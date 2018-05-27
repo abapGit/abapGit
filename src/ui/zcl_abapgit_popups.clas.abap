@@ -37,15 +37,7 @@ CLASS zcl_abapgit_popups DEFINITION
         !ev_cancel TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS create_tag_popup
-      IMPORTING
-        !iv_sha1   TYPE zif_abapgit_definitions=>ty_sha1
-      EXPORTING
-        !ev_name   TYPE string
-        !ev_sha1   TYPE zif_abapgit_definitions=>ty_sha1
-        !ev_cancel TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception .
+
     CLASS-METHODS run_page_class_popup
       EXPORTING
         !ev_name   TYPE string
@@ -66,14 +58,8 @@ CLASS zcl_abapgit_popups DEFINITION
         VALUE(rs_branch)    TYPE zif_abapgit_definitions=>ty_git_branch
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS tag_list_popup
-      IMPORTING
-        !iv_url         TYPE string
-        !iv_select_mode TYPE abap_bool DEFAULT abap_true
-      RETURNING
-        VALUE(rs_tag)   TYPE zif_abapgit_definitions=>ty_git_branch
-      RAISING
-        zcx_abapgit_exception .
+
+
     CLASS-METHODS repo_popup
       IMPORTING
         !iv_url            TYPE string
@@ -162,7 +148,7 @@ CLASS zcl_abapgit_popups DEFINITION
   PRIVATE SECTION.
 
     TYPES:
-      ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY .
+      ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
 
     CONSTANTS c_fieldname_selected TYPE lvc_fname VALUE `SELECTED` ##NO_TEXT.
     CLASS-DATA go_select_list_popup TYPE REF TO cl_salv_table .
@@ -197,11 +183,12 @@ CLASS zcl_abapgit_popups DEFINITION
           !e_salv_function .
     CLASS-METHODS extract_field_values
       IMPORTING
-        !it_fields  TYPE ty_sval_tt
+        it_fields  TYPE ty_sval_tt
       EXPORTING
-        !ev_url     TYPE abaptxt255-line
-        !ev_package TYPE tdevc-devclass
-        !ev_branch  TYPE textl-line .
+        ev_url     TYPE abaptxt255-line
+        ev_package TYPE tdevc-devclass
+        ev_branch  TYPE textl-line .
+
 ENDCLASS.
 
 
@@ -469,75 +456,6 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       MOVE-CORRESPONDING <lg_data> TO <lg_line>.
       INSERT <lg_line> INTO TABLE <lt_table>.
     ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD create_tag_popup.
-
-    DATA: lv_answer          TYPE c LENGTH 1,
-          lt_fields          TYPE TABLE OF sval,
-          lv_exit_while_loop TYPE abap_bool.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-    CLEAR: ev_name, ev_cancel, ev_sha1.
-
-    add_field( EXPORTING iv_tabname    = 'TBDTPPT'
-                         iv_fieldname  = 'P_TEXT'
-                         iv_fieldtext  = 'SHA'
-                         iv_value      = iv_sha1
-                         iv_obligatory = abap_true
-               CHANGING ct_fields      = lt_fields ).
-
-    add_field( EXPORTING iv_tabname    = 'TEXTL'
-                         iv_fieldname  = 'LINE'
-                         iv_fieldtext  = 'Name'
-                         iv_obligatory = abap_true
-               CHANGING ct_fields      = lt_fields ).
-
-    WHILE lv_exit_while_loop = abap_false.
-
-      CALL FUNCTION 'POPUP_GET_VALUES'
-        EXPORTING
-          popup_title     = 'Create tag'
-        IMPORTING
-          returncode      = lv_answer
-        TABLES
-          fields          = lt_fields
-        EXCEPTIONS
-          error_in_fields = 1
-          OTHERS          = 2 ##NO_TEXT.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from POPUP_GET_VALUES' ).
-      ENDIF.
-
-      IF lv_answer = 'A'.
-        ev_cancel = abap_true.
-        RETURN.
-      ENDIF.
-
-      READ TABLE lt_fields WITH KEY fieldname = 'P_TEXT'
-                           ASSIGNING <ls_field>.
-      ASSERT sy-subrc = 0.
-
-      ev_sha1 = <ls_field>-value.
-
-      READ TABLE lt_fields WITH KEY fieldname = 'LINE'
-                           ASSIGNING <ls_field>.
-      ASSERT sy-subrc = 0.
-
-      IF condense( <ls_field>-value ) CS ` `.
-        CLEAR: lv_exit_while_loop.
-        MESSAGE 'Tag name cannot contain blank spaces' TYPE 'S' DISPLAY LIKE 'E'.
-        CONTINUE.
-      ENDIF.
-
-      ev_name = zcl_abapgit_tag=>add_tag_prefix( <ls_field>-value ).
-
-      lv_exit_while_loop = abap_true.
-
-    ENDWHILE.
 
   ENDMETHOD.
 
@@ -1358,118 +1276,4 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.  "run_page_class_popup
-
-
-  METHOD tag_list_popup.
-
-    DATA: lo_branches         TYPE REF TO zcl_abapgit_git_branch_list,
-          lt_tags             TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
-          lv_answer           TYPE c LENGTH 1,
-          lt_selection        TYPE TABLE OF spopli,
-          lv_name_with_prefix TYPE string,
-          lo_alv              TYPE REF TO cl_salv_table,
-          lo_table_header     TYPE REF TO cl_salv_form_text,
-          lo_columns          TYPE REF TO cl_salv_columns_table,
-          lx_alv              TYPE REF TO cx_salv_error.
-
-    FIELD-SYMBOLS: <ls_sel> LIKE LINE OF lt_selection,
-                   <ls_tag> LIKE LINE OF lt_tags.
-
-    lo_branches = zcl_abapgit_git_transport=>branches( iv_url ).
-    lt_tags     = lo_branches->get_tags_only( ).
-
-    IF lines( lt_tags ) = 0.
-      zcx_abapgit_exception=>raise( `There are no tags for this repository` ).
-    ENDIF.
-
-    IF iv_select_mode = abap_true.
-
-      LOOP AT lt_tags ASSIGNING <ls_tag>.
-
-        INSERT INITIAL LINE INTO lt_selection INDEX 1 ASSIGNING <ls_sel>.
-        <ls_sel>-varoption = zcl_abapgit_tag=>remove_tag_prefix( <ls_tag>-name ).
-
-      ENDLOOP.
-
-      CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
-        EXPORTING
-          textline1          = 'Select tag'
-          titel              = 'Select tag'
-          start_col          = 30
-          start_row          = 5
-        IMPORTING
-          answer             = lv_answer
-        TABLES
-          t_spopli           = lt_selection
-        EXCEPTIONS
-          not_enough_answers = 1
-          too_much_answers   = 2
-          too_much_marks     = 3
-          OTHERS             = 4.                             "#EC NOTEXT
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'Error from POPUP_TO_DECIDE_LIST' ).
-      ENDIF.
-
-      IF lv_answer = 'A'. " cancel
-        RETURN.
-      ENDIF.
-
-      READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
-      ASSERT sy-subrc = 0.
-
-      lv_name_with_prefix = zcl_abapgit_tag=>add_tag_prefix( <ls_sel>-varoption ).
-
-      READ TABLE lt_tags ASSIGNING <ls_tag> WITH KEY name = lv_name_with_prefix.
-      ASSERT sy-subrc = 0.
-
-      rs_tag = <ls_tag>.
-
-    ELSE.
-
-      LOOP AT lt_tags ASSIGNING <ls_tag>.
-
-        <ls_tag>-name = zcl_abapgit_tag=>remove_tag_prefix( <ls_tag>-name ).
-
-      ENDLOOP.
-
-      TRY.
-          cl_salv_table=>factory(
-            IMPORTING
-              r_salv_table   = lo_alv
-            CHANGING
-              t_table        = lt_tags ).
-
-          lo_columns = lo_alv->get_columns( ).
-
-          lo_columns->get_column( `TYPE` )->set_technical( ).
-          lo_columns->get_column( `IS_HEAD` )->set_technical( ).
-          lo_columns->get_column( `DISPLAY_NAME` )->set_technical( ).
-
-          lo_columns->get_column( `SHA1` )->set_output_length( 30 ).
-          lo_columns->get_column( `SHA1` )->set_medium_text( 'SHA' ).
-
-          lo_columns->get_column( `NAME` )->set_medium_text( 'Tag name' ).
-
-          lo_columns->set_optimize( ).
-
-          lo_alv->set_screen_popup( start_column = 5
-                                    end_column   = 70
-                                    start_line   = 5
-                                    end_line     = 25 ).
-
-          CREATE OBJECT lo_table_header
-            EXPORTING
-              text = `Tags`.
-
-          lo_alv->set_top_of_list( lo_table_header ).
-
-          lo_alv->display( ).
-
-        CATCH cx_salv_error INTO lx_alv.
-          zcx_abapgit_exception=>raise( lx_alv->get_text( ) ).
-      ENDTRY.
-
-    ENDIF.
-
-  ENDMETHOD.
 ENDCLASS.

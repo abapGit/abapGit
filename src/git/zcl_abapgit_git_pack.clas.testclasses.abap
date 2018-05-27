@@ -567,3 +567,60 @@ CLASS ltcl_git_pack_decode_commit IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+CLASS ltcl_tag DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    METHODS:
+      decode_tag FOR TESTING RAISING cx_static_check.
+ENDCLASS.
+
+
+CLASS ltcl_tag IMPLEMENTATION.
+
+  METHOD decode_tag.
+
+    DATA: lv_test_data TYPE string,
+          lv_xstring   TYPE xstring,
+          ls_tag       TYPE zcl_abapgit_git_pack=>ty_tag.
+
+    lv_test_data = |object 175f9a21b15a9012c97a3dd15aea6d74d4204b6b\n|
+                && |type commit\n|
+                && |tag tag_1\n|
+                && |tagger Christian Guenter <christianguenter@googlemail.com> 1526718052 +0000\n|
+                && |\n|
+                && |This is an annotated tag\n|.
+
+    lv_xstring = zcl_abapgit_convert=>string_to_xstring_utf8( lv_test_data ).
+
+    ls_tag = zcl_abapgit_git_pack=>decode_tag( lv_xstring ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = |175f9a21b15a9012c97a3dd15aea6d74d4204b6b|
+      act = ls_tag-object ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'commit'
+      act = ls_tag-type ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'tag_1'
+      act = ls_tag-tag ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'Christian Guenter'
+      act = ls_tag-tagger_name ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'christianguenter@googlemail.com'
+      act = ls_tag-tagger_email ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'This is an annotated tag'
+      act = ls_tag-message ).
+
+  ENDMETHOD.
+
+ENDCLASS.
