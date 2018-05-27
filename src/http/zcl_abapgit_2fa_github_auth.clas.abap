@@ -60,7 +60,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_2fa_github_auth IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -336,6 +336,8 @@ CLASS zcl_abapgit_2fa_github_auth IMPLEMENTATION.
 
     li_client->receive( EXCEPTIONS OTHERS = 1 ).
     IF sy-subrc <> 0.
+* if the code fails here with a SSL error, make sure STRUST is setup to
+* work with https://api.github.com
       raise_comm_error_from_sy( ).
     ENDIF.
 
