@@ -33,4 +33,4 @@ https://guides.github.com/activities/contributing-to-open-source/
 
 ## Building/Creating a PR
 
-Building/Creating a PR is described here: http://docs.abapgit.org/guide-contributing-abapGit.html
+Building/Creating a PR is described here: http://docs.abapgit.org/other-contributing-abapGit.html
