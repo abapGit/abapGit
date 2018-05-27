@@ -11,21 +11,34 @@ REPORT zabapgit_test_ssl.
 
 * See https://github.com/larshp/abapGit/
 
-PARAMETERS: p_url    TYPE swc_value DEFAULT 'https://github.com',
-            p_proxy  TYPE string,
-            p_pxport TYPE string.
+PARAMETERS: p_url1 TYPE swc_value DEFAULT 'https://github.com',
+            p_url2 TYPE swc_value DEFAULT 'https://api.github.com'.
+* api.github.com is used when pushing code back to github
+
+SELECTION-SCREEN BEGIN OF BLOCK proxy WITH FRAME.
+* proxy settings, fill if your system is behind a proxy
+PARAMETERS: p_proxy  TYPE string,
+            p_pxport TYPE string,
+            p_puser  TYPE string,
+            p_ppwd   TYPE string.
+SELECTION-SCREEN END OF BLOCK proxy.
 
 START-OF-SELECTION.
-  PERFORM run.
+  PERFORM run USING p_url1.
+  PERFORM run USING p_url2.
 
-FORM run.
+FORM run USING iv_url TYPE swc_value.
 
   DATA: lv_code          TYPE i,
         lv_url           TYPE string,
         li_client        TYPE REF TO if_http_client,
         lv_error_message TYPE string.
 
-  lv_url = p_url.
+  IF iv_url IS INITIAL.
+    RETURN.
+  ENDIF.
+
+  lv_url = iv_url.
   cl_http_client=>create_by_url(
     EXPORTING
       url           = lv_url
@@ -35,11 +48,12 @@ FORM run.
     IMPORTING
       client        = li_client ).
 
-* enter username and password for proxy authentication if needed
-*  li_client->authenticate(
-*    proxy_authentication = abap_true
-*    username             = ''
-*    password             = '' ).
+  IF NOT p_puser IS INITIAL.
+    li_client->authenticate(
+      proxy_authentication = abap_true
+      username             = p_puser
+      password             = p_ppwd ).
+  ENDIF.
 
   li_client->send( ).
   li_client->receive(
@@ -62,10 +76,10 @@ FORM run.
 * if SSL Handshake fails, make sure to also check https://launchpad.support.sap.com/#/notes/510007
 
   li_client->response->get_status(
-      IMPORTING
-        code = lv_code ).
+    IMPORTING
+      code = lv_code ).
   IF lv_code = 200.
-    WRITE: / 'Success, it works'.
+    WRITE: / lv_url, ': ok'.
   ELSE.
     WRITE: / 'Error', lv_code.
   ENDIF.
