@@ -272,6 +272,18 @@ INTERFACE zif_abapgit_definitions PUBLIC.
            conflict TYPE string,
          END OF ty_merge.
 
+  TYPES: BEGIN OF ty_merge_conflict,
+           path        TYPE string,
+           filename    TYPE string,
+           source_sha1 TYPE zif_abapgit_definitions=>ty_sha1,
+           source_data TYPE xstring,
+           target_sha1 TYPE zif_abapgit_definitions=>ty_sha1,
+           target_data TYPE xstring,
+           result_sha1 TYPE zif_abapgit_definitions=>ty_sha1,
+           result_data TYPE xstring,
+         END OF ty_merge_conflict,
+         tt_merge_conflict TYPE STANDARD TABLE OF ty_merge_conflict WITH DEFAULT KEY.
+
   TYPES: BEGIN OF ty_repo_item,
            obj_type TYPE tadir-object,
            obj_name TYPE tadir-obj_name,
