@@ -60,7 +60,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_2fa_github_auth IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -315,6 +315,10 @@ CLASS zcl_abapgit_2fa_github_auth IMPLEMENTATION.
   METHOD zif_abapgit_2fa_authenticator~is_2fa_required.
 
     DATA: li_client TYPE REF TO if_http_client.
+
+    rv_required = abap_false.
+
+    RETURN.
 
     li_client = get_http_client_for_url( mv_github_api_url ).
 

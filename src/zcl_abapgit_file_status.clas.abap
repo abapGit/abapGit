@@ -252,8 +252,9 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       APPEND ls_item TO lt_items.
     ENDLOOP.
 
-    SORT lt_items. " Default key - type, name, pkg
-    DELETE ADJACENT DUPLICATES FROM lt_items.
+    SORT lt_items BY obj_type obj_name ASCENDING  "Unique key of LT_ITMES_IDX
+                     devclass          DESCENDING."So blank ones are at the bottom
+    DELETE ADJACENT DUPLICATES FROM lt_items COMPARING obj_type obj_name.
     lt_items_idx = lt_items. " Self protection + UNIQUE records assertion
 
     " Process new remote files (marked above with empty SHA1)
