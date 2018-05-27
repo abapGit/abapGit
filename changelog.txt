@@ -8,6 +8,12 @@ Legend
 + : added
 - : removed
 
+2018-05-27 v1.68.0
+------------------
++ Resolve conflicts functionallity/UI (beta)
++ Annotated tags
+* Locking problems fixed(?)
+
 2018-05-19 v1.67.0
 ------------------
 + IDOC support
