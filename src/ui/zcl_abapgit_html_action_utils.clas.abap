@@ -96,11 +96,6 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !it_postdata TYPE cnht_post_data_tab
       EXPORTING
         !es_fields   TYPE any .
-    CLASS-METHODS parse_tag_request
-      IMPORTING
-        !it_postdata TYPE cnht_post_data_tab
-      EXPORTING
-        !es_fields   TYPE any .
     CLASS-METHODS decode_bg_update
       IMPORTING
         !iv_getdata      TYPE clike
@@ -433,35 +428,6 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
 * todo, more to be added here
     REPLACE ALL OCCURRENCES OF '%3F' IN rv_string WITH '?'.
-
-  ENDMETHOD.
-
-  METHOD parse_tag_request.
-
-    CONSTANTS: lc_replace TYPE string VALUE '<<new>>'.
-
-    DATA: lv_string TYPE string,
-          lt_fields TYPE tihttpnvp.
-
-    FIELD-SYMBOLS <lv_body> TYPE string.
-
-    CLEAR es_fields.
-
-    CONCATENATE LINES OF it_postdata INTO lv_string.
-    REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_crlf    IN lv_string WITH lc_replace.
-    REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_newline IN lv_string WITH lc_replace.
-    lt_fields = parse_fields_upper_case_name( lv_string ).
-
-    get_field( EXPORTING name = 'SHA1'         it = lt_fields CHANGING cv = es_fields ).
-    get_field( EXPORTING name = 'NAME'         it = lt_fields CHANGING cv = es_fields ).
-    get_field( EXPORTING name = 'TAGGER_NAME'  it = lt_fields CHANGING cv = es_fields ).
-    get_field( EXPORTING name = 'TAGGER_EMAIL' it = lt_fields CHANGING cv = es_fields ).
-    get_field( EXPORTING name = 'MESSAGE'      it = lt_fields CHANGING cv = es_fields ).
-    get_field( EXPORTING name = 'BODY'         it = lt_fields CHANGING cv = es_fields ).
-
-    ASSIGN COMPONENT 'BODY' OF STRUCTURE es_fields TO <lv_body>.
-    ASSERT <lv_body> IS ASSIGNED.
-    REPLACE ALL OCCURRENCES OF lc_replace IN <lv_body> WITH zif_abapgit_definitions=>gc_newline.
 
   ENDMETHOD.
 
