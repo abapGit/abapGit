@@ -32,10 +32,8 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS create_tag
       IMPORTING
-        !io_repo                   TYPE REF TO zcl_abapgit_repo_online
-        is_tag                     TYPE zif_abapgit_definitions=>ty_git_tag
-      RETURNING
-        VALUE(rv_created_tag_type) TYPE  zif_abapgit_definitions=>ty_git_branch_type
+        !io_repo TYPE REF TO zcl_abapgit_repo_online
+        is_tag   TYPE zif_abapgit_definitions=>ty_git_tag
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS delete_branch
@@ -114,6 +112,21 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
       IMPORTING is_tag  TYPE zif_abapgit_definitions=>ty_git_tag
                 io_repo TYPE REF TO zcl_abapgit_repo_online
       RAISING   zcx_abapgit_exception.
+
+    CLASS-METHODS create_annotated_tag
+      IMPORTING
+        is_tag  TYPE zif_abapgit_definitions=>ty_git_tag
+        io_repo TYPE REF TO zcl_abapgit_repo_online
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS create_lightweight_tag
+      IMPORTING
+        is_tag  TYPE zif_abapgit_definitions=>ty_git_tag
+        io_repo TYPE REF TO zcl_abapgit_repo_online
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -205,39 +218,28 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
   METHOD create_tag.
 
-    DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
-          lv_pack    TYPE xstring.
-
     IF is_tag-name CS ` `.
       zcx_abapgit_exception=>raise( 'Tag name cannot contain blank spaces' ).
     ENDIF.
 
-    " It the message is filled we must create an annotated tag.
-    " Otherwise a lightweight tag is created
-    IF is_tag-message IS NOT INITIAL.
+    CASE is_tag-type.
+      WHEN zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
 
-      receive_pack_create_tag(
-          is_tag  = is_tag
-          io_repo = io_repo ).
+        create_annotated_tag(
+            is_tag  = is_tag
+            io_repo = io_repo ).
 
-      rv_created_tag_type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
+      WHEN  zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
 
-    ELSE.
+        create_lightweight_tag(
+            is_tag  = is_tag
+            io_repo = io_repo ).
 
-* "client MUST send an empty packfile"
-* https://github.com/git/git/blob/master/Documentation/technical/pack-protocol.txt#L514
-      lv_pack = zcl_abapgit_git_pack=>encode( lt_objects ).
+      WHEN OTHERS.
 
-      zcl_abapgit_git_transport=>receive_pack(
-        iv_url         = io_repo->get_url( )
-        iv_old         = c_zero
-        iv_new         = io_repo->get_sha1_local( )
-        iv_branch_name = is_tag-name
-        iv_pack        = lv_pack ).
+        zcx_abapgit_exception=>raise( |Invalid tag type: { is_tag-type }| ).
 
-      rv_created_tag_type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
-
-    ENDIF.
+    ENDCASE.
 
   ENDMETHOD.
 
@@ -466,6 +468,50 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
   ENDMETHOD.                    "push
 
 
+  METHOD receive_pack_create_tag.
+
+    DATA: lv_tag          TYPE xstring,
+          lt_objects      TYPE zif_abapgit_definitions=>ty_objects_tt,
+          lv_pack         TYPE xstring,
+          ls_object       LIKE LINE OF lt_objects,
+          ls_tag          TYPE zcl_abapgit_git_pack=>ty_tag,
+          lv_new_tag_sha1 TYPE zif_abapgit_definitions=>ty_sha1.
+
+* new tag
+    ls_tag-object       = is_tag-sha1.
+    ls_tag-type         = zif_abapgit_definitions=>gc_type-commit.
+    ls_tag-tag          = is_tag-name.
+    ls_tag-tagger_name  = is_tag-tagger_name.
+    ls_tag-tagger_email = is_tag-tagger_email.
+    ls_tag-message      = is_tag-message
+                      && |{ zif_abapgit_definitions=>gc_newline }|
+                      && |{ zif_abapgit_definitions=>gc_newline }|
+                      && is_tag-body.
+
+    lv_tag = zcl_abapgit_git_pack=>encode_tag( ls_tag ).
+
+    lv_new_tag_sha1 = zcl_abapgit_hash=>sha1(
+      iv_type = zif_abapgit_definitions=>gc_type-tag
+      iv_data = lv_tag ).
+
+    CLEAR ls_object.
+    ls_object-sha1 = lv_new_tag_sha1.
+    ls_object-type = zif_abapgit_definitions=>gc_type-tag.
+    ls_object-data = lv_tag.
+    APPEND ls_object TO lt_objects.
+
+    lv_pack = zcl_abapgit_git_pack=>encode( lt_objects ).
+
+    zcl_abapgit_git_transport=>receive_pack(
+      iv_url         = io_repo->get_url( )
+      iv_old         = c_zero
+      iv_new         = lv_new_tag_sha1
+      iv_branch_name = is_tag-name
+      iv_pack        = lv_pack ).
+
+  ENDMETHOD.
+
+
   METHOD receive_pack_push.
 
     DATA: lv_time    TYPE zcl_abapgit_time=>ty_unixtime,
@@ -653,45 +699,28 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD receive_pack_create_tag.
+  METHOD create_annotated_tag.
 
-    DATA: lv_tag          TYPE xstring,
-          lt_objects      TYPE zif_abapgit_definitions=>ty_objects_tt,
-          lv_pack         TYPE xstring,
-          lt_files        TYPE zif_abapgit_definitions=>ty_files_tt,
-          ls_object       LIKE LINE OF lt_objects,
-          ls_tag          TYPE zcl_abapgit_git_pack=>ty_tag,
-          lv_new_tag_sha1 TYPE zif_abapgit_definitions=>ty_sha1.
+    receive_pack_create_tag(
+        is_tag  = is_tag
+        io_repo = io_repo ).
 
-* new tag
-    ls_tag-object       = is_tag-sha1.
-    ls_tag-type         = zif_abapgit_definitions=>gc_type-commit.
-    ls_tag-tag          = is_tag-name.
-    ls_tag-tagger_name  = is_tag-tagger_name.
-    ls_tag-tagger_email = is_tag-tagger_email.
-    ls_tag-message      = is_tag-message
-                      && |{ zif_abapgit_definitions=>gc_newline }|
-                      && |{ zif_abapgit_definitions=>gc_newline }|
-                      && is_tag-body.
+  ENDMETHOD.
 
-    lv_tag = zcl_abapgit_git_pack=>encode_tag( ls_tag ).
 
-    lv_new_tag_sha1 = zcl_abapgit_hash=>sha1(
-      iv_type = zif_abapgit_definitions=>gc_type-tag
-      iv_data = lv_tag ).
+  METHOD create_lightweight_tag.
 
-    CLEAR ls_object.
-    ls_object-sha1 = lv_new_tag_sha1.
-    ls_object-type = zif_abapgit_definitions=>gc_type-tag.
-    ls_object-data = lv_tag.
-    APPEND ls_object TO lt_objects.
+    DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
+          lv_pack    TYPE xstring.
 
+* "client MUST send an empty packfile"
+* https://github.com/git/git/blob/master/Documentation/technical/pack-protocol.txt#L514
     lv_pack = zcl_abapgit_git_pack=>encode( lt_objects ).
 
     zcl_abapgit_git_transport=>receive_pack(
       iv_url         = io_repo->get_url( )
       iv_old         = c_zero
-      iv_new         = lv_new_tag_sha1
+      iv_new         = io_repo->get_sha1_local( )
       iv_branch_name = is_tag-name
       iv_pack        = lv_pack ).
 
