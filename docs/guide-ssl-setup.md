@@ -45,7 +45,7 @@ On [Feburary 22nd](https://githubengineering.com/crypto-removal-notice/), GitHub
 
 See [SAP note 510007](https://launchpad.support.sap.com/#/notes/510007), section 7, for information on how to configure SSL.
 
-Add parameters
+Add profile parameters:
 ```
 ssl/client_ciphersuites = 150:PFS:HIGH::EC_P256:EC_HIGH
 ssl/ciphersuites = 135:PFS:HIGH::EC_P256:EC_HIGH
