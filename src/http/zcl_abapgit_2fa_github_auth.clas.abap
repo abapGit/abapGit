@@ -316,6 +316,10 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
 
     DATA: li_client TYPE REF TO if_http_client.
 
+    rv_required = abap_false.
+
+    RETURN.
+
     li_client = get_http_client_for_url( mv_github_api_url ).
 
     li_client->propertytype_logon_popup = if_http_client=>co_disabled.
