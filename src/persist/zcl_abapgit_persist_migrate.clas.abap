@@ -293,7 +293,7 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
     ls_dd02v-ddlanguage = zif_abapgit_definitions=>gc_english.
     ls_dd02v-tabclass   = 'TRANSP'.
     ls_dd02v-ddtext     = c_text.
-    ls_dd02v-contflag   = 'A'.
+    ls_dd02v-contflag   = 'L'.
     ls_dd02v-exclass    = '1'.
 
     ls_dd09l-tabname  = zcl_abapgit_persistence_db=>c_tabname.
