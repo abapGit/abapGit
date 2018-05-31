@@ -254,7 +254,17 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD _build_extra_from_header.
-    r_result = c_objectname_tdlines && '_' && ls_header-tdspras.
+
+    DATA: lv_tdspras type laiso.
+
+    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_OUTPUT'
+      EXPORTING
+        input  = ls_header-tdspras
+      IMPORTING
+        output = lv_tdspras.
+
+    r_result = c_objectname_tdlines && '_' && lv_tdspras.
+
   ENDMETHOD.
 
   METHOD _get_last_changes.
