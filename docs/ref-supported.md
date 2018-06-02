@@ -74,6 +74,7 @@ SMIM | Info Object from the MIME Repository | Yes
 SOTS | All Concepts (OTR) of a Package - Long Texts | [#792](https://github.com/larshp/abapGit/issues/792)
 SPLO | Format Types | Yes
 SPRX | Proxy Object | [#87](https://github.com/larshp/abapGit/issues/87)
+SUCU | Authorization Groups (TBRG_AUTH) | [#1434](https://github.com/larshp/abapGit/issues/1434)
 SRFC | RFC Service | Yes
 SSFO | SAP Smart Form | Yes
 SSST | SAP Smart Style | Yes
