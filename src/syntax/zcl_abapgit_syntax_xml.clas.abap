@@ -5,27 +5,26 @@ CLASS zcl_abapgit_syntax_xml DEFINITION
 
   PUBLIC SECTION.
 
-    METHODS constructor.
-
     CONSTANTS:
       BEGIN OF c_css,
         xml_tag  TYPE string VALUE 'xml_tag',               "#EC NOTEXT
         attr     TYPE string VALUE 'attr',                  "#EC NOTEXT
         attr_val TYPE string VALUE 'attr_val',              "#EC NOTEXT
-      END OF c_css,
-
+      END OF c_css .
+    CONSTANTS:
       BEGIN OF c_token,
         xml_tag  TYPE c VALUE 'X',                          "#EC NOTEXT
         attr     TYPE c VALUE 'A',                          "#EC NOTEXT
         attr_val TYPE c VALUE 'V',                          "#EC NOTEXT
-      END OF c_token,
-
+      END OF c_token .
+    CONSTANTS:
       BEGIN OF c_regex,
         xml_tag  TYPE string VALUE '[<>]',                  "#EC NOTEXT
         attr     TYPE string VALUE '\s[-a-z:_0-9]+\s*(?==)', "#EC NOTEXT
         attr_val TYPE string VALUE '["''][^''"]+[''"]',     "#EC NOTEXT
-      END OF c_regex.
+      END OF c_regex .
 
+    METHODS constructor .
   PROTECTED SECTION.
 
     METHODS order_matches REDEFINITION.
@@ -34,7 +33,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SYNTAX_XML IMPLEMENTATION.
+CLASS zcl_abapgit_syntax_xml IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -91,8 +90,10 @@ CLASS ZCL_ABAPGIT_SYNTAX_XML IMPLEMENTATION.
             " Adjust length and offset of closing tag
           ELSEIF <ls_match>-text_tag = '>' AND lv_prev_token <> c_token-xml_tag.
             lv_state = 'C'.
-            <ls_match>-length = <ls_match>-offset - <ls_prev>-offset - <ls_prev>-length + <ls_match>-length.
-            <ls_match>-offset = <ls_prev>-offset + <ls_prev>-length.
+            IF <ls_prev> IS ASSIGNED.
+              <ls_match>-length = <ls_match>-offset - <ls_prev>-offset - <ls_prev>-length + <ls_match>-length.
+              <ls_match>-offset = <ls_prev>-offset + <ls_prev>-length.
+            ENDIF.
           ELSE.
             lv_state = 'O'.
           ENDIF.
