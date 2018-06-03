@@ -196,6 +196,10 @@ CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~are_changes_recorded_in_tr_req.
+    RETURN.
+  ENDMETHOD.
+
   METHOD zif_abapgit_sap_package~read_parent.
     rv_parentcl = c_top.
   ENDMETHOD.
