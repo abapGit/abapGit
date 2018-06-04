@@ -69,7 +69,8 @@ CLASS ltcl_xml_output IMPLEMENTATION.
     lv_value =
       '<?xml version="1.0" encoding="utf-16"?>#<abapGit version="v1.0.0">#' &
       ' <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">#' &
-      '  <asx:values>#   <DATA>#    <FOO>2</FOO>#    <BAR>A</BAR>#   </DATA>#  </asx:values># </asx:abap>#</abapGit>#'.
+      '  <asx:values>#   <DATA>#    <FOO>2</FOO>#    <BAR>A' &
+      '</BAR>#   </DATA>#  </asx:values># </asx:abap>#</abapGit>#'.
 
     REPLACE ALL OCCURRENCES OF '#' IN lv_value WITH cl_abap_char_utilities=>newline.
 
