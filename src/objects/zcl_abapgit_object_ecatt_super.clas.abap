@@ -144,12 +144,9 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
     lv_object_type = get_object_type( ).
 
     lo_element = ci_document->find_from_name( |{ lv_object_type }| ).
-    lo_element->set_attribute( name  = |SAPRL|
-                               value = || ).
-    lo_element->set_attribute( name  = |DOWNLOADDATE|
-                               value = || ).
-    lo_element->set_attribute( name  = |DOWNLOADTIME|
-                               value = || ).
+    lo_element->remove_attribute( |SAPRL| ).
+    lo_element->remove_attribute( |DOWNLOADDATE| ).
+    lo_element->remove_attribute( |DOWNLOADTIME| ).
 
   ENDMETHOD.
 
