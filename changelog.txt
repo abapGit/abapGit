@@ -8,6 +8,15 @@ Legend
 + : added
 - : removed
 
+2018-06-04 v1.68.2
+------------------
+* CLAS ignore deltion of non-existent objects
+* ENHO implement changed by
+* fix TOBJ diffs
+* fix error in XML syntax highlighter
+* ECATT remove empty attributes
+* evaluate 2FA implementations alphabetically
+
 2018-06-03 v1.68.1
 ------------------
 * XSLT fix changed_by
