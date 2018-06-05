@@ -153,7 +153,7 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
     IF lv_found = abap_false.
-      CLEAR ct_source[].
+      CLEAR ct_source.
     ENDIF.
 
   ENDMETHOD.                    "reduce

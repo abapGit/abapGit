@@ -79,7 +79,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'LINES'
                   CHANGING cg_data = lt_lines ).
 
-    IF lt_lines[] IS INITIAL.
+    IF lines( lt_lines ) = 0.
       RETURN.
     ENDIF.
 

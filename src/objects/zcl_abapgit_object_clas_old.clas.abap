@@ -114,7 +114,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'LINES'
                   CHANGING cg_data = lt_lines ).
 
-    IF lt_lines[] IS INITIAL.
+    IF lines( lt_lines ) = 0.
       RETURN.
     ENDIF.
 
@@ -155,7 +155,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
                   CHANGING cg_data = lt_tpool_ext ).
     lt_tpool = read_tpool( lt_tpool_ext ).
 
-    IF lt_tpool[] IS INITIAL.
+    IF lines( lt_tpool ) = 0.
       RETURN.
     ENDIF.
 
@@ -374,7 +374,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
     lt_source = mo_object_oriented_object_fct->serialize_abap(
       is_class_key = ls_class_key
       iv_type      = seop_ext_class_locals_def ).
-    IF NOT lt_source[] IS INITIAL.
+    IF lines( lt_source ) > 0.
       mo_files->add_abap( iv_extra = 'locals_def'
                           it_abap  = lt_source ).           "#EC NOTEXT
     ENDIF.
@@ -382,7 +382,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
     lt_source = mo_object_oriented_object_fct->serialize_abap(
       is_class_key = ls_class_key
       iv_type      = seop_ext_class_locals_imp ).
-    IF NOT lt_source[] IS INITIAL.
+    IF lines( lt_source ) > 0.
       mo_files->add_abap( iv_extra = 'locals_imp'
                           it_abap  = lt_source ).           "#EC NOTEXT
     ENDIF.
@@ -392,7 +392,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
       iv_type                 = seop_ext_class_testclasses ).
 
     mv_skip_testclass = mo_object_oriented_object_fct->get_skip_test_classes( ).
-    IF NOT lt_source[] IS INITIAL AND mv_skip_testclass = abap_false.
+    IF lines( lt_source ) > 0 AND mv_skip_testclass = abap_false.
       mo_files->add_abap( iv_extra = 'testclasses'
                           it_abap  = lt_source ).           "#EC NOTEXT
     ENDIF.
@@ -400,7 +400,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
     lt_source = mo_object_oriented_object_fct->serialize_abap(
       is_class_key = ls_class_key
       iv_type      = seop_ext_class_macros ).
-    IF NOT lt_source[] IS INITIAL.
+    IF lines( lt_source ) > 0.
       mo_files->add_abap( iv_extra = 'macros'
                           it_abap  = lt_source ).           "#EC NOTEXT
     ENDIF.
