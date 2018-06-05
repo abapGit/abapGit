@@ -1,8 +1,15 @@
 title: abapGit documentation
 highlighter: rouge
+collections_dir: collections
+collections:
+  development:
+    output: true
 defaults:
-  -
-    scope:
-      path: "" # an empty string here means all files in the project
+  - scope:
+      path: ""
     values:
       layout: "default"
+  - scope:
+      path: "_development"
+    values:
+      layout: "development"
