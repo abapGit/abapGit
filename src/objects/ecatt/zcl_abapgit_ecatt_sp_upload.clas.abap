@@ -28,7 +28,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
 
 
   METHOD get_ecatt_sp.
@@ -75,7 +75,7 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
         lv_exception_occurred = 'X'.
     ENDTRY.
 
-    IF  lv_exception_occurred = 'X'.
+    IF lv_exception_occurred = 'X'.
       raise_upload_exception( previous = exception_to_raise ).
     ENDIF.
   ENDMETHOD.

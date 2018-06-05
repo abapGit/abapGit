@@ -47,7 +47,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
 
 
   METHOD get_business_msgs_from_dom.
@@ -90,7 +90,7 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
         lv_exception_occurred = 'X'.
     ENDTRY.
 
-    IF  lv_exception_occurred = 'X'.
+    IF lv_exception_occurred = 'X'.
       raise_upload_exception( previous = exception_to_raise ).
     ENDIF.
 
@@ -137,7 +137,7 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
         lv_exception_occurred = 'X'.
     ENDTRY.
 
-    IF  lv_exception_occurred = 'X'.
+    IF lv_exception_occurred = 'X'.
       raise_upload_exception( previous = exception_to_raise ).
     ENDIF.
 
@@ -210,7 +210,7 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
         lv_exception_occurred = 'X'.
     ENDTRY.
 
-    IF  lv_exception_occurred = 'X'.
+    IF lv_exception_occurred = 'X'.
       raise_upload_exception( previous = exception_to_raise ).
     ENDIF.
 
