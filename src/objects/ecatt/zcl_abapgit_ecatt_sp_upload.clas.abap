@@ -46,8 +46,7 @@ CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
     FIELD-SYMBOLS: <ecatt_object> TYPE any.
 
     TRY.
-        li_section = template_over_all->find_from_name_ns(
-                                          name = 'START_PROFILE' ).
+        li_section = template_over_all->find_from_name_ns( 'START_PROFILE' ).
 
         IF NOT li_section IS INITIAL.
           CLASS cl_ixml DEFINITION LOAD .
@@ -107,7 +106,7 @@ CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
           CHANGING
             ch_object       = ch_object ).
 
-        upload_data_from_stream( im_xml_file = ch_object-filename ).
+        upload_data_from_stream( ch_object-filename ).
 
       CATCH cx_ecatt_apl INTO lx_ecatt.
         IF template_over_all IS INITIAL.

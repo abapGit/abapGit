@@ -186,7 +186,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
     zcl_abapgit_language=>set_current_language( mv_language ).
 
     TRY.
-        ls_vseoclass = mo_object_oriented_object_fct->get_class_properties( is_class_key = ls_clskey ).
+        ls_vseoclass = mo_object_oriented_object_fct->get_class_properties( ls_clskey ).
 
       CLEANUP.
         zcl_abapgit_language=>restore_login_language( ).
@@ -308,7 +308,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
     DATA: ls_class_key TYPE seoclskey.
     ls_class_key-clsname = ms_item-obj_name.
 
-    rv_bool = mo_object_oriented_object_fct->exists( iv_object_name = ls_class_key ).
+    rv_bool = mo_object_oriented_object_fct->exists( ls_class_key ).
   ENDMETHOD.                    "zif_abapgit_object~exists
 
 

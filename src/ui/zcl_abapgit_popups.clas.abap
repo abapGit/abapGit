@@ -916,7 +916,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     CLEAR: et_list.
 
-    create_new_table( it_list = it_list ).
+    create_new_table( it_list ).
 
     ASSIGN gr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.

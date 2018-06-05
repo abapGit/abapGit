@@ -108,7 +108,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ecatt_vo> TYPE any.
 
-    li_section = template_over_all->find_from_name_ns( name = 'IMPL_DET' ).
+    li_section = template_over_all->find_from_name_ns( 'IMPL_DET' ).
 
     IF NOT li_section IS INITIAL.
       CALL FUNCTION 'SDIXML_DOM_TO_DATA'
@@ -244,7 +244,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
           CHANGING
             ch_object       = ch_object ).
 
-        upload_data_from_stream( im_xml_file = ch_object-filename ).
+        upload_data_from_stream( ch_object-filename ).
       CATCH cx_ecatt_apl INTO ex.
         IF template_over_all IS INITIAL.
           RAISE EXCEPTION ex.
