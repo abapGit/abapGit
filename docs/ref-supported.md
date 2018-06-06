@@ -59,6 +59,7 @@ PRAG | Pragma in ABAP Source Code | Yes
 PROG | Program | Yes
 SAMC | ABAP Messaging Channels | Yes
 SAPC | ABAP Push Channels | Yes
+SCP1 | BC Set or Customizing Profile | [#1004](https://github.com/larshp/abapGit/issues/1004)
 SFBF | Business Function + Assignment | Yes
 SFBS | Business Function Set + Assignment | Yes
 SFPF | Form Object: Form | Yes
