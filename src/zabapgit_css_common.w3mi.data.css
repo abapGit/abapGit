@@ -328,6 +328,11 @@ form.aligned-form label {
   vertical-align: middle;
 }
 
+form.aligned-form select {
+  padding-right: 1em;
+  vertical-align: middle;
+}
+
 form.aligned-form span.sub-title {
   color: #BBB;
   font-size: smaller;

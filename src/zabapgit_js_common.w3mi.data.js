@@ -119,6 +119,15 @@ function perfClear() {
 }
 
 /**********************************************************
+ * TAG PAGE Logic
+ **********************************************************/
+// somehow only functions on window are visible for the select tag
+window.onTagTypeChange = function(oSelectObject){
+  var sValue = oSelectObject.value;
+  submitSapeventForm({ 'type': sValue }, "change_tag_type", "post");
+}
+
+/**********************************************************
  * STAGE PAGE Logic
  **********************************************************/
 

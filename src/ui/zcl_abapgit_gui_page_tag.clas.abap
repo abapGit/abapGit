@@ -4,8 +4,9 @@ CLASS zcl_abapgit_gui_page_tag DEFINITION PUBLIC FINAL
   PUBLIC SECTION.
 
     CONSTANTS: BEGIN OF c_action,
-                 commit_post   TYPE string VALUE 'commit_post',
-                 commit_cancel TYPE string VALUE 'commit_cancel',
+                 commit_post     TYPE string VALUE 'commit_post',
+                 commit_cancel   TYPE string VALUE 'commit_cancel',
+                 change_tag_type TYPE string VALUE 'change_tag_type',
                END OF c_action.
 
     METHODS:
@@ -21,7 +22,13 @@ CLASS zcl_abapgit_gui_page_tag DEFINITION PUBLIC FINAL
       scripts        REDEFINITION.
 
   PRIVATE SECTION.
-    DATA: mo_repo_online  TYPE REF TO zcl_abapgit_repo_online.
+    CONSTANTS: BEGIN OF co_tag_type,
+                 lightweight TYPE string VALUE 'lightweight',
+                 annotated   TYPE string VALUE 'annotated',
+               END OF co_tag_type.
+
+    DATA: mo_repo_online   TYPE REF TO zcl_abapgit_repo_online,
+          mv_selected_type TYPE string.
 
     METHODS:
       render_menu
@@ -43,8 +50,11 @@ CLASS zcl_abapgit_gui_page_tag DEFINITION PUBLIC FINAL
         RAISING   zcx_abapgit_exception,
 
       parse_tag_request
-        IMPORTING !it_postdata TYPE cnht_post_data_tab
-        EXPORTING !es_fields   TYPE any.
+        IMPORTING it_postdata TYPE cnht_post_data_tab
+        EXPORTING es_fields   TYPE any,
+      parse_change_tag_type_request
+        IMPORTING
+          it_postdata TYPE cnht_post_data_tab.
 
 ENDCLASS.
 
@@ -59,6 +69,8 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
     mo_repo_online ?= io_repo.
 
     ms_control-page_title = 'TAG'.
+    mv_selected_type = co_tag_type-lightweight.
+
   ENDMETHOD.
 
 
@@ -83,7 +95,10 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
           lv_email     TYPE string,
           lv_s_param   TYPE string,
           lo_settings  TYPE REF TO zcl_abapgit_settings,
-          lv_body_size TYPE i.
+          lv_body_size TYPE i,
+          lt_type      TYPE stringtab,
+          lv_selected  TYPE string.
+    FIELD-SYMBOLS: <type> LIKE LINE OF lt_type.
 
     lo_user  = zcl_abapgit_persistence_user=>get_instance( ).
 
@@ -107,12 +122,38 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( |<h3>If comment and body are empty a lightweight tag will be created, |
-               && |otherwise an annotated tag.</h3>| ).
-
     ro_html->add( '<div class="form-container">' ).
-    ro_html->add( '<form id="commit_form" class="aligned-form"'
+    ro_html->add( '<form id="commit_form" class="aligned-form grey70"'
                && ' method="post" action="sapevent:commit_post">' ).
+
+    INSERT co_tag_type-lightweight
+           INTO TABLE lt_type.
+
+    INSERT co_tag_type-annotated
+           INTO TABLE lt_type.
+
+    ro_html->add( '<div class="row">' ).
+    ro_html->add( 'Tag type <select name="folder_logic" onchange="onTagTypeChange(this)">' ).
+
+    LOOP AT lt_type ASSIGNING <type>.
+
+      IF mv_selected_type = <type>.
+        lv_selected = 'selected'.
+      ELSE.
+        CLEAR: lv_selected.
+      ENDIF.
+
+      ro_html->add( |<option value="{ <type> }" |
+                 && |{ lv_selected }>|
+                 && |{ <type> }</option>| ).
+
+    ENDLOOP.
+
+    ro_html->add( '</div>' ).
+
+    ro_html->add( '</select>' ).
+    ro_html->add( '<br>' ).
+    ro_html->add( '<br>' ).
 
     ro_html->add( render_text_input( iv_name  = 'sha1'
                                      iv_label = 'SHA1'
@@ -121,31 +162,35 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
     ro_html->add( render_text_input( iv_name  = 'name'
                                      iv_label = 'tag name' ) ).
 
-    ro_html->add( render_text_input( iv_name  = 'tagger_name'
-                                     iv_label = 'tagger name'
-                                     iv_value = lv_user ) ).
+    IF mv_selected_type = co_tag_type-annotated.
 
-    ro_html->add( render_text_input( iv_name  = 'tagger_email'
-                                     iv_label = 'tagger e-mail'
-                                     iv_value = lv_email ) ).
+      ro_html->add( render_text_input( iv_name  = 'tagger_name'
+                                       iv_label = 'tagger name'
+                                       iv_value = lv_user ) ).
 
-    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+      ro_html->add( render_text_input( iv_name  = 'tagger_email'
+                                       iv_label = 'tagger e-mail'
+                                       iv_value = lv_email ) ).
 
-    lv_s_param = lo_settings->get_commitmsg_comment_length( ).
+      lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
 
-    ro_html->add( render_text_input( iv_name       = 'message'
-                                     iv_label      = 'message'
-                                     iv_max_length = lv_s_param ) ).
+      lv_s_param = lo_settings->get_commitmsg_comment_length( ).
 
-    ro_html->add( '<div class="row">' ).
-    ro_html->add( '<label for="c-body">body</label>' ).
+      ro_html->add( render_text_input( iv_name       = 'message'
+                                       iv_label      = 'message'
+                                       iv_max_length = lv_s_param ) ).
 
-    lv_body_size = lo_settings->get_commitmsg_body_size( ).
-    IF lv_body_size > lc_body_col_max.
-      lv_body_size = lc_body_col_max.
+      ro_html->add( '<div class="row">' ).
+      ro_html->add( '<label for="c-body">body</label>' ).
+
+      lv_body_size = lo_settings->get_commitmsg_body_size( ).
+      IF lv_body_size > lc_body_col_max.
+        lv_body_size = lc_body_col_max.
+      ENDIF.
+      ro_html->add( |<textarea id="c-body" name="body" rows="10" cols="| &&
+                    |{ lv_body_size }"></textarea>| ).
+
     ENDIF.
-    ro_html->add( |<textarea id="c-body" name="body" rows="10" cols="| &&
-                  |{ lv_body_size }"></textarea>| ).
 
     ro_html->add( '<input type="submit" class="hidden-submit">' ).
     ro_html->add( '</div>' ).
@@ -218,6 +263,12 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
 
         ev_state = zif_abapgit_definitions=>gc_event_state-go_back.
 
+      WHEN c_action-change_tag_type.
+
+        parse_change_tag_type_request( it_postdata ).
+
+        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+
       WHEN c_action-commit_cancel.
         ev_state = zif_abapgit_definitions=>gc_event_state-go_back.
     ENDCASE.
@@ -227,29 +278,47 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
   METHOD create_tag.
 
     DATA:
-      ls_tag      TYPE zif_abapgit_definitions=>ty_git_tag,
-      lx_error    TYPE REF TO zcx_abapgit_exception,
-      lv_text     TYPE string,
-      lv_tag_type TYPE zif_abapgit_definitions=>ty_git_branch_type.
+      ls_tag   TYPE zif_abapgit_definitions=>ty_git_tag,
+      lx_error TYPE REF TO zcx_abapgit_exception,
+      lv_text  TYPE string.
 
     parse_tag_request(
       EXPORTING it_postdata = it_postdata
       IMPORTING es_fields   = ls_tag ).
 
+    IF ls_tag-name IS INITIAL.
+      zcx_abapgit_exception=>raise( |Please supply a tag name| ).
+    ENDIF.
+
     ls_tag-name = zcl_abapgit_tag=>add_tag_prefix( ls_tag-name ).
     ASSERT ls_tag-name CP 'refs/tags/+*'.
 
+    CASE mv_selected_type.
+      WHEN co_tag_type-lightweight.
+
+        ls_tag-type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
+
+      WHEN co_tag_type-annotated.
+
+        ls_tag-type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
+
+      WHEN OTHERS.
+
+        zcx_abapgit_exception=>raise( |Invalid tag type: { mv_selected_type }| ).
+
+    ENDCASE.
+
     TRY.
-        lv_tag_type = zcl_abapgit_git_porcelain=>create_tag( io_repo = mo_repo_online
-                                                             is_tag  = ls_tag ).
+        zcl_abapgit_git_porcelain=>create_tag( io_repo = mo_repo_online
+                                               is_tag  = ls_tag ).
 
       CATCH zcx_abapgit_exception INTO lx_error.
         zcx_abapgit_exception=>raise( |Cannot create tag { ls_tag-name }. Error: '{ lx_error->get_text( ) }'| ).
     ENDTRY.
 
-    IF lv_tag_type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
+    IF ls_tag-type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
       lv_text = |Lightweight tag { zcl_abapgit_tag=>remove_tag_prefix( ls_tag-name ) } created| ##NO_TEXT.
-    ELSE.
+    ELSEIF ls_tag-type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
       lv_text = |Annotated tag { zcl_abapgit_tag=>remove_tag_prefix( ls_tag-name ) } created| ##NO_TEXT.
     ENDIF.
 
@@ -284,6 +353,23 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
     ASSIGN COMPONENT 'BODY' OF STRUCTURE es_fields TO <lv_body>.
     ASSERT <lv_body> IS ASSIGNED.
     REPLACE ALL OCCURRENCES OF lc_replace IN <lv_body> WITH zif_abapgit_definitions=>gc_newline.
+
+  ENDMETHOD.
+
+
+  METHOD parse_change_tag_type_request.
+
+    FIELD-SYMBOLS: <ls_postdata> TYPE cnht_post_data_line.
+
+    READ TABLE it_postdata ASSIGNING <ls_postdata>
+                           INDEX 1.
+    IF sy-subrc = 0.
+      FIND FIRST OCCURRENCE OF REGEX `type=(.*)`
+           IN <ls_postdata>
+           SUBMATCHES mv_selected_type.
+    ENDIF.
+
+    mv_selected_type = condense( mv_selected_type ).
 
   ENDMETHOD.
 
