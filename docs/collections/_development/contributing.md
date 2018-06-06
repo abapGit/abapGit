@@ -1,6 +1,5 @@
 ---
 title: Contributing to abapGit
-category: other
 order: 90
 ---
 

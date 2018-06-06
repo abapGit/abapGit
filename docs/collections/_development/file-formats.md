@@ -1,6 +1,5 @@
 ---
 title: Object File Formats
-category: other
 order: 40
 ---
 

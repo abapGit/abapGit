@@ -1,6 +1,5 @@
 ---
 title: Technical Links
-category: other
 order: 50
 ---
 
