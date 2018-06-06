@@ -386,8 +386,8 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_conflict> TYPE zif_abapgit_definitions=>ty_merge_conflict,
                    <ls_result>   LIKE LINE OF ms_merge-result.
 
-    IF  is_conflict-result_sha1 IS NOT INITIAL
-    AND is_conflict-result_data IS NOT INITIAL.
+    IF is_conflict-result_sha1 IS NOT INITIAL
+        AND is_conflict-result_data IS NOT INITIAL.
       READ TABLE mt_conflicts ASSIGNING <ls_conflict> WITH KEY path = is_conflict-path
                                                                filename = is_conflict-filename.
       IF sy-subrc EQ 0.
@@ -397,8 +397,8 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
           <ls_result>-sha1 = is_conflict-result_sha1.
 
           ms_merge-stage->add( iv_path     = <ls_conflict>-path
-                             iv_filename = <ls_conflict>-filename
-                             iv_data     = is_conflict-result_data ).
+                               iv_filename = <ls_conflict>-filename
+                               iv_data     = is_conflict-result_data ).
 
           DELETE mt_conflicts WHERE path     EQ is_conflict-path
                                 AND filename EQ is_conflict-filename.

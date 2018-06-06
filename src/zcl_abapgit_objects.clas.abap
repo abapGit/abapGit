@@ -179,7 +179,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -224,7 +224,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     DATA: lt_files TYPE zif_abapgit_definitions=>ty_files_tt.
 
 
-    lt_files[] = it_files[].
+    lt_files = it_files.
     SORT lt_files BY path ASCENDING filename ASCENDING.
     DELETE ADJACENT DUPLICATES FROM lt_files COMPARING path filename.
     IF lines( lt_files ) <> lines( it_files ).
@@ -349,7 +349,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
-    lt_tadir[] = it_tadir[].
+    lt_tadir = it_tadir.
 
     zcl_abapgit_dependencies=>resolve( CHANGING ct_tadir = lt_tadir ).
 

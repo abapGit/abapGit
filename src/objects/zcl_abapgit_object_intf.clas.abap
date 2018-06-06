@@ -34,7 +34,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     super->constructor(
       is_item     = is_item
       iv_language = iv_language ).
-    mo_object_oriented_object_fct = zcl_abapgit_oo_factory=>make( iv_object_type = ms_item-obj_type ).
+    mo_object_oriented_object_fct = zcl_abapgit_oo_factory=>make( ms_item-obj_type ).
   ENDMETHOD.
 
 
@@ -67,7 +67,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
       is_key          = ls_clskey
       it_descriptions = lt_descriptions ).
 
-    mo_object_oriented_object_fct->add_to_activation_list( is_item = ms_item ).
+    mo_object_oriented_object_fct->add_to_activation_list( ms_item ).
   ENDMETHOD.
 
 
@@ -79,7 +79,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'LINES'
                   CHANGING cg_data = lt_lines ).
 
-    IF lt_lines[] IS INITIAL.
+    IF lines( lt_lines ) = 0.
       RETURN.
     ENDIF.
 
@@ -194,7 +194,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
     ls_class_key-clsname = ms_item-obj_name.
 
-    rv_bool = mo_object_oriented_object_fct->exists( iv_object_name = ls_class_key ).
+    rv_bool = mo_object_oriented_object_fct->exists( ls_class_key ).
 
     IF rv_bool = abap_true.
       SELECT SINGLE category FROM seoclassdf INTO lv_category

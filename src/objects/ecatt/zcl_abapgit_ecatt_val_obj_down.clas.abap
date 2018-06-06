@@ -46,7 +46,10 @@ CLASS zcl_abapgit_ecatt_val_obj_down DEFINITION
 
 ENDCLASS.
 
-CLASS zcl_abapgit_ecatt_val_obj_down IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_DOWN IMPLEMENTATION.
+
 
   METHOD download.
 
@@ -90,7 +93,7 @@ CLASS zcl_abapgit_ecatt_val_obj_down IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    set_variants_to_dom( im_params = ecatt_vo->params ).
+    set_variants_to_dom( ecatt_vo->params ).
 
     download_data( ).
 

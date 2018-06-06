@@ -388,10 +388,10 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
       ro_html->add( |<td class="icon">{ get_item_icon( is_item ) }</td>| ).
 
       IF is_item-is_dir = abap_true. " Subdir
-        lv_link = build_dir_jump_link( iv_path = is_item-path ).
+        lv_link = build_dir_jump_link( is_item-path ).
         ro_html->add( |<td class="dir" colspan="2">{ lv_link }</td>| ).
       ELSE.
-        lv_link = build_obj_jump_link( is_item = is_item ).
+        lv_link = build_obj_jump_link( is_item ).
         ro_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
         ro_html->add( |<td class="object">{ lv_link }</td>| ).
       ENDIF.

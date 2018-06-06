@@ -77,7 +77,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_git IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
 
   METHOD commit.
@@ -331,8 +331,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    zcl_abapgit_tag_popups=>tag_list_popup( io_repo = lo_repo ).
+    zcl_abapgit_tag_popups=>tag_list_popup( lo_repo ).
 
   ENDMETHOD.
-
 ENDCLASS.

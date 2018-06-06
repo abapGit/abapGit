@@ -355,12 +355,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ro_html->add( '<thead class="nav_line">' ).
     ro_html->add( '<tr>' ).
 
+    ro_html->add( '<th class="num"></th>' ).
     IF mv_unified = abap_true.
-      ro_html->add( '<th class="num"></th>' ).
       ro_html->add( '<th class="num"></th>' ).
       ro_html->add( |<th>@@ { is_diff_line-new_num } @@ { lv_beacon }</th>| ).
     ELSE.
-      ro_html->add( '<th class="num"></th>' ).
       ro_html->add( |<th colspan="3">@@ { is_diff_line-new_num } @@ { lv_beacon }</th>| ).
     ENDIF.
 
@@ -412,13 +411,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       ro_html->add( render_table_head( ) ).
       ro_html->add( render_lines( is_diff ) ).
       ro_html->add( '</table>' ).                           "#EC NOTEXT
-      ro_html->add( '</div>' ).                             "#EC NOTEXT
     ELSE.
       ro_html->add( '<div class="diff_content paddings center grey">' ). "#EC NOTEXT
       ro_html->add( 'The content seems to be binary.' ).    "#EC NOTEXT
       ro_html->add( 'Cannot display as diff.' ).            "#EC NOTEXT
-      ro_html->add( '</div>' ).                             "#EC NOTEXT
     ENDIF.
+    ro_html->add( '</div>' ).                               "#EC NOTEXT
 
     ro_html->add( '</div>' ).                               "#EC NOTEXT
 
@@ -613,24 +611,22 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
+    ro_html->add( '<thead class="header">' ).               "#EC NOTEXT
+    ro_html->add( '<tr>' ).                                 "#EC NOTEXT
+
     IF mv_unified = abap_true.
-      ro_html->add( '<thead class="header">' ).             "#EC NOTEXT
-      ro_html->add( '<tr>' ).                               "#EC NOTEXT
       ro_html->add( '<th class="num">old</th>' ).           "#EC NOTEXT
       ro_html->add( '<th class="num">new</th>' ).           "#EC NOTEXT
       ro_html->add( '<th>code</th>' ).                      "#EC NOTEXT
-      ro_html->add( '</tr>' ).                              "#EC NOTEXT
-      ro_html->add( '</thead>' ).                           "#EC NOTEXT
     ELSE.
-      ro_html->add( '<thead class="header">' ).             "#EC NOTEXT
-      ro_html->add( '<tr>' ).                               "#EC NOTEXT
       ro_html->add( '<th class="num"></th>' ).              "#EC NOTEXT
       ro_html->add( '<th>LOCAL</th>' ).                     "#EC NOTEXT
       ro_html->add( '<th class="num"></th>' ).              "#EC NOTEXT
       ro_html->add( '<th>REMOTE</th>' ).                    "#EC NOTEXT
-      ro_html->add( '</tr>' ).                              "#EC NOTEXT
-      ro_html->add( '</thead>' ).                           "#EC NOTEXT
     ENDIF.
+
+    ro_html->add( '</tr>' ).                                "#EC NOTEXT
+    ro_html->add( '</thead>' ).                             "#EC NOTEXT
 
   ENDMETHOD.  " render_table_head.
 

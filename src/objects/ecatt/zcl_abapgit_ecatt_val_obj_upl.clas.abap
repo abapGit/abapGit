@@ -47,7 +47,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
 
 
   METHOD get_business_msgs_from_dom.
@@ -90,7 +90,7 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
         lv_exception_occurred = 'X'.
     ENDTRY.
 
-    IF  lv_exception_occurred = 'X'.
+    IF lv_exception_occurred = 'X'.
       raise_upload_exception( previous = exception_to_raise ).
     ENDIF.
 
@@ -108,7 +108,7 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ecatt_vo> TYPE any.
 
-    li_section = template_over_all->find_from_name_ns( name = 'IMPL_DET' ).
+    li_section = template_over_all->find_from_name_ns( 'IMPL_DET' ).
 
     IF NOT li_section IS INITIAL.
       CALL FUNCTION 'SDIXML_DOM_TO_DATA'
@@ -137,7 +137,7 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
         lv_exception_occurred = 'X'.
     ENDTRY.
 
-    IF  lv_exception_occurred = 'X'.
+    IF lv_exception_occurred = 'X'.
       raise_upload_exception( previous = exception_to_raise ).
     ENDIF.
 
@@ -210,7 +210,7 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
         lv_exception_occurred = 'X'.
     ENDTRY.
 
-    IF  lv_exception_occurred = 'X'.
+    IF lv_exception_occurred = 'X'.
       raise_upload_exception( previous = exception_to_raise ).
     ENDIF.
 
@@ -244,7 +244,7 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
           CHANGING
             ch_object       = ch_object ).
 
-        upload_data_from_stream( im_xml_file = ch_object-filename ).
+        upload_data_from_stream( ch_object-filename ).
       CATCH cx_ecatt_apl INTO ex.
         IF template_over_all IS INITIAL.
           RAISE EXCEPTION ex.
