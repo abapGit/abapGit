@@ -8,6 +8,15 @@ Legend
 + : added
 - : removed
 
+2018-06-06 v1.68.3
+------------------
+* fix dump when objects are moved
+* abapGit news feature now works in more cases
+* FUGR force update of where-used
+* tag page redesigned
+* TABL, clear field RESERVEDTE
+* http agent changed
+
 2018-06-04 v1.68.2
 ------------------
 * CLAS ignore deltion of non-existent objects
