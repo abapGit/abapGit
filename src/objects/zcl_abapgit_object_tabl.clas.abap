@@ -390,6 +390,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
         <ls_dd03p>-dtelmaster,
         <ls_dd03p>-logflag,
         <ls_dd03p>-ddtext,
+        <ls_dd03p>-reservedte,
         <ls_dd03p>-reptext,
         <ls_dd03p>-scrtext_s,
         <ls_dd03p>-scrtext_m,
