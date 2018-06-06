@@ -66,12 +66,25 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       IMPORTING iv_function_name TYPE rs38l_fnam
       RETURNING VALUE(rv_return) TYPE abap_bool
       RAISING   zcx_abapgit_exception.
+    METHODS is_a_deleted_maintance_view
+      IMPORTING
+        is_progdir       TYPE zcl_abapgit_objects_program=>ty_progdir
+      RETURNING
+        VALUE(rv_return) TYPE abap_bool.
+    METHODS view_has_been_once_deleted
+      IMPORTING
+        is_progdir       TYPE zcl_abapgit_objects_program=>ty_progdir
+      RETURNING
+        VALUE(rv_return) TYPE abap_bool.
+    METHODS maintenance_view_exists
+      RETURNING
+        VALUE(rv_return) TYPE abap_bool.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
+CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
 
   METHOD are_exceptions_class_based.
@@ -122,12 +135,12 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
       CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
         EXPORTING
-          complete_area                = lv_area
+          complete_area = lv_area
         IMPORTING
-          namespace                    = lv_namespace
-          group                        = lv_group
+          namespace     = lv_namespace
+          group         = lv_group
         EXCEPTIONS
-          OTHERS                       = 12.
+          OTHERS        = 12.
 
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'error from FUNCTION_INCLUDE_SPLIT' ).
@@ -697,10 +710,10 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~exists.
-
-    DATA: lv_pool  TYPE tlibg-area.
-
-
+    DATA: lt_functions    TYPE ty_function_tt,
+          ls_progdir      TYPE ty_progdir,
+          lv_program_name TYPE programm,
+          lv_pool         TYPE tlibg-area.
     lv_pool = ms_item-obj_name.
     CALL FUNCTION 'RS_FUNCTION_POOL_EXISTS'
       EXPORTING
@@ -709,6 +722,17 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
         pool_not_exists = 1.
     rv_bool = boolc( sy-subrc <> 1 ).
 
+    lv_program_name = main_name( ).
+    TRY.
+        ls_progdir = read_progdir( lv_program_name ).
+      CATCH zcx_read_progdir_exception.
+        rv_bool = abap_false.
+        RETURN.
+    ENDTRY.
+
+    IF is_a_deleted_maintance_view( ls_progdir ) = abap_true.
+      rv_bool = abap_false.
+    ENDIF.
   ENDMETHOD.                    "zif_abapgit_object~exists
 
 
@@ -801,4 +825,30 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.                    "serialize
+
+  METHOD is_a_deleted_maintance_view.
+    IF view_has_been_once_deleted( is_progdir ) = abap_true AND
+       maintenance_view_exists( ) = abap_false.
+      rv_return = abap_true.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD view_has_been_once_deleted.
+    "This IF is explained at https://github.com/larshp/abapGit/issues/1100#issuecomment-388483442
+    IF is_progdir-sqlx = 'X' AND is_progdir-subc = 'I'.
+      rv_return = abap_true.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD maintenance_view_exists.
+    DATA: lt_view_directory TYPE TABLE OF tvdir.
+    SELECT area FROM tvdir INTO CORRESPONDING FIELDS OF TABLE lt_view_directory
+      WHERE area = ms_item-obj_name.
+    IF sy-subrc = 0.
+      rv_return = abap_true.
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.
