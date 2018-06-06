@@ -451,6 +451,10 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
          iv_head_branch = ''
          iv_sha1        = '' ).
 
+    " If the SHA1 is empty, it's not possible to create tags or branches.
+    " Therefore we update the local SHA1 with the new remote SHA1
+    set( iv_sha1 = get_sha1_remote( ) ).
+
   ENDMETHOD.  "set_new_remote
 
 
