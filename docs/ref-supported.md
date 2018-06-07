@@ -102,4 +102,6 @@ WEBI | Virtual End Point | Yes
 XINX | Extension Index | Yes
 XSLT | Transformation | Yes
 
+Support for customizing planned, see [#1004](https://github.com/larshp/abapGit/issues/1004)
+
 Also see [https://github.com/larshp/abapGit-Plugins](https://github.com/larshp/abapGit-Plugins)
