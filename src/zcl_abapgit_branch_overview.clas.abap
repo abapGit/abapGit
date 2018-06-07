@@ -313,6 +313,11 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
     INSERT LINES OF lt_tags INTO TABLE lt_branches_and_tags.
 
     LOOP AT lt_tags ASSIGNING <ls_branch>.
+
+      IF <ls_branch>-name CP '*^{}'.
+        CONTINUE.
+      ENDIF.
+
       MOVE-CORRESPONDING <ls_branch> TO ls_tag.
       INSERT ls_tag INTO TABLE mt_tags.
     ENDLOOP.
@@ -412,5 +417,4 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
         io_repo = io_repo.
 
   ENDMETHOD.
-
 ENDCLASS.

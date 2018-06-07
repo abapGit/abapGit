@@ -64,6 +64,13 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
 
     DATA mt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt .
     DATA mv_head_symref TYPE string .
+    METHODS find_tag_by_name
+      IMPORTING
+        iv_branch_name   TYPE string
+      RETURNING
+        VALUE(rs_branch) TYPE zif_abapgit_definitions=>ty_git_branch
+      RAISING
+        zcx_abapgit_exception.
 
     CLASS-METHODS parse_branch_list
       IMPORTING
@@ -108,10 +115,16 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Branch name empty' ).
     ENDIF.
 
-    READ TABLE mt_branches INTO rs_branch
-      WITH KEY name = iv_branch_name.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Branch not found' ).
+    IF iv_branch_name CP |refs/tags/*|.
+      rs_branch = find_tag_by_name( iv_branch_name ).
+    ELSE.
+
+      READ TABLE mt_branches INTO rs_branch
+        WITH KEY name = iv_branch_name.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Branch not found' ).
+      ENDIF.
+
     ENDIF.
 
   ENDMETHOD.  "find_by_name
@@ -211,10 +224,6 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
       rv_ignore = abap_true.
     ENDIF.
 
-    IF iv_branch_name CP 'refs/tags/*^{}'. " 2nd ref of annotated tag
-      rv_ignore = abap_true.
-    ENDIF.
-
   ENDMETHOD.  "is_ignored
 
 
@@ -294,4 +303,25 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.  "parse_head_params
+
+  METHOD find_tag_by_name.
+
+    DATA: lv_branch_name TYPE string.
+
+    lv_branch_name = iv_branch_name && '^{}'.
+
+    READ TABLE mt_branches INTO rs_branch
+        WITH KEY name = lv_branch_name.
+    IF sy-subrc <> 0.
+
+      READ TABLE mt_branches INTO rs_branch
+      WITH KEY name = iv_branch_name.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Branch not found' ).
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.
