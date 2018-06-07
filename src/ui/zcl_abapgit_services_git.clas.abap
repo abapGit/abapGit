@@ -318,7 +318,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
     lo_repo->set_branch_name( ls_tag-name ).
 
-    COMMIT WORK.
+    COMMIT WORK AND WAIT.
 
     zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
 
