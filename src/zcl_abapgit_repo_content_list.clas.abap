@@ -183,18 +183,7 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
 
   METHOD filter_changes.
 
-    DATA lt_repo_temp LIKE ct_repo_items.
-
-    FIELD-SYMBOLS <ls_item> LIKE LINE OF ct_repo_items.
-
-    LOOP AT ct_repo_items ASSIGNING <ls_item>.
-      CHECK <ls_item>-changes > 0.
-      APPEND <ls_item> TO lt_repo_temp.
-    ENDLOOP.
-
-    IF lines( lt_repo_temp ) > 0. " Prevent showing empty package if no changes, show all
-      ct_repo_items = lt_repo_temp.
-    ENDIF.
+    DELETE ct_repo_items WHERE changes = 0.
 
   ENDMETHOD. "filter_changes
 
