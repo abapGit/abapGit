@@ -8,6 +8,13 @@ Legend
 + : added
 - : removed
 
+2018-06-09 v1.69.0
+------------------
+! FORM serialization, filenames changed
+* fix gui show changes only
+* fix checkout annotated tags
+* set new remote: supply remote SHA1
+
 2018-06-06 v1.68.3
 ------------------
 * fix dump when objects are moved
