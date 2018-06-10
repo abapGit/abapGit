@@ -1,55 +1,28 @@
 CLASS zcl_abapgit_tadir DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC
+
+  GLOBAL FRIENDS zcl_abapgit_factory .
 
   PUBLIC SECTION.
 
-    CLASS-METHODS read
-      IMPORTING
-        !iv_package            TYPE tadir-devclass
-        !iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
-        !iv_only_local_objects TYPE abap_bool DEFAULT abap_false
-        !io_dot                TYPE REF TO zcl_abapgit_dot_abapgit OPTIONAL
-        !io_log                TYPE REF TO zcl_abapgit_log OPTIONAL
-      RETURNING
-        VALUE(rt_tadir)        TYPE zif_abapgit_definitions=>ty_tadir_tt
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS read_single
-      IMPORTING
-        !iv_pgmid       TYPE tadir-pgmid DEFAULT 'R3TR'
-        !iv_object      TYPE tadir-object
-        !iv_obj_name    TYPE tadir-obj_name
-      RETURNING
-        VALUE(rs_tadir) TYPE tadir
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS get_object_package
-      IMPORTING
-        !iv_pgmid          TYPE tadir-pgmid DEFAULT 'R3TR'
-        !iv_object         TYPE tadir-object
-        !iv_obj_name       TYPE tadir-obj_name
-      RETURNING
-        VALUE(rv_devclass) TYPE tadir-devclass
-      RAISING
-        zcx_abapgit_exception .
-
+    INTERFACES zif_abapgit_tadir .
   PRIVATE SECTION.
 
-    CLASS-METHODS exists
+    METHODS exists
       IMPORTING
-        is_item          TYPE zif_abapgit_definitions=>ty_item
+        !is_item         TYPE zif_abapgit_definitions=>ty_item
       RETURNING
-        VALUE(rv_exists) TYPE abap_bool.
-    CLASS-METHODS check_exists
+        VALUE(rv_exists) TYPE abap_bool .
+    METHODS check_exists
       IMPORTING
         !it_tadir       TYPE zif_abapgit_definitions=>ty_tadir_tt
       RETURNING
         VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS build
+    METHODS build
       IMPORTING
         !iv_package            TYPE tadir-devclass
         !iv_top                TYPE tadir-devclass
@@ -65,7 +38,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_tadir IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
 
 
   METHOD build.
@@ -211,14 +184,15 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_object_package.
+  METHOD zif_abapgit_tadir~get_object_package.
 
     DATA: ls_tadir TYPE tadir,
           ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
-    ls_tadir = read_single( iv_pgmid    = iv_pgmid
-                            iv_object   = iv_object
-                            iv_obj_name = iv_obj_name ).
+    ls_tadir = zif_abapgit_tadir~read_single(
+      iv_pgmid    = iv_pgmid
+      iv_object   = iv_object
+      iv_obj_name = iv_obj_name ).
 
     IF ls_tadir-delflag = 'X'.
       RETURN. "Mark for deletion -> return nothing
@@ -233,10 +207,10 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
     rv_devclass = ls_tadir-devclass.
 
-  ENDMETHOD.  "get_object_package.
+  ENDMETHOD.
 
 
-  METHOD read.
+  METHOD zif_abapgit_tadir~read.
 
 * start recursion
 * hmm, some problems here, should TADIR also build path?
@@ -255,10 +229,10 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
     rt_tadir = check_exists( rt_tadir ).
 
-  ENDMETHOD.                    "read
+  ENDMETHOD.
 
 
-  METHOD read_single.
+  METHOD zif_abapgit_tadir~read_single.
 
     IF iv_object = 'SICF'.
       rs_tadir = zcl_abapgit_object_sicf=>read_tadir_sicf(
@@ -271,5 +245,5 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
         AND obj_name = iv_obj_name.                       "#EC CI_SUBRC
     ENDIF.
 
-  ENDMETHOD.                    "read_single
+  ENDMETHOD.
 ENDCLASS.

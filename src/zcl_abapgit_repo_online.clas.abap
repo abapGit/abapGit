@@ -107,7 +107,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_online IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
 
   METHOD actualize_head_branch.
@@ -215,8 +215,8 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     lt_remote = get_files_remote( ).
     lt_status = status( ).
 
-    lv_package = me->get_package( ).
-    lt_tadir = zcl_abapgit_tadir=>read( lv_package ).
+    lv_package = get_package( ).
+    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( lv_package ).
     SORT lt_tadir BY pgmid ASCENDING object ASCENDING obj_name ASCENDING devclass ASCENDING.
 
     LOOP AT lt_status ASSIGNING <ls_status>

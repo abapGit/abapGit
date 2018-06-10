@@ -108,7 +108,7 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
                    <ls_tadir>     LIKE LINE OF lt_tadir.
 
 
-    lt_tadir = zcl_abapgit_tadir=>read(
+    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
       iv_package = mo_repo->get_package( )
       io_dot     = mo_repo->get_dot_abapgit( ) ).
 

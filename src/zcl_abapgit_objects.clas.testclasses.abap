@@ -64,7 +64,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
     lo_repo->status( ).
     lo_repo->deserialize( ls_checks ).
 
-    lt_tadir = zcl_abapgit_tadir=>read( c_package ).
+    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( c_package ).
     LOOP AT lt_types ASSIGNING <lv_type>.
       READ TABLE lt_tadir WITH KEY object = <lv_type> TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
@@ -85,7 +85,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
     ENDLOOP.
 
     zcl_abapgit_objects=>delete( lt_tadir ).
-    lt_tadir = zcl_abapgit_tadir=>read( c_package ).
+    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( c_package ).
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       lv_msg = |Not deleted properly { <ls_tadir>-object } { <ls_tadir>-obj_name }|.
       cl_abap_unit_assert=>fail(
