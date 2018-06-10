@@ -240,7 +240,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
                            iv_object   = ls_item-obj_type
                            iv_obj_name = ls_item-obj_name ).
 
-      IF NOT ls_item-devclass IS INITIAL.
+      IF NOT ls_item-devclass IS INITIAL AND iv_devclass <> ls_item-devclass.
 * make sure the package is under the repo main package
         lt_super = zcl_abapgit_sap_package=>get( iv_devclass )->list_subpackages( ).
         READ TABLE lt_super WITH KEY table_line = ls_item-devclass TRANSPORTING NO FIELDS.
