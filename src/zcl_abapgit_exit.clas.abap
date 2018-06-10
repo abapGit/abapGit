@@ -14,7 +14,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
+CLASS zcl_abapgit_exit IMPLEMENTATION.
 
 
   METHOD get_instance.
@@ -101,4 +101,18 @@ CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_exit~change_tadir.
+
+    TRY.
+        gi_exit->change_tadir(
+          EXPORTING
+            iv_package = iv_package
+          CHANGING
+            ct_tadir   = ct_tadir ).
+      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method.
+    ENDTRY.
+
+  ENDMETHOD.
+
 ENDCLASS.
