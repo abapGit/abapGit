@@ -65,7 +65,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
+CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
 
   METHOD build.
@@ -246,6 +246,12 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
                       iv_ignore_subpackages = iv_ignore_subpackages
                       iv_only_local_objects = iv_only_local_objects
                       io_log                = io_log ).
+
+    zcl_abapgit_exit=>get_instance( )->change_tadir(
+      EXPORTING
+        iv_package = iv_package
+      CHANGING
+        ct_tadir   = rt_tadir ).
 
     rt_tadir = check_exists( rt_tadir ).
 

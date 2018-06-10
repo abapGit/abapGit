@@ -19,6 +19,11 @@ INTERFACE zif_abapgit_exit PUBLIC.
       CHANGING  c_proxy_authentication TYPE abap_bool,
     http_client
       IMPORTING
-        ii_client TYPE REF TO if_http_client.
+        ii_client TYPE REF TO if_http_client,
+    change_tadir
+      IMPORTING
+        iv_package TYPE devclass
+      CHANGING
+        ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
 ENDINTERFACE.
