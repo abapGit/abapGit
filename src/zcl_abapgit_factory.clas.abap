@@ -1,30 +1,33 @@
 CLASS zcl_abapgit_factory DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_injector.
 
   PUBLIC SECTION.
 
-    CLASS-DATA gi_tadir TYPE REF TO zif_abapgit_tadir .
+    CLASS-METHODS:
+      get_tadir
+        RETURNING
+          VALUE(ri_tadir) TYPE REF TO zif_abapgit_tadir.
 
-    CLASS-METHODS get_tadir
-      RETURNING
-        VALUE(ri_tadir) TYPE REF TO zif_abapgit_tadir .
-  PROTECTED SECTION.
   PRIVATE SECTION.
+    CLASS-DATA:
+      mi_tadir TYPE REF TO zif_abapgit_tadir.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
-
+CLASS zcl_abapgit_factory IMPLEMENTATION.
 
   METHOD get_tadir.
 
-    IF gi_tadir IS INITIAL.
-      CREATE OBJECT gi_tadir TYPE zcl_abapgit_tadir.
+    IF mi_tadir IS INITIAL.
+      CREATE OBJECT mi_tadir TYPE zcl_abapgit_tadir.
     ENDIF.
 
-    ri_tadir = gi_tadir.
+    ri_tadir = mi_tadir.
 
   ENDMETHOD.
+
 ENDCLASS.
