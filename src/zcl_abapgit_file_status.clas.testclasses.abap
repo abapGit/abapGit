@@ -38,8 +38,7 @@ DEFINE _append_result.
 END-OF-DEFINITION.
 
 CLASS ltcl_file_status DEFINITION FOR TESTING RISK LEVEL HARMLESS
-  DURATION SHORT FINAL
-  INHERITING FROM cl_aunit_assert.
+  DURATION SHORT FINAL.
 
   PUBLIC SECTION.
     METHODS calculate_status FOR TESTING
@@ -137,7 +136,9 @@ CLASS ltcl_file_status IMPLEMENTATION.
       it_remote          = lt_remote
       it_cur_state       = lt_state ).
 
-    assert_equals( act = lt_results exp = lt_results_exp ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_results
+      exp = lt_results_exp ).
 
   ENDMETHOD.  "calculate_status
 
@@ -147,8 +148,7 @@ CLASS ltcl_file_status2 DEFINITION DEFERRED.
 CLASS zcl_abapgit_file_status DEFINITION LOCAL FRIENDS ltcl_file_status2.
 
 CLASS ltcl_file_status2 DEFINITION FOR TESTING RISK LEVEL HARMLESS
-  DURATION SHORT FINAL
-  INHERITING FROM cl_aunit_assert.
+  DURATION SHORT FINAL.
 
   PUBLIC SECTION.
     METHODS check FOR TESTING RAISING zcx_abapgit_exception.
@@ -179,7 +179,9 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
                                  io_dot     = zcl_abapgit_dot_abapgit=>build_default( )
                                  iv_top     = '$Z$' ).
 
-    assert_equals( act = lo_log->count( ) exp = 0 ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_log->count( )
+      exp = 0 ).
 
 *** 1 Negative, different path for same object
 
@@ -198,8 +200,13 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
                                  iv_top     = '$Z$' ).
 
     " This one is not pure - incorrect path also triggers path vs package check
-    assert_equals( act = lo_log->count( ) exp = 2 ).
-    assert_equals( act = lo_log->has_rc( '1' ) exp = abap_true ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_log->count( )
+      exp = 2 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_log->has_rc( '1' )
+      exp = abap_true ).
 
 *** 2 Negative, incorrect path vs package
 
@@ -217,8 +224,13 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
                                  io_dot     = zcl_abapgit_dot_abapgit=>build_default( )
                                  iv_top     = '$Z$' ).
 
-    assert_equals( act = lo_log->count( ) exp = 1 ).
-    assert_equals( act = lo_log->has_rc( '2' ) exp = abap_true ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_log->count( )
+      exp = 1 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_log->has_rc( '2' )
+      exp = abap_true ).
 
 *** 3 Negative, similar filenames
 
@@ -236,8 +248,13 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
                                  io_dot     = zcl_abapgit_dot_abapgit=>build_default( )
                                  iv_top     = '$Z$' ).
 
-    assert_equals( act = lo_log->count( ) exp = 1 ).
-    assert_equals( act = lo_log->has_rc( '3' ) exp = abap_true ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_log->count( )
+      exp = 1 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_log->has_rc( '3' )
+      exp = abap_true ).
 
 *** 4 Negative, empty filenames
 
@@ -254,11 +271,13 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
                                  io_dot     = zcl_abapgit_dot_abapgit=>build_default( )
                                  iv_top     = '$Z$' ).
 
-    assert_equals( act = lo_log->count( )
-                   exp = 1 ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_log->count( )
+      exp = 1 ).
 
-    assert_equals( act = lo_log->has_rc( '4' )
-                   exp = abap_true ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_log->has_rc( '4' )
+      exp = abap_true ).
 
   ENDMETHOD.  " check.
 

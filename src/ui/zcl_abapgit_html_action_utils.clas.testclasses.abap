@@ -1,6 +1,5 @@
 CLASS ltcl_html_action_utils DEFINITION FOR TESTING RISK LEVEL HARMLESS
-  DURATION SHORT FINAL
-  INHERITING FROM cl_aunit_assert.
+  DURATION SHORT FINAL.
 
   PUBLIC SECTION.
 
@@ -76,7 +75,9 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
     zcl_abapgit_html_action_utils=>add_field( EXPORTING name = 'VALUE' iv = ls_field
                                       CHANGING  ct = lt_fields ).
 
-    assert_equals( act = lt_fields exp = lt_answer ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lt_fields
+      exp = lt_answer ).
 
   ENDMETHOD.  "add_field
 
@@ -97,7 +98,10 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
     ls_answer-name  = 'TEST'.
     ls_answer-value = 'TEST'.
-    assert_equals( act = ls_field exp = ls_answer ). " Both field are filled!
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ls_field
+      exp = ls_answer ). " Both field are filled!
 
   ENDMETHOD.  "get_field
 
