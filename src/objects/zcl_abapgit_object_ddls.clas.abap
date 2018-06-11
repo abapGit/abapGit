@@ -248,8 +248,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lo_ddl  TYPE REF TO object,
-          lr_data TYPE REF TO data,
+    DATA: lo_ddl       TYPE REF TO object,
+          lr_data      TYPE REF TO data,
           lt_clr_comps TYPE STANDARD TABLE OF fieldname WITH DEFAULT KEY.
 
     FIELD-SYMBOLS: <lg_data>  TYPE any,
@@ -283,8 +283,9 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
 
     LOOP AT lt_clr_comps ASSIGNING <lv_comp>.
       ASSIGN COMPONENT <lv_comp> OF STRUCTURE <lg_data> TO <lg_field>.
-      ASSERT sy-subrc = 0.
-      CLEAR <lg_field>.
+      IF sy-subrc = 0.
+        CLEAR <lg_field>.
+      ENDIF.
     ENDLOOP.
 
     ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <lg_data> TO <lg_field>.
