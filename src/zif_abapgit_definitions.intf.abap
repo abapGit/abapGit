@@ -119,6 +119,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   TYPES: BEGIN OF ty_transport,
            required  TYPE abap_bool,
            transport TYPE trkorr,
+           type      TYPE ty_transport_type,
          END OF ty_transport.
 
 
