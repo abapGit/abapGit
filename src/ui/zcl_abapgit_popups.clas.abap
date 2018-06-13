@@ -139,6 +139,8 @@ CLASS zcl_abapgit_popups DEFINITION
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS popup_transport_request
+      IMPORTING
+        !is_transport_type TYPE zif_abapgit_definitions=>ty_transport_type
       RETURNING
         VALUE(rv_transport) TYPE trkorr
       RAISING
@@ -1015,6 +1017,9 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
           lt_e071k TYPE STANDARD TABLE OF e071k.
 
     CALL FUNCTION 'TRINT_ORDER_CHOICE'
+      EXPORTING
+        wi_order_type          = is_transport_type-request
+        wi_task_type           = is_transport_type-task
       IMPORTING
         we_order               = rv_transport
       TABLES

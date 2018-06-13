@@ -111,9 +111,15 @@ INTERFACE zif_abapgit_definitions PUBLIC.
            decision TYPE ty_yes_no,
          END OF ty_requirements.
 
+  TYPES: BEGIN OF ty_transport_type,
+           request TYPE trfunction,
+           task    TYPE trfunction,
+         END OF ty_transport_type.
+
   TYPES: BEGIN OF ty_transport,
            required  TYPE abap_bool,
            transport TYPE trkorr,
+           type      TYPE ty_transport_type,
          END OF ty_transport.
 
 

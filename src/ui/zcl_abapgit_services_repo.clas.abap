@@ -121,7 +121,8 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
         ENDIF.
 
         IF ls_checks-transport-required = abap_true.
-          ls_checks-transport-transport = zcl_abapgit_popups=>popup_transport_request( ).
+          ls_checks-transport-transport = zcl_abapgit_popups=>popup_transport_request(
+            is_transport_type = ls_checks-transport-type ).
         ENDIF.
 
       CATCH zcx_abapgit_cancel.
