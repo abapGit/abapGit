@@ -1,6 +1,6 @@
 ---
-title: Contributing to abapGit
-order: 90
+title: Contributing
+order: 5
 ---
 
 *******************************
@@ -15,6 +15,6 @@ order: 90
 
 5: After the pull request is merged, abapmerge will automatically run to build the report version of abapGit.
 
-Every time a commit is pushed to the master branch, https://travis-ci.org/ will be triggered to perform the build. It will use [abapmerge](https://github.com/larshp/abapmerge) to merge all the includes into a single file, the build can be downloaded from https://raw.githubusercontent.com/abapGit/build/master/zabapgit.abap
+Every time a commit is pushed to the master branch, [Travis CI](https://travis-ci.org/) will be triggered to perform the build. It will use [abapmerge](https://github.com/larshp/abapmerge) to merge all the includes into a single file, the build can be downloaded from [https://raw.githubusercontent.com/abapGit/build/master/zabapgit.abap](https://raw.githubusercontent.com/abapGit/build/master/zabapgit.abap)
 
 Alternatively, use the GitHub webinterface to change the files and submit a pull request.

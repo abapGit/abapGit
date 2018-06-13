@@ -1,11 +1,10 @@
 ---
 title: docs
-order: 10
+order: 200
 ---
 
-abapGit uses github pages for documentation, https://help.github.com/articles/what-is-github-pages/
-
-All pages are generated statically using https://jekyllrb.com/
+abapGit uses [github pages](https://help.github.com/articles/what-is-github-pages/) for documentation,
+all pages are generated statically using [Jekyll](https://jekyllrb.com/)
 
 Building /docs/ locally:
 
