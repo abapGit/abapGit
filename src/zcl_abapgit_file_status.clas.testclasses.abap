@@ -145,10 +145,10 @@ CLASS ltcl_file_status IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS ltcl_file_status2 DEFINITION DEFERRED.
-CLASS zcl_abapgit_file_status DEFINITION LOCAL FRIENDS ltcl_file_status2.
+CLASS ltcl_run_checks DEFINITION DEFERRED.
+CLASS zcl_abapgit_file_status DEFINITION LOCAL FRIENDS ltcl_run_checks.
 
-CLASS ltcl_file_status2 DEFINITION FOR TESTING RISK LEVEL HARMLESS
+CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
   DURATION SHORT FINAL.
 
   PRIVATE SECTION.
@@ -166,7 +166,7 @@ CLASS ltcl_file_status2 DEFINITION FOR TESTING RISK LEVEL HARMLESS
 
 ENDCLASS.
 
-CLASS ltcl_file_status2 IMPLEMENTATION.
+CLASS ltcl_run_checks IMPLEMENTATION.
 
   METHOD setup.
 
@@ -310,6 +310,124 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_log->has_rc( '4' )
       exp = abap_true ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltcl_status_helper DEFINITION DEFERRED.
+CLASS zcl_abapgit_file_status DEFINITION LOCAL FRIENDS ltcl_status_helper.
+
+CLASS ltcl_status_helper DEFINITION.
+
+  PUBLIC SECTION.
+    METHODS:
+      add_remote
+        IMPORTING
+          iv_path     TYPE string DEFAULT '/'
+          iv_filename TYPE string
+          iv_sha1     TYPE zif_abapgit_definitions=>ty_sha1,
+      add_local,
+      add_state,
+      run
+        RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
+        RAISING   zcx_abapgit_exception.
+
+  PRIVATE SECTION.
+
+    DATA: mt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt,
+          mt_remote TYPE zif_abapgit_definitions=>ty_files_tt,
+          mt_state  TYPE zif_abapgit_definitions=>ty_file_signatures_tt.
+
+ENDCLASS.
+
+CLASS ltcl_status_helper IMPLEMENTATION.
+
+  METHOD add_remote.
+
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
+
+    APPEND INITIAL LINE TO mt_remote ASSIGNING <ls_remote>.
+    <ls_remote>-path     = iv_path.
+    <ls_remote>-filename = iv_filename.
+    <ls_remote>-sha1     = iv_sha1.
+
+  ENDMETHOD.
+
+  METHOD add_local.
+
+    FIELD-SYMBOLS: <ls_local> LIKE LINE OF mt_local.
+
+* todo
+  ENDMETHOD.
+
+  METHOD add_state.
+
+    FIELD-SYMBOLS:  <ls_state> LIKE LINE OF mt_state.
+* todo
+  ENDMETHOD.
+
+  METHOD run.
+
+    DATA: lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
+
+    lo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
+
+    rt_results = zcl_abapgit_file_status=>calculate_status(
+      iv_devclass  = '$Z$'
+      io_dot       = lo_dot
+      it_local     = mt_local
+      it_remote    = mt_remote
+      it_cur_state = mt_state ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltcl_calculate_status DEFINITION DEFERRED.
+CLASS zcl_abapgit_file_status DEFINITION LOCAL FRIENDS ltcl_calculate_status.
+
+CLASS ltcl_calculate_status DEFINITION FOR TESTING RISK LEVEL HARMLESS
+  DURATION SHORT FINAL.
+
+  PRIVATE SECTION.
+    DATA:
+      mt_results TYPE zif_abapgit_definitions=>ty_results_tt,
+      ms_result  LIKE LINE OF mt_results,
+      mo_helper  TYPE REF TO ltcl_status_helper.
+
+    METHODS:
+      setup,
+      test1 FOR TESTING RAISING zcx_abapgit_exception.
+
+ENDCLASS.
+
+CLASS ltcl_calculate_status IMPLEMENTATION.
+
+  METHOD setup.
+
+    CREATE OBJECT mo_helper.
+
+  ENDMETHOD.
+
+  METHOD test1.
+
+    mo_helper->add_remote(
+      iv_filename = '$$zdoma1.doma.xml'
+      iv_sha1     = 'D1' ).
+
+    mt_results = mo_helper->run( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( mt_results )
+      exp = 1 ).
+
+    READ TABLE mt_results INDEX 1 INTO ms_result.
+    cl_abap_unit_assert=>assert_subrc( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ms_result-rstate
+      exp = zif_abapgit_definitions=>gc_state-added ).
 
   ENDMETHOD.
 
