@@ -108,6 +108,7 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
         gi_exit->change_tadir(
           EXPORTING
             iv_package = iv_package
+            io_log     = io_log
           CHANGING
             ct_tadir   = ct_tadir ).
       CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method.

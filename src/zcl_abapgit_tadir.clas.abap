@@ -224,6 +224,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
     zcl_abapgit_exit=>get_instance( )->change_tadir(
       EXPORTING
         iv_package = iv_package
+        io_log     = io_log
       CHANGING
         ct_tadir   = rt_tadir ).
 

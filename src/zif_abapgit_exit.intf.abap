@@ -32,6 +32,7 @@ INTERFACE zif_abapgit_exit PUBLIC.
     change_tadir
       IMPORTING
         iv_package TYPE devclass
+        io_log     TYPE REF TO zcl_abapgit_log
       CHANGING
         ct_tadir   TYPE ty_tadir_tt.
 
