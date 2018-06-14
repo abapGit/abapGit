@@ -26,7 +26,7 @@ DEFINE _append_remote.
 END-OF-DEFINITION.
 
 DEFINE _append_result.
-  APPEND INITIAL LINE TO lt_results ASSIGNING <ls_result>.
+  APPEND INITIAL LINE TO mt_results ASSIGNING <ls_result>.
   <ls_result>-obj_type = &1.
   <ls_result>-obj_name = &2.
   <ls_result>-match    = &3.
@@ -40,11 +40,12 @@ END-OF-DEFINITION.
 CLASS ltcl_file_status DEFINITION FOR TESTING RISK LEVEL HARMLESS
   DURATION SHORT FINAL.
 
-  PUBLIC SECTION.
-    METHODS calculate_status FOR TESTING
-      RAISING zcx_abapgit_exception.
+  PRIVATE SECTION.
+    DATA: mt_results TYPE zif_abapgit_definitions=>ty_results_tt.
 
-ENDCLASS.   "ltcl_file_status
+    METHODS: calculate_status FOR TESTING RAISING zcx_abapgit_exception.
+
+ENDCLASS.
 
 CLASS ltcl_file_status IMPLEMENTATION.
 
@@ -53,14 +54,14 @@ CLASS ltcl_file_status IMPLEMENTATION.
     DATA: lt_local       TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lt_remote      TYPE zif_abapgit_definitions=>ty_files_tt,
           lt_state       TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
-          lt_results     TYPE zif_abapgit_definitions=>ty_results_tt,
           lt_results_exp TYPE zif_abapgit_definitions=>ty_results_tt,
           lo_dot         TYPE REF TO zcl_abapgit_dot_abapgit.
 
     FIELD-SYMBOLS: <ls_local>  LIKE LINE OF lt_local,
                    <ls_remote> LIKE LINE OF lt_remote,
-                   <ls_result> LIKE LINE OF lt_results,
+                   <ls_result> LIKE LINE OF mt_results,
                    <ls_state>  LIKE LINE OF lt_state.
+
 
     "STATE         FILE                              SHA1
     _append_state '$$zclass1.clas.xml'              'C1_F1'.
@@ -125,11 +126,11 @@ CLASS ltcl_file_status IMPLEMENTATION.
     _append_result 'DOMA' '$$ZDOMA9'  ' '   'D'   ' '  ''     '/'  '$$zdoma9.doma.xml'.
     _append_result 'DOMA' 'NUM01'     ' '   ' '   'M'  'SUTI' '/'  'num01.doma.xml'.
     _append_result 'DOMA' 'XFELD'     'X'   ' '   ' '  'SUTI' '/'  'xfeld.doma.xml'.
-    lt_results_exp = lt_results.
+    lt_results_exp = mt_results.
 
     lo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
 
-    lt_results = zcl_abapgit_file_status=>calculate_status(
+    mt_results = zcl_abapgit_file_status=>calculate_status(
       iv_devclass        = '$Z$'
       io_dot             = lo_dot
       it_local           = lt_local
@@ -137,56 +138,74 @@ CLASS ltcl_file_status IMPLEMENTATION.
       it_cur_state       = lt_state ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lt_results
+      act = mt_results
       exp = lt_results_exp ).
 
-  ENDMETHOD.  "calculate_status
+  ENDMETHOD.
 
-ENDCLASS.   "ltcl_file_status
+ENDCLASS.
 
-CLASS ltcl_file_status2 DEFINITION DEFERRED.
-CLASS zcl_abapgit_file_status DEFINITION LOCAL FRIENDS ltcl_file_status2.
+CLASS ltcl_run_checks DEFINITION DEFERRED.
+CLASS zcl_abapgit_file_status DEFINITION LOCAL FRIENDS ltcl_run_checks.
 
-CLASS ltcl_file_status2 DEFINITION FOR TESTING RISK LEVEL HARMLESS
+CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
   DURATION SHORT FINAL.
 
-  PUBLIC SECTION.
-    METHODS check FOR TESTING RAISING zcx_abapgit_exception.
+  PRIVATE SECTION.
+    DATA: mt_results TYPE zif_abapgit_definitions=>ty_results_tt,
+          mo_dot     TYPE REF TO zcl_abapgit_dot_abapgit,
+          mo_log     TYPE REF TO zcl_abapgit_log.
 
-ENDCLASS.   "ltcl_sap_package
+    METHODS:
+      setup,
+      positive FOR TESTING RAISING zcx_abapgit_exception,
+      neg_diff_path_for_same_obj FOR TESTING RAISING zcx_abapgit_exception,
+      neg_incorrect_path_vs_pack FOR TESTING RAISING zcx_abapgit_exception,
+      neg_similar_filenames FOR TESTING RAISING zcx_abapgit_exception,
+      neg_empty_filenames FOR TESTING RAISING zcx_abapgit_exception.
 
-CLASS ltcl_file_status2 IMPLEMENTATION.
+ENDCLASS.
 
-  METHOD check.
+CLASS ltcl_run_checks IMPLEMENTATION.
 
-    DATA: lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
-          lo_log     TYPE REF TO zcl_abapgit_log.
+  METHOD setup.
 
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results.
+    CREATE OBJECT mo_log.
+
+    mo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
+    mo_dot->set_starting_folder( '/' ).
+
+  ENDMETHOD.
+
+  METHOD positive.
 
 *** 0 Positive
 
-    CLEAR lt_results.
-    CREATE OBJECT lo_log.
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF mt_results.
+
     "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH FILE
     _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'  'zclass1.clas.abap'.
     _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'  'zclass1.clas.xml'.
     _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'  'zdoma1.doma.xml'.
     _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'  'zdoma2.doma.xml'.
 
-    zcl_abapgit_file_status=>run_checks( io_log     = lo_log
-                                 it_results = lt_results
-                                 io_dot     = zcl_abapgit_dot_abapgit=>build_default( )
-                                 iv_top     = '$Z$' ).
+    zcl_abapgit_file_status=>run_checks(
+      io_log     = mo_log
+      it_results = mt_results
+      io_dot     = mo_dot
+      iv_top     = '$Z$' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lo_log->count( )
+      act = mo_log->count( )
       exp = 0 ).
+
+  ENDMETHOD.
+
+  METHOD neg_diff_path_for_same_obj.
 
 *** 1 Negative, different path for same object
 
-    CLEAR lt_results.
-    CREATE OBJECT lo_log.
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF mt_results.
 
     "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH   FILE
     _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    'zclass1.clas.abap'.
@@ -194,24 +213,28 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
     _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    'zdoma1.doma.xml'.
     _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    'zdoma2.doma.xml'.
 
-    zcl_abapgit_file_status=>run_checks( io_log     = lo_log
-                                 it_results = lt_results
-                                 io_dot     = zcl_abapgit_dot_abapgit=>build_default( )
-                                 iv_top     = '$Z$' ).
+    zcl_abapgit_file_status=>run_checks(
+      io_log     = mo_log
+      it_results = mt_results
+      io_dot     = mo_dot
+      iv_top     = '$Z$' ).
 
     " This one is not pure - incorrect path also triggers path vs package check
     cl_abap_unit_assert=>assert_equals(
-      act = lo_log->count( )
+      act = mo_log->count( )
       exp = 2 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lo_log->has_rc( '1' )
+      act = mo_log->has_rc( '1' )
       exp = abap_true ).
+
+  ENDMETHOD.
+
+  METHOD neg_incorrect_path_vs_pack.
 
 *** 2 Negative, incorrect path vs package
 
-    CLEAR lt_results.
-    CREATE OBJECT lo_log.
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF mt_results.
 
     "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH   FILE
     _append_result 'CLAS' '$$ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    '$$zclass1.clas.abap'.
@@ -219,23 +242,27 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
     _append_result 'DOMA' '$$ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/sub' '$$zdoma1.doma.xml'.
     _append_result 'DOMA' '$$ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    '$$zdoma2.doma.xml'.
 
-    zcl_abapgit_file_status=>run_checks( io_log     = lo_log
-                                 it_results = lt_results
-                                 io_dot     = zcl_abapgit_dot_abapgit=>build_default( )
-                                 iv_top     = '$Z$' ).
+    zcl_abapgit_file_status=>run_checks(
+      io_log     = mo_log
+      it_results = mt_results
+      io_dot     = mo_dot
+      iv_top     = '$Z$' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lo_log->count( )
+      act = mo_log->count( )
       exp = 1 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lo_log->has_rc( '2' )
+      act = mo_log->has_rc( '2' )
       exp = abap_true ).
+
+  ENDMETHOD.
+
+  METHOD neg_similar_filenames.
 
 *** 3 Negative, similar filenames
 
-    CLEAR lt_results.
-    CREATE OBJECT lo_log.
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF mt_results.
 
     "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH   FILE
     _append_result 'CLAS' '$$ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    '$$zclass1.clas.abap'.
@@ -243,42 +270,165 @@ CLASS ltcl_file_status2 IMPLEMENTATION.
     _append_result 'DOMA' '$$ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    '$$zdoma1.doma.xml'.
     _append_result 'DOMA' '$$ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    '$$zdoma1.doma.xml'.
 
-    zcl_abapgit_file_status=>run_checks( io_log     = lo_log
-                                 it_results = lt_results
-                                 io_dot     = zcl_abapgit_dot_abapgit=>build_default( )
-                                 iv_top     = '$Z$' ).
+    zcl_abapgit_file_status=>run_checks(
+      io_log     = mo_log
+      it_results = mt_results
+      io_dot     = mo_dot
+      iv_top     = '$Z$' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lo_log->count( )
+      act = mo_log->count( )
       exp = 1 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lo_log->has_rc( '3' )
+      act = mo_log->has_rc( '3' )
       exp = abap_true ).
+
+  ENDMETHOD.
+
+  METHOD neg_empty_filenames.
 
 *** 4 Negative, empty filenames
 
-    CLEAR lt_results.
-    CREATE OBJECT lo_log.
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF mt_results.
 
     "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH   FILE
     _append_result 'CLAS' '$$ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    '$$zclass1.clas.abap'.
     _append_result 'CLAS' '$$ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'    '$$zclass1.clas.xml'.
     _append_result 'DOMA' '$$ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    ''.
 
-    zcl_abapgit_file_status=>run_checks( io_log     = lo_log
-                                 it_results = lt_results
-                                 io_dot     = zcl_abapgit_dot_abapgit=>build_default( )
-                                 iv_top     = '$Z$' ).
+    zcl_abapgit_file_status=>run_checks(
+      io_log     = mo_log
+      it_results = mt_results
+      io_dot     = mo_dot
+      iv_top     = '$Z$' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lo_log->count( )
+      act = mo_log->count( )
       exp = 1 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lo_log->has_rc( '4' )
+      act = mo_log->has_rc( '4' )
       exp = abap_true ).
 
-  ENDMETHOD.  " check.
+  ENDMETHOD.
 
-ENDCLASS. "ltcl_sap_package
+ENDCLASS.
+
+CLASS ltcl_status_helper DEFINITION DEFERRED.
+CLASS zcl_abapgit_file_status DEFINITION LOCAL FRIENDS ltcl_status_helper.
+
+CLASS ltcl_status_helper DEFINITION.
+
+  PUBLIC SECTION.
+    METHODS:
+      add_remote
+        IMPORTING
+          iv_path     TYPE string DEFAULT '/'
+          iv_filename TYPE string
+          iv_sha1     TYPE zif_abapgit_definitions=>ty_sha1,
+      add_local,
+      add_state,
+      run
+        RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
+        RAISING   zcx_abapgit_exception.
+
+  PRIVATE SECTION.
+
+    DATA: mt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt,
+          mt_remote TYPE zif_abapgit_definitions=>ty_files_tt,
+          mt_state  TYPE zif_abapgit_definitions=>ty_file_signatures_tt.
+
+ENDCLASS.
+
+CLASS ltcl_status_helper IMPLEMENTATION.
+
+  METHOD add_remote.
+
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
+
+    APPEND INITIAL LINE TO mt_remote ASSIGNING <ls_remote>.
+    <ls_remote>-path     = iv_path.
+    <ls_remote>-filename = iv_filename.
+    <ls_remote>-sha1     = iv_sha1.
+
+  ENDMETHOD.
+
+  METHOD add_local.
+
+    FIELD-SYMBOLS: <ls_local> LIKE LINE OF mt_local.
+
+* todo
+  ENDMETHOD.
+
+  METHOD add_state.
+
+    FIELD-SYMBOLS:  <ls_state> LIKE LINE OF mt_state.
+* todo
+  ENDMETHOD.
+
+  METHOD run.
+
+    DATA: lo_dot TYPE REF TO zcl_abapgit_dot_abapgit.
+
+    lo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
+
+    rt_results = zcl_abapgit_file_status=>calculate_status(
+      iv_devclass  = '$Z$'
+      io_dot       = lo_dot
+      it_local     = mt_local
+      it_remote    = mt_remote
+      it_cur_state = mt_state ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltcl_calculate_status DEFINITION DEFERRED.
+CLASS zcl_abapgit_file_status DEFINITION LOCAL FRIENDS ltcl_calculate_status.
+
+CLASS ltcl_calculate_status DEFINITION FOR TESTING RISK LEVEL HARMLESS
+  DURATION SHORT FINAL.
+
+  PRIVATE SECTION.
+    DATA:
+      mt_results TYPE zif_abapgit_definitions=>ty_results_tt,
+      ms_result  LIKE LINE OF mt_results,
+      mo_helper  TYPE REF TO ltcl_status_helper.
+
+    METHODS:
+      setup,
+      test1 FOR TESTING RAISING zcx_abapgit_exception.
+
+ENDCLASS.
+
+CLASS ltcl_calculate_status IMPLEMENTATION.
+
+  METHOD setup.
+
+    CREATE OBJECT mo_helper.
+
+  ENDMETHOD.
+
+  METHOD test1.
+
+    mo_helper->add_remote(
+      iv_filename = '$$zdoma1.doma.xml'
+      iv_sha1     = 'D1' ).
+
+    mt_results = mo_helper->run( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( mt_results )
+      exp = 1 ).
+
+    READ TABLE mt_results INDEX 1 INTO ms_result.
+    cl_abap_unit_assert=>assert_subrc( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = ms_result-rstate
+      exp = zif_abapgit_definitions=>gc_state-added ).
+
+  ENDMETHOD.
+
+ENDCLASS.
