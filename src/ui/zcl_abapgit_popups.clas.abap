@@ -723,7 +723,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     TRANSLATE <ls_field>-value TO UPPER CASE.
     rs_tadir-obj_name = <ls_field>-value.
 
-    rs_tadir = zcl_abapgit_tadir=>read_single(
+    rs_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
       iv_object   = rs_tadir-object
       iv_obj_name = rs_tadir-obj_name ).
 

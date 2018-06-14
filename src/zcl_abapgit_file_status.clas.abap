@@ -236,9 +236,9 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
       CHECK lv_is_xml = abap_true. " Skip all but obj definitions
 
-      ls_item-devclass = zcl_abapgit_tadir=>get_object_package(
-                           iv_object   = ls_item-obj_type
-                           iv_obj_name = ls_item-obj_name ).
+      ls_item-devclass = zcl_abapgit_factory=>get_tadir( )->get_object_package(
+        iv_object   = ls_item-obj_type
+        iv_obj_name = ls_item-obj_name ).
 
       IF NOT ls_item-devclass IS INITIAL AND iv_devclass <> ls_item-devclass.
 * make sure the package is under the repo main package

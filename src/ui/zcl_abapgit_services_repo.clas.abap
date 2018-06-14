@@ -289,7 +289,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     lv_package = lo_repo->get_package( ).
-    lt_tadir   = zcl_abapgit_tadir=>read( lv_package ).
+    lt_tadir   = zcl_abapgit_factory=>get_tadir( )->read( lv_package ).
 
     IF lines( lt_tadir ) > 0.
 

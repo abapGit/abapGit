@@ -897,7 +897,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         io_dot  = io_repo->get_dot_abapgit( )
         iv_path = <ls_result>-path ).
 
-      ls_tadir = zcl_abapgit_tadir=>read_single(
+      ls_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
         iv_object   = <ls_result>-obj_type
         iv_obj_name = <ls_result>-obj_name ).
 

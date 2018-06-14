@@ -115,7 +115,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
           lv_obj_name = <ls_object>-obj_name.
         ENDIF.
 
-        ls_tadir = zcl_abapgit_tadir=>read_single(
+        ls_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
           iv_object   = lv_object
           iv_obj_name = lv_obj_name ).
 

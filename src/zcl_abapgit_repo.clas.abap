@@ -125,7 +125,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -262,7 +262,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
                                                         iv_data = <ls_return>-file-data ).
 
     lt_cache = mt_local.
-    lt_tadir = zcl_abapgit_tadir=>read(
+    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
       iv_package            = get_package( )
       iv_ignore_subpackages = get_local_settings( )-ignore_subpackages
       iv_only_local_objects = get_local_settings( )-only_local_objects
@@ -609,5 +609,4 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     set( it_checksums = lt_checksums ).
 
   ENDMETHOD.  " update_local_checksums
-
 ENDCLASS.
