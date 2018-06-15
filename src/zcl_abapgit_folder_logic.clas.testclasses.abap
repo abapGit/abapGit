@@ -165,6 +165,10 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
       iv_path     = '/src/top_foo/' ).
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~get_transport_type.
+    RETURN.
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS ltcl_folder_logic_namespaces DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
@@ -210,6 +214,10 @@ CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
 
   METHOD zif_abapgit_sap_package~exists.
     rv_bool = abap_true.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~get_transport_type.
+    RETURN.
   ENDMETHOD.
 
   METHOD setup.
