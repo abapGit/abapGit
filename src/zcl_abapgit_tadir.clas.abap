@@ -1,13 +1,12 @@
 CLASS zcl_abapgit_tadir DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC
-
+  CREATE PRIVATE
   GLOBAL FRIENDS zcl_abapgit_factory .
 
   PUBLIC SECTION.
-
     INTERFACES zif_abapgit_tadir .
+
   PRIVATE SECTION.
 
     METHODS exists
@@ -38,7 +37,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
+CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
 
   METHOD build.
