@@ -129,7 +129,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    zcl_abapgit_popups=>create_branch_popup(
+    zcl_abapgit_ui_factory=>get_popups( )->create_branch_popup(
       IMPORTING
         ev_name   = lv_name
         ev_cancel = lv_cancel ).
@@ -160,7 +160,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    ls_branch = zcl_abapgit_popups=>branch_list_popup( lo_repo->get_url( ) ).
+    ls_branch = zcl_abapgit_ui_factory=>get_popups( )->branch_list_popup( lo_repo->get_url( ) ).
     IF ls_branch IS INITIAL.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
@@ -233,7 +233,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Cannot reset. Local code is write-protected by repo config' ).
     ENDIF.
 
-    lv_answer = zcl_abapgit_popups=>popup_to_confirm(
+    lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
       titlebar              = 'Warning'
       text_question         = 'Reset local objects?'
       text_button_1         = 'Ok'
@@ -254,7 +254,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       INSERT `OBJECT` INTO TABLE lt_columns.
       INSERT `OBJ_NAME` INTO TABLE lt_columns.
 
-      zcl_abapgit_popups=>popup_to_select_from_list(
+      zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_from_list(
         EXPORTING
           it_list              = lt_unnecessary_local_objs
           i_header_text        = |Which unnecessary objects should be deleted?|
@@ -282,7 +282,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    ls_branch = zcl_abapgit_popups=>branch_list_popup(
+    ls_branch = zcl_abapgit_ui_factory=>get_popups( )->branch_list_popup(
       iv_url             = lo_repo->get_url( )
       iv_default_branch  = lo_repo->get_branch_name( )
       iv_show_new_option = abap_true ).
@@ -290,7 +290,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    IF ls_branch-name = zcl_abapgit_popups=>c_new_branch_label.
+    IF ls_branch-name = zcl_abapgit_ui_factory=>get_popups( )->c_new_branch_label.
       create_branch( iv_key ).
       RETURN.
     ENDIF.

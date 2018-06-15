@@ -152,7 +152,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
           lt_trkorr   TYPE trwbo_request_headers.
 
 
-    lt_trkorr = zcl_abapgit_popups=>popup_to_select_transports( ).
+    lt_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transports( ).
     IF lines( lt_trkorr ) = 0.
       RETURN.
     ENDIF.
@@ -172,7 +172,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
     ls_data-package     = lv_package.
     ls_data-dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ).
 
-    ls_data-dot_abapgit-folder_logic = zcl_abapgit_popups=>popup_folder_logic( ).
+    ls_data-dot_abapgit-folder_logic = zcl_abapgit_ui_factory=>get_popups( )->popup_folder_logic( ).
 
     CREATE OBJECT lo_repo
       EXPORTING

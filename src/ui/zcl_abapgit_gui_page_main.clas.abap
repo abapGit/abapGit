@@ -270,7 +270,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
           ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
 
-    ls_tadir = zcl_abapgit_popups=>popup_object( ).
+    ls_tadir = zcl_abapgit_ui_factory=>get_popups( )->popup_object( ).
     IF ls_tadir IS INITIAL.
       RETURN.
     ENDIF.

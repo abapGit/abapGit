@@ -64,7 +64,7 @@ FORM branch_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
   DATA: lx_error TYPE REF TO zcx_abapgit_exception.
 
   TRY.
-      zcl_abapgit_popups=>branch_popup_callback(
+      zcl_abapgit_ui_factory=>get_popups( )->branch_popup_callback(
         EXPORTING
           iv_code       = pv_code
         CHANGING
@@ -88,7 +88,7 @@ FORM package_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
   DATA: lx_error TYPE REF TO zcx_abapgit_exception.
 
   TRY.
-      zcl_abapgit_popups=>package_popup_callback(
+      zcl_abapgit_ui_factory=>get_popups( )->package_popup_callback(
         EXPORTING
           iv_code       = pv_code
         CHANGING
