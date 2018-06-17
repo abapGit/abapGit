@@ -77,7 +77,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_git IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
 
   METHOD commit.
@@ -233,6 +233,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Cannot reset. Local code is write-protected by repo config' ).
     ENDIF.
 
+* todo, separate UI and logic
     lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
       titlebar              = 'Warning'
       text_question         = 'Reset local objects?'
@@ -265,6 +266,8 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
       IF lines( lt_selected ) > 0.
         zcl_abapgit_objects=>delete( lt_selected ).
+* update repo cache
+        lo_repo->refresh( ).
       ENDIF.
 
     ENDIF.
