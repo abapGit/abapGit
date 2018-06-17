@@ -53,7 +53,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
     ASSERT is_key-type IS NOT INITIAL.
 
-    lv_answer = zcl_abapgit_popups=>popup_to_confirm(
+    lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
       titlebar              = 'Warning'
       text_question         = 'Delete?'
       text_button_1         = 'Ok'

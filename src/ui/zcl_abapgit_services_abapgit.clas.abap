@@ -54,7 +54,7 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
           lv_answer TYPE c LENGTH 1.
 
 
-    lv_answer = zcl_abapgit_popups=>popup_to_confirm(
+    lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
       titlebar              = iv_title
       text_question         = iv_text
       text_button_1         = 'Continue'
@@ -94,7 +94,7 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
 
     IF is_installed( ) = abap_true.
       lv_text = 'Seems like abapGit package is already installed. No changes to be done'.
-      zcl_abapgit_popups=>popup_to_inform(
+      zcl_abapgit_ui_factory=>get_popups( )->popup_to_inform(
         titlebar              = lc_title
         text_message          = lv_text ).
       RETURN.
@@ -117,7 +117,7 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
 
     IF is_installed_pi( ) = abap_true.
       lv_text = 'Seems like abapGit plugins package is already installed. No changes to be done'.
-      zcl_abapgit_popups=>popup_to_inform(
+      zcl_abapgit_ui_factory=>get_popups( )->popup_to_inform(
         titlebar              = lc_title
         text_message          = lv_text ).
       RETURN.

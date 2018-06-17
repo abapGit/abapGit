@@ -108,7 +108,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     DATA: lv_class_name TYPE string,
           lv_cancel     TYPE abap_bool.
 
-    zcl_abapgit_popups=>run_page_class_popup(
+    zcl_abapgit_ui_factory=>get_popups( )->run_page_class_popup(
       IMPORTING
         ev_name   = lv_class_name
         ev_cancel = lv_cancel ).
