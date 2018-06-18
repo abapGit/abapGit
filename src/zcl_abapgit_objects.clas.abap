@@ -567,7 +567,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       it_results = lt_results ).
 
     IF lines( lt_results ) > 0.
-      li_package = zcl_abapgit_sap_package=>get( io_repo->get_package( ) ).
+      li_package = zcl_abapgit_factory=>get_sap_package( io_repo->get_package( ) ).
       rs_checks-transport-required = li_package->are_changes_recorded_in_tr_req( ).
       IF NOT rs_checks-transport-required IS INITIAL.
         rs_checks-transport-type = li_package->get_transport_type( ).
@@ -811,7 +811,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lv_tree     TYPE dirtree-tname.
 
 
-    lt_packages = zcl_abapgit_sap_package=>get( iv_package )->list_subpackages( ).
+    lt_packages = zcl_abapgit_factory=>get_sap_package( iv_package )->list_subpackages( ).
     APPEND iv_package TO lt_packages.
 
     LOOP AT lt_packages INTO lv_package.

@@ -245,7 +245,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
         RETURN.
       ENDIF.
 
-      zcl_abapgit_sap_package=>create( ls_package_data ).
+      zcl_abapgit_factory=>get_sap_package( ls_package_data-devclass )->create( ls_package_data ).
       COMMIT WORK.
 
       <ls_fpackage>-value = ls_package_data-devclass.
@@ -505,7 +505,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
         RETURN.
       ENDIF.
 
-      zcl_abapgit_sap_package=>create( ls_package_data ).
+      zcl_abapgit_factory=>get_sap_package( ls_package_data-devclass )->create( ls_package_data ).
       COMMIT WORK.
 
       <ls_fpackage>-value = ls_package_data-devclass.

@@ -58,7 +58,6 @@ CLASS ltcl_folder_logic DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHOR
 
     METHODS:
       setup,
-      teardown,
       prefix1 FOR TESTING RAISING zcx_abapgit_exception,
       prefix2 FOR TESTING RAISING zcx_abapgit_exception,
       prefix_error1 FOR TESTING RAISING zcx_abapgit_exception,
@@ -93,26 +92,29 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
-  METHOD setup.
-    FIELD-SYMBOLS: <ls_inject> LIKE LINE OF zcl_abapgit_sap_package=>gt_injected.
-
-    CLEAR zcl_abapgit_sap_package=>gt_injected.
-
-    APPEND INITIAL LINE TO zcl_abapgit_sap_package=>gt_injected ASSIGNING <ls_inject>.
-    <ls_inject>-package = '$TOP'.
-    <ls_inject>-object  = me.
-
-    APPEND INITIAL LINE TO zcl_abapgit_sap_package=>gt_injected ASSIGNING <ls_inject>.
-    <ls_inject>-package = '$TOP_FOO'.
-    <ls_inject>-object  = me.
-
-    APPEND INITIAL LINE TO zcl_abapgit_sap_package=>gt_injected ASSIGNING <ls_inject>.
-    <ls_inject>-package = '$FOOBAR'.
-    <ls_inject>-object  = me.
+  METHOD zif_abapgit_sap_package~get_transport_type.
+    RETURN.
   ENDMETHOD.
 
-  METHOD teardown.
-    CLEAR zcl_abapgit_sap_package=>gt_injected.
+  METHOD zif_abapgit_sap_package~create.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~create_local.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD setup.
+
+    zcl_abapgit_injector=>set_sap_package( iv_package     = '$TOP'
+                                           ii_sap_package = me ).
+
+    zcl_abapgit_injector=>set_sap_package( iv_package     = '$TOP_FOO'
+                                           ii_sap_package = me ).
+
+    zcl_abapgit_injector=>set_sap_package( iv_package     = '$FOOBAR'
+                                           ii_sap_package = me ).
+
   ENDMETHOD.
 
   METHOD prefix1.
@@ -165,10 +167,6 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
       iv_path     = '/src/top_foo/' ).
   ENDMETHOD.
 
-  METHOD zif_abapgit_sap_package~get_transport_type.
-    RETURN.
-  ENDMETHOD.
-
 ENDCLASS.
 
 CLASS ltcl_folder_logic_namespaces DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
@@ -182,7 +180,6 @@ CLASS ltcl_folder_logic_namespaces DEFINITION FOR TESTING RISK LEVEL HARMLESS DU
 
     METHODS:
       setup,
-      teardown,
       prefix1 FOR TESTING RAISING zcx_abapgit_exception,
       prefix2 FOR TESTING RAISING zcx_abapgit_exception,
       full1 FOR TESTING RAISING zcx_abapgit_exception,
@@ -220,27 +217,28 @@ CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~create.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~create_local.
+    RETURN.
+  ENDMETHOD.
+
   METHOD setup.
-    FIELD-SYMBOLS: <ls_inject> LIKE LINE OF zcl_abapgit_sap_package=>gt_injected.
 
-    CLEAR zcl_abapgit_sap_package=>gt_injected.
+    zcl_abapgit_injector=>set_sap_package( iv_package     = '/TEST/TOOLS'
+                                           ii_sap_package = me ).
 
-    APPEND INITIAL LINE TO zcl_abapgit_sap_package=>gt_injected ASSIGNING <ls_inject>.
-    <ls_inject>-package = '/TEST/TOOLS'.
-    <ls_inject>-object  = me.
+    zcl_abapgit_injector=>set_sap_package( iv_package     = '/TEST/T1'
+                                           ii_sap_package = me ).
 
-    APPEND INITIAL LINE TO zcl_abapgit_sap_package=>gt_injected ASSIGNING <ls_inject>.
-    <ls_inject>-package = '/TEST/T1'.
-    <ls_inject>-object  = me.
+    zcl_abapgit_injector=>set_sap_package( iv_package     = '/TEST/TOOLS_T1'
+                                           ii_sap_package = me ).
 
-    APPEND INITIAL LINE TO zcl_abapgit_sap_package=>gt_injected ASSIGNING <ls_inject>.
-    <ls_inject>-package = '/TEST/TOOLS_T1'.
-    <ls_inject>-object  = me.
   ENDMETHOD.
 
-  METHOD teardown.
-    CLEAR zcl_abapgit_sap_package=>gt_injected.
-  ENDMETHOD.
+
 
   METHOD prefix1.
     ltcl_folder_logic_helper=>test(

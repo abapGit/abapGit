@@ -45,7 +45,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
+CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
 
   METHOD do_install.
@@ -70,7 +70,7 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
         iv_url              = iv_url
         iv_target_package   = iv_package ).
 
-      zcl_abapgit_sap_package=>create_local( iv_package ).
+      zcl_abapgit_factory=>get_sap_package( iv_package )->create_local( ).
 
       lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
         iv_url         = iv_url

@@ -242,7 +242,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
       IF NOT ls_item-devclass IS INITIAL AND iv_devclass <> ls_item-devclass.
 * make sure the package is under the repo main package
-        lt_super = zcl_abapgit_sap_package=>get( iv_devclass )->list_subpackages( ).
+        lt_super = zcl_abapgit_factory=>get_sap_package( iv_devclass )->list_subpackages( ).
         READ TABLE lt_super WITH KEY table_line = ls_item-devclass TRANSPORTING NO FIELDS.
         IF sy-subrc <> 0.
           CLEAR ls_item-devclass.
