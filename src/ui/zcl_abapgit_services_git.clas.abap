@@ -96,7 +96,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     ELSEIF is_commit-committer_email IS INITIAL.
       zcx_abapgit_exception=>raise( 'Commit: Committer email empty' ).
     ELSEIF is_commit-author_email IS NOT INITIAL AND is_commit-author_name IS INITIAL.
-      zcx_abapgit_exception=>raise( 'Commit: Author email empty' ). " Opposite should be OK ?
+      zcx_abapgit_exception=>raise( 'Commit: Author name empty' ). " Opposite should be OK ?
     ELSEIF is_commit-comment IS INITIAL.
       zcx_abapgit_exception=>raise( 'Commit: empty comment' ).
     ENDIF.
