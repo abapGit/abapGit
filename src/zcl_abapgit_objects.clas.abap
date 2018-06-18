@@ -79,7 +79,16 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS supported_list
       RETURNING
         VALUE(rt_types) TYPE ty_types_tt .
+  PROTECTED SECTION.
+
   PRIVATE SECTION.
+    TYPES: BEGIN OF ty_obj_serializer_map,
+             item     TYPE zif_abapgit_definitions=>ty_item,
+             metadata TYPE zif_abapgit_definitions=>ty_metadata,
+           END OF ty_obj_serializer_map,
+           tty_obj_serializer_map
+        TYPE SORTED TABLE OF ty_obj_serializer_map WITH UNIQUE KEY item.
+    CLASS-DATA st_obj_serializer_map TYPE tty_obj_serializer_map.
 
     CLASS-METHODS files_to_deserialize
       IMPORTING
@@ -93,16 +102,7 @@ CLASS zcl_abapgit_objects DEFINITION
         !it_files TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS create_object
-      IMPORTING
-        !is_item        TYPE zif_abapgit_definitions=>ty_item
-        !iv_language    TYPE spras
-        !is_metadata    TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
-        !iv_native_only TYPE abap_bool DEFAULT abap_false
-      RETURNING
-        VALUE(ri_obj)   TYPE REF TO zif_abapgit_object
-      RAISING
-        zcx_abapgit_exception .
+
     CLASS-METHODS prioritize_deser
       IMPORTING
         !it_results       TYPE zif_abapgit_definitions=>ty_results_tt
@@ -168,18 +168,34 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_objects
       IMPORTING
-        !it_objects TYPE ty_deserialization_tt
-        !iv_ddic    TYPE abap_bool DEFAULT abap_false
-        !iv_descr   TYPE string
+        it_objects TYPE ty_deserialization_tt
+        iv_ddic    TYPE abap_bool DEFAULT abap_false
+        iv_descr   TYPE string
       CHANGING
-        !ct_files   TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+        ct_files   TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS check_objects_locked
+      IMPORTING
+        iv_language TYPE spras
+        it_results  TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception.
+    CLASS-METHODS create_object
+      IMPORTING
+        is_item        TYPE zif_abapgit_definitions=>ty_item
+        iv_language    TYPE spras
+        is_metadata    TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
+        iv_native_only TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(ri_obj)  TYPE REF TO zif_abapgit_object
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -234,6 +250,29 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD check_objects_locked.
+
+    DATA: li_obj  TYPE REF TO zif_abapgit_object,
+          ls_item TYPE zif_abapgit_definitions=>ty_item.
+    FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result.
+
+    LOOP AT it_results ASSIGNING <ls_result>.
+
+      MOVE-CORRESPONDING <ls_result> TO ls_item.
+
+      li_obj = create_object( is_item     = ls_item
+                              iv_language = iv_language ).
+
+      IF li_obj->is_locked( ) = abap_true.
+        zcx_abapgit_exception=>raise( |Object { ls_item-obj_type } { ls_item-obj_name } |
+                                   && |is locked. Deserialization not possible.| ).
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD class_name.
 
     CONCATENATE 'ZCL_ABAPGIT_OBJECT_' is_item-obj_type INTO rv_class_name. "#EC NOTEXT
@@ -279,14 +318,6 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD create_object.
-
-    TYPES: BEGIN OF ty_obj_serializer_map,
-             item     LIKE is_item,
-             metadata LIKE is_metadata,
-           END OF ty_obj_serializer_map.
-
-    STATICS st_obj_serializer_map
-      TYPE SORTED TABLE OF ty_obj_serializer_map WITH UNIQUE KEY item.
 
     DATA: lv_message            TYPE string,
           lv_class_name         TYPE string,
@@ -440,6 +471,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     CREATE OBJECT lo_progress
       EXPORTING
         iv_total = lines( lt_results ).
+
+    check_objects_locked( iv_language = io_repo->get_dot_abapgit( )->get_master_language( )
+                          it_results  = lt_results ).
 
     LOOP AT lt_results ASSIGNING <ls_result>.
       lo_progress->show( iv_current = sy-tabix

@@ -114,6 +114,22 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
                 iv_skip_gui       TYPE abap_bool DEFAULT abap_false
       RETURNING VALUE(rv_changed) TYPE abap_bool.
 
+    METHODS is_any_dynpro_locked
+      IMPORTING iv_program                     TYPE programm
+      RETURNING VALUE(rv_is_any_dynpro_locked) TYPE abap_bool
+      RAISING   zcx_abapgit_exception.
+
+    METHODS is_cua_locked
+      IMPORTING iv_program              TYPE programm
+      RETURNING VALUE(rv_is_cua_locked) TYPE abap_bool
+      RAISING   zcx_abapgit_exception.
+
+    METHODS is_text_locked
+      IMPORTING iv_program               TYPE programm
+      RETURNING VALUE(rv_is_text_locked) TYPE abap_bool
+      RAISING   zcx_abapgit_exception.
+
+
     CLASS-METHODS:
       add_tpool
         IMPORTING it_tpool        TYPE textpool_table
@@ -136,6 +152,54 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
 ENDCLASS.
 
 CLASS zcl_abapgit_objects_program IMPLEMENTATION.
+
+  METHOD is_text_locked.
+
+    DATA: lv_object TYPE eqegraarg.
+
+    lv_object = |*{ iv_program }|.
+
+    rv_is_text_locked = exists_a_lock_entry_for( iv_lock_object = 'EABAPTEXTE'
+                                                 iv_argument    = lv_object ).
+
+  ENDMETHOD.
+
+  METHOD is_cua_locked.
+
+    DATA: lv_object TYPE eqegraarg,
+          ls_cua    TYPE zcl_abapgit_objects_program=>ty_cua.
+
+    lv_object = |CU{ iv_program }|.
+    OVERLAY lv_object WITH '                                          '.
+    lv_object = lv_object && '*'.
+
+    rv_is_cua_locked = exists_a_lock_entry_for( iv_lock_object = 'ESCUAPAINT'
+                                                iv_argument    = lv_object ).
+
+  ENDMETHOD.
+
+  METHOD is_any_dynpro_locked.
+
+    DATA: lt_dynpros TYPE zcl_abapgit_objects_program=>ty_dynpro_tt,
+          lv_object  TYPE seqg3-garg.
+
+    FIELD-SYMBOLS: <ls_dynpro> TYPE zcl_abapgit_objects_program=>ty_dynpro.
+
+    lt_dynpros = serialize_dynpros( iv_program ).
+
+    LOOP AT lt_dynpros ASSIGNING <ls_dynpro>.
+
+      lv_object = |{ <ls_dynpro>-header-screen }{ <ls_dynpro>-header-program }|.
+
+      IF exists_a_lock_entry_for( iv_lock_object = 'ESCRP'
+                                  iv_argument    = lv_object ) = abap_true.
+        rv_is_any_dynpro_locked = abap_true.
+        EXIT.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
 
   METHOD condense_flow.
 

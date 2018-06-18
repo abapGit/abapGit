@@ -266,4 +266,10 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
 ENDCLASS.

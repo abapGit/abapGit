@@ -462,4 +462,11 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
                  ig_data = ls_webi ).
 
   ENDMETHOD.                    "zif_abapgit_object~serialize
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
 ENDCLASS.

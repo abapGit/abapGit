@@ -8,7 +8,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_AUTH IMPLEMENTATION.
+CLASS zcl_abapgit_object_auth IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -127,4 +127,11 @@ CLASS ZCL_ABAPGIT_OBJECT_AUTH IMPLEMENTATION.
                  ig_data = ls_authx ).
 
   ENDMETHOD.                    "zif_abapgit_object~serialize
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
 ENDCLASS.

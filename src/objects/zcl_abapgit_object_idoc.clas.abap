@@ -225,4 +225,11 @@ CLASS ZCL_ABAPGIT_OBJECT_IDOC IMPLEMENTATION.
                  ig_data = ls_idoc ).
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
 ENDCLASS.

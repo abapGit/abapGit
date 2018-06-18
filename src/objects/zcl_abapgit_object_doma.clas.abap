@@ -36,7 +36,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
+CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -389,4 +389,12 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
     serialize_texts( io_xml ).
 
   ENDMETHOD.                    "serialize
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESDICT'
+                                            iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
+
+  ENDMETHOD.
+
 ENDCLASS.

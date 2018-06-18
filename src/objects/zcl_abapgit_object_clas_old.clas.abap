@@ -30,12 +30,17 @@ CLASS zcl_abapgit_object_clas_old DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
       serialize_xml
         IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
         RAISING   zcx_abapgit_exception.
+  PRIVATE SECTION.
+    METHODS:
+      is_class_locked
+        RETURNING VALUE(rv_is_class_locked) TYPE abap_bool
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
+CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -408,4 +413,44 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
     serialize_xml( io_xml ).
 
   ENDMETHOD.                    "serialize
+
+  METHOD zif_abapgit_object~is_locked.
+
+    DATA: lv_classpool TYPE program.
+
+    lv_classpool = cl_oo_classname_service=>get_classpool_name( |{ ms_item-obj_name }| ).
+
+    IF is_class_locked( )             = abap_true
+    OR is_text_locked( lv_classpool ) = abap_true.
+
+      rv_is_locked = abap_true.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD is_class_locked.
+
+    DATA: lv_clsname TYPE seoclsenq-clsname.
+
+    lv_clsname = ms_item-obj_name.
+    OVERLAY lv_clsname WITH '=============================='.
+
+    CALL FUNCTION 'ENQUEUE_ESEOCLASS'
+      EXPORTING
+        clsname        = lv_clsname
+      EXCEPTIONS
+        foreign_lock   = 1
+        system_failure = 2
+        OTHERS         = 3.
+
+    rv_is_class_locked = boolc( sy-subrc <> 0 ).
+
+    CALL FUNCTION 'DEQUEUE_ESEOCLASS'
+      EXPORTING
+        clsname = lv_clsname.
+
+  ENDMETHOD.
+
 ENDCLASS.

@@ -77,16 +77,34 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         zcx_abapgit_exception .
     METHODS are_exceptions_class_based
       IMPORTING
-        !iv_function_name TYPE rs38l_fnam
+        iv_function_name TYPE rs38l_fnam
       RETURNING
-        VALUE(rv_return)  TYPE abap_bool
+        VALUE(rv_return) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
+    METHODS is_function_group_locked
+      RETURNING
+        VALUE(rv_is_functions_group_locked) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
+    METHODS is_any_include_locked
+      RETURNING
+        VALUE(rv_is_any_include_locked) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
+    METHODS is_any_function_module_locked
+      RETURNING
+        VALUE(rv_any_function_module_locked) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
+
+
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
+CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
 
   METHOD are_exceptions_class_based.
@@ -844,4 +862,79 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.                    "serialize
+
+  METHOD zif_abapgit_object~is_locked.
+
+    DATA: lv_program TYPE program.
+
+    lv_program = main_name( ).
+
+    IF is_function_group_locked( )        = abap_true
+    OR is_any_include_locked( )           = abap_true
+    OR is_any_function_module_locked( )   = abap_true
+    OR is_any_dynpro_locked( lv_program ) = abap_true
+    OR is_cua_locked( lv_program )        = abap_true
+    OR is_text_locked( lv_program )       = abap_true.
+
+      rv_is_locked = abap_true.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD is_function_group_locked.
+
+    DATA: lv_object TYPE eqegraarg .
+
+    lv_object = |FG{ ms_item-obj_name }|.
+    OVERLAY lv_object WITH '                                          '.
+    lv_object = lv_object && '*'.
+
+    rv_is_functions_group_locked = exists_a_lock_entry_for( iv_lock_object = 'EEUDB'
+                                                            iv_argument    = lv_object ).
+
+  ENDMETHOD.
+
+
+  METHOD is_any_include_locked.
+
+    DATA: lt_includes TYPE rso_t_objnm.
+    FIELD-SYMBOLS: <lv_include> TYPE sobj_name.
+
+    lt_includes = includes( ).
+
+    LOOP AT lt_includes ASSIGNING <lv_include>.
+
+      IF exists_a_lock_entry_for( iv_lock_object = 'ESRDIRE'
+                                  iv_argument    = |{ <lv_include> }| ) = abap_true.
+        rv_is_any_include_locked = abap_true.
+        EXIT.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD is_any_function_module_locked.
+
+    DATA: lt_functions TYPE zcl_abapgit_object_fugr=>ty_rs38l_incl_tt.
+
+    FIELD-SYMBOLS: <ls_function> TYPE rs38l_incl.
+
+    lt_functions = functions( ).
+
+    LOOP AT lt_functions ASSIGNING <ls_function>.
+
+      IF exists_a_lock_entry_for( iv_lock_object = 'ESFUNCTION'
+                                  iv_argument    = |{ <ls_function>-funcname }| ) = abap_true.
+        rv_any_function_module_locked = abap_true.
+        EXIT.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.

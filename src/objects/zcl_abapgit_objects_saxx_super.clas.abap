@@ -52,7 +52,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_SAXX_SUPER IMPLEMENTATION.
+CLASS zcl_abapgit_objects_saxx_super IMPLEMENTATION.
 
 
   METHOD create_channel_objects.
@@ -391,4 +391,11 @@ CLASS ZCL_ABAPGIT_OBJECTS_SAXX_SUPER IMPLEMENTATION.
                  ig_data = <lg_data> ).
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
 ENDCLASS.

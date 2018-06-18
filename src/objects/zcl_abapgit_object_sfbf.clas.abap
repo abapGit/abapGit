@@ -176,6 +176,13 @@ CLASS ZCL_ABAPGIT_OBJECT_SFBF IMPLEMENTATION.
   ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
 
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
