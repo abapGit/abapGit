@@ -87,7 +87,7 @@ CLASS zcl_abapgit_zip IMPLEMENTATION.
 
     lv_package = io_repo->get_package( ).
 
-    IF zcl_abapgit_sap_package=>get( lv_package )->exists( ) = abap_false.
+    IF zcl_abapgit_factory=>get_sap_package( lv_package )->exists( ) = abap_false.
       zcx_abapgit_exception=>raise( |Package { lv_package } doesn't exist| ).
     ENDIF.
 

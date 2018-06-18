@@ -41,10 +41,10 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
 
     READ TABLE it_tadir INDEX 1 ASSIGNING <ls_tadir>.
     ASSERT sy-subrc = 0.
-    lt_super = zcl_abapgit_sap_package=>get( <ls_tadir>-devclass )->list_superpackages( ).
+    lt_super = zcl_abapgit_factory=>get_sap_package( <ls_tadir>-devclass )->list_superpackages( ).
 
     LOOP AT it_tadir ASSIGNING <ls_tadir>.
-      lt_obj = zcl_abapgit_sap_package=>get( <ls_tadir>-devclass )->list_superpackages( ).
+      lt_obj = zcl_abapgit_factory=>get_sap_package( <ls_tadir>-devclass )->list_superpackages( ).
 
 * filter out possibilities from lt_super
       LOOP AT lt_super INTO lv_super.

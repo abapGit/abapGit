@@ -53,7 +53,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
                    <lv_type>   LIKE LINE OF lt_types.
 
 
-    zcl_abapgit_sap_package=>create_local( c_package ).
+    zcl_abapgit_factory=>get_sap_package( c_package )->create_local( ).
 
     lt_types = zcl_abapgit_objects=>supported_list( ).
 

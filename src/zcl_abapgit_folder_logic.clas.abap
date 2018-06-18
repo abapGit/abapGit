@@ -41,7 +41,7 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
     IF iv_top = iv_package.
       rv_path = io_dot->get_starting_folder( ).
     ELSE.
-      lv_parentcl = zcl_abapgit_sap_package=>get( iv_package )->read_parent( ).
+      lv_parentcl = zcl_abapgit_factory=>get_sap_package( iv_package )->read_parent( ).
 
       IF lv_parentcl IS INITIAL.
         zcx_abapgit_exception=>raise( |error, expected parent package, { iv_package }| ).
@@ -133,10 +133,10 @@ CLASS zcl_abapgit_folder_logic IMPLEMENTATION.
 
       TRANSLATE rv_package TO UPPER CASE.
 
-      IF zcl_abapgit_sap_package=>get( rv_package )->exists( ) = abap_false AND
+      IF zcl_abapgit_factory=>get_sap_package( rv_package )->exists( ) = abap_false AND
           iv_create_if_not_exists = abap_true.
 
-        zcl_abapgit_sap_package=>get( lv_parent )->create_child( rv_package ).
+        zcl_abapgit_factory=>get_sap_package( lv_parent )->create_child( rv_package ).
       ENDIF.
 
       lv_parent = rv_package.
