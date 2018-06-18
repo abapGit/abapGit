@@ -224,4 +224,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SFBS IMPLEMENTATION.
                  iv_name = 'PARENT_BFS' ).
 
   ENDMETHOD.                    "serialize
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
 ENDCLASS.

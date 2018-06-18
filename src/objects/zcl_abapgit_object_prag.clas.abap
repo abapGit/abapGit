@@ -182,4 +182,11 @@ CLASS ZCL_ABAPGIT_OBJECT_PRAG IMPLEMENTATION.
     zcx_abapgit_exception=>raise( |Pragma { ms_item-obj_name } doesn't exist| ).
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
 ENDCLASS.

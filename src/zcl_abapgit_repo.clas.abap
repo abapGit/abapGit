@@ -120,7 +120,6 @@ CLASS zcl_abapgit_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-
 ENDCLASS.
 
 
@@ -609,4 +608,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     set( it_checksums = lt_checksums ).
 
   ENDMETHOD.  " update_local_checksums
+
+
+
 ENDCLASS.

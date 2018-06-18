@@ -175,6 +175,13 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
   ENDMETHOD.  "lif_object~has_changed_since
 
 
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
 
     CALL METHOD mo_plugin->('ZIF_ABAPGITP_PLUGIN~JUMP').

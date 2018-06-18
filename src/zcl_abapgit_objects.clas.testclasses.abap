@@ -356,3 +356,153 @@ CLASS ltcl_serialize IMPLEMENTATION.
   ENDMETHOD.                    "check
 
 ENDCLASS.                    "ltcl_serialize IMPLEMENTATION
+
+CLASS ltd_objcet_ddls_mock DEFINITION FOR TESTING.
+
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_object PARTIALLY IMPLEMENTED.
+    METHODS:
+      constructor
+        IMPORTING
+          is_item     TYPE zif_abapgit_definitions=>ty_item
+          iv_language TYPE spras.
+
+  PRIVATE SECTION.
+    DATA ms_item TYPE zif_abapgit_definitions=>ty_item.
+
+ENDCLASS.
+
+CLASS ltd_objcet_ddls_mock IMPLEMENTATION.
+
+  METHOD constructor.
+
+    ms_item = is_item.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~is_locked.
+
+    CASE ms_item-obj_name.
+      WHEN 'Z_TEST_DDLS'.
+
+        rv_is_locked = abap_true.
+
+      WHEN 'Z_TEST_DDLS2'.
+
+        rv_is_locked = abap_false.
+
+    ENDCASE.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltcl_check_objects_locked DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    DATA:
+      mt_given_results  TYPE zif_abapgit_definitions=>ty_results_tt,
+      mv_exception_text TYPE string.
+
+    METHODS:
+      throw_excp_if_object_is_locked FOR TESTING RAISING cx_static_check,
+      no_excp_if_obj_is_not_locked FOR TESTING RAISING cx_static_check,
+      given_locked_object,
+      when_check_objects_locked,
+      then_exception_shd_be_raised,
+      given_not_locked_object,
+      then_no_exception_shd_occur,
+      given_object
+        IMPORTING
+          iv_object_name TYPE string.
+
+ENDCLASS.
+
+CLASS zcl_abapgit_objects DEFINITION LOCAL FRIENDS ltcl_check_objects_locked.
+
+CLASS ltcl_check_objects_locked IMPLEMENTATION.
+
+  METHOD throw_excp_if_object_is_locked.
+
+    given_locked_object( ).
+    when_check_objects_locked( ).
+    then_exception_shd_be_raised( ).
+
+  ENDMETHOD.
+
+  METHOD no_excp_if_obj_is_not_locked.
+
+    given_not_locked_object( ).
+    when_check_objects_locked( ).
+    then_no_exception_shd_occur( ).
+
+  ENDMETHOD.
+
+  METHOD given_locked_object.
+
+    given_object( 'Z_TEST_DDLS' ).
+
+  ENDMETHOD.
+
+
+  METHOD when_check_objects_locked.
+
+    DATA: lx_error TYPE REF TO zcx_abapgit_exception.
+
+    TRY.
+        zcl_abapgit_objects=>check_objects_locked( iv_language = 'E'
+                                                   it_results  = mt_given_results ).
+
+      CATCH zcx_abapgit_exception INTO lx_error.
+        mv_exception_text = lx_error->get_text( ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD then_exception_shd_be_raised.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = |Object DDLS Z_TEST_DDLS is locked. Deserialization not possible.|
+      act = mv_exception_text ).
+
+  ENDMETHOD.
+
+
+  METHOD given_not_locked_object.
+
+    given_object( 'Z_TEST_DDLS2' ).
+
+  ENDMETHOD.
+
+
+  METHOD then_no_exception_shd_occur.
+
+    cl_abap_unit_assert=>assert_initial( mv_exception_text ).
+
+  ENDMETHOD.
+
+
+  METHOD given_object.
+
+    CONSTANTS:
+      co_obj_type TYPE string VALUE 'DDLS'.
+
+    DATA:
+      ls_result             LIKE LINE OF mt_given_results,
+      ls_obj_serializer_map LIKE LINE OF zcl_abapgit_objects=>st_obj_serializer_map.
+
+    ls_result-obj_type = co_obj_type.
+    ls_result-obj_name = iv_object_name.
+    INSERT ls_result INTO TABLE mt_given_results.
+
+    ls_obj_serializer_map-item-obj_type = co_obj_type.
+    ls_obj_serializer_map-item-obj_name = iv_object_name.
+    ls_obj_serializer_map-metadata-class = '\CLASS-POOL=ZCL_ABAPGIT_OBJECTS\CLASS=LTD_OBJCET_DDLS_MOCK'.
+    INSERT ls_obj_serializer_map INTO TABLE zcl_abapgit_objects=>st_obj_serializer_map.
+
+  ENDMETHOD.
+
+ENDCLASS.

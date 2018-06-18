@@ -211,4 +211,10 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.                    "zif_abapgit_object~compare_to_remote_version
 
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
 ENDCLASS.                    "zcl_abapgit_object_enho IMPLEMENTATION

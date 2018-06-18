@@ -8,7 +8,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DCLS IMPLEMENTATION.
+CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -194,4 +194,12 @@ CLASS ZCL_ABAPGIT_OBJECT_DCLS IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'E_ACMDCLSRC'
+                                            iv_argument    = |{ ms_item-obj_name }| ).
+
+  ENDMETHOD.
+
 ENDCLASS.

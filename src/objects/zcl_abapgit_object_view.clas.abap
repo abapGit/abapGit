@@ -268,4 +268,11 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
                  iv_name = 'DD28V_TABLE' ).
 
   ENDMETHOD.                    "serialize
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
 ENDCLASS.

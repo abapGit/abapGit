@@ -276,4 +276,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SXCI IMPLEMENTATION.
                  ig_data = ls_classic_badi_implementation ).
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
 ENDCLASS.
