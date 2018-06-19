@@ -178,7 +178,7 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS check_objects_locked
       IMPORTING
         iv_language TYPE spras
-        it_results  TYPE zif_abapgit_definitions=>ty_results_tt
+        it_items    TYPE zif_abapgit_definitions=>ty_items_tt
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS create_object
@@ -191,6 +191,16 @@ CLASS zcl_abapgit_objects DEFINITION
         VALUE(ri_obj)  TYPE REF TO zif_abapgit_object
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS map_tadir_to_items
+      IMPORTING
+        it_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RETURNING
+        VALUE(rt_items) TYPE zif_abapgit_definitions=>ty_items_tt.
+    CLASS-METHODS map_results_to_items
+      IMPORTING
+        it_results      TYPE zif_abapgit_definitions=>ty_results_tt
+      RETURNING
+        VALUE(rt_items) TYPE zif_abapgit_definitions=>ty_items_tt.
 ENDCLASS.
 
 
@@ -252,20 +262,18 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD check_objects_locked.
 
-    DATA: li_obj  TYPE REF TO zif_abapgit_object,
-          ls_item TYPE zif_abapgit_definitions=>ty_item.
-    FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result.
+    DATA: li_obj TYPE REF TO zif_abapgit_object.
 
-    LOOP AT it_results ASSIGNING <ls_result>.
+    FIELD-SYMBOLS: <ls_item> LIKE LINE OF it_items.
 
-      MOVE-CORRESPONDING <ls_result> TO ls_item.
+    LOOP AT it_items ASSIGNING <ls_item>.
 
-      li_obj = create_object( is_item     = ls_item
+      li_obj = create_object( is_item     = <ls_item>
                               iv_language = iv_language ).
 
       IF li_obj->is_locked( ) = abap_true.
-        zcx_abapgit_exception=>raise( |Object { ls_item-obj_type } { ls_item-obj_name } |
-                                   && |is locked. Deserialization not possible.| ).
+        zcx_abapgit_exception=>raise( |Object { <ls_item>-obj_type } { <ls_item>-obj_name } |
+                                   && |is locked. Action not possible.| ).
       ENDIF.
 
     ENDLOOP.
@@ -376,7 +384,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     DATA: ls_item     TYPE zif_abapgit_definitions=>ty_item,
           lo_progress TYPE REF TO zcl_abapgit_progress,
-          lt_tadir    LIKE it_tadir.
+          lt_tadir    LIKE it_tadir,
+          lt_items    TYPE zif_abapgit_definitions=>ty_items_tt.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
@@ -387,6 +396,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     CREATE OBJECT lo_progress
       EXPORTING
         iv_total = lines( lt_tadir ).
+
+    lt_items = map_tadir_to_items( lt_tadir ).
+
+    check_objects_locked( iv_language = zif_abapgit_definitions=>gc_english
+                          it_items    = lt_items ).
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       lo_progress->show( iv_current = sy-tabix
@@ -443,7 +457,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lt_rest     TYPE TABLE OF ty_deserialization,
           lt_late     TYPE TABLE OF ty_deserialization,
           lo_progress TYPE REF TO zcl_abapgit_progress,
-          lv_path     TYPE string.
+          lv_path     TYPE string,
+          lt_items    TYPE zif_abapgit_definitions=>ty_items_tt.
 
     FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result,
                    <ls_deser>  LIKE LINE OF lt_late.
@@ -472,8 +487,10 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       EXPORTING
         iv_total = lines( lt_results ).
 
+    lt_items = map_results_to_items( lt_results ).
+
     check_objects_locked( iv_language = io_repo->get_dot_abapgit( )->get_master_language( )
-                          it_results  = lt_results ).
+                          it_items    = lt_items ).
 
     LOOP AT lt_results ASSIGNING <ls_result>.
       lo_progress->show( iv_current = sy-tabix
@@ -947,4 +964,38 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
+  METHOD map_tadir_to_items.
+
+    DATA: ls_item LIKE LINE OF rt_items.
+    FIELD-SYMBOLS: <ls_tadir> TYPE zif_abapgit_definitions=>ty_tadir.
+
+    LOOP AT it_tadir ASSIGNING <ls_tadir>.
+
+      ls_item-devclass = <ls_tadir>-devclass.
+      ls_item-obj_type = <ls_tadir>-object.
+      ls_item-obj_name = <ls_tadir>-obj_name.
+      INSERT ls_item INTO TABLE rt_items.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD map_results_to_items.
+
+    DATA: ls_item LIKE LINE OF rt_items.
+    FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result.
+
+    LOOP AT it_results ASSIGNING <ls_result>.
+
+      ls_item-devclass = <ls_result>-package.
+      ls_item-obj_type = <ls_result>-obj_type.
+      ls_item-obj_name = <ls_result>-obj_name.
+      INSERT ls_item INTO TABLE rt_items.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.
