@@ -73,6 +73,9 @@ CLASS zcl_abapgit_services_git DEFINITION
         zcx_abapgit_exception
         zcx_abapgit_cancel.
 
+  PRIVATE SECTION.
+
+
 ENDCLASS.
 
 

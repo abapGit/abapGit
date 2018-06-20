@@ -156,6 +156,6 @@ INTERFACE zif_abapgit_popups
         VALUE(rv_transport) TYPE trkorr
       RAISING
         zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_cancel.
 
 ENDINTERFACE.

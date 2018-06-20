@@ -42,15 +42,19 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
     METHODS get_starting_folder
       RETURNING
         VALUE(rv_path) TYPE string .
+
     METHODS get_folder_logic
       RETURNING
         VALUE(rv_logic) TYPE string .
+
     METHODS set_folder_logic
       IMPORTING
         !iv_logic TYPE string .
+
     METHODS set_starting_folder
       IMPORTING
         !iv_path TYPE string .
+
     METHODS get_master_language
       RETURNING
         VALUE(rv_language) TYPE spras .
@@ -77,7 +81,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
+CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
 
   METHOD add_ignore.
@@ -276,4 +280,5 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
   ENDMETHOD.
+
 ENDCLASS.

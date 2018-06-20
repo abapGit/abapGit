@@ -1160,4 +1160,5 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.  "run_page_class_popup
+
 ENDCLASS.
