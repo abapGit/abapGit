@@ -506,6 +506,8 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
     update( ls_user ).
 
+    COMMIT WORK AND WAIT.
+
   ENDMETHOD.  " toggle_favorite.
 
 
