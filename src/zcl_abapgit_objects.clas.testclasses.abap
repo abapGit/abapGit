@@ -403,7 +403,7 @@ CLASS ltcl_check_objects_locked DEFINITION FINAL FOR TESTING
 
   PRIVATE SECTION.
     DATA:
-      mt_given_results  TYPE zif_abapgit_definitions=>ty_results_tt,
+      mt_given_items    TYPE zif_abapgit_definitions=>ty_items_tt,
       mv_exception_text TYPE string.
 
     METHODS:
@@ -453,7 +453,7 @@ CLASS ltcl_check_objects_locked IMPLEMENTATION.
 
     TRY.
         zcl_abapgit_objects=>check_objects_locked( iv_language = 'E'
-                                                   it_results  = mt_given_results ).
+                                                   it_items    = mt_given_items ).
 
       CATCH zcx_abapgit_exception INTO lx_error.
         mv_exception_text = lx_error->get_text( ).
@@ -465,7 +465,7 @@ CLASS ltcl_check_objects_locked IMPLEMENTATION.
   METHOD then_exception_shd_be_raised.
 
     cl_abap_unit_assert=>assert_equals(
-      exp = |Object DDLS Z_TEST_DDLS is locked. Deserialization not possible.|
+      exp = |Object DDLS Z_TEST_DDLS is locked. Action not possible.|
       act = mv_exception_text ).
 
   ENDMETHOD.
@@ -491,12 +491,12 @@ CLASS ltcl_check_objects_locked IMPLEMENTATION.
       co_obj_type TYPE string VALUE 'DDLS'.
 
     DATA:
-      ls_result             LIKE LINE OF mt_given_results,
+      ls_item               LIKE LINE OF mt_given_items,
       ls_obj_serializer_map LIKE LINE OF zcl_abapgit_objects=>st_obj_serializer_map.
 
-    ls_result-obj_type = co_obj_type.
-    ls_result-obj_name = iv_object_name.
-    INSERT ls_result INTO TABLE mt_given_results.
+    ls_item-obj_type = co_obj_type.
+    ls_item-obj_name = iv_object_name.
+    INSERT ls_item INTO TABLE mt_given_items.
 
     ls_obj_serializer_map-item-obj_type = co_obj_type.
     ls_obj_serializer_map-item-obj_name = iv_object_name.
