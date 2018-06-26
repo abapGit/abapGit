@@ -646,8 +646,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     rt_results = zcl_abapgit_file_status=>status( io_repo ).
     DELETE rt_results WHERE match = abap_true.     " Full match
-    SORT rt_results BY obj_type ASCENDING obj_name ASCENDING.
-    DELETE ADJACENT DUPLICATES FROM rt_results COMPARING obj_type obj_name.
+    SORT rt_results
+      BY obj_type ASCENDING
+         obj_name ASCENDING
+         filename ASCENDING.
+    DELETE ADJACENT DUPLICATES FROM rt_results COMPARING obj_type obj_name filename.
 
     DELETE rt_results WHERE obj_type IS INITIAL.
     DELETE rt_results WHERE lstate = zif_abapgit_definitions=>gc_state-added AND rstate IS INITIAL.
