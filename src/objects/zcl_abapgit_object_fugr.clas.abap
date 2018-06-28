@@ -902,7 +902,11 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     DATA: lt_includes TYPE rso_t_objnm.
     FIELD-SYMBOLS: <lv_include> TYPE sobj_name.
 
-    lt_includes = includes( ).
+    TRY.
+        lt_includes = includes( ).
+      CATCH zcx_abapgit_exception.
+        RETURN.
+    ENDTRY.
 
     LOOP AT lt_includes ASSIGNING <lv_include>.
 
@@ -923,7 +927,11 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_function> TYPE rs38l_incl.
 
-    lt_functions = functions( ).
+    TRY.
+        lt_functions = functions( ).
+      CATCH zcx_abapgit_exception.
+        RETURN.
+    ENDTRY.
 
     LOOP AT lt_functions ASSIGNING <ls_function>.
 
