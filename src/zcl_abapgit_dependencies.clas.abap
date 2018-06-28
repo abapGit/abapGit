@@ -114,6 +114,9 @@ CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
           ENDIF.
         WHEN 'DTEL'.
           <ls_tadir>-korrnum = '8000'.
+        WHEN 'PARA'.
+* PARA after DTEL
+          <ls_tadir>-korrnum = '8100'.
         WHEN 'DOMA'.
           <ls_tadir>-korrnum = '9000'.
         WHEN 'PROG'.
