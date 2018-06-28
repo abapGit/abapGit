@@ -15,7 +15,9 @@ CLASS zcl_abapgit_log DEFINITION PUBLIC CREATE PUBLIC.
       has_rc "For unit tests mainly
         IMPORTING iv_rc         TYPE balsort
         RETURNING VALUE(rv_yes) TYPE abap_bool,
-      show.
+      show
+        IMPORTING
+          iv_header_text TYPE csequence DEFAULT 'Log'.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_log,
@@ -42,7 +44,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_log IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
 
 
   METHOD add.
@@ -142,7 +144,7 @@ CLASS zcl_abapgit_log IMPLEMENTATION.
 
         CREATE OBJECT lo_form_header
           EXPORTING
-            text = |Log|.
+            text = iv_header_text.
 
         lo_alv->set_top_of_list( lo_form_header ).
 

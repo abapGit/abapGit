@@ -199,6 +199,8 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ENDIF.
     lo_tb_advanced->add( iv_txt = 'Syntax Check'
                          iv_act = |{ zif_abapgit_definitions=>gc_action-repo_syntax_check }?{ lv_key }| ).
+    lo_tb_advanced->add( iv_txt = 'Run Code Inspector'
+                         iv_act = |{ zif_abapgit_definitions=>gc_action-repo_code_inspector }?{ lv_key }| ).
     lo_tb_advanced->add( iv_txt = 'Repo settings'
                          iv_act = |{ zif_abapgit_definitions=>gc_action-repo_settings }?{ lv_key }| ).
 

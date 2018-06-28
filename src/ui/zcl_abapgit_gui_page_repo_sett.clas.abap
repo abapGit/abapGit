@@ -45,12 +45,14 @@ CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
 
     METHODS render_content
         REDEFINITION .
+
   PRIVATE SECTION.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -137,6 +139,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
           ls_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings.
 
 
+
     ls_settings = mo_repo->get_local_settings( ).
 
     io_html->add( '<h2>Local settings</h2>' ).
@@ -158,6 +161,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
       lv_checked = | checked|.
     ENDIF.
     io_html->add( |Only local objects <input name="only_local_objects" type="checkbox"{ lv_checked }><br>| ).
+
+    io_html->add( '<br>' ).
+    io_html->add( 'Code inspector check variant: <input name="check_variant" type="text" size="30" value="' &&
+      ls_settings-code_inspector_check_variant && '">' ).
+    io_html->add( '<br>' ).
+
+    CLEAR lv_checked.
+    IF ls_settings-block_commit = abap_true.
+      lv_checked = | checked|.
+    ENDIF.
+    io_html->add( |Block commit commit/push if code inspection has erros: |
+               && |<input name="block_commit" type="checkbox"{ lv_checked }><br>| ).
+
 
   ENDMETHOD.
 
@@ -200,8 +216,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
   METHOD save_local_settings.
 
-    DATA: ls_settings   TYPE zif_abapgit_persistence=>ty_repo-local_settings,
-          ls_post_field LIKE LINE OF it_post_fields.
+    DATA: ls_settings      TYPE zif_abapgit_persistence=>ty_repo-local_settings,
+          ls_post_field    LIKE LINE OF it_post_fields,
+          lv_check_variant TYPE sci_chkv.
 
 
     ls_settings = mo_repo->get_local_settings( ).
@@ -227,6 +244,26 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
       ls_settings-only_local_objects = abap_false.
     ENDIF.
 
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'check_variant'.
+    ASSERT sy-subrc = 0.
+    lv_check_variant = to_upper( ls_post_field-value ).
+    IF ls_post_field-value IS NOT INITIAL.
+      zcl_abapgit_code_inspector=>validate_check_variant( lv_check_variant ).
+    ENDIF.
+    ls_settings-code_inspector_check_variant = lv_check_variant.
+
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'block_commit' value = 'on'.
+    IF sy-subrc = 0.
+      ls_settings-block_commit = abap_true.
+    ELSE.
+      ls_settings-block_commit = abap_false.
+    ENDIF.
+
+    IF  ls_settings-block_commit = abap_true
+    AND ls_settings-code_inspector_check_variant IS INITIAL.
+      zcx_abapgit_exception=>raise( |If block commit is active, a check variant has to be maintained.| ).
+    ENDIF.
+
     mo_repo->set_local_settings( ls_settings ).
 
   ENDMETHOD.
@@ -241,4 +278,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
+
+
 ENDCLASS.

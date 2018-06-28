@@ -128,10 +128,11 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
   METHOD get_page_stage.
 
-    DATA: lo_repo       TYPE REF TO zcl_abapgit_repo_online,
-          lv_key        TYPE zif_abapgit_persistence=>ty_repo-key,
-          lv_seed       TYPE string,
-          lo_stage_page TYPE REF TO zcl_abapgit_gui_page_stage.
+    DATA: lo_repo                TYPE REF TO zcl_abapgit_repo_online,
+          lv_key                 TYPE zif_abapgit_persistence=>ty_repo-key,
+          lv_seed                TYPE string,
+          lo_stage_page          TYPE REF TO zcl_abapgit_gui_page_stage,
+          lo_code_inspector_page TYPE REF TO zcl_abapgit_gui_page_code_insp.
 
     FIND FIRST OCCURRENCE OF '=' IN iv_getdata.
     IF sy-subrc <> 0. " Not found ? -> just repo key in params
@@ -145,15 +146,27 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
 
-    " force refresh on stage, to make sure the latest local and remote files are used
-    lo_repo->refresh( ).
+    IF lo_repo->get_local_settings( )-code_inspector_check_variant IS NOT INITIAL.
 
-    CREATE OBJECT lo_stage_page
-      EXPORTING
-        io_repo = lo_repo
-        iv_seed = lv_seed.
+      CREATE OBJECT lo_code_inspector_page
+        EXPORTING
+          io_repo = lo_repo.
 
-    ri_page = lo_stage_page.
+      ri_page = lo_code_inspector_page.
+
+    ELSE.
+
+      " force refresh on stage, to make sure the latest local and remote files are used
+      lo_repo->refresh( ).
+
+      CREATE OBJECT lo_stage_page
+        EXPORTING
+          io_repo = lo_repo
+          iv_seed = lv_seed.
+
+      ri_page = lo_stage_page.
+
+    ENDIF.
 
   ENDMETHOD.  "get_page_stage
 
@@ -263,6 +276,11 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-repo_syntax_check.
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_syntax
+          EXPORTING
+            io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+      WHEN zif_abapgit_definitions=>gc_action-repo_code_inspector.
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_code_insp
           EXPORTING
             io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
