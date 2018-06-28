@@ -461,7 +461,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     READ TABLE rt_list TRANSPORTING NO FIELDS
                        WITH KEY kind = 'E'.
 
-    mv_code_inspector_successful = boolc( sy-subrc = 0 ).
+    mv_code_inspector_successful = boolc( sy-subrc <> 0 ).
 
   ENDMETHOD.
 
