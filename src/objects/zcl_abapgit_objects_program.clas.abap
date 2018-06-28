@@ -656,7 +656,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
           illegal_field_position = 9
           OTHERS                 = 10.
       IF sy-subrc <> 2 AND sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from RPY_DYNPRO_INSERT' ).
+        zcx_abapgit_exception=>raise( |error from RPY_DYNPRO_INSERT: { sy-subrc }| ).
       ENDIF.
 * todo, RPY_DYNPRO_UPDATE?
 
