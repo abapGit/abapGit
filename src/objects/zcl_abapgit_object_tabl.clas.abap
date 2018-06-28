@@ -89,6 +89,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
     DATA: lv_objname  TYPE rsedd0-ddobjname,
           lv_tabclass TYPE dd02l-tabclass,
           lv_no_ask   TYPE abap_bool,
+          lv_subrc    TYPE sy-subrc,
           lr_data     TYPE REF TO data.
 
     FIELD-SYMBOLS: <lg_data>  TYPE any.
@@ -102,12 +103,21 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers = '0000'.
     IF sy-subrc = 0 AND lv_tabclass = 'TRANSP'.
+
+* Avoid dump in dynamic SELECT in case the table does not exist on database
+      CALL FUNCTION 'DB_EXISTS_TABLE'
+        EXPORTING
+          tabname = lv_objname
+        IMPORTING
+          subrc   = lv_subrc.
+      IF lv_subrc = 0.
 * it cannot delete table with table wihtout asking
-      CREATE DATA lr_data TYPE (lv_objname).
-      ASSIGN lr_data->* TO <lg_data>.
-      SELECT SINGLE * FROM (lv_objname) INTO <lg_data>.
-      IF sy-subrc = 0.
-        lv_no_ask = abap_false.
+        CREATE DATA lr_data TYPE (lv_objname).
+        ASSIGN lr_data->* TO <lg_data>.
+        SELECT SINGLE * FROM (lv_objname) INTO <lg_data>.
+        IF sy-subrc = 0.
+          lv_no_ask = abap_false.
+        ENDIF.
       ENDIF.
     ENDIF.
 
@@ -314,6 +324,14 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
   ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
 
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESDICT'
+                                            iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
 
     jump_se11( iv_radio = 'RSRD1-DDTYPE'
@@ -498,12 +516,4 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
                  ig_data = lt_dd36m ).
 
   ENDMETHOD.                    "serialize
-
-  METHOD zif_abapgit_object~is_locked.
-
-    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESDICT'
-                                            iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
-
-  ENDMETHOD.
-
 ENDCLASS.
