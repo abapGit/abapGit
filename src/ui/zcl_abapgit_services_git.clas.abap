@@ -80,7 +80,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
+CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
 
   METHOD commit.
@@ -191,7 +191,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    ls_tag = zcl_abapgit_tag_popups=>tag_select_popup( lo_repo ).
+    ls_tag = zcl_abapgit_ui_factory=>get_tag_popups( )->tag_select_popup( lo_repo ).
     IF ls_tag IS INITIAL.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
@@ -315,7 +315,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    ls_tag = zcl_abapgit_tag_popups=>tag_select_popup( lo_repo ).
+    ls_tag = zcl_abapgit_ui_factory=>get_tag_popups( )->tag_select_popup( lo_repo ).
     IF ls_tag IS INITIAL.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
@@ -333,7 +333,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    zcl_abapgit_tag_popups=>tag_list_popup( lo_repo ).
+    zcl_abapgit_ui_factory=>get_tag_popups( )->tag_list_popup( lo_repo ).
 
   ENDMETHOD.
 ENDCLASS.
