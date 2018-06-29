@@ -128,6 +128,20 @@ window.onTagTypeChange = function(oSelectObject){
 }
 
 /**********************************************************
+ * Repo Overview Logic
+ **********************************************************/
+// somehow only functions on window are visible for the select tag
+window.onOrderByChange = function(oSelectObject){
+  var sValue = oSelectObject.value;
+  submitSapeventForm({ 'orderBy': sValue }, "change_order_by", "post");
+}
+
+window.onDirectionChange = function(oSelectObject){
+  var sValue = oSelectObject.value;
+  submitSapeventForm({ 'direction': sValue }, "direction", "post");
+}
+
+/**********************************************************
  * STAGE PAGE Logic
  **********************************************************/
 

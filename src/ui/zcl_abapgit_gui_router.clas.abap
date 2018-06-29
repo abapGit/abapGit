@@ -189,6 +189,9 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>gc_action-go_explore.                     " Go Explore page
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_explore.
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+      WHEN zif_abapgit_definitions=>gc_action-go_repo_overview.               " Go Repository overview
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_repo_over.
+        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-go_db.                          " Go DB util page
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_db.
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
