@@ -109,11 +109,6 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !ev_seed    TYPE string
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS requirement_decode
-      IMPORTING
-        iv_string                   TYPE clike
-      RETURNING
-        VALUE(rv_requirement_index) TYPE i.
   PRIVATE SECTION.
     CLASS-METHODS unescape
       IMPORTING iv_string        TYPE string
@@ -434,13 +429,6 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 * todo, more to be added here
     REPLACE ALL OCCURRENCES OF '%3F' IN rv_string WITH '?'.
 
-  ENDMETHOD.
-
-  METHOD requirement_decode.
-    DATA: lt_fields TYPE tihttpnvp.
-
-    lt_fields = parse_fields_upper_case_name( iv_string ).
-    get_field( EXPORTING name = 'REQ' it = lt_fields CHANGING cv = rv_requirement_index ).
   ENDMETHOD.
 
 ENDCLASS.
