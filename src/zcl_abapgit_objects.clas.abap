@@ -42,7 +42,8 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS delete
       IMPORTING
-        !it_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt
+        !it_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt
+        !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks OPTIONAL
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS jump
@@ -385,35 +386,50 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     DATA: ls_item     TYPE zif_abapgit_definitions=>ty_item,
           lo_progress TYPE REF TO zcl_abapgit_progress,
           lt_tadir    LIKE it_tadir,
-          lt_items    TYPE zif_abapgit_definitions=>ty_items_tt.
+          lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
+          lx_error    TYPE REF TO zcx_abapgit_exception,
+          lv_text     TYPE string.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
     lt_tadir = it_tadir.
 
-    zcl_abapgit_dependencies=>resolve( CHANGING ct_tadir = lt_tadir ).
+    IF is_checks-transport-required = abap_true.
+      zcl_abapgit_default_transport=>get_instance( )->set( is_checks-transport-transport ).
+    ENDIF.
 
-    CREATE OBJECT lo_progress
-      EXPORTING
-        iv_total = lines( lt_tadir ).
+    TRY.
+        zcl_abapgit_dependencies=>resolve( CHANGING ct_tadir = lt_tadir ).
 
-    lt_items = map_tadir_to_items( lt_tadir ).
+        CREATE OBJECT lo_progress
+          EXPORTING
+            iv_total = lines( lt_tadir ).
 
-    check_objects_locked( iv_language = zif_abapgit_definitions=>gc_english
-                          it_items    = lt_items ).
+        lt_items = map_tadir_to_items( lt_tadir ).
 
-    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-      lo_progress->show( iv_current = sy-tabix
-                         iv_text    = |Delete { <ls_tadir>-obj_name }| ) ##NO_TEXT.
+        check_objects_locked( iv_language = zif_abapgit_definitions=>gc_english
+                              it_items    = lt_items ).
 
-      CLEAR ls_item.
-      ls_item-obj_type = <ls_tadir>-object.
-      ls_item-obj_name = <ls_tadir>-obj_name.
-      delete_obj( ls_item ).
+        LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+          lo_progress->show( iv_current = sy-tabix
+                             iv_text    = |Delete { <ls_tadir>-obj_name }| ) ##NO_TEXT.
+
+          CLEAR ls_item.
+          ls_item-obj_type = <ls_tadir>-object.
+          ls_item-obj_name = <ls_tadir>-obj_name.
+          delete_obj( ls_item ).
 
 * make sure to save object deletions
-      COMMIT WORK.
-    ENDLOOP.
+          COMMIT WORK.
+        ENDLOOP.
+
+      CATCH zcx_abapgit_exception INTO lx_error.
+        zcl_abapgit_default_transport=>get_instance( )->reset( ).
+        lv_text = lx_error->get_text( ).
+        zcx_abapgit_exception=>raise( lv_text ).
+    ENDTRY.
+
+    zcl_abapgit_default_transport=>get_instance( )->reset( ).
 
   ENDMETHOD.                    "delete
 
@@ -446,7 +462,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   METHOD deserialize.
 
     DATA: ls_item     TYPE zif_abapgit_definitions=>ty_item,
-          lv_cancel   TYPE abap_bool,
           li_obj      TYPE REF TO zif_abapgit_object,
           lt_remote   TYPE zif_abapgit_definitions=>ty_files_tt,
           lv_package  TYPE devclass,

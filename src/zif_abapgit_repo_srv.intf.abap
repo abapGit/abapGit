@@ -46,7 +46,8 @@ INTERFACE zif_abapgit_repo_srv
       zcx_abapgit_exception .
   METHODS purge
     IMPORTING
-      !io_repo TYPE REF TO zcl_abapgit_repo
+      !io_repo  TYPE REF TO zcl_abapgit_repo
+      is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
     RAISING
       zcx_abapgit_exception .
   METHODS switch_repo_type

@@ -282,7 +282,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
           lv_answer   TYPE c LENGTH 1,
           lo_repo     TYPE REF TO zcl_abapgit_repo,
           lv_package  TYPE devclass,
-          lv_question TYPE c LENGTH 100.
+          lv_question TYPE c LENGTH 100,
+          ls_checks   TYPE zif_abapgit_definitions=>ty_deserialize_checks.
 
 
     lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
@@ -311,7 +312,14 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     ENDIF.
 
-    zcl_abapgit_repo_srv=>get_instance( )->purge( lo_repo ).
+    ls_checks = lo_repo->delete_checks( ).
+    IF ls_checks-transport-required = abap_true.
+      ls_checks-transport-transport = zcl_abapgit_ui_factory=>get_popups(
+                                        )->popup_transport_request(  ls_checks-transport-type ).
+    ENDIF.
+
+    zcl_abapgit_repo_srv=>get_instance( )->purge( io_repo   = lo_repo
+                                                  is_checks = ls_checks ).
 
     COMMIT WORK.
 
