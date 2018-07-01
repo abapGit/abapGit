@@ -14,7 +14,7 @@ CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
       BEGIN OF c_action,
         save_settings TYPE string VALUE 'save_settings',
       END OF c_action .
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo .
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo.
 
     METHODS render_dot_abapgit
       IMPORTING
@@ -91,14 +91,24 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
 
   METHOD render_dot_abapgit.
 
-    DATA: ls_dot          TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
-          lv_selected     TYPE string,
-          lt_folder_logic TYPE stringtab.
+    CONSTANTS: lc_requirement_edit_count TYPE i VALUE 5.
+    DATA: ls_dot               TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
+          lv_selected          TYPE string,
+          lt_folder_logic      TYPE stringtab,
+          lv_req_index         TYPE i,
+          lv_requirement_count TYPE i.
 
-    FIELD-SYMBOLS: <lv_folder_logic> TYPE LINE OF stringtab.
-
+    FIELD-SYMBOLS: <lv_folder_logic> TYPE LINE OF stringtab,
+                   <ls_requirement>  TYPE zif_abapgit_dot_abapgit=>ty_requirement.
 
     ls_dot = mo_repo->get_dot_abapgit( )->get_data( ).
+
+    lv_requirement_count = lines( ls_dot-requirements ).
+    IF lv_requirement_count < lc_requirement_edit_count.
+      DO - lv_requirement_count + lc_requirement_edit_count TIMES.
+        INSERT INITIAL LINE INTO TABLE ls_dot-requirements.
+      ENDDO.
+    ENDIF.
 
     INSERT zif_abapgit_dot_abapgit=>c_folder_logic-full
            INTO TABLE lt_folder_logic.
@@ -129,6 +139,25 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
     io_html->add( 'Starting folder: <input name="starting_folder" type="text" size="10" value="' &&
       ls_dot-starting_folder && '">' ).
     io_html->add( '<br>' ).
+
+    io_html->add( '<h3>Requirements</h3>' ).
+    io_html->add( '<table class="repo_tab" id="requirement-tab" style="max-width: 300px;">' ).
+    io_html->add( '<tr><th>Software Component</th><th>Min Release</th><th>Min Patch</th></tr>' ).
+
+    LOOP AT ls_dot-requirements ASSIGNING <ls_requirement>.
+      lv_req_index = sy-tabix.
+
+      io_html->add( '<tr>' ).
+      io_html->add( |<td><input name="req_com_{ lv_req_index }" maxlength=30 type="text" | &&
+                    |value="{ <ls_requirement>-component }"></td>| ).
+      io_html->add( |<td><input name="req_rel_{ lv_req_index }" maxlength=10 type="text" | &&
+                    |value="{ <ls_requirement>-min_release }"></td>| ).
+      io_html->add( |<td><input name="req_pat_{ lv_req_index }" maxlength=10 type="text" | &&
+                    |value="{ <ls_requirement>-min_patch }"></td>| ).
+      io_html->add( '</tr>' ).
+    ENDLOOP.
+
+    io_html->add( '</table>' ).
 
   ENDMETHOD.
 
@@ -195,8 +224,10 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
 
   METHOD save_dot_abap.
 
-    DATA: lo_dot        TYPE REF TO zcl_abapgit_dot_abapgit,
-          ls_post_field LIKE LINE OF it_post_fields.
+    DATA: lo_dot          TYPE REF TO zcl_abapgit_dot_abapgit,
+          ls_post_field   LIKE LINE OF it_post_fields,
+          lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
+    FIELD-SYMBOLS: <ls_requirement> TYPE zif_abapgit_dot_abapgit=>ty_requirement.
 
 
     lo_dot = mo_repo->get_dot_abapgit( ).
@@ -208,6 +239,24 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
     READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'starting_folder'.
     ASSERT sy-subrc = 0.
     lo_dot->set_starting_folder( ls_post_field-value ).
+
+    LOOP AT it_post_fields INTO ls_post_field WHERE name CP 'req_*'.
+      CASE ls_post_field-name+4(3).
+        WHEN 'com'.
+          INSERT INITIAL LINE INTO TABLE lt_requirements ASSIGNING <ls_requirement>.
+          <ls_requirement>-component = ls_post_field-value.
+        WHEN 'rel'.
+          <ls_requirement>-min_release = ls_post_field-value.
+        WHEN 'pat'.
+          <ls_requirement>-min_patch = ls_post_field-value.
+      ENDCASE.
+    ENDLOOP.
+
+    SORT lt_requirements BY component min_release min_patch.
+    DELETE lt_requirements WHERE component IS INITIAL.
+    DELETE ADJACENT DUPLICATES FROM lt_requirements COMPARING ALL FIELDS.
+
+    lo_dot->set_requirements( lt_requirements ).
 
     mo_repo->set_dot_abapgit( lo_dot ).
 
@@ -278,6 +327,4 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
-
-
 ENDCLASS.
