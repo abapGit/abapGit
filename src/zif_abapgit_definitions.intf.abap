@@ -424,6 +424,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
 
       go_main                  TYPE string VALUE 'go_main',
       go_explore               TYPE string VALUE 'go_explore',
+      go_repo_overview         TYPE string VALUE 'go_repo_overview',
       go_db                    TYPE string VALUE 'go_db',
       go_background            TYPE string VALUE 'go_background',
       go_background_run        TYPE string VALUE 'go_background_run',

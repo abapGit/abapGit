@@ -33,6 +33,7 @@ CLASS zcl_abapgit_html_toolbar DEFINITION
           iv_right       TYPE abap_bool OPTIONAL
           iv_sort        TYPE abap_bool OPTIONAL
           iv_corner      TYPE abap_bool OPTIONAL
+          iv_action      TYPE string OPTIONAL
         RETURNING
           VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
@@ -67,7 +68,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
+CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
 
 
   METHOD add.
@@ -142,8 +143,8 @@ CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
     ro_html->add( |<div class="{ lv_class }">| ).
     ro_html->add( '<ul><li>' ).
     ro_html->add_a( iv_txt = iv_label
-                    iv_typ = zif_abapgit_definitions=>gc_action_type-dummy
-                    iv_act = '' ).
+                    iv_typ = zif_abapgit_definitions=>gc_action_type-sapevent
+                    iv_act = iv_action ).
     ro_html->add( '<div class="minizone"></div>' ).
     ro_html->add( render_items( iv_sort = iv_sort ) ).
     ro_html->add( '</li></ul>' ).
