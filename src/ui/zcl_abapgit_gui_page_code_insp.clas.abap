@@ -233,8 +233,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
           ls_info               TYPE scir_rest,
           lo_result             TYPE REF TO cl_ci_result_root,
           lv_check_variant_name TYPE sci_chkv,
-          lv_package            TYPE devclass,
-          lv_srcid              TYPE scr_source_id.
+          lv_package            TYPE devclass.
 
     FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
 
@@ -256,12 +255,6 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
     lo_test = cl_ci_tests=>get_test_ref( <ls_result>-test ).
     lo_result = lo_test->get_result_node( <ls_result>-kind ).
-
-    lv_srcid = li_code_inspector->get_inspection( )->objs->objectsinf-srcid.
-
-    lo_result->set_srcid(
-        p_info  = ls_info
-        p_srcid = lv_srcid ).
 
     lo_result->set_info( ls_info ).
     lo_result->if_ci_test~navigate( ).
