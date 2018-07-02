@@ -23,7 +23,7 @@ INTERFACE zif_abapgit_persistence PUBLIC.
       ignore_subpackages           TYPE abap_bool,
       write_protected              TYPE abap_bool,
       only_local_objects           TYPE abap_bool,
-      code_inspector_check_variant TYPE sci_chkv ,
+      code_inspector_check_variant TYPE sci_chkv,
       block_commit                 TYPE abap_bool,
     END OF ty_local_settings.
 
@@ -34,6 +34,8 @@ INTERFACE zif_abapgit_persistence PUBLIC.
            branch_name     TYPE string,
            sha1            TYPE zif_abapgit_definitions=>ty_sha1,
            package         TYPE devclass,
+           created_by      TYPE xubname,
+           created_at      TYPE timestampl,
            offline         TYPE sap_bool,
            local_checksums TYPE ty_local_checksum_tt,
            dot_abapgit     TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
