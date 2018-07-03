@@ -65,6 +65,12 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
         VALUE(rs_signature) TYPE zif_abapgit_definitions=>ty_file_signature
       RAISING
         zcx_abapgit_exception .
+    METHODS get_requirements
+      RETURNING
+        VALUE(rt_requirements) TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
+    METHODS set_requirements
+      IMPORTING
+        it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
   PRIVATE SECTION.
     DATA: ms_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
@@ -281,4 +287,11 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD get_requirements.
+    rt_requirements = ms_data-requirements.
+  ENDMETHOD.
+
+  METHOD set_requirements.
+    ms_data-requirements = it_requirements.
+  ENDMETHOD.
 ENDCLASS.
