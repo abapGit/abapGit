@@ -12,6 +12,14 @@
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
    </VSEOCLASS>
+   <DESCRIPTIONS>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ABAPGIT_SAP_PACKAGE</CLSNAME>
+     <CMPNAME>REFRESH_PACKAGE_BUFFER</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Refresh Package Buffer</DESCRIPT>
+    </SEOCOMPOTX>
+   </DESCRIPTIONS>
   </asx:values>
  </asx:abap>
 </abapGit>

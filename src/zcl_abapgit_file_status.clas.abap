@@ -353,6 +353,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     ENDLOOP.
 
     " Check that objects are created in package corresponding to folder
+    ZCL_ABAPGIT_SAP_PACKAGE=>refresh_package_buffer( ).
     LOOP AT it_results ASSIGNING <ls_res1>
         WHERE NOT package IS INITIAL AND NOT path IS INITIAL.
       lv_path = zcl_abapgit_folder_logic=>package_to_path(
