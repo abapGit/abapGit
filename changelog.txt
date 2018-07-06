@@ -8,6 +8,16 @@ Legend
 + : added
 - : removed
 
+2018-07-06 v1.71.0
+------------------
+* validate sub and super packages when installing
+! delete empty packages
++ UI for editing requirements
+! track user which created repo
++ new repository overview page
+* delete PARA after DTEL
+* TABL, check existence before SELECTing
+
 2018-06-28 v1.70.0
 ------------------
 + possibility to run code inspector before staging
