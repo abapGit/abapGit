@@ -60,8 +60,6 @@ CLASS ZCL_ABAPGIT_PROGRESS IMPLEMENTATION.
 
     CONSTANTS: c_wait_secs TYPE i VALUE 2.
 
-    lv_pct = calc_pct( iv_current ).
-
     GET TIME.
     lv_time = sy-uzeit.
     IF mv_cv_time_next IS INITIAL AND mv_cv_datum_next IS INITIAL.
@@ -72,6 +70,8 @@ CLASS ZCL_ABAPGIT_PROGRESS IMPLEMENTATION.
     "We only do a progress indication if enough time has passed
     IF lv_time  >= mv_cv_time_next  AND sy-datum = mv_cv_datum_next  OR
        sy-datum >  mv_cv_datum_next.
+
+      lv_pct = calc_pct( iv_current ).
 
       CALL FUNCTION 'SAPGUI_PROGRESS_INDICATOR'
         EXPORTING
