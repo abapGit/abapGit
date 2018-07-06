@@ -4,12 +4,13 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
-  PRIVATE SECTION.
+protected section.
+private section.
 
-    TYPES:
-      ty_rs38l_incl_tt TYPE STANDARD TABLE OF rs38l_incl WITH DEFAULT KEY .
-    TYPES:
-      BEGIN OF ty_function,
+  types:
+    ty_rs38l_incl_tt TYPE STANDARD TABLE OF rs38l_incl WITH DEFAULT KEY .
+  types:
+    BEGIN OF ty_function,
         funcname          TYPE rs38l_fnam,
         global_flag       TYPE rs38l-global,
         remote_call       TYPE rs38l-remote,
@@ -24,87 +25,91 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         documentation     TYPE STANDARD TABLE OF rsfdo WITH DEFAULT KEY,
         exception_classes TYPE abap_bool,
       END OF ty_function .
-    TYPES:
-      ty_function_tt TYPE STANDARD TABLE OF ty_function WITH DEFAULT KEY .
+  types:
+    ty_function_tt TYPE STANDARD TABLE OF ty_function WITH DEFAULT KEY .
 
-    METHODS update_where_used
-      IMPORTING
-        !it_includes TYPE rso_t_objnm .
-    METHODS main_name
-      RETURNING
-        VALUE(rv_program) TYPE program
-      RAISING
-        zcx_abapgit_exception .
-    METHODS functions
-      RETURNING
-        VALUE(rt_functab) TYPE ty_rs38l_incl_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS includes
-      RETURNING
-        VALUE(rt_includes) TYPE rso_t_objnm
-      RAISING
-        zcx_abapgit_exception .
-    METHODS serialize_functions
-      RETURNING
-        VALUE(rt_functions) TYPE ty_function_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS deserialize_functions
-      IMPORTING
-        !it_functions TYPE ty_function_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS serialize_xml
-      IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_output
-      RAISING
-        zcx_abapgit_exception .
-    METHODS deserialize_xml
-      IMPORTING
-        !io_xml     TYPE REF TO zcl_abapgit_xml_input
-        !iv_package TYPE devclass
-      RAISING
-        zcx_abapgit_exception .
-    METHODS serialize_includes
-      RAISING
-        zcx_abapgit_exception .
-    METHODS deserialize_includes
-      IMPORTING
-        !io_xml     TYPE REF TO zcl_abapgit_xml_input
-        !iv_package TYPE devclass
-      RAISING
-        zcx_abapgit_exception .
-    METHODS are_exceptions_class_based
-      IMPORTING
-        iv_function_name TYPE rs38l_fnam
-      RETURNING
-        VALUE(rv_return) TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception .
-    METHODS is_function_group_locked
-      RETURNING
-        VALUE(rv_is_functions_group_locked) TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception.
-    METHODS is_any_include_locked
-      RETURNING
-        VALUE(rv_is_any_include_locked) TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception.
-    METHODS is_any_function_module_locked
-      RETURNING
-        VALUE(rv_any_function_module_locked) TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception.
-
-
-
+  methods UPDATE_WHERE_USED
+    importing
+      !IT_INCLUDES type RSO_T_OBJNM .
+  methods MAIN_NAME
+    returning
+      value(RV_PROGRAM) type PROGRAM
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods FUNCTIONS
+    returning
+      value(RT_FUNCTAB) type TY_RS38L_INCL_TT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods INCLUDES
+    returning
+      value(RT_INCLUDES) type RSO_T_OBJNM
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods SERIALIZE_FUNCTIONS
+    returning
+      value(RT_FUNCTIONS) type TY_FUNCTION_TT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods DESERIALIZE_FUNCTIONS
+    importing
+      !IT_FUNCTIONS type TY_FUNCTION_TT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods SERIALIZE_XML
+    importing
+      !IO_XML type ref to ZCL_ABAPGIT_XML_OUTPUT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods DESERIALIZE_XML
+    importing
+      !IO_XML type ref to ZCL_ABAPGIT_XML_INPUT
+      !IV_PACKAGE type DEVCLASS
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods SERIALIZE_INCLUDES
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods DESERIALIZE_INCLUDES
+    importing
+      !IO_XML type ref to ZCL_ABAPGIT_XML_INPUT
+      !IV_PACKAGE type DEVCLASS
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods ARE_EXCEPTIONS_CLASS_BASED
+    importing
+      !IV_FUNCTION_NAME type RS38L_FNAM
+    returning
+      value(RV_RETURN) type ABAP_BOOL
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods IS_FUNCTION_GROUP_LOCKED
+    returning
+      value(RV_IS_FUNCTIONS_GROUP_LOCKED) type ABAP_BOOL
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods IS_ANY_INCLUDE_LOCKED
+    returning
+      value(RV_IS_ANY_INCLUDE_LOCKED) type ABAP_BOOL
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods IS_ANY_FUNCTION_MODULE_LOCKED
+    returning
+      value(RV_ANY_FUNCTION_MODULE_LOCKED) type ABAP_BOOL
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods GET_ABAP_VERSION
+    importing
+      !IO_XML type ref to ZCL_ABAPGIT_XML_INPUT
+    returning
+      value(RV_ABAP_VERSION) type PROGDIR-UCCHECK
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
 
   METHOD are_exceptions_class_based.
@@ -277,13 +282,14 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
   METHOD deserialize_xml.
 
-    DATA: lv_complete  TYPE rs38l-area,
-          lv_namespace TYPE rs38l-namespace,
-          lv_areat     TYPE tlibt-areat,
-          lv_stext     TYPE tftit-stext,
-          lv_group     TYPE rs38l-area.
+    DATA: lv_complete     TYPE rs38l-area,
+          lv_namespace    TYPE rs38l-namespace,
+          lv_areat        TYPE tlibt-areat,
+          lv_stext        TYPE tftit-stext,
+          lv_group        TYPE rs38l-area,
+          lv_abap_version TYPE trdir-uccheck.
 
-
+    lv_abap_version = get_abap_version( io_xml ).
     lv_complete = ms_item-obj_name.
 
     CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
@@ -319,6 +325,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         short_text              = lv_stext
         namespace               = lv_namespace
         devclass                = iv_package
+        unicode_checks          = lv_abap_version
       EXCEPTIONS
         name_already_exists     = 1
         name_not_correct        = 2
@@ -363,6 +370,35 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM rt_functab COMPARING funcname.
 
   ENDMETHOD.                    "functions
+
+
+  METHOD get_abap_version.
+
+    DATA: lt_includes TYPE rso_t_objnm,
+          ls_progdir  TYPE ty_progdir,
+          lo_xml      TYPE REF TO zcl_abapgit_xml_input.
+
+    FIELD-SYMBOLS: <lv_include> LIKE LINE OF lt_includes.
+
+    io_xml->read( EXPORTING iv_name = 'INCLUDES'
+                  CHANGING cg_data = lt_includes ).
+
+    LOOP AT lt_includes ASSIGNING <lv_include>.
+
+      lo_xml = mo_files->read_xml( <lv_include> ).
+
+      lo_xml->read( EXPORTING iv_name = 'PROGDIR'
+                    CHANGING cg_data = ls_progdir ).
+
+      IF rv_abap_version IS INITIAL.
+        rv_abap_version = ls_progdir-uccheck.
+      ELSEIF rv_abap_version NE ls_progdir-uccheck.
+*** All includes need to have the same ABAP language version
+          zcx_abapgit_exception=>raise( 'different ABAP Language Versions' ).
+        ENDIF.
+      ENDLOOP.
+
+    ENDMETHOD.
 
 
   METHOD includes.
@@ -441,6 +477,69 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     APPEND lv_program TO rt_includes.
 
   ENDMETHOD.                    "includes
+
+
+  METHOD is_any_function_module_locked.
+
+    DATA: lt_functions TYPE zcl_abapgit_object_fugr=>ty_rs38l_incl_tt.
+
+    FIELD-SYMBOLS: <ls_function> TYPE rs38l_incl.
+
+    TRY.
+        lt_functions = functions( ).
+      CATCH zcx_abapgit_exception.
+        RETURN.
+    ENDTRY.
+
+    LOOP AT lt_functions ASSIGNING <ls_function>.
+
+      IF exists_a_lock_entry_for( iv_lock_object = 'ESFUNCTION'
+                                  iv_argument    = |{ <ls_function>-funcname }| ) = abap_true.
+        rv_any_function_module_locked = abap_true.
+        EXIT.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD is_any_include_locked.
+
+    DATA: lt_includes TYPE rso_t_objnm.
+    FIELD-SYMBOLS: <lv_include> TYPE sobj_name.
+
+    TRY.
+        lt_includes = includes( ).
+      CATCH zcx_abapgit_exception.
+        RETURN.
+    ENDTRY.
+
+    LOOP AT lt_includes ASSIGNING <lv_include>.
+
+      IF exists_a_lock_entry_for( iv_lock_object = 'ESRDIRE'
+                                  iv_argument    = |{ <lv_include> }| ) = abap_true.
+        rv_is_any_include_locked = abap_true.
+        EXIT.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD is_function_group_locked.
+
+    DATA: lv_object TYPE eqegraarg .
+
+    lv_object = |FG{ ms_item-obj_name }|.
+    OVERLAY lv_object WITH '                                          '.
+    lv_object = lv_object && '*'.
+
+    rv_is_functions_group_locked = exists_a_lock_entry_for( iv_lock_object = 'EEUDB'
+                                                            iv_argument    = lv_object ).
+
+  ENDMETHOD.
 
 
   METHOD main_name.
@@ -728,8 +827,8 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     DATA: lv_program_name TYPE programm,
           lt_functions    TYPE ty_function_tt,
           lt_dynpros      TYPE ty_dynpro_tt,
-          ls_cua          TYPE ty_cua.
-
+          ls_cua          TYPE ty_cua,
+          ls_progdir      TYPE ty_progdir.
 
     deserialize_xml(
       io_xml     = io_xml
@@ -812,6 +911,26 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
   ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
 
+  METHOD zif_abapgit_object~is_locked.
+
+    DATA: lv_program TYPE program.
+
+    lv_program = main_name( ).
+
+    IF is_function_group_locked( )        = abap_true
+    OR is_any_include_locked( )           = abap_true
+    OR is_any_function_module_locked( )   = abap_true
+    OR is_any_dynpro_locked( lv_program ) = abap_true
+    OR is_cua_locked( lv_program )        = abap_true
+    OR is_text_locked( lv_program )       = abap_true.
+
+      rv_is_locked = abap_true.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
@@ -862,87 +981,4 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.                    "serialize
-
-  METHOD zif_abapgit_object~is_locked.
-
-    DATA: lv_program TYPE program.
-
-    lv_program = main_name( ).
-
-    IF is_function_group_locked( )        = abap_true
-    OR is_any_include_locked( )           = abap_true
-    OR is_any_function_module_locked( )   = abap_true
-    OR is_any_dynpro_locked( lv_program ) = abap_true
-    OR is_cua_locked( lv_program )        = abap_true
-    OR is_text_locked( lv_program )       = abap_true.
-
-      rv_is_locked = abap_true.
-
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD is_function_group_locked.
-
-    DATA: lv_object TYPE eqegraarg .
-
-    lv_object = |FG{ ms_item-obj_name }|.
-    OVERLAY lv_object WITH '                                          '.
-    lv_object = lv_object && '*'.
-
-    rv_is_functions_group_locked = exists_a_lock_entry_for( iv_lock_object = 'EEUDB'
-                                                            iv_argument    = lv_object ).
-
-  ENDMETHOD.
-
-
-  METHOD is_any_include_locked.
-
-    DATA: lt_includes TYPE rso_t_objnm.
-    FIELD-SYMBOLS: <lv_include> TYPE sobj_name.
-
-    TRY.
-        lt_includes = includes( ).
-      CATCH zcx_abapgit_exception.
-        RETURN.
-    ENDTRY.
-
-    LOOP AT lt_includes ASSIGNING <lv_include>.
-
-      IF exists_a_lock_entry_for( iv_lock_object = 'ESRDIRE'
-                                  iv_argument    = |{ <lv_include> }| ) = abap_true.
-        rv_is_any_include_locked = abap_true.
-        EXIT.
-      ENDIF.
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD is_any_function_module_locked.
-
-    DATA: lt_functions TYPE zcl_abapgit_object_fugr=>ty_rs38l_incl_tt.
-
-    FIELD-SYMBOLS: <ls_function> TYPE rs38l_incl.
-
-    TRY.
-        lt_functions = functions( ).
-      CATCH zcx_abapgit_exception.
-        RETURN.
-    ENDTRY.
-
-    LOOP AT lt_functions ASSIGNING <ls_function>.
-
-      IF exists_a_lock_entry_for( iv_lock_object = 'ESFUNCTION'
-                                  iv_argument    = |{ <ls_function>-funcname }| ) = abap_true.
-        rv_any_function_module_locked = abap_true.
-        EXIT.
-      ENDIF.
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
 ENDCLASS.
