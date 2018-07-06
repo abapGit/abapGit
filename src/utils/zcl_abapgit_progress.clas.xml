@@ -14,6 +14,20 @@
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
    </VSEOCLASS>
+   <DESCRIPTIONS>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ABAPGIT_PROGRESS</CLSNAME>
+     <CMPNAME>MV_CV_DATUM_NEXT</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Date or Earliest, Next Progress Display</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ABAPGIT_PROGRESS</CLSNAME>
+     <CMPNAME>MV_CV_TIME_NEXT</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Time of Earliest, Next Progress Display</DESCRIPT>
+    </SEOCOMPOTX>
+   </DESCRIPTIONS>
   </asx:values>
  </asx:abap>
 </abapGit>
