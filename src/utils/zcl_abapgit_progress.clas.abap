@@ -21,10 +21,10 @@ CLASS zcl_abapgit_progress DEFINITION
         !iv_current   TYPE i
       RETURNING
         VALUE(rv_pct) TYPE i .
-private section.
+  PRIVATE SECTION.
 
-  data MV_CV_TIME_NEXT type SY-UZEIT .
-  data MV_CV_DATUM_NEXT type SY-DATUM .
+    DATA mv_cv_time_next TYPE sy-uzeit .
+    DATA mv_cv_datum_next TYPE sy-datum .
 ENDCLASS.
 
 
