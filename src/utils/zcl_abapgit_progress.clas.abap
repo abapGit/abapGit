@@ -80,6 +80,12 @@ CLASS ZCL_ABAPGIT_PROGRESS IMPLEMENTATION.
       mv_cv_time_next = lv_time + c_wait_secs.
 
     ENDIF.
+    IF sy-datum > mv_cv_datum_next.
+      mv_cv_datum_next = sy-datum.
+    ENDIF.
+    IF mv_cv_time_next < lv_time.
+      mv_cv_datum_next = sy-datum + 1.
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
