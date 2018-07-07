@@ -191,4 +191,10 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
 
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
 ENDCLASS.                    "zcl_abapgit_object_msag IMPLEMENTATION

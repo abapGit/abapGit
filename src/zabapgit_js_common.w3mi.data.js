@@ -119,6 +119,29 @@ function perfClear() {
 }
 
 /**********************************************************
+ * TAG PAGE Logic
+ **********************************************************/
+// somehow only functions on window are visible for the select tag
+window.onTagTypeChange = function(oSelectObject){
+  var sValue = oSelectObject.value;
+  submitSapeventForm({ 'type': sValue }, "change_tag_type", "post");
+}
+
+/**********************************************************
+ * Repo Overview Logic
+ **********************************************************/
+// somehow only functions on window are visible for the select tag
+window.onOrderByChange = function(oSelectObject){
+  var sValue = oSelectObject.value;
+  submitSapeventForm({ 'orderBy': sValue }, "change_order_by", "post");
+}
+
+window.onDirectionChange = function(oSelectObject){
+  var sValue = oSelectObject.value;
+  submitSapeventForm({ 'direction': sValue }, "direction", "post");
+}
+
+/**********************************************************
  * STAGE PAGE Logic
  **********************************************************/
 

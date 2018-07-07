@@ -17,13 +17,18 @@ CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING   zcx_abapgit_exception,
       deserialize_texts
         IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_input
-        RAISING   zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception,
+      is_program_locked
+        RETURNING
+          VALUE(rv_is_program_locked) TYPE abap_bool
+        RAISING
+          zcx_abapgit_exception.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
+CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -148,7 +153,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
 
     io_xml->read( EXPORTING iv_name = 'DYNPROS'
                   CHANGING cg_data  = lt_dynpros ).
-    deserialize_dynpros( it_dynpros = lt_dynpros ).
+    deserialize_dynpros( lt_dynpros ).
 
     io_xml->read( EXPORTING iv_name = 'CUA'
                   CHANGING cg_data  = ls_cua ).
@@ -213,4 +218,26 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
     serialize_texts( io_xml ).
 
   ENDMETHOD.                    "zif_abapgit_serialize~serialize
+
+  METHOD zif_abapgit_object~is_locked.
+
+    IF is_program_locked( )                     = abap_true
+    OR is_any_dynpro_locked( ms_item-obj_name ) = abap_true
+    OR is_cua_locked( ms_item-obj_name )        = abap_true
+    OR is_text_locked( ms_item-obj_name )       = abap_true.
+
+      rv_is_locked = abap_true.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD is_program_locked.
+
+    rv_is_program_locked = exists_a_lock_entry_for( iv_lock_object = 'ESRDIRE'
+                                                    iv_argument    = |{ ms_item-obj_name }| ).
+
+  ENDMETHOD.
+
 ENDCLASS.

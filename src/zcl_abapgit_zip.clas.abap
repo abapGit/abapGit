@@ -52,7 +52,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
+CLASS zcl_abapgit_zip IMPLEMENTATION.
 
 
   METHOD encode_files.
@@ -78,11 +78,18 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
   METHOD export.
 
-    DATA: lo_log TYPE REF TO zcl_abapgit_log,
-          lt_zip TYPE zif_abapgit_definitions=>ty_files_item_tt.
+    DATA: lo_log     TYPE REF TO zcl_abapgit_log,
+          lt_zip     TYPE zif_abapgit_definitions=>ty_files_item_tt,
+          lv_package TYPE devclass.
 
 
     CREATE OBJECT lo_log.
+
+    lv_package = io_repo->get_package( ).
+
+    IF zcl_abapgit_factory=>get_sap_package( lv_package )->exists( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Package { lv_package } doesn't exist| ).
+    ENDIF.
 
     lt_zip = io_repo->get_files_local( io_log    = lo_log
                                        it_filter = it_filter ).
@@ -112,7 +119,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF lt_files.
 
 
-    ls_tadir = zcl_abapgit_popups=>popup_object( ).
+    ls_tadir = zcl_abapgit_ui_factory=>get_popups( )->popup_object( ).
     IF ls_tadir IS INITIAL.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
@@ -198,7 +205,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     ls_data-key = 'DUMMY'.
     ls_data-dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ).
 
-    zcl_abapgit_popups=>popup_package_export(
+    zcl_abapgit_ui_factory=>get_popups( )->popup_package_export(
       IMPORTING
         ev_package      = ls_data-package
         ev_folder_logic = ls_data-dot_abapgit-folder_logic ).

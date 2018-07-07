@@ -30,12 +30,17 @@ CLASS zcl_abapgit_object_clas_old DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
       serialize_xml
         IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
         RAISING   zcx_abapgit_exception.
+  PRIVATE SECTION.
+    METHODS:
+      is_class_locked
+        RETURNING VALUE(rv_is_class_locked) TYPE abap_bool
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
+CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -114,7 +119,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'LINES'
                   CHANGING cg_data = lt_lines ).
 
-    IF lt_lines[] IS INITIAL.
+    IF lines( lt_lines ) = 0.
       RETURN.
     ENDIF.
 
@@ -155,7 +160,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
                   CHANGING cg_data = lt_tpool_ext ).
     lt_tpool = read_tpool( lt_tpool_ext ).
 
-    IF lt_tpool[] IS INITIAL.
+    IF lines( lt_tpool ) = 0.
       RETURN.
     ENDIF.
 
@@ -186,7 +191,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
     zcl_abapgit_language=>set_current_language( mv_language ).
 
     TRY.
-        ls_vseoclass = mo_object_oriented_object_fct->get_class_properties( is_class_key = ls_clskey ).
+        ls_vseoclass = mo_object_oriented_object_fct->get_class_properties( ls_clskey ).
 
       CLEANUP.
         zcl_abapgit_language=>restore_login_language( ).
@@ -308,7 +313,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
     DATA: ls_class_key TYPE seoclskey.
     ls_class_key-clsname = ms_item-obj_name.
 
-    rv_bool = mo_object_oriented_object_fct->exists( iv_object_name = ls_class_key ).
+    rv_bool = mo_object_oriented_object_fct->exists( ls_class_key ).
   ENDMETHOD.                    "zif_abapgit_object~exists
 
 
@@ -374,7 +379,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
     lt_source = mo_object_oriented_object_fct->serialize_abap(
       is_class_key = ls_class_key
       iv_type      = seop_ext_class_locals_def ).
-    IF NOT lt_source[] IS INITIAL.
+    IF lines( lt_source ) > 0.
       mo_files->add_abap( iv_extra = 'locals_def'
                           it_abap  = lt_source ).           "#EC NOTEXT
     ENDIF.
@@ -382,7 +387,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
     lt_source = mo_object_oriented_object_fct->serialize_abap(
       is_class_key = ls_class_key
       iv_type      = seop_ext_class_locals_imp ).
-    IF NOT lt_source[] IS INITIAL.
+    IF lines( lt_source ) > 0.
       mo_files->add_abap( iv_extra = 'locals_imp'
                           it_abap  = lt_source ).           "#EC NOTEXT
     ENDIF.
@@ -392,7 +397,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
       iv_type                 = seop_ext_class_testclasses ).
 
     mv_skip_testclass = mo_object_oriented_object_fct->get_skip_test_classes( ).
-    IF NOT lt_source[] IS INITIAL AND mv_skip_testclass = abap_false.
+    IF lines( lt_source ) > 0 AND mv_skip_testclass = abap_false.
       mo_files->add_abap( iv_extra = 'testclasses'
                           it_abap  = lt_source ).           "#EC NOTEXT
     ENDIF.
@@ -400,7 +405,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
     lt_source = mo_object_oriented_object_fct->serialize_abap(
       is_class_key = ls_class_key
       iv_type      = seop_ext_class_macros ).
-    IF NOT lt_source[] IS INITIAL.
+    IF lines( lt_source ) > 0.
       mo_files->add_abap( iv_extra = 'macros'
                           it_abap  = lt_source ).           "#EC NOTEXT
     ENDIF.
@@ -408,4 +413,44 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS_OLD IMPLEMENTATION.
     serialize_xml( io_xml ).
 
   ENDMETHOD.                    "serialize
+
+  METHOD zif_abapgit_object~is_locked.
+
+    DATA: lv_classpool TYPE program.
+
+    lv_classpool = cl_oo_classname_service=>get_classpool_name( |{ ms_item-obj_name }| ).
+
+    IF is_class_locked( )             = abap_true
+    OR is_text_locked( lv_classpool ) = abap_true.
+
+      rv_is_locked = abap_true.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD is_class_locked.
+
+    DATA: lv_clsname TYPE seoclsenq-clsname.
+
+    lv_clsname = ms_item-obj_name.
+    OVERLAY lv_clsname WITH '=============================='.
+
+    CALL FUNCTION 'ENQUEUE_ESEOCLASS'
+      EXPORTING
+        clsname        = lv_clsname
+      EXCEPTIONS
+        foreign_lock   = 1
+        system_failure = 2
+        OTHERS         = 3.
+
+    rv_is_class_locked = boolc( sy-subrc <> 0 ).
+
+    CALL FUNCTION 'DEQUEUE_ESEOCLASS'
+      EXPORTING
+        clsname = lv_clsname.
+
+  ENDMETHOD.
+
 ENDCLASS.

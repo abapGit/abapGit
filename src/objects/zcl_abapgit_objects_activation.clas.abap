@@ -77,7 +77,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
           lv_rc         TYPE sy-subrc,
           lt_deltab     TYPE STANDARD TABLE OF dcdeltb,
           lt_action_tab TYPE STANDARD TABLE OF dctablres,
-          lv_logname    TYPE ddmass-logname.
+          lv_logname    TYPE ddmass-logname,
+          lv_errmsg(255) TYPE c.
 
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF gt_objects.
 
@@ -86,6 +87,24 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
       ls_gentab-name = <ls_object>-obj_name.
       ls_gentab-type = <ls_object>-object.
       INSERT ls_gentab INTO TABLE lt_gentab.
+
+      CALL FUNCTION 'RS_CORR_INSERT'
+        EXPORTING
+          object              = <ls_object>-obj_name
+          object_class        = <ls_object>-object
+          global_lock         = abap_true
+        EXCEPTIONS
+          cancelled           = 1
+          permission_failure  = 2
+          unknown_objectclass = 3
+          OTHERS              = 4.
+
+      IF sy-subrc <> 0.
+        CONCATENATE 'error from RS_CORR_INSERT for' <ls_object>-object <ls_object>-obj_name
+            INTO lv_errmsg SEPARATED BY space.
+
+        zcx_abapgit_exception=>raise( lv_errmsg ).
+      ENDIF.
 
     ENDLOOP.
 

@@ -179,4 +179,10 @@ CLASS zcl_abapgit_object_enhs IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
 ENDCLASS. "zcl_abapgit_object_enhs

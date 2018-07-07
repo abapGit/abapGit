@@ -44,7 +44,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
 
   METHOD get_page_background.
@@ -108,7 +108,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
     DATA: lv_class_name TYPE string,
           lv_cancel     TYPE abap_bool.
 
-    zcl_abapgit_popups=>run_page_class_popup(
+    zcl_abapgit_ui_factory=>get_popups( )->run_page_class_popup(
       IMPORTING
         ev_name   = lv_class_name
         ev_cancel = lv_cancel ).
@@ -128,10 +128,11 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
   METHOD get_page_stage.
 
-    DATA: lo_repo       TYPE REF TO zcl_abapgit_repo_online,
-          lv_key        TYPE zif_abapgit_persistence=>ty_repo-key,
-          lv_seed       TYPE string,
-          lo_stage_page TYPE REF TO zcl_abapgit_gui_page_stage.
+    DATA: lo_repo                TYPE REF TO zcl_abapgit_repo_online,
+          lv_key                 TYPE zif_abapgit_persistence=>ty_repo-key,
+          lv_seed                TYPE string,
+          lo_stage_page          TYPE REF TO zcl_abapgit_gui_page_stage,
+          lo_code_inspector_page TYPE REF TO zcl_abapgit_gui_page_code_insp.
 
     FIND FIRST OCCURRENCE OF '=' IN iv_getdata.
     IF sy-subrc <> 0. " Not found ? -> just repo key in params
@@ -145,15 +146,27 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
 
-    " force refresh on stage, to make sure the latest local and remote files are used
-    lo_repo->refresh( ).
+    IF lo_repo->get_local_settings( )-code_inspector_check_variant IS NOT INITIAL.
 
-    CREATE OBJECT lo_stage_page
-      EXPORTING
-        io_repo = lo_repo
-        iv_seed = lv_seed.
+      CREATE OBJECT lo_code_inspector_page
+        EXPORTING
+          io_repo = lo_repo.
 
-    ri_page = lo_stage_page.
+      ri_page = lo_code_inspector_page.
+
+    ELSE.
+
+      " force refresh on stage, to make sure the latest local and remote files are used
+      lo_repo->refresh( ).
+
+      CREATE OBJECT lo_stage_page
+        EXPORTING
+          io_repo = lo_repo
+          iv_seed = lv_seed.
+
+      ri_page = lo_stage_page.
+
+    ENDIF.
 
   ENDMETHOD.  "get_page_stage
 
@@ -175,6 +188,9 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-go_explore.                     " Go Explore page
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_explore.
+        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+      WHEN zif_abapgit_definitions=>gc_action-go_repo_overview.               " Go Repository overview
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_repo_over.
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-go_db.                          " Go DB util page
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_db.
@@ -266,6 +282,11 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
           EXPORTING
             io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+      WHEN zif_abapgit_definitions=>gc_action-repo_code_inspector.
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_code_insp
+          EXPORTING
+            io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-repo_purge.                      " Repo remove & purge all objects
         zcl_abapgit_services_repo=>purge( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
@@ -341,9 +362,10 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         zcl_abapgit_services_git=>tag_overview( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN zif_abapgit_definitions=>gc_action-git_tag_create.                " GIT Tag create
-        zcl_abapgit_services_git=>create_tag( lv_key ).
-        zcl_abapgit_services_repo=>refresh( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_tag
+          EXPORTING
+            io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
       WHEN zif_abapgit_definitions=>gc_action-git_tag_delete.                " GIT Tag create
         zcl_abapgit_services_git=>delete_tag( lv_key ).
         zcl_abapgit_services_repo=>refresh( lv_key ).

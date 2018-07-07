@@ -47,7 +47,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
+CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
 
 
   METHOD build_folders.
@@ -108,7 +108,7 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
                    <ls_tadir>     LIKE LINE OF lt_tadir.
 
 
-    lt_tadir = zcl_abapgit_tadir=>read(
+    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
       iv_package = mo_repo->get_package( )
       io_dot     = mo_repo->get_dot_abapgit( ) ).
 
@@ -183,18 +183,7 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
 
   METHOD filter_changes.
 
-    DATA lt_repo_temp LIKE ct_repo_items.
-
-    FIELD-SYMBOLS <ls_item> LIKE LINE OF ct_repo_items.
-
-    LOOP AT ct_repo_items ASSIGNING <ls_item>.
-      CHECK <ls_item>-changes > 0.
-      APPEND <ls_item> TO lt_repo_temp.
-    ENDLOOP.
-
-    IF lines( lt_repo_temp ) > 0. " Prevent showing empty package if no changes, show all
-      ct_repo_items = lt_repo_temp.
-    ENDIF.
+    DELETE ct_repo_items WHERE changes = 0.
 
   ENDMETHOD. "filter_changes
 
@@ -220,7 +209,8 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
         CHANGING  ct_repo_items = rt_repo_items ).
     ENDIF.
 
-    IF iv_changes_only = abap_true.
+    IF iv_changes_only = abap_true AND mo_repo->is_offline( ) = abap_false.
+      " There are never changes for offline repositories
       filter_changes( CHANGING ct_repo_items = rt_repo_items ).
     ENDIF.
 

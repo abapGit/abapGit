@@ -48,6 +48,7 @@ input:focus, textarea:focus {
 .attention        { color: red        !important; }
 .error            { color: #d41919    !important; }
 .warning          { color: #efb301    !important; }
+.success          { color: green   	  !important; }
 .blue             { color: #5e8dc9    !important; }
 .red              { color: red        !important; }
 .white            { color: white      !important; }
@@ -324,6 +325,11 @@ form.aligned-form {
 
 form.aligned-form label {
   color: #BBB;
+  padding-right: 1em;
+  vertical-align: middle;
+}
+
+form.aligned-form select {
   padding-right: 1em;
   vertical-align: middle;
 }

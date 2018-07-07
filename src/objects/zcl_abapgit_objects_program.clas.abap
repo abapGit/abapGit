@@ -114,6 +114,22 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
                 iv_skip_gui       TYPE abap_bool DEFAULT abap_false
       RETURNING VALUE(rv_changed) TYPE abap_bool.
 
+    METHODS is_any_dynpro_locked
+      IMPORTING iv_program                     TYPE programm
+      RETURNING VALUE(rv_is_any_dynpro_locked) TYPE abap_bool
+      RAISING   zcx_abapgit_exception.
+
+    METHODS is_cua_locked
+      IMPORTING iv_program              TYPE programm
+      RETURNING VALUE(rv_is_cua_locked) TYPE abap_bool
+      RAISING   zcx_abapgit_exception.
+
+    METHODS is_text_locked
+      IMPORTING iv_program               TYPE programm
+      RETURNING VALUE(rv_is_text_locked) TYPE abap_bool
+      RAISING   zcx_abapgit_exception.
+
+
     CLASS-METHODS:
       add_tpool
         IMPORTING it_tpool        TYPE textpool_table
@@ -136,6 +152,54 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
 ENDCLASS.
 
 CLASS zcl_abapgit_objects_program IMPLEMENTATION.
+
+  METHOD is_text_locked.
+
+    DATA: lv_object TYPE eqegraarg.
+
+    lv_object = |*{ iv_program }|.
+
+    rv_is_text_locked = exists_a_lock_entry_for( iv_lock_object = 'EABAPTEXTE'
+                                                 iv_argument    = lv_object ).
+
+  ENDMETHOD.
+
+  METHOD is_cua_locked.
+
+    DATA: lv_object TYPE eqegraarg,
+          ls_cua    TYPE zcl_abapgit_objects_program=>ty_cua.
+
+    lv_object = |CU{ iv_program }|.
+    OVERLAY lv_object WITH '                                          '.
+    lv_object = lv_object && '*'.
+
+    rv_is_cua_locked = exists_a_lock_entry_for( iv_lock_object = 'ESCUAPAINT'
+                                                iv_argument    = lv_object ).
+
+  ENDMETHOD.
+
+  METHOD is_any_dynpro_locked.
+
+    DATA: lt_dynpros TYPE zcl_abapgit_objects_program=>ty_dynpro_tt,
+          lv_object  TYPE seqg3-garg.
+
+    FIELD-SYMBOLS: <ls_dynpro> TYPE zcl_abapgit_objects_program=>ty_dynpro.
+
+    lt_dynpros = serialize_dynpros( iv_program ).
+
+    LOOP AT lt_dynpros ASSIGNING <ls_dynpro>.
+
+      lv_object = |{ <ls_dynpro>-header-screen }{ <ls_dynpro>-header-program }|.
+
+      IF exists_a_lock_entry_for( iv_lock_object = 'ESCRP'
+                                  iv_argument    = lv_object ) = abap_true.
+        rv_is_any_dynpro_locked = abap_true.
+        EXIT.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
 
   METHOD condense_flow.
 
@@ -338,31 +402,29 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       ENDIF.
 
       zcl_abapgit_language=>restore_login_language( ).
-    ELSE.
+    ELSEIF strlen( is_progdir-name ) > 30.
 * function module RPY_PROGRAM_INSERT cannot handle function group includes
 
-      IF strlen( is_progdir-name ) > 30.
-        " special treatment for extensions
-        " if the program name exceeds 30 characters it is not a usual
-        " ABAP program but might be some extension, which requires the internal
-        " addition EXTENSION TYPE, see
-        " http://help.sap.com/abapdocu_751/en/abapinsert_report_internal.htm#!ABAP_ADDITION_1@1@
-        " This e.g. occurs in case of transportable Code Inspector variants (ending with ===VC)
-        INSERT REPORT is_progdir-name
-         FROM it_source
-         STATE 'I'
-         EXTENSION TYPE is_progdir-name+30.
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( 'error from INSERT REPORT .. EXTENSION TYPE' ).
-        ENDIF.
-      ELSE.
-        INSERT REPORT is_progdir-name
-          FROM it_source
-          STATE 'I'
-          PROGRAM TYPE is_progdir-subc.
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( 'error from INSERT REPORT' ).
-        ENDIF.
+      " special treatment for extensions
+      " if the program name exceeds 30 characters it is not a usual
+      " ABAP program but might be some extension, which requires the internal
+      " addition EXTENSION TYPE, see
+      " http://help.sap.com/abapdocu_751/en/abapinsert_report_internal.htm#!ABAP_ADDITION_1@1@
+      " This e.g. occurs in case of transportable Code Inspector variants (ending with ===VC)
+      INSERT REPORT is_progdir-name
+       FROM it_source
+       STATE 'I'
+       EXTENSION TYPE is_progdir-name+30.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'error from INSERT REPORT .. EXTENSION TYPE' ).
+      ENDIF.
+    ELSE.
+      INSERT REPORT is_progdir-name
+        FROM it_source
+        STATE 'I'
+        PROGRAM TYPE is_progdir-subc.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'error from INSERT REPORT' ).
       ENDIF.
     ENDIF.
 
@@ -594,7 +656,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
           illegal_field_position = 9
           OTHERS                 = 10.
       IF sy-subrc <> 2 AND sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from RPY_DYNPRO_INSERT' ).
+        zcx_abapgit_exception=>raise( |error from RPY_DYNPRO_INSERT: { sy-subrc }| ).
       ENDIF.
 * todo, RPY_DYNPRO_UPDATE?
 

@@ -1,33 +1,20 @@
-CLASS zcl_abapgit_sap_package DEFINITION PUBLIC CREATE PUBLIC.
+CLASS zcl_abapgit_sap_package DEFINITION
+    PUBLIC CREATE PRIVATE
+    GLOBAL FRIENDS zcl_abapgit_factory.
 
   PUBLIC SECTION.
-    CLASS-METHODS:
-      get
-        IMPORTING iv_package        TYPE devclass
-        RETURNING VALUE(ri_package) TYPE REF TO zif_abapgit_sap_package,
-      create
-        IMPORTING is_package TYPE scompkdtln
-        RAISING   zcx_abapgit_exception,
-      create_local
-        IMPORTING iv_package TYPE devclass
-        RAISING   zcx_abapgit_exception.
-
     METHODS:
       constructor
         IMPORTING iv_package TYPE devclass.
 
     INTERFACES: zif_abapgit_sap_package.
 
-    TYPES: BEGIN OF ty_injected,
-             package TYPE devclass,
-             object  TYPE REF TO zif_abapgit_sap_package,
-           END OF ty_injected.
-
-* TODO, isolate this variable?
-    CLASS-DATA: gt_injected TYPE STANDARD TABLE OF ty_injected.
-
   PRIVATE SECTION.
     DATA: mv_package TYPE devclass.
+
+    ALIASES:
+      create FOR zif_abapgit_sap_package~create,
+      create_local FOR zif_abapgit_sap_package~create_local.
 
 ENDCLASS.
 
@@ -41,7 +28,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD create.
+  METHOD zif_abapgit_sap_package~create.
 
     DATA: lv_err     TYPE string,
           li_package TYPE REF TO if_package,
@@ -144,13 +131,13 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD create_local.
+  METHOD zif_abapgit_sap_package~create_local.
 
     DATA: ls_package TYPE scompkdtln.
 
 
-    ls_package-devclass  = iv_package.
-    ls_package-ctext     = iv_package.
+    ls_package-devclass  = mv_package.
+    ls_package-ctext     = mv_package.
     ls_package-parentcl  = '$TMP'.
     ls_package-dlvunit   = 'LOCAL'.
     ls_package-as4user   = sy-uname.
@@ -160,19 +147,28 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   ENDMETHOD.                    "create
 
 
-  METHOD get.
+  METHOD zif_abapgit_sap_package~are_changes_recorded_in_tr_req.
 
-    FIELD-SYMBOLS: <ls_injected> LIKE LINE OF gt_injected.
+    DATA: li_package TYPE REF TO if_package.
 
-    IF lines( gt_injected ) > 0.
-      READ TABLE gt_injected ASSIGNING <ls_injected> WITH KEY package = iv_package.
-      ASSERT sy-subrc = 0. " unit test should be in control
-      ri_package = <ls_injected>-object.
-    ELSE.
-      CREATE OBJECT ri_package TYPE zcl_abapgit_sap_package
-        EXPORTING
-          iv_package = iv_package.
+    cl_package_factory=>load_package(
+      EXPORTING
+        i_package_name             = mv_package
+      IMPORTING
+        e_package                  = li_package
+      EXCEPTIONS
+        object_not_existing        = 1
+        unexpected_error           = 2
+        intern_err                 = 3
+        no_access                  = 4
+        object_locked_and_modified = 5
+        OTHERS                     = 6 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from CL_PACKAGE_FACTORY=>LOAD_PACKAGE { sy-subrc }| ).
     ENDIF.
+
+    rv_are_changes_rec_in_tr_req = li_package->wbo_korr_flag.
 
   ENDMETHOD.
 
@@ -227,6 +223,46 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_sap_package~get_transport_type.
+    DATA: lv_err_prefix TYPE string,
+          lv_pkg_name   TYPE e071-obj_name.
+
+    lv_err_prefix = |TRINT_GET_REQUEST_TYPE(R3TR, DEVC, { mv_package })|.
+    lv_pkg_name = mv_package.
+
+    CALL FUNCTION 'TRINT_GET_REQUEST_TYPE'
+      EXPORTING
+        iv_pgmid                   = 'R3TR'
+        iv_object                  = 'DEVC'
+        iv_obj_name                = lv_pkg_name
+      IMPORTING
+        ev_request_type            = rv_transport_type-request
+        ev_task_type               = rv_transport_type-task
+      EXCEPTIONS
+        no_request_needed          = 1
+        internal_error             = 2
+        cts_initialization_failure = 3.
+
+    CASE sy-subrc.
+      WHEN 0.
+        " OK!
+
+      WHEN 1.
+        zcx_abapgit_exception=>raise( |{ lv_err_prefix }: transport is not needed| ).
+
+      WHEN 2.
+        zcx_abapgit_exception=>raise( |{ lv_err_prefix }: internal error| ).
+
+      WHEN 3.
+        zcx_abapgit_exception=>raise( |{ lv_err_prefix }: failed to initialized CTS| ).
+
+      WHEN OTHERS.
+        zcx_abapgit_exception=>raise( |{ lv_err_prefix }: unrecognized return code| ).
+    ENDCASE.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_sap_package~list_subpackages.
 
     DATA: lt_list     LIKE rt_list,
@@ -238,7 +274,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
 * note the recursion, since packages are added to the list
     LOOP AT rt_list INTO lv_devclass.
-      lt_list = get( lv_devclass )->list_subpackages( ).
+      lt_list = zcl_abapgit_factory=>get_sap_package( lv_devclass )->list_subpackages( ).
       APPEND LINES OF lt_list TO rt_list.
     ENDLOOP.
 
@@ -258,7 +294,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
     IF sy-subrc = 0 AND NOT lv_parent IS INITIAL.
       APPEND lv_parent TO rt_list.
-      lt_list = get( lv_parent )->list_superpackages( ).
+      lt_list = zcl_abapgit_factory=>get_sap_package( lv_parent )->list_superpackages( ).
       APPEND LINES OF lt_list TO rt_list.
     ENDIF.
 
@@ -272,30 +308,4 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
   ENDMETHOD.
-
-  METHOD zif_abapgit_sap_package~are_changes_recorded_in_tr_req.
-
-    DATA: li_package TYPE REF TO if_package.
-
-    cl_package_factory=>load_package(
-      EXPORTING
-        i_package_name             = mv_package
-      IMPORTING
-        e_package                  = li_package
-      EXCEPTIONS
-        object_not_existing        = 1
-        unexpected_error           = 2
-        intern_err                 = 3
-        no_access                  = 4
-        object_locked_and_modified = 5
-        OTHERS                     = 6 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from CL_PACKAGE_FACTORY=>LOAD_PACKAGE { sy-subrc }| ).
-    ENDIF.
-
-    rv_are_changes_rec_in_tr_req = li_package->wbo_korr_flag.
-
-  ENDMETHOD.
-
 ENDCLASS.

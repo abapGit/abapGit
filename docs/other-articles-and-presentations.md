@@ -78,3 +78,11 @@ SAP Teched Barcelona
 [ABAP Code Reviews with abapGit](https://blogs.sap.com/2018/03/23/abap-code-reviews-with-abapgit/) -Eduardo Copat
 
 [Get into Git!](https://blogs.sap.com/2018/04/13/get-into-git/) - Mike Pokraka
+
+[ABAP – The Special Snowflake](https://blogs.sap.com/2018/07/02/abap-the-special-snowflake/) - Nigel James
+
+[Is SAP’s ABAP a special snowflake or has a Git run it over?](https://diginomica.com/2018/07/03/is-saps-abap-a-special-snowflake-or-has-a-git-run-it-over/) - Den Howlett
+
+[ORGANISIERE DEINE ARBEIT MIT ABAPGIT	](https://inspiricon.de/abapgit/) -Andra Atanasoaie
+
+[Moderne ABAP Entwicklung mit abapGit](https://de.slideshare.net/ChristianGnter/moderne-abap-entwicklung-mit-abapgit) - Christian Günter

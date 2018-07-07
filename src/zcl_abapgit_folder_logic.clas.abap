@@ -32,20 +32,22 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
 
   METHOD package_to_path.
 
-    DATA: lv_len      TYPE i,
-          lv_path     TYPE string,
-          lv_message  TYPE string,
-          lv_parentcl TYPE tdevc-parentcl.
+    DATA: lv_len          TYPE i,
+          lv_path         TYPE string,
+          lv_message      TYPE string,
+          lv_parentcl     TYPE tdevc-parentcl,
+          lv_folder_logic TYPE string.
 
     IF iv_top = iv_package.
       rv_path = io_dot->get_starting_folder( ).
     ELSE.
-      lv_parentcl = zcl_abapgit_sap_package=>get( iv_package )->read_parent( ).
+      lv_parentcl = zcl_abapgit_factory=>get_sap_package( iv_package )->read_parent( ).
 
       IF lv_parentcl IS INITIAL.
         zcx_abapgit_exception=>raise( |error, expected parent package, { iv_package }| ).
       ELSE.
-        CASE io_dot->get_folder_logic( ).
+        lv_folder_logic = io_dot->get_folder_logic( ).
+        CASE lv_folder_logic.
           WHEN zif_abapgit_dot_abapgit=>c_folder_logic-full.
             lv_len = 0.
             IF iv_package(1) = '$'.
@@ -63,7 +65,7 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
               zcx_abapgit_exception=>raise( lv_message ).
             ENDIF.
           WHEN OTHERS.
-            ASSERT 0 = 1.
+            zcx_abapgit_exception=>raise( |Invalid folder logic: { lv_folder_logic }| ).
         ENDCASE.
 
         lv_path = iv_package+lv_len.
@@ -107,7 +109,8 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
 
     lv_length  = strlen( io_dot->get_starting_folder( ) ).
     IF lv_length > strlen( iv_path ).
-      zcx_abapgit_exception=>raise( 'unexpected folder structure' ).
+* treat as not existing locally
+      RETURN.
     ENDIF.
     lv_path    = iv_path+lv_length.
     lv_parent  = lv_top.
@@ -131,10 +134,10 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
 
       TRANSLATE rv_package TO UPPER CASE.
 
-      IF zcl_abapgit_sap_package=>get( rv_package )->exists( ) = abap_false AND
+      IF zcl_abapgit_factory=>get_sap_package( rv_package )->exists( ) = abap_false AND
           iv_create_if_not_exists = abap_true.
 
-        zcl_abapgit_sap_package=>get( lv_parent )->create_child( rv_package ).
+        zcl_abapgit_factory=>get_sap_package( lv_parent )->create_child( rv_package ).
       ENDIF.
 
       lv_parent = rv_package.

@@ -56,7 +56,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_W3SUPER IMPLEMENTATION.
+CLASS zcl_abapgit_object_w3super IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -491,4 +491,18 @@ CLASS ZCL_ABAPGIT_OBJECT_W3SUPER IMPLEMENTATION.
                                   iv_ext   = get_ext( lt_w3params ) ).
 
   ENDMETHOD.                    "serialize
+
+  METHOD zif_abapgit_object~is_locked.
+
+    DATA: lv_object TYPE eqegraarg.
+
+    lv_object = |{ ms_item-obj_type+2(2) }{ ms_item-obj_name }|.
+    OVERLAY lv_object WITH '                                          '.
+    lv_object = lv_object && '*'.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'E_WWW_HTML'
+                                            iv_argument    = lv_object ).
+
+  ENDMETHOD.
+
 ENDCLASS.

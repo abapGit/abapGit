@@ -57,7 +57,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
+CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
 
   METHOD branches.
@@ -209,6 +209,8 @@ CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'funny refname' ).
     ELSEIF lv_string CP '*failed to update ref*'.
       zcx_abapgit_exception=>raise( 'failed to update ref' ).
+    ELSEIF lv_string CP '*missing necessary objects*'.
+      zcx_abapgit_exception=>raise( 'missing necessary objects' ).
     ENDIF.
 
   ENDMETHOD.                    "receive_pack

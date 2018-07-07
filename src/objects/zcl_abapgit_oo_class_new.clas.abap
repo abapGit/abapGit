@@ -180,7 +180,13 @@ CLASS ZCL_ABAPGIT_OO_CLASS_NEW IMPLEMENTATION.
                    <lg_field>       TYPE any.
 
 
-    CREATE DATA lr_cache_entry TYPE ('SEO_CS_CACHE').
+    TRY.
+        CREATE DATA lr_cache_entry TYPE ('SEO_CS_CACHE').
+      CATCH cx_sy_create_data_error.
+* does not exist in some older systems
+        RETURN.
+    ENDTRY.
+
     ASSIGN lr_cache_entry->* TO <lg_cache_entry>.
     ASSERT sy-subrc = 0.
 

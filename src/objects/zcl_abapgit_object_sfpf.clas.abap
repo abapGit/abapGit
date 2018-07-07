@@ -224,4 +224,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
     io_xml->set_raw( li_document->get_root_element( ) ).
 
   ENDMETHOD.                    "serialize
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
 ENDCLASS.

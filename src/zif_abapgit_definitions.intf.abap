@@ -43,11 +43,28 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   TYPES:
     ty_git_branch_list_tt TYPE STANDARD TABLE OF ty_git_branch WITH DEFAULT KEY .
 
+  TYPES:
+    BEGIN OF ty_git_tag,
+      sha1         TYPE zif_abapgit_definitions=>ty_sha1,
+      object       TYPE zif_abapgit_definitions=>ty_sha1,
+      name         TYPE string,
+      type         TYPE ty_git_branch_type,
+      display_name TYPE string,
+      tagger_name  TYPE string,
+      tagger_email TYPE string,
+      message      TYPE string,
+      body         TYPE string,
+    END OF ty_git_tag .
+  TYPES:
+    ty_git_tag_list_tt TYPE STANDARD TABLE OF ty_git_tag WITH DEFAULT KEY .
+
+
   CONSTANTS:
     BEGIN OF c_git_branch_type,
-      branch TYPE ty_git_branch_type VALUE 'HD',
-      tag    TYPE ty_git_branch_type VALUE 'TG',
-      other  TYPE ty_git_branch_type VALUE 'ZZ',
+      branch          TYPE ty_git_branch_type VALUE 'HD',
+      lightweight_tag TYPE ty_git_branch_type VALUE 'TG',
+      annotated_tag   TYPE ty_git_branch_type VALUE 'AT',
+      other           TYPE ty_git_branch_type VALUE 'ZZ',
     END OF c_git_branch_type .
   CONSTANTS c_head_name TYPE string VALUE 'HEAD' ##NO_TEXT.
 
@@ -94,9 +111,15 @@ INTERFACE zif_abapgit_definitions PUBLIC.
            decision TYPE ty_yes_no,
          END OF ty_requirements.
 
+  TYPES: BEGIN OF ty_transport_type,
+           request TYPE trfunction,
+           task    TYPE trfunction,
+         END OF ty_transport_type.
+
   TYPES: BEGIN OF ty_transport,
            required  TYPE abap_bool,
            transport TYPE trkorr,
+           type      TYPE ty_transport_type,
          END OF ty_transport.
 
 
@@ -272,6 +295,18 @@ INTERFACE zif_abapgit_definitions PUBLIC.
            conflict TYPE string,
          END OF ty_merge.
 
+  TYPES: BEGIN OF ty_merge_conflict,
+           path        TYPE string,
+           filename    TYPE string,
+           source_sha1 TYPE zif_abapgit_definitions=>ty_sha1,
+           source_data TYPE xstring,
+           target_sha1 TYPE zif_abapgit_definitions=>ty_sha1,
+           target_data TYPE xstring,
+           result_sha1 TYPE zif_abapgit_definitions=>ty_sha1,
+           result_data TYPE xstring,
+         END OF ty_merge_conflict,
+         tt_merge_conflict TYPE STANDARD TABLE OF ty_merge_conflict WITH DEFAULT KEY.
+
   TYPES: BEGIN OF ty_repo_item,
            obj_type TYPE tadir-object,
            obj_name TYPE tadir-obj_name,
@@ -291,7 +326,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
          END OF ty_s_user_settings.
 
   CONSTANTS gc_xml_version TYPE string VALUE 'v1.0.0' ##NO_TEXT.
-  CONSTANTS gc_abap_version TYPE string VALUE 'v1.66.0' ##NO_TEXT.
+  CONSTANTS gc_abap_version TYPE string VALUE '1.71.0' ##NO_TEXT.
   CONSTANTS:
     BEGIN OF gc_type,
       commit TYPE zif_abapgit_definitions=>ty_type VALUE 'commit', "#EC NOTEXT
@@ -360,6 +395,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       repo_toggle_fav          TYPE string VALUE 'repo_toggle_fav',
       repo_transport_to_branch TYPE string VALUE 'repo_transport_to_branch',
       repo_syntax_check        TYPE string VALUE 'repo_syntax_check',
+      repo_code_inspector      TYPE string VALUE 'repo_code_inspector',
 
       abapgit_home             TYPE string VALUE 'abapgit_home',
       abapgit_wiki             TYPE string VALUE 'abapgit_wiki',
@@ -388,6 +424,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
 
       go_main                  TYPE string VALUE 'go_main',
       go_explore               TYPE string VALUE 'go_explore',
+      go_repo_overview         TYPE string VALUE 'go_repo_overview',
       go_db                    TYPE string VALUE 'go_db',
       go_background            TYPE string VALUE 'go_background',
       go_background_run        TYPE string VALUE 'go_background_run',

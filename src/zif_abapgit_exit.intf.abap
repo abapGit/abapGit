@@ -1,7 +1,16 @@
 INTERFACE zif_abapgit_exit PUBLIC.
 
   TYPES:
-    ty_icm_sinfo2_tt TYPE STANDARD TABLE OF icm_sinfo2 WITH DEFAULT KEY .
+    BEGIN OF ty_tadir,
+      pgmid    TYPE tadir-pgmid,
+      object   TYPE tadir-object,
+      obj_name TYPE tadir-obj_name,
+      devclass TYPE tadir-devclass,
+      korrnum  TYPE tadir-korrnum,
+      path     TYPE string,
+    END OF ty_tadir,
+    ty_tadir_tt      TYPE STANDARD TABLE OF ty_tadir WITH DEFAULT KEY,
+    ty_icm_sinfo2_tt TYPE STANDARD TABLE OF icm_sinfo2 WITH DEFAULT KEY.
 
   METHODS:
     change_local_host
@@ -19,6 +28,12 @@ INTERFACE zif_abapgit_exit PUBLIC.
       CHANGING  c_proxy_authentication TYPE abap_bool,
     http_client
       IMPORTING
-        ii_client TYPE REF TO if_http_client.
+        ii_client TYPE REF TO if_http_client,
+    change_tadir
+      IMPORTING
+        iv_package TYPE devclass
+        io_log     TYPE REF TO zcl_abapgit_log
+      CHANGING
+        ct_tadir   TYPE ty_tadir_tt.
 
 ENDINTERFACE.

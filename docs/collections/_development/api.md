@@ -1,6 +1,5 @@
 ---
-title: abapGit API
-category: other
+title: API
 order: 80
 ---
 

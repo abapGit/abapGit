@@ -60,7 +60,7 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
           VALUE(rv_length) TYPE i,
       get_settings_xml
         RETURNING
-          VALUE(ev_settings_xml) TYPE string
+          VALUE(rv_settings_xml) TYPE string
         RAISING
           zcx_abapgit_exception,
       get_user_settings
@@ -153,7 +153,7 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
     lo_output->add( iv_name = zcl_abapgit_persistence_db=>c_type_settings
                     ig_data = ms_settings ).
 
-    ev_settings_xml = lo_output->render( ).
+    rv_settings_xml = lo_output->render( ).
 
   ENDMETHOD.
 

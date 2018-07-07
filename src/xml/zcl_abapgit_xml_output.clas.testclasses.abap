@@ -41,10 +41,10 @@ CLASS ltcl_xml_output IMPLEMENTATION.
     lo_output->add( iv_name = 'DATA'
                     ig_data = ls_input ).
 
-    li_xml_element = lo_output->mi_xml_doc->find_from_name( name = 'FOO' ).
+    li_xml_element = lo_output->mi_xml_doc->find_from_name( 'FOO' ).
     lv_value = li_xml_element->get_value( ).
     ls_result-foo = lv_value.
-    li_xml_element = lo_output->mi_xml_doc->find_from_name( name = 'BAR' ).
+    li_xml_element = lo_output->mi_xml_doc->find_from_name( 'BAR' ).
     lv_value = li_xml_element->get_value( ).
     ls_result-bar = lv_value.
 
@@ -69,7 +69,8 @@ CLASS ltcl_xml_output IMPLEMENTATION.
     lv_value =
       '<?xml version="1.0" encoding="utf-16"?>#<abapGit version="v1.0.0">#' &
       ' <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">#' &
-      '  <asx:values>#   <DATA>#    <FOO>2</FOO>#    <BAR>A</BAR>#   </DATA>#  </asx:values># </asx:abap>#</abapGit>#'.
+      '  <asx:values>#   <DATA>#    <FOO>2</FOO>#    <BAR>A' &
+      '</BAR>#   </DATA>#  </asx:values># </asx:abap>#</abapGit>#'.
 
     REPLACE ALL OCCURRENCES OF '#' IN lv_value WITH cl_abap_char_utilities=>newline.
 

@@ -1,5 +1,60 @@
 *"* use this source file for your ABAP unit test classes
 
+CLASS ltcl_relevant DEFINITION DEFERRED.
+CLASS zcl_abapgit_news DEFINITION LOCAL FRIENDS ltcl_relevant.
+
+CLASS ltcl_relevant DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
+
+  PRIVATE SECTION.
+
+    METHODS:
+      test01 FOR TESTING,
+      test02 FOR TESTING,
+      test03 FOR TESTING.
+
+ENDCLASS.
+
+CLASS ltcl_relevant IMPLEMENTATION.
+
+  METHOD test01.
+
+    DATA: lv_relevant TYPE abap_bool.
+
+    lv_relevant = zcl_abapgit_news=>is_relevant( 'https://github.com/larshp/abapGit.git' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_relevant
+      exp = abap_true ).
+
+  ENDMETHOD.
+
+  METHOD test02.
+
+    DATA: lv_relevant TYPE abap_bool.
+
+    lv_relevant = zcl_abapgit_news=>is_relevant( 'https://github.com/larshp/abapGit' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_relevant
+      exp = abap_true ).
+
+  ENDMETHOD.
+
+  METHOD test03.
+
+    DATA: lv_relevant TYPE abap_bool.
+
+    lv_relevant = zcl_abapgit_news=>is_relevant( 'https://github.com/larshp/something' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_relevant
+      exp = abap_false ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+
 CLASS ltcl_news DEFINITION DEFERRED.
 CLASS zcl_abapgit_news DEFINITION LOCAL FRIENDS ltcl_news.
 

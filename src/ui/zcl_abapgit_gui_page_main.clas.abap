@@ -16,6 +16,7 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
     CONSTANTS: BEGIN OF c_actions,
                  show       TYPE string VALUE 'show' ##NO_TEXT,
                  changed_by TYPE string VALUE 'changed_by',
+                 overview   TYPE string VALUE 'overview',
                END OF c_actions.
 
     DATA: mv_show         TYPE zif_abapgit_persistence=>ty_value,
@@ -40,7 +41,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
 
   METHOD build_main_menu.
@@ -52,24 +53,41 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
     CREATE OBJECT lo_advsub.
     CREATE OBJECT lo_helpsub.
 
-    lo_advsub->add( iv_txt = 'Database util'    iv_act = zif_abapgit_definitions=>gc_action-go_db ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Package to zip'   iv_act = zif_abapgit_definitions=>gc_action-zip_package ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Transport to zip' iv_act = zif_abapgit_definitions=>gc_action-zip_transport ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Object to files'  iv_act = zif_abapgit_definitions=>gc_action-zip_object ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Test changed by'  iv_act = c_actions-changed_by ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Page playground'  iv_act = zif_abapgit_definitions=>gc_action-go_playground ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Debug info'       iv_act = zif_abapgit_definitions=>gc_action-go_debuginfo ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Settings'         iv_act = zif_abapgit_definitions=>gc_action-go_settings ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Repository overview'
+                    iv_act = zif_abapgit_definitions=>gc_action-go_repo_overview ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Database util'
+                    iv_act = zif_abapgit_definitions=>gc_action-go_db ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Package to zip'
+                    iv_act = zif_abapgit_definitions=>gc_action-zip_package ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Transport to zip'
+                    iv_act = zif_abapgit_definitions=>gc_action-zip_transport ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Object to files'
+                    iv_act = zif_abapgit_definitions=>gc_action-zip_object ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Test changed by'
+                    iv_act = c_actions-changed_by ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Page playground'
+                    iv_act = zif_abapgit_definitions=>gc_action-go_playground ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Debug info'
+                    iv_act = zif_abapgit_definitions=>gc_action-go_debuginfo ) ##NO_TEXT.
+    lo_advsub->add( iv_txt = 'Settings'
+                    iv_act = zif_abapgit_definitions=>gc_action-go_settings ) ##NO_TEXT.
 
-    lo_helpsub->add( iv_txt = 'Tutorial'        iv_act = zif_abapgit_definitions=>gc_action-go_tutorial ) ##NO_TEXT.
-    lo_helpsub->add( iv_txt = 'abapGit wiki'    iv_act = zif_abapgit_definitions=>gc_action-abapgit_wiki ) ##NO_TEXT.
+    lo_helpsub->add( iv_txt = 'Tutorial'
+                     iv_act = zif_abapgit_definitions=>gc_action-go_tutorial ) ##NO_TEXT.
+    lo_helpsub->add( iv_txt = 'abapGit wiki'
+                     iv_act = zif_abapgit_definitions=>gc_action-abapgit_wiki ) ##NO_TEXT.
 
-    ro_menu->add( iv_txt = '+ Online'           iv_act = zif_abapgit_definitions=>gc_action-repo_newonline ) ##NO_TEXT.
-    ro_menu->add( iv_txt = '+ Offline'          iv_act = zif_abapgit_definitions=>gc_action-repo_newoffline ) ##NO_TEXT.
-    ro_menu->add( iv_txt = 'Explore'            iv_act = zif_abapgit_definitions=>gc_action-go_explore ) ##NO_TEXT.
+    ro_menu->add( iv_txt = '+ Online'
+                  iv_act = zif_abapgit_definitions=>gc_action-repo_newonline ) ##NO_TEXT.
+    ro_menu->add( iv_txt = '+ Offline'
+                  iv_act = zif_abapgit_definitions=>gc_action-repo_newoffline ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'Explore'
+                  iv_act = zif_abapgit_definitions=>gc_action-go_explore ) ##NO_TEXT.
 
-    ro_menu->add( iv_txt = 'Advanced'           io_sub = lo_advsub ) ##NO_TEXT.
-    ro_menu->add( iv_txt = 'Help'               io_sub = lo_helpsub ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'Advanced'
+                  io_sub = lo_advsub ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'Help'
+                  io_sub = lo_helpsub ) ##NO_TEXT.
 
   ENDMETHOD.                    "build main_menu
 
@@ -217,9 +235,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
     ro_html->add( '<td>' ).
     ro_html->add( lo_allbar->render_as_droplist(
-      iv_label = zcl_abapgit_html=>icon( iv_name = 'three-bars/blue' )
-      iv_right = abap_true
-      iv_sort  = abap_true ) ).
+      iv_label  = zcl_abapgit_html=>icon( iv_name = 'three-bars/blue' )
+      iv_action = c_actions-overview
+      iv_right  = abap_true
+      iv_sort   = abap_true ) ).
     ro_html->add( '</td>' ).
     ro_html->add( '</tr></table>' ).
 
@@ -270,7 +289,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
           ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
 
-    ls_tadir = zcl_abapgit_popups=>popup_object( ).
+    ls_tadir = zcl_abapgit_ui_factory=>get_popups( )->popup_object( ).
     IF ls_tadir IS INITIAL.
       RETURN.
     ENDIF.
@@ -287,7 +306,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_page~on_event.
 
-    DATA: lv_key TYPE zif_abapgit_persistence=>ty_repo-key.
+    DATA: lv_key           TYPE zif_abapgit_persistence=>ty_repo-key,
+          li_repo_overview TYPE REF TO zif_abapgit_gui_page.
 
 
     IF NOT mo_repo_content IS INITIAL.
@@ -320,6 +340,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
       WHEN c_actions-changed_by.
         test_changed_by( ).
         ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
+
+      WHEN c_actions-overview.
+
+        CREATE OBJECT li_repo_overview TYPE zcl_abapgit_gui_page_repo_over.
+
+        ei_page = li_repo_overview.
+        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+
     ENDCASE.
 
   ENDMETHOD.  "on_event

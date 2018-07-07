@@ -16,7 +16,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -28,11 +28,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: lt_result TYPE scit_alvlist,
-          ls_result LIKE LINE OF lt_result.
+    DATA: li_syntax_check TYPE REF TO zif_abapgit_code_inspector,
+          lt_result       TYPE scit_alvlist,
+          ls_result       LIKE LINE OF lt_result.
 
+    li_syntax_check = zcl_abapgit_factory=>get_syntax_check( iv_package = mo_repo->get_package( ) ).
 
-    lt_result = zcl_abapgit_syntax_check=>run( mo_repo->get_package( ) ).
+    lt_result = li_syntax_check->run( ).
 
     CREATE OBJECT ro_html.
     ro_html->add( '<div class="toc">' ).

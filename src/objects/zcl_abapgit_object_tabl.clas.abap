@@ -13,26 +13,44 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
 
-    DATA: lv_as4date TYPE dd02l-as4date,
-          lv_as4time TYPE dd02l-as4time.
+    TYPES: BEGIN OF ty_data,
+             as4user TYPE as4user,
+             as4date TYPE as4date,
+             as4time TYPE as4time,
+           END OF ty_data.
+
+    DATA: lt_data TYPE STANDARD TABLE OF ty_data WITH DEFAULT KEY,
+          ls_data LIKE LINE OF lt_data.
 
 
-    SELECT SINGLE as4user as4date as4time
-      FROM dd02l INTO (rv_user, lv_as4date, lv_as4time)
+    SELECT as4user as4date as4time
+      FROM dd02l INTO TABLE lt_data
       WHERE tabname = ms_item-obj_name
       AND as4local = 'A'
       AND as4vers = '0000'.
-    IF sy-subrc <> 0.
-      rv_user = c_user_unknown.
-      RETURN.
-    ENDIF.
 
-    SELECT SINGLE as4user INTO rv_user
+    SELECT as4user as4date as4time
+      APPENDING TABLE lt_data
       FROM dd09l
       WHERE tabname = ms_item-obj_name
       AND as4local = 'A'
-      AND as4vers = '0000'
-      AND ( as4date > lv_as4date OR ( as4date = lv_as4date AND as4time > lv_as4time ) ).
+      AND as4vers = '0000'.
+
+    SELECT as4user as4date as4time
+      APPENDING TABLE lt_data
+      FROM dd12l
+      WHERE sqltab = ms_item-obj_name
+      AND as4local = 'A'
+      AND as4vers = '0000'.
+
+    SORT lt_data BY as4date DESCENDING as4time DESCENDING.
+
+    READ TABLE lt_data INDEX 1 INTO ls_data.
+    IF sy-subrc = 0.
+      rv_user = ls_data-as4user.
+    ELSE.
+      rv_user = c_user_unknown.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -71,6 +89,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
     DATA: lv_objname  TYPE rsedd0-ddobjname,
           lv_tabclass TYPE dd02l-tabclass,
           lv_no_ask   TYPE abap_bool,
+          lv_subrc    TYPE sy-subrc,
           lr_data     TYPE REF TO data.
 
     FIELD-SYMBOLS: <lg_data>  TYPE any.
@@ -84,12 +103,21 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers = '0000'.
     IF sy-subrc = 0 AND lv_tabclass = 'TRANSP'.
+
+* Avoid dump in dynamic SELECT in case the table does not exist on database
+      CALL FUNCTION 'DB_EXISTS_TABLE'
+        EXPORTING
+          tabname = lv_objname
+        IMPORTING
+          subrc   = lv_subrc.
+      IF lv_subrc = 0.
 * it cannot delete table with table wihtout asking
-      CREATE DATA lr_data TYPE (lv_objname).
-      ASSIGN lr_data->* TO <lg_data>.
-      SELECT SINGLE * FROM (lv_objname) INTO <lg_data>.
-      IF sy-subrc = 0.
-        lv_no_ask = abap_false.
+        CREATE DATA lr_data TYPE (lv_objname).
+        ASSIGN lr_data->* TO <lg_data>.
+        SELECT SINGLE * FROM (lv_objname) INTO <lg_data>.
+        IF sy-subrc = 0.
+          lv_no_ask = abap_false.
+        ENDIF.
       ENDIF.
     ENDIF.
 
@@ -296,6 +324,14 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
   ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
 
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESDICT'
+                                            iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
 
     jump_se11( iv_radio = 'RSRD1-DDTYPE'
@@ -390,6 +426,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
         <ls_dd03p>-dtelmaster,
         <ls_dd03p>-logflag,
         <ls_dd03p>-ddtext,
+        <ls_dd03p>-reservedte,
         <ls_dd03p>-reptext,
         <ls_dd03p>-scrtext_s,
         <ls_dd03p>-scrtext_m,

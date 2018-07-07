@@ -42,15 +42,19 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
     METHODS get_starting_folder
       RETURNING
         VALUE(rv_path) TYPE string .
+
     METHODS get_folder_logic
       RETURNING
         VALUE(rv_logic) TYPE string .
+
     METHODS set_folder_logic
       IMPORTING
         !iv_logic TYPE string .
+
     METHODS set_starting_folder
       IMPORTING
         !iv_path TYPE string .
+
     METHODS get_master_language
       RETURNING
         VALUE(rv_language) TYPE spras .
@@ -61,6 +65,12 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
         VALUE(rs_signature) TYPE zif_abapgit_definitions=>ty_file_signature
       RAISING
         zcx_abapgit_exception .
+    METHODS get_requirements
+      RETURNING
+        VALUE(rt_requirements) TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
+    METHODS set_requirements
+      IMPORTING
+        it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
   PRIVATE SECTION.
     DATA: ms_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
@@ -77,7 +87,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
+CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
 
   METHOD add_ignore.
@@ -106,7 +116,7 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
 
     ls_data-master_language = sy-langu.
-    ls_data-starting_folder = '/'.
+    ls_data-starting_folder = '/src/'.
     ls_data-folder_logic    = zif_abapgit_dot_abapgit=>c_folder_logic-prefix.
 
     APPEND '/.gitignore' TO ls_data-ignore.
@@ -275,5 +285,13 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
       WITH '<?xml version="1.0" encoding="utf-8"?>'.
     ASSERT sy-subrc = 0.
 
+  ENDMETHOD.
+
+  METHOD get_requirements.
+    rt_requirements = ms_data-requirements.
+  ENDMETHOD.
+
+  METHOD set_requirements.
+    ms_data-requirements = it_requirements.
   ENDMETHOD.
 ENDCLASS.

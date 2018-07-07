@@ -225,7 +225,9 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
           lv_name     TYPE string,
           li_iterator TYPE REF TO if_ixml_node_iterator,
           lo_sf       TYPE REF TO cl_ssf_fb_smart_form,
-          lo_res      TYPE REF TO cl_ssf_fb_smart_form.
+          lo_res      TYPE REF TO cl_ssf_fb_smart_form,
+          lx_error    TYPE REF TO cx_ssf_fb,
+          lv_text     TYPE string.
 
 
     CREATE OBJECT lo_sf.
@@ -252,26 +254,40 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
     tadir_insert( iv_package ).
 
     lv_formname = ms_item-obj_name.
-    lo_sf->enqueue( suppress_corr_check = space
-                    master_language     = mv_language
-                    mode                = 'INSERT'
-                    formname            = lv_formname ).
 
-    lo_sf->xml_upload( EXPORTING dom      = io_xml->get_raw( )->get_root_element( )
-                                 formname = lv_formname
-                                 language = mv_language
-                       CHANGING  sform    = lo_res ).
+    TRY.
+        lo_sf->enqueue( suppress_corr_check = space
+                        master_language     = mv_language
+                        mode                = 'INSERT'
+                        formname            = lv_formname ).
 
-    lo_res->store( im_formname = lo_res->header-formname
-                   im_language = mv_language
-                   im_active   = abap_true ).
+        lo_sf->xml_upload( EXPORTING dom      = io_xml->get_raw( )->get_root_element( )
+                                     formname = lv_formname
+                                     language = mv_language
+                           CHANGING  sform    = lo_res ).
 
-    lo_sf->dequeue( lv_formname ).
+        lo_res->store( im_formname = lo_res->header-formname
+                       im_language = mv_language
+                       im_active   = abap_true ).
+
+        lo_sf->dequeue( lv_formname ).
+
+      CATCH cx_ssf_fb INTO lx_error.
+        lv_text = lx_error->get_text( ).
+        zcx_abapgit_exception=>raise( |{ ms_item-obj_type } { ms_item-obj_name }: { lv_text } | ).
+    ENDTRY.
 
   ENDMETHOD.                    "deserialize
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'E_SMFORM'
+                                            iv_argument    = |{ ms_item-obj_name }| ).
+
   ENDMETHOD.
 
 ENDCLASS.                    "zcl_abapgit_object_ssfo IMPLEMENTATION

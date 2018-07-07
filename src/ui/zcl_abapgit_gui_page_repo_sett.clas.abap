@@ -14,7 +14,7 @@ CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
       BEGIN OF c_action,
         save_settings TYPE string VALUE 'save_settings',
       END OF c_action .
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo .
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo.
 
     METHODS render_dot_abapgit
       IMPORTING
@@ -45,12 +45,14 @@ CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
 
     METHODS render_content
         REDEFINITION .
+
   PRIVATE SECTION.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -89,14 +91,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
   METHOD render_dot_abapgit.
 
-    DATA: ls_dot          TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
-          lv_selected     TYPE string,
-          lt_folder_logic TYPE stringtab.
+    CONSTANTS: lc_requirement_edit_count TYPE i VALUE 5.
+    DATA: ls_dot               TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
+          lv_selected          TYPE string,
+          lt_folder_logic      TYPE stringtab,
+          lv_req_index         TYPE i,
+          lv_requirement_count TYPE i.
 
-    FIELD-SYMBOLS: <lv_folder_logic> TYPE LINE OF stringtab.
-
+    FIELD-SYMBOLS: <lv_folder_logic> TYPE LINE OF stringtab,
+                   <ls_requirement>  TYPE zif_abapgit_dot_abapgit=>ty_requirement.
 
     ls_dot = mo_repo->get_dot_abapgit( )->get_data( ).
+
+    lv_requirement_count = lines( ls_dot-requirements ).
+    IF lv_requirement_count < lc_requirement_edit_count.
+      DO - lv_requirement_count + lc_requirement_edit_count TIMES.
+        INSERT INITIAL LINE INTO TABLE ls_dot-requirements.
+      ENDDO.
+    ENDIF.
 
     INSERT zif_abapgit_dot_abapgit=>c_folder_logic-full
            INTO TABLE lt_folder_logic.
@@ -128,6 +140,25 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
       ls_dot-starting_folder && '">' ).
     io_html->add( '<br>' ).
 
+    io_html->add( '<h3>Requirements</h3>' ).
+    io_html->add( '<table class="repo_tab" id="requirement-tab" style="max-width: 300px;">' ).
+    io_html->add( '<tr><th>Software Component</th><th>Min Release</th><th>Min Patch</th></tr>' ).
+
+    LOOP AT ls_dot-requirements ASSIGNING <ls_requirement>.
+      lv_req_index = sy-tabix.
+
+      io_html->add( '<tr>' ).
+      io_html->add( |<td><input name="req_com_{ lv_req_index }" maxlength=30 type="text" | &&
+                    |value="{ <ls_requirement>-component }"></td>| ).
+      io_html->add( |<td><input name="req_rel_{ lv_req_index }" maxlength=10 type="text" | &&
+                    |value="{ <ls_requirement>-min_release }"></td>| ).
+      io_html->add( |<td><input name="req_pat_{ lv_req_index }" maxlength=10 type="text" | &&
+                    |value="{ <ls_requirement>-min_patch }"></td>| ).
+      io_html->add( '</tr>' ).
+    ENDLOOP.
+
+    io_html->add( '</table>' ).
+
   ENDMETHOD.
 
 
@@ -135,6 +166,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
     DATA: lv_checked  TYPE string,
           ls_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings.
+
 
 
     ls_settings = mo_repo->get_local_settings( ).
@@ -159,6 +191,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     ENDIF.
     io_html->add( |Only local objects <input name="only_local_objects" type="checkbox"{ lv_checked }><br>| ).
 
+    io_html->add( '<br>' ).
+    io_html->add( 'Code inspector check variant: <input name="check_variant" type="text" size="30" value="' &&
+      ls_settings-code_inspector_check_variant && '">' ).
+    io_html->add( '<br>' ).
+
+    CLEAR lv_checked.
+    IF ls_settings-block_commit = abap_true.
+      lv_checked = | checked|.
+    ENDIF.
+    io_html->add( |Block commit commit/push if code inspection has erros: |
+               && |<input name="block_commit" type="checkbox"{ lv_checked }><br>| ).
+
+
   ENDMETHOD.
 
 
@@ -179,8 +224,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
   METHOD save_dot_abap.
 
-    DATA: lo_dot        TYPE REF TO zcl_abapgit_dot_abapgit,
-          ls_post_field LIKE LINE OF it_post_fields.
+    DATA: lo_dot          TYPE REF TO zcl_abapgit_dot_abapgit,
+          ls_post_field   LIKE LINE OF it_post_fields,
+          lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
+    FIELD-SYMBOLS: <ls_requirement> TYPE zif_abapgit_dot_abapgit=>ty_requirement.
 
 
     lo_dot = mo_repo->get_dot_abapgit( ).
@@ -193,6 +240,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     ASSERT sy-subrc = 0.
     lo_dot->set_starting_folder( ls_post_field-value ).
 
+    LOOP AT it_post_fields INTO ls_post_field WHERE name CP 'req_*'.
+      CASE ls_post_field-name+4(3).
+        WHEN 'com'.
+          INSERT INITIAL LINE INTO TABLE lt_requirements ASSIGNING <ls_requirement>.
+          <ls_requirement>-component = ls_post_field-value.
+        WHEN 'rel'.
+          <ls_requirement>-min_release = ls_post_field-value.
+        WHEN 'pat'.
+          <ls_requirement>-min_patch = ls_post_field-value.
+      ENDCASE.
+    ENDLOOP.
+
+    SORT lt_requirements BY component min_release min_patch.
+    DELETE lt_requirements WHERE component IS INITIAL.
+    DELETE ADJACENT DUPLICATES FROM lt_requirements COMPARING ALL FIELDS.
+
+    lo_dot->set_requirements( lt_requirements ).
+
     mo_repo->set_dot_abapgit( lo_dot ).
 
   ENDMETHOD.
@@ -200,8 +265,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
   METHOD save_local_settings.
 
-    DATA: ls_settings   TYPE zif_abapgit_persistence=>ty_repo-local_settings,
-          ls_post_field LIKE LINE OF it_post_fields.
+    DATA: ls_settings      TYPE zif_abapgit_persistence=>ty_repo-local_settings,
+          ls_post_field    LIKE LINE OF it_post_fields,
+          lv_check_variant TYPE sci_chkv.
 
 
     ls_settings = mo_repo->get_local_settings( ).
@@ -225,6 +291,26 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
       ls_settings-only_local_objects = abap_true.
     ELSE.
       ls_settings-only_local_objects = abap_false.
+    ENDIF.
+
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'check_variant'.
+    ASSERT sy-subrc = 0.
+    lv_check_variant = to_upper( ls_post_field-value ).
+    IF ls_post_field-value IS NOT INITIAL.
+      zcl_abapgit_code_inspector=>validate_check_variant( lv_check_variant ).
+    ENDIF.
+    ls_settings-code_inspector_check_variant = lv_check_variant.
+
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'block_commit' value = 'on'.
+    IF sy-subrc = 0.
+      ls_settings-block_commit = abap_true.
+    ELSE.
+      ls_settings-block_commit = abap_false.
+    ENDIF.
+
+    IF  ls_settings-block_commit = abap_true
+    AND ls_settings-code_inspector_check_variant IS INITIAL.
+      zcx_abapgit_exception=>raise( |If block commit is active, a check variant has to be maintained.| ).
     ENDIF.
 
     mo_repo->set_local_settings( ls_settings ).

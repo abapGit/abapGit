@@ -85,7 +85,8 @@ CLASS zcl_abapgit_services_repo DEFINITION
       CHANGING
         !ct_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
     CLASS-METHODS popup_package_overwrite
       CHANGING
         !ct_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
@@ -120,7 +121,8 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
         ENDIF.
 
         IF ls_checks-transport-required = abap_true.
-          ls_checks-transport-transport = zcl_abapgit_popups=>popup_transport_request( ).
+          ls_checks-transport-transport = zcl_abapgit_ui_factory=>get_popups( )->popup_transport_request(
+            is_transport_type = ls_checks-transport-type ).
         ENDIF.
 
       CATCH zcx_abapgit_cancel.
@@ -136,9 +138,9 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
   METHOD new_offline.
 
     DATA: lo_repo  TYPE REF TO zcl_abapgit_repo,
-          ls_popup TYPE zcl_abapgit_popups=>ty_popup.
+          ls_popup TYPE zif_abapgit_popups=>ty_popup.
 
-    ls_popup  = zcl_abapgit_popups=>repo_new_offline( ).
+    ls_popup  = zcl_abapgit_ui_factory=>get_popups( )->repo_new_offline( ).
     IF ls_popup-cancel = abap_true.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
@@ -157,10 +159,9 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
   METHOD new_online.
 
-    DATA: ls_popup TYPE zcl_abapgit_popups=>ty_popup.
+    DATA: ls_popup TYPE zif_abapgit_popups=>ty_popup.
 
-
-    ls_popup = zcl_abapgit_popups=>repo_popup( iv_url ).
+    ls_popup = zcl_abapgit_ui_factory=>get_popups( )->repo_popup( iv_url ).
     IF ls_popup-cancel = abap_true.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
@@ -211,7 +212,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     lv_column = 'OBJ_NAME'.
     INSERT lv_column INTO TABLE lt_columns.
 
-    zcl_abapgit_popups=>popup_to_select_from_list(
+    zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_from_list(
       EXPORTING
         it_list               = ct_overwrite
         i_header_text         = |The following Objects have been modified locally.|
@@ -220,7 +221,6 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
         it_columns_to_display = lt_columns
       IMPORTING
         et_list               = lt_selected ).
-* todo, it should be possible for the user to click cancel in the popup
 
     LOOP AT ct_overwrite ASSIGNING <ls_overwrite>.
       READ TABLE lt_selected WITH KEY
@@ -254,7 +254,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
         'from package' <ls_overwrite>-devclass
         INTO lv_question SEPARATED BY space.                "#EC NOTEXT
 
-      lv_answer = zcl_abapgit_popups=>popup_to_confirm(
+      lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
         titlebar              = 'Warning'
         text_question         = lv_question
         text_button_1         = 'Ok'
@@ -288,14 +288,14 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     lv_package = lo_repo->get_package( ).
-    lt_tadir   = zcl_abapgit_tadir=>read( lv_package ).
+    lt_tadir   = zcl_abapgit_factory=>get_tadir( )->read( lv_package ).
 
     IF lines( lt_tadir ) > 0.
 
       lv_question = |This will DELETE all objects in package { lv_package
         } ({ lines( lt_tadir ) } objects) from the system|. "#EC NOTEXT
 
-      lv_answer = zcl_abapgit_popups=>popup_to_confirm(
+      lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
         titlebar              = 'Uninstall'
         text_question         = lv_question
         text_button_1         = 'Delete'
@@ -349,7 +349,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
                 && ' Please make sure you don''t have ones like that.'.
     ENDIF.
 
-    lv_answer = zcl_abapgit_popups=>popup_to_confirm(
+    lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
       titlebar              = 'Warning'
       text_question         = lv_question
       text_button_1         = 'OK'
@@ -370,10 +370,10 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
   METHOD remote_attach.
 
-    DATA: ls_popup TYPE zcl_abapgit_popups=>ty_popup,
+    DATA: ls_popup TYPE zif_abapgit_popups=>ty_popup,
           lo_repo  TYPE REF TO zcl_abapgit_repo_online.
 
-    ls_popup = zcl_abapgit_popups=>repo_popup(
+    ls_popup = zcl_abapgit_ui_factory=>get_popups( )->repo_popup(
       iv_title          = 'Attach repo to remote ...'
       iv_url            = ''
       iv_package        = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key )->get_package( )
@@ -397,12 +397,12 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
   METHOD remote_change.
 
-    DATA: ls_popup TYPE zcl_abapgit_popups=>ty_popup,
+    DATA: ls_popup TYPE zif_abapgit_popups=>ty_popup,
           lo_repo  TYPE REF TO zcl_abapgit_repo_online.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    ls_popup = zcl_abapgit_popups=>repo_popup(
+    ls_popup = zcl_abapgit_ui_factory=>get_popups( )->repo_popup(
       iv_title          = 'Change repo remote ...'
       iv_url            = lo_repo->get_url( )
       iv_package        = lo_repo->get_package( )
@@ -424,7 +424,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     DATA: lv_answer TYPE c LENGTH 1.
 
-    lv_answer = zcl_abapgit_popups=>popup_to_confirm(
+    lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
       titlebar              = 'Make repository OFF-line'
       text_question         = 'This will detach the repo from remote and make it OFF-line'
       text_button_1         = 'Make OFF-line'
@@ -458,7 +458,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     lv_question = |This will remove the repository reference to the package { lv_package
       }. All objects will safely remain in the system.|.
 
-    lv_answer = zcl_abapgit_popups=>popup_to_confirm(
+    lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
       titlebar              = 'Remove'
       text_question         = lv_question
       text_button_1         = 'Remove'
@@ -502,13 +502,13 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     lo_repository ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_repository_key ).
 
-    lt_transport_headers = zcl_abapgit_popups=>popup_to_select_transports( ).
+    lt_transport_headers = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transports( ).
     lt_transport_objects = zcl_abapgit_transport=>to_tadir( lt_transport_headers ).
     IF lt_transport_objects IS INITIAL.
       zcx_abapgit_exception=>raise( 'Canceled or List of objects is empty ' ).
     ENDIF.
 
-    ls_transport_to_branch = zcl_abapgit_popups=>popup_to_create_transp_branch(
+    ls_transport_to_branch = zcl_abapgit_ui_factory=>get_popups( )->popup_to_create_transp_branch(
       lt_transport_headers ).
 
     CREATE OBJECT lo_transport_to_branch.

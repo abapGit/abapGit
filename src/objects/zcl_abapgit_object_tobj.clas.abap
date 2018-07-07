@@ -193,6 +193,28 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from OBJ_GENERATE' ).
     ENDIF.
 
+    CALL FUNCTION 'OBJ_SET_IMPORTABLE'
+      EXPORTING
+        iv_objectname         = ls_objh-objectname
+        iv_objecttype         = ls_objh-objecttype
+        iv_importable         = ls_objh-importable
+      EXCEPTIONS
+        object_not_defined    = 1
+        invalid               = 2
+        transport_error       = 3
+        object_enqueue_failed = 4
+        OTHERS                = 5.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from OBJ_SET_IMPORTABLE' ).
+    ENDIF.
+
+* fm OBJ_GENERATE takes the defaults from the DDIC object
+* set OBJTRANSP directly, should be okay looking at the code in OBJ_SET_IMPORTABLE
+* locking has been done in OBJ_SET_IMPORTABLE plus recording of transport
+    UPDATE objh SET objtransp = ls_objh-objtransp
+      WHERE objectname = ls_objh-objectname
+      AND objecttype = ls_objh-objecttype.
+
     io_xml->read( EXPORTING iv_name = 'TOBJ'
                   CHANGING cg_data = ls_tobj ).
     ls_tobj-tvdir-gendate = sy-datum.
@@ -276,6 +298,12 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
   ENDMETHOD.
 
 ENDCLASS.                    "zcl_abapgit_object_tobj IMPLEMENTATION

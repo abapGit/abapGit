@@ -30,9 +30,9 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
         zcx_abapgit_exception .
     METHODS get_tags_only   " For potential future use
       RETURNING
-        VALUE(rt_branches) TYPE zif_abapgit_definitions=>ty_git_branch_list_tt
+        VALUE(rt_tags) TYPE zif_abapgit_definitions=>ty_git_branch_list_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     CLASS-METHODS is_ignored
       IMPORTING
         !iv_branch_name  TYPE clike
@@ -45,9 +45,11 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
         VALUE(rv_display_name) TYPE string .
     CLASS-METHODS get_type
       IMPORTING
-        !iv_branch_name TYPE clike
+        !iv_branch_name      TYPE clike
+        it_result            TYPE stringtab OPTIONAL
+        iv_current_row_index TYPE sytabix OPTIONAL
       RETURNING
-        VALUE(rv_type)  TYPE zif_abapgit_definitions=>ty_git_branch_type .
+        VALUE(rv_type)       TYPE zif_abapgit_definitions=>ty_git_branch_type .
     CLASS-METHODS complete_heads_branch_name
       IMPORTING
         !iv_branch_name TYPE clike
@@ -62,6 +64,13 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
 
     DATA mt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt .
     DATA mv_head_symref TYPE string .
+    METHODS find_tag_by_name
+      IMPORTING
+        iv_branch_name   TYPE string
+      RETURNING
+        VALUE(rs_branch) TYPE zif_abapgit_definitions=>ty_git_branch
+      RAISING
+        zcx_abapgit_exception.
 
     CLASS-METHODS parse_branch_list
       IMPORTING
@@ -80,7 +89,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
+CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
 
 
   METHOD complete_heads_branch_name.
@@ -106,10 +115,16 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Branch name empty' ).
     ENDIF.
 
-    READ TABLE mt_branches INTO rs_branch
-      WITH KEY name = iv_branch_name.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Branch not found' ).
+    IF iv_branch_name CP |refs/tags/*|.
+      rs_branch = find_tag_by_name( iv_branch_name ).
+    ELSE.
+
+      READ TABLE mt_branches INTO rs_branch
+        WITH KEY name = iv_branch_name.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Branch not found' ).
+      ENDIF.
+
     ENDIF.
 
   ENDMETHOD.  "find_by_name
@@ -157,15 +172,21 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
   METHOD get_tags_only.
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF mt_branches.
 
-    LOOP AT mt_branches ASSIGNING <ls_branch>.
-      IF <ls_branch>-type = zif_abapgit_definitions=>c_git_branch_type-tag.
-        APPEND <ls_branch> TO rt_branches.
-      ENDIF.
+    LOOP AT mt_branches ASSIGNING <ls_branch>
+                        WHERE type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag
+                           OR type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
+      APPEND <ls_branch> TO rt_tags.
     ENDLOOP.
+
   ENDMETHOD.  "get_tags_only
 
 
   METHOD get_type.
+
+    DATA: lv_annotated_tag_with_suffix TYPE string.
+
+    FIELD-SYMBOLS: <ls_result> TYPE LINE OF stringtab.
+
     rv_type = zif_abapgit_definitions=>c_git_branch_type-other.
 
     IF iv_branch_name CP 'refs/heads/*' OR iv_branch_name = zif_abapgit_definitions=>c_head_name.
@@ -174,7 +195,17 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
     ENDIF.
 
     IF iv_branch_name CP 'refs/tags/*'.
-      rv_type = zif_abapgit_definitions=>c_git_branch_type-tag.
+
+      lv_annotated_tag_with_suffix = iv_branch_name && '^{}'.
+
+      READ TABLE it_result ASSIGNING <ls_result>
+                           INDEX iv_current_row_index + 1.
+      IF sy-subrc = 0 AND <ls_result> CP '*' && lv_annotated_tag_with_suffix.
+        rv_type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
+      ELSE.
+        rv_type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
+      ENDIF.
+
     ENDIF.
 
   ENDMETHOD.  "get_type
@@ -206,12 +237,13 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
 
   METHOD parse_branch_list.
 
-    DATA: lt_result      TYPE TABLE OF string,
-          lv_hash        TYPE zif_abapgit_definitions=>ty_sha1,
-          lv_name        TYPE string,
-          lv_head_params TYPE string,
-          lv_char        TYPE c,
-          lv_data        LIKE LINE OF lt_result.
+    DATA: lt_result            TYPE TABLE OF string,
+          lv_hash              TYPE zif_abapgit_definitions=>ty_sha1,
+          lv_name              TYPE string,
+          lv_head_params       TYPE string,
+          lv_char              TYPE c,
+          lv_data              LIKE LINE OF lt_result,
+          lv_current_row_index TYPE syst-tabix.
 
     FIELD-SYMBOLS: <ls_branch> LIKE LINE OF et_list.
 
@@ -220,6 +252,9 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
     SPLIT iv_data AT zif_abapgit_definitions=>gc_newline INTO TABLE lt_result.
 
     LOOP AT lt_result INTO lv_data.
+
+      lv_current_row_index = sy-tabix.
+
       IF sy-tabix = 1.
         CONTINUE. " current loop
       ELSEIF sy-tabix = 2 AND strlen( lv_data ) > 49.
@@ -245,7 +280,9 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
       <ls_branch>-sha1         = lv_hash.
       <ls_branch>-name         = lv_name.
       <ls_branch>-display_name = get_display_name( lv_name ).
-      <ls_branch>-type         = get_type( lv_name ).
+      <ls_branch>-type         = get_type( iv_branch_name       = lv_name
+                                           it_result            = lt_result
+                                           iv_current_row_index = lv_current_row_index ).
       IF <ls_branch>-name = zif_abapgit_definitions=>c_head_name OR <ls_branch>-name = ev_head_symref.
         <ls_branch>-is_head    = abap_true.
       ENDIF.
@@ -266,4 +303,25 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.  "parse_head_params
+
+  METHOD find_tag_by_name.
+
+    DATA: lv_branch_name TYPE string.
+
+    lv_branch_name = iv_branch_name && '^{}'.
+
+    READ TABLE mt_branches INTO rs_branch
+        WITH KEY name = lv_branch_name.
+    IF sy-subrc <> 0.
+
+      READ TABLE mt_branches INTO rs_branch
+      WITH KEY name = iv_branch_name.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Branch not found' ).
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

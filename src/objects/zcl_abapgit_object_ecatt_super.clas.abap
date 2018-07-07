@@ -28,7 +28,11 @@ CLASS zcl_abapgit_object_ecatt_super DEFINITION
 
       get_download ABSTRACT
         RETURNING
-          VALUE(ro_download) TYPE REF TO cl_apl_ecatt_download.
+          VALUE(ro_download) TYPE REF TO cl_apl_ecatt_download,
+
+      get_lock_object ABSTRACT
+        RETURNING
+          VALUE(rv_lock_object) TYPE eqeobj.
 
   PRIVATE SECTION.
     TYPES:
@@ -144,12 +148,9 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
     lv_object_type = get_object_type( ).
 
     lo_element = ci_document->find_from_name( |{ lv_object_type }| ).
-    lo_element->set_attribute( name  = |SAPRL|
-                               value = || ).
-    lo_element->set_attribute( name  = |DOWNLOADDATE|
-                               value = || ).
-    lo_element->set_attribute( name  = |DOWNLOADTIME|
-                               value = || ).
+    lo_element->remove_attribute( |SAPRL| ).
+    lo_element->remove_attribute( |DOWNLOADDATE| ).
+    lo_element->remove_attribute( |DOWNLOADTIME| ).
 
   ENDMETHOD.
 
@@ -628,6 +629,19 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
     ENDIF.
 
     ci_document->append_child( li_versions_node ).
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~is_locked.
+
+    DATA: lv_object TYPE seqg3-garg.
+
+    lv_object = ms_item-obj_name.
+    OVERLAY lv_object WITH '                              '.
+    lv_object = lv_object && '*'.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = get_lock_object( )
+                                            iv_argument    = lv_object ).
 
   ENDMETHOD.
 

@@ -181,4 +181,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SRFC IMPLEMENTATION.
                  ig_data = <lg_srfc_data> ).
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
 ENDCLASS.

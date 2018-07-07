@@ -214,6 +214,12 @@ CLASS ZCL_ABAPGIT_OBJECT_CMPT IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'CMPT not supported' ).
     ENDTRY.
 
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
 
   ENDMETHOD.
+
 ENDCLASS.

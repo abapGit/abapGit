@@ -272,4 +272,11 @@ CLASS ZCL_ABAPGIT_OBJECT_UCSA IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
 ENDCLASS.

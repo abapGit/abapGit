@@ -41,10 +41,10 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
 
     READ TABLE it_tadir INDEX 1 ASSIGNING <ls_tadir>.
     ASSERT sy-subrc = 0.
-    lt_super = zcl_abapgit_sap_package=>get( <ls_tadir>-devclass )->list_superpackages( ).
+    lt_super = zcl_abapgit_factory=>get_sap_package( <ls_tadir>-devclass )->list_superpackages( ).
 
     LOOP AT it_tadir ASSIGNING <ls_tadir>.
-      lt_obj = zcl_abapgit_sap_package=>get( <ls_tadir>-devclass )->list_superpackages( ).
+      lt_obj = zcl_abapgit_factory=>get_sap_package( <ls_tadir>-devclass )->list_superpackages( ).
 
 * filter out possibilities from lt_super
       LOOP AT lt_super INTO lv_super.
@@ -115,7 +115,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
           lv_obj_name = <ls_object>-obj_name.
         ENDIF.
 
-        ls_tadir = zcl_abapgit_tadir=>read_single(
+        ls_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
           iv_object   = lv_object
           iv_obj_name = lv_obj_name ).
 
@@ -152,7 +152,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
           lt_trkorr   TYPE trwbo_request_headers.
 
 
-    lt_trkorr = zcl_abapgit_popups=>popup_to_select_transports( ).
+    lt_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transports( ).
     IF lines( lt_trkorr ) = 0.
       RETURN.
     ENDIF.
@@ -172,7 +172,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
     ls_data-package     = lv_package.
     ls_data-dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ).
 
-    ls_data-dot_abapgit-folder_logic = zcl_abapgit_popups=>popup_folder_logic( ).
+    ls_data-dot_abapgit-folder_logic = zcl_abapgit_ui_factory=>get_popups( )->popup_folder_logic( ).
 
     CREATE OBJECT lo_repo
       EXPORTING

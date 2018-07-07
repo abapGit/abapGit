@@ -57,7 +57,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
+CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -186,12 +186,13 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
   METHOD calculate_status.
 
-    DATA: lt_remote    LIKE it_remote,
-          lt_items     TYPE zif_abapgit_definitions=>ty_items_tt,
-          ls_item      LIKE LINE OF lt_items,
-          lv_is_xml    TYPE abap_bool,
-          lt_items_idx TYPE zif_abapgit_definitions=>ty_items_ts,
-          lt_state_idx TYPE zif_abapgit_definitions=>ty_file_signatures_ts. " Sorted by path+filename
+    DATA: lt_remote       LIKE it_remote,
+          lt_items        TYPE zif_abapgit_definitions=>ty_items_tt,
+          ls_item         LIKE LINE OF lt_items,
+          lv_is_xml       TYPE abap_bool,
+          lt_sub_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
+          lt_items_idx    TYPE zif_abapgit_definitions=>ty_items_ts,
+          lt_state_idx    TYPE zif_abapgit_definitions=>ty_file_signatures_ts. " Sorted by path+filename
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_remote,
                    <ls_result> LIKE LINE OF rt_results,
@@ -235,9 +236,19 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
       CHECK lv_is_xml = abap_true. " Skip all but obj definitions
 
-      ls_item-devclass = zcl_abapgit_tadir=>get_object_package(
-                           iv_object   = ls_item-obj_type
-                           iv_obj_name = ls_item-obj_name ).
+      ls_item-devclass = zcl_abapgit_factory=>get_tadir( )->get_object_package(
+        iv_object   = ls_item-obj_type
+        iv_obj_name = ls_item-obj_name ).
+
+      IF NOT ls_item-devclass IS INITIAL AND iv_devclass <> ls_item-devclass.
+* make sure the package is under the repo main package
+        lt_sub_packages = zcl_abapgit_factory=>get_sap_package( iv_devclass )->list_subpackages( ).
+        READ TABLE lt_sub_packages WITH KEY table_line = ls_item-devclass TRANSPORTING NO FIELDS.
+        IF sy-subrc <> 0.
+          CLEAR ls_item-devclass.
+        ENDIF.
+      ENDIF.
+
       APPEND ls_item TO lt_items.
     ENDLOOP.
 

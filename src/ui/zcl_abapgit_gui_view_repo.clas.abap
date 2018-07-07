@@ -81,7 +81,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
 
   METHOD build_dir_jump_link.
@@ -199,6 +199,8 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     ENDIF.
     lo_tb_advanced->add( iv_txt = 'Syntax Check'
                          iv_act = |{ zif_abapgit_definitions=>gc_action-repo_syntax_check }?{ lv_key }| ).
+    lo_tb_advanced->add( iv_txt = 'Run Code Inspector'
+                         iv_act = |{ zif_abapgit_definitions=>gc_action-repo_code_inspector }?{ lv_key }| ).
     lo_tb_advanced->add( iv_txt = 'Repo settings'
                          iv_act = |{ zif_abapgit_definitions=>gc_action-repo_settings }?{ lv_key }| ).
 
@@ -340,9 +342,17 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
   METHOD render_empty_package.
 
-    rv_html = '<tr class="unsupported"><td class="paddings">'
-           && '  <center>Empty package</center>'
-           && '</td></tr>' ##NO_TEXT.
+    DATA: lv_text TYPE string.
+
+    IF mv_changes_only = abap_true.
+      lv_text = |No changes|.
+    ELSE.
+      lv_text = |Empty package|.
+    ENDIF.
+
+    rv_html = |<tr class="unsupported"><td class="paddings">|
+           && |  <center>{ lv_text }</center>|
+           && |</td></tr>|.
 
   ENDMETHOD. "render_empty_package
 
@@ -388,10 +398,10 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
       ro_html->add( |<td class="icon">{ get_item_icon( is_item ) }</td>| ).
 
       IF is_item-is_dir = abap_true. " Subdir
-        lv_link = build_dir_jump_link( iv_path = is_item-path ).
+        lv_link = build_dir_jump_link( is_item-path ).
         ro_html->add( |<td class="dir" colspan="2">{ lv_link }</td>| ).
       ELSE.
-        lv_link = build_obj_jump_link( is_item = is_item ).
+        lv_link = build_obj_jump_link( is_item ).
         ro_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
         ro_html->add( |<td class="object">{ lv_link }</td>| ).
       ENDIF.

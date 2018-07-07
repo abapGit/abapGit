@@ -8,6 +8,83 @@ Legend
 + : added
 - : removed
 
+2018-07-06 v1.71.0
+------------------
+* validate sub and super packages when installing
+! delete empty packages
++ UI for editing requirements
+! track user which created repo
++ new repository overview page
+* delete PARA after DTEL
+* TABL, check existence before SELECTing
+
+2018-06-28 v1.70.0
+------------------
++ possibility to run code inspector before staging
+* WAPA better delta handling
++ Block pull if any of deserialized object is locked
++ CHAR support
+
+2018-06-17 v1.69.1
+------------------
++ new exit: change_tadir
+* fix objects outside of repo
+* started dependency injection for unit testing
+* DDLS fix dump
+* handle repair transports
+* SSFO catch exception
+* SEO_CS_CACHE downport
+* TABL consider DD12L in changed_by
+
+2018-06-09 v1.69.0
+------------------
+! FORM serialization, filenames changed
+* fix gui show changes only
+* fix checkout annotated tags
+* set new remote: supply remote SHA1
+
+2018-06-06 v1.68.3
+------------------
+* fix dump when objects are moved
+* abapGit news feature now works in more cases
+* FUGR force update of where-used
+* tag page redesigned
+* TABL, clear field RESERVEDTE
+* http agent changed
+
+2018-06-04 v1.68.2
+------------------
+* CLAS ignore deltion of non-existent objects
+* ENHO implement changed by
+* fix TOBJ diffs
+* fix error in XML syntax highlighter
+* ECATT remove empty attributes
+* evaluate 2FA implementations alphabetically
+
+2018-06-03 v1.68.1
+------------------
+* XSLT fix changed_by
+* Fix dump in XML syntax highlighter
+* Delivery class of database table changed
+
+2018-05-27 v1.68.0
+------------------
++ Resolve conflicts functionallity/UI (beta)
++ Annotated tags
+* Locking problems fixed(?)
+
+2018-05-19 v1.67.0
+------------------
++ IDOC support
++ IEXT support
+* DOMA deletion downport
+* ALV popup
+* DDLS downport
+! default starting folder changed to "/src/"
+* Author regex fixed in branch overview
+! DDLS clear additional fields
+! Moving an object outside main package shows up as deletion
+
 2018-05-11 v1.66.0
 ------------------
 ! Clone without pull, user has to choose pull after creating online repo

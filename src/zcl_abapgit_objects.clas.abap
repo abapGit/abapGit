@@ -79,7 +79,16 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS supported_list
       RETURNING
         VALUE(rt_types) TYPE ty_types_tt .
+  PROTECTED SECTION.
+
   PRIVATE SECTION.
+    TYPES: BEGIN OF ty_obj_serializer_map,
+             item     TYPE zif_abapgit_definitions=>ty_item,
+             metadata TYPE zif_abapgit_definitions=>ty_metadata,
+           END OF ty_obj_serializer_map,
+           tty_obj_serializer_map
+        TYPE SORTED TABLE OF ty_obj_serializer_map WITH UNIQUE KEY item.
+    CLASS-DATA st_obj_serializer_map TYPE tty_obj_serializer_map.
 
     CLASS-METHODS files_to_deserialize
       IMPORTING
@@ -93,16 +102,7 @@ CLASS zcl_abapgit_objects DEFINITION
         !it_files TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS create_object
-      IMPORTING
-        !is_item        TYPE zif_abapgit_definitions=>ty_item
-        !iv_language    TYPE spras
-        !is_metadata    TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
-        !iv_native_only TYPE abap_bool DEFAULT abap_false
-      RETURNING
-        VALUE(ri_obj)   TYPE REF TO zif_abapgit_object
-      RAISING
-        zcx_abapgit_exception .
+
     CLASS-METHODS prioritize_deser
       IMPORTING
         !it_results       TYPE zif_abapgit_definitions=>ty_results_tt
@@ -168,13 +168,39 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_objects
       IMPORTING
-        !it_objects TYPE ty_deserialization_tt
-        !iv_ddic    TYPE abap_bool DEFAULT abap_false
-        !iv_descr   TYPE string
+        it_objects TYPE ty_deserialization_tt
+        iv_ddic    TYPE abap_bool DEFAULT abap_false
+        iv_descr   TYPE string
       CHANGING
-        !ct_files   TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+        ct_files   TYPE zif_abapgit_definitions=>ty_file_signatures_tt
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS check_objects_locked
+      IMPORTING
+        iv_language TYPE spras
+        it_items    TYPE zif_abapgit_definitions=>ty_items_tt
+      RAISING
+        zcx_abapgit_exception.
+    CLASS-METHODS create_object
+      IMPORTING
+        is_item        TYPE zif_abapgit_definitions=>ty_item
+        iv_language    TYPE spras
+        is_metadata    TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
+        iv_native_only TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(ri_obj)  TYPE REF TO zif_abapgit_object
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS map_tadir_to_items
+      IMPORTING
+        it_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RETURNING
+        VALUE(rt_items) TYPE zif_abapgit_definitions=>ty_items_tt.
+    CLASS-METHODS map_results_to_items
+      IMPORTING
+        it_results      TYPE zif_abapgit_definitions=>ty_results_tt
+      RETURNING
+        VALUE(rt_items) TYPE zif_abapgit_definitions=>ty_items_tt.
 ENDCLASS.
 
 
@@ -224,12 +250,33 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     DATA: lt_files TYPE zif_abapgit_definitions=>ty_files_tt.
 
 
-    lt_files[] = it_files[].
+    lt_files = it_files.
     SORT lt_files BY path ASCENDING filename ASCENDING.
     DELETE ADJACENT DUPLICATES FROM lt_files COMPARING path filename.
     IF lines( lt_files ) <> lines( it_files ).
       zcx_abapgit_exception=>raise( 'Duplicates' ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD check_objects_locked.
+
+    DATA: li_obj TYPE REF TO zif_abapgit_object.
+
+    FIELD-SYMBOLS: <ls_item> LIKE LINE OF it_items.
+
+    LOOP AT it_items ASSIGNING <ls_item>.
+
+      li_obj = create_object( is_item     = <ls_item>
+                              iv_language = iv_language ).
+
+      IF li_obj->is_locked( ) = abap_true.
+        zcx_abapgit_exception=>raise( |Object { <ls_item>-obj_type } { <ls_item>-obj_name } |
+                                   && |is locked. Action not possible.| ).
+      ENDIF.
+
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -279,14 +326,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD create_object.
-
-    TYPES: BEGIN OF ty_obj_serializer_map,
-             item     LIKE is_item,
-             metadata LIKE is_metadata,
-           END OF ty_obj_serializer_map.
-
-    STATICS st_obj_serializer_map
-      TYPE SORTED TABLE OF ty_obj_serializer_map WITH UNIQUE KEY item.
 
     DATA: lv_message            TYPE string,
           lv_class_name         TYPE string,
@@ -345,17 +384,23 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     DATA: ls_item     TYPE zif_abapgit_definitions=>ty_item,
           lo_progress TYPE REF TO zcl_abapgit_progress,
-          lt_tadir    LIKE it_tadir.
+          lt_tadir    LIKE it_tadir,
+          lt_items    TYPE zif_abapgit_definitions=>ty_items_tt.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
-    lt_tadir[] = it_tadir[].
+    lt_tadir = it_tadir.
 
     zcl_abapgit_dependencies=>resolve( CHANGING ct_tadir = lt_tadir ).
 
     CREATE OBJECT lo_progress
       EXPORTING
         iv_total = lines( lt_tadir ).
+
+    lt_items = map_tadir_to_items( lt_tadir ).
+
+    check_objects_locked( iv_language = zif_abapgit_definitions=>gc_english
+                          it_items    = lt_items ).
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       lo_progress->show( iv_current = sy-tabix
@@ -412,7 +457,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lt_rest     TYPE TABLE OF ty_deserialization,
           lt_late     TYPE TABLE OF ty_deserialization,
           lo_progress TYPE REF TO zcl_abapgit_progress,
-          lv_path     TYPE string.
+          lv_path     TYPE string,
+          lt_items    TYPE zif_abapgit_definitions=>ty_items_tt.
 
     FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result,
                    <ls_deser>  LIKE LINE OF lt_late.
@@ -440,6 +486,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     CREATE OBJECT lo_progress
       EXPORTING
         iv_total = lines( lt_results ).
+
+    lt_items = map_results_to_items( lt_results ).
+
+    check_objects_locked( iv_language = io_repo->get_dot_abapgit( )->get_master_language( )
+                          it_items    = lt_items ).
 
     LOOP AT lt_results ASSIGNING <ls_result>.
       lo_progress->show( iv_current = sy-tabix
@@ -520,7 +571,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
   METHOD deserialize_checks.
 
-    DATA: lt_results TYPE zif_abapgit_definitions=>ty_results_tt.
+    DATA: lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
+          li_package TYPE REF TO zif_abapgit_sap_package.
 
 
     lt_results = files_to_deserialize( io_repo ).
@@ -532,8 +584,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       it_results = lt_results ).
 
     IF lines( lt_results ) > 0.
-      rs_checks-transport-required = zcl_abapgit_sap_package=>get( io_repo->get_package( )
-                                         )->are_changes_recorded_in_tr_req( ).
+      li_package = zcl_abapgit_factory=>get_sap_package( io_repo->get_package( ) ).
+      rs_checks-transport-required = li_package->are_changes_recorded_in_tr_req( ).
+      IF NOT rs_checks-transport-required IS INITIAL.
+        rs_checks-transport-type = li_package->get_transport_type( ).
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
@@ -591,8 +646,11 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     rt_results = zcl_abapgit_file_status=>status( io_repo ).
     DELETE rt_results WHERE match = abap_true.     " Full match
-    SORT rt_results BY obj_type ASCENDING obj_name ASCENDING.
-    DELETE ADJACENT DUPLICATES FROM rt_results COMPARING obj_type obj_name.
+    SORT rt_results
+      BY obj_type ASCENDING
+         obj_name ASCENDING
+         filename ASCENDING.
+    DELETE ADJACENT DUPLICATES FROM rt_results COMPARING obj_type obj_name filename.
 
     DELETE rt_results WHERE obj_type IS INITIAL.
     DELETE rt_results WHERE lstate = zif_abapgit_definitions=>gc_state-added AND rstate IS INITIAL.
@@ -773,7 +831,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lv_tree     TYPE dirtree-tname.
 
 
-    lt_packages = zcl_abapgit_sap_package=>get( iv_package )->list_subpackages( ).
+    lt_packages = zcl_abapgit_factory=>get_sap_package( iv_package )->list_subpackages( ).
     APPEND iv_package TO lt_packages.
 
     LOOP AT lt_packages INTO lv_package.
@@ -893,7 +951,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         io_dot  = io_repo->get_dot_abapgit( )
         iv_path = <ls_result>-path ).
 
-      ls_tadir = zcl_abapgit_tadir=>read_single(
+      ls_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
         iv_object   = <ls_result>-obj_type
         iv_obj_name = <ls_result>-obj_name ).
 
@@ -909,4 +967,38 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
+  METHOD map_tadir_to_items.
+
+    DATA: ls_item LIKE LINE OF rt_items.
+    FIELD-SYMBOLS: <ls_tadir> TYPE zif_abapgit_definitions=>ty_tadir.
+
+    LOOP AT it_tadir ASSIGNING <ls_tadir>.
+
+      ls_item-devclass = <ls_tadir>-devclass.
+      ls_item-obj_type = <ls_tadir>-object.
+      ls_item-obj_name = <ls_tadir>-obj_name.
+      INSERT ls_item INTO TABLE rt_items.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD map_results_to_items.
+
+    DATA: ls_item LIKE LINE OF rt_items.
+    FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result.
+
+    LOOP AT it_results ASSIGNING <ls_result>.
+
+      ls_item-devclass = <ls_result>-package.
+      ls_item-obj_type = <ls_result>-obj_type.
+      ls_item-obj_name = <ls_result>-obj_name.
+      INSERT ls_item INTO TABLE rt_items.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.
