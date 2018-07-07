@@ -38,7 +38,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -184,11 +184,23 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE IMPLEMENTATION.
           zcx_abapgit_exception=>raise( 'nothing to merge' ).
         ENDIF.
 
-        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
-          EXPORTING
-            io_repo  = mo_repo
-            io_stage = mo_merge->get_result( )-stage.
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+        IF mo_repo->get_local_settings( )-code_inspector_check_variant IS NOT INITIAL.
+
+          CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_code_insp
+            EXPORTING
+              io_repo  = mo_repo
+              io_stage = mo_merge->get_result( )-stage.
+          ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+
+        ELSE.
+
+          CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
+            EXPORTING
+              io_repo  = mo_repo
+              io_stage = mo_merge->get_result( )-stage.
+          ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+
+        ENDIF.
 
       WHEN c_actions-res_conflicts.
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_merge_res

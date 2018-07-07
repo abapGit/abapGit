@@ -5,7 +5,8 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
     METHODS:
       constructor
         IMPORTING
-          io_repo TYPE REF TO zcl_abapgit_repo
+          io_repo  TYPE REF TO zcl_abapgit_repo
+          io_stage TYPE REF TO zcl_abapgit_stage OPTIONAL
         RAISING
           zcx_abapgit_exception,
 
@@ -25,12 +26,14 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
   PRIVATE SECTION.
     CONSTANTS:
       BEGIN OF c_actions,
-        stage TYPE string VALUE 'stage' ##NO_TEXT,
-        rerun TYPE string VALUE 'rerun' ##NO_TEXT,
+        stage  TYPE string VALUE 'stage' ##NO_TEXT,
+        commit TYPE string VALUE 'commit' ##NO_TEXT,
+        rerun  TYPE string VALUE 'rerun' ##NO_TEXT,
       END OF c_actions.
 
     DATA:
-      mt_result TYPE scit_alvlist.
+      mt_result TYPE scit_alvlist,
+      mo_stage  TYPE REF TO zcl_abapgit_stage.
 
     METHODS:
       build_menu
@@ -75,10 +78,24 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
       lv_opt = zif_abapgit_definitions=>gc_html_opt-crossout.
     ENDIF.
 
-    ro_menu->add( iv_txt = 'Stage'
-                  iv_act = c_actions-stage
-                  iv_cur = abap_false
-                  iv_opt = lv_opt ) ##NO_TEXT.
+    IF mo_stage IS BOUND.
+
+      " Staging info already available, we can directly
+      " offer to commit
+
+      ro_menu->add( iv_txt = 'Commit'
+                    iv_act = c_actions-commit
+                    iv_cur = abap_false
+                    iv_opt = lv_opt ) ##NO_TEXT.
+
+    ELSE.
+
+      ro_menu->add( iv_txt = 'Stage'
+                    iv_act = c_actions-stage
+                    iv_cur = abap_false
+                    iv_opt = lv_opt ) ##NO_TEXT.
+
+    ENDIF.
 
   ENDMETHOD.
 
@@ -86,6 +103,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     mo_repo ?= io_repo.
+    mo_stage = io_stage.
     ms_control-page_title = 'Code Inspector'.
     run_code_inspector( ).
   ENDMETHOD.  " constructor.
@@ -178,14 +196,29 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
       WHEN c_actions-stage.
 
         IF is_stage_allowed( ) = abap_true.
-
           " we need to refresh as the source might have changed
           lo_repo_online->refresh( ).
 
           CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_stage
             EXPORTING
               io_repo = lo_repo_online.
+          ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
 
+        ELSE.
+
+          ei_page = me.
+          ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
+
+        ENDIF.
+
+      WHEN c_actions-commit.
+
+        IF is_stage_allowed( ) = abap_true.
+
+          CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
+            EXPORTING
+              io_repo  = mo_repo
+              io_stage = mo_stage.
           ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
 
         ELSE.
