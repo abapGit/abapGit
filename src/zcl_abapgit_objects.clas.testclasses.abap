@@ -360,7 +360,7 @@ ENDCLASS.                    "ltcl_serialize IMPLEMENTATION
 CLASS ltd_objcet_ddls_mock DEFINITION FOR TESTING.
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_object PARTIALLY IMPLEMENTED.
+    INTERFACES zif_abapgit_object.
     METHODS:
       constructor
         IMPORTING
@@ -392,6 +392,42 @@ CLASS ltd_objcet_ddls_mock IMPLEMENTATION.
         rv_is_locked = abap_false.
 
     ENDCASE.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~changed_by. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~compare_to_remote_version. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~delete. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~deserialize. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~exists. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~get_metadata. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~has_changed_since. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~jump. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~serialize. "##needed
 
   ENDMETHOD.
 
