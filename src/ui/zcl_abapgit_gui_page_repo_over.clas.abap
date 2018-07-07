@@ -18,13 +18,15 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_overview,
-        favorite TYPE string,
-        type     TYPE string,
-        key      TYPE string,
-        name     TYPE string,
-        url      TYPE string,
-        package  TYPE string,
-        branch   TYPE string,
+        favorite   TYPE string,
+        type       TYPE string,
+        key        TYPE string,
+        name       TYPE string,
+        url        TYPE string,
+        package    TYPE string,
+        branch     TYPE string,
+        created_by TYPE string,
+        created_at TYPE string,
       END OF ty_overview,
       tty_overview TYPE STANDARD TABLE OF ty_overview
                    WITH NON-UNIQUE DEFAULT KEY.
@@ -87,7 +89,33 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         RETURNING
           VALUE(rt_overview) TYPE zcl_abapgit_gui_page_repo_over=>tty_overview
         RAISING
-          zcx_abapgit_exception.
+          zcx_abapgit_exception,
+
+      render_table_header
+        IMPORTING
+          io_html TYPE REF TO zcl_abapgit_html,
+
+      render_table
+        IMPORTING
+          io_html     TYPE REF TO zcl_abapgit_html
+          it_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview,
+
+      render_table_body
+        IMPORTING
+          io_html     TYPE REF TO zcl_abapgit_html
+          it_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview,
+
+      render_order_by
+        IMPORTING
+          io_html TYPE REF TO zcl_abapgit_html,
+
+      render_order_by_direction
+        IMPORTING
+          io_html TYPE REF TO zcl_abapgit_html,
+
+      render_header_bar
+        IMPORTING
+          io_html TYPE REF TO zcl_abapgit_html.
 
 ENDCLASS.
 
@@ -128,11 +156,13 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     IF mv_filter IS NOT INITIAL.
 
-      DELETE ct_overview WHERE key     NS mv_filter
-                           AND name    NS mv_filter
-                           AND url     NS mv_filter
-                           AND package NS mv_filter
-                           AND branch  NS mv_filter.
+      DELETE ct_overview WHERE key        NS mv_filter
+                           AND name       NS mv_filter
+                           AND url        NS mv_filter
+                           AND package    NS mv_filter
+                           AND branch     NS mv_filter
+                           AND created_by NS mv_filter
+                           AND created_at NS mv_filter.
 
     ENDIF.
 
@@ -169,26 +199,51 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   METHOD map_repo_list_to_overview.
 
-    DATA: ls_overview LIKE LINE OF rt_overview,
-          lo_repo_srv TYPE REF TO zcl_abapgit_repo,
-          lo_user     TYPE REF TO zcl_abapgit_persistence_user.
+    DATA: ls_overview  LIKE LINE OF rt_overview,
+          lo_repo_srv  TYPE REF TO zcl_abapgit_repo,
+          lo_user      TYPE REF TO zcl_abapgit_persistence_user,
+          lv_time_zone TYPE timezone,
+          lv_date      TYPE d,
+          lv_time      TYPE t.
 
     FIELD-SYMBOLS: <ls_repo> LIKE LINE OF it_repo_list.
 
     lo_user = zcl_abapgit_persistence_user=>get_instance( ).
+
+    CALL FUNCTION 'GET_SYSTEM_TIMEZONE'
+      IMPORTING
+        timezone            = lv_time_zone
+      EXCEPTIONS
+        customizing_missing = 1
+        OTHERS              = 2.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
 
     LOOP AT it_repo_list ASSIGNING <ls_repo>.
 
       CLEAR: ls_overview.
       lo_repo_srv = zcl_abapgit_repo_srv=>get_instance( )->get( <ls_repo>-key ).
 
-      ls_overview-favorite = lo_user->is_favorite_repo( <ls_repo>-key ).
-      ls_overview-type     = <ls_repo>-offline.
-      ls_overview-key      = <ls_repo>-key.
-      ls_overview-name     = lo_repo_srv->get_name( ).
-      ls_overview-url      = <ls_repo>-url.
-      ls_overview-package  = <ls_repo>-package.
-      ls_overview-branch   = zcl_abapgit_git_branch_list=>get_display_name( <ls_repo>-branch_name ).
+      ls_overview-favorite   = lo_user->is_favorite_repo( <ls_repo>-key ).
+      ls_overview-type       = <ls_repo>-offline.
+      ls_overview-key        = <ls_repo>-key.
+      ls_overview-name       = lo_repo_srv->get_name( ).
+      ls_overview-url        = <ls_repo>-url.
+      ls_overview-package    = <ls_repo>-package.
+      ls_overview-branch     = zcl_abapgit_git_branch_list=>get_display_name( <ls_repo>-branch_name ).
+      ls_overview-created_by = <ls_repo>-created_by.
+
+      IF <ls_repo>-created_at IS NOT INITIAL.
+        CONVERT TIME STAMP <ls_repo>-created_at
+                TIME ZONE lv_time_zone
+                INTO DATE lv_date
+                     TIME lv_time.
+
+        ls_overview-created_at = |{ lv_date DATE = USER } { lv_time TIME = USER }|.
+      ENDIF.
+
       INSERT ls_overview INTO TABLE rt_overview.
 
     ENDLOOP.
@@ -255,13 +310,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: lv_trclass          TYPE string,
-          lo_persistence_repo TYPE REF TO zcl_abapgit_persistence_repo,
-          lt_overview         TYPE tty_overview,
-          lv_type_icon        TYPE string,
-          lv_favorite_icon    TYPE string.
-
-    FIELD-SYMBOLS: <ls_overview> LIKE LINE OF lt_overview.
+    DATA: lo_persistence_repo TYPE REF TO zcl_abapgit_persistence_repo,
+          lt_overview         TYPE tty_overview.
 
     CREATE OBJECT lo_persistence_repo.
 
@@ -278,112 +328,11 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ro_html->add( |<form id="commit_form" class="grey70"|
                && | method="post" action="sapevent:{ gc_action-apply_filter }">| ).
 
-    ro_html->add( |<div class="row">| ).
+    render_header_bar( ro_html ).
 
-    ro_html->add( |Order by: <select name="order_by" onchange="onOrderByChange(this)">| ).
+    render_table( io_html     = ro_html
+                  it_overview = lt_overview ).
 
-    add_order_by_option( iv_option = |TYPE|
-                         io_html   = ro_html ).
-
-    add_order_by_option( iv_option = |KEY|
-                         io_html   = ro_html ).
-
-    add_order_by_option( iv_option = |NAME|
-                         io_html   = ro_html ).
-
-    add_order_by_option( iv_option = |URL|
-                         io_html   = ro_html ).
-
-    add_order_by_option( iv_option = |PACKAGE|
-                         io_html   = ro_html ).
-
-    add_order_by_option( iv_option = |BRANCH|
-                         io_html   = ro_html ).
-
-    ro_html->add( |</select>| ).
-
-    ro_html->add( |<select name="direction" onchange="onDirectionChange(this)">| ).
-
-    add_direction_option( iv_option   = |ASCENDING|
-                          iv_selected = mv_order_descending
-                          io_html     = ro_html ).
-
-    add_direction_option( iv_option   = |DESCENDING|
-                          iv_selected = mv_order_descending
-                          io_html     = ro_html ).
-
-    ro_html->add( |</select>| ).
-
-    ro_html->add( render_text_input( iv_name  = |filter|
-                                     iv_label = |Filter: |
-                                     iv_value = mv_filter ) ).
-
-    ro_html->add( |<input type="submit" class="hidden-submit">| ).
-
-    ro_html->add( |</div>| ).
-
-    ro_html->add( |</form>| ).
-    ro_html->add( |</div>| ).
-
-    ro_html->add( |<div class="db_list">| ).
-    ro_html->add( |<table class="db_tab">| ).
-
-    " Header
-    ro_html->add( |<thead>| ).
-    ro_html->add( |<tr>| ).
-    ro_html->add( |<th>Favorite</th>| ).
-    ro_html->add( |<th>Type</th>| ).
-    ro_html->add( |<th>Key</th>| ).
-    ro_html->add( |<th>Name</th>| ).
-    ro_html->add( |<th>Url</th>| ).
-    ro_html->add( |<th>Package</th>| ).
-    ro_html->add( |<th>Branch name</th>| ).
-    ro_html->add( |<th></th>| ).
-    ro_html->add( '</tr>' ).
-    ro_html->add( '</thead>' ).
-    ro_html->add( '<tbody>' ).
-
-
-    LOOP AT lt_overview ASSIGNING <ls_overview>.
-      CLEAR lv_trclass.
-      IF sy-tabix = 1.
-        lv_trclass = ' class="firstrow"' ##NO_TEXT.
-      ENDIF.
-
-      IF <ls_overview>-type = abap_true.
-        lv_type_icon = 'plug/darkgrey'.
-      ELSE.
-        lv_type_icon = 'cloud-upload/blue'.
-      ENDIF.
-
-      IF <ls_overview>-favorite = abap_true.
-        lv_favorite_icon = 'star/blue'.
-      ELSE.
-        lv_favorite_icon = 'star/grey'.
-      ENDIF.
-
-      ro_html->add( |<tr{ lv_trclass }>| ).
-      ro_html->add( |<td>| ).
-      ro_html->add_a( iv_act = |{ zif_abapgit_definitions=>gc_action-repo_toggle_fav }?{ <ls_overview>-key }|
-                      iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_favorite_icon
-                                                       iv_class = 'pad-sides'
-                                                       iv_hint  = 'Click to toggle favorite' ) ).
-      ro_html->add( |</td>| ).
-      ro_html->add( |<td>{ zcl_abapgit_html=>icon( lv_type_icon )  }</td>| ).
-
-      ro_html->add( |<td>{ <ls_overview>-key }</td>| ).
-      ro_html->add( |<td>{ zcl_abapgit_html=>a( iv_txt = <ls_overview>-name
-                                                iv_act = |{ gc_action-select }?{ <ls_overview>-key }| ) }</td>| ).
-      ro_html->add( |<td>{ <ls_overview>-url }</td>| ).
-      ro_html->add( |<td>{ <ls_overview>-package }</td>| ).
-      ro_html->add( |<td>{ <ls_overview>-branch }</td>| ).
-      ro_html->add( |<td>| ).
-      ro_html->add( |</td>| ).
-      ro_html->add( |</tr>| ).
-    ENDLOOP.
-
-    ro_html->add( |</tbody>| ).
-    ro_html->add( |</table>| ).
     ro_html->add( |</div>| ).
 
   ENDMETHOD.            "render_content
@@ -445,4 +394,164 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
+
+  METHOD render_table_header.
+
+    io_html->add( |<thead>| ).
+    io_html->add( |<tr>| ).
+    io_html->add( |<th>Favorite</th>| ).
+    io_html->add( |<th>Type</th>| ).
+    io_html->add( |<th>Key</th>| ).
+    io_html->add( |<th>Name</th>| ).
+    io_html->add( |<th>Url</th>| ).
+    io_html->add( |<th>Package</th>| ).
+    io_html->add( |<th>Branch name</th>| ).
+    io_html->add( |<th>Creator</th>| ).
+    io_html->add( |<th>Created at</th>| ).
+    io_html->add( |<th></th>| ).
+    io_html->add( '</tr>' ).
+    io_html->add( '</thead>' ).
+    io_html->add( '<tbody>' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_table.
+
+    io_html->add( |<div class="db_list">| ).
+    io_html->add( |<table class="db_tab">| ).
+
+    render_table_header( io_html ).
+    render_table_body( io_html     = io_html
+                       it_overview = it_overview  ).
+
+    io_html->add( |</tbody>| ).
+    io_html->add( |</table>| ).
+
+  ENDMETHOD.
+
+
+  METHOD render_table_body.
+
+    DATA: lv_trclass       TYPE string,
+          lv_type_icon     TYPE string,
+          lv_favorite_icon TYPE string.
+
+    FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
+
+    LOOP AT it_overview ASSIGNING <ls_overview>.
+
+      CLEAR lv_trclass.
+      IF sy-tabix = 1.
+        lv_trclass = ' class="firstrow"' ##NO_TEXT.
+      ENDIF.
+
+      IF <ls_overview>-type = abap_true.
+        lv_type_icon = 'plug/darkgrey'.
+      ELSE.
+        lv_type_icon = 'cloud-upload/blue'.
+      ENDIF.
+
+      IF <ls_overview>-favorite = abap_true.
+        lv_favorite_icon = 'star/blue'.
+      ELSE.
+        lv_favorite_icon = 'star/grey'.
+      ENDIF.
+
+      io_html->add( |<tr{ lv_trclass }>| ).
+      io_html->add( |<td>| ).
+      io_html->add_a( iv_act = |{ zif_abapgit_definitions=>gc_action-repo_toggle_fav }?{ <ls_overview>-key }|
+                      iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_favorite_icon
+                                                       iv_class = 'pad-sides'
+                                                       iv_hint  = 'Click to toggle favorite' ) ).
+      io_html->add( |</td>| ).
+      io_html->add( |<td>{ zcl_abapgit_html=>icon( lv_type_icon )  }</td>| ).
+
+      io_html->add( |<td>{ <ls_overview>-key }</td>| ).
+      io_html->add( |<td>{ zcl_abapgit_html=>a( iv_txt = <ls_overview>-name
+                                                iv_act = |{ gc_action-select }?{ <ls_overview>-key }| ) }</td>| ).
+      io_html->add( |<td>{ <ls_overview>-url }</td>| ).
+      io_html->add( |<td>{ <ls_overview>-package }</td>| ).
+      io_html->add( |<td>{ <ls_overview>-branch }</td>| ).
+      io_html->add( |<td>{ <ls_overview>-created_by }</td>| ).
+      io_html->add( |<td>{ <ls_overview>-created_at }</td>| ).
+      io_html->add( |<td>| ).
+      io_html->add( |</td>| ).
+      io_html->add( |</tr>| ).
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD render_order_by.
+
+    io_html->add( |Order by: <select name="order_by" onchange="onOrderByChange(this)">| ).
+
+    add_order_by_option( iv_option = |TYPE|
+                         io_html   = io_html ).
+
+    add_order_by_option( iv_option = |KEY|
+                         io_html   = io_html ).
+
+    add_order_by_option( iv_option = |NAME|
+                         io_html   = io_html ).
+
+    add_order_by_option( iv_option = |URL|
+                         io_html   = io_html ).
+
+    add_order_by_option( iv_option = |PACKAGE|
+                         io_html   = io_html ).
+
+    add_order_by_option( iv_option = |BRANCH|
+                         io_html   = io_html ).
+
+    add_order_by_option( iv_option = |CREATED_BY|
+                         io_html   = io_html ).
+
+    add_order_by_option( iv_option = |CREATED_AT|
+                         io_html   = io_html ).
+
+    io_html->add( |</select>| ).
+
+  ENDMETHOD.
+
+
+  METHOD render_order_by_direction.
+
+    io_html->add( |<select name="direction" onchange="onDirectionChange(this)">| ).
+
+    add_direction_option( iv_option   = |ASCENDING|
+                          iv_selected = mv_order_descending
+                          io_html     = io_html ).
+
+    add_direction_option( iv_option   = |DESCENDING|
+                          iv_selected = mv_order_descending
+                          io_html     = io_html ).
+
+    io_html->add( |</select>| ).
+
+  ENDMETHOD.
+
+
+  METHOD render_header_bar.
+
+    io_html->add( |<div class="row">| ).
+
+    render_order_by( io_html ).
+    render_order_by_direction( io_html ).
+
+    io_html->add( render_text_input( iv_name  = |filter|
+                                     iv_label = |Filter: |
+                                     iv_value = mv_filter ) ).
+
+    io_html->add( |<input type="submit" class="hidden-submit">| ).
+
+    io_html->add( |</div>| ).
+
+    io_html->add( |</form>| ).
+    io_html->add( |</div>| ).
+
+  ENDMETHOD.
+
 ENDCLASS.
