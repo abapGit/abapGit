@@ -9,6 +9,8 @@ Type   | Description   | Supported
 :------------ | :------------ | ------------:
 ACID | Checkpoint Group | Yes
 AOBJ | Archiving Object | [#804](https://github.com/larshp/abapGit/issues/804)
+ASFC | Field Catalog | [#1578](https://github.com/larshp/abapGit/issues/1578)
+ASIS | Archiving Information Structure | [#1579](https://github.com/larshp/abapGit/issues/1579)
 AUTH | Authorization Check Fields | Yes
 AVAS | Classification | [#1360](https://github.com/larshp/abapGit/issues/1360)
 BOBF | BOPF: Business Object Model | [#165](https://github.com/larshp/abapGit/issues/165)
@@ -60,6 +62,8 @@ PDWS | Workflow templates | [#154](https://github.com/larshp/abapGit/issues/154)
 PINF | Package interface | Yes
 PRAG | Pragma in ABAP Source Code | Yes
 PROG | Program | Yes
+SAJC | Application job catalog entry | [#1580](https://github.com/larshp/abapGit/issues/1580)
+SAJT | Application job template | [1581](https://github.com/larshp/abapGit/issues/1581)
 SAMC | ABAP Messaging Channels | Yes
 SAPC | ABAP Push Channels | Yes
 SCP1 | BC Set or Customizing Profile | [#1004](https://github.com/larshp/abapGit/issues/1004)
@@ -79,6 +83,7 @@ SOTS | All Concepts (OTR) of a Package - Long Texts | [#792](https://github.com/
 SPLO | Format Types | Yes
 SPRX | Proxy Object | [#87](https://github.com/larshp/abapGit/issues/87)
 SUCU | Authorization Groups (TBRG_AUTH) | [#1434](https://github.com/larshp/abapGit/issues/1434)
+SUSH | Assignment: Service --> Authorization Objects | [#1582](https://github.com/larshp/abapGit/issues/1582)
 SRFC | RFC Service | Yes
 SSFO | SAP Smart Form | Yes
 SSST | SAP Smart Style | Yes
