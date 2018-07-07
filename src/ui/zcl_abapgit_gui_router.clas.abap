@@ -53,7 +53,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       EXPORTING
         iv_key = iv_key.
 
-  ENDMETHOD.  "get_page_background
+  ENDMETHOD.
 
 
   METHOD get_page_branch_overview.
@@ -73,7 +73,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     ri_page = lo_page.
 
-  ENDMETHOD.  "get_page_branch_overview
+  ENDMETHOD.
 
 
   METHOD get_page_diff.
@@ -101,7 +101,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     ri_page = lo_page.
 
-  ENDMETHOD.  "get_page_diff
+  ENDMETHOD.
 
 
   METHOD get_page_playground.
@@ -123,7 +123,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |Cannot create page class { lv_class_name }| ).
     ENDTRY.
 
-  ENDMETHOD.  "get_page_playground
+  ENDMETHOD.
 
 
   METHOD get_page_stage.
@@ -168,7 +168,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     ENDIF.
 
-  ENDMETHOD.  "get_page_stage
+  ENDMETHOD.
 
 
   METHOD on_event.
@@ -265,9 +265,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>gc_action-abapgit_install.                 " Install abapGit
         zcl_abapgit_services_abapgit=>install_abapgit( ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-abapgit_install_pi.              " Install abapGit plugins
-        zcl_abapgit_services_abapgit=>install_abapgit_pi( ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
 
         " REPOSITORY services actions
@@ -379,5 +376,5 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         ev_state = zif_abapgit_definitions=>gc_event_state-not_handled.
     ENDCASE.
 
-  ENDMETHOD.        " on_event
+  ENDMETHOD.
 ENDCLASS.

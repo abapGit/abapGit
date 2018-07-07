@@ -8,9 +8,7 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
     CONSTANTS c_abapgit_homepage TYPE string VALUE 'http://www.abapgit.org' ##NO_TEXT.
     CONSTANTS c_abapgit_wikipage TYPE string VALUE 'http://docs.abapgit.org' ##NO_TEXT.
     CONSTANTS c_package_abapgit TYPE devclass VALUE '$ABAPGIT' ##NO_TEXT.
-    CONSTANTS c_package_plugins TYPE devclass VALUE '$ABAPGIT_PLUGINS' ##NO_TEXT.
     CONSTANTS c_abapgit_url TYPE string VALUE 'https://github.com/larshp/abapGit.git' ##NO_TEXT.
-    CONSTANTS c_plugins_url TYPE string VALUE 'https://github.com/larshp/abapGit-plugins.git' ##NO_TEXT.
 
     CLASS-METHODS open_abapgit_homepage
       RAISING
@@ -22,14 +20,7 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
       RAISING
         zcx_abapgit_exception
         zcx_abapgit_cancel .
-    CLASS-METHODS install_abapgit_pi
-      RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
     CLASS-METHODS is_installed
-      RETURNING
-        VALUE(rv_installed) TYPE abap_bool .
-    CLASS-METHODS is_installed_pi
       RETURNING
         VALUE(rv_installed) TYPE abap_bool .
   PRIVATE SECTION.
@@ -84,7 +75,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
     COMMIT WORK.
 
-  ENDMETHOD.  " do_install.
+  ENDMETHOD.
 
 
   METHOD install_abapgit.
@@ -107,32 +98,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
                 iv_url     = c_abapgit_url
                 iv_package = c_package_abapgit ).
 
-  ENDMETHOD.  "install_abapgit
-
-
-  METHOD install_abapgit_pi.
-
-    CONSTANTS lc_title TYPE c LENGTH 40 VALUE 'Install abapGit plugins'.
-    DATA lv_text       TYPE c LENGTH 100.
-
-    IF is_installed_pi( ) = abap_true.
-      lv_text = 'Seems like abapGit plugins package is already installed. No changes to be done'.
-      zcl_abapgit_ui_factory=>get_popups( )->popup_to_inform(
-        titlebar              = lc_title
-        text_message          = lv_text ).
-      RETURN.
-    ENDIF.
-
-    lv_text = |Confirm to install current version abapGit plugins to package {
-               c_package_plugins }|.
-
-    do_install( iv_title   = lc_title
-                iv_text    = lv_text
-                iv_url     = c_plugins_url
-                iv_package = c_package_plugins ).
-
-  ENDMETHOD.  "install_abapgit_pi
-
+  ENDMETHOD.
 
   METHOD is_installed.
 
@@ -144,21 +110,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
         rv_installed = abap_false.
     ENDTRY.
 
-  ENDMETHOD.                    "is_installed
-
-
-  METHOD is_installed_pi.
-
-    TRY.
-        rv_installed = zcl_abapgit_repo_srv=>get_instance( )->is_repo_installed( c_plugins_url ).
-        " TODO, alternative checks for presence in the system
-      CATCH zcx_abapgit_exception.
-        " cannot be installed anyway in this case, e.g. no connection
-        rv_installed = abap_false.
-    ENDTRY.
-
-  ENDMETHOD.                    "is_installed_pi
-
+  ENDMETHOD.
 
   METHOD open_abapgit_homepage.
 
@@ -169,7 +121,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Opening page in external browser failed.' ).
     ENDIF.
 
-  ENDMETHOD.  "open_abapgit_homepage
+  ENDMETHOD.
 
 
   METHOD open_abapgit_wikipage.
@@ -181,5 +133,5 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Opening page in external browser failed.' ).
     ENDIF.
 
-  ENDMETHOD.  "open_abapgit_wikipage
+  ENDMETHOD.
 ENDCLASS.
