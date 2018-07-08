@@ -6,64 +6,64 @@ CLASS zcl_abapgit_oo_class_new DEFINITION PUBLIC INHERITING FROM zcl_abapgit_oo_
       zif_abapgit_oo_object_fnc~generate_locals REDEFINITION,
       zif_abapgit_oo_object_fnc~deserialize_source REDEFINITION.
 
-private section.
+  PRIVATE SECTION.
 
-  class-methods UPDATE_SOURCE_INDEX
-    importing
-      !IV_CLSNAME type CSEQUENCE
-      !IO_SCANNER type ref to CL_OO_SOURCE_SCANNER_CLASS .
-  class-methods UPDATE_REPORT
-    importing
-      !IV_PROGRAM type PROGRAMM
-      !IT_SOURCE type STRING_TABLE
-    returning
-      value(RV_UPDATED) type ABAP_BOOL
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  class-methods GENERATE_CLASSPOOL
-    importing
-      !IV_NAME type SEOCLSNAME
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  class-methods UPDATE_META
-    importing
-      !IV_NAME type SEOCLSNAME
-      !IV_EXPOSURE type SEOEXPOSE
-      !IT_SOURCE type RSWSOURCET
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  class-methods DETERMINE_METHOD_INCLUDE
-    importing
-      !IV_NAME type SEOCLSNAME
-      !IV_METHOD type SEOCPDNAME
-    returning
-      value(RV_PROGRAM) type PROGRAMM
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  class-methods INIT_SCANNER
-    importing
-      !IT_SOURCE type ZIF_ABAPGIT_DEFINITIONS=>TY_STRING_TT
-      !IV_NAME type SEOCLSNAME
-    returning
-      value(RO_SCANNER) type ref to CL_OO_SOURCE_SCANNER_CLASS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  class-methods UPDATE_FULL_CLASS_INCLUDE
-    importing
-      !IV_CLASSNAME type SEOCLSNAME
-      !IT_SOURCE type STRING_TABLE
-      !IT_METHODS type CL_OO_SOURCE_SCANNER_CLASS=>TYPE_METHOD_IMPLEMENTATIONS .
-  class-methods CREATE_REPORT
-    importing
-      !IV_PROGRAM type PROGRAMM
-      !IT_SOURCE type STRING_TABLE
-      !IV_EXTENSION type SYCHAR02
-      !IV_PROGRAM_TYPE type SYCHAR01
-      !IV_VERSION type R3STATE .
-  class-methods UPDATE_CS_NUMBER_OF_METHODS
-    importing
-      !IV_CLASSNAME type SEOCLSNAME
-      !IV_NUMBER_OF_IMPL_METHODS type I .
+    CLASS-METHODS update_source_index
+      IMPORTING
+        !iv_clsname TYPE csequence
+        !io_scanner TYPE REF TO cl_oo_source_scanner_class .
+    CLASS-METHODS update_report
+      IMPORTING
+        !iv_program       TYPE programm
+        !it_source        TYPE string_table
+      RETURNING
+        VALUE(rv_updated) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS generate_classpool
+      IMPORTING
+        !iv_name TYPE seoclsname
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS update_meta
+      IMPORTING
+        !iv_name     TYPE seoclsname
+        !iv_exposure TYPE seoexpose
+        !it_source   TYPE rswsourcet
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS determine_method_include
+      IMPORTING
+        !iv_name          TYPE seoclsname
+        !iv_method        TYPE seocpdname
+      RETURNING
+        VALUE(rv_program) TYPE programm
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS init_scanner
+      IMPORTING
+        !it_source        TYPE zif_abapgit_definitions=>ty_string_tt
+        !iv_name          TYPE seoclsname
+      RETURNING
+        VALUE(ro_scanner) TYPE REF TO cl_oo_source_scanner_class
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS update_full_class_include
+      IMPORTING
+        !iv_classname TYPE seoclsname
+        !it_source    TYPE string_table
+        !it_methods   TYPE cl_oo_source_scanner_class=>type_method_implementations .
+    CLASS-METHODS create_report
+      IMPORTING
+        !iv_program      TYPE programm
+        !it_source       TYPE string_table
+        !iv_extension    TYPE sychar02
+        !iv_program_type TYPE sychar01
+        !iv_version      TYPE r3state .
+    CLASS-METHODS update_cs_number_of_methods
+      IMPORTING
+        !iv_classname              TYPE seoclsname
+        !iv_number_of_impl_methods TYPE i .
 ENDCLASS.
 
 
