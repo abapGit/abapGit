@@ -311,10 +311,6 @@ CLASS ZCL_ABAPGIT_OO_CLASS_NEW IMPLEMENTATION.
       class_name = iv_clsname
       version    = if_oo_clif_source=>co_version_active
       scanner    = io_scanner ).
-* todo, use the already scanned source
-*    li_index_helper->create_index(
-*      class_name = iv_clsname
-*      version    = if_oo_clif_source=>co_version_active ).
 
     li_index_helper->delete_index(
       class_name = iv_clsname
