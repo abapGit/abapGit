@@ -182,7 +182,7 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
     set_run_critical_tests( abap_false ).
     set_experimental_features( abap_false ).
     set_max_lines( 500 ).
-    set_adt_jump_enanbled( abap_false ).
+    set_adt_jump_enanbled( abap_true ).
     set_commitmsg_comment_length( c_commitmsg_comment_length_dft ).
     set_commitmsg_body_size( c_commitmsg_body_size_dft ).
 
