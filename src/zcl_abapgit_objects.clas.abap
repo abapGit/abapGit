@@ -898,6 +898,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+    SORT rt_overwrite.
+    DELETE ADJACENT DUPLICATES FROM rt_overwrite.
+
   ENDMETHOD.
 
 
