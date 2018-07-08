@@ -18,7 +18,22 @@ CLASS zcl_abapgit_object_scp1 DEFINITION
         scprfldv TYPE STANDARD TABLE OF scprfldv WITH DEFAULT KEY,
       END OF ty_scp1 .
 
-    METHODS get
+    METHODS dequeue .
+    METHODS enqueue
+      RAISING
+        zcx_abapgit_exception .
+    METHODS save
+      IMPORTING
+        !is_scp1 TYPE ty_scp1
+      RAISING
+        zcx_abapgit_exception .
+    METHODS adjust_inbound
+      CHANGING
+        !cs_scp1 TYPE ty_scp1 .
+    METHODS adjust_outbound
+      CHANGING
+        !cs_scp1 TYPE ty_scp1 .
+    METHODS load
       CHANGING
         !cs_scp1 TYPE ty_scp1 .
   PRIVATE SECTION.
@@ -29,11 +44,73 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
 
 
-  METHOD get.
+  METHOD adjust_inbound.
 
     FIELD-SYMBOLS: <ls_scprvals> TYPE scprvals,
                    <ls_scprreca> TYPE scprreca.
 
+* back to internal format
+    LOOP AT cs_scp1-scprvals ASSIGNING <ls_scprvals>.
+      SHIFT <ls_scprvals>-recnumber RIGHT DELETING TRAILING space.
+    ENDLOOP.
+    LOOP AT cs_scp1-scprreca ASSIGNING <ls_scprreca>.
+      SHIFT <ls_scprreca>-recnumber RIGHT DELETING TRAILING space.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD adjust_outbound.
+
+    FIELD-SYMBOLS: <ls_scprvals> TYPE scprvals,
+                   <ls_scprreca> TYPE scprreca.
+
+* normalize the XML
+    LOOP AT cs_scp1-scprvals ASSIGNING <ls_scprvals>.
+      CONDENSE <ls_scprvals>-recnumber.
+    ENDLOOP.
+    LOOP AT cs_scp1-scprreca ASSIGNING <ls_scprreca>.
+      CONDENSE <ls_scprreca>-recnumber.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD dequeue.
+
+    DATA: lv_id TYPE scpr_id.
+
+
+    lv_id = ms_item-obj_name.
+
+    CALL FUNCTION 'SCPR_SV_DEQUEUE_BCSET'
+      EXPORTING
+        bcset_id = lv_id.
+
+  ENDMETHOD.
+
+
+  METHOD enqueue.
+
+    DATA: lv_id TYPE scpr_id.
+
+    lv_id = ms_item-obj_name.
+
+    CALL FUNCTION 'SCPR_SV_ENQUEUE_BCSET'
+      EXPORTING
+        bcset_id          = lv_id
+      EXCEPTIONS
+        is_already_locked = 1
+        system_failure    = 2
+        OTHERS            = 3.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |SCP1 locking error| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD load.
 
     CALL FUNCTION 'SCPR_TEXT_GET'
       EXPORTING
@@ -53,14 +130,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
         valuesl  = cs_scp1-scprvall
         recattr  = cs_scp1-scprreca.
 
-* normalize the XML
-    LOOP AT cs_scp1-scprvals ASSIGNING <ls_scprvals>.
-      CONDENSE <ls_scprvals>-recnumber.
-    ENDLOOP.
-    LOOP AT cs_scp1-scprreca ASSIGNING <ls_scprreca>.
-      CONDENSE <ls_scprreca>-recnumber.
-    ENDLOOP.
-
     CALL FUNCTION 'SCPR_TEMPL_DB_FLDTXTVAR_GET'
       EXPORTING
         bcset_id = cs_scp1-scprattr-id
@@ -71,9 +140,64 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD save.
+
+    DATA: ls_scp1 TYPE ty_scp1,
+          ls_text TYPE scprtext.
+
+
+* copy everything to local, the function module changes the values
+    ls_scp1 = is_scp1.
+
+    READ TABLE ls_scp1-scprtext INTO ls_text WITH KEY langu = sy-langu.
+
+    CALL FUNCTION 'SCPR_TEMPL_MN_TEMPLATE_SAVE'
+      EXPORTING
+        profid                    = ls_scp1-scprattr-id
+        proftext                  = ls_text-text
+        category                  = ls_scp1-scprattr-category
+        cli_dep                   = ls_scp1-scprattr-cli_dep
+        cli_cas                   = ls_scp1-scprattr-cli_cas
+        reftype                   = ls_scp1-scprattr-reftype
+        refname                   = ls_scp1-scprattr-refname
+        orgid                     = ls_scp1-scprattr-orgid
+        component                 = ls_scp1-scprattr-component
+        minrelease                = ls_scp1-scprattr-minrelease
+        maxrelease                = ls_scp1-scprattr-maxrelease
+        act_info                  = ls_scp1-scprattr-act_info
+        bcset_type                = ls_scp1-scprattr-type
+        fldtxtvar_supplied        = 'YES'
+        with_transp_insert        = abap_false
+        with_progress_indicator   = abap_true
+        remove_denied_data        = abap_true
+        ask_for_cont_after_remove = abap_true
+      TABLES
+        values                    = ls_scp1-scprvals
+        valuesl                   = ls_scp1-scprvall
+        recattr                   = ls_scp1-scprreca
+        it_fldv                   = ls_scp1-scprfldv
+        texts                     = ls_scp1-scprtext
+      EXCEPTIONS
+        user_abort                = 1
+        error_in_transport_layer  = 2
+        inconsistent_data         = 3
+        database_error            = 4
+        OTHERS                    = 5.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error saving SCP1, { sy-tabix }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~changed_by.
 
-    rv_user = c_user_unknown.
+    SELECT SINGLE modifier INTO rv_user FROM scprattr
+      WHERE id = ms_item-obj_name
+      AND version = 'N'.
+    IF sy-subrc <> 0 OR rv_user IS INITIAL.
+      rv_user = c_user_unknown.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -87,32 +211,67 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-* todo
+    DATA: lv_id TYPE scpr_id.
+
+    lv_id = ms_item-obj_name.
+
+    enqueue( ).
+
+* todo, this gives a popup
+    CALL FUNCTION 'SCPR_CTRL_DELETE'
+      EXPORTING
+        profid             = lv_id
+      EXCEPTIONS
+        user_abort         = 1
+        profile_dont_exist = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |error while deleting SCP1, { sy-subrc }| ).
+    ENDIF.
+
+    dequeue( ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
 
-* todo
+    DATA: ls_scp1 TYPE ty_scp1.
+
+
+    io_xml->read(
+      EXPORTING iv_name = 'SCP1'
+      CHANGING  cg_data = ls_scp1 ).
+
+    adjust_inbound( CHANGING cs_scp1 = ls_scp1 ).
+
+    IF ls_scp1-scprattr-type = 'TMP'.
+* todo, function module SCPR_PRSET_MN_BCSET_SAVE
+      BREAK-POINT.
+    ELSE.
+      save( ls_scp1 ).
+    ENDIF.
+
+    dequeue( ).
+
+    tadir_insert( iv_package ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lv_profid TYPE scprattr-id.
+    DATA: lv_rc     TYPE sy-subrc,
+          lv_profid TYPE scprattr-id.
 
 
     lv_profid = ms_item-obj_name.
 
-    CALL FUNCTION 'SCPR_DB_ATTR_GET_DETAIL'
+    CALL FUNCTION 'SCPR_BCSET_EXISTS'
       EXPORTING
-        profid             = lv_profid
-      EXCEPTIONS
-        profile_dont_exist = 1
-        OTHERS             = 2.
-    rv_bool = boolc( sy-subrc = 0 ).
+        profid = lv_profid
+      IMPORTING
+        rc     = lv_rc.
+    rv_bool = boolc( lv_rc = 0 ).
 
   ENDMETHOD.
 
@@ -167,14 +326,14 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
         orgid      = ls_scp1-scprattr-orgid
         act_info   = ls_scp1-scprattr-act_info.
 
-
     IF ls_scp1-scprattr-type = 'TMP'.
-* todo, Hierarchical
+* todo, Hierarchical, fm SCPR_PRSET_DB_SUBP_GET_DETAIL, recursive?
       BREAK-POINT.
     ELSE.
-      get( CHANGING cs_scp1 = ls_scp1 ).
+      load( CHANGING cs_scp1 = ls_scp1 ).
     ENDIF.
 
+    adjust_outbound( CHANGING cs_scp1 = ls_scp1 ).
 
     io_xml->add(
       iv_name = 'SCP1'
