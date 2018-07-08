@@ -309,6 +309,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
           lv_remaining_length         TYPE i,
           lv_count_components_covered LIKE ls_objkey_sub-num.
 
+    DATA lv_len LIKE ls_key_component_uncovered-leng.
+
 
     lt_key_component_uncovered = it_key_component.
     ls_objkey_sub-num = cs_objkey-num.
@@ -322,7 +324,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
 
     LOOP AT lt_key_component_uncovered INTO ls_key_component_uncovered.
       CLEAR ls_objkey_sub-value.
-      DATA lv_len LIKE ls_key_component_uncovered-leng.
 
 *      Some datatype used in the key might exceed the total remaining characters length (e. g. SICF)
       TRY.
@@ -342,8 +343,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
 
       INSERT ls_objkey_sub INTO TABLE ct_objkey.
 
-      ADD ls_key_component_uncovered-leng TO lv_objkey_sub_pos.
-      ADD 1 TO cv_non_value_pos.
+      lv_objkey_sub_pos = lv_objkey_sub_pos + ls_key_component_uncovered-leng.
+      cv_non_value_pos = cv_non_value_pos + 1.
       CLEAR ls_objkey_sub.
 
       IF lv_objkey_sub_pos = strlen( cs_objkey-value ).
@@ -432,7 +433,14 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
           lv_non_value_pos   TYPE numc3,
           lt_key_fields      TYPE ddfields.
 
+    DATA: lv_is_asterix      TYPE abap_bool,
+          lv_where_statement TYPE string,
+          lv_key_pos         TYPE i,
+          lv_value128        TYPE string.
+
     FIELD-SYMBOLS <ls_object_table> LIKE LINE OF mt_object_table.
+
+    FIELD-SYMBOLS <ls_table_field> LIKE LINE OF lt_key_fields.
 
 
     READ TABLE mt_object_table ASSIGNING <ls_object_table> WITH KEY tobj_name = iv_tobj_name.
@@ -487,30 +495,30 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
               cs_objkey        = ls_objkey
               cv_non_value_pos = lv_non_value_pos ).
           CLEAR ls_objkey.
-          ADD 1 TO lv_objkey_pos.
+          lv_objkey_pos = lv_objkey_pos + 1.
 *       language
         ELSEIF <ls_object_table>-tobjkey+lv_next_objkey_pos(1) = 'L'.
           ls_objkey-value = sy-langu.
           INSERT ls_objkey INTO TABLE lt_objkey.
           CLEAR ls_objkey.
-          ADD 1 TO lv_non_value_pos.
-          ADD 1 TO lv_objkey_pos.
+          lv_non_value_pos = lv_non_value_pos + 1.
+          lv_objkey_pos = lv_objkey_pos + 1.
 *       Client
         ELSEIF <ls_object_table>-tobjkey+lv_next_objkey_pos(1) = 'C'.
           ls_objkey-value = sy-mandt.
           INSERT ls_objkey INTO TABLE lt_objkey.
           CLEAR ls_objkey.
-          ADD 1 TO lv_non_value_pos.
-          ADD 1 TO lv_objkey_pos.
+          lv_non_value_pos = lv_non_value_pos + 1.
+          lv_objkey_pos = lv_objkey_pos + 1.
         ENDIF.
         lv_value_pos = 0.
 *     value
       ELSE.
         ls_objkey-value+lv_value_pos(1) = <ls_object_table>-tobjkey+lv_objkey_pos(1).
-        ADD 1 TO lv_value_pos.
+        lv_value_pos = lv_value_pos + 1.
       ENDIF.
 
-      ADD 1 TO lv_objkey_pos.
+      lv_objkey_pos = lv_objkey_pos + 1.
     ENDWHILE.
 
 *    Similarly to that, fixed values might be supplied in the object key which actually make up key components
@@ -525,12 +533,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
     ENDIF.
 
 *   compose the where clause
-    DATA: lv_is_asterix      TYPE abap_bool,
-          lv_where_statement TYPE string,
-          lv_key_pos         TYPE i,
-          lv_value128        TYPE string.
-    FIELD-SYMBOLS <ls_table_field> LIKE LINE OF lt_key_fields.
-
     lv_is_asterix = abap_false.
     lv_key_pos = 1.
 
@@ -539,7 +541,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
         WITH TABLE KEY num = lv_key_pos.
       IF sy-subrc <> 0 OR <ls_table_field>-fieldname = 'LANGU'.
         CLEAR ls_objkey.
-        ADD 1 TO lv_key_pos.
+        lv_key_pos = lv_key_pos + 1.
         CONTINUE.
       ENDIF.
       IF ls_objkey-value = '*'.
@@ -555,7 +557,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
       CONCATENATE '''' ls_objkey-value '''' INTO lv_value128.
       CONCATENATE lv_where_statement <ls_table_field>-fieldname '='
         lv_value128 INTO lv_where_statement SEPARATED BY space.
-      ADD 1 TO lv_key_pos.
+      lv_key_pos = lv_key_pos + 1.
     ENDLOOP.
 
     rv_where = condense( lv_where_statement ).
@@ -626,8 +628,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
 
       INSERT ls_objkey_sub INTO TABLE ct_objkey.
 
-      ADD ls_key_component_uncovered-leng TO lv_objkey_sub_pos.
-      ADD 1 TO cv_non_value_pos.
+      lv_objkey_sub_pos = lv_objkey_sub_pos + ls_key_component_uncovered-leng.
+      cv_non_value_pos = cv_non_value_pos + 1.
       CLEAR ls_objkey_sub.
 
       IF lv_objkey_sub_pos = strlen( cs_objkey-value ).
