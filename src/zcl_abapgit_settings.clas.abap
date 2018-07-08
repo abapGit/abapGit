@@ -76,7 +76,13 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
       set_defaults,
       set_user_settings
         IMPORTING
-          is_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
+          is_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings,
+      get_show_default_repo
+        RETURNING
+          VALUE(rv_show_default_repo) TYPE abap_bool,
+      set_show_default_repo
+        IMPORTING
+          iv_show_default_repo TYPE abap_bool.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_s_settings,
@@ -183,6 +189,7 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
     set_experimental_features( abap_false ).
     set_max_lines( 500 ).
     set_adt_jump_enanbled( abap_true ).
+    set_show_default_repo( abap_false ).
     set_commitmsg_comment_length( c_commitmsg_comment_length_dft ).
     set_commitmsg_body_size( c_commitmsg_body_size_dft ).
 
@@ -243,6 +250,16 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
   METHOD get_user_settings.
     rs_settings = ms_user_settings.
+  ENDMETHOD.
+
+
+  METHOD get_show_default_repo.
+    rv_show_default_repo = ms_user_settings-show_default_repo.
+  ENDMETHOD.
+
+
+  METHOD set_show_default_repo.
+    ms_user_settings-show_default_repo = iv_show_default_repo.
   ENDMETHOD.
 
 ENDCLASS.
