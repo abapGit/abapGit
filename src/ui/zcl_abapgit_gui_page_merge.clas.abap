@@ -190,7 +190,6 @@ CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
             EXPORTING
               io_repo  = mo_repo
               io_stage = mo_merge->get_result( )-stage.
-          ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
 
         ELSE.
 
@@ -198,11 +197,13 @@ CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
             EXPORTING
               io_repo  = mo_repo
               io_stage = mo_merge->get_result( )-stage.
-          ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
 
         ENDIF.
 
+        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+
       WHEN c_actions-res_conflicts.
+
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_merge_res
           EXPORTING
             io_repo       = mo_repo
