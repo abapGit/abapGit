@@ -11,3 +11,5 @@ Building /docs/ locally:
 `bundle install`
 
 `bundle exec jekyll serve --incremental --port $PORT --host $IP`
+
+[Gude for installing bundle](https://help.dreamhost.com/hc/en-us/articles/115001070131-Using-Bundler-to-install-Ruby-gems)
