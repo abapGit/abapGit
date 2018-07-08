@@ -246,7 +246,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
 
     IF ls_scp1-scprattr-type = 'TMP'.
 * todo, function module SCPR_PRSET_MN_BCSET_SAVE
-      BREAK-POINT.
+      zcx_abapgit_exception=>raise( |todo, SCP1| ).
     ELSE.
       save( ls_scp1 ).
     ENDIF.
@@ -328,7 +328,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
 
     IF ls_scp1-scprattr-type = 'TMP'.
 * todo, Hierarchical, fm SCPR_PRSET_DB_SUBP_GET_DETAIL, recursive?
-      BREAK-POINT.
+      zcx_abapgit_exception=>raise( |todo, SCP1| ).
     ELSE.
       load( CHANGING cs_scp1 = ls_scp1 ).
     ENDIF.
