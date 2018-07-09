@@ -66,19 +66,21 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
 
         "Intialize
         CASE bitbyte+offset(1).
-          WHEN '1'.    rv_int = 1.
+          WHEN '1'.
+            rv_int = 1.
         ENDCASE.
 
       ELSE.
         CASE bitbyte+offset(1).
-          WHEN '1'.    rv_int = rv_int + ( 2 ** ( sy-index - 1 ) ).
+          WHEN '1'.
+            rv_int = rv_int + ( 2 ** ( sy-index - 1 ) ).
         ENDCASE.
       ENDIF.
 
       offset = offset - 1. "Move Cursor
 
     ENDDO.
-
+    
   ENDMETHOD.                    "bitbyte_to_int
 
 
