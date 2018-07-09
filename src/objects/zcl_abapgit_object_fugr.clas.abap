@@ -97,11 +97,14 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         VALUE(rv_any_function_module_locked) TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
-
-
-
+    METHODS get_abap_version
+      IMPORTING
+        !io_xml                TYPE REF TO zcl_abapgit_xml_input
+      RETURNING
+        VALUE(rv_abap_version) TYPE progdir-uccheck
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
-
 
 
 CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
@@ -277,13 +280,14 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
   METHOD deserialize_xml.
 
-    DATA: lv_complete  TYPE rs38l-area,
-          lv_namespace TYPE rs38l-namespace,
-          lv_areat     TYPE tlibt-areat,
-          lv_stext     TYPE tftit-stext,
-          lv_group     TYPE rs38l-area.
+    DATA: lv_complete     TYPE rs38l-area,
+          lv_namespace    TYPE rs38l-namespace,
+          lv_areat        TYPE tlibt-areat,
+          lv_stext        TYPE tftit-stext,
+          lv_group        TYPE rs38l-area,
+          lv_abap_version TYPE trdir-uccheck.
 
-
+    lv_abap_version = get_abap_version( io_xml ).
     lv_complete = ms_item-obj_name.
 
     CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
@@ -319,6 +323,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
         short_text              = lv_stext
         namespace               = lv_namespace
         devclass                = iv_package
+        unicode_checks          = lv_abap_version
       EXCEPTIONS
         name_already_exists     = 1
         name_not_correct        = 2
@@ -363,6 +368,39 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     DELETE ADJACENT DUPLICATES FROM rt_functab COMPARING funcname.
 
   ENDMETHOD.                    "functions
+  
+  
+    METHOD get_abap_version.
+
+    DATA: lt_includes TYPE rso_t_objnm,
+          ls_progdir  TYPE ty_progdir,
+          lo_xml      TYPE REF TO zcl_abapgit_xml_input.
+
+    FIELD-SYMBOLS: <lv_include> LIKE LINE OF lt_includes.
+
+    io_xml->read( EXPORTING iv_name = 'INCLUDES'
+                  CHANGING cg_data = lt_includes ).
+
+    LOOP AT lt_includes ASSIGNING <lv_include>.
+
+      lo_xml = mo_files->read_xml( <lv_include> ).
+
+      lo_xml->read( EXPORTING iv_name = 'PROGDIR'
+                    CHANGING cg_data = ls_progdir ).
+
+      IF rv_abap_version IS INITIAL.
+        rv_abap_version = ls_progdir-uccheck.
+      ELSEIF rv_abap_version NE ls_progdir-uccheck.
+*** All includes need to have the same ABAP language version
+        zcx_abapgit_exception=>raise( 'different ABAP Language Versions' ).
+      ENDIF.
+    ENDLOOP.
+
+    IF rv_abap_version IS INITIAL.
+      rv_abap_version = 'X'.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD includes.
