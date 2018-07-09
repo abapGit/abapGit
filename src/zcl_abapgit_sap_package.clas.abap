@@ -4,22 +4,24 @@ class ZCL_ABAPGIT_SAP_PACKAGE definition
 
   global friends ZCL_ABAPGIT_FACTORY .
 
-public section.
+  public section.
 
-  interfaces ZIF_ABAPGIT_SAP_PACKAGE .
+    interfaces ZIF_ABAPGIT_SAP_PACKAGE .
 
-  class-methods REFRESH_PACKAGE_BUFFER .
-  methods CONSTRUCTOR
-    importing
-      !IV_PACKAGE type DEVCLASS .
-private section.
+    class-methods REFRESH_PACKAGE_BUFFER .
+    methods CONSTRUCTOR
+      importing
+        !IV_PACKAGE type DEVCLASS .
 
-  data MV_PACKAGE type DEVCLASS .
-  class-data:
-    mt_devc_buffer TYPE SORTED TABLE OF tdevc
-         WITH UNIQUE KEY devclass
-         WITH NON-UNIQUE SORTED KEY parent COMPONENTS parentcl .
-  class-data M_BUFFERED type ABAP_BOOL value ABAP_TRUE ##NO_TEXT.
+  private section.
+
+    data MV_PACKAGE type DEVCLASS .
+    class-data:
+      mt_devc_buffer TYPE SORTED TABLE OF tdevc
+           WITH UNIQUE KEY devclass
+           WITH NON-UNIQUE SORTED KEY parent COMPONENTS parentcl .
+    class-data M_BUFFERED type ABAP_BOOL value ABAP_TRUE ##NO_TEXT.
+
 ENDCLASS.
 
 
@@ -35,9 +37,9 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
   METHOD refresh_package_buffer.
 
     IF m_buffered = abap_true.
-      SELECT devclass, parentcl
+      SELECT devclass parentcl
         FROM tdevc
-        INTO CORRESPONDING FIELDS OF TABLE @mt_devc_buffer.
+        INTO CORRESPONDING FIELDS OF TABLE mt_devc_buffer.
     ENDIF.
 
   ENDMETHOD.
@@ -319,6 +321,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
     DATA: lt_list   LIKE rt_list,
           lv_parent TYPE tdevc-parentcl.
+    FIELD_SYMBOLS: <st_devc> like line of mt_devc_buffer.
 
     APPEND mv_package TO rt_list.
 
@@ -328,7 +331,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
     IF m_buffered = abap_true.
 
-      READ TABLE mt_devc_buffer ASSIGNING FIELD-SYMBOL(<st_devc>)
+      READ TABLE mt_devc_buffer ASSIGNING <st_devc>
         WITH TABLE KEY devclass = mv_package.
       IF sy-subrc = 0 AND NOT <st_devc>-parentcl IS INITIAL.
         APPEND <st_devc>-parentcl TO rt_list.
@@ -354,13 +357,15 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
   METHOD zif_abapgit_sap_package~read_parent.
 
+    FIELD_SYMBOLS: <st_devc> like line of mt_devc_buffer.
+
     IF mt_devc_buffer IS INITIAL.
       refresh_package_buffer( ).
     ENDIF.
 
     IF m_buffered = abap_true.
 
-      READ TABLE mt_devc_buffer ASSIGNING FIELD-SYMBOL(<st_devc>)
+      READ TABLE mt_devc_buffer ASSIGNING <st_devc>
         WITH TABLE KEY devclass = mv_package.
       ASSERT sy-subrc = 0.
 
