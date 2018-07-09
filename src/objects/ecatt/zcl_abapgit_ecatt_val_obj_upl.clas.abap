@@ -8,7 +8,7 @@ CLASS zcl_abapgit_ecatt_val_obj_upl DEFINITION
     METHODS:
       z_set_stream_for_upload
         IMPORTING
-          im_xml TYPE xstring,
+          iv_xml TYPE xstring,
 
       upload REDEFINITION.
 
@@ -47,7 +47,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
+CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
 
 
   METHOD get_business_msgs_from_dom.
@@ -59,7 +59,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
           lv_exception_occurred TYPE etonoff,
           lo_ecatt_vo           TYPE REF TO object.
 
-    FIELD-SYMBOLS: <ecatt_vo> TYPE any.
+    FIELD-SYMBOLS: <lg_ecatt_vo> TYPE any.
 
     li_section = template_over_all->find_from_name_ns( 'ETVO_MSG' ).
 
@@ -77,10 +77,10 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    ASSIGN ('ECATT_OBJECT') TO <ecatt_vo>.
+    ASSIGN ('ECATT_OBJECT') TO <lg_ecatt_vo>.
     ASSERT sy-subrc = 0.
 
-    lo_ecatt_vo = <ecatt_vo>.
+    lo_ecatt_vo = <lg_ecatt_vo>.
 
     TRY.
         CALL METHOD lo_ecatt_vo->('SET_BUSSINESS_MSG')
@@ -106,7 +106,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
           lv_exception_occurred TYPE etonoff,
           lo_ecatt_vo           TYPE REF TO object.
 
-    FIELD-SYMBOLS: <ecatt_vo> TYPE any.
+    FIELD-SYMBOLS: <lg_ecatt_vo> TYPE any.
 
     li_section = template_over_all->find_from_name_ns( 'IMPL_DET' ).
 
@@ -124,10 +124,10 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    ASSIGN ('ECATT_OBJECT') TO <ecatt_vo>.
+    ASSIGN ('ECATT_OBJECT') TO <lg_ecatt_vo>.
     ASSERT sy-subrc = 0.
 
-    lo_ecatt_vo = <ecatt_vo>.
+    lo_ecatt_vo = <lg_ecatt_vo>.
 
     TRY.
         CALL METHOD lo_ecatt_vo->('SET_IMPL_DETAILS')
@@ -154,7 +154,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
           lv_exception_occurred TYPE etonoff,
           lo_ecatt_vo           TYPE REF TO object.
 
-    FIELD-SYMBOLS: <ecatt_vo> TYPE any.
+    FIELD-SYMBOLS: <lg_ecatt_vo> TYPE any.
 
     li_section = template_over_all->find_from_name_ns( 'INVERT_VALIDATION' ).
 
@@ -172,10 +172,10 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    ASSIGN ('ECATT_OBJECT') TO <ecatt_vo>.
+    ASSIGN ('ECATT_OBJECT') TO <lg_ecatt_vo>.
     ASSERT sy-subrc = 0.
 
-    lo_ecatt_vo = <ecatt_vo>.
+    lo_ecatt_vo = <lg_ecatt_vo>.
 
     TRY.
         CALL METHOD lo_ecatt_vo->('SET_INVERT_VALIDATION_FLAG')
@@ -226,15 +226,15 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
 
     "26.03.2013
 
-    DATA: ex          TYPE REF TO cx_ecatt_apl,
-          l_exists    TYPE etonoff,
-          l_exc_occ   TYPE etonoff,
+    DATA: lx_ex       TYPE REF TO cx_ecatt_apl,
+          lv_exists   TYPE etonoff,
+          lv_exc_occ  TYPE etonoff,
           ls_tadir    TYPE tadir,
           lo_ecatt_vo TYPE REF TO object,
           lo_params   TYPE REF TO cl_apl_ecatt_params.
 
-    FIELD-SYMBOLS: <ecatt_vo> TYPE any,
-                   <params>   TYPE data.
+    FIELD-SYMBOLS: <lg_ecatt_vo> TYPE any,
+                   <lg_params>   TYPE data.
 
     TRY.
         ch_object-i_devclass = ch_object-d_devclass.
@@ -245,82 +245,82 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
             ch_object       = ch_object ).
 
         upload_data_from_stream( ch_object-filename ).
-      CATCH cx_ecatt_apl INTO ex.
+      CATCH cx_ecatt_apl INTO lx_ex.
         IF template_over_all IS INITIAL.
-          RAISE EXCEPTION ex.
+          RAISE EXCEPTION lx_ex.
         ELSE.
-          l_exc_occ = 'X'.
+          lv_exc_occ = 'X'.
         ENDIF.
     ENDTRY.
 
     TRY.
         get_attributes_from_dom_new( CHANGING ch_object = ch_object ).
-      CATCH cx_ecatt_apl INTO ex.
-        l_exc_occ = 'X'.
+      CATCH cx_ecatt_apl INTO lx_ex.
+        lv_exc_occ = 'X'.
     ENDTRY.
 
-    ASSIGN ('ECATT_OBJECT') TO <ecatt_vo>.
+    ASSIGN ('ECATT_OBJECT') TO <lg_ecatt_vo>.
     ASSERT sy-subrc = 0.
 
-    lo_ecatt_vo = <ecatt_vo>.
+    lo_ecatt_vo = <lg_ecatt_vo>.
 
-    ASSIGN lo_ecatt_vo->('PARAMS') TO <params>.
+    ASSIGN lo_ecatt_vo->('PARAMS') TO <lg_params>.
     ASSERT sy-subrc = 0.
 
-    lo_params = <params>.
+    lo_params = <lg_params>.
 
     TRY.
         get_impl_detail_from_dom( ).
-      CATCH cx_ecatt_apl INTO ex.
-        l_exc_occ = 'X'.
+      CATCH cx_ecatt_apl INTO lx_ex.
+        lv_exc_occ = 'X'.
     ENDTRY.
 
     TRY.
         get_vo_flags_from_dom( ).
-      CATCH cx_ecatt_apl INTO ex.
-        l_exc_occ = 'X'.
+      CATCH cx_ecatt_apl INTO lx_ex.
+        lv_exc_occ = 'X'.
     ENDTRY.
 
     TRY.
         get_business_msgs_from_dom( ).
-      CATCH cx_ecatt_apl INTO ex.
-        l_exc_occ = 'X'.
+      CATCH cx_ecatt_apl INTO lx_ex.
+        lv_exc_occ = 'X'.
     ENDTRY.
 
     TRY.
         get_params_from_dom_new( im_params = lo_params ).
-      CATCH cx_ecatt_apl INTO ex.
-        l_exc_occ = 'X'.
+      CATCH cx_ecatt_apl INTO lx_ex.
+        lv_exc_occ = 'X'.
     ENDTRY.
 
     TRY.
         get_variants_from_dom( lo_params ).
-      CATCH cx_ecatt_apl INTO ex.
-        l_exc_occ = 'X'.
+      CATCH cx_ecatt_apl INTO lx_ex.
+        lv_exc_occ = 'X'.
     ENDTRY.
 
     TRY.
-        l_exists = cl_apl_ecatt_object=>existence_check_object(
+        lv_exists = cl_apl_ecatt_object=>existence_check_object(
                 im_name               = ch_object-d_obj_name
                 im_version            = ch_object-d_obj_ver
                 im_obj_type           = ch_object-s_obj_type
                 im_exists_any_version = 'X' ).
 
-        IF l_exists EQ space.
+        IF lv_exists EQ space.
           CALL METHOD lo_ecatt_vo->('SET_TADIR_FOR_NEW_OBJECT')
             EXPORTING
               im_tadir_for_new_object = tadir_preset.
         ENDIF.
       CATCH cx_ecatt.
-        CLEAR l_exists.
+        CLEAR lv_exists.
     ENDTRY.
 
     TRY.
         CALL METHOD lo_ecatt_vo->('SAVE')
           EXPORTING
             im_do_commit = 'X'.
-      CATCH cx_ecatt_apl INTO ex.
-        l_exc_occ = 'X'.
+      CATCH cx_ecatt_apl INTO lx_ex.
+        lv_exc_occ = 'X'.
     ENDTRY.
 
 *     get devclass from existing object
@@ -335,8 +335,8 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
       CATCH cx_ecatt.
         CLEAR ls_tadir.
     ENDTRY.
-    IF l_exc_occ = 'X'.
-      raise_upload_exception( previous = ex ).
+    IF lv_exc_occ = 'X'.
+      raise_upload_exception( previous = lx_ex ).
     ENDIF.
 
   ENDMETHOD.
@@ -353,7 +353,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
   METHOD z_set_stream_for_upload.
 
     " downport from CL_ABAPGIT_ECATT_DATA_UPLOAD SET_STREAM_FOR_UPLOAD
-    mv_external_xml = im_xml.
+    mv_external_xml = iv_xml.
 
   ENDMETHOD.
 ENDCLASS.

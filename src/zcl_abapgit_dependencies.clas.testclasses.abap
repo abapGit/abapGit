@@ -15,7 +15,7 @@ CLASS ltd_sap_package DEFINITION FOR TESTING.
         IMPORTING
           it_sub_packages TYPE tty_package.
 
-    INTERFACES: zif_abapgit_sap_package PARTIALLY IMPLEMENTED.
+    INTERFACES: zif_abapgit_sap_package.
 
   PRIVATE SECTION.
     DATA: mv_package      TYPE devclass,
@@ -48,6 +48,38 @@ CLASS ltd_sap_package IMPLEMENTATION.
   METHOD set_sub_packages.
 
     mt_sub_packages = it_sub_packages.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~are_changes_recorded_in_tr_req. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~create. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~create_child. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~create_local. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~exists. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~get_transport_type. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~list_superpackages. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~read_parent. "##needed
 
   ENDMETHOD.
 

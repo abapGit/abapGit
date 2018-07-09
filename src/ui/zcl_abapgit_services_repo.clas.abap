@@ -97,7 +97,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
 
   METHOD gui_deserialize.
@@ -152,9 +152,9 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lo_repo->get_key( ) ). " Set default repo for user
     toggle_favorite( lo_repo->get_key( ) ).
 
-    COMMIT WORK.
+    COMMIT WORK AND WAIT.
 
-  ENDMETHOD.  "new_offline
+  ENDMETHOD.
 
 
   METHOD new_online.
@@ -191,7 +191,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
         object_type     = 'DEVC'
         with_objectlist = abap_true.
 
-  ENDMETHOD.  " open_se80.
+  ENDMETHOD.
 
 
   METHOD popup_overwrite.
@@ -365,7 +365,9 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     lo_repo->rebuild_local_checksums( ).
 
-  ENDMETHOD.  "refresh_local_checksums
+    COMMIT WORK AND WAIT.
+
+  ENDMETHOD.
 
 
   METHOD remote_attach.
@@ -392,7 +394,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     COMMIT WORK.
 
-  ENDMETHOD.  "remote_attach
+  ENDMETHOD.
 
 
   METHOD remote_change.

@@ -61,7 +61,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -126,10 +126,47 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD jump.
+
+    DATA: lo_test               TYPE REF TO cl_ci_test_root,
+          li_code_inspector     TYPE REF TO zif_abapgit_code_inspector,
+          ls_info               TYPE scir_rest,
+          lo_result             TYPE REF TO cl_ci_result_root,
+          lv_check_variant_name TYPE sci_chkv,
+          lv_package            TYPE devclass.
+
+    FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
+
+    READ TABLE mt_result WITH KEY objtype = is_item-obj_type
+                                  objname = is_item-obj_name
+                         ASSIGNING <ls_result>.
+    ASSERT sy-subrc = 0.
+
+    lv_package = mo_repo->get_package( ).
+    lv_check_variant_name = mo_repo->get_local_settings( )-code_inspector_check_variant.
+
+    li_code_inspector = zcl_abapgit_factory=>get_code_inspector(
+        iv_package            = lv_package
+        iv_check_variant_name = lv_check_variant_name ).
+
+    " see SCI_LCL_DYNP_530 / HANDLE_DOUBLE_CLICK
+
+    MOVE-CORRESPONDING <ls_result> TO ls_info.
+
+    lo_test = cl_ci_tests=>get_test_ref( <ls_result>-test ).
+    lo_result = lo_test->get_result_node( <ls_result>-kind ).
+
+    lo_result->set_info( ls_info ).
+    lo_result->if_ci_test~navigate( ).
+
+  ENDMETHOD.
+
+
   METHOD render_content.
 
     DATA: lv_check_variant TYPE sci_chkv,
-          lv_class         TYPE string.
+          lv_class         TYPE string,
+          lv_line          TYPE string.
     FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
 
     CREATE OBJECT ro_html.
@@ -170,7 +207,13 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
           lv_class = 'grey'.
       ENDCASE.
 
-      ro_html->add( |<div class="{ lv_class }">Line { <ls_result>-line ALPHA = OUT }: { <ls_result>-text }</div><br>| ).
+      CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
+        EXPORTING
+          input  = <ls_result>-line
+        IMPORTING
+          output = lv_line.
+
+      ro_html->add( |<div class="{ lv_class }">Line { lv_line }: { <ls_result>-text }</div><br>| ).
     ENDLOOP.
 
     ro_html->add( '</div>' ).
@@ -257,41 +300,4 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     ro_html = super->zif_abapgit_gui_page~render( ).
 
   ENDMETHOD.
-
-
-  METHOD jump.
-
-    DATA: lo_test               TYPE REF TO cl_ci_test_root,
-          li_code_inspector     TYPE REF TO zif_abapgit_code_inspector,
-          ls_info               TYPE scir_rest,
-          lo_result             TYPE REF TO cl_ci_result_root,
-          lv_check_variant_name TYPE sci_chkv,
-          lv_package            TYPE devclass.
-
-    FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
-
-    READ TABLE mt_result WITH KEY objtype = is_item-obj_type
-                                  objname = is_item-obj_name
-                         ASSIGNING <ls_result>.
-    ASSERT sy-subrc = 0.
-
-    lv_package = mo_repo->get_package( ).
-    lv_check_variant_name = mo_repo->get_local_settings( )-code_inspector_check_variant.
-
-    li_code_inspector = zcl_abapgit_factory=>get_code_inspector(
-        iv_package            = lv_package
-        iv_check_variant_name = lv_check_variant_name ).
-
-    " see SCI_LCL_DYNP_530 / HANDLE_DOUBLE_CLICK
-
-    MOVE-CORRESPONDING <ls_result> TO ls_info.
-
-    lo_test = cl_ci_tests=>get_test_ref( <ls_result>-test ).
-    lo_result = lo_test->get_result_node( <ls_result>-kind ).
-
-    lo_result->set_info( ls_info ).
-    lo_result->if_ci_test~navigate( ).
-
-  ENDMETHOD.
-
 ENDCLASS.

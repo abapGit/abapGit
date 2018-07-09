@@ -34,6 +34,12 @@ FORM open_gui RAISING zcx_abapgit_exception.
   IF sy-batch = abap_true.
     zcl_abapgit_background=>run( ).
   ELSE.
+
+    IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_show_default_repo( ) = abap_false.
+      " Don't show the last seen repo at startup
+      zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( || ).
+    ENDIF.
+
     zcl_abapgit_gui=>get_instance( )->go_home( ).
     CALL SELECTION-SCREEN 1001. " trigger screen
   ENDIF.
