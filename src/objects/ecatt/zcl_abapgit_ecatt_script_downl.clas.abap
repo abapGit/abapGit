@@ -53,7 +53,7 @@ CLASS zcl_abapgit_ecatt_script_downl DEFINITION
         RAISING
           cx_ecatt_apl_util.
 
-  ENDCLASS.
+ENDCLASS.
 
 
 CLASS zcl_abapgit_ecatt_script_downl IMPLEMENTATION.
