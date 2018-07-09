@@ -80,7 +80,7 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
       offset = offset - 1. "Move Cursor
 
     ENDDO.
-    
+
   ENDMETHOD.                    "bitbyte_to_int
 
 
