@@ -4,12 +4,12 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
-private section.
+  PRIVATE SECTION.
 
-  types:
-    ty_rs38l_incl_tt TYPE STANDARD TABLE OF rs38l_incl WITH DEFAULT KEY .
-  types:
-    BEGIN OF ty_function,
+    TYPES:
+      ty_rs38l_incl_tt TYPE STANDARD TABLE OF rs38l_incl WITH DEFAULT KEY .
+    TYPES:
+      BEGIN OF ty_function,
         funcname          TYPE rs38l_fnam,
         global_flag       TYPE rs38l-global,
         remote_call       TYPE rs38l-remote,
@@ -24,86 +24,86 @@ private section.
         documentation     TYPE STANDARD TABLE OF rsfdo WITH DEFAULT KEY,
         exception_classes TYPE abap_bool,
       END OF ty_function .
-  types:
-    ty_function_tt TYPE STANDARD TABLE OF ty_function WITH DEFAULT KEY .
+    TYPES:
+      ty_function_tt TYPE STANDARD TABLE OF ty_function WITH DEFAULT KEY .
 
-  methods UPDATE_WHERE_USED
-    importing
-      !IT_INCLUDES type RSO_T_OBJNM .
-  methods MAIN_NAME
-    returning
-      value(RV_PROGRAM) type PROGRAM
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods FUNCTIONS
-    returning
-      value(RT_FUNCTAB) type TY_RS38L_INCL_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods INCLUDES
-    returning
-      value(RT_INCLUDES) type RSO_T_OBJNM
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SERIALIZE_FUNCTIONS
-    returning
-      value(RT_FUNCTIONS) type TY_FUNCTION_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods DESERIALIZE_FUNCTIONS
-    importing
-      !IT_FUNCTIONS type TY_FUNCTION_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SERIALIZE_XML
-    importing
-      !IO_XML type ref to ZCL_ABAPGIT_XML_OUTPUT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods DESERIALIZE_XML
-    importing
-      !IO_XML type ref to ZCL_ABAPGIT_XML_INPUT
-      !IV_PACKAGE type DEVCLASS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SERIALIZE_INCLUDES
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods DESERIALIZE_INCLUDES
-    importing
-      !IO_XML type ref to ZCL_ABAPGIT_XML_INPUT
-      !IV_PACKAGE type DEVCLASS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods ARE_EXCEPTIONS_CLASS_BASED
-    importing
-      !IV_FUNCTION_NAME type RS38L_FNAM
-    returning
-      value(RV_RETURN) type ABAP_BOOL
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods IS_FUNCTION_GROUP_LOCKED
-    returning
-      value(RV_IS_FUNCTIONS_GROUP_LOCKED) type ABAP_BOOL
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods IS_ANY_INCLUDE_LOCKED
-    returning
-      value(RV_IS_ANY_INCLUDE_LOCKED) type ABAP_BOOL
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods IS_ANY_FUNCTION_MODULE_LOCKED
-    returning
-      value(RV_ANY_FUNCTION_MODULE_LOCKED) type ABAP_BOOL
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods GET_ABAP_VERSION
-    importing
-      !IO_XML type ref to ZCL_ABAPGIT_XML_INPUT
-    returning
-      value(RV_ABAP_VERSION) type PROGDIR-UCCHECK
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
+    METHODS update_where_used
+      IMPORTING
+        !it_includes TYPE rso_t_objnm .
+    METHODS main_name
+      RETURNING
+        VALUE(rv_program) TYPE program
+      RAISING
+        zcx_abapgit_exception .
+    METHODS functions
+      RETURNING
+        VALUE(rt_functab) TYPE ty_rs38l_incl_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS includes
+      RETURNING
+        VALUE(rt_includes) TYPE rso_t_objnm
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_functions
+      RETURNING
+        VALUE(rt_functions) TYPE ty_function_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_functions
+      IMPORTING
+        !it_functions TYPE ty_function_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_xml
+      IMPORTING
+        !io_xml TYPE REF TO zcl_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_xml
+      IMPORTING
+        !io_xml     TYPE REF TO zcl_abapgit_xml_input
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_includes
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_includes
+      IMPORTING
+        !io_xml     TYPE REF TO zcl_abapgit_xml_input
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
+    METHODS are_exceptions_class_based
+      IMPORTING
+        !iv_function_name TYPE rs38l_fnam
+      RETURNING
+        VALUE(rv_return)  TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+    METHODS is_function_group_locked
+      RETURNING
+        VALUE(rv_is_functions_group_locked) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+    METHODS is_any_include_locked
+      RETURNING
+        VALUE(rv_is_any_include_locked) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+    METHODS is_any_function_module_locked
+      RETURNING
+        VALUE(rv_any_function_module_locked) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_abap_version
+      IMPORTING
+        !io_xml                TYPE REF TO zcl_abapgit_xml_input
+      RETURNING
+        VALUE(rv_abap_version) TYPE progdir-uccheck
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
