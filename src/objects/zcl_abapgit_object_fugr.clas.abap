@@ -4,7 +4,6 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
-protected section.
 private section.
 
   types:
@@ -394,11 +393,15 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
         rv_abap_version = ls_progdir-uccheck.
       ELSEIF rv_abap_version NE ls_progdir-uccheck.
 *** All includes need to have the same ABAP language version
-          zcx_abapgit_exception=>raise( 'different ABAP Language Versions' ).
-        ENDIF.
-      ENDLOOP.
+        zcx_abapgit_exception=>raise( 'different ABAP Language Versions' ).
+      ENDIF.
+    ENDLOOP.
 
-    ENDMETHOD.
+    IF rv_abap_version IS INITIAL.
+      rv_abap_version = 'X'.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD includes.
@@ -827,8 +830,8 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     DATA: lv_program_name TYPE programm,
           lt_functions    TYPE ty_function_tt,
           lt_dynpros      TYPE ty_dynpro_tt,
-          ls_cua          TYPE ty_cua,
-          ls_progdir      TYPE ty_progdir.
+          ls_cua          TYPE ty_cua.
+
 
     deserialize_xml(
       io_xml     = io_xml
