@@ -321,7 +321,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
     DATA: lt_list   LIKE rt_list,
           lv_parent TYPE tdevc-parentcl.
-    FIELD_SYMBOLS: <st_devc> like line of mt_devc_buffer.
+    FIELD-SYMBOLS: <st_devc> LIKE LINE OF mt_devc_buffer.
 
     APPEND mv_package TO rt_list.
 
@@ -357,7 +357,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
   METHOD zif_abapgit_sap_package~read_parent.
 
-    FIELD_SYMBOLS: <st_devc> like line of mt_devc_buffer.
+    FIELD-SYMBOLS: <st_devc> LIKE LINE OF mt_devc_buffer.
 
     IF mt_devc_buffer IS INITIAL.
       refresh_package_buffer( ).
