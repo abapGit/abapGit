@@ -96,23 +96,13 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
     TRY.
         CREATE OBJECT ro_avas
           EXPORTING
-*           im_object        =
-*           im_attribute     =
-            im_assignment_id = lv_id
-*           im_package       =
-*           im_cache         =
-*           im_report_run_result    =
-          .
-      CATCH cx_pak_wb_object_locked.
-        BREAK-POINT.
-      CATCH cx_pak_not_authorized.
-        BREAK-POINT.
-      CATCH cx_pak_invalid_state.
-        BREAK-POINT.
-      CATCH cx_pak_invalid_data.
-        BREAK-POINT.
+            im_assignment_id = lv_id.
+      CATCH cx_pak_wb_object_locked
+          cx_pak_not_authorized
+          cx_pak_invalid_state
+          cx_pak_invalid_data.
+        zcx_abapgit_exception=>raise( |AVAS error| ).
     ENDTRY.
-
 
   ENDMETHOD.
 
@@ -154,7 +144,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
           cx_pak_invalid_data
           cx_pak_not_authorized
           cx_pak_wb_object_locked.
-        BREAK-POINT.
+        zcx_abapgit_exception=>raise( |AVAS error| ).
     ENDTRY.
 
     lo_avas->if_pak_wb_object~delete( ).
