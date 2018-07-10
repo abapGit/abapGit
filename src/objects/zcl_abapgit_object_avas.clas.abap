@@ -1,34 +1,89 @@
-class ZCL_ABAPGIT_OBJECT_AVAS definition
-  public
-  inheriting from ZCL_ABAPGIT_OBJECTS_SUPER
-  create public .
+CLASS zcl_abapgit_object_avas DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  interfaces ZIF_ABAPGIT_OBJECT .
-PROTECTED SECTION.
+    INTERFACES zif_abapgit_object .
+  PROTECTED SECTION.
 
-  TYPES: BEGIN OF ty_header,
-           guid      TYPE guid_32,
-           attribute TYPE cls_attribute_name,
-           object    TYPE pak_object_key,
-         END OF ty_header.
+    TYPES:
+      BEGIN OF ty_header,
+        guid      TYPE guid_32,
+        attribute TYPE cls_attribute_name,
+        object    TYPE pak_object_key,
+      END OF ty_header .
+    TYPES:
+      BEGIN OF ty_avas,
+        header TYPE ty_header,
+        values TYPE cls_value_assignments,
+        links  TYPE cls_linked_objects,
+      END OF ty_avas .
 
-  TYPES: BEGIN OF ty_avas,
-           header TYPE ty_header,
-           values TYPE cls_value_assignments,
-           links  TYPE cls_linked_objects,
-         END OF ty_avas.
-
-  METHODS instantiate
-    RETURNING
-      VALUE(ro_avas) TYPE REF TO cl_cls_attr_value_assignment .
-private section.
+    METHODS insert_assignments
+      IMPORTING
+        !is_avas TYPE ty_avas
+      RAISING
+        zcx_abapgit_exception .
+    METHODS insert_links
+      IMPORTING
+        !is_avas TYPE ty_avas .
+    METHODS instantiate
+      RETURNING
+        VALUE(ro_avas) TYPE REF TO cl_cls_attr_value_assignment .
+  PRIVATE SECTION.
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
+
+
+  METHOD insert_assignments.
+
+    DATA: lt_assignment TYPE STANDARD TABLE OF cls_assignment,
+          ls_assignment LIKE LINE OF lt_assignment,
+          ls_value      LIKE LINE OF is_avas-values.
+
+
+    LOOP AT is_avas-values INTO ls_value.
+      CLEAR ls_assignment.
+      ls_assignment-guid        = is_avas-header-guid.
+      ls_assignment-value       = ls_value-value.
+      ls_assignment-trobjtype   = is_avas-header-object-trobjtype.
+      ls_assignment-sobj_name   = is_avas-header-object-sobj_name.
+      ls_assignment-object_type = is_avas-header-object-object_type.
+      ls_assignment-sub_key     = is_avas-header-object-sub_key.
+      ls_assignment-attribute   = is_avas-header-attribute.
+      ls_assignment-set_by      = sy-uname.
+      ls_assignment-changed_on  = sy-datum.
+      ls_assignment-remark      = ls_value-remark.
+      APPEND ls_assignment TO lt_assignment.
+    ENDLOOP.
+
+    DELETE FROM cls_assignment WHERE guid = is_avas-header-guid.
+
+    INSERT cls_assignment FROM TABLE lt_assignment.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error inserting into CLS_ASSIGNMENT| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD insert_links.
+
+* todo, how does links work?
+*    LOOP AT ls_avas-links INTO ls_linked_obj.
+*    ENDLOOP.
+
+**    DELETE FROM cls_linked_obj WHERE guid = ls_avas-header-guid.
+**    INSERT cls_linked_obj FROM TABLE lt_linked.
+*    if sy-subrc <> 0.
+*    endif.
+
+  ENDMETHOD.
 
 
   METHOD instantiate.
@@ -113,49 +168,22 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lo_avas TYPE REF TO cl_cls_attr_value_assignment,
-          ls_avas TYPE ty_avas.
+    DATA: ls_avas TYPE ty_avas.
 
 
     io_xml->read( EXPORTING iv_name = 'AVAS'
                   CHANGING cg_data = ls_avas ).
 
+* The AVAS API cannot be used in this case, as it will always create a new GUID
+
+    ASSERT NOT ls_avas-header-guid IS INITIAL.
+
     tadir_insert( iv_package ).
 
-* todo, this creates a new GUID
-    TRY.
-        CREATE OBJECT lo_avas
-          EXPORTING
-            im_object    = ls_avas-header-object
-            im_attribute = ls_avas-header-attribute
-            im_package   = iv_package.
+    insert_assignments( ls_avas ).
+    insert_links( ls_avas ).
 
-        IF lo_avas->if_cls_attr_value_assignment~is_initialized( ) = abap_false.
-          lo_avas->if_cls_attr_value_assignment~create( ).
-        ENDIF.
-
-        lo_avas->if_cls_attr_value_assignment~lock_and_refresh(
-          im_allow_popups = abap_false ).
-      CATCH cx_pak_wb_object_locked.
-        zcx_abapgit_exception=>raise( |AVAS locked, deserialize| ).
-    ENDTRY.
-
-    lo_avas->if_cls_attr_value_assignment~set_values(
-      CHANGING ch_values = ls_avas-values ).
-
-    lo_avas->if_cls_attr_value_assignment~set_links(
-      CHANGING ch_links = ls_avas-links ).
-
-* set default package, see function module RS_CORR_INSERT
-    SET PARAMETER ID 'EUK' FIELD iv_package.
-
-    lo_avas->if_pak_wb_object~save( ).
-
-    SET PARAMETER ID 'EUK' FIELD ''.
-
-    lo_avas->if_pak_wb_object~activate( ).
-
-    lo_avas->if_pak_wb_object_internal~unlock( ).
+* corr_insert?
 
   ENDMETHOD.
 
@@ -184,8 +212,11 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_locked.
-* todo
-    rv_is_locked = abap_false.
+
+    rv_is_locked = exists_a_lock_entry_for(
+      iv_lock_object = 'CLS_ENQUEUE_STRU'
+      iv_argument    = |{ ms_item-obj_name }| ).
+
   ENDMETHOD.
 
 
@@ -207,11 +238,9 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
 
     lo_avas = instantiate( ).
 
-    ls_avas-header-guid = lo_avas->if_cls_attr_value_assignment~get_guid( ).
-
+    ls_avas-header-guid      = lo_avas->if_cls_attr_value_assignment~get_guid( ).
     ls_avas-header-attribute = lo_avas->if_cls_attr_value_assignment~get_attribute( ).
-
-    ls_avas-header-object = lo_avas->if_cls_attr_value_assignment~get_object( ).
+    ls_avas-header-object    = lo_avas->if_cls_attr_value_assignment~get_object( ).
 
     lo_avas->if_cls_attr_value_assignment~get_values(
       IMPORTING
@@ -222,13 +251,11 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
         ex_links = ls_avas-links ).
 
     LOOP AT ls_avas-values ASSIGNING <ls_value>.
-      CLEAR: <ls_value>-set_by,
-             <ls_value>-changed_on.
+      CLEAR: <ls_value>-set_by, <ls_value>-changed_on.
     ENDLOOP.
 
     LOOP AT ls_avas-links ASSIGNING <ls_link>.
-      CLEAR: <ls_link>-set_by,
-             <ls_link>-changed_on.
+      CLEAR: <ls_link>-set_by, <ls_link>-changed_on.
     ENDLOOP.
 
     io_xml->add(
