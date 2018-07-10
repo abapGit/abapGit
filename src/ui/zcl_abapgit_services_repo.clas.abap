@@ -283,7 +283,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
           lo_repo     TYPE REF TO zcl_abapgit_repo,
           lv_package  TYPE devclass,
           lv_question TYPE c LENGTH 100,
-          ls_checks   TYPE zif_abapgit_definitions=>ty_deserialize_checks.
+          ls_checks   TYPE zif_abapgit_definitions=>ty_delete_checks.
 
 
     lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).

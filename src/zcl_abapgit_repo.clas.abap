@@ -14,7 +14,7 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS delete_checks
       RETURNING
-        VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
+        VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_delete_checks
       RAISING
         zcx_abapgit_exception .
     METHODS constructor

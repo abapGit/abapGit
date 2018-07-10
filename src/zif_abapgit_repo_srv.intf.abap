@@ -47,7 +47,7 @@ INTERFACE zif_abapgit_repo_srv
   METHODS purge
     IMPORTING
       !io_repo  TYPE REF TO zcl_abapgit_repo
-      is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
+      is_checks TYPE zif_abapgit_definitions=>ty_delete_checks
     RAISING
       zcx_abapgit_exception .
   METHODS switch_repo_type

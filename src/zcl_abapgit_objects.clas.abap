@@ -43,7 +43,7 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS delete
       IMPORTING
         !it_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt
-        !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks OPTIONAL
+        !is_checks TYPE zif_abapgit_definitions=>ty_delete_checks OPTIONAL
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS jump
@@ -206,7 +206,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -733,6 +733,40 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   ENDMETHOD.                    "jump
 
 
+  METHOD map_results_to_items.
+
+    DATA: ls_item LIKE LINE OF rt_items.
+    FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result.
+
+    LOOP AT it_results ASSIGNING <ls_result>.
+
+      ls_item-devclass = <ls_result>-package.
+      ls_item-obj_type = <ls_result>-obj_type.
+      ls_item-obj_name = <ls_result>-obj_name.
+      INSERT ls_item INTO TABLE rt_items.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD map_tadir_to_items.
+
+    DATA: ls_item LIKE LINE OF rt_items.
+    FIELD-SYMBOLS: <ls_tadir> TYPE zif_abapgit_definitions=>ty_tadir.
+
+    LOOP AT it_tadir ASSIGNING <ls_tadir>.
+
+      ls_item-devclass = <ls_tadir>-devclass.
+      ls_item-obj_type = <ls_tadir>-object.
+      ls_item-obj_name = <ls_tadir>-obj_name.
+      INSERT ls_item INTO TABLE rt_items.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD prioritize_deser.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
@@ -985,38 +1019,4 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
-  METHOD map_tadir_to_items.
-
-    DATA: ls_item LIKE LINE OF rt_items.
-    FIELD-SYMBOLS: <ls_tadir> TYPE zif_abapgit_definitions=>ty_tadir.
-
-    LOOP AT it_tadir ASSIGNING <ls_tadir>.
-
-      ls_item-devclass = <ls_tadir>-devclass.
-      ls_item-obj_type = <ls_tadir>-object.
-      ls_item-obj_name = <ls_tadir>-obj_name.
-      INSERT ls_item INTO TABLE rt_items.
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD map_results_to_items.
-
-    DATA: ls_item LIKE LINE OF rt_items.
-    FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result.
-
-    LOOP AT it_results ASSIGNING <ls_result>.
-
-      ls_item-devclass = <ls_result>-package.
-      ls_item-obj_type = <ls_result>-obj_type.
-      ls_item-obj_name = <ls_result>-obj_name.
-      INSERT ls_item INTO TABLE rt_items.
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
 ENDCLASS.
