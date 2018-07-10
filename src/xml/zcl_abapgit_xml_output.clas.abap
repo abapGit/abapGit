@@ -138,10 +138,10 @@ CLASS ZCL_ABAPGIT_XML_OUTPUT IMPLEMENTATION.
 
     rv_xml = to_xml( iv_normalize ).
 
-  ENDMETHOD.                    "render
+  ENDMETHOD.
 
 
   METHOD set_raw.
     mi_raw = ii_raw.
-  ENDMETHOD.                    "set_raw
+  ENDMETHOD.
 ENDCLASS.

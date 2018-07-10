@@ -267,7 +267,7 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
     ro_html->add( body( ) ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD render_merge.

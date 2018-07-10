@@ -87,7 +87,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
 
     ro_html->add( '</div>' ). "db_entry
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD update.

@@ -147,7 +147,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'SICF - error from change_node' ).
     ENDIF.
 
-  ENDMETHOD.                    "change_sicf
+  ENDMETHOD.
 
 
   METHOD find_parent.
@@ -169,7 +169,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'SICF - error from service_from_url' ).
     ENDIF.
 
-  ENDMETHOD.                    "find_parent
+  ENDMETHOD.
 
 
   METHOD insert_sicf.
@@ -231,7 +231,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |SICF - error from insert_node: { sy-subrc }| ).
     ENDIF.
 
-  ENDMETHOD.                    "insert_sicf
+  ENDMETHOD.
 
 
   METHOD read.
@@ -288,7 +288,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
       CLEAR <ls_icfhandler>-icfparguid.
     ENDLOOP.
 
-  ENDMETHOD.                    "read
+  ENDMETHOD.
 
 
   METHOD read_sicf_url.
@@ -364,7 +364,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
       INSERT <ls_list>-icfhandler INTO TABLE rt_list.
     ENDLOOP.
 
-  ENDMETHOD.                    "to_icfhndlist
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -430,7 +430,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'SICF - error from delete_node' ).
     ENDIF.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -469,7 +469,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
                    iv_parent     = ls_read-icfparguid ).
     ENDIF.
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -489,17 +489,17 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
       rv_bool = boolc( sy-subrc = 0 ).
     ENDIF.
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~jump.
@@ -536,7 +536,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SICF' ).
     ENDIF.
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -571,7 +571,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
     io_xml->add( iv_name = 'ICFHANDLER_TABLE'
                  ig_data = lt_icfhandler ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~is_locked.
 

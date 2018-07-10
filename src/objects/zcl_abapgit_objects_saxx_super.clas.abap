@@ -142,7 +142,7 @@ CLASS zcl_abapgit_objects_saxx_super IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error occured while locking { ms_item-obj_type } | && lv_objname ).
     ENDIF.
 
-  ENDMETHOD.                    "lock
+  ENDMETHOD.
 
 
   METHOD unlock.
@@ -159,7 +159,7 @@ CLASS zcl_abapgit_objects_saxx_super IMPLEMENTATION.
                             p_object_key = lv_object_key
                             p_objtype_tr = lv_objtype ).
 
-  ENDMETHOD.                    "unlock
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.

@@ -68,7 +68,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-  ENDMETHOD.                    "deserialize_texts
+  ENDMETHOD.
 
 
   METHOD serialize_texts.
@@ -89,7 +89,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
                    ig_data = lt_tpool_i18n ).
     ENDIF.
 
-  ENDMETHOD.                    "serialize_texts
+  ENDMETHOD.
 
 
   METHOD split_parameters.
@@ -223,7 +223,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
         ENDCASE.
       ENDLOOP.
     ENDIF.
-  ENDMETHOD.                    "split_parameters
+  ENDMETHOD.
 
 
   METHOD split_parameters_comp.
@@ -236,7 +236,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
         CLEAR cg_value+sy-fdpos.
       ENDIF.
     ENDIF.
-  ENDMETHOD.                    "split_parameters_comp
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -267,7 +267,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Error from RPY_TRANSACTION_DELETE' ).
     ENDIF.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -362,7 +362,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
     " Texts deserializing (translations)
     deserialize_texts( io_xml ).
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -374,17 +374,17 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
       WHERE tcode = ms_item-obj_name.                   "#EC CI_GENBUFF
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~jump.
@@ -421,7 +421,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
         OTHERS                = 4
         ##fm_subrc_ok.    "#EC CI_SUBRC
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -481,7 +481,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
     " Texts serializing (translations)
     serialize_texts( io_xml ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~is_locked.
 

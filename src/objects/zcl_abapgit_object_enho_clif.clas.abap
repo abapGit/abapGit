@@ -56,7 +56,7 @@ CLASS zcl_abapgit_object_enho_clif IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.                    "serialize_includes
+  ENDMETHOD.
 
   METHOD serialize.
 
@@ -98,7 +98,7 @@ CLASS zcl_abapgit_object_enho_clif IMPLEMENTATION.
     io_xml->add( iv_name = 'TAB_METHODS'
                  ig_data = lt_tab_methods ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
   METHOD deserialize.
 
@@ -150,6 +150,6 @@ CLASS zcl_abapgit_object_enho_clif IMPLEMENTATION.
 
     ENDLOOP.
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_enho_clif IMPLEMENTATION
+ENDCLASS.

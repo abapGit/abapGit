@@ -232,7 +232,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       INSERT REPORT lv_include FROM lt_source.
     ENDLOOP.
 
-  ENDMETHOD.                    "deserialize_functions
+  ENDMETHOD.
 
 
   METHOD deserialize_includes.
@@ -276,7 +276,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
     ENDLOOP.
 
-  ENDMETHOD.                    "deserialize_includes
+  ENDMETHOD.
 
 
   METHOD deserialize_xml.
@@ -343,7 +343,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from RS_FUNCTION_POOL_INSERT' ).
     ENDIF.
 
-  ENDMETHOD.                    "deserialize_xml
+  ENDMETHOD.
 
 
   METHOD functions.
@@ -368,7 +368,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     SORT rt_functab BY funcname ASCENDING.
     DELETE ADJACENT DUPLICATES FROM rt_functab COMPARING funcname.
 
-  ENDMETHOD.                    "functions
+  ENDMETHOD.
 
 
   METHOD get_abap_version.
@@ -479,7 +479,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
     APPEND lv_program TO rt_includes.
 
-  ENDMETHOD.                    "includes
+  ENDMETHOD.
 
 
   METHOD is_any_function_module_locked.
@@ -579,7 +579,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
     CONCATENATE lv_namespace 'SAPL' lv_group INTO rv_program.
 
-  ENDMETHOD.                    "main_name
+  ENDMETHOD.
 
 
   METHOD serialize_functions.
@@ -648,7 +648,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
     ENDLOOP.
 
-  ENDMETHOD.                    "serialize_functions
+  ENDMETHOD.
 
 
   METHOD serialize_includes.
@@ -670,7 +670,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
     ENDLOOP.
 
-  ENDMETHOD.                    "serialize_includes
+  ENDMETHOD.
 
 
   METHOD serialize_xml.
@@ -691,7 +691,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     io_xml->add( iv_name = 'INCLUDES'
                  ig_data = lt_includes ).
 
-  ENDMETHOD.                    "serialize_xml
+  ENDMETHOD.
 
 
   METHOD update_where_used.
@@ -822,7 +822,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
     update_where_used( lt_includes ).
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -856,7 +856,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     deserialize_cua( iv_program_name = lv_program_name
                      is_cua = ls_cua ).
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -872,12 +872,12 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
         pool_not_exists = 1.
     rv_bool = boolc( sy-subrc <> 1 ).
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~has_changed_since.
@@ -911,7 +911,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~is_locked.
@@ -943,7 +943,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
         object_type   = 'FUGR'
         in_new_window = abap_true.
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -983,5 +983,5 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
                    ig_data = ls_cua ).
     ENDIF.
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 ENDCLASS.

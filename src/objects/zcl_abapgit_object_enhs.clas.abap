@@ -20,7 +20,7 @@ CLASS zcl_abapgit_object_enhs IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -81,7 +81,7 @@ CLASS zcl_abapgit_object_enhs IMPLEMENTATION.
                           iv_package       = iv_package
                           ii_enh_spot_tool = li_spot_ref ).
 
-  ENDMETHOD.  "deserialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
 
@@ -104,7 +104,7 @@ CLASS zcl_abapgit_object_enhs IMPLEMENTATION.
     li_enhs->serialize( io_xml           = io_xml
                         ii_enh_spot_tool = li_spot_ref ).
 
-  ENDMETHOD.  "serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
 
@@ -122,7 +122,7 @@ CLASS zcl_abapgit_object_enhs IMPLEMENTATION.
         rv_bool = abap_false.
     ENDTRY.
 
-  ENDMETHOD.  "exists
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -145,11 +145,11 @@ CLASS zcl_abapgit_object_enhs IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'Error from CL_ENH_FACTORY' ).
     ENDTRY.
 
-  ENDMETHOD.  "delete
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.  "get_metadata
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~jump.
 
@@ -160,7 +160,7 @@ CLASS zcl_abapgit_object_enhs IMPLEMENTATION.
         object_type   = 'ENHS'
         in_new_window = abap_true.
 
-  ENDMETHOD.  "jump
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
@@ -185,4 +185,4 @@ CLASS zcl_abapgit_object_enhs IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS. "zcl_abapgit_object_enhs
+ENDCLASS.

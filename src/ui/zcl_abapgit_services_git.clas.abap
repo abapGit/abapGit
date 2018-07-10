@@ -120,7 +120,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     COMMIT WORK.
 
-  ENDMETHOD.  "commit
+  ENDMETHOD.
 
 
   METHOD create_branch.
@@ -180,7 +180,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     MESSAGE 'Branch deleted' TYPE 'S'.
 
-  ENDMETHOD.  "delete_branch
+  ENDMETHOD.
 
 
   METHOD delete_tag.
@@ -219,7 +219,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     COMMIT WORK.
 
-  ENDMETHOD.                    "pull
+  ENDMETHOD.
 
 
   METHOD reset.

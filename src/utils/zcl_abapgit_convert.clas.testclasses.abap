@@ -10,7 +10,7 @@ CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FIN
     METHODS split_string FOR TESTING.
     METHODS convert_bitbyte FOR TESTING RAISING zcx_abapgit_exception.
 
-ENDCLASS.                    "ltcl_convert DEFINITION
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS ltcl_convert IMPLEMENTATION
@@ -76,7 +76,7 @@ CLASS ltcl_convert IMPLEMENTATION.
           act = lv_result ).
     ENDDO.
 
-  ENDMETHOD.                    "convert_int
+  ENDMETHOD.
 
   METHOD split_string.
 
@@ -102,6 +102,6 @@ CLASS ltcl_convert IMPLEMENTATION.
                                         act = lt_act
                                         msg = ' Error during string split: LF' ).
 
-  ENDMETHOD.                    "split_string.
+  ENDMETHOD.
 
-ENDCLASS.                    "ltcl_convert IMPLEMENTATION
+ENDCLASS.

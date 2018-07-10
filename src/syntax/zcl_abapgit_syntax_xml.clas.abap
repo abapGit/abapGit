@@ -114,5 +114,5 @@ CLASS zcl_abapgit_syntax_xml IMPLEMENTATION.
       ASSIGN <ls_match> TO <ls_prev>.
     ENDLOOP.
 
-  ENDMETHOD.                    " order_matches
+  ENDMETHOD.
 ENDCLASS.

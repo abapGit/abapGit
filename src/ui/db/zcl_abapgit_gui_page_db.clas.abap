@@ -44,7 +44,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     ms_control-page_title = 'DATABASE PERSISTENCY'.
-  ENDMETHOD.  " constructor.
+  ENDMETHOD.
 
 
   METHOD delete.
@@ -73,7 +73,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
     COMMIT WORK.
 
-  ENDMETHOD.  " delete
+  ENDMETHOD.
 
 
   METHOD explain_content.
@@ -125,7 +125,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
                           format = cl_abap_format=>e_html_attr ).
         rv_text = |<pre>{ rv_text }</pre>|.
     ENDCASE.
-  ENDMETHOD.  "explain_content
+  ENDMETHOD.
 
 
   METHOD render_content.
@@ -184,7 +184,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
     ro_html->add( '</table>' ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.            "render_content
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~on_event.

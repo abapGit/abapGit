@@ -59,7 +59,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( '</tr></table>' ).                        "#EC NOTEXT
     ro_html->add( '</div>' ).                               "#EC NOTEXT
 
-  ENDMETHOD. "footer
+  ENDMETHOD.
 
 
   METHOD html_head.
@@ -79,7 +79,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     ro_html->add( '</head>' ).                              "#EC NOTEXT
 
-  ENDMETHOD.                    "html_head
+  ENDMETHOD.
 
 
   METHOD redirect.
@@ -99,7 +99,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD scripts.
     ASSERT 1 = 1. " Dummy
-  ENDMETHOD. "scripts
+  ENDMETHOD.
 
 
   METHOD title.
@@ -127,12 +127,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( '</tr></table>' ).                        "#EC NOTEXT
     ro_html->add( '</div>' ).                               "#EC NOTEXT
 
-  ENDMETHOD.                    "render page title
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~on_event.
     ev_state = zif_abapgit_definitions=>gc_event_state-not_handled.
-  ENDMETHOD. "lif_gui_page~on_event
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~render.
@@ -168,5 +168,5 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     ro_html->add( '</html>' ).                              "#EC NOTEXT
 
-  ENDMETHOD.  " lif_gui_page~render.
+  ENDMETHOD.
 ENDCLASS.

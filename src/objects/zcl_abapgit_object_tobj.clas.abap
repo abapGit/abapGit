@@ -50,7 +50,7 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -70,7 +70,7 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-late_deser = abap_true.
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
 
@@ -84,7 +84,7 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
       AND objecttype = ms_item-obj_name+lv_type_pos.    "#EC CI_GENBUFF
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
 
@@ -145,7 +145,7 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
     io_xml->add( iv_name = 'TOBJ'
                  ig_data = ls_tobj ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -252,7 +252,7 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
 
     delete_extra( ls_objh-objectname ).
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~jump.
 
@@ -294,7 +294,7 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, TOBJ' ).
     ENDIF.
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
@@ -306,4 +306,4 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_tobj IMPLEMENTATION
+ENDCLASS.

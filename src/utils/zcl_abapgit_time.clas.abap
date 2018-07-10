@@ -61,5 +61,5 @@ CLASS ZCL_ABAPGIT_TIME IMPLEMENTATION.
     rv_time+11 = lv_utcsign.
     rv_time+12 = lv_utcdiff.
 
-  ENDMETHOD.                    "get
+  ENDMETHOD.
 ENDCLASS.

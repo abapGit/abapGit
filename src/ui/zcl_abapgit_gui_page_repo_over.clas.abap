@@ -203,7 +203,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
         OTHERS              = 2.
     ASSERT sy-subrc = 0.
 
-  ENDMETHOD.  " constructor.
+  ENDMETHOD.
 
 
   METHOD map_repo_list_to_overview.
@@ -332,7 +332,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     ro_html->add( |</div>| ).
 
-  ENDMETHOD.            "render_content
+  ENDMETHOD.
 
 
   METHOD render_text_input.
@@ -352,7 +352,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ro_html->add( |<label for="{ iv_name }">{ iv_label }</label>| ).
     ro_html->add( |<input id="{ iv_name }" name="{ iv_name }" type="text"{ lv_attrs }>| ).
 
-  ENDMETHOD.  " render_text_input
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~on_event.

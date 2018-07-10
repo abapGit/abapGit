@@ -156,7 +156,7 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
       CLEAR ct_source.
     ENDIF.
 
-  ENDMETHOD.                    "reduce
+  ENDMETHOD.
 
 
   METHOD remove_signatures.
@@ -191,7 +191,7 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.                    "remove_signatures
+  ENDMETHOD.
 
 
   METHOD serialize_abap_clif_source.
@@ -246,7 +246,7 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
     rt_source = lo_source->get_old_source( ).
     remove_signatures( CHANGING ct_source = rt_source ).
 
-  ENDMETHOD.                    "serialize_abap
+  ENDMETHOD.
 
 
   METHOD serialize_locals_def.
@@ -256,7 +256,7 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
 
     reduce( CHANGING ct_source = rt_source ).
 
-  ENDMETHOD.                    "serialize_locals_def
+  ENDMETHOD.
 
 
   METHOD serialize_locals_imp.
@@ -266,7 +266,7 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
 
     reduce( CHANGING ct_source = rt_source ).
 
-  ENDMETHOD.                    "serialize_local
+  ENDMETHOD.
 
 
   METHOD serialize_macros.
@@ -276,7 +276,7 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
 
     reduce( CHANGING ct_source = rt_source ).
 
-  ENDMETHOD.                    "serialize_macro
+  ENDMETHOD.
 
 
   METHOD serialize_testclasses.
@@ -286,5 +286,5 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
 
     mv_skip_testclass = calculate_skip_testclass( rt_source ).
 
-  ENDMETHOD.                    "serialize_test
+  ENDMETHOD.
 ENDCLASS.

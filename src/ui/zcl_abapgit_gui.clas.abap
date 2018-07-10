@@ -108,7 +108,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     mi_cur_page = ls_stack-page. " last page always stays
     render( ).
 
-  ENDMETHOD.                "back
+  ENDMETHOD.
 
 
   METHOD cache_asset.
@@ -157,7 +157,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     ASSERT sy-subrc = 0. " Image data error
 
-  ENDMETHOD.  " cache_asset.
+  ENDMETHOD.
 
 
   METHOD cache_html.
@@ -166,7 +166,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
                           iv_type    = 'text'
                           iv_subtype = 'html' ).
 
-  ENDMETHOD.                    "cache_html
+  ENDMETHOD.
 
 
   METHOD call_page.
@@ -182,14 +182,14 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     mi_cur_page = ii_page.
     render( ).
 
-  ENDMETHOD.                "call_page
+  ENDMETHOD.
 
 
   METHOD constructor.
 
     startup( ).
 
-  ENDMETHOD.            "constructor
+  ENDMETHOD.
 
 
   METHOD get_current_page_name.
@@ -200,7 +200,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       SHIFT rv_page_name LEFT DELETING LEADING 'LCL_GUI_'.
     ENDIF." ELSE - return is empty => initial page
 
-  ENDMETHOD.  "get_current_page_name
+  ENDMETHOD.
 
 
   METHOD get_instance.
@@ -215,7 +215,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     on_event( action = |{ zif_abapgit_definitions=>gc_action-go_main }| ). " doesn't accept strings directly
 
-  ENDMETHOD.                "go_home
+  ENDMETHOD.
 
 
   METHOD handle_action.
@@ -275,7 +275,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         " Do nothing = gc_event_state-no_more_act
     ENDTRY.
 
-  ENDMETHOD.  "handle_action
+  ENDMETHOD.
 
 
   METHOD on_event.
@@ -287,7 +287,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       postdata    = postdata
       query_table = query_table ).
 
-  ENDMETHOD.                    "on_event
+  ENDMETHOD.
 
 
   METHOD render.
@@ -300,7 +300,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     mo_html_viewer->show_url( lv_url ).
 
-  ENDMETHOD.                    "render
+  ENDMETHOD.
 
 
   METHOD startup.
@@ -345,5 +345,5 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     mo_html_viewer->set_registered_events( lt_events ).
     SET HANDLER me->on_event FOR mo_html_viewer.
 
-  ENDMETHOD.                    "startup
+  ENDMETHOD.
 ENDCLASS.

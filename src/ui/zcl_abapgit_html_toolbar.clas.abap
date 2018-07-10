@@ -95,12 +95,12 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
 
     APPEND ls_item TO mt_items.
 
-  ENDMETHOD.  "add
+  ENDMETHOD.
 
 
   METHOD constructor.
     mv_id = iv_id.
-  ENDMETHOD. "constructor
+  ENDMETHOD.
 
 
   METHOD count.
@@ -123,7 +123,7 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
     ro_html->add( render_items( iv_sort = iv_sort ) ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render
+  ENDMETHOD.
 
 
   METHOD render_as_droplist.
@@ -150,7 +150,7 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
     ro_html->add( '</li></ul>' ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD. "render_as_droplist
+  ENDMETHOD.
 
 
   METHOD render_items.
@@ -233,5 +233,5 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
 
     ro_html->add( '</ul>' ).
 
-  ENDMETHOD.  "render_items
+  ENDMETHOD.
 ENDCLASS.

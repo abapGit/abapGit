@@ -87,7 +87,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
   METHOD add.
     APPEND is_file TO mt_files.
-  ENDMETHOD.                    "add
+  ENDMETHOD.
 
 
   METHOD add_abap.
@@ -107,7 +107,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     APPEND ls_file TO mt_files.
 
-  ENDMETHOD.                    "abap_to_file
+  ENDMETHOD.
 
 
   METHOD add_raw.
@@ -121,7 +121,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     APPEND ls_file TO mt_files.
 
-  ENDMETHOD.                    "add_raw
+  ENDMETHOD.
 
 
   METHOD add_string.
@@ -136,7 +136,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     APPEND ls_file TO mt_files.
 
-  ENDMETHOD.                    "add_string
+  ENDMETHOD.
 
 
   METHOD add_xml.
@@ -162,7 +162,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     APPEND ls_file TO mt_files.
 
-  ENDMETHOD.                    "do
+  ENDMETHOD.
 
 
   METHOD add_xml_from_plugin.
@@ -179,13 +179,13 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
       io_xml       = lo_xml
       iv_normalize = iv_normalize ).
 
-  ENDMETHOD.                    "add_xml_from_plugin
+  ENDMETHOD.
 
 
   METHOD constructor.
     ms_item = is_item.
     mv_path = iv_path.
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
 
   METHOD filename.
@@ -213,17 +213,17 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
     REPLACE ALL OCCURRENCES OF '/' IN rv_filename WITH '#'.
     TRANSLATE rv_filename TO LOWER CASE.
 
-  ENDMETHOD.                    "filename
+  ENDMETHOD.
 
 
   METHOD get_accessed_files.
     rt_files = mt_accessed_files.
-  ENDMETHOD.  " get_accessed_files.
+  ENDMETHOD.
 
 
   METHOD get_files.
     rt_files = mt_files.
-  ENDMETHOD.                    "get_files
+  ENDMETHOD.
 
 
   METHOD read_abap.
@@ -248,7 +248,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     SPLIT lv_abap AT zif_abapgit_definitions=>gc_newline INTO TABLE rt_abap.
 
-  ENDMETHOD.                    "read_abap
+  ENDMETHOD.
 
 
   METHOD read_file.
@@ -283,7 +283,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     ev_data = <ls_file>-data.
 
-  ENDMETHOD.  " read_file.
+  ENDMETHOD.
 
 
   METHOD read_raw.
@@ -296,7 +296,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
     read_file( EXPORTING iv_filename = lv_filename
                IMPORTING ev_data     = rv_data ).
 
-  ENDMETHOD.                    "read_raw
+  ENDMETHOD.
 
 
   METHOD read_string.
@@ -312,7 +312,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     rv_string = zcl_abapgit_convert=>xstring_to_string_utf8( lv_data ).
 
-  ENDMETHOD.                    "read_string
+  ENDMETHOD.
 
 
   METHOD read_xml.
@@ -333,10 +333,10 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
       EXPORTING
         iv_xml = lv_xml.
 
-  ENDMETHOD.                    "read_xml
+  ENDMETHOD.
 
 
   METHOD set_files.
     mt_files = it_files.
-  ENDMETHOD.                    "set_files
+  ENDMETHOD.
 ENDCLASS.

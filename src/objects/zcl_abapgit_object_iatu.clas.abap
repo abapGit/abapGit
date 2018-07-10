@@ -21,7 +21,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
@@ -29,7 +29,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
   METHOD read.
 
@@ -65,7 +65,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
     CONCATENATE LINES OF lt_source INTO ev_source RESPECTING BLANKS.
 
-  ENDMETHOD.                    "read
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
 
@@ -86,7 +86,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
     mo_files->add_string( iv_ext    = 'html'
                           iv_string = lv_source ) ##NO_TEXT.
 
-  ENDMETHOD.                    "zif_abapgit_object~serialize
+  ENDMETHOD.
 
   METHOD save.
 
@@ -115,7 +115,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
     li_template->if_w3_api_object~save( ).
 
-  ENDMETHOD.                    "save
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -132,7 +132,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
     save( is_attr   = ls_attr
           iv_source = lv_source ).
 
-  ENDMETHOD.                    "zif_abapgit_object~deserialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -160,7 +160,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
     li_template->if_w3_api_object~delete( ).
     li_template->if_w3_api_object~save( ).
 
-  ENDMETHOD.                    "zif_abapgit_object~delete
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
 
@@ -185,7 +185,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
       rv_bool = abap_true.
     ENDIF.
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~jump.
 
@@ -195,7 +195,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
         object_name = ms_item-obj_name
         object_type = ms_item-obj_type.
 
-  ENDMETHOD.                    "zif_abapgit_object~jump
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
@@ -207,4 +207,4 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_iatu IMPLEMENTATION
+ENDCLASS.

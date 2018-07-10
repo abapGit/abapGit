@@ -322,7 +322,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     zcl_abapgit_repo_srv=>get_instance( )->get( iv_key )->refresh( ).
 
-  ENDMETHOD.  "refresh
+  ENDMETHOD.
 
 
   METHOD refresh_local_checksums.

@@ -73,7 +73,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ENDIF.
     ro_html->add( '</span>' ).
 
-  ENDMETHOD.  "render_branch_span
+  ENDMETHOD.
 
 
   METHOD render_error.
@@ -92,7 +92,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ro_html->add( |{ zcl_abapgit_html=>icon( 'alert/red' ) } Error: { lv_error }| ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD. "render_error
+  ENDMETHOD.
 
 
   METHOD render_item_state.
@@ -134,7 +134,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     rv_html = rv_html && '</span>'.
 
-  ENDMETHOD. "render_item_state
+  ENDMETHOD.
 
 
   METHOD render_js_error_banner.
@@ -144,7 +144,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
                   ' If this does not disappear soon,' &&
                   ' then there is a JS init error, please log an issue' ).
     ro_html->add( '</div>' ).
-  ENDMETHOD. "render_js_error_stub
+  ENDMETHOD.
 
 
   METHOD render_news.
@@ -205,7 +205,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     ro_html->add( '</div>' ).
 
-  ENDMETHOD. "render_news
+  ENDMETHOD.
 
 
   METHOD render_repo_top.

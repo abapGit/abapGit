@@ -15,11 +15,11 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
 * looks like "changed by user" is not stored in the database
@@ -43,7 +43,7 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error creating CL_AAB_ID object' ).
     ENDIF.
 
-  ENDMETHOD.                    "create_object
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
 
@@ -64,7 +64,7 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
     io_xml->add( iv_name = 'DESCRIPTION'
                  ig_data = lv_description ).
 
-  ENDMETHOD.                    "zif_abapgit_object~serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -81,7 +81,7 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
     tadir_insert( iv_package ).
     lo_aab->save( ).
 
-  ENDMETHOD.                    "zif_abapgit_object~deserialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -107,7 +107,7 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
     ENDIF.
     lo_aab->dequeue( ).
 
-  ENDMETHOD.                    "zif_abapgit_object~delete
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
 
@@ -122,7 +122,7 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
         ex_state = lv_state ).
     rv_bool = boolc( lv_state = abap_true ).
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~jump.
 
@@ -133,7 +133,7 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
         object_type   = 'ACID'
         in_new_window = abap_true.
 
-  ENDMETHOD.                    "zif_abapgit_object~jump
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
@@ -145,4 +145,4 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_acid IMPLEMENTATION
+ENDCLASS.

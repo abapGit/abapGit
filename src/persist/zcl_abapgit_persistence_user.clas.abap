@@ -248,7 +248,7 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
     rv_changes_only = read( )-changes_only.
 
-  ENDMETHOD. "get_changes_only
+  ENDMETHOD.
 
 
   METHOD get_default_git_user_email.
@@ -269,21 +269,21 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
     rv_diff_unified = read( )-diff_unified.
 
-  ENDMETHOD. "get_diff_unified
+  ENDMETHOD.
 
 
   METHOD get_favorites.
 
     rt_favorites = read( )-favorites.
 
-  ENDMETHOD.  "get_favorites
+  ENDMETHOD.
 
 
   METHOD get_hide_files.
 
     rv_hide = read( )-hide_files.
 
-  ENDMETHOD. "get_hide_files
+  ENDMETHOD.
 
 
   METHOD get_instance.
@@ -306,28 +306,28 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
     rv_email = read_repo_config( iv_url )-git_user-email.
 
-  ENDMETHOD.  "get_repo_email
+  ENDMETHOD.
 
 
   METHOD get_repo_git_user_name.
 
     rv_username = read_repo_config( iv_url )-git_user-name.
 
-  ENDMETHOD.  "get_repo_username
+  ENDMETHOD.
 
 
   METHOD get_repo_last_change_seen.
 
     rv_version = read_repo_config( iv_url )-last_change_seen.
 
-  ENDMETHOD.  "get_last_change_seen
+  ENDMETHOD.
 
 
   METHOD get_repo_login.
 
     rv_login = read_repo_config( iv_url )-login.
 
-  ENDMETHOD.  "get_repo_login
+  ENDMETHOD.
 
 
   METHOD get_repo_show.
@@ -348,7 +348,7 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
     rv_yes = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.  " is_favorite_repo.
+  ENDMETHOD.
 
 
   METHOD read.
@@ -376,7 +376,7 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
     lt_repo_config = read( )-repo_config.
     READ TABLE lt_repo_config INTO rs_repo_config WITH KEY url = lv_key.
 
-  ENDMETHOD.  "read_repo_config
+  ENDMETHOD.
 
 
   METHOD set_default_git_user_email.
@@ -413,7 +413,7 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
     ls_repo_config-git_user-email = iv_email.
     update_repo_config( iv_url = iv_url is_repo_config = ls_repo_config ).
 
-  ENDMETHOD.  "set_repo_email
+  ENDMETHOD.
 
 
   METHOD set_repo_git_user_name.
@@ -424,7 +424,7 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
     ls_repo_config-git_user-name = iv_username.
     update_repo_config( iv_url = iv_url is_repo_config = ls_repo_config ).
 
-  ENDMETHOD.  "set_repo_username
+  ENDMETHOD.
 
 
   METHOD set_repo_last_change_seen.
@@ -435,7 +435,7 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
     ls_repo_config-last_change_seen = iv_version.
     update_repo_config( iv_url = iv_url is_repo_config = ls_repo_config ).
 
-  ENDMETHOD.  "set_last_change_seen
+  ENDMETHOD.
 
 
   METHOD set_repo_login.
@@ -446,7 +446,7 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
     ls_repo_config-login = iv_login.
     update_repo_config( iv_url = iv_url is_repo_config = ls_repo_config ).
 
-  ENDMETHOD.  "set_repo_login
+  ENDMETHOD.
 
 
   METHOD set_repo_show.
@@ -473,7 +473,7 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
     rv_changes_only = ls_user-changes_only.
 
-  ENDMETHOD. "toggle_changes_only
+  ENDMETHOD.
 
 
   METHOD toggle_diff_unified.
@@ -486,7 +486,7 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
     rv_diff_unified = ls_user-diff_unified.
 
-  ENDMETHOD. "toggle_diff_unified
+  ENDMETHOD.
 
 
   METHOD toggle_favorite.
@@ -508,7 +508,7 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
     COMMIT WORK AND WAIT.
 
-  ENDMETHOD.  " toggle_favorite.
+  ENDMETHOD.
 
 
   METHOD toggle_hide_files.
@@ -521,7 +521,7 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
     rv_hide = ls_user-hide_files.
 
-  ENDMETHOD. "toggle_hide_files
+  ENDMETHOD.
 
 
   METHOD to_xml.
@@ -567,7 +567,7 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
     COMMIT WORK AND WAIT.
 
-  ENDMETHOD.  "update_repo_config
+  ENDMETHOD.
 
   METHOD get_settings.
 

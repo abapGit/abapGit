@@ -123,7 +123,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
       set( iv_head_branch = lv_branch_name ).
     ENDIF.
 
-  ENDMETHOD.                    "actualize_head_branch
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -132,7 +132,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     mv_initialized = abap_false.
 
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
 
   METHOD delete_initial_online_repo.
@@ -147,7 +147,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     ENDIF.
 
-  ENDMETHOD.  " delete_initial_online_repo
+  ENDMETHOD.
 
 
   METHOD deserialize.
@@ -162,43 +162,43 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     COMMIT WORK AND WAIT.
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD get_branch_name.
     rv_name = ms_data-branch_name.
-  ENDMETHOD.                    "get_branch_name
+  ENDMETHOD.
 
 
   METHOD get_files_remote.
     initialize( ).
 
     rt_files = mt_remote.
-  ENDMETHOD.                    "get_files
+  ENDMETHOD.
 
 
   METHOD get_head_branch_name.
     rv_name = ms_data-head_branch.
-  ENDMETHOD.                    "get_head_branch_name
+  ENDMETHOD.
 
 
   METHOD get_objects.
     initialize( ).
 
     rt_objects = mt_objects.
-  ENDMETHOD.                    "get_objects
+  ENDMETHOD.
 
 
   METHOD get_sha1_local.
     rv_sha1 = ms_data-sha1.
-  ENDMETHOD.                    "get_sha1_local
+  ENDMETHOD.
 
 
   METHOD get_sha1_remote.
     initialize( ).
 
     rv_sha1 = mv_branch.
-  ENDMETHOD.                    "get_sha1_remote
+  ENDMETHOD.
 
 
   METHOD get_unnecessary_local_objs.
@@ -249,7 +249,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
   METHOD get_url.
     rv_url = ms_data-url.
-  ENDMETHOD.                    "get_url
+  ENDMETHOD.
 
 
   METHOD handle_stage_ignore.
@@ -337,7 +337,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     CLEAR: mv_code_inspector_successful.
 
-  ENDMETHOD.                    "push
+  ENDMETHOD.
 
 
   METHOD rebuild_local_checksums. "REMOTE
@@ -391,7 +391,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     set( it_checksums = lt_checksums ).
     reset_status( ).
 
-  ENDMETHOD.  " rebuild_local_checksums.
+  ENDMETHOD.
 
 
   METHOD refresh.
@@ -431,12 +431,12 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     mv_initialized = abap_true.
 
-  ENDMETHOD.                    "refresh
+  ENDMETHOD.
 
 
   METHOD reset_status.
     CLEAR mt_status.
-  ENDMETHOD.  " reset_status.
+  ENDMETHOD.
 
 
   METHOD run_code_inspector.
@@ -494,7 +494,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     " Therefore we update the local SHA1 with the new remote SHA1
     set( iv_sha1 = get_sha1_remote( ) ).
 
-  ENDMETHOD.  "set_new_remote
+  ENDMETHOD.
 
 
   METHOD set_objects.
@@ -524,5 +524,5 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     ENDIF.
     rt_results = mt_status.
 
-  ENDMETHOD.                    "status
+  ENDMETHOD.
 ENDCLASS.

@@ -155,7 +155,7 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     ms_control-page_title = 'SETTINGS'.
-  ENDMETHOD.  " constructor.
+  ENDMETHOD.
 
 
   METHOD parse_post.
@@ -246,7 +246,7 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
     ro_html->add( render_section_end( ) ).
     ro_html->add( render_form_end( ) ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD render_development_internals.

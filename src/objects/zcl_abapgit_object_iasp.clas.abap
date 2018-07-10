@@ -21,7 +21,7 @@ CLASS zcl_abapgit_object_iasp IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
@@ -29,7 +29,7 @@ CLASS zcl_abapgit_object_iasp IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
   METHOD read.
 
@@ -62,7 +62,7 @@ CLASS zcl_abapgit_object_iasp IMPLEMENTATION.
 
     li_service->get_parameters( IMPORTING p_parameters = et_parameters ).
 
-  ENDMETHOD.                    "read
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
 
@@ -82,7 +82,7 @@ CLASS zcl_abapgit_object_iasp IMPLEMENTATION.
     io_xml->add( iv_name = 'PARAMETERS'
                  ig_data = lt_parameters ).
 
-  ENDMETHOD.                    "zif_abapgit_object~serialize
+  ENDMETHOD.
 
   METHOD save.
 
@@ -98,7 +98,7 @@ CLASS zcl_abapgit_object_iasp IMPLEMENTATION.
 
     li_service->if_w3_api_object~save( ).
 
-  ENDMETHOD.                    "save
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -115,7 +115,7 @@ CLASS zcl_abapgit_object_iasp IMPLEMENTATION.
     save( is_attr       = ls_attr
           it_parameters = lt_parameters ).
 
-  ENDMETHOD.                    "zif_abapgit_object~deserialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -143,7 +143,7 @@ CLASS zcl_abapgit_object_iasp IMPLEMENTATION.
     li_service->if_w3_api_object~delete( ).
     li_service->if_w3_api_object~save( ).
 
-  ENDMETHOD.                    "zif_abapgit_object~delete
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
 
@@ -168,7 +168,7 @@ CLASS zcl_abapgit_object_iasp IMPLEMENTATION.
       rv_bool = abap_true.
     ENDIF.
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~jump.
 
@@ -178,7 +178,7 @@ CLASS zcl_abapgit_object_iasp IMPLEMENTATION.
         object_name = ms_item-obj_name
         object_type = ms_item-obj_type.
 
-  ENDMETHOD.                    "zif_abapgit_object~jump
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
@@ -190,4 +190,4 @@ CLASS zcl_abapgit_object_iasp IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_iasp IMPLEMENTATION
+ENDCLASS.

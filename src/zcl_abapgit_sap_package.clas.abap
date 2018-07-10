@@ -144,7 +144,7 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
 
     create( ls_package ).
 
-  ENDMETHOD.                    "create
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_sap_package~are_changes_recorded_in_tr_req.

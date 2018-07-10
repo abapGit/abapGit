@@ -23,7 +23,7 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
     super->constructor( ).
     ms_control-page_title = 'SYNTAX CHECK'.
     mo_repo = io_repo.
-  ENDMETHOD.  " constructor.
+  ENDMETHOD.
 
 
   METHOD render_content.
@@ -49,5 +49,5 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
 
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 ENDCLASS.
