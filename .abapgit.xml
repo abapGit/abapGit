@@ -10,7 +10,7 @@
     <item>/CONTRIBUTING.md</item>
     <item>/LICENSE</item>
     <item>/README.md</item>
-    <item>*.orig</item>
+    <item>/*.orig</item>
     <item>/package.json</item>
     <item>/changelog.txt</item>
     <item>/.gitignore</item>
