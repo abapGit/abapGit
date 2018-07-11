@@ -128,7 +128,10 @@ INTERFACE zif_abapgit_definitions PUBLIC.
            warning_package TYPE ty_overwrite_tt,
            requirements    TYPE ty_requirements,
            transport       TYPE ty_transport,
-         END OF ty_deserialize_checks.
+         END OF ty_deserialize_checks,
+         BEGIN OF ty_delete_checks,
+           transport TYPE ty_transport,
+         END OF ty_delete_checks.
 
   TYPES:
     BEGIN OF ty_metadata,
