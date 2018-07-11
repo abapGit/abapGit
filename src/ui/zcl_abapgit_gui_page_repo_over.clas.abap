@@ -12,8 +12,9 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         REDEFINITION .
 
   PROTECTED SECTION.
-    METHODS render_content
-        REDEFINITION .
+    METHODS:
+      render_content REDEFINITION,
+      scripts REDEFINITION.
 
   PRIVATE SECTION.
     TYPES:
@@ -548,6 +549,13 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     io_html->add( |</form>| ).
     io_html->add( |</div>| ).
+
+  ENDMETHOD.
+
+  METHOD scripts.
+
+    CREATE OBJECT ro_html.
+    ro_html->add( 'setInitialFocus("filter");' ).
 
   ENDMETHOD.
 
