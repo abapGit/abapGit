@@ -266,6 +266,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     ro_repo->initialize( ).
     ro_repo->find_remote_dot_abapgit( ).
+    ro_repo->find_remote_dot_gitignore( ).
 
   ENDMETHOD.
 

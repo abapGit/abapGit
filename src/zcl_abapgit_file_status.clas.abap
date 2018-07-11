@@ -391,8 +391,9 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
   METHOD status.
 
-    DATA: lv_index       LIKE sy-tabix,
-          lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit.
+    DATA: lv_index         LIKE sy-tabix,
+          lo_dot_abapgit   TYPE REF TO zcl_abapgit_dot_abapgit,
+          lo_dot_gitignore TYPE REF TO zcl_abapgit_dot_gitignore.
 
     FIELD-SYMBOLS <ls_result> LIKE LINE OF rt_results.
 
@@ -405,6 +406,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       it_cur_state = io_repo->get_local_checksums_per_file( ) ).
 
     lo_dot_abapgit = io_repo->get_dot_abapgit( ).
+    lo_dot_gitignore = io_repo->get_dot_gitignore( ).
 
     " Remove ignored files, fix .abapgit
     LOOP AT rt_results ASSIGNING <ls_result>.
@@ -412,10 +414,17 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
       IF lo_dot_abapgit->is_ignored(
           iv_path     = <ls_result>-path
-          iv_filename = <ls_result>-filename ) = abap_true.
+          iv_filename = <ls_result>-filename ) = abap_true
+      OR ( lo_dot_gitignore->is_ignored(
+             iv_path     = <ls_result>-path
+             iv_filename = <ls_result>-filename ) = abap_true
+          AND <ls_result>-lstate <> 'M' ). " only ignore if object doesn't exist in remote
+
         DELETE rt_results INDEX lv_index.
         CONTINUE.
+
       ENDIF.
+
     ENDLOOP.
 
     run_checks(
