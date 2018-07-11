@@ -30,7 +30,7 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -49,7 +49,7 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
 
@@ -100,7 +100,7 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
 
     ev_url = lv_url.
 
-  ENDMETHOD.                    "get_url_for_io
+  ENDMETHOD.
 
   METHOD build_filename.
 
@@ -108,7 +108,7 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
       INTO rv_filename SEPARATED BY '.'.
     TRANSLATE rv_filename TO LOWER CASE.
 
-  ENDMETHOD.                    "build_filename
+  ENDMETHOD.
 
   METHOD find_content.
 
@@ -131,7 +131,7 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
 
     rv_content = <ls_file>-data.
 
-  ENDMETHOD.                    "find_content
+  ENDMETHOD.
 
   METHOD get_filename.
 
@@ -145,7 +145,7 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
     READ TABLE lt_strings INDEX lv_lines INTO rv_filename.
     ASSERT sy-subrc = 0.
 
-  ENDMETHOD.                    "get_filename
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
 
@@ -205,7 +205,7 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
     io_xml->add( iv_name = 'CLASS'
                  ig_data = lv_class ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -282,7 +282,7 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -314,7 +314,7 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from delete' ).
     ENDIF.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~jump.
 
@@ -324,7 +324,7 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
         object_name = ms_item-obj_name
         object_type = ms_item-obj_type.
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
@@ -336,4 +336,4 @@ CLASS zcl_abapgit_object_smim IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_smim IMPLEMENTATION
+ENDCLASS.

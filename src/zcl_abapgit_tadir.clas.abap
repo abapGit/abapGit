@@ -130,7 +130,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       APPEND LINES OF lt_tadir TO rt_tadir.
     ENDLOOP.
 
-  ENDMETHOD.                    "build
+  ENDMETHOD.
 
 
   METHOD check_exists.
@@ -164,7 +164,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.                    "check_exists
+  ENDMETHOD.
 
 
   METHOD exists.

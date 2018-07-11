@@ -9,7 +9,7 @@ CLASS ltcl_dot_abapgit DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS
         RAISING zcx_abapgit_exception,
       ignore FOR TESTING.
 
-ENDCLASS.       "ltcl_Dot_Abapgit
+ENDCLASS.
 
 
 CLASS ltcl_dot_abapgit IMPLEMENTATION.

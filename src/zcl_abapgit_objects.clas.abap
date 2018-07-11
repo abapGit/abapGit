@@ -285,7 +285,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     CONCATENATE 'ZCL_ABAPGIT_OBJECT_' is_item-obj_type INTO rv_class_name. "#EC NOTEXT
 
-  ENDMETHOD.                    "class_name
+  ENDMETHOD.
 
 
   METHOD compare_remote_to_local.
@@ -377,7 +377,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         ENDIF.
     ENDTRY.
 
-  ENDMETHOD.                    "create_object
+  ENDMETHOD.
 
 
   METHOD delete.
@@ -415,7 +415,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       COMMIT WORK.
     ENDLOOP.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
 
   METHOD delete_obj.
@@ -440,7 +440,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
 
   METHOD deserialize.
@@ -566,7 +566,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     zcl_abapgit_default_transport=>get_instance( )->reset( ).
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD deserialize_checks.
@@ -636,7 +636,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         rv_bool = abap_true.
     ENDTRY.
 
-  ENDMETHOD.                    "exists
+  ENDMETHOD.
 
 
   METHOD files_to_deserialize.
@@ -676,7 +676,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       is_item     = is_item
       iv_language = zif_abapgit_definitions=>gc_english )->has_changed_since( iv_timestamp ).
 
-  ENDMETHOD.  "has_changed_since
+  ENDMETHOD.
 
 
   METHOD is_supported.
@@ -690,7 +690,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         rv_bool = abap_false.
     ENDTRY.
 
-  ENDMETHOD.                    "is_supported
+  ENDMETHOD.
 
 
   METHOD jump.
@@ -715,7 +715,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       li_obj->jump( ).
     ENDIF.
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD prioritize_deser.
@@ -756,7 +756,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
-  ENDMETHOD.                    "prioritize_deser
+  ENDMETHOD.
 
 
   METHOD serialize.
@@ -791,7 +791,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     check_duplicates( rt_files ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
 
   METHOD supported_list.
@@ -844,7 +844,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           with_tcode_index       = abap_true.
     ENDLOOP.
 
-  ENDMETHOD.                    "update_package_tree
+  ENDMETHOD.
 
 
   METHOD warning_overwrite_adjust.

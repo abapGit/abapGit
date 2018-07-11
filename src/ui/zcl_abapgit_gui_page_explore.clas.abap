@@ -23,10 +23,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_EXPLORE IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     ms_control-redirect_url = c_explore_url.
-  ENDMETHOD.  "constructor
+  ENDMETHOD.
 
 
   METHOD render_content.
     ASSERT 1 = 1. " Dummy
-  ENDMETHOD. "render_content.
+  ENDMETHOD.
 ENDCLASS.

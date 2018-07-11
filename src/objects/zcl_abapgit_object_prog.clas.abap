@@ -49,7 +49,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
                             it_tpool    = lt_tpool ).
     ENDLOOP.
 
-  ENDMETHOD.                    "deserialize_texts
+  ENDMETHOD.
 
 
   METHOD serialize_texts.
@@ -83,7 +83,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
                    ig_data = lt_tpool_i18n ).
     ENDIF.
 
-  ENDMETHOD.                    "serialize_texts
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -93,12 +93,12 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
     ENDIF.
-  ENDMETHOD.                    "zif_abapgit_object~changed_by
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.                    "zif_abapgit_object~compare_to_remote_version
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~delete.
@@ -123,7 +123,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error from RS_DELETE_PROGRAM: { sy-subrc }| ).
     ENDIF.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -167,7 +167,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
     " Texts deserializing (translations)
     deserialize_texts( io_xml ).
 
-  ENDMETHOD.                    "zif_abapgit_serialize~deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -179,12 +179,12 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
       AND r3state = 'A'.
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~has_changed_since.
@@ -193,7 +193,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
       iv_program   = ms_item-obj_name
       iv_timestamp = iv_timestamp ).
 
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~jump.
@@ -205,7 +205,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
         object_type   = 'PROG'
         in_new_window = abap_true.
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -217,7 +217,7 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
     " Texts serializing (translations)
     serialize_texts( io_xml ).
 
-  ENDMETHOD.                    "zif_abapgit_serialize~serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~is_locked.
 

@@ -169,7 +169,7 @@ CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
     ro_html->add( '</b>' ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~on_event.

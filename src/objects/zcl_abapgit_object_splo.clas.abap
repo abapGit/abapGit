@@ -58,7 +58,7 @@ CLASS zcl_abapgit_object_splo IMPLEMENTATION.
     io_xml->add( iv_name = 'TSP0P'
                  ig_data = ls_tsp0p ).
 
-  ENDMETHOD.                    "zif_abapgit_object~serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -80,7 +80,7 @@ CLASS zcl_abapgit_object_splo IMPLEMENTATION.
 
     tadir_insert( iv_package ).
 
-  ENDMETHOD.                    "zif_abapgit_object~deserialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -88,7 +88,7 @@ CLASS zcl_abapgit_object_splo IMPLEMENTATION.
     DELETE FROM tsp1d WHERE papart = ms_item-obj_name.    "#EC CI_SUBRC
     DELETE FROM tsp0p WHERE pdpaper = ms_item-obj_name.   "#EC CI_SUBRC
 
-  ENDMETHOD.                    "zif_abapgit_object~delete
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
 
@@ -99,11 +99,11 @@ CLASS zcl_abapgit_object_splo IMPLEMENTATION.
       WHERE papart = ms_item-obj_name.
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~jump.
     zcx_abapgit_exception=>raise( 'todo, jump, SPLO' ).
-  ENDMETHOD.                    "zif_abapgit_object~jump
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
@@ -115,4 +115,4 @@ CLASS zcl_abapgit_object_splo IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_splo IMPLEMENTATION
+ENDCLASS.

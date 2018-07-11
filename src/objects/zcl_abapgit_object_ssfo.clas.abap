@@ -13,7 +13,7 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -28,7 +28,7 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-delete_tadir = abap_true.
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
 
@@ -39,7 +39,7 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
       WHERE formname = ms_item-obj_name.
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~jump.
 
@@ -79,7 +79,7 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
         OTHERS                = 4
         ##fm_subrc_ok.                                                   "#EC CI_SUBRC
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -105,7 +105,7 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Error from FB_DELETE_FORM' ).
     ENDIF.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
 * see function module FB_DOWNLOAD_FORM
@@ -167,7 +167,7 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
 
     io_xml->set_raw( li_xml_doc->get_root_element( ) ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
   METHOD fix_ids.
 * makes sure ID and IDREF values are the same values for each serialization run
@@ -277,7 +277,7 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |{ ms_item-obj_type } { ms_item-obj_name }: { lv_text } | ).
     ENDTRY.
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
@@ -290,4 +290,4 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_ssfo IMPLEMENTATION
+ENDCLASS.

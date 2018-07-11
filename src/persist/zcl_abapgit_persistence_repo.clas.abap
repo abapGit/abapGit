@@ -347,7 +347,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
                    iv_value = iv_key
                    iv_data  = ls_content-data_str ).
 
-  ENDMETHOD.  "update_head_branch
+  ENDMETHOD.
 
 
   METHOD update_local_checksums.
@@ -421,7 +421,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
                    iv_value = iv_key
                    iv_data  = ls_content-data_str ).
 
-  ENDMETHOD.  "update_offline
+  ENDMETHOD.
 
 
   METHOD update_sha1.

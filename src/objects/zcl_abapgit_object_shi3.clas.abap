@@ -28,7 +28,7 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -47,11 +47,11 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
   METHOD constructor.
     super->constructor( is_item = is_item iv_language = iv_language ).
     mv_tree_id = ms_item-obj_name.
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
   METHOD jump_se43.
 
@@ -89,7 +89,7 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SHI3' ).
     ENDIF.
 
-  ENDMETHOD.                    "jump_se43
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~jump.
 
@@ -108,7 +108,7 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |Jump for type { ls_head-type } not implemented| ).
     ENDCASE.
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
 
@@ -127,7 +127,7 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
 
     rv_bool = boolc( ls_header-id IS NOT INITIAL ).
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -143,7 +143,7 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from BMENU_DELETE_TREE, SHI3' ).
     ENDIF.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
 
@@ -190,7 +190,7 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
     io_xml->add( iv_name = 'TREE_TEXTS'
                  ig_data = lt_texts ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
   METHOD clear_fields.
 
@@ -207,7 +207,7 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
       CLEAR: <ls_node>-frelease, <ls_node>-lrelease.
     ENDLOOP.
 
-  ENDMETHOD.                    "strip_stamps
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -255,7 +255,7 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Error from STREE_HIERARCHY_SAVE, SHI3' ).
     ENDIF.
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
@@ -267,4 +267,4 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_shi3 IMPLEMENTATION
+ENDCLASS.

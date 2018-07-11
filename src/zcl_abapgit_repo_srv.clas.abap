@@ -68,12 +68,12 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     APPEND io_repo TO mt_list.
 
-  ENDMETHOD.                    "add
+  ENDMETHOD.
 
 
   METHOD constructor.
     CREATE OBJECT mo_persistence.
-  ENDMETHOD.                    "class_constructor
+  ENDMETHOD.
 
 
   METHOD get_instance.
@@ -124,7 +124,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     mv_init = abap_true.
 
-  ENDMETHOD.                    "refresh
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_repo_srv~delete.

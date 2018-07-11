@@ -19,7 +19,7 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
   METHOD constructor.
     ms_item = is_item.
     mo_files = io_files.
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
   METHOD zif_abapgit_object_enho~serialize.
 
@@ -61,7 +61,7 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
       io_files = mo_files
       io_clif  = lo_enh_class ).
 
-  ENDMETHOD.                    "zif_abapgit_object_enho~serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object_enho~deserialize.
 
@@ -124,6 +124,6 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'error deserializing ENHO class' ).
     ENDTRY.
 
-  ENDMETHOD.                    "zif_abapgit_object_enho~deserialize
+  ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_enho_class IMPLEMENTATION
+ENDCLASS.

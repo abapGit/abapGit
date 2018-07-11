@@ -44,7 +44,7 @@ CLASS ZCL_ABAPGIT_XML IMPLEMENTATION.
   METHOD constructor.
     mi_ixml = cl_ixml=>create( ).
     mi_xml_doc = mi_ixml->create_document( ).
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
 
   METHOD display_xml_error.
@@ -63,7 +63,7 @@ CLASS ZCL_ABAPGIT_XML IMPLEMENTATION.
 
     zcx_abapgit_exception=>raise( 'XML error' ).
 
-  ENDMETHOD.                    "display_xml_error
+  ENDMETHOD.
 
 
   METHOD error.
@@ -98,7 +98,7 @@ CLASS ZCL_ABAPGIT_XML IMPLEMENTATION.
     ENDIF.
 
     zcx_abapgit_exception=>raise( 'Error while parsing XML' ).
-  ENDMETHOD.                    "error
+  ENDMETHOD.
 
 
   METHOD parse.
@@ -136,7 +136,7 @@ CLASS ZCL_ABAPGIT_XML IMPLEMENTATION.
     ms_metadata-class   = li_element->get_attribute_ns( c_attr_serializer ).
     ms_metadata-version = li_element->get_attribute_ns( c_attr_serializer_version ).
 
-  ENDMETHOD.                    "parse
+  ENDMETHOD.
 
 
   METHOD to_xml.
@@ -157,5 +157,5 @@ CLASS ZCL_ABAPGIT_XML IMPLEMENTATION.
 
     li_renderer->render( ).
 
-  ENDMETHOD.                    "to_xml
+  ENDMETHOD.
 ENDCLASS.

@@ -80,7 +80,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
 
     INSERT ls_exception INTO TABLE ct_exception.
 
-  ENDMETHOD.                    "add_fm_exception
+  ENDMETHOD.
 
 
   METHOD add_fm_param_exporting.
@@ -93,7 +93,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
 
     INSERT ls_param INTO TABLE ct_param.
 
-  ENDMETHOD.                    "add_fm_param_exporting
+  ENDMETHOD.
 
 
   METHOD add_fm_param_tables.
@@ -106,7 +106,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
 
     INSERT ls_param INTO TABLE ct_param.
 
-  ENDMETHOD.                    "add_fm_param_tables
+  ENDMETHOD.
 
 
   METHOD delta_controller.
@@ -203,7 +203,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from SVRS_MAKE_OBJECT_DELTA' ).
     ENDIF.
 
-  ENDMETHOD.                    "delta_controller
+  ENDMETHOD.
 
 
   METHOD delta_definition.
@@ -260,7 +260,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from SVRS_MAKE_OBJECT_DELTA' ).
     ENDIF.
 
-  ENDMETHOD.                    "delta_definition
+  ENDMETHOD.
 
 
   METHOD delta_view.
@@ -332,7 +332,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from SVRS_MAKE_OBJECT_DELTA' ).
     ENDIF.
 
-  ENDMETHOD.                    "delta_view
+  ENDMETHOD.
 
 
   METHOD get_limu_objects.
@@ -347,7 +347,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       IMPORTING
         limu_objects   = rt_objects.
 
-  ENDMETHOD.                    "get_limu_objects
+  ENDMETHOD.
 
 
   METHOD read.
@@ -421,7 +421,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       cmpname ASCENDING
       line_number ASCENDING.
 
-  ENDMETHOD.                    "read
+  ENDMETHOD.
 
 
   METHOD read_controller.
@@ -533,7 +533,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
            rs_controller-definition-changedby,
            rs_controller-definition-changedon.
 
-  ENDMETHOD.                    "read_controller
+  ENDMETHOD.
 
 
   METHOD read_definition.
@@ -578,7 +578,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
            rs_definition-definition-gendate,
            rs_definition-definition-gentime.
 
-  ENDMETHOD.                    "read_definition
+  ENDMETHOD.
 
 
   METHOD read_view.
@@ -631,7 +631,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
            rs_view-definition-changedby,
            rs_view-definition-changedon.
 
-  ENDMETHOD.                    "read_view
+  ENDMETHOD.
 
 
   METHOD recover_controller.
@@ -652,7 +652,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       CHANGING
         corrnr         = lv_corrnr ).
 
-  ENDMETHOD.                    "recover_controller
+  ENDMETHOD.
 
 
   METHOD recover_definition.
@@ -675,7 +675,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       CHANGING
         corrnr        = lv_corrnr ).
 
-  ENDMETHOD.                    "recover_definition
+  ENDMETHOD.
 
 
   METHOD recover_view.
@@ -696,12 +696,12 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       CHANGING
         corrnr   = lv_corrnr ).
 
-  ENDMETHOD.                    "recover_view
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
-  ENDMETHOD.                    "zif_abapgit_object~changed_by
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~compare_to_remote_version.
@@ -730,7 +730,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       p_wb_request       = lo_request
       p_wb_program_state = li_state ).
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -768,7 +768,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -782,17 +782,17 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       AND version = 'A'.                                "#EC CI_GENBUFF
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~jump.
@@ -804,7 +804,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
         object_type   = ms_item-obj_type
         in_new_window = abap_true.
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -821,7 +821,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
     io_xml->add( ig_data = mt_sources
                  iv_name = 'SOURCES' ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~is_locked.
 

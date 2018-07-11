@@ -20,7 +20,7 @@ CLASS ltcl_dangerous DEFINITION FOR TESTING RISK LEVEL CRITICAL DURATION LONG FI
 
     CONSTANTS: c_package TYPE devclass VALUE '$ABAPGIT_UNIT_TEST'.
 
-ENDCLASS.                    "ltcl_dangerous DEFINITION
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS ltcl_dangerous IMPLEMENTATION
@@ -37,7 +37,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
         msg   = 'Cancelled. You can enable these tests at the Settings page'
         level = if_aunit_constants=>tolerable ).
     ENDIF.
-  ENDMETHOD.                    "class_setup
+  ENDMETHOD.
 
   METHOD run.
 
@@ -97,9 +97,9 @@ CLASS ltcl_dangerous IMPLEMENTATION.
 
     COMMIT WORK.
 
-  ENDMETHOD.                    "run
+  ENDMETHOD.
 
-ENDCLASS.                    "ltcl_dangerous IMPLEMENTATION
+ENDCLASS.
 
 
 *----------------------------------------------------------------------*
@@ -113,7 +113,7 @@ CLASS ltcl_object_types DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHOR
     METHODS:
       not_exist FOR TESTING RAISING zcx_abapgit_exception.
 
-ENDCLASS.                    "ltcl_object_types DEFINITION
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS ltcl_object_types IMPLEMENTATION
@@ -148,9 +148,9 @@ CLASS ltcl_object_types IMPLEMENTATION.
         quit = if_aunit_constants=>no ).
     ENDLOOP.
 
-  ENDMETHOD.                    "not_exist
+  ENDMETHOD.
 
-ENDCLASS.                    "ltcl_object_types IMPLEMENTATION
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS ltcl_serialize DEFINITION
@@ -179,7 +179,7 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
       serialize_tran FOR TESTING RAISING zcx_abapgit_exception,
       serialize_ttyp FOR TESTING RAISING zcx_abapgit_exception.
 
-ENDCLASS.                    "ltcl_serialize DEFINITION
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS ltcl_serialize IMPLEMENTATION
@@ -198,7 +198,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "lcl_abap_unit
+  ENDMETHOD.
 
   METHOD serialize_shlp.
 
@@ -210,7 +210,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "lcl_abap_unit
+  ENDMETHOD.
 
   METHOD serialize_view.
 
@@ -222,7 +222,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "lcl_abap_unit
+  ENDMETHOD.
 
   METHOD serialize_tabl.
 
@@ -234,7 +234,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_table
+  ENDMETHOD.
 
   METHOD serialize_auth.
 
@@ -246,7 +246,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_auth
+  ENDMETHOD.
 
   METHOD serialize_clas.
 
@@ -258,7 +258,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_clas
+  ENDMETHOD.
 
   METHOD serialize_doma.
 
@@ -270,7 +270,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_doma
+  ENDMETHOD.
 
   METHOD serialize_dtel.
 
@@ -282,7 +282,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_dtel
+  ENDMETHOD.
 
   METHOD serialize_fugr.
 
@@ -294,7 +294,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_fugr
+  ENDMETHOD.
 
   METHOD serialize_msag.
 
@@ -306,7 +306,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_msag
+  ENDMETHOD.
 
   METHOD serialize_prog.
 
@@ -318,7 +318,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_prog
+  ENDMETHOD.
 
   METHOD serialize_tran.
 
@@ -330,7 +330,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_tran
+  ENDMETHOD.
 
   METHOD serialize_ttyp.
 
@@ -342,7 +342,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_ttyp
+  ENDMETHOD.
 
   METHOD check.
 
@@ -353,9 +353,9 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_not_initial( lt_files ).
 
-  ENDMETHOD.                    "check
+  ENDMETHOD.
 
-ENDCLASS.                    "ltcl_serialize IMPLEMENTATION
+ENDCLASS.
 
 CLASS ltd_objcet_ddls_mock DEFINITION FOR TESTING.
 

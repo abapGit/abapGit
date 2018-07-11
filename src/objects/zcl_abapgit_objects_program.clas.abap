@@ -323,7 +323,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     io_files->add_abap( iv_extra = iv_extra
                         it_abap  = lt_source ).
 
-  ENDMETHOD.                    "serialize_program
+  ENDMETHOD.
 
   METHOD deserialize_program.
 
@@ -488,7 +488,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       iv_type = 'REPS'
       iv_name = is_progdir-name ).
 
-  ENDMETHOD.                    "deserialize_program
+  ENDMETHOD.
 
   METHOD read_progdir.
 
@@ -516,7 +516,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
            rs_progdir-idate,
            rs_progdir-itime.
 
-  ENDMETHOD.                    "read_progdir
+  ENDMETHOD.
 
   METHOD serialize_cua.
 
@@ -547,7 +547,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from RS_CUA_INTERNAL_FETCH' ).
     ENDIF.
 
-  ENDMETHOD.                    "serialize_cua
+  ENDMETHOD.
 
   METHOD serialize_dynpros.
 
@@ -619,7 +619,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
     ENDLOOP.
 
-  ENDMETHOD.                    "serialize_dynpros
+  ENDMETHOD.
 
 
   METHOD deserialize_dynpros.
@@ -670,7 +670,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
     ENDLOOP.
 
-  ENDMETHOD.                    "deserialize_dynpros
+  ENDMETHOD.
 
   METHOD add_tpool.
 
@@ -687,7 +687,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.                    "add_tpool
+  ENDMETHOD.
 
   METHOD read_tpool.
 
@@ -705,7 +705,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.                    "read_tpool
+  ENDMETHOD.
 
   METHOD deserialize_textpool.
 
@@ -761,7 +761,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         iv_name   = iv_program
         iv_delete = lv_delete ).
     ENDIF.
-  ENDMETHOD.                    "deserialize_textpool
+  ENDMETHOD.
 
   METHOD deserialize_cua.
 
@@ -828,7 +828,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       iv_type = 'CUAD'
       iv_name = iv_program_name ).
 
-  ENDMETHOD.                    "deserialize_cua
+  ENDMETHOD.
 
   METHOD check_prog_changed_since.
 
@@ -904,6 +904,6 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.  "check_prog_changed_since
+  ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_objects_program IMPLEMENTATION
+ENDCLASS.

@@ -16,7 +16,7 @@ CLASS zcl_abapgit_object_enho_wdyc IMPLEMENTATION.
 
   METHOD constructor.
     ms_item = is_item.
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
   METHOD zif_abapgit_object_enho~deserialize.
 
@@ -56,7 +56,7 @@ CLASS zcl_abapgit_object_enho_wdyc IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'error deserializing ENHO wdyconf' ).
     ENDTRY.
 
-  ENDMETHOD.                    "zif_abapgit_object_enho~deserialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object_enho~serialize.
 
@@ -95,6 +95,6 @@ CLASS zcl_abapgit_object_enho_wdyc IMPLEMENTATION.
     io_xml->add_xml( iv_name = 'ENHANCEMENT_DATA'
                      ii_xml = li_element ).
 
-  ENDMETHOD.                    "zif_abapgit_object_enho~serialize
+  ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_enho_wdyconf IMPLEMENTATION
+ENDCLASS.

@@ -43,7 +43,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
     CREATE OBJECT ro_menu.
     ro_menu->add( iv_txt = 'Run background logic'
                   iv_act = zif_abapgit_definitions=>gc_action-go_background_run ) ##NO_TEXT.
-  ENDMETHOD. "build_menu
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -63,7 +63,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
 
     ro_html->add( render_data( ) ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD render_data.

@@ -22,7 +22,7 @@ CLASS zcl_abapgit_object_wdya IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -52,7 +52,7 @@ CLASS zcl_abapgit_object_wdya IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
 
@@ -72,7 +72,7 @@ CLASS zcl_abapgit_object_wdya IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'WDYA, permission failure' ).
     ENDTRY.
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
   METHOD read.
 
@@ -110,7 +110,7 @@ CLASS zcl_abapgit_object_wdya IMPLEMENTATION.
       APPEND ls_prop TO et_properties.
     ENDDO.
 
-  ENDMETHOD.                    "read
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
 
@@ -126,7 +126,7 @@ CLASS zcl_abapgit_object_wdya IMPLEMENTATION.
     io_xml->add( iv_name = 'PROPERTIES'
                  ig_data = lt_properties ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
   METHOD save.
 
@@ -155,7 +155,7 @@ CLASS zcl_abapgit_object_wdya IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'error saving WDYA' ).
     ENDTRY.
 
-  ENDMETHOD.                    "save
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -172,7 +172,7 @@ CLASS zcl_abapgit_object_wdya IMPLEMENTATION.
           it_properties = lt_properties
           iv_package    = iv_package ).
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -208,7 +208,7 @@ CLASS zcl_abapgit_object_wdya IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'WDYA, error deleting' ).
     ENDTRY.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~jump.
 
@@ -219,7 +219,7 @@ CLASS zcl_abapgit_object_wdya IMPLEMENTATION.
         object_type   = ms_item-obj_type
         in_new_window = abap_true.
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
@@ -231,4 +231,4 @@ CLASS zcl_abapgit_object_wdya IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_wdya IMPLEMENTATION
+ENDCLASS.

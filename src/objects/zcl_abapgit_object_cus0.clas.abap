@@ -29,11 +29,11 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
 
     mv_img_activity = ms_item-obj_name.
 
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown.
@@ -41,7 +41,7 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~jump.
 
@@ -55,7 +55,7 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
 *      CHANGING
 *        img_activity     = mv_img_activity.
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
 
@@ -69,7 +69,7 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
 
     rv_bool = boolc( ls_message IS INITIAL ).
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -85,7 +85,7 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |error from delete CUS0 { mv_img_activity } S_CUS_IMG_ACTIVITY_DELETE| ).
     ENDIF.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
 
@@ -109,7 +109,7 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
     io_xml->add( iv_name = 'CUS0'
                  ig_data = ls_img_activity ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -134,7 +134,7 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
         i_description = ls_text
         i_tcode       = ls_img_activity-header-tcode.
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
@@ -146,4 +146,4 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_cus0 IMPLEMENTATION
+ENDCLASS.

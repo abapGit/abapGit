@@ -552,7 +552,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     TRANSLATE <ls_field>-value TO UPPER CASE.
     rv_folder_logic = <ls_field>-value.
 
-  ENDMETHOD.                    "popup_package_export
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_popups~popup_object.
@@ -657,7 +657,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     TRANSLATE <ls_field>-value TO UPPER CASE.
     ev_folder_logic = <ls_field>-value.
 
-  ENDMETHOD.                    "popup_package_export
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_popups~popup_to_confirm.
@@ -681,7 +681,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
     ENDIF.
 
-  ENDMETHOD.  "popup_to_confirm
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_popups~popup_to_create_package.
@@ -708,7 +708,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ELSE.
       ev_create = abap_false.
     ENDIF.
-  ENDMETHOD.  " popup_to_create_package
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_popups~popup_to_create_transp_branch.
@@ -780,7 +780,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
         txt1  = lv_line1
         txt2  = lv_line2.
 
-  ENDMETHOD.  " popup_to_inform.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_popups~popup_to_select_from_list.
@@ -999,7 +999,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     ENDWHILE.
 
-  ENDMETHOD.                    "repo_new_offline
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_popups~repo_popup.
@@ -1159,6 +1159,6 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       ev_name = to_upper( <ls_field>-value ).
     ENDIF.
 
-  ENDMETHOD.  "run_page_class_popup
+  ENDMETHOD.
 
 ENDCLASS.

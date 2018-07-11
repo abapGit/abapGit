@@ -76,7 +76,7 @@ CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
         zcx_abapgit_exception=>raise( lv_message ).
     ENDTRY.
 
-  ENDMETHOD.  "deserialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
 
@@ -120,7 +120,7 @@ CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
         zcx_abapgit_exception=>raise( lv_message ).
     ENDTRY.
 
-  ENDMETHOD.  "serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
 
@@ -139,7 +139,7 @@ CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
         rv_bool = abap_false.
     ENDTRY.
 
-  ENDMETHOD.  "exists
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
     DATA: lv_spot_name TYPE enhspotcompositename,
@@ -166,11 +166,11 @@ CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
         zcx_abapgit_exception=>raise( lv_message ).
     ENDTRY.
 
-  ENDMETHOD.  "delete
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.  "get_metadata
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~jump.
 
@@ -181,7 +181,7 @@ CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
         object_type   = 'ENSC'
         in_new_window = abap_true.
 
-  ENDMETHOD.  "jump
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
@@ -193,4 +193,4 @@ CLASS zcl_abapgit_object_ensc IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS. "zcl_abapgit_object_ensc
+ENDCLASS.

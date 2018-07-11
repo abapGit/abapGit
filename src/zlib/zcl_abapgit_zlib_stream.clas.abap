@@ -35,14 +35,14 @@ CLASS ZCL_ABAPGIT_ZLIB_STREAM IMPLEMENTATION.
 
     mv_compressed = iv_data.
 
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
 
   METHOD remaining.
 
     rv_length = xstrlen( mv_compressed ) + 1.
 
-  ENDMETHOD.                    "remaining
+  ENDMETHOD.
 
 
   METHOD take_bits.
@@ -70,12 +70,12 @@ CLASS ZCL_ABAPGIT_ZLIB_STREAM IMPLEMENTATION.
 
     ENDWHILE.
 
-  ENDMETHOD.                    "take_bits
+  ENDMETHOD.
 
 
   METHOD take_int.
 
     rv_int = zcl_abapgit_zlib_convert=>bits_to_int( take_bits( iv_length ) ).
 
-  ENDMETHOD.                    "take_int
+  ENDMETHOD.
 ENDCLASS.

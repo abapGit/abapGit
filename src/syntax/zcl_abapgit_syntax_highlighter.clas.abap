@@ -101,7 +101,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
       rv_line = lv_escaped.
     ENDIF.
 
-  ENDMETHOD.                    " apply_style
+  ENDMETHOD.
 
 
   METHOD create.
@@ -115,7 +115,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
       CLEAR ro_instance.
     ENDIF.
 
-  ENDMETHOD.                    " create.
+  ENDMETHOD.
 
 
   METHOD extend_matches.
@@ -152,7 +152,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
       APPEND ls_match TO ct_matches.
     ENDIF.
 
-  ENDMETHOD.                    " extend_matches
+  ENDMETHOD.
 
 
   METHOD format_line.
@@ -175,7 +175,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
       rv_line = rv_line && lv_chunk.
     ENDLOOP.
 
-  ENDMETHOD.                    " format_line
+  ENDMETHOD.
 
 
   METHOD parse_line.
@@ -209,7 +209,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
 
-  ENDMETHOD.                    " parse_line
+  ENDMETHOD.
 
 
   METHOD process_line.
@@ -232,5 +232,5 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
     rv_line = me->format_line( iv_line    = iv_line
                                it_matches = lt_matches ).
 
-  ENDMETHOD.                    " process_line
+  ENDMETHOD.
 ENDCLASS.

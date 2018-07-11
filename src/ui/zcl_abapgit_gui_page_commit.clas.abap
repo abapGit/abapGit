@@ -72,7 +72,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     ro_html->add( render_stage( ) ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD render_form.
@@ -160,7 +160,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     ro_html->add( '</form>' ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.    "render_form
+  ENDMETHOD.
 
 
   METHOD render_menu.
@@ -183,7 +183,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     ro_html->add( lo_toolbar->render( ) ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.      "render_menu
+  ENDMETHOD.
 
 
   METHOD render_stage.
@@ -219,7 +219,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     ro_html->add( '</table>' ).
 
-  ENDMETHOD.    "render_stage
+  ENDMETHOD.
 
 
   METHOD render_text_input.
@@ -241,7 +241,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     ro_html->add( |<input id="{ iv_name }" name="{ iv_name }" type="text"{ lv_attrs }>| ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  " render_text_input
+  ENDMETHOD.
 
 
   METHOD scripts.
@@ -249,7 +249,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     CREATE OBJECT ro_html.
     ro_html->add( 'setInitialFocus("comment");' ).
 
-  ENDMETHOD.    "scripts
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~on_event.

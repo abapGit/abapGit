@@ -83,7 +83,7 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
     ro_html->add( render_form( ) ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD render_form.
@@ -198,7 +198,7 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
     ro_html->add( '</form>' ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.    "render_form
+  ENDMETHOD.
 
 
   METHOD render_menu.
@@ -221,7 +221,7 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
     ro_html->add( lo_toolbar->render( ) ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.      "render_menu
+  ENDMETHOD.
 
 
   METHOD render_text_input.
@@ -243,7 +243,7 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
     ro_html->add( |<input id="{ iv_name }" name="{ iv_name }" type="text"{ lv_attrs }>| ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  " render_text_input
+  ENDMETHOD.
 
 
   METHOD scripts.
@@ -251,7 +251,7 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
     CREATE OBJECT ro_html.
     ro_html->add( 'setInitialFocus("tag_name");' ).
 
-  ENDMETHOD.    "scripts
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~on_event.

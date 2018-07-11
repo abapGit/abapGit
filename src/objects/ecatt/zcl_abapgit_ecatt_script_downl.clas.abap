@@ -441,7 +441,7 @@ CLASS zcl_abapgit_ecatt_script_downl IMPLEMENTATION.
             called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_BLOB_TO_TEMPLATE' ).
     ENDIF.
 
-  ENDMETHOD.                    "SET_BLOB_TO_TEMPLATE
+  ENDMETHOD.
 
 
   METHOD set_artmp_to_template.

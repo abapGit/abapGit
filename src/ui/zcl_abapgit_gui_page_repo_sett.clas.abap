@@ -59,7 +59,7 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
     super->constructor( ).
     ms_control-page_title = 'REPO SETTINGS'.
     mo_repo = io_repo.
-  ENDMETHOD.  " constructor.
+  ENDMETHOD.
 
 
   METHOD parse_post.

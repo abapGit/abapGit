@@ -28,7 +28,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG_RUN IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     ms_control-page_title = 'BACKGROUND_RUN'.
-  ENDMETHOD.  " constructor.
+  ENDMETHOD.
 
 
   METHOD render_content.
@@ -45,7 +45,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG_RUN IMPLEMENTATION.
     ENDLOOP.
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD run.

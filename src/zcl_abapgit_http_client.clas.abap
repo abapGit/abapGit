@@ -63,7 +63,7 @@ CLASS ZCL_ABAPGIT_HTTP_CLIENT IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |HTTP error code: { lv_code }, { lv_text }| ).
     ENDCASE.
 
-  ENDMETHOD.                                                "http_200
+  ENDMETHOD.
 
 
   METHOD close.
@@ -112,7 +112,7 @@ CLASS ZCL_ABAPGIT_HTTP_CLIENT IMPLEMENTATION.
       zcx_abapgit_exception=>raise( lv_text ).
     ENDIF.
 
-  ENDMETHOD.  "send_receive
+  ENDMETHOD.
 
 
   METHOD send_receive_close.
@@ -165,5 +165,5 @@ CLASS ZCL_ABAPGIT_HTTP_CLIENT IMPLEMENTATION.
       mo_digest->run( mi_client ).
     ENDIF.
 
-  ENDMETHOD.                    "set_headers
+  ENDMETHOD.
 ENDCLASS.

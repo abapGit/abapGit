@@ -142,7 +142,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
     APPEND ls_field TO ct.
 
-  ENDMETHOD.  "add_field
+  ENDMETHOD.
 
 
   METHOD dbcontent_decode.
@@ -164,7 +164,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
       rs_content-data_str = rs_content-data_str+1.
     ENDIF.
 
-  ENDMETHOD.                    "dbcontent_decode
+  ENDMETHOD.
 
 
   METHOD dbkey_decode.
@@ -176,7 +176,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     get_field( EXPORTING name = 'TYPE'  it = lt_fields CHANGING cv = rs_key-type ).
     get_field( EXPORTING name = 'VALUE' it = lt_fields CHANGING cv = rs_key-value ).
 
-  ENDMETHOD.                    "dbkey_decode
+  ENDMETHOD.
 
 
   METHOD dbkey_encode.
@@ -188,7 +188,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
-  ENDMETHOD.                    "dbkey_encode
+  ENDMETHOD.
 
 
   METHOD decode_bg_update.
@@ -206,7 +206,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
     ASSERT NOT rs_fields IS INITIAL.
 
-  ENDMETHOD.  "decode_bg_update
+  ENDMETHOD.
 
 
   METHOD dir_decode.
@@ -216,7 +216,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     lt_fields = parse_fields( iv_string ).
     get_field( EXPORTING name = 'PATH' it = lt_fields CHANGING cv = rv_path ).
 
-  ENDMETHOD.                    "dir_decode
+  ENDMETHOD.
 
 
   METHOD dir_encode.
@@ -225,7 +225,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     add_field( EXPORTING name = 'PATH' iv = iv_path CHANGING ct = lt_fields ).
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
-  ENDMETHOD.                    "dir_encode
+  ENDMETHOD.
 
 
   METHOD field_keys_to_upper.
@@ -250,7 +250,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
-  ENDMETHOD.                    "file_encode
+  ENDMETHOD.
 
 
   METHOD file_obj_decode.
@@ -274,7 +274,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
       get_field( EXPORTING name = 'OBJ_NAME' it = lt_fields CHANGING cv = eg_object ).
     ENDIF.
 
-  ENDMETHOD.                    "file_decode
+  ENDMETHOD.
 
 
   METHOD get_field.
@@ -299,7 +299,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
         ASSERT 0 = 1.
     ENDCASE.
 
-  ENDMETHOD.  "get_field
+  ENDMETHOD.
 
 
   METHOD jump_decode.
@@ -311,7 +311,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     get_field( EXPORTING name = 'TYPE' it = lt_fields CHANGING cv = ev_obj_type ).
     get_field( EXPORTING name = 'NAME' it = lt_fields CHANGING cv = ev_obj_name ).
 
-  ENDMETHOD.                    "jump_decode
+  ENDMETHOD.
 
 
   METHOD jump_encode.
@@ -324,7 +324,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
-  ENDMETHOD.                    "jump_encode
+  ENDMETHOD.
 
 
   METHOD obj_encode.
@@ -338,7 +338,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
-  ENDMETHOD.                    "obj_encode
+  ENDMETHOD.
 
 
   METHOD parse_commit_request.
@@ -368,7 +368,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     ASSERT <lv_body> IS ASSIGNED.
     REPLACE ALL OCCURRENCES OF lc_replace IN <lv_body> WITH zif_abapgit_definitions=>gc_newline.
 
-  ENDMETHOD.                    "parse_commit_request
+  ENDMETHOD.
 
 
   METHOD parse_fields.
@@ -405,7 +405,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     rt_fields = parse_fields( iv_string ).
     field_keys_to_upper( CHANGING ct_fields = rt_fields ).
 
-  ENDMETHOD.  " parse_fields.
+  ENDMETHOD.
 
 
   METHOD stage_decode.
@@ -419,7 +419,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
     ASSERT NOT ev_key IS INITIAL.
 
-  ENDMETHOD.  " stage_decode.
+  ENDMETHOD.
 
 
   METHOD unescape.
