@@ -269,8 +269,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       io_log                = io_log ).
 
 
-    zcl_abapgit_sap_package=>refresh_package_buffer( ).
-
     lt_filter = it_filter.
     lv_filter_exist = boolc( lines( lt_filter ) > 0 ).
 

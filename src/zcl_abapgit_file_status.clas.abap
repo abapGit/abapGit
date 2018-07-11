@@ -291,7 +291,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     " Try to get a unique package name for DEVC by using the path
     IF lv_type = 'DEVC'.
       ASSERT lv_name = 'PACKAGE'.
-      lv_name = zcl_abapgit_folder_logic=>path_to_package(
+      lv_name = zcl_abapgit_folder_logic=>get_instance( abap_true )->path_to_package(
         iv_top                  = iv_devclass
         io_dot                  = io_dot
         iv_create_if_not_exists = abap_false
@@ -313,6 +313,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
           ls_file     TYPE zif_abapgit_definitions=>ty_file_signature,
           lt_res_sort LIKE it_results,
           lt_item_idx LIKE it_results.
+    data: lo_folder_logic type ref to zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_res1> LIKE LINE OF it_results,
                    <ls_res2> LIKE LINE OF it_results.
@@ -353,10 +354,10 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     ENDLOOP.
 
     " Check that objects are created in package corresponding to folder
-    ZCL_ABAPGIT_SAP_PACKAGE=>refresh_package_buffer( ).
+    lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( abap_true ).
     LOOP AT it_results ASSIGNING <ls_res1>
         WHERE NOT package IS INITIAL AND NOT path IS INITIAL.
-      lv_path = zcl_abapgit_folder_logic=>package_to_path(
+      lv_path = lo_folder_logic->package_to_path(
         iv_top     = iv_top
         io_dot     = io_dot
         iv_package = <ls_res1>-package ).

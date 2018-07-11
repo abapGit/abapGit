@@ -173,6 +173,10 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   TYPES:
     ty_objects_tt TYPE STANDARD TABLE OF ty_object WITH DEFAULT KEY .
   TYPES:
+    tt_devc_buffer TYPE SORTED TABLE OF tdevc
+      WITH UNIQUE KEY devclass
+      WITH NON-UNIQUE SORTED KEY parent COMPONENTS parentcl.
+  TYPES:
     BEGIN OF ty_tadir,
       pgmid    TYPE tadir-pgmid,
       object   TYPE tadir-object,

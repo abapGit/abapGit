@@ -1,33 +1,68 @@
-CLASS zcl_abapgit_folder_logic DEFINITION
-  PUBLIC
-  CREATE PUBLIC .
+class ZCL_ABAPGIT_FOLDER_LOGIC definition
+  public
+  create public .
 
-  PUBLIC SECTION.
+public section.
 
-    CLASS-METHODS package_to_path
-      IMPORTING
-        !iv_top        TYPE devclass
-        !io_dot        TYPE REF TO zcl_abapgit_dot_abapgit
-        !iv_package    TYPE devclass
-      RETURNING
-        VALUE(rv_path) TYPE string
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS path_to_package
-      IMPORTING
-        !iv_top                  TYPE devclass
-        !io_dot                  TYPE REF TO zcl_abapgit_dot_abapgit
-        !iv_path                 TYPE string
-        !iv_create_if_not_exists TYPE abap_bool DEFAULT abap_true
-      RETURNING
-        VALUE(rv_package)        TYPE devclass
-      RAISING
-        zcx_abapgit_exception .
+  methods CONSTRUCTOR
+    importing
+      !IV_BUFFERED type ABAP_BOOL default ABAP_FALSE .
+  methods PACKAGE_TO_PATH
+    importing
+      !IV_TOP type DEVCLASS
+      !IO_DOT type ref to ZCL_ABAPGIT_DOT_ABAPGIT
+      !IV_PACKAGE type DEVCLASS
+    returning
+      value(RV_PATH) type STRING
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods PATH_TO_PACKAGE
+    importing
+      !IV_TOP type DEVCLASS
+      !IO_DOT type ref to ZCL_ABAPGIT_DOT_ABAPGIT
+      !IV_PATH type STRING
+      !IV_CREATE_IF_NOT_EXISTS type ABAP_BOOL default ABAP_TRUE
+    returning
+      value(RV_PACKAGE) type DEVCLASS
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods GET_INSTANCE
+    importing
+      !IV_BUFFERED type ABAP_BOOL default ABAP_FALSE
+    returning
+      value(RO_INSTANCE) type ref to ZCL_ABAPGIT_FOLDER_LOGIC .
+protected section.
+
+  data MV_BUFFERED type ABAP_BOOL .
+private section.
+
+  data MT_DEVC_BUFFER type ZIF_ABAPGIT_DEFINITIONS=>TT_DEVC_BUFFER .
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
+
+
+  METHOD constructor.
+    mv_buffered = iv_buffered.
+
+    IF mv_buffered = abap_true.
+      SELECT devclass parentcl
+        FROM tdevc
+        INTO CORRESPONDING FIELDS OF TABLE mt_devc_buffer.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_instance.
+
+    CREATE OBJECT ro_instance
+      EXPORTING
+        iv_buffered = iv_buffered.
+
+  ENDMETHOD.
 
 
   METHOD package_to_path.
@@ -41,7 +76,11 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
     IF iv_top = iv_package.
       rv_path = io_dot->get_starting_folder( ).
     ELSE.
-      lv_parentcl = zcl_abapgit_factory=>get_sap_package( iv_package )->read_parent( ).
+      IF mv_buffered = abap_true.
+        lv_parentcl = zcl_abapgit_factory=>get_sap_package( iv_package )->read_parent( mt_devc_buffer ).
+      ELSE.
+        lv_parentcl = zcl_abapgit_factory=>get_sap_package( iv_package )->read_parent( ).
+      ENDIF.
 
       IF lv_parentcl IS INITIAL.
         zcx_abapgit_exception=>raise( |error, expected parent package, { iv_package }| ).
@@ -110,7 +149,7 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
     lv_length  = strlen( io_dot->get_starting_folder( ) ).
     IF lv_length > strlen( iv_path ).
 * treat as not existing locally
-      RETURN.
+          RETURN.
     ENDIF.
     lv_path    = iv_path+lv_length.
     lv_parent  = lv_top.

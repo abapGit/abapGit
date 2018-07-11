@@ -195,6 +195,8 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
     DO lv_objects TIMES.
 
+      DATA(uindex) = sy-index.
+
       lv_x = lv_data(1).
       lv_type = get_type( lv_x ).
 
@@ -266,7 +268,8 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
       ENDIF.
       ls_object-type = lv_type.
       ls_object-data = lv_decompressed.
-      APPEND ls_object TO rt_objects.
+      ls_object-index = uindex.
+      INSERT ls_object INTO TABLE rt_objects.
     ENDDO.
 
 * check SHA1 at end of pack
@@ -338,11 +341,17 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
           lo_progress TYPE REF TO zcl_abapgit_progress,
           lt_deltas   LIKE ct_objects.
 
-
-    LOOP AT ct_objects INTO ls_object WHERE type = zif_abapgit_definitions=>gc_type-ref_d.
-      DELETE ct_objects INDEX sy-tabix.
-      APPEND ls_object TO lt_deltas.
+    LOOP AT ct_objects INTO ls_object
+      USING KEY type
+      WHERE type = zif_abapgit_definitions=>gc_type-ref_d.
+      DELETE ct_objects
+        INDEX sy-tabix
+        USING KEY type.
+      INSERT ls_object INTO TABLE lt_deltas.
     ENDLOOP.
+
+    "Restore correct Delta Order
+    sort lt_deltas by index.
 
     CREATE OBJECT lo_progress
       EXPORTING
@@ -502,7 +511,9 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
     lv_delta = is_object-data.
 
 * find base
-    READ TABLE ct_objects ASSIGNING <ls_object> WITH KEY sha1 = is_object-sha1.
+    READ TABLE ct_objects ASSIGNING <ls_object>
+      WITH KEY sha COMPONENTS
+        sha1 = is_object-sha1.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Base not found, { is_object-sha1 }| ).
     ELSEIF <ls_object>-type = zif_abapgit_definitions=>gc_type-ref_d.
@@ -576,7 +587,8 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
     ls_object-sha1 = lv_sha1.
     ls_object-type = <ls_object>-type.
     ls_object-data = lv_result.
-    APPEND ls_object TO ct_objects.
+    ls_object-index = <ls_object>-index.
+    INSERT ls_object INTO TABLE ct_objects.
 
   ENDMETHOD.                    "delta
 
@@ -710,6 +722,27 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
     rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
 
   ENDMETHOD.                    "encode_commit
+
+
+  METHOD encode_tag.
+
+    DATA: lv_string TYPE string,
+          lv_tmp    TYPE string,
+          lv_time   TYPE zcl_abapgit_time=>ty_unixtime.
+
+    lv_time = zcl_abapgit_time=>get( ).
+
+    lv_string = |object { is_tag-object }{ zif_abapgit_definitions=>gc_newline }|
+             && |type { is_tag-type }{ zif_abapgit_definitions=>gc_newline }|
+             && |tag { zcl_abapgit_tag=>remove_tag_prefix( is_tag-tag ) }{ zif_abapgit_definitions=>gc_newline }|
+             && |tagger { is_tag-tagger_name } <{ is_tag-tagger_email }> { lv_time }|
+             && |{ zif_abapgit_definitions=>gc_newline }|
+             && |{ zif_abapgit_definitions=>gc_newline }|
+             && |{ is_tag-message }|.
+
+    rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
+
+  ENDMETHOD.
 
 
   METHOD encode_tree.
@@ -926,25 +959,4 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Wrong Adler checksum' ).
     ENDIF.
   ENDMETHOD.
-
-  METHOD encode_tag.
-
-    DATA: lv_string TYPE string,
-          lv_tmp    TYPE string,
-          lv_time   TYPE zcl_abapgit_time=>ty_unixtime.
-
-    lv_time = zcl_abapgit_time=>get( ).
-
-    lv_string = |object { is_tag-object }{ zif_abapgit_definitions=>gc_newline }|
-             && |type { is_tag-type }{ zif_abapgit_definitions=>gc_newline }|
-             && |tag { zcl_abapgit_tag=>remove_tag_prefix( is_tag-tag ) }{ zif_abapgit_definitions=>gc_newline }|
-             && |tagger { is_tag-tagger_name } <{ is_tag-tagger_email }> { lv_time }|
-             && |{ zif_abapgit_definitions=>gc_newline }|
-             && |{ zif_abapgit_definitions=>gc_newline }|
-             && |{ is_tag-message }|.
-
-    rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
-
-  ENDMETHOD.
-
 ENDCLASS.

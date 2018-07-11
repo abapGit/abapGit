@@ -7,37 +7,38 @@ CLASS zcl_abapgit_tadir DEFINITION
   PUBLIC SECTION.
     INTERFACES zif_abapgit_tadir .
 
-  PRIVATE SECTION.
+private section.
 
-    METHODS exists
-      IMPORTING
-        !is_item         TYPE zif_abapgit_definitions=>ty_item
-      RETURNING
-        VALUE(rv_exists) TYPE abap_bool .
-    METHODS check_exists
-      IMPORTING
-        !it_tadir       TYPE zif_abapgit_definitions=>ty_tadir_tt
-      RETURNING
-        VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS build
-      IMPORTING
-        !iv_package            TYPE tadir-devclass
-        !iv_top                TYPE tadir-devclass
-        !io_dot                TYPE REF TO zcl_abapgit_dot_abapgit
-        !iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
-        !iv_only_local_objects TYPE abap_bool
-        !io_log                TYPE REF TO zcl_abapgit_log OPTIONAL
-      RETURNING
-        VALUE(rt_tadir)        TYPE zif_abapgit_definitions=>ty_tadir_tt
-      RAISING
-        zcx_abapgit_exception .
+  methods EXISTS
+    importing
+      !IS_ITEM type ZIF_ABAPGIT_DEFINITIONS=>TY_ITEM
+    returning
+      value(RV_EXISTS) type ABAP_BOOL .
+  methods CHECK_EXISTS
+    importing
+      !IT_TADIR type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT
+    returning
+      value(RT_TADIR) type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods BUILD
+    importing
+      !IV_PACKAGE type TADIR-DEVCLASS
+      !IV_TOP type TADIR-DEVCLASS
+      !IO_DOT type ref to ZCL_ABAPGIT_DOT_ABAPGIT
+      !IV_IGNORE_SUBPACKAGES type ABAP_BOOL default ABAP_FALSE
+      !IV_ONLY_LOCAL_OBJECTS type ABAP_BOOL
+      !IO_LOG type ref to ZCL_ABAPGIT_LOG optional
+      !IO_FOLDER_LOGIC type ref to ZCL_ABAPGIT_FOLDER_LOGIC optional
+    returning
+      value(RT_TADIR) type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_tadir IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
 
 
   METHOD build.
@@ -50,10 +51,10 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
           lt_srcsystem    TYPE RANGE OF tadir-srcsystem,
           ls_srcsystem    LIKE LINE OF lt_srcsystem,
           ls_exclude      LIKE LINE OF lt_excludes.
+    DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_tdevc> LIKE LINE OF lt_tdevc,
                    <ls_tadir> LIKE LINE OF rt_tadir.
-
 
     ls_exclude-sign = 'I'.
     ls_exclude-option = 'EQ'.
@@ -98,7 +99,14 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
     ENDIF.
 
     IF NOT io_dot IS INITIAL.
-      lv_path = zcl_abapgit_folder_logic=>package_to_path(
+      "Reuse given Folder Logic Instance
+      lo_folder_logic = io_folder_logic.
+      IF lo_folder_logic IS NOT BOUND.
+        "Get Folder Logic Instance
+        lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( abap_true ).
+      ENDIF.
+
+      lv_path = lo_folder_logic->package_to_path(
         iv_top     = iv_top
         io_dot     = io_dot
         iv_package = iv_package ).
@@ -126,7 +134,8 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
                         iv_only_local_objects = iv_only_local_objects
                         iv_top                = iv_top
                         io_dot                = io_dot
-                        io_log                = io_log ).
+                        io_log                = io_log
+                        io_folder_logic       = lo_folder_logic ). "Hand down existing folder logic instance
       APPEND LINES OF lt_tadir TO rt_tadir.
     ENDLOOP.
 
