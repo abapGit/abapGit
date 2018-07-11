@@ -336,7 +336,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
       WHERE pgmid = iv_pgmid
       AND object = 'SICF'
       AND obj_name LIKE lv_obj_name
-      ORDER BY PRIMARY KEY.
+      ORDER BY PRIMARY KEY. "#EC CI_GENBUFF
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       IF read_sicf_url( <ls_tadir>-obj_name ) = lv_hash.

@@ -7,60 +7,63 @@ CLASS zcl_abapgit_oo_class_new DEFINITION PUBLIC INHERITING FROM zcl_abapgit_oo_
       zif_abapgit_oo_object_fnc~deserialize_source REDEFINITION.
 
   PRIVATE SECTION.
-    CLASS-METHODS:
-      update_report
-        IMPORTING
-          iv_program        TYPE programm
-          it_source         TYPE string_table
-        RETURNING
-          VALUE(rv_updated) TYPE abap_bool
-        RAISING
-          zcx_abapgit_exception,
-      generate_classpool
-        IMPORTING
-          iv_name TYPE seoclsname
-        RAISING
-          zcx_abapgit_exception,
-      update_meta
-        IMPORTING
-          iv_name     TYPE seoclsname
-          iv_exposure TYPE seoexpose
-          it_source   TYPE rswsourcet
-        RAISING
-          zcx_abapgit_exception,
-      determine_method_include
-        IMPORTING
-          iv_name           TYPE seoclsname
-          iv_method         TYPE seocpdname
-        RETURNING
-          VALUE(rv_program) TYPE programm
-        RAISING
-          zcx_abapgit_exception,
-      init_scanner
-        IMPORTING
-          it_source         TYPE zif_abapgit_definitions=>ty_string_tt
-          iv_name           TYPE seoclsname
-        RETURNING
-          VALUE(ro_scanner) TYPE REF TO cl_oo_source_scanner_class
-        RAISING
-          zcx_abapgit_exception,
-      update_full_class_include
-        IMPORTING
-          iv_classname TYPE seoclsname
-          it_source    TYPE string_table
-          it_methods   TYPE cl_oo_source_scanner_class=>type_method_implementations,
-      create_report
-        IMPORTING
-          iv_program      TYPE programm
-          it_source       TYPE string_table
-          iv_extension    TYPE sychar02
-          iv_program_type TYPE sychar01
-          iv_version      TYPE r3state,
-      update_cs_number_of_methods
-        IMPORTING
-          iv_classname              TYPE seoclsname
-          iv_number_of_impl_methods TYPE i.
 
+    CLASS-METHODS update_source_index
+      IMPORTING
+        !iv_clsname TYPE csequence
+        !io_scanner TYPE REF TO cl_oo_source_scanner_class .
+    CLASS-METHODS update_report
+      IMPORTING
+        !iv_program       TYPE programm
+        !it_source        TYPE string_table
+      RETURNING
+        VALUE(rv_updated) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS generate_classpool
+      IMPORTING
+        !iv_name TYPE seoclsname
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS update_meta
+      IMPORTING
+        !iv_name     TYPE seoclsname
+        !iv_exposure TYPE seoexpose
+        !it_source   TYPE rswsourcet
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS determine_method_include
+      IMPORTING
+        !iv_name          TYPE seoclsname
+        !iv_method        TYPE seocpdname
+      RETURNING
+        VALUE(rv_program) TYPE programm
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS init_scanner
+      IMPORTING
+        !it_source        TYPE zif_abapgit_definitions=>ty_string_tt
+        !iv_name          TYPE seoclsname
+      RETURNING
+        VALUE(ro_scanner) TYPE REF TO cl_oo_source_scanner_class
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS update_full_class_include
+      IMPORTING
+        !iv_classname TYPE seoclsname
+        !it_source    TYPE string_table
+        !it_methods   TYPE cl_oo_source_scanner_class=>type_method_implementations .
+    CLASS-METHODS create_report
+      IMPORTING
+        !iv_program      TYPE programm
+        !it_source       TYPE string_table
+        !iv_extension    TYPE sychar02
+        !iv_program_type TYPE sychar01
+        !iv_version      TYPE r3state .
+    CLASS-METHODS update_cs_number_of_methods
+      IMPORTING
+        !iv_classname              TYPE seoclsname
+        !iv_number_of_impl_methods TYPE i .
 ENDCLASS.
 
 
@@ -298,6 +301,24 @@ CLASS ZCL_ABAPGIT_OO_CLASS_NEW IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD update_source_index.
+
+    DATA li_index_helper TYPE REF TO if_oo_source_pos_index_helper.
+
+    CREATE OBJECT li_index_helper TYPE cl_oo_source_pos_index_helper.
+
+    li_index_helper->create_index_with_scanner(
+      class_name = iv_clsname
+      version    = if_oo_clif_source=>co_version_active
+      scanner    = io_scanner ).
+
+    li_index_helper->delete_index(
+      class_name = iv_clsname
+      version    = if_oo_clif_source=>co_version_inactive ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_oo_object_fnc~create.
 * same as in super class, but with "version = seoc_version_active"
 
@@ -400,6 +421,10 @@ CLASS ZCL_ABAPGIT_OO_CLASS_NEW IMPLEMENTATION.
     update_full_class_include( iv_classname = is_key-clsname
                                it_source    = it_source
                                it_methods   = lt_methods ).
+
+    update_source_index(
+      iv_clsname = is_key-clsname
+      io_scanner = lo_scanner ).
 
 * TODO, perhaps move this call to somewhere else, to be done while cleaning up the CLAS deserialization
     zcl_abapgit_objects_activation=>add(

@@ -12,6 +12,11 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
         zcx_abapgit_exception .
+    METHODS delete_checks
+      RETURNING
+        VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_delete_checks
+      RAISING
+        zcx_abapgit_exception .
     METHODS constructor
       IMPORTING
         !is_data TYPE zif_abapgit_persistence=>ty_repo .
@@ -124,7 +129,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -201,6 +206,16 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     lt_requirements = get_dot_abapgit( )->get_data( )-requirements.
     rs_checks-requirements-met = zcl_abapgit_requirement_helper=>is_requirements_met(
       lt_requirements ).
+
+  ENDMETHOD.
+
+
+  METHOD delete_checks.
+
+    DATA: li_package TYPE REF TO zif_abapgit_sap_package.
+
+    li_package = zcl_abapgit_factory=>get_sap_package( get_package( ) ).
+    rs_checks-transport-required = li_package->are_changes_recorded_in_tr_req( ).
 
   ENDMETHOD.
 
