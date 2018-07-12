@@ -242,7 +242,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
     lv_primary = get_primary_table( ).
 
     LOOP AT mt_object_table ASSIGNING <ls_table>.
-      lv_where = get_where_clause( <ls_table>-tobj_name ).
+      lv_where = cl_abap_dyn_prg=>escape_quotes_str( get_where_clause( <ls_table>-tobj_name ) ).
       ASSERT NOT lv_where IS INITIAL.
 
       DELETE FROM (<ls_table>-tobj_name) WHERE (lv_where).
@@ -367,7 +367,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
 
     lv_primary = get_primary_table( ).
 
-    lv_where_clause = get_where_clause( lv_primary ).
+    lv_where_clause = cl_abap_dyn_prg=>escape_quotes_str( get_where_clause( lv_primary ) ).
 
     CREATE DATA lr_table_line TYPE (lv_primary).
     ASSIGN lr_table_line->* TO <lg_table_line>.
@@ -588,7 +588,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
       CREATE DATA lr_ref TYPE STANDARD TABLE OF (<ls_object_table>-tobj_name).
       ASSIGN lr_ref->* TO <lt_data>.
 
-      lv_where = get_where_clause( <ls_object_table>-tobj_name ).
+      lv_where = cl_abap_dyn_prg=>escape_quotes_str( get_where_clause( <ls_object_table>-tobj_name ) ).
 
       SELECT * FROM (<ls_object_table>-tobj_name)
         INTO TABLE <lt_data>
@@ -669,7 +669,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
         } contains more than one instance! | ).
     ENDIF.
 
-    lv_where = get_where_clause( lv_primary ).
+    lv_where = cl_abap_dyn_prg=>escape_quotes_str( get_where_clause( lv_primary ) ).
 
 *  validate that max one local instance was affected by the import
     SELECT COUNT(*) FROM (lv_primary) WHERE (lv_where).
