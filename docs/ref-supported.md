@@ -9,7 +9,7 @@ Type   | Description   | Supported
 :------------ | :------------ | ------------:
 ACID | Checkpoint Group | Yes
 AOBJ | Archiving Object | [#804](https://github.com/larshp/abapGit/issues/804)
-ASFC | Field Catalog | [#1578](https://github.com/larshp/abapGit/issues/1578)
+ASFC | Field Catalog | Yes
 ASIS | Archiving Information Structure | [#1579](https://github.com/larshp/abapGit/issues/1579)
 AUTH | Authorization Check Fields | Yes
 AVAS | Classification | [#1360](https://github.com/larshp/abapGit/issues/1360)

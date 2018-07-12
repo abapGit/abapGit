@@ -84,7 +84,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
           quit = if_aunit_constants=>no ).
     ENDLOOP.
 
-    zcl_abapgit_objects=>delete( lt_tadir ).
+    zcl_abapgit_objects=>delete( it_tadir = lt_tadir ).
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( c_package ).
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       lv_msg = |Not deleted properly { <ls_tadir>-object } { <ls_tadir>-obj_name }|.
@@ -166,7 +166,6 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
         IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
         RAISING   zcx_abapgit_exception,
       serialize_tabl FOR TESTING RAISING zcx_abapgit_exception,
-      serialize_enqu FOR TESTING RAISING zcx_abapgit_exception,
       serialize_shlp FOR TESTING RAISING zcx_abapgit_exception,
       serialize_view FOR TESTING RAISING zcx_abapgit_exception,
       serialize_auth FOR TESTING RAISING zcx_abapgit_exception,
@@ -187,18 +186,6 @@ ENDCLASS.                    "ltcl_serialize DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS ltcl_serialize IMPLEMENTATION.
-
-  METHOD serialize_enqu.
-
-    DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item.
-
-
-    ls_item-obj_type = 'ENQU'.
-    ls_item-obj_name = 'E_USR04'.
-
-    check( ls_item ).
-
-  ENDMETHOD.                    "lcl_abap_unit
 
   METHOD serialize_shlp.
 
