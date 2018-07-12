@@ -2,41 +2,41 @@ class ZCL_ABAPGIT_FOLDER_LOGIC definition
   public
   create public .
 
-public section.
+  public section.
 
-  methods CONSTRUCTOR
-    importing
-      !IV_BUFFERED type ABAP_BOOL default ABAP_FALSE .
-  methods PACKAGE_TO_PATH
-    importing
-      !IV_TOP type DEVCLASS
-      !IO_DOT type ref to ZCL_ABAPGIT_DOT_ABAPGIT
-      !IV_PACKAGE type DEVCLASS
-    returning
-      value(RV_PATH) type STRING
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods PATH_TO_PACKAGE
-    importing
-      !IV_TOP type DEVCLASS
-      !IO_DOT type ref to ZCL_ABAPGIT_DOT_ABAPGIT
-      !IV_PATH type STRING
-      !IV_CREATE_IF_NOT_EXISTS type ABAP_BOOL default ABAP_TRUE
-    returning
-      value(RV_PACKAGE) type DEVCLASS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  class-methods GET_INSTANCE
-    importing
-      !IV_BUFFERED type ABAP_BOOL default ABAP_FALSE
-    returning
-      value(RO_INSTANCE) type ref to ZCL_ABAPGIT_FOLDER_LOGIC .
-protected section.
+    methods CONSTRUCTOR
+      importing
+        !IV_BUFFERED type ABAP_BOOL default ABAP_FALSE .
+    methods PACKAGE_TO_PATH
+      importing
+        !IV_TOP type DEVCLASS
+        !IO_DOT type ref to ZCL_ABAPGIT_DOT_ABAPGIT
+        !IV_PACKAGE type DEVCLASS
+      returning
+        value(RV_PATH) type STRING
+      raising
+        ZCX_ABAPGIT_EXCEPTION .
+    methods PATH_TO_PACKAGE
+      importing
+        !IV_TOP type DEVCLASS
+        !IO_DOT type ref to ZCL_ABAPGIT_DOT_ABAPGIT
+        !IV_PATH type STRING
+        !IV_CREATE_IF_NOT_EXISTS type ABAP_BOOL default ABAP_TRUE
+      returning
+        value(RV_PACKAGE) type DEVCLASS
+      raising
+        ZCX_ABAPGIT_EXCEPTION .
+    class-methods GET_INSTANCE
+      importing
+        !IV_BUFFERED type ABAP_BOOL default ABAP_FALSE
+      returning
+        value(RO_INSTANCE) type ref to ZCL_ABAPGIT_FOLDER_LOGIC .
+  protected section.
 
-  data MV_BUFFERED type ABAP_BOOL .
-private section.
+    data MV_BUFFERED type ABAP_BOOL .
+  private section.
 
-  data MT_DEVC_BUFFER type ZIF_ABAPGIT_DEFINITIONS=>TT_DEVC_BUFFER .
+    data MT_DEVC_BUFFER type ZIF_ABAPGIT_DEFINITIONS=>TT_DEVC_BUFFER .
 ENDCLASS.
 
 
