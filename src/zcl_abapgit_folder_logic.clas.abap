@@ -33,13 +33,13 @@ CLASS zcl_abapgit_folder_logic DEFINITION
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_folder_logic .
 
   PROTECTED SECTION.
-  
+
     DATA mv_buffered TYPE abap_bool .
 
   PRIVATE SECTION.
 
     DATA mt_devc_buffer TYPE zif_abapgit_definitions=>tt_devc_buffer .
-    
+
 ENDCLASS.
 
 
