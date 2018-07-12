@@ -7,33 +7,33 @@ CLASS zcl_abapgit_tadir DEFINITION
   PUBLIC SECTION.
     INTERFACES zif_abapgit_tadir .
 
-private section.
+  private section.
 
-  methods EXISTS
-    importing
-      !IS_ITEM type ZIF_ABAPGIT_DEFINITIONS=>TY_ITEM
-    returning
-      value(RV_EXISTS) type ABAP_BOOL .
-  methods CHECK_EXISTS
-    importing
-      !IT_TADIR type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT
-    returning
-      value(RT_TADIR) type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods BUILD
-    importing
-      !IV_PACKAGE type TADIR-DEVCLASS
-      !IV_TOP type TADIR-DEVCLASS
-      !IO_DOT type ref to ZCL_ABAPGIT_DOT_ABAPGIT
-      !IV_IGNORE_SUBPACKAGES type ABAP_BOOL default ABAP_FALSE
-      !IV_ONLY_LOCAL_OBJECTS type ABAP_BOOL
-      !IO_LOG type ref to ZCL_ABAPGIT_LOG optional
-      !IO_FOLDER_LOGIC type ref to ZCL_ABAPGIT_FOLDER_LOGIC optional
-    returning
-      value(RT_TADIR) type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
+    methods EXISTS
+      importing
+        !IS_ITEM type ZIF_ABAPGIT_DEFINITIONS=>TY_ITEM
+      returning
+        value(RV_EXISTS) type ABAP_BOOL .
+    methods CHECK_EXISTS
+      importing
+        !IT_TADIR type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT
+      returning
+        value(RT_TADIR) type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT
+      raising
+        ZCX_ABAPGIT_EXCEPTION .
+    methods BUILD
+      importing
+        !IV_PACKAGE type TADIR-DEVCLASS
+        !IV_TOP type TADIR-DEVCLASS
+        !IO_DOT type ref to ZCL_ABAPGIT_DOT_ABAPGIT
+        !IV_IGNORE_SUBPACKAGES type ABAP_BOOL default ABAP_FALSE
+        !IV_ONLY_LOCAL_OBJECTS type ABAP_BOOL
+        !IO_LOG type ref to ZCL_ABAPGIT_LOG optional
+        !IO_FOLDER_LOGIC type ref to ZCL_ABAPGIT_FOLDER_LOGIC optional
+      returning
+        value(RT_TADIR) type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT
+      raising
+        ZCX_ABAPGIT_EXCEPTION .
 ENDCLASS.
 
 
