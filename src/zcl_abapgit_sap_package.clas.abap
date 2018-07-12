@@ -8,16 +8,16 @@ class ZCL_ABAPGIT_SAP_PACKAGE definition
 
     interfaces ZIF_ABAPGIT_SAP_PACKAGE .
 
-  methods CONSTRUCTOR
-    importing
-      !IV_PACKAGE type DEVCLASS .
-private section.
+    methods CONSTRUCTOR
+      importing
+        !IV_PACKAGE type DEVCLASS .
+  private section.
 
-  data MV_PACKAGE type DEVCLASS .
-  data:
-    mt_devc_buffer TYPE SORTED TABLE OF tdevc
-         WITH UNIQUE KEY devclass
-         WITH NON-UNIQUE SORTED KEY parent COMPONENTS parentcl .
+    data MV_PACKAGE type DEVCLASS .
+    data:
+      mt_devc_buffer TYPE SORTED TABLE OF tdevc
+           WITH UNIQUE KEY devclass
+           WITH NON-UNIQUE SORTED KEY parent COMPONENTS parentcl .
 ENDCLASS.
 
 
