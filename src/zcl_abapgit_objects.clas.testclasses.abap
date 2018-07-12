@@ -166,7 +166,6 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
         IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
         RAISING   zcx_abapgit_exception,
       serialize_tabl FOR TESTING RAISING zcx_abapgit_exception,
-      serialize_enqu FOR TESTING RAISING zcx_abapgit_exception,
       serialize_shlp FOR TESTING RAISING zcx_abapgit_exception,
       serialize_view FOR TESTING RAISING zcx_abapgit_exception,
       serialize_auth FOR TESTING RAISING zcx_abapgit_exception,
@@ -187,18 +186,6 @@ ENDCLASS.                    "ltcl_serialize DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS ltcl_serialize IMPLEMENTATION.
-
-  METHOD serialize_enqu.
-
-    DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item.
-
-
-    ls_item-obj_type = 'ENQU'.
-    ls_item-obj_name = 'E_USR04'.
-
-    check( ls_item ).
-
-  ENDMETHOD.                    "lcl_abap_unit
 
   METHOD serialize_shlp.
 
