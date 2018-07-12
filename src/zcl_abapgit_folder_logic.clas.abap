@@ -1,42 +1,45 @@
-class ZCL_ABAPGIT_FOLDER_LOGIC definition
-  public
-  create public .
+CLASS zcl_abapgit_folder_logic DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
 
-  public section.
+  PUBLIC SECTION.
 
-    methods CONSTRUCTOR
-      importing
-        !IV_BUFFERED type ABAP_BOOL default ABAP_FALSE .
-    methods PACKAGE_TO_PATH
-      importing
-        !IV_TOP type DEVCLASS
-        !IO_DOT type ref to ZCL_ABAPGIT_DOT_ABAPGIT
-        !IV_PACKAGE type DEVCLASS
-      returning
-        value(RV_PATH) type STRING
-      raising
-        ZCX_ABAPGIT_EXCEPTION .
-    methods PATH_TO_PACKAGE
-      importing
-        !IV_TOP type DEVCLASS
-        !IO_DOT type ref to ZCL_ABAPGIT_DOT_ABAPGIT
-        !IV_PATH type STRING
-        !IV_CREATE_IF_NOT_EXISTS type ABAP_BOOL default ABAP_TRUE
-      returning
-        value(RV_PACKAGE) type DEVCLASS
-      raising
-        ZCX_ABAPGIT_EXCEPTION .
-    class-methods GET_INSTANCE
-      importing
-        !IV_BUFFERED type ABAP_BOOL default ABAP_FALSE
-      returning
-        value(RO_INSTANCE) type ref to ZCL_ABAPGIT_FOLDER_LOGIC .
-  protected section.
+    METHODS constructor
+      IMPORTING
+        !iv_buffered TYPE abap_bool DEFAULT abap_false .
+    METHODS package_to_path
+      IMPORTING
+        !iv_top        TYPE devclass
+        !io_dot        TYPE REF TO zcl_abapgit_dot_abapgit
+        !iv_package    TYPE devclass
+      RETURNING
+        VALUE(rv_path) TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    METHODS path_to_package
+      IMPORTING
+        !iv_top                  TYPE devclass
+        !io_dot                  TYPE REF TO zcl_abapgit_dot_abapgit
+        !iv_path                 TYPE string
+        !iv_create_if_not_exists TYPE abap_bool DEFAULT abap_true
+      RETURNING
+        VALUE(rv_package)        TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS get_instance
+      IMPORTING
+        !iv_buffered       TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(ro_instance) TYPE REF TO zcl_abapgit_folder_logic .
 
-    data MV_BUFFERED type ABAP_BOOL .
-  private section.
+  PROTECTED SECTION.
+  
+    DATA mv_buffered TYPE abap_bool .
 
-    data MT_DEVC_BUFFER type ZIF_ABAPGIT_DEFINITIONS=>TT_DEVC_BUFFER .
+  PRIVATE SECTION.
+
+    DATA mt_devc_buffer TYPE zif_abapgit_definitions=>tt_devc_buffer .
+    
 ENDCLASS.
 
 
