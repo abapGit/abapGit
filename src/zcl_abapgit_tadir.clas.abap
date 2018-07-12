@@ -7,33 +7,33 @@ CLASS zcl_abapgit_tadir DEFINITION
   PUBLIC SECTION.
     INTERFACES zif_abapgit_tadir .
 
-  private section.
+  PRIVATE SECTION.
 
-    methods EXISTS
-      importing
-        !IS_ITEM type ZIF_ABAPGIT_DEFINITIONS=>TY_ITEM
-      returning
-        value(RV_EXISTS) type ABAP_BOOL .
-    methods CHECK_EXISTS
-      importing
-        !IT_TADIR type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT
-      returning
-        value(RT_TADIR) type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT
-      raising
-        ZCX_ABAPGIT_EXCEPTION .
-    methods BUILD
-      importing
-        !IV_PACKAGE type TADIR-DEVCLASS
-        !IV_TOP type TADIR-DEVCLASS
-        !IO_DOT type ref to ZCL_ABAPGIT_DOT_ABAPGIT
-        !IV_IGNORE_SUBPACKAGES type ABAP_BOOL default ABAP_FALSE
-        !IV_ONLY_LOCAL_OBJECTS type ABAP_BOOL
-        !IO_LOG type ref to ZCL_ABAPGIT_LOG optional
-        !IO_FOLDER_LOGIC type ref to ZCL_ABAPGIT_FOLDER_LOGIC optional
-      returning
-        value(RT_TADIR) type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT
-      raising
-        ZCX_ABAPGIT_EXCEPTION .
+    METHODS exists
+      IMPORTING
+        !is_item         TYPE zif_abapgit_definitions=>ty_item
+      RETURNING
+        VALUE(rv_exists) TYPE abap_bool .
+    METHODS check_exists
+      IMPORTING
+        !it_tadir       TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RETURNING
+        VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS build
+      IMPORTING
+        !iv_package            TYPE tadir-devclass
+        !iv_top                TYPE tadir-devclass
+        !io_dot                TYPE REF TO zcl_abapgit_dot_abapgit
+        !iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
+        !iv_only_local_objects TYPE abap_bool
+        !io_log                TYPE REF TO zcl_abapgit_log OPTIONAL
+        !io_folder_logic       TYPE REF TO zcl_abapgit_folder_logic OPTIONAL
+      RETURNING
+        VALUE(rt_tadir)        TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
