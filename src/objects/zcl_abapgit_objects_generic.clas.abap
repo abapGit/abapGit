@@ -554,7 +554,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
         CONCATENATE lv_where_statement 'AND' INTO lv_where_statement
           SEPARATED BY space.
       ENDIF.
-      CONCATENATE '''' ls_objkey-value '''' INTO lv_value128.
+      "CONCATENATE '''' ls_objkey-value '''' INTO lv_value128.
+      lv_value128 = cl_abap_dyn_prg=>quote( ls_objkey-value ).
       CONCATENATE lv_where_statement <ls_table_field>-fieldname '='
         lv_value128 INTO lv_where_statement SEPARATED BY space.
       lv_key_pos = lv_key_pos + 1.
@@ -588,7 +589,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
       CREATE DATA lr_ref TYPE STANDARD TABLE OF (<ls_object_table>-tobj_name).
       ASSIGN lr_ref->* TO <lt_data>.
 
-      lv_where = CL_ABAP_DYN_PRG=>escape_quotes_str( get_where_clause( <ls_object_table>-tobj_name ) ).
+      lv_where = get_where_clause( <ls_object_table>-tobj_name ).
 
       SELECT * FROM (<ls_object_table>-tobj_name)
         INTO TABLE <lt_data>
