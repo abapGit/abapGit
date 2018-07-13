@@ -313,7 +313,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
           ls_file     TYPE zif_abapgit_definitions=>ty_file_signature,
           lt_res_sort LIKE it_results,
           lt_item_idx LIKE it_results.
-    data: lo_folder_logic type ref to zcl_abapgit_folder_logic.
+    DATA: lo_folder_logic type ref to zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_res1> LIKE LINE OF it_results,
                    <ls_res2> LIKE LINE OF it_results.
