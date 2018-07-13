@@ -389,8 +389,11 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       lo_xml->read( EXPORTING iv_name = 'PROGDIR'
                     CHANGING cg_data = ls_progdir ).
 
-      IF rv_abap_version IS INITIAL.
+      IF ls_progdir-uccheck IS INITIAL .
+        CONTINUE.
+      ELSEIF rv_abap_version IS INITIAL.
         rv_abap_version = ls_progdir-uccheck.
+        CONTINUE.
       ELSEIF rv_abap_version NE ls_progdir-uccheck.
 *** All includes need to have the same ABAP language version
         zcx_abapgit_exception=>raise( 'different ABAP Language Versions' ).
