@@ -393,7 +393,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
         rv_abap_version = ls_progdir-uccheck.
       ELSEIF rv_abap_version NE ls_progdir-uccheck.
 *** All includes need to have the same ABAP language version
-        zcx_abapgit_exception=>raise( 'different ABAP Language Versions' ).
+*        zcx_abapgit_exception=>raise( 'different ABAP Language Versions' ).
       ENDIF.
     ENDLOOP.
 
