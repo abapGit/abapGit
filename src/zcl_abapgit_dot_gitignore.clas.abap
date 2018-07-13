@@ -89,8 +89,7 @@ CLASS zcl_abapgit_dot_gitignore IMPLEMENTATION.
 
   METHOD from_text.
 
-    SPLIT iv_text AT cl_abap_char_utilities=>cr_lf
-                  INTO TABLE rt_data.
+    rt_data = zcl_abapgit_convert=>split_string( iv_text ).
 
   ENDMETHOD.
 
@@ -124,7 +123,7 @@ CLASS zcl_abapgit_dot_gitignore IMPLEMENTATION.
 
       lv_pattern = <lv_pattern>.
 
-      IF lv_pattern(1) <> '/'. " root
+      IF lv_pattern(1) <> zif_abapgit_definitions=>gc_root_dir.
         lv_pattern = |*{ lv_pattern }|.
       ENDIF.
 

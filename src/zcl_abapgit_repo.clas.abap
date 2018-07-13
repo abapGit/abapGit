@@ -123,25 +123,46 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA mv_last_serialization TYPE timestamp .
     DATA ms_data TYPE zif_abapgit_persistence=>ty_repo .
 
-    METHODS set
-      IMPORTING
-        !iv_sha1           TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
-        !it_checksums      TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
-        !iv_url            TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
-        !iv_branch_name    TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
-        !iv_head_branch    TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
-        !iv_offline        TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
-        !is_dot_abapgit    TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL
-        !it_dot_gitignore  TYPE zif_abapgit_definitions=>tty_dot_gitignore OPTIONAL
-        !is_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings OPTIONAL
-      RAISING
-        zcx_abapgit_exception .
+    METHODS:
+      set
+        IMPORTING
+          iv_sha1           TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
+          it_checksums      TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
+          iv_url            TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
+          iv_branch_name    TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
+          iv_head_branch    TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
+          iv_offline        TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
+          is_dot_abapgit    TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL
+          it_dot_gitignore  TYPE zif_abapgit_definitions=>tty_dot_gitignore OPTIONAL
+          is_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings OPTIONAL
+        RAISING
+          zcx_abapgit_exception.
+
+  PRIVATE SECTION.
+    METHODS:
+      refresh_dot_gitignore
+        RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_repo IMPLEMENTATION.
+
+  METHOD refresh_dot_gitignore.
+
+    DATA: lo_persistence_repo TYPE REF TO zcl_abapgit_persistence_repo.
+
+    CREATE OBJECT lo_persistence_repo.
+
+    TRY.
+        ms_data-dot_gitignore = lo_persistence_repo->read( ms_data-key )-dot_gitignore.
+
+      CATCH zcx_abapgit_not_found INTO DATA(lx_error).
+        "ignore
+    ENDTRY.
+
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -471,6 +492,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       CLEAR: mv_last_serialization, mt_local.
     ENDIF.
 
+    refresh_dot_gitignore( ).
+
   ENDMETHOD.                    "refresh
 
 
@@ -670,8 +693,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
     READ TABLE mt_remote ASSIGNING <ls_remote>
-      WITH KEY path = zif_abapgit_definitions=>gc_root_dir
-      filename = zif_abapgit_definitions=>gc_dot_gitignore.
+                         WITH KEY path     = zif_abapgit_definitions=>gc_root_dir
+                                  filename = zif_abapgit_definitions=>gc_dot_gitignore.
     IF sy-subrc = 0.
       ro_dot_gitignore = zcl_abapgit_dot_gitignore=>deserialize( <ls_remote>-data ).
       set_dot_gitignore( ro_dot_gitignore ).

@@ -51,7 +51,12 @@ CLASS zcl_abapgit_file_status DEFINITION
                   io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
         EXPORTING es_item     TYPE zif_abapgit_definitions=>ty_item
                   ev_is_xml   TYPE abap_bool
-        RAISING   zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception,
+      is_ignored
+        IMPORTING io_dot_abapgit       TYPE REF TO zcl_abapgit_dot_abapgit
+                  io_dot_gitignore     TYPE REF TO zcl_abapgit_dot_gitignore
+                  is_result            TYPE zif_abapgit_definitions=>ty_result
+        RETURNING VALUE(rv_is_ignored) TYPE abap_bool.
 
 ENDCLASS.
 
@@ -412,13 +417,9 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     LOOP AT rt_results ASSIGNING <ls_result>.
       lv_index = sy-tabix.
 
-      IF lo_dot_abapgit->is_ignored(
-          iv_path     = <ls_result>-path
-          iv_filename = <ls_result>-filename ) = abap_true
-      OR ( lo_dot_gitignore->is_ignored(
-             iv_path     = <ls_result>-path
-             iv_filename = <ls_result>-filename ) = abap_true
-          AND <ls_result>-lstate <> 'M' ). " only ignore if object doesn't exist in remote
+      IF is_ignored( io_dot_abapgit   = lo_dot_abapgit
+                     io_dot_gitignore = lo_dot_gitignore
+                     is_result        = <ls_result> ) = abap_true.
 
         DELETE rt_results INDEX lv_index.
         CONTINUE.
@@ -434,4 +435,19 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       iv_top     = io_repo->get_package( ) ).
 
   ENDMETHOD.  "status
+
+  METHOD is_ignored.
+
+    IF io_dot_abapgit->is_ignored( iv_path     = is_result-path
+                                   iv_filename = is_result-filename ) = abap_true
+    OR ( io_dot_gitignore->is_ignored( iv_path     = is_result-path
+                                       iv_filename = is_result-filename ) = abap_true
+           AND is_result-lstate <> 'M' ). " only ignore if object doesn't exist in remote
+
+      rv_is_ignored = abap_true.
+
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

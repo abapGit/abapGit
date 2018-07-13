@@ -21,7 +21,18 @@ CLASS zcl_abapgit_stage_logic DEFINITION
                   it_all_remote_files TYPE zif_abapgit_definitions=>ty_files_tt
         CHANGING  cs_files            TYPE zif_abapgit_definitions=>ty_stage_files,
       remove_identical
-        CHANGING cs_files TYPE zif_abapgit_definitions=>ty_stage_files.
+        CHANGING cs_files TYPE zif_abapgit_definitions=>ty_stage_files,
+      remove_dot_abapgit
+        IMPORTING
+          io_repo  TYPE REF TO zcl_abapgit_repo_online
+        CHANGING
+          cs_files TYPE zif_abapgit_definitions=>ty_stage_files,
+      remove_dot_gitignore
+        IMPORTING
+          io_repo             TYPE REF TO zcl_abapgit_repo_online
+          it_all_remote_files TYPE zif_abapgit_definitions=>ty_files_tt
+        CHANGING
+          cs_files            TYPE zif_abapgit_definitions=>ty_stage_files.
 
 ENDCLASS.
 
@@ -86,11 +97,20 @@ CLASS zcl_abapgit_stage_logic IMPLEMENTATION.
 
   METHOD remove_ignored.
 
+    remove_dot_abapgit( EXPORTING io_repo  = io_repo
+                        CHANGING  cs_files = cs_files ).
+
+    remove_dot_gitignore( EXPORTING io_repo             = io_repo
+                                    it_all_remote_files = it_all_remote_files
+                          CHANGING  cs_files            = cs_files  ).
+
+  ENDMETHOD.
+
+  METHOD remove_dot_abapgit.
+
     DATA: lv_index TYPE i.
 
-    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF cs_files-remote,
-                   <ls_local>  TYPE zif_abapgit_definitions=>ty_file_item.
-
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF cs_files-remote.
 
     LOOP AT cs_files-remote ASSIGNING <ls_remote>.
       lv_index = sy-tabix.
@@ -106,6 +126,15 @@ CLASS zcl_abapgit_stage_logic IMPLEMENTATION.
       ENDIF.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD remove_dot_gitignore.
+
+    DATA: lv_index TYPE i.
+
+    FIELD-SYMBOLS: <ls_local>  TYPE zif_abapgit_definitions=>ty_file_item.
 
     LOOP AT cs_files-local ASSIGNING <ls_local>.
       lv_index = sy-tabix.
@@ -127,4 +156,5 @@ CLASS zcl_abapgit_stage_logic IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
 ENDCLASS.
