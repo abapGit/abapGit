@@ -14,10 +14,6 @@ CLASS zcl_abapgit_sap_package DEFINITION
   PRIVATE SECTION.
 
     DATA mv_package TYPE devclass .
-    DATA:
-      mt_devc_buffer TYPE SORTED TABLE OF tdevc
-           WITH UNIQUE KEY devclass
-           WITH NON-UNIQUE SORTED KEY parent COMPONENTS parentcl .
 ENDCLASS.
 
 
@@ -269,10 +265,11 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
     DATA: lt_list     LIKE rt_list,
           lv_devclass LIKE LINE OF rt_list.
+    FIELD_SYMBOLS: <st_devc> LIKE LINE OF it_devc_info.
 
     IF it_devc_info is SUPPLIED.
 
-      LOOP AT it_devc_info ASSIGNING FIELD-SYMBOL(<st_devc>)
+      LOOP AT it_devc_info ASSIGNING <st_devc>
         USING KEY parent
         WHERE parentcl = mv_package.
 
@@ -302,7 +299,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
     DATA: lt_list   LIKE rt_list,
           lv_parent TYPE tdevc-parentcl.
-    FIELD-SYMBOLS: <st_devc> LIKE LINE OF mt_devc_buffer.
+    FIELD-SYMBOLS: <st_devc> LIKE LINE OF it_devc_info.
 
     APPEND mv_package TO rt_list.
 
@@ -334,7 +331,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
   METHOD zif_abapgit_sap_package~read_parent.
 
-    FIELD-SYMBOLS: <st_devc> LIKE LINE OF mt_devc_buffer.
+    FIELD-SYMBOLS: <st_devc> LIKE LINE OF it_devc_info.
 
 
     IF it_devc_info is SUPPLIED.
