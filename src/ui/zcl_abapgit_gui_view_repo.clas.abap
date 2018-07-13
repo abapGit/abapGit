@@ -212,6 +212,9 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
                          iv_act = |{ zif_abapgit_definitions=>gc_action-repo_refresh_checksums }?{ lv_key }|
                          iv_opt = lv_crossout ).
 
+    lo_tb_advanced->add( iv_txt = '.gitignore'
+                         iv_act = |{ zif_abapgit_definitions=>gc_action-repo_dot_git_ignore }?{ lv_key }| ).
+
     lo_tb_advanced->add( iv_txt = 'Remove'
                          iv_act = |{ zif_abapgit_definitions=>gc_action-repo_remove }?{ lv_key }| ).
 

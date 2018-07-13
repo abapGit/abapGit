@@ -359,14 +359,19 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     DELETE lt_local " Remove non-code related files except .abapgit
       WHERE item IS INITIAL
-      AND NOT ( file-path     = zif_abapgit_definitions=>gc_root_dir
-      AND       file-filename = zif_abapgit_definitions=>gc_dot_abapgit ).
+      AND NOT (     file-path     = zif_abapgit_definitions=>gc_root_dir
+                AND file-filename = zif_abapgit_definitions=>gc_dot_abapgit )
+      AND NOT (     file-path     = zif_abapgit_definitions=>gc_root_dir
+                AND file-filename = zif_abapgit_definitions=>gc_dot_gitignore ) .
 
     SORT lt_local BY item.
     SORT lt_remote BY path filename.
 
     LOOP AT lt_local ASSIGNING <ls_local>.
-      IF ls_last_item <> <ls_local>-item OR sy-tabix = 1. " First or New item reached ?
+      IF ls_last_item <> <ls_local>-item
+      OR sy-tabix = 1 " First or New item reached ?
+      OR <ls_local>-file-filename = zif_abapgit_definitions=>gc_dot_abapgit
+      OR <ls_local>-file-filename = zif_abapgit_definitions=>gc_dot_gitignore.  " item is initial for dot files...
         APPEND INITIAL LINE TO lt_checksums ASSIGNING <ls_checksum>.
         <ls_checksum>-item = <ls_local>-item.
         ls_last_item       = <ls_local>-item.

@@ -310,6 +310,11 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
           EXPORTING
             io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+      WHEN zif_abapgit_definitions=>gc_action-repo_dot_git_ignore.
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_gitignore
+          EXPORTING
+            io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
 
         " ZIP services actions
       WHEN zif_abapgit_definitions=>gc_action-zip_import.                      " Import repo from ZIP

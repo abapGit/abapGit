@@ -7,11 +7,23 @@ CLASS zcl_abapgit_dot_gitignore DEFINITION
     CLASS-METHODS:
       deserialize
         IMPORTING
-          !iv_xstr              TYPE xstring
+          iv_xstr               TYPE xstring
         RETURNING
           VALUE(ro_dot_abapgit) TYPE REF TO zcl_abapgit_dot_gitignore
         RAISING
-          zcx_abapgit_exception .
+          zcx_abapgit_exception,
+
+      to_text
+        IMPORTING
+          it_gitignore   TYPE stringtab
+        RETURNING
+          VALUE(rv_text) TYPE string,
+
+      from_text
+        IMPORTING
+          iv_text        TYPE string
+        RETURNING
+          VALUE(rt_data) TYPE zif_abapgit_definitions=>tty_dot_gitignore.
 
     METHODS:
       constructor
@@ -42,22 +54,8 @@ CLASS zcl_abapgit_dot_gitignore DEFINITION
           zcx_abapgit_exception .
 
   PRIVATE SECTION.
-    CLASS-METHODS:
-      from_text
-        IMPORTING
-          iv_text        TYPE string
-        RETURNING
-          VALUE(rt_data) TYPE zif_abapgit_definitions=>tty_dot_gitignore.
-
     DATA:
       mt_gitignore TYPE zif_abapgit_definitions=>tty_dot_gitignore.
-
-    METHODS:
-      to_text
-        IMPORTING
-          it_gitignore   TYPE stringtab
-        RETURNING
-          VALUE(rv_text) TYPE string.
 
 ENDCLASS.
 
@@ -156,9 +154,7 @@ CLASS zcl_abapgit_dot_gitignore IMPLEMENTATION.
 
     CONCATENATE LINES OF it_gitignore
                 INTO rv_text
-                SEPARATED BY cl_abap_char_utilities=>cr_lf.
-
-    rv_text = rv_text && cl_abap_char_utilities=>cr_lf.
+                SEPARATED BY cl_abap_char_utilities=>newline.
 
   ENDMETHOD.
 ENDCLASS.

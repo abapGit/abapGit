@@ -403,6 +403,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       repo_transport_to_branch TYPE string VALUE 'repo_transport_to_branch',
       repo_syntax_check        TYPE string VALUE 'repo_syntax_check',
       repo_code_inspector      TYPE string VALUE 'repo_code_inspector',
+      repo_dot_git_ignore      TYPE string VALUE 'repo_dot_git_ignore',
 
       abapgit_home             TYPE string VALUE 'abapgit_home',
       abapgit_wiki             TYPE string VALUE 'abapgit_wiki',
