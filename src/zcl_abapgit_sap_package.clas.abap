@@ -265,7 +265,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
     DATA: lt_list     LIKE rt_list,
           lv_devclass LIKE LINE OF rt_list.
-    FIELD_SYMBOLS: <st_devc> LIKE LINE OF it_devc_info.
+    FIELD-SYMBOLS: <st_devc> LIKE LINE OF it_devc_info.
 
     IF it_devc_info is SUPPLIED.
 
