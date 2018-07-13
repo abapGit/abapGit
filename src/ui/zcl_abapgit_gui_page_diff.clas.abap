@@ -1,7 +1,7 @@
-class ZCL_ABAPGIT_GUI_PAGE_DIFF definition
-  public
-  final
-  create public INHERITING FROM zcl_abapgit_gui_page.
+CLASS zcl_abapgit_gui_page_diff DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
 
@@ -96,10 +96,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       ls_r_dummy LIKE LINE OF it_remote ##NEEDED,
       ls_l_dummy LIKE LINE OF it_local  ##NEEDED.
 
-
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_remote,
                    <ls_local>  LIKE LINE OF it_local,
                    <ls_diff>   LIKE LINE OF mt_diff_files.
+
 
     READ TABLE it_remote ASSIGNING <ls_remote>
       WITH KEY filename = is_status-filename
@@ -171,7 +171,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-  ENDMETHOD.  "append_diff
+  ENDMETHOD.
 
 
   METHOD build_menu.
@@ -233,7 +233,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ro_menu->add( iv_txt = 'Split/Unified view'
                   iv_act = c_actions-toggle_unified ) ##NO_TEXT.
 
-  ENDMETHOD.  " build_menu.
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -336,7 +336,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       ENDIF.
     ENDDO.
 
-  ENDMETHOD.  " is_binary.
+  ENDMETHOD.
 
 
   METHOD render_beacon.
@@ -366,7 +366,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ro_html->add( '</tr>' ).
     ro_html->add( '</thead>' ).
 
-  ENDMETHOD.  " render_beacon.
+  ENDMETHOD.
 
 
   METHOD render_content.
@@ -392,7 +392,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ENDLOOP.
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD render_diff.
@@ -420,7 +420,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     ro_html->add( '</div>' ).                               "#EC NOTEXT
 
-  ENDMETHOD.  " render_diff
+  ENDMETHOD.
 
 
   METHOD render_diff_head.
@@ -443,7 +443,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       ro_html->add( |<span class="diff_banner diff_upd">~ { ls_stats-update }</span>| ).
     ENDIF.
 
-    ro_html->add( |<span class="diff_name">{ is_diff-filename }</span>| ). "#EC NOTEXT
+    ro_html->add( |<span class="diff_name">{ is_diff-path }{ is_diff-filename }</span>| ). "#EC NOTEXT
     ro_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state(
       iv1 = is_diff-lstate
       iv2 = is_diff-rstate ) ).
@@ -509,7 +509,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       ro_html->add( render_line_unified( ) ). " Release delayed lines
     ENDIF.
 
-  ENDMETHOD.  "render_lines
+  ENDMETHOD.
 
 
   METHOD render_line_split.
@@ -557,7 +557,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ENDIF.
     ro_html->add( '</tr>' ).                                "#EC NOTEXT
 
-  ENDMETHOD. "render_line_split
+  ENDMETHOD.
 
 
   METHOD render_line_unified.
@@ -604,7 +604,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ENDCASE.
     ro_html->add( '</tr>' ).                                "#EC NOTEXT
 
-  ENDMETHOD. "render_line_unified
+  ENDMETHOD.
 
 
   METHOD render_table_head.
@@ -628,7 +628,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ro_html->add( '</tr>' ).                                "#EC NOTEXT
     ro_html->add( '</thead>' ).                             "#EC NOTEXT
 
-  ENDMETHOD.  " render_table_head.
+  ENDMETHOD.
 
 
   METHOD scripts.
@@ -645,7 +645,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ro_html->add( '  }' ).
     ro_html->add( '});' ).
 
-  ENDMETHOD.  "scripts
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~on_event.
@@ -656,5 +656,5 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
         ev_state   = zif_abapgit_definitions=>gc_event_state-re_render.
     ENDCASE.
 
-  ENDMETHOD. "lif_gui_page~on_event
+  ENDMETHOD.
 ENDCLASS.
