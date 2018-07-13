@@ -20,7 +20,10 @@ CLASS zcl_abapgit_object_cus0 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_OBJECT_CUS0 IMPLEMENTATION.
+
 
   METHOD constructor.
 
@@ -31,45 +34,16 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
 
   ENDMETHOD.                    "constructor
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown.
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
-  METHOD zif_abapgit_object~jump.
+  METHOD zif_abapgit_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  ENDMETHOD.
 
-    zcx_abapgit_exception=>raise( |TODO: Jump| ).
-
-*   doesn't work...
-*    CALL FUNCTION 'S_CUS_IMG_ACTIVITY_MAINTAIN'
-*      EXPORTING
-*        i_display        = 'X'
-*        i_no_replacement = 'X'
-*      CHANGING
-*        img_activity     = mv_img_activity.
-
-  ENDMETHOD.                    "jump
-
-  METHOD zif_abapgit_object~exists.
-
-    DATA: ls_message TYPE hier_mess.
-
-    CALL FUNCTION 'S_CUS_IMG_ACTIVITY_EXISTS'
-      EXPORTING
-        img_activity = mv_img_activity
-      IMPORTING
-        message      = ls_message.
-
-    rv_bool = boolc( ls_message IS INITIAL ).
-
-  ENDMETHOD.                    "zif_abapgit_object~exists
 
   METHOD zif_abapgit_object~delete.
 
@@ -87,29 +61,6 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
 
   ENDMETHOD.                    "delete
 
-  METHOD zif_abapgit_object~serialize.
-
-    DATA: ls_img_activity TYPE ty_img_activity.
-
-    CALL FUNCTION 'S_CUS_IMG_ACTIVITY_READ'
-      EXPORTING
-        img_activity        = mv_img_activity
-      IMPORTING
-        img_activity_header = ls_img_activity-header
-      TABLES
-        img_activity_texts  = ls_img_activity-texts.
-
-    CLEAR: ls_img_activity-header-fuser,
-           ls_img_activity-header-fdate,
-           ls_img_activity-header-ftime,
-           ls_img_activity-header-luser,
-           ls_img_activity-header-ldate,
-           ls_img_activity-header-ltime.
-
-    io_xml->add( iv_name = 'CUS0'
-                 ig_data = ls_img_activity ).
-
-  ENDMETHOD.                    "serialize
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -136,9 +87,31 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
 
   ENDMETHOD.                    "deserialize
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
+
+  METHOD zif_abapgit_object~exists.
+
+    DATA: ls_message TYPE hier_mess.
+
+    CALL FUNCTION 'S_CUS_IMG_ACTIVITY_EXISTS'
+      EXPORTING
+        img_activity = mv_img_activity
+      IMPORTING
+        message      = ls_message.
+
+    rv_bool = boolc( ls_message IS INITIAL ).
+
+  ENDMETHOD.                    "zif_abapgit_object~exists
+
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+
+
+  METHOD zif_abapgit_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+
 
   METHOD zif_abapgit_object~is_locked.
 
@@ -146,4 +119,43 @@ CLASS zcl_abapgit_object_cus0 IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_cus0 IMPLEMENTATION
+
+  METHOD zif_abapgit_object~jump.
+
+    zcx_abapgit_exception=>raise( |TODO: Jump| ).
+
+*   doesn't work...
+*    CALL FUNCTION 'S_CUS_IMG_ACTIVITY_MAINTAIN'
+*      EXPORTING
+*        i_display        = 'X'
+*        i_no_replacement = 'X'
+*      CHANGING
+*        img_activity     = mv_img_activity.
+
+  ENDMETHOD.                    "jump
+
+
+  METHOD zif_abapgit_object~serialize.
+
+    DATA: ls_img_activity TYPE ty_img_activity.
+
+    CALL FUNCTION 'S_CUS_IMG_ACTIVITY_READ'
+      EXPORTING
+        img_activity        = mv_img_activity
+      IMPORTING
+        img_activity_header = ls_img_activity-header
+      TABLES
+        img_activity_texts  = ls_img_activity-texts.
+
+    CLEAR: ls_img_activity-header-fuser,
+           ls_img_activity-header-fdate,
+           ls_img_activity-header-ftime,
+           ls_img_activity-header-luser,
+           ls_img_activity-header-ldate,
+           ls_img_activity-header-ltime.
+
+    io_xml->add( iv_name = 'CUS0'
+                 ig_data = ls_img_activity ).
+
+  ENDMETHOD.                    "serialize
+ENDCLASS.
