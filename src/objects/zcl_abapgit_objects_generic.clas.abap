@@ -588,7 +588,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
       CREATE DATA lr_ref TYPE STANDARD TABLE OF (<ls_object_table>-tobj_name).
       ASSIGN lr_ref->* TO <lt_data>.
 
-      lv_where = get_where_clause( <ls_object_table>-tobj_name ).
+      lv_where = CL_ABAP_DYN_PRG=>escape_quotes_str( get_where_clause( <ls_object_table>-tobj_name ) ).
 
       SELECT * FROM (<ls_object_table>-tobj_name)
         INTO TABLE <lt_data>
