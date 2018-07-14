@@ -267,6 +267,9 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     ro_repo->initialize( ).
     ro_repo->find_remote_dot_abapgit( ).
 
+    " sync SHA1s otherwise in some cases we can't immediately create branches, tags and commit
+    ro_repo->sync_sha1_local( ).
+
   ENDMETHOD.
 
 
