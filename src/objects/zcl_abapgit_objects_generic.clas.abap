@@ -554,7 +554,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
         CONCATENATE lv_where_statement 'AND' INTO lv_where_statement
           SEPARATED BY space.
       ENDIF.
-      CONCATENATE '''' ls_objkey-value '''' INTO lv_value128.
+      lv_value128 = cl_abap_dyn_prg=>quote( ls_objkey-value ).
       CONCATENATE lv_where_statement <ls_table_field>-fieldname '='
         lv_value128 INTO lv_where_statement SEPARATED BY space.
       lv_key_pos = lv_key_pos + 1.
