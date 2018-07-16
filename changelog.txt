@@ -8,6 +8,16 @@ Legend
 + : added
 - : removed
 
+2018-07-13 v1.72.0
+------------------
++ Partial AVAS support
+* Set transport request during uninstall or reset
++ New repository overview page(via burger icon)
+* Performance optimizations
+! New default setting: jump to ABAP in Eclipse
++ Basic SCP1 support
+* Downport
+
 2018-07-06 v1.71.0
 ------------------
 * validate sub and super packages when installing

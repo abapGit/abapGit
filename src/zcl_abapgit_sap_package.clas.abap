@@ -20,11 +20,37 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_sap_package IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
 
   METHOD constructor.
     mv_package = iv_package.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_sap_package~are_changes_recorded_in_tr_req.
+
+    DATA: li_package TYPE REF TO if_package.
+
+    cl_package_factory=>load_package(
+      EXPORTING
+        i_package_name             = mv_package
+      IMPORTING
+        e_package                  = li_package
+      EXCEPTIONS
+        object_not_existing        = 1
+        unexpected_error           = 2
+        intern_err                 = 3
+        no_access                  = 4
+        object_locked_and_modified = 5
+        OTHERS                     = 6 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from CL_PACKAGE_FACTORY=>LOAD_PACKAGE { sy-subrc }| ).
+    ENDIF.
+
+    rv_are_changes_rec_in_tr_req = li_package->wbo_korr_flag.
+
   ENDMETHOD.
 
 
@@ -131,48 +157,6 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_sap_package~create_local.
-
-    DATA: ls_package TYPE scompkdtln.
-
-
-    ls_package-devclass  = mv_package.
-    ls_package-ctext     = mv_package.
-    ls_package-parentcl  = '$TMP'.
-    ls_package-dlvunit   = 'LOCAL'.
-    ls_package-as4user   = sy-uname.
-
-    create( ls_package ).
-
-  ENDMETHOD.                    "create
-
-
-  METHOD zif_abapgit_sap_package~are_changes_recorded_in_tr_req.
-
-    DATA: li_package TYPE REF TO if_package.
-
-    cl_package_factory=>load_package(
-      EXPORTING
-        i_package_name             = mv_package
-      IMPORTING
-        e_package                  = li_package
-      EXCEPTIONS
-        object_not_existing        = 1
-        unexpected_error           = 2
-        intern_err                 = 3
-        no_access                  = 4
-        object_locked_and_modified = 5
-        OTHERS                     = 6 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from CL_PACKAGE_FACTORY=>LOAD_PACKAGE { sy-subrc }| ).
-    ENDIF.
-
-    rv_are_changes_rec_in_tr_req = li_package->wbo_korr_flag.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_sap_package~create_child.
 
     DATA: li_parent TYPE REF TO if_package,
@@ -205,6 +189,22 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
     create( ls_child ).
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_sap_package~create_local.
+
+    DATA: ls_package TYPE scompkdtln.
+
+
+    ls_package-devclass  = mv_package.
+    ls_package-ctext     = mv_package.
+    ls_package-parentcl  = '$TMP'.
+    ls_package-dlvunit   = 'LOCAL'.
+    ls_package-as4user   = sy-uname.
+
+    create( ls_package ).
+
+  ENDMETHOD.                    "create
 
 
   METHOD zif_abapgit_sap_package~exists.
@@ -293,7 +293,6 @@ CLASS zcl_abapgit_sap_package IMPLEMENTATION.
       FROM tdevc WHERE devclass = mv_package.           "#EC CI_GENBUFF
 
     IF sy-subrc = 0 AND NOT lv_parent IS INITIAL.
-      APPEND lv_parent TO rt_list.
       lt_list = zcl_abapgit_factory=>get_sap_package( lv_parent )->list_superpackages( ).
       APPEND LINES OF lt_list TO rt_list.
     ENDIF.
