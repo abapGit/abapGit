@@ -86,3 +86,5 @@ SAP Teched Barcelona
 [ORGANISIERE DEINE ARBEIT MIT ABAPGIT	](https://inspiricon.de/abapgit/) -Andra Atanasoaie
 
 [Moderne ABAP Entwicklung mit abapGit](https://de.slideshare.net/ChristianGnter/moderne-abap-entwicklung-mit-abapgit) - Christian Günter
+
+[Coffee Corner Radio - ABAP - The Special Snowflake with Nigel & Graham]https://anchor.fm/sap-community-podcast/episodes/Episode-4-ABAP---The-Special-Snowflake-with-Nigel--Graham-e1qds0, Jacob, Nigel, Graham
