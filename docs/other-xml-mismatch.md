@@ -16,11 +16,11 @@ If the latest version of abapGit is installed and the erorr message is shown, th
 
 The steps are:
 
-1. Install old abapGit version, matching the serialized files
+1. Install the old abapGit version, matching the serialized files
 
-2. Install objects into the ABAP system
+2. Install the objects into the ABAP system
 
-3. Install newest abapGit version
+3. Install the newest abapGit version
 
 4. Use the new abapGit to save the files to the git repository
 

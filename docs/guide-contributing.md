@@ -8,6 +8,6 @@ order: 60
 * Clone the forked repository into the SAP system
 * Do changes in SAP
 * Commit the changes to the forked repository
-* Submit pull request
+* Submit a pull request
 
 The forked repository can be deleted after the pull request has been closed.
