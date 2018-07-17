@@ -13,51 +13,64 @@ CLASS zcl_abapgit_file_status DEFINITION
 
   PRIVATE SECTION.
 
-    CLASS-METHODS:
-      calculate_status
-        IMPORTING iv_devclass       TYPE devclass
-                  io_dot            TYPE REF TO zcl_abapgit_dot_abapgit
-                  it_local          TYPE zif_abapgit_definitions=>ty_files_item_tt
-                  it_remote         TYPE zif_abapgit_definitions=>ty_files_tt
-                  it_cur_state      TYPE zif_abapgit_definitions=>ty_file_signatures_tt
-        RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
-        RAISING   zcx_abapgit_exception,
-      run_checks
-        IMPORTING io_log     TYPE REF TO zcl_abapgit_log
-                  it_results TYPE zif_abapgit_definitions=>ty_results_tt
-                  io_dot     TYPE REF TO zcl_abapgit_dot_abapgit
-                  iv_top     TYPE devclass
-        RAISING   zcx_abapgit_exception,
-      build_existing
-        IMPORTING is_local         TYPE zif_abapgit_definitions=>ty_file_item
-                  is_remote        TYPE zif_abapgit_definitions=>ty_file
-                  it_state         TYPE zif_abapgit_definitions=>ty_file_signatures_ts
-        RETURNING VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_result,
-      build_new_local
-        IMPORTING is_local         TYPE zif_abapgit_definitions=>ty_file_item
-        RETURNING VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_result,
-      build_new_remote
-        IMPORTING iv_devclass      TYPE devclass
-                  io_dot           TYPE REF TO zcl_abapgit_dot_abapgit
-                  is_remote        TYPE zif_abapgit_definitions=>ty_file
-                  it_items         TYPE zif_abapgit_definitions=>ty_items_ts
-                  it_state         TYPE zif_abapgit_definitions=>ty_file_signatures_ts
-        RETURNING VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_result
-        RAISING   zcx_abapgit_exception,
-      identify_object
-        IMPORTING iv_filename TYPE string
-                  iv_path     TYPE string
-                  iv_devclass TYPE devclass
-                  io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
-        EXPORTING es_item     TYPE zif_abapgit_definitions=>ty_item
-                  ev_is_xml   TYPE abap_bool
-        RAISING   zcx_abapgit_exception.
-
+    CLASS-METHODS calculate_status
+      IMPORTING
+        !iv_devclass      TYPE devclass
+        !io_dot           TYPE REF TO zcl_abapgit_dot_abapgit
+        !it_local         TYPE zif_abapgit_definitions=>ty_files_item_tt
+        !it_remote        TYPE zif_abapgit_definitions=>ty_files_tt
+        !it_cur_state     TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+      RETURNING
+        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS run_checks
+      IMPORTING
+        !io_log     TYPE REF TO zcl_abapgit_log
+        !it_results TYPE zif_abapgit_definitions=>ty_results_tt
+        !io_dot     TYPE REF TO zcl_abapgit_dot_abapgit
+        !iv_top     TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS build_existing
+      IMPORTING
+        !is_local        TYPE zif_abapgit_definitions=>ty_file_item
+        !is_remote       TYPE zif_abapgit_definitions=>ty_file
+        !it_state        TYPE zif_abapgit_definitions=>ty_file_signatures_ts
+      RETURNING
+        VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_result .
+    CLASS-METHODS build_new_local
+      IMPORTING
+        !is_local        TYPE zif_abapgit_definitions=>ty_file_item
+      RETURNING
+        VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_result .
+    CLASS-METHODS build_new_remote
+      IMPORTING
+        !iv_devclass     TYPE devclass
+        !io_dot          TYPE REF TO zcl_abapgit_dot_abapgit
+        !is_remote       TYPE zif_abapgit_definitions=>ty_file
+        !it_items        TYPE zif_abapgit_definitions=>ty_items_ts
+        !it_state        TYPE zif_abapgit_definitions=>ty_file_signatures_ts
+      RETURNING
+        VALUE(rs_result) TYPE zif_abapgit_definitions=>ty_result
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS identify_object
+      IMPORTING
+        !iv_filename TYPE string
+        !iv_path     TYPE string
+        !iv_devclass TYPE devclass
+        !io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
+      EXPORTING
+        !es_item     TYPE zif_abapgit_definitions=>ty_item
+        !ev_is_xml   TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_file_status IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -193,6 +206,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
           lt_sub_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
           lt_items_idx    TYPE zif_abapgit_definitions=>ty_items_ts,
           lt_state_idx    TYPE zif_abapgit_definitions=>ty_file_signatures_ts. " Sorted by path+filename
+    DATA: lv_sub_package_read TYPE abap_bool VALUE abap_false.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_remote,
                    <ls_result> LIKE LINE OF rt_results,
@@ -227,12 +241,12 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
     " Complete item index for unmarked remote files
     LOOP AT lt_remote ASSIGNING <ls_remote> WHERE sha1 IS NOT INITIAL.
-      identify_object( EXPORTING iv_filename = <ls_remote>-filename
-                                 iv_path     = <ls_remote>-path
-                                 io_dot      = io_dot
-                                 iv_devclass = iv_devclass
-                       IMPORTING es_item     = ls_item
-                                 ev_is_xml   = lv_is_xml ).
+      identify_object( EXPORTING iv_filename     = <ls_remote>-filename
+                                 iv_path         = <ls_remote>-path
+                                 io_dot          = io_dot
+                                 iv_devclass     = iv_devclass
+                       IMPORTING es_item         = ls_item
+                                 ev_is_xml       = lv_is_xml ).
 
       CHECK lv_is_xml = abap_true. " Skip all but obj definitions
 
@@ -242,8 +256,14 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
       IF NOT ls_item-devclass IS INITIAL AND iv_devclass <> ls_item-devclass.
 * make sure the package is under the repo main package
-        lt_sub_packages = zcl_abapgit_factory=>get_sap_package( iv_devclass )->list_subpackages( ).
-        READ TABLE lt_sub_packages WITH KEY table_line = ls_item-devclass TRANSPORTING NO FIELDS.
+        IF lv_sub_package_read = abap_false.
+          lt_sub_packages = zcl_abapgit_factory=>get_sap_package( iv_devclass )->list_subpackages( ).
+          SORT lt_sub_packages BY table_line.
+          lv_sub_package_read = abap_true.
+        ENDIF.
+        READ TABLE lt_sub_packages TRANSPORTING NO FIELDS
+          WITH KEY table_line = ls_item-devclass
+          BINARY SEARCH.
         IF sy-subrc <> 0.
           CLEAR ls_item-devclass.
         ENDIF.
@@ -291,7 +311,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     " Try to get a unique package name for DEVC by using the path
     IF lv_type = 'DEVC'.
       ASSERT lv_name = 'PACKAGE'.
-      lv_name = zcl_abapgit_folder_logic=>get_instance( abap_true )->path_to_package(
+      lv_name = zcl_abapgit_folder_logic=>get_instance( )->path_to_package(
         iv_top                  = iv_devclass
         io_dot                  = io_dot
         iv_create_if_not_exists = abap_false
@@ -313,7 +333,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
           ls_file     TYPE zif_abapgit_definitions=>ty_file_signature,
           lt_res_sort LIKE it_results,
           lt_item_idx LIKE it_results.
-    DATA: lo_folder_logic type ref to zcl_abapgit_folder_logic.
+    DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_res1> LIKE LINE OF it_results,
                    <ls_res2> LIKE LINE OF it_results.
