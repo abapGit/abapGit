@@ -8,10 +8,10 @@ CLASS zcl_abapgit_object_sfpi DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS:
       load
         RETURNING VALUE(ri_wb_interface) TYPE REF TO if_fp_wb_interface
-        RAISING zcx_abapgit_exception,
+        RAISING   zcx_abapgit_exception,
       interface_to_xstring
         RETURNING VALUE(rv_xstr) TYPE xstring
-        RAISING zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -67,7 +67,7 @@ CLASS zcl_abapgit_object_sfpi IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_name TYPE fpname,
+    DATA: lv_name         TYPE fpname,
           lo_wb_interface TYPE REF TO cl_fp_wb_interface.
 
 
@@ -159,7 +159,14 @@ CLASS zcl_abapgit_object_sfpi IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_locked.
 
-    rv_is_locked = abap_false.
+    DATA: lv_object TYPE seqg3-garg.
+
+    lv_object = |{ ms_item-obj_name }|.
+    OVERLAY lv_object WITH '                              '.
+    lv_object = lv_object && '*'.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'EFPINTERFACE'
+                                            iv_argument    = lv_object ).
 
   ENDMETHOD.
 

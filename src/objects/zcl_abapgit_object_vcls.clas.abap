@@ -70,7 +70,24 @@ CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
         vclstrudep_tab = lt_vclstrudep
         vclmf_tab      = lt_vclmf.
 
-    corr_insert( iv_package ).
+    CALL FUNCTION 'RS_CORR_INSERT'
+      EXPORTING
+        object              = ms_item-obj_name
+        object_class        = ms_item-obj_type
+        devclass            = iv_package
+        master_language     = mv_language
+        mode                = 'INSERT'
+        global_lock         = abap_true
+      EXCEPTIONS
+        cancelled           = 1
+        permission_failure  = 2
+        unknown_objectclass = 3
+        OTHERS              = 4.
+    IF sy-subrc = 1.
+      zcx_abapgit_exception=>raise( 'Cancelled' ).
+    ELSEIF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT' ).
+    ENDIF.
 
     lv_objectname = ls_vcldir_entry-vclname.
     CALL FUNCTION 'OBJ_GENERATE'
@@ -130,32 +147,57 @@ CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
 
-    DATA: lv_vclname      TYPE  vcl_name.
+    DATA: ls_bcdata TYPE bdcdata,
+          lt_bcdata TYPE STANDARD TABLE OF bdcdata.
 
-    lv_vclname = ms_item-obj_name.
-    CALL FUNCTION 'VIEWCLUSTER_MAINTENANCE_CALL'
+    ls_bcdata-program  = 'SAPMSVIM'.
+    ls_bcdata-dynpro   = '0050'.
+    ls_bcdata-dynbegin = 'X'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam     = 'VIMDYNFLDS-VIEWNAME'.
+    ls_bcdata-fval     = ms_item-obj_name.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam     = 'VIMDYNFLDS-STRUCT_MNT'.
+    ls_bcdata-fval     = 'X'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam = 'BDC_OKCODE'.
+    ls_bcdata-fval = '=CLUS'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-program  = 'SAPMSVIM'.
+    ls_bcdata-dynpro   = '0052 '.
+    ls_bcdata-dynbegin = 'X'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam     = 'VIMDYNFLDS-VCLNAME'.
+    ls_bcdata-fval     = ms_item-obj_name.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam = 'BDC_OKCODE'.
+    ls_bcdata-fval = '=CLSH'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      STARTING NEW TASK 'GIT'
       EXPORTING
-        viewcluster_name             = lv_vclname
-        maintenance_action           = 'S'
+        tcode     = 'SE54'
+        mode_val  = 'E'
+      TABLES
+        using_tab = lt_bcdata
       EXCEPTIONS
-        client_reference             = 1
-        foreign_lock                 = 2
-        viewcluster_not_found        = 3
-        viewcluster_is_inconsistent  = 4
-        missing_generated_function   = 5
-        no_upd_auth                  = 6
-        no_show_auth                 = 7
-        object_not_found             = 8
-        no_tvdir_entry               = 9
-        no_clientindep_auth          = 10
-        invalid_action               = 11
-        saving_correction_failed     = 12
-        system_failure               = 13
-        unknown_field_in_dba_sellist = 14
-        missing_corr_number          = 15
-        OTHERS                       = 16.
+        OTHERS    = 1.
+
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error in VIEWCLUSTER_MAINTENANCE_CALL' ).
+      zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SE35' ).
     ENDIF.
 
   ENDMETHOD.                    "jump

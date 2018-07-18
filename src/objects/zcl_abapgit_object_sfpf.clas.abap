@@ -12,16 +12,16 @@ CLASS zcl_abapgit_object_sfpf DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS:
       load
         RETURNING VALUE(ri_wb_form) TYPE REF TO if_fp_wb_form
-        RAISING zcx_abapgit_exception,
+        RAISING   zcx_abapgit_exception,
       form_to_xstring
         RETURNING VALUE(rv_xstr) TYPE xstring
-        RAISING zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
+CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
 
 
   METHOD fix_oref.
@@ -134,7 +134,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_name TYPE fpname,
+    DATA: lv_name    TYPE fpname,
           lo_wb_form TYPE REF TO cl_fp_wb_form.
 
 
@@ -227,7 +227,15 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_locked.
 
-    rv_is_locked = abap_false.
+    DATA: lv_object TYPE seqg3-garg.
+
+    lv_object = |{ ms_item-obj_name }|.
+    OVERLAY lv_object WITH '                              '.
+    lv_object = lv_object && '*'.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'EFPFORM'
+                                            iv_argument    = lv_object ).
+
 
   ENDMETHOD.
 
