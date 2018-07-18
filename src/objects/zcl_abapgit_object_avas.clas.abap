@@ -88,8 +88,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
 
   METHOD instantiate.
 
-    DATA: lv_id TYPE guid_32.
-
+    DATA: lv_id TYPE guid_32,
+          lo_err TYPE REF TO cx_root.
 
     lv_id = ms_item-obj_name.
 
@@ -97,11 +97,14 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
         CREATE OBJECT ro_avas
           EXPORTING
             im_assignment_id = lv_id.
-      CATCH cx_pak_wb_object_locked
-          cx_pak_not_authorized
-          cx_pak_invalid_state
-          cx_pak_invalid_data.
-        zcx_abapgit_exception=>raise( |AVAS error| ).
+      CATCH cx_pak_wb_object_locked INTO lo_err.
+        zcx_abapgit_exception=>raise( |AVAS { lv_id }: locked: { lo_err->get_longtext( ) }| ).
+      CATCH cx_pak_not_authorized INTO lo_err.
+        zcx_abapgit_exception=>raise( |AVAS { lv_id }: not authorized: { lo_err->get_longtext( ) }| ).
+      CATCH cx_pak_invalid_state INTO lo_err.
+        zcx_abapgit_exception=>raise( |AVAS { lv_id }: invalid state: { lo_err->get_longtext( ) }| ).
+      CATCH cx_pak_invalid_data INTO lo_err.
+        zcx_abapgit_exception=>raise( |AVAS { lv_id }: invalid data: { lo_err->get_longtext( ) }| ).
     ENDTRY.
 
   ENDMETHOD.
