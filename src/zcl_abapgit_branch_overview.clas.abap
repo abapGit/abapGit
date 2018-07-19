@@ -1,30 +1,17 @@
-CLASS zcl_abapgit_branch_overview DEFINITION PUBLIC FINAL CREATE PRIVATE.
+CLASS zcl_abapgit_branch_overview DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_factory .
+
 
   PUBLIC SECTION.
-    CLASS-METHODS: run
-      IMPORTING io_repo                   TYPE REF TO zcl_abapgit_repo_online
-      RETURNING VALUE(ro_branch_overview) TYPE REF TO zcl_abapgit_branch_overview
-      RAISING   zcx_abapgit_exception.
 
+    INTERFACES zif_abapgit_branch_overview.
 
     METHODS:
       constructor
         IMPORTING io_repo TYPE REF TO zcl_abapgit_repo_online
-        RAISING   zcx_abapgit_exception,
-
-      get_branches
-        RETURNING VALUE(rt_branches) TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
-
-      get_tags
-        RETURNING VALUE(rt_tags) TYPE zif_abapgit_definitions=>ty_git_tag_list_tt,
-
-      get_commits
-        RETURNING
-          VALUE(rt_commits) TYPE zif_abapgit_definitions=>ty_commit_tt,
-
-      compress
-        IMPORTING it_commits        TYPE zif_abapgit_definitions=>ty_commit_tt
-        RETURNING VALUE(rt_commits) TYPE zif_abapgit_definitions=>ty_commit_tt
         RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
@@ -61,7 +48,7 @@ ENDCLASS.
 CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
 
-  METHOD compress.
+  METHOD zif_abapgit_branch_overview~compress.
 
     DEFINE _compress.
       IF lines( lt_temp ) >= 10.
@@ -271,12 +258,12 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_branches.
+  METHOD zif_abapgit_branch_overview~get_branches.
     rt_branches = mt_branches.
   ENDMETHOD.
 
 
-  METHOD get_commits.
+  METHOD zif_abapgit_branch_overview~get_commits.
     rt_commits = mt_commits.
   ENDMETHOD.
 
@@ -336,7 +323,7 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_tags.
+  METHOD zif_abapgit_branch_overview~get_tags.
 
     rt_tags = mt_tags.
 
@@ -409,12 +396,4 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-  METHOD run.
-
-    CREATE OBJECT ro_branch_overview
-      EXPORTING
-        io_repo = io_repo.
-
-  ENDMETHOD.
 ENDCLASS.
