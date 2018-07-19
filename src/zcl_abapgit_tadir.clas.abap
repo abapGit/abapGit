@@ -103,7 +103,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
       lo_folder_logic = io_folder_logic.
       IF lo_folder_logic IS NOT BOUND.
         "Get Folder Logic Instance
-        lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( abap_true ).
+        lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
       ENDIF.
 
       lv_path = lo_folder_logic->package_to_path(

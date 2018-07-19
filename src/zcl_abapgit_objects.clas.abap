@@ -493,7 +493,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     check_objects_locked( iv_language = io_repo->get_dot_abapgit( )->get_master_language( )
                           it_items    = lt_items ).
 
-    lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( abap_true ).
+    lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
     LOOP AT lt_results ASSIGNING <ls_result>.
       lo_progress->show( iv_current = sy-tabix
                          iv_text    = |Deserialize { <ls_result>-obj_name }| ) ##NO_TEXT.
@@ -946,7 +946,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
 
-    lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( abap_true ).
+    lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
     LOOP AT it_results ASSIGNING <ls_result>.
 
       lv_package = lo_folder_logic->path_to_package(

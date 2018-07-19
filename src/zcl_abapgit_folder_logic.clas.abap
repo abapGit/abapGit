@@ -4,9 +4,6 @@ CLASS zcl_abapgit_folder_logic DEFINITION
 
   PUBLIC SECTION.
 
-    METHODS constructor
-      IMPORTING
-        !iv_buffered TYPE abap_bool DEFAULT abap_false .
     METHODS package_to_path
       IMPORTING
         !iv_top        TYPE devclass
@@ -27,15 +24,9 @@ CLASS zcl_abapgit_folder_logic DEFINITION
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS get_instance
-      IMPORTING
-        !iv_buffered       TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_folder_logic .
-
   PROTECTED SECTION.
-
-    DATA mv_buffered TYPE abap_bool .
-
   PRIVATE SECTION.
 
     DATA mt_parent TYPE zif_abapgit_sap_package=>ty_devclass_info_tt .

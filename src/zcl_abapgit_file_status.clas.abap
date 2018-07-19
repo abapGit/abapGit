@@ -374,7 +374,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     ENDLOOP.
 
     " Check that objects are created in package corresponding to folder
-    lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( abap_true ).
+    lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
     LOOP AT it_results ASSIGNING <ls_res1>
         WHERE NOT package IS INITIAL AND NOT path IS INITIAL.
       lv_path = lo_folder_logic->package_to_path(
