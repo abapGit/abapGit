@@ -31,6 +31,14 @@ CLASS zcl_abapgit_factory DEFINITION
         RETURNING
           VALUE(ri_syntax_check) TYPE REF TO zif_abapgit_code_inspector
         RAISING
+          zcx_abapgit_exception,
+
+      get_branch_overview
+        IMPORTING
+          io_repo                   TYPE REF TO zcl_abapgit_repo_online
+        RETURNING
+          VALUE(ri_branch_overview) TYPE REF TO zif_abapgit_branch_overview
+        RAISING
           zcx_abapgit_exception.
 
 
@@ -58,17 +66,18 @@ CLASS zcl_abapgit_factory DEFINITION
                        WITH UNIQUE KEY package,
 
       BEGIN OF ty_branch_overview,
-        branch   TYPE zif_abapgit_definitions=>ty_sha1,
+        repo_key TYPE zif_abapgit_persistence=>ty_value,
         instance TYPE REF TO zif_abapgit_branch_overview,
       END OF ty_branch_overview,
       tty_branch_overview TYPE HASHED TABLE OF ty_branch_overview
-                         WITH UNIQUE KEY branch.
+                         WITH UNIQUE KEY repo_key.
 
     CLASS-DATA:
-      gi_tadir          TYPE REF TO zif_abapgit_tadir,
-      gt_sap_package    TYPE tty_sap_package,
-      gt_code_inspector TYPE tty_code_inspector,
-      gt_syntax_check   TYPE tty_syntax_check.
+      gi_tadir           TYPE REF TO zif_abapgit_tadir,
+      gt_sap_package     TYPE tty_sap_package,
+      gt_code_inspector  TYPE tty_code_inspector,
+      gt_syntax_check    TYPE tty_syntax_check,
+      gt_branch_overview TYPE tty_branch_overview.
 
 ENDCLASS.
 
@@ -164,15 +173,15 @@ CLASS zcl_abapgit_factory IMPLEMENTATION.
   METHOD get_branch_overview.
 
     DATA: ls_branch_overview LIKE LINE OF gt_branch_overview,
-          lv_branch          TYPE ty_branch_overview-branch.
+          lv_repo_key        TYPE ty_branch_overview-repo_key.
     FIELD-SYMBOLS: <ls_branch_overview> TYPE zcl_abapgit_factory=>ty_branch_overview.
 
-    lv_branch = io_repo->get_sha1_remote( ).
+    lv_repo_key = io_repo->get_key( ).
 
     READ TABLE gt_branch_overview ASSIGNING <ls_branch_overview>
-                               WITH TABLE KEY branch = lv_branch.
+                               WITH TABLE KEY repo_key = lv_repo_key.
     IF sy-subrc <> 0.
-      ls_branch_overview-branch = lv_branch.
+      ls_branch_overview-repo_key = lv_repo_key.
 
       CREATE OBJECT ls_branch_overview-instance TYPE zcl_abapgit_branch_overview
         EXPORTING
