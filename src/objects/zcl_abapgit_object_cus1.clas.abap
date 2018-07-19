@@ -52,6 +52,7 @@ CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
+    rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
   METHOD zif_abapgit_object~jump.
@@ -90,8 +91,6 @@ CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
   ENDMETHOD.                    "delete
 
   METHOD zif_abapgit_object~serialize.
-
-
 
     DATA: ls_customzing_activity TYPE ty_customzing_activity.
 
@@ -144,6 +143,23 @@ CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
 
     IF ls_message-msgty <> 'S'.
       zcx_abapgit_exception=>raise( |error from deserialize CUS1 { mv_customizing_activity } S_CUS_ACTIVITY_SAVE| ).
+    ENDIF.
+
+    CALL FUNCTION 'RS_CORR_INSERT'
+      EXPORTING
+        object              = ms_item-obj_name
+        object_class        = ms_item-obj_type
+        mode                = 'I'
+        global_lock         = abap_true
+        devclass            = iv_package
+        master_language     = sy-langu
+      EXCEPTIONS
+        cancelled           = 1
+        permission_failure  = 2
+        unknown_objectclass = 3
+        OTHERS              = 4.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT, CUS0' ).
     ENDIF.
 
   ENDMETHOD.                    "deserialize
