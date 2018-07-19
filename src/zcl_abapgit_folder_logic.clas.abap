@@ -38,8 +38,7 @@ CLASS zcl_abapgit_folder_logic DEFINITION
 
   PRIVATE SECTION.
 
-    DATA mt_devc_buffer TYPE zif_abapgit_definitions=>tt_devc_buffer .
-
+    DATA mt_parent TYPE zif_abapgit_sap_package=>ty_devclass_info_tt .
 ENDCLASS.
 
 
@@ -47,23 +46,9 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
 
 
-  METHOD constructor.
-    mv_buffered = iv_buffered.
-
-    IF mv_buffered = abap_true.
-      SELECT devclass parentcl
-        FROM tdevc
-        INTO CORRESPONDING FIELDS OF TABLE mt_devc_buffer.
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD get_instance.
 
-    CREATE OBJECT ro_instance
-      EXPORTING
-        iv_buffered = iv_buffered.
+    CREATE OBJECT ro_instance.
 
   ENDMETHOD.
 
@@ -75,14 +60,21 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
           lv_message      TYPE string,
           lv_parentcl     TYPE tdevc-parentcl,
           lv_folder_logic TYPE string.
+    DATA: st_parent LIKE LINE OF mt_parent.
 
     IF iv_top = iv_package.
       rv_path = io_dot->get_starting_folder( ).
     ELSE.
-      IF mv_buffered = abap_true.
-        lv_parentcl = zcl_abapgit_factory=>get_sap_package( iv_package )->read_parent( mt_devc_buffer ).
-      ELSE.
+      "Determine Parent Package
+      READ TABLE mt_parent INTO st_parent
+        WITH TABLE KEY devclass = iv_package.
+      IF sy-subrc <> 0.
         lv_parentcl = zcl_abapgit_factory=>get_sap_package( iv_package )->read_parent( ).
+        st_parent-devclass = iv_package.
+        st_parent-parentcl = lv_parentcl.
+        INSERT st_parent INTO TABLE mt_parent.
+      ELSE.
+        lv_parentcl = st_parent-parentcl.
       ENDIF.
 
       IF lv_parentcl IS INITIAL.
