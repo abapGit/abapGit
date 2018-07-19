@@ -404,9 +404,16 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
     ENDIF.
 
     IF ls_icfservice-icfparguid CO '0'.
-* not supported by the SAP standard API
+      " not supported by the SAP standard API
       zcx_abapgit_exception=>raise( 'SICF - cannot delete root node, delete node manually' ).
     ENDIF.
+
+    " Delete Application Customizing Data the hard way, as it isn't done by the API.
+    " If we wouldn't we would get errors from the API if entrys exist.
+    " Transaction SICF does the same.
+    DELETE FROM icfapplcust
+           WHERE icf_name = ls_icfservice-icf_name
+           AND icfparguid = ls_icfservice-icfparguid.
 
     cl_icf_tree=>if_icf_tree~delete_node(
       EXPORTING
