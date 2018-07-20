@@ -181,7 +181,7 @@ CLASS zcl_abapgit_tag_popups IMPLEMENTATION.
 
     CLEAR: mt_tags.
 
-    lt_tags = zcl_abapgit_branch_overview=>run( io_repo = io_repo )->get_tags( ).
+    lt_tags = zcl_abapgit_factory=>get_branch_overview( io_repo = io_repo )->get_tags( ).
 
     IF lines( lt_tags ) = 0.
       zcx_abapgit_exception=>raise( `There are no tags for this repository` ).
@@ -271,7 +271,7 @@ CLASS zcl_abapgit_tag_popups IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_sel> LIKE LINE OF lt_selection,
                    <ls_tag> LIKE LINE OF lt_tags.
 
-    lt_tags = zcl_abapgit_branch_overview=>run( io_repo = io_repo )->get_tags( ).
+    lt_tags = zcl_abapgit_factory=>get_branch_overview( io_repo = io_repo )->get_tags( ).
 
     IF lines( lt_tags ) = 0.
       zcx_abapgit_exception=>raise( `There are no tags for this repository` ).
