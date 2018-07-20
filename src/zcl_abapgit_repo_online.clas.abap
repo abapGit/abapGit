@@ -36,12 +36,9 @@ CLASS zcl_abapgit_repo_online DEFINITION
         !iv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name
       RAISING
         zcx_abapgit_exception .
-    METHODS get_sha1_local
-      RETURNING
-        VALUE(rv_sha1) TYPE zif_abapgit_persistence=>ty_repo-sha1 .
     METHODS get_sha1_remote
       RETURNING
-        VALUE(rv_sha1) TYPE zif_abapgit_persistence=>ty_repo-sha1
+        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
     METHODS get_objects
@@ -137,7 +134,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
   METHOD delete_initial_online_repo.
 
-    IF me->is_offline( ) = abap_false AND me->get_sha1_local( ) IS INITIAL.
+    IF me->is_offline( ) = abap_false AND me->get_sha1_remote( ) IS INITIAL.
 
       zcl_abapgit_repo_srv=>get_instance( )->delete( me ).
 
@@ -155,8 +152,6 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     initialize( ).
 
     super->deserialize( is_checks ).
-
-    set( iv_sha1 = mv_branch ).
 
     reset_status( ).
 
@@ -187,11 +182,6 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     rt_objects = mt_objects.
   ENDMETHOD.                    "get_objects
-
-
-  METHOD get_sha1_local.
-    rv_sha1 = ms_data-sha1.
-  ENDMETHOD.                    "get_sha1_local
 
 
   METHOD get_sha1_remote.
@@ -321,19 +311,8 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
                                      IMPORTING ev_branch        = lv_branch
                                                et_updated_files = lt_updated_files ).
 
-    IF io_stage->get_branch_sha1( ) = get_sha1_local( ).
-* pushing to the branch currently represented by this repository object
-      mv_branch = lv_branch.
-      set( iv_sha1 = lv_branch ).
-    ELSE.
-      refresh( ).
-    ENDIF.
-
+    refresh( ).
     update_local_checksums( lt_updated_files ).
-
-    IF zcl_abapgit_stage_logic=>count( me ) = 0.
-      set( iv_sha1 = lv_branch ).
-    ENDIF.
 
     CLEAR: mv_code_inspector_successful.
 
@@ -342,20 +321,18 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
   METHOD rebuild_local_checksums. "REMOTE
 
-    DATA: lt_remote       TYPE zif_abapgit_definitions=>ty_files_tt,
-          lt_local        TYPE zif_abapgit_definitions=>ty_files_item_tt,
-          ls_last_item    TYPE zif_abapgit_definitions=>ty_item,
-          lv_branch_equal TYPE abap_bool,
-          lt_checksums    TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
+    DATA: lt_remote    TYPE zif_abapgit_definitions=>ty_files_tt,
+          lt_local     TYPE zif_abapgit_definitions=>ty_files_item_tt,
+          ls_last_item TYPE zif_abapgit_definitions=>ty_item,
+          lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
 
     FIELD-SYMBOLS: <ls_checksum> LIKE LINE OF lt_checksums,
                    <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
                    <ls_remote>   LIKE LINE OF lt_remote,
                    <ls_local>    LIKE LINE OF lt_local.
 
-    lt_remote       = get_files_remote( ).
-    lt_local        = get_files_local( ).
-    lv_branch_equal = boolc( get_sha1_remote( ) = get_sha1_local( ) ).
+    lt_remote = get_files_remote( ).
+    lt_local  = get_files_local( ).
 
     DELETE lt_local " Remove non-code related files except .abapgit
       WHERE item IS INITIAL
@@ -383,7 +360,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
       " If hashes are equal -> local sha1 is OK
       " Else if R-branch is ahead  -> assume changes were remote, state - local sha1
       "      Else (branches equal) -> assume changes were local, state - remote sha1
-      IF <ls_local>-file-sha1 <> <ls_remote>-sha1 AND lv_branch_equal = abap_true.
+      IF <ls_local>-file-sha1 <> <ls_remote>-sha1.
         <ls_file_sig>-sha1 = <ls_remote>-sha1.
       ENDIF.
     ENDLOOP.
@@ -487,12 +464,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     mv_initialized = abap_false.
     set( iv_url         = iv_url
          iv_branch_name = iv_branch_name
-         iv_head_branch = ''
-         iv_sha1        = '' ).
-
-    " If the SHA1 is empty, it's not possible to create tags or branches.
-    " Therefore we update the local SHA1 with the new remote SHA1
-    set( iv_sha1 = get_sha1_remote( ) ).
+         iv_head_branch = '' ).
 
   ENDMETHOD.  "set_new_remote
 

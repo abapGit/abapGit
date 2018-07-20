@@ -310,7 +310,6 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       lo_repo->set(
         iv_url         = zcl_abapgit_url=>name( lo_repo->ms_data-url )
         iv_branch_name = ''
-        iv_sha1        = ''
         iv_head_branch = ''
         iv_offline     = abap_true ).
       CREATE OBJECT <lo_repo> TYPE zcl_abapgit_repo_offline

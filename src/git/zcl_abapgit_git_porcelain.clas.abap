@@ -27,7 +27,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
       IMPORTING
         !io_repo TYPE REF TO zcl_abapgit_repo_online
         !iv_name TYPE string
-        !iv_from TYPE zif_abapgit_definitions=>ty_sha1
+        iv_from  TYPE zif_abapgit_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS create_tag
@@ -198,8 +198,6 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
     IF iv_name CS ` `.
       zcx_abapgit_exception=>raise( 'Branch name cannot contain blank spaces' ).
-    ELSEIF iv_from = ''.
-      zcx_abapgit_exception=>raise( 'New branch, "from" SHA1 empty' ).
     ENDIF.
 
 * "client MUST send an empty packfile"
@@ -720,7 +718,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
     zcl_abapgit_git_transport=>receive_pack(
       iv_url         = io_repo->get_url( )
       iv_old         = c_zero
-      iv_new         = io_repo->get_sha1_local( )
+      iv_new         = is_tag-sha1
       iv_branch_name = is_tag-name
       iv_pack        = lv_pack ).
 

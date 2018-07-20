@@ -33,7 +33,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TRANSPORT_2_BRANCH IMPLEMENTATION.
+CLASS zcl_abapgit_transport_2_branch IMPLEMENTATION.
 
 
   METHOD create.
@@ -79,7 +79,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT_2_BRANCH IMPLEMENTATION.
         zcl_abapgit_git_porcelain=>create_branch(
           io_repo = io_repository
           iv_name = iv_branch_name
-          iv_from = io_repository->get_sha1_local( ) ).
+          iv_from = io_repository->get_sha1_remote( ) ).
 
         io_repository->set_branch_name( iv_branch_name ).
       CATCH zcx_abapgit_exception.
