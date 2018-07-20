@@ -57,7 +57,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_file_status IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -225,6 +225,8 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+    lt_sub_packages = zcl_abapgit_factory=>get_sap_package( iv_devclass )->list_subpackages( ).
+
     " Complete item index for unmarked remote files
     LOOP AT lt_remote ASSIGNING <ls_remote> WHERE sha1 IS NOT INITIAL.
       identify_object( EXPORTING iv_filename = <ls_remote>-filename
@@ -242,7 +244,6 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
       IF NOT ls_item-devclass IS INITIAL AND iv_devclass <> ls_item-devclass.
 * make sure the package is under the repo main package
-        lt_sub_packages = zcl_abapgit_factory=>get_sap_package( iv_devclass )->list_subpackages( ).
         READ TABLE lt_sub_packages WITH KEY table_line = ls_item-devclass TRANSPORTING NO FIELDS.
         IF sy-subrc <> 0.
           CLEAR ls_item-devclass.
