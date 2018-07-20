@@ -81,6 +81,8 @@ CLASS zcl_abapgit_repo_online DEFINITION
         VALUE(rt_list) TYPE scit_alvlist
       RAISING
         zcx_abapgit_exception .
+    METHODS: sync_sha1_local.
+
     METHODS deserialize
         REDEFINITION .
     METHODS get_files_remote
@@ -525,4 +527,11 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     rt_results = mt_status.
 
   ENDMETHOD.                    "status
+
+  METHOD sync_sha1_local.
+
+    ms_data-sha1 = mv_branch.
+
+  ENDMETHOD.
+
 ENDCLASS.
