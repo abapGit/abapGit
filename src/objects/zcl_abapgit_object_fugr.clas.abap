@@ -340,7 +340,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
         OTHERS                  = 12.
     IF sy-subrc <> 0 AND sy-subrc <> 1 AND sy-subrc <> 3.
 * todo, change description
-      zcx_abapgit_exception=>raise( 'error from RS_FUNCTION_POOL_INSERT' ).
+      zcx_abapgit_exception=>raise( |error from RS_FUNCTION_POOL_INSERT, code: { sy-subrc }| ).
     ENDIF.
 
   ENDMETHOD.                    "deserialize_xml
