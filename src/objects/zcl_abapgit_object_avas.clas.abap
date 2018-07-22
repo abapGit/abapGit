@@ -31,7 +31,9 @@ CLASS zcl_abapgit_object_avas DEFINITION
         !is_avas TYPE ty_avas .
     METHODS instantiate
       RETURNING
-        VALUE(ro_avas) TYPE REF TO cl_cls_attr_value_assignment .
+        VALUE(ro_avas) TYPE REF TO cl_cls_attr_value_assignment
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -88,7 +90,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
 
   METHOD instantiate.
 
-    DATA: lv_id TYPE guid_32,
+    DATA: lv_id  TYPE guid_32,
           lo_err TYPE REF TO cx_root.
 
     lv_id = ms_item-obj_name.
