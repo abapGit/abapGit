@@ -91,7 +91,6 @@ CLASS zcl_abapgit_repo_online DEFINITION
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
     DATA mv_branch TYPE zif_abapgit_definitions=>ty_sha1 .
     DATA mv_initialized TYPE abap_bool .
-    DATA mo_branches TYPE REF TO zcl_abapgit_git_branch_list .
     DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
     DATA mv_code_inspector_successful TYPE abap_bool .
 
@@ -101,6 +100,8 @@ CLASS zcl_abapgit_repo_online DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS actualize_head_branch
+      IMPORTING
+        io_branch_list TYPE REF TO zcl_abapgit_git_branch_list
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
@@ -112,7 +113,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
   METHOD actualize_head_branch.
     DATA lv_branch_name TYPE string.
-    lv_branch_name = mo_branches->get_head( )-name.
+    lv_branch_name = io_branch_list->get_head( )-name.
 
     IF lv_branch_name <> ms_data-head_branch.
       set( iv_head_branch = lv_branch_name ).
@@ -362,8 +363,9 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
   METHOD refresh.
 
-    DATA: lo_progress  TYPE REF TO zcl_abapgit_progress,
-          lx_exception TYPE REF TO zcx_abapgit_exception.
+    DATA: lo_progress    TYPE REF TO zcl_abapgit_progress,
+          lx_exception   TYPE REF TO zcx_abapgit_exception,
+          lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list.
 
     super->refresh( iv_drop_cache ).
     reset_status( ).
@@ -377,14 +379,14 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     zcl_abapgit_git_porcelain=>pull(
       EXPORTING
-        io_repo    = me
+        io_repo        = me
       IMPORTING
-        et_files   = mt_remote
-        et_objects = mt_objects
-        ev_branch  = mv_branch ).
+        et_files       = mt_remote
+        et_objects     = mt_objects
+        ev_branch      = mv_branch
+        eo_branch_list = lo_branch_list ).
 
-    mo_branches = zcl_abapgit_git_transport=>branches( get_url( ) ).
-    actualize_head_branch( ).
+    actualize_head_branch( lo_branch_list ).
 
     mv_initialized = abap_true.
 
