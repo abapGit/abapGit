@@ -52,7 +52,7 @@ CLASS ZCL_ABAPGIT_XML IMPLEMENTATION.
     DATA: lv_version TYPE string.
 
 
-    lv_version = |abapGit version: { zif_abapgit_definitions=>gc_abap_version }|.
+    lv_version = |abapGit version: { zif_abapgit_version=>gc_abap_version }|.
 
     CALL FUNCTION 'POPUP_TO_INFORM'
       EXPORTING
@@ -128,7 +128,7 @@ CLASS ZCL_ABAPGIT_XML IMPLEMENTATION.
     li_element = mi_xml_doc->find_from_name_ns( depth = 0 name = c_abapgit_tag ).
     li_version = li_element->if_ixml_node~get_attributes(
       )->get_named_item_ns( c_attr_version ) ##no_text.
-    IF li_version->get_value( ) <> zif_abapgit_definitions=>gc_xml_version.
+    IF li_version->get_value( ) <> zif_abapgit_version=>gc_xml_version.
       display_xml_error( ).
     ENDIF.
 
