@@ -87,29 +87,27 @@ CLASS zcl_abapgit_repo_online DEFINITION
     METHODS refresh
         REDEFINITION .
   PRIVATE SECTION.
-    DATA:
-      mt_objects                   TYPE zif_abapgit_definitions=>ty_objects_tt,
-      mv_branch                    TYPE zif_abapgit_definitions=>ty_sha1,
-      mv_initialized               TYPE abap_bool,
-      mo_branches                  TYPE REF TO zcl_abapgit_git_branch_list,
-      mt_status                    TYPE zif_abapgit_definitions=>ty_results_tt,
-      mv_code_inspector_successful TYPE abap_bool.
 
-    METHODS:
-      handle_stage_ignore
-        IMPORTING io_stage TYPE REF TO zcl_abapgit_stage
-        RAISING   zcx_abapgit_exception,
-      actualize_head_branch
-        RAISING zcx_abapgit_exception,
-      delete_initial_online_repo
-        IMPORTING iv_commit TYPE flag
-        RAISING   zcx_abapgit_exception.
+    DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
+    DATA mv_branch TYPE zif_abapgit_definitions=>ty_sha1 .
+    DATA mv_initialized TYPE abap_bool .
+    DATA mo_branches TYPE REF TO zcl_abapgit_git_branch_list .
+    DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
+    DATA mv_code_inspector_successful TYPE abap_bool .
 
+    METHODS handle_stage_ignore
+      IMPORTING
+        !io_stage TYPE REF TO zcl_abapgit_stage
+      RAISING
+        zcx_abapgit_exception .
+    METHODS actualize_head_branch
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_online IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
 
   METHOD actualize_head_branch.
@@ -130,21 +128,6 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     mv_initialized = abap_false.
 
   ENDMETHOD.                    "constructor
-
-
-  METHOD delete_initial_online_repo.
-
-    IF me->is_offline( ) = abap_false AND me->get_sha1_remote( ) IS INITIAL.
-
-      zcl_abapgit_repo_srv=>get_instance( )->delete( me ).
-
-      IF iv_commit = abap_true.
-        COMMIT WORK.
-      ENDIF.
-
-    ENDIF.
-
-  ENDMETHOD.  " delete_initial_online_repo
 
 
   METHOD deserialize.
@@ -392,22 +375,13 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     lo_progress->show( iv_current = 1
                        iv_text    = 'Fetch remote files' ) ##NO_TEXT.
 
-    TRY.
-        zcl_abapgit_git_porcelain=>pull(
-          EXPORTING
-            io_repo    = me
-          IMPORTING
-            et_files   = mt_remote
-            et_objects = mt_objects
-            ev_branch  = mv_branch ).
-
-      CATCH zcx_abapgit_exception INTO lx_exception.
-
-        delete_initial_online_repo( abap_true ).
-
-        RAISE EXCEPTION lx_exception.
-
-    ENDTRY.
+    zcl_abapgit_git_porcelain=>pull(
+      EXPORTING
+        io_repo    = me
+      IMPORTING
+        et_files   = mt_remote
+        et_objects = mt_objects
+        ev_branch  = mv_branch ).
 
     mo_branches = zcl_abapgit_git_transport=>branches( get_url( ) ).
     actualize_head_branch( ).
