@@ -311,7 +311,13 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
                                      IMPORTING ev_branch        = lv_branch
                                                et_updated_files = lt_updated_files ).
 
-    refresh( ).
+    IF io_stage->get_branch_sha1( ) = get_sha1_remote( ).
+* pushing to the branch currently represented by this repository object      mv_branch = lv_branch.
+      mv_branch = lv_branch.
+    ELSE.
+      refresh( ).
+    ENDIF.
+
     update_local_checksums( lt_updated_files ).
 
     CLEAR: mv_code_inspector_successful.
