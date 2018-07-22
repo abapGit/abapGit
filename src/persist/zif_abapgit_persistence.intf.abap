@@ -32,7 +32,6 @@ INTERFACE zif_abapgit_persistence PUBLIC.
   TYPES: BEGIN OF ty_repo_xml,
            url             TYPE string,
            branch_name     TYPE string,
-           sha1            TYPE zif_abapgit_definitions=>ty_sha1,
            package         TYPE devclass,
            created_by      TYPE xubname,
            created_at      TYPE timestampl,

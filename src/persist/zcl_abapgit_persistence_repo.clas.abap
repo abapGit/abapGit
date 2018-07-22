@@ -10,12 +10,6 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
         VALUE(rt_repos) TYPE zif_abapgit_persistence=>tt_repo
       RAISING
         zcx_abapgit_exception .
-    METHODS update_sha1
-      IMPORTING
-        !iv_key         TYPE zif_abapgit_persistence=>ty_repo-key
-        !iv_branch_sha1 TYPE zif_abapgit_persistence=>ty_repo_xml-sha1
-      RAISING
-        zcx_abapgit_exception .
     METHODS update_local_checksums
       IMPORTING
         !iv_key       TYPE zif_abapgit_persistence=>ty_repo-key
@@ -114,7 +108,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_persistence_repo IMPLEMENTATION.
 
 
   METHOD add.
@@ -125,7 +119,6 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
     ls_repo-url          = iv_url.
     ls_repo-branch_name  = iv_branch_name.
-    ls_repo-sha1         = iv_branch.
     ls_repo-package      = iv_package.
     ls_repo-offline      = iv_offline.
     ls_repo-created_by   = sy-uname.
@@ -422,31 +415,6 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
                    iv_data  = ls_content-data_str ).
 
   ENDMETHOD.  "update_offline
-
-
-  METHOD update_sha1.
-
-    DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
-          ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE zif_abapgit_persistence=>ty_repo.
-
-
-    ASSERT NOT iv_key IS INITIAL.
-
-    TRY.
-        ls_repo = read( iv_key ).
-      CATCH zcx_abapgit_not_found.
-        zcx_abapgit_exception=>raise( 'key not found' ).
-    ENDTRY.
-
-    ls_repo-sha1 = iv_branch_sha1.
-    ls_content-data_str = to_xml( ls_repo ).
-
-    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-                   iv_value = iv_key
-                   iv_data  = ls_content-data_str ).
-
-  ENDMETHOD.
 
 
   METHOD update_url.

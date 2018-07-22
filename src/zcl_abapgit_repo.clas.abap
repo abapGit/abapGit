@@ -114,7 +114,6 @@ CLASS zcl_abapgit_repo DEFINITION
 
     METHODS set
       IMPORTING
-        !iv_sha1           TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
         !it_checksums      TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
         !iv_url            TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
         !iv_branch_name    TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
@@ -457,8 +456,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     DATA: lo_persistence TYPE REF TO zcl_abapgit_persistence_repo.
 
 
-    ASSERT iv_sha1 IS SUPPLIED
-      OR it_checksums IS SUPPLIED
+    ASSERT it_checksums IS SUPPLIED
       OR iv_url IS SUPPLIED
       OR iv_branch_name IS SUPPLIED
       OR iv_head_branch IS SUPPLIED
@@ -467,13 +465,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       OR is_local_settings IS SUPPLIED.
 
     CREATE OBJECT lo_persistence.
-
-    IF iv_sha1 IS SUPPLIED.
-      lo_persistence->update_sha1(
-        iv_key         = ms_data-key
-        iv_branch_sha1 = iv_sha1 ).
-      ms_data-sha1 = iv_sha1.
-    ENDIF.
 
     IF it_checksums IS SUPPLIED.
       lo_persistence->update_local_checksums(

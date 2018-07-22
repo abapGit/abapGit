@@ -145,7 +145,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     zcl_abapgit_git_porcelain=>create_branch(
       io_repo = lo_repo
       iv_name = lv_name
-      iv_from = lo_repo->get_sha1_local( ) ).
+      iv_from = lo_repo->get_sha1_remote( ) ).
 
     " automatically switch to new branch
     lo_repo->set_branch_name( lv_name ).
