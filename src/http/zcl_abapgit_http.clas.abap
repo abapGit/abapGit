@@ -206,7 +206,7 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
 
 * bitbucket require agent prefix = "git/"
 * also see https://github.com/larshp/abapGit/issues/1432
-    rv_agent = |git/2.0 (abapGit { zif_abapgit_definitions=>gc_abap_version })|.
+    rv_agent = |git/2.0 (abapGit { zif_abapgit_version=>gc_abap_version })|.
 
   ENDMETHOD.
 

@@ -53,7 +53,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
 
     ro_html->add( '<td class="w40"></td>' ).                "#EC NOTEXT
-    ro_html->add( |<td><span class="version">{ zif_abapgit_definitions=>gc_abap_version }</span></td>| ). "#EC NOTEXT
+    ro_html->add( |<td><span class="version">{ zif_abapgit_version=>gc_abap_version }</span></td>| ). "#EC NOTEXT
     ro_html->add( '<td id="debug-output" class="w40"></td>' ). "#EC NOTEXT
 
     ro_html->add( '</tr></table>' ).                        "#EC NOTEXT
