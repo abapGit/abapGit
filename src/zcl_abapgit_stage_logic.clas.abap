@@ -1,7 +1,7 @@
-class ZCL_ABAPGIT_STAGE_LOGIC definition
-  public
-  final
-  create public .
+CLASS zcl_abapgit_stage_logic DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
     CLASS-METHODS:
@@ -17,16 +17,28 @@ class ZCL_ABAPGIT_STAGE_LOGIC definition
   PRIVATE SECTION.
     CLASS-METHODS:
       remove_ignored
-        IMPORTING io_repo  TYPE REF TO zcl_abapgit_repo_online
-        CHANGING  cs_files TYPE zif_abapgit_definitions=>ty_stage_files,
+        IMPORTING io_repo             TYPE REF TO zcl_abapgit_repo_online
+                  it_all_remote_files TYPE zif_abapgit_definitions=>ty_files_tt
+        CHANGING  cs_files            TYPE zif_abapgit_definitions=>ty_stage_files,
       remove_identical
-        CHANGING cs_files TYPE zif_abapgit_definitions=>ty_stage_files.
+        CHANGING cs_files TYPE zif_abapgit_definitions=>ty_stage_files,
+      remove_dot_abapgit
+        IMPORTING
+          io_repo  TYPE REF TO zcl_abapgit_repo_online
+        CHANGING
+          cs_files TYPE zif_abapgit_definitions=>ty_stage_files,
+      remove_dot_gitignore
+        IMPORTING
+          io_repo             TYPE REF TO zcl_abapgit_repo_online
+          it_all_remote_files TYPE zif_abapgit_definitions=>ty_files_tt
+        CHANGING
+          cs_files            TYPE zif_abapgit_definitions=>ty_stage_files.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_STAGE_LOGIC IMPLEMENTATION.
+CLASS zcl_abapgit_stage_logic IMPLEMENTATION.
 
 
   METHOD count.
@@ -42,11 +54,17 @@ CLASS ZCL_ABAPGIT_STAGE_LOGIC IMPLEMENTATION.
 
   METHOD get.
 
+    DATA: lt_remote TYPE zif_abapgit_definitions=>ty_stage_files-remote.
+
     rs_files-local  = io_repo->get_files_local( ).
     rs_files-remote = io_repo->get_files_remote( ).
+
+    lt_remote = rs_files-remote.
+
     remove_identical( CHANGING cs_files = rs_files ).
-    remove_ignored( EXPORTING io_repo  = io_repo
-                    CHANGING  cs_files = rs_files ).
+    remove_ignored( EXPORTING io_repo             = io_repo
+                              it_all_remote_files = lt_remote
+                    CHANGING  cs_files            = rs_files ).
 
   ENDMETHOD.
 
@@ -79,10 +97,20 @@ CLASS ZCL_ABAPGIT_STAGE_LOGIC IMPLEMENTATION.
 
   METHOD remove_ignored.
 
+    remove_dot_abapgit( EXPORTING io_repo  = io_repo
+                        CHANGING  cs_files = cs_files ).
+
+    remove_dot_gitignore( EXPORTING io_repo             = io_repo
+                                    it_all_remote_files = it_all_remote_files
+                          CHANGING  cs_files            = cs_files  ).
+
+  ENDMETHOD.
+
+  METHOD remove_dot_abapgit.
+
     DATA: lv_index TYPE i.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF cs_files-remote.
-
 
     LOOP AT cs_files-remote ASSIGNING <ls_remote>.
       lv_index = sy-tabix.
@@ -100,4 +128,33 @@ CLASS ZCL_ABAPGIT_STAGE_LOGIC IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
+
+  METHOD remove_dot_gitignore.
+
+    DATA: lv_index TYPE i.
+
+    FIELD-SYMBOLS: <ls_local>  TYPE zif_abapgit_definitions=>ty_file_item.
+
+    LOOP AT cs_files-local ASSIGNING <ls_local>.
+      lv_index = sy-tabix.
+
+      IF io_repo->get_dot_gitignore( )->is_ignored(
+          iv_path     = <ls_local>-file-path
+          iv_filename = <ls_local>-file-filename ) = abap_true.
+
+        READ TABLE it_all_remote_files TRANSPORTING NO FIELDS
+                                       WITH KEY path     = <ls_local>-file-path
+                                                filename = <ls_local>-file-filename.
+        IF sy-subrc <> 0.
+          " only ignore if object doesn't exist in remote
+          DELETE cs_files-local INDEX lv_index.
+        ENDIF.
+
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.

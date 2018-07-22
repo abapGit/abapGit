@@ -327,7 +327,9 @@ INTERFACE zif_abapgit_definitions PUBLIC.
            max_lines         TYPE i,
            adt_jump_enabled  TYPE abap_bool,
            show_default_repo TYPE abap_bool,
-         END OF ty_s_user_settings.
+         END OF ty_s_user_settings,
+         ty_dot_gitignore  TYPE string,
+         tty_dot_gitignore TYPE stringtab.
 
   CONSTANTS gc_xml_version TYPE string VALUE 'v1.0.0' ##NO_TEXT.
   CONSTANTS gc_abap_version TYPE string VALUE '1.72.1' ##NO_TEXT.
@@ -383,6 +385,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   CONSTANTS gc_english TYPE spras VALUE 'E' ##NO_TEXT.
   CONSTANTS gc_root_dir TYPE string VALUE '/' ##NO_TEXT.
   CONSTANTS gc_dot_abapgit TYPE string VALUE '.abapgit.xml' ##NO_TEXT.
+  CONSTANTS gc_dot_gitignore TYPE string VALUE '.gitignore' ##NO_TEXT.
   CONSTANTS gc_author_regex TYPE string VALUE '^([\\\w\s\.\,\#@\-_1-9\(\) ]+) <(.*)> (\d{10})\s?.\d{4}$' ##NO_TEXT.
   CONSTANTS:
     BEGIN OF gc_action,
@@ -400,6 +403,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       repo_transport_to_branch TYPE string VALUE 'repo_transport_to_branch',
       repo_syntax_check        TYPE string VALUE 'repo_syntax_check',
       repo_code_inspector      TYPE string VALUE 'repo_code_inspector',
+      repo_dot_git_ignore      TYPE string VALUE 'repo_dot_git_ignore',
 
       abapgit_home             TYPE string VALUE 'abapgit_home',
       abapgit_wiki             TYPE string VALUE 'abapgit_wiki',

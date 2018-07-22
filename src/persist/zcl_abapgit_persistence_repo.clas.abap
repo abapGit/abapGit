@@ -85,10 +85,16 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
         zcx_abapgit_exception .
     METHODS update_local_settings
       IMPORTING
-        !iv_key      TYPE zif_abapgit_persistence=>ty_repo-key
-        !is_settings TYPE zif_abapgit_persistence=>ty_repo_xml-local_settings
+         iv_key      TYPE zif_abapgit_persistence=>ty_repo-key
+         is_settings TYPE zif_abapgit_persistence=>ty_repo_xml-local_settings
       RAISING
         zcx_abapgit_exception .
+    METHODS update_dot_gitignore
+      IMPORTING
+        iv_key           TYPE zif_abapgit_persistence=>ty_value
+        it_dot_gitignore TYPE stringtab
+      RAISING
+        zcx_abapgit_exception.
   PRIVATE SECTION.
 
     DATA mo_db TYPE REF TO zcl_abapgit_persistence_db .
@@ -476,4 +482,29 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
                    iv_data  = ls_content-data_str ).
 
   ENDMETHOD.
+
+  METHOD update_dot_gitignore.
+
+    DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
+          ls_content LIKE LINE OF lt_content,
+          ls_repo    TYPE zif_abapgit_persistence=>ty_repo.
+
+
+    ASSERT NOT iv_key IS INITIAL.
+
+    TRY.
+        ls_repo = read( iv_key ).
+      CATCH zcx_abapgit_not_found.
+        zcx_abapgit_exception=>raise( 'key not found' ).
+    ENDTRY.
+
+    ls_repo-dot_gitignore = it_dot_gitignore.
+    ls_content-data_str = to_xml( ls_repo ).
+
+    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
+                   iv_value = iv_key
+                   iv_data  = ls_content-data_str ).
+
+  ENDMETHOD.
+
 ENDCLASS.

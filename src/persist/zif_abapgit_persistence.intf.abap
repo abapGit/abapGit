@@ -39,6 +39,7 @@ INTERFACE zif_abapgit_persistence PUBLIC.
            offline         TYPE sap_bool,
            local_checksums TYPE ty_local_checksum_tt,
            dot_abapgit     TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
+           dot_gitignore   TYPE zif_abapgit_definitions=>tty_dot_gitignore,
            head_branch     TYPE string,   " HEAD symref of the repo, master branch
            local_settings  TYPE ty_local_settings,
          END OF ty_repo_xml.

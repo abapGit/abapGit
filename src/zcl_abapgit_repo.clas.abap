@@ -61,6 +61,11 @@ CLASS zcl_abapgit_repo DEFINITION
         !io_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit
       RAISING
         zcx_abapgit_exception .
+    METHODS set_dot_gitignore
+      IMPORTING
+        !io_dot_gitignore TYPE REF TO zcl_abapgit_dot_gitignore
+      RAISING
+        zcx_abapgit_exception .
     METHODS deserialize
       IMPORTING
         VALUE(is_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
@@ -84,6 +89,11 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(ro_dot) TYPE REF TO zcl_abapgit_dot_abapgit
       RAISING
         zcx_abapgit_exception .
+    METHODS find_remote_dot_gitignore
+      RETURNING
+        VALUE(ro_dot_gitignore) TYPE REF TO zcl_abapgit_dot_gitignore
+      RAISING
+        zcx_abapgit_exception .
     METHODS is_offline
       RETURNING
         VALUE(rv_offline) TYPE abap_bool
@@ -102,8 +112,9 @@ CLASS zcl_abapgit_repo DEFINITION
         is_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
       RAISING
         zcx_abapgit_exception .
-
-
+    METHODS get_dot_gitignore
+      RETURNING
+        VALUE(ro_dot_gitignore) TYPE REF TO zcl_abapgit_dot_gitignore.
   PROTECTED SECTION.
 
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
@@ -112,24 +123,46 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA mv_last_serialization TYPE timestamp .
     DATA ms_data TYPE zif_abapgit_persistence=>ty_repo .
 
-    METHODS set
-      IMPORTING
-        !iv_sha1           TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
-        !it_checksums      TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
-        !iv_url            TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
-        !iv_branch_name    TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
-        !iv_head_branch    TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
-        !iv_offline        TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
-        !is_dot_abapgit    TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL
-        !is_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings OPTIONAL
-      RAISING
-        zcx_abapgit_exception .
+    METHODS:
+      set
+        IMPORTING
+          iv_sha1           TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
+          it_checksums      TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
+          iv_url            TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
+          iv_branch_name    TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
+          iv_head_branch    TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
+          iv_offline        TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
+          is_dot_abapgit    TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL
+          it_dot_gitignore  TYPE zif_abapgit_definitions=>tty_dot_gitignore OPTIONAL
+          is_local_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings OPTIONAL
+        RAISING
+          zcx_abapgit_exception.
+
+  PRIVATE SECTION.
+    METHODS:
+      refresh_dot_gitignore
+        RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_repo IMPLEMENTATION.
+
+  METHOD refresh_dot_gitignore.
+
+    DATA: lo_persistence_repo TYPE REF TO zcl_abapgit_persistence_repo.
+
+    CREATE OBJECT lo_persistence_repo.
+
+    TRY.
+        ms_data-dot_gitignore = lo_persistence_repo->read( ms_data-key )-dot_gitignore.
+
+      CATCH zcx_abapgit_not_found INTO DATA(lx_error).
+        "ignore
+    ENDTRY.
+
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -194,6 +227,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
     find_remote_dot_abapgit( ).
+    find_remote_dot_gitignore( ).
 
     IF get_local_settings( )-write_protected = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot deserialize. Local code is write-protected by repo config' ).
@@ -245,16 +279,16 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD get_files_local.
 
-    DATA: lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          ls_item     TYPE zif_abapgit_definitions=>ty_item,
-          lt_files    TYPE zif_abapgit_definitions=>ty_files_tt,
-          lo_progress TYPE REF TO zcl_abapgit_progress,
-          lt_cache    TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_file_item
-                   WITH NON-UNIQUE KEY item.
-
-    DATA: lt_filter       TYPE SORTED TABLE OF tadir
-                          WITH NON-UNIQUE KEY object obj_name,
-          lv_filter_exist TYPE abap_bool.
+    DATA: lt_tadir         TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          ls_item          TYPE zif_abapgit_definitions=>ty_item,
+          lt_files         TYPE zif_abapgit_definitions=>ty_files_tt,
+          lo_progress      TYPE REF TO zcl_abapgit_progress,
+          lt_cache         TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_file_item
+                   WITH NON-UNIQUE KEY item,
+          lt_filter        TYPE SORTED TABLE OF tadir
+                              WITH NON-UNIQUE KEY object obj_name,
+          lv_filter_exist  TYPE abap_bool,
+          lt_dot_gitignore TYPE zif_abapgit_definitions=>tty_dot_gitignore.
 
     FIELD-SYMBOLS: <ls_file>   LIKE LINE OF lt_files,
                    <ls_return> LIKE LINE OF rt_files,
@@ -274,6 +308,17 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     <ls_return>-file-data     = get_dot_abapgit( )->serialize( ).
     <ls_return>-file-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob
                                                         iv_data = <ls_return>-file-data ).
+
+    lt_dot_gitignore = get_dot_gitignore( )->get_data( ).
+
+    IF lines( lt_dot_gitignore ) > 0.
+      APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
+      <ls_return>-file-path     = zif_abapgit_definitions=>gc_root_dir.
+      <ls_return>-file-filename = zif_abapgit_definitions=>gc_dot_gitignore.
+      <ls_return>-file-data     = get_dot_gitignore( )->serialize( ).
+      <ls_return>-file-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob
+                                                          iv_data = <ls_return>-file-data ).
+    ENDIF.
 
     lt_cache = mt_local.
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
@@ -447,6 +492,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       CLEAR: mv_last_serialization, mt_local.
     ENDIF.
 
+    refresh_dot_gitignore( ).
+
   ENDMETHOD.                    "refresh
 
 
@@ -464,6 +511,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       OR iv_head_branch IS SUPPLIED
       OR iv_offline IS SUPPLIED
       OR is_dot_abapgit IS SUPPLIED
+      OR it_dot_gitignore IS SUPPLIED
       OR is_local_settings IS SUPPLIED.
 
     CREATE OBJECT lo_persistence.
@@ -515,6 +563,13 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
         iv_key         = ms_data-key
         is_dot_abapgit = is_dot_abapgit ).
       ms_data-dot_abapgit = is_dot_abapgit.
+    ENDIF.
+
+    IF it_dot_gitignore IS SUPPLIED.
+      lo_persistence->update_dot_gitignore(
+        iv_key           = ms_data-key
+        it_dot_gitignore = it_dot_gitignore ).
+      ms_data-dot_gitignore = it_dot_gitignore.
     ENDIF.
 
     IF is_local_settings IS SUPPLIED.
@@ -624,6 +679,31 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   ENDMETHOD.  " update_local_checksums
 
+  METHOD get_dot_gitignore.
 
+    CREATE OBJECT ro_dot_gitignore
+      EXPORTING
+        it_gitignore = ms_data-dot_gitignore.
+
+  ENDMETHOD.
+
+  METHOD find_remote_dot_gitignore.
+
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
+
+
+    READ TABLE mt_remote ASSIGNING <ls_remote>
+                         WITH KEY path     = zif_abapgit_definitions=>gc_root_dir
+                                  filename = zif_abapgit_definitions=>gc_dot_gitignore.
+    IF sy-subrc = 0.
+      ro_dot_gitignore = zcl_abapgit_dot_gitignore=>deserialize( <ls_remote>-data ).
+      set_dot_gitignore( ro_dot_gitignore ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD set_dot_gitignore.
+    set( it_dot_gitignore = io_dot_gitignore->get_data( ) ).
+  ENDMETHOD.
 
 ENDCLASS.
