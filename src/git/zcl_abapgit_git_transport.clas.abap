@@ -12,6 +12,7 @@ CLASS zcl_abapgit_git_transport DEFINITION
                 it_branches    TYPE zif_abapgit_definitions=>ty_git_branch_list_tt OPTIONAL
       EXPORTING et_objects     TYPE zif_abapgit_definitions=>ty_objects_tt
                 ev_branch      TYPE zif_abapgit_definitions=>ty_sha1
+                eo_branch_list TYPE REF TO zcl_abapgit_git_branch_list
       RAISING   zcx_abapgit_exception.
 
 * local to remote
@@ -46,6 +47,7 @@ CLASS zcl_abapgit_git_transport DEFINITION
                 iv_branch_name TYPE string
       EXPORTING eo_client      TYPE REF TO zcl_abapgit_http_client
                 ev_branch      TYPE zif_abapgit_definitions=>ty_sha1
+                eo_branch_list TYPE REF TO zcl_abapgit_git_branch_list
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS parse
@@ -98,18 +100,16 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
   METHOD find_branch.
 
-    DATA: lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list.
-
     branch_list(
       EXPORTING
         iv_url          = iv_url
         iv_service      = iv_service
       IMPORTING
         eo_client       = eo_client
-        eo_branch_list  = lo_branch_list ).
+        eo_branch_list  = eo_branch_list ).
 
     IF ev_branch IS SUPPLIED.
-      ev_branch = lo_branch_list->find_by_name( iv_branch_name )-sha1.
+      ev_branch = eo_branch_list->find_by_name( iv_branch_name )-sha1.
     ENDIF.
 
   ENDMETHOD.                    "find_branch
@@ -229,7 +229,9 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_branches.
 
 
-    CLEAR et_objects.
+    CLEAR: et_objects,
+           ev_branch,
+           eo_branch_list.
 
     find_branch(
       EXPORTING
@@ -238,6 +240,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
         iv_branch_name = iv_branch_name
       IMPORTING
         eo_client      = lo_client
+        eo_branch_list = eo_branch_list
         ev_branch      = ev_branch ).
 
     IF it_branches IS INITIAL.

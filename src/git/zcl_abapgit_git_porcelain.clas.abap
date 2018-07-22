@@ -6,11 +6,12 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
   PUBLIC SECTION.
     CLASS-METHODS pull
       IMPORTING
-        !io_repo    TYPE REF TO zcl_abapgit_repo_online
+        !io_repo        TYPE REF TO zcl_abapgit_repo_online
       EXPORTING
-        !et_files   TYPE zif_abapgit_definitions=>ty_files_tt
-        !et_objects TYPE zif_abapgit_definitions=>ty_objects_tt
-        !ev_branch  TYPE zif_abapgit_definitions=>ty_sha1
+        !et_files       TYPE zif_abapgit_definitions=>ty_files_tt
+        !et_objects     TYPE zif_abapgit_definitions=>ty_objects_tt
+        !ev_branch      TYPE zif_abapgit_definitions=>ty_sha1
+        !eo_branch_list TYPE REF TO zcl_abapgit_git_branch_list
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS push
@@ -351,6 +352,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
     CLEAR et_files.
     CLEAR et_objects.
     CLEAR ev_branch.
+    CLEAR eo_branch_list.
 
     zcl_abapgit_git_transport=>upload_pack(
       EXPORTING
@@ -358,7 +360,8 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
         iv_branch_name = io_repo->get_branch_name( )
       IMPORTING
         et_objects     = et_objects
-        ev_branch      = ev_branch ).
+        ev_branch      = ev_branch
+        eo_branch_list = eo_branch_list ).
 
     READ TABLE et_objects INTO ls_object WITH KEY sha1 = ev_branch type = zif_abapgit_definitions=>gc_type-commit.
     IF sy-subrc <> 0.
