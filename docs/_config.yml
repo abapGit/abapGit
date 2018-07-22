@@ -4,6 +4,8 @@ collections_dir: collections
 collections:
   development:
     output: true
+plugins:
+  - jekyll-octicons    
 defaults:
   - scope:
       path: ""
