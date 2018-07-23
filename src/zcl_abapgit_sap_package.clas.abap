@@ -274,7 +274,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
       WHERE parentcl = mv_package.      "#EC CI_GENBUFF "#EC CI_SUBRC
     lv_children = sy-dbcnt.
 
-    LOOP AT rt_list INTO lv_devclass FROM 1 TO children.
+    LOOP AT rt_list INTO lv_devclass FROM 1 TO lv_children.
       "Get Children of Child
       lt_list = zcl_abapgit_factory=>get_sap_package( lv_devclass )->list_subpackages( ).
       APPEND LINES OF lt_list TO rt_list.
