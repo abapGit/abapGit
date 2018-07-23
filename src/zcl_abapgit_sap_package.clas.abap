@@ -322,7 +322,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
     DATA: lt_list     LIKE rt_list,
           lv_devclass LIKE LINE OF rt_list.
-    DATA: children TYPE i.
+    DATA: lv_children TYPE i.
     FIELD-SYMBOLS: <st_devc> TYPE zif_abapgit_sap_package=>ty_devclass_info.
 
     DATA: o_package TYPE REF TO zcl_abapgit_sap_package.
@@ -353,9 +353,9 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
       SELECT devclass FROM tdevc
         INTO TABLE rt_list
         WHERE parentcl = mv_package.      "#EC CI_GENBUFF "#EC CI_SUBRC
-      children = sy-dbcnt.
+      lv_children = sy-dbcnt.
 
-      LOOP AT rt_list INTO lv_devclass FROM 1 TO children.
+      LOOP AT rt_list INTO lv_devclass FROM 1 TO lv_children.
         "Get Children of Child
         lt_list = zcl_abapgit_factory=>get_sap_package( lv_devclass )->list_subpackages( ).
         APPEND LINES OF lt_list TO rt_list.
