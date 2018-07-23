@@ -268,7 +268,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       io_dot                = get_dot_abapgit( )
       io_log                = io_log ).
 
-
     lt_filter = it_filter.
     lv_filter_exist = boolc( lines( lt_filter ) > 0 ).
 
