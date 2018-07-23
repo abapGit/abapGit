@@ -267,12 +267,12 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
     DATA: lt_list     LIKE rt_list,
           lv_devclass LIKE LINE OF rt_list.
-
+    DATA: lv_children TYPE i.
 
     SELECT devclass FROM tdevc
       INTO TABLE rt_list
       WHERE parentcl = mv_package.      "#EC CI_GENBUFF "#EC CI_SUBRC
-    children = sy-dbcnt.
+    lv_children = sy-dbcnt.
 
     LOOP AT rt_list INTO lv_devclass FROM 1 TO children.
       "Get Children of Child
