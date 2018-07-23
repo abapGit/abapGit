@@ -269,11 +269,13 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
           lv_devclass LIKE LINE OF rt_list.
 
 
-    SELECT devclass INTO TABLE rt_list
-      FROM tdevc WHERE parentcl = mv_package. "#EC CI_GENBUFF "#EC CI_SUBRC
+    SELECT devclass FROM tdevc
+      INTO TABLE rt_list
+      WHERE parentcl = mv_package.      "#EC CI_GENBUFF "#EC CI_SUBRC
+    children = sy-dbcnt.
 
-* note the recursion, since packages are added to the list
-    LOOP AT rt_list INTO lv_devclass.
+    LOOP AT rt_list INTO lv_devclass FROM 1 TO children.
+      "Get Children of Child
       lt_list = zcl_abapgit_factory=>get_sap_package( lv_devclass )->list_subpackages( ).
       APPEND LINES OF lt_list TO rt_list.
     ENDLOOP.
