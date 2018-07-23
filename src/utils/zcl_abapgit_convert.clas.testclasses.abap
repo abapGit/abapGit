@@ -8,6 +8,7 @@ CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FIN
   PRIVATE SECTION.
     METHODS convert_int FOR TESTING RAISING zcx_abapgit_exception.
     METHODS split_string FOR TESTING.
+    METHODS convert_bitbyte FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.                    "ltcl_convert DEFINITION
 
@@ -17,6 +18,46 @@ ENDCLASS.                    "ltcl_convert DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS ltcl_convert IMPLEMENTATION.
+
+  METHOD convert_bitbyte.
+
+    DATA: lv_xstring  TYPE xstring,
+          lv_byte     TYPE x,
+          lv_input    TYPE i,
+          lv_bitbyte  TYPE zif_abapgit_definitions=>ty_bitbyte,
+          lv_byteint  TYPE i,
+          lv_xbyteint TYPE xstring,
+          lv_xresult  TYPE xstring,
+          lv_result   TYPE i,
+          lv_offset   TYPE i.
+    DATA: lt_bitbytes TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_bitbyte
+            WITH DEFAULT KEY.
+
+    DO 1000 TIMES.
+
+      lv_result = 0.
+      CLEAR: lv_byteint, lv_xbyteint, lv_xresult.
+
+      lv_input  = sy-index * 64.
+      lv_xstring = zcl_abapgit_convert=>int_to_xstring4( lv_input ).
+      DO 4 TIMES.
+        lv_offset = sy-index - 1.
+        lv_byte = lv_xstring+lv_offset(1).
+        lv_bitbyte = zcl_abapgit_convert=>x_to_bitbyte( lv_byte ).
+        lv_byteint = zcl_abapgit_convert=>bitbyte_to_int( lv_bitbyte ).
+        lv_xbyteint = lv_byteint.
+        CONCATENATE lv_xresult lv_xbyteint INTO lv_xresult
+          IN BYTE MODE.
+      ENDDO.
+      lv_result = zcl_abapgit_convert=>xstring_to_int( lv_xresult ).
+
+      cl_abap_unit_assert=>assert_equals(
+          exp = lv_input
+          act = lv_result ).
+
+    ENDDO.
+
+  ENDMETHOD.
 
   METHOD convert_int.
 

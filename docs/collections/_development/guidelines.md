@@ -5,7 +5,7 @@ order: 10
 
 ### Practical
 
-* For non-tivial changes make sure there is an open issue. When starting the development add a comment in the issue. This will allow for discussing possible solutions, and avoid having multiple people look into the same issue.
+* For non-trivial changes make sure there is an open issue. When starting the development add a comment in the issue. This will allow for discussing possible solutions, and avoid having multiple people look into the same issue.
 
 * Keep the commits/PR as small as possible, try not to fix multiple issues in one commit/PR if possible. Smaller changes are easier to review, and are more likely to be accepted.
 

@@ -42,7 +42,8 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS delete
       IMPORTING
-        !it_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt
+        !it_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt
+        !is_checks TYPE zif_abapgit_definitions=>ty_delete_checks OPTIONAL
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS jump
@@ -385,35 +386,50 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     DATA: ls_item     TYPE zif_abapgit_definitions=>ty_item,
           lo_progress TYPE REF TO zcl_abapgit_progress,
           lt_tadir    LIKE it_tadir,
-          lt_items    TYPE zif_abapgit_definitions=>ty_items_tt.
+          lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
+          lx_error    TYPE REF TO zcx_abapgit_exception,
+          lv_text     TYPE string.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
     lt_tadir = it_tadir.
 
-    zcl_abapgit_dependencies=>resolve( CHANGING ct_tadir = lt_tadir ).
+    IF is_checks-transport-required = abap_true.
+      zcl_abapgit_default_transport=>get_instance( )->set( is_checks-transport-transport ).
+    ENDIF.
 
-    CREATE OBJECT lo_progress
-      EXPORTING
-        iv_total = lines( lt_tadir ).
+    TRY.
+        zcl_abapgit_dependencies=>resolve( CHANGING ct_tadir = lt_tadir ).
 
-    lt_items = map_tadir_to_items( lt_tadir ).
+        CREATE OBJECT lo_progress
+          EXPORTING
+            iv_total = lines( lt_tadir ).
 
-    check_objects_locked( iv_language = zif_abapgit_definitions=>gc_english
-                          it_items    = lt_items ).
+        lt_items = map_tadir_to_items( lt_tadir ).
 
-    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-      lo_progress->show( iv_current = sy-tabix
-                         iv_text    = |Delete { <ls_tadir>-obj_name }| ) ##NO_TEXT.
+        check_objects_locked( iv_language = zif_abapgit_definitions=>gc_english
+                              it_items    = lt_items ).
 
-      CLEAR ls_item.
-      ls_item-obj_type = <ls_tadir>-object.
-      ls_item-obj_name = <ls_tadir>-obj_name.
-      delete_obj( ls_item ).
+        LOOP AT lt_tadir ASSIGNING <ls_tadir>.
+          lo_progress->show( iv_current = sy-tabix
+                             iv_text    = |Delete { <ls_tadir>-obj_name }| ) ##NO_TEXT.
+
+          CLEAR ls_item.
+          ls_item-obj_type = <ls_tadir>-object.
+          ls_item-obj_name = <ls_tadir>-obj_name.
+          delete_obj( ls_item ).
 
 * make sure to save object deletions
-      COMMIT WORK.
-    ENDLOOP.
+          COMMIT WORK.
+        ENDLOOP.
+
+      CATCH zcx_abapgit_exception INTO lx_error.
+        zcl_abapgit_default_transport=>get_instance( )->reset( ).
+        lv_text = lx_error->get_text( ).
+        zcx_abapgit_exception=>raise( lv_text ).
+    ENDTRY.
+
+    zcl_abapgit_default_transport=>get_instance( )->reset( ).
 
   ENDMETHOD.                    "delete
 
@@ -446,7 +462,6 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
   METHOD deserialize.
 
     DATA: ls_item     TYPE zif_abapgit_definitions=>ty_item,
-          lv_cancel   TYPE abap_bool,
           li_obj      TYPE REF TO zif_abapgit_object,
           lt_remote   TYPE zif_abapgit_definitions=>ty_files_tt,
           lv_package  TYPE devclass,
@@ -720,6 +735,40 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
   ENDMETHOD.                    "jump
 
 
+  METHOD map_results_to_items.
+
+    DATA: ls_item LIKE LINE OF rt_items.
+    FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result.
+
+    LOOP AT it_results ASSIGNING <ls_result>.
+
+      ls_item-devclass = <ls_result>-package.
+      ls_item-obj_type = <ls_result>-obj_type.
+      ls_item-obj_name = <ls_result>-obj_name.
+      INSERT ls_item INTO TABLE rt_items.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD map_tadir_to_items.
+
+    DATA: ls_item LIKE LINE OF rt_items.
+    FIELD-SYMBOLS: <ls_tadir> TYPE zif_abapgit_definitions=>ty_tadir.
+
+    LOOP AT it_tadir ASSIGNING <ls_tadir>.
+
+      ls_item-devclass = <ls_tadir>-devclass.
+      ls_item-obj_type = <ls_tadir>-object.
+      ls_item-obj_name = <ls_tadir>-obj_name.
+      INSERT ls_item INTO TABLE rt_items.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD prioritize_deser.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
@@ -900,6 +949,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+    SORT rt_overwrite.
+    DELETE ADJACENT DUPLICATES FROM rt_overwrite.
+
   ENDMETHOD.
 
 
@@ -939,9 +991,11 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
   METHOD warning_package_find.
 
-    DATA: lv_package   TYPE devclass,
-          ls_overwrite LIKE LINE OF rt_overwrite,
-          ls_tadir     TYPE tadir.
+    DATA: lv_package         TYPE devclass,
+          lt_overwrite_uniqe TYPE HASHED TABLE OF zif_abapgit_definitions=>ty_overwrite
+                                  WITH UNIQUE KEY obj_type obj_name devclass,
+          ls_overwrite       LIKE LINE OF rt_overwrite,
+          ls_tadir           TYPE tadir.
     DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
@@ -964,43 +1018,12 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         ls_overwrite-obj_type = <ls_result>-obj_type.
         ls_overwrite-obj_name = <ls_result>-obj_name.
         ls_overwrite-devclass = ls_tadir-devclass.
-        APPEND ls_overwrite TO rt_overwrite.
+        INSERT ls_overwrite INTO TABLE lt_overwrite_uniqe.
       ENDIF.
 
     ENDLOOP.
 
-  ENDMETHOD.
-
-  METHOD map_tadir_to_items.
-
-    DATA: ls_item LIKE LINE OF rt_items.
-    FIELD-SYMBOLS: <ls_tadir> TYPE zif_abapgit_definitions=>ty_tadir.
-
-    LOOP AT it_tadir ASSIGNING <ls_tadir>.
-
-      ls_item-devclass = <ls_tadir>-devclass.
-      ls_item-obj_type = <ls_tadir>-object.
-      ls_item-obj_name = <ls_tadir>-obj_name.
-      INSERT ls_item INTO TABLE rt_items.
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD map_results_to_items.
-
-    DATA: ls_item LIKE LINE OF rt_items.
-    FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result.
-
-    LOOP AT it_results ASSIGNING <ls_result>.
-
-      ls_item-devclass = <ls_result>-package.
-      ls_item-obj_type = <ls_result>-obj_type.
-      ls_item-obj_name = <ls_result>-obj_name.
-      INSERT ls_item INTO TABLE rt_items.
-
-    ENDLOOP.
+    rt_overwrite = lt_overwrite_uniqe.
 
   ENDMETHOD.
 

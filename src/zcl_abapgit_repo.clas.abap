@@ -12,6 +12,11 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
         zcx_abapgit_exception .
+    METHODS delete_checks
+      RETURNING
+        VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_delete_checks
+      RAISING
+        zcx_abapgit_exception .
     METHODS constructor
       IMPORTING
         !is_data TYPE zif_abapgit_persistence=>ty_repo .
@@ -109,7 +114,6 @@ CLASS zcl_abapgit_repo DEFINITION
 
     METHODS set
       IMPORTING
-        !iv_sha1           TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
         !it_checksums      TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
         !iv_url            TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
         !iv_branch_name    TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
@@ -124,7 +128,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -201,6 +205,16 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     lt_requirements = get_dot_abapgit( )->get_data( )-requirements.
     rs_checks-requirements-met = zcl_abapgit_requirement_helper=>is_requirements_met(
       lt_requirements ).
+
+  ENDMETHOD.
+
+
+  METHOD delete_checks.
+
+    DATA: li_package TYPE REF TO zif_abapgit_sap_package.
+
+    li_package = zcl_abapgit_factory=>get_sap_package( get_package( ) ).
+    rs_checks-transport-required = li_package->are_changes_recorded_in_tr_req( ).
 
   ENDMETHOD.
 
@@ -442,8 +456,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     DATA: lo_persistence TYPE REF TO zcl_abapgit_persistence_repo.
 
 
-    ASSERT iv_sha1 IS SUPPLIED
-      OR it_checksums IS SUPPLIED
+    ASSERT it_checksums IS SUPPLIED
       OR iv_url IS SUPPLIED
       OR iv_branch_name IS SUPPLIED
       OR iv_head_branch IS SUPPLIED
@@ -452,13 +465,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       OR is_local_settings IS SUPPLIED.
 
     CREATE OBJECT lo_persistence.
-
-    IF iv_sha1 IS SUPPLIED.
-      lo_persistence->update_sha1(
-        iv_key         = ms_data-key
-        iv_branch_sha1 = iv_sha1 ).
-      ms_data-sha1 = iv_sha1.
-    ENDIF.
 
     IF it_checksums IS SUPPLIED.
       lo_persistence->update_local_checksums(

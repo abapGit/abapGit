@@ -49,7 +49,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_TUTORIAL IMPLEMENTATION.
                   zcl_abapgit_html=>icon( 'star/darkgrey' ) } icon at repo toolbar.</li>| ).
     ro_html->add( '</ul></p>' ).
 
-    ro_html->add( '<h2>abapGit related repositories</h2>' ).
+    ro_html->add( '<h2>abapGit repository</h2>' ).
     ro_html->add( '<p><ul>' ).
     ro_html->add( '<li>' ).
     IF zcl_abapgit_services_abapgit=>is_installed( ) = abap_true.
@@ -61,24 +61,14 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_TUTORIAL IMPLEMENTATION.
       ro_html->add( 'install it as a repository.' ).
     ENDIF.
     ro_html->add( '</li>' ).
-    ro_html->add( '<li>' ).
-    IF zcl_abapgit_services_abapgit=>is_installed_pi( ) = abap_true.
-      ro_html->add( 'abapGit plugins installed in package&nbsp;' ).
-      ro_html->add( zcl_abapgit_services_abapgit=>c_package_plugins ).
-    ELSE.
-      ro_html->add_a( iv_txt = 'install abapGit plugins'
-                      iv_act = zif_abapgit_definitions=>gc_action-abapgit_install_pi ).
-      ro_html->add( ' - you can also install plugins to extend supported object types' ).
-    ENDIF.
-    ro_html->add( '</li>' ).
     ro_html->add( '</ul></p>' ).
 
-  ENDMETHOD. " render_content.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~on_event.
     ev_state = zif_abapgit_definitions=>gc_event_state-not_handled.
-  ENDMETHOD.  " lif_gui_page~on_event.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~render.
@@ -89,5 +79,5 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_TUTORIAL IMPLEMENTATION.
     ro_html->add( render_content( ) ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "lif_gui_page~render
+  ENDMETHOD.
 ENDCLASS.

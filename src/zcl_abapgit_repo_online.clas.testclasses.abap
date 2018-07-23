@@ -3,7 +3,7 @@ CLASS ltd_code_inspector DEFINITION FOR TESTING.
 
   PUBLIC SECTION.
     INTERFACES:
-      zif_abapgit_code_inspector PARTIALLY IMPLEMENTED.
+      zif_abapgit_code_inspector.
 
     METHODS:
       constructor
@@ -33,6 +33,10 @@ CLASS ltd_code_inspector IMPLEMENTATION.
 
     ENDIF.
 
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_code_inspector~get_inspection. "##needed
 
   ENDMETHOD.
 

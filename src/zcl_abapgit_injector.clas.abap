@@ -34,7 +34,7 @@ CLASS zcl_abapgit_injector IMPLEMENTATION.
 
   METHOD set_tadir.
 
-    zcl_abapgit_factory=>mi_tadir = ii_tadir.
+    zcl_abapgit_factory=>gi_tadir = ii_tadir.
 
   ENDMETHOD.
 
@@ -43,7 +43,7 @@ CLASS zcl_abapgit_injector IMPLEMENTATION.
     DATA: ls_sap_package TYPE zcl_abapgit_factory=>ty_sap_package.
     FIELD-SYMBOLS: <ls_sap_package> TYPE zcl_abapgit_factory=>ty_sap_package.
 
-    READ TABLE zcl_abapgit_factory=>mt_sap_package
+    READ TABLE zcl_abapgit_factory=>gt_sap_package
          ASSIGNING <ls_sap_package>
          WITH TABLE KEY package = iv_package.
 
@@ -51,7 +51,7 @@ CLASS zcl_abapgit_injector IMPLEMENTATION.
 
       ls_sap_package-package = iv_package.
       INSERT ls_sap_package
-             INTO TABLE zcl_abapgit_factory=>mt_sap_package
+             INTO TABLE zcl_abapgit_factory=>gt_sap_package
              ASSIGNING <ls_sap_package>.
 
     ENDIF.
@@ -62,10 +62,10 @@ CLASS zcl_abapgit_injector IMPLEMENTATION.
 
   METHOD set_code_inspector.
 
-    DATA: ls_code_inspector LIKE LINE OF zcl_abapgit_factory=>mt_code_inspector.
-    FIELD-SYMBOLS: <ls_code_inspector> LIKE LINE OF zcl_abapgit_factory=>mt_code_inspector.
+    DATA: ls_code_inspector LIKE LINE OF zcl_abapgit_factory=>gt_code_inspector.
+    FIELD-SYMBOLS: <ls_code_inspector> LIKE LINE OF zcl_abapgit_factory=>gt_code_inspector.
 
-    READ TABLE zcl_abapgit_factory=>mt_code_inspector
+    READ TABLE zcl_abapgit_factory=>gt_code_inspector
          ASSIGNING <ls_code_inspector>
          WITH TABLE KEY package            = iv_package
                         check_variant_name = iv_check_variant_name.
@@ -75,7 +75,7 @@ CLASS zcl_abapgit_injector IMPLEMENTATION.
       ls_code_inspector-check_variant_name = iv_check_variant_name.
 
       INSERT ls_code_inspector
-             INTO TABLE zcl_abapgit_factory=>mt_code_inspector
+             INTO TABLE zcl_abapgit_factory=>gt_code_inspector
              ASSIGNING <ls_code_inspector>.
 
     ENDIF.
@@ -86,10 +86,10 @@ CLASS zcl_abapgit_injector IMPLEMENTATION.
 
   METHOD set_syntax_check.
 
-    DATA: ls_syntax_check LIKE LINE OF zcl_abapgit_factory=>mt_syntax_check.
-    FIELD-SYMBOLS: <ls_syntax_check> LIKE LINE OF zcl_abapgit_factory=>mt_syntax_check.
+    DATA: ls_syntax_check LIKE LINE OF zcl_abapgit_factory=>gt_syntax_check.
+    FIELD-SYMBOLS: <ls_syntax_check> LIKE LINE OF zcl_abapgit_factory=>gt_syntax_check.
 
-    READ TABLE zcl_abapgit_factory=>mt_syntax_check
+    READ TABLE zcl_abapgit_factory=>gt_syntax_check
          ASSIGNING <ls_syntax_check>
          WITH TABLE KEY package = iv_package.
     IF sy-subrc <> 0.
@@ -97,7 +97,7 @@ CLASS zcl_abapgit_injector IMPLEMENTATION.
       ls_syntax_check-package = iv_package.
 
       INSERT ls_syntax_check
-             INTO TABLE zcl_abapgit_factory=>mt_syntax_check
+             INTO TABLE zcl_abapgit_factory=>gt_syntax_check
              ASSIGNING <ls_syntax_check>.
 
     ENDIF.

@@ -82,7 +82,6 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD zif_abapgit_sap_package~are_changes_recorded_in_tr_req.
 
     DATA: li_package TYPE REF TO if_package.
@@ -378,7 +377,6 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
     lv_parent = zif_abapgit_sap_package~read_parent( ).
 
     IF sy-subrc = 0 AND NOT lv_parent IS INITIAL.
-      APPEND lv_parent TO rt_list.
       lt_list = zcl_abapgit_factory=>get_sap_package( lv_parent )->list_superpackages( ).
       APPEND LINES OF lt_list TO rt_list.
     ENDIF.

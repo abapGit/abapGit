@@ -128,7 +128,10 @@ INTERFACE zif_abapgit_definitions PUBLIC.
            warning_package TYPE ty_overwrite_tt,
            requirements    TYPE ty_requirements,
            transport       TYPE ty_transport,
-         END OF ty_deserialize_checks.
+         END OF ty_deserialize_checks,
+         BEGIN OF ty_delete_checks,
+           transport TYPE ty_transport,
+         END OF ty_delete_checks.
 
   TYPES:
     BEGIN OF ty_metadata,
@@ -321,12 +324,13 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   TYPES tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
 
   TYPES: BEGIN OF ty_s_user_settings,
-           max_lines        TYPE i,
-           adt_jump_enabled TYPE abap_bool,
+           max_lines         TYPE i,
+           adt_jump_enabled  TYPE abap_bool,
+           show_default_repo TYPE abap_bool,
          END OF ty_s_user_settings.
 
   CONSTANTS gc_xml_version TYPE string VALUE 'v1.0.0' ##NO_TEXT.
-  CONSTANTS gc_abap_version TYPE string VALUE '1.70.0' ##NO_TEXT.
+  CONSTANTS gc_abap_version TYPE string VALUE '1.72.1' ##NO_TEXT.
   CONSTANTS:
     BEGIN OF gc_type,
       commit TYPE zif_abapgit_definitions=>ty_type VALUE 'commit', "#EC NOTEXT
@@ -400,7 +404,6 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       abapgit_home             TYPE string VALUE 'abapgit_home',
       abapgit_wiki             TYPE string VALUE 'abapgit_wiki',
       abapgit_install          TYPE string VALUE 'abapgit_install',
-      abapgit_install_pi       TYPE string VALUE 'abapgit_install_pi',
 
       zip_import               TYPE string VALUE 'zip_import',
       zip_export               TYPE string VALUE 'zip_export',

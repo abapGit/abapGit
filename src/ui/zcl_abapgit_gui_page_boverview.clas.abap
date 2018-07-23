@@ -17,7 +17,7 @@ CLASS zcl_abapgit_gui_page_boverview DEFINITION
     DATA: mo_repo            TYPE REF TO zcl_abapgit_repo_online,
           mv_compress        TYPE abap_bool VALUE abap_false,
           mt_commits         TYPE zif_abapgit_definitions=>ty_commit_tt,
-          mo_branch_overview TYPE REF TO zcl_abapgit_branch_overview.
+          mi_branch_overview TYPE REF TO zif_abapgit_branch_overview.
 
     CONSTANTS: BEGIN OF c_actions,
                  uncompress TYPE string VALUE 'uncompress' ##NO_TEXT,
@@ -235,7 +235,7 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    lt_branches = mo_branch_overview->get_branches( ).
+    lt_branches = mi_branch_overview->get_branches( ).
 
     ro_html->add( |<select name="{ iv_name }">| ).
     LOOP AT lt_branches ASSIGNING <ls_branch>.
@@ -249,11 +249,11 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
 
   METHOD refresh.
 
-    mo_branch_overview = zcl_abapgit_branch_overview=>run( mo_repo ).
+    mi_branch_overview = zcl_abapgit_factory=>get_branch_overview( io_repo = mo_repo ).
 
-    mt_commits = mo_branch_overview->get_commits( ).
+    mt_commits = mi_branch_overview->get_commits( ).
     IF mv_compress = abap_true.
-      mt_commits = mo_branch_overview->compress( mt_commits ).
+      mt_commits = mi_branch_overview->compress( mt_commits ).
     ENDIF.
 
   ENDMETHOD.

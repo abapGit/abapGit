@@ -11,7 +11,7 @@ order: 40
 
 ## Adding objects ##
 * Navigate to the repository, click the "add" link
-* It will ask for which object to add, select the object
+* It will ask which object to add, select the object
 * The object will be commited to the repository
 
 ## Modifying objects ##

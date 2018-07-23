@@ -6,7 +6,7 @@ order: 10
 
 **.abapgit.xml** is a special abapGit file. It contains meta information of the abapGit project.
 
-Example: abapGit own .abapgit.xml
+Example: abapGit's own .abapgit.xml
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>

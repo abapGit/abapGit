@@ -22,7 +22,6 @@ CLASS zcl_abapgit_dependencies DEFINITION
         !ct_tadir TYPE ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
-
   PRIVATE SECTION.
 
     TYPES:
@@ -51,14 +50,17 @@ CLASS zcl_abapgit_dependencies DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS get_ddls_dependencies
       IMPORTING
-        !iv_ddls_name        TYPE tadir-obj_name
+        iv_ddls_name         TYPE tadir-obj_name
       RETURNING
         VALUE(rt_dependency) TYPE tty_dedenpency .
+    CLASS-METHODS resolve_packages
+      CHANGING
+        ct_tadir TYPE zcl_abapgit_dependencies=>ty_tadir_tt.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
+CLASS zcl_abapgit_dependencies IMPLEMENTATION.
 
 
   METHOD get_ddls_dependencies.
@@ -84,14 +86,16 @@ CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
 
   METHOD resolve.
 
-    DATA: lv_tabclass TYPE dd02l-tabclass.
+    DATA: lv_tabclass    TYPE dd02l-tabclass.
 
-    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF ct_tadir.
+    FIELD-SYMBOLS: <ls_tadir>            LIKE LINE OF ct_tadir.
 
 * misuse field KORRNUM to fix deletion sequence
 
     LOOP AT ct_tadir ASSIGNING <ls_tadir>.
       CASE <ls_tadir>-object.
+        WHEN 'DEVC'.
+          <ls_tadir>-korrnum = '9990'.
         WHEN 'IATU'.
           <ls_tadir>-korrnum = '5500'.
         WHEN 'IARP'.
@@ -140,6 +144,7 @@ CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
     ENDLOOP.
 
     resolve_ddic( CHANGING ct_tadir = ct_tadir ).
+    resolve_packages( CHANGING ct_tadir = ct_tadir ).
 
     SORT ct_tadir BY korrnum ASCENDING.
 
@@ -295,4 +300,36 @@ CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
     ENDDO.
 
   ENDMETHOD.                    "resolve_ddic
+
+
+  METHOD resolve_packages.
+
+    DATA: lt_subpackages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
+
+    FIELD-SYMBOLS: <ls_tadir>            LIKE LINE OF ct_tadir,
+                   <lv_subpackage>       LIKE LINE OF lt_subpackages,
+                   <ls_tadir_subpackage> LIKE LINE OF ct_tadir.
+
+    " List subpackage before corresponding superpackage
+
+    LOOP AT ct_tadir ASSIGNING <ls_tadir>
+                     WHERE object = 'DEVC'.
+
+      lt_subpackages = zcl_abapgit_factory=>get_sap_package( |{ <ls_tadir>-obj_name }| )->list_subpackages( ).
+
+      LOOP AT lt_subpackages ASSIGNING <lv_subpackage>.
+
+        READ TABLE ct_tadir ASSIGNING <ls_tadir_subpackage>
+                            WITH KEY object   = 'DEVC'
+                                     obj_name = <lv_subpackage>.
+        IF sy-subrc = 0.
+          <ls_tadir_subpackage>-korrnum = condense( |{ <ls_tadir_subpackage>-korrnum - 1 }| ).
+        ENDIF.
+
+      ENDLOOP.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.

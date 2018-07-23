@@ -5,7 +5,8 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
     METHODS:
       constructor
         IMPORTING
-          io_repo TYPE REF TO zcl_abapgit_repo
+          io_repo  TYPE REF TO zcl_abapgit_repo
+          io_stage TYPE REF TO zcl_abapgit_stage OPTIONAL
         RAISING
           zcx_abapgit_exception,
 
@@ -25,12 +26,14 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
   PRIVATE SECTION.
     CONSTANTS:
       BEGIN OF c_actions,
-        stage TYPE string VALUE 'stage' ##NO_TEXT,
-        rerun TYPE string VALUE 'rerun' ##NO_TEXT,
+        stage  TYPE string VALUE 'stage' ##NO_TEXT,
+        commit TYPE string VALUE 'commit' ##NO_TEXT,
+        rerun  TYPE string VALUE 'rerun' ##NO_TEXT,
       END OF c_actions.
 
     DATA:
-      mt_result TYPE scit_alvlist.
+      mt_result TYPE scit_alvlist,
+      mo_stage  TYPE REF TO zcl_abapgit_stage.
 
     METHODS:
       build_menu
@@ -58,7 +61,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -75,10 +78,24 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
       lv_opt = zif_abapgit_definitions=>gc_html_opt-crossout.
     ENDIF.
 
-    ro_menu->add( iv_txt = 'Stage'
-                  iv_act = c_actions-stage
-                  iv_cur = abap_false
-                  iv_opt = lv_opt ) ##NO_TEXT.
+    IF mo_stage IS BOUND.
+
+      " Staging info already available, we can directly
+      " offer to commit
+
+      ro_menu->add( iv_txt = 'Commit'
+                    iv_act = c_actions-commit
+                    iv_cur = abap_false
+                    iv_opt = lv_opt ) ##NO_TEXT.
+
+    ELSE.
+
+      ro_menu->add( iv_txt = 'Stage'
+                    iv_act = c_actions-stage
+                    iv_cur = abap_false
+                    iv_opt = lv_opt ) ##NO_TEXT.
+
+    ENDIF.
 
   ENDMETHOD.
 
@@ -86,6 +103,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     mo_repo ?= io_repo.
+    mo_stage = io_stage.
     ms_control-page_title = 'Code Inspector'.
     run_code_inspector( ).
   ENDMETHOD.  " constructor.
@@ -108,10 +126,47 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD jump.
+
+    DATA: lo_test               TYPE REF TO cl_ci_test_root,
+          li_code_inspector     TYPE REF TO zif_abapgit_code_inspector,
+          ls_info               TYPE scir_rest,
+          lo_result             TYPE REF TO cl_ci_result_root,
+          lv_check_variant_name TYPE sci_chkv,
+          lv_package            TYPE devclass.
+
+    FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
+
+    READ TABLE mt_result WITH KEY objtype = is_item-obj_type
+                                  objname = is_item-obj_name
+                         ASSIGNING <ls_result>.
+    ASSERT sy-subrc = 0.
+
+    lv_package = mo_repo->get_package( ).
+    lv_check_variant_name = mo_repo->get_local_settings( )-code_inspector_check_variant.
+
+    li_code_inspector = zcl_abapgit_factory=>get_code_inspector(
+        iv_package            = lv_package
+        iv_check_variant_name = lv_check_variant_name ).
+
+    " see SCI_LCL_DYNP_530 / HANDLE_DOUBLE_CLICK
+
+    MOVE-CORRESPONDING <ls_result> TO ls_info.
+
+    lo_test = cl_ci_tests=>get_test_ref( <ls_result>-test ).
+    lo_result = lo_test->get_result_node( <ls_result>-kind ).
+
+    lo_result->set_info( ls_info ).
+    lo_result->if_ci_test~navigate( ).
+
+  ENDMETHOD.
+
+
   METHOD render_content.
 
     DATA: lv_check_variant TYPE sci_chkv,
-          lv_class         TYPE string.
+          lv_class         TYPE string,
+          lv_line          TYPE string.
     FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
 
     CREATE OBJECT ro_html.
@@ -152,7 +207,13 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
           lv_class = 'grey'.
       ENDCASE.
 
-      ro_html->add( |<div class="{ lv_class }">Line { <ls_result>-line ALPHA = OUT }: { <ls_result>-text }</div><br>| ).
+      CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
+        EXPORTING
+          input  = <ls_result>-line
+        IMPORTING
+          output = lv_line.
+
+      ro_html->add( |<div class="{ lv_class }">Line { lv_line }: { <ls_result>-text }</div><br>| ).
     ENDLOOP.
 
     ro_html->add( '</div>' ).
@@ -178,14 +239,29 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
       WHEN c_actions-stage.
 
         IF is_stage_allowed( ) = abap_true.
-
           " we need to refresh as the source might have changed
           lo_repo_online->refresh( ).
 
           CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_stage
             EXPORTING
               io_repo = lo_repo_online.
+          ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
 
+        ELSE.
+
+          ei_page = me.
+          ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
+
+        ENDIF.
+
+      WHEN c_actions-commit.
+
+        IF is_stage_allowed( ) = abap_true.
+
+          CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
+            EXPORTING
+              io_repo  = mo_repo
+              io_stage = mo_stage.
           ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
 
         ELSE.
@@ -224,41 +300,4 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     ro_html = super->zif_abapgit_gui_page~render( ).
 
   ENDMETHOD.
-
-
-  METHOD jump.
-
-    DATA: lo_test               TYPE REF TO cl_ci_test_root,
-          li_code_inspector     TYPE REF TO zif_abapgit_code_inspector,
-          ls_info               TYPE scir_rest,
-          lo_result             TYPE REF TO cl_ci_result_root,
-          lv_check_variant_name TYPE sci_chkv,
-          lv_package            TYPE devclass.
-
-    FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
-
-    READ TABLE mt_result WITH KEY objtype = is_item-obj_type
-                                  objname = is_item-obj_name
-                         ASSIGNING <ls_result>.
-    ASSERT sy-subrc = 0.
-
-    lv_package = mo_repo->get_package( ).
-    lv_check_variant_name = mo_repo->get_local_settings( )-code_inspector_check_variant.
-
-    li_code_inspector = zcl_abapgit_factory=>get_code_inspector(
-        iv_package            = lv_package
-        iv_check_variant_name = lv_check_variant_name ).
-
-    " see SCI_LCL_DYNP_530 / HANDLE_DOUBLE_CLICK
-
-    MOVE-CORRESPONDING <ls_result> TO ls_info.
-
-    lo_test = cl_ci_tests=>get_test_ref( <ls_result>-test ).
-    lo_result = lo_test->get_result_node( <ls_result>-kind ).
-
-    lo_result->set_info( ls_info ).
-    lo_result->if_ci_test~navigate( ).
-
-  ENDMETHOD.
-
 ENDCLASS.

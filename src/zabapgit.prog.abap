@@ -44,7 +44,6 @@ INCLUDE zabapgit_user_exit IF FOUND.
 
 INCLUDE zabapgit_gui_pages_userexit IF FOUND.
 
-INCLUDE zabapgit_unit_test.
 INCLUDE zabapgit_forms.
 
 **********************************************************************
