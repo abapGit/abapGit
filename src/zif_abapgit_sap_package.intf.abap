@@ -4,46 +4,52 @@ INTERFACE zif_abapgit_sap_package
 
   TYPES:
     ty_devclass_tt TYPE STANDARD TABLE OF devclass WITH DEFAULT KEY .
+  TYPES:
+    BEGIN OF ty_devclass_info,
+      DEVCLASS  TYPE DEVCLASS,
+      NAMESPACE TYPE NAMESPACE,
+      PARENTCL  TYPE PARENTCL,
+    END OF ty_devclass_info .
+  TYPES:
+    ty_devclass_info_tt TYPE SORTED TABLE OF ty_devclass_info
+      WITH UNIQUE KEY devclass
+      WITH NON-UNIQUE SORTED KEY parent COMPONENTS parentcl .
 
-  METHODS create
-    IMPORTING
-      !is_package TYPE scompkdtln
-    RAISING
-      zcx_abapgit_exception .
-  METHODS create_local
-    RAISING
-      zcx_abapgit_exception .
-  METHODS list_subpackages
-    IMPORTING
-      !it_devc_info  TYPE zif_abapgit_definitions=>tt_devc_buffer OPTIONAL
-    RETURNING
-      VALUE(rt_list) TYPE ty_devclass_tt .
-  METHODS list_superpackages
-    IMPORTING
-      !it_devc_info  TYPE zif_abapgit_definitions=>tt_devc_buffer OPTIONAL
-    RETURNING
-      VALUE(rt_list) TYPE ty_devclass_tt .
-  METHODS read_parent
-    IMPORTING
-      !it_devc_info      TYPE zif_abapgit_definitions=>tt_devc_buffer OPTIONAL
-    RETURNING
-      VALUE(rv_parentcl) TYPE tdevc-parentcl .
-  METHODS create_child
-    IMPORTING
-      !iv_child TYPE devclass
-    RAISING
-      zcx_abapgit_exception .
-  METHODS exists
-    RETURNING
-      VALUE(rv_bool) TYPE abap_bool .
-  METHODS are_changes_recorded_in_tr_req
-    RETURNING
-      VALUE(rv_are_changes_rec_in_tr_req) TYPE abap_bool
-    RAISING
-      zcx_abapgit_exception .
-  METHODS get_transport_type
-    RETURNING
-      VALUE(rv_transport_type) TYPE zif_abapgit_definitions=>ty_transport_type
-    RAISING
-      zcx_abapgit_exception .
-ENDINTERFACE.
+  methods CREATE
+    importing
+      !IS_PACKAGE type SCOMPKDTLN
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods CREATE_LOCAL
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods LIST_SUBPACKAGES
+    importing
+      !IV_BUFFERED type ABAP_BOOL default ABAP_FALSE
+    returning
+      value(RT_LIST) type TY_DEVCLASS_TT .
+  methods LIST_SUPERPACKAGES
+    returning
+      value(RT_LIST) type TY_DEVCLASS_TT .
+  methods READ_PARENT
+    returning
+      value(RV_PARENTCL) type TDEVC-PARENTCL .
+  methods CREATE_CHILD
+    importing
+      !IV_CHILD type DEVCLASS
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods EXISTS
+    returning
+      value(RV_BOOL) type ABAP_BOOL .
+  methods ARE_CHANGES_RECORDED_IN_TR_REQ
+    returning
+      value(RV_ARE_CHANGES_REC_IN_TR_REQ) type ABAP_BOOL
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods GET_TRANSPORT_TYPE
+    returning
+      value(RV_TRANSPORT_TYPE) type ZIF_ABAPGIT_DEFINITIONS=>TY_TRANSPORT_TYPE
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+endinterface.

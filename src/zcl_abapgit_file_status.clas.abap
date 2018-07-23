@@ -203,10 +203,10 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
           lt_items        TYPE zif_abapgit_definitions=>ty_items_tt,
           ls_item         LIKE LINE OF lt_items,
           lv_is_xml       TYPE abap_bool,
+          lv_sub_fetched  TYPE abap_bool value abap_false,
           lt_sub_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
           lt_items_idx    TYPE zif_abapgit_definitions=>ty_items_ts,
           lt_state_idx    TYPE zif_abapgit_definitions=>ty_file_signatures_ts. " Sorted by path+filename
-    DATA: lv_sub_package_read TYPE abap_bool VALUE abap_false.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_remote,
                    <ls_result> LIKE LINE OF rt_results,
@@ -255,12 +255,12 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
         iv_obj_name = ls_item-obj_name ).
 
       IF NOT ls_item-devclass IS INITIAL AND iv_devclass <> ls_item-devclass.
-* make sure the package is under the repo main package
-        IF lv_sub_package_read = abap_false.
-          lt_sub_packages = zcl_abapgit_factory=>get_sap_package( iv_devclass )->list_subpackages( ).
-          SORT lt_sub_packages BY table_line.
-          lv_sub_package_read = abap_true.
+        IF lv_sub_fetched = abap_false.
+          lt_sub_packages = zcl_abapgit_factory=>get_sap_package( iv_devclass )->list_subpackages( abap_true ).
+          lv_sub_fetched = abap_true.
+          SORT lt_sub_packages BY table_line. "Optimize Read Access
         ENDIF.
+* make sure the package is under the repo main package
         READ TABLE lt_sub_packages TRANSPORTING NO FIELDS
           WITH KEY table_line = ls_item-devclass
           BINARY SEARCH.
