@@ -102,6 +102,11 @@ CLASS zcl_abapgit_repo DEFINITION
         is_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
       RAISING
         zcx_abapgit_exception .
+    METHODS run_code_inspector
+      RETURNING
+        value(rt_list) TYPE scit_alvlist
+      RAISING
+        zcx_abapgit_exception .
 
 
   PROTECTED SECTION.
@@ -111,6 +116,7 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA mv_do_local_refresh TYPE abap_bool .
     DATA mv_last_serialization TYPE timestamp .
     DATA ms_data TYPE zif_abapgit_persistence=>ty_repo .
+    DATA mv_code_inspector_successful TYPE abap_bool .
 
     METHODS set
       IMPORTING
@@ -129,6 +135,32 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_repo IMPLEMENTATION.
+
+  METHOD run_code_inspector.
+
+    DATA: li_code_inspector TYPE REF TO zif_abapgit_code_inspector,
+          lv_check_variant  TYPE string.
+
+    lv_check_variant = get_local_settings( )-code_inspector_check_variant.
+
+    IF lv_check_variant IS INITIAL.
+      zcx_abapgit_exception=>raise( |No check variant maintained in repo settings.| ).
+    ENDIF.
+
+    li_code_inspector = zcl_abapgit_factory=>get_code_inspector(
+                                  iv_package            = get_package( )
+                                  iv_check_variant_name = |{ lv_check_variant }| ).
+
+    rt_list = li_code_inspector->run( ).
+
+    DELETE rt_list WHERE kind = 'N'.
+
+    READ TABLE rt_list TRANSPORTING NO FIELDS
+                       WITH KEY kind = 'E'.
+
+    mv_code_inspector_successful = boolc( sy-subrc <> 0 ).
+
+  ENDMETHOD.
 
 
   METHOD constructor.
