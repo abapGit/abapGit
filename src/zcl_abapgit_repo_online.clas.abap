@@ -73,11 +73,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
         VALUE(rt_unnecessary_local_objects) TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
-    METHODS run_code_inspector
-      RETURNING
-        VALUE(rt_list) TYPE scit_alvlist
-      RAISING
-        zcx_abapgit_exception .
+
     METHODS deserialize
         REDEFINITION .
     METHODS get_files_remote
@@ -93,7 +89,6 @@ CLASS zcl_abapgit_repo_online DEFINITION
     DATA mv_initialized TYPE abap_bool .
     DATA mo_branches TYPE REF TO zcl_abapgit_git_branch_list .
     DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
-    DATA mv_code_inspector_successful TYPE abap_bool .
 
     METHODS handle_stage_ignore
       IMPORTING
@@ -394,33 +389,6 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   METHOD reset_status.
     CLEAR mt_status.
   ENDMETHOD.  " reset_status.
-
-
-  METHOD run_code_inspector.
-
-    DATA: li_code_inspector TYPE REF TO zif_abapgit_code_inspector,
-          lv_check_variant  TYPE string.
-
-    lv_check_variant = get_local_settings( )-code_inspector_check_variant.
-
-    IF lv_check_variant IS INITIAL.
-      zcx_abapgit_exception=>raise( |No check variant maintained in repo settings.| ).
-    ENDIF.
-
-    li_code_inspector = zcl_abapgit_factory=>get_code_inspector(
-                                  iv_package            = get_package( )
-                                  iv_check_variant_name = |{ lv_check_variant }| ).
-
-    rt_list = li_code_inspector->run( ).
-
-    DELETE rt_list WHERE kind = 'N'.
-
-    READ TABLE rt_list TRANSPORTING NO FIELDS
-                       WITH KEY kind = 'E'.
-
-    mv_code_inspector_successful = boolc( sy-subrc <> 0 ).
-
-  ENDMETHOD.
 
 
   METHOD set_branch_name.

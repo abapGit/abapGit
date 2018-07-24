@@ -18,7 +18,7 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
 
 
   PROTECTED SECTION.
-    DATA: mo_repo TYPE REF TO zcl_abapgit_repo_online.
+    DATA: mo_repo TYPE REF TO zcl_abapgit_repo.
 
     METHODS:
       render_content REDEFINITION.
@@ -38,7 +38,9 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
     METHODS:
       build_menu
         RETURNING
-          VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar,
+          VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar
+        RAISING
+          zcx_abapgit_exception,
 
       run_code_inspector
         RAISING
@@ -61,7 +63,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -76,6 +78,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
     IF is_stage_allowed( ) = abap_false.
       lv_opt = zif_abapgit_definitions=>gc_html_opt-crossout.
+    ENDIF.
+
+    IF mo_repo->is_offline( ) = abap_true.
+      RETURN.
     ENDIF.
 
     IF mo_stage IS BOUND.
@@ -233,10 +239,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
     DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online,
           ls_item        TYPE zif_abapgit_definitions=>ty_item.
 
-    lo_repo_online ?= mo_repo.
 
     CASE iv_action.
       WHEN c_actions-stage.
+
+        lo_repo_online ?= mo_repo.
 
         IF is_stage_allowed( ) = abap_true.
           " we need to refresh as the source might have changed
@@ -256,11 +263,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
       WHEN c_actions-commit.
 
+        lo_repo_online ?= mo_repo.
+
         IF is_stage_allowed( ) = abap_true.
 
           CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
             EXPORTING
-              io_repo  = mo_repo
+              io_repo  = lo_repo_online
               io_stage = mo_stage.
           ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
 
