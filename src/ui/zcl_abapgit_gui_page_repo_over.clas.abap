@@ -19,15 +19,17 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_overview,
-        favorite   TYPE string,
-        type       TYPE string,
-        key        TYPE string,
-        name       TYPE string,
-        url        TYPE string,
-        package    TYPE string,
-        branch     TYPE string,
-        created_by TYPE string,
-        created_at TYPE string,
+        favorite        TYPE string,
+        type            TYPE string,
+        key             TYPE string,
+        name            TYPE string,
+        url             TYPE string,
+        package         TYPE string,
+        branch          TYPE string,
+        created_by      TYPE string,
+        created_at      TYPE string,
+        deserialized_by TYPE string,
+        deserialized_at TYPE string,
       END OF ty_overview,
       tty_overview TYPE STANDARD TABLE OF ty_overview
                    WITH NON-UNIQUE DEFAULT KEY.
@@ -158,13 +160,15 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     IF mv_filter IS NOT INITIAL.
 
-      DELETE ct_overview WHERE key        NS mv_filter
-                           AND name       NS mv_filter
-                           AND url        NS mv_filter
-                           AND package    NS mv_filter
-                           AND branch     NS mv_filter
-                           AND created_by NS mv_filter
-                           AND created_at NS mv_filter.
+      DELETE ct_overview WHERE key             NS mv_filter
+                           AND name            NS mv_filter
+                           AND url             NS mv_filter
+                           AND package         NS mv_filter
+                           AND branch          NS mv_filter
+                           AND created_by      NS mv_filter
+                           AND created_at      NS mv_filter
+                           AND deserialized_by NS mv_filter
+                           AND deserialized_at NS mv_filter.
 
     ENDIF.
 
@@ -240,6 +244,17 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
                      TIME lv_time.
 
         ls_overview-created_at = |{ lv_date DATE = USER } { lv_time TIME = USER }|.
+      ENDIF.
+
+      ls_overview-deserialized_by = <ls_repo>-deserialized_by.
+
+      IF <ls_repo>-deserialized_at IS NOT INITIAL.
+        CONVERT TIME STAMP <ls_repo>-deserialized_at
+                TIME ZONE mv_time_zone
+                INTO DATE lv_date
+                     TIME lv_time.
+
+        ls_overview-deserialized_at = |{ lv_date DATE = USER } { lv_time TIME = USER }|.
       ENDIF.
 
       INSERT ls_overview INTO TABLE rt_overview.
@@ -406,6 +421,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     io_html->add( |<th>Branch name</th>| ).
     io_html->add( |<th>Creator</th>| ).
     io_html->add( |<th>Created at [{ mv_time_zone }]</th>| ).
+    io_html->add( |<th>Deserialized by</th>| ).
+    io_html->add( |<th>Deserialized at [{ mv_time_zone }]</th>| ).
     io_html->add( |<th></th>| ).
     io_html->add( '</tr>' ).
     io_html->add( '</thead>' ).
@@ -473,6 +490,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       io_html->add( |<td>{ <ls_overview>-branch }</td>| ).
       io_html->add( |<td>{ <ls_overview>-created_by }</td>| ).
       io_html->add( |<td>{ <ls_overview>-created_at }</td>| ).
+      io_html->add( |<td>{ <ls_overview>-deserialized_by }</td>| ).
+      io_html->add( |<td>{ <ls_overview>-deserialized_at }</td>| ).
       io_html->add( |<td>| ).
       io_html->add( |</td>| ).
       io_html->add( |</tr>| ).
@@ -508,6 +527,12 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
                          io_html   = io_html ).
 
     add_order_by_option( iv_option = |CREATED_AT|
+                         io_html   = io_html ).
+
+    add_order_by_option( iv_option = |DESERIALIZED_BY|
+                         io_html   = io_html ).
+
+    add_order_by_option( iv_option = |DESERIALIZED_AT|
                          io_html   = io_html ).
 
     io_html->add( |</select>| ).
