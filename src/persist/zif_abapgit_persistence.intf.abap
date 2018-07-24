@@ -35,6 +35,8 @@ INTERFACE zif_abapgit_persistence PUBLIC.
            package         TYPE devclass,
            created_by      TYPE xubname,
            created_at      TYPE timestampl,
+           deserialized_by TYPE xubname,
+           deserialized_at TYPE timestampl,
            offline         TYPE sap_bool,
            local_checksums TYPE ty_local_checksum_tt,
            dot_abapgit     TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,

@@ -79,10 +79,18 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
         zcx_abapgit_exception .
     METHODS update_local_settings
       IMPORTING
-        !iv_key      TYPE zif_abapgit_persistence=>ty_repo-key
-        !is_settings TYPE zif_abapgit_persistence=>ty_repo_xml-local_settings
+        iv_key      TYPE zif_abapgit_persistence=>ty_repo-key
+        is_settings TYPE zif_abapgit_persistence=>ty_repo_xml-local_settings
       RAISING
         zcx_abapgit_exception .
+    METHODS update_deserialized
+      IMPORTING
+        iv_key             TYPE zif_abapgit_persistence=>ty_value
+        iv_deserialized_at TYPE timestampl
+        iv_deserialized_by TYPE xubname
+      RAISING
+        zcx_abapgit_exception.
+
   PRIVATE SECTION.
 
     DATA mo_db TYPE REF TO zcl_abapgit_persistence_db .
@@ -444,4 +452,34 @@ CLASS zcl_abapgit_persistence_repo IMPLEMENTATION.
                    iv_data  = ls_content-data_str ).
 
   ENDMETHOD.
+
+  METHOD update_deserialized.
+
+    DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
+          ls_content LIKE LINE OF lt_content,
+          ls_repo    TYPE zif_abapgit_persistence=>ty_repo.
+
+    ASSERT NOT iv_key IS INITIAL.
+
+    TRY.
+        ls_repo = read( iv_key ).
+      CATCH zcx_abapgit_not_found.
+        zcx_abapgit_exception=>raise( 'key not found' ).
+    ENDTRY.
+
+    IF iv_deserialized_at IS NOT INITIAL.
+      ls_repo-deserialized_at = iv_deserialized_at.
+    ENDIF.
+
+    IF iv_deserialized_by IS NOT INITIAL.
+      ls_repo-deserialized_by = iv_deserialized_by.
+    ENDIF.
+
+    ls_content-data_str = to_xml( ls_repo ).
+
+    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
+                   iv_value = iv_key
+                   iv_data  = ls_content-data_str ).
+  ENDMETHOD.
+
 ENDCLASS.
