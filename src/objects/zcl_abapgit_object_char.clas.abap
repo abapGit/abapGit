@@ -178,8 +178,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
 
     lo_char->if_pak_wb_object~save( ).
 
-    EXPORT current_devclass FROM space TO MEMORY ID 'EUK'.
-
     lo_char->if_pak_wb_object~activate( ).
 
     lo_char->if_pak_wb_object_internal~unlock( ).
