@@ -104,7 +104,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SSST IMPLEMENTATION.
       EXCEPTIONS
         OTHERS              = 0.
 
-    SET PARAMETER ID 'EUK' FIELD iv_package.
+    set_default_package( iv_package ).
     ASSIGN ('(SAPLSTXBS)MASTER_LANGUAGE') TO <lv_spras>.
     IF sy-subrc = 0.
       <lv_spras> = ls_header-masterlang.
