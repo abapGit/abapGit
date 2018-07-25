@@ -173,12 +173,9 @@ CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
       im_values   = ls_char-cls_attr_value
       im_values_t = ls_char-cls_attr_valuet ).
 
-* set default package, see function module RS_CORR_INSERT
-    SET PARAMETER ID 'EUK' FIELD iv_package.
+    set_default_package( iv_package ).
 
     lo_char->if_pak_wb_object~save( ).
-
-    SET PARAMETER ID 'EUK' FIELD ''.
 
     lo_char->if_pak_wb_object~activate( ).
 
