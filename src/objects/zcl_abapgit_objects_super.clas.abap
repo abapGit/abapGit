@@ -42,10 +42,13 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
                   iv_field TYPE string
         RAISING   zcx_abapgit_exception,
       exists_a_lock_entry_for
-        IMPORTING iv_lock_object                 TYPE string
-                  iv_argument                    TYPE seqg3-garg OPTIONAL
+        IMPORTING iv_lock_object                TYPE string
+                  iv_argument                   TYPE seqg3-garg OPTIONAL
         RETURNING VALUE(rv_exists_a_lock_entry) TYPE abap_bool
-        RAISING   zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception,
+      set_default_package
+        IMPORTING
+          iv_package TYPE devclass.
 
   PRIVATE SECTION.
 
@@ -61,6 +64,22 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_objects_super IMPLEMENTATION.
+
+  METHOD set_default_package.
+
+    " In certain cases we need to set the package package via ABAP memory
+    " because we can't supply it via the APIs.
+    "
+    " Set default package, see function module RS_CORR_INSERT FORM get_current_devclass.
+    "
+    " We use ABAP memory instead the SET parameter because it is
+    " more reliable. SET parameter doesn't work when multiple objects
+    " are deserialized which uses the ABAP memory mechanism.
+    " We don't need to reset the memory as it is done in above mentioned form routine.
+
+    EXPORT current_devclass FROM iv_package TO MEMORY ID 'EUK'.
+
+  ENDMETHOD.
 
 
   METHOD check_timestamp.
