@@ -206,7 +206,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -474,6 +474,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lo_progress TYPE REF TO zcl_abapgit_progress,
           lv_path     TYPE string,
           lt_items    TYPE zif_abapgit_definitions=>ty_items_tt.
+    DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result,
                    <ls_deser>  LIKE LINE OF lt_late.
@@ -507,6 +508,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     check_objects_locked( iv_language = io_repo->get_dot_abapgit( )->get_master_language( )
                           it_items    = lt_items ).
 
+    lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
     LOOP AT lt_results ASSIGNING <ls_result>.
       lo_progress->show( iv_current = sy-tabix
                          iv_text    = |Deserialize { <ls_result>-obj_name }| ) ##NO_TEXT.
@@ -515,7 +517,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       ls_item-obj_type = <ls_result>-obj_type.
       ls_item-obj_name = <ls_result>-obj_name.
 
-      lv_package = zcl_abapgit_folder_logic=>path_to_package(
+      lv_package = lo_folder_logic->path_to_package(
         iv_top  = io_repo->get_package( )
         io_dot  = io_repo->get_dot_abapgit( )
         iv_path = <ls_result>-path ).
@@ -994,13 +996,14 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
                                   WITH UNIQUE KEY obj_type obj_name devclass,
           ls_overwrite       LIKE LINE OF rt_overwrite,
           ls_tadir           TYPE tadir.
+    DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
 
-
+    lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
     LOOP AT it_results ASSIGNING <ls_result>.
 
-      lv_package = zcl_abapgit_folder_logic=>path_to_package(
+      lv_package = lo_folder_logic->path_to_package(
         iv_top  = io_repo->get_package( )
         io_dot  = io_repo->get_dot_abapgit( )
         iv_path = <ls_result>-path ).

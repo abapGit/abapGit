@@ -338,7 +338,6 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
           lo_progress TYPE REF TO zcl_abapgit_progress,
           lt_deltas   LIKE ct_objects.
 
-
     LOOP AT ct_objects INTO ls_object WHERE type = zif_abapgit_definitions=>gc_type-ref_d.
       DELETE ct_objects INDEX sy-tabix.
       APPEND ls_object TO lt_deltas.
@@ -712,6 +711,27 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
   ENDMETHOD.                    "encode_commit
 
 
+  METHOD encode_tag.
+
+    DATA: lv_string TYPE string,
+          lv_tmp    TYPE string,
+          lv_time   TYPE zcl_abapgit_time=>ty_unixtime.
+
+    lv_time = zcl_abapgit_time=>get( ).
+
+    lv_string = |object { is_tag-object }{ zif_abapgit_definitions=>gc_newline }|
+             && |type { is_tag-type }{ zif_abapgit_definitions=>gc_newline }|
+             && |tag { zcl_abapgit_tag=>remove_tag_prefix( is_tag-tag ) }{ zif_abapgit_definitions=>gc_newline }|
+             && |tagger { is_tag-tagger_name } <{ is_tag-tagger_email }> { lv_time }|
+             && |{ zif_abapgit_definitions=>gc_newline }|
+             && |{ zif_abapgit_definitions=>gc_newline }|
+             && |{ is_tag-message }|.
+
+    rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
+
+  ENDMETHOD.
+
+
   METHOD encode_tree.
 
     CONSTANTS: lc_null TYPE x VALUE '00'.
@@ -926,25 +946,4 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Wrong Adler checksum' ).
     ENDIF.
   ENDMETHOD.
-
-  METHOD encode_tag.
-
-    DATA: lv_string TYPE string,
-          lv_tmp    TYPE string,
-          lv_time   TYPE zcl_abapgit_time=>ty_unixtime.
-
-    lv_time = zcl_abapgit_time=>get( ).
-
-    lv_string = |object { is_tag-object }{ zif_abapgit_definitions=>gc_newline }|
-             && |type { is_tag-type }{ zif_abapgit_definitions=>gc_newline }|
-             && |tag { zcl_abapgit_tag=>remove_tag_prefix( is_tag-tag ) }{ zif_abapgit_definitions=>gc_newline }|
-             && |tagger { is_tag-tagger_name } <{ is_tag-tagger_email }> { lv_time }|
-             && |{ zif_abapgit_definitions=>gc_newline }|
-             && |{ zif_abapgit_definitions=>gc_newline }|
-             && |{ is_tag-message }|.
-
-    rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
-
-  ENDMETHOD.
-
 ENDCLASS.

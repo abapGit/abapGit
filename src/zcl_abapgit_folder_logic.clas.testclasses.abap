@@ -25,12 +25,12 @@ CLASS ltcl_folder_logic_helper IMPLEMENTATION.
     lo_dot->set_starting_folder( iv_starting ).
     lo_dot->set_folder_logic( iv_logic ).
 
-    lv_package = zcl_abapgit_folder_logic=>path_to_package(
+    lv_package = zcl_abapgit_folder_logic=>get_instance( )->path_to_package(
       iv_top  = iv_top
       io_dot  = lo_dot
       iv_path = iv_path ).
 
-    lv_path = zcl_abapgit_folder_logic=>package_to_path(
+    lv_path = zcl_abapgit_folder_logic=>get_instance( )->package_to_path(
       iv_top     = iv_top
       io_dot     = lo_dot
       iv_package = iv_package ).

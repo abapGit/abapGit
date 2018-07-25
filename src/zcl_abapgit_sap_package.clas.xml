@@ -12,6 +12,14 @@
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
    </VSEOCLASS>
+   <DESCRIPTIONS>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ABAPGIT_SAP_PACKAGE</CLSNAME>
+     <CMPNAME>GET_PACKAGE_INFO</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Get Package Info in System</DESCRIPT>
+    </SEOCOMPOTX>
+   </DESCRIPTIONS>
   </asx:values>
  </asx:abap>
 </abapGit>

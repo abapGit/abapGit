@@ -4,7 +4,7 @@ CLASS zcl_abapgit_folder_logic DEFINITION
 
   PUBLIC SECTION.
 
-    CLASS-METHODS package_to_path
+    METHODS package_to_path
       IMPORTING
         !iv_top        TYPE devclass
         !io_dot        TYPE REF TO zcl_abapgit_dot_abapgit
@@ -13,7 +13,7 @@ CLASS zcl_abapgit_folder_logic DEFINITION
         VALUE(rv_path) TYPE string
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS path_to_package
+    METHODS path_to_package
       IMPORTING
         !iv_top                  TYPE devclass
         !io_dot                  TYPE REF TO zcl_abapgit_dot_abapgit
@@ -23,11 +23,25 @@ CLASS zcl_abapgit_folder_logic DEFINITION
         VALUE(rv_package)        TYPE devclass
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS get_instance
+      RETURNING
+        VALUE(ro_instance) TYPE REF TO zcl_abapgit_folder_logic .
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+
+    DATA mt_parent TYPE zif_abapgit_sap_package=>ty_devclass_info_tt .
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
+
+
+  METHOD get_instance.
+
+    CREATE OBJECT ro_instance.
+
+  ENDMETHOD.
 
 
   METHOD package_to_path.
@@ -37,11 +51,22 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
           lv_message      TYPE string,
           lv_parentcl     TYPE tdevc-parentcl,
           lv_folder_logic TYPE string.
+    DATA: st_parent LIKE LINE OF mt_parent.
 
     IF iv_top = iv_package.
       rv_path = io_dot->get_starting_folder( ).
     ELSE.
-      lv_parentcl = zcl_abapgit_factory=>get_sap_package( iv_package )->read_parent( ).
+      "Determine Parent Package
+      READ TABLE mt_parent INTO st_parent
+        WITH TABLE KEY devclass = iv_package.
+      IF sy-subrc <> 0.
+        lv_parentcl = zcl_abapgit_factory=>get_sap_package( iv_package )->read_parent( ).
+        st_parent-devclass = iv_package.
+        st_parent-parentcl = lv_parentcl.
+        INSERT st_parent INTO TABLE mt_parent.
+      ELSE.
+        lv_parentcl = st_parent-parentcl.
+      ENDIF.
 
       IF lv_parentcl IS INITIAL.
         zcx_abapgit_exception=>raise( |error, expected parent package, { iv_package }| ).
