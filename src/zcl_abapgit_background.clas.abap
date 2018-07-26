@@ -31,7 +31,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_background IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
 
 
   METHOD build_comment.
@@ -64,11 +64,7 @@ CLASS zcl_abapgit_background IMPLEMENTATION.
 
   METHOD determine_user_details.
 
-    DATA: lt_return             TYPE TABLE OF bapiret2,
-          ls_address            TYPE bapiaddr3,
-          lt_smtp               TYPE TABLE OF bapiadsmtp,
-          ls_smtp               TYPE bapiadsmtp,
-          lo_user_master_record TYPE REF TO zcl_abapgit_user_master_record.
+    DATA: lo_user_master_record TYPE REF TO zcl_abapgit_user_master_record.
 
 *   IF the method is to use real user values, call the BAPI
     IF iv_method = zcl_abapgit_persist_background=>c_amethod-user.
