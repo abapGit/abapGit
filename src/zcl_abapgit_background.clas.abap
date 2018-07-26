@@ -25,7 +25,12 @@ CLASS zcl_abapgit_background DEFINITION PUBLIC CREATE PUBLIC.
       determine_user_details
         IMPORTING iv_method      TYPE string
                   iv_changed_by  TYPE xubname
-        RETURNING VALUE(rs_user) TYPE zif_abapgit_definitions=>ty_git_user.
+        RETURNING VALUE(rs_user) TYPE zif_abapgit_definitions=>ty_git_user,
+      push_deletions
+        IMPORTING io_repo     TYPE REF TO zcl_abapgit_repo_online
+                  is_settings TYPE zcl_abapgit_persist_background=>ty_background
+                  is_files    TYPE zif_abapgit_definitions=>ty_stage_files
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -94,8 +99,13 @@ CLASS zcl_abapgit_background IMPLEMENTATION.
 
   METHOD push.
 
-    IF lines( zcl_abapgit_stage_logic=>get( io_repo )-local ) = 0.
-      WRITE: / 'nothing to stage' ##NO_TEXT.
+    DATA: ls_files TYPE zif_abapgit_definitions=>ty_stage_files.
+
+    ls_files = zcl_abapgit_stage_logic=>get( io_repo ).
+
+    IF  lines( ls_files-local ) = 0
+    AND lines( ls_files-remote ) = 0.
+      WRITE: / 'Nothing to stage' ##NO_TEXT.
       RETURN.
     ENDIF.
 
@@ -204,6 +214,14 @@ CLASS zcl_abapgit_background IMPLEMENTATION.
                      io_stage   = lo_stage ).
     ENDLOOP.
 
+    IF lines( ls_files-remote ) = 0.
+      RETURN.
+    ENDIF.
+
+    push_deletions( io_repo     = io_repo
+                    is_settings = is_settings
+                    is_files    = ls_files ).
+
   ENDMETHOD.
 
 
@@ -213,11 +231,13 @@ CLASS zcl_abapgit_background IMPLEMENTATION.
           ls_files   TYPE zif_abapgit_definitions=>ty_stage_files,
           lo_stage   TYPE REF TO zcl_abapgit_stage.
 
-    FIELD-SYMBOLS: <ls_local> LIKE LINE OF ls_files-local.
+    FIELD-SYMBOLS: <ls_local>  LIKE LINE OF ls_files-local,
+                   <ls_remote> LIKE LINE OF ls_files-remote.
 
 
     ls_files = zcl_abapgit_stage_logic=>get( io_repo ).
-    ASSERT lines( ls_files-local ) > 0.
+    ASSERT lines( ls_files-local ) > 0
+        OR lines( ls_files-remote ) > 0.
 
     CREATE OBJECT lo_stage
       EXPORTING
@@ -231,6 +251,17 @@ CLASS zcl_abapgit_background IMPLEMENTATION.
       lo_stage->add( iv_path     = <ls_local>-file-path
                      iv_filename = <ls_local>-file-filename
                      iv_data     = <ls_local>-file-data ).
+    ENDLOOP.
+
+    LOOP AT ls_files-remote ASSIGNING <ls_remote>.
+
+      WRITE: / 'removed' ##NO_TEXT,
+        <ls_remote>-path,
+        <ls_remote>-filename.
+
+      lo_stage->rm( iv_path     = <ls_remote>-path
+                    iv_filename = <ls_remote>-filename ).
+
     ENDLOOP.
 
     ls_comment-committer-name  = is_settings-aname.
@@ -306,4 +337,39 @@ CLASS zcl_abapgit_background IMPLEMENTATION.
         type = lc_enq_type.
 
   ENDMETHOD.
+
+  METHOD push_deletions.
+
+    DATA: lo_stage   TYPE REF TO zcl_abapgit_stage,
+          ls_comment TYPE zif_abapgit_definitions=>ty_comment.
+
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF is_files-remote.
+
+    ASSERT lines( is_files-remote ) > 0.
+
+    CREATE OBJECT lo_stage
+      EXPORTING
+        iv_branch_name = io_repo->get_branch_name( )
+        iv_branch_sha1 = io_repo->get_sha1_remote( ).
+
+    LOOP AT is_files-remote ASSIGNING <ls_remote>.
+
+      WRITE: / 'removed' ##NO_TEXT,
+        <ls_remote>-path,
+        <ls_remote>-filename.
+
+      lo_stage->rm( iv_path     = <ls_remote>-path
+                    iv_filename = <ls_remote>-filename ).
+
+    ENDLOOP.
+
+    ls_comment-committer-name  = is_settings-aname.
+    ls_comment-committer-email = is_settings-amail.
+    ls_comment-comment         = build_comment( is_files ).
+
+    io_repo->push( is_comment = ls_comment
+                   io_stage   = lo_stage ).
+
+  ENDMETHOD.
+
 ENDCLASS.
