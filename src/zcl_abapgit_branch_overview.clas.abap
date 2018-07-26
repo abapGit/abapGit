@@ -17,9 +17,8 @@ CLASS zcl_abapgit_branch_overview DEFINITION
   PRIVATE SECTION.
 
     TYPES:
-      ty_commits TYPE TABLE OF zif_abapgit_definitions=>ty_commit WITH DEFAULT KEY .
+      ty_commits TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_commit WITH DEFAULT KEY .
 
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
     DATA mt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt .
     DATA mt_commits TYPE ty_commits .
     DATA mt_tags TYPE zif_abapgit_definitions=>ty_git_tag_list_tt .
@@ -65,8 +64,6 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
   METHOD constructor.
 
     DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
-
-    mo_repo = io_repo.
 
     CLEAR mt_branches.
 
@@ -178,7 +175,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
 
       IF <ls_tag>-type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
         READ TABLE mt_commits WITH KEY sha1 = <ls_tag>-sha1
-                              ASSIGNING <ls_commit>.
+                              ASSIGNING <ls_commit>.      "#EC CI_SUBRC
       ELSEIF <ls_tag>-type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
         READ TABLE mt_commits WITH KEY sha1 = <ls_tag>-object
                               ASSIGNING <ls_commit>.
@@ -217,7 +214,8 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
           lt_tags              TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
           ls_tag               LIKE LINE OF mt_tags.
 
-    FIELD-SYMBOLS: <ls_branch> TYPE zif_abapgit_definitions=>ty_git_branch.
+    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_tags.
+
 
     CREATE OBJECT lo_progress
       EXPORTING
@@ -266,8 +264,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
 
   METHOD parse_annotated_tags.
 
-    DATA: ls_raw TYPE zcl_abapgit_git_pack=>ty_tag,
-          ls_tag LIKE LINE OF mt_tags.
+    DATA: ls_raw TYPE zcl_abapgit_git_pack=>ty_tag.
 
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects,
                    <ls_tag>    LIKE LINE OF mt_tags.
@@ -275,9 +272,6 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
     LOOP AT it_objects ASSIGNING <ls_object> WHERE type = zif_abapgit_definitions=>gc_type-tag.
 
       ls_raw = zcl_abapgit_git_pack=>decode_tag( <ls_object>-data ).
-
-      CLEAR ls_tag.
-      ls_tag-sha1 = <ls_object>-sha1.
 
       READ TABLE mt_tags ASSIGNING <ls_tag>
                          WITH KEY sha1 = <ls_object>-sha1.
@@ -323,7 +317,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
         DELETE lt_body TO 2.
       ENDIF.
 
-      READ TABLE lt_body INDEX 1 INTO ls_commit-message.
+      READ TABLE lt_body INDEX 1 INTO ls_commit-message.  "#EC CI_SUBRC
 
 * unix time stamps are in same time zone, so ignore the zone,
       FIND REGEX zif_abapgit_definitions=>gc_author_regex IN ls_raw-author
