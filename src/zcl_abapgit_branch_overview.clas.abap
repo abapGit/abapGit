@@ -45,69 +45,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
-
-
-  METHOD zif_abapgit_branch_overview~compress.
-
-    DEFINE _compress.
-      IF lines( lt_temp ) >= 10.
-        READ TABLE lt_temp ASSIGNING <ls_temp> INDEX 1.
-        ASSERT sy-subrc = 0.
-        APPEND INITIAL LINE TO rt_commits ASSIGNING <ls_new>.
-        <ls_new>-time       = <ls_temp>-time.
-        <ls_new>-message    = |Compressed, { lines( lt_temp ) } commits|.
-        <ls_new>-branch     = lv_name.
-        <ls_new>-compressed = abap_true.
-      ELSE.
-        APPEND LINES OF lt_temp TO rt_commits.
-      ENDIF.
-    END-OF-DEFINITION.
-
-    DATA: lv_previous TYPE i,
-          lv_index    TYPE i,
-          lv_name     TYPE string,
-          lt_temp     LIKE it_commits.
-
-    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF mt_branches,
-                   <ls_new>    LIKE LINE OF rt_commits,
-                   <ls_temp>   LIKE LINE OF lt_temp,
-                   <ls_commit> LIKE LINE OF it_commits.
-
-
-    LOOP AT mt_branches ASSIGNING <ls_branch>.
-
-      CLEAR lt_temp.
-      lv_name = <ls_branch>-name+11.
-
-      LOOP AT it_commits ASSIGNING <ls_commit>
-          WHERE branch = lv_name.
-        lv_index = sy-tabix.
-
-        IF NOT <ls_commit>-merge IS INITIAL
-            OR NOT <ls_commit>-create IS INITIAL.
-* always show these vertices
-          lv_previous = -1.
-        ENDIF.
-
-        IF lv_previous + 1 <> sy-tabix.
-          _compress.
-          CLEAR lt_temp.
-        ENDIF.
-
-        lv_previous = lv_index.
-
-        APPEND <ls_commit> TO lt_temp.
-
-      ENDLOOP.
-
-      _compress.
-
-    ENDLOOP.
-
-    SORT rt_commits BY time ASCENDING.
-
-  ENDMETHOD.
+CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -258,16 +196,6 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_branch_overview~get_branches.
-    rt_branches = mt_branches.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_branch_overview~get_commits.
-    rt_commits = mt_commits.
-  ENDMETHOD.
-
-
   METHOD get_git_objects.
 
     DATA: lo_branch_list       TYPE REF TO zcl_abapgit_git_branch_list,
@@ -319,13 +247,6 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
         et_objects     = rt_objects ).
 
     DELETE rt_objects WHERE type = zif_abapgit_definitions=>gc_type-blob.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_branch_overview~get_tags.
-
-    rt_tags = mt_tags.
 
   ENDMETHOD.
 
@@ -396,4 +317,82 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_branch_overview~compress.
+
+    DEFINE _compress.
+      IF lines( lt_temp ) >= 10.
+        READ TABLE lt_temp ASSIGNING <ls_temp> INDEX 1.
+        ASSERT sy-subrc = 0.
+        APPEND INITIAL LINE TO rt_commits ASSIGNING <ls_new>.
+        <ls_new>-time       = <ls_temp>-time.
+        <ls_new>-message    = |Compressed, { lines( lt_temp ) } commits|.
+        <ls_new>-branch     = lv_name.
+        <ls_new>-compressed = abap_true.
+      ELSE.
+        APPEND LINES OF lt_temp TO rt_commits.
+      ENDIF.
+    END-OF-DEFINITION.
+
+    DATA: lv_previous TYPE i,
+          lv_index    TYPE i,
+          lv_name     TYPE string,
+          lt_temp     LIKE it_commits.
+
+    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF mt_branches,
+                   <ls_new>    LIKE LINE OF rt_commits,
+                   <ls_temp>   LIKE LINE OF lt_temp,
+                   <ls_commit> LIKE LINE OF it_commits.
+
+
+    LOOP AT mt_branches ASSIGNING <ls_branch>.
+
+      CLEAR lt_temp.
+      lv_name = <ls_branch>-name+11.
+
+      LOOP AT it_commits ASSIGNING <ls_commit>
+          WHERE branch = lv_name.
+        lv_index = sy-tabix.
+
+        IF NOT <ls_commit>-merge IS INITIAL
+            OR NOT <ls_commit>-create IS INITIAL.
+* always show these vertices
+          lv_previous = -1.
+        ENDIF.
+
+        IF lv_previous + 1 <> sy-tabix.
+          _compress.
+          CLEAR lt_temp.
+        ENDIF.
+
+        lv_previous = lv_index.
+
+        APPEND <ls_commit> TO lt_temp.
+
+      ENDLOOP.
+
+      _compress.
+
+    ENDLOOP.
+
+    SORT rt_commits BY time ASCENDING.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_branch_overview~get_branches.
+    rt_branches = mt_branches.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_branch_overview~get_commits.
+    rt_commits = mt_commits.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_branch_overview~get_tags.
+
+    rt_tags = mt_tags.
+
+  ENDMETHOD.
 ENDCLASS.
