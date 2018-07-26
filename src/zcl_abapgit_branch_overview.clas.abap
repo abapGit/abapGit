@@ -2,45 +2,59 @@ CLASS zcl_abapgit_branch_overview DEFINITION
   PUBLIC
   FINAL
   CREATE PRIVATE
-  GLOBAL FRIENDS zcl_abapgit_factory .
 
+  GLOBAL FRIENDS zcl_abapgit_factory .
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_branch_overview.
+    INTERFACES zif_abapgit_branch_overview .
 
-    METHODS:
-      constructor
-        IMPORTING io_repo TYPE REF TO zcl_abapgit_repo_online
-        RAISING   zcx_abapgit_exception.
-
+    METHODS constructor
+      IMPORTING
+        !io_repo TYPE REF TO zcl_abapgit_repo_online
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
-    METHODS:
-      parse_commits
-        IMPORTING it_objects TYPE zif_abapgit_definitions=>ty_objects_tt
-        RAISING   zcx_abapgit_exception,
-      parse_annotated_tags
-        IMPORTING it_objects TYPE zif_abapgit_definitions=>ty_objects_tt
-        RAISING   zcx_abapgit_exception,
-      determine_branch
-        RAISING zcx_abapgit_exception,
-      determine_merges
-        RAISING zcx_abapgit_exception,
-      fixes
-        RAISING zcx_abapgit_exception,
-      get_git_objects
-        IMPORTING io_repo           TYPE REF TO zcl_abapgit_repo_online
-        RETURNING VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
-        RAISING   zcx_abapgit_exception,
-      determine_tags
-        RAISING zcx_abapgit_exception.
 
-    DATA:
-      mo_repo     TYPE REF TO zcl_abapgit_repo_online,
-      mt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
-      mt_commits  TYPE TABLE OF zif_abapgit_definitions=>ty_commit,
-      mt_tags     TYPE zif_abapgit_definitions=>ty_git_tag_list_tt.
+    TYPES:
+      ty_commits TYPE TABLE OF zif_abapgit_definitions=>ty_commit WITH DEFAULT KEY .
 
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
+    DATA mt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt .
+    DATA mt_commits TYPE ty_commits .
+    DATA mt_tags TYPE zif_abapgit_definitions=>ty_git_tag_list_tt .
+
+    CLASS-METHODS parse_commits
+      IMPORTING
+        !it_objects       TYPE zif_abapgit_definitions=>ty_objects_tt
+      RETURNING
+        VALUE(rt_commits) TYPE ty_commits
+      RAISING
+        zcx_abapgit_exception .
+    METHODS parse_annotated_tags
+      IMPORTING
+        !it_objects TYPE zif_abapgit_definitions=>ty_objects_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS determine_branch
+      RAISING
+        zcx_abapgit_exception .
+    METHODS determine_merges
+      RAISING
+        zcx_abapgit_exception .
+    METHODS fixes
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_git_objects
+      IMPORTING
+        !io_repo          TYPE REF TO zcl_abapgit_repo_online
+      RETURNING
+        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
+      RAISING
+        zcx_abapgit_exception .
+    METHODS determine_tags
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -55,10 +69,9 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
     mo_repo = io_repo.
 
     CLEAR mt_branches.
-    CLEAR mt_commits.
 
     lt_objects = get_git_objects( io_repo ).
-    parse_commits( lt_objects ).
+    mt_commits = parse_commits( lt_objects ).
     parse_annotated_tags( lt_objects ).
 
     CLEAR lt_objects.
@@ -319,7 +332,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
         ls_commit-email
         ls_commit-time ##NO_TEXT.
       ASSERT sy-subrc = 0.
-      APPEND ls_commit TO mt_commits.
+      APPEND ls_commit TO rt_commits.
 
     ENDLOOP.
 
