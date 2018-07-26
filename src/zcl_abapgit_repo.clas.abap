@@ -63,7 +63,7 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS deserialize
       IMPORTING
-        VALUE(is_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
+        is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
         zcx_abapgit_exception .
     METHODS refresh
@@ -141,33 +141,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo IMPLEMENTATION.
-
-  METHOD run_code_inspector.
-
-    DATA: li_code_inspector TYPE REF TO zif_abapgit_code_inspector,
-          lv_check_variant  TYPE string.
-
-    lv_check_variant = get_local_settings( )-code_inspector_check_variant.
-
-    IF lv_check_variant IS INITIAL.
-      zcx_abapgit_exception=>raise( |No check variant maintained in repo settings.| ).
-    ENDIF.
-
-    li_code_inspector = zcl_abapgit_factory=>get_code_inspector(
-                                  iv_package            = get_package( )
-                                  iv_check_variant_name = |{ lv_check_variant }| ).
-
-    rt_list = li_code_inspector->run( ).
-
-    DELETE rt_list WHERE kind = 'N'.
-
-    READ TABLE rt_list TRANSPORTING NO FIELDS
-                       WITH KEY kind = 'E'.
-
-    mv_code_inspector_successful = boolc( sy-subrc <> 0 ).
-
-  ENDMETHOD.
+CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -189,6 +163,16 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     lo_persistence->delete( ms_data-key ).
 
   ENDMETHOD.                    "delete
+
+
+  METHOD delete_checks.
+
+    DATA: li_package TYPE REF TO zif_abapgit_sap_package.
+
+    li_package = zcl_abapgit_factory=>get_sap_package( get_package( ) ).
+    rs_checks-transport-required = li_package->are_changes_recorded_in_tr_req( ).
+
+  ENDMETHOD.
 
 
   METHOD deserialize.
@@ -245,16 +229,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     lt_requirements = get_dot_abapgit( )->get_data( )-requirements.
     rs_checks-requirements-met = zcl_abapgit_requirement_helper=>is_requirements_met(
       lt_requirements ).
-
-  ENDMETHOD.
-
-
-  METHOD delete_checks.
-
-    DATA: li_package TYPE REF TO zif_abapgit_sap_package.
-
-    li_package = zcl_abapgit_factory=>get_sap_package( get_package( ) ).
-    rs_checks-transport-required = li_package->are_changes_recorded_in_tr_req( ).
 
   ENDMETHOD.
 
@@ -489,6 +463,33 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.                    "refresh
 
 
+  METHOD run_code_inspector.
+
+    DATA: li_code_inspector TYPE REF TO zif_abapgit_code_inspector,
+          lv_check_variant  TYPE string.
+
+    lv_check_variant = get_local_settings( )-code_inspector_check_variant.
+
+    IF lv_check_variant IS INITIAL.
+      zcx_abapgit_exception=>raise( |No check variant maintained in repo settings.| ).
+    ENDIF.
+
+    li_code_inspector = zcl_abapgit_factory=>get_code_inspector(
+                                  iv_package            = get_package( )
+                                  iv_check_variant_name = |{ lv_check_variant }| ).
+
+    rt_list = li_code_inspector->run( ).
+
+    DELETE rt_list WHERE kind = 'N'.
+
+    READ TABLE rt_list TRANSPORTING NO FIELDS
+                       WITH KEY kind = 'E'.
+
+    mv_code_inspector_successful = boolc( sy-subrc <> 0 ).
+
+  ENDMETHOD.
+
+
   METHOD set.
 
 * TODO: refactor
@@ -588,6 +589,20 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD update_last_deserialize.
+
+    DATA: lv_deserialized_at TYPE zif_abapgit_persistence=>ty_repo-deserialized_at,
+          lv_deserialized_by TYPE zif_abapgit_persistence=>ty_repo-deserialized_by.
+
+    GET TIME STAMP FIELD lv_deserialized_at.
+    lv_deserialized_by = sy-uname.
+
+    set( iv_deserialized_at = lv_deserialized_at
+         iv_deserialized_by = lv_deserialized_by ).
+
+  ENDMETHOD.
+
+
   METHOD update_local_checksums.
 
     " ASSUMTION: SHA1 in param is actual and correct.
@@ -665,19 +680,4 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     set( it_checksums = lt_checksums ).
 
   ENDMETHOD.  " update_local_checksums
-
-
-  METHOD update_last_deserialize.
-
-    DATA: lv_deserialized_at TYPE zif_abapgit_persistence=>ty_repo-deserialized_at,
-          lv_deserialized_by TYPE zif_abapgit_persistence=>ty_repo-deserialized_by.
-
-    GET TIME STAMP FIELD lv_deserialized_at.
-    lv_deserialized_by = sy-uname.
-
-    set( iv_deserialized_at = lv_deserialized_at
-         iv_deserialized_by = lv_deserialized_by ).
-
-  ENDMETHOD.
-
 ENDCLASS.
