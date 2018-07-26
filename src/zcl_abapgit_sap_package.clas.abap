@@ -271,7 +271,8 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
     SELECT devclass FROM tdevc
       INTO TABLE rt_list
-      WHERE parentcl = mv_package.      "#EC CI_GENBUFF "#EC CI_SUBRC
+      WHERE parentcl = mv_package
+      ORDER BY PRIMARY KEY.               "#EC CI_GENBUFF "#EC CI_SUBRC
     lv_children = sy-dbcnt.
 
     LOOP AT rt_list INTO lv_devclass FROM 1 TO lv_children.
