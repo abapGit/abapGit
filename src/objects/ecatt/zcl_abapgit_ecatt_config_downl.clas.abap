@@ -27,7 +27,9 @@ CLASS zcl_abapgit_ecatt_config_downl DEFINITION
 ENDCLASS.
 
 
-CLASS zcl_abapgit_ecatt_config_downl IMPLEMENTATION.
+
+CLASS ZCL_ABAPGIT_ECATT_CONFIG_DOWNL IMPLEMENTATION.
+
 
   METHOD download.
 
@@ -69,7 +71,7 @@ CLASS zcl_abapgit_ecatt_config_downl IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    set_variants_to_dom( im_params = ecatt_config->params ).
+    set_variants_to_dom( ecatt_config->params ).
 
     download_data( ).
 
@@ -102,5 +104,4 @@ CLASS zcl_abapgit_ecatt_config_downl IMPLEMENTATION.
     rv_xml_stream_size = mv_xml_stream_size.
 
   ENDMETHOD.
-
 ENDCLASS.
