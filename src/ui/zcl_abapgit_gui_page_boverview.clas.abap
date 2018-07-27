@@ -59,7 +59,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
 
 
   METHOD body.
@@ -249,7 +249,7 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
 
   METHOD refresh.
 
-    mi_branch_overview = zcl_abapgit_factory=>get_branch_overview( io_repo = mo_repo ).
+    mi_branch_overview = zcl_abapgit_factory=>get_branch_overview( mo_repo ).
 
     mt_commits = mi_branch_overview->get_commits( ).
     IF mv_compress = abap_true.
