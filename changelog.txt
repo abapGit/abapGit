@@ -8,6 +8,19 @@ Legend
 + : added
 - : removed
 
+2018-07-27 v1.72.2
+------------------
+* Additional unit tests
+* Optimize STATUS performance
+* FUGR fixes
+* AVAS fixes
+* SHA1 removed from persistence
+* News, less database updates
+* Refresh performance, only call BRANCH_LIST once
+* Code inspector for offline repositories
+* Store user and time for last deserialize
+* CHAR fixes
+
 2018-07-20 v1.72.1
 ------------------
 * FUGR: handle different ABAP language versions
