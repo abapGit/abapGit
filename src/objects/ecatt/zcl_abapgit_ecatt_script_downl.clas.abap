@@ -56,7 +56,9 @@ CLASS zcl_abapgit_ecatt_script_downl DEFINITION
 ENDCLASS.
 
 
-CLASS zcl_abapgit_ecatt_script_downl IMPLEMENTATION.
+
+CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
+
 
   METHOD download.
 
@@ -146,6 +148,53 @@ CLASS zcl_abapgit_ecatt_script_downl IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD escape_control_data.
+
+    " Downport
+
+    DATA: li_iter     TYPE REF TO if_ixml_node_iterator,
+          li_textit   TYPE REF TO if_ixml_node_iterator,
+          li_abapctrl TYPE REF TO if_ixml_node_collection,
+          li_text     TYPE REF TO if_ixml_text,
+          li_filter   TYPE REF TO if_ixml_node_filter,
+          li_list     TYPE REF TO if_ixml_node_list,
+          lv_value    TYPE etdom_name,
+          li_vars     TYPE REF TO if_ixml_element,
+          li_elem     TYPE REF TO if_ixml_element.
+
+    li_vars = ii_element->find_from_name_ns(
+    name = iv_tabname ).
+    li_filter = ii_element->create_filter_node_type(
+    if_ixml_node=>co_node_text ).
+    IF li_vars IS NOT INITIAL.
+      li_abapctrl = ii_element->get_elements_by_tag_name_ns( name = iv_node ).
+
+* just for debugging
+      li_iter = li_abapctrl->create_iterator( ).
+      li_elem ?= li_iter->get_next( ).
+      WHILE li_elem IS NOT INITIAL.
+        li_list = li_elem->get_children( ).
+
+        li_textit = li_list->create_rev_iterator_filtered(
+        filter = li_filter  ).
+        li_text ?= li_textit->get_next( ).
+        IF li_text IS NOT INITIAL.
+          lv_value = li_text->get_data( ).
+          IF lv_value(1) =  cl_abap_char_utilities=>minchar.
+            REPLACE SECTION OFFSET 0 LENGTH 1 OF lv_value WITH space.
+            li_text->set_value( value = lv_value ).
+          ENDIF.
+        ENDIF.
+        CLEAR: li_textit, li_list, li_elem, lv_value.
+        li_elem ?= li_iter->get_next( ).
+      ENDWHILE.
+      CLEAR: li_abapctrl, li_elem, li_iter.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD get_xml_stream.
 
     rv_xml_stream = mv_xml_stream.
@@ -160,58 +209,79 @@ CLASS zcl_abapgit_ecatt_script_downl IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_script_to_template.
+  METHOD set_artmp_to_template.
 
     " Downport
 
-    DATA:
-      lt_text    TYPE etxml_line_tabtype,
-      li_element TYPE REF TO if_ixml_element,
-      lv_rc      TYPE sy-subrc.
+    DATA: li_artmp_node   TYPE REF TO if_ixml_element,
+          lv_rc           TYPE sy-subrc,
+          lv_text         TYPE string,
+          lv_rc_args_tmpl TYPE int4,
+          lv_errmsg       TYPE string.
 
-    ecatt_script->get_script_text(
-      CHANGING
-        scripttext = lt_text ).
+    li_artmp_node = template_over_all->create_simple_element(
+                      name   = 'ECET_ARTMP'
+                      parent = root_node ).
 
-    mi_script_node = template_over_all->create_simple_element(
-                        name = 'SCRIPT'
-                        parent = root_node ).
-
-    IF mi_script_node IS INITIAL.
-      me->raise_download_exception(
-            textid        = cx_ecatt_apl_util=>download_processing
-            previous      = ex_ecatt
-            called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_SCRIPT_TO_TEMPLATE' ) .
-    ENDIF.
-
-    CALL FUNCTION 'SDIXML_DATA_TO_DOM'
-      EXPORTING
-        name         = 'ETXML_LINE_TABTYPE'
-        dataobject   = lt_text
+    ecatt_extprog->get_args_tmpl(
       IMPORTING
-        data_as_dom  = li_element
-      CHANGING
-        document     = template_over_all
-      EXCEPTIONS
-        illegal_name = 1
-        OTHERS       = 2.
-    IF sy-subrc <> 0.
-      me->raise_download_exception(
-            textid        = cx_ecatt_apl_util=>download_processing
-            previous      = ex_ecatt
-            called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_SCRIPT_TO_TEMPLATE' ).
+        ex_xml_arg_tmpl = lv_text
+        ex_rc           = lv_rc_args_tmpl
+        ex_errmsg       = lv_errmsg ).
 
+    IF li_artmp_node IS INITIAL OR lv_rc_args_tmpl > 0.
+      me->raise_download_exception(
+          textid        = cx_ecatt_apl_util=>download_processing
+          previous      = ex_ecatt
+          called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_ARTMP_TO_TEMPLATE'
+          free_text     = lv_errmsg ).
     ENDIF.
 
-    lv_rc = mi_script_node->append_child( li_element ).
+    lv_rc = li_artmp_node->set_value( value = lv_text ).
     IF lv_rc <> 0.
       me->raise_download_exception(
             textid        = cx_ecatt_apl_util=>download_processing
             previous      = ex_ecatt
-            called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_SCRIPT_TO_TEMPLATE' ).
+            called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_ARTMP_TO_TEMPLATE' ).
     ENDIF.
 
   ENDMETHOD.
+
+
+  METHOD set_blob_to_template.
+
+    " Downport
+
+    DATA: li_blob_node TYPE REF TO if_ixml_element,
+          lv_rc        TYPE sy-subrc,
+          lv_text      TYPE string.
+
+    li_blob_node = template_over_all->create_simple_element(
+                  name   = 'ECET_BLOBS'
+                  parent = root_node ).
+
+    IF li_blob_node IS INITIAL.
+      me->raise_download_exception(
+            textid        = cx_ecatt_apl_util=>download_processing
+            previous      = ex_ecatt
+            called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_BLOB_TO_TEMPLATE' ).
+    ENDIF.
+
+    ecatt_extprog->get_blob(
+      EXPORTING
+        im_whole_data = 1
+      IMPORTING
+        ex_xml_blob   = lv_text ).
+
+    lv_rc = li_blob_node->set_value( value = lv_text ).
+    IF lv_rc <> 0.
+      me->raise_download_exception(
+            textid        = cx_ecatt_apl_util=>download_processing
+            previous      = ex_ecatt
+            called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_BLOB_TO_TEMPLATE' ).
+    ENDIF.
+
+  ENDMETHOD.                    "SET_BLOB_TO_TEMPLATE
 
 
   METHOD set_control_data_for_tcd.
@@ -361,125 +431,56 @@ CLASS zcl_abapgit_ecatt_script_downl IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD escape_control_data.
+  METHOD set_script_to_template.
 
     " Downport
 
-    DATA: li_iter     TYPE REF TO if_ixml_node_iterator,
-          li_textit   TYPE REF TO if_ixml_node_iterator,
-          li_abapctrl TYPE REF TO if_ixml_node_collection,
-          li_text     TYPE REF TO if_ixml_text,
-          li_filter   TYPE REF TO if_ixml_node_filter,
-          li_list     TYPE REF TO if_ixml_node_list,
-          lv_value    TYPE etdom_name,
-          li_vars     TYPE REF TO if_ixml_element,
-          li_elem     TYPE REF TO if_ixml_element.
+    DATA:
+      lt_text    TYPE etxml_line_tabtype,
+      li_element TYPE REF TO if_ixml_element,
+      lv_rc      TYPE sy-subrc.
 
-    li_vars = ii_element->find_from_name_ns(
-    name = iv_tabname ).
-    li_filter = ii_element->create_filter_node_type(
-    if_ixml_node=>co_node_text ).
-    IF li_vars IS NOT INITIAL.
-      li_abapctrl = ii_element->get_elements_by_tag_name_ns( name = iv_node ).
+    ecatt_script->get_script_text(
+      CHANGING
+        scripttext = lt_text ).
 
-* just for debugging
-      li_iter = li_abapctrl->create_iterator( ).
-      li_elem ?= li_iter->get_next( ).
-      WHILE li_elem IS NOT INITIAL.
-        li_list = li_elem->get_children( ).
+    mi_script_node = template_over_all->create_simple_element(
+                        name = 'SCRIPT'
+                        parent = root_node ).
 
-        li_textit = li_list->create_rev_iterator_filtered(
-        filter = li_filter  ).
-        li_text ?= li_textit->get_next( ).
-        IF li_text IS NOT INITIAL.
-          lv_value = li_text->get_data( ).
-          IF lv_value(1) =  cl_abap_char_utilities=>minchar.
-            REPLACE SECTION OFFSET 0 LENGTH 1 OF lv_value WITH space.
-            li_text->set_value( value = lv_value ).
-          ENDIF.
-        ENDIF.
-        CLEAR: li_textit, li_list, li_elem, lv_value.
-        li_elem ?= li_iter->get_next( ).
-      ENDWHILE.
-      CLEAR: li_abapctrl, li_elem, li_iter.
-
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD set_blob_to_template.
-
-    " Downport
-
-    DATA: li_blob_node TYPE REF TO if_ixml_element,
-          lv_rc        TYPE sy-subrc,
-          lv_text      TYPE string.
-
-    li_blob_node = template_over_all->create_simple_element(
-                  name   = 'ECET_BLOBS'
-                  parent = root_node ).
-
-    IF li_blob_node IS INITIAL.
+    IF mi_script_node IS INITIAL.
       me->raise_download_exception(
             textid        = cx_ecatt_apl_util=>download_processing
             previous      = ex_ecatt
-            called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_BLOB_TO_TEMPLATE' ).
+            called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_SCRIPT_TO_TEMPLATE' ) .
     ENDIF.
 
-    ecatt_extprog->get_blob(
+    CALL FUNCTION 'SDIXML_DATA_TO_DOM'
       EXPORTING
-        im_whole_data = 1
+        name         = 'ETXML_LINE_TABTYPE'
+        dataobject   = lt_text
       IMPORTING
-        ex_xml_blob   = lv_text ).
+        data_as_dom  = li_element
+      CHANGING
+        document     = template_over_all
+      EXCEPTIONS
+        illegal_name = 1
+        OTHERS       = 2.
+    IF sy-subrc <> 0.
+      me->raise_download_exception(
+            textid        = cx_ecatt_apl_util=>download_processing
+            previous      = ex_ecatt
+            called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_SCRIPT_TO_TEMPLATE' ).
 
-    lv_rc = li_blob_node->set_value( value = lv_text ).
+    ENDIF.
+
+    lv_rc = mi_script_node->append_child( li_element ).
     IF lv_rc <> 0.
       me->raise_download_exception(
             textid        = cx_ecatt_apl_util=>download_processing
             previous      = ex_ecatt
-            called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_BLOB_TO_TEMPLATE' ).
-    ENDIF.
-
-  ENDMETHOD.                    "SET_BLOB_TO_TEMPLATE
-
-
-  METHOD set_artmp_to_template.
-
-    " Downport
-
-    DATA: li_artmp_node   TYPE REF TO if_ixml_element,
-          lv_rc           TYPE sy-subrc,
-          lv_text         TYPE string,
-          lv_rc_args_tmpl TYPE int4,
-          lv_errmsg       TYPE string.
-
-    li_artmp_node = template_over_all->create_simple_element(
-                      name   = 'ECET_ARTMP'
-                      parent = root_node ).
-
-    ecatt_extprog->get_args_tmpl(
-      IMPORTING
-        ex_xml_arg_tmpl = lv_text
-        ex_rc           = lv_rc_args_tmpl
-        ex_errmsg       = lv_errmsg ).
-
-    IF li_artmp_node IS INITIAL OR lv_rc_args_tmpl > 0.
-      me->raise_download_exception(
-          textid        = cx_ecatt_apl_util=>download_processing
-          previous      = ex_ecatt
-          called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_ARTMP_TO_TEMPLATE'
-          free_text     = lv_errmsg ).
-    ENDIF.
-
-    lv_rc = li_artmp_node->set_value( value = lv_text ).
-    IF lv_rc <> 0.
-      me->raise_download_exception(
-            textid        = cx_ecatt_apl_util=>download_processing
-            previous      = ex_ecatt
-            called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_ARTMP_TO_TEMPLATE' ).
+            called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_SCRIPT_TO_TEMPLATE' ).
     ENDIF.
 
   ENDMETHOD.
-
 ENDCLASS.
