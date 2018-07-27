@@ -96,7 +96,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
 
 *   set_params_to_schema( ).
       TRY.
-          get_general_params_data( im_params = ecatt_script->params ).
+          get_general_params_data( ecatt_script->params ).
         CATCH cx_ecatt_apl INTO lx_ecatt.                "#EC NOHANDLER
 *         proceed with download and report errors later
       ENDTRY.
@@ -109,7 +109,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
             set_general_params_data_to_dom( ).
             IF NOT wa_parm-pstruc_typ IS INITIAL.
               set_deep_stru_to_dom( ecatt_script->params ).
-              set_deep_data_to_dom( im_params = ecatt_script->params ).
+              set_deep_data_to_dom( ecatt_script->params ).
               IF wa_parm-xmlref_typ EQ cl_apl_ecatt_const=>ref_type_c_tcd.
                 set_control_data_for_tcd( is_param  =  wa_parm
                                           io_params = ecatt_script->params ).
@@ -162,12 +162,11 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
           li_vars     TYPE REF TO if_ixml_element,
           li_elem     TYPE REF TO if_ixml_element.
 
-    li_vars = ii_element->find_from_name_ns(
-    name = iv_tabname ).
+    li_vars = ii_element->find_from_name_ns( iv_tabname ).
     li_filter = ii_element->create_filter_node_type(
     if_ixml_node=>co_node_text ).
     IF li_vars IS NOT INITIAL.
-      li_abapctrl = ii_element->get_elements_by_tag_name_ns( name = iv_node ).
+      li_abapctrl = ii_element->get_elements_by_tag_name_ns( iv_node ).
 
 * just for debugging
       li_iter = li_abapctrl->create_iterator( ).
@@ -175,12 +174,11 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
       WHILE li_elem IS NOT INITIAL.
         li_list = li_elem->get_children( ).
 
-        li_textit = li_list->create_rev_iterator_filtered(
-        filter = li_filter  ).
+        li_textit = li_list->create_rev_iterator_filtered( li_filter  ).
         li_text ?= li_textit->get_next( ).
         IF li_text IS NOT INITIAL.
           lv_value = li_text->get_data( ).
-          IF lv_value(1) =  cl_abap_char_utilities=>minchar.
+          IF lv_value(1) = cl_abap_char_utilities=>minchar.
             REPLACE SECTION OFFSET 0 LENGTH 1 OF lv_value WITH space.
             li_text->set_value( value = lv_value ).
           ENDIF.
