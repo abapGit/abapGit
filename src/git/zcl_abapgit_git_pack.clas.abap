@@ -20,7 +20,8 @@ CLASS zcl_abapgit_git_pack DEFINITION
         author    TYPE string,
         committer TYPE string,
         body      TYPE string,
-      END OF ty_commit,
+      END OF ty_commit .
+    TYPES:
       BEGIN OF ty_tag,
         object       TYPE string,
         type         TYPE string,
@@ -30,11 +31,6 @@ CLASS zcl_abapgit_git_pack DEFINITION
         message      TYPE string,
         body         TYPE string,
       END OF ty_tag .
-    TYPES:
-      BEGIN OF ty_adler32,
-        sha1 TYPE zif_abapgit_definitions=>ty_sha1,
-        type TYPE zif_abapgit_definitions=>ty_type,
-      END OF ty_adler32 .
 
     CLASS-METHODS decode
       IMPORTING
@@ -78,16 +74,16 @@ CLASS zcl_abapgit_git_pack DEFINITION
         VALUE(rv_data) TYPE xstring .
     CLASS-METHODS encode_commit
       IMPORTING
-        is_commit      TYPE ty_commit
+        !is_commit     TYPE ty_commit
       RETURNING
         VALUE(rv_data) TYPE xstring .
     CLASS-METHODS encode_tag
       IMPORTING
-        is_tag         TYPE zcl_abapgit_git_pack=>ty_tag
+        !is_tag        TYPE zcl_abapgit_git_pack=>ty_tag
       RETURNING
         VALUE(rv_data) TYPE xstring
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
   PRIVATE SECTION.
 
     CONSTANTS:
@@ -151,7 +147,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_git_pack IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
 
   METHOD decode.
@@ -712,6 +708,27 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
   ENDMETHOD.                    "encode_commit
 
 
+  METHOD encode_tag.
+
+    DATA: lv_string TYPE string,
+          lv_tmp    TYPE string,
+          lv_time   TYPE zcl_abapgit_time=>ty_unixtime.
+
+    lv_time = zcl_abapgit_time=>get( ).
+
+    lv_string = |object { is_tag-object }{ zif_abapgit_definitions=>gc_newline }|
+             && |type { is_tag-type }{ zif_abapgit_definitions=>gc_newline }|
+             && |tag { zcl_abapgit_tag=>remove_tag_prefix( is_tag-tag ) }{ zif_abapgit_definitions=>gc_newline }|
+             && |tagger { is_tag-tagger_name } <{ is_tag-tagger_email }> { lv_time }|
+             && |{ zif_abapgit_definitions=>gc_newline }|
+             && |{ zif_abapgit_definitions=>gc_newline }|
+             && |{ is_tag-message }|.
+
+    rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
+
+  ENDMETHOD.
+
+
   METHOD encode_tree.
 
     CONSTANTS: lc_null TYPE x VALUE '00'.
@@ -926,25 +943,4 @@ CLASS zcl_abapgit_git_pack IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Wrong Adler checksum' ).
     ENDIF.
   ENDMETHOD.
-
-  METHOD encode_tag.
-
-    DATA: lv_string TYPE string,
-          lv_tmp    TYPE string,
-          lv_time   TYPE zcl_abapgit_time=>ty_unixtime.
-
-    lv_time = zcl_abapgit_time=>get( ).
-
-    lv_string = |object { is_tag-object }{ zif_abapgit_definitions=>gc_newline }|
-             && |type { is_tag-type }{ zif_abapgit_definitions=>gc_newline }|
-             && |tag { zcl_abapgit_tag=>remove_tag_prefix( is_tag-tag ) }{ zif_abapgit_definitions=>gc_newline }|
-             && |tagger { is_tag-tagger_name } <{ is_tag-tagger_email }> { lv_time }|
-             && |{ zif_abapgit_definitions=>gc_newline }|
-             && |{ zif_abapgit_definitions=>gc_newline }|
-             && |{ is_tag-message }|.
-
-    rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
-
-  ENDMETHOD.
-
 ENDCLASS.
