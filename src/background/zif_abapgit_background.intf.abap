@@ -1,17 +1,17 @@
-interface ZIF_ABAPGIT_BACKGROUND
-  public .
+INTERFACE zif_abapgit_background
+  PUBLIC .
 
 
-  class-methods GET_DESCRIPTION
-    returning
-      value(RV_DESCRIPTION) type STRING .
-  class-methods GET_SETTINGS
-    changing
-      value(CT_SETTINGS) type ZCL_ABAPGIT_PERSIST_BACKGROUND=>TY_SETTINGS_TT .
-  methods RUN
-    importing
-      !IO_REPO type ref to ZCL_ABAPGIT_REPO_ONLINE
-      !IT_SETTINGS type ZCL_ABAPGIT_PERSIST_BACKGROUND=>TY_SETTINGS_TT optional
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-endinterface.
+  CLASS-METHODS get_description
+    RETURNING
+      VALUE(rv_description) TYPE string .
+  CLASS-METHODS get_settings
+    CHANGING
+      VALUE(ct_settings) TYPE zcl_abapgit_persist_background=>ty_settings_tt .
+  METHODS run
+    IMPORTING
+      !io_repo     TYPE REF TO zcl_abapgit_repo_online
+      !it_settings TYPE zcl_abapgit_persist_background=>ty_settings_tt OPTIONAL
+    RAISING
+      zcx_abapgit_exception .
+ENDINTERFACE.
