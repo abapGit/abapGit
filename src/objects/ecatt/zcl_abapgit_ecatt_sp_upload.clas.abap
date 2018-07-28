@@ -49,7 +49,7 @@ CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
         li_section = template_over_all->find_from_name_ns( 'START_PROFILE' ).
 
         IF NOT li_section IS INITIAL.
-          CLASS cl_ixml DEFINITION LOAD .
+          CLASS cl_ixml DEFINITION LOAD.
           li_ixml = cl_ixml=>create( ).
           li_dom  = li_ixml->create_document( ).
           li_root ?= li_section->clone( ).
@@ -70,7 +70,7 @@ CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
               i_sp_xml = lv_start_profile.
 
         ENDIF.
-      CATCH cx_ecatt_apl .
+      CATCH cx_ecatt_apl.
         lv_exception_occurred = 'X'.
     ENDTRY.
 
