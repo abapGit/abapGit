@@ -52,7 +52,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -308,8 +308,8 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
       ls_settings-block_commit = abap_false.
     ENDIF.
 
-    IF  ls_settings-block_commit = abap_true
-    AND ls_settings-code_inspector_check_variant IS INITIAL.
+    IF ls_settings-block_commit = abap_true
+        AND ls_settings-code_inspector_check_variant IS INITIAL.
       zcx_abapgit_exception=>raise( |If block commit is active, a check variant has to be maintained.| ).
     ENDIF.
 
