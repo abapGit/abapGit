@@ -58,13 +58,13 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
     CLASS-METHODS file_encode
       IMPORTING
         !iv_key          TYPE zif_abapgit_persistence=>ty_repo-key
-        !ig_file         TYPE any                   "assuming ty_file
+        !ig_file         TYPE any                             "assuming ty_file
       RETURNING
         VALUE(rv_string) TYPE string .
     CLASS-METHODS obj_encode
       IMPORTING
         !iv_key          TYPE zif_abapgit_persistence=>ty_repo-key
-        !ig_object       TYPE any                 "assuming ty_item
+        !ig_object       TYPE any                         "assuming ty_item
       RETURNING
         VALUE(rv_string) TYPE string .
     CLASS-METHODS file_obj_decode
@@ -72,8 +72,8 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !iv_string TYPE clike
       EXPORTING
         !ev_key    TYPE zif_abapgit_persistence=>ty_repo-key
-        !eg_file   TYPE any            "assuming ty_file
-        !eg_object TYPE any          "assuming ty_item
+        !eg_file   TYPE any                "assuming ty_file
+        !eg_object TYPE any            "assuming ty_item
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS dbkey_encode
@@ -96,11 +96,6 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !it_postdata TYPE cnht_post_data_tab
       EXPORTING
         !es_fields   TYPE any .
-    CLASS-METHODS decode_bg_update
-      IMPORTING
-        !iv_getdata      TYPE clike
-      RETURNING
-        VALUE(rs_fields) TYPE zcl_abapgit_persist_background=>ty_background .
     CLASS-METHODS stage_decode
       IMPORTING
         !iv_getdata TYPE clike
@@ -118,7 +113,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -189,24 +184,6 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
   ENDMETHOD.                    "dbkey_encode
-
-
-  METHOD decode_bg_update.
-
-    DATA: lt_fields TYPE tihttpnvp.
-
-    lt_fields = parse_fields_upper_case_name( iv_getdata ).
-
-    get_field( EXPORTING name = 'METHOD'   it = lt_fields CHANGING cv = rs_fields ).
-    get_field( EXPORTING name = 'USERNAME' it = lt_fields CHANGING cv = rs_fields ).
-    get_field( EXPORTING name = 'PASSWORD' it = lt_fields CHANGING cv = rs_fields ).
-    get_field( EXPORTING name = 'AMETHOD'  it = lt_fields CHANGING cv = rs_fields ).
-    get_field( EXPORTING name = 'ANAME'    it = lt_fields CHANGING cv = rs_fields ).
-    get_field( EXPORTING name = 'AMAIL'    it = lt_fields CHANGING cv = rs_fields ).
-
-    ASSERT NOT rs_fields IS INITIAL.
-
-  ENDMETHOD.  "decode_bg_update
 
 
   METHOD dir_decode.
@@ -430,5 +407,4 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     REPLACE ALL OCCURRENCES OF '%3F' IN rv_string WITH '?'.
 
   ENDMETHOD.
-
 ENDCLASS.
