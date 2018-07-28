@@ -108,7 +108,7 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
       it_descriptions = lt_descriptions ).
 
     mo_object_oriented_object_fct->add_to_activation_list( ms_item ).
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD deserialize_docu.
@@ -171,7 +171,7 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
       it_text_pool  = lt_tpool
       iv_language   = mv_language ).
 
-  ENDMETHOD.                    "deserialize_textpool
+  ENDMETHOD.
 
 
   METHOD serialize_xml.
@@ -244,7 +244,7 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
                    ig_data = lt_descriptions ).
     ENDIF.
 
-  ENDMETHOD.                    "serialize_xml
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -293,7 +293,7 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
     ls_clskey-clsname = ms_item-obj_name.
 
     mo_object_oriented_object_fct->delete( ls_clskey ).
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -306,7 +306,7 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
                       iv_package = iv_package ).
 
     deserialize_docu( io_xml ).
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -314,12 +314,12 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
     ls_class_key-clsname = ms_item-obj_name.
 
     rv_bool = mo_object_oriented_object_fct->exists( ls_class_key ).
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~has_changed_since.
@@ -349,7 +349,7 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
         object_name   = ms_item-obj_name
         object_type   = 'CLAS'
         in_new_window = abap_true.
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -412,7 +412,7 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
 
     serialize_xml( io_xml ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~is_locked.
 

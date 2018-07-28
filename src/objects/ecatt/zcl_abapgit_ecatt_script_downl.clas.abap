@@ -279,7 +279,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
             called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_BLOB_TO_TEMPLATE' ).
     ENDIF.
 
-  ENDMETHOD.                    "SET_BLOB_TO_TEMPLATE
+  ENDMETHOD.
 
 
   METHOD set_control_data_for_tcd.

@@ -16,7 +16,7 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -88,7 +88,7 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
                           iv_ext    = 'xml'
                           iv_string = lv_source ) ##NO_TEXT.
 
-  ENDMETHOD.                    "zif_abapgit_object~serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -141,7 +141,7 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
-  ENDMETHOD.                    "zif_abapgit_object~deserialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -170,7 +170,7 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
     lo_xslt->delete( ).
     lo_xslt->save( ).
 
-  ENDMETHOD.                    "zif_abapgit_object~delete
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
 
@@ -186,7 +186,7 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
       rv_bool = abap_false.
     ENDIF.
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~jump.
 
@@ -196,11 +196,11 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
         object_name = ms_item-obj_name
         object_type = ms_item-obj_type.
 
-  ENDMETHOD.                    "zif_abapgit_object~jump
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
@@ -212,4 +212,4 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_xslt IMPLEMENTATION
+ENDCLASS.

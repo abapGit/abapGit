@@ -31,11 +31,11 @@ CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
 
     mv_extension = ms_item-obj_name.
 
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown.
@@ -43,11 +43,11 @@ CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~jump.
     zcx_abapgit_exception=>raise( |TODO: Jump { ms_item-obj_type }| ).
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
 
@@ -61,7 +61,7 @@ CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
 
     rv_bool = boolc( ls_extension_header IS NOT INITIAL ).
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -79,7 +79,7 @@ CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
       zcx_abapgit_exception=>raise( ls_message-msgtxt ).
     ENDIF.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
 
@@ -98,7 +98,7 @@ CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
     io_xml->add( iv_name = 'SHI5'
                  ig_data = ls_extension ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -120,7 +120,7 @@ CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
 
     tadir_insert( iv_package ).
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
@@ -132,4 +132,4 @@ CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_shi5 IMPLEMENTATION
+ENDCLASS.

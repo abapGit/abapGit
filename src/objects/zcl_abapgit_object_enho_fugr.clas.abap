@@ -21,7 +21,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_FUGR IMPLEMENTATION.
   METHOD constructor.
     ms_item = is_item.
     mo_files = io_files.
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object_enho~deserialize.
@@ -77,7 +77,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_FUGR IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |error deserializing ENHO fugrdata { ms_item-obj_name }| ).
     ENDTRY.
 
-  ENDMETHOD.                    "zif_abapgit_object_enho~deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object_enho~serialize.
@@ -117,5 +117,5 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_FUGR IMPLEMENTATION.
     io_xml->add( iv_name = 'FUGRDATA'
                  ig_data = ls_enha_data ).
 
-  ENDMETHOD.                    "zif_abapgit_object_enho~serialize
+  ENDMETHOD.
 ENDCLASS.

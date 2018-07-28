@@ -293,7 +293,7 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
       p_object               = lv_object
       p_complete_application = abap_true ).
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -431,7 +431,7 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
     delete_superfluous_pages( it_local_pages  = lt_local_pages
                               it_remote_pages = lt_pages_info ).
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -450,17 +450,17 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
         error_occured       = 3 ).
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~is_locked.
@@ -479,7 +479,7 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
         object_type   = ms_item-obj_type
         in_new_window = abap_true.
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -547,7 +547,7 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
     io_xml->add( iv_name = 'PAGES'
                  ig_data = lt_pages_info ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
   METHOD create_new_application.
 
