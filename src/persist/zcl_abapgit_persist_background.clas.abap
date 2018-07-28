@@ -4,25 +4,18 @@ CLASS zcl_abapgit_persist_background DEFINITION
 
   PUBLIC SECTION.
 
-    CONSTANTS: BEGIN OF c_method,
-                 nothing TYPE string VALUE 'nothing' ##NO_TEXT,
-                 pull    TYPE string VALUE 'pull' ##NO_TEXT,
-                 push    TYPE string VALUE 'push' ##NO_TEXT,
-               END OF c_method.
+    TYPES: BEGIN OF ty_settings,
+             key   TYPE string,
+             value TYPE string,
+           END OF ty_settings.
 
-    CONSTANTS: BEGIN OF c_amethod,
-                 fixed TYPE string VALUE 'fixed' ##NO_TEXT,
-                 auto  TYPE string VALUE 'auto' ##NO_TEXT,
-                 user  TYPE string VALUE 'user' ##NO_TEXT,
-               END OF c_amethod.
+    TYPES: ty_settings_tt TYPE STANDARD TABLE OF ty_settings WITH DEFAULT KEY.
 
     TYPES: BEGIN OF ty_xml,
              method   TYPE string,
              username TYPE string,
              password TYPE string,
-             amethod  TYPE string,
-             aname    TYPE string,
-             amail    TYPE string,
+             settings TYPE ty_settings_tt,
            END OF ty_xml.
 
     TYPES: BEGIN OF ty_background,
