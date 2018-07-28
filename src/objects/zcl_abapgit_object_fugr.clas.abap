@@ -112,7 +112,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
 
   METHOD are_exceptions_class_based.
@@ -400,7 +400,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       lo_xml->read( EXPORTING iv_name = 'PROGDIR'
                     CHANGING cg_data = ls_progdir ).
 
-      IF ls_progdir-uccheck IS INITIAL .
+      IF ls_progdir-uccheck IS INITIAL.
         CONTINUE.
       ELSEIF rv_abap_version IS INITIAL.
         rv_abap_version = ls_progdir-uccheck.
@@ -708,6 +708,20 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD update_func_group_short_text.
+
+    " We update the short text directly.
+    " SE80 does the same in
+    "   Program SAPLSEUF / LSEUFF07
+    "   FORM GROUP_CHANGE
+
+    UPDATE tlibt SET areat = iv_short_text
+                 WHERE spras = sy-langu
+                 AND   area  = iv_group.
+
+  ENDMETHOD.
+
+
   METHOD update_where_used.
 * make extra sure the where-used list is updated after deletion
 * Experienced some problems with the T00 include
@@ -998,18 +1012,4 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
-  METHOD update_func_group_short_text.
-
-    " We update the short text directly.
-    " SE80 does the same in
-    "   Program SAPLSEUF / LSEUFF07
-    "   FORM GROUP_CHANGE
-
-    UPDATE tlibt SET areat = iv_short_text
-                 WHERE spras = sy-langu
-                 AND   area  = iv_group.
-
-  ENDMETHOD.
-
 ENDCLASS.

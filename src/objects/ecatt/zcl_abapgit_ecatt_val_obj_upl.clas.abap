@@ -198,7 +198,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
           illegal_object = 1
           OTHERS         = 2.
       IF sy-subrc <> 0.
-        CLEAR lv_invert_validation .
+        CLEAR lv_invert_validation.
       ENDIF.
     ENDIF.
 
