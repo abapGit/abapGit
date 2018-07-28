@@ -32,7 +32,8 @@ CLASS zcl_abapgit_ecatt_data_downl DEFINITION
 ENDCLASS.
 
 
-CLASS zcl_abapgit_ecatt_data_downl IMPLEMENTATION.
+
+CLASS ZCL_ABAPGIT_ECATT_DATA_DOWNL IMPLEMENTATION.
 
 
   METHOD download.
@@ -79,7 +80,7 @@ CLASS zcl_abapgit_ecatt_data_downl IMPLEMENTATION.
 * MS180406
     set_var_mode_to_dom( ).
 * ENDMS180406
-    set_variants_to_dom( im_params = ecatt_data->params ).
+    set_variants_to_dom( ecatt_data->params ).
 
 * download_schema( ).
     download_data( ).
@@ -120,5 +121,4 @@ CLASS zcl_abapgit_ecatt_data_downl IMPLEMENTATION.
     mv_generate_xml_no_download = iv_generate_xml_no_download.
 
   ENDMETHOD.
-
 ENDCLASS.

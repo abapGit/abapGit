@@ -47,7 +47,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
 
 
   METHOD get_business_msgs_from_dom.
@@ -288,7 +288,7 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        get_params_from_dom_new( im_params = lo_params ).
+        get_params_from_dom_new( lo_params ).
       CATCH cx_ecatt_apl INTO lx_ex.
         lv_exc_occ = 'X'.
     ENDTRY.

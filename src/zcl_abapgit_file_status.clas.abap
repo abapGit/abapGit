@@ -222,7 +222,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
         ASSERT <ls_remote>-sha1 IS NOT INITIAL.
         CLEAR <ls_remote>-sha1. " Mark as processed
       ELSE.             " Only L exists
-        <ls_result> = build_new_local( is_local = <ls_local> ).
+        <ls_result> = build_new_local( <ls_local> ).
       ENDIF.
     ENDLOOP.
 

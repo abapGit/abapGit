@@ -261,7 +261,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
           WHEN zif_abapgit_definitions=>gc_event_state-go_back.
             back( ).
           WHEN zif_abapgit_definitions=>gc_event_state-go_back_to_bookmark.
-            back( iv_to_bookmark = abap_true ).
+            back( abap_true ).
           WHEN zif_abapgit_definitions=>gc_event_state-no_more_act.
             " Do nothing, handling completed
           WHEN OTHERS.
