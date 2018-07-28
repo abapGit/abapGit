@@ -56,7 +56,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
     IF lines( lt_objects ) = 1.
       rv_comment = |BG: { lv_str }|.
     ELSE.
-      rv_comment = 'BG: Multiple objects'.
+      rv_comment = 'BG: Multiple objects' ##NO_TEXT.
       LOOP AT lt_objects INTO lv_str.
         CONCATENATE rv_comment zif_abapgit_definitions=>gc_newline lv_str INTO rv_comment.
       ENDLOOP.
@@ -100,7 +100,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
           lt_changed    TYPE STANDARD TABLE OF ty_changed WITH DEFAULT KEY,
           lt_users      TYPE STANDARD TABLE OF xubname WITH DEFAULT KEY,
           ls_user_files LIKE ls_files,
-          lv_changed_by TYPE xubname,
+          lv_changed_by LIKE LINE OF lt_users,
           lo_stage      TYPE REF TO zcl_abapgit_stage.
 
     FIELD-SYMBOLS: <ls_changed> LIKE LINE OF lt_changed,
@@ -209,7 +209,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
 
     ENDLOOP.
 
-    ls_comment-committer-name  = 'Deletion'.
+    ls_comment-committer-name  = 'Deletion' ##NO_TEXT.
     ls_comment-committer-email = 'deletion@localhost'.
     ls_comment-comment         = build_comment( is_files ).
 
@@ -221,7 +221,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
 
   METHOD zif_abapgit_background~get_description.
 
-    rv_description = 'Automatic push, auto author'.
+    rv_description = 'Automatic push, auto author' ##NO_TEXT.
 
   ENDMETHOD.
 

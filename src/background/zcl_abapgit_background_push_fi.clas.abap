@@ -52,7 +52,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_FI IMPLEMENTATION.
     IF lines( lt_objects ) = 1.
       rv_comment = |BG: { lv_str }|.
     ELSE.
-      rv_comment = 'BG: Multiple objects'.
+      rv_comment = 'BG: Multiple objects' ##NO_TEXT.
       LOOP AT lt_objects INTO lv_str.
         CONCATENATE rv_comment zif_abapgit_definitions=>gc_newline lv_str INTO rv_comment.
       ENDLOOP.
@@ -112,7 +112,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_FI IMPLEMENTATION.
 
   METHOD zif_abapgit_background~get_description.
 
-    rv_description = 'Automatic push, fixed author'.
+    rv_description = 'Automatic push, fixed author' ##NO_TEXT.
 
   ENDMETHOD.
 
@@ -154,10 +154,10 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_FI IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    READ TABLE it_settings WITH KEY key = gc_settings-name INTO ls_setting.
+    READ TABLE it_settings WITH KEY key = gc_settings-name INTO ls_setting. "#EC CI_SUBRC
     lv_name = ls_setting-value.
 
-    READ TABLE it_settings WITH KEY key = gc_settings-email INTO ls_setting.
+    READ TABLE it_settings WITH KEY key = gc_settings-email INTO ls_setting. "#EC CI_SUBRC
     lv_email = ls_setting-value.
 
     push_fixed(
