@@ -23,11 +23,11 @@ CLASS zcl_abapgit_object_shi8 IMPLEMENTATION.
 
     mv_assignment_id = ms_item-obj_name.
 
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "ZIF_ABAPGIT_OBJECT~has_changed_since
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown.
@@ -35,11 +35,11 @@ CLASS zcl_abapgit_object_shi8 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "ZIF_ABAPGIT_OBJECT~get_metadata
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~jump.
     zcx_abapgit_exception=>raise( |TODO: Jump SHI8| ).
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
 
@@ -49,7 +49,7 @@ CLASS zcl_abapgit_object_shi8 IMPLEMENTATION.
       IMPORTING
         exists        = rv_bool.
 
-  ENDMETHOD.                    "ZIF_ABAPGIT_OBJECT~exists
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -67,7 +67,7 @@ CLASS zcl_abapgit_object_shi8 IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |{ ls_message-msgtxt }| ).
     ENDIF.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
 
@@ -94,7 +94,7 @@ CLASS zcl_abapgit_object_shi8 IMPLEMENTATION.
     io_xml->add( iv_name = 'SHI8'
                  ig_data = ls_assignment_data ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -126,7 +126,7 @@ CLASS zcl_abapgit_object_shi8 IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |{ ls_message-msgtxt }| ).
     ENDIF.
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
@@ -138,4 +138,4 @@ CLASS zcl_abapgit_object_shi8 IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_shi8 IMPLEMENTATION
+ENDCLASS.

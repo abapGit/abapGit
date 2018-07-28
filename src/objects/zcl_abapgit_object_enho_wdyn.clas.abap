@@ -19,7 +19,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_WDYN IMPLEMENTATION.
 
   METHOD constructor.
     ms_item = is_item.
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object_enho~deserialize.
@@ -86,7 +86,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_WDYN IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |error deserializing ENHO wdyn { ms_item-obj_name }| ).
     ENDTRY.
 
-  ENDMETHOD.                    "zif_abapgit_object_enho~deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object_enho~serialize.
@@ -116,5 +116,5 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_WDYN IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |error serializing ENHO wdyn { ms_item-obj_name }| ).
     ENDTRY.
 
-  ENDMETHOD.                    "zif_abapgit_object_enho~serialize
+  ENDMETHOD.
 ENDCLASS.

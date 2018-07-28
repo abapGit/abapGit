@@ -25,7 +25,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
@@ -33,7 +33,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
 
@@ -44,7 +44,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
         rv_bool = abap_false.
     ENDTRY.
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
   METHOD read.
 
@@ -79,7 +79,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from TYPD_GET_OBJECT' ).
     ENDIF.
 
-  ENDMETHOD.                    "read
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
 
@@ -100,7 +100,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
 
     mo_files->add_abap( lt_source ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
   METHOD create.
 
@@ -136,7 +136,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error setting uccheck' ).
     ENDIF.
 
-  ENDMETHOD.                    "create
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -165,7 +165,7 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -190,12 +190,12 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error deleting TYPE' ).
     ENDIF.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~jump.
     jump_se11( iv_radio = 'RSRD1-TYMA'
                iv_field = 'RSRD1-TYMA_VAL' ).
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
@@ -207,4 +207,4 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_type IMPLEMENTATION
+ENDCLASS.

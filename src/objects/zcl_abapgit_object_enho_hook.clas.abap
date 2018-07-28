@@ -35,7 +35,7 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
   METHOD constructor.
     ms_item = is_item.
     mo_files = io_files.
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
   METHOD zif_abapgit_object_enho~serialize.
 
@@ -75,7 +75,7 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
     io_xml->add( iv_name = 'SPACES'
                  ig_data = lt_spaces ).
 
-  ENDMETHOD.                    "zif_abapgit_object_enho~serialize
+  ENDMETHOD.
 
   METHOD hook_impl_serialize.
 * handle normalization of XML values
@@ -98,7 +98,7 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
         ENDWHILE.
       ENDLOOP.
     ENDLOOP.
-  ENDMETHOD.                    "hook_impl_serialize
+  ENDMETHOD.
 
   METHOD hook_impl_deserialize.
 
@@ -122,7 +122,7 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.                    "hook_impl_deserialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object_enho~deserialize.
 
@@ -191,6 +191,6 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
         zcx_abapgit_exception=>raise( lx_enh_root->get_text( ) ).
     ENDTRY.
 
-  ENDMETHOD.                    "zif_abapgit_object_enho~deserialize
+  ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_enho_hook IMPLEMENTATION
+ENDCLASS.

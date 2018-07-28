@@ -105,7 +105,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.  "deserialize_texts
+  ENDMETHOD.
 
 
   METHOD serialize_texts.
@@ -176,7 +176,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
                    ig_data = lt_dd07_texts ).
     ENDIF.
 
-  ENDMETHOD.  "serialize_texts
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -240,7 +240,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
     ENDTRY.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -288,7 +288,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -302,13 +302,13 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
       AND as4vers = '0000'.
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-ddic = abap_true.
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~has_changed_since.
@@ -327,7 +327,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
       iv_date      = lv_date
       iv_time      = lv_time ).
 
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~jump.
@@ -335,7 +335,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     jump_se11( iv_radio = 'RSRD1-DOMA'
                iv_field = 'RSRD1-DOMA_VAL' ).
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -388,7 +388,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
     serialize_texts( io_xml ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~is_locked.
 

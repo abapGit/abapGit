@@ -63,7 +63,7 @@ CLASS zcl_abapgit_object_w3super IMPLEMENTATION.
     super->constructor( is_item = is_item iv_language = iv_language ).
     ms_key-relid = ms_item-obj_type+2(2).
     ms_key-objid = ms_item-obj_name.
-  ENDMETHOD.  " constructor.
+  ENDMETHOD.
 
 
   METHOD find_param.
@@ -78,7 +78,7 @@ CLASS zcl_abapgit_object_w3super IMPLEMENTATION.
 
     rv_value = <ls_param>-value.
 
-  ENDMETHOD.  " find_param.
+  ENDMETHOD.
 
 
   METHOD get_ext.
@@ -86,13 +86,13 @@ CLASS zcl_abapgit_object_w3super IMPLEMENTATION.
     rv_ext = find_param( it_params = it_params iv_name = c_param_names-fileext ).
     SHIFT rv_ext LEFT DELETING LEADING '.'.
 
-  ENDMETHOD.  " get_ext.
+  ENDMETHOD.
 
 
   METHOD get_metadata. "Redefinition
     rs_metadata         = super->get_metadata( ).
     rs_metadata-version = 'v2.0.0'. " Seriazation v2, separate data file
-  ENDMETHOD.  " get_metadata. "Redefinition
+  ENDMETHOD.
 
 
   METHOD normalize_params.
@@ -115,7 +115,7 @@ CLASS zcl_abapgit_object_w3super IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.  " normalize_params.
+  ENDMETHOD.
 
 
   METHOD strip_params.
@@ -131,7 +131,7 @@ CLASS zcl_abapgit_object_w3super IMPLEMENTATION.
     DELETE ct_params WHERE name = c_param_names-version.
     DELETE ct_params WHERE name = c_param_names-filesize.
 
-  ENDMETHOD.  " strip_params.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -177,7 +177,7 @@ CLASS zcl_abapgit_object_w3super IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Cannot delete W3xx params' ).
     ENDIF.
 
-  ENDMETHOD.                    "zif_abapgit_object~delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -319,7 +319,7 @@ CLASS zcl_abapgit_object_w3super IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Cannot update TADIR for W3xx' ).
     ENDIF.
 
-  ENDMETHOD.                    "zif_abapgit_object~deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -336,17 +336,17 @@ CLASS zcl_abapgit_object_w3super IMPLEMENTATION.
 
     rv_bool = abap_true.
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~jump.
@@ -397,7 +397,7 @@ CLASS zcl_abapgit_object_w3super IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SE35' ).
     ENDIF.
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -490,7 +490,7 @@ CLASS zcl_abapgit_object_w3super IMPLEMENTATION.
                                   iv_extra = 'data'
                                   iv_ext   = get_ext( lt_w3params ) ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~is_locked.
 

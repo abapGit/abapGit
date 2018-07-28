@@ -108,7 +108,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     ASSERT NOT ms_item IS INITIAL.
     mv_language = iv_language.
     ASSERT NOT mv_language IS INITIAL.
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
 
   METHOD corr_insert.
@@ -137,7 +137,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT' ).
     ENDIF.
 
-  ENDMETHOD.                    "corr_insert
+  ENDMETHOD.
 
 
   METHOD exists_a_lock_entry_for.
@@ -179,7 +179,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     rs_metadata-class = lv_class.
     rs_metadata-version = 'v1.0.0' ##no_text.
 
-  ENDMETHOD.                    "get_metadata
+  ENDMETHOD.
 
 
   METHOD is_adt_jump_possible.
@@ -331,7 +331,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
         OTHERS                = 4
         ##fm_subrc_ok.                                                   "#EC CI_SUBRC
 
-  ENDMETHOD.                                                "jump_se11
+  ENDMETHOD.
 
 
   METHOD tadir_insert.

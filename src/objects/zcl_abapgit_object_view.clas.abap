@@ -21,12 +21,12 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
       rv_user = c_user_unknown.
     ENDIF.
 
-  ENDMETHOD.                    "zif_abapgit_object~changed_by
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~compare_to_remote_version.
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.                    "zif_abapgit_object~compare_to_remote_version
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~delete.
@@ -50,7 +50,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, VIEW' ).
     ENDIF.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -104,7 +104,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -134,13 +134,13 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
       ENDTRY.
     ENDIF.
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-ddic = abap_true.
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~has_changed_since.
@@ -181,7 +181,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
     jump_se11( iv_radio = 'RSRD1-VIMA'
                iv_field = 'RSRD1-VIMA_VAL' ).
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -267,7 +267,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
     io_xml->add( ig_data = lt_dd28v
                  iv_name = 'DD28V_TABLE' ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~is_locked.
 

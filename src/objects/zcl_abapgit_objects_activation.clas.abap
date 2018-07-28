@@ -67,7 +67,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
     update_where_used( ).
 
-  ENDMETHOD.                    "activate
+  ENDMETHOD.
 
 
   METHOD activate_ddic.
@@ -260,19 +260,19 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
         <ls_object>-delet_flag = iv_delete.
     ENDCASE.
 
-  ENDMETHOD.                    "activate
+  ENDMETHOD.
 
 
   METHOD add_item.
     add( iv_type = is_item-obj_type
          iv_name = is_item-obj_name ).
-  ENDMETHOD.                    "add_item
+  ENDMETHOD.
 
 
   METHOD clear.
     CLEAR gt_objects.
     CLEAR gt_classes.
-  ENDMETHOD.                    "clear
+  ENDMETHOD.
 
 
   METHOD fix_class_methods.

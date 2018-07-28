@@ -39,7 +39,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
     DELETE FROM vclstrudep WHERE vclname = lv_vclname.    "#EC CI_SUBRC
     DELETE FROM vclmf WHERE vclname = lv_vclname.         "#EC CI_SUBRC
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -107,7 +107,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error in OBJ_GENERATE for VCLS' ).
     ENDIF.
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -124,7 +124,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
       rv_bool = abap_false.
     ENDIF.
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
@@ -135,7 +135,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~is_locked.
@@ -200,7 +200,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from ABAP4_CALL_TRANSACTION, SE35' ).
     ENDIF.
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -246,5 +246,5 @@ CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
     io_xml->add( iv_name = 'VCLMF_TAB'
                  ig_data = lt_vclmf ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 ENDCLASS.

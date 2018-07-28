@@ -450,4 +450,4 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_FORM IMPLEMENTATION
+ENDCLASS.
