@@ -87,7 +87,7 @@ CLASS ltcl_xml_output IMPLEMENTATION.
                        iv_string     = lv_value
                        iv_codepage   = lv_encoding
                        iv_add_bom    = 'X' ).
-      CATCH cx_bcs .
+      CATCH cx_bcs.
     ENDTRY.
 
     lo_conv_in_string = cl_abap_conv_in_ce=>create(

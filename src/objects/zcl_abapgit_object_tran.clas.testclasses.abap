@@ -20,7 +20,7 @@ CLASS ltcl_split_parameters DEFINITION FINAL FOR TESTING
 
       then_st_tcode_shd_be
         IMPORTING
-          iv_exp_st_tcode TYPE eusel_tcod ,
+          iv_exp_st_tcode TYPE eusel_tcod,
 
       then_st_skip_1_shd_be
         IMPORTING

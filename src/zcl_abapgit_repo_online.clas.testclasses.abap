@@ -71,7 +71,7 @@ CLASS ltcl_run_code_inspection DEFINITION FINAL FOR TESTING
       given_mock_code_inspector
         IMPORTING
           iv_package       TYPE devclass
-          iv_check_variant TYPE sci_chkv ,
+          iv_check_variant TYPE sci_chkv,
 
       given_block_commit
         IMPORTING

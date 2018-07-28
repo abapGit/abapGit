@@ -547,7 +547,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
   METHOD is_function_group_locked.
 
-    DATA: lv_object TYPE eqegraarg .
+    DATA: lv_object TYPE eqegraarg.
 
     lv_object = |FG{ ms_item-obj_name }|.
     OVERLAY lv_object WITH '                                          '.
