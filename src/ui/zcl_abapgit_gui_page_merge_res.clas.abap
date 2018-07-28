@@ -32,8 +32,6 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
         changed_by TYPE xubname,
         type       TYPE string,
       END OF ty_file_diff .
-    TYPES:
-      tt_file_diff TYPE STANDARD TABLE OF ty_file_diff .
 
     CONSTANTS:
       BEGIN OF c_actions,
