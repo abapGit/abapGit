@@ -13,25 +13,48 @@ CLASS zcl_abapgit_gui_page_bkg DEFINITION
     METHODS zif_abapgit_gui_page~on_event
         REDEFINITION .
   PROTECTED SECTION.
-    METHODS render_content REDEFINITION.
 
-  PRIVATE SECTION.
-
-    DATA mv_key TYPE zif_abapgit_persistence=>ty_repo-key .
-
+    METHODS read_persist
+      IMPORTING
+        !io_repo          TYPE REF TO zcl_abapgit_repo_online
+      RETURNING
+        VALUE(rs_persist) TYPE zcl_abapgit_persist_background=>ty_background
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_methods
+      IMPORTING
+        !is_per        TYPE zcl_abapgit_persist_background=>ty_background
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    METHODS render_settings
+      IMPORTING
+        !is_per        TYPE zcl_abapgit_persist_background=>ty_background
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     METHODS build_menu
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
-    CLASS-METHODS update_task
+    CLASS-METHODS update
       IMPORTING
         !is_bg_task TYPE zcl_abapgit_persist_background=>ty_background
       RAISING
         zcx_abapgit_exception .
-    METHODS render_data
+    METHODS render
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
         zcx_abapgit_exception .
+    METHODS decode
+      IMPORTING
+        !iv_getdata      TYPE clike
+      RETURNING
+        VALUE(rs_fields) TYPE zcl_abapgit_persist_background=>ty_background .
+
+    METHODS render_content
+        REDEFINITION .
+  PRIVATE SECTION.
+
+    DATA mv_key TYPE zif_abapgit_persistence=>ty_repo-key .
 ENDCLASS.
 
 
@@ -40,10 +63,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
 
 
   METHOD build_menu.
+
     CREATE OBJECT ro_menu.
+
     ro_menu->add( iv_txt = 'Run background logic'
                   iv_act = zif_abapgit_definitions=>gc_action-go_background_run ) ##NO_TEXT.
-  ENDMETHOD. "build_menu
+
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -57,21 +83,80 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_content.
+  METHOD decode.
 
-    CREATE OBJECT ro_html.
+    DATA: lt_fields TYPE tihttpnvp.
 
-    ro_html->add( render_data( ) ).
-
-  ENDMETHOD.  "render_content
+    FIELD-SYMBOLS: <ls_setting> LIKE LINE OF rs_fields-settings.
 
 
-  METHOD render_data.
+    rs_fields-key = mv_key.
+
+    lt_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( iv_getdata ).
+
+    zcl_abapgit_html_action_utils=>get_field(
+      EXPORTING
+        name = 'METHOD'
+        it   = lt_fields
+      CHANGING
+        cv   = rs_fields ).
+    IF rs_fields-method IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    zcl_abapgit_html_action_utils=>get_field(
+      EXPORTING
+        name = 'USERNAME'
+        it   = lt_fields
+      CHANGING
+        cv   = rs_fields ).
+
+    zcl_abapgit_html_action_utils=>get_field(
+      EXPORTING
+        name = 'PASSWORD'
+        it   = lt_fields
+      CHANGING
+        cv   = rs_fields ).
+
+
+    CALL METHOD (rs_fields-method)=>zif_abapgit_background~get_settings
+      CHANGING
+        ct_settings = rs_fields-settings.
+    LOOP AT rs_fields-settings ASSIGNING <ls_setting>.
+      zcl_abapgit_html_action_utils=>get_field(
+        EXPORTING
+          name = <ls_setting>-key
+          it   = lt_fields
+        CHANGING
+          cv   = <ls_setting>-value ).
+    ENDLOOP.
+
+    ASSERT NOT rs_fields IS INITIAL.
+
+  ENDMETHOD.
+
+
+  METHOD read_persist.
+
+    DATA: lo_per TYPE REF TO zcl_abapgit_persist_background,
+          lt_per TYPE zcl_abapgit_persist_background=>tt_background.
+
+
+    CREATE OBJECT lo_per.
+    lt_per = lo_per->list( ).
+
+    READ TABLE lt_per INTO rs_persist WITH KEY key = io_repo->get_key( ).
+    IF sy-subrc <> 0.
+      CLEAR rs_persist.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD render.
 
     DATA: lo_repo    TYPE REF TO zcl_abapgit_repo_online,
-          lo_per     TYPE REF TO zcl_abapgit_persist_background,
-          lt_per     TYPE zcl_abapgit_persist_background=>tt_background,
-          ls_per     LIKE LINE OF lt_per,
+          ls_per     TYPE zcl_abapgit_persist_background=>ty_background,
           lv_nothing TYPE string,
           lv_push    TYPE string,
           lv_pull    TYPE string,
@@ -80,57 +165,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
           lv_auser   TYPE string.
 
 
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( mv_key ).
+    ls_per = read_persist( lo_repo ).
+
+
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div id="toc">' ).
 
-    CREATE OBJECT lo_per.
-    lt_per = lo_per->list( ).
-
-    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( mv_key ).
-
-    READ TABLE lt_per INTO ls_per WITH KEY key = lo_repo->get_key( ).
-    IF sy-subrc <> 0.
-      CLEAR ls_per.
-    ENDIF.
-
-    IF ls_per-aname IS INITIAL.
-      ls_per-aname = 'foobar' ##NO_TEXT.
-    ENDIF.
-    IF ls_per-amail IS INITIAL.
-      ls_per-amail = 'foo@bar.com' ##NO_TEXT.
-    ENDIF.
-
-    CASE ls_per-method.
-      WHEN zcl_abapgit_persist_background=>c_method-push.
-        lv_push = ' checked' ##NO_TEXT.
-      WHEN zcl_abapgit_persist_background=>c_method-pull.
-        lv_pull = ' checked' ##NO_TEXT.
-      WHEN OTHERS.
-        lv_nothing = ' checked' ##NO_TEXT.
-    ENDCASE.
-
-    CASE ls_per-amethod.
-      WHEN zcl_abapgit_persist_background=>c_amethod-user.
-        lv_auser = ' checked' ##NO_TEXT.
-      WHEN zcl_abapgit_persist_background=>c_amethod-auto.
-        lv_aauto = ' checked' ##NO_TEXT.
-      WHEN OTHERS.
-        lv_afixed = ' checked' ##NO_TEXT.
-    ENDCASE.
-
     ro_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( lo_repo ) ).
     ro_html->add( '<br>' ).
 
-    ro_html->add( '<u>Method</u><br>' ) ##NO_TEXT.
-    ro_html->add( |<form method="get" action="sapevent:{ zif_abapgit_definitions=>gc_action-bg_update }">| ).
-    ro_html->add( '<input type="radio" name="method" value="nothing"' &&
-      lv_nothing && '>Do nothing<br>' ) ##NO_TEXT.
-    ro_html->add( '<input type="radio" name="method" value="push"' &&
-      lv_push && '>Automatic push<br>' ) ##NO_TEXT.
-    ro_html->add( '<input type="radio" name="method" value="pull"' &&
-      lv_pull && '>Automatic pull<br>' ) ##NO_TEXT.
-    ro_html->add( '<br>' ).
+    ro_html->add( render_methods( ls_per ) ).
 
     ro_html->add( '<u>HTTP Authentication, optional</u><br>' ) ##NO_TEXT.
     ro_html->add( '(password will be saved in clear text)<br>' ) ##NO_TEXT.
@@ -149,27 +195,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
 
     ro_html->add( '<br>' ).
 
-    ro_html->add( '<u>Commit author</u><br>' ).
-    ro_html->add( '<input type="radio" name="amethod" value="fixed"' &&
-      lv_afixed && '>Fixed<br>' ) ##NO_TEXT.
-    ro_html->add( '<input type="radio" name="amethod" value="auto"' &&
-      lv_aauto && '>Automatic<br>' ) ##NO_TEXT.
-    ro_html->add( '<input type="radio" name="amethod" value="user"' &&
-      lv_auser && '>Automatic using SU01 user details<br>' ) ##NO_TEXT.
-    ro_html->add( '<br>' ).
-
-    ro_html->add( '<table>' ).
-    ro_html->add( '<tr>' ).
-    ro_html->add( '<td>Name:</td>' ).
-    ro_html->add( '<td><input type="text" name="aname" value="' &&
-      ls_per-aname && '"></td>' ).
-    ro_html->add( '</tr>' ).
-    ro_html->add( '<tr>' ).
-    ro_html->add( '<td>Email:</td>' ).
-    ro_html->add( '<td><input type="text" name="amail" value="' &&
-      ls_per-amail && '"></td>' ).
-    ro_html->add( '</tr>' ).
-    ro_html->add( '</table>' ).
+    ro_html->add( render_settings( ls_per ) ).
 
     ro_html->add( '<br>' ).
     ro_html->add( '<input type="submit" value="Save">' ).
@@ -182,13 +208,96 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD update_task.
+  METHOD render_content.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( render( ) ).
+
+  ENDMETHOD.
+
+
+  METHOD render_methods.
+
+    DATA: lt_methods TYPE zcl_abapgit_background=>ty_methods_tt,
+          ls_method  LIKE LINE OF lt_methods,
+          lv_checked TYPE string.
+
+
+    CREATE OBJECT ro_html.
+
+    lt_methods = zcl_abapgit_background=>list_methods( ).
+
+    ro_html->add( '<u>Method</u><br>' ) ##NO_TEXT.
+    ro_html->add( |<form method="get" action="sapevent:{ zif_abapgit_definitions=>gc_action-bg_update }">| ).
+
+    IF is_per-method IS INITIAL.
+      lv_checked = ' checked' ##NO_TEXT.
+    ENDIF.
+
+    ro_html->add( '<input type="radio" name="method" value=""' &&
+      lv_checked && '>Do nothing<br>' ) ##NO_TEXT.
+
+    LOOP AT lt_methods INTO ls_method.
+      CLEAR lv_checked.
+      IF is_per-method = ls_method-class.
+        lv_checked = ' checked' ##NO_TEXT.
+      ENDIF.
+
+      ro_html->add( '<input type="radio" name="method" value="' &&
+        ls_method-class && '"' &&
+        lv_checked && '>' &&
+        ls_method-description && '<br>' ) ##NO_TEXT.
+    ENDLOOP.
+
+    ro_html->add( '<br>' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_settings.
+
+    DATA: lt_settings LIKE is_per-settings,
+          ls_setting  LIKE LINE OF lt_settings.
+
+
+    CREATE OBJECT ro_html.
+
+    IF is_per-method IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    lt_settings = is_per-settings.
+
+    CALL METHOD (is_per-method)=>zif_abapgit_background~get_settings
+      CHANGING
+        ct_settings = lt_settings.
+
+    IF lines( lt_settings ) = 0.
+      RETURN.
+    ENDIF.
+
+    ro_html->add( '<table>' ).
+    LOOP AT lt_settings INTO ls_setting.
+      ro_html->add( '<tr>' ).
+      ro_html->add( '<td>' && ls_setting-key && ':</td>' ).
+      ro_html->add( '<td><input type="text" name="' &&
+        ls_setting-key && '" value="' &&
+        ls_setting-value && '"></td>' ).
+      ro_html->add( '</tr>' ).
+    ENDLOOP.
+    ro_html->add( '</table>' ).
+
+  ENDMETHOD.
+
+
+  METHOD update.
 
     DATA lo_persistence TYPE REF TO zcl_abapgit_persist_background.
 
     CREATE OBJECT lo_persistence.
 
-    IF is_bg_task-method = zcl_abapgit_persist_background=>c_method-nothing.
+    IF is_bg_task-method IS INITIAL.
       lo_persistence->delete( is_bg_task-key ).
     ELSE.
       lo_persistence->modify( is_bg_task ).
@@ -203,13 +312,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_page~on_event.
 
-    DATA ls_bg_task TYPE zcl_abapgit_persist_background=>ty_background.
-
     CASE iv_action.
       WHEN zif_abapgit_definitions=>gc_action-bg_update.
-        ls_bg_task     = zcl_abapgit_html_action_utils=>decode_bg_update( iv_getdata ).
-        ls_bg_task-key = mv_key.
-        update_task( ls_bg_task ).
+        update( decode( iv_getdata ) ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
     ENDCASE.
 
