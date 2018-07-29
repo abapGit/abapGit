@@ -58,13 +58,13 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
     CLASS-METHODS file_encode
       IMPORTING
         !iv_key          TYPE zif_abapgit_persistence=>ty_repo-key
-        !ig_file         TYPE any                                       "assuming ty_file
+        !ig_file         TYPE any                                                 "assuming ty_file
       RETURNING
         VALUE(rv_string) TYPE string .
     CLASS-METHODS obj_encode
       IMPORTING
         !iv_key          TYPE zif_abapgit_persistence=>ty_repo-key
-        !ig_object       TYPE any                                 "assuming ty_item
+        !ig_object       TYPE any                                         "assuming ty_item
       RETURNING
         VALUE(rv_string) TYPE string .
     CLASS-METHODS file_obj_decode
@@ -72,8 +72,8 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !iv_string TYPE clike
       EXPORTING
         !ev_key    TYPE zif_abapgit_persistence=>ty_repo-key
-        !eg_file   TYPE any                    "assuming ty_file
-        !eg_object TYPE any              "assuming ty_item
+        !eg_file   TYPE any                        "assuming ty_file
+        !eg_object TYPE any                "assuming ty_item
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS dbkey_encode
@@ -86,11 +86,6 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !iv_string    TYPE clike
       RETURNING
         VALUE(rs_key) TYPE zif_abapgit_persistence=>ty_content .
-    CLASS-METHODS parse_commit_request
-      IMPORTING
-        !it_postdata TYPE cnht_post_data_tab
-      EXPORTING
-        !es_fields   TYPE any .
     CLASS-METHODS stage_decode
       IMPORTING
         !iv_getdata TYPE clike
@@ -289,36 +284,6 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
   ENDMETHOD.                    "obj_encode
-
-
-  METHOD parse_commit_request.
-
-    CONSTANTS: lc_replace TYPE string VALUE '<<new>>'.
-
-    DATA: lv_string TYPE string,
-          lt_fields TYPE tihttpnvp.
-
-    FIELD-SYMBOLS <lv_body> TYPE string.
-
-    CLEAR es_fields.
-
-    CONCATENATE LINES OF it_postdata INTO lv_string.
-    REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_crlf    IN lv_string WITH lc_replace.
-    REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_newline IN lv_string WITH lc_replace.
-    lt_fields = parse_fields_upper_case_name( lv_string ).
-
-    get_field( EXPORTING name = 'COMMITTER_NAME'  it = lt_fields CHANGING cv = es_fields ).
-    get_field( EXPORTING name = 'COMMITTER_EMAIL' it = lt_fields CHANGING cv = es_fields ).
-    get_field( EXPORTING name = 'AUTHOR_NAME'     it = lt_fields CHANGING cv = es_fields ).
-    get_field( EXPORTING name = 'AUTHOR_EMAIL'    it = lt_fields CHANGING cv = es_fields ).
-    get_field( EXPORTING name = 'COMMENT'         it = lt_fields CHANGING cv = es_fields ).
-    get_field( EXPORTING name = 'BODY'            it = lt_fields CHANGING cv = es_fields ).
-
-    ASSIGN COMPONENT 'BODY' OF STRUCTURE es_fields TO <lv_body>.
-    ASSERT <lv_body> IS ASSIGNED.
-    REPLACE ALL OCCURRENCES OF lc_replace IN <lv_body> WITH zif_abapgit_definitions=>gc_newline.
-
-  ENDMETHOD.                    "parse_commit_request
 
 
   METHOD parse_fields.

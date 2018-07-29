@@ -1,25 +1,38 @@
-CLASS zcl_abapgit_gui_page_commit DEFINITION PUBLIC FINAL
-    CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
+CLASS zcl_abapgit_gui_page_commit DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_gui_page
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
 
-    CONSTANTS: BEGIN OF c_action,
-                 commit_post   TYPE string VALUE 'commit_post',
-                 commit_cancel TYPE string VALUE 'commit_cancel',
-               END OF c_action.
+    CONSTANTS:
+      BEGIN OF c_action,
+        commit_post   TYPE string VALUE 'commit_post',
+        commit_cancel TYPE string VALUE 'commit_cancel',
+      END OF c_action .
 
-    METHODS:
-      constructor
-        IMPORTING io_repo  TYPE REF TO zcl_abapgit_repo_online
-                  io_stage TYPE REF TO zcl_abapgit_stage
-        RAISING   zcx_abapgit_exception,
-      zif_abapgit_gui_page~on_event REDEFINITION.
+    METHODS constructor
+      IMPORTING
+        !io_repo  TYPE REF TO zcl_abapgit_repo_online
+        !io_stage TYPE REF TO zcl_abapgit_stage
+      RAISING
+        zcx_abapgit_exception .
 
+    METHODS zif_abapgit_gui_page~on_event
+        REDEFINITION .
   PROTECTED SECTION.
-    METHODS:
-      render_content REDEFINITION,
-      scripts        REDEFINITION.
 
+    CLASS-METHODS parse_commit_request
+      IMPORTING
+        !it_postdata TYPE cnht_post_data_tab
+      EXPORTING
+        !es_fields   TYPE any .
+
+    METHODS render_content
+        REDEFINITION .
+    METHODS scripts
+        REDEFINITION .
   PRIVATE SECTION.
     DATA: mo_repo  TYPE REF TO zcl_abapgit_repo_online,
           mo_stage TYPE REF TO zcl_abapgit_stage.
@@ -44,7 +57,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -54,6 +67,66 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     mo_stage  = io_stage.
 
     ms_control-page_title = 'COMMIT'.
+  ENDMETHOD.
+
+
+  METHOD parse_commit_request.
+
+    CONSTANTS: lc_replace TYPE string VALUE '<<new>>'.
+
+    DATA: lv_string TYPE string,
+          lt_fields TYPE tihttpnvp.
+
+    FIELD-SYMBOLS <lv_body> TYPE string.
+
+    CLEAR es_fields.
+
+    CONCATENATE LINES OF it_postdata INTO lv_string.
+    REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_crlf    IN lv_string WITH lc_replace.
+    REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_newline IN lv_string WITH lc_replace.
+    lt_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( lv_string ).
+
+    zcl_abapgit_html_action_utils=>get_field(
+      EXPORTING
+        name = 'COMMITTER_NAME'
+        it = lt_fields
+      CHANGING
+        cv = es_fields ).
+    zcl_abapgit_html_action_utils=>get_field(
+      EXPORTING
+        name = 'COMMITTER_EMAIL'
+        it = lt_fields
+      CHANGING
+        cv = es_fields ).
+    zcl_abapgit_html_action_utils=>get_field(
+      EXPORTING
+        name = 'AUTHOR_NAME'
+        it = lt_fields
+      CHANGING
+        cv = es_fields ).
+    zcl_abapgit_html_action_utils=>get_field(
+      EXPORTING
+        name = 'AUTHOR_EMAIL'
+        it = lt_fields
+      CHANGING
+      cv = es_fields ).
+    zcl_abapgit_html_action_utils=>get_field(
+      EXPORTING
+        name = 'COMMENT'
+        it = lt_fields
+      CHANGING
+      cv = es_fields ).
+    zcl_abapgit_html_action_utils=>get_field(
+      EXPORTING
+        name = 'BODY'
+        it = lt_fields
+      CHANGING
+        cv = es_fields ).
+
+    ASSIGN COMPONENT 'BODY' OF STRUCTURE es_fields TO <lv_body>.
+    ASSERT <lv_body> IS ASSIGNED.
+    REPLACE ALL OCCURRENCES OF lc_replace IN <lv_body> WITH zif_abapgit_definitions=>gc_newline.
+
   ENDMETHOD.
 
 
@@ -72,7 +145,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     ro_html->add( render_stage( ) ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD render_form.
@@ -160,7 +233,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     ro_html->add( '</form>' ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.    "render_form
+  ENDMETHOD.
 
 
   METHOD render_menu.
@@ -183,7 +256,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     ro_html->add( lo_toolbar->render( ) ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.      "render_menu
+  ENDMETHOD.
 
 
   METHOD render_stage.
@@ -219,7 +292,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
     ro_html->add( '</table>' ).
 
-  ENDMETHOD.    "render_stage
+  ENDMETHOD.
 
 
   METHOD render_text_input.
@@ -241,7 +314,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     ro_html->add( |<input id="{ iv_name }" name="{ iv_name }" type="text"{ lv_attrs }>| ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  " render_text_input
+  ENDMETHOD.
 
 
   METHOD scripts.
@@ -249,7 +322,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     CREATE OBJECT ro_html.
     ro_html->add( 'setInitialFocus("comment");' ).
 
-  ENDMETHOD.    "scripts
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~on_event.
@@ -259,7 +332,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
     CASE iv_action.
       WHEN c_action-commit_post.
 
-        zcl_abapgit_html_action_utils=>parse_commit_request(
+        parse_commit_request(
           EXPORTING it_postdata = it_postdata
           IMPORTING es_fields   = ls_commit ).
 
