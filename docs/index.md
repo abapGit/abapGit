@@ -7,4 +7,4 @@ Latest build: [zabapgit.abap](https://raw.githubusercontent.com/abapGit/build/ma
 
 For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/larshp/abapGit/issues)
 
-![](img/abapgit_1_33_3.png)
+![](img/abapgit_1_73_0.png)
