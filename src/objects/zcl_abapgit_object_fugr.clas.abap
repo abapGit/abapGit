@@ -112,7 +112,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
 
   METHOD are_exceptions_class_based.
@@ -400,7 +400,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       lo_xml->read( EXPORTING iv_name = 'PROGDIR'
                     CHANGING cg_data = ls_progdir ).
 
-      IF ls_progdir-uccheck IS INITIAL .
+      IF ls_progdir-uccheck IS INITIAL.
         CONTINUE.
       ELSEIF rv_abap_version IS INITIAL.
         rv_abap_version = ls_progdir-uccheck.
@@ -547,7 +547,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
   METHOD is_function_group_locked.
 
-    DATA: lv_object TYPE eqegraarg .
+    DATA: lv_object TYPE eqegraarg.
 
     lv_object = |FG{ ms_item-obj_name }|.
     OVERLAY lv_object WITH '                                          '.
@@ -704,6 +704,20 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
                  ig_data = lv_areat ).
     io_xml->add( iv_name = 'INCLUDES'
                  ig_data = lt_includes ).
+
+  ENDMETHOD.
+
+
+  METHOD update_func_group_short_text.
+
+    " We update the short text directly.
+    " SE80 does the same in
+    "   Program SAPLSEUF / LSEUFF07
+    "   FORM GROUP_CHANGE
+
+    UPDATE tlibt SET areat = iv_short_text
+                 WHERE spras = sy-langu
+                 AND   area  = iv_group.
 
   ENDMETHOD.
 
@@ -998,18 +1012,4 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
-  METHOD update_func_group_short_text.
-
-    " We update the short text directly.
-    " SE80 does the same in
-    "   Program SAPLSEUF / LSEUFF07
-    "   FORM GROUP_CHANGE
-
-    UPDATE tlibt SET areat = iv_short_text
-                 WHERE spras = sy-langu
-                 AND   area  = iv_group.
-
-  ENDMETHOD.
-
 ENDCLASS.

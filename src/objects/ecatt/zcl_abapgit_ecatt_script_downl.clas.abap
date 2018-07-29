@@ -450,7 +450,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
       me->raise_download_exception(
             textid        = cx_ecatt_apl_util=>download_processing
             previous      = ex_ecatt
-            called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_SCRIPT_TO_TEMPLATE' ) .
+            called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_SCRIPT_TO_TEMPLATE' ).
     ENDIF.
 
     CALL FUNCTION 'SDIXML_DATA_TO_DOM'

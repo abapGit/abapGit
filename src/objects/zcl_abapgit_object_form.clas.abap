@@ -86,21 +86,112 @@ CLASS zcl_abapgit_object_form DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_form IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~has_changed_since.
 
-    DATA: ls_last_changed    TYPE tys_form_header.
-    DATA: lv_last_changed_ts TYPE timestamp.
+CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
 
-    ls_last_changed = get_last_changes( ms_item-obj_name ).
 
-    CONVERT DATE ls_last_changed-tdldate TIME ls_last_changed-tdltime
-            INTO TIME STAMP lv_last_changed_ts TIME ZONE sy-zonlo.
+  METHOD build_extra_from_header.
 
-    rv_changed = boolc( sy-subrc <> 0 OR lv_last_changed_ts > iv_timestamp ).
+    DATA: lv_tdspras TYPE laiso.
+
+    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_OUTPUT'
+      EXPORTING
+        input  = is_header-tdspras
+      IMPORTING
+        output = lv_tdspras.
+
+    rv_result = c_objectname_tdlines && '_' && lv_tdspras.
 
   ENDMETHOD.
+
+
+  METHOD build_extra_from_header_old.
+    rv_result = c_objectname_tdlines && '_' && is_header-tdspras.
+  ENDMETHOD.
+
+
+  METHOD compress_lines.
+
+    DATA lv_string TYPE string.
+    DATA lo_xml TYPE REF TO zcl_abapgit_xml_output.
+
+    CREATE OBJECT lo_xml.
+    lo_xml->add( iv_name = c_objectname_tdlines
+                 ig_data = it_lines ).
+    lv_string = lo_xml->render( ).
+    IF lv_string IS NOT INITIAL.
+      mo_files->add_string( iv_extra  =
+                    build_extra_from_header( is_form_data-form_header )
+                            iv_ext    = c_extension_xml
+                            iv_string = lv_string ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD extract_tdlines.
+
+    DATA lv_string TYPE string.
+    DATA lo_xml TYPE REF TO zcl_abapgit_xml_input.
+
+    TRY.
+        lv_string = mo_files->read_string( iv_extra =
+                                   build_extra_from_header( is_form_data-form_header )
+                                           iv_ext   = c_extension_xml ).
+      CATCH zcx_abapgit_exception.
+
+        lv_string = mo_files->read_string( iv_extra =
+                               build_extra_from_header_old( is_form_data-form_header )
+                                           iv_ext   = c_extension_xml ).
+
+    ENDTRY.
+
+    CREATE OBJECT lo_xml EXPORTING iv_xml = lv_string.
+    lo_xml->read( EXPORTING iv_name = c_objectname_tdlines
+                  CHANGING  cg_data = rt_lines ).
+
+  ENDMETHOD.
+
+
+  METHOD find_form.
+
+    DATA: lv_text_name TYPE thead-tdname.
+
+    lv_text_name = iv_object_name.
+
+    CALL FUNCTION 'SELECT_TEXT'
+      EXPORTING
+        database_only = abap_true
+        id            = 'TXT'
+        language      = '*'
+        name          = lv_text_name
+        object        = c_objectname_form
+      TABLES
+        selections    = rt_text_header
+      EXCEPTIONS
+        OTHERS        = 1 ##fm_subrc_ok ##NO_TEXT.  "#EC CI_SUBRC
+
+  ENDMETHOD.
+
+
+  METHOD get_last_changes.
+
+    DATA: lv_form_name         TYPE thead-tdform.
+
+    CLEAR rs_last_changed.
+
+    lv_form_name = iv_form_name.
+
+    CALL FUNCTION 'READ_FORM'
+      EXPORTING
+        form             = lv_form_name
+        read_only_header = abap_true
+      IMPORTING
+        form_header      = rs_last_changed.
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -116,12 +207,54 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~get_metadata.
 
-    rs_metadata = get_metadata( ).
-    rs_metadata-delete_tadir = abap_true.
+  METHOD zif_abapgit_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~delete.
+
+    DATA: lv_name TYPE itcta-tdform.
+
+    lv_name = ms_item-obj_name.
+
+    CALL FUNCTION 'DELETE_FORM'
+      EXPORTING
+        form     = lv_name
+        language = '*'.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~deserialize.
+
+    DATA: lt_form_data            TYPE tyt_form_data.
+    DATA: lt_lines                TYPE tyt_lines.
+    FIELD-SYMBOLS: <ls_form_data> TYPE LINE OF tyt_form_data.
+
+    io_xml->read( EXPORTING iv_name = c_objectname_form
+                  CHANGING  cg_data = lt_form_data ).
+
+    LOOP AT lt_form_data ASSIGNING <ls_form_data>.
+
+      lt_lines = extract_tdlines( <ls_form_data> ).
+
+      _save_form( EXPORTING it_lines     = lt_lines
+                  CHANGING  cs_form_data = <ls_form_data> ).
+
+    ENDLOOP.
+
+    CALL FUNCTION 'SAPSCRIPT_DELETE_LOAD'
+      EXPORTING
+        delete = abap_true
+        form   = '*'
+        write  = space.
+
+    tadir_insert( iv_package ).
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~exists.
 
@@ -137,6 +270,47 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
         found            = rv_bool.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_metadata.
+
+    rs_metadata = get_metadata( ).
+    rs_metadata-delete_tadir = abap_true.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~has_changed_since.
+
+    DATA: ls_last_changed    TYPE tys_form_header.
+    DATA: lv_last_changed_ts TYPE timestamp.
+
+    ls_last_changed = get_last_changes( ms_item-obj_name ).
+
+    CONVERT DATE ls_last_changed-tdldate TIME ls_last_changed-tdltime
+            INTO TIME STAMP lv_last_changed_ts TIME ZONE sy-zonlo.
+
+    rv_changed = boolc( sy-subrc <> 0 OR lv_last_changed_ts > iv_timestamp ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+
+    DATA: lv_object TYPE seqg3-garg.
+
+    " example lock entry
+    "'001FORM      ZTEST_SAPSCRIPT                                                       TXT'
+    lv_object = |{ sy-mandt }{ ms_item-obj_type }      { ms_item-obj_name }|.
+    OVERLAY lv_object WITH '                                                                                   '.
+    lv_object = lv_object && '*'.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESSFORM'
+                                            iv_argument    = lv_object ).
+
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~jump.
 
@@ -170,18 +344,6 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~delete.
-
-    DATA: lv_name TYPE itcta-tdform.
-
-    lv_name = ms_item-obj_name.
-
-    CALL FUNCTION 'DELETE_FORM'
-      EXPORTING
-        form     = lv_name
-        language = '*'.
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
 
@@ -227,124 +389,6 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~deserialize.
-
-    DATA: lt_form_data            TYPE tyt_form_data.
-    DATA: lt_lines                TYPE tyt_lines.
-    FIELD-SYMBOLS: <ls_form_data> TYPE LINE OF tyt_form_data.
-
-    io_xml->read( EXPORTING iv_name = c_objectname_form
-                  CHANGING  cg_data = lt_form_data ).
-
-    LOOP AT lt_form_data ASSIGNING <ls_form_data>.
-
-      lt_lines = extract_tdlines( <ls_form_data> ).
-
-      _save_form( EXPORTING it_lines     = lt_lines
-                  CHANGING  cs_form_data = <ls_form_data> ).
-
-    ENDLOOP.
-
-    CALL FUNCTION 'SAPSCRIPT_DELETE_LOAD'
-      EXPORTING
-        delete = abap_true
-        form   = '*'
-        write  = space.
-
-    tadir_insert( iv_package ).
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-  METHOD build_extra_from_header.
-
-    DATA: lv_tdspras TYPE laiso.
-
-    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_OUTPUT'
-      EXPORTING
-        input  = is_header-tdspras
-      IMPORTING
-        output = lv_tdspras.
-
-    rv_result = c_objectname_tdlines && '_' && lv_tdspras.
-
-  ENDMETHOD.
-
-  METHOD build_extra_from_header_old.
-    rv_result = c_objectname_tdlines && '_' && is_header-tdspras.
-  ENDMETHOD.
-
-  METHOD get_last_changes.
-
-    DATA: lv_form_name         TYPE thead-tdform.
-
-    CLEAR rs_last_changed.
-
-    lv_form_name = iv_form_name.
-
-    CALL FUNCTION 'READ_FORM'
-      EXPORTING
-        form             = lv_form_name
-        read_only_header = abap_true
-      IMPORTING
-        form_header      = rs_last_changed.
-
-  ENDMETHOD.
-
-
-  METHOD _save_form.
-
-    CALL FUNCTION 'SAVE_FORM'
-      EXPORTING
-        form_header  = cs_form_data-form_header
-      TABLES
-        form_lines   = it_lines
-        pages        = cs_form_data-pages
-        page_windows = cs_form_data-page_windows
-        paragraphs   = cs_form_data-paragraphs
-        strings      = cs_form_data-strings
-        tabs         = cs_form_data-tabs
-        windows      = cs_form_data-windows.
-
-    CALL FUNCTION 'SAPSCRIPT_CHANGE_OLANGUAGE'
-      EXPORTING
-        forced    = abap_true
-        name      = cs_form_data-text_header-tdname
-        object    = cs_form_data-text_header-tdobject
-        olanguage = cs_form_data-orig_language
-      EXCEPTIONS
-        OTHERS    = 1
-        ##fm_subrc_ok.                                                   "#EC CI_SUBRC
-
-  ENDMETHOD.
-
-
-  METHOD extract_tdlines.
-
-    DATA lv_string TYPE string.
-    DATA lo_xml TYPE REF TO zcl_abapgit_xml_input.
-
-    TRY.
-        lv_string = mo_files->read_string( iv_extra =
-                                   build_extra_from_header( is_form_data-form_header )
-                                           iv_ext   = c_extension_xml ).
-      CATCH zcx_abapgit_exception.
-
-        lv_string = mo_files->read_string( iv_extra =
-                               build_extra_from_header_old( is_form_data-form_header )
-                                           iv_ext   = c_extension_xml ).
-
-    ENDTRY.
-
-    CREATE OBJECT lo_xml EXPORTING iv_xml = lv_string.
-    lo_xml->read( EXPORTING iv_name = c_objectname_tdlines
-                  CHANGING  cg_data = rt_lines ).
-
-  ENDMETHOD.
-
 
   METHOD _clear_changed_fields.
 
@@ -364,47 +408,6 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
            cs_form_data-text_header-tdldate,
            cs_form_data-text_header-tdltime,
            cs_form_data-text_header-tdlreles.
-
-  ENDMETHOD.
-
-
-  METHOD compress_lines.
-
-    DATA lv_string TYPE string.
-    DATA lo_xml TYPE REF TO zcl_abapgit_xml_output.
-
-    CREATE OBJECT lo_xml.
-    lo_xml->add( iv_name = c_objectname_tdlines
-                 ig_data = it_lines ).
-    lv_string = lo_xml->render( ).
-    IF lv_string IS NOT INITIAL.
-      mo_files->add_string( iv_extra  =
-                    build_extra_from_header( is_form_data-form_header )
-                            iv_ext    = c_extension_xml
-                            iv_string = lv_string ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD find_form.
-
-    DATA: lv_text_name TYPE thead-tdname.
-
-    lv_text_name = iv_object_name.
-
-    CALL FUNCTION 'SELECT_TEXT'
-      EXPORTING
-        database_only = abap_true
-        id            = 'TXT'
-        language      = '*'
-        name          = lv_text_name
-        object        = c_objectname_form
-      TABLES
-        selections    = rt_text_header
-      EXCEPTIONS
-        OTHERS        = 1
-        ##fm_subrc_ok ##NO_TEXT.  "#EC CI_SUBRC
 
   ENDMETHOD.
 
@@ -434,20 +437,30 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~is_locked.
 
-    DATA: lv_object TYPE seqg3-garg.
+  METHOD _save_form.
 
-    " example lock entry
-    "'001FORM      ZTEST_SAPSCRIPT                                                       TXT'
-    lv_object = |{ sy-mandt }{ ms_item-obj_type }      { ms_item-obj_name }|.
-    OVERLAY lv_object WITH '                                                                                   '.
-    lv_object = lv_object && '*'.
+    CALL FUNCTION 'SAVE_FORM'
+      EXPORTING
+        form_header  = cs_form_data-form_header
+      TABLES
+        form_lines   = it_lines
+        pages        = cs_form_data-pages
+        page_windows = cs_form_data-page_windows
+        paragraphs   = cs_form_data-paragraphs
+        strings      = cs_form_data-strings
+        tabs         = cs_form_data-tabs
+        windows      = cs_form_data-windows.
 
-    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESSFORM'
-                                            iv_argument    = lv_object ).
-
+    CALL FUNCTION 'SAPSCRIPT_CHANGE_OLANGUAGE'
+      EXPORTING
+        forced    = abap_true
+        name      = cs_form_data-text_header-tdname
+        object    = cs_form_data-text_header-tdobject
+        olanguage = cs_form_data-orig_language
+      EXCEPTIONS
+        OTHERS    = 1
+        ##fm_subrc_ok.                                                   "#EC CI_SUBRC
 
   ENDMETHOD.
-
 ENDCLASS.

@@ -36,7 +36,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_devc IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -50,6 +50,53 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     IF me->zif_abapgit_object~exists( ) = abap_true.
       ri_package = load_package( mv_local_devclass ).
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD is_empty.
+
+    DATA: lv_object_name TYPE tadir-obj_name,
+          lt_subpackages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
+
+    lt_subpackages = zcl_abapgit_factory=>get_sap_package( iv_package_name )->list_subpackages( ).
+
+    IF lines( lt_subpackages ) > 0.
+      rv_is_empty = abap_false.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE obj_name
+           FROM tadir
+           INTO lv_object_name
+           WHERE pgmid    =  'R3TR'
+           AND   NOT ( object = 'DEVC' AND obj_name = iv_package_name )
+           AND   devclass = iv_package_name.
+    rv_is_empty = boolc( sy-subrc <> 0 ).
+
+  ENDMETHOD.
+
+
+  METHOD load_package.
+
+    cl_package_factory=>load_package(
+      EXPORTING
+        i_package_name             = iv_package_name
+        i_force_reload             = abap_true
+      IMPORTING
+        e_package                  = ri_package
+      EXCEPTIONS
+        object_not_existing        = 1
+        unexpected_error           = 2
+        intern_err                 = 3
+        no_access                  = 4
+        object_locked_and_modified = 5
+        OTHERS                     = 6 ).
+    IF sy-subrc = 1.
+      RETURN.
+    ELSEIF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -476,6 +523,20 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~is_locked.
+
+    DATA: lv_object TYPE eqegraarg.
+
+    lv_object = |DV{ ms_item-obj_name }|.
+    OVERLAY lv_object WITH '                                          '.
+    lv_object = lv_object && '*'.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'EEUDB'
+                                            iv_argument    = lv_object ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -607,65 +668,4 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
       io_xml->add( iv_name = 'PERMISSION' ig_data = lt_usage_data ).
     ENDIF.
   ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-
-    DATA: lv_object TYPE eqegraarg .
-
-    lv_object = |DV{ ms_item-obj_name }|.
-    OVERLAY lv_object WITH '                                          '.
-    lv_object = lv_object && '*'.
-
-    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'EEUDB'
-                                            iv_argument    = lv_object ).
-
-  ENDMETHOD.
-
-
-  METHOD is_empty.
-
-    DATA: lv_object_name TYPE tadir-obj_name,
-          lt_subpackages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
-
-    lt_subpackages = zcl_abapgit_factory=>get_sap_package( iv_package_name )->list_subpackages( ).
-
-    IF lines( lt_subpackages ) > 0.
-      rv_is_empty = abap_false.
-      RETURN.
-    ENDIF.
-
-    SELECT SINGLE obj_name
-           FROM tadir
-           INTO lv_object_name
-           WHERE pgmid    =  'R3TR'
-           AND   NOT ( object = 'DEVC' AND obj_name = iv_package_name )
-           AND   devclass = iv_package_name.
-    rv_is_empty = boolc( sy-subrc <> 0 ).
-
-  ENDMETHOD.
-
-
-  METHOD load_package.
-
-    cl_package_factory=>load_package(
-      EXPORTING
-        i_package_name             = iv_package_name
-        i_force_reload             = abap_true
-      IMPORTING
-        e_package                  = ri_package
-      EXCEPTIONS
-        object_not_existing        = 1
-        unexpected_error           = 2
-        intern_err                 = 3
-        no_access                  = 4
-        object_locked_and_modified = 5
-        OTHERS                     = 6 ).
-    IF sy-subrc = 1.
-      RETURN.
-    ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.
