@@ -4,18 +4,11 @@ CLASS zcl_abapgit_persist_background DEFINITION
 
   PUBLIC SECTION.
 
-    TYPES: BEGIN OF ty_settings,
-             key   TYPE string,
-             value TYPE string,
-           END OF ty_settings.
-
-    TYPES: ty_settings_tt TYPE STANDARD TABLE OF ty_settings WITH DEFAULT KEY.
-
     TYPES: BEGIN OF ty_xml,
              method   TYPE string,
              username TYPE string,
              password TYPE string,
-             settings TYPE ty_settings_tt,
+             settings TYPE zif_abapgit_background=>ty_settings_tt,
            END OF ty_xml.
 
     TYPES: BEGIN OF ty_background,
