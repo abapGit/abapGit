@@ -58,13 +58,13 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
     CLASS-METHODS file_encode
       IMPORTING
         !iv_key          TYPE zif_abapgit_persistence=>ty_repo-key
-        !ig_file         TYPE any                             "assuming ty_file
+        !ig_file         TYPE any                                       "assuming ty_file
       RETURNING
         VALUE(rv_string) TYPE string .
     CLASS-METHODS obj_encode
       IMPORTING
         !iv_key          TYPE zif_abapgit_persistence=>ty_repo-key
-        !ig_object       TYPE any                         "assuming ty_item
+        !ig_object       TYPE any                                 "assuming ty_item
       RETURNING
         VALUE(rv_string) TYPE string .
     CLASS-METHODS file_obj_decode
@@ -72,8 +72,8 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !iv_string TYPE clike
       EXPORTING
         !ev_key    TYPE zif_abapgit_persistence=>ty_repo-key
-        !eg_file   TYPE any                "assuming ty_file
-        !eg_object TYPE any            "assuming ty_item
+        !eg_file   TYPE any                    "assuming ty_file
+        !eg_object TYPE any              "assuming ty_item
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS dbkey_encode
@@ -86,11 +86,6 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !iv_string    TYPE clike
       RETURNING
         VALUE(rs_key) TYPE zif_abapgit_persistence=>ty_content .
-    CLASS-METHODS dbcontent_decode
-      IMPORTING
-        !it_postdata      TYPE cnht_post_data_tab
-      RETURNING
-        VALUE(rs_content) TYPE zif_abapgit_persistence=>ty_content .
     CLASS-METHODS parse_commit_request
       IMPORTING
         !it_postdata TYPE cnht_post_data_tab
@@ -138,28 +133,6 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
     APPEND ls_field TO ct.
 
   ENDMETHOD.  "add_field
-
-
-  METHOD dbcontent_decode.
-
-    DATA: lt_fields TYPE tihttpnvp,
-          lv_string TYPE string.
-
-
-    CONCATENATE LINES OF it_postdata INTO lv_string.
-
-    lv_string = cl_http_utility=>unescape_url( lv_string ).
-
-    rs_content = dbkey_decode( lv_string ).
-
-    lt_fields = parse_fields_upper_case_name( lv_string ).
-
-    get_field( EXPORTING name = 'XMLDATA' it = lt_fields CHANGING cv = rs_content-data_str ).
-    IF rs_content-data_str(1) <> '<' AND rs_content-data_str+1(1) = '<'. " Hmmm ???
-      rs_content-data_str = rs_content-data_str+1.
-    ENDIF.
-
-  ENDMETHOD.                    "dbcontent_decode
 
 
   METHOD dbkey_decode.
