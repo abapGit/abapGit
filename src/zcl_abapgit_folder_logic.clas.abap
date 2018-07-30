@@ -4,7 +4,7 @@ CLASS zcl_abapgit_folder_logic DEFINITION
 
   PUBLIC SECTION.
 
-    CLASS-METHODS package_to_path
+    METHODS package_to_path
       IMPORTING
         !iv_top        TYPE devclass
         !io_dot        TYPE REF TO zcl_abapgit_dot_abapgit
@@ -13,7 +13,7 @@ CLASS zcl_abapgit_folder_logic DEFINITION
         VALUE(rv_path) TYPE string
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS path_to_package
+    METHODS path_to_package
       IMPORTING
         !iv_top                  TYPE devclass
         !io_dot                  TYPE REF TO zcl_abapgit_dot_abapgit
@@ -23,12 +23,52 @@ CLASS zcl_abapgit_folder_logic DEFINITION
         VALUE(rv_package)        TYPE devclass
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS get_instance
+      RETURNING
+        VALUE(ro_instance) TYPE REF TO zcl_abapgit_folder_logic .
+  PROTECTED SECTION.
+    METHODS get_parent
+      IMPORTING
+        !iv_package     TYPE devclass
+      RETURNING
+        VALUE(r_parent) TYPE devclass.
+  PRIVATE SECTION.
+    TYPES:
+      BEGIN OF ty_devclass_info,
+        devclass  TYPE devclass,
+        namespace TYPE namespace,
+        parentcl  TYPE parentcl,
+      END OF ty_devclass_info .
+    TYPES:
+      ty_devclass_info_tt TYPE SORTED TABLE OF ty_devclass_info
+        WITH UNIQUE KEY devclass .
+    DATA mt_parent TYPE ty_devclass_info_tt .
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
 
+
+  METHOD get_instance.
+    CREATE OBJECT ro_instance.
+  ENDMETHOD.
+
+  METHOD get_parent.
+    DATA: st_parent LIKE LINE OF mt_parent.
+
+    "Determine Parent Package
+    READ TABLE mt_parent INTO st_parent
+      WITH TABLE KEY devclass = iv_package.
+    IF sy-subrc <> 0.
+      r_parent = zcl_abapgit_factory=>get_sap_package( iv_package )->read_parent( ).
+      st_parent-devclass = iv_package.
+      st_parent-parentcl = r_parent.
+      INSERT st_parent INTO TABLE mt_parent.
+    ELSE.
+      r_parentcl = st_parent-parentcl.
+    ENDIF.
+  ENDMETHOD.
 
   METHOD package_to_path.
 
