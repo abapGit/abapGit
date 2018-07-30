@@ -11,11 +11,21 @@ CLASS zcl_abapgit_sap_package DEFINITION
 
   PRIVATE SECTION.
     DATA: mv_package TYPE devclass.
+    DATA mv_buffered TYPE abap_bool VALUE abap_false ##NO_TEXT.
+    DATA mt_buffer TYPE zif_abapgit_sap_package=>ty_devclass_info_tt .
 
     ALIASES:
       create FOR zif_abapgit_sap_package~create,
       create_local FOR zif_abapgit_sap_package~create_local.
 
+    METHODS get_package_info
+      IMPORTING
+        !i_no_sap_packages           TYPE abap_bool DEFAULT abap_true
+      RETURNING
+        VALUE(rt_packages_in_system) TYPE zif_abapgit_sap_package=>ty_devclass_info_tt .
+    METHODS set_buffer
+      IMPORTING
+        !it_buffer TYPE zif_abapgit_sap_package=>ty_devclass_info_tt OPTIONAL .
 ENDCLASS.
 
 
@@ -27,6 +37,43 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
     mv_package = iv_package.
   ENDMETHOD.
 
+  METHOD get_package_info.
+
+    IF i_no_sap_packages = abap_true.
+      "According to SAP Note 84282 we only need to evaluate packages
+      "with a local namespace ($), a customer namespace (Y*,Z*) or a partner namespace (/*/)
+      "All other namespaces belong to SAP
+      SELECT devclass namespace parentcl
+       FROM tdevc
+       INTO CORRESPONDING FIELDS OF TABLE rt_packages_in_system
+       WHERE ( devclass LIKE '$%'
+               OR devclass LIKE 'Y%'
+               OR devclass LIKE 'Z%'
+               OR devclass LIKE '/%' )
+         AND as4user <> 'SAP'.
+    ELSE.
+      SELECT devclass namespace parentcl
+        FROM tdevc
+        INTO CORRESPONDING FIELDS OF TABLE rt_packages_in_system.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD set_buffer.
+
+    IF it_buffer IS NOT SUPPLIED.
+      mt_buffer = get_package_info( ).
+      mv_buffered = abap_true.
+    ELSE.
+      mt_buffer = it_buffer.
+      IF it_buffer IS INITIAL.
+        mv_buffered = abap_false.
+      ELSE.
+        mv_buffered = abap_true.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
 
   METHOD zif_abapgit_sap_package~are_changes_recorded_in_tr_req.
 
@@ -268,18 +315,46 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
     DATA: lt_list     LIKE rt_list,
           lv_devclass LIKE LINE OF rt_list.
     DATA: lv_children TYPE i.
+    FIELD-SYMBOLS: <st_devc> TYPE zif_abapgit_sap_package=>ty_devclass_info.
 
-    SELECT devclass FROM tdevc
-      INTO TABLE rt_list
-      WHERE parentcl = mv_package
-      ORDER BY PRIMARY KEY.               "#EC CI_GENBUFF "#EC CI_SUBRC
-    lv_children = sy-dbcnt.
+    DATA: o_package TYPE REF TO zcl_abapgit_sap_package.
 
-    LOOP AT rt_list INTO lv_devclass FROM 1 TO lv_children.
-      "Get Children of Child
-      lt_list = zcl_abapgit_factory=>get_sap_package( lv_devclass )->list_subpackages( ).
-      APPEND LINES OF lt_list TO rt_list.
-    ENDLOOP.
+    IF iv_buffered = abap_true.
+
+      IF mv_buffered = abap_false.
+        set_buffer( ).
+      ENDIF.
+
+      LOOP AT mt_buffer ASSIGNING <st_devc>
+        USING KEY parent
+        WHERE parentcl = mv_package.
+
+        INSERT <st_devc>-devclass INTO TABLE rt_list.
+
+        CREATE OBJECT o_package
+          EXPORTING
+            iv_package = <st_devc>-devclass.
+        o_package->set_buffer( mt_buffer ).
+        lt_list = o_package->zif_abapgit_sap_package~list_subpackages( abap_true ).
+        APPEND LINES OF lt_list TO rt_list.
+
+      ENDLOOP.
+
+    ELSE.
+
+      SELECT devclass FROM tdevc
+        INTO TABLE rt_list
+        WHERE parentcl = mv_package
+        ORDER BY PRIMARY KEY.               "#EC CI_GENBUFF "#EC CI_SUBRC
+      lv_children = sy-dbcnt.
+
+      LOOP AT rt_list INTO lv_devclass FROM 1 TO lv_children.
+        "Get Children of Child
+        lt_list = zcl_abapgit_factory=>get_sap_package( lv_devclass )->list_subpackages( ).
+        APPEND LINES OF lt_list TO rt_list.
+      ENDLOOP.
+
+    ENDIF.
 
   ENDMETHOD.
 
@@ -292,8 +367,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
     APPEND mv_package TO rt_list.
 
-    SELECT SINGLE parentcl INTO lv_parent
-      FROM tdevc WHERE devclass = mv_package.           "#EC CI_GENBUFF
+    lv_parent = zif_abapgit_sap_package~read_parent( ).
 
     IF sy-subrc = 0 AND NOT lv_parent IS INITIAL.
       lt_list = zcl_abapgit_factory=>get_sap_package( lv_parent )->list_superpackages( ).
