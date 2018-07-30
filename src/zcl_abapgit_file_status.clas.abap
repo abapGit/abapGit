@@ -243,7 +243,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
       IF NOT ls_item-devclass IS INITIAL AND iv_devclass <> ls_item-devclass.
         IF lv_sub_fetched = abap_false.
-          lt_sub_packages = zcl_abapgit_factory=>get_sap_package( iv_devclass )->list_subpackages( ).
+          lt_sub_packages = zcl_abapgit_factory=>get_sap_package( iv_devclass )->list_subpackages( abap_true ).
           lv_sub_fetched = abap_true.
           SORT lt_sub_packages BY table_line. "Optimize Read Access
         ENDIF.
