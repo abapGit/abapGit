@@ -319,7 +319,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
   METHOD scripts.
 
-    CREATE OBJECT ro_html.
+    ro_html = super->scripts( ).
+
     ro_html->add( 'setInitialFocus("comment");' ).
 
   ENDMETHOD.

@@ -248,8 +248,9 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
 
   METHOD scripts.
 
-    CREATE OBJECT ro_html.
-    ro_html->add( 'setInitialFocus("tag_name");' ).
+    ro_html = super->scripts( ).
+
+    ro_html->add( 'setInitialFocus("name");' ).
 
   ENDMETHOD.    "scripts
 

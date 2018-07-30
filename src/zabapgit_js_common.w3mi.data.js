@@ -66,6 +66,20 @@ function setInitialFocus(id) {
   document.getElementById(id).focus();
 }
 
+// Set focus to a element with query selector
+function setInitialFocusWithQuerySelector(sSelector, bFocusParent) {
+  var oSelected = document.querySelector(sSelector);
+
+  if (oSelected) {
+    if (bFocusParent) {
+      oSelected.parentElement.focus();
+    } else {
+      oSelected.focus();
+    }
+  }
+
+}
+
 // Submit an existing form
 function submitFormById(id) {
   document.getElementById(id).submit();
@@ -537,6 +551,256 @@ DiffHelper.prototype.highlightButton = function(state) {
 
 // News announcement
 function displayNews() {
-  var div = document.getElementById("news"); 
-  div.style.display = (div.style.display)?'':'none';  
+  var div = document.getElementById("news");
+  div.style.display = (div.style.display) ? '' : 'none';
 }
+
+// this functions enables the navigation with arrows through list items (li)
+// e.g. in dropdown menus
+function enableArrowListNavigation() {
+
+  document.addEventListener('keydown', function (oEvent) {
+
+    if (oEvent.defaultPrevented) {
+      return;
+    }
+
+    var getLiSelected = function () {
+      return document.querySelector('li .selected');
+    };
+
+    var getActiveElement = function () {
+      return document.activeElement;
+    };
+
+    var getActiveElementParent = function () {
+      return getActiveElement().parentElement;
+    };
+
+    var onEnterOrSpace = function (oEvent) {
+      
+      // Enter or space clicks the selected link
+
+      var liSelected = getLiSelected();
+
+      if (liSelected) {
+        liSelected.firstElementChild.click();
+      }
+
+    };
+
+    var onArrowDown = function (oEvent) {
+
+      var
+        liNext,
+        liSelected = getLiSelected(),
+        oActiveElementParent = getActiveElementParent();
+
+      if (liSelected) {
+
+        // we deselect the current li and select the next sibling
+        liNext = oActiveElementParent.nextElementSibling;
+        if (liNext) {
+          liSelected.classList.toggle('selected');
+          liNext.firstElementChild.focus();
+          oActiveElementParent.classList.toggle('selected');
+          oEvent.preventDefault();
+        }
+
+      } else {
+
+        // we don't have any li selected, we have lookup where to start...
+        // the right element should have been activated in fnTooltipActivate
+        liNext = getActiveElement().nextElementSibling;
+        if (liNext) {
+          liNext.classList.toggle('selected');
+          liNext.firstElementChild.firstElementChild.focus();
+          oEvent.preventDefault();
+        }
+
+      }
+
+    };
+
+    var onArrowUp = function (oEvent) {
+
+      var
+        liSelected = getLiSelected(),
+        liPrevious = getActiveElementParent().previousElementSibling;
+
+      if (liSelected && liPrevious) {
+
+        liSelected.classList.toggle('selected');
+        liPrevious.firstElementChild.focus();
+        getActiveElementParent().classList.toggle('selected');
+        oEvent.preventDefault();
+
+      }
+
+    };
+
+    // navigate with arrows through list items and support pressing links 
+    // mit enter and space
+    if (oEvent.key === "ENTER" || oEvent.key === "") {
+      onEnterOrSpace(oEvent);
+    } else if (/Down$/.test(oEvent.key)) {
+      onArrowDown(oEvent);
+    } else if (/Up$/.test(oEvent.key)) {
+      onArrowUp(oEvent);
+    }
+
+  });
+}
+
+// Vimium like link hints
+function setLinkHints(sLinkHintKey, sColor) {
+
+  if (!sLinkHintKey || !sColor) {
+    return;
+  }
+
+  var
+    oTooltipMap = {},
+    bTooltipsOn = false,
+    sPending = "";
+
+  document.addEventListener("keypress", function (oEvent) { 
+
+    if (oEvent.defaultPrevented) {
+      return;
+    }
+
+    var fnRenderTooltip = function (oTooltip, iTooltipCounter) {
+      if (bTooltipsOn) {
+        oTooltip.classList.remove('hidden');
+      } else {
+        oTooltip.classList.add('hidden');
+      }
+      oTooltip.innerHTML = iTooltipCounter;
+      oTooltip.style.backgroundColor = sColor;
+      oTooltipMap[iTooltipCounter] = oTooltip;
+    };
+
+    var getTooltipStartValue = function(iToolTipCount){
+      
+      // if whe have 333 tooltips we start from 100
+      return Math.pow(10,iToolTipCount.toString().length - 1);
+
+    };
+
+    var fnRenderTooltips = function () {
+
+      // all possible links which should be accessed via tooltip have
+      // sub span which is hidden by default. If we like to show the 
+      // tooltip we have to toggle the css class 'hidden'.
+      // 
+      // We use numeric values for the tooltip label. Maybe we can 
+      // support also alphanumeric chars in the future. Then we have to
+      // calculate permutations and that's work. So for the sake of simplicity
+      // we stick to numeric values and just increment them.
+
+      var
+        aTooltips = document.querySelectorAll('a span'),
+        iTooltipCounter = getTooltipStartValue(aTooltips.length);
+
+      [].forEach.call(aTooltips, function(oTooltip){
+        iTooltipCounter += 1;
+        fnRenderTooltip(oTooltip, iTooltipCounter)
+      });
+
+    };
+
+    var fnToggleAllTooltips = function () {
+
+      sPending = "";
+      bTooltipsOn = !bTooltipsOn;
+
+      fnRenderTooltips();
+
+    };
+
+    var fnRemoveAllTooltips = function () {
+
+      sPending = "";
+      bTooltipsOn = false;
+
+      var
+        aTooltips = document.querySelectorAll('a span');
+
+      [].forEach.call(aTooltips, function (oTooltip) {
+        oTooltip.classList.add('hidden');
+      });
+
+    };
+
+    var fnFilterTooltips = function (sPending) {
+
+      Object
+        .keys(oTooltipMap)
+        .forEach(function (sKey) {
+
+          // we try to partially match, but only from the beginning!
+          var regex = new RegExp("^" + sPending);
+          var oTooltip = oTooltipMap[sKey];
+
+          if (regex.test(sKey)) {
+            // we have a partial match, grey out the matched part
+            oTooltip.innerHTML = sKey.replace(regex, "<div style='display:inline;color:lightgray'>" + sPending + '</div>');
+          } else {
+            // and hide the not matched tooltips
+            oTooltip.classList.add('hidden');
+          }
+
+        });
+
+    };
+
+    var fnActivateDropDownMenu = function (oTooltip) {
+      // to enable link hint navigation for drop down menu, we must expand 
+      // like if they were hovered
+      oTooltip.parentElement.parentElement.classList.toggle("block");
+    };
+
+    var fnTooltipActivate = function (oTooltip) {
+
+      // a tooltips was successfully specified, so we try to trigger the link
+      // and remove all tooltips
+      fnRemoveAllTooltips();
+      oTooltip.parentElement.click();
+
+      // in case it is a dropdownmenu we have to expand and focus it
+      fnActivateDropDownMenu(oTooltip);
+      oTooltip.parentElement.focus();
+
+    }
+
+    var activeElementType = ((document.activeElement && document.activeElement.nodeName) || "");
+    
+    // link hints are disabled for input and textareas for obvious reasons.
+    // Maybe we must add other types here in the future
+    if (oEvent.key === sLinkHintKey && activeElementType !== "INPUT" && activeElementType !== "TEXTAREA") {
+
+      fnToggleAllTooltips();
+
+    } else if (bTooltipsOn === true) {
+      
+      // the user tries to reach a tooltip
+      sPending += oEvent.key;
+      var oTooltip = oTooltipMap[sPending];
+
+      if (oTooltip) {
+        // we are there, we have a fully specified tooltip. Let's activate it
+        fnTooltipActivate(oTooltip);
+      } else {
+        // we are not there yet, but let's filter the link so that only
+        // the partially matched are shown
+        fnFilterTooltips(sPending);
+      }
+
+    }
+
+  });
+
+}
+
+
