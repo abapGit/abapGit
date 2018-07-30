@@ -66,7 +66,7 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
       st_parent-parentcl = r_parent.
       INSERT st_parent INTO TABLE mt_parent.
     ELSE.
-      r_parentcl = st_parent-parentcl.
+      r_parent = st_parent-parentcl.
     ENDIF.
   ENDMETHOD.
 
@@ -81,7 +81,7 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
     IF iv_top = iv_package.
       rv_path = io_dot->get_starting_folder( ).
     ELSE.
-      lv_parentcl = zcl_abapgit_factory=>get_sap_package( iv_package )->read_parent( ).
+      lv_parentcl = get_parent( iv_package ).
 
       IF lv_parentcl IS INITIAL.
         zcx_abapgit_exception=>raise( |error, expected parent package, { iv_package }| ).

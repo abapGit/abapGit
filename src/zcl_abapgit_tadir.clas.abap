@@ -110,8 +110,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       lv_path = lo_folder_logic->package_to_path(
         iv_top     = iv_top
         io_dot     = io_dot
-        iv_package = iv_package
-        io_folder_logic = lo_folder_logic ). "Hand down existing folder logic instance
+        iv_package = iv_package ).
     ENDIF.
 
     LOOP AT rt_tadir ASSIGNING <ls_tadir>.
