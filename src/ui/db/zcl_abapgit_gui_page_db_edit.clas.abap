@@ -14,6 +14,12 @@ CLASS zcl_abapgit_gui_page_db_edit DEFINITION
         REDEFINITION .
   PROTECTED SECTION.
 
+    CLASS-METHODS dbcontent_decode
+      IMPORTING
+        !it_postdata      TYPE cnht_post_data_tab
+      RETURNING
+        VALUE(rs_content) TYPE zif_abapgit_persistence=>ty_content .
+
     METHODS render_content
         REDEFINITION .
   PRIVATE SECTION.
@@ -40,6 +46,34 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
     super->constructor( ).
     ms_key = is_key.
     ms_control-page_title = 'CONFIG EDIT'.
+  ENDMETHOD.
+
+
+  METHOD dbcontent_decode.
+
+    DATA: lt_fields TYPE tihttpnvp,
+          lv_string TYPE string.
+
+
+    CONCATENATE LINES OF it_postdata INTO lv_string.
+
+    lv_string = cl_http_utility=>unescape_url( lv_string ).
+
+    rs_content = zcl_abapgit_html_action_utils=>dbkey_decode( lv_string ).
+
+    lt_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( lv_string ).
+
+    zcl_abapgit_html_action_utils=>get_field(
+      EXPORTING
+        name = 'XMLDATA'
+        it = lt_fields
+      CHANGING
+        cv = rs_content-data_str ).
+
+    IF rs_content-data_str(1) <> '<' AND rs_content-data_str+1(1) = '<'. " Hmmm ???
+      rs_content-data_str = rs_content-data_str+1.
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -87,7 +121,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
 
     ro_html->add( '</div>' ). "db_entry
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD update.
@@ -110,7 +144,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
 
     CASE iv_action.
       WHEN gc_action-update.
-        ls_db = zcl_abapgit_html_action_utils=>dbcontent_decode( it_postdata ).
+        ls_db = dbcontent_decode( it_postdata ).
         update( ls_db ).
         ev_state = zif_abapgit_definitions=>gc_event_state-go_back.
     ENDCASE.
