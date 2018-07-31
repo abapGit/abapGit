@@ -29,7 +29,6 @@ CLASS zcl_abapgit_tadir DEFINITION
         !iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
         !iv_only_local_objects TYPE abap_bool
         !io_log                TYPE REF TO zcl_abapgit_log OPTIONAL
-        !io_folder_logic       TYPE REF TO zcl_abapgit_folder_logic OPTIONAL
       RETURNING
         VALUE(rt_tadir)        TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
@@ -101,7 +100,6 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
     IF NOT io_dot IS INITIAL.
       "Reuse given Folder Logic Instance
-      lo_folder_logic = io_folder_logic.
       IF lo_folder_logic IS NOT BOUND.
         "Get Folder Logic Instance
         lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
