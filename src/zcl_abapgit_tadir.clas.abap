@@ -115,7 +115,6 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    lo_folder_logic = io_folder_logic.
     LOOP AT rt_tadir ASSIGNING <ls_tadir>.
 
       IF last_package <> <ls_tadir>-devclass.
