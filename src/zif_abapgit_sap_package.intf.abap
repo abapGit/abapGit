@@ -1,16 +1,6 @@
 INTERFACE zif_abapgit_sap_package PUBLIC.
 
   TYPES: ty_devclass_tt TYPE STANDARD TABLE OF devclass WITH DEFAULT KEY.
-  TYPES:
-    BEGIN OF ty_devclass_info,
-      DEVCLASS  TYPE DEVCLASS,
-      NAMESPACE TYPE NAMESPACE,
-      PARENTCL  TYPE PARENTCL,
-    END OF ty_devclass_info .
-  TYPES:
-    ty_devclass_info_tt TYPE SORTED TABLE OF ty_devclass_info
-      WITH UNIQUE KEY devclass
-      WITH NON-UNIQUE SORTED KEY parent COMPONENTS parentcl .
   METHODS:
     create
       IMPORTING is_package TYPE scompkdtln
@@ -18,8 +8,6 @@ INTERFACE zif_abapgit_sap_package PUBLIC.
     create_local
       RAISING   zcx_abapgit_exception,
     list_subpackages
-      IMPORTING
-        !IV_BUFFERED type ABAP_BOOL default ABAP_FALSE
       RETURNING VALUE(rt_list) TYPE ty_devclass_tt,
     list_superpackages
       RETURNING VALUE(rt_list) TYPE ty_devclass_tt,
