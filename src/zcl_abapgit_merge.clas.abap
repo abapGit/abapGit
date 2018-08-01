@@ -95,8 +95,9 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
 
     DEFINE _from_source.
       READ TABLE mt_objects ASSIGNING <ls_object>
-        WITH KEY type = zif_abapgit_definitions=>gc_type-blob
-        sha1 = <ls_source>-sha1.
+        WITH KEY type COMPONENTS
+          type = zif_abapgit_definitions=>gc_type-blob
+          sha1 = <ls_source>-sha1.
       ASSERT sy-subrc = 0.
 
       ms_merge-stage->add( iv_path     = <ls_file>-path
@@ -183,13 +184,17 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
         <ls_conflict>-path = <ls_file>-path.
         <ls_conflict>-filename = <ls_file>-name.
         <ls_conflict>-source_sha1 = <ls_source>-sha1.
-        READ TABLE mt_objects ASSIGNING <ls_object> WITH KEY type = zif_abapgit_definitions=>gc_type-blob
-                                                             sha1 = <ls_source>-sha1.
+        READ TABLE mt_objects ASSIGNING <ls_object>
+          WITH KEY type COMPONENTS
+            type = zif_abapgit_definitions=>gc_type-blob
+            sha1 = <ls_source>-sha1.
         <ls_conflict>-source_data = <ls_object>-data.
 
         <ls_conflict>-target_sha1 = <ls_target>-sha1.
-        READ TABLE mt_objects ASSIGNING <ls_object> WITH KEY type = zif_abapgit_definitions=>gc_type-blob
-                                                             sha1 = <ls_target>-sha1.
+        READ TABLE mt_objects ASSIGNING <ls_object>
+          WITH KEY type COMPONENTS
+            type = zif_abapgit_definitions=>gc_type-blob
+            sha1 = <ls_target>-sha1.
         <ls_conflict>-target_data = <ls_object>-data.
 
 * added in source and target, but different, merge conflict must be resolved
@@ -221,13 +226,17 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
         <ls_conflict>-path = <ls_file>-path.
         <ls_conflict>-filename = <ls_file>-name.
         <ls_conflict>-source_sha1 = <ls_source>-sha1.
-        READ TABLE mt_objects ASSIGNING <ls_object> WITH KEY type = zif_abapgit_definitions=>gc_type-blob
-                                                             sha1 = <ls_source>-sha1.
+        READ TABLE mt_objects ASSIGNING <ls_object>
+          WITH KEY type COMPONENTS
+            type = zif_abapgit_definitions=>gc_type-blob
+            sha1 = <ls_source>-sha1.
         <ls_conflict>-source_data = <ls_object>-data.
 
         <ls_conflict>-target_sha1 = <ls_target>-sha1.
-        READ TABLE mt_objects ASSIGNING <ls_object> WITH KEY type = zif_abapgit_definitions=>gc_type-blob
-                                                             sha1 = <ls_target>-sha1.
+        READ TABLE mt_objects ASSIGNING <ls_object>
+          WITH KEY type COMPONENTS
+            type = zif_abapgit_definitions=>gc_type-blob
+            sha1 = <ls_target>-sha1.
         <ls_conflict>-target_data = <ls_object>-data.
 
         ms_merge-conflict = |{ <ls_file>-name } merge conflict, changed in source and target branch|.
@@ -299,7 +308,9 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
 
     LOOP AT lt_visit INTO lv_commit.
       READ TABLE mt_objects ASSIGNING <ls_object>
-        WITH KEY type = zif_abapgit_definitions=>gc_type-commit sha1 = lv_commit.
+        WITH KEY type COMPONENTS
+          type = zif_abapgit_definitions=>gc_type-commit
+          sha1 = lv_commit.
       ASSERT sy-subrc = 0.
 
       ls_commit = zcl_abapgit_git_pack=>decode_commit( <ls_object>-data ).

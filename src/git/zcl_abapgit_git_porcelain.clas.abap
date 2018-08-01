@@ -330,7 +330,10 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
           ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
 
 
-    READ TABLE it_objects INTO ls_object WITH KEY sha1 = iv_branch type = zif_abapgit_definitions=>gc_type-commit.
+    READ TABLE it_objects INTO ls_object
+      WITH KEY type COMPONENTS
+        type = zif_abapgit_definitions=>gc_type-commit
+        sha1 = iv_branch .
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'commit not found' ).
     ENDIF.
@@ -363,7 +366,10 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
         ev_branch      = ev_branch
         eo_branch_list = eo_branch_list ).
 
-    READ TABLE et_objects INTO ls_object WITH KEY sha1 = ev_branch type = zif_abapgit_definitions=>gc_type-commit.
+    READ TABLE et_objects INTO ls_object
+      WITH KEY type COMPONENTS
+        type = zif_abapgit_definitions=>gc_type-commit
+        sha1 = ev_branch .
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Commit/branch not found' ).
     ENDIF.
@@ -499,6 +505,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
     ls_object-sha1 = lv_new_tag_sha1.
     ls_object-type = zif_abapgit_definitions=>gc_type-tag.
     ls_object-data = lv_tag.
+    ls_object-index = 1.
     APPEND ls_object TO lt_objects.
 
     lv_pack = zcl_abapgit_git_pack=>encode( lt_objects ).
@@ -522,6 +529,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
           lt_files   TYPE zif_abapgit_definitions=>ty_files_tt,
           ls_object  LIKE LINE OF lt_objects,
           ls_commit  TYPE zcl_abapgit_git_pack=>ty_commit.
+    DATA: uindex     TYPE sy-index.
 
     FIELD-SYMBOLS: <ls_tree> LIKE LINE OF it_trees,
                    <ls_blob> LIKE LINE OF it_blobs.
@@ -558,7 +566,10 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
       CLEAR ls_object.
       ls_object-sha1 = <ls_tree>-sha1.
 
-      READ TABLE lt_objects WITH KEY type = zif_abapgit_definitions=>gc_type-tree sha1 = ls_object-sha1
+      READ TABLE lt_objects
+        WITH KEY type COMPONENTS
+          type = zif_abapgit_definitions=>gc_type-tree
+          sha1 = ls_object-sha1
         TRANSPORTING NO FIELDS.
       IF sy-subrc = 0.
 * two identical trees added at the same time, only add one to the pack
@@ -567,6 +578,8 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
       ls_object-type = zif_abapgit_definitions=>gc_type-tree.
       ls_object-data = <ls_tree>-data.
+      uindex = uindex + 1.
+      ls_object-index = uindex.
       APPEND ls_object TO lt_objects.
     ENDLOOP.
 
@@ -576,7 +589,10 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
         iv_type = zif_abapgit_definitions=>gc_type-blob
         iv_data = <ls_blob>-data ).
 
-      READ TABLE lt_objects WITH KEY type = zif_abapgit_definitions=>gc_type-blob sha1 = ls_object-sha1
+      READ TABLE lt_objects
+        WITH KEY type COMPONENTS
+          type = zif_abapgit_definitions=>gc_type-blob
+          sha1 = ls_object-sha1
         TRANSPORTING NO FIELDS.
       IF sy-subrc = 0.
 * two identical files added at the same time, only add one blob to the pack
@@ -586,6 +602,8 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
       ls_object-type = zif_abapgit_definitions=>gc_type-blob.
       ASSERT NOT <ls_blob>-data IS INITIAL.
       ls_object-data = <ls_blob>-data.
+      uindex = uindex + 1.
+      ls_object-index = uindex.
       APPEND ls_object TO lt_objects.
     ENDLOOP.
 
@@ -625,7 +643,10 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
                    <ls_node> LIKE LINE OF lt_nodes.
 
 
-    READ TABLE it_objects ASSIGNING <ls_tree> WITH KEY sha1 = iv_sha1 type = zif_abapgit_definitions=>gc_type-tree.
+    READ TABLE it_objects ASSIGNING <ls_tree>
+      WITH KEY type COMPONENTS
+        type = zif_abapgit_definitions=>gc_type-tree
+        sha1 = iv_sha1.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Walk, tree not found' ).
     ENDIF.
@@ -635,7 +656,9 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
     LOOP AT lt_nodes ASSIGNING <ls_node>.
       IF <ls_node>-chmod = zif_abapgit_definitions=>gc_chmod-file.
         READ TABLE it_objects ASSIGNING <ls_blob>
-          WITH KEY sha1 = <ls_node>-sha1 type = zif_abapgit_definitions=>gc_type-blob.
+          WITH KEY type COMPONENTS
+            type = zif_abapgit_definitions=>gc_type-blob
+            sha1 = <ls_node>-sha1.
         IF sy-subrc <> 0.
           zcx_abapgit_exception=>raise( 'Walk, blob not found' ).
         ENDIF.
@@ -671,8 +694,9 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
 
     READ TABLE it_objects INTO ls_object
-      WITH KEY sha1 = iv_tree
-      type = zif_abapgit_definitions=>gc_type-tree.
+      WITH key type COMPONENTS
+        type = zif_abapgit_definitions=>gc_type-tree
+        sha1 = iv_tree.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'tree not found' ).
     ENDIF.
