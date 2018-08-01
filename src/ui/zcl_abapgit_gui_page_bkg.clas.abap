@@ -269,9 +269,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
 
     lt_settings = is_per-settings.
 
-    CALL METHOD (is_per-method)=>zif_abapgit_background~get_settings
-      CHANGING
-        ct_settings = lt_settings.
+* skip invalid values, from old background logic
+    IF is_per-method <> 'push' AND is_per-method <> 'pull' AND is_per-method <> 'nothing'.
+      CALL METHOD (is_per-method)=>zif_abapgit_background~get_settings
+        CHANGING
+          ct_settings = lt_settings.
+    ENDIF.
 
     IF lines( lt_settings ) = 0.
       RETURN.

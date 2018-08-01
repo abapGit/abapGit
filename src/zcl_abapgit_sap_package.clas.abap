@@ -265,21 +265,24 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
   METHOD zif_abapgit_sap_package~list_subpackages.
 
-    DATA: lt_list     LIKE rt_list,
-          lv_devclass LIKE LINE OF rt_list.
-    DATA: lv_children TYPE i.
+    DATA: lt_list     LIKE rt_list.
 
     SELECT devclass FROM tdevc
-      INTO TABLE rt_list
+      INTO TABLE lt_list
       WHERE parentcl = mv_package
-      ORDER BY PRIMARY KEY.               "#EC CI_GENBUFF "#EC CI_SUBRC
-    lv_children = sy-dbcnt.
+      ORDER BY PRIMARY KEY.               "#EC CI_SUBRC "#EC CI_GENBUFF
 
-    LOOP AT rt_list INTO lv_devclass FROM 1 TO lv_children.
-      "Get Children of Child
-      lt_list = zcl_abapgit_factory=>get_sap_package( lv_devclass )->list_subpackages( ).
+    rt_list = lt_list.
+    WHILE lines( lt_list ) > 0.
+
+      SELECT devclass FROM tdevc
+        INTO TABLE lt_list
+        FOR ALL ENTRIES IN lt_list
+        WHERE parentcl = lt_list-table_line
+        ORDER BY PRIMARY KEY.             "#EC CI_SUBRC "#EC CI_GENBUFF
       APPEND LINES OF lt_list TO rt_list.
-    ENDLOOP.
+
+    ENDWHILE.
 
   ENDMETHOD.
 
@@ -292,8 +295,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
     APPEND mv_package TO rt_list.
 
-    SELECT SINGLE parentcl INTO lv_parent
-      FROM tdevc WHERE devclass = mv_package.           "#EC CI_GENBUFF
+    lv_parent = zif_abapgit_sap_package~read_parent( ).
 
     IF sy-subrc = 0 AND NOT lv_parent IS INITIAL.
       lt_list = zcl_abapgit_factory=>get_sap_package( lv_parent )->list_superpackages( ).
