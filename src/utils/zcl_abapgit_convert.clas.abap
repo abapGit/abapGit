@@ -81,7 +81,7 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
 
     ENDDO.
 
-  ENDMETHOD.                    "bitbyte_to_int
+  ENDMETHOD.
 
 
   METHOD int_to_xstring4.
@@ -93,7 +93,7 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
     lv_x = iv_i.
     rv_xstring = lv_x.
 
-  ENDMETHOD.                    "int_to_xstring
+  ENDMETHOD.
 
 
   METHOD split_string.
@@ -107,7 +107,7 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
       SPLIT iv_string AT cl_abap_char_utilities=>newline INTO TABLE rt_lines.
     ENDIF.
 
-  ENDMETHOD.                    "split_string
+  ENDMETHOD.
 
 
   METHOD string_to_xstring_utf8.
@@ -127,7 +127,7 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
             cx_parameter_invalid_type.                  "#EC NO_HANDLER
     ENDTRY.
 
-  ENDMETHOD.                    "string_to_xstring_utf8
+  ENDMETHOD.
 
 
   METHOD xstring_to_int.
@@ -143,7 +143,7 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
       lv_xstring = lv_xstring+1.
     ENDWHILE.
 
-  ENDMETHOD.                    "xstring_to_int
+  ENDMETHOD.
 
 
   METHOD xstring_to_string_utf8.
@@ -167,7 +167,7 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
             cx_parameter_invalid_type.                  "#EC NO_HANDLER
     ENDTRY.
 
-  ENDMETHOD.                    "xstring_to_string_utf8
+  ENDMETHOD.
 
 
   METHOD x_to_bitbyte.
@@ -185,5 +185,5 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
     GET BIT 7 OF iv_x INTO rv_bitbyte+6(1).
     GET BIT 8 OF iv_x INTO rv_bitbyte+7(1).
 
-  ENDMETHOD.                    "x_to_bitbyte
+  ENDMETHOD.
 ENDCLASS.

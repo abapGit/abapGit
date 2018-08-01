@@ -74,7 +74,7 @@ CLASS ZCL_ABAPGIT_HASH IMPLEMENTATION.
 
     rv_checksum = lv_char8.
 
-  ENDMETHOD.                                                "adler32
+  ENDMETHOD.
 
 
   METHOD sha1.
@@ -99,7 +99,7 @@ CLASS ZCL_ABAPGIT_HASH IMPLEMENTATION.
 
     rv_sha1 = sha1_raw( lv_xstring ).
 
-  ENDMETHOD.                                                "sha1
+  ENDMETHOD.
 
 
   METHOD sha1_raw.
@@ -125,5 +125,5 @@ CLASS ZCL_ABAPGIT_HASH IMPLEMENTATION.
 
     TRANSLATE rv_sha1 TO LOWER CASE.
 
-  ENDMETHOD.                                                "sha1_raw
+  ENDMETHOD.
 ENDCLASS.
