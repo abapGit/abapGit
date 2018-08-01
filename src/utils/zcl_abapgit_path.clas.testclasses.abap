@@ -10,7 +10,7 @@ CLASS ltcl_path DEFINITION FOR TESTING
     METHODS change_dir FOR TESTING.
     METHODS get_filename_from_syspath FOR TESTING.
 
-ENDCLASS.       "ltcl_Path
+ENDCLASS.
 
 
 CLASS ltcl_path IMPLEMENTATION.
@@ -169,6 +169,6 @@ CLASS ltcl_path IMPLEMENTATION.
       'C:\foo\bar\moo.boo\dev\qas\_blah\goog\muuh\sap\hello\world\lorem\ipsum\s_foo.gif' ).
     cl_abap_unit_assert=>assert_equals( act = lv_filename exp = 's_foo.gif' ).
 
-  ENDMETHOD.  " get_filename_from_syspath.
+  ENDMETHOD.
 
 ENDCLASS.

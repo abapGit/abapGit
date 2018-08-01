@@ -20,7 +20,7 @@ CLASS ltcl_diff DEFINITION FOR TESTING
       diff05 FOR TESTING,
       diff06 FOR TESTING.
 
-ENDCLASS.       "ltcl_Diff
+ENDCLASS.
 
 
 CLASS ltcl_diff IMPLEMENTATION.
@@ -47,7 +47,7 @@ CLASS ltcl_diff IMPLEMENTATION.
     CLEAR mt_new.
     CLEAR mt_old.
     CLEAR mt_expected.
-  ENDMETHOD.                    "setup
+  ENDMETHOD.
 
   METHOD test.
 
@@ -82,7 +82,7 @@ CLASS ltcl_diff IMPLEMENTATION.
                                         exp = mt_expected ).
 
 
-  ENDMETHOD.                    "test
+  ENDMETHOD.
 
   METHOD diff01.
 
@@ -93,7 +93,7 @@ CLASS ltcl_diff IMPLEMENTATION.
     _expected 1 'A'  zif_abapgit_definitions=>c_diff-insert  '' ''.
     test( ).
 
-  ENDMETHOD.                    "diff01
+  ENDMETHOD.
 
   METHOD diff02.
 
@@ -105,7 +105,7 @@ CLASS ltcl_diff IMPLEMENTATION.
     _expected 1 'A'  ''        1 'A'.
     test( ).
 
-  ENDMETHOD.                    "diff02
+  ENDMETHOD.
 
   METHOD diff03.
 
@@ -116,7 +116,7 @@ CLASS ltcl_diff IMPLEMENTATION.
     _expected '' ''  zif_abapgit_definitions=>c_diff-delete  1 'A'.
     test( ).
 
-  ENDMETHOD.                    "diff03
+  ENDMETHOD.
 
   METHOD diff04.
 
@@ -128,7 +128,7 @@ CLASS ltcl_diff IMPLEMENTATION.
     _expected 1 'A+'  zif_abapgit_definitions=>c_diff-update  1 'A'.
     test( ).
 
-  ENDMETHOD.                    "diff04
+  ENDMETHOD.
 
   METHOD diff05.
 
@@ -143,7 +143,7 @@ CLASS ltcl_diff IMPLEMENTATION.
     _expected 2 'B'  ''        2 'B'.
     test( ).
 
-  ENDMETHOD.                    "diff05
+  ENDMETHOD.
 
   METHOD diff06.
 
@@ -167,6 +167,6 @@ CLASS ltcl_diff IMPLEMENTATION.
 
     test( ).
 
-  ENDMETHOD.                    "diff06
+  ENDMETHOD.
 
 ENDCLASS.
