@@ -52,9 +52,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
           ls_srcsystem    LIKE LINE OF lt_srcsystem,
           ls_exclude      LIKE LINE OF lt_excludes.
     DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
-
-    DATA: last_package TYPE devclass VALUE cl_abap_char_utilities=>horizontal_tab.
-    DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
+    DATA: last_package    TYPE devclass VALUE cl_abap_char_utilities=>horizontal_tab.
 
     FIELD-SYMBOLS: <ls_tdevc> LIKE LINE OF lt_tdevc,
                    <ls_tadir> LIKE LINE OF rt_tadir.
