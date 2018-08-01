@@ -64,7 +64,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
     IF iv_ignore_subpackages = abap_false.
       lt_packages = zcl_abapgit_factory=>get_sap_package( iv_package )->list_subpackages( ).
     ENDIF.
-    INSERT iv_package INTO lt_packages INDEX 1.    
+    INSERT iv_package INTO lt_packages INDEX 1.
 
     ls_exclude-sign = 'I'.
     ls_exclude-option = 'EQ'.
