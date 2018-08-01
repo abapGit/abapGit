@@ -785,23 +785,21 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
   METHOD get_type.
 
-    DATA: lv_char3   TYPE c LENGTH 3,
-          lv_bitbyte TYPE zif_abapgit_definitions=>ty_bitbyte.
+    CONSTANTS: c_mask TYPE x VALUE 112.
+    DATA: xtype TYPE x.
 
+    xtype = iv_x BIT-AND c_mask.
 
-    lv_bitbyte = zcl_abapgit_convert=>x_to_bitbyte( iv_x ).
-    lv_char3 = lv_bitbyte+1.
-
-    CASE lv_char3.
-      WHEN '001'.
+    CASE xtype.
+      WHEN 16.
         rv_type = zif_abapgit_definitions=>gc_type-commit.
-      WHEN '010'.
+      WHEN 32.
         rv_type = zif_abapgit_definitions=>gc_type-tree.
-      WHEN '011'.
+      WHEN 48.
         rv_type = zif_abapgit_definitions=>gc_type-blob.
-      WHEN '100'.
+      WHEN 64.
         rv_type = zif_abapgit_definitions=>gc_type-tag.
-      WHEN '111'.
+      WHEN 112.
         rv_type = zif_abapgit_definitions=>gc_type-ref_d.
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( 'Todo, unknown type' ).
