@@ -61,12 +61,10 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
     "Determine Packages to Read
     DATA: lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
-    IF iv_ignore_subpackages = abap_true.
-      INSERT iv_package INTO TABLE lt_packages.
-    ELSE.
+    IF iv_ignore_subpackages = abap_false.
       lt_packages = zcl_abapgit_factory=>get_sap_package( iv_package )->list_subpackages( ).
-      INSERT iv_package INTO lt_packages INDEX 1.
     ENDIF.
+    INSERT iv_package INTO lt_packages INDEX 1.    
 
     ls_exclude-sign = 'I'.
     ls_exclude-option = 'EQ'.
