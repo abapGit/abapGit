@@ -68,7 +68,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OO_CLASS_NEW IMPLEMENTATION.
+CLASS zcl_abapgit_oo_class_new IMPLEMENTATION.
 
 
   METHOD create_report.
@@ -303,18 +303,21 @@ CLASS ZCL_ABAPGIT_OO_CLASS_NEW IMPLEMENTATION.
 
   METHOD update_source_index.
 
-    DATA li_index_helper TYPE REF TO if_oo_source_pos_index_helper.
+    "    dynamic invocation IF_OO_SOURCE_POS_INDEX_HELPER doesn't exist in 702.
+    DATA li_index_helper TYPE REF TO object.
 
     CREATE OBJECT li_index_helper TYPE cl_oo_source_pos_index_helper.
 
-    li_index_helper->create_index_with_scanner(
-      class_name = iv_clsname
-      version    = if_oo_clif_source=>co_version_active
-      scanner    = io_scanner ).
+    CALL METHOD li_index_helper->('IF_OO_SOURCE_POS_INDEX_HELPER~CREATE_INDEX_WITH_SCANNER')
+      EXPORTING
+        class_name = iv_clsname
+        version    = if_oo_clif_source=>co_version_active
+        scanner    = io_scanner.
 
-    li_index_helper->delete_index(
-      class_name = iv_clsname
-      version    = if_oo_clif_source=>co_version_inactive ).
+    CALL METHOD li_index_helper->('IF_OO_SOURCE_POS_INDEX_HELPER~DELETE_INDEX')
+      EXPORTING
+        class_name = iv_clsname
+        version    = if_oo_clif_source=>co_version_inactive.
 
   ENDMETHOD.
 

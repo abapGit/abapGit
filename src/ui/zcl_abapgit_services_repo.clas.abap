@@ -198,7 +198,8 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     DATA: lt_columns  TYPE stringtab,
           lt_selected LIKE ct_overwrite,
-          lv_column   LIKE LINE OF lt_columns.
+          lv_column   LIKE LINE OF lt_columns,
+          li_popups   TYPE REF TO zif_abapgit_popups.
 
     FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF ct_overwrite.
 
@@ -212,7 +213,8 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     lv_column = 'OBJ_NAME'.
     INSERT lv_column INTO TABLE lt_columns.
 
-    zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_from_list(
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popups->popup_to_select_from_list(
       EXPORTING
         it_list               = ct_overwrite
         i_header_text         = |The following Objects have been modified locally.|

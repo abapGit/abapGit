@@ -127,12 +127,14 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
     DATA: lv_name   TYPE string,
           lv_cancel TYPE abap_bool,
-          lo_repo   TYPE REF TO zcl_abapgit_repo_online.
+          lo_repo   TYPE REF TO zcl_abapgit_repo_online,
+          li_popups TYPE REF TO zif_abapgit_popups.
 
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    zcl_abapgit_ui_factory=>get_popups( )->create_branch_popup(
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popups->create_branch_popup(
       IMPORTING
         ev_name   = lv_name
         ev_cancel = lv_cancel ).
@@ -221,7 +223,8 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
           lt_unnecessary_local_objs TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lt_selected               LIKE lt_unnecessary_local_objs,
           lt_columns                TYPE stringtab,
-          ls_checks                 TYPE zif_abapgit_definitions=>ty_delete_checks.
+          ls_checks                 TYPE zif_abapgit_definitions=>ty_delete_checks,
+          li_popups                 TYPE REF TO zif_abapgit_popups.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
@@ -251,7 +254,8 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
       INSERT `OBJECT` INTO TABLE lt_columns.
       INSERT `OBJ_NAME` INTO TABLE lt_columns.
 
-      zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_from_list(
+      li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+      li_popups->popup_to_select_from_list(
         EXPORTING
           it_list              = lt_unnecessary_local_objs
           i_header_text        = |Which unnecessary objects should be deleted?|

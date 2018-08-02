@@ -198,14 +198,16 @@ CLASS zcl_abapgit_zip IMPLEMENTATION.
 
   METHOD export_package.
 
-    DATA: lo_repo TYPE REF TO zcl_abapgit_repo_offline,
-          ls_data TYPE zif_abapgit_persistence=>ty_repo.
+    DATA: lo_repo   TYPE REF TO zcl_abapgit_repo_offline,
+          ls_data   TYPE zif_abapgit_persistence=>ty_repo,
+          li_popups TYPE REF TO zif_abapgit_popups.
 
 
     ls_data-key = 'DUMMY'.
     ls_data-dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ).
 
-    zcl_abapgit_ui_factory=>get_popups( )->popup_package_export(
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popups->popup_package_export(
       IMPORTING
         ev_package      = ls_data-package
         ev_folder_logic = ls_data-dot_abapgit-folder_logic ).
