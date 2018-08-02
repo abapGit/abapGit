@@ -8,7 +8,7 @@ CLASS zcl_abapgit_ecatt_data_upload DEFINITION
     METHODS:
       z_set_stream_for_upload
         IMPORTING
-          im_xml TYPE xstring.
+          iv_xml TYPE xstring.
 
   PROTECTED SECTION.
     METHODS:
@@ -35,7 +35,7 @@ CLASS zcl_abapgit_ecatt_data_upload IMPLEMENTATION.
   METHOD z_set_stream_for_upload.
 
     " donwnpoort from CL_ABAPGIT_ECATT_DATA_UPLOAD SET_STREAM_FOR_UPLOAD
-    mv_external_xml = im_xml.
+    mv_external_xml = iv_xml.
 
   ENDMETHOD.
 ENDCLASS.

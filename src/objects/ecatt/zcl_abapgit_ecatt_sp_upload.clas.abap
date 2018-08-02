@@ -8,7 +8,7 @@ CLASS zcl_abapgit_ecatt_sp_upload DEFINITION
     METHODS:
       z_set_stream_for_upload
         IMPORTING
-          im_xml TYPE xstring,
+          iv_xml TYPE xstring,
 
       upload
         REDEFINITION.
@@ -194,7 +194,7 @@ CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
   METHOD z_set_stream_for_upload.
 
     " downport from CL_APL_ECATT_START_PROFIL SET_STREAM_FOR_UPLOAD
-    mv_external_xml = im_xml.
+    mv_external_xml = iv_xml.
 
   ENDMETHOD.
 ENDCLASS.
