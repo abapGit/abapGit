@@ -40,7 +40,7 @@ CLASS ZCL_ABAPGIT_ZLIB_CONVERT IMPLEMENTATION.
       lv_bits = lv_bits+1.
     ENDWHILE.
 
-  ENDMETHOD.                    "bits_to_int
+  ENDMETHOD.
 
 
   METHOD hex_to_bits.
@@ -62,7 +62,7 @@ CLASS ZCL_ABAPGIT_ZLIB_CONVERT IMPLEMENTATION.
       lv_hex = lv_hex+1.
     ENDWHILE.
 
-  ENDMETHOD.                    "hex_to_bits
+  ENDMETHOD.
 
 
   METHOD int_to_hex.
@@ -73,5 +73,5 @@ CLASS ZCL_ABAPGIT_ZLIB_CONVERT IMPLEMENTATION.
     lv_x = iv_int.
     rv_hex = lv_x.
 
-  ENDMETHOD.                    "int_to_hex
+  ENDMETHOD.
 ENDCLASS.

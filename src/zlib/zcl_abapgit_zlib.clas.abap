@@ -72,7 +72,7 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
       CONCATENATE gv_out lv_x INTO gv_out IN BYTE MODE.
     ENDDO.
 
-  ENDMETHOD.                    "copy_out
+  ENDMETHOD.
 
 
   METHOD decode.
@@ -103,7 +103,7 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
       lv_first = lv_first * 2.
     ENDDO.
 
-  ENDMETHOD.                    "decode
+  ENDMETHOD.
 
 
   METHOD decompress.
@@ -159,7 +159,7 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
     rs_data-raw = gv_out.
     rs_data-compressed_len = xstrlen( iv_compressed ) - go_stream->remaining( ).
 
-  ENDMETHOD.                    "decompress
+  ENDMETHOD.
 
 
   METHOD dynamic.
@@ -253,7 +253,7 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
       EXPORTING
         it_lengths = lt_dists.
 
-  ENDMETHOD.                    "dynamic
+  ENDMETHOD.
 
 
   METHOD fixed.
@@ -287,7 +287,7 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
       EXPORTING
         it_lengths = lt_lengths.
 
-  ENDMETHOD.                    "fixed
+  ENDMETHOD.
 
 
   METHOD map_distance.
@@ -362,7 +362,7 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
         ASSERT 1 = 0.
     ENDCASE.
 
-  ENDMETHOD.                    "map_distance
+  ENDMETHOD.
 
 
   METHOD map_length.
@@ -435,7 +435,7 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
         ASSERT 1 = 0.
     ENDCASE.
 
-  ENDMETHOD.                    "map_length
+  ENDMETHOD.
 
 
   METHOD read_pair.
@@ -448,5 +448,5 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
     lv_symbol = decode( go_distcode ).
     rs_pair-distance = map_distance( lv_symbol ).
 
-  ENDMETHOD.                    "read_pair
+  ENDMETHOD.
 ENDCLASS.
