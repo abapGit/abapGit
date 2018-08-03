@@ -1,4 +1,3 @@
-*"* use this source file for your ABAP unit test classes
 CLASS ltcl_xml_output DEFINITION DEFERRED.
 CLASS zcl_abapgit_xml_output DEFINITION LOCAL FRIENDS ltcl_xml_output.
 

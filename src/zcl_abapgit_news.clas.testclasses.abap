@@ -1,5 +1,3 @@
-*"* use this source file for your ABAP unit test classes
-
 CLASS ltcl_relevant DEFINITION DEFERRED.
 CLASS zcl_abapgit_news DEFINITION LOCAL FRIENDS ltcl_relevant.
 

@@ -1,5 +1,3 @@
-*"* use this source file for your ABAP unit test classes
-
 CLASS abapgit_syntax_xml DEFINITION FINAL FOR TESTING
   DURATION SHORT
   RISK LEVEL HARMLESS.

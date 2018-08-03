@@ -1,4 +1,3 @@
-*"* use this source file for your ABAP unit test classes
 CLASS ltd_code_inspector DEFINITION FOR TESTING.
 
   PUBLIC SECTION.
