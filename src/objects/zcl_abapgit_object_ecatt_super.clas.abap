@@ -235,7 +235,7 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
 
     CALL METHOD lo_upload->('Z_SET_STREAM_FOR_UPLOAD')
       EXPORTING
-        im_xml = lv_xml.
+        iv_xml = lv_xml.
 
     ls_object-d_obj_name  = mv_object_name.
     ls_object-s_obj_type  = get_object_type( ).
