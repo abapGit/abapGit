@@ -867,47 +867,25 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     lv_length = iv_length.
 
-    IF lv_length <= 15.
-      lv_hex = 0 + lv_type + lv_length MOD 16.
-      rv_xstring = lv_hex.
-      lv_length = lv_length DIV 16.
+* first byte
+    IF lv_length > 15.
+      lv_hex = 128.
+    ENDIF.
+    lv_hex = lv_hex + lv_type + lv_length MOD 16.
+    rv_xstring = lv_hex.
+    lv_length = lv_length DIV 16.
 
-    ELSEIF lv_length <= 2047.
-      lv_hex = 128 + lv_type + lv_length MOD 16.
-      rv_xstring = lv_hex.
-      lv_length = lv_length DIV 16.
-
-      lv_hex = lv_length.
-      CONCATENATE rv_xstring lv_hex INTO rv_xstring IN BYTE MODE.
-    ELSEIF lv_length <= 262143.
-      lv_hex = 128 + lv_type + lv_length MOD 16.
-      rv_xstring = lv_hex.
-      lv_length = lv_length DIV 16.
-
+* subsequent bytes
+    WHILE lv_length >= 128.
       lv_hex = 128 + lv_length MOD 128.
       CONCATENATE rv_xstring lv_hex INTO rv_xstring IN BYTE MODE.
       lv_length = lv_length DIV 128.
+    ENDWHILE.
 
+* last byte
+    IF lv_length > 0.
       lv_hex = lv_length.
       CONCATENATE rv_xstring lv_hex INTO rv_xstring IN BYTE MODE.
-    ELSEIF lv_length <= 33554431.
-      lv_hex = 128 + lv_type + lv_length MOD 16.
-      rv_xstring = lv_hex.
-      lv_length = lv_length DIV 16.
-
-      lv_hex = 128 + lv_length MOD 128.
-      CONCATENATE rv_xstring lv_hex INTO rv_xstring IN BYTE MODE.
-      lv_length = lv_length DIV 128.
-
-      lv_hex = 128 + lv_length MOD 128.
-      CONCATENATE rv_xstring lv_hex INTO rv_xstring IN BYTE MODE.
-      lv_length = lv_length DIV 128.
-
-      lv_hex = lv_length.
-      CONCATENATE rv_xstring lv_hex INTO rv_xstring IN BYTE MODE.
-    ELSE.
-* this IF can be refactored, use shifting?
-      zcx_abapgit_exception=>raise( 'Todo, encoding length' ).
     ENDIF.
 
   ENDMETHOD.
