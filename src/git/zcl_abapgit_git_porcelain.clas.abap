@@ -340,7 +340,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
                              iv_tree    = ls_commit-tree
                              iv_base    = '/' ).
 
-  ENDMETHOD.                    "root_tree
+  ENDMETHOD.
 
 
   METHOD pull.
@@ -374,7 +374,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
                     iv_path = '/'
           CHANGING ct_files = et_files ).
 
-  ENDMETHOD.                    "pull
+  ENDMETHOD.
 
 
   METHOD push.
@@ -466,7 +466,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
                                    it_blobs   = lt_blobs
                                    io_stage   = io_stage ).
 
-  ENDMETHOD.                    "push
+  ENDMETHOD.
 
 
   METHOD receive_pack_create_tag.
@@ -611,7 +611,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
           CHANGING ct_files = lt_files ).
     io_repo->set_files_remote( lt_files ).
 
-  ENDMETHOD.                    "receive_pack
+  ENDMETHOD.
 
 
   METHOD walk.
@@ -657,7 +657,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
             CHANGING ct_files = ct_files ).
     ENDLOOP.
 
-  ENDMETHOD.                    "walk
+  ENDMETHOD.
 
 
   METHOD walk_tree.
