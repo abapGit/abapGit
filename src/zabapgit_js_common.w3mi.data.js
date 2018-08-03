@@ -555,6 +555,99 @@ function displayNews() {
   div.style.display = (div.style.display) ? '' : 'none';
 }
 
+function KeyNavigation() {
+  
+}
+
+KeyNavigation.prototype.dispatch = function(oEvent) {
+
+  // navigate with arrows through list items and support pressing links with enter and space
+  if (oEvent.key === "ENTER" || oEvent.key === "") {
+    this.onEnterOrSpace(oEvent);
+  } else if (/Down$/.test(oEvent.key)) {
+    this.onArrowDown(oEvent);
+  } else if (/Up$/.test(oEvent.key)) {
+    this.onArrowUp(oEvent);
+  }
+
+};
+
+KeyNavigation.prototype.getLiSelected = function() {
+  return document.querySelector('li .selected');
+};
+
+KeyNavigation.prototype.getActiveElement = function () {
+  return document.activeElement;
+};
+
+KeyNavigation.prototype.getActiveElementParent = function () {
+  return this.getActiveElement().parentElement;
+};
+
+KeyNavigation.prototype.onEnterOrSpace = function (oEvent) {
+  
+  // Enter or space clicks the selected link
+
+  var liSelected = this.getLiSelected();
+
+  if (liSelected) {
+    liSelected.firstElementChild.click();
+  }
+
+};
+
+
+KeyNavigation.prototype.onArrowDown = function (oEvent) {
+
+  var
+    liNext,
+    liSelected = this.getLiSelected(),
+    oActiveElementParent = this.getActiveElementParent();
+
+  if (liSelected) {
+
+    // we deselect the current li and select the next sibling
+    liNext = oActiveElementParent.nextElementSibling;
+    if (liNext) {
+      liSelected.classList.toggle('selected');
+      liNext.firstElementChild.focus();
+      oActiveElementParent.classList.toggle('selected');
+      oEvent.preventDefault();
+    }
+
+  } else {
+
+    // we don't have any li selected, we have lookup where to start...
+    // the right element should have been activated in fnTooltipActivate
+    liNext = this.getActiveElement().nextElementSibling;
+    if (liNext) {
+      liNext.classList.toggle('selected');
+      liNext.firstElementChild.firstElementChild.focus();
+      oEvent.preventDefault();
+    }
+
+  }
+
+};
+
+
+KeyNavigation.prototype.onArrowUp = function (oEvent) {
+
+  var
+    liSelected = this.getLiSelected(),
+    liPrevious = this.getActiveElementParent().previousElementSibling;
+
+  if (liSelected && liPrevious) {
+
+    liSelected.classList.toggle('selected');
+    liPrevious.firstElementChild.focus();
+    this.getActiveElementParent().classList.toggle('selected');
+    oEvent.preventDefault();
+
+  }
+
+};
+
 // this functions enables the navigation with arrows through list items (li)
 // e.g. in dropdown menus
 function enableArrowListNavigation() {
@@ -565,92 +658,10 @@ function enableArrowListNavigation() {
       return;
     }
 
-    var getLiSelected = function () {
-      return document.querySelector('li .selected');
-    };
-
-    var getActiveElement = function () {
-      return document.activeElement;
-    };
-
-    var getActiveElementParent = function () {
-      return getActiveElement().parentElement;
-    };
-
-    var onEnterOrSpace = function (oEvent) {
-      
-      // Enter or space clicks the selected link
-
-      var liSelected = getLiSelected();
-
-      if (liSelected) {
-        liSelected.firstElementChild.click();
-      }
-
-    };
-
-    var onArrowDown = function (oEvent) {
-
-      var
-        liNext,
-        liSelected = getLiSelected(),
-        oActiveElementParent = getActiveElementParent();
-
-      if (liSelected) {
-
-        // we deselect the current li and select the next sibling
-        liNext = oActiveElementParent.nextElementSibling;
-        if (liNext) {
-          liSelected.classList.toggle('selected');
-          liNext.firstElementChild.focus();
-          oActiveElementParent.classList.toggle('selected');
-          oEvent.preventDefault();
-        }
-
-      } else {
-
-        // we don't have any li selected, we have lookup where to start...
-        // the right element should have been activated in fnTooltipActivate
-        liNext = getActiveElement().nextElementSibling;
-        if (liNext) {
-          liNext.classList.toggle('selected');
-          liNext.firstElementChild.firstElementChild.focus();
-          oEvent.preventDefault();
-        }
-
-      }
-
-    };
-
-    var onArrowUp = function (oEvent) {
-
-      var
-        liSelected = getLiSelected(),
-        liPrevious = getActiveElementParent().previousElementSibling;
-
-      if (liSelected && liPrevious) {
-
-        liSelected.classList.toggle('selected');
-        liPrevious.firstElementChild.focus();
-        getActiveElementParent().classList.toggle('selected');
-        oEvent.preventDefault();
-
-      }
-
-    };
-
-    // navigate with arrows through list items and support pressing links 
-    // mit enter and space
-    if (oEvent.key === "ENTER" || oEvent.key === "") {
-      onEnterOrSpace(oEvent);
-    } else if (/Down$/.test(oEvent.key)) {
-      onArrowDown(oEvent);
-    } else if (/Up$/.test(oEvent.key)) {
-      onArrowUp(oEvent);
-    }
+    new KeyNavigation().dispatch(oEvent);
 
   });
-}
+};
 
 // Vimium like link hints
 function setLinkHints(sLinkHintKey, sColor) {
