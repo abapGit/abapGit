@@ -188,7 +188,7 @@ CLASS ltcl_pack DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
         RETURNING VALUE(rs_object) TYPE zif_abapgit_definitions=>ty_object
         RAISING   zcx_abapgit_exception.
 
-ENDCLASS.       "ltcl_Pack
+ENDCLASS.
 
 
 CLASS ltcl_pack IMPLEMENTATION.
@@ -310,7 +310,7 @@ CLASS ltcl_pack IMPLEMENTATION.
         exp = lt_objects
         act = lt_result ).
 
-  ENDMETHOD.                    "encode_decode_pack_multiple
+  ENDMETHOD.
 
   METHOD object_blob.
 
@@ -320,7 +320,7 @@ CLASS ltcl_pack IMPLEMENTATION.
     rs_object-data = iv_data.
     rs_object-adler32 = zcl_abapgit_hash=>adler32( iv_data ).
 
-  ENDMETHOD.                    "object_blob
+  ENDMETHOD.
 
   METHOD pack_short.
 
@@ -345,7 +345,7 @@ CLASS ltcl_pack IMPLEMENTATION.
         exp = lt_objects
         act = lt_result ).
 
-  ENDMETHOD.                    "encode_decode_pack
+  ENDMETHOD.
 
   METHOD pack_long.
 
@@ -396,7 +396,7 @@ CLASS ltcl_pack IMPLEMENTATION.
         exp = ls_commit
         act = ls_result ).
 
-  ENDMETHOD.                    "commit
+  ENDMETHOD.
 
   METHOD commit_newline.
 

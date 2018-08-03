@@ -77,7 +77,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
     lo_client->close( ).
 
-  ENDMETHOD.                    "branches
+  ENDMETHOD.
 
 
   METHOD branch_list.
@@ -95,7 +95,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
       EXPORTING
         iv_data = lv_data.
 
-  ENDMETHOD.                    "branch_list
+  ENDMETHOD.
 
 
   METHOD find_branch.
@@ -112,7 +112,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
       ev_branch = eo_branch_list->find_by_name( iv_branch_name )-sha1.
     ENDIF.
 
-  ENDMETHOD.                    "find_branch
+  ENDMETHOD.
 
 
   METHOD parse.
@@ -149,7 +149,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
     ev_pack = lv_pack.
 
-  ENDMETHOD.                    "parse
+  ENDMETHOD.
 
 
   METHOD receive_pack.
@@ -213,7 +213,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'missing necessary objects' ).
     ENDIF.
 
-  ENDMETHOD.                    "receive_pack
+  ENDMETHOD.
 
 
   METHOD upload_pack.
@@ -286,5 +286,5 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
     et_objects = zcl_abapgit_git_pack=>decode( lv_pack ).
 
-  ENDMETHOD.                    "upload_pack
+  ENDMETHOD.
 ENDCLASS.

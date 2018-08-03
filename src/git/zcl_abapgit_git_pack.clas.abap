@@ -275,7 +275,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     decode_deltas( CHANGING ct_objects = rt_objects ).
 
-  ENDMETHOD.                    "decode
+  ENDMETHOD.
 
 
   METHOD decode_commit.
@@ -325,7 +325,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'multiple parents? not supported' ).
     ENDIF.
 
-  ENDMETHOD.                    "decode_commit
+  ENDMETHOD.
 
 
   METHOD decode_deltas.
@@ -352,7 +352,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
              CHANGING ct_objects = ct_objects ).
     ENDLOOP.
 
-  ENDMETHOD.                    "decode_deltas
+  ENDMETHOD.
 
 
   METHOD decode_tag.
@@ -463,7 +463,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       lv_cursor = lv_match + 1 + lc_sha_length.
     ENDDO.
 
-  ENDMETHOD.                    "decode_tree
+  ENDMETHOD.
 
 
   METHOD delta.
@@ -574,7 +574,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
     ls_object-data = lv_result.
     APPEND ls_object TO ct_objects.
 
-  ENDMETHOD.                    "delta
+  ENDMETHOD.
 
 
   METHOD delta_header.
@@ -596,7 +596,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
     ENDDO.
     ev_header = zcl_abapgit_convert=>bitbyte_to_int( lv_bits ).
 
-  ENDMETHOD.                    "delta_header
+  ENDMETHOD.
 
 
   METHOD encode.
@@ -656,7 +656,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
     lv_sha1 = to_upper( zcl_abapgit_hash=>sha1_raw( rv_data ) ).
     CONCATENATE rv_data lv_sha1 INTO rv_data IN BYTE MODE.
 
-  ENDMETHOD.                    "encode
+  ENDMETHOD.
 
 
   METHOD encode_commit.
@@ -705,7 +705,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
 
-  ENDMETHOD.                    "encode_commit
+  ENDMETHOD.
 
 
   METHOD encode_tag.
@@ -755,7 +755,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       CONCATENATE rv_data lv_xstring lc_null lv_hex20 INTO rv_data IN BYTE MODE.
     ENDLOOP.
 
-  ENDMETHOD.                    "encode_tree
+  ENDMETHOD.
 
 
   METHOD get_length.
@@ -780,7 +780,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     ev_length = zcl_abapgit_convert=>bitbyte_to_int( lv_length_bits ).
 
-  ENDMETHOD.                    "get_length
+  ENDMETHOD.
 
 
   METHOD get_type.
@@ -805,7 +805,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'Todo, unknown type' ).
     ENDCASE.
 
-  ENDMETHOD.                    "get_type
+  ENDMETHOD.
 
 
   METHOD sort_tree.
@@ -910,7 +910,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Todo, encoding length' ).
     ENDIF.
 
-  ENDMETHOD.                    "type_and_length
+  ENDMETHOD.
 
 
   METHOD zlib_decompress.
