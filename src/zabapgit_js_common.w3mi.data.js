@@ -559,7 +559,11 @@ function KeyNavigation() {
   
 }
 
-KeyNavigation.prototype.dispatch = function(oEvent) {
+KeyNavigation.prototype.onkeydown = function(oEvent) {
+
+  if (oEvent.defaultPrevented) {
+    return;
+  }
 
   // navigate with arrows through list items and support pressing links with enter and space
   if (oEvent.key === "ENTER" || oEvent.key === "") {
@@ -652,16 +656,156 @@ KeyNavigation.prototype.onArrowUp = function (oEvent) {
 // e.g. in dropdown menus
 function enableArrowListNavigation() {
 
-  document.addEventListener('keydown', function (oEvent) {
+  var oKeyNavigation = new KeyNavigation();
 
-    if (oEvent.defaultPrevented) {
-      return;
+  document.addEventListener('keydown', oKeyNavigation.onkeydown.bind(oKeyNavigation));
+
+};
+
+function LinkHints(sLinkHintKey, sColor){
+  this.sLinkHintKey = sLinkHintKey; 
+  this.sColor = sColor;
+  this.oTooltipMap = {};
+  this.bTooltipsOn = false;
+  this.sPending = "";
+  this.aTooltipElements = document.querySelectorAll('a span');
+}
+
+LinkHints.prototype.fnRenderTooltip = function (oTooltip, iTooltipCounter) {
+  if (this.bTooltipsOn) {
+    oTooltip.classList.remove('hidden');
+  } else {
+    oTooltip.classList.add('hidden');
+  }
+  oTooltip.innerHTML = iTooltipCounter;
+  oTooltip.style.backgroundColor = this.sColor;
+  this.oTooltipMap[iTooltipCounter] = oTooltip;
+};
+
+LinkHints.prototype.getTooltipStartValue = function(iToolTipCount){
+  
+  // if whe have 333 tooltips we start from 100
+  return Math.pow(10,iToolTipCount.toString().length - 1);
+
+};
+
+LinkHints.prototype.fnRenderTooltips = function () {
+
+  // all possible links which should be accessed via tooltip have
+  // sub span which is hidden by default. If we like to show the 
+  // tooltip we have to toggle the css class 'hidden'.
+  // 
+  // We use numeric values for the tooltip label. Maybe we can 
+  // support also alphanumeric chars in the future. Then we have to
+  // calculate permutations and that's work. So for the sake of simplicity
+  // we stick to numeric values and just increment them.
+
+  var
+    iTooltipCounter = this.getTooltipStartValue(this.aTooltipElements.length),
+    that = this;
+
+  [].forEach.call(this.aTooltipElements, function(oTooltip){
+    iTooltipCounter += 1;
+    this.fnRenderTooltip(oTooltip, iTooltipCounter)
+  }.bind(that));
+
+};
+
+LinkHints.prototype.fnToggleAllTooltips = function () {
+
+  this.sPending = "";
+  this.bTooltipsOn = !this.bTooltipsOn;
+  this.fnRenderTooltips();
+
+};
+
+LinkHints.prototype.fnRemoveAllTooltips = function () {
+
+  this.sPending = "";
+  this.bTooltipsOn = false;
+
+  [].forEach.call(this.aTooltipElements, function (oTooltip) {
+    oTooltip.classList.add('hidden');
+  });
+
+};
+
+LinkHints.prototype.fnFilterTooltips = function (sPending) {
+
+  var that = this;
+
+  Object
+    .keys(this.oTooltipMap)
+    .forEach(function (sKey) {
+
+      // we try to partially match, but only from the beginning!
+      var regex = new RegExp("^" + this.sPending);
+      var oTooltip = this.oTooltipMap[sKey];
+
+      if (regex.test(sKey)) {
+        // we have a partial match, grey out the matched part
+        oTooltip.innerHTML = sKey.replace(regex, "<div style='display:inline;color:lightgray'>" + this.sPending + '</div>');
+      } else {
+        // and hide the not matched tooltips
+        oTooltip.classList.add('hidden');
+      }
+
+    }.bind(that));
+
+};
+
+LinkHints.prototype.fnActivateDropDownMenu = function (oTooltip) {
+  // to enable link hint navigation for drop down menu, we must expand 
+  // like if they were hovered
+  oTooltip.parentElement.parentElement.classList.toggle("block");
+};
+
+
+LinkHints.prototype.fnTooltipActivate = function (oTooltip) {
+
+  // a tooltips was successfully specified, so we try to trigger the link
+  // and remove all tooltips
+  this.fnRemoveAllTooltips();
+  oTooltip.parentElement.click();
+
+  // in case it is a dropdownmenu we have to expand and focus it
+  this.fnActivateDropDownMenu(oTooltip);
+  oTooltip.parentElement.focus();
+
+}
+
+LinkHints.prototype.onkeypress = function(oEvent){
+
+  if (oEvent.defaultPrevented) {
+    return;
+  }
+
+  var activeElementType = ((document.activeElement && document.activeElement.nodeName) || "");
+  
+  // link hints are disabled for input and textareas for obvious reasons.
+  // Maybe we must add other types here in the future
+  if (oEvent.key === this.sLinkHintKey && activeElementType !== "INPUT" && activeElementType !== "TEXTAREA") {
+
+    this.fnToggleAllTooltips();
+
+  } else if (this.bTooltipsOn === true) {
+    
+    // the user tries to reach a tooltip
+    this.sPending += oEvent.key;
+    var oTooltip = this.oTooltipMap[this.sPending];
+
+    if (oTooltip) {
+      // we are there, we have a fully specified tooltip. Let's activate it
+      this.fnTooltipActivate(oTooltip);
+    } else {
+      // we are not there yet, but let's filter the link so that only
+      // the partially matched are shown
+      this.fnFilterTooltips(this.sPending);
     }
 
-    new KeyNavigation().dispatch(oEvent);
+  }
 
-  });
-};
+}
 
 // Vimium like link hints
 function setLinkHints(sLinkHintKey, sColor) {
@@ -670,147 +814,9 @@ function setLinkHints(sLinkHintKey, sColor) {
     return;
   }
 
-  var
-    oTooltipMap = {},
-    bTooltipsOn = false,
-    sPending = "";
+  var oLinkHint = new LinkHints(sLinkHintKey, sColor);
 
-  document.addEventListener("keypress", function (oEvent) { 
-
-    if (oEvent.defaultPrevented) {
-      return;
-    }
-
-    var fnRenderTooltip = function (oTooltip, iTooltipCounter) {
-      if (bTooltipsOn) {
-        oTooltip.classList.remove('hidden');
-      } else {
-        oTooltip.classList.add('hidden');
-      }
-      oTooltip.innerHTML = iTooltipCounter;
-      oTooltip.style.backgroundColor = sColor;
-      oTooltipMap[iTooltipCounter] = oTooltip;
-    };
-
-    var getTooltipStartValue = function(iToolTipCount){
-      
-      // if whe have 333 tooltips we start from 100
-      return Math.pow(10,iToolTipCount.toString().length - 1);
-
-    };
-
-    var fnRenderTooltips = function () {
-
-      // all possible links which should be accessed via tooltip have
-      // sub span which is hidden by default. If we like to show the 
-      // tooltip we have to toggle the css class 'hidden'.
-      // 
-      // We use numeric values for the tooltip label. Maybe we can 
-      // support also alphanumeric chars in the future. Then we have to
-      // calculate permutations and that's work. So for the sake of simplicity
-      // we stick to numeric values and just increment them.
-
-      var
-        aTooltips = document.querySelectorAll('a span'),
-        iTooltipCounter = getTooltipStartValue(aTooltips.length);
-
-      [].forEach.call(aTooltips, function(oTooltip){
-        iTooltipCounter += 1;
-        fnRenderTooltip(oTooltip, iTooltipCounter)
-      });
-
-    };
-
-    var fnToggleAllTooltips = function () {
-
-      sPending = "";
-      bTooltipsOn = !bTooltipsOn;
-
-      fnRenderTooltips();
-
-    };
-
-    var fnRemoveAllTooltips = function () {
-
-      sPending = "";
-      bTooltipsOn = false;
-
-      var
-        aTooltips = document.querySelectorAll('a span');
-
-      [].forEach.call(aTooltips, function (oTooltip) {
-        oTooltip.classList.add('hidden');
-      });
-
-    };
-
-    var fnFilterTooltips = function (sPending) {
-
-      Object
-        .keys(oTooltipMap)
-        .forEach(function (sKey) {
-
-          // we try to partially match, but only from the beginning!
-          var regex = new RegExp("^" + sPending);
-          var oTooltip = oTooltipMap[sKey];
-
-          if (regex.test(sKey)) {
-            // we have a partial match, grey out the matched part
-            oTooltip.innerHTML = sKey.replace(regex, "<div style='display:inline;color:lightgray'>" + sPending + '</div>');
-          } else {
-            // and hide the not matched tooltips
-            oTooltip.classList.add('hidden');
-          }
-
-        });
-
-    };
-
-    var fnActivateDropDownMenu = function (oTooltip) {
-      // to enable link hint navigation for drop down menu, we must expand 
-      // like if they were hovered
-      oTooltip.parentElement.parentElement.classList.toggle("block");
-    };
-
-    var fnTooltipActivate = function (oTooltip) {
-
-      // a tooltips was successfully specified, so we try to trigger the link
-      // and remove all tooltips
-      fnRemoveAllTooltips();
-      oTooltip.parentElement.click();
-
-      // in case it is a dropdownmenu we have to expand and focus it
-      fnActivateDropDownMenu(oTooltip);
-      oTooltip.parentElement.focus();
-
-    }
-
-    var activeElementType = ((document.activeElement && document.activeElement.nodeName) || "");
-    
-    // link hints are disabled for input and textareas for obvious reasons.
-    // Maybe we must add other types here in the future
-    if (oEvent.key === sLinkHintKey && activeElementType !== "INPUT" && activeElementType !== "TEXTAREA") {
-
-      fnToggleAllTooltips();
-
-    } else if (bTooltipsOn === true) {
-      
-      // the user tries to reach a tooltip
-      sPending += oEvent.key;
-      var oTooltip = oTooltipMap[sPending];
-
-      if (oTooltip) {
-        // we are there, we have a fully specified tooltip. Let's activate it
-        fnTooltipActivate(oTooltip);
-      } else {
-        // we are not there yet, but let's filter the link so that only
-        // the partially matched are shown
-        fnFilterTooltips(sPending);
-      }
-
-    }
-
-  });
+  document.addEventListener("keypress", oLinkHint.onkeypress.bind(oLinkHint));
 
 }
 
