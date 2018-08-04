@@ -42,7 +42,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
 
   METHOD build_main_menu.
@@ -90,14 +90,14 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     ro_menu->add( iv_txt = 'Help'
                   io_sub = lo_helpsub ) ##NO_TEXT.
 
-  ENDMETHOD.                    "build main_menu
+  ENDMETHOD.
 
 
   METHOD constructor.
     super->constructor( ).
     ms_control-page_title = 'HOME'.
     ms_control-page_menu  = build_main_menu( ).
-  ENDMETHOD.  " constructor
+  ENDMETHOD.
 
 
   METHOD render_content.
@@ -128,7 +128,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
       ro_html->add( render_repo( lo_repo ) ).
     ENDIF.
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD render_repo.
@@ -150,7 +150,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     ro_html->add( mo_repo_content->render( ) ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_repo
+  ENDMETHOD.
 
 
   METHOD render_toc.
@@ -249,7 +249,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     ro_html->add( '</div>' ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_toc
+  ENDMETHOD.
 
 
   METHOD retrieve_active_repo.
@@ -280,7 +280,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
           iv_key = mv_show. " Reinit content state
     ENDIF.
 
-  ENDMETHOD.  "retrieve_active_repo
+  ENDMETHOD.
 
 
   METHOD test_changed_by.
@@ -351,6 +351,5 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
     ENDCASE.
 
-  ENDMETHOD.  "on_event
-
+  ENDMETHOD.
 ENDCLASS.
