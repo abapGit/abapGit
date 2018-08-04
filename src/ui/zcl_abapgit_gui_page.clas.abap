@@ -109,7 +109,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     lv_link_hint_key = lo_settings->get_link_hint_key( ).
     lv_background_color = lo_settings->get_link_hint_background_color( ).
 
-    IF lo_settings->get_link_hints( ) = abap_true
+    IF lo_settings->get_link_hints_enabled( ) = abap_true
     AND lv_link_hint_key IS NOT INITIAL.
       ro_html->add( |setLinkHints("{ lv_link_hint_key }","{ lv_background_color }");| ).
       ro_html->add( |setInitialFocusWithQuerySelector('a span', true);| ).

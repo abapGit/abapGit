@@ -327,7 +327,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
            max_lines                  TYPE i,
            adt_jump_enabled           TYPE abap_bool,
            show_default_repo          TYPE abap_bool,
-           link_hints                 TYPE abap_bool,
+           link_hints_enabled         TYPE abap_bool,
            link_hint_key              TYPE char01,
            link_hint_background_color TYPE string,
          END OF ty_s_user_settings.

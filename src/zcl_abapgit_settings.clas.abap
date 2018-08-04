@@ -83,12 +83,12 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
       set_show_default_repo
         IMPORTING
           iv_show_default_repo TYPE abap_bool,
-      set_link_hints
+      set_link_hints_enabled
         IMPORTING
-          iv_link_hints TYPE abap_bool,
-      get_link_hints
+          iv_link_hints_enabled TYPE abap_bool,
+      get_link_hints_enabled
         RETURNING
-          VALUE(rv_link_hints) TYPE abap_bool
+          VALUE(rv_link_hints_enabled) TYPE abap_bool
         RAISING
           zcx_abapgit_exception,
       set_link_hint_key
@@ -116,8 +116,13 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
              commitmsg_comment_length TYPE i,
              commitmsg_body_size      TYPE i,
            END OF ty_s_settings.
+
     DATA: ms_settings      TYPE ty_s_settings,
           ms_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
+
+    METHODS:
+      set_default_link_hint_key,
+      set_default_link_hint_bg_color.
 
 ENDCLASS.
 
@@ -146,8 +151,8 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_link_hints.
-    rv_link_hints = ms_user_settings-link_hints.
+  METHOD get_link_hints_enabled.
+    rv_link_hints_enabled = ms_user_settings-link_hints_enabled.
   ENDMETHOD.
 
 
@@ -233,9 +238,19 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
     set_show_default_repo( abap_false ).
     set_commitmsg_comment_length( c_commitmsg_comment_length_dft ).
     set_commitmsg_body_size( c_commitmsg_body_size_dft ).
-    set_link_hint_key( |f| ).
-    set_link_hint_background_color( |yellow| ).
+    set_default_link_hint_key( ).
+    set_default_link_hint_bg_color( ).
 
+  ENDMETHOD.
+
+
+  METHOD set_default_link_hint_bg_color.
+    set_link_hint_background_color( |lightgreen| ).
+  ENDMETHOD.
+
+
+  METHOD set_default_link_hint_key.
+    set_link_hint_key( |f| ).
   ENDMETHOD.
 
 
@@ -244,8 +259,8 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_link_hints.
-    ms_user_settings-link_hints = iv_link_hints.
+  METHOD set_link_hints_enabled.
+    ms_user_settings-link_hints_enabled = iv_link_hints_enabled.
   ENDMETHOD.
 
 
@@ -286,6 +301,14 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
   METHOD set_user_settings.
     ms_user_settings = is_user_settings.
+
+    IF ms_user_settings-link_hint_key IS INITIAL.
+      set_default_link_hint_key( ).
+    ENDIF.
+
+    IF ms_user_settings-link_hint_background_color IS INITIAL.
+      set_default_link_hint_bg_color( ).
+    ENDIF.
   ENDMETHOD.
 
 
