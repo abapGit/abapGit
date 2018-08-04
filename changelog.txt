@@ -8,6 +8,14 @@ Legend
 + : added
 - : removed
 
+2018-08-04 v1.74.0
+------------------
+- Stage button in diff screen removed
++ Vimium like link hint navigation, enable in settings
+* ecatt downport
+* Performance optimizations
+* SSFO fix jump to text module
+
 2018-07-29 v1.73.0
 ------------------
 ! Background mode must be reconfigured after installing this version
