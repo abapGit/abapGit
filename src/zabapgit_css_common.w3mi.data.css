@@ -20,6 +20,10 @@ a:hover, a:active {
   text-decoration: underline;
 }
 
+#abapGitLogo {
+  outline: none;
+}
+
 img               { border: 0px; vertical-align: middle; }
 table             { border-collapse: collapse; }
 pre               { display: inline; }
@@ -661,6 +665,7 @@ div.tutorial h2 {
 .nav-container.float-right ul ul { left: auto; right: 0; }
 
 .nav-container ul li.current-menu-item { font-weight: 700; }
+.nav-container ul li.block ul { display: block; }
 .nav-container ul li:hover > ul { display: block; }
 .nav-container ul ul li:hover { background-color: #f6f6f6; }
 
@@ -823,4 +828,40 @@ div.news .version-marker {
 div.news .update {
   border: #e8ba30 1px solid;
   background-color: #f5c538;
+}
+
+/* Tooltip text */
+.tooltiptext {
+    line-height: 15px;
+    width: 60px;
+    color: #000;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+
+    /* Position the tooltip text */
+    position: absolute;
+    z-index: 1;
+    margin-left: -60px;
+    margin-top: -30px;
+
+    /* Fade in tooltip */
+    opacity: 1;
+    transition: opacity 0.3s;
+}
+
+.hidden {
+  visibility: hidden;
+}
+
+/* Tooltip arrow */
+.tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
 }

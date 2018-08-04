@@ -151,7 +151,6 @@ CLASS zcl_abapgit_persistence_user DEFINITION
       RAISING
         zcx_abapgit_exception.
   PRIVATE SECTION.
-
     TYPES:
       BEGIN OF ty_repo_config,
         url              TYPE zif_abapgit_persistence=>ty_repo-url,
@@ -337,6 +336,17 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_settings.
+
+    DATA: ls_user TYPE ty_user.
+
+    ls_user = read( ).
+
+    rs_user_settings = ls_user-settings.
+
+  ENDMETHOD.
+
+
   METHOD is_favorite_repo.
 
     DATA: lt_favorites TYPE tt_favorites.
@@ -463,6 +473,17 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_settings.
+
+    DATA: ls_user TYPE ty_user.
+
+    ls_user = read( ).
+    ls_user-settings = is_user_settings.
+    update( ls_user ).
+
+  ENDMETHOD.
+
+
   METHOD toggle_changes_only.
 
     DATA ls_user TYPE ty_user.
@@ -568,25 +589,4 @@ CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
     COMMIT WORK AND WAIT.
 
   ENDMETHOD.  "update_repo_config
-
-  METHOD get_settings.
-
-    DATA: ls_user TYPE ty_user.
-
-    ls_user = read( ).
-
-    rs_user_settings = ls_user-settings.
-
-  ENDMETHOD.
-
-  METHOD set_settings.
-
-    DATA: ls_user TYPE ty_user.
-
-    ls_user = read( ).
-    ls_user-settings = is_user_settings.
-    update( ls_user ).
-
-  ENDMETHOD.
-
 ENDCLASS.

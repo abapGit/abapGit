@@ -1,6 +1,6 @@
 CLASS zcl_abapgit_html DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
@@ -26,7 +26,7 @@ CLASS zcl_abapgit_html DEFINITION
         !iv_opt   TYPE clike OPTIONAL
         !iv_class TYPE string OPTIONAL
         !iv_id    TYPE string OPTIONAL
-        !iv_style TYPE string OPTIONAL .
+        !iv_style TYPE string OPTIONAL.
     METHODS add_icon
       IMPORTING
         !iv_name  TYPE string
@@ -99,7 +99,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
           lv_href  TYPE string,
           lv_click TYPE string,
           lv_id    TYPE string,
-          lv_style TYPE string.
+          lv_style TYPE string,
+          lv_span  TYPE string.
 
     lv_class = iv_class.
 
@@ -140,7 +141,9 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       lv_style = | style="{ iv_style }"|.
     ENDIF.
 
-    rv_str = |<a{ lv_id }{ lv_class }{ lv_href }{ lv_click }{ lv_style }>{ iv_txt }</a>|.
+    lv_span = |<span class="tooltiptext hidden"></span>|.
+
+    rv_str = |<a{ lv_id }{ lv_class }{ lv_href }{ lv_click }{ lv_style }>{ iv_txt }{ lv_span }</a>|.
 
   ENDMETHOD. "a
 

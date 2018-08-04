@@ -10,7 +10,8 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
       zif_abapgit_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
-    METHODS render_content REDEFINITION.
+    METHODS:
+      render_content REDEFINITION.
 
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_actions,
@@ -351,4 +352,5 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.  "on_event
+
 ENDCLASS.

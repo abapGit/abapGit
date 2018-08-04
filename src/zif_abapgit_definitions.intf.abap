@@ -324,9 +324,12 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   TYPES tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY.
 
   TYPES: BEGIN OF ty_s_user_settings,
-           max_lines         TYPE i,
-           adt_jump_enabled  TYPE abap_bool,
-           show_default_repo TYPE abap_bool,
+           max_lines                  TYPE i,
+           adt_jump_enabled           TYPE abap_bool,
+           show_default_repo          TYPE abap_bool,
+           link_hints                 TYPE abap_bool,
+           link_hint_key              TYPE char01,
+           link_hint_background_color TYPE string,
          END OF ty_s_user_settings.
 
   CONSTANTS:
