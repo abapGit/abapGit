@@ -94,10 +94,9 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     CREATE OBJECT lo_page
       EXPORTING
-        iv_key           = lv_key
-        is_file          = ls_file
-        is_object        = ls_object
-        iv_supress_stage = boolc( iv_prev_page = 'PAGE_STAGE' ).
+        iv_key    = lv_key
+        is_file   = ls_file
+        is_object = ls_object.
 
     ri_page = lo_page.
 
