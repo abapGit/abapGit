@@ -133,11 +133,11 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
       mo_settings->set_adt_jump_enanbled( abap_false ).
     ENDIF.
 
-    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'link_hints'.
+    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'link_hints_enabled'.
     IF sy-subrc = 0.
-      mo_settings->set_link_hints( abap_true ).
+      mo_settings->set_link_hints_enabled( abap_true ).
     ELSE.
-      mo_settings->set_link_hints( abap_false ).
+      mo_settings->set_link_hints_enabled( abap_false ).
     ENDIF.
 
     READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'link_hint_key'.
@@ -435,7 +435,7 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
           lv_link_hint_key         TYPE char01,
           lv_link_background_color TYPE string.
 
-    IF mo_settings->get_link_hints( ) = abap_true.
+    IF mo_settings->get_link_hints_enabled( ) = abap_true.
       lv_checked = 'checked'.
     ENDIF.
 
@@ -444,7 +444,7 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
     ro_html->add( |<h2>Vimium like link hints</h2>| ).
-    ro_html->add( `<input type="checkbox" name="link_hints" value="X" `
+    ro_html->add( `<input type="checkbox" name="link_hints_enabled" value="X" `
                    && lv_checked && ` > Enable Vimium like link hints` ).
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).
@@ -454,7 +454,7 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
     ro_html->add( |<br>| ).
     ro_html->add( |<input type="text" name="link_hint_background_color" size="20" maxlength="20"|
                && | value="{ lv_link_background_color }"|
-               && |> Background Color| ).
+               && |> Background Color (HTML colors e.g. lightgreen or #42f47a)| ).
 
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).
