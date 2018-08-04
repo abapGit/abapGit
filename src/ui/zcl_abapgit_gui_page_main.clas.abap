@@ -15,9 +15,10 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
 
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_actions,
-                 show       TYPE string VALUE 'show' ##NO_TEXT,
-                 changed_by TYPE string VALUE 'changed_by',
-                 overview   TYPE string VALUE 'overview',
+                 show          TYPE string VALUE 'show' ##NO_TEXT,
+                 changed_by    TYPE string VALUE 'changed_by',
+                 overview      TYPE string VALUE 'overview',
+                 documentation TYPE string VALUE 'documentation',
                END OF c_actions.
 
     DATA: mv_show         TYPE zif_abapgit_persistence=>ty_value,
@@ -75,8 +76,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
     lo_helpsub->add( iv_txt = 'Tutorial'
                      iv_act = zif_abapgit_definitions=>gc_action-go_tutorial ) ##NO_TEXT.
-    lo_helpsub->add( iv_txt = 'abapGit wiki'
-                     iv_act = zif_abapgit_definitions=>gc_action-abapgit_wiki ) ##NO_TEXT.
+    lo_helpsub->add( iv_txt = 'Documentation'
+                     iv_act = c_actions-documentation ) ##NO_TEXT.
 
     ro_menu->add( iv_txt = '+ Online'
                   iv_act = zif_abapgit_definitions=>gc_action-repo_newonline ) ##NO_TEXT.
@@ -330,25 +331,23 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
     lv_key = iv_getdata.
 
     CASE iv_action.
-      WHEN c_actions-show.              " Change displayed repo
+      WHEN c_actions-show.
         zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
         TRY.
             zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->refresh( ).
           CATCH zcx_abapgit_exception ##NO_HANDLER.
         ENDTRY.
-
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN c_actions-changed_by.
         test_changed_by( ).
         ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
-
+      WHEN c_actions-documentation.
+        zcl_abapgit_services_abapgit=>open_abapgit_wikipage( ).
+        ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
       WHEN c_actions-overview.
-
         CREATE OBJECT li_repo_overview TYPE zcl_abapgit_gui_page_repo_over.
-
         ei_page = li_repo_overview.
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
-
     ENDCASE.
 
   ENDMETHOD.
