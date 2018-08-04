@@ -1,24 +1,38 @@
-CLASS zcl_abapgit_log DEFINITION PUBLIC CREATE PUBLIC.
+CLASS zcl_abapgit_log DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    METHODS:
-      add
-        IMPORTING
-          iv_msg  TYPE csequence
-          iv_type TYPE symsgty   DEFAULT 'E'
-          iv_rc   TYPE balsort   OPTIONAL,
-      count
-        RETURNING VALUE(rv_count) TYPE i,
-      to_html
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
-      clear,
-      has_rc "For unit tests mainly
-        IMPORTING iv_rc         TYPE balsort
-        RETURNING VALUE(rv_yes) TYPE abap_bool,
-      show
-        IMPORTING
-          iv_header_text TYPE csequence DEFAULT 'Log'.
 
+    METHODS add
+      IMPORTING
+        !iv_msg  TYPE csequence
+        !iv_type TYPE symsgty DEFAULT 'E'
+        !iv_rc   TYPE balsort OPTIONAL .
+    METHODS add_error
+      IMPORTING
+        !iv_msg TYPE csequence .
+    METHODS add_info
+      IMPORTING
+        !iv_msg TYPE csequence .
+    METHODS add_warning
+      IMPORTING
+        !iv_msg TYPE csequence .
+    METHODS count
+      RETURNING
+        VALUE(rv_count) TYPE i .
+    METHODS to_html
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    METHODS clear .
+    METHODS has_rc
+      IMPORTING
+        !iv_rc        TYPE balsort
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool .
+    METHODS show
+      IMPORTING
+        !iv_header_text TYPE csequence DEFAULT 'Log' .
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_log,
              msg  TYPE string,
@@ -59,6 +73,30 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD add_error.
+
+    add( iv_msg  = iv_msg
+         iv_type = 'E' ).
+
+  ENDMETHOD.
+
+
+  METHOD add_info.
+
+    add( iv_msg  = iv_msg
+         iv_type = 'I' ).
+
+  ENDMETHOD.
+
+
+  METHOD add_warning.
+
+    add( iv_msg  = iv_msg
+         iv_type = 'W' ).
+
+  ENDMETHOD.
+
+
   METHOD clear.
     CLEAR mt_log.
   ENDMETHOD.
@@ -70,6 +108,8 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
 
 
   METHOD has_rc.
+* todo, this method is only used in unit tests
+
     READ TABLE mt_log WITH KEY rc = iv_rc TRANSPORTING NO FIELDS.
     rv_yes = boolc( sy-subrc = 0 ).
   ENDMETHOD.
