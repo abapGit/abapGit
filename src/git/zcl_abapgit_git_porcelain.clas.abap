@@ -434,25 +434,11 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
 
     CLEAR et_updated_files.
 
-    IF io_stage->get_branch_sha1( ) = io_repo->get_sha1_remote( ).
-* objects cached in io_repo can be used, if pushing to the branch configured in repo
-      lt_objects = io_repo->get_objects( ).
-    ELSE.
-      APPEND INITIAL LINE TO lt_branches ASSIGNING <ls_branch>.
-      <ls_branch>-name = io_stage->get_branch_name( ).
-      <ls_branch>-sha1 = io_stage->get_branch_sha1( ).
-
-      zcl_abapgit_git_transport=>upload_pack(
-        EXPORTING
-          iv_url         = io_repo->get_url( )
-          iv_branch_name = io_repo->get_branch_name( )
-          it_branches    = lt_branches
-        IMPORTING
-          et_objects     = lt_objects ).
-    ENDIF.
+* assumption: push is done on top of the currently selected branch
+    lt_objects = io_repo->get_objects( ).
 
     lt_expanded = full_tree( it_objects = lt_objects
-                             iv_branch  = io_stage->get_branch_sha1( ) ).
+                             iv_branch  = io_repo->get_sha1_remote( ) ).
 
     lt_stage = io_stage->get_all( ).
     LOOP AT lt_stage ASSIGNING <ls_stage>.
@@ -582,7 +568,7 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
     ENDIF.
 
     ls_commit-tree      = <ls_tree>-sha1.
-    ls_commit-parent    = io_stage->get_branch_sha1( ).
+    ls_commit-parent    = io_repo->get_sha1_remote( ).
     ls_commit-parent2   = io_stage->get_merge_source( ).
     ls_commit-body      = is_comment-comment.
     lv_commit = zcl_abapgit_git_pack=>encode_commit( ls_commit ).
@@ -636,9 +622,9 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
 
     zcl_abapgit_git_transport=>receive_pack(
       iv_url         = io_repo->get_url( )
-      iv_old         = io_stage->get_branch_sha1( )
+      iv_old         = io_repo->get_sha1_remote( )
       iv_new         = rv_branch
-      iv_branch_name = io_stage->get_branch_name( )
+      iv_branch_name = io_repo->get_branch_name( )
       iv_pack        = lv_pack ).
 
 * update objects in repo, we know what has been pushed
