@@ -200,8 +200,8 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
     ENDIF.
 
     zcl_abapgit_git_porcelain=>delete_tag(
-      io_repo = lo_repo
-      is_tag  = ls_tag ).
+      iv_url = lo_repo->get_url( )
+      is_tag = ls_tag ).
 
     lv_text = |Tag { zcl_abapgit_tag=>remove_tag_prefix( ls_tag-name ) } deleted| ##NO_TEXT.
 
