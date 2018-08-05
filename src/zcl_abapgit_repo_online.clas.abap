@@ -349,7 +349,8 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     zcl_abapgit_git_porcelain=>pull(
       EXPORTING
-        io_repo        = me
+        iv_url         = get_url( )
+        iv_branch_name = get_branch_name( )
       IMPORTING
         et_files       = mt_remote
         et_objects     = mt_objects
