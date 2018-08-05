@@ -46,8 +46,8 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS delete_tag
       IMPORTING
-        !io_repo TYPE REF TO zcl_abapgit_repo_online
-        !is_tag  TYPE zif_abapgit_definitions=>ty_git_tag
+        !iv_url TYPE string
+        !is_tag TYPE zif_abapgit_definitions=>ty_git_tag
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS full_tree
@@ -312,7 +312,7 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
     lv_pack = zcl_abapgit_git_pack=>encode( lt_objects ).
 
     zcl_abapgit_git_transport=>receive_pack(
-      iv_url         = io_repo->get_url( )
+      iv_url         = iv_url
       iv_old         = is_tag-sha1
       iv_new         = c_zero
       iv_branch_name = is_tag-name
