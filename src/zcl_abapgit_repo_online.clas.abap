@@ -53,13 +53,9 @@ CLASS zcl_abapgit_repo_online DEFINITION
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception .
-    METHODS reset_status .
     METHODS set_objects
       IMPORTING
         !it_objects TYPE zif_abapgit_definitions=>ty_objects_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS initialize
       RAISING
         zcx_abapgit_exception .
     METHODS push
@@ -89,6 +85,10 @@ CLASS zcl_abapgit_repo_online DEFINITION
     DATA mv_initialized TYPE abap_bool .
     DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
 
+    METHODS reset_status .
+    METHODS initialize
+      RAISING
+        zcx_abapgit_exception .
     METHODS handle_stage_ignore
       IMPORTING
         !io_stage TYPE REF TO zcl_abapgit_stage
@@ -96,7 +96,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
         zcx_abapgit_exception .
     METHODS actualize_head_branch
       IMPORTING
-        io_branch_list TYPE REF TO zcl_abapgit_git_branch_list
+        !io_branch_list TYPE REF TO zcl_abapgit_git_branch_list
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.

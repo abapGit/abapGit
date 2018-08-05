@@ -49,7 +49,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
 
   METHOD add.
@@ -125,6 +125,28 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     mv_init = abap_true.
 
   ENDMETHOD.                    "refresh
+
+
+  METHOD validate_sub_super_packages.
+    DATA:
+      ls_repo     LIKE LINE OF it_repos,
+      lo_package  TYPE REF TO zif_abapgit_sap_package,
+      lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
+      lo_repo     TYPE REF TO zcl_abapgit_repo.
+
+    LOOP AT it_repos INTO ls_repo.
+      lo_repo = get( ls_repo-key ).
+
+      lo_package = zcl_abapgit_factory=>get_sap_package( ls_repo-package ).
+      APPEND LINES OF lo_package->list_subpackages( ) TO lt_packages.
+      APPEND LINES OF lo_package->list_superpackages( ) TO lt_packages.
+      READ TABLE lt_packages TRANSPORTING NO FIELDS
+        WITH KEY table_line = iv_package.
+      IF sy-subrc = 0.
+        zcx_abapgit_exception=>raise( |Repository { lo_repo->get_name( ) } already contains { iv_package } | ).
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_repo_srv~delete.
@@ -264,7 +286,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     add( ro_repo ).
 
-    ro_repo->initialize( ).
+    ro_repo->refresh( ).
     ro_repo->find_remote_dot_abapgit( ).
 
   ENDMETHOD.
@@ -360,26 +382,4 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       iv_package = iv_package
       it_repos   = lt_repos ).
   ENDMETHOD.
-
-  METHOD validate_sub_super_packages.
-    DATA:
-      ls_repo     LIKE LINE OF it_repos,
-      lo_package  TYPE REF TO zif_abapgit_sap_package,
-      lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
-      lo_repo     TYPE REF TO zcl_abapgit_repo.
-
-    LOOP AT it_repos INTO ls_repo.
-      lo_repo = get( ls_repo-key ).
-
-      lo_package = zcl_abapgit_factory=>get_sap_package( ls_repo-package ).
-      APPEND LINES OF lo_package->list_subpackages( ) TO lt_packages.
-      APPEND LINES OF lo_package->list_superpackages( ) TO lt_packages.
-      READ TABLE lt_packages TRANSPORTING NO FIELDS
-        WITH KEY table_line = iv_package.
-      IF sy-subrc = 0.
-        zcx_abapgit_exception=>raise( |Repository { lo_repo->get_name( ) } already contains { iv_package } | ).
-      ENDIF.
-    ENDLOOP.
-  ENDMETHOD.
-
 ENDCLASS.
