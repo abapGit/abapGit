@@ -34,12 +34,6 @@ CLASS zcl_abapgit_repo_online DEFINITION
         !iv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name
       RAISING
         zcx_abapgit_exception .
-    METHODS set_new_remote
-      IMPORTING
-        !iv_url         TYPE zif_abapgit_persistence=>ty_repo-url
-        !iv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name
-      RAISING
-        zcx_abapgit_exception .
     METHODS get_sha1_remote
       RETURNING
         VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
@@ -338,20 +332,6 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     set( iv_branch_name = iv_branch_name ).
 
   ENDMETHOD.
-
-
-  METHOD set_new_remote.
-
-    IF ms_data-local_settings-write_protected = abap_true.
-      zcx_abapgit_exception=>raise( 'Cannot change remote. Local code is write-protected by repo config' ).
-    ENDIF.
-
-    mv_initialized = abap_false.
-    set( iv_url         = iv_url
-         iv_branch_name = iv_branch_name
-         iv_head_branch = '' ).
-
-  ENDMETHOD.  "set_new_remote
 
 
   METHOD set_objects.

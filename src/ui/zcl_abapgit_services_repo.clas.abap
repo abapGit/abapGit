@@ -97,7 +97,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
 
   METHOD gui_deserialize.
@@ -422,8 +422,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     ENDIF.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    lo_repo->set_new_remote( iv_url         = ls_popup-url
-                             iv_branch_name = ls_popup-branch_name ).
+    lo_repo->set_url( ls_popup-url ).
+    lo_repo->set_branch_name( ls_popup-branch_name ).
 
     COMMIT WORK.
 
