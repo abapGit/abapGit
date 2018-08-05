@@ -53,10 +53,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     lv_text = zcl_abapgit_git_branch_list=>get_display_name( iv_branch ).
 
-    IF iv_branch = io_repo->get_head_branch_name( )
-       OR iv_branch = zif_abapgit_definitions=>c_head_name.
-      lv_class = 'branch branch_head'.
-    ELSEIF zcl_abapgit_git_branch_list=>get_type( iv_branch ) = zif_abapgit_definitions=>c_git_branch_type-branch.
+    IF zcl_abapgit_git_branch_list=>get_type( iv_branch ) = zif_abapgit_definitions=>c_git_branch_type-branch.
       lv_class = 'branch branch_branch'.
     ELSE.
       lv_class = 'branch'.
