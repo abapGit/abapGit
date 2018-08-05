@@ -6,6 +6,13 @@ CLASS zcl_abapgit_repo_online DEFINITION
 
   PUBLIC SECTION.
 
+    INTERFACES zif_abapgit_git_operations .
+
+    ALIASES create_branch
+      FOR zif_abapgit_git_operations~create_branch .
+    ALIASES push
+      FOR zif_abapgit_git_operations~push .
+
     METHODS constructor
       IMPORTING
         !is_data TYPE zif_abapgit_persistence=>ty_repo
@@ -55,21 +62,9 @@ CLASS zcl_abapgit_repo_online DEFINITION
         !it_objects TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception .
-    METHODS push
-      IMPORTING
-        !is_comment TYPE zif_abapgit_definitions=>ty_comment
-        !io_stage   TYPE REF TO zcl_abapgit_stage
-      RAISING
-        zcx_abapgit_exception .
     METHODS get_unnecessary_local_objs
       RETURNING
         VALUE(rt_unnecessary_local_objects) TYPE zif_abapgit_definitions=>ty_tadir_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS create_branch
-      IMPORTING
-        !iv_name TYPE string
-        !iv_from TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
       RAISING
         zcx_abapgit_exception .
 
@@ -111,29 +106,6 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     mv_initialized = abap_false.
 
   ENDMETHOD.                    "constructor
-
-
-  METHOD create_branch.
-
-    DATA: lv_sha1 TYPE zif_abapgit_definitions=>ty_sha1.
-
-    ASSERT iv_name CP 'refs/heads/+*'.
-
-    IF iv_from IS INITIAL.
-      lv_sha1 = get_sha1_remote( ).
-    ELSE.
-      lv_sha1 = iv_from.
-    ENDIF.
-
-    zcl_abapgit_git_porcelain=>create_branch(
-      iv_url  = get_url( )
-      iv_name = iv_name
-      iv_from = lv_sha1 ).
-
-    " automatically switch to new branch
-    set_branch_name( iv_name ).
-
-  ENDMETHOD.
 
 
   METHOD deserialize.
@@ -268,45 +240,6 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
       refresh( ).
     ENDIF.
   ENDMETHOD.
-
-
-  METHOD push.
-
-    DATA: lv_branch        TYPE zif_abapgit_definitions=>ty_sha1,
-          lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
-          lv_text          TYPE string.
-
-    IF ms_data-branch_name CP 'refs/tags*'.
-      lv_text = |You're working on a tag. Currently it's not |
-             && |possible to push on tags. Consider creating a branch instead|.
-      zcx_abapgit_exception=>raise( lv_text ).
-    ENDIF.
-
-    handle_stage_ignore( io_stage ).
-
-    IF ms_data-local_settings-block_commit = abap_true
-    AND mv_code_inspector_successful = abap_false.
-      zcx_abapgit_exception=>raise( |A successful code inspection is required| ).
-    ENDIF.
-
-    zcl_abapgit_git_porcelain=>push( EXPORTING is_comment       = is_comment
-                                               io_repo          = me
-                                               io_stage         = io_stage
-                                     IMPORTING ev_branch        = lv_branch
-                                               et_updated_files = lt_updated_files ).
-
-    IF io_stage->get_branch_sha1( ) = get_sha1_remote( ).
-* pushing to the branch currently represented by this repository object      mv_branch = lv_branch.
-      mv_branch = lv_branch.
-    ELSE.
-      refresh( ).
-    ENDIF.
-
-    update_local_checksums( lt_updated_files ).
-
-    CLEAR: mv_code_inspector_successful.
-
-  ENDMETHOD.                    "push
 
 
   METHOD rebuild_local_checksums. "REMOTE
@@ -449,4 +382,66 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     rt_results = mt_status.
 
   ENDMETHOD.                    "status
+
+
+  METHOD zif_abapgit_git_operations~create_branch.
+
+    DATA: lv_sha1 TYPE zif_abapgit_definitions=>ty_sha1.
+
+    ASSERT iv_name CP 'refs/heads/+*'.
+
+    IF iv_from IS INITIAL.
+      lv_sha1 = get_sha1_remote( ).
+    ELSE.
+      lv_sha1 = iv_from.
+    ENDIF.
+
+    zcl_abapgit_git_porcelain=>create_branch(
+      iv_url  = get_url( )
+      iv_name = iv_name
+      iv_from = lv_sha1 ).
+
+    " automatically switch to new branch
+    set_branch_name( iv_name ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_git_operations~push.
+
+    DATA: lv_branch        TYPE zif_abapgit_definitions=>ty_sha1,
+          lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
+          lv_text          TYPE string.
+
+    IF ms_data-branch_name CP 'refs/tags*'.
+      lv_text = |You're working on a tag. Currently it's not |
+             && |possible to push on tags. Consider creating a branch instead|.
+      zcx_abapgit_exception=>raise( lv_text ).
+    ENDIF.
+
+    handle_stage_ignore( io_stage ).
+
+    IF ms_data-local_settings-block_commit = abap_true
+    AND mv_code_inspector_successful = abap_false.
+      zcx_abapgit_exception=>raise( |A successful code inspection is required| ).
+    ENDIF.
+
+    zcl_abapgit_git_porcelain=>push( EXPORTING is_comment       = is_comment
+                                               io_repo          = me
+                                               io_stage         = io_stage
+                                     IMPORTING ev_branch        = lv_branch
+                                               et_updated_files = lt_updated_files ).
+
+    IF io_stage->get_branch_sha1( ) = get_sha1_remote( ).
+* pushing to the branch currently represented by this repository object      mv_branch = lv_branch.
+      mv_branch = lv_branch.
+    ELSE.
+      refresh( ).
+    ENDIF.
+
+    update_local_checksums( lt_updated_files ).
+
+    CLEAR: mv_code_inspector_successful.
+
+  ENDMETHOD.
 ENDCLASS.
