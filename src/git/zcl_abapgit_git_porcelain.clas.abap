@@ -34,8 +34,8 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS create_tag
       IMPORTING
-        !io_repo TYPE REF TO zcl_abapgit_repo_online
-        !is_tag  TYPE zif_abapgit_definitions=>ty_git_tag
+        !iv_url TYPE string
+        !is_tag TYPE zif_abapgit_definitions=>ty_git_tag
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS delete_branch
@@ -59,75 +59,85 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
-    TYPES: BEGIN OF ty_tree,
-             path TYPE string,
-             data TYPE xstring,
-             sha1 TYPE zif_abapgit_definitions=>ty_sha1,
-           END OF ty_tree.
 
-    TYPES: ty_trees_tt TYPE STANDARD TABLE OF ty_tree WITH DEFAULT KEY.
+    TYPES:
+      BEGIN OF ty_tree,
+        path TYPE string,
+        data TYPE xstring,
+        sha1 TYPE zif_abapgit_definitions=>ty_sha1,
+      END OF ty_tree .
+    TYPES:
+      ty_trees_tt TYPE STANDARD TABLE OF ty_tree WITH DEFAULT KEY .
+    TYPES:
+      BEGIN OF ty_folder,
+        path  TYPE string,
+        count TYPE i,
+        sha1  TYPE zif_abapgit_definitions=>ty_sha1,
+      END OF ty_folder .
+    TYPES:
+      ty_folders_tt TYPE STANDARD TABLE OF ty_folder WITH DEFAULT KEY .
 
-    TYPES: BEGIN OF ty_folder,
-             path  TYPE string,
-             count TYPE i,
-             sha1  TYPE zif_abapgit_definitions=>ty_sha1,
-           END OF ty_folder.
-
-    TYPES: ty_folders_tt TYPE STANDARD TABLE OF ty_folder WITH DEFAULT KEY.
-
-    CONSTANTS: c_zero TYPE zif_abapgit_definitions=>ty_sha1 VALUE '0000000000000000000000000000000000000000'.
+    CONSTANTS c_zero TYPE zif_abapgit_definitions=>ty_sha1 VALUE '0000000000000000000000000000000000000000' ##NO_TEXT.
 
     CLASS-METHODS build_trees
-      IMPORTING it_expanded     TYPE zif_abapgit_definitions=>ty_expanded_tt
-      RETURNING VALUE(rt_trees) TYPE ty_trees_tt
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !it_expanded    TYPE zif_abapgit_definitions=>ty_expanded_tt
+      RETURNING
+        VALUE(rt_trees) TYPE ty_trees_tt
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS find_folders
-      IMPORTING it_expanded       TYPE zif_abapgit_definitions=>ty_expanded_tt
-      RETURNING VALUE(rt_folders) TYPE ty_folders_tt.
-
+      IMPORTING
+        !it_expanded      TYPE zif_abapgit_definitions=>ty_expanded_tt
+      RETURNING
+        VALUE(rt_folders) TYPE ty_folders_tt .
     CLASS-METHODS walk
-      IMPORTING it_objects TYPE zif_abapgit_definitions=>ty_objects_tt
-                iv_sha1    TYPE zif_abapgit_definitions=>ty_sha1
-                iv_path    TYPE string
-      CHANGING  ct_files   TYPE zif_abapgit_definitions=>ty_files_tt
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !it_objects TYPE zif_abapgit_definitions=>ty_objects_tt
+        !iv_sha1    TYPE zif_abapgit_definitions=>ty_sha1
+        !iv_path    TYPE string
+      CHANGING
+        !ct_files   TYPE zif_abapgit_definitions=>ty_files_tt
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS walk_tree
-      IMPORTING it_objects         TYPE zif_abapgit_definitions=>ty_objects_tt
-                iv_tree            TYPE zif_abapgit_definitions=>ty_sha1
-                iv_base            TYPE string
-      RETURNING VALUE(rt_expanded) TYPE zif_abapgit_definitions=>ty_expanded_tt
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !it_objects        TYPE zif_abapgit_definitions=>ty_objects_tt
+        !iv_tree           TYPE zif_abapgit_definitions=>ty_sha1
+        !iv_base           TYPE string
+      RETURNING
+        VALUE(rt_expanded) TYPE zif_abapgit_definitions=>ty_expanded_tt
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS receive_pack_push
-      IMPORTING is_comment       TYPE zif_abapgit_definitions=>ty_comment
-                io_repo          TYPE REF TO zcl_abapgit_repo_online
-                it_trees         TYPE ty_trees_tt
-                it_blobs         TYPE zif_abapgit_definitions=>ty_files_tt
-                io_stage         TYPE REF TO zcl_abapgit_stage
-      RETURNING VALUE(rv_branch) TYPE zif_abapgit_definitions=>ty_sha1
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !is_comment      TYPE zif_abapgit_definitions=>ty_comment
+        !io_repo         TYPE REF TO zcl_abapgit_repo_online
+        !it_trees        TYPE ty_trees_tt
+        !it_blobs        TYPE zif_abapgit_definitions=>ty_files_tt
+        !io_stage        TYPE REF TO zcl_abapgit_stage
+      RETURNING
+        VALUE(rv_branch) TYPE zif_abapgit_definitions=>ty_sha1
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS receive_pack_create_tag
-      IMPORTING is_tag  TYPE zif_abapgit_definitions=>ty_git_tag
-                io_repo TYPE REF TO zcl_abapgit_repo_online
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !is_tag TYPE zif_abapgit_definitions=>ty_git_tag
+        !iv_url TYPE string
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS create_annotated_tag
       IMPORTING
-        is_tag  TYPE zif_abapgit_definitions=>ty_git_tag
-        io_repo TYPE REF TO zcl_abapgit_repo_online
+        !is_tag TYPE zif_abapgit_definitions=>ty_git_tag
+        !iv_url TYPE string
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     CLASS-METHODS create_lightweight_tag
       IMPORTING
-        is_tag  TYPE zif_abapgit_definitions=>ty_git_tag
-        io_repo TYPE REF TO zcl_abapgit_repo_online
+        !is_tag TYPE zif_abapgit_definitions=>ty_git_tag
+        !iv_url TYPE string
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -195,8 +205,8 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
   METHOD create_annotated_tag.
 
     receive_pack_create_tag(
-        is_tag  = is_tag
-        io_repo = io_repo ).
+      is_tag = is_tag
+      iv_url = iv_url ).
 
   ENDMETHOD.
 
@@ -234,7 +244,7 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
     lv_pack = zcl_abapgit_git_pack=>encode( lt_objects ).
 
     zcl_abapgit_git_transport=>receive_pack(
-      iv_url         = io_repo->get_url( )
+      iv_url         = iv_url
       iv_old         = c_zero
       iv_new         = is_tag-sha1
       iv_branch_name = is_tag-name
@@ -253,14 +263,14 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
 
         create_annotated_tag(
-            is_tag  = is_tag
-            io_repo = io_repo ).
+          is_tag = is_tag
+          iv_url = iv_url ).
 
       WHEN  zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
 
         create_lightweight_tag(
-            is_tag  = is_tag
-            io_repo = io_repo ).
+          is_tag = is_tag
+          iv_url = iv_url ).
 
       WHEN OTHERS.
 
@@ -532,7 +542,7 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
     lv_pack = zcl_abapgit_git_pack=>encode( lt_objects ).
 
     zcl_abapgit_git_transport=>receive_pack(
-      iv_url         = io_repo->get_url( )
+      iv_url         = iv_url
       iv_old         = c_zero
       iv_new         = lv_new_tag_sha1
       iv_branch_name = is_tag-name
