@@ -7,7 +7,8 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
 
     CLASS-METHODS pull
       IMPORTING
-        !io_repo        TYPE REF TO zcl_abapgit_repo_online
+        !iv_url         TYPE string
+        !iv_branch_name TYPE string
       EXPORTING
         !et_files       TYPE zif_abapgit_definitions=>ty_files_tt
         !et_objects     TYPE zif_abapgit_definitions=>ty_objects_tt
@@ -394,8 +395,8 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
 
     zcl_abapgit_git_transport=>upload_pack(
       EXPORTING
-        iv_url         = io_repo->get_url( )
-        iv_branch_name = io_repo->get_branch_name( )
+        iv_url         = iv_url
+        iv_branch_name = iv_branch_name
       IMPORTING
         et_objects     = et_objects
         ev_branch      = ev_branch
