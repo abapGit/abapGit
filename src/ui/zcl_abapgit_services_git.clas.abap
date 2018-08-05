@@ -178,12 +178,12 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
     ENDIF.
 
     zcl_abapgit_git_porcelain=>delete_branch(
-      io_repo   = lo_repo
+      iv_url    = lo_repo->get_url( )
       is_branch = ls_branch ).
 
     MESSAGE 'Branch deleted' TYPE 'S'.
 
-  ENDMETHOD.  "delete_branch
+  ENDMETHOD.
 
 
   METHOD delete_tag.
