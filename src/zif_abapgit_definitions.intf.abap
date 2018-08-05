@@ -403,7 +403,6 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       repo_code_inspector      TYPE string VALUE 'repo_code_inspector',
 
       abapgit_home             TYPE string VALUE 'abapgit_home',
-      abapgit_wiki             TYPE string VALUE 'abapgit_wiki',
       abapgit_install          TYPE string VALUE 'abapgit_install',
 
       zip_import               TYPE string VALUE 'zip_import',

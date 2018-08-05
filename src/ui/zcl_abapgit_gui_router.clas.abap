@@ -44,7 +44,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_router IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
 
   METHOD get_page_background.
@@ -259,9 +259,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>gc_action-abapgit_home.                    " Go abapGit homepage
         zcl_abapgit_services_abapgit=>open_abapgit_homepage( ).
         ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
-      WHEN zif_abapgit_definitions=>gc_action-abapgit_wiki.                    " Go abapGit wikipage
-        zcl_abapgit_services_abapgit=>open_abapgit_wikipage( ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
+
       WHEN zif_abapgit_definitions=>gc_action-abapgit_install.                 " Install abapGit
         zcl_abapgit_services_abapgit=>install_abapgit( ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
