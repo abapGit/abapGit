@@ -4,6 +4,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+
     CLASS-METHODS pull
       IMPORTING
         !io_repo        TYPE REF TO zcl_abapgit_repo_online
@@ -26,15 +27,15 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS create_branch
       IMPORTING
-        !io_repo TYPE REF TO zcl_abapgit_repo_online
+        !iv_url  TYPE string
         !iv_name TYPE string
-        iv_from  TYPE zif_abapgit_definitions=>ty_sha1
+        !iv_from TYPE zif_abapgit_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS create_tag
       IMPORTING
         !io_repo TYPE REF TO zcl_abapgit_repo_online
-        is_tag   TYPE zif_abapgit_definitions=>ty_git_tag
+        !is_tag  TYPE zif_abapgit_definitions=>ty_git_tag
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS delete_branch
@@ -56,8 +57,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
       RETURNING
         VALUE(rt_expanded) TYPE zif_abapgit_definitions=>ty_expanded_tt
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_tree,
              path TYPE string,
@@ -132,7 +132,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
 
 
   METHOD build_trees.
@@ -192,6 +192,15 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD create_annotated_tag.
+
+    receive_pack_create_tag(
+        is_tag  = is_tag
+        io_repo = io_repo ).
+
+  ENDMETHOD.
+
+
   METHOD create_branch.
 
     DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
@@ -206,10 +215,29 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
     lv_pack = zcl_abapgit_git_pack=>encode( lt_objects ).
 
     zcl_abapgit_git_transport=>receive_pack(
-      iv_url         = io_repo->get_url( )
+      iv_url         = iv_url
       iv_old         = c_zero
       iv_new         = iv_from
       iv_branch_name = iv_name
+      iv_pack        = lv_pack ).
+
+  ENDMETHOD.
+
+
+  METHOD create_lightweight_tag.
+
+    DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
+          lv_pack    TYPE xstring.
+
+* "client MUST send an empty packfile"
+* https://github.com/git/git/blob/master/Documentation/technical/pack-protocol.txt#L514
+    lv_pack = zcl_abapgit_git_pack=>encode( lt_objects ).
+
+    zcl_abapgit_git_transport=>receive_pack(
+      iv_url         = io_repo->get_url( )
+      iv_old         = c_zero
+      iv_new         = is_tag-sha1
+      iv_branch_name = is_tag-name
       iv_pack        = lv_pack ).
 
   ENDMETHOD.
@@ -699,32 +727,4 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
-  METHOD create_annotated_tag.
-
-    receive_pack_create_tag(
-        is_tag  = is_tag
-        io_repo = io_repo ).
-
-  ENDMETHOD.
-
-
-  METHOD create_lightweight_tag.
-
-    DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
-          lv_pack    TYPE xstring.
-
-* "client MUST send an empty packfile"
-* https://github.com/git/git/blob/master/Documentation/technical/pack-protocol.txt#L514
-    lv_pack = zcl_abapgit_git_pack=>encode( lt_objects ).
-
-    zcl_abapgit_git_transport=>receive_pack(
-      iv_url         = io_repo->get_url( )
-      iv_old         = c_zero
-      iv_new         = is_tag-sha1
-      iv_branch_name = is_tag-name
-      iv_pack        = lv_pack ).
-
-  ENDMETHOD.
-
 ENDCLASS.
