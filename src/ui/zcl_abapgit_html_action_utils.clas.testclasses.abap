@@ -25,24 +25,24 @@ CLASS ltcl_html_action_utils DEFINITION FOR TESTING RISK LEVEL HARMLESS
                   lower_case_ue TYPE string,
                 END OF gs_german_umlaut_as_char.
 
-    DATA m_given_parse_string TYPE string.
+    DATA mv_given_parse_string TYPE string.
     DATA mt_parsed_fields TYPE tihttpnvp.
 
     METHODS _given_string_is
       IMPORTING
-        i_string TYPE string.
+        iv_string TYPE string.
     METHODS _when_fields_are_parsed.
     METHODS _then_fields_should_be
       IMPORTING
-        index TYPE i
-        name  TYPE string
-        value TYPE string.
+        iv_index TYPE i
+        iv_name  TYPE string
+        iv_value TYPE string.
 
     CLASS-METHODS _hex_to_char
       IMPORTING
-        i_x        TYPE xstring
+        iv_x        TYPE xstring
       RETURNING
-        VALUE(r_s) TYPE string.
+        VALUE(rv_s) TYPE string.
 
 ENDCLASS. "ltcl_html_action_utils
 
@@ -70,10 +70,10 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
     ls_field-value = 'TEST'.
     APPEND ls_field TO lt_answer.
 
-    zcl_abapgit_html_action_utils=>add_field( EXPORTING name = 'NAME' iv = 'TEST'
-                                      CHANGING  ct = lt_fields ).
-    zcl_abapgit_html_action_utils=>add_field( EXPORTING name = 'VALUE' iv = ls_field
-                                      CHANGING  ct = lt_fields ).
+    zcl_abapgit_html_action_utils=>add_field( EXPORTING iv_name = 'NAME' ig_field = 'TEST'
+                                      CHANGING  ct_field = lt_fields ).
+    zcl_abapgit_html_action_utils=>add_field( EXPORTING iv_name = 'VALUE' ig_field = ls_field
+                                      CHANGING  ct_field = lt_fields ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_fields
@@ -91,10 +91,10 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
     ls_answer-value = 'TEST'.
     APPEND ls_answer TO lt_fields.
 
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'NAME' it = lt_fields
-                                      CHANGING  cv   = ls_field-value ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'NAME' it = lt_fields
-                                      CHANGING  cv   = ls_field ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'NAME' it_field = lt_fields
+                                      CHANGING  cg_field   = ls_field-value ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'NAME' it_field = lt_fields
+                                      CHANGING  cg_field   = ls_field ).
 
     ls_answer-name  = 'TEST'.
     ls_answer-value = 'TEST'.
@@ -111,7 +111,7 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
     _when_fields_are_parsed( ).
 
-    _then_fields_should_be( index = 1 name = `COMMITTER_NAME` value = `Gustav Gans` ).
+    _then_fields_should_be( iv_index = 1 iv_name = `COMMITTER_NAME` iv_value = `Gustav Gans` ).
 
   ENDMETHOD.
 
@@ -126,29 +126,29 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
     _when_fields_are_parsed( ).
 
-    _then_fields_should_be( index = 1
-                            name  = `COMMITTER_NAME`
-                            value = `Albert Schweitzer` ).
+    _then_fields_should_be( iv_index = 1
+                            iv_name  = `COMMITTER_NAME`
+                            iv_value = `Albert Schweitzer` ).
 
-    _then_fields_should_be( index = 2
-                            name  = `COMMITTER_EMAIL`
-                            value = `albert.schweitzer@googlemail.com` ).
+    _then_fields_should_be( iv_index = 2
+                            iv_name  = `COMMITTER_EMAIL`
+                            iv_value = `albert.schweitzer@googlemail.com` ).
 
-    _then_fields_should_be( index = 3
-                            name  = `COMMENT`
-                            value = `dummy comment` ).
+    _then_fields_should_be( iv_index = 3
+                            iv_name  = `COMMENT`
+                            iv_value = `dummy comment` ).
 
-    _then_fields_should_be( index = 4
-                            name  = `BODY`
-                            value = `Message body<<new>><<new>>with line break<<new>>` ).
+    _then_fields_should_be( iv_index = 4
+                            iv_name  = `BODY`
+                            iv_value = `Message body<<new>><<new>>with line break<<new>>` ).
 
-    _then_fields_should_be( index = 5
-                            name  = `AUTHOR_NAME`
-                            value = `Karl Klammer` ).
+    _then_fields_should_be( iv_index = 5
+                            iv_name  = `AUTHOR_NAME`
+                            iv_value = `Karl Klammer` ).
 
-    _then_fields_should_be( index = 6
-                            name  = `AUTHOR_EMAIL`
-                            value = `karl@klammer.com` ).
+    _then_fields_should_be( iv_index = 6
+                            iv_name  = `AUTHOR_EMAIL`
+                            iv_value = `karl@klammer.com` ).
 
   ENDMETHOD.
 
@@ -159,9 +159,9 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
     _when_fields_are_parsed( ).
 
-    _then_fields_should_be( index = 1
-                            name  = '/SRC/ZFOOBAR.PROG.ABAP'
-                            value = '?' ).
+    _then_fields_should_be( iv_index = 1
+                            iv_name  = '/SRC/ZFOOBAR.PROG.ABAP'
+                            iv_value = '?' ).
 
   ENDMETHOD.
 
@@ -188,41 +188,41 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
     _when_fields_are_parsed( ).
 
-    _then_fields_should_be( index = 1
-                            name  = `COMMITTER_NAME`
-                            value = |Christian G{ lv_ue }nter| ).
+    _then_fields_should_be( iv_index = 1
+                            iv_name  = `COMMITTER_NAME`
+                            iv_value = |Christian G{ lv_ue }nter| ).
 
-    _then_fields_should_be( index = 2
-                            name  = `COMMITTER_EMAIL`
-                            value = `guenne@googlemail.com` ).
+    _then_fields_should_be( iv_index = 2
+                            iv_name  = `COMMITTER_EMAIL`
+                            iv_value = `guenne@googlemail.com` ).
 
-    _then_fields_should_be( index = 3
-                            name  = `COMMENT`
-                            value = lv_ae_oe_ue ).
+    _then_fields_should_be( iv_index = 3
+                            iv_name  = `COMMENT`
+                            iv_value = lv_ae_oe_ue ).
 
-    _then_fields_should_be( index = 4
-                            name  = `BODY`
-                            value = |Message body<<new>><<new>>with line break<<new>>and umlauts. { lv_ae_oe_ue }| ).
+    _then_fields_should_be( iv_index = 4
+                            iv_name  = `BODY`
+                            iv_value = |Message body<<new>><<new>>with line break<<new>>and umlauts. { lv_ae_oe_ue }| ).
 
-    _then_fields_should_be( index = 5
-                            name  = `AUTHOR_NAME`
-                            value = |Gerd Schr{ lv_oe }der| ).
+    _then_fields_should_be( iv_index = 5
+                            iv_name  = `AUTHOR_NAME`
+                            iv_value = |Gerd Schr{ lv_oe }der| ).
 
-    _then_fields_should_be( index = 6
-                            name  = `AUTHOR_EMAIL`
-                            value = `gerd@schroeder.com` ).
+    _then_fields_should_be( iv_index = 6
+                            iv_name  = `AUTHOR_EMAIL`
+                            iv_value = `gerd@schroeder.com` ).
 
   ENDMETHOD.
 
   METHOD _given_string_is.
 
-    m_given_parse_string = i_string.
+    mv_given_parse_string = iv_string.
 
   ENDMETHOD.
 
   METHOD _when_fields_are_parsed.
 
-    mt_parsed_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( m_given_parse_string ).
+    mt_parsed_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( mv_given_parse_string ).
 
   ENDMETHOD.
 
@@ -231,18 +231,18 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_parsed_field> LIKE LINE OF mt_parsed_fields.
 
     READ TABLE mt_parsed_fields ASSIGNING <ls_parsed_field>
-                                INDEX index.
+                                INDEX iv_index.
 
     cl_abap_unit_assert=>assert_subrc( exp = 0
-                                       msg = |No parsed field found at index { index }| ).
+                                       msg = |No parsed field found at index { iv_index }| ).
 
     cl_abap_unit_assert=>assert_equals( act = <ls_parsed_field>-name
-                                        exp = name
-                                        msg = |Name at index { index } should be { name }| ).
+                                        exp = iv_name
+                                        msg = |Name at index { iv_index } should be { iv_name }| ).
 
     cl_abap_unit_assert=>assert_equals( act = <ls_parsed_field>-value
-                                        exp = value
-                                        msg = |Value at index { index } should be { value }| ).
+                                        exp = iv_value
+                                        msg = |Value at index { iv_index } should be { iv_value }| ).
 
   ENDMETHOD.
 
@@ -251,7 +251,7 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
     DATA lo_conv TYPE REF TO cl_abap_conv_in_ce.
 
     lo_conv = cl_abap_conv_in_ce=>create( ).
-    lo_conv->convert( EXPORTING input = i_x IMPORTING data = r_s ).
+    lo_conv->convert( EXPORTING input = iv_x IMPORTING data = rv_s ).
 
   ENDMETHOD.
 

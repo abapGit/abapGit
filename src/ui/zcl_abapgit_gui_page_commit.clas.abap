@@ -27,7 +27,7 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
       IMPORTING
         !it_postdata TYPE cnht_post_data_tab
       EXPORTING
-        !es_fields   TYPE any .
+        !eg_fields   TYPE any .
 
     METHODS render_content
         REDEFINITION .
@@ -79,7 +79,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
     FIELD-SYMBOLS <lv_body> TYPE string.
 
-    CLEAR es_fields.
+    CLEAR eg_fields.
 
     CONCATENATE LINES OF it_postdata INTO lv_string.
     REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_crlf    IN lv_string WITH lc_replace.
@@ -88,42 +88,42 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
     zcl_abapgit_html_action_utils=>get_field(
       EXPORTING
-        name = 'COMMITTER_NAME'
-        it = lt_fields
+        iv_name = 'COMMITTER_NAME'
+        it_field = lt_fields
       CHANGING
-        cv = es_fields ).
+        cg_field = eg_fields ).
     zcl_abapgit_html_action_utils=>get_field(
       EXPORTING
-        name = 'COMMITTER_EMAIL'
-        it = lt_fields
+        iv_name = 'COMMITTER_EMAIL'
+        it_field = lt_fields
       CHANGING
-        cv = es_fields ).
+        cg_field = eg_fields ).
     zcl_abapgit_html_action_utils=>get_field(
       EXPORTING
-        name = 'AUTHOR_NAME'
-        it = lt_fields
+        iv_name = 'AUTHOR_NAME'
+        it_field = lt_fields
       CHANGING
-        cv = es_fields ).
+        cg_field = eg_fields ).
     zcl_abapgit_html_action_utils=>get_field(
       EXPORTING
-        name = 'AUTHOR_EMAIL'
-        it = lt_fields
+        iv_name = 'AUTHOR_EMAIL'
+        it_field = lt_fields
       CHANGING
-      cv = es_fields ).
+      cg_field = eg_fields ).
     zcl_abapgit_html_action_utils=>get_field(
       EXPORTING
-        name = 'COMMENT'
-        it = lt_fields
+        iv_name = 'COMMENT'
+        it_field = lt_fields
       CHANGING
-      cv = es_fields ).
+      cg_field = eg_fields ).
     zcl_abapgit_html_action_utils=>get_field(
       EXPORTING
-        name = 'BODY'
-        it = lt_fields
+        iv_name = 'BODY'
+        it_field = lt_fields
       CHANGING
-        cv = es_fields ).
+        cg_field = eg_fields ).
 
-    ASSIGN COMPONENT 'BODY' OF STRUCTURE es_fields TO <lv_body>.
+    ASSIGN COMPONENT 'BODY' OF STRUCTURE eg_fields TO <lv_body>.
     ASSERT <lv_body> IS ASSIGNED.
     REPLACE ALL OCCURRENCES OF lc_replace IN <lv_body> WITH zif_abapgit_definitions=>gc_newline.
 
@@ -335,7 +335,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
         parse_commit_request(
           EXPORTING it_postdata = it_postdata
-          IMPORTING es_fields   = ls_commit ).
+          IMPORTING eg_fields   = ls_commit ).
 
         ls_commit-repo_key = mo_repo->get_key( ).
 

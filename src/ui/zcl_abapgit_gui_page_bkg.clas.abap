@@ -96,27 +96,27 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
 
     zcl_abapgit_html_action_utils=>get_field(
       EXPORTING
-        name = 'METHOD'
-        it   = lt_fields
+        iv_name = 'METHOD'
+        it_field   = lt_fields
       CHANGING
-        cv   = rs_fields ).
+        cg_field   = rs_fields ).
     IF rs_fields-method IS INITIAL.
       RETURN.
     ENDIF.
 
     zcl_abapgit_html_action_utils=>get_field(
       EXPORTING
-        name = 'USERNAME'
-        it   = lt_fields
+        iv_name = 'USERNAME'
+        it_field   = lt_fields
       CHANGING
-        cv   = rs_fields ).
+        cg_field   = rs_fields ).
 
     zcl_abapgit_html_action_utils=>get_field(
       EXPORTING
-        name = 'PASSWORD'
-        it   = lt_fields
+        iv_name = 'PASSWORD'
+        it_field   = lt_fields
       CHANGING
-        cv   = rs_fields ).
+        cg_field   = rs_fields ).
 
 
     CALL METHOD (rs_fields-method)=>zif_abapgit_background~get_settings
@@ -125,10 +125,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
     LOOP AT rs_fields-settings ASSIGNING <ls_setting>.
       zcl_abapgit_html_action_utils=>get_field(
         EXPORTING
-          name = <ls_setting>-key
-          it   = lt_fields
+          iv_name = <ls_setting>-key
+          it_field   = lt_fields
         CHANGING
-          cv   = <ls_setting>-value ).
+          cg_field   = <ls_setting>-value ).
     ENDLOOP.
 
     ASSERT NOT rs_fields IS INITIAL.
