@@ -77,10 +77,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_FI IMPLEMENTATION.
     ASSERT lines( ls_files-local ) > 0
         OR lines( ls_files-remote ) > 0.
 
-    CREATE OBJECT lo_stage
-      EXPORTING
-        iv_branch_name = io_repo->get_branch_name( )
-        iv_branch_sha1 = io_repo->get_sha1_remote( ).
+    CREATE OBJECT lo_stage.
 
     LOOP AT ls_files-local ASSIGNING <ls_local>.
       mo_log->add_info( |stage: {

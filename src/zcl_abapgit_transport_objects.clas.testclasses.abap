@@ -57,11 +57,9 @@ ENDCLASS.       "ltcl_Transport_Objects
 CLASS ltcl_transport_objects IMPLEMENTATION.
 
   METHOD setup.
-    CREATE OBJECT mo_stage
-      EXPORTING
-        iv_branch_name = 'A_branch_name'
-        iv_branch_sha1 = 'Branch_SH1'.
+    CREATE OBJECT mo_stage.
   ENDMETHOD.
+
   METHOD add_new_to_local_files.
     DATA ls_local_file TYPE zif_abapgit_definitions=>ty_file_item.
 

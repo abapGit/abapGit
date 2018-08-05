@@ -13,7 +13,7 @@ CLASS zcl_abapgit_stage DEFINITION
       END OF ty_stage .
     TYPES:
       ty_stage_tt TYPE SORTED TABLE OF ty_stage
-          WITH UNIQUE KEY file-path file-filename .
+            WITH UNIQUE KEY file-path file-filename .
 
     CONSTANTS:
       BEGIN OF c_method,
@@ -32,8 +32,6 @@ CLASS zcl_abapgit_stage DEFINITION
         zcx_abapgit_exception .
     METHODS constructor
       IMPORTING
-        !iv_branch_name  TYPE string
-        !iv_branch_sha1  TYPE zif_abapgit_definitions=>ty_sha1
         !iv_merge_source TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL .
     METHODS add
       IMPORTING

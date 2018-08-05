@@ -43,10 +43,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT_2_BRANCH IMPLEMENTATION.
 
     io_repository->create_branch( lv_branch_name ).
 
-    CREATE OBJECT lo_stage
-      EXPORTING
-        iv_branch_name = io_repository->get_branch_name( )
-        iv_branch_sha1 = io_repository->get_sha1_remote( ).
+    CREATE OBJECT lo_stage.
 
     ls_stage_objects = zcl_abapgit_stage_logic=>get( io_repository ).
 

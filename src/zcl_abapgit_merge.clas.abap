@@ -116,8 +116,6 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
 
     CREATE OBJECT ms_merge-stage
       EXPORTING
-        iv_branch_name  = mo_repo->get_branch_name( )
-        iv_branch_sha1  = mo_repo->get_sha1_remote( )
         iv_merge_source = ms_merge-source-sha1.
 
     LOOP AT lt_files ASSIGNING <ls_file>.
