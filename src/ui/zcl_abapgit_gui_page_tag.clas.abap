@@ -60,7 +60,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -70,6 +70,105 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
 
     ms_control-page_title = 'TAG'.
     mv_selected_type = co_tag_type-lightweight.
+
+  ENDMETHOD.
+
+
+  METHOD create_tag.
+
+    DATA:
+      ls_tag   TYPE zif_abapgit_definitions=>ty_git_tag,
+      lx_error TYPE REF TO zcx_abapgit_exception,
+      lv_text  TYPE string.
+
+    parse_tag_request(
+      EXPORTING it_postdata = it_postdata
+      IMPORTING es_fields   = ls_tag ).
+
+    IF ls_tag-name IS INITIAL.
+      zcx_abapgit_exception=>raise( |Please supply a tag name| ).
+    ENDIF.
+
+    ls_tag-name = zcl_abapgit_tag=>add_tag_prefix( ls_tag-name ).
+    ASSERT ls_tag-name CP 'refs/tags/+*'.
+
+    CASE mv_selected_type.
+      WHEN co_tag_type-lightweight.
+
+        ls_tag-type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
+
+      WHEN co_tag_type-annotated.
+
+        ls_tag-type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
+
+      WHEN OTHERS.
+
+        zcx_abapgit_exception=>raise( |Invalid tag type: { mv_selected_type }| ).
+
+    ENDCASE.
+
+    TRY.
+        zcl_abapgit_git_porcelain=>create_tag( iv_url = mo_repo_online->get_url( )
+                                               is_tag = ls_tag ).
+
+      CATCH zcx_abapgit_exception INTO lx_error.
+        zcx_abapgit_exception=>raise( |Cannot create tag { ls_tag-name }. Error: '{ lx_error->get_text( ) }'| ).
+    ENDTRY.
+
+    IF ls_tag-type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
+      lv_text = |Lightweight tag { zcl_abapgit_tag=>remove_tag_prefix( ls_tag-name ) } created| ##NO_TEXT.
+    ELSEIF ls_tag-type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
+      lv_text = |Annotated tag { zcl_abapgit_tag=>remove_tag_prefix( ls_tag-name ) } created| ##NO_TEXT.
+    ENDIF.
+
+    MESSAGE lv_text TYPE 'S'.
+
+  ENDMETHOD.
+
+
+  METHOD parse_change_tag_type_request.
+
+    FIELD-SYMBOLS: <ls_postdata> TYPE cnht_post_data_line.
+
+    READ TABLE it_postdata ASSIGNING <ls_postdata>
+                           INDEX 1.
+    IF sy-subrc = 0.
+      FIND FIRST OCCURRENCE OF REGEX `type=(.*)`
+           IN <ls_postdata>
+           SUBMATCHES mv_selected_type.
+    ENDIF.
+
+    mv_selected_type = condense( mv_selected_type ).
+
+  ENDMETHOD.
+
+
+  METHOD parse_tag_request.
+
+    CONSTANTS: lc_replace TYPE string VALUE '<<new>>'.
+
+    DATA: lv_string TYPE string,
+          lt_fields TYPE tihttpnvp.
+
+    FIELD-SYMBOLS <lv_body> TYPE string.
+
+    CLEAR es_fields.
+
+    CONCATENATE LINES OF it_postdata INTO lv_string.
+    REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_crlf    IN lv_string WITH lc_replace.
+    REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_newline IN lv_string WITH lc_replace.
+    lt_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( lv_string ).
+
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'SHA1'         it = lt_fields CHANGING cv = es_fields ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'NAME'         it = lt_fields CHANGING cv = es_fields ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'TAGGER_NAME'  it = lt_fields CHANGING cv = es_fields ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'TAGGER_EMAIL' it = lt_fields CHANGING cv = es_fields ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'MESSAGE'      it = lt_fields CHANGING cv = es_fields ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'BODY'         it = lt_fields CHANGING cv = es_fields ).
+
+    ASSIGN COMPONENT 'BODY' OF STRUCTURE es_fields TO <lv_body>.
+    ASSERT <lv_body> IS ASSIGNED.
+    REPLACE ALL OCCURRENCES OF lc_replace IN <lv_body> WITH zif_abapgit_definitions=>gc_newline.
 
   ENDMETHOD.
 
@@ -275,103 +374,4 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
-
-  METHOD create_tag.
-
-    DATA:
-      ls_tag   TYPE zif_abapgit_definitions=>ty_git_tag,
-      lx_error TYPE REF TO zcx_abapgit_exception,
-      lv_text  TYPE string.
-
-    parse_tag_request(
-      EXPORTING it_postdata = it_postdata
-      IMPORTING es_fields   = ls_tag ).
-
-    IF ls_tag-name IS INITIAL.
-      zcx_abapgit_exception=>raise( |Please supply a tag name| ).
-    ENDIF.
-
-    ls_tag-name = zcl_abapgit_tag=>add_tag_prefix( ls_tag-name ).
-    ASSERT ls_tag-name CP 'refs/tags/+*'.
-
-    CASE mv_selected_type.
-      WHEN co_tag_type-lightweight.
-
-        ls_tag-type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
-
-      WHEN co_tag_type-annotated.
-
-        ls_tag-type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
-
-      WHEN OTHERS.
-
-        zcx_abapgit_exception=>raise( |Invalid tag type: { mv_selected_type }| ).
-
-    ENDCASE.
-
-    TRY.
-        zcl_abapgit_git_porcelain=>create_tag( io_repo = mo_repo_online
-                                               is_tag  = ls_tag ).
-
-      CATCH zcx_abapgit_exception INTO lx_error.
-        zcx_abapgit_exception=>raise( |Cannot create tag { ls_tag-name }. Error: '{ lx_error->get_text( ) }'| ).
-    ENDTRY.
-
-    IF ls_tag-type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
-      lv_text = |Lightweight tag { zcl_abapgit_tag=>remove_tag_prefix( ls_tag-name ) } created| ##NO_TEXT.
-    ELSEIF ls_tag-type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
-      lv_text = |Annotated tag { zcl_abapgit_tag=>remove_tag_prefix( ls_tag-name ) } created| ##NO_TEXT.
-    ENDIF.
-
-    MESSAGE lv_text TYPE 'S'.
-
-  ENDMETHOD.
-
-
-  METHOD parse_tag_request.
-
-    CONSTANTS: lc_replace TYPE string VALUE '<<new>>'.
-
-    DATA: lv_string TYPE string,
-          lt_fields TYPE tihttpnvp.
-
-    FIELD-SYMBOLS <lv_body> TYPE string.
-
-    CLEAR es_fields.
-
-    CONCATENATE LINES OF it_postdata INTO lv_string.
-    REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_crlf    IN lv_string WITH lc_replace.
-    REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_newline IN lv_string WITH lc_replace.
-    lt_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( lv_string ).
-
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'SHA1'         it = lt_fields CHANGING cv = es_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'NAME'         it = lt_fields CHANGING cv = es_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'TAGGER_NAME'  it = lt_fields CHANGING cv = es_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'TAGGER_EMAIL' it = lt_fields CHANGING cv = es_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'MESSAGE'      it = lt_fields CHANGING cv = es_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'BODY'         it = lt_fields CHANGING cv = es_fields ).
-
-    ASSIGN COMPONENT 'BODY' OF STRUCTURE es_fields TO <lv_body>.
-    ASSERT <lv_body> IS ASSIGNED.
-    REPLACE ALL OCCURRENCES OF lc_replace IN <lv_body> WITH zif_abapgit_definitions=>gc_newline.
-
-  ENDMETHOD.
-
-
-  METHOD parse_change_tag_type_request.
-
-    FIELD-SYMBOLS: <ls_postdata> TYPE cnht_post_data_line.
-
-    READ TABLE it_postdata ASSIGNING <ls_postdata>
-                           INDEX 1.
-    IF sy-subrc = 0.
-      FIND FIRST OCCURRENCE OF REGEX `type=(.*)`
-           IN <ls_postdata>
-           SUBMATCHES mv_selected_type.
-    ENDIF.
-
-    mv_selected_type = condense( mv_selected_type ).
-
-  ENDMETHOD.
-
 ENDCLASS.
