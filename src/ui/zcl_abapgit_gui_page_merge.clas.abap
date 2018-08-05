@@ -38,7 +38,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -60,11 +60,12 @@ CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
 
     mo_repo = io_repo.
 
+    io_repo->set_branch_name( |refs/heads/{ iv_target }| ).
+
     CREATE OBJECT mo_merge
       EXPORTING
         io_repo          = io_repo
-        iv_source_branch = iv_source
-        iv_target_branch = iv_target.
+        iv_source_branch = iv_source.
     mo_merge->run( ).
 
     ms_control-page_title = 'MERGE'.

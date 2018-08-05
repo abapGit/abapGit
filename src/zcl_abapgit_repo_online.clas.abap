@@ -389,6 +389,8 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
   METHOD zif_abapgit_git_operations~push.
 
+* assumption: PUSH is done on top of the currently selected branch
+
     DATA: lv_branch        TYPE zif_abapgit_definitions=>ty_sha1,
           lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
           lv_text          TYPE string.
@@ -399,25 +401,23 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
       zcx_abapgit_exception=>raise( lv_text ).
     ENDIF.
 
-    handle_stage_ignore( io_stage ).
-
     IF ms_data-local_settings-block_commit = abap_true
-    AND mv_code_inspector_successful = abap_false.
+        AND mv_code_inspector_successful = abap_false.
       zcx_abapgit_exception=>raise( |A successful code inspection is required| ).
     ENDIF.
 
-    zcl_abapgit_git_porcelain=>push( EXPORTING is_comment       = is_comment
-                                               io_repo          = me
-                                               io_stage         = io_stage
-                                     IMPORTING ev_branch        = lv_branch
-                                               et_updated_files = lt_updated_files ).
+    handle_stage_ignore( io_stage ).
 
-    IF io_stage->get_branch_sha1( ) = get_sha1_remote( ).
-* pushing to the branch currently represented by this repository object      mv_branch = lv_branch.
-      mv_branch = lv_branch.
-    ELSE.
-      refresh( ).
-    ENDIF.
+    zcl_abapgit_git_porcelain=>push(
+      EXPORTING
+        is_comment       = is_comment
+        io_repo          = me
+        io_stage         = io_stage
+      IMPORTING
+        ev_branch        = lv_branch
+        et_updated_files = lt_updated_files ).
+
+    mv_branch = lv_branch.
 
     update_local_checksums( lt_updated_files ).
 
