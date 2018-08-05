@@ -60,7 +60,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -159,12 +159,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
     REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_newline IN lv_string WITH lc_replace.
     lt_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( lv_string ).
 
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'SHA1'         it_field = lt_fields CHANGING cg_field = eg_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'NAME'         it_field = lt_fields CHANGING cg_field = eg_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'TAGGER_NAME'  it_field = lt_fields CHANGING cg_field = eg_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'TAGGER_EMAIL' it_field = lt_fields CHANGING cg_field = eg_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'MESSAGE'      it_field = lt_fields CHANGING cg_field = eg_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'BODY'         it_field = lt_fields CHANGING cg_field = eg_fields ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'SHA1'
+                                                        it_field = lt_fields
+                                              CHANGING cg_field = eg_fields ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'NAME'
+                                                        it_field = lt_fields
+                                              CHANGING cg_field = eg_fields ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'TAGGER_NAME'
+                                                        it_field = lt_fields
+                                              CHANGING cg_field = eg_fields ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'TAGGER_EMAIL'
+                                                        it_field = lt_fields
+                                              CHANGING cg_field = eg_fields ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'MESSAGE'
+                                                        it_field = lt_fields
+                                              CHANGING cg_field = eg_fields ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'BODY'
+                                                        it_field = lt_fields
+                                              CHANGING cg_field = eg_fields ).
 
     ASSIGN COMPONENT 'BODY' OF STRUCTURE eg_fields TO <lv_body>.
     ASSERT <lv_body> IS ASSIGNED.
