@@ -80,7 +80,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_git IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
 
   METHOD commit.
@@ -140,15 +140,18 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
+****************
+* TODO: move this part to ONLINE repo class
     ASSERT lv_name CP 'refs/heads/+*'.
 
     zcl_abapgit_git_porcelain=>create_branch(
-      io_repo = lo_repo
+      iv_url  = lo_repo->get_url( )
       iv_name = lv_name
       iv_from = lo_repo->get_sha1_remote( ) ).
 
     " automatically switch to new branch
     lo_repo->set_branch_name( lv_name ).
+*****************
 
     MESSAGE 'Switched to new branch' TYPE 'S' ##NO_TEXT.
 

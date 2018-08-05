@@ -33,7 +33,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_transport_2_branch IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_TRANSPORT_2_BRANCH IMPLEMENTATION.
 
 
   METHOD create.
@@ -77,7 +77,7 @@ CLASS zcl_abapgit_transport_2_branch IMPLEMENTATION.
     ASSERT iv_branch_name CP 'refs/heads/+*'.
     TRY.
         zcl_abapgit_git_porcelain=>create_branch(
-          io_repo = io_repository
+          iv_url  = io_repository->get_url( )
           iv_name = iv_branch_name
           iv_from = io_repository->get_sha1_remote( ) ).
 
