@@ -14,7 +14,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SSST IMPLEMENTATION.
+CLASS zcl_abapgit_object_ssst IMPLEMENTATION.
 
 
   METHOD validate_font.
@@ -109,6 +109,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SSST IMPLEMENTATION.
     IF sy-subrc = 0.
       <lv_spras> = ls_header-masterlang.
     ENDIF.
+
+    tadir_insert( iv_package ).
 
     CALL FUNCTION 'SSF_SAVE_STYLE'
       EXPORTING
