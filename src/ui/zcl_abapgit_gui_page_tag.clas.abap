@@ -22,10 +22,10 @@ CLASS zcl_abapgit_gui_page_tag DEFINITION PUBLIC FINAL
       scripts        REDEFINITION.
 
   PRIVATE SECTION.
-    CONSTANTS: BEGIN OF co_tag_type,
+    CONSTANTS: BEGIN OF c_tag_type,
                  lightweight TYPE string VALUE 'lightweight',
                  annotated   TYPE string VALUE 'annotated',
-               END OF co_tag_type.
+               END OF c_tag_type.
 
     DATA: mo_repo_online   TYPE REF TO zcl_abapgit_repo_online,
           mv_selected_type TYPE string.
@@ -51,7 +51,7 @@ CLASS zcl_abapgit_gui_page_tag DEFINITION PUBLIC FINAL
 
       parse_tag_request
         IMPORTING it_postdata TYPE cnht_post_data_tab
-        EXPORTING es_fields   TYPE any,
+        EXPORTING eg_fields   TYPE any,
       parse_change_tag_type_request
         IMPORTING
           it_postdata TYPE cnht_post_data_tab.
@@ -60,7 +60,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -69,7 +69,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
     mo_repo_online ?= io_repo.
 
     ms_control-page_title = 'TAG'.
-    mv_selected_type = co_tag_type-lightweight.
+    mv_selected_type = c_tag_type-lightweight.
 
   ENDMETHOD.
 
@@ -83,7 +83,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
 
     parse_tag_request(
       EXPORTING it_postdata = it_postdata
-      IMPORTING es_fields   = ls_tag ).
+      IMPORTING eg_fields   = ls_tag ).
 
     IF ls_tag-name IS INITIAL.
       zcx_abapgit_exception=>raise( |Please supply a tag name| ).
@@ -93,11 +93,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
     ASSERT ls_tag-name CP 'refs/tags/+*'.
 
     CASE mv_selected_type.
-      WHEN co_tag_type-lightweight.
+      WHEN c_tag_type-lightweight.
 
         ls_tag-type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
 
-      WHEN co_tag_type-annotated.
+      WHEN c_tag_type-annotated.
 
         ls_tag-type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
 
@@ -128,13 +128,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
 
   METHOD parse_change_tag_type_request.
 
-    FIELD-SYMBOLS: <ls_postdata> TYPE cnht_post_data_line.
+    FIELD-SYMBOLS: <lv_postdata> TYPE cnht_post_data_line.
 
-    READ TABLE it_postdata ASSIGNING <ls_postdata>
+    READ TABLE it_postdata ASSIGNING <lv_postdata>
                            INDEX 1.
     IF sy-subrc = 0.
       FIND FIRST OCCURRENCE OF REGEX `type=(.*)`
-           IN <ls_postdata>
+           IN <lv_postdata>
            SUBMATCHES mv_selected_type.
     ENDIF.
 
@@ -152,21 +152,33 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
 
     FIELD-SYMBOLS <lv_body> TYPE string.
 
-    CLEAR es_fields.
+    CLEAR eg_fields.
 
     CONCATENATE LINES OF it_postdata INTO lv_string.
     REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_crlf    IN lv_string WITH lc_replace.
     REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_newline IN lv_string WITH lc_replace.
     lt_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( lv_string ).
 
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'SHA1'         it = lt_fields CHANGING cv = es_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'NAME'         it = lt_fields CHANGING cv = es_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'TAGGER_NAME'  it = lt_fields CHANGING cv = es_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'TAGGER_EMAIL' it = lt_fields CHANGING cv = es_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'MESSAGE'      it = lt_fields CHANGING cv = es_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'BODY'         it = lt_fields CHANGING cv = es_fields ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'SHA1'
+                                                        it_field = lt_fields
+                                              CHANGING cg_field = eg_fields ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'NAME'
+                                                        it_field = lt_fields
+                                              CHANGING cg_field = eg_fields ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'TAGGER_NAME'
+                                                        it_field = lt_fields
+                                              CHANGING cg_field = eg_fields ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'TAGGER_EMAIL'
+                                                        it_field = lt_fields
+                                              CHANGING cg_field = eg_fields ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'MESSAGE'
+                                                        it_field = lt_fields
+                                              CHANGING cg_field = eg_fields ).
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'BODY'
+                                                        it_field = lt_fields
+                                              CHANGING cg_field = eg_fields ).
 
-    ASSIGN COMPONENT 'BODY' OF STRUCTURE es_fields TO <lv_body>.
+    ASSIGN COMPONENT 'BODY' OF STRUCTURE eg_fields TO <lv_body>.
     ASSERT <lv_body> IS ASSIGNED.
     REPLACE ALL OCCURRENCES OF lc_replace IN <lv_body> WITH zif_abapgit_definitions=>gc_newline.
 
@@ -197,7 +209,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
           lv_body_size TYPE i,
           lt_type      TYPE stringtab,
           lv_selected  TYPE string.
-    FIELD-SYMBOLS: <type> LIKE LINE OF lt_type.
+    FIELD-SYMBOLS: <lv_type> LIKE LINE OF lt_type.
 
     lo_user  = zcl_abapgit_persistence_user=>get_instance( ).
 
@@ -225,26 +237,26 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
     ro_html->add( '<form id="commit_form" class="aligned-form grey70"'
                && ' method="post" action="sapevent:commit_post">' ).
 
-    INSERT co_tag_type-lightweight
+    INSERT c_tag_type-lightweight
            INTO TABLE lt_type.
 
-    INSERT co_tag_type-annotated
+    INSERT c_tag_type-annotated
            INTO TABLE lt_type.
 
     ro_html->add( '<div class="row">' ).
     ro_html->add( 'Tag type <select name="folder_logic" onchange="onTagTypeChange(this)">' ).
 
-    LOOP AT lt_type ASSIGNING <type>.
+    LOOP AT lt_type ASSIGNING <lv_type>.
 
-      IF mv_selected_type = <type>.
+      IF mv_selected_type = <lv_type>.
         lv_selected = 'selected'.
       ELSE.
         CLEAR: lv_selected.
       ENDIF.
 
-      ro_html->add( |<option value="{ <type> }" |
+      ro_html->add( |<option value="{ <lv_type> }" |
                  && |{ lv_selected }>|
-                 && |{ <type> }</option>| ).
+                 && |{ <lv_type> }</option>| ).
 
     ENDLOOP.
 
@@ -261,7 +273,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
     ro_html->add( render_text_input( iv_name  = 'name'
                                      iv_label = 'tag name' ) ).
 
-    IF mv_selected_type = co_tag_type-annotated.
+    IF mv_selected_type = c_tag_type-annotated.
 
       ro_html->add( render_text_input( iv_name  = 'tagger_name'
                                        iv_label = 'tagger name'
