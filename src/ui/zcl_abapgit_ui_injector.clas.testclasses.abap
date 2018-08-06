@@ -1,5 +1,3 @@
-*"* use this source file for your ABAP unit test classes
-
 CLASS ltd_abapgit_popups_mock DEFINITION.
 
   PUBLIC SECTION.

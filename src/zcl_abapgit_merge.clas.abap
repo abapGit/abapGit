@@ -9,7 +9,6 @@ CLASS zcl_abapgit_merge DEFINITION
       IMPORTING
         !io_repo          TYPE REF TO zcl_abapgit_repo_online
         !iv_source_branch TYPE string
-        !iv_target_branch TYPE string
       RAISING
         zcx_abapgit_exception .
     METHODS get_conflicts
@@ -21,9 +20,6 @@ CLASS zcl_abapgit_merge DEFINITION
     METHODS get_source_branch
       RETURNING
         VALUE(rv_source_branch) TYPE string .
-    METHODS get_target_branch
-      RETURNING
-        VALUE(rv_target_branch) TYPE string .
     METHODS has_conflicts
       RETURNING
         VALUE(rv_conflicts_exists) TYPE boolean .
@@ -45,7 +41,6 @@ CLASS zcl_abapgit_merge DEFINITION
     DATA mt_conflicts TYPE zif_abapgit_definitions=>tt_merge_conflict .
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
     DATA mv_source_branch TYPE string .
-    DATA mv_target_branch TYPE string .
 
     METHODS all_files
       RETURNING
@@ -122,8 +117,6 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
 
     CREATE OBJECT ms_merge-stage
       EXPORTING
-        iv_branch_name  = ms_merge-target-name
-        iv_branch_sha1  = ms_merge-target-sha1
         iv_merge_source = ms_merge-source-sha1.
 
     LOOP AT lt_files ASSIGNING <ls_file>.
@@ -248,13 +241,12 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
 
   METHOD constructor.
 
-    IF iv_source_branch EQ iv_target_branch.
+    IF iv_source_branch EQ io_repo->get_branch_name( ).
       zcx_abapgit_exception=>raise( 'source = target' ).
     ENDIF.
 
     mo_repo = io_repo.
     mv_source_branch = iv_source_branch.
-    mv_target_branch = iv_target_branch.
 
   ENDMETHOD.
 
@@ -264,11 +256,13 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
     DATA: lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list,
           lt_upload      TYPE zif_abapgit_definitions=>ty_git_branch_list_tt.
 
-    lo_branch_list  = zcl_abapgit_git_transport=>branches( ms_merge-repo->get_url( ) ).
+    lo_branch_list = zcl_abapgit_git_transport=>branches( ms_merge-repo->get_url( ) ).
+
     ms_merge-source = lo_branch_list->find_by_name(
       zcl_abapgit_git_branch_list=>complete_heads_branch_name( mv_source_branch ) ).
+
     ms_merge-target = lo_branch_list->find_by_name(
-      zcl_abapgit_git_branch_list=>complete_heads_branch_name( mv_target_branch ) ).
+      zcl_abapgit_git_branch_list=>complete_heads_branch_name( mo_repo->get_branch_name( ) ) ).
 
     APPEND ms_merge-source TO lt_upload.
     APPEND ms_merge-target TO lt_upload.
@@ -370,13 +364,6 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
   METHOD get_source_branch.
 
     rv_source_branch = mv_source_branch.
-
-  ENDMETHOD.
-
-
-  METHOD get_target_branch.
-
-    rv_target_branch = mv_target_branch.
 
   ENDMETHOD.
 

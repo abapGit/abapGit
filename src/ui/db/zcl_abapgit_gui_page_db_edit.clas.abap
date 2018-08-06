@@ -25,9 +25,9 @@ CLASS zcl_abapgit_gui_page_db_edit DEFINITION
   PRIVATE SECTION.
 
     CONSTANTS:
-      BEGIN OF gc_action,
+      BEGIN OF c_action,
         update TYPE string VALUE 'update',
-      END OF gc_action .
+      END OF c_action .
     DATA ms_key TYPE zif_abapgit_persistence=>ty_content .
 
     CLASS-METHODS update
@@ -65,10 +65,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
 
     zcl_abapgit_html_action_utils=>get_field(
       EXPORTING
-        name = 'XMLDATA'
-        it = lt_fields
+        iv_name = 'XMLDATA'
+        it_field = lt_fields
       CHANGING
-        cv = rs_content-data_str ).
+        cg_field = rs_content-data_str ).
 
     IF rs_content-data_str(1) <> '<' AND rs_content-data_str+1(1) = '<'. " Hmmm ???
       rs_content-data_str = rs_content-data_str+1.
@@ -113,7 +113,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
     ro_html->add( '</td></tr></table>' ).
 
     " Form
-    ro_html->add( |<form id="db_form" method="post" action="sapevent:| && |{ gc_action-update }">| ).
+    ro_html->add( |<form id="db_form" method="post" action="sapevent:| && |{ c_action-update }">| ).
     ro_html->add( |<input type="hidden" name="type" value="{ ms_key-type }">| ).
     ro_html->add( |<input type="hidden" name="value" value="{ ms_key-value }">| ).
     ro_html->add( |<textarea rows="20" cols="100" name="xmldata">{ lv_data }</textarea>| ).
@@ -143,7 +143,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
     DATA: ls_db TYPE zif_abapgit_persistence=>ty_content.
 
     CASE iv_action.
-      WHEN gc_action-update.
+      WHEN c_action-update.
         ls_db = dbcontent_decode( it_postdata ).
         update( ls_db ).
         ev_state = zif_abapgit_definitions=>gc_event_state-go_back.

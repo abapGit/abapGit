@@ -579,7 +579,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   METHOD scripts.
 
-    CREATE OBJECT ro_html.
+    ro_html = super->scripts( ).
+
     ro_html->add( 'setInitialFocus("filter");' ).
 
   ENDMETHOD.

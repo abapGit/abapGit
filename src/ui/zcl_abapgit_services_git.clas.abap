@@ -80,7 +80,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_git IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
 
   METHOD commit.
@@ -127,12 +127,14 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     DATA: lv_name   TYPE string,
           lv_cancel TYPE abap_bool,
-          lo_repo   TYPE REF TO zcl_abapgit_repo_online.
+          lo_repo   TYPE REF TO zcl_abapgit_repo_online,
+          li_popups TYPE REF TO zif_abapgit_popups.
 
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    zcl_abapgit_ui_factory=>get_popups( )->create_branch_popup(
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popups->create_branch_popup(
       IMPORTING
         ev_name   = lv_name
         ev_cancel = lv_cancel ).
@@ -140,15 +142,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    ASSERT lv_name CP 'refs/heads/+*'.
-
-    zcl_abapgit_git_porcelain=>create_branch(
-      io_repo = lo_repo
-      iv_name = lv_name
-      iv_from = lo_repo->get_sha1_remote( ) ).
-
-    " automatically switch to new branch
-    lo_repo->set_branch_name( lv_name ).
+    lo_repo->create_branch( lv_name ).
 
     MESSAGE 'Switched to new branch' TYPE 'S' ##NO_TEXT.
 
@@ -175,12 +169,12 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     ENDIF.
 
     zcl_abapgit_git_porcelain=>delete_branch(
-      io_repo   = lo_repo
+      iv_url    = lo_repo->get_url( )
       is_branch = ls_branch ).
 
     MESSAGE 'Branch deleted' TYPE 'S'.
 
-  ENDMETHOD.  "delete_branch
+  ENDMETHOD.
 
 
   METHOD delete_tag.
@@ -197,8 +191,8 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     ENDIF.
 
     zcl_abapgit_git_porcelain=>delete_tag(
-      io_repo = lo_repo
-      is_tag  = ls_tag ).
+      iv_url = lo_repo->get_url( )
+      is_tag = ls_tag ).
 
     lv_text = |Tag { zcl_abapgit_tag=>remove_tag_prefix( ls_tag-name ) } deleted| ##NO_TEXT.
 
@@ -229,7 +223,8 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
           lt_unnecessary_local_objs TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lt_selected               LIKE lt_unnecessary_local_objs,
           lt_columns                TYPE stringtab,
-          ls_checks                 TYPE zif_abapgit_definitions=>ty_delete_checks.
+          ls_checks                 TYPE zif_abapgit_definitions=>ty_delete_checks,
+          li_popups                 TYPE REF TO zif_abapgit_popups.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
@@ -259,7 +254,8 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       INSERT `OBJECT` INTO TABLE lt_columns.
       INSERT `OBJ_NAME` INTO TABLE lt_columns.
 
-      zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_from_list(
+      li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+      li_popups->popup_to_select_from_list(
         EXPORTING
           it_list              = lt_unnecessary_local_objs
           i_header_text        = |Which unnecessary objects should be deleted?|

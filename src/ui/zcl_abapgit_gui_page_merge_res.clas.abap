@@ -117,31 +117,31 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
     CONSTANTS: lc_replace TYPE string VALUE '<<new>>'.
 
-    DATA: BEGIN OF filedata,
+    DATA: BEGIN OF ls_filedata,
             merge_content TYPE string,
-          END OF filedata.
+          END OF ls_filedata.
 
     DATA: lv_string           TYPE string,
           lt_fields           TYPE tihttpnvp,
           lv_new_file_content TYPE xstring.
 
-    FIELD-SYMBOLS: <postdata_line> LIKE LINE OF it_postdata,
+    FIELD-SYMBOLS: <lv_postdata_line> LIKE LINE OF it_postdata,
                    <ls_conflict>   TYPE zif_abapgit_definitions=>ty_merge_conflict.
 
-    LOOP AT it_postdata ASSIGNING <postdata_line>.
-      lv_string = |{ lv_string }{ <postdata_line> }|.
+    LOOP AT it_postdata ASSIGNING <lv_postdata_line>.
+      lv_string = |{ lv_string }{ <lv_postdata_line> }|.
     ENDLOOP.
     REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_crlf    IN lv_string WITH lc_replace.
     REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>gc_newline IN lv_string WITH lc_replace.
 
     lt_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( lv_string ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING name = 'MERGE_CONTENT'
-                                                        it = lt_fields
-                                              CHANGING cv = filedata ).
-    filedata-merge_content = cl_http_utility=>unescape_url( escaped = filedata-merge_content ).
-    REPLACE ALL OCCURRENCES OF lc_replace IN filedata-merge_content WITH zif_abapgit_definitions=>gc_newline.
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'MERGE_CONTENT'
+                                                        it_field = lt_fields
+                                              CHANGING cg_field = ls_filedata ).
+    ls_filedata-merge_content = cl_http_utility=>unescape_url( escaped = ls_filedata-merge_content ).
+    REPLACE ALL OCCURRENCES OF lc_replace IN ls_filedata-merge_content WITH zif_abapgit_definitions=>gc_newline.
 
-    lv_new_file_content = zcl_abapgit_convert=>string_to_xstring_utf8( iv_string = filedata-merge_content ).
+    lv_new_file_content = zcl_abapgit_convert=>string_to_xstring_utf8( iv_string = ls_filedata-merge_content ).
 
     READ TABLE mt_conflicts ASSIGNING <ls_conflict> INDEX mv_current_conflict_index.
     <ls_conflict>-result_sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob
@@ -451,7 +451,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
       ro_html->add( '<tr>' ).                               "#EC NOTEXT
       ro_html->add( '<th class="num"></th>' ).              "#EC NOTEXT
       ro_html->add( '<form id="target_form" method="post" action="sapevent:apply_target">' ). "#EC NOTEXT
-      ro_html->add( '<th>Target - ' && mo_merge->get_target_branch( ) && ' - ' ). "#EC NOTEXT
+      ro_html->add( '<th>Target - ' && mo_repo->get_branch_name( ) && ' - ' ). "#EC NOTEXT
       ro_html->add_a( iv_act = 'submitFormById(''target_form'');' "#EC NOTEXT
                       iv_txt = 'Apply'
                       iv_typ = zif_abapgit_definitions=>gc_action_type-onclick
@@ -473,7 +473,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
       ro_html->add( '<thead class="header">' ).             "#EC NOTEXT
       ro_html->add( '<tr>' ).                               "#EC NOTEXT
       ro_html->add( '<th class="num"></th>' ).              "#EC NOTEXT
-      ro_html->add( '<th>Target - ' && mo_merge->get_target_branch( ) &&'</th> ' ). "#EC NOTEXT
+      ro_html->add( '<th>Target - ' && mo_repo->get_branch_name( ) &&'</th> ' ). "#EC NOTEXT
       ro_html->add( '<th class="num"></th>' ).              "#EC NOTEXT
       ro_html->add( '<th>Source - ' && mo_merge->get_source_branch( ) &&'</th> ' ). "#EC NOTEXT
       ro_html->add( '</tr>' ).                              "#EC NOTEXT

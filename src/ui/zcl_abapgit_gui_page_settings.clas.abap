@@ -57,6 +57,12 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
     METHODS render_start_up
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+    METHODS render_link_hints
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
+
 
 ENDCLASS.
 
@@ -125,6 +131,23 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
       mo_settings->set_adt_jump_enanbled( abap_true ).
     ELSE.
       mo_settings->set_adt_jump_enanbled( abap_false ).
+    ENDIF.
+
+    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'link_hints_enabled'.
+    IF sy-subrc = 0.
+      mo_settings->set_link_hints_enabled( abap_true ).
+    ELSE.
+      mo_settings->set_link_hints_enabled( abap_false ).
+    ENDIF.
+
+    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'link_hint_key'.
+    IF sy-subrc = 0.
+      mo_settings->set_link_hint_key( |{ <ls_post_field>-value }| ).
+    ENDIF.
+
+    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'link_hint_background_color'.
+    IF sy-subrc = 0.
+      mo_settings->set_link_hint_background_color( |{ <ls_post_field>-value }| ).
     ENDIF.
 
     READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'comment_length'.
@@ -243,6 +266,8 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
     ro_html->add( render_max_lines( ) ).
     ro_html->add( |<hr>| ).
     ro_html->add( render_adt_jump_enabled( ) ).
+    ro_html->add( |<hr>| ).
+    ro_html->add( render_link_hints( ) ).
     ro_html->add( render_section_end( ) ).
     ro_html->add( render_form_end( ) ).
 
@@ -401,6 +426,39 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
                    && lv_checked && ` > Show last repo` ).
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).
+  ENDMETHOD.
+
+
+  METHOD render_link_hints.
+
+    DATA: lv_checked               TYPE string,
+          lv_link_hint_key         TYPE char01,
+          lv_link_background_color TYPE string.
+
+    IF mo_settings->get_link_hints_enabled( ) = abap_true.
+      lv_checked = 'checked'.
+    ENDIF.
+
+    lv_link_hint_key = mo_settings->get_link_hint_key( ).
+    lv_link_background_color = mo_settings->get_link_hint_background_color( ).
+
+    CREATE OBJECT ro_html.
+    ro_html->add( |<h2>Vimium like link hints</h2>| ).
+    ro_html->add( `<input type="checkbox" name="link_hints_enabled" value="X" `
+                   && lv_checked && ` > Enable Vimium like link hints` ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<input type="text" name="link_hint_key" size="1" maxlength="1" value="{ lv_link_hint_key }" |
+               && |> Single key to activate links| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<input type="text" name="link_hint_background_color" size="20" maxlength="20"|
+               && | value="{ lv_link_background_color }"|
+               && |> Background Color (HTML colors e.g. lightgreen or #42f47a)| ).
+
+    ro_html->add( |<br>| ).
+    ro_html->add( |<br>| ).
+
   ENDMETHOD.
 
 ENDCLASS.

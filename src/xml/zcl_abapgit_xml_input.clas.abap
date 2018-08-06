@@ -40,7 +40,7 @@ CLASS ZCL_ABAPGIT_XML_INPUT IMPLEMENTATION.
     parse( iv_xml ).
     fix_xml( ).
 
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
 
   METHOD fix_xml.
@@ -55,17 +55,17 @@ CLASS ZCL_ABAPGIT_XML_INPUT IMPLEMENTATION.
     mi_xml_doc->get_root( )->remove_child( li_git ).
     mi_xml_doc->get_root( )->append_child( li_abap ).
 
-  ENDMETHOD.                    "fix_xml
+  ENDMETHOD.
 
 
   METHOD get_metadata.
     rs_metadata = ms_metadata.
-  ENDMETHOD.                    "get_metadata
+  ENDMETHOD.
 
 
   METHOD get_raw.
     ri_raw = mi_xml_doc.
-  ENDMETHOD.                    "get_raw
+  ENDMETHOD.
 
 
   METHOD read.
@@ -92,5 +92,5 @@ CLASS ZCL_ABAPGIT_XML_INPUT IMPLEMENTATION.
         zcx_abapgit_exception=>raise( lx_error->if_message~get_text( ) ).
     ENDTRY.
 
-  ENDMETHOD.                    "read
+  ENDMETHOD.
 ENDCLASS.

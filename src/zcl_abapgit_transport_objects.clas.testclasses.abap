@@ -46,7 +46,7 @@ CLASS ltcl_transport_objects DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HA
           iv_path     TYPE string.
 
     DATA: mo_transport_objects TYPE REF TO zcl_abapgit_transport_objects,
-          mt_transport_objects TYPE scts_tadir,
+          mt_transport_objects TYPE zif_abapgit_definitions=>ty_tadir_tt,
           mt_object_statuses   TYPE zif_abapgit_definitions=>ty_results_tt,
           ms_stage_objects     TYPE zif_abapgit_definitions=>ty_stage_files,
           mo_stage             TYPE REF TO zcl_abapgit_stage.
@@ -57,11 +57,9 @@ ENDCLASS.       "ltcl_Transport_Objects
 CLASS ltcl_transport_objects IMPLEMENTATION.
 
   METHOD setup.
-    CREATE OBJECT mo_stage
-      EXPORTING
-        iv_branch_name = 'A_branch_name'
-        iv_branch_sha1 = 'Branch_SH1'.
+    CREATE OBJECT mo_stage.
   ENDMETHOD.
+
   METHOD add_new_to_local_files.
     DATA ls_local_file TYPE zif_abapgit_definitions=>ty_file_item.
 
@@ -284,7 +282,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD given_the_transport_object.
-    DATA ls_transport_object TYPE tadir.
+    DATA ls_transport_object TYPE zif_abapgit_definitions=>ty_tadir.
     ls_transport_object-obj_name = iv_obj_name.
     ls_transport_object-object   = iv_obj_type.
     ls_transport_object-delflag  = iv_delflag.

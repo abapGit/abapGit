@@ -1,4 +1,3 @@
-*"* use this source file for your ABAP unit test classes
 CLASS ltd_sap_package DEFINITION FOR TESTING.
 
   PUBLIC SECTION.
@@ -91,7 +90,7 @@ CLASS ltcl_resolve_packages DEFINITION FOR TESTING
 
   PRIVATE SECTION.
     DATA:
-      mt_tadir        TYPE zcl_abapgit_dependencies=>ty_tadir_tt,
+      mt_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt,
       mt_sub_packages TYPE ltd_sap_package=>tty_package.
 
     METHODS:

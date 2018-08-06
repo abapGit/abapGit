@@ -10,13 +10,15 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
       zif_abapgit_gui_page~on_event REDEFINITION.
 
   PROTECTED SECTION.
-    METHODS render_content REDEFINITION.
+    METHODS:
+      render_content REDEFINITION.
 
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_actions,
-                 show       TYPE string VALUE 'show' ##NO_TEXT,
-                 changed_by TYPE string VALUE 'changed_by',
-                 overview   TYPE string VALUE 'overview',
+                 show          TYPE string VALUE 'show' ##NO_TEXT,
+                 changed_by    TYPE string VALUE 'changed_by',
+                 overview      TYPE string VALUE 'overview',
+                 documentation TYPE string VALUE 'documentation',
                END OF c_actions.
 
     DATA: mv_show         TYPE zif_abapgit_persistence=>ty_value,
@@ -41,7 +43,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
 
   METHOD build_main_menu.
@@ -74,8 +76,8 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
     lo_helpsub->add( iv_txt = 'Tutorial'
                      iv_act = zif_abapgit_definitions=>gc_action-go_tutorial ) ##NO_TEXT.
-    lo_helpsub->add( iv_txt = 'abapGit wiki'
-                     iv_act = zif_abapgit_definitions=>gc_action-abapgit_wiki ) ##NO_TEXT.
+    lo_helpsub->add( iv_txt = 'Documentation'
+                     iv_act = c_actions-documentation ) ##NO_TEXT.
 
     ro_menu->add( iv_txt = '+ Online'
                   iv_act = zif_abapgit_definitions=>gc_action-repo_newonline ) ##NO_TEXT.
@@ -89,14 +91,14 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     ro_menu->add( iv_txt = 'Help'
                   io_sub = lo_helpsub ) ##NO_TEXT.
 
-  ENDMETHOD.                    "build main_menu
+  ENDMETHOD.
 
 
   METHOD constructor.
     super->constructor( ).
     ms_control-page_title = 'HOME'.
     ms_control-page_menu  = build_main_menu( ).
-  ENDMETHOD.  " constructor
+  ENDMETHOD.
 
 
   METHOD render_content.
@@ -127,7 +129,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
       ro_html->add( render_repo( lo_repo ) ).
     ENDIF.
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD render_repo.
@@ -149,7 +151,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     ro_html->add( mo_repo_content->render( ) ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_repo
+  ENDMETHOD.
 
 
   METHOD render_toc.
@@ -248,7 +250,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     ro_html->add( '</div>' ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_toc
+  ENDMETHOD.
 
 
   METHOD retrieve_active_repo.
@@ -279,12 +281,12 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
           iv_key = mv_show. " Reinit content state
     ENDIF.
 
-  ENDMETHOD.  "retrieve_active_repo
+  ENDMETHOD.
 
 
   METHOD test_changed_by.
 
-    DATA: ls_tadir TYPE tadir,
+    DATA: ls_tadir TYPE zif_abapgit_definitions=>ty_tadir,
           lv_user  TYPE xubname,
           ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
@@ -329,26 +331,24 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     lv_key = iv_getdata.
 
     CASE iv_action.
-      WHEN c_actions-show.              " Change displayed repo
+      WHEN c_actions-show.
         zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
         TRY.
             zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->refresh( ).
           CATCH zcx_abapgit_exception ##NO_HANDLER.
         ENDTRY.
-
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
       WHEN c_actions-changed_by.
         test_changed_by( ).
         ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
-
+      WHEN c_actions-documentation.
+        zcl_abapgit_services_abapgit=>open_abapgit_wikipage( ).
+        ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
       WHEN c_actions-overview.
-
         CREATE OBJECT li_repo_overview TYPE zcl_abapgit_gui_page_repo_over.
-
         ei_page = li_repo_overview.
         ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
-
     ENDCASE.
 
-  ENDMETHOD.  "on_event
+  ENDMETHOD.
 ENDCLASS.

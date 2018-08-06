@@ -67,10 +67,12 @@ FORM branch_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
                   RAISING zcx_abapgit_exception ##called ##needed.
 * called dynamically from function module POPUP_GET_VALUES_USER_BUTTONS
 
-  DATA: lx_error TYPE REF TO zcx_abapgit_exception.
+  DATA: lx_error  TYPE REF TO zcx_abapgit_exception,
+        li_popups TYPE REF TO zif_abapgit_popups.
 
   TRY.
-      zcl_abapgit_ui_factory=>get_popups( )->branch_popup_callback(
+      li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+      li_popups->branch_popup_callback(
         EXPORTING
           iv_code       = pv_code
         CHANGING
@@ -91,10 +93,12 @@ FORM package_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
                    RAISING  zcx_abapgit_exception ##called ##needed.
 * called dynamically from function module POPUP_GET_VALUES_USER_BUTTONS
 
-  DATA: lx_error TYPE REF TO zcx_abapgit_exception.
+  DATA: lx_error  TYPE REF TO zcx_abapgit_exception,
+        li_popups TYPE REF TO zif_abapgit_popups.
 
   TRY.
-      zcl_abapgit_ui_factory=>get_popups( )->package_popup_callback(
+      li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+      li_popups->package_popup_callback(
         EXPORTING
           iv_code       = pv_code
         CHANGING
@@ -109,7 +113,9 @@ FORM package_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
 ENDFORM.                    "package_popup
 
 FORM output.
-  DATA: lt_ucomm TYPE TABLE OF sy-ucomm.
+  DATA: lt_ucomm TYPE TABLE OF sy-ucomm,
+        lx_error TYPE REF TO zcx_abapgit_exception.
+
   PERFORM set_pf_status IN PROGRAM rsdbrunt IF FOUND.
 
   APPEND 'CRET' TO lt_ucomm.  "Button Execute
@@ -119,6 +125,12 @@ FORM output.
       p_status  = sy-pfkey
     TABLES
       p_exclude = lt_ucomm.
+
+  TRY.
+      zcl_abapgit_gui=>get_instance( )->focus( ).
+    CATCH zcx_abapgit_exception INTO lx_error.
+      message lx_error type 'S' DISPLAY LIKE 'E'.
+  ENDTRY.
 ENDFORM.
 
 FORM exit RAISING zcx_abapgit_exception.

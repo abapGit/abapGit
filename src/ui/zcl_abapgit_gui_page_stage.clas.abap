@@ -317,7 +317,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
   METHOD scripts.
 
-    CREATE OBJECT ro_html.
+    ro_html = super->scripts( ).
 
     ro_html->add( 'var gStageParams = {' ).
     ro_html->add( |  seed:            "{ mv_seed }",| ). " Unique page id
@@ -343,10 +343,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local.
 
-    CREATE OBJECT lo_stage
-      EXPORTING
-        iv_branch_name = mo_repo->get_branch_name( )
-        iv_branch_sha1 = mo_repo->get_sha1_remote( ).
+    CREATE OBJECT lo_stage.
 
     CASE iv_action.
       WHEN c_action-stage_all.

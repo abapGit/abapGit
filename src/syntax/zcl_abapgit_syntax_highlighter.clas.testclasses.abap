@@ -530,7 +530,7 @@ CLASS ltcl_syntax_basic_logic DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS
 
   PRIVATE SECTION.
 
-    DATA mo TYPE REF TO zcl_abapgit_syntax_highlighter.
+    DATA mo_syntax_highlighter TYPE REF TO zcl_abapgit_syntax_highlighter.
 
     METHODS:
       setup,
@@ -546,7 +546,7 @@ ENDCLASS.
 CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
 
   METHOD setup.
-    mo = zcl_abapgit_syntax_highlighter=>create( '*.abap' ).
+    mo_syntax_highlighter = zcl_abapgit_syntax_highlighter=>create( '*.abap' ).
   ENDMETHOD.
 
   METHOD format_line.
@@ -564,7 +564,7 @@ CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
       ' <span class="text">&#39;FM_NAME&#39;</span>.' &&    "#EC NOTEXT
       ' <span class="comment">&quot; Commented</span>'.     "#EC NOTEXT
 
-    lv_line_act = mo->process_line( lv_line ).
+    lv_line_act = mo_syntax_highlighter->process_line( lv_line ).
 
     cl_abap_unit_assert=>assert_equals( exp = lv_line_exp
                                         act = lv_line_act
@@ -577,7 +577,7 @@ CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
     DATA lv_line_act TYPE string.
 
     " Call the method and compare results
-    lv_line_act = mo->apply_style( iv_line  = 'CALL FUNCTION' "#EC NOTEXT
+    lv_line_act = mo_syntax_highlighter->apply_style( iv_line  = 'CALL FUNCTION' "#EC NOTEXT
                                    iv_class = zcl_abapgit_syntax_abap=>c_css-keyword ).
 
     cl_abap_unit_assert=>assert_equals(
@@ -592,7 +592,7 @@ CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
     DATA lv_line_act TYPE string.
 
     " Call the method with empty parameter and compare results
-    lv_line_act = mo->process_line( '' ).
+    lv_line_act = mo_syntax_highlighter->process_line( '' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_line_act
@@ -600,7 +600,7 @@ CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
       msg = 'Failure in method process_line.' ).            "#EC NOTEXT
 
     " Call the method with non-empty line and compare results
-    lv_line_act = mo->process_line( '* CALL FUNCTION' ). "#EC NOTEXT
+    lv_line_act = mo_syntax_highlighter->process_line( '* CALL FUNCTION' ). "#EC NOTEXT
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_line_act

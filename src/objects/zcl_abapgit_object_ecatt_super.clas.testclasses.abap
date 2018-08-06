@@ -1,5 +1,3 @@
-*"* use this source file for your ABAP unit test classes
-
 CLASS ltcl_changed_by DEFINITION DEFERRED.
 
 CLASS zcl_abapgit_object_ecatt_super DEFINITION LOCAL FRIENDS ltcl_changed_by.

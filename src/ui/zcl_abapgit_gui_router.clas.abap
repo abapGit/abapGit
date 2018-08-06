@@ -44,7 +44,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_router IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
 
   METHOD get_page_background.
@@ -94,10 +94,9 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     CREATE OBJECT lo_page
       EXPORTING
-        iv_key           = lv_key
-        is_file          = ls_file
-        is_object        = ls_object
-        iv_supress_stage = boolc( iv_prev_page = 'PAGE_STAGE' ).
+        iv_key    = lv_key
+        is_file   = ls_file
+        is_object = ls_object.
 
     ri_page = lo_page.
 
@@ -106,9 +105,11 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
   METHOD get_page_playground.
     DATA: lv_class_name TYPE string,
-          lv_cancel     TYPE abap_bool.
+          lv_cancel     TYPE abap_bool,
+          li_popups     TYPE REF TO zif_abapgit_popups.
 
-    zcl_abapgit_ui_factory=>get_popups( )->run_page_class_popup(
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popups->run_page_class_popup(
       IMPORTING
         ev_name   = lv_class_name
         ev_cancel = lv_cancel ).
@@ -260,9 +261,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>gc_action-abapgit_home.                    " Go abapGit homepage
         zcl_abapgit_services_abapgit=>open_abapgit_homepage( ).
         ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
-      WHEN zif_abapgit_definitions=>gc_action-abapgit_wiki.                    " Go abapGit wikipage
-        zcl_abapgit_services_abapgit=>open_abapgit_wikipage( ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
+
       WHEN zif_abapgit_definitions=>gc_action-abapgit_install.                 " Install abapGit
         zcl_abapgit_services_abapgit=>install_abapgit( ).
         ev_state = zif_abapgit_definitions=>gc_event_state-re_render.

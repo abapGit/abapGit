@@ -89,7 +89,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
 
 
   METHOD complete_heads_branch_name.
@@ -98,7 +98,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
     ELSE.
       rv_name = 'refs/heads/' && iv_branch_name.
     ENDIF.
-  ENDMETHOD.  "complete_heads_branch_name
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -106,7 +106,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
       EXPORTING iv_data        = iv_data
       IMPORTING et_list        = me->mt_branches
                 ev_head_symref = me->mv_head_symref ).
-  ENDMETHOD.  "create
+  ENDMETHOD.
 
 
   METHOD find_by_name.
@@ -122,12 +122,33 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
       READ TABLE mt_branches INTO rs_branch
         WITH KEY name = iv_branch_name.
       IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Branch not found: { iv_branch_name }| ).
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD find_tag_by_name.
+
+    DATA: lv_branch_name TYPE string.
+
+    lv_branch_name = iv_branch_name && '^{}'.
+
+    READ TABLE mt_branches INTO rs_branch
+        WITH KEY name = lv_branch_name.
+    IF sy-subrc <> 0.
+
+      READ TABLE mt_branches INTO rs_branch
+      WITH KEY name = iv_branch_name.
+      IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'Branch not found' ).
       ENDIF.
 
     ENDIF.
 
-  ENDMETHOD.  "find_by_name
+  ENDMETHOD.
 
 
   METHOD get_branches_only.
@@ -138,7 +159,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
         APPEND <ls_branch> TO rt_branches.
       ENDIF.
     ENDLOOP.
-  ENDMETHOD.  "get_branches_only
+  ENDMETHOD.
 
 
   METHOD get_display_name.
@@ -150,7 +171,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
       REPLACE FIRST OCCURRENCE OF 'refs/' IN rv_display_name WITH ''.
     ENDIF.
 
-  ENDMETHOD.  "get_display_name
+  ENDMETHOD.
 
 
   METHOD get_head.
@@ -161,12 +182,12 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
       rs_branch = find_by_name( zif_abapgit_definitions=>c_head_name ).
     ENDIF.
 
-  ENDMETHOD.  "get_head
+  ENDMETHOD.
 
 
   METHOD get_head_symref.
     rv_head_symref = mv_head_symref.
-  ENDMETHOD.  " get_head_symref.
+  ENDMETHOD.
 
 
   METHOD get_tags_only.
@@ -178,7 +199,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
       APPEND <ls_branch> TO rt_tags.
     ENDLOOP.
 
-  ENDMETHOD.  "get_tags_only
+  ENDMETHOD.
 
 
   METHOD get_type.
@@ -208,7 +229,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
 
     ENDIF.
 
-  ENDMETHOD.  "get_type
+  ENDMETHOD.
 
 
   METHOD is_ignored.
@@ -224,7 +245,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
       rv_ignore = abap_true.
     ENDIF.
 
-  ENDMETHOD.  "is_ignored
+  ENDMETHOD.
 
 
   METHOD normalize_branch_name.
@@ -232,7 +253,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
     rv_name = iv_branch_name. " Force convert to string
     REPLACE ALL OCCURRENCES OF ` ` IN rv_name WITH '-'. " Disallow space in branch name
 
-  ENDMETHOD.  " normalize_branch_name.
+  ENDMETHOD.
 
 
   METHOD parse_branch_list.
@@ -288,7 +309,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.                    "parse_branch_list
+  ENDMETHOD.
 
 
   METHOD parse_head_params.
@@ -302,26 +323,5 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
       rv_head_symref = iv_data+ls_submatch-offset(ls_submatch-length).
     ENDIF.
 
-  ENDMETHOD.  "parse_head_params
-
-  METHOD find_tag_by_name.
-
-    DATA: lv_branch_name TYPE string.
-
-    lv_branch_name = iv_branch_name && '^{}'.
-
-    READ TABLE mt_branches INTO rs_branch
-        WITH KEY name = lv_branch_name.
-    IF sy-subrc <> 0.
-
-      READ TABLE mt_branches INTO rs_branch
-      WITH KEY name = iv_branch_name.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'Branch not found' ).
-      ENDIF.
-
-    ENDIF.
-
   ENDMETHOD.
-
 ENDCLASS.

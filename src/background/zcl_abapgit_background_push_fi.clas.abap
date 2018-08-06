@@ -8,10 +8,12 @@ CLASS zcl_abapgit_background_push_fi DEFINITION
     INTERFACES zif_abapgit_background .
   PROTECTED SECTION.
 
-    CONSTANTS: BEGIN OF gc_settings,
-                 name  TYPE string VALUE 'NAME',
-                 email TYPE string VALUE 'EMAIL',
-               END OF gc_settings.
+    CONSTANTS:
+      BEGIN OF gc_settings,
+        name  TYPE string VALUE 'NAME',
+        email TYPE string VALUE 'EMAIL',
+      END OF gc_settings .
+    DATA mo_log TYPE REF TO zcl_abapgit_log .
 
     METHODS build_comment
       IMPORTING
@@ -75,15 +77,12 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_FI IMPLEMENTATION.
     ASSERT lines( ls_files-local ) > 0
         OR lines( ls_files-remote ) > 0.
 
-    CREATE OBJECT lo_stage
-      EXPORTING
-        iv_branch_name = io_repo->get_branch_name( )
-        iv_branch_sha1 = io_repo->get_sha1_remote( ).
+    CREATE OBJECT lo_stage.
 
     LOOP AT ls_files-local ASSIGNING <ls_local>.
-      WRITE: / 'stage' ##NO_TEXT,
-        <ls_local>-file-path,
-        <ls_local>-file-filename.
+      mo_log->add_info( |stage: {
+        <ls_local>-file-path } {
+        <ls_local>-file-filename }| ).
       lo_stage->add( iv_path     = <ls_local>-file-path
                      iv_filename = <ls_local>-file-filename
                      iv_data     = <ls_local>-file-data ).
@@ -91,9 +90,9 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_FI IMPLEMENTATION.
 
     LOOP AT ls_files-remote ASSIGNING <ls_remote>.
 
-      WRITE: / 'removed' ##NO_TEXT,
-        <ls_remote>-path,
-        <ls_remote>-filename.
+      mo_log->add_info( |removed: {
+        <ls_remote>-path } {
+        <ls_remote>-filename }| ).
 
       lo_stage->rm( iv_path     = <ls_remote>-path
                     iv_filename = <ls_remote>-filename ).
@@ -146,11 +145,11 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_FI IMPLEMENTATION.
           lv_name    TYPE string,
           lv_email   TYPE string.
 
-
+    mo_log = io_log.
     ls_files = zcl_abapgit_stage_logic=>get( io_repo ).
 
     IF lines( ls_files-local ) = 0 AND lines( ls_files-remote ) = 0.
-      WRITE: / 'Nothing to stage' ##NO_TEXT.
+      io_log->add_info( 'Nothing to stage' ).
       RETURN.
     ENDIF.
 

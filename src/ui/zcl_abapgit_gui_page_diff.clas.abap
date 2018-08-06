@@ -29,7 +29,6 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         IMPORTING iv_key           TYPE zif_abapgit_persistence=>ty_repo-key
                   is_file          TYPE zif_abapgit_definitions=>ty_file OPTIONAL
                   is_object        TYPE zif_abapgit_definitions=>ty_item OPTIONAL
-                  iv_supress_stage TYPE abap_bool DEFAULT abap_false
         RAISING   zcx_abapgit_exception,
       zif_abapgit_gui_page~on_event REDEFINITION.
   PROTECTED SECTION.
@@ -76,7 +75,6 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
                 is_status TYPE zif_abapgit_definitions=>ty_result
       RAISING   zcx_abapgit_exception.
     METHODS build_menu
-      IMPORTING iv_supress_stage TYPE abap_bool
       RETURNING VALUE(ro_menu)   TYPE REF TO zcl_abapgit_html_toolbar.
     METHODS is_binary
       IMPORTING iv_d1         TYPE xstring
@@ -194,13 +192,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     CREATE OBJECT ro_menu.
 
-    IF iv_supress_stage = abap_false.
-      ro_menu->add( iv_txt = 'Stage'
-                    iv_act = |{ zif_abapgit_definitions=>gc_action-go_stage }?{ mv_repo_key }|
-                    iv_id  = 'stage-button'
-                    iv_opt = zif_abapgit_definitions=>gc_html_opt-strong ).
-    ENDIF.
-
     IF lines( lt_types ) > 1 OR lines( lt_users ) > 1.
       CREATE OBJECT lo_sub EXPORTING iv_id = 'diff-filter'.
 
@@ -295,7 +286,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'PAGE_DIFF ERROR: No diff files found' ).
     ENDIF.
 
-    ms_control-page_menu  = build_menu( iv_supress_stage ).
+    ms_control-page_menu  = build_menu( ).
 
   ENDMETHOD.
 
@@ -633,15 +624,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
   METHOD scripts.
 
-    CREATE OBJECT ro_html.
+    ro_html = super->scripts( ).
 
     ro_html->add( 'var gHelper = new DiffHelper({' ).
     ro_html->add( |  seed:        "{ mv_seed }",| ).
-    ro_html->add( |  stageAction: "{ zif_abapgit_definitions=>gc_action-go_stage }",| ).
     ro_html->add( '  ids: {' ).
     ro_html->add( '    diffList:    "diff-list",' ).
     ro_html->add( '    filterMenu:  "diff-filter",' ).
-    ro_html->add( '    stageButton: "stage-button"' ).
     ro_html->add( '  }' ).
     ro_html->add( '});' ).
 

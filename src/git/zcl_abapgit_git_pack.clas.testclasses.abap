@@ -92,68 +92,126 @@ CLASS ltcl_type_and_length DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARM
 
   PRIVATE SECTION.
     METHODS:
-      type_and_length01 FOR TESTING RAISING zcx_abapgit_exception,
-      type_and_length02 FOR TESTING RAISING zcx_abapgit_exception,
-      type_and_length03 FOR TESTING RAISING zcx_abapgit_exception,
-      type_and_length04 FOR TESTING RAISING zcx_abapgit_exception.
+      test
+        IMPORTING
+          iv_length   TYPE i
+          iv_type     TYPE zif_abapgit_definitions=>ty_type DEFAULT zif_abapgit_definitions=>gc_type-commit
+          iv_expected TYPE xstring
+        RAISING
+          zcx_abapgit_exception,
+      type_and_length_0 FOR TESTING RAISING zcx_abapgit_exception,
+      type_and_length_1 FOR TESTING RAISING zcx_abapgit_exception,
+      type_and_length_10 FOR TESTING RAISING zcx_abapgit_exception,
+      type_and_length_15 FOR TESTING RAISING zcx_abapgit_exception,
+      type_and_length_16 FOR TESTING RAISING zcx_abapgit_exception,
+      type_and_length_17 FOR TESTING RAISING zcx_abapgit_exception,
+      type_and_length_100 FOR TESTING RAISING zcx_abapgit_exception,
+      type_and_length_128 FOR TESTING RAISING zcx_abapgit_exception,
+      type_and_length_2047 FOR TESTING RAISING zcx_abapgit_exception,
+      type_and_length_2048 FOR TESTING RAISING zcx_abapgit_exception,
+      type_and_length_90000 FOR TESTING RAISING zcx_abapgit_exception,
+      type_and_length_1000000 FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
 CLASS ltcl_type_and_length IMPLEMENTATION.
 
-  METHOD type_and_length01.
+  METHOD test.
 
     DATA: lv_result TYPE xstring.
 
     lv_result = zcl_abapgit_git_pack=>type_and_length(
-      iv_type   = zif_abapgit_definitions=>gc_type-commit
-      iv_length = 100 ).
+      iv_type   = iv_type
+      iv_length = iv_length ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_result
-      exp = '9406' ).
+      exp = iv_expected ).
 
   ENDMETHOD.
 
-  METHOD type_and_length02.
+  METHOD type_and_length_100.
 
-    DATA: lv_result TYPE xstring.
-
-    lv_result = zcl_abapgit_git_pack=>type_and_length(
-      iv_type   = zif_abapgit_definitions=>gc_type-blob
-      iv_length = 90000 ).
-
-    cl_abap_unit_assert=>assert_equals(
-      act = lv_result
-      exp = 'B0F92B' ).
+    test( iv_length   = 100
+          iv_expected = '9406' ).
 
   ENDMETHOD.
 
-  METHOD type_and_length03.
+  METHOD type_and_length_2047.
 
-    DATA: lv_result TYPE xstring.
-
-    lv_result = zcl_abapgit_git_pack=>type_and_length(
-      iv_type   = zif_abapgit_definitions=>gc_type-commit
-      iv_length = 10 ).
-
-    cl_abap_unit_assert=>assert_equals(
-      act = lv_result
-      exp = '1A' ).
+    test( iv_length   = 2047
+          iv_expected = '9F7F' ).
 
   ENDMETHOD.
 
-  METHOD type_and_length04.
+  METHOD type_and_length_2048.
 
-    DATA: lv_result TYPE xstring.
+    test( iv_length   = 2048
+          iv_expected = '908001' ).
 
-    lv_result = zcl_abapgit_git_pack=>type_and_length(
-      iv_type   = zif_abapgit_definitions=>gc_type-commit
-      iv_length = 1000000 ).
+  ENDMETHOD.
 
-    cl_abap_unit_assert=>assert_equals(
-      act = lv_result
-      exp = '90A4E803' ).
+  METHOD type_and_length_90000.
+
+    test( iv_length   = 90000
+          iv_type     = zif_abapgit_definitions=>gc_type-blob
+          iv_expected = 'B0F92B' ).
+
+  ENDMETHOD.
+
+  METHOD type_and_length_10.
+
+    test( iv_length   = 10
+          iv_expected = '1A' ).
+
+  ENDMETHOD.
+
+  METHOD type_and_length_1000000.
+
+    test( iv_length   = 1000000
+          iv_expected = '90A4E803' ).
+
+  ENDMETHOD.
+
+  METHOD type_and_length_0.
+
+    test( iv_length   = 0
+          iv_expected = '10' ).
+
+  ENDMETHOD.
+
+  METHOD type_and_length_128.
+
+    test( iv_length   = 128
+          iv_expected = '9008' ).
+
+  ENDMETHOD.
+
+  METHOD type_and_length_1.
+
+    test( iv_length   = 1
+          iv_expected = '11' ).
+
+  ENDMETHOD.
+
+  METHOD type_and_length_15.
+
+    test( iv_length   = 15
+          iv_expected = '1F' ).
+
+  ENDMETHOD.
+
+  METHOD type_and_length_16.
+
+    test( iv_length   = 16
+          iv_expected = '9001' ).
+
+  ENDMETHOD.
+
+  METHOD type_and_length_17.
+
+    test( iv_length   = 17
+          iv_expected = '9101' ).
 
   ENDMETHOD.
 
@@ -188,7 +246,7 @@ CLASS ltcl_pack DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
         RETURNING VALUE(rs_object) TYPE zif_abapgit_definitions=>ty_object
         RAISING   zcx_abapgit_exception.
 
-ENDCLASS.       "ltcl_Pack
+ENDCLASS.
 
 
 CLASS ltcl_pack IMPLEMENTATION.
@@ -310,7 +368,7 @@ CLASS ltcl_pack IMPLEMENTATION.
         exp = lt_objects
         act = lt_result ).
 
-  ENDMETHOD.                    "encode_decode_pack_multiple
+  ENDMETHOD.
 
   METHOD object_blob.
 
@@ -320,7 +378,7 @@ CLASS ltcl_pack IMPLEMENTATION.
     rs_object-data = iv_data.
     rs_object-adler32 = zcl_abapgit_hash=>adler32( iv_data ).
 
-  ENDMETHOD.                    "object_blob
+  ENDMETHOD.
 
   METHOD pack_short.
 
@@ -345,7 +403,7 @@ CLASS ltcl_pack IMPLEMENTATION.
         exp = lt_objects
         act = lt_result ).
 
-  ENDMETHOD.                    "encode_decode_pack
+  ENDMETHOD.
 
   METHOD pack_long.
 
@@ -396,7 +454,7 @@ CLASS ltcl_pack IMPLEMENTATION.
         exp = ls_commit
         act = ls_result ).
 
-  ENDMETHOD.                    "commit
+  ENDMETHOD.
 
   METHOD commit_newline.
 

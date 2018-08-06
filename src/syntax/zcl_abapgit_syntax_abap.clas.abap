@@ -50,7 +50,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_ABAP IMPLEMENTATION.
 
     init_keywords( ).
 
-  ENDMETHOD.                    " class_constructor
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -71,7 +71,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_ABAP IMPLEMENTATION.
               iv_token = c_token-text
               iv_style = c_css-text ).
 
-  ENDMETHOD.                    " constructor
+  ENDMETHOD.
 
 
   METHOD init_keywords.
@@ -179,7 +179,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_ABAP IMPLEMENTATION.
     SPLIT lv_keywords AT '|' INTO TABLE lt_keywords.
     gt_keywords = lt_keywords. " Hash table
 
-  ENDMETHOD.                    " init_keywords
+  ENDMETHOD.
 
 
   METHOD is_keyword.
@@ -190,7 +190,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_ABAP IMPLEMENTATION.
     READ TABLE gt_keywords WITH KEY table_line = lv_str TRANSPORTING NO FIELDS.
     rv_yes = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.  " is_keyword.
+  ENDMETHOD.
 
 
   METHOD order_matches.
@@ -261,7 +261,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_ABAP IMPLEMENTATION.
       ASSIGN <ls_match> TO <ls_prev>.
     ENDLOOP.
 
-  ENDMETHOD.                    " order_matches.
+  ENDMETHOD.
 
 
   METHOD parse_line. "REDEFINITION

@@ -74,6 +74,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
           lo_repo       TYPE REF TO zcl_abapgit_repo_online,
           lt_list       TYPE zcl_abapgit_persist_background=>tt_background,
           li_background TYPE REF TO zif_abapgit_background,
+          lo_log        TYPE REF TO zcl_abapgit_log,
           lv_repo_name  TYPE string.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
@@ -108,11 +109,15 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
         iv_username = <ls_list>-username
         iv_password = <ls_list>-password ).
 
+      CREATE OBJECT lo_log.
       CREATE OBJECT li_background TYPE (<ls_list>-method).
 
       li_background->run(
         io_repo     = lo_repo
+        io_log      = lo_log
         it_settings = <ls_list>-settings ).
+
+      lo_log->write( ).
     ENDLOOP.
 
     IF lines( lt_list ) = 0.

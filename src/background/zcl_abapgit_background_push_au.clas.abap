@@ -8,6 +8,8 @@ CLASS zcl_abapgit_background_push_au DEFINITION
     INTERFACES zif_abapgit_background .
   PROTECTED SECTION.
 
+    DATA mo_log TYPE REF TO zcl_abapgit_log .
+
     METHODS build_comment
       IMPORTING
         !is_files         TYPE zif_abapgit_definitions=>ty_stage_files
@@ -128,10 +130,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
 *     Fill user details
       ls_comment-committer = determine_user_details( lv_changed_by ).
 
-      CREATE OBJECT lo_stage
-        EXPORTING
-          iv_branch_name = io_repo->get_branch_name( )
-          iv_branch_sha1 = io_repo->get_sha1_remote( ).
+      CREATE OBJECT lo_stage.
 
       CLEAR ls_user_files.
 
@@ -142,10 +141,10 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
           changed_by = lv_changed_by
           TRANSPORTING NO FIELDS.
         IF sy-subrc = 0.
-          WRITE: / 'stage' ##NO_TEXT,
-            ls_comment-committer-name,
-            <ls_local>-file-path,
-            <ls_local>-file-filename.
+          mo_log->add_info( |stage: {
+            ls_comment-committer-name } {
+            <ls_local>-file-path } {
+            <ls_local>-file-filename }| ).
 
           lo_stage->add( iv_path     = <ls_local>-file-path
                          iv_filename = <ls_local>-file-filename
@@ -157,9 +156,9 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
               WHERE filename = <ls_local>-file-filename
               AND path <> <ls_local>-file-path
               AND filename <> 'package.devc.xml'.
-            WRITE: / 'rm' ##NO_TEXT,
-              <ls_remote>-path,
-              <ls_remote>-filename.
+            mo_log->add_info( |rm: {
+              <ls_remote>-path } {
+              <ls_remote>-filename }| ).
 
 * rm old file when object has moved
             lo_stage->rm(
@@ -193,16 +192,13 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
 
     ASSERT lines( is_files-remote ) > 0.
 
-    CREATE OBJECT lo_stage
-      EXPORTING
-        iv_branch_name = io_repo->get_branch_name( )
-        iv_branch_sha1 = io_repo->get_sha1_remote( ).
+    CREATE OBJECT lo_stage.
 
     LOOP AT is_files-remote ASSIGNING <ls_remote>.
 
-      WRITE: / 'removed' ##NO_TEXT,
-        <ls_remote>-path,
-        <ls_remote>-filename.
+      mo_log->add_info( |removed: {
+        <ls_remote>-path } {
+        <ls_remote>-filename }| ).
 
       lo_stage->rm( iv_path     = <ls_remote>-path
                     iv_filename = <ls_remote>-filename ).
@@ -237,10 +233,11 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
 
     DATA: ls_files TYPE zif_abapgit_definitions=>ty_stage_files.
 
+    mo_log = io_log.
     ls_files = zcl_abapgit_stage_logic=>get( io_repo ).
 
     IF lines( ls_files-local ) = 0 AND lines( ls_files-remote ) = 0.
-      WRITE: / 'Nothing to stage' ##NO_TEXT.
+      io_log->add_info( 'Nothing to stage' ) ##NO_TEXT.
       RETURN.
     ENDIF.
 

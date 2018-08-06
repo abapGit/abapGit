@@ -6,6 +6,8 @@ order: 10
 
 **.abapgit.xml** is a special abapGit file. It contains meta information of the abapGit project.
 
+.abapgit.xml can be edit via "Repo menu > Advanced > Repo settings" or via "abapGit menu > Advanced > Database util". 
+
 Example: abapGit's own .abapgit.xml
 
 ```xml
@@ -77,3 +79,33 @@ The folder logic FULL forces the installation of the repository into packages wi
 ## Ignore
 
 Files which abapGit will not download into your ABAP system.
+
+## Requirements
+
+ToDo
+
+## Local Settings
+
+### Write protected
+
+Write protected ist described here: [Write proteced](http://docs.abapgit.org/ref-write-protect.html)
+
+### Ignore subpackages
+
+Suppackages would be ignored through this option.
+
+### Only local objects 
+
+ToDo
+
+### Code inspector
+
+The repo objects can be checked with the Code inspector before staging.
+
+#### Code inspector check variant
+
+By entering the Code inspector variant, the check is activated.
+
+#### Block commit commit/push if code inspection has erros
+
+This option can be used to prevent staging if errors occur in the Code Inspector.

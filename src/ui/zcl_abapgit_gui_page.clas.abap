@@ -29,7 +29,6 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
     METHODS title
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
-
     METHODS footer
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
@@ -98,7 +97,25 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
 
   METHOD scripts.
-    ASSERT 1 = 1. " Dummy
+
+    DATA: lo_settings         TYPE REF TO zcl_abapgit_settings,
+          lv_link_hint_key    TYPE char01,
+          lv_background_color TYPE string.
+
+    CREATE OBJECT ro_html.
+
+    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+
+    lv_link_hint_key = lo_settings->get_link_hint_key( ).
+    lv_background_color = lo_settings->get_link_hint_background_color( ).
+
+    IF lo_settings->get_link_hints_enabled( ) = abap_true
+    AND lv_link_hint_key IS NOT INITIAL.
+      ro_html->add( |setLinkHints("{ lv_link_hint_key }","{ lv_background_color }");| ).
+      ro_html->add( |setInitialFocusWithQuerySelector('a span', true);| ).
+      ro_html->add( |enableArrowListNavigation();| ).
+    ENDIF.
+
   ENDMETHOD. "scripts
 
 
@@ -111,6 +128,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     ro_html->add( |<td class="logo">{
                   zcl_abapgit_html=>a( iv_txt = '<img src="img/logo" alt="logo">'
+                                       iv_id  = 'abapGitLogo'
                                        iv_act = zif_abapgit_definitions=>gc_action-abapgit_home )
                   }</td>| ).                                "#EC NOTEXT
 

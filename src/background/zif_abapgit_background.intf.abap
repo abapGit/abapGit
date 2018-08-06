@@ -1,12 +1,14 @@
 INTERFACE zif_abapgit_background
   PUBLIC .
 
-  TYPES: BEGIN OF ty_settings,
-           key   TYPE string,
-           value TYPE string,
-         END OF ty_settings.
 
-  TYPES: ty_settings_tt TYPE STANDARD TABLE OF ty_settings WITH DEFAULT KEY.
+  TYPES:
+    BEGIN OF ty_settings,
+      key   TYPE string,
+      value TYPE string,
+    END OF ty_settings .
+  TYPES:
+    ty_settings_tt TYPE STANDARD TABLE OF ty_settings WITH DEFAULT KEY .
 
   CLASS-METHODS get_description
     RETURNING
@@ -17,6 +19,7 @@ INTERFACE zif_abapgit_background
   METHODS run
     IMPORTING
       !io_repo     TYPE REF TO zcl_abapgit_repo_online
+      !io_log      TYPE REF TO zcl_abapgit_log
       !it_settings TYPE ty_settings_tt OPTIONAL
     RAISING
       zcx_abapgit_exception .

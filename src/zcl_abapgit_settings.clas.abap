@@ -82,7 +82,29 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
           VALUE(rv_show_default_repo) TYPE abap_bool,
       set_show_default_repo
         IMPORTING
-          iv_show_default_repo TYPE abap_bool.
+          iv_show_default_repo TYPE abap_bool,
+      set_link_hints_enabled
+        IMPORTING
+          iv_link_hints_enabled TYPE abap_bool,
+      get_link_hints_enabled
+        RETURNING
+          VALUE(rv_link_hints_enabled) TYPE abap_bool
+        RAISING
+          zcx_abapgit_exception,
+      set_link_hint_key
+        IMPORTING
+          iv_link_hint_key TYPE char01,
+      get_link_hint_key
+        RETURNING
+          VALUE(rv_link_hint_key) TYPE char01
+        RAISING
+          zcx_abapgit_exception,
+      get_link_hint_background_color
+        RETURNING
+          VALUE(rv_background_color) TYPE string,
+      set_link_hint_background_color
+        IMPORTING
+          iv_background_color TYPE string.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_s_settings,
@@ -94,8 +116,13 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
              commitmsg_comment_length TYPE i,
              commitmsg_body_size      TYPE i,
            END OF ty_s_settings.
+
     DATA: ms_settings      TYPE ty_s_settings,
           ms_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
+
+    METHODS:
+      set_default_link_hint_key,
+      set_default_link_hint_bg_color.
 
 ENDCLASS.
 
@@ -121,6 +148,16 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
   METHOD get_experimental_features.
     rv_run = ms_settings-experimental_features.
+  ENDMETHOD.
+
+
+  METHOD get_link_hints_enabled.
+    rv_link_hints_enabled = ms_user_settings-link_hints_enabled.
+  ENDMETHOD.
+
+
+  METHOD get_link_hint_key.
+    rv_link_hint_key = ms_user_settings-link_hint_key.
   ENDMETHOD.
 
 
@@ -164,6 +201,15 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_show_default_repo.
+    rv_show_default_repo = ms_user_settings-show_default_repo.
+  ENDMETHOD.
+
+
+  METHOD get_user_settings.
+    rs_settings = ms_user_settings.
+  ENDMETHOD.
+
 
   METHOD set_adt_jump_enanbled.
     ms_user_settings-adt_jump_enabled = iv_adt_jump_enabled.
@@ -192,12 +238,34 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
     set_show_default_repo( abap_false ).
     set_commitmsg_comment_length( c_commitmsg_comment_length_dft ).
     set_commitmsg_body_size( c_commitmsg_body_size_dft ).
+    set_default_link_hint_key( ).
+    set_default_link_hint_bg_color( ).
 
+  ENDMETHOD.
+
+
+  METHOD set_default_link_hint_bg_color.
+    set_link_hint_background_color( |lightgreen| ).
+  ENDMETHOD.
+
+
+  METHOD set_default_link_hint_key.
+    set_link_hint_key( |f| ).
   ENDMETHOD.
 
 
   METHOD set_experimental_features.
     ms_settings-experimental_features = iv_run.
+  ENDMETHOD.
+
+
+  METHOD set_link_hints_enabled.
+    ms_user_settings-link_hints_enabled = iv_link_hints_enabled.
+  ENDMETHOD.
+
+
+  METHOD set_link_hint_key.
+    ms_user_settings-link_hint_key = iv_link_hint_key.
   ENDMETHOD.
 
 
@@ -226,8 +294,21 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_show_default_repo.
+    ms_user_settings-show_default_repo = iv_show_default_repo.
+  ENDMETHOD.
+
+
   METHOD set_user_settings.
     ms_user_settings = is_user_settings.
+
+    IF ms_user_settings-link_hint_key IS INITIAL.
+      set_default_link_hint_key( ).
+    ENDIF.
+
+    IF ms_user_settings-link_hint_background_color IS INITIAL.
+      set_default_link_hint_bg_color( ).
+    ENDIF.
   ENDMETHOD.
 
 
@@ -248,18 +329,13 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD get_user_settings.
-    rs_settings = ms_user_settings.
+  METHOD get_link_hint_background_color.
+    rv_background_color = ms_user_settings-link_hint_background_color.
   ENDMETHOD.
 
 
-  METHOD get_show_default_repo.
-    rv_show_default_repo = ms_user_settings-show_default_repo.
-  ENDMETHOD.
-
-
-  METHOD set_show_default_repo.
-    ms_user_settings-show_default_repo = iv_show_default_repo.
+  METHOD set_link_hint_background_color.
+    ms_user_settings-link_hint_background_color = iv_background_color.
   ENDMETHOD.
 
 ENDCLASS.

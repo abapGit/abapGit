@@ -1,7 +1,7 @@
-class ZCL_ABAPGIT_GUI definition
-  public
-  final
-  create private .
+CLASS zcl_abapgit_gui DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PRIVATE .
 
   PUBLIC SECTION.
 
@@ -19,6 +19,8 @@ class ZCL_ABAPGIT_GUI definition
 
     METHODS on_event FOR EVENT sapevent OF cl_gui_html_viewer
       IMPORTING action frame getdata postdata query_table.  "#EC NEEDED
+
+    METHODS focus.
 
   PRIVATE SECTION.
 
@@ -190,6 +192,13 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     startup( ).
 
   ENDMETHOD.            "constructor
+
+
+  METHOD focus.
+
+    cl_gui_control=>set_focus( mo_html_viewer ).
+
+  ENDMETHOD.
 
 
   METHOD get_current_page_name.

@@ -79,11 +79,14 @@ todo, should this be refactored to the repo object instead?
 
 ## Branches
 
+### List
+`zcl_abapgit_factory=>get_branch_overview( mo_repo )->get_branches( ).`
+
 ### Switching
-todo
+`repo->set_branch_name( )`
 
 ### Creating
-todo
+`repo->create_branch( )`
 
 ### Deleting
 todo

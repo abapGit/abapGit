@@ -1,4 +1,3 @@
-*"* use this source file for your ABAP unit test classes
 CLASS ltd_code_inspector DEFINITION FOR TESTING.
 
   PUBLIC SECTION.
@@ -189,10 +188,7 @@ CLASS ltcl_run_code_inspection IMPLEMENTATION.
           lo_stage   TYPE REF TO  zcl_abapgit_stage,
           lx_error   TYPE REF TO  zcx_abapgit_exception.
 
-    CREATE OBJECT lo_stage
-      EXPORTING
-        iv_branch_name = 'refs/master'
-        iv_branch_sha1 = 'dummy'.
+    CREATE OBJECT lo_stage.
 
     TRY.
         mo_repo_online->push( is_comment = ls_comment

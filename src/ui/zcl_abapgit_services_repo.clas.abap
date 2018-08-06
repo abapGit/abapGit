@@ -97,7 +97,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
 
   METHOD gui_deserialize.
@@ -198,7 +198,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     DATA: lt_columns  TYPE stringtab,
           lt_selected LIKE ct_overwrite,
-          lv_column   LIKE LINE OF lt_columns.
+          lv_column   LIKE LINE OF lt_columns,
+          li_popups   TYPE REF TO zif_abapgit_popups.
 
     FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF ct_overwrite.
 
@@ -212,7 +213,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     lv_column = 'OBJ_NAME'.
     INSERT lv_column INTO TABLE lt_columns.
 
-    zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_from_list(
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popups->popup_to_select_from_list(
       EXPORTING
         it_list               = ct_overwrite
         i_header_text         = |The following Objects have been modified locally.|
@@ -422,8 +424,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     ENDIF.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    lo_repo->set_new_remote( iv_url         = ls_popup-url
-                             iv_branch_name = ls_popup-branch_name ).
+    lo_repo->set_url( ls_popup-url ).
+    lo_repo->set_branch_name( ls_popup-branch_name ).
 
     COMMIT WORK.
 
@@ -502,7 +504,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       lo_repository          TYPE REF TO zcl_abapgit_repo_online,
       lo_transport_to_branch TYPE REF TO zcl_abapgit_transport_2_branch,
       lt_transport_headers   TYPE trwbo_request_headers,
-      lt_transport_objects   TYPE scts_tadir,
+      lt_transport_objects   TYPE zif_abapgit_definitions=>ty_tadir_tt,
       ls_transport_to_branch TYPE zif_abapgit_definitions=>ty_transport_to_branch.
 
 

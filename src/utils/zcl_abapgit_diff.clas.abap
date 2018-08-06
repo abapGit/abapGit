@@ -82,7 +82,7 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
 
     ENDLOOP.
 
-  ENDMETHOD.                " calculate_line_num_and_stats
+  ENDMETHOD.
 
 
   METHOD compute.
@@ -101,7 +101,7 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
         trdir_delta  = lt_trdir_delta
         text_delta   = rt_delta.
 
-  ENDMETHOD.                    "compute
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -127,12 +127,12 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
     map_beacons( ).
     shortlist( ).
 
-  ENDMETHOD.                    "diff
+  ENDMETHOD.
 
 
   METHOD get.
     rt_diff = mt_diff.
-  ENDMETHOD.                    "get
+  ENDMETHOD.
 
 
   METHOD map_beacons.
@@ -194,7 +194,7 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
 
-  ENDMETHOD.                " map_beacons
+  ENDMETHOD.
 
 
   METHOD render.
@@ -255,7 +255,7 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
       ENDIF.
     ENDDO.
 
-  ENDMETHOD.                " render
+  ENDMETHOD.
 
 
   METHOD shortlist.
@@ -293,12 +293,12 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-  ENDMETHOD.                " shortlist
+  ENDMETHOD.
 
 
   METHOD stats.
     rs_count = ms_stats.
-  ENDMETHOD.                    "count
+  ENDMETHOD.
 
 
   METHOD unpack.
@@ -313,5 +313,5 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
     SPLIT lv_new AT zif_abapgit_definitions=>gc_newline INTO TABLE et_new.
     SPLIT lv_old AT zif_abapgit_definitions=>gc_newline INTO TABLE et_old.
 
-  ENDMETHOD.                    "unpack
+  ENDMETHOD.
 ENDCLASS.
