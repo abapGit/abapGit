@@ -182,6 +182,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       obj_name TYPE tadir-obj_name,
       devclass TYPE tadir-devclass,
       korrnum  TYPE tadir-korrnum,
+      delflag  TYPE tadir-delflag,
       path     TYPE string,
     END OF ty_tadir .
   TYPES:

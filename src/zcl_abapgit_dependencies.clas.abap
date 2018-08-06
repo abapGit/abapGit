@@ -5,21 +5,9 @@ CLASS zcl_abapgit_dependencies DEFINITION
 
   PUBLIC SECTION.
 
-    TYPES:
-      BEGIN OF ty_tadir,
-        pgmid    TYPE tadir-pgmid,
-        object   TYPE tadir-object,
-        obj_name TYPE tadir-obj_name,
-        devclass TYPE tadir-devclass,
-        korrnum  TYPE tadir-korrnum,
-        path     TYPE string,
-      END OF ty_tadir .
-    TYPES:
-      ty_tadir_tt TYPE STANDARD TABLE OF ty_tadir WITH DEFAULT KEY .
-
     CLASS-METHODS resolve
       CHANGING
-        !ct_tadir TYPE ty_tadir_tt
+        !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
@@ -45,7 +33,7 @@ CLASS zcl_abapgit_dependencies DEFINITION
 
     CLASS-METHODS resolve_ddic
       CHANGING
-        !ct_tadir TYPE ty_tadir_tt
+        !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS get_ddls_dependencies
@@ -55,12 +43,12 @@ CLASS zcl_abapgit_dependencies DEFINITION
         VALUE(rt_dependency) TYPE tty_dedenpency .
     CLASS-METHODS resolve_packages
       CHANGING
-        ct_tadir TYPE zcl_abapgit_dependencies=>ty_tadir_tt.
+        ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_dependencies IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
 
 
   METHOD get_ddls_dependencies.
@@ -171,9 +159,9 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
           lt_scope        TYPE STANDARD TABLE OF seu_obj,
           lt_dependency   TYPE tty_dedenpency.
 
-    FIELD-SYMBOLS: <ls_tadir_ddls>      TYPE ty_tadir,
+    FIELD-SYMBOLS: <ls_tadir_ddls>      TYPE zif_abapgit_definitions=>ty_tadir,
                    <ls_dependency>      TYPE ty_dependency,
-                   <ls_tadir_dependent> TYPE ty_tadir,
+                   <ls_tadir_dependent> TYPE zif_abapgit_definitions=>ty_tadir,
                    <ls_tadir>           LIKE LINE OF ct_tadir,
                    <ls_edge>            LIKE LINE OF lt_edges,
                    <ls_found>           LIKE LINE OF lt_founds,
@@ -331,5 +319,4 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
 ENDCLASS.

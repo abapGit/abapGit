@@ -1,12 +1,17 @@
-CLASS zcl_abapgit_transport_2_branch DEFINITION PUBLIC FINAL CREATE PUBLIC.
+CLASS zcl_abapgit_transport_2_branch DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    METHODS:
-      create
-        IMPORTING io_repository          TYPE REF TO zcl_abapgit_repo_online
-                  is_transport_to_branch TYPE zif_abapgit_definitions=>ty_transport_to_branch
-                  it_transport_objects   TYPE scts_tadir
-        RAISING   zcx_abapgit_exception.
+
+    METHODS create
+      IMPORTING
+        !io_repository          TYPE REF TO zcl_abapgit_repo_online
+        !is_transport_to_branch TYPE zif_abapgit_definitions=>ty_transport_to_branch
+        !it_transport_objects   TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
 
     METHODS generate_commit_message
@@ -16,7 +21,7 @@ CLASS zcl_abapgit_transport_2_branch DEFINITION PUBLIC FINAL CREATE PUBLIC.
         VALUE(rs_comment)       TYPE zif_abapgit_definitions=>ty_comment .
     METHODS stage_transport_objects
       IMPORTING
-        !it_transport_objects TYPE scts_tadir
+        !it_transport_objects TYPE zif_abapgit_definitions=>ty_tadir_tt
         !io_stage             TYPE REF TO zcl_abapgit_stage
         !is_stage_objects     TYPE zif_abapgit_definitions=>ty_stage_files
         !it_object_statuses   TYPE zif_abapgit_definitions=>ty_results_tt

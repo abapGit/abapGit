@@ -206,7 +206,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -995,7 +995,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lt_overwrite_uniqe TYPE HASHED TABLE OF zif_abapgit_definitions=>ty_overwrite
                                   WITH UNIQUE KEY obj_type obj_name devclass,
           ls_overwrite       LIKE LINE OF rt_overwrite,
-          ls_tadir           TYPE tadir.
+          ls_tadir           TYPE zif_abapgit_definitions=>ty_tadir.
+
     DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
@@ -1026,5 +1027,4 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     rt_overwrite = lt_overwrite_uniqe.
 
   ENDMETHOD.
-
 ENDCLASS.

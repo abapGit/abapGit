@@ -38,7 +38,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_tadir IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
 
 
   METHOD build.
@@ -197,7 +197,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
   METHOD zif_abapgit_tadir~get_object_package.
 
-    DATA: ls_tadir TYPE tadir,
+    DATA: ls_tadir TYPE zif_abapgit_definitions=>ty_tadir,
           ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
     ls_tadir = zif_abapgit_tadir~read_single(
@@ -251,7 +251,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
         iv_pgmid    = iv_pgmid
         iv_obj_name = iv_obj_name ).
     ELSE.
-      SELECT SINGLE * FROM tadir INTO rs_tadir
+      SELECT SINGLE * FROM tadir INTO CORRESPONDING FIELDS OF rs_tadir
         WHERE pgmid = iv_pgmid
         AND object = iv_object
         AND obj_name = iv_obj_name.                       "#EC CI_SUBRC

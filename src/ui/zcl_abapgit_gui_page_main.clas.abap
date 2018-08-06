@@ -286,7 +286,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
   METHOD test_changed_by.
 
-    DATA: ls_tadir TYPE tadir,
+    DATA: ls_tadir TYPE zif_abapgit_definitions=>ty_tadir,
           lv_user  TYPE xubname,
           ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
