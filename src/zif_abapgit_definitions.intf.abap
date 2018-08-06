@@ -176,8 +176,8 @@ INTERFACE zif_abapgit_definitions PUBLIC.
     END OF ty_object .
   TYPES:
     ty_objects_tt TYPE STANDARD TABLE OF ty_object WITH DEFAULT KEY
-      WITH NON-UNIQUE SORTED KEY sha COMPONENTS sha1 type index
-      WITH NON-UNIQUE SORTED KEY type COMPONENTS type sha1 index .
+      WITH NON-UNIQUE SORTED KEY sha COMPONENTS sha1
+      WITH NON-UNIQUE SORTED KEY type COMPONENTS type sha1.
   TYPES:
     BEGIN OF ty_tadir,
       pgmid    TYPE tadir-pgmid,
