@@ -55,7 +55,8 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
     DATA: last_package    TYPE devclass VALUE cl_abap_char_utilities=>horizontal_tab.
 
     FIELD-SYMBOLS: <ls_tdevc> LIKE LINE OF lt_tdevc,
-                   <ls_tadir> LIKE LINE OF rt_tadir.
+                   <ls_tadir> LIKE LINE OF rt_tadir,
+                   <lv_package>  TYPE devclass.
 
     "Determine Packages to Read
     DATA: lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
@@ -92,7 +93,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
         AND object NOT IN lt_excludes
         AND delflag = abap_false
         AND srcsystem IN lt_srcsystem
-        ORDER BY PRIMARY KEY.    "#EC CI_GENBUFF "#EC CI_SUBRC
+        ORDER BY PRIMARY KEY.             "#EC CI_GENBUFF "#EC CI_SUBRC
     ENDIF.
 
     SORT rt_tadir BY devclass pgmid object obj_name.
@@ -102,14 +103,14 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
       it_tadir = rt_tadir
       io_log   = io_log ).
 
-    LOOP AT lt_packages ASSIGNING FIELD-SYMBOL(<package>).
+    LOOP AT lt_packages ASSIGNING <lv_package>.
       " Local packages are not in TADIR, only in TDEVC, act as if they were
-      IF <package> CP '$*'. " OR <package> CP 'T*' ).
+      IF <lv_package> CP '$*'. " OR <package> CP 'T*' ).
         APPEND INITIAL LINE TO rt_tadir ASSIGNING <ls_tadir>.
         <ls_tadir>-pgmid    = 'R3TR'.
         <ls_tadir>-object   = 'DEVC'.
-        <ls_tadir>-obj_name = <package>.
-        <ls_tadir>-devclass = <package>.
+        <ls_tadir>-obj_name = <lv_package>.
+        <ls_tadir>-devclass = <lv_package>.
       ENDIF.
     ENDLOOP.
 
@@ -223,6 +224,8 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
 
   METHOD zif_abapgit_tadir~read.
 
+    DATA: li_exit TYPE REF TO zif_abapgit_exit.
+
 * start recursion
 * hmm, some problems here, should TADIR also build path?
     rt_tadir = build( iv_package            = iv_package
@@ -232,7 +235,8 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
                       iv_only_local_objects = iv_only_local_objects
                       io_log                = io_log ).
 
-    zcl_abapgit_exit=>get_instance( )->change_tadir(
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->change_tadir(
       EXPORTING
         iv_package = iv_package
         io_log     = io_log

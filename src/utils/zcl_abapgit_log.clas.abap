@@ -61,7 +61,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
+CLASS zcl_abapgit_log IMPLEMENTATION.
 
 
   METHOD add.
@@ -237,11 +237,13 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
 
   METHOD write.
 
-    DATA: ls_log LIKE LINE OF mt_log.
+    DATA: ls_log  LIKE LINE OF mt_log,
+          lv_text TYPE string.
 
 
     LOOP AT mt_log INTO ls_log.
-      WRITE: / |{ ls_log-type }: { ls_log-msg }|.
+      lv_text = |{ ls_log-type }: { ls_log-msg }|.
+      WRITE: / lv_text.
     ENDLOOP.
 
   ENDMETHOD.
