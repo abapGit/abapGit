@@ -1048,7 +1048,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
       add_field( EXPORTING iv_tabname    = 'TDEVC'
                            iv_fieldname  = 'DEVCLASS'
-                           iv_fieldtext  = 'Target package'
+                           iv_fieldtext  = 'Package'
                            iv_value      = lv_package
                            iv_field_attr = lv_pattr
                  CHANGING ct_fields      = lt_fields ).

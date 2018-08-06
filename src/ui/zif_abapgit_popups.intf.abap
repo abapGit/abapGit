@@ -61,7 +61,7 @@ INTERFACE zif_abapgit_popups
       !iv_branch         TYPE string DEFAULT 'refs/heads/master'
       !iv_freeze_package TYPE abap_bool OPTIONAL
       !iv_freeze_url     TYPE abap_bool OPTIONAL
-      !iv_title          TYPE clike DEFAULT 'Clone repository ...'
+      !iv_title          TYPE clike DEFAULT 'New Online Project'
     RETURNING
       VALUE(rs_popup)    TYPE zif_abapgit_popups=>ty_popup
     RAISING
