@@ -303,21 +303,27 @@ CLASS zcl_abapgit_oo_class_new IMPLEMENTATION.
 
   METHOD update_source_index.
 
-    "    dynamic invocation IF_OO_SOURCE_POS_INDEX_HELPER doesn't exist in 702.
+    "    dynamic invocation, IF_OO_SOURCE_POS_INDEX_HELPER doesn't exist in 702.
     DATA li_index_helper TYPE REF TO object.
 
-    CREATE OBJECT li_index_helper TYPE cl_oo_source_pos_index_helper.
+    TRY.
+        CREATE OBJECT li_index_helper TYPE cl_oo_source_pos_index_helper.
 
-    CALL METHOD li_index_helper->('IF_OO_SOURCE_POS_INDEX_HELPER~CREATE_INDEX_WITH_SCANNER')
-      EXPORTING
-        class_name = iv_clsname
-        version    = if_oo_clif_source=>co_version_active
-        scanner    = io_scanner.
+        CALL METHOD li_index_helper->('IF_OO_SOURCE_POS_INDEX_HELPER~CREATE_INDEX_WITH_SCANNER')
+          EXPORTING
+            class_name = iv_clsname
+            version    = if_oo_clif_source=>co_version_active
+            scanner    = io_scanner.
 
-    CALL METHOD li_index_helper->('IF_OO_SOURCE_POS_INDEX_HELPER~DELETE_INDEX')
-      EXPORTING
-        class_name = iv_clsname
-        version    = if_oo_clif_source=>co_version_inactive.
+        CALL METHOD li_index_helper->('IF_OO_SOURCE_POS_INDEX_HELPER~DELETE_INDEX')
+          EXPORTING
+            class_name = iv_clsname
+            version    = if_oo_clif_source=>co_version_inactive.
+
+      CATCH cx_root.
+        " it's probably okay to no update the index
+        RETURN.
+    ENDTRY.
 
   ENDMETHOD.
 
