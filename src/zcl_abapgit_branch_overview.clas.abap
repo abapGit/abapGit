@@ -58,7 +58,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
+CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -325,7 +325,9 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
         ls_commit-author
         ls_commit-email
         ls_commit-time ##NO_TEXT.
-      ASSERT sy-subrc = 0.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Error author regex' ).
+      ENDIF.
       APPEND ls_commit TO rt_commits.
 
     ENDLOOP.
