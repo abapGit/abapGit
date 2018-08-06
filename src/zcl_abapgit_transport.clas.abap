@@ -1,26 +1,41 @@
-CLASS zcl_abapgit_transport DEFINITION PUBLIC FINAL CREATE PUBLIC.
+CLASS zcl_abapgit_transport DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    CLASS-METHODS:
-      zip RAISING zcx_abapgit_exception,
-      to_tadir IMPORTING it_transport_headers TYPE trwbo_request_headers
-               RETURNING VALUE(rt_tadir)      TYPE scts_tadir
-               RAISING   zcx_abapgit_exception.
 
+    CLASS-METHODS zip
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS to_tadir
+      IMPORTING
+        !it_transport_headers TYPE trwbo_request_headers
+      RETURNING
+        VALUE(rt_tadir)       TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
-    CLASS-METHODS:
-      read_requests
-        IMPORTING it_trkorr          TYPE trwbo_request_headers
-        RETURNING VALUE(rt_requests) TYPE trwbo_requests
-        RAISING   zcx_abapgit_exception,
-      find_top_package
-        IMPORTING it_tadir          TYPE scts_tadir
-        RETURNING VALUE(rv_package) TYPE devclass,
-      resolve
-        IMPORTING it_requests     TYPE trwbo_requests
-        RETURNING VALUE(rt_tadir) TYPE scts_tadir
-        RAISING   zcx_abapgit_exception.
 
+    CLASS-METHODS read_requests
+      IMPORTING
+        !it_trkorr         TYPE trwbo_request_headers
+      RETURNING
+        VALUE(rt_requests) TYPE trwbo_requests
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS find_top_package
+      IMPORTING
+        !it_tadir         TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RETURNING
+        VALUE(rv_package) TYPE devclass .
+    CLASS-METHODS resolve
+      IMPORTING
+        !it_requests    TYPE trwbo_requests
+      RETURNING
+        VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -87,7 +102,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
     DATA: lv_object     TYPE tadir-object,
           lv_obj_name   TYPE tadir-obj_name,
           lv_trobj_name TYPE trobj_name,
-          ls_tadir      TYPE tadir.
+          ls_tadir      TYPE zif_abapgit_definitions=>ty_tadir.
 
     FIELD-SYMBOLS: <ls_request> LIKE LINE OF it_requests,
                    <ls_object>  LIKE LINE OF <ls_request>-objects.
@@ -145,7 +160,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
   METHOD zip.
 
     DATA: lt_requests TYPE trwbo_requests,
-          lt_tadir    TYPE scts_tadir,
+          lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lv_package  TYPE devclass,
           ls_data     TYPE zif_abapgit_persistence=>ty_repo,
           lo_repo     TYPE REF TO zcl_abapgit_repo_offline,
@@ -179,6 +194,6 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
         is_data = ls_data.
 
     zcl_abapgit_zip=>export( io_repo   = lo_repo
-                     it_filter = lt_tadir ).
+                             it_filter = lt_tadir ).
   ENDMETHOD.
 ENDCLASS.

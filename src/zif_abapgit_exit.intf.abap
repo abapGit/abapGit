@@ -1,15 +1,6 @@
 INTERFACE zif_abapgit_exit PUBLIC.
 
   TYPES:
-    BEGIN OF ty_tadir,
-      pgmid    TYPE tadir-pgmid,
-      object   TYPE tadir-object,
-      obj_name TYPE tadir-obj_name,
-      devclass TYPE tadir-devclass,
-      korrnum  TYPE tadir-korrnum,
-      path     TYPE string,
-    END OF ty_tadir,
-    ty_tadir_tt      TYPE STANDARD TABLE OF ty_tadir WITH DEFAULT KEY,
     ty_icm_sinfo2_tt TYPE STANDARD TABLE OF icm_sinfo2 WITH DEFAULT KEY.
 
   METHODS:
@@ -34,6 +25,6 @@ INTERFACE zif_abapgit_exit PUBLIC.
         iv_package TYPE devclass
         io_log     TYPE REF TO zcl_abapgit_log
       CHANGING
-        ct_tadir   TYPE ty_tadir_tt.
+        ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
 ENDINTERFACE.

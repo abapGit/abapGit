@@ -3,21 +3,26 @@ CLASS zcl_abapgit_zip DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+
     CLASS-METHODS import
-      IMPORTING iv_key TYPE zif_abapgit_persistence=>ty_value
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !iv_key TYPE zif_abapgit_persistence=>ty_value
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS export
-      IMPORTING io_repo   TYPE REF TO zcl_abapgit_repo
-                it_filter TYPE scts_tadir OPTIONAL
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !io_repo   TYPE REF TO zcl_abapgit_repo
+        !it_filter TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS export_package
-      RAISING zcx_abapgit_exception zcx_abapgit_cancel.
-
+      RAISING
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
     CLASS-METHODS export_object
-      RAISING zcx_abapgit_exception zcx_abapgit_cancel.
-
+      RAISING
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
   PRIVATE SECTION.
     CLASS-METHODS file_upload
       RETURNING VALUE(rv_xstr) TYPE xstring
@@ -52,7 +57,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_zip IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
 
   METHOD encode_files.
@@ -106,7 +111,7 @@ CLASS zcl_abapgit_zip IMPLEMENTATION.
 
   METHOD export_object.
 
-    DATA: ls_tadir    TYPE tadir,
+    DATA: ls_tadir    TYPE zif_abapgit_definitions=>ty_tadir,
           ls_item     TYPE zif_abapgit_definitions=>ty_item,
           lv_folder   TYPE string,
           lv_fullpath TYPE string,

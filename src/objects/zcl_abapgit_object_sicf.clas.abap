@@ -16,7 +16,7 @@ CLASS zcl_abapgit_object_sicf DEFINITION
         !iv_pgmid       TYPE tadir-pgmid DEFAULT 'R3TR'
         !iv_obj_name    TYPE tadir-obj_name
       RETURNING
-        VALUE(rs_tadir) TYPE tadir
+        VALUE(rs_tadir) TYPE zif_abapgit_definitions=>ty_tadir
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS read_sicf_url
@@ -322,7 +322,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
 
   METHOD read_tadir_sicf.
 
-    DATA: lt_tadir    TYPE STANDARD TABLE OF tadir WITH DEFAULT KEY,
+    DATA: lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lv_hash     TYPE text25,
           lv_obj_name TYPE tadir-obj_name.
 
@@ -332,11 +332,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
     lv_hash = iv_obj_name+15.
     CONCATENATE iv_obj_name(15) '%' INTO lv_obj_name.
 
-    SELECT * FROM tadir INTO TABLE lt_tadir
+    SELECT * FROM tadir INTO CORRESPONDING FIELDS OF TABLE lt_tadir
       WHERE pgmid = iv_pgmid
       AND object = 'SICF'
       AND obj_name LIKE lv_obj_name
-      ORDER BY PRIMARY KEY. "#EC CI_GENBUFF
+      ORDER BY PRIMARY KEY.                             "#EC CI_GENBUFF
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       IF read_sicf_url( <ls_tadir>-obj_name ) = lv_hash.
@@ -481,7 +481,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: ls_tadir TYPE tadir,
+    DATA: ls_tadir TYPE zif_abapgit_definitions=>ty_tadir,
           ls_key   TYPE ty_sicf_key.
 
     ls_tadir = read_tadir_sicf( ms_item-obj_name ).
@@ -506,6 +506,13 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
   ENDMETHOD.
 
 
@@ -579,11 +586,4 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
                  ig_data = lt_icfhandler ).
 
   ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-
-    rv_is_locked = abap_false.
-
-  ENDMETHOD.
-
 ENDCLASS.

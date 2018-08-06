@@ -504,7 +504,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       lo_repository          TYPE REF TO zcl_abapgit_repo_online,
       lo_transport_to_branch TYPE REF TO zcl_abapgit_transport_2_branch,
       lt_transport_headers   TYPE trwbo_request_headers,
-      lt_transport_objects   TYPE scts_tadir,
+      lt_transport_objects   TYPE zif_abapgit_definitions=>ty_tadir_tt,
       ls_transport_to_branch TYPE zif_abapgit_definitions=>ty_transport_to_branch.
 
 

@@ -28,7 +28,7 @@ INTERFACE zif_abapgit_tadir
       !iv_object      TYPE tadir-object
       !iv_obj_name    TYPE tadir-obj_name
     RETURNING
-      VALUE(rs_tadir) TYPE tadir
+      VALUE(rs_tadir) TYPE zif_abapgit_definitions=>ty_tadir
     RAISING
       zcx_abapgit_exception .
 ENDINTERFACE.

@@ -31,7 +31,7 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS get_files_local
       IMPORTING
         !io_log         TYPE REF TO zcl_abapgit_log OPTIONAL
-        !it_filter      TYPE scts_tadir OPTIONAL
+        !it_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
@@ -63,7 +63,7 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS deserialize
       IMPORTING
-        is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
+        !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
         zcx_abapgit_exception .
     METHODS refresh
@@ -99,16 +99,14 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(rs_settings) TYPE zif_abapgit_persistence=>ty_repo-local_settings .
     METHODS set_local_settings
       IMPORTING
-        is_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
+        !is_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
       RAISING
         zcx_abapgit_exception .
     METHODS run_code_inspector
       RETURNING
-        value(rt_list) TYPE scit_alvlist
+        VALUE(rt_list) TYPE scit_alvlist
       RAISING
         zcx_abapgit_exception .
-
-
   PROTECTED SECTION.
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
     DATA mt_remote TYPE zif_abapgit_definitions=>ty_files_tt .
@@ -265,7 +263,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
           lt_cache    TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_file_item
                    WITH NON-UNIQUE KEY item.
 
-    DATA: lt_filter       TYPE SORTED TABLE OF tadir
+    DATA: lt_filter       TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_tadir
                           WITH NON-UNIQUE KEY object obj_name,
           lv_filter_exist TYPE abap_bool.
 
