@@ -36,7 +36,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
+CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -272,36 +272,68 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
         RETURN.
       ENDIF.
 
-      li_package->set_changeable(
-        EXPORTING
-          i_changeable                = abap_true
-          i_suppress_dialog           = abap_true
-        EXCEPTIONS
-          object_locked_by_other_user = 1
-          permission_failure          = 2
-          object_already_changeable   = 3
-          object_already_unlocked     = 4
-          object_just_created         = 5
-          object_deleted              = 6
-          object_modified             = 7
-          object_not_existing         = 8
-          object_invalid              = 9
-          unexpected_error            = 10
-          OTHERS                      = 11 ).
+      TRY.
+          CALL METHOD li_package->('SET_CHANGEABLE')
+            EXPORTING
+              i_changeable                = abap_true
+              i_suppress_dialog           = abap_true " Parameter missing in 702
+            EXCEPTIONS
+              object_locked_by_other_user = 1
+              permission_failure          = 2
+              object_already_changeable   = 3
+              object_already_unlocked     = 4
+              object_just_created         = 5
+              object_deleted              = 6
+              object_modified             = 7
+              object_not_existing         = 8
+              object_invalid              = 9
+              unexpected_error            = 10
+              OTHERS                      = 11.
+
+        CATCH cx_root.
+          li_package->set_changeable(
+            EXPORTING
+              i_changeable                = abap_true
+            EXCEPTIONS
+              object_locked_by_other_user = 1
+              permission_failure          = 2
+              object_already_changeable   = 3
+              object_already_unlocked     = 4
+              object_just_created         = 5
+              object_deleted              = 6
+              object_modified             = 7
+              object_not_existing         = 8
+              object_invalid              = 9
+              unexpected_error            = 10
+              OTHERS                      = 11 ).
+      ENDTRY.
 
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
-      li_package->delete(
-        EXPORTING
-          i_suppress_dialog     = abap_true
-        EXCEPTIONS
-          object_not_empty      = 1
-          object_not_changeable = 2
-          object_invalid        = 3
-          intern_err            = 4
-          OTHERS                = 5 ).
+      TRY.
+          CALL METHOD li_package->('DELETE')
+            EXPORTING
+              i_suppress_dialog     = abap_true  " Parameter missing in 702
+            EXCEPTIONS
+              object_not_empty      = 1
+              object_not_changeable = 2
+              object_invalid        = 3
+              intern_err            = 4
+              OTHERS                = 5.
+
+        CATCH cx_root.
+
+          li_package->delete(
+            EXCEPTIONS
+              object_not_empty      = 1
+              object_not_changeable = 2
+              object_invalid        = 3
+              intern_err            = 4
+              OTHERS                = 5 ).
+
+      ENDTRY.
 
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
