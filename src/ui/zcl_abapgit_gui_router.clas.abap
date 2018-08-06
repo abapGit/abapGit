@@ -105,9 +105,11 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
   METHOD get_page_playground.
     DATA: lv_class_name TYPE string,
-          lv_cancel     TYPE abap_bool.
+          lv_cancel     TYPE abap_bool,
+          li_popups     TYPE REF TO zif_abapgit_popups.
 
-    zcl_abapgit_ui_factory=>get_popups( )->run_page_class_popup(
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popups->run_page_class_popup(
       IMPORTING
         ev_name   = lv_class_name
         ev_cancel = lv_cancel ).
