@@ -213,8 +213,6 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
 
     " downport from CL_APL_ECATT_VO_UPLOAD
 
-    "26.03.2013
-
     DATA: lx_ex       TYPE REF TO cx_ecatt_apl,
           lv_exists   TYPE etonoff,
           lv_exc_occ  TYPE etonoff,
@@ -223,11 +221,17 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
           lo_params   TYPE REF TO cl_apl_ecatt_params.
 
     FIELD-SYMBOLS: <lg_ecatt_vo> TYPE any,
-                   <lg_params>   TYPE data.
+                   <lg_params>   TYPE data,
+                   <lv_d_akh>    TYPE data.
 
     TRY.
         ch_object-i_devclass = ch_object-d_devclass.
-        ch_object-i_akh      = ch_object-d_akh.
+
+        ASSIGN COMPONENT 'D_AKH' OF STRUCTURE ch_object
+               TO <lv_d_akh>. " doesn't exist in 702
+        IF sy-subrc = 0.
+          ch_object-i_akh = <lv_d_akh>.
+        ENDIF.
 
         super->upload(
           CHANGING
