@@ -51,11 +51,6 @@ CLASS zcl_abapgit_repo_online DEFINITION
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception .
-    METHODS set_objects
-      IMPORTING
-        !it_objects TYPE zif_abapgit_definitions=>ty_objects_tt
-      RAISING
-        zcx_abapgit_exception .
     METHODS get_unnecessary_local_objs
       RETURNING
         VALUE(rt_unnecessary_local_objects) TYPE zif_abapgit_definitions=>ty_tadir_tt
@@ -84,6 +79,11 @@ CLASS zcl_abapgit_repo_online DEFINITION
     METHODS handle_stage_ignore
       IMPORTING
         !io_stage TYPE REF TO zcl_abapgit_stage
+      RAISING
+        zcx_abapgit_exception .
+    METHODS set_objects
+      IMPORTING
+        !it_objects TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
@@ -389,9 +389,14 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
   METHOD zif_abapgit_git_operations~push.
 
+* assumption: PUSH is done on top of the currently selected branch
+
     DATA: lv_branch        TYPE zif_abapgit_definitions=>ty_sha1,
           lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
+          lt_new_files     TYPE zif_abapgit_definitions=>ty_files_tt,
+          lt_new_objects   TYPE zif_abapgit_definitions=>ty_objects_tt,
           lv_text          TYPE string.
+
 
     IF ms_data-branch_name CP 'refs/tags*'.
       lv_text = |You're working on a tag. Currently it's not |
@@ -399,25 +404,31 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
       zcx_abapgit_exception=>raise( lv_text ).
     ENDIF.
 
-    handle_stage_ignore( io_stage ).
-
     IF ms_data-local_settings-block_commit = abap_true
-    AND mv_code_inspector_successful = abap_false.
+        AND mv_code_inspector_successful = abap_false.
       zcx_abapgit_exception=>raise( |A successful code inspection is required| ).
     ENDIF.
 
-    zcl_abapgit_git_porcelain=>push( EXPORTING is_comment       = is_comment
-                                               io_repo          = me
-                                               io_stage         = io_stage
-                                     IMPORTING ev_branch        = lv_branch
-                                               et_updated_files = lt_updated_files ).
+    handle_stage_ignore( io_stage ).
 
-    IF io_stage->get_branch_sha1( ) = get_sha1_remote( ).
-* pushing to the branch currently represented by this repository object      mv_branch = lv_branch.
-      mv_branch = lv_branch.
-    ELSE.
-      refresh( ).
-    ENDIF.
+    zcl_abapgit_git_porcelain=>push(
+      EXPORTING
+        is_comment       = is_comment
+        io_stage         = io_stage
+        iv_branch_name   = get_branch_name( )
+        iv_url           = get_url( )
+        iv_parent        = get_sha1_remote( )
+        it_old_objects   = get_objects( )
+      IMPORTING
+        ev_branch        = lv_branch
+        et_new_files     = lt_new_files
+        et_new_objects   = lt_new_objects
+        et_updated_files = lt_updated_files ).
+
+    set_objects( lt_new_objects ).
+    set_files_remote( lt_new_files ).
+
+    mv_branch = lv_branch.
 
     update_local_checksums( lt_updated_files ).
 

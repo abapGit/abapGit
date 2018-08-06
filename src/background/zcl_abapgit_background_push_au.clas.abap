@@ -130,10 +130,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
 *     Fill user details
       ls_comment-committer = determine_user_details( lv_changed_by ).
 
-      CREATE OBJECT lo_stage
-        EXPORTING
-          iv_branch_name = io_repo->get_branch_name( )
-          iv_branch_sha1 = io_repo->get_sha1_remote( ).
+      CREATE OBJECT lo_stage.
 
       CLEAR ls_user_files.
 
@@ -195,10 +192,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
 
     ASSERT lines( is_files-remote ) > 0.
 
-    CREATE OBJECT lo_stage
-      EXPORTING
-        iv_branch_name = io_repo->get_branch_name( )
-        iv_branch_sha1 = io_repo->get_sha1_remote( ).
+    CREATE OBJECT lo_stage.
 
     LOOP AT is_files-remote ASSIGNING <ls_remote>.
 

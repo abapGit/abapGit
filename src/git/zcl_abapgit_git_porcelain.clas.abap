@@ -18,12 +18,17 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS push
       IMPORTING
-        !io_repo          TYPE REF TO zcl_abapgit_repo_online
         !is_comment       TYPE zif_abapgit_definitions=>ty_comment
         !io_stage         TYPE REF TO zcl_abapgit_stage
+        !it_old_objects   TYPE zif_abapgit_definitions=>ty_objects_tt
+        !iv_parent        TYPE zif_abapgit_definitions=>ty_sha1
+        !iv_url           TYPE string
+        !iv_branch_name   TYPE string
       EXPORTING
+        !et_new_files     TYPE zif_abapgit_definitions=>ty_files_tt
         !ev_branch        TYPE zif_abapgit_definitions=>ty_sha1
         !et_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+        !et_new_objects   TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS create_branch
@@ -112,13 +117,17 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS receive_pack_push
       IMPORTING
-        !is_comment      TYPE zif_abapgit_definitions=>ty_comment
-        !io_repo         TYPE REF TO zcl_abapgit_repo_online
-        !it_trees        TYPE ty_trees_tt
-        !it_blobs        TYPE zif_abapgit_definitions=>ty_files_tt
-        !io_stage        TYPE REF TO zcl_abapgit_stage
-      RETURNING
-        VALUE(rv_branch) TYPE zif_abapgit_definitions=>ty_sha1
+        !is_comment     TYPE zif_abapgit_definitions=>ty_comment
+        !it_trees       TYPE ty_trees_tt
+        !it_blobs       TYPE zif_abapgit_definitions=>ty_files_tt
+        !iv_parent      TYPE zif_abapgit_definitions=>ty_sha1
+        !iv_parent2     TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
+        !iv_url         TYPE string
+        !iv_branch_name TYPE string
+      EXPORTING
+        !ev_new_commit  TYPE zif_abapgit_definitions=>ty_sha1
+        !et_new_objects TYPE zif_abapgit_definitions=>ty_objects_tt
+        !ev_new_tree    TYPE zif_abapgit_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS receive_pack_create_tag
@@ -267,7 +276,7 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
           is_tag = is_tag
           iv_url = iv_url ).
 
-      WHEN  zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
+      WHEN zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
 
         create_lightweight_tag(
           is_tag = is_tag
@@ -421,38 +430,19 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
     DATA: lt_expanded TYPE zif_abapgit_definitions=>ty_expanded_tt,
           lt_blobs    TYPE zif_abapgit_definitions=>ty_files_tt,
           lv_sha1     TYPE zif_abapgit_definitions=>ty_sha1,
+          lv_new_tree TYPE zif_abapgit_definitions=>ty_sha1,
           lt_trees    TYPE ty_trees_tt,
-          lt_objects  TYPE zif_abapgit_definitions=>ty_objects_tt,
-          lt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
           lt_stage    TYPE zcl_abapgit_stage=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage>   LIKE LINE OF lt_stage,
                    <ls_updated> LIKE LINE OF et_updated_files,
-                   <ls_branch>  LIKE LINE OF lt_branches,
                    <ls_exp>     LIKE LINE OF lt_expanded.
 
 
     CLEAR et_updated_files.
 
-    IF io_stage->get_branch_sha1( ) = io_repo->get_sha1_remote( ).
-* objects cached in io_repo can be used, if pushing to the branch configured in repo
-      lt_objects = io_repo->get_objects( ).
-    ELSE.
-      APPEND INITIAL LINE TO lt_branches ASSIGNING <ls_branch>.
-      <ls_branch>-name = io_stage->get_branch_name( ).
-      <ls_branch>-sha1 = io_stage->get_branch_sha1( ).
-
-      zcl_abapgit_git_transport=>upload_pack(
-        EXPORTING
-          iv_url         = io_repo->get_url( )
-          iv_branch_name = io_repo->get_branch_name( )
-          it_branches    = lt_branches
-        IMPORTING
-          et_objects     = lt_objects ).
-    ENDIF.
-
-    lt_expanded = full_tree( it_objects = lt_objects
-                             iv_branch  = io_stage->get_branch_sha1( ) ).
+    lt_expanded = full_tree( it_objects = it_old_objects
+                             iv_branch  = iv_parent ).
 
     lt_stage = io_stage->get_all( ).
     LOOP AT lt_stage ASSIGNING <ls_stage>.
@@ -499,11 +489,25 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
 
     lt_trees = build_trees( lt_expanded ).
 
-    ev_branch = receive_pack_push( is_comment = is_comment
-                                   io_repo    = io_repo
-                                   it_trees   = lt_trees
-                                   it_blobs   = lt_blobs
-                                   io_stage   = io_stage ).
+    receive_pack_push(
+      EXPORTING
+        is_comment     = is_comment
+        it_trees       = lt_trees
+        iv_branch_name = iv_branch_name
+        iv_url         = iv_url
+        iv_parent      = iv_parent
+        iv_parent2     = io_stage->get_merge_source( )
+        it_blobs       = lt_blobs
+      IMPORTING
+        ev_new_commit  = ev_branch
+        et_new_objects = et_new_objects
+        ev_new_tree    = lv_new_tree ).
+
+    APPEND LINES OF it_old_objects TO et_new_objects.
+    walk( EXPORTING it_objects = et_new_objects
+                    iv_sha1 = lv_new_tree
+                    iv_path = '/'
+          CHANGING ct_files = et_new_files ).
 
   ENDMETHOD.
 
@@ -554,13 +558,11 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
 
   METHOD receive_pack_push.
 
-    DATA: lv_time    TYPE zcl_abapgit_time=>ty_unixtime,
-          lv_commit  TYPE xstring,
-          lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
-          lv_pack    TYPE xstring,
-          lt_files   TYPE zif_abapgit_definitions=>ty_files_tt,
-          ls_object  LIKE LINE OF lt_objects,
-          ls_commit  TYPE zcl_abapgit_git_pack=>ty_commit.
+    DATA: lv_time   TYPE zcl_abapgit_time=>ty_unixtime,
+          lv_commit TYPE xstring,
+          lv_pack   TYPE xstring,
+          ls_object LIKE LINE OF et_new_objects,
+          ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
 
     FIELD-SYMBOLS: <ls_tree> LIKE LINE OF it_trees,
                    <ls_blob> LIKE LINE OF it_blobs.
@@ -582,8 +584,8 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
     ENDIF.
 
     ls_commit-tree      = <ls_tree>-sha1.
-    ls_commit-parent    = io_stage->get_branch_sha1( ).
-    ls_commit-parent2   = io_stage->get_merge_source( ).
+    ls_commit-parent    = iv_parent.
+    ls_commit-parent2   = iv_parent2.
     ls_commit-body      = is_comment-comment.
     lv_commit = zcl_abapgit_git_pack=>encode_commit( ls_commit ).
 
@@ -591,13 +593,13 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
     ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-commit iv_data = lv_commit ).
     ls_object-type = zif_abapgit_definitions=>gc_type-commit.
     ls_object-data = lv_commit.
-    APPEND ls_object TO lt_objects.
+    APPEND ls_object TO et_new_objects.
 
     LOOP AT it_trees ASSIGNING <ls_tree>.
       CLEAR ls_object.
       ls_object-sha1 = <ls_tree>-sha1.
 
-      READ TABLE lt_objects WITH KEY type = zif_abapgit_definitions=>gc_type-tree sha1 = ls_object-sha1
+      READ TABLE et_new_objects WITH KEY type = zif_abapgit_definitions=>gc_type-tree sha1 = ls_object-sha1
         TRANSPORTING NO FIELDS.
       IF sy-subrc = 0.
 * two identical trees added at the same time, only add one to the pack
@@ -606,7 +608,7 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
 
       ls_object-type = zif_abapgit_definitions=>gc_type-tree.
       ls_object-data = <ls_tree>-data.
-      APPEND ls_object TO lt_objects.
+      APPEND ls_object TO et_new_objects.
     ENDLOOP.
 
     LOOP AT it_blobs ASSIGNING <ls_blob>.
@@ -615,7 +617,9 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
         iv_type = zif_abapgit_definitions=>gc_type-blob
         iv_data = <ls_blob>-data ).
 
-      READ TABLE lt_objects WITH KEY type = zif_abapgit_definitions=>gc_type-blob sha1 = ls_object-sha1
+      READ TABLE et_new_objects WITH KEY
+        type = zif_abapgit_definitions=>gc_type-blob
+        sha1 = ls_object-sha1
         TRANSPORTING NO FIELDS.
       IF sy-subrc = 0.
 * two identical files added at the same time, only add one blob to the pack
@@ -625,30 +629,23 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
       ls_object-type = zif_abapgit_definitions=>gc_type-blob.
       ASSERT NOT <ls_blob>-data IS INITIAL.
       ls_object-data = <ls_blob>-data.
-      APPEND ls_object TO lt_objects.
+      APPEND ls_object TO et_new_objects.
     ENDLOOP.
 
-    lv_pack = zcl_abapgit_git_pack=>encode( lt_objects ).
+    lv_pack = zcl_abapgit_git_pack=>encode( et_new_objects ).
 
-    rv_branch = zcl_abapgit_hash=>sha1(
+    ev_new_commit = zcl_abapgit_hash=>sha1(
       iv_type = zif_abapgit_definitions=>gc_type-commit
       iv_data = lv_commit ).
 
     zcl_abapgit_git_transport=>receive_pack(
-      iv_url         = io_repo->get_url( )
-      iv_old         = io_stage->get_branch_sha1( )
-      iv_new         = rv_branch
-      iv_branch_name = io_stage->get_branch_name( )
+      iv_url         = iv_url
+      iv_old         = iv_parent
+      iv_new         = ev_new_commit
+      iv_branch_name = iv_branch_name
       iv_pack        = lv_pack ).
 
-* update objects in repo, we know what has been pushed
-    APPEND LINES OF io_repo->get_objects( ) TO lt_objects.
-    io_repo->set_objects( lt_objects ).
-    walk( EXPORTING it_objects = lt_objects
-                    iv_sha1 = ls_commit-tree
-                    iv_path = '/'
-          CHANGING ct_files = lt_files ).
-    io_repo->set_files_remote( lt_files ).
+    ev_new_tree = ls_commit-tree.
 
   ENDMETHOD.
 
