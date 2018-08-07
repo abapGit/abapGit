@@ -291,7 +291,6 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
     add( ro_repo ).
 
-    ro_repo->refresh( ).
     ro_repo->find_remote_dot_abapgit( ).
 
   ENDMETHOD.
