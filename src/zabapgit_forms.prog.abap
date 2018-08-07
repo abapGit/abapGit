@@ -129,7 +129,7 @@ FORM output.
   TRY.
       zcl_abapgit_gui=>get_instance( )->focus( ).
     CATCH zcx_abapgit_exception INTO lx_error.
-      message lx_error type 'S' DISPLAY LIKE 'E'.
+      MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
   ENDTRY.
 ENDFORM.
 
