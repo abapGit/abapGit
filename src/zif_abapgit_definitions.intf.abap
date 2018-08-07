@@ -172,9 +172,12 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       type    TYPE zif_abapgit_definitions=>ty_type,
       data    TYPE xstring,
       adler32 TYPE ty_adler32,
+      index   TYPE i,
     END OF ty_object .
   TYPES:
-    ty_objects_tt TYPE STANDARD TABLE OF ty_object WITH DEFAULT KEY .
+    ty_objects_tt TYPE STANDARD TABLE OF ty_object WITH DEFAULT KEY
+      WITH NON-UNIQUE SORTED KEY sha COMPONENTS sha1
+      WITH NON-UNIQUE SORTED KEY type COMPONENTS type sha1.
   TYPES:
     BEGIN OF ty_tadir,
       pgmid    TYPE tadir-pgmid,

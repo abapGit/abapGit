@@ -167,7 +167,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
           lv_xstring        TYPE xstring,
           lv_expected       TYPE i,
           ls_object         LIKE LINE OF rt_objects.
-
+    DATA: uindex            TYPE sy-index.
 
     lv_data = iv_data.
 
@@ -190,6 +190,8 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
 
     DO lv_objects TIMES.
+
+      uindex = sy-index.
 
       lv_x = lv_data(1).
       lv_type = get_type( lv_x ).
@@ -262,6 +264,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       ENDIF.
       ls_object-type = lv_type.
       ls_object-data = lv_decompressed.
+      ls_object-index = uindex.
       APPEND ls_object TO rt_objects.
     ENDDO.
 
@@ -335,10 +338,18 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
           lt_deltas   LIKE ct_objects.
 
 
-    LOOP AT ct_objects INTO ls_object WHERE type = zif_abapgit_definitions=>gc_type-ref_d.
-      DELETE ct_objects INDEX sy-tabix.
-      APPEND ls_object TO lt_deltas.
+    LOOP AT ct_objects INTO ls_object
+      USING KEY type
+      WHERE type = zif_abapgit_definitions=>gc_type-ref_d.
+      INSERT ls_object INTO TABLE lt_deltas.
     ENDLOOP.
+
+    DELETE ct_objects
+      USING KEY type
+      WHERE type = zif_abapgit_definitions=>gc_type-ref_d.
+
+    "Restore correct Delta Order
+    SORT lt_deltas BY index.
 
     CREATE OBJECT lo_progress
       EXPORTING
@@ -498,7 +509,8 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
     lv_delta = is_object-data.
 
 * find base
-    READ TABLE ct_objects ASSIGNING <ls_object> WITH KEY sha1 = is_object-sha1.
+    READ TABLE ct_objects ASSIGNING <ls_object>
+      WITH KEY sha COMPONENTS sha1 = is_object-sha1.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Base not found, { is_object-sha1 }| ).
     ELSEIF <ls_object>-type = zif_abapgit_definitions=>gc_type-ref_d.
@@ -572,6 +584,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
     ls_object-sha1 = lv_sha1.
     ls_object-type = <ls_object>-type.
     ls_object-data = lv_result.
+    ls_object-index = <ls_object>-index. "Retain sort index
     APPEND ls_object TO ct_objects.
 
   ENDMETHOD.
