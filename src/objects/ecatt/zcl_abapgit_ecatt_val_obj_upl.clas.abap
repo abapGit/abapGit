@@ -287,7 +287,9 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        get_params_from_dom_new( lo_params ).
+        CALL METHOD ('GET_PARAMS_FROM_DOM_NEW') " doesn't exist in 702
+          EXPORTING
+            im_params = lo_params.
       CATCH cx_ecatt_apl INTO lx_ex.
         lv_exc_occ = 'X'.
     ENDTRY.
