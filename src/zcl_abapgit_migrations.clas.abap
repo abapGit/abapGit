@@ -51,8 +51,7 @@ CLASS ZCL_ABAPGIT_MIGRATIONS IMPLEMENTATION.
 
     DATA: lt_repos     TYPE zif_abapgit_definitions=>ty_repo_ref_tt,
           lv_repo_list TYPE string,
-          lv_index     TYPE i,
-          lo_repo      TYPE REF TO zcl_abapgit_repo_online.
+          lv_index     TYPE i.
 
     FIELD-SYMBOLS: <lo_repo> LIKE LINE OF lt_repos.
 

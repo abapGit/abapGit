@@ -30,8 +30,6 @@ CLASS ltcl_convert IMPLEMENTATION.
           lv_xresult  TYPE xstring,
           lv_result   TYPE i,
           lv_offset   TYPE i.
-    DATA: lt_bitbytes TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_bitbyte
-            WITH DEFAULT KEY.
 
     DO 1000 TIMES.
 

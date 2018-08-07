@@ -403,7 +403,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
     DATA: lv_new   TYPE string,
           lv_old   TYPE string,
-          lv_merge TYPE string,
           lv_mark  TYPE string,
           lv_bg    TYPE string.
 

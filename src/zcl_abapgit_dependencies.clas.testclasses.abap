@@ -32,7 +32,6 @@ CLASS ltd_sap_package IMPLEMENTATION.
 
   METHOD zif_abapgit_sap_package~list_subpackages.
 
-    DATA: ls_package LIKE LINE OF rt_list.
     FIELD-SYMBOLS: <lv_package> TYPE devclass.
 
     IF mv_package = 'Z_MAIN'.
