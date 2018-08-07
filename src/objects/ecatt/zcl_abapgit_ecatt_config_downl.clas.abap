@@ -28,7 +28,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ECATT_CONFIG_DOWNL IMPLEMENTATION.
+CLASS zcl_abapgit_ecatt_config_downl IMPLEMENTATION.
 
 
   METHOD download.
@@ -56,7 +56,9 @@ CLASS ZCL_ABAPGIT_ECATT_CONFIG_DOWNL IMPLEMENTATION.
 
     set_attributes_to_template( ).
     ecatt_config ?= ecatt_object.
-    set_ecatt_objects_to_template( ).
+
+    CALL METHOD ('SET_ECATT_OBJECTS_TO_TEMPLATE'). " doesn't exist in 702
+
 * MS180406
     set_var_mode_to_dom( ).
 * ENDMS180406

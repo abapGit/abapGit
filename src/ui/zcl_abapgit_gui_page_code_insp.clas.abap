@@ -159,11 +159,18 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
     MOVE-CORRESPONDING <ls_result> TO ls_info.
 
-    lo_test = cl_ci_tests=>get_test_ref( <ls_result>-test ).
+    TRY.
+        lo_test ?= cl_ci_tests=>get_test_ref( <ls_result>-test ).
+
+      CATCH cx_root.
+        zcx_abapgit_exception=>raise( |Jump to object not supported in your NW release|  ).
+    ENDTRY.
+
     lo_result = lo_test->get_result_node( <ls_result>-kind ).
 
     lo_result->set_info( ls_info ).
     lo_result->if_ci_test~navigate( ).
+
 
   ENDMETHOD.
 

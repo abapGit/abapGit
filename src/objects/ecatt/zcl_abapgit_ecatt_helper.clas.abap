@@ -133,8 +133,8 @@ CLASS zcl_abapgit_ecatt_helper IMPLEMENTATION.
         ex_dom = ri_template_over_all ).
 
 * MD: Workaround, because nodes starting with "XML" are not allowed
-    lv_nc_xmlref_typ = ri_template_over_all->get_elements_by_tag_name_ns(
-                      'XMLREF_TYP' ).                       "#EC NOTEXT
+    lv_nc_xmlref_typ ?= ri_template_over_all->get_elements_by_tag_name_ns(
+                          'XMLREF_TYP' ).                   "#EC NOTEXT
     lv_count = lv_nc_xmlref_typ->get_length( ).
     WHILE lv_index LT lv_count.
       lv_n_xmlref_typ = lv_nc_xmlref_typ->get_item( lv_index ).
