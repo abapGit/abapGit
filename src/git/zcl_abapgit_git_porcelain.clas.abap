@@ -728,7 +728,7 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
 
 
     READ TABLE it_objects INTO ls_object
-      WITH key type COMPONENTS
+      WITH KEY type COMPONENTS
         type = zif_abapgit_definitions=>gc_type-tree
         sha1 = iv_tree.
     IF sy-subrc <> 0.
