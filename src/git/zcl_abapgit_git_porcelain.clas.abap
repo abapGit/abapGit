@@ -568,7 +568,7 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
     DATA: lv_time    TYPE zcl_abapgit_time=>ty_unixtime,
           lv_commit  TYPE xstring,
           lv_pack    TYPE xstring,
-          ls_object  LIKE LINE OF lt_objects,
+          ls_object  LIKE LINE OF et_new_objects,
           ls_commit  TYPE zcl_abapgit_git_pack=>ty_commit.
     DATA: uindex     TYPE sy-index.
 
