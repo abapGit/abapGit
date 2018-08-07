@@ -432,6 +432,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     update_local_checksums( lt_updated_files ).
 
+    reset_status( ).
     CLEAR: mv_code_inspector_successful.
 
   ENDMETHOD.
