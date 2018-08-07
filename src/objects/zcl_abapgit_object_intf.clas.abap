@@ -17,7 +17,7 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
-    DATA mo_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc.
+    DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc.
 
     METHODS serialize_xml
       IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
@@ -34,7 +34,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     super->constructor(
       is_item     = is_item
       iv_language = iv_language ).
-    mo_object_oriented_object_fct = zcl_abapgit_oo_factory=>make( ms_item-obj_type ).
+    mi_object_oriented_object_fct = zcl_abapgit_oo_factory=>make( ms_item-obj_type ).
   ENDMETHOD.
 
 
@@ -50,24 +50,24 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'VSEOINTERF'
                   CHANGING cg_data = ls_vseointerf ).
 
-    mo_object_oriented_object_fct->create(
+    mi_object_oriented_object_fct->create(
       EXPORTING
         iv_package    = iv_package
       CHANGING
-        is_properties = ls_vseointerf ).
+        cg_properties = ls_vseointerf ).
 
-    mo_object_oriented_object_fct->deserialize_source(
+    mi_object_oriented_object_fct->deserialize_source(
       is_key               = ls_clskey
       it_source            = lt_source ).
 
     io_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
                   CHANGING cg_data = lt_descriptions ).
 
-    mo_object_oriented_object_fct->update_descriptions(
+    mi_object_oriented_object_fct->update_descriptions(
       is_key          = ls_clskey
       it_descriptions = lt_descriptions ).
 
-    mo_object_oriented_object_fct->add_to_activation_list( ms_item ).
+    mi_object_oriented_object_fct->add_to_activation_list( ms_item ).
   ENDMETHOD.
 
 
@@ -85,7 +85,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
     lv_object = ms_item-obj_name.
 
-    mo_object_oriented_object_fct->create_documentation(
+    mi_object_oriented_object_fct->create_documentation(
       it_lines       = lt_lines
       iv_object_name = lv_object
       iv_language    = mv_language ).
@@ -102,7 +102,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
     ls_clskey-clsname = ms_item-obj_name.
 
-    ls_vseointerf = mo_object_oriented_object_fct->get_interface_properties( ls_clskey ).
+    ls_vseointerf = mi_object_oriented_object_fct->get_interface_properties( ls_clskey ).
 
     CLEAR: ls_vseointerf-uuid,
            ls_vseointerf-author,
@@ -116,7 +116,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     io_xml->add( iv_name = 'VSEOINTERF'
                  ig_data = ls_vseointerf ).
 
-    lt_lines = mo_object_oriented_object_fct->read_documentation(
+    lt_lines = mi_object_oriented_object_fct->read_documentation(
       iv_class_name = ls_clskey-clsname
       iv_language   = mv_language ).
     IF lines( lt_lines ) > 0.
@@ -124,7 +124,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
                    ig_data = lt_lines ).
     ENDIF.
 
-    lt_descriptions = mo_object_oriented_object_fct->read_descriptions( ls_clskey-clsname ).
+    lt_descriptions = mi_object_oriented_object_fct->read_descriptions( ls_clskey-clsname ).
     IF lines( lt_descriptions ) > 0.
       io_xml->add( iv_name = 'DESCRIPTIONS'
                    ig_data = lt_descriptions ).
@@ -147,7 +147,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
           ls_reposrc  LIKE LINE OF lt_reposrc,
           lt_includes TYPE STANDARD TABLE OF ty_includes.
 
-    lt_includes = mo_object_oriented_object_fct->get_includes( ms_item-obj_name ).
+    lt_includes = mi_object_oriented_object_fct->get_includes( ms_item-obj_name ).
     ASSERT lines( lt_includes ) > 0.
 
     SELECT unam udat utime FROM reposrc
@@ -175,7 +175,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     DATA: ls_clskey TYPE seoclskey.
     ls_clskey-clsname = ms_item-obj_name.
 
-    mo_object_oriented_object_fct->delete( ls_clskey ).
+    mi_object_oriented_object_fct->delete( ls_clskey ).
   ENDMETHOD.
 
 
@@ -194,7 +194,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
     ls_class_key-clsname = ms_item-obj_name.
 
-    rv_bool = mo_object_oriented_object_fct->exists( ls_class_key ).
+    rv_bool = mi_object_oriented_object_fct->exists( ls_class_key ).
 
     IF rv_bool = abap_true.
       SELECT SINGLE category FROM seoclassdf INTO lv_category
@@ -219,7 +219,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
       lv_program  TYPE program,
       lt_includes TYPE seoincl_t.
 
-    lt_includes = mo_object_oriented_object_fct->get_includes( ms_item-obj_name ).
+    lt_includes = mi_object_oriented_object_fct->get_includes( ms_item-obj_name ).
     READ TABLE lt_includes INDEX 1 INTO lv_program.
     "lv_program = cl_oo_classname_service=>get_interfacepool_name( lv_clsname ).
     rv_changed = check_prog_changed_since(
@@ -259,7 +259,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
         version = seoc_version_inactive
         force   = seox_true.
 
-    lt_source = mo_object_oriented_object_fct->serialize_abap( ls_interface_key ).
+    lt_source = mi_object_oriented_object_fct->serialize_abap( ls_interface_key ).
 
     mo_files->add_abap( lt_source ).
 

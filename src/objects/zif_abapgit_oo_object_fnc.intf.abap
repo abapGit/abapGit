@@ -11,7 +11,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
         iv_package    TYPE devclass
         iv_overwrite  TYPE seox_boolean DEFAULT seox_true
       CHANGING
-        is_properties TYPE any
+        cg_properties TYPE any
       RAISING
         zcx_abapgit_exception,
     generate_locals
@@ -69,7 +69,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
         zcx_abapgit_exception,
     exists
       IMPORTING
-        iv_object_name   TYPE seoclskey
+        is_object_name   TYPE seoclskey
       RETURNING
         VALUE(rv_exists) TYPE abap_bool,
     serialize_abap

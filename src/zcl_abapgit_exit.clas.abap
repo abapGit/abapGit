@@ -58,7 +58,7 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
           EXPORTING
             iv_repo_url            = iv_repo_url
           CHANGING
-            c_proxy_authentication = c_proxy_authentication ).
+            cv_proxy_authentication = cv_proxy_authentication ).
       CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method.
     ENDTRY.
 
@@ -72,7 +72,7 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
           EXPORTING
             iv_repo_url  = iv_repo_url
           CHANGING
-            c_proxy_port = c_proxy_port ).
+            cv_proxy_port = cv_proxy_port ).
       CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method.
     ENDTRY.
 
@@ -86,7 +86,7 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
           EXPORTING
             iv_repo_url = iv_repo_url
           CHANGING
-            c_proxy_url = c_proxy_url ).
+            cv_proxy_url = cv_proxy_url ).
       CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method.
     ENDTRY.
 
