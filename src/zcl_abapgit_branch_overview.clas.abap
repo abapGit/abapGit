@@ -58,7 +58,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -269,7 +269,8 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects,
                    <ls_tag>    LIKE LINE OF mt_tags.
 
-    LOOP AT it_objects ASSIGNING <ls_object> WHERE type = zif_abapgit_definitions=>gc_type-tag.
+    LOOP AT it_objects ASSIGNING <ls_object> USING KEY type
+        WHERE type = zif_abapgit_definitions=>gc_type-tag.
 
       ls_raw = zcl_abapgit_git_pack=>decode_tag( <ls_object>-data ).
 
@@ -301,7 +302,8 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects.
 
 
-    LOOP AT it_objects ASSIGNING <ls_object> WHERE type = zif_abapgit_definitions=>gc_type-commit.
+    LOOP AT it_objects ASSIGNING <ls_object> USING KEY type
+        WHERE type = zif_abapgit_definitions=>gc_type-commit.
       ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_object>-data ).
 
       CLEAR ls_commit.
