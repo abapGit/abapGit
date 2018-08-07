@@ -18,7 +18,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
 
-    CREATE OBJECT mo_object_oriented_object_fct TYPE zcl_abapgit_oo_class_new.
+    CREATE OBJECT mi_object_oriented_object_fct TYPE zcl_abapgit_oo_class_new.
   ENDMETHOD.
 
   METHOD deserialize_abap.
@@ -53,13 +53,13 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'VSEOCLASS'
                   CHANGING cg_data = ls_vseoclass ).
 
-    mo_object_oriented_object_fct->create(
+    mi_object_oriented_object_fct->create(
       EXPORTING
         iv_package    = iv_package
       CHANGING
-        is_properties = ls_vseoclass ).
+        cg_properties = ls_vseoclass ).
 
-    mo_object_oriented_object_fct->generate_locals(
+    mi_object_oriented_object_fct->generate_locals(
       is_key                   = ls_class_key
       iv_force                 = seox_true
       it_local_definitions     = lt_local_definitions
@@ -67,14 +67,14 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       it_local_macros          = lt_local_macros
       it_local_test_classes    = lt_test_classes ).
 
-    mo_object_oriented_object_fct->deserialize_source(
+    mi_object_oriented_object_fct->deserialize_source(
       is_key    = ls_class_key
       it_source = lt_source ).
 
     io_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
                   CHANGING cg_data = lt_descriptions ).
 
-    mo_object_oriented_object_fct->update_descriptions(
+    mi_object_oriented_object_fct->update_descriptions(
       is_key          = ls_class_key
       it_descriptions = lt_descriptions ).
 

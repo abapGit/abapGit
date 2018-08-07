@@ -21,7 +21,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
         devclass        = iv_package
         overwrite       = iv_overwrite
       CHANGING
-        class           = is_properties
+        class           = cg_properties
       EXCEPTIONS
         existing        = 1
         is_interface    = 2

@@ -9,7 +9,7 @@ CLASS zcl_abapgit_object_clas_old DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
         iv_language TYPE spras.
 
   PROTECTED SECTION.
-    DATA: mo_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc,
+    DATA: mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc,
           mv_skip_testclass             TYPE abap_bool.
 
     METHODS:
@@ -47,7 +47,7 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
     super->constructor(
       is_item     = is_item
       iv_language = iv_language ).
-    mo_object_oriented_object_fct = zcl_abapgit_oo_factory=>make( ms_item-obj_type ).
+    mi_object_oriented_object_fct = zcl_abapgit_oo_factory=>make( ms_item-obj_type ).
   ENDMETHOD.
 
 
@@ -82,13 +82,13 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'VSEOCLASS'
                   CHANGING cg_data = ls_vseoclass ).
 
-    mo_object_oriented_object_fct->create(
+    mi_object_oriented_object_fct->create(
       EXPORTING
         iv_package    = iv_package
       CHANGING
-        is_properties = ls_vseoclass ).
+        cg_properties = ls_vseoclass ).
 
-    mo_object_oriented_object_fct->generate_locals(
+    mi_object_oriented_object_fct->generate_locals(
       is_key                   = ls_class_key
       iv_force                 = seox_true
       it_local_definitions     = lt_local_definitions
@@ -96,18 +96,18 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
       it_local_macros          = lt_local_macros
       it_local_test_classes    = lt_test_classes ).
 
-    mo_object_oriented_object_fct->deserialize_source(
+    mi_object_oriented_object_fct->deserialize_source(
       is_key    = ls_class_key
       it_source = lt_source ).
 
     io_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
                   CHANGING cg_data = lt_descriptions ).
 
-    mo_object_oriented_object_fct->update_descriptions(
+    mi_object_oriented_object_fct->update_descriptions(
       is_key          = ls_class_key
       it_descriptions = lt_descriptions ).
 
-    mo_object_oriented_object_fct->add_to_activation_list( ms_item ).
+    mi_object_oriented_object_fct->add_to_activation_list( ms_item ).
   ENDMETHOD.
 
 
@@ -125,7 +125,7 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
 
     lv_object = ms_item-obj_name.
 
-    mo_object_oriented_object_fct->create_documentation(
+    mi_object_oriented_object_fct->create_documentation(
       it_lines       = lt_lines
       iv_object_name = lv_object
       iv_language    = mv_language ).
@@ -143,7 +143,7 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    mo_object_oriented_object_fct->create_sotr(
+    mi_object_oriented_object_fct->create_sotr(
       iv_package    = iv_package
       it_sotr       = lt_sotr ).
   ENDMETHOD.
@@ -166,7 +166,7 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
 
     lv_clsname = ms_item-obj_name.
 
-    mo_object_oriented_object_fct->insert_text_pool(
+    mi_object_oriented_object_fct->insert_text_pool(
       iv_class_name = lv_clsname
       it_text_pool  = lt_tpool
       iv_language   = mv_language ).
@@ -191,7 +191,7 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
     zcl_abapgit_language=>set_current_language( mv_language ).
 
     TRY.
-        ls_vseoclass = mo_object_oriented_object_fct->get_class_properties( ls_clskey ).
+        ls_vseoclass = mi_object_oriented_object_fct->get_class_properties( ls_clskey ).
 
       CLEANUP.
         zcl_abapgit_language=>restore_login_language( ).
@@ -216,21 +216,21 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
     io_xml->add( iv_name = 'VSEOCLASS'
                  ig_data = ls_vseoclass ).
 
-    lt_tpool = mo_object_oriented_object_fct->read_text_pool(
+    lt_tpool = mi_object_oriented_object_fct->read_text_pool(
       iv_class_name = ls_clskey-clsname
       iv_language   = mv_language ).
     io_xml->add( iv_name = 'TPOOL'
                  ig_data = add_tpool( lt_tpool ) ).
 
     IF ls_vseoclass-category = seoc_category_exception.
-      lt_sotr =  mo_object_oriented_object_fct->read_sotr( ms_item-obj_name ).
+      lt_sotr =  mi_object_oriented_object_fct->read_sotr( ms_item-obj_name ).
       IF lines( lt_sotr ) > 0.
         io_xml->add( iv_name = 'SOTR'
                      ig_data = lt_sotr ).
       ENDIF.
     ENDIF.
 
-    lt_lines = mo_object_oriented_object_fct->read_documentation(
+    lt_lines = mi_object_oriented_object_fct->read_documentation(
       iv_class_name = ls_clskey-clsname
       iv_language   = mv_language ).
     IF lines( lt_lines ) > 0.
@@ -238,7 +238,7 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
                    ig_data = lt_lines ).
     ENDIF.
 
-    lt_descriptions = mo_object_oriented_object_fct->read_descriptions( ls_clskey-clsname ).
+    lt_descriptions = mi_object_oriented_object_fct->read_descriptions( ls_clskey-clsname ).
     IF lines( lt_descriptions ) > 0.
       io_xml->add( iv_name = 'DESCRIPTIONS'
                    ig_data = lt_descriptions ).
@@ -263,7 +263,7 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
           ls_reposrc  LIKE LINE OF lt_reposrc,
           lt_includes TYPE STANDARD TABLE OF ty_includes.
 
-    lt_includes = mo_object_oriented_object_fct->get_includes( ms_item-obj_name ).
+    lt_includes = mi_object_oriented_object_fct->get_includes( ms_item-obj_name ).
     ASSERT lines( lt_includes ) > 0.
 
     SELECT unam udat utime FROM reposrc
@@ -292,7 +292,7 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
     DATA: ls_clskey TYPE seoclskey.
     ls_clskey-clsname = ms_item-obj_name.
 
-    mo_object_oriented_object_fct->delete( ls_clskey ).
+    mi_object_oriented_object_fct->delete( ls_clskey ).
   ENDMETHOD.
 
 
@@ -313,7 +313,7 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
     DATA: ls_class_key TYPE seoclskey.
     ls_class_key-clsname = ms_item-obj_name.
 
-    rv_bool = mo_object_oriented_object_fct->exists( ls_class_key ).
+    rv_bool = mi_object_oriented_object_fct->exists( ls_class_key ).
   ENDMETHOD.
 
 
@@ -328,7 +328,7 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
     FIELD-SYMBOLS <lv_incl> LIKE LINE OF lt_includes.
 
 
-    lt_includes = mo_object_oriented_object_fct->get_includes( ms_item-obj_name ).
+    lt_includes = mi_object_oriented_object_fct->get_includes( ms_item-obj_name ).
     LOOP AT lt_includes ASSIGNING <lv_incl>.
       rv_changed = check_prog_changed_since(
         iv_program   = <lv_incl>
@@ -372,11 +372,11 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
         version = seoc_version_inactive
         force   = seox_true.
 
-    lt_source = mo_object_oriented_object_fct->serialize_abap( ls_class_key ).
+    lt_source = mi_object_oriented_object_fct->serialize_abap( ls_class_key ).
 
     mo_files->add_abap( lt_source ).
 
-    lt_source = mo_object_oriented_object_fct->serialize_abap(
+    lt_source = mi_object_oriented_object_fct->serialize_abap(
       is_class_key = ls_class_key
       iv_type      = seop_ext_class_locals_def ).
     IF lines( lt_source ) > 0.
@@ -384,7 +384,7 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
                           it_abap  = lt_source ).           "#EC NOTEXT
     ENDIF.
 
-    lt_source = mo_object_oriented_object_fct->serialize_abap(
+    lt_source = mi_object_oriented_object_fct->serialize_abap(
       is_class_key = ls_class_key
       iv_type      = seop_ext_class_locals_imp ).
     IF lines( lt_source ) > 0.
@@ -392,17 +392,17 @@ CLASS zcl_abapgit_object_clas_old IMPLEMENTATION.
                           it_abap  = lt_source ).           "#EC NOTEXT
     ENDIF.
 
-    lt_source = mo_object_oriented_object_fct->serialize_abap(
+    lt_source = mi_object_oriented_object_fct->serialize_abap(
       is_class_key            = ls_class_key
       iv_type                 = seop_ext_class_testclasses ).
 
-    mv_skip_testclass = mo_object_oriented_object_fct->get_skip_test_classes( ).
+    mv_skip_testclass = mi_object_oriented_object_fct->get_skip_test_classes( ).
     IF lines( lt_source ) > 0 AND mv_skip_testclass = abap_false.
       mo_files->add_abap( iv_extra = 'testclasses'
                           it_abap  = lt_source ).           "#EC NOTEXT
     ENDIF.
 
-    lt_source = mo_object_oriented_object_fct->serialize_abap(
+    lt_source = mi_object_oriented_object_fct->serialize_abap(
       is_class_key = ls_class_key
       iv_type      = seop_ext_class_macros ).
     IF lines( lt_source ) > 0.
