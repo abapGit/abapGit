@@ -222,15 +222,19 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lg_ecatt_vo> TYPE any,
                    <lg_params>   TYPE data,
-                   <lv_d_akh>    TYPE data.
+                   <lv_d_akh>    TYPE data,
+                   <lv_i_akh>    TYPE data.
 
     TRY.
         ch_object-i_devclass = ch_object-d_devclass.
 
         ASSIGN COMPONENT 'D_AKH' OF STRUCTURE ch_object
                TO <lv_d_akh>. " doesn't exist in 702
-        IF sy-subrc = 0.
-          ch_object-i_akh = <lv_d_akh>.
+        ASSIGN COMPONENT 'I_AKH' OF STRUCTURE ch_object
+               TO <lv_i_akh>. " doesn't exist in 702
+        IF  <lv_d_akh> IS ASSIGNED
+        AND <lv_i_akh> IS ASSIGNED.
+          <lv_i_akh> = <lv_d_akh>.
         ENDIF.
 
         super->upload(
@@ -247,7 +251,9 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        get_attributes_from_dom_new( CHANGING ch_object = ch_object ).
+        CALL METHOD ('GET_ATTRIBUTES_FROM_DOM_NEW') " doesn't exit in 702
+          CHANGING
+            ch_object = ch_object.
       CATCH cx_ecatt_apl INTO lx_ex.
         lv_exc_occ = 'X'.
     ENDTRY.

@@ -28,7 +28,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
+CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
 
 
   METHOD get_ecatt_sp.
@@ -96,11 +96,21 @@ CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
           lv_exception_occurred TYPE etonoff,
           lo_ecatt_sp           TYPE REF TO object.
 
-    FIELD-SYMBOLS: <ecatt_sp> TYPE any.
+    FIELD-SYMBOLS: <ecatt_sp> TYPE any,
+                   <lv_d_akh> TYPE data,
+                   <lv_i_akh> TYPE data.
 
     TRY.
         ch_object-i_devclass = ch_object-d_devclass.
-        ch_object-i_akh      = ch_object-d_akh.
+
+        ASSIGN COMPONENT 'D_AKH' OF STRUCTURE ch_object
+               TO <lv_d_akh>. " doesn't exist in 702
+        ASSIGN COMPONENT 'I_AKH' OF STRUCTURE ch_object
+               TO <lv_i_akh>. " doesn't exist in 702
+        IF  <lv_d_akh> IS ASSIGNED
+        AND <lv_i_akh> IS ASSIGNED.
+          <lv_i_akh> = <lv_d_akh>.
+        ENDIF.
 
         super->upload(
           CHANGING
@@ -117,7 +127,9 @@ CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        get_attributes_from_dom_new( CHANGING ch_object = ch_object ).
+        CALL METHOD ('GET_ATTRIBUTES_FROM_DOM_NEW') " doesn't exist in 720
+          CHANGING
+            ch_object = ch_object.
       CATCH cx_ecatt_apl INTO lx_ecatt.
         lv_exc_occ = 'X'.
     ENDTRY.
