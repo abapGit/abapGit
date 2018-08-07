@@ -370,7 +370,6 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     DATA: lv_string TYPE string,
           lv_word   TYPE string,
-          lv_length TYPE i,
           lv_trash  TYPE string ##NEEDED,
           lt_string TYPE TABLE OF string.
 
@@ -724,7 +723,6 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
   METHOD encode_tag.
 
     DATA: lv_string TYPE string,
-          lv_tmp    TYPE string,
           lv_time   TYPE zcl_abapgit_time=>ty_unixtime.
 
     lv_time = zcl_abapgit_time=>get( ).

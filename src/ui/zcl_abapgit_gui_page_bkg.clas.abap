@@ -155,14 +155,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
 
   METHOD render.
 
-    DATA: lo_repo    TYPE REF TO zcl_abapgit_repo_online,
-          ls_per     TYPE zcl_abapgit_persist_background=>ty_background,
-          lv_nothing TYPE string,
-          lv_push    TYPE string,
-          lv_pull    TYPE string,
-          lv_afixed  TYPE string,
-          lv_aauto   TYPE string,
-          lv_auser   TYPE string.
+    DATA: lo_repo TYPE REF TO zcl_abapgit_repo_online,
+          ls_per  TYPE zcl_abapgit_persist_background=>ty_background.
 
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( mv_key ).

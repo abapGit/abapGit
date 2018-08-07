@@ -125,7 +125,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_char        TYPE ty_char,
-          lv_request     TYPE trkorr,
           ls_description LIKE LINE OF ls_char-cls_attributet,
           lo_char        TYPE REF TO cl_cls_attribute,
           lx_pak_error   TYPE REF TO cx_root,

@@ -172,8 +172,6 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
 
   METHOD x_to_bitbyte.
 
-    DATA: lv_b TYPE n.
-
     CLEAR rv_bitbyte.
 
     GET BIT 1 OF iv_x INTO rv_bitbyte+0(1).
