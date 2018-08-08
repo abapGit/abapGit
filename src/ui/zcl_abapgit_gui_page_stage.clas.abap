@@ -23,35 +23,47 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
       scripts        REDEFINITION.
 
   PRIVATE SECTION.
-    DATA: mo_repo  TYPE REF TO zcl_abapgit_repo_online,
-          ms_files TYPE zif_abapgit_definitions=>ty_stage_files,
-          mv_seed  TYPE string. " Unique page id to bind JS sessionStorage
 
-    METHODS:
-      render_list
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
+    TYPES:
+      BEGIN OF ty_changed_by,
+        item TYPE zif_abapgit_definitions=>ty_item,
+        name TYPE xubname,
+      END OF ty_changed_by .
+    TYPES:
+      ty_changed_by_tt TYPE SORTED TABLE OF ty_changed_by WITH UNIQUE KEY item.
 
-      render_file
-        IMPORTING iv_context     TYPE string
-                  is_file        TYPE zif_abapgit_definitions=>ty_file
-                  is_item        TYPE zif_abapgit_definitions=>ty_item OPTIONAL
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
+    DATA ms_files TYPE zif_abapgit_definitions=>ty_stage_files .
+    DATA mv_seed TYPE string .    " Unique page id to bind JS sessionStorage
 
-      render_actions
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
-
-      read_last_changed_by
-        IMPORTING is_file        TYPE zif_abapgit_definitions=>ty_file
-        RETURNING VALUE(rv_user) TYPE xubname,
-
-      process_stage_list
-        IMPORTING it_postdata TYPE cnht_post_data_tab
-                  io_stage    TYPE REF TO zcl_abapgit_stage
-        RAISING   zcx_abapgit_exception,
-
-      build_menu
-        RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
-
+    METHODS find_changed_by
+      IMPORTING
+        !it_local            TYPE zif_abapgit_definitions=>ty_files_item_tt
+      RETURNING
+        VALUE(rt_changed_by) TYPE ty_changed_by_tt .
+    METHODS render_list
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    METHODS render_file
+      IMPORTING
+        !iv_context    TYPE string
+        !is_file       TYPE zif_abapgit_definitions=>ty_file
+        !is_item       TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+        !iv_changed_by TYPE xubname OPTIONAL
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    METHODS render_actions
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    METHODS process_stage_list
+      IMPORTING
+        !it_postdata TYPE cnht_post_data_tab
+        !io_stage    TYPE REF TO zcl_abapgit_stage
+      RAISING
+        zcx_abapgit_exception .
+    METHODS build_menu
+      RETURNING
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
 ENDCLASS.
 
 
@@ -88,6 +100,29 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     ENDIF.
 
     ms_control-page_menu  = build_menu( ).
+
+  ENDMETHOD.
+
+
+  METHOD find_changed_by.
+
+    DATA: ls_local      LIKE LINE OF it_local,
+          ls_changed_by LIKE LINE OF rt_changed_by.
+
+    FIELD-SYMBOLS: <ls_changed_by> LIKE LINE OF rt_changed_by.
+
+
+    LOOP AT it_local INTO ls_local WHERE NOT item IS INITIAL.
+      ls_changed_by-item = ls_local-item.
+      INSERT ls_changed_by INTO TABLE rt_changed_by.
+    ENDLOOP.
+
+    LOOP AT rt_changed_by ASSIGNING <ls_changed_by>.
+      TRY.
+          <ls_changed_by>-name = to_lower( zcl_abapgit_objects=>changed_by( <ls_changed_by>-item ) ).
+        CATCH zcx_abapgit_exception.
+      ENDTRY.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -140,23 +175,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.        "process_stage_list
-
-
-  METHOD read_last_changed_by.
-    DATA: ls_local_file  TYPE zif_abapgit_definitions=>ty_file_item,
-          lt_files_local TYPE zif_abapgit_definitions=>ty_files_item_tt.
-    TRY.
-        lt_files_local = mo_repo->get_files_local( ).
-        READ TABLE lt_files_local INTO ls_local_file WITH KEY file = is_file.
-        IF sy-subrc = 0.
-          rv_user = zcl_abapgit_objects=>changed_by( ls_local_file-item ).
-        ENDIF.
-      CATCH zcx_abapgit_exception.
-        CLEAR rv_user. "Should not raise errors if user last changed by was not found
-    ENDTRY.
-
-    rv_user = to_lower( rv_user ).
-  ENDMETHOD.
 
 
   METHOD render_actions.
@@ -212,7 +230,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.      "render_content
+  ENDMETHOD.
 
 
   METHOD render_file.
@@ -239,7 +257,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           iv_act = |{ zif_abapgit_definitions=>gc_action-go_diff }?{ lv_param }| ).
         ro_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
         ro_html->add( |<td class="name">{ lv_filename }</td>| ).
-        ro_html->add( |<td class="user">{ read_last_changed_by( is_file ) }</td>| ).
+        ro_html->add( |<td class="user">{ iv_changed_by }</td>| ).
       WHEN 'remote'.
         ro_html->add( '<td class="type">-</td>' ).  " Dummy for object type
         ro_html->add( |<td class="name">{ lv_filename }</td>| ).
@@ -255,12 +273,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
   METHOD render_list.
 
+    DATA: lt_changed_by TYPE ty_changed_by_tt,
+          ls_changed_by LIKE LINE OF lt_changed_by.
+
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF ms_files-remote,
                    <ls_local>  LIKE LINE OF ms_files-local.
 
     CREATE OBJECT ro_html.
 
     ro_html->add( '<table id="stageTab" class="stage_tab w100">' ).
+
+    lt_changed_by = find_changed_by( ms_files-local ).
 
     " Local changes
     LOOP AT ms_files-local ASSIGNING <ls_local>.
@@ -277,10 +300,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
         ro_html->add( '<tbody>' ).
       ENDAT.
 
+      READ TABLE lt_changed_by INTO ls_changed_by WITH KEY item = <ls_local>-item. "#EC CI_SUBRC
+
       ro_html->add( render_file(
         iv_context = 'local'
-        is_file    = <ls_local>-file
-        is_item    = <ls_local>-item ) ). " TODO Refactor, unify structure
+        is_file       = <ls_local>-file
+        is_item       = <ls_local>-item
+        iv_changed_by = ls_changed_by-name ) ).
 
       AT LAST.
         ro_html->add('</tbody>').
@@ -343,7 +369,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local.
 
+
     CREATE OBJECT lo_stage.
+
+    CLEAR: ei_page, ev_state.
 
     CASE iv_action.
       WHEN c_action-stage_all.
