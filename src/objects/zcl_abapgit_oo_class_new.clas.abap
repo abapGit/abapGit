@@ -68,7 +68,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_oo_class_new IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OO_CLASS_NEW IMPLEMENTATION.
 
 
   METHOD create_report.
@@ -237,18 +237,31 @@ CLASS zcl_abapgit_oo_class_new IMPLEMENTATION.
 
     ls_clskey-clsname = iv_name.
 
-* todo, downport to 702, see https://github.com/larshp/abapGit/issues/933
-    CREATE OBJECT lo_update TYPE ('CL_OO_CLASS_SECTION_SOURCE')
-      EXPORTING
-        clskey                        = ls_clskey
-        exposure                      = iv_exposure
-        state                         = 'A'
-        source                        = it_source
-        suppress_constrctr_generation = seox_true
-      EXCEPTIONS
-        class_not_existing            = 1
-        read_source_error             = 2
-        OTHERS                        = 3.
+    TRY.
+        CREATE OBJECT lo_update TYPE ('CL_OO_CLASS_SECTION_SOURCE')
+          EXPORTING
+            clskey                        = ls_clskey
+            exposure                      = iv_exposure
+            state                         = 'A'
+            source                        = it_source
+            suppress_constrctr_generation = seox_true
+          EXCEPTIONS
+            class_not_existing            = 1
+            read_source_error             = 2
+            OTHERS                        = 3.
+      CATCH cx_sy_dyn_call_param_not_found.
+* downport to 702, see https://github.com/larshp/abapGit/issues/933
+* this will READ REPORT instead of using it_source, which should be okay
+        CREATE OBJECT lo_update TYPE cl_oo_class_section_source
+          EXPORTING
+            clskey             = ls_clskey
+            exposure           = iv_exposure
+            state              = 'A'
+          EXCEPTIONS
+            class_not_existing = 1
+            read_source_error  = 2
+            OTHERS             = 3.
+    ENDTRY.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error instantiating CL_OO_CLASS_SECTION_SOURCE' ).
     ENDIF.
