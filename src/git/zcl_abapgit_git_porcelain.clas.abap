@@ -13,7 +13,6 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         !et_files       TYPE zif_abapgit_definitions=>ty_files_tt
         !et_objects     TYPE zif_abapgit_definitions=>ty_objects_tt
         !ev_branch      TYPE zif_abapgit_definitions=>ty_sha1
-        !eo_branch_list TYPE REF TO zcl_abapgit_git_branch_list
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS push
@@ -403,7 +402,6 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
     CLEAR et_files.
     CLEAR et_objects.
     CLEAR ev_branch.
-    CLEAR eo_branch_list.
 
     zcl_abapgit_git_transport=>upload_pack(
       EXPORTING
@@ -411,8 +409,7 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
         iv_branch_name = iv_branch_name
       IMPORTING
         et_objects     = et_objects
-        ev_branch      = ev_branch
-        eo_branch_list = eo_branch_list ).
+        ev_branch      = ev_branch ).
 
     READ TABLE et_objects INTO ls_object
       WITH KEY type COMPONENTS
@@ -565,11 +562,11 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
 
   METHOD receive_pack_push.
 
-    DATA: lv_time    TYPE zcl_abapgit_time=>ty_unixtime,
-          lv_commit  TYPE xstring,
-          lv_pack    TYPE xstring,
-          ls_object  LIKE LINE OF et_new_objects,
-          ls_commit  TYPE zcl_abapgit_git_pack=>ty_commit.
+    DATA: lv_time   TYPE zcl_abapgit_time=>ty_unixtime,
+          lv_commit TYPE xstring,
+          lv_pack   TYPE xstring,
+          ls_object LIKE LINE OF et_new_objects,
+          ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
     DATA: uindex     TYPE sy-index.
 
     FIELD-SYMBOLS: <ls_tree> LIKE LINE OF it_trees,
