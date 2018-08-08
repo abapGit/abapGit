@@ -412,10 +412,8 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
            ls_dd09l-as4time.
 
     ASSIGN COMPONENT 'ROWORCOLST' OF STRUCTURE ls_dd09l TO <lg_roworcolst>.
-    IF sy-subrc = 0.
-      IF <lg_roworcolst> = 'C'.
-        CLEAR <lg_roworcolst>. "To avoid diff errors. This field doesn't exists in all releases
-      ENDIF.
+    IF sy-subrc = 0 AND <lg_roworcolst> = 'C'.
+      CLEAR <lg_roworcolst>. "To avoid diff errors. This field doesn't exists in all releases
     ENDIF.
 
 
