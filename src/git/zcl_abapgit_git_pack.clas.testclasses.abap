@@ -327,6 +327,7 @@ CLASS ltcl_pack IMPLEMENTATION.
     ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob iv_data = lv_data ).
     ls_object-type = zif_abapgit_definitions=>gc_type-blob.
     ls_object-data = lv_data.
+    ls_object-index = 1.
     ls_object-adler32 = zcl_abapgit_hash=>adler32( lv_data ).
     APPEND ls_object TO lt_objects.
 
@@ -342,6 +343,7 @@ CLASS ltcl_pack IMPLEMENTATION.
     ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-commit iv_data = lv_data ).
     ls_object-type = zif_abapgit_definitions=>gc_type-commit.
     ls_object-data = lv_data.
+    ls_object-index = 2.
     ls_object-adler32 = zcl_abapgit_hash=>adler32( lv_data ).
     APPEND ls_object TO lt_objects.
 
@@ -356,6 +358,7 @@ CLASS ltcl_pack IMPLEMENTATION.
     ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-tree iv_data = lv_data ).
     ls_object-type = zif_abapgit_definitions=>gc_type-tree.
     ls_object-data = lv_data.
+    ls_object-index = 3.
     ls_object-adler32 = zcl_abapgit_hash=>adler32( lv_data ).
     APPEND ls_object TO lt_objects.
 
@@ -376,6 +379,7 @@ CLASS ltcl_pack IMPLEMENTATION.
                                              iv_data = iv_data ).
     rs_object-type = zif_abapgit_definitions=>gc_type-blob.
     rs_object-data = iv_data.
+    rs_object-index = 1.
     rs_object-adler32 = zcl_abapgit_hash=>adler32( iv_data ).
 
   ENDMETHOD.
