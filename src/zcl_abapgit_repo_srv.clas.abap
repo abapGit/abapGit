@@ -49,7 +49,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
+CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
 
   METHOD add.
@@ -291,8 +291,13 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
     add( ro_repo ).
 
-    ro_repo->refresh( ).
-    ro_repo->find_remote_dot_abapgit( ).
+    TRY.
+        ro_repo->refresh( ).
+        ro_repo->find_remote_dot_abapgit( ).
+      CATCH zcx_abapgit_exception.
+        "User gets later a error message
+    ENDTRY.
+
 
   ENDMETHOD.
 
