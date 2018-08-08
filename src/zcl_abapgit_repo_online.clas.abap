@@ -291,6 +291,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   METHOD refresh.
 
     DATA: lo_progress  TYPE REF TO zcl_abapgit_progress,
+          ls_pull      TYPE zcl_abapgit_git_porcelain=>ty_pull_result,
           lx_exception TYPE REF TO zcx_abapgit_exception.
 
     super->refresh( iv_drop_cache ).
@@ -303,14 +304,13 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     lo_progress->show( iv_current = 1
                        iv_text    = 'Fetch remote files' ) ##NO_TEXT.
 
-    zcl_abapgit_git_porcelain=>pull(
-      EXPORTING
-        iv_url         = get_url( )
-        iv_branch_name = get_branch_name( )
-      IMPORTING
-        et_files       = mt_remote
-        et_objects     = mt_objects
-        ev_branch      = mv_branch ).
+    ls_pull = zcl_abapgit_git_porcelain=>pull(
+      iv_url         = get_url( )
+      iv_branch_name = get_branch_name( ) ).
+
+    mt_remote  = ls_pull-files.
+    mt_objects = ls_pull-objects.
+    mv_branch  = ls_pull-branch.
 
     mv_initialized = abap_true.
 
@@ -391,11 +391,8 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
 * assumption: PUSH is done on top of the currently selected branch
 
-    DATA: lv_branch        TYPE zif_abapgit_definitions=>ty_sha1,
-          lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
-          lt_new_files     TYPE zif_abapgit_definitions=>ty_files_tt,
-          lt_new_objects   TYPE zif_abapgit_definitions=>ty_objects_tt,
-          lv_text          TYPE string.
+    DATA: ls_push TYPE zcl_abapgit_git_porcelain=>ty_push_result,
+          lv_text TYPE string.
 
 
     IF ms_data-branch_name CP 'refs/tags*'.
@@ -411,26 +408,20 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     handle_stage_ignore( io_stage ).
 
-    zcl_abapgit_git_porcelain=>push(
-      EXPORTING
-        is_comment       = is_comment
-        io_stage         = io_stage
-        iv_branch_name   = get_branch_name( )
-        iv_url           = get_url( )
-        iv_parent        = get_sha1_remote( )
-        it_old_objects   = get_objects( )
-      IMPORTING
-        ev_branch        = lv_branch
-        et_new_files     = lt_new_files
-        et_new_objects   = lt_new_objects
-        et_updated_files = lt_updated_files ).
+    ls_push = zcl_abapgit_git_porcelain=>push(
+      is_comment     = is_comment
+      io_stage       = io_stage
+      iv_branch_name = get_branch_name( )
+      iv_url         = get_url( )
+      iv_parent      = get_sha1_remote( )
+      it_old_objects = get_objects( ) ).
 
-    set_objects( lt_new_objects ).
-    set_files_remote( lt_new_files ).
+    set_objects( ls_push-new_objects ).
+    set_files_remote( ls_push-new_files ).
 
-    mv_branch = lv_branch.
+    mv_branch = ls_push-branch.
 
-    update_local_checksums( lt_updated_files ).
+    update_local_checksums( ls_push-updated_files ).
 
     reset_status( ).
     CLEAR: mv_code_inspector_successful.
