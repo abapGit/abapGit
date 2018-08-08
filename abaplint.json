@@ -1,5 +1,5 @@
 {
-   "version":"v750",    
+   "version":"v702",    
    "rules":{
       "7bit_ascii":{
          "enabled":true
