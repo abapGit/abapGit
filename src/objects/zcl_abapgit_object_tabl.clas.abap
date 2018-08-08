@@ -8,7 +8,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
+CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -355,10 +355,11 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
           lv_masklen TYPE c LENGTH 4,
           lt_dd36m   TYPE dd36mttyp.
 
-    FIELD-SYMBOLS: <ls_dd12v> LIKE LINE OF lt_dd12v,
-                   <ls_dd05m> LIKE LINE OF lt_dd05m,
-                   <ls_dd36m> LIKE LINE OF lt_dd36m,
-                   <ls_dd03p> LIKE LINE OF lt_dd03p.
+    FIELD-SYMBOLS: <ls_dd12v>      LIKE LINE OF lt_dd12v,
+                   <ls_dd05m>      LIKE LINE OF lt_dd05m,
+                   <ls_dd36m>      LIKE LINE OF lt_dd36m,
+                   <ls_dd03p>      LIKE LINE OF lt_dd03p,
+                   <lg_roworcolst> TYPE any.
 
 
     lv_name = ms_item-obj_name.
@@ -409,6 +410,12 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
     CLEAR: ls_dd09l-as4user,
            ls_dd09l-as4date,
            ls_dd09l-as4time.
+
+    ASSIGN COMPONENT 'ROWORCOLST' OF STRUCTURE ls_dd09l TO <lg_roworcolst>.
+    IF sy-subrc = 0 AND <lg_roworcolst> = 'C'.
+      CLEAR <lg_roworcolst>. "To avoid diff errors. This field doesn't exists in all releases
+    ENDIF.
+
 
     LOOP AT lt_dd12v ASSIGNING <ls_dd12v>.
       CLEAR: <ls_dd12v>-as4user,
