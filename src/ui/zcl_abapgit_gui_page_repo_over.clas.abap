@@ -125,7 +125,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
 
   METHOD add_direction_option.
@@ -323,12 +323,11 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: lo_persistence_repo TYPE REF TO zcl_abapgit_persistence_repo,
-          lt_overview         TYPE tty_overview.
+    DATA: lt_overview TYPE tty_overview.
 
-    CREATE OBJECT lo_persistence_repo.
 
-    lt_overview = map_repo_list_to_overview( lo_persistence_repo->list( ) ).
+    lt_overview = map_repo_list_to_overview(
+      zcl_abapgit_persist_factory=>get_repo( )->list( ) ).
 
     apply_order_by( CHANGING ct_overview = lt_overview ).
 
@@ -351,82 +350,79 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
   ENDMETHOD.            "render_content
 
 
-  METHOD render_text_input.
+  METHOD render_header_bar.
 
-    DATA lv_attrs TYPE string.
+    io_html->add( |<div class="row">| ).
 
-    CREATE OBJECT ro_html.
+    render_order_by( io_html ).
+    render_order_by_direction( io_html ).
 
-    IF iv_value IS NOT INITIAL.
-      lv_attrs = | value="{ iv_value }"|.
-    ENDIF.
+    io_html->add( render_text_input( iv_name  = |filter|
+                                     iv_label = |Filter: |
+                                     iv_value = mv_filter ) ).
 
-    IF iv_max_length IS NOT INITIAL.
-      lv_attrs = | maxlength="{ iv_max_length }"|.
-    ENDIF.
+    io_html->add( |<input type="submit" class="hidden-submit">| ).
 
-    ro_html->add( |<label for="{ iv_name }">{ iv_label }</label>| ).
-    ro_html->add( |<input id="{ iv_name }" name="{ iv_name }" type="text"{ lv_attrs }>| ).
+    io_html->add( |</div>| ).
 
-  ENDMETHOD.  " render_text_input
-
-
-  METHOD zif_abapgit_gui_page~on_event.
-
-    DATA: lv_key  TYPE zif_abapgit_persistence=>ty_value.
-
-    CASE iv_action.
-      WHEN gc_action-select.
-
-        lv_key = iv_getdata.
-
-        zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
-
-        TRY.
-            zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->refresh( ).
-          CATCH zcx_abapgit_exception ##NO_HANDLER.
-        ENDTRY.
-
-        ev_state = zif_abapgit_definitions=>gc_event_state-go_back.
-
-      WHEN gc_action-change_order_by.
-
-        parse_change_order_by( it_postdata ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-
-      WHEN gc_action-direction.
-
-        parse_direction( it_postdata ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-
-      WHEN gc_action-apply_filter.
-
-        parse_filter( it_postdata ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-
-    ENDCASE.
+    io_html->add( |</form>| ).
+    io_html->add( |</div>| ).
 
   ENDMETHOD.
 
-  METHOD render_table_header.
 
-    io_html->add( |<thead>| ).
-    io_html->add( |<tr>| ).
-    io_html->add( |<th>Favorite</th>| ).
-    io_html->add( |<th>Type</th>| ).
-    io_html->add( |<th>Key</th>| ).
-    io_html->add( |<th>Name</th>| ).
-    io_html->add( |<th>Url</th>| ).
-    io_html->add( |<th>Package</th>| ).
-    io_html->add( |<th>Branch name</th>| ).
-    io_html->add( |<th>Creator</th>| ).
-    io_html->add( |<th>Created at [{ mv_time_zone }]</th>| ).
-    io_html->add( |<th>Deserialized by</th>| ).
-    io_html->add( |<th>Deserialized at [{ mv_time_zone }]</th>| ).
-    io_html->add( |<th></th>| ).
-    io_html->add( '</tr>' ).
-    io_html->add( '</thead>' ).
-    io_html->add( '<tbody>' ).
+  METHOD render_order_by.
+
+    io_html->add( |Order by: <select name="order_by" onchange="onOrderByChange(this)">| ).
+
+    add_order_by_option( iv_option = |TYPE|
+                         io_html   = io_html ).
+
+    add_order_by_option( iv_option = |KEY|
+                         io_html   = io_html ).
+
+    add_order_by_option( iv_option = |NAME|
+                         io_html   = io_html ).
+
+    add_order_by_option( iv_option = |URL|
+                         io_html   = io_html ).
+
+    add_order_by_option( iv_option = |PACKAGE|
+                         io_html   = io_html ).
+
+    add_order_by_option( iv_option = |BRANCH|
+                         io_html   = io_html ).
+
+    add_order_by_option( iv_option = |CREATED_BY|
+                         io_html   = io_html ).
+
+    add_order_by_option( iv_option = |CREATED_AT|
+                         io_html   = io_html ).
+
+    add_order_by_option( iv_option = |DESERIALIZED_BY|
+                         io_html   = io_html ).
+
+    add_order_by_option( iv_option = |DESERIALIZED_AT|
+                         io_html   = io_html ).
+
+    io_html->add( |</select>| ).
+
+  ENDMETHOD.
+
+
+  METHOD render_order_by_direction.
+
+    io_html->add( |<select name="direction" onchange="onDirectionChange(this)">| ).
+
+    add_direction_option( iv_option   = |ASCENDING|
+                          iv_selected = mv_order_descending
+                          io_html     = io_html ).
+
+    add_direction_option( iv_option   = |DESCENDING|
+                          iv_selected = mv_order_descending
+                          io_html     = io_html ).
+
+    io_html->add( |</select>| ).
 
   ENDMETHOD.
 
@@ -501,81 +497,48 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_order_by.
+  METHOD render_table_header.
 
-    io_html->add( |Order by: <select name="order_by" onchange="onOrderByChange(this)">| ).
-
-    add_order_by_option( iv_option = |TYPE|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |KEY|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |NAME|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |URL|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |PACKAGE|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |BRANCH|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |CREATED_BY|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |CREATED_AT|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |DESERIALIZED_BY|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |DESERIALIZED_AT|
-                         io_html   = io_html ).
-
-    io_html->add( |</select>| ).
+    io_html->add( |<thead>| ).
+    io_html->add( |<tr>| ).
+    io_html->add( |<th>Favorite</th>| ).
+    io_html->add( |<th>Type</th>| ).
+    io_html->add( |<th>Key</th>| ).
+    io_html->add( |<th>Name</th>| ).
+    io_html->add( |<th>Url</th>| ).
+    io_html->add( |<th>Package</th>| ).
+    io_html->add( |<th>Branch name</th>| ).
+    io_html->add( |<th>Creator</th>| ).
+    io_html->add( |<th>Created at [{ mv_time_zone }]</th>| ).
+    io_html->add( |<th>Deserialized by</th>| ).
+    io_html->add( |<th>Deserialized at [{ mv_time_zone }]</th>| ).
+    io_html->add( |<th></th>| ).
+    io_html->add( '</tr>' ).
+    io_html->add( '</thead>' ).
+    io_html->add( '<tbody>' ).
 
   ENDMETHOD.
 
 
-  METHOD render_order_by_direction.
+  METHOD render_text_input.
 
-    io_html->add( |<select name="direction" onchange="onDirectionChange(this)">| ).
+    DATA lv_attrs TYPE string.
 
-    add_direction_option( iv_option   = |ASCENDING|
-                          iv_selected = mv_order_descending
-                          io_html     = io_html ).
+    CREATE OBJECT ro_html.
 
-    add_direction_option( iv_option   = |DESCENDING|
-                          iv_selected = mv_order_descending
-                          io_html     = io_html ).
+    IF iv_value IS NOT INITIAL.
+      lv_attrs = | value="{ iv_value }"|.
+    ENDIF.
 
-    io_html->add( |</select>| ).
+    IF iv_max_length IS NOT INITIAL.
+      lv_attrs = | maxlength="{ iv_max_length }"|.
+    ENDIF.
 
-  ENDMETHOD.
+    ro_html->add( |<label for="{ iv_name }">{ iv_label }</label>| ).
+    ro_html->add( |<input id="{ iv_name }" name="{ iv_name }" type="text"{ lv_attrs }>| ).
 
+  ENDMETHOD.  " render_text_input
 
-  METHOD render_header_bar.
-
-    io_html->add( |<div class="row">| ).
-
-    render_order_by( io_html ).
-    render_order_by_direction( io_html ).
-
-    io_html->add( render_text_input( iv_name  = |filter|
-                                     iv_label = |Filter: |
-                                     iv_value = mv_filter ) ).
-
-    io_html->add( |<input type="submit" class="hidden-submit">| ).
-
-    io_html->add( |</div>| ).
-
-    io_html->add( |</form>| ).
-    io_html->add( |</div>| ).
-
-  ENDMETHOD.
 
   METHOD scripts.
 
@@ -585,4 +548,41 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_gui_page~on_event.
+
+    DATA: lv_key  TYPE zif_abapgit_persistence=>ty_value.
+
+    CASE iv_action.
+      WHEN gc_action-select.
+
+        lv_key = iv_getdata.
+
+        zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
+
+        TRY.
+            zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->refresh( ).
+          CATCH zcx_abapgit_exception ##NO_HANDLER.
+        ENDTRY.
+
+        ev_state = zif_abapgit_definitions=>gc_event_state-go_back.
+
+      WHEN gc_action-change_order_by.
+
+        parse_change_order_by( it_postdata ).
+        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+
+      WHEN gc_action-direction.
+
+        parse_direction( it_postdata ).
+        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+
+      WHEN gc_action-apply_filter.
+
+        parse_filter( it_postdata ).
+        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+
+    ENDCASE.
+
+  ENDMETHOD.
 ENDCLASS.

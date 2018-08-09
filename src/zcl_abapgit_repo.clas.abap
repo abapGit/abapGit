@@ -153,14 +153,9 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD delete.
 
-    DATA: lo_persistence TYPE REF TO zcl_abapgit_persistence_repo.
+    zcl_abapgit_persist_factory=>get_repo( )->delete( ms_data-key ).
 
-
-    CREATE OBJECT lo_persistence.
-
-    lo_persistence->delete( ms_data-key ).
-
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
 
   METHOD delete_checks.
@@ -492,7 +487,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 * TODO: refactor
 
-    DATA: lo_persistence TYPE REF TO zcl_abapgit_persistence_repo.
+    DATA: li_persistence TYPE REF TO zif_abapgit_persist_repo.
 
 
     ASSERT it_checksums IS SUPPLIED
@@ -505,60 +500,59 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       OR iv_deserialized_by IS SUPPLIED
       OR iv_deserialized_at IS SUPPLIED.
 
-    CREATE OBJECT lo_persistence.
+    li_persistence = zcl_abapgit_persist_factory=>get_repo( ).
 
     IF it_checksums IS SUPPLIED.
-      lo_persistence->update_local_checksums(
+      li_persistence->update_local_checksums(
         iv_key       = ms_data-key
         it_checksums = it_checksums ).
       ms_data-local_checksums = it_checksums.
     ENDIF.
 
     IF iv_url IS SUPPLIED.
-      lo_persistence->update_url(
+      li_persistence->update_url(
         iv_key = ms_data-key
         iv_url = iv_url ).
       ms_data-url = iv_url.
     ENDIF.
 
     IF iv_branch_name IS SUPPLIED.
-      lo_persistence->update_branch_name(
+      li_persistence->update_branch_name(
         iv_key         = ms_data-key
         iv_branch_name = iv_branch_name ).
       ms_data-branch_name = iv_branch_name.
     ENDIF.
 
     IF iv_head_branch IS SUPPLIED.
-      lo_persistence->update_head_branch(
+      li_persistence->update_head_branch(
         iv_key         = ms_data-key
         iv_head_branch = iv_head_branch ).
       ms_data-head_branch = iv_head_branch.
     ENDIF.
 
     IF iv_offline IS SUPPLIED.
-      lo_persistence->update_offline(
+      li_persistence->update_offline(
         iv_key     = ms_data-key
         iv_offline = iv_offline ).
       ms_data-offline = iv_offline.
     ENDIF.
 
     IF is_dot_abapgit IS SUPPLIED.
-      lo_persistence->update_dot_abapgit(
+      li_persistence->update_dot_abapgit(
         iv_key         = ms_data-key
         is_dot_abapgit = is_dot_abapgit ).
       ms_data-dot_abapgit = is_dot_abapgit.
     ENDIF.
 
     IF is_local_settings IS SUPPLIED.
-      lo_persistence->update_local_settings(
+      li_persistence->update_local_settings(
         iv_key      = ms_data-key
         is_settings = is_local_settings ).
       ms_data-local_settings = is_local_settings.
     ENDIF.
 
-    IF iv_deserialized_at IS SUPPLIED
-    OR iv_deserialized_by IS SUPPLIED.
-      lo_persistence->update_deserialized(
+    IF iv_deserialized_at IS SUPPLIED OR iv_deserialized_by IS SUPPLIED.
+      li_persistence->update_deserialized(
         iv_key             = ms_data-key
         iv_deserialized_at = iv_deserialized_at
         iv_deserialized_by = iv_deserialized_by ).
