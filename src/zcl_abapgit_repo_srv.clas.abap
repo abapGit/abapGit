@@ -23,7 +23,6 @@ CLASS zcl_abapgit_repo_srv DEFINITION
 
     CLASS-DATA gi_ref TYPE REF TO zif_abapgit_repo_srv .
     DATA mv_init TYPE abap_bool VALUE abap_false ##NO_TEXT.
-    DATA mo_persistence TYPE REF TO zcl_abapgit_persistence_repo .
     DATA mt_list TYPE zif_abapgit_definitions=>ty_repo_ref_tt .
 
     METHODS refresh
@@ -35,16 +34,15 @@ CLASS zcl_abapgit_repo_srv DEFINITION
         VALUE(rv_allowed) TYPE abap_bool .
     METHODS add
       IMPORTING
-        io_repo TYPE REF TO zcl_abapgit_repo
+        !io_repo TYPE REF TO zcl_abapgit_repo
       RAISING
         zcx_abapgit_exception .
     METHODS validate_sub_super_packages
       IMPORTING
-        iv_package TYPE devclass
-        it_repos   TYPE zif_abapgit_persistence=>tt_repo
+        !iv_package TYPE devclass
+        !it_repos   TYPE zif_abapgit_persistence=>tt_repo
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -72,8 +70,8 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
 
   METHOD constructor.
-    CREATE OBJECT mo_persistence.
-  ENDMETHOD.                    "class_constructor
+
+  ENDMETHOD.
 
 
   METHOD get_instance.
@@ -107,7 +105,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
     CLEAR mt_list.
 
-    lt_list = mo_persistence->list( ).
+    lt_list = zcl_abapgit_persist_factory=>get_repo( )->list( ).
     LOOP AT lt_list ASSIGNING <ls_list>.
       IF <ls_list>-offline = abap_false.
         CREATE OBJECT lo_online
@@ -238,7 +236,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
     validate_package( iv_package ).
 
-    lv_key = mo_persistence->add(
+    lv_key = zcl_abapgit_persist_factory=>get_repo( )->add(
       iv_url         = iv_url
       iv_branch_name = ''
       iv_package     = iv_package
@@ -246,7 +244,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
       is_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ) ).
 
     TRY.
-        ls_repo = mo_persistence->read( lv_key ).
+        ls_repo = zcl_abapgit_persist_factory=>get_repo( )->read( lv_key ).
       CATCH zcx_abapgit_not_found.
         zcx_abapgit_exception=>raise( 'new_offline not found' ).
     ENDTRY.
@@ -273,14 +271,14 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
     validate_package( iv_package ).
     zcl_abapgit_url=>validate( |{ iv_url }| ).
 
-    lv_key = mo_persistence->add(
+    lv_key = zcl_abapgit_persist_factory=>get_repo( )->add(
       iv_url         = iv_url
       iv_branch_name = iv_branch_name
       iv_package     = iv_package
       iv_offline     = abap_false
       is_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ) ).
     TRY.
-        ls_repo = mo_persistence->read( lv_key ).
+        ls_repo = zcl_abapgit_persist_factory=>get_repo( )->read( lv_key ).
       CATCH zcx_abapgit_not_found.
         zcx_abapgit_exception=>raise( 'new_online not found' ).
     ENDTRY.
@@ -377,7 +375,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
     ENDIF.
 
     " make sure its not already in use for a different repository
-    lt_repos = mo_persistence->list( ).
+    lt_repos = zcl_abapgit_persist_factory=>get_repo( )->list( ).
     READ TABLE lt_repos WITH KEY package = iv_package TRANSPORTING NO FIELDS.
     IF sy-subrc = 0.
       zcx_abapgit_exception=>raise( |Package { iv_package } already in use| ).
