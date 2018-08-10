@@ -765,7 +765,12 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
   METHOD deserialize_cua.
 
-    DATA: ls_tr_key TYPE trkey.
+    DATA: ls_tr_key TYPE trkey,
+          ls_adm    TYPE rsmpe_adm.
+    FIELD-SYMBOLS: <ls_pfk> LIKE LINE OF is_cua-pfk,
+                   <ls_adm> TYPE rsmpe_adm,
+                   <ls_act> LIKE LINE OF is_cua-act,
+                   <ls_men> LIKE LINE OF is_cua-men.
 
 
     IF lines( is_cua-sta ) = 0
@@ -796,13 +801,35 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     ls_tr_key-sub_type = 'CUAD'.
     ls_tr_key-sub_name = iv_program_name.
 
+
+    ASSIGN is_cua-adm TO <ls_adm>.
+    IF is_cua-adm IS INITIAL.
+      " issue #1807 automatic correction of CUA interfaces saved incorrectly in the past (ADM was not saved in the XML)
+      ASSIGN ls_adm TO <ls_adm>.
+      CLEAR ls_adm.
+      LOOP AT is_cua-act ASSIGNING <ls_act>.
+        IF <ls_act>-code+6(14) IS INITIAL AND <ls_act>-code(6) CO '0123456789'.
+          ls_adm-actcode = <ls_act>-code.
+        ENDIF.
+      ENDLOOP.
+      LOOP AT is_cua-men ASSIGNING <ls_men>.
+        IF <ls_men>-code+6(14) IS INITIAL AND <ls_men>-code(6) CO '0123456789'.
+          ls_adm-mencode = <ls_men>-code.
+        ENDIF.
+      ENDLOOP.
+      LOOP AT is_cua-pfk ASSIGNING <ls_pfk>.
+        IF <ls_pfk>-code+6(14) IS INITIAL AND <ls_pfk>-code(6) CO '0123456789'.
+          ls_adm-pfkcode = <ls_pfk>-code.
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
     sy-tcode = 'SE41' ##write_ok. " evil hack, workaround to handle fixes in note 2159455
     CALL FUNCTION 'RS_CUA_INTERNAL_WRITE'
       EXPORTING
         program   = iv_program_name
         language  = mv_language
         tr_key    = ls_tr_key
-        adm       = is_cua-adm
+        adm       = <ls_adm>
         state     = 'I'
       TABLES
         sta       = is_cua-sta
