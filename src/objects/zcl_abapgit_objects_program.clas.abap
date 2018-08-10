@@ -148,6 +148,12 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
                   it_spaces      TYPE ty_spaces_tt
         RETURNING VALUE(rt_flow) TYPE swydyflow.
 
+    CLASS-METHODS auto_correct_cua_adm
+      IMPORTING
+        is_cua TYPE zcl_abapgit_objects_program=>ty_cua
+      CHANGING
+        cs_adm TYPE rsmpe_adm.
+
 
 ENDCLASS.
 
@@ -767,10 +773,10 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
     DATA: ls_tr_key TYPE trkey,
           ls_adm    TYPE rsmpe_adm.
-    FIELD-SYMBOLS: <ls_pfk> LIKE LINE OF is_cua-pfk,
+    FIELD-SYMBOLS: <ls_pfk> TYPE rsmpe_pfk,
                    <ls_adm> TYPE rsmpe_adm,
-                   <ls_act> LIKE LINE OF is_cua-act,
-                   <ls_men> LIKE LINE OF is_cua-men.
+                   <ls_act> TYPE rsmpe_act,
+                   <ls_men> TYPE rsmpe_men.
 
 
     IF lines( is_cua-sta ) = 0
@@ -802,26 +808,13 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     ls_tr_key-sub_name = iv_program_name.
 
 
-    ASSIGN is_cua-adm TO <ls_adm>.
-    IF is_cua-adm IS INITIAL.
+    IF is_cua-adm IS NOT INITIAL.
+      ASSIGN is_cua-adm TO <ls_adm>.
+    ELSE.
       " issue #1807 automatic correction of CUA interfaces saved incorrectly in the past (ADM was not saved in the XML)
-      ASSIGN ls_adm TO <ls_adm>.
       CLEAR ls_adm.
-      LOOP AT is_cua-act ASSIGNING <ls_act>.
-        IF <ls_act>-code+6(14) IS INITIAL AND <ls_act>-code(6) CO '0123456789'.
-          ls_adm-actcode = <ls_act>-code.
-        ENDIF.
-      ENDLOOP.
-      LOOP AT is_cua-men ASSIGNING <ls_men>.
-        IF <ls_men>-code+6(14) IS INITIAL AND <ls_men>-code(6) CO '0123456789'.
-          ls_adm-mencode = <ls_men>-code.
-        ENDIF.
-      ENDLOOP.
-      LOOP AT is_cua-pfk ASSIGNING <ls_pfk>.
-        IF <ls_pfk>-code+6(14) IS INITIAL AND <ls_pfk>-code(6) CO '0123456789'.
-          ls_adm-pfkcode = <ls_pfk>-code.
-        ENDIF.
-      ENDLOOP.
+      auto_correct_cua_adm( EXPORTING is_cua = is_cua CHANGING cs_adm = ls_adm ).
+      ASSIGN ls_adm TO <ls_adm>.
     ENDIF.
     sy-tcode = 'SE41' ##write_ok. " evil hack, workaround to handle fixes in note 2159455
     CALL FUNCTION 'RS_CUA_INTERNAL_WRITE'
@@ -930,6 +923,40 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         RETURN.
       ENDIF.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD auto_correct_cua_adm.
+    " issue #1807 automatic correction of CUA interfaces saved incorrectly in the past (ADM was not saved in the XML)
+    FIELD-SYMBOLS:
+      <ls_pfk> TYPE rsmpe_pfk,
+      <ls_act> TYPE rsmpe_act,
+      <ls_men> TYPE rsmpe_men.
+
+    IF cs_adm-actcode IS INITIAL.
+      LOOP AT is_cua-act ASSIGNING <ls_act>.
+        IF <ls_act>-code+6(14) IS INITIAL AND <ls_act>-code(6) CO '0123456789'.
+          cs_adm-actcode = <ls_act>-code.
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
+
+    IF cs_adm-mencode IS INITIAL.
+      LOOP AT is_cua-men ASSIGNING <ls_men>.
+        IF <ls_men>-code+6(14) IS INITIAL AND <ls_men>-code(6) CO '0123456789'.
+          cs_adm-mencode = <ls_men>-code.
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
+
+    IF cs_adm-pfkcode IS INITIAL.
+      LOOP AT is_cua-pfk ASSIGNING <ls_pfk>.
+        IF <ls_pfk>-code+6(14) IS INITIAL AND <ls_pfk>-code(6) CO '0123456789'.
+          cs_adm-pfkcode = <ls_pfk>-code.
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
 
   ENDMETHOD.
 
