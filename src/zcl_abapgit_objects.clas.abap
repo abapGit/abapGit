@@ -16,7 +16,6 @@ CLASS zcl_abapgit_objects DEFINITION
     TYPES:
       ty_deserialization_tt TYPE STANDARD TABLE OF ty_deserialization WITH DEFAULT KEY .
 
-
     CLASS-METHODS serialize
       IMPORTING
         !is_item        TYPE zif_abapgit_definitions=>ty_item
@@ -170,12 +169,11 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_objects
       IMPORTING
-        it_objects  TYPE ty_deserialization_tt
-        iv_ddic     TYPE abap_bool DEFAULT abap_false
-        iv_descr    TYPE string
-        is_deserialize_auto_correction TYPE zif_abapgit_persistence=>ty_deserialize_auto_correction
+        it_objects TYPE ty_deserialization_tt
+        iv_ddic    TYPE abap_bool DEFAULT abap_false
+        iv_descr   TYPE string
       CHANGING
-        ct_files    TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+        ct_files   TYPE zif_abapgit_definitions=>ty_file_signatures_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS check_objects_locked
@@ -208,7 +206,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -476,8 +474,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lo_progress TYPE REF TO zcl_abapgit_progress,
           lv_path     TYPE string,
           lt_items    TYPE zif_abapgit_definitions=>ty_items_tt.
-    DATA: lo_folder_logic                TYPE REF TO zcl_abapgit_folder_logic,
-          ls_deserialize_auto_correction TYPE zif_abapgit_persistence=>ty_deserialize_auto_correction.
+    DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_result> TYPE zif_abapgit_definitions=>ty_result,
                    <ls_deser>  LIKE LINE OF lt_late.
@@ -566,22 +563,17 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       CLEAR: lv_path, lv_package.
     ENDLOOP.
 
-    ls_deserialize_auto_correction = io_repo->get_local_settings( )-deserialize_auto_correction.
-
     deserialize_objects( EXPORTING it_objects = lt_ddic
                                    iv_ddic    = abap_true
                                    iv_descr   = 'DDIC'
-                                   is_deserialize_auto_correction = ls_deserialize_auto_correction
                          CHANGING ct_files = rt_accessed_files ).
 
     deserialize_objects( EXPORTING it_objects = lt_rest
                                    iv_descr   = 'Objects'
-                                   is_deserialize_auto_correction = ls_deserialize_auto_correction
                          CHANGING ct_files = rt_accessed_files ).
 
     deserialize_objects( EXPORTING it_objects = lt_late
                                    iv_descr   = 'Late'
-                                   is_deserialize_auto_correction = ls_deserialize_auto_correction
                          CHANGING ct_files = rt_accessed_files ).
 
     update_package_tree( io_repo->get_package( ) ).
@@ -638,9 +630,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
         iv_text    = |Deserialize { iv_descr } - { <ls_obj>-item-obj_name }| ) ##NO_TEXT.
 
       <ls_obj>-obj->deserialize( iv_package = <ls_obj>-package
-                                 io_xml     = <ls_obj>-xml
-                                 is_deserialize_auto_correction = is_deserialize_auto_correction
-                                 ).
+                                 io_xml     = <ls_obj>-xml ).
       APPEND LINES OF <ls_obj>-obj->mo_files->get_accessed_files( ) TO ct_files.
     ENDLOOP.
 

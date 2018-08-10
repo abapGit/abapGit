@@ -19,18 +19,12 @@ INTERFACE zif_abapgit_persistence PUBLIC.
          END OF ty_local_checksum.
 
   TYPES:
-    BEGIN OF ty_deserialize_auto_correction,
-      cua_interfaces TYPE abap_bool,
-    END OF ty_deserialize_auto_correction.
-
-  TYPES:
     BEGIN OF ty_local_settings,
       ignore_subpackages           TYPE abap_bool,
       write_protected              TYPE abap_bool,
       only_local_objects           TYPE abap_bool,
       code_inspector_check_variant TYPE sci_chkv,
       block_commit                 TYPE abap_bool,
-      deserialize_auto_correction  TYPE ty_deserialize_auto_correction,
     END OF ty_local_settings.
 
   TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.

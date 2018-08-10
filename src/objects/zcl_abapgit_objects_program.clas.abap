@@ -104,9 +104,8 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
       RAISING   zcx_abapgit_exception.
 
     METHODS deserialize_cua
-      IMPORTING iv_program_name                TYPE programm
-                is_cua                         TYPE ty_cua
-                is_deserialize_auto_correction TYPE zif_abapgit_persistence=>ty_deserialize_auto_correction
+      IMPORTING iv_program_name TYPE programm
+                is_cua          TYPE ty_cua
       RAISING   zcx_abapgit_exception.
 
     METHODS check_prog_changed_since
@@ -804,7 +803,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
 
     ASSIGN is_cua-adm TO <ls_adm>.
-    IF is_cua-adm IS INITIAL AND is_deserialize_auto_correction-cua_interfaces = abap_true.
+    IF is_cua-adm IS INITIAL.
+      " issue #1807 automatic correction of CUA interfaces saved incorrectly in the past (ADM was not saved in the XML)
       ASSIGN ls_adm TO <ls_adm>.
       CLEAR ls_adm.
       LOOP AT is_cua-act ASSIGNING <ls_act>.
