@@ -773,10 +773,6 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
     DATA: ls_tr_key TYPE trkey,
           ls_adm    TYPE rsmpe_adm.
-    FIELD-SYMBOLS: <ls_pfk> TYPE rsmpe_pfk,
-                   <ls_adm> TYPE rsmpe_adm,
-                   <ls_act> TYPE rsmpe_act,
-                   <ls_men> TYPE rsmpe_men.
 
 
     IF lines( is_cua-sta ) = 0
@@ -808,21 +804,16 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     ls_tr_key-sub_name = iv_program_name.
 
 
-    IF is_cua-adm IS NOT INITIAL.
-      ASSIGN is_cua-adm TO <ls_adm>.
-    ELSE.
-      " issue #1807 automatic correction of CUA interfaces saved incorrectly in the past (ADM was not saved in the XML)
-      CLEAR ls_adm.
-      auto_correct_cua_adm( EXPORTING is_cua = is_cua CHANGING cs_adm = ls_adm ).
-      ASSIGN ls_adm TO <ls_adm>.
-    ENDIF.
+    ls_adm = is_cua-adm.
+    auto_correct_cua_adm( EXPORTING is_cua = is_cua CHANGING cs_adm = ls_adm ).
+
     sy-tcode = 'SE41' ##write_ok. " evil hack, workaround to handle fixes in note 2159455
     CALL FUNCTION 'RS_CUA_INTERNAL_WRITE'
       EXPORTING
         program   = iv_program_name
         language  = mv_language
         tr_key    = ls_tr_key
-        adm       = <ls_adm>
+        adm       = ls_adm
         state     = 'I'
       TABLES
         sta       = is_cua-sta
@@ -934,29 +925,27 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       <ls_act> TYPE rsmpe_act,
       <ls_men> TYPE rsmpe_men.
 
-    IF cs_adm-actcode IS INITIAL.
-      LOOP AT is_cua-act ASSIGNING <ls_act>.
-        IF <ls_act>-code+6(14) IS INITIAL AND <ls_act>-code(6) CO '0123456789'.
-          cs_adm-actcode = <ls_act>-code.
-        ENDIF.
-      ENDLOOP.
+    IF cs_adm IS NOT INITIAL.
+      RETURN.
     ENDIF.
 
-    IF cs_adm-mencode IS INITIAL.
-      LOOP AT is_cua-men ASSIGNING <ls_men>.
-        IF <ls_men>-code+6(14) IS INITIAL AND <ls_men>-code(6) CO '0123456789'.
-          cs_adm-mencode = <ls_men>-code.
-        ENDIF.
-      ENDLOOP.
-    ENDIF.
+    LOOP AT is_cua-act ASSIGNING <ls_act>.
+      IF <ls_act>-code+6(14) IS INITIAL AND <ls_act>-code(6) CO '0123456789'.
+        cs_adm-actcode = <ls_act>-code.
+      ENDIF.
+    ENDLOOP.
 
-    IF cs_adm-pfkcode IS INITIAL.
-      LOOP AT is_cua-pfk ASSIGNING <ls_pfk>.
-        IF <ls_pfk>-code+6(14) IS INITIAL AND <ls_pfk>-code(6) CO '0123456789'.
-          cs_adm-pfkcode = <ls_pfk>-code.
-        ENDIF.
-      ENDLOOP.
-    ENDIF.
+    LOOP AT is_cua-men ASSIGNING <ls_men>.
+      IF <ls_men>-code+6(14) IS INITIAL AND <ls_men>-code(6) CO '0123456789'.
+        cs_adm-mencode = <ls_men>-code.
+      ENDIF.
+    ENDLOOP.
+
+    LOOP AT is_cua-pfk ASSIGNING <ls_pfk>.
+      IF <ls_pfk>-code+6(14) IS INITIAL AND <ls_pfk>-code(6) CO '0123456789'.
+        cs_adm-pfkcode = <ls_pfk>-code.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
