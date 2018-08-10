@@ -7,6 +7,7 @@ INTERFACE zif_abapgit_object PUBLIC.
     deserialize
       IMPORTING iv_package TYPE devclass
                 io_xml     TYPE REF TO zcl_abapgit_xml_input
+                is_deserialize_auto_correction TYPE zif_abapgit_persistence=>ty_deserialize_auto_correction
       RAISING   zcx_abapgit_exception,
     delete
       RAISING zcx_abapgit_exception,

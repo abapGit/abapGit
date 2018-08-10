@@ -158,7 +158,8 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'CUA'
                   CHANGING cg_data  = ls_cua ).
     deserialize_cua( iv_program_name = lv_program_name
-                     is_cua = ls_cua ).
+                     is_cua = ls_cua
+                     is_deserialize_auto_correction = is_deserialize_auto_correction ).
 
     " Texts deserializing (English)
     deserialize_textpool( iv_program = lv_program_name

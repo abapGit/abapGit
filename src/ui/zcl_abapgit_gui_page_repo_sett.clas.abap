@@ -203,6 +203,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     io_html->add( |Block commit commit/push if code inspection has erros: |
                && |<input name="block_commit" type="checkbox"{ lv_checked }><br>| ).
 
+    CLEAR lv_checked.
+    IF ls_settings-deserialize_auto_correction-cua_interfaces = abap_true.
+      lv_checked = | checked|.
+    ENDIF.
+    io_html->add( |Auto correct CUA interfaces <input name="auto_correct_cua_interfaces" type="checkbox"{ lv_checked }><br>| ).
 
   ENDMETHOD.
 
@@ -311,6 +316,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     IF ls_settings-block_commit = abap_true
         AND ls_settings-code_inspector_check_variant IS INITIAL.
       zcx_abapgit_exception=>raise( |If block commit is active, a check variant has to be maintained.| ).
+    ENDIF.
+
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'auto_correct_cua_interfaces' value = 'on'.
+    IF sy-subrc = 0.
+      ls_settings-deserialize_auto_correction-cua_interfaces = abap_true.
+    ELSE.
+      ls_settings-deserialize_auto_correction-cua_interfaces = abap_false.
     ENDIF.
 
     mo_repo->set_local_settings( ls_settings ).
