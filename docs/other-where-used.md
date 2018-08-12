@@ -18,7 +18,7 @@ order: 50
 ### Consulting and Partner
 * Computerservice Wolf
 * [CQSE](https://www.cqse.eu/)
-* Discovery Consulting
+* [Discovery Consulting](https://www.discoveryconsulting.com.au)
 * [emineo](https://www.emineo.ch/)
 * [INVIXO](http://invixo.com/)
 * [Microsoft Azure](https://github.com/Microsoft/ABAP-SDK-for-Azure)
@@ -28,7 +28,7 @@ order: 50
 * [SBCG](https://www.sbcg.com.ua/)
 * SE38 IT-Engineering, Neuss, Germany
 * [Tricktresor](https://www.tricktresor.de)
-* Yelcho Systems Consulting
+* [Yelcho Systems Consulting](http://www.yelcho.com.au/)
 
 [Projects using ABAPGit listed on dotabap.org](http://dotabap.org)
 
