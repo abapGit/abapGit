@@ -13,7 +13,7 @@ order: 50
 
 ### SAP
 * [SAP IBSO](https://www.sap.com/services/application-development.html)
-* [SAP Labs Czeck Republic](https://www.facebook.com/SAPLabsCZ/)
+* [SAP Labs Czech Republic](https://www.facebook.com/SAPLabsCZ/)
 
 ### Consulting and Partner
 * Computerservice Wolf
