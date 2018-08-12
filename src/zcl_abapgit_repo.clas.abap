@@ -336,9 +336,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         io_log      = io_log ).
       LOOP AT lt_files ASSIGNING <ls_file>.
         <ls_file>-path = <ls_tadir>-path.
-        <ls_file>-sha1 = zcl_abapgit_hash=>sha1(
-          iv_type = zif_abapgit_definitions=>gc_type-blob
-          iv_data = <ls_file>-data ).
 
         APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
         <ls_return>-file = <ls_file>.

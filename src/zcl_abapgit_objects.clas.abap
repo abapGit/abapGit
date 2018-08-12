@@ -816,6 +816,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           lo_xml   TYPE REF TO zcl_abapgit_xml_output,
           lo_files TYPE REF TO zcl_abapgit_objects_files.
 
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF rt_files.
+
 
     IF is_supported( is_item ) = abap_false.
       IF NOT io_log IS INITIAL.
@@ -842,7 +844,13 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     check_duplicates( rt_files ).
 
-  ENDMETHOD.                    "serialize
+    LOOP AT rt_files ASSIGNING <ls_file>.
+      <ls_file>-sha1 = zcl_abapgit_hash=>sha1(
+        iv_type = zif_abapgit_definitions=>gc_type-blob
+        iv_data = <ls_file>-data ).
+    ENDLOOP.
+
+  ENDMETHOD.
 
 
   METHOD supported_list.
