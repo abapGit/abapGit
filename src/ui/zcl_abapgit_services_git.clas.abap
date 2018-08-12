@@ -86,12 +86,12 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
   METHOD commit.
 
     DATA: ls_comment TYPE zif_abapgit_definitions=>ty_comment,
-          lo_user    TYPE REF TO zcl_abapgit_persistence_user.
+          li_user    TYPE REF TO zif_abapgit_persist_user.
 
-    lo_user = zcl_abapgit_persistence_user=>get_instance( ).
-    lo_user->set_repo_git_user_name( iv_url      = io_repo->get_url( )
+    li_user = zcl_abapgit_persistence_user=>get_instance( ).
+    li_user->set_repo_git_user_name( iv_url      = io_repo->get_url( )
                                      iv_username = is_commit-committer_name ).
-    lo_user->set_repo_git_user_email( iv_url     = io_repo->get_url( )
+    li_user->set_repo_git_user_email( iv_url     = io_repo->get_url( )
                                       iv_email   = is_commit-committer_email ).
 
     IF is_commit-committer_name IS INITIAL.
@@ -120,7 +120,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
     COMMIT WORK.
 
-  ENDMETHOD.  "commit
+  ENDMETHOD.
 
 
   METHOD create_branch.

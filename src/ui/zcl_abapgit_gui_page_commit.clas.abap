@@ -152,7 +152,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
     CONSTANTS: lc_body_col_max TYPE i VALUE 150.
 
-    DATA: lo_user      TYPE REF TO zcl_abapgit_persistence_user.
+    DATA: li_user      TYPE REF TO zif_abapgit_persist_user.
     DATA: lv_user      TYPE string.
     DATA: lv_email     TYPE string.
     DATA: lv_s_param   TYPE string.
@@ -163,20 +163,20 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 * commit messages should be max 50 characters
 * body should wrap at 72 characters
 
-    lo_user  = zcl_abapgit_persistence_user=>get_instance( ).
+    li_user = zcl_abapgit_persistence_user=>get_instance( ).
 
-    lv_user  = lo_user->get_repo_git_user_name( mo_repo->get_url( ) ).
+    lv_user  = li_user->get_repo_git_user_name( mo_repo->get_url( ) ).
     IF lv_user IS INITIAL.
-      lv_user  = lo_user->get_default_git_user_name( ).
+      lv_user  = li_user->get_default_git_user_name( ).
     ENDIF.
     IF lv_user IS INITIAL.
       " get default from user master record
       lv_user = zcl_abapgit_user_master_record=>get_instance( sy-uname )->get_name( ).
     ENDIF.
 
-    lv_email = lo_user->get_repo_git_user_email( mo_repo->get_url( ) ).
+    lv_email = li_user->get_repo_git_user_email( mo_repo->get_url( ) ).
     IF lv_email IS INITIAL.
-      lv_email = lo_user->get_default_git_user_email( ).
+      lv_email = li_user->get_default_git_user_email( ).
     ENDIF.
     IF lv_email IS INITIAL.
       " get default from user master record
