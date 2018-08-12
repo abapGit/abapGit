@@ -8,6 +8,20 @@ Legend
 + : added
 - : removed
 
+2018-08-12 v1.74.1
+------------------
+* Refactoring
+* Downport
+* Descriptions in new online popup
+* Optimized git object handling
+* SSST package popup fixed
+* PARA popup fixed
+* Package validations
+* Diff still shows after pushing
+* TABL field ROWORCOLST cleared
+* Staging page optimizations
+* Correct CUA if needed during pull
+
 2018-08-04 v1.74.0
 ------------------
 - Stage button in diff screen removed
