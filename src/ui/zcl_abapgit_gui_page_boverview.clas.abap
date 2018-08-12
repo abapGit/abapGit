@@ -87,7 +87,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
     ro_html->add( '<canvas id="gitGraph"></canvas>' ).
 
     ro_html->add( '<script type="text/javascript" src="https://cdnjs.' &&
-      'cloudflare.com/ajax/libs/gitgraph.js/1.2.3/gitgraph.min.js">' &&
+      'cloudflare.com/ajax/libs/gitgraph.js/1.12.0/gitgraph.min.js">' &&
       '</script>' ) ##NO_TEXT.
 
     ro_html->add( '<script type="text/javascript">' ).
