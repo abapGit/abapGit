@@ -215,20 +215,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     DATA: ls_overview LIKE LINE OF rt_overview,
           lo_repo_srv TYPE REF TO zcl_abapgit_repo,
-          lo_user     TYPE REF TO zcl_abapgit_persistence_user,
           lv_date     TYPE d,
           lv_time     TYPE t.
 
     FIELD-SYMBOLS: <ls_repo> LIKE LINE OF it_repo_list.
 
-    lo_user = zcl_abapgit_persistence_user=>get_instance( ).
 
     LOOP AT it_repo_list ASSIGNING <ls_repo>.
 
       CLEAR: ls_overview.
       lo_repo_srv = zcl_abapgit_repo_srv=>get_instance( )->get( <ls_repo>-key ).
 
-      ls_overview-favorite   = lo_user->is_favorite_repo( <ls_repo>-key ).
+      ls_overview-favorite   = zcl_abapgit_persistence_user=>get_instance(
+        )->is_favorite_repo( <ls_repo>-key ).
       ls_overview-type       = <ls_repo>-offline.
       ls_overview-key        = <ls_repo>-key.
       ls_overview-name       = lo_repo_srv->get_name( ).

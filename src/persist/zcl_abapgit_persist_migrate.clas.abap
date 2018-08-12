@@ -59,7 +59,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
 
 
   METHOD distribute_settings_to_users.
@@ -67,7 +67,7 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
     DATA: lt_abapgit_users    TYPE STANDARD TABLE OF char12
                                    WITH NON-UNIQUE DEFAULT KEY,
           ls_user_settings    TYPE zif_abapgit_definitions=>ty_s_user_settings,
-          lo_user_persistence TYPE REF TO zcl_abapgit_persistence_user.
+          li_user_persistence TYPE REF TO zif_abapgit_persist_user.
 
     FIELD-SYMBOLS: <ls_user>                     LIKE LINE OF lt_abapgit_users,
                    <ls_setting_to_migrate>       TYPE zcl_abapgit_persist_migrate=>ty_settings_to_migrate,
@@ -80,9 +80,9 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
 
     LOOP AT lt_abapgit_users ASSIGNING <ls_user>.
 
-      lo_user_persistence = zcl_abapgit_persistence_user=>get_instance( <ls_user> ).
+      li_user_persistence = zcl_abapgit_persistence_user=>get_instance( <ls_user> ).
 
-      ls_user_settings = lo_user_persistence->get_settings( ).
+      ls_user_settings = li_user_persistence->get_settings( ).
 
       LOOP AT it_settings_to_migrate ASSIGNING <ls_setting_to_migrate>.
 
@@ -95,9 +95,20 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
 
       ENDLOOP.
 
-      lo_user_persistence->set_settings( ls_user_settings ).
+      li_user_persistence->set_settings( ls_user_settings ).
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD get_global_settings_document.
+
+    DATA: lv_global_settings_xml TYPE string.
+
+    lv_global_settings_xml = read_global_settings_xml( ).
+
+    ri_global_settings_dom = cl_ixml_80_20=>parse_to_document( stream_string = lv_global_settings_xml ).
 
   ENDMETHOD.
 
@@ -264,6 +275,15 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD read_global_settings_xml.
+
+    rv_global_settings_xml = zcl_abapgit_persistence_db=>get_instance( )->read(
+        iv_type  = zcl_abapgit_persistence_db=>c_type_settings
+        iv_value = '' ).
+
+  ENDMETHOD.
+
+
   METHOD run.
 
     IF table_exists( ) = abap_false.
@@ -409,25 +429,4 @@ CLASS zcl_abapgit_persist_migrate IMPLEMENTATION.
       iv_data  = lv_settings_xml ).
 
   ENDMETHOD.
-
-
-  METHOD read_global_settings_xml.
-
-    rv_global_settings_xml = zcl_abapgit_persistence_db=>get_instance( )->read(
-        iv_type  = zcl_abapgit_persistence_db=>c_type_settings
-        iv_value = '' ).
-
-  ENDMETHOD.
-
-
-  METHOD get_global_settings_document.
-
-    DATA: lv_global_settings_xml TYPE string.
-
-    lv_global_settings_xml = read_global_settings_xml( ).
-
-    ri_global_settings_dom = cl_ixml_80_20=>parse_to_document( stream_string = lv_global_settings_xml ).
-
-  ENDMETHOD.
-
 ENDCLASS.

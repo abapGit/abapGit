@@ -60,7 +60,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -201,7 +201,7 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
 
     CONSTANTS: lc_body_col_max TYPE i VALUE 150.
 
-    DATA: lo_user      TYPE REF TO zcl_abapgit_persistence_user,
+    DATA: li_user      TYPE REF TO zif_abapgit_persist_user,
           lv_user      TYPE string,
           lv_email     TYPE string,
           lv_s_param   TYPE string,
@@ -209,22 +209,24 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
           lv_body_size TYPE i,
           lt_type      TYPE stringtab,
           lv_selected  TYPE string.
+
     FIELD-SYMBOLS: <lv_type> LIKE LINE OF lt_type.
 
-    lo_user  = zcl_abapgit_persistence_user=>get_instance( ).
 
-    lv_user  = lo_user->get_repo_git_user_name( mo_repo_online->get_url( ) ).
+    li_user = zcl_abapgit_persistence_user=>get_instance( ).
+
+    lv_user = li_user->get_repo_git_user_name( mo_repo_online->get_url( ) ).
     IF lv_user IS INITIAL.
-      lv_user  = lo_user->get_default_git_user_name( ).
+      lv_user = li_user->get_default_git_user_name( ).
     ENDIF.
     IF lv_user IS INITIAL.
       " get default from user master record
       lv_user = zcl_abapgit_user_master_record=>get_instance( sy-uname )->get_name( ).
     ENDIF.
 
-    lv_email = lo_user->get_repo_git_user_email( mo_repo_online->get_url( ) ).
+    lv_email = li_user->get_repo_git_user_email( mo_repo_online->get_url( ) ).
     IF lv_email IS INITIAL.
-      lv_email = lo_user->get_default_git_user_email( ).
+      lv_email = li_user->get_default_git_user_email( ).
     ENDIF.
     IF lv_email IS INITIAL.
       " get default from user master record
