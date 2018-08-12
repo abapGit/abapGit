@@ -30,11 +30,6 @@ order: 50
 * [Tricktresor](https://www.tricktresor.de)
 * Yelcho Systems Consulting
 
-### OSS projects
-* [ABAPGit](https://github.com/larshp/abapGit)
-* [ABAPGitServer](https://github.com/larshp/abapGitServer)
-* [ABAPOpenChecks](https://github.com/larshp/abapOpenChecks)
-
-[Search for projects on Github using ABAPGit](https://github.com/search?q=filename%3A.abapgit.xml&type=Code)
+[Projects using ABAPGit listed on dotabap.org](http://dotabap.org)
 
 Initial list reported at [issue #1574](https://github.com/larshp/abapGit/issues/1574). Updates can be made via pull request.
