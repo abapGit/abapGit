@@ -5,12 +5,13 @@ CLASS zcl_abapgit_gui_page_merge DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     METHODS constructor
       IMPORTING
-        !io_repo   TYPE REF TO zcl_abapgit_repo_online
-        !iv_source TYPE string
-        !iv_target TYPE string
+        io_repo   TYPE REF TO zcl_abapgit_repo_online
+        iv_source TYPE string
+        iv_target TYPE string
       RAISING
         zcx_abapgit_exception .
 
@@ -38,7 +39,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -215,4 +216,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
+
 ENDCLASS.

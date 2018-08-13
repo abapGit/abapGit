@@ -5,6 +5,7 @@ CLASS zcl_abapgit_gui_page_debuginfo DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     METHODS constructor .
   PROTECTED SECTION.
@@ -100,4 +101,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
       '"<br>Frontend time: " + new Date(), "debug_info");' ).
 
   ENDMETHOD.  "scripts
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
 ENDCLASS.

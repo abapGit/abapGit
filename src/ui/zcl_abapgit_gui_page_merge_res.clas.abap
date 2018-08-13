@@ -5,14 +5,15 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     METHODS constructor
       IMPORTING
-        !io_repo       TYPE REF TO zcl_abapgit_repo_online
-        !io_merge_page TYPE REF TO zcl_abapgit_gui_page_merge
-        !io_merge      TYPE REF TO zcl_abapgit_merge
+        io_repo       TYPE REF TO zcl_abapgit_repo_online
+        io_merge_page TYPE REF TO zcl_abapgit_gui_page_merge
+        io_merge      TYPE REF TO zcl_abapgit_merge
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
     METHODS zif_abapgit_gui_page~on_event
         REDEFINITION .
@@ -110,7 +111,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
 
 
   METHOD apply_merged_content.
@@ -126,7 +127,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
           lv_new_file_content TYPE xstring.
 
     FIELD-SYMBOLS: <lv_postdata_line> LIKE LINE OF it_postdata,
-                   <ls_conflict>   TYPE zif_abapgit_definitions=>ty_merge_conflict.
+                   <ls_conflict>      TYPE zif_abapgit_definitions=>ty_merge_conflict.
 
     LOOP AT it_postdata ASSIGNING <lv_postdata_line>.
       lv_string = |{ lv_string }{ <lv_postdata_line> }|.
@@ -401,10 +402,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
   METHOD render_line_split.
 
-    DATA: lv_new   TYPE string,
-          lv_old   TYPE string,
-          lv_mark  TYPE string,
-          lv_bg    TYPE string.
+    DATA: lv_new  TYPE string,
+          lv_old  TYPE string,
+          lv_mark TYPE string,
+          lv_bg   TYPE string.
 
     CREATE OBJECT ro_html.
 
@@ -577,4 +578,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
+
 ENDCLASS.

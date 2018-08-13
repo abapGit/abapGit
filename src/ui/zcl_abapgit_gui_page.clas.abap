@@ -35,11 +35,25 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
     METHODS redirect
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
+    METHODS link_hints
+      IMPORTING
+        io_html TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS hotkeys
+      IMPORTING
+        io_html TYPE REF TO zcl_abapgit_html.
+
+    METHODS get_relevant_hotkeys
+      RETURNING
+        VALUE(rt_hotkeys) TYPE zif_abapgit_definitions=>tty_hotkey.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
 
   METHOD footer.
@@ -98,23 +112,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD scripts.
 
-    DATA: lo_settings         TYPE REF TO zcl_abapgit_settings,
-          lv_link_hint_key    TYPE char01,
-          lv_background_color TYPE string.
-
     CREATE OBJECT ro_html.
 
-    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
-
-    lv_link_hint_key = lo_settings->get_link_hint_key( ).
-    lv_background_color = lo_settings->get_link_hint_background_color( ).
-
-    IF lo_settings->get_link_hints_enabled( ) = abap_true
-    AND lv_link_hint_key IS NOT INITIAL.
-      ro_html->add( |setLinkHints("{ lv_link_hint_key }","{ lv_background_color }");| ).
-      ro_html->add( |setInitialFocusWithQuerySelector('a span', true);| ).
-      ro_html->add( |enableArrowListNavigation();| ).
-    ENDIF.
+    link_hints( ro_html ).
+    hotkeys( ro_html ).
 
   ENDMETHOD. "scripts
 
@@ -187,4 +188,99 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( '</html>' ).                              "#EC NOTEXT
 
   ENDMETHOD.  " lif_gui_page~render.
+
+  METHOD link_hints.
+
+    DATA: lo_settings         TYPE REF TO zcl_abapgit_settings,
+          lv_link_hint_key    TYPE char01,
+          lv_background_color TYPE string.
+
+    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+
+    lv_link_hint_key = lo_settings->get_link_hint_key( ).
+    lv_background_color = lo_settings->get_link_hint_background_color( ).
+
+    IF lo_settings->get_link_hints_enabled( ) = abap_true
+    AND lv_link_hint_key IS NOT INITIAL.
+
+      io_html->add( |setLinkHints("{ lv_link_hint_key }","{ lv_background_color }");| ).
+      io_html->add( |setInitialFocusWithQuerySelector('a span', true);| ).
+      io_html->add( |enableArrowListNavigation();| ).
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD hotkeys.
+
+    DATA: lv_json    TYPE string,
+          lt_hotkeys TYPE zif_abapgit_definitions=>tty_hotkey.
+
+    FIELD-SYMBOLS: <ls_hotkey> TYPE zif_abapgit_definitions=>ty_hotkey.
+
+    lt_hotkeys = get_relevant_hotkeys( ).
+
+    IF lines( lt_hotkeys ) = 0.
+      RETURN.
+    ENDIF.
+
+    lv_json = `{`.
+
+    LOOP AT lt_hotkeys ASSIGNING <ls_hotkey>.
+
+      IF sy-tabix > 1.
+        lv_json = lv_json && |,|.
+      ENDIF.
+
+      lv_json = lv_json && |  "{ <ls_hotkey>-sequence }" : "{ <ls_hotkey>-action }" |.
+
+    ENDLOOP.
+
+    lv_json = lv_json && `}`.
+
+    io_html->add( |setKeyBindings({ lv_json });| ).
+
+  ENDMETHOD.
+
+
+  METHOD get_relevant_hotkeys.
+
+    DATA: lo_settings                    TYPE REF TO zcl_abapgit_settings,
+          lv_class_name                  TYPE abap_abstypename,
+          lt_hotkey_actions_of_curr_page TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action,
+          lv_save_tabix                  TYPE syst-tabix.
+
+    FIELD-SYMBOLS: <ls_hotkey> TYPE zif_abapgit_definitions=>ty_hotkey.
+
+    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+
+    rt_hotkeys = lo_settings->get_hotkeys( ).
+
+    lv_class_name = cl_abap_classdescr=>get_class_name( me ).
+
+    TRY.
+        CALL METHOD (lv_class_name)=>zif_abapgit_gui_page_hotkey~get_hotkey_actions
+          RECEIVING
+            rt_hotkey_actions = lt_hotkey_actions_of_curr_page.
+
+      CATCH cx_root.
+        RETURN.
+    ENDTRY.
+
+    LOOP AT rt_hotkeys ASSIGNING <ls_hotkey>.
+
+      lv_save_tabix = sy-tabix.
+
+      READ TABLE lt_hotkey_actions_of_curr_page TRANSPORTING NO FIELDS
+                                                WITH KEY action = <ls_hotkey>-action.
+      IF sy-subrc <> 0.
+        " We only offer hotkeys which are supported by the current page
+        DELETE rt_hotkeys INDEX lv_save_tabix.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.

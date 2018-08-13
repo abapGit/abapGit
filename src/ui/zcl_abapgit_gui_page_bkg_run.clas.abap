@@ -5,6 +5,7 @@ CLASS zcl_abapgit_gui_page_bkg_run DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     METHODS constructor .
 
@@ -69,6 +70,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG_RUN IMPLEMENTATION.
       CATCH zcx_abapgit_exception INTO lx_error.
         APPEND lx_error->get_text( ) TO mt_text.
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 

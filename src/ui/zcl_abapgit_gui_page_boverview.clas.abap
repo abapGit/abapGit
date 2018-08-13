@@ -4,6 +4,8 @@ CLASS zcl_abapgit_gui_page_boverview DEFINITION
   CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
+    INTERFACES: zif_abapgit_gui_page_hotkey.
+
     METHODS:
       constructor
         IMPORTING io_repo TYPE REF TO zcl_abapgit_repo_online
@@ -59,7 +61,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
 
 
   METHOD body.
@@ -315,4 +317,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
+
 ENDCLASS.

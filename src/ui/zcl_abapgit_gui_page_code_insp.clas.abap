@@ -2,6 +2,8 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
     INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
+    INTERFACES: zif_abapgit_gui_page_hotkey.
+
     METHODS:
       constructor
         IMPORTING
@@ -15,7 +17,6 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
 
       zif_abapgit_gui_page~render
         REDEFINITION.
-
 
   PROTECTED SECTION.
     DATA: mo_repo TYPE REF TO zcl_abapgit_repo.
@@ -316,4 +317,10 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     ro_html = super->zif_abapgit_gui_page~render( ).
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
+
 ENDCLASS.

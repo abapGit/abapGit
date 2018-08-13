@@ -6,6 +6,7 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_gui_page .
+    INTERFACES zif_abapgit_gui_page_hotkey.
 
     ALIASES render
       FOR zif_abapgit_gui_page~render .
@@ -633,4 +634,10 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.  "lif_gui_page~render
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
+
 ENDCLASS.

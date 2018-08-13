@@ -4,6 +4,8 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
   CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
+    INTERFACES: zif_abapgit_gui_page_hotkey.
+
     CONSTANTS:
       BEGIN OF c_action,
         save_settings TYPE string VALUE 'save_settings',
@@ -62,7 +64,21 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
         zcx_abapgit_exception.
-
+    METHODS render_hotkeys
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
+    METHODS get_possible_hotkey_actions
+      RETURNING
+        VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action
+      RAISING
+        zcx_abapgit_exception.
+    METHODS get_hotkey_actions_from_pages
+      RETURNING
+        VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -73,8 +89,12 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
 
   METHOD build_settings.
 
-    DATA: lv_i_param_value         TYPE i.
-    FIELD-SYMBOLS: <ls_post_field> TYPE ihttpnvp.
+    DATA: lv_i_param_value TYPE i,
+          column           TYPE string,
+          lt_key_bindings  TYPE zif_abapgit_definitions=>tty_hotkey.
+
+    FIELD-SYMBOLS: <ls_post_field>  TYPE ihttpnvp,
+                   <ls_key_binding> TYPE zif_abapgit_definitions=>ty_hotkey.
 
 
     CREATE OBJECT mo_settings.
@@ -172,6 +192,27 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
       mo_settings->set_commitmsg_body_size( zcl_abapgit_settings=>c_commitmsg_body_size_dft ).
     ENDIF.
 
+
+    LOOP AT it_post_fields ASSIGNING <ls_post_field> WHERE name CP 'key*'.
+
+      FIND FIRST OCCURRENCE OF REGEX `key_(.*)_`
+           IN <ls_post_field>-name
+           SUBMATCHES column.
+
+      CASE column.
+        WHEN 'sequence'.
+          INSERT INITIAL LINE INTO TABLE lt_key_bindings ASSIGNING <ls_key_binding>.
+          <ls_key_binding>-sequence = <ls_post_field>-value.
+        WHEN 'action'.
+          <ls_key_binding>-action = <ls_post_field>-value.
+      ENDCASE.
+    ENDLOOP.
+
+    DELETE lt_key_bindings WHERE sequence IS INITIAL
+                           OR    action IS INITIAL.
+
+    mo_settings->set_hotkeys( lt_key_bindings ).
+
   ENDMETHOD.
 
 
@@ -179,6 +220,52 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
     super->constructor( ).
     ms_control-page_title = 'SETTINGS'.
   ENDMETHOD.  " constructor.
+
+
+  METHOD get_hotkey_actions_from_pages.
+
+    DATA: lt_hotkey_actions TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action,
+          lo_interface      TYPE REF TO cl_oo_interface,
+          lt_classes        TYPE seo_relkeys.
+
+    FIELD-SYMBOLS: <ls_class> TYPE seorelkey.
+
+    TRY.
+        lo_interface ?= cl_oo_class=>get_instance( |ZIF_ABAPGIT_GUI_PAGE_HOTKEY| ).
+
+      CATCH cx_class_not_existent.
+        " hotkeys are only available with installed abapGit repository
+        RETURN.
+    ENDTRY.
+
+    lt_classes = lo_interface->get_implementing_classes( ).
+
+    LOOP AT lt_classes ASSIGNING <ls_class>.
+
+      CALL METHOD (<ls_class>-clsname)=>zif_abapgit_gui_page_hotkey~get_hotkey_actions
+        RECEIVING
+          rt_hotkey_actions = lt_hotkey_actions.
+
+      INSERT LINES OF lt_hotkey_actions INTO TABLE rt_hotkey_actions.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD get_possible_hotkey_actions.
+
+    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+
+    rt_hotkey_actions = get_hotkey_actions_from_pages( ).
+
+    " insert empty row at the beginning, so that we can unset a hotkey
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    SORT rt_hotkey_actions.
+    DELETE ADJACENT DUPLICATES FROM rt_hotkey_actions.
+
+  ENDMETHOD.
 
 
   METHOD parse_post.
@@ -268,6 +355,8 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
     ro_html->add( render_adt_jump_enabled( ) ).
     ro_html->add( |<hr>| ).
     ro_html->add( render_link_hints( ) ).
+    ro_html->add( |<hr>| ).
+    ro_html->add( render_hotkeys( ) ).
     ro_html->add( render_section_end( ) ).
     ro_html->add( render_form_end( ) ).
 
@@ -319,6 +408,107 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_hotkeys.
+
+    DATA: lv_index        TYPE i,
+          lt_key_bindings TYPE zif_abapgit_definitions=>tty_hotkey,
+          lv_selected     TYPE string,
+          lt_actions      TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action.
+
+    FIELD-SYMBOLS: <ls_key_binding> LIKE LINE OF lt_key_bindings,
+                   <ls_action>      LIKE LINE OF lt_actions.
+
+    lt_key_bindings = mo_settings->get_hotkeys( ).
+
+    DO 3 TIMES.
+      APPEND INITIAL LINE TO lt_key_bindings.
+    ENDDO.
+
+    CREATE OBJECT ro_html.
+    ro_html->add( |<h2>Hotkeys</h2>| ).
+    ro_html->add( |(Only available with installed abapGit repo)| ).
+    ro_html->add( |<br/>| ).
+    ro_html->add( |<br/>| ).
+
+    ro_html->add( '<table class="repo_tab" id="key_bindings" style="max-width: 300px;">' ).
+    ro_html->add( '<tr><th>key</th><th>action</th></tr>' ).
+
+    lt_actions = get_possible_hotkey_actions( ).
+
+    LOOP AT lt_key_bindings ASSIGNING <ls_key_binding>.
+
+      lv_index = sy-tabix.
+
+      ro_html->add( '<tr>' ).
+      ro_html->add( |<td><input name="key_sequence_{ lv_index }" maxlength=1 type="text" | &&
+                    |value="{ <ls_key_binding>-sequence }"></td>| ).
+
+      ro_html->add( |<td><select name="key_action_{ lv_index }">| ).
+
+      LOOP AT lt_actions ASSIGNING <ls_action>.
+
+        IF <ls_key_binding>-action = <ls_action>-action.
+          lv_selected = 'selected'.
+        ELSE.
+          CLEAR: lv_selected.
+        ENDIF.
+
+        ro_html->add( |<option value="{ <ls_action>-action }" |
+                   && |{ lv_selected }>|
+                   && |{ <ls_action>-name }</option>| ).
+
+      ENDLOOP.
+
+      ro_html->add( '</select></td>' ).
+      ro_html->add( '</tr>' ).
+
+    ENDLOOP.
+
+
+    ro_html->add( '</select></td>' ).
+    ro_html->add( '</tr>' ).
+
+    ro_html->add( '</table>' ).
+
+    ro_html->add( |<br>| ).
+    ro_html->add( |<br>| ).
+
+  ENDMETHOD.
+
+
+  METHOD render_link_hints.
+
+    DATA: lv_checked               TYPE string,
+          lv_link_hint_key         TYPE char01,
+          lv_link_background_color TYPE string.
+
+    IF mo_settings->get_link_hints_enabled( ) = abap_true.
+      lv_checked = 'checked'.
+    ENDIF.
+
+    lv_link_hint_key = mo_settings->get_link_hint_key( ).
+    lv_link_background_color = mo_settings->get_link_hint_background_color( ).
+
+    CREATE OBJECT ro_html.
+    ro_html->add( |<h2>Vimium like link hints</h2>| ).
+    ro_html->add( `<input type="checkbox" name="link_hints_enabled" value="X" `
+                   && lv_checked && ` > Enable Vimium like link hints` ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<input type="text" name="link_hint_key" size="1" maxlength="1" value="{ lv_link_hint_key }" |
+               && |> Single key to activate links| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<input type="text" name="link_hint_background_color" size="20" maxlength="20"|
+               && | value="{ lv_link_background_color }"|
+               && |> Background Color (HTML colors e.g. lightgreen or #42f47a)| ).
+
+    ro_html->add( |<br>| ).
+    ro_html->add( |<br>| ).
+
+  ENDMETHOD.
+
+
   METHOD render_max_lines.
     CREATE OBJECT ro_html.
 
@@ -359,40 +549,6 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD validate_settings.
-
-    IF ( mo_settings->get_proxy_url( ) IS NOT INITIAL AND  mo_settings->get_proxy_port( ) IS INITIAL ) OR
-                 ( mo_settings->get_proxy_url( ) IS INITIAL AND  mo_settings->get_proxy_port( ) IS NOT INITIAL ).
-      MESSAGE 'If specifying proxy, specify both URL and port' TYPE 'W'.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page~on_event.
-* todo, check input values eg INT
-
-    DATA:
-      lt_post_fields TYPE tihttpnvp.
-
-    CASE iv_action.
-      WHEN c_action-save_settings.
-        lt_post_fields = parse_post( it_postdata ).
-
-        build_settings( lt_post_fields ).
-        validate_settings( ).
-
-        IF mv_error = abap_true.
-          MESSAGE 'Error when saving settings. Open an issue at https://github.com/larshp/abapGit' TYPE 'E'.
-        ELSE.
-          persist_settings( ).
-        ENDIF.
-
-        ev_state = zif_abapgit_definitions=>gc_event_state-go_back.
-    ENDCASE.
-
-  ENDMETHOD.
-
   METHOD render_section_begin.
 
     CREATE OBJECT ro_html.
@@ -429,36 +585,42 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_link_hints.
+  METHOD validate_settings.
 
-    DATA: lv_checked               TYPE string,
-          lv_link_hint_key         TYPE char01,
-          lv_link_background_color TYPE string.
-
-    IF mo_settings->get_link_hints_enabled( ) = abap_true.
-      lv_checked = 'checked'.
+    IF ( mo_settings->get_proxy_url( ) IS NOT INITIAL AND  mo_settings->get_proxy_port( ) IS INITIAL ) OR
+                 ( mo_settings->get_proxy_url( ) IS INITIAL AND  mo_settings->get_proxy_port( ) IS NOT INITIAL ).
+      MESSAGE 'If specifying proxy, specify both URL and port' TYPE 'W'.
     ENDIF.
-
-    lv_link_hint_key = mo_settings->get_link_hint_key( ).
-    lv_link_background_color = mo_settings->get_link_hint_background_color( ).
-
-    CREATE OBJECT ro_html.
-    ro_html->add( |<h2>Vimium like link hints</h2>| ).
-    ro_html->add( `<input type="checkbox" name="link_hints_enabled" value="X" `
-                   && lv_checked && ` > Enable Vimium like link hints` ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<input type="text" name="link_hint_key" size="1" maxlength="1" value="{ lv_link_hint_key }" |
-               && |> Single key to activate links| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<input type="text" name="link_hint_background_color" size="20" maxlength="20"|
-               && | value="{ lv_link_background_color }"|
-               && |> Background Color (HTML colors e.g. lightgreen or #42f47a)| ).
-
-    ro_html->add( |<br>| ).
-    ro_html->add( |<br>| ).
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page~on_event.
+* todo, check input values eg INT
+
+    DATA:
+      lt_post_fields TYPE tihttpnvp.
+
+    CASE iv_action.
+      WHEN c_action-save_settings.
+        lt_post_fields = parse_post( it_postdata ).
+
+        build_settings( lt_post_fields ).
+        validate_settings( ).
+
+        IF mv_error = abap_true.
+          MESSAGE 'Error when saving settings. Open an issue at https://github.com/larshp/abapGit' TYPE 'E'.
+        ELSE.
+          persist_settings( ).
+        ENDIF.
+
+        ev_state = zif_abapgit_definitions=>gc_event_state-go_back.
+    ENDCASE.
+
+  ENDMETHOD.
 ENDCLASS.

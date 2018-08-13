@@ -4,6 +4,8 @@ CLASS zcl_abapgit_gui_page_db_dis DEFINITION
   CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
+    INTERFACES: zif_abapgit_gui_page_hotkey.
+
     METHODS: constructor
       IMPORTING is_key TYPE zif_abapgit_persistence=>ty_content.
 
@@ -80,4 +82,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_DIS IMPLEMENTATION.
            && |<table class="tag"><tr><td class="label">Key:</td>|
            && |  <td>{ is_key-value }</td></tr></table>|.
   ENDMETHOD. "render_record_banner
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
 ENDCLASS.

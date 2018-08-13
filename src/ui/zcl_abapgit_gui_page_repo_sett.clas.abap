@@ -3,6 +3,8 @@ CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
     CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
+    INTERFACES: zif_abapgit_gui_page_hotkey.
+
     METHODS:
       constructor
         IMPORTING io_repo TYPE REF TO zcl_abapgit_repo,
@@ -314,6 +316,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     ENDIF.
 
     mo_repo->set_local_settings( ls_settings ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 
