@@ -1,5 +1,5 @@
 ---
-title: Who uses ABAPGit?
+title: Who uses abapGit?
 category: other
 order: 50
 ---
@@ -30,6 +30,6 @@ order: 50
 * [Tricktresor](https://www.tricktresor.de)
 * [Yelcho Systems Consulting](http://www.yelcho.com.au/)
 
-[Projects using ABAPGit listed on dotabap.org](http://dotabap.org)
+[Projects using abapGit listed on dotabap.org](http://dotabap.org)
 
 Initial list reported at [issue #1574](https://github.com/larshp/abapGit/issues/1574). Updates can be made via pull request.
