@@ -249,9 +249,11 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     DATA: lo_settings                    TYPE REF TO zcl_abapgit_settings,
           lv_class_name                  TYPE abap_abstypename,
           lt_hotkey_actions_of_curr_page TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action,
-          lv_save_tabix                  TYPE syst-tabix.
+          lv_save_tabix                  TYPE syst-tabix,
+          ls_hotkey                      LIKE LINE OF rt_hotkeys.
 
-    FIELD-SYMBOLS: <ls_hotkey> TYPE zif_abapgit_definitions=>ty_hotkey.
+    FIELD-SYMBOLS: <ls_hotkey>              TYPE zif_abapgit_definitions=>ty_hotkey,
+                   <ls_hotkey_of_curr_page> TYPE zif_abapgit_gui_page_hotkey=>ty_hotkey_action.
 
     lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
 
@@ -268,18 +270,32 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    LOOP AT rt_hotkeys ASSIGNING <ls_hotkey>.
+    IF lines( rt_hotkeys ) = 0.
+      " when no use defined hotkeys exist, we use the default
+      LOOP AT lt_hotkey_actions_of_curr_page ASSIGNING <ls_hotkey_of_curr_page>.
 
-      lv_save_tabix = sy-tabix.
+        ls_hotkey-action   = <ls_hotkey_of_curr_page>-action.
+        ls_hotkey-sequence = <ls_hotkey_of_curr_page>-default_hotkey.
+        INSERT ls_hotkey INTO TABLE rt_hotkeys.
 
-      READ TABLE lt_hotkey_actions_of_curr_page TRANSPORTING NO FIELDS
-                                                WITH KEY action = <ls_hotkey>-action.
-      IF sy-subrc <> 0.
-        " We only offer hotkeys which are supported by the current page
-        DELETE rt_hotkeys INDEX lv_save_tabix.
-      ENDIF.
+      ENDLOOP.
 
-    ENDLOOP.
+    ELSE.
+
+      LOOP AT rt_hotkeys ASSIGNING <ls_hotkey>.
+
+        lv_save_tabix = sy-tabix.
+
+        READ TABLE lt_hotkey_actions_of_curr_page TRANSPORTING NO FIELDS
+                                                  WITH KEY action = <ls_hotkey>-action.
+        IF sy-subrc <> 0.
+          " We only offer hotkeys which are supported by the current page
+          DELETE rt_hotkeys INDEX lv_save_tabix.
+        ENDIF.
+
+      ENDLOOP.
+
+    ENDIF.
 
   ENDMETHOD.
 

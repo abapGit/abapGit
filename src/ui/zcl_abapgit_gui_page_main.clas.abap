@@ -358,32 +358,39 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
     DATA: ls_hotkey_action TYPE zif_abapgit_gui_page_hotkey=>ty_hotkey_action.
 
-    ls_hotkey_action-name   = |Main: Settings|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>gc_action-go_settings.
+    ls_hotkey_action-name           = |Main: Settings|.
+    ls_hotkey_action-action         = zif_abapgit_definitions=>gc_action-go_settings.
+    ls_hotkey_action-default_hotkey = |s|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |Main: Repo overview|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>gc_action-go_repo_overview.
+    ls_hotkey_action-name           = |Main: Repo overview|.
+    ls_hotkey_action-action         = zif_abapgit_definitions=>gc_action-go_repo_overview.
+    ls_hotkey_action-default_hotkey = |o|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |Main: Refresh|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>gc_action-repo_refresh.
+    ls_hotkey_action-name           = |Main: Refresh|.
+    ls_hotkey_action-action         = zif_abapgit_definitions=>gc_action-repo_refresh.
+    ls_hotkey_action-default_hotkey = |r|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |Main: Pull|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>gc_action-git_pull.
+    ls_hotkey_action-name           = |Main: Pull|.
+    ls_hotkey_action-action         = zif_abapgit_definitions=>gc_action-git_pull.
+    ls_hotkey_action-default_hotkey = |p|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |Main: + Online|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>gc_action-repo_newonline.
+    ls_hotkey_action-name           = |Main: + Online|.
+    ls_hotkey_action-action         = zif_abapgit_definitions=>gc_action-repo_newonline.
+    ls_hotkey_action-default_hotkey = |n|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |Main: Uninstall|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>gc_action-repo_purge.
+    ls_hotkey_action-name           = |Main: Uninstall|.
+    ls_hotkey_action-action         = zif_abapgit_definitions=>gc_action-repo_purge.
+    ls_hotkey_action-default_hotkey = |u|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |Main: Show diff|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>gc_action-go_diff.
+    ls_hotkey_action-name           = |Main: Show diff|.
+    ls_hotkey_action-action         = zif_abapgit_definitions=>gc_action-go_diff.
+    ls_hotkey_action-default_hotkey = |d|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.

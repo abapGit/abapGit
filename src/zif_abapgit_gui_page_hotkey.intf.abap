@@ -3,8 +3,9 @@ INTERFACE zif_abapgit_gui_page_hotkey
 
   TYPES:
     BEGIN OF ty_hotkey_action,
-      name   TYPE string,
-      action TYPE string,
+      name           TYPE string,
+      action         TYPE string,
+      default_hotkey TYPE string,
     END OF ty_hotkey_action,
     tty_hotkey_action TYPE STANDARD TABLE OF ty_hotkey_action
                            WITH NON-UNIQUE DEFAULT KEY.

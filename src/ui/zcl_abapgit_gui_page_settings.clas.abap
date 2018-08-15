@@ -79,6 +79,11 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
         VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action
       RAISING
         zcx_abapgit_exception.
+    METHODS get_default_hotkeys
+      RETURNING
+        VALUE(rt_default_hotkeys) TYPE zif_abapgit_definitions=>tty_hotkey
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -220,6 +225,24 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
     super->constructor( ).
     ms_control-page_title = 'SETTINGS'.
   ENDMETHOD.  " constructor.
+
+
+  METHOD get_default_hotkeys.
+
+    DATA: lt_actions TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action,
+          ls_hotkey  LIKE LINE OF rt_default_hotkeys.
+
+    FIELD-SYMBOLS: <ls_action> LIKE LINE OF lt_actions.
+
+    lt_actions = get_hotkey_actions_from_pages( ).
+
+    LOOP AT lt_actions ASSIGNING <ls_action>.
+      ls_hotkey-action   = <ls_action>-action.
+      ls_hotkey-sequence = <ls_action>-default_hotkey.
+      INSERT ls_hotkey INTO TABLE rt_default_hotkeys.
+    ENDLOOP.
+
+  ENDMETHOD.
 
 
   METHOD get_hotkey_actions_from_pages.
@@ -410,18 +433,22 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
 
   METHOD render_hotkeys.
 
-    DATA: lv_index        TYPE i,
-          lt_key_bindings TYPE zif_abapgit_definitions=>tty_hotkey,
-          lv_selected     TYPE string,
-          lt_actions      TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action.
+    DATA: lv_index    TYPE i,
+          lt_hotkeys  TYPE zif_abapgit_definitions=>tty_hotkey,
+          lv_selected TYPE string,
+          lt_actions  TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action.
 
-    FIELD-SYMBOLS: <ls_key_binding> LIKE LINE OF lt_key_bindings,
+    FIELD-SYMBOLS: <ls_key_binding> LIKE LINE OF lt_hotkeys,
                    <ls_action>      LIKE LINE OF lt_actions.
 
-    lt_key_bindings = mo_settings->get_hotkeys( ).
+    lt_hotkeys = mo_settings->get_hotkeys( ).
+
+    IF lines( lt_hotkeys ) = 0.
+      lt_hotkeys = get_default_hotkeys( ).
+    ENDIF.
 
     DO 3 TIMES.
-      APPEND INITIAL LINE TO lt_key_bindings.
+      APPEND INITIAL LINE TO lt_hotkeys.
     ENDDO.
 
     CREATE OBJECT ro_html.
@@ -435,7 +462,7 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
 
     lt_actions = get_possible_hotkey_actions( ).
 
-    LOOP AT lt_key_bindings ASSIGNING <ls_key_binding>.
+    LOOP AT lt_hotkeys ASSIGNING <ls_key_binding>.
 
       lv_index = sy-tabix.
 
