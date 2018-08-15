@@ -217,9 +217,9 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     li_popups->popup_to_select_from_list(
       EXPORTING
         it_list               = ct_overwrite
-        i_header_text         = |The following Objects have been modified locally.|
+        iv_header_text         = |The following Objects have been modified locally.|
                             && | Select the Objects which should be overwritten.|
-        i_select_column_text  = 'Overwrite?'
+        iv_select_column_text  = 'Overwrite?'
         it_columns_to_display = lt_columns
       IMPORTING
         et_list               = lt_selected ).
@@ -257,14 +257,14 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
         INTO lv_question SEPARATED BY space.                "#EC NOTEXT
 
       lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-        titlebar              = 'Warning'
-        text_question         = lv_question
-        text_button_1         = 'Ok'
-        icon_button_1         = 'ICON_DELETE'
-        text_button_2         = 'Cancel'
-        icon_button_2         = 'ICON_CANCEL'
-        default_button        = '2'
-        display_cancel_button = abap_false ).               "#EC NOTEXT
+        iv_titlebar              = 'Warning'
+        iv_text_question         = lv_question
+        iv_text_button_1         = 'Ok'
+        iv_icon_button_1         = 'ICON_DELETE'
+        iv_text_button_2         = 'Cancel'
+        iv_icon_button_2         = 'ICON_CANCEL'
+        iv_default_button        = '2'
+        iv_display_cancel_button = abap_false ).               "#EC NOTEXT
 
       IF lv_answer = '2'.
         RAISE EXCEPTION TYPE zcx_abapgit_cancel.
@@ -299,14 +299,14 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
         } ({ lines( lt_tadir ) } objects) from the system|. "#EC NOTEXT
 
       lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-        titlebar              = 'Uninstall'
-        text_question         = lv_question
-        text_button_1         = 'Delete'
-        icon_button_1         = 'ICON_DELETE'
-        text_button_2         = 'Cancel'
-        icon_button_2         = 'ICON_CANCEL'
-        default_button        = '2'
-        display_cancel_button = abap_false ).               "#EC NOTEXT
+        iv_titlebar              = 'Uninstall'
+        iv_text_question         = lv_question
+        iv_text_button_1         = 'Delete'
+        iv_icon_button_1         = 'ICON_DELETE'
+        iv_text_button_2         = 'Cancel'
+        iv_icon_button_2         = 'ICON_CANCEL'
+        iv_default_button        = '2'
+        iv_display_cancel_button = abap_false ).               "#EC NOTEXT
 
       IF lv_answer = '2'.
         RAISE EXCEPTION TYPE zcx_abapgit_cancel.
@@ -360,14 +360,14 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     ENDIF.
 
     lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-      titlebar              = 'Warning'
-      text_question         = lv_question
-      text_button_1         = 'OK'
-      icon_button_1         = 'ICON_DELETE'
-      text_button_2         = 'Cancel'
-      icon_button_2         = 'ICON_CANCEL'
-      default_button        = '2'
-      display_cancel_button = abap_false ).                 "#EC NOTEXT
+      iv_titlebar              = 'Warning'
+      iv_text_question         = lv_question
+      iv_text_button_1         = 'OK'
+      iv_icon_button_1         = 'ICON_DELETE'
+      iv_text_button_2         = 'Cancel'
+      iv_icon_button_2         = 'ICON_CANCEL'
+      iv_default_button        = '2'
+      iv_display_cancel_button = abap_false ).                 "#EC NOTEXT
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
@@ -437,14 +437,14 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     DATA: lv_answer TYPE c LENGTH 1.
 
     lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-      titlebar              = 'Make repository OFF-line'
-      text_question         = 'This will detach the repo from remote and make it OFF-line'
-      text_button_1         = 'Make OFF-line'
-      icon_button_1         = 'ICON_WF_UNLINK'
-      text_button_2         = 'Cancel'
-      icon_button_2         = 'ICON_CANCEL'
-      default_button        = '2'
-      display_cancel_button = abap_false ).                 "#EC NOTEXT
+      iv_titlebar              = 'Make repository OFF-line'
+      iv_text_question         = 'This will detach the repo from remote and make it OFF-line'
+      iv_text_button_1         = 'Make OFF-line'
+      iv_icon_button_1         = 'ICON_WF_UNLINK'
+      iv_text_button_2         = 'Cancel'
+      iv_icon_button_2         = 'ICON_CANCEL'
+      iv_default_button        = '2'
+      iv_display_cancel_button = abap_false ).                 "#EC NOTEXT
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
@@ -471,14 +471,14 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       }. All objects will safely remain in the system.|.
 
     lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-      titlebar              = 'Remove'
-      text_question         = lv_question
-      text_button_1         = 'Remove'
-      icon_button_1         = 'ICON_WF_UNLINK'
-      text_button_2         = 'Cancel'
-      icon_button_2         = 'ICON_CANCEL'
-      default_button        = '2'
-      display_cancel_button = abap_false ).                 "#EC NOTEXT
+      iv_titlebar              = 'Remove'
+      iv_text_question         = lv_question
+      iv_text_button_1         = 'Remove'
+      iv_icon_button_1         = 'ICON_WF_UNLINK'
+      iv_text_button_2         = 'Cancel'
+      iv_icon_button_2         = 'ICON_CANCEL'
+      iv_default_button        = '2'
+      iv_display_cancel_button = abap_false ).                 "#EC NOTEXT
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.

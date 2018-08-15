@@ -234,14 +234,14 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
 * todo, separate UI and logic
     lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-      titlebar              = 'Warning'
-      text_question         = 'Reset local objects?'
-      text_button_1         = 'Ok'
-      icon_button_1         = 'ICON_OKAY'
-      text_button_2         = 'Cancel'
-      icon_button_2         = 'ICON_CANCEL'
-      default_button        = '2'
-      display_cancel_button = abap_false ).                 "#EC NOTEXT
+      iv_titlebar              = 'Warning'
+      iv_text_question         = 'Reset local objects?'
+      iv_text_button_1         = 'Ok'
+      iv_icon_button_1         = 'ICON_OKAY'
+      iv_text_button_2         = 'Cancel'
+      iv_icon_button_2         = 'ICON_CANCEL'
+      iv_default_button        = '2'
+      iv_display_cancel_button = abap_false ).                 "#EC NOTEXT
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
@@ -258,8 +258,8 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
       li_popups->popup_to_select_from_list(
         EXPORTING
           it_list              = lt_unnecessary_local_objs
-          i_header_text        = |Which unnecessary objects should be deleted?|
-          i_select_column_text = 'Delete?'
+          iv_header_text        = |Which unnecessary objects should be deleted?|
+          iv_select_column_text = 'Delete?'
           it_columns_to_display = lt_columns
         IMPORTING
           et_list              = lt_selected ).

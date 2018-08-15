@@ -52,16 +52,16 @@ CLASS zcl_abapgit_object_wdyn DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RETURNING VALUE(rs_delta) TYPE svrs2_xversionable_object
         RAISING   zcx_abapgit_exception,
       add_fm_param_exporting
-        IMPORTING i_name   TYPE string
-                  i_value  TYPE any
+        IMPORTING iv_name   TYPE string
+                  ig_value  TYPE any
         CHANGING  ct_param TYPE abap_func_parmbind_tab,
       add_fm_param_tables
-        IMPORTING i_name   TYPE string
+        IMPORTING iv_name   TYPE string
         CHANGING  ct_value TYPE ANY TABLE
                   ct_param TYPE abap_func_parmbind_tab,
       add_fm_exception
-        IMPORTING i_name       TYPE string
-                  i_value      TYPE i
+        IMPORTING iv_name       TYPE string
+                  iv_value      TYPE i
         CHANGING  ct_exception TYPE abap_func_excpbind_tab.
 
 ENDCLASS.
@@ -75,8 +75,8 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
 
     DATA: ls_exception LIKE LINE OF ct_exception.
 
-    ls_exception-name = i_name.
-    ls_exception-value = i_value.
+    ls_exception-name = iv_name.
+    ls_exception-value = iv_value.
 
     INSERT ls_exception INTO TABLE ct_exception.
 
@@ -88,8 +88,8 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
     DATA: ls_param LIKE LINE OF ct_param.
 
     ls_param-kind = abap_func_exporting.
-    ls_param-name = i_name.
-    GET REFERENCE OF i_value INTO ls_param-value.
+    ls_param-name = iv_name.
+    GET REFERENCE OF ig_value INTO ls_param-value.
 
     INSERT ls_param INTO TABLE ct_param.
 
@@ -101,7 +101,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
     DATA: ls_param LIKE LINE OF ct_param.
 
     ls_param-kind = abap_func_tables.
-    ls_param-name = i_name.
+    ls_param-name = iv_name.
     GET REFERENCE OF ct_value INTO ls_param-value.
 
     INSERT ls_param INTO TABLE ct_param.
@@ -440,75 +440,75 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
 *   Calling FM dynamically because version 702 has less parameters
 
 *   FM parameters
-    add_fm_param_exporting( EXPORTING i_name     = 'CONTROLLER_KEY'
-                                      i_value    = is_key
+    add_fm_param_exporting( EXPORTING iv_name     = 'CONTROLLER_KEY'
+                                      ig_value    = is_key
                             CHANGING  ct_param = lt_fm_param ).
-    add_fm_param_exporting( EXPORTING i_name     = 'GET_ALL_TRANSLATIONS'
-                                      i_value    = abap_false
+    add_fm_param_exporting( EXPORTING iv_name     = 'GET_ALL_TRANSLATIONS'
+                                      ig_value    = abap_false
                             CHANGING  ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'DEFINITION'
+    add_fm_param_tables( EXPORTING iv_name = 'DEFINITION'
                          CHANGING  ct_value = lt_definition
                                    ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'DESCRIPTIONS'
+    add_fm_param_tables( EXPORTING iv_name = 'DESCRIPTIONS'
                          CHANGING ct_value = rs_controller-descriptions
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'CONTROLLER_USAGES'
+    add_fm_param_tables( EXPORTING iv_name = 'CONTROLLER_USAGES'
                          CHANGING ct_value = rs_controller-controller_usages
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'CONTROLLER_COMPONENTS'
+    add_fm_param_tables( EXPORTING iv_name = 'CONTROLLER_COMPONENTS'
                          CHANGING ct_value = lt_components
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'CONTROLLER_COMPONENT_SOURCES'
+    add_fm_param_tables( EXPORTING iv_name = 'CONTROLLER_COMPONENT_SOURCES'
                          CHANGING ct_value = lt_sources
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'CONTROLLER_COMPONENT_TEXTS'
+    add_fm_param_tables( EXPORTING iv_name = 'CONTROLLER_COMPONENT_TEXTS'
                          CHANGING ct_value = rs_controller-controller_component_texts
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'CONTROLLER_PARAMETERS'
+    add_fm_param_tables( EXPORTING iv_name = 'CONTROLLER_PARAMETERS'
                          CHANGING ct_value = rs_controller-controller_parameters
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'CONTROLLER_PARAMETER_TEXTS'
+    add_fm_param_tables( EXPORTING iv_name = 'CONTROLLER_PARAMETER_TEXTS'
                          CHANGING ct_value = rs_controller-controller_parameter_texts
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'CONTEXT_NODES'
+    add_fm_param_tables( EXPORTING iv_name = 'CONTEXT_NODES'
                          CHANGING ct_value = rs_controller-context_nodes
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'CONTEXT_ATTRIBUTES'
+    add_fm_param_tables( EXPORTING iv_name = 'CONTEXT_ATTRIBUTES'
                          CHANGING ct_value = rs_controller-context_attributes
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'CONTEXT_MAPPINGS'
+    add_fm_param_tables( EXPORTING iv_name = 'CONTEXT_MAPPINGS'
                          CHANGING ct_value = rs_controller-context_mappings
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'FIELDGROUPS'
+    add_fm_param_tables( EXPORTING iv_name = 'FIELDGROUPS'
                          CHANGING ct_value = rs_controller-fieldgroups
                                   ct_param = lt_fm_param ).
 *   Version 702 doesn't have these two attributes so we
 *   use them dynamically for downward compatibility
     ASSIGN COMPONENT 'CONTROLLER_EXCEPTIONS' OF STRUCTURE rs_controller TO <lt_ctrl_exceptions>.
     IF sy-subrc = 0.
-      add_fm_param_tables( EXPORTING i_name = 'CONTROLLER_EXCEPTIONS'
+      add_fm_param_tables( EXPORTING iv_name = 'CONTROLLER_EXCEPTIONS'
                            CHANGING ct_value = <lt_ctrl_exceptions>
                                     ct_param = lt_fm_param ).
     ENDIF.
     ASSIGN COMPONENT 'CONTROLLER_EXCEPTION_TEXTS' OF STRUCTURE rs_controller TO <lt_ctrl_exception_texts>.
     IF sy-subrc = 0.
-      add_fm_param_tables( EXPORTING i_name = 'CONTROLLER_EXCEPTION_TEXTS'
+      add_fm_param_tables( EXPORTING iv_name = 'CONTROLLER_EXCEPTION_TEXTS'
                            CHANGING ct_value = <lt_ctrl_exception_texts>
                                     ct_param = lt_fm_param ).
     ENDIF.
-    add_fm_param_tables( EXPORTING i_name = 'PSMODILOG'
+    add_fm_param_tables( EXPORTING iv_name = 'PSMODILOG'
                          CHANGING ct_value = lt_psmodilog
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'PSMODISRC'
+    add_fm_param_tables( EXPORTING iv_name = 'PSMODISRC'
                          CHANGING ct_value = lt_psmodisrc
                                   ct_param = lt_fm_param ).
 
 *   FM exceptions
-    add_fm_exception( EXPORTING i_name = 'NOT_EXISTING'
-                                i_value = 1
+    add_fm_exception( EXPORTING iv_name = 'NOT_EXISTING'
+                                iv_value = 1
                       CHANGING ct_exception = lt_fm_exception ).
-    add_fm_exception( EXPORTING i_name = 'OTHERS'
-                                i_value = 2
+    add_fm_exception( EXPORTING iv_name = 'OTHERS'
+                                iv_value = 2
                       CHANGING ct_exception = lt_fm_exception ).
 
     CALL FUNCTION 'WDYC_GET_OBJECT'

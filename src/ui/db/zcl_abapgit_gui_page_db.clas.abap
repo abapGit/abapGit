@@ -55,14 +55,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
     ASSERT is_key-type IS NOT INITIAL.
 
     lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-      titlebar              = 'Warning'
-      text_question         = 'Delete?'
-      text_button_1         = 'Ok'
-      icon_button_1         = 'ICON_DELETE'
-      text_button_2         = 'Cancel'
-      icon_button_2         = 'ICON_CANCEL'
-      default_button        = '2'
-      display_cancel_button = abap_false ).                 "#EC NOTEXT
+      iv_titlebar              = 'Warning'
+      iv_text_question         = 'Delete?'
+      iv_text_button_1         = 'Ok'
+      iv_icon_button_1         = 'ICON_DELETE'
+      iv_text_button_2         = 'Cancel'
+      iv_icon_button_2         = 'ICON_CANCEL'
+      iv_default_button        = '2'
+      iv_display_cancel_button = abap_false ).                 "#EC NOTEXT
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
