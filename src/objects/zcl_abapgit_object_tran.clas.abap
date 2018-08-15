@@ -26,8 +26,8 @@ CLASS zcl_abapgit_object_tran DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
                  cs_tstc    TYPE tstc,
 
       split_parameters_comp
-        IMPORTING iv_type  TYPE any
-                  iv_param TYPE any
+        IMPORTING ig_type  TYPE any
+                  ig_param TYPE any
         CHANGING  cg_value TYPE any,
 
       serialize_texts
@@ -106,14 +106,14 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
     CLEAR cs_rsstcd-s_vari.
 
     IF cs_tstcp-param(1) = '\'.             " OO-Transaktion ohne FR
-      split_parameters_comp( EXPORTING iv_type = c_oo_program
-                                       iv_param = cs_tstcp-param
+      split_parameters_comp( EXPORTING ig_type = c_oo_program
+                                       ig_param = cs_tstcp-param
                              CHANGING  cg_value = cs_tstc-pgmna ).
-      split_parameters_comp( EXPORTING iv_type = c_oo_class
-                                       iv_param = cs_tstcp-param
+      split_parameters_comp( EXPORTING ig_type = c_oo_class
+                                       ig_param = cs_tstcp-param
                              CHANGING  cg_value = cs_rsstcd-classname ).
-      split_parameters_comp( EXPORTING iv_type = c_oo_method
-                                       iv_param = cs_tstcp-param
+      split_parameters_comp( EXPORTING ig_type = c_oo_method
+                                       ig_param = cs_tstcp-param
                              CHANGING  cg_value = cs_rsstcd-method ).
 
       IF NOT cs_tstc-pgmna IS INITIAL.
@@ -229,9 +229,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
   METHOD split_parameters_comp.
     DATA: lv_off TYPE i.
 
-    IF iv_param CS iv_type.
-      lv_off = sy-fdpos + strlen( iv_type ).
-      cg_value = iv_param+lv_off.
+    IF ig_param CS ig_type.
+      lv_off = sy-fdpos + strlen( ig_type ).
+      cg_value = ig_param+lv_off.
       IF cg_value CA '\'.
         CLEAR cg_value+sy-fdpos.
       ENDIF.

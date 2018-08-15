@@ -68,22 +68,22 @@ INTERFACE zif_abapgit_popups
       zcx_abapgit_exception ##NO_TEXT.
   METHODS popup_to_confirm
     IMPORTING
-      !titlebar              TYPE clike
-      !text_question         TYPE clike
-      !text_button_1         TYPE clike DEFAULT 'Yes'
-      !icon_button_1         TYPE icon-name DEFAULT space
-      !text_button_2         TYPE clike DEFAULT 'No'
-      !icon_button_2         TYPE icon-name DEFAULT space
-      !default_button        TYPE char1 DEFAULT '1'
-      !display_cancel_button TYPE char1 DEFAULT abap_true
+      !iv_titlebar              TYPE clike
+      !iv_text_question         TYPE clike
+      !iv_text_button_1         TYPE clike DEFAULT 'Yes'
+      !iv_icon_button_1         TYPE icon-name DEFAULT space
+      !iv_text_button_2         TYPE clike DEFAULT 'No'
+      !iv_icon_button_2         TYPE icon-name DEFAULT space
+      !iv_default_button        TYPE char1 DEFAULT '1'
+      !iv_display_cancel_button TYPE char1 DEFAULT abap_true
     RETURNING
       VALUE(rv_answer)       TYPE char1
     RAISING
       zcx_abapgit_exception .
   METHODS popup_to_inform
     IMPORTING
-      !titlebar     TYPE clike
-      !text_message TYPE clike
+      !iv_titlebar     TYPE clike
+      !iv_text_message TYPE clike
     RAISING
       zcx_abapgit_exception .
   METHODS popup_to_create_package
@@ -106,8 +106,8 @@ INTERFACE zif_abapgit_popups
   METHODS popup_to_select_from_list
     IMPORTING
       !it_list               TYPE STANDARD TABLE
-      !i_header_text         TYPE csequence
-      !i_select_column_text  TYPE csequence
+      !iv_header_text         TYPE csequence
+      !iv_select_column_text  TYPE csequence
       !it_columns_to_display TYPE stringtab
     EXPORTING
       VALUE(et_list)         TYPE STANDARD TABLE

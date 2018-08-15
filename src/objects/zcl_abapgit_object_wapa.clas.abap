@@ -309,8 +309,8 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
           lt_pages_info     TYPE ty_pages_tt,
           ls_pagekey        TYPE o2pagkey,
           ls_local_page     TYPE zcl_abapgit_object_wapa=>ty_page,
-          lv_remote_content TYPE o2pageline_table,
-          lv_local_content  TYPE o2pageline_table,
+          lt_remote_content TYPE o2pageline_table,
+          lt_local_content  TYPE o2pageline_table,
           lt_local_pages    TYPE o2pagelist.
 
     FIELD-SYMBOLS: <ls_remote_page>       LIKE LINE OF lt_pages_info.
@@ -396,19 +396,19 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
       REPLACE ALL OCCURRENCES OF '/' IN lv_extra WITH '_-'.
       REPLACE ALL OCCURRENCES OF '/' IN lv_ext WITH '_-'.
 
-      lv_remote_content = to_page_content( mo_files->read_raw( iv_extra = lv_extra
+      lt_remote_content = to_page_content( mo_files->read_raw( iv_extra = lv_extra
                                                                iv_ext   = lv_ext ) ).
-      lv_local_content = to_page_content( get_page_content( lo_page ) ).
+      lt_local_content = to_page_content( get_page_content( lo_page ) ).
 
       IF ls_local_page = <ls_remote_page>
-      AND lv_local_content = lv_remote_content.
+      AND lt_local_content = lt_remote_content.
         " no changes -> nothing to do
         CONTINUE.
       ENDIF.
 
       IF <ls_remote_page>-attributes-pagetype <> so2_controller.
 
-        lo_page->set_page( lv_remote_content ).
+        lo_page->set_page( lt_remote_content ).
 
         lo_page->set_event_handlers( <ls_remote_page>-event_handlers ).
         lo_page->set_parameters( <ls_remote_page>-parameters ).

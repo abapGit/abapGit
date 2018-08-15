@@ -46,12 +46,12 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
 
     lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-      titlebar              = iv_title
-      text_question         = iv_text
-      text_button_1         = 'Continue'
-      text_button_2         = 'Cancel'
-      default_button        = '2'
-      display_cancel_button = abap_false ).                 "#EC NOTEXT
+      iv_titlebar              = iv_title
+      iv_text_question         = iv_text
+      iv_text_button_1         = 'Continue'
+      iv_text_button_2         = 'Cancel'
+      iv_default_button        = '2'
+      iv_display_cancel_button = abap_false ).                 "#EC NOTEXT
 
     IF lv_answer <> '1'.
       RETURN.
@@ -86,8 +86,8 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
     IF is_installed( ) = abap_true.
       lv_text = 'Seems like abapGit package is already installed. No changes to be done'.
       zcl_abapgit_ui_factory=>get_popups( )->popup_to_inform(
-        titlebar              = lc_title
-        text_message          = lv_text ).
+        iv_titlebar              = lc_title
+        iv_text_message          = lv_text ).
       RETURN.
     ENDIF.
 

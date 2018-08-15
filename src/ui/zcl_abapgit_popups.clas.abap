@@ -664,14 +664,14 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     CALL FUNCTION 'POPUP_TO_CONFIRM'
       EXPORTING
-        titlebar              = titlebar
-        text_question         = text_question
-        text_button_1         = text_button_1
-        icon_button_1         = icon_button_1
-        text_button_2         = text_button_2
-        icon_button_2         = icon_button_2
-        default_button        = default_button
-        display_cancel_button = display_cancel_button
+        titlebar              = iv_titlebar
+        text_question         = iv_text_question
+        text_button_1         = iv_text_button_1
+        icon_button_1         = iv_icon_button_1
+        text_button_2         = iv_text_button_2
+        icon_button_2         = iv_icon_button_2
+        default_button        = iv_default_button
+        display_cancel_button = iv_display_cancel_button
       IMPORTING
         answer                = rv_answer
       EXCEPTIONS
@@ -769,14 +769,14 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     DATA: lv_line1 TYPE char70,
           lv_line2 TYPE char70.
 
-    lv_line1 = text_message.
-    IF strlen( text_message ) > 70.
-      lv_line2 = text_message+70.
+    lv_line1 = iv_text_message.
+    IF strlen( iv_text_message ) > 70.
+      lv_line2 = iv_text_message+70.
     ENDIF.
 
     CALL FUNCTION 'POPUP_TO_INFORM'
       EXPORTING
-        titel = titlebar
+        titel = iv_titlebar
         txt1  = lv_line1
         txt2  = lv_line2.
 
@@ -821,7 +821,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
         CREATE OBJECT lo_table_header
           EXPORTING
-            text = i_header_text.
+            text = iv_header_text.
 
         go_select_list_popup->set_top_of_list( lo_table_header ).
 
@@ -835,9 +835,9 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
             lo_column ?= ls_column-r_column.
             lo_column->set_cell_type( if_salv_c_cell_type=>checkbox_hotspot ).
             lo_column->set_output_length( 20 ).
-            lo_column->set_short_text( |{ i_select_column_text }| ).
-            lo_column->set_medium_text( |{ i_select_column_text }| ).
-            lo_column->set_long_text( |{ i_select_column_text }| ).
+            lo_column->set_short_text( |{ iv_select_column_text }| ).
+            lo_column->set_medium_text( |{ iv_select_column_text }| ).
+            lo_column->set_long_text( |{ iv_select_column_text }| ).
             CONTINUE.
           ENDIF.
 
