@@ -830,6 +830,10 @@ div.news .update {
   background-color: #f5c538;
 }
 
+.newslist td {
+  padding-right: 1em
+}
+
 /* Tooltip text */
 .tooltiptext {
     line-height: 15px;

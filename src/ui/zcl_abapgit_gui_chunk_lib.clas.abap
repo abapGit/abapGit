@@ -39,6 +39,12 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION PUBLIC FINAL CREATE PUBLIC.
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING   zcx_abapgit_exception.
 
+    CLASS-METHODS render_hotkey_overview
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -90,6 +96,65 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ro_html->add( '</div>' ).
 
   ENDMETHOD. "render_error
+
+
+  METHOD render_hotkey_overview.
+
+    DATA: lv_display  TYPE string,
+          lt_hotkeys  TYPE zif_abapgit_definitions=>tty_hotkey,
+          lt_actions  TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action,
+          lo_settings TYPE REF TO zcl_abapgit_settings.
+
+    FIELD-SYMBOLS: <ls_hotkey> TYPE zif_abapgit_definitions=>ty_hotkey,
+                   <ls_action> LIKE LINE OF lt_actions.
+
+    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+
+    lt_hotkeys = lo_settings->get_hotkeys( ).
+
+    lt_actions = zcl_abapgit_hotkeys=>get_default_hotkeys_from_pages( ).
+
+    CREATE OBJECT ro_html.
+
+    lv_display = 'display:none'.
+
+    ro_html->add( |<div id="hotkeys" class="news" style="{ lv_display }">| ).
+
+    ro_html->add( '<div class="headbar title">Hotkeys'
+               && '<div class="float-right">'
+               && zcl_abapgit_html=>a(
+                    iv_txt   = '&#x274c;'
+                    iv_typ   = zif_abapgit_definitions=>gc_action_type-onclick
+                    iv_act   = 'displayNews()'
+                    iv_class = 'close-btn' )
+               && '</div></div>' ).
+
+    " Generate hotkeys
+    ro_html->add( |<div class="newslist">| ).
+
+    ro_html->add( '<table>' ).
+
+    LOOP AT lt_hotkeys ASSIGNING <ls_hotkey>.
+
+      READ TABLE lt_actions ASSIGNING <ls_action>
+                            WITH TABLE KEY action
+                            COMPONENTS action = <ls_hotkey>-action.
+
+      IF sy-subrc = 0.
+        ro_html->add( '<tr>' ).
+        ro_html->add( |<td>{ <ls_hotkey>-sequence }</td><td>-</td><td>{ <ls_action>-name }</td>| ).
+        ro_html->add( '</tr>' ).
+      ENDIF.
+
+    ENDLOOP.
+
+    ro_html->add( '</table>' ).
+
+    ro_html->add( '</div>' ).
+
+    ro_html->add( '</div>' ).
+
+  ENDMETHOD.
 
 
   METHOD render_item_state.

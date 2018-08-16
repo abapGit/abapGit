@@ -1,0 +1,102 @@
+CLASS zcl_abapgit_hotkeys DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
+
+  PUBLIC SECTION.
+    CLASS-METHODS:
+      get_default_hotkeys_from_pages
+        RETURNING
+          VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action
+        RAISING
+          zcx_abapgit_exception,
+
+      get_relevant_hotkeys_for_page
+        IMPORTING
+          io_page           TYPE REF TO zcl_abapgit_gui_page
+        RETURNING
+          VALUE(rt_hotkeys) TYPE zif_abapgit_definitions=>tty_hotkey
+        RAISING
+          zcx_abapgit_exception.
+
+ENDCLASS.
+
+
+
+CLASS zcl_abapgit_hotkeys IMPLEMENTATION.
+
+  METHOD get_default_hotkeys_from_pages.
+
+    DATA: lt_hotkey_actions TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action,
+          lo_interface      TYPE REF TO cl_oo_interface,
+          lt_classes        TYPE seo_relkeys.
+
+    FIELD-SYMBOLS: <ls_class> TYPE seorelkey.
+
+    TRY.
+        lo_interface ?= cl_oo_class=>get_instance( |ZIF_ABAPGIT_GUI_PAGE_HOTKEY| ).
+
+      CATCH cx_class_not_existent.
+        " hotkeys are only available with installed abapGit repository
+        RETURN.
+    ENDTRY.
+
+    lt_classes = lo_interface->get_implementing_classes( ).
+
+    LOOP AT lt_classes ASSIGNING <ls_class>.
+
+      CALL METHOD (<ls_class>-clsname)=>zif_abapgit_gui_page_hotkey~get_hotkey_actions
+        RECEIVING
+          rt_hotkey_actions = lt_hotkey_actions.
+
+      INSERT LINES OF lt_hotkey_actions INTO TABLE rt_hotkey_actions.
+
+    ENDLOOP.
+
+    SORT rt_hotkey_actions.
+    DELETE ADJACENT DUPLICATES FROM rt_hotkey_actions.
+
+  ENDMETHOD.
+
+
+  METHOD get_relevant_hotkeys_for_page.
+
+    DATA: lo_settings                    TYPE REF TO zcl_abapgit_settings,
+          lv_class_name                  TYPE abap_abstypename,
+          lt_hotkey_actions_of_curr_page TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action,
+          lv_save_tabix                  TYPE syst-tabix.
+
+    FIELD-SYMBOLS: <ls_hotkey>              TYPE zif_abapgit_definitions=>ty_hotkey.
+
+    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+
+    rt_hotkeys = lo_settings->get_hotkeys( ).
+
+    lv_class_name = cl_abap_classdescr=>get_class_name( io_page ).
+
+    TRY.
+        CALL METHOD (lv_class_name)=>zif_abapgit_gui_page_hotkey~get_hotkey_actions
+          RECEIVING
+            rt_hotkey_actions = lt_hotkey_actions_of_curr_page.
+
+      CATCH cx_root.
+        RETURN.
+    ENDTRY.
+
+    LOOP AT rt_hotkeys ASSIGNING <ls_hotkey>.
+
+      lv_save_tabix = sy-tabix.
+
+      READ TABLE lt_hotkey_actions_of_curr_page TRANSPORTING NO FIELDS
+                                                WITH TABLE KEY action
+                                                COMPONENTS action = <ls_hotkey>-action.
+      IF sy-subrc <> 0.
+        " We only offer hotkeys which are supported by the current page
+        DELETE rt_hotkeys INDEX lv_save_tabix.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+ENDCLASS.

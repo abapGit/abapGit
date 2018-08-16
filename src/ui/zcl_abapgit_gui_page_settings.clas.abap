@@ -74,11 +74,7 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
         VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action
       RAISING
         zcx_abapgit_exception.
-    METHODS get_hotkey_actions_from_pages
-      RETURNING
-        VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action
-      RAISING
-        zcx_abapgit_exception.
+
     METHODS get_default_hotkeys
       RETURNING
         VALUE(rt_default_hotkeys) TYPE zif_abapgit_definitions=>tty_hotkey
@@ -234,7 +230,7 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_action> LIKE LINE OF lt_actions.
 
-    lt_actions = get_hotkey_actions_from_pages( ).
+    lt_actions = zcl_abapgit_hotkeys=>get_default_hotkeys_from_pages( ).
 
     LOOP AT lt_actions ASSIGNING <ls_action>.
       ls_hotkey-action   = <ls_action>-action.
@@ -245,48 +241,14 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_hotkey_actions_from_pages.
-
-    DATA: lt_hotkey_actions TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action,
-          lo_interface      TYPE REF TO cl_oo_interface,
-          lt_classes        TYPE seo_relkeys.
-
-    FIELD-SYMBOLS: <ls_class> TYPE seorelkey.
-
-    TRY.
-        lo_interface ?= cl_oo_class=>get_instance( |ZIF_ABAPGIT_GUI_PAGE_HOTKEY| ).
-
-      CATCH cx_class_not_existent.
-        " hotkeys are only available with installed abapGit repository
-        RETURN.
-    ENDTRY.
-
-    lt_classes = lo_interface->get_implementing_classes( ).
-
-    LOOP AT lt_classes ASSIGNING <ls_class>.
-
-      CALL METHOD (<ls_class>-clsname)=>zif_abapgit_gui_page_hotkey~get_hotkey_actions
-        RECEIVING
-          rt_hotkey_actions = lt_hotkey_actions.
-
-      INSERT LINES OF lt_hotkey_actions INTO TABLE rt_hotkey_actions.
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
   METHOD get_possible_hotkey_actions.
 
     DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
 
-    rt_hotkey_actions = get_hotkey_actions_from_pages( ).
+    rt_hotkey_actions = zcl_abapgit_hotkeys=>get_default_hotkeys_from_pages( ).
 
     " insert empty row at the beginning, so that we can unset a hotkey
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    SORT rt_hotkey_actions.
-    DELETE ADJACENT DUPLICATES FROM rt_hotkey_actions.
+    INSERT ls_hotkey_action INTO rt_hotkey_actions INDEX 1.
 
   ENDMETHOD.
 
