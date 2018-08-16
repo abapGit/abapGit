@@ -821,7 +821,7 @@ function setLinkHints(sLinkHintKey, sColor) {
 }
 
 function Hotkeys(oKeyMap){
-  this.oKeyMap = oKeyMap;
+  this.oKeyMap = oKeyMap || {};
 }
 
 Hotkeys.prototype.getSapEvent = function(sSapEvent) {
@@ -861,6 +861,12 @@ Hotkeys.prototype.onkeydown = function(oEvent){
     if (sSapEvent) {
       submitSapeventForm({}, sSapEvent, "post");
       oEvent.preventDefault();
+    }
+  } else if (sKey === "?" ) {
+    var elHotkeys = document.querySelector('#hotkeys');
+    
+    if (elHotkeys) {
+      elHotkeys.style.display = (elHotkeys.style.display) ? '' : 'none';
     }
   }
 }
