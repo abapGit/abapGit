@@ -321,6 +321,18 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
+    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+
+    ls_hotkey_action-name           = |Code Inspector: Stage|.
+    ls_hotkey_action-action         = c_actions-stage.
+    ls_hotkey_action-default_hotkey = |s|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-name           = |Code Inspector: Re-Run|.
+    ls_hotkey_action-action         = c_actions-rerun.
+    ls_hotkey_action-default_hotkey = |r|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
   ENDMETHOD.
 
 ENDCLASS.

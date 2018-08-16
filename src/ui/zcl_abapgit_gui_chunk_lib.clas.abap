@@ -124,7 +124,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
                && '<div class="float-right">'
                && zcl_abapgit_html=>a(
                     iv_txt   = '&#x274c;'
-                    iv_typ   = zif_abapgit_definitions=>gc_action_type-onclick
+                    iv_typ   = zif_abapgit_definitions=>c_action_type-onclick
                     iv_act   = 'displayNews()'
                     iv_class = 'close-btn' )
                && '</div></div>' ).

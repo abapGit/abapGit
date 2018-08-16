@@ -360,6 +360,11 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
     ls_hotkey_action-name           = |Main: Settings|.
     ls_hotkey_action-action         = zif_abapgit_definitions=>c_action-go_settings.
+    ls_hotkey_action-default_hotkey = |x|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-name           = |Main: Stage|.
+    ls_hotkey_action-action         = zif_abapgit_definitions=>c_action-go_stage.
     ls_hotkey_action-default_hotkey = |s|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
