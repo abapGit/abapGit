@@ -9,7 +9,7 @@ CLASS zcl_abapgit_html DEFINITION
     CLASS-METHODS class_constructor .
     METHODS add
       IMPORTING
-        !iv_chunk TYPE any .
+        !ig_chunk TYPE any .
     METHODS render
       IMPORTING
         !iv_no_indent_jscss TYPE abap_bool OPTIONAL
@@ -22,7 +22,7 @@ CLASS zcl_abapgit_html DEFINITION
       IMPORTING
         !iv_txt   TYPE string
         !iv_act   TYPE string
-        !iv_typ   TYPE char1 DEFAULT zif_abapgit_definitions=>gc_action_type-sapevent
+        !iv_typ   TYPE char1 DEFAULT zif_abapgit_definitions=>c_action_type-sapevent
         !iv_opt   TYPE clike OPTIONAL
         !iv_class TYPE string OPTIONAL
         !iv_id    TYPE string OPTIONAL
@@ -36,7 +36,7 @@ CLASS zcl_abapgit_html DEFINITION
       IMPORTING
         !iv_txt       TYPE string
         !iv_act       TYPE string
-        !iv_typ       TYPE char1 DEFAULT zif_abapgit_definitions=>gc_action_type-sapevent
+        !iv_typ       TYPE char1 DEFAULT zif_abapgit_definitions=>c_action_type-sapevent
         !iv_opt       TYPE clike OPTIONAL
         !iv_class     TYPE string OPTIONAL
         !iv_id        TYPE string OPTIONAL
@@ -104,13 +104,13 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
     lv_class = iv_class.
 
-    IF iv_opt CA zif_abapgit_definitions=>gc_html_opt-strong.
+    IF iv_opt CA zif_abapgit_definitions=>c_html_opt-strong.
       lv_class = lv_class && ' emphasis' ##NO_TEXT.
     ENDIF.
-    IF iv_opt CA zif_abapgit_definitions=>gc_html_opt-cancel.
+    IF iv_opt CA zif_abapgit_definitions=>c_html_opt-cancel.
       lv_class = lv_class && ' attention' ##NO_TEXT.
     ENDIF.
-    IF iv_opt CA zif_abapgit_definitions=>gc_html_opt-crossout.
+    IF iv_opt CA zif_abapgit_definitions=>c_html_opt-crossout.
       lv_class = lv_class && ' crossout grey' ##NO_TEXT.
     ENDIF.
     IF lv_class IS NOT INITIAL.
@@ -119,16 +119,16 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     ENDIF.
 
     lv_href  = ' href="#"'. " Default, dummy
-    IF iv_act IS NOT INITIAL OR iv_typ = zif_abapgit_definitions=>gc_action_type-dummy.
+    IF iv_act IS NOT INITIAL OR iv_typ = zif_abapgit_definitions=>c_action_type-dummy.
       CASE iv_typ.
-        WHEN zif_abapgit_definitions=>gc_action_type-url.
+        WHEN zif_abapgit_definitions=>c_action_type-url.
           lv_href  = | href="{ iv_act }"|.
-        WHEN zif_abapgit_definitions=>gc_action_type-sapevent.
+        WHEN zif_abapgit_definitions=>c_action_type-sapevent.
           lv_href  = | href="sapevent:{ iv_act }"|.
-        WHEN zif_abapgit_definitions=>gc_action_type-onclick.
+        WHEN zif_abapgit_definitions=>c_action_type-onclick.
           lv_href  = ' href="#"'.
           lv_click = | onclick="{ iv_act }"|.
-        WHEN zif_abapgit_definitions=>gc_action_type-dummy.
+        WHEN zif_abapgit_definitions=>c_action_type-dummy.
           lv_href  = ' href="#"'.
       ENDCASE.
     ENDIF.
@@ -155,18 +155,18 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lt_tab> TYPE string_table.
 
-    DESCRIBE FIELD iv_chunk TYPE lv_type. " Describe is faster than RTTI classes
+    DESCRIBE FIELD ig_chunk TYPE lv_type. " Describe is faster than RTTI classes
 
     CASE lv_type.
       WHEN 'C' OR 'g'.  " Char or string
-        APPEND iv_chunk TO mt_buffer.
+        APPEND ig_chunk TO mt_buffer.
       WHEN 'h'.         " Table
-        ASSIGN iv_chunk TO <lt_tab>. " Assuming table of strings ! Will dump otherwise
+        ASSIGN ig_chunk TO <lt_tab>. " Assuming table of strings ! Will dump otherwise
         APPEND LINES OF <lt_tab> TO mt_buffer.
       WHEN 'r'.         " Object ref
-        ASSERT iv_chunk IS BOUND. " Dev mistake
+        ASSERT ig_chunk IS BOUND. " Dev mistake
         TRY.
-            lo_html ?= iv_chunk.
+            lo_html ?= ig_chunk.
           CATCH cx_sy_move_cast_error.
             ASSERT 1 = 0. " Dev mistake
         ENDTRY.
@@ -300,7 +300,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       indent_line( CHANGING cs_context = ls_context cv_line = <lv_line_c> ).
     ENDLOOP.
 
-    CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY zif_abapgit_definitions=>gc_newline.
+    CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY zif_abapgit_definitions=>c_newline.
 
   ENDMETHOD.                    "render
 

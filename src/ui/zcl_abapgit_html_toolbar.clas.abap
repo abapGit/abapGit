@@ -11,7 +11,7 @@ CLASS zcl_abapgit_html_toolbar DEFINITION
         IMPORTING
           iv_txt TYPE string
           io_sub TYPE REF TO zcl_abapgit_html_toolbar OPTIONAL
-          iv_typ TYPE c         DEFAULT zif_abapgit_definitions=>gc_action_type-sapevent
+          iv_typ TYPE c         DEFAULT zif_abapgit_definitions=>c_action_type-sapevent
           iv_act TYPE string    OPTIONAL
           iv_ico TYPE string    OPTIONAL
           iv_cur TYPE abap_bool OPTIONAL
@@ -74,9 +74,9 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
   METHOD add.
     DATA ls_item TYPE ty_item.
 
-    ASSERT iv_typ = zif_abapgit_definitions=>gc_action_type-separator  " sep doesn't have action
-      OR iv_typ = zif_abapgit_definitions=>gc_action_type-onclick      " click may have no action (assigned in JS)
-      OR iv_typ = zif_abapgit_definitions=>gc_action_type-dummy        " dummy may have no action
+    ASSERT iv_typ = zif_abapgit_definitions=>c_action_type-separator  " sep doesn't have action
+      OR iv_typ = zif_abapgit_definitions=>c_action_type-onclick      " click may have no action (assigned in JS)
+      OR iv_typ = zif_abapgit_definitions=>c_action_type-dummy        " dummy may have no action
       OR iv_act IS INITIAL AND io_sub IS NOT INITIAL
       OR iv_act IS NOT INITIAL AND io_sub IS INITIAL. " Only one supplied
 
@@ -143,7 +143,7 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
     ro_html->add( |<div class="{ lv_class }">| ).
     ro_html->add( '<ul><li>' ).
     ro_html->add_a( iv_txt = iv_label
-                    iv_typ = zif_abapgit_definitions=>gc_action_type-sapevent
+                    iv_typ = zif_abapgit_definitions=>c_action_type-sapevent
                     iv_act = iv_action ).
     ro_html->add( '<div class="minizone"></div>' ).
     ro_html->add( render_items( iv_sort = iv_sort ) ).
@@ -187,7 +187,7 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
     LOOP AT mt_items ASSIGNING <ls_item>.
       CLEAR: lv_class, lv_icon.
 
-      IF <ls_item>-typ = zif_abapgit_definitions=>gc_action_type-separator.
+      IF <ls_item>-typ = zif_abapgit_definitions=>c_action_type-separator.
         ro_html->add( |<li class="separator">{ <ls_item>-txt }</li>| ).
         CONTINUE.
       ENDIF.
@@ -221,7 +221,7 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
                         iv_opt   = <ls_item>-opt ).
       ELSE.
         ro_html->add_a( iv_txt   = lv_icon && <ls_item>-txt
-                        iv_typ   = zif_abapgit_definitions=>gc_action_type-dummy
+                        iv_typ   = zif_abapgit_definitions=>c_action_type-dummy
                         iv_act   = ''
                         iv_id    = <ls_item>-id
                         iv_opt   = <ls_item>-opt ).

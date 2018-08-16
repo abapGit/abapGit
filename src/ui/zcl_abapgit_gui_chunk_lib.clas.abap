@@ -18,8 +18,8 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION PUBLIC FINAL CREATE PUBLIC.
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS render_item_state
-      IMPORTING iv1            TYPE char1
-                iv2            TYPE char1
+      IMPORTING iv_lstate            TYPE char1
+                iv_rstate            TYPE char1
       RETURNING VALUE(rv_html) TYPE string.
 
     CLASS-METHODS render_branch_span
@@ -63,7 +63,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ro_html->add( |<span class="{ lv_class }">| ).
     ro_html->add_icon( iv_name = 'git-branch/darkgrey' iv_hint = 'Current branch' ).
     IF iv_interactive = abap_true.
-      ro_html->add_a( iv_act = |{ zif_abapgit_definitions=>gc_action-git_branch_switch }?{ io_repo->get_key( ) }|
+      ro_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ io_repo->get_key( ) }|
                       iv_txt = lv_text ).
     ELSE.
       ro_html->add( lv_text ).
@@ -104,27 +104,27 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     DO 2 TIMES.
       CASE sy-index.
         WHEN 1.
-          ASSIGN iv1 TO <lv_state>.
+          ASSIGN iv_lstate TO <lv_state>.
           lv_system = 'Local:'.
         WHEN 2.
-          ASSIGN iv2 TO <lv_state>.
+          ASSIGN iv_rstate TO <lv_state>.
           lv_system = 'Remote:'.
       ENDCASE.
 
       CASE <lv_state>.
-        WHEN zif_abapgit_definitions=>gc_state-unchanged.  "None or unchanged
-          IF iv1 = zif_abapgit_definitions=>gc_state-added OR iv2 = zif_abapgit_definitions=>gc_state-added.
+        WHEN zif_abapgit_definitions=>c_state-unchanged.  "None or unchanged
+          IF iv_lstate = zif_abapgit_definitions=>c_state-added OR iv_rstate = zif_abapgit_definitions=>c_state-added.
             rv_html = rv_html && |<span class="none" title="{ lv_system } Not exists">X</span>|.
           ELSE.
             rv_html = rv_html && |<span class="none" title="{ lv_system } No changes">&nbsp;</span>|.
           ENDIF.
-        WHEN zif_abapgit_definitions=>gc_state-modified.   "Changed
+        WHEN zif_abapgit_definitions=>c_state-modified.   "Changed
           rv_html = rv_html && |<span class="changed" title="{ lv_system } Modified">M</span>|.
-        WHEN zif_abapgit_definitions=>gc_state-added.      "Added new
+        WHEN zif_abapgit_definitions=>c_state-added.      "Added new
           rv_html = rv_html && |<span class="added" title="{ lv_system } Added new">A</span>|.
-        WHEN zif_abapgit_definitions=>gc_state-mixed.      "Multiple changes (multifile)
+        WHEN zif_abapgit_definitions=>c_state-mixed.      "Multiple changes (multifile)
           rv_html = rv_html && |<span class="mixed" title="{ lv_system } Multiple changes">&#x25A0;</span>|.
-        WHEN zif_abapgit_definitions=>gc_state-deleted.    "Deleted
+        WHEN zif_abapgit_definitions=>c_state-deleted.    "Deleted
           rv_html = rv_html && |<span class="deleted" title="{ lv_system } Deleted">D</span>|.
       ENDCASE.
     ENDDO.
@@ -170,7 +170,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
                && '<div class="float-right">'
                && zcl_abapgit_html=>a(
                     iv_txt   = '&#x274c;'
-                    iv_typ   = zif_abapgit_definitions=>gc_action_type-onclick
+                    iv_typ   = zif_abapgit_definitions=>c_action_type-onclick
                     iv_act   = 'displayNews()'
                     iv_class = 'close-btn' )
                && '</div></div>' ).
@@ -244,7 +244,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
         lv_icon = 'arrow-up/grey80'.
       ENDIF.
       ro_html->add_a( iv_act = 'displayNews()'
-                      iv_typ = zif_abapgit_definitions=>gc_action_type-onclick
+                      iv_typ = zif_abapgit_definitions=>c_action_type-onclick
                       iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_icon
                                                        iv_class = 'pad-sides'
                                                       iv_hint  = 'Display changelog' ) ).
@@ -259,7 +259,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ELSE.
       lv_icon = 'star/grey' ##NO_TEXT.
     ENDIF.
-    ro_html->add_a( iv_act = |{ zif_abapgit_definitions=>gc_action-repo_toggle_fav }?{ io_repo->get_key( ) }|
+    ro_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?{ io_repo->get_key( ) }|
                     iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_icon
                                                      iv_class = 'pad-sides'
                                                      iv_hint  = 'Click to toggle favorite' ) ).
@@ -295,7 +295,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       ro_html->add_icon( iv_name = 'package/darkgrey' iv_hint = 'SAP package' ).
       ro_html->add( '<span>' ).
       ro_html->add_a( iv_txt = io_repo->get_package( )
-                      iv_act = |{ zif_abapgit_definitions=>gc_action-jump_pkg }?{ io_repo->get_package( ) }| ).
+                      iv_act = |{ zif_abapgit_definitions=>c_action-jump_pkg }?{ io_repo->get_package( ) }| ).
       ro_html->add( '</span>' ).
     ENDIF.
 

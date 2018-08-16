@@ -232,8 +232,8 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
     READ TABLE mt_remote ASSIGNING <ls_remote>
-      WITH KEY path = zif_abapgit_definitions=>gc_root_dir
-      filename = zif_abapgit_definitions=>gc_dot_abapgit.
+      WITH KEY path = zif_abapgit_definitions=>c_root_dir
+      filename = zif_abapgit_definitions=>c_dot_abapgit.
     IF sy-subrc = 0.
       ro_dot = zcl_abapgit_dot_abapgit=>deserialize( <ls_remote>-data ).
       set_dot_abapgit( ro_dot ).
@@ -275,10 +275,10 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     ENDIF.
 
     APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
-    <ls_return>-file-path     = zif_abapgit_definitions=>gc_root_dir.
-    <ls_return>-file-filename = zif_abapgit_definitions=>gc_dot_abapgit.
+    <ls_return>-file-path     = zif_abapgit_definitions=>c_root_dir.
+    <ls_return>-file-filename = zif_abapgit_definitions=>c_dot_abapgit.
     <ls_return>-file-data     = get_dot_abapgit( )->serialize( ).
-    <ls_return>-file-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob
+    <ls_return>-file-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
                                                         iv_data = <ls_return>-file-data ).
 
     lt_cache = mt_local.
@@ -420,8 +420,8 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     DELETE lt_local " Remove non-code related files except .abapgit
       WHERE item IS INITIAL
-      AND NOT ( file-path     = zif_abapgit_definitions=>gc_root_dir
-      AND       file-filename = zif_abapgit_definitions=>gc_dot_abapgit ).
+      AND NOT ( file-path     = zif_abapgit_definitions=>c_root_dir
+      AND       file-filename = zif_abapgit_definitions=>c_dot_abapgit ).
 
     SORT lt_local BY item.
 

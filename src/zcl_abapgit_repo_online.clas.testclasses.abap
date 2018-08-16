@@ -1,4 +1,4 @@
-CLASS ltd_code_inspector DEFINITION FOR TESTING.
+CLASS ltcl_code_inspector DEFINITION FOR TESTING.
 
   PUBLIC SECTION.
     INTERFACES:
@@ -13,7 +13,7 @@ CLASS ltd_code_inspector DEFINITION FOR TESTING.
 
 ENDCLASS.
 
-CLASS ltd_code_inspector IMPLEMENTATION.
+CLASS ltcl_code_inspector IMPLEMENTATION.
 
   METHOD constructor.
 
@@ -151,7 +151,7 @@ CLASS ltcl_run_code_inspection IMPLEMENTATION.
 
   METHOD given_mock_code_inspector.
 
-    DATA: lo_mock_code_inspector TYPE REF TO ltd_code_inspector.
+    DATA: lo_mock_code_inspector TYPE REF TO ltcl_code_inspector.
 
     CREATE OBJECT lo_mock_code_inspector
       EXPORTING

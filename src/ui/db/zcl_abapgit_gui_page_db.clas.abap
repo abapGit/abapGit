@@ -18,9 +18,9 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
   PRIVATE SECTION.
 
     CONSTANTS:
-      BEGIN OF gc_action,
+      BEGIN OF c_action,
         delete TYPE string VALUE 'delete',
-      END OF gc_action .
+      END OF c_action .
 
     CLASS-METHODS delete
       IMPORTING
@@ -167,9 +167,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
       lv_action  = zcl_abapgit_html_action_utils=>dbkey_encode( <ls_data> ).
 
       CREATE OBJECT lo_toolbar.
-      lo_toolbar->add( iv_txt = 'Display' iv_act = |{ zif_abapgit_definitions=>gc_action-db_display }?{ lv_action }| ).
-      lo_toolbar->add( iv_txt = 'Edit'    iv_act = |{ zif_abapgit_definitions=>gc_action-db_edit }?{ lv_action }| ).
-      lo_toolbar->add( iv_txt = 'Delete'  iv_act = |{ gc_action-delete }?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Display' iv_act = |{ zif_abapgit_definitions=>c_action-db_display }?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Edit'    iv_act = |{ zif_abapgit_definitions=>c_action-db_edit }?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Delete'  iv_act = |{ c_action-delete }?{ lv_action }| ).
 
       ro_html->add( |<tr{ lv_trclass }>| ).
       ro_html->add( |<td>{ <ls_data>-type }</td>| ).
@@ -198,10 +198,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
     DATA: ls_db TYPE zif_abapgit_persistence=>ty_content.
 
     CASE iv_action.
-      WHEN gc_action-delete.
+      WHEN c_action-delete.
         ls_db = zcl_abapgit_html_action_utils=>dbkey_decode( iv_getdata ).
         delete( ls_db ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD.

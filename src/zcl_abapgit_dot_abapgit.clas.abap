@@ -194,9 +194,9 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
   METHOD get_signature.
 
-    rs_signature-path     = zif_abapgit_definitions=>gc_root_dir.
-    rs_signature-filename = zif_abapgit_definitions=>gc_dot_abapgit.
-    rs_signature-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob
+    rs_signature-path     = zif_abapgit_definitions=>c_root_dir.
+    rs_signature-filename = zif_abapgit_definitions=>c_dot_abapgit.
+    rs_signature-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
                                                     iv_data = serialize( ) ).
 
   ENDMETHOD. "get_signature
@@ -219,7 +219,7 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
     lv_name = iv_path && iv_filename.
 
     CONCATENATE ms_data-starting_folder '*' INTO lv_starting.
-    CONCATENATE '/' zif_abapgit_definitions=>gc_dot_abapgit INTO lv_dot.
+    CONCATENATE '/' zif_abapgit_definitions=>c_dot_abapgit INTO lv_dot.
 
     LOOP AT ms_data-ignore INTO lv_ignore.
       FIND ALL OCCURRENCES OF '/' IN lv_name MATCH COUNT lv_count.

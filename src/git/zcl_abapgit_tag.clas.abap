@@ -26,7 +26,7 @@ CLASS ZCL_ABAPGIT_TAG IMPLEMENTATION.
 
   METHOD add_tag_prefix.
 
-    rv_text = zif_abapgit_definitions=>gc_tag_prefix && iv_text.
+    rv_text = zif_abapgit_definitions=>c_tag_prefix && iv_text.
 
   ENDMETHOD.
 
@@ -35,7 +35,7 @@ CLASS ZCL_ABAPGIT_TAG IMPLEMENTATION.
 
     rv_text = iv_text.
 
-    REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>gc_tag_prefix
+    REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_tag_prefix
             IN rv_text
             WITH ''.
 

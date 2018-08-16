@@ -206,7 +206,7 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
 
     DATA: lv_annotated_tag_with_suffix TYPE string.
 
-    FIELD-SYMBOLS: <ls_result> TYPE LINE OF stringtab.
+    FIELD-SYMBOLS: <lv_result> TYPE LINE OF stringtab.
 
     rv_type = zif_abapgit_definitions=>c_git_branch_type-other.
 
@@ -219,9 +219,9 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
 
       lv_annotated_tag_with_suffix = iv_branch_name && '^{}'.
 
-      READ TABLE it_result ASSIGNING <ls_result>
+      READ TABLE it_result ASSIGNING <lv_result>
                            INDEX iv_current_row_index + 1.
-      IF sy-subrc = 0 AND <ls_result> CP '*' && lv_annotated_tag_with_suffix.
+      IF sy-subrc = 0 AND <lv_result> CP '*' && lv_annotated_tag_with_suffix.
         rv_type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
       ELSE.
         rv_type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
@@ -270,7 +270,7 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
 
     CLEAR: et_list, ev_head_symref.
 
-    SPLIT iv_data AT zif_abapgit_definitions=>gc_newline INTO TABLE lt_result.
+    SPLIT iv_data AT zif_abapgit_definitions=>c_newline INTO TABLE lt_result.
 
     LOOP AT lt_result INTO lv_data.
 

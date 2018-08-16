@@ -68,7 +68,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
     CREATE OBJECT ro_menu.
 
     ro_menu->add( iv_txt = 'Run background logic'
-                  iv_act = zif_abapgit_definitions=>gc_action-go_background_run ) ##NO_TEXT.
+                  iv_act = zif_abapgit_definitions=>c_action-go_background_run ) ##NO_TEXT.
 
   ENDMETHOD.
 
@@ -224,7 +224,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
     lt_methods = zcl_abapgit_background=>list_methods( ).
 
     ro_html->add( '<u>Method</u><br>' ) ##NO_TEXT.
-    ro_html->add( |<form method="get" action="sapevent:{ zif_abapgit_definitions=>gc_action-bg_update }">| ).
+    ro_html->add( |<form method="get" action="sapevent:{ zif_abapgit_definitions=>c_action-bg_update }">| ).
 
     IF is_per-method IS INITIAL.
       lv_checked = ' checked' ##NO_TEXT.
@@ -316,9 +316,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
   METHOD zif_abapgit_gui_page~on_event.
 
     CASE iv_action.
-      WHEN zif_abapgit_definitions=>gc_action-bg_update.
+      WHEN zif_abapgit_definitions=>c_action-bg_update.
         update( decode( iv_getdata ) ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD.

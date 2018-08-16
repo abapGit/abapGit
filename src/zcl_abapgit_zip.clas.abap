@@ -504,7 +504,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
       <ls_file>-data = lv_data.
 
-      <ls_file>-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob
+      <ls_file>-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
                                                iv_data = <ls_file>-data ).
 
     ENDLOOP.

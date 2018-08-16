@@ -198,10 +198,10 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
       " File types
       IF lines( lt_types ) > 1.
-        lo_sub->add( iv_txt = 'TYPE' iv_typ = zif_abapgit_definitions=>gc_action_type-separator ).
+        lo_sub->add( iv_txt = 'TYPE' iv_typ = zif_abapgit_definitions=>c_action_type-separator ).
         LOOP AT lt_types ASSIGNING <lv_i>.
           lo_sub->add( iv_txt = <lv_i>
-                       iv_typ = zif_abapgit_definitions=>gc_action_type-onclick
+                       iv_typ = zif_abapgit_definitions=>c_action_type-onclick
                        iv_aux = 'type'
                        iv_chk = abap_true ).
         ENDLOOP.
@@ -209,10 +209,10 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
       " Changed by
       IF lines( lt_users ) > 1.
-        lo_sub->add( iv_txt = 'CHANGED BY' iv_typ = zif_abapgit_definitions=>gc_action_type-separator ).
+        lo_sub->add( iv_txt = 'CHANGED BY' iv_typ = zif_abapgit_definitions=>c_action_type-separator ).
         LOOP AT lt_users ASSIGNING <lv_i>.
           lo_sub->add( iv_txt = <lv_i>
-                       iv_typ = zif_abapgit_definitions=>gc_action_type-onclick
+                       iv_typ = zif_abapgit_definitions=>c_action_type-onclick
                        iv_aux = 'changed-by'
                        iv_chk = abap_true ).
         ENDLOOP.
@@ -437,8 +437,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     ro_html->add( |<span class="diff_name">{ is_diff-path }{ is_diff-filename }</span>| ). "#EC NOTEXT
     ro_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state(
-      iv1 = is_diff-lstate
-      iv2 = is_diff-rstate ) ).
+      iv_lstate = is_diff-lstate
+      iv_rstate = is_diff-rstate ) ).
 
     IF is_diff-fstate = c_fstate-both AND mv_unified = abap_true.
       ro_html->add( '<span class="attention pad-sides">Attention: Unified mode'
@@ -643,7 +643,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     CASE iv_action.
       WHEN c_actions-toggle_unified. " Toggle file diplay
         mv_unified = zcl_abapgit_persistence_user=>get_instance( )->toggle_diff_unified( ).
-        ev_state   = zif_abapgit_definitions=>gc_event_state-re_render.
+        ev_state   = zif_abapgit_definitions=>c_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD.

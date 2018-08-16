@@ -43,7 +43,7 @@ CLASS ltcl_git_porcelain IMPLEMENTATION.
     <ls_expanded>-path  = iv_path.
     <ls_expanded>-name  = iv_name.
     <ls_expanded>-sha1  = 'a'.
-    <ls_expanded>-chmod = zif_abapgit_definitions=>gc_chmod-file.
+    <ls_expanded>-chmod = zif_abapgit_definitions=>c_chmod-file.
 
   ENDMETHOD.
 

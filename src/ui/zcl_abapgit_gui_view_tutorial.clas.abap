@@ -27,17 +27,17 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_TUTORIAL IMPLEMENTATION.
     ro_html->add( '<p><ul>' ).
 
     ro_html->add( `<li>To clone a remote repo (e.g. from github) click ` ).
-    ro_html->add_a( iv_txt = '+ Online' iv_act = zif_abapgit_definitions=>gc_action-repo_newonline ).
+    ro_html->add_a( iv_txt = '+ Online' iv_act = zif_abapgit_definitions=>c_action-repo_newonline ).
     ro_html->add( ' from the top menu. This will copy a remote repo to your system.</li>' ).
 
     ro_html->add( `<li>To add a local package as a repo click ` ).
-    ro_html->add_a( iv_txt = '+ Offline' iv_act = zif_abapgit_definitions=>gc_action-repo_newoffline ).
+    ro_html->add_a( iv_txt = '+ Offline' iv_act = zif_abapgit_definitions=>c_action-repo_newoffline ).
     ro_html->add( ' from the top menu. This will track a repo which already exist in' ).
     ro_html->add( ' the system with abapGit. You''ll be able to attach it to remote origin' ).
     ro_html->add( ' or just serialize as a zip file</li>' ).
 
     ro_html->add( `<li>Go ` ).
-    ro_html->add_a( iv_txt = 'Explore' iv_act = zif_abapgit_definitions=>gc_action-go_explore ).
+    ro_html->add_a( iv_txt = 'Explore' iv_act = zif_abapgit_definitions=>c_action-go_explore ).
     ro_html->add( ' to find projects using abapGit</li>' ).
 
     ro_html->add( '</ul></p>' ).
@@ -57,7 +57,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_TUTORIAL IMPLEMENTATION.
       ro_html->add( 'abapGit installed in package&nbsp;' ).
       ro_html->add( zcl_abapgit_services_abapgit=>c_package_abapgit ).
     ELSE.
-      ro_html->add_a( iv_txt = 'install abapGit repo' iv_act = zif_abapgit_definitions=>gc_action-abapgit_install ).
+      ro_html->add_a( iv_txt = 'install abapGit repo' iv_act = zif_abapgit_definitions=>c_action-abapgit_install ).
       ro_html->add( ' - To keep abapGit up-to-date (or also to contribute) you need to' ).
       ro_html->add( 'install it as a repository.' ).
     ENDIF.
@@ -73,7 +73,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_TUTORIAL IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_page~on_event.
-    ev_state = zif_abapgit_definitions=>gc_event_state-not_handled.
+    ev_state = zif_abapgit_definitions=>c_event_state-not_handled.
   ENDMETHOD.
 
 

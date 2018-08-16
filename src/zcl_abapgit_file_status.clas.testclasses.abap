@@ -226,10 +226,10 @@ CLASS lcl_status_result IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcl_status_helper DEFINITION DEFERRED.
-CLASS zcl_abapgit_file_status DEFINITION LOCAL FRIENDS lcl_status_helper.
+CLASS ltcl_status_helper DEFINITION DEFERRED.
+CLASS zcl_abapgit_file_status DEFINITION LOCAL FRIENDS ltcl_status_helper.
 
-CLASS lcl_status_helper DEFINITION FOR TESTING.
+CLASS ltcl_status_helper DEFINITION FOR TESTING.
 
   PUBLIC SECTION.
     INTERFACES:
@@ -280,7 +280,7 @@ CLASS lcl_status_helper DEFINITION FOR TESTING.
 
 ENDCLASS.
 
-CLASS lcl_status_helper IMPLEMENTATION.
+CLASS ltcl_status_helper IMPLEMENTATION.
 
   METHOD constructor.
 
@@ -384,7 +384,7 @@ CLASS ltcl_calculate_status DEFINITION FOR TESTING RISK LEVEL HARMLESS
 
   PRIVATE SECTION.
     DATA:
-      mo_helper TYPE REF TO lcl_status_helper,
+      mo_helper TYPE REF TO ltcl_status_helper,
       mo_result TYPE REF TO lcl_status_result.
 
     METHODS:
@@ -417,7 +417,7 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_result->get_line( 1 )-rstate
-      exp = zif_abapgit_definitions=>gc_state-added ).
+      exp = zif_abapgit_definitions=>c_state-added ).
 
   ENDMETHOD.
 
@@ -435,7 +435,7 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_result->get_line( 1 )-lstate
-      exp = zif_abapgit_definitions=>gc_state-added ).
+      exp = zif_abapgit_definitions=>c_state-added ).
 
   ENDMETHOD.
 
@@ -479,11 +479,11 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_result->get_line( 1 )-lstate
-      exp = zif_abapgit_definitions=>gc_state-modified ).
+      exp = zif_abapgit_definitions=>c_state-modified ).
 
     cl_abap_unit_assert=>assert_equals(
       act = mo_result->get_line( 1 )-rstate
-      exp = zif_abapgit_definitions=>gc_state-modified ).
+      exp = zif_abapgit_definitions=>c_state-modified ).
 
   ENDMETHOD.
 
@@ -505,7 +505,7 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
 * it should appear as not existing locally
     cl_abap_unit_assert=>assert_equals(
       act = mo_result->get_line( 1 )-rstate
-      exp = zif_abapgit_definitions=>gc_state-added ).
+      exp = zif_abapgit_definitions=>c_state-added ).
 
   ENDMETHOD.
 

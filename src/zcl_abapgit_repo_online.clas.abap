@@ -165,7 +165,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     SORT lt_tadir BY pgmid ASCENDING object ASCENDING obj_name ASCENDING devclass ASCENDING.
 
     LOOP AT lt_status ASSIGNING <ls_status>
-                      WHERE lstate = zif_abapgit_definitions=>gc_state-added.
+                      WHERE lstate = zif_abapgit_definitions=>c_state-added.
 
       READ TABLE lt_tadir ASSIGNING <ls_tadir>
                           WITH KEY pgmid    = 'R3TR'
@@ -219,8 +219,8 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     IF lv_add = abap_true.
       io_stage->add(
-        iv_path     = zif_abapgit_definitions=>gc_root_dir
-        iv_filename = zif_abapgit_definitions=>gc_dot_abapgit
+        iv_path     = zif_abapgit_definitions=>c_root_dir
+        iv_filename = zif_abapgit_definitions=>c_dot_abapgit
         iv_data     = lo_dot_abapgit->serialize( ) ).
 
       set_dot_abapgit( lo_dot_abapgit ).
@@ -253,8 +253,8 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     DELETE lt_local " Remove non-code related files except .abapgit
       WHERE item IS INITIAL
-      AND NOT ( file-path     = zif_abapgit_definitions=>gc_root_dir
-      AND       file-filename = zif_abapgit_definitions=>gc_dot_abapgit ).
+      AND NOT ( file-path     = zif_abapgit_definitions=>c_root_dir
+      AND       file-filename = zif_abapgit_definitions=>c_dot_abapgit ).
 
     SORT lt_local BY item.
     SORT lt_remote BY path filename.

@@ -96,9 +96,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
           ls_file   TYPE zif_abapgit_definitions=>ty_file.
 
 
-    CONCATENATE LINES OF it_abap INTO lv_source SEPARATED BY zif_abapgit_definitions=>gc_newline.
+    CONCATENATE LINES OF it_abap INTO lv_source SEPARATED BY zif_abapgit_definitions=>c_newline.
 * when editing files via eg. GitHub web interface it adds a newline at end of file
-    lv_source = lv_source && zif_abapgit_definitions=>gc_newline.
+    lv_source = lv_source && zif_abapgit_definitions=>c_newline.
 
     ls_file-path = '/'.
     ls_file-filename = filename( iv_extra = iv_extra
@@ -246,7 +246,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     lv_abap = zcl_abapgit_convert=>xstring_to_string_utf8( lv_data ).
 
-    SPLIT lv_abap AT zif_abapgit_definitions=>gc_newline INTO TABLE rt_abap.
+    SPLIT lv_abap AT zif_abapgit_definitions=>c_newline INTO TABLE rt_abap.
 
   ENDMETHOD.
 

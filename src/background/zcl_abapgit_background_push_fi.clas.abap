@@ -9,10 +9,10 @@ CLASS zcl_abapgit_background_push_fi DEFINITION
   PROTECTED SECTION.
 
     CONSTANTS:
-      BEGIN OF gc_settings,
+      BEGIN OF c_settings,
         name  TYPE string VALUE 'NAME',
         email TYPE string VALUE 'EMAIL',
-      END OF gc_settings .
+      END OF c_settings .
     DATA mo_log TYPE REF TO zcl_abapgit_log .
 
     METHODS build_comment
@@ -56,7 +56,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_FI IMPLEMENTATION.
     ELSE.
       rv_comment = 'BG: Multiple objects' ##NO_TEXT.
       LOOP AT lt_objects INTO lv_str.
-        CONCATENATE rv_comment zif_abapgit_definitions=>gc_newline lv_str INTO rv_comment.
+        CONCATENATE rv_comment zif_abapgit_definitions=>c_newline lv_str INTO rv_comment.
       ENDLOOP.
     ENDIF.
 
@@ -121,16 +121,16 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_FI IMPLEMENTATION.
     DATA: ls_setting LIKE LINE OF ct_settings.
 
 
-    READ TABLE ct_settings WITH KEY key = gc_settings-name INTO ls_setting.
+    READ TABLE ct_settings WITH KEY key = c_settings-name INTO ls_setting.
     IF sy-subrc <> 0.
-      ls_setting-key = gc_settings-name.
+      ls_setting-key = c_settings-name.
       ls_setting-value = 'foobar'.
       APPEND ls_setting TO ct_settings.
     ENDIF.
 
-    READ TABLE ct_settings WITH KEY key = gc_settings-email INTO ls_setting.
+    READ TABLE ct_settings WITH KEY key = c_settings-email INTO ls_setting.
     IF sy-subrc <> 0.
-      ls_setting-key = gc_settings-email.
+      ls_setting-key = c_settings-email.
       ls_setting-value = 'foobar@localhost'.
       APPEND ls_setting TO ct_settings.
     ENDIF.
@@ -153,10 +153,10 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_FI IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    READ TABLE it_settings WITH KEY key = gc_settings-name INTO ls_setting. "#EC CI_SUBRC
+    READ TABLE it_settings WITH KEY key = c_settings-name INTO ls_setting. "#EC CI_SUBRC
     lv_name = ls_setting-value.
 
-    READ TABLE it_settings WITH KEY key = gc_settings-email INTO ls_setting. "#EC CI_SUBRC
+    READ TABLE it_settings WITH KEY key = c_settings-email INTO ls_setting. "#EC CI_SUBRC
     lv_email = ls_setting-value.
 
     push_fixed(

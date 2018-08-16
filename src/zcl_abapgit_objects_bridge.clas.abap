@@ -95,7 +95,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
     DATA ls_objtype_map LIKE LINE OF gt_objtype_map.
 
     super->constructor( is_item = is_item
-                        iv_language = zif_abapgit_definitions=>gc_english ).
+                        iv_language = zif_abapgit_definitions=>c_english ).
 
 *    determine the responsible plugin
     READ TABLE gt_objtype_map INTO ls_objtype_map

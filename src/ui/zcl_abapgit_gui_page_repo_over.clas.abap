@@ -35,13 +35,13 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       tty_overview TYPE STANDARD TABLE OF ty_overview
                    WITH NON-UNIQUE DEFAULT KEY.
     CONSTANTS:
-      BEGIN OF gc_action,
+      BEGIN OF c_action,
         delete          TYPE string VALUE 'delete',
         select          TYPE string VALUE 'select',
         change_order_by TYPE string VALUE 'change_order_by',
         direction       TYPE string VALUE 'direction',
         apply_filter    TYPE string VALUE 'apply_filter',
-      END OF gc_action .
+      END OF c_action .
 
     DATA:
       mv_order_by         TYPE string,
@@ -266,13 +266,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   METHOD parse_change_order_by.
 
-    FIELD-SYMBOLS: <ls_postdata> TYPE cnht_post_data_line.
+    FIELD-SYMBOLS: <lv_postdata> TYPE cnht_post_data_line.
 
-    READ TABLE it_postdata ASSIGNING <ls_postdata>
+    READ TABLE it_postdata ASSIGNING <lv_postdata>
                            INDEX 1.
     IF sy-subrc = 0.
       FIND FIRST OCCURRENCE OF REGEX `orderBy=(.*)`
-           IN <ls_postdata>
+           IN <lv_postdata>
            SUBMATCHES mv_order_by.
     ENDIF.
 
@@ -285,15 +285,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     DATA: lv_direction TYPE string.
 
-    FIELD-SYMBOLS: <ls_postdata> TYPE cnht_post_data_line.
+    FIELD-SYMBOLS: <lv_postdata> TYPE cnht_post_data_line.
 
     CLEAR: mv_order_descending.
 
-    READ TABLE it_postdata ASSIGNING <ls_postdata>
+    READ TABLE it_postdata ASSIGNING <lv_postdata>
                            INDEX 1.
     IF sy-subrc = 0.
       FIND FIRST OCCURRENCE OF REGEX `direction=(.*)`
-           IN <ls_postdata>
+           IN <lv_postdata>
            SUBMATCHES lv_direction.
     ENDIF.
 
@@ -306,13 +306,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   METHOD parse_filter.
 
-    FIELD-SYMBOLS: <ls_postdata> LIKE LINE OF it_postdata.
+    FIELD-SYMBOLS: <lv_postdata> LIKE LINE OF it_postdata.
 
-    READ TABLE it_postdata ASSIGNING <ls_postdata>
+    READ TABLE it_postdata ASSIGNING <lv_postdata>
                            INDEX 1.
     IF sy-subrc = 0.
       FIND FIRST OCCURRENCE OF REGEX `filter=(.*)`
-           IN <ls_postdata>
+           IN <lv_postdata>
            SUBMATCHES mv_filter.
     ENDIF.
 
@@ -338,7 +338,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     ro_html->add( |<div class="form-container">| ).
 
     ro_html->add( |<form id="commit_form" class="grey70"|
-               && | method="post" action="sapevent:{ gc_action-apply_filter }">| ).
+               && | method="post" action="sapevent:{ c_action-apply_filter }">| ).
 
     render_header_bar( ro_html ).
 
@@ -471,7 +471,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
       io_html->add( |<tr{ lv_trclass }>| ).
       io_html->add( |<td>| ).
-      io_html->add_a( iv_act = |{ zif_abapgit_definitions=>gc_action-repo_toggle_fav }?{ <ls_overview>-key }|
+      io_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?{ <ls_overview>-key }|
                       iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_favorite_icon
                                                        iv_class = 'pad-sides'
                                                        iv_hint  = 'Click to toggle favorite' ) ).
@@ -480,7 +480,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
       io_html->add( |<td>{ <ls_overview>-key }</td>| ).
       io_html->add( |<td>{ zcl_abapgit_html=>a( iv_txt = <ls_overview>-name
-                                                iv_act = |{ gc_action-select }?{ <ls_overview>-key }| ) }</td>| ).
+                                                iv_act = |{ c_action-select }?{ <ls_overview>-key }| ) }</td>| ).
       io_html->add( |<td>{ <ls_overview>-url }</td>| ).
       io_html->add( |<td>{ <ls_overview>-package }</td>| ).
       io_html->add( |<td>{ <ls_overview>-branch }</td>| ).
@@ -554,7 +554,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     DATA: lv_key  TYPE zif_abapgit_persistence=>ty_value.
 
     CASE iv_action.
-      WHEN gc_action-select.
+      WHEN c_action-select.
 
         lv_key = iv_getdata.
 
@@ -565,22 +565,22 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
           CATCH zcx_abapgit_exception ##NO_HANDLER.
         ENDTRY.
 
-        ev_state = zif_abapgit_definitions=>gc_event_state-go_back.
+        ev_state = zif_abapgit_definitions=>c_event_state-go_back.
 
-      WHEN gc_action-change_order_by.
+      WHEN c_action-change_order_by.
 
         parse_change_order_by( it_postdata ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
 
-      WHEN gc_action-direction.
+      WHEN c_action-direction.
 
         parse_direction( it_postdata ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
 
-      WHEN gc_action-apply_filter.
+      WHEN c_action-apply_filter.
 
         parse_filter( it_postdata ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
 
     ENDCASE.
 

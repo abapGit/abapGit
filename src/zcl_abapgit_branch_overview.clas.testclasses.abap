@@ -26,7 +26,7 @@ CLASS ltcl_test IMPLEMENTATION.
           ls_object  LIKE LINE OF lt_objects.
 
 
-    ls_object-type = zif_abapgit_definitions=>gc_type-commit.
+    ls_object-type = zif_abapgit_definitions=>c_type-commit.
     ls_object-data = '7472656520396335376238613931336465306539' &&
       '3735333630633261306330643638363037306162' &&
       '61343965650A706172656E742036393532346462' &&
@@ -63,28 +63,28 @@ CLASS ltcl_test IMPLEMENTATION.
           ls_object            LIKE LINE OF lt_objects,
           ls_git_pack_commit   TYPE zcl_abapgit_git_pack=>ty_commit.
 
-    ls_object-type = zif_abapgit_definitions=>gc_type-commit.
+    ls_object-type = zif_abapgit_definitions=>c_type-commit.
     ls_git_pack_commit-tree         = 'dummy'.
     ls_git_pack_commit-author       = 'Lastname, Firstname <mail@mail.com> 1532611350 +0000'.
     ls_git_pack_commit-committer    = 'dummy'.
     ls_object-data = zcl_abapgit_git_pack=>encode_commit( is_commit = ls_git_pack_commit ).
     APPEND ls_object TO lt_objects.
 
-    ls_object-type = zif_abapgit_definitions=>gc_type-commit.
+    ls_object-type = zif_abapgit_definitions=>c_type-commit.
     ls_git_pack_commit-tree         = 'dummy'.
     ls_git_pack_commit-author       = 'Soeren Mueller <mail@mail.com> 1532611350 +0000'.
     ls_git_pack_commit-committer    = 'dummy'.
     ls_object-data = zcl_abapgit_git_pack=>encode_commit( is_commit = ls_git_pack_commit ).
     APPEND ls_object TO lt_objects.
 
-    ls_object-type = zif_abapgit_definitions=>gc_type-commit.
+    ls_object-type = zif_abapgit_definitions=>c_type-commit.
     ls_git_pack_commit-tree         = 'dummy'.
     ls_git_pack_commit-author       = 'S#ren M#ller <mail@mail.com> 1532611350 +0000'.
     ls_git_pack_commit-committer    = 'dummy'.
     ls_object-data = zcl_abapgit_git_pack=>encode_commit( is_commit = ls_git_pack_commit ).
     APPEND ls_object TO lt_objects.
 
-    ls_object-type = zif_abapgit_definitions=>gc_type-commit.
+    ls_object-type = zif_abapgit_definitions=>c_type-commit.
     ls_git_pack_commit-tree         = 'dummy'.
     ls_git_pack_commit-author       = 'Dr. Werner Mueller <mail@mail.com> 1532611350 +0000'.
     ls_git_pack_commit-committer    = 'dummy'.

@@ -95,7 +95,7 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
   METHOD build_settings.
 
     DATA: lv_i_param_value TYPE i,
-          column           TYPE string,
+          lv_column           TYPE string,
           lt_key_bindings  TYPE zif_abapgit_definitions=>tty_hotkey.
 
     FIELD-SYMBOLS: <ls_post_field>  TYPE ihttpnvp,
@@ -202,9 +202,9 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
 
       FIND FIRST OCCURRENCE OF REGEX `key_(.*)_`
            IN <ls_post_field>-name
-           SUBMATCHES column.
+           SUBMATCHES lv_column.
 
-      CASE column.
+      CASE lv_column.
         WHEN 'sequence'.
           INSERT INITIAL LINE INTO TABLE lt_key_bindings ASSIGNING <ls_key_binding>.
           <ls_key_binding>-sequence = <ls_post_field>-value.
@@ -646,7 +646,7 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
           persist_settings( ).
         ENDIF.
 
-        ev_state = zif_abapgit_definitions=>gc_event_state-go_back.
+        ev_state = zif_abapgit_definitions=>c_event_state-go_back.
     ENDCASE.
 
   ENDMETHOD.

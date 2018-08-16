@@ -69,18 +69,18 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
           ls_user_settings    TYPE zif_abapgit_definitions=>ty_s_user_settings,
           li_user_persistence TYPE REF TO zif_abapgit_persist_user.
 
-    FIELD-SYMBOLS: <ls_user>                     LIKE LINE OF lt_abapgit_users,
+    FIELD-SYMBOLS: <lv_user>                     LIKE LINE OF lt_abapgit_users,
                    <ls_setting_to_migrate>       TYPE zcl_abapgit_persist_migrate=>ty_settings_to_migrate,
-                   <user_specific_setting_value> TYPE data.
+                   <lg_user_specific_setting_val> TYPE data.
 
     " distribute settings to all abapGit users
     SELECT value FROM (zcl_abapgit_persistence_db=>c_tabname)
                  INTO TABLE lt_abapgit_users
                  WHERE type = zcl_abapgit_persistence_db=>c_type_user.
 
-    LOOP AT lt_abapgit_users ASSIGNING <ls_user>.
+    LOOP AT lt_abapgit_users ASSIGNING <lv_user>.
 
-      li_user_persistence = zcl_abapgit_persistence_user=>get_instance( <ls_user> ).
+      li_user_persistence = zcl_abapgit_persistence_user=>get_instance( <lv_user> ).
 
       ls_user_settings = li_user_persistence->get_settings( ).
 
@@ -88,10 +88,10 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
 
         ASSIGN COMPONENT <ls_setting_to_migrate>-name
                OF STRUCTURE ls_user_settings
-               TO <user_specific_setting_value>.
+               TO <lg_user_specific_setting_val>.
         ASSERT sy-subrc = 0.
 
-        <user_specific_setting_value> = <ls_setting_to_migrate>-value.
+        <lg_user_specific_setting_val> = <ls_setting_to_migrate>-value.
 
       ENDLOOP.
 
@@ -127,7 +127,7 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
     ls_dd25v-viewname   = zcl_abapgit_persistence_db=>c_lock.
     ls_dd25v-aggtype    = 'E'.
     ls_dd25v-roottab    = zcl_abapgit_persistence_db=>c_tabname.
-    ls_dd25v-ddlanguage = zif_abapgit_definitions=>gc_english.
+    ls_dd25v-ddlanguage = zif_abapgit_definitions=>c_english.
     ls_dd25v-ddtext     = c_text.
 
     APPEND INITIAL LINE TO lt_dd26e ASSIGNING <ls_dd26e>.
@@ -214,20 +214,20 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
 
   METHOD migrate_setting.
 
-    DATA: lo_element            TYPE REF TO if_ixml_element,
+    DATA: li_element            TYPE REF TO if_ixml_element,
           ls_setting_to_migrate LIKE LINE OF ct_settings_to_migrate.
 
-    lo_element = ci_document->find_from_name( iv_name  ).
-    IF lo_element IS BOUND.
+    li_element = ci_document->find_from_name( iv_name  ).
+    IF li_element IS BOUND.
 
       " The element is present in the global config.
       " Therefore we have to migrate it
 
       ls_setting_to_migrate-name = iv_name.
-      ls_setting_to_migrate-value = lo_element->get_value( ).
+      ls_setting_to_migrate-value = li_element->get_value( ).
       INSERT ls_setting_to_migrate INTO TABLE ct_settings_to_migrate.
 
-      lo_element->remove_node( ).
+      li_element->remove_node( ).
 
     ENDIF.
 
@@ -310,7 +310,7 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_dd03p> LIKE LINE OF lt_dd03p.
 
     ls_dd02v-tabname    = zcl_abapgit_persistence_db=>c_tabname.
-    ls_dd02v-ddlanguage = zif_abapgit_definitions=>gc_english.
+    ls_dd02v-ddlanguage = zif_abapgit_definitions=>c_english.
     ls_dd02v-tabclass   = 'TRANSP'.
     ls_dd02v-ddtext     = c_text.
     ls_dd02v-contflag   = 'L'.

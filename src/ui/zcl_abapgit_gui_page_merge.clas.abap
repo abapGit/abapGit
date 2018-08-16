@@ -202,7 +202,7 @@ CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
 
         ENDIF.
 
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
 
       WHEN c_actions-res_conflicts.
 
@@ -211,7 +211,7 @@ CLASS zcl_abapgit_gui_page_merge IMPLEMENTATION.
             io_repo       = mo_repo
             io_merge_page = me
             io_merge      = mo_merge.
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
 
     ENDCASE.
 

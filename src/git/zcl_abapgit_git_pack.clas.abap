@@ -167,7 +167,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
           lv_xstring        TYPE xstring,
           lv_expected       TYPE i,
           ls_object         LIKE LINE OF rt_objects.
-    DATA: uindex            TYPE sy-index.
+    DATA: lv_uindex            TYPE sy-index.
 
     lv_data = iv_data.
 
@@ -191,7 +191,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     DO lv_objects TIMES.
 
-      uindex = sy-index.
+      lv_uindex = sy-index.
 
       lv_x = lv_data(1).
       lv_type = get_type( lv_x ).
@@ -199,7 +199,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       get_length( IMPORTING ev_length = lv_expected
                   CHANGING cv_data = lv_data ).
 
-      IF lv_type = zif_abapgit_definitions=>gc_type-ref_d.
+      IF lv_type = zif_abapgit_definitions=>c_type-ref_d.
         lv_ref_delta = lv_data(20).
         lv_data = lv_data+20.
       ENDIF.
@@ -254,7 +254,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       ls_object-adler32 = lv_data(4).
       lv_data = lv_data+4. " skip adler checksum
 
-      IF lv_type = zif_abapgit_definitions=>gc_type-ref_d.
+      IF lv_type = zif_abapgit_definitions=>c_type-ref_d.
         ls_object-sha1 = lv_ref_delta.
         TRANSLATE ls_object-sha1 TO LOWER CASE.
       ELSE.
@@ -264,7 +264,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       ENDIF.
       ls_object-type = lv_type.
       ls_object-data = lv_decompressed.
-      ls_object-index = uindex.
+      ls_object-index = lv_uindex.
       APPEND ls_object TO rt_objects.
     ENDDO.
 
@@ -294,7 +294,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data ).
 
-    SPLIT lv_string AT zif_abapgit_definitions=>gc_newline INTO TABLE lt_string.
+    SPLIT lv_string AT zif_abapgit_definitions=>c_newline INTO TABLE lt_string.
 
     LOOP AT lt_string ASSIGNING <lv_string>.
       lv_length = strlen( <lv_string> ) + 1.
@@ -340,13 +340,13 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     LOOP AT ct_objects INTO ls_object
       USING KEY type
-      WHERE type = zif_abapgit_definitions=>gc_type-ref_d.
+      WHERE type = zif_abapgit_definitions=>c_type-ref_d.
       INSERT ls_object INTO TABLE lt_deltas.
     ENDLOOP.
 
     DELETE ct_objects
       USING KEY type
-      WHERE type = zif_abapgit_definitions=>gc_type-ref_d.
+      WHERE type = zif_abapgit_definitions=>c_type-ref_d.
 
     "Restore correct Delta Order
     SORT lt_deltas BY index.
@@ -378,7 +378,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data ).
 
-    SPLIT lv_string AT zif_abapgit_definitions=>gc_newline INTO TABLE lt_string.
+    SPLIT lv_string AT zif_abapgit_definitions=>c_newline INTO TABLE lt_string.
 
     LOOP AT lt_string ASSIGNING <lv_string>.
 
@@ -413,7 +413,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
           ELSE.
 
             IF rs_tag-body IS NOT INITIAL.
-              rs_tag-body = rs_tag-body && zif_abapgit_definitions=>gc_newline.
+              rs_tag-body = rs_tag-body && zif_abapgit_definitions=>c_newline.
             ENDIF.
 
             rs_tag-body = rs_tag-body && <lv_string>.
@@ -458,9 +458,9 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
       CLEAR ls_node.
       ls_node-chmod = lv_chmod.
-      IF ls_node-chmod <> zif_abapgit_definitions=>gc_chmod-dir
-          AND ls_node-chmod <> zif_abapgit_definitions=>gc_chmod-file
-          AND ls_node-chmod <> zif_abapgit_definitions=>gc_chmod-executable.
+      IF ls_node-chmod <> zif_abapgit_definitions=>c_chmod-dir
+          AND ls_node-chmod <> zif_abapgit_definitions=>c_chmod-file
+          AND ls_node-chmod <> zif_abapgit_definitions=>c_chmod-executable.
         zcx_abapgit_exception=>raise( 'Unknown chmod' ).
       ENDIF.
 
@@ -512,7 +512,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       WITH KEY sha COMPONENTS sha1 = is_object-sha1.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Base not found, { is_object-sha1 }| ).
-    ELSEIF <ls_object>-type = zif_abapgit_definitions=>gc_type-ref_d.
+    ELSEIF <ls_object>-type = zif_abapgit_definitions=>c_type-ref_d.
 * sanity check
       zcx_abapgit_exception=>raise( 'Delta, base eq delta' ).
     ENDIF.
@@ -685,7 +685,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
     lv_string = ''.
 
     CONCATENATE 'tree' lv_tree_lower INTO lv_tmp SEPARATED BY space. "#EC NOTEXT
-    CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>gc_newline INTO lv_string.
+    CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>c_newline INTO lv_string.
 
     IF NOT is_commit-parent IS INITIAL.
       lv_parent_lower = is_commit-parent.
@@ -693,7 +693,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
       CONCATENATE 'parent' lv_parent_lower
         INTO lv_tmp SEPARATED BY space.                     "#EC NOTEXT
-      CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>gc_newline INTO lv_string.
+      CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>c_newline INTO lv_string.
     ENDIF.
 
     IF NOT is_commit-parent2 IS INITIAL.
@@ -702,18 +702,18 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
       CONCATENATE 'parent' lv_parent_lower
         INTO lv_tmp SEPARATED BY space.                     "#EC NOTEXT
-      CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>gc_newline INTO lv_string.
+      CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>c_newline INTO lv_string.
     ENDIF.
 
     CONCATENATE 'author' is_commit-author
       INTO lv_tmp SEPARATED BY space.                       "#EC NOTEXT
-    CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>gc_newline INTO lv_string.
+    CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>c_newline INTO lv_string.
 
     CONCATENATE 'committer' is_commit-committer
       INTO lv_tmp SEPARATED BY space.                       "#EC NOTEXT
-    CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>gc_newline INTO lv_string.
+    CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>c_newline INTO lv_string.
 
-    CONCATENATE lv_string zif_abapgit_definitions=>gc_newline is_commit-body INTO lv_string.
+    CONCATENATE lv_string zif_abapgit_definitions=>c_newline is_commit-body INTO lv_string.
 
     rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
 
@@ -727,12 +727,12 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     lv_time = zcl_abapgit_time=>get( ).
 
-    lv_string = |object { is_tag-object }{ zif_abapgit_definitions=>gc_newline }|
-             && |type { is_tag-type }{ zif_abapgit_definitions=>gc_newline }|
-             && |tag { zcl_abapgit_tag=>remove_tag_prefix( is_tag-tag ) }{ zif_abapgit_definitions=>gc_newline }|
+    lv_string = |object { is_tag-object }{ zif_abapgit_definitions=>c_newline }|
+             && |type { is_tag-type }{ zif_abapgit_definitions=>c_newline }|
+             && |tag { zcl_abapgit_tag=>remove_tag_prefix( is_tag-tag ) }{ zif_abapgit_definitions=>c_newline }|
              && |tagger { is_tag-tagger_name } <{ is_tag-tagger_email }> { lv_time }|
-             && |{ zif_abapgit_definitions=>gc_newline }|
-             && |{ zif_abapgit_definitions=>gc_newline }|
+             && |{ zif_abapgit_definitions=>c_newline }|
+             && |{ zif_abapgit_definitions=>c_newline }|
              && |{ is_tag-message }|.
 
     rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ).
@@ -796,22 +796,22 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
   METHOD get_type.
 
-    CONSTANTS: c_mask TYPE x VALUE 112.
-    DATA: xtype TYPE x.
+    CONSTANTS: lc_mask TYPE x VALUE 112.
+    DATA: lv_xtype TYPE x.
 
-    xtype = iv_x BIT-AND c_mask.
+    lv_xtype = iv_x BIT-AND lc_mask.
 
-    CASE xtype.
+    CASE lv_xtype.
       WHEN 16.
-        rv_type = zif_abapgit_definitions=>gc_type-commit.
+        rv_type = zif_abapgit_definitions=>c_type-commit.
       WHEN 32.
-        rv_type = zif_abapgit_definitions=>gc_type-tree.
+        rv_type = zif_abapgit_definitions=>c_type-tree.
       WHEN 48.
-        rv_type = zif_abapgit_definitions=>gc_type-blob.
+        rv_type = zif_abapgit_definitions=>c_type-blob.
       WHEN 64.
-        rv_type = zif_abapgit_definitions=>gc_type-tag.
+        rv_type = zif_abapgit_definitions=>c_type-tag.
       WHEN 112.
-        rv_type = zif_abapgit_definitions=>gc_type-ref_d.
+        rv_type = zif_abapgit_definitions=>c_type-ref_d.
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( 'Todo, unknown type' ).
     ENDCASE.
@@ -834,7 +834,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     LOOP AT it_nodes ASSIGNING <ls_node>.
       APPEND INITIAL LINE TO lt_sort ASSIGNING <ls_sort>.
-      IF <ls_node>-chmod = zif_abapgit_definitions=>gc_chmod-dir.
+      IF <ls_node>-chmod = zif_abapgit_definitions=>c_chmod-dir.
         CONCATENATE <ls_node>-name '/' INTO <ls_sort>-sort.
       ELSE.
         <ls_sort>-sort = <ls_node>-name.
@@ -862,15 +862,15 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
 
     CASE iv_type.
-      WHEN zif_abapgit_definitions=>gc_type-commit.
+      WHEN zif_abapgit_definitions=>c_type-commit.
         lv_type = 16.
-      WHEN zif_abapgit_definitions=>gc_type-tree.
+      WHEN zif_abapgit_definitions=>c_type-tree.
         lv_type = 32.
-      WHEN zif_abapgit_definitions=>gc_type-blob.
+      WHEN zif_abapgit_definitions=>c_type-blob.
         lv_type = 48.
-      WHEN zif_abapgit_definitions=>gc_type-tag.
+      WHEN zif_abapgit_definitions=>c_type-tag.
         lv_type = 64.
-      WHEN zif_abapgit_definitions=>gc_type-ref_d.
+      WHEN zif_abapgit_definitions=>c_type-ref_d.
         lv_type = 112.
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( 'Unexpected object type while encoding pack' ).
