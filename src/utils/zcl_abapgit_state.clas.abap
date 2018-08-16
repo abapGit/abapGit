@@ -25,7 +25,7 @@ CLASS ZCL_ABAPGIT_STATE IMPLEMENTATION.
     ELSEIF cv_prev IS INITIAL.
       cv_prev = iv_cur.
     ELSE.
-      cv_prev = zif_abapgit_definitions=>gc_state-mixed.
+      cv_prev = zif_abapgit_definitions=>c_state-mixed.
     ENDIF.
 
   ENDMETHOD.

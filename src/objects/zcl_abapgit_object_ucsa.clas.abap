@@ -16,13 +16,13 @@ CLASS zcl_abapgit_object_ucsa DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
       clear_dynamic_fields
         CHANGING
-          cs_complete_comm_assembly TYPE any,
+          cg_complete_comm_assembly TYPE any,
 
       clear_field
         IMPORTING
           iv_fieldname TYPE csequence
         CHANGING
-          cs_header    TYPE any.
+          cg_header    TYPE any.
 
 ENDCLASS.
 
@@ -36,33 +36,33 @@ CLASS ZCL_ABAPGIT_OBJECT_UCSA IMPLEMENTATION.
     FIELD-SYMBOLS: <lg_header> TYPE any.
 
 
-    ASSIGN COMPONENT 'HEADER' OF STRUCTURE cs_complete_comm_assembly
+    ASSIGN COMPONENT 'HEADER' OF STRUCTURE cg_complete_comm_assembly
            TO <lg_header>.
     ASSERT sy-subrc = 0.
 
     clear_field(
       EXPORTING iv_fieldname = 'CREATEDBY'
-      CHANGING  cs_header    = <lg_header> ).
+      CHANGING  cg_header    = <lg_header> ).
 
     clear_field(
       EXPORTING iv_fieldname = 'CREATEDON'
-      CHANGING  cs_header    = <lg_header> ).
+      CHANGING  cg_header    = <lg_header> ).
 
     clear_field(
       EXPORTING iv_fieldname = 'CREATEDAT'
-      CHANGING  cs_header    = <lg_header> ).
+      CHANGING  cg_header    = <lg_header> ).
 
     clear_field(
       EXPORTING iv_fieldname = 'CHANGEDBY'
-      CHANGING  cs_header    = <lg_header> ).
+      CHANGING  cg_header    = <lg_header> ).
 
     clear_field(
       EXPORTING iv_fieldname = 'CHANGEDON'
-      CHANGING  cs_header    = <lg_header> ).
+      CHANGING  cg_header    = <lg_header> ).
 
     clear_field(
       EXPORTING iv_fieldname = 'CHANGEDAT'
-      CHANGING  cs_header    = <lg_header> ).
+      CHANGING  cg_header    = <lg_header> ).
 
   ENDMETHOD.
 
@@ -71,7 +71,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UCSA IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lg_field> TYPE any.
 
-    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_header
+    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cg_header
            TO <lg_field>.
     ASSERT sy-subrc = 0.
     CLEAR <lg_field>.
@@ -118,7 +118,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UCSA IMPLEMENTATION.
 
         CALL METHOD lo_persistence->('IF_UCON_SA_PERSIST~DELETE')
           EXPORTING
-            version = zif_abapgit_definitions=>gc_version-active.
+            version = zif_abapgit_definitions=>c_version-active.
 
       CATCH cx_root INTO lx_root.
         lv_text = lx_root->get_text( ).
@@ -158,7 +158,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UCSA IMPLEMENTATION.
         CALL METHOD lo_persistence->('IF_UCON_SA_PERSIST~SAVE')
           EXPORTING
             sa      = <lg_complete_comm_assembly>
-            version = zif_abapgit_definitions=>gc_version-active.
+            version = zif_abapgit_definitions=>c_version-active.
 
         tadir_insert( iv_package ).
 
@@ -186,7 +186,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UCSA IMPLEMENTATION.
 
         CALL METHOD lo_persistence->('IF_UCON_SA_PERSIST~LOAD')
           EXPORTING
-            version  = zif_abapgit_definitions=>gc_version-active
+            version  = zif_abapgit_definitions=>c_version-active
             language = sy-langu.
 
       CATCH cx_root.
@@ -256,12 +256,12 @@ CLASS ZCL_ABAPGIT_OBJECT_UCSA IMPLEMENTATION.
 
         CALL METHOD lo_persistence->('IF_UCON_SA_PERSIST~LOAD')
           EXPORTING
-            version  = zif_abapgit_definitions=>gc_version-active
+            version  = zif_abapgit_definitions=>c_version-active
             language = sy-langu
           IMPORTING
             sa       = <lg_complete_comm_assembly>.
 
-        clear_dynamic_fields( CHANGING cs_complete_comm_assembly = <lg_complete_comm_assembly> ).
+        clear_dynamic_fields( CHANGING cg_complete_comm_assembly = <lg_complete_comm_assembly> ).
 
         io_xml->add( iv_name = 'UCSA'
                      ig_data = <lg_complete_comm_assembly> ).

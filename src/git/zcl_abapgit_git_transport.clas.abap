@@ -186,7 +186,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
               zcl_abapgit_git_utils=>get_null( ) &&
               ` ` &&
               lv_cap_list &&
-              zif_abapgit_definitions=>gc_newline.          "#EC NOTEXT
+              zif_abapgit_definitions=>c_newline.          "#EC NOTEXT
     lv_cmd_pkt = zcl_abapgit_git_utils=>pkt_string( lv_line ).
 
     lv_buffer = lv_cmd_pkt && '0000'.
@@ -257,22 +257,22 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
       IF sy-tabix = 1.
         lv_capa = 'side-band-64k no-progress multi_ack' ##NO_TEXT.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
-          && ` ` && lv_capa && zif_abapgit_definitions=>gc_newline. "#EC NOTEXT
+          && ` ` && lv_capa && zif_abapgit_definitions=>c_newline. "#EC NOTEXT
       ELSE.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
-          && zif_abapgit_definitions=>gc_newline.           "#EC NOTEXT
+          && zif_abapgit_definitions=>c_newline.           "#EC NOTEXT
       ENDIF.
       lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( lv_line ).
     ENDLOOP.
 
     IF iv_deepen = abap_true.
       lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( 'deepen 1'
-        && zif_abapgit_definitions=>gc_newline ).           "#EC NOTEXT
+        && zif_abapgit_definitions=>c_newline ).           "#EC NOTEXT
     ENDIF.
 
     lv_buffer = lv_buffer
              && '0000'
-             && '0009done' && zif_abapgit_definitions=>gc_newline.
+             && '0009done' && zif_abapgit_definitions=>c_newline.
 
     lv_xstring = lo_client->send_receive_close(
       zcl_abapgit_convert=>string_to_xstring_utf8( lv_buffer ) ).

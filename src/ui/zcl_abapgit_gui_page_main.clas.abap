@@ -57,35 +57,35 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     CREATE OBJECT lo_helpsub.
 
     lo_advsub->add( iv_txt = 'Repository overview'
-                    iv_act = zif_abapgit_definitions=>gc_action-go_repo_overview ) ##NO_TEXT.
+                    iv_act = zif_abapgit_definitions=>c_action-go_repo_overview ) ##NO_TEXT.
     lo_advsub->add( iv_txt = 'Database util'
-                    iv_act = zif_abapgit_definitions=>gc_action-go_db ) ##NO_TEXT.
+                    iv_act = zif_abapgit_definitions=>c_action-go_db ) ##NO_TEXT.
     lo_advsub->add( iv_txt = 'Package to zip'
-                    iv_act = zif_abapgit_definitions=>gc_action-zip_package ) ##NO_TEXT.
+                    iv_act = zif_abapgit_definitions=>c_action-zip_package ) ##NO_TEXT.
     lo_advsub->add( iv_txt = 'Transport to zip'
-                    iv_act = zif_abapgit_definitions=>gc_action-zip_transport ) ##NO_TEXT.
+                    iv_act = zif_abapgit_definitions=>c_action-zip_transport ) ##NO_TEXT.
     lo_advsub->add( iv_txt = 'Object to files'
-                    iv_act = zif_abapgit_definitions=>gc_action-zip_object ) ##NO_TEXT.
+                    iv_act = zif_abapgit_definitions=>c_action-zip_object ) ##NO_TEXT.
     lo_advsub->add( iv_txt = 'Test changed by'
                     iv_act = c_actions-changed_by ) ##NO_TEXT.
     lo_advsub->add( iv_txt = 'Page playground'
-                    iv_act = zif_abapgit_definitions=>gc_action-go_playground ) ##NO_TEXT.
+                    iv_act = zif_abapgit_definitions=>c_action-go_playground ) ##NO_TEXT.
     lo_advsub->add( iv_txt = 'Debug info'
-                    iv_act = zif_abapgit_definitions=>gc_action-go_debuginfo ) ##NO_TEXT.
+                    iv_act = zif_abapgit_definitions=>c_action-go_debuginfo ) ##NO_TEXT.
     lo_advsub->add( iv_txt = 'Settings'
-                    iv_act = zif_abapgit_definitions=>gc_action-go_settings ) ##NO_TEXT.
+                    iv_act = zif_abapgit_definitions=>c_action-go_settings ) ##NO_TEXT.
 
     lo_helpsub->add( iv_txt = 'Tutorial'
-                     iv_act = zif_abapgit_definitions=>gc_action-go_tutorial ) ##NO_TEXT.
+                     iv_act = zif_abapgit_definitions=>c_action-go_tutorial ) ##NO_TEXT.
     lo_helpsub->add( iv_txt = 'Documentation'
                      iv_act = c_actions-documentation ) ##NO_TEXT.
 
     ro_menu->add( iv_txt = '+ Online'
-                  iv_act = zif_abapgit_definitions=>gc_action-repo_newonline ) ##NO_TEXT.
+                  iv_act = zif_abapgit_definitions=>c_action-repo_newonline ) ##NO_TEXT.
     ro_menu->add( iv_txt = '+ Offline'
-                  iv_act = zif_abapgit_definitions=>gc_action-repo_newoffline ) ##NO_TEXT.
+                  iv_act = zif_abapgit_definitions=>c_action-repo_newoffline ) ##NO_TEXT.
     ro_menu->add( iv_txt = 'Explore'
-                  iv_act = zif_abapgit_definitions=>gc_action-go_explore ) ##NO_TEXT.
+                  iv_act = zif_abapgit_definitions=>c_action-go_explore ) ##NO_TEXT.
 
     ro_menu->add( iv_txt = 'Advanced'
                   io_sub = lo_advsub ) ##NO_TEXT.
@@ -231,7 +231,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
       ro_html->add( lo_favbar->render( iv_sort = abap_true ) ).
     ELSE.
       ro_html->add( |<span class="grey">No favorites so far. For more info please check {
-                    zcl_abapgit_html=>a( iv_txt = 'tutorial' iv_act = zif_abapgit_definitions=>gc_action-go_tutorial )
+                    zcl_abapgit_html=>a( iv_txt = 'tutorial' iv_act = zif_abapgit_definitions=>c_action-go_tutorial )
                     }</span>| ).
     ENDIF.
     ro_html->add( '</td>' ).
@@ -324,7 +324,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
           ei_page      = ei_page
           ev_state     = ev_state ).
 
-      IF ev_state <> zif_abapgit_definitions=>gc_event_state-not_handled.
+      IF ev_state <> zif_abapgit_definitions=>c_event_state-not_handled.
         RETURN.
       ENDIF.
     ENDIF.
@@ -338,17 +338,17 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
             zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->refresh( ).
           CATCH zcx_abapgit_exception ##NO_HANDLER.
         ENDTRY.
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
       WHEN c_actions-changed_by.
         test_changed_by( ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
+        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
       WHEN c_actions-documentation.
         zcl_abapgit_services_abapgit=>open_abapgit_wikipage( ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
+        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
       WHEN c_actions-overview.
         CREATE OBJECT li_repo_overview TYPE zcl_abapgit_gui_page_repo_over.
         ei_page = li_repo_overview.
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
     ENDCASE.
 
   ENDMETHOD.
@@ -359,37 +359,37 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     DATA: ls_hotkey_action TYPE zif_abapgit_gui_page_hotkey=>ty_hotkey_action.
 
     ls_hotkey_action-name           = |Main: Settings|.
-    ls_hotkey_action-action         = zif_abapgit_definitions=>gc_action-go_settings.
+    ls_hotkey_action-action         = zif_abapgit_definitions=>c_action-go_settings.
     ls_hotkey_action-default_hotkey = |s|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     ls_hotkey_action-name           = |Main: Repo overview|.
-    ls_hotkey_action-action         = zif_abapgit_definitions=>gc_action-go_repo_overview.
+    ls_hotkey_action-action         = zif_abapgit_definitions=>c_action-go_repo_overview.
     ls_hotkey_action-default_hotkey = |o|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     ls_hotkey_action-name           = |Main: Refresh|.
-    ls_hotkey_action-action         = zif_abapgit_definitions=>gc_action-repo_refresh.
+    ls_hotkey_action-action         = zif_abapgit_definitions=>c_action-repo_refresh.
     ls_hotkey_action-default_hotkey = |r|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     ls_hotkey_action-name           = |Main: Pull|.
-    ls_hotkey_action-action         = zif_abapgit_definitions=>gc_action-git_pull.
+    ls_hotkey_action-action         = zif_abapgit_definitions=>c_action-git_pull.
     ls_hotkey_action-default_hotkey = |p|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     ls_hotkey_action-name           = |Main: + Online|.
-    ls_hotkey_action-action         = zif_abapgit_definitions=>gc_action-repo_newonline.
+    ls_hotkey_action-action         = zif_abapgit_definitions=>c_action-repo_newonline.
     ls_hotkey_action-default_hotkey = |n|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     ls_hotkey_action-name           = |Main: Uninstall|.
-    ls_hotkey_action-action         = zif_abapgit_definitions=>gc_action-repo_purge.
+    ls_hotkey_action-action         = zif_abapgit_definitions=>c_action-repo_purge.
     ls_hotkey_action-default_hotkey = |u|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     ls_hotkey_action-name           = |Main: Show diff|.
-    ls_hotkey_action-action         = zif_abapgit_definitions=>gc_action-go_diff.
+    ls_hotkey_action-action         = zif_abapgit_definitions=>c_action-go_diff.
     ls_hotkey_action-default_hotkey = |d|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 

@@ -42,7 +42,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT_OBJECTS IMPLEMENTATION.
           AND NOT lstate IS INITIAL.
 
         CASE ls_object_status-lstate.
-          WHEN zif_abapgit_definitions=>gc_state-added OR zif_abapgit_definitions=>gc_state-modified.
+          WHEN zif_abapgit_definitions=>c_state-added OR zif_abapgit_definitions=>c_state-modified.
             IF ls_transport_object-delflag = abap_true.
               zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
               } should be added/modified, but has deletion flag in transport| ).
@@ -62,7 +62,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT_OBJECTS IMPLEMENTATION.
               iv_path     = ls_local_file-file-path
               iv_filename = ls_local_file-file-filename
               iv_data     = ls_local_file-file-data ).
-          WHEN zif_abapgit_definitions=>gc_state-deleted.
+          WHEN zif_abapgit_definitions=>c_state-deleted.
             IF ls_transport_object-delflag = abap_false.
               zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
               } should be removed, but has NO deletion flag in transport| ).

@@ -39,7 +39,7 @@ CLASS ltcl_transport_objects DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HA
           is_local_file TYPE zif_abapgit_definitions=>ty_file_item,
       then_it_should_raise_exception
         IMPORTING
-          with_text TYPE string,
+          iv_with_text TYPE string,
       then_it_should_remove_at_stage
         IMPORTING
           iv_filename TYPE string
@@ -71,7 +71,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
       iv_filename   = 'CL_FOO.abap'
-      iv_lstate     = zif_abapgit_definitions=>gc_state-added ).
+      iv_lstate     = zif_abapgit_definitions=>c_state-added ).
 
     ls_local_file = given_the_local_file(
       iv_obj_name = 'CL_FOO'
@@ -94,7 +94,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
       iv_filename   = 'CL_FOO.abap'
-      iv_lstate     = zif_abapgit_definitions=>gc_state-modified ).
+      iv_lstate     = zif_abapgit_definitions=>c_state-modified ).
 
     ls_local_file = given_the_local_file(
       iv_obj_name = 'CL_FOO'
@@ -120,13 +120,13 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
       iv_filename   = 'CL_FOO.abap'
-      iv_lstate     = zif_abapgit_definitions=>gc_state-modified ).
+      iv_lstate     = zif_abapgit_definitions=>c_state-modified ).
 
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
       iv_filename   = 'CL_FOO.xml'
-      iv_lstate     = zif_abapgit_definitions=>gc_state-modified ).
+      iv_lstate     = zif_abapgit_definitions=>c_state-modified ).
 
     ls_abap_local_file = given_the_local_file(
       iv_obj_name = 'CL_FOO'
@@ -155,10 +155,10 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
-      iv_lstate     = zif_abapgit_definitions=>gc_state-added ).
+      iv_lstate     = zif_abapgit_definitions=>c_state-added ).
 
     then_it_should_raise_exception(
-      with_text = 'Object CL_A_CLASS_NOT_IN_REPO not found in the local repository files' ).
+      iv_with_text = 'Object CL_A_CLASS_NOT_IN_REPO not found in the local repository files' ).
   ENDMETHOD.
 
   METHOD object_not_in_local_files.
@@ -170,7 +170,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
-      iv_lstate     = zif_abapgit_definitions=>gc_state-added ).
+      iv_lstate     = zif_abapgit_definitions=>c_state-added ).
 
     given_the_local_file(
       iv_obj_name = 'CL_ANOTHER_LOCAL_FILE'
@@ -180,7 +180,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_data     = 'data' ).
 
     then_it_should_raise_exception(
-      with_text = 'Object CL_FOO not found in the local repository files' ).
+      iv_with_text = 'Object CL_FOO not found in the local repository files' ).
   ENDMETHOD.
 
   METHOD cant_be_added_with_del_flag.
@@ -192,10 +192,10 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
-      iv_lstate     = zif_abapgit_definitions=>gc_state-added ).
+      iv_lstate     = zif_abapgit_definitions=>c_state-added ).
 
     then_it_should_raise_exception(
-      with_text = 'Object CL_FOO should be added/modified, but has deletion flag in transport' ).
+      iv_with_text = 'Object CL_FOO should be added/modified, but has deletion flag in transport' ).
   ENDMETHOD.
 
   METHOD cant_be_modified_with_del_flag.
@@ -207,10 +207,10 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
-      iv_lstate     = zif_abapgit_definitions=>gc_state-modified ).
+      iv_lstate     = zif_abapgit_definitions=>c_state-modified ).
 
     then_it_should_raise_exception(
-      with_text = 'Object CL_FOO should be added/modified, but has deletion flag in transport' ).
+      iv_with_text = 'Object CL_FOO should be added/modified, but has deletion flag in transport' ).
   ENDMETHOD.
   METHOD deleted_to_removed_files.
     given_the_transport_object(
@@ -223,7 +223,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_obj_type   = 'CLAS'
       iv_filename   = 'CL_FOO.abap'
       iv_path       = '/a_path'
-      iv_lstate     = zif_abapgit_definitions=>gc_state-deleted ).
+      iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
 
     when_staging( ).
 
@@ -244,14 +244,14 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_obj_type   = 'CLAS'
       iv_filename   = 'CL_FOO.abap'
       iv_path       = '/a_path'
-      iv_lstate     = zif_abapgit_definitions=>gc_state-deleted ).
+      iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
 
     given_the_object_status(
       iv_obj_name   = 'CL_FOO'
       iv_obj_type   = 'CLAS'
       iv_filename   = 'CL_FOO.xml'
       iv_path       = '/a_path'
-      iv_lstate     = zif_abapgit_definitions=>gc_state-deleted ).
+      iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
 
     when_staging( ).
 
@@ -275,10 +275,10 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_obj_type   = 'CLAS'
       iv_filename   = 'CL_FOO.abap'
       iv_path       = '/a_path'
-      iv_lstate     = zif_abapgit_definitions=>gc_state-deleted ).
+      iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
 
     then_it_should_raise_exception(
-         with_text = 'Object CL_FOO should be removed, but has NO deletion flag in transport' ).
+         iv_with_text = 'Object CL_FOO should be removed, but has NO deletion flag in transport' ).
   ENDMETHOD.
 
   METHOD given_the_transport_object.
@@ -341,7 +341,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       CATCH zcx_abapgit_exception INTO lx_exception.
         cl_abap_unit_assert=>assert_equals(
           act = lx_exception->get_text( )
-          exp = with_text ).
+          exp = iv_with_text ).
     ENDTRY.
   ENDMETHOD.
 

@@ -184,195 +184,195 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
     CASE iv_action.
         " General PAGE routing
-      WHEN zif_abapgit_definitions=>gc_action-go_main.                          " Go Main page
+      WHEN zif_abapgit_definitions=>c_action-go_main.                          " Go Main page
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
-      WHEN zif_abapgit_definitions=>gc_action-go_explore.                     " Go Explore page
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-go_explore.                     " Go Explore page
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_explore.
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
-      WHEN zif_abapgit_definitions=>gc_action-go_repo_overview.               " Go Repository overview
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-go_repo_overview.               " Go Repository overview
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_repo_over.
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
-      WHEN zif_abapgit_definitions=>gc_action-go_db.                          " Go DB util page
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-go_db.                          " Go DB util page
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_db.
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
-      WHEN zif_abapgit_definitions=>gc_action-go_debuginfo.
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-go_debuginfo.
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_debuginfo.
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
-      WHEN zif_abapgit_definitions=>gc_action-go_settings.
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-go_settings.
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_settings.
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
-      WHEN zif_abapgit_definitions=>gc_action-go_background_run.              " Go background run page
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-go_background_run.              " Go background run page
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_bkg_run.
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
-      WHEN zif_abapgit_definitions=>gc_action-go_background.                   " Go Background page
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-go_background.                   " Go Background page
         ei_page  = get_page_background( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
-      WHEN zif_abapgit_definitions=>gc_action-go_diff.                         " Go Diff page
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-go_diff.                         " Go Diff page
         ei_page  = get_page_diff(
           iv_getdata   = iv_getdata
           iv_prev_page = iv_prev_page ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page_w_bookmark.
-      WHEN zif_abapgit_definitions=>gc_action-go_stage.                        " Go Staging page
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page_w_bookmark.
+      WHEN zif_abapgit_definitions=>c_action-go_stage.                        " Go Staging page
         ei_page  = get_page_stage( iv_getdata ).
         IF iv_prev_page = 'PAGE_DIFF'.
-          ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+          ev_state = zif_abapgit_definitions=>c_event_state-new_page.
         ELSE.
-          ev_state = zif_abapgit_definitions=>gc_event_state-new_page_w_bookmark.
+          ev_state = zif_abapgit_definitions=>c_event_state-new_page_w_bookmark.
         ENDIF.
-      WHEN zif_abapgit_definitions=>gc_action-go_branch_overview.              " Go repo branch overview
+      WHEN zif_abapgit_definitions=>c_action-go_branch_overview.              " Go repo branch overview
         ei_page  = get_page_branch_overview( iv_getdata ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
-      WHEN zif_abapgit_definitions=>gc_action-go_playground.                   " Create playground page
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-go_playground.                   " Create playground page
         ei_page  = get_page_playground( ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
-      WHEN zif_abapgit_definitions=>gc_action-go_tutorial.                     " Go to tutorial
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-go_tutorial.                     " Go to tutorial
         zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( '' ).        " Clear show_id
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.          " Assume we are on main page
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.          " Assume we are on main page
 
         " SAP GUI actions
-      WHEN zif_abapgit_definitions=>gc_action-jump.                          " Open object editor
+      WHEN zif_abapgit_definitions=>c_action-jump.                          " Open object editor
         zcl_abapgit_html_action_utils=>jump_decode(
           EXPORTING iv_string   = iv_getdata
           IMPORTING ev_obj_type = ls_item-obj_type
                     ev_obj_name = ls_item-obj_name ).
         zcl_abapgit_objects=>jump( ls_item ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
-      WHEN zif_abapgit_definitions=>gc_action-jump_pkg.                      " Open SE80
+        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
+      WHEN zif_abapgit_definitions=>c_action-jump_pkg.                      " Open SE80
         zcl_abapgit_services_repo=>open_se80( |{ iv_getdata }| ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
+        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
 
         " DB actions
-      WHEN zif_abapgit_definitions=>gc_action-db_edit.
+      WHEN zif_abapgit_definitions=>c_action-db_edit.
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_db_edit
           EXPORTING
             is_key = zcl_abapgit_html_action_utils=>dbkey_decode( iv_getdata ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
         IF iv_prev_page = 'PAGE_DB_DIS'.
-          ev_state = zif_abapgit_definitions=>gc_event_state-new_page_replacing.
+          ev_state = zif_abapgit_definitions=>c_event_state-new_page_replacing.
         ENDIF.
-      WHEN zif_abapgit_definitions=>gc_action-db_display.
+      WHEN zif_abapgit_definitions=>c_action-db_display.
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_db_dis
           EXPORTING
             is_key = zcl_abapgit_html_action_utils=>dbkey_decode( iv_getdata ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
 
         " ABAPGIT services actions
-      WHEN zif_abapgit_definitions=>gc_action-abapgit_home.                    " Go abapGit homepage
+      WHEN zif_abapgit_definitions=>c_action-abapgit_home.                    " Go abapGit homepage
         zcl_abapgit_services_abapgit=>open_abapgit_homepage( ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
+        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
 
-      WHEN zif_abapgit_definitions=>gc_action-abapgit_install.                 " Install abapGit
+      WHEN zif_abapgit_definitions=>c_action-abapgit_install.                 " Install abapGit
         zcl_abapgit_services_abapgit=>install_abapgit( ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
 
         " REPOSITORY services actions
-      WHEN zif_abapgit_definitions=>gc_action-repo_newoffline.                 " New offline repo
+      WHEN zif_abapgit_definitions=>c_action-repo_newoffline.                 " New offline repo
         zcl_abapgit_services_repo=>new_offline( ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-repo_refresh.                    " Repo refresh
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-repo_refresh.                    " Repo refresh
         zcl_abapgit_services_repo=>refresh( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-repo_syntax_check.
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-repo_syntax_check.
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_syntax
           EXPORTING
             io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
-      WHEN zif_abapgit_definitions=>gc_action-repo_code_inspector.
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-repo_code_inspector.
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_code_insp
           EXPORTING
             io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
-      WHEN zif_abapgit_definitions=>gc_action-repo_purge.                      " Repo remove & purge all objects
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-repo_purge.                      " Repo remove & purge all objects
         zcl_abapgit_services_repo=>purge( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-repo_remove.                     " Repo remove
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-repo_remove.                     " Repo remove
         zcl_abapgit_services_repo=>remove( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-repo_newonline.
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-repo_newonline.
         zcl_abapgit_services_repo=>new_online( lv_url ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
       WHEN 'install'.    " 'install' is for explore page
         zcl_abapgit_services_repo=>new_online( lv_url ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-repo_refresh_checksums.          " Rebuil local checksums
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-repo_refresh_checksums.          " Rebuil local checksums
         zcl_abapgit_services_repo=>refresh_local_checksums( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-repo_toggle_fav.                 " Toggle repo as favorite
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-repo_toggle_fav.                 " Toggle repo as favorite
         zcl_abapgit_services_repo=>toggle_favorite( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-repo_transport_to_branch.
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-repo_transport_to_branch.
         zcl_abapgit_services_repo=>transport_to_branch( iv_repository_key = lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-repo_settings.
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-repo_settings.
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_repo_sett
           EXPORTING
             io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
 
         " ZIP services actions
-      WHEN zif_abapgit_definitions=>gc_action-zip_import.                      " Import repo from ZIP
+      WHEN zif_abapgit_definitions=>c_action-zip_import.                      " Import repo from ZIP
         zcl_abapgit_zip=>import( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-zip_export.                      " Export repo as ZIP
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-zip_export.                      " Export repo as ZIP
         zcl_abapgit_zip=>export( zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ) ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
-      WHEN zif_abapgit_definitions=>gc_action-zip_package.                     " Export package as ZIP
+        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
+      WHEN zif_abapgit_definitions=>c_action-zip_package.                     " Export package as ZIP
         zcl_abapgit_zip=>export_package( ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
-      WHEN zif_abapgit_definitions=>gc_action-zip_transport.                   " Export transport as ZIP
+        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
+      WHEN zif_abapgit_definitions=>c_action-zip_transport.                   " Export transport as ZIP
         zcl_abapgit_transport=>zip( ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
-      WHEN zif_abapgit_definitions=>gc_action-zip_object.                      " Export object as ZIP
+        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
+      WHEN zif_abapgit_definitions=>c_action-zip_object.                      " Export object as ZIP
         zcl_abapgit_zip=>export_object( ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
+        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
 
         " Remote ORIGIN manipulations
-      WHEN zif_abapgit_definitions=>gc_action-repo_remote_attach.            " Remote attach
+      WHEN zif_abapgit_definitions=>c_action-repo_remote_attach.            " Remote attach
         zcl_abapgit_services_repo=>remote_attach( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-repo_remote_detach.            " Remote detach
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-repo_remote_detach.            " Remote detach
         zcl_abapgit_services_repo=>remote_detach( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-repo_remote_change.            " Remote change
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-repo_remote_change.            " Remote change
         zcl_abapgit_services_repo=>remote_change( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
 
         " GIT actions
-      WHEN zif_abapgit_definitions=>gc_action-git_pull.                      " GIT Pull
+      WHEN zif_abapgit_definitions=>c_action-git_pull.                      " GIT Pull
         zcl_abapgit_services_git=>pull( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-git_reset.                     " GIT Reset
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-git_reset.                     " GIT Reset
         zcl_abapgit_services_git=>reset( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-git_branch_create.             " GIT Create new branch
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-git_branch_create.             " GIT Create new branch
         zcl_abapgit_services_git=>create_branch( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-git_branch_delete.             " GIT Delete remote branch
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-git_branch_delete.             " GIT Delete remote branch
         zcl_abapgit_services_git=>delete_branch( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-git_branch_switch.             " GIT Switch branch
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-git_branch_switch.             " GIT Switch branch
         zcl_abapgit_services_git=>switch_branch( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-go_tag_overview.               " GIT Tag overview
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-go_tag_overview.               " GIT Tag overview
         zcl_abapgit_services_git=>tag_overview( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-git_tag_create.                " GIT Tag create
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-git_tag_create.                " GIT Tag create
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_tag
           EXPORTING
             io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
-      WHEN zif_abapgit_definitions=>gc_action-git_tag_delete.                " GIT Tag create
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-git_tag_delete.                " GIT Tag create
         zcl_abapgit_services_git=>delete_tag( lv_key ).
         zcl_abapgit_services_repo=>refresh( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
-      WHEN zif_abapgit_definitions=>gc_action-git_tag_switch.                " GIT Switch Tag
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-git_tag_switch.                " GIT Switch Tag
         zcl_abapgit_services_git=>switch_tag( lv_key ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
 
         "Others
       WHEN OTHERS.
-        ev_state = zif_abapgit_definitions=>gc_event_state-not_handled.
+        ev_state = zif_abapgit_definitions=>c_event_state-not_handled.
     ENDCASE.
 
   ENDMETHOD.

@@ -25,7 +25,7 @@ CLASS ZCL_ABAPGIT_TEST_SERIALIZE IMPLEMENTATION.
 
     lt_files = zcl_abapgit_objects=>serialize(
       is_item     = is_item
-      iv_language = zif_abapgit_definitions=>gc_english ).
+      iv_language = zif_abapgit_definitions=>c_english ).
 
     cl_abap_unit_assert=>assert_not_initial( lt_files ).
 

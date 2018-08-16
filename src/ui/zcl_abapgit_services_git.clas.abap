@@ -112,7 +112,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
     IF NOT is_commit-body IS INITIAL.
       CONCATENATE ls_comment-comment '' is_commit-body
-        INTO ls_comment-comment SEPARATED BY zif_abapgit_definitions=>gc_newline.
+        INTO ls_comment-comment SEPARATED BY zif_abapgit_definitions=>c_newline.
     ENDIF.
 
     io_repo->push( is_comment = ls_comment

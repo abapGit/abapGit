@@ -59,7 +59,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_DIS IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_toolbar.
-    lo_toolbar->add( iv_act = |{ zif_abapgit_definitions=>gc_action-db_edit }?{ lv_action }|
+    lo_toolbar->add( iv_act = |{ zif_abapgit_definitions=>c_action-db_edit }?{ lv_action }|
                      iv_txt = 'Edit' ) ##NO_TEXT.
 
     ro_html->add( '<div class="db_entry">' ).
@@ -78,7 +78,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_DIS IMPLEMENTATION.
   METHOD render_record_banner.
     rv_html = |<table class="tag"><tr><td class="label">Type:</td>|
            && | <td>{ is_key-type }</td></tr></table>|
-           && zif_abapgit_definitions=>gc_newline
+           && zif_abapgit_definitions=>c_newline
            && |<table class="tag"><tr><td class="label">Key:</td>|
            && |  <td>{ is_key-value }</td></tr></table>|.
   ENDMETHOD. "render_record_banner

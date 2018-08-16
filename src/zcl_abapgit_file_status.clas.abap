@@ -86,10 +86,10 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
     IF sy-subrc = 0.
       IF ls_file_sig-sha1 <> is_local-file-sha1.
-        rs_result-lstate = zif_abapgit_definitions=>gc_state-modified.
+        rs_result-lstate = zif_abapgit_definitions=>c_state-modified.
       ENDIF.
       IF ls_file_sig-sha1 <> is_remote-sha1.
-        rs_result-rstate = zif_abapgit_definitions=>gc_state-modified.
+        rs_result-rstate = zif_abapgit_definitions=>c_state-modified.
       ENDIF.
       rs_result-match = boolc( rs_result-lstate IS INITIAL
         AND rs_result-rstate IS INITIAL ).
@@ -100,8 +100,8 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       " the user will presumably decide what to do after checking the actual diff
       rs_result-match = boolc( is_local-file-sha1 = is_remote-sha1 ).
       IF rs_result-match = abap_false.
-        rs_result-lstate = zif_abapgit_definitions=>gc_state-modified.
-        rs_result-rstate = zif_abapgit_definitions=>gc_state-modified.
+        rs_result-lstate = zif_abapgit_definitions=>c_state-modified.
+        rs_result-rstate = zif_abapgit_definitions=>c_state-modified.
       ENDIF.
     ENDIF.
 
@@ -121,7 +121,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
     " Match
     rs_result-match    = abap_false.
-    rs_result-lstate   = zif_abapgit_definitions=>gc_state-added.
+    rs_result-lstate   = zif_abapgit_definitions=>c_state-added.
 
   ENDMETHOD.  "build_new_local
 
@@ -135,7 +135,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     rs_result-path     = is_remote-path.
     rs_result-filename = is_remote-filename.
     rs_result-match    = abap_false.
-    rs_result-rstate   = zif_abapgit_definitions=>gc_state-added.
+    rs_result-rstate   = zif_abapgit_definitions=>c_state-added.
 
     identify_object( EXPORTING iv_filename = is_remote-filename
                                iv_path     = is_remote-path
@@ -166,14 +166,14 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
           rs_result-match = abap_true.
           CLEAR rs_result-rstate.
         ELSE.
-          rs_result-rstate = zif_abapgit_definitions=>gc_state-modified.
+          rs_result-rstate = zif_abapgit_definitions=>c_state-modified.
         ENDIF.
 
         " Item is in state and in cache but with no package - it was deleted
         " OR devclass is the same as repo package (see #532)
         IF ls_item-devclass IS INITIAL OR ls_item-devclass = iv_devclass.
           rs_result-match  = abap_false.
-          rs_result-lstate = zif_abapgit_definitions=>gc_state-deleted.
+          rs_result-lstate = zif_abapgit_definitions=>c_state-deleted.
         ENDIF.
       ENDIF.
 

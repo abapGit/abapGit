@@ -68,11 +68,11 @@ CLASS zcl_abapgit_gui DEFINITION
       RAISING   zcx_abapgit_exception.
 
     METHODS handle_action
-      IMPORTING action      TYPE c
-                frame       TYPE c OPTIONAL
-                getdata     TYPE c OPTIONAL
-                postdata    TYPE cnht_post_data_tab OPTIONAL
-                query_table TYPE cnht_query_table OPTIONAL.
+      IMPORTING iv_action      TYPE c
+                iv_frame       TYPE c OPTIONAL
+                iv_getdata     TYPE c OPTIONAL
+                it_postdata    TYPE cnht_post_data_tab OPTIONAL
+                it_query_table TYPE cnht_query_table OPTIONAL.
 
 ENDCLASS.
 
@@ -222,7 +222,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD go_home.
 
-    on_event( action = |{ zif_abapgit_definitions=>gc_action-go_main }| ). " doesn't accept strings directly
+    on_event( action = |{ zif_abapgit_definitions=>c_action-go_main }| ). " doesn't accept strings directly
 
   ENDMETHOD.                "go_home
 
@@ -237,10 +237,10 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         IF mi_cur_page IS BOUND.
           mi_cur_page->on_event(
             EXPORTING
-              iv_action    = action
+              iv_action    = iv_action
               iv_prev_page = get_current_page_name( )
-              iv_getdata   = getdata
-              it_postdata  = postdata
+              iv_getdata   = iv_getdata
+              it_postdata  = it_postdata
             IMPORTING
               ei_page      = li_page
               ev_state     = lv_state ).
@@ -249,32 +249,32 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         IF lv_state IS INITIAL.
           mo_router->on_event(
             EXPORTING
-              iv_action    = action
+              iv_action    = iv_action
               iv_prev_page = get_current_page_name( )
-              iv_getdata   = getdata
-              it_postdata  = postdata
+              iv_getdata   = iv_getdata
+              it_postdata  = it_postdata
             IMPORTING
               ei_page      = li_page
               ev_state     = lv_state ).
         ENDIF.
 
         CASE lv_state.
-          WHEN zif_abapgit_definitions=>gc_event_state-re_render.
+          WHEN zif_abapgit_definitions=>c_event_state-re_render.
             render( ).
-          WHEN zif_abapgit_definitions=>gc_event_state-new_page.
+          WHEN zif_abapgit_definitions=>c_event_state-new_page.
             call_page( li_page ).
-          WHEN zif_abapgit_definitions=>gc_event_state-new_page_w_bookmark.
+          WHEN zif_abapgit_definitions=>c_event_state-new_page_w_bookmark.
             call_page( ii_page = li_page iv_with_bookmark = abap_true ).
-          WHEN zif_abapgit_definitions=>gc_event_state-new_page_replacing.
+          WHEN zif_abapgit_definitions=>c_event_state-new_page_replacing.
             call_page( ii_page = li_page iv_replacing = abap_true ).
-          WHEN zif_abapgit_definitions=>gc_event_state-go_back.
+          WHEN zif_abapgit_definitions=>c_event_state-go_back.
             back( ).
-          WHEN zif_abapgit_definitions=>gc_event_state-go_back_to_bookmark.
+          WHEN zif_abapgit_definitions=>c_event_state-go_back_to_bookmark.
             back( abap_true ).
-          WHEN zif_abapgit_definitions=>gc_event_state-no_more_act.
+          WHEN zif_abapgit_definitions=>c_event_state-no_more_act.
             " Do nothing, handling completed
           WHEN OTHERS.
-            zcx_abapgit_exception=>raise( |Unknown action: { action }| ).
+            zcx_abapgit_exception=>raise( |Unknown action: { iv_action }| ).
         ENDCASE.
 
       CATCH zcx_abapgit_exception INTO lx_exception.
@@ -290,11 +290,11 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
   METHOD on_event.
 
     handle_action(
-      action      = action
-      frame       = frame
-      getdata     = getdata
-      postdata    = postdata
-      query_table = query_table ).
+      iv_action      = action
+      iv_frame       = frame
+      iv_getdata     = getdata
+      it_postdata    = postdata
+      it_query_table = query_table ).
 
   ENDMETHOD.                    "on_event
 

@@ -104,7 +104,7 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |No inline resource: { iv_asset_name }| ).
     ENDCASE.
 
-    CONCATENATE LINES OF lt_data INTO lv_str SEPARATED BY zif_abapgit_definitions=>gc_newline.
+    CONCATENATE LINES OF lt_data INTO lv_str SEPARATED BY zif_abapgit_definitions=>c_newline.
 
     CALL FUNCTION 'SCMS_STRING_TO_XSTRING'
       EXPORTING

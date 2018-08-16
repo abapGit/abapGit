@@ -60,7 +60,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
     ELSE.
       rv_comment = 'BG: Multiple objects' ##NO_TEXT.
       LOOP AT lt_objects INTO lv_str.
-        CONCATENATE rv_comment zif_abapgit_definitions=>gc_newline lv_str INTO rv_comment.
+        CONCATENATE rv_comment zif_abapgit_definitions=>c_newline lv_str INTO rv_comment.
       ENDLOOP.
     ENDIF.
 

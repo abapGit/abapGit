@@ -78,7 +78,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
                   iv_cur = abap_false ) ##NO_TEXT.
 
     IF is_stage_allowed( ) = abap_false.
-      lv_opt = zif_abapgit_definitions=>gc_html_opt-crossout.
+      lv_opt = zif_abapgit_definitions=>c_html_opt-crossout.
     ENDIF.
 
     IF mo_repo->is_offline( ) = abap_true.
@@ -209,7 +209,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
       ro_html->add( '<div>' ).
       ro_html->add_a( iv_txt = |{ <ls_result>-objtype } { <ls_result>-objname }|
                       iv_act = |{ <ls_result>-objtype }{ <ls_result>-objname }|
-                      iv_typ = zif_abapgit_definitions=>gc_action_type-sapevent ).
+                      iv_typ = zif_abapgit_definitions=>c_action_type-sapevent ).
       ro_html->add( '</div>' ).
 
       CASE <ls_result>-kind.
@@ -260,12 +260,12 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
           CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_stage
             EXPORTING
               io_repo = lo_repo_online.
-          ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+          ev_state = zif_abapgit_definitions=>c_event_state-new_page.
 
         ELSE.
 
           ei_page = me.
-          ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
+          ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
 
         ENDIF.
 
@@ -279,12 +279,12 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
             EXPORTING
               io_repo  = lo_repo_online
               io_stage = mo_stage.
-          ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+          ev_state = zif_abapgit_definitions=>c_event_state-new_page.
 
         ELSE.
 
           ei_page = me.
-          ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
+          ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
 
         ENDIF.
 
@@ -293,7 +293,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
         run_code_inspector( ).
 
         ei_page = me.
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
 
       WHEN OTHERS.
 
@@ -304,7 +304,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
 *        zcl_abapgit_objects=>jump( ls_item ).
 
-        ev_state = zif_abapgit_definitions=>gc_event_state-no_more_act.
+        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
 
     ENDCASE.
 

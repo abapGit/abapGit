@@ -334,7 +334,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
     DATA: lt_files TYPE zif_abapgit_definitions=>ty_files_tt.
 
     lt_files = zcl_abapgit_objects=>serialize( is_item     = is_item
-                                       iv_language = zif_abapgit_definitions=>gc_english ).
+                                       iv_language = zif_abapgit_definitions=>c_english ).
 
     cl_abap_unit_assert=>assert_not_initial( lt_files ).
 
@@ -342,7 +342,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
 ENDCLASS.                    "ltcl_serialize IMPLEMENTATION
 
-CLASS ltd_objcet_ddls_mock DEFINITION FOR TESTING.
+CLASS ltcl_objcet_ddls_mock DEFINITION FOR TESTING.
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
@@ -357,7 +357,7 @@ CLASS ltd_objcet_ddls_mock DEFINITION FOR TESTING.
 
 ENDCLASS.
 
-CLASS ltd_objcet_ddls_mock IMPLEMENTATION.
+CLASS ltcl_objcet_ddls_mock IMPLEMENTATION.
 
   METHOD constructor.
 
@@ -509,20 +509,20 @@ CLASS ltcl_check_objects_locked IMPLEMENTATION.
   METHOD given_object.
 
     CONSTANTS:
-      co_obj_type TYPE string VALUE 'DDLS'.
+      lc_obj_type TYPE string VALUE 'DDLS'.
 
     DATA:
       ls_item               LIKE LINE OF mt_given_items,
-      ls_obj_serializer_map LIKE LINE OF zcl_abapgit_objects=>st_obj_serializer_map.
+      ls_obj_serializer_map LIKE LINE OF zcl_abapgit_objects=>gt_obj_serializer_map.
 
-    ls_item-obj_type = co_obj_type.
+    ls_item-obj_type = lc_obj_type.
     ls_item-obj_name = iv_object_name.
     INSERT ls_item INTO TABLE mt_given_items.
 
-    ls_obj_serializer_map-item-obj_type = co_obj_type.
+    ls_obj_serializer_map-item-obj_type = lc_obj_type.
     ls_obj_serializer_map-item-obj_name = iv_object_name.
-    ls_obj_serializer_map-metadata-class = '\CLASS-POOL=ZCL_ABAPGIT_OBJECTS\CLASS=LTD_OBJCET_DDLS_MOCK'.
-    INSERT ls_obj_serializer_map INTO TABLE zcl_abapgit_objects=>st_obj_serializer_map.
+    ls_obj_serializer_map-metadata-class = '\CLASS-POOL=ZCL_ABAPGIT_OBJECTS\CLASS=LTCL_OBJCET_DDLS_MOCK'.
+    INSERT ls_obj_serializer_map INTO TABLE zcl_abapgit_objects=>gt_obj_serializer_map.
 
   ENDMETHOD.
 

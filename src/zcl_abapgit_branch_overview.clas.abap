@@ -257,7 +257,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
       IMPORTING
         et_objects     = rt_objects ).
 
-    DELETE rt_objects WHERE type = zif_abapgit_definitions=>gc_type-blob.
+    DELETE rt_objects WHERE type = zif_abapgit_definitions=>c_type-blob.
 
   ENDMETHOD.
 
@@ -270,7 +270,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
                    <ls_tag>    LIKE LINE OF mt_tags.
 
     LOOP AT it_objects ASSIGNING <ls_object> USING KEY type
-        WHERE type = zif_abapgit_definitions=>gc_type-tag.
+        WHERE type = zif_abapgit_definitions=>c_type-tag.
 
       ls_raw = zcl_abapgit_git_pack=>decode_tag( <ls_object>-data ).
 
@@ -303,7 +303,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
 
 
     LOOP AT it_objects ASSIGNING <ls_object> USING KEY type
-        WHERE type = zif_abapgit_definitions=>gc_type-commit.
+        WHERE type = zif_abapgit_definitions=>c_type-commit.
       ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_object>-data ).
 
       CLEAR ls_commit.
@@ -311,7 +311,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
       ls_commit-parent1 = ls_raw-parent.
       ls_commit-parent2 = ls_raw-parent2.
 
-      SPLIT ls_raw-body AT zif_abapgit_definitions=>gc_newline INTO TABLE lt_body.
+      SPLIT ls_raw-body AT zif_abapgit_definitions=>c_newline INTO TABLE lt_body.
 
       READ TABLE lt_body WITH KEY table_line = ' -----END PGP SIGNATURE-----' TRANSPORTING NO FIELDS.
       IF sy-subrc = 0.
@@ -322,7 +322,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
       READ TABLE lt_body INDEX 1 INTO ls_commit-message.  "#EC CI_SUBRC
 
 * unix time stamps are in same time zone, so ignore the zone,
-      FIND REGEX zif_abapgit_definitions=>gc_author_regex IN ls_raw-author
+      FIND REGEX zif_abapgit_definitions=>c_author_regex IN ls_raw-author
         SUBMATCHES
         ls_commit-author
         ls_commit-email

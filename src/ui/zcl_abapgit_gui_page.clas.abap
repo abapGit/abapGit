@@ -130,7 +130,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ro_html->add( |<td class="logo">{
                   zcl_abapgit_html=>a( iv_txt = '<img src="img/logo" alt="logo">'
                                        iv_id  = 'abapGitLogo'
-                                       iv_act = zif_abapgit_definitions=>gc_action-abapgit_home )
+                                       iv_act = zif_abapgit_definitions=>c_action-abapgit_home )
                   }</td>| ).                                "#EC NOTEXT
 
     ro_html->add( |<td><span class="page_title"> &#x25BA; {
@@ -150,7 +150,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_page~on_event.
-    ev_state = zif_abapgit_definitions=>gc_event_state-not_handled.
+    ev_state = zif_abapgit_definitions=>c_event_state-not_handled.
   ENDMETHOD. "lif_gui_page~on_event
 
 
