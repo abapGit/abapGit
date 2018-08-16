@@ -5,10 +5,11 @@ CLASS zcl_abapgit_gui_page_db_edit DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     METHODS constructor
       IMPORTING
-        !is_key TYPE zif_abapgit_persistence=>ty_content .
+        is_key TYPE zif_abapgit_persistence=>ty_content .
 
     METHODS zif_abapgit_gui_page~on_event
         REDEFINITION .
@@ -134,6 +135,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
       iv_data  = is_content-data_str ).
 
     COMMIT WORK.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 

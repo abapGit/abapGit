@@ -5,6 +5,7 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     METHODS constructor .
 
@@ -185,6 +186,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
     ro_html->add( '</div>' ).
 
   ENDMETHOD.            "render_content
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~on_event.

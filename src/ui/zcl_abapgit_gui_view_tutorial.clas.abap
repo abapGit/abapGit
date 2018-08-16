@@ -2,6 +2,7 @@ CLASS zcl_abapgit_gui_view_tutorial DEFINITION PUBLIC FINAL CREATE PUBLIC.
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_gui_page.
+    INTERFACES zif_abapgit_gui_page_hotkey.
     ALIASES render FOR zif_abapgit_gui_page~render.
 
   PRIVATE SECTION.
@@ -62,6 +63,11 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_TUTORIAL IMPLEMENTATION.
     ENDIF.
     ro_html->add( '</li>' ).
     ro_html->add( '</ul></p>' ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 

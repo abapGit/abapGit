@@ -820,4 +820,55 @@ function setLinkHints(sLinkHintKey, sColor) {
 
 }
 
+function Hotkeys(oKeyMap){
+  this.oKeyMap = oKeyMap;
+}
 
+Hotkeys.prototype.getSapEvent = function(sSapEvent) {
+
+  var result = "";
+  var aSapEvents = document.querySelectorAll('a[href^="sapevent:' + sSapEvent + '"]');
+
+  [].forEach.call(aSapEvents, function(sapEvent){
+      if (new RegExp(sSapEvent + "$" ).test(sapEvent.href)
+      || (new RegExp(sSapEvent + "\\?" ).test(sapEvent.href))) {
+        result = sapEvent.href.replace("sapevent:","");
+      }
+    });
+
+  return result;
+
+}
+
+Hotkeys.prototype.onkeydown = function(oEvent){
+
+  if (oEvent.defaultPrevented) {
+      return;
+  }
+
+  var activeElementType = ((document.activeElement && document.activeElement.nodeName) || "");
+
+  if (activeElementType === "INPUT" || activeElementType === "TEXTAREA") {
+    return
+  }
+
+  var 
+    sKey = oEvent.key || oEvent.keyCode,
+    oHotkey = this.oKeyMap[sKey];
+
+  if (oHotkey) {
+    var sSapEvent = this.getSapEvent(oHotkey);
+    if (sSapEvent) {
+      submitSapeventForm({}, sSapEvent, "post");
+      oEvent.preventDefault();
+    }
+  }
+}
+
+function setKeyBindings(oKeyMap){
+
+  var oHotkeys = new Hotkeys(oKeyMap);
+
+  document.addEventListener('keydown', oHotkeys.onkeydown.bind(oHotkeys));
+
+}

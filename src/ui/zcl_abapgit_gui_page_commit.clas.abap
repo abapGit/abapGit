@@ -5,6 +5,7 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     CONSTANTS:
       BEGIN OF c_action,
@@ -14,10 +15,10 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
 
     METHODS constructor
       IMPORTING
-        !io_repo  TYPE REF TO zcl_abapgit_repo_online
-        !io_stage TYPE REF TO zcl_abapgit_stage
+        io_repo  TYPE REF TO zcl_abapgit_repo_online
+        io_stage TYPE REF TO zcl_abapgit_stage
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
     METHODS zif_abapgit_gui_page~on_event
         REDEFINITION .
@@ -322,6 +323,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
     ro_html = super->scripts( ).
 
     ro_html->add( 'setInitialFocus("comment");' ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 

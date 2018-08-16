@@ -5,10 +5,11 @@ CLASS zcl_abapgit_gui_page_bkg DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     METHODS constructor
       IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key .
+        iv_key TYPE zif_abapgit_persistence=>ty_repo-key .
 
     METHODS zif_abapgit_gui_page~on_event
         REDEFINITION .
@@ -303,6 +304,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
     MESSAGE 'Saved' TYPE 'S' ##NO_TEXT.
 
     COMMIT WORK.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 

@@ -58,6 +58,13 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   TYPES:
     ty_git_tag_list_tt TYPE STANDARD TABLE OF ty_git_tag WITH DEFAULT KEY .
 
+  TYPES:
+    BEGIN OF ty_hotkey,
+      sequence TYPE string,
+      action   TYPE string,
+    END OF ty_hotkey,
+    tty_hotkey TYPE STANDARD TABLE OF ty_hotkey
+                    WITH NON-UNIQUE DEFAULT KEY.
 
   CONSTANTS:
     BEGIN OF c_git_branch_type,
@@ -334,6 +341,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
            link_hints_enabled         TYPE abap_bool,
            link_hint_key              TYPE char01,
            link_hint_background_color TYPE string,
+           hotkeys                    TYPE tty_hotkey,
          END OF ty_s_user_settings.
 
   CONSTANTS:

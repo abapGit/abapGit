@@ -4,6 +4,8 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
   CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
+    INTERFACES: zif_abapgit_gui_page_hotkey.
+
     CONSTANTS: BEGIN OF c_action,
                  stage_all    TYPE string VALUE 'stage_all',
                  stage_commit TYPE string VALUE 'stage_commit',
@@ -361,6 +363,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     ro_html->add( 'var gHelper = new StageHelper(gStageParams);' ).
 
   ENDMETHOD.  "scripts
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~on_event.

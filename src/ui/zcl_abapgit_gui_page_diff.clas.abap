@@ -4,6 +4,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
   CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
+    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     CONSTANTS:
       BEGIN OF c_fstate,
@@ -26,9 +27,9 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
 
     METHODS:
       constructor
-        IMPORTING iv_key           TYPE zif_abapgit_persistence=>ty_repo-key
-                  is_file          TYPE zif_abapgit_definitions=>ty_file OPTIONAL
-                  is_object        TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+        IMPORTING iv_key    TYPE zif_abapgit_persistence=>ty_repo-key
+                  is_file   TYPE zif_abapgit_definitions=>ty_file OPTIONAL
+                  is_object TYPE zif_abapgit_definitions=>ty_item OPTIONAL
         RAISING   zcx_abapgit_exception,
       zif_abapgit_gui_page~on_event REDEFINITION.
   PROTECTED SECTION.
@@ -75,7 +76,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
                 is_status TYPE zif_abapgit_definitions=>ty_result
       RAISING   zcx_abapgit_exception.
     METHODS build_menu
-      RETURNING VALUE(ro_menu)   TYPE REF TO zcl_abapgit_html_toolbar.
+      RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
     METHODS is_binary
       IMPORTING iv_d1         TYPE xstring
                 iv_d2         TYPE xstring
@@ -84,7 +85,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
 
   METHOD append_diff.
@@ -646,4 +647,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
+
 ENDCLASS.

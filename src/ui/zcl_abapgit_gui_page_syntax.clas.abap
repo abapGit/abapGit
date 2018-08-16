@@ -2,6 +2,8 @@ CLASS zcl_abapgit_gui_page_syntax DEFINITION PUBLIC FINAL CREATE PUBLIC
     INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
+    INTERFACES: zif_abapgit_gui_page_hotkey.
+
     METHODS:
       constructor
         IMPORTING io_repo TYPE REF TO zcl_abapgit_repo.
@@ -16,7 +18,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -50,4 +52,9 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
     ro_html->add( '</div>' ).
 
   ENDMETHOD.  "render_content
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
 ENDCLASS.
