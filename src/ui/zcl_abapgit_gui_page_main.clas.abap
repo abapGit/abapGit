@@ -368,6 +368,11 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     ls_hotkey_action-default_hotkey = |s|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
+    ls_hotkey_action-name           = |Main: Switch branch|.
+    ls_hotkey_action-action         = zif_abapgit_definitions=>c_action-git_branch_switch.
+    ls_hotkey_action-default_hotkey = |b|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
     ls_hotkey_action-name           = |Main: Repo overview|.
     ls_hotkey_action-action         = zif_abapgit_definitions=>c_action-go_repo_overview.
     ls_hotkey_action-default_hotkey = |o|.
