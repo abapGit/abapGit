@@ -125,7 +125,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
                && zcl_abapgit_html=>a(
                     iv_txt   = '&#x274c;'
                     iv_typ   = zif_abapgit_definitions=>c_action_type-onclick
-                    iv_act   = 'displayNews()'
+                    iv_act   = 'closeHotkeyOverview()'
                     iv_class = 'close-btn' )
                && '</div></div>' ).
 
