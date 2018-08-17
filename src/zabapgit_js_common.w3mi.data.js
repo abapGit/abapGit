@@ -555,6 +555,12 @@ function displayNews() {
   div.style.display = (div.style.display) ? '' : 'none';
 }
 
+// Hotkey Overview 
+function closeHotkeyOverview() {
+  var div = document.getElementById("hotkeys");
+  div.style.display = (div.style.display) ? '' : 'none';
+}
+
 function KeyNavigation() {
   
 }
