@@ -11,7 +11,7 @@ order: 5
 
 3: Do the required changes to classes and/or main program
 
-4: Create the pull request with the changes
+4: Create the pull request with the changes. Look here for further help: [https://opensource.guide/how-to-contribute/#opening-a-pull-request](https://opensource.guide/how-to-contribute/#opening-a-pull-request)
 
 5: After the pull request is merged, abapmerge will automatically run to build the report version of abapGit.
 
