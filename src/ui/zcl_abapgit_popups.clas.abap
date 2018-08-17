@@ -934,15 +934,17 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
 
-    add_field( EXPORTING iv_tabname   = 'ABAPTXT255'
-                         iv_fieldname = 'LINE'
-                         iv_fieldtext = 'Name'
-               CHANGING ct_fields     = lt_fields ).
+    add_field( EXPORTING iv_tabname    = 'ABAPTXT255'
+                         iv_fieldname  = 'LINE'
+                         iv_fieldtext  = 'Name'
+                         iv_obligatory = abap_true
+               CHANGING  ct_fields     = lt_fields ).
 
-    add_field( EXPORTING iv_tabname   = 'TDEVC'
-                         iv_fieldname = 'DEVCLASS'
-                         iv_fieldtext = 'Package'
-               CHANGING ct_fields     = lt_fields ).
+    add_field( EXPORTING iv_tabname    = 'TDEVC'
+                         iv_fieldname  = 'DEVCLASS'
+                         iv_fieldtext  = 'Package'
+                         iv_obligatory = abap_true
+               CHANGING  ct_fields     = lt_fields ).
 
     WHILE lv_finished = abap_false.
 
