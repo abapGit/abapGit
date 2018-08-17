@@ -18,8 +18,8 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION PUBLIC FINAL CREATE PUBLIC.
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS render_item_state
-      IMPORTING iv_lstate            TYPE char1
-                iv_rstate            TYPE char1
+      IMPORTING iv_lstate      TYPE char1
+                iv_rstate      TYPE char1
       RETURNING VALUE(rv_html) TYPE string.
 
     CLASS-METHODS render_branch_span
@@ -49,7 +49,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
+CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
 
   METHOD render_branch_span.
@@ -128,6 +128,8 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
                     iv_act   = 'closeHotkeyOverview()'
                     iv_class = 'close-btn' )
                && '</div></div>' ).
+
+    ro_html->add( |<div class="paddings">Close window with ? or upper right corner X</div>| ).
 
     " Generate hotkeys
     ro_html->add( |<div class="newslist">| ).
