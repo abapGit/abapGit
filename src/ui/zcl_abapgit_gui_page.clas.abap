@@ -1,7 +1,13 @@
 CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_gui_page.
+    INTERFACES:
+      zif_abapgit_gui_page.
+
+    CLASS-METHODS:
+      get_hotkey_actions
+        RETURNING
+          VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action.
 
   PROTECTED SECTION.
 
@@ -57,26 +63,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page IMPLEMENTATION.
-
-
-  METHOD footer.
-
-    CREATE OBJECT ro_html.
-
-    ro_html->add( '<div id="footer">' ).                    "#EC NOTEXT
-
-    ro_html->add( '<img src="img/logo" alt="logo">' ).      "#EC NOTEXT
-    ro_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
-
-    ro_html->add( '<td class="w40"></td>' ).                "#EC NOTEXT
-    ro_html->add( |<td><span class="version">{ zif_abapgit_version=>gc_abap_version }</span></td>| ). "#EC NOTEXT
-    ro_html->add( '<td id="debug-output" class="w40"></td>' ). "#EC NOTEXT
-
-    ro_html->add( '</tr></table>' ).                        "#EC NOTEXT
-    ro_html->add( '</div>' ).                               "#EC NOTEXT
-
-  ENDMETHOD. "footer
+CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
 
   METHOD add_hotkeys.
@@ -103,6 +90,39 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     lv_json = lv_json && `}`.
 
     io_html->add( |setKeyBindings({ lv_json });| ).
+
+  ENDMETHOD.
+
+
+  METHOD footer.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( '<div id="footer">' ).                    "#EC NOTEXT
+
+    ro_html->add( '<img src="img/logo" alt="logo">' ).      "#EC NOTEXT
+    ro_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
+
+    ro_html->add( '<td class="w40"></td>' ).                "#EC NOTEXT
+    ro_html->add( |<td><span class="version">{ zif_abapgit_version=>gc_abap_version }</span></td>| ). "#EC NOTEXT
+    ro_html->add( '<td id="debug-output" class="w40"></td>' ). "#EC NOTEXT
+
+    ro_html->add( '</tr></table>' ).                        "#EC NOTEXT
+    ro_html->add( '</div>' ).                               "#EC NOTEXT
+
+  ENDMETHOD. "footer
+
+
+  METHOD get_hotkey_actions.
+
+    " these are the global shortcuts active on all pages
+
+    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+
+    ls_hotkey_action-name           = |Global: Show hotkeys|.
+    ls_hotkey_action-action         = |showHotkeys|.
+    ls_hotkey_action-default_hotkey = |?|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
 

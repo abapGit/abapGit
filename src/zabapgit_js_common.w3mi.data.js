@@ -827,7 +827,45 @@ function setLinkHints(sLinkHintKey, sColor) {
 }
 
 function Hotkeys(oKeyMap){
+
+  var that = this;  
   this.oKeyMap = oKeyMap || {};
+
+  // these are the hotkeys provided by the backend
+  Object.keys(this.oKeyMap).forEach(function(sKey){
+
+    var action = that.oKeyMap[sKey]; 
+    
+    // We replace the actions with callback functions to unify
+    // the hotkey execution
+    that.oKeyMap[sKey] = function(oEvent) {
+
+      // We have either a js function
+      if (that[action]) {
+        that[action].call(that);
+        return;
+      }
+      
+      // Or a SAP event
+      var sUiSapEvent = that.getSapEvent(action);
+      if (sUiSapEvent) {
+        submitSapeventForm({}, sUiSapEvent, "post");
+        oEvent.preventDefault();
+        return;
+      }
+
+    }
+
+  });
+
+}
+
+Hotkeys.prototype.showHotkeys = function() {
+  var elHotkeys = document.querySelector('#hotkeys');
+  
+  if (elHotkeys) {
+    elHotkeys.style.display = (elHotkeys.style.display) ? '' : 'none';
+  }
 }
 
 Hotkeys.prototype.getSapEvent = function(sSapEvent) {
@@ -860,20 +898,10 @@ Hotkeys.prototype.onkeydown = function(oEvent){
 
   var 
     sKey = oEvent.key || oEvent.keyCode,
-    oHotkey = this.oKeyMap[sKey];
+    fnHotkey = this.oKeyMap[sKey];
 
-  if (oHotkey) {
-    var sSapEvent = this.getSapEvent(oHotkey);
-    if (sSapEvent) {
-      submitSapeventForm({}, sSapEvent, "post");
-      oEvent.preventDefault();
-    }
-  } else if (sKey === "?" ) {
-    var elHotkeys = document.querySelector('#hotkeys');
-    
-    if (elHotkeys) {
-      elHotkeys.style.display = (elHotkeys.style.display) ? '' : 'none';
-    }
+  if (fnHotkey) {
+    fnHotkey.call(this, oEvent);
   }
 }
 

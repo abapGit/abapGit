@@ -53,6 +53,10 @@ CLASS zcl_abapgit_hotkeys IMPLEMENTATION.
 
     ENDLOOP.
 
+    " the global shortcuts are defined in the base class
+    lt_hotkey_actions = zcl_abapgit_gui_page=>get_hotkey_actions( ).
+    INSERT LINES OF lt_hotkey_actions INTO TABLE rt_hotkey_actions.
+
     SORT rt_hotkey_actions.
     DELETE ADJACENT DUPLICATES FROM rt_hotkey_actions.
 
@@ -64,7 +68,8 @@ CLASS zcl_abapgit_hotkeys IMPLEMENTATION.
     DATA: lo_settings                    TYPE REF TO zcl_abapgit_settings,
           lv_class_name                  TYPE abap_abstypename,
           lt_hotkey_actions_of_curr_page TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action,
-          lv_save_tabix                  TYPE syst-tabix.
+          lv_save_tabix                  TYPE syst-tabix,
+          lt_hotkey_actions              TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action.
 
     FIELD-SYMBOLS: <ls_hotkey>              TYPE zif_abapgit_definitions=>ty_hotkey.
 
@@ -83,6 +88,10 @@ CLASS zcl_abapgit_hotkeys IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
+    " these are the global shortcuts
+    lt_hotkey_actions = zcl_abapgit_gui_page=>get_hotkey_actions( ).
+    INSERT LINES OF lt_hotkey_actions INTO TABLE lt_hotkey_actions_of_curr_page.
+
     LOOP AT rt_hotkeys ASSIGNING <ls_hotkey>.
 
       lv_save_tabix = sy-tabix.
@@ -91,7 +100,7 @@ CLASS zcl_abapgit_hotkeys IMPLEMENTATION.
                                                 WITH TABLE KEY action
                                                 COMPONENTS action = <ls_hotkey>-action.
       IF sy-subrc <> 0.
-        " We only offer hotkeys which are supported by the current page
+        " We only offer hotkeys which are supported by the current page or globally
         DELETE rt_hotkeys INDEX lv_save_tabix.
       ENDIF.
 
