@@ -129,7 +129,12 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
                     iv_class = 'close-btn' )
                && '</div></div>' ).
 
-    ro_html->add( |<div class="paddings">Close window with ? or upper right corner X</div>| ).
+    READ TABLE lt_hotkeys ASSIGNING <ls_hotkey>
+                          WITH KEY action = zcl_abapgit_gui_page=>c_global_page_action-showhotkeys.
+    IF sy-subrc = 0.
+      ro_html->add( |<div class="paddings">Close window with '{ <ls_hotkey>-sequence }' |
+                 && |or upper right corner X</div>| ).
+    ENDIF.
 
     " Generate hotkeys
     ro_html->add( |<div class="newslist">| ).
