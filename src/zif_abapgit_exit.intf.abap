@@ -9,14 +9,21 @@ INTERFACE zif_abapgit_exit PUBLIC.
     allow_sap_objects
       RETURNING VALUE(rv_allowed) TYPE abap_bool,
     change_proxy_url
-      IMPORTING iv_repo_url TYPE csequence
+      IMPORTING iv_repo_url  TYPE csequence
       CHANGING  cv_proxy_url TYPE string,
     change_proxy_port
-      IMPORTING iv_repo_url  TYPE csequence
+      IMPORTING iv_repo_url   TYPE csequence
       CHANGING  cv_proxy_port TYPE string,
     change_proxy_authentication
-      IMPORTING iv_repo_url            TYPE csequence
+      IMPORTING iv_repo_url             TYPE csequence
       CHANGING  cv_proxy_authentication TYPE abap_bool,
+    create_http_client
+      IMPORTING
+        iv_url           TYPE string
+      RETURNING
+        VALUE(ri_client) TYPE REF TO if_http_client
+      RAISING
+        zcx_abapgit_exception,
     http_client
       IMPORTING
         ii_client TYPE REF TO if_http_client,
