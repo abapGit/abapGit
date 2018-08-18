@@ -93,6 +93,16 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_exit~create_http_client.
+
+    TRY.
+        ri_client = gi_exit->create_http_client( iv_url ).
+      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_exit~http_client.
 
     TRY.

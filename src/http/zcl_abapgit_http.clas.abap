@@ -36,7 +36,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
+CLASS zcl_abapgit_http IMPLEMENTATION.
 
 
   METHOD acquire_login_details.
@@ -124,30 +124,36 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
 
     CREATE OBJECT lo_proxy_configuration.
 
-    cl_http_client=>create_by_url(
-      EXPORTING
-        url                = zcl_abapgit_url=>host( iv_url )
-        ssl_id             = 'ANONYM'
-        proxy_host         = lo_proxy_configuration->get_proxy_url( iv_url )
-        proxy_service      = lo_proxy_configuration->get_proxy_port( iv_url )
-      IMPORTING
-        client             = li_client
-      EXCEPTIONS
-        argument_not_found = 1
-        plugin_not_active  = 2
-        internal_error     = 3
-        OTHERS             = 4 ).
-    IF sy-subrc <> 0.
-      CASE sy-subrc.
-        WHEN 1.
-          " make sure:
-          " a) SSL is setup properly in STRUST
-          lv_text = 'HTTPS ARGUMENT_NOT_FOUND | STRUST/SSL Setup correct?'.
-        WHEN OTHERS.
-          lv_text = 'While creating HTTP Client'.           "#EC NOTEXT
+    li_client = zcl_abapgit_exit=>get_instance( )->create_http_client( iv_url ).
 
-      ENDCASE.
-      zcx_abapgit_exception=>raise( lv_text ).
+    IF li_client IS NOT BOUND.
+
+      cl_http_client=>create_by_url(
+        EXPORTING
+          url                = zcl_abapgit_url=>host( iv_url )
+          ssl_id             = 'ANONYM'
+          proxy_host         = lo_proxy_configuration->get_proxy_url( iv_url )
+          proxy_service      = lo_proxy_configuration->get_proxy_port( iv_url )
+        IMPORTING
+          client             = li_client
+        EXCEPTIONS
+          argument_not_found = 1
+          plugin_not_active  = 2
+          internal_error     = 3
+          OTHERS             = 4 ).
+      IF sy-subrc <> 0.
+        CASE sy-subrc.
+          WHEN 1.
+            " make sure:
+            " a) SSL is setup properly in STRUST
+            lv_text = 'HTTPS ARGUMENT_NOT_FOUND | STRUST/SSL Setup correct?'.
+          WHEN OTHERS.
+            lv_text = 'While creating HTTP Client'.         "#EC NOTEXT
+
+        ENDCASE.
+        zcx_abapgit_exception=>raise( lv_text ).
+      ENDIF.
+
     ENDIF.
 
     IF lo_proxy_configuration->get_proxy_authentication( iv_url ) = abap_true.
