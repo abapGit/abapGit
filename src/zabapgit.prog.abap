@@ -55,6 +55,7 @@ START-OF-SELECTION.
 
 * Hide Execute button from screen
 AT SELECTION-SCREEN OUTPUT.
+  zcl_abapgit_gui=>set_all_visible( cl_gui_control=>visible_true ).
   IF sy-dynnr = lcl_password_dialog=>c_dynnr.
     lcl_password_dialog=>on_screen_output( ).
   ELSE.
@@ -66,6 +67,10 @@ AT SELECTION-SCREEN ON EXIT-COMMAND.
   PERFORM exit.
 
 AT SELECTION-SCREEN.
+  IF sscrfields-ucomm = 'SPOS'. " save variant - it's for abapGit background mode
+    zcl_abapgit_gui=>set_all_visible( cl_gui_control=>visible_false ).
+    RETURN.
+  ENDIF.
   IF sy-dynnr = lcl_password_dialog=>c_dynnr.
     lcl_password_dialog=>on_screen_event( sscrfields-ucomm ).
   ENDIF.
