@@ -25,11 +25,14 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         exception_classes TYPE abap_bool,
       END OF ty_function .
     TYPES:
-      ty_function_tt TYPE STANDARD TABLE OF ty_function WITH DEFAULT KEY .
+      ty_function_tt TYPE STANDARD TABLE OF ty_function WITH DEFAULT KEY.
+
+    TYPES:
+      ty_sobj_name_tt TYPE STANDARD TABLE OF sobj_name WITH DEFAULT KEY.
 
     METHODS update_where_used
       IMPORTING
-        !it_includes TYPE rso_t_objnm .
+        !it_includes TYPE ty_sobj_name_tt .
     METHODS main_name
       RETURNING
         VALUE(rv_program) TYPE program
@@ -42,7 +45,7 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         zcx_abapgit_exception .
     METHODS includes
       RETURNING
-        VALUE(rt_includes) TYPE rso_t_objnm
+        VALUE(rt_includes) TYPE ty_sobj_name_tt
       RAISING
         zcx_abapgit_exception .
     METHODS serialize_functions
@@ -243,7 +246,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
     DATA: lo_xml       TYPE REF TO zcl_abapgit_xml_input,
           ls_progdir   TYPE ty_progdir,
-          lt_includes  TYPE rso_t_objnm,
+          lt_includes  TYPE ty_sobj_name_tt,
           lt_tpool     TYPE textpool_table,
           lt_tpool_ext TYPE zif_abapgit_definitions=>ty_tpool_tt,
           lt_source    TYPE TABLE OF abaptxt255.
@@ -384,7 +387,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
   METHOD get_abap_version.
 
-    DATA: lt_includes TYPE rso_t_objnm,
+    DATA: lt_includes TYPE ty_sobj_name_tt,
           ls_progdir  TYPE ty_progdir,
           lo_xml      TYPE REF TO zcl_abapgit_xml_input.
 
@@ -523,7 +526,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
   METHOD is_any_include_locked.
 
-    DATA: lt_includes TYPE rso_t_objnm.
+    DATA: lt_includes TYPE ty_sobj_name_tt.
     FIELD-SYMBOLS: <lv_include> TYPE sobj_name.
 
     TRY.
@@ -667,7 +670,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
   METHOD serialize_includes.
 
-    DATA: lt_includes TYPE rso_t_objnm.
+    DATA: lt_includes TYPE ty_sobj_name_tt.
 
     FIELD-SYMBOLS: <lv_include> LIKE LINE OF lt_includes.
 
@@ -689,7 +692,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
   METHOD serialize_xml.
 
-    DATA: lt_includes TYPE rso_t_objnm,
+    DATA: lt_includes TYPE ty_sobj_name_tt,
           lv_areat    TYPE tlibt-areat.
 
 
@@ -755,7 +758,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
     DATA: lt_stamps   TYPE STANDARD TABLE OF ty_stamps WITH DEFAULT KEY,
           lv_program  TYPE program,
-          lt_includes TYPE rso_t_objnm.
+          lt_includes TYPE ty_sobj_name_tt.
 
     FIELD-SYMBOLS: <ls_stamp>   LIKE LINE OF lt_stamps,
                    <lv_include> LIKE LINE OF lt_includes.
@@ -821,7 +824,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
 
     DATA: lv_area     TYPE rs38l-area,
-          lt_includes TYPE rso_t_objnm.
+          lt_includes TYPE ty_sobj_name_tt.
 
 
     lt_includes = includes( ).
@@ -911,7 +914,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
   METHOD zif_abapgit_object~has_changed_since.
 
     DATA: lt_functab  TYPE ty_rs38l_incl_tt,
-          lt_includes TYPE rso_t_objnm.
+          lt_includes TYPE ty_sobj_name_tt.
 
     FIELD-SYMBOLS: <ls_func>         LIKE LINE OF lt_functab,
                    <lv_include_name> LIKE LINE OF lt_includes.
