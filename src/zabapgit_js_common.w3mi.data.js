@@ -273,7 +273,7 @@ StageHelper.prototype.onTableClick = function (event) {
   }
 
   this.updateMenu();
-}
+};
 
 // Search object
 StageHelper.prototype.onSearch = function (e) {
@@ -666,7 +666,7 @@ function enableArrowListNavigation() {
 
   document.addEventListener('keydown', oKeyNavigation.onkeydown.bind(oKeyNavigation));
 
-};
+}
 
 function LinkHints(sLinkHintKey, sColor){
   this.sLinkHintKey = sLinkHintKey; 
@@ -707,13 +707,12 @@ LinkHints.prototype.fnRenderTooltips = function () {
   // we stick to numeric values and just increment them.
 
   var
-    iTooltipCounter = this.getTooltipStartValue(this.aTooltipElements.length),
-    that = this;
+    iTooltipCounter = this.getTooltipStartValue(this.aTooltipElements.length);
 
   [].forEach.call(this.aTooltipElements, function(oTooltip){
     iTooltipCounter += 1;
     this.fnRenderTooltip(oTooltip, iTooltipCounter)
-  }.bind(that));
+  }.bind(this));
 
 };
 
@@ -738,8 +737,6 @@ LinkHints.prototype.fnRemoveAllTooltips = function () {
 
 LinkHints.prototype.fnFilterTooltips = function (sPending) {
 
-  var that = this;
-
   Object
     .keys(this.oTooltipMap)
     .forEach(function (sKey) {
@@ -756,7 +753,7 @@ LinkHints.prototype.fnFilterTooltips = function (sPending) {
         oTooltip.classList.add('hidden');
       }
 
-    }.bind(that));
+    }.bind(this));
 
 };
 
@@ -828,26 +825,30 @@ function setLinkHints(sLinkHintKey, sColor) {
 
 function Hotkeys(oKeyMap){
 
-  var that = this;  
   this.oKeyMap = oKeyMap || {};
 
   // these are the hotkeys provided by the backend
   Object.keys(this.oKeyMap).forEach(function(sKey){
 
-    var action = that.oKeyMap[sKey]; 
+    var action = this.oKeyMap[sKey]; 
     
     // We replace the actions with callback functions to unify
     // the hotkey execution
-    that.oKeyMap[sKey] = function(oEvent) {
+    this.oKeyMap[sKey] = function(oEvent) {
 
-      // We have either a js function
-      if (that[action]) {
-        that[action].call(that);
+      // We have either a js function on this
+      if (this[action]) {
+        this[action].call(this);
         return;
+      }
+
+      // Or a global function
+      if (window[action]) {
+        window[action].call(this);
       }
       
       // Or a SAP event
-      var sUiSapEvent = that.getSapEvent(action);
+      var sUiSapEvent = this.getSapEvent(action);
       if (sUiSapEvent) {
         submitSapeventForm({}, sUiSapEvent, "post");
         oEvent.preventDefault();
@@ -856,7 +857,7 @@ function Hotkeys(oKeyMap){
 
     }
 
-  });
+  }.bind(this));
 
 }
 
@@ -910,5 +911,167 @@ function setKeyBindings(oKeyMap){
   var oHotkeys = new Hotkeys(oKeyMap);
 
   document.addEventListener('keydown', oHotkeys.onkeydown.bind(oHotkeys));
+
+}
+
+/* 
+  Patch / git add -p
+  */
+
+function Patch() {
+
+  this.CSS_CLASS = {
+    ADD: 'add',
+    REMOVE: 'remove',
+    PATCH: 'patch',
+    PATCH_ACTIVE: 'patch-active'
+  }
+
+  this.ID = {
+    STAGE: 'stage',
+    PATCH_ADD_ALL: 'patch_add_all',
+    PATCH_REMOVE_ALL: 'patch_remove_all'
+  }
+  
+  this.ACTION = {
+    PATCH_STAGE: 'patch_stage'
+  }
+
+}
+
+function CSSPatchClassCombination(sClassLinkClicked, sClassCorrespondingLink){
+  this.sClassLinkClicked = sClassLinkClicked;
+  this.sClassCorrespondingLink = sClassCorrespondingLink;
+}
+
+Patch.prototype.preparePatch = function(){
+
+  var oAddRemove = new CSSPatchClassCombination(this.CSS_CLASS.ADD, this.CSS_CLASS.REMOVE);
+  var oRemoveAdd = new CSSPatchClassCombination(this.CSS_CLASS.REMOVE, this.CSS_CLASS.ADD);
+
+  this.registerClickHandlerForPatchLink(oAddRemove);
+  this.registerClickHandlerForPatchLink(oRemoveAdd);
+
+  this.registerClickHandlerForPatchLinkAll('#' + this.ID.PATCH_ADD_ALL, oAddRemove);
+  this.registerClickHandlerForPatchLinkAll('#' + this.ID.PATCH_REMOVE_ALL, oRemoveAdd);
+
+}
+
+
+Patch.prototype.registerClickHandlerForPatchLink = function(oClassCombination) {
+  // register onclick handler. When a link is clicked it is 
+  // deactivated and its corresponding link gets active
+  //
+  // e.g. if you click on 'add' add is deactivated and 'remove' 
+  // is activated.
+
+  var elLinkAll = document.querySelectorAll('.' + this.CSS_CLASS.PATCH + ' a.' + oClassCombination.sClassLinkClicked);
+  
+  [].forEach.call(elLinkAll,function(elLink){
+
+    elLink.addEventListener('click',function(oEvent){
+      this.togglePatchActiveForClassLink(oEvent, elLink, oClassCombination);
+    }.bind(this));
+
+  }.bind(this));
+
+}
+
+Patch.prototype.togglePatchActive = function(oEvent, elClicked, elCorrespondingLink){ 
+
+  if (!elClicked.classList.contains(this.CSS_CLASS.PATCH_ACTIVE)){
+    elClicked.classList.toggle(this.CSS_CLASS.PATCH_ACTIVE);
+    elCorrespondingLink.classList.toggle(this.CSS_CLASS.PATCH_ACTIVE);
+  }
+
+  oEvent.preventDefault();
+}
+
+
+Patch.prototype.togglePatchActiveForClassLink = function(oEvent, elClicked, oClassCombination) {
+
+  var oRegexPatchClassPrefix = new RegExp('^' + oClassCombination.sClassLinkClicked );
+  var sCorrespondingLinkId = elClicked.id.replace(oRegexPatchClassPrefix, oClassCombination.sClassCorrespondingLink);
+  var elCorrespondingLink = document.querySelector('#' + this.escapeDots(sCorrespondingLinkId));
+
+  this.togglePatchActive(oEvent, elClicked, elCorrespondingLink);
+}
+
+Patch.prototype.escapeDots = function(sFileName){
+  return sFileName.replace(/\./g,'\\.');
+}
+
+Patch.prototype.patchLinkClickAll = function(oClassCombination) {
+  return function(oEvent) {
+
+    var sTableId = oEvent.srcElement.parentElement.parentElement.parentElement.parentElement.id;
+    var elAddAll = document.querySelectorAll('#' + this.escapeDots(sTableId) + ' a.' + oClassCombination.sClassLinkClicked);
+    
+    [].forEach.call(elAddAll,function(elem){
+      this.togglePatchActiveForClassLink(oEvent, elem, oClassCombination);
+    }.bind(this));
+
+    oEvent.preventDefault();
+
+  }
+}
+
+Patch.prototype.registerClickHandlerForPatchLinkAll = function(sSelector, oClassCombination){
+
+  var elAll = document.querySelectorAll(sSelector);
+
+  [].forEach.call(elAll, function(elem){
+    elem.addEventListener('click', this.patchLinkClickAll(oClassCombination).bind(this));
+  }.bind(this));
+
+}
+
+Patch.prototype.registerStagePatch = function registerStagePatch(){
+
+  var elStage = document.querySelector('#' + this.ID.STAGE);
+  elStage.addEventListener('click', this.stagePatch.bind(this));
+
+  // for hotkeys
+  window.stagePatch = function(){
+    this.stagePatch();
+  }.bind(this);
+
+}
+
+Patch.prototype.stagePatch = function() {
+
+  // Collect add and remove info and submit to backend
+
+  var aAddPatch = this.collectActiveElementsForSelector('.' + this.CSS_CLASS.PATCH +' a.' + this.CSS_CLASS.ADD);
+  var aRemovePatch = this.collectActiveElementsForSelector('.' + this.CSS_CLASS.PATCH + ' a.' + this.CSS_CLASS.REMOVE);
+
+  submitSapeventForm({'add': aAddPatch, 'remove': aRemovePatch}, this.ACTION.PATCH_STAGE, "post");
+
+}
+
+Patch.prototype.collectActiveElementsForSelector = function(sSelector){
+
+  return [].slice.call(document.querySelectorAll(sSelector))
+    .filter(function(elem){
+      return elem.classList.contains(this.CSS_CLASS.PATCH_ACTIVE)
+    }.bind(this))
+    .map(function(elem){
+      return elem.id;
+    });
+
+};
+
+
+function preparePatch(){
+
+  var oPatch = new Patch();
+  oPatch.preparePatch();
+
+}
+
+function registerStagePatch(){
+
+  var oPatch = new Patch();
+  oPatch.registerStagePatch();
 
 }

@@ -498,6 +498,18 @@ table.diff_tab td.num, th.num {
   -ms-user-select: none;
   user-select: none;
 }
+table.diff_tab td.patch, th.patch {
+  width: 1%;
+  min-width: 6em;
+  padding-right: 8px;
+  padding-left:  8px;
+  text-align: right !important;
+  color: #ccc;
+  border-left: 1px solid #eee;
+  border-right: 1px solid #eee;
+  -ms-user-select: none;
+  user-select: none;
+}
 table.diff_tab td.num::before {
   content: attr(line-num);
 }
@@ -875,4 +887,9 @@ div.news .update {
     border-width: 5px;
     border-style: solid;
     border-color: #555 transparent transparent transparent;
+}
+
+/* diff-patch */
+.patch-active {
+  color: lightgrey !important; 
 }

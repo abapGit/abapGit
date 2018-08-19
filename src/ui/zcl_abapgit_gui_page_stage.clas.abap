@@ -70,7 +70,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -182,7 +182,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
   METHOD render_actions.
 
     DATA: lv_local_count TYPE i,
-          lv_add_all_txt TYPE string.
+          lv_add_all_txt TYPE string,
+          lv_param       TYPE string,
+          ls_file        TYPE zif_abapgit_definitions=>ty_file.
 
     CREATE OBJECT ro_html.
     lv_local_count = lines( ms_files-local ).
@@ -204,6 +206,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     ro_html->add_a( iv_act = |{ c_action-stage_all }|
                     iv_id  = 'commitAllButton'
                     iv_txt = lv_add_all_txt ) ##NO_TEXT.
+
+    lv_param = zcl_abapgit_html_action_utils=>file_encode( iv_key  = mo_repo->get_key( )
+                                                           ig_file = ls_file ).
+
+
+    ro_html->add( '</td>' ).
+
+    ro_html->add( '<td class="pad-sides">' ).
+    ro_html->add_a(
+      iv_txt = |Patch|
+      iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?{ lv_param }| ).
     ro_html->add( '</td>' ).
 
     " Filter bar
@@ -212,7 +225,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
                   ' type="search" placeholder="Filter objects">' ).
     ro_html->add( '</td>' ).
 
-    ro_html->add( '</tr></table>' ).
+    ro_html->add( '</tr>' ).
+    ro_html->add( '</table>' ).
 
   ENDMETHOD.      "render_actions
 
@@ -268,6 +282,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     ro_html->add( |<td class="status">?</td>| ).
     ro_html->add( '<td class="cmd"></td>' ). " Command added in JS
+
     ro_html->add( '</tr>' ).
 
   ENDMETHOD.  "render_file
@@ -366,6 +381,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+    DATA: ls_hotkey_action TYPE zif_abapgit_gui_page_hotkey=>ty_hotkey_action.
+
+    ls_hotkey_action-name           = |Stage: Patch|.
+    ls_hotkey_action-action         = zif_abapgit_definitions=>c_action-go_patch.
+    ls_hotkey_action-default_hotkey = |p|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
 
