@@ -1,4 +1,3 @@
-TEST
 [![Build Status](https://travis-ci.org/larshp/abapGit.svg?branch=master)](https://travis-ci.org/larshp/abapGit)
 [![abaplint](https://abaplint.org/badges/larshp/abapGit)](https://abaplint.org/project/larshp/abapGit)
 [![Slack](https://abapgit-slackinviter.herokuapp.com/badge.svg)](https://abapgit-slackinviter.herokuapp.com/)
