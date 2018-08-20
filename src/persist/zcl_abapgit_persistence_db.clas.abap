@@ -67,20 +67,24 @@ CLASS zcl_abapgit_persistence_db DEFINITION
         zcx_abapgit_exception .
   PRIVATE SECTION.
 
-    CLASS-DATA go_db TYPE REF TO zcl_abapgit_persistence_db .
+    CLASS-DATA:go_db                   TYPE REF TO zcl_abapgit_persistence_db ,
+               gv_update_function_name TYPE        funcname.
 
     METHODS validate_and_unprettify_xml
       IMPORTING
-        !iv_xml       TYPE string
+        iv_xml        TYPE string
       RETURNING
         VALUE(rv_xml) TYPE string
       RAISING
         zcx_abapgit_exception .
+    METHODS get_update_fm_name
+      RETURNING
+        VALUE(r_result) TYPE funcname.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
+CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
 
 
   METHOD add.
@@ -137,6 +141,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
 
 
   METHOD lock.
+    DATA: lv_function TYPE funcname.
 
     CALL FUNCTION 'ENQUEUE_EZABAPGIT'
       EXPORTING
@@ -152,7 +157,8 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
     ENDIF.
 
 * trigger dummy update task to automatically release locks at commit
-    CALL FUNCTION 'SRT_IDP_DBACCESS_ON_ROLLBACK'
+    lv_function = get_update_fm_name( ).
+    CALL FUNCTION lv_function
       IN UPDATE TASK.
 
   ENDMETHOD.
@@ -216,4 +222,29 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
       iv_ignore_errors = abap_false ).
 
   ENDMETHOD.  " validate_and_unprettify_xml
+
+  METHOD get_update_fm_name.
+
+    CONSTANTS:lc_func TYPE funcname VALUE 'BANK_OBJ_WORKL_RELEASE_LOCKS'.
+
+    IF gv_update_function_name = ''.
+
+      CALL FUNCTION 'FUNCTION_EXISTS'
+        EXPORTING
+          funcname           = lc_func
+        EXCEPTIONS
+          function_not_exist = 1
+          OTHERS             = 2.
+      IF sy-subrc = 0.
+        gv_update_function_name = 'SRT_IDP_DBACCESS_ON_ROLLBACK'.
+      ELSE.
+        gv_update_function_name = lc_func.
+      ENDIF.
+
+    ENDIF.
+
+    r_result = gv_update_function_name.
+
+  ENDMETHOD.
+
 ENDCLASS.
