@@ -384,8 +384,7 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
         EXCEPTIONS
           cntl_error        = 1
           cntl_system_error = 2
-          OTHERS            = 3
-      ).
+          OTHERS            = 3 ).
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'Controls error' ).
       ENDIF.
