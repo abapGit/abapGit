@@ -24,7 +24,7 @@ CLASS zcl_abapgit_gui DEFINITION
 
     CLASS-METHODS set_all_visible
       IMPORTING
-        !visible LIKE cl_gui_control=>visible_true DEFAULT cl_gui_control=>visible_true
+        !visible TYPE char1 DEFAULT cl_gui_control=>visible_true
       RAISING
         zcx_abapgit_exception .
 
