@@ -152,7 +152,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
     ENDIF.
 
 * trigger dummy update task to automatically release locks at commit
-    CALL FUNCTION 'BANK_OBJ_WORKL_RELEASE_LOCKS'
+    CALL FUNCTION 'CALL_V1_PING'
       IN UPDATE TASK.
 
   ENDMETHOD.
