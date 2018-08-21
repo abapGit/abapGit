@@ -68,7 +68,7 @@ CLASS zcl_abapgit_persistence_db DEFINITION
   PRIVATE SECTION.
 
     CLASS-DATA go_db TYPE REF TO zcl_abapgit_persistence_db .
-    DATA:gv_update_function TYPE funcname.
+    DATA: gv_update_function TYPE funcname.
 
     METHODS get_update_function RETURNING VALUE(r_funcname) TYPE funcname.
 
