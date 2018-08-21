@@ -18,9 +18,7 @@ CLASS zcl_abapgit_gui DEFINITION
       RAISING   zcx_abapgit_exception.
 
     METHODS on_event FOR EVENT sapevent OF cl_gui_html_viewer
-      IMPORTING action frame getdata postdata query_table.  "#EC NEEDED
-
-    METHODS focus.
+      IMPORTING action frame getdata postdata query_table.
 
   PRIVATE SECTION.
 
@@ -192,14 +190,6 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     startup( ).
 
   ENDMETHOD.            "constructor
-
-
-  METHOD focus.
-
-    cl_gui_control=>set_focus( mo_html_viewer ).
-
-  ENDMETHOD.
-
 
   METHOD get_current_page_name.
     IF mi_cur_page IS BOUND.

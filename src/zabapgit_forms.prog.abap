@@ -126,11 +126,6 @@ FORM output.
     TABLES
       p_exclude = lt_ucomm.
 
-  TRY.
-      zcl_abapgit_gui=>get_instance( )->focus( ).
-    CATCH zcx_abapgit_exception INTO lx_error.
-      MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
-  ENDTRY.
 ENDFORM.
 
 FORM exit RAISING zcx_abapgit_exception.
