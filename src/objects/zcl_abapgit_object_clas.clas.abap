@@ -420,23 +420,15 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD is_class_locked.
-    DATA: lv_clsname TYPE seoclsenq-clsname.
 
-    lv_clsname = ms_item-obj_name.
-    OVERLAY lv_clsname WITH '=============================='.
+    DATA: lv_argument TYPE seqg3-garg.
 
-    CALL FUNCTION 'ENQUEUE_ESEOCLASS'
-      EXPORTING
-        clsname        = lv_clsname
-      EXCEPTIONS
-        foreign_lock   = 1
-        system_failure = 2
-        OTHERS         = 3.
+    lv_argument = ms_item-obj_name.
+    OVERLAY lv_argument WITH '=============================='.
+    lv_argument = lv_argument && '*'.
 
-    rv_is_class_locked = boolc( sy-subrc <> 0 ).
+    rv_is_class_locked = exists_a_lock_entry_for( iv_lock_object = 'ESEOCLASS'
+                                                  iv_argument    = lv_argument ).
 
-    CALL FUNCTION 'DEQUEUE_ESEOCLASS'
-      EXPORTING
-        clsname = lv_clsname.
   ENDMETHOD.
 ENDCLASS.
