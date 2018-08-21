@@ -68,6 +68,9 @@ CLASS zcl_abapgit_persistence_db DEFINITION
   PRIVATE SECTION.
 
     CLASS-DATA go_db TYPE REF TO zcl_abapgit_persistence_db .
+    DATA: gv_update_function TYPE funcname.
+
+    METHODS get_update_function RETURNING VALUE(r_funcname) TYPE funcname.
 
     METHODS validate_and_unprettify_xml
       IMPORTING
@@ -80,7 +83,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
+CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
 
 
   METHOD add.
@@ -137,6 +140,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
 
 
   METHOD lock.
+    DATA: lv_dummy_update_function TYPE funcname.
 
     CALL FUNCTION 'ENQUEUE_EZABAPGIT'
       EXPORTING
@@ -151,8 +155,10 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Could not aquire lock { iv_type } { iv_value }| ).
     ENDIF.
 
+    lv_dummy_update_function = get_update_function( ).
+
 * trigger dummy update task to automatically release locks at commit
-    CALL FUNCTION 'BANK_OBJ_WORKL_RELEASE_LOCKS'
+    CALL FUNCTION lv_dummy_update_function
       IN UPDATE TASK.
 
   ENDMETHOD.
@@ -216,4 +222,22 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
       iv_ignore_errors = abap_false ).
 
   ENDMETHOD.  " validate_and_unprettify_xml
+
+  METHOD get_update_function.
+    IF gv_update_function IS INITIAL.
+      gv_update_function = 'CALL_V1_PING'.
+      CALL FUNCTION 'FUNCTION_EXISTS'
+        EXPORTING
+          funcname = gv_update_function
+        EXCEPTIONS
+          OTHERS   = 2.
+
+      IF sy-subrc <> 0.
+        gv_update_function = 'BANK_OBJ_WORKL_RELEASE_LOCKS'.
+      ENDIF.
+    ENDIF.
+    r_funcname = gv_update_function.
+
+  ENDMETHOD.
+
 ENDCLASS.
