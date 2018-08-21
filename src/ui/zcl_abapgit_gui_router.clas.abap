@@ -22,12 +22,6 @@ CLASS zcl_abapgit_gui_router DEFINITION
       RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
       RAISING   zcx_abapgit_exception.
 
-    METHODS get_page_patch
-      IMPORTING iv_getdata     TYPE clike
-                iv_prev_page   TYPE clike
-      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
-      RAISING   zcx_abapgit_exception.
-
     METHODS get_page_branch_overview
       IMPORTING iv_getdata     TYPE clike
       RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
@@ -103,35 +97,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         iv_key    = lv_key
         is_file   = ls_file
         is_object = ls_object.
-
-    ri_page = lo_page.
-
-  ENDMETHOD.
-
-
-  METHOD get_page_patch.
-
-    DATA: lo_page   TYPE REF TO zcl_abapgit_gui_page_diff,
-          lv_key    TYPE zif_abapgit_persistence=>ty_repo-key,
-          ls_file   TYPE zif_abapgit_definitions=>ty_file,
-          ls_object TYPE zif_abapgit_definitions=>ty_item,
-          lo_stage  TYPE REF TO zcl_abapgit_stage.
-
-    zcl_abapgit_html_action_utils=>file_obj_decode(
-      EXPORTING
-        iv_string = iv_getdata
-      IMPORTING
-        ev_key    = lv_key
-        eg_file   = ls_file
-        eg_object = ls_object ).
-
-    CREATE OBJECT lo_stage.
-
-    CREATE OBJECT lo_page
-      EXPORTING
-        iv_key        = lv_key
-        iv_patch_mode = abap_true
-        io_stage      = lo_stage.
 
     ri_page = lo_page.
 
@@ -248,11 +213,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
           iv_getdata   = iv_getdata
           iv_prev_page = iv_prev_page ).
         ev_state = zif_abapgit_definitions=>c_event_state-new_page_w_bookmark.
-      WHEN zif_abapgit_definitions=>c_action-go_patch.                         " Go Patch page
-        ei_page  = get_page_patch(
-          iv_getdata   = iv_getdata
-          iv_prev_page = iv_prev_page ).
-        ev_state = zif_abapgit_definitions=>c_event_state-new_page_replacing.
       WHEN zif_abapgit_definitions=>c_action-go_stage.                        " Go Staging page
         ei_page  = get_page_stage( iv_getdata ).
         IF iv_prev_page = 'PAGE_DIFF'.

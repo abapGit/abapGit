@@ -66,6 +66,11 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
     METHODS build_menu
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
+    METHODS get_page_patch
+      IMPORTING iv_getdata     TYPE clike
+                iv_prev_page   TYPE clike
+      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
+      RAISING   zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -405,23 +410,72 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
     CASE iv_action.
       WHEN c_action-stage_all.
+
         LOOP AT ms_files-local ASSIGNING <ls_file>.
           lo_stage->add( iv_path     = <ls_file>-file-path
                          iv_filename = <ls_file>-file-filename
                          iv_data     = <ls_file>-file-data ).
         ENDLOOP.
+
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
+          EXPORTING
+            io_repo  = mo_repo
+            io_stage = lo_stage.
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+
       WHEN c_action-stage_commit.
+
         process_stage_list( it_postdata = it_postdata io_stage = lo_stage ).
+
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
+          EXPORTING
+            io_repo  = mo_repo
+            io_stage = lo_stage.
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+
+      WHEN zif_abapgit_definitions=>c_action-go_patch.                         " Go Patch page
+
+        ei_page  = get_page_patch(
+          iv_getdata   = iv_getdata
+          iv_prev_page = iv_prev_page ).
+        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+
       WHEN OTHERS.
         RETURN.
     ENDCASE.
 
-    CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
-      EXPORTING
-        io_repo  = mo_repo
-        io_stage = lo_stage.
+  ENDMETHOD.
 
-    ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+
+  METHOD get_page_patch.
+
+    DATA: lo_page   TYPE REF TO zcl_abapgit_gui_page_diff,
+          lv_key    TYPE zif_abapgit_persistence=>ty_repo-key,
+          ls_file   TYPE zif_abapgit_definitions=>ty_file,
+          ls_object TYPE zif_abapgit_definitions=>ty_item,
+          lo_stage  TYPE REF TO zcl_abapgit_stage.
+
+    zcl_abapgit_html_action_utils=>file_obj_decode(
+      EXPORTING
+        iv_string = iv_getdata
+      IMPORTING
+        ev_key    = lv_key
+        eg_file   = ls_file
+        eg_object = ls_object ).
+
+    CREATE OBJECT lo_stage.
+
+    CREATE OBJECT lo_page
+      EXPORTING
+        iv_key        = lv_key
+        iv_patch_mode = abap_true
+        io_stage      = lo_stage.
+
+    ri_page = lo_page.
 
   ENDMETHOD.
+
+
 ENDCLASS.
