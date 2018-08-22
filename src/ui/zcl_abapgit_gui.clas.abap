@@ -20,6 +20,12 @@ CLASS zcl_abapgit_gui DEFINITION
     METHODS on_event FOR EVENT sapevent OF cl_gui_html_viewer
       IMPORTING action frame getdata postdata query_table.
 
+    CLASS-METHODS set_all_visible
+      IMPORTING
+        !visible TYPE char1 DEFAULT cl_gui_control=>visible_true
+      RAISING
+        zcx_abapgit_exception .
+
   PRIVATE SECTION.
 
     CLASS-DATA: go_gui TYPE REF TO zcl_abapgit_gui.
@@ -76,7 +82,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
+CLASS zcl_abapgit_gui IMPLEMENTATION.
 
 
   METHOD back.
@@ -345,4 +351,34 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     SET HANDLER me->on_event FOR mo_html_viewer.
 
   ENDMETHOD.                    "startup
+
+  METHOD set_all_visible.
+    DATA: lt_control   TYPE cnto_control_list,
+          lo_container TYPE REF TO cl_gui_container,
+          lo_control   TYPE REF TO cl_gui_control.
+
+    CLEAR lt_control.
+    APPEND cl_gui_container=>screen0 TO lt_control.
+    LOOP AT lt_control INTO lo_control.
+      TRY.
+          lo_container ?= lo_control.
+          APPEND LINES OF lo_container->children TO lt_control.
+        CATCH cx_root.
+      ENDTRY.
+    ENDLOOP.
+
+    LOOP AT lt_control INTO lo_control WHERE table_line IS BOUND.
+      lo_control->set_visible(
+        EXPORTING
+          visible           = visible
+        EXCEPTIONS
+          cntl_error        = 1
+          cntl_system_error = 2
+          OTHERS            = 3 ).
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Controls error' ).
+      ENDIF.
+    ENDLOOP.
+  ENDMETHOD.
+
 ENDCLASS.
