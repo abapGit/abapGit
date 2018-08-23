@@ -990,11 +990,23 @@ Patch.prototype.togglePatchActive = function(oEvent, elClicked, elCorrespondingL
 
 Patch.prototype.togglePatchActiveForClassLink = function(oEvent, elClicked, oClassCombination) {
 
-  var oRegexPatchClassPrefix = new RegExp('^' + oClassCombination.sClassLinkClicked );
-  var sCorrespondingLinkId = elClicked.id.replace(oRegexPatchClassPrefix, oClassCombination.sClassCorrespondingLink);
+  var sCorrespondingLinkId = this.getCorrespodingLinkId(elClicked.id, oClassCombination);
   var elCorrespondingLink = document.querySelector('#' + this.escapeDots(sCorrespondingLinkId));
 
   this.togglePatchActive(oEvent, elClicked, elCorrespondingLink);
+}
+
+Patch.prototype.getCorrespodingLinkId = function(sClickedLinkId, oClassCombination){
+
+  // e.g. 
+  //
+  //   add_patch_z_test_git_add_p.prog.abap_28 => remove_patch_z_test_git_add_p.prog.abap_28
+  //
+  // and vice versa
+
+  var oRegexPatchClassPrefix = new RegExp('^' + oClassCombination.sClassLinkClicked );
+  return sClickedLinkId.replace(oRegexPatchClassPrefix, oClassCombination.sClassCorrespondingLink);
+
 }
 
 Patch.prototype.escapeDots = function(sFileName){
