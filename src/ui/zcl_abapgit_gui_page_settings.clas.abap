@@ -85,7 +85,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
 
   METHOD build_settings.
@@ -200,9 +200,9 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
            IN <ls_post_field>-name
            SUBMATCHES lv_column.
 
+      INSERT INITIAL LINE INTO TABLE lt_key_bindings ASSIGNING <ls_key_binding>.
       CASE lv_column.
         WHEN 'sequence'.
-          INSERT INITIAL LINE INTO TABLE lt_key_bindings ASSIGNING <ls_key_binding>.
           <ls_key_binding>-sequence = <ls_post_field>-value.
         WHEN 'action'.
           <ls_key_binding>-action = <ls_post_field>-value.
