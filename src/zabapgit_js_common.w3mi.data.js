@@ -918,6 +918,11 @@ function setKeyBindings(oKeyMap){
   Patch / git add -p
   */
 
+function CSSPatchClassCombination(sClassLinkClicked, sClassCorrespondingLink){
+  this.sClassLinkClicked = sClassLinkClicked;
+  this.sClassCorrespondingLink = sClassCorrespondingLink;
+}
+
 function Patch() {
 
   this.CSS_CLASS = {
@@ -937,26 +942,35 @@ function Patch() {
     PATCH_STAGE: 'patch_stage'
   }
 
-}
+  this.ADD_REMOVE = new CSSPatchClassCombination(this.CSS_CLASS.ADD, this.CSS_CLASS.REMOVE);
+  this.REMOVE_ADD = new CSSPatchClassCombination(this.CSS_CLASS.REMOVE, this.CSS_CLASS.ADD);
 
-function CSSPatchClassCombination(sClassLinkClicked, sClassCorrespondingLink){
-  this.sClassLinkClicked = sClassLinkClicked;
-  this.sClassCorrespondingLink = sClassCorrespondingLink;
 }
 
 Patch.prototype.preparePatch = function(){
 
-  var oAddRemove = new CSSPatchClassCombination(this.CSS_CLASS.ADD, this.CSS_CLASS.REMOVE);
-  var oRemoveAdd = new CSSPatchClassCombination(this.CSS_CLASS.REMOVE, this.CSS_CLASS.ADD);
-
-  this.registerClickHandlerForPatchLink(oAddRemove);
-  this.registerClickHandlerForPatchLink(oRemoveAdd);
-
-  this.registerClickHandlerForPatchLinkAll('#' + this.ID.PATCH_ADD_ALL, oAddRemove);
-  this.registerClickHandlerForPatchLinkAll('#' + this.ID.PATCH_REMOVE_ALL, oRemoveAdd);
+  this.registerClickHandlerSingleLine();
+  this.registerClickHandlerAllFile();
 
 }
 
+Patch.prototype.registerClickHandlerSingleLine = function(){
+
+  // registers the link handlers for add and remove single lines
+
+  this.registerClickHandlerForPatchLink(this.ADD_REMOVE);
+  this.registerClickHandlerForPatchLink(this.REMOVE_ADD);
+
+}
+
+Patch.prototype.registerClickHandlerAllFile = function(){
+
+  // registers the link handlers for add and remove all changes for a file 
+
+  this.registerClickHandlerForPatchLinkAll('#' + this.ID.PATCH_ADD_ALL, this.ADD_REMOVE);
+  this.registerClickHandlerForPatchLinkAll('#' + this.ID.PATCH_REMOVE_ALL, this.REMOVE_ADD);
+
+}
 
 Patch.prototype.registerClickHandlerForPatchLink = function(oClassCombination) {
   // register onclick handler. When a link is clicked it is 
