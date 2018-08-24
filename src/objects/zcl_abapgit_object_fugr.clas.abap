@@ -750,6 +750,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
   METHOD zif_abapgit_object~changed_by.
 
     TYPES: BEGIN OF ty_stamps,
+             progname type progname,
              user TYPE xubname,
              date TYPE d,
              time TYPE t,
@@ -778,24 +779,24 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Error from RS_GET_ALL_INCLUDES' ).
     ENDIF.
 
-    SELECT unam AS user udat AS date utime AS time FROM reposrc
+    SELECT unam AS user udat AS date utime AS time progname FROM reposrc
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
       WHERE progname = lv_program
       AND   r3state = 'A'.                                "#EC CI_SUBRC
 
     LOOP AT lt_includes ASSIGNING <lv_include>.
-      SELECT unam AS user udat AS date utime AS time FROM reposrc
+      SELECT unam AS user udat AS date utime AS time progname FROM reposrc
         APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
         WHERE progname = <lv_include>
         AND   r3state = 'A'.                              "#EC CI_SUBRC
     ENDLOOP.
 
-    SELECT unam AS user udat AS date utime AS time FROM repotext " Program text pool
+    SELECT unam AS user udat AS date utime AS time progname FROM repotext " Program text pool
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
       WHERE progname = lv_program
       AND   r3state = 'A'.                                "#EC CI_SUBRC
 
-    SELECT vautor AS user vdatum AS date vzeit AS time FROM eudb         " GUI
+    SELECT vautor AS user vdatum AS date vzeit AS time name as progname FROM eudb         " GUI
       APPENDING CORRESPONDING FIELDS OF TABLE lt_stamps
       WHERE relid = 'CU'
       AND   name  = lv_program
