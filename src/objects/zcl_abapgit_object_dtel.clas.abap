@@ -15,6 +15,7 @@ CLASS zcl_abapgit_object_dtel DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
              scrtext_l  TYPE dd04t-scrtext_l,
            END OF ty_dd04_texts,
            tt_dd04_texts TYPE STANDARD TABLE OF ty_dd04_texts.
+    CONSTANTS: c_longtext_id_dtel TYPE dokil-id VALUE 'DE'.
 
     METHODS:
       serialize_texts
@@ -176,6 +177,8 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, DTEL' ).
     ENDIF.
 
+    delete_longtexts( c_longtext_id_dtel ).
+
   ENDMETHOD.
 
 
@@ -212,6 +215,8 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
 
     deserialize_texts( io_xml   = io_xml
                        is_dd04v = ls_dd04v ).
+
+    deserialize_longtexts( io_xml ).
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
@@ -332,6 +337,9 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
                  ig_data = ls_tpara ).
 
     serialize_texts( io_xml ).
+
+    serialize_longtexts( io_xml         = io_xml
+                         iv_longtext_id = c_longtext_id_dtel ).
 
   ENDMETHOD.
 

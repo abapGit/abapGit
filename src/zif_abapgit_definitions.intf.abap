@@ -344,6 +344,10 @@ INTERFACE zif_abapgit_definitions PUBLIC.
            hotkeys                    TYPE tty_hotkey,
          END OF ty_s_user_settings.
 
+  TYPES:
+          tty_dokil TYPE STANDARD TABLE OF dokil
+                         WITH NON-UNIQUE DEFAULT KEY.
+
   CONSTANTS:
     BEGIN OF c_type,
       commit TYPE zif_abapgit_definitions=>ty_type VALUE 'commit', "#EC NOTEXT
