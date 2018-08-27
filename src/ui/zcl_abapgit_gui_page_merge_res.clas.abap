@@ -111,7 +111,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
 
   METHOD apply_merged_content.
@@ -284,7 +284,7 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
 
         "Table for Div-Table and textarea
         ro_html->add( '<div class="diff_content">' ).       "#EC NOTEXT
-        ro_html->add( '<table>' ).                          "#EC NOTEXT
+        ro_html->add( '<table class="w100">' ).                          "#EC NOTEXT
         ro_html->add( '<thead class="header">' ).           "#EC NOTEXT
         ro_html->add( '<tr>' ).                             "#EC NOTEXT
         ro_html->add( '<th>Code</th>' ).                    "#EC NOTEXT
@@ -313,9 +313,9 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
         ro_html->add( '</td>' ).                            "#EC NOTEXT
         ro_html->add( '<td>' ).                             "#EC NOTEXT
         ro_html->add( '<div class="form-container">' ).
-        ro_html->add( |<form id="merge_form" class="aligned-form" accept-charset="UTF-8"| ).
+        ro_html->add( |<form id="merge_form" class="aligned-form w100" accept-charset="UTF-8"| ).
         ro_html->add( |method="post" action="sapevent:apply_merge">| ).
-        ro_html->add( |<textarea id="merge_content" name="merge_content" | ).
+        ro_html->add( |<textarea id="merge_content" name="merge_content" class="w100" | ).
         ro_html->add( |rows="{ lines( is_diff-o_diff->get( ) ) }">{ lv_target_content }</textarea>| ).
         ro_html->add( '<input type="submit" class="hidden-submit">' ).
         ro_html->add( '</form>' ).                          "#EC NOTEXT
@@ -531,6 +531,11 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_page~on_event.
 
     FIELD-SYMBOLS: <ls_conflict> TYPE zif_abapgit_definitions=>ty_merge_conflict.
@@ -578,10 +583,4 @@ CLASS zcl_abapgit_gui_page_merge_res IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-  ENDMETHOD.
-
 ENDCLASS.
