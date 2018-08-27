@@ -47,8 +47,18 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
         RETURNING VALUE(rv_exists_a_lock_entry) TYPE abap_bool
         RAISING   zcx_abapgit_exception,
       set_default_package
-        IMPORTING
-          iv_package TYPE devclass.
+        IMPORTING iv_package TYPE devclass,
+      serialize_longtexts
+        IMPORTING io_xml         TYPE REF TO zcl_abapgit_xml_output
+                  iv_longtext_id TYPE dokil-id OPTIONAL
+                  it_dokil       TYPE zif_abapgit_definitions=>tty_dokil OPTIONAL
+        RAISING   zcx_abapgit_exception,
+      deserialize_longtexts
+        IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_input
+        RAISING   zcx_abapgit_exception,
+      delete_longtexts
+        IMPORTING iv_longtext_id TYPE dokil-id
+        RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
 
@@ -64,6 +74,7 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_objects_super IMPLEMENTATION.
+
 
   METHOD set_default_package.
 
@@ -136,6 +147,22 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     ELSEIF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT' ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD delete_longtexts.
+
+    zcl_abapgit_longtexts=>delete( iv_longtext_id = iv_longtext_id
+                                   iv_object_name = ms_item-obj_name
+                                   iv_language    = mv_language ).
+
+  ENDMETHOD.
+
+
+  METHOD deserialize_longtexts.
+
+    zcl_abapgit_longtexts=>deserialize( io_xml ).
 
   ENDMETHOD.
 
@@ -330,6 +357,17 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
         resource_failure      = 3
         OTHERS                = 4
         ##fm_subrc_ok.                                                   "#EC CI_SUBRC
+
+  ENDMETHOD.
+
+
+  METHOD serialize_longtexts.
+
+    zcl_abapgit_longtexts=>serialize( iv_object_name = ms_item-obj_name
+                                      iv_longtext_id = iv_longtext_id
+                                      iv_language    = mv_language
+                                      it_dokil       = it_dokil
+                                      io_xml         = io_xml ).
 
   ENDMETHOD.
 

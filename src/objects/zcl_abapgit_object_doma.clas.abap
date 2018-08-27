@@ -21,6 +21,7 @@ CLASS zcl_abapgit_object_doma DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
            END OF ty_dd07_texts,
            tt_dd01_texts TYPE STANDARD TABLE OF ty_dd01_texts,
            tt_dd07_texts TYPE STANDARD TABLE OF ty_dd07_texts.
+    CONSTANTS: c_longtext_id_doma TYPE dokil-id VALUE 'DO'.
 
     METHODS:
       serialize_texts
@@ -240,6 +241,8 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
     ENDTRY.
 
+    delete_longtexts( c_longtext_id_doma ).
+
   ENDMETHOD.
 
 
@@ -285,6 +288,8 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     deserialize_texts( io_xml   = io_xml
                        is_dd01v = ls_dd01v
                        it_dd07v = lt_dd07v ).
+
+    deserialize_longtexts( io_xml ).
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
@@ -387,6 +392,9 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
                  ig_data = lt_dd07v ).
 
     serialize_texts( io_xml ).
+
+    serialize_longtexts( io_xml         = io_xml
+                         iv_longtext_id = c_longtext_id_doma ).
 
   ENDMETHOD.
 
