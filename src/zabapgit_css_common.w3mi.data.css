@@ -411,6 +411,12 @@ div.diff_content {
   border-top: 1px solid #DDD;
   border-bottom: 1px solid #DDD;
 }
+
+div.diff_content tbody tr td{
+  width: 50%;
+  vertical-align: top
+}
+
 div.diff_head span.state-block {
   margin-left: 0.5em;
   font-family: Consolas, Lucida Console, Courier, monospace;
