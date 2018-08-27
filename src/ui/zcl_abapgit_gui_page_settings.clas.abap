@@ -20,8 +20,9 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
   PRIVATE SECTION.
 
     DATA:
-      mo_settings TYPE REF TO zcl_abapgit_settings,
-      mv_error    TYPE abap_bool.
+      mo_settings    TYPE REF TO zcl_abapgit_settings,
+      mv_error       TYPE abap_bool,
+      mt_post_fields TYPE tihttpnvp.
 
     METHODS render_proxy
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
@@ -80,12 +81,17 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
         VALUE(rt_default_hotkeys) TYPE zif_abapgit_definitions=>tty_hotkey
       RAISING
         zcx_abapgit_exception.
+    METHODS is_post_field_checked
+      IMPORTING
+        iv_name          TYPE string
+      RETURNING
+        value(rv_return) TYPE abap_bool.
 
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
 
   METHOD build_settings.
@@ -99,47 +105,44 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
 
 
     CREATE OBJECT mo_settings.
-    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'proxy_url'.
+    mt_post_fields = it_post_fields.
+    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'proxy_url'.
     IF sy-subrc <> 0.
       mv_error = abap_true.
     ENDIF.
     mo_settings->set_proxy_url( <ls_post_field>-value ).
 
-    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'proxy_port'.
+    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'proxy_port'.
     IF sy-subrc <> 0.
       mv_error = abap_true.
     ENDIF.
     mo_settings->set_proxy_port( <ls_post_field>-value ).
 
-    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'proxy_auth'.
-    IF sy-subrc = 0.
+    IF is_post_field_checked( 'proxy_auth' ) = abap_true.
       mo_settings->set_proxy_authentication( abap_true ).
     ELSE.
       mo_settings->set_proxy_authentication( abap_false ).
     ENDIF.
 
-    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'critical_tests'.
-    IF sy-subrc = 0.
+    IF is_post_field_checked( 'critical_tests' ) = abap_true.
       mo_settings->set_run_critical_tests( abap_true ).
     ELSE.
       mo_settings->set_run_critical_tests( abap_false ).
     ENDIF.
 
-    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'experimental_features'.
-    IF sy-subrc = 0.
+    IF is_post_field_checked( 'experimental_features' ) = abap_true.
       mo_settings->set_experimental_features( abap_true ).
     ELSE.
       mo_settings->set_experimental_features( abap_false ).
     ENDIF.
 
-    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'show_default_repo'.
-    IF sy-subrc = 0.
+    IF is_post_field_checked( 'show_default_repo' ) = abap_true.
       mo_settings->set_show_default_repo( abap_true ).
     ELSE.
       mo_settings->set_show_default_repo( abap_false ).
     ENDIF.
 
-    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'max_lines'.
+    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'max_lines'.
     IF sy-subrc = 0.
       lv_i_param_value = <ls_post_field>-value.
       mo_settings->set_max_lines( lv_i_param_value ).
@@ -147,31 +150,29 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
       mo_settings->set_max_lines( 0 ).
     ENDIF.
 
-    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'adt_jump_enabled'.
-    IF sy-subrc = 0.
+    IF is_post_field_checked( 'adt_jump_enabled' ) = abap_true.
       mo_settings->set_adt_jump_enanbled( abap_true ).
     ELSE.
       mo_settings->set_adt_jump_enanbled( abap_false ).
     ENDIF.
 
-    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'link_hints_enabled'.
-    IF sy-subrc = 0.
+    IF is_post_field_checked( 'link_hints_enabled' ) = abap_true.
       mo_settings->set_link_hints_enabled( abap_true ).
     ELSE.
       mo_settings->set_link_hints_enabled( abap_false ).
     ENDIF.
 
-    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'link_hint_key'.
+    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'link_hint_key'.
     IF sy-subrc = 0.
       mo_settings->set_link_hint_key( |{ <ls_post_field>-value }| ).
     ENDIF.
 
-    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'link_hint_background_color'.
+    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'link_hint_background_color'.
     IF sy-subrc = 0.
       mo_settings->set_link_hint_background_color( |{ <ls_post_field>-value }| ).
     ENDIF.
 
-    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'comment_length'.
+    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'comment_length'.
     IF sy-subrc = 0.
       lv_i_param_value = <ls_post_field>-value.
       IF lv_i_param_value < zcl_abapgit_settings=>c_commitmsg_comment_length_dft.
@@ -182,7 +183,7 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
       mo_settings->set_commitmsg_comment_length( zcl_abapgit_settings=>c_commitmsg_comment_length_dft ).
     ENDIF.
 
-    READ TABLE it_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'body_size'.
+    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'body_size'.
     IF sy-subrc = 0.
       lv_i_param_value = <ls_post_field>-value.
       IF lv_i_param_value < zcl_abapgit_settings=>c_commitmsg_body_size_dft.
@@ -194,15 +195,15 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
     ENDIF.
 
 
-    LOOP AT it_post_fields ASSIGNING <ls_post_field> WHERE name CP 'key*'.
+    LOOP AT mt_post_fields ASSIGNING <ls_post_field> WHERE name CP 'key*'.
 
       FIND FIRST OCCURRENCE OF REGEX `key_(.*)_`
            IN <ls_post_field>-name
            SUBMATCHES lv_column.
 
+      INSERT INITIAL LINE INTO TABLE lt_key_bindings ASSIGNING <ls_key_binding>.
       CASE lv_column.
         WHEN 'sequence'.
-          INSERT INITIAL LINE INTO TABLE lt_key_bindings ASSIGNING <ls_key_binding>.
           <ls_key_binding>-sequence = <ls_post_field>-value.
         WHEN 'action'.
           <ls_key_binding>-action = <ls_post_field>-value.
@@ -612,4 +613,16 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
+
+  METHOD is_post_field_checked.
+    FIELD-SYMBOLS: <ls_post_field> TYPE ihttpnvp.
+    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = iv_name.
+    IF sy-subrc = 0.
+      IF <ls_post_field>-value = abap_true "HTML value when using standard netweaver GUI
+      OR <ls_post_field>-value = 'on'.     "HTML value when using Netweaver Java GUI
+        rv_return = abap_true.
+      ENDIF.
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.
