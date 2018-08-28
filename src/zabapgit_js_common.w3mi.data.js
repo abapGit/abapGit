@@ -32,6 +32,22 @@ if (!Function.prototype.bind) {
   };
 }
 
+// String includes polyfill, taken from https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/String/includes
+if (!String.prototype.includes) {
+  String.prototype.includes = function(search, start) {
+    'use strict';
+    if (typeof start !== 'number') {
+      start = 0;
+    }
+    
+    if (start + search.length > this.length) {
+      return false;
+    } else {
+      return this.indexOf(search, start) !== -1;
+    }
+  };
+}
+
 /**********************************************************
  * Common functions
  **********************************************************/
@@ -870,17 +886,25 @@ Hotkeys.prototype.showHotkeys = function() {
 
 Hotkeys.prototype.getSapEvent = function(sSapEvent) {
 
-  var result = "";
+  var fnNormalizeSapEventHref = function(sSapEvent, oSapEvent) {
+    if (new RegExp(sSapEvent + "$" ).test(oSapEvent.href)
+    || (new RegExp(sSapEvent + "\\?" ).test(oSapEvent.href))) {
+      return oSapEvent.href.replace("sapevent:","");
+    }
+  };
+
   var aSapEvents = document.querySelectorAll('a[href^="sapevent:' + sSapEvent + '"]');
 
-  [].forEach.call(aSapEvents, function(sapEvent){
-      if (new RegExp(sSapEvent + "$" ).test(sapEvent.href)
-      || (new RegExp(sSapEvent + "\\?" ).test(sapEvent.href))) {
-        result = sapEvent.href.replace("sapevent:","");
-      }
-    });
+  var aFilteredAndNormalizedSapEvents = 
+        [].map.call(aSapEvents, function(oSapEvent){
+          return fnNormalizeSapEventHref(sSapEvent, oSapEvent);
+        })
+        .filter(function(elem){
+          // remove false positives
+          return (elem && !elem.includes("sapevent:"));
+        });
 
-  return result;
+  return (aFilteredAndNormalizedSapEvents && aFilteredAndNormalizedSapEvents[0]);
 
 }
 
