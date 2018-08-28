@@ -143,6 +143,11 @@ div.repo {
   color: #333;
   font-size: 14pt;
 }
+.repo_name a.url {
+  color: #ccc;
+  font-size: 12pt;
+  margin-left: 0.5em;
+}
 .repo_name span.url {
   color: #ccc;
   font-size: 12pt;
@@ -538,6 +543,7 @@ div.debug_container p {
 div.db_list {
   background-color: #fff;
   padding: 0.5em;
+  overflow-x: auto;
 }
 
 table.db_tab pre {

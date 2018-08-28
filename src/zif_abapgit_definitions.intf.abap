@@ -459,6 +459,8 @@ INTERFACE zif_abapgit_definitions PUBLIC.
 
       jump                     TYPE string VALUE 'jump',
       jump_pkg                 TYPE string VALUE 'jump_pkg',
+
+      url                      TYPE string VALUE 'url',
     END OF c_action .
   CONSTANTS:
     BEGIN OF c_version,

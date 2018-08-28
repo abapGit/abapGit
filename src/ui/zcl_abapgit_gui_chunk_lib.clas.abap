@@ -305,7 +305,12 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ro_html->add( |<span class="name">{ io_repo->get_name( ) }</span>| ).
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
-      ro_html->add( |<span class="url">{ lo_repo_online->get_url( ) }</span>| ).
+
+      ro_html->add_a( iv_txt   = lo_repo_online->get_url( )
+                      iv_act   = |{ zif_abapgit_definitions=>c_action-url }?|
+                              && |{ lo_repo_online->get_url( ) }|
+                      iv_class = |url| ).
+
     ENDIF.
 
     " News
@@ -319,7 +324,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
                       iv_typ = zif_abapgit_definitions=>c_action_type-onclick
                       iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_icon
                                                        iv_class = 'pad-sides'
-                                                      iv_hint  = 'Display changelog' ) ).
+                                                       iv_hint  = 'Display changelog' ) ).
     ENDIF.
     ro_html->add( '</td>' ).
 
