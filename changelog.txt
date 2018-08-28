@@ -8,6 +8,20 @@ Legend
 + : added
 - : removed
 
+2018-08-12 v1.75.0
+------------------
++ User exit CREATE_HTTP_CLIENT
++ Hotkeys, press "?" for overview
+* fix layout in merge mode
+* DTEL, DOMA, TABL longtext serialization
+* SAP GUI Java fix settings page
+* MSAG logntexts and is_locked
+* Saving variant for background program
+* Downport
+* PROG, add guard for bad TADIR entries
+* gitgraph.js updated to latest
+* Refactoring
+
 2018-08-12 v1.74.1
 ------------------
 * Refactoring
