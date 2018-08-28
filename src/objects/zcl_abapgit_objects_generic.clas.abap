@@ -545,9 +545,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
         CONTINUE.
       ENDIF.
       IF ls_objkey-value = '*'.
-        lv_is_asterix = rs_c_true.
+        lv_is_asterix = abap_true.
       ENDIF.
-      IF lv_is_asterix = rs_c_true.
+      IF lv_is_asterix = abap_true.
         CONTINUE.
       ENDIF.
       IF NOT lv_where_statement IS INITIAL.
