@@ -81,6 +81,8 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
       CHANGING
         cg_data = ls_area_attributes ).
 
+    tadir_insert( iv_package ).
+
     TRY.
         CALL METHOD ('\PROGRAM=SAPLSHMA\CLASS=LCL_SHMA_HELPER')=>('INSERT_AREA')
           EXPORTING
