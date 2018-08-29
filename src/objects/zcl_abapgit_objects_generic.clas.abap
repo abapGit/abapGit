@@ -117,7 +117,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
     FIELD-SYMBOLS <ls_object_method> LIKE LINE OF mt_object_method.
 
 
-    ls_cts_object_entry-pgmid    = rs_c_pgmid_r3tr.
+    ls_cts_object_entry-pgmid    = seok_pgmid_r3tr.
     ls_cts_object_entry-object   = ms_item-obj_type.
     ls_cts_object_entry-obj_name = ms_item-obj_name.
     INSERT ls_cts_object_entry INTO TABLE lt_cts_object_entry.
@@ -160,7 +160,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
     IF sy-subrc = 0.
       lv_client = sy-mandt.
 
-      ls_cts_object_entry-pgmid    = rs_c_pgmid_r3tr.
+      ls_cts_object_entry-pgmid    = seok_pgmid_r3tr.
       ls_cts_object_entry-object   = ms_item-obj_type.
       ls_cts_object_entry-obj_name = ms_item-obj_name.
       INSERT ls_cts_object_entry INTO TABLE lt_cts_object_entry.
@@ -545,9 +545,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
         CONTINUE.
       ENDIF.
       IF ls_objkey-value = '*'.
-        lv_is_asterix = rs_c_true.
+        lv_is_asterix = abap_true.
       ENDIF.
-      IF lv_is_asterix = rs_c_true.
+      IF lv_is_asterix = abap_true.
         CONTINUE.
       ENDIF.
       IF NOT lv_where_statement IS INITIAL.
