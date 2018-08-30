@@ -157,6 +157,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENQU IMPLEMENTATION.
           lt_dd26e TYPE TABLE OF dd26e,
           lt_dd27p TYPE TABLE OF dd27p.
 
+    FIELD-SYMBOLS: <ls_dd27p> LIKE LINE OF lt_dd27p.
 
     lv_name = ms_item-obj_name.
 
@@ -183,6 +184,22 @@ CLASS ZCL_ABAPGIT_OBJECT_ENQU IMPLEMENTATION.
     CLEAR: ls_dd25v-as4user,
            ls_dd25v-as4date,
            ls_dd25v-as4time.
+
+    LOOP AT lt_dd27p ASSIGNING <ls_dd27p>.
+      "taken from table
+      CLEAR <ls_dd27p>-headlen.
+      CLEAR <ls_dd27p>-scrlen1.
+      CLEAR <ls_dd27p>-scrlen2.
+      CLEAR <ls_dd27p>-scrlen3.
+      CLEAR <ls_dd27p>-intlen.
+      CLEAR <ls_dd27p>-outputlen.
+      CLEAR <ls_dd27p>-flength.
+      CLEAR <ls_dd27p>-ddtext.
+      CLEAR <ls_dd27p>-reptext.
+      CLEAR <ls_dd27p>-scrtext_s.
+      CLEAR <ls_dd27p>-scrtext_m.
+      CLEAR <ls_dd27p>-scrtext_l.
+    ENDLOOP.
 
     io_xml->add( iv_name = 'DD25V'
                  ig_data = ls_dd25v ).
