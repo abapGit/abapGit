@@ -161,7 +161,8 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD deserialize_longtexts.
 
-    zcl_abapgit_longtexts=>deserialize( io_xml ).
+    zcl_abapgit_longtexts=>deserialize( io_xml             = io_xml
+                                        iv_master_language = mv_language ).
 
   ENDMETHOD.
 
