@@ -9,7 +9,6 @@ CLASS zcl_abapgit_longtexts DEFINITION
         IMPORTING
           iv_object_name TYPE sobj_name
           iv_longtext_id TYPE dokil-id
-          iv_language    TYPE sy-langu
           it_dokil       TYPE zif_abapgit_definitions=>tty_dokil
           io_xml         TYPE REF TO zcl_abapgit_xml_output
         RAISING
@@ -25,7 +24,6 @@ CLASS zcl_abapgit_longtexts DEFINITION
         IMPORTING
           iv_object_name TYPE sobj_name
           iv_longtext_id TYPE dokil-id
-          iv_language    TYPE sy-langu
         RAISING
           zcx_abapgit_exception.
 
@@ -57,8 +55,7 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
     SELECT * FROM dokil
              INTO TABLE lt_dokil
              WHERE id     = iv_longtext_id
-             AND   object = iv_longtext_id
-             AND   langu  = iv_language.
+             AND   object = iv_longtext_id.
 
     LOOP AT lt_dokil ASSIGNING <ls_dokil>.
 
@@ -127,8 +124,7 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
       SELECT * FROM dokil
               INTO TABLE lt_dokil
               WHERE id     = iv_longtext_id
-              AND   object = iv_object_name
-              AND   langu  = iv_language.
+              AND   object = iv_object_name.
 
     ELSE.
 
