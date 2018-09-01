@@ -229,6 +229,13 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   TYPES:
     ty_sotr_tt TYPE STANDARD TABLE OF ty_sotr WITH DEFAULT KEY .
   TYPES:
+    BEGIN OF ty_obj_attribute,
+      cmpname   TYPE seocmpname,
+      attkeyfld TYPE seokeyfld,
+      attbusobj TYPE seobusobj,
+    END OF ty_obj_attribute,
+    ty_obj_attribute_tt TYPE STANDARD TABLE OF ty_obj_attribute WITH DEFAULT KEY.
+  TYPES:
     BEGIN OF ty_transport_to_branch,
       branch_name TYPE string,
       commit_text TYPE string,

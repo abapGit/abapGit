@@ -19,7 +19,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
+CLASS zcl_abapgit_oo_base IMPLEMENTATION.
 
 
   METHOD deserialize_abap_source_new.
@@ -280,5 +280,43 @@ CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
   METHOD zif_abapgit_oo_object_fnc~update_descriptions.
     DELETE FROM seocompotx WHERE clsname = is_key-clsname. "#EC CI_SUBRC
     INSERT seocompotx FROM TABLE it_descriptions.         "#EC CI_SUBRC
+  ENDMETHOD.
+
+  METHOD zif_abapgit_oo_object_fnc~read_attributes.
+    SELECT cmpname attbusobj attkeyfld
+      FROM seocompodf
+      INTO CORRESPONDING FIELDS OF TABLE rt_attributes
+      WHERE clsname = iv_object_name
+        AND ( attbusobj <> space OR attkeyfld <> space )
+      ORDER BY PRIMARY KEY.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_oo_object_fnc~update_attributes.
+    DATA: lt_current_attributes TYPE STANDARD TABLE OF seocompodf,
+          ls_empty_attribute    TYPE zif_abapgit_definitions=>ty_obj_attribute.
+    FIELD-SYMBOLS: <ls_current_attribute> LIKE LINE OF lt_current_attributes,
+                   <ls_new_attribute>     LIKE LINE OF it_attributes.
+
+    SELECT * INTO TABLE lt_current_attributes
+      FROM seocompodf
+      WHERE clsname = iv_object_name
+        AND version = '1'
+      ORDER BY PRIMARY KEY.
+
+    LOOP AT lt_current_attributes ASSIGNING <ls_current_attribute>.
+      READ TABLE it_attributes WITH KEY cmpname = <ls_current_attribute>-cmpname
+                               ASSIGNING <ls_new_attribute>.
+      IF sy-subrc = 0.
+        MOVE-CORRESPONDING <ls_new_attribute> TO <ls_current_attribute>.
+      ELSE.
+        ls_empty_attribute-cmpname = <ls_current_attribute>-cmpname.
+        MOVE-CORRESPONDING ls_empty_attribute TO <ls_current_attribute>.
+        CLEAR ls_empty_attribute.
+      ENDIF.
+
+      MODIFY seocompodf FROM <ls_current_attribute>.
+      UNASSIGN <ls_new_attribute>.
+    ENDLOOP.
+    UNASSIGN <ls_current_attribute>.
   ENDMETHOD.
 ENDCLASS.
