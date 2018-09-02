@@ -293,7 +293,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~update_attributes.
     DATA: lt_current_attributes TYPE STANDARD TABLE OF seocompodf,
-          ls_empty_attribute    TYPE zif_abapgit_definitions=>ty_obj_attribute.
+          lt_updates            TYPE STANDARD TABLE OF seocompodf.
     FIELD-SYMBOLS: <ls_current_attribute> LIKE LINE OF lt_current_attributes,
                    <ls_new_attribute>     LIKE LINE OF it_attributes.
 
@@ -304,19 +304,34 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
       ORDER BY PRIMARY KEY.
 
     LOOP AT lt_current_attributes ASSIGNING <ls_current_attribute>.
-      READ TABLE it_attributes WITH KEY cmpname = <ls_current_attribute>-cmpname
+      READ TABLE it_attributes WITH KEY cmpname
+                               COMPONENTS cmpname = <ls_current_attribute>-cmpname
                                ASSIGNING <ls_new_attribute>.
       IF sy-subrc = 0.
-        MOVE-CORRESPONDING <ls_new_attribute> TO <ls_current_attribute>.
+        " Found additional information, check if there needs to be an update
+        IF <ls_new_attribute>-attbusobj <> <ls_current_attribute>-attbusobj OR
+           <ls_new_attribute>-attkeyfld <> <ls_current_attribute>-attkeyfld.
+          MOVE-CORRESPONDING <ls_new_attribute> TO <ls_current_attribute>.
+          APPEND <ls_current_attribute> TO lt_updates.
+        ENDIF.
       ELSE.
-        ls_empty_attribute-cmpname = <ls_current_attribute>-cmpname.
-        MOVE-CORRESPONDING ls_empty_attribute TO <ls_current_attribute>.
-        CLEAR ls_empty_attribute.
+        " No additional information
+        " Info: Without SAP Note 2400131 nothing happens here because the fields were cleared
+        " 'by accident' beforehand.
+        IF <ls_current_attribute>-attbusobj IS NOT INITIAL OR
+           <ls_current_attribute>-attkeyfld IS NOT INITIAL.
+          CLEAR: <ls_current_attribute>-attbusobj,
+                 <ls_current_attribute>-attkeyfld.
+          APPEND <ls_current_attribute> TO lt_updates.
+        ENDIF.
       ENDIF.
 
-      MODIFY seocompodf FROM <ls_current_attribute>.
       UNASSIGN <ls_new_attribute>.
     ENDLOOP.
     UNASSIGN <ls_current_attribute>.
+
+    IF lines( lt_updates ) > 0.
+      MODIFY seocompodf FROM TABLE lt_updates.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.
