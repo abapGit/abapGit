@@ -154,15 +154,15 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
   METHOD delete_longtexts.
 
     zcl_abapgit_longtexts=>delete( iv_longtext_id = iv_longtext_id
-                                   iv_object_name = ms_item-obj_name
-                                   iv_language    = mv_language ).
+                                   iv_object_name = ms_item-obj_name ).
 
   ENDMETHOD.
 
 
   METHOD deserialize_longtexts.
 
-    zcl_abapgit_longtexts=>deserialize( io_xml ).
+    zcl_abapgit_longtexts=>deserialize( io_xml             = io_xml
+                                        iv_master_language = mv_language ).
 
   ENDMETHOD.
 
@@ -365,7 +365,6 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
     zcl_abapgit_longtexts=>serialize( iv_object_name = ms_item-obj_name
                                       iv_longtext_id = iv_longtext_id
-                                      iv_language    = mv_language
                                       it_dokil       = it_dokil
                                       io_xml         = io_xml ).
 
