@@ -641,7 +641,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
       ENDIF.
 
       ls_object-type = zif_abapgit_definitions=>c_type-blob.
-      ASSERT NOT <ls_blob>-data IS INITIAL.
+*       ASSERT NOT <ls_blob>-data IS INITIAL. "#1857 allow empty files - some more checks needed?
       ls_object-data = <ls_blob>-data.
       lv_uindex = lv_uindex + 1.
       ls_object-index = lv_uindex.
