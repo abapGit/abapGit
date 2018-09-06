@@ -8,19 +8,20 @@ CLASS zcl_abapgit_branch_overview DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_branch_overview .
+    TYPES: ty_commits TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_commit WITH DEFAULT KEY .
 
     METHODS constructor
       IMPORTING
-        !io_repo TYPE REF TO zcl_abapgit_repo_online
+        io_repo TYPE REF TO zcl_abapgit_repo_online
       RAISING
         zcx_abapgit_exception .
+
   PRIVATE SECTION.
 
-    TYPES:
-      ty_commits TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_commit WITH DEFAULT KEY .
+    TYPES: tyt_commit_sha1_range TYPE RANGE OF zif_abapgit_definitions=>ty_sha1.
 
     DATA mt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt .
-    DATA mt_commits TYPE ty_commits .
+    DATA mt_commits  TYPE ty_commits .
     DATA mt_tags TYPE zif_abapgit_definitions=>ty_git_tag_list_tt .
 
     CLASS-METHODS parse_commits
@@ -54,12 +55,18 @@ CLASS zcl_abapgit_branch_overview DEFINITION
     METHODS determine_tags
       RAISING
         zcx_abapgit_exception .
+    METHODS _sort_commits CHANGING ct_commits TYPE ty_commits.
+    METHODS _get_1st_child_commit
+      IMPORTING itr_commit_sha1s    TYPE tyt_commit_sha1_range
+      EXPORTING etr_commit_sha1s    TYPE tyt_commit_sha1_range
+      CHANGING  ct_commits          TYPE ty_commits
+      RETURNING VALUE(e_1st_commit) TYPE zif_abapgit_definitions=>ty_commit.
+
+
 ENDCLASS.
 
 
-
-CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
-
+CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
   METHOD constructor.
 
@@ -77,8 +84,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
     determine_merges( ).
     determine_tags( ).
     fixes( ).
-
-    SORT mt_commits BY time ASCENDING.
+    _sort_commits( CHANGING ct_commits = mt_commits ).
 
   ENDMETHOD.
 
@@ -343,7 +349,11 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
       IF lines( lt_temp ) >= 10.
         READ TABLE lt_temp ASSIGNING <ls_temp> INDEX 1.
         ASSERT sy-subrc = 0.
+        READ TABLE lt_temp ASSIGNING <ls_temp_end> INDEX lines( lt_temp ).
+        ASSERT sy-subrc = 0.
         APPEND INITIAL LINE TO rt_commits ASSIGNING <ls_new>.
+        <ls_new>-sha1       = <ls_temp_end>-sha1.
+        <ls_new>-parent1    = <ls_temp>-parent1.
         <ls_new>-time       = <ls_temp>-time.
         <ls_new>-message    = |Compressed, { lines( lt_temp ) } commits|.
         <ls_new>-branch     = lv_name.
@@ -351,6 +361,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
       ELSE.
         APPEND LINES OF lt_temp TO rt_commits.
       ENDIF.
+      CLEAR lt_temp.
     END-OF-DEFINITION.
 
     DATA: lv_previous TYPE i,
@@ -358,10 +369,11 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
           lv_name     TYPE string,
           lt_temp     LIKE it_commits.
 
-    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF mt_branches,
-                   <ls_new>    LIKE LINE OF rt_commits,
-                   <ls_temp>   LIKE LINE OF lt_temp,
-                   <ls_commit> LIKE LINE OF it_commits.
+    FIELD-SYMBOLS: <ls_branch>   LIKE LINE OF mt_branches,
+                   <ls_new>      LIKE LINE OF rt_commits,
+                   <ls_temp>     LIKE LINE OF lt_temp,
+                   <ls_temp_end> LIKE LINE OF lt_temp,
+                   <ls_commit>   LIKE LINE OF it_commits.
 
 
     LOOP AT mt_branches ASSIGNING <ls_branch>.
@@ -381,7 +393,6 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
 
         IF lv_previous + 1 <> sy-tabix.
           _compress.
-          CLEAR lt_temp.
         ENDIF.
 
         lv_previous = lv_index.
@@ -394,7 +405,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
 
     ENDLOOP.
 
-    SORT rt_commits BY time ASCENDING.
+    _sort_commits( CHANGING ct_commits = rt_commits ).
 
   ENDMETHOD.
 
@@ -414,4 +425,82 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
     rt_tags = mt_tags.
 
   ENDMETHOD.
+
+
+  METHOD _get_1st_child_commit.
+
+    DATA: lt_1stchild_commits        TYPE ty_commits.
+    DATA: lsr_parent                 LIKE LINE OF itr_commit_sha1s.
+    DATA: ltr_commit_sha1s           LIKE itr_commit_sha1s.
+    FIELD-SYMBOLS: <lsr_commit_sha1> LIKE LINE OF itr_commit_sha1s.
+    FIELD-SYMBOLS: <ls_child_commit> TYPE zif_abapgit_definitions=>ty_commit.
+
+* get all reachable next commits
+    ltr_commit_sha1s = itr_commit_sha1s.
+    LOOP AT ct_commits ASSIGNING <ls_child_commit> WHERE parent1 IN ltr_commit_sha1s
+                                                      OR parent2 IN ltr_commit_sha1s.
+      INSERT <ls_child_commit> INTO TABLE lt_1stchild_commits.
+    ENDLOOP.
+
+* return oldest one
+    SORT lt_1stchild_commits BY time ASCENDING.
+    READ TABLE lt_1stchild_commits INTO e_1st_commit INDEX 1.
+
+* remove from available commits
+    DELETE ct_commits WHERE sha1 = e_1st_commit-sha1.
+
+* set relevant parent commit sha1s
+    IF lines( lt_1stchild_commits ) = 1.
+      CLEAR etr_commit_sha1s.
+    ELSE.
+      etr_commit_sha1s = itr_commit_sha1s.
+    ENDIF.
+
+    lsr_parent-sign   = 'I'.
+    lsr_parent-option = 'EQ'.
+    lsr_parent-low    = e_1st_commit-sha1.
+    INSERT lsr_parent INTO TABLE etr_commit_sha1s.
+
+  ENDMETHOD.
+
+
+  METHOD _sort_commits.
+
+    DATA: lt_sorted_commits            TYPE ty_commits.
+    DATA: lv_next_commit               TYPE zif_abapgit_definitions=>ty_commit.
+    DATA: ltr_parents                  TYPE tyt_commit_sha1_range.
+    DATA: lsr_parent                   LIKE LINE OF ltr_parents.
+    FIELD-SYMBOLS: <ls_initial_commit> TYPE zif_abapgit_definitions=>ty_commit.
+
+* find initial commit
+    READ TABLE ct_commits ASSIGNING <ls_initial_commit> WITH KEY parent1 = space.
+    IF sy-subrc = 0.
+
+      lsr_parent-sign   = 'I'.
+      lsr_parent-option = 'EQ'.
+      lsr_parent-low    = <ls_initial_commit>-sha1.
+      INSERT lsr_parent INTO TABLE ltr_parents.
+
+* first commit
+      INSERT <ls_initial_commit> INTO TABLE lt_sorted_commits.
+
+* remove from available commits
+      DELETE ct_commits WHERE sha1 = <ls_initial_commit>-sha1.
+
+      DO.
+        _get_1st_child_commit( EXPORTING itr_commit_sha1s = ltr_parents
+                               IMPORTING etr_commit_sha1s = ltr_parents
+                               CHANGING  ct_commits       = ct_commits
+                               RECEIVING e_1st_commit     = lv_next_commit ).
+        IF lv_next_commit IS INITIAL.
+          EXIT. "DO
+        ENDIF.
+        INSERT lv_next_commit INTO TABLE lt_sorted_commits.
+      ENDDO.
+    ENDIF.
+
+    ct_commits = lt_sorted_commits.
+
+  ENDMETHOD.
+
 ENDCLASS.
