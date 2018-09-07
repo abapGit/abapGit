@@ -549,8 +549,8 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         not_found       = 1
         unknown_version = 2
         OTHERS          = 3.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_CUA_INTERNAL_FETCH' ).
+    IF sy-subrc > 1.
+      zcx_abapgit_exception=>raise( |error from RS_CUA_INTERNAL_FETCH, { sy-subrc }| ).
     ENDIF.
 
   ENDMETHOD.
