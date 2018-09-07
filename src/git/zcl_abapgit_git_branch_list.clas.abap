@@ -65,14 +65,19 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
 
     DATA mt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt .
     DATA mv_head_symref TYPE string .
+
+    CLASS-METHODS skip_first_pkt
+      IMPORTING
+        !iv_data       TYPE string
+      RETURNING
+        VALUE(rv_data) TYPE string .
     METHODS find_tag_by_name
       IMPORTING
-        iv_branch_name   TYPE string
+        !iv_branch_name  TYPE string
       RETURNING
         VALUE(rs_branch) TYPE zif_abapgit_definitions=>ty_git_branch
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     CLASS-METHODS parse_branch_list
       IMPORTING
         !iv_data        TYPE string
@@ -271,25 +276,23 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
 
     CLEAR: et_list, ev_head_symref.
 
-    SPLIT iv_data AT zif_abapgit_definitions=>c_newline INTO TABLE lt_result.
+    lv_data = skip_first_pkt( iv_data ).
+    SPLIT lv_data AT zif_abapgit_definitions=>c_newline INTO TABLE lt_result.
 
     LOOP AT lt_result INTO lv_data.
-
       lv_current_row_index = sy-tabix.
 
-      IF sy-tabix = 1.
-        CONTINUE. " current loop
-      ELSEIF sy-tabix = 2 AND strlen( lv_data ) > 49.
+      IF sy-tabix = 1 AND strlen( lv_data ) > 49.
         lv_hash = lv_data+8.
         lv_name = lv_data+49.
         lv_char = zcl_abapgit_git_utils=>get_null( ).
 
         SPLIT lv_name AT lv_char INTO lv_name lv_head_params.
         ev_head_symref = parse_head_params( lv_head_params ).
-      ELSEIF sy-tabix > 2 AND strlen( lv_data ) > 45.
+      ELSEIF sy-tabix > 1 AND strlen( lv_data ) > 45.
         lv_hash = lv_data+4.
         lv_name = lv_data+45.
-      ELSEIF sy-tabix = 2 AND strlen( lv_data ) = 8 AND lv_data(8) = '00000000'.
+      ELSEIF sy-tabix = 1 AND strlen( lv_data ) = 8 AND lv_data(8) = '00000000'.
         zcx_abapgit_exception=>raise( 'No branches, create branch manually by adding file' ) ##NO_TEXT.
       ELSE.
         CONTINUE.
@@ -323,6 +326,22 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
     IF sy-subrc IS INITIAL.
       rv_head_symref = iv_data+ls_submatch-offset(ls_submatch-length).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD skip_first_pkt.
+
+    DATA: lv_hex    TYPE x LENGTH 1,
+          lv_length TYPE i.
+
+* channel
+    ASSERT iv_data(2) = '00'.
+
+    lv_hex = to_upper( iv_data+2(2) ).
+    lv_length = lv_hex + 2.
+
+    rv_data = iv_data+lv_length.
 
   ENDMETHOD.
 ENDCLASS.
