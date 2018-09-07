@@ -10,8 +10,9 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
 
     CLASS-METHODS:
       jump_adt
-        IMPORTING i_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name
-                  i_obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type
+        IMPORTING i_obj_name    TYPE zif_abapgit_definitions=>ty_item-obj_name
+                  i_obj_type    TYPE zif_abapgit_definitions=>ty_item-obj_type
+                  i_line_number TYPE i OPTIONAL
         RAISING   zcx_abapgit_exception.
 
     CONSTANTS: c_user_unknown TYPE xubname VALUE 'UNKNOWN'.
@@ -262,6 +263,7 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
           lo_adt            TYPE REF TO object,
           lo_adt_uri_mapper TYPE REF TO object,
           lo_adt_objref     TYPE REF TO object ##needed.
+    DATA: lv_line_number    TYPE string.
 
     FIELD-SYMBOLS: <lv_uri> TYPE string.
 
@@ -305,6 +307,14 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
         ASSERT sy-subrc = 0.
 
         CONCATENATE 'adt://' sy-sysid <lv_uri> INTO lv_adt_link.
+
+        IF i_line_number IS NOT INITIAL.
+          lv_line_number = i_line_number.
+          SHIFT lv_line_number LEFT DELETING LEADING ' 0'.
+          CONDENSE lv_line_number NO-GAPS.
+          CONCATENATE lv_adt_link '/source/main#start=' lv_line_number ',0;end=' lv_line_number ',1 ' INTO lv_adt_link.
+
+        ENDIF.
 
         cl_gui_frontend_services=>execute( EXPORTING  document = lv_adt_link
                                            EXCEPTIONS OTHERS   = 1 ).
