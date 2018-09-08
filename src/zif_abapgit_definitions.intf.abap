@@ -263,13 +263,14 @@ INTERFACE zif_abapgit_definitions PUBLIC.
              END OF c_diff.
 
   TYPES: BEGIN OF ty_diff,
-           new_num TYPE c LENGTH 6,
-           new     TYPE string,
-           result  TYPE c LENGTH 1,
-           old_num TYPE c LENGTH 6,
-           old     TYPE string,
-           short   TYPE abap_bool,
-           beacon  TYPE i,
+           patch_flag TYPE abap_bool,
+           new_num    TYPE c LENGTH 6,
+           new        TYPE string,
+           result     TYPE c LENGTH 1,
+           old_num    TYPE c LENGTH 6,
+           old        TYPE string,
+           short      TYPE abap_bool,
+           beacon     TYPE i,
          END OF ty_diff.
   TYPES:  ty_diffs_tt TYPE STANDARD TABLE OF ty_diff WITH DEFAULT KEY.
 
@@ -347,6 +348,15 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   TYPES:
           tty_dokil TYPE STANDARD TABLE OF dokil
                          WITH NON-UNIQUE DEFAULT KEY.
+  TYPES: tty_lines TYPE STANDARD TABLE OF i
+                        WITH NON-UNIQUE DEFAULT KEY,
+         BEGIN OF ty_patch,
+           filename  TYPE string,
+           lines_new TYPE tty_lines,
+           lines_old TYPE tty_lines,
+         END OF ty_patch,
+         tty_patch TYPE HASHED TABLE OF ty_patch
+                        WITH UNIQUE KEY filename.
 
   CONSTANTS:
     BEGIN OF c_type,
@@ -456,6 +466,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       go_debuginfo             TYPE string VALUE 'go_debuginfo',
       go_settings              TYPE string VALUE 'go_settings',
       go_tutorial              TYPE string VALUE 'go_tutorial',
+      go_patch                 TYPE string VALUE 'go_patch',
 
       jump                     TYPE string VALUE 'jump',
       jump_pkg                 TYPE string VALUE 'jump_pkg',
