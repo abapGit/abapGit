@@ -8,6 +8,17 @@ Legend
 + : added
 - : removed
 
+2018-09-08 v1.76.0
+------------------
++ git patch, added to staging page
++ serialize all longtexts
++ ENQU clear redundant fields
+* suppress SHMA package popup
+* branch overview sorted by parent instead of time
+* handle error from RS_CUA_INTERNAL_FETCH
+* fix problem with branch list from bitbucket.org
+* allow empty blobs
+
 2018-08-12 v1.75.0
 ------------------
 + User exit CREATE_HTTP_CLIENT
