@@ -10,9 +10,11 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
 
     CLASS-METHODS:
       jump_adt
-        IMPORTING i_obj_name    TYPE zif_abapgit_definitions=>ty_item-obj_name
-                  i_obj_type    TYPE zif_abapgit_definitions=>ty_item-obj_type
-                  i_line_number TYPE i OPTIONAL
+        IMPORTING i_obj_name     TYPE zif_abapgit_definitions=>ty_item-obj_name
+                  i_obj_type     TYPE zif_abapgit_definitions=>ty_item-obj_type
+                  i_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
+                  i_sub_obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type OPTIONAL
+                  i_line_number  TYPE i OPTIONAL
         RAISING   zcx_abapgit_exception.
 
     CONSTANTS: c_user_unknown TYPE xubname VALUE 'UNKNOWN'.
@@ -69,6 +71,18 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
                   io_adt                        TYPE REF TO object
         RETURNING VALUE(r_is_adt_jump_possible) TYPE abap_bool
         RAISING   zcx_abapgit_exception.
+    CLASS-METHODS:
+      get_adt_objects_and_names
+        IMPORTING
+          i_obj_name       TYPE zif_abapgit_definitions=>ty_item-obj_name
+          i_obj_type       TYPE zif_abapgit_definitions=>ty_item-obj_type
+        EXPORTING
+          eo_adt_uri_mapper TYPE REF TO object
+          eo_adt_objectref  TYPE REF TO object
+          e_program         TYPE progname
+          e_include         TYPE progname
+        RAISING
+          zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -256,17 +270,91 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD jump_adt.
 
-    DATA: lv_adt_link       TYPE string,
-          lv_obj_type       TYPE trobjtype,
-          lv_obj_name       TYPE trobj_name,
-          lo_object         TYPE REF TO cl_wb_object,
-          lo_adt            TYPE REF TO object,
-          lo_adt_uri_mapper TYPE REF TO object,
-          lo_adt_objref     TYPE REF TO object ##needed.
-    DATA: lv_line_number    TYPE string.
+    DATA: lv_adt_link           TYPE string.
+    DATA: lo_adt_uri_mapper     TYPE REF TO object ##needed.
+    DATA: lo_adt_objref         TYPE REF TO object ##needed.
+    DATA: lo_adt_sub_objref     TYPE REF TO object ##needed.
+    DATA: lv_program            TYPE progname.
+    DATA: lv_include            TYPE progname.
+*    DATA: lo_sub_adt_uri_mapper TYPE REF TO object ##needed.
+*    DATA: lo_sub_adt_objref     TYPE REF TO object ##needed.
+*    DATA: lv_sub_program        TYPE progname.
+*    DATA: lv_sub_include        TYPE progname.
+    DATA: lv_line_number        TYPE string.
 
     FIELD-SYMBOLS: <lv_uri> TYPE string.
+    DATA: lv_uri TYPE string.
 
+
+    get_adt_objects_and_names(
+      EXPORTING
+        i_obj_name        = i_obj_name
+        i_obj_type        = i_obj_type
+      IMPORTING
+        eo_adt_uri_mapper = lo_adt_uri_mapper
+        eo_adt_objectref  = lo_adt_objref
+        e_program         = lv_program
+        e_include         = lv_include ).
+
+*    get_adt_objects_and_names(
+*      EXPORTING
+*        i_obj_name        = i_sub_obj_name
+*        i_obj_type        = i_sub_obj_type
+*      IMPORTING
+*        eo_adt_uri_mapper = lo_sub_adt_uri_mapper
+*        eo_adt_objectref  = lo_sub_adt_objref
+*        e_program         = lv_sub_program
+*        e_include         = lv_sub_include ).
+
+    TRY.
+        IF i_sub_obj_name IS NOT INITIAL.
+
+          IF ( lv_program <> i_obj_name AND lv_include IS INITIAL ) OR
+             ( lv_program = lv_include AND i_sub_obj_name IS NOT INITIAL ).
+            lv_include = i_sub_obj_name.
+          ENDIF.
+
+          CALL METHOD lo_adt_uri_mapper->('IF_ADT_URI_MAPPER~MAP_INCLUDE_TO_OBJREF')
+            EXPORTING
+              program     = lv_program
+              include     = lv_include
+              line        = i_line_number
+              line_offset = 0
+              end_line    = i_line_number
+              end_offset  = 1
+            RECEIVING
+              result      = lo_adt_sub_objref.
+          IF lo_adt_sub_objref IS NOT INITIAL.
+            lo_adt_objref = lo_adt_sub_objref.
+          ENDIF.
+
+        ENDIF.
+
+        ASSIGN ('LO_ADT_OBJREF->REF_DATA-URI') TO <lv_uri>.
+        ASSERT sy-subrc = 0.
+
+        CONCATENATE 'adt://' sy-sysid <lv_uri> INTO lv_adt_link.
+
+        cl_gui_frontend_services=>execute( EXPORTING  document = lv_adt_link
+                                           EXCEPTIONS OTHERS   = 1 ).
+
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
+        ENDIF.
+
+      CATCH cx_root.
+        zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD get_adt_objects_and_names.
+
+    DATA lv_obj_type       TYPE trobjtype.
+    DATA lv_obj_name       TYPE trobj_name.
+    DATA lo_object         TYPE REF TO cl_wb_object.
+    DATA lo_adt            TYPE REF TO object.
+    FIELD-SYMBOLS <lv_uri> TYPE string.
 
     lv_obj_name = i_obj_name.
     lv_obj_type = i_obj_type.
@@ -295,39 +383,31 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
         CALL METHOD lo_adt->('IF_ADT_TOOLS_CORE_FACTORY~GET_URI_MAPPER')
           RECEIVING
-            result = lo_adt_uri_mapper.
+            result = eo_adt_uri_mapper.
 
-        CALL METHOD lo_adt_uri_mapper->('IF_ADT_URI_MAPPER~MAP_WB_OBJECT_TO_OBJREF')
+        CALL METHOD eo_adt_uri_mapper->('IF_ADT_URI_MAPPER~MAP_WB_OBJECT_TO_OBJREF')
           EXPORTING
             wb_object = lo_object
           RECEIVING
-            result    = lo_adt_objref.
+            result    = eo_adt_objectref.
 
-        ASSIGN ('LO_ADT_OBJREF->REF_DATA-URI') TO <lv_uri>.
+        ASSIGN ('EO_ADT_OBJECTREF->REF_DATA-URI') TO <lv_uri>.
         ASSERT sy-subrc = 0.
 
-        CONCATENATE 'adt://' sy-sysid <lv_uri> INTO lv_adt_link.
-
-        IF i_line_number IS NOT INITIAL.
-          lv_line_number = i_line_number.
-          SHIFT lv_line_number LEFT DELETING LEADING ' 0'.
-          CONDENSE lv_line_number NO-GAPS.
-          CONCATENATE lv_adt_link '/source/main#start=' lv_line_number ',0;end=' lv_line_number ',1 ' INTO lv_adt_link.
-
-        ENDIF.
-
-        cl_gui_frontend_services=>execute( EXPORTING  document = lv_adt_link
-                                           EXCEPTIONS OTHERS   = 1 ).
-
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
-        ENDIF.
+        CALL METHOD eo_adt_uri_mapper->('IF_ADT_URI_MAPPER~MAP_OBJREF_TO_INCLUDE')
+          EXPORTING
+            uri     = <lv_uri>
+          IMPORTING
+            program = e_program
+            include = e_include.
 
       CATCH cx_root.
         zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
     ENDTRY.
 
   ENDMETHOD.
+
+
 
 
   METHOD jump_se11.
