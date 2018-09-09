@@ -408,8 +408,6 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
   ENDMETHOD.
 
 
-
-
   METHOD jump_se11.
 
     DATA: lt_bdcdata TYPE TABLE OF bdcdata.
