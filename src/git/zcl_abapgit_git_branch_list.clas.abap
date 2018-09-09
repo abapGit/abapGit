@@ -346,7 +346,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
     IF iv_data+lv_0a_pos(1) = cl_abap_char_utilities=>newline.
       lv_length = lv_hex.
     ELSE.
-      lv_length = lv_hex + 2.
+      lv_length = lv_hex.
     ENDIF.
 
     rv_data = iv_data+lv_length.
