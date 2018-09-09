@@ -252,13 +252,16 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
          ( <ls_result>-sobjname = <ls_result>-objname and
            <ls_result>-sobjtype = <ls_result>-sobjtype ).
         ro_html->add_a( iv_txt = |{ <ls_result>-objtype } { <ls_result>-objname }|
-                        iv_act = |{ <ls_result>-objtype }{ <ls_result>-objname }{ c_object_separator }{ c_object_separator }{ <ls_result>-line }|
+                        iv_act = |{ <ls_result>-objtype }{ <ls_result>-objname }| &&
+                                 |{ c_object_separator }{ c_object_separator }{ <ls_result>-line }|
                         iv_typ = zif_abapgit_definitions=>c_action_type-sapevent ).
 
       ELSE.
         ro_html->add_a( iv_txt = |{ <ls_result>-objtype } { <ls_result>-objname }| &&
                                  | < { <ls_result>-sobjtype } { <ls_result>-sobjname }|
-                        iv_act = |{ <ls_result>-objtype }{ <ls_result>-objname }{ c_object_separator }{ <ls_result>-sobjtype }{ <ls_result>-sobjname }{ c_object_separator }{ <ls_result>-line }|
+                        iv_act = |{ <ls_result>-objtype }{ <ls_result>-objname }| &&
+                                 |{ c_object_separator }{ <ls_result>-sobjtype }{ <ls_result>-sobjname }| &&
+                                 |{ c_object_separator }{ <ls_result>-line }|
                         iv_typ = zif_abapgit_definitions=>c_action_type-sapevent ).
 
       ENDIF.
@@ -313,9 +316,13 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_page~on_event.
 
-    DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online,
-          ls_item        TYPE zif_abapgit_definitions=>ty_item,
-          ls_sub_item    TYPE zif_abapgit_definitions=>ty_item.
+    DATA: lo_repo_online   TYPE REF TO zcl_abapgit_repo_online,
+          ls_item          TYPE zif_abapgit_definitions=>ty_item,
+          ls_sub_item      TYPE zif_abapgit_definitions=>ty_item.
+    DATA: lv_main_object   TYPE string.
+    DATA: lv_sub_object    TYPE string.
+    DATA: lv_line_number_s TYPE string.
+    DATA: lv_line_number   TYPE i.
 
 
     CASE iv_action.
@@ -366,10 +373,6 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
         ev_state = zif_abapgit_definitions=>c_event_state-re_render.
 
       WHEN OTHERS.
-        DATA: lv_main_object TYPE string.
-        DATA: lv_sub_object TYPE string.
-        DATA: lv_line_number_s TYPE string.
-        DATA: lv_line_number TYPE i.
         SPLIT iv_action AT c_object_separator INTO lv_main_object lv_sub_object lv_line_number_s.
         ls_item-obj_type = lv_main_object(4).
         ls_item-obj_name = lv_main_object+4(*).
