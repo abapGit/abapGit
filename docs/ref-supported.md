@@ -38,10 +38,11 @@ ECSP | eCATT Start Profile | Yes
 ECTC | eCATT Test Configuration | Yes
 ECTD | eCATT Test Data Container | Yes
 ECVO | eCATT Validation Object | Yes
-ENHC | Composite Enhancement Implementation | Yes
+ENHC | Composite Enhancement Implementation | [#1896](https://github.com/larshp/abapGit/issues/1896)
 ENHO | Enhancement Implementation | Yes
 ENHS | Enhancement Spot | Yes
 ENQU | Lock Object | Yes
+ENSC | Composite Enhancement Spot | Yes
 FORM | SAPscript form | Yes
 FUGR | Function Group | Yes
 IAMU | Language-Independent IAC Binary Data | Yes
@@ -97,6 +98,8 @@ TRAN | Transaction | Yes
 TTYP | Table Type | Yes
 TYPE | Type Group | Yes
 UCSA | Unified Connectivity Service Assembly | Yes
+UDMO | Data model | [#1905](https://github.com/larshp/abapGit/issues/1905)
+UENO | Entity type | [#1906](https://github.com/larshp/abapGit/issues/1906)
 VCLS | View cluster | Yes
 VIEW | View | Yes
 W3HT | Web Reporting/Internet Transaction Server HTML Templates | Yes
