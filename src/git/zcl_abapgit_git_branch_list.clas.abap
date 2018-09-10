@@ -95,7 +95,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
+CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
 
 
   METHOD complete_heads_branch_name.
@@ -332,14 +332,22 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
 
   METHOD skip_first_pkt.
 
+    CONSTANTS: lc_lf TYPE x LENGTH 1 VALUE '0A'.
     DATA: lv_hex    TYPE x LENGTH 1,
-          lv_length TYPE i.
+          lv_length TYPE i,
+          lv_0a_pos TYPE i.
+
 
 * channel
     ASSERT iv_data(2) = '00'.
 
     lv_hex = to_upper( iv_data+2(2) ).
-    lv_length = lv_hex + 2.
+    lv_0a_pos = lv_hex - 1.
+    IF iv_data+lv_0a_pos(1) = cl_abap_char_utilities=>newline.
+      lv_length = lv_hex.
+    ELSE.
+      lv_length = lv_hex.
+    ENDIF.
 
     rv_data = iv_data+lv_length.
 
