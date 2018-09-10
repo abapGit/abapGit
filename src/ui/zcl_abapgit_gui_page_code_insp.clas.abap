@@ -295,6 +295,9 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
         ei_page = me.
         ev_state = zif_abapgit_definitions=>c_event_state-re_render.
 
+      WHEN zif_abapgit_definitions=>c_action-abapgit_home.
+        RETURN.
+
       WHEN OTHERS.
 
         ls_item-obj_type = iv_action(4).
