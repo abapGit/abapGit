@@ -32,7 +32,7 @@ CLASS zcl_abapgit_object_msag DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         IMPORTING it_t100 TYPE zcl_abapgit_object_msag=>tty_t100
                   io_xml  TYPE REF TO zcl_abapgit_xml_output
         RAISING   zcx_abapgit_exception,
-      erase_msgid IMPORTING message_id        TYPE arbgb.
+      erase_msgid IMPORTING iv_message_id        TYPE arbgb.
 
 ENDCLASS.
 
@@ -182,14 +182,14 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
     DATA: lv_t100a          TYPE t100a,
           lv_error          TYPE abap_bool,
-          frozen            TYPE flag,
-          message_id        TYPE arbgb,
-          trkey1            TYPE trkey,
+          lv_frozen            TYPE flag,
+          lv_message_id        TYPE arbgb,
+          lv_trkey1            TYPE trkey,
           lv_access_granted TYPE abap_bool.
 
 * parameter SUPPRESS_DIALOG doesnt exist in all versions of FM RS_DELETE_MESSAGE_ID
 * replaced with a copy
-    message_id = ms_item-obj_name.
+    lv_message_id = ms_item-obj_name.
     IF ms_item-obj_name EQ space.
       lv_error = abap_true."blank message id
     ELSE.
@@ -200,20 +200,20 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     ENDIF.
 
     IF lv_error = abap_false.
-      CLEAR frozen.
+      CLEAR lv_frozen.
       CALL FUNCTION 'RS_ACCESS_PERMISSION'
         EXPORTING
           authority_check = 'X'
           global_lock     = 'X'
           mode            = 'MODIFY'
-          object          = message_id
+          object          = lv_message_id
           object_class    = 'T100'
         IMPORTING
-          frozen          = frozen
+          frozen          = lv_frozen
         EXCEPTIONS
           OTHERS          = 1.
 
-      IF sy-subrc NE 0 OR frozen NE space.
+      IF sy-subrc NE 0 OR lv_frozen NE space.
         lv_error = abap_true."can't access
       ELSE.
         lv_access_granted = abap_true.
@@ -226,11 +226,11 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
       CALL FUNCTION 'RS_CORR_INSERT'
         EXPORTING
           global_lock        = 'X'
-          object             = message_id
+          object             = lv_message_id
           object_class       = 'MSAG'
           mode               = 'D'
         IMPORTING
-          transport_key      = trkey1
+          transport_key      = lv_trkey1
         EXCEPTIONS
           cancelled          = 01
           permission_failure = 02.
@@ -241,8 +241,8 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     ENDIF.
 
     IF lv_error = abap_false.
-      erase_msgid( message_id ).
-      trkey1-sub_type = '*'.
+      erase_msgid( lv_message_id ).
+      lv_trkey1-sub_type = '*'.
 
     ENDIF.
 
@@ -250,7 +250,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
       CALL FUNCTION 'RS_ACCESS_PERMISSION'
         EXPORTING
           mode         = 'FREE'
-          object       = message_id
+          object       = lv_message_id
           object_class = 'T100'.
 
     ENDIF.
@@ -433,23 +433,23 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD erase_msgid.
-    DATA: d_key_s TYPE dokhl-object.
+    DATA: lv_key_s TYPE dokhl-object.
 
-    CLEAR d_key_s.
+    CLEAR lv_key_s.
     CALL FUNCTION 'DOCU_OBJECT_NAME_CONCATENATE'
       EXPORTING
         docu_id  = 'NA'
-        element  = message_id
+        element  = iv_message_id
         addition = '   '
       IMPORTING
-        object   = d_key_s
+        object   = lv_key_s
       EXCEPTIONS
         OTHERS   = 0.
 
     CALL FUNCTION 'DOKU_DELETE_ALL'
       EXPORTING
         doku_id                        = 'NA'
-        doku_object                    = d_key_s
+        doku_object                    = lv_key_s
         generic_use                    = 'X'
         suppress_authority             = space
         suppress_enqueue               = space
@@ -465,25 +465,25 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     IF sy-subrc NE 0 AND sy-subrc NE 4.
       MESSAGE s044(e4) WITH sy-msgid.
     ENDIF.
-    DELETE FROM t100a WHERE arbgb = message_id.
+    DELETE FROM t100a WHERE arbgb = iv_message_id.
     IF sy-subrc <> 0 AND sy-subrc <> 4.
       MESSAGE s018(e4) WITH 'T100A'.
     ELSE.
       CALL FUNCTION 'RS_TREE_OBJECT_PLACEMENT'
         EXPORTING
-          object    = message_id
+          object    = iv_message_id
           operation = 'DELETE'
           program   = space
           type      = 'CN'.
-      DELETE FROM t100o WHERE arbgb = message_id.
-      DELETE FROM t100t WHERE arbgb = message_id.       "#EC CI_NOFIRST
-      DELETE FROM t100u WHERE arbgb = message_id.
-      DELETE FROM t100x WHERE arbgb = message_id.
-      DELETE FROM t100 WHERE arbgb = message_id.
+      DELETE FROM t100o WHERE arbgb = iv_message_id.
+      DELETE FROM t100t WHERE arbgb = iv_message_id.       "#EC CI_NOFIRST
+      DELETE FROM t100u WHERE arbgb = iv_message_id.
+      DELETE FROM t100x WHERE arbgb = iv_message_id.
+      DELETE FROM t100 WHERE arbgb = iv_message_id.
       IF sy-subrc <> 0 AND sy-subrc <> 4.
         MESSAGE s018(e4) WITH 'T100'.
       ELSE.
-        MESSAGE s022(e4) WITH message_id.
+        MESSAGE s022(e4) WITH iv_message_id.
       ENDIF.
     ENDIF.
 
