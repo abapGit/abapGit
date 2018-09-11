@@ -111,6 +111,14 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     lv_head_suffix = | ({ zif_abapgit_definitions=>c_head_name })|.
     lv_head_symref = lo_branches->get_head_symref( ).
 
+    IF iv_hide_branch IS NOT INITIAL.
+      DELETE lt_branches WHERE name = iv_hide_branch.
+    ENDIF.
+
+    IF iv_hide_head IS NOT INITIAL.
+      DELETE lt_branches WHERE name = zif_abapgit_definitions=>c_head_name.
+    ENDIF.
+
     LOOP AT lt_branches ASSIGNING <ls_branch>.
 
       CHECK <ls_branch>-name IS NOT INITIAL. " To ensure some below ifs

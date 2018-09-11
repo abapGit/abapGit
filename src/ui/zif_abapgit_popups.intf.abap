@@ -50,6 +50,8 @@ INTERFACE zif_abapgit_popups
       !iv_url             TYPE string
       !iv_default_branch  TYPE string OPTIONAL
       !iv_show_new_option TYPE abap_bool OPTIONAL
+      !iv_hide_branch     TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
+      !iv_hide_head       TYPE abap_bool OPTIONAL
     RETURNING
       VALUE(rs_branch)    TYPE zif_abapgit_definitions=>ty_git_branch
     RAISING
@@ -77,7 +79,7 @@ INTERFACE zif_abapgit_popups
       !iv_default_button        TYPE char1 DEFAULT '1'
       !iv_display_cancel_button TYPE char1 DEFAULT abap_true
     RETURNING
-      VALUE(rv_answer)       TYPE char1
+      VALUE(rv_answer)          TYPE char1
     RAISING
       zcx_abapgit_exception .
   METHODS popup_to_inform
@@ -106,8 +108,8 @@ INTERFACE zif_abapgit_popups
   METHODS popup_to_select_from_list
     IMPORTING
       !it_list               TYPE STANDARD TABLE
-      !iv_header_text         TYPE csequence
-      !iv_select_column_text  TYPE csequence
+      !iv_header_text        TYPE csequence
+      !iv_select_column_text TYPE csequence
       !it_columns_to_display TYPE stringtab
     EXPORTING
       VALUE(et_list)         TYPE STANDARD TABLE
