@@ -270,20 +270,13 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD jump_adt.
 
-    DATA: lv_adt_link           TYPE string.
-    DATA: lo_adt_uri_mapper     TYPE REF TO object ##needed.
-    DATA: lo_adt_objref         TYPE REF TO object ##needed.
-    DATA: lo_adt_sub_objref     TYPE REF TO object ##needed.
-    DATA: lv_program            TYPE progname.
-    DATA: lv_include            TYPE progname.
-*    DATA: lo_sub_adt_uri_mapper TYPE REF TO object ##needed.
-*    DATA: lo_sub_adt_objref     TYPE REF TO object ##needed.
-*    DATA: lv_sub_program        TYPE progname.
-*    DATA: lv_sub_include        TYPE progname.
-    DATA: lv_line_number        TYPE string.
-
+    DATA: lv_adt_link       TYPE string.
+    DATA: lo_adt_uri_mapper TYPE REF TO object ##needed.
+    DATA: lo_adt_objref     TYPE REF TO object ##needed.
+    DATA: lo_adt_sub_objref TYPE REF TO object ##needed.
+    DATA: lv_program        TYPE progname.
+    DATA: lv_include        TYPE progname.
     FIELD-SYMBOLS: <lv_uri> TYPE string.
-    DATA: lv_uri TYPE string.
 
 
     get_adt_objects_and_names(
@@ -295,16 +288,6 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
         eo_adt_objectref  = lo_adt_objref
         e_program         = lv_program
         e_include         = lv_include ).
-
-*    get_adt_objects_and_names(
-*      EXPORTING
-*        i_obj_name        = i_sub_obj_name
-*        i_obj_type        = i_sub_obj_type
-*      IMPORTING
-*        eo_adt_uri_mapper = lo_sub_adt_uri_mapper
-*        eo_adt_objectref  = lo_sub_adt_objref
-*        e_program         = lv_sub_program
-*        e_include         = lv_sub_include ).
 
     TRY.
         IF i_sub_obj_name IS NOT INITIAL.
