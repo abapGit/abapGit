@@ -32,7 +32,13 @@ CLASS zcl_abapgit_object_msag DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         IMPORTING it_t100 TYPE zcl_abapgit_object_msag=>tty_t100
                   io_xml  TYPE REF TO zcl_abapgit_xml_output
         RAISING   zcx_abapgit_exception,
-      erase_msgid IMPORTING iv_message_id        TYPE arbgb.
+      delete_msgid IMPORTING iv_message_id        TYPE arbgb,
+      free_access_permission
+        IMPORTING
+          i_message_id TYPE arbgb,
+      delete_documentation
+        IMPORTING
+          iv_message_id TYPE arbgb.
 
 ENDCLASS.
 
@@ -181,82 +187,69 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
     DATA: lv_t100a          TYPE t100a,
-          lv_error          TYPE abap_bool,
-          lv_frozen            TYPE flag,
-          lv_message_id        TYPE arbgb,
-          lv_trkey1            TYPE trkey,
+          lv_frozen         TYPE flag,
+          lv_message_id     TYPE arbgb,
+          lv_trkey1         TYPE trkey,
           lv_access_granted TYPE abap_bool.
 
 * parameter SUPPRESS_DIALOG doesnt exist in all versions of FM RS_DELETE_MESSAGE_ID
 * replaced with a copy
     lv_message_id = ms_item-obj_name.
     IF ms_item-obj_name EQ space.
-      lv_error = abap_true."blank message id
+      zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."blank message id
     ELSE.
       SELECT SINGLE * FROM t100a INTO lv_t100a WHERE arbgb = ms_item-obj_name.
       IF sy-subrc NE 0.
-        lv_error = abap_true."not found
+        zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."not found
       ENDIF.
     ENDIF.
 
-    IF lv_error = abap_false.
-      CLEAR lv_frozen.
-      CALL FUNCTION 'RS_ACCESS_PERMISSION'
-        EXPORTING
-          authority_check = 'X'
-          global_lock     = 'X'
-          mode            = 'MODIFY'
-          object          = lv_message_id
-          object_class    = 'T100'
-        IMPORTING
-          frozen          = lv_frozen
-        EXCEPTIONS
-          OTHERS          = 1.
+    CLEAR lv_frozen.
+    CALL FUNCTION 'RS_ACCESS_PERMISSION'
+      EXPORTING
+        authority_check = 'X'
+        global_lock     = 'X'
+        mode            = 'MODIFY'
+        object          = lv_message_id
+        object_class    = 'T100'
+      IMPORTING
+        frozen          = lv_frozen
+      EXCEPTIONS
+        OTHERS          = 1.
 
-      IF sy-subrc NE 0 OR lv_frozen NE space.
-        lv_error = abap_true."can't access
-      ELSE.
-        lv_access_granted = abap_true.
+    IF sy-subrc NE 0 OR lv_frozen NE space.
+      zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."can't access
+    ELSE.
+      lv_access_granted = abap_true.
+    ENDIF.
+
+
+
+    CALL FUNCTION 'RS_CORR_INSERT'
+      EXPORTING
+        global_lock        = 'X'
+        object             = lv_message_id
+        object_class       = 'MSAG'
+        mode               = 'D'
+      IMPORTING
+        transport_key      = lv_trkey1
+      EXCEPTIONS
+        cancelled          = 01
+        permission_failure = 02.
+    IF sy-subrc NE 0.
+      IF lv_access_granted = abap_true.
+        free_access_permission( lv_message_id ).
       ENDIF.
-
+      zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."can't access
     ENDIF.
 
-    IF lv_error = abap_false.
 
-      CALL FUNCTION 'RS_CORR_INSERT'
-        EXPORTING
-          global_lock        = 'X'
-          object             = lv_message_id
-          object_class       = 'MSAG'
-          mode               = 'D'
-        IMPORTING
-          transport_key      = lv_trkey1
-        EXCEPTIONS
-          cancelled          = 01
-          permission_failure = 02.
-      IF sy-subrc NE 0.
-        lv_error = abap_true."can't access
-      ENDIF.
+    delete_msgid( lv_message_id ).
+    lv_trkey1-sub_type = '*'.
 
-    ENDIF.
 
-    IF lv_error = abap_false.
-      erase_msgid( lv_message_id ).
-      lv_trkey1-sub_type = '*'.
-
-    ENDIF.
-
-    IF    lv_access_granted = abap_true.
-      CALL FUNCTION 'RS_ACCESS_PERMISSION'
-        EXPORTING
-          mode         = 'FREE'
-          object       = lv_message_id
-          object_class = 'T100'.
-
-    ENDIF.
-
-    IF lv_error = abap_true.
-      zcx_abapgit_exception=>raise( 'Error from RS_DELETE_MESSAGE_ID' ).
+    IF lv_access_granted = abap_true.
+      free_access_permission( lv_message_id ).
     ENDIF.
 
   ENDMETHOD.
@@ -432,7 +425,39 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD erase_msgid.
+  METHOD delete_msgid.
+
+    delete_documentation( iv_message_id ).
+
+    DELETE FROM t100a WHERE arbgb = iv_message_id.
+    IF sy-subrc = 0 OR sy-subrc = 4.
+      CALL FUNCTION 'RS_TREE_OBJECT_PLACEMENT'
+        EXPORTING
+          object    = iv_message_id
+          operation = 'DELETE'
+          program   = space
+          type      = 'CN'.
+      DELETE FROM t100o WHERE arbgb = iv_message_id.
+      DELETE FROM t100t WHERE arbgb = iv_message_id.    "#EC CI_NOFIRST
+      DELETE FROM t100u WHERE arbgb = iv_message_id.
+      DELETE FROM t100x WHERE arbgb = iv_message_id.
+      DELETE FROM t100 WHERE arbgb = iv_message_id.
+    ENDIF.
+
+
+  ENDMETHOD.
+
+
+  METHOD free_access_permission.
+    CALL FUNCTION 'RS_ACCESS_PERMISSION'
+      EXPORTING
+        mode         = 'FREE'
+        object       = i_message_id
+        object_class = 'T100'.
+  ENDMETHOD.
+
+
+  METHOD delete_documentation.
     DATA: lv_key_s TYPE dokhl-object.
 
     CLEAR lv_key_s.
@@ -462,31 +487,6 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
         object_is_already_enqueued     = 05
         object_is_enqueued_by_corr     = 06
         user_break                     = 07.
-    IF sy-subrc NE 0 AND sy-subrc NE 4.
-      MESSAGE s044(e4) WITH sy-msgid.
-    ENDIF.
-    DELETE FROM t100a WHERE arbgb = iv_message_id.
-    IF sy-subrc <> 0 AND sy-subrc <> 4.
-      MESSAGE s018(e4) WITH 'T100A'.
-    ELSE.
-      CALL FUNCTION 'RS_TREE_OBJECT_PLACEMENT'
-        EXPORTING
-          object    = iv_message_id
-          operation = 'DELETE'
-          program   = space
-          type      = 'CN'.
-      DELETE FROM t100o WHERE arbgb = iv_message_id.
-      DELETE FROM t100t WHERE arbgb = iv_message_id.       "#EC CI_NOFIRST
-      DELETE FROM t100u WHERE arbgb = iv_message_id.
-      DELETE FROM t100x WHERE arbgb = iv_message_id.
-      DELETE FROM t100 WHERE arbgb = iv_message_id.
-      IF sy-subrc <> 0 AND sy-subrc <> 4.
-        MESSAGE s018(e4) WITH 'T100'.
-      ELSE.
-        MESSAGE s022(e4) WITH iv_message_id.
-      ENDIF.
-    ENDIF.
-
 
   ENDMETHOD.
 
