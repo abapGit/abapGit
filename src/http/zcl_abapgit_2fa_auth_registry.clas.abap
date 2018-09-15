@@ -1,4 +1,4 @@
-"! Static registry class to find <em>LIF_2FA_AUTHENTICATOR</em> instances
+"! Static registry class to find {@link ZIF_ABAPGIT_2FA_AUTHENTICATOR} instances
 CLASS zcl_abapgit_2fa_auth_registry DEFINITION
   PUBLIC
   FINAL
@@ -9,8 +9,8 @@ CLASS zcl_abapgit_2fa_auth_registry DEFINITION
       class_constructor,
       "! Retrieve an authenticator instance by url
       "! @parameter iv_url | Url of the repository / service
-      "! @parameter ro_authenticator | Found authenticator instance
-      "! @raising lcx_2fa_unsupported | No authenticator found that supports the service
+      "! @parameter ri_authenticator | Found authenticator instance
+      "! @raising zcx_abapgit_2fa_unsupported | No authenticator found that supports the service
       get_authenticator_for_url IMPORTING iv_url                  TYPE string
                                 RETURNING VALUE(ri_authenticator) TYPE REF TO zif_abapgit_2fa_authenticator
                                 RAISING   zcx_abapgit_2fa_unsupported,
