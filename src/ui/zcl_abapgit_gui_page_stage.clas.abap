@@ -9,6 +9,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
     CONSTANTS: BEGIN OF c_action,
                  stage_all    TYPE string VALUE 'stage_all',
                  stage_commit TYPE string VALUE 'stage_commit',
+                 stage_filter TYPE string VALUE 'stage_filter',
                END OF c_action.
 
     METHODS:
@@ -36,7 +37,8 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
     DATA ms_files TYPE zif_abapgit_definitions=>ty_stage_files .
-    DATA mv_seed TYPE string .    " Unique page id to bind JS sessionStorage
+    DATA mv_seed TYPE string .   " Unique page id to bind JS sessionStorage
+    DATA mv_filter_value TYPE string.
 
     METHODS find_changed_by
       IMPORTING
@@ -227,7 +229,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     " Filter bar
     ro_html->add( '<td class="right">' ).
     ro_html->add( '<input class="stage-filter" id="objectSearch"' &&
-                  ' type="search" placeholder="Filter objects">' ).
+                  ' type="search" placeholder="Filter objects"' &&
+                  | value={ mv_filter_value }>| ).
     ro_html->add( '</td>' ).
 
     ro_html->add( '</tr>' ).
@@ -399,7 +402,9 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_page~on_event.
 
-    DATA lo_stage TYPE REF TO zcl_abapgit_stage.
+    DATA: lo_stage  TYPE REF TO zcl_abapgit_stage,
+          lv_string TYPE string,
+          lt_fields TYPE tihttpnvp.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local.
 
@@ -434,6 +439,18 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
             io_repo  = mo_repo
             io_stage = lo_stage.
         ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+
+      WHEN c_action-stage_filter.
+
+        CONCATENATE LINES OF it_postdata INTO lv_string.
+
+        lt_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_string ).
+
+        zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name  = 'filterValue'
+                                                            it_field = lt_fields
+                                                  CHANGING  cg_field = mv_filter_value ).
+
+        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
 
       WHEN zif_abapgit_definitions=>c_action-go_patch.                         " Go Patch page
 

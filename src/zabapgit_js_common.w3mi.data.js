@@ -180,7 +180,7 @@ function StageHelper(params) {
   this.pageSeed        = params.seed;
   this.formAction      = params.formAction;
   this.choiseCount     = 0;
-  this.lastSearchValue = "";
+  this.lastFilterValue = "";
 
   // DOM nodes
   this.dom = {
@@ -218,8 +218,8 @@ function StageHelper(params) {
 StageHelper.prototype.setHooks = function() {
   this.dom.stageTab.onclick        = this.onTableClick.bind(this);
   this.dom.commitBtn.onclick       = this.submit.bind(this);
-  this.dom.objectSearch.oninput    = this.onSearch.bind(this);
-  this.dom.objectSearch.onkeypress = this.onSearch.bind(this);
+  this.dom.objectSearch.oninput    = this.onFilter.bind(this);
+  this.dom.objectSearch.onkeypress = this.onFilter.bind(this);
   window.onbeforeunload            = this.onPageUnload.bind(this);
   window.onload                    = this.onPageLoad.bind(this);
 }
@@ -242,7 +242,7 @@ StageHelper.prototype.onPageUnload = function() {
 
   var data = this.collectData();
   window.sessionStorage.setItem(this.pageSeed, JSON.stringify(data));
-}
+};
 
 // Re-store table state on entering the page
 StageHelper.prototype.onPageLoad = function() {
@@ -254,8 +254,11 @@ StageHelper.prototype.onPageLoad = function() {
   });
 
   this.updateMenu();
+  if (this.dom.objectSearch.value) {
+    this.applyFilterValue(this.dom.objectSearch.value);
+  }
   debugOutput("StageHelper.onPageLoad: " + ((data) ? "from Storage" : "initial state"));
-}
+};
 
 // Table event handler, change status
 StageHelper.prototype.onTableClick = function (event) {
@@ -292,15 +295,22 @@ StageHelper.prototype.onTableClick = function (event) {
 };
 
 // Search object
-StageHelper.prototype.onSearch = function (e) {
+StageHelper.prototype.onFilter = function (e) {
   if ( // Enter hit or clear, IE SUCKS !
-       e.type === "input" && !e.target.value && this.lastSearchValue
+       e.type === "input" && !e.target.value && this.lastFilterValue
     || e.type === "keypress" && e.which === 13 ) { 
 
-    this.lastSearchValue = e.target.value;
-    this.iterateStageTab(true, this.applyFilterToRow, e.target.value);
+    this.applyFilterValue(e.target.value);
+    submitSapeventForm({ 'filterValue': e.target.value }, "stage_filter", "post");
   }
-}
+};
+
+StageHelper.prototype.applyFilterValue = function(sFilterValue) {
+
+  this.lastFilterValue = sFilterValue;
+  this.iterateStageTab(true, this.applyFilterToRow, sFilterValue);
+
+};
 
 // Apply filter to a single stage line - hide or show
 StageHelper.prototype.applyFilterToRow = function (row, filter) {
