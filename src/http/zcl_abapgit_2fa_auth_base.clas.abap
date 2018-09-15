@@ -1,4 +1,4 @@
-"! Default <em>LIF_2FA-AUTHENTICATOR</em> implememtation
+"! Default {@link ZIF_ABAPGIT_2FA_AUTHENTICATOR} implementation
 CLASS zcl_abapgit_2fa_auth_base DEFINITION
   PUBLIC
   ABSTRACT
@@ -17,7 +17,7 @@ CLASS zcl_abapgit_2fa_auth_base DEFINITION
     METHODS:
       "! @parameter iv_supported_url_regex | Regular expression to check if a repository url is
       "!                                     supported, used for default implementation of
-      "!                                     <em>SUPPORTS_URL</em>
+      "!                                     {@link .METH:supports_url}
       constructor IMPORTING iv_supported_url_regex TYPE clike.
   PROTECTED SECTION.
     CLASS-METHODS:
