@@ -30,7 +30,10 @@ CLASS ltcl_syntax_cases DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS
       test_xml_02  FOR TESTING,
       test_xml_03  FOR TESTING,
       test_xml_04  FOR TESTING,
-      test_xml_05  FOR TESTING.
+      test_xml_05  FOR TESTING,
+      test_xml_06  FOR TESTING,
+      test_xml_07  FOR TESTING,
+      test_xml_08  FOR TESTING.
 
 ENDCLASS.
 *----------------------------------------------------------------------*
@@ -510,6 +513,87 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     _generate_extend 'X' 29 1 '>'.
     _generate_extend '.' 30 6 ''.
     _generate_extend 'X' 36 9 '<'.
+
+    do_test( iv_line = lv_line iv_filename = '*.xml' ).
+
+  ENDMETHOD.
+
+  METHOD test_xml_06.
+    DATA lv_line TYPE string.
+
+    "unclosed tag
+    lv_line = '<ns:tag ns:a1="v1"'.                                     "#EC NOTEXT
+
+    " Generate table with expected values after parsing
+    _generate_parse 'X' 0  1.
+    _generate_parse 'A' 7  6.
+    _generate_parse 'V' 14 4.
+
+    " Generate table with expected values after ordering
+    _generate_order 'X' 0  7 '<'.
+    _generate_order 'A' 7  6 ''.
+    _generate_order 'V' 14 4 ''.
+
+    " Generate table with expected values after extending
+    _generate_extend 'X' 0  7 '<'.
+    _generate_extend 'A' 7  6 ''.
+    _generate_extend '.' 13 1 ''.
+    _generate_extend 'V' 14 4 ''.
+
+    do_test( iv_line = lv_line iv_filename = '*.xml' ).
+  ENDMETHOD.
+
+  METHOD test_xml_07.
+    "invalid XML characters in a string
+    DATA lv_line TYPE string.
+
+    "xml special characters in attribute
+    lv_line = '<tag attribute=" '' > "/>'.                   "#EC NOTEXT
+
+    " Generate table with expected values after parsing
+    _generate_parse 'X' 0  1.
+    _generate_parse 'A' 4  10.
+    _generate_parse 'V' 15 7.
+    _generate_parse 'X' 23 1.
+
+    " Generate table with expected values after ordering
+    _generate_order 'X' 0  4 '<'.
+    _generate_order 'A' 4  10 ''.
+    _generate_order 'V' 15 7 ''.
+    _generate_order 'X' 22 2 '>'.
+
+    " Generate table with expected values after extending
+    _generate_extend 'X' 0  4 '<'.
+    _generate_extend 'A' 4  10 ''.
+    _generate_extend '.' 14 1 ''.
+    _generate_extend 'V' 15 7 ''.
+    _generate_extend 'X' 22 2 '>'.
+
+    do_test( iv_line = lv_line iv_filename = '*.xml' ).
+
+
+  ENDMETHOD.
+
+
+  METHOD test_xml_08.
+    "invalid XML characters in a string
+    DATA lv_line TYPE string.
+
+    "attribute at beginning of line
+    lv_line = 'attribute=''>" '''.                   "#EC NOTEXT
+
+    " Generate table with expected values after parsing
+    _generate_parse 'A' 0  9.
+    _generate_parse 'V' 10 5.
+
+    " Generate table with expected values after ordering
+    _generate_order 'A' 0  9 ''.
+    _generate_order 'V' 10 5 ''.
+
+    " Generate table with expected values after extending
+    _generate_extend 'A' 0  9 ''.
+    _generate_extend '.' 9 1 ''.
+    _generate_extend 'V' 10 5 ''.
 
     do_test( iv_line = lv_line iv_filename = '*.xml' ).
 
