@@ -19,9 +19,11 @@ CLASS zcl_abapgit_syntax_xml DEFINITION
       END OF c_token .
     CONSTANTS:
       BEGIN OF c_regex,
-        xml_tag  TYPE string VALUE '[<>]',                  "#EC NOTEXT
-        attr     TYPE string VALUE '\s[-a-z:_0-9]+\s*(?==)', "#EC NOTEXT
-        attr_val TYPE string VALUE '["''][^''"]*[''"]',     "#EC NOTEXT
+        "for XML tags, we will use a submatch
+        " main pattern includes quoted strings so we can ignore < and > in attr values
+        xml_tag  TYPE string VALUE '(?:"[^"]*")|(?:''[^'']*'')|([<>])',    "#EC NOTEXT
+        attr     TYPE string VALUE '(?:^|\s)[-a-z:_0-9]+\s*(?==)', "#EC NOTEXT
+        attr_val TYPE string VALUE '("[^"]*")|(''[^'']*'')',     "#EC NOTEXT
       END OF c_regex .
 
     METHODS constructor .
@@ -42,9 +44,10 @@ CLASS zcl_abapgit_syntax_xml IMPLEMENTATION.
 
     " Initialize instances of regular expressions
 
-    add_rule( iv_regex = c_regex-xml_tag
-              iv_token = c_token-xml_tag
-              iv_style = c_css-xml_tag ).
+    add_rule( iv_regex    = c_regex-xml_tag
+              iv_token    = c_token-xml_tag
+              iv_style    = c_css-xml_tag
+              iv_submatch = 1 ).
 
     add_rule( iv_regex = c_regex-attr
               iv_token = c_token-attr
@@ -113,6 +116,19 @@ CLASS zcl_abapgit_syntax_xml IMPLEMENTATION.
       lv_prev_token = <ls_match>-token.
       ASSIGN <ls_match> TO <ls_prev>.
     ENDLOOP.
+
+    "if the last XML tag is not closed, extend it to the end of the tag
+    IF    lv_prev_token = c_token-xml_tag
+      AND <ls_prev> IS ASSIGNED
+      AND <ls_prev>-length  = 1
+      AND <ls_prev>-text_tag = '<'.
+
+      FIND REGEX '<\s*[^\s]*' IN iv_line+<ls_prev>-offset MATCH LENGTH <ls_prev>-length.
+      IF sy-subrc <> 0.
+        <ls_prev>-length = 1.
+      ENDIF.
+
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

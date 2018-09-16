@@ -30,9 +30,10 @@ CLASS zcl_abapgit_syntax_highlighter DEFINITION
 
     TYPES:
       BEGIN OF ty_rule,
-        regex TYPE REF TO cl_abap_regex,
-        token TYPE char1,
-        style TYPE string,
+        regex             TYPE REF TO cl_abap_regex,
+        token             TYPE char1,
+        style             TYPE string,
+        relevant_submatch TYPE i,
       END OF ty_rule.
 
     CONSTANTS c_token_none TYPE c VALUE '.'.
@@ -41,9 +42,10 @@ CLASS zcl_abapgit_syntax_highlighter DEFINITION
 
     METHODS add_rule
       IMPORTING
-        iv_regex TYPE string
-        iv_token TYPE c
-        iv_style TYPE string.
+        iv_regex    TYPE string
+        iv_token    TYPE c
+        iv_style    TYPE string
+        iv_submatch TYPE i OPTIONAL.
 
     METHODS parse_line
       IMPORTING iv_line    TYPE string
@@ -66,12 +68,11 @@ CLASS zcl_abapgit_syntax_highlighter DEFINITION
       IMPORTING iv_line        TYPE string
                 iv_class       TYPE string
       RETURNING VALUE(rv_line) TYPE string.
-
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
+CLASS zcl_abapgit_syntax_highlighter IMPLEMENTATION.
 
 
   METHOD add_rule.
@@ -83,8 +84,9 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
         pattern     = iv_regex
         ignore_case = abap_true.
 
-    ls_rule-token = iv_token.
-    ls_rule-style = iv_style.
+    ls_rule-token         = iv_token.
+    ls_rule-style         = iv_style.
+    ls_rule-relevant_submatch = iv_submatch.
     APPEND ls_rule TO mt_rules.
 
   ENDMETHOD.
@@ -188,7 +190,8 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
 
     FIELD-SYMBOLS:
       <ls_regex>  LIKE LINE OF mt_rules,
-      <ls_result> TYPE match_result.
+      <ls_result> TYPE match_result,
+      <ls_submatch>  LIKE LINE OF <ls_result>-submatches.
 
 
     CLEAR et_matches.
@@ -202,10 +205,21 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
       " Save matches into custom table with predefined tokens
       LOOP AT lt_result ASSIGNING <ls_result>.
         CLEAR: ls_match.
-        ls_match-token  = <ls_regex>-token.
-        ls_match-offset = <ls_result>-offset.
-        ls_match-length = <ls_result>-length.
-        APPEND ls_match TO et_matches.
+        IF <ls_regex>-relevant_submatch = 0.
+          ls_match-token  = <ls_regex>-token.
+          ls_match-offset = <ls_result>-offset.
+          ls_match-length = <ls_result>-length.
+          APPEND ls_match TO et_matches.
+        ELSE.
+          READ TABLE <ls_result>-submatches ASSIGNING <ls_submatch> INDEX <ls_regex>-relevant_submatch.
+          "submatch might be empty if only discarted parts matched
+          IF sy-subrc = 0 and <ls_submatch>-offset >= 0 and <ls_submatch>-length > 0.
+            ls_match-token  = <ls_regex>-token.
+            ls_match-offset = <ls_submatch>-offset.
+            ls_match-length = <ls_submatch>-length.
+            APPEND ls_match TO et_matches.
+          ENDIF.
+        ENDIF.
       ENDLOOP.
     ENDLOOP.
 
