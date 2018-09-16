@@ -218,9 +218,9 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
     IF sy-subrc NE 0 OR lv_frozen NE space.
       zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."can't access
-    ELSE.
-      lv_access_granted = abap_true.
     ENDIF.
+
+    lv_access_granted = abap_true.
 
     CALL FUNCTION 'RS_CORR_INSERT'
       EXPORTING
