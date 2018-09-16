@@ -31,6 +31,7 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
         commit TYPE string VALUE 'commit' ##NO_TEXT,
         rerun  TYPE string VALUE 'rerun' ##NO_TEXT,
       END OF c_actions.
+    CONSTANTS: c_object_separator type char1 VALUE '|'.
 
     DATA:
       mt_result TYPE scit_alvlist,
@@ -56,7 +57,9 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
           VALUE(rv_is_stage_allowed) TYPE abap_bool,
       jump
         IMPORTING
-          is_item TYPE zif_abapgit_definitions=>ty_item
+          is_item       TYPE zif_abapgit_definitions=>ty_item
+          is_sub_item   TYPE zif_abapgit_definitions=>ty_item
+          i_line_number type i
         RAISING
           zcx_abapgit_exception.
 
@@ -141,13 +144,32 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
           lo_result             TYPE REF TO cl_ci_result_root,
           lv_check_variant_name TYPE sci_chkv,
           lv_package            TYPE devclass.
+    DATA: lv_adt_jump_enabled   TYPE abap_bool.
+    DATA: lv_line_number        TYPE i.
+    DATA: ls_item               TYPE zif_abapgit_definitions=>ty_item.
+    DATA: ls_sub_item           TYPE zif_abapgit_definitions=>ty_item.
 
     FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
 
-    READ TABLE mt_result WITH KEY objtype = is_item-obj_type
-                                  objname = is_item-obj_name
-                         ASSIGNING <ls_result>.
-    ASSERT sy-subrc = 0.
+    IF is_sub_item IS NOT INITIAL.
+      READ TABLE mt_result WITH KEY objtype  = is_item-obj_type
+                                    objname  = is_item-obj_name
+                                    sobjtype = is_sub_item-obj_type
+                                    sobjname = is_sub_item-obj_name
+                                    line     = i_line_number
+                           ASSIGNING <ls_result>.
+    ELSE.
+      READ TABLE mt_result WITH KEY objtype = is_item-obj_type
+                                    objname = is_item-obj_name
+                                    line    = i_line_number
+                           ASSIGNING <ls_result>.
+    ENDIF.
+    ASSERT <ls_result> IS ASSIGNED.
+    ls_item-obj_name = <ls_result>-objname.
+    ls_item-obj_type = <ls_result>-objtype.
+
+    ls_sub_item-obj_name = <ls_result>-sobjname.
+    ls_sub_item-obj_type = <ls_result>-sobjtype.
 
     lv_package = mo_repo->get_package( ).
     lv_check_variant_name = mo_repo->get_local_settings( )-code_inspector_check_variant.
@@ -158,7 +180,23 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
     " see SCI_LCL_DYNP_530 / HANDLE_DOUBLE_CLICK
 
-    MOVE-CORRESPONDING <ls_result> TO ls_info.
+    lv_adt_jump_enabled = zcl_abapgit_persist_settings=>get_instance( )->read( )->get_adt_jump_enabled( ).
+
+    TRY.
+        IF lv_adt_jump_enabled = abap_true.
+
+          lv_line_number = <ls_result>-line.
+
+          zcl_abapgit_objects_super=>jump_adt( i_obj_name     = ls_item-obj_name
+                                               i_obj_type     = ls_item-obj_type
+                                               i_sub_obj_name = ls_sub_item-obj_name
+                                               i_sub_obj_type = ls_sub_item-obj_type
+                                               i_line_number  = lv_line_number ).
+          RETURN.
+
+        ENDIF.
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
 
     TRY.
         lo_test ?= cl_ci_tests=>get_test_ref( <ls_result>-test ).
@@ -168,6 +206,9 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     ENDTRY.
 
     lo_result = lo_test->get_result_node( <ls_result>-kind ).
+
+
+    MOVE-CORRESPONDING <ls_result> TO ls_info.
 
     lo_result->set_info( ls_info ).
     lo_result->if_ci_test~navigate( ).
@@ -207,9 +248,23 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     LOOP AT mt_result ASSIGNING <ls_result>.
 
       ro_html->add( '<div>' ).
-      ro_html->add_a( iv_txt = |{ <ls_result>-objtype } { <ls_result>-objname }|
-                      iv_act = |{ <ls_result>-objtype }{ <ls_result>-objname }|
-                      iv_typ = zif_abapgit_definitions=>c_action_type-sapevent ).
+      IF <ls_result>-sobjname IS INITIAL or
+         ( <ls_result>-sobjname = <ls_result>-objname and
+           <ls_result>-sobjtype = <ls_result>-sobjtype ).
+        ro_html->add_a( iv_txt = |{ <ls_result>-objtype } { <ls_result>-objname }|
+                        iv_act = |{ <ls_result>-objtype }{ <ls_result>-objname }| &&
+                                 |{ c_object_separator }{ c_object_separator }{ <ls_result>-line }|
+                        iv_typ = zif_abapgit_definitions=>c_action_type-sapevent ).
+
+      ELSE.
+        ro_html->add_a( iv_txt = |{ <ls_result>-objtype } { <ls_result>-objname }| &&
+                                 | < { <ls_result>-sobjtype } { <ls_result>-sobjname }|
+                        iv_act = |{ <ls_result>-objtype }{ <ls_result>-objname }| &&
+                                 |{ c_object_separator }{ <ls_result>-sobjtype }{ <ls_result>-sobjname }| &&
+                                 |{ c_object_separator }{ <ls_result>-line }|
+                        iv_typ = zif_abapgit_definitions=>c_action_type-sapevent ).
+
+      ENDIF.
       ro_html->add( '</div>' ).
 
       CASE <ls_result>-kind.
@@ -242,10 +297,32 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+
+    ls_hotkey_action-name           = |Code Inspector: Stage|.
+    ls_hotkey_action-action         = c_actions-stage.
+    ls_hotkey_action-default_hotkey = |s|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-name           = |Code Inspector: Re-Run|.
+    ls_hotkey_action-action         = c_actions-rerun.
+    ls_hotkey_action-default_hotkey = |r|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_page~on_event.
 
-    DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online,
-          ls_item        TYPE zif_abapgit_definitions=>ty_item.
+    DATA: lo_repo_online   TYPE REF TO zcl_abapgit_repo_online,
+          ls_item          TYPE zif_abapgit_definitions=>ty_item,
+          ls_sub_item      TYPE zif_abapgit_definitions=>ty_item.
+    DATA: lv_main_object   TYPE string.
+    DATA: lv_sub_object    TYPE string.
+    DATA: lv_line_number_s TYPE string.
+    DATA: lv_line_number   TYPE i.
 
 
     CASE iv_action.
@@ -299,13 +376,20 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
         RETURN.
 
       WHEN OTHERS.
+        SPLIT iv_action AT c_object_separator INTO lv_main_object lv_sub_object lv_line_number_s.
+        ls_item-obj_type = lv_main_object(4).
+        ls_item-obj_name = lv_main_object+4(*).
 
-        ls_item-obj_type = iv_action(4).
-        ls_item-obj_name = iv_action+4(*).
+        IF lv_sub_object IS NOT INITIAL.
+          ls_sub_item-obj_type = lv_sub_object(4).
+          ls_sub_item-obj_name = lv_sub_object+4(*).
+        ENDIF.
 
-        jump( ls_item ).
+        lv_line_number = lv_line_number_s.
 
-*        zcl_abapgit_objects=>jump( ls_item ).
+        jump( is_item       = ls_item
+              is_sub_item   = ls_sub_item
+              i_line_number = lv_line_number ).
 
         ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
 
@@ -320,22 +404,4 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     ro_html = super->zif_abapgit_gui_page~render( ).
 
   ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
-
-    ls_hotkey_action-name           = |Code Inspector: Stage|.
-    ls_hotkey_action-action         = c_actions-stage.
-    ls_hotkey_action-default_hotkey = |s|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-name           = |Code Inspector: Re-Run|.
-    ls_hotkey_action-action         = c_actions-rerun.
-    ls_hotkey_action-default_hotkey = |r|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-  ENDMETHOD.
-
 ENDCLASS.
