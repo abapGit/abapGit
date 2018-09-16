@@ -38,7 +38,7 @@ ECSP | eCATT Start Profile | Yes
 ECTC | eCATT Test Configuration | Yes
 ECTD | eCATT Test Data Container | Yes
 ECVO | eCATT Validation Object | Yes
-ENHC | Composite Enhancement Implementation | [#1896](https://github.com/larshp/abapGit/issues/1896)
+ENHC | Composite Enhancement Implementation | Yes
 ENHO | Enhancement Implementation | Yes
 ENHS | Enhancement Spot | Yes
 ENQU | Lock Object | Yes
