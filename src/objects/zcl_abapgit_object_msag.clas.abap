@@ -189,7 +189,6 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     DATA: lv_t100a          TYPE t100a,
           lv_frozen         TYPE flag,
           lv_message_id     TYPE arbgb,
-          lv_trkey1         TYPE trkey,
           lv_access_granted TYPE abap_bool.
 
 * parameter SUPPRESS_DIALOG doesnt exist in all versions of FM RS_DELETE_MESSAGE_ID
@@ -197,11 +196,11 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     lv_message_id = ms_item-obj_name.
     IF ms_item-obj_name EQ space.
       zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."blank message id
-    ELSE.
-      SELECT SINGLE * FROM t100a INTO lv_t100a WHERE arbgb = ms_item-obj_name.
-      IF sy-subrc NE 0.
-        zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."not found
-      ENDIF.
+    ENDIF.
+
+    SELECT SINGLE * FROM t100a INTO lv_t100a WHERE arbgb = ms_item-obj_name.
+    IF sy-subrc NE 0.
+      zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."not found
     ENDIF.
 
     CLEAR lv_frozen.
@@ -223,19 +222,16 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
       lv_access_granted = abap_true.
     ENDIF.
 
-
-
     CALL FUNCTION 'RS_CORR_INSERT'
       EXPORTING
         global_lock        = 'X'
         object             = lv_message_id
         object_class       = 'MSAG'
         mode               = 'D'
-      IMPORTING
-        transport_key      = lv_trkey1
       EXCEPTIONS
         cancelled          = 01
         permission_failure = 02.
+
     IF sy-subrc NE 0.
       IF lv_access_granted = abap_true.
         free_access_permission( lv_message_id ).
@@ -243,10 +239,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."can't access
     ENDIF.
 
-
     delete_msgid( lv_message_id ).
-    lv_trkey1-sub_type = '*'.
-
 
     IF lv_access_granted = abap_true.
       free_access_permission( lv_message_id ).
