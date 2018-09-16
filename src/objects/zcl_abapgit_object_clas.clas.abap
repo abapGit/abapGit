@@ -77,11 +77,15 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     ls_class_key-clsname = ms_item-obj_name.
 
     io_xml->read( EXPORTING iv_name = 'VSEOCLASS'
-                  CHANGING cg_data = ls_vseoclass ).
+                  CHANGING  cg_data = ls_vseoclass ).
+
+    io_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
+                  CHANGING  cg_data = lt_attributes ).
 
     mi_object_oriented_object_fct->create(
       EXPORTING
         iv_package    = iv_package
+        it_attributes = lt_attributes
       CHANGING
         cg_properties = ls_vseoclass ).
 
@@ -103,13 +107,6 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     mi_object_oriented_object_fct->update_descriptions(
       is_key          = ls_class_key
       it_descriptions = lt_descriptions ).
-
-    io_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
-                  CHANGING  cg_data = lt_attributes ).
-
-    mi_object_oriented_object_fct->update_attributes(
-      iv_object_name = ls_class_key-clsname
-      it_attributes  = lt_attributes ).
 
   ENDMETHOD.
 

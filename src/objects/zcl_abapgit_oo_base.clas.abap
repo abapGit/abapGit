@@ -2,6 +2,13 @@ CLASS zcl_abapgit_oo_base DEFINITION PUBLIC ABSTRACT.
   PUBLIC SECTION.
     INTERFACES: zif_abapgit_oo_object_fnc.
 
+  PROTECTED SECTION.
+    CLASS-METHODS:
+      convert_attrib_to_vseoattrib
+        IMPORTING iv_clsname           TYPE seoclsname
+                  it_attributes        TYPE zif_abapgit_definitions=>ty_obj_attribute_tt
+        RETURNING VALUE(rt_vseoattrib) TYPE seoo_attributes_r.
+
   PRIVATE SECTION.
     DATA mv_skip_test_classes TYPE abap_bool.
 
@@ -288,50 +295,21 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
       INTO CORRESPONDING FIELDS OF TABLE rt_attributes
       WHERE clsname = iv_object_name
         AND ( attbusobj <> space OR attkeyfld <> space )
+        AND version = '1'
       ORDER BY PRIMARY KEY.
   ENDMETHOD.
 
-  METHOD zif_abapgit_oo_object_fnc~update_attributes.
-    DATA: lt_current_attributes TYPE STANDARD TABLE OF seocompodf,
-          lt_updates            TYPE STANDARD TABLE OF seocompodf.
-    FIELD-SYMBOLS: <ls_current_attribute> LIKE LINE OF lt_current_attributes,
-                   <ls_new_attribute>     LIKE LINE OF it_attributes.
 
-    SELECT * INTO TABLE lt_current_attributes
-      FROM seocompodf
-      WHERE clsname = iv_object_name
-        AND version = '1'
-      ORDER BY PRIMARY KEY.
+  METHOD convert_attrib_to_vseoattrib.
+    FIELD-SYMBOLS: <ls_attribute>  LIKE LINE OF it_attributes,
+                   <ls_vseoattrib> LIKE LINE OF rt_vseoattrib.
 
-    LOOP AT lt_current_attributes ASSIGNING <ls_current_attribute>.
-      READ TABLE it_attributes WITH KEY cmpname
-                               COMPONENTS cmpname = <ls_current_attribute>-cmpname
-                               ASSIGNING <ls_new_attribute>.
-      IF sy-subrc = 0.
-        " Found additional information, check if there needs to be an update
-        IF <ls_new_attribute>-attbusobj <> <ls_current_attribute>-attbusobj OR
-           <ls_new_attribute>-attkeyfld <> <ls_current_attribute>-attkeyfld.
-          MOVE-CORRESPONDING <ls_new_attribute> TO <ls_current_attribute>.
-          APPEND <ls_current_attribute> TO lt_updates.
-        ENDIF.
-      ELSE.
-        " No additional information
-        " Info: Without SAP Note 2400131 nothing happens here because the fields were cleared
-        " 'by accident' beforehand.
-        IF <ls_current_attribute>-attbusobj IS NOT INITIAL OR
-           <ls_current_attribute>-attkeyfld IS NOT INITIAL.
-          CLEAR: <ls_current_attribute>-attbusobj,
-                 <ls_current_attribute>-attkeyfld.
-          APPEND <ls_current_attribute> TO lt_updates.
-        ENDIF.
-      ENDIF.
-
-      UNASSIGN <ls_new_attribute>.
+    LOOP AT it_attributes ASSIGNING <ls_attribute>.
+      INSERT INITIAL LINE INTO TABLE rt_vseoattrib ASSIGNING <ls_vseoattrib>.
+      MOVE-CORRESPONDING <ls_attribute> TO <ls_vseoattrib>.
+      <ls_vseoattrib>-clsname = iv_clsname.
+      UNASSIGN <ls_vseoattrib>.
     ENDLOOP.
-    UNASSIGN <ls_current_attribute>.
-
-    IF lines( lt_updates ) > 0.
-      MODIFY seocompodf FROM TABLE lt_updates.
-    ENDIF.
+    UNASSIGN <ls_attribute>.
   ENDMETHOD.
 ENDCLASS.
