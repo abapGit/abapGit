@@ -76,7 +76,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
+CLASS zcl_abapgit_gui IMPLEMENTATION.
 
 
   METHOD back.
@@ -278,12 +278,39 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
 
   METHOD on_event.
+    DATA: lv_action(400) TYPE c,
+          lt_postdata    LIKE postdata,
+          lv_match       TYPE string,
+          lv_ofs TYPE i,
+          lv_len TYPE i,
+          lv_temp TYPE string.
+
+    FIELD-SYMBOLS: <postdata> LIKE LINE OF lt_postdata.
+
+    lv_action = action.
+    lt_postdata = postdata.
+    "hack for java webgui support
+    IF action = '__abapgit_dummy__'.
+      LOOP AT lt_postdata ASSIGNING <postdata>.
+        FIND REGEX '__ABAPGIT_ACTION=([^\s&]+)&?' IN <postdata> SUBMATCHES lv_match MATCH LENGTH lv_len MATCH OFFSET lv_ofs.
+        IF sy-subrc = 0.
+          if lv_ofs > 0.
+            lv_temp = <postdata>(lv_ofs).
+          endif.
+          lv_ofs = lv_ofs + lv_len.
+          CONCATENATE lv_temp <postdata>+lv_ofs into <postdata>.
+          lv_action = lv_match.
+          exit.
+        ENDIF.
+
+      ENDLOOP.
+    ENDIF.
 
     handle_action(
-      iv_action      = action
+      iv_action      = lv_action
       iv_frame       = frame
       iv_getdata     = getdata
-      it_postdata    = postdata
+      it_postdata    = lt_postdata
       it_query_table = query_table ).
 
   ENDMETHOD.                    "on_event
