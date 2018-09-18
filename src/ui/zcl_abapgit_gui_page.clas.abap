@@ -14,24 +14,31 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
         RETURNING
           VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action.
 
-  PROTECTED SECTION.
+protected section.
 
-    TYPES: BEGIN OF ty_control,
+  types:
+    BEGIN OF ty_control,
              redirect_url TYPE string,
              page_title   TYPE string,
              page_menu    TYPE REF TO zcl_abapgit_html_toolbar,
-           END OF  ty_control.
+           END OF  ty_control .
 
-    DATA: ms_control TYPE ty_control.
+  data MS_CONTROL type TY_CONTROL .
 
-    METHODS render_content ABSTRACT
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-      RAISING   zcx_abapgit_exception.
-
-    METHODS scripts
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-      RAISING   zcx_abapgit_exception.
-
+  methods DUMMY_HIDDEN_FORM
+    returning
+      value(RO_HTML) type STRING .
+  methods RENDER_CONTENT
+  abstract
+    returning
+      value(RO_HTML) type ref to ZCL_ABAPGIT_HTML
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods SCRIPTS
+    returning
+      value(RO_HTML) type ref to ZCL_ABAPGIT_HTML
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
   PRIVATE SECTION.
     METHODS html_head
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
@@ -73,7 +80,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
 
   METHOD add_hotkeys.
@@ -102,6 +109,35 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     io_html->add( |setKeyBindings({ lv_json });| ).
 
   ENDMETHOD.
+
+
+  METHOD call_browser.
+
+    cl_gui_frontend_services=>execute(
+      EXPORTING
+        document               = |{ iv_url }|
+      EXCEPTIONS
+        cntl_error             = 1
+        error_no_gui           = 2
+        bad_parameter          = 3
+        file_not_found         = 4
+        path_not_found         = 5
+        file_extension_unknown = 6
+        error_execute_failed   = 7
+        synchronous_failed     = 8
+        not_supported_by_gui   = 9
+        OTHERS                 = 10 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  method DUMMY_HIDDEN_FORM.
+    ro_html = '<form id="__ABAPGIT_EVENT_DUMMY__" method="POST" action="sapevent:__abapgit_dummy__"></form>'.
+  endmethod.
 
 
   METHOD footer.
@@ -280,6 +316,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ro_html->add( render_hotkey_overview( ) ).
     ro_html->add( render_content( ) ).
     ro_html->add( footer( ) ).
+    ro_html->add( dummy_hidden_form( ) ).                   "#EC NOTEXT
     ro_html->add( '</body>' ).                              "#EC NOTEXT
 
     lo_script = scripts( ).
@@ -294,28 +331,4 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ro_html->add( '</html>' ).                              "#EC NOTEXT
 
   ENDMETHOD.  " lif_gui_page~render.
-
-  METHOD call_browser.
-
-    cl_gui_frontend_services=>execute(
-      EXPORTING
-        document               = |{ iv_url }|
-      EXCEPTIONS
-        cntl_error             = 1
-        error_no_gui           = 2
-        bad_parameter          = 3
-        file_not_found         = 4
-        path_not_found         = 5
-        file_extension_unknown = 6
-        error_execute_failed   = 7
-        synchronous_failed     = 8
-        not_supported_by_gui   = 9
-        OTHERS                 = 10 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.
