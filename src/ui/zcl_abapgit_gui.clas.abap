@@ -72,6 +72,12 @@ CLASS zcl_abapgit_gui DEFINITION
                 it_postdata    TYPE cnht_post_data_tab OPTIONAL
                 it_query_table TYPE cnht_query_table OPTIONAL.
 
+    METHODS remove_dummy_action
+      IMPORTING
+        VALUE(i_postdata) TYPE string
+      RETURNING
+        VALUE(r_result)   TYPE cnht_post_data_tab.
+
 ENDCLASS.
 
 
@@ -281,29 +287,24 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
     DATA: lv_action(400) TYPE c,
           lt_postdata    LIKE postdata,
           lv_match       TYPE string,
-          lv_ofs TYPE i,
-          lv_len TYPE i,
-          lv_temp TYPE string.
+          lv_len         TYPE i,
+          lv_temp        TYPE string.
 
     FIELD-SYMBOLS: <postdata> LIKE LINE OF lt_postdata.
 
     lv_action = action.
-    lt_postdata = postdata.
     "hack for java webgui support
     IF action = '__abapgit_dummy__'.
-      LOOP AT lt_postdata ASSIGNING <postdata>.
-        FIND REGEX '__ABAPGIT_ACTION=([^\s&]+)&?' IN <postdata> SUBMATCHES lv_match MATCH LENGTH lv_len MATCH OFFSET lv_ofs.
-        IF sy-subrc = 0.
-          if lv_ofs > 0.
-            lv_temp = <postdata>(lv_ofs).
-          endif.
-          lv_ofs = lv_ofs + lv_len.
-          CONCATENATE lv_temp <postdata>+lv_ofs into <postdata>.
-          lv_action = lv_match.
-          exit.
-        ENDIF.
-
-      ENDLOOP.
+      CONCATENATE LINES OF postdata INTO lv_temp RESPECTING BLANKS.
+      FIND REGEX '&?__ABAPGIT_ACTION=([^\s&]+)&?' IN lv_temp SUBMATCHES lv_match.
+      IF sy-subrc = 0.
+        lv_action = lv_match.
+        lt_postdata = remove_dummy_action( lv_temp ).
+      ELSE.
+        lt_postdata = postdata.
+      ENDIF.
+    ELSE.
+      lt_postdata = postdata.
     ENDIF.
 
     handle_action(
@@ -372,4 +373,26 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
     SET HANDLER me->on_event FOR mo_html_viewer.
 
   ENDMETHOD.                    "startup
+
+  METHOD remove_dummy_action.
+    DATA: lv_len         TYPE i.
+
+    FIELD-SYMBOLS: <postdata> LIKE LINE OF r_result.
+    REPLACE REGEX '&?__ABAPGIT_ACTION=[^\s&]+(&?)' IN i_postdata  WITH '$1'.
+    IF i_postdata <> '' AND i_postdata(1) = '&' AND sy-subrc = 0.
+      i_postdata = i_postdata+1.
+    ENDIF.
+    WHILE i_postdata <> ''.
+      APPEND INITIAL LINE TO r_result ASSIGNING <postdata>.
+      <postdata> = i_postdata.
+      DESCRIBE FIELD <postdata> LENGTH lv_len IN CHARACTER MODE.
+      IF strlen( i_postdata ) >= lv_len.
+        i_postdata = i_postdata+lv_len.
+      ELSE.
+        EXIT.
+      ENDIF.
+    ENDWHILE.
+
+  ENDMETHOD.
+
 ENDCLASS.
