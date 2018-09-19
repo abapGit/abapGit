@@ -3,11 +3,16 @@ CLASS zcl_abapgit_object_form DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
+    METHODS constructor
+      IMPORTING
+        is_item     TYPE zif_abapgit_definitions=>ty_item
+        iv_language TYPE spras.
 
   PRIVATE SECTION.
     CONSTANTS: c_objectname_form    TYPE thead-tdobject VALUE 'FORM' ##NO_TEXT.
     CONSTANTS: c_objectname_tdlines TYPE thead-tdobject VALUE 'TDLINES' ##NO_TEXT.
     CONSTANTS: c_extension_xml      TYPE string         VALUE 'xml' ##NO_TEXT.
+    DATA: mv_form_name  TYPE itcta-tdform.
 
     TYPES: BEGIN OF tys_form_data,
              form_header   TYPE itcta,
@@ -84,11 +89,24 @@ CLASS zcl_abapgit_object_form DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         es_form_data   TYPE zcl_abapgit_object_form=>tys_form_data
         et_lines       TYPE zcl_abapgit_object_form=>tyt_lines.
 
+    METHODS order_check_and_insert
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
+CLASS zcl_abapgit_object_form IMPLEMENTATION.
+
+  METHOD constructor.
+
+    super->constructor( is_item     = is_item
+                        iv_language = iv_language ).
+
+    mv_form_name = ms_item-obj_name.
+
+  ENDMETHOD.
 
 
   METHOD build_extra_from_header.
@@ -215,14 +233,12 @@ CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_name TYPE itcta-tdform.
-
-    lv_name = ms_item-obj_name.
-
     CALL FUNCTION 'DELETE_FORM'
       EXPORTING
-        form     = lv_name
+        form     = mv_form_name
         language = '*'.
+
+    order_check_and_insert( ).
 
   ENDMETHOD.
 
@@ -230,7 +246,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA: lt_form_data            TYPE tyt_form_data.
-    DATA: lt_lines                TYPE tyt_lines.
+    DATA: lt_lines TYPE tyt_lines.
     FIELD-SYMBOLS: <ls_form_data> TYPE LINE OF tyt_form_data.
 
     io_xml->read( EXPORTING iv_name = c_objectname_form
@@ -253,18 +269,16 @@ CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
 
     tadir_insert( iv_package ).
 
+    order_check_and_insert( ).
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lv_form_name TYPE thead-tdform.
-
-    lv_form_name = ms_item-obj_name.
-
     CALL FUNCTION 'READ_FORM'
       EXPORTING
-        form             = lv_form_name
+        form             = mv_form_name
         read_only_header = abap_true
       IMPORTING
         found            = rv_bool.
@@ -275,7 +289,6 @@ CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
   METHOD zif_abapgit_object~get_metadata.
 
     rs_metadata = get_metadata( ).
-    rs_metadata-delete_tadir = abap_true.
 
   ENDMETHOD.
 
@@ -463,4 +476,41 @@ CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
         ##fm_subrc_ok.                                                   "#EC CI_SUBRC
 
   ENDMETHOD.
+
+  METHOD order_check_and_insert.
+
+    DATA: ls_order TYPE e071k-trkorr.
+
+    CALL FUNCTION 'SAPSCRIPT_ORDER_CHECK'
+      EXPORTING
+        objecttype           = ms_item-obj_type
+        form                 = mv_form_name
+      EXCEPTIONS
+        invalid_input        = 1
+        object_locked        = 2
+        object_not_available = 3
+        OTHERS               = 4.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    CALL FUNCTION 'SAPSCRIPT_ORDER_INSERT'
+      EXPORTING
+        objecttype     = ms_item-obj_type
+        form           = mv_form_name
+        masterlang     = mv_language
+      CHANGING
+        order          = ls_order
+      EXCEPTIONS
+        invalid_input  = 1
+        order_canceled = 2
+        OTHERS         = 3.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.
