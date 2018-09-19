@@ -62,7 +62,12 @@ function debugOutput(text, dstID) {
 // Find/Create hidden form and submit with sapevent
 function submitSapeventForm(params, action, method) {
   var dummyid = "__ABAPGIT_EVENT_DUMMY__";
-  var form = document.getElementById(dummyid);
+  var form;
+  //for get create a dynamic form on the fly
+  //for post use the static one in the page if found to work around sapgui java bugs
+  if (!method || method.toLowerCase() !== "get") {
+    form = document.getElementById(dummyid);
+  }
   if (form) {
     while (form.firstChild) form.removeChild(form.firstChild);
     //java gui breaks if we change the form action, so we pass it as a form field instead
