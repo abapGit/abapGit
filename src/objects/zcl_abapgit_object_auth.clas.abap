@@ -57,6 +57,8 @@ CLASS zcl_abapgit_object_auth IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'AUTHX'
                   CHANGING cg_data = ls_authx ).
 
+    tadir_insert( iv_package ).
+
     CREATE OBJECT lo_auth.
 
     IF lo_auth->add_afield_to_trkorr( ls_authx-fieldname ) <> 0.
