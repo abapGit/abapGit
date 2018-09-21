@@ -8,6 +8,18 @@ Legend
 + : added
 - : removed
 
+2018-09-21 v1.77.0
+------------------
++ ENHC support
++ Code inspector respect jump to ADT
+* Downport
+* FORM record transport request
+* AUTH popups
+* MSAG popups
+* Staging page preserve filter value
+* XML syntax highlighting fixes
+* Branch overview fixes
+
 2018-09-08 v1.76.0
 ------------------
 + git patch, added to staging page
