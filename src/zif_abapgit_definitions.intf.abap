@@ -21,7 +21,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
            ty_file_signature WITH UNIQUE KEY path filename .
   TYPES:
     BEGIN OF ty_file.
-      INCLUDE TYPE ty_file_signature.
+          INCLUDE TYPE ty_file_signature.
   TYPES: data TYPE xstring,
          END OF ty_file .
   TYPES:
@@ -107,7 +107,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   TYPES: ty_yes_no TYPE c LENGTH 1.
 
   TYPES: BEGIN OF ty_overwrite.
-      INCLUDE TYPE ty_item.
+          INCLUDE TYPE ty_item.
   TYPES: decision TYPE ty_yes_no,
          END OF ty_overwrite.
 
@@ -216,7 +216,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
     ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY .
   TYPES:
     BEGIN OF ty_tpool.
-      INCLUDE TYPE textpool.
+          INCLUDE TYPE textpool.
   TYPES:   split TYPE c LENGTH 8.
   TYPES: END OF ty_tpool .
   TYPES:
@@ -411,6 +411,12 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   CONSTANTS c_root_dir TYPE string VALUE '/' ##NO_TEXT.
   CONSTANTS c_dot_abapgit TYPE string VALUE '.abapgit.xml' ##NO_TEXT.
   CONSTANTS c_author_regex TYPE string VALUE '^([\\\w\s\.\,\#@\-_1-9\(\) ]+) <(.*)> (\d{10})\s?.\d{4}$' ##NO_TEXT.
+  CONSTANTS: BEGIN OF c_smart_response_check,
+               BEGIN OF get_refs,
+                 content_regex TYPE string VALUE '^[0-9a-f]{4}#',
+                 content_type TYPE string VALUE 'application/x-git-<service>-pack-advertisement',
+               END OF get_refs,
+             END OF c_smart_response_check.
   CONSTANTS:
     BEGIN OF c_action,
       repo_refresh             TYPE string VALUE 'repo_refresh',

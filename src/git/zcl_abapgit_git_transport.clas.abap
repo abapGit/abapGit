@@ -83,11 +83,18 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
   METHOD branch_list.
 
     DATA: lv_data TYPE string.
-
+    DATA: lv_expected_content_type TYPE string.
 
     eo_client = zcl_abapgit_http=>create_by_url(
       iv_url     = iv_url
       iv_service = iv_service ).
+
+    lv_expected_content_type = zif_abapgit_definitions=>c_smart_response_check-get_refs-content_type.
+    REPLACE '<service>' in lv_expected_content_type with iv_service.
+
+    eo_client->check_smart_response(
+        iv_expected_content_type = lv_expected_content_type
+        iv_content_regex         = zif_abapgit_definitions=>c_smart_response_check-get_refs-content_regex ).
 
     lv_data = eo_client->get_cdata( ).
 
@@ -186,7 +193,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
               zcl_abapgit_git_utils=>get_null( ) &&
               ` ` &&
               lv_cap_list &&
-              zif_abapgit_definitions=>c_newline.          "#EC NOTEXT
+              zif_abapgit_definitions=>c_newline.           "#EC NOTEXT
     lv_cmd_pkt = zcl_abapgit_git_utils=>pkt_string( lv_line ).
 
     lv_buffer = lv_cmd_pkt && '0000'.
@@ -260,14 +267,14 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
           && ` ` && lv_capa && zif_abapgit_definitions=>c_newline. "#EC NOTEXT
       ELSE.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
-          && zif_abapgit_definitions=>c_newline.           "#EC NOTEXT
+          && zif_abapgit_definitions=>c_newline.            "#EC NOTEXT
       ENDIF.
       lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( lv_line ).
     ENDLOOP.
 
     IF iv_deepen = abap_true.
       lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( 'deepen 1'
-        && zif_abapgit_definitions=>c_newline ).           "#EC NOTEXT
+        && zif_abapgit_definitions=>c_newline ).            "#EC NOTEXT
     ENDIF.
 
     lv_buffer = lv_buffer
