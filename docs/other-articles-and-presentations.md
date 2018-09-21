@@ -94,3 +94,5 @@ SAP Teched Barcelona
 [SAP Inside Track Berlin 2018 - DevOps in SAP ABAP Landscapes](https://www.slideshare.net/Junsas/sap-inside-track-berlin-2018-devops-in-abap-landscapes-112976719), Sascha Junkert
 
 [SAP Inside Track Bern 2018 - modern ABAP development with abapGit](https://de.slideshare.net/ChristianGnter/sitbern-modern-abap-development-with-abapgit), Christian Günter
+
+[DSAG - abapGit](https://larshp.github.io/Presentations/dsag2018/), Lars Hvam
