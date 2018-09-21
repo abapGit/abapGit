@@ -9,6 +9,7 @@ CLASS zcl_abapgit_branch_overview DEFINITION
 
     INTERFACES zif_abapgit_branch_overview .
     TYPES: ty_commits TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_commit WITH DEFAULT KEY .
+    CONSTANTS c_deleted_branch_name_prefix TYPE string VALUE '__DELETED_BRANCH_' ##NO_TEXT.
 
     METHODS constructor
       IMPORTING
@@ -61,6 +62,8 @@ CLASS zcl_abapgit_branch_overview DEFINITION
       EXPORTING etr_commit_sha1s TYPE tyt_commit_sha1_range
                 e_1st_commit     TYPE zif_abapgit_definitions=>ty_commit
       CHANGING  ct_commits       TYPE ty_commits.
+    METHODS _reverse_sort_order
+      CHANGING ct_commits TYPE ty_commits.
 
 ENDCLASS.
 
@@ -75,6 +78,8 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
     lt_objects = get_git_objects( io_repo ).
     mt_commits = parse_commits( lt_objects ).
+    _sort_commits( CHANGING ct_commits = mt_commits ).
+
     parse_annotated_tags( lt_objects ).
 
     CLEAR lt_objects.
@@ -83,7 +88,7 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
     determine_merges( ).
     determine_tags( ).
     fixes( ).
-    _sort_commits( CHANGING ct_commits = mt_commits ).
+
 
   ENDMETHOD.
 
@@ -141,30 +146,75 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
   METHOD determine_merges.
 
-    FIELD-SYMBOLS: <ls_merged> LIKE LINE OF mt_commits,
-                   <ls_commit> LIKE LINE OF mt_commits.
+    DATA: BEGIN OF deleted_branch_info,
+            created TYPE flag,
+            index   TYPE string,
+            name    TYPE string,
+          END OF deleted_branch_info.
 
+    FIELD-SYMBOLS: <ls_merged_branch_commit> TYPE zif_abapgit_definitions=>ty_commit,
+                   <ls_merged_branch_parent> TYPE zif_abapgit_definitions=>ty_commit,
+                   <ls_commit>               TYPE zif_abapgit_definitions=>ty_commit,
+                   <ls_create>               TYPE zif_abapgit_definitions=>ty_create.
 
-* important: start with the newest first and propagate branches
-    SORT mt_commits BY time DESCENDING.
+* we need latest first here: latest -> initial
+    _reverse_sort_order( CHANGING ct_commits = mt_commits ).
 
     LOOP AT mt_commits ASSIGNING <ls_commit> WHERE NOT parent2 IS INITIAL.
       ASSERT NOT <ls_commit>-branch IS INITIAL.
 
-      READ TABLE mt_commits ASSIGNING <ls_merged> WITH KEY sha1 = <ls_commit>-parent2.
+      READ TABLE mt_commits ASSIGNING <ls_merged_branch_commit> WITH KEY sha1 = <ls_commit>-parent2.
       IF sy-subrc = 0.
-        <ls_commit>-merge = <ls_merged>-branch.
+        <ls_commit>-merge = <ls_merged_branch_commit>-branch.
 
 * orphaned, branch has been deleted after merge
-        WHILE <ls_merged>-branch IS INITIAL.
-          <ls_merged>-branch = <ls_commit>-branch.
-          READ TABLE mt_commits ASSIGNING <ls_merged> WITH KEY sha1 = <ls_merged>-parent1.
+        deleted_branch_info-created = abap_false.
+
+        WHILE <ls_merged_branch_commit>-branch IS INITIAL.
+          IF deleted_branch_info-created = abap_false.
+
+            deleted_branch_info-created = abap_true.
+            deleted_branch_info-index = deleted_branch_info-index + 1.
+            deleted_branch_info-name = c_deleted_branch_name_prefix && deleted_branch_info-index && '__'.
+            CONDENSE deleted_branch_info-name NO-GAPS.
+
+            <ls_commit>-merge = deleted_branch_info-name.
+
+          ENDIF.
+          <ls_merged_branch_commit>-branch = deleted_branch_info-name.
+
+          READ TABLE mt_commits ASSIGNING <ls_merged_branch_parent>
+                                WITH KEY sha1 = <ls_merged_branch_commit>-parent1.
           IF sy-subrc <> 0.
             EXIT.
+          ELSE.
+            ASSIGN <ls_merged_branch_parent> TO <ls_merged_branch_commit>.
           ENDIF.
         ENDWHILE.
+
+        IF <ls_merged_branch_parent> IS ASSIGNED.
+          APPEND INITIAL LINE TO <ls_merged_branch_parent>-create ASSIGNING <ls_create>.
+          <ls_create>-name = deleted_branch_info-name.
+          <ls_create>-parent = <ls_commit>-branch.
+        ENDIF.
+
       ENDIF.
     ENDLOOP.
+
+    " switch back to initial -> latest
+    _reverse_sort_order( CHANGING ct_commits = mt_commits ).
+
+  ENDMETHOD.
+
+  METHOD _reverse_sort_order.
+    DATA: lt_commits           TYPE ty_commits.
+    FIELD-SYMBOLS: <ls_commit> TYPE zif_abapgit_definitions=>ty_commit.
+
+    LOOP AT ct_commits ASSIGNING <ls_commit>.
+      INSERT <ls_commit> INTO lt_commits INDEX 1.
+    ENDLOOP.
+    ct_commits = lt_commits.
+    FREE lt_commits.
 
   ENDMETHOD.
 
@@ -503,5 +553,4 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
     ct_commits = lt_sorted_commits.
 
   ENDMETHOD.
-
 ENDCLASS.
