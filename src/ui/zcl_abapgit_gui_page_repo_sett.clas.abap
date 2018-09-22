@@ -226,9 +226,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
   METHOD save_dot_abap.
 
-    DATA: lo_dot          TYPE REF TO zcl_abapgit_dot_abapgit,
-          ls_post_field   LIKE LINE OF it_post_fields,
-          lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
+    DATA: lo_dot           TYPE REF TO zcl_abapgit_dot_abapgit,
+          ls_post_field    LIKE LINE OF it_post_fields,
+          lt_sorted_fields LIKE it_post_fields,
+          lt_requirements  TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
     FIELD-SYMBOLS: <ls_requirement> TYPE zif_abapgit_dot_abapgit=>ty_requirement.
 
 
@@ -242,11 +243,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     ASSERT sy-subrc = 0.
     lo_dot->set_starting_folder( ls_post_field-value ).
 
+    lt_sorted_fields = it_post_fields.
+    sort lt_sorted_fields.
+
+    LOOP AT lt_sorted_fields INTO ls_post_field WHERE name CP 'req_*'.
+      IF ls_post_field-name+4(3) = 'com'.
+        INSERT INITIAL LINE INTO TABLE lt_requirements ASSIGNING <ls_requirement>.
+        <ls_requirement>-component = ls_post_field-value.
+      ENDIF.
+    ENDLOOP.
+
     LOOP AT it_post_fields INTO ls_post_field WHERE name CP 'req_*'.
+      READ TABLE lt_requirements ASSIGNING <ls_requirement> INDEX ls_post_field-name+8.
       CASE ls_post_field-name+4(3).
-        WHEN 'com'.
-          INSERT INITIAL LINE INTO TABLE lt_requirements ASSIGNING <ls_requirement>.
-          <ls_requirement>-component = ls_post_field-value.
         WHEN 'rel'.
           <ls_requirement>-min_release = ls_post_field-value.
         WHEN 'pat'.
