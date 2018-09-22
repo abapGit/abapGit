@@ -411,12 +411,6 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   CONSTANTS c_root_dir TYPE string VALUE '/' ##NO_TEXT.
   CONSTANTS c_dot_abapgit TYPE string VALUE '.abapgit.xml' ##NO_TEXT.
   CONSTANTS c_author_regex TYPE string VALUE '^([\\\w\s\.\,\#@\-_1-9\(\) ]+) <(.*)> (\d{10})\s?.\d{4}$' ##NO_TEXT.
-  CONSTANTS: BEGIN OF c_smart_response_check,
-               BEGIN OF get_refs,
-                 content_regex TYPE string VALUE '^[0-9a-f]{4}#',
-                 content_type TYPE string VALUE 'application/x-git-<service>-pack-advertisement',
-               END OF get_refs,
-             END OF c_smart_response_check.
   CONSTANTS:
     BEGIN OF c_action,
       repo_refresh             TYPE string VALUE 'repo_refresh',

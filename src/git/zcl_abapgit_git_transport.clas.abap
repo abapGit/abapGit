@@ -33,6 +33,12 @@ CLASS zcl_abapgit_git_transport DEFINITION
                  receive TYPE string VALUE 'receive',       "#EC NOTEXT
                  upload  TYPE string VALUE 'upload',        "#EC NOTEXT
                END OF c_service.
+  CONSTANTS: BEGIN OF c_smart_response_check,
+               BEGIN OF get_refs,
+                 content_regex TYPE string VALUE '^[0-9a-f]{4}#',
+                 content_type TYPE string VALUE 'application/x-git-<service>-pack-advertisement',
+               END OF get_refs,
+             END OF c_smart_response_check.
 
     CLASS-METHODS branch_list
       IMPORTING iv_url         TYPE string
@@ -89,12 +95,12 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
       iv_url     = iv_url
       iv_service = iv_service ).
 
-    lv_expected_content_type = zif_abapgit_definitions=>c_smart_response_check-get_refs-content_type.
+    lv_expected_content_type = c_smart_response_check-get_refs-content_type.
     REPLACE '<service>' in lv_expected_content_type with iv_service.
 
     eo_client->check_smart_response(
         iv_expected_content_type = lv_expected_content_type
-        iv_content_regex         = zif_abapgit_definitions=>c_smart_response_check-get_refs-content_regex ).
+        iv_content_regex         = c_smart_response_check-get_refs-content_regex ).
 
     lv_data = eo_client->get_cdata( ).
 
