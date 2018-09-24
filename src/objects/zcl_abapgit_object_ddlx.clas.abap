@@ -138,7 +138,8 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
           lv_text       TYPE string,
           lx_error      TYPE REF TO cx_root.
 
-    FIELD-SYMBOLS: <lg_data> TYPE any.
+    FIELD-SYMBOLS: <lg_data>  TYPE any,
+                   <lg_field> TYPE data.
 
     TRY.
         CREATE DATA lr_data
@@ -150,6 +151,16 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
             iv_name = 'DDLX'
           CHANGING
             cg_data = <lg_data> ).
+
+        ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <lg_data> TO <lg_field>.
+        ASSERT sy-subrc = 0.
+
+        TRY.
+            " If the file doesn't exist that's ok, because previously
+            " the source code was stored in the xml. We are downward compatible.
+            <lg_field> = mo_files->read_string( 'asddlxs' ) ##no_text.
+          CATCH zcx_abapgit_exception.
+        ENDTRY.
 
         CREATE OBJECT li_data_model
           TYPE ('CL_DDLX_WB_OBJECT_DATA').
@@ -219,7 +230,8 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
           lv_text        TYPE string,
           lx_error       TYPE REF TO cx_root.
 
-    FIELD-SYMBOLS: <lg_data> TYPE any.
+    FIELD-SYMBOLS: <lg_data>  TYPE any,
+                   <lg_field> TYPE data.
 
     lv_object_key = ms_item-obj_name.
 
@@ -244,6 +256,14 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
             p_data = <lg_data> ).
 
         clear_fields( CHANGING cs_data = <lg_data> ).
+
+        ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <lg_data> TO <lg_field>.
+        ASSERT sy-subrc = 0.
+
+        mo_files->add_string( iv_ext    = 'asddlxs'
+                              iv_string = <lg_field> ).
+
+        CLEAR <lg_field>.
 
         io_xml->add( iv_name = 'DDLX'
                      ig_data = <lg_data> ).
