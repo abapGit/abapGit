@@ -14,6 +14,11 @@ CLASS zcl_abapgit_object_suso DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     DATA:
       mv_objectname TYPE tobj-objct.
 
+    METHODS:
+      delete_documentation
+        RAISING
+          zcx_abapgit_exception.
+
 ENDCLASS.
 
 CLASS zcl_abapgit_object_suso IMPLEMENTATION.
@@ -163,9 +168,8 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
 
     DATA:
       lv_act_head TYPE cl_suso_gen=>td_act,
-      lv_dummy    TYPE sy-langu,
+      lv_dummy    TYPE string,
       lo_suso     TYPE REF TO cl_suso_gen,
-      lv_docu_obj TYPE dokhl-object,
       lv_failed   TYPE abap_bool.
 
     CREATE OBJECT lo_suso.
@@ -178,7 +182,6 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    "initialize dialog control data
     lo_suso->get_suso_edit_mode( EXPORTING id_object      = mv_objectname
                                            id_planed_act  = co_act_delete
                                  IMPORTING ed_mode_head   = lv_act_head ).
@@ -190,12 +193,38 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    "delete documentation in all languages
+    delete_documentation( ).
+
+    DELETE FROM tobj  WHERE objct  = mv_objectname.
+    DELETE FROM tobjt WHERE object = mv_objectname.
+    DELETE FROM tactz WHERE brobj  = mv_objectname.
+
+    CALL FUNCTION 'SUPV_DELETE_OBJECT_ASSIGNMENTS'
+      EXPORTING
+        object_name  = mv_objectname
+        all_releases = abap_true.
+
+    CALL FUNCTION 'RS_TREE_OBJECT_PLACEMENT'
+      EXPORTING
+        object    = mv_objectname
+        type      = 'SUSO'
+        operation = 'DELETE'.
+
+  ENDMETHOD.
+
+  METHOD delete_documentation.
+
+    DATA:
+      lv_docu_obj TYPE dokhl-object,
+      lv_dummy    TYPE sy-langu.
+
     lv_docu_obj  = mv_objectname.
 
-    SELECT SINGLE langu FROM dokil INTO lv_dummy
-      WHERE id     = 'UO'                               "#EC CI_GENBUFF
-        AND object = lv_docu_obj.
+    SELECT SINGLE langu
+           FROM dokil INTO lv_dummy
+           WHERE id   = 'UO'                            "#EC CI_GENBUFF
+           AND object = lv_docu_obj.
+
     IF sy-subrc = 0.
 
       CALL FUNCTION 'DOKU_DELETE_ALL'
@@ -220,22 +249,8 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
 
     ENDIF.
 
-    DELETE FROM tobj  WHERE objct  = mv_objectname.
-    DELETE FROM tobjt WHERE object = mv_objectname.
-    DELETE FROM tactz WHERE brobj  = mv_objectname.
-
-    CALL FUNCTION 'SUPV_DELETE_OBJECT_ASSIGNMENTS'
-      EXPORTING
-        object_name  = mv_objectname
-        all_releases = abap_true.
-
-    CALL FUNCTION 'RS_TREE_OBJECT_PLACEMENT'
-      EXPORTING
-        object    = mv_objectname
-        type      = 'SUSO'
-        operation = 'DELETE'.
-
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~jump.
 
