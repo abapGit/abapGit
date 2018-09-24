@@ -106,7 +106,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     CREATE OBJECT ro_toolbar.
 
-    IF mo_repo->is_offline( ) = abap_false.
+    IF mo_repo->is_offline( ) = abap_false or mo_repo->has_remote( ) = abap_true.
       ro_toolbar->add(  " Show/Hide files
         iv_txt = 'Show files'
         iv_chk = boolc( NOT mv_hide_files = abap_true )
@@ -556,6 +556,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
         ev_state        = zif_abapgit_definitions=>c_event_state-re_render.
       WHEN c_actions-zip_import2_apply.
         zcl_abapgit_services_repo=>gui_deserialize( mo_repo ).
+        mo_repo->reset_remote( ).
         ev_state        = zif_abapgit_definitions=>c_event_state-re_render.
     ENDCASE.
 

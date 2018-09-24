@@ -208,7 +208,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
         CHANGING  ct_repo_items = rt_repo_items ).
     ENDIF.
 
-    IF iv_changes_only = abap_true AND mo_repo->is_offline( ) = abap_false.
+    IF iv_changes_only = abap_true AND ( mo_repo->is_offline( ) = abap_false or mo_repo->has_remote( ) = abap_true ).
       " There are never changes for offline repositories
       filter_changes( CHANGING ct_repo_items = rt_repo_items ).
     ENDIF.

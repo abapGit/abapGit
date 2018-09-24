@@ -65,9 +65,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
     DATA mv_branch TYPE zif_abapgit_definitions=>ty_sha1 .
     DATA mv_initialized TYPE abap_bool .
-    DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
 
-    METHODS reset_status .
     METHODS initialize
       RAISING
         zcx_abapgit_exception .
@@ -311,14 +309,8 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
   ENDMETHOD.                    "refresh
 
-
-  METHOD reset_status.
-    CLEAR mt_status.
-  ENDMETHOD.  " reset_status.
-
   METHOD reset_remote.
     super->reset_remote( ).
-    reset_status( ).
     mv_initialized = abap_false.
   ENDMETHOD.
 
@@ -354,11 +346,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   METHOD status.
 
     initialize( ).
-
-    IF lines( mt_status ) = 0.
-      mt_status = super->status( io_log ).
-    ENDIF.
-    rt_results = mt_status.
+    rt_results = super->status( io_log ).
 
   ENDMETHOD.                    "status
 

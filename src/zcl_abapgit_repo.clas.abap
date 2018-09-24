@@ -125,7 +125,9 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA mv_last_serialization TYPE timestamp .
     DATA ms_data TYPE zif_abapgit_persistence=>ty_repo .
     DATA mv_code_inspector_successful TYPE abap_bool .
+    DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
 
+    METHODS reset_status .
     METHODS set
       IMPORTING
         !it_checksums       TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
@@ -372,15 +374,25 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD reset_remote.
-    clear mt_remote.
+    CLEAR mt_remote.
+    reset_status( ).
   ENDMETHOD.
+
+
+  METHOD reset_status.
+    CLEAR mt_status.
+  ENDMETHOD.  " reset_status.
 
 
   METHOD status.
 
-    rt_results = zcl_abapgit_file_status=>status(
-      io_repo = me
-      io_log  = io_log ). " No caching by default
+    IF lines( mt_status ) = 0.
+      mt_status = zcl_abapgit_file_status=>status(
+        io_repo = me
+        io_log  = io_log ).
+    ENDIF.
+
+    rt_results = mt_status.
 
   ENDMETHOD.
 
