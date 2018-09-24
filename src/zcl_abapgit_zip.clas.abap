@@ -6,7 +6,8 @@ CLASS zcl_abapgit_zip DEFINITION
 
     CLASS-METHODS import
       IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_value
+        iv_key TYPE zif_abapgit_persistence=>ty_value
+        iv_no_deserialize TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS export
@@ -409,7 +410,9 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     lo_repo->set_files_remote( unzip_file( file_upload( ) ) ).
 
-    zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
+    if iv_no_deserialize = abap_false.
+      zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
+    endif.
 
   ENDMETHOD.                    "import
 

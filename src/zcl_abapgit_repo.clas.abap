@@ -47,6 +47,9 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception .
+    METHODS has_remote
+      RETURNING VALUE(rv_yes) TYPE abap_bool .
+    METHODS reset_remote.
     METHODS get_package
       RETURNING
         VALUE(rv_package) TYPE zif_abapgit_persistence=>ty_repo-package .
@@ -107,6 +110,14 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(rt_list) TYPE scit_alvlist
       RAISING
         zcx_abapgit_exception .
+    METHODS status
+      IMPORTING
+        !io_log           TYPE REF TO zcl_abapgit_log OPTIONAL
+      RETURNING
+        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception .
+
   PROTECTED SECTION.
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
     DATA mt_remote TYPE zif_abapgit_definitions=>ty_files_tt .
@@ -352,6 +363,25 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD get_files_remote.
     rt_files = mt_remote.
+  ENDMETHOD.
+
+
+  METHOD has_remote.
+    rv_yes = boolc( lines( mt_remote ) > 0 ).
+  ENDMETHOD.
+
+
+  METHOD reset_remote.
+    clear mt_remote.
+  ENDMETHOD.
+
+
+  METHOD status.
+
+    rt_results = zcl_abapgit_file_status=>status(
+      io_repo = me
+      io_log  = io_log ). " No caching by default
+
   ENDMETHOD.
 
 
