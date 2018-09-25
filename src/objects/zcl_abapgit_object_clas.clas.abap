@@ -56,7 +56,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
           lt_local_macros          TYPE seop_source_string,
           lt_test_classes          TYPE seop_source_string,
           lt_descriptions          TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
-          ls_class_key             TYPE seoclskey.
+          ls_class_key             TYPE seoclskey,
+          lt_attributes            TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
 
 
     lt_source = mo_files->read_abap( ).
@@ -76,11 +77,15 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     ls_class_key-clsname = ms_item-obj_name.
 
     io_xml->read( EXPORTING iv_name = 'VSEOCLASS'
-                  CHANGING cg_data = ls_vseoclass ).
+                  CHANGING  cg_data = ls_vseoclass ).
+
+    io_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
+                  CHANGING  cg_data = lt_attributes ).
 
     mi_object_oriented_object_fct->create(
       EXPORTING
         iv_package    = iv_package
+        it_attributes = lt_attributes
       CHANGING
         cg_properties = ls_vseoclass ).
 
@@ -354,7 +359,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
           lt_descriptions TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
           ls_clskey       TYPE seoclskey,
           lt_sotr         TYPE zif_abapgit_definitions=>ty_sotr_tt,
-          lt_lines        TYPE tlinetab.
+          lt_lines        TYPE tlinetab,
+          lt_attributes   TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
 
     ls_clskey-clsname = ms_item-obj_name.
 
@@ -415,6 +421,12 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     IF lines( lt_descriptions ) > 0.
       io_xml->add( iv_name = 'DESCRIPTIONS'
                    ig_data = lt_descriptions ).
+    ENDIF.
+
+    lt_attributes = mi_object_oriented_object_fct->read_attributes( ls_clskey-clsname ).
+    IF lines( lt_attributes ) > 0.
+      io_xml->add( iv_name = 'ATTRIBUTES'
+                   ig_data = lt_attributes ).
     ENDIF.
 
   ENDMETHOD.

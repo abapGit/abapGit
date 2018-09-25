@@ -16,12 +16,23 @@ ENDCLASS.
 
 CLASS zcl_abapgit_oo_class IMPLEMENTATION.
   METHOD zif_abapgit_oo_object_fnc~create.
+    DATA: lt_vseoattrib TYPE seoo_attributes_r.
+    FIELD-SYMBOLS: <lv_clsname> TYPE seoclsname.
+
+    ASSIGN COMPONENT 'CLSNAME' OF STRUCTURE cg_properties TO <lv_clsname>.
+    ASSERT sy-subrc = 0.
+
+    lt_vseoattrib = convert_attrib_to_vseoattrib(
+                      iv_clsname    = <lv_clsname>
+                      it_attributes = it_attributes ).
+
     CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
       EXPORTING
         devclass        = iv_package
         overwrite       = iv_overwrite
       CHANGING
         class           = cg_properties
+        attributes      = lt_vseoattrib
       EXCEPTIONS
         existing        = 1
         is_interface    = 2

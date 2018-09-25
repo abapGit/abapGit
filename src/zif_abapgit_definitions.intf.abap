@@ -213,7 +213,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   TYPES:
     ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY .
   TYPES:
-    ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY .
+    ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY.
   TYPES:
     BEGIN OF ty_tpool.
           INCLUDE TYPE textpool.
@@ -228,6 +228,14 @@ INTERFACE zif_abapgit_definitions PUBLIC.
     END OF ty_sotr .
   TYPES:
     ty_sotr_tt TYPE STANDARD TABLE OF ty_sotr WITH DEFAULT KEY .
+  TYPES:
+    BEGIN OF ty_obj_attribute,
+      cmpname   TYPE seocmpname,
+      attkeyfld TYPE seokeyfld,
+      attbusobj TYPE seobusobj,
+    END OF ty_obj_attribute,
+    ty_obj_attribute_tt TYPE STANDARD TABLE OF ty_obj_attribute WITH DEFAULT KEY
+                             WITH NON-UNIQUE SORTED KEY cmpname COMPONENTS cmpname.
   TYPES:
     BEGIN OF ty_transport_to_branch,
       branch_name TYPE string,
