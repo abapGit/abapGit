@@ -21,7 +21,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
            ty_file_signature WITH UNIQUE KEY path filename .
   TYPES:
     BEGIN OF ty_file.
-      INCLUDE TYPE ty_file_signature.
+          INCLUDE TYPE ty_file_signature.
   TYPES: data TYPE xstring,
          END OF ty_file .
   TYPES:
@@ -107,7 +107,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   TYPES: ty_yes_no TYPE c LENGTH 1.
 
   TYPES: BEGIN OF ty_overwrite.
-      INCLUDE TYPE ty_item.
+          INCLUDE TYPE ty_item.
   TYPES: decision TYPE ty_yes_no,
          END OF ty_overwrite.
 
@@ -216,7 +216,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
     ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY .
   TYPES:
     BEGIN OF ty_tpool.
-      INCLUDE TYPE textpool.
+          INCLUDE TYPE textpool.
   TYPES:   split TYPE c LENGTH 8.
   TYPES: END OF ty_tpool .
   TYPES:
