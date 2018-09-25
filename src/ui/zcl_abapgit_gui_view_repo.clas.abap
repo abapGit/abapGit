@@ -84,7 +84,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
 
   METHOD build_dir_jump_link.
@@ -106,7 +106,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     CREATE OBJECT ro_toolbar.
 
-    IF mo_repo->is_offline( ) = abap_false or mo_repo->has_remote( ) = abap_true.
+    IF mo_repo->has_remote( ) = abap_true.
       ro_toolbar->add(  " Show/Hide files
         iv_txt = 'Show files'
         iv_chk = boolc( NOT mv_hide_files = abap_true )
@@ -301,10 +301,6 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     super->constructor( ).
 
     mo_repo         = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    IF mo_repo->is_offline( ) = abap_true.
-      mo_repo->reset_remote( ). " reset on new "show" if ZIP was loaded
-    ENDIF.
-
     mv_cur_dir      = '/'. " Root
     mv_hide_files   = zcl_abapgit_persistence_user=>get_instance( )->get_hide_files( ).
     mv_changes_only = zcl_abapgit_persistence_user=>get_instance( )->get_changes_only( ).
@@ -423,7 +419,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    IF mo_repo->is_offline( ) = abap_false OR mo_repo->has_remote( ) = abap_true.
+    IF mo_repo->has_remote( ) = abap_true.
 
       " Files
       ro_html->add( '<td class="files">' ).
@@ -527,6 +523,11 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ro_html->add( '</tr>' ).
 
   ENDMETHOD. "render_parent_dir
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~on_event.
@@ -656,10 +657,4 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.  "lif_gui_page~render
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-  ENDMETHOD.
-
 ENDCLASS.
