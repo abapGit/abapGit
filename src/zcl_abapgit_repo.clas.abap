@@ -368,35 +368,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD has_remote.
-    rv_yes = boolc( lines( mt_remote ) > 0 ).
-  ENDMETHOD.
-
-
-  METHOD reset_remote.
-    CLEAR mt_remote.
-    reset_status( ).
-  ENDMETHOD.
-
-
-  METHOD reset_status.
-    CLEAR mt_status.
-  ENDMETHOD.  " reset_status.
-
-
-  METHOD status.
-
-    IF lines( mt_status ) = 0.
-      mt_status = zcl_abapgit_file_status=>status(
-        io_repo = me
-        io_log  = io_log ).
-    ENDIF.
-
-    rt_results = mt_status.
-
-  ENDMETHOD.
-
-
   METHOD get_key.
     rv_key = ms_data-key.
   ENDMETHOD.                    "get_key
@@ -440,6 +411,11 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD get_package.
     rv_package = ms_data-package.
   ENDMETHOD.                    "get_package
+
+
+  METHOD has_remote.
+    rv_yes = boolc( lines( mt_remote ) > 0 ).
+  ENDMETHOD.
 
 
   METHOD is_offline.
@@ -487,12 +463,24 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD refresh.
 
     mv_do_local_refresh = abap_true.
+    reset_remote( ).
 
     IF iv_drop_cache = abap_true.
       CLEAR: mv_last_serialization, mt_local.
     ENDIF.
 
   ENDMETHOD.                    "refresh
+
+
+  METHOD reset_remote.
+    CLEAR mt_remote.
+    reset_status( ).
+  ENDMETHOD.
+
+
+  METHOD reset_status.
+    CLEAR mt_status.
+  ENDMETHOD.  " reset_status.
 
 
   METHOD run_code_inspector.
@@ -616,6 +604,19 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD set_local_settings.
 
     set( is_local_settings = is_settings ).
+
+  ENDMETHOD.
+
+
+  METHOD status.
+
+    IF lines( mt_status ) = 0.
+      mt_status = zcl_abapgit_file_status=>status(
+        io_repo = me
+        io_log  = io_log ).
+    ENDIF.
+
+    rt_results = mt_status.
 
   ENDMETHOD.
 
