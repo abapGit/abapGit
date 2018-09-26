@@ -127,7 +127,12 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ENDIF.
 
     IF iv_hide_head IS NOT INITIAL.
-      DELETE lt_branches WHERE name = zif_abapgit_definitions=>c_head_name.
+      DELETE lt_branches WHERE name    = zif_abapgit_definitions=>c_head_name
+                            OR is_head = abap_true.
+    ENDIF.
+
+    IF lt_branches IS INITIAL.
+      zcx_abapgit_exception=>raise( 'No branch to select' ).
     ENDIF.
 
     LOOP AT lt_branches ASSIGNING <ls_branch>.
