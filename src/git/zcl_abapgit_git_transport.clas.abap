@@ -224,6 +224,8 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'failed to update ref' ).
     ELSEIF lv_string CP '*missing necessary objects*'.
       zcx_abapgit_exception=>raise( 'missing necessary objects' ).
+    ELSEIF lv_string CP '*refusing to delete the current branch*'.
+      zcx_abapgit_exception=>raise( 'branch delete not allowed' ).
     ENDIF.
 
   ENDMETHOD.
