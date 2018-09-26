@@ -90,10 +90,14 @@ CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
 
   METHOD get_branch_overview.
 
-    CREATE OBJECT ri_branch_overview
-      TYPE zcl_abapgit_branch_overview
-      EXPORTING
-        io_repo = io_repo.
+    IF gi_branch_overview IS INITIAL.
+      CREATE OBJECT gi_branch_overview
+        TYPE zcl_abapgit_branch_overview
+        EXPORTING
+          io_repo = io_repo.
+    ENDIF.
+
+    ri_branch_overview = gi_branch_overview.
 
   ENDMETHOD.
 
@@ -153,8 +157,12 @@ CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
 
   METHOD get_stage_logic.
 
-    CREATE OBJECT ri_logic
-      TYPE zcl_abapgit_stage_logic.
+    IF gi_stage_logic IS INITIAL.
+      CREATE OBJECT gi_stage_logic
+        TYPE zcl_abapgit_stage_logic.
+    ENDIF.
+
+    ri_logic = gi_stage_logic.
 
   ENDMETHOD.
 
