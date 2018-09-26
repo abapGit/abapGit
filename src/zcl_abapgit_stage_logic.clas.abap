@@ -1,17 +1,12 @@
 CLASS zcl_abapgit_stage_logic DEFINITION
   PUBLIC
-  FINAL
-  CREATE PUBLIC .
+  CREATE PRIVATE
+
+  GLOBAL FRIENDS zcl_abapgit_factory .
 
   PUBLIC SECTION.
 
-    CLASS-METHODS get
-      IMPORTING
-        !io_repo        TYPE REF TO zcl_abapgit_repo_online
-      RETURNING
-        VALUE(rs_files) TYPE zif_abapgit_definitions=>ty_stage_files
-      RAISING
-        zcx_abapgit_exception .
+    INTERFACES zif_abapgit_stage_logic .
   PRIVATE SECTION.
     CLASS-METHODS:
       remove_ignored
@@ -25,17 +20,6 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_STAGE_LOGIC IMPLEMENTATION.
-
-
-  METHOD get.
-
-    rs_files-local  = io_repo->get_files_local( ).
-    rs_files-remote = io_repo->get_files_remote( ).
-    remove_identical( CHANGING cs_files = rs_files ).
-    remove_ignored( EXPORTING io_repo  = io_repo
-                    CHANGING  cs_files = rs_files ).
-
-  ENDMETHOD.
 
 
   METHOD remove_identical.
@@ -85,6 +69,17 @@ CLASS ZCL_ABAPGIT_STAGE_LOGIC IMPLEMENTATION.
       ENDIF.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_stage_logic~get.
+
+    rs_files-local  = io_repo->get_files_local( ).
+    rs_files-remote = io_repo->get_files_remote( ).
+    remove_identical( CHANGING cs_files = rs_files ).
+    remove_ignored( EXPORTING io_repo  = io_repo
+                    CHANGING  cs_files = rs_files ).
 
   ENDMETHOD.
 ENDCLASS.
