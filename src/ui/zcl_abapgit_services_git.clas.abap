@@ -166,12 +166,6 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    IF ls_branch-name = 'HEAD'.
-      zcx_abapgit_exception=>raise( 'Cannot delete HEAD' ).
-    ELSEIF ls_branch-name = lo_repo->get_branch_name( ).
-      zcx_abapgit_exception=>raise( 'Switch branch before deleting current' ).
-    ENDIF.
-
     zcl_abapgit_git_porcelain=>delete_branch(
       iv_url    = lo_repo->get_url( )
       is_branch = ls_branch ).
