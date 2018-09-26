@@ -293,6 +293,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
 
   METHOD read_sicf_url.
 
+* note: this method is called dynamically from some places
+
     DATA: lv_name    TYPE icfname,
           lv_url     TYPE string,
           lv_parguid TYPE icfparguid.
@@ -321,6 +323,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
 
 
   METHOD read_tadir_sicf.
+
+* note: this method is called dynamically from some places
 
     DATA: lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lv_hash     TYPE text25,
