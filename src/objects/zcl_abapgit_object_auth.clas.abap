@@ -73,7 +73,7 @@ CLASS zcl_abapgit_object_auth IMPLEMENTATION.
 
     DELETE FROM authx WHERE fieldname = mv_fieldname.
     IF sy-subrc <> 0.
-      MESSAGE e507(0m) INTO DATA(dummy).
+      MESSAGE e507(0m) INTO lv_dummy.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
