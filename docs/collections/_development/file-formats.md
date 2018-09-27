@@ -3,7 +3,7 @@ title: Object File Formats
 order: 40
 ---
 
-All files for an object is located in the same folder, each folder corresponds to a package. Subpackages are organized under parent packages(directories) according to the logic described in http://docs.abapgit.org/ref-dot-abapgit.html
+All files for an object are located in the same folder, each folder corresponds to a package. Subpackages are organized under parent packages(directories) according to the logic described in http://docs.abapgit.org/ref-dot-abapgit.html
 
 # CLAS
 Files corresponding to the editable parts in source based class builder or ABAP in Eclipse:
