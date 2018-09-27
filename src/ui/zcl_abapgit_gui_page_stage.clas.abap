@@ -77,7 +77,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -100,7 +100,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
     ms_control-page_title = 'STAGE'.
     mo_repo               = io_repo.
-    ms_files              = zcl_abapgit_stage_logic=>get( mo_repo ).
+    ms_files              = zcl_abapgit_factory=>get_stage_logic( )->get( mo_repo ).
     mv_seed               = iv_seed.
 
     IF mv_seed IS INITIAL. " Generate based on time unless obtained from diff page
@@ -132,6 +132,35 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         CATCH zcx_abapgit_exception.
       ENDTRY.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD get_page_patch.
+
+    DATA: lo_page   TYPE REF TO zcl_abapgit_gui_page_diff,
+          lv_key    TYPE zif_abapgit_persistence=>ty_repo-key,
+          ls_file   TYPE zif_abapgit_definitions=>ty_file,
+          ls_object TYPE zif_abapgit_definitions=>ty_item,
+          lo_stage  TYPE REF TO zcl_abapgit_stage.
+
+    zcl_abapgit_html_action_utils=>file_obj_decode(
+      EXPORTING
+        iv_string = iv_getdata
+      IMPORTING
+        ev_key    = lv_key
+        eg_file   = ls_file
+        eg_object = ls_object ).
+
+    CREATE OBJECT lo_stage.
+
+    CREATE OBJECT lo_page
+      EXPORTING
+        iv_key        = lv_key
+        iv_patch_mode = abap_true
+        io_stage      = lo_stage.
+
+    ri_page = lo_page.
 
   ENDMETHOD.
 
@@ -464,35 +493,4 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
-
-
-  METHOD get_page_patch.
-
-    DATA: lo_page   TYPE REF TO zcl_abapgit_gui_page_diff,
-          lv_key    TYPE zif_abapgit_persistence=>ty_repo-key,
-          ls_file   TYPE zif_abapgit_definitions=>ty_file,
-          ls_object TYPE zif_abapgit_definitions=>ty_item,
-          lo_stage  TYPE REF TO zcl_abapgit_stage.
-
-    zcl_abapgit_html_action_utils=>file_obj_decode(
-      EXPORTING
-        iv_string = iv_getdata
-      IMPORTING
-        ev_key    = lv_key
-        eg_file   = ls_file
-        eg_object = ls_object ).
-
-    CREATE OBJECT lo_stage.
-
-    CREATE OBJECT lo_page
-      EXPORTING
-        iv_key        = lv_key
-        iv_patch_mode = abap_true
-        io_stage      = lo_stage.
-
-    ri_page = lo_page.
-
-  ENDMETHOD.
-
-
 ENDCLASS.
