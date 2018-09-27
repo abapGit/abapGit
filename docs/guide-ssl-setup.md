@@ -1,7 +1,7 @@
 ---
 title: SSL setup
-category: online projects
-order: 70
+category: setup
+order: 10
 ---
 
 ##### Option A - Chrome #####
