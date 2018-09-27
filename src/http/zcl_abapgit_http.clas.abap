@@ -6,16 +6,20 @@ CLASS zcl_abapgit_http DEFINITION
   PUBLIC SECTION.
     CONSTANTS: BEGIN OF c_scheme,
                  digest TYPE string VALUE 'Digest',
-               END OF c_scheme.
+               END OF c_scheme .
 
-    CLASS-METHODS:
-      get_agent
-        RETURNING VALUE(rv_agent) TYPE string,
-      create_by_url
-        IMPORTING iv_url           TYPE string
-                  iv_service       TYPE string
-        RETURNING VALUE(ro_client) TYPE REF TO zcl_abapgit_http_client
-        RAISING   zcx_abapgit_exception.
+    CLASS-EVENTS auth_request
+      EXPORTING VALUE(url) TYPE string
+                VALUE(user) TYPE REF TO string
+                VALUE(pass) TYPE REF TO string.
+
+    CLASS-METHODS get_agent
+      RETURNING VALUE(rv_agent) TYPE string .
+    CLASS-METHODS create_by_url
+      IMPORTING iv_url          TYPE string
+                iv_service      TYPE string
+      RETURNING VALUE(ro_client) TYPE REF TO zcl_abapgit_http_client
+      RAISING zcx_abapgit_exception .
   PRIVATE SECTION.
     CLASS-METHODS:
       check_auth_requested
@@ -45,35 +49,45 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
           lv_user         TYPE string,
           lv_pass         TYPE string,
           lo_digest       TYPE REF TO zcl_abapgit_http_digest.
-
+    DATA: lv_user_auth TYPE REF TO string.
+    DATA: lv_pass_auth TYPE REF TO string.
 
     lv_default_user = zcl_abapgit_persistence_user=>get_instance( )->get_repo_login( iv_url ).
     lv_user         = lv_default_user.
 
-    zcl_abapgit_password_dialog=>popup(
+    GET REFERENCE OF lv_user INTO lv_user_auth.
+    GET REFERENCE OF lv_pass INTO lv_pass_auth.
+
+    RAISE EVENT auth_request
       EXPORTING
-        iv_repo_url     = iv_url
-      CHANGING
-        cv_user         = lv_user
-        cv_pass         = lv_pass ).
+        url  = iv_url
+        user = lv_user_auth
+        pass = lv_pass_auth.
 
-    IF lv_user IS INITIAL.
-      zcx_abapgit_exception=>raise( 'HTTP 401, unauthorized' ).
-    ENDIF.
-
-    IF lv_user <> lv_default_user.
-      zcl_abapgit_persistence_user=>get_instance( )->set_repo_login(
-        iv_url   = iv_url
-        iv_login = lv_user ).
-    ENDIF.
-
-    " Offer two factor authentication if it is available and required
-    zcl_abapgit_2fa_auth_registry=>use_2fa_if_required(
-      EXPORTING
-        iv_url      = iv_url
-      CHANGING
-        cv_username = lv_user
-        cv_password = lv_pass ).
+*    zcl_abapgit_password_dialog=>popup(
+*      EXPORTING
+*        iv_repo_url     = iv_url
+*      CHANGING
+*        cv_user         = lv_user
+*        cv_pass         = lv_pass ).
+*
+*    IF lv_user IS INITIAL.
+*      zcx_abapgit_exception=>raise( 'HTTP 401, unauthorized' ).
+*    ENDIF.
+*
+*    IF lv_user <> lv_default_user.
+*      zcl_abapgit_persistence_user=>get_instance( )->set_repo_login(
+*        iv_url   = iv_url
+*        iv_login = lv_user ).
+*    ENDIF.
+*
+*    " Offer two factor authentication if it is available and required
+*    zcl_abapgit_2fa_auth_registry=>use_2fa_if_required(
+*      EXPORTING
+*        iv_url      = iv_url
+*      CHANGING
+*        cv_username = lv_user
+*        cv_password = lv_pass ).
 
     rv_scheme = ii_client->response->get_header_field( 'www-authenticate' ).
     FIND REGEX '^(\w+)' IN rv_scheme SUBMATCHES rv_scheme.

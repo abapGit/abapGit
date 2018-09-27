@@ -5,21 +5,25 @@ CLASS zcl_abapgit_gui DEFINITION
 
   PUBLIC SECTION.
 
-    CLASS-METHODS: get_instance
+    CLASS-METHODS get_instance
       RETURNING VALUE(ro_gui) TYPE REF TO zcl_abapgit_gui
-      RAISING   zcx_abapgit_exception.
-
+      RAISING   zcx_abapgit_exception .
+    METHODS handle_auth_requests FOR EVENT auth_request OF zcl_abapgit_http
+      IMPORTING url
+                user
+                pass.
     METHODS go_home
-      RAISING zcx_abapgit_exception.
-
+      RAISING zcx_abapgit_exception .
     METHODS back
       IMPORTING iv_to_bookmark TYPE abap_bool DEFAULT abap_false
-      RETURNING VALUE(rv_exit) TYPE xfeld
-      RAISING   zcx_abapgit_exception.
-
+      RETURNING VALUE(rv_exit)  TYPE xfeld
+      RAISING zcx_abapgit_exception .
     METHODS on_event FOR EVENT sapevent OF cl_gui_html_viewer
-      IMPORTING action frame getdata postdata query_table.
-
+      IMPORTING action
+                frame
+                getdata
+                postdata
+                query_table .
   PRIVATE SECTION.
 
     CLASS-DATA: go_gui TYPE REF TO zcl_abapgit_gui.
@@ -76,7 +80,43 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
+CLASS zcl_abapgit_gui IMPLEMENTATION.
+
+
+  METHOD handle_auth_requests.
+
+    FIELD-SYMBOLS: <user> TYPE string.
+    FIELD-SYMBOLS: <pass> TYPE string.
+
+    ASSIGN user->* TO <user>.
+    ASSIGN pass->* TO <pass>.
+
+    zcl_abapgit_password_dialog=>popup(
+      EXPORTING
+        iv_repo_url     = url
+      CHANGING
+        cv_user         = <user>
+        cv_pass         = <pass> ).
+
+    IF <user> IS INITIAL.
+      zcx_abapgit_exception=>raise( 'HTTP 401, unauthorized' ).
+    ENDIF.
+
+*    IF <user> <> lv_default_user.
+    zcl_abapgit_persistence_user=>get_instance( )->set_repo_login(
+      iv_url   = url
+      iv_login = <user> ).
+*    ENDIF.
+
+    " Offer two factor authentication if it is available and required
+    zcl_abapgit_2fa_auth_registry=>use_2fa_if_required(
+      EXPORTING
+        iv_url      = url
+      CHANGING
+        cv_username = <user>
+        cv_password = <pass> ).
+
+  ENDMETHOD.
 
 
   METHOD back.
@@ -190,6 +230,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     startup( ).
 
   ENDMETHOD.            "constructor
+
 
   METHOD get_current_page_name.
     IF mi_cur_page IS BOUND.
@@ -343,6 +384,8 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     mo_html_viewer->set_registered_events( lt_events ).
     SET HANDLER me->on_event FOR mo_html_viewer.
+
+    SET HANDLER me->handle_auth_requests.
 
   ENDMETHOD.                    "startup
 ENDCLASS.
