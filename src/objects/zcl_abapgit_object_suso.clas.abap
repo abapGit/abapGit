@@ -167,14 +167,22 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
       co_act_delete TYPE activ_auth VALUE '06'.
 
     DATA:
-      lv_act_head TYPE cl_suso_gen=>td_act,
-      lv_dummy    TYPE string,
-      lo_suso     TYPE REF TO cl_suso_gen,
-      lv_failed   TYPE abap_bool.
+      lv_act_head            TYPE activ_auth,
+      lv_dummy               TYPE string,
+      lo_suso                TYPE REF TO object,
+      lv_failed              TYPE abap_bool,
+      lv_suso_collect_in_cts TYPE i.
 
-    CREATE OBJECT lo_suso.
+    " Downport: CL_SUSO_GEN doesn't exist in 702
+    CREATE OBJECT lo_suso
+      TYPE
+        ('CL_SUSO_GEN').
 
-    lv_failed = lo_suso->suso_load_from_db( mv_objectname ).
+    CALL METHOD lo_suso->('SUSO_LOAD_FROM_DB')
+      EXPORTING
+        id_object = mv_objectname
+      RECEIVING
+        ed_failed = lv_failed.
 
     IF lv_failed = abap_true.
       " Object & does not exist; choose an existing object
@@ -182,14 +190,24 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    lo_suso->get_suso_edit_mode( EXPORTING id_object      = mv_objectname
-                                           id_planed_act  = co_act_delete
-                                 IMPORTING ed_mode_head   = lv_act_head ).
+    CALL METHOD lo_suso->('GET_SUSO_EDIT_MODE')
+      EXPORTING
+        id_object     = mv_objectname
+        id_planed_act = co_act_delete
+      IMPORTING
+        ed_mode_head  = lv_act_head.
+
     IF lv_act_head <> co_act_delete.
       zcx_abapgit_exception=>raise( |AUTH { mv_objectname }: Delete not allowed| ).
     ENDIF.
 
-    IF lo_suso->suso_collect_in_cts( mv_objectname ) IS NOT INITIAL.
+    CALL METHOD lo_suso->('SUSO_COLLECT_IN_CTS')
+      EXPORTING
+        id_object = mv_objectname
+      RECEIVING
+        ed_result = lv_suso_collect_in_cts.
+
+    IF lv_suso_collect_in_cts IS NOT INITIAL.
       RETURN.
     ENDIF.
 
