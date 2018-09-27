@@ -255,7 +255,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
     DATA LT_UDMO_LONG_TEXTS LIKE STANDARD TABLE OF LS_UDMO_LONG_TEXT.
     DATA LT_UDMO_LANGUAGES TYPE STANDARD TABLE OF LANGUAGE_TYPE.
-    DATA LV_DOKVERSION TYPE TDVERSION.
+    DATA LS_HEADER TYPE THEAD.
 
     IO_XML->READ( EXPORTING IV_NAME = 'UDMO_LONG_TEXTS'
                   CHANGING  CG_DATA = LT_UDMO_LONG_TEXTS ).
@@ -269,18 +269,20 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
       " You are reminded that the target system may already have some texts in
       " existence. So we determine the highest existent version.
 
-      CLEAR LV_DOKVERSION.
+      CLEAR LS_HEADER-TDVERSION.
 
-      SELECT MAX( DOKVERSION ) INTO LV_DOKVERSION
+      SELECT MAX( DOKVERSION )
+      INTO LS_HEADER-TDVERSION
       FROM DOKHL
       WHERE ID = ME->C_LXE_TEXT_TYPE
       AND   OBJECT = ME->MV_TEXT_OBJECT
       AND   LANGU = LS_UDMO_LONG_TEXT-LANGUAGE.
 
-      LS_UDMO_LONG_TEXT-HEADER-TDVERSION = LV_DOKVERSION + 1.
+      " Increment the version
+      LS_HEADER-TDVERSION = LS_HEADER-TDVERSION + 1.
+      LS_UDMO_LONG_TEXT-HEADER-TDVERSION = LS_HEADER-TDVERSION.
 
-      " This very handy function module takes care of all the variation in text processing
-      " between various objects.
+      " This function module takes care of the variation in text processing between various objects.
       CALL FUNCTION 'LXE_OBJ_DOKU_PUT_XSTRING'
         EXPORTING
           SLANG   = ME->MV_LANGUAGE
