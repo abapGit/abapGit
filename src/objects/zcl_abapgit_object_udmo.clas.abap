@@ -274,7 +274,8 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
       AND   OBJECT = ME->MV_TEXT_OBJECT
       AND   LANGU = LS_UDMO_LONG_TEXT-LANGUAGE.          "#EC CI_BYPASS
                                                         "#EC CI_GENBUFF
-      ADD 1 TO LS_UDMO_LONG_TEXT-HEADER-TDVERSION.
+
+      LS_UDMO_LONG_TEXT-HEADER-TDVERSION = LS_UDMO_LONG_TEXT-HEADER-TDVERSION + 1.
 
       " This very handy function module takes care of all the variation in text processing
       " between various objects.
