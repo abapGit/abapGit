@@ -23,7 +23,8 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lo_dcl TYPE REF TO object.
+    DATA: lo_dcl   TYPE REF TO object,
+          lx_error TYPE REF TO cx_root.
 
     TRY.
         CALL METHOD ('CL_ACM_DCL_HANDLER_FACTORY')=>('CREATE')
@@ -34,8 +35,9 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
           EXPORTING
             iv_dclname = ms_item-obj_name.
 
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'DCLS error' ).
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                      ix_previous = lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -43,8 +45,9 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lr_data TYPE REF TO data,
-          lo_dcl  TYPE REF TO object.
+    DATA: lr_data  TYPE REF TO data,
+          lo_dcl   TYPE REF TO object,
+          lx_error TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <lg_data>  TYPE any,
                    <lg_field> TYPE any.
@@ -78,8 +81,9 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
 
         tadir_insert( iv_package ).
 
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'DCLS error' ).
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                      ix_previous = lx_error ).
     ENDTRY.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
@@ -89,7 +93,8 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lo_dcl TYPE REF TO object.
+    DATA: lo_dcl   TYPE REF TO object,
+          lx_error TYPE REF TO cx_root.
 
     TRY.
         CALL METHOD ('CL_ACM_DCL_HANDLER_FACTORY')=>('CREATE')
@@ -102,8 +107,9 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
           RECEIVING
             rv_exists     = rv_bool.
 
-      CATCH cx_root.
-        rv_bool = abap_false.
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                      ix_previous = lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -138,8 +144,9 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lr_data TYPE REF TO data,
-          lo_dcl  TYPE REF TO object.
+    DATA: lr_data  TYPE REF TO data,
+          lo_dcl   TYPE REF TO object,
+          lx_error TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <lg_data>  TYPE any,
                    <lg_field> TYPE any.
@@ -189,8 +196,9 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
         io_xml->add( iv_name = 'DCLS'
                      ig_data = <lg_data> ).
 
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'DCLS error' ).
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                      ix_previous = lx_error ).
     ENDTRY.
 
   ENDMETHOD.
