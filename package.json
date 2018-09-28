@@ -11,6 +11,6 @@
   },
   "devDependencies": {
     "abapmerge": "^0.9.5",
-    "abaplint": "^0.30.0"
+    "abaplint": "^1.0.1"
   }
 }
