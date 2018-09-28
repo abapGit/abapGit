@@ -339,6 +339,8 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
         handle_function( ls_webi ).
         handle_soap( ls_webi ).
 
+        tadir_insert( iv_package ).
+
         mi_vi->if_ws_md_lockable_object~save( ).
         mi_vi->if_ws_md_lockable_object~unlock( ).
       CATCH cx_ws_md_exception INTO lx_root.
