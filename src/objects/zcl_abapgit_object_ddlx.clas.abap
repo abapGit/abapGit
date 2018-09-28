@@ -80,6 +80,8 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
 
   METHOD get_persistence.
 
+    DATA: lx_error TYPE REF TO cx_root.
+
     TRY.
         IF mo_persistence IS NOT BOUND.
 
@@ -88,8 +90,9 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
 
         ENDIF.
 
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( `DDLX not supported` ).
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                      ix_previous = lx_error ).
     ENDTRY.
 
     ri_persistence = mo_persistence.
@@ -111,7 +114,6 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
 
     DATA: lv_object_key TYPE seu_objkey,
           li_data_model TYPE REF TO if_wb_object_data_model,
-          lv_text       TYPE string,
           lx_error      TYPE REF TO cx_root.
 
 
@@ -124,8 +126,8 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
                                     p_version    = swbm_version_active ).
 
       CATCH cx_root INTO lx_error.
-        lv_text = lx_error->get_text( ).
-        zcx_abapgit_exception=>raise( lv_text ).
+        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                      ix_previous = lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -135,7 +137,6 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
 
     DATA: li_data_model TYPE REF TO if_wb_object_data_model,
           lr_data       TYPE REF TO data,
-          lv_text       TYPE string,
           lx_error      TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <lg_data>  TYPE any,
@@ -170,8 +171,8 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
         get_persistence( )->save( li_data_model ).
 
       CATCH cx_root INTO lx_error.
-        lv_text = lx_error->get_text( ).
-        zcx_abapgit_exception=>raise( lv_text ).
+        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                      ix_previous = lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -208,6 +209,14 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESDICT'
+                                            iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
 
     TRY.
@@ -227,7 +236,6 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
           li_data_model  TYPE REF TO if_wb_object_data_model,
           li_persistence TYPE REF TO if_wb_object_persist,
           lr_data        TYPE REF TO data,
-          lv_text        TYPE string,
           lx_error       TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <lg_data>  TYPE any,
@@ -269,17 +277,9 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
                      ig_data = <lg_data> ).
 
       CATCH cx_root INTO lx_error.
-        lv_text = lx_error->get_text( ).
-        zcx_abapgit_exception=>raise( lv_text ).
+        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                      ix_previous = lx_error ).
     ENDTRY.
 
   ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-
-    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESDICT'
-                                            iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
-
-  ENDMETHOD.
-
 ENDCLASS.
