@@ -362,7 +362,7 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
 
 
   METHOD transform_dummy_form_params.
-    " to support SAPGUI java we handle some postcalls a hardcoded action
+    " to support SAPGUI java we handle some post calls a hardcoded action
     " passing the actual action in a parameter
     " this code simulates the original call using it
     DATA: pdata           TYPE string,
@@ -378,7 +378,12 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
     FIELD-SYMBOLS: <postdata> LIKE LINE OF postdata.
 
     IF action = '__abapgit_dummy__'.
+      "convert postdata in a string, as the bit we look for might be split between lines
       CONCATENATE LINES OF postdata INTO pdata RESPECTING BLANKS.
+      "I expect a & separated list of varname=value, perhaps starting with a ?
+      " want to remove my own variable and preserve the rest
+      " my variable is called __ABAPGIT_ACTION, and might include URL-encoded parameters
+      "   which will look like %3Fsomething %3F is an encoded ?
       FIND REGEX '([&?]?)__ABAPGIT_ACTION=([^\s&\%]+)(?:(?:%3[fF])([^\s&]*))?(&?)' IN pdata
         MATCH OFFSET moff MATCH LENGTH mlen
         SUBMATCHES prefix newaction queryparameters suffix.
@@ -386,12 +391,15 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
       IF sy-subrc = 0.
         "match: I did use the static form
         action = newaction.
+        "the encoded form has a fixed action, getdata will always be blank.
+        "I want to pass down what was included in my action above
         getdata = cl_http_utility=>unescape_url( queryparameters ).
 
-        "for postdata, remove the query result (except perhaps the initial or final ?/&) and split the rest
+        "for postdata, remove the query result (except the initial or final ?/& if I have both)
         CLEAR postdata.
         rest = pdata+moff.
         rest = rest+mlen.
+        "if what is left is blanks, ignore them
         FIND REGEX '^\s*$' IN rest.
         IF sy-subrc = 0.
           pdata = pdata(moff).
@@ -403,6 +411,7 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
           CONCATENATE pdata(moff) prefix suffix rest INTO pdata.
         ENDIF.
 
+        "split rest in postdata format
         WHILE rest <> ''.
           APPEND INITIAL LINE TO postdata ASSIGNING <postdata>.
           <postdata> = rest.
