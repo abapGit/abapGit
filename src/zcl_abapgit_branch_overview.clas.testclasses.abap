@@ -57,45 +57,41 @@ CLASS ltcl_test IMPLEMENTATION.
 
   METHOD check_author_regex.
 
-
     DATA: lt_objects           TYPE zif_abapgit_definitions=>ty_objects_tt,
           lt_commits           TYPE zcl_abapgit_branch_overview=>ty_commits,
           ls_object            LIKE LINE OF lt_objects,
           ls_git_pack_commit   TYPE zcl_abapgit_git_pack=>ty_commit.
 
-    ls_object-type = zif_abapgit_definitions=>c_type-commit.
-    ls_git_pack_commit-tree         = 'dummy'.
-    ls_git_pack_commit-author       = 'Lastname, Firstname <mail@mail.com> 1532611350 +0000'.
-    ls_git_pack_commit-committer    = 'dummy'.
-    ls_object-data = zcl_abapgit_git_pack=>encode_commit( is_commit = ls_git_pack_commit ).
-    APPEND ls_object TO lt_objects.
 
     ls_object-type = zif_abapgit_definitions=>c_type-commit.
-    ls_git_pack_commit-tree         = 'dummy'.
-    ls_git_pack_commit-author       = 'Soeren Mueller <mail@mail.com> 1532611350 +0000'.
-    ls_git_pack_commit-committer    = 'dummy'.
-    ls_object-data = zcl_abapgit_git_pack=>encode_commit( is_commit = ls_git_pack_commit ).
+    ls_git_pack_commit-tree      = 'dummy'.
+    ls_git_pack_commit-committer = 'dummy'.
+
+    ls_git_pack_commit-author = 'Lastname, Firstname <mail@mail.com> 1532611350 +0000'.
+    ls_object-data = zcl_abapgit_git_pack=>encode_commit( ls_git_pack_commit ).
     APPEND ls_object TO lt_objects.
 
-    ls_object-type = zif_abapgit_definitions=>c_type-commit.
-    ls_git_pack_commit-tree         = 'dummy'.
-    ls_git_pack_commit-author       = 'S#ren M#ller <mail@mail.com> 1532611350 +0000'.
-    ls_git_pack_commit-committer    = 'dummy'.
-    ls_object-data = zcl_abapgit_git_pack=>encode_commit( is_commit = ls_git_pack_commit ).
+    ls_git_pack_commit-author = 'Soeren Mueller <mail@mail.com> 1532611350 +0000'.
+    ls_object-data = zcl_abapgit_git_pack=>encode_commit( ls_git_pack_commit ).
     APPEND ls_object TO lt_objects.
 
-    ls_object-type = zif_abapgit_definitions=>c_type-commit.
-    ls_git_pack_commit-tree         = 'dummy'.
-    ls_git_pack_commit-author       = 'Dr. Werner Mueller <mail@mail.com> 1532611350 +0000'.
-    ls_git_pack_commit-committer    = 'dummy'.
-    ls_object-data = zcl_abapgit_git_pack=>encode_commit( is_commit = ls_git_pack_commit ).
+    ls_git_pack_commit-author = 'S#ren M#ller <mail@mail.com> 1532611350 +0000'.
+    ls_object-data = zcl_abapgit_git_pack=>encode_commit( ls_git_pack_commit ).
+    APPEND ls_object TO lt_objects.
+
+    ls_git_pack_commit-author = 'Dr. Werner Mueller <mail@mail.com> 1532611350 +0000'.
+    ls_object-data = zcl_abapgit_git_pack=>encode_commit( ls_git_pack_commit ).
+    APPEND ls_object TO lt_objects.
+
+    ls_git_pack_commit-author = 'SAP*........ <SAP*........@localhost> 1535375483 +0200'.
+    ls_object-data = zcl_abapgit_git_pack=>encode_commit( ls_git_pack_commit ).
     APPEND ls_object TO lt_objects.
 
     lt_commits = zcl_abapgit_branch_overview=>parse_commits( lt_objects ).
 
     cl_abap_unit_assert=>assert_equals(
        act = lines( lt_commits )
-       exp = 4 ).
+       exp = 5 ).
 
   ENDMETHOD.
 
