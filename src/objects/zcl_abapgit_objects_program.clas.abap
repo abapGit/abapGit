@@ -565,6 +565,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_d020s>       LIKE LINE OF lt_d020s,
                    <lv_outputstyle> TYPE scrpostyle,
+                   <ls_container>   LIKE LINE OF lt_containers,
                    <ls_field>       LIKE LINE OF lt_fields_to_containers,
                    <ls_dynpro>      LIKE LINE OF rt_dynpro.
 
@@ -612,6 +613,15 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         ASSIGN COMPONENT 'OUTPUTSTYLE' OF STRUCTURE <ls_field> TO <lv_outputstyle>.
         IF sy-subrc = 0 AND <lv_outputstyle> = '  '.
           CLEAR <lv_outputstyle>.
+        ENDIF.
+      ENDLOOP.
+
+      LOOP AT lt_containers ASSIGNING <ls_container>.
+        IF <ls_container>-c_resize_v = abap_false.
+          CLEAR <ls_container>-c_line_min.
+        ENDIF.
+        IF <ls_container>-c_resize_h = abap_false.
+          CLEAR <ls_container>-c_coln_min.
         ENDIF.
       ENDLOOP.
 
