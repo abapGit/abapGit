@@ -412,12 +412,12 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
         ENDIF.
 
         "split rest in postdata format
-        WHILE rest <> ''.
+        WHILE pdata <> ''.
           APPEND INITIAL LINE TO postdata ASSIGNING <postdata>.
-          <postdata> = rest.
+          <postdata> = pdata.
           DESCRIBE FIELD <postdata> LENGTH pdatalen IN CHARACTER MODE.
-          IF strlen( rest ) >= pdatalen.
-            rest = rest+pdatalen.
+          IF strlen( pdata ) >= pdatalen.
+            pdata = pdata+pdatalen.
           ELSE.
             EXIT.
           ENDIF.
