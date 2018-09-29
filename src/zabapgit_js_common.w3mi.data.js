@@ -63,9 +63,11 @@ function debugOutput(text, dstID) {
 function submitSapeventForm(params, action, method) {
   var dummyid = "__ABAPGIT_EVENT_DUMMY__";
   var form;
-  //for get create a dynamic form on the fly
-  //for post use the static one in the page if found to work around sapgui java bugs
-  if (!method || method.toLowerCase() !== "get") {
+  //SAPGUI java does not send postdata if we change the post action
+  //so if the method is not get and we have parameters we use a form with a constant ID
+  //already embedded in the page and pass the action as a parameter
+  //if not we create a new form and use that
+  if ((!method || method.toLowerCase() !== "get") && Object.keys(params).length > 0) {
     form = document.getElementById(dummyid);
   }
   if (form) {
@@ -78,7 +80,7 @@ function submitSapeventForm(params, action, method) {
     form.appendChild(hiddenField);
   }
   else {
-    //no dummy form in page, create one. Won'r work in java GUI
+    //no dummy form selected in page, create one
     form = document.createElement("form");
     form.setAttribute("action", "sapevent:" + action);
     form.setAttribute("method", method || "post");

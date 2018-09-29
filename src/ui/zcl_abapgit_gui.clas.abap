@@ -72,11 +72,11 @@ CLASS zcl_abapgit_gui DEFINITION
                 it_postdata    TYPE cnht_post_data_tab OPTIONAL
                 it_query_table TYPE cnht_query_table OPTIONAL.
 
-    METHODS remove_dummy_action
-      IMPORTING
-        VALUE(i_postdata) TYPE string
-      RETURNING
-        VALUE(r_result)   TYPE cnht_post_data_tab.
+    METHODS transform_dummy_form_params
+      CHANGING
+        action   TYPE c
+        getdata  TYPE c
+        postdata TYPE cnht_post_data_tab.
 
 ENDCLASS.
 
@@ -284,34 +284,19 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
 
 
   METHOD on_event.
-    DATA: lv_action(400) TYPE c,
-          lt_postdata    LIKE postdata,
-          lv_match       TYPE string,
-          lv_len         TYPE i,
-          lv_temp        TYPE string.
 
-    FIELD-SYMBOLS: <postdata> LIKE LINE OF lt_postdata.
-
-    lv_action = action.
-    "hack for java webgui support
-    IF action = '__abapgit_dummy__'.
-      CONCATENATE LINES OF postdata INTO lv_temp RESPECTING BLANKS.
-      FIND REGEX '&?__ABAPGIT_ACTION=([^\s&]+)&?' IN lv_temp SUBMATCHES lv_match.
-      IF sy-subrc = 0.
-        lv_action = lv_match.
-        lt_postdata = remove_dummy_action( lv_temp ).
-      ELSE.
-        lt_postdata = postdata.
-      ENDIF.
-    ELSE.
-      lt_postdata = postdata.
-    ENDIF.
+    "workaround for java sapgui
+    transform_dummy_form_params(
+      CHANGING
+        action   = action
+        getdata  = getdata
+        postdata = postdata ).
 
     handle_action(
-      iv_action      = lv_action
+      iv_action      = action
       iv_frame       = frame
       iv_getdata     = getdata
-      it_postdata    = lt_postdata
+      it_postdata    = postdata
       it_query_table = query_table ).
 
   ENDMETHOD.                    "on_event
@@ -374,24 +359,64 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
 
   ENDMETHOD.                    "startup
 
-  METHOD remove_dummy_action.
-    DATA: lv_len         TYPE i.
 
-    FIELD-SYMBOLS: <postdata> LIKE LINE OF r_result.
-    REPLACE REGEX '&?__ABAPGIT_ACTION=[^\s&]+(&?)' IN i_postdata  WITH '$1'.
-    IF i_postdata <> '' AND i_postdata(1) = '&' AND sy-subrc = 0.
-      i_postdata = i_postdata+1.
-    ENDIF.
-    WHILE i_postdata <> ''.
-      APPEND INITIAL LINE TO r_result ASSIGNING <postdata>.
-      <postdata> = i_postdata.
-      DESCRIBE FIELD <postdata> LENGTH lv_len IN CHARACTER MODE.
-      IF strlen( i_postdata ) >= lv_len.
-        i_postdata = i_postdata+lv_len.
-      ELSE.
-        EXIT.
+
+  METHOD transform_dummy_form_params.
+    " to support SAPGUI java we handle some postcalls a hardcoded action
+    " passing the actual action in a parameter
+    " this code simulates the original call using it
+    DATA: pdata           TYPE string,
+          prefix          TYPE string,
+          suffix          TYPE string,
+          newaction       TYPE string,
+          queryparameters TYPE string,
+          rest            TYPE string,
+          moff            TYPE i,
+          mlen            TYPE i,
+          pdatalen        TYPE i.
+
+    FIELD-SYMBOLS: <postdata> LIKE LINE OF postdata.
+
+    IF action = '__abapgit_dummy__'.
+      CONCATENATE LINES OF postdata INTO pdata RESPECTING BLANKS.
+      FIND REGEX '([&?]?)__ABAPGIT_ACTION=([^\s&\%]+)(?:(?:%3[fF])([^\s&]*))?(&?)' IN pdata
+        MATCH OFFSET moff MATCH LENGTH mlen
+        SUBMATCHES prefix newaction queryparameters suffix.
+
+      IF sy-subrc = 0.
+        "match: I did use the static form
+        action = newaction.
+        getdata = cl_http_utility=>unescape_url( queryparameters ).
+
+        "for postdata, remove the query result (except perhaps the initial or final ?/&) and split the rest
+        CLEAR postdata.
+        rest = pdata+moff.
+        rest = rest+mlen.
+        FIND REGEX '^\s*$' IN rest.
+        IF sy-subrc = 0.
+          pdata = pdata(moff).
+          rest = ''.
+        ELSE.
+          IF prefix <> '' AND suffix <> ''.
+            suffix = ''.
+          ENDIF.
+          CONCATENATE pdata(moff) prefix suffix rest INTO pdata.
+        ENDIF.
+
+        WHILE rest <> ''.
+          APPEND INITIAL LINE TO postdata ASSIGNING <postdata>.
+          <postdata> = rest.
+          DESCRIBE FIELD <postdata> LENGTH pdatalen IN CHARACTER MODE.
+          IF strlen( rest ) >= pdatalen.
+            rest = rest+pdatalen.
+          ELSE.
+            EXIT.
+          ENDIF.
+        ENDWHILE.
+
       ENDIF.
-    ENDWHILE.
+
+    ENDIF.
 
   ENDMETHOD.
 
