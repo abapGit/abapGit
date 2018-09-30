@@ -932,7 +932,7 @@ Hotkeys.prototype.onkeydown = function(oEvent){
   }
 
   var 
-    sKey = oEvent.key || oEvent.keyCode,
+    sKey = oEvent.key || String.fromCharCode(oEvent.keyCode),
     fnHotkey = this.oKeyMap[sKey];
 
   if (fnHotkey) {
@@ -944,7 +944,7 @@ function setKeyBindings(oKeyMap){
 
   var oHotkeys = new Hotkeys(oKeyMap);
 
-  document.addEventListener('keydown', oHotkeys.onkeydown.bind(oHotkeys));
+  document.addEventListener('keypress', oHotkeys.onkeydown.bind(oHotkeys));
 
 }
 
