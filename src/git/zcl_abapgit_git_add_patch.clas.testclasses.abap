@@ -26,8 +26,6 @@ CLASS ltcl_calculate_patch DEFINITION FINAL FOR TESTING
       unknown_result_type FOR TESTING RAISING cx_static_check.
 
     METHODS:
-      setup,
-
       given_diff
         IMPORTING
           iv_patch_flag TYPE zif_abapgit_definitions=>ty_diff-patch_flag
@@ -49,19 +47,12 @@ CLASS ltcl_calculate_patch DEFINITION FINAL FOR TESTING
     DATA:
       mt_diff  TYPE zif_abapgit_definitions=>ty_diffs_tt,
       mt_patch TYPE stringtab,
-      mv_index TYPE sytabix,
       mx_error TYPE REF TO zcx_abapgit_exception.
 
 ENDCLASS.
 
 
 CLASS ltcl_calculate_patch IMPLEMENTATION.
-
-  METHOD setup.
-
-    mv_index = 0.
-
-  ENDMETHOD.
 
   DEFINE given_diff.
 
@@ -84,10 +75,10 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     when_patch_is_calculated( ).
 
-    then_patch_should_be(:
-      ' '              ),
-      'write: `Test`.' ),
-      ' '              ).
+    then_patch_should_be(
+      |\n| &&
+      |write: `Test`.\n| &&
+      |\n| ).
 
   ENDMETHOD.
 
@@ -102,11 +93,11 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     when_patch_is_calculated( ).
 
-    then_patch_should_be(:
-      ' '                     ),
-      'write: `Test`.'        ),
-      'write: `Hello world`.' ),
-      ' '                     ).
+    then_patch_should_be(
+      |\n| &&
+      |write: `Test`.\n| &&
+      |write: `Hello world`.\n| &&
+      |\n| ).
 
   ENDMETHOD.
 
@@ -122,12 +113,12 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     when_patch_is_calculated( ).
 
-    then_patch_should_be(:
-      ' '                     ),
-      'write: `Test`.'        ),
-      ' '                     ),
-      'write: `Hello world`.' ),
-      ' '                     ).
+    then_patch_should_be(
+      |\n| &&
+      |write: `Test`.\n| &&
+      |\n| &&
+      |write: `Hello world`.\n| &&
+      |\n| ).
 
   ENDMETHOD.
 
@@ -143,11 +134,11 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     when_patch_is_calculated( ).
 
-    then_patch_should_be(:
-      ' '              ),
-      'write: `Test`.' ),
-      ' '              ),
-      ' '              ).
+    then_patch_should_be(
+      |\n| &&
+      |write: `Test`.\n| &&
+      |\n| &&
+      |\n| ).
 
   ENDMETHOD.
 
@@ -161,9 +152,7 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     when_patch_is_calculated( ).
 
-    then_patch_should_be(:
-      ' ' ),
-      ' ' ).
+    then_patch_should_be( |\n\n| ).
 
   ENDMETHOD.
 
@@ -178,9 +167,7 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     when_patch_is_calculated( ).
 
-    then_patch_should_be(:
-      ' ' ),
-      ' ' ).
+    then_patch_should_be( |\n\n| ).
 
   ENDMETHOD.
 
@@ -196,10 +183,10 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     when_patch_is_calculated( ).
 
-    then_patch_should_be(:
-      ' '                     ),
-      'write: `Hello world`.' ),
-      ' '                     ).
+    then_patch_should_be(
+      |\n| &&
+      |write: `Hello world`.| &&
+      |\n| ).
 
   ENDMETHOD.
 
@@ -216,10 +203,11 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     when_patch_is_calculated( ).
 
-    then_patch_should_be( ' ' ).
-    then_patch_should_be( 'write: `Hello world`.' ).
-    then_patch_should_be( 'write: `Hello 123`.'     ).
-    then_patch_should_be( ' ' ).
+    then_patch_should_be(
+      |\n| &&
+      |write: `Hello world`.\n| &&
+      |write: `Hello 123`.\n| &&
+      |\n| ).
 
   ENDMETHOD.
 
@@ -233,10 +221,10 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     when_patch_is_calculated( ).
 
-    then_patch_should_be(:
-      ' '                     ),
-      'write: `Hello world`.' ),
-      ' '                     ).
+    then_patch_should_be(
+      |\n| &&
+      |write: `Hello world`.\n| &&
+      |\n| ).
 
   ENDMETHOD.
 
@@ -251,11 +239,11 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     when_patch_is_calculated( ).
 
-    then_patch_should_be(:
-      ' '                     ),
-      'write: `Hello world`.' ),
-      'write: `Test`.'        ),
-      ' '                     ).
+    then_patch_should_be(
+      |\n| &&
+      |write: `Hello world`.\n| &&
+      |write: `Test`.\n| &&
+      |\n| ).
 
   ENDMETHOD.
 
@@ -271,12 +259,12 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     when_patch_is_calculated( ).
 
-    then_patch_should_be(:
-      ' '                     ),
-      'write: `Hello world`.' ),
-      ' '                     ),
-      'write: `Test`.'        ),
-      ' '                     ).
+    then_patch_should_be(
+      |\n| &&
+      |write: `Hello world`.\n| &&
+      |\n| &&
+      |write: `Test`.\n| &&
+      |\n| ).
 
   ENDMETHOD.
 
@@ -292,12 +280,12 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     when_patch_is_calculated( ).
 
-    then_patch_should_be(:
-      ' '                     ),
-      'write: `Hello world`.' ),
-      ' '                     ),
-      'write: `Hello world`.' ),
-      ' '                     ).
+    then_patch_should_be(
+      |\n| &&
+      |write: `Hello world`.\n| &&
+      |\n| &&
+      |write: `Hello world`.\n| &&
+      |\n| ).
 
   ENDMETHOD.
 
@@ -314,13 +302,13 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     when_patch_is_calculated( ).
 
-    then_patch_should_be(:
-      ' '                     ),
-      'write: `Hello world`.' ),
-      ' '                     ),
-      'write: `Hello world`.' ),
-      ' '                     ),
-      'write: `newline`.'     ).
+    then_patch_should_be(
+      |\n| &&
+      |write: `Hello world`.\n| &&
+      |\n| &&
+      |write: `Hello world`.\n| &&
+      |\n| &&
+      |write: `newline`.\n| ).
 
   ENDMETHOD.
 
@@ -372,16 +360,22 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
   METHOD then_patch_should_be.
 
-    FIELD-SYMBOLS: <ls_patch> LIKE LINE OF mt_patch.
+    DATA: lv_index TYPE i,
+          lt_patch TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+          lv_patch LIKE LINE OF lt_patch.
 
-    mv_index = mv_index + 1.
+    FIELD-SYMBOLS: <lv_patch> LIKE LINE OF mt_patch.
 
-    READ TABLE mt_patch INDEX mv_index
-                        ASSIGNING <ls_patch>.
+    SPLIT iv_exp_patch AT |\n| INTO TABLE lt_patch IN CHARACTER MODE.
 
-    cl_abap_unit_assert=>assert_equals(
-      exp = iv_exp_patch
-      act = <ls_patch> ).
+    LOOP AT lt_patch INTO lv_patch.
+      READ TABLE mt_patch INDEX sy-tabix ASSIGNING <lv_patch>.
+      cl_abap_unit_assert=>assert_subrc( ).
+
+      cl_abap_unit_assert=>assert_equals(
+        exp = lv_patch
+        act = <lv_patch> ).
+    ENDLOOP.
 
   ENDMETHOD.
 
