@@ -363,7 +363,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
         iv_changed_by = ls_changed_by-name ) ).
 
       AT LAST.
-        ro_html->add('</tbody>').
+        ro_html->add( '</tbody>' ).
       ENDAT.
     ENDLOOP.
 
@@ -386,7 +386,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
         is_file    = <ls_remote> ) ).
 
       AT LAST.
-        ro_html->add('</tbody>').
+        ro_html->add( '</tbody>' ).
       ENDAT.
     ENDLOOP.
 
