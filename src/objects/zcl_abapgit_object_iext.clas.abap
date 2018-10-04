@@ -215,7 +215,9 @@ CLASS zcl_abapgit_object_iext IMPLEMENTATION.
            ls_extension-attributes-credate,
            ls_extension-attributes-cretime,
            ls_extension-attributes-ldate,
-           ls_extension-attributes-ltime.
+           ls_extension-attributes-ltime,
+           ls_extension-attributes-pwork,
+           ls_extension-attributes-presp.
 
     io_xml->add( iv_name = 'IEXT'
                  ig_data = ls_extension ).
