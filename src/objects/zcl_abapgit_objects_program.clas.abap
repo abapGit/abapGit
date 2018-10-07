@@ -582,7 +582,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     IF sy-subrc = 2.
       zcx_abapgit_exception=>raise( 'error from screen_list' ).
     ENDIF.
-    
+
     SORT lt_d020s BY dnum ASCENDING.
 
 * loop dynpros and skip generated selection screens
