@@ -8,6 +8,17 @@ Legend
 + : added
 - : removed
 
+2018-10-07 v1.78.0
+------------------
++ UDMO support
+* PROG fix dynpro ordering
+* SUSO downport
++ Run code inspector in parallel
+* WEBI fixes
+* Syntax check results page clean up
+! DDLX source in separate file
+! smart response checks for verifying git endpoint
+
 2018-09-21 v1.77.0
 ------------------
 + ENHC support
