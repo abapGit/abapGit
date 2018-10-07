@@ -85,6 +85,8 @@ CLASS zcl_abapgit_object_iext IMPLEMENTATION.
         cg_data = ls_extension ).
 
     MOVE-CORRESPONDING ls_extension-attributes TO ls_attributes.
+    ls_attributes-presp = cl_abap_syst=>get_user_name( ).
+    ls_attributes-pwork = ls_attributes-presp.
 
     CALL FUNCTION 'EXTTYPE_CREATE'
       EXPORTING
