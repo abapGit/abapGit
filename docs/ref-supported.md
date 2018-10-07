@@ -98,7 +98,7 @@ TRAN | Transaction | Yes
 TTYP | Table Type | Yes
 TYPE | Type Group | Yes
 UCSA | Unified Connectivity Service Assembly | Yes
-UDMO | Data model | [#1905](https://github.com/larshp/abapGit/issues/1905)
+UDMO | Data model | Yes
 UENO | Entity type | [#1906](https://github.com/larshp/abapGit/issues/1906)
 VCLS | View cluster | Yes
 VIEW | View | Yes
