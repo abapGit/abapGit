@@ -1,97 +1,97 @@
-CLASS ZCL_ABAPGIT_OBJECT_UDMO DEFINITION
+CLASS zcl_abapgit_object_udmo DEFINITION
   PUBLIC
-  INHERITING FROM ZCL_ABAPGIT_OBJECTS_SUPER
+  INHERITING FROM zcl_abapgit_objects_super
   FINAL
   CREATE PUBLIC .
 
   PUBLIC SECTION.
 
-    INTERFACES ZIF_ABAPGIT_OBJECT .
+    INTERFACES zif_abapgit_object .
 
-    METHODS CONSTRUCTOR
+    METHODS constructor
       IMPORTING
-        !IS_ITEM     TYPE ZIF_ABAPGIT_DEFINITIONS=>TY_ITEM
-        !IV_LANGUAGE TYPE SPRAS .
+        !is_item     TYPE zif_abapgit_definitions=>ty_item
+        !iv_language TYPE spras .
   PROTECTED SECTION.
 
-    METHODS CORR_INSERT
-         REDEFINITION .
+    METHODS corr_insert
+        REDEFINITION .
   PRIVATE SECTION.
 
     TYPES:
       " You are reminded that the text serialisation / de-serialisation methods depend upon a common type.
       " To make the dependency explicit, there is one common definition.
-      BEGIN OF TY_UDMO_TEXT_TYPE.
-    TYPES SPRACHE TYPE DM40T-SPRACHE.
-    TYPES DMOID TYPE DM40T-DMOID.
-    TYPES LANGBEZ TYPE DM40T-LANGBEZ.
-    TYPES AS4LOCAL TYPE DM40T-AS4LOCAL.
-    TYPES END OF TY_UDMO_TEXT_TYPE .
+      BEGIN OF ty_udmo_text_type.
+    TYPES sprache TYPE dm40t-sprache.
+    TYPES dmoid TYPE dm40t-dmoid.
+    TYPES langbez TYPE dm40t-langbez.
+    TYPES as4local TYPE dm40t-as4local.
+    TYPES END OF ty_udmo_text_type .
 
-    DATA MV_DATA_MODEL TYPE UDDMODL .
-    DATA MV_TEXT_OBJECT TYPE DOKU_OBJ .
-    DATA MV_LXE_TEXT_NAME TYPE LXEOBJNAME .
-    DATA MV_ACTIVATION_STATE TYPE AS4LOCAL .
-    DATA MS_OBJECT_TYPE TYPE RSDEO .
-    CONSTANTS C_TRANSPORT_OBJECT_CLASS TYPE TROBJTYPE VALUE 'SUDM' ##NO_TEXT.
-    CONSTANTS C_LXE_TEXT_TYPE TYPE LXEOBJTYPE VALUE 'IM' ##NO_TEXT.
-    CONSTANTS C_CORRECTION_OBJECT_TYPE TYPE RSDEO-OBJTYPE VALUE 'UDMO' ##NO_TEXT.
-    CONSTANTS C_ACTIVE_STATE TYPE AS4LOCAL VALUE 'A' ##NO_TEXT.
+    DATA mv_data_model TYPE uddmodl .
+    DATA mv_text_object TYPE doku_obj .
+    DATA mv_lxe_text_name TYPE lxeobjname .
+    DATA mv_activation_state TYPE as4local .
+    DATA ms_object_type TYPE rsdeo .
+    CONSTANTS c_transport_object_class TYPE trobjtype VALUE 'SUDM' ##NO_TEXT.
+    CONSTANTS c_lxe_text_type TYPE lxeobjtype VALUE 'IM' ##NO_TEXT.
+    CONSTANTS c_correction_object_type TYPE rsdeo-objtype VALUE 'UDMO' ##NO_TEXT.
+    CONSTANTS c_active_state TYPE as4local VALUE 'A' ##NO_TEXT.
 
-    METHODS IS_NAME_PERMITTED
+    METHODS is_name_permitted
       RAISING
-        ZCX_ABAPGIT_EXCEPTION .
-    METHODS UPDATE_TREE .
-    METHODS SERIALIZE_SHORT_TEXTS
+        zcx_abapgit_exception .
+    METHODS update_tree .
+    METHODS serialize_short_texts
       IMPORTING
-        !IO_XML TYPE REF TO ZCL_ABAPGIT_XML_OUTPUT
+        !io_xml TYPE REF TO zcl_abapgit_xml_output
       RAISING
-        ZCX_ABAPGIT_EXCEPTION .
-    METHODS DESERIALIZE_SHORT_TEXTS
+        zcx_abapgit_exception .
+    METHODS deserialize_short_texts
       IMPORTING
-        !IO_XML TYPE REF TO ZCL_ABAPGIT_XML_INPUT
+        !io_xml TYPE REF TO zcl_abapgit_xml_input
       RAISING
-        ZCX_ABAPGIT_EXCEPTION .
-    METHODS SERIALIZE_LONG_TEXTS
+        zcx_abapgit_exception .
+    METHODS serialize_long_texts
       IMPORTING
-        !IO_XML TYPE REF TO ZCL_ABAPGIT_XML_OUTPUT
+        !io_xml TYPE REF TO zcl_abapgit_xml_output
       RAISING
-        ZCX_ABAPGIT_EXCEPTION .
-    METHODS DESERIALIZE_LONG_TEXTS
+        zcx_abapgit_exception .
+    METHODS deserialize_long_texts
       IMPORTING
-        !IO_XML TYPE REF TO ZCL_ABAPGIT_XML_INPUT
+        !io_xml TYPE REF TO zcl_abapgit_xml_input
       RAISING
-        ZCX_ABAPGIT_EXCEPTION .
-    METHODS SERIALIZE_ENTITIES
+        zcx_abapgit_exception .
+    METHODS serialize_entities
       IMPORTING
-        !IO_XML TYPE REF TO ZCL_ABAPGIT_XML_OUTPUT
+        !io_xml TYPE REF TO zcl_abapgit_xml_output
       RAISING
-        ZCX_ABAPGIT_EXCEPTION .
-    METHODS DESERIALIZE_ENTITIES
+        zcx_abapgit_exception .
+    METHODS deserialize_entities
       IMPORTING
-        !IO_XML TYPE REF TO ZCL_ABAPGIT_XML_INPUT
+        !io_xml TYPE REF TO zcl_abapgit_xml_input
       RAISING
-        ZCX_ABAPGIT_EXCEPTION .
-    METHODS ACCESS_MODIFY
+        zcx_abapgit_exception .
+    METHODS access_modify
       RETURNING
-        VALUE(RV_RESULT) TYPE ABAP_BOOL
+        VALUE(rv_result) TYPE abap_bool
       RAISING
-        ZCX_ABAPGIT_EXCEPTION .
-    METHODS ACCESS_FREE
+        zcx_abapgit_exception .
+    METHODS access_free
       RETURNING
-        VALUE(RV_RESULT) TYPE ABAP_BOOL
+        VALUE(rv_result) TYPE abap_bool
       RAISING
-        ZCX_ABAPGIT_EXCEPTION .
-    METHODS DESERIALIZE_MODEL
+        zcx_abapgit_exception .
+    METHODS deserialize_model
       IMPORTING
-        !IO_XML TYPE REF TO ZCL_ABAPGIT_XML_INPUT
+        !io_xml TYPE REF TO zcl_abapgit_xml_input
       RAISING
-        ZCX_ABAPGIT_EXCEPTION .
-    METHODS SERIALIZE_MODEL
+        zcx_abapgit_exception .
+    METHODS serialize_model
       IMPORTING
-        !IO_XML TYPE REF TO ZCL_ABAPGIT_XML_OUTPUT
+        !io_xml TYPE REF TO zcl_abapgit_xml_output
       RAISING
-        ZCX_ABAPGIT_EXCEPTION .
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -99,37 +99,37 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
 
-  METHOD ACCESS_FREE.
+  METHOD access_free.
 
     " Release the lock on the object.
 
     CALL FUNCTION 'RS_ACCESS_PERMISSION'
       EXPORTING
-        MODE                     = 'FREE'
-        OBJECT                   = ME->MS_OBJECT_TYPE
-        OBJECT_CLASS             = ME->C_TRANSPORT_OBJECT_CLASS
+        mode                     = 'FREE'
+        object                   = me->ms_object_type
+        object_class             = me->c_transport_object_class
       EXCEPTIONS
-        CANCELED_IN_CORR         = 1
-        ENQUEUED_BY_USER         = 2
-        ENQUEUE_SYSTEM_FAILURE   = 3
-        ILLEGAL_PARAMETER_VALUES = 4
-        LOCKED_BY_AUTHOR         = 5
-        NO_MODIFY_PERMISSION     = 6
-        NO_SHOW_PERMISSION       = 7
-        PERMISSION_FAILURE       = 8
-        REQUEST_LANGUAGE_DENIED  = 9
+        canceled_in_corr         = 1
+        enqueued_by_user         = 2
+        enqueue_system_failure   = 3
+        illegal_parameter_values = 4
+        locked_by_author         = 5
+        no_modify_permission     = 6
+        no_show_permission       = 7
+        permission_failure       = 8
+        request_language_denied  = 9
         OTHERS                   = 10.
 
-    IF SY-SUBRC NE 0.
-      ZCX_ABAPGIT_EXCEPTION=>RAISE_T100( ).
+    IF sy-subrc NE 0.
+      zcx_abapgit_exception=>raise_t100( ).
     ELSE.
-      RV_RESULT = ABAP_TRUE.
+      rv_result = abap_true.
     ENDIF.
 
   ENDMETHOD.
 
 
-  METHOD ACCESS_MODIFY.
+  METHOD access_modify.
 
 * You are reminded that mode modify is the same as insert, with one important difference:
 
@@ -141,56 +141,56 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
     CALL FUNCTION 'RS_ACCESS_PERMISSION'
       EXPORTING
-        AUTHORITY_CHECK          = ABAP_TRUE
-        GLOBAL_LOCK              = ABAP_TRUE
-        MODE                     = 'MODIFY'
-        OBJECT                   = ME->MS_OBJECT_TYPE
-        OBJECT_CLASS             = ME->C_TRANSPORT_OBJECT_CLASS
+        authority_check          = abap_true
+        global_lock              = abap_true
+        mode                     = 'MODIFY'
+        object                   = me->ms_object_type
+        object_class             = me->c_transport_object_class
       EXCEPTIONS
-        CANCELED_IN_CORR         = 1
-        ENQUEUED_BY_USER         = 2
-        ENQUEUE_SYSTEM_FAILURE   = 3
-        ILLEGAL_PARAMETER_VALUES = 4
-        LOCKED_BY_AUTHOR         = 5
-        NO_MODIFY_PERMISSION     = 6
-        NO_SHOW_PERMISSION       = 7
-        PERMISSION_FAILURE       = 8
-        REQUEST_LANGUAGE_DENIED  = 9
+        canceled_in_corr         = 1
+        enqueued_by_user         = 2
+        enqueue_system_failure   = 3
+        illegal_parameter_values = 4
+        locked_by_author         = 5
+        no_modify_permission     = 6
+        no_show_permission       = 7
+        permission_failure       = 8
+        request_language_denied  = 9
         OTHERS                   = 10.
 
-    IF SY-SUBRC NE 0.
-      ZCX_ABAPGIT_EXCEPTION=>RAISE_T100( ).
+    IF sy-subrc NE 0.
+      zcx_abapgit_exception=>raise_t100( ).
     ELSE.
-      RV_RESULT = ABAP_TRUE.
+      rv_result = abap_true.
     ENDIF.
 
   ENDMETHOD.
 
 
-  METHOD CONSTRUCTOR.
+  METHOD constructor.
 
-    SUPER->CONSTRUCTOR( IS_ITEM  =  IS_ITEM  IV_LANGUAGE = IV_LANGUAGE ).
+    super->constructor( is_item  =  is_item  iv_language = iv_language ).
 
 
     " Conversion to Data model
-    ME->MV_DATA_MODEL = IS_ITEM-OBJ_NAME.
+    me->mv_data_model = is_item-obj_name.
     " Default activation state is active
-    ME->MV_ACTIVATION_STATE = C_ACTIVE_STATE.
+    me->mv_activation_state = c_active_state.
     " Derive the data model's text object
-    MV_TEXT_OBJECT = 'UDMD' && IS_ITEM-OBJ_NAME.
+    mv_text_object = 'UDMD' && is_item-obj_name.
     " And set the text object to active
-    MV_TEXT_OBJECT+30(1) = MV_ACTIVATION_STATE.
-    MV_LXE_TEXT_NAME = MV_TEXT_OBJECT.
+    mv_text_object+30(1) = mv_activation_state.
+    mv_lxe_text_name = mv_text_object.
 
     " Correction and Transport System object
-    ME->MS_OBJECT_TYPE-OBJTYPE = C_CORRECTION_OBJECT_TYPE.
-    ME->MS_OBJECT_TYPE-OBJNAME = IS_ITEM-OBJ_NAME.
+    me->ms_object_type-objtype = c_correction_object_type.
+    me->ms_object_type-objname = is_item-obj_name.
 
 
   ENDMETHOD.
 
 
-  METHOD CORR_INSERT.
+  METHOD corr_insert.
 
     " You are reminded that SUDM - Data Model has no part objects e.g. no LIMU
     " Therefore global lock is always appropriate
@@ -199,41 +199,41 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
     CALL FUNCTION 'RS_CORR_INSERT'
       EXPORTING
-        OBJECT              = ME->MS_OBJECT_TYPE
-        OBJECT_CLASS        = ME->C_TRANSPORT_OBJECT_CLASS
-        DEVCLASS            = IV_PACKAGE
-        MASTER_LANGUAGE     = MV_LANGUAGE
-        MODE                = 'INSERT'
-        GLOBAL_LOCK         = ABAP_TRUE
+        object              = me->ms_object_type
+        object_class        = me->c_transport_object_class
+        devclass            = iv_package
+        master_language     = mv_language
+        mode                = 'INSERT'
+        global_lock         = abap_true
       EXCEPTIONS
-        CANCELLED           = 1
-        PERMISSION_FAILURE  = 2
-        UNKNOWN_OBJECTCLASS = 3
+        cancelled           = 1
+        permission_failure  = 2
+        unknown_objectclass = 3
         OTHERS              = 4.
-    IF SY-SUBRC = 1.
-      ZCX_ABAPGIT_EXCEPTION=>RAISE( 'Cancelled' ).
-    ELSEIF SY-SUBRC <> 0.
-      ZCX_ABAPGIT_EXCEPTION=>RAISE( 'Error from RS_CORR_INSERT' ).
+    IF sy-subrc = 1.
+      zcx_abapgit_exception=>raise( 'Cancelled' ).
+    ELSEIF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error from RS_CORR_INSERT' ).
     ENDIF.
   ENDMETHOD.
 
 
-  METHOD DESERIALIZE_ENTITIES.
+  METHOD deserialize_entities.
 
-    DATA LT_UDMO_ENTITIES TYPE STANDARD TABLE OF DM41S WITH DEFAULT KEY.
-    DATA LS_UDMO_ENTITY LIKE LINE OF LT_UDMO_ENTITIES.
+    DATA lt_udmo_entities TYPE STANDARD TABLE OF dm41s WITH DEFAULT KEY.
+    DATA ls_udmo_entity LIKE LINE OF lt_udmo_entities.
 
 
-    IO_XML->READ( EXPORTING IV_NAME = 'UDMO_ENTITIES'
-                  CHANGING  CG_DATA = LT_UDMO_ENTITIES ).
+    io_xml->read( EXPORTING iv_name = 'UDMO_ENTITIES'
+                  CHANGING  cg_data = lt_udmo_entities ).
 
-    LOOP AT LT_UDMO_ENTITIES INTO LS_UDMO_ENTITY.
+    LOOP AT lt_udmo_entities INTO ls_udmo_entity.
 
       CALL FUNCTION 'SDU_DMO_ENT_PUT'
         EXPORTING
-          OBJECT   = LS_UDMO_ENTITY
+          object   = ls_udmo_entity
         EXCEPTIONS
-          RET_CODE = 0
+          ret_code = 0
           OTHERS   = 0.
 
     ENDLOOP.
@@ -241,56 +241,56 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD DESERIALIZE_LONG_TEXTS.
+  METHOD deserialize_long_texts.
 
-    DATA BEGIN OF LS_UDMO_LONG_TEXT.
-    DATA LANGUAGE TYPE DM40T-SPRACHE.
-    DATA HEADER   TYPE THEAD.
-    DATA CONTENT TYPE XSTRING.
-    DATA END OF LS_UDMO_LONG_TEXT.
+    DATA BEGIN OF ls_udmo_long_text.
+    DATA language TYPE dm40t-sprache.
+    DATA header   TYPE thead.
+    DATA content TYPE xstring.
+    DATA END OF ls_udmo_long_text.
 
-    TYPES BEGIN OF LANGUAGE_TYPE.
-    TYPES LANGUAGE TYPE DM40T-SPRACHE.
-    TYPES END OF LANGUAGE_TYPE.
+    TYPES BEGIN OF language_type.
+    TYPES language TYPE dm40t-sprache.
+    TYPES END OF language_type.
 
-    DATA LT_UDMO_LONG_TEXTS LIKE STANDARD TABLE OF LS_UDMO_LONG_TEXT.
-    DATA LT_UDMO_LANGUAGES TYPE STANDARD TABLE OF LANGUAGE_TYPE.
-    DATA LS_HEADER TYPE THEAD.
+    DATA lt_udmo_long_texts LIKE STANDARD TABLE OF ls_udmo_long_text.
+    DATA lt_udmo_languages TYPE STANDARD TABLE OF language_type.
+    DATA ls_header TYPE thead.
 
-    IO_XML->READ( EXPORTING IV_NAME = 'UDMO_LONG_TEXTS'
-                  CHANGING  CG_DATA = LT_UDMO_LONG_TEXTS ).
+    io_xml->read( EXPORTING iv_name = 'UDMO_LONG_TEXTS'
+                  CHANGING  cg_data = lt_udmo_long_texts ).
 
-    LOOP AT LT_UDMO_LONG_TEXTS INTO LS_UDMO_LONG_TEXT.
+    LOOP AT lt_udmo_long_texts INTO ls_udmo_long_text.
 
-      LS_UDMO_LONG_TEXT-HEADER-TDFUSER = SY-UNAME.
-      LS_UDMO_LONG_TEXT-HEADER-TDFDATE = SY-DATUM.
-      LS_UDMO_LONG_TEXT-HEADER-TDFTIME = SY-UZEIT.
+      ls_udmo_long_text-header-tdfuser = sy-uname.
+      ls_udmo_long_text-header-tdfdate = sy-datum.
+      ls_udmo_long_text-header-tdftime = sy-uzeit.
 
       " You are reminded that the target system may already have some texts in
       " existence. So we determine the highest existent version.
 
-      CLEAR LS_HEADER-TDVERSION.
+      CLEAR ls_header-tdversion.
 
-      SELECT MAX( DOKVERSION )
-      INTO LS_HEADER-TDVERSION
-      FROM DOKHL
-      WHERE ID = ME->C_LXE_TEXT_TYPE
-      AND   OBJECT = ME->MV_TEXT_OBJECT
-      AND   LANGU = LS_UDMO_LONG_TEXT-LANGUAGE.
+      SELECT MAX( dokversion )
+      INTO ls_header-tdversion
+      FROM dokhl
+      WHERE id = me->c_lxe_text_type
+      AND   object = me->mv_text_object
+      AND   langu = ls_udmo_long_text-language.
 
       " Increment the version
-      LS_HEADER-TDVERSION = LS_HEADER-TDVERSION + 1.
-      LS_UDMO_LONG_TEXT-HEADER-TDVERSION = LS_HEADER-TDVERSION.
+      ls_header-tdversion = ls_header-tdversion + 1.
+      ls_udmo_long_text-header-tdversion = ls_header-tdversion.
 
       " This function module takes care of the variation in text processing between various objects.
       CALL FUNCTION 'LXE_OBJ_DOKU_PUT_XSTRING'
         EXPORTING
-          SLANG   = ME->MV_LANGUAGE
-          TLANG   = LS_UDMO_LONG_TEXT-LANGUAGE
-          OBJTYPE = ME->C_LXE_TEXT_TYPE
-          OBJNAME = ME->MV_LXE_TEXT_NAME
-          HEADER  = LS_UDMO_LONG_TEXT-HEADER
-          CONTENT = LS_UDMO_LONG_TEXT-CONTENT.
+          slang   = me->mv_language
+          tlang   = ls_udmo_long_text-language
+          objtype = me->c_lxe_text_type
+          objname = me->mv_lxe_text_name
+          header  = ls_udmo_long_text-header
+          content = ls_udmo_long_text-content.
 
 
     ENDLOOP.
@@ -299,30 +299,30 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD DESERIALIZE_MODEL.
+  METHOD deserialize_model.
 
-    DATA LS_DM40L TYPE DM40L.
+    DATA ls_dm40l TYPE dm40l.
 
 
-    IO_XML->READ( EXPORTING IV_NAME = 'DM40L'
-                  CHANGING CG_DATA = LS_DM40L ).
+    io_xml->read( EXPORTING iv_name = 'DM40L'
+                  CHANGING cg_data = ls_dm40l ).
 
 
     " See SDU_MODEL_PUT
     GET TIME.
 
-    LS_DM40L-FLG_FRAME = ABAP_TRUE.
-    LS_DM40L-FSTDATE   = SY-DATUM.
-    LS_DM40L-FSTTIME   = SY-UZEIT.
-    LS_DM40L-FSTUSER   = SY-UNAME.
-    LS_DM40L-LSTDATE   = SY-DATUM.
-    LS_DM40L-LSTTIME   = SY-UZEIT.
-    LS_DM40L-LSTUSER   = SY-UNAME.
+    ls_dm40l-flg_frame = abap_true.
+    ls_dm40l-fstdate   = sy-datum.
+    ls_dm40l-fsttime   = sy-uzeit.
+    ls_dm40l-fstuser   = sy-uname.
+    ls_dm40l-lstdate   = sy-datum.
+    ls_dm40l-lsttime   = sy-uzeit.
+    ls_dm40l-lstuser   = sy-uname.
 
-    MODIFY DM40L FROM LS_DM40L.
+    MODIFY dm40l FROM ls_dm40l.
 
-    IF SY-SUBRC <> 0.
-      ZCX_ABAPGIT_EXCEPTION=>RAISE( 'error from SDU_MODEL_PUT' ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from SDU_MODEL_PUT' ).
     ENDIF.
 
 
@@ -330,56 +330,56 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD DESERIALIZE_SHORT_TEXTS.
+  METHOD deserialize_short_texts.
 
-    DATA LT_UDMO_TEXTS TYPE STANDARD TABLE OF TY_UDMO_TEXT_TYPE WITH DEFAULT KEY.
-    DATA LS_UDMO_TEXT  TYPE TY_UDMO_TEXT_TYPE.
-    DATA LS_DM40T TYPE DM40T.
+    DATA lt_udmo_texts TYPE STANDARD TABLE OF ty_udmo_text_type WITH DEFAULT KEY.
+    DATA ls_udmo_text  TYPE ty_udmo_text_type.
+    DATA ls_dm40t TYPE dm40t.
 
 
     " Deserialize the XML
-    IO_XML->READ( EXPORTING IV_NAME = 'UDMO_TEXTS'
-                  CHANGING  CG_DATA = LT_UDMO_TEXTS ).
+    io_xml->read( EXPORTING iv_name = 'UDMO_TEXTS'
+                  CHANGING  cg_data = lt_udmo_texts ).
 
     " For every text provided
-    LOOP AT LT_UDMO_TEXTS INTO LS_UDMO_TEXT.
+    LOOP AT lt_udmo_texts INTO ls_udmo_text.
 
       " Does the text already exist? This is the same logic as used
       " in the FM SDU_MODEL_PUT
       SELECT SINGLE *
-      FROM DM40T
-      INTO LS_DM40T
-      WHERE SPRACHE  EQ LS_UDMO_TEXT-SPRACHE
-      AND   DMOID    EQ LS_UDMO_TEXT-DMOID
-      AND   AS4LOCAL EQ ME->MV_ACTIVATION_STATE.
+        FROM dm40t
+        INTO ls_dm40t
+        WHERE sprache  EQ ls_udmo_text-sprache
+        AND   dmoid    EQ ls_udmo_text-dmoid
+        AND   as4local EQ me->mv_activation_state.
 
-      IF SY-SUBRC EQ 0.
+      IF sy-subrc EQ 0.
         " There is already an active description for this language
         " but the provided description differs
-        IF LS_DM40T-LANGBEZ NE LS_UDMO_TEXT-LANGBEZ.
+        IF ls_dm40t-langbez NE ls_udmo_text-langbez.
 
-          LS_DM40T-LANGBEZ = LS_UDMO_TEXT-LANGBEZ.
-          LS_DM40T-LSTDATE = SY-DATUM.
-          LS_DM40T-LSTTIME = SY-UZEIT.
-          LS_DM40T-LSTUSER = SY-UNAME.
+          ls_dm40t-langbez = ls_udmo_text-langbez.
+          ls_dm40t-lstdate = sy-datum.
+          ls_dm40t-lsttime = sy-uzeit.
+          ls_dm40t-lstuser = sy-uname.
 
-          MODIFY DM40T FROM LS_DM40T.
+          MODIFY dm40t FROM ls_dm40t.
 
         ENDIF.
       ELSE.
 
         " There is no EXISTING active description in this language
 
-        LS_DM40T-AS4LOCAL = LS_UDMO_TEXT-AS4LOCAL.
-        LS_DM40T-DMOID    = LS_UDMO_TEXT-DMOID.
-        LS_DM40T-LANGBEZ  = LS_UDMO_TEXT-LANGBEZ.
-        LS_DM40T-LSTDATE  = SY-DATUM.
-        LS_DM40T-LSTTIME  = SY-UZEIT.
-        LS_DM40T-LSTUSER  = SY-UNAME.
-        LS_DM40T-SPRACHE  = LS_UDMO_TEXT-SPRACHE.
+        ls_dm40t-as4local = ls_udmo_text-as4local.
+        ls_dm40t-dmoid    = ls_udmo_text-dmoid.
+        ls_dm40t-langbez  = ls_udmo_text-langbez.
+        ls_dm40t-lstdate  = sy-datum.
+        ls_dm40t-lsttime  = sy-uzeit.
+        ls_dm40t-lstuser  = sy-uname.
+        ls_dm40t-sprache  = ls_udmo_text-sprache.
 
 
-        INSERT DM40T FROM LS_DM40T.
+        INSERT dm40t FROM ls_dm40t.
 
       ENDIF.
 
@@ -389,7 +389,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD IS_NAME_PERMITTED.
+  METHOD is_name_permitted.
 
     " It is unlikely that a serialised data model will have a name that is not permitted. However
     " there may be reservations in TRESE which could prohibit the data model name.
@@ -398,46 +398,46 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
     CALL FUNCTION 'SDU_SAA_CHECK'
       EXPORTING
-        OBJ_NAME   = ME->MS_OBJECT_TYPE-OBJNAME
-        OBJ_TYPE   = ME->MS_OBJECT_TYPE-OBJTYPE
+        obj_name   = me->ms_object_type-objname
+        obj_type   = me->ms_object_type-objtype
       EXCEPTIONS
-        WRONG_TYPE = 01.
+        wrong_type = 01.
 
-    IF SY-SUBRC <> 0.
-      ZCX_ABAPGIT_EXCEPTION=>RAISE_T100( ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
 
 
-  METHOD SERIALIZE_ENTITIES.
+  METHOD serialize_entities.
 
-    DATA LT_UDMO_ENTITIES TYPE STANDARD TABLE OF DM41S WITH DEFAULT KEY.
-    FIELD-SYMBOLS <UDMO_ENTITY> TYPE DM41S.
+    DATA lt_udmo_entities TYPE STANDARD TABLE OF dm41s WITH DEFAULT KEY.
+    FIELD-SYMBOLS <udmo_entity> TYPE dm41s.
 
-    SELECT * FROM DM41S
-      INTO TABLE LT_UDMO_ENTITIES
-      WHERE DMOID EQ ME->MV_DATA_MODEL
-      AND AS4LOCAL EQ ME->MV_ACTIVATION_STATE.
+    SELECT * FROM dm41s
+      INTO TABLE lt_udmo_entities
+      WHERE dmoid EQ me->mv_data_model
+      AND as4local EQ me->mv_activation_state.
 
 
-    LOOP AT LT_UDMO_ENTITIES ASSIGNING <UDMO_ENTITY> .
+    LOOP AT lt_udmo_entities ASSIGNING <udmo_entity> .
 
       " You are reminded that administrative information, such as last changed by user, date, time is not serialised.
-      CLEAR <UDMO_ENTITY>-LSTUSER.
-      CLEAR <UDMO_ENTITY>-LSTDATE.
-      CLEAR <UDMO_ENTITY>-LSTTIME.
-      CLEAR <UDMO_ENTITY>-FSTUSER.
-      CLEAR <UDMO_ENTITY>-FSTDATE.
-      CLEAR <UDMO_ENTITY>-FSTTIME.
+      CLEAR <udmo_entity>-lstuser.
+      CLEAR <udmo_entity>-lstdate.
+      CLEAR <udmo_entity>-lsttime.
+      CLEAR <udmo_entity>-fstuser.
+      CLEAR <udmo_entity>-fstdate.
+      CLEAR <udmo_entity>-fsttime.
 
 
     ENDLOOP.
 
     " You are reminded that descriptions in other languages do not have to be in existence, although they may.
-    IF LINES( LT_UDMO_ENTITIES ) GT 0.
-      IO_XML->ADD( IV_NAME = 'UDMO_ENTITIES'
-                   IG_DATA = LT_UDMO_ENTITIES ).
+    IF lines( lt_udmo_entities ) GT 0.
+      io_xml->add( iv_name = 'UDMO_ENTITIES'
+                   ig_data = lt_udmo_entities ).
     ENDIF.
 
 
@@ -445,7 +445,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD SERIALIZE_LONG_TEXTS.
+  METHOD serialize_long_texts.
 
     " The model has short texts in multiple languages. These are held in DM40T.
 
@@ -453,159 +453,159 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     " maintained as translations using SE63 Translation Editor. All of these long texts are held in DOK*
 
 
-    DATA BEGIN OF LS_UDMO_LONG_TEXT.
-    DATA LANGUAGE TYPE DM40T-SPRACHE.
-    DATA HEADER   TYPE THEAD.
-    DATA CONTENT TYPE XSTRING.
-    DATA END OF LS_UDMO_LONG_TEXT.
+    DATA BEGIN OF ls_udmo_long_text.
+    DATA language TYPE dm40t-sprache.
+    DATA header   TYPE thead.
+    DATA content TYPE xstring.
+    DATA END OF ls_udmo_long_text.
 
-    TYPES BEGIN OF LS_LANGUAGE_TYPE.
-    TYPES LANGUAGE TYPE DM40T-SPRACHE.
-    TYPES END OF LS_LANGUAGE_TYPE.
+    TYPES BEGIN OF ls_language_type.
+    TYPES language TYPE dm40t-sprache.
+    TYPES END OF ls_language_type.
 
-    DATA LT_UDMO_LONG_TEXTS LIKE STANDARD TABLE OF LS_UDMO_LONG_TEXT.
-    DATA LT_UDMO_LANGUAGES TYPE STANDARD TABLE OF LS_LANGUAGE_TYPE.
-    DATA LS_UDMO_LANGUAGE  LIKE LINE OF LT_UDMO_LANGUAGES.
-    DATA: LV_ERROR_STATUS  TYPE LXESTATPRC .
+    DATA lt_udmo_long_texts LIKE STANDARD TABLE OF ls_udmo_long_text.
+    DATA lt_udmo_languages TYPE STANDARD TABLE OF ls_language_type.
+    DATA ls_udmo_language  LIKE LINE OF lt_udmo_languages.
+    DATA: lv_error_status  TYPE lxestatprc .
 
 
     " In which languages are the short texts are maintained.
-    SELECT SPRACHE AS LANGUAGE
-    FROM DM40T
-    INTO TABLE LT_UDMO_LANGUAGES
-    WHERE DMOID    EQ ME->MV_DATA_MODEL
-    AND   AS4LOCAL EQ ME->MV_ACTIVATION_STATE
-    ORDER BY SPRACHE ASCENDING.                         "#EC CI_NOFIRST
+    SELECT sprache AS language
+    FROM dm40t
+    INTO TABLE lt_udmo_languages
+    WHERE dmoid    EQ me->mv_data_model
+    AND   as4local EQ me->mv_activation_state
+    ORDER BY sprache ASCENDING.                         "#EC CI_NOFIRST
 
     " For every language for which a short text is maintained,
-    LOOP AT LT_UDMO_LANGUAGES INTO LS_UDMO_LANGUAGE.
+    LOOP AT lt_udmo_languages INTO ls_udmo_language.
 
-      CLEAR LS_UDMO_LONG_TEXT.
-      CLEAR LV_ERROR_STATUS.
+      CLEAR ls_udmo_long_text.
+      CLEAR lv_error_status.
 
-      LS_UDMO_LONG_TEXT-LANGUAGE = LS_UDMO_LANGUAGE-LANGUAGE.
+      ls_udmo_long_text-language = ls_udmo_language-language.
 
       " You are reminded that this function gets the most recent version of the texts.
       CALL FUNCTION 'LXE_OBJ_DOKU_GET_XSTRING'
         EXPORTING
-          LANG    = LS_UDMO_LANGUAGE-LANGUAGE
-          OBJTYPE = ME->C_LXE_TEXT_TYPE
-          OBJNAME = ME->MV_LXE_TEXT_NAME
+          lang    = ls_udmo_language-language
+          objtype = me->c_lxe_text_type
+          objname = me->mv_lxe_text_name
         IMPORTING
-          HEADER  = LS_UDMO_LONG_TEXT-HEADER
-          CONTENT = LS_UDMO_LONG_TEXT-CONTENT
-          PSTATUS = LV_ERROR_STATUS.
+          header  = ls_udmo_long_text-header
+          content = ls_udmo_long_text-content
+          pstatus = lv_error_status.
 
-      CHECK LV_ERROR_STATUS EQ 'S'. "Success
+      CHECK lv_error_status EQ 'S'. "Success
 
       " Administrative information is not serialised
-      CLEAR LS_UDMO_LONG_TEXT-HEADER-TDFUSER.
-      CLEAR LS_UDMO_LONG_TEXT-HEADER-TDFDATE.
-      CLEAR LS_UDMO_LONG_TEXT-HEADER-TDFTIME.
+      CLEAR ls_udmo_long_text-header-tdfuser.
+      CLEAR ls_udmo_long_text-header-tdfdate.
+      CLEAR ls_udmo_long_text-header-tdftime.
 
-      CLEAR LS_UDMO_LONG_TEXT-HEADER-TDLUSER.
-      CLEAR LS_UDMO_LONG_TEXT-HEADER-TDLDATE.
-      CLEAR LS_UDMO_LONG_TEXT-HEADER-TDLTIME.
+      CLEAR ls_udmo_long_text-header-tdluser.
+      CLEAR ls_udmo_long_text-header-tdldate.
+      CLEAR ls_udmo_long_text-header-tdltime.
 
-      APPEND LS_UDMO_LONG_TEXT TO LT_UDMO_LONG_TEXTS.
+      APPEND ls_udmo_long_text TO lt_udmo_long_texts.
 
     ENDLOOP.
 
     " You are reminded that long texts do not have to be in existence
-    IF LINES( LT_UDMO_LONG_TEXTS ) GT 0.
-      IO_XML->ADD( IV_NAME = 'UDMO_LONG_TEXTS'
-                   IG_DATA = LT_UDMO_LONG_TEXTS ).
+    IF lines( lt_udmo_long_texts ) GT 0.
+      io_xml->add( iv_name = 'UDMO_LONG_TEXTS'
+                   ig_data = lt_udmo_long_texts ).
     ENDIF.
 
 
   ENDMETHOD.
 
 
-  METHOD SERIALIZE_MODEL.
+  METHOD serialize_model.
 
-    DATA LS_DM40L TYPE DM40L.
+    DATA ls_dm40l TYPE dm40l.
 
     " See SDU_MODEL_GET.
     SELECT SINGLE *
-    FROM DM40L
-    INTO LS_DM40L
-    WHERE DMOID    EQ ME->MV_DATA_MODEL
-    AND   AS4LOCAL EQ ME->MV_ACTIVATION_STATE.
+    FROM dm40l
+    INTO ls_dm40l
+    WHERE dmoid    EQ me->mv_data_model
+    AND   as4local EQ me->mv_activation_state.
 
 
-    IF SY-SUBRC NE 0.
-      ZCX_ABAPGIT_EXCEPTION=>RAISE( 'error from UDMO - model serialisation' ).
+    IF sy-subrc NE 0.
+      zcx_abapgit_exception=>raise( 'error from UDMO - model serialisation' ).
     ENDIF.
 
     " You are reminded that administrative data is not serialised.
-    CLEAR LS_DM40L-LSTDATE.
-    CLEAR LS_DM40L-LSTTIME.
-    CLEAR LS_DM40L-LSTUSER.
-    CLEAR LS_DM40L-FSTDATE.
-    CLEAR LS_DM40L-FSTTIME.
-    CLEAR LS_DM40L-FSTUSER.
+    CLEAR ls_dm40l-lstdate.
+    CLEAR ls_dm40l-lsttime.
+    CLEAR ls_dm40l-lstuser.
+    CLEAR ls_dm40l-fstdate.
+    CLEAR ls_dm40l-fsttime.
+    CLEAR ls_dm40l-fstuser.
 
-    IO_XML->ADD( IV_NAME = 'DM40L'
-                 IG_DATA = LS_DM40L ).
+    io_xml->add( iv_name = 'DM40L'
+                 ig_data = ls_dm40l ).
 
   ENDMETHOD.
 
 
-  METHOD SERIALIZE_SHORT_TEXTS.
+  METHOD serialize_short_texts.
 
-    DATA LT_UDMO_TEXTS TYPE STANDARD TABLE OF TY_UDMO_TEXT_TYPE WITH DEFAULT KEY.
+    DATA lt_udmo_texts TYPE STANDARD TABLE OF ty_udmo_text_type WITH DEFAULT KEY.
     " You are reminded that administrative information, such as last changed by user, date, time is not serialised.
 
     " You are reminded that active short texts of all (existent) languages are serialised.
 
-    SELECT SPRACHE DMOID AS4LOCAL LANGBEZ
-      FROM DM40T
-      INTO CORRESPONDING FIELDS OF TABLE LT_UDMO_TEXTS
-      WHERE DMOID    EQ ME->MV_DATA_MODEL
-      AND   AS4LOCAL EQ ME->MV_ACTIVATION_STATE
-      ORDER BY SPRACHE ASCENDING.                       "#EC CI_NOFIRST
+    SELECT sprache dmoid as4local langbez
+      FROM dm40t
+      INTO CORRESPONDING FIELDS OF TABLE lt_udmo_texts
+      WHERE dmoid    EQ me->mv_data_model
+      AND   as4local EQ me->mv_activation_state
+      ORDER BY sprache ASCENDING.                       "#EC CI_NOFIRST
 
     " You are reminded that descriptions in other languages do not have to be in existence.
-    IF LINES( LT_UDMO_TEXTS ) GT 0.
-      IO_XML->ADD( IV_NAME = 'UDMO_TEXTS'
-                   IG_DATA = LT_UDMO_TEXTS ).
+    IF lines( lt_udmo_texts ) GT 0.
+      io_xml->add( iv_name = 'UDMO_TEXTS'
+                   ig_data = lt_udmo_texts ).
     ENDIF.
 
 
   ENDMETHOD.
 
 
-  METHOD UPDATE_TREE.
+  METHOD update_tree.
 
     CALL FUNCTION 'RS_TREE_OBJECT_PLACEMENT'
       EXPORTING
-        OBJECT    = ME->MV_DATA_MODEL
-        OPERATION = 'INSERT'
-        TYPE      = ME->C_CORRECTION_OBJECT_TYPE.
+        object    = me->mv_data_model
+        operation = 'INSERT'
+        type      = me->c_correction_object_type.
 
   ENDMETHOD.
 
 
-  METHOD ZIF_ABAPGIT_OBJECT~CHANGED_BY.
+  METHOD zif_abapgit_object~changed_by.
 
-    SELECT SINGLE LSTUSER INTO RV_USER
-     FROM  DM40L
-     WHERE  DMOID     = ME->MV_DATA_MODEL
-     AND    AS4LOCAL  = ME->MV_ACTIVATION_STATE.
+    SELECT SINGLE lstuser INTO rv_user
+      FROM  dm40l
+      WHERE  dmoid    = me->mv_data_model
+      AND    as4local = me->mv_activation_state.
 
-    IF SY-SUBRC NE 0.
-      RV_USER = C_USER_UNKNOWN.
+    IF sy-subrc NE 0.
+      rv_user = c_user_unknown.
     ENDIF.
 
   ENDMETHOD.
 
 
-  METHOD ZIF_ABAPGIT_OBJECT~COMPARE_TO_REMOTE_VERSION.
-    CREATE OBJECT RO_COMPARISON_RESULT TYPE ZCL_ABAPGIT_COMPARISON_NULL.
+  METHOD zif_abapgit_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
 
 
-  METHOD ZIF_ABAPGIT_OBJECT~DELETE.
+  METHOD zif_abapgit_object~delete.
 
 * You are reminded that this function model checks for
 *  - permissions
@@ -617,23 +617,23 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
     CALL FUNCTION 'RPY_DATAMODEL_DELETE'
       EXPORTING
-        MODEL_NAME       = ME->MV_DATA_MODEL
+        model_name       = me->mv_data_model
       EXCEPTIONS
-        CANCELLED        = 1
-        PERMISSION_ERROR = 2
-        NOT_FOUND        = 3
-        IS_USED          = 4
+        cancelled        = 1
+        permission_error = 2
+        not_found        = 3
+        is_used          = 4
         OTHERS           = 5.
 
-    IF SY-SUBRC NE 0.
-      ZCX_ABAPGIT_EXCEPTION=>RAISE_T100( ).
+    IF sy-subrc NE 0.
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
 
   ENDMETHOD.                    "zif_abapgit_object~delete
 
 
-  METHOD ZIF_ABAPGIT_OBJECT~DESERIALIZE.
+  METHOD zif_abapgit_object~deserialize.
 
 * You are reminded that this method checks for
 *  - validity of data model name with regard to naming conventions
@@ -645,39 +645,28 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
 
 * Is the data model name compliant with naming conventions?
-    IS_NAME_PERMITTED( ).
+    is_name_permitted( ).
 
 * Access Permission granted?
-    ACCESS_MODIFY( ).
+    access_modify( ).
 
 * Connection to transport and correction system
-    CORR_INSERT( IV_PACKAGE = IV_PACKAGE ).
+    corr_insert( iv_package ).
 
 * Insert the data model, relations and documentation
     TRY.
-        " Deserialize the data model
-        DESERIALIZE_MODEL( IO_XML = IO_XML ).
+        deserialize_model( io_xml ).
+        deserialize_entities( io_xml ).
+        deserialize_short_texts( io_xml ).
+        deserialize_long_texts( io_xml ).
+        update_tree( ).
+        access_free( ).
 
-        " Deserialize relations to entities
-        DESERIALIZE_ENTITIES( IO_XML = IO_XML ).
+      CATCH zcx_abapgit_exception.
 
-        " Deserialize texts
-        DESERIALIZE_SHORT_TEXTS( IO_XML   = IO_XML ).
+        me->access_free( ).
 
-        " Deserialize long texts
-        DESERIALIZE_LONG_TEXTS( IO_XML   = IO_XML ).
-
-        " Update object tree
-        UPDATE_TREE( ).
-
-        " Release the object locks
-        ACCESS_FREE( ).
-
-      CATCH ZCX_ABAPGIT_EXCEPTION.
-
-        ME->ACCESS_FREE( ).
-
-        ZCX_ABAPGIT_EXCEPTION=>RAISE( 'Error in deserialisation of UDMO' ).
+        zcx_abapgit_exception=>raise( 'Error in deserialisation of UDMO' ).
 
 
     ENDTRY.
@@ -688,92 +677,93 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
   ENDMETHOD.                    "zif_abapgit_object~deserialize
 
 
-  METHOD ZIF_ABAPGIT_OBJECT~EXISTS.
+  METHOD zif_abapgit_object~exists.
 
     "  See Function Module SDU_MODEL_EXISTS
 
-    SELECT COUNT( * ) FROM  DM40L
-           WHERE  DMOID     = ME->MV_DATA_MODEL
-           AND    AS4LOCAL  = ME->MV_ACTIVATION_STATE.
+    SELECT COUNT( * ) FROM  dm40l
+           WHERE  dmoid     = me->mv_data_model
+           AND    as4local  = me->mv_activation_state.
 
-    RV_BOOL = BOOLC( SY-SUBRC = 0 ).
+    rv_bool = boolc( sy-subrc = 0 ).
 
 
 
   ENDMETHOD.                    "zif_abapgit_object~exists
 
 
-  METHOD ZIF_ABAPGIT_OBJECT~GET_METADATA.
-    RS_METADATA = GET_METADATA( ).
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
   ENDMETHOD.                    "zif_abapgit_object~get_metadata
 
 
-  METHOD ZIF_ABAPGIT_OBJECT~HAS_CHANGED_SINCE.
+  METHOD zif_abapgit_object~has_changed_since.
 
-    DATA LV_DATE TYPE DATS.
-    DATA LV_TIME TYPE TIMS.
+    DATA lv_date TYPE dats.
+    DATA lv_time TYPE tims.
 
 
-    SELECT SINGLE LSTDATE LSTTIME FROM DM40L
-      INTO (LV_DATE, LV_TIME)
-           WHERE  DMOID     = ME->MV_DATA_MODEL
-           AND    AS4LOCAL  = ME->MV_ACTIVATION_STATE.
+    SELECT SINGLE lstdate lsttime FROM dm40l
+      INTO (lv_date, lv_time)
+           WHERE  dmoid     = me->mv_data_model
+           AND    as4local  = me->mv_activation_state.
 
-    RV_CHANGED = CHECK_TIMESTAMP(
-      IV_TIMESTAMP = IV_TIMESTAMP
-      IV_DATE      = LV_DATE
-      IV_TIME      = LV_TIME ).
+    rv_changed = check_timestamp(
+      iv_timestamp = iv_timestamp
+      iv_date      = lv_date
+      iv_time      = lv_time ).
 
 
   ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
 
-  METHOD ZIF_ABAPGIT_OBJECT~IS_LOCKED.
+  METHOD zif_abapgit_object~is_locked.
 
-    RV_IS_LOCKED = EXISTS_A_LOCK_ENTRY_FOR( IV_LOCK_OBJECT = 'ESDUM'
-                                             IV_ARGUMENT    = |{ MS_ITEM-OBJ_TYPE }{ MS_ITEM-OBJ_NAME }| ).
+    rv_is_locked = exists_a_lock_entry_for(
+      iv_lock_object = 'ESDUM'
+      iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
 
   ENDMETHOD.
 
 
-  METHOD ZIF_ABAPGIT_OBJECT~JUMP.
+  METHOD zif_abapgit_object~jump.
 
     " The function module listed below do not open a new window - so we revert to BDC.
     "    CALL FUNCTION 'SDU_MODEL_SHOW'
     "    CALL FUNCTION 'RS_TOOL_ACCESS'
 
-    DATA LT_BDCDATA TYPE TABLE OF BDCDATA.
+    DATA lt_bdcdata TYPE TABLE OF bdcdata.
 
-    FIELD-SYMBOLS: <LS_BDCDATA> LIKE LINE OF LT_BDCDATA.
+    FIELD-SYMBOLS: <ls_bdcdata> LIKE LINE OF lt_bdcdata.
 
-    APPEND INITIAL LINE TO LT_BDCDATA ASSIGNING <LS_BDCDATA>.
-    <LS_BDCDATA>-PROGRAM  = 'SAPMUD00'.
-    <LS_BDCDATA>-DYNPRO   = '0100'.
-    <LS_BDCDATA>-DYNBEGIN = ABAP_TRUE.
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-program  = 'SAPMUD00'.
+    <ls_bdcdata>-dynpro   = '0100'.
+    <ls_bdcdata>-dynbegin = abap_true.
 
-    APPEND INITIAL LINE TO LT_BDCDATA ASSIGNING <LS_BDCDATA>.
-    <LS_BDCDATA>-FNAM = 'BDC_OKCODE'.
-    <LS_BDCDATA>-FVAL = '=SHOW'.
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = 'BDC_OKCODE'.
+    <ls_bdcdata>-fval = '=SHOW'.
 
-    APPEND INITIAL LINE TO LT_BDCDATA ASSIGNING <LS_BDCDATA>.
-    <LS_BDCDATA>-FNAM = 'RSUD3-DATM'.
-    <LS_BDCDATA>-FVAL = ABAP_TRUE.
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = 'RSUD3-DATM'.
+    <ls_bdcdata>-fval = abap_true.
 
-    APPEND INITIAL LINE TO LT_BDCDATA ASSIGNING <LS_BDCDATA>.
-    <LS_BDCDATA>-FNAM = 'RSUD3-OBJ_KEY'.
-    <LS_BDCDATA>-FVAL = MS_ITEM-OBJ_NAME.
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = 'RSUD3-OBJ_KEY'.
+    <ls_bdcdata>-fval = ms_item-obj_name.
 
     CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
       STARTING NEW TASK 'GIT'
       EXPORTING
-        TCODE                 = 'SD11'
-        MODE_VAL              = 'E'
+        tcode                 = 'SD11'
+        mode_val              = 'E'
       TABLES
-        USING_TAB             = LT_BDCDATA
+        using_tab             = lt_bdcdata
       EXCEPTIONS
-        SYSTEM_FAILURE        = 1
-        COMMUNICATION_FAILURE = 2
-        RESOURCE_FAILURE      = 3
+        system_failure        = 1
+        communication_failure = 2
+        resource_failure      = 3
         OTHERS                = 4
         ##fm_subrc_ok.                                                   "#EC CI_SUBRC
 
@@ -781,24 +771,17 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
   ENDMETHOD.                    "zif_abapgit_object~jump
 
 
-  METHOD ZIF_ABAPGIT_OBJECT~SERIALIZE.
+  METHOD zif_abapgit_object~serialize.
 
 
-    IF ZIF_ABAPGIT_OBJECT~EXISTS( ) = ABAP_FALSE.
+    IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
-    " Serialisation of the data model
-    SERIALIZE_MODEL( IO_XML ).
-
-    " Serialisation of related entities
-    ME->SERIALIZE_ENTITIES( IO_XML  ).
-
-    " Serialisation of other languages
-    ME->SERIALIZE_SHORT_TEXTS( IO_XML ).
-
-    "Serialisation of long descriptions
-    ME->SERIALIZE_LONG_TEXTS(  IO_XML ).
+    serialize_model( io_xml ).
+    me->serialize_entities( io_xml  ).
+    me->serialize_short_texts( io_xml ).
+    me->serialize_long_texts( io_xml ).
 
   ENDMETHOD.                    "zif_abapgit_object~serialize
 ENDCLASS.
