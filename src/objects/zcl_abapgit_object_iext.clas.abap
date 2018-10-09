@@ -42,14 +42,11 @@ CLASS zcl_abapgit_object_iext IMPLEMENTATION.
 
     CALL FUNCTION 'EXTTYPE_READ'
       EXPORTING
-        pi_cimtyp        = mv_extension
+        pi_cimtyp     = mv_extension
       IMPORTING
-        pe_attributes    = ls_attributes
+        pe_attributes = ls_attributes
       EXCEPTIONS
-        object_not_found = 1
-        db_error         = 2
-        no_authority     = 3
-        OTHERS           = 4.
+        OTHERS        = 1.
 
     rv_user = ls_attributes-plast.
 
@@ -65,15 +62,9 @@ CLASS zcl_abapgit_object_iext IMPLEMENTATION.
 
     CALL FUNCTION 'EXTTYPE_DELETE'
       EXPORTING
-        pi_cimtyp           = mv_extension
+        pi_cimtyp = mv_extension
       EXCEPTIONS
-        object_not_found    = 1
-        lock_error          = 2
-        action_not_possible = 3
-        transport_error     = 4
-        db_error            = 5
-        no_authority        = 6
-        OTHERS              = 7.
+        OTHERS    = 1.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
@@ -94,24 +85,18 @@ CLASS zcl_abapgit_object_iext IMPLEMENTATION.
         cg_data = ls_extension ).
 
     MOVE-CORRESPONDING ls_extension-attributes TO ls_attributes.
+    ls_attributes-presp = cl_abap_syst=>get_user_name( ).
+    ls_attributes-pwork = ls_attributes-presp.
 
     CALL FUNCTION 'EXTTYPE_CREATE'
       EXPORTING
-        pi_cimtyp           = mv_extension
-        pi_devclass         = iv_package
-        pi_attributes       = ls_attributes
+        pi_cimtyp     = mv_extension
+        pi_devclass   = iv_package
+        pi_attributes = ls_attributes
       TABLES
-        pt_syntax           = ls_extension-t_syntax
+        pt_syntax     = ls_extension-t_syntax
       EXCEPTIONS
-        object_not_found    = 1
-        object_exists       = 2
-        action_not_possible = 3
-        syntax_error        = 4
-        segment_error       = 5
-        transport_error     = 6
-        db_error            = 7
-        no_authority        = 8
-        OTHERS              = 9.
+        OTHERS        = 1.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
@@ -124,12 +109,9 @@ CLASS zcl_abapgit_object_iext IMPLEMENTATION.
 
     CALL FUNCTION 'EXTTYPE_READ'
       EXPORTING
-        pi_cimtyp        = mv_extension
+        pi_cimtyp = mv_extension
       EXCEPTIONS
-        object_not_found = 1
-        db_error         = 2
-        no_authority     = 3
-        OTHERS           = 4.
+        OTHERS    = 1.
 
     rv_bool = boolc( sy-subrc = 0 ).
 
@@ -172,15 +154,12 @@ CLASS zcl_abapgit_object_iext IMPLEMENTATION.
     CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
       STARTING NEW TASK 'GIT'
       EXPORTING
-        tcode                 = 'WE30'
-        mode_val              = 'E'
+        tcode     = 'WE30'
+        mode_val  = 'E'
       TABLES
-        using_tab             = lt_bdcdata
+        using_tab = lt_bdcdata
       EXCEPTIONS
-        system_failure        = 1
-        communication_failure = 2
-        resource_failure      = 3
-        OTHERS                = 4.
+        OTHERS    = 1.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
@@ -195,16 +174,13 @@ CLASS zcl_abapgit_object_iext IMPLEMENTATION.
 
     CALL FUNCTION 'EXTTYPE_READ'
       EXPORTING
-        pi_cimtyp        = mv_extension
+        pi_cimtyp     = mv_extension
       IMPORTING
-        pe_attributes    = ls_extension-attributes
+        pe_attributes = ls_extension-attributes
       TABLES
-        pt_syntax        = ls_extension-t_syntax
+        pt_syntax     = ls_extension-t_syntax
       EXCEPTIONS
-        object_not_found = 1
-        db_error         = 2
-        no_authority     = 3
-        OTHERS           = 4.
+        OTHERS        = 1.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
@@ -215,7 +191,9 @@ CLASS zcl_abapgit_object_iext IMPLEMENTATION.
            ls_extension-attributes-credate,
            ls_extension-attributes-cretime,
            ls_extension-attributes-ldate,
-           ls_extension-attributes-ltime.
+           ls_extension-attributes-ltime,
+           ls_extension-attributes-pwork,
+           ls_extension-attributes-presp.
 
     io_xml->add( iv_name = 'IEXT'
                  ig_data = ls_extension ).
