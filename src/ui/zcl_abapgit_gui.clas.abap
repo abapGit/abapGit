@@ -72,11 +72,17 @@ CLASS zcl_abapgit_gui DEFINITION
                 it_postdata    TYPE cnht_post_data_tab OPTIONAL
                 it_query_table TYPE cnht_query_table OPTIONAL.
 
+    METHODS transform_dummy_form_params
+      CHANGING
+        action   TYPE c
+        getdata  TYPE c
+        postdata TYPE cnht_post_data_tab.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
+CLASS zcl_abapgit_gui IMPLEMENTATION.
 
 
   METHOD back.
@@ -279,6 +285,13 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD on_event.
 
+    "workaround for java sapgui
+    transform_dummy_form_params(
+      CHANGING
+        action   = action
+        getdata  = getdata
+        postdata = postdata ).
+
     handle_action(
       iv_action      = action
       iv_frame       = frame
@@ -345,4 +358,75 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     SET HANDLER me->on_event FOR mo_html_viewer.
 
   ENDMETHOD.                    "startup
+
+
+
+  METHOD transform_dummy_form_params.
+    " to support SAPGUI java we handle some post calls a hardcoded action
+    " passing the actual action in a parameter
+    " this code simulates the original call using it
+    DATA: pdata           TYPE string,
+          prefix          TYPE string,
+          suffix          TYPE string,
+          newaction       TYPE string,
+          queryparameters TYPE string,
+          rest            TYPE string,
+          moff            TYPE i,
+          mlen            TYPE i,
+          pdatalen        TYPE i.
+
+    FIELD-SYMBOLS: <postdata> LIKE LINE OF postdata.
+
+    IF action = '__abapgit_dummy__'.
+      "convert postdata in a string, as the bit we look for might be split between lines
+      CONCATENATE LINES OF postdata INTO pdata RESPECTING BLANKS.
+      "I expect a & separated list of varname=value, perhaps starting with a ?
+      " want to remove my own variable and preserve the rest
+      " my variable is called __ABAPGIT_ACTION, and might include URL-encoded parameters
+      "   which will look like %3Fsomething %3F is an encoded ?
+      FIND REGEX '([&?]?)__ABAPGIT_ACTION=([^\s&\%]+)(?:(?:%3[fF])([^\s&]*))?(&?)' IN pdata
+        MATCH OFFSET moff MATCH LENGTH mlen
+        SUBMATCHES prefix newaction queryparameters suffix.
+
+      IF sy-subrc = 0.
+        "match: I did use the static form
+        action = newaction.
+        "the encoded form has a fixed action, getdata will always be blank.
+        "I want to pass down what was included in my action above
+        getdata = cl_http_utility=>unescape_url( queryparameters ).
+
+        "for postdata, remove the query result (except the initial or final ?/& if I have both)
+        CLEAR postdata.
+        rest = pdata+moff.
+        rest = rest+mlen.
+        "if what is left is blanks, ignore them
+        FIND REGEX '^\s*$' IN rest.
+        IF sy-subrc = 0.
+          pdata = pdata(moff).
+          rest = ''.
+        ELSE.
+          IF prefix <> '' AND suffix <> ''.
+            suffix = ''.
+          ENDIF.
+          CONCATENATE pdata(moff) prefix suffix rest INTO pdata.
+        ENDIF.
+
+        "split rest in postdata format
+        WHILE pdata <> ''.
+          APPEND INITIAL LINE TO postdata ASSIGNING <postdata>.
+          <postdata> = pdata.
+          DESCRIBE FIELD <postdata> LENGTH pdatalen IN CHARACTER MODE.
+          IF strlen( pdata ) >= pdatalen.
+            pdata = pdata+pdatalen.
+          ELSE.
+            EXIT.
+          ENDIF.
+        ENDWHILE.
+
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

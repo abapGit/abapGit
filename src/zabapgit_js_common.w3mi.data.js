@@ -59,13 +59,34 @@ function debugOutput(text, dstID) {
   stdout.innerHTML = stdout.innerHTML + wrapped;
 }
 
-// Create hidden form and submit with sapevent
+// Find/Create hidden form and submit with sapevent
 function submitSapeventForm(params, action, method) {
-  var form = document.createElement("form");
-  form.setAttribute("method", method || "post");
-  form.setAttribute("action", "sapevent:" + action);
-  
-  for(var key in params) {
+  var dummyid = "__ABAPGIT_EVENT_DUMMY__";
+  var form;
+  //SAPGUI java does not send postdata if we change the post action
+  //so if the method is not get and we have parameters we use a form with a constant ID
+  //already embedded in the page and pass the action as a parameter
+  //if not we create a new form and use that
+  if ((!method || method.toLowerCase() !== "get") && Object.keys(params).length > 0) {
+    form = document.getElementById(dummyid);
+  }
+  if (form) {
+    while (form.firstChild) form.removeChild(form.firstChild);
+    //java gui breaks if we change the form action, so we pass it as a form field instead
+    var hiddenField = document.createElement("input");
+    hiddenField.setAttribute("type", "hidden");
+    hiddenField.setAttribute("name", "__ABAPGIT_ACTION");
+    hiddenField.setAttribute("value", action);
+    form.appendChild(hiddenField);
+  }
+  else {
+    //no dummy form selected in page, create one
+    form = document.createElement("form");
+    form.setAttribute("action", "sapevent:" + action);
+    form.setAttribute("method", method || "post");
+  }
+
+  for (var key in params) {
     var hiddenField = document.createElement("input");
     hiddenField.setAttribute("type", "hidden");
     hiddenField.setAttribute("name", key);
@@ -73,7 +94,8 @@ function submitSapeventForm(params, action, method) {
     form.appendChild(hiddenField);
   }
 
-  document.body.appendChild(form);
+  if (form.id !== dummyid)
+    document.body.appendChild(form);//new form created, add it to body
   form.submit();
 }
 

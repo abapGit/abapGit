@@ -69,6 +69,10 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
       RAISING
         zcx_abapgit_exception.
 
+    METHODS dummy_hidden_form
+      RETURNING
+        value(rv_html) TYPE string.
+
 ENDCLASS.
 
 
@@ -280,6 +284,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ro_html->add( render_hotkey_overview( ) ).
     ro_html->add( render_content( ) ).
     ro_html->add( footer( ) ).
+    ro_html->add( dummy_hidden_form( ) ).                   "#EC NOTEXT
     ro_html->add( '</body>' ).                              "#EC NOTEXT
 
     lo_script = scripts( ).
@@ -318,4 +323,10 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD dummy_hidden_form.
+    rv_html = '<form id="__ABAPGIT_EVENT_DUMMY__" method="POST" action="sapevent:__abapgit_dummy__"></form>'.
+  ENDMETHOD.
+
 ENDCLASS.
+
