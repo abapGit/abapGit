@@ -18,6 +18,8 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         toggle_folders    TYPE string VALUE 'toggle_folders' ##NO_TEXT,
         toggle_changes    TYPE string VALUE 'toggle_changes' ##NO_TEXT,
         display_more      TYPE string VALUE 'display_more' ##NO_TEXT,
+        zip_import2_load  TYPE string VALUE 'zip_import2_load' ##NO_TEXT,
+        zip_import2_apply TYPE string VALUE 'zip_import2_apply' ##NO_TEXT,
       END OF c_actions .
 
     METHODS constructor
@@ -82,7 +84,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
 
   METHOD build_dir_jump_link.
@@ -104,7 +106,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     CREATE OBJECT ro_toolbar.
 
-    IF mo_repo->is_offline( ) = abap_false.
+    IF mo_repo->has_remote( ) = abap_true.
       ro_toolbar->add(  " Show/Hide files
         iv_txt = 'Show files'
         iv_chk = boolc( NOT mv_hide_files = abap_true )
@@ -252,9 +254,18 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       ro_toolbar->add( iv_txt = 'Tag'
                        io_sub = lo_tb_tag ) ##NO_TEXT.
     ELSE.
-      ro_toolbar->add( iv_txt = 'Import ZIP'
-                       iv_act = |{ zif_abapgit_definitions=>c_action-zip_import }?{ lv_key }|
-                       iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
+      IF mo_repo->has_remote( ) = abap_true.
+        ro_toolbar->add( iv_txt = 'Apply'
+                         iv_act = |{ c_actions-zip_import2_apply }|
+                         iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
+        ro_toolbar->add( iv_txt = 'Show diff'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ lv_key }|
+                         iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
+      ELSE.
+        ro_toolbar->add( iv_txt = 'Import ZIP'
+                         iv_act = |{ c_actions-zip_import2_load }|
+                         iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
+      ENDIF.
       ro_toolbar->add( iv_txt = 'Export ZIP'
                        iv_act = |{ zif_abapgit_definitions=>c_action-zip_export }?{ lv_key }|
                        iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
@@ -408,7 +419,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    IF mo_repo->is_offline( ) = abap_false.
+    IF mo_repo->has_remote( ) = abap_true.
 
       " Files
       ro_html->add( '<td class="files">' ).
@@ -514,6 +525,11 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
   ENDMETHOD. "render_parent_dir
 
 
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_page~on_event.
 
     DATA: lv_path TYPE string.
@@ -535,6 +551,13 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
         ev_state        = zif_abapgit_definitions=>c_event_state-re_render.
       WHEN c_actions-display_more.      " Increase MAX lines limit
         mv_max_lines    = mv_max_lines + mv_max_setting.
+        ev_state        = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN c_actions-zip_import2_load.
+        zcl_abapgit_zip=>import( iv_key = mo_repo->get_key( ) iv_no_deserialize = abap_true ).
+        ev_state        = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN c_actions-zip_import2_apply.
+        zcl_abapgit_services_repo=>gui_deserialize( mo_repo ).
+        mo_repo->reset_remote( ).
         ev_state        = zif_abapgit_definitions=>c_event_state-re_render.
     ENDCASE.
 
@@ -581,7 +604,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
                                         iv_rstate = lv_rstate ) ).
 
         lo_log = lo_browser->get_log( ).
-        IF mo_repo->is_offline( ) = abap_false AND lo_log->count( ) > 0.
+        IF lo_log->count( ) > 0.
           ro_html->add( '<div class="log">' ).
           ro_html->add( lo_log->to_html( ) ). " shows eg. list of unsupported objects
           ro_html->add( '</div>' ).
@@ -634,10 +657,4 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.  "lif_gui_page~render
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-  ENDMETHOD.
-
 ENDCLASS.

@@ -44,13 +44,8 @@ CLASS zcl_abapgit_repo_online DEFINITION
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception .
-    METHODS status
-      IMPORTING
-        !io_log           TYPE REF TO zcl_abapgit_log OPTIONAL
-      RETURNING
-        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
-      RAISING
-        zcx_abapgit_exception .
+    METHODS status REDEFINITION.
+    METHODS reset_remote REDEFINITION.
     METHODS get_unnecessary_local_objs
       RETURNING
         VALUE(rt_unnecessary_local_objects) TYPE zif_abapgit_definitions=>ty_tadir_tt
@@ -70,9 +65,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
     DATA mv_branch TYPE zif_abapgit_definitions=>ty_sha1 .
     DATA mv_initialized TYPE abap_bool .
-    DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
 
-    METHODS reset_status .
     METHODS initialize
       RAISING
         zcx_abapgit_exception .
@@ -316,11 +309,10 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
   ENDMETHOD.                    "refresh
 
-
-  METHOD reset_status.
-    CLEAR mt_status.
-  ENDMETHOD.  " reset_status.
-
+  METHOD reset_remote.
+    super->reset_remote( ).
+    mv_initialized = abap_false.
+  ENDMETHOD.
 
   METHOD set_branch_name.
 
@@ -354,12 +346,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   METHOD status.
 
     initialize( ).
-
-    IF lines( mt_status ) = 0.
-      mt_status = zcl_abapgit_file_status=>status( io_repo = me
-                                                   io_log  = io_log ).
-    ENDIF.
-    rt_results = mt_status.
+    rt_results = super->status( io_log ).
 
   ENDMETHOD.                    "status
 

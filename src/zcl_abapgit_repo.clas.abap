@@ -47,6 +47,9 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception .
+    METHODS has_remote
+      RETURNING VALUE(rv_yes) TYPE abap_bool .
+    METHODS reset_remote.
     METHODS get_package
       RETURNING
         VALUE(rv_package) TYPE zif_abapgit_persistence=>ty_repo-package .
@@ -107,6 +110,14 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(rt_list) TYPE scit_alvlist
       RAISING
         zcx_abapgit_exception .
+    METHODS status
+      IMPORTING
+        !io_log           TYPE REF TO zcl_abapgit_log OPTIONAL
+      RETURNING
+        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception .
+
   PROTECTED SECTION.
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
     DATA mt_remote TYPE zif_abapgit_definitions=>ty_files_tt .
@@ -114,7 +125,9 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA mv_last_serialization TYPE timestamp .
     DATA ms_data TYPE zif_abapgit_persistence=>ty_repo .
     DATA mv_code_inspector_successful TYPE abap_bool .
+    DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
 
+    METHODS reset_status .
     METHODS set
       IMPORTING
         !it_checksums       TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
@@ -400,6 +413,11 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.                    "get_package
 
 
+  METHOD has_remote.
+    rv_yes = boolc( lines( mt_remote ) > 0 ).
+  ENDMETHOD.
+
+
   METHOD is_offline.
     rv_offline = ms_data-offline.
   ENDMETHOD.
@@ -445,12 +463,24 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD refresh.
 
     mv_do_local_refresh = abap_true.
+    reset_remote( ).
 
     IF iv_drop_cache = abap_true.
       CLEAR: mv_last_serialization, mt_local.
     ENDIF.
 
   ENDMETHOD.                    "refresh
+
+
+  METHOD reset_remote.
+    CLEAR mt_remote.
+    reset_status( ).
+  ENDMETHOD.
+
+
+  METHOD reset_status.
+    CLEAR mt_status.
+  ENDMETHOD.  " reset_status.
 
 
   METHOD run_code_inspector.
@@ -574,6 +604,19 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD set_local_settings.
 
     set( is_local_settings = is_settings ).
+
+  ENDMETHOD.
+
+
+  METHOD status.
+
+    IF lines( mt_status ) = 0.
+      mt_status = zcl_abapgit_file_status=>status(
+        io_repo = me
+        io_log  = io_log ).
+    ENDIF.
+
+    rt_results = mt_status.
 
   ENDMETHOD.
 

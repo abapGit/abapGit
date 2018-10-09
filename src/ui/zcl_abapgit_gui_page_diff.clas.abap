@@ -163,7 +163,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
 
   METHOD add_to_stage.
@@ -424,7 +424,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     DATA: lt_remote TYPE zif_abapgit_definitions=>ty_files_tt,
           lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lt_status TYPE zif_abapgit_definitions=>ty_results_tt,
-          lo_repo   TYPE REF TO zcl_abapgit_repo_online,
+          lo_repo   TYPE REF TO zcl_abapgit_repo,
           lv_ts     TYPE timestamp.
 
     FIELD-SYMBOLS: <ls_status> LIKE LINE OF lt_status.
@@ -446,7 +446,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     ASSERT is_file IS INITIAL OR is_object IS INITIAL. " just one passed
 
-    lo_repo  ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo   = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     lt_remote = lo_repo->get_files_remote( ).
     lt_local  = lo_repo->get_files_local( ).
     lt_status = lo_repo->status( ).
@@ -486,6 +486,40 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     ENDIF.
 
     ms_control-page_menu  = build_menu( ).
+
+  ENDMETHOD.
+
+
+  METHOD get_diff_line.
+
+    DATA: lt_diff       TYPE zif_abapgit_definitions=>ty_diffs_tt,
+          lv_line_index TYPE sytabix.
+
+    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diff.
+
+    lv_line_index = iv_line_index.
+    lt_diff = io_diff->get( ).
+
+    READ TABLE lt_diff INTO rs_diff
+                       INDEX lv_line_index.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Invalid line index { lv_line_index }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_diff_object.
+
+    FIELD-SYMBOLS: <ls_diff_file> LIKE LINE OF mt_diff_files.
+
+    READ TABLE mt_diff_files ASSIGNING <ls_diff_file>
+                             WITH KEY filename = iv_filename.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Invalid filename { iv_filename }| ).
+    ENDIF.
+
+    ro_diff = <ls_diff_file>-o_diff.
 
   ENDMETHOD.
 
@@ -739,12 +773,14 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     " New line
     lv_mark = ` `.
-    IF iv_fstate = c_fstate-both OR is_diff_line-result = zif_abapgit_definitions=>c_diff-update.
-      lv_bg = ' diff_upd'.
-      lv_mark = `~`.
-    ELSEIF is_diff_line-result = zif_abapgit_definitions=>c_diff-insert.
-      lv_bg = ' diff_ins'.
-      lv_mark = `+`.
+    IF is_diff_line-result IS NOT INITIAL.
+      IF iv_fstate = c_fstate-both OR is_diff_line-result = zif_abapgit_definitions=>c_diff-update.
+        lv_bg = ' diff_upd'.
+        lv_mark = `~`.
+      ELSEIF is_diff_line-result = zif_abapgit_definitions=>c_diff-insert.
+        lv_bg = ' diff_ins'.
+        lv_mark = `+`.
+      ENDIF.
     ENDIF.
     lv_new = |<td class="num" line-num="{ is_diff_line-new_num }"></td>|
           && |<td class="code{ lv_bg }">{ lv_mark }{ is_diff_line-new }</td>|.
@@ -756,12 +792,14 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     " Old line
     CLEAR lv_bg.
     lv_mark = ` `.
-    IF iv_fstate = c_fstate-both OR is_diff_line-result = zif_abapgit_definitions=>c_diff-update.
-      lv_bg = ' diff_upd'.
-      lv_mark = `~`.
-    ELSEIF is_diff_line-result = zif_abapgit_definitions=>c_diff-delete.
-      lv_bg = ' diff_del'.
-      lv_mark = `-`.
+    IF is_diff_line-result IS NOT INITIAL.
+      IF iv_fstate = c_fstate-both OR is_diff_line-result = zif_abapgit_definitions=>c_diff-update.
+        lv_bg = ' diff_upd'.
+        lv_mark = `~`.
+      ELSEIF is_diff_line-result = zif_abapgit_definitions=>c_diff-delete.
+        lv_bg = ' diff_del'.
+        lv_mark = `-`.
+      ENDIF.
     ENDIF.
     lv_old = |<td class="num" line-num="{ is_diff_line-old_num }"></td>|
           && |<td class="code{ lv_bg }">{ lv_mark }{ is_diff_line-old }</td>|.
@@ -1039,38 +1077,4 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
-
-  METHOD get_diff_object.
-
-    FIELD-SYMBOLS: <ls_diff_file> LIKE LINE OF mt_diff_files.
-
-    READ TABLE mt_diff_files ASSIGNING <ls_diff_file>
-                             WITH KEY filename = iv_filename.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Invalid filename { iv_filename }| ).
-    ENDIF.
-
-    ro_diff = <ls_diff_file>-o_diff.
-
-  ENDMETHOD.
-
-
-  METHOD get_diff_line.
-
-    DATA: lt_diff       TYPE zif_abapgit_definitions=>ty_diffs_tt,
-          lv_line_index TYPE sytabix.
-
-    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diff.
-
-    lv_line_index = iv_line_index.
-    lt_diff = io_diff->get( ).
-
-    READ TABLE lt_diff INTO rs_diff
-                       INDEX lv_line_index.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Invalid line index { lv_line_index }| ).
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.
