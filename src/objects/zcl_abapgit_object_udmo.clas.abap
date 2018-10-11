@@ -243,15 +243,15 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
   METHOD deserialize_long_texts.
 
+    TYPES BEGIN OF language_type.
+    TYPES language TYPE dm40t-sprache.
+    TYPES END OF language_type.
+
     DATA BEGIN OF ls_udmo_long_text.
     DATA language TYPE dm40t-sprache.
     DATA header   TYPE thead.
     DATA content TYPE xstring.
     DATA END OF ls_udmo_long_text.
-
-    TYPES BEGIN OF language_type.
-    TYPES language TYPE dm40t-sprache.
-    TYPES END OF language_type.
 
     DATA lt_udmo_long_texts LIKE STANDARD TABLE OF ls_udmo_long_text.
     DATA lt_udmo_languages TYPE STANDARD TABLE OF language_type.
@@ -452,16 +452,15 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     " The model has a long description also in a master language, with other long descriptions
     " maintained as translations using SE63 Translation Editor. All of these long texts are held in DOK*
 
+    TYPES BEGIN OF ls_language_type.
+    TYPES language TYPE dm40t-sprache.
+    TYPES END OF ls_language_type.
 
     DATA BEGIN OF ls_udmo_long_text.
     DATA language TYPE dm40t-sprache.
     DATA header   TYPE thead.
     DATA content TYPE xstring.
     DATA END OF ls_udmo_long_text.
-
-    TYPES BEGIN OF ls_language_type.
-    TYPES language TYPE dm40t-sprache.
-    TYPES END OF ls_language_type.
 
     DATA lt_udmo_long_texts LIKE STANDARD TABLE OF ls_udmo_long_text.
     DATA lt_udmo_languages TYPE STANDARD TABLE OF ls_language_type.

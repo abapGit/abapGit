@@ -53,13 +53,13 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
           ls_exclude      LIKE LINE OF lt_excludes.
     DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
     DATA: last_package    TYPE devclass VALUE cl_abap_char_utilities=>horizontal_tab.
+    DATA: lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
 
     FIELD-SYMBOLS: <ls_tdevc>   LIKE LINE OF lt_tdevc,
                    <ls_tadir>   LIKE LINE OF rt_tadir,
                    <lv_package> TYPE devclass.
 
     "Determine Packages to Read
-    DATA: lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
     IF iv_ignore_subpackages = abap_false.
       lt_packages = zcl_abapgit_factory=>get_sap_package( iv_package )->list_subpackages( ).
     ENDIF.
