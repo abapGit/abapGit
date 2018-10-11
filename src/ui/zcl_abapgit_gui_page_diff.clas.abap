@@ -163,7 +163,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
 
   METHOD add_to_stage.
@@ -490,12 +490,45 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_diff_line.
+
+    DATA: lt_diff       TYPE zif_abapgit_definitions=>ty_diffs_tt,
+          lv_line_index TYPE sytabix.
+
+    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diff.
+
+    lv_line_index = iv_line_index.
+    lt_diff = io_diff->get( ).
+
+    READ TABLE lt_diff INTO rs_diff
+                       INDEX lv_line_index.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Invalid line index { lv_line_index }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_diff_object.
+
+    FIELD-SYMBOLS: <ls_diff_file> LIKE LINE OF mt_diff_files.
+
+    READ TABLE mt_diff_files ASSIGNING <ls_diff_file>
+                             WITH KEY filename = iv_filename.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Invalid filename { iv_filename }| ).
+    ENDIF.
+
+    ro_diff = <ls_diff_file>-o_diff.
+
+  ENDMETHOD.
+
+
   METHOD get_patch_data.
 
     CLEAR: ev_filename, ev_line_index.
 
-    IF  iv_action <> c_patch_action-add
-    AND iv_action <> c_patch_action-remove.
+    IF iv_action <> c_patch_action-add AND iv_action <> c_patch_action-remove.
       zcx_abapgit_exception=>raise( |Invalid action { iv_action }| ).
     ENDIF.
 
@@ -1043,38 +1076,4 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
-
-  METHOD get_diff_object.
-
-    FIELD-SYMBOLS: <ls_diff_file> LIKE LINE OF mt_diff_files.
-
-    READ TABLE mt_diff_files ASSIGNING <ls_diff_file>
-                             WITH KEY filename = iv_filename.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Invalid filename { iv_filename }| ).
-    ENDIF.
-
-    ro_diff = <ls_diff_file>-o_diff.
-
-  ENDMETHOD.
-
-
-  METHOD get_diff_line.
-
-    DATA: lt_diff       TYPE zif_abapgit_definitions=>ty_diffs_tt,
-          lv_line_index TYPE sytabix.
-
-    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diff.
-
-    lv_line_index = iv_line_index.
-    lt_diff = io_diff->get( ).
-
-    READ TABLE lt_diff INTO rs_diff
-                       INDEX lv_line_index.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Invalid line index { lv_line_index }| ).
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.

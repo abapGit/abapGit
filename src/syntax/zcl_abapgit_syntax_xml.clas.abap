@@ -35,7 +35,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_syntax_xml IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SYNTAX_XML IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -118,10 +118,10 @@ CLASS zcl_abapgit_syntax_xml IMPLEMENTATION.
     ENDLOOP.
 
     "if the last XML tag is not closed, extend it to the end of the tag
-    IF    lv_prev_token = c_token-xml_tag
-      AND <ls_prev> IS ASSIGNED
-      AND <ls_prev>-length  = 1
-      AND <ls_prev>-text_tag = '<'.
+    IF lv_prev_token = c_token-xml_tag
+        AND <ls_prev> IS ASSIGNED
+        AND <ls_prev>-length  = 1
+        AND <ls_prev>-text_tag = '<'.
 
       FIND REGEX '<\s*[^\s]*' IN iv_line+<ls_prev>-offset MATCH LENGTH <ls_prev>-length.
       IF sy-subrc <> 0.
