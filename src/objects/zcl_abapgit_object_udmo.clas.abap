@@ -421,7 +421,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
       AND as4local EQ me->mv_activation_state.
 
 
-    LOOP AT lt_udmo_entities ASSIGNING <udmo_entity> .
+    LOOP AT lt_udmo_entities ASSIGNING <udmo_entity>.
 
       " You are reminded that administrative information, such as last changed by user, date, time is not serialised.
       CLEAR <udmo_entity>-lstuser.
@@ -439,8 +439,6 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
       io_xml->add( iv_name = 'UDMO_ENTITIES'
                    ig_data = lt_udmo_entities ).
     ENDIF.
-
-
 
   ENDMETHOD.
 
@@ -465,16 +463,16 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     DATA lt_udmo_long_texts LIKE STANDARD TABLE OF ls_udmo_long_text.
     DATA lt_udmo_languages TYPE STANDARD TABLE OF ls_language_type.
     DATA ls_udmo_language  LIKE LINE OF lt_udmo_languages.
-    DATA: lv_error_status  TYPE lxestatprc .
+    DATA: lv_error_status  TYPE lxestatprc.
 
 
     " In which languages are the short texts are maintained.
     SELECT sprache AS language
-    FROM dm40t
-    INTO TABLE lt_udmo_languages
-    WHERE dmoid    EQ me->mv_data_model
-    AND   as4local EQ me->mv_activation_state
-    ORDER BY sprache ASCENDING.                         "#EC CI_NOFIRST
+      FROM dm40t
+      INTO TABLE lt_udmo_languages
+      WHERE dmoid    EQ me->mv_data_model
+      AND   as4local EQ me->mv_activation_state
+      ORDER BY sprache ASCENDING.                       "#EC CI_NOFIRST
 
     " For every language for which a short text is maintained,
     LOOP AT lt_udmo_languages INTO ls_udmo_language.
