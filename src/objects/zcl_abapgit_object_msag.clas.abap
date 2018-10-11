@@ -136,7 +136,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
 
       MOVE-CORRESPONDING <ls_t100_text> TO ls_t100.
       ls_t100-arbgb = lv_msg_id.
-      MODIFY t100 FROM ls_t100.                           "#EC CI_SUBRC
+      MODIFY t100 FROM ls_t100.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'MSAG: Table T100 modify failed' ).
       ENDIF.
@@ -351,7 +351,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
 
     LOOP AT lt_t100 ASSIGNING <ls_t100>.
       DELETE lt_before WHERE msgnr = <ls_t100>-msgnr.
-      MODIFY t100 FROM <ls_t100>.                         "#EC CI_SUBRC
+      MODIFY t100 FROM <ls_t100>.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'MSAG: Table T100 modify failed' ).
       ENDIF.
@@ -360,7 +360,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
       ls_t100u-name    = sy-uname.
       ls_t100u-datum   = sy-datum.
       ls_t100u-selfdef = '3'.
-      MODIFY t100u FROM ls_t100u.                         "#EC CI_SUBRC
+      MODIFY t100u FROM ls_t100u.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'MSAG: Table T100U modify failed' ).
       ENDIF.
@@ -371,7 +371,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
     ls_t100a-respuser = sy-uname.
     ls_t100a-ldate = sy-datum.
     ls_t100a-ltime = sy-uzeit.
-    MODIFY t100a FROM ls_t100a.                           "#EC CI_SUBRC
+    MODIFY t100a FROM ls_t100a.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'MSAG: Table T100A modify failed' ).
     ENDIF.
@@ -379,7 +379,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
     ls_t100t-sprsl = mv_language.
     ls_t100t-arbgb = ls_t100a-arbgb.
     ls_t100t-stext = ls_t100a-stext.
-    MODIFY t100t FROM ls_t100t.                           "#EC CI_SUBRC
+    MODIFY t100t FROM ls_t100t.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'MSAG: Table T100T modify failed' ).
     ENDIF.
