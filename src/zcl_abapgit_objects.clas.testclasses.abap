@@ -82,7 +82,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
           quit = if_aunit_constants=>no ).
     ENDLOOP.
 
-    zcl_abapgit_objects=>delete( it_tadir = lt_tadir ).
+    zcl_abapgit_objects=>delete( lt_tadir ).
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( c_package ).
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       lv_msg = |Not deleted properly { <ls_tadir>-object } { <ls_tadir>-obj_name }|.

@@ -142,13 +142,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
     ls_filedata-merge_content = cl_http_utility=>unescape_url( escaped = ls_filedata-merge_content ).
     REPLACE ALL OCCURRENCES OF lc_replace IN ls_filedata-merge_content WITH zif_abapgit_definitions=>c_newline.
 
-    lv_new_file_content = zcl_abapgit_convert=>string_to_xstring_utf8( iv_string = ls_filedata-merge_content ).
+    lv_new_file_content = zcl_abapgit_convert=>string_to_xstring_utf8( ls_filedata-merge_content ).
 
     READ TABLE mt_conflicts ASSIGNING <ls_conflict> INDEX mv_current_conflict_index.
     <ls_conflict>-result_sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
                                                         iv_data = lv_new_file_content ).
     <ls_conflict>-result_data = lv_new_file_content.
-    mo_merge->resolve_conflict( is_conflict = <ls_conflict> ).
+    mo_merge->resolve_conflict( <ls_conflict> ).
 
   ENDMETHOD.
 
@@ -548,19 +548,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
         CASE iv_action.
           WHEN c_actions-apply_merge.
-            apply_merged_content( it_postdata = it_postdata ).
+            apply_merged_content( it_postdata ).
 
           WHEN c_actions-apply_source.
             READ TABLE mt_conflicts ASSIGNING <ls_conflict> INDEX mv_current_conflict_index.
             <ls_conflict>-result_sha1 = <ls_conflict>-source_sha1.
             <ls_conflict>-result_data = <ls_conflict>-source_data.
-            mo_merge->resolve_conflict( is_conflict = <ls_conflict> ).
+            mo_merge->resolve_conflict( <ls_conflict> ).
 
           WHEN c_actions-apply_target.
             READ TABLE mt_conflicts ASSIGNING <ls_conflict> INDEX mv_current_conflict_index.
             <ls_conflict>-result_sha1 = <ls_conflict>-target_sha1.
             <ls_conflict>-result_data = <ls_conflict>-target_data.
-            mo_merge->resolve_conflict( is_conflict = <ls_conflict> ).
+            mo_merge->resolve_conflict( <ls_conflict> ).
 
         ENDCASE.
 
