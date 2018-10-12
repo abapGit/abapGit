@@ -718,6 +718,10 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     li_obj = create_object( is_item     = is_item
                             iv_language = zif_abapgit_definitions=>c_english ).
 
+    IF li_obj->exists( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Object { is_item-obj_type } { is_item-obj_name } doesn't exist| ).
+    ENDIF.
+
     lv_adt_jump_enabled = zcl_abapgit_persist_settings=>get_instance( )->read( )->get_adt_jump_enabled( ).
 
     IF lv_adt_jump_enabled = abap_true.
