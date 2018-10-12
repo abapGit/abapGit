@@ -153,7 +153,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
     DATA: lo_repo   TYPE REF TO zcl_abapgit_repo_online,
           ls_branch TYPE zif_abapgit_definitions=>ty_git_branch,
-          lo_popups type REF TO zif_abapgit_popups.
+          lo_popups TYPE REF TO zif_abapgit_popups.
 
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).

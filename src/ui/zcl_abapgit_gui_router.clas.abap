@@ -44,7 +44,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_router IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
 
   METHOD get_page_background.
@@ -302,7 +302,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         zcl_abapgit_services_repo=>toggle_favorite( lv_key ).
         ev_state = zif_abapgit_definitions=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_transport_to_branch.
-        zcl_abapgit_services_repo=>transport_to_branch( iv_repository_key = lv_key ).
+        zcl_abapgit_services_repo=>transport_to_branch( lv_key ).
         ev_state = zif_abapgit_definitions=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_settings.
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_repo_sett

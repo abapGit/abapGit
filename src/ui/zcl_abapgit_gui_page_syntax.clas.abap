@@ -32,7 +32,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
     DATA: li_syntax_check TYPE REF TO zif_abapgit_code_inspector.
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF mt_result.
 
-    li_syntax_check = zcl_abapgit_factory=>get_syntax_check( iv_package = mo_repo->get_package( ) ).
+    li_syntax_check = zcl_abapgit_factory=>get_syntax_check( mo_repo->get_package( ) ).
 
     mt_result = li_syntax_check->run( ).
 
@@ -49,7 +49,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
 
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.

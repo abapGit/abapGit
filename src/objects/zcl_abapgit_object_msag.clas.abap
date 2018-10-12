@@ -44,7 +44,64 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_msag IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
+
+
+  METHOD delete_documentation.
+    DATA: lv_key_s TYPE dokhl-object.
+
+    CLEAR lv_key_s.
+    CALL FUNCTION 'DOCU_OBJECT_NAME_CONCATENATE'
+      EXPORTING
+        docu_id  = 'NA'
+        element  = iv_message_id
+        addition = '   '
+      IMPORTING
+        object   = lv_key_s
+      EXCEPTIONS
+        OTHERS   = 0.
+
+    CALL FUNCTION 'DOKU_DELETE_ALL'
+      EXPORTING
+        doku_id                        = 'NA'
+        doku_object                    = lv_key_s
+        generic_use                    = 'X'
+        suppress_authority             = space
+        suppress_enqueue               = space
+        suppress_transport             = space
+      EXCEPTIONS
+        header_without_text            = 01
+        index_without_header           = 02
+        no_authority_for_devclass_xxxx = 03
+        no_docu_found                  = 04
+        object_is_already_enqueued     = 05
+        object_is_enqueued_by_corr     = 06
+        user_break                     = 07.
+
+  ENDMETHOD.
+
+
+  METHOD delete_msgid.
+
+    delete_documentation( iv_message_id ).
+
+    DELETE FROM t100a WHERE arbgb = iv_message_id.
+    IF sy-subrc = 0 OR sy-subrc = 4.
+      CALL FUNCTION 'RS_TREE_OBJECT_PLACEMENT'
+        EXPORTING
+          object    = iv_message_id
+          operation = 'DELETE'
+          program   = space
+          type      = 'CN'.
+      DELETE FROM t100o WHERE arbgb = iv_message_id.
+      DELETE FROM t100t WHERE arbgb = iv_message_id.    "#EC CI_NOFIRST
+      DELETE FROM t100u WHERE arbgb = iv_message_id.
+      DELETE FROM t100x WHERE arbgb = iv_message_id.
+      DELETE FROM t100 WHERE arbgb = iv_message_id.
+    ENDIF.
+
+
+  ENDMETHOD.
 
 
   METHOD deserialize_texts.
@@ -79,12 +136,21 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
       MOVE-CORRESPONDING <ls_t100_text> TO ls_t100.
       ls_t100-arbgb = lv_msg_id.
-      MODIFY t100 FROM ls_t100.                           "#EC CI_SUBRC
+      MODIFY t100 FROM ls_t100.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'MSAG: Table T100 modify failed' ).
       ENDIF.
     ENDLOOP.
 
+  ENDMETHOD.
+
+
+  METHOD free_access_permission.
+    CALL FUNCTION 'RS_ACCESS_PERMISSION'
+      EXPORTING
+        mode         = 'FREE'
+        object       = i_message_id
+        object_class = 'T100'.
   ENDMETHOD.
 
 
@@ -285,7 +351,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
     LOOP AT lt_t100 ASSIGNING <ls_t100>.
       DELETE lt_before WHERE msgnr = <ls_t100>-msgnr.
-      MODIFY t100 FROM <ls_t100>.                         "#EC CI_SUBRC
+      MODIFY t100 FROM <ls_t100>.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'MSAG: Table T100 modify failed' ).
       ENDIF.
@@ -294,7 +360,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
       ls_t100u-name    = sy-uname.
       ls_t100u-datum   = sy-datum.
       ls_t100u-selfdef = '3'.
-      MODIFY t100u FROM ls_t100u.                         "#EC CI_SUBRC
+      MODIFY t100u FROM ls_t100u.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'MSAG: Table T100U modify failed' ).
       ENDIF.
@@ -305,7 +371,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     ls_t100a-respuser = sy-uname.
     ls_t100a-ldate = sy-datum.
     ls_t100a-ltime = sy-uzeit.
-    MODIFY t100a FROM ls_t100a.                           "#EC CI_SUBRC
+    MODIFY t100a FROM ls_t100a.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'MSAG: Table T100A modify failed' ).
     ENDIF.
@@ -313,7 +379,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     ls_t100t-sprsl = mv_language.
     ls_t100t-arbgb = ls_t100a-arbgb.
     ls_t100t-stext = ls_t100a-stext.
-    MODIFY t100t FROM ls_t100t.                           "#EC CI_SUBRC
+    MODIFY t100t FROM ls_t100t.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'MSAG: Table T100T modify failed' ).
     ENDIF.
@@ -328,7 +394,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
     deserialize_longtexts( io_xml ).
 
-    deserialize_texts( io_xml = io_xml ).
+    deserialize_texts( io_xml ).
 
   ENDMETHOD.
 
@@ -417,70 +483,4 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     serialize_texts( io_xml ).
 
   ENDMETHOD.
-
-  METHOD delete_msgid.
-
-    delete_documentation( iv_message_id ).
-
-    DELETE FROM t100a WHERE arbgb = iv_message_id.
-    IF sy-subrc = 0 OR sy-subrc = 4.
-      CALL FUNCTION 'RS_TREE_OBJECT_PLACEMENT'
-        EXPORTING
-          object    = iv_message_id
-          operation = 'DELETE'
-          program   = space
-          type      = 'CN'.
-      DELETE FROM t100o WHERE arbgb = iv_message_id.
-      DELETE FROM t100t WHERE arbgb = iv_message_id.    "#EC CI_NOFIRST
-      DELETE FROM t100u WHERE arbgb = iv_message_id.
-      DELETE FROM t100x WHERE arbgb = iv_message_id.
-      DELETE FROM t100 WHERE arbgb = iv_message_id.
-    ENDIF.
-
-
-  ENDMETHOD.
-
-
-  METHOD free_access_permission.
-    CALL FUNCTION 'RS_ACCESS_PERMISSION'
-      EXPORTING
-        mode         = 'FREE'
-        object       = i_message_id
-        object_class = 'T100'.
-  ENDMETHOD.
-
-
-  METHOD delete_documentation.
-    DATA: lv_key_s TYPE dokhl-object.
-
-    CLEAR lv_key_s.
-    CALL FUNCTION 'DOCU_OBJECT_NAME_CONCATENATE'
-      EXPORTING
-        docu_id  = 'NA'
-        element  = iv_message_id
-        addition = '   '
-      IMPORTING
-        object   = lv_key_s
-      EXCEPTIONS
-        OTHERS   = 0.
-
-    CALL FUNCTION 'DOKU_DELETE_ALL'
-      EXPORTING
-        doku_id                        = 'NA'
-        doku_object                    = lv_key_s
-        generic_use                    = 'X'
-        suppress_authority             = space
-        suppress_enqueue               = space
-        suppress_transport             = space
-      EXCEPTIONS
-        header_without_text            = 01
-        index_without_header           = 02
-        no_authority_for_devclass_xxxx = 03
-        no_docu_found                  = 04
-        object_is_already_enqueued     = 05
-        object_is_enqueued_by_corr     = 06
-        user_break                     = 07.
-
-  ENDMETHOD.
-
 ENDCLASS.

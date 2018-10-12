@@ -160,7 +160,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
 
 
   METHOD build_trees.
@@ -389,7 +389,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
     READ TABLE it_objects INTO ls_object
       WITH KEY type COMPONENTS
         type = zif_abapgit_definitions=>c_type-commit
-        sha1 = iv_branch .
+        sha1 = iv_branch.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'commit not found' ).
     ENDIF.

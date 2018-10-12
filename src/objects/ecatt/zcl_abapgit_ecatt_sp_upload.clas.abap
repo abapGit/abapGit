@@ -28,7 +28,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
 
 
   METHOD get_ecatt_sp.
@@ -107,14 +107,13 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
                TO <lv_d_akh>. " doesn't exist in 702
         ASSIGN COMPONENT 'I_AKH' OF STRUCTURE ch_object
                TO <lv_i_akh>. " doesn't exist in 702
-        IF  <lv_d_akh> IS ASSIGNED
-        AND <lv_i_akh> IS ASSIGNED.
+        IF <lv_d_akh> IS ASSIGNED AND <lv_i_akh> IS ASSIGNED.
           <lv_i_akh> = <lv_d_akh>.
         ENDIF.
 
         super->upload(
           CHANGING
-            ch_object       = ch_object ).
+            ch_object = ch_object ).
 
         upload_data_from_stream( ch_object-filename ).
 

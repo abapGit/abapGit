@@ -72,7 +72,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_syntax_highlighter IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
 
 
   METHOD add_rule.
@@ -189,9 +189,9 @@ CLASS zcl_abapgit_syntax_highlighter IMPLEMENTATION.
       ls_match   TYPE ty_match.
 
     FIELD-SYMBOLS:
-      <ls_regex>  LIKE LINE OF mt_rules,
-      <ls_result> TYPE match_result,
-      <ls_submatch>  LIKE LINE OF <ls_result>-submatches.
+      <ls_regex>    LIKE LINE OF mt_rules,
+      <ls_result>   TYPE match_result,
+      <ls_submatch> LIKE LINE OF <ls_result>-submatches.
 
 
     CLEAR et_matches.
@@ -213,7 +213,7 @@ CLASS zcl_abapgit_syntax_highlighter IMPLEMENTATION.
         ELSE.
           READ TABLE <ls_result>-submatches ASSIGNING <ls_submatch> INDEX <ls_regex>-relevant_submatch.
           "submatch might be empty if only discarted parts matched
-          IF sy-subrc = 0 and <ls_submatch>-offset >= 0 and <ls_submatch>-length > 0.
+          IF sy-subrc = 0 AND <ls_submatch>-offset >= 0 AND <ls_submatch>-length > 0.
             ls_match-token  = <ls_regex>-token.
             ls_match-offset = <ls_submatch>-offset.
             ls_match-length = <ls_submatch>-length.
