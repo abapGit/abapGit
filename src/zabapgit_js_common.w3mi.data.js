@@ -155,7 +155,7 @@ function perfClear() {
 window.onTagTypeChange = function(oSelectObject){
   var sValue = oSelectObject.value;
   submitSapeventForm({ 'type': sValue }, "change_tag_type", "post");
-}
+};
 
 /**********************************************************
  * Repo Overview Logic
@@ -164,12 +164,12 @@ window.onTagTypeChange = function(oSelectObject){
 window.onOrderByChange = function(oSelectObject){
   var sValue = oSelectObject.value;
   submitSapeventForm({ 'orderBy': sValue }, "change_order_by", "post");
-}
+};
 
 window.onDirectionChange = function(oSelectObject){
   var sValue = oSelectObject.value;
   submitSapeventForm({ 'direction': sValue }, "direction", "post");
-}
+};
 
 /**********************************************************
  * STAGE PAGE Logic
@@ -737,7 +737,7 @@ LinkHints.prototype.fnRenderTooltips = function () {
 
   [].forEach.call(this.aTooltipElements, function(oTooltip){
     iTooltipCounter += 1;
-    this.fnRenderTooltip(oTooltip, iTooltipCounter)
+    this.fnRenderTooltip(oTooltip, iTooltipCounter);
   }.bind(this));
 
 };
@@ -801,7 +801,7 @@ LinkHints.prototype.fnTooltipActivate = function (oTooltip) {
   this.fnActivateDropDownMenu(oTooltip);
   oTooltip.parentElement.focus();
 
-}
+};
 
 LinkHints.prototype.onkeypress = function(oEvent){
 
@@ -834,7 +834,7 @@ LinkHints.prototype.onkeypress = function(oEvent){
 
   }
 
-}
+};
 
 // Vimium like link hints
 function setLinkHints(sLinkHintKey, sColor) {
@@ -881,7 +881,7 @@ function Hotkeys(oKeyMap){
         return;
       }
 
-    }
+    };
 
   }.bind(this));
 
@@ -893,7 +893,7 @@ Hotkeys.prototype.showHotkeys = function() {
   if (elHotkeys) {
     elHotkeys.style.display = (elHotkeys.style.display) ? '' : 'none';
   }
-}
+};
 
 Hotkeys.prototype.getSapEvent = function(sSapEvent) {
 
@@ -917,7 +917,7 @@ Hotkeys.prototype.getSapEvent = function(sSapEvent) {
 
   return (aFilteredAndNormalizedSapEvents && aFilteredAndNormalizedSapEvents[0]);
 
-}
+};
 
 Hotkeys.prototype.onkeydown = function(oEvent){
 
@@ -928,7 +928,7 @@ Hotkeys.prototype.onkeydown = function(oEvent){
   var activeElementType = ((document.activeElement && document.activeElement.nodeName) || "");
 
   if (activeElementType === "INPUT" || activeElementType === "TEXTAREA") {
-    return
+    return;
   }
 
   var 
@@ -938,7 +938,7 @@ Hotkeys.prototype.onkeydown = function(oEvent){
   if (fnHotkey) {
     fnHotkey.call(this, oEvent);
   }
-}
+};
 
 function setKeyBindings(oKeyMap){
 
@@ -964,17 +964,17 @@ function Patch() {
     REMOVE: 'remove',
     PATCH: 'patch',
     PATCH_ACTIVE: 'patch-active'
-  }
+  };
 
   this.ID = {
     STAGE: 'stage',
     PATCH_ADD_ALL: 'patch_add_all',
     PATCH_REMOVE_ALL: 'patch_remove_all'
-  }
+  };
   
   this.ACTION = {
     PATCH_STAGE: 'patch_stage'
-  }
+  };
 
   this.ADD_REMOVE = new CSSPatchClassCombination(this.CSS_CLASS.ADD, this.CSS_CLASS.REMOVE);
   this.REMOVE_ADD = new CSSPatchClassCombination(this.CSS_CLASS.REMOVE, this.CSS_CLASS.ADD);
@@ -986,7 +986,7 @@ Patch.prototype.preparePatch = function(){
   this.registerClickHandlerSingleLine();
   this.registerClickHandlerAllFile();
 
-}
+};
 
 Patch.prototype.registerClickHandlerSingleLine = function(){
 
@@ -995,7 +995,7 @@ Patch.prototype.registerClickHandlerSingleLine = function(){
   this.registerClickHandlerForPatchLink(this.ADD_REMOVE);
   this.registerClickHandlerForPatchLink(this.REMOVE_ADD);
 
-}
+};
 
 Patch.prototype.registerClickHandlerAllFile = function(){
 
@@ -1004,7 +1004,7 @@ Patch.prototype.registerClickHandlerAllFile = function(){
   this.registerClickHandlerForPatchLinkAll('#' + this.ID.PATCH_ADD_ALL, this.ADD_REMOVE);
   this.registerClickHandlerForPatchLinkAll('#' + this.ID.PATCH_REMOVE_ALL, this.REMOVE_ADD);
 
-}
+};
 
 Patch.prototype.registerClickHandlerForPatchLink = function(oClassCombination) {
   // register onclick handler. When a link is clicked it is 
@@ -1023,7 +1023,7 @@ Patch.prototype.registerClickHandlerForPatchLink = function(oClassCombination) {
 
   }.bind(this));
 
-}
+};
 
 Patch.prototype.togglePatchActive = function(oEvent, elClicked, elCorrespondingLink){ 
 
@@ -1033,7 +1033,7 @@ Patch.prototype.togglePatchActive = function(oEvent, elClicked, elCorrespondingL
   }
 
   oEvent.preventDefault();
-}
+};
 
 
 Patch.prototype.togglePatchActiveForClassLink = function(oEvent, elClicked, oClassCombination) {
@@ -1042,7 +1042,7 @@ Patch.prototype.togglePatchActiveForClassLink = function(oEvent, elClicked, oCla
   var elCorrespondingLink = document.querySelector('#' + this.escapeDots(sCorrespondingLinkId));
 
   this.togglePatchActive(oEvent, elClicked, elCorrespondingLink);
-}
+};
 
 Patch.prototype.getCorrespodingLinkId = function(sClickedLinkId, oClassCombination){
 
@@ -1055,11 +1055,11 @@ Patch.prototype.getCorrespodingLinkId = function(sClickedLinkId, oClassCombinati
   var oRegexPatchClassPrefix = new RegExp('^' + oClassCombination.sClassLinkClicked );
   return sClickedLinkId.replace(oRegexPatchClassPrefix, oClassCombination.sClassCorrespondingLink);
 
-}
+};
 
 Patch.prototype.escapeDots = function(sFileName){
   return sFileName.replace(/\./g,'\\.');
-}
+};
 
 Patch.prototype.patchLinkClickAll = function(oClassCombination) {
   return function(oEvent) {
@@ -1074,7 +1074,7 @@ Patch.prototype.patchLinkClickAll = function(oClassCombination) {
     oEvent.preventDefault();
 
   }
-}
+};
 
 Patch.prototype.registerClickHandlerForPatchLinkAll = function(sSelector, oClassCombination){
 
@@ -1084,7 +1084,7 @@ Patch.prototype.registerClickHandlerForPatchLinkAll = function(sSelector, oClass
     elem.addEventListener('click', this.patchLinkClickAll(oClassCombination).bind(this));
   }.bind(this));
 
-}
+};
 
 Patch.prototype.registerStagePatch = function registerStagePatch(){
 
@@ -1096,7 +1096,7 @@ Patch.prototype.registerStagePatch = function registerStagePatch(){
     this.stagePatch();
   }.bind(this);
 
-}
+};
 
 Patch.prototype.stagePatch = function() {
 
@@ -1107,13 +1107,13 @@ Patch.prototype.stagePatch = function() {
 
   submitSapeventForm({'add': aAddPatch, 'remove': aRemovePatch}, this.ACTION.PATCH_STAGE, "post");
 
-}
+};
 
 Patch.prototype.collectActiveElementsForSelector = function(sSelector){
 
   return [].slice.call(document.querySelectorAll(sSelector))
     .filter(function(elem){
-      return elem.classList.contains(this.CSS_CLASS.PATCH_ACTIVE)
+      return elem.classList.contains(this.CSS_CLASS.PATCH_ACTIVE);
     }.bind(this))
     .map(function(elem){
       return elem.id;
