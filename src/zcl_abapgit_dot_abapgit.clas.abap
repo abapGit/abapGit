@@ -199,7 +199,7 @@ CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
     rs_signature-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
                                                     iv_data = serialize( ) ).
 
-  ENDMETHOD. "get_signature
+  ENDMETHOD.
 
 
   METHOD get_starting_folder.

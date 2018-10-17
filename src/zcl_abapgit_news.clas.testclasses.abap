@@ -72,7 +72,7 @@ CLASS ltcl_news DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
       parse_line         FOR TESTING,
       parse              FOR TESTING.
 
-ENDCLASS.                    "ltcl_news DEFINITION
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS ltcl_news IMPLEMENTATION
@@ -92,7 +92,7 @@ CLASS ltcl_news IMPLEMENTATION.
                                         act = lv_version_act
                                         msg = ' Error during conversion of version to numeric value' ).
 
-  ENDMETHOD.                    "convert_version_to_numeric
+  ENDMETHOD.
 
   METHOD compare_versions.
 
@@ -123,7 +123,7 @@ CLASS ltcl_news IMPLEMENTATION.
                                         act = lv_result
                                         msg = ' Error during comparison of versions. Case: A = B' ).
 
-  ENDMETHOD.                    "compare_versions
+  ENDMETHOD.
 
   METHOD normalize_version.
 
@@ -143,7 +143,7 @@ CLASS ltcl_news IMPLEMENTATION.
       act = zcl_abapgit_news=>normalize_version( 'x.y.z' )
       exp = '' ).
 
-  ENDMETHOD.                    "normalize_version
+  ENDMETHOD.
 
   METHOD parse_line.
 
@@ -200,7 +200,7 @@ CLASS ltcl_news IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals( act = ls_log-is_important exp = abap_true ).
     cl_abap_unit_assert=>assert_equals( act = ls_log-text         exp = ' ! important news' ).
 
-  ENDMETHOD.                    "parse_line
+  ENDMETHOD.
 
   METHOD parse.
 
@@ -282,6 +282,6 @@ CLASS ltcl_news IMPLEMENTATION.
                                         act = lt_log_act
                                         msg = ' Error during parsing: Case 3.' ).
 
-  ENDMETHOD.                    "parse
+  ENDMETHOD.
 
-ENDCLASS.                    "ltcl_news IMPLEMENTATION
+ENDCLASS.

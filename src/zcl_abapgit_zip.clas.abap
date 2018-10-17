@@ -78,7 +78,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     rv_xstr = lo_zip->save( ).
 
-  ENDMETHOD.                    "encode_files
+  ENDMETHOD.
 
 
   METHOD export.
@@ -106,7 +106,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     file_download( iv_package = io_repo->get_package( )
                    iv_xstr    = encode_files( lt_zip ) ).
 
-  ENDMETHOD.                    "export_key
+  ENDMETHOD.
 
 
   METHOD export_object.
@@ -198,7 +198,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.  "export_package
+  ENDMETHOD.
 
 
   METHOD export_package.
@@ -226,7 +226,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     export( lo_repo ).
 
-  ENDMETHOD.  "export_package
+  ENDMETHOD.
 
 
   METHOD filename.
@@ -246,7 +246,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     ENDIF.
     TRANSLATE ev_filename TO LOWER CASE.
 
-  ENDMETHOD.                    "filename
+  ENDMETHOD.
 
 
   METHOD file_download.
@@ -324,7 +324,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from gui_download' ).
     ENDIF.
 
-  ENDMETHOD.                    "file_download
+  ENDMETHOD.
 
 
   METHOD file_upload.
@@ -398,7 +398,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     CONCATENATE LINES OF lt_data INTO rv_xstr IN BYTE MODE.
     rv_xstr = rv_xstr(lv_length).
 
-  ENDMETHOD.                    "file_upload
+  ENDMETHOD.
 
 
   METHOD import.
@@ -411,7 +411,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
 
-  ENDMETHOD.                    "import
+  ENDMETHOD.
 
 
   METHOD normalize_path.
@@ -456,7 +456,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-  ENDMETHOD.                    "normalize_path
+  ENDMETHOD.
 
 
   METHOD unzip_file.
@@ -511,5 +511,5 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     normalize_path( CHANGING ct_files = rt_files ).
 
-  ENDMETHOD.                    "decode_files
+  ENDMETHOD.
 ENDCLASS.

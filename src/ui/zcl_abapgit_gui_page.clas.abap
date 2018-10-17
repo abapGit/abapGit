@@ -144,7 +144,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( '</tr></table>' ).                        "#EC NOTEXT
     ro_html->add( '</div>' ).                               "#EC NOTEXT
 
-  ENDMETHOD. "footer
+  ENDMETHOD.
 
 
   METHOD get_hotkey_actions.
@@ -178,7 +178,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     ro_html->add( '</head>' ).                              "#EC NOTEXT
 
-  ENDMETHOD.                    "html_head
+  ENDMETHOD.
 
 
   METHOD link_hints.
@@ -234,7 +234,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     link_hints( ro_html ).
     add_hotkeys( ro_html ).
 
-  ENDMETHOD. "scripts
+  ENDMETHOD.
 
 
   METHOD title.
@@ -263,7 +263,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( '</tr></table>' ).                        "#EC NOTEXT
     ro_html->add( '</div>' ).                               "#EC NOTEXT
 
-  ENDMETHOD.                    "render page title
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~on_event.
@@ -317,5 +317,5 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     ro_html->add( '</html>' ).                              "#EC NOTEXT
 
-  ENDMETHOD.  " lif_gui_page~render.
+  ENDMETHOD.
 ENDCLASS.

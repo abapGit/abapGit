@@ -83,7 +83,7 @@ CLASS ZCL_ABAPGIT_PERSIST_BACKGROUND IMPLEMENTATION.
     READ TABLE mt_jobs WITH KEY key = iv_key TRANSPORTING NO FIELDS.
     rv_yes = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.  "exists
+  ENDMETHOD.
 
 
   METHOD from_xml.

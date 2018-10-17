@@ -286,7 +286,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     CONCATENATE 'ZCL_ABAPGIT_OBJECT_' is_item-obj_type INTO rv_class_name. "#EC NOTEXT
 
-  ENDMETHOD.                    "class_name
+  ENDMETHOD.
 
 
   METHOD compare_remote_to_local.
@@ -378,7 +378,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         ENDIF.
     ENDTRY.
 
-  ENDMETHOD.                    "create_object
+  ENDMETHOD.
 
 
   METHOD delete.
@@ -431,7 +431,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     zcl_abapgit_default_transport=>get_instance( )->reset( ).
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
 
   METHOD delete_obj.
@@ -456,7 +456,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
 
   METHOD deserialize.
@@ -583,7 +583,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     zcl_abapgit_default_transport=>get_instance( )->reset( ).
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD deserialize_checks.
@@ -653,7 +653,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         rv_bool = abap_true.
     ENDTRY.
 
-  ENDMETHOD.                    "exists
+  ENDMETHOD.
 
 
   METHOD files_to_deserialize.
@@ -693,7 +693,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       is_item     = is_item
       iv_language = zif_abapgit_definitions=>c_english )->has_changed_since( iv_timestamp ).
 
-  ENDMETHOD.  "has_changed_since
+  ENDMETHOD.
 
 
   METHOD is_supported.
@@ -707,7 +707,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         rv_bool = abap_false.
     ENDTRY.
 
-  ENDMETHOD.                    "is_supported
+  ENDMETHOD.
 
 
   METHOD jump.
@@ -737,7 +737,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       li_obj->jump( ).
     ENDIF.
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD map_results_to_items.
@@ -812,7 +812,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
-  ENDMETHOD.                    "prioritize_deser
+  ENDMETHOD.
 
 
   METHOD serialize.
@@ -908,7 +908,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           with_tcode_index       = abap_true.
     ENDLOOP.
 
-  ENDMETHOD.                    "update_package_tree
+  ENDMETHOD.
 
 
   METHOD warning_overwrite_adjust.

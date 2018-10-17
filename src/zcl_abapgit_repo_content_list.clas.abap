@@ -97,7 +97,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
       ENDAT.
     ENDLOOP.
 
-  ENDMETHOD. "build_folders
+  ENDMETHOD.
 
 
   METHOD build_repo_items_offline.
@@ -120,7 +120,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
       <ls_repo_item>-sortkey  = c_sortkey-default.      " Default sort key
     ENDLOOP.
 
-  ENDMETHOD.  "build_repo_items_offline
+  ENDMETHOD.
 
 
   METHOD build_repo_items_online.
@@ -172,25 +172,25 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
       ENDAT.
     ENDLOOP.
 
-  ENDMETHOD. "build_repo_items_online
+  ENDMETHOD.
 
 
   METHOD constructor.
     mo_repo = io_repo.
     CREATE OBJECT mo_log.
-  ENDMETHOD.  "constructor
+  ENDMETHOD.
 
 
   METHOD filter_changes.
 
     DELETE ct_repo_items WHERE changes = 0.
 
-  ENDMETHOD. "filter_changes
+  ENDMETHOD.
 
 
   METHOD get_log.
     ro_log = mo_log.
-  ENDMETHOD. "get_log
+  ENDMETHOD.
 
 
   METHOD list.
@@ -219,5 +219,5 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
       obj_type ASCENDING
       obj_name ASCENDING.
 
-  ENDMETHOD.  "list
+  ENDMETHOD.
 ENDCLASS.

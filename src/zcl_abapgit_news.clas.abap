@@ -113,7 +113,7 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
       rv_result = 0.
     ENDIF.
 
-  ENDMETHOD.                    "compare_versions
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -136,7 +136,7 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
     READ TABLE mt_log INTO ls_log_line INDEX 1.
     mv_latest_version = ls_log_line-version. " Empty if not found
 
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
 
   METHOD create.
@@ -190,37 +190,37 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
         iv_version = ro_instance->latest_version( ) ).
     ENDIF.
 
-  ENDMETHOD.                    "create
+  ENDMETHOD.
 
 
   METHOD get_log.
     rt_log = me->mt_log.
-  ENDMETHOD.                    "get_log
+  ENDMETHOD.
 
 
   METHOD has_important.
     READ TABLE mt_log WITH KEY is_important = abap_true TRANSPORTING NO FIELDS.
     rv_boolean = boolc( sy-subrc IS INITIAL ).
-  ENDMETHOD.                    "has_important_news
+  ENDMETHOD.
 
 
   METHOD has_news.
     rv_boolean = boolc( lines( mt_log ) > 0 ).
-  ENDMETHOD.                    "has_news
+  ENDMETHOD.
 
 
   METHOD has_unseen.
     rv_boolean = boolc( compare_versions(
       iv_a = mv_latest_version
       iv_b = mv_lastseen_version ) > 0 ).
-  ENDMETHOD.                    "has_unseen
+  ENDMETHOD.
 
 
   METHOD has_updates.
     rv_boolean = boolc( compare_versions(
       iv_a = mv_latest_version
       iv_b = mv_current_version ) > 0 ).
-  ENDMETHOD.                    "has_updates
+  ENDMETHOD.
 
 
   METHOD is_relevant.
@@ -235,7 +235,7 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
 
   METHOD latest_version.
     rv_version = me->mv_latest_version.
-  ENDMETHOD.                    "latest_version
+  ENDMETHOD.
 
 
   METHOD normalize_version.
@@ -246,7 +246,7 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
     FIND FIRST OCCURRENCE OF REGEX lc_version_pattern
       IN iv_version SUBMATCHES rv_version.
 
-  ENDMETHOD.                    "normalize_version
+  ENDMETHOD.
 
 
   METHOD parse.
@@ -290,7 +290,7 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
       APPEND ls_log TO rt_log.
     ENDLOOP.
 
-  ENDMETHOD.                    "parse
+  ENDMETHOD.
 
 
   METHOD parse_line.
@@ -318,7 +318,7 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
 
     rs_log-text = iv_line.
 
-  ENDMETHOD.                    "parse_line
+  ENDMETHOD.
 
 
   METHOD version_to_numeric.
@@ -332,5 +332,5 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
     " Calculated value of version number, empty version will become 0 which is OK
     rv_version = lv_major * 1000000 + lv_minor * 1000 + lv_release.
 
-  ENDMETHOD.                    "convert_version_to_numeric
+  ENDMETHOD.
 ENDCLASS.

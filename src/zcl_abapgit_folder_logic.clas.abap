@@ -134,7 +134,7 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-  ENDMETHOD.                    "class_to_path
+  ENDMETHOD.
 
 
   METHOD path_to_package.

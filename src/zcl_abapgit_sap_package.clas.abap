@@ -204,7 +204,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
     create( ls_package ).
 
-  ENDMETHOD.                    "create
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_sap_package~exists.

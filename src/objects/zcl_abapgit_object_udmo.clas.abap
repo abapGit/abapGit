@@ -627,7 +627,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     ENDIF.
 
 
-  ENDMETHOD.                    "zif_abapgit_object~delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -671,7 +671,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     " You are reminded that data models are not relevant for activation.
 
 
-  ENDMETHOD.                    "zif_abapgit_object~deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -686,12 +686,12 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
 
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~has_changed_since.
@@ -711,7 +711,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
       iv_time      = lv_time ).
 
 
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~is_locked.
@@ -765,7 +765,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
         ##fm_subrc_ok.                                                   "#EC CI_SUBRC
 
 
-  ENDMETHOD.                    "zif_abapgit_object~jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -780,5 +780,5 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     me->serialize_short_texts( io_xml ).
     me->serialize_long_texts( io_xml ).
 
-  ENDMETHOD.                    "zif_abapgit_object~serialize
+  ENDMETHOD.
 ENDCLASS.

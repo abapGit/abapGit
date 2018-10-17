@@ -64,7 +64,7 @@ CLASS ltcl_folder_logic DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHOR
       full1 FOR TESTING RAISING zcx_abapgit_exception,
       full2 FOR TESTING RAISING zcx_abapgit_exception.
 
-ENDCLASS.                    "ltcl_convert DEFINITION
+ENDCLASS.
 
 CLASS ltcl_folder_logic IMPLEMENTATION.
 
@@ -185,7 +185,7 @@ CLASS ltcl_folder_logic_namespaces DEFINITION FOR TESTING RISK LEVEL HARMLESS DU
       full1 FOR TESTING RAISING zcx_abapgit_exception,
       full2 FOR TESTING RAISING zcx_abapgit_exception.
 
-ENDCLASS.                    "ltcl_convert DEFINITION
+ENDCLASS.
 
 CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
 

@@ -89,7 +89,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
                     iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ mo_repo->get_key( ) }| ).
     ENDIF.
 
-  ENDMETHOD. "build_menu
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -212,7 +212,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
       ENDCASE.
     ENDLOOP.
 
-  ENDMETHOD.        "process_stage_list
+  ENDMETHOD.
 
 
   METHOD render_actions.
@@ -265,7 +265,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     ro_html->add( '</tr>' ).
     ro_html->add( '</table>' ).
 
-  ENDMETHOD.      "render_actions
+  ENDMETHOD.
 
 
   METHOD render_content.
@@ -322,7 +322,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     ro_html->add( '</tr>' ).
 
-  ENDMETHOD.  "render_file
+  ENDMETHOD.
 
 
   METHOD render_list.
@@ -392,7 +392,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     ro_html->add( '</table>' ).
 
-  ENDMETHOD.      "render_lines
+  ENDMETHOD.
 
 
   METHOD scripts.
@@ -414,7 +414,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     ro_html->add( '}' ).
     ro_html->add( 'var gHelper = new StageHelper(gStageParams);' ).
 
-  ENDMETHOD.  "scripts
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.

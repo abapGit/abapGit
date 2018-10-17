@@ -99,7 +99,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     mv_initialized = abap_false.
 
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
 
   METHOD deserialize.
@@ -112,33 +112,33 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     COMMIT WORK AND WAIT.
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD get_branch_name.
     rv_name = ms_data-branch_name.
-  ENDMETHOD.                    "get_branch_name
+  ENDMETHOD.
 
 
   METHOD get_files_remote.
     initialize( ).
 
     rt_files = mt_remote.
-  ENDMETHOD.                    "get_files
+  ENDMETHOD.
 
 
   METHOD get_objects.
     initialize( ).
 
     rt_objects = mt_objects.
-  ENDMETHOD.                    "get_objects
+  ENDMETHOD.
 
 
   METHOD get_sha1_remote.
     initialize( ).
 
     rv_sha1 = mv_branch.
-  ENDMETHOD.                    "get_sha1_remote
+  ENDMETHOD.
 
 
   METHOD get_unnecessary_local_objs.
@@ -189,7 +189,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
   METHOD get_url.
     rv_url = ms_data-url.
-  ENDMETHOD.                    "get_url
+  ENDMETHOD.
 
 
   METHOD handle_stage_ignore.
@@ -285,7 +285,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     set( it_checksums = lt_checksums ).
     reset_status( ).
 
-  ENDMETHOD.  " rebuild_local_checksums.
+  ENDMETHOD.
 
 
   METHOD refresh.
@@ -314,12 +314,12 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     mv_initialized = abap_true.
 
-  ENDMETHOD.                    "refresh
+  ENDMETHOD.
 
 
   METHOD reset_status.
     CLEAR mt_status.
-  ENDMETHOD.  " reset_status.
+  ENDMETHOD.
 
 
   METHOD set_branch_name.
@@ -361,7 +361,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     ENDIF.
     rt_results = mt_status.
 
-  ENDMETHOD.                    "status
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_git_operations~create_branch.

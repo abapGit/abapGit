@@ -72,7 +72,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_DIS IMPLEMENTATION.
     ro_html->add( |<pre class="syntax-hl">{ lv_data }</pre>| ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD render_record_banner.
@@ -81,7 +81,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_DIS IMPLEMENTATION.
            && zif_abapgit_definitions=>c_newline
            && |<table class="tag"><tr><td class="label">Key:</td>|
            && |  <td>{ is_key-value }</td></tr></table>|.
-  ENDMETHOD. "render_record_banner
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
