@@ -273,8 +273,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
     ro_html->add( '<table class="stage_tab">' ).
     ro_html->add( '<thead>' ).
-    ro_html->add( '<tr>').
-    ro_html->add( '<th colspan="2">Staged files</th>').
+    ro_html->add( '<tr>' ).
+    ro_html->add( '<th colspan="2">Staged files</th>' ).
     ro_html->add( '</tr>' ).
     ro_html->add( '</thead>' ).
 

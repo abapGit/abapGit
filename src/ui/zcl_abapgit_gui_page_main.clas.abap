@@ -349,6 +349,16 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
         CREATE OBJECT li_repo_overview TYPE zcl_abapgit_gui_page_repo_over.
         ei_page = li_repo_overview.
         ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+      WHEN OTHERS.
+        super->zif_abapgit_gui_page~on_event(
+          EXPORTING
+            iv_action    = iv_action
+            iv_prev_page = iv_prev_page
+            iv_getdata   = iv_getdata
+            it_postdata  = it_postdata
+          IMPORTING
+            ei_page      = ei_page
+            ev_state     = ev_state  ).
     ENDCASE.
 
   ENDMETHOD.

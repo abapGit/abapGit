@@ -177,7 +177,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     deserialize_checks( ).
 
     IF is_checks-requirements-met = 'N' AND is_checks-requirements-decision IS INITIAL.
-      zcx_abapgit_exception=>raise( 'Requirements not met and undecided ').
+      zcx_abapgit_exception=>raise( 'Requirements not met and undecided' ).
     ENDIF.
 
     IF is_checks-transport-required = abap_true AND is_checks-transport-transport IS INITIAL.

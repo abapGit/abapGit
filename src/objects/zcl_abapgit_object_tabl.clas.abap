@@ -3,6 +3,8 @@ CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
+  PRIVATE SECTION.
+    CONSTANTS: c_longtext_id_tabl TYPE dokil-id VALUE 'TB'.
 
 ENDCLASS.
 
@@ -135,6 +137,8 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, TABL' ).
     ENDIF.
 
+    delete_longtexts( c_longtext_id_tabl ).
+
   ENDMETHOD.
 
 
@@ -244,6 +248,8 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
                                            iv_name = lv_tname ).
 
     ENDLOOP.
+
+    deserialize_longtexts( io_xml ).
 
   ENDMETHOD.
 
@@ -521,6 +527,9 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
                  iv_name = 'DD35V_TALE' ).
     io_xml->add( iv_name = 'DD36M'
                  ig_data = lt_dd36m ).
+
+    serialize_longtexts( io_xml         = io_xml
+                         iv_longtext_id = c_longtext_id_tabl ).
 
   ENDMETHOD.
 ENDCLASS.

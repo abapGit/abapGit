@@ -48,7 +48,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
+CLASS zcl_abapgit_object_webi IMPLEMENTATION.
 
 
   METHOD handle_endpoint.
@@ -78,12 +78,12 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'todo, WEBI BAPI' ).
     ENDIF.
 
-    IF lines( is_webi-pvepfunction ) <> 1.
-      zcx_abapgit_exception=>raise( 'todo, WEBI, function name' ).
-    ENDIF.
-
 * field ls_endpoint-endpointname does not exist in 702
     READ TABLE is_webi-pvepfunction INDEX 1 ASSIGNING <ls_function>.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |WEBI { ms_item-obj_name }: couldn't detect endpoint name| ).
+    ENDIF.
+
     li_endpoint->set_data(
       data_version = '1'
       data         = <ls_function>-function ).
@@ -339,6 +339,8 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
         handle_function( ls_webi ).
         handle_soap( ls_webi ).
 
+        tadir_insert( iv_package ).
+
         mi_vi->if_ws_md_lockable_object~save( ).
         mi_vi->if_ws_md_lockable_object~unlock( ).
       CATCH cx_ws_md_exception INTO lx_root.
@@ -470,3 +472,4 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+

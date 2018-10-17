@@ -6,6 +6,9 @@ CLASS zcl_abapgit_object_tran DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PRIVATE SECTION.
 
+    TYPES: tty_param_values TYPE STANDARD TABLE OF rsparam
+                                 WITH NON-UNIQUE DEFAULT KEY.
+
     CONSTANTS: c_oo_program(9)    VALUE '\PROGRAM=',
                c_oo_class(7)      VALUE '\CLASS=',
                c_oo_method(8)     VALUE '\METHOD=',
@@ -36,13 +39,259 @@ CLASS zcl_abapgit_object_tran DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
       deserialize_texts
         IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_input
-        RAISING   zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception,
+
+      deserialize_oo_transaction
+        IMPORTING
+          iv_package      TYPE devclass
+          is_tstc         TYPE tstc
+          is_tstcc        TYPE tstcc
+          is_tstct        TYPE tstct
+          is_tstcp        TYPE tstcp
+          it_param_values TYPE zcl_abapgit_object_tran=>tty_param_values
+          is_rsstcd       TYPE rsstcd
+        RAISING
+          zcx_abapgit_exception.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
+CLASS zcl_abapgit_object_tran IMPLEMENTATION.
+
+
+  METHOD deserialize_oo_transaction.
+
+    " You should remember that we don't use batch input just for fun,
+    " but because FM RPY_TRANSACTION_INSERT doesn't support OO transactions.
+
+    DATA: ls_bcdata  TYPE bdcdata,
+          lt_bcdata  TYPE STANDARD TABLE OF bdcdata,
+          lt_message TYPE STANDARD TABLE OF bdcmsgcoll.
+
+    FIELD-SYMBOLS: <ls_message> TYPE bdcmsgcoll.
+
+    ls_bcdata-program  = 'SAPLSEUK'.
+    ls_bcdata-dynpro   = '0390'.
+    ls_bcdata-dynbegin = 'X'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam     = 'TSTC-TCODE'.
+    ls_bcdata-fval     = is_tstc-tcode.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    IF zif_abapgit_object~exists( ) = abap_true.
+
+      CLEAR ls_bcdata.
+      ls_bcdata-fnam = 'BDC_OKCODE'.
+      ls_bcdata-fval = '=CHNG'.
+      APPEND ls_bcdata TO lt_bcdata.
+
+    ELSE.
+
+      CLEAR ls_bcdata.
+      ls_bcdata-fnam = 'BDC_OKCODE'.
+      ls_bcdata-fval = '=ADD'.
+      APPEND ls_bcdata TO lt_bcdata.
+
+    ENDIF.
+
+    ls_bcdata-program  = 'SAPLSEUK'.
+    ls_bcdata-dynpro   = '0300'.
+    ls_bcdata-dynbegin = 'X'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam     = 'TSTCT-TTEXT'.
+    ls_bcdata-fval     = is_tstct-ttext.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam     = 'RSSTCD-S_CLASS'.
+    ls_bcdata-fval     = 'X'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam = 'BDC_OKCODE'.
+    ls_bcdata-fval = '=ENTR'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    ls_bcdata-program  = 'SAPLSEUK'.
+    ls_bcdata-dynpro   = '0360'.
+    ls_bcdata-dynbegin = 'X'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam     = 'RSSTCD-S_TRFRAME'.
+    ls_bcdata-fval     = is_rsstcd-s_trframe.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam     = 'RSSTCD-S_UPDTASK'.
+    ls_bcdata-fval     = is_rsstcd-s_updtask.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam = 'BDC_OKCODE'.
+    ls_bcdata-fval = '=TR_FRAMEWORK'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    ls_bcdata-program  = 'SAPLSEUK'.
+    ls_bcdata-dynpro   = '0360'.
+    ls_bcdata-dynbegin = 'X'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam     = 'RSSTCD-CLASSNAME'.
+    ls_bcdata-fval     = is_rsstcd-classname.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam     = 'RSSTCD-METHOD'.
+    ls_bcdata-fval     = is_rsstcd-method.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    IF is_rsstcd-s_local IS NOT INITIAL.
+      CLEAR ls_bcdata.
+      ls_bcdata-fnam     = 'RSSTCD-S_LOCAL'.
+      ls_bcdata-fval     = is_rsstcd-s_local.
+      APPEND ls_bcdata TO lt_bcdata.
+    ENDIF.
+
+    IF is_rsstcd-s_updlok IS NOT INITIAL.
+      CLEAR ls_bcdata.
+      ls_bcdata-fnam     = 'RSSTCD-S_UPDLOK'.
+      ls_bcdata-fval     = is_rsstcd-s_updlok.
+      APPEND ls_bcdata TO lt_bcdata.
+    ENDIF.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam     = 'TSTC-PGMNA'.
+    ls_bcdata-fval     = is_tstc-pgmna.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    IF is_tstcc-s_webgui = '2'.
+
+      CLEAR ls_bcdata.
+      ls_bcdata-fnam     = 'G_IAC_EWT'.
+      ls_bcdata-fval     = abap_true.
+      APPEND ls_bcdata TO lt_bcdata.
+
+      CLEAR ls_bcdata.
+      ls_bcdata-fnam = 'BDC_OKCODE'.
+      ls_bcdata-fval = 'MAKE_PROFI                                                            '.
+      APPEND ls_bcdata TO lt_bcdata.
+
+      ls_bcdata-program  = 'SAPLSEUK'.
+      ls_bcdata-dynpro   = '0360'.
+      ls_bcdata-dynbegin = 'X'.
+      APPEND ls_bcdata TO lt_bcdata.
+
+    ELSEIF is_tstcc-s_webgui IS NOT INITIAL.
+
+      CLEAR ls_bcdata.
+      ls_bcdata-fnam     = 'TSTCC-S_WEBGUI'.
+      ls_bcdata-fval     = is_tstcc-s_webgui.
+      APPEND ls_bcdata TO lt_bcdata.
+
+    ENDIF.
+
+    IF is_tstcc-s_pervas IS NOT INITIAL.
+      CLEAR ls_bcdata.
+      ls_bcdata-fnam     = 'TSTCC-S_PERVAS'.
+      ls_bcdata-fval     = is_tstcc-s_pervas.
+      APPEND ls_bcdata TO lt_bcdata.
+    ENDIF.
+
+    IF is_tstcc-s_service IS NOT INITIAL.
+      CLEAR ls_bcdata.
+      ls_bcdata-fnam     = 'TSTCC-S_SERVICE'.
+      ls_bcdata-fval     = is_tstcc-s_service.
+      APPEND ls_bcdata TO lt_bcdata.
+    ENDIF.
+
+    IF is_tstcc-s_platin IS NOT INITIAL.
+      CLEAR ls_bcdata.
+      ls_bcdata-fnam     = 'TSTCC-S_PLATIN'.
+      ls_bcdata-fval     = is_tstcc-s_platin.
+      APPEND ls_bcdata TO lt_bcdata.
+    ENDIF.
+
+    IF is_tstcc-s_win32 IS NOT INITIAL.
+      CLEAR ls_bcdata.
+      ls_bcdata-fnam     = 'TSTCC-S_WIN32'.
+      ls_bcdata-fval     = is_tstcc-s_win32.
+      APPEND ls_bcdata TO lt_bcdata.
+    ENDIF.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam = 'BDC_OKCODE'.
+    ls_bcdata-fval = '=WB_SAVE'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    ls_bcdata-program  = 'SAPLSTRD'.
+    ls_bcdata-dynpro   = '0100'.
+    ls_bcdata-dynbegin = 'X'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam     = 'KO007-L_DEVCLASS'.
+    ls_bcdata-fval     = iv_package.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam = 'BDC_OKCODE'.
+    ls_bcdata-fval = '=ADD'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    ls_bcdata-program  = 'BDC_OKCODE'.
+    ls_bcdata-dynpro   = '0360'.
+    ls_bcdata-dynbegin = 'X'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam = 'BDC_OKCODE'.
+    ls_bcdata-fval = '=WB_BACK'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    ls_bcdata-program  = 'BDC_OKCODE'.
+    ls_bcdata-dynpro   = '0360'.
+    ls_bcdata-dynbegin = 'X'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CLEAR ls_bcdata.
+    ls_bcdata-fnam = 'BDC_OKCODE'.
+    ls_bcdata-fval = '=WB_BACK'.
+    APPEND ls_bcdata TO lt_bcdata.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      EXPORTING
+        tcode     = 'SE93'
+        mode_val  = 'N'
+      TABLES
+        using_tab = lt_bcdata
+        mess_tab  = lt_message
+      EXCEPTIONS
+        OTHERS    = 1.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error deserializing { ms_item-obj_type } { ms_item-obj_name }| ).
+    ENDIF.
+
+    LOOP AT lt_message ASSIGNING <ls_message>
+                       WHERE msgtyp CA 'EAX'.
+
+      MESSAGE ID     <ls_message>-msgid
+              TYPE   <ls_message>-msgtyp
+              NUMBER <ls_message>-msgnr
+              WITH   <ls_message>-msgv1 <ls_message>-msgv2 <ls_message>-msgv3 <ls_message>-msgv4
+              INTO sy-msgli.
+      zcx_abapgit_exception=>raise_t100( ).
+
+    ENDLOOP.
+
+  ENDMETHOD.
 
 
   METHOD deserialize_texts.
@@ -275,11 +524,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
     CONSTANTS: lc_hex_tra TYPE x VALUE '00',
 *               c_hex_men TYPE x VALUE '01',
                lc_hex_par TYPE x VALUE '02',
-               lc_hex_rep TYPE x VALUE '80'.
+               lc_hex_rep TYPE x VALUE '80',
 *               c_hex_rpv TYPE x VALUE '10',
-*               c_hex_obj TYPE x VALUE '08',
-*               c_hex_chk TYPE x VALUE '04',
-*               c_hex_enq TYPE x VALUE '20'.
+               lc_hex_obj TYPE x VALUE '08'.
 
     DATA: lv_dynpro       TYPE d020s-dnum,
           ls_tstc         TYPE tstc,
@@ -287,7 +534,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
           ls_tstct        TYPE tstct,
           ls_tstcc        TYPE tstcc,
           ls_tstcp        TYPE tstcp,
-          lt_param_values TYPE TABLE OF rsparam,
+          lt_param_values TYPE tty_param_values,
           ls_rsstcd       TYPE rsstcd.
 
 
@@ -313,6 +560,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
         lv_type = ststc_c_type_report.
       WHEN lc_hex_par.
         lv_type = ststc_c_type_parameters.
+      WHEN lc_hex_obj.
+        lv_type = ststc_c_type_object.
 * todo, or ststc_c_type_variant?
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( 'Transaction, unknown CINFO' ).
@@ -327,37 +576,52 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
           cs_tstc    = ls_tstc ).
     ENDIF.
 
-    CALL FUNCTION 'RPY_TRANSACTION_INSERT'
-      EXPORTING
-        transaction             = ls_tstc-tcode
-        program                 = ls_tstc-pgmna
-        dynpro                  = lv_dynpro
-        language                = mv_language
-        development_class       = iv_package
-        transaction_type        = lv_type
-        shorttext               = ls_tstct-ttext
-        called_transaction      = ls_rsstcd-call_tcode
-        called_transaction_skip = ls_rsstcd-st_skip_1
-        variant                 = ls_rsstcd-variant
-        cl_independend          = ls_rsstcd-s_ind_vari
-        html_enabled            = ls_tstcc-s_webgui
-        java_enabled            = ls_tstcc-s_platin
-        wingui_enabled          = ls_tstcc-s_win32
-      TABLES
-        param_values            = lt_param_values
-      EXCEPTIONS
-        cancelled               = 1
-        already_exist           = 2
-        permission_error        = 3
-        name_not_allowed        = 4
-        name_conflict           = 5
-        illegal_type            = 6
-        object_inconsistent     = 7
-        db_access_error         = 8
-        OTHERS                  = 9.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from RPY_TRANSACTION_INSERT' ).
-    ENDIF.
+    CASE lv_type.
+      WHEN ststc_c_type_object.
+
+        deserialize_oo_transaction( iv_package      = iv_package
+                                    is_tstc         = ls_tstc
+                                    is_tstcc        = ls_tstcc
+                                    is_tstct        = ls_tstct
+                                    is_tstcp        = ls_tstcp
+                                    it_param_values = lt_param_values
+                                    is_rsstcd       = ls_rsstcd ).
+
+      WHEN OTHERS.
+
+        CALL FUNCTION 'RPY_TRANSACTION_INSERT'
+          EXPORTING
+            transaction             = ls_tstc-tcode
+            program                 = ls_tstc-pgmna
+            dynpro                  = lv_dynpro
+            language                = mv_language
+            development_class       = iv_package
+            transaction_type        = lv_type
+            shorttext               = ls_tstct-ttext
+            called_transaction      = ls_rsstcd-call_tcode
+            called_transaction_skip = ls_rsstcd-st_skip_1
+            variant                 = ls_rsstcd-variant
+            cl_independend          = ls_rsstcd-s_ind_vari
+            html_enabled            = ls_tstcc-s_webgui
+            java_enabled            = ls_tstcc-s_platin
+            wingui_enabled          = ls_tstcc-s_win32
+          TABLES
+            param_values            = lt_param_values
+          EXCEPTIONS
+            cancelled               = 1
+            already_exist           = 2
+            permission_error        = 3
+            name_not_allowed        = 4
+            name_conflict           = 5
+            illegal_type            = 6
+            object_inconsistent     = 7
+            db_access_error         = 8
+            OTHERS                  = 9.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( 'Error from RPY_TRANSACTION_INSERT' ).
+        ENDIF.
+
+    ENDCASE.
 
     " Texts deserializing (translations)
     deserialize_texts( io_xml ).
@@ -384,6 +648,21 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+
+    DATA: lv_object TYPE eqegraarg.
+
+    lv_object = |TN{ ms_item-obj_name }|.
+    OVERLAY lv_object WITH '                                          '.
+    lv_object = lv_object && '*'.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'EEUDB'
+                                            iv_argument    = lv_object ).
+
+
   ENDMETHOD.
 
 
@@ -482,19 +761,4 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
     serialize_texts( io_xml ).
 
   ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-
-    DATA: lv_object TYPE eqegraarg.
-
-    lv_object = |TN{ ms_item-obj_name }|.
-    OVERLAY lv_object WITH '                                          '.
-    lv_object = lv_object && '*'.
-
-    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'EEUDB'
-                                            iv_argument    = lv_object ).
-
-
-  ENDMETHOD.
-
 ENDCLASS.

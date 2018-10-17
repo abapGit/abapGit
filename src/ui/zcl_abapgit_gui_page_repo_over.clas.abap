@@ -126,7 +126,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
 
   METHOD add_direction_option.
@@ -481,7 +481,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       io_html->add( |<td>{ <ls_overview>-key }</td>| ).
       io_html->add( |<td>{ zcl_abapgit_html=>a( iv_txt = <ls_overview>-name
                                                 iv_act = |{ c_action-select }?{ <ls_overview>-key }| ) }</td>| ).
-      io_html->add( |<td>{ <ls_overview>-url }</td>| ).
+
+      IF <ls_overview>-type = abap_false.
+        io_html->add( |<td>{ io_html->a( iv_txt = <ls_overview>-url
+                                         iv_act = |{ zif_abapgit_definitions=>c_action-url }?|
+                                               && |{ <ls_overview>-url }| ) }</td>| ).
+      ELSE.
+        io_html->add( |<td> </td>| ).
+      ENDIF.
+
       io_html->add( |<td>{ <ls_overview>-package }</td>| ).
       io_html->add( |<td>{ <ls_overview>-branch }</td>| ).
       io_html->add( |<td>{ <ls_overview>-created_by }</td>| ).
@@ -581,6 +589,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
         parse_filter( it_postdata ).
         ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+
+      WHEN OTHERS.
+
+        super->zif_abapgit_gui_page~on_event(
+          EXPORTING
+            iv_action    = iv_action
+            iv_prev_page = iv_prev_page
+            iv_getdata   = iv_getdata
+            it_postdata  = it_postdata
+          IMPORTING
+            ei_page      = ei_page
+            ev_state     = ev_state  ).
 
     ENDCASE.
 

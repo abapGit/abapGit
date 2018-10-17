@@ -60,12 +60,11 @@ CLASS zcl_abapgit_gui_page_boverview DEFINITION
 ENDCLASS.
 
 
-
 CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
 
-
   METHOD body.
-    DATA: lv_tag TYPE string.
+    DATA: lv_tag                 TYPE string.
+    DATA: lv_branch_display_name TYPE string.
 
     FIELD-SYMBOLS: <ls_commit> LIKE LINE OF mt_commits,
                    <ls_create> LIKE LINE OF <ls_commit>-create.
@@ -145,9 +144,15 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
       ENDIF.
 
       LOOP AT <ls_commit>-create ASSIGNING <ls_create>.
+        IF <ls_create>-name CS zcl_abapgit_branch_overview=>c_deleted_branch_name_prefix.
+          lv_branch_display_name = ''.
+        ELSE.
+          lv_branch_display_name = <ls_create>-name.
+        ENDIF.
+
         ro_html->add( |var { escape_branch( <ls_create>-name ) } = {
-          escape_branch( <ls_create>-parent ) }.branch("{
-          <ls_create>-name }");| ).
+                      escape_branch( <ls_create>-parent ) }.branch("{
+                      lv_branch_display_name }");| ).
       ENDLOOP.
 
     ENDLOOP.
@@ -287,6 +292,11 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_page~on_event.
 
     DATA: ls_merge TYPE ty_merge,
@@ -317,9 +327,4 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-  ENDMETHOD.
-
 ENDCLASS.

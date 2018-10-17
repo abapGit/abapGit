@@ -88,11 +88,11 @@ ToDo
 
 ### Write protected
 
-Write protected ist described here: [Write proteced](http://docs.abapgit.org/ref-write-protect.html)
+Write protected is described here: [Write protected](http://docs.abapgit.org/ref-write-protect.html)
 
 ### Ignore subpackages
 
-Suppackages would be ignored through this option.
+Subpackages would be ignored through this option.
 
 ### Only local objects 
 
@@ -100,7 +100,7 @@ ToDo
 
 ### Code inspector
 
-The repo objects can be checked with the Code inspector before staging.
+The repository objects can be checked with the Code inspector before staging.
 
 #### Code inspector check variant
 

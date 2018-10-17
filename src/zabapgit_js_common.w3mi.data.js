@@ -32,6 +32,22 @@ if (!Function.prototype.bind) {
   };
 }
 
+// String includes polyfill, taken from https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/String/includes
+if (!String.prototype.includes) {
+  String.prototype.includes = function(search, start) {
+    'use strict';
+    if (typeof start !== 'number') {
+      start = 0;
+    }
+    
+    if (start + search.length > this.length) {
+      return false;
+    } else {
+      return this.indexOf(search, start) !== -1;
+    }
+  };
+}
+
 /**********************************************************
  * Common functions
  **********************************************************/
@@ -139,7 +155,7 @@ function perfClear() {
 window.onTagTypeChange = function(oSelectObject){
   var sValue = oSelectObject.value;
   submitSapeventForm({ 'type': sValue }, "change_tag_type", "post");
-}
+};
 
 /**********************************************************
  * Repo Overview Logic
@@ -148,12 +164,12 @@ window.onTagTypeChange = function(oSelectObject){
 window.onOrderByChange = function(oSelectObject){
   var sValue = oSelectObject.value;
   submitSapeventForm({ 'orderBy': sValue }, "change_order_by", "post");
-}
+};
 
 window.onDirectionChange = function(oSelectObject){
   var sValue = oSelectObject.value;
   submitSapeventForm({ 'direction': sValue }, "direction", "post");
-}
+};
 
 /**********************************************************
  * STAGE PAGE Logic
@@ -164,7 +180,7 @@ function StageHelper(params) {
   this.pageSeed        = params.seed;
   this.formAction      = params.formAction;
   this.choiseCount     = 0;
-  this.lastSearchValue = "";
+  this.lastFilterValue = "";
 
   // DOM nodes
   this.dom = {
@@ -202,8 +218,8 @@ function StageHelper(params) {
 StageHelper.prototype.setHooks = function() {
   this.dom.stageTab.onclick        = this.onTableClick.bind(this);
   this.dom.commitBtn.onclick       = this.submit.bind(this);
-  this.dom.objectSearch.oninput    = this.onSearch.bind(this);
-  this.dom.objectSearch.onkeypress = this.onSearch.bind(this);
+  this.dom.objectSearch.oninput    = this.onFilter.bind(this);
+  this.dom.objectSearch.onkeypress = this.onFilter.bind(this);
   window.onbeforeunload            = this.onPageUnload.bind(this);
   window.onload                    = this.onPageLoad.bind(this);
 }
@@ -226,7 +242,7 @@ StageHelper.prototype.onPageUnload = function() {
 
   var data = this.collectData();
   window.sessionStorage.setItem(this.pageSeed, JSON.stringify(data));
-}
+};
 
 // Re-store table state on entering the page
 StageHelper.prototype.onPageLoad = function() {
@@ -238,8 +254,11 @@ StageHelper.prototype.onPageLoad = function() {
   });
 
   this.updateMenu();
+  if (this.dom.objectSearch.value) {
+    this.applyFilterValue(this.dom.objectSearch.value);
+  }
   debugOutput("StageHelper.onPageLoad: " + ((data) ? "from Storage" : "initial state"));
-}
+};
 
 // Table event handler, change status
 StageHelper.prototype.onTableClick = function (event) {
@@ -273,18 +292,25 @@ StageHelper.prototype.onTableClick = function (event) {
   }
 
   this.updateMenu();
-}
+};
 
 // Search object
-StageHelper.prototype.onSearch = function (e) {
+StageHelper.prototype.onFilter = function (e) {
   if ( // Enter hit or clear, IE SUCKS !
-       e.type === "input" && !e.target.value && this.lastSearchValue
+       e.type === "input" && !e.target.value && this.lastFilterValue
     || e.type === "keypress" && e.which === 13 ) { 
 
-    this.lastSearchValue = e.target.value;
-    this.iterateStageTab(true, this.applyFilterToRow, e.target.value);
+    this.applyFilterValue(e.target.value);
+    submitSapeventForm({ 'filterValue': e.target.value }, "stage_filter", "post");
   }
-}
+};
+
+StageHelper.prototype.applyFilterValue = function(sFilterValue) {
+
+  this.lastFilterValue = sFilterValue;
+  this.iterateStageTab(true, this.applyFilterToRow, sFilterValue);
+
+};
 
 // Apply filter to a single stage line - hide or show
 StageHelper.prototype.applyFilterToRow = function (row, filter) {
@@ -666,7 +692,7 @@ function enableArrowListNavigation() {
 
   document.addEventListener('keydown', oKeyNavigation.onkeydown.bind(oKeyNavigation));
 
-};
+}
 
 function LinkHints(sLinkHintKey, sColor){
   this.sLinkHintKey = sLinkHintKey; 
@@ -707,13 +733,12 @@ LinkHints.prototype.fnRenderTooltips = function () {
   // we stick to numeric values and just increment them.
 
   var
-    iTooltipCounter = this.getTooltipStartValue(this.aTooltipElements.length),
-    that = this;
+    iTooltipCounter = this.getTooltipStartValue(this.aTooltipElements.length);
 
   [].forEach.call(this.aTooltipElements, function(oTooltip){
     iTooltipCounter += 1;
-    this.fnRenderTooltip(oTooltip, iTooltipCounter)
-  }.bind(that));
+    this.fnRenderTooltip(oTooltip, iTooltipCounter);
+  }.bind(this));
 
 };
 
@@ -738,8 +763,6 @@ LinkHints.prototype.fnRemoveAllTooltips = function () {
 
 LinkHints.prototype.fnFilterTooltips = function (sPending) {
 
-  var that = this;
-
   Object
     .keys(this.oTooltipMap)
     .forEach(function (sKey) {
@@ -756,7 +779,7 @@ LinkHints.prototype.fnFilterTooltips = function (sPending) {
         oTooltip.classList.add('hidden');
       }
 
-    }.bind(that));
+    }.bind(this));
 
 };
 
@@ -778,7 +801,7 @@ LinkHints.prototype.fnTooltipActivate = function (oTooltip) {
   this.fnActivateDropDownMenu(oTooltip);
   oTooltip.parentElement.focus();
 
-}
+};
 
 LinkHints.prototype.onkeypress = function(oEvent){
 
@@ -811,7 +834,7 @@ LinkHints.prototype.onkeypress = function(oEvent){
 
   }
 
-}
+};
 
 // Vimium like link hints
 function setLinkHints(sLinkHintKey, sColor) {
@@ -828,35 +851,39 @@ function setLinkHints(sLinkHintKey, sColor) {
 
 function Hotkeys(oKeyMap){
 
-  var that = this;  
   this.oKeyMap = oKeyMap || {};
 
   // these are the hotkeys provided by the backend
   Object.keys(this.oKeyMap).forEach(function(sKey){
 
-    var action = that.oKeyMap[sKey]; 
+    var action = this.oKeyMap[sKey]; 
     
     // We replace the actions with callback functions to unify
     // the hotkey execution
-    that.oKeyMap[sKey] = function(oEvent) {
+    this.oKeyMap[sKey] = function(oEvent) {
 
-      // We have either a js function
-      if (that[action]) {
-        that[action].call(that);
+      // We have either a js function on this
+      if (this[action]) {
+        this[action].call(this);
         return;
+      }
+
+      // Or a global function
+      if (window[action]) {
+        window[action].call(this);
       }
       
       // Or a SAP event
-      var sUiSapEvent = that.getSapEvent(action);
+      var sUiSapEvent = this.getSapEvent(action);
       if (sUiSapEvent) {
         submitSapeventForm({}, sUiSapEvent, "post");
         oEvent.preventDefault();
         return;
       }
 
-    }
+    };
 
-  });
+  }.bind(this));
 
 }
 
@@ -866,23 +893,31 @@ Hotkeys.prototype.showHotkeys = function() {
   if (elHotkeys) {
     elHotkeys.style.display = (elHotkeys.style.display) ? '' : 'none';
   }
-}
+};
 
 Hotkeys.prototype.getSapEvent = function(sSapEvent) {
 
-  var result = "";
+  var fnNormalizeSapEventHref = function(sSapEvent, oSapEvent) {
+    if (new RegExp(sSapEvent + "$" ).test(oSapEvent.href)
+    || (new RegExp(sSapEvent + "\\?" ).test(oSapEvent.href))) {
+      return oSapEvent.href.replace("sapevent:","");
+    }
+  };
+
   var aSapEvents = document.querySelectorAll('a[href^="sapevent:' + sSapEvent + '"]');
 
-  [].forEach.call(aSapEvents, function(sapEvent){
-      if (new RegExp(sSapEvent + "$" ).test(sapEvent.href)
-      || (new RegExp(sSapEvent + "\\?" ).test(sapEvent.href))) {
-        result = sapEvent.href.replace("sapevent:","");
-      }
-    });
+  var aFilteredAndNormalizedSapEvents = 
+        [].map.call(aSapEvents, function(oSapEvent){
+          return fnNormalizeSapEventHref(sSapEvent, oSapEvent);
+        })
+        .filter(function(elem){
+          // remove false positives
+          return (elem && !elem.includes("sapevent:"));
+        });
 
-  return result;
+  return (aFilteredAndNormalizedSapEvents && aFilteredAndNormalizedSapEvents[0]);
 
-}
+};
 
 Hotkeys.prototype.onkeydown = function(oEvent){
 
@@ -893,22 +928,210 @@ Hotkeys.prototype.onkeydown = function(oEvent){
   var activeElementType = ((document.activeElement && document.activeElement.nodeName) || "");
 
   if (activeElementType === "INPUT" || activeElementType === "TEXTAREA") {
-    return
+    return;
   }
 
   var 
-    sKey = oEvent.key || oEvent.keyCode,
+    sKey = oEvent.key || String.fromCharCode(oEvent.keyCode),
     fnHotkey = this.oKeyMap[sKey];
 
   if (fnHotkey) {
     fnHotkey.call(this, oEvent);
   }
-}
+};
 
 function setKeyBindings(oKeyMap){
 
   var oHotkeys = new Hotkeys(oKeyMap);
 
-  document.addEventListener('keydown', oHotkeys.onkeydown.bind(oHotkeys));
+  document.addEventListener('keypress', oHotkeys.onkeydown.bind(oHotkeys));
+
+}
+
+/* 
+  Patch / git add -p
+  */
+
+function CSSPatchClassCombination(sClassLinkClicked, sClassCorrespondingLink){
+  this.sClassLinkClicked = sClassLinkClicked;
+  this.sClassCorrespondingLink = sClassCorrespondingLink;
+}
+
+function Patch() {
+
+  this.CSS_CLASS = {
+    ADD: 'add',
+    REMOVE: 'remove',
+    PATCH: 'patch',
+    PATCH_ACTIVE: 'patch-active'
+  };
+
+  this.ID = {
+    STAGE: 'stage',
+    PATCH_ADD_ALL: 'patch_add_all',
+    PATCH_REMOVE_ALL: 'patch_remove_all'
+  };
+  
+  this.ACTION = {
+    PATCH_STAGE: 'patch_stage'
+  };
+
+  this.ADD_REMOVE = new CSSPatchClassCombination(this.CSS_CLASS.ADD, this.CSS_CLASS.REMOVE);
+  this.REMOVE_ADD = new CSSPatchClassCombination(this.CSS_CLASS.REMOVE, this.CSS_CLASS.ADD);
+
+}
+
+Patch.prototype.preparePatch = function(){
+
+  this.registerClickHandlerSingleLine();
+  this.registerClickHandlerAllFile();
+
+};
+
+Patch.prototype.registerClickHandlerSingleLine = function(){
+
+  // registers the link handlers for add and remove single lines
+
+  this.registerClickHandlerForPatchLink(this.ADD_REMOVE);
+  this.registerClickHandlerForPatchLink(this.REMOVE_ADD);
+
+};
+
+Patch.prototype.registerClickHandlerAllFile = function(){
+
+  // registers the link handlers for add and remove all changes for a file 
+
+  this.registerClickHandlerForPatchLinkAll('#' + this.ID.PATCH_ADD_ALL, this.ADD_REMOVE);
+  this.registerClickHandlerForPatchLinkAll('#' + this.ID.PATCH_REMOVE_ALL, this.REMOVE_ADD);
+
+};
+
+Patch.prototype.registerClickHandlerForPatchLink = function(oClassCombination) {
+  // register onclick handler. When a link is clicked it is 
+  // deactivated and its corresponding link gets active
+  //
+  // e.g. if you click on 'add' add is deactivated and 'remove' 
+  // is activated.
+
+  var elLinkAll = document.querySelectorAll('.' + this.CSS_CLASS.PATCH + ' a.' + oClassCombination.sClassLinkClicked);
+  
+  [].forEach.call(elLinkAll,function(elLink){
+
+    elLink.addEventListener('click',function(oEvent){
+      this.togglePatchActiveForClassLink(oEvent, elLink, oClassCombination);
+    }.bind(this));
+
+  }.bind(this));
+
+};
+
+Patch.prototype.togglePatchActive = function(oEvent, elClicked, elCorrespondingLink){ 
+
+  if (!elClicked.classList.contains(this.CSS_CLASS.PATCH_ACTIVE)){
+    elClicked.classList.toggle(this.CSS_CLASS.PATCH_ACTIVE);
+    elCorrespondingLink.classList.toggle(this.CSS_CLASS.PATCH_ACTIVE);
+  }
+
+  oEvent.preventDefault();
+};
+
+
+Patch.prototype.togglePatchActiveForClassLink = function(oEvent, elClicked, oClassCombination) {
+
+  var sCorrespondingLinkId = this.getCorrespodingLinkId(elClicked.id, oClassCombination);
+  var elCorrespondingLink = document.querySelector('#' + this.escapeDots(sCorrespondingLinkId));
+
+  this.togglePatchActive(oEvent, elClicked, elCorrespondingLink);
+};
+
+Patch.prototype.getCorrespodingLinkId = function(sClickedLinkId, oClassCombination){
+
+  // e.g. 
+  //
+  //   add_patch_z_test_git_add_p.prog.abap_28 => remove_patch_z_test_git_add_p.prog.abap_28
+  //
+  // and vice versa
+
+  var oRegexPatchClassPrefix = new RegExp('^' + oClassCombination.sClassLinkClicked );
+  return sClickedLinkId.replace(oRegexPatchClassPrefix, oClassCombination.sClassCorrespondingLink);
+
+};
+
+Patch.prototype.escapeDots = function(sFileName){
+  return sFileName.replace(/\./g,'\\.');
+};
+
+Patch.prototype.patchLinkClickAll = function(oClassCombination) {
+  return function(oEvent) {
+
+    var sTableId = oEvent.srcElement.parentElement.parentElement.parentElement.parentElement.id;
+    var elAddAll = document.querySelectorAll('#' + this.escapeDots(sTableId) + ' a.' + oClassCombination.sClassLinkClicked);
+    
+    [].forEach.call(elAddAll,function(elem){
+      this.togglePatchActiveForClassLink(oEvent, elem, oClassCombination);
+    }.bind(this));
+
+    oEvent.preventDefault();
+
+  }
+};
+
+Patch.prototype.registerClickHandlerForPatchLinkAll = function(sSelector, oClassCombination){
+
+  var elAll = document.querySelectorAll(sSelector);
+
+  [].forEach.call(elAll, function(elem){
+    elem.addEventListener('click', this.patchLinkClickAll(oClassCombination).bind(this));
+  }.bind(this));
+
+};
+
+Patch.prototype.registerStagePatch = function registerStagePatch(){
+
+  var elStage = document.querySelector('#' + this.ID.STAGE);
+  elStage.addEventListener('click', this.stagePatch.bind(this));
+
+  // for hotkeys
+  window.stagePatch = function(){
+    this.stagePatch();
+  }.bind(this);
+
+};
+
+Patch.prototype.stagePatch = function() {
+
+  // Collect add and remove info and submit to backend
+
+  var aAddPatch = this.collectActiveElementsForSelector('.' + this.CSS_CLASS.PATCH +' a.' + this.CSS_CLASS.ADD);
+  var aRemovePatch = this.collectActiveElementsForSelector('.' + this.CSS_CLASS.PATCH + ' a.' + this.CSS_CLASS.REMOVE);
+
+  submitSapeventForm({'add': aAddPatch, 'remove': aRemovePatch}, this.ACTION.PATCH_STAGE, "post");
+
+};
+
+Patch.prototype.collectActiveElementsForSelector = function(sSelector){
+
+  return [].slice.call(document.querySelectorAll(sSelector))
+    .filter(function(elem){
+      return elem.classList.contains(this.CSS_CLASS.PATCH_ACTIVE);
+    }.bind(this))
+    .map(function(elem){
+      return elem.id;
+    });
+
+};
+
+
+function preparePatch(){
+
+  var oPatch = new Patch();
+  oPatch.preparePatch();
+
+}
+
+function registerStagePatch(){
+
+  var oPatch = new Patch();
+  oPatch.registerStagePatch();
 
 }

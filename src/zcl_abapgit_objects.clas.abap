@@ -48,7 +48,8 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS jump
       IMPORTING
-        !is_item TYPE zif_abapgit_definitions=>ty_item
+        !is_item       TYPE zif_abapgit_definitions=>ty_item
+        !i_line_number TYPE i OPTIONAL
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS changed_by
@@ -213,17 +214,16 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     DATA: li_obj TYPE REF TO zif_abapgit_object.
 
-
-    IF is_item IS INITIAL.
-* eg. ".abapgit.xml" file
-      rv_user = zcl_abapgit_objects_super=>c_user_unknown.
-    ELSE.
+    IF is_item IS NOT INITIAL.
       li_obj = create_object( is_item     = is_item
                               iv_language = zif_abapgit_definitions=>c_english ).
       rv_user = li_obj->changed_by( ).
     ENDIF.
 
-    ASSERT NOT rv_user IS INITIAL.
+    IF rv_user IS INITIAL.
+* eg. ".abapgit.xml" file
+      rv_user = zcl_abapgit_objects_super=>c_user_unknown.
+    ENDIF.
 
 * todo, fallback to looking at transports if rv_user = 'UNKNOWN'?
 
@@ -718,13 +718,18 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     li_obj = create_object( is_item     = is_item
                             iv_language = zif_abapgit_definitions=>c_english ).
 
+    IF li_obj->exists( ) = abap_false.
+      zcx_abapgit_exception=>raise( |Object { is_item-obj_type } { is_item-obj_name } doesn't exist| ).
+    ENDIF.
+
     lv_adt_jump_enabled = zcl_abapgit_persist_settings=>get_instance( )->read( )->get_adt_jump_enabled( ).
 
     IF lv_adt_jump_enabled = abap_true.
       TRY.
           zcl_abapgit_objects_super=>jump_adt(
-            i_obj_name = is_item-obj_name
-            i_obj_type = is_item-obj_type ).
+            i_obj_name    = is_item-obj_name
+            i_obj_type    = is_item-obj_type
+            i_line_number = i_line_number ).
         CATCH zcx_abapgit_exception.
           li_obj->jump( ).
       ENDTRY.

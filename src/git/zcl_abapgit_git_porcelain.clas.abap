@@ -160,7 +160,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
 
 
   METHOD build_trees.
@@ -389,7 +389,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
     READ TABLE it_objects INTO ls_object
       WITH KEY type COMPONENTS
         type = zif_abapgit_definitions=>c_type-commit
-        sha1 = iv_branch .
+        sha1 = iv_branch.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'commit not found' ).
     ENDIF.
@@ -641,7 +641,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
       ENDIF.
 
       ls_object-type = zif_abapgit_definitions=>c_type-blob.
-      ASSERT NOT <ls_blob>-data IS INITIAL.
+*       ASSERT NOT <ls_blob>-data IS INITIAL. "#1857 allow empty files - some more checks needed?
       ls_object-data = <ls_blob>-data.
       lv_uindex = lv_uindex + 1.
       ls_object-index = lv_uindex.

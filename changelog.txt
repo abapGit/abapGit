@@ -8,6 +8,54 @@ Legend
 + : added
 - : removed
 
+2018-10-07 v1.78.0
+------------------
++ UDMO support
+* PROG fix dynpro ordering
+* SUSO downport
++ Run code inspector in parallel
+* WEBI fixes
+* Syntax check results page clean up
+! DDLX source in separate file
+! smart response checks for verifying git endpoint
+
+2018-09-21 v1.77.0
+------------------
++ ENHC support
++ Code inspector respect jump to ADT
+* Downport
+* FORM record transport request
+* AUTH popups
+* MSAG popups
+* Staging page preserve filter value
+* XML syntax highlighting fixes
+* Branch overview fixes
+
+2018-09-08 v1.76.0
+------------------
++ git patch, added to staging page
++ serialize all longtexts
++ ENQU clear redundant fields
+* suppress SHMA package popup
+* branch overview sorted by parent instead of time
+* handle error from RS_CUA_INTERNAL_FETCH
+* fix problem with branch list from bitbucket.org
+* allow empty blobs
+
+2018-08-12 v1.75.0
+------------------
++ User exit CREATE_HTTP_CLIENT
++ Hotkeys, press "?" for overview
+* fix layout in merge mode
+* DTEL, DOMA, TABL longtext serialization
+* SAP GUI Java fix settings page
+* MSAG logntexts and is_locked
+* Saving variant for background program
+* Downport
+* PROG, add guard for bad TADIR entries
+* gitgraph.js updated to latest
+* Refactoring
+
 2018-08-12 v1.74.1
 ------------------
 * Refactoring

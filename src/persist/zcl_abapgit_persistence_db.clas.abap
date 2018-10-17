@@ -83,7 +83,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
 
 
   METHOD add.
@@ -121,6 +121,24 @@ CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
       CREATE OBJECT go_db.
     ENDIF.
     ro_db = go_db.
+
+  ENDMETHOD.
+
+
+  METHOD get_update_function.
+    IF gv_update_function IS INITIAL.
+      gv_update_function = 'CALL_V1_PING'.
+      CALL FUNCTION 'FUNCTION_EXISTS'
+        EXPORTING
+          funcname = gv_update_function
+        EXCEPTIONS
+          OTHERS   = 2.
+
+      IF sy-subrc <> 0.
+        gv_update_function = 'BANK_OBJ_WORKL_RELEASE_LOCKS'.
+      ENDIF.
+    ENDIF.
+    r_funcname = gv_update_function.
 
   ENDMETHOD.
 
@@ -187,7 +205,7 @@ CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
 
     SELECT SINGLE data_str FROM (c_tabname) INTO rv_data
       WHERE type = iv_type
-      AND value = iv_value.                               "#EC CI_SUBRC
+      AND value = iv_value.
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE zcx_abapgit_not_found.
     ENDIF.
@@ -222,22 +240,4 @@ CLASS zcl_abapgit_persistence_db IMPLEMENTATION.
       iv_ignore_errors = abap_false ).
 
   ENDMETHOD.  " validate_and_unprettify_xml
-
-  METHOD get_update_function.
-    IF gv_update_function IS INITIAL.
-      gv_update_function = 'CALL_V1_PING'.
-      CALL FUNCTION 'FUNCTION_EXISTS'
-        EXPORTING
-          funcname = gv_update_function
-        EXCEPTIONS
-          OTHERS   = 2.
-
-      IF sy-subrc <> 0.
-        gv_update_function = 'BANK_OBJ_WORKL_RELEASE_LOCKS'.
-      ENDIF.
-    ENDIF.
-    r_funcname = gv_update_function.
-
-  ENDMETHOD.
-
 ENDCLASS.

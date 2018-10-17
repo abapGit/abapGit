@@ -130,7 +130,7 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
         undefined_name          = 5
         OTHERS                  = 6 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from cl_o2_api_xsltdesc=>create_new_from_string' ).
+      zcx_abapgit_exception=>raise( |error from cl_o2_api_xsltdesc=>create_new_from_string, { sy-subrc }| ).
     ENDIF.
 
     lo_xslt->activate( ).

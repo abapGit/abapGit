@@ -152,20 +152,18 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
   METHOD delete_branch.
 
     DATA: lo_repo   TYPE REF TO zcl_abapgit_repo_online,
-          ls_branch TYPE zif_abapgit_definitions=>ty_git_branch.
+          ls_branch TYPE zif_abapgit_definitions=>ty_git_branch,
+          lo_popups TYPE REF TO zif_abapgit_popups.
 
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    ls_branch = zcl_abapgit_ui_factory=>get_popups( )->branch_list_popup( lo_repo->get_url( ) ).
+    lo_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    ls_branch = lo_popups->branch_list_popup( iv_url         = lo_repo->get_url( )
+                                              iv_hide_branch = lo_repo->get_branch_name( )
+                                              iv_hide_head   = abap_true ).
     IF ls_branch IS INITIAL.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
-    ENDIF.
-
-    IF ls_branch-name = 'HEAD'.
-      zcx_abapgit_exception=>raise( 'Cannot delete HEAD' ).
-    ELSEIF ls_branch-name = lo_repo->get_branch_name( ).
-      zcx_abapgit_exception=>raise( 'Switch branch before deleting current' ).
     ENDIF.
 
     zcl_abapgit_git_porcelain=>delete_branch(
@@ -300,7 +298,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    IF ls_branch-name = zcl_abapgit_ui_factory=>get_popups( )->c_new_branch_label.
+    IF ls_branch-name = zif_abapgit_popups=>c_new_branch_label.
       create_branch( iv_key ).
       RETURN.
     ENDIF.

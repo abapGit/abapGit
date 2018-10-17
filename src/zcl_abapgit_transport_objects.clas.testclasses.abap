@@ -337,7 +337,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
 
     TRY.
         when_staging( ).
-        cl_abap_unit_assert=>fail( 'Should have raised exception').
+        cl_abap_unit_assert=>fail( 'Should have raised exception' ).
       CATCH zcx_abapgit_exception INTO lx_exception.
         cl_abap_unit_assert=>assert_equals(
           act = lx_exception->get_text( )

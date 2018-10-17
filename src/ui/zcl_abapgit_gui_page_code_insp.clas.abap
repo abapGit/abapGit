@@ -1,5 +1,5 @@
 CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
-    INHERITING FROM zcl_abapgit_gui_page.
+    INHERITING FROM zcl_abapgit_gui_page_codi_base.
 
   PUBLIC SECTION.
     INTERFACES: zif_abapgit_gui_page_hotkey.
@@ -19,10 +19,9 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
         REDEFINITION.
 
   PROTECTED SECTION.
-    DATA: mo_repo TYPE REF TO zcl_abapgit_repo.
 
     METHODS:
-      render_content REDEFINITION.
+      render_content   REDEFINITION.
 
   PRIVATE SECTION.
     CONSTANTS:
@@ -31,9 +30,7 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
         commit TYPE string VALUE 'commit' ##NO_TEXT,
         rerun  TYPE string VALUE 'rerun' ##NO_TEXT,
       END OF c_actions.
-
     DATA:
-      mt_result TYPE scit_alvlist,
       mo_stage  TYPE REF TO zcl_abapgit_stage.
 
     METHODS:
@@ -53,12 +50,7 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
 
       is_stage_allowed
         RETURNING
-          VALUE(rv_is_stage_allowed) TYPE abap_bool,
-      jump
-        IMPORTING
-          is_item TYPE zif_abapgit_definitions=>ty_item
-        RAISING
-          zcx_abapgit_exception.
+          VALUE(rv_is_stage_allowed) TYPE abap_bool.
 
 ENDCLASS.
 
@@ -132,50 +124,6 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-  METHOD jump.
-
-    DATA: lo_test               TYPE REF TO cl_ci_test_root,
-          li_code_inspector     TYPE REF TO zif_abapgit_code_inspector,
-          ls_info               TYPE scir_rest,
-          lo_result             TYPE REF TO cl_ci_result_root,
-          lv_check_variant_name TYPE sci_chkv,
-          lv_package            TYPE devclass.
-
-    FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
-
-    READ TABLE mt_result WITH KEY objtype = is_item-obj_type
-                                  objname = is_item-obj_name
-                         ASSIGNING <ls_result>.
-    ASSERT sy-subrc = 0.
-
-    lv_package = mo_repo->get_package( ).
-    lv_check_variant_name = mo_repo->get_local_settings( )-code_inspector_check_variant.
-
-    li_code_inspector = zcl_abapgit_factory=>get_code_inspector(
-        iv_package            = lv_package
-        iv_check_variant_name = lv_check_variant_name ).
-
-    " see SCI_LCL_DYNP_530 / HANDLE_DOUBLE_CLICK
-
-    MOVE-CORRESPONDING <ls_result> TO ls_info.
-
-    TRY.
-        lo_test ?= cl_ci_tests=>get_test_ref( <ls_result>-test ).
-
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( |Jump to object not supported in your NW release|  ).
-    ENDTRY.
-
-    lo_result = lo_test->get_result_node( <ls_result>-kind ).
-
-    lo_result->set_info( ls_info ).
-    lo_result->if_ci_test~navigate( ).
-
-
-  ENDMETHOD.
-
-
   METHOD render_content.
 
     DATA: lv_check_variant TYPE sci_chkv,
@@ -205,35 +153,12 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     ro_html->add( |<br/>| ).
 
     LOOP AT mt_result ASSIGNING <ls_result>.
-
-      ro_html->add( '<div>' ).
-      ro_html->add_a( iv_txt = |{ <ls_result>-objtype } { <ls_result>-objname }|
-                      iv_act = |{ <ls_result>-objtype }{ <ls_result>-objname }|
-                      iv_typ = zif_abapgit_definitions=>c_action_type-sapevent ).
-      ro_html->add( '</div>' ).
-
-      CASE <ls_result>-kind.
-        WHEN 'E'.
-          lv_class = 'error'.
-        WHEN 'W'.
-          lv_class = 'warning'.
-        WHEN OTHERS.
-          lv_class = 'grey'.
-      ENDCASE.
-
-      CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
-        EXPORTING
-          input  = <ls_result>-line
-        IMPORTING
-          output = lv_line.
-
-      ro_html->add( |<div class="{ lv_class }">Line { lv_line }: { <ls_result>-text }</div><br>| ).
+      render_result( ro_html = ro_html iv_result = <ls_result> ).
     ENDLOOP.
 
     ro_html->add( '</div>' ).
 
   ENDMETHOD.  "render_content
-
 
   METHOD run_code_inspector.
 
@@ -242,11 +167,31 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+
+    ls_hotkey_action-name           = |Code Inspector: Stage|.
+    ls_hotkey_action-action         = c_actions-stage.
+    ls_hotkey_action-default_hotkey = |s|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-name           = |Code Inspector: Re-Run|.
+    ls_hotkey_action-action         = c_actions-rerun.
+    ls_hotkey_action-default_hotkey = |r|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_page~on_event.
-
-    DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online,
-          ls_item        TYPE zif_abapgit_definitions=>ty_item.
-
+    DATA: lo_repo_online   TYPE REF TO zcl_abapgit_repo_online,
+          ls_item          TYPE zif_abapgit_definitions=>ty_item,
+          ls_sub_item      TYPE zif_abapgit_definitions=>ty_item.
+    DATA: lv_main_object   TYPE string.
+    DATA: lv_sub_object    TYPE string.
+    DATA: lv_line_number_s TYPE string.
+    DATA: lv_line_number   TYPE i.
 
     CASE iv_action.
       WHEN c_actions-stage.
@@ -294,18 +239,16 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
         ei_page = me.
         ev_state = zif_abapgit_definitions=>c_event_state-re_render.
-
       WHEN OTHERS.
-
-        ls_item-obj_type = iv_action(4).
-        ls_item-obj_name = iv_action+4(*).
-
-        jump( ls_item ).
-
-*        zcl_abapgit_objects=>jump( ls_item ).
-
-        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
-
+        super->zif_abapgit_gui_page~on_event(
+          EXPORTING
+            iv_action             = iv_action
+            iv_prev_page          = iv_prev_page
+            iv_getdata            = iv_getdata
+            it_postdata           = it_postdata
+          IMPORTING
+            ei_page               = ei_page
+            ev_state              = ev_state ).
     ENDCASE.
 
   ENDMETHOD.
@@ -317,22 +260,4 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     ro_html = super->zif_abapgit_gui_page~render( ).
 
   ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
-
-    ls_hotkey_action-name           = |Code Inspector: Stage|.
-    ls_hotkey_action-action         = c_actions-stage.
-    ls_hotkey_action-default_hotkey = |s|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-name           = |Code Inspector: Re-Run|.
-    ls_hotkey_action-action         = c_actions-rerun.
-    ls_hotkey_action-default_hotkey = |r|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-  ENDMETHOD.
-
 ENDCLASS.

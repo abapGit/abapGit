@@ -84,14 +84,16 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_STAGE IMPLEMENTATION.
+CLASS zcl_abapgit_stage IMPLEMENTATION.
 
 
   METHOD add.
+
     append( iv_path     = iv_path
             iv_filename = iv_filename
             iv_method   = c_method-add
             iv_data     = iv_data ).
+
   ENDMETHOD.        "add
 
 

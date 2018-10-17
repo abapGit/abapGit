@@ -36,7 +36,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
 
 
   METHOD get_business_msgs_from_dom.
@@ -232,14 +232,13 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
                TO <lv_d_akh>. " doesn't exist in 702
         ASSIGN COMPONENT 'I_AKH' OF STRUCTURE ch_object
                TO <lv_i_akh>. " doesn't exist in 702
-        IF  <lv_d_akh> IS ASSIGNED
-        AND <lv_i_akh> IS ASSIGNED.
+        IF <lv_d_akh> IS ASSIGNED AND <lv_i_akh> IS ASSIGNED.
           <lv_i_akh> = <lv_d_akh>.
         ENDIF.
 
         super->upload(
           CHANGING
-            ch_object       = ch_object ).
+            ch_object = ch_object ).
 
         upload_data_from_stream( ch_object-filename ).
       CATCH cx_ecatt_apl INTO lx_ex.

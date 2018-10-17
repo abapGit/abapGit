@@ -13,13 +13,14 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
+CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
 
   METHOD open_adt_stob.
 
-    DATA: lr_data                   TYPE REF TO data.
-    DATA: lo_ddl                    TYPE REF TO object.
+    DATA: lr_data  TYPE REF TO data,
+          lo_ddl   TYPE REF TO object,
+          lx_error TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <lt_ddnames>     TYPE STANDARD TABLE.
     FIELD-SYMBOLS: <lt_entity_view> TYPE STANDARD TABLE.
@@ -66,8 +67,9 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
 
         ENDIF.
 
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'DDLS Jump Error' ).
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                      ix_previous = lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -76,7 +78,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
   METHOD zif_abapgit_object~changed_by.
 
     DATA: lo_ddl   TYPE REF TO object,
-          lr_data  TYPE REF TO data.
+          lr_data  TYPE REF TO data,
+          lx_error TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <lg_data>  TYPE any,
                    <lg_field> TYPE any.
@@ -102,7 +105,9 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
         IF sy-subrc = 0.
           rv_user = <lg_field>.
         ENDIF.
-      CATCH cx_root.
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                      ix_previous = lx_error ).
     ENDTRY.
 
     IF rv_user IS INITIAL.
@@ -119,7 +124,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lo_ddl TYPE REF TO object.
+    DATA: lo_ddl   TYPE REF TO object,
+          lx_error TYPE REF TO cx_root.
 
 
     CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
@@ -130,8 +136,9 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
         CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~DELETE')
           EXPORTING
             name = ms_item-obj_name.
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'DDLS error deleting' ).
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                      ix_previous = lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -139,8 +146,9 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lo_ddl  TYPE REF TO object,
-          lr_data TYPE REF TO data.
+    DATA: lo_ddl   TYPE REF TO object,
+          lr_data  TYPE REF TO data,
+          lx_error TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <lg_data>  TYPE any,
                    <lg_field> TYPE any.
@@ -172,8 +180,10 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
             objectname = ms_item-obj_name
             devclass   = iv_package
             prid       = 0.
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'DDLS error writing TADIR' ).
+
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                      ix_previous = lx_error ).
     ENDTRY.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
@@ -250,7 +260,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
 
     DATA: lo_ddl       TYPE REF TO object,
           lr_data      TYPE REF TO data,
-          lt_clr_comps TYPE STANDARD TABLE OF fieldname WITH DEFAULT KEY.
+          lt_clr_comps TYPE STANDARD TABLE OF fieldname WITH DEFAULT KEY,
+          lx_error     TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <lg_data>  TYPE any,
                    <lg_field> TYPE any,
@@ -271,8 +282,9 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
             get_state    = 'A'
           IMPORTING
             ddddlsrcv_wa = <lg_data>.
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'DDLS error reading' ).
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                      ix_previous = lx_error ).
     ENDTRY.
 
     APPEND 'AS4USER' TO lt_clr_comps.

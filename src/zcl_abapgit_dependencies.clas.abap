@@ -48,7 +48,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
+CLASS zcl_abapgit_dependencies IMPLEMENTATION.
 
 
   METHOD get_ddls_dependencies.
@@ -111,6 +111,11 @@ CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
           <ls_tadir>-korrnum = '8100'.
         WHEN 'DOMA'.
           <ls_tadir>-korrnum = '9000'.
+* AUTH after DCLS
+        WHEN 'DCLS'.
+          <ls_tadir>-korrnum = '7100'.
+        WHEN 'AUTH'.
+          <ls_tadir>-korrnum = '7000'.
         WHEN 'PROG'.
 * delete includes after main programs
           SELECT COUNT(*) FROM reposrc

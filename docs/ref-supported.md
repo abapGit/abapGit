@@ -42,6 +42,7 @@ ENHC | Composite Enhancement Implementation | Yes
 ENHO | Enhancement Implementation | Yes
 ENHS | Enhancement Spot | Yes
 ENQU | Lock Object | Yes
+ENSC | Composite Enhancement Spot | Yes
 FORM | SAPscript form | Yes
 FUGR | Function Group | Yes
 IAMU | Language-Independent IAC Binary Data | Yes
@@ -97,6 +98,8 @@ TRAN | Transaction | Yes
 TTYP | Table Type | Yes
 TYPE | Type Group | Yes
 UCSA | Unified Connectivity Service Assembly | Yes
+UDMO | Data model | Yes
+UENO | Entity type | [#1906](https://github.com/larshp/abapGit/issues/1906)
 VCLS | View cluster | Yes
 VIEW | View | Yes
 W3HT | Web Reporting/Internet Transaction Server HTML Templates | Yes

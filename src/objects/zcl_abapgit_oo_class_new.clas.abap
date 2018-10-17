@@ -68,7 +68,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OO_CLASS_NEW IMPLEMENTATION.
+CLASS zcl_abapgit_oo_class_new IMPLEMENTATION.
 
 
   METHOD create_report.
@@ -346,7 +346,17 @@ CLASS ZCL_ABAPGIT_OO_CLASS_NEW IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~create.
+    DATA: lt_vseoattrib TYPE seoo_attributes_r.
+    FIELD-SYMBOLS: <lv_clsname> TYPE seoclsname.
+
 * same as in super class, but with "version = seoc_version_active"
+
+    ASSIGN COMPONENT 'CLSNAME' OF STRUCTURE cg_properties TO <lv_clsname>.
+    ASSERT sy-subrc = 0.
+
+    lt_vseoattrib = convert_attrib_to_vseoattrib(
+                      iv_clsname    = <lv_clsname>
+                      it_attributes = it_attributes ).
 
     CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
       EXPORTING
@@ -355,6 +365,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS_NEW IMPLEMENTATION.
         version         = seoc_version_active
       CHANGING
         class           = cg_properties
+        attributes      = lt_vseoattrib
       EXCEPTIONS
         existing        = 1
         is_interface    = 2

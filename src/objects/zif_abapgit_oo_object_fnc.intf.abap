@@ -10,6 +10,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
       IMPORTING
         iv_package    TYPE devclass
         iv_overwrite  TYPE seox_boolean DEFAULT seox_true
+        it_attributes TYPE zif_abapgit_definitions=>ty_obj_attribute_tt OPTIONAL
       CHANGING
         cg_properties TYPE any
       RAISING
@@ -131,6 +132,10 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
       IMPORTING
         iv_classname         TYPE seoclsname
       RETURNING
-        VALUE(rv_superclass) TYPE seoclsname.
-
+        VALUE(rv_superclass) TYPE seoclsname,
+    read_attributes
+      IMPORTING
+        iv_object_name       TYPE seoclsname
+      RETURNING
+        VALUE(rt_attributes) TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
 ENDINTERFACE.

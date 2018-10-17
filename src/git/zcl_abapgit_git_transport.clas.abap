@@ -33,6 +33,12 @@ CLASS zcl_abapgit_git_transport DEFINITION
                  receive TYPE string VALUE 'receive',       "#EC NOTEXT
                  upload  TYPE string VALUE 'upload',        "#EC NOTEXT
                END OF c_service.
+    CONSTANTS: BEGIN OF c_smart_response_check,
+                 BEGIN OF get_refs,
+                   content_regex TYPE string VALUE '^[0-9a-f]{4}#',
+                   content_type  TYPE string VALUE 'application/x-git-<service>-pack-advertisement',
+                 END OF get_refs,
+               END OF c_smart_response_check.
 
     CLASS-METHODS branch_list
       IMPORTING iv_url         TYPE string
@@ -83,11 +89,18 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
   METHOD branch_list.
 
     DATA: lv_data TYPE string.
-
+    DATA: lv_expected_content_type TYPE string.
 
     eo_client = zcl_abapgit_http=>create_by_url(
       iv_url     = iv_url
       iv_service = iv_service ).
+
+    lv_expected_content_type = c_smart_response_check-get_refs-content_type.
+    REPLACE '<service>' IN lv_expected_content_type WITH iv_service.
+
+    eo_client->check_smart_response(
+        iv_expected_content_type = lv_expected_content_type
+        iv_content_regex         = c_smart_response_check-get_refs-content_regex ).
 
     lv_data = eo_client->get_cdata( ).
 
@@ -186,7 +199,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
               zcl_abapgit_git_utils=>get_null( ) &&
               ` ` &&
               lv_cap_list &&
-              zif_abapgit_definitions=>c_newline.          "#EC NOTEXT
+              zif_abapgit_definitions=>c_newline.           "#EC NOTEXT
     lv_cmd_pkt = zcl_abapgit_git_utils=>pkt_string( lv_line ).
 
     lv_buffer = lv_cmd_pkt && '0000'.
@@ -211,6 +224,8 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'failed to update ref' ).
     ELSEIF lv_string CP '*missing necessary objects*'.
       zcx_abapgit_exception=>raise( 'missing necessary objects' ).
+    ELSEIF lv_string CP '*refusing to delete the current branch*'.
+      zcx_abapgit_exception=>raise( 'branch delete not allowed' ).
     ENDIF.
 
   ENDMETHOD.
@@ -260,14 +275,14 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
           && ` ` && lv_capa && zif_abapgit_definitions=>c_newline. "#EC NOTEXT
       ELSE.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
-          && zif_abapgit_definitions=>c_newline.           "#EC NOTEXT
+          && zif_abapgit_definitions=>c_newline.            "#EC NOTEXT
       ENDIF.
       lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( lv_line ).
     ENDLOOP.
 
     IF iv_deepen = abap_true.
       lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( 'deepen 1'
-        && zif_abapgit_definitions=>c_newline ).           "#EC NOTEXT
+        && zif_abapgit_definitions=>c_newline ).            "#EC NOTEXT
     ENDIF.
 
     lv_buffer = lv_buffer

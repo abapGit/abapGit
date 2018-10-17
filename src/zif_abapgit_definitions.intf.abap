@@ -21,7 +21,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
            ty_file_signature WITH UNIQUE KEY path filename .
   TYPES:
     BEGIN OF ty_file.
-      INCLUDE TYPE ty_file_signature.
+          INCLUDE TYPE ty_file_signature.
   TYPES: data TYPE xstring,
          END OF ty_file .
   TYPES:
@@ -107,7 +107,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   TYPES: ty_yes_no TYPE c LENGTH 1.
 
   TYPES: BEGIN OF ty_overwrite.
-      INCLUDE TYPE ty_item.
+          INCLUDE TYPE ty_item.
   TYPES: decision TYPE ty_yes_no,
          END OF ty_overwrite.
 
@@ -213,10 +213,10 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   TYPES:
     ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY .
   TYPES:
-    ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY .
+    ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY.
   TYPES:
     BEGIN OF ty_tpool.
-      INCLUDE TYPE textpool.
+          INCLUDE TYPE textpool.
   TYPES:   split TYPE c LENGTH 8.
   TYPES: END OF ty_tpool .
   TYPES:
@@ -228,6 +228,14 @@ INTERFACE zif_abapgit_definitions PUBLIC.
     END OF ty_sotr .
   TYPES:
     ty_sotr_tt TYPE STANDARD TABLE OF ty_sotr WITH DEFAULT KEY .
+  TYPES:
+    BEGIN OF ty_obj_attribute,
+      cmpname   TYPE seocmpname,
+      attkeyfld TYPE seokeyfld,
+      attbusobj TYPE seobusobj,
+    END OF ty_obj_attribute,
+    ty_obj_attribute_tt TYPE STANDARD TABLE OF ty_obj_attribute WITH DEFAULT KEY
+                             WITH NON-UNIQUE SORTED KEY cmpname COMPONENTS cmpname.
   TYPES:
     BEGIN OF ty_transport_to_branch,
       branch_name TYPE string,
@@ -263,13 +271,14 @@ INTERFACE zif_abapgit_definitions PUBLIC.
              END OF c_diff.
 
   TYPES: BEGIN OF ty_diff,
-           new_num TYPE c LENGTH 6,
-           new     TYPE string,
-           result  TYPE c LENGTH 1,
-           old_num TYPE c LENGTH 6,
-           old     TYPE string,
-           short   TYPE abap_bool,
-           beacon  TYPE i,
+           patch_flag TYPE abap_bool,
+           new_num    TYPE c LENGTH 6,
+           new        TYPE string,
+           result     TYPE c LENGTH 1,
+           old_num    TYPE c LENGTH 6,
+           old        TYPE string,
+           short      TYPE abap_bool,
+           beacon     TYPE i,
          END OF ty_diff.
   TYPES:  ty_diffs_tt TYPE STANDARD TABLE OF ty_diff WITH DEFAULT KEY.
 
@@ -344,6 +353,19 @@ INTERFACE zif_abapgit_definitions PUBLIC.
            hotkeys                    TYPE tty_hotkey,
          END OF ty_s_user_settings.
 
+  TYPES:
+          tty_dokil TYPE STANDARD TABLE OF dokil
+                         WITH NON-UNIQUE DEFAULT KEY.
+  TYPES: tty_lines TYPE STANDARD TABLE OF i
+                        WITH NON-UNIQUE DEFAULT KEY,
+         BEGIN OF ty_patch,
+           filename  TYPE string,
+           lines_new TYPE tty_lines,
+           lines_old TYPE tty_lines,
+         END OF ty_patch,
+         tty_patch TYPE HASHED TABLE OF ty_patch
+                        WITH UNIQUE KEY filename.
+
   CONSTANTS:
     BEGIN OF c_type,
       commit TYPE zif_abapgit_definitions=>ty_type VALUE 'commit', "#EC NOTEXT
@@ -396,7 +418,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   CONSTANTS c_english TYPE spras VALUE 'E' ##NO_TEXT.
   CONSTANTS c_root_dir TYPE string VALUE '/' ##NO_TEXT.
   CONSTANTS c_dot_abapgit TYPE string VALUE '.abapgit.xml' ##NO_TEXT.
-  CONSTANTS c_author_regex TYPE string VALUE '^([\\\w\s\.\,\#@\-_1-9\(\) ]+) <(.*)> (\d{10})\s?.\d{4}$' ##NO_TEXT.
+  CONSTANTS c_author_regex TYPE string VALUE '^([\\\w\s\.\*\,\#@\-_1-9\(\) ]+) <(.*)> (\d{10})\s?.\d{4}$' ##NO_TEXT.
   CONSTANTS:
     BEGIN OF c_action,
       repo_refresh             TYPE string VALUE 'repo_refresh',
@@ -452,9 +474,12 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       go_debuginfo             TYPE string VALUE 'go_debuginfo',
       go_settings              TYPE string VALUE 'go_settings',
       go_tutorial              TYPE string VALUE 'go_tutorial',
+      go_patch                 TYPE string VALUE 'go_patch',
 
       jump                     TYPE string VALUE 'jump',
       jump_pkg                 TYPE string VALUE 'jump_pkg',
+
+      url                      TYPE string VALUE 'url',
     END OF c_action .
   CONSTANTS:
     BEGIN OF c_version,

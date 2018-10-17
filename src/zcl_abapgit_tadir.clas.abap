@@ -53,13 +53,13 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
           ls_exclude      LIKE LINE OF lt_excludes.
     DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
     DATA: last_package    TYPE devclass VALUE cl_abap_char_utilities=>horizontal_tab.
+    DATA: lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
 
-    FIELD-SYMBOLS: <ls_tdevc> LIKE LINE OF lt_tdevc,
-                   <ls_tadir> LIKE LINE OF rt_tadir,
-                   <lv_package>  TYPE devclass.
+    FIELD-SYMBOLS: <ls_tdevc>   LIKE LINE OF lt_tdevc,
+                   <ls_tadir>   LIKE LINE OF rt_tadir,
+                   <lv_package> TYPE devclass.
 
     "Determine Packages to Read
-    DATA: lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
     IF iv_ignore_subpackages = abap_false.
       lt_packages = zcl_abapgit_factory=>get_sap_package( iv_package )->list_subpackages( ).
     ENDIF.
@@ -139,7 +139,15 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
       CASE <ls_tadir>-object.
         WHEN 'SICF'.
 * replace the internal GUID with a hash of the path
-          <ls_tadir>-obj_name+15 = zcl_abapgit_object_sicf=>read_sicf_url( <ls_tadir>-obj_name ).
+          TRY.
+              CALL METHOD ('ZCL_ABAPGIT_OBJECT_SICF')=>read_sicf_url
+                EXPORTING
+                  iv_obj_name = <ls_tadir>-obj_name
+                RECEIVING
+                  rv_hash     = <ls_tadir>-obj_name+15.
+            CATCH cx_sy_dyn_call_illegal_method.
+* SICF might not be supported in some systems, assume this code is not called
+          ENDTRY.
       ENDCASE.
     ENDLOOP.
 
@@ -251,9 +259,16 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
   METHOD zif_abapgit_tadir~read_single.
 
     IF iv_object = 'SICF'.
-      rs_tadir = zcl_abapgit_object_sicf=>read_tadir_sicf(
-        iv_pgmid    = iv_pgmid
-        iv_obj_name = iv_obj_name ).
+      TRY.
+          CALL METHOD ('ZCL_ABAPGIT_OBJECT_SICF')=>read_tadir
+            EXPORTING
+              iv_pgmid    = iv_pgmid
+              iv_obj_name = iv_obj_name
+            RECEIVING
+              rs_tadir    = rs_tadir.
+        CATCH cx_sy_dyn_call_illegal_method.
+* SICF might not be supported in some systems, assume this code is not called
+      ENDTRY.
     ELSE.
       SELECT SINGLE * FROM tadir INTO CORRESPONDING FIELDS OF rs_tadir
         WHERE pgmid = iv_pgmid
