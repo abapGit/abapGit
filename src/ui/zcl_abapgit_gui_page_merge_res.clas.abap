@@ -215,7 +215,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
       ENDIF.
     ENDDO.
 
-  ENDMETHOD.  " is_binary.
+  ENDMETHOD.
 
 
   METHOD render_beacon.
@@ -240,7 +240,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
     ro_html->add( '</tr>' ).
     ro_html->add( '</thead>' ).
 
-  ENDMETHOD.  " render_beacon.
+  ENDMETHOD.
 
 
   METHOD render_content.
@@ -255,7 +255,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
     ro_html->add( render_diff( ms_diff_file ) ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD render_diff.
@@ -333,7 +333,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
     ro_html->add( '</div>' ).                               "#EC NOTEXT
 
-  ENDMETHOD.  " render_diff
+  ENDMETHOD.
 
 
   METHOD render_diff_head.
@@ -397,7 +397,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
     ENDLOOP.
 
-  ENDMETHOD.  "render_lines
+  ENDMETHOD.
 
 
   METHOD render_line_split.
@@ -440,7 +440,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
     ro_html->add( lv_new ). " Source
     ro_html->add( '</tr>' ).                                "#EC NOTEXT
 
-  ENDMETHOD. "render_line_split
+  ENDMETHOD.
 
 
   METHOD render_table_head.
@@ -480,7 +480,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
       ro_html->add( '</thead>' ).                           "#EC NOTEXT
     ENDIF.
 
-  ENDMETHOD.  " render_table_head.
+  ENDMETHOD.
 
 
   METHOD resolve_diff.

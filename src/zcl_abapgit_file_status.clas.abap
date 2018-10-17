@@ -105,7 +105,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-  ENDMETHOD.  "build_existing
+  ENDMETHOD.
 
 
   METHOD build_new_local.
@@ -123,7 +123,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     rs_result-match    = abap_false.
     rs_result-lstate   = zif_abapgit_definitions=>c_state-added.
 
-  ENDMETHOD.  "build_new_local
+  ENDMETHOD.
 
 
   METHOD build_new_remote.
@@ -181,7 +181,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       ASSERT 1 = 1. " No action, just follow defaults
     ENDIF.
 
-  ENDMETHOD.  "build_new_remote
+  ENDMETHOD.
 
 
   METHOD calculate_status.
@@ -278,7 +278,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       obj_name ASCENDING
       filename ASCENDING.
 
-  ENDMETHOD.  "calculate_status.
+  ENDMETHOD.
 
 
   METHOD identify_object.
@@ -310,7 +310,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     es_item-obj_name = lv_name.
     ev_is_xml        = boolc( lv_ext = 'XML' AND strlen( lv_type ) = 4 ).
 
-  ENDMETHOD.  "identify_object.
+  ENDMETHOD.
 
 
   METHOD run_checks.
@@ -395,7 +395,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       MOVE-CORRESPONDING <ls_res1> TO ls_file.
     ENDLOOP.
 
-  ENDMETHOD.                    "check
+  ENDMETHOD.
 
 
   METHOD status.
@@ -433,5 +433,5 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       io_dot     = lo_dot_abapgit
       iv_top     = io_repo->get_package( ) ).
 
-  ENDMETHOD.  "status
+  ENDMETHOD.
 ENDCLASS.

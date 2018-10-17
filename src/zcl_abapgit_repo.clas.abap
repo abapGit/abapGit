@@ -148,7 +148,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     ms_data = is_data.
 
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
 
   METHOD delete.
@@ -357,7 +357,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD get_key.
     rv_key = ms_data-key.
-  ENDMETHOD.                    "get_key
+  ENDMETHOD.
 
 
   METHOD get_local_checksums.
@@ -392,12 +392,12 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       rv_name = cl_http_utility=>if_http_utility~unescape_url( rv_name ).
     ENDIF.
 
-  ENDMETHOD.                    "get_name
+  ENDMETHOD.
 
 
   METHOD get_package.
     rv_package = ms_data-package.
-  ENDMETHOD.                    "get_package
+  ENDMETHOD.
 
 
   METHOD is_offline.
@@ -439,7 +439,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     set( it_checksums = lt_checksums ).
 
-  ENDMETHOD.  " rebuild_local_checksums.
+  ENDMETHOD.
 
 
   METHOD refresh.
@@ -450,7 +450,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       CLEAR: mv_last_serialization, mt_local.
     ENDIF.
 
-  ENDMETHOD.                    "refresh
+  ENDMETHOD.
 
 
   METHOD run_code_inspector.
@@ -668,5 +668,5 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     SORT lt_checksums BY item.
     set( it_checksums = lt_checksums ).
 
-  ENDMETHOD.  " update_local_checksums
+  ENDMETHOD.
 ENDCLASS.

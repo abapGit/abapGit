@@ -292,7 +292,7 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
       lv_plus = lv_plus + 1.
     ENDDO.
 
-  ENDMETHOD.                    "resolve_ddic
+  ENDMETHOD.
 
 
   METHOD resolve_packages.

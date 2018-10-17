@@ -151,7 +151,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
       ENDCASE.
     ENDLOOP.
 
-  ENDMETHOD.                    "build
+  ENDMETHOD.
 
 
   METHOD check_exists.
@@ -185,7 +185,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.                    "check_exists
+  ENDMETHOD.
 
 
   METHOD exists.

@@ -97,7 +97,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     rv_html = zcl_abapgit_html=>a( iv_txt = lv_path
                                    iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
 
-  ENDMETHOD.  "build_dir_jump_link
+  ENDMETHOD.
 
 
   METHOD build_grid_menu.
@@ -121,7 +121,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       iv_chk = mv_show_folders
       iv_act = c_actions-toggle_folders ).
 
-  ENDMETHOD. "build_grid_menu
+  ENDMETHOD.
 
 
   METHOD build_head_menu.
@@ -267,7 +267,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ro_toolbar->add( iv_txt = zcl_abapgit_html=>icon( iv_name = 'settings/grey70' )
                      io_sub = build_grid_menu( ) ).
 
-  ENDMETHOD.  "build_head_menu
+  ENDMETHOD.
 
 
   METHOD build_obj_jump_link.
@@ -280,7 +280,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     rv_html = zcl_abapgit_html=>a( iv_txt = |{ is_item-obj_name }|
                                    iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_encode }| ).
 
-  ENDMETHOD.  "build_obj_jump_link
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -299,7 +299,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     mv_max_lines    = lo_settings->get_max_lines( ).
     mv_max_setting  = mv_max_lines.
 
-  ENDMETHOD. "constructor
+  ENDMETHOD.
 
 
   METHOD get_item_class.
@@ -318,7 +318,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       rv_html = | class="{ concat_lines_of( table = lt_class sep = ` ` ) }"|.
     ENDIF.
 
-  ENDMETHOD. "get_item_class
+  ENDMETHOD.
 
 
   METHOD get_item_icon.
@@ -338,7 +338,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       rv_html = zcl_abapgit_html=>icon( 'file-directory/darkgrey' ).
     ENDIF.
 
-  ENDMETHOD. "get_item_icon
+  ENDMETHOD.
 
 
   METHOD render_empty_package.
@@ -355,7 +355,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
            && |  <center>{ lv_text }</center>|
            && |</td></tr>|.
 
-  ENDMETHOD. "render_empty_package
+  ENDMETHOD.
 
 
   METHOD render_head_line.
@@ -378,7 +378,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ro_html->add( '</tr></table>' ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD. "render_head_line
+  ENDMETHOD.
 
 
   METHOD render_item.
@@ -424,7 +424,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     ro_html->add( '</tr>' ).
 
-  ENDMETHOD.  "render_item
+  ENDMETHOD.
 
 
   METHOD render_item_command.
@@ -479,7 +479,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     ENDIF.
 
-  ENDMETHOD.  "render_item_command
+  ENDMETHOD.
 
 
   METHOD render_item_files.
@@ -496,7 +496,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       ro_html->add( |<div>{ ls_file-path && ls_file-filename }</div>| ).
     ENDLOOP.
 
-  ENDMETHOD.  "render_item_files
+  ENDMETHOD.
 
 
   METHOD render_parent_dir.
@@ -511,7 +511,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ENDIF.
     ro_html->add( '</tr>' ).
 
-  ENDMETHOD. "render_parent_dir
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~on_event.
@@ -538,7 +538,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
         ev_state        = zif_abapgit_definitions=>c_event_state-re_render.
     ENDCASE.
 
-  ENDMETHOD. "lif_gui_page~on_event
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~render.
@@ -633,7 +633,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
         ro_html->add( zcl_abapgit_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
     ENDTRY.
 
-  ENDMETHOD.  "lif_gui_page~render
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.

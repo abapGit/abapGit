@@ -44,7 +44,7 @@ CLASS ltcl_html_action_utils DEFINITION FOR TESTING RISK LEVEL HARMLESS
       RETURNING
         VALUE(rv_s) TYPE string.
 
-ENDCLASS. "ltcl_html_action_utils
+ENDCLASS.
 
 CLASS ltcl_html_action_utils IMPLEMENTATION.
 
@@ -79,7 +79,7 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
       act = lt_fields
       exp = lt_answer ).
 
-  ENDMETHOD.  "add_field
+  ENDMETHOD.
 
   METHOD get_field.
 
@@ -103,7 +103,7 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
       act = ls_field
       exp = ls_answer ). " Both field are filled!
 
-  ENDMETHOD.  "get_field
+  ENDMETHOD.
 
   METHOD parse_fields_simple_case.
 
@@ -255,4 +255,4 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS. "ltcl_html_action_utils
+ENDCLASS.

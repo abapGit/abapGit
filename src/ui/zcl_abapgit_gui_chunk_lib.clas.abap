@@ -76,7 +76,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ENDIF.
     ro_html->add( '</span>' ).
 
-  ENDMETHOD.  "render_branch_span
+  ENDMETHOD.
 
 
   METHOD render_error.
@@ -95,7 +95,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ro_html->add( |{ zcl_abapgit_html=>icon( 'alert/red' ) } Error: { lv_error }| ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD. "render_error
+  ENDMETHOD.
 
 
   METHOD render_hotkey_overview.
@@ -203,7 +203,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     rv_html = rv_html && '</span>'.
 
-  ENDMETHOD. "render_item_state
+  ENDMETHOD.
 
 
   METHOD render_js_error_banner.
@@ -213,7 +213,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
                   ' If this does not disappear soon,' &&
                   ' then there is a JS init error, please log an issue' ).
     ro_html->add( '</div>' ).
-  ENDMETHOD. "render_js_error_stub
+  ENDMETHOD.
 
 
   METHOD render_news.
@@ -274,7 +274,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     ro_html->add( '</div>' ).
 
-  ENDMETHOD. "render_news
+  ENDMETHOD.
 
 
   METHOD render_repo_top.

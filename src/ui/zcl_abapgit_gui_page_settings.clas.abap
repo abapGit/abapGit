@@ -221,7 +221,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     ms_control-page_title = 'SETTINGS'.
-  ENDMETHOD.  " constructor.
+  ENDMETHOD.
 
 
   METHOD get_default_hotkeys.
@@ -346,7 +346,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ro_html->add( render_section_end( ) ).
     ro_html->add( render_form_end( ) ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD render_development_internals.

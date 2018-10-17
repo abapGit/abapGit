@@ -229,7 +229,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'DB update failed' ).
     ENDIF.
 
-  ENDMETHOD.  "update
+  ENDMETHOD.
 
 
   METHOD validate_and_unprettify_xml.
@@ -239,5 +239,5 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
       iv_unpretty      = abap_true
       iv_ignore_errors = abap_false ).
 
-  ENDMETHOD.  " validate_and_unprettify_xml
+  ENDMETHOD.
 ENDCLASS.

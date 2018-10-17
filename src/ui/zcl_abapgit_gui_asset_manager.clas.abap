@@ -61,7 +61,7 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Failed to get GUI resource: { iv_asset_name }| ).
     ENDIF.
 
-  ENDMETHOD.  " get_asset.
+  ENDMETHOD.
 
 
   METHOD get_images.
@@ -82,7 +82,7 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
       ASSERT sy-subrc = 0. " Image data error
     ENDLOOP.
 
-  ENDMETHOD.  " get_images.
+  ENDMETHOD.
 
 
   METHOD get_inline_asset.
@@ -115,7 +115,7 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
         OTHERS = 1.
     ASSERT sy-subrc = 0.
 
-  ENDMETHOD.  " get_inline_asset.
+  ENDMETHOD.
 
 
   METHOD get_inline_images.
@@ -206,7 +206,7 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
       && 'cpUAAAAASUVORK5CYII='.
     APPEND ls_image TO rt_images.
 
-  ENDMETHOD.  " get_inline_images.
+  ENDMETHOD.
 
 
   METHOD get_mime_asset.
@@ -260,7 +260,7 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
       EXCEPTIONS
         failed       = 1 ##FM_SUBRC_OK.
 
-  ENDMETHOD.  " get_mime_asset.
+  ENDMETHOD.
 
 
   METHOD get_webfont_link.
@@ -270,5 +270,5 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
            && 'https://cdnjs.cloudflare.com/ajax/libs/octicons/4.4.0/font/octicons.min.css'
            && '">'.                                         "#EC NOTEXT
 
-  ENDMETHOD.  " get_webfont_link
+  ENDMETHOD.
 ENDCLASS.

@@ -96,7 +96,7 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
           password = lv_pass ).
     ENDCASE.
 
-  ENDMETHOD.  "acquire_login_details
+  ENDMETHOD.
 
 
   METHOD check_auth_requested.
@@ -110,7 +110,7 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
       rv_auth_requested = abap_true.
     ENDIF.
 
-  ENDMETHOD.  "check_auth_requested
+  ENDMETHOD.
 
 
   METHOD create_by_url.

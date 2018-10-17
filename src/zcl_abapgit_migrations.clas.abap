@@ -100,5 +100,5 @@ CLASS ZCL_ABAPGIT_MIGRATIONS IMPLEMENTATION.
     " local .abapgit.xml state, issue #630
     local_dot_abapgit( ).
 
-  ENDMETHOD.  " run.
+  ENDMETHOD.
 ENDCLASS.

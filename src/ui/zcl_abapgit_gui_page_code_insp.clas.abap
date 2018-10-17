@@ -105,7 +105,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     mo_stage = io_stage.
     ms_control-page_title = 'Code Inspector'.
     run_code_inspector( ).
-  ENDMETHOD.  " constructor.
+  ENDMETHOD.
 
 
   METHOD has_inspection_errors.
@@ -158,7 +158,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
   METHOD run_code_inspector.
 

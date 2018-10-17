@@ -24,7 +24,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
     super->constructor( ).
     ms_control-page_title = 'SYNTAX CHECK'.
     mo_repo = io_repo.
-  ENDMETHOD.  " constructor.
+  ENDMETHOD.
 
 
   METHOD render_content.
