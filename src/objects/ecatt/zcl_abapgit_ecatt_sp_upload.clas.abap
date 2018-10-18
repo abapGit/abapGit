@@ -49,7 +49,6 @@ CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
         li_section = template_over_all->find_from_name_ns( 'START_PROFILE' ).
 
         IF NOT li_section IS INITIAL.
-          CLASS cl_ixml DEFINITION LOAD.
           li_ixml = cl_ixml=>create( ).
           li_dom  = li_ixml->create_document( ).
           li_root ?= li_section->clone( ).
