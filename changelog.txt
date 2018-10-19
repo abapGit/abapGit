@@ -8,6 +8,14 @@ Legend
 + : added
 - : removed
 
+2018-10-19 v1.78.1
+------------------
+* Diff fixes
+* Jump only if object exists
+* IEXT: clear additional fields
+* TRAN: support OO transactions
+* SSFO: fix id renumbering
+
 2018-10-07 v1.78.0
 ------------------
 + UDMO support
