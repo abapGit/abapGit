@@ -141,8 +141,8 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
         IF sy-subrc = 0 AND offset > 0.
           TRY.
               element ?= i_node.
-              element->set_attribute( EXPORTING name  = zcl_abapgit_object_ssfo=>attrib_abapgit_leadig_spaces
-                                                value = |{ offset }| ).
+              element->set_attribute( name  = zcl_abapgit_object_ssfo=>attrib_abapgit_leadig_spaces
+                                      value = |{ offset }| ).
 
             CATCH cx_sy_move_cast_error ##no_handler.
           ENDTRY.
@@ -417,9 +417,9 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
           OR lv_name = 'LASTUSER'.
         li_node->set_value( 'DUMMY' ).
       ENDIF.
-      set_attribute_leading_spaces( EXPORTING i_name      = lv_name
-                                    i_node                = li_node
-                          CHANGING  c_within_code_section = within_code_section ).
+      set_attribute_leading_spaces( EXPORTING i_name                = lv_name
+                                              i_node                = li_node
+                                    CHANGING  c_within_code_section = within_code_section ).
 
       li_node = li_iterator->get_next( ).
     ENDWHILE.
