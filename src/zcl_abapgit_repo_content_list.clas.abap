@@ -23,6 +23,7 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
                  dir        TYPE i VALUE 1,
                  orphan     TYPE i VALUE 2,
                  changed    TYPE i VALUE 3,
+                 inactive   TYPE i VALUE 4,
                END OF c_sortkey.
 
     DATA: mo_repo TYPE REF TO zcl_abapgit_repo,
@@ -117,7 +118,12 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
       <ls_repo_item>-obj_type = <ls_tadir>-object.
       <ls_repo_item>-obj_name = <ls_tadir>-obj_name.
       <ls_repo_item>-path     = <ls_tadir>-path.
-      <ls_repo_item>-sortkey  = c_sortkey-default.      " Default sort key
+      <ls_repo_item>-inactive = <ls_tadir>-inactive.
+      IF <ls_repo_item>-inactive = abap_true.
+        <ls_repo_item>-sortkey = c_sortkey-inactive.
+      ELSE.
+        <ls_repo_item>-sortkey  = c_sortkey-default.      " Default sort key
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.
@@ -141,6 +147,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
         APPEND INITIAL LINE TO rt_repo_items ASSIGNING <ls_repo_item>.
         <ls_repo_item>-obj_type = <ls_status>-obj_type.
         <ls_repo_item>-obj_name = <ls_status>-obj_name.
+        <ls_repo_item>-inactive = <ls_status>-inactive.
         <ls_repo_item>-sortkey  = c_sortkey-default. " Default sort key
         <ls_repo_item>-changes  = 0.
         <ls_repo_item>-path     = <ls_status>-path.
@@ -153,6 +160,11 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
         ls_file-rstate     = <ls_status>-rstate.
         ls_file-lstate     = <ls_status>-lstate.
         APPEND ls_file TO <ls_repo_item>-files.
+
+        IF <ls_status>-inactive = abap_true AND
+           <ls_repo_item>-sortkey > c_sortkey-changed.
+          <ls_repo_item>-sortkey = c_sortkey-inactive.
+        ENDIF.
 
         IF ls_file-is_changed = abap_true.
           <ls_repo_item>-sortkey = c_sortkey-changed. " Changed files

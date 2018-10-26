@@ -107,7 +107,9 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(rt_list) TYPE scit_alvlist
       RAISING
         zcx_abapgit_exception .
+
   PROTECTED SECTION.
+
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
     DATA mt_remote TYPE zif_abapgit_definitions=>ty_files_tt .
     DATA mv_do_local_refresh TYPE abap_bool .
@@ -116,24 +118,20 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA mv_code_inspector_successful TYPE abap_bool .
 
     METHODS set
-      IMPORTING
-        !it_checksums       TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
-        !iv_url             TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
-        !iv_branch_name     TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
-        !iv_head_branch     TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
-        !iv_offline         TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
-        !is_dot_abapgit     TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL
-        !is_local_settings  TYPE zif_abapgit_persistence=>ty_repo-local_settings OPTIONAL
-        !iv_deserialized_at TYPE zif_abapgit_persistence=>ty_repo-deserialized_at OPTIONAL
-        !iv_deserialized_by TYPE zif_abapgit_persistence=>ty_repo-deserialized_by OPTIONAL
-      RAISING
-        zcx_abapgit_exception .
+      IMPORTING it_checksums       TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
+                iv_url             TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
+                iv_branch_name     TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
+                iv_head_branch     TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
+                iv_offline         TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
+                is_dot_abapgit     TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL
+                is_local_settings  TYPE zif_abapgit_persistence=>ty_repo-local_settings OPTIONAL
+                iv_deserialized_at TYPE zif_abapgit_persistence=>ty_repo-deserialized_at OPTIONAL
+                iv_deserialized_by TYPE zif_abapgit_persistence=>ty_repo-deserialized_by OPTIONAL
+      RAISING   zcx_abapgit_exception .
 
   PRIVATE SECTION.
-    METHODS:
-      update_last_deserialize
-        RAISING
-          zcx_abapgit_exception.
+
+    METHODS: update_last_deserialize RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -313,6 +311,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       ls_item-obj_type = <ls_tadir>-object.
       ls_item-obj_name = <ls_tadir>-obj_name.
       ls_item-devclass = <ls_tadir>-devclass.
+      ls_item-inactive = <ls_tadir>-inactive.
 
       IF mv_last_serialization IS NOT INITIAL. " Try to fetch from cache
         READ TABLE lt_cache TRANSPORTING NO FIELDS

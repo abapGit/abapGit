@@ -77,7 +77,10 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         RETURNING VALUE(rv_html) TYPE string,
       build_dir_jump_link
         IMPORTING iv_path        TYPE string
-        RETURNING VALUE(rv_html) TYPE string.
+        RETURNING VALUE(rv_html) TYPE string,
+      build_inactive_object_code
+        IMPORTING is_item                     TYPE zif_abapgit_definitions=>ty_repo_item
+        RETURNING value(r_inactive_html_code) TYPE string.
 ENDCLASS.
 
 
@@ -404,7 +407,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       ELSE.
         lv_link = build_obj_jump_link( is_item ).
         ro_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
-        ro_html->add( |<td class="object">{ lv_link }</td>| ).
+        ro_html->add( |<td class="object">{ lv_link } { build_inactive_object_code( is_item ) }</td>| ).
       ENDIF.
     ENDIF.
 
@@ -425,6 +428,19 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ro_html->add( '</tr>' ).
 
   ENDMETHOD.
+
+  METHOD build_inactive_object_code.
+
+    IF is_item-inactive = abap_true.
+      r_inactive_html_code = zcl_abapgit_html=>icon(
+                               iv_name  = 'zap/orange'
+                               iv_hint  = 'Object or object part is inactive'
+                               iv_class = 'inactive' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
 
 
   METHOD render_item_command.
