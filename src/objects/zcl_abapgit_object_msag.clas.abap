@@ -44,7 +44,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
+CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
 
   METHOD delete_documentation.
@@ -482,5 +482,10 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
 
     serialize_texts( io_xml ).
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    is_active( ).
   ENDMETHOD.
 ENDCLASS.
