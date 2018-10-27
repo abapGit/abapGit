@@ -52,23 +52,23 @@ CLASS zcl_abapgit_object_wdyn DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RETURNING VALUE(rs_delta) TYPE svrs2_xversionable_object
         RAISING   zcx_abapgit_exception,
       add_fm_param_exporting
-        IMPORTING iv_name   TYPE string
-                  ig_value  TYPE any
+        IMPORTING iv_name  TYPE string
+                  ig_value TYPE any
         CHANGING  ct_param TYPE abap_func_parmbind_tab,
       add_fm_param_tables
-        IMPORTING iv_name   TYPE string
+        IMPORTING iv_name  TYPE string
         CHANGING  ct_value TYPE ANY TABLE
                   ct_param TYPE abap_func_parmbind_tab,
       add_fm_exception
-        IMPORTING iv_name       TYPE string
-                  iv_value      TYPE i
+        IMPORTING iv_name      TYPE string
+                  iv_value     TYPE i
         CHANGING  ct_exception TYPE abap_func_excpbind_tab.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
+CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
 
 
   METHOD add_fm_exception.
@@ -824,9 +824,11 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~is_locked.
-
     rv_is_locked = abap_false.
-
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~is_active.
+    is_active( ).
+  ENDMETHOD.
 ENDCLASS.

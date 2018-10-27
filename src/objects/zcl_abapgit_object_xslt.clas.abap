@@ -176,7 +176,6 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
 
     DATA: lv_name TYPE cxsltdesc.
 
-
     lv_name = ms_item-obj_name.
 
     rv_bool = cl_o2_api_xsltdesc=>exists( lv_name ).
@@ -207,9 +206,11 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~is_locked.
-
     rv_is_locked = abap_false.
-
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~is_active.
+    is_active( ).
+  ENDMETHOD.
 ENDCLASS.

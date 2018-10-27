@@ -15,7 +15,7 @@ CLASS zcl_abapgit_object_udmo DEFINITION
   PROTECTED SECTION.
 
     METHODS corr_insert
-        REDEFINITION .
+         REDEFINITION .
   PRIVATE SECTION.
 
     TYPES:
@@ -96,7 +96,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
+CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
 
 
   METHOD access_free.
@@ -764,12 +764,10 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
         OTHERS                = 4
         ##fm_subrc_ok.                                                   "#EC CI_SUBRC
 
-
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
-
 
     IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
@@ -780,5 +778,10 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     me->serialize_short_texts( io_xml ).
     me->serialize_long_texts( io_xml ).
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    is_active( ).
   ENDMETHOD.
 ENDCLASS.
