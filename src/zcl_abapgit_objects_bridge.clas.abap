@@ -26,7 +26,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
+CLASS zcl_abapgit_objects_bridge IMPLEMENTATION.
 
 
   METHOD class_constructor.
@@ -195,5 +195,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
       EXPORTING
         io_xml = io_xml.
 
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~is_active.
+    e_active = abap_true.
   ENDMETHOD.
 ENDCLASS.
