@@ -474,5 +474,4 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
         o_inactive = ms_item-inactive.
 
   ENDMETHOD.
-
 ENDCLASS.

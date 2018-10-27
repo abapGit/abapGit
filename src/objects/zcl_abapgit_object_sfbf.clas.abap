@@ -13,7 +13,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SFBF IMPLEMENTATION.
+CLASS zcl_abapgit_object_sfbf IMPLEMENTATION.
 
 
   METHOD get.
@@ -254,5 +254,10 @@ CLASS ZCL_ABAPGIT_OBJECT_SFBF IMPLEMENTATION.
     io_xml->add( ig_data = lt_parent_bfs
                  iv_name = 'PARENT_BFS' ).
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    is_active( ).
   ENDMETHOD.
 ENDCLASS.

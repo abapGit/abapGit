@@ -301,9 +301,11 @@ CLASS zcl_abapgit_object_tobj IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~is_locked.
-
     rv_is_locked = abap_false.
-
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~is_active.
+    is_active( ).
+  ENDMETHOD.
 ENDCLASS.

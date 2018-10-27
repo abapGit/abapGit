@@ -590,4 +590,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
                  ig_data = lt_icfhandler ).
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    is_active( ).
+  ENDMETHOD.
 ENDCLASS.
