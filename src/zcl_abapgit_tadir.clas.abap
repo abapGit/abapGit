@@ -8,8 +8,6 @@ CLASS zcl_abapgit_tadir DEFINITION
     INTERFACES zif_abapgit_tadir .
 
   PRIVATE SECTION.
-    TYPES: ty_objects_2_check_tadirs TYPE STANDARD TABLE OF e071 WITH DEFAULT KEY.
-
     METHODS exists
       IMPORTING
         !is_item         TYPE zif_abapgit_definitions=>ty_item
@@ -34,12 +32,7 @@ CLASS zcl_abapgit_tadir DEFINITION
       RETURNING
         VALUE(rt_tadir)        TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
-        zcx_abapgit_exception .
-    METHODS mark_inactive_objects
-      CHANGING c_e071_tadirs  TYPE ty_objects_2_check_tadirs
-               c_check_tadirs TYPE zif_abapgit_definitions=>ty_tadir_tt.
-    METHODS mark_inactive_special_objects
-      CHANGING c_check_tadirs TYPE zif_abapgit_definitions=>ty_tadir_tt.
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -59,9 +52,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
           ls_exclude             LIKE LINE OF lt_excludes,
           lo_folder_logic        TYPE REF TO zcl_abapgit_folder_logic,
           last_package           TYPE devclass VALUE cl_abap_char_utilities=>horizontal_tab,
-          lt_packages            TYPE zif_abapgit_sap_package=>ty_devclass_tt,
-          objects_2_check_tadir  TYPE LINE OF zcl_abapgit_tadir=>ty_objects_2_check_tadirs,
-          objects_2_check_tadirs TYPE zcl_abapgit_tadir=>ty_objects_2_check_tadirs.
+          lt_packages            TYPE zif_abapgit_sap_package=>ty_devclass_tt.
 
     FIELD-SYMBOLS: <ls_tdevc>   LIKE LINE OF lt_tdevc,
                    <ls_tadir>   LIKE LINE OF rt_tadir,
@@ -157,15 +148,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 * SICF might not be supported in some systems, assume this code is not called
           ENDTRY.
       ENDCASE.
-
-      MOVE-CORRESPONDING <ls_tadir> TO objects_2_check_tadir.
-      INSERT objects_2_check_tadir INTO TABLE objects_2_check_tadirs.
-
     ENDLOOP.
-
-    me->mark_inactive_objects( CHANGING c_e071_tadirs  = objects_2_check_tadirs
-                                        c_check_tadirs = rt_tadir ).
-
   ENDMETHOD.
 
 
@@ -293,60 +276,5 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-  METHOD mark_inactive_objects.
-
-    DATA: messages TYPE STANDARD TABLE OF sprot_u WITH DEFAULT KEY.
-
-    mark_inactive_special_objects( CHANGING c_check_tadirs = c_check_tadirs ).
-
-    CALL FUNCTION 'RS_INACTIVE_OBJECTS_WARNING'
-      EXPORTING
-        suppress_protocol         = abap_false
-        with_program_includes     = abap_false
-        suppress_dictionary_check = abap_false
-        phased_activation         = abap_false
-      TABLES
-        p_e071                    = c_e071_tadirs
-        p_xmsg                    = messages.
-
-    LOOP AT messages ASSIGNING FIELD-SYMBOL(<message>).
-      READ TABLE c_check_tadirs ASSIGNING FIELD-SYMBOL(<check_tadir>)
-                                WITH KEY object = <message>-var1 obj_name = <message>-var2.
-      IF sy-subrc <> 0.
-        READ TABLE c_check_tadirs ASSIGNING <check_tadir> WITH KEY obj_name = <message>-var2.
-        IF sy-subrc <> 0.
-          LOOP AT c_check_tadirs ASSIGNING <check_tadir>.
-            IF <message>-var2 CP |{ <check_tadir>-obj_name }=*|. "some more checks needed?
-              EXIT. "LOOP
-            ENDIF.
-          ENDLOOP.
-        ENDIF.
-      ENDIF.
-
-      IF <check_tadir> IS ASSIGNED.
-        <check_tadir>-inactive = abap_true.
-      ENDIF.
-      UNASSIGN <check_tadir>.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD mark_inactive_special_objects.
-
-    DATA: ssfo_formname TYPE tdsfname.
-
-* SSFO is special => the only one???
-    LOOP AT c_check_tadirs ASSIGNING FIELD-SYMBOL(<check_tadir>) WHERE object = 'SSFO'.
-      ssfo_formname = <check_tadir>-obj_name.
-      CALL FUNCTION 'SSF_STATUS_INFO'
-        EXPORTING
-          i_formname = ssfo_formname
-        IMPORTING
-          o_inactive = <check_tadir>-inactive.
-    ENDLOOP.
-
-  ENDMETHOD.
 
 ENDCLASS.

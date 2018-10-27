@@ -61,6 +61,9 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
         RAISING   zcx_abapgit_exception,
       delete_longtexts
         IMPORTING iv_longtext_id TYPE dokil-id
+        RAISING   zcx_abapgit_exception,
+      is_active
+        RETURNING VALUE(e_active) TYPE abap_bool
         RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
@@ -74,8 +77,8 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
     CLASS-METHODS:
       get_adt_objects_and_names
         IMPORTING
-          i_obj_name       TYPE zif_abapgit_definitions=>ty_item-obj_name
-          i_obj_type       TYPE zif_abapgit_definitions=>ty_item-obj_type
+          i_obj_name        TYPE zif_abapgit_definitions=>ty_item-obj_name
+          i_obj_type        TYPE zif_abapgit_definitions=>ty_item-obj_type
         EXPORTING
           eo_adt_uri_mapper TYPE REF TO object
           eo_adt_objectref  TYPE REF TO object
@@ -461,4 +464,31 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+
+  METHOD is_active.
+
+    DATA: messages    TYPE STANDARD TABLE OF sprot_u WITH DEFAULT KEY,
+          e071_tadirs TYPE STANDARD TABLE OF e071 WITH DEFAULT KEY,
+          e071_tadir  TYPE e071.
+
+    e071_tadir-object   = ms_item-obj_type.
+    e071_tadir-obj_name = ms_item-obj_name.
+
+    CALL FUNCTION 'RS_INACTIVE_OBJECTS_WARNING'
+      EXPORTING
+        suppress_protocol         = abap_false
+        with_program_includes     = abap_false
+        suppress_dictionary_check = abap_false
+        phased_activation         = abap_false
+      TABLES
+        p_e071                    = e071_tadirs
+        p_xmsg                    = messages.
+
+    IF messages IS NOT INITIAL.
+      ms_item-inactive = abap_true.
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

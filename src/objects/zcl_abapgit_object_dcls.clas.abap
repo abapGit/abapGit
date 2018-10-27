@@ -210,4 +210,8 @@ CLASS zcl_abapgit_object_dcls IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~is_active.
+    is_active( ).
+  ENDMETHOD.
 ENDCLASS.

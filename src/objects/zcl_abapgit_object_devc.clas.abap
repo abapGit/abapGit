@@ -700,4 +700,9 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
       io_xml->add( iv_name = 'PERMISSION' ig_data = lt_usage_data ).
     ENDIF.
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    is_active( ).
+  ENDMETHOD.
 ENDCLASS.

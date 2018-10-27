@@ -169,9 +169,12 @@ CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~is_locked.
-
     rv_is_locked = abap_false.
+  ENDMETHOD.
 
+
+METHOD zif_abapgit_object~is_active.
+    e_active = abap_true.
   ENDMETHOD.
 
 ENDCLASS.

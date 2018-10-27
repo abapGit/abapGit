@@ -207,7 +207,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -848,6 +848,11 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     rt_files = lo_files->get_files( ).
 
     check_duplicates( rt_files ).
+
+    TRY.
+        li_obj->is_active( ).
+      CATCH cx_sy_dyn_call_illegal_method.
+    ENDTRY.
 
     LOOP AT rt_files ASSIGNING <ls_file>.
       <ls_file>-sha1 = zcl_abapgit_hash=>sha1(
