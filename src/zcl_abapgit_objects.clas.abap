@@ -78,6 +78,10 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS supported_list
       RETURNING
         VALUE(rt_types) TYPE ty_types_tt .
+    CLASS-METHODS is_active
+      IMPORTING is_item         TYPE zif_abapgit_definitions=>ty_item
+      RETURNING VALUE(e_active) TYPE abap_bool
+      RAISING   zcx_abapgit_exception .
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -1042,4 +1046,21 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     rt_overwrite = lt_overwrite_uniqe.
 
   ENDMETHOD.
+
+
+  METHOD is_active.
+
+    DATA: object TYPE REF TO zif_abapgit_object.
+
+    object = create_object( is_item     = is_item
+                            iv_language = sy-langu ).
+
+    TRY.
+        e_active = object->is_active( ).
+      CATCH cx_sy_dyn_call_illegal_method
+            cx_sy_ref_is_initial.
+        e_active = abap_true.
+    ENDTRY.
+  ENDMETHOD.
+
 ENDCLASS.

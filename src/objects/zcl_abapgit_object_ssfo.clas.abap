@@ -473,5 +473,6 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
       IMPORTING
         o_inactive = ms_item-inactive.
 
+    e_active = boolc( ms_item-inactive = abap_false ).
   ENDMETHOD.
 ENDCLASS.
