@@ -114,7 +114,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
+CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
 
   METHOD are_exceptions_class_based.
@@ -1013,5 +1013,10 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
                    ig_data = ls_cua ).
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    is_active( ).
   ENDMETHOD.
 ENDCLASS.

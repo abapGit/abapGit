@@ -852,6 +852,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     TRY.
         li_obj->is_active( ).
       CATCH cx_sy_dyn_call_illegal_method.
+        "considered as active
     ENDTRY.
 
     LOOP AT rt_files ASSIGNING <ls_file>.

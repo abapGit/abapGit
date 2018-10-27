@@ -441,8 +441,6 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-
-
   METHOD render_item_command.
 
     DATA: lv_difflink TYPE string,
