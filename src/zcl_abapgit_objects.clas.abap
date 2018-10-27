@@ -17,14 +17,11 @@ CLASS zcl_abapgit_objects DEFINITION
       ty_deserialization_tt TYPE STANDARD TABLE OF ty_deserialization WITH DEFAULT KEY .
 
     CLASS-METHODS serialize
-      IMPORTING
-        !is_item        TYPE zif_abapgit_definitions=>ty_item
-        !iv_language    TYPE spras
-        !io_log         TYPE REF TO zcl_abapgit_log OPTIONAL
-      RETURNING
-        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
-      RAISING
-        zcx_abapgit_exception .
+      IMPORTING iv_language TYPE spras
+                io_log      TYPE REF TO zcl_abapgit_log OPTIONAL
+      EXPORTING et_files    TYPE zif_abapgit_definitions=>ty_files_tt
+      CHANGING  cs_item     TYPE zif_abapgit_definitions=>ty_item
+      RAISING   zcx_abapgit_exception .
     CLASS-METHODS deserialize
       IMPORTING
         !io_repo                 TYPE REF TO zcl_abapgit_repo
@@ -821,13 +818,12 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lo_xml   TYPE REF TO zcl_abapgit_xml_output,
           lo_files TYPE REF TO zcl_abapgit_objects_files.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF rt_files.
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF et_files.
 
-
-    IF is_supported( is_item ) = abap_false.
+    IF is_supported( cs_item ) = abap_false.
       IF NOT io_log IS INITIAL.
-        io_log->add( iv_msg = |Object type ignored, not supported: { is_item-obj_type
-                       }-{ is_item-obj_name }|
+        io_log->add( iv_msg = |Object type ignored, not supported: { cs_item-obj_type
+                       }-{ cs_item-obj_name }|
                      iv_type = 'E' ).
       ENDIF.
       RETURN.
@@ -835,9 +831,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     CREATE OBJECT lo_files
       EXPORTING
-        is_item = is_item.
+        is_item = cs_item.
 
-    li_obj = create_object( is_item = is_item
+    li_obj = create_object( is_item = cs_item
                             iv_language = iv_language ).
     li_obj->mo_files = lo_files.
     CREATE OBJECT lo_xml.
@@ -845,17 +841,17 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     lo_files->add_xml( io_xml      = lo_xml
                        is_metadata = li_obj->get_metadata( ) ).
 
-    rt_files = lo_files->get_files( ).
+    et_files = lo_files->get_files( ).
 
-    check_duplicates( rt_files ).
+    check_duplicates( et_files ).
 
     TRY.
-        li_obj->is_active( ).
+        cs_item-inactive = boolc( li_obj->is_active( ) = abap_false ).
       CATCH cx_sy_dyn_call_illegal_method.
         "considered as active
     ENDTRY.
 
-    LOOP AT rt_files ASSIGNING <ls_file>.
+    LOOP AT et_files ASSIGNING <ls_file>.
       <ls_file>-sha1 = zcl_abapgit_hash=>sha1(
         iv_type = zif_abapgit_definitions=>c_type-blob
         iv_data = <ls_file>-data ).

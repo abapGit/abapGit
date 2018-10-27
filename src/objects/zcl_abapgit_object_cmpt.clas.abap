@@ -223,6 +223,6 @@ CLASS zcl_abapgit_object_cmpt IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_active.
-    is_active( ).
+    e_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

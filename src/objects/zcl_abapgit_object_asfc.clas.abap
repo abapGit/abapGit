@@ -12,7 +12,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ASFC IMPLEMENTATION.
+CLASS zcl_abapgit_object_asfc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -109,7 +109,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ASFC IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_active.
-    is_active( ).
+    e_active = is_active( ).
   ENDMETHOD.
 
 ENDCLASS.

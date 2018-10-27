@@ -329,10 +329,12 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      lt_files = zcl_abapgit_objects=>serialize(
-        is_item     = ls_item
-        iv_language = get_dot_abapgit( )->get_master_language( )
-        io_log      = io_log ).
+      zcl_abapgit_objects=>serialize(
+        EXPORTING iv_language = get_dot_abapgit( )->get_master_language( )
+                  io_log      = io_log
+        IMPORTING et_files    = lt_files
+        CHANGING  cs_item     = ls_item ).
+
       LOOP AT lt_files ASSIGNING <ls_file>.
         <ls_file>-path = <ls_tadir>-path.
 

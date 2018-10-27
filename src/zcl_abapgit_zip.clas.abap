@@ -57,7 +57,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
+CLASS zcl_abapgit_zip IMPLEMENTATION.
 
 
   METHOD encode_files.
@@ -132,9 +132,10 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     ls_item-obj_type = ls_tadir-object.
     ls_item-obj_name = ls_tadir-obj_name.
 
-    lt_files = zcl_abapgit_objects=>serialize(
-      is_item     = ls_item
-      iv_language = sy-langu ).
+    zcl_abapgit_objects=>serialize(
+        EXPORTING iv_language = sy-langu
+        IMPORTING et_files    = lt_files
+        CHANGING  cs_item     = ls_item ).
 
     IF lines( lt_files ) = 0.
       MESSAGE 'Empty' TYPE 'S'.

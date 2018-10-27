@@ -19,7 +19,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DIAL IMPLEMENTATION.
+CLASS zcl_abapgit_object_dial IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -213,6 +213,6 @@ CLASS ZCL_ABAPGIT_OBJECT_DIAL IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_active.
-    is_active( ).
+    e_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

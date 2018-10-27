@@ -29,7 +29,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
+CLASS zcl_abapgit_object_char IMPLEMENTATION.
 
 
   METHOD instantiate_char.
@@ -282,6 +282,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_active.
-    is_active( ).
+    e_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

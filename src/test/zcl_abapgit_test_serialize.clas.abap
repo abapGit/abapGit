@@ -6,26 +6,26 @@ CLASS zcl_abapgit_test_serialize DEFINITION
   PUBLIC SECTION.
 
     CLASS-METHODS check
-      IMPORTING
-        !is_item TYPE zif_abapgit_definitions=>ty_item
+      IMPORTING VALUE(is_item) TYPE zif_abapgit_definitions=>ty_item
       RAISING
-        zcx_abapgit_exception .
+                zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TEST_SERIALIZE IMPLEMENTATION.
+CLASS zcl_abapgit_test_serialize IMPLEMENTATION.
 
 
   METHOD check.
 
     DATA: lt_files TYPE zif_abapgit_definitions=>ty_files_tt.
 
-    lt_files = zcl_abapgit_objects=>serialize(
-      is_item     = is_item
-      iv_language = zif_abapgit_definitions=>c_english ).
+    zcl_abapgit_objects=>serialize(
+        EXPORTING iv_language = zif_abapgit_definitions=>c_english
+        IMPORTING et_files    = lt_files
+        CHANGING  cs_item     = is_item ).
 
     cl_abap_unit_assert=>assert_not_initial( lt_files ).
 

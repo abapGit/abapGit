@@ -114,7 +114,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
 
   METHOD are_exceptions_class_based.
@@ -944,6 +944,11 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~is_active.
+    e_active = is_active( ).
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~is_locked.
 
     DATA: lv_program TYPE program.
@@ -1013,10 +1018,5 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
                    ig_data = ls_cua ).
     ENDIF.
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    is_active( ).
   ENDMETHOD.
 ENDCLASS.

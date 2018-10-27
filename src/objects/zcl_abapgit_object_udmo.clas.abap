@@ -27,7 +27,6 @@ CLASS zcl_abapgit_object_udmo DEFINITION
     TYPES langbez TYPE dm40t-langbez.
     TYPES as4local TYPE dm40t-as4local.
     TYPES END OF ty_udmo_text_type .
-
     DATA mv_data_model TYPE uddmodl .
     DATA mv_text_object TYPE doku_obj .
     DATA mv_lxe_text_name TYPE lxeobjname .
@@ -782,6 +781,6 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_active.
-    is_active( ).
+    e_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

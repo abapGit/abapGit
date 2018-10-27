@@ -39,7 +39,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
+CLASS zcl_abapgit_object_avas IMPLEMENTATION.
 
 
   METHOD insert_assignments.
@@ -261,6 +261,6 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_active.
-    is_active( ).
+    e_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.
