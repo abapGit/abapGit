@@ -137,7 +137,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -249,18 +249,17 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD get_files_local.
 
-    DATA: lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          ls_item     TYPE zif_abapgit_definitions=>ty_item,
-          lt_files    TYPE zif_abapgit_definitions=>ty_files_tt,
-          lo_progress TYPE REF TO zcl_abapgit_progress,
-          lt_cache    TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_file_item
-                   WITH NON-UNIQUE KEY item.
+    DATA: lt_tadir     TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          lo_progress  TYPE REF TO zcl_abapgit_progress,
+          lt_cache     TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_file_item
+                   WITH NON-UNIQUE KEY item,
+          ls_fils_item TYPE zcl_abapgit_objects=>ty_serialization.
 
     DATA: lt_filter       TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_tadir
                           WITH NON-UNIQUE KEY object obj_name,
           lv_filter_exist TYPE abap_bool.
 
-    FIELD-SYMBOLS: <ls_file>   LIKE LINE OF lt_files,
+    FIELD-SYMBOLS: <ls_file>   LIKE LINE OF ls_fils_item-files,
                    <ls_return> LIKE LINE OF rt_files,
                    <ls_cache>  LIKE LINE OF lt_cache,
                    <ls_tadir>  LIKE LINE OF lt_tadir.
@@ -308,18 +307,18 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         iv_current = sy-tabix
         iv_text    = |Serialize { <ls_tadir>-obj_name }| ) ##NO_TEXT.
 
-      ls_item-obj_type = <ls_tadir>-object.
-      ls_item-obj_name = <ls_tadir>-obj_name.
-      ls_item-devclass = <ls_tadir>-devclass.
+      ls_fils_item-item-obj_type = <ls_tadir>-object.
+      ls_fils_item-item-obj_name = <ls_tadir>-obj_name.
+      ls_fils_item-item-devclass = <ls_tadir>-devclass.
       IF mv_last_serialization IS NOT INITIAL. " Try to fetch from cache
         READ TABLE lt_cache TRANSPORTING NO FIELDS
-          WITH KEY item = ls_item. " type+name+package key
+          WITH KEY item = ls_fils_item-item. " type+name+package key
         " There is something in cache and the object is unchanged
         IF sy-subrc = 0
             AND abap_false = zcl_abapgit_objects=>has_changed_since(
-            is_item      = ls_item
+            is_item      = ls_fils_item-item
             iv_timestamp = mv_last_serialization ).
-          LOOP AT lt_cache ASSIGNING <ls_cache> WHERE item = ls_item.
+          LOOP AT lt_cache ASSIGNING <ls_cache> WHERE item = ls_fils_item-item.
             APPEND <ls_cache> TO rt_files.
           ENDLOOP.
 
@@ -327,18 +326,18 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      zcl_abapgit_objects=>serialize(
-        EXPORTING iv_language = get_dot_abapgit( )->get_master_language( )
-                  io_log      = io_log
-        IMPORTING et_files    = lt_files
-        CHANGING  cs_item     = ls_item ).
+      ls_fils_item = zcl_abapgit_objects=>serialize(
+        EXPORTING is_item     = ls_fils_item-item
+                  iv_language = get_dot_abapgit( )->get_master_language( )
+                  io_log      = io_log ).
 
-      LOOP AT lt_files ASSIGNING <ls_file>.
+
+      LOOP AT ls_fils_item-files ASSIGNING <ls_file>.
         <ls_file>-path = <ls_tadir>-path.
 
         APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
         <ls_return>-file = <ls_file>.
-        <ls_return>-item = ls_item.
+        <ls_return>-item = ls_fils_item-item.
       ENDLOOP.
     ENDLOOP.
 

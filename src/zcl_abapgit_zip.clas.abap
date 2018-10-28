@@ -112,16 +112,15 @@ CLASS zcl_abapgit_zip IMPLEMENTATION.
   METHOD export_object.
 
     DATA: ls_tadir    TYPE zif_abapgit_definitions=>ty_tadir,
-          ls_item     TYPE zif_abapgit_definitions=>ty_item,
           lv_folder   TYPE string,
           lv_fullpath TYPE string,
           lt_rawdata  TYPE solix_tab,
           lv_sep      TYPE c LENGTH 1,
-          lt_files    TYPE zif_abapgit_definitions=>ty_files_tt.
+          ls_files_item TYPE zcl_abapgit_objects=>ty_serialization.
 
     STATICS: sv_prev TYPE string.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF lt_files.
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF ls_files_item-files.
 
 
     ls_tadir = zcl_abapgit_ui_factory=>get_popups( )->popup_object( ).
@@ -129,15 +128,13 @@ CLASS zcl_abapgit_zip IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    ls_item-obj_type = ls_tadir-object.
-    ls_item-obj_name = ls_tadir-obj_name.
+    ls_files_item-item-obj_type = ls_tadir-object.
+    ls_files_item-item-obj_name = ls_tadir-obj_name.
 
-    zcl_abapgit_objects=>serialize(
-        EXPORTING iv_language = sy-langu
-        IMPORTING et_files    = lt_files
-        CHANGING  cs_item     = ls_item ).
+    ls_files_item = zcl_abapgit_objects=>serialize( is_item = ls_files_item-item
+                                                    iv_language = sy-langu ).
 
-    IF lines( lt_files ) = 0.
+    IF lines( ls_files_item-files ) = 0.
       MESSAGE 'Empty' TYPE 'S'.
       RETURN.
     ENDIF.
@@ -157,7 +154,7 @@ CLASS zcl_abapgit_zip IMPLEMENTATION.
       CHANGING
         file_separator = lv_sep ).
 
-    LOOP AT lt_files ASSIGNING <ls_file>.
+    LOOP AT ls_files_item-files ASSIGNING <ls_file>.
       CONCATENATE lv_folder lv_sep <ls_file>-filename INTO lv_fullpath.
 
       lt_rawdata = cl_bcs_convert=>xstring_to_solix( <ls_file>-data ).

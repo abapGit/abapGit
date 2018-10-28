@@ -198,6 +198,6 @@ CLASS zcl_abapgit_objects_bridge IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~is_active.
-    e_active = abap_true.
+    rv_active = abap_true.
   ENDMETHOD.
 ENDCLASS.

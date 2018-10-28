@@ -20,14 +20,12 @@ CLASS zcl_abapgit_test_serialize IMPLEMENTATION.
 
   METHOD check.
 
-    DATA: lt_files TYPE zif_abapgit_definitions=>ty_files_tt.
+    data: ls_files_item TYPE zcl_abapgit_objects=>ty_serialization.
 
-    zcl_abapgit_objects=>serialize(
-        EXPORTING iv_language = zif_abapgit_definitions=>c_english
-        IMPORTING et_files    = lt_files
-        CHANGING  cs_item     = is_item ).
+   ls_files_item = zcl_abapgit_objects=>serialize( is_item     = is_item
+                                                   iv_language = zif_abapgit_definitions=>c_english ).
 
-    cl_abap_unit_assert=>assert_not_initial( lt_files ).
+    cl_abap_unit_assert=>assert_not_initial( ls_files_item-files ).
 
   ENDMETHOD.
 ENDCLASS.

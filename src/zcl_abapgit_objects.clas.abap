@@ -15,12 +15,17 @@ CLASS zcl_abapgit_objects DEFINITION
       END OF ty_deserialization .
     TYPES:
       ty_deserialization_tt TYPE STANDARD TABLE OF ty_deserialization WITH DEFAULT KEY .
+    TYPES:
+      BEGIN OF ty_serialization,
+        files TYPE zif_abapgit_definitions=>ty_files_tt,
+        item  TYPE zif_abapgit_definitions=>ty_item,
+      END OF ty_serialization.
 
     CLASS-METHODS serialize
-      IMPORTING iv_language TYPE spras
-                io_log      TYPE REF TO zcl_abapgit_log OPTIONAL
-      EXPORTING et_files    TYPE zif_abapgit_definitions=>ty_files_tt
-      CHANGING  cs_item     TYPE zif_abapgit_definitions=>ty_item
+      IMPORTING is_item                  TYPE zif_abapgit_definitions=>ty_item
+                iv_language              TYPE spras
+                io_log                   TYPE REF TO zcl_abapgit_log OPTIONAL
+      RETURNING VALUE(rs_files_and_item) TYPE zcl_abapgit_objects=>ty_serialization
       RAISING   zcx_abapgit_exception .
     CLASS-METHODS deserialize
       IMPORTING
@@ -79,7 +84,7 @@ CLASS zcl_abapgit_objects DEFINITION
       RETURNING
         VALUE(rt_types) TYPE ty_types_tt .
     CLASS-METHODS is_active
-      IMPORTING is_item         TYPE zif_abapgit_definitions=>ty_item
+      IMPORTING is_item          TYPE zif_abapgit_definitions=>ty_item
       RETURNING VALUE(rv_active) TYPE abap_bool
       RAISING   zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -822,12 +827,14 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lo_xml   TYPE REF TO zcl_abapgit_xml_output,
           lo_files TYPE REF TO zcl_abapgit_objects_files.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF et_files.
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF rs_files_and_item-files.
 
-    IF is_supported( cs_item ) = abap_false.
+    rs_files_and_item-item = is_item.
+
+    IF is_supported( rs_files_and_item-item ) = abap_false.
       IF NOT io_log IS INITIAL.
-        io_log->add( iv_msg = |Object type ignored, not supported: { cs_item-obj_type
-                       }-{ cs_item-obj_name }|
+        io_log->add( iv_msg = |Object type ignored, not supported: { rs_files_and_item-item-obj_type
+                       }-{ rs_files_and_item-item-obj_name }|
                      iv_type = 'E' ).
       ENDIF.
       RETURN.
@@ -835,9 +842,9 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     CREATE OBJECT lo_files
       EXPORTING
-        is_item = cs_item.
+        is_item = rs_files_and_item-item.
 
-    li_obj = create_object( is_item = cs_item
+    li_obj = create_object( is_item     = rs_files_and_item-item
                             iv_language = iv_language ).
     li_obj->mo_files = lo_files.
     CREATE OBJECT lo_xml.
@@ -845,13 +852,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     lo_files->add_xml( io_xml      = lo_xml
                        is_metadata = li_obj->get_metadata( ) ).
 
-    et_files = lo_files->get_files( ).
+    rs_files_and_item-files = lo_files->get_files( ).
 
-    check_duplicates( et_files ).
+    check_duplicates( rs_files_and_item-files ).
 
-    cs_item-inactive = boolc( li_obj->is_active( ) = abap_false ).
+    rs_files_and_item-item-inactive = boolc( li_obj->is_active( ) = abap_false ).
 
-    LOOP AT et_files ASSIGNING <ls_file>.
+    LOOP AT rs_files_and_item-files ASSIGNING <ls_file>.
       <ls_file>-sha1 = zcl_abapgit_hash=>sha1(
         iv_type = zif_abapgit_definitions=>c_type-blob
         iv_data = <ls_file>-data ).
