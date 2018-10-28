@@ -327,9 +327,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       ENDIF.
 
       ls_fils_item = zcl_abapgit_objects=>serialize(
-        EXPORTING is_item     = ls_fils_item-item
-                  iv_language = get_dot_abapgit( )->get_master_language( )
-                  io_log      = io_log ).
+        is_item     = ls_fils_item-item
+        iv_language = get_dot_abapgit( )->get_master_language( )
+        io_log      = io_log ).
 
 
       LOOP AT ls_fils_item-files ASSIGNING <ls_file>.
