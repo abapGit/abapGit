@@ -37,7 +37,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_doma IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -335,6 +335,17 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESDICT'
+                                            iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
 
     jump_se11( iv_radio = 'RSRD1-DOMA'
@@ -396,15 +407,5 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     serialize_longtexts( io_xml         = io_xml
                          iv_longtext_id = c_longtext_id_doma ).
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESDICT'
-                                            iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    e_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

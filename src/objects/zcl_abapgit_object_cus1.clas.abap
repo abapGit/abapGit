@@ -174,7 +174,7 @@ CLASS zcl_abapgit_object_cus1 IMPLEMENTATION.
 
 
 METHOD zif_abapgit_object~is_active.
-    e_active = abap_true.
+    rv_active = abap_true.
   ENDMETHOD.
 
 ENDCLASS.

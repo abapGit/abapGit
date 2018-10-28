@@ -80,7 +80,7 @@ CLASS zcl_abapgit_objects DEFINITION
         VALUE(rt_types) TYPE ty_types_tt .
     CLASS-METHODS is_active
       IMPORTING is_item         TYPE zif_abapgit_definitions=>ty_item
-      RETURNING VALUE(e_active) TYPE abap_bool
+      RETURNING VALUE(rv_active) TYPE abap_bool
       RAISING   zcx_abapgit_exception .
   PROTECTED SECTION.
 
@@ -849,11 +849,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     check_duplicates( et_files ).
 
-    TRY.
-        cs_item-inactive = boolc( li_obj->is_active( ) = abap_false ).
-      CATCH cx_sy_dyn_call_illegal_method.
-        "considered as active
-    ENDTRY.
+    cs_item-inactive = boolc( li_obj->is_active( ) = abap_false ).
 
     LOOP AT et_files ASSIGNING <ls_file>.
       <ls_file>-sha1 = zcl_abapgit_hash=>sha1(
@@ -1056,11 +1052,10 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
                             iv_language = sy-langu ).
 
     TRY.
-        e_active = object->is_active( ).
+        rv_active = object->is_active( ).
       CATCH cx_sy_dyn_call_illegal_method
             cx_sy_ref_is_initial.
-        e_active = abap_true.
+        rv_active = abap_true.
     ENDTRY.
   ENDMETHOD.
-
 ENDCLASS.

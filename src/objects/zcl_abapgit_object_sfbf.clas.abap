@@ -258,6 +258,6 @@ CLASS zcl_abapgit_object_sfbf IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_active.
-    e_active = is_active( ).
+    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

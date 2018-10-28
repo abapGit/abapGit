@@ -311,8 +311,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       ls_item-obj_type = <ls_tadir>-object.
       ls_item-obj_name = <ls_tadir>-obj_name.
       ls_item-devclass = <ls_tadir>-devclass.
-      ls_item-inactive = <ls_tadir>-inactive.
-
       IF mv_last_serialization IS NOT INITIAL. " Try to fetch from cache
         READ TABLE lt_cache TRANSPORTING NO FIELDS
           WITH KEY item = ls_item. " type+name+package key
