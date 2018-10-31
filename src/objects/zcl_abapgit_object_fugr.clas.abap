@@ -944,6 +944,11 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~is_locked.
 
     DATA: lv_program TYPE program.

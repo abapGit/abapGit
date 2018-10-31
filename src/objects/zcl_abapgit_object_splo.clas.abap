@@ -62,9 +62,9 @@ CLASS zcl_abapgit_object_splo IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: ls_tsp1t    TYPE tsp1t,
-          ls_tsp1d    TYPE tsp1d,
-          ls_tsp0p    TYPE tsp0p.
+    DATA: ls_tsp1t TYPE tsp1t,
+          ls_tsp1d TYPE tsp1d,
+          ls_tsp0p TYPE tsp0p.
 
 
     io_xml->read( EXPORTING iv_name = 'TSPLT'
@@ -110,9 +110,11 @@ CLASS zcl_abapgit_object_splo IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~is_locked.
-
     rv_is_locked = abap_false.
-
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
 ENDCLASS.

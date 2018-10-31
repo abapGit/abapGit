@@ -91,6 +91,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       obj_type TYPE tadir-object,
       obj_name TYPE tadir-obj_name,
       devclass TYPE devclass,
+      inactive TYPE abap_bool,
     END OF ty_item .
   TYPES:
     ty_items_tt TYPE STANDARD TABLE OF ty_item WITH DEFAULT KEY .
@@ -201,6 +202,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
     BEGIN OF ty_result,
       obj_type TYPE tadir-object,
       obj_name TYPE tadir-obj_name,
+      inactive TYPE abap_bool,
       path     TYPE string,
       filename TYPE string,
       package  TYPE devclass,
@@ -333,6 +335,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   TYPES: BEGIN OF ty_repo_item,
            obj_type TYPE tadir-object,
            obj_name TYPE tadir-obj_name,
+           inactive type abap_bool,
            sortkey  TYPE i,
            path     TYPE string,
            is_dir   TYPE abap_bool,

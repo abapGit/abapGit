@@ -15,16 +15,18 @@ CLASS zcl_abapgit_objects DEFINITION
       END OF ty_deserialization .
     TYPES:
       ty_deserialization_tt TYPE STANDARD TABLE OF ty_deserialization WITH DEFAULT KEY .
+    TYPES:
+      BEGIN OF ty_serialization,
+        files TYPE zif_abapgit_definitions=>ty_files_tt,
+        item  TYPE zif_abapgit_definitions=>ty_item,
+      END OF ty_serialization.
 
     CLASS-METHODS serialize
-      IMPORTING
-        !is_item        TYPE zif_abapgit_definitions=>ty_item
-        !iv_language    TYPE spras
-        !io_log         TYPE REF TO zcl_abapgit_log OPTIONAL
-      RETURNING
-        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
-      RAISING
-        zcx_abapgit_exception .
+      IMPORTING is_item                  TYPE zif_abapgit_definitions=>ty_item
+                iv_language              TYPE spras
+                io_log                   TYPE REF TO zcl_abapgit_log OPTIONAL
+      RETURNING VALUE(rs_files_and_item) TYPE zcl_abapgit_objects=>ty_serialization
+      RAISING   zcx_abapgit_exception .
     CLASS-METHODS deserialize
       IMPORTING
         !io_repo                 TYPE REF TO zcl_abapgit_repo
@@ -81,6 +83,10 @@ CLASS zcl_abapgit_objects DEFINITION
     CLASS-METHODS supported_list
       RETURNING
         VALUE(rt_types) TYPE ty_types_tt .
+    CLASS-METHODS is_active
+      IMPORTING is_item          TYPE zif_abapgit_definitions=>ty_item
+      RETURNING VALUE(rv_active) TYPE abap_bool
+      RAISING   zcx_abapgit_exception .
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -207,7 +213,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -821,13 +827,14 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           lo_xml   TYPE REF TO zcl_abapgit_xml_output,
           lo_files TYPE REF TO zcl_abapgit_objects_files.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF rt_files.
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF rs_files_and_item-files.
 
+    rs_files_and_item-item = is_item.
 
-    IF is_supported( is_item ) = abap_false.
+    IF is_supported( rs_files_and_item-item ) = abap_false.
       IF NOT io_log IS INITIAL.
-        io_log->add( iv_msg = |Object type ignored, not supported: { is_item-obj_type
-                       }-{ is_item-obj_name }|
+        io_log->add( iv_msg = |Object type ignored, not supported: { rs_files_and_item-item-obj_type
+                       }-{ rs_files_and_item-item-obj_name }|
                      iv_type = 'E' ).
       ENDIF.
       RETURN.
@@ -835,9 +842,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     CREATE OBJECT lo_files
       EXPORTING
-        is_item = is_item.
+        is_item = rs_files_and_item-item.
 
-    li_obj = create_object( is_item = is_item
+    li_obj = create_object( is_item     = rs_files_and_item-item
                             iv_language = iv_language ).
     li_obj->mo_files = lo_files.
     CREATE OBJECT lo_xml.
@@ -845,11 +852,13 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     lo_files->add_xml( io_xml      = lo_xml
                        is_metadata = li_obj->get_metadata( ) ).
 
-    rt_files = lo_files->get_files( ).
+    rs_files_and_item-files = lo_files->get_files( ).
 
-    check_duplicates( rt_files ).
+    check_duplicates( rs_files_and_item-files ).
 
-    LOOP AT rt_files ASSIGNING <ls_file>.
+    rs_files_and_item-item-inactive = boolc( li_obj->is_active( ) = abap_false ).
+
+    LOOP AT rs_files_and_item-files ASSIGNING <ls_file>.
       <ls_file>-sha1 = zcl_abapgit_hash=>sha1(
         iv_type = zif_abapgit_definitions=>c_type-blob
         iv_data = <ls_file>-data ).
@@ -1039,5 +1048,21 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     rt_overwrite = lt_overwrite_uniqe.
 
+  ENDMETHOD.
+
+
+  METHOD is_active.
+
+    DATA: object TYPE REF TO zif_abapgit_object.
+
+    object = create_object( is_item     = is_item
+                            iv_language = sy-langu ).
+
+    TRY.
+        rv_active = object->is_active( ).
+      CATCH cx_sy_dyn_call_illegal_method
+            cx_sy_ref_is_initial.
+        rv_active = abap_true.
+    ENDTRY.
   ENDMETHOD.
 ENDCLASS.

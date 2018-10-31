@@ -14,7 +14,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ENHO_WDYN IMPLEMENTATION.
+CLASS zcl_abapgit_object_enho_wdyn IMPLEMENTATION.
 
 
   METHOD constructor.

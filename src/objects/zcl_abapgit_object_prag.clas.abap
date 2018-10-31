@@ -28,7 +28,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_PRAG IMPLEMENTATION.
+CLASS zcl_abapgit_object_prag IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -164,29 +164,26 @@ CLASS ZCL_ABAPGIT_OBJECT_PRAG IMPLEMENTATION.
 
 
   METHOD _raise_pragma_enqueue.
-
     zcx_abapgit_exception=>raise( |Pragma { ms_item-obj_name } enqueue error| ).
-
   ENDMETHOD.
 
 
   METHOD _raise_pragma_exists.
-
     zcx_abapgit_exception=>raise( |Pragma { ms_item-obj_name } exists| ).
-
   ENDMETHOD.
 
 
   METHOD _raise_pragma_not_exists.
-
     zcx_abapgit_exception=>raise( |Pragma { ms_item-obj_name } doesn't exist| ).
-
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~is_locked.
-
     rv_is_locked = abap_false.
-
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
 ENDCLASS.

@@ -12,7 +12,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ASFC IMPLEMENTATION.
+CLASS zcl_abapgit_object_asfc IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -106,4 +106,10 @@ CLASS ZCL_ABAPGIT_OBJECT_ASFC IMPLEMENTATION.
     lo_generic->serialize( io_xml ).
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
 ENDCLASS.

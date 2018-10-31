@@ -8,7 +8,6 @@ CLASS zcl_abapgit_tadir DEFINITION
     INTERFACES zif_abapgit_tadir .
 
   PRIVATE SECTION.
-
     METHODS exists
       IMPORTING
         !is_item         TYPE zif_abapgit_definitions=>ty_item
@@ -33,27 +32,27 @@ CLASS zcl_abapgit_tadir DEFINITION
       RETURNING
         VALUE(rt_tadir)        TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
+CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
 
   METHOD build.
 
-    DATA: lt_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          lt_tdevc        TYPE STANDARD TABLE OF tdevc,
-          lv_path         TYPE string,
-          lo_skip_objects TYPE REF TO zcl_abapgit_skip_objects,
-          lt_excludes     TYPE RANGE OF trobjtype,
-          lt_srcsystem    TYPE RANGE OF tadir-srcsystem,
-          ls_srcsystem    LIKE LINE OF lt_srcsystem,
-          ls_exclude      LIKE LINE OF lt_excludes.
-    DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
-    DATA: last_package    TYPE devclass VALUE cl_abap_char_utilities=>horizontal_tab.
-    DATA: lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
+    DATA: lt_tadir               TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          lt_tdevc               TYPE STANDARD TABLE OF tdevc,
+          lv_path                TYPE string,
+          lo_skip_objects        TYPE REF TO zcl_abapgit_skip_objects,
+          lt_excludes            TYPE RANGE OF trobjtype,
+          lt_srcsystem           TYPE RANGE OF tadir-srcsystem,
+          ls_srcsystem           LIKE LINE OF lt_srcsystem,
+          ls_exclude             LIKE LINE OF lt_excludes,
+          lo_folder_logic        TYPE REF TO zcl_abapgit_folder_logic,
+          last_package           TYPE devclass VALUE cl_abap_char_utilities=>horizontal_tab,
+          lt_packages            TYPE zif_abapgit_sap_package=>ty_devclass_tt.
 
     FIELD-SYMBOLS: <ls_tdevc>   LIKE LINE OF lt_tdevc,
                    <ls_tadir>   LIKE LINE OF rt_tadir,
@@ -150,7 +149,6 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
           ENDTRY.
       ENDCASE.
     ENDLOOP.
-
   ENDMETHOD.
 
 
@@ -277,4 +275,6 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+
 ENDCLASS.

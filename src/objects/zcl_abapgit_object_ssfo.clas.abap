@@ -461,4 +461,18 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~is_active.
+
+    DATA: ssfo_formname TYPE tdsfname.
+
+    ssfo_formname = ms_item-obj_name.
+    CALL FUNCTION 'SSF_STATUS_INFO'
+      EXPORTING
+        i_formname = ssfo_formname
+      IMPORTING
+        o_inactive = ms_item-inactive.
+
+    rv_active = boolc( ms_item-inactive = abap_false ).
+  ENDMETHOD.
 ENDCLASS.

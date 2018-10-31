@@ -28,7 +28,6 @@ CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 ENDCLASS.
 
 
-
 CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
 
@@ -250,5 +249,10 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
     serialize_longtexts( io_xml         = io_xml
                          iv_longtext_id = c_longtext_id_prog ).
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

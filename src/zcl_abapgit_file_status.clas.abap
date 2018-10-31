@@ -224,6 +224,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       ELSE.             " Only L exists
         <ls_result> = build_new_local( <ls_local> ).
       ENDIF.
+      <ls_result>-inactive = <ls_local>-item-inactive.
     ENDLOOP.
 
     " Complete item index for unmarked remote files
@@ -259,8 +260,8 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       APPEND ls_item TO lt_items.
     ENDLOOP.
 
-    SORT lt_items. " Default key - type, name, pkg
-    DELETE ADJACENT DUPLICATES FROM lt_items.
+    SORT lt_items DESCENDING. " Default key - type, name, pkg, inactive
+    DELETE ADJACENT DUPLICATES FROM lt_items COMPARING obj_type obj_name devclass.
     lt_items_idx = lt_items. " Self protection + UNIQUE records assertion
 
     " Process new remote files (marked above with empty SHA1)

@@ -87,7 +87,6 @@ CLASS zcl_abapgit_object_susc IMPLEMENTATION.
 
     DATA: lv_objclass TYPE tobc-oclss.
 
-
     lv_objclass = ms_item-obj_name.
     CALL FUNCTION 'SUSR_DELETE_OBJECT_CLASS'
       EXPORTING
@@ -98,7 +97,6 @@ CLASS zcl_abapgit_object_susc IMPLEMENTATION.
   METHOD zif_abapgit_object~jump.
 
     DATA: lv_objclass TYPE tobc-oclss.
-
 
     lv_objclass = ms_item-obj_name.
     CALL FUNCTION 'SUSR_SHOW_OBJECT_CLASS'
@@ -112,9 +110,6 @@ CLASS zcl_abapgit_object_susc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~is_locked.
-
     rv_is_locked = abap_false.
-
   ENDMETHOD.
-
 ENDCLASS.

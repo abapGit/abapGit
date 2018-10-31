@@ -161,7 +161,7 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
 
     METHODS:
       check
-        IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
+        IMPORTING VALUE(is_item) TYPE zif_abapgit_definitions=>ty_item
         RAISING   zcx_abapgit_exception,
       serialize_tabl FOR TESTING RAISING zcx_abapgit_exception,
       serialize_shlp FOR TESTING RAISING zcx_abapgit_exception,
@@ -331,12 +331,14 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
   METHOD check.
 
-    DATA: lt_files TYPE zif_abapgit_definitions=>ty_files_tt.
+    DATA: ls_files_item TYPE zcl_abapgit_objects=>ty_serialization.
 
-    lt_files = zcl_abapgit_objects=>serialize( is_item     = is_item
-                                       iv_language = zif_abapgit_definitions=>c_english ).
+    ls_files_item = zcl_abapgit_objects=>serialize( is_item     = is_item
+                                                    iv_language = zif_abapgit_definitions=>c_english ).
 
-    cl_abap_unit_assert=>assert_not_initial( lt_files ).
+    cl_abap_unit_assert=>assert_not_initial( ls_files_item-files ).
+    cl_abap_unit_assert=>assert_equals( act = ls_files_item-item
+                                        exp = is_item ).
 
   ENDMETHOD.
 
@@ -413,6 +415,10 @@ CLASS ltcl_objcet_ddls_mock IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~is_active. "##needed
 
   ENDMETHOD.
 

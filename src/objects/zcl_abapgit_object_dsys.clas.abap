@@ -28,7 +28,10 @@ CLASS zcl_abapgit_object_dsys DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_OBJECT_DSYS IMPLEMENTATION.
+
 
   METHOD constructor.
 
@@ -40,9 +43,24 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
+
+  METHOD read.
+
+    CALL FUNCTION 'DOCU_READ'
+      EXPORTING
+        id       = c_id
+        langu    = mv_language
+        object   = mv_object
+        typ      = c_typ
+        version  = c_version
+      IMPORTING
+        doktitle = rs_data-doctitle
+        head     = rs_data-head
+      TABLES
+        line     = rs_data-lines.
+
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~changed_by.
     rv_user = read( )-head-tdluser.
@@ -51,37 +69,11 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-    rs_metadata-delete_tadir = abap_true.
+
+  METHOD zif_abapgit_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~jump.
-
-    CALL FUNCTION 'DSYS_SHOW'
-      EXPORTING
-        dokclass         = c_dokclas
-        dokname          = mv_dokname
-      EXCEPTIONS
-        class_unknown    = 1
-        object_not_found = 2
-        OTHERS           = 3.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DSYS_EDIT' ).
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~exists.
-
-    SELECT SINGLE object FROM dokil INTO mv_object
-           WHERE id   = c_id
-           AND object = mv_object.                      "#EC CI_GENBUFF
-
-    rv_bool = boolc( sy-subrc = 0 ).
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -101,25 +93,6 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~serialize.
-
-    DATA: ls_data   TYPE ty_data.
-
-    ls_data = read( ).
-
-    CLEAR: ls_data-head-tdfuser,
-           ls_data-head-tdfreles,
-           ls_data-head-tdfdate,
-           ls_data-head-tdftime,
-           ls_data-head-tdluser,
-           ls_data-head-tdlreles,
-           ls_data-head-tdldate,
-           ls_data-head-tdltime.
-
-    io_xml->add( iv_name = 'DSYS'
-                 ig_data = ls_data ).
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -141,31 +114,74 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
 
-  METHOD read.
+  METHOD zif_abapgit_object~exists.
 
-    CALL FUNCTION 'DOCU_READ'
-      EXPORTING
-        id       = c_id
-        langu    = mv_language
-        object   = mv_object
-        typ      = c_typ
-        version  = c_version
-      IMPORTING
-        doktitle = rs_data-doctitle
-        head     = rs_data-head
-      TABLES
-        line     = rs_data-lines.
+    SELECT SINGLE object FROM dokil INTO mv_object
+           WHERE id   = c_id
+           AND object = mv_object.                      "#EC CI_GENBUFF
+
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+    rs_metadata-delete_tadir = abap_true.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~is_locked.
-
     rv_is_locked = abap_false.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~jump.
+
+    CALL FUNCTION 'DSYS_SHOW'
+      EXPORTING
+        dokclass         = c_dokclas
+        dokname          = mv_dokname
+      EXCEPTIONS
+        class_unknown    = 1
+        object_not_found = 2
+        OTHERS           = 3.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from DSYS_EDIT' ).
+    ENDIF.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~serialize.
+
+    DATA: ls_data   TYPE ty_data.
+
+    ls_data = read( ).
+
+    CLEAR: ls_data-head-tdfuser,
+           ls_data-head-tdfreles,
+           ls_data-head-tdfdate,
+           ls_data-head-tdftime,
+           ls_data-head-tdluser,
+           ls_data-head-tdlreles,
+           ls_data-head-tdldate,
+           ls_data-head-tdltime.
+
+    io_xml->add( iv_name = 'DSYS'
+                 ig_data = ls_data ).
+
+  ENDMETHOD.
 ENDCLASS.

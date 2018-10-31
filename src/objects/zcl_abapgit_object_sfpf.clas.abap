@@ -236,7 +236,10 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
     rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'EFPFORM'
                                             iv_argument    = lv_object ).
 
-
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
 ENDCLASS.

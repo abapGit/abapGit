@@ -12,33 +12,10 @@ CLASS zcl_abapgit_object_xslt DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.
 
-  METHOD zif_abapgit_object~changed_by.
+CLASS ZCL_ABAPGIT_OBJECT_XSLT IMPLEMENTATION.
 
-    DATA: lo_xslt       TYPE REF TO cl_o2_api_xsltdesc,
-          ls_attributes TYPE o2xsltattr.
-
-    lo_xslt = get( ).
-    lo_xslt->get_attributes(
-      RECEIVING
-        p_attributes     = ls_attributes
-      EXCEPTIONS
-        object_invalid   = 1
-        xsltdesc_deleted = 2
-        OTHERS           = 3 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-    rv_user = ls_attributes-changedby.
-
-  ENDMETHOD.
 
   METHOD get.
 
@@ -62,33 +39,64 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~serialize.
+
+  METHOD zif_abapgit_object~changed_by.
 
     DATA: lo_xslt       TYPE REF TO cl_o2_api_xsltdesc,
-          lv_source     TYPE string,
           ls_attributes TYPE o2xsltattr.
 
-
     lo_xslt = get( ).
+    lo_xslt->get_attributes(
+      RECEIVING
+        p_attributes     = ls_attributes
+      EXCEPTIONS
+        object_invalid   = 1
+        xsltdesc_deleted = 2
+        OTHERS           = 3 ).
 
-    ls_attributes = lo_xslt->get_attributes( ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
 
-    CLEAR: ls_attributes-author,
-           ls_attributes-createdon,
-           ls_attributes-changedby,
-           ls_attributes-changedon,
-           ls_attributes-devclass.
-
-    io_xml->add( iv_name = 'ATTRIBUTES'
-                 ig_data = ls_attributes ).
-
-    lv_source = lo_xslt->get_source_string( ).
-
-    mo_files->add_string( iv_extra  = 'source'
-                          iv_ext    = 'xml'
-                          iv_string = lv_source ) ##NO_TEXT.
+    rv_user = ls_attributes-changedby.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~delete.
+
+    DATA: lo_xslt TYPE REF TO cl_o2_api_xsltdesc,
+          lv_name TYPE cxsltdesc.
+
+
+    lv_name = ms_item-obj_name.
+
+    cl_o2_api_xsltdesc=>load(
+      EXPORTING
+        p_xslt_desc        = lv_name
+      IMPORTING
+        p_obj              = lo_xslt
+      EXCEPTIONS
+        error_occured      = 1
+        not_existing       = 2
+        permission_failure = 3
+        version_not_found  = 4
+        OTHERS             = 5 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from cl_o2_api_xsltdesc=>load' ).
+    ENDIF.
+
+    lo_xslt->set_changeable( abap_true ).
+    lo_xslt->delete( ).
+    lo_xslt->save( ).
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -143,39 +151,10 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~delete.
-
-    DATA: lo_xslt TYPE REF TO cl_o2_api_xsltdesc,
-          lv_name TYPE cxsltdesc.
-
-
-    lv_name = ms_item-obj_name.
-
-    cl_o2_api_xsltdesc=>load(
-      EXPORTING
-        p_xslt_desc        = lv_name
-      IMPORTING
-        p_obj              = lo_xslt
-      EXCEPTIONS
-        error_occured      = 1
-        not_existing       = 2
-        permission_failure = 3
-        version_not_found  = 4
-        OTHERS             = 5 ).
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from cl_o2_api_xsltdesc=>load' ).
-    ENDIF.
-
-    lo_xslt->set_changeable( abap_true ).
-    lo_xslt->delete( ).
-    lo_xslt->save( ).
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~exists.
 
     DATA: lv_name TYPE cxsltdesc.
-
 
     lv_name = ms_item-obj_name.
 
@@ -188,6 +167,27 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
@@ -198,18 +198,32 @@ CLASS zcl_abapgit_object_xslt IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
+
+  METHOD zif_abapgit_object~serialize.
+
+    DATA: lo_xslt       TYPE REF TO cl_o2_api_xsltdesc,
+          lv_source     TYPE string,
+          ls_attributes TYPE o2xsltattr.
+
+
+    lo_xslt = get( ).
+
+    ls_attributes = lo_xslt->get_attributes( ).
+
+    CLEAR: ls_attributes-author,
+           ls_attributes-createdon,
+           ls_attributes-changedby,
+           ls_attributes-changedon,
+           ls_attributes-devclass.
+
+    io_xml->add( iv_name = 'ATTRIBUTES'
+                 ig_data = ls_attributes ).
+
+    lv_source = lo_xslt->get_source_string( ).
+
+    mo_files->add_string( iv_extra  = 'source'
+                          iv_ext    = 'xml'
+                          iv_string = lv_source ) ##NO_TEXT.
+
   ENDMETHOD.
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-
-    rv_is_locked = abap_false.
-
-  ENDMETHOD.
-
 ENDCLASS.

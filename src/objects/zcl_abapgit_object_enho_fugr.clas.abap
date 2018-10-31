@@ -15,7 +15,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ENHO_FUGR IMPLEMENTATION.
+CLASS zcl_abapgit_object_enho_fugr IMPLEMENTATION.
 
 
   METHOD constructor.

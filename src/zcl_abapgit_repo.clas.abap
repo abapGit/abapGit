@@ -107,7 +107,9 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(rt_list) TYPE scit_alvlist
       RAISING
         zcx_abapgit_exception .
+
   PROTECTED SECTION.
+
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
     DATA mt_remote TYPE zif_abapgit_definitions=>ty_files_tt .
     DATA mv_do_local_refresh TYPE abap_bool .
@@ -116,30 +118,26 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA mv_code_inspector_successful TYPE abap_bool .
 
     METHODS set
-      IMPORTING
-        !it_checksums       TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
-        !iv_url             TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
-        !iv_branch_name     TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
-        !iv_head_branch     TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
-        !iv_offline         TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
-        !is_dot_abapgit     TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL
-        !is_local_settings  TYPE zif_abapgit_persistence=>ty_repo-local_settings OPTIONAL
-        !iv_deserialized_at TYPE zif_abapgit_persistence=>ty_repo-deserialized_at OPTIONAL
-        !iv_deserialized_by TYPE zif_abapgit_persistence=>ty_repo-deserialized_by OPTIONAL
-      RAISING
-        zcx_abapgit_exception .
+      IMPORTING it_checksums       TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
+                iv_url             TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
+                iv_branch_name     TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
+                iv_head_branch     TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
+                iv_offline         TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
+                is_dot_abapgit     TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL
+                is_local_settings  TYPE zif_abapgit_persistence=>ty_repo-local_settings OPTIONAL
+                iv_deserialized_at TYPE zif_abapgit_persistence=>ty_repo-deserialized_at OPTIONAL
+                iv_deserialized_by TYPE zif_abapgit_persistence=>ty_repo-deserialized_by OPTIONAL
+      RAISING   zcx_abapgit_exception .
 
   PRIVATE SECTION.
-    METHODS:
-      update_last_deserialize
-        RAISING
-          zcx_abapgit_exception.
+
+    METHODS: update_last_deserialize RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -251,18 +249,17 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD get_files_local.
 
-    DATA: lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          ls_item     TYPE zif_abapgit_definitions=>ty_item,
-          lt_files    TYPE zif_abapgit_definitions=>ty_files_tt,
-          lo_progress TYPE REF TO zcl_abapgit_progress,
-          lt_cache    TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_file_item
-                   WITH NON-UNIQUE KEY item.
+    DATA: lt_tadir     TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          lo_progress  TYPE REF TO zcl_abapgit_progress,
+          lt_cache     TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_file_item
+                   WITH NON-UNIQUE KEY item,
+          ls_fils_item TYPE zcl_abapgit_objects=>ty_serialization.
 
     DATA: lt_filter       TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_tadir
                           WITH NON-UNIQUE KEY object obj_name,
           lv_filter_exist TYPE abap_bool.
 
-    FIELD-SYMBOLS: <ls_file>   LIKE LINE OF lt_files,
+    FIELD-SYMBOLS: <ls_file>   LIKE LINE OF ls_fils_item-files,
                    <ls_return> LIKE LINE OF rt_files,
                    <ls_cache>  LIKE LINE OF lt_cache,
                    <ls_tadir>  LIKE LINE OF lt_tadir.
@@ -310,19 +307,18 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         iv_current = sy-tabix
         iv_text    = |Serialize { <ls_tadir>-obj_name }| ) ##NO_TEXT.
 
-      ls_item-obj_type = <ls_tadir>-object.
-      ls_item-obj_name = <ls_tadir>-obj_name.
-      ls_item-devclass = <ls_tadir>-devclass.
-
+      ls_fils_item-item-obj_type = <ls_tadir>-object.
+      ls_fils_item-item-obj_name = <ls_tadir>-obj_name.
+      ls_fils_item-item-devclass = <ls_tadir>-devclass.
       IF mv_last_serialization IS NOT INITIAL. " Try to fetch from cache
         READ TABLE lt_cache TRANSPORTING NO FIELDS
-          WITH KEY item = ls_item. " type+name+package key
+          WITH KEY item = ls_fils_item-item. " type+name+package key
         " There is something in cache and the object is unchanged
         IF sy-subrc = 0
             AND abap_false = zcl_abapgit_objects=>has_changed_since(
-            is_item      = ls_item
+            is_item      = ls_fils_item-item
             iv_timestamp = mv_last_serialization ).
-          LOOP AT lt_cache ASSIGNING <ls_cache> WHERE item = ls_item.
+          LOOP AT lt_cache ASSIGNING <ls_cache> WHERE item = ls_fils_item-item.
             APPEND <ls_cache> TO rt_files.
           ENDLOOP.
 
@@ -330,16 +326,18 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      lt_files = zcl_abapgit_objects=>serialize(
-        is_item     = ls_item
+      ls_fils_item = zcl_abapgit_objects=>serialize(
+        is_item     = ls_fils_item-item
         iv_language = get_dot_abapgit( )->get_master_language( )
         io_log      = io_log ).
-      LOOP AT lt_files ASSIGNING <ls_file>.
+
+
+      LOOP AT ls_fils_item-files ASSIGNING <ls_file>.
         <ls_file>-path = <ls_tadir>-path.
 
         APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
         <ls_return>-file = <ls_file>.
-        <ls_return>-item = ls_item.
+        <ls_return>-item = ls_fils_item-item.
       ENDLOOP.
     ENDLOOP.
 

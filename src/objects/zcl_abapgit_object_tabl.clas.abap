@@ -532,4 +532,9 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
                          iv_longtext_id = c_longtext_id_tabl ).
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
 ENDCLASS.
