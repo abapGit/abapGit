@@ -13,6 +13,7 @@ ASFC | Field Catalog | Yes
 ASIS | Archiving Information Structure | [#1579](https://github.com/larshp/abapGit/issues/1579)
 AUTH | Authorization Check Fields | Yes
 AVAS | Classification | [#1360](https://github.com/larshp/abapGit/issues/1360)
+BDEF | Behaviour Definition | [#2021](https://github.com/larshp/abapGit/issues/2021)
 BOBF | BOPF: Business Object Model | [#165](https://github.com/larshp/abapGit/issues/165)
 CHAR | Object characteristic | Yes
 CHDO | Change Document Object | [#802](https://github.com/larshp/abapGit/issues/802)
