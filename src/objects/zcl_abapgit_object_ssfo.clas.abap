@@ -28,7 +28,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
+CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
 
 
   METHOD code_item_section_handling.
@@ -133,7 +133,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
 
   METHOD get_range_node_codes.
 
-    DATA: range_node_code TYPE sstr_sr_string_range.
+    DATA: range_node_code TYPE LINE OF ty_string_range.
 
     IF me->range_node_codes IS INITIAL.
       range_node_code-sign   = 'I'.
