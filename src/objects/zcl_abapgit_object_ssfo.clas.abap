@@ -5,7 +5,9 @@ CLASS zcl_abapgit_object_ssfo DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PRIVATE SECTION.
-    CLASS-DATA: range_node_codes TYPE stty_sr_string_range.
+    TYPES: ty_string_range TYPE RANGE OF string.
+
+    CLASS-DATA: range_node_codes TYPE ty_string_range.
     CONSTANTS: attrib_abapgit_leadig_spaces TYPE string VALUE 'abapgit-leadig-spaces' ##NO_TEXT.
 
     METHODS fix_ids IMPORTING ii_xml_doc TYPE REF TO if_ixml_document.
@@ -15,7 +17,7 @@ CLASS zcl_abapgit_object_ssfo DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS handle_attrib_leading_spaces IMPORTING i_name                TYPE string
                                                    i_node                TYPE REF TO if_ixml_node
                                          CHANGING  c_within_code_section TYPE abap_bool.
-    METHODS get_range_node_codes RETURNING VALUE(e_range_node_codes) TYPE stty_sr_string_range.
+    METHODS get_range_node_codes RETURNING VALUE(e_range_node_codes) TYPE ty_string_range.
     METHODS code_item_section_handling IMPORTING i_name                TYPE string
                                                  i_node                TYPE REF TO if_ixml_node
                                        EXPORTING e_code_item_element   TYPE REF TO if_ixml_element
@@ -25,7 +27,36 @@ CLASS zcl_abapgit_object_ssfo DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 ENDCLASS.
 
 
-CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
+
+CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
+
+
+  METHOD code_item_section_handling.
+    CONSTANTS: node_item TYPE string VALUE 'item' ##NO_TEXT.
+    CONSTANTS: node_text TYPE string VALUE '#text' ##NO_TEXT.
+
+    IF i_name IN get_range_node_codes( ).
+      c_within_code_section = abap_true.
+    ENDIF.
+
+    IF c_within_code_section = abap_true.
+      IF i_name = node_item.
+        TRY.
+            e_code_item_element ?= i_node.
+            RETURN.
+          CATCH cx_sy_move_cast_error ##no_handler.
+        ENDTRY.
+
+      ELSEIF i_name NOT IN get_range_node_codes( ) AND
+             i_name <> node_text.
+        c_within_code_section = abap_false.
+      ENDIF.
+    ENDIF.
+
+    RAISE EXCEPTION TYPE zcx_abapgit_exception.
+
+  ENDMETHOD.
+
 
   METHOD fix_ids.
 
@@ -100,6 +131,28 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_range_node_codes.
+
+    DATA: range_node_code TYPE sstr_sr_string_range.
+
+    IF me->range_node_codes IS INITIAL.
+      range_node_code-sign   = 'I'.
+      range_node_code-option = 'EQ'.
+      range_node_code-low    = 'CODE'.
+      INSERT range_node_code INTO TABLE me->range_node_codes.
+      range_node_code-low    = 'GTYPES'.
+      INSERT range_node_code INTO TABLE me->range_node_codes.
+      range_node_code-low    = 'GCODING'.
+      INSERT range_node_code INTO TABLE me->range_node_codes.
+      range_node_code-low    = 'FCODING'.
+      INSERT range_node_code INTO TABLE me->range_node_codes.
+    ENDIF.
+
+    e_range_node_codes = me->range_node_codes.
+
+  ENDMETHOD.
+
+
   METHOD handle_attrib_leading_spaces.
 
     DATA element        TYPE REF TO if_ixml_element.
@@ -152,32 +205,6 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-  METHOD code_item_section_handling.
-    CONSTANTS: node_item TYPE string VALUE 'item' ##NO_TEXT.
-    CONSTANTS: node_text TYPE string VALUE '#text' ##NO_TEXT.
-
-    IF i_name IN get_range_node_codes( ).
-      c_within_code_section = abap_true.
-    ENDIF.
-
-    IF c_within_code_section = abap_true.
-      IF i_name = node_item.
-        TRY.
-            e_code_item_element ?= i_node.
-            RETURN.
-          CATCH cx_sy_move_cast_error ##no_handler.
-        ENDTRY.
-
-      ELSEIF i_name NOT IN get_range_node_codes( ) AND
-             i_name <> node_text.
-        c_within_code_section = abap_false.
-      ENDIF.
-    ENDIF.
-
-    RAISE EXCEPTION TYPE zcx_abapgit_exception.
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -303,6 +330,21 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+
+    DATA: ssfo_formname TYPE tdsfname.
+
+    ssfo_formname = ms_item-obj_name.
+    CALL FUNCTION 'SSF_STATUS_INFO'
+      EXPORTING
+        i_formname = ssfo_formname
+      IMPORTING
+        o_inactive = ms_item-inactive.
+
+    rv_active = boolc( ms_item-inactive = abap_false ).
   ENDMETHOD.
 
 
@@ -437,42 +479,5 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
 
     io_xml->set_raw( li_xml_doc->get_root_element( ) ).
 
-  ENDMETHOD.
-
-
-  METHOD get_range_node_codes.
-
-    DATA: range_node_code TYPE sstr_sr_string_range.
-
-    IF me->range_node_codes IS INITIAL.
-      range_node_code-sign   = 'I'.
-      range_node_code-option = 'EQ'.
-      range_node_code-low    = 'CODE'.
-      INSERT range_node_code INTO TABLE me->range_node_codes.
-      range_node_code-low    = 'GTYPES'.
-      INSERT range_node_code INTO TABLE me->range_node_codes.
-      range_node_code-low    = 'GCODING'.
-      INSERT range_node_code INTO TABLE me->range_node_codes.
-      range_node_code-low    = 'FCODING'.
-      INSERT range_node_code INTO TABLE me->range_node_codes.
-    ENDIF.
-
-    e_range_node_codes = me->range_node_codes.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-
-    DATA: ssfo_formname TYPE tdsfname.
-
-    ssfo_formname = ms_item-obj_name.
-    CALL FUNCTION 'SSF_STATUS_INFO'
-      EXPORTING
-        i_formname = ssfo_formname
-      IMPORTING
-        o_inactive = ms_item-inactive.
-
-    rv_active = boolc( ms_item-inactive = abap_false ).
   ENDMETHOD.
 ENDCLASS.
