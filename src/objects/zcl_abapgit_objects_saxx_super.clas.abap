@@ -1,11 +1,13 @@
-CLASS zcl_abapgit_objects_saxx_super DEFINITION PUBLIC ABSTRACT
-                                INHERITING FROM zcl_abapgit_objects_super.
+CLASS zcl_abapgit_objects_saxx_super DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  ABSTRACT
+  CREATE PUBLIC .
+
 * common class for SAPC and SAMC objects
-
   PUBLIC SECTION.
-    INTERFACES:
-      zif_abapgit_object.
 
+    INTERFACES zif_abapgit_object .
   PROTECTED SECTION.
     METHODS:
       get_persistence_class_name ABSTRACT
@@ -52,7 +54,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_saxx_super IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_SAXX_SUPER IMPLEMENTATION.
 
 
   METHOD create_channel_objects.
@@ -319,6 +321,18 @@ CLASS zcl_abapgit_objects_saxx_super IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
@@ -391,11 +405,4 @@ CLASS zcl_abapgit_objects_saxx_super IMPLEMENTATION.
                  ig_data = <lg_data> ).
 
   ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-
-    rv_is_locked = abap_false.
-
-  ENDMETHOD.
-
 ENDCLASS.
