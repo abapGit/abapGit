@@ -405,35 +405,41 @@ CLASS zcl_abapgit_oo_class_new IMPLEMENTATION.
 
 * public
     lt_source = lo_scanner->get_public_section_source( ).
-    lv_program = cl_oo_classname_service=>get_pubsec_name( is_key-clsname ).
-    lv_updated = update_report( iv_program = lv_program
-                                it_source  = lt_source ).
-    IF lv_updated = abap_true.
-      update_meta( iv_name     = is_key-clsname
-                   iv_exposure = seoc_exposure_public
-                   it_source   = lt_source ).
+    IF lt_source IS NOT INITIAL.
+      lv_program = cl_oo_classname_service=>get_pubsec_name( is_key-clsname ).
+      lv_updated = update_report( iv_program = lv_program
+                                  it_source  = lt_source ).
+      IF lv_updated = abap_true.
+        update_meta( iv_name     = is_key-clsname
+                     iv_exposure = seoc_exposure_public
+                     it_source   = lt_source ).
+      ENDIF.
     ENDIF.
 
 * protected
     lt_source = lo_scanner->get_protected_section_source( ).
-    lv_program = cl_oo_classname_service=>get_prosec_name( is_key-clsname ).
-    lv_updated = update_report( iv_program = lv_program
-                                it_source  = lt_source ).
-    IF lv_updated = abap_true.
-      update_meta( iv_name     = is_key-clsname
-                   iv_exposure = seoc_exposure_protected
-                   it_source   = lt_source ).
+    IF lt_source IS NOT INITIAL.
+      lv_program = cl_oo_classname_service=>get_prosec_name( is_key-clsname ).
+      lv_updated = update_report( iv_program = lv_program
+                                  it_source  = lt_source ).
+      IF lv_updated = abap_true.
+        update_meta( iv_name     = is_key-clsname
+                     iv_exposure = seoc_exposure_protected
+                     it_source   = lt_source ).
+      ENDIF.
     ENDIF.
 
 * private
     lt_source = lo_scanner->get_private_section_source( ).
-    lv_program = cl_oo_classname_service=>get_prisec_name( is_key-clsname ).
-    lv_updated = update_report( iv_program = lv_program
-                                it_source  = lt_source ).
-    IF lv_updated = abap_true.
-      update_meta( iv_name     = is_key-clsname
-                   iv_exposure = seoc_exposure_private
-                   it_source   = lt_source ).
+    IF lt_source IS NOT INITIAL.
+      lv_program = cl_oo_classname_service=>get_prisec_name( is_key-clsname ).
+      lv_updated = update_report( iv_program = lv_program
+                                  it_source  = lt_source ).
+      IF lv_updated = abap_true.
+        update_meta( iv_name     = is_key-clsname
+                     iv_exposure = seoc_exposure_private
+                     it_source   = lt_source ).
+      ENDIF.
     ENDIF.
 
 * methods
