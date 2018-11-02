@@ -79,7 +79,7 @@ CLASS zcl_abapgit_object_enho_wdyn IMPLEMENTATION.
 
         ENDLOOP.
 
-        lo_wdyn->if_enh_object~save( ).
+        lo_wdyn->if_enh_object~save( run_dark = abap_true ).
         lo_wdyn->if_enh_object~unlock( ).
 
       CATCH cx_root.

@@ -118,7 +118,7 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
           io_xml  = io_xml
           io_clif = lo_enh_class ).
 
-        lo_enh_class->if_enh_object~save( ).
+        lo_enh_class->if_enh_object~save( run_dark = abap_true ).
         lo_enh_class->if_enh_object~unlock( ).
       CATCH cx_enh_root.
         zcx_abapgit_exception=>raise( 'error deserializing ENHO class' ).
