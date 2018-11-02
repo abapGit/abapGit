@@ -183,13 +183,12 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
   METHOD activate_old.
 
-    DATA: lv_popup TYPE abap_bool.
+    DATA: lv_popup TYPE abap_bool,
+          li_gui   TYPE REF TO zif_abapgit_gui_functions.
 
     IF gt_objects IS NOT INITIAL.
 
-      CALL FUNCTION 'GUI_IS_AVAILABLE'
-        IMPORTING
-          return = lv_popup.
+      lv_popup = zcl_abapgit_ui_factory=>get_gui_functions( )->gui_is_available( ).
 
       CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
         EXPORTING
