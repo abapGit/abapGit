@@ -132,7 +132,7 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
         request_language_denied  = 9
         OTHERS                   = 10.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_PRAMETER_DELETE' ).
+      zcx_abapgit_exception=>raise( |error from RS_ACCESS_PERMISSION. SUBRC={ sy-subrc }| ).
     ENDIF.
 
     SELECT COUNT(*) FROM cross WHERE ( type = 'P' OR
@@ -173,7 +173,7 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
             type      = 'CR'.
       ENDIF.
     ELSE.
-      zcx_abapgit_exception=>raise( 'error from RS_PRAMETER_DELETE' ).
+      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT' ).
     ENDIF.
 
   ENDMETHOD.
