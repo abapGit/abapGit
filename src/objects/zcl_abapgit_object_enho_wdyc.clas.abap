@@ -50,7 +50,7 @@ CLASS zcl_abapgit_object_enho_wdyc IMPLEMENTATION.
 * lo_wdyconf->set_enhancement_data( )
         ASSERT 0 = 1.
 
-        lo_wdyconf->if_enh_object~save( ).
+        lo_wdyconf->if_enh_object~save( run_dark = abap_true ).
         lo_wdyconf->if_enh_object~unlock( ).
       CATCH cx_enh_root.
         zcx_abapgit_exception=>raise( 'error deserializing ENHO wdyconf' ).

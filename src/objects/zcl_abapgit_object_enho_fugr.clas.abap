@@ -70,7 +70,7 @@ CLASS zcl_abapgit_object_enho_fugr IMPLEMENTATION.
 
         ENDLOOP.
 
-        lo_fugrdata->if_enh_object~save( ).
+        lo_fugrdata->if_enh_object~save( run_dark = abap_true ).
         lo_fugrdata->if_enh_object~unlock( ).
 
       CATCH cx_enh_root.

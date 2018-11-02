@@ -83,7 +83,7 @@ CLASS zcl_abapgit_object_enho_intf IMPLEMENTATION.
           io_xml  = io_xml
           io_clif = lo_enh_intf ).
 
-        lo_enh_intf->if_enh_object~save( ).
+        lo_enh_intf->if_enh_object~save( run_dark = abap_true ).
         lo_enh_intf->if_enh_object~unlock( ).
       CATCH cx_enh_root.
         zcx_abapgit_exception=>raise( 'error deserializing ENHO interface' ).
