@@ -132,7 +132,7 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
         request_language_denied  = 9
         OTHERS                   = 10.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |error from RS_ACCESS_PERMISSION. SUBRC={ sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     SELECT COUNT(*) FROM cross WHERE ( type = 'P' OR
