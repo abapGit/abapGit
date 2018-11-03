@@ -61,7 +61,10 @@ CLASS zcl_abapgit_syntax_check IMPLEMENTATION.
         error_in_enqueue    = 3
         not_authorized      = 4
         OTHERS              = 5 ).
-    ASSERT sy-subrc = 0.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Couldn't create variant. Subrc = { sy-subrc }| ).
+    ENDIF.
 
     ls_variant-testname = 'CL_CI_TEST_SYNTAX_CHECK'.
     INSERT ls_variant INTO TABLE lt_variant.
@@ -72,7 +75,10 @@ CLASS zcl_abapgit_syntax_check IMPLEMENTATION.
       EXCEPTIONS
         not_enqueued = 1
         OTHERS       = 2 ).
-    ASSERT sy-subrc = 0.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Couldn't set variant. Subrc = { sy-subrc }| ).
+    ENDIF.
 
     mo_variant->save(
       EXPORTING
@@ -82,7 +88,10 @@ CLASS zcl_abapgit_syntax_check IMPLEMENTATION.
         transport_error   = 2
         not_authorized    = 3
         OTHERS            = 4 ).
-    ASSERT sy-subrc = 0.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Couldn't save variant. Subrc = { sy-subrc }| ).
+    ENDIF.
 
     ro_variant = mo_variant.
 
@@ -92,16 +101,21 @@ CLASS zcl_abapgit_syntax_check IMPLEMENTATION.
 
     super->cleanup( io_set ).
 
-    mo_variant->delete(
-      EXCEPTIONS
-        exists_in_insp   = 1
-        locked           = 2
-        error_in_enqueue = 3
-        not_authorized   = 4
-        transport_error  = 5
-        OTHERS           = 6 ).
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Couldn't delete variant. Subrc = { sy-subrc }| ).
+    IF mo_variant IS BOUND.
+
+      mo_variant->delete(
+        EXCEPTIONS
+          exists_in_insp   = 1
+          locked           = 2
+          error_in_enqueue = 3
+          not_authorized   = 4
+          transport_error  = 5
+          OTHERS           = 6 ).
+
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Couldn't delete variant. Subrc = { sy-subrc }| ).
+      ENDIF.
+
     ENDIF.
 
   ENDMETHOD.

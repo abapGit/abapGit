@@ -44,10 +44,21 @@ CLASS zcl_abapgit_code_inspector DEFINITION
           zcx_abapgit_exception.
 
   PRIVATE SECTION.
+    CONSTANTS:
+      BEGIN OF co_run_mode,
+        run_with_popup   TYPE sychar01 VALUE 'P',
+        run_after_popup  TYPE sychar01 VALUE 'A',
+        run_via_rfc      TYPE sychar01 VALUE 'R',
+        run_in_batch     TYPE sychar01 VALUE 'B',
+        run_loc_parallel TYPE sychar01 VALUE 'L',
+        run_direct       TYPE sychar01 VALUE 'L',
+      END OF co_run_mode.
+
     DATA:
       mo_inspection      TYPE REF TO cl_ci_inspection,
       mv_objectset_name  TYPE sci_objs,
-      mv_inspection_name TYPE sci_insp.
+      mv_inspection_name TYPE sci_insp,
+      mv_run_mode        TYPE sychar01.
 
     METHODS:
       find_all_subpackages
@@ -64,7 +75,9 @@ CLASS zcl_abapgit_code_inspector DEFINITION
         IMPORTING
           io_inspection  TYPE REF TO cl_ci_inspection
         RETURNING
-          VALUE(rt_list) TYPE scit_alvlist,
+          VALUE(rt_list) TYPE scit_alvlist
+        RAISING
+          zcx_abapgit_exception,
 
       create_inspection
         IMPORTING
@@ -84,15 +97,20 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
 
   METHOD cleanup.
 
-    mo_inspection->delete(
-      EXCEPTIONS
-        locked              = 1
-        error_in_enqueue    = 2
-        not_authorized      = 3
-        exceptn_appl_exists = 4
-        OTHERS              = 5 ).
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Couldn't delete inspection. Subrc = { sy-subrc }| ).
+    IF mo_inspection IS BOUND.
+
+      mo_inspection->delete(
+        EXCEPTIONS
+          locked              = 1
+          error_in_enqueue    = 2
+          not_authorized      = 3
+          exceptn_appl_exists = 4
+          OTHERS              = 5 ).
+
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Couldn't delete inspection. Subrc = { sy-subrc }| ).
+      ENDIF.
+
     ENDIF.
 
     io_set->delete(
@@ -103,6 +121,7 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
         not_authorized   = 4
         exists_in_objs   = 5
         OTHERS           = 6 ).
+
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Couldn't delete objectset. Subrc = { sy-subrc }| ).
     ENDIF.
@@ -120,6 +139,13 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
     " Both are deleted afterwards.
     mv_inspection_name = mv_objectset_name = |{ sy-uname }_{ sy-datum }_{ sy-uzeit }|.
 
+    " We have to disable parallelization in batch because of lock errors.
+    IF sy-batch = abap_true.
+      mv_run_mode = co_run_mode-run_via_rfc.
+    ELSE.
+      mv_run_mode = co_run_mode-run_loc_parallel.
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -136,7 +162,10 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
         error_in_enqueue = 2
         not_authorized   = 3
         OTHERS           = 4 ).
-    ASSERT sy-subrc = 0.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Failed to create inspection. Subrc = { sy-subrc }| ).
+    ENDIF.
 
     ro_inspection->set(
       p_chkv = io_variant
@@ -236,11 +265,14 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
 
     io_inspection->run(
       EXPORTING
-        p_howtorun            = 'L'
+        p_howtorun            = mv_run_mode
       EXCEPTIONS
         invalid_check_version = 1
         OTHERS                = 2 ).
-    ASSERT sy-subrc = 0.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Code inspector run failed. Subrc = { sy-subrc }| ).
+    ENDIF.
 
     io_inspection->plain_list(
       IMPORTING
@@ -280,6 +312,12 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
 
     TRY.
         lo_set = create_objectset( ).
+
+        IF lines( lo_set->iobjlst-objects ) = 0.
+          " no objects, nothing to check
+          RETURN.
+        ENDIF.
+
         lo_variant = create_variant( ).
 
         mo_inspection = create_inspection(
@@ -294,13 +332,10 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
 
         " ensure cleanup
         cleanup( lo_set ).
-
-        RAISE EXCEPTION TYPE zcx_abapgit_exception
-          EXPORTING
-            previous = lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                      ix_previous = lx_error ).
 
     ENDTRY.
-
 
   ENDMETHOD.
 ENDCLASS.
