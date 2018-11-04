@@ -36,6 +36,9 @@ CLASS zcl_abapgit_object_scp1 DEFINITION
     METHODS load
       CHANGING
         !cs_scp1 TYPE ty_scp1 .
+    METHODS call_delete_fms
+      IMPORTING i_profile_id TYPE scpr_id
+      RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -211,27 +214,69 @@ CLASS zcl_abapgit_object_scp1 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_id TYPE scpr_id.
-
-    lv_id = ms_item-obj_name.
+    DATA: profile_id     TYPE scpr_id.
+    profile_id = ms_item-obj_name.
 
     enqueue( ).
-
-* todo, this gives a popup
-    CALL FUNCTION 'SCPR_CTRL_DELETE'
-      EXPORTING
-        profid             = lv_id
-      EXCEPTIONS
-        user_abort         = 1
-        profile_dont_exist = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |error while deleting SCP1, { sy-subrc }| ).
-    ENDIF.
-
+    call_delete_fms( profile_id ).
     dequeue( ).
 
   ENDMETHOD.
 
+  METHOD call_delete_fms.
+
+    CONSTANTS version_new      TYPE c VALUE 'N' ##NO_TEXT. "Include SCPRINTCONST version_new
+    CONSTANTS operation_delete TYPE c VALUE 'D' ##NO_TEXT.
+    DATA profile_type          TYPE scprattr-type.
+    DATA fatherprofiles        TYPE standard table of scproprof WITH DEFAULT KEY.
+    DATA fatherprofile         TYPE scproprof.
+
+    CALL FUNCTION 'SCPR_DB_ATTR_GET_DETAIL'
+      EXPORTING
+        profid   = i_profile_id
+        version  = version_new
+      IMPORTING
+        proftype = profile_type
+      EXCEPTIONS
+        OTHERS   = 0.
+
+    CALL FUNCTION 'SCPR_PRSET_DB_USED_IN'
+      EXPORTING
+        profid   = i_profile_id
+        version  = version_new
+      TABLES
+        profiles = fatherprofiles.
+
+    fatherprofile-id       = i_profile_id.
+    APPEND fatherprofile TO fatherprofiles.
+    CALL FUNCTION 'SCPR_CT_TRANSPORT_ENTRIES'
+      TABLES
+        profids                  = fatherprofiles
+      EXCEPTIONS
+        error_in_transport_layer = 1
+        user_abort               = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |error while deleting SCP1 - TRANSPORT, { sy-subrc }| ).
+    ENDIF.
+
+    CALL FUNCTION 'SCPR_PRSET_DB_DELETE_ALL'
+      EXPORTING
+        profid      = i_profile_id
+        proftype    = profile_type
+      TABLES
+        fatherprofs = fatherprofiles
+      EXCEPTIONS
+        user_abort  = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |error while deleting SCP1 - DB_DELETE, { sy-subrc }| ).
+    ENDIF.
+
+    CALL FUNCTION 'SCPR_MEM_SCPR_ACTIONS_ADD'
+      EXPORTING
+        bcset_id  = i_profile_id
+        operation = operation_delete.
+
+  ENDMETHOD.
 
   METHOD zif_abapgit_object~deserialize.
 
