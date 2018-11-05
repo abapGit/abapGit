@@ -85,17 +85,15 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
+CLASS zcl_abapgit_factory IMPLEMENTATION.
 
 
   METHOD get_branch_overview.
 
-    IF gi_branch_overview IS INITIAL.
-      CREATE OBJECT gi_branch_overview
-        TYPE zcl_abapgit_branch_overview
-        EXPORTING
-          io_repo = io_repo.
-    ENDIF.
+    CREATE OBJECT gi_branch_overview
+      TYPE zcl_abapgit_branch_overview
+      EXPORTING
+        io_repo = io_repo.
 
     ri_branch_overview = gi_branch_overview.
 
