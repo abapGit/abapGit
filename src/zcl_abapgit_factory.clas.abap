@@ -39,6 +39,9 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-METHODS get_stage_logic
       RETURNING
         VALUE(ri_logic) TYPE REF TO zif_abapgit_stage_logic .
+    CLASS-METHODS get_cts_api
+      RETURNING
+        VALUE(ri_cts_api) TYPE REF TO zif_abapgit_cts_api.
   PRIVATE SECTION.
 
     TYPES:
@@ -81,11 +84,12 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-DATA gt_syntax_check TYPE tty_syntax_check .
     CLASS-DATA gi_branch_overview TYPE REF TO zif_abapgit_branch_overview .
     CLASS-DATA gi_stage_logic TYPE REF TO zif_abapgit_stage_logic .
+    CLASS-DATA gi_cts_api TYPE REF TO zif_abapgit_cts_api.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
+CLASS zcl_abapgit_factory IMPLEMENTATION.
 
 
   METHOD get_branch_overview.
@@ -200,5 +204,13 @@ CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
 
     ri_tadir = gi_tadir.
 
+  ENDMETHOD.
+
+  METHOD get_cts_api.
+    IF gi_cts_api IS NOT BOUND.
+      CREATE OBJECT gi_cts_api TYPE zcl_abapgit_cts_api.
+    ENDIF.
+
+    ri_cts_api = gi_cts_api.
   ENDMETHOD.
 ENDCLASS.
