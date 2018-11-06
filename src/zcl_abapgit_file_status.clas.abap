@@ -10,6 +10,12 @@ CLASS zcl_abapgit_file_status DEFINITION
                 io_log            TYPE REF TO zcl_abapgit_log OPTIONAL
       RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING   zcx_abapgit_exception.
+    CLASS-METHODS identify_objects
+      IMPORTING it_files        TYPE zif_abapgit_definitions=>ty_files_tt
+                iv_package      TYPE devclass
+                io_dot          TYPE REF TO zcl_abapgit_dot_abapgit
+      RETURNING VALUE(rt_items) TYPE zif_abapgit_definitions=>ty_items_ts
+      RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
 
@@ -57,7 +63,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
+CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -435,4 +441,40 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       iv_top     = io_repo->get_package( ) ).
 
   ENDMETHOD.
+
+
+  METHOD identify_objects.
+
+    DATA: ls_item   TYPE zif_abapgit_definitions=>ty_item,
+          lv_is_xml TYPE abap_bool.
+
+    FIELD-SYMBOLS: <ls_file> TYPE zif_abapgit_definitions=>ty_file.
+
+    LOOP AT it_files ASSIGNING <ls_file>.
+
+      CLEAR: ls_item,
+             lv_is_xml.
+
+      identify_object(
+        EXPORTING
+          iv_filename = <ls_file>-filename
+          iv_path     = <ls_file>-path
+          iv_devclass = iv_package
+          io_dot      = io_dot
+        IMPORTING
+          es_item     = ls_item
+          ev_is_xml   = lv_is_xml ).
+
+      IF ls_item-obj_type = 'DEVC'.
+        ls_item-devclass = iv_package.
+      ENDIF.
+
+      IF lv_is_xml = abap_true.
+        INSERT ls_item INTO TABLE rt_items.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.
