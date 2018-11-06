@@ -65,6 +65,9 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
       get_item_icon
         IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
         RETURNING VALUE(rv_html) TYPE string,
+      render_item_lock_column
+        IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
+        RETURNING VALUE(rv_html) TYPE string,
       render_empty_package
         RETURNING VALUE(rv_html) TYPE string,
       render_parent_dir
@@ -80,7 +83,7 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         RETURNING VALUE(rv_html) TYPE string,
       build_inactive_object_code
         IMPORTING is_item                     TYPE zif_abapgit_definitions=>ty_repo_item
-        RETURNING value(r_inactive_html_code) TYPE string.
+        RETURNING VALUE(r_inactive_html_code) TYPE string.
 ENDCLASS.
 
 
@@ -394,12 +397,13 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ro_html->add( |<tr{ get_item_class( is_item ) }>| ).
 
     IF is_item-obj_name IS INITIAL AND is_item-is_dir = abap_false.
-      ro_html->add( '<td colspan="2"></td>'
+      ro_html->add( '<td colspan="3"></td>'
                  && '<td class="object">'
                  && '<i class="grey">non-code and meta files</i>'
                  && '</td>' ).
     ELSE.
       ro_html->add( |<td class="icon">{ get_item_icon( is_item ) }</td>| ).
+      ro_html->add( render_item_lock_column( is_item ) ).
 
       IF is_item-is_dir = abap_true. " Subdir
         lv_link = build_dir_jump_link( is_item-path ).
@@ -525,6 +529,33 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ENDIF.
     ro_html->add( '</tr>' ).
 
+  ENDMETHOD.
+
+  METHOD render_item_lock_column.
+    DATA: li_cts_api          TYPE REF TO zif_abapgit_cts_api,
+          lv_transport        TYPE trkorr,
+          lv_transport_string TYPE string.
+
+    li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
+
+    TRY.
+        IF is_item-obj_type IS INITIAL OR is_item-obj_name IS INITIAL OR
+           li_cts_api->is_object_type_lockable( is_item-obj_type ) = abap_false OR
+           li_cts_api->is_object_locked_in_transport( iv_object_type = is_item-obj_type
+                                                      iv_object_name = is_item-obj_name ) = abap_false.
+          rv_html = |<td class="icon"></td>|.
+        ELSE.
+          lv_transport = li_cts_api->get_current_transport_for_obj( iv_object_type             = is_item-obj_type
+                                                                    iv_object_name             = is_item-obj_name
+                                                                    iv_resolve_task_to_request = abap_false ).
+          lv_transport_string = lv_transport.
+          rv_html = |<td class="icon">| &&
+                    |{ zcl_abapgit_html=>icon( iv_name = 'lock/darkgrey' iv_hint = lv_transport_string ) }| &&
+                    |</td>|.
+        ENDIF.
+      CATCH zcx_abapgit_exception.
+        ASSERT 1 = 2 ##TODO.
+    ENDTRY.
   ENDMETHOD.
 
 
