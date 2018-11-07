@@ -40,11 +40,14 @@ CLASS zcl_abapgit_gui_router DEFINITION
     METHODS get_page_playground
       RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
       RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
+
+    CLASS-METHODS jump_display_transport
+      IMPORTING iv_getdata TYPE clike.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
 
   METHOD get_page_background.
@@ -241,6 +244,9 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-jump_pkg.                      " Open SE80
         zcl_abapgit_services_repo=>open_se80( |{ iv_getdata }| ).
         ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
+      WHEN zif_abapgit_definitions=>c_action-jump_transport.
+        jump_display_transport( iv_getdata ).
+        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
 
         " DB actions
       WHEN zif_abapgit_definitions=>c_action-db_edit.
@@ -375,5 +381,15 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         ev_state = zif_abapgit_definitions=>c_event_state-not_handled.
     ENDCASE.
 
+  ENDMETHOD.
+
+  METHOD jump_display_transport.
+    DATA: lv_transport TYPE trkorr.
+
+    lv_transport = iv_getdata.
+
+    CALL FUNCTION 'TR_DISPLAY_REQUEST'
+      EXPORTING
+        i_trkorr = lv_transport.
   ENDMETHOD.
 ENDCLASS.

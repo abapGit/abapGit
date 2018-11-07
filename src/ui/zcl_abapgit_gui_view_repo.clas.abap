@@ -534,7 +534,8 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
   METHOD render_item_lock_column.
     DATA: li_cts_api          TYPE REF TO zif_abapgit_cts_api,
           lv_transport        TYPE trkorr,
-          lv_transport_string TYPE string.
+          lv_transport_string TYPE string,
+          lv_icon_html TYPE string.
 
     li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
 
@@ -549,8 +550,12 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
                                                                     iv_object_name             = is_item-obj_name
                                                                     iv_resolve_task_to_request = abap_false ).
           lv_transport_string = lv_transport.
+          lv_icon_html = zcl_abapgit_html=>a( iv_txt = zcl_abapgit_html=>icon( iv_name = 'lock/darkgrey'
+                                                                               iv_hint = lv_transport_string )
+                                              iv_act = |{ zif_abapgit_definitions=>c_action-jump_transport }?| &&
+                                                       lv_transport ).
           rv_html = |<td class="icon">| &&
-                    |{ zcl_abapgit_html=>icon( iv_name = 'lock/darkgrey' iv_hint = lv_transport_string ) }| &&
+                    |{ lv_icon_html }| &&
                     |</td>|.
         ENDIF.
       CATCH zcx_abapgit_exception.
