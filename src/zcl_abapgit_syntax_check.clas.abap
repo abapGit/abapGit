@@ -1,6 +1,6 @@
 CLASS zcl_abapgit_syntax_check DEFINITION
-  CREATE PRIVATE
   PUBLIC
+  CREATE PRIVATE
   GLOBAL FRIENDS zcl_abapgit_factory.
 
 

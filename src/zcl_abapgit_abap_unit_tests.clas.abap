@@ -1,6 +1,6 @@
 CLASS zcl_abapgit_abap_unit_tests DEFINITION
-  CREATE PRIVATE
   PUBLIC
+  CREATE PRIVATE
   GLOBAL FRIENDS zcl_abapgit_factory.
 
   PUBLIC SECTION.
