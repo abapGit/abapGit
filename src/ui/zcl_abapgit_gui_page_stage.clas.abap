@@ -168,8 +168,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
             ls_new-item = <ls_local>-item.
 
             ls_new-transport = li_cts_api->get_current_transport_for_obj(
-              iv_object_type = <ls_local>-item-obj_type
-              iv_object_name = <ls_local>-item-obj_name
+              iv_object_type             = <ls_local>-item-obj_type
+              iv_object_name             = <ls_local>-item-obj_name
               iv_resolve_task_to_request = abap_false ).
 
             INSERT ls_new INTO TABLE rt_transports.
