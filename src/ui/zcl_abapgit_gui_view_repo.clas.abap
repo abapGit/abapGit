@@ -50,8 +50,9 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         RETURNING VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
         RAISING   zcx_abapgit_exception,
       render_item
-        IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        IMPORTING is_item              TYPE zif_abapgit_definitions=>ty_repo_item
+                  iv_render_transports TYPE abap_bool
+        RETURNING VALUE(ro_html)       TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       render_item_files
         IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
@@ -389,21 +390,29 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
   METHOD render_item.
 
-    DATA: lv_link TYPE string.
+    DATA: lv_link    TYPE string,
+          lv_colspan TYPE i.
 
     CREATE OBJECT ro_html.
 
+    IF iv_render_transports = abap_false.
+      lv_colspan = 2.
+    ELSE.
+      lv_colspan = 3.
+    ENDIF.
 
     ro_html->add( |<tr{ get_item_class( is_item ) }>| ).
 
     IF is_item-obj_name IS INITIAL AND is_item-is_dir = abap_false.
-      ro_html->add( '<td colspan="3"></td>'
+      ro_html->add( |<td colspan="{ lv_colspan }"></td>|
                  && '<td class="object">'
                  && '<i class="grey">non-code and meta files</i>'
                  && '</td>' ).
     ELSE.
       ro_html->add( |<td class="icon">{ get_item_icon( is_item ) }</td>| ).
-      ro_html->add( render_item_lock_column( is_item ) ).
+      IF iv_render_transports = abap_true.
+        ro_html->add( render_item_lock_column( is_item ) ).
+      ENDIF.
 
       IF is_item-is_dir = abap_true. " Subdir
         lv_link = build_dir_jump_link( is_item-path ).
@@ -593,15 +602,16 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_page~render.
 
-    DATA: lt_repo_items TYPE zif_abapgit_definitions=>tt_repo_items,
-          lo_browser    TYPE REF TO zcl_abapgit_repo_content_list,
-          lx_error      TYPE REF TO zcx_abapgit_exception,
-          lv_lstate     TYPE char1,
-          lv_rstate     TYPE char1,
-          lv_max        TYPE abap_bool,
-          lv_max_str    TYPE string,
-          lv_add_str    TYPE string,
-          lo_log        TYPE REF TO zcl_abapgit_log.
+    DATA: lt_repo_items        TYPE zif_abapgit_definitions=>tt_repo_items,
+          lo_browser           TYPE REF TO zcl_abapgit_repo_content_list,
+          lx_error             TYPE REF TO zcx_abapgit_exception,
+          lv_lstate            TYPE char1,
+          lv_rstate            TYPE char1,
+          lv_max               TYPE abap_bool,
+          lv_max_str           TYPE string,
+          lv_add_str           TYPE string,
+          lo_log               TYPE REF TO zcl_abapgit_log,
+          lv_render_transports TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
@@ -609,6 +619,9 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
 
     CREATE OBJECT ro_html.
+
+    lv_render_transports = zcl_abapgit_factory=>get_cts_api(
+      )->is_chrec_possible_for_package( mo_repo->get_package( ) ).
 
     TRY.
 
@@ -654,7 +667,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
               lv_max = abap_true.
               EXIT. " current loop
             ENDIF.
-            ro_html->add( render_item( <ls_item> ) ).
+            ro_html->add( render_item( is_item = <ls_item> iv_render_transports = lv_render_transports ) ).
           ENDLOOP.
         ENDIF.
 
