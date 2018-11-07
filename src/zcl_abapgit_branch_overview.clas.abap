@@ -19,10 +19,11 @@ CLASS zcl_abapgit_branch_overview DEFINITION
 
   PRIVATE SECTION.
 
-    TYPES: tyt_commit_sha1_range TYPE RANGE OF zif_abapgit_definitions=>ty_sha1.
+    TYPES:
+      tyt_commit_sha1_range TYPE RANGE OF zif_abapgit_definitions=>ty_sha1 .
 
     DATA mt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt .
-    DATA mt_commits  TYPE ty_commits .
+    DATA mt_commits TYPE ty_commits .
     DATA mt_tags TYPE zif_abapgit_definitions=>ty_git_tag_list_tt .
 
     CLASS-METHODS parse_commits
@@ -56,19 +57,26 @@ CLASS zcl_abapgit_branch_overview DEFINITION
     METHODS determine_tags
       RAISING
         zcx_abapgit_exception .
-    METHODS _sort_commits CHANGING ct_commits TYPE ty_commits.
+    METHODS _sort_commits
+      CHANGING
+        !ct_commits TYPE ty_commits .
     METHODS _get_1st_child_commit
-      IMPORTING itr_commit_sha1s TYPE tyt_commit_sha1_range
-      EXPORTING etr_commit_sha1s TYPE tyt_commit_sha1_range
-                e_1st_commit     TYPE zif_abapgit_definitions=>ty_commit
-      CHANGING  ct_commits       TYPE ty_commits.
+      IMPORTING
+        !it_commit_sha1s TYPE tyt_commit_sha1_range
+      EXPORTING
+        !et_commit_sha1s TYPE tyt_commit_sha1_range
+        !es_1st_commit   TYPE zif_abapgit_definitions=>ty_commit
+      CHANGING
+        !ct_commits      TYPE ty_commits .
     METHODS _reverse_sort_order
-      CHANGING ct_commits TYPE ty_commits.
-
+      CHANGING
+        !ct_commits TYPE ty_commits .
 ENDCLASS.
 
 
-CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
+
+CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
+
 
   METHOD constructor.
 
@@ -203,18 +211,6 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
     " switch back to initial -> latest
     _reverse_sort_order( CHANGING ct_commits = mt_commits ).
-
-  ENDMETHOD.
-
-  METHOD _reverse_sort_order.
-    DATA: lt_commits           TYPE ty_commits.
-    FIELD-SYMBOLS: <ls_commit> TYPE zif_abapgit_definitions=>ty_commit.
-
-    LOOP AT ct_commits ASSIGNING <ls_commit>.
-      INSERT <ls_commit> INTO lt_commits INDEX 1.
-    ENDLOOP.
-    ct_commits = lt_commits.
-    FREE lt_commits.
 
   ENDMETHOD.
 
@@ -479,15 +475,15 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
   METHOD _get_1st_child_commit.
 
     DATA: lt_1stchild_commits        TYPE ty_commits.
-    DATA: lsr_parent                 LIKE LINE OF itr_commit_sha1s.
-    DATA: ltr_commit_sha1s           LIKE itr_commit_sha1s.
-    FIELD-SYMBOLS: <lsr_commit_sha1> LIKE LINE OF itr_commit_sha1s.
+    DATA: lsr_parent                 LIKE LINE OF it_commit_sha1s.
+    DATA: ltr_commit_sha1s           LIKE it_commit_sha1s.
+    FIELD-SYMBOLS: <lsr_commit_sha1> LIKE LINE OF it_commit_sha1s.
     FIELD-SYMBOLS: <ls_child_commit> TYPE zif_abapgit_definitions=>ty_commit.
 
-    CLEAR: e_1st_commit.
+    CLEAR: es_1st_commit.
 
 * get all reachable next commits
-    ltr_commit_sha1s = itr_commit_sha1s.
+    ltr_commit_sha1s = it_commit_sha1s.
     LOOP AT ct_commits ASSIGNING <ls_child_commit> WHERE parent1 IN ltr_commit_sha1s
                                                       OR parent2 IN ltr_commit_sha1s.
       INSERT <ls_child_commit> INTO TABLE lt_1stchild_commits.
@@ -495,22 +491,35 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
 * return oldest one
     SORT lt_1stchild_commits BY time ASCENDING.
-    READ TABLE lt_1stchild_commits INTO e_1st_commit INDEX 1.
+    READ TABLE lt_1stchild_commits INTO es_1st_commit INDEX 1.
 
 * remove from available commits
-    DELETE ct_commits WHERE sha1 = e_1st_commit-sha1.
+    DELETE ct_commits WHERE sha1 = es_1st_commit-sha1.
 
 * set relevant parent commit sha1s
     IF lines( lt_1stchild_commits ) = 1.
-      CLEAR etr_commit_sha1s.
+      CLEAR et_commit_sha1s.
     ELSE.
-      etr_commit_sha1s = itr_commit_sha1s.
+      et_commit_sha1s = it_commit_sha1s.
     ENDIF.
 
     lsr_parent-sign   = 'I'.
     lsr_parent-option = 'EQ'.
-    lsr_parent-low    = e_1st_commit-sha1.
-    INSERT lsr_parent INTO TABLE etr_commit_sha1s.
+    lsr_parent-low    = es_1st_commit-sha1.
+    INSERT lsr_parent INTO TABLE et_commit_sha1s.
+
+  ENDMETHOD.
+
+
+  METHOD _reverse_sort_order.
+    DATA: lt_commits           TYPE ty_commits.
+    FIELD-SYMBOLS: <ls_commit> TYPE zif_abapgit_definitions=>ty_commit.
+
+    LOOP AT ct_commits ASSIGNING <ls_commit>.
+      INSERT <ls_commit> INTO lt_commits INDEX 1.
+    ENDLOOP.
+    ct_commits = lt_commits.
+    FREE lt_commits.
 
   ENDMETHOD.
 
@@ -539,10 +548,10 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
       DELETE ct_commits WHERE sha1 = <ls_initial_commit>-sha1.
 
       DO.
-        _get_1st_child_commit( EXPORTING itr_commit_sha1s = ltr_parents
-                               IMPORTING etr_commit_sha1s = ltr_parents
-                                         e_1st_commit     = lv_next_commit
-                               CHANGING  ct_commits       = ct_commits ).
+        _get_1st_child_commit( EXPORTING it_commit_sha1s = ltr_parents
+                               IMPORTING et_commit_sha1s = ltr_parents
+                                         es_1st_commit   = lv_next_commit
+                               CHANGING  ct_commits      = ct_commits ).
         IF lv_next_commit IS INITIAL.
           EXIT. "DO
         ENDIF.
