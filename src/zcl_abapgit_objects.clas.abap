@@ -749,9 +749,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     IF lv_adt_jump_enabled = abap_true.
       TRY.
           zcl_abapgit_objects_super=>jump_adt(
-            i_obj_name    = is_item-obj_name
-            i_obj_type    = is_item-obj_type
-            i_line_number = iv_line_number ).
+            iv_obj_name    = is_item-obj_name
+            iv_obj_type    = is_item-obj_type
+            iv_line_number = iv_line_number ).
         CATCH zcx_abapgit_exception.
           li_obj->jump( ).
       ENDTRY.

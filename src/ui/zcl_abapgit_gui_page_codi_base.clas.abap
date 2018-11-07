@@ -79,11 +79,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
           lv_line_number = <ls_result>-line.
 
-          zcl_abapgit_objects_super=>jump_adt( i_obj_name     = ls_item-obj_name
-                                               i_obj_type     = ls_item-obj_type
-                                               i_sub_obj_name = ls_sub_item-obj_name
-                                               i_sub_obj_type = ls_sub_item-obj_type
-                                               i_line_number  = lv_line_number ).
+          zcl_abapgit_objects_super=>jump_adt( iv_obj_name     = ls_item-obj_name
+                                               iv_obj_type     = ls_item-obj_type
+                                               iv_sub_obj_name = ls_sub_item-obj_name
+                                               iv_sub_obj_type = ls_sub_item-obj_type
+                                               iv_line_number  = lv_line_number ).
           RETURN.
 
         ENDIF.
