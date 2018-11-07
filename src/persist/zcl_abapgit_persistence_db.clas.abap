@@ -70,7 +70,7 @@ CLASS zcl_abapgit_persistence_db DEFINITION
     CLASS-DATA go_db TYPE REF TO zcl_abapgit_persistence_db .
     DATA: gv_update_function TYPE funcname.
 
-    METHODS get_update_function RETURNING VALUE(r_funcname) TYPE funcname.
+    METHODS get_update_function RETURNING VALUE(rv_funcname) TYPE funcname.
 
     METHODS validate_and_unprettify_xml
       IMPORTING
@@ -138,7 +138,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
         gv_update_function = 'BANK_OBJ_WORKL_RELEASE_LOCKS'.
       ENDIF.
     ENDIF.
-    r_funcname = gv_update_function.
+    rv_funcname = gv_update_function.
 
   ENDMETHOD.
 

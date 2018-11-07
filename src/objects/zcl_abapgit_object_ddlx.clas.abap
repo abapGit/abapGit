@@ -28,7 +28,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
 
 
   METHOD clear_field.
@@ -209,6 +209,11 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~is_locked.
 
     rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESDICT'
@@ -220,8 +225,8 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
   METHOD zif_abapgit_object~jump.
 
     TRY.
-        jump_adt( i_obj_name = ms_item-obj_name
-                  i_obj_type = ms_item-obj_type ).
+        jump_adt( iv_obj_name = ms_item-obj_name
+                  iv_obj_type = ms_item-obj_type ).
 
       CATCH zcx_abapgit_exception.
         zcx_abapgit_exception=>raise( 'DDLX Jump Error' ).
@@ -281,10 +286,5 @@ CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
                                       ix_previous = lx_error ).
     ENDTRY.
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

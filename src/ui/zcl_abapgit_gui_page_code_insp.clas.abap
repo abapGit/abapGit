@@ -56,7 +56,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -124,6 +124,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD render_content.
 
     DATA: lv_check_variant TYPE sci_chkv,
@@ -153,12 +154,14 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     ro_html->add( |<br/>| ).
 
     LOOP AT mt_result ASSIGNING <ls_result>.
-      render_result( ro_html = ro_html iv_result = <ls_result> ).
+      render_result( io_html   = ro_html
+                     iv_result = <ls_result> ).
     ENDLOOP.
 
     ro_html->add( '</div>' ).
 
   ENDMETHOD.
+
 
   METHOD run_code_inspector.
 

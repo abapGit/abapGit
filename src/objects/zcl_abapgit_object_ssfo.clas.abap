@@ -11,45 +11,45 @@ CLASS zcl_abapgit_object_ssfo DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     CONSTANTS: attrib_abapgit_leadig_spaces TYPE string VALUE 'abapgit-leadig-spaces' ##NO_TEXT.
 
     METHODS fix_ids IMPORTING ii_xml_doc TYPE REF TO if_ixml_document.
-    METHODS set_attribute_leading_spaces IMPORTING i_name                TYPE string
-                                                   i_node                TYPE REF TO if_ixml_node
-                                         CHANGING  c_within_code_section TYPE abap_bool.
-    METHODS handle_attrib_leading_spaces IMPORTING i_name                TYPE string
-                                                   i_node                TYPE REF TO if_ixml_node
-                                         CHANGING  c_within_code_section TYPE abap_bool.
+    METHODS set_attribute_leading_spaces IMPORTING iv_name                TYPE string
+                                                   ii_node                TYPE REF TO if_ixml_node
+                                         CHANGING  cv_within_code_section TYPE abap_bool.
+    METHODS handle_attrib_leading_spaces IMPORTING iv_name                TYPE string
+                                                   ii_node                TYPE REF TO if_ixml_node
+                                         CHANGING  cv_within_code_section TYPE abap_bool.
     METHODS get_range_node_codes RETURNING VALUE(e_range_node_codes) TYPE ty_string_range.
-    METHODS code_item_section_handling IMPORTING i_name                TYPE string
-                                                 i_node                TYPE REF TO if_ixml_node
-                                       EXPORTING e_code_item_element   TYPE REF TO if_ixml_element
-                                       CHANGING  c_within_code_section TYPE abap_bool
+    METHODS code_item_section_handling IMPORTING iv_name                TYPE string
+                                                 ii_node                TYPE REF TO if_ixml_node
+                                       EXPORTING ei_code_item_element   TYPE REF TO if_ixml_element
+                                       CHANGING  cv_within_code_section TYPE abap_bool
                                        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
 
 
   METHOD code_item_section_handling.
     CONSTANTS: node_item TYPE string VALUE 'item' ##NO_TEXT.
     CONSTANTS: node_text TYPE string VALUE '#text' ##NO_TEXT.
 
-    IF i_name IN get_range_node_codes( ).
-      c_within_code_section = abap_true.
+    IF iv_name IN get_range_node_codes( ).
+      cv_within_code_section = abap_true.
     ENDIF.
 
-    IF c_within_code_section = abap_true.
-      IF i_name = node_item.
+    IF cv_within_code_section = abap_true.
+      IF iv_name = node_item.
         TRY.
-            e_code_item_element ?= i_node.
+            ei_code_item_element ?= ii_node.
             RETURN.
           CATCH cx_sy_move_cast_error ##no_handler.
         ENDTRY.
 
-      ELSEIF i_name NOT IN get_range_node_codes( ) AND
-             i_name <> node_text.
-        c_within_code_section = abap_false.
+      ELSEIF iv_name NOT IN get_range_node_codes( ) AND
+             iv_name <> node_text.
+        cv_within_code_section = abap_false.
       ENDIF.
     ENDIF.
 
@@ -160,10 +160,10 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
     DATA coding_line    TYPE string.
 
     TRY.
-        code_item_section_handling( EXPORTING i_name                = i_name
-                                              i_node                = i_node
-                                    IMPORTING e_code_item_element   = element
-                                    CHANGING  c_within_code_section = c_within_code_section ).
+        code_item_section_handling( EXPORTING iv_name                = iv_name
+                                              ii_node                = ii_node
+                                    IMPORTING ei_code_item_element   = element
+                                    CHANGING  cv_within_code_section = cv_within_code_section ).
 
         leading_spaces = element->get_attribute_ns( name = zcl_abapgit_object_ssfo=>attrib_abapgit_leadig_spaces ).
 
@@ -183,17 +183,17 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
     DATA: offset              TYPE i.
 
     TRY.
-        code_item_section_handling( EXPORTING i_name                = i_name
-                                              i_node                = i_node
-                                    IMPORTING e_code_item_element   = element
-                                    CHANGING  c_within_code_section = c_within_code_section ).
+        code_item_section_handling( EXPORTING iv_name                = iv_name
+                                              ii_node                = ii_node
+                                    IMPORTING ei_code_item_element   = element
+                                    CHANGING  cv_within_code_section = cv_within_code_section ).
 
-        code_line = i_node->get_value( ).
+        code_line = ii_node->get_value( ).
         "find 1st non space char
         FIND FIRST OCCURRENCE OF REGEX '\S' IN code_line MATCH OFFSET offset.
         IF sy-subrc = 0 AND offset > 0.
           TRY.
-              element ?= i_node.
+              element ?= ii_node.
               element->set_attribute( name  = zcl_abapgit_object_ssfo=>attrib_abapgit_leadig_spaces
                                       value = |{ offset }| ).
 
@@ -275,9 +275,9 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
 
       ENDCASE.
 
-      handle_attrib_leading_spaces( EXPORTING i_name                = lv_name
-                                              i_node                = li_node
-                                    CHANGING  c_within_code_section = within_code_section ).
+      handle_attrib_leading_spaces( EXPORTING iv_name                = lv_name
+                                              ii_node                = li_node
+                                    CHANGING  cv_within_code_section = within_code_section ).
 
       li_node = li_iterator->get_next( ).
     ENDWHILE.
@@ -459,9 +459,9 @@ CLASS zcl_abapgit_object_ssfo IMPLEMENTATION.
           OR lv_name = 'LASTUSER'.
         li_node->set_value( 'DUMMY' ).
       ENDIF.
-      set_attribute_leading_spaces( EXPORTING i_name                = lv_name
-                                              i_node                = li_node
-                                    CHANGING  c_within_code_section = within_code_section ).
+      set_attribute_leading_spaces( EXPORTING iv_name                = lv_name
+                                              ii_node                = li_node
+                                    CHANGING  cv_within_code_section = within_code_section ).
 
       li_node = li_iterator->get_next( ).
     ENDWHILE.

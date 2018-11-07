@@ -29,6 +29,21 @@ CLASS zcl_abapgit_factory DEFINITION
         VALUE(ri_syntax_check) TYPE REF TO zif_abapgit_code_inspector
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS get_adhoc_code_inspector
+      IMPORTING
+        !iv_package                    TYPE devclass
+        iv_test_name                   TYPE sci_tstval-testname
+      RETURNING
+        VALUE(ri_adhoc_code_inspector) TYPE REF TO zif_abapgit_code_inspector
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS get_abap_unit_tests
+      IMPORTING
+        !iv_package               TYPE devclass
+      RETURNING
+        VALUE(ri_abap_unit_tests) TYPE REF TO zif_abapgit_code_inspector
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS get_branch_overview
       IMPORTING
         !io_repo                  TYPE REF TO zcl_abapgit_repo_online
@@ -85,6 +100,7 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-DATA gi_branch_overview TYPE REF TO zif_abapgit_branch_overview .
     CLASS-DATA gi_stage_logic TYPE REF TO zif_abapgit_stage_logic .
     CLASS-DATA gi_cts_api TYPE REF TO zif_abapgit_cts_api.
+    CLASS-DATA gi_adhoc_code_inspector TYPE REF TO zif_abapgit_code_inspector.
 ENDCLASS.
 
 
@@ -212,5 +228,33 @@ CLASS zcl_abapgit_factory IMPLEMENTATION.
     ENDIF.
 
     ri_cts_api = gi_cts_api.
+  ENDMETHOD.
+
+  METHOD get_adhoc_code_inspector.
+
+    IF gi_adhoc_code_inspector IS BOUND.
+      ri_adhoc_code_inspector = gi_adhoc_code_inspector.
+    ELSE.
+      CREATE OBJECT ri_adhoc_code_inspector
+        TYPE zcl_abapgit_adhoc_code_insp
+        EXPORTING
+          iv_package   = iv_package
+          iv_test_name = iv_test_name.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_abap_unit_tests.
+
+    IF gi_adhoc_code_inspector IS BOUND.
+      ri_abap_unit_tests = gi_adhoc_code_inspector.
+    ELSE.
+      CREATE OBJECT ri_abap_unit_tests
+        TYPE zcl_abapgit_abap_unit_tests
+        EXPORTING
+          iv_package = iv_package.
+    ENDIF.
+
   ENDMETHOD.
 ENDCLASS.
