@@ -1,6 +1,6 @@
 CLASS zcl_abapgit_adhoc_code_insp DEFINITION
-  CREATE PRIVATE
   PUBLIC
+  CREATE PRIVATE
   INHERITING FROM zcl_abapgit_code_inspector
   GLOBAL FRIENDS zcl_abapgit_factory.
 
