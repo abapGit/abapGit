@@ -81,33 +81,33 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
 
   METHOD call_delete_fms.
 
-    CONSTANTS version_new      TYPE c VALUE 'N' ##NO_TEXT. "Include SCPRINTCONST version_new
-    CONSTANTS operation_delete TYPE c VALUE 'D' ##NO_TEXT.
-    DATA profile_type          TYPE scprattr-type.
-    DATA fatherprofiles        TYPE standard table of scproprof WITH DEFAULT KEY.
-    DATA fatherprofile         TYPE scproprof.
+    CONSTANTS lc_version_new      TYPE c VALUE 'N' ##NO_TEXT. "Include SCPRINTCONST version_new
+    CONSTANTS lc_operation_delete TYPE c VALUE 'D' ##NO_TEXT.
+    DATA lv_profile_type          TYPE scprattr-type.
+    DATA lt_fatherprofiles        TYPE STANDARD TABLE OF scproprof WITH DEFAULT KEY.
+    DATA ls_fatherprofile         TYPE scproprof.
 
     CALL FUNCTION 'SCPR_DB_ATTR_GET_DETAIL'
       EXPORTING
         profid   = iv_profile_id
-        version  = version_new
+        version  = lc_version_new
       IMPORTING
-        proftype = profile_type
+        proftype = lv_profile_type
       EXCEPTIONS
         OTHERS   = 0.
 
     CALL FUNCTION 'SCPR_PRSET_DB_USED_IN'
       EXPORTING
         profid   = iv_profile_id
-        version  = version_new
+        version  = lc_version_new
       TABLES
-        profiles = fatherprofiles.
+        profiles = lt_fatherprofiles.
 
-    fatherprofile-id = iv_profile_id.
-    APPEND fatherprofile TO fatherprofiles.
+    ls_fatherprofile-id = iv_profile_id.
+    APPEND ls_fatherprofile TO lt_fatherprofiles.
     CALL FUNCTION 'SCPR_CT_TRANSPORT_ENTRIES'
       TABLES
-        profids                  = fatherprofiles
+        profids                  = lt_fatherprofiles
       EXCEPTIONS
         error_in_transport_layer = 1
         user_abort               = 2.
@@ -118,9 +118,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
     CALL FUNCTION 'SCPR_PRSET_DB_DELETE_ALL'
       EXPORTING
         profid      = iv_profile_id
-        proftype    = profile_type
+        proftype    = lv_profile_type
       TABLES
-        fatherprofs = fatherprofiles
+        fatherprofs = lt_fatherprofiles
       EXCEPTIONS
         user_abort  = 1.
     IF sy-subrc <> 0.
@@ -130,7 +130,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
     CALL FUNCTION 'SCPR_MEM_SCPR_ACTIONS_ADD'
       EXPORTING
         bcset_id  = iv_profile_id
-        operation = operation_delete.
+        operation = lc_operation_delete.
 
   ENDMETHOD.
 
@@ -270,11 +270,12 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: profile_id     TYPE scpr_id.
-    profile_id = ms_item-obj_name.
+    DATA: lv_profile_id TYPE scpr_id.
+
+    lv_profile_id = ms_item-obj_name.
 
     enqueue( ).
-    call_delete_fms( profile_id ).
+    call_delete_fms( lv_profile_id ).
     dequeue( ).
 
   ENDMETHOD.

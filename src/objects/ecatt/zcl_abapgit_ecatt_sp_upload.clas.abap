@@ -43,7 +43,7 @@ CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
           lv_exception_occurred TYPE etonoff,
           lo_ecatt_sp           TYPE REF TO object.
 
-    FIELD-SYMBOLS: <ecatt_object> TYPE any.
+    FIELD-SYMBOLS: <lg_ecatt_object> TYPE any.
 
     TRY.
         li_section = template_over_all->find_from_name_ns( 'START_PROFILE' ).
@@ -59,10 +59,10 @@ CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
             IMPORTING
               xml_as_string = lv_start_profile.
 
-          ASSIGN ('ECATT_OBJECT') TO <ecatt_object>.
+          ASSIGN ('ECATT_OBJECT') TO <lg_ecatt_object>.
           ASSERT sy-subrc = 0.
 
-          lo_ecatt_sp = <ecatt_object>.
+          lo_ecatt_sp = <lg_ecatt_object>.
 
           CALL METHOD lo_ecatt_sp->('SET_SP_ATTRIBUTES')
             EXPORTING
@@ -95,9 +95,9 @@ CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
           lv_exception_occurred TYPE etonoff,
           lo_ecatt_sp           TYPE REF TO object.
 
-    FIELD-SYMBOLS: <ecatt_sp> TYPE any,
-                   <lv_d_akh> TYPE data,
-                   <lv_i_akh> TYPE data.
+    FIELD-SYMBOLS: <lg_ecatt_sp> TYPE any,
+                   <lv_d_akh>    TYPE data,
+                   <lv_i_akh>    TYPE data.
 
     TRY.
         ch_object-i_devclass = ch_object-d_devclass.
@@ -132,10 +132,10 @@ CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
         lv_exc_occ = 'X'.
     ENDTRY.
 
-    ASSIGN me->ecatt_object TO <ecatt_sp>.
+    ASSIGN me->ecatt_object TO <lg_ecatt_sp>.
     ASSERT sy-subrc = 0.
 
-    lo_ecatt_sp = <ecatt_sp>.
+    lo_ecatt_sp = <lg_ecatt_sp>.
 
     TRY.
         get_ecatt_sp( ).
