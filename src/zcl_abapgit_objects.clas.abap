@@ -704,13 +704,13 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
   METHOD is_active.
 
-    DATA: object TYPE REF TO zif_abapgit_object.
+    DATA: li_object TYPE REF TO zif_abapgit_object.
 
-    object = create_object( is_item     = is_item
-                            iv_language = sy-langu ).
+    li_object = create_object( is_item     = is_item
+                               iv_language = sy-langu ).
 
     TRY.
-        rv_active = object->is_active( ).
+        rv_active = li_object->is_active( ).
       CATCH cx_sy_dyn_call_illegal_method
             cx_sy_ref_is_initial.
         rv_active = abap_true.

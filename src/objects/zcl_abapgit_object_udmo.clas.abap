@@ -95,7 +95,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
 
   METHOD access_free.
@@ -412,7 +412,7 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
   METHOD serialize_entities.
 
     DATA lt_udmo_entities TYPE STANDARD TABLE OF dm41s WITH DEFAULT KEY.
-    FIELD-SYMBOLS <udmo_entity> TYPE dm41s.
+    FIELD-SYMBOLS <ls_udmo_entity> TYPE dm41s.
 
     SELECT * FROM dm41s
       INTO TABLE lt_udmo_entities
@@ -420,21 +420,20 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
       AND as4local EQ me->mv_activation_state.
 
 
-    LOOP AT lt_udmo_entities ASSIGNING <udmo_entity>.
+    LOOP AT lt_udmo_entities ASSIGNING <ls_udmo_entity>.
 
       " You are reminded that administrative information, such as last changed by user, date, time is not serialised.
-      CLEAR <udmo_entity>-lstuser.
-      CLEAR <udmo_entity>-lstdate.
-      CLEAR <udmo_entity>-lsttime.
-      CLEAR <udmo_entity>-fstuser.
-      CLEAR <udmo_entity>-fstdate.
-      CLEAR <udmo_entity>-fsttime.
-
+      CLEAR <ls_udmo_entity>-lstuser.
+      CLEAR <ls_udmo_entity>-lstdate.
+      CLEAR <ls_udmo_entity>-lsttime.
+      CLEAR <ls_udmo_entity>-fstuser.
+      CLEAR <ls_udmo_entity>-fstdate.
+      CLEAR <ls_udmo_entity>-fsttime.
 
     ENDLOOP.
 
     " You are reminded that descriptions in other languages do not have to be in existence, although they may.
-    IF lines( lt_udmo_entities ) GT 0.
+    IF lines( lt_udmo_entities ) > 0.
       io_xml->add( iv_name = 'UDMO_ENTITIES'
                    ig_data = lt_udmo_entities ).
     ENDIF.
@@ -713,6 +712,11 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~is_locked.
 
     rv_is_locked = exists_a_lock_entry_for(
@@ -777,10 +781,5 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
     me->serialize_short_texts( io_xml ).
     me->serialize_long_texts( io_xml ).
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.
