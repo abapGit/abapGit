@@ -37,14 +37,14 @@ CLASS zcl_abapgit_object_scp1 DEFINITION
       CHANGING
         !cs_scp1 TYPE ty_scp1 .
     METHODS call_delete_fms
-      IMPORTING i_profile_id TYPE scpr_id
+      IMPORTING iv_profile_id TYPE scpr_id
       RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_scp1 IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
 
 
   METHOD adjust_inbound.
@@ -75,6 +75,62 @@ CLASS zcl_abapgit_object_scp1 IMPLEMENTATION.
     LOOP AT cs_scp1-scprreca ASSIGNING <ls_scprreca>.
       CONDENSE <ls_scprreca>-recnumber.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD call_delete_fms.
+
+    CONSTANTS version_new      TYPE c VALUE 'N' ##NO_TEXT. "Include SCPRINTCONST version_new
+    CONSTANTS operation_delete TYPE c VALUE 'D' ##NO_TEXT.
+    DATA profile_type          TYPE scprattr-type.
+    DATA fatherprofiles        TYPE standard table of scproprof WITH DEFAULT KEY.
+    DATA fatherprofile         TYPE scproprof.
+
+    CALL FUNCTION 'SCPR_DB_ATTR_GET_DETAIL'
+      EXPORTING
+        profid   = iv_profile_id
+        version  = version_new
+      IMPORTING
+        proftype = profile_type
+      EXCEPTIONS
+        OTHERS   = 0.
+
+    CALL FUNCTION 'SCPR_PRSET_DB_USED_IN'
+      EXPORTING
+        profid   = iv_profile_id
+        version  = version_new
+      TABLES
+        profiles = fatherprofiles.
+
+    fatherprofile-id = iv_profile_id.
+    APPEND fatherprofile TO fatherprofiles.
+    CALL FUNCTION 'SCPR_CT_TRANSPORT_ENTRIES'
+      TABLES
+        profids                  = fatherprofiles
+      EXCEPTIONS
+        error_in_transport_layer = 1
+        user_abort               = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |error while deleting SCP1 - TRANSPORT, { sy-subrc }| ).
+    ENDIF.
+
+    CALL FUNCTION 'SCPR_PRSET_DB_DELETE_ALL'
+      EXPORTING
+        profid      = iv_profile_id
+        proftype    = profile_type
+      TABLES
+        fatherprofs = fatherprofiles
+      EXCEPTIONS
+        user_abort  = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |error while deleting SCP1 - DB_DELETE, { sy-subrc }| ).
+    ENDIF.
+
+    CALL FUNCTION 'SCPR_MEM_SCPR_ACTIONS_ADD'
+      EXPORTING
+        bcset_id  = iv_profile_id
+        operation = operation_delete.
 
   ENDMETHOD.
 
@@ -223,60 +279,6 @@ CLASS zcl_abapgit_object_scp1 IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD call_delete_fms.
-
-    CONSTANTS version_new      TYPE c VALUE 'N' ##NO_TEXT. "Include SCPRINTCONST version_new
-    CONSTANTS operation_delete TYPE c VALUE 'D' ##NO_TEXT.
-    DATA profile_type          TYPE scprattr-type.
-    DATA fatherprofiles        TYPE standard table of scproprof WITH DEFAULT KEY.
-    DATA fatherprofile         TYPE scproprof.
-
-    CALL FUNCTION 'SCPR_DB_ATTR_GET_DETAIL'
-      EXPORTING
-        profid   = i_profile_id
-        version  = version_new
-      IMPORTING
-        proftype = profile_type
-      EXCEPTIONS
-        OTHERS   = 0.
-
-    CALL FUNCTION 'SCPR_PRSET_DB_USED_IN'
-      EXPORTING
-        profid   = i_profile_id
-        version  = version_new
-      TABLES
-        profiles = fatherprofiles.
-
-    fatherprofile-id       = i_profile_id.
-    APPEND fatherprofile TO fatherprofiles.
-    CALL FUNCTION 'SCPR_CT_TRANSPORT_ENTRIES'
-      TABLES
-        profids                  = fatherprofiles
-      EXCEPTIONS
-        error_in_transport_layer = 1
-        user_abort               = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |error while deleting SCP1 - TRANSPORT, { sy-subrc }| ).
-    ENDIF.
-
-    CALL FUNCTION 'SCPR_PRSET_DB_DELETE_ALL'
-      EXPORTING
-        profid      = i_profile_id
-        proftype    = profile_type
-      TABLES
-        fatherprofs = fatherprofiles
-      EXCEPTIONS
-        user_abort  = 1.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |error while deleting SCP1 - DB_DELETE, { sy-subrc }| ).
-    ENDIF.
-
-    CALL FUNCTION 'SCPR_MEM_SCPR_ACTIONS_ADD'
-      EXPORTING
-        bcset_id  = i_profile_id
-        operation = operation_delete.
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -332,6 +334,11 @@ CLASS zcl_abapgit_object_scp1 IMPLEMENTATION.
 
     rv_changed = abap_true.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
   ENDMETHOD.
 
 
@@ -394,10 +401,5 @@ CLASS zcl_abapgit_object_scp1 IMPLEMENTATION.
       iv_name = 'SCP1'
       ig_data  = ls_scp1 ).
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

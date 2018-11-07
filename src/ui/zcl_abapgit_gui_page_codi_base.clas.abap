@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM zcl_abapgit_gui_page.
   PUBLIC SECTION.
     METHODS:
-       zif_abapgit_gui_page~on_event
+      zif_abapgit_gui_page~on_event
         REDEFINITION.
 
   PROTECTED SECTION.
@@ -14,9 +14,9 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM 
                               iv_result TYPE scir_alvlist,
       jump
         IMPORTING
-          is_item       TYPE zif_abapgit_definitions=>ty_item
-          is_sub_item   TYPE zif_abapgit_definitions=>ty_item
-          i_line_number TYPE i
+          is_item        TYPE zif_abapgit_definitions=>ty_item
+          is_sub_item    TYPE zif_abapgit_definitions=>ty_item
+          iv_line_number TYPE i
         RAISING
           zcx_abapgit_exception.
   PRIVATE SECTION.
@@ -48,12 +48,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
                                     objname  = is_item-obj_name
                                     sobjtype = is_sub_item-obj_type
                                     sobjname = is_sub_item-obj_name
-                                    line     = i_line_number
+                                    line     = iv_line_number
                            ASSIGNING <ls_result>.
     ELSE.
       READ TABLE mt_result WITH KEY objtype = is_item-obj_type
                                     objname = is_item-obj_name
-                                    line    = i_line_number
+                                    line    = iv_line_number
                            ASSIGNING <ls_result>.
     ENDIF.
     ASSERT <ls_result> IS ASSIGNED.
@@ -79,11 +79,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
           lv_line_number = <ls_result>-line.
 
-          zcl_abapgit_objects_super=>jump_adt( i_obj_name     = ls_item-obj_name
-                                               i_obj_type     = ls_item-obj_type
-                                               i_sub_obj_name = ls_sub_item-obj_name
-                                               i_sub_obj_type = ls_sub_item-obj_type
-                                               i_line_number  = lv_line_number ).
+          zcl_abapgit_objects_super=>jump_adt( iv_obj_name     = ls_item-obj_name
+                                               iv_obj_type     = ls_item-obj_type
+                                               iv_sub_obj_name = ls_sub_item-obj_name
+                                               iv_sub_obj_type = ls_sub_item-obj_type
+                                               iv_line_number  = lv_line_number ).
           RETURN.
 
         ENDIF.
@@ -178,9 +178,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
         lv_line_number = lv_line_number_s.
 
-        jump( is_item       = ls_item
-              is_sub_item   = ls_sub_item
-              i_line_number = lv_line_number ).
+        jump( is_item        = ls_item
+              is_sub_item    = ls_sub_item
+              iv_line_number = lv_line_number ).
 
         ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
 

@@ -10,11 +10,11 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
 
     CLASS-METHODS:
       jump_adt
-        IMPORTING i_obj_name     TYPE zif_abapgit_definitions=>ty_item-obj_name
-                  i_obj_type     TYPE zif_abapgit_definitions=>ty_item-obj_type
-                  i_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
-                  i_sub_obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type OPTIONAL
-                  i_line_number  TYPE i OPTIONAL
+        IMPORTING iv_obj_name     TYPE zif_abapgit_definitions=>ty_item-obj_name
+                  iv_obj_type     TYPE zif_abapgit_definitions=>ty_item-obj_type
+                  iv_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
+                  iv_sub_obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type OPTIONAL
+                  iv_line_number  TYPE i OPTIONAL
         RAISING   zcx_abapgit_exception.
 
     CONSTANTS: c_user_unknown TYPE xubname VALUE 'UNKNOWN'.
@@ -77,13 +77,13 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
     CLASS-METHODS:
       get_adt_objects_and_names
         IMPORTING
-          i_obj_name        TYPE zif_abapgit_definitions=>ty_item-obj_name
-          i_obj_type        TYPE zif_abapgit_definitions=>ty_item-obj_type
+          iv_obj_name       TYPE zif_abapgit_definitions=>ty_item-obj_name
+          iv_obj_type       TYPE zif_abapgit_definitions=>ty_item-obj_type
         EXPORTING
           eo_adt_uri_mapper TYPE REF TO object
           eo_adt_objectref  TYPE REF TO object
-          e_program         TYPE progname
-          e_include         TYPE progname
+          ev_program        TYPE progname
+          ev_include        TYPE progname
         RAISING
           zcx_abapgit_exception.
 
@@ -91,7 +91,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_super IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
 
 
   METHOD check_timestamp.
@@ -204,8 +204,8 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     DATA lo_adt            TYPE REF TO object.
     FIELD-SYMBOLS <lv_uri> TYPE string.
 
-    lv_obj_name = i_obj_name.
-    lv_obj_type = i_obj_type.
+    lv_obj_name = iv_obj_name.
+    lv_obj_type = iv_obj_type.
 
     TRY.
         cl_wb_object=>create_from_transport_key(
@@ -246,8 +246,8 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
           EXPORTING
             uri     = <lv_uri>
           IMPORTING
-            program = e_program
-            include = e_include.
+            program = ev_program
+            include = ev_include.
 
       CATCH cx_root.
         zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
@@ -357,29 +357,29 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
     get_adt_objects_and_names(
       EXPORTING
-        i_obj_name        = i_obj_name
-        i_obj_type        = i_obj_type
+        iv_obj_name       = iv_obj_name
+        iv_obj_type       = iv_obj_type
       IMPORTING
         eo_adt_uri_mapper = lo_adt_uri_mapper
         eo_adt_objectref  = lo_adt_objref
-        e_program         = lv_program
-        e_include         = lv_include ).
+        ev_program        = lv_program
+        ev_include        = lv_include ).
 
     TRY.
-        IF i_sub_obj_name IS NOT INITIAL.
+        IF iv_sub_obj_name IS NOT INITIAL.
 
-          IF ( lv_program <> i_obj_name AND lv_include IS INITIAL ) OR
-             ( lv_program = lv_include AND i_sub_obj_name IS NOT INITIAL ).
-            lv_include = i_sub_obj_name.
+          IF ( lv_program <> iv_obj_name AND lv_include IS INITIAL ) OR
+             ( lv_program = lv_include AND iv_sub_obj_name IS NOT INITIAL ).
+            lv_include = iv_sub_obj_name.
           ENDIF.
 
           CALL METHOD lo_adt_uri_mapper->('IF_ADT_URI_MAPPER~MAP_INCLUDE_TO_OBJREF')
             EXPORTING
               program     = lv_program
               include     = lv_include
-              line        = i_line_number
+              line        = iv_line_number
               line_offset = 0
-              end_line    = i_line_number
+              end_line    = iv_line_number
               end_offset  = 1
             RECEIVING
               result      = lo_adt_sub_objref.

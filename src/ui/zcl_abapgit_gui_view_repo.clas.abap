@@ -79,13 +79,13 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         IMPORTING iv_path        TYPE string
         RETURNING VALUE(rv_html) TYPE string,
       build_inactive_object_code
-        IMPORTING is_item                     TYPE zif_abapgit_definitions=>ty_repo_item
-        RETURNING value(r_inactive_html_code) TYPE string.
+        IMPORTING is_item                      TYPE zif_abapgit_definitions=>ty_repo_item
+        RETURNING VALUE(rv_inactive_html_code) TYPE string.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
 
   METHOD build_dir_jump_link.
@@ -273,6 +273,18 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD build_inactive_object_code.
+
+    IF is_item-inactive = abap_true.
+      rv_inactive_html_code = zcl_abapgit_html=>icon(
+        iv_name  = 'zap/orange'
+        iv_hint  = 'Object or object part is inactive'
+        iv_class = 'inactive' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD build_obj_jump_link.
 
     DATA: lv_encode TYPE string.
@@ -429,17 +441,6 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD build_inactive_object_code.
-
-    IF is_item-inactive = abap_true.
-      r_inactive_html_code = zcl_abapgit_html=>icon(
-                               iv_name  = 'zap/orange'
-                               iv_hint  = 'Object or object part is inactive'
-                               iv_class = 'inactive' ).
-    ENDIF.
-
-  ENDMETHOD.
-
 
   METHOD render_item_command.
 
@@ -524,6 +525,11 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       ro_html->add( |<td colspan="2"></td>| ). " Dummy for online
     ENDIF.
     ro_html->add( '</tr>' ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 
@@ -648,10 +654,4 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-  ENDMETHOD.
-
 ENDCLASS.
