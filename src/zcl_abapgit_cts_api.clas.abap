@@ -111,4 +111,8 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
     rv_lockable = boolc( lv_type_check_result = 'L' ).
   ENDMETHOD.
+
+  METHOD zif_abapgit_cts_api~is_chrec_possible_for_package.
+    rv_possible = boolc( iv_package(1) NA '$T' ).
+  ENDMETHOD.
 ENDCLASS.

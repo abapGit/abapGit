@@ -159,9 +159,11 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         LOOP AT it_local ASSIGNING <ls_local> WHERE item IS NOT INITIAL.
           IF <ls_local>-item-obj_type IS NOT INITIAL AND
              <ls_local>-item-obj_name IS NOT INITIAL AND
-              li_cts_api->is_object_type_lockable( <ls_local>-item-obj_type ) = abap_true AND
-              li_cts_api->is_object_locked_in_transport( iv_object_type = <ls_local>-item-obj_type
-                                                         iv_object_name = <ls_local>-item-obj_name ) = abap_true.
+             <ls_local>-item-devclass IS NOT INITIAL AND
+             li_cts_api->is_chrec_possible_for_package( <ls_local>-item-devclass ) = abap_true AND
+             li_cts_api->is_object_type_lockable( <ls_local>-item-obj_type ) = abap_true AND
+             li_cts_api->is_object_locked_in_transport( iv_object_type = <ls_local>-item-obj_type
+                                                        iv_object_name = <ls_local>-item-obj_name ) = abap_true.
 
             ls_new-item = <ls_local>-item.
 

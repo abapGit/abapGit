@@ -535,7 +535,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     DATA: li_cts_api          TYPE REF TO zif_abapgit_cts_api,
           lv_transport        TYPE trkorr,
           lv_transport_string TYPE string,
-          lv_icon_html TYPE string.
+          lv_icon_html        TYPE string.
 
     li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
 

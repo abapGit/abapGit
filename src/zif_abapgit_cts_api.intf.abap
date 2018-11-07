@@ -30,5 +30,10 @@ INTERFACE zif_abapgit_cts_api PUBLIC.
     "! @parameter rv_lockable | Lockable
     is_object_type_lockable IMPORTING iv_program_id      TYPE pgmid DEFAULT 'R3TR'
                                       iv_object_type     TYPE trobjtype
-                            RETURNING VALUE(rv_lockable) TYPE abap_bool.
+                            RETURNING VALUE(rv_lockable) TYPE abap_bool,
+    "! Check if change recording is possible for the given package
+    "! @parameter iv_package | Package
+    "! @parameter rv_possible | Change recording is possible
+    is_chrec_possible_for_package IMPORTING iv_package         TYPE devclass
+                                  RETURNING VALUE(rv_possible) TYPE abap_bool.
 ENDINTERFACE.
