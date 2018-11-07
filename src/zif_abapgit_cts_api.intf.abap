@@ -7,6 +7,7 @@ INTERFACE zif_abapgit_cts_api PUBLIC.
     "! @parameter iv_object_name | Object name
     "! @parameter iv_resolve_task_to_request | Return the transport request number if the object is locked in a task
     "! @parameter rv_transport | Transport request / task
+    "! @raising zcx_abapgit_exception | Object is not locked in a transport
     get_current_transport_for_obj IMPORTING iv_program_id              TYPE pgmid DEFAULT 'R3TR'
                                             iv_object_type             TYPE trobjtype
                                             iv_object_name             TYPE sobj_name
@@ -18,7 +19,7 @@ INTERFACE zif_abapgit_cts_api PUBLIC.
     "! @parameter iv_object_type | Object type
     "! @parameter iv_object_name | Object name
     "! @parameter rv_locked | Object is locked
-    "! @raising zcx_abapgit_exception |
+    "! @raising zcx_abapgit_exception | Object type is not lockable
     is_object_locked_in_transport IMPORTING iv_program_id    TYPE pgmid DEFAULT 'R3TR'
                                             iv_object_type   TYPE trobjtype
                                             iv_object_name   TYPE sobj_name

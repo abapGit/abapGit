@@ -559,7 +559,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
                     |</td>|.
         ENDIF.
       CATCH zcx_abapgit_exception.
-        ASSERT 1 = 2 ##TODO.
+        ASSERT 1 = 2.
     ENDTRY.
   ENDMETHOD.
 
