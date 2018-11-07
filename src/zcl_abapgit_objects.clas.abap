@@ -50,8 +50,8 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS jump
       IMPORTING
-        !is_item       TYPE zif_abapgit_definitions=>ty_item
-        !i_line_number TYPE i OPTIONAL
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !iv_line_number TYPE i OPTIONAL
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS changed_by
@@ -213,7 +213,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -702,6 +702,22 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_active.
+
+    DATA: object TYPE REF TO zif_abapgit_object.
+
+    object = create_object( is_item     = is_item
+                            iv_language = sy-langu ).
+
+    TRY.
+        rv_active = object->is_active( ).
+      CATCH cx_sy_dyn_call_illegal_method
+            cx_sy_ref_is_initial.
+        rv_active = abap_true.
+    ENDTRY.
+  ENDMETHOD.
+
+
   METHOD is_supported.
 
     TRY.
@@ -735,7 +751,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           zcl_abapgit_objects_super=>jump_adt(
             i_obj_name    = is_item-obj_name
             i_obj_type    = is_item-obj_type
-            i_line_number = i_line_number ).
+            i_line_number = iv_line_number ).
         CATCH zcx_abapgit_exception.
           li_obj->jump( ).
       ENDTRY.
@@ -1048,21 +1064,5 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     rt_overwrite = lt_overwrite_uniqe.
 
-  ENDMETHOD.
-
-
-  METHOD is_active.
-
-    DATA: object TYPE REF TO zif_abapgit_object.
-
-    object = create_object( is_item     = is_item
-                            iv_language = sy-langu ).
-
-    TRY.
-        rv_active = object->is_active( ).
-      CATCH cx_sy_dyn_call_illegal_method
-            cx_sy_ref_is_initial.
-        rv_active = abap_true.
-    ENDTRY.
   ENDMETHOD.
 ENDCLASS.

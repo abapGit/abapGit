@@ -10,13 +10,13 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM 
       mt_result TYPE scit_alvlist.
 
     METHODS:
-      render_result IMPORTING ro_html   TYPE REF TO zcl_abapgit_html
+      render_result IMPORTING io_html   TYPE REF TO zcl_abapgit_html
                               iv_result TYPE scir_alvlist,
       jump
         IMPORTING
           is_item       TYPE zif_abapgit_definitions=>ty_item
           is_sub_item   TYPE zif_abapgit_definitions=>ty_item
-          i_line_number type i
+          i_line_number TYPE i
         RAISING
           zcx_abapgit_exception.
   PRIVATE SECTION.
@@ -26,86 +26,8 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
-  METHOD render_result.
-    DATA: lv_class TYPE string,
-          lv_line  TYPE string.
-
-    ro_html->add( '<div>' ).
-    IF iv_result-sobjname IS INITIAL OR
-       ( iv_result-sobjname = iv_result-objname AND
-         iv_result-sobjtype = iv_result-sobjtype ).
-      ro_html->add_a( iv_txt = |{ iv_result-objtype } { iv_result-objname }|
-                      iv_act = |{ iv_result-objtype }{ iv_result-objname }| &&
-                               |{ c_object_separator }{ c_object_separator }{ iv_result-line }|
-                      iv_typ = zif_abapgit_definitions=>c_action_type-sapevent ).
-
-    ELSE.
-      ro_html->add_a( iv_txt = |{ iv_result-objtype } { iv_result-objname }| &&
-                               | < { iv_result-sobjtype } { iv_result-sobjname }|
-                      iv_act = |{ iv_result-objtype }{ iv_result-objname }| &&
-                               |{ c_object_separator }{ iv_result-sobjtype }{ iv_result-sobjname }| &&
-                               |{ c_object_separator }{ iv_result-line }|
-                      iv_typ = zif_abapgit_definitions=>c_action_type-sapevent ).
-
-    ENDIF.
-    ro_html->add( '</div>' ).
-
-    CASE iv_result-kind.
-      WHEN 'E'.
-        lv_class = 'error'.
-      WHEN 'W'.
-        lv_class = 'warning'.
-      WHEN OTHERS.
-        lv_class = 'grey'.
-    ENDCASE.
-
-    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
-      EXPORTING
-        input  = iv_result-line
-      IMPORTING
-        output = lv_line.
-
-    ro_html->add( |<div class="{ lv_class }">Line { lv_line }: { iv_result-text }</div><br>| ).
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_gui_page~on_event.
-    DATA: ls_item          TYPE zif_abapgit_definitions=>ty_item,
-          ls_sub_item      TYPE zif_abapgit_definitions=>ty_item,
-          lv_main_object   TYPE string,
-          lv_sub_object    TYPE string,
-          lv_line_number_s TYPE string,
-          lv_line_number   TYPE i.
-
-
-    CASE iv_action.
-
-      WHEN zif_abapgit_definitions=>c_action-abapgit_home.
-        RETURN.
-
-      WHEN OTHERS.
-        SPLIT iv_action AT c_object_separator INTO lv_main_object lv_sub_object lv_line_number_s.
-        ls_item-obj_type = lv_main_object(4).
-        ls_item-obj_name = lv_main_object+4(*).
-
-        IF lv_sub_object IS NOT INITIAL.
-          ls_sub_item-obj_type = lv_sub_object(4).
-          ls_sub_item-obj_name = lv_sub_object+4(*).
-        ENDIF.
-
-        lv_line_number = lv_line_number_s.
-
-        jump( is_item       = ls_item
-              is_sub_item   = ls_sub_item
-              i_line_number = lv_line_number ).
-
-        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
-
-    ENDCASE.
-
-  ENDMETHOD.
 
   METHOD jump.
     DATA: lo_test               TYPE REF TO cl_ci_test_root,
@@ -185,4 +107,84 @@ CLASS zcl_abapgit_gui_page_codi_base IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD render_result.
+    DATA: lv_class TYPE string,
+          lv_line  TYPE string.
+
+    io_html->add( '<div>' ).
+    IF iv_result-sobjname IS INITIAL OR
+       ( iv_result-sobjname = iv_result-objname AND
+         iv_result-sobjtype = iv_result-sobjtype ).
+      io_html->add_a( iv_txt = |{ iv_result-objtype } { iv_result-objname }|
+                      iv_act = |{ iv_result-objtype }{ iv_result-objname }| &&
+                               |{ c_object_separator }{ c_object_separator }{ iv_result-line }|
+                      iv_typ = zif_abapgit_definitions=>c_action_type-sapevent ).
+
+    ELSE.
+      io_html->add_a( iv_txt = |{ iv_result-objtype } { iv_result-objname }| &&
+                               | < { iv_result-sobjtype } { iv_result-sobjname }|
+                      iv_act = |{ iv_result-objtype }{ iv_result-objname }| &&
+                               |{ c_object_separator }{ iv_result-sobjtype }{ iv_result-sobjname }| &&
+                               |{ c_object_separator }{ iv_result-line }|
+                      iv_typ = zif_abapgit_definitions=>c_action_type-sapevent ).
+
+    ENDIF.
+    io_html->add( '</div>' ).
+
+    CASE iv_result-kind.
+      WHEN 'E'.
+        lv_class = 'error'.
+      WHEN 'W'.
+        lv_class = 'warning'.
+      WHEN OTHERS.
+        lv_class = 'grey'.
+    ENDCASE.
+
+    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
+      EXPORTING
+        input  = iv_result-line
+      IMPORTING
+        output = lv_line.
+
+    io_html->add( |<div class="{ lv_class }">Line { lv_line }: { iv_result-text }</div><br>| ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page~on_event.
+    DATA: ls_item          TYPE zif_abapgit_definitions=>ty_item,
+          ls_sub_item      TYPE zif_abapgit_definitions=>ty_item,
+          lv_main_object   TYPE string,
+          lv_sub_object    TYPE string,
+          lv_line_number_s TYPE string,
+          lv_line_number   TYPE i.
+
+
+    CASE iv_action.
+
+      WHEN zif_abapgit_definitions=>c_action-abapgit_home.
+        RETURN.
+
+      WHEN OTHERS.
+        SPLIT iv_action AT c_object_separator INTO lv_main_object lv_sub_object lv_line_number_s.
+        ls_item-obj_type = lv_main_object(4).
+        ls_item-obj_name = lv_main_object+4(*).
+
+        IF lv_sub_object IS NOT INITIAL.
+          ls_sub_item-obj_type = lv_sub_object(4).
+          ls_sub_item-obj_name = lv_sub_object+4(*).
+        ENDIF.
+
+        lv_line_number = lv_line_number_s.
+
+        jump( is_item       = ls_item
+              is_sub_item   = ls_sub_item
+              i_line_number = lv_line_number ).
+
+        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
+
+    ENDCASE.
+
+  ENDMETHOD.
 ENDCLASS.
