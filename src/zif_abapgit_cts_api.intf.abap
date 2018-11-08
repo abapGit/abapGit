@@ -35,6 +35,8 @@ INTERFACE zif_abapgit_cts_api PUBLIC.
     "! Check if change recording is possible for the given package
     "! @parameter iv_package | Package
     "! @parameter rv_possible | Change recording is possible
+    "! @raising zcx_abapgit_exception | Package could not be loaded
     is_chrec_possible_for_package IMPORTING iv_package         TYPE devclass
-                                  RETURNING VALUE(rv_possible) TYPE abap_bool.
+                                  RETURNING VALUE(rv_possible) TYPE abap_bool
+                                  RAISING   zcx_abapgit_exception.
 ENDINTERFACE.

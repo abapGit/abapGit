@@ -89,7 +89,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
 
   METHOD build_dir_jump_link.
@@ -626,10 +626,10 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    lv_render_transports = zcl_abapgit_factory=>get_cts_api(
-      )->is_chrec_possible_for_package( mo_repo->get_package( ) ).
-
     TRY.
+
+        lv_render_transports = zcl_abapgit_factory=>get_cts_api(
+          )->is_chrec_possible_for_package( mo_repo->get_package( ) ).
 
         CREATE OBJECT lo_browser
           EXPORTING
