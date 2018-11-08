@@ -127,9 +127,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: lv_check_variant TYPE sci_chkv,
-          lv_class         TYPE string,
-          lv_line          TYPE string.
+    DATA: lv_check_variant TYPE sci_chkv.
+
     FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
 
     CREATE OBJECT ro_html.
@@ -188,13 +187,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_page~on_event.
-    DATA: lo_repo_online   TYPE REF TO zcl_abapgit_repo_online,
-          ls_item          TYPE zif_abapgit_definitions=>ty_item,
-          ls_sub_item      TYPE zif_abapgit_definitions=>ty_item.
-    DATA: lv_main_object   TYPE string.
-    DATA: lv_sub_object    TYPE string.
-    DATA: lv_line_number_s TYPE string.
-    DATA: lv_line_number   TYPE i.
+
+    DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
 
     CASE iv_action.
       WHEN c_actions-stage.

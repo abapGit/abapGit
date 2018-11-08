@@ -253,7 +253,6 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     DATA END OF ls_udmo_long_text.
 
     DATA lt_udmo_long_texts LIKE STANDARD TABLE OF ls_udmo_long_text.
-    DATA lt_udmo_languages TYPE STANDARD TABLE OF language_type.
     DATA ls_header TYPE thead.
 
     io_xml->read( EXPORTING iv_name = 'UDMO_LONG_TEXTS'

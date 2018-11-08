@@ -95,7 +95,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
 
 
   METHOD complete_heads_branch_name.
@@ -332,7 +332,6 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
 
   METHOD skip_first_pkt.
 
-    CONSTANTS: lc_lf TYPE x LENGTH 1 VALUE '0A'.
     DATA: lv_hex    TYPE x LENGTH 1,
           lv_length TYPE i,
           lv_0a_pos TYPE i.

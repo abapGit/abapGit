@@ -29,7 +29,6 @@ CLASS ltcl_xml_output IMPLEMENTATION.
     DATA: ls_input       TYPE st_old,
           ls_result      TYPE st_old,
           lv_value       TYPE string,
-          lv_xml         TYPE string,
           li_xml_element TYPE REF TO if_ixml_element,
           lo_output      TYPE REF TO zcl_abapgit_xml_output.
 

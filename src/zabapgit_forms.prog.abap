@@ -113,8 +113,7 @@ FORM package_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
 ENDFORM.                    "package_popup
 
 FORM output.
-  DATA: lt_ucomm TYPE TABLE OF sy-ucomm,
-        lx_error TYPE REF TO zcx_abapgit_exception.
+  DATA: lt_ucomm TYPE TABLE OF sy-ucomm.
 
   PERFORM set_pf_status IN PROGRAM rsdbrunt IF FOUND.
 

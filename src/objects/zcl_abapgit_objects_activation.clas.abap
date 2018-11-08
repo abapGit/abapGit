@@ -183,8 +183,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
   METHOD activate_old.
 
-    DATA: lv_popup TYPE abap_bool,
-          li_gui   TYPE REF TO zif_abapgit_gui_functions.
+    DATA: lv_popup TYPE abap_bool.
 
     IF gt_objects IS NOT INITIAL.
 

@@ -290,9 +290,8 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
   METHOD refresh.
 
-    DATA: lo_progress  TYPE REF TO zcl_abapgit_progress,
-          ls_pull      TYPE zcl_abapgit_git_porcelain=>ty_pull_result,
-          lx_exception TYPE REF TO zcx_abapgit_exception.
+    DATA: lo_progress TYPE REF TO zcl_abapgit_progress,
+          ls_pull     TYPE zcl_abapgit_git_porcelain=>ty_pull_result.
 
     super->refresh( iv_drop_cache ).
     reset_status( ).

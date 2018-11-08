@@ -64,8 +64,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
 
     " Downport
 
-    DATA: lv_partyp TYPE string,
-          lx_ecatt  TYPE REF TO cx_ecatt_apl.
+    DATA: lx_ecatt TYPE REF TO cx_ecatt_apl.
 
     load_help = im_load_help.
     typ = im_object_type.
