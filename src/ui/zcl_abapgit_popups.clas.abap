@@ -1119,13 +1119,13 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    IF ev_value_1 IS REQUESTED.
+    IF ev_value_1 IS SUPPLIED.
       READ TABLE ct_fields INDEX 1 ASSIGNING <ls_field>.
       ASSERT sy-subrc = 0.
       ev_value_1 = <ls_field>-value.
     ENDIF.
 
-    IF ev_value_2 IS REQUESTED.
+    IF ev_value_2 IS SUPPLIED.
       READ TABLE ct_fields INDEX 2 ASSIGNING <ls_field>.
       ASSERT sy-subrc = 0.
       ev_value_2 = <ls_field>-value.
