@@ -1,64 +1,82 @@
 {
-   "version":"v702",    
-   "rules":{
-      "7bit_ascii":{
-         "enabled":true
-      },
-      "contains_tab":{
-         "enabled":true
-      },
-      "functional_writing":{
-         "enabled":true
-      },
-      "line_length":{
-         "enabled":true,
-         "length":120
-      },
-      "max_one_statement":{
-         "enabled":true
-      },
-      "parser_error":{
-         "enabled":true
-      },
-      "space_before_colon":{
-         "enabled":true
-      },
-      "colon_missing_space":{
-         "enabled":true
-      },
-      "exit_or_check":{
-         "enabled":true
-      },
-      "line_only_punc":{
-         "enabled":true
-      },
-      "obsolete_statement":{
-         "enabled":true
-      },
-      "start_at_tab":{
-         "enabled":true
-      },
-      "whitespace_end":{
-         "enabled":true
-      },
-      "exporting":{
-         "enabled":true
-      },
-      "empty_statement":{
-         "enabled":true
-      },
-      "sequential_blank":{
-         "enabled":true,
-         "lines":4
-      },
-      "definitions_top":{
-         "enabled":true
-      },
-      "indentation":{
-         "enabled":true
-      },
-      "breakpoint":{
-         "enabled":true
-      }
-   }
+  "version": "v702",
+  "rules": {
+    "7bit_ascii": {
+      "enabled": true
+    },
+    "contains_tab": {
+      "enabled": true
+    },
+    "functional_writing": {
+      "enabled": true
+    },
+    "line_length": {
+      "enabled": true,
+      "length": 120
+    },
+    "max_one_statement": {
+      "enabled": true
+    },
+    "parser_error": {
+      "enabled": true
+    },
+    "space_before_colon": {
+      "enabled": true
+    },
+    "colon_missing_space": {
+      "enabled": true
+    },
+    "exit_or_check": {
+      "enabled": true
+    },
+    "line_only_punc": {
+      "enabled": true
+    },
+    "obsolete_statement": {
+      "enabled": true
+    },
+    "start_at_tab": {
+      "enabled": true
+    },
+    "whitespace_end": {
+      "enabled": true
+    },
+    "exporting": {
+      "enabled": true
+    },
+    "empty_statement": {
+      "enabled": true
+    },
+    "sequential_blank": {
+      "enabled": true,
+      "lines": 4
+    },
+    "definitions_top": {
+      "enabled": true
+    },
+    "breakpoint": {
+      "enabled": true
+    },
+    "cloud_types": {
+      "enabled": true
+    },
+    "mix_returning": {
+      "enabled": true
+    },
+    "method_parameter_names": {
+      "enabled": true,
+      "importing": "^I._.*$",
+      "returning": "^R._.*$",
+      "changing": "^C._.*$",
+      "exporting": "^E._.*$"
+    },
+    "inline_data_old_versions": {
+      "enabled": true
+    },
+    "local_variable_names": {
+      "enabled": true,
+      "expectedData": "^L._.*$",
+      "expectedFS": "^<L._.*>$"
+    }
+  }
 }

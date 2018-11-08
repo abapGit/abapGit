@@ -164,7 +164,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
                                     IMPORTING ei_code_item_element   = li_element
                                     CHANGING  cv_within_code_section = cv_within_code_section ).
 
-        lv_leading_spaces = li_element->get_attribute_ns( name = zcl_abapgit_object_ssfo=>attrib_abapgit_leadig_spaces ).
+        lv_leading_spaces = li_element->get_attribute_ns(
+          name = zcl_abapgit_object_ssfo=>attrib_abapgit_leadig_spaces ).
 
         lv_coding_line = li_element->get_value( ).
         SHIFT lv_coding_line RIGHT BY lv_leading_spaces PLACES.
