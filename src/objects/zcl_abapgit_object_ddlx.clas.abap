@@ -170,6 +170,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
 
         get_persistence( )->save( li_data_model ).
 
+        tadir_insert( iv_package ).
+
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
                                       ix_previous = lx_error ).
@@ -201,6 +203,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-ddic = abap_true.
+    rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.
 
 
