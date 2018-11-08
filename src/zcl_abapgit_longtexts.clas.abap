@@ -113,9 +113,8 @@ CLASS ZCL_ABAPGIT_LONGTEXTS IMPLEMENTATION.
   METHOD serialize.
 
     DATA: ls_longtext  TYPE ty_longtext,
-          lt_longtexts TYPE tty_longtexts.
-    DATA: lt_dokil       TYPE zif_abapgit_definitions=>tty_dokil,
-          lv_longtext_id TYPE dokil-id.
+          lt_longtexts TYPE tty_longtexts,
+          lt_dokil     TYPE zif_abapgit_definitions=>tty_dokil.
 
     FIELD-SYMBOLS: <ls_dokil> LIKE LINE OF lt_dokil.
 

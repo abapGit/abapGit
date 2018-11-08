@@ -360,8 +360,7 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
   METHOD then_patch_should_be.
 
-    DATA: lv_index TYPE i,
-          lt_patch TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+    DATA: lt_patch TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
           lv_patch LIKE LINE OF lt_patch.
 
     FIELD-SYMBOLS: <lv_patch> LIKE LINE OF mt_patch.
