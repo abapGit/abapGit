@@ -144,7 +144,7 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
         no_authority              = 26
         OTHERS                    = 27 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'SICF - error from change_node' ).
+      zcx_abapgit_exception=>raise( |SICF - error from change_node. Subrc = { sy-subrc }| ).
     ENDIF.
 
   ENDMETHOD.
@@ -166,7 +166,7 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
         no_authority          = 5
         OTHERS                = 6 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'SICF - error from service_from_url' ).
+      zcx_abapgit_exception=>raise( |SICF - error from service_from_url. Subrc = { sy-subrc }| ).
     ENDIF.
 
   ENDMETHOD.
@@ -266,7 +266,7 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
         no_authority      = 4
         OTHERS            = 5 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'SICF - error from get_info_from_serv' ).
+      zcx_abapgit_exception=>raise( |SICF - error from get_info_from_serv. Subrc = { sy-subrc }| ).
     ENDIF.
 
     ASSERT lines( lt_serv_info ) = 1.
@@ -438,7 +438,7 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
         no_authority                = 11
         OTHERS                      = 12 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'SICF - error from delete_node' ).
+      zcx_abapgit_exception=>raise( |SICF - error from delete_node. Subrc = { sy-subrc }| ).
     ENDIF.
 
   ENDMETHOD.
@@ -513,9 +513,20 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~is_locked.
 
-    rv_is_locked = abap_false.
+    DATA: lv_argument TYPE seqg3-garg.
+
+    lv_argument = ms_item-obj_name(15).
+    lv_argument+15(1) = '*'.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESICFSER'
+                                            iv_argument    = lv_argument ).
 
   ENDMETHOD.
 
@@ -589,10 +600,5 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
     io_xml->add( iv_name = 'ICFHANDLER_TABLE'
                  ig_data = lt_icfhandler ).
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.
