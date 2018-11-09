@@ -24,12 +24,15 @@ CLASS zcl_abapgit_injector DEFINITION
     CLASS-METHODS set_stage_logic
       IMPORTING
         !ii_logic TYPE REF TO zif_abapgit_stage_logic .
+    CLASS-METHODS set_cts_api
+      IMPORTING
+        ii_cts_api TYPE REF TO zif_abapgit_cts_api.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_INJECTOR IMPLEMENTATION.
+CLASS zcl_abapgit_injector IMPLEMENTATION.
 
 
   METHOD set_code_inspector.
@@ -114,5 +117,9 @@ CLASS ZCL_ABAPGIT_INJECTOR IMPLEMENTATION.
 
     zcl_abapgit_factory=>gi_tadir = ii_tadir.
 
+  ENDMETHOD.
+
+  METHOD set_cts_api.
+    zcl_abapgit_factory=>gi_cts_api = ii_cts_api.
   ENDMETHOD.
 ENDCLASS.
