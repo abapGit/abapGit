@@ -478,8 +478,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
           ls_parent           LIKE LINE OF it_commit_sha1s,
           lt_commit_sha1s     LIKE it_commit_sha1s.
 
-    FIELD-SYMBOLS: <ls_commit_sha1>  LIKE LINE OF it_commit_sha1s,
-                   <ls_child_commit> TYPE zif_abapgit_definitions=>ty_commit.
+    FIELD-SYMBOLS: <ls_child_commit> TYPE zif_abapgit_definitions=>ty_commit.
 
     CLEAR: es_1st_commit.
 

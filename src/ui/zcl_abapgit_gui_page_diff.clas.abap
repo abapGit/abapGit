@@ -169,7 +169,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
   METHOD add_to_stage.
 
     DATA: lo_repo              TYPE REF TO zcl_abapgit_repo_online,
-          lt_local             TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lt_diff              TYPE zif_abapgit_definitions=>ty_diffs_tt,
           lv_something_patched TYPE abap_bool,
           lv_patch             TYPE xstring,
@@ -177,8 +176,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_diff_file> TYPE zcl_abapgit_gui_page_diff=>ty_file_diff.
 
-    lo_repo  ?= zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
-    lt_local  = lo_repo->get_files_local( ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
 
     LOOP AT mt_diff_files ASSIGNING <ls_diff_file>.
 
@@ -495,7 +493,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     DATA: lt_diff       TYPE zif_abapgit_definitions=>ty_diffs_tt,
           lv_line_index TYPE sytabix.
 
-    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diff.
 
     lv_line_index = iv_line_index.
     lt_diff = io_diff->get( ).

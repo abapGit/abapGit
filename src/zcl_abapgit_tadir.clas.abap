@@ -7,6 +7,7 @@ CLASS zcl_abapgit_tadir DEFINITION
   PUBLIC SECTION.
     INTERFACES zif_abapgit_tadir .
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS exists
       IMPORTING
@@ -53,8 +54,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
           lv_last_package TYPE devclass VALUE cl_abap_char_utilities=>horizontal_tab,
           lt_packages     TYPE zif_abapgit_sap_package=>ty_devclass_tt.
 
-    FIELD-SYMBOLS: <ls_tdevc>   LIKE LINE OF lt_tdevc,
-                   <ls_tadir>   LIKE LINE OF rt_tadir,
+    FIELD-SYMBOLS: <ls_tadir>   LIKE LINE OF rt_tadir,
                    <lv_package> TYPE devclass.
 
     "Determine Packages to Read

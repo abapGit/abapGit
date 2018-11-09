@@ -4,31 +4,24 @@ CLASS zcl_abapgit_ecatt_data_downl DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    METHODS:
-      download REDEFINITION,
 
-      set_generate_xml_no_download
-        IMPORTING
-          iv_generate_xml_no_download TYPE abap_bool,
+    METHODS get_xml_stream
+      RETURNING
+        VALUE(rv_xml_stream) TYPE xstring .
+    METHODS get_xml_stream_size
+      RETURNING
+        VALUE(rv_xml_stream_size) TYPE int4 .
 
-      get_xml_stream
-        RETURNING
-          VALUE(rv_xml_stream) TYPE xstring,
-
-      get_xml_stream_size
-        RETURNING
-          VALUE(rv_xml_stream_size) TYPE int4.
-
+    METHODS download
+        REDEFINITION .
   PROTECTED SECTION.
     METHODS:
       download_data REDEFINITION.
 
   PRIVATE SECTION.
-    DATA:
-      mv_generate_xml_no_download TYPE abap_bool,
-      mv_xml_stream               TYPE xstring,
-      mv_xml_stream_size          TYPE int4.
 
+    DATA mv_xml_stream TYPE xstring .
+    DATA mv_xml_stream_size TYPE int4 .
 ENDCLASS.
 
 
@@ -112,13 +105,6 @@ CLASS ZCL_ABAPGIT_ECATT_DATA_DOWNL IMPLEMENTATION.
   METHOD get_xml_stream_size.
 
     rv_xml_stream_size = mv_xml_stream_size.
-
-  ENDMETHOD.
-
-
-  METHOD set_generate_xml_no_download.
-
-    mv_generate_xml_no_download = iv_generate_xml_no_download.
 
   ENDMETHOD.
 ENDCLASS.

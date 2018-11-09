@@ -89,7 +89,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -147,11 +147,12 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD find_transports.
     DATA: li_cts_api TYPE REF TO zif_abapgit_cts_api,
           ls_new     LIKE LINE OF rt_transports.
-    FIELD-SYMBOLS: <ls_local> LIKE LINE OF it_local,
-                   <ls_new>   LIKE LINE OF rt_transports.
+
+    FIELD-SYMBOLS: <ls_local> LIKE LINE OF it_local.
 
     li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
 
@@ -189,17 +190,13 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
     DATA: lo_page   TYPE REF TO zcl_abapgit_gui_page_diff,
           lv_key    TYPE zif_abapgit_persistence=>ty_repo-key,
-          ls_file   TYPE zif_abapgit_definitions=>ty_file,
-          ls_object TYPE zif_abapgit_definitions=>ty_item,
           lo_stage  TYPE REF TO zcl_abapgit_stage.
 
     zcl_abapgit_html_action_utils=>file_obj_decode(
       EXPORTING
         iv_string = iv_getdata
       IMPORTING
-        ev_key    = lv_key
-        eg_file   = ls_file
-        eg_object = ls_object ).
+        ev_key    = lv_key ).
 
     CREATE OBJECT lo_stage.
 

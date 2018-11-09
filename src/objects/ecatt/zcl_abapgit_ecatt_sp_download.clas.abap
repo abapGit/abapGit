@@ -41,8 +41,6 @@ CLASS ZCL_ABAPGIT_ECATT_SP_DOWNLOAD IMPLEMENTATION.
 
     " Downport
 
-    DATA: lv_partyp TYPE string.
-
     load_help = im_load_help.
     typ = im_object_type.
 
@@ -57,8 +55,6 @@ CLASS ZCL_ABAPGIT_ECATT_SP_DOWNLOAD IMPLEMENTATION.
       CATCH cx_ecatt INTO ex_ecatt.
         RETURN.
     ENDTRY.
-
-    lv_partyp = cl_apl_ecatt_const=>params_type_par.
 
     set_attributes_to_template( ).
 
