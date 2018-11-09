@@ -7,7 +7,8 @@ CLASS zcl_abapgit_object_sfsw DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS:
       get
         RETURNING VALUE(ro_switch) TYPE REF TO cl_sfw_sw
-        RAISING   zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception,
+      wait_for_background_job.
 
 ENDCLASS.
 
@@ -62,6 +63,10 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
         lo_switch = cl_sfw_sw=>get_switch( lv_switch_id ).
         lo_switch->set_delete_flag( lv_switch_id ).
         lo_switch->save_all( ).
+
+        " deletion via background job. Wait until the job is finished.
+        wait_for_background_job( ).
+
       CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
         zcx_abapgit_exception=>raise( 'Error deleting Switch' ).
     ENDTRY.
@@ -110,6 +115,8 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
     lo_switch->set_conflicts( lt_conflicts ).
 
     set_default_package( iv_package ).
+    tadir_insert( iv_package ).
+
     lo_switch->save_all(
       EXCEPTIONS
         not_saved = 1
@@ -155,6 +162,16 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
   ENDMETHOD.
 
 
@@ -215,12 +232,31 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~is_locked.
-    rv_is_locked = abap_false.
+  METHOD wait_for_background_job.
+
+    DATA: lv_job_count TYPE tbtco-jobcount.
+
+    " We wait for at most 5 seconds. If it takes
+    " more than that it probably doesn't matter,
+    " because we have other problems
+
+    DO 5 TIMES.
+
+      SELECT SINGLE jobcount
+             FROM tbtco
+             INTO lv_job_count
+             WHERE jobname = 'SFW_DELETE_SWITCH'
+             AND   status  = 'R'
+             AND   sdluname = sy-uname.
+
+      IF sy-subrc = 0.
+        WAIT UP TO 1 SECONDS.
+      ELSE.
+        EXIT.
+      ENDIF.
+
+    ENDDO.
+
   ENDMETHOD.
 
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
-  ENDMETHOD.
 ENDCLASS.
