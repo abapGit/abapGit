@@ -120,6 +120,8 @@ CLASS zcl_abapgit_object_sfbs IMPLEMENTATION.
     lo_bfs->set_nested_parent( lt_parent_bfs ).
 
     set_default_package( iv_package ).
+    tadir_insert( iv_package ).
+
     lo_bfs->save_all( ).
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
@@ -154,6 +156,7 @@ CLASS zcl_abapgit_object_sfbs IMPLEMENTATION.
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-ddic = abap_true.
+    rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.
 
 
