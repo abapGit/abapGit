@@ -92,7 +92,6 @@ CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
           lv_exists             TYPE etonoff,
           lv_exc_occ            TYPE etonoff,
           ls_tadir              TYPE tadir,
-          lv_exception_occurred TYPE etonoff,
           lo_ecatt_sp           TYPE REF TO object.
 
     FIELD-SYMBOLS: <lg_ecatt_sp> TYPE any,
@@ -171,7 +170,6 @@ CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
     TRY.
         ecatt_object->close_object( im_suppress_events ='X' ).
       CATCH cx_ecatt_apl INTO lx_ecatt.
-        lv_exception_occurred = 'X'.
     ENDTRY.
 *end
 *     get devclass from existing object

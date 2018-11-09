@@ -66,18 +66,12 @@ CLASS ltcl_patch IMPLEMENTATION.
 
   METHOD invalid_action.
 
-    DATA: lv_file_name  TYPE string,
-          lv_line_index TYPE string,
-          lx_error      TYPE REF TO zcx_abapgit_exception.
+    DATA: lx_error TYPE REF TO zcx_abapgit_exception.
 
     TRY.
         zcl_abapgit_gui_page_diff=>get_patch_data(
-          EXPORTING
-            iv_patch      = |remove_patch_ztest_patch.prog.abap_39|
-            iv_action     = |mix|
-          IMPORTING
-            ev_filename   = lv_file_name
-            ev_line_index = lv_line_index ).
+          iv_patch  = |remove_patch_ztest_patch.prog.abap_39|
+          iv_action = |mix| ).
 
         cl_abap_unit_assert=>fail( ).
 

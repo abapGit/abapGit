@@ -64,8 +64,6 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
 
     " Downport
 
-    DATA: lx_ecatt TYPE REF TO cx_ecatt_apl.
-
     load_help = im_load_help.
     typ = im_object_type.
 
@@ -96,7 +94,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
 *   set_params_to_schema( ).
       TRY.
           get_general_params_data( ecatt_script->params ).
-        CATCH cx_ecatt_apl INTO lx_ecatt.                "#EC NOHANDLER
+        CATCH cx_ecatt_apl.                              "#EC NOHANDLER
 *         proceed with download and report errors later
       ENDTRY.
 
@@ -115,7 +113,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
 
               ENDIF.
             ENDIF.
-          CATCH cx_ecatt_apl INTO lx_ecatt.              "#EC NOHANDLER
+          CATCH cx_ecatt_apl.                            "#EC NOHANDLER
 *         proceed with download and report errors later
         ENDTRY.
       ENDLOOP.

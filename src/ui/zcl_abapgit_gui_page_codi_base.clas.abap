@@ -31,7 +31,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
   METHOD jump.
     DATA: lo_test               TYPE REF TO cl_ci_test_root,
-          li_code_inspector     TYPE REF TO zif_abapgit_code_inspector,
           ls_info               TYPE scir_rest,
           lo_result             TYPE REF TO cl_ci_result_root,
           lv_check_variant_name TYPE sci_chkv,
@@ -65,10 +64,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
     lv_package = mo_repo->get_package( ).
     lv_check_variant_name = mo_repo->get_local_settings( )-code_inspector_check_variant.
-
-    li_code_inspector = zcl_abapgit_factory=>get_code_inspector(
-        iv_package            = lv_package
-        iv_check_variant_name = lv_check_variant_name ).
 
     " see SCI_LCL_DYNP_530 / HANDLE_DOUBLE_CLICK
 
