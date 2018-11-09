@@ -344,7 +344,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS ltcl_objcet_ddls_mock DEFINITION FOR TESTING.
+CLASS ltcl_object_ddls_mock DEFINITION FOR TESTING.
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
@@ -359,7 +359,7 @@ CLASS ltcl_objcet_ddls_mock DEFINITION FOR TESTING.
 
 ENDCLASS.
 
-CLASS ltcl_objcet_ddls_mock IMPLEMENTATION.
+CLASS ltcl_object_ddls_mock IMPLEMENTATION.
 
   METHOD constructor.
 
@@ -527,8 +527,206 @@ CLASS ltcl_check_objects_locked IMPLEMENTATION.
 
     ls_obj_serializer_map-item-obj_type = lc_obj_type.
     ls_obj_serializer_map-item-obj_name = iv_object_name.
-    ls_obj_serializer_map-metadata-class = '\CLASS-POOL=ZCL_ABAPGIT_OBJECTS\CLASS=LTCL_OBJCET_DDLS_MOCK'.
+    ls_obj_serializer_map-metadata-class = '\CLASS-POOL=ZCL_ABAPGIT_OBJECTS\CLASS=LTCL_OBJECT_DDLS_MOCK'.
     INSERT ls_obj_serializer_map INTO TABLE zcl_abapgit_objects=>gt_obj_serializer_map.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltcl_filter_files_to_deser DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    DATA:
+      mo_objects TYPE REF TO zcl_abapgit_objects,
+      mt_result  TYPE zif_abapgit_definitions=>ty_results_tt.
+
+    METHODS:
+      setup,
+      filter_duplicates FOR TESTING RAISING cx_static_check,
+      filter_duplicates_rstate FOR TESTING RAISING cx_static_check,
+      filter_duplicates_lstate FOR TESTING RAISING cx_static_check,
+      filter_duplicates_match FOR TESTING RAISING cx_static_check,
+      filter_duplicates_init_objtype FOR TESTING RAISING cx_static_check,
+
+      given_result
+        IMPORTING
+          iv_result_line TYPE string,
+
+      when_filter_is_applied.
+
+ENDCLASS.
+
+CLASS zcl_abapgit_objects DEFINITION LOCAL FRIENDS ltcl_filter_files_to_deser.
+
+CLASS ltcl_filter_files_to_deser IMPLEMENTATION.
+
+  METHOD setup.
+
+    CREATE OBJECT mo_objects.
+
+  ENDMETHOD.
+
+  METHOD filter_duplicates.
+
+    given_result( |PROG;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.abap;;;;| ).
+    given_result( |PROG;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.xml;;;;| ).
+
+    when_filter_is_applied( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 1
+      act = lines( mt_result ) ).
+
+  ENDMETHOD.
+
+
+  METHOD filter_duplicates_rstate.
+
+    DATA: ls_exp LIKE LINE OF mt_result,
+          ls_act LIKE LINE OF mt_result.
+
+    given_result( |PROG;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.abap;;;;| ).
+    given_result( |PROG;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.xml;;;;A| ).
+
+    READ TABLE mt_result INDEX 2 INTO ls_exp.
+
+    when_filter_is_applied( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 1
+      act = lines( mt_result ) ).
+
+    READ TABLE mt_result INDEX 1 INTO ls_act.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = ls_exp
+      act = ls_act ).
+
+  ENDMETHOD.
+
+
+  METHOD filter_duplicates_lstate.
+
+    given_result( |PROG;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.abap;;;A;| ).
+    given_result( |PROG;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.xml;;;A;| ).
+
+    when_filter_is_applied( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = lines( mt_result ) ).
+
+  ENDMETHOD.
+
+
+  METHOD filter_duplicates_match.
+
+    given_result( |PROG;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.abap;;X;;| ).
+    given_result( |PROG;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.xml;;X;;| ).
+
+    when_filter_is_applied( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = lines( mt_result ) ).
+
+  ENDMETHOD.
+
+
+  METHOD filter_duplicates_init_objtype.
+
+    given_result( |;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.abap;;;;| ).
+    given_result( |;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.xml;;;;| ).
+
+    when_filter_is_applied( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = lines( mt_result ) ).
+
+  ENDMETHOD.
+
+
+  METHOD given_result.
+
+    DATA: ls_result LIKE LINE OF mt_result.
+
+    SPLIT iv_result_line
+      AT ';'
+      INTO ls_result-obj_type
+           ls_result-obj_name
+           ls_result-inactive
+           ls_result-path
+           ls_result-filename
+           ls_result-package
+           ls_result-match
+           ls_result-lstate
+           ls_result-rstate.
+
+    INSERT ls_result INTO TABLE mt_result.
+
+  ENDMETHOD.
+
+
+  METHOD when_filter_is_applied.
+
+    mt_result = mo_objects->filter_files_to_deserialize( mt_result ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltcl_adjust_namespaces DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    METHODS:
+      setup,
+      adjust_namespaces FOR TESTING RAISING cx_static_check.
+
+    DATA:
+      mo_objects TYPE REF TO zcl_abapgit_objects.
+
+ENDCLASS.
+
+CLASS zcl_abapgit_objects DEFINITION LOCAL FRIENDS ltcl_adjust_namespaces.
+
+CLASS ltcl_adjust_namespaces IMPLEMENTATION.
+
+  METHOD setup.
+
+    CREATE OBJECT mo_objects.
+
+  ENDMETHOD.
+
+  METHOD adjust_namespaces.
+
+    DATA: lt_input  TYPE zif_abapgit_definitions=>ty_results_tt,
+          lt_ouptut TYPE zif_abapgit_definitions=>ty_results_tt,
+          ls_result LIKE LINE OF lt_input.
+
+    ls_result-obj_name = |#SAP#ZTEST|.
+    INSERT ls_result INTO TABLE lt_input.
+
+    ls_result-obj_name = |ZTEST|.
+    INSERT ls_result INTO TABLE lt_input.
+
+    lt_ouptut = mo_objects->adjust_namespaces( lt_input ).
+
+    READ TABLE lt_ouptut INTO ls_result INDEX 1.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = |/SAP/ZTEST|
+      act = ls_result-obj_name ).
+
+    READ TABLE lt_ouptut INTO ls_result INDEX 2.
+    cl_abap_unit_assert=>assert_equals(
+      exp = |ZTEST|
+      act = ls_result-obj_name ).
 
   ENDMETHOD.
 
