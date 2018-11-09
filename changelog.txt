@@ -8,6 +8,16 @@ Legend
 + : added
 - : removed
 
+2018-11-09 v1.79.0
+------------------
++ CTS integration, show corresponding transports
++ Mark inactive objects in repo list
+* SSFO handle leading spaces
+* PARA error handling
+* ENHO do not show gui
+* SCP1 do not show gui
+* DDLX fix tadir handling
+
 2018-10-19 v1.78.1
 ------------------
 * Diff fixes
