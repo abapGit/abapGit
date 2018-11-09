@@ -202,7 +202,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
     DATA: lt_fields TYPE tihttpnvp.
 
-    ASSERT eg_file IS SUPPLIED OR eg_object IS SUPPLIED.
+    ASSERT eg_file IS SUPPLIED OR eg_object IS SUPPLIED OR ev_key IS SUPPLIED.
 
     CLEAR: ev_key, eg_file, eg_object.
     lt_fields = parse_fields_upper_case_name( iv_string ).
