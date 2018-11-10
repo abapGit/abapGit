@@ -8,7 +8,10 @@ CLASS zcl_abapgit_object_sfsw DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       get
         RETURNING VALUE(ro_switch) TYPE REF TO cl_sfw_sw
         RAISING   zcx_abapgit_exception,
-      wait_for_background_job.
+      wait_for_background_job,
+      wait_for_deletion
+        RAISING
+          zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -64,8 +67,11 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
         lo_switch->set_delete_flag( lv_switch_id ).
         lo_switch->save_all( ).
 
-        " deletion via background job. Wait until the job is finished.
+        " deletion via background job. Wait until the job is finished...
         wait_for_background_job( ).
+
+        " ... the object is deleted
+        wait_for_deletion( ).
 
       CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
         zcx_abapgit_exception=>raise( 'Error deleting Switch' ).
@@ -250,6 +256,21 @@ CLASS zcl_abapgit_object_sfsw IMPLEMENTATION.
              AND   sdluname = sy-uname.
 
       IF sy-subrc = 0.
+        WAIT UP TO 1 SECONDS.
+      ELSE.
+        EXIT.
+      ENDIF.
+
+    ENDDO.
+
+  ENDMETHOD.
+
+
+  METHOD wait_for_deletion.
+
+    DO 5 TIMES.
+
+      IF zif_abapgit_object~exists( ) = abap_true.
         WAIT UP TO 1 SECONDS.
       ELSE.
         EXIT.
