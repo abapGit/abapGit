@@ -3,6 +3,24 @@ CLASS zcl_abapgit_object_susc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
+  PROTECTED SECTION.
+    CONSTANTS transobjecttype_class TYPE char1 VALUE 'C' ##NO_TEXT.
+
+    METHODS has_authorization
+      IMPORTING i_object_type TYPE seu_objid
+                i_class       TYPE tobc-oclss
+                i_activity    TYPE activ_auth
+      RAISING   zcx_abapgit_exception.
+    METHODS is_used
+      IMPORTING i_auth_object_class TYPE tobc-oclss
+      RAISING   zcx_abapgit_exception.
+  PRIVATE SECTION.
+    METHODS delete_class
+      IMPORTING i_auth_object_class TYPE tobc-oclss.
+    METHODS put_delete_to_transport
+      IMPORTING i_auth_object_class TYPE tobc-oclss
+                i_object_type       TYPE seu_objid
+      RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -73,7 +91,7 @@ CLASS zcl_abapgit_object_susc IMPLEMENTATION.
     CALL FUNCTION 'SUSR_COMMEDITCHECK'
       EXPORTING
         objectname      = lv_objectname
-        transobjecttype = 'C'.
+        transobjecttype = zcl_abapgit_object_susc=>transobjecttype_class.
 
     INSERT tobc FROM ls_tobc.                             "#EC CI_SUBRC
 * ignore sy-subrc as all fields are key fields
@@ -84,92 +102,109 @@ CLASS zcl_abapgit_object_susc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
+    CONSTANTS activity_delete_06 TYPE activ_auth VALUE '06'.
 
-    DATA: objclass     TYPE tobc-oclss.
-    DATA: message_text TYPE string.
+    DATA: auth_object_class TYPE tobc-oclss.
+    DATA: object_type       TYPE seu_objid.
+    DATA: tr_object_name    TYPE e071-obj_name.
+    DATA: tr_return         TYPE char1.
 
-    objclass = ms_item-obj_name.
+    auth_object_class = ms_item-obj_name.
+    object_type = ms_item-obj_type.
 
-* Copy of FM 'SUSR_DELETE_OBJECT_CLASS' 740SP08
-* I hate to do this, but there is no other way
-    DATA:
-      lr_susc   TYPE REF TO cl_auth_tools,
-      ls_tobct  TYPE tobct,
-      ls_tadir  TYPE tadir,
-      ls_tdevc  TYPE tdevc,
-      ld_dummy  TYPE xuobjclass,
-      ld_tr_obj TYPE e071-obj_name,
-      ld_korret TYPE char1, "tv_c1,
-      ld_answer TYPE char1. "tv_c1.
-*-----------------------------------------------------------------------
-    CREATE OBJECT lr_susc.
+    TRY.
+        me->zif_abapgit_object~exists( ).
+      CATCH zcx_abapgit_exception.
+        RETURN.
+    ENDTRY.
 
-* 1st - existence check, get data for deletion
-    lr_susc->susc_get_class( EXPORTING oclss    = objclass
-                             IMPORTING ps_tobct = ls_tobct
-                                       ps_tadir = ls_tadir ).
-    IF ls_tobct IS INITIAL.
-      zcx_abapgit_exception=>raise_t100( iv_msgid = '01'
-                                         iv_msgno = '434'
-                                         iv_msgv1 = |{ objclass }| ).
+    has_authorization( EXPORTING i_object_type = object_type
+                                 i_class       = auth_object_class
+                                 i_activity    = activity_delete_06 ).
+
+    is_used( auth_object_class ).
+
+    delete_class( auth_object_class ).
+
+    put_delete_to_transport( i_auth_object_class = auth_object_class
+                             i_object_type       = object_type ).
+  ENDMETHOD.
+
+  METHOD put_delete_to_transport.
+
+    DATA: tr_object_name TYPE e071-obj_name.
+    DATA: tr_return      TYPE char1.
+    DATA: package_info   TYPE tdevc.
+
+    tr_object_name = i_auth_object_class.
+    CALL FUNCTION 'SUSR_COMMEDITCHECK'
+      EXPORTING
+        objectname       = tr_object_name
+        transobjecttype  = zcl_abapgit_object_susc=>transobjecttype_class
+      IMPORTING
+        return_from_korr = tr_return.
+
+    IF tr_return <> 'M'.
+      zcx_abapgit_exception=>raise( |error in SUSC delete at SUSR_COMMEDITCHECK| ).
     ENDIF.
 
-* 2nd - authority-check
-    IF lr_susc->susc_auth_check( oclss = objclass
-                                 actvt = '06' ) <> 0.
+    CALL FUNCTION 'TR_DEVCLASS_GET'
+      EXPORTING
+        iv_devclass = ms_item-devclass
+      IMPORTING
+        es_tdevc    = package_info
+      EXCEPTIONS
+        OTHERS      = 1.
+    IF sy-subrc = 0 AND package_info-korrflag IS INITIAL.
+      CALL FUNCTION 'TR_TADIR_INTERFACE'
+        EXPORTING
+          wi_delete_tadir_entry = abap_true
+          wi_test_modus         = space
+          wi_tadir_pgmid        = 'R3TR'
+          wi_tadir_object       = i_object_type
+          wi_tadir_obj_name     = tr_object_name
+        EXCEPTIONS
+          OTHERS                = 0.
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD delete_class.
+
+    DELETE FROM tobc  WHERE oclss = i_auth_object_class.
+    DELETE FROM tobct WHERE oclss = i_auth_object_class.
+
+  ENDMETHOD.
+
+  METHOD is_used.
+
+    DATA: used_auth_object_class TYPE tobc-oclss.
+    SELECT SINGLE oclss
+      FROM tobj
+      INTO used_auth_object_class
+      WHERE oclss = i_auth_object_class ##WARN_OK.
+    IF sy-subrc = 0.
+      zcx_abapgit_exception=>raise_t100( iv_msgid = '01'
+                                         iv_msgno = '212'
+                                         iv_msgv1 = |{ used_auth_object_class }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD has_authorization.
+
+    AUTHORITY-CHECK OBJECT 'S_DEVELOP'
+           ID 'DEVCLASS' DUMMY
+           ID 'OBJTYPE' FIELD i_object_type
+           ID 'OBJNAME' FIELD i_class
+           ID 'P_GROUP' DUMMY
+           ID 'ACTVT'   FIELD i_activity.
+
+    IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( iv_msgid = '01'
                                          iv_msgno = '467' ).
     ENDIF.
 
-* 3rd - where used in auth.-objects test
-    SELECT SINGLE oclss FROM tobj INTO ld_dummy
-      WHERE oclss = objclass     ##WARN_OK.
-    IF sy-subrc = 0.
-      zcx_abapgit_exception=>raise_t100( iv_msgid = '01'
-                                         iv_msgno = '212'
-                                         iv_msgv1 = |{ ld_dummy }| ).
-    ENDIF.
-
-*!!! delete confirmation popup !!!
-
-* 5th - create a transport task
-    ld_tr_obj = objclass.
-    CALL FUNCTION 'SUSR_COMMEDITCHECK'
-      EXPORTING
-        objectname       = ld_tr_obj
-        transobjecttype  = 'C'
-      IMPORTING
-        return_from_korr = ld_korret
-        return_ls_tadir  = ls_tadir.
-
-    IF ld_korret <> 'M'.
-      zcx_abapgit_exception=>raise( |error in SUSC delete at SUSR_COMMEDITCHECK| ).
-    ENDIF.
-* now the real deletion
-    DELETE FROM tobc  WHERE oclss = objclass.
-    DELETE FROM tobct WHERE oclss = objclass.           "#EC CI_NOFIRST
-
-* follow-up action ... clean up in table tadir
-    CALL FUNCTION 'TR_DEVCLASS_GET'
-      EXPORTING
-        iv_devclass = ls_tadir-devclass
-      IMPORTING
-        es_tdevc    = ls_tdevc
-      EXCEPTIONS
-        OTHERS      = 1.
-    IF sy-subrc = 0 AND ls_tdevc-korrflag IS INITIAL.
-*   object classes are not connected with the CTS
-*   -> if a TADIR-entry exists, we have to reorganize it manualy
-      CALL FUNCTION 'TR_TADIR_INTERFACE'
-        EXPORTING
-          wi_delete_tadir_entry = 'X'
-          wi_test_modus         = space
-          wi_tadir_pgmid        = ls_tadir-pgmid
-          wi_tadir_object       = ls_tadir-object
-          wi_tadir_obj_name     = ls_tadir-obj_name
-        EXCEPTIONS
-          OTHERS                = 0.
-    ENDIF.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~jump.
