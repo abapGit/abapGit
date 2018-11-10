@@ -819,12 +819,18 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
+* DDLS has to be handled before DCLS
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'DDLS'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
     LOOP AT it_results ASSIGNING <ls_result>
         WHERE obj_type <> 'IASP'
         AND obj_type <> 'PROG'
         AND obj_type <> 'XSLT'
         AND obj_type <> 'PINF'
-        AND obj_type <> 'ENHS'.
+        AND obj_type <> 'ENHS'
+        AND obj_type <> 'DDLS'.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 

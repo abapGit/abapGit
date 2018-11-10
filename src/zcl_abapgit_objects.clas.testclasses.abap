@@ -731,3 +731,89 @@ CLASS ltcl_adjust_namespaces IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
+
+CLASS ltcl_prio_deserialization DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    METHODS:
+      setup,
+      ddls_before_dcls FOR TESTING RAISING cx_static_check,
+
+      given
+        IMPORTING
+          iv_object_type TYPE trobjtype,
+      when_deser_is_priorized,
+      then
+        IMPORTING
+          iv_exp_object_type TYPE trobjtype.
+
+    DATA:
+      mo_objects          TYPE REF TO zcl_abapgit_objects,
+      mt_input            TYPE zif_abapgit_definitions=>ty_results_tt,
+      mt_output           TYPE zif_abapgit_definitions=>ty_results_tt,
+      mv_exp_output_tabix TYPE i.
+
+ENDCLASS.
+
+CLASS zcl_abapgit_objects DEFINITION LOCAL FRIENDS ltcl_prio_deserialization.
+
+CLASS ltcl_prio_deserialization IMPLEMENTATION.
+
+  METHOD setup.
+
+    CREATE OBJECT mo_objects.
+    mv_exp_output_tabix = 0.
+
+  ENDMETHOD.
+
+  METHOD ddls_before_dcls.
+
+    given( 'DCLS' ).
+    given( 'DDLS' ).
+    given( 'DCLS' ).
+    given( 'DDLS' ).
+
+    when_deser_is_priorized( ).
+
+    then( 'DDLS' ).
+    then( 'DDLS' ).
+    then( 'DCLS' ).
+    then( 'DCLS' ).
+
+  ENDMETHOD.
+
+
+  METHOD given.
+
+    DATA: ls_input LIKE LINE OF mt_input.
+
+    ls_input-obj_type = iv_object_type.
+    INSERT ls_input INTO TABLE mt_input.
+
+  ENDMETHOD.
+
+
+  METHOD when_deser_is_priorized.
+
+    mt_output = mo_objects->prioritize_deser( mt_input ).
+
+  ENDMETHOD.
+
+
+  METHOD then.
+
+    DATA: ls_output LIKE LINE OF mt_output.
+
+    mv_exp_output_tabix = mv_exp_output_tabix + 1.
+
+    READ TABLE mt_output INTO ls_output INDEX mv_exp_output_tabix.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = iv_exp_object_type
+      act = ls_output-obj_type ).
+
+  ENDMETHOD.
+
+ENDCLASS.
