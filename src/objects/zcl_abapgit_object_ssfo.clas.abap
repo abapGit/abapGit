@@ -4,10 +4,11 @@ CLASS zcl_abapgit_object_ssfo DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: ty_string_range TYPE RANGE OF string.
 
-    CLASS-DATA: range_node_codes TYPE ty_string_range.
+    CLASS-DATA: gt_range_node_codes TYPE ty_string_range.
     CONSTANTS: attrib_abapgit_leadig_spaces TYPE string VALUE 'abapgit-leadig-spaces' ##NO_TEXT.
 
     METHODS fix_ids IMPORTING ii_xml_doc TYPE REF TO if_ixml_document.
@@ -31,15 +32,15 @@ CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
 
 
   METHOD code_item_section_handling.
-    CONSTANTS: node_item TYPE string VALUE 'item' ##NO_TEXT.
-    CONSTANTS: node_text TYPE string VALUE '#text' ##NO_TEXT.
+    CONSTANTS: lc_node_item TYPE string VALUE 'item' ##NO_TEXT.
+    CONSTANTS: lc_node_text TYPE string VALUE '#text' ##NO_TEXT.
 
     IF iv_name IN get_range_node_codes( ).
       cv_within_code_section = abap_true.
     ENDIF.
 
     IF cv_within_code_section = abap_true.
-      IF iv_name = node_item.
+      IF iv_name = lc_node_item.
         TRY.
             ei_code_item_element ?= ii_node.
             RETURN.
@@ -47,7 +48,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
         ENDTRY.
 
       ELSEIF iv_name NOT IN get_range_node_codes( ) AND
-             iv_name <> node_text.
+             iv_name <> lc_node_text.
         cv_within_code_section = abap_false.
       ENDIF.
     ENDIF.
@@ -134,20 +135,20 @@ CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
 
     DATA: ls_range_node_code TYPE LINE OF ty_string_range.
 
-    IF me->range_node_codes IS INITIAL.
+    IF me->gt_range_node_codes IS INITIAL.
       ls_range_node_code-sign   = 'I'.
       ls_range_node_code-option = 'EQ'.
       ls_range_node_code-low    = 'CODE'.
-      INSERT ls_range_node_code INTO TABLE me->range_node_codes.
+      INSERT ls_range_node_code INTO TABLE me->gt_range_node_codes.
       ls_range_node_code-low    = 'GTYPES'.
-      INSERT ls_range_node_code INTO TABLE me->range_node_codes.
+      INSERT ls_range_node_code INTO TABLE me->gt_range_node_codes.
       ls_range_node_code-low    = 'GCODING'.
-      INSERT ls_range_node_code INTO TABLE me->range_node_codes.
+      INSERT ls_range_node_code INTO TABLE me->gt_range_node_codes.
       ls_range_node_code-low    = 'FCODING'.
-      INSERT ls_range_node_code INTO TABLE me->range_node_codes.
+      INSERT ls_range_node_code INTO TABLE me->gt_range_node_codes.
     ENDIF.
 
-    rt_range_node_codes = me->range_node_codes.
+    rt_range_node_codes = me->gt_range_node_codes.
 
   ENDMETHOD.
 

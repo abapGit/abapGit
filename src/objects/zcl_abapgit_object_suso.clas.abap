@@ -27,7 +27,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_suso IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SUSO IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -83,7 +83,7 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
   METHOD pre_check.
 
     CONSTANTS:
-      co_act_delete TYPE activ_auth VALUE '06'.
+      lc_act_delete TYPE activ_auth VALUE '06'.
 
     DATA:
       lv_act_head            TYPE activ_auth,
@@ -130,11 +130,11 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
       CALL METHOD lo_suso->('GET_SUSO_EDIT_MODE')
         EXPORTING
           id_object     = mv_objectname
-          id_planed_act = co_act_delete
+          id_planed_act = lc_act_delete
         IMPORTING
           ed_mode_head  = lv_act_head.
 
-      IF lv_act_head <> co_act_delete.
+      IF lv_act_head <> lc_act_delete.
         zcx_abapgit_exception=>raise( |AUTH { mv_objectname }: Delete not allowed| ).
       ENDIF.
 
@@ -263,6 +263,11 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~is_locked.
 
     rv_is_locked = abap_false.
@@ -332,10 +337,5 @@ CLASS zcl_abapgit_object_suso IMPLEMENTATION.
     io_xml->add( ig_data = lt_tobjvor
                  iv_name = 'TOBJVOR' ).
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

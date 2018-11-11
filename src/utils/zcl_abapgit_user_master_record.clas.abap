@@ -33,17 +33,16 @@ CLASS zcl_abapgit_user_master_record DEFINITION
       END OF ty_user.
 
     CLASS-DATA:
-      mt_user TYPE HASHED TABLE OF ty_user
+      gt_user TYPE HASHED TABLE OF ty_user
                    WITH UNIQUE KEY user.
 
     DATA:
       ms_user TYPE zif_abapgit_definitions=>ty_git_user.
-
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_USER_MASTER_RECORD IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -88,7 +87,7 @@ CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
     DATA: ls_user TYPE ty_user.
     FIELD-SYMBOLS: <ls_user> TYPE ty_user.
 
-    READ TABLE mt_user ASSIGNING <ls_user>
+    READ TABLE gt_user ASSIGNING <ls_user>
                        WITH KEY user = iv_user.
     IF sy-subrc <> 0.
 
@@ -98,7 +97,7 @@ CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
           iv_user = iv_user.
 
       INSERT ls_user
-             INTO TABLE mt_user
+             INTO TABLE gt_user
              ASSIGNING <ls_user>.
 
     ENDIF.
@@ -113,5 +112,4 @@ CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
     rv_name = ms_user-name.
 
   ENDMETHOD.
-
 ENDCLASS.

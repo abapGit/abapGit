@@ -26,6 +26,7 @@ CLASS zcl_abapgit_popups DEFINITION
       package_popup_callback        FOR zif_abapgit_popups~package_popup_callback,
       popup_transport_request       FOR zif_abapgit_popups~popup_transport_request.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES:
@@ -34,10 +35,10 @@ CLASS zcl_abapgit_popups DEFINITION
     CONSTANTS c_fieldname_selected TYPE lvc_fname VALUE `SELECTED` ##NO_TEXT.
     CONSTANTS c_answer_cancel      TYPE char1 VALUE 'A' ##NO_TEXT.
 
-    DATA go_select_list_popup TYPE REF TO cl_salv_table .
-    DATA gr_table TYPE REF TO data .
-    DATA gv_cancel TYPE abap_bool .
-    DATA go_table_descr TYPE REF TO cl_abap_tabledescr .
+    DATA mo_select_list_popup TYPE REF TO cl_salv_table .
+    DATA mr_table TYPE REF TO data .
+    DATA mv_cancel TYPE abap_bool .
+    DATA mo_table_descr TYPE REF TO cl_abap_tabledescr .
 
     METHODS add_field
       IMPORTING
@@ -119,8 +120,8 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
                    <lg_line>      TYPE data,
                    <lg_data>      TYPE any.
 
-    go_table_descr ?= cl_abap_tabledescr=>describe_by_data( it_list ).
-    lo_struct_descr ?= go_table_descr->get_table_line_type( ).
+    mo_table_descr ?= cl_abap_tabledescr=>describe_by_data( it_list ).
+    lo_struct_descr ?= mo_table_descr->get_table_line_type( ).
     lt_components = lo_struct_descr->get_components( ).
 
     INSERT INITIAL LINE INTO lt_components ASSIGNING <ls_component> INDEX 1.
@@ -130,10 +131,10 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     <ls_component>-type ?= cl_abap_datadescr=>describe_by_name( 'FLAG' ).
 
     lo_struct_descr2 = cl_abap_structdescr=>create( lt_components ).
-    go_table_descr = cl_abap_tabledescr=>create( lo_struct_descr2 ).
+    mo_table_descr = cl_abap_tabledescr=>create( lo_struct_descr2 ).
 
-    CREATE DATA gr_table TYPE HANDLE go_table_descr.
-    ASSIGN gr_table->* TO <lt_table>.
+    CREATE DATA mr_table TYPE HANDLE mo_table_descr.
+    ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
 
     CREATE DATA lr_struct TYPE HANDLE lo_struct_descr2.
@@ -184,7 +185,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     lv_condition = |{ c_fieldname_selected } = ABAP_TRUE|.
 
-    ASSIGN gr_table->* TO <lt_table>.
+    ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
 
     CREATE DATA lr_exporting LIKE LINE OF et_list.
@@ -205,19 +206,19 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
                    <lg_line>     TYPE any,
                    <lv_selected> TYPE flag.
 
-    ASSIGN gr_table->* TO <lt_table>.
+    ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
 
     CASE e_salv_function.
       WHEN 'O.K.'.
-        gv_cancel = abap_false.
-        go_select_list_popup->close_screen( ).
+        mv_cancel = abap_false.
+        mo_select_list_popup->close_screen( ).
 
       WHEN 'ABR'.
         "Canceled: clear list to overwrite nothing
         CLEAR <lt_table>.
-        gv_cancel = abap_true.
-        go_select_list_popup->close_screen( ).
+        mv_cancel = abap_true.
+        mo_select_list_popup->close_screen( ).
 
       WHEN 'SALL'.
 
@@ -232,7 +233,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
         ENDLOOP.
 
-        go_select_list_popup->refresh( ).
+        mo_select_list_popup->refresh( ).
 
       WHEN 'DSEL'.
 
@@ -247,11 +248,11 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
         ENDLOOP.
 
-        go_select_list_popup->refresh( ).
+        mo_select_list_popup->refresh( ).
 
       WHEN OTHERS.
         CLEAR <lt_table>.
-        go_select_list_popup->close_screen( ).
+        mo_select_list_popup->close_screen( ).
     ENDCASE.
 
   ENDMETHOD.
@@ -265,7 +266,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
                    <lg_line>     TYPE any,
                    <lv_selected> TYPE flag.
 
-    ASSIGN gr_table->* TO <lt_table>.
+    ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
 
     lv_line = row.
@@ -287,7 +288,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     ENDIF.
 
-    go_select_list_popup->refresh( ).
+    mo_select_list_popup->refresh( ).
   ENDMETHOD.
 
 
@@ -744,22 +745,22 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     create_new_table( it_list ).
 
-    ASSIGN gr_table->* TO <lt_table>.
+    ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
 
     TRY.
-        cl_salv_table=>factory( IMPORTING r_salv_table = go_select_list_popup
+        cl_salv_table=>factory( IMPORTING r_salv_table = mo_select_list_popup
                                 CHANGING  t_table = <lt_table> ).
 
-        go_select_list_popup->set_screen_status( pfstatus = '102'
+        mo_select_list_popup->set_screen_status( pfstatus = '102'
                                                  report = 'SAPMSVIM' ).
 
-        go_select_list_popup->set_screen_popup( start_column = 1
+        mo_select_list_popup->set_screen_popup( start_column = 1
                                                 end_column   = 65
                                                 start_line   = 1
                                                 end_line     = 20 ).
 
-        lo_events = go_select_list_popup->get_event( ).
+        lo_events = mo_select_list_popup->get_event( ).
 
         SET HANDLER on_select_list_link_click FOR lo_events.
         SET HANDLER on_select_list_function_click FOR lo_events.
@@ -768,9 +769,9 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
           EXPORTING
             text = iv_header_text.
 
-        go_select_list_popup->set_top_of_list( lo_table_header ).
+        mo_select_list_popup->set_top_of_list( lo_table_header ).
 
-        lo_columns = go_select_list_popup->get_columns( ).
+        lo_columns = mo_select_list_popup->get_columns( ).
         lo_columns->set_optimize( abap_true ).
         lt_columns = lo_columns->get( ).
 
@@ -794,13 +795,13 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
         ENDLOOP.
 
-        go_select_list_popup->display( ).
+        mo_select_list_popup->display( ).
 
       CATCH cx_salv_msg.
         zcx_abapgit_exception=>raise( 'Error from POPUP_TO_SELECT_FROM_LIST' ).
     ENDTRY.
 
-    IF gv_cancel = abap_true.
+    IF mv_cancel = abap_true.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
@@ -808,9 +809,9 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       IMPORTING
         et_list = et_list ).
 
-    CLEAR: go_select_list_popup,
-           gr_table,
-           go_table_descr.
+    CLEAR: mo_select_list_popup,
+           mr_table,
+           mo_table_descr.
 
   ENDMETHOD.
 
