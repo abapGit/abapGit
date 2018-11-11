@@ -17,11 +17,10 @@ CLASS zcl_abapgit_ecatt_val_obj_down DEFINITION
 
   PROTECTED SECTION.
     DATA:
-      li_objects_node TYPE REF TO if_ixml_element.
+      mi_objects_node TYPE REF TO if_ixml_element.
 
     METHODS:
       download_data REDEFINITION.
-
   PRIVATE SECTION.
     DATA:
       mv_xml_stream      TYPE xstring,
@@ -36,7 +35,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ecatt_val_obj_down IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_DOWN IMPLEMENTATION.
 
 
   METHOD download.
@@ -145,7 +144,7 @@ CLASS zcl_abapgit_ecatt_val_obj_down IMPLEMENTATION.
 
     lo_ecatt_vo = <lg_ecatt_vo>.
 
-    li_objects_node = template_over_all->create_simple_element(
+    mi_objects_node = template_over_all->create_simple_element(
                                            name   = 'BUSINESS_MESSAGES'
                                            parent = root_node ).
 
@@ -187,7 +186,7 @@ CLASS zcl_abapgit_ecatt_val_obj_down IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lg_ecatt_vo> TYPE any.
 
-    li_objects_node = template_over_all->create_simple_element(
+    mi_objects_node = template_over_all->create_simple_element(
                                            name   = 'VO_FLAGS'
                                            parent = root_node ).
 
@@ -257,7 +256,7 @@ CLASS zcl_abapgit_ecatt_val_obj_down IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lg_ecatt_vo> TYPE any.
 
-    li_objects_node = template_over_all->create_simple_element(
+    mi_objects_node = template_over_all->create_simple_element(
                                            name   = 'IMPL_DETAILS'
                                            parent = root_node ).
 
