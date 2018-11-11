@@ -9,14 +9,24 @@ CLASS zcl_abapgit_object_shi3 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         is_item     TYPE zif_abapgit_definitions=>ty_item
         iv_language TYPE spras.
 
+  PROTECTED SECTION.
+    METHODS has_authorization
+      IMPORTING iv_devclass     TYPE devclass
+                iv_object_type  TYPE seu_objid
+                iv_structure_id TYPE hier_guid
+                iv_activity     TYPE activ_auth
+      RAISING   zcx_abapgit_exception.
+    METHODS is_used
+      IMPORTING iv_structure_id TYPE hier_guid
+      RAISING   zcx_abapgit_exception.
+    METHODS delete_tree_structure
+      IMPORTING iv_structure_id TYPE hier_guid.
 
   PRIVATE SECTION.
     DATA: mv_tree_id TYPE ttree-id.
 
     METHODS jump_se43
       RAISING zcx_abapgit_exception.
-
-
 
     METHODS clear_fields
       CHANGING cs_head  TYPE ttree
@@ -131,17 +141,28 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    CALL FUNCTION 'BMENU_DELETE_TREE'
-      EXPORTING
-        tree_id            = mv_tree_id
-      EXCEPTIONS
-        trees_do_not_exist = 1
-        no_authority       = 2
-        canceled           = 3
-        OTHERS             = 4.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from BMENU_DELETE_TREE, SHI3' ).
-    ENDIF.
+    CONSTANTS activity_delete_06 TYPE activ_auth VALUE '06'.
+
+    DATA: lv_object_type    TYPE seu_objid.
+    DATA: lv_tr_object_name TYPE e071-obj_name.
+    DATA: lv_tr_return      TYPE char1.
+
+    lv_object_type = ms_item-obj_type.
+
+    TRY.
+        me->zif_abapgit_object~exists( ).
+      CATCH zcx_abapgit_exception.
+        RETURN.
+    ENDTRY.
+
+    has_authorization( iv_object_type  = lv_object_type
+                       iv_structure_id = mv_tree_id
+                       iv_devclass     = ms_item-devclass
+                       iv_activity     = activity_delete_06 ).
+
+    is_used( mv_tree_id ).
+
+    delete_tree_structure( mv_tree_id ).
 
   ENDMETHOD.
 
@@ -268,5 +289,45 @@ CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_active.
     rv_active = is_active( ).
+  ENDMETHOD.
+
+  METHOD has_authorization.
+
+    AUTHORITY-CHECK OBJECT 'S_DEVELOP'
+      ID 'DEVCLASS'  FIELD iv_devclass
+      ID 'OBJTYPE'   FIELD 'MENU'
+      ID 'OBJNAME'   FIELD iv_structure_id
+      ID 'P_GROUP'  DUMMY
+      ID 'ACTVT'    FIELD iv_activity.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( iv_msgid = 's#'
+                                         iv_msgno = '203' ).
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD is_used.
+
+    DATA: lt_used_in_structures TYPE STANDARD TABLE OF ttree WITH DEFAULT KEY.
+
+    CALL FUNCTION 'STREE_GET_STRUCTURE_USAGE'
+      EXPORTING
+        structure_id       = iv_structure_id
+      TABLES
+        used_in_structures = lt_used_in_structures.
+
+    IF lt_used_in_structures IS NOT INITIAL.
+      zcx_abapgit_exception=>raise( |IMG structure ID { iv_structure_id } is still used| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD delete_tree_structure.
+    CALL FUNCTION 'STREE_EXTERNAL_DELETE'
+      EXPORTING
+        structure_id          = iv_structure_id
+        no_confirmation_popup = abap_true.
   ENDMETHOD.
 ENDCLASS.
