@@ -118,9 +118,9 @@ CLASS zcl_abapgit_object_susc IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    has_authorization( EXPORTING iv_object_type = lv_object_type
-                                 iv_class       = lv_auth_object_class
-                                 iv_activity    = activity_delete_06 ).
+    has_authorization( iv_object_type = lv_object_type
+                       iv_class       = lv_auth_object_class
+                       iv_activity    = activity_delete_06 ).
 
     is_used( lv_auth_object_class ).
 
