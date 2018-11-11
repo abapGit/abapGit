@@ -8,7 +8,6 @@ CLASS zcl_abapgit_repo DEFINITION
   PUBLIC SECTION.
 
     INTERFACE zif_abapgit_definitions LOAD .
-    TYPE-POOLS abap .
     METHODS deserialize_checks
       RETURNING
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
@@ -26,13 +25,14 @@ CLASS zcl_abapgit_repo DEFINITION
       RETURNING
         VALUE(rv_key) TYPE zif_abapgit_persistence=>ty_value .
     METHODS get_name
+    ABSTRACT
       RETURNING
         VALUE(rv_name) TYPE string
       RAISING
         zcx_abapgit_exception .
     METHODS get_files_local
       IMPORTING
-        !io_log    TYPE REF TO zcl_abapgit_log OPTIONAL
+        !io_log TYPE REF TO zcl_abapgit_log OPTIONAL
         !it_filter TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
@@ -68,6 +68,7 @@ CLASS zcl_abapgit_repo DEFINITION
         !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
         zcx_abapgit_exception .
+    TYPE-POOLS abap .
     METHODS refresh
       IMPORTING
         !iv_drop_cache TYPE abap_bool DEFAULT abap_false
@@ -93,9 +94,7 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS set_files_remote
       IMPORTING
-        !it_files TYPE zif_abapgit_definitions=>ty_files_tt
-      RAISING
-        zcx_abapgit_exception .
+        !it_files TYPE zif_abapgit_definitions=>ty_files_tt .
     METHODS get_local_settings
       RETURNING
         VALUE(rs_settings) TYPE zif_abapgit_persistence=>ty_repo-local_settings .
@@ -109,7 +108,8 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(rt_list) TYPE scit_alvlist
       RAISING
         zcx_abapgit_exception .
-    METHODS has_remote
+    METHODS has_remote_source
+    ABSTRACT
       RETURNING
         VALUE(rv_yes) TYPE abap_bool .
     METHODS status
@@ -403,18 +403,8 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_name.
-    rv_name = ms_data-url.
-  ENDMETHOD.
-
-
   METHOD get_package.
     rv_package = ms_data-package.
-  ENDMETHOD.
-
-
-  METHOD has_remote.
-    rv_yes = boolc( lines( mt_remote ) > 0 ).
   ENDMETHOD.
 
 

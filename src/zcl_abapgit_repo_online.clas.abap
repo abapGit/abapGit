@@ -51,6 +51,8 @@ CLASS zcl_abapgit_repo_online DEFINITION
       REDEFINITION .
     METHODS rebuild_local_checksums
       REDEFINITION .
+    METHODS has_remote_source
+      REDEFINITION .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -222,7 +224,14 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD rebuild_local_checksums. "REMOTE
+  METHOD has_remote_source.
+    rv_yes = abap_true.
+  ENDMETHOD.
+
+
+  METHOD rebuild_local_checksums.
+
+    " TODO: method unify to base class !
 
     DATA:
           lt_remote    TYPE zif_abapgit_definitions=>ty_files_tt,
