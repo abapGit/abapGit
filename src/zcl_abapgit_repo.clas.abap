@@ -7,7 +7,6 @@ CLASS zcl_abapgit_repo DEFINITION
 
   PUBLIC SECTION.
 
-    INTERFACE zif_abapgit_definitions LOAD .
     METHODS deserialize_checks
       RETURNING
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
@@ -68,7 +67,6 @@ CLASS zcl_abapgit_repo DEFINITION
         !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
         zcx_abapgit_exception .
-    TYPE-POOLS abap .
     METHODS refresh
       IMPORTING
         !iv_drop_cache TYPE abap_bool DEFAULT abap_false
@@ -121,8 +119,6 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
   PROTECTED SECTION.
 
-    INTERFACE zif_abapgit_definitions LOAD .
-    TYPE-POOLS abap .
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
     DATA mt_remote TYPE zif_abapgit_definitions=>ty_files_tt .
     DATA mv_request_local_refresh TYPE abap_bool .
@@ -133,16 +129,15 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
 
     METHODS set
-      IMPORTING
-        !it_checksums       TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
-        !iv_url             TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
-        !iv_branch_name     TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
-        !iv_head_branch     TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
-        !iv_offline         TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
-        !is_dot_abapgit     TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL
-        !is_local_settings  TYPE zif_abapgit_persistence=>ty_repo-local_settings OPTIONAL
-        !iv_deserialized_at TYPE zif_abapgit_persistence=>ty_repo-deserialized_at OPTIONAL
-        !iv_deserialized_by TYPE zif_abapgit_persistence=>ty_repo-deserialized_by OPTIONAL
+      IMPORTING it_checksums       TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
+                iv_url             TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
+                iv_branch_name     TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
+                iv_head_branch     TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
+                iv_offline         TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
+                is_dot_abapgit     TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL
+                is_local_settings  TYPE zif_abapgit_persistence=>ty_repo-local_settings OPTIONAL
+                iv_deserialized_at TYPE zif_abapgit_persistence=>ty_repo-deserialized_at OPTIONAL
+                iv_deserialized_by TYPE zif_abapgit_persistence=>ty_repo-deserialized_by OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS reset_status .
