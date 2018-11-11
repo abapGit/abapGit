@@ -422,7 +422,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     DATA: lt_remote TYPE zif_abapgit_definitions=>ty_files_tt,
           lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lt_status TYPE zif_abapgit_definitions=>ty_results_tt,
-          lo_repo   TYPE REF TO zcl_abapgit_repo_online,
+          lo_repo   TYPE REF TO zcl_abapgit_repo,
           lv_ts     TYPE timestamp.
 
     FIELD-SYMBOLS: <ls_status> LIKE LINE OF lt_status.
@@ -444,7 +444,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     ASSERT is_file IS INITIAL OR is_object IS INITIAL. " just one passed
 
-    lo_repo  ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo   = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     lt_remote = lo_repo->get_files_remote( ).
     lt_local  = lo_repo->get_files_local( ).
     lt_status = lo_repo->status( ).

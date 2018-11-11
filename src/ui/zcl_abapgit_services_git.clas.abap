@@ -201,9 +201,9 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
   METHOD pull.
 
-    DATA: lo_repo TYPE REF TO zcl_abapgit_repo_online.
+    DATA: lo_repo TYPE REF TO zcl_abapgit_repo.
 
-    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     lo_repo->refresh( ).
 

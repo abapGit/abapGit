@@ -133,7 +133,7 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
 
   METHOD build_repo_items_online.
 
-    DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online,
+    DATA:
           ls_file        TYPE zif_abapgit_definitions=>ty_repo_file,
           lt_status      TYPE zif_abapgit_definitions=>ty_results_tt.
 
@@ -141,8 +141,7 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
                    <ls_repo_item> LIKE LINE OF rt_repo_items.
 
 
-    lo_repo_online ?= mo_repo.
-    lt_status       = lo_repo_online->status( mo_log ).
+    lt_status       = mo_repo->status( mo_log ).
 
     LOOP AT lt_status ASSIGNING <ls_status>.
       AT NEW obj_name. "obj_type + obj_name
