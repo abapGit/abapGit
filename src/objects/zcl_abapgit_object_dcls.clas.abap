@@ -67,6 +67,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DCLS IMPLEMENTATION.
     <lg_field> = mo_files->read_string( 'asdcls' ).
 
     TRY.
+        tadir_insert( iv_package ).
+
         CALL METHOD ('CL_ACM_DCL_HANDLER_FACTORY')=>('CREATE')
           RECEIVING
             ro_handler = lo_dcl.
@@ -74,12 +76,10 @@ CLASS ZCL_ABAPGIT_OBJECT_DCLS IMPLEMENTATION.
         CALL METHOD lo_dcl->('SAVE')
           EXPORTING
             iv_dclname     = ms_item-obj_name
-            iv_put_state   = 'A'
+            iv_put_state   = 'I'
             is_dclsrc      = <lg_data>
             iv_devclass    = iv_package
             iv_access_mode = 'INSERT'.
-
-        tadir_insert( iv_package ).
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
@@ -118,8 +118,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DCLS IMPLEMENTATION.
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
 
-    rs_metadata-ddic         = abap_true.
     rs_metadata-delete_tadir = abap_true.
+    rs_metadata-late_deser   = abap_true.
   ENDMETHOD.
 
 
