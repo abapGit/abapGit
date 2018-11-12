@@ -95,7 +95,7 @@ CLASS zcl_abapgit_factory IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_branch_overview> TYPE zcl_abapgit_factory=>ty_branch_overview.
 
     READ TABLE gt_branch_overview ASSIGNING <ls_branch_overview>
-                                  WITH TABLE KEY repo_key           = io_repo->get_key( ).
+                                  WITH TABLE KEY repo_key = io_repo->get_key( ).
 
     IF sy-subrc <> 0.
 
@@ -110,6 +110,8 @@ CLASS zcl_abapgit_factory IMPLEMENTATION.
              INTO TABLE gt_branch_overview
              ASSIGNING <ls_branch_overview>.
 
+    ELSE.
+      <ls_branch_overview>-instance->update( io_repo ).
     ENDIF.
 
     ri_branch_overview = <ls_branch_overview>-instance.

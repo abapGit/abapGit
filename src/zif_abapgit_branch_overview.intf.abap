@@ -15,6 +15,10 @@ INTERFACE zif_abapgit_branch_overview
     compress
       IMPORTING it_commits        TYPE zif_abapgit_definitions=>ty_commit_tt
       RETURNING VALUE(rt_commits) TYPE zif_abapgit_definitions=>ty_commit_tt
+      RAISING   zcx_abapgit_exception,
+
+    update
+      IMPORTING io_repo TYPE REF TO zcl_abapgit_repo_online
       RAISING   zcx_abapgit_exception.
 
 ENDINTERFACE.
