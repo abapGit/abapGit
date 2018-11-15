@@ -84,20 +84,11 @@ CLASS zcl_abapgit_factory DEFINITION
     TYPES:
       tty_syntax_check TYPE HASHED TABLE OF ty_syntax_check
                          WITH UNIQUE KEY package .
-    TYPES:
-      BEGIN OF ty_branch_overview,
-        repo_key TYPE zif_abapgit_persistence=>ty_value,
-        instance TYPE REF TO zif_abapgit_branch_overview,
-      END OF ty_branch_overview .
-    TYPES:
-      tty_branch_overview TYPE HASHED TABLE OF ty_branch_overview
-                           WITH UNIQUE KEY repo_key .
 
     CLASS-DATA gi_tadir TYPE REF TO zif_abapgit_tadir .
     CLASS-DATA gt_sap_package TYPE tty_sap_package .
     CLASS-DATA gt_code_inspector TYPE tty_code_inspector .
     CLASS-DATA gt_syntax_check TYPE tty_syntax_check .
-    CLASS-DATA gi_branch_overview TYPE REF TO zif_abapgit_branch_overview .
     CLASS-DATA gi_stage_logic TYPE REF TO zif_abapgit_stage_logic .
     CLASS-DATA gi_cts_api TYPE REF TO zif_abapgit_cts_api.
     CLASS-DATA gi_adhoc_code_inspector TYPE REF TO zif_abapgit_code_inspector.
@@ -110,14 +101,10 @@ CLASS zcl_abapgit_factory IMPLEMENTATION.
 
   METHOD get_branch_overview.
 
-    IF gi_branch_overview IS INITIAL.
-      CREATE OBJECT gi_branch_overview
-        TYPE zcl_abapgit_branch_overview
-        EXPORTING
-          io_repo = io_repo.
-    ENDIF.
-
-    ri_branch_overview = gi_branch_overview.
+    CREATE OBJECT ri_branch_overview
+      TYPE zcl_abapgit_branch_overview
+      EXPORTING
+        io_repo = io_repo.
 
   ENDMETHOD.
 
