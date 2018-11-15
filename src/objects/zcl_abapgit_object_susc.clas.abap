@@ -24,111 +24,52 @@ CLASS zcl_abapgit_object_susc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_susc IMPLEMENTATION.
-
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown. " todo
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~exists.
-
-    DATA: lv_oclss TYPE tobc-oclss.
 
 
-    SELECT SINGLE oclss FROM tobc INTO lv_oclss
-      WHERE oclss = ms_item-obj_name.
-    rv_bool = boolc( sy-subrc = 0 ).
+CLASS ZCL_ABAPGIT_OBJECT_SUSC IMPLEMENTATION.
+
+
+  METHOD delete_class.
+
+    DELETE FROM tobc  WHERE oclss = iv_auth_object_class.
+    DELETE FROM tobct WHERE oclss = iv_auth_object_class.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~serialize.
 
-    DATA: ls_tobc  TYPE tobc,
-          ls_tobct TYPE tobct.
+  METHOD has_authorization.
 
+    AUTHORITY-CHECK OBJECT 'S_DEVELOP'
+           ID 'DEVCLASS' DUMMY
+           ID 'OBJTYPE' FIELD iv_object_type
+           ID 'OBJNAME' FIELD iv_class
+           ID 'P_GROUP' DUMMY
+           ID 'ACTVT'   FIELD iv_activity.
 
-    SELECT SINGLE * FROM tobc INTO ls_tobc
-      WHERE oclss = ms_item-obj_name.
     IF sy-subrc <> 0.
-      RETURN.
+      zcx_abapgit_exception=>raise_t100( iv_msgid = '01'
+                                         iv_msgno = '467' ).
     ENDIF.
 
-    SELECT SINGLE * FROM tobct INTO ls_tobct
-      WHERE oclss = ms_item-obj_name
-      AND langu = mv_language.
+  ENDMETHOD.
 
-    io_xml->add( iv_name = 'TOBC'
-                 ig_data = ls_tobc ).
-    io_xml->add( iv_name = 'TOBCT'
-                 ig_data = ls_tobct ).
+
+  METHOD is_used.
+
+    DATA: lv_used_auth_object_class TYPE tobc-oclss.
+
+    SELECT SINGLE oclss
+      FROM tobj
+      INTO lv_used_auth_object_class
+      WHERE oclss = iv_auth_object_class ##WARN_OK.
+    IF sy-subrc = 0.
+      zcx_abapgit_exception=>raise_t100( iv_msgid = '01'
+                                         iv_msgno = '212'
+                                         iv_msgv1 = |{ iv_auth_object_class }| ).
+    ENDIF.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~deserialize.
-* see function group SUSA
-
-    DATA: ls_tobc       TYPE tobc,
-          lv_objectname TYPE e071-obj_name,
-          ls_tobct      TYPE tobct.
-
-
-    io_xml->read( EXPORTING iv_name = 'TOBC'
-                  CHANGING cg_data = ls_tobc ).
-    io_xml->read( EXPORTING iv_name = 'TOBCT'
-                  CHANGING cg_data = ls_tobct ).
-
-    tadir_insert( iv_package ).
-
-    lv_objectname = ms_item-obj_name.
-    CALL FUNCTION 'SUSR_COMMEDITCHECK'
-      EXPORTING
-        objectname      = lv_objectname
-        transobjecttype = zcl_abapgit_object_susc=>transobjecttype_class.
-
-    INSERT tobc FROM ls_tobc.                             "#EC CI_SUBRC
-* ignore sy-subrc as all fields are key fields
-
-    MODIFY tobct FROM ls_tobct.                           "#EC CI_SUBRC
-    ASSERT sy-subrc = 0.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~delete.
-    CONSTANTS activity_delete_06 TYPE activ_auth VALUE '06'.
-
-    DATA: lv_auth_object_class TYPE tobc-oclss.
-    DATA: lv_object_type       TYPE seu_objid.
-    DATA: lv_tr_object_name    TYPE e071-obj_name.
-    DATA: lv_tr_return         TYPE char1.
-
-    lv_auth_object_class = ms_item-obj_name.
-    lv_object_type = ms_item-obj_type.
-
-    TRY.
-        me->zif_abapgit_object~exists( ).
-      CATCH zcx_abapgit_exception.
-        RETURN.
-    ENDTRY.
-
-    has_authorization( iv_object_type = lv_object_type
-                       iv_class       = lv_auth_object_class
-                       iv_activity    = activity_delete_06 ).
-
-    is_used( lv_auth_object_class ).
-
-    delete_class( lv_auth_object_class ).
-
-    put_delete_to_transport( iv_auth_object_class = lv_auth_object_class
-                             iv_object_type       = lv_object_type ).
-  ENDMETHOD.
 
   METHOD put_delete_to_transport.
 
@@ -169,44 +110,108 @@ CLASS zcl_abapgit_object_susc IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD delete_class.
 
-    DELETE FROM tobc  WHERE oclss = iv_auth_object_class.
-    DELETE FROM tobct WHERE oclss = iv_auth_object_class.
+  METHOD zif_abapgit_object~changed_by.
+    rv_user = c_user_unknown. " todo
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~delete.
+    CONSTANTS lc_activity_delete_06 TYPE activ_auth VALUE '06'.
+
+    DATA: lv_auth_object_class TYPE tobc-oclss.
+    DATA: lv_object_type       TYPE seu_objid.
+    DATA: lv_tr_object_name    TYPE e071-obj_name.
+    DATA: lv_tr_return         TYPE char1.
+
+    lv_auth_object_class = ms_item-obj_name.
+    lv_object_type = ms_item-obj_type.
+
+    TRY.
+        me->zif_abapgit_object~exists( ).
+      CATCH zcx_abapgit_exception.
+        RETURN.
+    ENDTRY.
+
+    has_authorization( iv_object_type = lv_object_type
+                       iv_class       = lv_auth_object_class
+                       iv_activity    = lc_activity_delete_06 ).
+
+    is_used( lv_auth_object_class ).
+
+    delete_class( lv_auth_object_class ).
+
+    put_delete_to_transport( iv_auth_object_class = lv_auth_object_class
+                             iv_object_type       = lv_object_type ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~deserialize.
+* see function group SUSA
+
+    DATA: ls_tobc       TYPE tobc,
+          lv_objectname TYPE e071-obj_name,
+          ls_tobct      TYPE tobct.
+
+
+    io_xml->read( EXPORTING iv_name = 'TOBC'
+                  CHANGING cg_data = ls_tobc ).
+    io_xml->read( EXPORTING iv_name = 'TOBCT'
+                  CHANGING cg_data = ls_tobct ).
+
+    tadir_insert( iv_package ).
+
+    lv_objectname = ms_item-obj_name.
+    CALL FUNCTION 'SUSR_COMMEDITCHECK'
+      EXPORTING
+        objectname      = lv_objectname
+        transobjecttype = zcl_abapgit_object_susc=>transobjecttype_class.
+
+    INSERT tobc FROM ls_tobc.                             "#EC CI_SUBRC
+* ignore sy-subrc as all fields are key fields
+
+    MODIFY tobct FROM ls_tobct.                           "#EC CI_SUBRC
+    ASSERT sy-subrc = 0.
 
   ENDMETHOD.
 
-  METHOD is_used.
 
-    DATA: lv_used_auth_object_class TYPE tobc-oclss.
+  METHOD zif_abapgit_object~exists.
 
-    SELECT SINGLE oclss
-      FROM tobj
-      INTO lv_used_auth_object_class
-      WHERE oclss = iv_auth_object_class ##WARN_OK.
-    IF sy-subrc = 0.
-      zcx_abapgit_exception=>raise_t100( iv_msgid = '01'
-                                         iv_msgno = '212'
-                                         iv_msgv1 = |{ iv_auth_object_class }| ).
-    ENDIF.
+    DATA: lv_oclss TYPE tobc-oclss.
+
+
+    SELECT SINGLE oclss FROM tobc INTO lv_oclss
+      WHERE oclss = ms_item-obj_name.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
-  METHOD has_authorization.
 
-    AUTHORITY-CHECK OBJECT 'S_DEVELOP'
-           ID 'DEVCLASS' DUMMY
-           ID 'OBJTYPE' FIELD iv_object_type
-           ID 'OBJNAME' FIELD iv_class
-           ID 'P_GROUP' DUMMY
-           ID 'ACTVT'   FIELD iv_activity.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( iv_msgid = '01'
-                                         iv_msgno = '467' ).
-    ENDIF.
-
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~has_changed_since.
+    rv_changed = abap_true.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~jump.
 
@@ -219,16 +224,27 @@ CLASS zcl_abapgit_object_susc IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
 
-  METHOD zif_abapgit_object~is_locked.
-    rv_is_locked = abap_false.
-  ENDMETHOD.
+  METHOD zif_abapgit_object~serialize.
 
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
-  ENDMETHOD.
+    DATA: ls_tobc  TYPE tobc,
+          ls_tobct TYPE tobct.
 
+
+    SELECT SINGLE * FROM tobc INTO ls_tobc
+      WHERE oclss = ms_item-obj_name.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE * FROM tobct INTO ls_tobct
+      WHERE oclss = ms_item-obj_name
+      AND langu = mv_language.
+
+    io_xml->add( iv_name = 'TOBC'
+                 ig_data = ls_tobc ).
+    io_xml->add( iv_name = 'TOBCT'
+                 ig_data = ls_tobct ).
+
+  ENDMETHOD.
 ENDCLASS.
