@@ -66,21 +66,11 @@ CLASS zcl_abapgit_factory DEFINITION
     TYPES:
       tty_syntax_check TYPE HASHED TABLE OF ty_syntax_check
                          WITH UNIQUE KEY package .
-    TYPES:
-      BEGIN OF ty_branch_overview,
-        repo_key TYPE zif_abapgit_persistence=>ty_value,
-        instance TYPE REF TO zif_abapgit_branch_overview,
-      END OF ty_branch_overview .
-    TYPES:
-      tty_branch_overview TYPE HASHED TABLE OF ty_branch_overview
-                           WITH UNIQUE KEY repo_key .
 
     CLASS-DATA gi_tadir TYPE REF TO zif_abapgit_tadir .
     CLASS-DATA gt_sap_package TYPE tty_sap_package .
     CLASS-DATA gt_code_inspector TYPE tty_code_inspector .
     CLASS-DATA gt_syntax_check TYPE tty_syntax_check .
-    CLASS-DATA gt_branch_overview TYPE tty_branch_overview .
-    CLASS-DATA gi_branch_overview TYPE REF TO zif_abapgit_branch_overview .
     CLASS-DATA gi_stage_logic TYPE REF TO zif_abapgit_stage_logic .
 ENDCLASS.
 
@@ -91,30 +81,10 @@ CLASS zcl_abapgit_factory IMPLEMENTATION.
 
   METHOD get_branch_overview.
 
-    DATA: ls_branch_overview LIKE LINE OF gt_branch_overview.
-    FIELD-SYMBOLS: <ls_branch_overview> TYPE zcl_abapgit_factory=>ty_branch_overview.
-
-    READ TABLE gt_branch_overview ASSIGNING <ls_branch_overview>
-                                  WITH TABLE KEY repo_key = io_repo->get_key( ).
-
-    IF sy-subrc <> 0.
-
-      ls_branch_overview-repo_key = io_repo->get_key( ).
-
-      CREATE OBJECT ls_branch_overview-instance
-        TYPE zcl_abapgit_branch_overview
-        EXPORTING
-          io_repo = io_repo.
-
-      INSERT ls_branch_overview
-             INTO TABLE gt_branch_overview
-             ASSIGNING <ls_branch_overview>.
-
-    ELSE.
-      <ls_branch_overview>-instance->update( io_repo ).
-    ENDIF.
-
-    ri_branch_overview = <ls_branch_overview>-instance.
+    CREATE OBJECT ri_branch_overview
+      TYPE zcl_abapgit_branch_overview
+      EXPORTING
+        io_repo = io_repo.
 
   ENDMETHOD.
 

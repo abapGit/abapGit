@@ -562,8 +562,4 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_branch_overview~update.
-    setup( io_repo ).
-  ENDMETHOD.
-
 ENDCLASS.
