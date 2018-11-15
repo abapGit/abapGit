@@ -84,7 +84,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     DATA: lo_progress TYPE REF TO zcl_abapgit_progress,
           ls_pull     TYPE zcl_abapgit_git_porcelain=>ty_pull_result.
 
-    IF mv_remote_is_initialized = abap_true.
+    IF mv_request_remote_refresh = abap_false.
       RETURN.
     ENDIF.
 

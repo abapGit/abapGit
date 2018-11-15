@@ -125,7 +125,7 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA mv_last_serialization TYPE timestamp .
     DATA ms_data TYPE zif_abapgit_persistence=>ty_repo .
     DATA mv_code_inspector_successful TYPE abap_bool .
-    DATA mv_remote_is_initialized TYPE abap_bool .
+    DATA mv_request_remote_refresh TYPE abap_bool .
     DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
 
     METHODS set
@@ -460,7 +460,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD reset_remote.
     CLEAR mt_remote.
-    mv_remote_is_initialized = abap_false.
+    mv_request_remote_refresh = abap_true.
     reset_status( ).
   ENDMETHOD.
 
@@ -584,7 +584,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD set_files_remote.
 
     mt_remote = it_files.
-    mv_remote_is_initialized = abap_true.
+    mv_request_remote_refresh = abap_false.
 
   ENDMETHOD.
 

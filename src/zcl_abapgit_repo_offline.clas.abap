@@ -36,6 +36,13 @@ CLASS ZCL_ABAPGIT_REPO_OFFLINE IMPLEMENTATION.
 
     DATA lt_backup LIKE mt_remote.
 
+    " online repo has online source to renew data from, offline does not
+    " so offline repo preserves the remote
+    " in case of partial pull failure the user will immediately see the new difference
+    " UI will detect "pullable" content based on mt_status
+    " in the uniform way both for online and offline repos
+    " for more details see discussion in 2096 and 1953
+
     lt_backup = mt_remote.
     super->reset_remote( ).
     set_files_remote( lt_backup ).
