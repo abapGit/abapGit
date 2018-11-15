@@ -64,11 +64,6 @@ CLASS zcl_abapgit_branch_overview DEFINITION
       CHANGING  ct_commits       TYPE ty_commits.
     METHODS _reverse_sort_order
       CHANGING ct_commits TYPE ty_commits.
-    METHODS setup
-      IMPORTING
-        io_repo TYPE REF TO zcl_abapgit_repo_online
-      RAISING
-        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -76,7 +71,23 @@ ENDCLASS.
 CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
   METHOD constructor.
-    setup( io_repo ).
+
+    DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
+
+    lt_objects = get_git_objects( io_repo ).
+
+    mt_commits = parse_commits( lt_objects ).
+    _sort_commits( CHANGING ct_commits = mt_commits ).
+
+    parse_annotated_tags( lt_objects ).
+
+    CLEAR lt_objects.
+
+    determine_branch( ).
+    determine_merges( ).
+    determine_tags( ).
+    fixes( ).
+
   ENDMETHOD.
 
 
@@ -539,26 +550,6 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
     ENDIF.
 
     ct_commits = lt_sorted_commits.
-
-  ENDMETHOD.
-
-  METHOD setup.
-
-    DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
-
-    lt_objects = get_git_objects( io_repo ).
-
-    mt_commits = parse_commits( lt_objects ).
-    _sort_commits( CHANGING ct_commits = mt_commits ).
-
-    parse_annotated_tags( lt_objects ).
-
-    CLEAR lt_objects.
-
-    determine_branch( ).
-    determine_merges( ).
-    determine_tags( ).
-    fixes( ).
 
   ENDMETHOD.
 
