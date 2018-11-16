@@ -101,7 +101,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
 
     ls_object_key-pgmid = iv_program_id.
     ls_object_key-object = iv_object_type.
-    ls_object_key-obj_name = '*'.
+    ls_object_key-obj_name = '_'. " Dummy value #2071
 
     CALL FUNCTION 'TR_CHECK_TYPE'
       EXPORTING
