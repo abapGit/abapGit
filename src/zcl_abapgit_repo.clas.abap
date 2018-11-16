@@ -222,15 +222,19 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD deserialize_checks.
 
-    DATA: lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
+    DATA: lt_requirements    TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
+          lv_master_language TYPE spras.
 
 
     find_remote_dot_abapgit( ).
 
+    lv_master_language = get_dot_abapgit( )->get_master_language( ).
+
     IF get_local_settings( )-write_protected = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot deserialize. Local code is write-protected by repo config' ).
-    ELSEIF get_dot_abapgit( )->get_master_language( ) <> sy-langu.
-      zcx_abapgit_exception=>raise( 'Current login language does not match master language' ).
+    ELSEIF lv_master_language <> sy-langu.
+      zcx_abapgit_exception=>raise( |Current login language '{ sy-langu }' |
+                                 && | does not match master language '{ lv_master_language }'| ).
     ENDIF.
 
     rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
