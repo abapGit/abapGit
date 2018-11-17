@@ -8,6 +8,16 @@ Legend
 + : added
 - : removed
 
+2018-11-17 v1.79.1
+------------------
+* SICF error handling + is_locked
+* fix duplicate deserialization
+* Better TADIR handling
+* Less GUI popups
+* Fix branch overview not refreshed
+* Refactoring
+* Code cleanup
+
 2018-11-09 v1.79.0
 ------------------
 + CTS integration, show corresponding transports
