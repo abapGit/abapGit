@@ -24,14 +24,15 @@ CLASS zcl_abapgit_repo DEFINITION
       RETURNING
         VALUE(rv_key) TYPE zif_abapgit_persistence=>ty_value .
     METHODS get_name
+    ABSTRACT
       RETURNING
         VALUE(rv_name) TYPE string
       RAISING
         zcx_abapgit_exception .
     METHODS get_files_local
       IMPORTING
-        !io_log         TYPE REF TO zcl_abapgit_log OPTIONAL
-        !it_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
+        !io_log TYPE REF TO zcl_abapgit_log OPTIONAL
+        !it_filter TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
@@ -91,9 +92,7 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS set_files_remote
       IMPORTING
-        !it_files TYPE zif_abapgit_definitions=>ty_files_tt
-      RAISING
-        zcx_abapgit_exception .
+        !it_files TYPE zif_abapgit_definitions=>ty_files_tt .
     METHODS get_local_settings
       RETURNING
         VALUE(rs_settings) TYPE zif_abapgit_persistence=>ty_repo-local_settings .
@@ -107,15 +106,27 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(rt_list) TYPE scit_alvlist
       RAISING
         zcx_abapgit_exception .
-
+    METHODS has_remote_source
+    ABSTRACT
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool .
+    METHODS status
+      IMPORTING
+        !io_log TYPE REF TO zcl_abapgit_log OPTIONAL
+      RETURNING
+        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
 
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
     DATA mt_remote TYPE zif_abapgit_definitions=>ty_files_tt .
-    DATA mv_do_local_refresh TYPE abap_bool .
+    DATA mv_request_local_refresh TYPE abap_bool .
     DATA mv_last_serialization TYPE timestamp .
     DATA ms_data TYPE zif_abapgit_persistence=>ty_repo .
     DATA mv_code_inspector_successful TYPE abap_bool .
+    DATA mv_request_remote_refresh TYPE abap_bool .
+    DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
 
     METHODS set
       IMPORTING it_checksums       TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
@@ -127,17 +138,20 @@ CLASS zcl_abapgit_repo DEFINITION
                 is_local_settings  TYPE zif_abapgit_persistence=>ty_repo-local_settings OPTIONAL
                 iv_deserialized_at TYPE zif_abapgit_persistence=>ty_repo-deserialized_at OPTIONAL
                 iv_deserialized_by TYPE zif_abapgit_persistence=>ty_repo-deserialized_by OPTIONAL
-      RAISING   zcx_abapgit_exception .
-
+      RAISING
+        zcx_abapgit_exception .
+    METHODS reset_status .
+    METHODS reset_remote .
   PRIVATE SECTION.
 
-    METHODS: update_last_deserialize RAISING zcx_abapgit_exception.
-
+    METHODS update_last_deserialize
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -198,6 +212,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     update_local_checksums( lt_updated_files ).
     update_last_deserialize( ).
+    reset_status( ).
+
+    COMMIT WORK AND WAIT.
 
   ENDMETHOD.
 
@@ -266,7 +283,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
     " Serialization happened before and no refresh request
-    IF mv_last_serialization IS NOT INITIAL AND mv_do_local_refresh = abap_false.
+    IF mv_last_serialization IS NOT INITIAL AND mv_request_local_refresh = abap_false.
       rt_files = mt_local.
       RETURN.
     ENDIF.
@@ -342,8 +359,8 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     ENDLOOP.
 
     GET TIME STAMP FIELD mv_last_serialization.
-    mt_local            = rt_files.
-    mv_do_local_refresh = abap_false. " Fulfill refresh
+    mt_local                 = rt_files.
+    mv_request_local_refresh = abap_false. " Fulfill refresh
 
   ENDMETHOD.
 
@@ -381,18 +398,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_name.
-
-    IF ms_data-offline = abap_true.
-      rv_name = ms_data-url.
-    ELSE.
-      rv_name = zcl_abapgit_url=>name( ms_data-url ).
-      rv_name = cl_http_utility=>if_http_utility~unescape_url( rv_name ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD get_package.
     rv_package = ms_data-package.
   ENDMETHOD.
@@ -403,16 +408,17 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD rebuild_local_checksums. "LOCAL (BASE)
+  METHOD rebuild_local_checksums.
 
-    DATA: lt_local     TYPE zif_abapgit_definitions=>ty_files_item_tt,
+    DATA:
+          lt_local     TYPE zif_abapgit_definitions=>ty_files_item_tt,
           ls_last_item TYPE zif_abapgit_definitions=>ty_item,
           lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
 
-    FIELD-SYMBOLS: <ls_checksum> LIKE LINE OF lt_checksums,
+    FIELD-SYMBOLS:
+                   <ls_checksum> LIKE LINE OF lt_checksums,
                    <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
                    <ls_local>    LIKE LINE OF lt_local.
-
 
     lt_local = get_files_local( ).
 
@@ -420,7 +426,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       WHERE item IS INITIAL
       AND NOT ( file-path     = zif_abapgit_definitions=>c_root_dir
       AND       file-filename = zif_abapgit_definitions=>c_dot_abapgit ).
-
     SORT lt_local BY item.
 
     LOOP AT lt_local ASSIGNING <ls_local>.
@@ -436,18 +441,32 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     ENDLOOP.
 
     set( it_checksums = lt_checksums ).
+    reset_status( ).
 
   ENDMETHOD.
 
 
   METHOD refresh.
 
-    mv_do_local_refresh = abap_true.
+    mv_request_local_refresh = abap_true.
+    reset_remote( ).
 
     IF iv_drop_cache = abap_true.
       CLEAR: mv_last_serialization, mt_local.
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD reset_remote.
+    CLEAR mt_remote.
+    mv_request_remote_refresh = abap_true.
+    reset_status( ).
+  ENDMETHOD.
+
+
+  METHOD reset_status.
+    CLEAR mt_status.
   ENDMETHOD.
 
 
@@ -565,6 +584,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   METHOD set_files_remote.
 
     mt_remote = it_files.
+    mv_request_remote_refresh = abap_false.
 
   ENDMETHOD.
 
@@ -572,6 +592,19 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   METHOD set_local_settings.
 
     set( is_local_settings = is_settings ).
+
+  ENDMETHOD.
+
+
+  METHOD status.
+
+    IF lines( mt_status ) = 0.
+      mt_status = zcl_abapgit_file_status=>status(
+        io_repo = me
+        io_log  = io_log ).
+    ENDIF.
+
+    rt_results = mt_status.
 
   ENDMETHOD.
 
