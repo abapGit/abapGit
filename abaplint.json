@@ -8,7 +8,8 @@
       "enabled": true
     },
     "functional_writing": {
-      "enabled": true
+      "enabled": true,
+      "ignoreExceptions": true
     },
     "line_length": {
       "enabled": true,
@@ -30,7 +31,8 @@
       "enabled": true
     },
     "line_only_punc": {
-      "enabled": true
+      "enabled": true,
+      "ignoreExceptions": true
     },
     "obsolete_statement": {
       "enabled": true
@@ -65,6 +67,7 @@
     },
     "method_parameter_names": {
       "enabled": true,
+      "ignoreExceptions": true,
       "importing": "^I._.*$",
       "returning": "^R._.*$",
       "changing": "^C._.*$",
@@ -76,7 +79,14 @@
     "local_variable_names": {
       "enabled": true,
       "expectedData": "^L._.*$",
+      "expectedConstant": "^LC_.*$",
       "expectedFS": "^<L._.*>$"
+    },
+    "class_attribute_names": {
+      "enabled": true,
+      "ignoreExceptions": true,
+      "statics": "^G._.*$",
+      "instance": "^M._.*$"
     }
   }
 }
