@@ -143,7 +143,7 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
       cl_http_client=>create_by_url(
         EXPORTING
           url                = zcl_abapgit_url=>host( iv_url )
-          ssl_id             = 'ANONYM'
+          ssl_id             = zcl_abapgit_exit=>get_instance( )->get_ssl_id( )
           proxy_host         = lo_proxy_configuration->get_proxy_url( iv_url )
           proxy_service      = lo_proxy_configuration->get_proxy_port( iv_url )
         IMPORTING
