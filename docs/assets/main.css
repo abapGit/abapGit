@@ -32,6 +32,14 @@ h1, h2, h3 {
   clear: both;
 }
 
+@media print
+{
+  .nav-print {
+    display: none !important;
+    width: 0px !important;
+  }
+}
+
 .nav {
   float: left;
   width: 300px;
