@@ -40,3 +40,6 @@ Can be used for setting logon tickets eg. in connection with abapGitServer conne
 
 ### CHANGE_TADIR
 Can be used to skip certian objects, or force a different object setup than currently in TADIR.
+
+### GET_SSL_ID
+Possibility to change the default `ANONYM` ssl id to something system specific
