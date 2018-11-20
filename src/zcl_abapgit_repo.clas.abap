@@ -146,8 +146,13 @@ CLASS zcl_abapgit_repo DEFINITION
 
     TYPES:
       ty_cache_tt TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_file_item
-                       WITH NON-UNIQUE KEY item .
+                         WITH NON-UNIQUE KEY item .
 
+    METHODS apply_filter
+      IMPORTING
+        !it_filter TYPE zif_abapgit_definitions=>ty_tadir_tt
+      CHANGING
+        !ct_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt .
     METHODS build_dotabapgit_file
       RETURNING
         VALUE(rs_file) TYPE zif_abapgit_definitions=>ty_file
@@ -169,6 +174,35 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+
+
+  METHOD apply_filter.
+
+    DATA: lt_filter TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_tadir
+                      WITH NON-UNIQUE KEY object obj_name,
+          lv_index  TYPE i.
+
+    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF ct_tadir.
+
+
+    IF lines( it_filter ) = 0.
+      RETURN.
+    ENDIF.
+
+    lt_filter = it_filter.
+
+* this is another loop at TADIR, but typically the filter is blank
+    LOOP AT ct_tadir ASSIGNING <ls_tadir>.
+      lv_index = sy-tabix.
+      READ TABLE lt_filter TRANSPORTING NO FIELDS WITH KEY object = <ls_tadir>-object
+                                                           obj_name = <ls_tadir>-obj_name
+                                                  BINARY SEARCH.
+      IF sy-subrc <> 0.
+        DELETE ct_tadir INDEX lv_index.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
 
 
   METHOD build_dotabapgit_file.
@@ -295,14 +329,11 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD get_files_local.
 
-    DATA: lt_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          lo_progress     TYPE REF TO zcl_abapgit_progress,
-          lt_cache        TYPE ty_cache_tt,
-          lt_found        LIKE rt_files,
-          ls_fils_item    TYPE zcl_abapgit_objects=>ty_serialization,
-          lt_filter       TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_tadir
-                          WITH NON-UNIQUE KEY object obj_name,
-          lv_filter_exist TYPE abap_bool.
+    DATA: lt_tadir     TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          lo_progress  TYPE REF TO zcl_abapgit_progress,
+          lt_cache     TYPE ty_cache_tt,
+          lt_found     LIKE rt_files,
+          ls_fils_item TYPE zcl_abapgit_objects=>ty_serialization.
 
     FIELD-SYMBOLS: <ls_file>   LIKE LINE OF ls_fils_item-files,
                    <ls_return> LIKE LINE OF rt_files,
@@ -327,22 +358,14 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       io_dot                = get_dot_abapgit( )
       io_log                = io_log ).
 
-    lt_filter = it_filter.
-    lv_filter_exist = boolc( lines( lt_filter ) > 0 ).
+    apply_filter( EXPORTING it_filter = it_filter
+                  CHANGING ct_tadir  = lt_tadir ).
 
     CREATE OBJECT lo_progress
       EXPORTING
         iv_total = lines( lt_tadir ).
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-      IF lv_filter_exist = abap_true.
-        READ TABLE lt_filter TRANSPORTING NO FIELDS WITH KEY object = <ls_tadir>-object
-                                                             obj_name = <ls_tadir>-obj_name
-                                                    BINARY SEARCH.
-        IF sy-subrc <> 0.
-          CONTINUE.
-        ENDIF.
-      ENDIF.
 
       lo_progress->show(
         iv_current = sy-tabix
