@@ -146,8 +146,13 @@ CLASS zcl_abapgit_repo DEFINITION
 
     TYPES:
       ty_cache_tt TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_file_item
-                     WITH NON-UNIQUE KEY item .
+                       WITH NON-UNIQUE KEY item .
 
+    METHODS build_dotabapgit_file
+      RETURNING
+        VALUE(rs_file) TYPE zif_abapgit_definitions=>ty_file
+      RAISING
+        zcx_abapgit_exception .
     METHODS lookup_cache
       IMPORTING
         !it_cache       TYPE ty_cache_tt
@@ -164,6 +169,17 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+
+
+  METHOD build_dotabapgit_file.
+
+    rs_file-path     = zif_abapgit_definitions=>c_root_dir.
+    rs_file-filename = zif_abapgit_definitions=>c_dot_abapgit.
+    rs_file-data     = get_dot_abapgit( )->serialize( ).
+    rs_file-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
+                                               iv_data = rs_file-data ).
+
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -300,13 +316,10 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     ENDIF.
 
     APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
-    <ls_return>-file-path     = zif_abapgit_definitions=>c_root_dir.
-    <ls_return>-file-filename = zif_abapgit_definitions=>c_dot_abapgit.
-    <ls_return>-file-data     = get_dot_abapgit( )->serialize( ).
-    <ls_return>-file-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
-                                                        iv_data = <ls_return>-file-data ).
+    <ls_return>-file = build_dotabapgit_file( ).
 
     lt_cache = mt_local.
+
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
       iv_package            = get_package( )
       iv_ignore_subpackages = get_local_settings( )-ignore_subpackages
