@@ -240,8 +240,10 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     IF get_local_settings( )-write_protected = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot deserialize. Local code is write-protected by repo config' ).
     ELSEIF lv_master_language <> lv_logon_language.
-      zcx_abapgit_exception=>raise( |Current login language '{ conversion_exit_isola_output( lv_logon_language ) }'|
-                                 && | does not match master language '{ conversion_exit_isola_output( lv_master_language ) }'| ).
+      zcx_abapgit_exception=>raise( |Current login language |
+                                 && |'{ conversion_exit_isola_output( lv_logon_language ) }'|
+                                 && | does not match master language |
+                                 && |'{ conversion_exit_isola_output( lv_master_language ) }'| ).
     ENDIF.
 
     rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
