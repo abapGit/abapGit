@@ -146,7 +146,7 @@ CLASS zcl_abapgit_repo DEFINITION
 
     TYPES:
       ty_cache_tt TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_file_item
-                         WITH NON-UNIQUE KEY item .
+                           WITH NON-UNIQUE KEY item .
 
     METHODS apply_filter
       IMPORTING
@@ -161,7 +161,8 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS lookup_cache
       IMPORTING
         !it_cache       TYPE ty_cache_tt
-        !is_item        TYPE zif_abapgit_definitions=>ty_item
+      CHANGING
+        !ct_tadir       TYPE zif_abapgit_definitions=>ty_tadir_tt
       RETURNING
         VALUE(rt_found) TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
@@ -362,6 +363,11 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     apply_filter( EXPORTING it_filter = it_filter
                   CHANGING ct_tadir  = lt_tadir ).
 
+    APPEND LINES OF lookup_cache(
+        EXPORTING it_cache = lt_cache
+        CHANGING ct_tadir = lt_tadir )
+      TO rt_files.
+
     CREATE OBJECT lo_progress
       EXPORTING
         iv_total = lines( lt_tadir ).
@@ -375,13 +381,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       ls_fils_item-item-obj_type = <ls_tadir>-object.
       ls_fils_item-item-obj_name = <ls_tadir>-obj_name.
       ls_fils_item-item-devclass = <ls_tadir>-devclass.
-
-      lt_found = lookup_cache( is_item = ls_fils_item-item
-                               it_cache = lt_cache ).
-      IF lines( lt_found ) > 0.
-        APPEND LINES OF lt_found TO rt_files.
-        CONTINUE.
-      ENDIF.
 
       TRY.
           ls_fils_item = zcl_abapgit_objects=>serialize(
@@ -452,22 +451,39 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD lookup_cache.
 
-    FIELD-SYMBOLS: <ls_cache> LIKE LINE OF it_cache.
+    DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item,
+          lv_index TYPE i.
+
+    FIELD-SYMBOLS: <ls_cache> LIKE LINE OF it_cache,
+                   <ls_tadir> LIKE LINE OF ct_tadir.
 
 
-    IF mv_last_serialization IS NOT INITIAL. " Try to fetch from cache
+    IF mv_last_serialization IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    LOOP AT ct_tadir ASSIGNING <ls_tadir>.
+      lv_index = sy-tabix.
+
+      ls_item-obj_type = <ls_tadir>-object.
+      ls_item-obj_name = <ls_tadir>-obj_name.
+      ls_item-devclass = <ls_tadir>-devclass.
+
+
       READ TABLE it_cache TRANSPORTING NO FIELDS
-        WITH KEY item = is_item. " type+name+package key
+        WITH KEY item = ls_item. " type+name+package key
       " There is something in cache and the object is unchanged
       IF sy-subrc = 0
           AND abap_false = zcl_abapgit_objects=>has_changed_since(
-          is_item      = is_item
+          is_item      = ls_item
           iv_timestamp = mv_last_serialization ).
-        LOOP AT it_cache ASSIGNING <ls_cache> WHERE item = is_item.
+        LOOP AT it_cache ASSIGNING <ls_cache> WHERE item = ls_item.
           APPEND <ls_cache> TO rt_found.
         ENDLOOP.
+        DELETE ct_tadir INDEX lv_index.
       ENDIF.
-    ENDIF.
+
+    ENDLOOP.
 
   ENDMETHOD.
 
