@@ -146,7 +146,7 @@ CLASS zcl_abapgit_repo DEFINITION
 
     TYPES:
       ty_cache_tt TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_file_item
-                           WITH NON-UNIQUE KEY item .
+                             WITH NON-UNIQUE KEY item .
 
     METHODS apply_filter
       IMPORTING
@@ -160,11 +160,11 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS lookup_cache
       IMPORTING
-        !it_cache       TYPE ty_cache_tt
+        !it_cache TYPE ty_cache_tt
+      EXPORTING
+        !et_found TYPE zif_abapgit_definitions=>ty_files_item_tt
       CHANGING
-        !ct_tadir       TYPE zif_abapgit_definitions=>ty_tadir_tt
-      RETURNING
-        VALUE(rt_found) TYPE zif_abapgit_definitions=>ty_files_item_tt
+        !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
     METHODS update_last_deserialize
@@ -363,10 +363,11 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     apply_filter( EXPORTING it_filter = it_filter
                   CHANGING ct_tadir  = lt_tadir ).
 
-    APPEND LINES OF lookup_cache(
-        EXPORTING it_cache = lt_cache
-        CHANGING ct_tadir = lt_tadir )
-      TO rt_files.
+    lookup_cache(
+      EXPORTING it_cache = lt_cache
+      IMPORTING et_found = lt_found
+      CHANGING ct_tadir = lt_tadir ).
+    APPEND LINES OF lt_found TO rt_files.
 
     CREATE OBJECT lo_progress
       EXPORTING
@@ -457,6 +458,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_cache> LIKE LINE OF it_cache,
                    <ls_tadir> LIKE LINE OF ct_tadir.
 
+    CLEAR et_found.
 
     IF mv_last_serialization IS INITIAL.
       RETURN.
@@ -478,7 +480,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
           is_item      = ls_item
           iv_timestamp = mv_last_serialization ).
         LOOP AT it_cache ASSIGNING <ls_cache> WHERE item = ls_item.
-          APPEND <ls_cache> TO rt_found.
+          APPEND <ls_cache> TO et_found.
         ENDLOOP.
         DELETE ct_tadir INDEX lv_index.
       ENDIF.
