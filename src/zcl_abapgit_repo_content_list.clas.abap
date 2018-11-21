@@ -29,11 +29,11 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
     DATA: mo_repo TYPE REF TO zcl_abapgit_repo,
           mo_log  TYPE REF TO zcl_abapgit_log.
 
-    METHODS build_repo_items_offline
+    METHODS build_repo_items_local_only
       RETURNING VALUE(rt_repo_items) TYPE zif_abapgit_definitions=>tt_repo_items
       RAISING   zcx_abapgit_exception.
 
-    METHODS build_repo_items_online
+    METHODS build_repo_items_with_remote
       RETURNING VALUE(rt_repo_items) TYPE zif_abapgit_definitions=>tt_repo_items
       RAISING   zcx_abapgit_exception.
 
@@ -101,7 +101,7 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD build_repo_items_offline.
+  METHOD build_repo_items_local_only.
 
     DATA: lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt,
           ls_item  TYPE zif_abapgit_definitions=>ty_item.
@@ -131,7 +131,7 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD build_repo_items_online.
+  METHOD build_repo_items_with_remote.
 
     DATA:
           ls_file        TYPE zif_abapgit_definitions=>ty_repo_file,
@@ -210,10 +210,10 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
 
     mo_log->clear( ).
 
-    IF mo_repo->is_offline( ) = abap_true.
-      rt_repo_items = build_repo_items_offline( ).
+    IF mo_repo->has_remote_source( ) = abap_true.
+      rt_repo_items = build_repo_items_with_remote( ).
     ELSE.
-      rt_repo_items = build_repo_items_online( ).
+      rt_repo_items = build_repo_items_local_only( ).
     ENDIF.
 
     IF iv_by_folders = abap_true.
@@ -222,7 +222,7 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
         CHANGING  ct_repo_items = rt_repo_items ).
     ENDIF.
 
-    IF iv_changes_only = abap_true AND mo_repo->is_offline( ) = abap_false.
+    IF iv_changes_only = abap_true.
       " There are never changes for offline repositories
       filter_changes( CHANGING ct_repo_items = rt_repo_items ).
     ENDIF.
