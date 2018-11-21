@@ -418,6 +418,8 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error from ABAP4_CALL_TRANSACTION. Subrc = { sy-subrc }| ).
     ENDIF.
 
+    MESSAGE |Repository opened in a new window| TYPE 'S'.
+
   ENDMETHOD.
 
 
