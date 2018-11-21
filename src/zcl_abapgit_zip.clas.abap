@@ -57,7 +57,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_zip IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
 
   METHOD encode_files.
@@ -403,11 +403,8 @@ CLASS zcl_abapgit_zip IMPLEMENTATION.
 
     DATA: lo_repo TYPE REF TO zcl_abapgit_repo_offline.
 
-
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     lo_repo->set_files_remote( unzip_file( file_upload( ) ) ).
-
-    zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
 
   ENDMETHOD.
 
@@ -506,6 +503,8 @@ CLASS zcl_abapgit_zip IMPLEMENTATION.
                                                iv_data = <ls_file>-data ).
 
     ENDLOOP.
+
+    DELETE rt_files WHERE filename is initial.
 
     normalize_path( CHANGING ct_files = rt_files ).
 

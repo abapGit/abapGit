@@ -92,7 +92,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
 
   METHOD build_dir_jump_link.
@@ -114,7 +114,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     CREATE OBJECT ro_toolbar.
 
-    IF mo_repo->is_offline( ) = abap_false.
+    IF mo_repo->has_remote_source( ) = abap_true.
       ro_toolbar->add(  " Show/Hide files
         iv_txt = 'Show files'
         iv_chk = boolc( NOT mv_hide_files = abap_true )
@@ -242,35 +242,38 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     " Build main toolbar ==============================
     IF mo_repo->is_offline( ) = abap_false. " Online ?
-      TRY.
-          IF iv_rstate IS NOT INITIAL. " Something new at remote
-            ro_toolbar->add( iv_txt = 'Pull'
-                             iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?{ lv_key }|
-                             iv_opt = lv_pull_opt ).
-          ENDIF.
-          IF iv_lstate IS NOT INITIAL. " Something new at local
-            ro_toolbar->add( iv_txt = 'Stage'
-                             iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ lv_key }|
-                             iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
-          ENDIF.
-          IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " Any changes
-            ro_toolbar->add( iv_txt = 'Show diff'
-                             iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ lv_key }|
-                             iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
-          ENDIF.
-        CATCH zcx_abapgit_exception ##NO_HANDLER.
-          " authorization error or repository does not exist
-          " ignore error
-      ENDTRY.
+      IF iv_rstate IS NOT INITIAL. " Something new at remote
+        ro_toolbar->add( iv_txt = 'Pull'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?{ lv_key }|
+                         iv_opt = lv_pull_opt ).
+      ENDIF.
+      IF iv_lstate IS NOT INITIAL. " Something new at local
+        ro_toolbar->add( iv_txt = 'Stage'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ lv_key }|
+                         iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
+      ENDIF.
+      IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " Any changes
+        ro_toolbar->add( iv_txt = 'Show diff'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ lv_key }|
+                         iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
+      ENDIF.
       ro_toolbar->add( iv_txt = 'Branch'
                        io_sub = lo_tb_branch ) ##NO_TEXT.
       ro_toolbar->add( iv_txt = 'Tag'
                        io_sub = lo_tb_tag ) ##NO_TEXT.
     ELSE.
-      ro_toolbar->add( iv_txt = 'Import ZIP'
+      IF mo_repo->has_remote_source( ) = abap_true AND iv_rstate IS NOT INITIAL.
+        ro_toolbar->add( iv_txt = 'Pull <sup>zip</sup>'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?{ lv_key }|
+                         iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
+        ro_toolbar->add( iv_txt = 'Show diff'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ lv_key }|
+                         iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
+      ENDIF.
+      ro_toolbar->add( iv_txt = 'Import <sup>zip</sup>'
                        iv_act = |{ zif_abapgit_definitions=>c_action-zip_import }?{ lv_key }|
                        iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
-      ro_toolbar->add( iv_txt = 'Export ZIP'
+      ro_toolbar->add( iv_txt = 'Export <sup>zip</sup>'
                        iv_act = |{ zif_abapgit_definitions=>c_action-zip_export }?{ lv_key }|
                        iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
     ENDIF.
@@ -499,18 +502,16 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    IF mo_repo->is_offline( ) = abap_false.
+    " Files
+    ro_html->add( '<td class="files">' ).
+    ro_html->add( render_item_files( is_item ) ).
+    ro_html->add( '</td>' ).
 
-      " Files
-      ro_html->add( '<td class="files">' ).
-      ro_html->add( render_item_files( is_item ) ).
-      ro_html->add( '</td>' ).
-
-      " Command
+    " Command
+    IF mo_repo->has_remote_source( ) = abap_true.
       ro_html->add( '<td class="cmd">' ).
       ro_html->add( render_item_command( is_item ) ).
       ro_html->add( '</td>' ).
-
     ENDIF.
 
     ro_html->add( '</tr>' ).
@@ -629,9 +630,9 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     ro_html->add( '<tr class="folder">' ).
     ro_html->add( |<td class="icon">{ zcl_abapgit_html=>icon( 'dir' ) }</td>| ).
-    ro_html->add( |<td class="object" colspan="2">{ build_dir_jump_link( '..' ) }</td>| ).
-    IF mo_repo->is_offline( ) = abap_false.
-      ro_html->add( |<td colspan="2"></td>| ). " Dummy for online
+    ro_html->add( |<td class="object" colspan="4">{ build_dir_jump_link( '..' ) }</td>| ).
+    IF mo_repo->has_remote_source( ) = abap_true.
+      ro_html->add( |<td colspan="1"></td>| ). " Dummy for online
     ENDIF.
     ro_html->add( '</tr>' ).
 

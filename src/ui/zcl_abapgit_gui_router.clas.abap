@@ -47,7 +47,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_router IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
 
   METHOD get_page_background.
@@ -172,6 +172,17 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD jump_display_transport.
+    DATA: lv_transport TYPE trkorr.
+
+    lv_transport = iv_getdata.
+
+    CALL FUNCTION 'TR_DISPLAY_REQUEST'
+      EXPORTING
+        i_trkorr = lv_transport.
   ENDMETHOD.
 
 
@@ -319,6 +330,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         " ZIP services actions
       WHEN zif_abapgit_definitions=>c_action-zip_import.                      " Import repo from ZIP
         zcl_abapgit_zip=>import( lv_key ).
+        zcl_abapgit_services_repo=>refresh( lv_key ).
         ev_state = zif_abapgit_definitions=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-zip_export.                      " Export repo as ZIP
         zcl_abapgit_zip=>export( zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ) ).
@@ -381,15 +393,5 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         ev_state = zif_abapgit_definitions=>c_event_state-not_handled.
     ENDCASE.
 
-  ENDMETHOD.
-
-  METHOD jump_display_transport.
-    DATA: lv_transport TYPE trkorr.
-
-    lv_transport = iv_getdata.
-
-    CALL FUNCTION 'TR_DISPLAY_REQUEST'
-      EXPORTING
-        i_trkorr = lv_transport.
   ENDMETHOD.
 ENDCLASS.
