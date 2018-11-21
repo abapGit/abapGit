@@ -438,7 +438,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
       AT FIRST.
         ro_html->add( '<thead><tr class="remote">' ).
         ro_html->add( '<th></th>' ). " Type
-        ro_html->add( '<th colspan="2">Files to remove or non-code</th>' ).
+        ro_html->add( '<th colspan="3">Files to remove or non-code</th>' ).
         ro_html->add( '<th></th>' ). " Status
         ro_html->add( '<th class="cmd">' ).
         ro_html->add( '<a>ignore</a>&#x2193; <a>remove</a>&#x2193; <a>reset</a>&#x2193;' ).
