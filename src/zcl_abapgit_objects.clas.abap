@@ -19,14 +19,16 @@ CLASS zcl_abapgit_objects DEFINITION
       BEGIN OF ty_serialization,
         files TYPE zif_abapgit_definitions=>ty_files_tt,
         item  TYPE zif_abapgit_definitions=>ty_item,
-      END OF ty_serialization.
+      END OF ty_serialization .
 
     CLASS-METHODS serialize
-      IMPORTING is_item                  TYPE zif_abapgit_definitions=>ty_item
-                iv_language              TYPE spras
-                io_log                   TYPE REF TO zcl_abapgit_log OPTIONAL
-      RETURNING VALUE(rs_files_and_item) TYPE zcl_abapgit_objects=>ty_serialization
-      RAISING   zcx_abapgit_exception .
+      IMPORTING
+        !is_item                 TYPE zif_abapgit_definitions=>ty_item
+        !iv_language             TYPE spras
+      RETURNING
+        VALUE(rs_files_and_item) TYPE zcl_abapgit_objects=>ty_serialization
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS deserialize
       IMPORTING
         !io_repo                 TYPE REF TO zcl_abapgit_repo
@@ -84,9 +86,12 @@ CLASS zcl_abapgit_objects DEFINITION
       RETURNING
         VALUE(rt_types) TYPE ty_types_tt .
     CLASS-METHODS is_active
-      IMPORTING is_item          TYPE zif_abapgit_definitions=>ty_item
-      RETURNING VALUE(rv_active) TYPE abap_bool
-      RAISING   zcx_abapgit_exception .
+      IMPORTING
+        !is_item         TYPE zif_abapgit_definitions=>ty_item
+      RETURNING
+        VALUE(rv_active) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -224,6 +229,19 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+
+
+  METHOD adjust_namespaces.
+
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF rt_results.
+
+    rt_results = it_results.
+
+    LOOP AT rt_results ASSIGNING <ls_result>.
+      REPLACE ALL OCCURRENCES OF '#' IN <ls_result>-obj_name WITH '/'.
+    ENDLOOP.
+
+  ENDMETHOD.
 
 
   METHOD changed_by.
@@ -682,6 +700,23 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD filter_files_to_deserialize.
+
+    rt_results = it_results.
+
+    DELETE rt_results WHERE match = abap_true.     " Full match
+    SORT rt_results
+      BY obj_type ASCENDING
+         obj_name ASCENDING
+         rstate   DESCENDING. " ensures that non-empty rstate is kept
+    DELETE ADJACENT DUPLICATES FROM rt_results COMPARING obj_type obj_name.
+
+    DELETE rt_results WHERE obj_type IS INITIAL.
+    DELETE rt_results WHERE lstate = zif_abapgit_definitions=>c_state-added AND rstate IS INITIAL.
+
+  ENDMETHOD.
+
+
   METHOD has_changed_since.
     rv_changed = abap_true. " Assume changed
 
@@ -849,12 +884,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     rs_files_and_item-item = is_item.
 
     IF is_supported( rs_files_and_item-item ) = abap_false.
-      IF NOT io_log IS INITIAL.
-        io_log->add( iv_msg = |Object type ignored, not supported: { rs_files_and_item-item-obj_type
-                       }-{ rs_files_and_item-item-obj_name }|
-                     iv_type = 'E' ).
-      ENDIF.
-      RETURN.
+      zcx_abapgit_exception=>raise( |Object type ignored, not supported: {
+        rs_files_and_item-item-obj_type }-{
+        rs_files_and_item-item-obj_name }| ).
     ENDIF.
 
     CREATE OBJECT lo_files
@@ -1066,34 +1098,4 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     rt_overwrite = lt_overwrite_uniqe.
 
   ENDMETHOD.
-
-  METHOD filter_files_to_deserialize.
-
-    rt_results = it_results.
-
-    DELETE rt_results WHERE match = abap_true.     " Full match
-    SORT rt_results
-      BY obj_type ASCENDING
-         obj_name ASCENDING
-         rstate   DESCENDING. " ensures that non-empty rstate is kept
-    DELETE ADJACENT DUPLICATES FROM rt_results COMPARING obj_type obj_name.
-
-    DELETE rt_results WHERE obj_type IS INITIAL.
-    DELETE rt_results WHERE lstate = zif_abapgit_definitions=>c_state-added AND rstate IS INITIAL.
-
-  ENDMETHOD.
-
-
-  METHOD adjust_namespaces.
-
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF rt_results.
-
-    rt_results = it_results.
-
-    LOOP AT rt_results ASSIGNING <ls_result>.
-      REPLACE ALL OCCURRENCES OF '#' IN <ls_result>-obj_name WITH '/'.
-    ENDLOOP.
-
-  ENDMETHOD.
-
 ENDCLASS.

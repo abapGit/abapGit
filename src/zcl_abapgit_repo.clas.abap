@@ -333,6 +333,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
           lo_progress  TYPE REF TO zcl_abapgit_progress,
           lt_cache     TYPE ty_cache_tt,
           lt_found     LIKE rt_files,
+          lx_error     TYPE REF TO zcx_abapgit_exception,
           ls_fils_item TYPE zcl_abapgit_objects=>ty_serialization.
 
     FIELD-SYMBOLS: <ls_file>   LIKE LINE OF ls_fils_item-files,
@@ -382,10 +383,13 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
-      ls_fils_item = zcl_abapgit_objects=>serialize(
-        is_item     = ls_fils_item-item
-        iv_language = get_dot_abapgit( )->get_master_language( )
-        io_log      = io_log ).
+      TRY.
+          ls_fils_item = zcl_abapgit_objects=>serialize(
+            is_item     = ls_fils_item-item
+            iv_language = get_dot_abapgit( )->get_master_language( ) ).
+        CATCH zcx_abapgit_exception INTO lx_error.
+          io_log->add_error( lx_error->get_text( ) ).
+      ENDTRY.
 
       LOOP AT ls_fils_item-files ASSIGNING <ls_file>.
         <ls_file>-path = <ls_tadir>-path.
