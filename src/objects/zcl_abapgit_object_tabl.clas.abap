@@ -3,14 +3,89 @@ CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
+  PROTECTED SECTION.
   PRIVATE SECTION.
-    CONSTANTS: c_longtext_id_tabl TYPE dokil-id VALUE 'TB'.
 
+    CONSTANTS c_longtext_id_tabl TYPE dokil-id VALUE 'TB' ##NO_TEXT.
+
+    TYPES: ty_dd03p_tt TYPE STANDARD TABLE OF dd03p.
+
+    METHODS clear_dd03p_fields
+      CHANGING ct_dd03p TYPE ty_dd03p_tt.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
+
+
+  METHOD clear_dd03p_fields.
+
+    DATA: lv_masklen TYPE c LENGTH 4.
+
+    FIELD-SYMBOLS: <ls_dd03p> LIKE LINE OF ct_dd03p.
+
+
+* remove nested structures
+    DELETE ct_dd03p WHERE depth <> '00'.
+* remove fields from .INCLUDEs
+    DELETE ct_dd03p WHERE adminfield <> '0'.
+
+    LOOP AT ct_dd03p ASSIGNING <ls_dd03p> WHERE NOT rollname IS INITIAL.
+      CLEAR: <ls_dd03p>-ddlanguage,
+        <ls_dd03p>-dtelmaster,
+        <ls_dd03p>-logflag,
+        <ls_dd03p>-ddtext,
+        <ls_dd03p>-reservedte,
+        <ls_dd03p>-reptext,
+        <ls_dd03p>-scrtext_s,
+        <ls_dd03p>-scrtext_m,
+        <ls_dd03p>-scrtext_l.
+
+      lv_masklen = <ls_dd03p>-masklen.
+      IF lv_masklen = '' OR NOT lv_masklen CO '0123456789'.
+* make sure the field contains valid data, or the XML will dump
+        CLEAR <ls_dd03p>-masklen.
+      ENDIF.
+
+      IF <ls_dd03p>-comptype = 'E'.
+* type specified via data element
+        CLEAR: <ls_dd03p>-domname,
+          <ls_dd03p>-inttype,
+          <ls_dd03p>-intlen,
+          <ls_dd03p>-mask,
+          <ls_dd03p>-memoryid,
+          <ls_dd03p>-headlen,
+          <ls_dd03p>-scrlen1,
+          <ls_dd03p>-scrlen2,
+          <ls_dd03p>-scrlen3,
+          <ls_dd03p>-datatype,
+          <ls_dd03p>-leng,
+          <ls_dd03p>-outputlen,
+          <ls_dd03p>-deffdname,
+          <ls_dd03p>-convexit,
+          <ls_dd03p>-entitytab,
+          <ls_dd03p>-dommaster,
+          <ls_dd03p>-domname3l,
+          <ls_dd03p>-decimals,
+          <ls_dd03p>-lowercase,
+          <ls_dd03p>-signflag.
+      ENDIF.
+
+      IF <ls_dd03p>-shlporigin = 'D'.
+* search help from domain
+        CLEAR: <ls_dd03p>-shlpfield,
+          <ls_dd03p>-shlpname.
+      ENDIF.
+
+* XML output assumes correct field content
+      IF <ls_dd03p>-routputlen = '      '.
+        CLEAR <ls_dd03p>-routputlen.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -330,6 +405,11 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~is_locked.
 
     rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESDICT'
@@ -348,23 +428,21 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lv_name    TYPE ddobjname,
-          ls_dd02v   TYPE dd02v,
-          ls_dd09l   TYPE dd09l,
-          lt_dd03p   TYPE TABLE OF dd03p,
-          lt_dd05m   TYPE TABLE OF dd05m,
-          lt_dd08v   TYPE TABLE OF dd08v,
-          lt_dd12v   TYPE dd12vtab,
-          lt_dd17v   TYPE dd17vtab,
-          lt_dd35v   TYPE TABLE OF dd35v,
-          lv_index   LIKE sy-index,
-          lv_masklen TYPE c LENGTH 4,
-          lt_dd36m   TYPE dd36mttyp.
+    DATA: lv_name  TYPE ddobjname,
+          ls_dd02v TYPE dd02v,
+          ls_dd09l TYPE dd09l,
+          lt_dd03p TYPE ty_dd03p_tt,
+          lt_dd05m TYPE TABLE OF dd05m,
+          lt_dd08v TYPE TABLE OF dd08v,
+          lt_dd12v TYPE dd12vtab,
+          lt_dd17v TYPE dd17vtab,
+          lt_dd35v TYPE TABLE OF dd35v,
+          lv_index LIKE sy-index,
+          lt_dd36m TYPE dd36mttyp.
 
     FIELD-SYMBOLS: <ls_dd12v>      LIKE LINE OF lt_dd12v,
                    <ls_dd05m>      LIKE LINE OF lt_dd05m,
                    <ls_dd36m>      LIKE LINE OF lt_dd36m,
-                   <ls_dd03p>      LIKE LINE OF lt_dd03p,
                    <lg_roworcolst> TYPE any.
 
 
@@ -429,63 +507,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
              <ls_dd12v>-as4time.
     ENDLOOP.
 
-* remove nested structures
-    DELETE lt_dd03p WHERE depth <> '00'.
-* remove fields from .INCLUDEs
-    DELETE lt_dd03p WHERE adminfield <> '0'.
-
-    LOOP AT lt_dd03p ASSIGNING <ls_dd03p> WHERE NOT rollname IS INITIAL.
-      CLEAR: <ls_dd03p>-ddlanguage,
-        <ls_dd03p>-dtelmaster,
-        <ls_dd03p>-logflag,
-        <ls_dd03p>-ddtext,
-        <ls_dd03p>-reservedte,
-        <ls_dd03p>-reptext,
-        <ls_dd03p>-scrtext_s,
-        <ls_dd03p>-scrtext_m,
-        <ls_dd03p>-scrtext_l.
-
-      lv_masklen = <ls_dd03p>-masklen.
-      IF lv_masklen = '' OR NOT lv_masklen CO '0123456789'.
-* make sure the field contains valid data, or the XML will dump
-        CLEAR <ls_dd03p>-masklen.
-      ENDIF.
-
-      IF <ls_dd03p>-comptype = 'E'.
-* type specified via data element
-        CLEAR: <ls_dd03p>-domname,
-          <ls_dd03p>-inttype,
-          <ls_dd03p>-intlen,
-          <ls_dd03p>-mask,
-          <ls_dd03p>-memoryid,
-          <ls_dd03p>-headlen,
-          <ls_dd03p>-scrlen1,
-          <ls_dd03p>-scrlen2,
-          <ls_dd03p>-scrlen3,
-          <ls_dd03p>-datatype,
-          <ls_dd03p>-leng,
-          <ls_dd03p>-outputlen,
-          <ls_dd03p>-deffdname,
-          <ls_dd03p>-convexit,
-          <ls_dd03p>-entitytab,
-          <ls_dd03p>-dommaster,
-          <ls_dd03p>-domname3l,
-          <ls_dd03p>-decimals,
-          <ls_dd03p>-lowercase,
-          <ls_dd03p>-signflag.
-      ENDIF.
-
-      IF <ls_dd03p>-shlporigin = 'D'.
-* search help from domain
-        CLEAR: <ls_dd03p>-shlpfield,
-          <ls_dd03p>-shlpname.
-      ENDIF.
-
-* XML output assumes correct field content
-      IF <ls_dd03p>-routputlen = '      '.
-        CLEAR <ls_dd03p>-routputlen.
-      ENDIF.
-    ENDLOOP.
+    clear_dd03p_fields( CHANGING ct_dd03p = lt_dd03p ).
 
 * remove foreign keys inherited from .INCLUDEs
     DELETE lt_dd08v WHERE noinherit = 'N'.
@@ -531,10 +553,5 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     serialize_longtexts( io_xml         = io_xml
                          iv_longtext_id = c_longtext_id_tabl ).
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.
