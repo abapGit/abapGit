@@ -179,7 +179,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -228,6 +228,17 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     ms_data = is_data.
     mv_request_remote_refresh = abap_true.
+
+  ENDMETHOD.
+
+
+  METHOD conversion_exit_isola_output.
+
+    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_OUTPUT'
+      EXPORTING
+        input  = iv_spras
+      IMPORTING
+        output = rv_spras.
 
   ENDMETHOD.
 
@@ -344,15 +355,11 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   METHOD get_files_local.
 
     DATA: lt_tadir     TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          lo_progress  TYPE REF TO zcl_abapgit_progress,
+          lo_serialize TYPE REF TO zcl_abapgit_serialize,
           lt_cache     TYPE ty_cache_tt,
-          lt_found     LIKE rt_files,
-          lx_error     TYPE REF TO zcx_abapgit_exception,
-          ls_fils_item TYPE zcl_abapgit_objects=>ty_serialization.
+          lt_found     LIKE rt_files.
 
-    FIELD-SYMBOLS: <ls_file>   LIKE LINE OF ls_fils_item-files,
-                   <ls_return> LIKE LINE OF rt_files,
-                   <ls_tadir>  LIKE LINE OF lt_tadir.
+    FIELD-SYMBOLS: <ls_return> LIKE LINE OF rt_files.
 
 
     " Serialization happened before and no refresh request
@@ -382,36 +389,13 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       CHANGING ct_tadir = lt_tadir ).
     APPEND LINES OF lt_found TO rt_files.
 
-    CREATE OBJECT lo_progress
-      EXPORTING
-        iv_total = lines( lt_tadir ).
+    CREATE OBJECT lo_serialize.
 
-    LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-
-      lo_progress->show(
-        iv_current = sy-tabix
-        iv_text    = |Serialize { <ls_tadir>-obj_name }| ) ##NO_TEXT.
-
-      ls_fils_item-item-obj_type = <ls_tadir>-object.
-      ls_fils_item-item-obj_name = <ls_tadir>-obj_name.
-      ls_fils_item-item-devclass = <ls_tadir>-devclass.
-
-      TRY.
-          ls_fils_item = zcl_abapgit_objects=>serialize(
-            is_item     = ls_fils_item-item
-            iv_language = get_dot_abapgit( )->get_master_language( ) ).
-        CATCH zcx_abapgit_exception INTO lx_error.
-          io_log->add_error( lx_error->get_text( ) ).
-      ENDTRY.
-
-      LOOP AT ls_fils_item-files ASSIGNING <ls_file>.
-        <ls_file>-path = <ls_tadir>-path.
-
-        APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
-        <ls_return>-file = <ls_file>.
-        <ls_return>-item = ls_fils_item-item.
-      ENDLOOP.
-    ENDLOOP.
+    lt_found = lo_serialize->serialize(
+      it_tadir    = lt_tadir
+      iv_language = get_dot_abapgit( )->get_master_language( )
+      io_log      = io_log ).
+    APPEND LINES OF lt_found TO rt_files.
 
     GET TIME STAMP FIELD mv_last_serialization.
     mt_local                 = rt_files.
@@ -795,15 +779,4 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     set( it_checksums = lt_checksums ).
 
   ENDMETHOD.
-
-  METHOD conversion_exit_isola_output.
-
-    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_OUTPUT'
-      EXPORTING
-        input  = iv_spras
-      IMPORTING
-        output = rv_spras.
-
-  ENDMETHOD.
-
 ENDCLASS.
