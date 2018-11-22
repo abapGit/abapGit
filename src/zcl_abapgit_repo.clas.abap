@@ -169,11 +169,16 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS update_last_deserialize
       RAISING
         zcx_abapgit_exception .
+    METHODS conversion_exit_isola_output
+      IMPORTING
+        iv_spras        TYPE spras
+      RETURNING
+        VALUE(rv_spras) TYPE laiso.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -284,15 +289,23 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD deserialize_checks.
 
-    DATA: lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
+    DATA: lt_requirements    TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
+          lv_master_language TYPE spras,
+          lv_logon_language  TYPE spras.
 
 
     find_remote_dot_abapgit( ).
 
+    lv_master_language = get_dot_abapgit( )->get_master_language( ).
+    lv_logon_language  = cl_abap_syst=>get_logon_language( ).
+
     IF get_local_settings( )-write_protected = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot deserialize. Local code is write-protected by repo config' ).
-    ELSEIF get_dot_abapgit( )->get_master_language( ) <> sy-langu.
-      zcx_abapgit_exception=>raise( 'Current login language does not match master language' ).
+    ELSEIF lv_master_language <> lv_logon_language.
+      zcx_abapgit_exception=>raise( |Current login language |
+                                 && |'{ conversion_exit_isola_output( lv_logon_language ) }'|
+                                 && | does not match master language |
+                                 && |'{ conversion_exit_isola_output( lv_master_language ) }'| ).
     ENDIF.
 
     rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
@@ -760,4 +773,15 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     set( it_checksums = lt_checksums ).
 
   ENDMETHOD.
+
+  METHOD conversion_exit_isola_output.
+
+    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_OUTPUT'
+      EXPORTING
+        input  = iv_spras
+      IMPORTING
+        output = rv_spras.
+
+  ENDMETHOD.
+
 ENDCLASS.

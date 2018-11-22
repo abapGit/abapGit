@@ -438,6 +438,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       repo_transport_to_branch TYPE string VALUE 'repo_transport_to_branch',
       repo_syntax_check        TYPE string VALUE 'repo_syntax_check',
       repo_code_inspector      TYPE string VALUE 'repo_code_inspector',
+      repo_open_in_master_lang TYPE string VALUE 'repo_open_in_master_lang',
 
       abapgit_home             TYPE string VALUE 'abapgit_home',
       abapgit_install          TYPE string VALUE 'abapgit_install',
@@ -491,5 +492,6 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       inactive TYPE r3state VALUE 'I',
     END OF c_version .
   CONSTANTS c_tag_prefix TYPE string VALUE 'refs/tags/' ##NO_TEXT.
+  CONSTANTS c_spagpa_param_repo_key TYPE char20 VALUE 'REPO_KEY'.
 
 ENDINTERFACE.
