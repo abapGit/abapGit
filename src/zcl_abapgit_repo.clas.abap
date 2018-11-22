@@ -146,7 +146,7 @@ CLASS zcl_abapgit_repo DEFINITION
 
     TYPES:
       ty_cache_tt TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_file_item
-                         WITH NON-UNIQUE KEY item .
+                             WITH NON-UNIQUE KEY item .
 
     METHODS apply_filter
       IMPORTING
@@ -160,10 +160,11 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS lookup_cache
       IMPORTING
-        !it_cache       TYPE ty_cache_tt
-        !is_item        TYPE zif_abapgit_definitions=>ty_item
-      RETURNING
-        VALUE(rt_found) TYPE zif_abapgit_definitions=>ty_files_item_tt
+        !it_cache TYPE ty_cache_tt
+      EXPORTING
+        !et_found TYPE zif_abapgit_definitions=>ty_files_item_tt
+      CHANGING
+        !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
     METHODS update_last_deserialize
@@ -346,6 +347,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
           lo_progress  TYPE REF TO zcl_abapgit_progress,
           lt_cache     TYPE ty_cache_tt,
           lt_found     LIKE rt_files,
+          lx_error     TYPE REF TO zcx_abapgit_exception,
           ls_fils_item TYPE zcl_abapgit_objects=>ty_serialization.
 
     FIELD-SYMBOLS: <ls_file>   LIKE LINE OF ls_fils_item-files,
@@ -374,6 +376,12 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     apply_filter( EXPORTING it_filter = it_filter
                   CHANGING ct_tadir  = lt_tadir ).
 
+    lookup_cache(
+      EXPORTING it_cache = lt_cache
+      IMPORTING et_found = lt_found
+      CHANGING ct_tadir = lt_tadir ).
+    APPEND LINES OF lt_found TO rt_files.
+
     CREATE OBJECT lo_progress
       EXPORTING
         iv_total = lines( lt_tadir ).
@@ -388,17 +396,13 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       ls_fils_item-item-obj_name = <ls_tadir>-obj_name.
       ls_fils_item-item-devclass = <ls_tadir>-devclass.
 
-      lt_found = lookup_cache( is_item = ls_fils_item-item
-                               it_cache = lt_cache ).
-      IF lines( lt_found ) > 0.
-        APPEND LINES OF lt_found TO rt_files.
-        CONTINUE.
-      ENDIF.
-
-      ls_fils_item = zcl_abapgit_objects=>serialize(
-        is_item     = ls_fils_item-item
-        iv_language = get_dot_abapgit( )->get_master_language( )
-        io_log      = io_log ).
+      TRY.
+          ls_fils_item = zcl_abapgit_objects=>serialize(
+            is_item     = ls_fils_item-item
+            iv_language = get_dot_abapgit( )->get_master_language( ) ).
+        CATCH zcx_abapgit_exception INTO lx_error.
+          io_log->add_error( lx_error->get_text( ) ).
+      ENDTRY.
 
       LOOP AT ls_fils_item-files ASSIGNING <ls_file>.
         <ls_file>-path = <ls_tadir>-path.
@@ -461,22 +465,40 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD lookup_cache.
 
-    FIELD-SYMBOLS: <ls_cache> LIKE LINE OF it_cache.
+    DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item,
+          lv_index TYPE i.
+
+    FIELD-SYMBOLS: <ls_cache> LIKE LINE OF it_cache,
+                   <ls_tadir> LIKE LINE OF ct_tadir.
+
+    CLEAR et_found.
+
+    IF mv_last_serialization IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    LOOP AT ct_tadir ASSIGNING <ls_tadir>.
+      lv_index = sy-tabix.
+
+      ls_item-obj_type = <ls_tadir>-object.
+      ls_item-obj_name = <ls_tadir>-obj_name.
+      ls_item-devclass = <ls_tadir>-devclass.
 
 
-    IF mv_last_serialization IS NOT INITIAL. " Try to fetch from cache
       READ TABLE it_cache TRANSPORTING NO FIELDS
-        WITH KEY item = is_item. " type+name+package key
+        WITH KEY item = ls_item. " type+name+package key
       " There is something in cache and the object is unchanged
       IF sy-subrc = 0
           AND abap_false = zcl_abapgit_objects=>has_changed_since(
-          is_item      = is_item
+          is_item      = ls_item
           iv_timestamp = mv_last_serialization ).
-        LOOP AT it_cache ASSIGNING <ls_cache> WHERE item = is_item.
-          APPEND <ls_cache> TO rt_found.
+        LOOP AT it_cache ASSIGNING <ls_cache> WHERE item = ls_item.
+          APPEND <ls_cache> TO et_found.
         ENDLOOP.
+        DELETE ct_tadir INDEX lv_index.
       ENDIF.
-    ENDIF.
+
+    ENDLOOP.
 
   ENDMETHOD.
 
