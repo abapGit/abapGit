@@ -92,7 +92,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
 
   METHOD build_dir_jump_link.
@@ -223,7 +223,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
                          iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh_checksums }?{ lv_key }|
                          iv_opt = lv_crossout ).
 
-    IF mo_repo->get_dot_abapgit( )->get_master_language( ) <> cl_abap_syst=>get_logon_language( ).
+    IF mo_repo->get_dot_abapgit( )->get_master_language( ) <> sy-langu.
       lo_tb_advanced->add( iv_txt = 'Open in master language'
                            iv_act = |{ zif_abapgit_definitions=>c_action-repo_open_in_master_lang }?{ lv_key }| ).
     ENDIF.
@@ -386,7 +386,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
     lv_master_language = mo_repo->get_dot_abapgit( )->get_master_language( ).
 
-    IF lv_master_language = cl_abap_syst=>get_logon_language( ).
+    IF lv_master_language = sy-langu.
       zcx_abapgit_exception=>raise( |Repo already opened in master language| ).
     ENDIF.
 
@@ -421,7 +421,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error from ABAP4_CALL_TRANSACTION. Subrc = { sy-subrc }| ).
     ENDIF.
 
-    MESSAGE |Repository opened in a new window| TYPE 'S'.
+    MESSAGE 'Repository opened in a new window' TYPE 'S'.
 
   ENDMETHOD.
 
