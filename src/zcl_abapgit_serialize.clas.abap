@@ -145,7 +145,9 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
         error     = 1
         OTHERS    = 2.
     IF sy-subrc <> 0.
-      mo_log->add_error( |{ sy-msgv1 }{ sy-msgv2 }{ sy-msgv3 }{ sy-msgv3 }| ).
+      IF NOT mo_log IS INITIAL.
+        mo_log->add_error( |{ sy-msgv1 }{ sy-msgv2 }{ sy-msgv3 }{ sy-msgv3 }| ).
+      ENDIF.
     ELSE.
       IMPORT data = ls_fils_item FROM DATA BUFFER lv_result. "#EC CI_SUBRC
       ASSERT sy-subrc = 0.
@@ -215,7 +217,9 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
         add_to_return( is_fils_item = ls_fils_item
                        iv_path      = is_tadir-path ).
       CATCH zcx_abapgit_exception INTO lx_error.
-        mo_log->add_error( lx_error->get_text( ) ).
+        IF NOT mo_log IS INITIAL.
+          mo_log->add_error( lx_error->get_text( ) ).
+        ENDIF.
     ENDTRY.
 
   ENDMETHOD.
