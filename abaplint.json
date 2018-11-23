@@ -59,6 +59,13 @@
     "breakpoint": {
       "enabled": true
     },
+    "nesting": {
+      "enabled": true,
+      "depth": 5
+    },
+    "keywords_upper": {
+      "enabled": true
+    },
     "cloud_types": {
       "enabled": true
     },
@@ -97,4 +104,3 @@
     }
   }
 }
-  

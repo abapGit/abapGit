@@ -504,7 +504,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     ENDLOOP.
 
-    DELETE rt_files WHERE filename is initial.
+    DELETE rt_files WHERE filename IS INITIAL.
 
     normalize_path( CHANGING ct_files = rt_files ).
 
