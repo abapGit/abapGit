@@ -309,7 +309,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     find_remote_dot_abapgit( ).
 
     lv_master_language = get_dot_abapgit( )->get_master_language( ).
-    lv_logon_language  = cl_abap_syst=>get_logon_language( ).
+    lv_logon_language  = sy-langu.
 
     IF get_local_settings( )-write_protected = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot deserialize. Local code is write-protected by repo config' ).
