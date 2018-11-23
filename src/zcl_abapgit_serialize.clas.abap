@@ -114,7 +114,9 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
         cant_init_different_pbt_groups = 6
         OTHERS                         = 7.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from SPBT_INITIALIZE: { sy-subrc }| ).
+* fallback to running sequentially. If SPBT_INITIALIZE fails, check transactions
+* RZ12, SM50, SM21, SARFC
+      gv_max = 1.
     ENDIF.
 
     IF gv_max > 1.
