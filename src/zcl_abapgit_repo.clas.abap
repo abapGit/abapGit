@@ -7,6 +7,10 @@ CLASS zcl_abapgit_repo DEFINITION
 
   PUBLIC SECTION.
 
+    EVENTS on_metadata_change
+      EXPORTING
+        VALUE(IS_META) TYPE zif_abapgit_persistence=>ty_repo_xml
+        VALUE(IT_CHANGE_LOG) TYPE string_table .
     METHODS deserialize_checks
       RETURNING
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
@@ -633,7 +637,10 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 * TODO: refactor
 
-    DATA: li_persistence TYPE REF TO zif_abapgit_persist_repo.
+    DATA:
+          lt_change_log TYPE string_table,
+          ls_meta_slug TYPE zif_abapgit_persistence=>ty_repo_xml,
+          li_persistence TYPE REF TO zif_abapgit_persist_repo.
 
 
     ASSERT it_checksums IS SUPPLIED
@@ -653,6 +660,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         iv_key       = ms_data-key
         it_checksums = it_checksums ).
       ms_data-local_checksums = it_checksums.
+      APPEND 'local_checksums' TO lt_change_log.
     ENDIF.
 
     IF iv_url IS SUPPLIED.
@@ -660,6 +668,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         iv_key = ms_data-key
         iv_url = iv_url ).
       ms_data-url = iv_url.
+      APPEND 'url' TO lt_change_log.
     ENDIF.
 
     IF iv_branch_name IS SUPPLIED.
@@ -667,6 +676,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         iv_key         = ms_data-key
         iv_branch_name = iv_branch_name ).
       ms_data-branch_name = iv_branch_name.
+      APPEND 'branch_name' TO lt_change_log.
     ENDIF.
 
     IF iv_head_branch IS SUPPLIED.
@@ -674,6 +684,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         iv_key         = ms_data-key
         iv_head_branch = iv_head_branch ).
       ms_data-head_branch = iv_head_branch.
+      APPEND 'head_branch' TO lt_change_log.
     ENDIF.
 
     IF iv_offline IS SUPPLIED.
@@ -681,6 +692,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         iv_key     = ms_data-key
         iv_offline = iv_offline ).
       ms_data-offline = iv_offline.
+      APPEND 'offline' TO lt_change_log.
     ENDIF.
 
     IF is_dot_abapgit IS SUPPLIED.
@@ -688,6 +700,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         iv_key         = ms_data-key
         is_dot_abapgit = is_dot_abapgit ).
       ms_data-dot_abapgit = is_dot_abapgit.
+      APPEND 'dot_abapgit' TO lt_change_log.
     ENDIF.
 
     IF is_local_settings IS SUPPLIED.
@@ -695,6 +708,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         iv_key      = ms_data-key
         is_settings = is_local_settings ).
       ms_data-local_settings = is_local_settings.
+      APPEND 'local_settings' TO lt_change_log.
     ENDIF.
 
     IF iv_deserialized_at IS SUPPLIED OR iv_deserialized_by IS SUPPLIED.
@@ -703,7 +717,14 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         iv_deserialized_at = iv_deserialized_at
         iv_deserialized_by = iv_deserialized_by ).
       ms_data-deserialized_at = iv_deserialized_at.
+      APPEND 'deserialized_at' TO lt_change_log.
     ENDIF.
+
+    MOVE-CORRESPONDING ms_data TO ls_meta_slug.
+    RAISE EVENT on_metadata_change
+      EXPORTING
+        is_meta = ls_meta_slug
+        it_change_log = lt_change_log.
 
   ENDMETHOD.
 

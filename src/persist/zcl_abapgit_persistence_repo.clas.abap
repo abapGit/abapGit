@@ -407,4 +407,45 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
                    iv_data  = ls_content-data_str ).
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_persist_repo~update_metadata.
+
+    DATA:
+          lv_blob  TYPE zif_abapgit_persistence=>ty_content-data_str,
+          lv_field LIKE LINE OF it_change_log,
+          ls_repo  TYPE zif_abapgit_persistence=>ty_repo.
+
+    FIELD-SYMBOLS <vdst> TYPE ANY.
+    FIELD-SYMBOLS <vsrc> TYPE ANY.
+
+    " TODO validations ?? e.g. 'update, url empty' and/or change_log entries ?
+
+    ASSERT NOT iv_key IS INITIAL.
+
+    TRY.
+        ls_repo = read( iv_key ).
+      CATCH zcx_abapgit_not_found.
+        zcx_abapgit_exception=>raise( 'repo key not found' ).
+    ENDTRY.
+
+    IF it_change_log IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    LOOP AT it_change_log INTO lv_field.
+      lv_field = to_upper( lv_field ).
+      ASSIGN COMPONENT lv_field OF STRUCTURE ls_repo TO <vdst>.
+      ASSIGN COMPONENT lv_field OF STRUCTURE is_meta TO <vsrc>.
+      <vdst> = <vsrc>.
+    ENDLOOP.
+
+    lv_blob = to_xml( ls_repo ).
+
+    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
+                   iv_value = iv_key
+                   iv_data  = lv_blob ).
+
+  ENDMETHOD.
+
 ENDCLASS.

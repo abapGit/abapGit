@@ -10,6 +10,10 @@ CLASS zcl_abapgit_repo_srv DEFINITION
     CLASS-METHODS get_instance
       RETURNING
         VALUE(ri_srv) TYPE REF TO zif_abapgit_repo_srv .
+    METHODS handle_repo_meta_change
+      FOR EVENT on_metadata_change of zcl_abapgit_repo
+      IMPORTING is_meta it_change_log sender.
+
   PRIVATE SECTION.
 
     ALIASES delete
@@ -43,6 +47,7 @@ CLASS zcl_abapgit_repo_srv DEFINITION
         !it_repos   TYPE zif_abapgit_persistence=>tt_repo
       RAISING
         zcx_abapgit_exception .
+
 ENDCLASS.
 
 
@@ -70,7 +75,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
 
   METHOD constructor.
-
+    SET HANDLER me->handle_repo_meta_change FOR ALL INSTANCES ACTIVATION 'X'.
   ENDMETHOD.
 
 
@@ -79,6 +84,26 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
       CREATE OBJECT gi_ref TYPE zcl_abapgit_repo_srv.
     ENDIF.
     ri_srv = gi_ref.
+  ENDMETHOD.
+
+
+  METHOD handle_repo_meta_change.
+
+    DATA:
+         lo_repo TYPE REF TO zcl_abapgit_repo,
+         li_persistence TYPE REF TO zif_abapgit_persist_repo.
+
+    lo_repo ?= sender.
+    lo_repo->get_key( ).
+
+    " TODO: how to catch exceptions ?
+
+    li_persistence = zcl_abapgit_persist_factory=>get_repo( ).
+    li_persistence->update_metadata(
+      iv_key        = lo_repo->get_key( )
+      is_meta       = is_meta
+      it_change_log = it_change_log ).
+
   ENDMETHOD.
 
 

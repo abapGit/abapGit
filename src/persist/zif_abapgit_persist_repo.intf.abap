@@ -87,4 +87,11 @@ INTERFACE zif_abapgit_persist_repo
       !iv_url TYPE zif_abapgit_persistence=>ty_repo_xml-url
     RAISING
       zcx_abapgit_exception .
+  METHODS update_metadata
+    IMPORTING
+      !iv_key        TYPE zif_abapgit_persistence=>ty_repo-key
+      !is_meta       TYPE zif_abapgit_persistence=>ty_repo_xml
+      !it_change_log TYPE string_table
+    RAISING
+      zcx_abapgit_exception .
 ENDINTERFACE.
