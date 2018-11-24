@@ -487,7 +487,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     DATA: ls_hotkey_action TYPE zif_abapgit_gui_page_hotkey=>ty_hotkey_action.
 
-    ls_hotkey_action-name           = |Stage: Patch|.
+    ls_hotkey_action-name           = |Patch|.
     ls_hotkey_action-action         = zif_abapgit_definitions=>c_action-go_patch.
     ls_hotkey_action-default_hotkey = |p|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
