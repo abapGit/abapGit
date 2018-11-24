@@ -25,8 +25,8 @@ CLASS zcl_abapgit_hotkeys DEFINITION
       RETURNING
         VALUE(rv_yes) TYPE abap_bool.
 
-   PRIVATE SECTION.
-     CLASS-DATA mv_hint_was_shown TYPE abap_bool.
+  PRIVATE SECTION.
+    CLASS-DATA gv_hint_was_shown TYPE abap_bool.
 
 ENDCLASS.
 
@@ -126,9 +126,9 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
 
 
   METHOD should_show_hint.
-    IF mv_hint_was_shown = abap_false.
+    IF gv_hint_was_shown = abap_false.
       rv_yes = abap_true.
-      mv_hint_was_shown = abap_true.
+      gv_hint_was_shown = abap_true.
     ENDIF.
   ENDMETHOD.
 ENDCLASS.
