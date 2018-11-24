@@ -7,10 +7,9 @@ CLASS zcl_abapgit_repo DEFINITION
 
   PUBLIC SECTION.
 
-    EVENTS on_metadata_change
-      EXPORTING
-        VALUE(IS_META) TYPE zif_abapgit_persistence=>ty_repo_xml
-        VALUE(IT_CHANGE_LOG) TYPE string_table .
+    METHODS subscribe_on_meta_change
+      IMPORTING
+        ii_subscriber TYPE REF TO zif_abapgit_repo_srv.
     METHODS deserialize_checks
       RETURNING
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
@@ -154,10 +153,14 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS reset_remote .
   PRIVATE SECTION.
 
+    DATA mi_subscriber TYPE REF TO zif_abapgit_repo_srv .
+
     TYPES:
       ty_cache_tt TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_file_item
                              WITH NON-UNIQUE KEY item .
-
+    METHODS notify_subscribers
+      RAISING
+        zcx_abapgit_exception .
     METHODS apply_filter
       IMPORTING
         !it_filter TYPE zif_abapgit_definitions=>ty_tadir_tt
@@ -544,6 +547,13 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD notify_subscribers.
+    IF mi_subscriber IS BOUND.
+      " TODO
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD rebuild_local_checksums.
 
     DATA:
@@ -720,11 +730,11 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       APPEND 'deserialized_at' TO lt_change_log.
     ENDIF.
 
-    MOVE-CORRESPONDING ms_data TO ls_meta_slug.
-    RAISE EVENT on_metadata_change
-      EXPORTING
-        is_meta = ls_meta_slug
-        it_change_log = lt_change_log.
+*    MOVE-CORRESPONDING ms_data TO ls_meta_slug.
+*    RAISE EVENT on_metadata_change
+*      EXPORTING
+*        is_meta = ls_meta_slug
+*        it_change_log = lt_change_log.
 
   ENDMETHOD.
 
@@ -759,6 +769,11 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     rt_results = mt_status.
 
+  ENDMETHOD.
+
+
+  METHOD subscribe_on_meta_change.
+    mi_subscriber = ii_subscriber.
   ENDMETHOD.
 
 

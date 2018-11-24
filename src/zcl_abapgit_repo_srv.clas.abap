@@ -10,9 +10,6 @@ CLASS zcl_abapgit_repo_srv DEFINITION
     CLASS-METHODS get_instance
       RETURNING
         VALUE(ri_srv) TYPE REF TO zif_abapgit_repo_srv .
-    METHODS handle_repo_meta_change
-      FOR EVENT on_metadata_change of zcl_abapgit_repo
-      IMPORTING is_meta it_change_log sender.
 
   PRIVATE SECTION.
 
@@ -32,7 +29,6 @@ CLASS zcl_abapgit_repo_srv DEFINITION
     METHODS refresh
       RAISING
         zcx_abapgit_exception .
-    METHODS constructor .
     METHODS is_sap_object_allowed
       RETURNING
         VALUE(rv_allowed) TYPE abap_bool .
@@ -74,36 +70,11 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD constructor.
-    SET HANDLER me->handle_repo_meta_change FOR ALL INSTANCES ACTIVATION 'X'.
-  ENDMETHOD.
-
-
   METHOD get_instance.
     IF gi_ref IS INITIAL.
       CREATE OBJECT gi_ref TYPE zcl_abapgit_repo_srv.
     ENDIF.
     ri_srv = gi_ref.
-  ENDMETHOD.
-
-
-  METHOD handle_repo_meta_change.
-
-    DATA:
-         lo_repo TYPE REF TO zcl_abapgit_repo,
-         li_persistence TYPE REF TO zif_abapgit_persist_repo.
-
-    lo_repo ?= sender.
-    lo_repo->get_key( ).
-
-    " TODO: how to catch exceptions ?
-
-    li_persistence = zcl_abapgit_persist_factory=>get_repo( ).
-    li_persistence->update_metadata(
-      iv_key        = lo_repo->get_key( )
-      is_meta       = is_meta
-      it_change_log = it_change_log ).
-
   ENDMETHOD.
 
 
@@ -320,6 +291,20 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
     ro_repo->refresh( ).
     ro_repo->find_remote_dot_abapgit( ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_srv~on_repo_meta_change.
+
+    DATA:
+         li_persistence TYPE REF TO zif_abapgit_persist_repo.
+
+    li_persistence = zcl_abapgit_persist_factory=>get_repo( ).
+    li_persistence->update_metadata(
+      iv_key        = iv_key
+      is_meta       = is_meta
+      it_change_log = it_change_log ).
 
   ENDMETHOD.
 
