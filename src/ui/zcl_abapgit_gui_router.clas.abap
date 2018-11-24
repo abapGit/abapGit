@@ -476,6 +476,13 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         ei_page      = ei_page
         ev_state     = ev_state ).
 
+    sap_gui_actions(
+      EXPORTING
+        is_event_data = ls_event_data
+      IMPORTING
+        ei_page      = ei_page
+        ev_state     = ev_state ).
+
     IF ev_state IS INITIAL.
       ev_state = zif_abapgit_definitions=>c_event_state-not_handled.
     ENDIF.
