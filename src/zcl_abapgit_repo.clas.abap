@@ -333,6 +333,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
 
+    get_files_remote( ).
 
     READ TABLE mt_remote ASSIGNING <ls_remote>
       WITH KEY path = zif_abapgit_definitions=>c_root_dir
