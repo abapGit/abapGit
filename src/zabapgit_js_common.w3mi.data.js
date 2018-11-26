@@ -576,15 +576,9 @@ DiffHelper.prototype.highlightButton = function(state) {
  **********************************************************/
 
 // News announcement
-function displayNews() {
-  var div = document.getElementById("news");
-  div.style.display = (div.style.display) ? '' : 'none';
-}
-
-// Hotkey Overview
-function closeHotkeyOverview() {
-  var div = document.getElementById("hotkeys");
-  div.style.display = (div.style.display) ? '' : 'none';
+function toggleDisplay(divId) {
+  var div = document.getElementById(divId);
+  if (div) div.style.display = (div.style.display) ? '' : 'none';
 }
 
 function KeyNavigation() {
@@ -945,7 +939,11 @@ function setKeyBindings(oKeyMap){
   var oHotkeys = new Hotkeys(oKeyMap);
 
   document.addEventListener('keypress', oHotkeys.onkeydown.bind(oHotkeys));
-
+  setTimeout(function(){ 
+    var div = document.getElementById("hotkeys-hint");
+    if (div) div.style.opacity = 0.2;
+  }, 4900);
+  setTimeout(function(){ toggleDisplay("hotkeys-hint") }, 5000);
 }
 
 /*
