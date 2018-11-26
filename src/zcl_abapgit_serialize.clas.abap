@@ -95,28 +95,26 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
         OTHERS             = 2.
     IF sy-subrc <> 0.
       gv_max = 1.
-      RETURN.
-    ENDIF.
-
+    ELSE.
 * todo, add possibility to set group name in user exit
-
-    CALL FUNCTION 'SPBT_INITIALIZE'
-      EXPORTING
-        group_name                     = 'parallel_generators'
-      IMPORTING
-        free_pbt_wps                   = gv_max
-      EXCEPTIONS
-        invalid_group_name             = 1
-        internal_error                 = 2
-        pbt_env_already_initialized    = 3
-        currently_no_resources_avail   = 4
-        no_pbt_resources_found         = 5
-        cant_init_different_pbt_groups = 6
-        OTHERS                         = 7.
-    IF sy-subrc <> 0.
-* fallback to running sequentially. If SPBT_INITIALIZE fails, check transactions
-* RZ12, SM50, SM21, SARFC
-      gv_max = 1.
+      CALL FUNCTION 'SPBT_INITIALIZE'
+        EXPORTING
+          group_name                     = 'parallel_generators'
+        IMPORTING
+          free_pbt_wps                   = gv_max
+        EXCEPTIONS
+          invalid_group_name             = 1
+          internal_error                 = 2
+          pbt_env_already_initialized    = 3
+          currently_no_resources_avail   = 4
+          no_pbt_resources_found         = 5
+          cant_init_different_pbt_groups = 6
+          OTHERS                         = 7.
+      IF sy-subrc <> 0.
+*   fallback to running sequentially. If SPBT_INITIALIZE fails, check transactions
+*   RZ12, SM50, SM21, SARFC
+        gv_max = 1.
+      ENDIF.
     ENDIF.
 
     IF gv_max > 1.
