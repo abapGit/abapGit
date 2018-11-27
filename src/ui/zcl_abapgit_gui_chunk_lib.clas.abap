@@ -41,7 +41,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION PUBLIC FINAL CREATE PUBLIC.
 
     CLASS-METHODS render_hotkey_overview
       IMPORTING
-        io_page TYPE REF TO zcl_abapgit_gui_page
+        io_page        TYPE REF TO zcl_abapgit_gui_page
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
@@ -49,17 +49,19 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION PUBLIC FINAL CREATE PUBLIC.
 
     CLASS-METHODS render_infopanel
       IMPORTING
-        iv_div_id  TYPE string
-        iv_title   TYPE string
-        iv_hide    TYPE abap_bool DEFAULT abap_true
-        iv_hint    TYPE string OPTIONAL
-        io_content TYPE REF TO zcl_abapgit_html
+        iv_div_id      TYPE string
+        iv_title       TYPE string
+        iv_hide        TYPE abap_bool DEFAULT abap_true
+        iv_hint        TYPE string OPTIONAL
+        io_content     TYPE REF TO zcl_abapgit_html
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
         zcx_abapgit_exception.
 
 
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
@@ -160,7 +162,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       iv_hide    = abap_true
       io_content = ro_html ).
 
-    IF zcl_abapgit_hotkeys=>should_show_hint( ) = abap_true.
+    IF <ls_hotkey> IS ASSIGNED AND zcl_abapgit_hotkeys=>should_show_hint( ) = abap_true.
       ro_html->add( |<div id="hotkeys-hint" class="corner-hint">|
         && |Press '{ <ls_hotkey>-sequence }' to get keyboard shortcuts list|
         && |</div>| ).
@@ -259,9 +261,9 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
   METHOD render_news.
 
-    DATA: lv_text    TYPE string,
-          lv_hint    TYPE string,
-          lt_log     TYPE zcl_abapgit_news=>tt_log.
+    DATA: lv_text TYPE string,
+          lv_hint TYPE string,
+          lt_log  TYPE zcl_abapgit_news=>tt_log.
 
     FIELD-SYMBOLS: <ls_line> LIKE LINE OF lt_log.
 
