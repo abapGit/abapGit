@@ -219,6 +219,10 @@ table.repo_tab {
   width: 32px;
   text-align: center;
 }
+.repo_tab td.icon:not(:first-child) {
+  width: 26px;
+  text-align: left;
+}
 .repo_tab td.type {
   width: 3em;
 }
