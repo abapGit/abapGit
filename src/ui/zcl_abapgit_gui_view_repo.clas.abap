@@ -92,7 +92,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
 
   METHOD build_dir_jump_link.
@@ -617,7 +617,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
                                                                     iv_object_name             = is_item-obj_name
                                                                     iv_resolve_task_to_request = abap_false ).
           lv_transport_string = lv_transport.
-          lv_icon_html = zcl_abapgit_html=>a( iv_txt = zcl_abapgit_html=>icon( iv_name = 'lock/darkgrey'
+          lv_icon_html = zcl_abapgit_html=>a( iv_txt = zcl_abapgit_html=>icon( iv_name = 'briefcase/darkgrey'
                                                                                iv_hint = lv_transport_string )
                                               iv_act = |{ zif_abapgit_definitions=>c_action-jump_transport }?| &&
                                                        lv_transport ).
