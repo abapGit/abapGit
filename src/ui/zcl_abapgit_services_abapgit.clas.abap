@@ -23,14 +23,23 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
     CLASS-METHODS is_installed
       RETURNING
         VALUE(rv_installed) TYPE abap_bool .
-  PRIVATE SECTION.
+    CLASS-METHODS prepare_gui_startup
+      RAISING
+        zcx_abapgit_exception.
 
+  PRIVATE SECTION.
     CLASS-METHODS do_install
       IMPORTING iv_title   TYPE c
                 iv_text    TYPE c
                 iv_url     TYPE string
                 iv_package TYPE devclass
       RAISING   zcx_abapgit_exception.
+
+    CLASS-METHODS set_start_repo_from_package
+      IMPORTING
+        iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -51,7 +60,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
       iv_text_button_1         = 'Continue'
       iv_text_button_2         = 'Cancel'
       iv_default_button        = '2'
-      iv_display_cancel_button = abap_false ).                 "#EC NOTEXT
+      iv_display_cancel_button = abap_false ).              "#EC NOTEXT
 
     IF lv_answer <> '1'.
       RETURN.
@@ -134,4 +143,82 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+  METHOD prepare_gui_startup.
+
+    DATA: lv_repo_key TYPE zif_abapgit_persistence=>ty_value,
+          lv_package  TYPE devclass.
+
+    IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_show_default_repo( ) = abap_false.
+      " Don't show the last seen repo at startup
+      zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( || ).
+    ENDIF.
+
+    " We have two special cases for gui startup
+    "   - open a specific repo by repo key
+    "   - open a specific repo by package name
+    " These overrule the last shown repo
+
+    GET PARAMETER ID zif_abapgit_definitions=>c_spagpa_param_repo_key FIELD lv_repo_key.
+    GET PARAMETER ID zif_abapgit_definitions=>c_spagpa_param_package  FIELD lv_package.
+
+    IF lv_repo_key IS NOT INITIAL.
+
+      SET PARAMETER ID zif_abapgit_definitions=>c_spagpa_param_repo_key FIELD ''.
+      zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_repo_key ).
+
+    ELSEIF lv_package IS NOT INITIAL.
+
+      SET PARAMETER ID zif_abapgit_definitions=>c_spagpa_param_package FIELD ''.
+      set_start_repo_from_package( lv_package ).
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD set_start_repo_from_package.
+
+    DATA: lo_repo          TYPE REF TO zcl_abapgit_repo,
+          lt_r_package     TYPE RANGE OF devclass,
+          ls_r_package     LIKE LINE OF lt_r_package,
+          lt_superpackages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
+          lo_package       TYPE REF TO zif_abapgit_sap_package.
+
+    FIELD-SYMBOLS: <lo_repo>         TYPE LINE OF zif_abapgit_definitions=>ty_repo_ref_tt,
+                   <lv_superpackage> LIKE LINE OF lt_superpackages.
+
+    lo_package = zcl_abapgit_factory=>get_sap_package( iv_package  ).
+
+    IF lo_package->exists( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    ls_r_package-sign   = 'I'.
+    ls_r_package-option = 'EQ'.
+    ls_r_package-low    = iv_package.
+    INSERT ls_r_package INTO TABLE lt_r_package.
+
+    " Also consider superpackages. E.g. when some open $abapgit_ui, abapGit repo
+    " should be found via package $abapgit
+    lt_superpackages = lo_package->list_superpackages( ).
+    LOOP AT lt_superpackages ASSIGNING <lv_superpackage>.
+      ls_r_package-low = <lv_superpackage>.
+      INSERT ls_r_package INTO TABLE lt_r_package.
+    ENDLOOP.
+
+    LOOP AT zcl_abapgit_repo_srv=>get_instance( )->list( ) ASSIGNING <lo_repo>.
+
+      IF <lo_repo>->get_package( ) IN lt_r_package.
+        lo_repo = <lo_repo>.
+      ENDIF.
+
+    ENDLOOP.
+
+    IF lo_repo IS BOUND.
+      zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lo_repo->get_key( ) ).
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.
