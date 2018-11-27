@@ -802,6 +802,11 @@ div.info-panel {
   box-shadow: 1px 1px 3px 2px #dcdcdc;
 }
 
+div.info-panel-fixed { 
+  position: fixed;
+  top: 15%;
+}
+
 div.info-panel div.info-hint {
   text-transform: uppercase;
   font-size: small;
