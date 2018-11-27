@@ -13,7 +13,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
 
 
   METHOD open_adt_stob.
@@ -62,8 +62,8 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
         IF sy-subrc = 0.
           ASSIGN COMPONENT 'DDLNAME' OF STRUCTURE <lg_entity_view> TO <lg_ddlname>.
 
-          jump_adt( i_obj_name = <lg_ddlname>
-                    i_obj_type = 'DDLS' ).
+          jump_adt( iv_obj_name = <lg_ddlname>
+                    iv_obj_type = 'DDLS' ).
 
         ENDIF.
 
@@ -233,6 +233,19 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESDICT'
+                                            iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
 
     DATA: lv_typename   TYPE typename.
@@ -312,12 +325,4 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
                  ig_data = <lg_data> ).
 
   ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-
-    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESDICT'
-                                            iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
-
-  ENDMETHOD.
-
 ENDCLASS.

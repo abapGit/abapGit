@@ -1,7 +1,7 @@
 {
   "license": "MIT",
   "scripts": {
-    "pretest": "abaplint \"src/**/*.abap\"",
+    "pretest": "abaplint --version && abaplint \"src/**/*.abap\"",
     "test": "abapmerge src/zabapgit.prog.abap > zabapgit.abap",
     "_disabled_posttest": "abaplint zabapgit.abap"
   },
@@ -10,7 +10,7 @@
     "url": "git+https://github.com/larshp/abapGit.git"
   },
   "devDependencies": {
-    "abapmerge": "^0.9.5",
-    "abaplint": "^1.0.1"
+    "abapmerge": "^0.11.0",
+    "abaplint": "^1.4.0"
   }
 }

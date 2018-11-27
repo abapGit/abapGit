@@ -14,7 +14,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ENHO_WDYN IMPLEMENTATION.
+CLASS zcl_abapgit_object_enho_wdyn IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -79,7 +79,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_WDYN IMPLEMENTATION.
 
         ENDLOOP.
 
-        lo_wdyn->if_enh_object~save( ).
+        lo_wdyn->if_enh_object~save( run_dark = abap_true ).
         lo_wdyn->if_enh_object~unlock( ).
 
       CATCH cx_root.

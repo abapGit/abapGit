@@ -13,7 +13,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SFBS IMPLEMENTATION.
+CLASS zcl_abapgit_object_sfbs IMPLEMENTATION.
 
 
   METHOD get.
@@ -120,6 +120,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SFBS IMPLEMENTATION.
     lo_bfs->set_nested_parent( lt_parent_bfs ).
 
     set_default_package( iv_package ).
+    tadir_insert( iv_package ).
+
     lo_bfs->save_all( ).
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
@@ -154,6 +156,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SFBS IMPLEMENTATION.
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-ddic = abap_true.
+    rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.
 
 
@@ -224,9 +227,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SFBS IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~is_locked.
-
     rv_is_locked = abap_false.
-
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
 ENDCLASS.

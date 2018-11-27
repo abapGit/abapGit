@@ -56,7 +56,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -105,7 +105,7 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     mo_stage = io_stage.
     ms_control-page_title = 'Code Inspector'.
     run_code_inspector( ).
-  ENDMETHOD.  " constructor.
+  ENDMETHOD.
 
 
   METHOD has_inspection_errors.
@@ -124,11 +124,11 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD render_content.
 
-    DATA: lv_check_variant TYPE sci_chkv,
-          lv_class         TYPE string,
-          lv_line          TYPE string.
+    DATA: lv_check_variant TYPE sci_chkv.
+
     FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
 
     CREATE OBJECT ro_html.
@@ -153,12 +153,14 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
     ro_html->add( |<br/>| ).
 
     LOOP AT mt_result ASSIGNING <ls_result>.
-      render_result( ro_html = ro_html iv_result = <ls_result> ).
+      render_result( io_html   = ro_html
+                     iv_result = <ls_result> ).
     ENDLOOP.
 
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
+
 
   METHOD run_code_inspector.
 
@@ -171,12 +173,12 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
     DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
 
-    ls_hotkey_action-name           = |Code Inspector: Stage|.
+    ls_hotkey_action-name           = |Stage|.
     ls_hotkey_action-action         = c_actions-stage.
     ls_hotkey_action-default_hotkey = |s|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-name           = |Code Inspector: Re-Run|.
+    ls_hotkey_action-name           = |Re-Run|.
     ls_hotkey_action-action         = c_actions-rerun.
     ls_hotkey_action-default_hotkey = |r|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
@@ -185,13 +187,8 @@ CLASS zcl_abapgit_gui_page_code_insp IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_page~on_event.
-    DATA: lo_repo_online   TYPE REF TO zcl_abapgit_repo_online,
-          ls_item          TYPE zif_abapgit_definitions=>ty_item,
-          ls_sub_item      TYPE zif_abapgit_definitions=>ty_item.
-    DATA: lv_main_object   TYPE string.
-    DATA: lv_sub_object    TYPE string.
-    DATA: lv_line_number_s TYPE string.
-    DATA: lv_line_number   TYPE i.
+
+    DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
 
     CASE iv_action.
       WHEN c_actions-stage.

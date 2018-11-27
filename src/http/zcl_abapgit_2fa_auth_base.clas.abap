@@ -42,32 +42,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_2fa_auth_base IMPLEMENTATION.
-
-
-  METHOD constructor.
-    CREATE OBJECT mo_url_regex
-      EXPORTING
-        pattern     = iv_supported_url_regex
-        ignore_case = abap_true.
-  ENDMETHOD.
-
-
-  METHOD is_session_running.
-    rv_running = mv_session_running.
-  ENDMETHOD.
-
-
-  METHOD raise_comm_error_from_sy.
-    DATA: lv_error_msg TYPE string.
-
-    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4
-            INTO lv_error_msg.
-    RAISE EXCEPTION TYPE zcx_abapgit_2fa_comm_error
-      EXPORTING
-        mv_text = |Communication error: { lv_error_msg }| ##NO_TEXT.
-  ENDMETHOD.
+CLASS ZCL_ABAPGIT_2FA_AUTH_BASE IMPLEMENTATION.
 
 
   METHOD authenticate.
@@ -81,6 +56,14 @@ CLASS zcl_abapgit_2fa_auth_base IMPLEMENTATION.
     ENDIF.
 
     mv_session_running = abap_true.
+  ENDMETHOD.
+
+
+  METHOD constructor.
+    CREATE OBJECT mo_url_regex
+      EXPORTING
+        pattern     = iv_supported_url_regex
+        ignore_case = abap_true.
   ENDMETHOD.
 
 
@@ -98,15 +81,6 @@ CLASS zcl_abapgit_2fa_auth_base IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD is_2fa_required.
-    rv_required = abap_false.
-  ENDMETHOD.
-
-
-  METHOD supports_url.
-    rv_supported = mo_url_regex->create_matcher( text = iv_url )->match( ).
-  ENDMETHOD.
-
   METHOD get_http_client_for_url.
     DATA: lo_proxy       TYPE REF TO zcl_abapgit_proxy_config,
           lo_abapgit_exc TYPE REF TO zcx_abapgit_exception,
@@ -116,7 +90,7 @@ CLASS zcl_abapgit_2fa_auth_base IMPLEMENTATION.
     cl_http_client=>create_by_url(
       EXPORTING
         url                = iv_url
-        ssl_id             = 'ANONYM'
+        ssl_id             = zcl_abapgit_exit=>get_instance( )->get_ssl_id( )
         proxy_host         = lo_proxy->get_proxy_url( iv_url )
         proxy_service      = lo_proxy->get_proxy_port( iv_url  )
       IMPORTING
@@ -143,4 +117,30 @@ CLASS zcl_abapgit_2fa_auth_base IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
+
+  METHOD is_2fa_required.
+    rv_required = abap_false.
+  ENDMETHOD.
+
+
+  METHOD is_session_running.
+    rv_running = mv_session_running.
+  ENDMETHOD.
+
+
+  METHOD raise_comm_error_from_sy.
+    DATA: lv_error_msg TYPE string.
+
+    MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+            WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4
+            INTO lv_error_msg.
+    RAISE EXCEPTION TYPE zcx_abapgit_2fa_comm_error
+      EXPORTING
+        mv_text = |Communication error: { lv_error_msg }| ##NO_TEXT.
+  ENDMETHOD.
+
+
+  METHOD supports_url.
+    rv_supported = mo_url_regex->create_matcher( text = iv_url )->match( ).
+  ENDMETHOD.
 ENDCLASS.

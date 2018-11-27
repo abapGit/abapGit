@@ -50,8 +50,9 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         RETURNING VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
         RAISING   zcx_abapgit_exception,
       render_item
-        IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        IMPORTING is_item              TYPE zif_abapgit_definitions=>ty_repo_item
+                  iv_render_transports TYPE abap_bool
+        RETURNING VALUE(ro_html)       TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       render_item_files
         IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
@@ -63,6 +64,9 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
         RETURNING VALUE(rv_html) TYPE string,
       get_item_icon
+        IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
+        RETURNING VALUE(rv_html) TYPE string,
+      render_item_lock_column
         IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
         RETURNING VALUE(rv_html) TYPE string,
       render_empty_package
@@ -77,7 +81,13 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         RETURNING VALUE(rv_html) TYPE string,
       build_dir_jump_link
         IMPORTING iv_path        TYPE string
-        RETURNING VALUE(rv_html) TYPE string.
+        RETURNING VALUE(rv_html) TYPE string,
+      build_inactive_object_code
+        IMPORTING is_item                      TYPE zif_abapgit_definitions=>ty_repo_item
+        RETURNING VALUE(rv_inactive_html_code) TYPE string,
+      open_in_master_language
+        RAISING zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -97,14 +107,14 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     rv_html = zcl_abapgit_html=>a( iv_txt = lv_path
                                    iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
 
-  ENDMETHOD.  "build_dir_jump_link
+  ENDMETHOD.
 
 
   METHOD build_grid_menu.
 
     CREATE OBJECT ro_toolbar.
 
-    IF mo_repo->is_offline( ) = abap_false.
+    IF mo_repo->has_remote_source( ) = abap_true.
       ro_toolbar->add(  " Show/Hide files
         iv_txt = 'Show files'
         iv_chk = boolc( NOT mv_hide_files = abap_true )
@@ -121,7 +131,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       iv_chk = mv_show_folders
       iv_act = c_actions-toggle_folders ).
 
-  ENDMETHOD. "build_grid_menu
+  ENDMETHOD.
 
 
   METHOD build_head_menu.
@@ -213,6 +223,11 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
                          iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh_checksums }?{ lv_key }|
                          iv_opt = lv_crossout ).
 
+    IF mo_repo->get_dot_abapgit( )->get_master_language( ) <> sy-langu.
+      lo_tb_advanced->add( iv_txt = 'Open in master language'
+                           iv_act = |{ zif_abapgit_definitions=>c_action-repo_open_in_master_lang }?{ lv_key }| ).
+    ENDIF.
+
     lo_tb_advanced->add( iv_txt = 'Remove'
                          iv_act = |{ zif_abapgit_definitions=>c_action-repo_remove }?{ lv_key }| ).
 
@@ -227,35 +242,38 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     " Build main toolbar ==============================
     IF mo_repo->is_offline( ) = abap_false. " Online ?
-      TRY.
-          IF iv_rstate IS NOT INITIAL. " Something new at remote
-            ro_toolbar->add( iv_txt = 'Pull'
-                             iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?{ lv_key }|
-                             iv_opt = lv_pull_opt ).
-          ENDIF.
-          IF iv_lstate IS NOT INITIAL. " Something new at local
-            ro_toolbar->add( iv_txt = 'Stage'
-                             iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ lv_key }|
-                             iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
-          ENDIF.
-          IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " Any changes
-            ro_toolbar->add( iv_txt = 'Show diff'
-                             iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ lv_key }|
-                             iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
-          ENDIF.
-        CATCH zcx_abapgit_exception ##NO_HANDLER.
-          " authorization error or repository does not exist
-          " ignore error
-      ENDTRY.
+      IF iv_rstate IS NOT INITIAL. " Something new at remote
+        ro_toolbar->add( iv_txt = 'Pull'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?{ lv_key }|
+                         iv_opt = lv_pull_opt ).
+      ENDIF.
+      IF iv_lstate IS NOT INITIAL. " Something new at local
+        ro_toolbar->add( iv_txt = 'Stage'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ lv_key }|
+                         iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
+      ENDIF.
+      IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " Any changes
+        ro_toolbar->add( iv_txt = 'Show diff'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ lv_key }|
+                         iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
+      ENDIF.
       ro_toolbar->add( iv_txt = 'Branch'
                        io_sub = lo_tb_branch ) ##NO_TEXT.
       ro_toolbar->add( iv_txt = 'Tag'
                        io_sub = lo_tb_tag ) ##NO_TEXT.
     ELSE.
-      ro_toolbar->add( iv_txt = 'Import ZIP'
+      IF mo_repo->has_remote_source( ) = abap_true AND iv_rstate IS NOT INITIAL.
+        ro_toolbar->add( iv_txt = 'Pull <sup>zip</sup>'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?{ lv_key }|
+                         iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
+        ro_toolbar->add( iv_txt = 'Show diff'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ lv_key }|
+                         iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
+      ENDIF.
+      ro_toolbar->add( iv_txt = 'Import <sup>zip</sup>'
                        iv_act = |{ zif_abapgit_definitions=>c_action-zip_import }?{ lv_key }|
                        iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
-      ro_toolbar->add( iv_txt = 'Export ZIP'
+      ro_toolbar->add( iv_txt = 'Export <sup>zip</sup>'
                        iv_act = |{ zif_abapgit_definitions=>c_action-zip_export }?{ lv_key }|
                        iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
     ENDIF.
@@ -267,7 +285,19 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ro_toolbar->add( iv_txt = zcl_abapgit_html=>icon( iv_name = 'settings/grey70' )
                      io_sub = build_grid_menu( ) ).
 
-  ENDMETHOD.  "build_head_menu
+  ENDMETHOD.
+
+
+  METHOD build_inactive_object_code.
+
+    IF is_item-inactive = abap_true.
+      rv_inactive_html_code = zcl_abapgit_html=>icon(
+        iv_name  = 'zap/orange'
+        iv_hint  = 'Object or object part is inactive'
+        iv_class = 'inactive' ).
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD build_obj_jump_link.
@@ -280,7 +310,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     rv_html = zcl_abapgit_html=>a( iv_txt = |{ is_item-obj_name }|
                                    iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_encode }| ).
 
-  ENDMETHOD.  "build_obj_jump_link
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -299,7 +329,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     mv_max_lines    = lo_settings->get_max_lines( ).
     mv_max_setting  = mv_max_lines.
 
-  ENDMETHOD. "constructor
+  ENDMETHOD.
 
 
   METHOD get_item_class.
@@ -318,7 +348,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       rv_html = | class="{ concat_lines_of( table = lt_class sep = ` ` ) }"|.
     ENDIF.
 
-  ENDMETHOD. "get_item_class
+  ENDMETHOD.
 
 
   METHOD get_item_icon.
@@ -338,7 +368,62 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       rv_html = zcl_abapgit_html=>icon( 'file-directory/darkgrey' ).
     ENDIF.
 
-  ENDMETHOD. "get_item_icon
+  ENDMETHOD.
+
+
+  METHOD open_in_master_language.
+
+    CONSTANTS:
+      lc_abapgit_tcode TYPE tcode VALUE `ZABAPGIT` ##NO_TEXT.
+
+    DATA:
+      lv_master_language TYPE spras,
+      lt_spagpa          TYPE STANDARD TABLE OF rfc_spagpa,
+      ls_spagpa          LIKE LINE OF lt_spagpa,
+      ls_item            TYPE zif_abapgit_definitions=>ty_item.
+
+    " https://blogs.sap.com/2017/01/13/logon-language-sy-langu-and-rfc/
+
+    lv_master_language = mo_repo->get_dot_abapgit( )->get_master_language( ).
+
+    IF lv_master_language = sy-langu.
+      zcx_abapgit_exception=>raise( |Repo already opened in master language| ).
+    ENDIF.
+
+    ls_item-obj_name = lc_abapgit_tcode.
+    ls_item-obj_type = |TRAN|.
+
+    IF zcl_abapgit_objects=>exists( ls_item ) = abap_false.
+      zcx_abapgit_exception=>raise( |Please install the abapGit repository| ).
+    ENDIF.
+
+    SET LOCALE LANGUAGE lv_master_language.
+
+    ls_spagpa-parid  = zif_abapgit_definitions=>c_spagpa_param_repo_key.
+    ls_spagpa-parval = mo_repo->get_key( ).
+    INSERT ls_spagpa INTO TABLE lt_spagpa.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      DESTINATION 'NONE'
+      STARTING NEW TASK 'ABAPGIT'
+      EXPORTING
+        tcode                   = lc_abapgit_tcode
+      TABLES
+        spagpa_tab              = lt_spagpa
+      EXCEPTIONS
+        call_transaction_denied = 1
+        tcode_invalid           = 2
+        communication_failure   = 3
+        system_failure          = 4
+        OTHERS                  = 5.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from ABAP4_CALL_TRANSACTION. Subrc = { sy-subrc }| ).
+    ENDIF.
+
+    MESSAGE 'Repository opened in a new window' TYPE 'S'.
+
+  ENDMETHOD.
 
 
   METHOD render_empty_package.
@@ -355,7 +440,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
            && |  <center>{ lv_text }</center>|
            && |</td></tr>|.
 
-  ENDMETHOD. "render_empty_package
+  ENDMETHOD.
 
 
   METHOD render_head_line.
@@ -378,25 +463,34 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ro_html->add( '</tr></table>' ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD. "render_head_line
+  ENDMETHOD.
 
 
   METHOD render_item.
 
-    DATA: lv_link TYPE string.
+    DATA: lv_link    TYPE string,
+          lv_colspan TYPE i.
 
     CREATE OBJECT ro_html.
 
+    IF iv_render_transports = abap_false.
+      lv_colspan = 2.
+    ELSE.
+      lv_colspan = 3.
+    ENDIF.
 
     ro_html->add( |<tr{ get_item_class( is_item ) }>| ).
 
     IF is_item-obj_name IS INITIAL AND is_item-is_dir = abap_false.
-      ro_html->add( '<td colspan="2"></td>'
+      ro_html->add( |<td colspan="{ lv_colspan }"></td>|
                  && '<td class="object">'
                  && '<i class="grey">non-code and meta files</i>'
                  && '</td>' ).
     ELSE.
       ro_html->add( |<td class="icon">{ get_item_icon( is_item ) }</td>| ).
+      IF iv_render_transports = abap_true.
+        ro_html->add( render_item_lock_column( is_item ) ).
+      ENDIF.
 
       IF is_item-is_dir = abap_true. " Subdir
         lv_link = build_dir_jump_link( is_item-path ).
@@ -404,27 +498,25 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       ELSE.
         lv_link = build_obj_jump_link( is_item ).
         ro_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
-        ro_html->add( |<td class="object">{ lv_link }</td>| ).
+        ro_html->add( |<td class="object">{ lv_link } { build_inactive_object_code( is_item ) }</td>| ).
       ENDIF.
     ENDIF.
 
-    IF mo_repo->is_offline( ) = abap_false.
+    " Files
+    ro_html->add( '<td class="files">' ).
+    ro_html->add( render_item_files( is_item ) ).
+    ro_html->add( '</td>' ).
 
-      " Files
-      ro_html->add( '<td class="files">' ).
-      ro_html->add( render_item_files( is_item ) ).
-      ro_html->add( '</td>' ).
-
-      " Command
+    " Command
+    IF mo_repo->has_remote_source( ) = abap_true.
       ro_html->add( '<td class="cmd">' ).
       ro_html->add( render_item_command( is_item ) ).
       ro_html->add( '</td>' ).
-
     ENDIF.
 
     ro_html->add( '</tr>' ).
 
-  ENDMETHOD.  "render_item
+  ENDMETHOD.
 
 
   METHOD render_item_command.
@@ -479,7 +571,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     ENDIF.
 
-  ENDMETHOD.  "render_item_command
+  ENDMETHOD.
 
 
   METHOD render_item_files.
@@ -496,7 +588,40 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       ro_html->add( |<div>{ ls_file-path && ls_file-filename }</div>| ).
     ENDLOOP.
 
-  ENDMETHOD.  "render_item_files
+  ENDMETHOD.
+
+
+  METHOD render_item_lock_column.
+    DATA: li_cts_api          TYPE REF TO zif_abapgit_cts_api,
+          lv_transport        TYPE trkorr,
+          lv_transport_string TYPE string,
+          lv_icon_html        TYPE string.
+
+    li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
+
+    TRY.
+        IF is_item-obj_type IS INITIAL OR is_item-obj_name IS INITIAL OR
+           li_cts_api->is_object_type_lockable( is_item-obj_type ) = abap_false OR
+           li_cts_api->is_object_locked_in_transport( iv_object_type = is_item-obj_type
+                                                      iv_object_name = is_item-obj_name ) = abap_false.
+          rv_html = |<td class="icon"></td>|.
+        ELSE.
+          lv_transport = li_cts_api->get_current_transport_for_obj( iv_object_type             = is_item-obj_type
+                                                                    iv_object_name             = is_item-obj_name
+                                                                    iv_resolve_task_to_request = abap_false ).
+          lv_transport_string = lv_transport.
+          lv_icon_html = zcl_abapgit_html=>a( iv_txt = zcl_abapgit_html=>icon( iv_name = 'lock/darkgrey'
+                                                                               iv_hint = lv_transport_string )
+                                              iv_act = |{ zif_abapgit_definitions=>c_action-jump_transport }?| &&
+                                                       lv_transport ).
+          rv_html = |<td class="icon">| &&
+                    |{ lv_icon_html }| &&
+                    |</td>|.
+        ENDIF.
+      CATCH zcx_abapgit_exception.
+        ASSERT 1 = 2.
+    ENDTRY.
+  ENDMETHOD.
 
 
   METHOD render_parent_dir.
@@ -505,13 +630,18 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     ro_html->add( '<tr class="folder">' ).
     ro_html->add( |<td class="icon">{ zcl_abapgit_html=>icon( 'dir' ) }</td>| ).
-    ro_html->add( |<td class="object" colspan="2">{ build_dir_jump_link( '..' ) }</td>| ).
-    IF mo_repo->is_offline( ) = abap_false.
-      ro_html->add( |<td colspan="2"></td>| ). " Dummy for online
+    ro_html->add( |<td class="object" colspan="4">{ build_dir_jump_link( '..' ) }</td>| ).
+    IF mo_repo->has_remote_source( ) = abap_true.
+      ro_html->add( |<td colspan="1"></td>| ). " Dummy for online
     ENDIF.
     ro_html->add( '</tr>' ).
 
-  ENDMETHOD. "render_parent_dir
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~on_event.
@@ -536,22 +666,26 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       WHEN c_actions-display_more.      " Increase MAX lines limit
         mv_max_lines    = mv_max_lines + mv_max_setting.
         ev_state        = zif_abapgit_definitions=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-repo_open_in_master_lang.
+        open_in_master_language( ).
+        ev_state        = zif_abapgit_definitions=>c_event_state-re_render.
     ENDCASE.
 
-  ENDMETHOD. "lif_gui_page~on_event
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~render.
 
-    DATA: lt_repo_items TYPE zif_abapgit_definitions=>tt_repo_items,
-          lo_browser    TYPE REF TO zcl_abapgit_repo_content_list,
-          lx_error      TYPE REF TO zcx_abapgit_exception,
-          lv_lstate     TYPE char1,
-          lv_rstate     TYPE char1,
-          lv_max        TYPE abap_bool,
-          lv_max_str    TYPE string,
-          lv_add_str    TYPE string,
-          lo_log        TYPE REF TO zcl_abapgit_log.
+    DATA: lt_repo_items        TYPE zif_abapgit_definitions=>tt_repo_items,
+          lo_browser           TYPE REF TO zcl_abapgit_repo_content_list,
+          lx_error             TYPE REF TO zcx_abapgit_exception,
+          lv_lstate            TYPE char1,
+          lv_rstate            TYPE char1,
+          lv_max               TYPE abap_bool,
+          lv_max_str           TYPE string,
+          lv_add_str           TYPE string,
+          lo_log               TYPE REF TO zcl_abapgit_log,
+          lv_render_transports TYPE abap_bool.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
@@ -561,6 +695,9 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     TRY.
+
+        lv_render_transports = zcl_abapgit_factory=>get_cts_api(
+          )->is_chrec_possible_for_package( mo_repo->get_package( ) ).
 
         CREATE OBJECT lo_browser
           EXPORTING
@@ -604,7 +741,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
               lv_max = abap_true.
               EXIT. " current loop
             ENDIF.
-            ro_html->add( render_item( <ls_item> ) ).
+            ro_html->add( render_item( is_item = <ls_item> iv_render_transports = lv_render_transports ) ).
           ENDLOOP.
         ENDIF.
 
@@ -633,11 +770,5 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
         ro_html->add( zcl_abapgit_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
     ENDTRY.
 
-  ENDMETHOD.  "lif_gui_page~render
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
   ENDMETHOD.
-
 ENDCLASS.

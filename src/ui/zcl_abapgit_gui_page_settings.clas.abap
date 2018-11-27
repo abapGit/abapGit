@@ -85,7 +85,7 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
       IMPORTING
         iv_name          TYPE string
       RETURNING
-        value(rv_return) TYPE abap_bool.
+        VALUE(rv_return) TYPE abap_bool.
 
 ENDCLASS.
 
@@ -97,7 +97,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
   METHOD build_settings.
 
     DATA: lv_i_param_value TYPE i,
-          lv_column           TYPE string,
+          lv_column        TYPE string,
           lt_key_bindings  TYPE zif_abapgit_definitions=>tty_hotkey.
 
     FIELD-SYMBOLS: <ls_post_field>  TYPE ihttpnvp,
@@ -221,7 +221,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     ms_control-page_title = 'SETTINGS'.
-  ENDMETHOD.  " constructor.
+  ENDMETHOD.
 
 
   METHOD get_default_hotkeys.
@@ -251,6 +251,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     " insert empty row at the beginning, so that we can unset a hotkey
     INSERT ls_hotkey_action INTO rt_hotkey_actions INDEX 1.
 
+  ENDMETHOD.
+
+
+  METHOD is_post_field_checked.
+    FIELD-SYMBOLS: <ls_post_field> TYPE ihttpnvp.
+    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = iv_name.
+    IF sy-subrc = 0.
+      IF <ls_post_field>-value = abap_true "HTML value when using standard netweaver GUI
+      OR <ls_post_field>-value = 'on'.     "HTML value when using Netweaver Java GUI
+        rv_return = abap_true.
+      ENDIF.
+    ENDIF.
   ENDMETHOD.
 
 
@@ -346,7 +358,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ro_html->add( render_section_end( ) ).
     ro_html->add( render_form_end( ) ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD render_development_internals.
@@ -613,16 +625,4 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
-
-  METHOD is_post_field_checked.
-    FIELD-SYMBOLS: <ls_post_field> TYPE ihttpnvp.
-    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = iv_name.
-    IF sy-subrc = 0.
-      IF <ls_post_field>-value = abap_true "HTML value when using standard netweaver GUI
-      OR <ls_post_field>-value = 'on'.     "HTML value when using Netweaver Java GUI
-        rv_return = abap_true.
-      ENDIF.
-    ENDIF.
-  ENDMETHOD.
-
 ENDCLASS.

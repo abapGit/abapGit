@@ -26,6 +26,7 @@ CLASS zcl_abapgit_popups DEFINITION
       package_popup_callback        FOR zif_abapgit_popups~package_popup_callback,
       popup_transport_request       FOR zif_abapgit_popups~popup_transport_request.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES:
@@ -34,10 +35,10 @@ CLASS zcl_abapgit_popups DEFINITION
     CONSTANTS c_fieldname_selected TYPE lvc_fname VALUE `SELECTED` ##NO_TEXT.
     CONSTANTS c_answer_cancel      TYPE char1 VALUE 'A' ##NO_TEXT.
 
-    DATA go_select_list_popup TYPE REF TO cl_salv_table .
-    DATA gr_table TYPE REF TO data .
-    DATA gv_cancel TYPE abap_bool .
-    DATA go_table_descr TYPE REF TO cl_abap_tabledescr .
+    DATA mo_select_list_popup TYPE REF TO cl_salv_table .
+    DATA mr_table TYPE REF TO data .
+    DATA mv_cancel TYPE abap_bool .
+    DATA mo_table_descr TYPE REF TO cl_abap_tabledescr .
 
     METHODS add_field
       IMPORTING
@@ -86,7 +87,8 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_popups IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
+
 
   METHOD add_field.
 
@@ -100,6 +102,193 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     <ls_field>-field_attr = iv_field_attr.
     <ls_field>-field_obl  = iv_obligatory.
 
+  ENDMETHOD.
+
+
+  METHOD create_new_table.
+
+    " create and populate a table on the fly derived from
+    " it_data with a select column
+
+    DATA: lr_struct        TYPE REF TO data,
+          lt_components    TYPE cl_abap_structdescr=>component_table,
+          lo_struct_descr  TYPE REF TO cl_abap_structdescr,
+          lo_struct_descr2 TYPE REF TO cl_abap_structdescr.
+
+    FIELD-SYMBOLS: <lt_table>     TYPE STANDARD TABLE,
+                   <ls_component> TYPE abap_componentdescr,
+                   <lg_line>      TYPE data,
+                   <lg_data>      TYPE any.
+
+    mo_table_descr ?= cl_abap_tabledescr=>describe_by_data( it_list ).
+    lo_struct_descr ?= mo_table_descr->get_table_line_type( ).
+    lt_components = lo_struct_descr->get_components( ).
+
+    INSERT INITIAL LINE INTO lt_components ASSIGNING <ls_component> INDEX 1.
+    ASSERT sy-subrc = 0.
+
+    <ls_component>-name = c_fieldname_selected.
+    <ls_component>-type ?= cl_abap_datadescr=>describe_by_name( 'FLAG' ).
+
+    lo_struct_descr2 = cl_abap_structdescr=>create( lt_components ).
+    mo_table_descr = cl_abap_tabledescr=>create( lo_struct_descr2 ).
+
+    CREATE DATA mr_table TYPE HANDLE mo_table_descr.
+    ASSIGN mr_table->* TO <lt_table>.
+    ASSERT sy-subrc = 0.
+
+    CREATE DATA lr_struct TYPE HANDLE lo_struct_descr2.
+    ASSIGN lr_struct->* TO <lg_line>.
+    ASSERT sy-subrc = 0.
+
+    LOOP AT it_list ASSIGNING <lg_data>.
+      CLEAR <lg_line>.
+      MOVE-CORRESPONDING <lg_data> TO <lg_line>.
+      INSERT <lg_line> INTO TABLE <lt_table>.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD extract_field_values.
+
+    FIELD-SYMBOLS: <ls_field> LIKE LINE OF it_fields.
+
+    CLEAR: ev_url,
+           ev_package,
+           ev_branch.
+
+    READ TABLE it_fields INDEX 1 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    ev_url = <ls_field>-value.
+
+    READ TABLE it_fields INDEX 2 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    ev_package = <ls_field>-value.
+    TRANSLATE ev_package TO UPPER CASE.
+
+    READ TABLE it_fields INDEX 3 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    ev_branch = <ls_field>-value.
+
+  ENDMETHOD.
+
+
+  METHOD get_selected_rows.
+
+    DATA: lv_condition TYPE string,
+          lr_exporting TYPE REF TO data.
+
+    FIELD-SYMBOLS: <lg_exporting> TYPE any,
+                   <lt_table>     TYPE STANDARD TABLE,
+                   <lg_line>      TYPE any.
+
+    lv_condition = |{ c_fieldname_selected } = ABAP_TRUE|.
+
+    ASSIGN mr_table->* TO <lt_table>.
+    ASSERT sy-subrc = 0.
+
+    CREATE DATA lr_exporting LIKE LINE OF et_list.
+    ASSIGN lr_exporting->* TO <lg_exporting>.
+
+    LOOP AT <lt_table> ASSIGNING <lg_line> WHERE (lv_condition).
+      CLEAR <lg_exporting>.
+      MOVE-CORRESPONDING <lg_line> TO <lg_exporting>.
+      APPEND <lg_exporting> TO et_list.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD on_select_list_function_click.
+
+    FIELD-SYMBOLS: <lt_table>    TYPE STANDARD TABLE,
+                   <lg_line>     TYPE any,
+                   <lv_selected> TYPE flag.
+
+    ASSIGN mr_table->* TO <lt_table>.
+    ASSERT sy-subrc = 0.
+
+    CASE e_salv_function.
+      WHEN 'O.K.'.
+        mv_cancel = abap_false.
+        mo_select_list_popup->close_screen( ).
+
+      WHEN 'ABR'.
+        "Canceled: clear list to overwrite nothing
+        CLEAR <lt_table>.
+        mv_cancel = abap_true.
+        mo_select_list_popup->close_screen( ).
+
+      WHEN 'SALL'.
+
+        LOOP AT <lt_table> ASSIGNING <lg_line>.
+
+          ASSIGN COMPONENT c_fieldname_selected
+                 OF STRUCTURE <lg_line>
+                 TO <lv_selected>.
+          ASSERT sy-subrc = 0.
+
+          <lv_selected> = abap_true.
+
+        ENDLOOP.
+
+        mo_select_list_popup->refresh( ).
+
+      WHEN 'DSEL'.
+
+        LOOP AT <lt_table> ASSIGNING <lg_line>.
+
+          ASSIGN COMPONENT c_fieldname_selected
+                 OF STRUCTURE <lg_line>
+                 TO <lv_selected>.
+          ASSERT sy-subrc = 0.
+
+          <lv_selected> = abap_false.
+
+        ENDLOOP.
+
+        mo_select_list_popup->refresh( ).
+
+      WHEN OTHERS.
+        CLEAR <lt_table>.
+        mo_select_list_popup->close_screen( ).
+    ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD on_select_list_link_click.
+
+    DATA: lv_line TYPE sytabix.
+
+    FIELD-SYMBOLS: <lt_table>    TYPE STANDARD TABLE,
+                   <lg_line>     TYPE any,
+                   <lv_selected> TYPE flag.
+
+    ASSIGN mr_table->* TO <lt_table>.
+    ASSERT sy-subrc = 0.
+
+    lv_line = row.
+
+    READ TABLE <lt_table> ASSIGNING <lg_line>
+                       INDEX lv_line.
+    IF sy-subrc = 0.
+
+      ASSIGN COMPONENT c_fieldname_selected
+             OF STRUCTURE <lg_line>
+             TO <lv_selected>.
+      ASSERT sy-subrc = 0.
+
+      IF <lv_selected> = abap_true.
+        <lv_selected> = abap_false.
+      ELSE.
+        <lv_selected> = abap_true.
+      ENDIF.
+
+    ENDIF.
+
+    mo_select_list_popup->refresh( ).
   ENDMETHOD.
 
 
@@ -304,193 +493,6 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD create_new_table.
-
-    " create and populate a table on the fly derived from
-    " it_data with a select column
-
-    DATA: lr_struct       TYPE REF TO data,
-          lt_components   TYPE cl_abap_structdescr=>component_table,
-          lo_struct_descr TYPE REF TO cl_abap_structdescr,
-          struct_descr    TYPE REF TO cl_abap_structdescr.
-
-    FIELD-SYMBOLS: <lt_table>     TYPE STANDARD TABLE,
-                   <ls_component> TYPE abap_componentdescr,
-                   <lg_line>      TYPE data,
-                   <lg_data>      TYPE any.
-
-    go_table_descr ?= cl_abap_tabledescr=>describe_by_data( it_list ).
-    lo_struct_descr ?= go_table_descr->get_table_line_type( ).
-    lt_components = lo_struct_descr->get_components( ).
-
-    INSERT INITIAL LINE INTO lt_components ASSIGNING <ls_component> INDEX 1.
-    ASSERT sy-subrc = 0.
-
-    <ls_component>-name = c_fieldname_selected.
-    <ls_component>-type ?= cl_abap_datadescr=>describe_by_name( 'FLAG' ).
-
-    struct_descr = cl_abap_structdescr=>create( lt_components ).
-    go_table_descr = cl_abap_tabledescr=>create( struct_descr ).
-
-    CREATE DATA gr_table TYPE HANDLE go_table_descr.
-    ASSIGN gr_table->* TO <lt_table>.
-    ASSERT sy-subrc = 0.
-
-    CREATE DATA lr_struct TYPE HANDLE struct_descr.
-    ASSIGN lr_struct->* TO <lg_line>.
-    ASSERT sy-subrc = 0.
-
-    LOOP AT it_list ASSIGNING <lg_data>.
-      CLEAR <lg_line>.
-      MOVE-CORRESPONDING <lg_data> TO <lg_line>.
-      INSERT <lg_line> INTO TABLE <lt_table>.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD extract_field_values.
-
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF it_fields.
-
-    CLEAR: ev_url,
-           ev_package,
-           ev_branch.
-
-    READ TABLE it_fields INDEX 1 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    ev_url = <ls_field>-value.
-
-    READ TABLE it_fields INDEX 2 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    ev_package = <ls_field>-value.
-    TRANSLATE ev_package TO UPPER CASE.
-
-    READ TABLE it_fields INDEX 3 ASSIGNING <ls_field>.
-    ASSERT sy-subrc = 0.
-    ev_branch = <ls_field>-value.
-
-  ENDMETHOD.
-
-
-  METHOD get_selected_rows.
-
-    DATA: lv_condition TYPE string,
-          lr_exporting TYPE REF TO data.
-
-    FIELD-SYMBOLS: <lg_exporting> TYPE any,
-                   <lt_table>     TYPE STANDARD TABLE,
-                   <lg_line>      TYPE any.
-
-    lv_condition = |{ c_fieldname_selected } = ABAP_TRUE|.
-
-    ASSIGN gr_table->* TO <lt_table>.
-    ASSERT sy-subrc = 0.
-
-    CREATE DATA lr_exporting LIKE LINE OF et_list.
-    ASSIGN lr_exporting->* TO <lg_exporting>.
-
-    LOOP AT <lt_table> ASSIGNING <lg_line> WHERE (lv_condition).
-      CLEAR <lg_exporting>.
-      MOVE-CORRESPONDING <lg_line> TO <lg_exporting>.
-      APPEND <lg_exporting> TO et_list.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD on_select_list_function_click.
-
-    FIELD-SYMBOLS: <lt_table>    TYPE STANDARD TABLE,
-                   <lg_line>     TYPE any,
-                   <lv_selected> TYPE flag.
-
-    ASSIGN gr_table->* TO <lt_table>.
-    ASSERT sy-subrc = 0.
-
-    CASE e_salv_function.
-      WHEN 'O.K.'.
-        gv_cancel = abap_false.
-        go_select_list_popup->close_screen( ).
-
-      WHEN 'ABR'.
-        "Canceled: clear list to overwrite nothing
-        CLEAR <lt_table>.
-        gv_cancel = abap_true.
-        go_select_list_popup->close_screen( ).
-
-      WHEN 'SALL'.
-
-        LOOP AT <lt_table> ASSIGNING <lg_line>.
-
-          ASSIGN COMPONENT c_fieldname_selected
-                 OF STRUCTURE <lg_line>
-                 TO <lv_selected>.
-          ASSERT sy-subrc = 0.
-
-          <lv_selected> = abap_true.
-
-        ENDLOOP.
-
-        go_select_list_popup->refresh( ).
-
-      WHEN 'DSEL'.
-
-        LOOP AT <lt_table> ASSIGNING <lg_line>.
-
-          ASSIGN COMPONENT c_fieldname_selected
-                 OF STRUCTURE <lg_line>
-                 TO <lv_selected>.
-          ASSERT sy-subrc = 0.
-
-          <lv_selected> = abap_false.
-
-        ENDLOOP.
-
-        go_select_list_popup->refresh( ).
-
-      WHEN OTHERS.
-        CLEAR <lt_table>.
-        go_select_list_popup->close_screen( ).
-    ENDCASE.
-
-  ENDMETHOD.
-
-
-  METHOD on_select_list_link_click.
-
-    DATA: lv_line TYPE sytabix.
-
-    FIELD-SYMBOLS: <lt_table>    TYPE STANDARD TABLE,
-                   <lg_line>     TYPE any,
-                   <lv_selected> TYPE flag.
-
-    ASSIGN gr_table->* TO <lt_table>.
-    ASSERT sy-subrc = 0.
-
-    lv_line = row.
-
-    READ TABLE <lt_table> ASSIGNING <lg_line>
-                       INDEX lv_line.
-    IF sy-subrc = 0.
-
-      ASSIGN COMPONENT c_fieldname_selected
-             OF STRUCTURE <lg_line>
-             TO <lv_selected>.
-      ASSERT sy-subrc = 0.
-
-      IF <lv_selected> = abap_true.
-        <lv_selected> = abap_false.
-      ELSE.
-        <lv_selected> = abap_true.
-      ENDIF.
-
-    ENDIF.
-
-    go_select_list_popup->refresh( ).
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_popups~package_popup_callback.
 
     DATA: ls_package_data TYPE scompkdtln,
@@ -641,7 +643,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
     ENDIF.
 
-  ENDMETHOD.  "popup_to_confirm
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_popups~popup_to_create_package.
@@ -668,7 +670,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ELSE.
       ev_create = abap_false.
     ENDIF.
-  ENDMETHOD.  " popup_to_create_package
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_popups~popup_to_create_transp_branch.
@@ -724,7 +726,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
         txt1  = lv_line1
         txt2  = lv_line2.
 
-  ENDMETHOD.  " popup_to_inform.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_popups~popup_to_select_from_list.
@@ -743,22 +745,22 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     create_new_table( it_list ).
 
-    ASSIGN gr_table->* TO <lt_table>.
+    ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
 
     TRY.
-        cl_salv_table=>factory( IMPORTING r_salv_table = go_select_list_popup
+        cl_salv_table=>factory( IMPORTING r_salv_table = mo_select_list_popup
                                 CHANGING  t_table = <lt_table> ).
 
-        go_select_list_popup->set_screen_status( pfstatus = '102'
+        mo_select_list_popup->set_screen_status( pfstatus = '102'
                                                  report = 'SAPMSVIM' ).
 
-        go_select_list_popup->set_screen_popup( start_column = 1
+        mo_select_list_popup->set_screen_popup( start_column = 1
                                                 end_column   = 65
                                                 start_line   = 1
                                                 end_line     = 20 ).
 
-        lo_events = go_select_list_popup->get_event( ).
+        lo_events = mo_select_list_popup->get_event( ).
 
         SET HANDLER on_select_list_link_click FOR lo_events.
         SET HANDLER on_select_list_function_click FOR lo_events.
@@ -767,9 +769,9 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
           EXPORTING
             text = iv_header_text.
 
-        go_select_list_popup->set_top_of_list( lo_table_header ).
+        mo_select_list_popup->set_top_of_list( lo_table_header ).
 
-        lo_columns = go_select_list_popup->get_columns( ).
+        lo_columns = mo_select_list_popup->get_columns( ).
         lo_columns->set_optimize( abap_true ).
         lt_columns = lo_columns->get( ).
 
@@ -793,13 +795,13 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
         ENDLOOP.
 
-        go_select_list_popup->display( ).
+        mo_select_list_popup->display( ).
 
       CATCH cx_salv_msg.
         zcx_abapgit_exception=>raise( 'Error from POPUP_TO_SELECT_FROM_LIST' ).
     ENDTRY.
 
-    IF gv_cancel = abap_true.
+    IF mv_cancel = abap_true.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
@@ -807,9 +809,9 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       IMPORTING
         et_list = et_list ).
 
-    CLEAR: go_select_list_popup,
-           gr_table,
-           go_table_descr.
+    CLEAR: mo_select_list_popup,
+           mr_table,
+           mo_table_descr.
 
   ENDMETHOD.
 
@@ -945,7 +947,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     ENDWHILE.
 
-  ENDMETHOD.                    "repo_new_offline
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_popups~repo_popup.
@@ -1118,18 +1120,17 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    IF ev_value_1 IS REQUESTED.
+    IF ev_value_1 IS SUPPLIED.
       READ TABLE ct_fields INDEX 1 ASSIGNING <ls_field>.
       ASSERT sy-subrc = 0.
       ev_value_1 = <ls_field>-value.
     ENDIF.
 
-    IF ev_value_2 IS REQUESTED.
+    IF ev_value_2 IS SUPPLIED.
       READ TABLE ct_fields INDEX 2 ASSIGNING <ls_field>.
       ASSERT sy-subrc = 0.
       ev_value_2 = <ls_field>-value.
     ENDIF.
 
   ENDMETHOD.
-
 ENDCLASS.

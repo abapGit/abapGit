@@ -7,6 +7,7 @@ CLASS zcl_abapgit_exit DEFINITION
 
     INTERFACES: zif_abapgit_exit.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-DATA gi_exit TYPE REF TO zif_abapgit_exit .
@@ -14,7 +15,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_exit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
 
 
   METHOD get_instance.
@@ -93,25 +94,6 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_exit~create_http_client.
-
-    TRY.
-        ri_client = gi_exit->create_http_client( iv_url ).
-      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method.
-    ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_exit~http_client.
-
-    TRY.
-        gi_exit->http_client( ii_client ).
-      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method.
-    ENDTRY.
-
-  ENDMETHOD.
-
   METHOD zif_abapgit_exit~change_tadir.
 
     TRY.
@@ -126,4 +108,34 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_exit~create_http_client.
+
+    TRY.
+        ri_client = gi_exit->create_http_client( iv_url ).
+      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_exit~get_ssl_id.
+
+    TRY.
+        rv_ssl_id = gi_exit->get_ssl_id( ).
+      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method.
+        rv_ssl_id = 'ANONYM'.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_exit~http_client.
+
+    TRY.
+        gi_exit->http_client( ii_client ).
+      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method.
+    ENDTRY.
+
+  ENDMETHOD.
 ENDCLASS.

@@ -12,7 +12,8 @@ REPORT zabapgit_test_ssl.
 * See https://github.com/larshp/abapGit/
 
 PARAMETERS: p_url1 TYPE swc_value DEFAULT 'https://github.com',
-            p_url2 TYPE swc_value DEFAULT 'https://api.github.com'.
+            p_url2 TYPE swc_value DEFAULT 'https://api.github.com',
+            p_id   TYPE ssfapplssl DEFAULT 'ANONYM'.
 * api.github.com is used when pushing code back to github
 
 SELECTION-SCREEN BEGIN OF BLOCK proxy WITH FRAME.
@@ -44,7 +45,7 @@ FORM run USING iv_url TYPE swc_value.
   cl_http_client=>create_by_url(
     EXPORTING
       url           = lv_url
-      ssl_id        = 'ANONYM'
+      ssl_id        = p_id
       proxy_host    = p_proxy
       proxy_service = p_pxport
     IMPORTING

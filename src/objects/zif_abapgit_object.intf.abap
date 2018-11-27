@@ -14,9 +14,11 @@ INTERFACE zif_abapgit_object PUBLIC.
       RETURNING VALUE(rv_bool) TYPE abap_bool
       RAISING   zcx_abapgit_exception,
     is_locked
-      RETURNING VALUE(rv_is_locked) type abap_bool
-      RAISING
-        zcx_abapgit_exception,
+      RETURNING VALUE(rv_is_locked) TYPE abap_bool
+      RAISING   zcx_abapgit_exception,
+    is_active
+      RETURNING VALUE(rv_active) TYPE abap_bool
+      RAISING   zcx_abapgit_exception,
     changed_by
       RETURNING VALUE(rv_user) TYPE xubname
       RAISING   zcx_abapgit_exception,

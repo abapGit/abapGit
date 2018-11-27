@@ -32,10 +32,10 @@ CLASS zcl_abapgit_object_msag DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         IMPORTING it_t100 TYPE zcl_abapgit_object_msag=>tty_t100
                   io_xml  TYPE REF TO zcl_abapgit_xml_output
         RAISING   zcx_abapgit_exception,
-      delete_msgid IMPORTING iv_message_id        TYPE arbgb,
+      delete_msgid IMPORTING iv_message_id TYPE arbgb,
       free_access_permission
         IMPORTING
-          i_message_id TYPE arbgb,
+          iv_message_id TYPE arbgb,
       delete_documentation
         IMPORTING
           iv_message_id TYPE arbgb.
@@ -149,7 +149,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
     CALL FUNCTION 'RS_ACCESS_PERMISSION'
       EXPORTING
         mode         = 'FREE'
-        object       = i_message_id
+        object       = iv_message_id
         object_class = 'T100'.
   ENDMETHOD.
 
@@ -418,6 +418,11 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
   ENDMETHOD.
 
 

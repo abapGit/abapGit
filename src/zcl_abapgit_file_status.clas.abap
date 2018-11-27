@@ -105,7 +105,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-  ENDMETHOD.  "build_existing
+  ENDMETHOD.
 
 
   METHOD build_new_local.
@@ -123,7 +123,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     rs_result-match    = abap_false.
     rs_result-lstate   = zif_abapgit_definitions=>c_state-added.
 
-  ENDMETHOD.  "build_new_local
+  ENDMETHOD.
 
 
   METHOD build_new_remote.
@@ -181,7 +181,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       ASSERT 1 = 1. " No action, just follow defaults
     ENDIF.
 
-  ENDMETHOD.  "build_new_remote
+  ENDMETHOD.
 
 
   METHOD calculate_status.
@@ -224,6 +224,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       ELSE.             " Only L exists
         <ls_result> = build_new_local( <ls_local> ).
       ENDIF.
+      <ls_result>-inactive = <ls_local>-item-inactive.
     ENDLOOP.
 
     " Complete item index for unmarked remote files
@@ -259,8 +260,8 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       APPEND ls_item TO lt_items.
     ENDLOOP.
 
-    SORT lt_items. " Default key - type, name, pkg
-    DELETE ADJACENT DUPLICATES FROM lt_items.
+    SORT lt_items DESCENDING. " Default key - type, name, pkg, inactive
+    DELETE ADJACENT DUPLICATES FROM lt_items COMPARING obj_type obj_name devclass.
     lt_items_idx = lt_items. " Self protection + UNIQUE records assertion
 
     " Process new remote files (marked above with empty SHA1)
@@ -278,7 +279,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       obj_name ASCENDING
       filename ASCENDING.
 
-  ENDMETHOD.  "calculate_status.
+  ENDMETHOD.
 
 
   METHOD identify_object.
@@ -310,7 +311,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     es_item-obj_name = lv_name.
     ev_is_xml        = boolc( lv_ext = 'XML' AND strlen( lv_type ) = 4 ).
 
-  ENDMETHOD.  "identify_object.
+  ENDMETHOD.
 
 
   METHOD run_checks.
@@ -395,7 +396,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       MOVE-CORRESPONDING <ls_res1> TO ls_file.
     ENDLOOP.
 
-  ENDMETHOD.                    "check
+  ENDMETHOD.
 
 
   METHOD status.
@@ -433,5 +434,5 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       io_dot     = lo_dot_abapgit
       iv_top     = io_repo->get_package( ) ).
 
-  ENDMETHOD.  "status
+  ENDMETHOD.
 ENDCLASS.

@@ -49,7 +49,7 @@ CLASS lcl_password_dialog DEFINITION FINAL.
       IMPORTING
         iv_repo_url TYPE string.
 
-ENDCLASS. "lcl_password_dialog DEFINITION
+ENDCLASS.
 
 CLASS lcl_password_dialog IMPLEMENTATION.
 
@@ -74,14 +74,14 @@ CLASS lcl_password_dialog IMPLEMENTATION.
 
     CLEAR: p_url, p_user, p_pass.
 
-  ENDMETHOD.  "popup
+  ENDMETHOD.
 
   METHOD on_screen_init.
     s_title = 'Login'     ##NO_TEXT.
     s_url   = 'Repo URL'  ##NO_TEXT.
     s_user  = 'User'      ##NO_TEXT.
     s_pass  = 'Password'  ##NO_TEXT.
-  ENDMETHOD.  "on_screen_init
+  ENDMETHOD.
 
   METHOD on_screen_output.
     DATA lt_ucomm TYPE TABLE OF sy-ucomm.
@@ -116,7 +116,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
       SET CURSOR FIELD 'P_PASS'.
     ENDIF.
 
-  ENDMETHOD.  "on_screen_output
+  ENDMETHOD.
 
   METHOD on_screen_event.
     ASSERT sy-dynnr = c_dynnr.
@@ -136,7 +136,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
         LEAVE TO SCREEN 0.
     ENDCASE.
 
-  ENDMETHOD.  "on_screen_event
+  ENDMETHOD.
 
 
   METHOD enrich_title_by_hostname.
@@ -151,4 +151,4 @@ CLASS lcl_password_dialog IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS. " lcl_password_dialog IMPLEMENTATION
+ENDCLASS.

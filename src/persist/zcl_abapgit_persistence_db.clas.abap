@@ -68,9 +68,9 @@ CLASS zcl_abapgit_persistence_db DEFINITION
   PRIVATE SECTION.
 
     CLASS-DATA go_db TYPE REF TO zcl_abapgit_persistence_db .
-    DATA: gv_update_function TYPE funcname.
+    DATA: mv_update_function TYPE funcname.
 
-    METHODS get_update_function RETURNING VALUE(r_funcname) TYPE funcname.
+    METHODS get_update_function RETURNING VALUE(rv_funcname) TYPE funcname.
 
     METHODS validate_and_unprettify_xml
       IMPORTING
@@ -126,19 +126,19 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
 
 
   METHOD get_update_function.
-    IF gv_update_function IS INITIAL.
-      gv_update_function = 'CALL_V1_PING'.
+    IF mv_update_function IS INITIAL.
+      mv_update_function = 'CALL_V1_PING'.
       CALL FUNCTION 'FUNCTION_EXISTS'
         EXPORTING
-          funcname = gv_update_function
+          funcname = mv_update_function
         EXCEPTIONS
           OTHERS   = 2.
 
       IF sy-subrc <> 0.
-        gv_update_function = 'BANK_OBJ_WORKL_RELEASE_LOCKS'.
+        mv_update_function = 'BANK_OBJ_WORKL_RELEASE_LOCKS'.
       ENDIF.
     ENDIF.
-    r_funcname = gv_update_function.
+    rv_funcname = mv_update_function.
 
   ENDMETHOD.
 
@@ -229,7 +229,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'DB update failed' ).
     ENDIF.
 
-  ENDMETHOD.  "update
+  ENDMETHOD.
 
 
   METHOD validate_and_unprettify_xml.
@@ -239,5 +239,5 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
       iv_unpretty      = abap_true
       iv_ignore_errors = abap_false ).
 
-  ENDMETHOD.  " validate_and_unprettify_xml
+  ENDMETHOD.
 ENDCLASS.

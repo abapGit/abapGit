@@ -17,98 +17,10 @@ CLASS zcl_abapgit_object_enho DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_enho IMPLEMENTATION.
-
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~changed_by.
-
-    DATA: lv_enh_id   TYPE enhname,
-          li_enho     TYPE REF TO zif_abapgit_object_enho,
-          lt_log      TYPE enh_log_it,
-          li_log_obj  TYPE REF TO if_enh_log,
-          ls_enhlog   TYPE enhlog,
-          lv_lines    TYPE i,
-          lt_enhlog   TYPE STANDARD TABLE OF enhlog WITH DEFAULT KEY,
-          li_enh_tool TYPE REF TO if_enh_tool.
 
 
-    lv_enh_id = ms_item-obj_name.
-    TRY.
-        li_enh_tool = cl_enh_factory=>get_enhancement(
-          enhancement_id   = lv_enh_id
-          bypassing_buffer = abap_true ).
-      CATCH cx_enh_root.
-        rv_user = c_user_unknown.
-        RETURN.
-    ENDTRY.
+CLASS ZCL_ABAPGIT_OBJECT_ENHO IMPLEMENTATION.
 
-    lt_log = li_enh_tool->get_log( ).
-
-    LOOP AT lt_log INTO li_log_obj.
-      ls_enhlog = li_log_obj->get_enhlog( ).
-      APPEND ls_enhlog TO lt_enhlog.
-    ENDLOOP.
-
-    lv_lines = lines( lt_enhlog ).
-    READ TABLE lt_enhlog INTO ls_enhlog INDEX lv_lines.
-    IF sy-subrc = 0.
-      rv_user = ls_enhlog-loguser.
-    ELSE.
-      rv_user = c_user_unknown.
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~exists.
-
-    DATA: lv_enh_id TYPE enhname.
-
-
-    lv_enh_id = ms_item-obj_name.
-    TRY.
-        cl_enh_factory=>get_enhancement(
-          enhancement_id   = lv_enh_id
-          bypassing_buffer = abap_true ).
-        rv_bool = abap_true.
-      CATCH cx_enh_root.
-        rv_bool = abap_false.
-    ENDTRY.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~serialize.
-
-    DATA: lv_enh_id   TYPE enhname,
-          li_enho     TYPE REF TO zif_abapgit_object_enho,
-          li_enh_tool TYPE REF TO if_enh_tool.
-
-
-    IF zif_abapgit_object~exists( ) = abap_false.
-      RETURN.
-    ENDIF.
-
-    lv_enh_id = ms_item-obj_name.
-    TRY.
-        li_enh_tool = cl_enh_factory=>get_enhancement(
-          enhancement_id   = lv_enh_id
-          bypassing_buffer = abap_true ).
-      CATCH cx_enh_root.
-        zcx_abapgit_exception=>raise( 'Error from CL_ENH_FACTORY' ).
-    ENDTRY.
-
-    li_enho = factory( li_enh_tool->get_tool( ) ).
-
-    li_enho->serialize( io_xml      = io_xml
-                        ii_enh_tool = li_enh_tool ).
-
-  ENDMETHOD.
 
   METHOD factory.
 
@@ -154,6 +66,72 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~changed_by.
+
+    DATA: lv_enh_id   TYPE enhname,
+          lt_log      TYPE enh_log_it,
+          li_log_obj  TYPE REF TO if_enh_log,
+          ls_enhlog   TYPE enhlog,
+          lv_lines    TYPE i,
+          lt_enhlog   TYPE STANDARD TABLE OF enhlog WITH DEFAULT KEY,
+          li_enh_tool TYPE REF TO if_enh_tool.
+
+
+    lv_enh_id = ms_item-obj_name.
+    TRY.
+        li_enh_tool = cl_enh_factory=>get_enhancement(
+          enhancement_id   = lv_enh_id
+          bypassing_buffer = abap_true ).
+      CATCH cx_enh_root.
+        rv_user = c_user_unknown.
+        RETURN.
+    ENDTRY.
+
+    lt_log = li_enh_tool->get_log( ).
+
+    LOOP AT lt_log INTO li_log_obj.
+      ls_enhlog = li_log_obj->get_enhlog( ).
+      APPEND ls_enhlog TO lt_enhlog.
+    ENDLOOP.
+
+    lv_lines = lines( lt_enhlog ).
+    READ TABLE lt_enhlog INTO ls_enhlog INDEX lv_lines.
+    IF sy-subrc = 0.
+      rv_user = ls_enhlog-loguser.
+    ELSE.
+      rv_user = c_user_unknown.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~delete.
+
+    DATA: lv_enh_id     TYPE enhname,
+          li_enh_object TYPE REF TO if_enh_object.
+
+
+    lv_enh_id = ms_item-obj_name.
+    TRY.
+        li_enh_object = cl_enh_factory=>get_enhancement(
+          enhancement_id = lv_enh_id
+          lock           = abap_true ).
+        li_enh_object->delete( ).
+        li_enh_object->save( run_dark = abap_true ).
+        li_enh_object->unlock( ).
+      CATCH cx_enh_root.
+        zcx_abapgit_exception=>raise( 'Error deleting ENHO' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~deserialize.
 
     DATA: lv_tool TYPE enhtooltype,
@@ -176,40 +154,39 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~delete.
 
-    DATA: lv_enh_id     TYPE enhname,
-          li_enh_object TYPE REF TO if_enh_object.
+  METHOD zif_abapgit_object~exists.
+
+    DATA: lv_enh_id TYPE enhname.
 
 
     lv_enh_id = ms_item-obj_name.
     TRY.
-        li_enh_object = cl_enh_factory=>get_enhancement(
-          enhancement_id = lv_enh_id
-          lock           = abap_true ).
-        li_enh_object->delete( ).
-        li_enh_object->save( ).
-        li_enh_object->unlock( ).
+        cl_enh_factory=>get_enhancement(
+          enhancement_id   = lv_enh_id
+          bypassing_buffer = abap_true ).
+        rv_bool = abap_true.
       CATCH cx_enh_root.
-        zcx_abapgit_exception=>raise( 'Error deleting ENHO' ).
+        rv_bool = abap_false.
     ENDTRY.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~jump.
 
-    CALL FUNCTION 'RS_TOOL_ACCESS'
-      EXPORTING
-        operation     = 'SHOW'
-        object_name   = ms_item-obj_name
-        object_type   = 'ENHO'
-        in_new_window = abap_true.
-
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+
+  METHOD zif_abapgit_object~has_changed_since.
+    rv_changed = abap_true.
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~is_locked.
 
@@ -224,4 +201,43 @@ CLASS zcl_abapgit_object_enho IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~jump.
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation     = 'SHOW'
+        object_name   = ms_item-obj_name
+        object_type   = 'ENHO'
+        in_new_window = abap_true.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~serialize.
+
+    DATA: lv_enh_id   TYPE enhname,
+          li_enho     TYPE REF TO zif_abapgit_object_enho,
+          li_enh_tool TYPE REF TO if_enh_tool.
+
+
+    IF zif_abapgit_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    lv_enh_id = ms_item-obj_name.
+    TRY.
+        li_enh_tool = cl_enh_factory=>get_enhancement(
+          enhancement_id   = lv_enh_id
+          bypassing_buffer = abap_true ).
+      CATCH cx_enh_root.
+        zcx_abapgit_exception=>raise( 'Error from CL_ENH_FACTORY' ).
+    ENDTRY.
+
+    li_enho = factory( li_enh_tool->get_tool( ) ).
+
+    li_enho->serialize( io_xml      = io_xml
+                        ii_enh_tool = li_enh_tool ).
+
+  ENDMETHOD.
 ENDCLASS.

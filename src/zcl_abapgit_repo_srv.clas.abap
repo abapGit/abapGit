@@ -66,7 +66,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
     APPEND io_repo TO mt_list.
 
-  ENDMETHOD.                    "add
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -122,7 +122,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
     mv_init = abap_true.
 
-  ENDMETHOD.                    "refresh
+  ENDMETHOD.
 
 
   METHOD validate_sub_super_packages.

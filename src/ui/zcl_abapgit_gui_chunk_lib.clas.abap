@@ -40,16 +40,33 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION PUBLIC FINAL CREATE PUBLIC.
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS render_hotkey_overview
+      IMPORTING
+        io_page        TYPE REF TO zcl_abapgit_gui_page
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS render_infopanel
+      IMPORTING
+        iv_div_id      TYPE string
+        iv_title       TYPE string
+        iv_hide        TYPE abap_bool DEFAULT abap_true
+        iv_hint        TYPE string OPTIONAL
+        io_content     TYPE REF TO zcl_abapgit_html
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
+
+
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
 
   METHOD render_branch_span.
@@ -76,7 +93,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ENDIF.
     ro_html->add( '</span>' ).
 
-  ENDMETHOD.  "render_branch_span
+  ENDMETHOD.
 
 
   METHOD render_error.
@@ -95,12 +112,12 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ro_html->add( |{ zcl_abapgit_html=>icon( 'alert/red' ) } Error: { lv_error }| ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD. "render_error
+  ENDMETHOD.
 
 
   METHOD render_hotkey_overview.
 
-    DATA: lv_display  TYPE string,
+    DATA: lv_hint     TYPE string,
           lt_hotkeys  TYPE zif_abapgit_definitions=>tty_hotkey,
           lt_actions  TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action,
           lo_settings TYPE REF TO zcl_abapgit_settings.
@@ -109,56 +126,82 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
                    <ls_action> LIKE LINE OF lt_actions.
 
     lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
-
-    lt_hotkeys = lo_settings->get_hotkeys( ).
-
-    lt_actions = zcl_abapgit_hotkeys=>get_default_hotkeys_from_pages( ).
+    lt_hotkeys  = lo_settings->get_hotkeys( ).
+    lt_actions  = zcl_abapgit_hotkeys=>get_default_hotkeys_from_pages( io_page ).
 
     CREATE OBJECT ro_html.
 
-    lv_display = 'display:none'.
-
-    ro_html->add( |<div id="hotkeys" class="news" style="{ lv_display }">| ).
-
-    ro_html->add( '<div class="headbar title">Hotkeys'
-               && '<div class="float-right">'
-               && zcl_abapgit_html=>a(
-                    iv_txt   = '&#x274c;'
-                    iv_typ   = zif_abapgit_definitions=>c_action_type-onclick
-                    iv_act   = 'closeHotkeyOverview()'
-                    iv_class = 'close-btn' )
-               && '</div></div>' ).
-
-    READ TABLE lt_hotkeys ASSIGNING <ls_hotkey>
-                          WITH KEY action = zcl_abapgit_gui_page=>c_global_page_action-showhotkeys.
-    IF sy-subrc = 0.
-      ro_html->add( |<div class="paddings">Close window with '{ <ls_hotkey>-sequence }' |
-                 && |or upper right corner X</div>| ).
-    ENDIF.
-
-    " Generate hotkeys
-    ro_html->add( |<div class="newslist">| ).
-
-    ro_html->add( '<table>' ).
-
+    " Render hotkeys
+    ro_html->add( '<ul class="hotkeys">' ).
     LOOP AT lt_hotkeys ASSIGNING <ls_hotkey>.
 
       READ TABLE lt_actions ASSIGNING <ls_action>
                             WITH TABLE KEY action
                             COMPONENTS action = <ls_hotkey>-action.
-
       IF sy-subrc = 0.
-        ro_html->add( '<tr>' ).
-        ro_html->add( |<td>{ <ls_hotkey>-sequence }</td><td>-</td><td>{ <ls_action>-name }</td>| ).
-        ro_html->add( '</tr>' ).
+        ro_html->add( |<li>|
+          && |<span class="key-id">{ <ls_hotkey>-sequence }</span>|
+          && |<span class="key-descr">{ <ls_action>-name }</span>|
+          && |</li>| ).
       ENDIF.
 
     ENDLOOP.
+    ro_html->add( '</ul>' ).
 
-    ro_html->add( '</table>' ).
+    " Wrap
+    READ TABLE lt_hotkeys ASSIGNING <ls_hotkey>
+      WITH KEY action = zcl_abapgit_gui_page=>c_global_page_action-showhotkeys.
+    IF sy-subrc = 0.
+      lv_hint = |Close window with '{ <ls_hotkey>-sequence }' or upper right corner 'X'|.
+    ENDIF.
 
+    ro_html = render_infopanel(
+      iv_div_id  = 'hotkeys'
+      iv_title   = 'Hotkeys'
+      iv_hint    = lv_hint
+      iv_hide    = abap_true
+      io_content = ro_html ).
+
+    IF <ls_hotkey> IS ASSIGNED AND zcl_abapgit_hotkeys=>should_show_hint( ) = abap_true.
+      ro_html->add( |<div id="hotkeys-hint" class="corner-hint">|
+        && |Press '{ <ls_hotkey>-sequence }' to get keyboard shortcuts list|
+        && |</div>| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD render_infopanel.
+
+    DATA lv_display TYPE string.
+
+    CREATE OBJECT ro_html.
+
+    IF iv_hide = abap_true. " Initially hide
+      lv_display = 'display:none'.
+    ENDIF.
+
+    ro_html->add( |<div id="{ iv_div_id }" class="info-panel" style="{ lv_display }">| ).
+
+    ro_html->add( |<div class="info-title">{ iv_title }|
+               && '<div class="float-right">'
+               && zcl_abapgit_html=>a(
+                    iv_txt   = '&#x274c;'
+                    iv_typ   = zif_abapgit_definitions=>c_action_type-onclick
+                    iv_act   = |toggleDisplay('{ iv_div_id }')|
+                    iv_class = 'close-btn' )
+               && '</div></div>' ).
+
+    IF iv_hint IS NOT INITIAL.
+      ro_html->add( '<div class="info-hint">'
+        && zcl_abapgit_html=>icon( iv_name = 'alert' iv_class = 'pad-right' )
+        && iv_hint
+        && '</div>' ).
+    ENDIF.
+
+    ro_html->add( |<div class="info-list">| ).
+    ro_html->add( io_content ).
     ro_html->add( '</div>' ).
-
     ro_html->add( '</div>' ).
 
   ENDMETHOD.
@@ -203,7 +246,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     rv_html = rv_html && '</span>'.
 
-  ENDMETHOD. "render_item_state
+  ENDMETHOD.
 
 
   METHOD render_js_error_banner.
@@ -213,14 +256,14 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
                   ' If this does not disappear soon,' &&
                   ' then there is a JS init error, please log an issue' ).
     ro_html->add( '</div>' ).
-  ENDMETHOD. "render_js_error_stub
+  ENDMETHOD.
 
 
   METHOD render_news.
 
-    DATA: lv_text    TYPE string,
-          lv_display TYPE string,
-          lt_log     TYPE zcl_abapgit_news=>tt_log.
+    DATA: lv_text TYPE string,
+          lv_hint TYPE string,
+          lt_log  TYPE zcl_abapgit_news=>tt_log.
 
     FIELD-SYMBOLS: <ls_line> LIKE LINE OF lt_log.
 
@@ -232,30 +275,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     lt_log = io_news->get_log( ).
 
-    IF io_news->has_unseen( ) = abap_false.
-      lv_display = 'display:none'.
-    ENDIF.
-
-    ro_html->add( |<div id="news" class="news" style="{ lv_display }">| ).
-
-    ro_html->add( '<div class="headbar title">Announcement of the latest changes'
-               && '<div class="float-right">'
-               && zcl_abapgit_html=>a(
-                    iv_txt   = '&#x274c;'
-                    iv_typ   = zif_abapgit_definitions=>c_action_type-onclick
-                    iv_act   = 'displayNews()'
-                    iv_class = 'close-btn' )
-               && '</div></div>' ).
-
-    IF io_news->has_important( ) = abap_true.
-      ro_html->add( '<div class="headbar important">'
-        && zcl_abapgit_html=>icon( iv_name = 'alert' iv_class = 'pad-right' )
-        && 'Please note changes marked with "!"'
-        && '</div>' ).
-    ENDIF.
-
-    " Generate news
-    ro_html->add( |<div class="newslist">| ).
+    " Render news
     LOOP AT lt_log ASSIGNING <ls_line>.
       IF <ls_line>-is_header = abap_true.
         IF <ls_line>-pos_to_cur > 0.
@@ -270,11 +290,20 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
         ro_html->add( |<li>{ <ls_line>-text }</li>| ).
       ENDIF.
     ENDLOOP.
-    ro_html->add( '</div>' ).
 
-    ro_html->add( '</div>' ).
+    " Wrap
+    IF io_news->has_important( ) = abap_true.
+      lv_hint = 'Please note changes marked with "!"'.
+    ENDIF.
 
-  ENDMETHOD. "render_news
+    ro_html = render_infopanel(
+      iv_div_id  = 'news'
+      iv_title   = 'Announcement of the latest changes'
+      iv_hint    = lv_hint
+      iv_hide    = boolc( io_news->has_unseen( ) = abap_false )
+      io_content = ro_html ).
+
+  ENDMETHOD.
 
 
   METHOD render_repo_top.
@@ -320,7 +349,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       ELSE.
         lv_icon = 'arrow-up/grey80'.
       ENDIF.
-      ro_html->add_a( iv_act = 'displayNews()'
+      ro_html->add_a( iv_act = |toggleDisplay('news')|
                       iv_typ = zif_abapgit_definitions=>c_action_type-onclick
                       iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_icon
                                                        iv_class = 'pad-sides'

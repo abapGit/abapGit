@@ -7,8 +7,8 @@ CLASS zcl_abapgit_tadir DEFINITION
   PUBLIC SECTION.
     INTERFACES zif_abapgit_tadir .
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
-
     METHODS exists
       IMPORTING
         !is_item         TYPE zif_abapgit_definitions=>ty_item
@@ -33,7 +33,7 @@ CLASS zcl_abapgit_tadir DEFINITION
       RETURNING
         VALUE(rt_tadir)        TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -43,20 +43,18 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
 
   METHOD build.
 
-    DATA: lt_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          lt_tdevc        TYPE STANDARD TABLE OF tdevc,
+    DATA: lt_tdevc        TYPE STANDARD TABLE OF tdevc,
           lv_path         TYPE string,
           lo_skip_objects TYPE REF TO zcl_abapgit_skip_objects,
           lt_excludes     TYPE RANGE OF trobjtype,
           lt_srcsystem    TYPE RANGE OF tadir-srcsystem,
           ls_srcsystem    LIKE LINE OF lt_srcsystem,
-          ls_exclude      LIKE LINE OF lt_excludes.
-    DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
-    DATA: last_package    TYPE devclass VALUE cl_abap_char_utilities=>horizontal_tab.
-    DATA: lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
+          ls_exclude      LIKE LINE OF lt_excludes,
+          lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic,
+          lv_last_package TYPE devclass VALUE cl_abap_char_utilities=>horizontal_tab,
+          lt_packages     TYPE zif_abapgit_sap_package=>ty_devclass_tt.
 
-    FIELD-SYMBOLS: <ls_tdevc>   LIKE LINE OF lt_tdevc,
-                   <ls_tadir>   LIKE LINE OF rt_tadir,
+    FIELD-SYMBOLS: <ls_tadir>   LIKE LINE OF rt_tadir,
                    <lv_package> TYPE devclass.
 
     "Determine Packages to Read
@@ -116,9 +114,9 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
 
     LOOP AT rt_tadir ASSIGNING <ls_tadir>.
 
-      IF last_package <> <ls_tadir>-devclass.
+      IF lv_last_package <> <ls_tadir>-devclass.
         "Change in Package
-        last_package = <ls_tadir>-devclass.
+        lv_last_package = <ls_tadir>-devclass.
 
         IF NOT io_dot IS INITIAL.
           "Reuse given Folder Logic Instance
@@ -150,14 +148,12 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
           ENDTRY.
       ENDCASE.
     ENDLOOP.
-
-  ENDMETHOD.                    "build
+  ENDMETHOD.
 
 
   METHOD check_exists.
 
-    DATA: lv_exists   TYPE abap_bool,
-          lo_progress TYPE REF TO zcl_abapgit_progress,
+    DATA: lo_progress TYPE REF TO zcl_abapgit_progress,
           ls_item     TYPE zif_abapgit_definitions=>ty_item.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
@@ -185,7 +181,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.                    "check_exists
+  ENDMETHOD.
 
 
   METHOD exists.

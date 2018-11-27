@@ -169,7 +169,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
   METHOD add_to_stage.
 
     DATA: lo_repo              TYPE REF TO zcl_abapgit_repo_online,
-          lt_local             TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lt_diff              TYPE zif_abapgit_definitions=>ty_diffs_tt,
           lv_something_patched TYPE abap_bool,
           lv_patch             TYPE xstring,
@@ -177,8 +176,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_diff_file> TYPE zcl_abapgit_gui_page_diff=>ty_file_diff.
 
-    lo_repo  ?= zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
-    lt_local  = lo_repo->get_files_local( ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
 
     LOOP AT mt_diff_files ASSIGNING <ls_diff_file>.
 
@@ -424,7 +422,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     DATA: lt_remote TYPE zif_abapgit_definitions=>ty_files_tt,
           lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lt_status TYPE zif_abapgit_definitions=>ty_results_tt,
-          lo_repo   TYPE REF TO zcl_abapgit_repo_online,
+          lo_repo   TYPE REF TO zcl_abapgit_repo,
           lv_ts     TYPE timestamp.
 
     FIELD-SYMBOLS: <ls_status> LIKE LINE OF lt_status.
@@ -446,7 +444,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     ASSERT is_file IS INITIAL OR is_object IS INITIAL. " just one passed
 
-    lo_repo  ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo   = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     lt_remote = lo_repo->get_files_remote( ).
     lt_local  = lo_repo->get_files_local( ).
     lt_status = lo_repo->status( ).
@@ -495,7 +493,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     DATA: lt_diff       TYPE zif_abapgit_definitions=>ty_diffs_tt,
           lv_line_index TYPE sytabix.
 
-    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diff.
 
     lv_line_index = iv_line_index.
     lt_diff = io_diff->get( ).
@@ -1044,7 +1041,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
 
-    ls_hotkey_action-name           = |Diff: Stage|.
+    ls_hotkey_action-name           = |Stage changes|.
     ls_hotkey_action-action         = |stagePatch|.
     ls_hotkey_action-default_hotkey = |s|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.

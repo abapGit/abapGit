@@ -29,7 +29,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
+CLASS zcl_abapgit_object_char IMPLEMENTATION.
 
 
   METHOD instantiate_char.
@@ -278,5 +278,10 @@ CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
     io_xml->add( iv_name = 'CHAR'
                  ig_data = ls_char ).
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

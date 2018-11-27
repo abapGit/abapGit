@@ -31,7 +31,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ecatt_sp_download IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ECATT_SP_DOWNLOAD IMPLEMENTATION.
 
 
   METHOD download.
@@ -40,8 +40,6 @@ CLASS zcl_abapgit_ecatt_sp_download IMPLEMENTATION.
     " doesn't exist in 702
 
     " Downport
-
-    DATA: lv_partyp TYPE string.
 
     load_help = im_load_help.
     typ = im_object_type.
@@ -57,8 +55,6 @@ CLASS zcl_abapgit_ecatt_sp_download IMPLEMENTATION.
       CATCH cx_ecatt INTO ex_ecatt.
         RETURN.
     ENDTRY.
-
-    lv_partyp = cl_apl_ecatt_const=>params_type_par.
 
     set_attributes_to_template( ).
 
@@ -96,6 +92,7 @@ CLASS zcl_abapgit_ecatt_sp_download IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD set_sp_data_to_template.
 
     " downport
@@ -106,16 +103,16 @@ CLASS zcl_abapgit_ecatt_sp_download IMPLEMENTATION.
           lv_sp_xml                  TYPE etxml_line_str,
           lo_ecatt_sp                TYPE REF TO object.
 
-    FIELD-SYMBOLS: <ecatt_object> TYPE data.
+    FIELD-SYMBOLS: <lg_ecatt_object> TYPE data.
 
     li_start_profile_data_node = template_over_all->create_simple_element(
                                    name = 'START_PROFILE'
                                    parent = root_node ).
 
-    ASSIGN ('ECATT_OBJECT') TO <ecatt_object>.
+    ASSIGN ('ECATT_OBJECT') TO <lg_ecatt_object>.
     ASSERT sy-subrc = 0.
 
-    lo_ecatt_sp = <ecatt_object>.
+    lo_ecatt_sp = <lg_ecatt_object>.
 
     TRY.
         CALL METHOD lo_ecatt_sp->('GET_SP_ATTRIBUTES')
@@ -134,5 +131,4 @@ CLASS zcl_abapgit_ecatt_sp_download IMPLEMENTATION.
     li_start_profile_data_node->append_child( new_child = li_element ).
 
   ENDMETHOD.
-
 ENDCLASS.

@@ -1,58 +1,55 @@
-CLASS zcl_abapgit_objects_saxx_super DEFINITION PUBLIC ABSTRACT
-                                INHERITING FROM zcl_abapgit_objects_super.
+CLASS zcl_abapgit_objects_saxx_super DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  ABSTRACT
+  CREATE PUBLIC .
+
 * common class for SAPC and SAMC objects
-
   PUBLIC SECTION.
-    INTERFACES:
-      zif_abapgit_object.
 
+    INTERFACES zif_abapgit_object .
   PROTECTED SECTION.
-    METHODS:
-      get_persistence_class_name ABSTRACT
-        RETURNING
-          VALUE(r_persistence_class_name) TYPE seoclsname,
 
-      get_data_class_name ABSTRACT
-        RETURNING
-          VALUE(r_data_class_name) TYPE seoclsname,
-
-      get_data_structure_name ABSTRACT
-        RETURNING
-          VALUE(r_data_structure_name) TYPE string.
-
+    METHODS get_persistence_class_name
+          ABSTRACT
+      RETURNING
+        VALUE(rv_persistence_class_name) TYPE seoclsname .
+    METHODS get_data_class_name
+          ABSTRACT
+      RETURNING
+        VALUE(rv_data_class_name) TYPE seoclsname .
+    METHODS get_data_structure_name
+          ABSTRACT
+      RETURNING
+        VALUE(rv_data_structure_name) TYPE string .
   PRIVATE SECTION.
-    DATA: mo_persistence          TYPE REF TO if_wb_object_persist,
-          mo_appl_obj_data        TYPE REF TO if_wb_object_data_model,
-          mv_data_structure_name  TYPE string,
-          mv_appl_obj_cls_name    TYPE seoclsname,
-          mv_persistence_cls_name TYPE seoclsname.
 
-    METHODS:
-      create_channel_objects
-        RAISING
-          zcx_abapgit_exception,
+    DATA mo_persistence TYPE REF TO if_wb_object_persist .
+    DATA mo_appl_obj_data TYPE REF TO if_wb_object_data_model .
+    DATA mv_data_structure_name TYPE string .
+    DATA mv_appl_obj_cls_name TYPE seoclsname .
+    DATA mv_persistence_cls_name TYPE seoclsname .
 
-      get_data
-        EXPORTING
-          p_data TYPE any
-        RAISING
-          zcx_abapgit_exception,
-
-      lock
-        RAISING
-          zcx_abapgit_exception,
-
-      unlock
-        RAISING
-          zcx_abapgit_exception,
-
-      get_names.
-
+    METHODS create_channel_objects
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_data
+      EXPORTING
+        !eg_data TYPE any
+      RAISING
+        zcx_abapgit_exception .
+    METHODS lock
+      RAISING
+        zcx_abapgit_exception .
+    METHODS unlock
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_names .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_saxx_super IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_SAXX_SUPER IMPLEMENTATION.
 
 
   METHOD create_channel_objects.
@@ -95,7 +92,7 @@ CLASS zcl_abapgit_objects_saxx_super IMPLEMENTATION.
 
     mo_appl_obj_data->get_data(
       IMPORTING
-        p_data = p_data ).
+        p_data = eg_data ).
 
   ENDMETHOD.
 
@@ -182,7 +179,7 @@ CLASS zcl_abapgit_objects_saxx_super IMPLEMENTATION.
 
     get_data(
       IMPORTING
-        p_data = <lg_data> ).
+        eg_data = <lg_data> ).
 
     ASSIGN COMPONENT 'HEADER' OF STRUCTURE <lg_data> TO <lg_header>.
     ASSERT sy-subrc = 0.
@@ -319,6 +316,18 @@ CLASS zcl_abapgit_objects_saxx_super IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
@@ -350,7 +359,7 @@ CLASS zcl_abapgit_objects_saxx_super IMPLEMENTATION.
 
     get_data(
       IMPORTING
-        p_data = <lg_data> ).
+        eg_data = <lg_data> ).
 
     ASSIGN COMPONENT 'HEADER' OF STRUCTURE <lg_data> TO <lg_header>.
     ASSERT sy-subrc = 0.
@@ -391,11 +400,4 @@ CLASS zcl_abapgit_objects_saxx_super IMPLEMENTATION.
                  ig_data = <lg_data> ).
 
   ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-
-    rv_is_locked = abap_false.
-
-  ENDMETHOD.
-
 ENDCLASS.

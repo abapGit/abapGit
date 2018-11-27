@@ -94,7 +94,7 @@ CLASS zcl_abapgit_stage IMPLEMENTATION.
             iv_method   = c_method-add
             iv_data     = iv_data ).
 
-  ENDMETHOD.        "add
+  ENDMETHOD.
 
 
   METHOD append.
@@ -119,7 +119,7 @@ CLASS zcl_abapgit_stage IMPLEMENTATION.
       INSERT ls_stage INTO TABLE mt_stage.
     ENDIF.
 
-  ENDMETHOD.        "append
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -129,12 +129,12 @@ CLASS zcl_abapgit_stage IMPLEMENTATION.
 
   METHOD count.
     rv_count = lines( mt_stage ).
-  ENDMETHOD.        "count
+  ENDMETHOD.
 
 
   METHOD get_all.
     rt_stage = mt_stage.
-  ENDMETHOD.        "get_all
+  ENDMETHOD.
 
 
   METHOD get_merge_source.
@@ -146,7 +146,7 @@ CLASS zcl_abapgit_stage IMPLEMENTATION.
     append( iv_path     = iv_path
             iv_filename = iv_filename
             iv_method   = c_method-ignore ).
-  ENDMETHOD.        "ignore
+  ENDMETHOD.
 
 
   METHOD method_description.
@@ -162,19 +162,19 @@ CLASS zcl_abapgit_stage IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'unknown staging method type' ).
     ENDCASE.
 
-  ENDMETHOD.        "method_description
+  ENDMETHOD.
 
 
   METHOD reset.
     DELETE mt_stage WHERE file-path     = iv_path
                     AND   file-filename = iv_filename.
     ASSERT sy-subrc = 0.
-  ENDMETHOD.        "reset
+  ENDMETHOD.
 
 
   METHOD rm.
     append( iv_path     = iv_path
             iv_filename = iv_filename
             iv_method   = c_method-rm ).
-  ENDMETHOD.        "rm
+  ENDMETHOD.
 ENDCLASS.

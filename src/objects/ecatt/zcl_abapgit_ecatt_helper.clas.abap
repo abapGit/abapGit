@@ -39,7 +39,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ecatt_helper IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ECATT_HELPER IMPLEMENTATION.
 
 
   METHOD build_xml_of_object.
@@ -84,10 +84,8 @@ CLASS zcl_abapgit_ecatt_helper IMPLEMENTATION.
   METHOD download_data.
 
     DATA:
-      lv_xtab  TYPE etxml_xline_tabtype,
       lo_xml   TYPE REF TO cl_apl_ecatt_xml,
-      lv_size  TYPE int4,
-      lx_ecatt TYPE REF TO cx_ecatt_apl_xml.
+      lv_size  TYPE int4.
 
     CLEAR: ev_xml_stream,
            ev_xml_stream_size.
@@ -103,22 +101,21 @@ CLASS zcl_abapgit_ecatt_helper IMPLEMENTATION.
 
         lo_xml->get_attributes(
           IMPORTING
-            ex_xtab         = lv_xtab
             ex_size_xstring = lv_size
             ex_xml          = ev_xml_stream ).
 
         ev_xml_stream_size = lv_size.
 
-      CATCH cx_ecatt_apl_xml INTO lx_ecatt.
+      CATCH cx_ecatt_apl_xml.
         RETURN.
     ENDTRY.
 
   ENDMETHOD.
 
+
   METHOD upload_data_from_stream.
 
     DATA:
-      lt_eing          TYPE etxml_xline_tabtype,
       lo_xml           TYPE REF TO cl_apl_ecatt_xml,
       lv_xstr          TYPE xstring,
       lv_nc_xmlref_typ TYPE REF TO if_ixml_node_collection,
@@ -157,9 +154,5 @@ CLASS zcl_abapgit_ecatt_helper IMPLEMENTATION.
       lv_index = lv_index + 1.
     ENDWHILE.
 
-    FREE: lt_eing.
-    CLEAR: lo_xml, lv_xstr.
-
   ENDMETHOD.
-
 ENDCLASS.

@@ -263,15 +263,15 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~compare_to_remote_version.
-
     CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-
   ENDMETHOD.
 
   METHOD zif_abapgit_object~is_locked.
-
     rv_is_locked = abap_false.
-
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
 ENDCLASS.

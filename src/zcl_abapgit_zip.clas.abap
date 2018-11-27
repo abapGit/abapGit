@@ -78,7 +78,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     rv_xstr = lo_zip->save( ).
 
-  ENDMETHOD.                    "encode_files
+  ENDMETHOD.
 
 
   METHOD export.
@@ -106,22 +106,21 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     file_download( iv_package = io_repo->get_package( )
                    iv_xstr    = encode_files( lt_zip ) ).
 
-  ENDMETHOD.                    "export_key
+  ENDMETHOD.
 
 
   METHOD export_object.
 
     DATA: ls_tadir    TYPE zif_abapgit_definitions=>ty_tadir,
-          ls_item     TYPE zif_abapgit_definitions=>ty_item,
           lv_folder   TYPE string,
           lv_fullpath TYPE string,
           lt_rawdata  TYPE solix_tab,
           lv_sep      TYPE c LENGTH 1,
-          lt_files    TYPE zif_abapgit_definitions=>ty_files_tt.
+          ls_files_item TYPE zcl_abapgit_objects=>ty_serialization.
 
     STATICS: sv_prev TYPE string.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF lt_files.
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF ls_files_item-files.
 
 
     ls_tadir = zcl_abapgit_ui_factory=>get_popups( )->popup_object( ).
@@ -129,14 +128,13 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    ls_item-obj_type = ls_tadir-object.
-    ls_item-obj_name = ls_tadir-obj_name.
+    ls_files_item-item-obj_type = ls_tadir-object.
+    ls_files_item-item-obj_name = ls_tadir-obj_name.
 
-    lt_files = zcl_abapgit_objects=>serialize(
-      is_item     = ls_item
-      iv_language = sy-langu ).
+    ls_files_item = zcl_abapgit_objects=>serialize( is_item = ls_files_item-item
+                                                    iv_language = sy-langu ).
 
-    IF lines( lt_files ) = 0.
+    IF lines( ls_files_item-files ) = 0.
       MESSAGE 'Empty' TYPE 'S'.
       RETURN.
     ENDIF.
@@ -156,7 +154,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
       CHANGING
         file_separator = lv_sep ).
 
-    LOOP AT lt_files ASSIGNING <ls_file>.
+    LOOP AT ls_files_item-files ASSIGNING <ls_file>.
       CONCATENATE lv_folder lv_sep <ls_file>-filename INTO lv_fullpath.
 
       lt_rawdata = cl_bcs_convert=>xstring_to_solix( <ls_file>-data ).
@@ -198,7 +196,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.  "export_package
+  ENDMETHOD.
 
 
   METHOD export_package.
@@ -226,7 +224,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     export( lo_repo ).
 
-  ENDMETHOD.  "export_package
+  ENDMETHOD.
 
 
   METHOD filename.
@@ -246,7 +244,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     ENDIF.
     TRANSLATE ev_filename TO LOWER CASE.
 
-  ENDMETHOD.                    "filename
+  ENDMETHOD.
 
 
   METHOD file_download.
@@ -324,7 +322,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from gui_download' ).
     ENDIF.
 
-  ENDMETHOD.                    "file_download
+  ENDMETHOD.
 
 
   METHOD file_upload.
@@ -398,20 +396,17 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     CONCATENATE LINES OF lt_data INTO rv_xstr IN BYTE MODE.
     rv_xstr = rv_xstr(lv_length).
 
-  ENDMETHOD.                    "file_upload
+  ENDMETHOD.
 
 
   METHOD import.
 
     DATA: lo_repo TYPE REF TO zcl_abapgit_repo_offline.
 
-
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     lo_repo->set_files_remote( unzip_file( file_upload( ) ) ).
 
-    zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
-
-  ENDMETHOD.                    "import
+  ENDMETHOD.
 
 
   METHOD normalize_path.
@@ -456,7 +451,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-  ENDMETHOD.                    "normalize_path
+  ENDMETHOD.
 
 
   METHOD unzip_file.
@@ -509,7 +504,9 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     ENDLOOP.
 
+    DELETE rt_files WHERE filename IS INITIAL.
+
     normalize_path( CHANGING ct_files = rt_files ).
 
-  ENDMETHOD.                    "decode_files
+  ENDMETHOD.
 ENDCLASS.

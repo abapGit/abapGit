@@ -145,7 +145,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
     rv_str = |<a{ lv_id }{ lv_class }{ lv_href }{ lv_click }{ lv_style }>{ iv_txt }{ lv_span }</a>|.
 
-  ENDMETHOD. "a
+  ENDMETHOD.
 
 
   METHOD add.
@@ -175,7 +175,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
         ASSERT 1 = 0. " Dev mistake
     ENDCASE.
 
-  ENDMETHOD.  " add
+  ENDMETHOD.
 
 
   METHOD add_a.
@@ -188,7 +188,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
             iv_id    = iv_id
             iv_style = iv_style ) ).
 
-  ENDMETHOD.                    "add_a
+  ENDMETHOD.
 
 
   METHOD add_icon.
@@ -197,7 +197,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
                iv_class = iv_class
                iv_hint  = iv_hint ) ).
 
-  ENDMETHOD.                    "add_icon
+  ENDMETHOD.
 
 
   METHOD class_constructor.
@@ -205,7 +205,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       EXPORTING
         pattern     = '<(AREA|BASE|BR|COL|COMMAND|EMBED|HR|IMG|INPUT|LINK|META|PARAM|SOURCE|!)'
         ignore_case = abap_false.
-  ENDMETHOD. "class_constructor
+  ENDMETHOD.
 
 
   METHOD icon.
@@ -229,7 +229,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
     rv_str = |<i class="octicon octicon-{ lv_name }{ lv_color }{ lv_class }"{ lv_hint }></i>|.
 
-  ENDMETHOD. "icon
+  ENDMETHOD.
 
 
   METHOD indent_line.
@@ -277,12 +277,12 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       cs_context-indent_str = repeat( val = ` ` occ = cs_context-indent * c_indent_size ).
     ENDIF.
 
-  ENDMETHOD. "indent_line
+  ENDMETHOD.
 
 
   METHOD is_empty.
     rv_yes = boolc( lines( mt_buffer ) = 0 ).
-  ENDMETHOD. "is_empty
+  ENDMETHOD.
 
 
   METHOD render.
@@ -302,7 +302,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
     CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY zif_abapgit_definitions=>c_newline.
 
-  ENDMETHOD.                    "render
+  ENDMETHOD.
 
 
   METHOD study_line.
@@ -361,5 +361,5 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
     ENDIF.
 
-  ENDMETHOD. "study_line
+  ENDMETHOD.
 ENDCLASS.

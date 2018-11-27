@@ -10,102 +10,104 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
 
     CLASS-METHODS:
       jump_adt
-        IMPORTING i_obj_name     TYPE zif_abapgit_definitions=>ty_item-obj_name
-                  i_obj_type     TYPE zif_abapgit_definitions=>ty_item-obj_type
-                  i_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
-                  i_sub_obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type OPTIONAL
-                  i_line_number  TYPE i OPTIONAL
+        IMPORTING iv_obj_name     TYPE zif_abapgit_definitions=>ty_item-obj_name
+                  iv_obj_type     TYPE zif_abapgit_definitions=>ty_item-obj_type
+                  iv_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
+                  iv_sub_obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type OPTIONAL
+                  iv_line_number  TYPE i OPTIONAL
         RAISING   zcx_abapgit_exception.
 
     CONSTANTS: c_user_unknown TYPE xubname VALUE 'UNKNOWN'.
 
   PROTECTED SECTION.
 
-    DATA: ms_item     TYPE zif_abapgit_definitions=>ty_item,
-          mv_language TYPE spras.
+    DATA ms_item TYPE zif_abapgit_definitions=>ty_item .
+    DATA mv_language TYPE spras .
 
-    METHODS:
-      check_timestamp
-        IMPORTING
-          iv_timestamp      TYPE timestamp
-          iv_date           TYPE datum
-          iv_time           TYPE uzeit
-        RETURNING
-          VALUE(rv_changed) TYPE abap_bool,
-      get_metadata
-        RETURNING VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata,
-      corr_insert
-        IMPORTING iv_package TYPE devclass
-        RAISING   zcx_abapgit_exception,
-      tadir_insert
-        IMPORTING iv_package TYPE devclass
-        RAISING   zcx_abapgit_exception,
-      jump_se11
-        IMPORTING iv_radio TYPE string
-                  iv_field TYPE string
-        RAISING   zcx_abapgit_exception,
-      exists_a_lock_entry_for
-        IMPORTING iv_lock_object                TYPE string
-                  iv_argument                   TYPE seqg3-garg OPTIONAL
-        RETURNING VALUE(rv_exists_a_lock_entry) TYPE abap_bool
-        RAISING   zcx_abapgit_exception,
-      set_default_package
-        IMPORTING iv_package TYPE devclass,
-      serialize_longtexts
-        IMPORTING io_xml         TYPE REF TO zcl_abapgit_xml_output
-                  iv_longtext_id TYPE dokil-id OPTIONAL
-                  it_dokil       TYPE zif_abapgit_definitions=>tty_dokil OPTIONAL
-        RAISING   zcx_abapgit_exception,
-      deserialize_longtexts
-        IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_input
-        RAISING   zcx_abapgit_exception,
-      delete_longtexts
-        IMPORTING iv_longtext_id TYPE dokil-id
-        RAISING   zcx_abapgit_exception.
-
+    METHODS check_timestamp
+      IMPORTING
+        !iv_timestamp     TYPE timestamp
+        !iv_date          TYPE datum
+        !iv_time          TYPE uzeit
+      RETURNING
+        VALUE(rv_changed) TYPE abap_bool .
+    METHODS get_metadata
+      RETURNING
+        VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata .
+    METHODS corr_insert
+      IMPORTING
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
+    METHODS tadir_insert
+      IMPORTING
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
+    METHODS jump_se11
+      IMPORTING
+        !iv_radio TYPE string
+        !iv_field TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    METHODS exists_a_lock_entry_for
+      IMPORTING
+        !iv_lock_object               TYPE string
+        !iv_argument                  TYPE seqg3-garg OPTIONAL
+      RETURNING
+        VALUE(rv_exists_a_lock_entry) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+    METHODS set_default_package
+      IMPORTING
+        !iv_package TYPE devclass .
+    METHODS serialize_longtexts
+      IMPORTING
+        !io_xml         TYPE REF TO zcl_abapgit_xml_output
+        !iv_longtext_id TYPE dokil-id OPTIONAL
+        !it_dokil       TYPE zif_abapgit_definitions=>tty_dokil OPTIONAL
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_longtexts
+      IMPORTING
+        !io_xml TYPE REF TO zcl_abapgit_xml_input
+      RAISING
+        zcx_abapgit_exception .
+    METHODS delete_longtexts
+      IMPORTING
+        !iv_longtext_id TYPE dokil-id
+      RAISING
+        zcx_abapgit_exception .
+    METHODS is_active
+      RETURNING
+        VALUE(rv_active) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
 
     CLASS-METHODS:
       is_adt_jump_possible
-        IMPORTING io_object                     TYPE REF TO cl_wb_object
-                  io_adt                        TYPE REF TO object
-        RETURNING VALUE(r_is_adt_jump_possible) TYPE abap_bool
+        IMPORTING io_object                      TYPE REF TO cl_wb_object
+                  io_adt                         TYPE REF TO object
+        RETURNING VALUE(rv_is_adt_jump_possible) TYPE abap_bool
         RAISING   zcx_abapgit_exception.
     CLASS-METHODS:
       get_adt_objects_and_names
         IMPORTING
-          i_obj_name       TYPE zif_abapgit_definitions=>ty_item-obj_name
-          i_obj_type       TYPE zif_abapgit_definitions=>ty_item-obj_type
+          iv_obj_name       TYPE zif_abapgit_definitions=>ty_item-obj_name
+          iv_obj_type       TYPE zif_abapgit_definitions=>ty_item-obj_type
         EXPORTING
           eo_adt_uri_mapper TYPE REF TO object
           eo_adt_objectref  TYPE REF TO object
-          e_program         TYPE progname
-          e_include         TYPE progname
+          ev_program        TYPE progname
+          ev_include        TYPE progname
         RAISING
           zcx_abapgit_exception.
-
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_super IMPLEMENTATION.
-
-
-  METHOD set_default_package.
-
-    " In certain cases we need to set the package package via ABAP memory
-    " because we can't supply it via the APIs.
-    "
-    " Set default package, see function module RS_CORR_INSERT FORM get_current_devclass.
-    "
-    " We use ABAP memory instead the SET parameter because it is
-    " more reliable. SET parameter doesn't work when multiple objects
-    " are deserialized which uses the ABAP memory mechanism.
-    " We don't need to reset the memory as it is done in above mentioned form routine.
-
-    EXPORT current_devclass FROM iv_package TO MEMORY ID 'EUK'.
-
-  ENDMETHOD.
+CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
 
 
   METHOD check_timestamp.
@@ -210,127 +212,6 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_metadata.
-
-    DATA: lv_class TYPE string.
-
-    lv_class = cl_abap_classdescr=>describe_by_object_ref( me )->get_relative_name( ).
-
-    REPLACE FIRST OCCURRENCE OF 'ZCL_ABAPGIT' IN lv_class WITH 'LCL'.
-
-    rs_metadata-class = lv_class.
-    rs_metadata-version = 'v1.0.0' ##no_text.
-
-  ENDMETHOD.
-
-
-  METHOD is_adt_jump_possible.
-
-    DATA: lo_wb_request         TYPE REF TO cl_wb_request,
-          lo_adt_uri_mapper_vit TYPE REF TO object,
-          lv_vit_wb_request     TYPE abap_bool.
-
-    cl_wb_request=>create_from_object_ref(
-      EXPORTING
-        p_wb_object       = io_object
-      RECEIVING
-        p_wb_request      = lo_wb_request
-      EXCEPTIONS
-        illegal_operation = 1
-        cancelled         = 2
-        OTHERS            = 3 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
-    ENDIF.
-
-    TRY.
-        CALL METHOD io_adt->('IF_ADT_TOOLS_CORE_FACTORY~GET_URI_MAPPER_VIT')
-          RECEIVING
-            result = lo_adt_uri_mapper_vit.
-
-        CALL METHOD lo_adt_uri_mapper_vit->('IF_ADT_URI_MAPPER_VIT~IS_VIT_WB_REQUEST')
-          EXPORTING
-            wb_request = lo_wb_request
-          RECEIVING
-            result     = lv_vit_wb_request.
-
-        IF lv_vit_wb_request = abap_true.
-          r_is_adt_jump_possible = abap_false.
-        ELSE.
-          r_is_adt_jump_possible = abap_true.
-        ENDIF.
-
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
-    ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD jump_adt.
-
-    DATA: lv_adt_link       TYPE string.
-    DATA: lo_adt_uri_mapper TYPE REF TO object ##needed.
-    DATA: lo_adt_objref     TYPE REF TO object ##needed.
-    DATA: lo_adt_sub_objref TYPE REF TO object ##needed.
-    DATA: lv_program        TYPE progname.
-    DATA: lv_include        TYPE progname.
-    FIELD-SYMBOLS: <lv_uri> TYPE string.
-
-
-    get_adt_objects_and_names(
-      EXPORTING
-        i_obj_name        = i_obj_name
-        i_obj_type        = i_obj_type
-      IMPORTING
-        eo_adt_uri_mapper = lo_adt_uri_mapper
-        eo_adt_objectref  = lo_adt_objref
-        e_program         = lv_program
-        e_include         = lv_include ).
-
-    TRY.
-        IF i_sub_obj_name IS NOT INITIAL.
-
-          IF ( lv_program <> i_obj_name AND lv_include IS INITIAL ) OR
-             ( lv_program = lv_include AND i_sub_obj_name IS NOT INITIAL ).
-            lv_include = i_sub_obj_name.
-          ENDIF.
-
-          CALL METHOD lo_adt_uri_mapper->('IF_ADT_URI_MAPPER~MAP_INCLUDE_TO_OBJREF')
-            EXPORTING
-              program     = lv_program
-              include     = lv_include
-              line        = i_line_number
-              line_offset = 0
-              end_line    = i_line_number
-              end_offset  = 1
-            RECEIVING
-              result      = lo_adt_sub_objref.
-          IF lo_adt_sub_objref IS NOT INITIAL.
-            lo_adt_objref = lo_adt_sub_objref.
-          ENDIF.
-
-        ENDIF.
-
-        ASSIGN ('LO_ADT_OBJREF->REF_DATA-URI') TO <lv_uri>.
-        ASSERT sy-subrc = 0.
-
-        CONCATENATE 'adt://' sy-sysid <lv_uri> INTO lv_adt_link.
-
-        cl_gui_frontend_services=>execute( EXPORTING  document = lv_adt_link
-                                           EXCEPTIONS OTHERS   = 1 ).
-
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
-        ENDIF.
-
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
-    ENDTRY.
-
-  ENDMETHOD.
-
   METHOD get_adt_objects_and_names.
 
     DATA lv_obj_type       TYPE trobjtype.
@@ -339,8 +220,8 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     DATA lo_adt            TYPE REF TO object.
     FIELD-SYMBOLS <lv_uri> TYPE string.
 
-    lv_obj_name = i_obj_name.
-    lv_obj_type = i_obj_type.
+    lv_obj_name = iv_obj_name.
+    lv_obj_type = iv_obj_type.
 
     TRY.
         cl_wb_object=>create_from_transport_key(
@@ -381,8 +262,160 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
           EXPORTING
             uri     = <lv_uri>
           IMPORTING
-            program = e_program
-            include = e_include.
+            program = ev_program
+            include = ev_include.
+
+      CATCH cx_root.
+        zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD get_metadata.
+
+    DATA: lv_class TYPE string.
+
+    lv_class = cl_abap_classdescr=>describe_by_object_ref( me )->get_relative_name( ).
+
+    REPLACE FIRST OCCURRENCE OF 'ZCL_ABAPGIT' IN lv_class WITH 'LCL'.
+
+    rs_metadata-class = lv_class.
+    rs_metadata-version = 'v1.0.0' ##no_text.
+
+  ENDMETHOD.
+
+
+  METHOD is_active.
+
+    DATA: lt_messages    TYPE STANDARD TABLE OF sprot_u WITH DEFAULT KEY,
+          lt_e071_tadirs TYPE STANDARD TABLE OF e071 WITH DEFAULT KEY,
+          ls_e071_tadir  LIKE LINE OF lt_e071_tadirs.
+
+    ms_item-inactive = abap_false.
+
+    ls_e071_tadir-object   = ms_item-obj_type.
+    ls_e071_tadir-obj_name = ms_item-obj_name.
+    INSERT ls_e071_tadir INTO TABLE lt_e071_tadirs.
+
+    CALL FUNCTION 'RS_INACTIVE_OBJECTS_WARNING'
+      EXPORTING
+        suppress_protocol         = abap_false
+        with_program_includes     = abap_false
+        suppress_dictionary_check = abap_false
+        phased_activation         = abap_false
+      TABLES
+        p_e071                    = lt_e071_tadirs
+        p_xmsg                    = lt_messages.
+
+    IF lt_messages IS NOT INITIAL.
+      ms_item-inactive = abap_true.
+    ENDIF.
+
+    rv_active = boolc( ms_item-inactive = abap_false ).
+  ENDMETHOD.
+
+
+  METHOD is_adt_jump_possible.
+
+    DATA: lo_wb_request         TYPE REF TO cl_wb_request,
+          lo_adt_uri_mapper_vit TYPE REF TO object,
+          lv_vit_wb_request     TYPE abap_bool.
+
+    cl_wb_request=>create_from_object_ref(
+      EXPORTING
+        p_wb_object       = io_object
+      RECEIVING
+        p_wb_request      = lo_wb_request
+      EXCEPTIONS
+        illegal_operation = 1
+        cancelled         = 2
+        OTHERS            = 3 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
+    ENDIF.
+
+    TRY.
+        CALL METHOD io_adt->('IF_ADT_TOOLS_CORE_FACTORY~GET_URI_MAPPER_VIT')
+          RECEIVING
+            result = lo_adt_uri_mapper_vit.
+
+        CALL METHOD lo_adt_uri_mapper_vit->('IF_ADT_URI_MAPPER_VIT~IS_VIT_WB_REQUEST')
+          EXPORTING
+            wb_request = lo_wb_request
+          RECEIVING
+            result     = lv_vit_wb_request.
+
+        IF lv_vit_wb_request = abap_true.
+          rv_is_adt_jump_possible = abap_false.
+        ELSE.
+          rv_is_adt_jump_possible = abap_true.
+        ENDIF.
+
+      CATCH cx_root.
+        zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD jump_adt.
+
+    DATA: lv_adt_link       TYPE string.
+    DATA: lo_adt_uri_mapper TYPE REF TO object ##needed.
+    DATA: lo_adt_objref     TYPE REF TO object ##needed.
+    DATA: lo_adt_sub_objref TYPE REF TO object ##needed.
+    DATA: lv_program        TYPE progname.
+    DATA: lv_include        TYPE progname.
+    FIELD-SYMBOLS: <lv_uri> TYPE string.
+
+
+    get_adt_objects_and_names(
+      EXPORTING
+        iv_obj_name       = iv_obj_name
+        iv_obj_type       = iv_obj_type
+      IMPORTING
+        eo_adt_uri_mapper = lo_adt_uri_mapper
+        eo_adt_objectref  = lo_adt_objref
+        ev_program        = lv_program
+        ev_include        = lv_include ).
+
+    TRY.
+        IF iv_sub_obj_name IS NOT INITIAL.
+
+          IF ( lv_program <> iv_obj_name AND lv_include IS INITIAL ) OR
+             ( lv_program = lv_include AND iv_sub_obj_name IS NOT INITIAL ).
+            lv_include = iv_sub_obj_name.
+          ENDIF.
+
+          CALL METHOD lo_adt_uri_mapper->('IF_ADT_URI_MAPPER~MAP_INCLUDE_TO_OBJREF')
+            EXPORTING
+              program     = lv_program
+              include     = lv_include
+              line        = iv_line_number
+              line_offset = 0
+              end_line    = iv_line_number
+              end_offset  = 1
+            RECEIVING
+              result      = lo_adt_sub_objref.
+          IF lo_adt_sub_objref IS NOT INITIAL.
+            lo_adt_objref = lo_adt_sub_objref.
+          ENDIF.
+
+        ENDIF.
+
+        ASSIGN ('LO_ADT_OBJREF->REF_DATA-URI') TO <lv_uri>.
+        ASSERT sy-subrc = 0.
+
+        CONCATENATE 'adt://' sy-sysid <lv_uri> INTO lv_adt_link.
+
+        cl_gui_frontend_services=>execute( EXPORTING  document = lv_adt_link
+                                           EXCEPTIONS OTHERS   = 1 ).
+
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
+        ENDIF.
 
       CATCH cx_root.
         zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
@@ -438,6 +471,23 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
                                       iv_longtext_id = iv_longtext_id
                                       it_dokil       = it_dokil
                                       io_xml         = io_xml ).
+
+  ENDMETHOD.
+
+
+  METHOD set_default_package.
+
+    " In certain cases we need to set the package package via ABAP memory
+    " because we can't supply it via the APIs.
+    "
+    " Set default package, see function module RS_CORR_INSERT FORM get_current_devclass.
+    "
+    " We use ABAP memory instead the SET parameter because it is
+    " more reliable. SET parameter doesn't work when multiple objects
+    " are deserialized which uses the ABAP memory mechanism.
+    " We don't need to reset the memory as it is done in above mentioned form routine.
+
+    EXPORT current_devclass FROM iv_package TO MEMORY ID 'EUK'.
 
   ENDMETHOD.
 

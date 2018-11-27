@@ -275,6 +275,7 @@ table.repo_tab {
   border-color: #dbdbdb;
   color: #c8c8c8;
 }
+.repo_tab .inactive       { color: orange; }
 
 /* STAGE */
 div.stage-container { width: 850px; }
@@ -790,7 +791,7 @@ div.tutorial h2 {
 
 /* News Announcement */
 
-div.news { 
+div.info-panel { 
   position: absolute;
   z-index: 99;
   top: 36px;
@@ -801,18 +802,24 @@ div.news {
   box-shadow: 1px 1px 3px 2px #dcdcdc;
 }
 
-div.news div.headbar {
+div.info-panel div.info-hint {
   text-transform: uppercase;
   font-size: small;
-  padding: 4px 6px;
+  padding: 8px 6px 0px;
+  text-align: center;
+  color: #ccc;
 }
 
-div.news div.title {
+div.info-panel div.info-title {
+  text-transform: uppercase;
+  font-size: small;
+  padding: 6px;
+  text-align: center;
   color: #f8f8f8;
   background-color: #888;
 }
 
-div.news div.title a.close-btn { 
+div.info-panel div.info-title a.close-btn { 
   color: #d8d8d8; 
   padding-left: 12px; 
   padding-right: 2px;
@@ -820,19 +827,18 @@ div.news div.title a.close-btn {
   bottom: 1px;
 }
 
-div.news div.important { color: #aaa; }
-div.news div.newslist {
-  padding: 0.5em 0.7em;
+div.info-panel div.info-list {
+  padding: 0.8em 0.7em 1em;
   color: #444;
 }
 
-div.news li {
+div.info-panel li {
   padding-left: 10px;
   list-style-type: none;
 }
 
-div.news h1:first-child { margin: auto; }
-div.news h1 { 
+div.info-panel h1:first-child { margin: auto; }
+div.info-panel h1 { 
   font-size: inherit;
   padding: 6px 4px;
   margin: 4px auto auto;
@@ -840,7 +846,7 @@ div.news h1 {
   font-weight: normal;
 }
 
-div.news .version-marker {
+div.info-panel .version-marker {
   color: white;
   display: inline-block;
   margin-left: 20px;
@@ -850,12 +856,12 @@ div.news .version-marker {
   background-color: #ccc;
 }
 
-div.news .update {
+div.info-panel .update {
   border: #e8ba30 1px solid;
   background-color: #f5c538;
 }
 
-.newslist td {
+div.info-panel div.info-list td {
   padding-right: 1em
 }
 
@@ -898,4 +904,42 @@ div.news .update {
 /* diff-patch */
 .patch-active {
   color: lightgrey !important; 
+}
+
+/* HOTKEYS */
+
+ul.hotkeys {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  font-size: smaller;
+}
+
+ul.hotkeys span.key-id {
+  background: #f0f0f0;
+  border: 1px solid #dcdcdc;
+  border-radius: 3px;
+  padding: 1px 7px;
+  width: 0.5em;
+  display: inline-block;
+  text-align: center;
+  margin-top: 0.2em;
+}
+
+ul.hotkeys span.key-descr {
+  margin-left: 1.2em;
+}
+
+div.corner-hint {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  color: #aaa;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 4px;
+  font-size: smaller;
+  opacity: 0.5;
+  background: white;
+  z-index: 99;
 }

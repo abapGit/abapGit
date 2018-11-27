@@ -144,7 +144,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( '</tr></table>' ).                        "#EC NOTEXT
     ro_html->add( '</div>' ).                               "#EC NOTEXT
 
-  ENDMETHOD. "footer
+  ENDMETHOD.
 
 
   METHOD get_hotkey_actions.
@@ -153,7 +153,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
 
-    ls_hotkey_action-name           = |Global: Show hotkeys|.
+    ls_hotkey_action-name           = |Show hotkeys help|.
     ls_hotkey_action-action         = c_global_page_action-showhotkeys.
     ls_hotkey_action-default_hotkey = |?|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
@@ -178,7 +178,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     ro_html->add( '</head>' ).                              "#EC NOTEXT
 
-  ENDMETHOD.                    "html_head
+  ENDMETHOD.
 
 
   METHOD link_hints.
@@ -221,8 +221,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD render_hotkey_overview.
 
-    CREATE OBJECT ro_html.
-    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_hotkey_overview( ) ).
+    ro_html = zcl_abapgit_gui_chunk_lib=>render_hotkey_overview( me ).
 
   ENDMETHOD.
 
@@ -234,7 +233,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     link_hints( ro_html ).
     add_hotkeys( ro_html ).
 
-  ENDMETHOD. "scripts
+  ENDMETHOD.
 
 
   METHOD title.
@@ -263,7 +262,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( '</tr></table>' ).                        "#EC NOTEXT
     ro_html->add( '</div>' ).                               "#EC NOTEXT
 
-  ENDMETHOD.                    "render page title
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~on_event.
@@ -317,5 +316,5 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     ro_html->add( '</html>' ).                              "#EC NOTEXT
 
-  ENDMETHOD.  " lif_gui_page~render.
+  ENDMETHOD.
 ENDCLASS.

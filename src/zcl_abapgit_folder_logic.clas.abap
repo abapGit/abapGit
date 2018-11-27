@@ -29,9 +29,9 @@ CLASS zcl_abapgit_folder_logic DEFINITION
   PROTECTED SECTION.
     METHODS get_parent
       IMPORTING
-        !iv_package     TYPE devclass
+        !iv_package      TYPE devclass
       RETURNING
-        VALUE(r_parent) TYPE devclass.
+        VALUE(rv_parent) TYPE devclass.
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_devclass_info,
@@ -54,21 +54,23 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
     CREATE OBJECT ro_instance.
   ENDMETHOD.
 
+
   METHOD get_parent.
-    DATA: st_parent LIKE LINE OF mt_parent.
+    DATA: ls_parent LIKE LINE OF mt_parent.
 
     "Determine Parent Package
-    READ TABLE mt_parent INTO st_parent
+    READ TABLE mt_parent INTO ls_parent
       WITH TABLE KEY devclass = iv_package.
     IF sy-subrc <> 0.
-      r_parent = zcl_abapgit_factory=>get_sap_package( iv_package )->read_parent( ).
-      st_parent-devclass = iv_package.
-      st_parent-parentcl = r_parent.
-      INSERT st_parent INTO TABLE mt_parent.
+      rv_parent = zcl_abapgit_factory=>get_sap_package( iv_package )->read_parent( ).
+      ls_parent-devclass = iv_package.
+      ls_parent-parentcl = rv_parent.
+      INSERT ls_parent INTO TABLE mt_parent.
     ELSE.
-      r_parent = st_parent-parentcl.
+      rv_parent = ls_parent-parentcl.
     ENDIF.
   ENDMETHOD.
+
 
   METHOD package_to_path.
 
@@ -134,7 +136,7 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-  ENDMETHOD.                    "class_to_path
+  ENDMETHOD.
 
 
   METHOD path_to_package.

@@ -15,7 +15,7 @@ CLASS zcl_abapgit_object_udmo DEFINITION
   PROTECTED SECTION.
 
     METHODS corr_insert
-        REDEFINITION .
+         REDEFINITION .
   PRIVATE SECTION.
 
     TYPES:
@@ -27,7 +27,6 @@ CLASS zcl_abapgit_object_udmo DEFINITION
     TYPES langbez TYPE dm40t-langbez.
     TYPES as4local TYPE dm40t-as4local.
     TYPES END OF ty_udmo_text_type .
-
     DATA mv_data_model TYPE uddmodl .
     DATA mv_text_object TYPE doku_obj .
     DATA mv_lxe_text_name TYPE lxeobjname .
@@ -254,7 +253,6 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     DATA END OF ls_udmo_long_text.
 
     DATA lt_udmo_long_texts LIKE STANDARD TABLE OF ls_udmo_long_text.
-    DATA lt_udmo_languages TYPE STANDARD TABLE OF language_type.
     DATA ls_header TYPE thead.
 
     io_xml->read( EXPORTING iv_name = 'UDMO_LONG_TEXTS'
@@ -413,7 +411,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
   METHOD serialize_entities.
 
     DATA lt_udmo_entities TYPE STANDARD TABLE OF dm41s WITH DEFAULT KEY.
-    FIELD-SYMBOLS <udmo_entity> TYPE dm41s.
+    FIELD-SYMBOLS <ls_udmo_entity> TYPE dm41s.
 
     SELECT * FROM dm41s
       INTO TABLE lt_udmo_entities
@@ -421,21 +419,20 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
       AND as4local EQ me->mv_activation_state.
 
 
-    LOOP AT lt_udmo_entities ASSIGNING <udmo_entity>.
+    LOOP AT lt_udmo_entities ASSIGNING <ls_udmo_entity>.
 
       " You are reminded that administrative information, such as last changed by user, date, time is not serialised.
-      CLEAR <udmo_entity>-lstuser.
-      CLEAR <udmo_entity>-lstdate.
-      CLEAR <udmo_entity>-lsttime.
-      CLEAR <udmo_entity>-fstuser.
-      CLEAR <udmo_entity>-fstdate.
-      CLEAR <udmo_entity>-fsttime.
-
+      CLEAR <ls_udmo_entity>-lstuser.
+      CLEAR <ls_udmo_entity>-lstdate.
+      CLEAR <ls_udmo_entity>-lsttime.
+      CLEAR <ls_udmo_entity>-fstuser.
+      CLEAR <ls_udmo_entity>-fstdate.
+      CLEAR <ls_udmo_entity>-fsttime.
 
     ENDLOOP.
 
     " You are reminded that descriptions in other languages do not have to be in existence, although they may.
-    IF lines( lt_udmo_entities ) GT 0.
+    IF lines( lt_udmo_entities ) > 0.
       io_xml->add( iv_name = 'UDMO_ENTITIES'
                    ig_data = lt_udmo_entities ).
     ENDIF.
@@ -627,7 +624,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     ENDIF.
 
 
-  ENDMETHOD.                    "zif_abapgit_object~delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -671,7 +668,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     " You are reminded that data models are not relevant for activation.
 
 
-  ENDMETHOD.                    "zif_abapgit_object~deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -686,12 +683,12 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
 
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~has_changed_since.
@@ -711,7 +708,12 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
       iv_time      = lv_time ).
 
 
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~is_locked.
@@ -764,12 +766,10 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
         OTHERS                = 4
         ##fm_subrc_ok.                                                   "#EC CI_SUBRC
 
-
-  ENDMETHOD.                    "zif_abapgit_object~jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
-
 
     IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
@@ -780,5 +780,5 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     me->serialize_short_texts( io_xml ).
     me->serialize_long_texts( io_xml ).
 
-  ENDMETHOD.                    "zif_abapgit_object~serialize
+  ENDMETHOD.
 ENDCLASS.

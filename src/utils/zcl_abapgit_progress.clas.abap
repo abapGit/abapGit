@@ -58,7 +58,7 @@ CLASS ZCL_ABAPGIT_PROGRESS IMPLEMENTATION.
     DATA: lv_pct  TYPE i.
     DATA: lv_time TYPE t.
 
-    CONSTANTS: c_wait_secs TYPE i VALUE 2.
+    CONSTANTS: lc_wait_secs TYPE i VALUE 2.
 
     GET TIME.
     lv_time = sy-uzeit.
@@ -77,7 +77,7 @@ CLASS ZCL_ABAPGIT_PROGRESS IMPLEMENTATION.
         EXPORTING
           percentage = lv_pct
           text       = iv_text.
-      mv_cv_time_next = lv_time + c_wait_secs.
+      mv_cv_time_next = lv_time + lc_wait_secs.
 
     ENDIF.
     IF sy-datum > mv_cv_datum_next.

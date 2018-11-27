@@ -176,4 +176,10 @@ CLASS ZCL_ABAPGIT_OBJECT_CUS0 IMPLEMENTATION.
                  ig_data = ls_img_activity ).
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = abap_true.
+  ENDMETHOD.
+
 ENDCLASS.

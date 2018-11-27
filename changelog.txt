@@ -8,6 +8,42 @@ Legend
 + : added
 - : removed
 
+2018-11-23 v1.80.0
+------------------
++ Parallel serialization
++ 2 step zip import
++ possibility to open repo in master language
++ Set SSL_ID via user exit
+* SUSC tadir handling
+
+2018-11-17 v1.79.1
+------------------
+* SICF error handling + is_locked
+* fix duplicate deserialization
+* Better TADIR handling
+* Less GUI popups
+* Fix branch overview not refreshed
+* Refactoring
+* Code cleanup
+
+2018-11-09 v1.79.0
+------------------
++ CTS integration, show corresponding transports
++ Mark inactive objects in repo list
+* SSFO handle leading spaces
+* PARA error handling
+* ENHO do not show gui
+* SCP1 do not show gui
+* DDLX fix tadir handling
+
+2018-10-19 v1.78.1
+------------------
+* Diff fixes
+* Jump only if object exists
+* IEXT: clear additional fields
+* TRAN: support OO transactions
+* SSFO: fix id renumbering
+
 2018-10-07 v1.78.0
 ------------------
 + UDMO support

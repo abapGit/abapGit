@@ -29,6 +29,21 @@ CLASS zcl_abapgit_factory DEFINITION
         VALUE(ri_syntax_check) TYPE REF TO zif_abapgit_code_inspector
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS get_adhoc_code_inspector
+      IMPORTING
+        !iv_package                    TYPE devclass
+        iv_test_name                   TYPE sci_tstval-testname
+      RETURNING
+        VALUE(ri_adhoc_code_inspector) TYPE REF TO zif_abapgit_code_inspector
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS get_abap_unit_tests
+      IMPORTING
+        !iv_package               TYPE devclass
+      RETURNING
+        VALUE(ri_abap_unit_tests) TYPE REF TO zif_abapgit_code_inspector
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS get_branch_overview
       IMPORTING
         !io_repo                  TYPE REF TO zcl_abapgit_repo_online
@@ -39,6 +54,9 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-METHODS get_stage_logic
       RETURNING
         VALUE(ri_logic) TYPE REF TO zif_abapgit_stage_logic .
+    CLASS-METHODS get_cts_api
+      RETURNING
+        VALUE(ri_cts_api) TYPE REF TO zif_abapgit_cts_api.
   PRIVATE SECTION.
 
     TYPES:
@@ -66,38 +84,27 @@ CLASS zcl_abapgit_factory DEFINITION
     TYPES:
       tty_syntax_check TYPE HASHED TABLE OF ty_syntax_check
                          WITH UNIQUE KEY package .
-    TYPES:
-      BEGIN OF ty_branch_overview,
-        repo_key TYPE zif_abapgit_persistence=>ty_value,
-        instance TYPE REF TO zif_abapgit_branch_overview,
-      END OF ty_branch_overview .
-    TYPES:
-      tty_branch_overview TYPE HASHED TABLE OF ty_branch_overview
-                           WITH UNIQUE KEY repo_key .
 
     CLASS-DATA gi_tadir TYPE REF TO zif_abapgit_tadir .
     CLASS-DATA gt_sap_package TYPE tty_sap_package .
     CLASS-DATA gt_code_inspector TYPE tty_code_inspector .
     CLASS-DATA gt_syntax_check TYPE tty_syntax_check .
-    CLASS-DATA gi_branch_overview TYPE REF TO zif_abapgit_branch_overview .
     CLASS-DATA gi_stage_logic TYPE REF TO zif_abapgit_stage_logic .
+    CLASS-DATA gi_cts_api TYPE REF TO zif_abapgit_cts_api.
+    CLASS-DATA gi_adhoc_code_inspector TYPE REF TO zif_abapgit_code_inspector.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
+CLASS zcl_abapgit_factory IMPLEMENTATION.
 
 
   METHOD get_branch_overview.
 
-    IF gi_branch_overview IS INITIAL.
-      CREATE OBJECT gi_branch_overview
-        TYPE zcl_abapgit_branch_overview
-        EXPORTING
-          io_repo = io_repo.
-    ENDIF.
-
-    ri_branch_overview = gi_branch_overview.
+    CREATE OBJECT ri_branch_overview
+      TYPE zcl_abapgit_branch_overview
+      EXPORTING
+        io_repo = io_repo.
 
   ENDMETHOD.
 
@@ -199,6 +206,42 @@ CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
     ENDIF.
 
     ri_tadir = gi_tadir.
+
+  ENDMETHOD.
+
+  METHOD get_cts_api.
+    IF gi_cts_api IS NOT BOUND.
+      CREATE OBJECT gi_cts_api TYPE zcl_abapgit_cts_api.
+    ENDIF.
+
+    ri_cts_api = gi_cts_api.
+  ENDMETHOD.
+
+  METHOD get_adhoc_code_inspector.
+
+    IF gi_adhoc_code_inspector IS BOUND.
+      ri_adhoc_code_inspector = gi_adhoc_code_inspector.
+    ELSE.
+      CREATE OBJECT ri_adhoc_code_inspector
+        TYPE zcl_abapgit_adhoc_code_insp
+        EXPORTING
+          iv_package   = iv_package
+          iv_test_name = iv_test_name.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_abap_unit_tests.
+
+    IF gi_adhoc_code_inspector IS BOUND.
+      ri_abap_unit_tests = gi_adhoc_code_inspector.
+    ELSE.
+      CREATE OBJECT ri_abap_unit_tests
+        TYPE zcl_abapgit_abap_unit_tests
+        EXPORTING
+          iv_package = iv_package.
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

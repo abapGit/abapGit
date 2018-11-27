@@ -443,4 +443,10 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
                                                   iv_argument    = lv_argument ).
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
 ENDCLASS.

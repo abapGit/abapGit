@@ -26,7 +26,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
+CLASS zcl_abapgit_objects_bridge IMPLEMENTATION.
 
 
   METHOD class_constructor.
@@ -87,7 +87,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP. "at plugins
 
-  ENDMETHOD.                    "class_constructor
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -112,7 +112,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
         EXPORTING
           classname = 'LCL_OBJECTS_BRIDGE'.
     ENDIF.
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -134,7 +134,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
         zcx_abapgit_exception=>raise( lx_plugin->get_text( ) ).
     ENDTRY.
 
-  ENDMETHOD.                    "lif_object~delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -149,7 +149,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
       CATCH cx_static_check INTO lx_plugin.
         zcx_abapgit_exception=>raise( lx_plugin->get_text( ) ).
     ENDTRY.
-  ENDMETHOD.                    "lif_object~deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -158,7 +158,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
       RECEIVING
         rv_bool = rv_bool.
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
@@ -167,12 +167,12 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
       RECEIVING
         rs_metadata = rs_metadata.
 
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~is_locked.
@@ -186,7 +186,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
 
     CALL METHOD mo_plugin->('ZIF_ABAPGITP_PLUGIN~JUMP').
 
-  ENDMETHOD.                    "lif_object~jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -195,5 +195,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
       EXPORTING
         io_xml = io_xml.
 
-  ENDMETHOD.                    "lif_object~serialize
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = abap_true.
+  ENDMETHOD.
 ENDCLASS.

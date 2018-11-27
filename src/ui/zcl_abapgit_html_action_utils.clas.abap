@@ -127,7 +127,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
     APPEND ls_field TO ct_field.
 
-  ENDMETHOD.  "add_field
+  ENDMETHOD.
 
 
   METHOD dbkey_decode.
@@ -139,7 +139,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     get_field( EXPORTING iv_name = 'TYPE'  it_field = lt_fields CHANGING cg_field = rs_key-type ).
     get_field( EXPORTING iv_name = 'VALUE' it_field = lt_fields CHANGING cg_field = rs_key-value ).
 
-  ENDMETHOD.                    "dbkey_decode
+  ENDMETHOD.
 
 
   METHOD dbkey_encode.
@@ -151,7 +151,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
-  ENDMETHOD.                    "dbkey_encode
+  ENDMETHOD.
 
 
   METHOD dir_decode.
@@ -161,7 +161,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     lt_fields = parse_fields( iv_string ).
     get_field( EXPORTING iv_name = 'PATH' it_field = lt_fields CHANGING cg_field = rv_path ).
 
-  ENDMETHOD.                    "dir_decode
+  ENDMETHOD.
 
 
   METHOD dir_encode.
@@ -170,7 +170,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     add_field( EXPORTING iv_name = 'PATH' ig_field = iv_path CHANGING ct_field = lt_fields ).
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
-  ENDMETHOD.                    "dir_encode
+  ENDMETHOD.
 
 
   METHOD field_keys_to_upper.
@@ -195,14 +195,14 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
-  ENDMETHOD.                    "file_encode
+  ENDMETHOD.
 
 
   METHOD file_obj_decode.
 
     DATA: lt_fields TYPE tihttpnvp.
 
-    ASSERT eg_file IS SUPPLIED OR eg_object IS SUPPLIED.
+    ASSERT eg_file IS SUPPLIED OR eg_object IS SUPPLIED OR ev_key IS SUPPLIED.
 
     CLEAR: ev_key, eg_file, eg_object.
     lt_fields = parse_fields_upper_case_name( iv_string ).
@@ -219,7 +219,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
       get_field( EXPORTING iv_name = 'OBJ_NAME' it_field = lt_fields CHANGING cg_field = eg_object ).
     ENDIF.
 
-  ENDMETHOD.                    "file_decode
+  ENDMETHOD.
 
 
   METHOD get_field.
@@ -244,7 +244,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
         ASSERT 0 = 1.
     ENDCASE.
 
-  ENDMETHOD.  "get_field
+  ENDMETHOD.
 
 
   METHOD jump_decode.
@@ -256,7 +256,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     get_field( EXPORTING iv_name = 'TYPE' it_field = lt_fields CHANGING cg_field = ev_obj_type ).
     get_field( EXPORTING iv_name = 'NAME' it_field = lt_fields CHANGING cg_field = ev_obj_name ).
 
-  ENDMETHOD.                    "jump_decode
+  ENDMETHOD.
 
 
   METHOD jump_encode.
@@ -269,7 +269,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
-  ENDMETHOD.                    "jump_encode
+  ENDMETHOD.
 
 
   METHOD obj_encode.
@@ -283,7 +283,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
-  ENDMETHOD.                    "obj_encode
+  ENDMETHOD.
 
 
   METHOD parse_fields.
@@ -320,7 +320,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
     rt_fields = parse_fields( iv_string ).
     field_keys_to_upper( CHANGING ct_fields = rt_fields ).
 
-  ENDMETHOD.  " parse_fields.
+  ENDMETHOD.
 
 
   METHOD stage_decode.
@@ -334,7 +334,7 @@ CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
 
     ASSERT NOT ev_key IS INITIAL.
 
-  ENDMETHOD.  " stage_decode.
+  ENDMETHOD.
 
 
   METHOD unescape.

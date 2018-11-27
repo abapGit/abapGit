@@ -1,42 +1,54 @@
 CLASS zcl_abapgit_http DEFINITION
   PUBLIC
-  FINAL
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    CONSTANTS: BEGIN OF c_scheme,
-                 digest TYPE string VALUE 'Digest',
-               END OF c_scheme.
 
-    CLASS-METHODS:
-      get_agent
-        RETURNING VALUE(rv_agent) TYPE string,
-      create_by_url
-        IMPORTING iv_url           TYPE string
-                  iv_service       TYPE string
-        RETURNING VALUE(ro_client) TYPE REF TO zcl_abapgit_http_client
-        RAISING   zcx_abapgit_exception.
+    CONSTANTS:
+      BEGIN OF c_scheme,
+        digest TYPE string VALUE 'Digest',
+      END OF c_scheme .
+
+    CLASS-METHODS get_agent
+      RETURNING
+        VALUE(rv_agent) TYPE string .
+    CLASS-METHODS create_by_url
+      IMPORTING
+        !iv_url          TYPE string
+        !iv_service      TYPE string
+      RETURNING
+        VALUE(ro_client) TYPE REF TO zcl_abapgit_http_client
+      RAISING
+        zcx_abapgit_exception .
+  PROTECTED SECTION.
+
+    CLASS-METHODS check_auth_requested
+      IMPORTING
+        !ii_client               TYPE REF TO if_http_client
+      RETURNING
+        VALUE(rv_auth_requested) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS is_local_system
+      IMPORTING
+        !iv_url        TYPE string
+      RETURNING
+        VALUE(rv_bool) TYPE abap_bool .
+    CLASS-METHODS acquire_login_details
+      IMPORTING
+        !ii_client       TYPE REF TO if_http_client
+        !io_client       TYPE REF TO zcl_abapgit_http_client
+        !iv_url          TYPE string
+      RETURNING
+        VALUE(rv_scheme) TYPE string
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
-    CLASS-METHODS:
-      check_auth_requested
-        IMPORTING ii_client                TYPE REF TO if_http_client
-        RETURNING VALUE(rv_auth_requested) TYPE abap_bool
-        RAISING   zcx_abapgit_exception,
-      is_local_system
-        IMPORTING iv_url         TYPE string
-        RETURNING VALUE(rv_bool) TYPE abap_bool,
-      acquire_login_details
-        IMPORTING ii_client        TYPE REF TO if_http_client
-                  io_client        TYPE REF TO zcl_abapgit_http_client
-                  iv_url           TYPE string
-        RETURNING VALUE(rv_scheme) TYPE string
-        RAISING   zcx_abapgit_exception.
-
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_http IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
 
 
   METHOD acquire_login_details.
@@ -96,7 +108,7 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
           password = lv_pass ).
     ENDCASE.
 
-  ENDMETHOD.  "acquire_login_details
+  ENDMETHOD.
 
 
   METHOD check_auth_requested.
@@ -110,7 +122,7 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
       rv_auth_requested = abap_true.
     ENDIF.
 
-  ENDMETHOD.  "check_auth_requested
+  ENDMETHOD.
 
 
   METHOD create_by_url.
@@ -131,7 +143,7 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
       cl_http_client=>create_by_url(
         EXPORTING
           url                = zcl_abapgit_url=>host( iv_url )
-          ssl_id             = 'ANONYM'
+          ssl_id             = zcl_abapgit_exit=>get_instance( )->get_ssl_id( )
           proxy_host         = lo_proxy_configuration->get_proxy_url( iv_url )
           proxy_service      = lo_proxy_configuration->get_proxy_port( iv_url )
         IMPORTING

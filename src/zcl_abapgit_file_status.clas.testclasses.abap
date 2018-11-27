@@ -349,7 +349,6 @@ CLASS ltcl_status_helper IMPLEMENTATION.
 
   METHOD add_state.
 
-    FIELD-SYMBOLS:  <ls_state> LIKE LINE OF mt_state.
 * todo
   ENDMETHOD.
 

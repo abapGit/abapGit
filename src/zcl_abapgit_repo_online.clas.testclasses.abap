@@ -118,8 +118,6 @@ CLASS ltcl_run_code_inspection IMPLEMENTATION.
 
   METHOD no_exception_when_no_error.
 
-    DATA: lx_error TYPE REF TO zcx_abapgit_exception.
-
     given_online_repo( '$PACKAGE' ).
     given_check_variant( |variant| ).
     given_mock_code_inspector( iv_package       = '$PACKAGE'

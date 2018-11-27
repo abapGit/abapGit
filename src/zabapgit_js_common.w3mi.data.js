@@ -24,7 +24,7 @@ if (!Function.prototype.bind) {
         };
 
     if (this.prototype) {
-      fNOP.prototype = this.prototype; 
+      fNOP.prototype = this.prototype;
     }
     fBound.prototype = new fNOP();
 
@@ -39,7 +39,7 @@ if (!String.prototype.includes) {
     if (typeof start !== 'number') {
       start = 0;
     }
-    
+
     if (start + search.length > this.length) {
       return false;
     } else {
@@ -64,7 +64,7 @@ function submitSapeventForm(params, action, method) {
   var form = document.createElement("form");
   form.setAttribute("method", method || "post");
   form.setAttribute("action", "sapevent:" + action);
-  
+
   for(var key in params) {
     var hiddenField = document.createElement("input");
     hiddenField.setAttribute("type", "hidden");
@@ -133,8 +133,8 @@ function perfOut(prefix) {
 
   var keys = Object.keys(totals);
   for (var i = keys.length - 1; i >= 0; i--) {
-    console.log(prefix 
-      + " " + keys[i] + ": " 
+    console.log(prefix
+      + " " + keys[i] + ": "
       + totals[keys[i]].time.toFixed(3) + "ms"
       + " (" + totals[keys[i]].count.toFixed() +")");
   }
@@ -190,10 +190,10 @@ function StageHelper(params) {
     objectSearch: document.getElementById(params.ids.objectSearch),
     fileCounter:  document.getElementById(params.ids.fileCounter)
   };
-  
+
   // Table columns (autodetection)
   this.colIndex      = this.detectColumns();
-  this.filterTargets = ["name", "user"];
+  this.filterTargets = ["name", "user", "transport"];
 
   // Constants
   this.HIGHLIGHT_STYLE = "highlight";
@@ -204,7 +204,7 @@ function StageHelper(params) {
     reset:  "?",
     isValid: function (status) { return "ARI?".indexOf(status) == -1; }
   };
-  
+
   this.TEMPLATES = {
     cmdReset:  "<a>reset</a>",
     cmdLocal:  "<a>add</a>",
@@ -275,10 +275,10 @@ StageHelper.prototype.onTableClick = function (event) {
   } else return;
 
   if (["TD","TH"].indexOf(td.tagName) == -1 || td.className != "cmd") return;
-  
+
   var status    = this.STATUS[target.innerText]; // Convert anchor text to status
   var targetRow = td.parentNode;
-  
+
   if (td.tagName === "TD") {
     this.updateRow(targetRow, status);
   } else { // TH
@@ -298,7 +298,7 @@ StageHelper.prototype.onTableClick = function (event) {
 StageHelper.prototype.onFilter = function (e) {
   if ( // Enter hit or clear, IE SUCKS !
        e.type === "input" && !e.target.value && this.lastFilterValue
-    || e.type === "keypress" && e.which === 13 ) { 
+    || e.type === "keypress" && e.which === 13 ) {
 
     this.applyFilterValue(e.target.value);
     submitSapeventForm({ 'filterValue': e.target.value }, "stage_filter", "post");
@@ -325,7 +325,7 @@ StageHelper.prototype.applyFilterToRow = function (row, filter) {
     };
   }, this);
 
-  var isVisible = false; 
+  var isVisible = false;
 
   // Apply filter to cells, mark filtered text
   for (var i = targets.length - 1; i >= 0; i--) {
@@ -346,8 +346,8 @@ StageHelper.prototype.applyFilterToRow = function (row, filter) {
 
 // Get how status should affect object counter
 StageHelper.prototype.getStatusImpact = function (status) {
-  if (typeof status !== "string" 
-    || status.length !== 1 
+  if (typeof status !== "string"
+    || status.length !== 1
     || this.STATUS.isValid(status) ) {
     alert("Unknown status");
   } else {
@@ -383,8 +383,8 @@ StageHelper.prototype.updateRowStatus = function (row, status) {
 StageHelper.prototype.updateRowCommand = function (row, status) {
   var cell = row.cells[this.colIndex["cmd"]];
   if (status === this.STATUS.reset) {
-    cell.innerHTML = (row.className == "local") 
-      ? this.TEMPLATES.cmdLocal 
+    cell.innerHTML = (row.className == "local")
+      ? this.TEMPLATES.cmdLocal
       : this.TEMPLATES.cmdRemote;
   } else {
     cell.innerHTML = this.TEMPLATES.cmdReset;
@@ -413,7 +413,7 @@ StageHelper.prototype.collectData = function () {
 }
 
 // Table iteration helper
-StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {  
+StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {
   var restArgs = Array.prototype.slice.call(arguments, 2);
   var table    = this.dom.stageTab;
 
@@ -502,7 +502,7 @@ function DiffHelper(params) {
   if (document.getElementById(params.ids.filterMenu)) {
     this.checkList = new CheckListWrapper(params.ids.filterMenu, this.onFilter.bind(this));
     this.dom.filterButton = document.getElementById(params.ids.filterMenu).parentNode;
-  } 
+  }
 
   // Hijack stage command
   if (this.dom.stageButton) {
@@ -576,19 +576,13 @@ DiffHelper.prototype.highlightButton = function(state) {
  **********************************************************/
 
 // News announcement
-function displayNews() {
-  var div = document.getElementById("news");
-  div.style.display = (div.style.display) ? '' : 'none';
-}
-
-// Hotkey Overview 
-function closeHotkeyOverview() {
-  var div = document.getElementById("hotkeys");
-  div.style.display = (div.style.display) ? '' : 'none';
+function toggleDisplay(divId) {
+  var div = document.getElementById(divId);
+  if (div) div.style.display = (div.style.display) ? '' : 'none';
 }
 
 function KeyNavigation() {
-  
+
 }
 
 KeyNavigation.prototype.onkeydown = function(oEvent) {
@@ -621,7 +615,7 @@ KeyNavigation.prototype.getActiveElementParent = function () {
 };
 
 KeyNavigation.prototype.onEnterOrSpace = function (oEvent) {
-  
+
   // Enter or space clicks the selected link
 
   var liSelected = this.getLiSelected();
@@ -695,7 +689,7 @@ function enableArrowListNavigation() {
 }
 
 function LinkHints(sLinkHintKey, sColor){
-  this.sLinkHintKey = sLinkHintKey; 
+  this.sLinkHintKey = sLinkHintKey;
   this.sColor = sColor;
   this.oTooltipMap = {};
   this.bTooltipsOn = false;
@@ -715,7 +709,7 @@ LinkHints.prototype.fnRenderTooltip = function (oTooltip, iTooltipCounter) {
 };
 
 LinkHints.prototype.getTooltipStartValue = function(iToolTipCount){
-  
+
   // if whe have 333 tooltips we start from 100
   return Math.pow(10,iToolTipCount.toString().length - 1);
 
@@ -724,10 +718,10 @@ LinkHints.prototype.getTooltipStartValue = function(iToolTipCount){
 LinkHints.prototype.fnRenderTooltips = function () {
 
   // all possible links which should be accessed via tooltip have
-  // sub span which is hidden by default. If we like to show the 
+  // sub span which is hidden by default. If we like to show the
   // tooltip we have to toggle the css class 'hidden'.
-  // 
-  // We use numeric values for the tooltip label. Maybe we can 
+  //
+  // We use numeric values for the tooltip label. Maybe we can
   // support also alphanumeric chars in the future. Then we have to
   // calculate permutations and that's work. So for the sake of simplicity
   // we stick to numeric values and just increment them.
@@ -784,7 +778,7 @@ LinkHints.prototype.fnFilterTooltips = function (sPending) {
 };
 
 LinkHints.prototype.fnActivateDropDownMenu = function (oTooltip) {
-  // to enable link hint navigation for drop down menu, we must expand 
+  // to enable link hint navigation for drop down menu, we must expand
   // like if they were hovered
   oTooltip.parentElement.parentElement.classList.toggle("block");
 };
@@ -810,7 +804,7 @@ LinkHints.prototype.onkeypress = function(oEvent){
   }
 
   var activeElementType = ((document.activeElement && document.activeElement.nodeName) || "");
-  
+
   // link hints are disabled for input and textareas for obvious reasons.
   // Maybe we must add other types here in the future
   if (oEvent.key === this.sLinkHintKey && activeElementType !== "INPUT" && activeElementType !== "TEXTAREA") {
@@ -818,7 +812,7 @@ LinkHints.prototype.onkeypress = function(oEvent){
     this.fnToggleAllTooltips();
 
   } else if (this.bTooltipsOn === true) {
-    
+
     // the user tries to reach a tooltip
     this.sPending += oEvent.key;
     var oTooltip = this.oTooltipMap[this.sPending];
@@ -856,8 +850,8 @@ function Hotkeys(oKeyMap){
   // these are the hotkeys provided by the backend
   Object.keys(this.oKeyMap).forEach(function(sKey){
 
-    var action = this.oKeyMap[sKey]; 
-    
+    var action = this.oKeyMap[sKey];
+
     // We replace the actions with callback functions to unify
     // the hotkey execution
     this.oKeyMap[sKey] = function(oEvent) {
@@ -872,7 +866,7 @@ function Hotkeys(oKeyMap){
       if (window[action]) {
         window[action].call(this);
       }
-      
+
       // Or a SAP event
       var sUiSapEvent = this.getSapEvent(action);
       if (sUiSapEvent) {
@@ -889,7 +883,7 @@ function Hotkeys(oKeyMap){
 
 Hotkeys.prototype.showHotkeys = function() {
   var elHotkeys = document.querySelector('#hotkeys');
-  
+
   if (elHotkeys) {
     elHotkeys.style.display = (elHotkeys.style.display) ? '' : 'none';
   }
@@ -906,7 +900,7 @@ Hotkeys.prototype.getSapEvent = function(sSapEvent) {
 
   var aSapEvents = document.querySelectorAll('a[href^="sapevent:' + sSapEvent + '"]');
 
-  var aFilteredAndNormalizedSapEvents = 
+  var aFilteredAndNormalizedSapEvents =
         [].map.call(aSapEvents, function(oSapEvent){
           return fnNormalizeSapEventHref(sSapEvent, oSapEvent);
         })
@@ -931,7 +925,7 @@ Hotkeys.prototype.onkeydown = function(oEvent){
     return;
   }
 
-  var 
+  var
     sKey = oEvent.key || String.fromCharCode(oEvent.keyCode),
     fnHotkey = this.oKeyMap[sKey];
 
@@ -945,10 +939,14 @@ function setKeyBindings(oKeyMap){
   var oHotkeys = new Hotkeys(oKeyMap);
 
   document.addEventListener('keypress', oHotkeys.onkeydown.bind(oHotkeys));
-
+  setTimeout(function(){ 
+    var div = document.getElementById("hotkeys-hint");
+    if (div) div.style.opacity = 0.2;
+  }, 4900);
+  setTimeout(function(){ toggleDisplay("hotkeys-hint") }, 5000);
 }
 
-/* 
+/*
   Patch / git add -p
   */
 
@@ -971,7 +969,7 @@ function Patch() {
     PATCH_ADD_ALL: 'patch_add_all',
     PATCH_REMOVE_ALL: 'patch_remove_all'
   };
-  
+
   this.ACTION = {
     PATCH_STAGE: 'patch_stage'
   };
@@ -999,7 +997,7 @@ Patch.prototype.registerClickHandlerSingleLine = function(){
 
 Patch.prototype.registerClickHandlerAllFile = function(){
 
-  // registers the link handlers for add and remove all changes for a file 
+  // registers the link handlers for add and remove all changes for a file
 
   this.registerClickHandlerForPatchLinkAll('#' + this.ID.PATCH_ADD_ALL, this.ADD_REMOVE);
   this.registerClickHandlerForPatchLinkAll('#' + this.ID.PATCH_REMOVE_ALL, this.REMOVE_ADD);
@@ -1007,14 +1005,14 @@ Patch.prototype.registerClickHandlerAllFile = function(){
 };
 
 Patch.prototype.registerClickHandlerForPatchLink = function(oClassCombination) {
-  // register onclick handler. When a link is clicked it is 
+  // register onclick handler. When a link is clicked it is
   // deactivated and its corresponding link gets active
   //
-  // e.g. if you click on 'add' add is deactivated and 'remove' 
+  // e.g. if you click on 'add' add is deactivated and 'remove'
   // is activated.
 
   var elLinkAll = document.querySelectorAll('.' + this.CSS_CLASS.PATCH + ' a.' + oClassCombination.sClassLinkClicked);
-  
+
   [].forEach.call(elLinkAll,function(elLink){
 
     elLink.addEventListener('click',function(oEvent){
@@ -1025,7 +1023,7 @@ Patch.prototype.registerClickHandlerForPatchLink = function(oClassCombination) {
 
 };
 
-Patch.prototype.togglePatchActive = function(oEvent, elClicked, elCorrespondingLink){ 
+Patch.prototype.togglePatchActive = function(oEvent, elClicked, elCorrespondingLink){
 
   if (!elClicked.classList.contains(this.CSS_CLASS.PATCH_ACTIVE)){
     elClicked.classList.toggle(this.CSS_CLASS.PATCH_ACTIVE);
@@ -1046,7 +1044,7 @@ Patch.prototype.togglePatchActiveForClassLink = function(oEvent, elClicked, oCla
 
 Patch.prototype.getCorrespodingLinkId = function(sClickedLinkId, oClassCombination){
 
-  // e.g. 
+  // e.g.
   //
   //   add_patch_z_test_git_add_p.prog.abap_28 => remove_patch_z_test_git_add_p.prog.abap_28
   //
@@ -1066,7 +1064,7 @@ Patch.prototype.patchLinkClickAll = function(oClassCombination) {
 
     var sTableId = oEvent.srcElement.parentElement.parentElement.parentElement.parentElement.id;
     var elAddAll = document.querySelectorAll('#' + this.escapeDots(sTableId) + ' a.' + oClassCombination.sClassLinkClicked);
-    
+
     [].forEach.call(elAddAll,function(elem){
       this.togglePatchActiveForClassLink(oEvent, elem, oClassCombination);
     }.bind(this));

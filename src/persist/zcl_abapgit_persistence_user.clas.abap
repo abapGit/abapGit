@@ -147,7 +147,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
     lt_repo_config = read( )-repo_config.
     READ TABLE lt_repo_config INTO rs_repo_config WITH KEY url = lv_key.
 
-  ENDMETHOD.  "read_repo_config
+  ENDMETHOD.
 
 
   METHOD to_xml.
@@ -193,7 +193,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
 
     COMMIT WORK AND WAIT.
 
-  ENDMETHOD.  "update_repo_config
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_persist_user~get_changes_only.

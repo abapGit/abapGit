@@ -42,7 +42,11 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
   METHOD constructor.
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
-    mv_local_devclass = is_item-devclass.
+    IF is_item-devclass IS NOT INITIAL.
+      mv_local_devclass = is_item-devclass.
+    ELSE.
+      mv_local_devclass = is_item-obj_name.
+    ENDIF.
   ENDMETHOD.
 
 
@@ -699,5 +703,10 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     IF lt_usage_data IS NOT INITIAL.
       io_xml->add( iv_name = 'PERMISSION' ig_data = lt_usage_data ).
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

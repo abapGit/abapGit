@@ -23,7 +23,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_XINX IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -84,7 +84,7 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_extension_index TYPE ty_extension_index,
-          rc                 TYPE sy-subrc.
+          lv_rc              TYPE sy-subrc.
 
     io_xml->read(
       EXPORTING
@@ -118,7 +118,7 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
         name        = mv_name
         id          = mv_id
       IMPORTING
-        rc          = rc
+        rc          = lv_rc
       EXCEPTIONS
         not_found   = 1
         put_failure = 2
@@ -128,7 +128,7 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error from DDIF_INDX_ACTIVATE { sy-subrc }| ).
     ENDIF.
 
-    IF rc <> 0.
+    IF lv_rc <> 0.
       zcx_abapgit_exception=>raise( |Cannot activate extension index { mv_id } of table { mv_name }| ).
     ENDIF.
 
@@ -161,6 +161,16 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
 
   METHOD zif_abapgit_object~has_changed_since.
     rv_changed = abap_true.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
   ENDMETHOD.
 
 
@@ -213,11 +223,4 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
                  ig_data = ls_extension_index ).
 
   ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-
-    rv_is_locked = abap_false.
-
-  ENDMETHOD.
-
 ENDCLASS.

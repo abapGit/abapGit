@@ -1,64 +1,106 @@
 {
-   "version":"v702",    
-   "rules":{
-      "7bit_ascii":{
-         "enabled":true
-      },
-      "contains_tab":{
-         "enabled":true
-      },
-      "functional_writing":{
-         "enabled":true
-      },
-      "line_length":{
-         "enabled":true,
-         "length":120
-      },
-      "max_one_statement":{
-         "enabled":true
-      },
-      "parser_error":{
-         "enabled":true
-      },
-      "space_before_colon":{
-         "enabled":true
-      },
-      "colon_missing_space":{
-         "enabled":true
-      },
-      "exit_or_check":{
-         "enabled":true
-      },
-      "line_only_punc":{
-         "enabled":true
-      },
-      "obsolete_statement":{
-         "enabled":true
-      },
-      "start_at_tab":{
-         "enabled":true
-      },
-      "whitespace_end":{
-         "enabled":true
-      },
-      "exporting":{
-         "enabled":true
-      },
-      "empty_statement":{
-         "enabled":true
-      },
-      "sequential_blank":{
-         "enabled":true,
-         "lines":4
-      },
-      "definitions_top":{
-         "enabled":true
-      },
-      "indentation":{
-         "enabled":true
-      },
-      "breakpoint":{
-         "enabled":true
-      }
-   }
+  "version": "v702",
+  "rules": {
+    "7bit_ascii": {
+      "enabled": true
+    },
+    "contains_tab": {
+      "enabled": true
+    },
+    "functional_writing": {
+      "enabled": true,
+      "ignoreExceptions": true
+    },
+    "line_length": {
+      "enabled": true,
+      "length": 120
+    },
+    "max_one_statement": {
+      "enabled": true
+    },
+    "parser_error": {
+      "enabled": true
+    },
+    "space_before_colon": {
+      "enabled": true
+    },
+    "colon_missing_space": {
+      "enabled": true
+    },
+    "exit_or_check": {
+      "enabled": true
+    },
+    "line_only_punc": {
+      "enabled": true,
+      "ignoreExceptions": true
+    },
+    "obsolete_statement": {
+      "enabled": true
+    },
+    "start_at_tab": {
+      "enabled": true
+    },
+    "whitespace_end": {
+      "enabled": true
+    },
+    "exporting": {
+      "enabled": true
+    },
+    "empty_statement": {
+      "enabled": true
+    },
+    "sequential_blank": {
+      "enabled": true,
+      "lines": 4
+    },
+    "definitions_top": {
+      "enabled": true
+    },
+    "breakpoint": {
+      "enabled": true
+    },
+    "nesting": {
+      "enabled": true,
+      "depth": 5
+    },
+    "keywords_upper": {
+      "enabled": true
+    },
+    "cloud_types": {
+      "enabled": true
+    },
+    "method_length": {
+      "enabled": true,
+      "statements": 180
+    },
+    "mix_returning": {
+      "enabled": true
+    },
+    "method_parameter_names": {
+      "enabled": true,
+      "ignoreExceptions": true,
+      "importing": "^I._.*$",
+      "returning": "^R._.*$",
+      "changing": "^C._.*$",
+      "exporting": "^E._.*$",
+      "ignoreNames": [
+        "P_TASK"
+      ]
+    },
+    "inline_data_old_versions": {
+      "enabled": true
+    },
+    "local_variable_names": {
+      "enabled": true,
+      "expectedData": "^L._.*$",
+      "expectedConstant": "^LC_.*$",
+      "expectedFS": "^<L._.*>$"
+    },
+    "class_attribute_names": {
+      "enabled": true,
+      "ignoreExceptions": true,
+      "statics": "^G._.*$",
+      "instance": "^M._.*$"
+    }
+  }
 }

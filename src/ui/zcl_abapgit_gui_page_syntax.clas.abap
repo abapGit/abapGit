@@ -24,7 +24,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
     super->constructor( ).
     ms_control-page_title = 'SYNTAX CHECK'.
     mo_repo = io_repo.
-  ENDMETHOD.  " constructor.
+  ENDMETHOD.
 
 
   METHOD render_content.
@@ -44,7 +44,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
     ENDIF.
 
     LOOP AT mt_result ASSIGNING <ls_result>.
-      render_result( ro_html   = ro_html iv_result = <ls_result> ).
+      render_result( io_html   = ro_html
+                     iv_result = <ls_result> ).
     ENDLOOP.
 
     ro_html->add( '</div>' ).

@@ -132,7 +132,7 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
         request_language_denied  = 9
         OTHERS                   = 10.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_PRAMETER_DELETE' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     SELECT COUNT(*) FROM cross WHERE ( type = 'P' OR
@@ -173,7 +173,7 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
             type      = 'CR'.
       ENDIF.
     ELSE.
-      zcx_abapgit_exception=>raise( 'error from RS_PRAMETER_DELETE' ).
+      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT' ).
     ENDIF.
 
   ENDMETHOD.
@@ -195,8 +195,19 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_locked.
 
-    rv_is_locked = abap_false.
+    DATA: lv_argument TYPE seqg3-garg.
+
+    lv_argument = |PA{ ms_item-obj_name }|.
+    OVERLAY lv_argument WITH '                                          '.
+    lv_argument = lv_argument && '*'.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'EEUDB'
+                                            iv_argument    = lv_argument ).
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
 ENDCLASS.

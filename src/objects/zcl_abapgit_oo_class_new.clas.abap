@@ -405,35 +405,41 @@ CLASS zcl_abapgit_oo_class_new IMPLEMENTATION.
 
 * public
     lt_source = lo_scanner->get_public_section_source( ).
-    lv_program = cl_oo_classname_service=>get_pubsec_name( is_key-clsname ).
-    lv_updated = update_report( iv_program = lv_program
-                                it_source  = lt_source ).
-    IF lv_updated = abap_true.
-      update_meta( iv_name     = is_key-clsname
-                   iv_exposure = seoc_exposure_public
-                   it_source   = lt_source ).
+    IF lt_source IS NOT INITIAL.
+      lv_program = cl_oo_classname_service=>get_pubsec_name( is_key-clsname ).
+      lv_updated = update_report( iv_program = lv_program
+                                  it_source  = lt_source ).
+      IF lv_updated = abap_true.
+        update_meta( iv_name     = is_key-clsname
+                     iv_exposure = seoc_exposure_public
+                     it_source   = lt_source ).
+      ENDIF.
     ENDIF.
 
 * protected
     lt_source = lo_scanner->get_protected_section_source( ).
-    lv_program = cl_oo_classname_service=>get_prosec_name( is_key-clsname ).
-    lv_updated = update_report( iv_program = lv_program
-                                it_source  = lt_source ).
-    IF lv_updated = abap_true.
-      update_meta( iv_name     = is_key-clsname
-                   iv_exposure = seoc_exposure_protected
-                   it_source   = lt_source ).
+    IF lt_source IS NOT INITIAL.
+      lv_program = cl_oo_classname_service=>get_prosec_name( is_key-clsname ).
+      lv_updated = update_report( iv_program = lv_program
+                                  it_source  = lt_source ).
+      IF lv_updated = abap_true.
+        update_meta( iv_name     = is_key-clsname
+                     iv_exposure = seoc_exposure_protected
+                     it_source   = lt_source ).
+      ENDIF.
     ENDIF.
 
 * private
     lt_source = lo_scanner->get_private_section_source( ).
-    lv_program = cl_oo_classname_service=>get_prisec_name( is_key-clsname ).
-    lv_updated = update_report( iv_program = lv_program
-                                it_source  = lt_source ).
-    IF lv_updated = abap_true.
-      update_meta( iv_name     = is_key-clsname
-                   iv_exposure = seoc_exposure_private
-                   it_source   = lt_source ).
+    IF lt_source IS NOT INITIAL.
+      lv_program = cl_oo_classname_service=>get_prisec_name( is_key-clsname ).
+      lv_updated = update_report( iv_program = lv_program
+                                  it_source  = lt_source ).
+      IF lv_updated = abap_true.
+        update_meta( iv_name     = is_key-clsname
+                     iv_exposure = seoc_exposure_private
+                     it_source   = lt_source ).
+      ENDIF.
     ENDIF.
 
 * methods
@@ -476,17 +482,23 @@ CLASS zcl_abapgit_oo_class_new IMPLEMENTATION.
     DATA: lv_program TYPE programm.
 
 
-    lv_program = cl_oo_classname_service=>get_ccdef_name( is_key-clsname ).
-    update_report( iv_program = lv_program
-                   it_source  = it_local_definitions ).
+    IF lines( it_local_definitions ) > 0.
+      lv_program = cl_oo_classname_service=>get_ccdef_name( is_key-clsname ).
+      update_report( iv_program = lv_program
+                     it_source  = it_local_definitions ).
+    ENDIF.
 
-    lv_program = cl_oo_classname_service=>get_ccimp_name( is_key-clsname ).
-    update_report( iv_program = lv_program
-                   it_source  = it_local_implementations ).
+    IF lines( it_local_implementations ) > 0.
+      lv_program = cl_oo_classname_service=>get_ccimp_name( is_key-clsname ).
+      update_report( iv_program = lv_program
+                     it_source  = it_local_implementations ).
+    ENDIF.
 
-    lv_program = cl_oo_classname_service=>get_ccmac_name( is_key-clsname ).
-    update_report( iv_program = lv_program
-                   it_source  = it_local_macros ).
+    IF lines( it_local_macros ) > 0.
+      lv_program = cl_oo_classname_service=>get_ccmac_name( is_key-clsname ).
+      update_report( iv_program = lv_program
+                     it_source  = it_local_macros ).
+    ENDIF.
 
     IF lines( it_local_test_classes ) > 0.
       lv_program = cl_oo_classname_service=>get_ccau_name( is_key-clsname ).
