@@ -1,13 +1,13 @@
-interface ZIF_ABAPGIT_REPO_LISTENER
-  public .
+INTERFACE zif_abapgit_repo_listener
+  PUBLIC .
 
 
-  interface ZIF_ABAPGIT_PERSISTENCE load .
-  methods ON_META_CHANGE
-    importing
-      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
-      !IS_META type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO_XML
-      !IS_CHANGE_MASK type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO_META_MASK
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-endinterface.
+  INTERFACE zif_abapgit_persistence LOAD .
+  METHODS on_meta_change
+    IMPORTING
+      !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+      !is_meta TYPE zif_abapgit_persistence=>ty_repo_xml
+      !is_change_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask
+    RAISING
+      zcx_abapgit_exception .
+ENDINTERFACE.
