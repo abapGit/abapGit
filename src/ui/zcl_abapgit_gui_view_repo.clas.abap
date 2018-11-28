@@ -25,6 +25,7 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
         zcx_abapgit_exception .
+
   PRIVATE SECTION.
 
     DATA: mo_repo         TYPE REF TO zcl_abapgit_repo,
@@ -183,10 +184,12 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     ENDIF.
 
     " Build advanced drop-down ========================
-    IF mo_repo->is_offline( ) = abap_false. " Online ?
+    IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " In case of asyncronicities
       lo_tb_advanced->add( iv_txt = 'Reset local'
                            iv_act = |{ zif_abapgit_definitions=>c_action-git_reset }?{ lv_key }|
                            iv_opt = lv_wp_opt ).
+    ENDIF.
+    IF mo_repo->is_offline( ) = abap_false. " Online ?
       lo_tb_advanced->add( iv_txt = 'Background mode'
                            iv_act = |{ zif_abapgit_definitions=>c_action-go_background }?{ lv_key }| ).
       lo_tb_advanced->add( iv_txt = 'Change remote'

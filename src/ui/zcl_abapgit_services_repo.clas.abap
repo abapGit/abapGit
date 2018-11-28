@@ -148,6 +148,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_offline(
       iv_url     = ls_popup-url
       iv_package = ls_popup-package ).
+    lo_repo->rebuild_local_checksums( ).
 
     zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lo_repo->get_key( ) ). " Set default repo for user
     toggle_favorite( lo_repo->get_key( ) ).
