@@ -9,6 +9,7 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
     INTERFACES zif_abapgit_persist_repo .
 
     METHODS constructor .
+    CLASS-METHODS class_constructor .
   PROTECTED SECTION.
 
     ALIASES list
@@ -17,6 +18,7 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
       FOR zif_abapgit_persist_repo~read .
   PRIVATE SECTION.
 
+    CLASS-DATA gt_meta_fields TYPE STANDARD TABLE OF abap_compname.
     DATA mo_db TYPE REF TO zcl_abapgit_persistence_db .
 
     METHODS from_xml
@@ -42,6 +44,24 @@ ENDCLASS.
 
 CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
+  METHOD class_constructor.
+
+    DATA ls_dummy_meta_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask.
+    DATA ls_dummy_meta      TYPE zif_abapgit_persistence=>ty_repo_xml.
+    DATA lo_type_meta_mask  TYPE REF TO cl_abap_structdescr.
+    DATA lo_type_meta       TYPE REF TO cl_abap_structdescr.
+    FIELD-SYMBOLS <ls_comp> LIKE LINE OF lo_type_meta_mask->components.
+
+    lo_type_meta_mask ?= cl_abap_structdescr=>describe_by_data( ls_dummy_meta_mask ).
+    lo_type_meta      ?= cl_abap_structdescr=>describe_by_data( ls_dummy_meta ).
+    LOOP AT lo_type_meta_mask->components ASSIGNING <ls_comp>.
+      APPEND <ls_comp>-name TO gt_meta_fields.
+      " Consistency protection, this will dump if meta and meta_mask types are out of sync
+      READ TABLE lo_type_meta->components TRANSPORTING NO FIELDS WITH KEY name = <ls_comp>-name.
+      ASSERT sy-subrc = 0.
+    ENDLOOP.
+
+  ENDMETHOD.
 
   METHOD constructor.
     mo_db = zcl_abapgit_persistence_db=>get_instance( ).
@@ -199,248 +219,44 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-  METHOD zif_abapgit_persist_repo~update_branch_name.
-
-    DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
-          ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE zif_abapgit_persistence=>ty_repo.
-
-
-    ASSERT NOT iv_key IS INITIAL.
-
-    TRY.
-        ls_repo = read( iv_key ).
-      CATCH zcx_abapgit_not_found.
-        zcx_abapgit_exception=>raise( 'key not found' ).
-    ENDTRY.
-
-    ls_repo-branch_name = iv_branch_name.
-    ls_content-data_str = to_xml( ls_repo ).
-
-    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-                   iv_value = iv_key
-                   iv_data  = ls_content-data_str ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_persist_repo~update_deserialized.
-
-    DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
-          ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE zif_abapgit_persistence=>ty_repo.
-
-    ASSERT NOT iv_key IS INITIAL.
-
-    TRY.
-        ls_repo = read( iv_key ).
-      CATCH zcx_abapgit_not_found.
-        zcx_abapgit_exception=>raise( 'key not found' ).
-    ENDTRY.
-
-    IF iv_deserialized_at IS NOT INITIAL.
-      ls_repo-deserialized_at = iv_deserialized_at.
-    ENDIF.
-
-    IF iv_deserialized_by IS NOT INITIAL.
-      ls_repo-deserialized_by = iv_deserialized_by.
-    ENDIF.
-
-    ls_content-data_str = to_xml( ls_repo ).
-
-    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-                   iv_value = iv_key
-                   iv_data  = ls_content-data_str ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_persist_repo~update_dot_abapgit.
-
-    DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
-          ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE zif_abapgit_persistence=>ty_repo.
-
-
-    ASSERT NOT iv_key IS INITIAL.
-
-    TRY.
-        ls_repo = read( iv_key ).
-      CATCH zcx_abapgit_not_found.
-        zcx_abapgit_exception=>raise( 'key not found' ).
-    ENDTRY.
-
-    ls_repo-dot_abapgit = is_dot_abapgit.
-    ls_content-data_str = to_xml( ls_repo ).
-
-    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-                   iv_value = iv_key
-                   iv_data  = ls_content-data_str ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_persist_repo~update_head_branch.
-
-    DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
-          ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE zif_abapgit_persistence=>ty_repo.
-
-
-    ASSERT NOT iv_key IS INITIAL.
-
-    TRY.
-        ls_repo = read( iv_key ).
-      CATCH zcx_abapgit_not_found.
-        zcx_abapgit_exception=>raise( 'key not found' ).
-    ENDTRY.
-
-    ls_repo-head_branch = iv_head_branch.
-    ls_content-data_str = to_xml( ls_repo ).
-
-    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-                   iv_value = iv_key
-                   iv_data  = ls_content-data_str ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_persist_repo~update_local_checksums.
-
-    DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
-          ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE zif_abapgit_persistence=>ty_repo.
-
-
-    ASSERT NOT iv_key IS INITIAL.
-
-    TRY.
-        ls_repo = read( iv_key ).
-      CATCH zcx_abapgit_not_found.
-        zcx_abapgit_exception=>raise( 'key not found' ).
-    ENDTRY.
-
-    ls_repo-local_checksums = it_checksums.
-    ls_content-data_str = to_xml( ls_repo ).
-
-    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-                   iv_value = iv_key
-                   iv_data  = ls_content-data_str ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_persist_repo~update_local_settings.
-
-    DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
-          ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE zif_abapgit_persistence=>ty_repo.
-
-
-    ASSERT NOT iv_key IS INITIAL.
-
-    TRY.
-        ls_repo = read( iv_key ).
-      CATCH zcx_abapgit_not_found.
-        zcx_abapgit_exception=>raise( 'key not found' ).
-    ENDTRY.
-
-    ls_repo-local_settings = is_settings.
-    ls_content-data_str = to_xml( ls_repo ).
-
-    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-                   iv_value = iv_key
-                   iv_data  = ls_content-data_str ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_persist_repo~update_offline.
-
-    DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
-          ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE zif_abapgit_persistence=>ty_repo.
-
-    ASSERT NOT iv_key IS INITIAL.
-
-    TRY.
-        ls_repo = read( iv_key ).
-      CATCH zcx_abapgit_not_found.
-        zcx_abapgit_exception=>raise( 'key not found' ).
-    ENDTRY.
-
-    ls_repo-offline = iv_offline.
-    ls_content-data_str = to_xml( ls_repo ).
-
-    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-                   iv_value = iv_key
-                   iv_data  = ls_content-data_str ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_persist_repo~update_url.
-
-    DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
-          ls_content LIKE LINE OF lt_content,
-          ls_repo    TYPE zif_abapgit_persistence=>ty_repo.
-
-
-    IF iv_url IS INITIAL.
-      zcx_abapgit_exception=>raise( 'update, url empty' ).
-    ENDIF.
-
-    ASSERT NOT iv_key IS INITIAL.
-
-    TRY.
-        ls_repo = read( iv_key ).
-      CATCH zcx_abapgit_not_found.
-        zcx_abapgit_exception=>raise( 'key not found' ).
-    ENDTRY.
-
-    ls_repo-url = iv_url.
-    ls_content-data_str = to_xml( ls_repo ).
-
-    mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
-                   iv_value = iv_key
-                   iv_data  = ls_content-data_str ).
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_persist_repo~update_metadata.
 
     DATA:
-          lv_blob  TYPE zif_abapgit_persistence=>ty_content-data_str,
-          lv_field LIKE LINE OF it_change_log,
-          ls_repo  TYPE zif_abapgit_persistence=>ty_repo.
+          lv_blob            TYPE zif_abapgit_persistence=>ty_content-data_str,
+          ls_persistent_meta TYPE zif_abapgit_persistence=>ty_repo.
 
-    FIELD-SYMBOLS <vdst> TYPE ANY.
-    FIELD-SYMBOLS <vsrc> TYPE ANY.
-
-    " TODO validations ?? e.g. 'update, url empty' and/or change_log entries ?
+    FIELD-SYMBOLS <lv_field>   LIKE LINE OF gt_meta_fields.
+    FIELD-SYMBOLS <lv_dst>     TYPE ANY.
+    FIELD-SYMBOLS <lv_src>     TYPE ANY.
+    FIELD-SYMBOLS <lv_changed> TYPE abap_bool.
 
     ASSERT NOT iv_key IS INITIAL.
 
+    IF is_change_mask IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    " Validations
+    IF is_change_mask-url = abap_true AND is_meta-url IS INITIAL.
+      zcx_abapgit_exception=>raise( 'update, url empty' ).
+    ENDIF.
+
     TRY.
-        ls_repo = read( iv_key ).
+        ls_persistent_meta = read( iv_key ).
       CATCH zcx_abapgit_not_found.
         zcx_abapgit_exception=>raise( 'repo key not found' ).
     ENDTRY.
 
-    IF it_change_log IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    LOOP AT it_change_log INTO lv_field.
-      lv_field = to_upper( lv_field ).
-      ASSIGN COMPONENT lv_field OF STRUCTURE ls_repo TO <vdst>.
-      ASSIGN COMPONENT lv_field OF STRUCTURE is_meta TO <vsrc>.
-      <vdst> = <vsrc>.
+    " Update
+    LOOP AT gt_meta_fields ASSIGNING <lv_field>.
+      ASSIGN COMPONENT <lv_field> OF STRUCTURE is_change_mask TO <lv_changed>.
+      CHECK <lv_changed> = abap_true.
+      ASSIGN COMPONENT <lv_field> OF STRUCTURE ls_persistent_meta TO <lv_dst>.
+      ASSIGN COMPONENT <lv_field> OF STRUCTURE is_meta TO <lv_src>.
+      <lv_dst> = <lv_src>.
     ENDLOOP.
 
-    lv_blob = to_xml( ls_repo ).
+    lv_blob = to_xml( ls_persistent_meta ).
 
     mo_db->update( iv_type  = zcl_abapgit_persistence_db=>c_type_repo
                    iv_value = iv_key

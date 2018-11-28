@@ -6,6 +6,7 @@ CLASS zcl_abapgit_repo_srv DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_repo_srv .
+    INTERFACES zif_abapgit_repo_listener .
 
     CLASS-METHODS get_instance
       RETURNING
@@ -32,9 +33,20 @@ CLASS zcl_abapgit_repo_srv DEFINITION
     METHODS is_sap_object_allowed
       RETURNING
         VALUE(rv_allowed) TYPE abap_bool .
+    METHODS instantiate_and_add
+      IMPORTING
+        !is_repo_meta TYPE zif_abapgit_persistence=>ty_repo
+      RAISING
+        zcx_abapgit_exception .
     METHODS add
       IMPORTING
         !io_repo TYPE REF TO zcl_abapgit_repo
+      RAISING
+        zcx_abapgit_exception .
+    METHODS reinstantiate_repo
+      IMPORTING
+        !iv_key  TYPE zif_abapgit_persistence=>ty_repo-key
+        !is_meta TYPE zif_abapgit_persistence=>ty_repo_xml
       RAISING
         zcx_abapgit_exception .
     METHODS validate_sub_super_packages
@@ -65,7 +77,29 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+    io_repo->bind_listener( me ).
     APPEND io_repo TO mt_list.
+
+  ENDMETHOD.
+
+
+  METHOD instantiate_and_add.
+
+    DATA:
+      lo_online  TYPE REF TO zcl_abapgit_repo_online,
+      lo_offline TYPE REF TO zcl_abapgit_repo_offline.
+
+    IF is_repo_meta-offline = abap_false.
+      CREATE OBJECT lo_online
+        EXPORTING
+          is_data = is_repo_meta.
+      add( lo_online ).
+    ELSE.
+      CREATE OBJECT lo_offline
+        EXPORTING
+          is_data = is_repo_meta.
+      add( lo_offline ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -103,17 +137,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
     lt_list = zcl_abapgit_persist_factory=>get_repo( )->list( ).
     LOOP AT lt_list ASSIGNING <ls_list>.
-      IF <ls_list>-offline = abap_false.
-        CREATE OBJECT lo_online
-          EXPORTING
-            is_data = <ls_list>.
-        APPEND lo_online TO mt_list.
-      ELSE.
-        CREATE OBJECT lo_offline
-          EXPORTING
-            is_data = <ls_list>.
-        APPEND lo_offline TO mt_list.
-      ENDIF.
+      instantiate_and_add( <ls_list> ).
     ENDLOOP.
 
     mv_init = abap_true.
@@ -154,7 +178,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_srv~delete.
 
-    io_repo->delete( ).
+    zcl_abapgit_persist_factory=>get_repo( )->delete( io_repo->get_key( ) ).
 
     DELETE TABLE mt_list FROM io_repo.
     ASSERT sy-subrc = 0.
@@ -295,16 +319,41 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_repo_srv~on_repo_meta_change.
+  METHOD zif_abapgit_repo_listener~on_meta_change.
 
-    DATA:
-         li_persistence TYPE REF TO zif_abapgit_persist_repo.
+    DATA li_persistence TYPE REF TO zif_abapgit_persist_repo.
 
     li_persistence = zcl_abapgit_persist_factory=>get_repo( ).
     li_persistence->update_metadata(
-      iv_key        = iv_key
-      is_meta       = is_meta
-      it_change_log = it_change_log ).
+      iv_key         = iv_key
+      is_meta        = is_meta
+      is_change_mask = is_change_mask ).
+
+
+    " Recreate repo instance if type changed
+    IF is_change_mask-offline = abap_true.
+      reinstantiate_repo(
+        iv_key  = iv_key
+        is_meta = is_meta ).
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD reinstantiate_repo.
+
+      DATA lo_repo      TYPE REF TO zcl_abapgit_repo.
+      DATA ls_full_meta TYPE zif_abapgit_persistence=>ty_repo.
+
+      lo_repo = get( iv_key ).
+      DELETE TABLE mt_list FROM lo_repo.
+      ASSERT sy-subrc IS INITIAL.
+
+      MOVE-CORRESPONDING is_meta TO ls_full_meta.
+      ls_full_meta-key = iv_key.
+
+      instantiate_and_add( ls_full_meta ).
 
   ENDMETHOD.
 
@@ -328,38 +377,6 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
                                  is_checks = is_checks ).
 
     delete( io_repo ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_repo_srv~switch_repo_type.
-
-* todo, this should be a method on the repo instead?
-
-    DATA lo_repo TYPE REF TO zcl_abapgit_repo.
-
-    FIELD-SYMBOLS <lo_repo> LIKE LINE OF mt_list.
-
-    lo_repo = get( iv_key ).
-    READ TABLE mt_list ASSIGNING <lo_repo> FROM lo_repo.
-    ASSERT sy-subrc IS INITIAL.
-    ASSERT iv_offline <> lo_repo->ms_data-offline.
-
-    IF iv_offline = abap_true. " On-line -> OFFline
-      lo_repo->set(
-        iv_url         = zcl_abapgit_url=>name( lo_repo->ms_data-url )
-        iv_branch_name = ''
-        iv_head_branch = ''
-        iv_offline     = abap_true ).
-      CREATE OBJECT <lo_repo> TYPE zcl_abapgit_repo_offline
-        EXPORTING
-          is_data = lo_repo->ms_data.
-    ELSE. " OFFline -> On-line
-      lo_repo->set( iv_offline = abap_false ).
-      CREATE OBJECT <lo_repo> TYPE zcl_abapgit_repo_online
-        EXPORTING
-          is_data = lo_repo->ms_data.
-    ENDIF.
 
   ENDMETHOD.
 
