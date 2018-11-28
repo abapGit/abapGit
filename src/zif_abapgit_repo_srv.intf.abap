@@ -55,11 +55,4 @@ INTERFACE zif_abapgit_repo_srv
       !iv_package TYPE devclass
     RAISING
       zcx_abapgit_exception .
-  METHODS on_repo_meta_change
-    IMPORTING
-      IV_KEY        TYPE zif_abapgit_persistence=>ty_repo-key
-      IS_META       TYPE zif_abapgit_persistence=>ty_repo_xml
-      IT_CHANGE_LOG TYPE string_table
-    RAISING
-      zcx_abapgit_exception .
 ENDINTERFACE.
