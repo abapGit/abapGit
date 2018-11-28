@@ -141,11 +141,12 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
 
   METHOD path_to_package.
 
-    DATA: lv_length TYPE i,
-          lv_parent TYPE devclass,
-          lv_new    TYPE string,
-          lv_path   TYPE string,
-          lv_top    TYPE devclass.
+    DATA: lv_length        TYPE i,
+          lv_parent        TYPE devclass,
+          lv_new           TYPE string,
+          lv_path          TYPE string,
+          lv_absolute_name TYPE string,
+          lv_top           TYPE devclass.
 
     lv_top = iv_top.
 
@@ -163,18 +164,31 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
 
       CASE io_dot->get_folder_logic( ).
         WHEN zif_abapgit_dot_abapgit=>c_folder_logic-full.
-          rv_package = lv_new.
-          TRANSLATE rv_package USING '#/'.
+          lv_absolute_name = lv_new.
+          TRANSLATE lv_absolute_name USING '#/'.
           IF iv_top(1) = '$'.
-            CONCATENATE '$' rv_package INTO rv_package.
+            CONCATENATE '$' lv_absolute_name INTO lv_absolute_name.
           ENDIF.
         WHEN zif_abapgit_dot_abapgit=>c_folder_logic-prefix.
-          CONCATENATE rv_package '_' lv_new INTO rv_package.
+          CONCATENATE rv_package '_' lv_new INTO lv_absolute_name.
         WHEN OTHERS.
           ASSERT 0 = 1.
       ENDCASE.
 
-      TRANSLATE rv_package TO UPPER CASE.
+      TRANSLATE lv_absolute_name TO UPPER CASE.
+
+      IF strlen( lv_absolute_name ) > 30.
+        zcx_abapgit_exception=>raise( |Package { lv_absolute_name } exceeds ABAP 30-characters-name limit| ).
+      ENDIF.
+
+      IF lv_absolute_name = lv_top.
+        zcx_abapgit_exception=>raise( |Root package { lv_top } has a subpackage with the same name| ).
+      ENDIF.
+      IF lv_absolute_name = lv_parent.
+        zcx_abapgit_exception=>raise( |Package { lv_absolute_name } has a subpackage with the same name| ).
+      ENDIF.
+
+      rv_package = lv_absolute_name.
 
       IF zcl_abapgit_factory=>get_sap_package( rv_package )->exists( ) = abap_false AND
           iv_create_if_not_exists = abap_true.
