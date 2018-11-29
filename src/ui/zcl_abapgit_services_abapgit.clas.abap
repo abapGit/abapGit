@@ -188,7 +188,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
     FIELD-SYMBOLS: <lo_repo>         TYPE LINE OF zif_abapgit_definitions=>ty_repo_ref_tt,
                    <lv_superpackage> LIKE LINE OF lt_superpackages.
 
-    lo_package = zcl_abapgit_factory=>get_sap_package( iv_package  ).
+    lo_package = zcl_abapgit_factory=>get_sap_package( iv_package ).
 
     IF lo_package->exists( ) = abap_false.
       RETURN.
@@ -211,6 +211,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
       IF <lo_repo>->get_package( ) IN lt_r_package.
         lo_repo = <lo_repo>.
+        EXIT.
       ENDIF.
 
     ENDLOOP.
