@@ -36,6 +36,8 @@ CLASS zcl_abapgit_repo_srv DEFINITION
     METHODS instantiate_and_add
       IMPORTING
         !is_repo_meta TYPE zif_abapgit_persistence=>ty_repo
+      RETURNING
+        VALUE(ro_repo) TYPE REF TO zcl_abapgit_repo
       RAISING
         zcx_abapgit_exception .
     METHODS add
@@ -85,21 +87,16 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
   METHOD instantiate_and_add.
 
-    DATA:
-      lo_online  TYPE REF TO zcl_abapgit_repo_online,
-      lo_offline TYPE REF TO zcl_abapgit_repo_offline.
-
     IF is_repo_meta-offline = abap_false.
-      CREATE OBJECT lo_online
+      CREATE OBJECT ro_repo TYPE zcl_abapgit_repo_online
         EXPORTING
           is_data = is_repo_meta.
-      add( lo_online ).
     ELSE.
-      CREATE OBJECT lo_offline
+      CREATE OBJECT ro_repo TYPE zcl_abapgit_repo_offline
         EXPORTING
           is_data = is_repo_meta.
-      add( lo_offline ).
     ENDIF.
+    add( ro_repo ).
 
   ENDMETHOD.
 
@@ -273,11 +270,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'new_offline not found' ).
     ENDTRY.
 
-    CREATE OBJECT ro_repo
-      EXPORTING
-        is_data = ls_repo.
-
-    add( ro_repo ).
+    ro_repo ?= instantiate_and_add( ls_repo ).
 
   ENDMETHOD.
 
@@ -307,11 +300,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'new_online not found' ).
     ENDTRY.
 
-    CREATE OBJECT ro_repo
-      EXPORTING
-        is_data = ls_repo.
-
-    add( ro_repo ).
+    ro_repo ?= instantiate_and_add( ls_repo ).
 
     ro_repo->refresh( ).
     ro_repo->find_remote_dot_abapgit( ).
@@ -331,6 +320,9 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
 
     " Recreate repo instance if type changed
+    " Instances in mt_list are of *_online and *_offline type
+    " If type is changed object should be recreated from the proper class
+    " TODO refactor, e.g. unify repo logic in one class
     IF is_change_mask-offline = abap_true.
       reinstantiate_repo(
         iv_key  = iv_key

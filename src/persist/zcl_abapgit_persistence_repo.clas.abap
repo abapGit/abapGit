@@ -9,7 +9,6 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
     INTERFACES zif_abapgit_persist_repo .
 
     METHODS constructor .
-    CLASS-METHODS class_constructor .
   PROTECTED SECTION.
 
     ALIASES list
@@ -18,7 +17,7 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
       FOR zif_abapgit_persist_repo~read .
   PRIVATE SECTION.
 
-    CLASS-DATA gt_meta_fields TYPE STANDARD TABLE OF abap_compname.
+    DATA mt_meta_fields TYPE STANDARD TABLE OF abap_compname.
     DATA mo_db TYPE REF TO zcl_abapgit_persistence_db .
 
     METHODS from_xml
@@ -44,7 +43,7 @@ ENDCLASS.
 
 CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
-  METHOD class_constructor.
+  METHOD constructor.
 
     DATA ls_dummy_meta_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask.
     DATA ls_dummy_meta      TYPE zif_abapgit_persistence=>ty_repo_xml.
@@ -52,19 +51,15 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
     DATA lo_type_meta       TYPE REF TO cl_abap_structdescr.
     FIELD-SYMBOLS <ls_comp> LIKE LINE OF lo_type_meta_mask->components.
 
+    " Collect actual list of fields in repo meta data (used in update_meta)
     lo_type_meta_mask ?= cl_abap_structdescr=>describe_by_data( ls_dummy_meta_mask ).
     lo_type_meta      ?= cl_abap_structdescr=>describe_by_data( ls_dummy_meta ).
     LOOP AT lo_type_meta_mask->components ASSIGNING <ls_comp>.
-      APPEND <ls_comp>-name TO gt_meta_fields.
-      " Consistency protection, this will dump if meta and meta_mask types are out of sync
-      READ TABLE lo_type_meta->components TRANSPORTING NO FIELDS WITH KEY name = <ls_comp>-name.
-      ASSERT sy-subrc = 0.
+      APPEND <ls_comp>-name TO mt_meta_fields.
     ENDLOOP.
 
-  ENDMETHOD.
-
-  METHOD constructor.
     mo_db = zcl_abapgit_persistence_db=>get_instance( ).
+
   ENDMETHOD.
 
 
@@ -225,7 +220,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
           lv_blob            TYPE zif_abapgit_persistence=>ty_content-data_str,
           ls_persistent_meta TYPE zif_abapgit_persistence=>ty_repo.
 
-    FIELD-SYMBOLS <lv_field>   LIKE LINE OF gt_meta_fields.
+    FIELD-SYMBOLS <lv_field>   LIKE LINE OF mt_meta_fields.
     FIELD-SYMBOLS <lv_dst>     TYPE ANY.
     FIELD-SYMBOLS <lv_src>     TYPE ANY.
     FIELD-SYMBOLS <lv_changed> TYPE abap_bool.
@@ -248,11 +243,14 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
     ENDTRY.
 
     " Update
-    LOOP AT gt_meta_fields ASSIGNING <lv_field>.
+    LOOP AT mt_meta_fields ASSIGNING <lv_field>.
       ASSIGN COMPONENT <lv_field> OF STRUCTURE is_change_mask TO <lv_changed>.
+      ASSERT sy-subrc = 0.
       CHECK <lv_changed> = abap_true.
       ASSIGN COMPONENT <lv_field> OF STRUCTURE ls_persistent_meta TO <lv_dst>.
+      ASSERT sy-subrc = 0.
       ASSIGN COMPONENT <lv_field> OF STRUCTURE is_meta TO <lv_src>.
+      ASSERT sy-subrc = 0.
       <lv_dst> = <lv_src>.
     ENDLOOP.
 
