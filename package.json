@@ -3,7 +3,8 @@
   "scripts": {
     "pretest": "abaplint --version && abaplint \"src/**/*.abap\"",
     "test": "abapmerge src/zabapgit.prog.abap > zabapgit.abap",
-    "_disabled_posttest": "abaplint zabapgit.abap"
+    "_disabled_posttest": "abaplint zabapgit.abap",
+    "lint": "node_modules/.bin/abaplint \"src/**/*.abap\""
   },
   "repository": {
     "type": "git",
