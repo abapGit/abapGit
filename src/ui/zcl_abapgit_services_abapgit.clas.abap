@@ -42,6 +42,10 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS get_package_from_adt
+      RETURNING
+        VALUE(rv_package) TYPE devclass.
+
 ENDCLASS.
 
 
@@ -145,21 +149,24 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
   METHOD prepare_gui_startup.
 
-    DATA: lv_repo_key TYPE zif_abapgit_persistence=>ty_value,
-          lv_package  TYPE devclass.
+    DATA: lv_repo_key    TYPE zif_abapgit_persistence=>ty_value,
+          lv_package     TYPE devclass,
+          lv_package_adt TYPE devclass.
 
     IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_show_default_repo( ) = abap_false.
       " Don't show the last seen repo at startup
       zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( || ).
     ENDIF.
 
-    " We have two special cases for gui startup
+    " We have three special cases for gui startup
     "   - open a specific repo by repo key
     "   - open a specific repo by package name
+    "   - open a specific repo by package name provided by ADT
     " These overrule the last shown repo
 
     GET PARAMETER ID zif_abapgit_definitions=>c_spagpa_param_repo_key FIELD lv_repo_key.
     GET PARAMETER ID zif_abapgit_definitions=>c_spagpa_param_package  FIELD lv_package.
+    lv_package_adt = get_package_from_adt( ).
 
     IF lv_repo_key IS NOT INITIAL.
 
@@ -170,6 +177,10 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
       SET PARAMETER ID zif_abapgit_definitions=>c_spagpa_param_package FIELD ''.
       set_start_repo_from_package( lv_package ).
+
+    ELSEIF lv_package_adt IS NOT INITIAL.
+
+      set_start_repo_from_package( lv_package_adt ).
 
     ENDIF.
 
@@ -221,6 +232,58 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
     IF lo_repo IS BOUND.
       zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lo_repo->get_key( ) ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_package_from_adt.
+
+    DATA: ls_item    TYPE zif_abapgit_definitions=>ty_item,
+          lr_context TYPE REF TO data,
+          lt_fields  TYPE tihttpnvp.
+
+
+    FIELD-SYMBOLS: <ls_context>    TYPE any,
+                   <lv_parameters> TYPE string,
+                   <ls_field>      LIKE LINE OF lt_fields.
+
+    ls_item-obj_type = 'CLAS'.
+    ls_item-obj_name = 'CL_ADT_GUI_INTEGRATION_CONTEXT'.
+
+    IF zcl_abapgit_objects=>exists( ls_item  ) = abap_false.
+      " ADT is not supported in this NW release
+      RETURN.
+    ENDIF.
+
+    TRY.
+        CREATE DATA lr_context TYPE ('CL_ADT_GUI_INTEGRATION_CONTEXT=>TY_CONTEXT_INFO').
+
+        ASSIGN lr_context->* TO <ls_context>.
+        ASSERT sy-subrc = 0.
+
+        CALL METHOD ('CL_ADT_GUI_INTEGRATION_CONTEXT')=>read_context
+          RECEIVING
+            result = <ls_context>.
+
+        ASSIGN COMPONENT 'PARAMETERS'
+               OF STRUCTURE <ls_context>
+               TO <lv_parameters>.
+        ASSERT sy-subrc = 0.
+
+        lt_fields = cl_http_utility=>string_to_fields(
+                        cl_http_utility=>unescape_url(
+                            <lv_parameters> ) ).
+
+        READ TABLE lt_fields ASSIGNING <ls_field>
+                             WITH KEY name = 'p_package_name'.
+        IF sy-subrc = 0.
+          rv_package = <ls_field>-value.
+        ENDIF.
+
+      CATCH cx_root.
+        " Some problems with dynamic ADT access.
+        " Let's ignore it for now and fail silently
+    ENDTRY.
 
   ENDMETHOD.
 
