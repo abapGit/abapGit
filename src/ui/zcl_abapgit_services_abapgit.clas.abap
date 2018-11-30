@@ -182,7 +182,8 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
           lt_r_package     TYPE RANGE OF devclass,
           ls_r_package     LIKE LINE OF lt_r_package,
           lt_superpackages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
-          lo_package       TYPE REF TO zif_abapgit_sap_package.
+          lo_package       TYPE REF TO zif_abapgit_sap_package,
+          lt_repo_list     TYPE zif_abapgit_definitions=>ty_repo_ref_tt.
 
     FIELD-SYMBOLS: <lo_repo>         TYPE LINE OF zif_abapgit_definitions=>ty_repo_ref_tt,
                    <lv_superpackage> LIKE LINE OF lt_superpackages.
@@ -206,7 +207,9 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
       INSERT ls_r_package INTO TABLE lt_r_package.
     ENDLOOP.
 
-    LOOP AT zcl_abapgit_repo_srv=>get_instance( )->list( ) ASSIGNING <lo_repo>.
+    lt_repo_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
+
+    LOOP AT lt_repo_list ASSIGNING <lo_repo>.
 
       IF <lo_repo>->get_package( ) IN lt_r_package.
         lo_repo = <lo_repo>.
