@@ -25,6 +25,7 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
         zcx_abapgit_exception .
+
   PRIVATE SECTION.
 
     DATA: mo_repo         TYPE REF TO zcl_abapgit_repo,
@@ -92,7 +93,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
 
   METHOD build_dir_jump_link.
@@ -183,10 +184,12 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ENDIF.
 
     " Build advanced drop-down ========================
-    IF mo_repo->is_offline( ) = abap_false. " Online ?
+    IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " In case of asyncronicities
       lo_tb_advanced->add( iv_txt = 'Reset local'
                            iv_act = |{ zif_abapgit_definitions=>c_action-git_reset }?{ lv_key }|
                            iv_opt = lv_wp_opt ).
+    ENDIF.
+    IF mo_repo->is_offline( ) = abap_false. " Online ?
       lo_tb_advanced->add( iv_txt = 'Background mode'
                            iv_act = |{ zif_abapgit_definitions=>c_action-go_background }?{ lv_key }| ).
       lo_tb_advanced->add( iv_txt = 'Change remote'
@@ -380,7 +383,9 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       lv_master_language TYPE spras,
       lt_spagpa          TYPE STANDARD TABLE OF rfc_spagpa,
       ls_spagpa          LIKE LINE OF lt_spagpa,
-      ls_item            TYPE zif_abapgit_definitions=>ty_item.
+      ls_item            TYPE zif_abapgit_definitions=>ty_item,
+      lv_subrc           TYPE syst-subrc,
+      lv_save_sy_langu   TYPE sy-langu.
 
     " https://blogs.sap.com/2017/01/13/logon-language-sy-langu-and-rfc/
 
@@ -397,6 +402,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Please install the abapGit repository| ).
     ENDIF.
 
+    lv_save_sy_langu = sy-langu.
     SET LOCALE LANGUAGE lv_master_language.
 
     ls_spagpa-parid  = zif_abapgit_definitions=>c_spagpa_param_repo_key.
@@ -417,8 +423,12 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
         system_failure          = 4
         OTHERS                  = 5.
 
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from ABAP4_CALL_TRANSACTION. Subrc = { sy-subrc }| ).
+    lv_subrc = sy-subrc.
+
+    SET LOCALE LANGUAGE lv_save_sy_langu.
+
+    IF lv_subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from ABAP4_CALL_TRANSACTION. Subrc = { lv_subrc }| ).
     ENDIF.
 
     MESSAGE 'Repository opened in a new window' TYPE 'S'.
@@ -610,7 +620,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
                                                                     iv_object_name             = is_item-obj_name
                                                                     iv_resolve_task_to_request = abap_false ).
           lv_transport_string = lv_transport.
-          lv_icon_html = zcl_abapgit_html=>a( iv_txt = zcl_abapgit_html=>icon( iv_name = 'lock/darkgrey'
+          lv_icon_html = zcl_abapgit_html=>a( iv_txt = zcl_abapgit_html=>icon( iv_name = 'briefcase/darkgrey'
                                                                                iv_hint = lv_transport_string )
                                               iv_act = |{ zif_abapgit_definitions=>c_action-jump_transport }?| &&
                                                        lv_transport ).

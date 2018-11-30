@@ -216,7 +216,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
   METHOD reset.
 
-    DATA: lo_repo                   TYPE REF TO zcl_abapgit_repo_online,
+    DATA: lo_repo                   TYPE REF TO zcl_abapgit_repo,
           lv_answer                 TYPE c LENGTH 1,
           lt_unnecessary_local_objs TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lt_selected               LIKE lt_unnecessary_local_objs,
@@ -224,7 +224,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
           ls_checks                 TYPE zif_abapgit_definitions=>ty_delete_checks,
           li_popups                 TYPE REF TO zif_abapgit_popups.
 
-    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     IF lo_repo->get_local_settings( )-write_protected = abap_true.
       zcx_abapgit_exception=>raise( 'Cannot reset. Local code is write-protected by repo config' ).

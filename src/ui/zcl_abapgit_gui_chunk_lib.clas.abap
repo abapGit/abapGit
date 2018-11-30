@@ -53,6 +53,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION PUBLIC FINAL CREATE PUBLIC.
         iv_title       TYPE string
         iv_hide        TYPE abap_bool DEFAULT abap_true
         iv_hint        TYPE string OPTIONAL
+        iv_scrollable  TYPE abap_bool DEFAULT abap_true
         io_content     TYPE REF TO zcl_abapgit_html
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
@@ -156,11 +157,12 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ENDIF.
 
     ro_html = render_infopanel(
-      iv_div_id  = 'hotkeys'
-      iv_title   = 'Hotkeys'
-      iv_hint    = lv_hint
-      iv_hide    = abap_true
-      io_content = ro_html ).
+      iv_div_id     = 'hotkeys'
+      iv_title      = 'Hotkeys'
+      iv_hint       = lv_hint
+      iv_hide       = abap_true
+      iv_scrollable = abap_false
+      io_content    = ro_html ).
 
     IF <ls_hotkey> IS ASSIGNED AND zcl_abapgit_hotkeys=>should_show_hint( ) = abap_true.
       ro_html->add( |<div id="hotkeys-hint" class="corner-hint">|
@@ -174,6 +176,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
   METHOD render_infopanel.
 
     DATA lv_display TYPE string.
+    DATA lv_class TYPE string.
 
     CREATE OBJECT ro_html.
 
@@ -181,7 +184,12 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       lv_display = 'display:none'.
     ENDIF.
 
-    ro_html->add( |<div id="{ iv_div_id }" class="info-panel" style="{ lv_display }">| ).
+    lv_class = 'info-panel'.
+    IF iv_scrollable = abap_false. " Initially hide
+      lv_class = lv_class && ' info-panel-fixed'.
+    ENDIF.
+
+    ro_html->add( |<div id="{ iv_div_id }" class="{ lv_class }" style="{ lv_display }">| ).
 
     ro_html->add( |<div class="info-title">{ iv_title }|
                && '<div class="float-right">'
