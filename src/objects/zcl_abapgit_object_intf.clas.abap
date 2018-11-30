@@ -18,6 +18,7 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
 
   PRIVATE SECTION.
     DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc.
+    DATA mv_activation_placeholder_step TYPE abap_bool.
 
     METHODS serialize_xml
       IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
@@ -35,6 +36,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       is_item     = is_item
       iv_language = iv_language ).
     mi_object_oriented_object_fct = zcl_abapgit_oo_factory=>make( ms_item-obj_type ).
+    mv_activation_placeholder_step = abap_true.
   ENDMETHOD.
 
 
@@ -50,24 +52,27 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'VSEOINTERF'
                   CHANGING cg_data = ls_vseointerf ).
 
-    mi_object_oriented_object_fct->create(
-      EXPORTING
-        iv_package    = iv_package
-      CHANGING
-        cg_properties = ls_vseointerf ).
+    IF mv_activation_placeholder_step = abap_true.
+      mi_object_oriented_object_fct->create(
+        EXPORTING
+          iv_package    = iv_package
+        CHANGING
+          cg_properties = ls_vseointerf ).
+      mv_activation_placeholder_step = abap_false.
+    ELSE.
+      mi_object_oriented_object_fct->deserialize_source(
+        is_key               = ls_clskey
+        it_source            = lt_source ).
 
-    mi_object_oriented_object_fct->deserialize_source(
-      is_key               = ls_clskey
-      it_source            = lt_source ).
+      io_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
+                    CHANGING cg_data = lt_descriptions ).
 
-    io_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
-                  CHANGING cg_data = lt_descriptions ).
-
-    mi_object_oriented_object_fct->update_descriptions(
-      is_key          = ls_clskey
-      it_descriptions = lt_descriptions ).
+      mi_object_oriented_object_fct->update_descriptions(
+        is_key          = ls_clskey
+        it_descriptions = lt_descriptions ).
 
     mi_object_oriented_object_fct->add_to_activation_list( ms_item ).
+    ENDIF.
   ENDMETHOD.
 
 
@@ -211,6 +216,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
+    rs_metadata-multistep_deserialization = abap_true.
   ENDMETHOD.
 
 
@@ -226,6 +232,25 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
       iv_program   = lv_program
       iv_timestamp = iv_timestamp
       iv_skip_gui  = abap_true ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+
+    DATA: lv_object TYPE eqegraarg.
+
+    lv_object = |{ ms_item-obj_name }|.
+    OVERLAY lv_object WITH '==============================P'.
+    lv_object = lv_object && '*'.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESEOCLASS'
+                                            iv_argument    = lv_object ).
+
   ENDMETHOD.
 
 
@@ -264,23 +289,5 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     mo_files->add_abap( lt_source ).
 
     serialize_xml( io_xml ).
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-
-    DATA: lv_object TYPE eqegraarg.
-
-    lv_object = |{ ms_item-obj_name }|.
-    OVERLAY lv_object WITH '==============================P'.
-    lv_object = lv_object && '*'.
-
-    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESEOCLASS'
-                                            iv_argument    = lv_object ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

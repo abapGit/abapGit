@@ -24,6 +24,7 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
       EXPORTING
         devclass        = iv_package
         overwrite       = iv_overwrite
+        version         = seoc_version_active
       CHANGING
         interface       = cg_properties
         attributes      = lt_vseoattrib

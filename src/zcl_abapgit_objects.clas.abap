@@ -504,6 +504,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           lt_results  TYPE zif_abapgit_definitions=>ty_results_tt,
           lt_ddic     TYPE TABLE OF ty_deserialization,
           lt_rest     TYPE TABLE OF ty_deserialization,
+          lt_multistep    TYPE TABLE OF ty_deserialization,
           lt_late     TYPE TABLE OF ty_deserialization,
           lo_progress TYPE REF TO zcl_abapgit_progress,
           lv_path     TYPE string,
@@ -584,6 +585,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
       IF li_obj->get_metadata( )-late_deser = abap_true.
         APPEND INITIAL LINE TO lt_late ASSIGNING <ls_deser>.
+      ELSEIF li_obj->get_metadata( )-multistep_deserialization = abap_true.
+        APPEND INITIAL LINE TO lt_multistep ASSIGNING <ls_deser>.
       ELSEIF li_obj->get_metadata( )-ddic = abap_true.
         APPEND INITIAL LINE TO lt_ddic ASSIGNING <ls_deser>.
       ELSE.
@@ -596,6 +599,11 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
       CLEAR: lv_path, lv_package.
     ENDLOOP.
+    APPEND LINES OF lt_multistep TO lt_rest.
+
+    deserialize_objects( EXPORTING it_objects = lt_multistep
+                                   iv_descr   = 'Classes and interfaces'
+                         CHANGING ct_files = rt_accessed_files ).
 
     deserialize_objects( EXPORTING it_objects = lt_ddic
                                    iv_ddic    = abap_true
