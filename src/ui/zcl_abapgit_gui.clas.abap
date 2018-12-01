@@ -111,33 +111,23 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
   METHOD cache_asset.
 
     DATA: lv_xstr  TYPE xstring,
-          lt_xdata TYPE TABLE OF w3_mime, " RAW255
+          lt_xdata TYPE lvc_t_mime,
           lv_size  TYPE int4.
 
     ASSERT iv_text IS SUPPLIED OR iv_xdata IS SUPPLIED.
 
     IF iv_text IS SUPPLIED. " String input
-
-      CALL FUNCTION 'SCMS_STRING_TO_XSTRING'
-        EXPORTING
-          text   = iv_text
-        IMPORTING
-          buffer = lv_xstr
-        EXCEPTIONS
-          OTHERS = 1.
-      ASSERT sy-subrc = 0.
-
+      lv_xstr = zcl_abapgit_gui_asset_manager=>string_to_xstring( iv_text ).
     ELSE. " Raw input
       lv_xstr = iv_xdata.
     ENDIF.
 
-    CALL FUNCTION 'SCMS_XSTRING_TO_BINARY'
+    zcl_abapgit_gui_asset_manager=>xstring_to_bintab(
       EXPORTING
-        buffer        = lv_xstr
+        iv_xstr   = lv_xstr
       IMPORTING
-        output_length = lv_size
-      TABLES
-        binary_tab    = lt_xdata.
+        ev_size   = lv_size
+        et_bintab = lt_xdata ).
 
     mo_html_viewer->load_data(
       EXPORTING

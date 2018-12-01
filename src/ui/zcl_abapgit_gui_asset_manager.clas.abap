@@ -23,6 +23,13 @@ CLASS zcl_abapgit_gui_asset_manager DEFINITION PUBLIC FINAL CREATE PUBLIC .
       RETURNING
         VALUE(rv_xstr) TYPE xstring.
 
+    CLASS-METHODS xstring_to_bintab
+      IMPORTING
+        iv_xstr   TYPE xstring
+      EXPORTING
+        ev_size   TYPE i
+        et_bintab TYPE lvc_t_mime.
+
   PRIVATE SECTION.
 
     METHODS get_textlike_asset
@@ -292,6 +299,18 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
       EXCEPTIONS
         failed       = 1 ##FM_SUBRC_OK.
     ASSERT sy-subrc = 0.
+
+  ENDMETHOD.
+
+  METHOD xstring_to_bintab.
+
+    CALL FUNCTION 'SCMS_XSTRING_TO_BINARY'
+    EXPORTING
+      buffer        = iv_xstr
+    IMPORTING
+      output_length = ev_size
+    TABLES
+      binary_tab    = et_bintab.
 
   ENDMETHOD.
 
