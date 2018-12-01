@@ -17,11 +17,19 @@ CLASS zcl_abapgit_ui_factory DEFINITION
         RETURNING
           VALUE(ri_gui_functions) TYPE REF TO zif_abapgit_gui_functions.
 
+    CLASS-METHODS: get_gui
+      RETURNING
+        VALUE(ro_gui) TYPE REF TO zcl_abapgit_gui
+      RAISING
+        zcx_abapgit_exception.
+
+
   PRIVATE SECTION.
     CLASS-DATA:
       gi_popups        TYPE REF TO zif_abapgit_popups,
       gi_tag_popups    TYPE REF TO zif_abapgit_tag_popups,
-      gi_gui_functions TYPE REF TO zif_abapgit_gui_functions.
+      gi_gui_functions TYPE REF TO zif_abapgit_gui_functions,
+      go_gui           TYPE REF TO zcl_abapgit_gui.
 
 ENDCLASS.
 
@@ -57,6 +65,24 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
     ENDIF.
 
     ri_gui_functions = gi_gui_functions.
+
+  ENDMETHOD.
+
+  METHOD get_gui.
+
+    DATA:
+          li_router    TYPE REF TO zif_abapgit_gui_router,
+          li_asset_man TYPE REF TO zif_abapgit_gui_asset_manager.
+
+    IF go_gui IS INITIAL.
+      CREATE OBJECT li_router TYPE zcl_abapgit_gui_router.
+      CREATE OBJECT li_asset_man TYPE zcl_abapgit_gui_asset_manager.
+      CREATE OBJECT go_gui
+        EXPORTING
+          ii_router    = li_router
+          ii_asset_man = li_asset_man.
+    ENDIF.
+    ro_gui = go_gui.
 
   ENDMETHOD.
 
