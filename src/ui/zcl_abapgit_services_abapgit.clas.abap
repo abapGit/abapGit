@@ -278,6 +278,14 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
                              WITH KEY name = 'p_package_name'.
         IF sy-subrc = 0.
           rv_package = <ls_field>-value.
+
+          " We want to open the repo just once. Therefore we delete the parameters
+          " and initialize the ADT context.
+          CLEAR <lv_parameters>.
+          CALL METHOD ('CL_ADT_GUI_INTEGRATION_CONTEXT')=>initialize_instance
+            EXPORTING
+              context_info = <ls_context>.
+
         ENDIF.
 
       CATCH cx_root.
