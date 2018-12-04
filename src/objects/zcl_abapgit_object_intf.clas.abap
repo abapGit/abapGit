@@ -58,7 +58,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
           iv_package    = iv_package
         CHANGING
           cg_properties = ls_vseointerf ).
-
+        mv_activation_placeholder_step = abap_false.
     ELSE.
       mi_object_oriented_object_fct->deserialize_source(
         is_key               = ls_clskey
@@ -72,6 +72,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
         it_descriptions = lt_descriptions ).
 
       mi_object_oriented_object_fct->add_to_activation_list( ms_item ).
+      mv_activation_placeholder_step = abap_true.
     ENDIF.
   ENDMETHOD.
 
@@ -185,13 +186,9 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~deserialize.
-    IF mv_activation_placeholder_step = abap_true.
       deserialize_abap( io_xml     = io_xml
                         iv_package = iv_package ).
-      mv_activation_placeholder_step = abap_false.
-    ELSE.
       deserialize_docu( io_xml ).
-    ENDIF.
   ENDMETHOD.
 
 
@@ -294,3 +291,4 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     serialize_xml( io_xml ).
   ENDMETHOD.
 ENDCLASS.
+

@@ -115,6 +115,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       mi_object_oriented_object_fct->update_descriptions(
         is_key          = ls_class_key
         it_descriptions = lt_descriptions ).
+      mv_activation_placeholder_step = abap_true.
     ENDIF.
 
   ENDMETHOD.
@@ -327,18 +328,15 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~deserialize.
-    IF mv_activation_placeholder_step = abap_true.
       deserialize_abap( io_xml     = io_xml
                         iv_package = iv_package ).
-      mv_activation_placeholder_step = abap_false.
-    ELSE.
+
       deserialize_tpool( io_xml ).
 
       deserialize_sotr( io_xml     = io_xml
                         iv_package = iv_package ).
 
       deserialize_docu( io_xml ).
-    ENDIF.
   ENDMETHOD.
 
 
@@ -469,3 +467,4 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
   ENDMETHOD.
 ENDCLASS.
+
