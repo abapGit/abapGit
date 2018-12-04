@@ -163,6 +163,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD html_head.
 
+    DATA lv_font TYPE string.
+
     CREATE OBJECT ro_html.
 
     ro_html->add( '<head>' ).                               "#EC NOTEXT
@@ -174,7 +176,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( '<link rel="stylesheet" type="text/css" href="css/common.css">' ).
     ro_html->add( '<script type="text/javascript" src="js/common.js"></script>' ). "#EC NOTEXT
 
-    ro_html->add( zcl_abapgit_gui_asset_manager=>get_webfont_link( ) ). " Web fonts
+    lv_font = |<link rel="stylesheet" type="text/css" href="|
+      && 'https://cdnjs.cloudflare.com/ajax/libs/octicons/4.4.0/font/octicons.min.css'
+      && '">'.                                         "#EC NOTEXT
+    ro_html->add( lv_font ). " Web fonts
 
     ro_html->add( '</head>' ).                              "#EC NOTEXT
 

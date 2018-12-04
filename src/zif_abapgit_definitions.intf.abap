@@ -151,14 +151,6 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       ddic                      TYPE abap_bool,
     END OF ty_metadata .
   TYPES:
-    BEGIN OF ty_web_asset,
-      url     TYPE w3url,
-      base64  TYPE string,
-      content TYPE xstring,
-    END OF ty_web_asset .
-  TYPES:
-    tt_web_assets TYPE STANDARD TABLE OF ty_web_asset WITH DEFAULT KEY .
-  TYPES:
     BEGIN OF ty_repo_file,
       path       TYPE string,
       filename   TYPE string,

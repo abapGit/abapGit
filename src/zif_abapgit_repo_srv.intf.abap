@@ -50,12 +50,6 @@ INTERFACE zif_abapgit_repo_srv
       is_checks TYPE zif_abapgit_definitions=>ty_delete_checks
     RAISING
       zcx_abapgit_exception .
-  METHODS switch_repo_type
-    IMPORTING
-      !iv_key     TYPE zif_abapgit_persistence=>ty_value
-      !iv_offline TYPE abap_bool
-    RAISING
-      zcx_abapgit_exception .
   METHODS validate_package
     IMPORTING
       !iv_package TYPE devclass

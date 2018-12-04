@@ -36,7 +36,7 @@ FORM open_gui RAISING zcx_abapgit_exception.
   ELSE.
 
     zcl_abapgit_services_abapgit=>prepare_gui_startup( ).
-    zcl_abapgit_gui=>get_instance( )->go_home( ).
+    zcl_abapgit_ui_factory=>get_gui( )->go_home( ).
     CALL SELECTION-SCREEN 1001. " trigger screen
 
   ENDIF.
@@ -127,7 +127,7 @@ ENDFORM.
 FORM exit RAISING zcx_abapgit_exception.
   CASE sy-ucomm.
     WHEN 'CBAC'.  "Back
-      IF zcl_abapgit_gui=>get_instance( )->back( ) IS INITIAL.
+      IF zcl_abapgit_ui_factory=>get_gui( )->back( ) IS INITIAL.
         LEAVE TO SCREEN 1001.
       ENDIF.
   ENDCASE.

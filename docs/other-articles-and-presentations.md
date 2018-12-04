@@ -96,3 +96,7 @@ SAP Teched Barcelona
 [SAP Inside Track Bern 2018 - modern ABAP development with abapGit](https://de.slideshare.net/ChristianGnter/sitbern-modern-abap-development-with-abapgit), Christian Günter
 
 [DSAG - abapGit](https://larshp.github.io/Presentations/dsag2018/), Lars Hvam
+
+[abapGit & lint](https://speakerdeck.com/mkysoft/abapgit-and-lint), Mustafa Kerim Yılmaz
+
+[Using abapGit and Phabricator for easy and simultaneously development on different multi-system-landscapes](https://blogs.sap.com/2018/12/02/using-abapgit-and-phabricator-for-easy-and-simultaneously-development-on-different-multi-system-landscapes/), Sascha Wächter

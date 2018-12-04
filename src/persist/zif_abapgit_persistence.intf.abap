@@ -44,6 +44,22 @@ INTERFACE zif_abapgit_persistence PUBLIC.
            local_settings  TYPE ty_local_settings,
          END OF ty_repo_xml.
 
+  TYPES:
+    BEGIN OF ty_repo_meta_mask,
+      url             TYPE abap_bool,
+      branch_name     TYPE abap_bool,
+      package         TYPE abap_bool,
+      created_by      TYPE abap_bool,
+      created_at      TYPE abap_bool,
+      deserialized_by TYPE abap_bool,
+      deserialized_at TYPE abap_bool,
+      offline         TYPE abap_bool,
+      local_checksums TYPE abap_bool,
+      dot_abapgit     TYPE abap_bool,
+      head_branch     TYPE abap_bool,
+      local_settings  TYPE abap_bool,
+    END OF ty_repo_meta_mask.
+
   TYPES: BEGIN OF ty_repo,
            key TYPE zif_abapgit_persistence=>ty_value.
       INCLUDE TYPE ty_repo_xml.
