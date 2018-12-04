@@ -9,9 +9,9 @@ CLASS zcl_abapgit_object_clas DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         iv_language TYPE spras.
 
   PROTECTED SECTION.
-    DATA: mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc,
-          mv_skip_testclass             TYPE abap_bool,
-          mv_activation_placeholder_step  TYPE abap_bool.
+    DATA: mi_object_oriented_object_fct  TYPE REF TO zif_abapgit_oo_object_fnc,
+          mv_skip_testclass              TYPE abap_bool,
+          mv_activation_placeholder_step TYPE abap_bool.
     METHODS:
       deserialize_abap
         IMPORTING io_xml     TYPE REF TO zcl_abapgit_xml_input
@@ -327,15 +327,18 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~deserialize.
-    deserialize_abap( io_xml     = io_xml
-                      iv_package = iv_package ).
+    IF mv_activation_placeholder_step = abap_true.
+      deserialize_abap( io_xml     = io_xml
+                        iv_package = iv_package ).
+      mv_activation_placeholder_step = abap_false.
+    ELSE.
+      deserialize_tpool( io_xml ).
 
-    deserialize_tpool( io_xml ).
+      deserialize_sotr( io_xml     = io_xml
+                        iv_package = iv_package ).
 
-    deserialize_sotr( io_xml     = io_xml
-                      iv_package = iv_package ).
-
-    deserialize_docu( io_xml ).
+      deserialize_docu( io_xml ).
+    ENDIF.
   ENDMETHOD.
 
 
