@@ -31,24 +31,14 @@ ENDFORM.                    "run
 
 FORM open_gui RAISING zcx_abapgit_exception.
 
-  DATA: lv_repo_key TYPE zif_abapgit_persistence=>ty_value.
-
   IF sy-batch = abap_true.
     zcl_abapgit_background=>run( ).
   ELSE.
 
-    GET PARAMETER ID zif_abapgit_definitions=>c_spagpa_param_repo_key FIELD lv_repo_key.
-
-    IF lv_repo_key IS NOT INITIAL.
-      SET PARAMETER ID zif_abapgit_definitions=>c_spagpa_param_repo_key FIELD ''.
-      zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_repo_key ).
-    ELSEIF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_show_default_repo( ) = abap_false.
-      " Don't show the last seen repo at startup
-      zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( || ).
-    ENDIF.
-
-    zcl_abapgit_gui=>get_instance( )->go_home( ).
+    zcl_abapgit_services_abapgit=>prepare_gui_startup( ).
+    zcl_abapgit_ui_factory=>get_gui( )->go_home( ).
     CALL SELECTION-SCREEN 1001. " trigger screen
+
   ENDIF.
 
 ENDFORM.
@@ -137,7 +127,7 @@ ENDFORM.
 FORM exit RAISING zcx_abapgit_exception.
   CASE sy-ucomm.
     WHEN 'CBAC'.  "Back
-      IF zcl_abapgit_gui=>get_instance( )->back( ) IS INITIAL.
+      IF zcl_abapgit_ui_factory=>get_gui( )->back( ) IS INITIAL.
         LEAVE TO SCREEN 1001.
       ENDIF.
   ENDCASE.

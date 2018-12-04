@@ -219,6 +219,10 @@ table.repo_tab {
   width: 32px;
   text-align: center;
 }
+.repo_tab td.icon:not(:first-child) {
+  width: 26px;
+  text-align: left;
+}
 .repo_tab td.type {
   width: 3em;
 }
@@ -800,6 +804,11 @@ div.info-panel {
   margin-left: -20em;
   background-color: white;
   box-shadow: 1px 1px 3px 2px #dcdcdc;
+}
+
+div.info-panel-fixed { 
+  position: fixed;
+  top: 15%;
 }
 
 div.info-panel div.info-hint {

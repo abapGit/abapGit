@@ -2,31 +2,54 @@ CLASS zcl_abapgit_gui_asset_manager DEFINITION PUBLIC FINAL CREATE PUBLIC .
 
   PUBLIC SECTION.
 
-    METHODS get_asset
-      IMPORTING iv_asset_name  TYPE string
-      RETURNING VALUE(rv_data) TYPE xstring
-      RAISING   zcx_abapgit_exception.
+    INTERFACES zif_abapgit_gui_asset_manager.
 
-    METHODS get_images
-      RETURNING VALUE(rt_images) TYPE zif_abapgit_definitions=>tt_web_assets.
+    CLASS-METHODS string_to_xstring
+      IMPORTING
+        iv_str         TYPE string
+      RETURNING
+        VALUE(rv_xstr) TYPE xstring.
 
-    CLASS-METHODS get_webfont_link
-      RETURNING VALUE(rv_link) TYPE string.
+    CLASS-METHODS base64_to_xstring
+      IMPORTING
+        iv_base64      TYPE string
+      RETURNING
+        VALUE(rv_xstr) TYPE xstring.
+
+    CLASS-METHODS bintab_to_xstring
+      IMPORTING
+        it_bintab      TYPE lvc_t_mime
+        iv_size        TYPE i
+      RETURNING
+        VALUE(rv_xstr) TYPE xstring.
+
+    CLASS-METHODS xstring_to_bintab
+      IMPORTING
+        iv_xstr   TYPE xstring
+      EXPORTING
+        ev_size   TYPE i
+        et_bintab TYPE lvc_t_mime.
 
   PRIVATE SECTION.
 
-    METHODS get_inline_asset
-      IMPORTING iv_asset_name  TYPE string
-      RETURNING VALUE(rv_data) TYPE xstring
-      RAISING   zcx_abapgit_exception.
+    METHODS get_textlike_asset
+      IMPORTING
+        iv_asset_url    TYPE string
+      RETURNING
+        VALUE(rs_asset) TYPE zif_abapgit_gui_asset_manager=>ty_web_asset
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS get_mime_asset
-      IMPORTING iv_asset_name  TYPE c
-      RETURNING VALUE(rv_data) TYPE xstring
-      RAISING   zcx_abapgit_exception.
+      IMPORTING
+        iv_mime_name    TYPE c
+      RETURNING
+        VALUE(rv_xdata) TYPE xstring
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS get_inline_images
-      RETURNING VALUE(rt_images) TYPE zif_abapgit_definitions=>tt_web_assets.
+      RETURNING VALUE(rt_images) TYPE zif_abapgit_gui_asset_manager=>tt_web_assets.
 
 ENDCLASS.
 
@@ -34,97 +57,77 @@ ENDCLASS.
 
 CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
 
+  METHOD zif_abapgit_gui_asset_manager~get_all_assets.
 
-  METHOD get_asset.
+    DATA:
+          lt_assets TYPE zif_abapgit_gui_asset_manager=>tt_web_assets,
+          ls_asset  LIKE LINE OF lt_assets.
 
-    DATA: lv_asset_name TYPE string,
-          lv_mime_name  TYPE wwwdatatab-objid.
+    ls_asset = get_textlike_asset( 'css/common.css' ).
+    APPEND ls_asset TO rt_assets.
+    ls_asset = get_textlike_asset( 'js/common.js' ).
+    APPEND ls_asset TO rt_assets.
 
-    lv_asset_name = to_upper( iv_asset_name ).
-
-    CASE lv_asset_name.
-      WHEN 'CSS_COMMON'.
-        lv_mime_name = 'ZABAPGIT_CSS_COMMON'.
-      WHEN 'JS_COMMON'.
-        lv_mime_name = 'ZABAPGIT_JS_COMMON'.
-      WHEN OTHERS.
-        zcx_abapgit_exception=>raise( |Improper resource name: { iv_asset_name }| ).
-    ENDCASE.
-
-    " Inline is default (for older AG snapshots to work)
-    rv_data = get_inline_asset( lv_asset_name ).
-    IF rv_data IS INITIAL.
-      rv_data = get_mime_asset( lv_mime_name ). " Get MIME object
-    ENDIF.
-
-    IF rv_data IS INITIAL.
-      zcx_abapgit_exception=>raise( |Failed to get GUI resource: { iv_asset_name }| ).
-    ENDIF.
+    lt_assets = get_inline_images( ).
+    APPEND LINES OF lt_assets TO rt_assets.
 
   ENDMETHOD.
 
 
-  METHOD get_images.
-
-    FIELD-SYMBOLS <ls_image> LIKE LINE OF rt_images.
-
-    rt_images = get_inline_images( ).
-
-    " Convert to xstring
-    LOOP AT rt_images ASSIGNING <ls_image>.
-      CALL FUNCTION 'SSFC_BASE64_DECODE'
-        EXPORTING
-          b64data = <ls_image>-base64
-        IMPORTING
-          bindata = <ls_image>-content
-        EXCEPTIONS
-          OTHERS  = 1.
-      ASSERT sy-subrc = 0. " Image data error
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD get_inline_asset.
+  METHOD get_textlike_asset.
 
 * used by abapmerge
     DEFINE _inline.
       APPEND &1 TO lt_data.
     END-OF-DEFINITION.
 
-    DATA: lt_data TYPE zif_abapgit_definitions=>ty_string_tt,
-          lv_str  TYPE string.
+    DATA:
+          lt_data      TYPE string_table,
+          lv_mime_name TYPE wwwdatatab-objid,
+          lv_str       TYPE string.
 
-    CASE iv_asset_name.
-      WHEN 'CSS_COMMON'.
+    CASE iv_asset_url.
+      WHEN 'css/common.css'.
+        rs_asset-url     = iv_asset_url.
+        rs_asset-type    = 'text'.
+        rs_asset-subtype = 'css'.
+        lv_mime_name     = 'ZABAPGIT_CSS_COMMON'.
         " @@abapmerge include zabapgit_css_common.w3mi.data.css > _inline '$$'.
-      WHEN 'JS_COMMON'.
+      WHEN 'js/common.js'.
+        rs_asset-url     = iv_asset_url.
+        rs_asset-type    = 'text'.
+        rs_asset-subtype = 'javascript'.
+        lv_mime_name     = 'ZABAPGIT_JS_COMMON'.
         " @@abapmerge include zabapgit_js_common.w3mi.data.js > _inline '$$'.
       WHEN OTHERS.
-        zcx_abapgit_exception=>raise( |No inline resource: { iv_asset_name }| ).
+        zcx_abapgit_exception=>raise( |No inline resource: { iv_asset_url }| ).
     ENDCASE.
 
-    CONCATENATE LINES OF lt_data INTO lv_str SEPARATED BY zif_abapgit_definitions=>c_newline.
+    IF lt_data IS NOT INITIAL.
+      CONCATENATE LINES OF lt_data INTO lv_str SEPARATED BY zif_abapgit_definitions=>c_newline.
+      rs_asset-content = string_to_xstring( lv_str ).
+    ELSE.
+      rs_asset-content = get_mime_asset( lv_mime_name ).
+    ENDIF.
 
-    CALL FUNCTION 'SCMS_STRING_TO_XSTRING'
-      EXPORTING
-        text   = lv_str
-      IMPORTING
-        buffer = rv_data
-      EXCEPTIONS
-        OTHERS = 1.
-    ASSERT sy-subrc = 0.
+    IF rs_asset-content IS INITIAL.
+      zcx_abapgit_exception=>raise( |Failed to get GUI resource: { iv_asset_url }| ).
+    ENDIF.
 
   ENDMETHOD.
 
 
   METHOD get_inline_images.
 
-    DATA ls_image TYPE zif_abapgit_definitions=>ty_web_asset.
+    DATA:
+      lv_base64 TYPE string,
+      ls_image  LIKE LINE OF rt_images.
 
 * see https://github.com/larshp/abapGit/issues/201 for source SVG
     ls_image-url     = 'img/logo' ##NO_TEXT.
-    ls_image-base64 =
+    ls_image-type    = 'image'.
+    ls_image-subtype = 'pmg'.
+    lv_base64 =
          'iVBORw0KGgoAAAANSUhEUgAAAKMAAAAoCAYAAACSG0qbAAAABHNCSVQICAgIfAhkiAAA'
       && 'AAlwSFlzAAAEJQAABCUBprHeCQAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9y'
       && 'Z5vuPBoAAA8VSURBVHic7Zx7cJzVeYef31nJAtvYko1JjM3FYHlXimwZkLWyLEMcwIGQ'
@@ -204,6 +207,7 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
       && 'X9K+ygQTFGDcHhaaoGJyouDNV7JH+eGj4mF6gspoC+tzJt1ObsT4MDsF2zxs886+Ml5v'
       && '/PogUvEwPUGFiE+SX4gAtQa1gkhV7onQR4oJMR5oxC6stDeghd7Dh6E+CPw/HL4vVO2f'
       && 'cpUAAAAASUVORK5CYII='.
+    ls_image-content = base64_to_xstring( lv_base64 ).
     APPEND ls_image TO rt_images.
 
   ENDMETHOD.
@@ -217,7 +221,7 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
           lt_w3mime TYPE STANDARD TABLE OF w3mime.
 
     ls_key-relid = 'MI'.
-    ls_key-objid = iv_asset_name.
+    ls_key-objid = iv_mime_name.
 
     " Get exact file size
     CALL FUNCTION 'WWWPARAMS_READ'
@@ -250,25 +254,64 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    rv_xdata = bintab_to_xstring(
+      iv_size   = lv_size
+      it_bintab = lt_w3mime ).
+
+  ENDMETHOD.
+
+
+  METHOD string_to_xstring.
+
+    CALL FUNCTION 'SCMS_STRING_TO_XSTRING'
+      EXPORTING
+        text   = iv_str
+      IMPORTING
+        buffer = rv_xstr
+      EXCEPTIONS
+        OTHERS = 1.
+    ASSERT sy-subrc = 0.
+
+  ENDMETHOD.
+
+  METHOD base64_to_xstring.
+
+    CALL FUNCTION 'SSFC_BASE64_DECODE'
+      EXPORTING
+        b64data = iv_base64
+      IMPORTING
+        bindata = rv_xstr
+      EXCEPTIONS
+        OTHERS  = 1.
+    ASSERT sy-subrc = 0.
+
+  ENDMETHOD.
+
+  METHOD bintab_to_xstring.
+
     CALL FUNCTION 'SCMS_BINARY_TO_XSTRING'
       EXPORTING
-        input_length = lv_size
+        input_length = iv_size
       IMPORTING
-        buffer       = rv_data
+        buffer       = rv_xstr
       TABLES
-        binary_tab   = lt_w3mime
+        binary_tab   = it_bintab
       EXCEPTIONS
         failed       = 1 ##FM_SUBRC_OK.
+    ASSERT sy-subrc = 0.
 
   ENDMETHOD.
 
+  METHOD xstring_to_bintab.
 
-  METHOD get_webfont_link.
-
-    rv_link = '<link rel="stylesheet"'
-           && ' type="text/css" href="'
-           && 'https://cdnjs.cloudflare.com/ajax/libs/octicons/4.4.0/font/octicons.min.css'
-           && '">'.                                         "#EC NOTEXT
+    CALL FUNCTION 'SCMS_XSTRING_TO_BINARY'
+    EXPORTING
+      buffer        = iv_xstr
+    IMPORTING
+      output_length = ev_size
+    TABLES
+      binary_tab    = et_bintab.
 
   ENDMETHOD.
+
 ENDCLASS.

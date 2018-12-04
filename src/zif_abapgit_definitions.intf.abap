@@ -150,14 +150,6 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       ddic         TYPE abap_bool,
     END OF ty_metadata .
   TYPES:
-    BEGIN OF ty_web_asset,
-      url     TYPE w3url,
-      base64  TYPE string,
-      content TYPE xstring,
-    END OF ty_web_asset .
-  TYPES:
-    tt_web_assets TYPE STANDARD TABLE OF ty_web_asset WITH DEFAULT KEY .
-  TYPES:
     BEGIN OF ty_repo_file,
       path       TYPE string,
       filename   TYPE string,
@@ -493,5 +485,6 @@ INTERFACE zif_abapgit_definitions PUBLIC.
     END OF c_version .
   CONSTANTS c_tag_prefix TYPE string VALUE 'refs/tags/' ##NO_TEXT.
   CONSTANTS c_spagpa_param_repo_key TYPE char20 VALUE 'REPO_KEY'.
+  CONSTANTS c_spagpa_param_package TYPE char20 VALUE 'PACKAGE'.
 
 ENDINTERFACE.

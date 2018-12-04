@@ -148,6 +148,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_offline(
       iv_url     = ls_popup-url
       iv_package = ls_popup-package ).
+    lo_repo->rebuild_local_checksums( ).
 
     zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lo_repo->get_key( ) ). " Set default repo for user
     toggle_favorite( lo_repo->get_key( ) ).
@@ -394,10 +395,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    zcl_abapgit_repo_srv=>get_instance( )->switch_repo_type(
-      iv_key = iv_key
-      iv_offline = abap_false ).
-
+    zcl_abapgit_repo_srv=>get_instance( )->get( iv_key )->switch_repo_type( iv_offline = abap_false ).
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     lo_repo->set_url( ls_popup-url ).
     lo_repo->set_branch_name( ls_popup-branch_name ).
@@ -450,7 +448,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    zcl_abapgit_repo_srv=>get_instance( )->switch_repo_type( iv_key = iv_key  iv_offline = abap_true ).
+    zcl_abapgit_repo_srv=>get_instance( )->get( iv_key )->switch_repo_type( iv_offline = abap_true ).
 
     COMMIT WORK.
 

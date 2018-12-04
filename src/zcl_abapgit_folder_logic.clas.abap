@@ -141,12 +141,13 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
 
   METHOD path_to_package.
 
-    DATA: lv_length        TYPE i,
-          lv_parent        TYPE devclass,
-          lv_new           TYPE string,
-          lv_path          TYPE string,
-          lv_absolute_name TYPE string,
-          lv_top           TYPE devclass.
+    DATA: lv_length               TYPE i,
+          lv_parent               TYPE devclass,
+          lv_new                  TYPE string,
+          lv_path                 TYPE string,
+          lv_absolute_name        TYPE string,
+          lv_top                  TYPE devclass,
+          lt_unique_package_names TYPE HASHED TABLE OF devclass WITH UNIQUE KEY table_line.
 
     lv_top = iv_top.
 
@@ -158,6 +159,8 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
     lv_path    = iv_path+lv_length.
     lv_parent  = lv_top.
     rv_package = lv_top.
+
+    INSERT iv_top INTO TABLE lt_unique_package_names.
 
     WHILE lv_path CA '/'.
       SPLIT lv_path AT '/' INTO lv_new lv_path.
@@ -181,14 +184,14 @@ CLASS ZCL_ABAPGIT_FOLDER_LOGIC IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |Package { lv_absolute_name } exceeds ABAP 30-characters-name limit| ).
       ENDIF.
 
-      IF lv_absolute_name = lv_top.
-        zcx_abapgit_exception=>raise( |Root package { lv_top } has a subpackage with the same name| ).
-      ENDIF.
-      IF lv_absolute_name = lv_parent.
-        zcx_abapgit_exception=>raise( |Package { lv_absolute_name } has a subpackage with the same name| ).
-      ENDIF.
-
       rv_package = lv_absolute_name.
+      READ TABLE lt_unique_package_names TRANSPORTING NO FIELDS
+        WITH TABLE KEY table_line = rv_package.
+      IF sy-subrc = 0.
+        zcx_abapgit_exception=>raise( |Package { rv_package } has a subpackage with the same name| ).
+      ELSE.
+        INSERT rv_package INTO TABLE lt_unique_package_names.
+      ENDIF.
 
       IF zcl_abapgit_factory=>get_sap_package( rv_package )->exists( ) = abap_false AND
           iv_create_if_not_exists = abap_true.

@@ -1,5 +1,8 @@
 {
-  "version": "v702",
+  "global": {
+    "version": "v702",
+    "skipGeneratedGatewayClasses": true
+  },
   "rules": {
     "7bit_ascii": {
       "enabled": true
@@ -35,7 +38,15 @@
       "ignoreExceptions": true
     },
     "obsolete_statement": {
-      "enabled": true
+      "enabled": true,
+      "refresh": true,
+      "compute": true,
+      "add": true,
+      "subtract": true,
+      "multiply": true,
+      "move": true,
+      "divide": true,
+      "requested": true
     },
     "start_at_tab": {
       "enabled": true
@@ -64,14 +75,15 @@
       "depth": 5
     },
     "keywords_upper": {
-      "enabled": true
+      "enabled": true,
+      "ignoreExceptions": true
     },
     "cloud_types": {
       "enabled": true
     },
     "method_length": {
       "enabled": true,
-      "statements": 180
+      "statements": 100
     },
     "mix_returning": {
       "enabled": true
