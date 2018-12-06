@@ -915,8 +915,8 @@ div.info-panel div.info-list td {
   color: lightgrey !important; 
 }
 
-/* HOTKEYS */
 
+/* HOTKEYS */
 ul.hotkeys {
   list-style-type: none;
   padding: 0;
@@ -951,4 +951,10 @@ div.corner-hint {
   opacity: 0.5;
   background: white;
   z-index: 99;
+}
+
+/* Commit popup */
+table.commit tr .title {
+  font-weight: bold;
+  vertical-align: top;
 }

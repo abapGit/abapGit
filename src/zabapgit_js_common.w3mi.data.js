@@ -1119,7 +1119,6 @@ Patch.prototype.collectActiveElementsForSelector = function(sSelector){
 
 };
 
-
 function preparePatch(){
 
   var oPatch = new Patch();
@@ -1133,3 +1132,50 @@ function registerStagePatch(){
   oPatch.registerStagePatch();
 
 }
+
+/**********************************************************
+ * Page branch overview
+ **********************************************************/
+
+function BranchOverview() {
+  this.bFixed = false;
+  this.elCurrentCommit = {
+    style : {
+      display: 'none'
+    }
+  };
+}
+
+BranchOverview.prototype.fnToggleCommit = function(sha1) {
+
+  if (this.elCurrentCommit.style.display && this.bFixed) {
+    this.elCurrentCommit.style.display = 'none';
+    this.bFixed = false;
+  } else {
+    this.elCurrentCommit = document.getElementById(sha1);
+    this.elCurrentCommit.style.display = '';
+    this.bFixed = true;
+  }
+
+};
+
+BranchOverview.prototype.fnOnCommitClick = function(commit){
+  this.fnToggleCommit(commit.sha1);
+};
+
+BranchOverview.prototype.fnShowCommit = function(event){
+  // If there is any commit visible we hide it first
+  if (this.elCurrentCommit.style.display) {
+    this.elCurrentCommit.style.display = 'none';
+  }
+
+  this.elCurrentCommit = document.getElementById(event.data.sha1);
+  this.elCurrentCommit.style.display = '';
+  this.bFixed = false;
+};
+
+BranchOverview.prototype.fnHideCommit = function (event){
+  if (!this.bFixed){
+    this.elCurrentCommit.style.display = 'none';
+  }
+};

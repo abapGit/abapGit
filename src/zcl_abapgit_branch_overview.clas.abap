@@ -75,7 +75,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
+CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -349,7 +349,8 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
           lt_body   TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
           ls_raw    TYPE zcl_abapgit_git_pack=>ty_commit.
 
-    FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects.
+    FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects,
+                   <lv_body>   TYPE string.
 
 
     LOOP AT it_objects ASSIGNING <ls_object> USING KEY type
@@ -370,6 +371,11 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
       ENDIF.
 
       READ TABLE lt_body INDEX 1 INTO ls_commit-message.  "#EC CI_SUBRC
+      " The second line is always empty. Therefore we omit it.
+      LOOP AT lt_body ASSIGNING <lv_body>
+                      FROM 3.
+        INSERT <lv_body> INTO TABLE ls_commit-body.
+      ENDLOOP.
 
 * unix time stamps are in same time zone, so ignore the zone,
       FIND REGEX zif_abapgit_definitions=>c_author_regex IN ls_raw-author
@@ -418,7 +424,6 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
                    <ls_temp>     LIKE LINE OF lt_temp,
                    <ls_temp_end> LIKE LINE OF lt_temp,
                    <ls_commit>   LIKE LINE OF it_commits.
-
 
     LOOP AT mt_branches ASSIGNING <ls_branch>.
 
