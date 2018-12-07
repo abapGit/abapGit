@@ -449,6 +449,26 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
         tabs         = es_form_data-tabs
         windows      = es_form_data-windows.
 
+    DATA(lv_firstloop) = abap_true.
+    DATA(lt_windows)   = es_form_data-windows.
+    DATA(lt_lines)     = et_lines.
+    SORT lt_windows BY tdwindow.
+
+    REFRESH et_lines.
+    LOOP AT lt_windows INTO DATA(ls_windows).
+      lv_firstloop = abap_true.
+      READ TABLE lt_lines INTO DATA(ls_lines) WITH KEY tdformat = '/W'
+                                                       tdline = ls_windows-tdwindow.
+      LOOP AT lt_lines INTO ls_lines FROM sy-tabix.
+        IF lv_firstloop = abap_false AND
+           ls_lines-tdformat = '/W'.
+          EXIT.
+        ENDIF.
+        APPEND ls_lines TO et_lines.
+        lv_firstloop = abap_false.
+      ENDLOOP.
+    ENDLOOP.
+    
   ENDMETHOD.
 
 
