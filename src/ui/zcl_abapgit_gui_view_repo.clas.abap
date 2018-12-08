@@ -736,6 +736,15 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
         ro_html->add( '<div class="repo_container">' ).
 
+        " Offline match banner
+        IF mo_repo->is_offline( ) = abap_true AND mo_repo->has_remote_source( ) = abap_true
+          AND lv_lstate IS INITIAL AND lv_rstate IS INITIAL.
+          ro_html->add(
+            |<div class="repo_banner panel success">|
+            && |ZIP source is attached and completely <b>matches</b> to the local state|
+            && |</div>| ).
+        ENDIF.
+
         " Repo content table
         ro_html->add( '<table class="repo_tab">' ).
 
