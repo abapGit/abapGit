@@ -73,6 +73,16 @@ input:focus, textarea:focus {
 .float-right      { float: right; }
 .pad-right        { padding-right: 6px; }
 
+/* PANELS */
+div.panel {
+  border-radius: 3px;
+}
+div.panel.success {
+  color: #589a58 !important;
+  background: #c5eac5;
+}
+/* TODO: add warning and error colors */
+
 /* STRUCTURE DIVS, HEADER & FOOTER */
 div#header {
   padding:          0.5em 0.5em;
@@ -202,6 +212,14 @@ div.repo {
 div.repo_container {
   position: relative;
 }
+
+div.repo_banner {
+  margin: 0em 1.2em 1em;
+  padding: 0.5em 0.5em;
+  text-align: center;
+  font-size: 85%;
+}
+
 table.repo_tab {
   border: 1px solid #DDD;
   border-radius: 3px;
