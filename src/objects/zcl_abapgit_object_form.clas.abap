@@ -455,22 +455,25 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
         windows      = es_form_data-windows.
 
       _sort_tdlines_by_windows( CHANGING ct_form_windows  = es_form_data-windows
-                                         ct_lines         = et_lines ).    
+                                         ct_lines         = et_lines ).
   ENDMETHOD.
-  
-  METHOD _sort_tdlines_by_windows.
-    DATA lv_elt_windows TYPE tdformat VALUE '/W'.
-    DATA lv_firstloop   TYPE boolean.
 
-    DATA(lt_lines)   = ct_lines.
-    REFRESH ct_lines.
+  METHOD _sort_tdlines_by_windows.
+    DATA lt_lines        TYPE zcl_abapgit_object_form=>tyt_lines.
+    DATA ls_lines        LIKE LINE OF lt_lines.    
+    DATA ls_form_windows LIKE LINE OF ct_form_windows.
+    DATA lv_elt_windows  TYPE tdformat VALUE '/W'.
+    DATA lv_firstloop    TYPE boolean.
+
+    lt_lines = ct_lines.
+    CLEAR ct_lines.
 
     SORT ct_form_windows BY tdwindow.
 
-    LOOP AT ct_form_windows INTO DATA(ls_form_windows).
+    LOOP AT ct_form_windows INTO ls_form_windows.
       lv_firstloop = abap_true.
-      READ TABLE lt_lines INTO DATA(ls_lines) WITH KEY tdformat = lv_elt_windows
-                                                       tdline   = ls_form_windows-tdwindow.
+      READ TABLE lt_lines INTO ls_lines WITH KEY tdformat = lv_elt_windows
+                                                 tdline   = ls_form_windows-tdwindow.
       LOOP AT lt_lines INTO ls_lines FROM sy-tabix.
         IF lv_firstloop = abap_false AND
            ls_lines-tdformat = lv_elt_windows.
@@ -481,8 +484,8 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
   ENDMETHOD.
-  
-  METHOD _save_form.
+
+METHOD _save_form.
 
     CALL FUNCTION 'SAVE_FORM'
       EXPORTING
