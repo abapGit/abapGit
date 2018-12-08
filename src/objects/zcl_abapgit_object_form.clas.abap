@@ -460,7 +460,7 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
 
   METHOD _sort_tdlines_by_windows.
     DATA lt_lines        TYPE zcl_abapgit_object_form=>tyt_lines.
-    DATA ls_lines        LIKE LINE OF lt_lines.    
+    DATA ls_lines        LIKE LINE OF lt_lines.
     DATA ls_form_windows LIKE LINE OF ct_form_windows.
     DATA lv_elt_windows  TYPE tdformat VALUE '/W'.
     DATA lv_firstloop    TYPE boolean.
