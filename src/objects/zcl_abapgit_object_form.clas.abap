@@ -89,6 +89,11 @@ CLASS zcl_abapgit_object_form DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         es_form_data   TYPE zcl_abapgit_object_form=>tys_form_data
         et_lines       TYPE zcl_abapgit_object_form=>tyt_lines.
 
+    METHODS _sort_tdlines_by_windows
+      CHANGING
+        ct_form_windows TYPE zcl_abapgit_object_form=>tys_form_data-windows
+        ct_lines        TYPE zcl_abapgit_object_form=>tyt_lines.
+
     METHODS order_check_and_insert
       RAISING
         zcx_abapgit_exception.
@@ -449,29 +454,34 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
         tabs         = es_form_data-tabs
         windows      = es_form_data-windows.
 
-    DATA(lv_firstloop) = abap_true.
-    DATA(lt_windows)   = es_form_data-windows.
-    DATA(lt_lines)     = et_lines.
-    SORT lt_windows BY tdwindow.
+      _sort_tdlines_by_windows( CHANGING ct_form_windows  = es_form_data-windows
+                                         ct_lines         = et_lines ).    
+  ENDMETHOD.
+  
+  METHOD _sort_tdlines_by_windows.
+    DATA lv_elt_windows TYPE tdformat VALUE '/W'.
+    DATA lv_firstloop   TYPE boolean.
 
-    REFRESH et_lines.
-    LOOP AT lt_windows INTO DATA(ls_windows).
+    DATA(lt_lines)   = ct_lines.
+    REFRESH ct_lines.
+
+    SORT ct_form_windows BY tdwindow.
+
+    LOOP AT ct_form_windows INTO DATA(ls_form_windows).
       lv_firstloop = abap_true.
-      READ TABLE lt_lines INTO DATA(ls_lines) WITH KEY tdformat = '/W'
-                                                       tdline = ls_windows-tdwindow.
+      READ TABLE lt_lines INTO DATA(ls_lines) WITH KEY tdformat = lv_elt_windows
+                                                       tdline   = ls_form_windows-tdwindow.
       LOOP AT lt_lines INTO ls_lines FROM sy-tabix.
         IF lv_firstloop = abap_false AND
-           ls_lines-tdformat = '/W'.
+           ls_lines-tdformat = lv_elt_windows.
           EXIT.
         ENDIF.
-        APPEND ls_lines TO et_lines.
+        APPEND ls_lines TO ct_lines.
         lv_firstloop = abap_false.
       ENDLOOP.
     ENDLOOP.
-    
   ENDMETHOD.
-
-
+  
   METHOD _save_form.
 
     CALL FUNCTION 'SAVE_FORM'
