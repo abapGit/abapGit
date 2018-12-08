@@ -4,32 +4,7 @@ CLASS zcl_abapgit_gui_asset_manager DEFINITION PUBLIC FINAL CREATE PUBLIC .
 
     INTERFACES zif_abapgit_gui_asset_manager.
 
-    CLASS-METHODS string_to_xstring
-      IMPORTING
-        iv_str         TYPE string
-      RETURNING
-        VALUE(rv_xstr) TYPE xstring.
-
-    CLASS-METHODS base64_to_xstring
-      IMPORTING
-        iv_base64      TYPE string
-      RETURNING
-        VALUE(rv_xstr) TYPE xstring.
-
-    CLASS-METHODS bintab_to_xstring
-      IMPORTING
-        it_bintab      TYPE lvc_t_mime
-        iv_size        TYPE i
-      RETURNING
-        VALUE(rv_xstr) TYPE xstring.
-
-    CLASS-METHODS xstring_to_bintab
-      IMPORTING
-        iv_xstr   TYPE xstring
-      EXPORTING
-        ev_size   TYPE i
-        et_bintab TYPE lvc_t_mime.
-
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     METHODS get_textlike_asset
@@ -56,65 +31,6 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
-
-  METHOD zif_abapgit_gui_asset_manager~get_all_assets.
-
-    DATA:
-          lt_assets TYPE zif_abapgit_gui_asset_manager=>tt_web_assets,
-          ls_asset  LIKE LINE OF lt_assets.
-
-    ls_asset = get_textlike_asset( 'css/common.css' ).
-    APPEND ls_asset TO rt_assets.
-    ls_asset = get_textlike_asset( 'js/common.js' ).
-    APPEND ls_asset TO rt_assets.
-
-    lt_assets = get_inline_images( ).
-    APPEND LINES OF lt_assets TO rt_assets.
-
-  ENDMETHOD.
-
-
-  METHOD get_textlike_asset.
-
-* used by abapmerge
-    DEFINE _inline.
-      APPEND &1 TO lt_data.
-    END-OF-DEFINITION.
-
-    DATA:
-          lt_data      TYPE string_table,
-          lv_mime_name TYPE wwwdatatab-objid,
-          lv_str       TYPE string.
-
-    CASE iv_asset_url.
-      WHEN 'css/common.css'.
-        rs_asset-url     = iv_asset_url.
-        rs_asset-type    = 'text'.
-        rs_asset-subtype = 'css'.
-        lv_mime_name     = 'ZABAPGIT_CSS_COMMON'.
-        " @@abapmerge include zabapgit_css_common.w3mi.data.css > _inline '$$'.
-      WHEN 'js/common.js'.
-        rs_asset-url     = iv_asset_url.
-        rs_asset-type    = 'text'.
-        rs_asset-subtype = 'javascript'.
-        lv_mime_name     = 'ZABAPGIT_JS_COMMON'.
-        " @@abapmerge include zabapgit_js_common.w3mi.data.js > _inline '$$'.
-      WHEN OTHERS.
-        zcx_abapgit_exception=>raise( |No inline resource: { iv_asset_url }| ).
-    ENDCASE.
-
-    IF lt_data IS NOT INITIAL.
-      CONCATENATE LINES OF lt_data INTO lv_str SEPARATED BY zif_abapgit_definitions=>c_newline.
-      rs_asset-content = string_to_xstring( lv_str ).
-    ELSE.
-      rs_asset-content = get_mime_asset( lv_mime_name ).
-    ENDIF.
-
-    IF rs_asset-content IS INITIAL.
-      zcx_abapgit_exception=>raise( |Failed to get GUI resource: { iv_asset_url }| ).
-    ENDIF.
-
-  ENDMETHOD.
 
 
   METHOD get_inline_images.
@@ -207,7 +123,7 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
       && 'X9K+ygQTFGDcHhaaoGJyouDNV7JH+eGj4mF6gspoC+tzJt1ObsT4MDsF2zxs886+Ml5v'
       && '/PogUvEwPUGFiE+SX4gAtQa1gkhV7onQR4oJMR5oxC6stDeghd7Dh6E+CPw/HL4vVO2f'
       && 'cpUAAAAASUVORK5CYII='.
-    ls_image-content = base64_to_xstring( lv_base64 ).
+    ls_image-content = zcl_abapgit_string_utils=>base64_to_xstring( lv_base64 ).
     APPEND ls_image TO rt_images.
 
   ENDMETHOD.
@@ -254,64 +170,69 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    rv_xdata = bintab_to_xstring(
+    rv_xdata = zcl_abapgit_string_utils=>bintab_to_xstring(
       iv_size   = lv_size
       it_bintab = lt_w3mime ).
 
   ENDMETHOD.
 
 
-  METHOD string_to_xstring.
+  METHOD get_textlike_asset.
 
-    CALL FUNCTION 'SCMS_STRING_TO_XSTRING'
-      EXPORTING
-        text   = iv_str
-      IMPORTING
-        buffer = rv_xstr
-      EXCEPTIONS
-        OTHERS = 1.
-    ASSERT sy-subrc = 0.
+* used by abapmerge
+    DEFINE _inline.
+      APPEND &1 TO lt_data.
+    END-OF-DEFINITION.
 
-  ENDMETHOD.
+    DATA:
+          lt_data      TYPE string_table,
+          lv_mime_name TYPE wwwdatatab-objid,
+          lv_str       TYPE string.
 
-  METHOD base64_to_xstring.
+    CASE iv_asset_url.
+      WHEN 'css/common.css'.
+        rs_asset-url     = iv_asset_url.
+        rs_asset-type    = 'text'.
+        rs_asset-subtype = 'css'.
+        lv_mime_name     = 'ZABAPGIT_CSS_COMMON'.
+        " @@abapmerge include zabapgit_css_common.w3mi.data.css > _inline '$$'.
+      WHEN 'js/common.js'.
+        rs_asset-url     = iv_asset_url.
+        rs_asset-type    = 'text'.
+        rs_asset-subtype = 'javascript'.
+        lv_mime_name     = 'ZABAPGIT_JS_COMMON'.
+        " @@abapmerge include zabapgit_js_common.w3mi.data.js > _inline '$$'.
+      WHEN OTHERS.
+        zcx_abapgit_exception=>raise( |No inline resource: { iv_asset_url }| ).
+    ENDCASE.
 
-    CALL FUNCTION 'SSFC_BASE64_DECODE'
-      EXPORTING
-        b64data = iv_base64
-      IMPORTING
-        bindata = rv_xstr
-      EXCEPTIONS
-        OTHERS  = 1.
-    ASSERT sy-subrc = 0.
+    IF lt_data IS NOT INITIAL.
+      CONCATENATE LINES OF lt_data INTO lv_str SEPARATED BY zif_abapgit_definitions=>c_newline.
+      rs_asset-content = zcl_abapgit_string_utils=>string_to_xstring( lv_str ).
+    ELSE.
+      rs_asset-content = get_mime_asset( lv_mime_name ).
+    ENDIF.
 
-  ENDMETHOD.
-
-  METHOD bintab_to_xstring.
-
-    CALL FUNCTION 'SCMS_BINARY_TO_XSTRING'
-      EXPORTING
-        input_length = iv_size
-      IMPORTING
-        buffer       = rv_xstr
-      TABLES
-        binary_tab   = it_bintab
-      EXCEPTIONS
-        failed       = 1 ##FM_SUBRC_OK.
-    ASSERT sy-subrc = 0.
-
-  ENDMETHOD.
-
-  METHOD xstring_to_bintab.
-
-    CALL FUNCTION 'SCMS_XSTRING_TO_BINARY'
-    EXPORTING
-      buffer        = iv_xstr
-    IMPORTING
-      output_length = ev_size
-    TABLES
-      binary_tab    = et_bintab.
+    IF rs_asset-content IS INITIAL.
+      zcx_abapgit_exception=>raise( |Failed to get GUI resource: { iv_asset_url }| ).
+    ENDIF.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_gui_asset_manager~get_all_assets.
+
+    DATA:
+          lt_assets TYPE zif_abapgit_gui_asset_manager=>tt_web_assets,
+          ls_asset  LIKE LINE OF lt_assets.
+
+    ls_asset = get_textlike_asset( 'css/common.css' ).
+    APPEND ls_asset TO rt_assets.
+    ls_asset = get_textlike_asset( 'js/common.js' ).
+    APPEND ls_asset TO rt_assets.
+
+    lt_assets = get_inline_images( ).
+    APPEND LINES OF lt_assets TO rt_assets.
+
+  ENDMETHOD.
 ENDCLASS.
