@@ -22,6 +22,7 @@ CLASS zcl_abapgit_gui DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES: BEGIN OF ty_page_stack,
@@ -117,12 +118,12 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     ASSERT iv_text IS SUPPLIED OR iv_xdata IS SUPPLIED.
 
     IF iv_text IS SUPPLIED. " String input
-      lv_xstr = zcl_abapgit_gui_asset_manager=>string_to_xstring( iv_text ).
+      lv_xstr = zcl_abapgit_string_utils=>string_to_xstring( iv_text ).
     ELSE. " Raw input
       lv_xstr = iv_xdata.
     ENDIF.
 
-    zcl_abapgit_gui_asset_manager=>xstring_to_bintab(
+    zcl_abapgit_string_utils=>xstring_to_bintab(
       EXPORTING
         iv_xstr   = lv_xstr
       IMPORTING
@@ -179,6 +180,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     startup( ).
 
   ENDMETHOD.
+
 
   METHOD get_current_page_name.
     IF mi_cur_page IS BOUND.
