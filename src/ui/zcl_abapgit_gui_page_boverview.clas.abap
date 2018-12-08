@@ -145,14 +145,14 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
           }", author: "{
           <ls_commit>-author }", sha1: "{
           <ls_commit>-sha1(7) }", tag: "{ lv_tag
-          }", onClick:gBranchOveriew.fnOnCommitClick.bind(gBranchOveriew)\});| ).
+          }", onClick:gBranchOveriew.onCommitClick.bind(gBranchOveriew)\});| ).
       ELSE.
         ro_html->add( |{ escape_branch( <ls_commit>-merge ) }.merge({
           escape_branch( <ls_commit>-branch ) }, \{message: "{
           escape_message( <ls_commit>-message ) }", long: "{ escape_message( concat_lines_of( table = <ls_commit>-body
                                                                                               sep   = ` ` ) )
           }", author: "{ <ls_commit>-author }", sha1: "{
-          <ls_commit>-sha1(7) }", onClick:gBranchOveriew.fnOnCommitClick.bind(gBranchOveriew)\});| ).
+          <ls_commit>-sha1(7) }", onClick:gBranchOveriew.onCommitClick.bind(gBranchOveriew)\});| ).
       ENDIF.
 
       LOOP AT <ls_commit>-create ASSIGNING <ls_create>.
@@ -170,9 +170,9 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
     ENDLOOP.
 
     ro_html->add(
-       |gitGraph.addEventListener( "commit:mouseover", gBranchOveriew.fnShowCommit.bind(gBranchOveriew) );| ).
+       |gitGraph.addEventListener( "commit:mouseover", gBranchOveriew.showCommit.bind(gBranchOveriew) );| ).
     ro_html->add(
-       |gitGraph.addEventListener( "commit:mouseout",  gBranchOveriew.fnHideCommit.bind(gBranchOveriew) );| ).
+       |gitGraph.addEventListener( "commit:mouseout",  gBranchOveriew.hideCommit.bind(gBranchOveriew) );| ).
 
     ro_html->add( '</script>' ).
 

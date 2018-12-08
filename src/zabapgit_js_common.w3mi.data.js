@@ -1146,7 +1146,7 @@ function BranchOverview() {
   };
 }
 
-BranchOverview.prototype.fnToggleCommit = function(sha1) {
+BranchOverview.prototype.toggleCommit = function(sha1) {
 
   if (this.elCurrentCommit.style.display && this.bFixed) {
     this.elCurrentCommit.style.display = 'none';
@@ -1159,11 +1159,11 @@ BranchOverview.prototype.fnToggleCommit = function(sha1) {
 
 };
 
-BranchOverview.prototype.fnOnCommitClick = function(commit){
-  this.fnToggleCommit(commit.sha1);
+BranchOverview.prototype.onCommitClick = function(commit){
+  this.toggleCommit(commit.sha1);
 };
 
-BranchOverview.prototype.fnShowCommit = function(event){
+BranchOverview.prototype.showCommit = function(event){
   // If there is any commit visible we hide it first
   if (this.elCurrentCommit.style.display) {
     this.elCurrentCommit.style.display = 'none';
@@ -1174,7 +1174,7 @@ BranchOverview.prototype.fnShowCommit = function(event){
   this.bFixed = false;
 };
 
-BranchOverview.prototype.fnHideCommit = function (event){
+BranchOverview.prototype.hideCommit = function (event){
   if (!this.bFixed){
     this.elCurrentCommit.style.display = 'none';
   }
