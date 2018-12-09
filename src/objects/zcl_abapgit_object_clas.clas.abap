@@ -386,7 +386,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
            ls_vseoclass-changedon,
            ls_vseoclass-r3release,
            ls_vseoclass-chgdanyby,
-           ls_vseoclass-chgdanyon.
+           ls_vseoclass-chgdanyon,
+           ls_vseoclass-clsfinal.
 
     IF mv_skip_testclass = abap_true.
       CLEAR ls_vseoclass-with_unit_tests.
