@@ -9,4 +9,4 @@ abapGit uses a few external libraries, these are loaded via [cdnjs](https://cdnj
 Library   | Version | License
 :------------ | :------------ | :------------
 [octicons](https://github.com/primer/octicons) | 4.4.0 | MIT
-[gitgraph](https://github.com/nicoespeon/gitgraph.js) | 1.12.0 | MIT
+[gitgraph](https://github.com/nicoespeon/gitgraph.js) | 1.14.0 | MIT

@@ -249,6 +249,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
            email      TYPE string,
            time       TYPE string,
            message    TYPE string,
+           body       TYPE stringtab,
            branch     TYPE string,
            merge      TYPE string,
            tags       TYPE stringtab,

@@ -1119,7 +1119,6 @@ Patch.prototype.collectActiveElementsForSelector = function(sSelector){
 
 };
 
-
 function preparePatch(){
 
   var oPatch = new Patch();
@@ -1133,3 +1132,62 @@ function registerStagePatch(){
   oPatch.registerStagePatch();
 
 }
+
+/**********************************************************
+ * Page branch overview
+ * 
+ * Hovering a commit node in the branch overview will show
+ * a popup with the commit details. Single click on a node
+ * will fix the popup, so that users can select text. The
+ * fixation is removed when any node is hovered or the popup 
+ * is closed via 'X'.
+ * 
+ **********************************************************/
+
+function BranchOverview() {
+  this.bFixed = false;
+  this.elCurrentCommit = {
+    style : {
+      display: 'none'
+    }
+  };
+}
+
+BranchOverview.prototype.toggleCommit = function(sSha1, bFixPopup) {
+
+  // If the popup is fixed, we just remove the fixation.
+  // The popup will then be hidden by the next call of hideCommit 
+  if (this.bFixed) {
+    this.bFixed = false;
+    return;
+  } 
+
+  // We hide the previous shown commit popup
+  this.elCurrentCommit.style.display = 'none';
+
+  // Display the new commit popup if sha1 is supplied
+  if (sSha1){
+    this.elCurrentCommit = document.getElementById(sSha1);
+    this.elCurrentCommit.style.display = '';
+
+    // and fix the popup so that the next hideCommit won't hide it.
+    this.bFixed = bFixPopup;
+
+  }
+
+};
+
+// called by onClick of commit nodes in branch overview
+BranchOverview.prototype.onCommitClick = function(commit){
+  this.toggleCommit(commit.sha1, true);
+};
+
+// Called by commit:mouseover
+BranchOverview.prototype.showCommit = function(event){
+  this.toggleCommit(event.data.sha1);
+};
+
+// Called by commit:mouseout
+BranchOverview.prototype.hideCommit = function (event){
+  this.toggleCommit();
+};

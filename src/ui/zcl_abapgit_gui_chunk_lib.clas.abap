@@ -60,6 +60,14 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION PUBLIC FINAL CREATE PUBLIC.
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS render_commit_popup
+      IMPORTING
+        iv_content     TYPE csequence
+        iv_id          TYPE csequence
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -67,7 +75,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
+CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
 
   METHOD render_branch_span.
@@ -93,6 +101,26 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       ro_html->add( lv_text ).
     ENDIF.
     ro_html->add( '</span>' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_commit_popup.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( '<ul class="hotkeys">' ).
+    ro_html->add( |<li>|
+      && |<span>{ iv_content }</span>|
+      && |</li>| ).
+    ro_html->add( '</ul>' ).
+
+    ro_html = render_infopanel(
+      iv_div_id     = |{ iv_id }|
+      iv_title      = 'Commit details'
+      iv_hide       = abap_true
+      iv_scrollable = abap_false
+      io_content    = ro_html ).
 
   ENDMETHOD.
 

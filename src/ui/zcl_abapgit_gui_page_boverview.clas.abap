@@ -56,15 +56,21 @@ CLASS zcl_abapgit_gui_page_boverview DEFINITION
         RETURNING VALUE(rv_string) TYPE string,
       escape_message
         IMPORTING iv_string        TYPE string
-        RETURNING VALUE(rv_string) TYPE string.
+        RETURNING VALUE(rv_string) TYPE string,
+      render_commit_popups
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        RAISING   zcx_abapgit_exception.
 ENDCLASS.
+
 
 
 CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
 
+
   METHOD body.
-    DATA: lv_tag                 TYPE string.
-    DATA: lv_branch_display_name TYPE string.
+
+    DATA: lv_tag                 TYPE string,
+          lv_branch_display_name TYPE string.
 
     FIELD-SYMBOLS: <ls_commit> LIKE LINE OF mt_commits,
                    <ls_create> LIKE LINE OF <ls_commit>-create.
@@ -88,7 +94,7 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
     ro_html->add( '<canvas id="gitGraph"></canvas>' ).
 
     ro_html->add( '<script type="text/javascript" src="https://cdnjs.' &&
-      'cloudflare.com/ajax/libs/gitgraph.js/1.12.0/gitgraph.min.js">' &&
+      'cloudflare.com/ajax/libs/gitgraph.js/1.14.0/gitgraph.min.js">' &&
       '</script>' ) ##NO_TEXT.
 
     ro_html->add( '<script type="text/javascript">' ).
@@ -109,8 +115,10 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
     ro_html->add( '  template: myTemplateConfig,' ).
     ro_html->add( '  orientation: "vertical-reverse"' ).
     ro_html->add( '});' ).
+    ro_html->add( 'var gBranchOveriew = new BranchOverview();' ).
 
     LOOP AT mt_commits ASSIGNING <ls_commit>.
+
       IF sy-tabix = 1.
 * assumption: all branches are created from master, todo
         ro_html->add( |var {
@@ -132,15 +140,19 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
                                   sep   = ` | ` ).
 
         ro_html->add( |{ escape_branch( <ls_commit>-branch ) }.commit(\{message: "{
-          escape_message( <ls_commit>-message ) }", author: "{
+          escape_message( <ls_commit>-message ) }", long: "{ escape_message( concat_lines_of( table = <ls_commit>-body
+                                                                                              sep   = ` ` ) )
+          }", author: "{
           <ls_commit>-author }", sha1: "{
-          <ls_commit>-sha1(7) }", tag: "{ lv_tag }"\});| ).
+          <ls_commit>-sha1(7) }", tag: "{ lv_tag
+          }", onClick:gBranchOveriew.onCommitClick.bind(gBranchOveriew)\});| ).
       ELSE.
         ro_html->add( |{ escape_branch( <ls_commit>-merge ) }.merge({
           escape_branch( <ls_commit>-branch ) }, \{message: "{
-          escape_message( <ls_commit>-message ) }", author: "{
-          <ls_commit>-author }", sha1: "{
-          <ls_commit>-sha1(7) }"\});| ).
+          escape_message( <ls_commit>-message ) }", long: "{ escape_message( concat_lines_of( table = <ls_commit>-body
+                                                                                              sep   = ` ` ) )
+          }", author: "{ <ls_commit>-author }", sha1: "{
+          <ls_commit>-sha1(7) }", onClick:gBranchOveriew.onCommitClick.bind(gBranchOveriew)\});| ).
       ENDIF.
 
       LOOP AT <ls_commit>-create ASSIGNING <ls_create>.
@@ -157,7 +169,14 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
 
     ENDLOOP.
 
+    ro_html->add(
+       |gitGraph.addEventListener( "commit:mouseover", gBranchOveriew.showCommit.bind(gBranchOveriew) );| ).
+    ro_html->add(
+       |gitGraph.addEventListener( "commit:mouseout",  gBranchOveriew.hideCommit.bind(gBranchOveriew) );| ).
+
     ro_html->add( '</script>' ).
+
+    ro_html->add( render_commit_popups( ) ).
 
   ENDMETHOD.
 
@@ -327,4 +346,63 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
+
+  METHOD render_commit_popups.
+
+    DATA: lv_time    TYPE char10,
+          lv_date    TYPE sy-datum,
+          lv_content TYPE string.
+
+    FIELD-SYMBOLS: <ls_commit> LIKE LINE OF mt_commits.
+
+    CREATE OBJECT ro_html.
+
+    LOOP AT mt_commits ASSIGNING <ls_commit>.
+
+      CLEAR: lv_time, lv_date.
+
+      PERFORM p6_to_date_time_tz IN PROGRAM rstr0400
+                                 USING <ls_commit>-time
+                                       lv_time
+                                       lv_date.
+
+      lv_content = |<table class="commit">|
+                && |  <tr>|
+                && |    <td class="title">Author</td>|
+                && |    <td>{ <ls_commit>-author }</td>|
+                && |  </tr>|
+                && |  <tr>|
+                && |    <td class="title">SHA1</td>|
+                && |    <td>{ <ls_commit>-sha1 }</td>|
+                && |  </tr>|
+                && |  <tr>|
+                && |    <td class="title">Date/Time</td>|
+                && |    <td>{ lv_date DATE = USER }</td>|
+                && |  </tr>|
+                && |  <tr>|
+                && |    <td class="title">Message</td>|
+                && |    <td>{ <ls_commit>-message }</td>|
+                && |  </tr>|
+                && |  <tr>|.
+
+      IF <ls_commit>-body IS NOT INITIAL.
+        lv_content = lv_content
+                  && |<td class="title">Body</td>|
+                  && |<td>{ concat_lines_of( table = <ls_commit>-body
+                                             sep   = |<br/>| ) }</td>|.
+      ENDIF.
+
+      lv_content = lv_content
+                && |  </tr>|
+                && |</table>|.
+
+      ro_html->add( zcl_abapgit_gui_chunk_lib=>render_commit_popup( iv_id      = <ls_commit>-sha1(7)
+                                                                    iv_content = lv_content ) ).
+
+    ENDLOOP.
+
+
+
+  ENDMETHOD.
+
 ENDCLASS.
