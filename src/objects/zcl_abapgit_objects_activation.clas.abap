@@ -79,9 +79,18 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF gt_objects.
 
 
-    LOOP AT gt_objects ASSIGNING <ls_object>.	
-      ls_gentab-name = <ls_object>-obj_name.	
-      ls_gentab-type = <ls_object>-object.	
+    LOOP AT gt_objects ASSIGNING <ls_object>.
+      ls_gentab-type = <ls_object>-object.
+      ls_gentab-name = <ls_object>-obj_name.
+      IF ls_gentab-type = 'INDX'.
+        CALL FUNCTION 'DD_E071_TO_DD'
+          EXPORTING
+            object   = <ls_object>-object
+            obj_name = <ls_object>-obj_name
+          IMPORTING
+            name     = ls_gentab-name
+            id       = ls_gentab-indx.
+      ENDIF.
       INSERT ls_gentab INTO TABLE lt_gentab.
     ENDLOOP.
 
@@ -117,9 +126,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
       ENDIF.
 
       IF lv_rc > 0.
-
         show_activation_errors( lv_logname ).
-
       ENDIF.
 
     ENDIF.
