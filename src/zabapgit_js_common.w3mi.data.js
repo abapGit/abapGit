@@ -1037,7 +1037,7 @@ Patch.prototype.togglePatchActive = function(oEvent, elClicked, elCorrespondingL
 Patch.prototype.togglePatchActiveForClassLink = function(oEvent, elClicked, oClassCombination) {
 
   var sCorrespondingLinkId = this.getCorrespodingLinkId(elClicked.id, oClassCombination);
-  var elCorrespondingLink = document.querySelector('#' + this.escape(sCorrespondingLinkId));
+  var elCorrespondingLink = document.querySelector('[ID="' + this.escape(sCorrespondingLinkId) + '"]');
 
   this.togglePatchActive(oEvent, elClicked, elCorrespondingLink);
 };
@@ -1065,7 +1065,7 @@ Patch.prototype.patchLinkClickAll = function(oClassCombination) {
   return function(oEvent) {
 
     var sTableId = oEvent.srcElement.parentElement.parentElement.parentElement.parentElement.id;
-    var elAddAll = document.querySelectorAll('#' + this.escape(sTableId) + ' a.' + oClassCombination.sClassLinkClicked);
+    var elAddAll = document.querySelectorAll('[ID="' + this.escape(sTableId) + '"] a.' + oClassCombination.sClassLinkClicked);
 
     [].forEach.call(elAddAll,function(elem){
       this.togglePatchActiveForClassLink(oEvent, elem, oClassCombination);
