@@ -37,14 +37,18 @@ CLASS zcl_abapgit_object_clas DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING   zcx_abapgit_exception.
 ENDCLASS.
 
-CLASS zcl_abapgit_object_clas IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
+
 
   METHOD constructor.
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
 
-    CREATE OBJECT mi_object_oriented_object_fct TYPE zcl_abapgit_oo_class_new.
+    CREATE OBJECT mi_object_oriented_object_fct TYPE zcl_abapgit_oo_class.
   ENDMETHOD.
+
 
   METHOD deserialize_abap.
 * same as in zcl_abapgit_object_clas, but without "mo_object_oriented_object_fct->add_to_activation_list"
@@ -109,6 +113,167 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       it_descriptions = lt_descriptions ).
 
   ENDMETHOD.
+
+
+  METHOD deserialize_docu.
+
+    DATA: lt_lines  TYPE tlinetab,
+          lv_object TYPE dokhl-object.
+
+    io_xml->read( EXPORTING iv_name = 'LINES'
+                  CHANGING cg_data = lt_lines ).
+
+    IF lines( lt_lines ) = 0.
+      RETURN.
+    ENDIF.
+
+    lv_object = ms_item-obj_name.
+
+    mi_object_oriented_object_fct->create_documentation(
+      it_lines       = lt_lines
+      iv_object_name = lv_object
+      iv_language    = mv_language ).
+  ENDMETHOD.
+
+
+  METHOD deserialize_sotr.
+    "OTR stands for Online Text Repository
+    DATA: lt_sotr    TYPE zif_abapgit_definitions=>ty_sotr_tt.
+
+    io_xml->read( EXPORTING iv_name = 'SOTR'
+                  CHANGING cg_data = lt_sotr ).
+
+    IF lines( lt_sotr ) = 0.
+      RETURN.
+    ENDIF.
+
+    mi_object_oriented_object_fct->create_sotr(
+      iv_package    = iv_package
+      it_sotr       = lt_sotr ).
+  ENDMETHOD.
+
+
+  METHOD deserialize_tpool.
+
+    DATA: lv_clsname   TYPE seoclsname,
+          lt_tpool_ext TYPE zif_abapgit_definitions=>ty_tpool_tt,
+          lt_tpool     TYPE textpool_table.
+
+
+    io_xml->read( EXPORTING iv_name = 'TPOOL'
+                  CHANGING cg_data = lt_tpool_ext ).
+    lt_tpool = read_tpool( lt_tpool_ext ).
+
+    IF lines( lt_tpool ) = 0.
+      RETURN.
+    ENDIF.
+
+    lv_clsname = ms_item-obj_name.
+
+    mi_object_oriented_object_fct->insert_text_pool(
+      iv_class_name = lv_clsname
+      it_text_pool  = lt_tpool
+      iv_language   = mv_language ).
+
+  ENDMETHOD.
+
+
+  METHOD is_class_locked.
+
+    DATA: lv_argument TYPE seqg3-garg.
+
+    lv_argument = ms_item-obj_name.
+    OVERLAY lv_argument WITH '=============================='.
+    lv_argument = lv_argument && '*'.
+
+    rv_is_class_locked = exists_a_lock_entry_for( iv_lock_object = 'ESEOCLASS'
+                                                  iv_argument    = lv_argument ).
+
+  ENDMETHOD.
+
+
+  METHOD serialize_xml.
+
+    DATA: ls_vseoclass    TYPE vseoclass,
+          lt_tpool        TYPE textpool_table,
+          lt_descriptions TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
+          ls_clskey       TYPE seoclskey,
+          lt_sotr         TYPE zif_abapgit_definitions=>ty_sotr_tt,
+          lt_lines        TYPE tlinetab,
+          lt_attributes   TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
+
+    ls_clskey-clsname = ms_item-obj_name.
+
+    "If class was deserialized with a previous versions of abapGit and current language was different
+    "from master language at this time, this call would return SY-LANGU as master language. To fix
+    "these objects, set SY-LANGU to master language temporarily.
+    zcl_abapgit_language=>set_current_language( mv_language ).
+
+    TRY.
+        ls_vseoclass = mi_object_oriented_object_fct->get_class_properties( ls_clskey ).
+
+      CLEANUP.
+        zcl_abapgit_language=>restore_login_language( ).
+
+    ENDTRY.
+
+    zcl_abapgit_language=>restore_login_language( ).
+
+    CLEAR: ls_vseoclass-uuid,
+           ls_vseoclass-author,
+           ls_vseoclass-createdon,
+           ls_vseoclass-changedby,
+           ls_vseoclass-changedon,
+           ls_vseoclass-r3release,
+           ls_vseoclass-chgdanyby,
+           ls_vseoclass-chgdanyon,
+           ls_vseoclass-clsfinal,
+           ls_vseoclass-clsabstrct,
+           ls_vseoclass-exposure.
+
+    IF mv_skip_testclass = abap_true.
+      CLEAR ls_vseoclass-with_unit_tests.
+    ENDIF.
+
+    io_xml->add( iv_name = 'VSEOCLASS'
+                 ig_data = ls_vseoclass ).
+
+    lt_tpool = mi_object_oriented_object_fct->read_text_pool(
+      iv_class_name = ls_clskey-clsname
+      iv_language   = mv_language ).
+    io_xml->add( iv_name = 'TPOOL'
+                 ig_data = add_tpool( lt_tpool ) ).
+
+    IF ls_vseoclass-category = seoc_category_exception.
+      lt_sotr =  mi_object_oriented_object_fct->read_sotr( ms_item-obj_name ).
+      IF lines( lt_sotr ) > 0.
+        io_xml->add( iv_name = 'SOTR'
+                     ig_data = lt_sotr ).
+      ENDIF.
+    ENDIF.
+
+    lt_lines = mi_object_oriented_object_fct->read_documentation(
+      iv_class_name = ls_clskey-clsname
+      iv_language   = mv_language ).
+    IF lines( lt_lines ) > 0.
+      io_xml->add( iv_name = 'LINES'
+                   ig_data = lt_lines ).
+    ENDIF.
+
+    lt_descriptions = mi_object_oriented_object_fct->read_descriptions( ls_clskey-clsname ).
+    IF lines( lt_descriptions ) > 0.
+      io_xml->add( iv_name = 'DESCRIPTIONS'
+                   ig_data = lt_descriptions ).
+    ENDIF.
+
+    lt_attributes = mi_object_oriented_object_fct->read_attributes( ls_clskey-clsname ).
+    IF lines( lt_attributes ) > 0.
+      io_xml->add( iv_name = 'ATTRIBUTES'
+                   ig_data = lt_attributes ).
+    ENDIF.
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -205,6 +370,27 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+
+    DATA: lv_classpool TYPE program.
+
+    lv_classpool = cl_oo_classname_service=>get_classpool_name( |{ ms_item-obj_name }| ).
+
+    IF is_class_locked( )             = abap_true
+    OR is_text_locked( lv_classpool ) = abap_true.
+
+      rv_is_locked = abap_true.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -276,180 +462,4 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     serialize_xml( io_xml ).
 
   ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-
-    DATA: lv_classpool TYPE program.
-
-    lv_classpool = cl_oo_classname_service=>get_classpool_name( |{ ms_item-obj_name }| ).
-
-    IF is_class_locked( )             = abap_true
-    OR is_text_locked( lv_classpool ) = abap_true.
-
-      rv_is_locked = abap_true.
-
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD deserialize_docu.
-
-    DATA: lt_lines  TYPE tlinetab,
-          lv_object TYPE dokhl-object.
-
-    io_xml->read( EXPORTING iv_name = 'LINES'
-                  CHANGING cg_data = lt_lines ).
-
-    IF lines( lt_lines ) = 0.
-      RETURN.
-    ENDIF.
-
-    lv_object = ms_item-obj_name.
-
-    mi_object_oriented_object_fct->create_documentation(
-      it_lines       = lt_lines
-      iv_object_name = lv_object
-      iv_language    = mv_language ).
-  ENDMETHOD.
-
-  METHOD deserialize_sotr.
-    "OTR stands for Online Text Repository
-    DATA: lt_sotr    TYPE zif_abapgit_definitions=>ty_sotr_tt.
-
-    io_xml->read( EXPORTING iv_name = 'SOTR'
-                  CHANGING cg_data = lt_sotr ).
-
-    IF lines( lt_sotr ) = 0.
-      RETURN.
-    ENDIF.
-
-    mi_object_oriented_object_fct->create_sotr(
-      iv_package    = iv_package
-      it_sotr       = lt_sotr ).
-  ENDMETHOD.
-
-  METHOD deserialize_tpool.
-
-    DATA: lv_clsname   TYPE seoclsname,
-          lt_tpool_ext TYPE zif_abapgit_definitions=>ty_tpool_tt,
-          lt_tpool     TYPE textpool_table.
-
-
-    io_xml->read( EXPORTING iv_name = 'TPOOL'
-                  CHANGING cg_data = lt_tpool_ext ).
-    lt_tpool = read_tpool( lt_tpool_ext ).
-
-    IF lines( lt_tpool ) = 0.
-      RETURN.
-    ENDIF.
-
-    lv_clsname = ms_item-obj_name.
-
-    mi_object_oriented_object_fct->insert_text_pool(
-      iv_class_name = lv_clsname
-      it_text_pool  = lt_tpool
-      iv_language   = mv_language ).
-
-  ENDMETHOD.
-
-  METHOD serialize_xml.
-
-    DATA: ls_vseoclass    TYPE vseoclass,
-          lt_tpool        TYPE textpool_table,
-          lt_descriptions TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
-          ls_clskey       TYPE seoclskey,
-          lt_sotr         TYPE zif_abapgit_definitions=>ty_sotr_tt,
-          lt_lines        TYPE tlinetab,
-          lt_attributes   TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
-
-    ls_clskey-clsname = ms_item-obj_name.
-
-    "If class was deserialized with a previous versions of abapGit and current language was different
-    "from master language at this time, this call would return SY-LANGU as master language. To fix
-    "these objects, set SY-LANGU to master language temporarily.
-    zcl_abapgit_language=>set_current_language( mv_language ).
-
-    TRY.
-        ls_vseoclass = mi_object_oriented_object_fct->get_class_properties( ls_clskey ).
-
-      CLEANUP.
-        zcl_abapgit_language=>restore_login_language( ).
-
-    ENDTRY.
-
-    zcl_abapgit_language=>restore_login_language( ).
-
-    CLEAR: ls_vseoclass-uuid,
-           ls_vseoclass-author,
-           ls_vseoclass-createdon,
-           ls_vseoclass-changedby,
-           ls_vseoclass-changedon,
-           ls_vseoclass-r3release,
-           ls_vseoclass-chgdanyby,
-           ls_vseoclass-chgdanyon,
-           ls_vseoclass-clsfinal,
-           ls_vseoclass-clsabstrct,
-           ls_vseoclass-exposure.
-
-    IF mv_skip_testclass = abap_true.
-      CLEAR ls_vseoclass-with_unit_tests.
-    ENDIF.
-
-    io_xml->add( iv_name = 'VSEOCLASS'
-                 ig_data = ls_vseoclass ).
-
-    lt_tpool = mi_object_oriented_object_fct->read_text_pool(
-      iv_class_name = ls_clskey-clsname
-      iv_language   = mv_language ).
-    io_xml->add( iv_name = 'TPOOL'
-                 ig_data = add_tpool( lt_tpool ) ).
-
-    IF ls_vseoclass-category = seoc_category_exception.
-      lt_sotr =  mi_object_oriented_object_fct->read_sotr( ms_item-obj_name ).
-      IF lines( lt_sotr ) > 0.
-        io_xml->add( iv_name = 'SOTR'
-                     ig_data = lt_sotr ).
-      ENDIF.
-    ENDIF.
-
-    lt_lines = mi_object_oriented_object_fct->read_documentation(
-      iv_class_name = ls_clskey-clsname
-      iv_language   = mv_language ).
-    IF lines( lt_lines ) > 0.
-      io_xml->add( iv_name = 'LINES'
-                   ig_data = lt_lines ).
-    ENDIF.
-
-    lt_descriptions = mi_object_oriented_object_fct->read_descriptions( ls_clskey-clsname ).
-    IF lines( lt_descriptions ) > 0.
-      io_xml->add( iv_name = 'DESCRIPTIONS'
-                   ig_data = lt_descriptions ).
-    ENDIF.
-
-    lt_attributes = mi_object_oriented_object_fct->read_attributes( ls_clskey-clsname ).
-    IF lines( lt_attributes ) > 0.
-      io_xml->add( iv_name = 'ATTRIBUTES'
-                   ig_data = lt_attributes ).
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD is_class_locked.
-
-    DATA: lv_argument TYPE seqg3-garg.
-
-    lv_argument = ms_item-obj_name.
-    OVERLAY lv_argument WITH '=============================='.
-    lv_argument = lv_argument && '*'.
-
-    rv_is_class_locked = exists_a_lock_entry_for( iv_lock_object = 'ESEOCLASS'
-                                                  iv_argument    = lv_argument ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
-  ENDMETHOD.
-
 ENDCLASS.
