@@ -180,6 +180,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     LOOP AT mt_diff_files ASSIGNING <ls_diff_file>.
 
+      IF <ls_diff_file>-o_diff IS NOT BOUND.
+        " When we deal with binary files we don't have a diff object.
+        " There's nothing to do because they cannot be patched
+        CONTINUE.
+      ENDIF.
+
       lt_diff = <ls_diff_file>-o_diff->get( ).
 
       READ TABLE lt_diff TRANSPORTING NO FIELDS
