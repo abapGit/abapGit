@@ -8,6 +8,15 @@ Legend
 + : added
 - : removed
 
+2018-12-12 v1.81.0
+------------------
+! CLAS XML changed, redundant fields cleared
++ SUCU support
++ Hotkey improvements
+* patch feature bugfixes
+* SAP script window sequence
+* backport
+
 2018-11-23 v1.80.0
 ------------------
 + Parallel serialization
