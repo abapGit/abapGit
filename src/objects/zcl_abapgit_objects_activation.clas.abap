@@ -80,6 +80,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
 
     LOOP AT gt_objects ASSIGNING <ls_object>.
+      ls_gentab-tabix = sy-tabix.
       ls_gentab-type = <ls_object>-object.
       ls_gentab-name = <ls_object>-obj_name.
       IF ls_gentab-type = 'INDX'.
@@ -100,9 +101,10 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
       CALL FUNCTION 'DD_MASS_ACT_C3'
         EXPORTING
-          ddmode         = 'C'
-          medium         = 'T'
-          device         = 'T'
+          ddmode         = 'O'
+          medium         = 'T' " transport order
+          device         = 'T' " saves to table DDRPH?
+          version        = 'M' " activate newest
           logname        = lv_logname
           write_log      = abap_true
           log_head_tail  = abap_true
@@ -290,7 +292,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
       lo_log->add( <ls_line>-line ).
     ENDLOOP.
 
-    lo_log->show( ).
+    IF lo_log->count( ) > 0.
+      lo_log->show( ).
+    ENDIF.
 
   ENDMETHOD.
 
