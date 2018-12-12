@@ -19,6 +19,8 @@ ABAP Version: 702 or higher
 
 Latest build: [zabapgit.abap](https://raw.githubusercontent.com/abapGit/build/master/zabapgit.abap)
 
+Recommend using SAP GUI for Windows, there are multiple issues related to running abapGit and Java SAP GUI. Focus is on supporting [https://github.com/abapGit/ADT_Frontend](ADT) instead of supporting Java SAP GUI.
+
 ## Design Goals 
 - Easy installation
 - Easy upgrade
