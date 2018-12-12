@@ -71,10 +71,19 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
     DATA: lt_gentab     TYPE STANDARD TABLE OF dcgentb,
           lv_rc         TYPE sy-subrc,
+          ls_gentab     LIKE LINE OF lt_gentab,
           lt_deltab     TYPE STANDARD TABLE OF dcdeltb,
           lt_action_tab TYPE STANDARD TABLE OF dctablres,
           lv_logname    TYPE ddmass-logname.
 
+    FIELD-SYMBOLS: <ls_object> LIKE LINE OF gt_objects.
+
+
+    LOOP AT gt_objects ASSIGNING <ls_object>.	
+      ls_gentab-name = <ls_object>-obj_name.	
+      ls_gentab-type = <ls_object>-object.	
+      INSERT ls_gentab INTO TABLE lt_gentab.
+    ENDLOOP.
 
     IF lt_gentab IS NOT INITIAL.
 
