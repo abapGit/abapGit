@@ -17,18 +17,15 @@ CLASS zcl_abapgit_objects_activation DEFINITION PUBLIC CREATE PUBLIC.
 
     CLASS-METHODS clear.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-DATA:
-      gt_classes TYPE STANDARD TABLE OF seoclsname WITH DEFAULT KEY,
-      gt_objects TYPE TABLE OF dwinactiv.
+      gt_classes TYPE STANDARD TABLE OF seoclsname WITH DEFAULT KEY .
+    CLASS-DATA:
+      gt_objects TYPE TABLE OF dwinactiv .
 
     CLASS-METHODS update_where_used .
-    CLASS-METHODS fix_class_methods
-      IMPORTING
-        !iv_obj_name TYPE trobj_name
-      CHANGING
-        !ct_objects  TYPE dwinactiv_tab .
     CLASS-METHODS use_new_activation_logic
       RETURNING
         VALUE(rv_use_new_activation_logic) TYPE abap_bool .
@@ -73,39 +70,29 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
   METHOD activate_ddic.
 
     DATA: lt_gentab     TYPE STANDARD TABLE OF dcgentb,
-          ls_gentab     LIKE LINE OF lt_gentab,
           lv_rc         TYPE sy-subrc,
+          ls_gentab     LIKE LINE OF lt_gentab,
           lt_deltab     TYPE STANDARD TABLE OF dcdeltb,
           lt_action_tab TYPE STANDARD TABLE OF dctablres,
-          lv_logname    TYPE ddmass-logname,
-          lv_errmsg(255) TYPE c.
+          lv_logname    TYPE ddmass-logname.
 
     FIELD-SYMBOLS: <ls_object> LIKE LINE OF gt_objects.
 
+
     LOOP AT gt_objects ASSIGNING <ls_object>.
-
-      ls_gentab-name = <ls_object>-obj_name.
+      ls_gentab-tabix = sy-tabix.
       ls_gentab-type = <ls_object>-object.
-      INSERT ls_gentab INTO TABLE lt_gentab.
-
-      CALL FUNCTION 'RS_CORR_INSERT'
-        EXPORTING
-          object              = <ls_object>-obj_name
-          object_class        = <ls_object>-object
-          global_lock         = abap_true
-        EXCEPTIONS
-          cancelled           = 1
-          permission_failure  = 2
-          unknown_objectclass = 3
-          OTHERS              = 4.
-
-      IF sy-subrc <> 0.
-        CONCATENATE 'error from RS_CORR_INSERT for' <ls_object>-object <ls_object>-obj_name
-            INTO lv_errmsg SEPARATED BY space.
-
-        zcx_abapgit_exception=>raise( lv_errmsg ).
+      ls_gentab-name = <ls_object>-obj_name.
+      IF ls_gentab-type = 'INDX'.
+        CALL FUNCTION 'DD_E071_TO_DD'
+          EXPORTING
+            object   = <ls_object>-object
+            obj_name = <ls_object>-obj_name
+          IMPORTING
+            name     = ls_gentab-name
+            id       = ls_gentab-indx.
       ENDIF.
-
+      INSERT ls_gentab INTO TABLE lt_gentab.
     ENDLOOP.
 
     IF lt_gentab IS NOT INITIAL.
@@ -114,9 +101,10 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
       CALL FUNCTION 'DD_MASS_ACT_C3'
         EXPORTING
-          ddmode         = 'C'
-          medium         = 'T'
-          device         = 'T'
+          ddmode         = 'O'
+          medium         = 'T' " transport order
+          device         = 'T' " saves to table DDRPH?
+          version        = 'M' " activate newest
           logname        = lv_logname
           write_log      = abap_true
           log_head_tail  = abap_true
@@ -140,9 +128,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
       ENDIF.
 
       IF lv_rc > 0.
-
         show_activation_errors( lv_logname ).
-
       ENDIF.
 
     ENDIF.
@@ -273,43 +259,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD fix_class_methods.
-* function module RS_WORKING_OBJECTS_ACTIVATE assumes that
-* METH lines contains spaces between class and method name
-* however, classes named with 30 characters
-* eg. ZCL_CLAS_TESTTESTTESTTESTTESTT
-* this will not be true, so find all the method includes instead
-
-* TODO, this class is obsolete with new CLAS deserialization logic
-
-    DATA: lt_methods TYPE seop_methods_w_include,
-          lv_class   TYPE seoclsname.
-
-    FIELD-SYMBOLS: <ls_method> LIKE LINE OF lt_methods,
-                   <ls_object> LIKE LINE OF ct_objects.
-
-
-    lv_class = iv_obj_name.
-
-    cl_oo_classname_service=>get_all_method_includes(
-      EXPORTING
-        clsname            = lv_class
-      RECEIVING
-        result             = lt_methods
-      EXCEPTIONS
-        class_not_existing = 1
-        OTHERS             = 2 ).
-    ASSERT sy-subrc = 0.
-    DELETE ct_objects WHERE object = 'METH'.
-    LOOP AT lt_methods ASSIGNING <ls_method>.
-      APPEND INITIAL LINE TO ct_objects ASSIGNING <ls_object>.
-      <ls_object>-object = 'METH'.
-      <ls_object>-obj_name = <ls_method>-incname.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
   METHOD show_activation_errors.
 
     DATA: lt_lines      TYPE STANDARD TABLE OF trlog,
@@ -343,7 +292,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
       lo_log->add( <ls_line>-line ).
     ENDLOOP.
 
-    lo_log->show( ).
+    IF lo_log->count( ) > 0.
+      lo_log->show( ).
+    ENDIF.
 
   ENDMETHOD.
 
