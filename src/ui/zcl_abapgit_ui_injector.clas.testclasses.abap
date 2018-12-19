@@ -1,11 +1,11 @@
-CLASS ltd_abapgit_popups_mock DEFINITION.
+CLASS ltcl_abapgit_popups_mock DEFINITION FOR TESTING.
 
   PUBLIC SECTION.
     INTERFACES: zif_abapgit_popups.
 
 ENDCLASS.
 
-CLASS no_dependency_injection DEFINITION FOR TESTING
+CLASS ltcl_no_dependency_injection DEFINITION FOR TESTING
                               RISK LEVEL HARMLESS
                               DURATION SHORT.
 
@@ -15,7 +15,7 @@ CLASS no_dependency_injection DEFINITION FOR TESTING
 
 ENDCLASS.
 
-CLASS simple_dependency_injection DEFINITION FOR TESTING
+CLASS ltcl_simple_dependency_inject DEFINITION FOR TESTING
                                   RISK LEVEL HARMLESS
                                   DURATION SHORT.
 
@@ -26,7 +26,7 @@ CLASS simple_dependency_injection DEFINITION FOR TESTING
 
 ENDCLASS.
 
-CLASS ltd_abapgit_popups_mock IMPLEMENTATION.
+CLASS ltcl_abapgit_popups_mock IMPLEMENTATION.
 
   METHOD zif_abapgit_popups~branch_list_popup.
 
@@ -98,7 +98,7 @@ CLASS ltd_abapgit_popups_mock IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS no_dependency_injection IMPLEMENTATION.
+CLASS ltcl_no_dependency_injection IMPLEMENTATION.
 
   METHOD no_injection.
 
@@ -117,11 +117,11 @@ CLASS no_dependency_injection IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS simple_dependency_injection IMPLEMENTATION.
+CLASS ltcl_simple_dependency_inject IMPLEMENTATION.
 
   METHOD setup.
 
-    DATA: lo_popups_mock  TYPE REF TO ltd_abapgit_popups_mock.
+    DATA: lo_popups_mock TYPE REF TO ltcl_abapgit_popups_mock.
 
     CREATE OBJECT lo_popups_mock.
 
@@ -139,7 +139,7 @@ CLASS simple_dependency_injection IMPLEMENTATION.
     lo_class_descr ?= cl_abap_classdescr=>describe_by_object_ref( lo_popups ).
 
     cl_abap_unit_assert=>assert_equals(
-      exp = '\CLASS-POOL=ZCL_ABAPGIT_UI_INJECTOR\CLASS=LTD_ABAPGIT_POPUPS_MOCK'
+      exp = '\CLASS-POOL=ZCL_ABAPGIT_UI_INJECTOR\CLASS=LTCL_ABAPGIT_POPUPS_MOCK'
       act = lo_class_descr->absolute_name ).
 
   ENDMETHOD.

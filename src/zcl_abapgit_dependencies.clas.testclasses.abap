@@ -1,4 +1,4 @@
-CLASS ltd_sap_package DEFINITION FOR TESTING.
+CLASS ltcl_sap_package DEFINITION FOR TESTING.
 
   PUBLIC SECTION.
     TYPES:
@@ -22,7 +22,7 @@ CLASS ltd_sap_package DEFINITION FOR TESTING.
 
 ENDCLASS.
 
-CLASS ltd_sap_package IMPLEMENTATION.
+CLASS ltcl_sap_package IMPLEMENTATION.
 
   METHOD constructor.
 
@@ -88,7 +88,7 @@ CLASS ltcl_resolve_packages DEFINITION FOR TESTING
   PRIVATE SECTION.
     DATA:
       mt_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt,
-      mt_sub_packages TYPE ltd_sap_package=>tty_package.
+      mt_sub_packages TYPE ltcl_sap_package=>tty_package.
 
     METHODS:
       resolve_single FOR TESTING RAISING cx_static_check,
@@ -163,7 +163,7 @@ CLASS ltcl_resolve_packages IMPLEMENTATION.
 
   METHOD when_packages_are_resolved.
 
-    DATA: lo_mock_sap_package TYPE REF TO ltd_sap_package.
+    DATA: lo_mock_sap_package TYPE REF TO ltcl_sap_package.
 
     CREATE OBJECT lo_mock_sap_package
       EXPORTING

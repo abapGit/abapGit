@@ -1,11 +1,11 @@
-CLASS ltd_abapgit_tadir_mock DEFINITION.
+CLASS ltcl_abapgit_tadir_mock DEFINITION.
 
   PUBLIC SECTION.
     INTERFACES: zif_abapgit_tadir.
 
 ENDCLASS.
 
-CLASS no_dependency_injection DEFINITION FOR TESTING
+CLASS ltcl_no_dependency_injection DEFINITION FOR TESTING
                               RISK LEVEL HARMLESS
                               DURATION SHORT.
 
@@ -15,7 +15,7 @@ CLASS no_dependency_injection DEFINITION FOR TESTING
 
 ENDCLASS.
 
-CLASS simple_dependency_injection DEFINITION FOR TESTING
+CLASS ltcl_simple_dependency_inject DEFINITION FOR TESTING
                                   RISK LEVEL HARMLESS
                                   DURATION SHORT.
 
@@ -26,7 +26,7 @@ CLASS simple_dependency_injection DEFINITION FOR TESTING
 
 ENDCLASS.
 
-CLASS ltd_abapgit_tadir_mock IMPLEMENTATION.
+CLASS ltcl_abapgit_tadir_mock IMPLEMENTATION.
 
   METHOD zif_abapgit_tadir~get_object_package.
 
@@ -42,7 +42,7 @@ CLASS ltd_abapgit_tadir_mock IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS no_dependency_injection IMPLEMENTATION.
+CLASS ltcl_no_dependency_injection IMPLEMENTATION.
 
   METHOD no_injection.
 
@@ -61,11 +61,11 @@ CLASS no_dependency_injection IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS simple_dependency_injection IMPLEMENTATION.
+CLASS ltcl_simple_dependency_inject IMPLEMENTATION.
 
   METHOD setup.
 
-    DATA: lo_tadir_mock  TYPE REF TO ltd_abapgit_tadir_mock.
+    DATA: lo_tadir_mock  TYPE REF TO ltcl_abapgit_tadir_mock.
 
     CREATE OBJECT lo_tadir_mock.
 
@@ -83,7 +83,7 @@ CLASS simple_dependency_injection IMPLEMENTATION.
     lo_class_descr ?= cl_abap_classdescr=>describe_by_object_ref( lo_tadir ).
 
     cl_abap_unit_assert=>assert_equals(
-      exp = '\CLASS-POOL=ZCL_ABAPGIT_INJECTOR\CLASS=LTD_ABAPGIT_TADIR_MOCK'
+      exp = '\CLASS-POOL=ZCL_ABAPGIT_INJECTOR\CLASS=LTCL_ABAPGIT_TADIR_MOCK'
       act = lo_class_descr->absolute_name ).
 
   ENDMETHOD.
