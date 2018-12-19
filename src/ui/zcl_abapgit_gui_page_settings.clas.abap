@@ -19,203 +19,89 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
 
   PRIVATE SECTION.
 
-    DATA:
-      mo_settings    TYPE REF TO zcl_abapgit_settings,
-      mv_error       TYPE abap_bool,
-      mt_post_fields TYPE tihttpnvp.
+    DATA mo_settings TYPE REF TO zcl_abapgit_settings .
+    DATA mv_error TYPE abap_bool .
+    DATA mt_post_fields TYPE tihttpnvp .
 
+    METHODS post_commit_msg .
+    METHODS post_development_internals .
+    METHODS post_hotkeys .
     METHODS render_proxy
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     METHODS render_development_internals
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     METHODS render_form_begin
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     METHODS render_form_end
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     METHODS render_max_lines
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     METHODS render_adt_jump_enabled
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     METHODS render_commit_msg
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
-    METHODS build_settings
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    METHODS post_proxy .
+    METHODS post
       IMPORTING
-        it_post_fields TYPE tihttpnvp.
-    METHODS validate_settings.
+        !it_post_fields TYPE tihttpnvp .
+    METHODS validate_settings .
     METHODS parse_post
       IMPORTING
-        it_postdata           TYPE cnht_post_data_tab
+        !it_postdata          TYPE cnht_post_data_tab
       RETURNING
-        VALUE(rt_post_fields) TYPE tihttpnvp.
+        VALUE(rt_post_fields) TYPE tihttpnvp .
     METHODS persist_settings
       RAISING
-        zcx_abapgit_exception.
-    METHODS read_settings.
+        zcx_abapgit_exception .
+    METHODS read_settings .
     METHODS render_section_begin
       IMPORTING
-                iv_header      TYPE csequence
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+        !iv_header     TYPE csequence
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     METHODS render_section_end
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     METHODS render_start_up
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     METHODS render_link_hints
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS render_hotkeys
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS get_possible_hotkey_actions
       RETURNING
         VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS get_default_hotkeys
       RETURNING
         VALUE(rt_default_hotkeys) TYPE zif_abapgit_definitions=>tty_hotkey
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS is_post_field_checked
       IMPORTING
-        iv_name          TYPE string
+        !iv_name         TYPE string
       RETURNING
-        VALUE(rv_return) TYPE abap_bool.
-
+        VALUE(rv_return) TYPE abap_bool .
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
-
-
-  METHOD build_settings.
-
-    DATA: lv_i_param_value TYPE i,
-          lv_column        TYPE string,
-          lt_key_bindings  TYPE zif_abapgit_definitions=>tty_hotkey.
-
-    FIELD-SYMBOLS: <ls_post_field>  TYPE ihttpnvp,
-                   <ls_key_binding> TYPE zif_abapgit_definitions=>ty_hotkey.
-
-
-    CREATE OBJECT mo_settings.
-    mt_post_fields = it_post_fields.
-    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'proxy_url'.
-    IF sy-subrc <> 0.
-      mv_error = abap_true.
-    ENDIF.
-    mo_settings->set_proxy_url( <ls_post_field>-value ).
-
-    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'proxy_port'.
-    IF sy-subrc <> 0.
-      mv_error = abap_true.
-    ENDIF.
-    mo_settings->set_proxy_port( <ls_post_field>-value ).
-
-    IF is_post_field_checked( 'proxy_auth' ) = abap_true.
-      mo_settings->set_proxy_authentication( abap_true ).
-    ELSE.
-      mo_settings->set_proxy_authentication( abap_false ).
-    ENDIF.
-
-    IF is_post_field_checked( 'critical_tests' ) = abap_true.
-      mo_settings->set_run_critical_tests( abap_true ).
-    ELSE.
-      mo_settings->set_run_critical_tests( abap_false ).
-    ENDIF.
-
-    IF is_post_field_checked( 'experimental_features' ) = abap_true.
-      mo_settings->set_experimental_features( abap_true ).
-    ELSE.
-      mo_settings->set_experimental_features( abap_false ).
-    ENDIF.
-
-    IF is_post_field_checked( 'show_default_repo' ) = abap_true.
-      mo_settings->set_show_default_repo( abap_true ).
-    ELSE.
-      mo_settings->set_show_default_repo( abap_false ).
-    ENDIF.
-
-    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'max_lines'.
-    IF sy-subrc = 0.
-      lv_i_param_value = <ls_post_field>-value.
-      mo_settings->set_max_lines( lv_i_param_value ).
-    ELSE.
-      mo_settings->set_max_lines( 0 ).
-    ENDIF.
-
-    IF is_post_field_checked( 'adt_jump_enabled' ) = abap_true.
-      mo_settings->set_adt_jump_enanbled( abap_true ).
-    ELSE.
-      mo_settings->set_adt_jump_enanbled( abap_false ).
-    ENDIF.
-
-    IF is_post_field_checked( 'link_hints_enabled' ) = abap_true.
-      mo_settings->set_link_hints_enabled( abap_true ).
-    ELSE.
-      mo_settings->set_link_hints_enabled( abap_false ).
-    ENDIF.
-
-    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'link_hint_key'.
-    IF sy-subrc = 0.
-      mo_settings->set_link_hint_key( |{ <ls_post_field>-value }| ).
-    ENDIF.
-
-    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'link_hint_background_color'.
-    IF sy-subrc = 0.
-      mo_settings->set_link_hint_background_color( |{ <ls_post_field>-value }| ).
-    ENDIF.
-
-    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'comment_length'.
-    IF sy-subrc = 0.
-      lv_i_param_value = <ls_post_field>-value.
-      IF lv_i_param_value < zcl_abapgit_settings=>c_commitmsg_comment_length_dft.
-        lv_i_param_value = zcl_abapgit_settings=>c_commitmsg_comment_length_dft.
-      ENDIF.
-      mo_settings->set_commitmsg_comment_length( lv_i_param_value ).
-    ELSE.
-      mo_settings->set_commitmsg_comment_length( zcl_abapgit_settings=>c_commitmsg_comment_length_dft ).
-    ENDIF.
-
-    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'body_size'.
-    IF sy-subrc = 0.
-      lv_i_param_value = <ls_post_field>-value.
-      IF lv_i_param_value < zcl_abapgit_settings=>c_commitmsg_body_size_dft.
-        lv_i_param_value = zcl_abapgit_settings=>c_commitmsg_body_size_dft.
-      ENDIF.
-      mo_settings->set_commitmsg_body_size( lv_i_param_value ).
-    ELSE.
-      mo_settings->set_commitmsg_body_size( zcl_abapgit_settings=>c_commitmsg_body_size_dft ).
-    ENDIF.
-
-
-    LOOP AT mt_post_fields ASSIGNING <ls_post_field> WHERE name CP 'key*'.
-
-      FIND FIRST OCCURRENCE OF REGEX `key_(.*)_`
-           IN <ls_post_field>-name
-           SUBMATCHES lv_column.
-
-      INSERT INITIAL LINE INTO TABLE lt_key_bindings ASSIGNING <ls_key_binding>.
-      CASE lv_column.
-        WHEN 'sequence'.
-          <ls_key_binding>-sequence = <ls_post_field>-value.
-        WHEN 'action'.
-          <ls_key_binding>-action = <ls_post_field>-value.
-      ENDCASE.
-    ENDLOOP.
-
-    DELETE lt_key_bindings WHERE sequence IS INITIAL
-                           OR    action IS INITIAL.
-
-    mo_settings->set_hotkeys( lt_key_bindings ).
-
-  ENDMETHOD.
 
 
   METHOD constructor.
@@ -259,7 +145,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = iv_name.
     IF sy-subrc = 0.
       IF <ls_post_field>-value = abap_true "HTML value when using standard netweaver GUI
-      OR <ls_post_field>-value = 'on'.     "HTML value when using Netweaver Java GUI
+          OR <ls_post_field>-value = 'on'.     "HTML value when using Netweaver Java GUI
         rv_return = abap_true.
       ENDIF.
     ENDIF.
@@ -283,6 +169,170 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     lo_settings_persistence = zcl_abapgit_persist_settings=>get_instance( ).
     lo_settings_persistence->modify( mo_settings ).
     MESSAGE 'Settings succesfully saved' TYPE 'S'.
+
+  ENDMETHOD.
+
+
+  METHOD post.
+
+    DATA: lv_i_param_value TYPE i.
+
+    FIELD-SYMBOLS: <ls_post_field> TYPE ihttpnvp.
+
+
+    CREATE OBJECT mo_settings.
+    mt_post_fields = it_post_fields.
+
+
+    post_proxy( ).
+    post_commit_msg( ).
+    post_development_internals( ).
+
+* todo, refactor to private POST_* methods
+    IF is_post_field_checked( 'show_default_repo' ) = abap_true.
+      mo_settings->set_show_default_repo( abap_true ).
+    ELSE.
+      mo_settings->set_show_default_repo( abap_false ).
+    ENDIF.
+
+    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'max_lines'.
+    IF sy-subrc = 0.
+      lv_i_param_value = <ls_post_field>-value.
+      mo_settings->set_max_lines( lv_i_param_value ).
+    ELSE.
+      mo_settings->set_max_lines( 0 ).
+    ENDIF.
+
+    IF is_post_field_checked( 'adt_jump_enabled' ) = abap_true.
+      mo_settings->set_adt_jump_enanbled( abap_true ).
+    ELSE.
+      mo_settings->set_adt_jump_enanbled( abap_false ).
+    ENDIF.
+
+    IF is_post_field_checked( 'link_hints_enabled' ) = abap_true.
+      mo_settings->set_link_hints_enabled( abap_true ).
+    ELSE.
+      mo_settings->set_link_hints_enabled( abap_false ).
+    ENDIF.
+
+    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'link_hint_key'.
+    IF sy-subrc = 0.
+      mo_settings->set_link_hint_key( |{ <ls_post_field>-value }| ).
+    ENDIF.
+
+    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'link_hint_background_color'.
+    IF sy-subrc = 0.
+      mo_settings->set_link_hint_background_color( |{ <ls_post_field>-value }| ).
+    ENDIF.
+
+    post_hotkeys( ).
+
+  ENDMETHOD.
+
+
+  METHOD post_commit_msg.
+
+    DATA: lv_i_param_value TYPE i.
+
+    FIELD-SYMBOLS: <ls_post_field> TYPE ihttpnvp.
+
+
+    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'comment_length'.
+    IF sy-subrc = 0.
+      lv_i_param_value = <ls_post_field>-value.
+      IF lv_i_param_value < zcl_abapgit_settings=>c_commitmsg_comment_length_dft.
+        lv_i_param_value = zcl_abapgit_settings=>c_commitmsg_comment_length_dft.
+      ENDIF.
+      mo_settings->set_commitmsg_comment_length( lv_i_param_value ).
+    ELSE.
+      mo_settings->set_commitmsg_comment_length( zcl_abapgit_settings=>c_commitmsg_comment_length_dft ).
+    ENDIF.
+
+    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'body_size'.
+    IF sy-subrc = 0.
+      lv_i_param_value = <ls_post_field>-value.
+      IF lv_i_param_value < zcl_abapgit_settings=>c_commitmsg_body_size_dft.
+        lv_i_param_value = zcl_abapgit_settings=>c_commitmsg_body_size_dft.
+      ENDIF.
+      mo_settings->set_commitmsg_body_size( lv_i_param_value ).
+    ELSE.
+      mo_settings->set_commitmsg_body_size( zcl_abapgit_settings=>c_commitmsg_body_size_dft ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD post_development_internals.
+
+    IF is_post_field_checked( 'critical_tests' ) = abap_true.
+      mo_settings->set_run_critical_tests( abap_true ).
+    ELSE.
+      mo_settings->set_run_critical_tests( abap_false ).
+    ENDIF.
+
+    IF is_post_field_checked( 'experimental_features' ) = abap_true.
+      mo_settings->set_experimental_features( abap_true ).
+    ELSE.
+      mo_settings->set_experimental_features( abap_false ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD post_hotkeys.
+
+    DATA: lv_column       TYPE string,
+          lt_key_bindings TYPE zif_abapgit_definitions=>tty_hotkey.
+
+    FIELD-SYMBOLS: <ls_post_field>  TYPE ihttpnvp,
+                   <ls_key_binding> TYPE zif_abapgit_definitions=>ty_hotkey.
+
+
+    LOOP AT mt_post_fields ASSIGNING <ls_post_field> WHERE name CP 'key*'.
+
+      FIND FIRST OCCURRENCE OF REGEX `key_(.*)_`
+           IN <ls_post_field>-name
+           SUBMATCHES lv_column.
+
+      INSERT INITIAL LINE INTO TABLE lt_key_bindings ASSIGNING <ls_key_binding>.
+      CASE lv_column.
+        WHEN 'sequence'.
+          <ls_key_binding>-sequence = <ls_post_field>-value.
+        WHEN 'action'.
+          <ls_key_binding>-action = <ls_post_field>-value.
+      ENDCASE.
+    ENDLOOP.
+
+    DELETE lt_key_bindings WHERE sequence IS INITIAL
+                           OR    action IS INITIAL.
+
+    mo_settings->set_hotkeys( lt_key_bindings ).
+
+  ENDMETHOD.
+
+
+  METHOD post_proxy.
+
+    FIELD-SYMBOLS: <ls_post_field> TYPE ihttpnvp.
+
+
+    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'proxy_url'.
+    IF sy-subrc <> 0.
+      mv_error = abap_true.
+    ENDIF.
+    mo_settings->set_proxy_url( <ls_post_field>-value ).
+
+    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'proxy_port'.
+    IF sy-subrc <> 0.
+      mv_error = abap_true.
+    ENDIF.
+    mo_settings->set_proxy_port( <ls_post_field>-value ).
+
+    IF is_post_field_checked( 'proxy_auth' ) = abap_true.
+      mo_settings->set_proxy_authentication( abap_true ).
+    ELSE.
+      mo_settings->set_proxy_authentication( abap_false ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -598,7 +648,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
+    RETURN.
   ENDMETHOD.
 
 
@@ -612,7 +662,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
       WHEN c_action-save_settings.
         lt_post_fields = parse_post( it_postdata ).
 
-        build_settings( lt_post_fields ).
+        post( lt_post_fields ).
         validate_settings( ).
 
         IF mv_error = abap_true.
