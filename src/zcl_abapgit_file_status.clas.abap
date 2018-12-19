@@ -11,6 +11,7 @@ CLASS zcl_abapgit_file_status DEFINITION
       RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING   zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-METHODS:
@@ -424,7 +425,6 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
           iv_path     = <ls_result>-path
           iv_filename = <ls_result>-filename ) = abap_true.
         DELETE rt_results INDEX lv_index.
-        CONTINUE.
       ENDIF.
     ENDLOOP.
 

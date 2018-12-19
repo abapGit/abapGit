@@ -171,7 +171,7 @@ CLASS ltcl_test IMPLEMENTATION.
                  msgno TYPE symsgno VALUE '001',
                  msgv1 TYPE symsgv VALUE 'Variable 1',
                  msgv2 TYPE symsgv VALUE 'Variable 2',
-                 msgv3 TYPE symsgv VALUE'Variable 3',
+                 msgv3 TYPE symsgv VALUE 'Variable 3',
                  msgv4 TYPE symsgv VALUE IS INITIAL,
                END OF lc_msg4.
 
