@@ -4,42 +4,46 @@ CLASS zcl_abapgit_object_msag DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
-    TYPES: BEGIN OF ty_t100_texts,
-             sprsl TYPE t100-sprsl,
-             msgnr TYPE t100-msgnr,
-             text  TYPE t100-text,
-           END OF ty_t100_texts,
-           tt_t100_texts TYPE STANDARD TABLE OF ty_t100_texts,
-           tty_t100      TYPE STANDARD TABLE OF t100
-                         WITH NON-UNIQUE DEFAULT KEY,
-           BEGIN OF ty_longtext,
-             dokil TYPE dokil,
-             head  TYPE thead,
-             lines TYPE tline_tab,
-           END OF ty_longtext,
-           tty_longtexts TYPE STANDARD TABLE OF ty_longtext
-                              WITH NON-UNIQUE DEFAULT KEY.
 
-    METHODS:
-      serialize_texts
-        IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
-        RAISING   zcx_abapgit_exception,
-      deserialize_texts
-        IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_input
-        RAISING   zcx_abapgit_exception,
-      serialize_longtexts_msag
-        IMPORTING it_t100 TYPE zcl_abapgit_object_msag=>tty_t100
-                  io_xml  TYPE REF TO zcl_abapgit_xml_output
-        RAISING   zcx_abapgit_exception,
-      delete_msgid IMPORTING iv_message_id TYPE arbgb,
-      free_access_permission
-        IMPORTING
-          iv_message_id TYPE arbgb,
-      delete_documentation
-        IMPORTING
-          iv_message_id TYPE arbgb.
+    TYPES:
+      BEGIN OF ty_t100_texts,
+        sprsl TYPE t100-sprsl,
+        msgnr TYPE t100-msgnr,
+        text  TYPE t100-text,
+      END OF ty_t100_texts .
+    TYPES:
+      tt_t100_texts TYPE STANDARD TABLE OF ty_t100_texts .
+    TYPES:
+      tty_t100      TYPE STANDARD TABLE OF t100
+                           WITH NON-UNIQUE DEFAULT KEY .
 
+    METHODS serialize_texts
+      IMPORTING
+        !io_xml TYPE REF TO zcl_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_texts
+      IMPORTING
+        !io_xml TYPE REF TO zcl_abapgit_xml_input
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_longtexts_msag
+      IMPORTING
+        !it_t100 TYPE zcl_abapgit_object_msag=>tty_t100
+        !io_xml  TYPE REF TO zcl_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
+    METHODS delete_msgid
+      IMPORTING
+        !iv_message_id TYPE arbgb .
+    METHODS free_access_permission
+      IMPORTING
+        !iv_message_id TYPE arbgb .
+    METHODS delete_documentation
+      IMPORTING
+        !iv_message_id TYPE arbgb .
 ENDCLASS.
 
 

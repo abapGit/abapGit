@@ -465,7 +465,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT' ).
     ENDIF.
 
-    READ TABLE it_tpool INTO ls_tpool WITH KEY id = 'R'.  "#EC CI_SUBRC
+    READ TABLE it_tpool INTO ls_tpool WITH KEY id = 'R'.
     IF sy-subrc = 0.
 * there is a bug in RPY_PROGRAM_UPDATE, the header line of TTAB is not
 * cleared, so the title length might be inherited from a different program.
