@@ -61,7 +61,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -271,7 +271,7 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
 
     ro_html->add( render_text_input( iv_name  = 'sha1'
                                      iv_label = 'SHA1'
-                                     iv_value = mo_repo_online->get_sha1_remote( ) ) ).
+                                     iv_value = mo_repo_online->get_remote_branch_sha1( ) ) ).
 
     ro_html->add( render_text_input( iv_name  = 'name'
                                      iv_label = 'tag name' ) ).
@@ -369,6 +369,11 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_page~on_event.
 
     CASE iv_action.
@@ -389,9 +394,4 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-  ENDMETHOD.
-
 ENDCLASS.

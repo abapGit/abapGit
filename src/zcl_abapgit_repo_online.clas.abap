@@ -13,57 +13,14 @@ CLASS zcl_abapgit_repo_online DEFINITION
     ALIASES push
       FOR zif_abapgit_git_operations~push .
 
-    METHODS get_url
-      RETURNING
-        VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url .
-    METHODS get_branch_name
-      RETURNING
-        VALUE(rv_name) TYPE zif_abapgit_persistence=>ty_repo-branch_name .
-    METHODS set_url
-      IMPORTING
-        !iv_url TYPE zif_abapgit_persistence=>ty_repo-url
-      RAISING
-        zcx_abapgit_exception .
-    METHODS set_branch_name
-      IMPORTING
-        !iv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_sha1_remote
-      RETURNING
-        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_objects
-      RETURNING
-        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_files_remote
-      REDEFINITION .
-    METHODS get_name
-      REDEFINITION .
     METHODS rebuild_local_checksums
-      REDEFINITION .
-    METHODS has_remote_source
       REDEFINITION .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
-    DATA mv_branch TYPE zif_abapgit_definitions=>ty_sha1 .
-
     METHODS handle_stage_ignore
       IMPORTING
         !io_stage TYPE REF TO zcl_abapgit_stage
-      RAISING
-        zcx_abapgit_exception .
-    METHODS set_objects
-      IMPORTING
-        !it_objects TYPE zif_abapgit_definitions=>ty_objects_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS fetch_remote
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
@@ -71,68 +28,6 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
-
-
-  METHOD fetch_remote.
-
-    DATA: lo_progress TYPE REF TO zcl_abapgit_progress,
-          ls_pull     TYPE zcl_abapgit_git_porcelain=>ty_pull_result.
-
-    IF mv_request_remote_refresh = abap_false.
-      RETURN.
-    ENDIF.
-
-    CREATE OBJECT lo_progress
-      EXPORTING
-        iv_total = 1.
-
-
-    lo_progress->show( iv_current = 1
-                       iv_text    = 'Fetch remote files' ) ##NO_TEXT.
-
-    ls_pull = zcl_abapgit_git_porcelain=>pull(
-      iv_url         = get_url( )
-      iv_branch_name = get_branch_name( ) ).
-
-    set_files_remote( ls_pull-files ).
-    set_objects( ls_pull-objects ).
-    mv_branch = ls_pull-branch.
-
-  ENDMETHOD.
-
-
-  METHOD get_branch_name.
-    rv_name = ms_data-branch_name.
-  ENDMETHOD.
-
-
-  METHOD get_files_remote.
-    fetch_remote( ).
-    rt_files = super->get_files_remote( ).
-  ENDMETHOD.
-
-
-  METHOD get_name.
-    rv_name = zcl_abapgit_url=>name( ms_data-url ).
-    rv_name = cl_http_utility=>if_http_utility~unescape_url( rv_name ).
-  ENDMETHOD.
-
-
-  METHOD get_objects.
-    fetch_remote( ).
-    rt_objects = mt_objects.
-  ENDMETHOD.
-
-
-  METHOD get_sha1_remote.
-    fetch_remote( ).
-    rv_sha1 = mv_branch.
-  ENDMETHOD.
-
-
-  METHOD get_url.
-    rv_url = ms_data-url.
-  ENDMETHOD.
 
 
   METHOD handle_stage_ignore.
@@ -169,11 +64,6 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
       set_dot_abapgit( lo_dot_abapgit ).
     ENDIF.
 
-  ENDMETHOD.
-
-
-  METHOD has_remote_source.
-    rv_yes = abap_true.
   ENDMETHOD.
 
 
@@ -233,35 +123,6 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_branch_name.
-
-    IF ms_data-local_settings-write_protected = abap_true.
-      zcx_abapgit_exception=>raise( 'Cannot switch branch. Local code is write-protected by repo config' ).
-    ENDIF.
-
-    reset_remote( ).
-    set( iv_branch_name = iv_branch_name ).
-
-  ENDMETHOD.
-
-
-  METHOD set_objects.
-    mt_objects = it_objects.
-  ENDMETHOD.
-
-
-  METHOD set_url.
-
-    IF ms_data-local_settings-write_protected = abap_true.
-      zcx_abapgit_exception=>raise( 'Cannot change URL. Local code is write-protected by repo config' ).
-    ENDIF.
-
-    reset_remote( ).
-    set( iv_url = iv_url ).
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_git_operations~create_branch.
 
     DATA: lv_sha1 TYPE zif_abapgit_definitions=>ty_sha1.
@@ -269,7 +130,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     ASSERT iv_name CP 'refs/heads/+*'.
 
     IF iv_from IS INITIAL.
-      lv_sha1 = get_sha1_remote( ).
+      lv_sha1 = get_remote_branch_sha1( ).
     ELSE.
       lv_sha1 = iv_from.
     ENDIF.
@@ -306,18 +167,23 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     handle_stage_ignore( io_stage ).
 
+*   moved here from get_objects, probably refactor
+*   mt_objects used only here, returned with pull ...
+
+    fetch_remote( ).
+
     ls_push = zcl_abapgit_git_porcelain=>push(
       is_comment     = is_comment
       io_stage       = io_stage
       iv_branch_name = get_branch_name( )
       iv_url         = get_url( )
-      iv_parent      = get_sha1_remote( )
-      it_old_objects = get_objects( ) ).
+      iv_parent      = get_remote_branch_sha1( )
+      it_old_objects = mt_objects ).
 
     set_objects( ls_push-new_objects ).
     set_files_remote( ls_push-new_files ).
 
-    mv_branch = ls_push-branch.
+    mv_branch_sha1 = ls_push-branch.
 
     update_local_checksums( ls_push-updated_files ).
 

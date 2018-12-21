@@ -13,6 +13,12 @@ CLASS zcl_abapgit_services_repo DEFINITION
       RAISING
         zcx_abapgit_exception
         zcx_abapgit_cancel .
+    CLASS-METHODS import_zip
+      IMPORTING
+        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+      RAISING
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
     CLASS-METHODS refresh
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
@@ -528,4 +534,20 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       it_transport_objects   = lt_transport_objects ).
 
   ENDMETHOD.
+
+  METHOD import_zip.
+
+    DATA lv_path TYPE string.
+    DATA lo_repo TYPE REF TO zcl_abapgit_repo.
+
+    lv_path = zcl_abapgit_fs=>show_file_open_dialog(
+      iv_title            = 'Import ZIP'
+      iv_default_filename = '*.zip' ).
+
+    lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo->bind_connector( zcl_abapgit_repo_conn_zip=>create( lv_path ) ).
+    lo_repo->refresh( ).
+
+  ENDMETHOD.
+
 ENDCLASS.

@@ -8,6 +8,9 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS bind_listener
       IMPORTING
         ii_listener TYPE REF TO zif_abapgit_repo_listener.
+    METHODS bind_connector
+      IMPORTING
+        ii_connector TYPE REF TO zif_abapgit_repo_connector.
     METHODS deserialize_checks
       RETURNING
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
@@ -25,7 +28,6 @@ CLASS zcl_abapgit_repo DEFINITION
       RETURNING
         VALUE(rv_key) TYPE zif_abapgit_persistence=>ty_value .
     METHODS get_name
-          ABSTRACT
       RETURNING
         VALUE(rv_name) TYPE string
       RAISING
@@ -105,7 +107,6 @@ CLASS zcl_abapgit_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS has_remote_source
-          ABSTRACT
       RETURNING
         VALUE(rv_yes) TYPE abap_bool .
     METHODS status
@@ -125,6 +126,27 @@ CLASS zcl_abapgit_repo DEFINITION
         iv_offline TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
+    METHODS get_url
+      RETURNING
+        VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url .
+    METHODS get_branch_name
+      RETURNING
+        VALUE(rv_name) TYPE zif_abapgit_persistence=>ty_repo-branch_name .
+    METHODS set_url
+      IMPORTING
+        !iv_url TYPE zif_abapgit_persistence=>ty_repo-url
+      RAISING
+        zcx_abapgit_exception .
+    METHODS set_branch_name
+      IMPORTING
+        !iv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_remote_branch_sha1
+      RETURNING
+        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+      RAISING
+        zcx_abapgit_exception .
 
   PROTECTED SECTION.
 
@@ -136,6 +158,8 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA mv_code_inspector_successful TYPE abap_bool .
     DATA mv_request_remote_refresh TYPE abap_bool .
     DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
+    DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
+    DATA mv_branch_sha1 TYPE zif_abapgit_definitions=>ty_sha1 .
 
     METHODS set
       IMPORTING it_checksums       TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
@@ -151,9 +175,17 @@ CLASS zcl_abapgit_repo DEFINITION
                 zcx_abapgit_exception .
     METHODS reset_status .
     METHODS reset_remote .
+    METHODS fetch_remote
+      RAISING
+        zcx_abapgit_exception .
+    METHODS set_objects
+      IMPORTING
+        it_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
+
   PRIVATE SECTION.
 
     DATA mi_listener TYPE REF TO zif_abapgit_repo_listener .
+    DATA mi_connector TYPE REF TO zif_abapgit_repo_connector.
 
     TYPES:
       ty_cache_tt TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_file_item
@@ -190,6 +222,8 @@ CLASS zcl_abapgit_repo DEFINITION
         iv_spras        TYPE spras
       RETURNING
         VALUE(rv_spras) TYPE laiso.
+
+
 ENDCLASS.
 
 
@@ -414,6 +448,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD get_files_remote.
+    fetch_remote( ).
     rt_files = mt_remote.
   ENDMETHOD.
 
@@ -861,5 +896,99 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD bind_connector.
+    mi_connector = ii_connector.
+    reset_remote( ).
+  ENDMETHOD.
+
+  METHOD get_branch_name.
+    rv_name = ms_data-branch_name.
+  ENDMETHOD.
+
+  METHOD get_url.
+    rv_url = ms_data-url.
+  ENDMETHOD.
+
+  METHOD set_branch_name.
+
+    IF ms_data-local_settings-write_protected = abap_true.
+      zcx_abapgit_exception=>raise( 'Cannot switch branch. Local code is write-protected by repo config' ).
+    ENDIF.
+
+    reset_remote( ).
+    set( iv_branch_name = iv_branch_name ).
+
+  ENDMETHOD.
+
+  METHOD set_url.
+
+    IF ms_data-local_settings-write_protected = abap_true.
+      zcx_abapgit_exception=>raise( 'Cannot change URL. Local code is write-protected by repo config' ).
+    ENDIF.
+
+    reset_remote( ).
+    set( iv_url = iv_url ).
+
+  ENDMETHOD.
+
+
+  METHOD has_remote_source.
+
+    rv_yes = boolc( mi_connector IS BOUND ).
+
+  ENDMETHOD.
+
+  METHOD get_name.
+
+    IF is_offline( ) = abap_true.
+      rv_name = ms_data-url.
+    ELSE.
+      rv_name = zcl_abapgit_url=>name( ms_data-url ).
+      rv_name = cl_http_utility=>if_http_utility~unescape_url( rv_name ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD fetch_remote.
+
+    DATA:
+      lo_progress TYPE REF TO zcl_abapgit_progress,
+      ls_pull     TYPE zcl_abapgit_git_porcelain=>ty_pull_result.
+
+    IF mv_request_remote_refresh = abap_false.
+      RETURN.
+    ENDIF.
+
+    IF mi_connector IS NOT BOUND.
+      zcx_abapgit_exception=>raise( 'Repo does not have remote connector' ).
+    ENDIF.
+
+    CREATE OBJECT lo_progress
+      EXPORTING
+        iv_total = 1.
+
+    lo_progress->show( iv_current = 1
+                       iv_text    = 'Fetch remote files' ) ##NO_TEXT.
+
+    mi_connector->fetch(
+      EXPORTING
+        iv_url         = get_url( )
+        iv_branch_name = get_branch_name( )
+      IMPORTING
+        et_files       = mt_remote
+        et_objects     = mt_objects
+        ev_branch_sha1 = mv_branch_sha1 ).
+
+  ENDMETHOD.
+
+  METHOD set_objects.
+    mt_objects = it_objects.
+  ENDMETHOD.
+
+  METHOD get_remote_branch_sha1.
+    fetch_remote( ).
+    rv_sha1 = mv_branch_sha1.
+  ENDMETHOD.
 
 ENDCLASS.
