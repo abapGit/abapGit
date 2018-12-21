@@ -147,6 +147,12 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
+    METHODS push
+      IMPORTING
+        !is_comment TYPE zif_abapgit_definitions=>ty_comment
+        !io_stage   TYPE REF TO zcl_abapgit_stage
+      RAISING
+        zcx_abapgit_exception .
 
   PROTECTED SECTION.
 
@@ -181,6 +187,11 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS set_objects
       IMPORTING
         it_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
+    METHODS handle_stage_ignore
+      IMPORTING
+        !io_stage TYPE REF TO zcl_abapgit_stage
+      RAISING
+        zcx_abapgit_exception .
 
   PRIVATE SECTION.
 
@@ -989,6 +1000,92 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD get_remote_branch_sha1.
     fetch_remote( ).
     rv_sha1 = mv_branch_sha1.
+  ENDMETHOD.
+
+  METHOD handle_stage_ignore.
+
+    DATA: lv_dot_changed TYPE abap_bool,
+          lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
+          lt_stage       TYPE zcl_abapgit_stage=>ty_stage_tt.
+
+    FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
+
+
+    lo_dot_abapgit = get_dot_abapgit( ).
+    lt_stage = io_stage->get_all( ).
+    LOOP AT lt_stage ASSIGNING <ls_stage> WHERE method = zcl_abapgit_stage=>c_method-ignore.
+
+      lo_dot_abapgit->add_ignore(
+        iv_path     = <ls_stage>-file-path
+        iv_filename = <ls_stage>-file-filename ).
+
+      " remove it from the staging object, as the action is handled here
+      io_stage->reset( iv_path     = <ls_stage>-file-path
+                       iv_filename = <ls_stage>-file-filename ).
+
+      lv_dot_changed = abap_true.
+
+    ENDLOOP.
+
+    IF lv_dot_changed = abap_true.
+      io_stage->add(
+        iv_path     = zif_abapgit_definitions=>c_root_dir
+        iv_filename = zif_abapgit_definitions=>c_dot_abapgit
+        iv_data     = lo_dot_abapgit->serialize( ) ).
+
+      set_dot_abapgit( lo_dot_abapgit ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD push.
+
+* assumption: PUSH is done on top of the currently selected branch
+
+    DATA:
+      lt_update_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
+      lv_text         TYPE string.
+
+    IF mi_connector IS NOT BOUND.
+      zcx_abapgit_exception=>raise( 'Repo does not have remote connector' ).
+    ENDIF.
+
+
+    IF ms_data-branch_name CP 'refs/tags*'.
+      lv_text = |You're working on a tag. Currently it's not |
+             && |possible to push on tags. Consider creating a branch instead|.
+      zcx_abapgit_exception=>raise( lv_text ).
+    ENDIF.
+
+    IF ms_data-local_settings-block_commit = abap_true
+        AND mv_code_inspector_successful = abap_false.
+      zcx_abapgit_exception=>raise( |A successful code inspection is required| ).
+    ENDIF.
+
+    handle_stage_ignore( io_stage ).
+
+*   moved here from get_objects, probably REFACTOR
+*   used to get remote_branch_sha1 and mt_objects
+*   mt_objects used only here, returned with pull ...
+    fetch_remote( ).
+
+    mi_connector->push(
+      EXPORTING
+        iv_url         = get_url( )
+        is_comment     = is_comment
+        io_stage       = io_stage
+        iv_branch_name = get_branch_name( )
+        iv_parent      = get_remote_branch_sha1( )
+      IMPORTING
+        et_files         = mt_remote
+        ev_branch_sha1   = mv_branch_sha1
+        et_updated_files = lt_update_files
+      CHANGING
+        ct_objects     = mt_objects ).
+
+    reset_status( ).
+    CLEAR: mv_code_inspector_successful.
+
   ENDMETHOD.
 
 ENDCLASS.

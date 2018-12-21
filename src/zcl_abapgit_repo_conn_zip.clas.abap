@@ -106,6 +106,9 @@ CLASS ZCL_ABAPGIT_REPO_CONN_ZIP IMPLEMENTATION.
 
 
   METHOD zif_abapgit_repo_connector~push.
+
+    zcx_abapgit_exception=>raise( 'push is not supported for zip connector' ).
+
   ENDMETHOD.
 
 

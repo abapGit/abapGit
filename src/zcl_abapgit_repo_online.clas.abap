@@ -10,61 +10,17 @@ CLASS zcl_abapgit_repo_online DEFINITION
 
     ALIASES create_branch
       FOR zif_abapgit_git_operations~create_branch .
-    ALIASES push
-      FOR zif_abapgit_git_operations~push .
 
     METHODS rebuild_local_checksums
       REDEFINITION .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    METHODS handle_stage_ignore
-      IMPORTING
-        !io_stage TYPE REF TO zcl_abapgit_stage
-      RAISING
-        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
-
-
-  METHOD handle_stage_ignore.
-
-    DATA: lv_add         TYPE abap_bool,
-          lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
-          lt_stage       TYPE zcl_abapgit_stage=>ty_stage_tt.
-
-    FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
-
-
-    lo_dot_abapgit = get_dot_abapgit( ).
-    lt_stage = io_stage->get_all( ).
-    LOOP AT lt_stage ASSIGNING <ls_stage> WHERE method = zcl_abapgit_stage=>c_method-ignore.
-
-      lo_dot_abapgit->add_ignore(
-        iv_path     = <ls_stage>-file-path
-        iv_filename = <ls_stage>-file-filename ).
-
-      " remove it from the staging object, as the action is handled here
-      io_stage->reset( iv_path     = <ls_stage>-file-path
-                       iv_filename = <ls_stage>-file-filename ).
-
-      lv_add = abap_true.
-
-    ENDLOOP.
-
-    IF lv_add = abap_true.
-      io_stage->add(
-        iv_path     = zif_abapgit_definitions=>c_root_dir
-        iv_filename = zif_abapgit_definitions=>c_dot_abapgit
-        iv_data     = lo_dot_abapgit->serialize( ) ).
-
-      set_dot_abapgit( lo_dot_abapgit ).
-    ENDIF.
-
-  ENDMETHOD.
 
 
   METHOD rebuild_local_checksums.
@@ -147,48 +103,6 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
 
   METHOD zif_abapgit_git_operations~push.
-
-* assumption: PUSH is done on top of the currently selected branch
-
-    DATA: ls_push TYPE zcl_abapgit_git_porcelain=>ty_push_result,
-          lv_text TYPE string.
-
-
-    IF ms_data-branch_name CP 'refs/tags*'.
-      lv_text = |You're working on a tag. Currently it's not |
-             && |possible to push on tags. Consider creating a branch instead|.
-      zcx_abapgit_exception=>raise( lv_text ).
-    ENDIF.
-
-    IF ms_data-local_settings-block_commit = abap_true
-        AND mv_code_inspector_successful = abap_false.
-      zcx_abapgit_exception=>raise( |A successful code inspection is required| ).
-    ENDIF.
-
-    handle_stage_ignore( io_stage ).
-
-*   moved here from get_objects, probably refactor
-*   mt_objects used only here, returned with pull ...
-
-    fetch_remote( ).
-
-    ls_push = zcl_abapgit_git_porcelain=>push(
-      is_comment     = is_comment
-      io_stage       = io_stage
-      iv_branch_name = get_branch_name( )
-      iv_url         = get_url( )
-      iv_parent      = get_remote_branch_sha1( )
-      it_old_objects = mt_objects ).
-
-    set_objects( ls_push-new_objects ).
-    set_files_remote( ls_push-new_files ).
-
-    mv_branch_sha1 = ls_push-branch.
-
-    update_local_checksums( ls_push-updated_files ).
-
-    reset_status( ).
-    CLEAR: mv_code_inspector_successful.
 
   ENDMETHOD.
 ENDCLASS.
