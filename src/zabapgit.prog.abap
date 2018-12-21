@@ -48,6 +48,7 @@ INCLUDE zabapgit_forms.
 
 **********************************************************************
 INITIALIZATION.
+  PERFORM remove_toolbar USING '1001'. " Remove toolbar on html screen
   lcl_password_dialog=>on_screen_init( ).
 
 START-OF-SELECTION.
