@@ -148,3 +148,60 @@ FORM password_popup
       cv_pass         = cv_pass ).
 
 ENDFORM.
+
+FORM remove_toolbar USING pv_dynnr TYPE char4.
+
+  DATA: ls_header               TYPE rpy_dyhead,
+        lt_containers           TYPE dycatt_tab,
+        lt_fields_to_containers TYPE dyfatc_tab,
+        lt_flow_logic           TYPE swydyflow.
+
+  CALL FUNCTION 'RPY_DYNPRO_READ'
+    EXPORTING
+      progname             = sy-cprog
+      dynnr                = pv_dynnr
+    IMPORTING
+      header               = ls_header
+    TABLES
+      containers           = lt_containers
+      fields_to_containers = lt_fields_to_containers
+      flow_logic           = lt_flow_logic
+    EXCEPTIONS
+      cancelled            = 1
+      not_found            = 2
+      permission_error     = 3
+      OTHERS               = 4.
+  IF sy-subrc IS NOT INITIAL.
+    RETURN. " Ignore errors, just exit
+  ENDIF.
+
+  IF ls_header-no_toolbar = abap_true.
+    RETURN. " No change required
+  ENDIF.
+
+  ls_header-no_toolbar = abap_true.
+
+  CALL FUNCTION 'RPY_DYNPRO_INSERT'
+    EXPORTING
+      header                 = ls_header
+      suppress_exist_checks  = abap_true
+    TABLES
+      containers           = lt_containers
+      fields_to_containers = lt_fields_to_containers
+      flow_logic           = lt_flow_logic
+    EXCEPTIONS
+      cancelled              = 1
+      already_exists         = 2
+      program_not_exists     = 3
+      not_executed           = 4
+      missing_required_field = 5
+      illegal_field_value    = 6
+      field_not_allowed      = 7
+      not_generated          = 8
+      illegal_field_position = 9
+      OTHERS                 = 10.
+  IF sy-subrc <> 2 AND sy-subrc <> 0.
+    RETURN. " Ignore errors, just exit
+  ENDIF.
+
+ENDFORM.
