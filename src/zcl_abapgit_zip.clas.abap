@@ -260,7 +260,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     TRANSLATE lv_package USING '/#'.
     CONCATENATE lv_package '_' sy-datlo '_' sy-timlo INTO lv_default.
 
-    lo_fe_serv = zcl_abapgit_factory=>get_fe_services( ).
+    lo_fe_serv = zcl_abapgit_factory=>get_frontend_services( ).
 
     lv_path = lo_fe_serv->show_file_save_dialog(
       iv_title            = 'Export ZIP'
@@ -278,11 +278,11 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     DATA: lv_path TYPE string.
 
-    lv_path = zcl_abapgit_factory=>get_fe_services( )->show_file_open_dialog(
+    lv_path = zcl_abapgit_factory=>get_frontend_services( )->show_file_open_dialog(
       iv_title            = 'Import ZIP'
       iv_default_filename = '*.zip' ).
 
-    rv_xstr = zcl_abapgit_factory=>get_fe_services( )->file_upload( lv_path ).
+    rv_xstr = zcl_abapgit_factory=>get_frontend_services( )->file_upload( lv_path ).
 
   ENDMETHOD.
 

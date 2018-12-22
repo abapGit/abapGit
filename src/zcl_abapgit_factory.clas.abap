@@ -57,7 +57,7 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-METHODS get_cts_api
       RETURNING
         VALUE(ri_cts_api) TYPE REF TO zif_abapgit_cts_api.
-    CLASS-METHODS get_fe_services
+    CLASS-METHODS get_frontend_services
       RETURNING
         VALUE(ri_fe_serv) TYPE REF TO zif_abapgit_frontend_services.
 
@@ -181,7 +181,7 @@ CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_fe_services.
+  METHOD get_frontend_services.
 
     IF gi_fe_services IS INITIAL.
       CREATE OBJECT gi_fe_services TYPE zcl_abapgit_frontend_services.
