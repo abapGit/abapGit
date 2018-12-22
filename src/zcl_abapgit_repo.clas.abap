@@ -271,6 +271,17 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD bind_connector.
+    mi_connector = ii_connector.
+    reset_remote( ).
+  ENDMETHOD.
+
+
+  METHOD bind_listener.
+    mi_listener = ii_listener.
+  ENDMETHOD.
+
+
   METHOD build_dotabapgit_file.
 
     rs_file-path     = zif_abapgit_definitions=>c_root_dir.
@@ -382,6 +393,38 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD fetch_remote.
+
+    DATA:
+      lo_progress TYPE REF TO zcl_abapgit_progress,
+      ls_pull     TYPE zcl_abapgit_git_porcelain=>ty_pull_result.
+
+    IF mv_request_remote_refresh = abap_false.
+      RETURN.
+    ENDIF.
+
+    IF mi_connector IS NOT BOUND.
+      zcx_abapgit_exception=>raise( 'Repo does not have remote connector' ).
+    ENDIF.
+
+    CREATE OBJECT lo_progress
+      EXPORTING
+        iv_total = 1.
+
+    lo_progress->show( iv_current = 1
+                       iv_text    = 'Fetch remote files' ) ##NO_TEXT.
+
+    mi_connector->fetch(
+      EXPORTING
+        iv_branch_name = get_branch_name( )
+      IMPORTING
+        et_files       = mt_remote
+        et_objects     = mt_objects
+        ev_branch_sha1 = mv_branch_sha1 ).
+
+  ENDMETHOD.
+
+
   METHOD find_remote_dot_abapgit.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
@@ -396,6 +439,11 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       set_dot_abapgit( ro_dot ).
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD get_branch_name.
+    rv_name = ms_data-branch_name.
   ENDMETHOD.
 
 
@@ -492,8 +540,26 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_name.
+
+    IF is_offline( ) = abap_true.
+      rv_name = ms_data-url.
+    ELSE.
+      rv_name = zcl_abapgit_url=>name( ms_data-url ).
+      rv_name = cl_http_utility=>if_http_utility~unescape_url( rv_name ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD get_package.
     rv_package = ms_data-package.
+  ENDMETHOD.
+
+
+  METHOD get_remote_branch_sha1.
+    fetch_remote( ).
+    rv_sha1 = mv_branch_sha1.
   ENDMETHOD.
 
 
@@ -539,6 +605,55 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     ENDLOOP.
 
     rt_unnecessary_local_objects = lt_tadir_unique.
+
+  ENDMETHOD.
+
+
+  METHOD get_url.
+    rv_url = ms_data-url.
+  ENDMETHOD.
+
+
+  METHOD handle_stage_ignore.
+
+    DATA: lv_dot_changed TYPE abap_bool,
+          lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
+          lt_stage       TYPE zcl_abapgit_stage=>ty_stage_tt.
+
+    FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
+
+
+    lo_dot_abapgit = get_dot_abapgit( ).
+    lt_stage = io_stage->get_all( ).
+    LOOP AT lt_stage ASSIGNING <ls_stage> WHERE method = zcl_abapgit_stage=>c_method-ignore.
+
+      lo_dot_abapgit->add_ignore(
+        iv_path     = <ls_stage>-file-path
+        iv_filename = <ls_stage>-file-filename ).
+
+      " remove it from the staging object, as the action is handled here
+      io_stage->reset( iv_path     = <ls_stage>-file-path
+                       iv_filename = <ls_stage>-file-filename ).
+
+      lv_dot_changed = abap_true.
+
+    ENDLOOP.
+
+    IF lv_dot_changed = abap_true.
+      io_stage->add(
+        iv_path     = zif_abapgit_definitions=>c_root_dir
+        iv_filename = zif_abapgit_definitions=>c_dot_abapgit
+        iv_data     = lo_dot_abapgit->serialize( ) ).
+
+      set_dot_abapgit( lo_dot_abapgit ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD has_remote_source.
+
+    rv_yes = boolc( mi_connector IS BOUND ).
 
   ENDMETHOD.
 
@@ -603,25 +718,84 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD rebuild_local_checksums.
+  METHOD push.
+
+* assumption: PUSH is done on top of the currently selected branch
 
     DATA:
-      lt_local     TYPE zif_abapgit_definitions=>ty_files_item_tt,
-      ls_last_item TYPE zif_abapgit_definitions=>ty_item,
-      lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
+      lt_update_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
+      lv_text         TYPE string.
+
+    IF mi_connector IS NOT BOUND.
+      zcx_abapgit_exception=>raise( 'Repo does not have remote connector' ).
+    ENDIF.
+
+
+    IF ms_data-branch_name CP 'refs/tags*'.
+      lv_text = |You're working on a tag. Currently it's not |
+             && |possible to push on tags. Consider creating a branch instead|.
+      zcx_abapgit_exception=>raise( lv_text ).
+    ENDIF.
+
+    IF ms_data-local_settings-block_commit = abap_true
+        AND mv_code_inspector_successful = abap_false.
+      zcx_abapgit_exception=>raise( |A successful code inspection is required| ).
+    ENDIF.
+
+    handle_stage_ignore( io_stage ).
+
+*   moved here from get_objects, probably REFACTOR
+*   used to get remote_branch_sha1 and mt_objects
+*   mt_objects used only here, returned with pull ...
+    fetch_remote( ).
+
+    mi_connector->push(
+      EXPORTING
+        is_comment     = is_comment
+        io_stage       = io_stage
+        iv_branch_name = get_branch_name( )
+        iv_parent      = get_remote_branch_sha1( )
+      IMPORTING
+        et_files         = mt_remote
+        ev_branch_sha1   = mv_branch_sha1
+        et_updated_files = lt_update_files
+      CHANGING
+        ct_objects     = mt_objects ).
+
+    reset_status( ).
+    CLEAR: mv_code_inspector_successful.
+
+  ENDMETHOD.
+
+
+  METHOD rebuild_local_checksums.
+
+    " TODO refactor
+
+    DATA:
+          lt_remote    TYPE zif_abapgit_definitions=>ty_files_tt,
+          lt_local     TYPE zif_abapgit_definitions=>ty_files_item_tt,
+          ls_last_item TYPE zif_abapgit_definitions=>ty_item,
+          lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
 
     FIELD-SYMBOLS:
-      <ls_checksum> LIKE LINE OF lt_checksums,
-      <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
-      <ls_local>    LIKE LINE OF lt_local.
+                   <ls_checksum> LIKE LINE OF lt_checksums,
+                   <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
+                   <ls_remote>   LIKE LINE OF lt_remote,
+                   <ls_local>    LIKE LINE OF lt_local.
 
-    lt_local = get_files_local( ).
+    lt_local  = get_files_local( ).
 
     DELETE lt_local " Remove non-code related files except .abapgit
       WHERE item IS INITIAL
       AND NOT ( file-path     = zif_abapgit_definitions=>c_root_dir
       AND       file-filename = zif_abapgit_definitions=>c_dot_abapgit ).
     SORT lt_local BY item.
+
+    IF has_remote_source( ) = abap_true.
+      lt_remote = get_files_remote( ).
+      SORT lt_remote BY path filename.
+    ENDIF.
 
     LOOP AT lt_local ASSIGNING <ls_local>.
       IF ls_last_item <> <ls_local>-item OR sy-tabix = 1. " First or New item reached ?
@@ -630,9 +804,24 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         ls_last_item       = <ls_local>-item.
       ENDIF.
 
+      IF has_remote_source( ) = abap_true.
+        READ TABLE lt_remote ASSIGNING <ls_remote>
+          WITH KEY path = <ls_local>-file-path filename = <ls_local>-file-filename
+          BINARY SEARCH.
+        CHECK sy-subrc = 0.  " Ignore new local ones
+      ENDIF.
+
       APPEND INITIAL LINE TO <ls_checksum>-files ASSIGNING <ls_file_sig>.
       MOVE-CORRESPONDING <ls_local>-file TO <ls_file_sig>.
 
+      IF has_remote_source( ) = abap_true.
+        " If hashes are equal -> local sha1 is OK
+        " Else if R-branch is ahead  -> assume changes were remote, state - local sha1
+        "      Else (branches equal) -> assume changes were local, state - remote sha1
+        IF <ls_local>-file-sha1 <> <ls_remote>-sha1.
+          <ls_file_sig>-sha1 = <ls_remote>-sha1.
+        ENDIF.
+      ENDIF.
     ENDLOOP.
 
     set( it_checksums = lt_checksums ).
@@ -758,6 +947,18 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_branch_name.
+
+    IF ms_data-local_settings-write_protected = abap_true.
+      zcx_abapgit_exception=>raise( 'Cannot switch branch. Local code is write-protected by repo config' ).
+    ENDIF.
+
+    reset_remote( ).
+    set( iv_branch_name = iv_branch_name ).
+
+  ENDMETHOD.
+
+
   METHOD set_dot_abapgit.
     set( is_dot_abapgit = io_dot_abapgit->get_data( ) ).
   ENDMETHOD.
@@ -778,6 +979,23 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_objects.
+    mt_objects = it_objects.
+  ENDMETHOD.
+
+
+  METHOD set_url.
+
+    IF ms_data-local_settings-write_protected = abap_true.
+      zcx_abapgit_exception=>raise( 'Cannot change URL. Local code is write-protected by repo config' ).
+    ENDIF.
+
+    reset_remote( ).
+    set( iv_url = iv_url ).
+
+  ENDMETHOD.
+
+
   METHOD status.
 
     IF lines( mt_status ) = 0.
@@ -791,8 +1009,22 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD bind_listener.
-    mi_listener = ii_listener.
+  METHOD switch_repo_type.
+
+    IF iv_offline = ms_data-offline.
+      zcx_abapgit_exception=>raise( |Cannot switch_repo_type, offline already = "{ ms_data-offline }"| ).
+    ENDIF.
+
+    IF iv_offline = abap_true. " On-line -> OFFline
+      set(
+        iv_url         = zcl_abapgit_url=>name( ms_data-url )
+        iv_branch_name = ''
+        iv_head_branch = ''
+        iv_offline     = abap_true ).
+    ELSE. " OFFline -> On-line
+      set( iv_offline = abap_false ).
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -887,203 +1119,4 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     set( it_checksums = lt_checksums ).
 
   ENDMETHOD.
-
-
-  METHOD switch_repo_type.
-
-    IF iv_offline = ms_data-offline.
-      zcx_abapgit_exception=>raise( |Cannot switch_repo_type, offline already = "{ ms_data-offline }"| ).
-    ENDIF.
-
-    IF iv_offline = abap_true. " On-line -> OFFline
-      set(
-        iv_url         = zcl_abapgit_url=>name( ms_data-url )
-        iv_branch_name = ''
-        iv_head_branch = ''
-        iv_offline     = abap_true ).
-    ELSE. " OFFline -> On-line
-      set( iv_offline = abap_false ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD bind_connector.
-    mi_connector = ii_connector.
-    reset_remote( ).
-  ENDMETHOD.
-
-  METHOD get_branch_name.
-    rv_name = ms_data-branch_name.
-  ENDMETHOD.
-
-  METHOD get_url.
-    rv_url = ms_data-url.
-  ENDMETHOD.
-
-  METHOD set_branch_name.
-
-    IF ms_data-local_settings-write_protected = abap_true.
-      zcx_abapgit_exception=>raise( 'Cannot switch branch. Local code is write-protected by repo config' ).
-    ENDIF.
-
-    reset_remote( ).
-    set( iv_branch_name = iv_branch_name ).
-
-  ENDMETHOD.
-
-  METHOD set_url.
-
-    IF ms_data-local_settings-write_protected = abap_true.
-      zcx_abapgit_exception=>raise( 'Cannot change URL. Local code is write-protected by repo config' ).
-    ENDIF.
-
-    reset_remote( ).
-    set( iv_url = iv_url ).
-
-  ENDMETHOD.
-
-
-  METHOD has_remote_source.
-
-    rv_yes = boolc( mi_connector IS BOUND ).
-
-  ENDMETHOD.
-
-  METHOD get_name.
-
-    IF is_offline( ) = abap_true.
-      rv_name = ms_data-url.
-    ELSE.
-      rv_name = zcl_abapgit_url=>name( ms_data-url ).
-      rv_name = cl_http_utility=>if_http_utility~unescape_url( rv_name ).
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD fetch_remote.
-
-    DATA:
-      lo_progress TYPE REF TO zcl_abapgit_progress,
-      ls_pull     TYPE zcl_abapgit_git_porcelain=>ty_pull_result.
-
-    IF mv_request_remote_refresh = abap_false.
-      RETURN.
-    ENDIF.
-
-    IF mi_connector IS NOT BOUND.
-      zcx_abapgit_exception=>raise( 'Repo does not have remote connector' ).
-    ENDIF.
-
-    CREATE OBJECT lo_progress
-      EXPORTING
-        iv_total = 1.
-
-    lo_progress->show( iv_current = 1
-                       iv_text    = 'Fetch remote files' ) ##NO_TEXT.
-
-    mi_connector->fetch(
-      EXPORTING
-        iv_branch_name = get_branch_name( )
-      IMPORTING
-        et_files       = mt_remote
-        et_objects     = mt_objects
-        ev_branch_sha1 = mv_branch_sha1 ).
-
-  ENDMETHOD.
-
-  METHOD set_objects.
-    mt_objects = it_objects.
-  ENDMETHOD.
-
-  METHOD get_remote_branch_sha1.
-    fetch_remote( ).
-    rv_sha1 = mv_branch_sha1.
-  ENDMETHOD.
-
-  METHOD handle_stage_ignore.
-
-    DATA: lv_dot_changed TYPE abap_bool,
-          lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
-          lt_stage       TYPE zcl_abapgit_stage=>ty_stage_tt.
-
-    FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
-
-
-    lo_dot_abapgit = get_dot_abapgit( ).
-    lt_stage = io_stage->get_all( ).
-    LOOP AT lt_stage ASSIGNING <ls_stage> WHERE method = zcl_abapgit_stage=>c_method-ignore.
-
-      lo_dot_abapgit->add_ignore(
-        iv_path     = <ls_stage>-file-path
-        iv_filename = <ls_stage>-file-filename ).
-
-      " remove it from the staging object, as the action is handled here
-      io_stage->reset( iv_path     = <ls_stage>-file-path
-                       iv_filename = <ls_stage>-file-filename ).
-
-      lv_dot_changed = abap_true.
-
-    ENDLOOP.
-
-    IF lv_dot_changed = abap_true.
-      io_stage->add(
-        iv_path     = zif_abapgit_definitions=>c_root_dir
-        iv_filename = zif_abapgit_definitions=>c_dot_abapgit
-        iv_data     = lo_dot_abapgit->serialize( ) ).
-
-      set_dot_abapgit( lo_dot_abapgit ).
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD push.
-
-* assumption: PUSH is done on top of the currently selected branch
-
-    DATA:
-      lt_update_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
-      lv_text         TYPE string.
-
-    IF mi_connector IS NOT BOUND.
-      zcx_abapgit_exception=>raise( 'Repo does not have remote connector' ).
-    ENDIF.
-
-
-    IF ms_data-branch_name CP 'refs/tags*'.
-      lv_text = |You're working on a tag. Currently it's not |
-             && |possible to push on tags. Consider creating a branch instead|.
-      zcx_abapgit_exception=>raise( lv_text ).
-    ENDIF.
-
-    IF ms_data-local_settings-block_commit = abap_true
-        AND mv_code_inspector_successful = abap_false.
-      zcx_abapgit_exception=>raise( |A successful code inspection is required| ).
-    ENDIF.
-
-    handle_stage_ignore( io_stage ).
-
-*   moved here from get_objects, probably REFACTOR
-*   used to get remote_branch_sha1 and mt_objects
-*   mt_objects used only here, returned with pull ...
-    fetch_remote( ).
-
-    mi_connector->push(
-      EXPORTING
-        is_comment     = is_comment
-        io_stage       = io_stage
-        iv_branch_name = get_branch_name( )
-        iv_parent      = get_remote_branch_sha1( )
-      IMPORTING
-        et_files         = mt_remote
-        ev_branch_sha1   = mv_branch_sha1
-        et_updated_files = lt_update_files
-      CHANGING
-        ct_objects     = mt_objects ).
-
-    reset_status( ).
-    CLEAR: mv_code_inspector_successful.
-
-  ENDMETHOD.
-
 ENDCLASS.
