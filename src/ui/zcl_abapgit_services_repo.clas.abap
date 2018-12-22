@@ -147,7 +147,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     DATA lv_path TYPE string.
     DATA lo_repo TYPE REF TO zcl_abapgit_repo.
 
-    lv_path = zcl_abapgit_factory=>get_fe_services( )->show_file_open_dialog(
+    lv_path = zcl_abapgit_factory=>get_frontend_services( )->show_file_open_dialog(
       iv_title            = 'Import ZIP'
       iv_default_filename = '*.zip' ).
 

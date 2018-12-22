@@ -48,7 +48,7 @@ CLASS ZCL_ABAPGIT_REPO_CONN_ZIP IMPLEMENTATION.
 
     CREATE OBJECT ro_connector.
     ro_connector->mv_filepath = iv_path.
-    ro_connector->mv_blob     = zcl_abapgit_factory=>get_fe_services( )->file_upload( iv_path ).
+    ro_connector->mv_blob     = zcl_abapgit_factory=>get_frontend_services( )->file_upload( iv_path ).
 
   ENDMETHOD.
 

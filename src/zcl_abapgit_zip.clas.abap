@@ -9,10 +9,12 @@ CLASS zcl_abapgit_zip DEFINITION
         !it_filter TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
       RAISING
         zcx_abapgit_exception .
+
     CLASS-METHODS export_package
       RAISING
         zcx_abapgit_exception
         zcx_abapgit_cancel .
+
     CLASS-METHODS export_object
       RAISING
         zcx_abapgit_exception
