@@ -3,7 +3,6 @@ INTERFACE zif_abapgit_repo_connector
 
     METHODS fetch
       IMPORTING
-        iv_url         TYPE string
         iv_branch_name TYPE string
       EXPORTING
         et_files       TYPE zif_abapgit_definitions=>ty_files_tt
@@ -16,7 +15,6 @@ INTERFACE zif_abapgit_repo_connector
       IMPORTING
         is_comment      TYPE zif_abapgit_definitions=>ty_comment
         io_stage        TYPE REF TO zcl_abapgit_stage
-        iv_url          TYPE string
         iv_branch_name  TYPE string
         iv_parent       TYPE zif_abapgit_definitions=>ty_sha1
       EXPORTING

@@ -984,7 +984,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     mi_connector->fetch(
       EXPORTING
-        iv_url         = get_url( )
         iv_branch_name = get_branch_name( )
       IMPORTING
         et_files       = mt_remote
@@ -1071,7 +1070,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     mi_connector->push(
       EXPORTING
-        iv_url         = get_url( )
         is_comment     = is_comment
         io_stage       = io_stage
         iv_branch_name = get_branch_name( )

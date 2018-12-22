@@ -57,7 +57,7 @@ CLASS zcl_abapgit_repo_srv DEFINITION
         !it_repos   TYPE zif_abapgit_persistence=>tt_repo
       RAISING
         zcx_abapgit_exception .
-    METHODS assign_connector
+    METHODS assign_default_connector
       IMPORTING
         io_repo TYPE REF TO zcl_abapgit_repo
       RAISING
@@ -85,22 +85,18 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
     ENDLOOP.
 
     io_repo->bind_listener( me ).
-    assign_connector( io_repo ).
+    assign_default_connector( io_repo ).
     APPEND io_repo TO mt_list.
 
   ENDMETHOD.
 
 
-  METHOD assign_connector.
-
-    DATA li_connector TYPE REF TO zif_abapgit_repo_connector.
-
-    IF io_repo->is_offline( ) = abap_false.
-      CREATE OBJECT li_connector TYPE zcl_abapgit_repo_conn_online.
-    ENDIF.
+  METHOD assign_default_connector.
 
     " offline = NULL, no default connection for offline
-    io_repo->bind_connector( li_connector ).
+    IF io_repo->is_offline( ) = abap_false.
+      io_repo->bind_connector( zcl_abapgit_repo_conn_online=>create( io_repo->get_url( ) ) ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -343,8 +339,9 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
     " Instances in mt_list are of *_online and *_offline type
     " If type is changed object should be recreated from the proper class
     " TODO refactor, e.g. unify repo logic in one class
-    IF is_change_mask-offline = abap_true.
-      assign_connector( get( iv_key ) ). " reassign connector on type change
+    IF is_change_mask-offline = abap_true OR is_change_mask-url = abap_true.
+      " reassign connector on type change or url change
+      assign_default_connector( get( iv_key ) ).
 
       reinstantiate_repo(
         iv_key  = iv_key
