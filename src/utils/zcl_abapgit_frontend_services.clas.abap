@@ -1,44 +1,11 @@
-CLASS zcl_abapgit_fs DEFINITION
+CLASS zcl_abapgit_frontend_services DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC .
 
   PUBLIC SECTION.
 
-    CLASS-METHODS file_upload
-      IMPORTING
-        iv_path TYPE string
-      RETURNING
-        VALUE(rv_xstr) TYPE xstring
-      RAISING
-        zcx_abapgit_exception.
-
-    CLASS-METHODS file_download
-      IMPORTING
-        iv_path TYPE string
-        iv_xstr TYPE xstring
-      RAISING
-        zcx_abapgit_exception.
-
-    CLASS-METHODS show_file_save_dialog
-      IMPORTING
-        iv_title            TYPE string
-        iv_extension        TYPE string
-        iv_default_filename TYPE string
-      RETURNING
-        VALUE(rv_path) TYPE string
-      RAISING
-        zcx_abapgit_exception.
-
-    CLASS-METHODS show_file_open_dialog
-      IMPORTING
-        iv_title            TYPE string
-        iv_default_filename TYPE string
-      RETURNING
-        VALUE(rv_path) TYPE string
-      RAISING
-        zcx_abapgit_exception.
-
+    INTERFACES zif_abapgit_frontend_services.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -46,10 +13,10 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FS IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
 
 
-  METHOD file_download.
+  METHOD zif_abapgit_frontend_services~file_download.
 
     DATA:
       lt_rawdata  TYPE solix_tab.
@@ -95,7 +62,7 @@ CLASS ZCL_ABAPGIT_FS IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD file_upload.
+  METHOD zif_abapgit_frontend_services~file_upload.
 
     DATA:
       lt_data       TYPE TABLE OF x255,
@@ -139,7 +106,7 @@ CLASS ZCL_ABAPGIT_FS IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD show_file_open_dialog.
+  METHOD zif_abapgit_frontend_services~show_file_open_dialog.
 
     DATA:
       lt_file_table TYPE filetable,
@@ -175,7 +142,7 @@ CLASS ZCL_ABAPGIT_FS IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD show_file_save_dialog.
+  METHOD zif_abapgit_frontend_services~show_file_save_dialog.
 
     DATA:
       lv_action   TYPE i,
