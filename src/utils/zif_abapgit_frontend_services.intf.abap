@@ -4,7 +4,7 @@ INTERFACE zif_abapgit_frontend_services
       IMPORTING
         !iv_path TYPE string
       RETURNING
-        value(rv_xstr) TYPE xstring
+        VALUE(rv_xstr) TYPE xstring
       RAISING
         zcx_abapgit_exception .
     METHODS file_download
@@ -19,7 +19,7 @@ INTERFACE zif_abapgit_frontend_services
         !iv_extension TYPE string
         !iv_default_filename TYPE string
       RETURNING
-        value(rv_path) TYPE string
+        VALUE(rv_path) TYPE string
       RAISING
         zcx_abapgit_exception .
     METHODS show_file_open_dialog
@@ -27,7 +27,7 @@ INTERFACE zif_abapgit_frontend_services
         !iv_title TYPE string
         !iv_default_filename TYPE string
       RETURNING
-        value(rv_path) TYPE string
+        VALUE(rv_path) TYPE string
       RAISING
         zcx_abapgit_exception .
 ENDINTERFACE.
