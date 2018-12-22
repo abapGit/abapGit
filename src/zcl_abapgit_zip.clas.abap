@@ -23,6 +23,7 @@ CLASS zcl_abapgit_zip DEFINITION
       RAISING
         zcx_abapgit_exception
         zcx_abapgit_cancel .
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS file_upload
       RETURNING VALUE(rv_xstr) TYPE xstring
@@ -250,20 +251,23 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
   METHOD file_download.
 
     DATA:
-      lv_path TYPE string,
+      lv_path     TYPE string,
       lv_default  TYPE string,
+      lo_fe_serv  TYPE REF TO zif_abapgit_frontend_services,
       lv_package  TYPE devclass.
 
     lv_package = iv_package.
     TRANSLATE lv_package USING '/#'.
     CONCATENATE lv_package '_' sy-datlo '_' sy-timlo INTO lv_default.
 
-    lv_path = zcl_abapgit_fs=>show_file_save_dialog(
+    lo_fe_serv = zcl_abapgit_factory=>get_fe_services( ).
+
+    lv_path = lo_fe_serv->show_file_save_dialog(
       iv_title            = 'Export ZIP'
       iv_extension        = 'zip'
       iv_default_filename = lv_default ).
 
-    zcl_abapgit_fs=>file_download(
+    lo_fe_serv->file_download(
       iv_path = lv_path
       iv_xstr = iv_xstr ).
 
@@ -274,11 +278,11 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     DATA: lv_path TYPE string.
 
-    lv_path = zcl_abapgit_fs=>show_file_open_dialog(
+    lv_path = zcl_abapgit_factory=>get_fe_services( )->show_file_open_dialog(
       iv_title            = 'Import ZIP'
       iv_default_filename = '*.zip' ).
 
-    rv_xstr = zcl_abapgit_fs=>file_upload( lv_path ).
+    rv_xstr = zcl_abapgit_factory=>get_fe_services( )->file_upload( lv_path ).
 
   ENDMETHOD.
 
