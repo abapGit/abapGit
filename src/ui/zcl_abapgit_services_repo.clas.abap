@@ -85,6 +85,7 @@ CLASS zcl_abapgit_services_repo DEFINITION
         !io_repo TYPE REF TO zcl_abapgit_repo
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-METHODS popup_overwrite
@@ -137,6 +138,22 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
 * and pass decisions to deserialize
     io_repo->deserialize( ls_checks ).
+
+  ENDMETHOD.
+
+
+  METHOD import_zip.
+
+    DATA lv_path TYPE string.
+    DATA lo_repo TYPE REF TO zcl_abapgit_repo.
+
+    lv_path = zcl_abapgit_factory=>get_fe_services( )->show_file_open_dialog(
+      iv_title            = 'Import ZIP'
+      iv_default_filename = '*.zip' ).
+
+    lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    lo_repo->bind_connector( zcl_abapgit_repo_conn_zip=>create( lv_path ) ).
+    lo_repo->refresh( ).
 
   ENDMETHOD.
 
@@ -534,20 +551,4 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       it_transport_objects   = lt_transport_objects ).
 
   ENDMETHOD.
-
-  METHOD import_zip.
-
-    DATA lv_path TYPE string.
-    DATA lo_repo TYPE REF TO zcl_abapgit_repo.
-
-    lv_path = zcl_abapgit_fs=>show_file_open_dialog(
-      iv_title            = 'Import ZIP'
-      iv_default_filename = '*.zip' ).
-
-    lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    lo_repo->bind_connector( zcl_abapgit_repo_conn_zip=>create( lv_path ) ).
-    lo_repo->refresh( ).
-
-  ENDMETHOD.
-
 ENDCLASS.

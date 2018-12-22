@@ -18,6 +18,7 @@ CLASS zcl_abapgit_zip DEFINITION
         zcx_abapgit_exception
         zcx_abapgit_cancel .
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS file_download
       IMPORTING iv_package TYPE devclass
@@ -227,5 +228,4 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
       iv_xstr = iv_xstr ).
 
   ENDMETHOD.
-
 ENDCLASS.

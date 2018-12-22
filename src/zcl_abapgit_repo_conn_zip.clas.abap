@@ -44,6 +44,80 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_REPO_CONN_ZIP IMPLEMENTATION.
 
 
+  METHOD create.
+
+    CREATE OBJECT ro_connector.
+    ro_connector->mv_filepath = iv_path.
+    ro_connector->mv_blob     = zcl_abapgit_factory=>get_fe_services( )->file_upload( iv_path ).
+
+  ENDMETHOD.
+
+
+  METHOD normalize_path.
+* removes first folder from path if needed
+
+    DATA: lt_split  TYPE TABLE OF string,
+          lv_needed TYPE abap_bool,
+          lv_length TYPE i,
+          lv_split  LIKE LINE OF lt_split.
+
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF ct_files.
+
+
+    READ TABLE ct_files INDEX 1 ASSIGNING <ls_file>.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    SPLIT <ls_file>-path AT '/' INTO TABLE lt_split.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+    READ TABLE lt_split INDEX 2 INTO lv_split.
+    IF sy-subrc <> 0 OR strlen( lv_split ) = 0.
+      RETURN.
+    ENDIF.
+
+    CONCATENATE '/' lv_split '/*' INTO lv_split.
+
+    lv_needed = abap_true.
+    LOOP AT ct_files ASSIGNING <ls_file>.
+      IF NOT <ls_file>-path CP lv_split.
+        lv_needed = abap_false.
+        EXIT. " current loop
+      ENDIF.
+    ENDLOOP.
+
+    IF lv_needed = abap_true.
+      lv_length = strlen( lv_split ) - 2.
+      LOOP AT ct_files ASSIGNING <ls_file>.
+        <ls_file>-path = <ls_file>-path+lv_length.
+      ENDLOOP.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD parse_filename.
+
+    IF iv_str CA '/'.
+      FIND REGEX '(.*/)(.*)' IN iv_str
+        SUBMATCHES ev_path ev_filename.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Malformed path' ).
+      ENDIF.
+      IF ev_path <> '/'.
+        CONCATENATE '/' ev_path INTO ev_path.
+      ENDIF.
+    ELSE.
+      ev_path = '/'.
+      ev_filename = iv_str.
+    ENDIF.
+    TRANSLATE ev_filename TO LOWER CASE.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_repo_connector~fetch.
 
     DATA:
@@ -110,77 +184,4 @@ CLASS ZCL_ABAPGIT_REPO_CONN_ZIP IMPLEMENTATION.
     zcx_abapgit_exception=>raise( 'push is not supported for zip connector' ).
 
   ENDMETHOD.
-
-
-  METHOD parse_filename.
-
-    IF iv_str CA '/'.
-      FIND REGEX '(.*/)(.*)' IN iv_str
-        SUBMATCHES ev_path ev_filename.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'Malformed path' ).
-      ENDIF.
-      IF ev_path <> '/'.
-        CONCATENATE '/' ev_path INTO ev_path.
-      ENDIF.
-    ELSE.
-      ev_path = '/'.
-      ev_filename = iv_str.
-    ENDIF.
-    TRANSLATE ev_filename TO LOWER CASE.
-
-  ENDMETHOD.
-
-  METHOD normalize_path.
-* removes first folder from path if needed
-
-    DATA: lt_split  TYPE TABLE OF string,
-          lv_needed TYPE abap_bool,
-          lv_length TYPE i,
-          lv_split  LIKE LINE OF lt_split.
-
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF ct_files.
-
-
-    READ TABLE ct_files INDEX 1 ASSIGNING <ls_file>.
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
-
-    SPLIT <ls_file>-path AT '/' INTO TABLE lt_split.
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
-    READ TABLE lt_split INDEX 2 INTO lv_split.
-    IF sy-subrc <> 0 OR strlen( lv_split ) = 0.
-      RETURN.
-    ENDIF.
-
-    CONCATENATE '/' lv_split '/*' INTO lv_split.
-
-    lv_needed = abap_true.
-    LOOP AT ct_files ASSIGNING <ls_file>.
-      IF NOT <ls_file>-path CP lv_split.
-        lv_needed = abap_false.
-        EXIT. " current loop
-      ENDIF.
-    ENDLOOP.
-
-    IF lv_needed = abap_true.
-      lv_length = strlen( lv_split ) - 2.
-      LOOP AT ct_files ASSIGNING <ls_file>.
-        <ls_file>-path = <ls_file>-path+lv_length.
-      ENDLOOP.
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD create.
-
-    CREATE OBJECT ro_connector.
-    ro_connector->mv_filepath = iv_path.
-    ro_connector->mv_blob     = zcl_abapgit_fs=>file_upload( iv_path ).
-
-  ENDMETHOD.
-
 ENDCLASS.
