@@ -1,4 +1,4 @@
-CLASS ltcl_abapgit_tadir_mock DEFINITION.
+CLASS ltcl_abapgit_tadir_mock DEFINITION FOR TESTING.
 
   PUBLIC SECTION.
     INTERFACES: zif_abapgit_tadir.

@@ -1,4 +1,4 @@
-CLASS abapgit_syntax_xml DEFINITION FINAL FOR TESTING
+CLASS ltcl_abapgit_syntax_xml DEFINITION FINAL FOR TESTING
   DURATION SHORT
   RISK LEVEL HARMLESS.
 
@@ -18,7 +18,7 @@ CLASS abapgit_syntax_xml DEFINITION FINAL FOR TESTING
 ENDCLASS.
 
 
-CLASS abapgit_syntax_xml IMPLEMENTATION.
+CLASS ltcl_abapgit_syntax_xml IMPLEMENTATION.
 
   METHOD setup.
 
