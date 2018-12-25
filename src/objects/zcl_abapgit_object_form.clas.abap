@@ -8,6 +8,7 @@ CLASS zcl_abapgit_object_form DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         is_item     TYPE zif_abapgit_definitions=>ty_item
         iv_language TYPE spras.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS: c_objectname_form    TYPE thead-tdobject VALUE 'FORM' ##NO_TEXT.
     CONSTANTS: c_objectname_tdlines TYPE thead-tdobject VALUE 'TDLINES' ##NO_TEXT.
@@ -102,16 +103,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_form IMPLEMENTATION.
-
-  METHOD constructor.
-
-    super->constructor( is_item     = is_item
-                        iv_language = iv_language ).
-
-    mv_form_name = ms_item-obj_name.
-
-  ENDMETHOD.
+CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
 
 
   METHOD build_extra_from_header.
@@ -149,6 +141,16 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
                             iv_ext    = c_extension_xml
                             iv_string = lv_string ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD constructor.
+
+    super->constructor( is_item     = is_item
+                        iv_language = iv_language ).
+
+    mv_form_name = ms_item-obj_name.
 
   ENDMETHOD.
 
@@ -212,6 +214,43 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
         read_only_header = abap_true
       IMPORTING
         form_header      = rs_last_changed.
+
+  ENDMETHOD.
+
+
+  METHOD order_check_and_insert.
+
+    DATA: ls_order TYPE e071k-trkorr.
+
+    CALL FUNCTION 'SAPSCRIPT_ORDER_CHECK'
+      EXPORTING
+        objecttype           = ms_item-obj_type
+        form                 = mv_form_name
+      EXCEPTIONS
+        invalid_input        = 1
+        object_locked        = 2
+        object_not_available = 3
+        OTHERS               = 4.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    CALL FUNCTION 'SAPSCRIPT_ORDER_INSERT'
+      EXPORTING
+        objecttype     = ms_item-obj_type
+        form           = mv_form_name
+        masterlang     = mv_language
+      CHANGING
+        order          = ls_order
+      EXCEPTIONS
+        invalid_input  = 1
+        order_canceled = 2
+        OTHERS         = 3.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -311,6 +350,11 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
 
     rv_changed = boolc( sy-subrc <> 0 OR lv_last_changed_ts > iv_timestamp ).
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
   ENDMETHOD.
 
 
@@ -454,9 +498,37 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
         tabs         = es_form_data-tabs
         windows      = es_form_data-windows.
 
-      _sort_tdlines_by_windows( CHANGING ct_form_windows  = es_form_data-windows
-                                         ct_lines         = et_lines ).
+    _sort_tdlines_by_windows( CHANGING ct_form_windows  = es_form_data-windows
+                                       ct_lines         = et_lines ).
   ENDMETHOD.
+
+
+  METHOD _save_form.
+
+    CALL FUNCTION 'SAVE_FORM'
+      EXPORTING
+        form_header  = cs_form_data-form_header
+      TABLES
+        form_lines   = it_lines
+        pages        = cs_form_data-pages
+        page_windows = cs_form_data-page_windows
+        paragraphs   = cs_form_data-paragraphs
+        strings      = cs_form_data-strings
+        tabs         = cs_form_data-tabs
+        windows      = cs_form_data-windows.
+
+    CALL FUNCTION 'SAPSCRIPT_CHANGE_OLANGUAGE'
+      EXPORTING
+        forced    = abap_true
+        name      = cs_form_data-text_header-tdname
+        object    = cs_form_data-text_header-tdobject
+        olanguage = cs_form_data-orig_language
+      EXCEPTIONS
+        OTHERS    = 1
+        ##fm_subrc_ok.                                                   "#EC CI_SUBRC
+
+  ENDMETHOD.
+
 
   METHOD _sort_tdlines_by_windows.
     DATA lt_lines        TYPE zcl_abapgit_object_form=>tyt_lines.
@@ -483,72 +555,5 @@ CLASS zcl_abapgit_object_form IMPLEMENTATION.
         lv_firstloop = abap_false.
       ENDLOOP.
     ENDLOOP.
-  ENDMETHOD.
-
-METHOD _save_form.
-
-    CALL FUNCTION 'SAVE_FORM'
-      EXPORTING
-        form_header  = cs_form_data-form_header
-      TABLES
-        form_lines   = it_lines
-        pages        = cs_form_data-pages
-        page_windows = cs_form_data-page_windows
-        paragraphs   = cs_form_data-paragraphs
-        strings      = cs_form_data-strings
-        tabs         = cs_form_data-tabs
-        windows      = cs_form_data-windows.
-
-    CALL FUNCTION 'SAPSCRIPT_CHANGE_OLANGUAGE'
-      EXPORTING
-        forced    = abap_true
-        name      = cs_form_data-text_header-tdname
-        object    = cs_form_data-text_header-tdobject
-        olanguage = cs_form_data-orig_language
-      EXCEPTIONS
-        OTHERS    = 1
-        ##fm_subrc_ok.                                                   "#EC CI_SUBRC
-
-  ENDMETHOD.
-
-  METHOD order_check_and_insert.
-
-    DATA: ls_order TYPE e071k-trkorr.
-
-    CALL FUNCTION 'SAPSCRIPT_ORDER_CHECK'
-      EXPORTING
-        objecttype           = ms_item-obj_type
-        form                 = mv_form_name
-      EXCEPTIONS
-        invalid_input        = 1
-        object_locked        = 2
-        object_not_available = 3
-        OTHERS               = 4.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-    CALL FUNCTION 'SAPSCRIPT_ORDER_INSERT'
-      EXPORTING
-        objecttype     = ms_item-obj_type
-        form           = mv_form_name
-        masterlang     = mv_language
-      CHANGING
-        order          = ls_order
-      EXCEPTIONS
-        invalid_input  = 1
-        order_canceled = 2
-        OTHERS         = 3.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.
