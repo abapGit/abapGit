@@ -1,8 +1,8 @@
 *******************************************************************
 *   System-defined Include-files.                                 *
 *******************************************************************
-  INCLUDE LZABAPGIT_PARALLELTOP.             " Global Declarations
-  INCLUDE LZABAPGIT_PARALLELUXX.             " Function Modules
+INCLUDE lzabapgit_paralleltop.             " Global Declarations
+INCLUDE lzabapgit_paralleluxx.             " Function Modules
 
 *******************************************************************
 *   User-defined Include-files (if necessary).                    *
