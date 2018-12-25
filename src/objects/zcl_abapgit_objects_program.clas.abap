@@ -506,9 +506,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
         zcl_abapgit_language=>restore_login_language( ).
 
         IF sy-msgid = 'EU' AND sy-msgno = '510'.
-          zcx_abapgit_exception=>raise( 'User is currently editing program' ).
+          zcx_abapgit_exception=>raise( |'User is currently editing program'{ is_progdir-name }| ).
         ELSE.
-          zcx_abapgit_exception=>raise( 'PROG, error updating' ).
+          zcx_abapgit_exception=>raise( |'PROG, error updating'{ is_progdir-name }| ).
         ENDIF.
       ENDIF.
 
@@ -912,7 +912,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
       RETURN.
     ELSEIF sy-subrc <> 0.
       zcl_abapgit_language=>restore_login_language( ).
-      zcx_abapgit_exception=>raise( 'Error reading program' ).
+      zcx_abapgit_exception=>raise( |'Error reading program'{ lv_program_name }| ).
     ENDIF.
 
     zcl_abapgit_language=>restore_login_language( ).
