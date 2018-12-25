@@ -23,7 +23,7 @@ ENDCLASS.
 CLASS lcl_requirements IMPLEMENTATION.
 
   METHOD new.
-    ro_result = NEW lcl_requirements( ).
+    CREATE OBJECT ro_result.
   ENDMETHOD.
 
   METHOD set_component.
