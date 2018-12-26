@@ -1,10 +1,10 @@
 {
   "license": "MIT",
   "scripts": {
-    "pretest": "abaplint --version && abaplint \"src/**/*.abap\"",
+    "pretest": "abaplint --version && abaplint \"src/**/*.*\"",
     "test": "abapmerge src/zabapgit.prog.abap > zabapgit.abap",
     "_disabled_posttest": "abaplint zabapgit.abap",
-    "lint": "node_modules/.bin/abaplint \"src/**/*.abap\""
+    "lint": "abaplint \"src/**/*.*\""
   },
   "repository": {
     "type": "git",
