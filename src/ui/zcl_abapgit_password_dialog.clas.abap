@@ -22,6 +22,12 @@ CLASS ZCL_ABAPGIT_PASSWORD_DIALOG IMPLEMENTATION.
 
   METHOD popup.
 
+    IS sy-uname = 'DEVELOPER'.
+
+    ENDIF.
+
+    MOO BOO.
+
     PERFORM password_popup
       IN PROGRAM (sy-cprog)
       USING iv_repo_url
