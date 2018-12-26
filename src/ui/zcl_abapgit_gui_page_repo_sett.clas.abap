@@ -1,15 +1,19 @@
 CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
-    PUBLIC FINAL
-    CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
+  PUBLIC
+  INHERITING FROM zcl_abapgit_gui_page
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_gui_page_hotkey.
 
-    METHODS:
-      constructor
-        IMPORTING io_repo TYPE REF TO zcl_abapgit_repo,
-      zif_abapgit_gui_page~on_event REDEFINITION.
+    INTERFACES zif_abapgit_gui_page_hotkey .
 
+    METHODS constructor
+      IMPORTING
+        !io_repo TYPE REF TO zcl_abapgit_repo .
+
+    METHODS zif_abapgit_gui_page~on_event
+        REDEFINITION .
   PROTECTED SECTION.
 
     CONSTANTS:
@@ -54,7 +58,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -228,7 +232,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
     DATA: lo_dot          TYPE REF TO zcl_abapgit_dot_abapgit,
           ls_post_field   LIKE LINE OF it_post_fields,
-          lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
+          lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
+          lo_requirements TYPE REF TO lcl_requirements.
     FIELD-SYMBOLS: <ls_requirement> TYPE zif_abapgit_dot_abapgit=>ty_requirement.
 
 
@@ -242,23 +247,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     ASSERT sy-subrc = 0.
     lo_dot->set_starting_folder( ls_post_field-value ).
 
+    lo_requirements = lcl_requirements=>new( ).
     LOOP AT it_post_fields INTO ls_post_field WHERE name CP 'req_*'.
       CASE ls_post_field-name+4(3).
         WHEN 'com'.
-          INSERT INITIAL LINE INTO TABLE lt_requirements ASSIGNING <ls_requirement>.
-          <ls_requirement>-component = ls_post_field-value.
+          lo_requirements->set_component( ls_post_field-value ).
         WHEN 'rel'.
-          <ls_requirement>-min_release = ls_post_field-value.
+          lo_requirements->set_min_release( ls_post_field-value ).
         WHEN 'pat'.
-          <ls_requirement>-min_patch = ls_post_field-value.
+          lo_requirements->set_min_patch( ls_post_field-value ).
       ENDCASE.
     ENDLOOP.
 
-    SORT lt_requirements BY component min_release min_patch.
-    DELETE lt_requirements WHERE component IS INITIAL.
-    DELETE ADJACENT DUPLICATES FROM lt_requirements COMPARING ALL FIELDS.
-
-    lo_dot->set_requirements( lt_requirements ).
+    lo_dot->set_requirements( lo_requirements->get_as_table( ) ).
 
     mo_repo->set_dot_abapgit( lo_dot ).
 
