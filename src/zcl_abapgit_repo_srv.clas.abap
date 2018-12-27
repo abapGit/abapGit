@@ -206,31 +206,6 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_repo_listener~on_meta_change.
-
-    DATA li_persistence TYPE REF TO zif_abapgit_persist_repo.
-
-    li_persistence = zcl_abapgit_persist_factory=>get_repo( ).
-    li_persistence->update_metadata(
-      iv_key         = iv_key
-      is_meta        = is_meta
-      is_change_mask = is_change_mask ).
-
-
-    " Recreate repo instance if type changed
-    " Instances in mt_list are of *_online and *_offline type
-    " If type is changed object should be recreated from the proper class
-    " TODO refactor, e.g. unify repo logic in one class
-    IF is_change_mask-offline = abap_true.
-      reinstantiate_repo(
-        iv_key  = iv_key
-        is_meta = is_meta ).
-
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_repo_srv~delete.
 
     zcl_abapgit_persist_factory=>get_repo( )->delete( io_repo->get_key( ) ).
@@ -390,23 +365,6 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
         is_meta = is_meta ).
 
     ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD reinstantiate_repo.
-
-      DATA lo_repo      TYPE REF TO zcl_abapgit_repo.
-      DATA ls_full_meta TYPE zif_abapgit_persistence=>ty_repo.
-
-      lo_repo = get( iv_key ).
-      DELETE TABLE mt_list FROM lo_repo.
-      ASSERT sy-subrc IS INITIAL.
-
-      MOVE-CORRESPONDING is_meta TO ls_full_meta.
-      ls_full_meta-key = iv_key.
-
-      instantiate_and_add( ls_full_meta ).
 
   ENDMETHOD.
 
