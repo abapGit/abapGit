@@ -15,6 +15,7 @@
     <item>/.gitignore</item>
     <item>/CODE_OF_CONDUCT.md</item>
     <item>/abaplint.json</item>
+    <item>/.eslintrc.yaml</item>
    </IGNORE>
   </DATA>
  </asx:values>
