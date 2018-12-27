@@ -2,16 +2,16 @@
 [![abaplint](https://abaplint.org/badges/larshp/abapGit)](https://abaplint.org/project/larshp/abapGit)
 [![Slack](https://abapgit-slackinviter.herokuapp.com/badge.svg)](https://abapgit-slackinviter.herokuapp.com/)
 
-# abapGit 
+# abapGit
 
 Git client for ABAP
 
-Works with: [GitHub](https://github.com/), 
-[GitLab](https://gitlab.com/), 
-[Assembla](https://www.assembla.com/git/), 
-[Bitbucket](https://bitbucket.org/), 
-[abapGitServer](https://github.com/larshp/abapGitServer), 
-[SCP](http://go.sap.com/denmark/developer/tutorials/hcp-webide-commit-git.html), 
+Works with: [GitHub](https://github.com/),
+[GitLab](https://gitlab.com/),
+[Assembla](https://www.assembla.com/git/),
+[Bitbucket](https://bitbucket.org/),
+[abapGitServer](https://github.com/larshp/abapGitServer),
+[SCP](http://go.sap.com/denmark/developer/tutorials/hcp-webide-commit-git.html),
 [AWS](https://aws.amazon.com/codecommit/),
 [TFS](https://www.visualstudio.com/team-services/git/) and more
 
@@ -19,18 +19,18 @@ ABAP Version: 702 or higher
 
 Latest build: [zabapgit.abap](https://raw.githubusercontent.com/abapGit/build/master/zabapgit.abap)
 
-Recommend using SAP GUI for Windows, there are multiple issues related to running abapGit and Java SAP GUI. Focus is on supporting [https://github.com/abapGit/ADT_Frontend](ADT) instead of supporting Java SAP GUI.
+Recommend using SAP GUI for Windows, there are multiple issues related to running abapGit and Java SAP GUI. Focus is on supporting [ADT](https://github.com/abapGit/ADT_Frontend) instead of supporting Java SAP GUI.
 
-## Design Goals 
+## Design Goals
 - Easy installation
 - Easy upgrade
 - Small system footprint
 - Code readable in git repository
 
-## Documentation/Guides 
+## Documentation/Guides
 http://docs.abapgit.org
 
-## Projects using abapGit 
+## Projects using abapGit
 
 See [dotabap.org](http://dotabap.org)
 
