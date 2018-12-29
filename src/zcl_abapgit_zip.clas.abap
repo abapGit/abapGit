@@ -23,15 +23,22 @@ CLASS zcl_abapgit_zip DEFINITION
       RAISING
         zcx_abapgit_exception
         zcx_abapgit_cancel .
+    CLASS-METHODS unzip_file
+      IMPORTING
+        !iv_xstr TYPE xstring
+      RETURNING
+        value(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS load
+      RETURNING
+        value(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS file_upload
       RETURNING VALUE(rv_xstr) TYPE xstring
-      RAISING   zcx_abapgit_exception.
-
-    CLASS-METHODS unzip_file
-      IMPORTING iv_xstr         TYPE xstring
-      RETURNING VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS normalize_path
@@ -293,6 +300,22 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     lo_repo->set_files_remote( unzip_file( file_upload( ) ) ).
+
+  ENDMETHOD.
+
+
+  METHOD load.
+
+    DATA: lv_path TYPE string,
+          lv_xstr TYPE xstring.
+
+    lv_path = zcl_abapgit_factory=>get_frontend_services( )->show_file_open_dialog(
+      iv_title            = 'Import ZIP'
+      iv_default_filename = '*.zip' ).
+
+    lv_xstr = zcl_abapgit_factory=>get_frontend_services( )->file_upload( lv_path ).
+
+    rt_files = unzip_file( lv_xstr ).
 
   ENDMETHOD.
 

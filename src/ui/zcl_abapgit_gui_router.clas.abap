@@ -410,79 +410,6 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_router~on_event.
-
-    DATA: ls_event_data TYPE ty_event_data.
-
-    ls_event_data-action    = iv_action.
-    ls_event_data-prev_page = iv_prev_page.
-    ls_event_data-getdata   = iv_getdata.
-    ls_event_data-postdata  = it_postdata.
-
-
-    general_page_routing(
-      EXPORTING
-        is_event_data = ls_event_data
-      IMPORTING
-        ei_page      = ei_page
-        ev_state     = ev_state ).
-
-    repository_services(
-      EXPORTING
-        is_event_data = ls_event_data
-      IMPORTING
-        ei_page      = ei_page
-        ev_state     = ev_state ).
-
-    git_services(
-      EXPORTING
-        is_event_data = ls_event_data
-      IMPORTING
-        ei_page      = ei_page
-        ev_state     = ev_state ).
-
-    zip_services(
-      EXPORTING
-        is_event_data = ls_event_data
-      IMPORTING
-        ei_page      = ei_page
-        ev_state     = ev_state ).
-
-    db_actions(
-      EXPORTING
-        is_event_data = ls_event_data
-      IMPORTING
-        ei_page      = ei_page
-        ev_state     = ev_state ).
-
-    abapgit_services_actions(
-      EXPORTING
-        is_event_data = ls_event_data
-      IMPORTING
-        ei_page      = ei_page
-        ev_state     = ev_state ).
-
-    remote_origin_manipulations(
-      EXPORTING
-        is_event_data = ls_event_data
-      IMPORTING
-        ei_page      = ei_page
-        ev_state     = ev_state ).
-
-    sap_gui_actions(
-      EXPORTING
-        is_event_data = ls_event_data
-      IMPORTING
-        ei_page      = ei_page
-        ev_state     = ev_state ).
-
-    IF ev_state IS INITIAL.
-      ev_state = zif_abapgit_definitions=>c_event_state-not_handled.
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD remote_origin_manipulations.
 
     DATA: lv_key TYPE zif_abapgit_persistence=>ty_repo-key.
@@ -588,17 +515,91 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_gui_router~on_event.
+
+    DATA: ls_event_data TYPE ty_event_data.
+
+    ls_event_data-action    = iv_action.
+    ls_event_data-prev_page = iv_prev_page.
+    ls_event_data-getdata   = iv_getdata.
+    ls_event_data-postdata  = it_postdata.
+
+
+    general_page_routing(
+      EXPORTING
+        is_event_data = ls_event_data
+      IMPORTING
+        ei_page      = ei_page
+        ev_state     = ev_state ).
+
+    repository_services(
+      EXPORTING
+        is_event_data = ls_event_data
+      IMPORTING
+        ei_page      = ei_page
+        ev_state     = ev_state ).
+
+    git_services(
+      EXPORTING
+        is_event_data = ls_event_data
+      IMPORTING
+        ei_page      = ei_page
+        ev_state     = ev_state ).
+
+    zip_services(
+      EXPORTING
+        is_event_data = ls_event_data
+      IMPORTING
+        ei_page      = ei_page
+        ev_state     = ev_state ).
+
+    db_actions(
+      EXPORTING
+        is_event_data = ls_event_data
+      IMPORTING
+        ei_page      = ei_page
+        ev_state     = ev_state ).
+
+    abapgit_services_actions(
+      EXPORTING
+        is_event_data = ls_event_data
+      IMPORTING
+        ei_page      = ei_page
+        ev_state     = ev_state ).
+
+    remote_origin_manipulations(
+      EXPORTING
+        is_event_data = ls_event_data
+      IMPORTING
+        ei_page      = ei_page
+        ev_state     = ev_state ).
+
+    sap_gui_actions(
+      EXPORTING
+        is_event_data = ls_event_data
+      IMPORTING
+        ei_page      = ei_page
+        ev_state     = ev_state ).
+
+    IF ev_state IS INITIAL.
+      ev_state = zif_abapgit_definitions=>c_event_state-not_handled.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zip_services.
 
     DATA: lv_key  TYPE zif_abapgit_persistence=>ty_repo-key.
-
+    DATA: lo_repo TYPE REF TO zcl_abapgit_repo_offline.
 
     lv_key = is_event_data-getdata. " TODO refactor
 
     CASE is_event_data-action.
         " ZIP services actions
       WHEN zif_abapgit_definitions=>c_action-zip_import.                      " Import repo from ZIP
-        zcl_abapgit_zip=>import( lv_key ).
+        lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+        lo_repo->set_files_remote( zcl_abapgit_zip=>load( ) ).
         zcl_abapgit_services_repo=>refresh( lv_key ).
         ev_state = zif_abapgit_definitions=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-zip_export.                      " Export repo as ZIP
