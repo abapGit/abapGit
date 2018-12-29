@@ -1,5 +1,4 @@
 ---
-root: true
 parserOptions:
   ecmaVersion: 5
 env:
@@ -7,8 +6,9 @@ env:
 extends:
   - eslint:recommended
 rules:
-  quotes: ['warn', 'single', { 'avoidEscape': true }]
+  quotes: ['error', 'double', { 'avoidEscape': true }]
   semi:   ['error', 'always', { 'omitLastInOneLineBlock': true}]
   no-console: off
   indent: ['error', 2]
   no-trailing-spaces: ['error']
+  no-unused-vars: ['warn']
