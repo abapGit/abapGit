@@ -41,6 +41,13 @@ CLASS zcl_abapgit_convert DEFINITION
         !iv_string      TYPE string
       RETURNING
         VALUE(rt_lines) TYPE string_table .
+    CLASS-METHODS conversion_exit_isola_output
+      IMPORTING
+        iv_spras        TYPE spras
+      RETURNING
+        VALUE(rv_spras) TYPE laiso.
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
@@ -80,6 +87,17 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
       lv_offset = lv_offset - 1. "Move Cursor
 
     ENDDO.
+
+  ENDMETHOD.
+
+
+  METHOD conversion_exit_isola_output.
+
+    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_OUTPUT'
+      EXPORTING
+        input  = iv_spras
+      IMPORTING
+        output = rv_spras.
 
   ENDMETHOD.
 

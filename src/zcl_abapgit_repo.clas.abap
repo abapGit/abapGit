@@ -185,11 +185,6 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS update_last_deserialize
       RAISING
         zcx_abapgit_exception .
-    METHODS conversion_exit_isola_output
-      IMPORTING
-        iv_spras        TYPE spras
-      RETURNING
-        VALUE(rv_spras) TYPE laiso.
 ENDCLASS.
 
 
@@ -226,6 +221,11 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD bind_listener.
+    mi_listener = ii_listener.
+  ENDMETHOD.
+
+
   METHOD build_dotabapgit_file.
 
     rs_file-path     = zif_abapgit_definitions=>c_root_dir.
@@ -243,17 +243,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     ms_data = is_data.
     mv_request_remote_refresh = abap_true.
-
-  ENDMETHOD.
-
-
-  METHOD conversion_exit_isola_output.
-
-    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_OUTPUT'
-      EXPORTING
-        input  = iv_spras
-      IMPORTING
-        output = rv_spras.
 
   ENDMETHOD.
 
@@ -323,9 +312,9 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Cannot deserialize. Local code is write-protected by repo config' ).
     ELSEIF lv_master_language <> lv_logon_language.
       zcx_abapgit_exception=>raise( |Current login language |
-                                 && |'{ conversion_exit_isola_output( lv_logon_language ) }'|
+                                 && |'{ zcl_abapgit_convert=>conversion_exit_isola_output( lv_logon_language ) }'|
                                  && | does not match master language |
-                                 && |'{ conversion_exit_isola_output( lv_master_language ) }'| ).
+                                 && |'{ zcl_abapgit_convert=>conversion_exit_isola_output( lv_master_language ) }'| ).
     ENDIF.
 
     rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
@@ -745,8 +734,22 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD bind_listener.
-    mi_listener = ii_listener.
+  METHOD switch_repo_type.
+
+    IF iv_offline = ms_data-offline.
+      zcx_abapgit_exception=>raise( |Cannot switch_repo_type, offline already = "{ ms_data-offline }"| ).
+    ENDIF.
+
+    IF iv_offline = abap_true. " On-line -> OFFline
+      set(
+        iv_url         = zcl_abapgit_url=>name( ms_data-url )
+        iv_branch_name = ''
+        iv_head_branch = ''
+        iv_offline     = abap_true ).
+    ELSE. " OFFline -> On-line
+      set( iv_offline = abap_false ).
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -841,25 +844,4 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     set( it_checksums = lt_checksums ).
 
   ENDMETHOD.
-
-
-  METHOD switch_repo_type.
-
-    IF iv_offline = ms_data-offline.
-      zcx_abapgit_exception=>raise( |Cannot switch_repo_type, offline already = "{ ms_data-offline }"| ).
-    ENDIF.
-
-    IF iv_offline = abap_true. " On-line -> OFFline
-      set(
-        iv_url         = zcl_abapgit_url=>name( ms_data-url )
-        iv_branch_name = ''
-        iv_head_branch = ''
-        iv_offline     = abap_true ).
-    ELSE. " OFFline -> On-line
-      set( iv_offline = abap_false ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
 ENDCLASS.
