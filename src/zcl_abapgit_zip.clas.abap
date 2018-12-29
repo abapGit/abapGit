@@ -4,11 +4,6 @@ CLASS zcl_abapgit_zip DEFINITION
 
   PUBLIC SECTION.
 
-    CLASS-METHODS import
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_value
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS export
       IMPORTING
         !io_repo   TYPE REF TO zcl_abapgit_repo
@@ -37,10 +32,6 @@ CLASS zcl_abapgit_zip DEFINITION
         zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CLASS-METHODS file_upload
-      RETURNING VALUE(rv_xstr) TYPE xstring
-      RAISING   zcx_abapgit_exception.
-
     CLASS-METHODS normalize_path
       CHANGING ct_files TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING  zcx_abapgit_exception.
@@ -277,29 +268,6 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     lo_fe_serv->file_download(
       iv_path = lv_path
       iv_xstr = iv_xstr ).
-
-  ENDMETHOD.
-
-
-  METHOD file_upload.
-
-    DATA: lv_path TYPE string.
-
-    lv_path = zcl_abapgit_factory=>get_frontend_services( )->show_file_open_dialog(
-      iv_title            = 'Import ZIP'
-      iv_default_filename = '*.zip' ).
-
-    rv_xstr = zcl_abapgit_factory=>get_frontend_services( )->file_upload( lv_path ).
-
-  ENDMETHOD.
-
-
-  METHOD import.
-
-    DATA: lo_repo TYPE REF TO zcl_abapgit_repo_offline.
-
-    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    lo_repo->set_files_remote( unzip_file( file_upload( ) ) ).
 
   ENDMETHOD.
 
