@@ -410,7 +410,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
   ENDMETHOD.
 
 
- METHOD zif_abapgit_gui_router~on_event.
+  METHOD zif_abapgit_gui_router~on_event.
 
     DATA: ls_event_data TYPE ty_event_data.
 
