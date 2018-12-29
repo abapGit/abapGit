@@ -1,16 +1,16 @@
 CLASS zcl_abapgit_repo DEFINITION
   PUBLIC
   ABSTRACT
-  CREATE PUBLIC.
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
 
     METHODS bind_listener
       IMPORTING
-        ii_listener TYPE REF TO zif_abapgit_repo_listener.
+        !ii_listener TYPE REF TO zif_abapgit_repo_listener .
     METHODS bind_connector
       IMPORTING
-        ii_connector TYPE REF TO zif_abapgit_repo_connector.
+        !ii_connector TYPE REF TO zif_abapgit_repo_connector .
     METHODS deserialize_checks
       RETURNING
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
@@ -123,7 +123,7 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS switch_repo_type
       IMPORTING
-        iv_offline TYPE abap_bool
+        !iv_offline TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
     METHODS get_url
@@ -142,7 +142,7 @@ CLASS zcl_abapgit_repo DEFINITION
         !iv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name
       RAISING
         zcx_abapgit_exception .
-    METHODS get_remote_branch_sha1
+    METHODS get_sha1_remote
       RETURNING
         VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
       RAISING
@@ -159,7 +159,6 @@ CLASS zcl_abapgit_repo DEFINITION
         !iv_from TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
       RAISING
         zcx_abapgit_exception .
-
   PROTECTED SECTION.
 
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
@@ -329,7 +328,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     ASSERT iv_name CP 'refs/heads/+*'.
 
     IF iv_from IS INITIAL.
-      lv_sha1 = get_remote_branch_sha1( ).
+      lv_sha1 = get_sha1_remote( ).
     ELSE.
       lv_sha1 = iv_from.
     ENDIF.
@@ -588,7 +587,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_remote_branch_sha1.
+  METHOD get_sha1_remote.
     fetch_remote( ).
     rv_sha1 = mv_branch_sha1.
   ENDMETHOD.
@@ -785,7 +784,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
         is_comment     = is_comment
         io_stage       = io_stage
         iv_branch_name = get_branch_name( )
-        iv_parent      = get_remote_branch_sha1( )
+        iv_parent      = get_sha1_remote( )
       IMPORTING
         et_files         = mt_remote
         ev_branch_sha1   = mv_branch_sha1
@@ -804,16 +803,16 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     " TODO refactor
 
     DATA:
-          lt_remote    TYPE zif_abapgit_definitions=>ty_files_tt,
-          lt_local     TYPE zif_abapgit_definitions=>ty_files_item_tt,
-          ls_last_item TYPE zif_abapgit_definitions=>ty_item,
-          lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
+      lt_remote    TYPE zif_abapgit_definitions=>ty_files_tt,
+      lt_local     TYPE zif_abapgit_definitions=>ty_files_item_tt,
+      ls_last_item TYPE zif_abapgit_definitions=>ty_item,
+      lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
 
     FIELD-SYMBOLS:
-                   <ls_checksum> LIKE LINE OF lt_checksums,
-                   <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
-                   <ls_remote>   LIKE LINE OF lt_remote,
-                   <ls_local>    LIKE LINE OF lt_local.
+      <ls_checksum> LIKE LINE OF lt_checksums,
+      <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
+      <ls_remote>   LIKE LINE OF lt_remote,
+      <ls_local>    LIKE LINE OF lt_local.
 
     lt_local  = get_files_local( ).
 
