@@ -430,7 +430,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   METHOD render_table.
 
     io_html->add( |<div class="db_list repo-overview">| ).
-    io_html->add( |<table class="db_tab">| ).
+    io_html->add( |<table class="db_tab w100">| ).
 
     render_table_header( io_html ).
     render_table_body( io_html     = io_html
@@ -472,13 +472,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       ENDIF.
 
       io_html->add( |<tr{ lv_trclass }>| ).
-      io_html->add( |<td>| ).
+      io_html->add( |<td class="wmin">| ).
       io_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?{ <ls_overview>-key }|
                       iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_favorite_icon
                                                        iv_class = 'pad-sides'
                                                        iv_hint  = 'Click to toggle favorite' ) ).
       io_html->add( |</td>| ).
-      io_html->add( |<td>{ zcl_abapgit_html=>icon( lv_type_icon )  }</td>| ).
+      io_html->add( |<td class="wmin">{ zcl_abapgit_html=>icon( lv_type_icon )  }</td>| ).
 
       io_html->add( |<td>{ zcl_abapgit_html=>a( iv_txt = <ls_overview>-name
                                                 iv_act = |{ c_action-select }?{ <ls_overview>-key }| ) }</td>| ).
@@ -511,8 +511,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     io_html->add( |<thead>| ).
     io_html->add( |<tr>| ).
-    io_html->add( |<th></th>| ). " Fav icon
-    io_html->add( |<th></th>| ). " Repo type
+    io_html->add( |<th class="wmin"></th>| ). " Fav icon
+    io_html->add( |<th class="wmin"></th>| ). " Repo type
     io_html->add( |<th>Name</th>| ).
     io_html->add( |<th>Url</th>| ).
     io_html->add( |<th>Package</th>| ).

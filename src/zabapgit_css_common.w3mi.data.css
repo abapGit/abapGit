@@ -69,6 +69,7 @@ input:focus, textarea:focus {
 .indent5em        { padding-left: 0.5em; }
 .pad4px           { padding: 4px; }
 .w100             { width: 100%; }
+.wmin             { width: 1%; }
 .w40              { width: 40%; }
 .float-right      { float: right; }
 .pad-right        { padding-right: 6px; }
@@ -982,11 +983,10 @@ table.commit tr .title {
   font-size: smaller;
 }
 
-.repo-overview tbody tr {
-  line-height: 2em;
+.repo-overview tbody td {
+  height: 2em;
 }
 
-.repo-overview .ro-detail {
+.ro-detail {
   display: none;
 }
-
