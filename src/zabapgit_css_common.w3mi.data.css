@@ -976,3 +976,17 @@ table.commit tr .title {
   font-weight: bold;
   vertical-align: top;
 }
+
+/* Repo overview */
+.repo-overview {
+  font-size: smaller;
+}
+
+.repo-overview tbody tr {
+  line-height: 2em;
+}
+
+.repo-overview .ro-detail {
+  display: none;
+}
+

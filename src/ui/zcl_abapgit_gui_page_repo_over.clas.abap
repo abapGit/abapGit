@@ -359,7 +359,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       iv_value = mv_filter ) ).
 
     io_html->add( |<input type="submit" class="hidden-submit">| ).
-
+    io_html->add( zcl_abapgit_html=>a(
+      iv_txt = 'Toggle detail'
+      iv_act = |toggleRepoListDetail()|
+      iv_typ = zif_abapgit_definitions=>c_action_type-onclick ) ).
     io_html->add( |</div>| ).
 
     io_html->add( |</form>| ).
@@ -426,7 +429,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   METHOD render_table.
 
-    io_html->add( |<div class="db_list">| ).
+    io_html->add( |<div class="db_list repo-overview">| ).
     io_html->add( |<table class="db_tab">| ).
 
     render_table_header( io_html ).
@@ -451,10 +454,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     LOOP AT it_overview ASSIGNING <ls_overview>.
 
-      CLEAR lv_trclass.
-      IF sy-tabix = 1.
-        lv_trclass = ' class="firstrow"' ##NO_TEXT.
-      ENDIF.
+*      CLEAR lv_trclass.
+*      IF sy-tabix = 1.
+*        lv_trclass = ' class="firstrow"' ##NO_TEXT.
+*      ENDIF.
 
       IF <ls_overview>-type = abap_true.
         lv_type_icon = 'plug/darkgrey'.
@@ -477,7 +480,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       io_html->add( |</td>| ).
       io_html->add( |<td>{ zcl_abapgit_html=>icon( lv_type_icon )  }</td>| ).
 
-      io_html->add( |<td>{ <ls_overview>-key }</td>| ).
       io_html->add( |<td>{ zcl_abapgit_html=>a( iv_txt = <ls_overview>-name
                                                 iv_act = |{ c_action-select }?{ <ls_overview>-key }| ) }</td>| ).
 
@@ -486,17 +488,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
                                          iv_act = |{ zif_abapgit_definitions=>c_action-url }?|
                                                && |{ <ls_overview>-url }| ) }</td>| ).
       ELSE.
-        io_html->add( |<td> </td>| ).
+        io_html->add( |<td></td>| ).
       ENDIF.
 
       io_html->add( |<td>{ <ls_overview>-package }</td>| ).
       io_html->add( |<td>{ <ls_overview>-branch }</td>| ).
-      io_html->add( |<td>{ <ls_overview>-created_by }</td>| ).
-      io_html->add( |<td>{ <ls_overview>-created_at }</td>| ).
-      io_html->add( |<td>{ <ls_overview>-deserialized_by }</td>| ).
-      io_html->add( |<td>{ <ls_overview>-deserialized_at }</td>| ).
-      io_html->add( |<td>| ).
-      io_html->add( |</td>| ).
+      io_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_by }</td>| ).
+      io_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_at }</td>| ).
+      io_html->add( |<td class="ro-detail">{ <ls_overview>-created_by }</td>| ).
+      io_html->add( |<td class="ro-detail">{ <ls_overview>-created_at }</td>| ).
+      io_html->add( |<td class="ro-detail">{ <ls_overview>-key }</td>| ).
       io_html->add( |</tr>| ).
 
     ENDLOOP.
@@ -510,18 +511,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     io_html->add( |<thead>| ).
     io_html->add( |<tr>| ).
-    io_html->add( |<th>Favorite</th>| ).
-    io_html->add( |<th>Type</th>| ).
-    io_html->add( |<th>Key</th>| ).
+    io_html->add( |<th></th>| ). " Fav icon
+    io_html->add( |<th></th>| ). " Repo type
     io_html->add( |<th>Name</th>| ).
     io_html->add( |<th>Url</th>| ).
     io_html->add( |<th>Package</th>| ).
     io_html->add( |<th>Branch name</th>| ).
-    io_html->add( |<th>Creator</th>| ).
-    io_html->add( |<th>Created at [{ mv_time_zone }]</th>| ).
-    io_html->add( |<th>Deserialized by</th>| ).
-    io_html->add( |<th>Deserialized at [{ mv_time_zone }]</th>| ).
-    io_html->add( |<th></th>| ).
+    io_html->add( |<th class="ro-detail">Deserialized by</th>| ).
+    io_html->add( |<th class="ro-detail">Deserialized at [{ mv_time_zone }]</th>| ).
+    io_html->add( |<th class="ro-detail">Creator</th>| ).
+    io_html->add( |<th class="ro-detail">Created at [{ mv_time_zone }]</th>| ).
+    io_html->add( |<th class="ro-detail">Key</th>| ).
     io_html->add( '</tr>' ).
     io_html->add( '</thead>' ).
 
