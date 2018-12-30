@@ -335,31 +335,28 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( |<div class="form-container">| ).
-
-    ro_html->add( |<form id="commit_form" class="grey70"|
-               && | method="post" action="sapevent:{ c_action-apply_filter }">| ).
-
     render_header_bar( ro_html ).
-
     render_table( io_html     = ro_html
                   it_overview = lt_overview ).
-
-    ro_html->add( |</div>| ).
 
   ENDMETHOD.
 
 
   METHOD render_header_bar.
 
+    io_html->add( |<div class="form-container">| ).
+    io_html->add( |<form id="commit_form" class="grey70"|
+               && | method="post" action="sapevent:{ c_action-apply_filter }">| ).
+
     io_html->add( |<div class="row">| ).
 
     render_order_by( io_html ).
     render_order_by_direction( io_html ).
 
-    io_html->add( render_text_input( iv_name  = |filter|
-                                     iv_label = |Filter: |
-                                     iv_value = mv_filter ) ).
+    io_html->add( render_text_input(
+      iv_name  = |filter|
+      iv_label = |Filter: |
+      iv_value = mv_filter ) ).
 
     io_html->add( |<input type="submit" class="hidden-submit">| ).
 
@@ -436,8 +433,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     render_table_body( io_html     = io_html
                        it_overview = it_overview  ).
 
-    io_html->add( |</tbody>| ).
     io_html->add( |</table>| ).
+    io_html->add( |</div>| ).
 
   ENDMETHOD.
 
@@ -449,6 +446,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
           lv_favorite_icon TYPE string.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
+
+    io_html->add( '<tbody>' ).
 
     LOOP AT it_overview ASSIGNING <ls_overview>.
 
@@ -502,6 +501,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     ENDLOOP.
 
+    io_html->add( |</tbody>| ).
+
   ENDMETHOD.
 
 
@@ -523,7 +524,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     io_html->add( |<th></th>| ).
     io_html->add( '</tr>' ).
     io_html->add( '</thead>' ).
-    io_html->add( '<tbody>' ).
 
   ENDMETHOD.
 
