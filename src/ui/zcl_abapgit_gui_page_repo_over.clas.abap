@@ -345,10 +345,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   METHOD render_header_bar.
 
     io_html->add( |<div class="form-container">| ).
-    io_html->add( |<form id="commit_form" class="grey70"|
-               && | method="post" action="sapevent:{ c_action-apply_filter }">| ).
 
-    io_html->add( |<div class="row">| ).
+    io_html->add( |<form class="inline" method="post" action="sapevent:{ c_action-apply_filter }">| ).
 
     render_order_by( io_html ).
     render_order_by_direction( io_html ).
@@ -357,15 +355,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       iv_name  = |filter|
       iv_label = |Filter: |
       iv_value = mv_filter ) ).
-
     io_html->add( |<input type="submit" class="hidden-submit">| ).
+    io_html->add( |</form>| ).
+
     io_html->add( zcl_abapgit_html=>a(
       iv_txt = 'Toggle detail'
       iv_act = |toggleRepoListDetail()|
       iv_typ = zif_abapgit_definitions=>c_action_type-onclick ) ).
-    io_html->add( |</div>| ).
 
-    io_html->add( |</form>| ).
     io_html->add( |</div>| ).
 
   ENDMETHOD.

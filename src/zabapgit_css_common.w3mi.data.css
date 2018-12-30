@@ -73,6 +73,7 @@ input:focus, textarea:focus {
 .w40              { width: 40%; }
 .float-right      { float: right; }
 .pad-right        { padding-right: 6px; }
+.inline           { display: inline; }
 
 /* PANELS */
 div.panel {
