@@ -444,7 +444,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   METHOD render_table_body.
 
-    DATA: lv_trclass       TYPE string,
+    DATA:
           lv_type_icon     TYPE string,
           lv_favorite_icon TYPE string.
 
@@ -453,11 +453,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     io_html->add( '<tbody>' ).
 
     LOOP AT it_overview ASSIGNING <ls_overview>.
-
-*      CLEAR lv_trclass.
-*      IF sy-tabix = 1.
-*        lv_trclass = ' class="firstrow"' ##NO_TEXT.
-*      ENDIF.
 
       IF <ls_overview>-type = abap_true.
         lv_type_icon = 'plug/darkgrey'.
@@ -471,7 +466,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
         lv_favorite_icon = 'star/grey'.
       ENDIF.
 
-      io_html->add( |<tr{ lv_trclass }>| ).
+      io_html->add( |<tr>| ).
       io_html->add( |<td class="wmin">| ).
       io_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?{ <ls_overview>-key }|
                       iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_favorite_icon
