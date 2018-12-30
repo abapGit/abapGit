@@ -4,11 +4,6 @@ CLASS zcl_abapgit_zip DEFINITION
 
   PUBLIC SECTION.
 
-    CLASS-METHODS import
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_value
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS export
       IMPORTING
         !io_repo   TYPE REF TO zcl_abapgit_repo
@@ -23,17 +18,20 @@ CLASS zcl_abapgit_zip DEFINITION
       RAISING
         zcx_abapgit_exception
         zcx_abapgit_cancel .
+    CLASS-METHODS unzip_file
+      IMPORTING
+        !iv_xstr TYPE xstring
+      RETURNING
+        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS load
+      RETURNING
+        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CLASS-METHODS file_upload
-      RETURNING VALUE(rv_xstr) TYPE xstring
-      RAISING   zcx_abapgit_exception.
-
-    CLASS-METHODS unzip_file
-      IMPORTING iv_xstr         TYPE xstring
-      RETURNING VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
-      RAISING   zcx_abapgit_exception.
-
     CLASS-METHODS normalize_path
       CHANGING ct_files TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING  zcx_abapgit_exception.
@@ -274,25 +272,18 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD file_upload.
+  METHOD load.
 
-    DATA: lv_path TYPE string.
+    DATA: lv_path TYPE string,
+          lv_xstr TYPE xstring.
 
     lv_path = zcl_abapgit_factory=>get_frontend_services( )->show_file_open_dialog(
       iv_title            = 'Import ZIP'
       iv_default_filename = '*.zip' ).
 
-    rv_xstr = zcl_abapgit_factory=>get_frontend_services( )->file_upload( lv_path ).
+    lv_xstr = zcl_abapgit_factory=>get_frontend_services( )->file_upload( lv_path ).
 
-  ENDMETHOD.
-
-
-  METHOD import.
-
-    DATA: lo_repo TYPE REF TO zcl_abapgit_repo_offline.
-
-    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    lo_repo->set_files_remote( unzip_file( file_upload( ) ) ).
+    rt_files = unzip_file( lv_xstr ).
 
   ENDMETHOD.
 
