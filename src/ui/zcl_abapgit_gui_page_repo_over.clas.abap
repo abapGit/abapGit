@@ -126,7 +126,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
 
   METHOD add_direction_option.
@@ -557,6 +557,11 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_page~on_event.
 
     DATA: lv_key  TYPE zif_abapgit_persistence=>ty_value.
@@ -605,10 +610,4 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-  ENDMETHOD.
-
 ENDCLASS.
