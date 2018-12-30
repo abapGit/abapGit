@@ -591,7 +591,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
   METHOD zip_services.
 
     DATA: lv_key  TYPE zif_abapgit_persistence=>ty_repo-key.
-    DATA: lo_repo TYPE REF TO zcl_abapgit_repo_offline.
+    DATA: lo_repo TYPE REF TO zcl_abapgit_repo.
 
     lv_key = is_event_data-getdata. " TODO refactor
 
