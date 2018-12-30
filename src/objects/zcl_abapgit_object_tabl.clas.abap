@@ -141,8 +141,6 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
   ENDMETHOD.
 
 
-
-
   METHOD zif_abapgit_object~changed_by.
 
     TYPES: BEGIN OF ty_data,
@@ -668,8 +666,10 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
             zcx_abapgit_exception=>raise_t100( ).
           ENDIF.
 
-          zcl_abapgit_object_idoc=>clear_idoc_segement_fields( CHANGING cs_structure = ls_segment_definition-segmentdefinition ).
-          zcl_abapgit_object_idoc=>clear_idoc_segement_fields( CHANGING cs_structure = ls_segment_definition-segmentheader ).
+          zcl_abapgit_object_idoc=>clear_idoc_segement_fields(
+                                     CHANGING cs_structure = ls_segment_definition-segmentdefinition ).
+          zcl_abapgit_object_idoc=>clear_idoc_segement_fields(
+                                     CHANGING cs_structure = ls_segment_definition-segmentheader ).
 
           add_segment_definitions( ls_segment_definition ).
         ENDLOOP.

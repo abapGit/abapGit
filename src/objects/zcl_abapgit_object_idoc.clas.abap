@@ -19,7 +19,7 @@ CLASS zcl_abapgit_object_idoc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     DATA: mv_idoctyp TYPE edi_iapi00-idoctyp.
 
-    CLASS-METHODS clear_idoc_segement_field  IMPORTING i_fieldname TYPE csequence CHANGING cs_structure TYPE any.
+    CLASS-METHODS clear_idoc_segement_field  IMPORTING iv_fieldname TYPE csequence CHANGING cs_structure TYPE any.
 
 ENDCLASS.
 
@@ -223,31 +223,31 @@ CLASS zcl_abapgit_object_idoc IMPLEMENTATION.
 
   METHOD clear_idoc_segement_fields.
 
-    clear_idoc_segement_field( EXPORTING i_fieldname = 'DEVC'
-                               CHANGING cs_structure = cs_structure ).
-    clear_idoc_segement_field( EXPORTING i_fieldname = 'PLAST'
-                               CHANGING cs_structure = cs_structure ).
-    clear_idoc_segement_field( EXPORTING i_fieldname = 'PWORK'
-                               CHANGING cs_structure = cs_structure ).
-    clear_idoc_segement_field( EXPORTING i_fieldname = 'PRESP'
-                               CHANGING cs_structure = cs_structure ).
-    clear_idoc_segement_field( EXPORTING i_fieldname = 'CREDATE'
-                               CHANGING cs_structure = cs_structure ).
-    clear_idoc_segement_field( EXPORTING i_fieldname = 'CRETIME'
-                               CHANGING cs_structure = cs_structure ).
-    clear_idoc_segement_field( EXPORTING i_fieldname = 'LDATE'
-                               CHANGING cs_structure = cs_structure ).
-    clear_idoc_segement_field( EXPORTING i_fieldname = 'LTIME'
-                               CHANGING cs_structure = cs_structure ).
+    clear_idoc_segement_field( EXPORTING iv_fieldname = 'DEVC'
+                               CHANGING  cs_structure = cs_structure ).
+    clear_idoc_segement_field( EXPORTING iv_fieldname = 'PLAST'
+                               CHANGING  cs_structure = cs_structure ).
+    clear_idoc_segement_field( EXPORTING iv_fieldname = 'PWORK'
+                               CHANGING  cs_structure = cs_structure ).
+    clear_idoc_segement_field( EXPORTING iv_fieldname = 'PRESP'
+                               CHANGING  cs_structure = cs_structure ).
+    clear_idoc_segement_field( EXPORTING iv_fieldname = 'CREDATE'
+                               CHANGING  cs_structure = cs_structure ).
+    clear_idoc_segement_field( EXPORTING iv_fieldname = 'CRETIME'
+                               CHANGING  cs_structure = cs_structure ).
+    clear_idoc_segement_field( EXPORTING iv_fieldname = 'LDATE'
+                               CHANGING  cs_structure = cs_structure ).
+    clear_idoc_segement_field( EXPORTING iv_fieldname = 'LTIME'
+                               CHANGING  cs_structure = cs_structure ).
   ENDMETHOD.
 
   METHOD clear_idoc_segement_field.
 
-    FIELD-SYMBOLS <any_field> TYPE any.
+    FIELD-SYMBOLS <lv_any_field> TYPE any.
 
-    ASSIGN COMPONENT i_fieldname OF STRUCTURE cs_structure TO <any_field>.
+    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_structure TO <lv_any_field>.
     IF sy-subrc = 0.
-      CLEAR <any_field>.
+      CLEAR <lv_any_field>.
     ENDIF.
 
   ENDMETHOD.
