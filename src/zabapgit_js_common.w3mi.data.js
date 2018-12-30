@@ -3,6 +3,24 @@
  **********************************************************/
 
 /**********************************************************
+  Global variables used from outside
+ **********************************************************/
+/* exported setInitialFocus */
+/* exported setInitialFocusWithQuerySelector */
+/* exported submitFormById */
+/* exported errorStub */
+/* exported confirmInitialized */
+/* exported perfOut */
+/* exported perfLog */
+/* exported perfClear */
+/* exported enableArrowListNavigation */
+/* exported setLinkHints */
+/* exported setKeyBindings */
+/* exported preparePatch */
+/* exported registerStagePatch */
+/* exported toggleRepoListDetail */
+
+/**********************************************************
  * Polyfills
  **********************************************************/
 
