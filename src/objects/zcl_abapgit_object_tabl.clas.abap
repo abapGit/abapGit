@@ -36,8 +36,7 @@ CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     CONSTANTS c_longtext_id_tabl TYPE dokil-id VALUE 'TB' ##NO_TEXT.
     CONSTANTS: BEGIN OF c_s_dataname,
                  segment_definition TYPE string VALUE 'SEGMENT_DEFINITION' ##NO_TEXT,
-               END OF c_s_dataname,
-               c_extra_segment_definition TYPE string VALUE 'IDOC_SEGMENT_' ##NO_TEXT.
+               END OF c_s_dataname.
     TYPES: ty_dd03p_tt TYPE STANDARD TABLE OF dd03p.
 
     METHODS clear_dd03p_fields
@@ -47,8 +46,7 @@ CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS check_is_idoc_segment RAISING zcx_abapgit_exception.
     METHODS clear_dd03p_fields_common CHANGING cs_dd03p TYPE dd03p.
     METHODS clear_dd03p_fields_dataelement CHANGING cs_dd03p TYPE dd03p.
-    METHODS add_segment_definitions IMPORTING  is_segment_definition TYPE ty_segment_definition
-                                    EXCEPTIONS zcx_abapgit_exception .
+
 ENDCLASS.
 
 
@@ -671,8 +669,11 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
           zcl_abapgit_object_idoc=>clear_idoc_segement_fields(
                                      CHANGING cs_structure = ls_segment_definition-segmentheader ).
 
-          add_segment_definitions( ls_segment_definition ).
+          APPEND ls_segment_definition TO lt_segment_definitions.
         ENDLOOP.
+
+        io_xml->add( iv_name = c_s_dataname-segment_definition
+                     ig_data = lt_segment_definitions ).
 
       CATCH zcx_abapgit_exception ##no_handler.
         "ok, no Idoc segment
@@ -680,24 +681,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD add_segment_definitions.
 
-    DATA lv_string TYPE string.
-    DATA lo_xml    TYPE REF TO zcl_abapgit_xml_output.
-
-    CREATE OBJECT lo_xml.
-    lo_xml->add( iv_name = c_s_dataname-segment_definition
-                 ig_data = is_segment_definition ).
-    lv_string = lo_xml->render( ).
-    IF lv_string IS NOT INITIAL.
-      mo_files->add_string( iv_extra  = c_extra_segment_definition &&
-                                        is_segment_definition-segmentdefinition-segtyp && '_' &&
-                                        is_segment_definition-segmentdefinition-version
-                            iv_ext    = c_extension_xml
-                            iv_string = lv_string ).
-    ENDIF.
-
-  ENDMETHOD.
   METHOD check_is_idoc_segment.
 
     DATA lv_segment_type TYPE edilsegtyp.
@@ -719,21 +703,14 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
     DATA lv_version             TYPE segmentvrs .
     DATA lv_result              TYPE syst_subrc.
-    DATA ls_segment_definition  TYPE ty_segment_definition.
+    DATA lt_segment_definitions TYPE ty_segment_definitions.
     DATA lv_package             TYPE devclass.
-    DATA lv_string              TYPE string.
-    DATA lo_xml                 TYPE REF TO zcl_abapgit_xml_input.
+    FIELD-SYMBOLS <ls_segment_definition> TYPE ty_segment_definition.
 
     TRY.
-        lv_string = mo_files->read_string( iv_extra = c_extra_segment_definition &&
-                                                      ms_item-obj_name && '_' &&
-                                                      lv_version
-                                           iv_ext   = c_extension_xml ).
 
-        CREATE OBJECT lo_xml EXPORTING iv_xml = lv_string.
-
-        lo_xml->read( EXPORTING iv_name = c_s_dataname-segment_definition
-                      CHANGING  cg_data = ls_segment_definition ).
+        io_xml->read( EXPORTING iv_name = c_s_dataname-segment_definition
+                      CHANGING  cg_data = lt_segment_definitions ).
 
 
       CATCH zcx_abapgit_exception ##no_handler.
@@ -744,48 +721,53 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     rv_deserialized = abap_true.
 
     lv_package = iv_package.
-    ls_segment_definition-segmentheader-presp =
-    ls_segment_definition-segmentheader-pwork = cl_abap_syst=>get_user_name( ).
 
-    CALL FUNCTION 'SEGMENT_READ'
-      EXPORTING
-        segmenttyp = ls_segment_definition-segmentheader-segtyp
-      IMPORTING
-        result     = lv_result
-      EXCEPTIONS
-        OTHERS     = 1.
-    IF sy-subrc <> 0 OR lv_result <> 0.
-      CALL FUNCTION 'SEGMENT_CREATE'
+    LOOP AT lt_segment_definitions ASSIGNING <ls_segment_definition>.
+      <ls_segment_definition>-segmentheader-presp =
+      <ls_segment_definition>-segmentheader-pwork = cl_abap_syst=>get_user_name( ).
+
+      CALL FUNCTION 'SEGMENT_READ'
+        EXPORTING
+          segmenttyp = <ls_segment_definition>-segmentheader-segtyp
         IMPORTING
-          segmentdefinition = ls_segment_definition-segmentdefinition
-        TABLES
-          segmentstructure  = ls_segment_definition-segmentstructures
-        CHANGING
-          segmentheader     = ls_segment_definition-segmentheader
-          devclass          = lv_package
+          result     = lv_result
         EXCEPTIONS
-          OTHERS            = 1.
-    ELSE.
+          OTHERS     = 1.
+      IF sy-subrc <> 0 OR lv_result <> 0.
+        CALL FUNCTION 'SEGMENT_CREATE'
+          IMPORTING
+            segmentdefinition = <ls_segment_definition>-segmentdefinition
+          TABLES
+            segmentstructure  = <ls_segment_definition>-segmentstructures
+          CHANGING
+            segmentheader     = <ls_segment_definition>-segmentheader
+            devclass          = lv_package
+          EXCEPTIONS
+            OTHERS            = 1.
+      ELSE.
 
-      CALL FUNCTION 'SEGMENT_MODIFY'
-        CHANGING
-          segmentheader = ls_segment_definition-segmentheader
-          devclass      = lv_package
-        EXCEPTIONS
-          OTHERS        = 1.
+        CALL FUNCTION 'SEGMENT_MODIFY'
+          CHANGING
+            segmentheader = <ls_segment_definition>-segmentheader
+            devclass      = lv_package
+          EXCEPTIONS
+            OTHERS        = 1.
+        IF sy-subrc = 0.
+          CALL FUNCTION 'SEGMENTDEFINITION_MODIFY'
+            TABLES
+              segmentstructure  = <ls_segment_definition>-segmentstructures
+            CHANGING
+              segmentdefinition = <ls_segment_definition>-segmentdefinition
+            EXCEPTIONS
+              OTHERS            = 1.
+        ENDIF.
+      ENDIF.
 
-      CALL FUNCTION 'SEGMENTDEFINITION_MODIFY'
-        TABLES
-          segmentstructure  = ls_segment_definition-segmentstructures
-        CHANGING
-          segmentdefinition = ls_segment_definition-segmentdefinition
-        EXCEPTIONS
-          OTHERS            = 1.
-    ENDIF.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
 
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
+    ENDLOOP.
 
     CALL FUNCTION 'TR_TADIR_INTERFACE'
       EXPORTING
