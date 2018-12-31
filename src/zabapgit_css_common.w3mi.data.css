@@ -69,9 +69,11 @@ input:focus, textarea:focus {
 .indent5em        { padding-left: 0.5em; }
 .pad4px           { padding: 4px; }
 .w100             { width: 100%; }
+.wmin             { width: 1%; }
 .w40              { width: 40%; }
 .float-right      { float: right; }
 .pad-right        { padding-right: 6px; }
+.inline           { display: inline; }
 
 /* PANELS */
 div.panel {
@@ -975,4 +977,17 @@ div.corner-hint {
 table.commit tr .title {
   font-weight: bold;
   vertical-align: top;
+}
+
+/* Repo overview */
+.repo-overview {
+  font-size: smaller;
+}
+
+.repo-overview tbody td {
+  height: 2em;
+}
+
+.ro-detail {
+  display: none;
 }

@@ -126,7 +126,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
 
   METHOD add_direction_option.
@@ -335,37 +335,34 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( |<div class="form-container">| ).
-
-    ro_html->add( |<form id="commit_form" class="grey70"|
-               && | method="post" action="sapevent:{ c_action-apply_filter }">| ).
-
     render_header_bar( ro_html ).
-
     render_table( io_html     = ro_html
                   it_overview = lt_overview ).
-
-    ro_html->add( |</div>| ).
 
   ENDMETHOD.
 
 
   METHOD render_header_bar.
 
-    io_html->add( |<div class="row">| ).
+    io_html->add( |<div class="form-container">| ).
+
+    io_html->add( |<form class="inline" method="post" action="sapevent:{ c_action-apply_filter }">| ).
 
     render_order_by( io_html ).
     render_order_by_direction( io_html ).
 
-    io_html->add( render_text_input( iv_name  = |filter|
-                                     iv_label = |Filter: |
-                                     iv_value = mv_filter ) ).
-
+    io_html->add( render_text_input(
+      iv_name  = |filter|
+      iv_label = |Filter: |
+      iv_value = mv_filter ) ).
     io_html->add( |<input type="submit" class="hidden-submit">| ).
-
-    io_html->add( |</div>| ).
-
     io_html->add( |</form>| ).
+
+    io_html->add( zcl_abapgit_html=>a(
+      iv_txt = 'Toggle detail'
+      iv_act = |toggleRepoListDetail()|
+      iv_typ = zif_abapgit_definitions=>c_action_type-onclick ) ).
+
     io_html->add( |</div>| ).
 
   ENDMETHOD.
@@ -429,33 +426,30 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   METHOD render_table.
 
-    io_html->add( |<div class="db_list">| ).
-    io_html->add( |<table class="db_tab">| ).
+    io_html->add( |<div class="db_list repo-overview">| ).
+    io_html->add( |<table class="db_tab w100">| ).
 
     render_table_header( io_html ).
     render_table_body( io_html     = io_html
                        it_overview = it_overview  ).
 
-    io_html->add( |</tbody>| ).
     io_html->add( |</table>| ).
+    io_html->add( |</div>| ).
 
   ENDMETHOD.
 
 
   METHOD render_table_body.
 
-    DATA: lv_trclass       TYPE string,
+    DATA:
           lv_type_icon     TYPE string,
           lv_favorite_icon TYPE string.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
-    LOOP AT it_overview ASSIGNING <ls_overview>.
+    io_html->add( '<tbody>' ).
 
-      CLEAR lv_trclass.
-      IF sy-tabix = 1.
-        lv_trclass = ' class="firstrow"' ##NO_TEXT.
-      ENDIF.
+    LOOP AT it_overview ASSIGNING <ls_overview>.
 
       IF <ls_overview>-type = abap_true.
         lv_type_icon = 'plug/darkgrey'.
@@ -469,16 +463,15 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
         lv_favorite_icon = 'star/grey'.
       ENDIF.
 
-      io_html->add( |<tr{ lv_trclass }>| ).
-      io_html->add( |<td>| ).
+      io_html->add( |<tr>| ).
+      io_html->add( |<td class="wmin">| ).
       io_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?{ <ls_overview>-key }|
                       iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_favorite_icon
                                                        iv_class = 'pad-sides'
                                                        iv_hint  = 'Click to toggle favorite' ) ).
       io_html->add( |</td>| ).
-      io_html->add( |<td>{ zcl_abapgit_html=>icon( lv_type_icon )  }</td>| ).
+      io_html->add( |<td class="wmin">{ zcl_abapgit_html=>icon( lv_type_icon )  }</td>| ).
 
-      io_html->add( |<td>{ <ls_overview>-key }</td>| ).
       io_html->add( |<td>{ zcl_abapgit_html=>a( iv_txt = <ls_overview>-name
                                                 iv_act = |{ c_action-select }?{ <ls_overview>-key }| ) }</td>| ).
 
@@ -487,20 +480,21 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
                                          iv_act = |{ zif_abapgit_definitions=>c_action-url }?|
                                                && |{ <ls_overview>-url }| ) }</td>| ).
       ELSE.
-        io_html->add( |<td> </td>| ).
+        io_html->add( |<td></td>| ).
       ENDIF.
 
       io_html->add( |<td>{ <ls_overview>-package }</td>| ).
       io_html->add( |<td>{ <ls_overview>-branch }</td>| ).
-      io_html->add( |<td>{ <ls_overview>-created_by }</td>| ).
-      io_html->add( |<td>{ <ls_overview>-created_at }</td>| ).
-      io_html->add( |<td>{ <ls_overview>-deserialized_by }</td>| ).
-      io_html->add( |<td>{ <ls_overview>-deserialized_at }</td>| ).
-      io_html->add( |<td>| ).
-      io_html->add( |</td>| ).
+      io_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_by }</td>| ).
+      io_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_at }</td>| ).
+      io_html->add( |<td class="ro-detail">{ <ls_overview>-created_by }</td>| ).
+      io_html->add( |<td class="ro-detail">{ <ls_overview>-created_at }</td>| ).
+      io_html->add( |<td class="ro-detail">{ <ls_overview>-key }</td>| ).
       io_html->add( |</tr>| ).
 
     ENDLOOP.
+
+    io_html->add( |</tbody>| ).
 
   ENDMETHOD.
 
@@ -509,21 +503,19 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     io_html->add( |<thead>| ).
     io_html->add( |<tr>| ).
-    io_html->add( |<th>Favorite</th>| ).
-    io_html->add( |<th>Type</th>| ).
-    io_html->add( |<th>Key</th>| ).
+    io_html->add( |<th class="wmin"></th>| ). " Fav icon
+    io_html->add( |<th class="wmin"></th>| ). " Repo type
     io_html->add( |<th>Name</th>| ).
     io_html->add( |<th>Url</th>| ).
     io_html->add( |<th>Package</th>| ).
     io_html->add( |<th>Branch name</th>| ).
-    io_html->add( |<th>Creator</th>| ).
-    io_html->add( |<th>Created at [{ mv_time_zone }]</th>| ).
-    io_html->add( |<th>Deserialized by</th>| ).
-    io_html->add( |<th>Deserialized at [{ mv_time_zone }]</th>| ).
-    io_html->add( |<th></th>| ).
+    io_html->add( |<th class="ro-detail">Deserialized by</th>| ).
+    io_html->add( |<th class="ro-detail">Deserialized at [{ mv_time_zone }]</th>| ).
+    io_html->add( |<th class="ro-detail">Creator</th>| ).
+    io_html->add( |<th class="ro-detail">Created at [{ mv_time_zone }]</th>| ).
+    io_html->add( |<th class="ro-detail">Key</th>| ).
     io_html->add( '</tr>' ).
     io_html->add( '</thead>' ).
-    io_html->add( '<tbody>' ).
 
   ENDMETHOD.
 
@@ -553,6 +545,11 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ro_html = super->scripts( ).
 
     ro_html->add( 'setInitialFocus("filter");' ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 
@@ -605,10 +602,4 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-  ENDMETHOD.
-
 ENDCLASS.

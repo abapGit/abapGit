@@ -1195,3 +1195,18 @@ BranchOverview.prototype.showCommit = function(event){
 BranchOverview.prototype.hideCommit = function (event){ // eslint-disable-line no-unused-vars
   this.toggleCommit();
 };
+
+// Repo overview
+function findStyleSheetByName(name) {
+  var classes = document.styleSheets[0].cssRules || document.styleSheets[0].rules;
+  for (var i = 0; i < classes.length; i++) {
+    if (classes[i].selectorText === name) return classes[i];
+  }
+}
+
+function toggleRepoListDetail() {
+  var detailClass = findStyleSheetByName(".ro-detail");
+  if (detailClass) {
+    detailClass.style.display = detailClass.style.display === "none" ? "" : "none";
+  }
+}
