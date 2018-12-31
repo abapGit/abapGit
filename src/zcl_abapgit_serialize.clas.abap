@@ -271,7 +271,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD constructor.
-    IF is_merged( ).
+    IF is_merged( ) = abap_true.
       gv_max_threads = 1.
     ENDIF.
   ENDMETHOD.
