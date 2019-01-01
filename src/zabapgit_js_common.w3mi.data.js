@@ -19,6 +19,9 @@
 /* exported preparePatch */
 /* exported registerStagePatch */
 /* exported toggleRepoListDetail */
+/* exported onDirectionChange */
+/* exported onOrderByChange  */
+/* exported onTagTypeChange */
 
 /**********************************************************
  * Polyfills
@@ -171,25 +174,37 @@ function perfClear() {
 /**********************************************************
  * TAG PAGE Logic
  **********************************************************/
-// somehow only functions on window are visible for the select tag
-window.onTagTypeChange = function(oSelectObject){
+function onTagTypeChange(oSelectObject){
   var sValue = oSelectObject.value;
   submitSapeventForm({ type: sValue }, "change_tag_type", "post");
-};
+}
 
 /**********************************************************
  * Repo Overview Logic
  **********************************************************/
-// somehow only functions on window are visible for the select tag
-window.onOrderByChange = function(oSelectObject){
+function onOrderByChange(oSelectObject){
   var sValue = oSelectObject.value;
   submitSapeventForm({ orderBy: sValue }, "change_order_by", "post");
-};
+}
 
-window.onDirectionChange = function(oSelectObject){
+function onDirectionChange(oSelectObject){
   var sValue = oSelectObject.value;
   submitSapeventForm({ direction: sValue }, "direction", "post");
-};
+}
+
+function findStyleSheetByName(name) {
+  var classes = document.styleSheets[0].cssRules || document.styleSheets[0].rules;
+  for (var i = 0; i < classes.length; i++) {
+    if (classes[i].selectorText === name) return classes[i];
+  }
+}
+
+function toggleRepoListDetail() {
+  var detailClass = findStyleSheetByName(".ro-detail");
+  if (detailClass) {
+    detailClass.style.display = detailClass.style.display === "none" ? "" : "none";
+  }
+}
 
 /**********************************************************
  * STAGE PAGE Logic
@@ -614,7 +629,7 @@ KeyNavigation.prototype.onkeydown = function(oEvent) {
 
   // navigate with arrows through list items and support pressing links with enter and space
   if (oEvent.key === "ENTER" || oEvent.key === "") {
-    this.onEnterOrSpace(oEvent);
+    this.onEnterOrSpace();
   } else if (/Down$/.test(oEvent.key)) {
     this.onArrowDown(oEvent);
   } else if (/Up$/.test(oEvent.key)) {
@@ -635,7 +650,7 @@ KeyNavigation.prototype.getActiveElementParent = function () {
   return this.getActiveElement().parentElement;
 };
 
-KeyNavigation.prototype.onEnterOrSpace = function (oEvent) { // eslint-disable-line no-unused-vars
+KeyNavigation.prototype.onEnterOrSpace = function () {
 
   // Enter or space clicks the selected link
 
@@ -1213,18 +1228,3 @@ BranchOverview.prototype.showCommit = function(event){
 BranchOverview.prototype.hideCommit = function (event){ // eslint-disable-line no-unused-vars
   this.toggleCommit();
 };
-
-// Repo overview
-function findStyleSheetByName(name) {
-  var classes = document.styleSheets[0].cssRules || document.styleSheets[0].rules;
-  for (var i = 0; i < classes.length; i++) {
-    if (classes[i].selectorText === name) return classes[i];
-  }
-}
-
-function toggleRepoListDetail() {
-  var detailClass = findStyleSheetByName(".ro-detail");
-  if (detailClass) {
-    detailClass.style.display = detailClass.style.display === "none" ? "" : "none";
-  }
-}
