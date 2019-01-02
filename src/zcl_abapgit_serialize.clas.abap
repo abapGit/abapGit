@@ -4,6 +4,7 @@ CLASS zcl_abapgit_serialize DEFINITION
 
   PUBLIC SECTION.
 
+    METHODS constructor.
     METHODS on_end_of_task
       IMPORTING
         !p_task TYPE clike .
@@ -17,9 +18,10 @@ CLASS zcl_abapgit_serialize DEFINITION
         VALUE(rt_files)      TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
         zcx_abapgit_exception .
+
   PROTECTED SECTION.
 
-    CLASS-DATA gv_max TYPE i .
+    CLASS-DATA gv_max_threads TYPE i .
     DATA mt_files TYPE zif_abapgit_definitions=>ty_files_item_tt .
     DATA mv_free TYPE i .
     DATA mo_log TYPE REF TO zcl_abapgit_log .
@@ -50,11 +52,13 @@ CLASS zcl_abapgit_serialize DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
+    METHODS is_merged RETURNING VALUE(rv_result) TYPE abap_bool .
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
+CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
 
   METHOD add_to_return.
@@ -80,10 +84,10 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF gv_max >= 1.
+    IF gv_max_threads >= 1.
 * SPBT_INITIALIZE gives error PBT_ENV_ALREADY_INITIALIZED if called
 * multiple times in same session
-      rv_threads = gv_max.
+      rv_threads = gv_max_threads.
       RETURN.
     ENDIF.
 
@@ -94,14 +98,14 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
         function_not_exist = 1
         OTHERS             = 2.
     IF sy-subrc <> 0.
-      gv_max = 1.
+      gv_max_threads = 1.
     ELSE.
 * todo, add possibility to set group name in user exit
       CALL FUNCTION 'SPBT_INITIALIZE'
         EXPORTING
           group_name                     = 'parallel_generators'
         IMPORTING
-          free_pbt_wps                   = gv_max
+          free_pbt_wps                   = gv_max_threads
         EXCEPTIONS
           invalid_group_name             = 1
           internal_error                 = 2
@@ -113,17 +117,17 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
       IF sy-subrc <> 0.
 *   fallback to running sequentially. If SPBT_INITIALIZE fails, check transactions
 *   RZ12, SM50, SM21, SARFC
-        gv_max = 1.
+        gv_max_threads = 1.
       ENDIF.
     ENDIF.
 
-    IF gv_max > 1.
-      gv_max = gv_max - 1.
+    IF gv_max_threads > 1.
+      gv_max_threads = gv_max_threads - 1.
     ENDIF.
 
-    ASSERT gv_max >= 1.
+    ASSERT gv_max_threads >= 1.
 
-    rv_threads = gv_max.
+    rv_threads = gv_max_threads.
 
   ENDMETHOD.
 
@@ -265,4 +269,25 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
     rt_files = mt_files.
 
   ENDMETHOD.
+
+  METHOD constructor.
+    IF is_merged( ) = abap_true.
+      gv_max_threads = 1.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD is_merged.
+
+    DATA lo_marker TYPE REF TO data.
+
+    TRY.
+        CREATE DATA lo_marker TYPE REF TO ('LIF_ABAPMERGE_MARKER')  ##no_text.
+        "No exception --> marker found
+        rv_result = abap_true.
+
+      CATCH cx_sy_create_data_error  ##no_handler.
+    ENDTRY.
+
+  ENDMETHOD.
+
 ENDCLASS.
