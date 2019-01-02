@@ -1,5 +1,5 @@
 #!/bin/bash
-abapmerge src/zabapgit.prog.abap > ../zabapgit.abap
+abapmerge -f src/zabapgit.prog.abap > ../zabapgit.abap
 wc -l ../zabapgit.abap
 cd ..
 git clone https://github.com/abapGit/build.git
