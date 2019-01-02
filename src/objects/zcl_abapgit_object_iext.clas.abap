@@ -8,16 +8,14 @@ CLASS zcl_abapgit_object_iext DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         IMPORTING
           is_item     TYPE zif_abapgit_definitions=>ty_item
           iv_language TYPE spras.
-
   PRIVATE SECTION.
-    TYPES:
-      BEGIN OF ty_extention,
-        attributes TYPE edi_iapi01,
-        t_syntax   TYPE STANDARD TABLE OF edi_iapi03 WITH NON-UNIQUE DEFAULT KEY,
-      END OF ty_extention.
+    TYPES: BEGIN OF ty_extention,
+             attributes TYPE edi_iapi01,
+             t_syntax   TYPE STANDARD TABLE OF edi_iapi03 WITH NON-UNIQUE DEFAULT KEY,
+           END OF ty_extention.
 
-    DATA:
-      mv_extension TYPE edi_cimtyp.
+    CONSTANTS c_dataname_iext TYPE string VALUE 'IEXT' ##NO_TEXT.
+    DATA: mv_extension TYPE edi_cimtyp.
 
 ENDCLASS.
 
@@ -28,7 +26,7 @@ CLASS zcl_abapgit_object_iext IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( is_item = is_item
+    super->constructor( is_item     = is_item
                         iv_language = iv_language ).
 
     mv_extension = ms_item-obj_name.
@@ -78,29 +76,37 @@ CLASS zcl_abapgit_object_iext IMPLEMENTATION.
     DATA: ls_extension  TYPE ty_extention,
           ls_attributes TYPE edi_iapi05.
 
-    io_xml->read(
-      EXPORTING
-        iv_name = 'IEXT'
-      CHANGING
-        cg_data = ls_extension ).
+    io_xml->read( EXPORTING iv_name = c_dataname_iext
+                  CHANGING  cg_data = ls_extension ).
 
     MOVE-CORRESPONDING ls_extension-attributes TO ls_attributes.
     ls_attributes-presp = cl_abap_syst=>get_user_name( ).
     ls_attributes-pwork = ls_attributes-presp.
 
-    CALL FUNCTION 'EXTTYPE_CREATE'
-      EXPORTING
-        pi_cimtyp     = mv_extension
-        pi_devclass   = iv_package
-        pi_attributes = ls_attributes
-      TABLES
-        pt_syntax     = ls_extension-t_syntax
-      EXCEPTIONS
-        OTHERS        = 1.
-
+    IF me->zif_abapgit_object~exists( ) = abap_true.
+      CALL FUNCTION 'EXTTYPE_UPDATE'
+        EXPORTING
+          pi_cimtyp     = mv_extension
+          pi_attributes = ls_attributes
+        TABLES
+          pt_syntax     = ls_extension-t_syntax
+        EXCEPTIONS
+          OTHERS        = 1.
+    ELSE.
+      CALL FUNCTION 'EXTTYPE_CREATE'
+        EXPORTING
+          pi_cimtyp     = mv_extension
+          pi_devclass   = iv_package
+          pi_attributes = ls_attributes
+        TABLES
+          pt_syntax     = ls_extension-t_syntax
+        EXCEPTIONS
+          OTHERS        = 1.
+    ENDIF.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+
 
   ENDMETHOD.
 
@@ -170,7 +176,7 @@ CLASS zcl_abapgit_object_iext IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: ls_extension TYPE ty_extention.
+    DATA ls_extension           TYPE ty_extention.
 
     CALL FUNCTION 'EXTTYPE_READ'
       EXPORTING
@@ -186,19 +192,13 @@ CLASS zcl_abapgit_object_iext IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    CLEAR: ls_extension-attributes-devc,
-           ls_extension-attributes-plast,
-           ls_extension-attributes-credate,
-           ls_extension-attributes-cretime,
-           ls_extension-attributes-ldate,
-           ls_extension-attributes-ltime,
-           ls_extension-attributes-pwork,
-           ls_extension-attributes-presp.
+    zcl_abapgit_object_idoc=>clear_idoc_segement_fields( CHANGING cs_structure = ls_extension-attributes ).
 
-    io_xml->add( iv_name = 'IEXT'
+    io_xml->add( iv_name = c_dataname_iext
                  ig_data = ls_extension ).
 
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~is_locked.
     rv_is_locked = abap_false.
