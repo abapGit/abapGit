@@ -120,10 +120,14 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
     LOOP AT mt_commits ASSIGNING <ls_commit>.
 
       IF sy-tabix = 1.
-* assumption: all branches are created from master, todo
+        " assumption: all branches are created from master, todo
         ro_html->add( |var {
           escape_branch( <ls_commit>-branch ) } = gitgraph.branch("{
           <ls_commit>-branch }");| ).
+      ENDIF.
+
+      IF <ls_commit>-branch IS INITIAL.
+        CONTINUE. " we skip orphaned commits
       ENDIF.
 
       IF <ls_commit>-compressed = abap_true.
