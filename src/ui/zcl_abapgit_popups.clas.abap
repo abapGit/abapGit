@@ -903,7 +903,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
           popup_title       = 'New Offline Project'
           programname       = sy-cprog
           formname          = 'PACKAGE_POPUP'
-          ok_pushbuttontext = ''
+          ok_pushbuttontext = 'OK'
           icon_ok_push      = lv_icon_ok
           first_pushbutton  = lv_button1
           icon_button_1     = lv_icon1
