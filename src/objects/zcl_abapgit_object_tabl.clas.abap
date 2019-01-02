@@ -707,6 +707,8 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     DATA lv_package             TYPE devclass.
     FIELD-SYMBOLS <ls_segment_definition> TYPE ty_segment_definition.
 
+    rv_deserialized = abap_false.
+
     TRY.
 
         io_xml->read( EXPORTING iv_name = c_s_dataname-segment_definition
@@ -714,9 +716,12 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
 
       CATCH zcx_abapgit_exception ##no_handler.
-        rv_deserialized = abap_false.
         RETURN. "previous XML version or no IDoc segment
     ENDTRY.
+
+    IF lines( lt_segment_definitions ) = 0.
+      RETURN. "no IDoc segment
+    ENDIF.
 
     rv_deserialized = abap_true.
 
