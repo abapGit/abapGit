@@ -314,7 +314,8 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Current login language |
                                  && |'{ zcl_abapgit_convert=>conversion_exit_isola_output( lv_logon_language ) }'|
                                  && | does not match master language |
-                                 && |'{ zcl_abapgit_convert=>conversion_exit_isola_output( lv_master_language ) }'| ).
+                                 && |'{ zcl_abapgit_convert=>conversion_exit_isola_output( lv_master_language ) }'.|
+                                 && | Run 'Advanced' > 'Open in master language'| ).
     ENDIF.
 
     rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
