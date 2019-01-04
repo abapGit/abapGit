@@ -51,7 +51,24 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
+
+
+  METHOD check_is_idoc_segment.
+
+    DATA lv_segment_type TYPE edilsegtyp.
+
+    lv_segment_type = ms_item-obj_name.
+
+    SELECT SINGLE segtyp
+           FROM edisegment
+           INTO lv_segment_type
+           WHERE segtyp = lv_segment_type.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'No IDoc segment' ).
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD clear_dd03p_fields.
@@ -96,6 +113,22 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD clear_dd03p_fields_common.
+
+    CLEAR: cs_dd03p-ddlanguage,
+           cs_dd03p-dtelmaster,
+           cs_dd03p-logflag,
+           cs_dd03p-ddtext,
+           cs_dd03p-reservedte,
+           cs_dd03p-reptext,
+           cs_dd03p-scrtext_s,
+           cs_dd03p-scrtext_m,
+           cs_dd03p-scrtext_l.
+
+  ENDMETHOD.
+
+
   METHOD clear_dd03p_fields_dataelement.
 
 * type specified via data element
@@ -123,18 +156,192 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD delete_idoc_segment.
 
-  METHOD clear_dd03p_fields_common.
+    DATA lv_segment_type        TYPE edilsegtyp.
+    DATA lv_result              LIKE sy-subrc.
 
-    CLEAR: cs_dd03p-ddlanguage,
-           cs_dd03p-dtelmaster,
-           cs_dd03p-logflag,
-           cs_dd03p-ddtext,
-           cs_dd03p-reservedte,
-           cs_dd03p-reptext,
-           cs_dd03p-scrtext_s,
-           cs_dd03p-scrtext_m,
-           cs_dd03p-scrtext_l.
+    TRY.
+        check_is_idoc_segment( ).
+
+      CATCH zcx_abapgit_exception ##no_handler.
+        rv_deleted = abap_false.
+        RETURN. "previous XML version or no IDoc segment
+    ENDTRY.
+
+    rv_deleted = abap_true.
+    lv_segment_type = ms_item-obj_name.
+
+    CALL FUNCTION 'SEGMENT_DELETE'
+      EXPORTING
+        segmenttyp = lv_segment_type
+      IMPORTING
+        result     = lv_result
+      EXCEPTIONS
+        OTHERS     = 1.
+    IF sy-subrc <> 0 OR lv_result <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD deserialize_idoc_segment.
+
+    DATA lv_version             TYPE segmentvrs .
+    DATA lv_result              LIKE sy-subrc.
+    DATA lt_segment_definitions TYPE ty_segment_definitions.
+    DATA lv_package             TYPE devclass.
+    FIELD-SYMBOLS <ls_segment_definition> TYPE ty_segment_definition.
+
+    rv_deserialized = abap_false.
+
+    TRY.
+
+        io_xml->read( EXPORTING iv_name = c_s_dataname-segment_definition
+                      CHANGING  cg_data = lt_segment_definitions ).
+
+
+      CATCH zcx_abapgit_exception ##no_handler.
+        RETURN. "previous XML version or no IDoc segment
+    ENDTRY.
+
+    IF lines( lt_segment_definitions ) = 0.
+      RETURN. "no IDoc segment
+    ENDIF.
+
+    rv_deserialized = abap_true.
+
+    lv_package = iv_package.
+
+    LOOP AT lt_segment_definitions ASSIGNING <ls_segment_definition>.
+      <ls_segment_definition>-segmentheader-presp =
+      <ls_segment_definition>-segmentheader-pwork = cl_abap_syst=>get_user_name( ).
+
+      CALL FUNCTION 'SEGMENT_READ'
+        EXPORTING
+          segmenttyp = <ls_segment_definition>-segmentheader-segtyp
+        IMPORTING
+          result     = lv_result
+        EXCEPTIONS
+          OTHERS     = 1.
+      IF sy-subrc <> 0 OR lv_result <> 0.
+        CALL FUNCTION 'SEGMENT_CREATE'
+          IMPORTING
+            segmentdefinition = <ls_segment_definition>-segmentdefinition
+          TABLES
+            segmentstructure  = <ls_segment_definition>-segmentstructures
+          CHANGING
+            segmentheader     = <ls_segment_definition>-segmentheader
+            devclass          = lv_package
+          EXCEPTIONS
+            OTHERS            = 1.
+      ELSE.
+
+        CALL FUNCTION 'SEGMENT_MODIFY'
+          CHANGING
+            segmentheader = <ls_segment_definition>-segmentheader
+            devclass      = lv_package
+          EXCEPTIONS
+            OTHERS        = 1.
+        IF sy-subrc = 0.
+          CALL FUNCTION 'SEGMENTDEFINITION_MODIFY'
+            TABLES
+              segmentstructure  = <ls_segment_definition>-segmentstructures
+            CHANGING
+              segmentdefinition = <ls_segment_definition>-segmentdefinition
+            EXCEPTIONS
+              OTHERS            = 1.
+        ENDIF.
+      ENDIF.
+
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+    ENDLOOP.
+
+    CALL FUNCTION 'TR_TADIR_INTERFACE'
+      EXPORTING
+        wi_test_modus       = abap_false
+        wi_tadir_pgmid      = 'R3TR'
+        wi_tadir_object     = ms_item-obj_type
+        wi_tadir_obj_name   = ms_item-obj_name
+        wi_tadir_author     = cl_abap_syst=>get_user_name( )
+        wi_tadir_devclass   = iv_package
+        wi_tadir_masterlang = mv_language
+        iv_set_edtflag      = abap_true
+        iv_delflag          = abap_false
+      EXCEPTIONS
+        OTHERS              = 1.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from TR_TADIR_INTERFACE' ).
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD serialize_idoc_segment.
+
+    DATA lv_segment_type        TYPE edilsegtyp.
+    DATA lv_result              LIKE sy-subrc.
+    DATA lv_devclass            TYPE devclass.
+    DATA lt_segmentdefinitions  TYPE STANDARD TABLE OF edisegmdef.
+    DATA ls_segment_definition  TYPE ty_segment_definition.
+    DATA lt_segment_definitions TYPE ty_segment_definitions.
+    FIELD-SYMBOLS: <ls_segemtndefinition> TYPE edisegmdef.
+
+    TRY.
+        check_is_idoc_segment( ).
+
+        lv_segment_type = ms_item-obj_name.
+        CALL FUNCTION 'SEGMENT_READ'
+          EXPORTING
+            segmenttyp        = lv_segment_type
+          IMPORTING
+            result            = lv_result
+          TABLES
+            segmentdefinition = lt_segmentdefinitions
+          EXCEPTIONS
+            OTHERS            = 1.
+        IF sy-subrc <> 0 OR lv_result <> 0.
+          zcx_abapgit_exception=>raise_t100( ).
+        ENDIF.
+
+        LOOP AT lt_segmentdefinitions ASSIGNING <ls_segemtndefinition>.
+          CLEAR ls_segment_definition.
+          CALL FUNCTION 'SEGMENTDEFINITION_READ'
+            EXPORTING
+              segmenttyp           = <ls_segemtndefinition>-segtyp
+            IMPORTING
+              result               = lv_result
+              devclass             = lv_devclass
+              segmentheader        = ls_segment_definition-segmentheader
+              segmentdefinition    = ls_segment_definition-segmentdefinition
+            TABLES
+              segmentstructure     = ls_segment_definition-segmentstructures
+            CHANGING
+              version              = <ls_segemtndefinition>-version
+            EXCEPTIONS
+              no_authority         = 1
+              segment_not_existing = 2
+              OTHERS               = 3.
+          IF sy-subrc <> 0 OR lv_result <> 0.
+            zcx_abapgit_exception=>raise_t100( ).
+          ENDIF.
+
+          zcl_abapgit_object_idoc=>clear_idoc_segement_fields(
+                                     CHANGING cs_structure = ls_segment_definition-segmentdefinition ).
+          zcl_abapgit_object_idoc=>clear_idoc_segement_fields(
+                                     CHANGING cs_structure = ls_segment_definition-segmentheader ).
+
+          APPEND ls_segment_definition TO lt_segment_definitions.
+        ENDLOOP.
+
+        io_xml->add( iv_name = c_s_dataname-segment_definition
+                     ig_data = lt_segment_definitions ).
+
+      CATCH zcx_abapgit_exception ##no_handler.
+        "ok, no Idoc segment
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -614,211 +821,4 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     serialize_idoc_segment( io_xml ).
 
   ENDMETHOD.
-
-  METHOD serialize_idoc_segment.
-
-    DATA lv_segment_type        TYPE edilsegtyp.
-    DATA lv_result              TYPE syst_subrc.
-    DATA lv_devclass            TYPE devclass.
-    DATA lt_segmentdefinitions  TYPE STANDARD TABLE OF edisegmdef.
-    DATA ls_segment_definition  TYPE ty_segment_definition.
-    DATA lt_segment_definitions TYPE ty_segment_definitions.
-    FIELD-SYMBOLS: <ls_segemtndefinition> TYPE edisegmdef.
-
-    TRY.
-        check_is_idoc_segment( ).
-
-        lv_segment_type = ms_item-obj_name.
-        CALL FUNCTION 'SEGMENT_READ'
-          EXPORTING
-            segmenttyp        = lv_segment_type
-          IMPORTING
-            result            = lv_result
-          TABLES
-            segmentdefinition = lt_segmentdefinitions
-          EXCEPTIONS
-            OTHERS            = 1.
-        IF sy-subrc <> 0 OR lv_result <> 0.
-          zcx_abapgit_exception=>raise_t100( ).
-        ENDIF.
-
-        LOOP AT lt_segmentdefinitions ASSIGNING <ls_segemtndefinition>.
-          CLEAR ls_segment_definition.
-          CALL FUNCTION 'SEGMENTDEFINITION_READ'
-            EXPORTING
-              segmenttyp           = <ls_segemtndefinition>-segtyp
-            IMPORTING
-              result               = lv_result
-              devclass             = lv_devclass
-              segmentheader        = ls_segment_definition-segmentheader
-              segmentdefinition    = ls_segment_definition-segmentdefinition
-            TABLES
-              segmentstructure     = ls_segment_definition-segmentstructures
-            CHANGING
-              version              = <ls_segemtndefinition>-version
-            EXCEPTIONS
-              no_authority         = 1
-              segment_not_existing = 2
-              OTHERS               = 3.
-          IF sy-subrc <> 0 OR lv_result <> 0.
-            zcx_abapgit_exception=>raise_t100( ).
-          ENDIF.
-
-          zcl_abapgit_object_idoc=>clear_idoc_segement_fields(
-                                     CHANGING cs_structure = ls_segment_definition-segmentdefinition ).
-          zcl_abapgit_object_idoc=>clear_idoc_segement_fields(
-                                     CHANGING cs_structure = ls_segment_definition-segmentheader ).
-
-          APPEND ls_segment_definition TO lt_segment_definitions.
-        ENDLOOP.
-
-        io_xml->add( iv_name = c_s_dataname-segment_definition
-                     ig_data = lt_segment_definitions ).
-
-      CATCH zcx_abapgit_exception ##no_handler.
-        "ok, no Idoc segment
-    ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD check_is_idoc_segment.
-
-    DATA lv_segment_type TYPE edilsegtyp.
-
-    lv_segment_type = ms_item-obj_name.
-
-    SELECT SINGLE segtyp
-           FROM edisegment
-           INTO lv_segment_type
-           WHERE segtyp = lv_segment_type.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'No IDoc segment' ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD deserialize_idoc_segment.
-
-    DATA lv_version             TYPE segmentvrs .
-    DATA lv_result              TYPE syst_subrc.
-    DATA lt_segment_definitions TYPE ty_segment_definitions.
-    DATA lv_package             TYPE devclass.
-    FIELD-SYMBOLS <ls_segment_definition> TYPE ty_segment_definition.
-
-    rv_deserialized = abap_false.
-
-    TRY.
-
-        io_xml->read( EXPORTING iv_name = c_s_dataname-segment_definition
-                      CHANGING  cg_data = lt_segment_definitions ).
-
-
-      CATCH zcx_abapgit_exception ##no_handler.
-        RETURN. "previous XML version or no IDoc segment
-    ENDTRY.
-
-    IF lines( lt_segment_definitions ) = 0.
-      RETURN. "no IDoc segment
-    ENDIF.
-
-    rv_deserialized = abap_true.
-
-    lv_package = iv_package.
-
-    LOOP AT lt_segment_definitions ASSIGNING <ls_segment_definition>.
-      <ls_segment_definition>-segmentheader-presp =
-      <ls_segment_definition>-segmentheader-pwork = cl_abap_syst=>get_user_name( ).
-
-      CALL FUNCTION 'SEGMENT_READ'
-        EXPORTING
-          segmenttyp = <ls_segment_definition>-segmentheader-segtyp
-        IMPORTING
-          result     = lv_result
-        EXCEPTIONS
-          OTHERS     = 1.
-      IF sy-subrc <> 0 OR lv_result <> 0.
-        CALL FUNCTION 'SEGMENT_CREATE'
-          IMPORTING
-            segmentdefinition = <ls_segment_definition>-segmentdefinition
-          TABLES
-            segmentstructure  = <ls_segment_definition>-segmentstructures
-          CHANGING
-            segmentheader     = <ls_segment_definition>-segmentheader
-            devclass          = lv_package
-          EXCEPTIONS
-            OTHERS            = 1.
-      ELSE.
-
-        CALL FUNCTION 'SEGMENT_MODIFY'
-          CHANGING
-            segmentheader = <ls_segment_definition>-segmentheader
-            devclass      = lv_package
-          EXCEPTIONS
-            OTHERS        = 1.
-        IF sy-subrc = 0.
-          CALL FUNCTION 'SEGMENTDEFINITION_MODIFY'
-            TABLES
-              segmentstructure  = <ls_segment_definition>-segmentstructures
-            CHANGING
-              segmentdefinition = <ls_segment_definition>-segmentdefinition
-            EXCEPTIONS
-              OTHERS            = 1.
-        ENDIF.
-      ENDIF.
-
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise_t100( ).
-      ENDIF.
-
-    ENDLOOP.
-
-    CALL FUNCTION 'TR_TADIR_INTERFACE'
-      EXPORTING
-        wi_test_modus       = abap_false
-        wi_tadir_pgmid      = 'R3TR'
-        wi_tadir_object     = ms_item-obj_type
-        wi_tadir_obj_name   = ms_item-obj_name
-        wi_tadir_author     = cl_abap_syst=>get_user_name( )
-        wi_tadir_devclass   = iv_package
-        wi_tadir_masterlang = mv_language
-        iv_set_edtflag      = abap_true
-        iv_delflag          = abap_false
-      EXCEPTIONS
-        OTHERS              = 1.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from TR_TADIR_INTERFACE' ).
-    ENDIF.
-  ENDMETHOD.
-
-
-  METHOD delete_idoc_segment.
-
-    DATA lv_segment_type        TYPE edilsegtyp.
-    DATA lv_result              TYPE syst_subrc.
-
-    TRY.
-        check_is_idoc_segment( ).
-
-      CATCH zcx_abapgit_exception ##no_handler.
-        rv_deleted = abap_false.
-        RETURN. "previous XML version or no IDoc segment
-    ENDTRY.
-
-    rv_deleted = abap_true.
-    lv_segment_type = ms_item-obj_name.
-
-    CALL FUNCTION 'SEGMENT_DELETE'
-      EXPORTING
-        segmenttyp = lv_segment_type
-      IMPORTING
-        result     = lv_result
-      EXCEPTIONS
-        OTHERS     = 1.
-    IF sy-subrc <> 0 OR lv_result <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-  ENDMETHOD.
-
 ENDCLASS.
