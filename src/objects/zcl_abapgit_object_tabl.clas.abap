@@ -191,6 +191,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
     DATA lv_result              LIKE sy-subrc.
     DATA lt_segment_definitions TYPE ty_segment_definitions.
     DATA lv_package             TYPE devclass.
+    DATA lv_uname               TYPE sy-uname.
     FIELD-SYMBOLS <ls_segment_definition> TYPE ty_segment_definition.
 
     rv_deserialized = abap_false.
@@ -260,13 +261,15 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
     ENDLOOP.
 
+    lv_uname = cl_abap_syst=>get_user_name( ).
+
     CALL FUNCTION 'TR_TADIR_INTERFACE'
       EXPORTING
         wi_test_modus       = abap_false
         wi_tadir_pgmid      = 'R3TR'
         wi_tadir_object     = ms_item-obj_type
         wi_tadir_obj_name   = ms_item-obj_name
-        wi_tadir_author     = cl_abap_syst=>get_user_name( )
+        wi_tadir_author     = lv_uname
         wi_tadir_devclass   = iv_package
         wi_tadir_masterlang = mv_language
         iv_set_edtflag      = abap_true
