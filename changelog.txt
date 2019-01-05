@@ -15,7 +15,7 @@ Legend
 ! VCLS, clear CHANGEDATE
 ! Repo overview page redesign
 ! IDOC segments part of TABL
-* Branch overview, skip orphaned commmits
+* Branch overview, skip orphaned commits
 
 2018-12-12 v1.81.0
 ------------------
