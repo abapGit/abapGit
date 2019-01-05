@@ -112,9 +112,8 @@ ENDFORM.                    "package_popup
 FORM output.
 
 *  from http://ceronio.net/2017/07/hiding-the-execute-button-in-an-abap-report-selection-screen/
-
-  perform insert_into_excl(rsdbrunt) using 'CRET'. "Button Execute
-  perform insert_into_excl(rsdbrunt) using 'SPOS'. "Button Save
+  PERFORM insert_into_excl IN PROGRAM rsdbrunt USING 'CRET' IF FOUND. "Button Execute
+  PERFORM insert_into_excl IN PROGRAM rsdbrunt USING 'SPOS' IF FOUND. "Button Save
 
 ENDFORM.
 
