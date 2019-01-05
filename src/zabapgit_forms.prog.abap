@@ -110,17 +110,11 @@ FORM package_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
 ENDFORM.                    "package_popup
 
 FORM output.
-  DATA: lt_ucomm TYPE TABLE OF sy-ucomm.
 
-  PERFORM set_pf_status IN PROGRAM rsdbrunt IF FOUND.
+*  from http://ceronio.net/2017/07/hiding-the-execute-button-in-an-abap-report-selection-screen/
 
-  APPEND 'CRET' TO lt_ucomm.  "Button Execute
-
-  CALL FUNCTION 'RS_SET_SELSCREEN_STATUS'
-    EXPORTING
-      p_status  = sy-pfkey
-    TABLES
-      p_exclude = lt_ucomm.
+  perform insert_into_excl(rsdbrunt) using 'CRET'. "Button Execute
+  perform insert_into_excl(rsdbrunt) using 'SPOS'. "Button Save
 
 ENDFORM.
 
@@ -186,9 +180,9 @@ FORM remove_toolbar USING pv_dynnr TYPE char4.
       header                 = ls_header
       suppress_exist_checks  = abap_true
     TABLES
-      containers           = lt_containers
-      fields_to_containers = lt_fields_to_containers
-      flow_logic           = lt_flow_logic
+      containers             = lt_containers
+      fields_to_containers   = lt_fields_to_containers
+      flow_logic             = lt_flow_logic
     EXCEPTIONS
       cancelled              = 1
       already_exists         = 2
