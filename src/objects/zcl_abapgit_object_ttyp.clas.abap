@@ -137,8 +137,8 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
     DATA: lv_name  TYPE ddobjname,
           lt_dd42v TYPE dd42v_tab,
           lt_dd43v TYPE dd43v_tab,
-          ls_dd40v TYPE dd40v.
-
+          ls_dd40v TYPE dd40v,
+          lv_msg   TYPE string.
 
     io_xml->read( EXPORTING iv_name = 'DD40V'
                   CHANGING cg_data = ls_dd40v ).
@@ -168,14 +168,20 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
 
     IF sy-subrc <> 0.
       CASE sy-subrc.
-        WHEN 1. MESSAGE e002(zabapgit_objects) WITH 'DDIF_TTYP_PUT' lv_name 'TTYP_NOT_FOUND'    INTO lv_msg.
-        WHEN 2. MESSAGE e002(zabapgit_objects) WITH 'DDIF_TTYP_PUT' lv_name 'NAME_INCONSISTENT' INTO lv_msg.
-        WHEN 3. MESSAGE e002(zabapgit_objects) WITH 'DDIF_TTYP_PUT' lv_name 'TTYP_INCONSISTENT' INTO lv_msg.
-        WHEN 4. MESSAGE e002(zabapgit_objects) WITH 'DDIF_TTYP_PUT' lv_name 'PUT_FAILURE'       INTO lv_msg.
-        WHEN 5. MESSAGE e002(zabapgit_objects) WITH 'DDIF_TTYP_PUT' lv_name 'PUT_REFUSED'       INTO lv_msg.
-        WHEN OTHERS. MESSAGE e003(objects) WITH 'DDIF_TTYP_PUT' lv_name INTO lv_msg.
+        WHEN 1.
+          MESSAGE e002(zabapgit_objects) WITH 'DDIF_TTYP_PUT' lv_name 'TTYP_NOT_FOUND'    INTO lv_msg.
+        WHEN 2.
+          MESSAGE e002(zabapgit_objects) WITH 'DDIF_TTYP_PUT' lv_name 'NAME_INCONSISTENT' INTO lv_msg.
+        WHEN 3.
+          MESSAGE e002(zabapgit_objects) WITH 'DDIF_TTYP_PUT' lv_name 'TTYP_INCONSISTENT' INTO lv_msg.
+        WHEN 4.
+          MESSAGE e002(zabapgit_objects) WITH 'DDIF_TTYP_PUT' lv_name 'PUT_FAILURE'       INTO lv_msg.
+        WHEN 5.
+          MESSAGE e002(zabapgit_objects) WITH 'DDIF_TTYP_PUT' lv_name 'PUT_REFUSED'       INTO lv_msg.
+        WHEN OTHERS.
+          MESSAGE e003(zabapgit_objects) WITH 'DDIF_TTYP_PUT' lv_name INTO lv_msg.
       ENDCASE.
-      cx_abapgit_exception=>raise_t100( ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
