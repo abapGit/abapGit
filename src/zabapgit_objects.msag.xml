@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_MSAG" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <T100A>
+    <ARBGB>ZABAPGIT_OBJECTS</ARBGB>
+    <MASTERLANG>E</MASTERLANG>
+    <STEXT>MSAG</STEXT>
+   </T100A>
+   <T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZABAPGIT_OBJECTS</ARBGB>
+     <MSGNR>000</MSGNR>
+     <TEXT>&amp;1&amp;2&amp;3&amp;4</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZABAPGIT_OBJECTS</ARBGB>
+     <MSGNR>001</MSGNR>
+     <TEXT>&amp;1 &amp;2 &amp;3 &amp;4</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZABAPGIT_OBJECTS</ARBGB>
+     <MSGNR>002</MSGNR>
+     <TEXT>Function &amp;1 for &amp;2 failed: &amp;3</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZABAPGIT_OBJECTS</ARBGB>
+     <MSGNR>003</MSGNR>
+     <TEXT>Function &amp;1 for &amp;2 failed</TEXT>
+    </T100>
+    <T100>
+     <SPRSL>E</SPRSL>
+     <ARBGB>ZABAPGIT_OBJECTS</ARBGB>
+     <MSGNR>004</MSGNR>
+     <TEXT>No changes allowed for object &amp;1 to ensure backward compatibility</TEXT>
+    </T100>
+   </T100>
+  </asx:values>
+ </asx:abap>
+</abapGit>

@@ -78,7 +78,7 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
         object_not_specified = 3
         permission_failure   = 4.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, TTYP' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -106,9 +106,11 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
       EXCEPTIONS
         illegal_input = 1
         OTHERS        = 2.
+
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DDIF_TTYP_GET' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+
     IF ls_dd40v IS INITIAL.
       RETURN. " does not exist in system
     ENDIF.
@@ -163,8 +165,17 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
         put_failure       = 4
         put_refused       = 5
         OTHERS            = 6.
+
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DDIF_TTYP_PUT' ).
+      CASE sy-subrc.
+        WHEN 1. MESSAGE e002(zabapgit_objects) WITH 'DDIF_TTYP_PUT' lv_name 'TTYP_NOT_FOUND'    INTO lv_msg.
+        WHEN 2. MESSAGE e002(zabapgit_objects) WITH 'DDIF_TTYP_PUT' lv_name 'NAME_INCONSISTENT' INTO lv_msg.
+        WHEN 3. MESSAGE e002(zabapgit_objects) WITH 'DDIF_TTYP_PUT' lv_name 'TTYP_INCONSISTENT' INTO lv_msg.
+        WHEN 4. MESSAGE e002(zabapgit_objects) WITH 'DDIF_TTYP_PUT' lv_name 'PUT_FAILURE'       INTO lv_msg.
+        WHEN 5. MESSAGE e002(zabapgit_objects) WITH 'DDIF_TTYP_PUT' lv_name 'PUT_REFUSED'       INTO lv_msg.
+        WHEN OTHERS. MESSAGE e003(objects) WITH 'DDIF_TTYP_PUT' lv_name INTO lv_msg.
+      ENDCASE.
+      cx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
