@@ -167,19 +167,19 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
         OTHERS            = 6.
 
     IF sy-subrc <> 0.
-      CONCATENATE 'Error in DDIF_TTYP_PUT on object' lv_name INTO lv_msg SEPARATED BY ' '.
+      lv_msg = |Error in DDIF_TTYP_PUT on object { lv_name }|.
 
       CASE sy-subrc.
         WHEN 1.
-          CONCATENATE lv_msg '(TTYP_NOT_FOUND)' INTO lv_msg SEPARATED BY ' '.
+          lv_msg = lv_msg && | (TTYP_NOT_FOUND)|.
         WHEN 2.
-          CONCATENATE lv_msg '(NAME_INCONSISTENT)' INTO lv_msg SEPARATED BY ' '.
+          lv_msg = lv_msg && | (NAME_INCONSISTENT)|.
         WHEN 3.
-          CONCATENATE lv_msg '(TTYP_INCONSISTENT)' INTO lv_msg SEPARATED BY ' '.
+          lv_msg = lv_msg && | (TTYP_INCONSISTENT)|.
         WHEN 4.
-          CONCATENATE lv_msg '(PUT_FAILURE)' INTO lv_msg SEPARATED BY ' '.
+          lv_msg = lv_msg && | (PUT_FAILURE)|.
         WHEN 5.
-          CONCATENATE lv_msg '(PUT_REFUSED)' INTO lv_msg SEPARATED BY ' '.
+          lv_msg = lv_msg && | (PUT_REFUSED)|.
         WHEN OTHERS.
       ENDCASE.
 
