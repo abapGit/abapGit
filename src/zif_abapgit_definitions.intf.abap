@@ -112,8 +112,9 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   TYPES: decision TYPE ty_yes_no,
          END OF ty_overwrite.
 
-  TYPES: ty_overwrite_tt TYPE STANDARD TABLE OF ty_overwrite WITH DEFAULT KEY.
-
+  TYPES: ty_overwrite_tt TYPE STANDARD TABLE OF ty_overwrite WITH DEFAULT KEY
+                              WITH UNIQUE HASHED KEY object_type_and_name
+                                   COMPONENTS obj_type obj_name.
   TYPES: BEGIN OF ty_requirements,
            met      TYPE ty_yes_no,
            decision TYPE ty_yes_no,

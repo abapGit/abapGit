@@ -218,18 +218,18 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     li_popups->popup_to_select_from_list(
       EXPORTING
         it_list               = ct_overwrite
-        iv_header_text         = |The following Objects have been modified locally.|
-                            && | Select the Objects which should be overwritten.|
-        iv_select_column_text  = 'Overwrite?'
+        iv_header_text        = |The following objects have been modified locally.|
+                             && | Select the objects which should be overwritten.|
+        iv_select_column_text = 'Overwrite?'
         it_columns_to_display = lt_columns
       IMPORTING
         et_list               = lt_selected ).
 
     LOOP AT ct_overwrite ASSIGNING <ls_overwrite>.
-      READ TABLE lt_selected WITH KEY
-        obj_type = <ls_overwrite>-obj_type
-        obj_name = <ls_overwrite>-obj_name
-        TRANSPORTING NO FIELDS.
+      READ TABLE lt_selected WITH TABLE KEY object_type_and_name
+                             COMPONENTS obj_type = <ls_overwrite>-obj_type
+                                        obj_name = <ls_overwrite>-obj_name
+                             TRANSPORTING NO FIELDS.
       IF sy-subrc = 0.
         <ls_overwrite>-decision = 'Y'.
       ELSE.
@@ -242,37 +242,44 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
   METHOD popup_package_overwrite.
 
-    DATA: lv_question TYPE c LENGTH 200,
-          lv_answer   TYPE c.
+    DATA: lt_colums_to_display TYPE stringtab,
+          lv_column            LIKE LINE OF lt_colums_to_display,
+          lt_selected          LIKE ct_overwrite.
 
     FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF ct_overwrite.
-
 
     IF lines( ct_overwrite ) = 0.
       RETURN.
     ENDIF.
 
+    lv_column = 'OBJ_TYPE'.
+    INSERT lv_column INTO TABLE lt_colums_to_display.
+    lv_column = 'OBJ_NAME'.
+    INSERT lv_column INTO TABLE lt_colums_to_display.
+    lv_column = 'DEVCLASS'.
+    INSERT lv_column INTO TABLE lt_colums_to_display.
+
+    zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_from_list(
+      EXPORTING
+        it_list               = ct_overwrite
+        iv_header_text        = |The following objects have been created in other packages.|
+                             && | Select the objects which should be overwritten.|
+        iv_select_column_text = |Overwrite?|
+        it_columns_to_display = lt_colums_to_display
+      IMPORTING
+        et_list               = lt_selected ).
+
     LOOP AT ct_overwrite ASSIGNING <ls_overwrite>.
-      CONCATENATE 'Overwrite object' <ls_overwrite>-obj_type <ls_overwrite>-obj_name
-        'from package' <ls_overwrite>-devclass
-        INTO lv_question SEPARATED BY space.                "#EC NOTEXT
 
-      lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
-        iv_titlebar              = 'Warning'
-        iv_text_question         = lv_question
-        iv_text_button_1         = 'Ok'
-        iv_icon_button_1         = 'ICON_DELETE'
-        iv_text_button_2         = 'Cancel'
-        iv_icon_button_2         = 'ICON_CANCEL'
-        iv_default_button        = '2'
-        iv_display_cancel_button = abap_false ).               "#EC NOTEXT
-
-      IF lv_answer = '2'.
-        RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+      READ TABLE lt_selected WITH TABLE KEY object_type_and_name
+                             COMPONENTS obj_type = <ls_overwrite>-obj_type
+                                        obj_name = <ls_overwrite>-obj_name
+                             TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0.
+        <ls_overwrite>-decision = 'Y'.
+      ELSE.
+        <ls_overwrite>-decision = 'N'.
       ENDIF.
-
-* todo, let the user decide yes/no/cancel
-      <ls_overwrite>-decision = 'Y'.
 
     ENDLOOP.
 
