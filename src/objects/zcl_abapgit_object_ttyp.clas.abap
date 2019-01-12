@@ -78,7 +78,7 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
         object_not_specified = 3
         permission_failure   = 4.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, TTYP' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -106,9 +106,11 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
       EXCEPTIONS
         illegal_input = 1
         OTHERS        = 2.
+
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DDIF_TTYP_GET' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+
     IF ls_dd40v IS INITIAL.
       RETURN. " does not exist in system
     ENDIF.
@@ -135,8 +137,8 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
     DATA: lv_name  TYPE ddobjname,
           lt_dd42v TYPE dd42v_tab,
           lt_dd43v TYPE dd43v_tab,
-          ls_dd40v TYPE dd40v.
-
+          ls_dd40v TYPE dd40v,
+          lv_msg   TYPE string.
 
     io_xml->read( EXPORTING iv_name = 'DD40V'
                   CHANGING cg_data = ls_dd40v ).
@@ -163,8 +165,25 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
         put_failure       = 4
         put_refused       = 5
         OTHERS            = 6.
+
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DDIF_TTYP_PUT' ).
+      lv_msg = |Error in DDIF_TTYP_PUT on object { lv_name }|.
+
+      CASE sy-subrc.
+        WHEN 1.
+          lv_msg = lv_msg && | (TTYP_NOT_FOUND)|.
+        WHEN 2.
+          lv_msg = lv_msg && | (NAME_INCONSISTENT)|.
+        WHEN 3.
+          lv_msg = lv_msg && | (TTYP_INCONSISTENT)|.
+        WHEN 4.
+          lv_msg = lv_msg && | (PUT_FAILURE)|.
+        WHEN 5.
+          lv_msg = lv_msg && | (PUT_REFUSED)|.
+        WHEN OTHERS.
+      ENDCASE.
+
+      zcx_abapgit_exception=>raise( iv_text = lv_msg ).
     ENDIF.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
