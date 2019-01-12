@@ -236,8 +236,10 @@ table.repo_tab {
   padding-bottom: 2px;
 }
 .repo_tab td.icon {
-  width: 32px;
+  width: 1px;
   text-align: center;
+  padding-left: 8px;
+  padding-right: 4px;
 }
 .repo_tab td.icon:not(:first-child) {
   width: 26px;

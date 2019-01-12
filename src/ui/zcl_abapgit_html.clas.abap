@@ -90,7 +90,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
+CLASS zcl_abapgit_html IMPLEMENTATION.
 
 
   METHOD a.
@@ -210,10 +210,12 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
   METHOD icon.
 
-    DATA: lv_hint  TYPE string,
-          lv_name  TYPE string,
-          lv_color TYPE string,
-          lv_class TYPE string.
+    DATA: lv_hint          TYPE string,
+          lv_name          TYPE string,
+          lv_color         TYPE string,
+          lv_class         TYPE string,
+          lv_octicon_class TYPE string,
+          lv_xpixel        TYPE i.
 
     SPLIT iv_name AT '/' INTO lv_name lv_color.
 
@@ -227,7 +229,14 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       lv_color = | { lv_color }|.
     ENDIF.
 
-    rv_str = |<i class="octicon octicon-{ lv_name }{ lv_color }{ lv_class }"{ lv_hint }></i>|.
+    lv_xpixel = cl_gui_cfw=>compute_pixel_from_metric( x_or_y = 'X' in = 1 ).
+    IF lv_xpixel >= 2.
+      lv_octicon_class = 'mega-octicon'.
+    ELSE.
+      lv_octicon_class = 'octicon'.
+    ENDIF.
+
+    rv_str = |<i class="{ lv_octicon_class } octicon-{ lv_name }{ lv_color }{ lv_class }" { lv_hint }></i>|.
 
   ENDMETHOD.
 
