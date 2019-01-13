@@ -439,10 +439,10 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
   METHOD deserialize_program.
 
     DATA: lv_exists      TYPE sap_bool,
-          lv_progname    TYPE reposrc-progname,
           ls_tpool       LIKE LINE OF it_tpool,
           lv_title       TYPE rglif-title,
-          ls_progdir_new TYPE progdir.
+          ls_progdir_new TYPE progdir,
+          ls_progdir_old TYPE progdir.
 
     FIELD-SYMBOLS: <lg_any> TYPE any.
 
@@ -477,9 +477,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
       lv_title = ls_tpool-entry.
     ENDIF.
 
-    SELECT SINGLE progname FROM reposrc INTO lv_progname
-      WHERE progname = is_progdir-name
-      AND r3state = 'A'.
+    SELECT SINGLE * FROM progdir INTO ls_progdir_old
+      WHERE name  = is_progdir-name
+        AND state = 'A'.
     IF sy-subrc = 0.
       lv_exists = abap_true.
     ELSE.
@@ -487,6 +487,23 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
     ENDIF.
 
     IF lv_exists = abap_true.
+      IF ls_progdir_old-edtx = abap_true.
+        " Force remove editor lock, otherwise RPY_PROGRAM_UPDATE will fail with PERMISSION_ERROR
+        ls_progdir_old-edtx = abap_false.
+        CALL FUNCTION 'UPDATE_PROGDIR'
+          EXPORTING
+            i_progdir    = ls_progdir_old
+            i_progname   = ls_progdir_old-name
+            i_state      = 'A'
+          EXCEPTIONS
+            not_executed = 1
+            OTHERS       = 2.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( |Could not remove editor lock for { is_progdir-name }.| ).
+        ENDIF.
+        CLEAR ls_progdir_old.
+      ENDIF.
+
       zcl_abapgit_language=>set_current_language( mv_language ).
 
       CALL FUNCTION 'RPY_PROGRAM_UPDATE'
