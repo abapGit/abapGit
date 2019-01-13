@@ -8,8 +8,10 @@ CLASS ltcl_code_inspector DEFINITION FOR TESTING.
       constructor
         IMPORTING
           iv_package TYPE devclass.
+
   PRIVATE SECTION.
-    DATA mv_package TYPE devclass.
+    DATA:
+      mv_package TYPE devclass.
 
 ENDCLASS.
 
@@ -47,9 +49,10 @@ CLASS ltcl_run_code_inspection DEFINITION FINAL FOR TESTING
 
   PRIVATE SECTION.
     DATA:
-      mo_repo_online TYPE REF TO zcl_abapgit_repo_online,
-      mv_error_text  TYPE string,
-      mt_act_list    TYPE scit_alvlist.
+      mo_repo_online   TYPE REF TO zcl_abapgit_repo_online,
+      mv_error_text    TYPE string,
+      mt_act_list      TYPE scit_alvlist,
+      mv_check_variant TYPE string.
 
     METHODS:
       exception_when_no_check_var FOR TESTING RAISING cx_static_check,
@@ -99,7 +102,7 @@ CLASS ltcl_run_code_inspection IMPLEMENTATION.
     given_online_repo( iv_package = '$DUMMY' ).
     given_check_variant( || ).
     when_run_code_inspector( ).
-    then_exception_text_is( |No check variant maintained in repo settings.| ).
+    then_exception_text_is( |Please supply check variant| ).
 
   ENDMETHOD.
 
@@ -143,6 +146,7 @@ CLASS ltcl_run_code_inspection IMPLEMENTATION.
 
 
   METHOD given_check_variant.
+    mv_check_variant = iv_check_variant.
     mo_repo_online->ms_data-local_settings-code_inspector_check_variant = iv_check_variant.
   ENDMETHOD.
 
@@ -213,7 +217,7 @@ CLASS ltcl_run_code_inspection IMPLEMENTATION.
     DATA: lx_error TYPE REF TO zcx_abapgit_exception.
 
     TRY.
-        mt_act_list = mo_repo_online->run_code_inspector( ).
+        mt_act_list = mo_repo_online->run_code_inspector( |{ mv_check_variant }| ).
       CATCH zcx_abapgit_exception INTO lx_error.
         mv_error_text = lx_error->get_text( ).
     ENDTRY.
