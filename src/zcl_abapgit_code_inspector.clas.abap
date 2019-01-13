@@ -131,7 +131,16 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
 
   METHOD constructor.
 
+    IF iv_package IS INITIAL.
+      zcx_abapgit_exception=>raise( |Please supply package| ).
+    ENDIF.
+
     mv_package = iv_package.
+
+    IF iv_check_variant_name IS INITIAL.
+      zcx_abapgit_exception=>raise( |Please supply check variant| ).
+    ENDIF.
+
     mv_check_variant_name = iv_check_variant_name.
 
     " We create the inspection and objectset with dummy names.

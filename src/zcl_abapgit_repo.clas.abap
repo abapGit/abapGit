@@ -100,8 +100,10 @@ CLASS zcl_abapgit_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS run_code_inspector
+      IMPORTING
+        iv_check_variant TYPE string
       RETURNING
-        VALUE(rt_list) TYPE scit_alvlist
+        VALUE(rt_list)   TYPE scit_alvlist
       RAISING
         zcx_abapgit_exception .
     METHODS has_remote_source
@@ -611,18 +613,11 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD run_code_inspector.
 
-    DATA: li_code_inspector TYPE REF TO zif_abapgit_code_inspector,
-          lv_check_variant  TYPE string.
-
-    lv_check_variant = get_local_settings( )-code_inspector_check_variant.
-
-    IF lv_check_variant IS INITIAL.
-      zcx_abapgit_exception=>raise( |No check variant maintained in repo settings.| ).
-    ENDIF.
+    DATA: li_code_inspector TYPE REF TO zif_abapgit_code_inspector.
 
     li_code_inspector = zcl_abapgit_factory=>get_code_inspector(
                                   iv_package            = get_package( )
-                                  iv_check_variant_name = |{ lv_check_variant }| ).
+                                  iv_check_variant_name = |{ iv_check_variant }| ).
 
     rt_list = li_code_inspector->run( ).
 
