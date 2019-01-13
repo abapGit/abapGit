@@ -976,9 +976,11 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     lt_overwrite = warning_overwrite_find( ct_results ).
 
     LOOP AT lt_overwrite ASSIGNING <ls_overwrite>.
-      READ TABLE it_overwrite INTO ls_overwrite WITH KEY
-        obj_type = <ls_overwrite>-obj_type
-        obj_name = <ls_overwrite>-obj_name.
+
+      READ TABLE it_overwrite INTO ls_overwrite
+                              WITH TABLE KEY object_type_and_name
+                              COMPONENTS obj_type = <ls_overwrite>-obj_type
+                                         obj_name = <ls_overwrite>-obj_name.
       IF sy-subrc <> 0 OR ls_overwrite-decision IS INITIAL.
         zcx_abapgit_exception=>raise( |Overwrite { <ls_overwrite>-obj_type } {
           <ls_overwrite>-obj_name } undecided| ).
@@ -1035,9 +1037,11 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       io_repo      = io_repo ).
 
     LOOP AT lt_overwrite ASSIGNING <ls_overwrite>.
-      READ TABLE it_overwrite INTO ls_overwrite WITH KEY
-        obj_type = <ls_overwrite>-obj_type
-        obj_name = <ls_overwrite>-obj_name.
+
+      READ TABLE it_overwrite INTO ls_overwrite
+                              WITH TABLE KEY object_type_and_name
+                              COMPONENTS obj_type = <ls_overwrite>-obj_type
+                                         obj_name = <ls_overwrite>-obj_name.
       IF sy-subrc <> 0 OR ls_overwrite-decision IS INITIAL.
         zcx_abapgit_exception=>raise( |Overwrite odd package { <ls_overwrite>-obj_type } {
           <ls_overwrite>-obj_name } undecided| ).
