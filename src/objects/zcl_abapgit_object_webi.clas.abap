@@ -3,6 +3,7 @@ CLASS zcl_abapgit_object_webi DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_webi,
              veptext         TYPE veptext,
@@ -48,7 +49,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_webi IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
 
 
   METHOD handle_endpoint.
@@ -160,7 +161,6 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
           WHERE function = <ls_function>-function.
         li_fault = li_function->create_fault( <ls_fault>-fault ).
         li_fault->set_name_mapped_to( <ls_fault>-mappedname ).
-*        li_fault->set_description( <ls_fault>-description_id ).
         li_fault->set_detail( <ls_fault>-detail ).
       ENDLOOP.
 
@@ -381,6 +381,16 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
@@ -464,14 +474,4 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
                  ig_data = ls_webi ).
 
   ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-    rv_is_locked = abap_false.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
-  ENDMETHOD.
 ENDCLASS.
-

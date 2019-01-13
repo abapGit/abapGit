@@ -3,6 +3,8 @@ CLASS zcl_abapgit_object_ensc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
@@ -187,8 +189,6 @@ CLASS ZCL_ABAPGIT_OBJECT_ENSC IMPLEMENTATION.
         lo_spot_ref ?= li_spot_ref.
 
         lv_enh_shtext = li_spot_ref->if_enh_object_docu~get_shorttext( ).
-        "find parent = composite enhancement (ENSC)
-*        lv_parent = cl_r3standard_persistence=>enh_find_parent_composite( lv_spot_name ).
         "find subsequent enhancement spots
         lt_enh_spots = lo_spot_ref->if_enh_spot_composite~get_enh_spot_childs( ).
         "find subsequent composite enhancement spots
