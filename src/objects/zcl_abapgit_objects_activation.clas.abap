@@ -227,11 +227,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
           zcx_abapgit_exception=>raise( 'Error from RS_INACTIVE_OBJECTS_IN_OBJECT' ).
         ENDIF.
 
-*        IF iv_type = 'CLAS'.
-*          fix_class_methods( EXPORTING iv_obj_name = lv_obj_name
-*                             CHANGING ct_objects = lt_objects ).
-*        ENDIF.
-
         LOOP AT lt_objects ASSIGNING <ls_object>.
           <ls_object>-delet_flag = iv_delete.
         ENDLOOP.
