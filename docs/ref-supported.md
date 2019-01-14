@@ -85,6 +85,7 @@ SMIM | Info Object from the MIME Repository | Yes
 SOTS | All Concepts (OTR) of a Package - Long Texts | [#792](https://github.com/larshp/abapGit/issues/792)
 SPLO | Format Types | Yes
 SPRX | Proxy Object | [#87](https://github.com/larshp/abapGit/issues/87)
+SQSC |	Database Procedure Proxy | [#2291](https://github.com/larshp/abapGit/issues/2291)
 SUCU | Authorization Groups (TBRG_AUTH) | Yes
 SUSH | Assignment: Service --> Authorization Objects | [#1582](https://github.com/larshp/abapGit/issues/1582)
 SRFC | RFC Service | Yes
