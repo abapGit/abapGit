@@ -86,13 +86,13 @@ SOTS | All Concepts (OTR) of a Package - Long Texts | [#792](https://github.com/
 SPLO | Format Types | Yes
 SPRX | Proxy Object | [#87](https://github.com/larshp/abapGit/issues/87)
 SQSC |	Database Procedure Proxy | [#2291](https://github.com/larshp/abapGit/issues/2291)
-SUCU | Authorization Groups (TBRG_AUTH) | Yes
-SUSH | Assignment: Service --> Authorization Objects | [#1582](https://github.com/larshp/abapGit/issues/1582)
 SRFC | RFC Service | Yes
 SSFO | SAP Smart Form | Yes
 SSST | SAP Smart Style | Yes
 STYL | SAPscript style | Yes
+SUCU | Authorization Groups (TBRG_AUTH) | Yes
 SUSC | Authorization object class | Yes
+SUSH | Assignment: Service --> Authorization Objects | [#1582](https://github.com/larshp/abapGit/issues/1582)
 SUSO | Authorization object | Yes
 SXCI | Business Add-Ins - Implementations | Yes
 TABL | Table | Yes
