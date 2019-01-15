@@ -23,7 +23,12 @@ CLASS zcl_abapgit_default_transport DEFINITION
 
       reset
         RAISING
-          zcx_abapgit_exception.
+          zcx_abapgit_exception,
+      get
+        RETURNING
+          VALUE(rs_default_task) TYPE e070use
+        RAISING
+          zcx_abapgit_exception .
 
 
   PRIVATE SECTION.
@@ -36,11 +41,6 @@ CLASS zcl_abapgit_default_transport DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS restore
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get
-      RETURNING
-        VALUE(rs_default_task) TYPE e070use
       RAISING
         zcx_abapgit_exception .
     METHODS set_internal
@@ -57,7 +57,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DEFAULT_TRANSPORT IMPLEMENTATION.
+CLASS zcl_abapgit_default_transport IMPLEMENTATION.
 
 
   METHOD clear.
@@ -203,7 +203,6 @@ CLASS ZCL_ABAPGIT_DEFAULT_TRANSPORT IMPLEMENTATION.
     CALL FUNCTION 'TR_TASK_SET'
       EXPORTING
         iv_order          = iv_transport
-*       iv_task           = iv_task
       EXCEPTIONS
         invalid_username  = 1
         invalid_category  = 2
