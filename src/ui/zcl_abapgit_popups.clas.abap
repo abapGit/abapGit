@@ -413,7 +413,8 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     DATA: lv_url          TYPE string,
           ls_package_data TYPE scompkdtln,
           ls_branch       TYPE zif_abapgit_definitions=>ty_git_branch,
-          lv_create       TYPE boolean.
+          lv_create       TYPE boolean,
+          lv_text         TYPE string.
 
     FIELD-SYMBOLS: <ls_furl>     LIKE LINE OF ct_fields,
                    <ls_fbranch>  LIKE LINE OF ct_fields,
@@ -446,6 +447,12 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       READ TABLE ct_fields ASSIGNING <ls_fpackage> WITH KEY fieldname = 'DEVCLASS'.
       ASSERT sy-subrc = 0.
       ls_package_data-devclass = <ls_fpackage>-value.
+
+      IF zcl_abapgit_factory=>get_sap_package( ls_package_data-devclass )->exists( ) = abap_true.
+        lv_text = |Package { ls_package_data-devclass } already exists|.
+        MESSAGE lv_text TYPE 'I' DISPLAY LIKE 'E'.
+        RETURN.
+      ENDIF.
 
       popup_to_create_package(
         IMPORTING
