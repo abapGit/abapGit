@@ -396,7 +396,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
         other           = 6
         OTHERS          = 7.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from SEO_CLASS_CREATE_COMPLETE' ).
+      zcx_abapgit_exception=>raise( |error from SEO_CLASS_CREATE_COMPLETE: { sy-subrc }| ).
     ENDIF.
 
   ENDMETHOD.
