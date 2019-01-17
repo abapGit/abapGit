@@ -194,11 +194,9 @@ CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
         lo_columns->set_optimize( ).
 
         lo_column = lo_columns->get_column( 'REQUIRED_RELEASE' ).
-*        lo_column->set_fixed_header_text( 'S' ).
         lo_column->set_short_text( 'Req. Rel.' ).
 
         lo_column = lo_columns->get_column( 'REQUIRED_PATCH' ).
-*        lo_column->set_fixed_header_text( 'S' ).
         lo_column->set_short_text( 'Req. SP L.' ).
 
         lo_alv->set_screen_popup( start_column = 30
