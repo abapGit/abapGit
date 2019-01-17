@@ -142,7 +142,7 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
   METHOD reduce.
 
     DATA: lv_source LIKE LINE OF ct_source,
-          lv_found  TYPE sap_bool.
+          lv_found  TYPE abap_bool.
 
 
 * skip files that only contain the standard comments
@@ -166,7 +166,7 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
 
     DATA: lv_begin  TYPE string,
           lv_end    TYPE string,
-          lv_remove TYPE sap_bool,
+          lv_remove TYPE abap_bool,
           lv_source LIKE LINE OF ct_source.
 
     "@TODO: Put under test

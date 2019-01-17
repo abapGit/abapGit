@@ -199,7 +199,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
       path     TYPE string,
       filename TYPE string,
       package  TYPE devclass,
-      match    TYPE sap_bool,
+      match    TYPE abap_bool,
       lstate   TYPE char1,
       rstate   TYPE char1,
     END OF ty_result .

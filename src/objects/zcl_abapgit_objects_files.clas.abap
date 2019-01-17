@@ -20,14 +20,14 @@ CLASS zcl_abapgit_objects_files DEFINITION
       add_xml
         IMPORTING iv_extra     TYPE clike OPTIONAL
                   io_xml       TYPE REF TO zcl_abapgit_xml_output
-                  iv_normalize TYPE sap_bool DEFAULT abap_true
+                  iv_normalize TYPE abap_bool DEFAULT abap_true
                   is_metadata  TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
         RAISING   zcx_abapgit_exception,
 * needed since type-check during dynamic call fails even if the object is compatible
       add_xml_from_plugin
         IMPORTING iv_extra     TYPE clike OPTIONAL
                   io_xml       TYPE REF TO object
-                  iv_normalize TYPE sap_bool DEFAULT abap_true
+                  iv_normalize TYPE abap_bool DEFAULT abap_true
         RAISING   zcx_abapgit_exception ##called,
       read_xml
         IMPORTING iv_extra      TYPE clike OPTIONAL
@@ -35,7 +35,7 @@ CLASS zcl_abapgit_objects_files DEFINITION
         RAISING   zcx_abapgit_exception,
       read_abap
         IMPORTING iv_extra       TYPE clike OPTIONAL
-                  iv_error       TYPE sap_bool DEFAULT abap_true
+                  iv_error       TYPE abap_bool DEFAULT abap_true
         RETURNING VALUE(rt_abap) TYPE abaptxt255_tab
         RAISING   zcx_abapgit_exception,
       add_abap
@@ -61,6 +61,7 @@ CLASS zcl_abapgit_objects_files DEFINITION
       get_accessed_files
         RETURNING VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_file_signatures_tt.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: ms_item           TYPE zif_abapgit_definitions=>ty_item,
           mt_accessed_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
