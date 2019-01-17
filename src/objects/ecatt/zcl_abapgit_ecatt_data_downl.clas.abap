@@ -54,10 +54,7 @@ CLASS ZCL_ABAPGIT_ECATT_DATA_DOWNL IMPLEMENTATION.
     lv_partyp = cl_apl_ecatt_const=>params_type_par.
 
     ecatt_data ?= ecatt_object.
-* build_schema( ).
-* set_attributes_to_schema( ).
     set_attributes_to_template( ).
-* set_params_to_schema( ).
     get_general_params_data( im_params = ecatt_data->params
                              im_ptyp   = lv_partyp ).
 
@@ -75,7 +72,6 @@ CLASS ZCL_ABAPGIT_ECATT_DATA_DOWNL IMPLEMENTATION.
 * ENDMS180406
     set_variants_to_dom( ecatt_data->params ).
 
-* download_schema( ).
     download_data( ).
 
   ENDMETHOD.

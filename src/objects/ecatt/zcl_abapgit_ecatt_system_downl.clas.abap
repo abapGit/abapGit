@@ -53,12 +53,8 @@ CLASS ZCL_ABAPGIT_ECATT_SYSTEM_DOWNL IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-* build_schema( ).
-* set_attributes_to_schema( ).
     set_attributes_to_template( ).
-* set_systems_data_to_schema( ).
     set_systems_data_to_template( ).
-* download_schema( ).
     download_data( ).
 
   ENDMETHOD.
