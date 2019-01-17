@@ -86,7 +86,7 @@ CLASS zcl_abapgit_object_form DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       IMPORTING
         is_text_header TYPE zcl_abapgit_object_form=>tys_text_header
       EXPORTING
-        ev_form_found  TYPE flag
+        ev_form_found  TYPE abap_bool
         es_form_data   TYPE zcl_abapgit_object_form=>tys_form_data
         et_lines       TYPE zcl_abapgit_object_form=>tyt_lines.
 
@@ -414,7 +414,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
     DATA: ls_form_data              TYPE tys_form_data.
     DATA: lt_text_header            TYPE tyt_text_header.
     DATA: lt_lines                  TYPE tyt_lines.
-    DATA: lv_form_found             TYPE flag.
+    DATA: lv_form_found             TYPE abap_bool.
     FIELD-SYMBOLS: <ls_text_header> LIKE LINE OF lt_text_header.
 
     lt_text_header = find_form( ms_item-obj_name ).

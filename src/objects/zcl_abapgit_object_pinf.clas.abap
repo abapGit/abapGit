@@ -150,7 +150,7 @@ CLASS zcl_abapgit_object_pinf IMPLEMENTATION.
   METHOD update_attributes.
 
     DATA: ls_sign       TYPE scompisign,
-          lv_changeable TYPE flag.
+          lv_changeable TYPE abap_bool.
 
 
     ii_interface->get_changeable( IMPORTING e_changeable = lv_changeable ).

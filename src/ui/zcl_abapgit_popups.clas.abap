@@ -204,7 +204,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lt_table>    TYPE STANDARD TABLE,
                    <lg_line>     TYPE any,
-                   <lv_selected> TYPE flag.
+                   <lv_selected> TYPE abap_bool.
 
     ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
@@ -264,7 +264,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lt_table>    TYPE STANDARD TABLE,
                    <lg_line>     TYPE any,
-                   <lv_selected> TYPE flag.
+                   <lv_selected> TYPE abap_bool.
 
     ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
