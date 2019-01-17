@@ -850,6 +850,18 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
         IF sy-subrc = 0 AND <lv_outputstyle> = '  '.
           CLEAR <lv_outputstyle>.
         ENDIF.
+
+* if the DDIC element has a PARAMETER_ID and the flag "from_dict" is active
+* the import will enable the SET-/GET_PARAM flag. In this case force "off"
+        IF <ls_field>-param_id IS NOT INITIAL
+           AND <ls_field>-from_dict = abap_true.
+          IF <ls_field>-set_param IS INITIAL.
+            <ls_field>-set_param = zif_abapgit_definitions=>c_rpyty_force_off.
+          ENDIF.
+          IF <ls_field>-get_param IS INITIAL.
+            <ls_field>-get_param = zif_abapgit_definitions=>c_rpyty_force_off.
+          ENDIF.
+        ENDIF.
       ENDLOOP.
 
       LOOP AT lt_containers ASSIGNING <ls_container>.
