@@ -533,7 +533,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
     DATA ls_lines        LIKE LINE OF lt_lines.
     DATA ls_form_windows LIKE LINE OF ct_form_windows.
     DATA lv_elt_windows  TYPE tdformat VALUE '/W'.
-    DATA lv_firstloop    TYPE boolean.
+    DATA lv_firstloop    TYPE abap_bool.
 
     lt_lines = ct_lines.
     CLEAR ct_lines.

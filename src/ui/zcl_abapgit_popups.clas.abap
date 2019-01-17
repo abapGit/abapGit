@@ -413,7 +413,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     DATA: lv_url          TYPE string,
           ls_package_data TYPE scompkdtln,
           ls_branch       TYPE zif_abapgit_definitions=>ty_git_branch,
-          lv_create       TYPE boolean.
+          lv_create       TYPE abap_bool.
 
     FIELD-SYMBOLS: <ls_furl>     LIKE LINE OF ct_fields,
                    <ls_fbranch>  LIKE LINE OF ct_fields,
@@ -496,7 +496,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
   METHOD zif_abapgit_popups~package_popup_callback.
 
     DATA: ls_package_data TYPE scompkdtln,
-          lv_create       TYPE boolean.
+          lv_create       TYPE abap_bool.
 
     FIELD-SYMBOLS: <ls_fpackage> LIKE LINE OF ct_fields.
 

@@ -91,7 +91,7 @@ INTERFACE zif_abapgit_popups
   METHODS popup_to_create_package
     EXPORTING
       !es_package_data TYPE scompkdtln
-      !ev_create       TYPE boolean
+      !ev_create       TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
   METHODS popup_to_create_transp_branch

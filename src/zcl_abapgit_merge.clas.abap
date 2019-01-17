@@ -22,7 +22,7 @@ CLASS zcl_abapgit_merge DEFINITION
         VALUE(rv_source_branch) TYPE string .
     METHODS has_conflicts
       RETURNING
-        VALUE(rv_conflicts_exists) TYPE boolean .
+        VALUE(rv_conflicts_exists) TYPE abap_bool .
     METHODS resolve_conflict
       IMPORTING
         !is_conflict TYPE zif_abapgit_definitions=>ty_merge_conflict
@@ -31,6 +31,7 @@ CLASS zcl_abapgit_merge DEFINITION
     METHODS run
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES:
