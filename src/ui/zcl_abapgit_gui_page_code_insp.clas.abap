@@ -71,6 +71,40 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
 
+  METHOD ask_user_for_check_variant.
+
+    DATA: lt_return TYPE STANDARD TABLE OF ddshretval.
+
+    FIELD-SYMBOLS: <ls_return> LIKE LINE OF lt_return.
+
+    CALL FUNCTION 'F4IF_FIELD_VALUE_REQUEST'
+      EXPORTING
+        tabname           = 'SCI_DYNP'
+        fieldname         = 'CHKV'
+      TABLES
+        return_tab        = lt_return
+      EXCEPTIONS
+        field_not_found   = 1
+        no_help_for_field = 2
+        inconsistent_help = 3
+        no_values_found   = 4
+        OTHERS            = 5.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    READ TABLE lt_return ASSIGNING <ls_return>
+                         WITH KEY retfield = 'SCI_DYNP-CHKV'.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Please select a check variant.| ).
+    ENDIF.
+
+    rv_check_variant = <ls_return>-fieldval.
+
+  ENDMETHOD.
+
+
   METHOD build_menu.
 
     DATA: lv_opt TYPE c LENGTH 1.
@@ -121,6 +155,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD determine_check_variant.
+
+    mv_check_variant = mo_repo->get_local_settings( )-code_inspector_check_variant.
+
+    IF mv_check_variant IS INITIAL.
+      mv_check_variant = ask_user_for_check_variant( ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD has_inspection_errors.
 
     READ TABLE mt_result TRANSPORTING NO FIELDS
@@ -139,8 +184,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
 
   METHOD render_content.
-
-    FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
 
     CREATE OBJECT ro_html.
 
@@ -161,10 +204,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
     ro_html->add( |<br/>| ).
 
-    LOOP AT mt_result ASSIGNING <ls_result>.
-      render_result( io_html   = ro_html
-                     iv_result = <ls_result> ).
-    ENDLOOP.
+    render_result( io_html   = ro_html
+                   it_result = mt_result ).
 
     ro_html->add( '</div>' ).
 
@@ -266,49 +307,4 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
     ro_html = super->zif_abapgit_gui_page~render( ).
 
   ENDMETHOD.
-
-  METHOD ask_user_for_check_variant.
-
-    DATA: lt_return TYPE STANDARD TABLE OF ddshretval.
-
-    FIELD-SYMBOLS: <ls_return> LIKE LINE OF lt_return.
-
-    CALL FUNCTION 'F4IF_FIELD_VALUE_REQUEST'
-      EXPORTING
-        tabname           = 'SCI_DYNP'
-        fieldname         = 'CHKV'
-      TABLES
-        return_tab        = lt_return
-      EXCEPTIONS
-        field_not_found   = 1
-        no_help_for_field = 2
-        inconsistent_help = 3
-        no_values_found   = 4
-        OTHERS            = 5.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-    READ TABLE lt_return ASSIGNING <ls_return>
-                         WITH KEY retfield = 'SCI_DYNP-CHKV'.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Please select a check variant.| ).
-    ENDIF.
-
-    rv_check_variant = <ls_return>-fieldval.
-
-  ENDMETHOD.
-
-
-  METHOD determine_check_variant.
-
-    mv_check_variant = mo_repo->get_local_settings( )-code_inspector_check_variant.
-
-    IF mv_check_variant IS INITIAL.
-      mv_check_variant = ask_user_for_check_variant( ).
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.

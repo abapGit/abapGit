@@ -13,6 +13,7 @@ CLASS zcl_abapgit_gui_page_syntax DEFINITION PUBLIC FINAL CREATE PUBLIC
     METHODS:
       render_content REDEFINITION.
 
+  PRIVATE SECTION.
 ENDCLASS.
 
 
@@ -30,7 +31,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
   METHOD render_content.
 
     DATA: li_syntax_check TYPE REF TO zif_abapgit_code_inspector.
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF mt_result.
 
     li_syntax_check = zcl_abapgit_factory=>get_syntax_check( mo_repo->get_package( ) ).
 
@@ -43,10 +43,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
       ro_html->add( 'No errors' ).
     ENDIF.
 
-    LOOP AT mt_result ASSIGNING <ls_result>.
-      render_result( io_html   = ro_html
-                     iv_result = <ls_result> ).
-    ENDLOOP.
+    render_result( io_html   = ro_html
+                   it_result = mt_result ).
 
     ro_html->add( '</div>' ).
 
