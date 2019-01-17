@@ -106,13 +106,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
   METHOD render_result.
 
+    CONSTANTS: lc_limit TYPE i VALUE 500.
+
     DATA: lv_class TYPE string,
           lv_line  TYPE string.
 
     FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
 
 
-    LOOP AT it_result ASSIGNING <ls_result>.
+    LOOP AT it_result ASSIGNING <ls_result> TO lc_limit.
 
       io_html->add( '<div>' ).
       IF <ls_result>-sobjname IS INITIAL OR
@@ -152,6 +154,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
       io_html->add( |<div class="{ lv_class }">Line { lv_line }: { <ls_result>-text }</div><br>| ).
 
     ENDLOOP.
+
+    IF lines( it_result ) > lc_limit.
+      io_html->add( |Only first { lc_limit } findings shown in list!| ).
+    ENDIF.
 
   ENDMETHOD.
 
