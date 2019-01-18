@@ -488,6 +488,5 @@ INTERFACE zif_abapgit_definitions PUBLIC.
   CONSTANTS c_tag_prefix TYPE string VALUE 'refs/tags/' ##NO_TEXT.
   CONSTANTS c_spagpa_param_repo_key TYPE char20 VALUE 'REPO_KEY'.
   CONSTANTS c_spagpa_param_package TYPE char20 VALUE 'PACKAGE'.
-  CONSTANTS c_rpyty_force_off TYPE char01 VALUE '/' ##NO_TEXT.
 
 ENDINTERFACE.
