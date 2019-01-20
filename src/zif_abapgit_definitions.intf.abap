@@ -480,11 +480,7 @@ INTERFACE zif_abapgit_definitions PUBLIC.
 
       url                      TYPE string VALUE 'url',
     END OF c_action .
-  CONSTANTS:
-    BEGIN OF c_version,
-      active   TYPE r3state VALUE 'A',
-      inactive TYPE r3state VALUE 'I',
-    END OF c_version .
+
   CONSTANTS c_tag_prefix TYPE string VALUE 'refs/tags/' ##NO_TEXT.
   CONSTANTS c_spagpa_param_repo_key TYPE char20 VALUE 'REPO_KEY'.
   CONSTANTS c_spagpa_param_package TYPE char20 VALUE 'PACKAGE'.
