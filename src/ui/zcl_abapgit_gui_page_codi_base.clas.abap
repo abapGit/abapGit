@@ -5,20 +5,21 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM 
         REDEFINITION.
 
   PROTECTED SECTION.
-    DATA: mo_repo TYPE REF TO zcl_abapgit_repo.
-    DATA:
-      mt_result TYPE scit_alvlist.
 
-    METHODS:
-      render_result IMPORTING io_html   TYPE REF TO zcl_abapgit_html
-                              iv_result TYPE scir_alvlist,
-      jump
-        IMPORTING
-          is_item        TYPE zif_abapgit_definitions=>ty_item
-          is_sub_item    TYPE zif_abapgit_definitions=>ty_item
-          iv_line_number TYPE i
-        RAISING
-          zcx_abapgit_exception.
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo .
+    DATA mt_result TYPE scit_alvlist .
+
+    METHODS render_result
+      IMPORTING
+        !io_html   TYPE REF TO zcl_abapgit_html
+        !it_result TYPE scit_alvlist .
+    METHODS jump
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !is_sub_item    TYPE zif_abapgit_definitions=>ty_item
+        !iv_line_number TYPE i
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
     CONSTANTS: c_object_separator TYPE char1 VALUE '|'.
 
@@ -104,45 +105,59 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
 
   METHOD render_result.
+
+    CONSTANTS: lc_limit TYPE i VALUE 500.
+
     DATA: lv_class TYPE string,
           lv_line  TYPE string.
 
-    io_html->add( '<div>' ).
-    IF iv_result-sobjname IS INITIAL OR
-       ( iv_result-sobjname = iv_result-objname AND
-         iv_result-sobjtype = iv_result-sobjtype ).
-      io_html->add_a( iv_txt = |{ iv_result-objtype } { iv_result-objname }|
-                      iv_act = |{ iv_result-objtype }{ iv_result-objname }| &&
-                               |{ c_object_separator }{ c_object_separator }{ iv_result-line }|
-                      iv_typ = zif_abapgit_definitions=>c_action_type-sapevent ).
+    FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
 
-    ELSE.
-      io_html->add_a( iv_txt = |{ iv_result-objtype } { iv_result-objname }| &&
-                               | < { iv_result-sobjtype } { iv_result-sobjname }|
-                      iv_act = |{ iv_result-objtype }{ iv_result-objname }| &&
-                               |{ c_object_separator }{ iv_result-sobjtype }{ iv_result-sobjname }| &&
-                               |{ c_object_separator }{ iv_result-line }|
-                      iv_typ = zif_abapgit_definitions=>c_action_type-sapevent ).
 
+    LOOP AT it_result ASSIGNING <ls_result> TO lc_limit.
+
+      io_html->add( '<div>' ).
+      IF <ls_result>-sobjname IS INITIAL OR
+         ( <ls_result>-sobjname = <ls_result>-objname AND
+           <ls_result>-sobjtype = <ls_result>-sobjtype ).
+        io_html->add_a( iv_txt = |{ <ls_result>-objtype } { <ls_result>-objname }|
+                        iv_act = |{ <ls_result>-objtype }{ <ls_result>-objname }| &&
+                                 |{ c_object_separator }{ c_object_separator }{ <ls_result>-line }|
+                        iv_typ = zif_abapgit_definitions=>c_action_type-sapevent ).
+
+      ELSE.
+        io_html->add_a( iv_txt = |{ <ls_result>-objtype } { <ls_result>-objname }| &&
+                                 | < { <ls_result>-sobjtype } { <ls_result>-sobjname }|
+                        iv_act = |{ <ls_result>-objtype }{ <ls_result>-objname }| &&
+                                 |{ c_object_separator }{ <ls_result>-sobjtype }{ <ls_result>-sobjname }| &&
+                                 |{ c_object_separator }{ <ls_result>-line }|
+                        iv_typ = zif_abapgit_definitions=>c_action_type-sapevent ).
+
+      ENDIF.
+      io_html->add( '</div>' ).
+
+      CASE <ls_result>-kind.
+        WHEN 'E'.
+          lv_class = 'error'.
+        WHEN 'W'.
+          lv_class = 'warning'.
+        WHEN OTHERS.
+          lv_class = 'grey'.
+      ENDCASE.
+
+      CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
+        EXPORTING
+          input  = <ls_result>-line
+        IMPORTING
+          output = lv_line.
+
+      io_html->add( |<div class="{ lv_class }">Line { lv_line }: { <ls_result>-text }</div><br>| ).
+
+    ENDLOOP.
+
+    IF lines( it_result ) > lc_limit.
+      io_html->add( |Only first { lc_limit } findings shown in list!| ).
     ENDIF.
-    io_html->add( '</div>' ).
-
-    CASE iv_result-kind.
-      WHEN 'E'.
-        lv_class = 'error'.
-      WHEN 'W'.
-        lv_class = 'warning'.
-      WHEN OTHERS.
-        lv_class = 'grey'.
-    ENDCASE.
-
-    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
-      EXPORTING
-        input  = iv_result-line
-      IMPORTING
-        output = lv_line.
-
-    io_html->add( |<div class="{ lv_class }">Line { lv_line }: { iv_result-text }</div><br>| ).
 
   ENDMETHOD.
 
