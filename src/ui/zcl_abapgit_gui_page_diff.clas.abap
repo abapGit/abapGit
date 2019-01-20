@@ -617,19 +617,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
   METHOD render_content.
 
     DATA: ls_diff_file LIKE LINE OF mt_diff_files,
-          lo_progress  TYPE REF TO zcl_abapgit_progress.
+          li_progress  TYPE REF TO zif_abapgit_progress.
 
 
     CREATE OBJECT ro_html.
 
-    CREATE OBJECT lo_progress
-      EXPORTING
-        iv_total = lines( mt_diff_files ).
+    li_progress = zcl_abapgit_progress=>get_instance( lines( mt_diff_files ) ).
 
     ro_html->add( |<div id="diff-list" data-repo-key="{ mv_repo_key }">| ).
     ro_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
     LOOP AT mt_diff_files INTO ls_diff_file.
-      lo_progress->show(
+      li_progress->show(
         iv_current = sy-tabix
         iv_text    = |Render Diff - { ls_diff_file-filename }| ).
 
