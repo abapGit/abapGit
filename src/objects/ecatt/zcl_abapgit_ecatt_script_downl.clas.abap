@@ -80,18 +80,14 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
     ENDTRY.
 
     toolname = ecatt_object->attrib->get_tool_name( ).
-* build_schema( ).
-* set_attributes_to_schema( ).
     set_attributes_to_template( ).
 
     IF toolname EQ cl_apl_ecatt_const=>toolname_ecatt.
 
       ecatt_script ?= ecatt_object.
 
-*   set_script_to_schema( ).
       set_script_to_template( ).
 
-*   set_params_to_schema( ).
       TRY.
           get_general_params_data( ecatt_script->params ).
         CATCH cx_ecatt_apl.                              "#EC NOHANDLER
@@ -125,7 +121,6 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
 
     ENDIF.
 
-* download_schema( ).
     download_data( ).
 
   ENDMETHOD.
