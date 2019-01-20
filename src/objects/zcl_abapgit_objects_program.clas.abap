@@ -572,6 +572,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
     ls_progdir_new-varcl   = is_progdir-varcl.
     ls_progdir_new-appl    = is_progdir-appl.
     ls_progdir_new-rstat   = is_progdir-rstat.
+    ls_progdir_new-sqlx    = is_progdir-sqlx.
 
     CALL FUNCTION 'UPDATE_PROGDIR'
       EXPORTING
@@ -583,16 +584,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
         OTHERS       = 2.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'PROG, error inserting' ).
-    ENDIF.
-
-    SELECT SINGLE * FROM progdir INTO ls_progdir_new
-      WHERE name = ls_progdir_new-name
-      AND state = ls_progdir_new-state.
-    IF sy-subrc = 0 AND is_progdir-varcl = space AND ls_progdir_new-varcl = abap_true.
-* function module UPDATE_PROGDIR does not update VARCL
-      UPDATE progdir SET varcl = is_progdir-varcl
-        WHERE name = ls_progdir_new-name
-        AND state = ls_progdir_new-state.                 "#EC CI_SUBRC
     ENDIF.
 
     zcl_abapgit_objects_activation=>add(
@@ -723,6 +714,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
     MOVE-CORRESPONDING ls_sapdir TO rs_progdir.
 
     CLEAR: rs_progdir-edtx,
+           rs_progdir-varcl,
            rs_progdir-cnam,
            rs_progdir-cdat,
            rs_progdir-unam,
