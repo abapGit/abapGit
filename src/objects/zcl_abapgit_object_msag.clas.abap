@@ -257,7 +257,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
     DATA: lv_t100a          TYPE t100a,
-          lv_frozen         TYPE flag,
+          lv_frozen         TYPE abap_bool,
           lv_message_id     TYPE arbgb,
           lv_access_granted TYPE abap_bool.
 

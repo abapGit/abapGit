@@ -62,7 +62,7 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
         zcx_abapgit_exception .
     METHODS build_menu
       IMPORTING
-        VALUE(iv_with_conflict) TYPE boolean OPTIONAL
+        VALUE(iv_with_conflict) TYPE abap_bool OPTIONAL
       RETURNING
         VALUE(ro_menu)          TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS is_binary
@@ -284,7 +284,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
         "Table for Div-Table and textarea
         ro_html->add( '<div class="diff_content">' ).       "#EC NOTEXT
-        ro_html->add( '<table class="w100">' ).                          "#EC NOTEXT
+        ro_html->add( '<table class="w100">' ).             "#EC NOTEXT
         ro_html->add( '<thead class="header">' ).           "#EC NOTEXT
         ro_html->add( '<tr>' ).                             "#EC NOTEXT
         ro_html->add( '<th>Code</th>' ).                    "#EC NOTEXT

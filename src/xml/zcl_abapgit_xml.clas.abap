@@ -18,7 +18,7 @@ CLASS zcl_abapgit_xml DEFINITION
                c_attr_serializer_version TYPE string VALUE 'serializer_version' ##NO_TEXT.
 
     METHODS to_xml
-      IMPORTING iv_normalize  TYPE sap_bool DEFAULT abap_true
+      IMPORTING iv_normalize  TYPE abap_bool DEFAULT abap_true
       RETURNING VALUE(rv_xml) TYPE string.
 
     METHODS parse

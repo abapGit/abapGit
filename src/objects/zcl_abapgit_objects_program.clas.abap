@@ -438,7 +438,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
   METHOD deserialize_program.
 
-    DATA: lv_exists      TYPE sap_bool,
+    DATA: lv_exists      TYPE abap_bool,
           lv_progname    TYPE reposrc-progname,
           ls_tpool       LIKE LINE OF it_tpool,
           lv_title       TYPE rglif-title,

@@ -204,7 +204,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lt_table>    TYPE STANDARD TABLE,
                    <lg_line>     TYPE any,
-                   <lv_selected> TYPE flag.
+                   <lv_selected> TYPE abap_bool.
 
     ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
@@ -264,7 +264,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lt_table>    TYPE STANDARD TABLE,
                    <lg_line>     TYPE any,
-                   <lv_selected> TYPE flag.
+                   <lv_selected> TYPE abap_bool.
 
     ASSIGN mr_table->* TO <lt_table>.
     ASSERT sy-subrc = 0.
@@ -413,7 +413,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     DATA: lv_url          TYPE string,
           ls_package_data TYPE scompkdtln,
           ls_branch       TYPE zif_abapgit_definitions=>ty_git_branch,
-          lv_create       TYPE boolean,
+          lv_create       TYPE abap_bool,
           lv_text         TYPE string.
 
     FIELD-SYMBOLS: <ls_furl>     LIKE LINE OF ct_fields,
@@ -503,7 +503,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
   METHOD zif_abapgit_popups~package_popup_callback.
 
     DATA: ls_package_data TYPE scompkdtln,
-          lv_create       TYPE boolean.
+          lv_create       TYPE abap_bool.
 
     FIELD-SYMBOLS: <ls_fpackage> LIKE LINE OF ct_fields.
 

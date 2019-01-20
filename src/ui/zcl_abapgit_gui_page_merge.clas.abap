@@ -32,7 +32,7 @@ CLASS zcl_abapgit_gui_page_merge DEFINITION
 
     METHODS build_menu
       IMPORTING
-        VALUE(iv_with_conflict) TYPE boolean OPTIONAL
+        VALUE(iv_with_conflict) TYPE abap_bool OPTIONAL
       RETURNING
         VALUE(ro_menu)          TYPE REF TO zcl_abapgit_html_toolbar .
 ENDCLASS.

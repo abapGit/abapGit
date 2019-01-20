@@ -37,7 +37,7 @@ INTERFACE zif_abapgit_persistence PUBLIC.
            created_at      TYPE timestampl,
            deserialized_by TYPE xubname,
            deserialized_at TYPE timestampl,
-           offline         TYPE sap_bool,
+           offline         TYPE abap_bool,
            local_checksums TYPE ty_local_checksum_tt,
            dot_abapgit     TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
            head_branch     TYPE string,   " HEAD symref of the repo, master branch

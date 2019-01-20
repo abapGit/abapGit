@@ -111,7 +111,7 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lv_state TYPE flag,
+    DATA: lv_state TYPE abap_bool,
           lo_aab   TYPE REF TO cl_aab_id.
 
 

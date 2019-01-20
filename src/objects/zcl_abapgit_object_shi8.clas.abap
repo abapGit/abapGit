@@ -53,7 +53,7 @@ CLASS zcl_abapgit_object_shi8 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_deleted TYPE xfeld,
+    DATA: lv_deleted TYPE abap_bool,
           ls_message TYPE hier_mess.
 
     CALL FUNCTION 'STREE_SFW_ASSIGNMENT_DELETE'
@@ -100,7 +100,7 @@ CLASS zcl_abapgit_object_shi8 IMPLEMENTATION.
 
     DATA: ls_assignment_data TYPE ttree_sfw_nodes,
           ls_node_data       TYPE hier_iface,
-          lv_saved           TYPE xfeld,
+          lv_saved           TYPE abap_bool,
           ls_message         TYPE hier_mess.
 
     io_xml->read(

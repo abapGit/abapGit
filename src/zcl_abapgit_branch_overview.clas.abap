@@ -17,6 +17,7 @@ CLASS zcl_abapgit_branch_overview DEFINITION
       RAISING
         zcx_abapgit_exception .
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES:
@@ -75,7 +76,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -153,7 +154,7 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
   METHOD determine_merges.
 
     DATA: BEGIN OF ls_deleted_branch_info,
-            created TYPE flag,
+            created TYPE abap_bool,
             index   TYPE string,
             name    TYPE string,
           END OF ls_deleted_branch_info.
@@ -567,5 +568,4 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
     ct_commits = lt_sorted_commits.
 
   ENDMETHOD.
-
 ENDCLASS.
