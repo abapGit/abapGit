@@ -84,6 +84,7 @@ CLASS zcl_abapgit_git_pack DEFINITION
         VALUE(rv_data) TYPE xstring
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CONSTANTS:
@@ -334,7 +335,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
   METHOD decode_deltas.
 
     DATA: ls_object   LIKE LINE OF ct_objects,
-          lo_progress TYPE REF TO zcl_abapgit_progress,
+          li_progress TYPE REF TO zif_abapgit_progress,
           lt_deltas   LIKE ct_objects.
 
 
@@ -351,12 +352,10 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
     "Restore correct Delta Order
     SORT lt_deltas BY index.
 
-    CREATE OBJECT lo_progress
-      EXPORTING
-        iv_total = lines( lt_deltas ).
+    li_progress = zcl_abapgit_progress=>get_instance( lines( lt_deltas ) ).
 
     LOOP AT lt_deltas INTO ls_object.
-      lo_progress->show( iv_current = sy-tabix
+      li_progress->show( iv_current = sy-tabix
                          iv_text    = 'Decode deltas' ) ##NO_TEXT.
 
       delta( EXPORTING is_object = ls_object
@@ -617,7 +616,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
           lv_adler32       TYPE zif_abapgit_definitions=>ty_adler32,
           lv_compressed    TYPE xstring,
           lv_xstring       TYPE xstring,
-          lo_progress      TYPE REF TO zcl_abapgit_progress,
+          li_progress      TYPE REF TO zif_abapgit_progress,
           lv_objects_total TYPE i.
 
     FIELD-SYMBOLS: <ls_object>  LIKE LINE OF it_objects.
@@ -632,13 +631,11 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     lv_objects_total = lines( it_objects ).
 
-    CREATE OBJECT lo_progress
-      EXPORTING
-        iv_total = lv_objects_total.
+    li_progress = zcl_abapgit_progress=>get_instance( lv_objects_total ).
 
     LOOP AT it_objects ASSIGNING <ls_object>.
       IF sy-tabix MOD 200 = 0.
-        lo_progress->show(
+        li_progress->show(
           iv_current = sy-tabix
           iv_text    = |Encoding objects ( { sy-tabix } of { lv_objects_total } )| ).
       ENDIF.
