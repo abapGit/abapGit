@@ -791,6 +791,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
   METHOD serialize_dynpros.
 
+    CONSTANTS lc_rpyty_force_off TYPE char01 VALUE '/' ##NO_TEXT.
+
     DATA: ls_header               TYPE rpy_dyhead,
           lt_containers           TYPE dycatt_tab,
           lt_fields_to_containers TYPE dyfatc_tab,
@@ -849,6 +851,18 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
         ASSIGN COMPONENT 'OUTPUTSTYLE' OF STRUCTURE <ls_field> TO <lv_outputstyle>.
         IF sy-subrc = 0 AND <lv_outputstyle> = '  '.
           CLEAR <lv_outputstyle>.
+        ENDIF.
+
+* if the DDIC element has a PARAMETER_ID and the flag "from_dict" is active
+* the import will enable the SET-/GET_PARAM flag. In this case force "off"
+        IF <ls_field>-param_id IS NOT INITIAL
+           AND <ls_field>-from_dict = abap_true.
+          IF <ls_field>-set_param IS INITIAL.
+            <ls_field>-set_param = lc_rpyty_force_off.
+          ENDIF.
+          IF <ls_field>-get_param IS INITIAL.
+            <ls_field>-get_param = lc_rpyty_force_off.
+          ENDIF.
         ENDIF.
       ENDLOOP.
 
