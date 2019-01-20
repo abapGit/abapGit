@@ -1,24 +1,21 @@
 CLASS zcl_abapgit_progress DEFINITION
   PUBLIC
   FINAL
-  CREATE PROTECTED .
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_progress .
-
-    CLASS-METHODS get_instance
+    METHODS show
       IMPORTING
-        !iv_total          TYPE i
-      RETURNING
-        VALUE(ri_progress) TYPE REF TO zif_abapgit_progress .
+        VALUE(iv_current) TYPE i
+        !iv_text          TYPE csequence .
+    METHODS constructor
+      IMPORTING
+        !iv_total TYPE i .
   PROTECTED SECTION.
 
     DATA mv_total TYPE i .
 
-    METHODS constructor
-      IMPORTING
-        !iv_total TYPE i .
     METHODS calc_pct
       IMPORTING
         !iv_current   TYPE i
@@ -56,19 +53,10 @@ CLASS ZCL_ABAPGIT_PROGRESS IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_instance.
+  METHOD show.
 
-    CREATE OBJECT ri_progress TYPE zcl_abapgit_progress
-      EXPORTING
-        iv_total = iv_total.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_progress~show.
-
-    DATA: lv_pct  TYPE i,
-          lv_time TYPE t.
+    DATA: lv_pct  TYPE i.
+    DATA: lv_time TYPE t.
 
     CONSTANTS: lc_wait_secs TYPE i VALUE 2.
 
