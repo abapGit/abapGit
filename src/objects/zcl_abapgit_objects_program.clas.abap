@@ -925,6 +925,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
     ls_progdir = read_progdir( lv_program_name ).
 
+* temp, should take from function group main program
+    ls_progdir-uccheck = 'X'.
+
     IF io_xml IS BOUND.
       lo_xml = io_xml.
     ELSE.
