@@ -413,7 +413,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
   METHOD delete.
 
     DATA: ls_item     TYPE zif_abapgit_definitions=>ty_item,
-          lo_progress TYPE REF TO zcl_abapgit_progress,
+          li_progress TYPE REF TO zif_abapgit_progress,
           lt_tadir    LIKE it_tadir,
           lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
           lx_error    TYPE REF TO zcx_abapgit_exception,
@@ -430,9 +430,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     TRY.
         zcl_abapgit_dependencies=>resolve( CHANGING ct_tadir = lt_tadir ).
 
-        CREATE OBJECT lo_progress
-          EXPORTING
-            iv_total = lines( lt_tadir ).
+        li_progress = zcl_abapgit_progress=>get_instance( lines( lt_tadir ) ).
 
         lt_items = map_tadir_to_items( lt_tadir ).
 
@@ -440,7 +438,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
                               it_items    = lt_items ).
 
         LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-          lo_progress->show( iv_current = sy-tabix
+          li_progress->show( iv_current = sy-tabix
                              iv_text    = |Delete { <ls_tadir>-obj_name }| ) ##NO_TEXT.
 
           CLEAR ls_item.
@@ -500,7 +498,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           lt_ddic     TYPE TABLE OF ty_deserialization,
           lt_rest     TYPE TABLE OF ty_deserialization,
           lt_late     TYPE TABLE OF ty_deserialization,
-          lo_progress TYPE REF TO zcl_abapgit_progress,
+          li_progress TYPE REF TO zif_abapgit_progress,
           lv_path     TYPE string,
           lt_items    TYPE zif_abapgit_definitions=>ty_items_tt.
     DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
@@ -528,9 +526,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       CHANGING
         ct_results = lt_results ).
 
-    CREATE OBJECT lo_progress
-      EXPORTING
-        iv_total = lines( lt_results ).
+    li_progress = zcl_abapgit_progress=>get_instance( lines( lt_results ) ).
 
     lt_items = map_results_to_items( lt_results ).
 
@@ -539,7 +535,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
     LOOP AT lt_results ASSIGNING <ls_result>.
-      lo_progress->show( iv_current = sy-tabix
+      li_progress->show( iv_current = sy-tabix
                          iv_text    = |Deserialize { <ls_result>-obj_name }| ) ##NO_TEXT.
 
       CLEAR ls_item.
@@ -642,19 +638,17 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
   METHOD deserialize_objects.
 
-    DATA: lo_progress TYPE REF TO zcl_abapgit_progress.
+    DATA: li_progress TYPE REF TO zif_abapgit_progress.
 
     FIELD-SYMBOLS: <ls_obj> LIKE LINE OF it_objects.
 
 
     zcl_abapgit_objects_activation=>clear( ).
 
-    CREATE OBJECT lo_progress
-      EXPORTING
-        iv_total = lines( it_objects ).
+    li_progress = zcl_abapgit_progress=>get_instance( lines( it_objects ) ).
 
     LOOP AT it_objects ASSIGNING <ls_obj>.
-      lo_progress->show(
+      li_progress->show(
         iv_current = sy-tabix
         iv_text    = |Deserialize { iv_descr } - { <ls_obj>-item-obj_name }| ) ##NO_TEXT.
 

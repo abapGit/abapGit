@@ -58,7 +58,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_serialize IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
 
   METHOD add_to_return.
@@ -74,6 +74,13 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       <ls_return>-item = is_fils_item-item.
     ENDLOOP.
 
+  ENDMETHOD.
+
+
+  METHOD constructor.
+    IF is_merged( ) = abap_true.
+      gv_max_threads = 1.
+    ENDIF.
   ENDMETHOD.
 
 
@@ -128,6 +135,21 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     ASSERT gv_max_threads >= 1.
 
     rv_threads = gv_max_threads.
+
+  ENDMETHOD.
+
+
+  METHOD is_merged.
+
+    DATA lo_marker TYPE REF TO data.
+
+    TRY.
+        CREATE DATA lo_marker TYPE REF TO ('LIF_ABAPMERGE_MARKER')  ##no_text.
+        "No exception --> marker found
+        rv_result = abap_true.
+
+      CATCH cx_sy_create_data_error  ##no_handler.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -230,7 +252,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
   METHOD serialize.
 
     DATA: lv_max      TYPE i,
-          lo_progress TYPE REF TO zcl_abapgit_progress.
+          li_progress TYPE REF TO zif_abapgit_progress.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
@@ -241,13 +263,11 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     mv_free = lv_max.
     mo_log = io_log.
 
-    CREATE OBJECT lo_progress
-      EXPORTING
-        iv_total = lines( it_tadir ).
+    li_progress = zcl_abapgit_progress=>get_instance( lines( it_tadir ) ).
 
     LOOP AT it_tadir ASSIGNING <ls_tadir>.
 
-      lo_progress->show(
+      li_progress->show(
         iv_current = sy-tabix
         iv_text    = |Serialize { <ls_tadir>-obj_name }, { lv_max } threads| ) ##NO_TEXT.
 
@@ -269,25 +289,4 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
     rt_files = mt_files.
 
   ENDMETHOD.
-
-  METHOD constructor.
-    IF is_merged( ) = abap_true.
-      gv_max_threads = 1.
-    ENDIF.
-  ENDMETHOD.
-
-  METHOD is_merged.
-
-    DATA lo_marker TYPE REF TO data.
-
-    TRY.
-        CREATE DATA lo_marker TYPE REF TO ('LIF_ABAPMERGE_MARKER')  ##no_text.
-        "No exception --> marker found
-        rv_result = abap_true.
-
-      CATCH cx_sy_create_data_error  ##no_handler.
-    ENDTRY.
-
-  ENDMETHOD.
-
 ENDCLASS.

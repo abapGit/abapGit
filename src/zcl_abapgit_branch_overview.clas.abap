@@ -259,7 +259,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
   METHOD get_git_objects.
 
     DATA: lo_branch_list       TYPE REF TO zcl_abapgit_git_branch_list,
-          lo_progress          TYPE REF TO zcl_abapgit_progress,
+          li_progress          TYPE REF TO zif_abapgit_progress,
           lt_branches_and_tags TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
           lt_tags              TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
           ls_tag               LIKE LINE OF mt_tags.
@@ -267,11 +267,9 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_tags.
 
 
-    CREATE OBJECT lo_progress
-      EXPORTING
-        iv_total = 1.
+    li_progress = zcl_abapgit_progress=>get_instance( 1 ).
 
-    lo_progress->show(
+    li_progress->show(
       iv_current = 1
       iv_text    = |Get git objects { io_repo->get_name( ) }| ) ##NO_TEXT.
 

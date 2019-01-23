@@ -153,21 +153,19 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
 
   METHOD check_exists.
 
-    DATA: lo_progress TYPE REF TO zcl_abapgit_progress,
+    DATA: li_progress TYPE REF TO zif_abapgit_progress,
           ls_item     TYPE zif_abapgit_definitions=>ty_item.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
 
-    CREATE OBJECT lo_progress
-      EXPORTING
-        iv_total = lines( it_tadir ).
+    li_progress = zcl_abapgit_progress=>get_instance( lines( it_tadir ) ).
 
 * rows from database table TADIR are not removed for
 * transportable objects until the transport is released
     LOOP AT it_tadir ASSIGNING <ls_tadir>.
       IF sy-tabix MOD 200 = 0.
-        lo_progress->show(
+        li_progress->show(
           iv_current = sy-tabix
           iv_text    = |Check object exists { <ls_tadir>-object } { <ls_tadir>-obj_name }| ).
       ENDIF.
