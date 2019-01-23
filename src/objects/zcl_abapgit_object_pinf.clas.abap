@@ -19,35 +19,48 @@ CLASS zcl_abapgit_object_pinf DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !is_pinf            TYPE ty_pinf
         !iv_package         TYPE devclass
       RETURNING
-        VALUE(ri_interface) TYPE REF TO if_package_interface
+        VALUE(ri_interface) TYPE REF TO lif_package_interface_facade
       RAISING
         zcx_abapgit_exception .
     METHODS delete_elements
       IMPORTING
-        !ii_interface TYPE REF TO if_package_interface
+        !ii_interface TYPE REF TO lif_package_interface_facade
       RAISING
         zcx_abapgit_exception .
     METHODS update_attributes
       IMPORTING
         !iv_package   TYPE devclass
         !is_pinf      TYPE ty_pinf
-        !ii_interface TYPE REF TO if_package_interface
+        !ii_interface TYPE REF TO lif_package_interface_facade
       RAISING
         zcx_abapgit_exception .
     METHODS update_elements
       IMPORTING
-        !is_pinf      TYPE ty_pinf
-        !ii_interface TYPE REF TO if_package_interface
+        is_pinf      TYPE ty_pinf
+        ii_interface TYPE REF TO lif_package_interface_facade
       RAISING
         zcx_abapgit_exception .
+    METHODS load
+      IMPORTING
+        iv_name             TYPE scomifnam
+      RETURNING
+        VALUE(ri_interface) TYPE REF TO lif_package_interface_facade.
+    METHODS create_facade
+      IMPORTING
+        ii_interface     TYPE REF TO if_package_interface
+      RETURNING
+        VALUE(ri_facade) TYPE REF TO lif_package_interface_facade.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
+CLASS zcl_abapgit_object_pinf IMPLEMENTATION.
 
 
   METHOD create_or_load.
+
+    DATA: li_interface TYPE REF TO if_package_interface.
 
     IF zif_abapgit_object~exists( ) = abap_false.
       cl_package_interface=>create_new_package_interface(
@@ -55,7 +68,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
           i_pkg_interface_name    = is_pinf-attributes-intf_name
           i_publisher_pkg_name    = iv_package
         IMPORTING
-          e_package_interface     = ri_interface
+          e_package_interface     = li_interface
         EXCEPTIONS
           object_already_existing = 1
           object_just_created     = 2
@@ -65,23 +78,13 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'error creating new package interface' ).
       ENDIF.
+
+      ri_interface = create_facade( li_interface ).
+
     ELSE.
-      cl_package_interface=>load_package_interface(
-        EXPORTING
-          i_package_interface_name   = is_pinf-attributes-intf_name
-          i_force_reload             = abap_true
-        IMPORTING
-          e_package_interface        = ri_interface
-        EXCEPTIONS
-          db_read_error              = 1
-          unexpected_error           = 2
-          object_not_existing        = 3
-          shorttext_not_existing     = 4
-          object_locked_and_modified = 5
-          OTHERS                     = 6 ).
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error loading package interface' ).
-      ENDIF.
+
+      ri_interface = load( is_pinf-attributes-intf_name ).
+
     ENDIF.
 
   ENDMETHOD.
@@ -96,7 +99,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
 
     ii_interface->set_elements_changeable( abap_true ).
 
-    ii_interface->get_elements( IMPORTING e_elements = lt_elements ).
+    ii_interface->get_elements( IMPORTING et_elements = lt_elements ).
 
     LOOP AT lt_elements ASSIGNING <li_element>.
       <li_element>->delete( ).
@@ -113,7 +116,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
           lv_changeable TYPE abap_bool.
 
 
-    ii_interface->get_changeable( IMPORTING e_changeable = lv_changeable ).
+    ii_interface->get_changeable( IMPORTING ev_changeable = lv_changeable ).
     IF lv_changeable = abap_false.
 * at creation the object is already in change mode
       ii_interface->set_changeable( abap_true ).
@@ -129,8 +132,8 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
     ls_sign-release_status = abap_true.
 
     ii_interface->set_all_attributes(
-      i_package_interface_data = is_pinf-attributes
-      i_data_sign              = ls_sign ).
+      is_package_interface_data = is_pinf-attributes
+      is_data_sign              = ls_sign ).
 
     set_default_package( iv_package ).
 * looks like setting "i_suppress_dialog = abap_true" will make
@@ -148,27 +151,14 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
           lt_add      TYPE scomeldata,
           lv_index    TYPE i,
           lv_found    TYPE abap_bool,
-*          ls_sign     TYPE scomelsign,
           ls_attr     TYPE scomeldtln.
 
     FIELD-SYMBOLS: <li_element> LIKE LINE OF lt_existing,
                    <ls_element> LIKE LINE OF is_pinf-elements.
 
-
-*    ls_sign-usag_restr                 = abap_true.
-*    ls_sign-stability                  = abap_true.
-*    ls_sign-no_check                   = abap_true.
-*    ls_sign-useastype                  = abap_true.
-*    ls_sign-asforgnkey                 = abap_true.
-*    ls_sign-deprecation_type           = abap_true. backport
-*    ls_sign-replacement_object_type    = abap_true. backport
-*    ls_sign-replacement_object_name    = abap_true. backport
-*    ls_sign-replacement_subobject_type = abap_true. backport
-*    ls_sign-replacement_subobject_name = abap_true. backport
-
     ii_interface->set_elements_changeable( abap_true ).
 
-    ii_interface->get_elements( IMPORTING e_elements = lt_existing ).
+    ii_interface->get_elements( IMPORTING et_elements = lt_existing ).
 
     LOOP AT is_pinf-elements ASSIGNING <ls_element>.
 
@@ -217,27 +207,9 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_name      TYPE scomifnam,
-          li_interface TYPE REF TO if_package_interface.
+    DATA: li_interface TYPE REF TO lif_package_interface_facade.
 
-
-    lv_name = ms_item-obj_name.
-
-    cl_package_interface=>load_package_interface(
-      EXPORTING
-        i_package_interface_name   = lv_name
-      IMPORTING
-        e_package_interface        = li_interface
-      EXCEPTIONS
-        db_read_error              = 1
-        unexpected_error           = 2
-        object_not_existing        = 3
-        shorttext_not_existing     = 4
-        object_locked_and_modified = 5
-        OTHERS                     = 6 ).
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error loading package interface, delete' ).
-    ENDIF.
+    li_interface = load( |{ ms_item-obj_name }| ).
 
 * elements must be deleted before the package interface
 * can be deleted
@@ -254,7 +226,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: li_interface TYPE REF TO if_package_interface,
+    DATA: li_interface TYPE REF TO lif_package_interface_facade,
           ls_pinf      TYPE ty_pinf.
 
 
@@ -262,7 +234,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
                   CHANGING cg_data = ls_pinf ).
 
     li_interface = create_or_load(
-      is_pinf = ls_pinf
+      is_pinf    = ls_pinf
       iv_package = iv_package ).
 
     update_attributes(
@@ -339,26 +311,17 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA: ls_pinf      TYPE ty_pinf,
-          lv_name      TYPE scomifnam,
           lt_elements  TYPE ty_elements,
-          li_interface TYPE REF TO if_package_interface.
+          li_interface TYPE REF TO lif_package_interface_facade.
 
     FIELD-SYMBOLS: <lg_any>     TYPE any,
                    <li_element> LIKE LINE OF lt_elements,
                    <ls_element> LIKE LINE OF ls_pinf-elements.
 
-
-    lv_name = ms_item-obj_name.
-
-    cl_package_interface=>load_package_interface(
-      EXPORTING
-        i_package_interface_name = lv_name
-        i_force_reload           = abap_true
-      IMPORTING
-        e_package_interface      = li_interface ).
+    li_interface = load( |{ ms_item-obj_name }| ).
 
     li_interface->get_all_attributes(
-      IMPORTING e_package_interface_data = ls_pinf-attributes ).
+      IMPORTING es_package_interface_data = ls_pinf-attributes ).
 
     CLEAR: ls_pinf-attributes-pack_name,
            ls_pinf-attributes-author,
@@ -378,7 +341,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
       CLEAR <lg_any>.
     ENDIF.
 
-    li_interface->get_elements( IMPORTING e_elements = lt_elements ).
+    li_interface->get_elements( IMPORTING et_elements = lt_elements ).
 
     LOOP AT lt_elements ASSIGNING <li_element>.
       APPEND INITIAL LINE TO ls_pinf-elements ASSIGNING <ls_element>.
@@ -390,4 +353,29 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
                  iv_name = 'PINF' ).
 
   ENDMETHOD.
+
+  METHOD load.
+
+    DATA: li_interface TYPE REF TO  if_package_interface.
+
+    cl_package_interface=>load_package_interface(
+      EXPORTING
+        i_package_interface_name = iv_name
+        i_force_reload           = abap_true
+      IMPORTING
+        e_package_interface      = li_interface ).
+
+    ri_interface = create_facade( li_interface ).
+
+  ENDMETHOD.
+
+
+  METHOD create_facade.
+
+    CREATE OBJECT ri_facade TYPE lcl_package_interface_facade
+      EXPORTING
+        ii_interface = ii_interface.
+
+  ENDMETHOD.
+
 ENDCLASS.
