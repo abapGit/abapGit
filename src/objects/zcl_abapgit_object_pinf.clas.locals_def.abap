@@ -12,7 +12,7 @@ INTERFACE lif_package_interface_facade.
     set_elements_changeable
       IMPORTING
         VALUE(iv_changeable) TYPE flag
-      raising
+      RAISING
         zcx_abapgit_exception,
 
     save_elements

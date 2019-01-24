@@ -16,7 +16,7 @@ CLASS lcl_package_interface_facade IMPLEMENTATION.
         intern_err     = 2
         OTHERS         = 3 ).
 
-    If sy-subrc <> 0.
+    IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
