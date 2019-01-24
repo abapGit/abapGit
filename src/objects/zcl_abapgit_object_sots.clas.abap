@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_object_sots DEFINITION INHERITING FROM zcl_abapgit_objects_super PUBLIC FINAL.
+CLASS zcl_abapgit_object_sots DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_super FINAL.
 
   PUBLIC SECTION.
     INTERFACES:
