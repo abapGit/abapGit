@@ -86,7 +86,8 @@
     "keywords_upper": {
       "enabled": true,
       "exclude": [],
-      "ignoreExceptions": true
+      "ignoreExceptions": true,
+      "ignoreLowerClassImplmentationStatement": true
     },
     "line_length": {
       "enabled": true,
