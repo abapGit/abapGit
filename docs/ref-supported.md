@@ -82,7 +82,7 @@ SHLP | Search Help | Yes
 SHMA | Shared Objects: Defined Area Attributes | Yes
 SICF | ICF Service | Yes
 SMIM | Info Object from the MIME Repository | Yes
-SOTS | All Concepts (OTR) of a Package - Long Texts | [#792](https://github.com/larshp/abapGit/issues/792)
+SOTS | All Concepts (OTR) of a Package - Long Texts | Yes
 SPLO | Format Types | Yes
 SPRX | Proxy Object | [#87](https://github.com/larshp/abapGit/issues/87)
 SQSC | Database Procedure Proxy | Yes
