@@ -82,12 +82,17 @@ CLASS zcl_abapgit_popups DEFINITION
       CHANGING  ct_fields         TYPE ty_lt_fields
       RAISING   zcx_abapgit_exception
                 zcx_abapgit_cancel.
+    METHODS validate_folder_logic
+      IMPORTING
+        iv_folder_logic TYPE string
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
+CLASS zcl_abapgit_popups IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -899,6 +904,13 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
                          iv_obligatory = abap_true
                CHANGING  ct_fields     = lt_fields ).
 
+    add_field( EXPORTING iv_tabname    = 'ZABAPGIT'
+                         iv_fieldname  = 'VALUE'
+                         iv_fieldtext  = 'Folder logic'
+                         iv_obligatory = abap_true
+                         iv_value      = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
+               CHANGING  ct_fields     = lt_fields ).
+
     WHILE lv_finished = abap_false.
 
       lv_icon_ok  = icon_okay.
@@ -941,10 +953,16 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       TRANSLATE <ls_field>-value TO UPPER CASE.
       rs_popup-package = <ls_field>-value.
 
+      READ TABLE lt_fields INDEX 3 ASSIGNING <ls_field>.
+      ASSERT sy-subrc = 0.
+      TRANSLATE <ls_field>-value TO UPPER CASE.
+      rs_popup-folder_logic = <ls_field>-value.
+
       lv_finished = abap_true.
 
       TRY.
           zcl_abapgit_repo_srv=>get_instance( )->validate_package( rs_popup-package ).
+          validate_folder_logic( rs_popup-folder_logic ).
 
         CATCH zcx_abapgit_exception INTO lx_error.
           " in case of validation errors we display the popup again
@@ -1140,4 +1158,18 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+  METHOD validate_folder_logic.
+
+    IF  iv_folder_logic <> zif_abapgit_dot_abapgit=>c_folder_logic-prefix
+    AND iv_folder_logic <> zif_abapgit_dot_abapgit=>c_folder_logic-full.
+
+      zcx_abapgit_exception=>raise( |Invalid folder logic { iv_folder_logic }. |
+                                 && |Choose either { zif_abapgit_dot_abapgit=>c_folder_logic-prefix } |
+                                 && |or { zif_abapgit_dot_abapgit=>c_folder_logic-full } | ).
+
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.
