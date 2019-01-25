@@ -29,10 +29,11 @@ INTERFACE zif_abapgit_repo_srv
       zcx_abapgit_exception .
   METHODS new_offline
     IMPORTING
-      !iv_url        TYPE string
-      !iv_package    TYPE devclass
+      !iv_url         TYPE string
+      !iv_package     TYPE devclass
+      iv_folder_logic TYPE string DEFAULT zif_abapgit_dot_abapgit=>c_folder_logic-full
     RETURNING
-      VALUE(ro_repo) TYPE REF TO zcl_abapgit_repo_offline
+      VALUE(ro_repo)  TYPE REF TO zcl_abapgit_repo_offline
     RAISING
       zcx_abapgit_exception .
   METHODS new_online

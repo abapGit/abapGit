@@ -293,18 +293,22 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_srv~new_offline.
 
-    DATA: ls_repo TYPE zif_abapgit_persistence=>ty_repo,
-          lv_key  TYPE zif_abapgit_persistence=>ty_repo-key.
+    DATA: ls_repo        TYPE zif_abapgit_persistence=>ty_repo,
+          lv_key         TYPE zif_abapgit_persistence=>ty_repo-key,
+          lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit.
 
 
     validate_package( iv_package ).
+
+    lo_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( ).
+    lo_dot_abapgit->set_folder_logic( iv_folder_logic ).
 
     lv_key = zcl_abapgit_persist_factory=>get_repo( )->add(
       iv_url         = iv_url
       iv_branch_name = ''
       iv_package     = iv_package
       iv_offline     = abap_true
-      is_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ) ).
+      is_dot_abapgit = lo_dot_abapgit->get_data( ) ).
 
     TRY.
         ls_repo = zcl_abapgit_persist_factory=>get_repo( )->read( lv_key ).
