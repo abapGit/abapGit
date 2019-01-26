@@ -145,10 +145,32 @@
       "enabled": true,
       "exclude": []
     },
+    "msag_consistency": {
+      "enabled": true,
+      "exclude": []
+    },
     "nesting": {
       "enabled": true,
       "exclude": [],
       "depth": 5
+    },
+    "object_naming": {
+      "enabled": true,
+      "exclude": [],
+      "clas": "^ZCL\\_",
+      "intf": "^ZIF\\_",
+      "prog": "^Z",
+      "fugr": "^Z",
+      "tabl": "^Z",
+      "ttyp": "^Z",
+      "dtel": "^Z",
+      "doma": "^Z",
+      "msag": "^Z",
+      "tran": "^Z",
+      "enqu": "^Z",
+      "auth": "^Z",
+      "devc": "^Z",
+      "pinf": "^Z"
     },
     "obsolete_statement": {
       "enabled": true,
