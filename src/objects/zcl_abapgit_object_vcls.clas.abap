@@ -4,18 +4,18 @@ CLASS zcl_abapgit_object_vcls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
 
   PROTECTED SECTION.
-private section.
+  PRIVATE SECTION.
 
 * See include MTOBJCON:
-  constants C_CLUSTER_TYPE type C value 'C' ##NO_TEXT.
-  constants C_MODE_INSERT type OBJ_PARA-MAINT_MODE value 'I' ##NO_TEXT.
+    CONSTANTS c_cluster_type TYPE c VALUE 'C' ##NO_TEXT.
+    CONSTANTS c_mode_insert TYPE obj_para-maint_mode VALUE 'I' ##NO_TEXT.
 
-  class-methods CHECK_LOCK
-    importing
-      !IV_VIEWNAME type TABNAME
-      !IT_SELLIST type SCPRVIMSELLIST
-    returning
-      value(RV_IS_LOCKED) type ABAP_BOOL .
+    CLASS-METHODS check_lock
+      IMPORTING
+        !iv_viewname        TYPE tabname
+        !it_sellist         TYPE scprvimsellist
+      RETURNING
+        VALUE(rv_is_locked) TYPE abap_bool.
 ENDCLASS.
 
 
