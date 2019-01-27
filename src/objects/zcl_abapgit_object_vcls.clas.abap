@@ -4,16 +4,51 @@ CLASS zcl_abapgit_object_vcls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
 
   PROTECTED SECTION.
-  PRIVATE SECTION.
-* See include MTOBJCON:
-    CONSTANTS: c_cluster_type TYPE c VALUE 'C'.
-    CONSTANTS: c_mode_insert  TYPE obj_para-maint_mode VALUE 'I'.
+private section.
 
+* See include MTOBJCON:
+  constants C_CLUSTER_TYPE type C value 'C' ##NO_TEXT.
+  constants C_MODE_INSERT type OBJ_PARA-MAINT_MODE value 'I' ##NO_TEXT.
+
+  class-methods CHECK_LOCK
+    importing
+      !IV_VIEWNAME type TABNAME
+      !IT_SELLIST type SCPRVIMSELLIST
+    returning
+      value(RV_IS_LOCKED) type ABAP_BOOL .
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
+
+
+  METHOD check_lock.
+
+    CALL FUNCTION 'VIEW_ENQUEUE'
+      EXPORTING
+        action       = 'E'
+        view_name    = iv_viewname
+      TABLES
+        sellist      = it_sellist
+      EXCEPTIONS
+        foreign_lock = 1
+        OTHERS       = 0.
+
+    IF sy-subrc <> 0. " or at every error?
+      rv_is_locked = abap_true.
+    ENDIF.
+
+    CALL FUNCTION 'VIEW_ENQUEUE'
+      EXPORTING
+        action    = 'D'
+        view_name = iv_viewname
+      TABLES
+        sellist   = it_sellist
+      EXCEPTIONS
+        OTHERS    = 0.
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -121,11 +156,6 @@ CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
 
     rv_bool = boolc( sy-subrc = 0 ).
 
-    IF lv_changedate IS INITIAL.
-* same logic as in function module VIEWCLUSTER_GET_DEFINITION
-      rv_bool = abap_false.
-    ENDIF.
-
   ENDMETHOD.
 
 
@@ -141,13 +171,49 @@ CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
+
+    DATA lv_changedate TYPE vcldir-changedate.
+
+    SELECT SINGLE changedate INTO lv_changedate FROM vcldir
+      WHERE vclname = ms_item-obj_name.
+
+    IF lv_changedate IS NOT INITIAL.
+* see logic in function module VIEWCLUSTER_GET_DEFINITION
+      rv_active = abap_true.
+    ELSE.
+      rv_active = abap_false.
+    ENDIF.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~is_locked.
 
-    rv_is_locked = abap_false.
+
+    DATA:
+      ls_sellist TYPE vimsellist,
+      lt_sellist TYPE scprvimsellist.
+
+    ls_sellist-viewfield  = 'VCLNAME'.
+    ls_sellist-operator   = 'EQ'.
+    ls_sellist-value      = me->ms_item-obj_name.
+    APPEND ls_sellist TO lt_sellist.
+
+    rv_is_locked = check_lock( iv_viewname = 'V_VCLDIR'
+                               it_sellist  = lt_sellist ).
+    CHECK rv_is_locked = abap_false.
+
+    rv_is_locked = check_lock( iv_viewname = 'V_VCLSTRUC'
+                               it_sellist  = lt_sellist ).
+    CHECK rv_is_locked = abap_false.
+
+    rv_is_locked = check_lock( iv_viewname = 'V_VCLSTDEP'
+                               it_sellist  = lt_sellist ).
+    CHECK rv_is_locked = abap_false.
+
+    rv_is_locked = check_lock( iv_viewname = 'V_VCLMF'
+                               it_sellist  = lt_sellist ).
+    CHECK rv_is_locked = abap_false.
 
   ENDMETHOD.
 
