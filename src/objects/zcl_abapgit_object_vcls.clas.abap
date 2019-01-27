@@ -201,19 +201,22 @@ CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
 
     rv_is_locked = check_lock( iv_viewname = 'V_VCLDIR'
                                it_sellist  = lt_sellist ).
-    CHECK rv_is_locked = abap_false.
 
-    rv_is_locked = check_lock( iv_viewname = 'V_VCLSTRUC'
-                               it_sellist  = lt_sellist ).
-    CHECK rv_is_locked = abap_false.
+    IF rv_is_locked = abap_false.
+      rv_is_locked = check_lock( iv_viewname = 'V_VCLSTRUC'
+                                 it_sellist  = lt_sellist ).
+      IF rv_is_locked = abap_false.
 
-    rv_is_locked = check_lock( iv_viewname = 'V_VCLSTDEP'
-                               it_sellist  = lt_sellist ).
-    CHECK rv_is_locked = abap_false.
+        rv_is_locked = check_lock( iv_viewname = 'V_VCLSTDEP'
+                                   it_sellist  = lt_sellist ).
 
-    rv_is_locked = check_lock( iv_viewname = 'V_VCLMF'
-                               it_sellist  = lt_sellist ).
-    CHECK rv_is_locked = abap_false.
+        IF rv_is_locked = abap_false.
+          rv_is_locked = check_lock( iv_viewname = 'V_VCLMF'
+                                     it_sellist  = lt_sellist ).
+
+        ENDIF.
+      ENDIF.
+    ENDIF.
 
   ENDMETHOD.
 
