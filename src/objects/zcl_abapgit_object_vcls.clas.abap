@@ -10,12 +10,14 @@ CLASS zcl_abapgit_object_vcls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     CONSTANTS c_cluster_type TYPE c VALUE 'C' ##NO_TEXT.
     CONSTANTS c_mode_insert TYPE obj_para-maint_mode VALUE 'I' ##NO_TEXT.
 
-    CLASS-METHODS check_lock
+    METHODS check_lock
       IMPORTING
-        !iv_viewname        TYPE tabname
-        !it_sellist         TYPE scprvimsellist
+        !iv_tabname         TYPE tabname
+        !iv_argument        TYPE seqg3-garg
       RETURNING
-        VALUE(rv_is_locked) TYPE abap_bool.
+        VALUE(rv_is_locked) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -25,28 +27,20 @@ CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
 
   METHOD check_lock.
 
-    CALL FUNCTION 'VIEW_ENQUEUE'
-      EXPORTING
-        action       = 'E'
-        view_name    = iv_viewname
-      TABLES
-        sellist      = it_sellist
-      EXCEPTIONS
-        foreign_lock = 1
-        OTHERS       = 0.
+    DATA:
+      ls_rstable_key TYPE rstable, " Lock argument for table RSTABLE
+      lv_argument    TYPE eqegraarg.
 
-    IF sy-subrc <> 0. " or at every error?
-      rv_is_locked = abap_true.
-    ENDIF.
+    " Set Values für generic table lock
+    ls_rstable_key-tabname = iv_tabname.
+    ls_rstable_key-varkey  = iv_argument.
 
-    CALL FUNCTION 'VIEW_ENQUEUE'
-      EXPORTING
-        action    = 'D'
-        view_name = iv_viewname
-      TABLES
-        sellist   = it_sellist
-      EXCEPTIONS
-        OTHERS    = 0.
+    " include all sub keys
+    lv_argument = ls_rstable_key.
+    lv_argument = lv_argument && '*'.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object         = 'E_TABLEE'
+                                            iv_argument            = lv_argument ).
 
   ENDMETHOD.
 
@@ -189,33 +183,25 @@ CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_locked.
 
-
     DATA:
-      ls_sellist TYPE vimsellist,
-      lt_sellist TYPE scprvimsellist.
+      ls_vcldir         TYPE vcldir,
+      ls_vcldirt        TYPE vcldirt,
 
-    ls_sellist-viewfield  = 'VCLNAME'.
-    ls_sellist-operator   = 'EQ'.
-    ls_sellist-value      = me->ms_item-obj_name.
-    APPEND ls_sellist TO lt_sellist.
+      lv_argument       TYPE seqg3-garg,
+      lv_argument_langu TYPE seqg3-garg.
 
-    rv_is_locked = check_lock( iv_viewname = 'V_VCLDIR'
-                               it_sellist  = lt_sellist ).
+    lv_argument         = me->ms_item-obj_name.
+    lv_argument_langu   = |@{ me->ms_item-obj_name }|.
 
-    IF rv_is_locked = abap_false.
-      rv_is_locked = check_lock( iv_viewname = 'V_VCLSTRUC'
-                                 it_sellist  = lt_sellist ).
-      IF rv_is_locked = abap_false.
+    "Check all relevant maintein tabeles for view clusters
+    IF   check_lock( iv_tabname = 'VCLDIR'    iv_argument = lv_argument )        = abap_true
+      OR check_lock( iv_tabname = 'VCLDIRT'   iv_argument = lv_argument_langu )  = abap_true
+      OR check_lock( iv_tabname = 'VCLSTRUC'  iv_argument = lv_argument )        = abap_true
+      OR check_lock( iv_tabname = 'VCLSTRUCT' iv_argument = lv_argument_langu )  = abap_true
+      OR check_lock( iv_tabname = 'VCLSTRUC'  iv_argument = lv_argument )        = abap_true
+      OR check_lock( iv_tabname = 'VCLMF'     iv_argument = lv_argument )        = abap_true.
 
-        rv_is_locked = check_lock( iv_viewname = 'V_VCLSTDEP'
-                                   it_sellist  = lt_sellist ).
-
-        IF rv_is_locked = abap_false.
-          rv_is_locked = check_lock( iv_viewname = 'V_VCLMF'
-                                     it_sellist  = lt_sellist ).
-
-        ENDIF.
-      ENDIF.
+      rv_is_locked = abap_true.
     ENDIF.
 
   ENDMETHOD.
