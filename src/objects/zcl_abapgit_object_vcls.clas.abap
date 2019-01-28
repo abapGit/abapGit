@@ -31,7 +31,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
       ls_rstable_key TYPE rstable, " Lock argument for table RSTABLE
       lv_argument    TYPE eqegraarg.
 
-    " Set Values für generic table lock
+    " Set Values for generic table lock
     ls_rstable_key-tabname = iv_tabname.
     ls_rstable_key-varkey  = iv_argument.
 
