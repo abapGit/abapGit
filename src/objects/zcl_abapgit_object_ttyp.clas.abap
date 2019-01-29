@@ -64,6 +64,9 @@ CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
 
     DATA: lv_objname TYPE rsedd0-ddobjname.
 
+    IF zif_abapgit_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
 
     lv_objname = ms_item-obj_name.
 
