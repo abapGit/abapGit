@@ -12,6 +12,14 @@
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
    </VSEOCLASS>
+   <DESCRIPTIONS>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ABAPGIT_OBJECT_VCLS</CLSNAME>
+     <CMPNAME>CHECK_LOCK</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>check if lock entry exits</DESCRIPT>
+    </SEOCOMPOTX>
+   </DESCRIPTIONS>
   </asx:values>
  </asx:abap>
 </abapGit>
