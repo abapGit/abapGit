@@ -695,10 +695,14 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     CLEAR: rs_transport_branch-branch_name, rs_transport_branch-commit_text.
 
-    IF lines( it_transport_headers ) = 1.   " If we only have one transport selected set branch name to Transport name and commit description to transport description.
-      ls_transport_header = it_transport_headers[ 1 ].
+    " If we only have one transport selected set branch name to Transport name and commit description to transport description.
+    IF lines( it_transport_headers ) = 1.
+      READ TABLE it_transport_headers INDEX 1 INTO ls_transport_header.
       lv_transports_as_text = ls_transport_header-trkorr.
-      SELECT SINGLE as4text FROM e07t WHERE trkorr = @ls_transport_header-trkorr AND langu = @sy-langu INTO @lv_desc_as_text .
+      SELECT SINGLE as4text FROM e07t INTO lv_desc_as_text  WHERE
+        trkorr = ls_transport_header-trkorr AND
+        langu = sy-langu .
+
     ELSE.   " Else set branch name and commit message to 'Transport(s)_TRXXXXXX_TRXXXXX'
       lv_transports_as_text = 'Transport(s)'.
       LOOP AT it_transport_headers INTO ls_transport_header.
