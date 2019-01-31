@@ -15,6 +15,7 @@ CLASS zcl_abapgit_transport_objects DEFINITION
         !it_object_statuses TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     DATA mt_transport_objects TYPE zif_abapgit_definitions=>ty_tadir_tt .
@@ -22,7 +23,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TRANSPORT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_transport_objects IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -55,13 +56,13 @@ CLASS ZCL_ABAPGIT_TRANSPORT_OBJECTS IMPLEMENTATION.
                        file-filename = ls_object_status-filename.
             IF sy-subrc <> 0.
               zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
-              } not found in the local repository files| ).
+               } not found in the local repository files| ).
+            ELSE.
+              io_stage->add(
+                iv_path     = ls_local_file-file-path
+                iv_filename = ls_local_file-file-filename
+                iv_data     = ls_local_file-file-data ).
             ENDIF.
-
-            io_stage->add(
-              iv_path     = ls_local_file-file-path
-              iv_filename = ls_local_file-file-filename
-              iv_data     = ls_local_file-file-data ).
           WHEN zif_abapgit_definitions=>c_state-deleted.
             IF ls_transport_object-delflag = abap_false.
               zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
@@ -75,8 +76,9 @@ CLASS ZCL_ABAPGIT_TRANSPORT_OBJECTS IMPLEMENTATION.
         ENDCASE.
       ENDLOOP.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
-        } not found in the local repository files| ).
+        " Since not all objects in a transport might be in the local repo
+        " i.e generated SADL objects, we don't add these objects to
+        " the stage.
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
