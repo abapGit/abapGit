@@ -392,6 +392,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
     DATA: lv_name   TYPE dwinactiv-obj_name,
           ls_dynpro LIKE LINE OF it_dynpros.
 
+    FIELD-SYMBOLS: <ls_field> TYPE rpy_dyfatc.
+
 * ls_dynpro is changed by the function module, a field-symbol will cause
 * the program to dump since it_dynpros cannot be changed
     LOOP AT it_dynpros INTO ls_dynpro.
@@ -401,7 +403,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
         it_spaces = ls_dynpro-spaces ).
 
 
-      LOOP AT ls_dynpro-fields ASSIGNING FIELD-SYMBOL(<ls_field>).
+      LOOP AT ls_dynpro-fields ASSIGNING <ls_field>.
 * if the DDIC element has a PARAMETER_ID and the flag "from_dict" is active
 * the import will enable the SET-/GET_PARAM flag. In this case: "force off"
         IF <ls_field>-param_id IS NOT INITIAL
