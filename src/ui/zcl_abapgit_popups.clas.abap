@@ -82,12 +82,17 @@ CLASS zcl_abapgit_popups DEFINITION
       CHANGING  ct_fields         TYPE ty_lt_fields
       RAISING   zcx_abapgit_exception
                 zcx_abapgit_cancel.
+    METHODS validate_folder_logic
+      IMPORTING
+        iv_folder_logic TYPE string
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
+CLASS zcl_abapgit_popups IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -683,17 +688,30 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
   METHOD zif_abapgit_popups~popup_to_create_transp_branch.
     DATA: lt_fields             TYPE TABLE OF sval,
           lv_transports_as_text TYPE string,
+          lv_desc_as_text       TYPE string,
           ls_transport_header   LIKE LINE OF it_transport_headers.
     DATA: lv_branch_name        TYPE spo_value.
     DATA: lv_commit_text        TYPE spo_value.
 
     CLEAR: rs_transport_branch-branch_name, rs_transport_branch-commit_text.
 
-    lv_transports_as_text = 'Transport(s)'.
-    LOOP AT it_transport_headers INTO ls_transport_header.
-      CONCATENATE lv_transports_as_text '_' ls_transport_header-trkorr INTO lv_transports_as_text.
-    ENDLOOP.
+    " If we only have one transport selected set branch name to Transport
+    " name and commit description to transport description.
+    IF lines( it_transport_headers ) = 1.
+      READ TABLE it_transport_headers INDEX 1 INTO ls_transport_header.
+      lv_transports_as_text = ls_transport_header-trkorr.
+      SELECT SINGLE as4text FROM e07t INTO lv_desc_as_text  WHERE
+        trkorr = ls_transport_header-trkorr AND
+        langu = sy-langu .
 
+    ELSE.   " Else set branch name and commit message to 'Transport(s)_TRXXXXXX_TRXXXXX'
+      lv_transports_as_text = 'Transport(s)'.
+      LOOP AT it_transport_headers INTO ls_transport_header.
+        CONCATENATE lv_transports_as_text '_' ls_transport_header-trkorr INTO lv_transports_as_text.
+      ENDLOOP.
+      lv_desc_as_text = lv_transports_as_text.
+
+    ENDIF.
     add_field( EXPORTING iv_tabname   = 'TEXTL'
                          iv_fieldname = 'LINE'
                          iv_fieldtext = 'Branch name'
@@ -703,7 +721,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     add_field( EXPORTING iv_tabname   = 'ABAPTXT255'
                          iv_fieldname = 'LINE'
                          iv_fieldtext = 'Commit text'
-                         iv_value     = lv_transports_as_text
+                         iv_value     = lv_desc_as_text
                CHANGING ct_fields     = lt_fields ).
 
     _popup_2_get_values( EXPORTING iv_popup_title    = 'Transport to new Branch' "#EC NOTEXT
@@ -899,6 +917,13 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
                          iv_obligatory = abap_true
                CHANGING  ct_fields     = lt_fields ).
 
+    add_field( EXPORTING iv_tabname    = 'ZABAPGIT'
+                         iv_fieldname  = 'VALUE'
+                         iv_fieldtext  = 'Folder logic'
+                         iv_obligatory = abap_true
+                         iv_value      = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
+               CHANGING  ct_fields     = lt_fields ).
+
     WHILE lv_finished = abap_false.
 
       lv_icon_ok  = icon_okay.
@@ -941,10 +966,16 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       TRANSLATE <ls_field>-value TO UPPER CASE.
       rs_popup-package = <ls_field>-value.
 
+      READ TABLE lt_fields INDEX 3 ASSIGNING <ls_field>.
+      ASSERT sy-subrc = 0.
+      TRANSLATE <ls_field>-value TO UPPER CASE.
+      rs_popup-folder_logic = <ls_field>-value.
+
       lv_finished = abap_true.
 
       TRY.
           zcl_abapgit_repo_srv=>get_instance( )->validate_package( rs_popup-package ).
+          validate_folder_logic( rs_popup-folder_logic ).
 
         CATCH zcx_abapgit_exception INTO lx_error.
           " in case of validation errors we display the popup again
@@ -1140,4 +1171,18 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+  METHOD validate_folder_logic.
+
+    IF  iv_folder_logic <> zif_abapgit_dot_abapgit=>c_folder_logic-prefix
+    AND iv_folder_logic <> zif_abapgit_dot_abapgit=>c_folder_logic-full.
+
+      zcx_abapgit_exception=>raise( |Invalid folder logic { iv_folder_logic }. |
+                                 && |Choose either { zif_abapgit_dot_abapgit=>c_folder_logic-prefix } |
+                                 && |or { zif_abapgit_dot_abapgit=>c_folder_logic-full } | ).
+
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.
