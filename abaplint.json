@@ -157,7 +157,7 @@
     "object_naming": {
       "enabled": true,
       "exclude": [],
-      "clas": "^ZCL\\_",
+      "clas": "^ZC(L|X)\\_",
       "intf": "^ZIF\\_",
       "prog": "^Z",
       "fugr": "^Z",
@@ -169,7 +169,6 @@
       "tran": "^Z",
       "enqu": "^Z",
       "auth": "^Z",
-      "devc": "^Z",
       "pinf": "^Z"
     },
     "obsolete_statement": {
