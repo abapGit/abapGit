@@ -1,11 +1,6 @@
-CLASS zcl_abapgit_object_sprx DEFINITION
-INHERITING FROM zcl_abapgit_objects_super
-  PUBLIC
-  FINAL
-  CREATE PUBLIC .
+CLASS zcl_abapgit_object_sprx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_super FINAL.
 
   PUBLIC SECTION.
-
     INTERFACES:
       zif_abapgit_object.
 
