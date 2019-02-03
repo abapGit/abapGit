@@ -357,9 +357,10 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA:
-      lo_proxy        TYPE REF TO cl_proxy,
-      ls_sprx_db_data TYPE sprx_db_data,
-      lt_delta        TYPE sprx_t_delta.
+      lo_proxy           TYPE REF TO cl_proxy,
+      ls_sprx_db_data    TYPE sprx_db_data,
+      lt_delta           TYPE sprx_t_delta,
+      lx_proxy_gen_error TYPE REF TO cx_proxy_gen_error.
 
     FIELD-SYMBOLS:
       <ls_sproxheader> LIKE LINE OF ls_sprx_db_data-sproxhdr,
@@ -371,8 +372,8 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
 
     TRY.
         lo_proxy = cl_proxy_fact=>load_by_abap_name(
-                      object   = mv_object
-                      obj_name = mv_obj_name ).
+                       object   = mv_object
+                       obj_name = mv_obj_name ).
 
         lt_delta = lo_proxy->get_delta_all( ).
 
@@ -381,34 +382,35 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
                               inactive  = abap_false
                               delta     = lt_delta ).
 
-
-        LOOP AT ls_sprx_db_data-sproxhdr ASSIGNING <ls_sproxheader>.
-
-          CLEAR:
-            <ls_sproxheader>-created_by,
-            <ls_sproxheader>-created_on,
-            <ls_sproxheader>-changed_by,
-            <ls_sproxheader>-changed_on.
-
-        ENDLOOP.
-
-        LOOP AT ls_sprx_db_data-sproxdat ASSIGNING <ls_sproxdat>.
-
-          CLEAR <ls_sproxdat>-warnings.
-
-        ENDLOOP.
-
-        io_xml->add(
-            iv_name = c_proxy-header
-            ig_data = ls_sprx_db_data-sproxhdr ).
-
-        io_xml->add(
-            iv_name = c_proxy-data
-            ig_data = ls_sprx_db_data-sproxdat ).
-
-      CATCH cx_proxy_gen_error.
-        zcx_abapgit_exception=>raise( |SPRX - error load proxy { mv_obj_name }| ).
+      CATCH cx_proxy_gen_error INTO lx_proxy_gen_error.
+        zcx_abapgit_exception=>raise( iv_text     = lx_proxy_gen_error->get_text( )
+                                      ix_previous = lx_proxy_gen_error ).
     ENDTRY.
+
+    LOOP AT ls_sprx_db_data-sproxhdr ASSIGNING <ls_sproxheader>.
+
+      CLEAR:
+        <ls_sproxheader>-created_by,
+        <ls_sproxheader>-created_on,
+        <ls_sproxheader>-changed_by,
+        <ls_sproxheader>-changed_on.
+
+    ENDLOOP.
+
+    LOOP AT ls_sprx_db_data-sproxdat ASSIGNING <ls_sproxdat>.
+
+      CLEAR <ls_sproxdat>-warnings.
+
+    ENDLOOP.
+
+    io_xml->add(
+        iv_name = c_proxy-header
+        ig_data = ls_sprx_db_data-sproxhdr ).
+
+    io_xml->add(
+        iv_name = c_proxy-data
+        ig_data = ls_sprx_db_data-sproxdat ).
+
 
   ENDMETHOD.
 
