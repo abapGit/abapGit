@@ -234,8 +234,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
           ls_post_field   LIKE LINE OF it_post_fields,
           lo_requirements TYPE REF TO lcl_requirements.
 
-    FIELD-SYMBOLS: <ls_requirement> TYPE zif_abapgit_dot_abapgit=>ty_requirement.
-
 
     lo_dot = mo_repo->get_dot_abapgit( ).
 
