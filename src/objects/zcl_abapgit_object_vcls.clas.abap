@@ -184,9 +184,6 @@ CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
   METHOD zif_abapgit_object~is_locked.
 
     DATA:
-      ls_vcldir         TYPE vcldir,
-      ls_vcldirt        TYPE vcldirt,
-
       lv_argument       TYPE seqg3-garg,
       lv_argument_langu TYPE seqg3-garg.
 

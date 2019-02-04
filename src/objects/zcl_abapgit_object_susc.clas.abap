@@ -130,8 +130,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSC IMPLEMENTATION.
 
     DATA: lv_auth_object_class TYPE tobc-oclss.
     DATA: lv_object_type       TYPE seu_objid.
-    DATA: lv_tr_object_name    TYPE e071-obj_name.
-    DATA: lv_tr_return         TYPE char1.
 
     lv_auth_object_class = ms_item-obj_name.
     lv_object_type = ms_item-obj_type.
