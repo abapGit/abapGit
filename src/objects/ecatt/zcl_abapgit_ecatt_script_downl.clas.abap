@@ -90,7 +90,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
 
       TRY.
           get_general_params_data( ecatt_script->params ).
-        CATCH cx_ecatt_apl.                              "#EC NOHANDLER
+        CATCH cx_ecatt_apl.                              "#EC NO_HANDLER
 *         proceed with download and report errors later
       ENDTRY.
 
@@ -109,7 +109,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
 
               ENDIF.
             ENDIF.
-          CATCH cx_ecatt_apl.                            "#EC NOHANDLER
+          CATCH cx_ecatt_apl.                            "#EC NO_HANDLER
 *         proceed with download and report errors later
         ENDTRY.
       ENDLOOP.
