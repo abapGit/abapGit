@@ -27,7 +27,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_intf IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -193,8 +193,7 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: ls_vseointerf TYPE vseointerf,
-          ls_clskey     TYPE seoclskey.
+    DATA: ls_vseointerf TYPE vseointerf.
 
     io_xml->read( EXPORTING iv_name = 'VSEOINTERF'
                   CHANGING cg_data = ls_vseointerf ).
