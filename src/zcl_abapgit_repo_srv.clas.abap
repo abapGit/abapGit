@@ -12,6 +12,7 @@ CLASS zcl_abapgit_repo_srv DEFINITION
       RETURNING
         VALUE(ri_srv) TYPE REF TO zif_abapgit_repo_srv .
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     ALIASES delete
@@ -123,9 +124,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
   METHOD refresh.
 
-    DATA: lt_list    TYPE zif_abapgit_persistence=>tt_repo,
-          lo_online  TYPE REF TO zcl_abapgit_repo_online,
-          lo_offline TYPE REF TO zcl_abapgit_repo_offline.
+    DATA: lt_list TYPE zif_abapgit_persistence=>tt_repo.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
 
