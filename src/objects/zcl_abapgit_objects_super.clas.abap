@@ -27,8 +27,8 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
     METHODS check_timestamp
       IMPORTING
         !iv_timestamp     TYPE timestamp
-        !iv_date          TYPE datum
-        !iv_time          TYPE uzeit
+        !iv_date          TYPE d
+        !iv_time          TYPE t
       RETURNING
         VALUE(rv_changed) TYPE abap_bool .
     METHODS get_metadata
