@@ -216,7 +216,7 @@ CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
 
   METHOD version_greater_or_equal.
 
-    DATA: lv_number TYPE numc4 ##NEEDED.
+    DATA: lv_number TYPE n LENGTH 4 ##NEEDED.
 
     TRY.
         MOVE EXACT: is_status-installed_release TO lv_number,

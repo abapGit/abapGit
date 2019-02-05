@@ -40,6 +40,7 @@ CLASS zcl_abapgit_news DEFINITION
     METHODS has_unseen
       RETURNING
         VALUE(rv_boolean) TYPE abap_bool .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     DATA mt_log TYPE tt_log .
@@ -323,9 +324,9 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
 
   METHOD version_to_numeric.
 
-    DATA: lv_major   TYPE numc4,
-          lv_minor   TYPE numc4,
-          lv_release TYPE numc4.
+    DATA: lv_major   TYPE n LENGTH 4,
+          lv_minor   TYPE n LENGTH 4,
+          lv_release TYPE n LENGTH 4.
 
     SPLIT iv_version AT '.' INTO lv_major lv_minor lv_release.
 
