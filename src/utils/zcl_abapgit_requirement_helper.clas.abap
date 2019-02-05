@@ -9,7 +9,7 @@ CLASS zcl_abapgit_requirement_helper DEFINITION
       BEGIN OF ty_requirement_status,
         met               TYPE abap_bool,
         component         TYPE dlvunit,
-        description       TYPE text80,
+        description       TYPE cvers_sdu-desc_text,
         installed_release TYPE saprelease,
         installed_patch   TYPE sappatchlv,
         required_release  TYPE saprelease,
@@ -30,6 +30,7 @@ CLASS zcl_abapgit_requirement_helper DEFINITION
         VALUE(rv_status) TYPE zif_abapgit_definitions=>ty_yes_no
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-METHODS show_requirement_popup
