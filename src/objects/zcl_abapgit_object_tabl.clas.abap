@@ -187,7 +187,6 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
   METHOD deserialize_idoc_segment.
 
-    DATA lv_version             TYPE segmentvrs .
     DATA lv_result              LIKE sy-subrc.
     DATA lt_segment_definitions TYPE ty_segment_definitions.
     DATA lv_package             TYPE devclass.

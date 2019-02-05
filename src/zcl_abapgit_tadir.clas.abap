@@ -43,8 +43,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
 
   METHOD build.
 
-    DATA: lt_tdevc        TYPE STANDARD TABLE OF tdevc,
-          lv_path         TYPE string,
+    DATA: lv_path         TYPE string,
           lo_skip_objects TYPE REF TO zcl_abapgit_skip_objects,
           lt_excludes     TYPE RANGE OF trobjtype,
           lt_srcsystem    TYPE RANGE OF tadir-srcsystem,

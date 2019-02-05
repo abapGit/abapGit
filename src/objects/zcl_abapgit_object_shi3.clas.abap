@@ -167,9 +167,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
 
     CONSTANTS lc_activity_delete_06 TYPE activ_auth VALUE '06'.
 
-    DATA: lv_object_type    TYPE seu_objid.
-    DATA: lv_tr_object_name TYPE e071-obj_name.
-    DATA: lv_tr_return      TYPE char1.
+    DATA: lv_object_type TYPE seu_objid.
 
     lv_object_type = ms_item-obj_type.
 

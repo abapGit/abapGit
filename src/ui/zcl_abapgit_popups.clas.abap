@@ -92,7 +92,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_popups IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -294,6 +294,20 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ENDIF.
 
     mo_select_list_popup->refresh( ).
+  ENDMETHOD.
+
+
+  METHOD validate_folder_logic.
+
+    IF  iv_folder_logic <> zif_abapgit_dot_abapgit=>c_folder_logic-prefix
+    AND iv_folder_logic <> zif_abapgit_dot_abapgit=>c_folder_logic-full.
+
+      zcx_abapgit_exception=>raise( |Invalid folder logic { iv_folder_logic }. |
+                                 && |Choose either { zif_abapgit_dot_abapgit=>c_folder_logic-prefix } |
+                                 && |or { zif_abapgit_dot_abapgit=>c_folder_logic-full } | ).
+
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -702,7 +716,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       lv_transports_as_text = ls_transport_header-trkorr.
       SELECT SINGLE as4text FROM e07t INTO lv_desc_as_text  WHERE
         trkorr = ls_transport_header-trkorr AND
-        langu = sy-langu .
+        langu = sy-langu.
 
     ELSE.   " Else set branch name and commit message to 'Transport(s)_TRXXXXXX_TRXXXXX'
       lv_transports_as_text = 'Transport(s)'.
@@ -1171,18 +1185,4 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
-  METHOD validate_folder_logic.
-
-    IF  iv_folder_logic <> zif_abapgit_dot_abapgit=>c_folder_logic-prefix
-    AND iv_folder_logic <> zif_abapgit_dot_abapgit=>c_folder_logic-full.
-
-      zcx_abapgit_exception=>raise( |Invalid folder logic { iv_folder_logic }. |
-                                 && |Choose either { zif_abapgit_dot_abapgit=>c_folder_logic-prefix } |
-                                 && |or { zif_abapgit_dot_abapgit=>c_folder_logic-full } | ).
-
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.

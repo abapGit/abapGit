@@ -20,7 +20,7 @@ CLASS ltcl_requirements IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD check_field_mapping.
-    DATA lv_lines TYPE i.
+
     DATA ls_actual       TYPE zif_abapgit_dot_abapgit=>ty_requirement.
     DATA ls_expected     TYPE zif_abapgit_dot_abapgit=>ty_requirement.
     DATA lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.

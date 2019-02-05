@@ -229,7 +229,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD adjust_namespaces.
@@ -691,8 +691,6 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD filter_files_to_deserialize.
-
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF rt_results.
 
     rt_results = it_results.
 
