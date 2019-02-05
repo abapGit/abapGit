@@ -8,6 +8,7 @@ CLASS zcl_abapgit_object_sfpf DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       fix_oref
         IMPORTING ii_document TYPE REF TO if_ixml_document.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS:
       load
@@ -21,7 +22,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
 
 
   METHOD fix_oref.
@@ -164,6 +165,11 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
 
     TRY.
         li_form = cl_fp_helper=>convert_xstring_to_form( lv_xstr ).
+
+        IF zif_abapgit_object~exists( ) = abap_true.
+          cl_fp_wb_form=>delete( lv_name ).
+        ENDIF.
+
         tadir_insert( iv_package ).
         li_wb_object = cl_fp_wb_form=>create( i_name = lv_name
                                               i_form = li_form ).
@@ -201,6 +207,25 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+
+    DATA: lv_object TYPE seqg3-garg.
+
+    lv_object = |{ ms_item-obj_name }|.
+    OVERLAY lv_object WITH '                              '.
+    lv_object = lv_object && '*'.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'EFPFORM'
+                                            iv_argument    = lv_object ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
@@ -223,23 +248,5 @@ CLASS zcl_abapgit_object_sfpf IMPLEMENTATION.
     fix_oref( li_document ).
     io_xml->set_raw( li_document->get_root_element( ) ).
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-
-    DATA: lv_object TYPE seqg3-garg.
-
-    lv_object = |{ ms_item-obj_name }|.
-    OVERLAY lv_object WITH '                              '.
-    lv_object = lv_object && '*'.
-
-    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'EFPFORM'
-                                            iv_argument    = lv_object ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.
