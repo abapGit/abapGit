@@ -12,6 +12,7 @@ CLASS zcl_abapgit_object_sprx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING
           zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
       BEGIN OF c_proxy,
@@ -67,7 +68,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SPRX IMPLEMENTATION.
 
 
   METHOD activate_classes.
@@ -107,6 +108,29 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error from RS_WORKING_OBJECTS_ACTIVATE. Subrc={ sy-subrc }| ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD check_sprx_tadir.
+
+    DATA: lt_abap_keys TYPE prx_abapobjects,
+          ls_abap_key  LIKE LINE OF lt_abap_keys,
+          lx_error     TYPE REF TO cx_proxy_gen_error.
+
+    ls_abap_key-object   = mv_object.
+    ls_abap_key-obj_name = mv_obj_name.
+    APPEND ls_abap_key TO lt_abap_keys.
+
+    TRY.
+        cl_proxy_utils=>check_sprx_tadir(
+            objects = lt_abap_keys
+            repair  = abap_true ).
+
+      CATCH cx_proxy_gen_error INTO lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = |{ lx_error->get_text( ) }|
+                                      ix_previous = lx_error ).
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -172,6 +196,26 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD dequeue_proxy.
+
+    DATA: lo_proxy TYPE REF TO cl_proxy,
+          lx_error TYPE REF TO cx_proxy_gen_error.
+
+    TRY.
+        lo_proxy = cl_proxy_fact=>load_by_abap_name(
+                       object   = mv_object
+                       obj_name = mv_obj_name ).
+
+        lo_proxy->dequeue( ).
+
+      CATCH cx_proxy_gen_error INTO lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = |{ lx_error->get_text( ) }|
+                                      ix_previous = lx_error ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD generate_service_definition.
 
     DATA: lv_transport    TYPE e070use-ordernum,
@@ -213,6 +257,29 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
 
     ev_object   = ms_item-obj_name(4).
     ev_obj_name = ms_item-obj_name+4.
+
+  ENDMETHOD.
+
+
+  METHOD save.
+
+    DATA:
+      lt_sproxhdr_old  TYPE sprx_hdr_t,
+      lt_sproxdat_old  TYPE sprx_dat_t,
+      lt_sproxsvar_old TYPE sprx_svar_t,
+      lt_sproxintf_old TYPE sprx_matchintf_t,
+      lt_sproxsvar_new TYPE sprx_svar_t,
+      lt_sproxintf_new TYPE sprx_matchintf_t.
+
+    cl_proxy_data=>db_save(
+        sproxhdr_old  = lt_sproxhdr_old
+        sproxdat_old  = lt_sproxdat_old
+        sproxsvar_old = lt_sproxsvar_old
+        sproxintf_old = lt_sproxintf_old
+        sproxhdr_new  = it_sproxhdr_new
+        sproxdat_new  = it_sproxdat_new
+        sproxsvar_new = lt_sproxsvar_new
+        sproxintf_new = lt_sproxintf_new ).
 
   ENDMETHOD.
 
@@ -383,8 +450,9 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
                               delta     = lt_delta ).
 
       CATCH cx_proxy_gen_error INTO lx_proxy_gen_error.
-        zcx_abapgit_exception=>raise( iv_text     = lx_proxy_gen_error->get_text( )
-                                      ix_previous = lx_proxy_gen_error ).
+        zcx_abapgit_exception=>raise(
+          iv_text     = |SPRX, { lx_proxy_gen_error->get_text( ) }|
+          ix_previous = lx_proxy_gen_error ).
     ENDTRY.
 
     LOOP AT ls_sprx_db_data-sproxhdr ASSIGNING <ls_sproxheader>.
@@ -413,70 +481,4 @@ CLASS zcl_abapgit_object_sprx IMPLEMENTATION.
 
 
   ENDMETHOD.
-
-  METHOD check_sprx_tadir.
-
-    DATA: lt_abap_keys TYPE prx_abapobjects,
-          ls_abap_key  LIKE LINE OF lt_abap_keys,
-          lx_error     TYPE REF TO cx_proxy_gen_error.
-
-    ls_abap_key-object   = mv_object.
-    ls_abap_key-obj_name = mv_obj_name.
-    APPEND ls_abap_key TO lt_abap_keys.
-
-    TRY.
-        cl_proxy_utils=>check_sprx_tadir(
-            objects = lt_abap_keys
-            repair  = abap_true ).
-
-      CATCH cx_proxy_gen_error INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = |{ lx_error->get_text( ) }|
-                                      ix_previous = lx_error ).
-    ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD dequeue_proxy.
-
-    DATA: lo_proxy TYPE REF TO cl_proxy,
-          lx_error TYPE REF TO cx_proxy_gen_error.
-
-    TRY.
-        lo_proxy = cl_proxy_fact=>load_by_abap_name(
-                       object   = mv_object
-                       obj_name = mv_obj_name ).
-
-        lo_proxy->dequeue( ).
-
-      CATCH cx_proxy_gen_error INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = |{ lx_error->get_text( ) }|
-                                      ix_previous = lx_error ).
-    ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD save.
-
-    DATA:
-      lt_sproxhdr_old  TYPE sprx_hdr_t,
-      lt_sproxdat_old  TYPE sprx_dat_t,
-      lt_sproxsvar_old TYPE sprx_svar_t,
-      lt_sproxintf_old TYPE sprx_matchintf_t,
-      lt_sproxsvar_new TYPE sprx_svar_t,
-      lt_sproxintf_new TYPE sprx_matchintf_t.
-
-    cl_proxy_data=>db_save(
-        sproxhdr_old  = lt_sproxhdr_old
-        sproxdat_old  = lt_sproxdat_old
-        sproxsvar_old = lt_sproxsvar_old
-        sproxintf_old = lt_sproxintf_old
-        sproxhdr_new  = it_sproxhdr_new
-        sproxdat_new  = it_sproxdat_new
-        sproxsvar_new = lt_sproxsvar_new
-        sproxintf_new = lt_sproxintf_new ).
-
-  ENDMETHOD.
-
 ENDCLASS.
