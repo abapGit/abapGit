@@ -64,9 +64,10 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
 
   METHOD zif_abapgit_frontend_services~file_upload.
 
-    DATA:
-      lt_data       TYPE TABLE OF x255,
-      lv_length     TYPE i.
+    TYPES: ty_hex TYPE x LENGTH 255.
+
+    DATA: lt_data   TYPE TABLE OF ty_hex WITH DEFAULT KEY,
+          lv_length TYPE i.
 
     cl_gui_frontend_services=>gui_upload(
       EXPORTING
