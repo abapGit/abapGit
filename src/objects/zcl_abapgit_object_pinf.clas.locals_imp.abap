@@ -185,9 +185,9 @@ CLASS lcl_package_interface_facade IMPLEMENTATION.
         acl_not_empty                = 4
         author_not_existing          = 5
         object_type_mismatch         = 6
-        logical_package_types_differ = 7
-        object_invalid               = 8
-        OTHERS                       = 9 ).
+        OTHERS                       = 7 ).
+* Downport: exceptions "logical_package_types_differ" and
+* "object_invalid" does not exist in lower versions
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
