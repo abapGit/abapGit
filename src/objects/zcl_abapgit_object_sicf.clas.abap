@@ -11,6 +11,8 @@ CLASS zcl_abapgit_object_sicf DEFINITION
     ALIASES mo_files
       FOR zif_abapgit_object~mo_files .
 
+    TYPES: ty_hash TYPE c LENGTH 25.
+
     CLASS-METHODS read_tadir_sicf
       IMPORTING
         !iv_pgmid       TYPE tadir-pgmid DEFAULT 'R3TR'
@@ -23,9 +25,10 @@ CLASS zcl_abapgit_object_sicf DEFINITION
       IMPORTING
         !iv_obj_name   TYPE tadir-obj_name
       RETURNING
-        VALUE(rv_hash) TYPE text25
+        VALUE(rv_hash) TYPE ty_hash
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES:
@@ -80,7 +83,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
 
 
   METHOD change_sicf.
@@ -327,7 +330,7 @@ CLASS zcl_abapgit_object_sicf IMPLEMENTATION.
 * note: this method is called dynamically from some places
 
     DATA: lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          lv_hash     TYPE text25,
+          lv_hash     TYPE ty_hash,
           lv_obj_name TYPE tadir-obj_name.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF lt_tadir.

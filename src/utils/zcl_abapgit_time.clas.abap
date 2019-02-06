@@ -8,9 +8,9 @@ CLASS zcl_abapgit_time DEFINITION
     CLASS-METHODS get
       RETURNING VALUE(rv_time) TYPE ty_unixtime
       RAISING   zcx_abapgit_exception.
+  PROTECTED SECTION.
   PRIVATE SECTION.
-    CONSTANTS: c_epoch TYPE datum VALUE '19700101'.
-
+    CONSTANTS: c_epoch TYPE d VALUE '19700101'.
 ENDCLASS.
 
 
