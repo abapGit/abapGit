@@ -1,4 +1,4 @@
-"! Static registry class to find {@link ZIF_ABAPGIT_2FA_AUTHENTICATOR} instances
+"! Static registry class to find &#123;&#64;link ZIF_ABAPGIT_2FA_AUTHENTICATOR&#125; instances
 CLASS zcl_abapgit_2fa_auth_registry DEFINITION
   PUBLIC
   FINAL
