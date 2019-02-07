@@ -3,58 +3,65 @@ CLASS zcl_abapgit_diff DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    DATA mt_beacons TYPE zif_abapgit_definitions=>ty_string_tt READ-ONLY.
 
 * assumes data is UTF8 based with newlines
 * only works with lines up to 255 characters
     METHODS constructor
-      IMPORTING iv_new TYPE xstring
-                iv_old TYPE xstring.
-
+      IMPORTING
+        !iv_new TYPE xstring
+        !iv_old TYPE xstring .
     METHODS get
-      RETURNING VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt.
-
+      RETURNING
+        VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt .
     METHODS stats
-      RETURNING VALUE(rs_count) TYPE zif_abapgit_definitions=>ty_count.
-
+      RETURNING
+        VALUE(rs_count) TYPE zif_abapgit_definitions=>ty_count .
     METHODS set_patch_new
       IMPORTING
-        iv_line_new   TYPE i
-        iv_patch_flag TYPE abap_bool
+        !iv_line_new   TYPE i
+        !iv_patch_flag TYPE abap_bool
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS set_patch_old
       IMPORTING
-        iv_line_old   TYPE i
-        iv_patch_flag TYPE abap_bool
+        !iv_line_old   TYPE i
+        !iv_patch_flag TYPE abap_bool
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
+    METHODS get_beacons
+      RETURNING
+        VALUE(rt_beacons) TYPE zif_abapgit_definitions=>ty_string_tt .
+  PROTECTED SECTION.
 
   PRIVATE SECTION.
-    DATA mt_diff     TYPE zif_abapgit_definitions=>ty_diffs_tt.
-    DATA ms_stats    TYPE zif_abapgit_definitions=>ty_count.
 
-    CLASS-METHODS:
-      unpack
-        IMPORTING iv_new TYPE xstring
-                  iv_old TYPE xstring
-        EXPORTING et_new TYPE abaptxt255_tab
-                  et_old TYPE abaptxt255_tab,
-      render
-        IMPORTING it_new         TYPE abaptxt255_tab
-                  it_old         TYPE abaptxt255_tab
-                  it_delta       TYPE vxabapt255_tab
-        RETURNING VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt,
-      compute
-        IMPORTING it_new          TYPE abaptxt255_tab
-                  it_old          TYPE abaptxt255_tab
-        RETURNING VALUE(rt_delta) TYPE vxabapt255_tab.
+    DATA mt_beacons TYPE zif_abapgit_definitions=>ty_string_tt .
+    DATA mt_diff TYPE zif_abapgit_definitions=>ty_diffs_tt .
+    DATA ms_stats TYPE zif_abapgit_definitions=>ty_count .
 
-    METHODS:
-      calculate_line_num_and_stats,
-      map_beacons,
-      shortlist.
+    CLASS-METHODS unpack
+      IMPORTING
+        !iv_new TYPE xstring
+        !iv_old TYPE xstring
+      EXPORTING
+        !et_new TYPE abaptxt255_tab
+        !et_old TYPE abaptxt255_tab .
+    CLASS-METHODS render
+      IMPORTING
+        !it_new        TYPE abaptxt255_tab
+        !it_old        TYPE abaptxt255_tab
+        !it_delta      TYPE vxabapt255_tab
+      RETURNING
+        VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt .
+    CLASS-METHODS compute
+      IMPORTING
+        !it_new         TYPE abaptxt255_tab
+        !it_old         TYPE abaptxt255_tab
+      RETURNING
+        VALUE(rt_delta) TYPE vxabapt255_tab .
+    METHODS calculate_line_num_and_stats .
+    METHODS map_beacons .
+    METHODS shortlist .
 ENDCLASS.
 
 
@@ -147,6 +154,13 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
 
   METHOD get.
     rt_diff = mt_diff.
+  ENDMETHOD.
+
+
+  METHOD get_beacons.
+
+    rt_beacons = mt_beacons.
+
   ENDMETHOD.
 
 

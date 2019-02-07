@@ -586,12 +586,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
   METHOD render_beacon.
 
-    DATA: lv_beacon  TYPE string.
+    DATA: lv_beacon TYPE string.
 
     CREATE OBJECT ro_html.
 
     IF is_diff_line-beacon > 0.
-      READ TABLE is_diff-o_diff->mt_beacons INTO lv_beacon INDEX is_diff_line-beacon.
+      READ TABLE is_diff-o_diff->get_beacons( ) INTO lv_beacon INDEX is_diff_line-beacon.
     ELSE.
       lv_beacon = '---'.
     ENDIF.
