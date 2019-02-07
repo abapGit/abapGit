@@ -4,6 +4,7 @@ CLASS zcl_abapgit_object_ddlx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+  PROTECTED SECTION.
     DATA: mo_persistence TYPE REF TO if_wb_object_persist.
 
   PRIVATE SECTION.
@@ -28,7 +29,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
 
 
   METHOD clear_field.
