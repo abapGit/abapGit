@@ -12,6 +12,14 @@
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
    </VSEOCLASS>
+   <DESCRIPTIONS>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ABAPGIT_OBJECT_SFPF</CLSNAME>
+     <CMPNAME>FIX_OREF</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Renumber consiqentioally attributes &quot;id&quot; and &quot;href&quot;</DESCRIPT>
+    </SEOCOMPOTX>
+   </DESCRIPTIONS>
   </asx:values>
  </asx:abap>
 </abapGit>
