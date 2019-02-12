@@ -1,21 +1,21 @@
-class ZCL_ABAPGIT_OBJECT_SFPF definition
-  public
-  inheriting from ZCL_ABAPGIT_OBJECTS_SUPER
-  final
-  create public .
+CLASS zcl_abapgit_object_sfpf DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  FINAL
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  interfaces ZIF_ABAPGIT_OBJECT .
+    INTERFACES zif_abapgit_object .
 
-  aliases MO_FILES
-    for ZIF_ABAPGIT_OBJECT~MO_FILES .
+    ALIASES mo_files
+      FOR zif_abapgit_object~mo_files .
 
-  class-methods FIX_OREF
-    importing
-      !II_DOCUMENT type ref to IF_IXML_DOCUMENT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
+    CLASS-METHODS fix_oref
+      IMPORTING
+        !ii_document TYPE REF TO if_ixml_document
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS:
