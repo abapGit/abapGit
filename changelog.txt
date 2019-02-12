@@ -8,6 +8,17 @@ Legend
 + : added
 - : removed
 
+2019-02-12 v1.83.0
+------------------
++ SPRX support
+* SCP1 bugfix
+* Fix SSL ID user exit
+* PINF downport
+* SFPF fix overwriting object
+* Dynpros fix SET/GET_PARAM bug
+* SOTS fixes
+* Fix for inactive view cluster
+
 2019-01-24 v1.82.0
 ------------------
 * Fix icons for HiDPI screens
