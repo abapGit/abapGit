@@ -818,6 +818,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
   METHOD prioritize_deser.
 
+* todo, refactor this method
+
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
 
 * WEBI has to be handled before SPRX.
@@ -845,11 +847,6 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
-* PINF has to be handled before DEVC for package interface usage
-    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'PINF'.
-      APPEND <ls_result> TO rt_results.
-    ENDLOOP.
-
 * ENHS has to be handled before ENHO
     LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'ENHS'.
       APPEND <ls_result> TO rt_results.
@@ -865,10 +862,21 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         AND obj_type <> 'PROG'
         AND obj_type <> 'XSLT'
         AND obj_type <> 'PINF'
+        AND obj_type <> 'DEVC'
         AND obj_type <> 'ENHS'
         AND obj_type <> 'DDLS'
         AND obj_type <> 'SPRX'
         AND obj_type <> 'WEBI'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
+* PINF after everything as it can expose objects
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'PINF'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
+* DEVC after PINF, as it can refer for package interface usage
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'DEVC'.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
