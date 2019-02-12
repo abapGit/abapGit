@@ -84,7 +84,7 @@ SICF | ICF Service | Yes
 SMIM | Info Object from the MIME Repository | Yes
 SOTS | All Concepts (OTR) of a Package - Long Texts | Yes
 SPLO | Format Types | Yes
-SPRX | Proxy Object | [#87](https://github.com/larshp/abapGit/issues/87)
+SPRX | Proxy Object | Yes
 SQSC | Database Procedure Proxy | Yes
 SRFC | RFC Service | Yes
 SSFO | SAP Smart Form | Yes
