@@ -1,13 +1,21 @@
-CLASS zcl_abapgit_object_sfpf DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_super FINAL.
+class ZCL_ABAPGIT_OBJECT_SFPF definition
+  public
+  inheriting from ZCL_ABAPGIT_OBJECTS_SUPER
+  final
+  create public .
 
-  PUBLIC SECTION.
-    INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
+public section.
 
-    CLASS-METHODS:
-      fix_oref
-        IMPORTING ii_document TYPE REF TO if_ixml_document.
+  interfaces ZIF_ABAPGIT_OBJECT .
 
+  aliases MO_FILES
+    for ZIF_ABAPGIT_OBJECT~MO_FILES .
+
+  class-methods FIX_OREF
+    importing
+      !II_DOCUMENT type ref to IF_IXML_DOCUMENT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
   PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS:
@@ -27,50 +35,76 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
 
   METHOD fix_oref.
 
-    DATA: li_iterator TYPE REF TO if_ixml_node_iterator,
-          lv_new      TYPE n LENGTH 3,
-          lv_old      TYPE string,
-          lt_map      TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-          li_attr_map TYPE REF TO if_ixml_named_node_map,
-          li_attr     TYPE REF TO if_ixml_node,
-          li_node     TYPE REF TO if_ixml_node.
+* During serialization of a SFPF / SFPI object the interface hierarchy
+* is represented by attributes "id" and "href", where the id looks
+* like "o<number>" and href like "#o<number>". Every run of
+* serialization generates a new <number> in these  attributes, that
+* leads to differences even by comparing of untouched forms.
+* The purpose of this method is to renumber the id's consiqentioally
+* and therefore to avoid fictive defferences.
 
-    DEFINE _lookup.
-      READ TABLE lt_map FROM &1 TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
-        APPEND &1 TO lt_map.
-        READ TABLE lt_map FROM &1 TRANSPORTING NO FIELDS.
+* NB: As the method iterator->get_next() works quite slowly,
+*     it is better to collect all attributes in a cache table
+*     instead of implementing of a nested loop using get_next().
+
+    DATA:
+      li_iterator TYPE REF TO if_ixml_node_iterator,
+      li_elem     TYPE REF TO if_ixml_element,
+      lv_new      TYPE string,
+      lv_old      TYPE string,
+      lv_count    TYPE i,
+      BEGIN OF ls_attr_href,
+        val  TYPE string,
+        attr TYPE REF TO if_ixml_attribute,
+      END OF ls_attr_href,
+      lt_attr_href LIKE SORTED TABLE OF ls_attr_href
+        WITH NON-UNIQUE KEY val.
+
+    FIELD-SYMBOLS <ls_attr_href> LIKE LINE OF lt_attr_href.
+
+*   Collect all attributes href='#o...' in the cache table
+    li_iterator = ii_document->create_iterator_filtered(
+      ii_document->create_filter_and(
+        filter1 = ii_document->create_filter_node_type(
+          if_ixml_node=>co_node_element  )
+        filter2 = ii_document->create_filter_attribute( 'href' ) ) ).
+    li_elem ?= li_iterator->get_next( ).
+    WHILE li_elem IS NOT INITIAL.
+      ls_attr_href-attr = li_elem->get_attribute_node( 'href' ).
+      ls_attr_href-val = ls_attr_href-attr->get_value( ).
+      IF ls_attr_href-val CP '##o*'.
+        INSERT ls_attr_href INTO TABLE lt_attr_href.
       ENDIF.
-      lv_new = sy-tabix + 100.
-    END-OF-DEFINITION.
+      li_elem ?= li_iterator->get_next( ).
+    ENDWHILE.
 
-
-    li_iterator = ii_document->create_iterator( ).
-    li_node = li_iterator->get_next( ).
-    WHILE NOT li_node IS INITIAL.
-      li_attr_map = li_node->get_attributes( ).
-
-      IF li_attr_map IS BOUND.
-        li_attr = li_attr_map->get_named_item_ns( 'href' ).
-        IF li_attr IS BOUND.
-          lv_old = li_attr->get_value( ).
-          IF lv_old(2) = '#o'.
-            _lookup lv_old+1.
-            li_attr->set_value( '#o' && lv_new ).
-          ENDIF.
+*   Renumber id='o...' attributes
+    li_iterator = ii_document->create_iterator_filtered(
+      ii_document->create_filter_and(
+        filter1 = ii_document->create_filter_node_type(
+          if_ixml_node=>co_node_element  )
+        filter2 = ii_document->create_filter_attribute( 'id' ) ) ).
+    li_elem ?= li_iterator->get_next( ).
+    WHILE li_elem IS NOT INITIAL.
+      lv_old = li_elem->get_attribute( 'id' ).
+      IF lv_old CP 'o*'.
+        lv_count = lv_count + 1.
+        lv_new = |o{ lv_count }|.
+*       Rewrite id
+        IF li_elem->set_attribute(
+          name = 'id' value = lv_new ) IS NOT INITIAL.
+          zcx_abapgit_exception=>raise( 'SFPF error, FIX_OREF' ).
         ENDIF.
-
-        li_attr = li_attr_map->get_named_item_ns( 'id' ).
-        IF li_attr IS BOUND.
-          lv_old = li_attr->get_value( ).
-          IF lv_old(1) = 'o'.
-            _lookup lv_old.
-            li_attr->set_value( 'o' && lv_new ).
+*       Update references
+        LOOP AT lt_attr_href ASSIGNING <ls_attr_href>
+          WHERE val = '#' && lv_old.
+          IF <ls_attr_href>-attr->set_value( '#' && lv_new )
+            IS NOT INITIAL.
+            zcx_abapgit_exception=>raise( 'SFPF error, FIX_OREF' ).
           ENDIF.
-        ENDIF.
+        ENDLOOP.
       ENDIF.
-
-      li_node = li_iterator->get_next( ).
+      li_elem ?= li_iterator->get_next( ).
     ENDWHILE.
 
   ENDMETHOD.
