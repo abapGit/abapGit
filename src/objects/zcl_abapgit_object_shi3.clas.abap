@@ -10,18 +10,22 @@ CLASS zcl_abapgit_object_shi3 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         iv_language TYPE spras.
 
   PROTECTED SECTION.
-    METHODS has_authorization
-      IMPORTING iv_devclass     TYPE devclass
-                iv_object_type  TYPE seu_objid
-                iv_structure_id TYPE hier_guid
-                iv_activity     TYPE activ_auth
-      RAISING   zcx_abapgit_exception.
-    METHODS is_used
-      IMPORTING iv_structure_id TYPE hier_guid
-      RAISING   zcx_abapgit_exception.
-    METHODS delete_tree_structure
-      IMPORTING iv_structure_id TYPE hier_guid.
 
+    METHODS has_authorization
+      IMPORTING
+        !iv_devclass     TYPE devclass
+        !iv_structure_id TYPE hier_guid
+        !iv_activity     TYPE activ_auth
+      RAISING
+        zcx_abapgit_exception .
+    METHODS is_used
+      IMPORTING
+        !iv_structure_id TYPE hier_guid
+      RAISING
+        zcx_abapgit_exception .
+    METHODS delete_tree_structure
+      IMPORTING
+        !iv_structure_id TYPE hier_guid .
   PRIVATE SECTION.
     DATA: mv_tree_id TYPE ttree-id.
 
@@ -77,11 +81,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
       ID 'DEVCLASS'  FIELD iv_devclass
       ID 'OBJTYPE'   FIELD 'MENU'
       ID 'OBJNAME'   FIELD iv_structure_id
-      ID 'P_GROUP'  DUMMY
-      ID 'ACTVT'    FIELD iv_activity.
+      ID 'P_GROUP'   DUMMY
+      ID 'ACTVT'     FIELD iv_activity.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( iv_msgid = 's#'
+      zcx_abapgit_exception=>raise_t100( iv_msgid = 'S#'
                                          iv_msgno = '203' ).
     ENDIF.
   ENDMETHOD.
@@ -167,18 +171,13 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
 
     CONSTANTS lc_activity_delete_06 TYPE activ_auth VALUE '06'.
 
-    DATA: lv_object_type TYPE seu_objid.
-
-    lv_object_type = ms_item-obj_type.
-
     TRY.
         me->zif_abapgit_object~exists( ).
       CATCH zcx_abapgit_exception.
         RETURN.
     ENDTRY.
 
-    has_authorization( iv_object_type  = lv_object_type
-                       iv_structure_id = mv_tree_id
+    has_authorization( iv_structure_id = mv_tree_id
                        iv_devclass     = ms_item-devclass
                        iv_activity     = lc_activity_delete_06 ).
 
