@@ -11,3 +11,5 @@ order: 60
 * Submit a pull request
 
 The forked repository can be deleted after the pull request has been closed.
+
+[See this](contributing.html) if you are contributing to abapGit
