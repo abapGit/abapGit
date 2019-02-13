@@ -194,6 +194,8 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
 
     CREATE OBJECT lo_stage.
 
+    ls_comment-comment = 'BG: Deletion' ##NO_TEXT.
+
     LOOP AT is_files-remote ASSIGNING <ls_remote>.
 
       mo_log->add_info( |removed: {
@@ -203,11 +205,13 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
       lo_stage->rm( iv_path     = <ls_remote>-path
                     iv_filename = <ls_remote>-filename ).
 
+      CONCATENATE ls_comment-comment zif_abapgit_definitions=>c_newline <ls_remote>-filename
+        INTO ls_comment-comment.
+
     ENDLOOP.
 
     ls_comment-committer-name  = 'Deletion' ##NO_TEXT.
     ls_comment-committer-email = 'deletion@localhost'.
-    ls_comment-comment         = build_comment( is_files ).
 
     io_repo->push( is_comment = ls_comment
                    io_stage   = lo_stage ).
