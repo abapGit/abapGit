@@ -335,20 +335,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'T100'
                   CHANGING cg_data = lt_t100 ).
 
-    CALL FUNCTION 'RS_CORR_INSERT'
-      EXPORTING
-        global_lock         = abap_true
-        devclass            = iv_package
-        object              = ls_t100a-arbgb
-        object_class        = 'T100'
-        mode                = 'INSERT'
-      EXCEPTIONS
-        cancelled           = 01
-        permission_failure  = 02
-        unknown_objectclass = 03.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from RS_CORR_INSERT' ).
-    ENDIF.
+    corr_insert( iv_package ).
 
     SELECT * FROM t100u INTO TABLE lt_before
       WHERE arbgb = ls_t100a-arbgb ORDER BY msgnr. "#EC CI_GENBUFF "#EC CI_BYPASS

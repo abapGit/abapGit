@@ -37,6 +37,7 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
     METHODS corr_insert
       IMPORTING
         !iv_package TYPE devclass
+        !iv_object_class TYPE any OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS tadir_insert
@@ -141,28 +142,97 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
 
   METHOD corr_insert.
 
-    DATA: ls_object TYPE ddenqs.
+    DATA: lv_object           TYPE string,
+          lv_object_class     TYPE string,
+          lv_gui_is_available TYPE c,
+          lv_korrnum_check    TYPE e070-trkorr,
+          lv_ordernum_check   TYPE e070-trkorr,
+          lv_korrnum          TYPE e070-trkorr.
 
+    IF iv_object_class IS NOT INITIAL.
+      lv_object_class = iv_object_class.
+      IF iv_object_class = 'DICT'.
+        CONCATENATE ms_item-obj_type ms_item-obj_name INTO lv_object.
+      ELSE.
+        lv_object = ms_item-obj_name.
+      ENDIF.
+    ELSE.
+      lv_object_class = ms_item-obj_type.
+      lv_object       = ms_item-obj_name.
+    ENDIF.
 
-    ls_object-objtype = ms_item-obj_type.
-    ls_object-objname = ms_item-obj_name.
+    CALL FUNCTION 'GUI_IS_AVAILABLE'
+      IMPORTING
+        return = lv_gui_is_available.
 
-    CALL FUNCTION 'RS_CORR_INSERT'
-      EXPORTING
-        object              = ls_object
-        object_class        = 'DICT'
-        devclass            = iv_package
-        master_language     = mv_language
-        mode                = 'INSERT'
-      EXCEPTIONS
-        cancelled           = 1
-        permission_failure  = 2
-        unknown_objectclass = 3
-        OTHERS              = 4.
-    IF sy-subrc = 1.
-      zcx_abapgit_exception=>raise( 'Cancelled' ).
-    ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT' ).
+    IF lv_gui_is_available EQ abap_true.
+      CALL FUNCTION 'RS_CORR_INSERT'
+        EXPORTING
+          object              = lv_object
+          object_class        = lv_object_class
+          devclass            = iv_package
+          master_language     = mv_language
+          global_lock         = abap_true
+          mode                = 'I'
+        EXCEPTIONS
+          cancelled           = 1
+          permission_failure  = 2
+          unknown_objectclass = 3
+          OTHERS              = 4.
+    ELSE.
+
+      "check whether object is currently locked in different transport
+      CALL FUNCTION 'RS_CORR_CHECK'
+        EXPORTING
+          object              = lv_object
+          object_class        = lv_object_class
+          mode                = 'I'
+          global_lock         = abap_true
+          suppress_dialog     = abap_true
+        IMPORTING
+*         devclass            =
+*         error_info          =
+*         master_language     =
+          korrnum             = lv_korrnum_check
+          ordernum            = lv_ordernum_check
+*         transport_key       =
+*         tadire              =
+        EXCEPTIONS
+          cancelled           = 1
+          permission_failure  = 2
+          unknown_objectclass = 3
+          OTHERS              = 4.
+      CASE sy-subrc.
+        WHEN 0.
+          IF lv_ordernum_check IS NOT INITIAL.
+            "take task under lv_ordernum_check
+            lv_korrnum = lv_korrnum_check.
+          ELSE.
+            lv_korrnum = cl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
+          ENDIF.
+        WHEN OTHERS.
+          cx_abapgit_exception=>raise_t100( ).
+      ENDCASE.
+
+      CALL FUNCTION 'RS_CORR_INSERT'
+        EXPORTING
+          object              = lv_object
+          object_class        = lv_object_class
+          mode                = 'I'
+          global_lock         = abap_true
+          korrnum             = lv_korrnum
+          devclass            = iv_package
+          author              = sy-uname
+          master_language     = mv_language "sy-langu
+          suppress_dialog     = abap_true
+        EXCEPTIONS
+          cancelled           = 1
+          permission_failure  = 2
+          unknown_objectclass = 3
+          OTHERS              = 4.
+    ENDIF.
+    IF sy-subrc <> 0.
+      cx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
