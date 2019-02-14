@@ -243,25 +243,6 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-
-    DATA: lv_date TYPE dats,
-          lv_time TYPE tims.
-
-    SELECT SINGLE as4date as4time FROM dd04l
-      INTO (lv_date, lv_time)
-      WHERE rollname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers = '0000'.
-
-    rv_changed = check_timestamp(
-      iv_timestamp = iv_timestamp
-      iv_date      = lv_date
-      iv_time      = lv_time ).
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~jump.
 
     jump_se11( iv_radio = 'RSRD1-DDTYPE'

@@ -120,13 +120,6 @@ CLASS zcl_abapgit_object_jobd IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-
-    rv_changed = abap_true.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~jump.
 
     DATA: lv_obj_name TYPE e071-obj_name.

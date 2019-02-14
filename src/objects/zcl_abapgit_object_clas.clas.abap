@@ -350,26 +350,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-    DATA: lt_includes TYPE seoincl_t.
-
-    FIELD-SYMBOLS <lv_incl> LIKE LINE OF lt_includes.
-
-
-    lt_includes = mi_object_oriented_object_fct->get_includes( ms_item-obj_name ).
-    LOOP AT lt_includes ASSIGNING <lv_incl>.
-      rv_changed = check_prog_changed_since(
-        iv_program   = <lv_incl>
-        iv_timestamp = iv_timestamp
-        iv_skip_gui  = abap_true ).
-      IF rv_changed = abap_true.
-        RETURN.
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~is_active.
     rv_active = is_active( ).
   ENDMETHOD.

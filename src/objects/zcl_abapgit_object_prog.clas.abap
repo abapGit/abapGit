@@ -199,15 +199,6 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-
-    rv_changed = check_prog_changed_since(
-      iv_program   = ms_item-obj_name
-      iv_timestamp = iv_timestamp ).
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~is_locked.
 
     IF is_program_locked( )                     = abap_true

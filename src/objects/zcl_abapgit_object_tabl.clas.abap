@@ -620,62 +620,6 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-
-    DATA: lv_date    TYPE dats,
-          lv_time    TYPE tims,
-          lt_indexes TYPE STANDARD TABLE OF dd09l.
-
-    FIELD-SYMBOLS <ls_index> LIKE LINE OF lt_indexes.
-
-    SELECT SINGLE as4date as4time FROM dd02l " Table
-      INTO (lv_date, lv_time)
-      WHERE tabname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers  = '0000'.
-
-    rv_changed = check_timestamp(
-      iv_timestamp = iv_timestamp
-      iv_date      = lv_date
-      iv_time      = lv_time ).
-    IF rv_changed = abap_true.
-      RETURN.
-    ENDIF.
-
-    SELECT SINGLE as4date as4time FROM dd09l " Table tech settings
-      INTO (lv_date, lv_time)
-      WHERE tabname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers  = '0000'.
-
-    rv_changed = check_timestamp(
-      iv_timestamp = iv_timestamp
-      iv_date      = lv_date
-      iv_time      = lv_time ).
-    IF rv_changed = abap_true.
-      RETURN.
-    ENDIF.
-
-    SELECT as4date as4time FROM dd12l " Table tech settings
-      INTO CORRESPONDING FIELDS OF TABLE lt_indexes
-      WHERE sqltab = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers  = '0000'
-      ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS.
-
-    LOOP AT lt_indexes ASSIGNING <ls_index>.
-      rv_changed = check_timestamp(
-        iv_timestamp = iv_timestamp
-        iv_date      = <ls_index>-as4date
-        iv_time      = <ls_index>-as4time ).
-      IF rv_changed = abap_true.
-        RETURN.
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~is_active.
     rv_active = is_active( ).
   ENDMETHOD.

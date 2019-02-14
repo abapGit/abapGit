@@ -691,26 +691,6 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-
-    DATA lv_date TYPE dats.
-    DATA lv_time TYPE tims.
-
-
-    SELECT SINGLE lstdate lsttime FROM dm40l
-      INTO (lv_date, lv_time)
-           WHERE  dmoid     = me->mv_data_model
-           AND    as4local  = me->mv_activation_state.
-
-    rv_changed = check_timestamp(
-      iv_timestamp = iv_timestamp
-      iv_date      = lv_date
-      iv_time      = lv_time ).
-
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~is_active.
     rv_active = is_active( ).
   ENDMETHOD.

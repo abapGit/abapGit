@@ -125,11 +125,6 @@ CLASS zcl_abapgit_object_auth IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~jump.
 
 * TODO, this function module does not exist in 702

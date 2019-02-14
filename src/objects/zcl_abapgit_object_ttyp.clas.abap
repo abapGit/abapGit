@@ -8,23 +8,6 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_ttyp IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~has_changed_since.
-
-    DATA: lv_date TYPE dats,
-          lv_time TYPE tims.
-
-    SELECT SINGLE as4date as4time FROM dd40l
-      INTO (lv_date, lv_time)
-      WHERE typename = ms_item-obj_name
-      AND as4local = 'A'.
-
-    rv_changed = check_timestamp(
-      iv_timestamp = iv_timestamp
-      iv_date      = lv_date
-      iv_time      = lv_time ).
-
-  ENDMETHOD.
-
   METHOD zif_abapgit_object~changed_by.
 
     SELECT SINGLE as4user FROM dd40l INTO rv_user

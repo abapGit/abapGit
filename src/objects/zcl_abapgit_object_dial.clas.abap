@@ -151,13 +151,6 @@ CLASS zcl_abapgit_object_dial IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-
-    rv_changed = abap_true.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~jump.
 
     DATA: lv_objectname TYPE tdct-dnam.

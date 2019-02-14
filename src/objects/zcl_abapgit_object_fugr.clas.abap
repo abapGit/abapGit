@@ -910,40 +910,6 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-
-    DATA: lt_functab  TYPE ty_rs38l_incl_tt,
-          lt_includes TYPE ty_sobj_name_tt.
-
-    FIELD-SYMBOLS: <ls_func>         LIKE LINE OF lt_functab,
-                   <lv_include_name> LIKE LINE OF lt_includes.
-
-
-    lt_includes = includes( ). " Main prog also included here
-
-    LOOP AT lt_includes ASSIGNING <lv_include_name>.
-      rv_changed = check_prog_changed_since(
-        iv_program   = <lv_include_name>
-        iv_timestamp = iv_timestamp ).
-      IF rv_changed = abap_true.
-        RETURN.
-      ENDIF.
-    ENDLOOP.
-
-    lt_functab = functions( ).
-
-    LOOP AT lt_functab ASSIGNING <ls_func>.
-      rv_changed = check_prog_changed_since(
-        iv_program   = <ls_func>-include
-        iv_timestamp = iv_timestamp ).
-      IF rv_changed = abap_true.
-        RETURN.
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~is_active.
     rv_active = is_active( ).
   ENDMETHOD.

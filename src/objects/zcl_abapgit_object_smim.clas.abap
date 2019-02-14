@@ -28,10 +28,6 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_smim IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.
-
   METHOD zif_abapgit_object~changed_by.
 
     DATA: lv_loio TYPE sdok_docid.

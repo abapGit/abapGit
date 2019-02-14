@@ -8,10 +8,6 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_splo IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.
-
   METHOD zif_abapgit_object~changed_by.
 
     SELECT SINGLE chgname1 FROM tsp1d INTO rv_user
