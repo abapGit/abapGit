@@ -114,7 +114,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
+CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
 
   METHOD are_exceptions_class_based.
@@ -427,12 +427,13 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
              cnam     TYPE reposrc-cnam,
            END OF ty_reposrc.
 
-    DATA: lt_reposrc   TYPE STANDARD TABLE OF ty_reposrc WITH DEFAULT KEY,
-          ls_reposrc   LIKE LINE OF lt_reposrc,
-          lv_program   TYPE program,
-          lv_offset_ns TYPE i,
-          lv_tabix     LIKE sy-tabix,
-          lt_functab   TYPE ty_rs38l_incl_tt.
+    DATA: lt_reposrc        TYPE STANDARD TABLE OF ty_reposrc WITH DEFAULT KEY,
+          ls_reposrc        LIKE LINE OF lt_reposrc,
+          lv_program        TYPE program,
+          lv_offset_ns      TYPE i,
+          lv_tabix          LIKE sy-tabix,
+          lt_functab        TYPE ty_rs38l_incl_tt,
+          lt_tadir_includes TYPE HASHED TABLE OF objname WITH UNIQUE KEY table_line.
 
     FIELD-SYMBOLS: <lv_include> LIKE LINE OF rt_includes,
                    <ls_func>    LIKE LINE OF lt_functab.
@@ -473,6 +474,24 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     ENDIF.
 
     IF lines( rt_includes ) > 0.
+      " check which includes have their own tadir entry
+      " these includes might reside in a different package or might be shared between multiple function groups
+      " or other programs and are hence no part of the to serialized FUGR object
+      " they will be handled as individual objects when serializing their package
+      SELECT obj_name
+        INTO TABLE lt_tadir_includes
+        FROM tadir
+        FOR ALL ENTRIES IN rt_includes
+        WHERE pgmid = 'R3TR'
+              AND object = 'PROG'
+              AND obj_name = rt_includes-table_line.
+      LOOP AT rt_includes ASSIGNING <lv_include>.
+        READ TABLE lt_tadir_includes WITH KEY table_line = <lv_include> TRANSPORTING NO FIELDS.
+        IF sy-subrc = 0.
+          DELETE rt_includes.
+        ENDIF.
+      ENDLOOP.
+
       SELECT progname cnam FROM reposrc
         INTO TABLE lt_reposrc
         FOR ALL ENTRIES IN rt_includes
