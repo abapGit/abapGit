@@ -63,14 +63,6 @@ CLASS zcl_abapgit_objects DEFINITION
         VALUE(rv_user) TYPE xubname
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS has_changed_since
-      IMPORTING
-        !is_item          TYPE zif_abapgit_definitions=>ty_item
-        !iv_timestamp     TYPE timestamp
-      RETURNING
-        VALUE(rv_changed) TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS is_supported
       IMPORTING
         !is_item        TYPE zif_abapgit_definitions=>ty_item
@@ -703,20 +695,6 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     DELETE rt_results WHERE obj_type IS INITIAL.
     DELETE rt_results WHERE lstate = zif_abapgit_definitions=>c_state-added AND rstate IS INITIAL.
-
-  ENDMETHOD.
-
-
-  METHOD has_changed_since.
-    rv_changed = abap_true. " Assume changed
-
-    IF is_supported( is_item ) = abap_false.
-      RETURN. " Will requre serialize which will log the error
-    ENDIF.
-
-    rv_changed = create_object(
-      is_item     = is_item
-      iv_language = zif_abapgit_definitions=>c_english )->has_changed_since( iv_timestamp ).
 
   ENDMETHOD.
 

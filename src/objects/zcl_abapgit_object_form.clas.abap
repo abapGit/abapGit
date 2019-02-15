@@ -338,21 +338,6 @@ CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-
-    DATA: ls_last_changed    TYPE tys_form_header.
-    DATA: lv_last_changed_ts TYPE timestamp.
-
-    ls_last_changed = get_last_changes( ms_item-obj_name ).
-
-    CONVERT DATE ls_last_changed-tdldate TIME ls_last_changed-tdltime
-            INTO TIME STAMP lv_last_changed_ts TIME ZONE sy-zonlo.
-
-    rv_changed = boolc( sy-subrc <> 0 OR lv_last_changed_ts > iv_timestamp ).
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~is_active.
     rv_active = is_active( ).
   ENDMETHOD.

@@ -7,12 +7,6 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_shma IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~has_changed_since.
-
-    rv_changed = abap_true.
-
-  ENDMETHOD.
-
   METHOD zif_abapgit_object~changed_by.
 
     rv_user = c_user_unknown.

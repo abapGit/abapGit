@@ -406,10 +406,6 @@ CLASS ltcl_object_ddls_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~has_changed_since. "##needed
-
-  ENDMETHOD.
-
   METHOD zif_abapgit_object~jump. "##needed
 
   ENDMETHOD.

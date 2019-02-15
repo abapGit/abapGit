@@ -4,6 +4,7 @@ CLASS zcl_abapgit_object_acid DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS: create_object
       RETURNING VALUE(ro_aab) TYPE REF TO cl_aab_id
@@ -11,20 +12,10 @@ CLASS zcl_abapgit_object_acid DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
+
+
 CLASS zcl_abapgit_object_acid IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~changed_by.
-* looks like "changed by user" is not stored in the database
-    rv_user = c_user_unknown.
-  ENDMETHOD.
 
   METHOD create_object.
 
@@ -45,43 +36,17 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~serialize.
 
-    DATA: lo_aab         TYPE REF TO cl_aab_id,
-          lv_description TYPE aab_id_descript.
-
-
-    IF zif_abapgit_object~exists( ) = abap_false.
-      RETURN.
-    ENDIF.
-
-    lo_aab = create_object( ).
-
-    lo_aab->get_descript(
-      IMPORTING ex_descript = lv_description
-      EXCEPTIONS no_description_found = 1 ).
-
-    io_xml->add( iv_name = 'DESCRIPTION'
-                 ig_data = lv_description ).
-
+  METHOD zif_abapgit_object~changed_by.
+* looks like "changed by user" is not stored in the database
+    rv_user = c_user_unknown.
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~deserialize.
 
-    DATA: lv_description TYPE aab_id_descript,
-          lo_aab         TYPE REF TO cl_aab_id.
-
-
-    io_xml->read( EXPORTING iv_name = 'DESCRIPTION'
-                  CHANGING cg_data = lv_description ).
-
-    lo_aab = create_object( ).
-    lo_aab->enqueue( ).
-    lo_aab->set_descript( lv_description ).
-    tadir_insert( iv_package ).
-    lo_aab->save( ).
-
+  METHOD zif_abapgit_object~compare_to_remote_version.
+    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~delete.
 
@@ -109,6 +74,25 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~deserialize.
+
+    DATA: lv_description TYPE aab_id_descript,
+          lo_aab         TYPE REF TO cl_aab_id.
+
+
+    io_xml->read( EXPORTING iv_name = 'DESCRIPTION'
+                  CHANGING cg_data = lv_description ).
+
+    lo_aab = create_object( ).
+    lo_aab->enqueue( ).
+    lo_aab->set_descript( lv_description ).
+    tadir_insert( iv_package ).
+    lo_aab->save( ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~exists.
 
     DATA: lv_state TYPE abap_bool,
@@ -124,6 +108,24 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
@@ -135,19 +137,25 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+
+  METHOD zif_abapgit_object~serialize.
+
+    DATA: lo_aab         TYPE REF TO cl_aab_id,
+          lv_description TYPE aab_id_descript.
+
+
+    IF zif_abapgit_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    lo_aab = create_object( ).
+
+    lo_aab->get_descript(
+      IMPORTING ex_descript = lv_description
+      EXCEPTIONS no_description_found = 1 ).
+
+    io_xml->add( iv_name = 'DESCRIPTION'
+                 ig_data = lv_description ).
+
   ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-
-    rv_is_locked = abap_false.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
-  ENDMETHOD.
-
 ENDCLASS.

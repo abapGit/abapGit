@@ -25,11 +25,7 @@ INTERFACE zif_abapgit_object PUBLIC.
     jump
       RAISING zcx_abapgit_exception,
     get_metadata
-      RETURNING VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata,
-    has_changed_since
-      IMPORTING iv_timestamp      TYPE timestamp
-      RETURNING VALUE(rv_changed) TYPE abap_bool
-      RAISING   zcx_abapgit_exception.
+      RETURNING VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata.
   METHODS:
     compare_to_remote_version
       IMPORTING io_remote_version_xml       TYPE REF TO zcl_abapgit_xml_input

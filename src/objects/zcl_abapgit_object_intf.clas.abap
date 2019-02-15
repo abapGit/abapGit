@@ -237,21 +237,6 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-    DATA:
-      lv_program  TYPE program,
-      lt_includes TYPE seoincl_t.
-
-    lt_includes = mi_object_oriented_object_fct->get_includes( ms_item-obj_name ).
-    READ TABLE lt_includes INDEX 1 INTO lv_program.
-    "lv_program = cl_oo_classname_service=>get_interfacepool_name( lv_clsname ).
-    rv_changed = check_prog_changed_since(
-      iv_program   = lv_program
-      iv_timestamp = iv_timestamp
-      iv_skip_gui  = abap_true ).
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~is_active.
     rv_active = is_active( ).
   ENDMETHOD.

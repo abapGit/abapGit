@@ -16,10 +16,6 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_styl IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.
-
   METHOD zif_abapgit_object~changed_by.
 
     DATA: ls_style TYPE ty_style,
