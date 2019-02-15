@@ -72,7 +72,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         VALUE(rt_expanded) TYPE zif_abapgit_definitions=>ty_expanded_tt
       RAISING
         zcx_abapgit_exception .
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES:
