@@ -14,3 +14,5 @@ order: 60
 Check out further details in [Understanding the GitHub flow](https://guides.github.com/introduction/flow/)
 
 The forked repository can be deleted after the pull request has been closed.
+
+[See this](development/contributing.html) if you are contributing to abapGit
