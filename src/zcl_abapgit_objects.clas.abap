@@ -224,6 +224,7 @@ CLASS zcl_abapgit_objects DEFINITION
         it_results        TYPE zif_abapgit_definitions=>ty_results_tt
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt.
+
 ENDCLASS.
 
 
@@ -817,7 +818,19 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
   METHOD prioritize_deser.
 
+* todo, refactor this method
+
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
+
+* WEBI has to be handled before SPRX.
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'WEBI'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
+* SPRX has to be handled before depended objects CLAS/INFT/TABL etc.
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'SPRX'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
 
 * XSLT has to be handled before CLAS/PROG
     LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'XSLT'.
@@ -831,11 +844,6 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 * ISAP has to be handled before ISRP
     LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'IASP'.
-      APPEND <ls_result> TO rt_results.
-    ENDLOOP.
-
-* PINF has to be handled before DEVC for package interface usage
-    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'PINF'.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
@@ -854,8 +862,21 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         AND obj_type <> 'PROG'
         AND obj_type <> 'XSLT'
         AND obj_type <> 'PINF'
+        AND obj_type <> 'DEVC'
         AND obj_type <> 'ENHS'
-        AND obj_type <> 'DDLS'.
+        AND obj_type <> 'DDLS'
+        AND obj_type <> 'SPRX'
+        AND obj_type <> 'WEBI'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
+* PINF after everything as it can expose objects
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'PINF'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
+* DEVC after PINF, as it can refer for package interface usage
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'DEVC'.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 

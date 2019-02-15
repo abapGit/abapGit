@@ -50,7 +50,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
   METHOD adjust_inbound.
 
     FIELD-SYMBOLS: <ls_scprvals> TYPE scprvals,
-                   <ls_scprreca> TYPE scprreca.
+                   <ls_scprreca> TYPE scprreca,
+                   <ls_scprvall> TYPE scprvall.
 
 * back to internal format
     LOOP AT cs_scp1-scprvals ASSIGNING <ls_scprvals>.
@@ -59,6 +60,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
     LOOP AT cs_scp1-scprreca ASSIGNING <ls_scprreca>.
       SHIFT <ls_scprreca>-recnumber RIGHT DELETING TRAILING space.
     ENDLOOP.
+    LOOP AT cs_scp1-scprvall ASSIGNING <ls_scprvall>.
+      SHIFT <ls_scprvall>-recnumber RIGHT DELETING TRAILING space.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -66,7 +70,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
   METHOD adjust_outbound.
 
     FIELD-SYMBOLS: <ls_scprvals> TYPE scprvals,
-                   <ls_scprreca> TYPE scprreca.
+                   <ls_scprreca> TYPE scprreca,
+                   <ls_scprvall> TYPE scprvall.
 
 * normalize the XML
     LOOP AT cs_scp1-scprvals ASSIGNING <ls_scprvals>.
@@ -74,6 +79,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
     ENDLOOP.
     LOOP AT cs_scp1-scprreca ASSIGNING <ls_scprreca>.
       CONDENSE <ls_scprreca>-recnumber.
+    ENDLOOP.
+    LOOP AT cs_scp1-scprvall ASSIGNING <ls_scprvall>.
+      CONDENSE <ls_scprvall>-recnumber.
     ENDLOOP.
 
   ENDMETHOD.

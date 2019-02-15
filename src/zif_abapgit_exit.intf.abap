@@ -35,6 +35,7 @@ INTERFACE zif_abapgit_exit
       zcx_abapgit_exception .
   METHODS http_client
     IMPORTING
+      !iv_url    TYPE string
       !ii_client TYPE REF TO if_http_client .
   METHODS change_tadir
     IMPORTING

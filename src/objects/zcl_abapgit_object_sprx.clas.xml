@@ -3,23 +3,15 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_ABAPGIT_OBJECT_VCLS</CLSNAME>
+    <CLSNAME>ZCL_ABAPGIT_OBJECT_SPRX</CLSNAME>
     <VERSION>1</VERSION>
     <LANGU>E</LANGU>
-    <DESCRIPT>VCLS</DESCRIPT>
+    <DESCRIPT>Proxy Objects</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
    </VSEOCLASS>
-   <DESCRIPTIONS>
-    <SEOCOMPOTX>
-     <CLSNAME>ZCL_ABAPGIT_OBJECT_VCLS</CLSNAME>
-     <CMPNAME>CHECK_LOCK</CMPNAME>
-     <LANGU>E</LANGU>
-     <DESCRIPT>check if lock entry exits</DESCRIPT>
-    </SEOCOMPOTX>
-   </DESCRIPTIONS>
   </asx:values>
  </asx:abap>
 </abapGit>

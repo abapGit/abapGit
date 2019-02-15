@@ -43,6 +43,7 @@ ENDCLASS.
 
 CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
+
   METHOD constructor.
 
     DATA ls_dummy_meta_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask.
@@ -214,15 +215,16 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD zif_abapgit_persist_repo~update_metadata.
 
     DATA:
-          lv_blob            TYPE zif_abapgit_persistence=>ty_content-data_str,
-          ls_persistent_meta TYPE zif_abapgit_persistence=>ty_repo.
+      lv_blob            TYPE zif_abapgit_persistence=>ty_content-data_str,
+      ls_persistent_meta TYPE zif_abapgit_persistence=>ty_repo.
 
     FIELD-SYMBOLS <lv_field>   LIKE LINE OF mt_meta_fields.
-    FIELD-SYMBOLS <lv_dst>     TYPE ANY.
-    FIELD-SYMBOLS <lv_src>     TYPE ANY.
+    FIELD-SYMBOLS <lv_dst>     TYPE any.
+    FIELD-SYMBOLS <lv_src>     TYPE any.
     FIELD-SYMBOLS <lv_changed> TYPE abap_bool.
 
     ASSERT NOT iv_key IS INITIAL.
@@ -261,5 +263,4 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
                    iv_data  = lv_blob ).
 
   ENDMETHOD.
-
 ENDCLASS.

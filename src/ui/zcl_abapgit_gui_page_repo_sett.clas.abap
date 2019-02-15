@@ -58,7 +58,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -232,9 +232,7 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
 
     DATA: lo_dot          TYPE REF TO zcl_abapgit_dot_abapgit,
           ls_post_field   LIKE LINE OF it_post_fields,
-          lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
           lo_requirements TYPE REF TO lcl_requirements.
-    FIELD-SYMBOLS: <ls_requirement> TYPE zif_abapgit_dot_abapgit=>ty_requirement.
 
 
     lo_dot = mo_repo->get_dot_abapgit( ).

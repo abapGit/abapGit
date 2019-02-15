@@ -27,7 +27,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_intf IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -172,14 +172,37 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~delete.
-    DATA: ls_clskey TYPE seoclskey.
+    DATA: ls_clskey     TYPE seoclskey,
+          ls_vseointerf TYPE vseointerf.
+
     ls_clskey-clsname = ms_item-obj_name.
+    ls_vseointerf = mi_object_oriented_object_fct->get_interface_properties( ls_clskey ).
+
+    IF ls_vseointerf-clsproxy = abap_true.
+      " Proxy interfaces are managed via SPRX
+      RETURN.
+    ENDIF.
+
+    IF zif_abapgit_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
 
     mi_object_oriented_object_fct->delete( ls_clskey ).
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
+
+    DATA: ls_vseointerf TYPE vseointerf.
+
+    io_xml->read( EXPORTING iv_name = 'VSEOINTERF'
+                  CHANGING cg_data = ls_vseointerf ).
+
+    IF ls_vseointerf-clsproxy = abap_true.
+      " Proxy interfaces are managed via SPRX
+      RETURN.
+    ENDIF.
+
     deserialize_abap( io_xml     = io_xml
                       iv_package = iv_package ).
 
@@ -229,6 +252,25 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+
+    DATA: lv_object TYPE eqegraarg.
+
+    lv_object = |{ ms_item-obj_name }|.
+    OVERLAY lv_object WITH '==============================P'.
+    lv_object = lv_object && '*'.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESEOCLASS'
+                                            iv_argument    = lv_object ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
     CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
@@ -264,23 +306,5 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
     mo_files->add_abap( lt_source ).
 
     serialize_xml( io_xml ).
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-
-    DATA: lv_object TYPE eqegraarg.
-
-    lv_object = |{ ms_item-obj_name }|.
-    OVERLAY lv_object WITH '==============================P'.
-    lv_object = lv_object && '*'.
-
-    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESEOCLASS'
-                                            iv_argument    = lv_object ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.
