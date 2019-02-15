@@ -72,7 +72,7 @@ CLASS zcl_abapgit_object_enqu IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'DD27P_TABLE'
                   CHANGING cg_data = lt_dd27p ).
 
-    corr_insert( iv_package ).
+    corr_insert( iv_package = iv_package iv_object_class = 'DICT' ).
 
     lv_name = ms_item-obj_name.
 

@@ -37,6 +37,7 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
     METHODS corr_insert
       IMPORTING
         !iv_package TYPE devclass
+        !iv_object_class TYPE any OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS tadir_insert
@@ -141,28 +142,38 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
 
   METHOD corr_insert.
 
-    DATA: ls_object TYPE ddenqs.
+    DATA: lv_object       TYPE string,
+          lv_object_class TYPE string.
 
-
-    ls_object-objtype = ms_item-obj_type.
-    ls_object-objname = ms_item-obj_name.
+    IF iv_object_class IS NOT INITIAL.
+      lv_object_class = iv_object_class.
+      IF iv_object_class = 'DICT'.
+        CONCATENATE ms_item-obj_type ms_item-obj_name INTO lv_object.
+      ELSE.
+        lv_object = ms_item-obj_name.
+      ENDIF.
+    ELSE.
+      lv_object_class = ms_item-obj_type.
+      lv_object       = ms_item-obj_name.
+    ENDIF.
 
     CALL FUNCTION 'RS_CORR_INSERT'
       EXPORTING
-        object              = ls_object
-        object_class        = 'DICT'
+        object              = lv_object
+        object_class        = lv_object_class
         devclass            = iv_package
         master_language     = mv_language
-        mode                = 'INSERT'
+        global_lock         = abap_true
+        author              = sy-uname
+        mode                = 'I'
+        suppress_dialog     = abap_true
       EXCEPTIONS
         cancelled           = 1
         permission_failure  = 2
         unknown_objectclass = 3
         OTHERS              = 4.
-    IF sy-subrc = 1.
-      zcx_abapgit_exception=>raise( 'Cancelled' ).
-    ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT' ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
