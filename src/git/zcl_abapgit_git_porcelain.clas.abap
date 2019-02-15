@@ -72,6 +72,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         VALUE(rt_expanded) TYPE zif_abapgit_definitions=>ty_expanded_tt
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES:
@@ -544,7 +545,6 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
       iv_type = zif_abapgit_definitions=>c_type-tag
       iv_data = lv_tag ).
 
-    CLEAR ls_object.
     ls_object-sha1 = lv_new_tag_sha1.
     ls_object-type = zif_abapgit_definitions=>c_type-tag.
     ls_object-data = lv_tag.
@@ -569,8 +569,8 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
           lv_commit TYPE xstring,
           lv_pack   TYPE xstring,
           ls_object LIKE LINE OF et_new_objects,
-          ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
-    DATA: lv_uindex     TYPE sy-index.
+          ls_commit TYPE zcl_abapgit_git_pack=>ty_commit,
+          lv_uindex TYPE sy-index.
 
     FIELD-SYMBOLS: <ls_tree> LIKE LINE OF it_trees,
                    <ls_blob> LIKE LINE OF it_blobs.
@@ -597,7 +597,6 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
     ls_commit-body      = is_comment-comment.
     lv_commit = zcl_abapgit_git_pack=>encode_commit( ls_commit ).
 
-    CLEAR ls_object.
     ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-commit iv_data = lv_commit ).
     ls_object-type = zif_abapgit_definitions=>c_type-commit.
     ls_object-data = lv_commit.
@@ -641,7 +640,7 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
       ENDIF.
 
       ls_object-type = zif_abapgit_definitions=>c_type-blob.
-*       ASSERT NOT <ls_blob>-data IS INITIAL. "#1857 allow empty files - some more checks needed?
+* note <ls_blob>-data can be empty, #1857 allow empty files - some more checks needed?
       ls_object-data = <ls_blob>-data.
       lv_uindex = lv_uindex + 1.
       ls_object-index = lv_uindex.

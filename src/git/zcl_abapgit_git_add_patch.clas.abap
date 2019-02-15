@@ -22,6 +22,7 @@ CLASS zcl_abapgit_git_add_patch DEFINITION
         RAISING
           zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA:
       mt_diff  TYPE zif_abapgit_definitions=>ty_diffs_tt,
@@ -38,12 +39,12 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_git_add_patch IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GIT_ADD_PATCH IMPLEMENTATION.
 
 
   METHOD calculate_patch.
 
-    FIELD-SYMBOLS: <ls_diff> TYPE zif_abapgit_definitions=>ty_diff.
+    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
 
     LOOP AT mt_diff ASSIGNING <ls_diff>.
 

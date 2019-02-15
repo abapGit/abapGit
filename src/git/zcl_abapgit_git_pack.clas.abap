@@ -167,20 +167,21 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
           lv_decompress_len TYPE i,
           lv_xstring        TYPE xstring,
           lv_expected       TYPE i,
-          ls_object         LIKE LINE OF rt_objects.
-    DATA: lv_uindex            TYPE sy-index.
+          ls_object         LIKE LINE OF rt_objects,
+          lv_uindex         TYPE sy-index.
+
 
     lv_data = iv_data.
 
 * header
     IF NOT xstrlen( lv_data ) > 4 OR lv_data(4) <> c_pack_start.
-      zcx_abapgit_exception=>raise( 'Unexpected pack header' ).
+      zcx_abapgit_exception=>raise( |Unexpected pack header| ).
     ENDIF.
     lv_data = lv_data+4.
 
 * version
     IF lv_data(4) <> c_version.
-      zcx_abapgit_exception=>raise( 'Version not supported' ).
+      zcx_abapgit_exception=>raise( |Version not supported| ).
     ENDIF.
     lv_data = lv_data+4.
 
@@ -208,7 +209,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 * strip header, '789C', CMF + FLG
       lv_zlib = lv_data(2).
       IF lv_zlib <> c_zlib AND lv_zlib <> c_zlib_hmm.
-        zcx_abapgit_exception=>raise( 'Unexpected zlib header' ).
+        zcx_abapgit_exception=>raise( |Unexpected zlib header| ).
       ENDIF.
       lv_data = lv_data+2.
 
@@ -223,7 +224,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
             raw_out_len = lv_decompress_len ).
 
         IF lv_expected <> lv_decompress_len.
-          zcx_abapgit_exception=>raise( 'Decompression falied' ).
+          zcx_abapgit_exception=>raise( |Decompression falied| ).
         ENDIF.
 
         cl_abap_gzip=>compress_binary(
@@ -274,7 +275,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
     lv_xstring = iv_data(lv_len).
     lv_sha1 = zcl_abapgit_hash=>sha1_raw( lv_xstring ).
     IF to_upper( lv_sha1 ) <> lv_data.
-      zcx_abapgit_exception=>raise( 'SHA1 at end of pack doesnt match' ).
+      zcx_abapgit_exception=>raise( |SHA1 at end of pack doesnt match| ).
     ENDIF.
 
     decode_deltas( CHANGING ct_objects = rt_objects ).
@@ -326,7 +327,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
     IF rs_commit-author IS INITIAL
         OR rs_commit-committer IS INITIAL
         OR rs_commit-tree IS INITIAL.
-      zcx_abapgit_exception=>raise( 'multiple parents? not supported' ).
+      zcx_abapgit_exception=>raise( |multiple parents? not supported| ).
     ENDIF.
 
   ENDMETHOD.
@@ -340,8 +341,8 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
 
     LOOP AT ct_objects INTO ls_object
-      USING KEY type
-      WHERE type = zif_abapgit_definitions=>c_type-ref_d.
+        USING KEY type
+        WHERE type = zif_abapgit_definitions=>c_type-ref_d.
       INSERT ls_object INTO TABLE lt_deltas.
     ENDLOOP.
 
@@ -460,7 +461,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       IF ls_node-chmod <> zif_abapgit_definitions=>c_chmod-dir
           AND ls_node-chmod <> zif_abapgit_definitions=>c_chmod-file
           AND ls_node-chmod <> zif_abapgit_definitions=>c_chmod-executable.
-        zcx_abapgit_exception=>raise( 'Unknown chmod' ).
+        zcx_abapgit_exception=>raise( |Unknown chmod| ).
       ENDIF.
 
       lv_offset = lv_match + 1.
@@ -513,7 +514,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Base not found, { is_object-sha1 }| ).
     ELSEIF <ls_object>-type = zif_abapgit_definitions=>c_type-ref_d.
 * sanity check
-      zcx_abapgit_exception=>raise( 'Delta, base eq delta' ).
+      zcx_abapgit_exception=>raise( |Delta, base eq delta| ).
     ENDIF.
 
     lv_base = <ls_object>-data.
@@ -810,7 +811,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       WHEN 112.
         rv_type = zif_abapgit_definitions=>c_type-ref_d.
       WHEN OTHERS.
-        zcx_abapgit_exception=>raise( 'Todo, unknown type' ).
+        zcx_abapgit_exception=>raise( |Todo, unknown git pack type| ).
     ENDCASE.
 
   ENDMETHOD.
@@ -870,7 +871,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_type-ref_d.
         lv_type = 112.
       WHEN OTHERS.
-        zcx_abapgit_exception=>raise( 'Unexpected object type while encoding pack' ).
+        zcx_abapgit_exception=>raise( |Unexpected object type while encoding pack| ).
     ENDCASE.
 
     lv_length = iv_length.
@@ -911,7 +912,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
     cv_decompressed = ls_data-raw.
 
     IF lv_compressed_len IS INITIAL.
-      zcx_abapgit_exception=>raise( 'Decompression falied :o/' ).
+      zcx_abapgit_exception=>raise( |Decompression falied :o/| ).
     ENDIF.
 
     cv_data = cv_data+lv_compressed_len.
@@ -924,7 +925,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       cv_data = cv_data+1.
     ENDIF.
     IF cv_data(4) <> lv_adler32.
-      zcx_abapgit_exception=>raise( 'Wrong Adler checksum' ).
+      zcx_abapgit_exception=>raise( |Wrong Adler checksum| ).
     ENDIF.
   ENDMETHOD.
 ENDCLASS.
