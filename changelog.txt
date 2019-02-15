@@ -8,6 +8,20 @@ Legend
 + : added
 - : removed
 
+2019-02-15 v1.84.0
+------------------
+* PINF fix deserialization sequence
+* DOMA do not serialize translations without language
+* Downport
+! SFPF + SFPI format changed, downwards compatible
+* Background mode, auto push, deletion commit message changed
+* ACID deletion sequence fixed
+* FUGR, exlcude reuseable includes
+* MSAG, fix transport entry
+! Limit max threads in serialization to 32
+! Remove HAS_CHANGED_SINCE feature
+! Transport to branch, ignore fiels not in local repo
+
 2019-02-12 v1.83.0
 ------------------
 + SPRX support
