@@ -134,6 +134,11 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
     ASSERT gv_max_threads >= 1.
 
+    IF gv_max_threads > 32.
+* https://en.wikipedia.org/wiki/Amdahl%27s_law
+      gv_max_threads = 32.
+    ENDIF.
+
     rv_threads = gv_max_threads.
 
   ENDMETHOD.
