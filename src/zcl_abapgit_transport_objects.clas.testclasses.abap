@@ -43,7 +43,8 @@ CLASS ltcl_transport_objects DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HA
       then_it_should_remove_at_stage
         IMPORTING
           iv_filename TYPE string
-          iv_path     TYPE string.
+          iv_path     TYPE string,
+      then_it_should_not_raise_excpt.
 
     DATA: mo_transport_objects TYPE REF TO zcl_abapgit_transport_objects,
           mt_transport_objects TYPE zif_abapgit_definitions=>ty_tadir_tt,
@@ -157,8 +158,8 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_obj_type   = 'CLAS'
       iv_lstate     = zif_abapgit_definitions=>c_state-added ).
 
-    then_it_should_raise_exception(
-      iv_with_text = 'Object CL_A_CLASS_NOT_IN_REPO not found in the local repository files' ).
+    then_it_should_not_raise_excpt( ).
+
   ENDMETHOD.
 
   METHOD object_not_in_local_files.
@@ -178,9 +179,8 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_filename = 'CL_FOO.abap'
       iv_path     = '/path'
       iv_data     = 'data' ).
-
     then_it_should_raise_exception(
-      iv_with_text = 'Object CL_FOO not found in the local repository files' ).
+          iv_with_text = 'Object CL_FOO not found in the local repository files' ).
   ENDMETHOD.
 
   METHOD cant_be_added_with_del_flag.
@@ -357,6 +357,16 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
     IF sy-subrc <> 0.
       cl_abap_unit_assert=>fail( |Object { iv_filename } not removed in stage| ).
     ENDIF.
+  ENDMETHOD.
+
+  METHOD then_it_should_not_raise_excpt.
+    DATA: lx_exception TYPE REF TO zcx_abapgit_exception.
+
+    TRY.
+        when_staging( ).
+      CATCH zcx_abapgit_exception INTO lx_exception.
+        cl_abap_unit_assert=>fail( 'Should not have raised exception' ).
+    ENDTRY.
   ENDMETHOD.
 
 ENDCLASS.

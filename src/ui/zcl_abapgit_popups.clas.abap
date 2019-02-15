@@ -717,7 +717,6 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       SELECT SINGLE as4text FROM e07t INTO lv_desc_as_text  WHERE
         trkorr = ls_transport_header-trkorr AND
         langu = sy-langu.
-
     ELSE.   " Else set branch name and commit message to 'Transport(s)_TRXXXXXX_TRXXXXX'
       lv_transports_as_text = 'Transport(s)'.
       LOOP AT it_transport_headers INTO ls_transport_header.
