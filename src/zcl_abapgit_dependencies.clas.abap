@@ -10,6 +10,7 @@ CLASS zcl_abapgit_dependencies DEFINITION
         !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES:
@@ -48,7 +49,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_dependencies IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
 
 
   METHOD get_ddls_dependencies.
@@ -74,9 +75,9 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
 
   METHOD resolve.
 
-    DATA: lv_tabclass    TYPE dd02l-tabclass.
+    DATA: lv_tabclass TYPE dd02l-tabclass.
 
-    FIELD-SYMBOLS: <ls_tadir>            LIKE LINE OF ct_tadir.
+    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF ct_tadir.
 
 * misuse field KORRNUM to fix deletion sequence
 
@@ -106,6 +107,9 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
           ENDIF.
         WHEN 'DTEL'.
           <ls_tadir>-korrnum = '8000'.
+* ACID after PROG/FUGR/CLAS
+        WHEN 'ACID'.
+          <ls_tadir>-korrnum = '3000'.
         WHEN 'PARA'.
 * PARA after DTEL
           <ls_tadir>-korrnum = '8100'.

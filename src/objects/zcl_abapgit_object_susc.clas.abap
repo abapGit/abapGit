@@ -4,24 +4,28 @@ CLASS zcl_abapgit_object_susc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
   PROTECTED SECTION.
+
     CONSTANTS transobjecttype_class TYPE char1 VALUE 'C' ##NO_TEXT.
 
     METHODS has_authorization
-      IMPORTING iv_object_type TYPE seu_objid
-                iv_class       TYPE tobc-oclss
-                iv_activity    TYPE activ_auth
-      RAISING   zcx_abapgit_exception.
+      IMPORTING
+        !iv_class    TYPE tobc-oclss
+        !iv_activity TYPE activ_auth
+      RAISING
+        zcx_abapgit_exception .
     METHODS is_used
-      IMPORTING iv_auth_object_class TYPE tobc-oclss
-      RAISING   zcx_abapgit_exception.
+      IMPORTING
+        !iv_auth_object_class TYPE tobc-oclss
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
-    METHODS delete_class
-      IMPORTING iv_auth_object_class TYPE tobc-oclss.
-    METHODS put_delete_to_transport
-      IMPORTING iv_auth_object_class TYPE tobc-oclss
-                iv_object_type       TYPE seu_objid
-      RAISING   zcx_abapgit_exception.
 
+    METHODS delete_class
+      IMPORTING
+        !iv_auth_object_class TYPE tobc-oclss .
+    METHODS put_delete_to_transport
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -41,7 +45,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSC IMPLEMENTATION.
 
     AUTHORITY-CHECK OBJECT 'S_DEVELOP'
            ID 'DEVCLASS' DUMMY
-           ID 'OBJTYPE' FIELD iv_object_type
+           ID 'OBJTYPE' FIELD 'SUSC'
            ID 'OBJNAME' FIELD iv_class
            ID 'P_GROUP' DUMMY
            ID 'ACTVT'   FIELD iv_activity.
@@ -79,7 +83,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSC IMPLEMENTATION.
           lv_tadir_object   TYPE tadir-object,
           lv_tadir_obj_name TYPE tadir-obj_name.
 
-    lv_tr_object_name = iv_auth_object_class.
+
+    lv_tr_object_name = ms_item-obj_name.
+
     CALL FUNCTION 'SUSR_COMMEDITCHECK'
       EXPORTING
         objectname       = lv_tr_object_name
@@ -99,7 +105,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSC IMPLEMENTATION.
       EXCEPTIONS
         OTHERS      = 1.
     IF sy-subrc = 0 AND ls_package_info-korrflag IS INITIAL.
-      lv_tadir_object   = iv_object_type.
+      lv_tadir_object   = ms_item-obj_type.
       lv_tadir_obj_name = lv_tr_object_name.
       CALL FUNCTION 'TR_TADIR_INTERFACE'
         EXPORTING
@@ -126,13 +132,13 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSC IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~delete.
+
     CONSTANTS lc_activity_delete_06 TYPE activ_auth VALUE '06'.
 
     DATA: lv_auth_object_class TYPE tobc-oclss.
-    DATA: lv_object_type       TYPE seu_objid.
+
 
     lv_auth_object_class = ms_item-obj_name.
-    lv_object_type = ms_item-obj_type.
 
     TRY.
         me->zif_abapgit_object~exists( ).
@@ -140,16 +146,15 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSC IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    has_authorization( iv_object_type = lv_object_type
-                       iv_class       = lv_auth_object_class
-                       iv_activity    = lc_activity_delete_06 ).
+    has_authorization( iv_class    = lv_auth_object_class
+                       iv_activity = lc_activity_delete_06 ).
 
     is_used( lv_auth_object_class ).
 
     delete_class( lv_auth_object_class ).
 
-    put_delete_to_transport( iv_auth_object_class = lv_auth_object_class
-                             iv_object_type       = lv_object_type ).
+    put_delete_to_transport( ).
+
   ENDMETHOD.
 
 
