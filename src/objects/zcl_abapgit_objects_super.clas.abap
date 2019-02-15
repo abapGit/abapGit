@@ -142,12 +142,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
 
   METHOD corr_insert.
 
-    DATA: lv_object           TYPE string,
-          lv_object_class     TYPE string,
-          lv_gui_is_available TYPE c,
-          lv_korrnum_check    TYPE e070-trkorr,
-          lv_ordernum_check   TYPE e070-trkorr,
-          lv_korrnum          TYPE e070-trkorr.
+    DATA: lv_object       TYPE string,
+          lv_object_class TYPE string.
 
     IF iv_object_class IS NOT INITIAL.
       lv_object_class = iv_object_class.
@@ -161,76 +157,21 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
       lv_object       = ms_item-obj_name.
     ENDIF.
 
-    CALL FUNCTION 'GUI_IS_AVAILABLE'
-      IMPORTING
-        return = lv_gui_is_available.
-
-    IF lv_gui_is_available EQ abap_true.
-      CALL FUNCTION 'RS_CORR_INSERT'
-        EXPORTING
-          object              = lv_object
-          object_class        = lv_object_class
-          devclass            = iv_package
-          master_language     = mv_language
-          global_lock         = abap_true
-          mode                = 'I'
-        EXCEPTIONS
-          cancelled           = 1
-          permission_failure  = 2
-          unknown_objectclass = 3
-          OTHERS              = 4.
-    ELSE.
-
-      "check whether object is currently locked in different transport
-      CALL FUNCTION 'RS_CORR_CHECK'
-        EXPORTING
-          object              = lv_object
-          object_class        = lv_object_class
-          mode                = 'I'
-          global_lock         = abap_true
-          suppress_dialog     = abap_true
-        IMPORTING
-*         devclass            =
-*         error_info          =
-*         master_language     =
-          korrnum             = lv_korrnum_check
-          ordernum            = lv_ordernum_check
-*         transport_key       =
-*         tadire              =
-        EXCEPTIONS
-          cancelled           = 1
-          permission_failure  = 2
-          unknown_objectclass = 3
-          OTHERS              = 4.
-      CASE sy-subrc.
-        WHEN 0.
-          IF lv_ordernum_check IS NOT INITIAL.
-            "take task under lv_ordernum_check
-            lv_korrnum = lv_korrnum_check.
-          ELSE.
-            lv_korrnum = cl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
-          ENDIF.
-        WHEN OTHERS.
-          cx_abapgit_exception=>raise_t100( ).
-      ENDCASE.
-
-      CALL FUNCTION 'RS_CORR_INSERT'
-        EXPORTING
-          object              = lv_object
-          object_class        = lv_object_class
-          mode                = 'I'
-          global_lock         = abap_true
-          korrnum             = lv_korrnum
-          devclass            = iv_package
-          author              = sy-uname
-          master_language     = mv_language "sy-langu
-          suppress_dialog     = abap_true
-        EXCEPTIONS
-          cancelled           = 1
-          permission_failure  = 2
-          unknown_objectclass = 3
-          OTHERS              = 4.
-    ENDIF.
+    CALL FUNCTION 'RS_CORR_INSERT'
+      EXPORTING
+        object              = lv_object
+        object_class        = lv_object_class
+        devclass            = iv_package
+        master_language     = mv_language
+        global_lock         = abap_true
+        author              = sy-uname
+        mode                = 'I'
+        suppress_dialog     = abap_true
+      EXCEPTIONS
+        cancelled           = 1
+        permission_failure  = 2
+        unknown_objectclass = 3
+        OTHERS              = 4.
     IF sy-subrc <> 0.
       cx_abapgit_exception=>raise_t100( ).
     ENDIF.
