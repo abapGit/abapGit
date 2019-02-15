@@ -146,9 +146,9 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     given_diff:
       " patch_flag  new_num   new result   old_num   old
-          ' '       '    1'   ' '   ' '    '    1'   ' '             ,
+          ' '       '    1'   ' '   ' '    '    1'   ' ',
           'X'       '     '   ' '   'D'    '    2'   'write: `Test`.',
-          ' '       '    2'   ' '   ' '    '    3'   ' '             .
+          ' '       '    2'   ' '   ' '    '    3'   ' '.
 
     when_patch_is_calculated( ).
 
@@ -160,10 +160,10 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     given_diff:
       " patch_flag  new_num   new result   old_num   old
-          ' '       '    1'   ' '   ' '    '    1'   ' '                    ,
-          'X'       '     '   ' '   'D'    '    2'   'write: `Test`.'       ,
+          ' '       '    1'   ' '   ' '    '    1'   ' ',
+          'X'       '     '   ' '   'D'    '    2'   'write: `Test`.',
           'X'       '     '   ' '   'D'    '    3'   'write: `Hello world`.',
-          ' '       '    2'   ' '   ' '    '    4'   ' '                    .
+          ' '       '    2'   ' '   ' '    '    4'   ' '.
 
     when_patch_is_calculated( ).
 
@@ -175,11 +175,11 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     given_diff:
       " patch_flag  new_num   new result   old_num   old
-          ' '       '    1'   ' '   ' '    '    1'   ' '                    ,
-          'X'       '     '   ' '   'D'    '    2'   'write: `Test`.'       ,
+          ' '       '    1'   ' '   ' '    '    1'   ' ',
+          'X'       '     '   ' '   'D'    '    2'   'write: `Test`.',
           ' '       '     '   ' '   'D'    '    3'   'write: `Hello world`.',
-          'X'       '     '   ' '   'D'    '    4'   'write: `Hello 123`.'  ,
-          ' '       '    2'   ' '   ' '    '    5'   ' '                    .
+          'X'       '     '   ' '   'D'    '    4'   'write: `Hello 123`.',
+          ' '       '    2'   ' '   ' '    '    5'   ' '.
 
     when_patch_is_calculated( ).
 
@@ -194,12 +194,12 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     given_diff:
       " patch_flag  new_num   new result   old_num   old
-          ' '       '    1'   ' '   ' '    '    1'   ' '                    ,
-          'X'       '     '   ' '   'D'    '    2'   'write: `Test`.'       ,
+          ' '       '    1'   ' '   ' '    '    1'   ' ',
+          'X'       '     '   ' '   'D'    '    2'   'write: `Test`.',
           ' '       '     '   ' '   'D'    '    3'   'write: `Hello world`.',
-          ' '       '     '   ' '   'D'    '    4'   'write: `Hello 123`.'  ,
-          'X'       '     '   ' '   'D'    '    5'   'write: `Hello test`.' ,
-          ' '       '    2'   ' '   ' '    '    6'   ' '                    .
+          ' '       '     '   ' '   'D'    '    4'   'write: `Hello 123`.',
+          'X'       '     '   ' '   'D'    '    5'   'write: `Hello test`.',
+          ' '       '    2'   ' '   ' '    '    6'   ' '.
 
     when_patch_is_calculated( ).
 
@@ -215,9 +215,9 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     given_diff:
       " patch_flag  new_num   new                    result   old_num   old
-          ' '       '    1'   ' '                      ' '    '    1'   ' '             ,
+          ' '       '    1'   ' '                      ' '    '    1'   ' ',
           'X'       '    2'   'write: `Hello world`.'  'U'    '    2'   'write: `Test`.',
-          ' '       '    3'   ' '                      ' '    '    3'   ' '             .
+          ' '       '    3'   ' '                      ' '    '    3'   ' '.
 
     when_patch_is_calculated( ).
 
@@ -232,10 +232,10 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     given_diff:
       " patch_flag  new_num   new                    result   old_num   old
-          ' '       '    1'   ' '                      ' '    '    1'   ' '                    ,
-          'X'       '    2'   'write: `Hello world`.'  'U'    '    2'   'write: `Test`.'       ,
+          ' '       '    1'   ' '                      ' '    '    1'   ' ',
+          'X'       '    2'   'write: `Hello world`.'  'U'    '    2'   'write: `Test`.',
           'X'       '    3'   'write: `Test`.'         'U'    '    3'   'write: `Hello world`.',
-          ' '       '    4'   ' '                      ' '    '    4'   ' '                    .
+          ' '       '    4'   ' '                      ' '    '    4'   ' '.
 
     when_patch_is_calculated( ).
 
@@ -251,11 +251,11 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     given_diff:
       " patch_flag  new_num   new                    result   old_num   old
-          ' '       '    1'   ' '                      ' '    '    1'   ' '                    ,
-          'X'       '    2'   'write: `Hello world`.'  'U'    '    2'   'write: `Test`.'       ,
-          ' '       '    3'   ' '                      ' '    '    3'   ' '                    ,
+          ' '       '    1'   ' '                      ' '    '    1'   ' ',
+          'X'       '    2'   'write: `Hello world`.'  'U'    '    2'   'write: `Test`.',
+          ' '       '    3'   ' '                      ' '    '    3'   ' ',
           'X'       '    4'   'write: `Test`.'         'U'    '    4'   'write: `Hello world`.',
-          ' '       '    5'   ' '                      ' '    '    5'   ' '                    .
+          ' '       '    5'   ' '                      ' '    '    5'   ' '.
 
     when_patch_is_calculated( ).
 
@@ -272,11 +272,11 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     given_diff:
       " patch_flag  new_num   new                    result   old_num   old
-          ' '       '    1'   ' '                      ' '    '    1'   ' '                    ,
-          'X'       '    2'   'write: `Hello world`.'  'U'    '    2'   'write: `Test`.'       ,
-          ' '       '    3'   ' '                      ' '    '    3'   ' '                    ,
+          ' '       '    1'   ' '                      ' '    '    1'   ' ',
+          'X'       '    2'   'write: `Hello world`.'  'U'    '    2'   'write: `Test`.',
+          ' '       '    3'   ' '                      ' '    '    3'   ' ',
           ' '       '    4'   'write: `Test`.'         'U'    '    4'   'write: `Hello world`.',
-          ' '       '    5'   ' '                      ' '    '    5'   ' '                    .
+          ' '       '    5'   ' '                      ' '    '    5'   ' '.
 
     when_patch_is_calculated( ).
 
@@ -293,12 +293,12 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     given_diff:
       " patch_flag  new_num   new                    result   old_num   old
-          ' '       '    1'   ' '                      ' '    '    1'   ' '                    ,
-          'X'       '    2'   'write: `Hello world`.'  'U'    '    2'   'write: `Test`.'       ,
-          ' '       '    3'   ' '                      ' '    '    3'   ' '                    ,
+          ' '       '    1'   ' '                      ' '    '    1'   ' ',
+          'X'       '    2'   'write: `Hello world`.'  'U'    '    2'   'write: `Test`.',
+          ' '       '    3'   ' '                      ' '    '    3'   ' ',
           ' '       '    4'   'write: `Test`.'         'U'    '    4'   'write: `Hello world`.',
-          ' '       '    5'   ' '                      ' '    '    5'   ' '                    ,
-          'X'       '    6'   'write: `newline`.'      'I'    '     '   ' '                    .
+          ' '       '    5'   ' '                      ' '    '    5'   ' ',
+          'X'       '    6'   'write: `newline`.'      'I'    '     '   ' '.
 
     when_patch_is_calculated( ).
 
@@ -351,8 +351,7 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
     TRY.
         mt_patch = lo_git_add_patch->get_patch( ).
-
-      CATCH zcx_abapgit_exception INTO mx_error.
+      CATCH zcx_abapgit_exception INTO mx_error ##NO_HANDLER.
     ENDTRY.
 
   ENDMETHOD.
