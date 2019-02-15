@@ -158,10 +158,8 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_obj_type   = 'CLAS'
       iv_lstate     = zif_abapgit_definitions=>c_state-added ).
 
-        then_it_should_not_raise_excpt( ).
+    then_it_should_not_raise_excpt( ).
 
- "   then_it_should_raise_exception(
- "     iv_with_text = 'Object CL_A_CLASS_NOT_IN_REPO not found in the local repository files' ).
   ENDMETHOD.
 
   METHOD object_not_in_local_files.
