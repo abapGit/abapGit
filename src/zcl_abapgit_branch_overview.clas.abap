@@ -530,7 +530,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
   METHOD _sort_commits.
 
     DATA: lt_sorted_commits TYPE ty_commits,
-          lv_next_commit    TYPE zif_abapgit_definitions=>ty_commit,
+          ls_next_commit    TYPE zif_abapgit_definitions=>ty_commit,
           lt_parents        TYPE tyt_commit_sha1_range,
           ls_parent         LIKE LINE OF lt_parents.
 
@@ -554,12 +554,12 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
       DO.
         _get_1st_child_commit( EXPORTING it_commit_sha1s = lt_parents
                                IMPORTING et_commit_sha1s = lt_parents
-                                         es_1st_commit   = lv_next_commit
+                                         es_1st_commit   = ls_next_commit
                                CHANGING  ct_commits      = ct_commits ).
-        IF lv_next_commit IS INITIAL.
+        IF ls_next_commit IS INITIAL.
           EXIT. "DO
         ENDIF.
-        INSERT lv_next_commit INTO TABLE lt_sorted_commits.
+        INSERT ls_next_commit INTO TABLE lt_sorted_commits.
       ENDDO.
     ENDIF.
 

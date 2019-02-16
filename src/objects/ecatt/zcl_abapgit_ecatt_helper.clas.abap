@@ -31,6 +31,7 @@ CLASS zcl_abapgit_ecatt_helper DEFINITION
         RAISING
           cx_ecatt_apl_xml.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
       co_xml TYPE int4 VALUE 1. " downport of if_apl_ecatt_xml=>co_xml
@@ -84,8 +85,8 @@ CLASS ZCL_ABAPGIT_ECATT_HELPER IMPLEMENTATION.
   METHOD download_data.
 
     DATA:
-      lo_xml   TYPE REF TO cl_apl_ecatt_xml,
-      lv_size  TYPE int4.
+      lo_xml  TYPE REF TO cl_apl_ecatt_xml,
+      lv_size TYPE int4.
 
     CLEAR: ev_xml_stream,
            ev_xml_stream_size.
@@ -118,8 +119,8 @@ CLASS ZCL_ABAPGIT_ECATT_HELPER IMPLEMENTATION.
     DATA:
       lo_xml           TYPE REF TO cl_apl_ecatt_xml,
       lv_xstr          TYPE xstring,
-      lv_nc_xmlref_typ TYPE REF TO if_ixml_node_collection,
-      lv_n_xmlref_typ  TYPE REF TO if_ixml_node,
+      li_nc_xmlref_typ TYPE REF TO if_ixml_node_collection,
+      li_n_xmlref_typ  TYPE REF TO if_ixml_node,
       lv_index         TYPE i VALUE 0,
       lv_count         TYPE i.
 
@@ -142,15 +143,15 @@ CLASS ZCL_ABAPGIT_ECATT_HELPER IMPLEMENTATION.
         ex_dom = ri_template_over_all ).
 
 * MD: Workaround, because nodes starting with "XML" are not allowed
-    lv_nc_xmlref_typ ?= ri_template_over_all->get_elements_by_tag_name_ns(
+    li_nc_xmlref_typ ?= ri_template_over_all->get_elements_by_tag_name_ns(
                           'XMLREF_TYP' ).                   "#EC NOTEXT
-    CALL METHOD lv_nc_xmlref_typ->('GET_LENGTH')  " downport
+    CALL METHOD li_nc_xmlref_typ->('GET_LENGTH')  " downport
       RECEIVING
         rval = lv_count.
 
     WHILE lv_index LT lv_count.
-      lv_n_xmlref_typ = lv_nc_xmlref_typ->get_item( lv_index ).
-      lv_n_xmlref_typ->set_name( 'X-MLREF_TYP' ).
+      li_n_xmlref_typ = li_nc_xmlref_typ->get_item( lv_index ).
+      li_n_xmlref_typ->set_name( 'X-MLREF_TYP' ).
       lv_index = lv_index + 1.
     ENDWHILE.
 

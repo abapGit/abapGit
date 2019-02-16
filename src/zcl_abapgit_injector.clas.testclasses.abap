@@ -46,12 +46,12 @@ CLASS ltcl_no_dependency_injection IMPLEMENTATION.
 
   METHOD no_injection.
 
-    DATA: lo_tadir       TYPE REF TO zif_abapgit_tadir,
+    DATA: li_tadir       TYPE REF TO zif_abapgit_tadir,
           lo_class_descr TYPE REF TO cl_abap_classdescr.
 
-    lo_tadir = zcl_abapgit_factory=>get_tadir( ).
+    li_tadir = zcl_abapgit_factory=>get_tadir( ).
 
-    lo_class_descr ?= cl_abap_classdescr=>describe_by_object_ref( lo_tadir ).
+    lo_class_descr ?= cl_abap_classdescr=>describe_by_object_ref( li_tadir ).
 
     cl_abap_unit_assert=>assert_equals(
       exp = '\CLASS=ZCL_ABAPGIT_TADIR'
@@ -75,12 +75,12 @@ CLASS ltcl_simple_dependency_inject IMPLEMENTATION.
 
   METHOD simple_injection.
 
-    DATA: lo_tadir       TYPE REF TO zif_abapgit_tadir,
+    DATA: li_tadir       TYPE REF TO zif_abapgit_tadir,
           lo_class_descr TYPE REF TO cl_abap_classdescr.
 
-    lo_tadir = zcl_abapgit_factory=>get_tadir( ).
+    li_tadir = zcl_abapgit_factory=>get_tadir( ).
 
-    lo_class_descr ?= cl_abap_classdescr=>describe_by_object_ref( lo_tadir ).
+    lo_class_descr ?= cl_abap_classdescr=>describe_by_object_ref( li_tadir ).
 
     cl_abap_unit_assert=>assert_equals(
       exp = '\CLASS-POOL=ZCL_ABAPGIT_INJECTOR\CLASS=LTCL_ABAPGIT_TADIR_MOCK'
