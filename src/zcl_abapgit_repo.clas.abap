@@ -38,9 +38,6 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
         zcx_abapgit_exception .
-    METHODS get_local_checksums
-      RETURNING
-        VALUE(rt_checksums) TYPE zif_abapgit_persistence=>ty_local_checksum_tt .
     METHODS get_local_checksums_per_file
       RETURNING
         VALUE(rt_checksums) TYPE zif_abapgit_definitions=>ty_file_signatures_tt .
@@ -151,6 +148,9 @@ CLASS zcl_abapgit_repo DEFINITION
 
     DATA mi_listener TYPE REF TO zif_abapgit_repo_listener .
 
+    METHODS get_local_checksums
+      RETURNING
+        VALUE(rt_checksums) TYPE zif_abapgit_persistence=>ty_local_checksum_tt .
     METHODS notify_listener
       IMPORTING
         !is_change_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask
