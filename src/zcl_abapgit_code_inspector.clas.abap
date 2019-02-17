@@ -92,7 +92,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
 
 
   METHOD cleanup.
@@ -305,11 +305,6 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |No valid check variant { iv_check_variant_name  }| ).
     ENDIF.
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_code_inspector~get_inspection.
-    ro_inspection = mo_inspection.
   ENDMETHOD.
 
 

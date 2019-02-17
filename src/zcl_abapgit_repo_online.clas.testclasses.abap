@@ -34,11 +34,6 @@ CLASS ltcl_code_inspector IMPLEMENTATION.
 
     ENDIF.
 
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_code_inspector~get_inspection. "##needed
-
   ENDMETHOD.
 
 ENDCLASS.

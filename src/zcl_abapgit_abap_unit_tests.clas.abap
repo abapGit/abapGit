@@ -14,6 +14,7 @@ CLASS zcl_abapgit_abap_unit_tests DEFINITION
         RAISING
           zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA:
       mo_adhoc_code_inspector TYPE REF TO zif_abapgit_code_inspector.
@@ -22,7 +23,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_abap_unit_tests IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ABAP_UNIT_TESTS IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -34,18 +35,9 @@ CLASS zcl_abapgit_abap_unit_tests IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_code_inspector~get_inspection.
-
-    ro_inspection = mo_adhoc_code_inspector->get_inspection( ).
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_code_inspector~run.
 
     rt_list = mo_adhoc_code_inspector->run( ).
 
   ENDMETHOD.
-
-
 ENDCLASS.

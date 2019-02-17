@@ -1,15 +1,10 @@
 INTERFACE zif_abapgit_code_inspector
-  PUBLIC.
+  PUBLIC .
 
-  METHODS:
-    run
-      RETURNING
-        VALUE(rt_list) TYPE scit_alvlist
-      RAISING
-        zcx_abapgit_exception,
 
-    get_inspection
-      RETURNING
-        VALUE(ro_inspection) TYPE REF TO cl_ci_inspection.
-
+  METHODS run
+    RETURNING
+      VALUE(rt_list) TYPE scit_alvlist
+    RAISING
+      zcx_abapgit_exception .
 ENDINTERFACE.

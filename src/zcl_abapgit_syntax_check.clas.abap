@@ -15,6 +15,7 @@ CLASS zcl_abapgit_syntax_check DEFINITION
         RAISING
           zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA:
       mo_adhoc_code_inspector TYPE REF TO zif_abapgit_code_inspector.
@@ -23,7 +24,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_syntax_check IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SYNTAX_CHECK IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -31,13 +32,6 @@ CLASS zcl_abapgit_syntax_check IMPLEMENTATION.
     mo_adhoc_code_inspector = zcl_abapgit_factory=>get_adhoc_code_inspector(
                                 iv_package   = iv_package
                                 iv_test_name = 'CL_CI_TEST_SYNTAX_CHECK' ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_code_inspector~get_inspection.
-
-    ro_inspection = mo_adhoc_code_inspector->get_inspection( ).
 
   ENDMETHOD.
 
