@@ -116,6 +116,9 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO IMPLEMENTATION.
     DATA: lv_enh_id     TYPE enhname,
           li_enh_object TYPE REF TO if_enh_object.
 
+    IF zif_abapgit_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
 
     lv_enh_id = ms_item-obj_name.
     TRY.
