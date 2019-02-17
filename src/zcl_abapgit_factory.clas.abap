@@ -88,7 +88,7 @@ CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
     READ TABLE gt_code_inspector ASSIGNING <ls_code_inspector>
       WITH TABLE KEY package = iv_package.
     IF sy-subrc <> 0.
-      ls_code_inspector-package = iv_package..
+      ls_code_inspector-package = iv_package.
 
       CREATE OBJECT ls_code_inspector-instance TYPE zcl_abapgit_code_inspector
         EXPORTING
