@@ -345,7 +345,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     DATA: lo_zip  TYPE REF TO cl_abap_zip,
           lv_data TYPE xstring.
 
-    FIELD-SYMBOLS: <ls_zipfile> TYPE cl_abap_zip=>t_file,
+    FIELD-SYMBOLS: <ls_zipfile> LIKE LINE OF lo_zip->files,
                    <ls_file>    LIKE LINE OF rt_files.
 
 
