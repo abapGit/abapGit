@@ -6,22 +6,20 @@ CLASS zcl_abapgit_ecatt_helper DEFINITION
     CLASS-METHODS:
       build_xml_of_object
         IMPORTING
-          im_object_name     TYPE  etobj_name
-          im_object_version  TYPE  etobj_ver
-          im_object_type     TYPE  etobj_type
-          io_download        TYPE REF TO cl_apl_ecatt_download
-        EXPORTING
-          ex_xml_stream      TYPE  xstring
-          ex_xml_stream_size TYPE  int4
+          im_object_name       TYPE etobj_name
+          im_object_version    TYPE etobj_ver
+          im_object_type       TYPE etobj_type
+          io_download          TYPE REF TO cl_apl_ecatt_download
+        RETURNING
+          VALUE(rv_xml_stream) TYPE xstring
         RAISING
           zcx_abapgit_exception,
 
       download_data
         IMPORTING
           ii_template_over_all TYPE REF TO if_ixml_document
-        EXPORTING
-          ev_xml_stream        TYPE xstring
-          ev_xml_stream_size   TYPE i,
+        RETURNING
+          VALUE(rv_xml_stream) TYPE xstring,
 
       upload_data_from_stream
         IMPORTING
@@ -40,7 +38,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ECATT_HELPER IMPLEMENTATION.
+CLASS zcl_abapgit_ecatt_helper IMPLEMENTATION.
 
 
   METHOD build_xml_of_object.
@@ -49,7 +47,8 @@ CLASS ZCL_ABAPGIT_ECATT_HELPER IMPLEMENTATION.
 
     DATA: lo_load_help_dummy TYPE REF TO cl_apl_ecatt_load_help,
           lx_ecatt           TYPE REF TO cx_ecatt_apl,
-          lv_text            TYPE string.
+          lv_text            TYPE string,
+          li_download        TYPE REF TO zif_abapgit_ecatt_download.
 
     "download method will create the xml stream
     "note: it's the redefined download( ) of each object type specific download, which is called
@@ -71,13 +70,9 @@ CLASS ZCL_ABAPGIT_ECATT_HELPER IMPLEMENTATION.
         "will never be raised from download, when called with mv_generate_xml_no_download = 'X'.
     ENDTRY.
 
-    CALL METHOD io_download->('GET_XML_STREAM')
-      RECEIVING
-        rv_xml_stream = ex_xml_stream.
+    li_download ?= io_download.
 
-    CALL METHOD io_download->('GET_XML_STREAM_SIZE')
-      RECEIVING
-        rv_xml_stream_size = ex_xml_stream_size.
+    rv_xml_stream = li_download->get_xml_stream( ).
 
   ENDMETHOD.
 
@@ -85,11 +80,7 @@ CLASS ZCL_ABAPGIT_ECATT_HELPER IMPLEMENTATION.
   METHOD download_data.
 
     DATA:
-      lo_xml  TYPE REF TO cl_apl_ecatt_xml,
-      lv_size TYPE int4.
-
-    CLEAR: ev_xml_stream,
-           ev_xml_stream_size.
+      lo_xml TYPE REF TO cl_apl_ecatt_xml.
 
     TRY.
         CALL METHOD cl_apl_ecatt_xml=>('CREATE') " doesn't exist in 702
@@ -102,10 +93,7 @@ CLASS ZCL_ABAPGIT_ECATT_HELPER IMPLEMENTATION.
 
         lo_xml->get_attributes(
           IMPORTING
-            ex_size_xstring = lv_size
-            ex_xml          = ev_xml_stream ).
-
-        ev_xml_stream_size = lv_size.
+            ex_xml = rv_xml_stream ).
 
       CATCH cx_ecatt_apl_xml.
         RETURN.

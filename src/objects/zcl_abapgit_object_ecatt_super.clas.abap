@@ -136,7 +136,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
+CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
 
 
   METHOD clear_attributes.
@@ -213,6 +213,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
 
     DATA: ls_object   TYPE etmobjects,
           lo_upload   TYPE REF TO cl_apl_ecatt_upload,
+          li_upload   TYPE REF TO zif_abapgit_ecatt_upload,
           lv_xml      TYPE xstring,
           lv_text     TYPE string,
           li_document TYPE REF TO if_ixml_document,
@@ -225,16 +226,15 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lo_upload = get_upload( ).
+    lo_upload  = get_upload( ).
+    li_upload ?= lo_upload.
 
     li_document = cl_ixml=>create( )->create_document( ).
     li_document->append_child( ii_version_node->get_first_child( ) ).
 
     lv_xml = cl_ixml_80_20=>render_to_xstring( li_document ).
 
-    CALL METHOD lo_upload->('Z_SET_STREAM_FOR_UPLOAD')
-      EXPORTING
-        iv_xml = lv_xml.
+    li_upload->z_set_stream_for_upload( lv_xml ).
 
     ls_object-d_obj_name  = mv_object_name.
     ls_object-s_obj_type  = get_object_type( ).
@@ -317,14 +317,11 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
 
     lv_object_type = get_object_type( ).
 
-    zcl_abapgit_ecatt_helper=>build_xml_of_object(
-      EXPORTING
-        im_object_name    = mv_object_name
-        im_object_version = is_version_info-version
-        im_object_type    = lv_object_type
-        io_download       = lo_download
-      IMPORTING
-        ex_xml_stream     = lv_xml ).
+    lv_xml = zcl_abapgit_ecatt_helper=>build_xml_of_object(
+                 im_object_name    = mv_object_name
+                 im_object_version = is_version_info-version
+                 im_object_type    = lv_object_type
+                 io_download       = lo_download ).
 
     li_document = cl_ixml_80_20=>parse_to_document( stream_xstring = lv_xml ).
 
@@ -376,14 +373,11 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
 
     lv_object_type = get_object_type( ).
 
-    zcl_abapgit_ecatt_helper=>build_xml_of_object(
-      EXPORTING
-        im_object_name    = mv_object_name
-        im_object_version = iv_version
-        im_object_type    = lv_object_type
-        io_download       = lo_download
-      IMPORTING
-        ex_xml_stream     = lv_xml ).
+    lv_xml = zcl_abapgit_ecatt_helper=>build_xml_of_object(
+                 im_object_name    = mv_object_name
+                 im_object_version = iv_version
+                 im_object_type    = lv_object_type
+                 io_download       = lo_download ).
 
     li_document = cl_ixml_80_20=>parse_to_document( stream_xstring = lv_xml ).
 
