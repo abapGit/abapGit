@@ -49,7 +49,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_DOWN IMPLEMENTATION.
           lo_ecatt_vo TYPE REF TO object.
 
     FIELD-SYMBOLS: <lg_ecatt_vo> TYPE any,
-                   <lt_params>   TYPE REF TO cl_apl_ecatt_params.
+                   <lo_params>   TYPE REF TO cl_apl_ecatt_params.
 
     load_help = im_load_help.
     typ = im_object_type.
@@ -80,21 +80,21 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_DOWN IMPLEMENTATION.
     set_business_msgs( ).
 
     ASSIGN lo_ecatt_vo->('PARAMS')
-           TO <lt_params>.
+           TO <lo_params>.
     ASSERT sy-subrc = 0.
 
-    get_general_params_data( im_params = <lt_params>
+    get_general_params_data( im_params = <lo_params>
                              im_ptyp   = lv_partyp ).
     LOOP AT parm INTO wa_parm.
       set_general_params_data_to_dom( ).
       IF NOT wa_parm-val_type IS INITIAL.
-        set_deep_stru_to_dom( <lt_params> ).
-        set_deep_data_to_dom( im_params = <lt_params>
+        set_deep_stru_to_dom( <lo_params> ).
+        set_deep_data_to_dom( im_params = <lo_params>
                               im_pindex = wa_parm-pindex ).
       ENDIF.
     ENDLOOP.
 
-    set_variants_to_dom( <lt_params> ).
+    set_variants_to_dom( <lo_params> ).
 
     download_data( ).
 

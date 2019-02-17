@@ -83,7 +83,7 @@ CLASS ZCL_ABAPGIT_2FA_AUTH_BASE IMPLEMENTATION.
 
   METHOD get_http_client_for_url.
     DATA: lo_proxy       TYPE REF TO zcl_abapgit_proxy_config,
-          lo_abapgit_exc TYPE REF TO zcx_abapgit_exception,
+          lx_abapgit_exc TYPE REF TO zcx_abapgit_exception,
           lv_error_text  TYPE string.
 
     CREATE OBJECT lo_proxy.
@@ -107,12 +107,15 @@ CLASS ZCL_ABAPGIT_2FA_AUTH_BASE IMPLEMENTATION.
     IF lo_proxy->get_proxy_authentication( iv_url ) = abap_true.
       TRY.
           zcl_abapgit_proxy_auth=>run( ri_client ).
-        CATCH zcx_abapgit_exception INTO lo_abapgit_exc.
-          lv_error_text = lo_abapgit_exc->get_text( ).
+        CATCH zcx_abapgit_exception INTO lx_abapgit_exc.
+          lv_error_text = lx_abapgit_exc->get_text( ).
           IF lv_error_text IS INITIAL.
             lv_error_text = `Proxy authentication error`.
           ENDIF.
-          RAISE EXCEPTION TYPE zcx_abapgit_2fa_comm_error EXPORTING mv_text = lv_error_text previous = lo_abapgit_exc.
+          RAISE EXCEPTION TYPE zcx_abapgit_2fa_comm_error
+            EXPORTING
+              mv_text  = lv_error_text
+              previous = lx_abapgit_exc.
       ENDTRY.
     ENDIF.
   ENDMETHOD.

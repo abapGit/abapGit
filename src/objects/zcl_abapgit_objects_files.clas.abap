@@ -3,64 +3,82 @@ CLASS zcl_abapgit_objects_files DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    METHODS:
-      constructor
-        IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
-                  iv_path TYPE string OPTIONAL,
-      add_string
-        IMPORTING iv_extra  TYPE clike OPTIONAL
-                  iv_ext    TYPE string
-                  iv_string TYPE string
-        RAISING   zcx_abapgit_exception,
-      read_string
-        IMPORTING iv_extra         TYPE clike OPTIONAL
-                  iv_ext           TYPE string
-        RETURNING VALUE(rv_string) TYPE string
-        RAISING   zcx_abapgit_exception,
-      add_xml
-        IMPORTING iv_extra     TYPE clike OPTIONAL
-                  io_xml       TYPE REF TO zcl_abapgit_xml_output
-                  iv_normalize TYPE abap_bool DEFAULT abap_true
-                  is_metadata  TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
-        RAISING   zcx_abapgit_exception,
-* needed since type-check during dynamic call fails even if the object is compatible
-      add_xml_from_plugin
-        IMPORTING iv_extra     TYPE clike OPTIONAL
-                  io_xml       TYPE REF TO object
-                  iv_normalize TYPE abap_bool DEFAULT abap_true
-        RAISING   zcx_abapgit_exception ##called,
-      read_xml
-        IMPORTING iv_extra      TYPE clike OPTIONAL
-        RETURNING VALUE(ro_xml) TYPE REF TO zcl_abapgit_xml_input
-        RAISING   zcx_abapgit_exception,
-      read_abap
-        IMPORTING iv_extra       TYPE clike OPTIONAL
-                  iv_error       TYPE abap_bool DEFAULT abap_true
-        RETURNING VALUE(rt_abap) TYPE abaptxt255_tab
-        RAISING   zcx_abapgit_exception,
-      add_abap
-        IMPORTING iv_extra TYPE clike OPTIONAL
-                  it_abap  TYPE STANDARD TABLE
-        RAISING   zcx_abapgit_exception,
-      add
-        IMPORTING is_file TYPE zif_abapgit_definitions=>ty_file,
-      add_raw
-        IMPORTING iv_extra TYPE clike OPTIONAL
-                  iv_ext   TYPE string
-                  iv_data  TYPE xstring
-        RAISING   zcx_abapgit_exception,
-      read_raw
-        IMPORTING iv_extra       TYPE clike OPTIONAL
-                  iv_ext         TYPE string
-        RETURNING VALUE(rv_data) TYPE xstring
-        RAISING   zcx_abapgit_exception,
-      get_files
-        RETURNING VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt,
-      set_files
-        IMPORTING it_files TYPE zif_abapgit_definitions=>ty_files_tt,
-      get_accessed_files
-        RETURNING VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_file_signatures_tt.
 
+    METHODS constructor
+      IMPORTING
+        !is_item TYPE zif_abapgit_definitions=>ty_item
+        !iv_path TYPE string OPTIONAL .
+    METHODS add_string
+      IMPORTING
+        !iv_extra  TYPE clike OPTIONAL
+        !iv_ext    TYPE string
+        !iv_string TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    METHODS read_string
+      IMPORTING
+        !iv_extra        TYPE clike OPTIONAL
+        !iv_ext          TYPE string
+      RETURNING
+        VALUE(rv_string) TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    METHODS add_xml
+      IMPORTING
+        !iv_extra     TYPE clike OPTIONAL
+        !io_xml       TYPE REF TO zcl_abapgit_xml_output
+        !iv_normalize TYPE abap_bool DEFAULT abap_true
+        !is_metadata  TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
+      RAISING
+        zcx_abapgit_exception .
+    METHODS read_xml
+      IMPORTING
+        !iv_extra     TYPE clike OPTIONAL
+      RETURNING
+        VALUE(ro_xml) TYPE REF TO zcl_abapgit_xml_input
+      RAISING
+        zcx_abapgit_exception .
+    METHODS read_abap
+      IMPORTING
+        !iv_extra      TYPE clike OPTIONAL
+        !iv_error      TYPE abap_bool DEFAULT abap_true
+      RETURNING
+        VALUE(rt_abap) TYPE abaptxt255_tab
+      RAISING
+        zcx_abapgit_exception .
+    METHODS add_abap
+      IMPORTING
+        !iv_extra TYPE clike OPTIONAL
+        !it_abap  TYPE STANDARD TABLE
+      RAISING
+        zcx_abapgit_exception .
+    METHODS add
+      IMPORTING
+        !is_file TYPE zif_abapgit_definitions=>ty_file .
+    METHODS add_raw
+      IMPORTING
+        !iv_extra TYPE clike OPTIONAL
+        !iv_ext   TYPE string
+        !iv_data  TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
+    METHODS read_raw
+      IMPORTING
+        !iv_extra      TYPE clike OPTIONAL
+        !iv_ext        TYPE string
+      RETURNING
+        VALUE(rv_data) TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_files
+      RETURNING
+        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt .
+    METHODS set_files
+      IMPORTING
+        !it_files TYPE zif_abapgit_definitions=>ty_files_tt .
+    METHODS get_accessed_files
+      RETURNING
+        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_file_signatures_tt .
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: ms_item           TYPE zif_abapgit_definitions=>ty_item,
@@ -162,23 +180,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
     ls_file-data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_xml ).
 
     APPEND ls_file TO mt_files.
-
-  ENDMETHOD.
-
-
-  METHOD add_xml_from_plugin.
-*    this method wraps add_xml as in the plugin. This is necessary as the wrapped
-*    xml-object in the plugin can only be typed to object.
-*    ABAP does not perform implicit type casts (also if compatible) in signatures,
-*    therefore this method's signature is typed ref to object
-    DATA lo_xml TYPE REF TO zcl_abapgit_xml_output.
-
-    lo_xml ?= io_xml.
-
-    me->add_xml(
-      iv_extra     = iv_extra
-      io_xml       = lo_xml
-      iv_normalize = iv_normalize ).
 
   ENDMETHOD.
 
