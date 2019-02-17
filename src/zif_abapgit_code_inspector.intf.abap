@@ -3,6 +3,8 @@ INTERFACE zif_abapgit_code_inspector
 
 
   METHODS run
+    IMPORTING
+      !iv_variant    TYPE sci_chkv
     RETURNING
       VALUE(rt_list) TYPE scit_alvlist
     RAISING

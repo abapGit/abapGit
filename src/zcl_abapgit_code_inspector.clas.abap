@@ -1,48 +1,42 @@
 CLASS zcl_abapgit_code_inspector DEFINITION
   PUBLIC
   CREATE PROTECTED
-  GLOBAL FRIENDS zcl_abapgit_factory.
+
+  GLOBAL FRIENDS zcl_abapgit_factory .
 
   PUBLIC SECTION.
-    INTERFACES:
-      zif_abapgit_code_inspector.
 
-    METHODS:
-      constructor
-        IMPORTING
-          iv_package            TYPE devclass
-          iv_check_variant_name TYPE sci_chkv OPTIONAL
-        RAISING
-          zcx_abapgit_exception.
+    INTERFACES zif_abapgit_code_inspector .
 
-    CLASS-METHODS:
-      validate_check_variant
-        IMPORTING
-          iv_check_variant_name TYPE sci_chkv
-        RAISING
-          zcx_abapgit_exception.
-
+    METHODS constructor
+      IMPORTING
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS validate_check_variant
+      IMPORTING
+        !iv_check_variant_name TYPE sci_chkv
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
+
     TYPES:
       ty_tdevc_tt TYPE STANDARD TABLE OF tdevc WITH DEFAULT KEY .
 
-    DATA:
-      mv_package            TYPE devclass,
-      mv_check_variant_name TYPE sci_chkv.
+    DATA mv_package TYPE devclass .
 
-    METHODS:
-      create_variant
-        RETURNING
-          VALUE(ro_variant) TYPE REF TO cl_ci_checkvariant
-        RAISING
-          zcx_abapgit_exception,
-
-      cleanup
-        IMPORTING
-          io_set TYPE REF TO cl_ci_objectset
-        RAISING
-          zcx_abapgit_exception.
-
+    METHODS create_variant
+      IMPORTING
+        !iv_variant       TYPE sci_chkv
+      RETURNING
+        VALUE(ro_variant) TYPE REF TO cl_ci_checkvariant
+      RAISING
+        zcx_abapgit_exception .
+    METHODS cleanup
+      IMPORTING
+        !io_set TYPE REF TO cl_ci_objectset
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
     CONSTANTS:
       BEGIN OF co_run_mode,
@@ -137,12 +131,6 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
 
     mv_package = iv_package.
 
-    IF iv_check_variant_name IS INITIAL.
-      zcx_abapgit_exception=>raise( |Please supply check variant| ).
-    ENDIF.
-
-    mv_check_variant_name = iv_check_variant_name.
-
     " We create the inspection and objectset with dummy names.
     " Because we want to persist them so we can run it in parallel.
     " Both are deleted afterwards.
@@ -221,14 +209,14 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
 
   METHOD create_variant.
 
-    IF mv_check_variant_name IS INITIAL.
+    IF iv_variant IS INITIAL.
       zcx_abapgit_exception=>raise( |No check variant supplied.| ).
     ENDIF.
 
     cl_ci_checkvariant=>get_ref(
       EXPORTING
         p_user                   = ''
-        p_name                   = mv_check_variant_name
+        p_name                   = iv_variant
       RECEIVING
         p_ref                    = ro_variant
       EXCEPTIONS
@@ -238,9 +226,9 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
 
     CASE sy-subrc.
       WHEN 1.
-        zcx_abapgit_exception=>raise( |Check variant { mv_check_variant_name } doesn't exist| ).
+        zcx_abapgit_exception=>raise( |Check variant { iv_variant } doesn't exist| ).
       WHEN 2.
-        zcx_abapgit_exception=>raise( |Parameter missing for check variant { mv_check_variant_name }| ).
+        zcx_abapgit_exception=>raise( |Parameter missing for check variant { iv_variant }| ).
     ENDCASE.
 
   ENDMETHOD.
@@ -314,6 +302,7 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
           lo_variant TYPE REF TO cl_ci_checkvariant,
           lx_error   TYPE REF TO zcx_abapgit_exception.
 
+
     TRY.
         lo_set = create_objectset( ).
 
@@ -322,7 +311,7 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
           RETURN.
         ENDIF.
 
-        lo_variant = create_variant( ).
+        lo_variant = create_variant( iv_variant ).
 
         mo_inspection = create_inspection(
           io_set     = lo_set

@@ -50,7 +50,6 @@ CLASS ltcl_run_code_inspection DEFINITION FINAL FOR TESTING
       mv_check_variant TYPE string.
 
     METHODS:
-      exception_when_no_check_var FOR TESTING RAISING cx_static_check,
       exception_when_error FOR TESTING RAISING cx_static_check,
       no_exception_when_no_error FOR TESTING RAISING cx_static_check,
       push_not_possible_if_ci_req FOR TESTING RAISING cx_static_check,
@@ -92,17 +91,7 @@ CLASS zcl_abapgit_repo_online DEFINITION LOCAL FRIENDS ltcl_run_code_inspection.
 
 CLASS ltcl_run_code_inspection IMPLEMENTATION.
 
-  METHOD exception_when_no_check_var.
-
-    given_online_repo( iv_package = '$DUMMY' ).
-    given_check_variant( || ).
-    when_run_code_inspector( ).
-    then_exception_text_is( |Please supply check variant| ).
-
-  ENDMETHOD.
-
   METHOD exception_when_error.
-
 
     given_online_repo( '$DUMMY' ).
     given_check_variant( |variant| ).
@@ -124,7 +113,6 @@ CLASS ltcl_run_code_inspection IMPLEMENTATION.
     then_no_exception_is_raised( ).
 
   ENDMETHOD.
-
 
   METHOD given_online_repo.
 
@@ -154,10 +142,9 @@ CLASS ltcl_run_code_inspection IMPLEMENTATION.
       EXPORTING
         iv_package = iv_package.
 
-    zcl_abapgit_injector=>set_code_inspector( iv_package            = iv_package
-                                              iv_check_variant_name = iv_check_variant
-                                              ii_code_inspector     = lo_mock_code_inspector ).
-
+    zcl_abapgit_injector=>set_code_inspector(
+      iv_package        = iv_package
+      ii_code_inspector = lo_mock_code_inspector ).
 
   ENDMETHOD.
 

@@ -14,9 +14,8 @@ CLASS zcl_abapgit_injector DEFINITION
         !ii_sap_package TYPE REF TO zif_abapgit_sap_package .
     CLASS-METHODS set_code_inspector
       IMPORTING
-        !iv_package            TYPE devclass
-        !iv_check_variant_name TYPE sci_chkv OPTIONAL
-        !ii_code_inspector     TYPE REF TO zif_abapgit_code_inspector .
+        !iv_package        TYPE devclass
+        !ii_code_inspector TYPE REF TO zif_abapgit_code_inspector .
     CLASS-METHODS set_stage_logic
       IMPORTING
         !ii_logic TYPE REF TO zif_abapgit_stage_logic .
@@ -39,12 +38,10 @@ CLASS ZCL_ABAPGIT_INJECTOR IMPLEMENTATION.
 
     READ TABLE zcl_abapgit_factory=>gt_code_inspector
          ASSIGNING <ls_code_inspector>
-         WITH TABLE KEY package            = iv_package
-                        check_variant_name = iv_check_variant_name.
+         WITH TABLE KEY package = iv_package.
     IF sy-subrc <> 0.
 
       ls_code_inspector-package = iv_package.
-      ls_code_inspector-check_variant_name = iv_check_variant_name.
 
       INSERT ls_code_inspector
              INTO TABLE zcl_abapgit_factory=>gt_code_inspector

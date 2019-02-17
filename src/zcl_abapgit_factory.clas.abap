@@ -17,7 +17,6 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-METHODS get_code_inspector
       IMPORTING
         !iv_package              TYPE devclass
-        !iv_check_variant_name   TYPE sci_chkv
       RETURNING
         VALUE(ri_code_inspector) TYPE REF TO zif_abapgit_code_inspector
       RAISING
@@ -51,13 +50,12 @@ CLASS zcl_abapgit_factory DEFINITION
                             WITH UNIQUE KEY package .
     TYPES:
       BEGIN OF ty_code_inspector,
-        package            TYPE devclass,
-        check_variant_name TYPE sci_chkv,
-        instance           TYPE REF TO zif_abapgit_code_inspector,
+        package  TYPE devclass,
+        instance TYPE REF TO zif_abapgit_code_inspector,
       END OF ty_code_inspector .
     TYPES:
       tty_code_inspector TYPE HASHED TABLE OF ty_code_inspector
-                               WITH UNIQUE KEY package check_variant_name .
+                               WITH UNIQUE KEY package .
 
     CLASS-DATA gi_tadir TYPE REF TO zif_abapgit_tadir .
     CLASS-DATA gt_sap_package TYPE tty_sap_package .
@@ -88,16 +86,13 @@ CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_code_inspector> TYPE zcl_abapgit_factory=>ty_code_inspector.
 
     READ TABLE gt_code_inspector ASSIGNING <ls_code_inspector>
-                                 WITH TABLE KEY package            = iv_package
-                                                check_variant_name = iv_check_variant_name.
+      WITH TABLE KEY package = iv_package.
     IF sy-subrc <> 0.
-      ls_code_inspector-package = iv_package.
-      ls_code_inspector-check_variant_name = iv_check_variant_name.
+      ls_code_inspector-package = iv_package..
 
       CREATE OBJECT ls_code_inspector-instance TYPE zcl_abapgit_code_inspector
         EXPORTING
-          iv_package            = iv_package
-          iv_check_variant_name = iv_check_variant_name.
+          iv_package = iv_package.
 
       INSERT ls_code_inspector
              INTO TABLE gt_code_inspector
