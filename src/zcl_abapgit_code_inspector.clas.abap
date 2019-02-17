@@ -38,6 +38,7 @@ CLASS zcl_abapgit_code_inspector DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
+
     CONSTANTS:
       BEGIN OF co_run_mode,
         run_with_popup   TYPE sychar01 VALUE 'P',
@@ -46,42 +47,34 @@ CLASS zcl_abapgit_code_inspector DEFINITION
         run_in_batch     TYPE sychar01 VALUE 'B',
         run_loc_parallel TYPE sychar01 VALUE 'L',
         run_direct       TYPE sychar01 VALUE 'L',
-      END OF co_run_mode.
+      END OF co_run_mode .
+    DATA mo_inspection TYPE REF TO cl_ci_inspection .
+    DATA mv_name TYPE sci_objs .
+    DATA mv_run_mode TYPE sychar01 .
 
-    DATA:
-      mo_inspection      TYPE REF TO cl_ci_inspection,
-      mv_objectset_name  TYPE sci_objs,
-      mv_inspection_name TYPE sci_insp,
-      mv_run_mode        TYPE sychar01.
-
-    METHODS:
-      find_all_subpackages
-        IMPORTING
-          iv_package         TYPE devclass
-        RETURNING
-          VALUE(rt_packages) TYPE ty_tdevc_tt,
-
-      create_objectset
-        RETURNING
-          VALUE(ro_set) TYPE REF TO cl_ci_objectset,
-
-      run_inspection
-        IMPORTING
-          io_inspection  TYPE REF TO cl_ci_inspection
-        RETURNING
-          VALUE(rt_list) TYPE scit_alvlist
-        RAISING
-          zcx_abapgit_exception,
-
-      create_inspection
-        IMPORTING
-          io_set               TYPE REF TO cl_ci_objectset
-          io_variant           TYPE REF TO cl_ci_checkvariant
-        RETURNING
-          VALUE(ro_inspection) TYPE REF TO cl_ci_inspection
-        RAISING
-          zcx_abapgit_exception.
-
+    METHODS find_all_subpackages
+      IMPORTING
+        !iv_package        TYPE devclass
+      RETURNING
+        VALUE(rt_packages) TYPE ty_tdevc_tt .
+    METHODS create_objectset
+      RETURNING
+        VALUE(ro_set) TYPE REF TO cl_ci_objectset .
+    METHODS run_inspection
+      IMPORTING
+        !io_inspection TYPE REF TO cl_ci_inspection
+      RETURNING
+        VALUE(rt_list) TYPE scit_alvlist
+      RAISING
+        zcx_abapgit_exception .
+    METHODS create_inspection
+      IMPORTING
+        !io_set              TYPE REF TO cl_ci_objectset
+        !io_variant          TYPE REF TO cl_ci_checkvariant
+      RETURNING
+        VALUE(ro_inspection) TYPE REF TO cl_ci_inspection
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -134,7 +127,7 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
     " We create the inspection and objectset with dummy names.
     " Because we want to persist them so we can run it in parallel.
     " Both are deleted afterwards.
-    mv_inspection_name = mv_objectset_name = |{ sy-uname }_{ sy-datum }_{ sy-uzeit }|.
+    mv_name = |{ sy-uname }_{ sy-datum }_{ sy-uzeit }|.
 
     " We have to disable parallelization in batch because of lock errors.
     IF sy-batch = abap_true.
@@ -151,7 +144,7 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
     cl_ci_inspection=>create(
       EXPORTING
         p_user           = sy-uname
-        p_name           = mv_inspection_name
+        p_name           = mv_name
       RECEIVING
         p_ref            = ro_inspection
       EXCEPTIONS
@@ -201,8 +194,9 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
       AND delflag = abap_false
       AND pgmid = 'R3TR'.                               "#EC CI_GENBUFF
 
-    ro_set = cl_ci_objectset=>save_from_list( p_name    = mv_objectset_name
-                                              p_objects = lt_objs ).
+    ro_set = cl_ci_objectset=>save_from_list(
+      p_name    = mv_name
+      p_objects = lt_objs ).
 
   ENDMETHOD.
 
