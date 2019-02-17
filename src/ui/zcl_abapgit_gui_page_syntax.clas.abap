@@ -32,7 +32,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
 
     DATA: li_syntax_check TYPE REF TO zif_abapgit_code_inspector.
 
-    li_syntax_check = zcl_abapgit_factory=>get_syntax_check( mo_repo->get_package( ) ).
+    li_syntax_check = zcl_abapgit_factory=>get_code_inspector(
+      iv_package            = mo_repo->get_package( )
+      iv_check_variant_name = 'SYNTAX_CHECK' ).
 
     mt_result = li_syntax_check->run( ).
 

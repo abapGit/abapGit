@@ -22,13 +22,6 @@ CLASS zcl_abapgit_factory DEFINITION
         VALUE(ri_code_inspector) TYPE REF TO zif_abapgit_code_inspector
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS get_syntax_check
-      IMPORTING
-        !iv_package            TYPE devclass
-      RETURNING
-        VALUE(ri_syntax_check) TYPE REF TO zif_abapgit_code_inspector
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS get_adhoc_code_inspector
       IMPORTING
         !iv_package                    TYPE devclass
@@ -63,7 +56,7 @@ CLASS zcl_abapgit_factory DEFINITION
       END OF ty_sap_package .
     TYPES:
       tty_sap_package TYPE HASHED TABLE OF ty_sap_package
-                        WITH UNIQUE KEY package .
+                          WITH UNIQUE KEY package .
     TYPES:
       BEGIN OF ty_code_inspector,
         package            TYPE devclass,
@@ -72,24 +65,15 @@ CLASS zcl_abapgit_factory DEFINITION
       END OF ty_code_inspector .
     TYPES:
       tty_code_inspector TYPE HASHED TABLE OF ty_code_inspector
-                           WITH UNIQUE KEY package check_variant_name .
-    TYPES:
-      BEGIN OF ty_syntax_check,
-        package  TYPE devclass,
-        instance TYPE REF TO zif_abapgit_code_inspector,
-      END OF ty_syntax_check .
-    TYPES:
-      tty_syntax_check TYPE HASHED TABLE OF ty_syntax_check
-                         WITH UNIQUE KEY package .
+                             WITH UNIQUE KEY package check_variant_name .
 
     CLASS-DATA gi_tadir TYPE REF TO zif_abapgit_tadir .
     CLASS-DATA gt_sap_package TYPE tty_sap_package .
     CLASS-DATA gt_code_inspector TYPE tty_code_inspector .
-    CLASS-DATA gt_syntax_check TYPE tty_syntax_check .
     CLASS-DATA gi_stage_logic TYPE REF TO zif_abapgit_stage_logic .
-    CLASS-DATA gi_cts_api TYPE REF TO zif_abapgit_cts_api.
-    CLASS-DATA gi_adhoc_code_inspector TYPE REF TO zif_abapgit_code_inspector.
-    CLASS-DATA gi_fe_services TYPE REF TO zif_abapgit_frontend_services.
+    CLASS-DATA gi_cts_api TYPE REF TO zif_abapgit_cts_api .
+    CLASS-DATA gi_adhoc_code_inspector TYPE REF TO zif_abapgit_code_inspector .
+    CLASS-DATA gi_fe_services TYPE REF TO zif_abapgit_frontend_services .
 ENDCLASS.
 
 
@@ -203,31 +187,6 @@ CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
     ENDIF.
 
     ri_logic = gi_stage_logic.
-
-  ENDMETHOD.
-
-
-  METHOD get_syntax_check.
-
-    DATA: ls_syntax_check LIKE LINE OF gt_syntax_check.
-    FIELD-SYMBOLS: <ls_syntax_check> TYPE zcl_abapgit_factory=>ty_syntax_check.
-
-    READ TABLE gt_syntax_check ASSIGNING <ls_syntax_check>
-                               WITH TABLE KEY package = iv_package.
-    IF sy-subrc <> 0.
-      ls_syntax_check-package =  iv_package.
-
-      CREATE OBJECT ls_syntax_check-instance TYPE zcl_abapgit_syntax_check
-        EXPORTING
-          iv_package = iv_package.
-
-      INSERT ls_syntax_check
-             INTO TABLE gt_syntax_check
-             ASSIGNING <ls_syntax_check>.
-
-    ENDIF.
-
-    ri_syntax_check = <ls_syntax_check>-instance.
 
   ENDMETHOD.
 
