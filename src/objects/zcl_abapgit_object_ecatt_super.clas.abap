@@ -234,7 +234,7 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
 
     lv_xml = cl_ixml_80_20=>render_to_xstring( li_document ).
 
-    li_upload->z_set_stream_for_upload( lv_xml ).
+    li_upload->set_stream_for_upload( lv_xml ).
 
     ls_object-d_obj_name  = mv_object_name.
     ls_object-s_obj_type  = get_object_type( ).
@@ -245,7 +245,7 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
     TRY.
         lo_upload->upload(
           CHANGING
-            ch_object      = ls_object ).
+            ch_object = ls_object ).
 
       CATCH cx_ecatt INTO lx_error.
         lv_text = lx_error->get_text( ).

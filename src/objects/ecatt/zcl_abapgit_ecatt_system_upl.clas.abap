@@ -29,7 +29,7 @@ CLASS zcl_abapgit_ecatt_system_upl IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_ecatt_upload~z_set_stream_for_upload.
+  METHOD zif_abapgit_ecatt_upload~set_stream_for_upload.
 
     " downport from CL_APL_ECATT_SYSTEMS_UPLOAD SET_STREAM_FOR_UPLOAD
     mv_external_xml = iv_xml.
