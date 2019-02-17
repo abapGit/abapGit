@@ -14,6 +14,9 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
         RETURNING
           VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action.
 
+    METHODS:
+      constructor.
+
   PROTECTED SECTION.
 
     TYPES: BEGIN OF ty_control,
@@ -33,6 +36,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
+    DATA: mo_settings         TYPE REF TO zcl_abapgit_settings.
     METHODS html_head
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
@@ -73,7 +77,13 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page IMPLEMENTATION.
+
+  METHOD constructor.
+
+    mo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+
+  ENDMETHOD.
 
 
   METHOD add_hotkeys.
@@ -176,10 +186,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( '<link rel="stylesheet" type="text/css" href="css/common.css">' ).
     ro_html->add( '<script type="text/javascript" src="js/common.js"></script>' ). "#EC NOTEXT
 
-    lv_font = |<link rel="stylesheet" type="text/css" href="|
-      && 'https://cdnjs.cloudflare.com/ajax/libs/octicons/4.4.0/font/octicons.min.css'
-      && '">'.                                         "#EC NOTEXT
-    ro_html->add( lv_font ). " Web fonts
+    IF mo_settings->get_octicons_disabled( ) = abap_false.
+
+      lv_font = |<link rel="stylesheet" type="text/css" href="|
+        && 'https://cdnjs.cloudflare.com/ajax/libs/octicons/4.4.0/font/octicons.min.css'
+        && '">'.                                            "#EC NOTEXT
+      ro_html->add( lv_font ). " Web fonts
+
+    ENDIF.
 
     ro_html->add( '</head>' ).                              "#EC NOTEXT
 
@@ -188,16 +202,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD link_hints.
 
-    DATA: lo_settings         TYPE REF TO zcl_abapgit_settings,
-          lv_link_hint_key    TYPE char01,
+    DATA: lv_link_hint_key    TYPE char01,
           lv_background_color TYPE string.
 
-    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+    lv_link_hint_key = mo_settings->get_link_hint_key( ).
+    lv_background_color = mo_settings->get_link_hint_background_color( ).
 
-    lv_link_hint_key = lo_settings->get_link_hint_key( ).
-    lv_background_color = lo_settings->get_link_hint_background_color( ).
-
-    IF lo_settings->get_link_hints_enabled( ) = abap_true
+    IF mo_settings->get_link_hints_enabled( ) = abap_true
     AND lv_link_hint_key IS NOT INITIAL.
 
       io_html->add( |setLinkHints("{ lv_link_hint_key }","{ lv_background_color }");| ).

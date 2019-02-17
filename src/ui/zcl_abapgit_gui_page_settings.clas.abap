@@ -94,9 +94,12 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
         zcx_abapgit_exception .
     METHODS is_post_field_checked
       IMPORTING
-        !iv_name         TYPE string
+        iv_name          TYPE string
       RETURNING
         VALUE(rv_return) TYPE abap_bool .
+    METHODS render_octicons
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
 ENDCLASS.
 
 
@@ -224,6 +227,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     IF sy-subrc = 0.
       mo_settings->set_link_hint_background_color( |{ <ls_post_field>-value }| ).
     ENDIF.
+
+    IF is_post_field_checked( 'octicons_disabled' ) = abap_true.
+      mo_settings->set_octicons_disabled( abap_true ).
+    ELSE.
+      mo_settings->set_octicons_disabled( abap_false ).
+    ENDIF.
+
 
     post_hotkeys( ).
 
@@ -402,6 +412,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ro_html->add( |<hr>| ).
     ro_html->add( render_adt_jump_enabled( ) ).
     ro_html->add( |<hr>| ).
+    ro_html->add( render_octicons( ) ).
+    ro_html->add( |<hr>| ).
     ro_html->add( render_link_hints( ) ).
     ro_html->add( |<hr>| ).
     ro_html->add( render_hotkeys( ) ).
@@ -568,6 +580,27 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ro_html->add( |<label for="max_lines">Max. # of objects listed (0 = all)</label>| ).
     ro_html->add( |<br>| ).
     ro_html->add( `<input name="max_lines" type="text" size="5" value="` && mo_settings->get_max_lines( ) && `">` ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<br>| ).
+  ENDMETHOD.
+
+
+  METHOD render_octicons.
+
+    DATA lv_checked TYPE string.
+
+    IF mo_settings->get_octicons_disabled( ) = abap_true.
+      lv_checked = 'checked'.
+    ENDIF.
+
+    CREATE OBJECT ro_html.
+    ro_html->add( |<h2>Octicons</h2>| ).
+    ro_html->add( |You should disbale octicons when your client doesn't have internet access |
+               && |or the abapGit UI hangs sometimes.| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( `<input type="checkbox" name="octicons_disabled" value="X" `
+                   && lv_checked && ` > Disable octions` ).
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).
   ENDMETHOD.
