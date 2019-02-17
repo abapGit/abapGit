@@ -110,7 +110,13 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
         RETURNING
           VALUE(rt_hotkeys) TYPE zif_abapgit_definitions=>tty_hotkey
         RAISING
-          zcx_abapgit_exception.
+          zcx_abapgit_exception,
+      set_octicons_disabled
+        IMPORTING
+          iv_octions_disabled TYPE abap_bool,
+      get_octicons_disabled
+        RETURNING
+          VALUE(rv_octions_disabled) TYPE abap_bool.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_s_settings,
@@ -375,6 +381,14 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
     ENDIF.
 
+  ENDMETHOD.
+
+  METHOD get_octicons_disabled.
+    rv_octions_disabled = ms_user_settings-octicons_disabled.
+  ENDMETHOD.
+
+  METHOD set_octicons_disabled.
+    ms_user_settings-octicons_disabled = iv_octions_disabled.
   ENDMETHOD.
 
 ENDCLASS.
