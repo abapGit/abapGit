@@ -32,16 +32,9 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-METHODS get_adhoc_code_inspector
       IMPORTING
         !iv_package                    TYPE devclass
-        iv_test_name                   TYPE sci_tstval-testname
+        !iv_test_name                  TYPE sci_tstval-testname
       RETURNING
         VALUE(ri_adhoc_code_inspector) TYPE REF TO zif_abapgit_code_inspector
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS get_abap_unit_tests
-      IMPORTING
-        !iv_package               TYPE devclass
-      RETURNING
-        VALUE(ri_abap_unit_tests) TYPE REF TO zif_abapgit_code_inspector
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS get_branch_overview
@@ -56,11 +49,10 @@ CLASS zcl_abapgit_factory DEFINITION
         VALUE(ri_logic) TYPE REF TO zif_abapgit_stage_logic .
     CLASS-METHODS get_cts_api
       RETURNING
-        VALUE(ri_cts_api) TYPE REF TO zif_abapgit_cts_api.
+        VALUE(ri_cts_api) TYPE REF TO zif_abapgit_cts_api .
     CLASS-METHODS get_frontend_services
       RETURNING
-        VALUE(ri_fe_serv) TYPE REF TO zif_abapgit_frontend_services.
-
+        VALUE(ri_fe_serv) TYPE REF TO zif_abapgit_frontend_services .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -103,20 +95,6 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
-
-
-  METHOD get_abap_unit_tests.
-
-    IF gi_adhoc_code_inspector IS BOUND.
-      ri_abap_unit_tests = gi_adhoc_code_inspector.
-    ELSE.
-      CREATE OBJECT ri_abap_unit_tests
-        TYPE zcl_abapgit_abap_unit_tests
-        EXPORTING
-          iv_package = iv_package.
-    ENDIF.
-
-  ENDMETHOD.
 
 
   METHOD get_adhoc_code_inspector.
