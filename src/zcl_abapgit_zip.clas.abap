@@ -10,21 +10,14 @@ CLASS zcl_abapgit_zip DEFINITION
         !it_filter TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS export_package
-      RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
     CLASS-METHODS export_object
       RAISING
         zcx_abapgit_exception
         zcx_abapgit_cancel .
-    CLASS-METHODS unzip_file
-      IMPORTING
-        !iv_xstr TYPE xstring
-      RETURNING
-        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
+    CLASS-METHODS export_package
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception
+        zcx_abapgit_cancel .
     CLASS-METHODS load
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
@@ -32,26 +25,40 @@ CLASS zcl_abapgit_zip DEFINITION
         zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CLASS-METHODS normalize_path
-      CHANGING ct_files TYPE zif_abapgit_definitions=>ty_files_tt
-      RAISING  zcx_abapgit_exception.
-
-    CLASS-METHODS filename
-      IMPORTING iv_str      TYPE string
-      EXPORTING ev_path     TYPE string
-                ev_filename TYPE string
-      RAISING   zcx_abapgit_exception.
-
-    CLASS-METHODS file_download
-      IMPORTING iv_package TYPE devclass
-                iv_xstr    TYPE xstring
-      RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS encode_files
-      IMPORTING it_files       TYPE zif_abapgit_definitions=>ty_files_item_tt
-      RETURNING VALUE(rv_xstr) TYPE xstring
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !it_files      TYPE zif_abapgit_definitions=>ty_files_item_tt
+      RETURNING
+        VALUE(rv_xstr) TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS filename
+      IMPORTING
+        !iv_str      TYPE string
+      EXPORTING
+        !ev_path     TYPE string
+        !ev_filename TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS file_download
+      IMPORTING
+        !iv_package TYPE devclass
+        !iv_xstr    TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS normalize_path
+      CHANGING
+        !ct_files TYPE zif_abapgit_definitions=>ty_files_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS unzip_file
+      IMPORTING
+        !iv_xstr        TYPE xstring
+      RETURNING
+        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -110,11 +117,11 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
   METHOD export_object.
 
-    DATA: ls_tadir    TYPE zif_abapgit_definitions=>ty_tadir,
-          lv_folder   TYPE string,
-          lv_fullpath TYPE string,
-          lt_rawdata  TYPE solix_tab,
-          lv_sep      TYPE c LENGTH 1,
+    DATA: ls_tadir      TYPE zif_abapgit_definitions=>ty_tadir,
+          lv_folder     TYPE string,
+          lv_fullpath   TYPE string,
+          lt_rawdata    TYPE solix_tab,
+          lv_sep        TYPE c LENGTH 1,
           ls_files_item TYPE zcl_abapgit_objects=>ty_serialization.
 
     STATICS: sv_prev TYPE string.
@@ -249,10 +256,10 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
   METHOD file_download.
 
     DATA:
-      lv_path     TYPE string,
-      lv_default  TYPE string,
-      lo_fe_serv  TYPE REF TO zif_abapgit_frontend_services,
-      lv_package  TYPE devclass.
+      lv_path    TYPE string,
+      lv_default TYPE string,
+      lo_fe_serv TYPE REF TO zif_abapgit_frontend_services,
+      lv_package TYPE devclass.
 
     lv_package = iv_package.
     TRANSLATE lv_package USING '/#'.
