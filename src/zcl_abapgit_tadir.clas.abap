@@ -9,6 +9,7 @@ CLASS zcl_abapgit_tadir DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+
     METHODS exists
       IMPORTING
         !is_item         TYPE zif_abapgit_definitions=>ty_item
@@ -29,11 +30,10 @@ CLASS zcl_abapgit_tadir DEFINITION
         !iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
         !iv_only_local_objects TYPE abap_bool
         !io_log                TYPE REF TO zcl_abapgit_log OPTIONAL
-        !io_folder_logic       TYPE REF TO zcl_abapgit_folder_logic OPTIONAL
       RETURNING
         VALUE(rt_tadir)        TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -54,7 +54,8 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
           lt_packages     TYPE zif_abapgit_sap_package=>ty_devclass_tt.
 
     FIELD-SYMBOLS: <ls_tadir>   LIKE LINE OF rt_tadir,
-                   <lv_package> TYPE devclass.
+                   <lv_package> LIKE LINE OF lt_packages.
+
 
     "Determine Packages to Read
     IF iv_ignore_subpackages = abap_false.
@@ -90,7 +91,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
         AND object NOT IN lt_excludes
         AND delflag = abap_false
         AND srcsystem IN lt_srcsystem
-        ORDER BY PRIMARY KEY.             "#EC CI_GENBUFF "#EC CI_SUBRC
+        ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS. "#EC CI_GENBUFF "#EC CI_SUBRC
     ENDIF.
 
     SORT rt_tadir BY devclass pgmid object obj_name.
@@ -142,7 +143,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
                   iv_obj_name = <ls_tadir>-obj_name
                 RECEIVING
                   rv_hash     = <ls_tadir>-obj_name+15.
-            CATCH cx_sy_dyn_call_illegal_method.
+            CATCH cx_sy_dyn_call_illegal_method ##NO_HANDLER.
 * SICF might not be supported in some systems, assume this code is not called
           ENDTRY.
       ENDCASE.
@@ -259,7 +260,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
               iv_obj_name = iv_obj_name
             RECEIVING
               rs_tadir    = rs_tadir.
-        CATCH cx_sy_dyn_call_illegal_method.
+        CATCH cx_sy_dyn_call_illegal_method ##NO_HANDLER.
 * SICF might not be supported in some systems, assume this code is not called
       ENDTRY.
     ELSE.
