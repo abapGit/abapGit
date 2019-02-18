@@ -5,11 +5,10 @@ CLASS zcl_abapgit_ecatt_sp_upload DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    METHODS:
-      z_set_stream_for_upload
-        IMPORTING
-          iv_xml TYPE xstring,
+    INTERFACES:
+      zif_abapgit_ecatt_upload.
 
+    METHODS:
       upload
         REDEFINITION.
 
@@ -28,7 +27,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
+CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
 
 
   METHOD get_ecatt_sp.
@@ -88,11 +87,11 @@ CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
 
     "26.03.2013
 
-    DATA: lx_ecatt              TYPE REF TO cx_ecatt_apl,
-          lv_exists             TYPE etonoff,
-          lv_exc_occ            TYPE etonoff,
-          ls_tadir              TYPE tadir,
-          lo_ecatt_sp           TYPE REF TO object.
+    DATA: lx_ecatt    TYPE REF TO cx_ecatt_apl,
+          lv_exists   TYPE etonoff,
+          lv_exc_occ  TYPE etonoff,
+          ls_tadir    TYPE tadir,
+          lo_ecatt_sp TYPE REF TO object.
 
     FIELD-SYMBOLS: <lg_ecatt_sp> TYPE any,
                    <lv_d_akh>    TYPE data,
@@ -199,7 +198,7 @@ CLASS ZCL_ABAPGIT_ECATT_SP_UPLOAD IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD z_set_stream_for_upload.
+  METHOD zif_abapgit_ecatt_upload~set_stream_for_upload.
 
     " downport from CL_APL_ECATT_START_PROFIL SET_STREAM_FOR_UPLOAD
     mv_external_xml = iv_xml.

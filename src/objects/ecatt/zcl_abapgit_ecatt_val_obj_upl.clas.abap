@@ -5,11 +5,10 @@ CLASS zcl_abapgit_ecatt_val_obj_upl DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    METHODS:
-      z_set_stream_for_upload
-        IMPORTING
-          iv_xml TYPE xstring,
+    INTERFACES:
+      zif_abapgit_ecatt_upload.
 
+    METHODS:
       upload REDEFINITION.
 
   PROTECTED SECTION.
@@ -36,7 +35,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
+CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
 
 
   METHOD get_business_msgs_from_dom.
@@ -350,7 +349,7 @@ CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD z_set_stream_for_upload.
+  METHOD zif_abapgit_ecatt_upload~set_stream_for_upload.
 
     " downport from CL_ABAPGIT_ECATT_DATA_UPLOAD SET_STREAM_FOR_UPLOAD
     mv_external_xml = iv_xml.

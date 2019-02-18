@@ -4,16 +4,11 @@ CLASS zcl_abapgit_ecatt_system_downl DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    INTERFACES:
+      zif_abapgit_ecatt_download.
+
     METHODS:
-      download REDEFINITION,
-
-      get_xml_stream
-        RETURNING
-          VALUE(rv_xml_stream) TYPE xstring,
-
-      get_xml_stream_size
-        RETURNING
-          VALUE(rv_xml_stream_size) TYPE int4.
+      download REDEFINITION.
 
   PROTECTED SECTION.
     METHODS:
@@ -21,8 +16,7 @@ CLASS zcl_abapgit_ecatt_system_downl DEFINITION
 
   PRIVATE SECTION.
     DATA:
-      mv_xml_stream      TYPE xstring,
-      mv_xml_stream_size TYPE int4.
+      mv_xml_stream TYPE xstring.
 
     METHODS:
       set_systems_data_to_template.
@@ -31,7 +25,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ECATT_SYSTEM_DOWNL IMPLEMENTATION.
+CLASS zcl_abapgit_ecatt_system_downl IMPLEMENTATION.
 
 
   METHOD download.
@@ -64,26 +58,14 @@ CLASS ZCL_ABAPGIT_ECATT_SYSTEM_DOWNL IMPLEMENTATION.
 
     " Downport
 
-    zcl_abapgit_ecatt_helper=>download_data(
-      EXPORTING
-        ii_template_over_all = template_over_all
-      IMPORTING
-        ev_xml_stream        = mv_xml_stream
-        ev_xml_stream_size   = mv_xml_stream_size ).
+    mv_xml_stream = zcl_abapgit_ecatt_helper=>download_data( template_over_all ).
 
   ENDMETHOD.
 
 
-  METHOD get_xml_stream.
+  METHOD zif_abapgit_ecatt_download~get_xml_stream.
 
     rv_xml_stream = mv_xml_stream.
-
-  ENDMETHOD.
-
-
-  METHOD get_xml_stream_size.
-
-    rv_xml_stream_size = mv_xml_stream_size.
 
   ENDMETHOD.
 
@@ -122,6 +104,7 @@ CLASS ZCL_ABAPGIT_ECATT_SYSTEM_DOWNL IMPLEMENTATION.
         EXCEPTIONS
           illegal_name = 1
           OTHERS       = 2.
+      ASSERT sy-subrc = 0.
 
       etpar_node->append_child( new_child = li_item ).
 
