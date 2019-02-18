@@ -204,11 +204,16 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
     ENDIF.
 
     IF iv_extra IS INITIAL.
-      CONCATENATE lv_obj_name '.' ms_item-obj_type '.' iv_ext
+      CONCATENATE lv_obj_name '.' ms_item-obj_type
         INTO rv_filename.                                   "#EC NOTEXT
     ELSE.
-      CONCATENATE lv_obj_name '.' ms_item-obj_type '.' iv_extra '.' iv_ext
+      CONCATENATE lv_obj_name '.' ms_item-obj_type '.' iv_extra
         INTO rv_filename.                                   "#EC NOTEXT
+    ENDIF.
+
+    IF iv_ext IS NOT INITIAL.
+      CONCATENATE rv_filename '.' iv_ext
+        INTO rv_filename.
     ENDIF.
 
 * handle namespaces
