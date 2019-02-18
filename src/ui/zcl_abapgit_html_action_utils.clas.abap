@@ -4,9 +4,6 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
 
   PUBLIC SECTION.
 
-    CLASS-METHODS field_keys_to_upper
-      CHANGING
-        !ct_fields TYPE tihttpnvp .
     CLASS-METHODS parse_fields
       IMPORTING
         !iv_string       TYPE clike
@@ -17,12 +14,6 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !iv_string       TYPE clike
       RETURNING
         VALUE(rt_fields) TYPE tihttpnvp .
-    CLASS-METHODS add_field
-      IMPORTING
-        !iv_name TYPE string
-        !ig_field   TYPE any
-      CHANGING
-        !ct_field   TYPE tihttpnvp .
     CLASS-METHODS get_field
       IMPORTING
         !iv_name  TYPE string
@@ -58,13 +49,13 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
     CLASS-METHODS file_encode
       IMPORTING
         !iv_key          TYPE zif_abapgit_persistence=>ty_repo-key
-        !ig_file         TYPE any                                                 "assuming ty_file
+        !ig_file         TYPE any                                                                     "assuming ty_file
       RETURNING
         VALUE(rv_string) TYPE string .
     CLASS-METHODS obj_encode
       IMPORTING
         !iv_key          TYPE zif_abapgit_persistence=>ty_repo-key
-        !ig_object       TYPE any                                         "assuming ty_item
+        !ig_object       TYPE any                                                         "assuming ty_item
       RETURNING
         VALUE(rv_string) TYPE string .
     CLASS-METHODS file_obj_decode
@@ -72,8 +63,8 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !iv_string TYPE clike
       EXPORTING
         !ev_key    TYPE zif_abapgit_persistence=>ty_repo-key
-        !eg_file   TYPE any                        "assuming ty_file
-        !eg_object TYPE any                "assuming ty_item
+        !eg_file   TYPE any                                "assuming ty_file
+        !eg_object TYPE any                    "assuming ty_item
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS dbkey_encode
@@ -94,16 +85,28 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !ev_seed    TYPE string
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
-    CLASS-METHODS unescape
-      IMPORTING iv_string        TYPE string
-      RETURNING VALUE(rv_string) TYPE string.
 
+    CLASS-METHODS field_keys_to_upper
+      CHANGING
+        !ct_fields TYPE tihttpnvp .
+    CLASS-METHODS add_field
+      IMPORTING
+        !iv_name  TYPE string
+        !ig_field TYPE any
+      CHANGING
+        !ct_field TYPE tihttpnvp .
+    CLASS-METHODS unescape
+      IMPORTING
+        !iv_string       TYPE string
+      RETURNING
+        VALUE(rv_string) TYPE string .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_html_action_utils IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
 
   METHOD add_field.

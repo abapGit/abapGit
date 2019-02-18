@@ -1,81 +1,90 @@
-CLASS zcl_abapgit_gui_chunk_lib DEFINITION PUBLIC FINAL CREATE PUBLIC.
+CLASS zcl_abapgit_gui_chunk_lib DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
 
     CLASS-METHODS render_error
-      IMPORTING ix_error       TYPE REF TO zcx_abapgit_exception OPTIONAL
-                iv_error       TYPE string OPTIONAL
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
-
+      IMPORTING
+        !ix_error      TYPE REF TO zcx_abapgit_exception OPTIONAL
+        !iv_error      TYPE string OPTIONAL
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     CLASS-METHODS render_repo_top
-      IMPORTING io_repo               TYPE REF TO zcl_abapgit_repo
-                iv_show_package       TYPE abap_bool DEFAULT abap_true
-                iv_show_branch        TYPE abap_bool DEFAULT abap_true
-                iv_interactive_branch TYPE abap_bool DEFAULT abap_false
-                iv_branch             TYPE string OPTIONAL
-                io_news               TYPE REF TO zcl_abapgit_news OPTIONAL
-      RETURNING VALUE(ro_html)        TYPE REF TO zcl_abapgit_html
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !io_repo               TYPE REF TO zcl_abapgit_repo
+        !iv_show_package       TYPE abap_bool DEFAULT abap_true
+        !iv_show_branch        TYPE abap_bool DEFAULT abap_true
+        !iv_interactive_branch TYPE abap_bool DEFAULT abap_false
+        !iv_branch             TYPE string OPTIONAL
+        !io_news               TYPE REF TO zcl_abapgit_news OPTIONAL
+      RETURNING
+        VALUE(ro_html)         TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS render_item_state
-      IMPORTING iv_lstate      TYPE char1
-                iv_rstate      TYPE char1
-      RETURNING VALUE(rv_html) TYPE string.
-
-    CLASS-METHODS render_branch_span
-      IMPORTING iv_branch      TYPE string
-                io_repo        TYPE REF TO zcl_abapgit_repo_online
-                iv_interactive TYPE abap_bool
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !iv_lstate     TYPE char1
+        !iv_rstate     TYPE char1
+      RETURNING
+        VALUE(rv_html) TYPE string .
     CLASS-METHODS render_js_error_banner
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-      RAISING   zcx_abapgit_exception.
-
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS render_news
       IMPORTING
-                io_news        TYPE REF TO zcl_abapgit_news
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-      RAISING   zcx_abapgit_exception.
-
+        !io_news       TYPE REF TO zcl_abapgit_news
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS render_hotkey_overview
       IMPORTING
-        io_page        TYPE REF TO zcl_abapgit_gui_page
+        !io_page       TYPE REF TO zcl_abapgit_gui_page
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
-        zcx_abapgit_exception.
-
-    CLASS-METHODS render_infopanel
-      IMPORTING
-        iv_div_id      TYPE string
-        iv_title       TYPE string
-        iv_hide        TYPE abap_bool DEFAULT abap_true
-        iv_hint        TYPE string OPTIONAL
-        iv_scrollable  TYPE abap_bool DEFAULT abap_true
-        io_content     TYPE REF TO zcl_abapgit_html
-      RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-      RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     CLASS-METHODS render_commit_popup
       IMPORTING
-        iv_content     TYPE csequence
-        iv_id          TYPE csequence
+        !iv_content    TYPE csequence
+        !iv_id         TYPE csequence
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    CLASS-METHODS render_branch_span
+      IMPORTING
+        !iv_branch      TYPE string
+        !io_repo        TYPE REF TO zcl_abapgit_repo_online
+        !iv_interactive TYPE abap_bool
+      RETURNING
+        VALUE(ro_html)  TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS render_infopanel
+      IMPORTING
+        !iv_div_id     TYPE string
+        !iv_title      TYPE string
+        !iv_hide       TYPE abap_bool DEFAULT abap_true
+        !iv_hint       TYPE string OPTIONAL
+        !iv_scrollable TYPE abap_bool DEFAULT abap_true
+        !io_content    TYPE REF TO zcl_abapgit_html
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
 
   METHOD render_branch_span.

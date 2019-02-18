@@ -1,3 +1,6 @@
+CLASS ltcl_oo_serialize DEFINITION DEFERRED.
+CLASS zcl_abapgit_oo_serializer DEFINITION LOCAL FRIENDS ltcl_oo_serialize.
+
 CLASS ltcl_oo_serialize DEFINITION FINAL FOR TESTING
   DURATION SHORT
   RISK LEVEL HARMLESS.
