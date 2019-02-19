@@ -431,23 +431,21 @@ CLASS ZCL_ABAPGIT_OBJECT_SPRX IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    TRY.
-        lo_proxy = cl_proxy_fact=>load_by_abap_name(
-                       object   = mv_object
-                       obj_name = mv_obj_name ).
+    ls_sprx_db_data = cl_proxy_db=>load_by_abap_name(
+      object   = mv_object
+      obj_name = mv_obj_name ).
 
-        lt_delta = lo_proxy->get_delta_all( ).
+    DELETE ls_sprx_db_data-sproxhdr WHERE object <> mv_object OR obj_name <> mv_obj_name.
+    DELETE ls_sprx_db_data-sproxdat WHERE object <> mv_object OR obj_name <> mv_obj_name.
+    DELETE ls_sprx_db_data-sproxsvar WHERE object <> mv_object OR obj_name <> mv_obj_name.
+    DELETE ls_sprx_db_data-sproxpck WHERE object <> mv_object OR obj_name <> mv_obj_name.
+    DELETE ls_sprx_db_data-sproxintf WHERE object <> mv_object OR obj_name <> mv_obj_name.
 
-        ls_sprx_db_data = cl_proxy_db=>serialize(
-                              proxy     = lo_proxy
-                              inactive  = abap_false
-                              delta     = lt_delta ).
+    IF lines( ls_sprx_db_data-sproxhdr ) <> 1.
+      zcx_abapgit_exception=>raise( |SPRX, no header found| ).
+    ENDIF.
 
-      CATCH cx_proxy_gen_error INTO lx_proxy_gen_error.
-        zcx_abapgit_exception=>raise(
-          iv_text     = |SPRX, { lx_proxy_gen_error->get_text( ) }|
-          ix_previous = lx_proxy_gen_error ).
-    ENDTRY.
+    ASSERT lines( ls_sprx_db_data-objects_not_found ) = 0.
 
     LOOP AT ls_sprx_db_data-sproxhdr ASSIGNING <ls_sproxheader>.
 
@@ -472,7 +470,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SPRX IMPLEMENTATION.
     io_xml->add(
         iv_name = c_proxy-data
         ig_data = ls_sprx_db_data-sproxdat ).
-
 
   ENDMETHOD.
 ENDCLASS.
