@@ -27,16 +27,6 @@ CLASS zcl_abapgit_object_sprx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       EXPORTING
         !ev_object   TYPE sproxhdr-object
         !ev_obj_name TYPE sproxhdr-obj_name .
-    METHODS activate_classes
-      IMPORTING
-        !it_sproxdat_new TYPE sprx_dat_t
-      RAISING
-        zcx_abapgit_exception .
-    METHODS generate_service_definition
-      IMPORTING
-        !it_sproxdat_new TYPE sprx_dat_t
-      RAISING
-        zcx_abapgit_exception .
     METHODS delta_handling
       IMPORTING
         !io_xml          TYPE REF TO zcl_abapgit_xml_input
@@ -57,47 +47,6 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_OBJECT_SPRX IMPLEMENTATION.
-
-
-  METHOD activate_classes.
-
-    DATA: lt_objects TYPE STANDARD TABLE OF dwinactiv,
-          ls_object  LIKE LINE OF lt_objects.
-
-    FIELD-SYMBOLS: <ls_sproxdat_new> TYPE sprx_dat.
-
-    " Somehow the classes aren't activated by the proxy framework.
-    " This seems weird and it's almost certain a result of wrong API calls.
-    " So as a quick fix we activate them ourselves. This surely has to
-    " be improved in the future. ZCL_ABAPGIT_OBJECTS_ACTIVATION cannot
-    " be used as it doesn't activate classes.
-
-    LOOP AT it_sproxdat_new ASSIGNING <ls_sproxdat_new>
-                            WHERE object1 = 'CLAS'.
-
-      ls_object-object   = <ls_sproxdat_new>-object1.
-      ls_object-obj_name = <ls_sproxdat_new>-obj_name1.
-      INSERT ls_object INTO TABLE lt_objects.
-
-    ENDLOOP.
-
-    CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
-      EXPORTING
-        activate_ddic_objects  = abap_false
-        with_popup             = abap_false
-      TABLES
-        objects                = lt_objects
-      EXCEPTIONS
-        excecution_error       = 1
-        cancelled              = 2
-        insert_into_corr_error = 3
-        OTHERS                 = 4.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from RS_WORKING_OBJECTS_ACTIVATE. Subrc={ sy-subrc }| ).
-    ENDIF.
-
-  ENDMETHOD.
 
 
   METHOD check_sprx_tadir.
@@ -180,42 +129,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SPRX IMPLEMENTATION.
             cg_data = et_sproxdat_new ).
 
     ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD generate_service_definition.
-
-    DATA: lv_transport    TYPE e070use-ordernum,
-          li_proxy_object TYPE REF TO if_px_main,
-          lx_proxy_fault  TYPE REF TO cx_proxy_fault.
-
-    lv_transport = zcl_abapgit_default_transport=>get_instance(
-                                               )->get( )-ordernum.
-
-    TRY.
-        li_proxy_object = cl_pxn_factory=>create(
-                              application  = 'PROXY_UI'
-                              display_only = abap_false
-                              saveable     = abap_true
-                          )->if_pxn_factory~load_by_abap_name(
-                              object   = mv_object
-                              obj_name = mv_obj_name ).
-
-        li_proxy_object->activate(
-          EXPORTING
-            activate_all     = abap_true
-          CHANGING
-            transport_number = lv_transport ).
-
-        li_proxy_object->dequeue( ).
-
-      CATCH cx_proxy_fault INTO lx_proxy_fault.
-        zcx_abapgit_exception=>raise( iv_text     = |{ lx_proxy_fault->get_text( ) }|
-                                      ix_previous = lx_proxy_fault ).
-    ENDTRY.
-
-    activate_classes( it_sproxdat_new ).
 
   ENDMETHOD.
 
@@ -325,10 +238,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SPRX IMPLEMENTATION.
     COMMIT WORK.
 
     check_sprx_tadir( ).
-
-    IF mv_object = 'INTF'.
-      generate_service_definition( lt_sproxdat_new ).
-    ENDIF.
 
   ENDMETHOD.
 
