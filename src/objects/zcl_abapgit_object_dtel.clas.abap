@@ -4,6 +4,7 @@ CLASS zcl_abapgit_object_dtel DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES: BEGIN OF ty_dd04_texts,
@@ -30,7 +31,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -174,7 +175,7 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
         object_not_specified = 3
         permission_failure   = 4.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, DTEL' ).
+      zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, DTEL,' && sy-subrc ).
     ENDIF.
 
     delete_longtexts( c_longtext_id_dtel ).
@@ -240,6 +241,17 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-ddic = abap_true.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESDICT'
+                                            iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
   ENDMETHOD.
 
 
@@ -322,15 +334,5 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
     serialize_longtexts( io_xml         = io_xml
                          iv_longtext_id = c_longtext_id_dtel ).
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESDICT'
-                                            iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

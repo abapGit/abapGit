@@ -354,9 +354,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SPRX IMPLEMENTATION.
       it_sproxhdr_new = lt_sproxhdr_new
       it_sproxdat_new = lt_sproxdat_new ).
 
+    COMMIT WORK.
+
     check_sprx_tadir( ).
 
-    dequeue_proxy( ).
+*    dequeue_proxy( ).
 
     IF mv_object = 'INTF'.
       generate_service_definition( lt_sproxdat_new ).
@@ -442,10 +444,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SPRX IMPLEMENTATION.
     DELETE ls_sprx_db_data-sproxintf WHERE object <> mv_object OR obj_name <> mv_obj_name.
 
     IF lines( ls_sprx_db_data-sproxhdr ) <> 1.
-      zcx_abapgit_exception=>raise( |SPRX, no header found| ).
+      zcx_abapgit_exception=>raise( |SPRX, no header found, { mv_object }, { mv_obj_name }| ).
     ENDIF.
-
-    ASSERT lines( ls_sprx_db_data-objects_not_found ) = 0.
 
     LOOP AT ls_sprx_db_data-sproxhdr ASSIGNING <ls_sproxheader>.
 

@@ -475,7 +475,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
           object_not_specified = 3
           permission_failure   = 4.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, TABL' ).
+        zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, TABL,' && sy-subrc ).
       ENDIF.
 
       delete_longtexts( c_longtext_id_tabl ).
