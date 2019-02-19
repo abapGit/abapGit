@@ -14,56 +14,44 @@ CLASS zcl_abapgit_object_sprx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+
     CONSTANTS:
       BEGIN OF c_proxy,
         data   TYPE string VALUE 'PROXY_DATA' ##NO_TEXT,
         header TYPE string VALUE 'PROXY_HEADER' ##NO_TEXT,
-      END OF c_proxy.
+      END OF c_proxy .
+    DATA mv_object TYPE sproxhdr-object .
+    DATA mv_obj_name TYPE sproxhdr-obj_name .
 
-    METHODS:
-      get_object_and_name
-        EXPORTING
-          ev_object   TYPE sproxhdr-object
-          ev_obj_name TYPE sproxhdr-obj_name,
-
-      activate_classes
-        IMPORTING
-          it_sproxdat_new TYPE sprx_dat_t
-        RAISING
-          zcx_abapgit_exception,
-
-      generate_service_definition
-        IMPORTING
-          it_sproxdat_new TYPE sprx_dat_t
-        RAISING
-          zcx_abapgit_exception,
-
-      delta_handling
-        IMPORTING
-          io_xml          TYPE REF TO zcl_abapgit_xml_input
-        EXPORTING
-          et_sproxhdr_new TYPE sprx_hdr_t
-          et_sproxdat_new TYPE sprx_dat_t
-        RAISING
-          zcx_abapgit_exception,
-
-      check_sprx_tadir
-        RAISING
-          zcx_abapgit_exception,
-
-      dequeue_proxy
-        RAISING
-          zcx_abapgit_exception,
-
-      save
-        IMPORTING
-          it_sproxhdr_new TYPE sprx_hdr_t
-          it_sproxdat_new TYPE sprx_dat_t.
-
-    DATA:
-      mv_object   TYPE sproxhdr-object,
-      mv_obj_name TYPE sproxhdr-obj_name.
-
+    METHODS get_object_and_name
+      EXPORTING
+        !ev_object   TYPE sproxhdr-object
+        !ev_obj_name TYPE sproxhdr-obj_name .
+    METHODS activate_classes
+      IMPORTING
+        !it_sproxdat_new TYPE sprx_dat_t
+      RAISING
+        zcx_abapgit_exception .
+    METHODS generate_service_definition
+      IMPORTING
+        !it_sproxdat_new TYPE sprx_dat_t
+      RAISING
+        zcx_abapgit_exception .
+    METHODS delta_handling
+      IMPORTING
+        !io_xml          TYPE REF TO zcl_abapgit_xml_input
+      EXPORTING
+        !et_sproxhdr_new TYPE sprx_hdr_t
+        !et_sproxdat_new TYPE sprx_dat_t
+      RAISING
+        zcx_abapgit_exception .
+    METHODS check_sprx_tadir
+      RAISING
+        zcx_abapgit_exception .
+    METHODS save
+      IMPORTING
+        !it_sproxhdr_new TYPE sprx_hdr_t
+        !it_sproxdat_new TYPE sprx_dat_t .
 ENDCLASS.
 
 
@@ -191,26 +179,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SPRX IMPLEMENTATION.
           CHANGING
             cg_data = et_sproxdat_new ).
 
-    ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD dequeue_proxy.
-
-    DATA: lo_proxy TYPE REF TO cl_proxy,
-          lx_error TYPE REF TO cx_proxy_gen_error.
-
-    TRY.
-        lo_proxy = cl_proxy_fact=>load_by_abap_name(
-                       object   = mv_object
-                       obj_name = mv_obj_name ).
-
-        lo_proxy->dequeue( ).
-
-      CATCH cx_proxy_gen_error INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = |{ lx_error->get_text( ) }|
-                                      ix_previous = lx_error ).
     ENDTRY.
 
   ENDMETHOD.
@@ -357,8 +325,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SPRX IMPLEMENTATION.
     COMMIT WORK.
 
     check_sprx_tadir( ).
-
-*    dequeue_proxy( ).
 
     IF mv_object = 'INTF'.
       generate_service_definition( lt_sproxdat_new ).
