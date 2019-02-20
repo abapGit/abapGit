@@ -39,6 +39,7 @@ CLASS zcl_abapgit_code_inspector DEFINITION
         zcx_abapgit_exception .
   PRIVATE SECTION.
 
+    DATA mv_success TYPE abap_bool .
     CONSTANTS:
       BEGIN OF co_run_mode,
         run_with_popup   TYPE sychar01 VALUE 'P',
@@ -314,6 +315,11 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
         rt_list = run_inspection( mo_inspection ).
 
         cleanup( lo_set ).
+
+        IF iv_save = abap_true.
+          READ TABLE rt_list TRANSPORTING NO FIELDS WITH KEY kind = 'E'.
+          mv_success = boolc( sy-subrc <> 0 ).
+        ENDIF.
 
       CATCH zcx_abapgit_exception INTO lx_error.
 
