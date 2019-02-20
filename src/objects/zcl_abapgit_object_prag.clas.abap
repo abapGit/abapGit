@@ -3,7 +3,7 @@ CLASS zcl_abapgit_object_prag DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
 
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_pragma,
              pragma      TYPE c LENGTH 40,

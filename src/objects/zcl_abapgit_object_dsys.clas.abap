@@ -9,7 +9,7 @@ CLASS zcl_abapgit_object_dsys DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         is_item     TYPE zif_abapgit_definitions=>ty_item
         iv_language TYPE spras.
 
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS: c_typ     TYPE dokhl-typ VALUE 'E',
                c_version TYPE dokhl-dokversion VALUE '0001',

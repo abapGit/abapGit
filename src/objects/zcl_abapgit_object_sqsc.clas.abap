@@ -15,7 +15,7 @@ CLASS zcl_abapgit_object_sqsc DEFINITION
         RAISING
           zcx_abapgit_exception.
 
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     " Downport original structures from
     "   - IF_DBPROC_PROXY_UI

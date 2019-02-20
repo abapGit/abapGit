@@ -3,7 +3,7 @@ CLASS zcl_abapgit_object_sxci DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
 
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_classic_badi_implementation,
              implementation_data TYPE impl_data,

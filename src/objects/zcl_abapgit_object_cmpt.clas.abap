@@ -9,7 +9,7 @@ CLASS zcl_abapgit_object_cmpt DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     INTERFACES zif_abapgit_object.
 
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: mo_cmp_db TYPE REF TO object,
           mv_name   TYPE c LENGTH 30.

@@ -9,7 +9,7 @@ CLASS zcl_abapgit_object_cus0 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         is_item     TYPE zif_abapgit_definitions=>ty_item
         iv_language TYPE spras.
 
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: tty_img_activity_texts TYPE STANDARD TABLE OF cus_imgact
                                        WITH NON-UNIQUE DEFAULT KEY,

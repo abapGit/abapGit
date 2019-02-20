@@ -3,7 +3,7 @@ CLASS zcl_abapgit_object_enqu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: tyt_dd27p TYPE STANDARD TABLE OF dd27p WITH DEFAULT KEY.
     METHODS _clear_dd27p_fields CHANGING ct_dd27p TYPE tyt_dd27p.

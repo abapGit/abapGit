@@ -10,7 +10,7 @@ CLASS zcl_abapgit_object_shi5 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         iv_language TYPE spras.
 
 
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: tty_ttree_extt TYPE STANDARD TABLE OF ttree_extt
                                WITH NON-UNIQUE DEFAULT KEY,

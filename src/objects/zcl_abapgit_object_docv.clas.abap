@@ -4,7 +4,7 @@ CLASS zcl_abapgit_object_docv DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS: c_typ     TYPE dokhl-typ VALUE 'E',
                c_version TYPE dokhl-dokversion VALUE '0001',

@@ -12,7 +12,7 @@ CLASS zcl_abapgit_object_enhc DEFINITION
           is_item     TYPE zif_abapgit_definitions=>ty_item
           iv_language TYPE spras.
 
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA:
       mv_composite_id TYPE enhcompositename.

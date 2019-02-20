@@ -9,7 +9,7 @@ CLASS zcl_abapgit_object_shi8 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         is_item     TYPE zif_abapgit_definitions=>ty_item
         iv_language TYPE spras.
 
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: mv_assignment_id  TYPE hier_sfw_id.
 

@@ -5,7 +5,7 @@ CLASS zcl_abapgit_object_ssst DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
     CONSTANTS: c_style_active TYPE tdactivate VALUE 'A'.
 
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS validate_font
       IMPORTING iv_tdfamily TYPE tdfamily

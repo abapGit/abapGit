@@ -10,7 +10,7 @@ CLASS zcl_abapgit_object_idoc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           iv_language TYPE spras.
     CLASS-METHODS clear_idoc_segement_fields CHANGING cs_structure TYPE any.
 
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_idoc,

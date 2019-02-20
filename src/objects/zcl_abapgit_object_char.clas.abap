@@ -8,7 +8,7 @@ CLASS zcl_abapgit_object_char DEFINITION
 
     INTERFACES zif_abapgit_object .
 
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES:

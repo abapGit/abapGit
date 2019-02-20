@@ -8,7 +8,7 @@ CLASS zcl_abapgit_object_iext DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         IMPORTING
           is_item     TYPE zif_abapgit_definitions=>ty_item
           iv_language TYPE spras.
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_extention,
              attributes TYPE edi_iapi01,

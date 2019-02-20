@@ -7,7 +7,7 @@ CLASS zcl_abapgit_object_sots DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     ALIASES:
       mo_files FOR zif_abapgit_object~mo_files.
 
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_sots,

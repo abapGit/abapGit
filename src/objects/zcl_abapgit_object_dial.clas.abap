@@ -3,7 +3,7 @@ CLASS zcl_abapgit_object_dial DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
 
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_dialog_module,
              tdct     TYPE tdct,
