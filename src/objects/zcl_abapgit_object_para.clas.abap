@@ -4,100 +4,20 @@ CLASS zcl_abapgit_object_para DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+protected section.
+private section.
 ENDCLASS.
 
-CLASS zcl_abapgit_object_para IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
+
 
   METHOD zif_abapgit_object~changed_by.
 * looks like "changed by user" is not stored in the database
     rv_user = c_user_unknown.
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-* Data elements can refer to PARA objects
-    rs_metadata-ddic = abap_true.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~exists.
-
-    DATA: lv_paramid TYPE tpara-paramid.
-
-
-    SELECT SINGLE paramid FROM tpara INTO lv_paramid
-      WHERE paramid = ms_item-obj_name.                 "#EC CI_GENBUFF
-    rv_bool = boolc( sy-subrc = 0 ).
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~serialize.
-
-    DATA: ls_tpara  TYPE tpara,
-          ls_tparat TYPE tparat.
-
-
-    SELECT SINGLE * FROM tpara INTO ls_tpara
-      WHERE paramid = ms_item-obj_name.                 "#EC CI_GENBUFF
-    IF sy-subrc <> 0.
-      RETURN.
-    ENDIF.
-
-    SELECT SINGLE * FROM tparat INTO ls_tparat
-      WHERE paramid = ms_item-obj_name
-      AND sprache = mv_language.          "#EC CI_GENBUFF "#EC CI_SUBRC
-
-    io_xml->add( iv_name = 'TPARA'
-                 ig_data = ls_tpara ).
-    io_xml->add( iv_name = 'TPARAT'
-                 ig_data = ls_tparat ).
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~deserialize.
-* see fm RS_PARAMETER_ADD and RS_PARAMETER_EDIT
-
-    DATA: lv_mode   TYPE c LENGTH 1,
-          ls_tpara  TYPE tpara,
-          ls_tparat TYPE tparat.
-
-
-    SELECT SINGLE * FROM tpara INTO ls_tpara
-      WHERE paramid = ms_item-obj_name.                 "#EC CI_GENBUFF
-    IF sy-subrc = 0.
-      lv_mode = 'M'.
-    ELSE.
-      lv_mode = 'I'.
-    ENDIF.
-
-    io_xml->read( EXPORTING iv_name = 'TPARA'
-                  CHANGING cg_data = ls_tpara ).
-    io_xml->read( EXPORTING iv_name = 'TPARAT'
-                  CHANGING cg_data = ls_tparat ).
-
-    CALL FUNCTION 'RS_CORR_INSERT'
-      EXPORTING
-        object              = ms_item-obj_name
-        object_class        = 'PARA'
-        mode                = lv_mode
-        global_lock         = abap_true
-        devclass            = iv_package
-        master_language     = mv_language
-      EXCEPTIONS
-        cancelled           = 1
-        permission_failure  = 2
-        unknown_objectclass = 3
-        OTHERS              = 4.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT, PARA' ).
-    ENDIF.
-
-    MODIFY tpara FROM ls_tpara.                           "#EC CI_SUBRC
-    ASSERT sy-subrc = 0.
-
-    MODIFY tparat FROM ls_tparat.                         "#EC CI_SUBRC
-    ASSERT sy-subrc = 0.
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -174,20 +94,82 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~jump.
 
-    CALL FUNCTION 'RS_TOOL_ACCESS'
+  METHOD zif_abapgit_object~deserialize.
+* see fm RS_PARAMETER_ADD and RS_PARAMETER_EDIT
+
+    DATA: lv_mode   TYPE c LENGTH 1,
+          ls_tpara  TYPE tpara,
+          ls_tparat TYPE tparat.
+
+
+    SELECT SINGLE * FROM tpara INTO ls_tpara
+      WHERE paramid = ms_item-obj_name.                 "#EC CI_GENBUFF
+    IF sy-subrc = 0.
+      lv_mode = 'M'.
+    ELSE.
+      lv_mode = 'I'.
+    ENDIF.
+
+    io_xml->read( EXPORTING iv_name = 'TPARA'
+                  CHANGING cg_data = ls_tpara ).
+    io_xml->read( EXPORTING iv_name = 'TPARAT'
+                  CHANGING cg_data = ls_tparat ).
+
+    CALL FUNCTION 'RS_CORR_INSERT'
       EXPORTING
-        operation     = 'SHOW'
-        object_name   = ms_item-obj_name
-        object_type   = 'PARA'
-        in_new_window = abap_true.
+        object              = ms_item-obj_name
+        object_class        = 'PARA'
+        mode                = lv_mode
+        global_lock         = abap_true
+        devclass            = iv_package
+        master_language     = mv_language
+      EXCEPTIONS
+        cancelled           = 1
+        permission_failure  = 2
+        unknown_objectclass = 3
+        OTHERS              = 4.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT, PARA' ).
+    ENDIF.
+
+    MODIFY tpara FROM ls_tpara.                           "#EC CI_SUBRC
+    ASSERT sy-subrc = 0.
+
+    MODIFY tparat FROM ls_tparat.                         "#EC CI_SUBRC
+    ASSERT sy-subrc = 0.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+
+  METHOD zif_abapgit_object~exists.
+
+    DATA: lv_paramid TYPE tpara-paramid.
+
+
+    SELECT SINGLE paramid FROM tpara INTO lv_paramid
+      WHERE paramid = ms_item-obj_name.                 "#EC CI_GENBUFF
+    rv_bool = boolc( sy-subrc = 0 ).
+
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+* Data elements can refer to PARA objects
+    rs_metadata-ddic = abap_true.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~is_locked.
 
@@ -203,7 +185,38 @@ CLASS zcl_abapgit_object_para IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
+  METHOD zif_abapgit_object~jump.
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation     = 'SHOW'
+        object_name   = ms_item-obj_name
+        object_type   = 'PARA'
+        in_new_window = abap_true.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~serialize.
+
+    DATA: ls_tpara  TYPE tpara,
+          ls_tparat TYPE tparat.
+
+
+    SELECT SINGLE * FROM tpara INTO ls_tpara
+      WHERE paramid = ms_item-obj_name.                 "#EC CI_GENBUFF
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE * FROM tparat INTO ls_tparat
+      WHERE paramid = ms_item-obj_name
+      AND sprache = mv_language.          "#EC CI_GENBUFF "#EC CI_SUBRC
+
+    io_xml->add( iv_name = 'TPARA'
+                 ig_data = ls_tpara ).
+    io_xml->add( iv_name = 'TPARAT'
+                 ig_data = ls_tparat ).
+
   ENDMETHOD.
 ENDCLASS.

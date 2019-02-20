@@ -162,11 +162,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~delete.
 
     CONSTANTS lc_activity_delete_06 TYPE activ_auth VALUE '06'.
@@ -254,6 +249,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
 
     rv_bool = boolc( ls_header-id IS NOT INITIAL ).
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
   ENDMETHOD.
 
 

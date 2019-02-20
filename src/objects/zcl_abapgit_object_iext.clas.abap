@@ -8,6 +8,7 @@ CLASS zcl_abapgit_object_iext DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         IMPORTING
           is_item     TYPE zif_abapgit_definitions=>ty_item
           iv_language TYPE spras.
+protected section.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_extention,
              attributes TYPE edi_iapi01,
@@ -21,7 +22,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_iext IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_IEXT IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -48,11 +49,6 @@ CLASS zcl_abapgit_object_iext IMPLEMENTATION.
 
     rv_user = ls_attributes-plast.
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
 
 
@@ -124,8 +120,23 @@ CLASS zcl_abapgit_object_iext IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
   ENDMETHOD.
 
 
@@ -192,15 +203,5 @@ CLASS zcl_abapgit_object_iext IMPLEMENTATION.
     io_xml->add( iv_name = c_dataname_iext
                  ig_data = ls_extension ).
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_locked.
-    rv_is_locked = abap_false.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

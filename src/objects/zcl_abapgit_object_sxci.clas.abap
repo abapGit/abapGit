@@ -3,6 +3,7 @@ CLASS zcl_abapgit_object_sxci DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
 
+protected section.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_classic_badi_implementation,
              implementation_data TYPE impl_data,
@@ -16,19 +17,12 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_sxci IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SXCI IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
 
     rv_user = c_user_unknown.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
 
   ENDMETHOD.
 
@@ -158,11 +152,27 @@ CLASS zcl_abapgit_object_sxci IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_metadata.
 
     rs_metadata = get_metadata( ).
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~jump.
 
@@ -267,14 +277,5 @@ CLASS zcl_abapgit_object_sxci IMPLEMENTATION.
     io_xml->add( iv_name = 'SXCI'
                  ig_data = ls_classic_badi_implementation ).
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-    rv_is_locked = abap_false.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

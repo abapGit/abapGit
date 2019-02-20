@@ -4,6 +4,7 @@ CLASS zcl_abapgit_object_enho DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+protected section.
   PRIVATE SECTION.
 
     METHODS:
@@ -106,11 +107,6 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~delete.
 
     DATA: lv_enh_id     TYPE enhname,
@@ -173,6 +169,11 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO IMPLEMENTATION.
         rv_bool = abap_false.
     ENDTRY.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
   ENDMETHOD.
 
 

@@ -12,16 +12,11 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_asfc IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_ASFC IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
     rv_user = zcl_abapgit_objects_super=>c_user_unknown.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
 
 
@@ -66,11 +61,21 @@ CLASS zcl_abapgit_object_asfc IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_metadata.
 
     rs_metadata = get_metadata( ).
     rs_metadata-delete_tadir = abap_true.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
   ENDMETHOD.
 
 
@@ -99,10 +104,4 @@ CLASS zcl_abapgit_object_asfc IMPLEMENTATION.
     lo_generic->serialize( io_xml ).
 
   ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
-  ENDMETHOD.
-
 ENDCLASS.

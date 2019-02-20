@@ -4,6 +4,7 @@ CLASS zcl_abapgit_object_wapa DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+protected section.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_page,
              attributes     TYPE o2pagattr,
@@ -52,7 +53,105 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
+
+
+  METHOD create_new_application.
+
+    DATA: ls_item   LIKE ms_item,
+          lv_objkey TYPE seu_objkey.
+
+    cl_o2_api_application=>create_new(
+      EXPORTING
+        p_application_data      = is_attributes
+        p_nodes                 = it_nodes
+        p_navgraph              = it_navgraph
+      IMPORTING
+        p_application           = ro_bsp
+      EXCEPTIONS
+        object_already_existing = 1
+        object_just_created     = 2
+        not_authorized          = 3
+        undefined_name          = 4
+        author_not_existing     = 5
+        action_cancelled        = 6
+        error_occured           = 7
+        invalid_parameter       = 8 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |WAPA - error from create_new: { sy-subrc }| ).
+    ENDIF.
+
+    ro_bsp->save( ).
+
+    ro_bsp->set_changeable(
+      p_changeable           = abap_false
+      p_complete_application = abap_true ).
+
+    ls_item-obj_type = 'WAPD'.
+    ls_item-obj_name = ms_item-obj_name.
+    zcl_abapgit_objects_activation=>add_item( ls_item ).
+
+    lv_objkey = ls_item-obj_name.
+* todo, hmm, the WAPD is not added to the worklist during activation
+    cl_o2_api_application=>activate( lv_objkey ).
+
+
+  ENDMETHOD.
+
+
+  METHOD create_new_page.
+
+    cl_o2_api_pages=>create_new_page(
+      EXPORTING
+        p_pageattrs = is_page_attributes
+      IMPORTING
+        p_page      = ro_page
+      EXCEPTIONS
+        object_already_exists = 1
+        invalid_name          = 2
+        error_occured         = 3
+        o2appl_not_existing   = 4
+        OTHERS                = 5 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error { sy-subrc } from CL_O2_API_PAGES=>CREATE_NEW_PAGE| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD delete_superfluous_pages.
+
+    DATA: ls_pagekey TYPE o2pagkey.
+    FIELD-SYMBOLS: <ls_local_page> LIKE LINE OF it_local_pages.
+
+    " delete local pages which doesn't exists remotely
+    LOOP AT it_local_pages ASSIGNING <ls_local_page>.
+
+      READ TABLE it_remote_pages WITH KEY attributes-pagekey = <ls_local_page>-pagekey
+                               TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        " page exists locally but not remotely -> delete
+
+        ls_pagekey-applname = <ls_local_page>-applname.
+        ls_pagekey-pagekey = <ls_local_page>-pagekey.
+
+        cl_o2_page=>delete_page_for_application(
+          EXPORTING
+            p_pagekey           = ls_pagekey
+          EXCEPTIONS
+            object_not_existing = 1
+            error_occured       = 2 ).
+
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( |Error { sy-subrc } from CL_O2_PAGE=>DELETE_PAGE_FOR_APPLICATION| ).
+        ENDIF.
+
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
 
 
   METHOD get_page_content.
@@ -191,11 +290,6 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
 
     rv_user = ls_latest-changedby.
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
 
 
@@ -453,8 +547,18 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
   ENDMETHOD.
 
 
@@ -542,107 +646,5 @@ CLASS zcl_abapgit_object_wapa IMPLEMENTATION.
     io_xml->add( iv_name = 'PAGES'
                  ig_data = lt_pages_info ).
 
-  ENDMETHOD.
-
-  METHOD create_new_application.
-
-    DATA: ls_item   LIKE ms_item,
-          lv_objkey TYPE seu_objkey.
-
-    cl_o2_api_application=>create_new(
-      EXPORTING
-        p_application_data      = is_attributes
-        p_nodes                 = it_nodes
-        p_navgraph              = it_navgraph
-      IMPORTING
-        p_application           = ro_bsp
-      EXCEPTIONS
-        object_already_existing = 1
-        object_just_created     = 2
-        not_authorized          = 3
-        undefined_name          = 4
-        author_not_existing     = 5
-        action_cancelled        = 6
-        error_occured           = 7
-        invalid_parameter       = 8 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |WAPA - error from create_new: { sy-subrc }| ).
-    ENDIF.
-
-    ro_bsp->save( ).
-
-    ro_bsp->set_changeable(
-      p_changeable           = abap_false
-      p_complete_application = abap_true ).
-
-    ls_item-obj_type = 'WAPD'.
-    ls_item-obj_name = ms_item-obj_name.
-    zcl_abapgit_objects_activation=>add_item( ls_item ).
-
-    lv_objkey = ls_item-obj_name.
-* todo, hmm, the WAPD is not added to the worklist during activation
-    cl_o2_api_application=>activate( lv_objkey ).
-
-
-  ENDMETHOD.
-
-
-  METHOD create_new_page.
-
-    cl_o2_api_pages=>create_new_page(
-      EXPORTING
-        p_pageattrs = is_page_attributes
-      IMPORTING
-        p_page      = ro_page
-      EXCEPTIONS
-        object_already_exists = 1
-        invalid_name          = 2
-        error_occured         = 3
-        o2appl_not_existing   = 4
-        OTHERS                = 5 ).
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error { sy-subrc } from CL_O2_API_PAGES=>CREATE_NEW_PAGE| ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD delete_superfluous_pages.
-
-    DATA: ls_pagekey TYPE o2pagkey.
-    FIELD-SYMBOLS: <ls_local_page> LIKE LINE OF it_local_pages.
-
-    " delete local pages which doesn't exists remotely
-    LOOP AT it_local_pages ASSIGNING <ls_local_page>.
-
-      READ TABLE it_remote_pages WITH KEY attributes-pagekey = <ls_local_page>-pagekey
-                               TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
-        " page exists locally but not remotely -> delete
-
-        ls_pagekey-applname = <ls_local_page>-applname.
-        ls_pagekey-pagekey = <ls_local_page>-pagekey.
-
-        cl_o2_page=>delete_page_for_application(
-          EXPORTING
-            p_pagekey           = ls_pagekey
-          EXCEPTIONS
-            object_not_existing = 1
-            error_occured       = 2 ).
-
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( |Error { sy-subrc } from CL_O2_PAGE=>DELETE_PAGE_FOR_APPLICATION| ).
-        ENDIF.
-
-      ENDIF.
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

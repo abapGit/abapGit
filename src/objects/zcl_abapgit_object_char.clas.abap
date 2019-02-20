@@ -8,6 +8,7 @@ CLASS zcl_abapgit_object_char DEFINITION
 
     INTERFACES zif_abapgit_object .
 
+protected section.
   PRIVATE SECTION.
 
     TYPES:
@@ -29,7 +30,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_char IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
 
 
   METHOD instantiate_char.
@@ -85,11 +86,6 @@ CLASS zcl_abapgit_object_char IMPLEMENTATION.
       rv_user = c_user_unknown.
     ENDIF.
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
 
 
@@ -209,8 +205,18 @@ CLASS zcl_abapgit_object_char IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
   ENDMETHOD.
 
 
@@ -273,10 +279,5 @@ CLASS zcl_abapgit_object_char IMPLEMENTATION.
     io_xml->add( iv_name = 'CHAR'
                  ig_data = ls_char ).
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

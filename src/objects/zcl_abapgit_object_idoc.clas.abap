@@ -10,6 +10,7 @@ CLASS zcl_abapgit_object_idoc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           iv_language TYPE spras.
     CLASS-METHODS clear_idoc_segement_fields CHANGING cs_structure TYPE any.
 
+protected section.
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_idoc,
@@ -24,7 +25,41 @@ CLASS zcl_abapgit_object_idoc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 ENDCLASS.
 
 
-CLASS zcl_abapgit_object_idoc IMPLEMENTATION.
+
+CLASS ZCL_ABAPGIT_OBJECT_IDOC IMPLEMENTATION.
+
+
+  METHOD clear_idoc_segement_field.
+
+    FIELD-SYMBOLS <lv_any_field> TYPE any.
+
+    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_structure TO <lv_any_field>.
+    IF sy-subrc = 0.
+      CLEAR <lv_any_field>.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD clear_idoc_segement_fields.
+
+    clear_idoc_segement_field( EXPORTING iv_fieldname = 'DEVC'
+                               CHANGING  cs_structure = cs_structure ).
+    clear_idoc_segement_field( EXPORTING iv_fieldname = 'PLAST'
+                               CHANGING  cs_structure = cs_structure ).
+    clear_idoc_segement_field( EXPORTING iv_fieldname = 'PWORK'
+                               CHANGING  cs_structure = cs_structure ).
+    clear_idoc_segement_field( EXPORTING iv_fieldname = 'PRESP'
+                               CHANGING  cs_structure = cs_structure ).
+    clear_idoc_segement_field( EXPORTING iv_fieldname = 'CREDATE'
+                               CHANGING  cs_structure = cs_structure ).
+    clear_idoc_segement_field( EXPORTING iv_fieldname = 'CRETIME'
+                               CHANGING  cs_structure = cs_structure ).
+    clear_idoc_segement_field( EXPORTING iv_fieldname = 'LDATE'
+                               CHANGING  cs_structure = cs_structure ).
+    clear_idoc_segement_field( EXPORTING iv_fieldname = 'LTIME'
+                               CHANGING  cs_structure = cs_structure ).
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -58,11 +93,6 @@ CLASS zcl_abapgit_object_idoc IMPLEMENTATION.
 
     rv_user = ls_attributes-plast.
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
 
 
@@ -133,8 +163,23 @@ CLASS zcl_abapgit_object_idoc IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
   ENDMETHOD.
 
 
@@ -205,46 +250,4 @@ CLASS zcl_abapgit_object_idoc IMPLEMENTATION.
                  ig_data = ls_idoc ).
 
   ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-    rv_is_locked = abap_false.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
-  ENDMETHOD.
-
-
-  METHOD clear_idoc_segement_fields.
-
-    clear_idoc_segement_field( EXPORTING iv_fieldname = 'DEVC'
-                               CHANGING  cs_structure = cs_structure ).
-    clear_idoc_segement_field( EXPORTING iv_fieldname = 'PLAST'
-                               CHANGING  cs_structure = cs_structure ).
-    clear_idoc_segement_field( EXPORTING iv_fieldname = 'PWORK'
-                               CHANGING  cs_structure = cs_structure ).
-    clear_idoc_segement_field( EXPORTING iv_fieldname = 'PRESP'
-                               CHANGING  cs_structure = cs_structure ).
-    clear_idoc_segement_field( EXPORTING iv_fieldname = 'CREDATE'
-                               CHANGING  cs_structure = cs_structure ).
-    clear_idoc_segement_field( EXPORTING iv_fieldname = 'CRETIME'
-                               CHANGING  cs_structure = cs_structure ).
-    clear_idoc_segement_field( EXPORTING iv_fieldname = 'LDATE'
-                               CHANGING  cs_structure = cs_structure ).
-    clear_idoc_segement_field( EXPORTING iv_fieldname = 'LTIME'
-                               CHANGING  cs_structure = cs_structure ).
-  ENDMETHOD.
-
-  METHOD clear_idoc_segement_field.
-
-    FIELD-SYMBOLS <lv_any_field> TYPE any.
-
-    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_structure TO <lv_any_field>.
-    IF sy-subrc = 0.
-      CLEAR <lv_any_field>.
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.

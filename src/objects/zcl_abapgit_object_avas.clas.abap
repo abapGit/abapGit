@@ -130,11 +130,6 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~delete.
 
     DATA: lo_avas TYPE REF TO cl_cls_attr_value_assignment.
@@ -191,6 +186,11 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
       WHERE guid = ms_item-obj_name.
     rv_bool = boolc( sy-subrc = 0 ).
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
   ENDMETHOD.
 
 

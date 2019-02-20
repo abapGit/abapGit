@@ -4,6 +4,7 @@ CLASS zcl_abapgit_object_styl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+protected section.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_style,
              header     TYPE itcda,
@@ -14,7 +15,10 @@ CLASS zcl_abapgit_object_styl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_styl IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_OBJECT_STYL IMPLEMENTATION.
+
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -38,10 +42,42 @@ CLASS zcl_abapgit_object_styl IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-    rs_metadata-delete_tadir = abap_true.
+
+  METHOD zif_abapgit_object~delete.
+
+    DATA: lv_style TYPE itcda-tdstyle.
+
+
+    lv_style = ms_item-obj_name.
+
+    CALL FUNCTION 'DELETE_STYLE'
+      EXPORTING
+        style    = lv_style
+        language = '*'.
+
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~deserialize.
+
+    DATA: ls_style TYPE ty_style.
+
+
+    io_xml->read( EXPORTING iv_name = 'STYLE'
+                  CHANGING cg_data = ls_style ).
+
+    CALL FUNCTION 'SAVE_STYLE'
+      EXPORTING
+        style_header = ls_style-header
+      TABLES
+        paragraphs   = ls_style-paragraphs
+        strings      = ls_style-strings
+        tabs         = ls_style-tabs.
+
+    tadir_insert( iv_package ).
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~exists.
 
@@ -65,6 +101,28 @@ CLASS zcl_abapgit_object_styl IMPLEMENTATION.
     rv_bool = boolc( lv_found = abap_true ).
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+    rs_metadata-delete_tadir = abap_true.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~jump.
 
@@ -112,39 +170,6 @@ CLASS zcl_abapgit_object_styl IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~delete.
-
-    DATA: lv_style TYPE itcda-tdstyle.
-
-
-    lv_style = ms_item-obj_name.
-
-    CALL FUNCTION 'DELETE_STYLE'
-      EXPORTING
-        style    = lv_style
-        language = '*'.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~deserialize.
-
-    DATA: ls_style TYPE ty_style.
-
-
-    io_xml->read( EXPORTING iv_name = 'STYLE'
-                  CHANGING cg_data = ls_style ).
-
-    CALL FUNCTION 'SAVE_STYLE'
-      EXPORTING
-        style_header = ls_style-header
-      TABLES
-        paragraphs   = ls_style-paragraphs
-        strings      = ls_style-strings
-        tabs         = ls_style-tabs.
-
-    tadir_insert( iv_package ).
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
 
@@ -176,18 +201,5 @@ CLASS zcl_abapgit_object_styl IMPLEMENTATION.
     io_xml->add( iv_name = 'STYLE'
                  ig_data = ls_style ).
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-    rv_is_locked = abap_false.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

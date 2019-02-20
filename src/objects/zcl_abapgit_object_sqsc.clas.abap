@@ -15,6 +15,7 @@ CLASS zcl_abapgit_object_sqsc DEFINITION
         RAISING
           zcx_abapgit_exception.
 
+protected section.
   PRIVATE SECTION.
     " Downport original structures from
     "   - IF_DBPROC_PROXY_UI
@@ -110,7 +111,8 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_sqsc IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SQSC IMPLEMENTATION.
+
 
   METHOD constructor.
 
@@ -139,13 +141,37 @@ CLASS zcl_abapgit_object_sqsc IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD delete_interface_if_it_exists.
+
+    DATA: ls_item      TYPE zif_abapgit_definitions=>ty_item,
+          lo_interface TYPE REF TO zcl_abapgit_object_intf.
+
+    " The interface is managed by the proxy. If abapGit
+    " has created it before we have to delete it. Otherwise
+    " if_dbproc_proxy_ui~create will throw errors.
+
+    ls_item-obj_name = iv_interface.
+    ls_item-obj_type = 'INTF'.
+
+    IF zcl_abapgit_objects=>exists( ls_item ) = abap_true.
+
+      CREATE OBJECT lo_interface
+        EXPORTING
+          is_item     = ls_item
+          iv_language = mv_language.
+
+      lo_interface->zif_abapgit_object~delete( ).
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown.
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -162,6 +188,7 @@ CLASS zcl_abapgit_object_sqsc IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -211,6 +238,7 @@ CLASS zcl_abapgit_object_sqsc IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD zif_abapgit_object~exists.
 
     CALL METHOD mo_proxy->('IF_DBPROC_PROXY_UI~EXISTS')
@@ -219,19 +247,28 @@ CLASS zcl_abapgit_object_sqsc IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
 
     rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.
 
+
   METHOD zif_abapgit_object~is_active.
     rv_active = is_active( ).
   ENDMETHOD.
 
+
   METHOD zif_abapgit_object~is_locked.
     rv_is_locked = abap_false.
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~jump.
 
@@ -240,6 +277,7 @@ CLASS zcl_abapgit_object_sqsc IMPLEMENTATION.
         iv_obj_type = ms_item-obj_type ).
 
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~serialize.
 
@@ -271,31 +309,4 @@ CLASS zcl_abapgit_object_sqsc IMPLEMENTATION.
                  ig_data = ls_proxy ).
 
   ENDMETHOD.
-
-
-  METHOD delete_interface_if_it_exists.
-
-    DATA: ls_item      TYPE zif_abapgit_definitions=>ty_item,
-          lo_interface TYPE REF TO zcl_abapgit_object_intf.
-
-    " The interface is managed by the proxy. If abapGit
-    " has created it before we have to delete it. Otherwise
-    " if_dbproc_proxy_ui~create will throw errors.
-
-    ls_item-obj_name = iv_interface.
-    ls_item-obj_type = 'INTF'.
-
-    IF zcl_abapgit_objects=>exists( ls_item ) = abap_true.
-
-      CREATE OBJECT lo_interface
-        EXPORTING
-          is_item     = ls_item
-          iv_language = mv_language.
-
-      lo_interface->zif_abapgit_object~delete( ).
-
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.
