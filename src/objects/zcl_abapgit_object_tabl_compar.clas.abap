@@ -1,18 +1,18 @@
-class ZCL_ABAPGIT_OBJECT_TABL_COMPAR definition
-  public
-  create public .
+CLASS zcl_abapgit_object_tabl_compar DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  interfaces ZIF_ABAPGIT_COMPARATOR .
+    INTERFACES zif_abapgit_comparator .
 
-  methods CONSTRUCTOR
-    importing
-      !IO_LOCAL type ref to ZCL_ABAPGIT_XML_INPUT .
-protected section.
-private section.
+    METHODS constructor
+      IMPORTING
+        !io_local TYPE REF TO zcl_abapgit_xml_input .
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 
-  data MO_LOCAL type ref to ZCL_ABAPGIT_XML_INPUT .
+    DATA mo_local TYPE REF TO zcl_abapgit_xml_input .
 ENDCLASS.
 
 
