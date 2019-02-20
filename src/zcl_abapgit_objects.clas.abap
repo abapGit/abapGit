@@ -324,6 +324,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     DATA: ls_remote_file    TYPE zif_abapgit_definitions=>ty_file,
           lo_remote_version TYPE REF TO zcl_abapgit_xml_input,
           lv_count          TYPE i,
+          ls_result         TYPE zif_abapgit_comparator=>ty_result,
           lv_answer         TYPE string,
           li_comparator     TYPE REF TO zif_abapgit_comparator.
 
@@ -349,7 +350,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         EXPORTING
           iv_xml = zcl_abapgit_convert=>xstring_to_string_utf8( ls_remote_file-data ).
 
-      DATA(ls_result) = li_comparator->compare( lo_remote_version ).
+      ls_result = li_comparator->compare( lo_remote_version ).
       IF ls_result-text IS INITIAL.
         RETURN.
       ENDIF.
