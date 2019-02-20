@@ -34,8 +34,5 @@ todo
 ``ZIF_ABAPGIT_OBJECT~GET_METADATA`` 
 todo
 
-``ZIF_ABAPGIT_OBJECT~HAS_CHANGED_SINCE`` 
-todo
-
-``ZIF_ABAPGIT_OBJECT~COMPARE_TO_REMOTE_VERSION`` 
-todo
+``ZIF_ABAPGIT_OBJECT~GET_COMARATOR`` 
+Triggered before deserialization to perform checks, eg warn the user that database tables are changed.
