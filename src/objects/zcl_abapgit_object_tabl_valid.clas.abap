@@ -9,6 +9,7 @@ CLASS zcl_abapgit_object_tabl_valid DEFINITION PUBLIC FINAL.
       RAISING
         zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
       tty_founds  TYPE STANDARD TABLE OF rsfindlst
@@ -40,7 +41,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tabl_valid IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TABL_VALID IMPLEMENTATION.
 
 
   METHOD get_where_used_recursive.
@@ -104,6 +105,26 @@ CLASS zcl_abapgit_object_tabl_valid IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_structure_used_in_db_table.
+
+    DATA: lt_scope  TYPE tty_seu_obj,
+          lt_founds TYPE tty_founds.
+
+    APPEND 'TABL' TO lt_scope.
+    APPEND 'STRU' TO lt_scope.
+
+    lt_founds = get_where_used_recursive( iv_object_name = iv_object_name
+                                          iv_object_type = 'STRU'
+                                          it_scope       = lt_scope
+                                          iv_depth       = 5 ).
+
+    DELETE lt_founds WHERE object_cls <> 'DT'.
+
+    rv_is_structure_used_in_db_tab = boolc( lines( lt_founds ) > 0 ).
+
+  ENDMETHOD.
+
+
   METHOD validate.
 
     DATA: lt_previous_table_fields TYPE TABLE OF dd03p,
@@ -147,25 +168,9 @@ CLASS zcl_abapgit_object_tabl_valid IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.
-
-  METHOD is_structure_used_in_db_table.
-
-    DATA: lt_scope  TYPE tty_seu_obj,
-          lt_founds TYPE tty_founds.
-
-    APPEND 'TABL' TO lt_scope.
-    APPEND 'STRU' TO lt_scope.
-
-    lt_founds = get_where_used_recursive( iv_object_name = iv_object_name
-                                          iv_object_type = 'STRU'
-                                          it_scope       = lt_scope
-                                          iv_depth       = 5 ).
-
-    DELETE lt_founds WHERE object_cls <> 'DT'.
-
-    rv_is_structure_used_in_db_tab = boolc( lines( lt_founds ) > 0 ).
+    IF NOT rv_message IS INITIAL.
+      rv_message = |Database Table { ls_dd02v-tabname }: { rv_message }|.
+    ENDIF.
 
   ENDMETHOD.
-
 ENDCLASS.
