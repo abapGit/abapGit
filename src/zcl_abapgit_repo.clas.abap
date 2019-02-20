@@ -501,11 +501,9 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     DATA: li_code_inspector TYPE REF TO zif_abapgit_code_inspector.
 
-    li_code_inspector = zcl_abapgit_factory=>get_code_inspector(
-                                  iv_package            = get_package( )
-                                  iv_check_variant_name = |{ iv_check_variant }| ).
+    li_code_inspector = zcl_abapgit_factory=>get_code_inspector( get_package( ) ).
 
-    rt_list = li_code_inspector->run( ).
+    rt_list = li_code_inspector->run( |{ iv_check_variant }| ).
 
     DELETE rt_list WHERE kind = 'N'.
 
