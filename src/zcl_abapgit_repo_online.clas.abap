@@ -289,7 +289,8 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     ENDIF.
 
     IF ms_data-local_settings-block_commit = abap_true
-        AND mv_code_inspector_successful = abap_false.
+        AND zcl_abapgit_factory=>get_code_inspector( get_package( )
+          )->is_successful( ) = abap_false.
       zcx_abapgit_exception=>raise( |A successful code inspection is required| ).
     ENDIF.
 
@@ -311,7 +312,6 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     update_local_checksums( ls_push-updated_files ).
 
     reset_status( ).
-    CLEAR: mv_code_inspector_successful.
 
   ENDMETHOD.
 ENDCLASS.

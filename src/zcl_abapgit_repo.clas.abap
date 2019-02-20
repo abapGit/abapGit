@@ -96,13 +96,6 @@ CLASS zcl_abapgit_repo DEFINITION
         !is_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
       RAISING
         zcx_abapgit_exception .
-    METHODS run_code_inspector
-      IMPORTING
-        !iv_check_variant TYPE string
-      RETURNING
-        VALUE(rt_list)    TYPE scit_alvlist
-      RAISING
-        zcx_abapgit_exception .
     METHODS has_remote_source
           ABSTRACT
       RETURNING
@@ -125,7 +118,6 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA mt_remote TYPE zif_abapgit_definitions=>ty_files_tt .
     DATA mv_request_local_refresh TYPE abap_bool .
     DATA ms_data TYPE zif_abapgit_persistence=>ty_repo .
-    DATA mv_code_inspector_successful TYPE abap_bool .
     DATA mv_request_remote_refresh TYPE abap_bool .
     DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
 
@@ -494,24 +486,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD reset_status.
     CLEAR mt_status.
-  ENDMETHOD.
-
-
-  METHOD run_code_inspector.
-
-    DATA: li_code_inspector TYPE REF TO zif_abapgit_code_inspector.
-
-    li_code_inspector = zcl_abapgit_factory=>get_code_inspector( get_package( ) ).
-
-    rt_list = li_code_inspector->run( |{ iv_check_variant }| ).
-
-    DELETE rt_list WHERE kind = 'N'.
-
-    READ TABLE rt_list TRANSPORTING NO FIELDS
-                       WITH KEY kind = 'E'.
-
-    mv_code_inspector_successful = boolc( sy-subrc <> 0 ).
-
   ENDMETHOD.
 
 
