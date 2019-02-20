@@ -268,7 +268,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
           EXCEPTIONS
             class_not_existing            = 1
             read_source_error             = 2
-            OTHERS                        = 3.
+            OTHERS                        = 3 ##SUBRC_OK.
       CATCH cx_sy_dyn_call_param_not_found.
 * downport to 702, see https://github.com/larshp/abapGit/issues/933
 * this will READ REPORT instead of using it_source, which should be okay
@@ -291,7 +291,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
         CALL METHOD lo_update->('SET_AMDP_SUPPORT')
           EXPORTING
             enabled = abap_true.
-      CATCH cx_sy_dyn_call_illegal_method.
+      CATCH cx_sy_dyn_call_illegal_method ##NO_HANDLER.
 * AMDP not supported in this system, ignore error
     ENDTRY.
     lo_update->scan_section_source(
@@ -457,10 +457,11 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
           user_cancelled                = 17
           no_entry_found                = 18
           OTHERS                        = 19.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from SOTR_CREATE_CONCEPT' ).
+      IF sy-subrc <> 0 AND sy-subrc <> 5.
+        zcx_abapgit_exception=>raise( 'error from SOTR_CREATE_CONCEPT,' && sy-subrc ).
       ENDIF.
     ENDLOOP.
+
   ENDMETHOD.
 
 
@@ -757,8 +758,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~read_text_pool.
-    DATA:
-     lv_cp TYPE program.
+    DATA: lv_cp TYPE program.
 
     lv_cp = cl_oo_classname_service=>get_classpool_name( iv_class_name ).
     READ TEXTPOOL lv_cp INTO rt_text_pool LANGUAGE iv_language. "#EC CI_READ_REP
