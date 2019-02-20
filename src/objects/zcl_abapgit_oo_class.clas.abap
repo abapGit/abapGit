@@ -384,6 +384,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
         devclass        = iv_package
         overwrite       = iv_overwrite
         version         = seoc_version_active
+        suppress_dialog = abap_true
       CHANGING
         class           = cg_properties
         attributes      = lt_vseoattrib
