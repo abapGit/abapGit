@@ -116,7 +116,13 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
           iv_octions_disabled TYPE abap_bool,
       get_octicons_disabled
         RETURNING
-          VALUE(rv_octions_disabled) TYPE abap_bool.
+          VALUE(rv_octions_disabled) TYPE abap_bool,
+      set_parallel_proc_disabled
+        IMPORTING
+          iv_disable_parallel_proc TYPE abap_bool,
+      get_parallel_proc_disabled
+        RETURNING
+          VALUE(rv_disable_parallel_proc) TYPE abap_bool.
 
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_s_settings,
@@ -389,6 +395,14 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
   METHOD set_octicons_disabled.
     ms_user_settings-octicons_disabled = iv_octions_disabled.
+  ENDMETHOD.
+
+  METHOD set_parallel_proc_disabled.
+    ms_user_settings-parallel_proc_disabled = iv_disable_parallel_proc.
+  ENDMETHOD.
+
+  METHOD get_parallel_proc_disabled.
+    rv_disable_parallel_proc = ms_user_settings-parallel_proc_disabled.
   ENDMETHOD.
 
 ENDCLASS.

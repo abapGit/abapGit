@@ -100,6 +100,9 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
     METHODS render_octicons
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    METHODS render_parallel_proc
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
 ENDCLASS.
 
 
@@ -234,6 +237,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
       mo_settings->set_octicons_disabled( abap_false ).
     ENDIF.
 
+    IF is_post_field_checked( 'parallel_proc_disabled' ) = abap_true.
+      mo_settings->set_parallel_proc_disabled( abap_true ).
+    ELSE.
+      mo_settings->set_parallel_proc_disabled( abap_false ).
+    ENDIF.
 
     post_hotkeys( ).
 
@@ -413,6 +421,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ro_html->add( render_adt_jump_enabled( ) ).
     ro_html->add( |<hr>| ).
     ro_html->add( render_octicons( ) ).
+    ro_html->add( |<hr>| ).
+    ro_html->add( render_parallel_proc( ) ).
     ro_html->add( |<hr>| ).
     ro_html->add( render_link_hints( ) ).
     ro_html->add( |<hr>| ).
@@ -601,6 +611,23 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ro_html->add( |<br>| ).
     ro_html->add( `<input type="checkbox" name="octicons_disabled" value="X" `
                    && lv_checked && ` > Disable octions` ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<br>| ).
+  ENDMETHOD.
+
+
+  METHOD render_parallel_proc.
+
+    DATA lv_checked TYPE string.
+
+    IF mo_settings->get_parallel_proc_disabled( ) = abap_true.
+      lv_checked = 'checked'.
+    ENDIF.
+
+    CREATE OBJECT ro_html.
+    ro_html->add( |<h2>Parallel processing</h2>| ).
+    ro_html->add( `<input type="checkbox" name="parallel_proc_disabled" value="X" `
+                   && lv_checked && ` > Disable parallel processing` ).
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).
   ENDMETHOD.
