@@ -289,6 +289,8 @@ CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error in VIEWCLUSTER_GET_DEFINITION' ).
     ENDIF.
 
+    SORT lt_vclstrudep BY vclname object objfield.
+
     CLEAR ls_vcldir_entry-author.
     CLEAR ls_vcldir_entry-changedate.
 
