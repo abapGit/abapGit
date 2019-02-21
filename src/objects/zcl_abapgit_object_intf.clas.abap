@@ -7,15 +7,21 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
         is_item     TYPE zif_abapgit_definitions=>ty_item
         iv_language TYPE spras.
   PROTECTED SECTION.
+
+    METHODS deserialize_proxy
+      RAISING
+        zcx_abapgit_exception .
     METHODS deserialize_abap
-      IMPORTING io_xml     TYPE REF TO zcl_abapgit_xml_input
-                iv_package TYPE devclass
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !io_xml     TYPE REF TO zcl_abapgit_xml_input
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
     METHODS deserialize_docu
-      IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_input
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !io_xml TYPE REF TO zcl_abapgit_xml_input
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
     DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc.
 
@@ -89,6 +95,43 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
       it_lines       = lt_lines
       iv_object_name = lv_object
       iv_language    = mv_language ).
+  ENDMETHOD.
+
+
+  METHOD deserialize_proxy.
+
+    DATA: lv_transport    TYPE e070use-ordernum,
+          li_proxy_object TYPE REF TO if_px_main,
+          lv_name         TYPE prx_r3name,
+          lx_proxy_fault  TYPE REF TO cx_proxy_fault.
+
+    lv_transport = zcl_abapgit_default_transport=>get_instance(
+                                               )->get( )-ordernum.
+
+    lv_name = ms_item-obj_name.
+
+    TRY.
+        li_proxy_object = cl_pxn_factory=>create(
+                              application  = 'PROXY_UI'
+                              display_only = abap_false
+                              saveable     = abap_true
+                          )->if_pxn_factory~load_by_abap_name(
+                              object   = ms_item-obj_type
+                              obj_name = lv_name ).
+
+        li_proxy_object->activate(
+          EXPORTING
+            activate_all     = abap_true
+          CHANGING
+            transport_number = lv_transport ).
+
+        li_proxy_object->dequeue( ).
+
+      CATCH cx_proxy_fault INTO lx_proxy_fault.
+        zcx_abapgit_exception=>raise( iv_text     = |{ lx_proxy_fault->get_text( ) }|
+                                      ix_previous = lx_proxy_fault ).
+    ENDTRY.
+
   ENDMETHOD.
 
 
@@ -200,6 +243,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
     IF ls_vseointerf-clsproxy = abap_true.
       " Proxy interfaces are managed via SPRX
+      deserialize_proxy( ).
       RETURN.
     ENDIF.
 
