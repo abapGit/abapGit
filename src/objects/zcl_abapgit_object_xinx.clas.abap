@@ -9,6 +9,7 @@ CLASS zcl_abapgit_object_xinx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           is_item     TYPE zif_abapgit_definitions=>ty_item
           iv_language TYPE spras.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_extension_index,
              dd12v   TYPE dd12v,
@@ -50,11 +51,6 @@ CLASS ZCL_ABAPGIT_OBJECT_XINX IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
 
 
@@ -151,6 +147,11 @@ CLASS ZCL_ABAPGIT_OBJECT_XINX IMPLEMENTATION.
 
     rv_bool = boolc( lv_dd12v IS NOT INITIAL ).
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
   ENDMETHOD.
 
 

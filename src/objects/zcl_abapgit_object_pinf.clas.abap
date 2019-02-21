@@ -55,7 +55,16 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_pinf IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
+
+
+  METHOD create_facade.
+
+    CREATE OBJECT ri_facade TYPE lcl_package_interface_facade
+      EXPORTING
+        ii_interface = ii_interface.
+
+  ENDMETHOD.
 
 
   METHOD create_or_load.
@@ -106,6 +115,22 @@ CLASS zcl_abapgit_object_pinf IMPLEMENTATION.
     ENDLOOP.
 
     ii_interface->save_elements( ).
+
+  ENDMETHOD.
+
+
+  METHOD load.
+
+    DATA: li_interface TYPE REF TO  if_package_interface.
+
+    cl_package_interface=>load_package_interface(
+      EXPORTING
+        i_package_interface_name = iv_name
+        i_force_reload           = abap_true
+      IMPORTING
+        e_package_interface      = li_interface ).
+
+    ri_interface = create_facade( li_interface ).
 
   ENDMETHOD.
 
@@ -200,11 +225,6 @@ CLASS zcl_abapgit_object_pinf IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~delete.
 
     DATA: li_interface TYPE REF TO lif_package_interface_facade.
@@ -265,6 +285,11 @@ CLASS zcl_abapgit_object_pinf IMPLEMENTATION.
       rv_bool = boolc( sy-subrc = 0 ).
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
   ENDMETHOD.
 
 
@@ -348,29 +373,4 @@ CLASS zcl_abapgit_object_pinf IMPLEMENTATION.
                  iv_name = 'PINF' ).
 
   ENDMETHOD.
-
-  METHOD load.
-
-    DATA: li_interface TYPE REF TO  if_package_interface.
-
-    cl_package_interface=>load_package_interface(
-      EXPORTING
-        i_package_interface_name = iv_name
-        i_force_reload           = abap_true
-      IMPORTING
-        e_package_interface      = li_interface ).
-
-    ri_interface = create_facade( li_interface ).
-
-  ENDMETHOD.
-
-
-  METHOD create_facade.
-
-    CREATE OBJECT ri_facade TYPE lcl_package_interface_facade
-      EXPORTING
-        ii_interface = ii_interface.
-
-  ENDMETHOD.
-
 ENDCLASS.

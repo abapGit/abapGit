@@ -136,7 +136,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
 
 
   METHOD clear_attributes.
@@ -483,11 +483,6 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~delete.
 
     DATA: lx_error       TYPE REF TO cx_ecatt_apl,
@@ -557,6 +552,11 @@ CLASS zcl_abapgit_object_ecatt_super IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
   ENDMETHOD.
 
 

@@ -156,11 +156,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~delete.
 
     DATA: lv_name    TYPE fpname,
@@ -222,6 +217,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
       AND state = 'A'.
     rv_bool = boolc( sy-subrc = 0 ).
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
   ENDMETHOD.
 
 

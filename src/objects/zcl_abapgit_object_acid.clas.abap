@@ -14,7 +14,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_acid IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_ACID IMPLEMENTATION.
 
 
   METHOD create_object.
@@ -40,11 +40,6 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
   METHOD zif_abapgit_object~changed_by.
 * looks like "changed by user" is not stored in the database
     rv_user = c_user_unknown.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
 
 
@@ -106,6 +101,11 @@ CLASS zcl_abapgit_object_acid IMPLEMENTATION.
         ex_state = lv_state ).
     rv_bool = boolc( lv_state = abap_true ).
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
   ENDMETHOD.
 
 

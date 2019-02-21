@@ -4,6 +4,7 @@ CLASS zcl_abapgit_object_doct DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS: c_id      TYPE dokhl-id VALUE 'TX',
                c_typ     TYPE dokhl-typ VALUE 'E',
@@ -21,11 +22,10 @@ CLASS zcl_abapgit_object_doct DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_doct IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-  ENDMETHOD.
+
+CLASS ZCL_ABAPGIT_OBJECT_DOCT IMPLEMENTATION.
+
 
   METHOD read.
 
@@ -49,12 +49,59 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD zif_abapgit_object~changed_by.
     rv_user = read( )-head-tdluser.
     IF rv_user IS INITIAL.
       rv_user = c_user_unknown.
     ENDIF.
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~delete.
+
+    DATA: lv_object TYPE dokhl-object.
+
+
+    lv_object = ms_item-obj_name.
+
+    CALL FUNCTION 'DOCU_DEL'
+      EXPORTING
+        id       = c_id
+        langu    = mv_language
+        object   = lv_object
+        typ      = c_typ
+      EXCEPTIONS
+        ret_code = 1
+        OTHERS   = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from DOCU_DEL' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~deserialize.
+
+    DATA: ls_data TYPE ty_data.
+
+
+    io_xml->read( EXPORTING iv_name = c_name
+                  CHANGING cg_data = ls_data ).
+
+    CALL FUNCTION 'DOCU_UPDATE'
+      EXPORTING
+        head    = ls_data-head
+        state   = 'A'
+        typ     = c_typ
+        version = c_version
+      TABLES
+        line    = ls_data-lines.
+
+    tadir_insert( iv_package ).
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~exists.
 
@@ -71,6 +118,27 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~jump.
 
@@ -119,48 +187,6 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~delete.
-
-    DATA: lv_object TYPE dokhl-object.
-
-
-    lv_object = ms_item-obj_name.
-
-    CALL FUNCTION 'DOCU_DEL'
-      EXPORTING
-        id       = c_id
-        langu    = mv_language
-        object   = lv_object
-        typ      = c_typ
-      EXCEPTIONS
-        ret_code = 1
-        OTHERS   = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DOCU_DEL' ).
-    ENDIF.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~deserialize.
-
-    DATA: ls_data TYPE ty_data.
-
-
-    io_xml->read( EXPORTING iv_name = c_name
-                  CHANGING cg_data = ls_data ).
-
-    CALL FUNCTION 'DOCU_UPDATE'
-      EXPORTING
-        head    = ls_data-head
-        state   = 'A'
-        typ     = c_typ
-        version = c_version
-      TABLES
-        line    = ls_data-lines.
-
-    tadir_insert( iv_package ).
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~serialize.
 
@@ -181,18 +207,5 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
     io_xml->add( iv_name = c_name
                  ig_data = ls_data ).
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-    rv_is_locked = abap_false.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

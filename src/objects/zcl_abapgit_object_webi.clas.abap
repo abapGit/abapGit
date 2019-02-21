@@ -50,7 +50,8 @@ CLASS zcl_abapgit_object_webi DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 ENDCLASS.
 
 
-CLASS zcl_abapgit_object_webi IMPLEMENTATION.
+
+CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
 
 
   METHOD handle_endpoint.
@@ -290,11 +291,6 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~delete.
 
     DATA: lv_name TYPE vepname,
@@ -389,6 +385,11 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
       name      = lv_name
       i_version = sews_c_vif_version-active ).
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
   ENDMETHOD.
 
 

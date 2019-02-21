@@ -4,6 +4,7 @@ CLASS zcl_abapgit_object_sfpi DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS:
       load
@@ -15,7 +16,43 @@ CLASS zcl_abapgit_object_sfpi DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_sfpi IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_OBJECT_SFPI IMPLEMENTATION.
+
+
+  METHOD interface_to_xstring.
+
+    DATA: li_fp_interface TYPE REF TO if_fp_interface,
+          li_wb_interface TYPE REF TO if_fp_wb_interface.
+
+
+    TRY.
+        li_wb_interface = load( ).
+        li_fp_interface ?= li_wb_interface->get_object( ).
+        rv_xstr = cl_fp_helper=>convert_interface_to_xstring( li_fp_interface ).
+      CATCH cx_fp_api.
+        zcx_abapgit_exception=>raise( 'SFPI error, interface_to_xstring' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD load.
+
+    DATA: lv_name TYPE fpname.
+
+
+    lv_name = ms_item-obj_name.
+
+    TRY.
+        ri_wb_interface = cl_fp_wb_interface=>load( lv_name ).
+      CATCH cx_fp_api.
+        zcx_abapgit_exception=>raise( 'SFPI error, load' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -35,31 +72,6 @@ CLASS zcl_abapgit_object_sfpi IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~exists.
-
-    DATA: lv_name TYPE fpinterface-name.
-
-    SELECT SINGLE name FROM fpinterface
-      INTO lv_name
-      WHERE name = ms_item-obj_name
-      AND state = 'A'.
-    rv_bool = boolc( sy-subrc = 0 ).
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~jump.
-
-    CALL FUNCTION 'RS_TOOL_ACCESS'
-      EXPORTING
-        operation   = 'SHOW'
-        object_name = ms_item-obj_name
-        object_type = ms_item-obj_type.
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -79,49 +91,6 @@ CLASS zcl_abapgit_object_sfpi IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD load.
-
-    DATA: lv_name TYPE fpname.
-
-
-    lv_name = ms_item-obj_name.
-
-    TRY.
-        ri_wb_interface = cl_fp_wb_interface=>load( lv_name ).
-      CATCH cx_fp_api.
-        zcx_abapgit_exception=>raise( 'SFPI error, load' ).
-    ENDTRY.
-
-  ENDMETHOD.
-
-  METHOD interface_to_xstring.
-
-    DATA: li_fp_interface TYPE REF TO if_fp_interface,
-          li_wb_interface TYPE REF TO if_fp_wb_interface.
-
-
-    TRY.
-        li_wb_interface = load( ).
-        li_fp_interface ?= li_wb_interface->get_object( ).
-        rv_xstr = cl_fp_helper=>convert_interface_to_xstring( li_fp_interface ).
-      CATCH cx_fp_api.
-        zcx_abapgit_exception=>raise( 'SFPI error, interface_to_xstring' ).
-    ENDTRY.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~serialize.
-
-    DATA: lv_xstr     TYPE xstring,
-          li_document TYPE REF TO if_ixml_document.
-
-
-    lv_xstr = interface_to_xstring( ).
-    li_document = cl_ixml_80_20=>parse_to_document( stream_xstring = lv_xstr ).
-    zcl_abapgit_object_sfpf=>fix_oref( li_document ).
-    io_xml->set_raw( li_document->get_root_element( ) ).
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -149,9 +118,34 @@ CLASS zcl_abapgit_object_sfpi IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+
+  METHOD zif_abapgit_object~exists.
+
+    DATA: lv_name TYPE fpinterface-name.
+
+    SELECT SINGLE name FROM fpinterface
+      INTO lv_name
+      WHERE name = ms_item-obj_name
+      AND state = 'A'.
+    rv_bool = boolc( sy-subrc = 0 ).
+
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~is_locked.
 
@@ -167,7 +161,27 @@ CLASS zcl_abapgit_object_sfpi IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
+  METHOD zif_abapgit_object~jump.
+
+    CALL FUNCTION 'RS_TOOL_ACCESS'
+      EXPORTING
+        operation   = 'SHOW'
+        object_name = ms_item-obj_name
+        object_type = ms_item-obj_type.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~serialize.
+
+    DATA: lv_xstr     TYPE xstring,
+          li_document TYPE REF TO if_ixml_document.
+
+
+    lv_xstr = interface_to_xstring( ).
+    li_document = cl_ixml_80_20=>parse_to_document( stream_xstring = lv_xstr ).
+    zcl_abapgit_object_sfpf=>fix_oref( li_document ).
+    io_xml->set_raw( li_document->get_root_element( ) ).
+
   ENDMETHOD.
 ENDCLASS.

@@ -321,10 +321,12 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 * before pull, this is useful eg. when overwriting a TABL object.
 * only the main XML file is used for comparison
 
-    DATA: ls_remote_file       TYPE zif_abapgit_definitions=>ty_file,
-          lo_remote_version    TYPE REF TO zcl_abapgit_xml_input,
-          lv_count             TYPE i,
-          li_comparison_result TYPE REF TO zif_abapgit_comparison_result.
+    DATA: ls_remote_file    TYPE zif_abapgit_definitions=>ty_file,
+          lo_remote_version TYPE REF TO zcl_abapgit_xml_input,
+          lv_count          TYPE i,
+          ls_result         TYPE zif_abapgit_comparator=>ty_result,
+          lv_answer         TYPE string,
+          li_comparator     TYPE REF TO zif_abapgit_comparator.
 
 
     FIND ALL OCCURRENCES OF '.' IN is_result-filename MATCH COUNT lv_count.
@@ -335,18 +337,41 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       ENDIF.
 
       READ TABLE it_remote WITH KEY filename = is_result-filename INTO ls_remote_file.
+      IF sy-subrc <> 0. "if file does not exist in remote, we don't need to validate
+        RETURN.
+      ENDIF.
 
-      "if file does not exist in remote, we don't need to validate
-      IF sy-subrc = 0.
-        CREATE OBJECT lo_remote_version
-          EXPORTING
-            iv_xml = zcl_abapgit_convert=>xstring_to_string_utf8( ls_remote_file-data ).
-        li_comparison_result = ii_object->compare_to_remote_version( lo_remote_version ).
-        li_comparison_result->show_confirmation_dialog( ).
+      li_comparator = ii_object->get_comparator( ).
+      IF NOT li_comparator IS BOUND.
+        RETURN.
+      ENDIF.
 
-        IF li_comparison_result->is_result_complete_halt( ) = abap_true.
-          zcx_abapgit_exception=>raise( 'Deserialization aborted by user' ).
-        ENDIF.
+      CREATE OBJECT lo_remote_version
+        EXPORTING
+          iv_xml = zcl_abapgit_convert=>xstring_to_string_utf8( ls_remote_file-data ).
+
+      ls_result = li_comparator->compare( lo_remote_version ).
+      IF ls_result-text IS INITIAL.
+        RETURN.
+      ENDIF.
+
+      CALL FUNCTION 'POPUP_TO_CONFIRM'
+        EXPORTING
+          titlebar              = 'Warning'
+          text_question         = ls_result-text
+          text_button_1         = 'Abort'
+          icon_button_1         = 'ICON_CANCEL'
+          text_button_2         = 'Pull anyway'
+          icon_button_2         = 'ICON_OKAY'
+          default_button        = '2'
+          display_cancel_button = abap_false
+        IMPORTING
+          answer                = lv_answer
+        EXCEPTIONS
+          text_not_found        = 1
+          OTHERS                = 2.                        "#EC NOTEXT
+      IF sy-subrc <> 0 OR lv_answer = 1.
+        zcx_abapgit_exception=>raise( 'Deserialization aborted by user' ).
       ENDIF.
     ENDIF.
 

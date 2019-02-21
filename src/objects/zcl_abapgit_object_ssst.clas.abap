@@ -5,6 +5,7 @@ CLASS zcl_abapgit_object_ssst DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
     CONSTANTS: c_style_active TYPE tdactivate VALUE 'A'.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS validate_font
       IMPORTING iv_tdfamily TYPE tdfamily
@@ -14,7 +15,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_ssst IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SSST IMPLEMENTATION.
 
 
   METHOD validate_font.
@@ -39,11 +40,6 @@ CLASS zcl_abapgit_object_ssst IMPLEMENTATION.
       rv_user = c_user_unknown.
     ENDIF.
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
 
 
@@ -157,9 +153,25 @@ CLASS zcl_abapgit_object_ssst IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-delete_tadir = abap_true.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'E_SMSTYLE'
+                                            iv_argument    = |{ ms_item-obj_name }| ).
   ENDMETHOD.
 
 
@@ -257,15 +269,5 @@ CLASS zcl_abapgit_object_ssst IMPLEMENTATION.
     io_xml->add( ig_data = lt_tabstops
                  iv_name = 'STXSTAB' ).
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~is_locked.
-    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'E_SMSTYLE'
-                                            iv_argument    = |{ ms_item-obj_name }| ).
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~is_active.
-    rv_active = is_active( ).
   ENDMETHOD.
 ENDCLASS.

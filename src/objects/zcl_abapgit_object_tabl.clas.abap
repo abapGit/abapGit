@@ -392,35 +392,6 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    DATA: lo_table_validation     TYPE REF TO zcl_abapgit_object_tabl_valid,
-          lo_local_version_output TYPE REF TO zcl_abapgit_xml_output,
-          lo_local_version_input  TYPE REF TO zcl_abapgit_xml_input,
-          lv_validation_text      TYPE string.
-
-    CREATE OBJECT lo_local_version_output.
-    me->zif_abapgit_object~serialize( lo_local_version_output ).
-
-    CREATE OBJECT lo_local_version_input
-      EXPORTING
-        iv_xml = lo_local_version_output->render( ).
-
-    CREATE OBJECT lo_table_validation.
-
-    lv_validation_text = lo_table_validation->validate(
-      io_remote_version = io_remote_version_xml
-      io_local_version  = lo_local_version_input ).
-    IF lv_validation_text IS NOT INITIAL.
-      lv_validation_text = |Database Table { ms_item-obj_name }: { lv_validation_text }|.
-      CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_object_tabl_dialog
-        EXPORTING
-          iv_message = lv_validation_text.
-    ELSE.
-      CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-    ENDIF.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~delete.
 
     DATA: lv_objname  TYPE rsedd0-ddobjname,
@@ -610,6 +581,26 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers = '0000'.
     rv_bool = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+
+    DATA: lo_local_version_output TYPE REF TO zcl_abapgit_xml_output,
+          lo_local_version_input  TYPE REF TO zcl_abapgit_xml_input.
+
+
+    CREATE OBJECT lo_local_version_output.
+    me->zif_abapgit_object~serialize( lo_local_version_output ).
+
+    CREATE OBJECT lo_local_version_input
+      EXPORTING
+        iv_xml = lo_local_version_output->render( ).
+
+    CREATE OBJECT ri_comparator TYPE zcl_abapgit_object_tabl_compar
+      EXPORTING
+        io_local = lo_local_version_input.
 
   ENDMETHOD.
 

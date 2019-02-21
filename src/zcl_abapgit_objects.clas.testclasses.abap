@@ -386,7 +386,7 @@ CLASS ltcl_object_ddls_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~compare_to_remote_version. "##needed
+  METHOD zif_abapgit_object~get_comparator. "##needed
 
   ENDMETHOD.
 

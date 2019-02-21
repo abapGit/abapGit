@@ -9,6 +9,7 @@ CLASS zcl_abapgit_object_cus1 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         is_item     TYPE zif_abapgit_definitions=>ty_item
         iv_language TYPE spras.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: tty_activity_titles TYPE STANDARD TABLE OF cus_actt
                                     WITH NON-UNIQUE DEFAULT KEY,
@@ -48,11 +49,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CUS1 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
 
 
@@ -134,6 +130,11 @@ CLASS ZCL_ABAPGIT_OBJECT_CUS1 IMPLEMENTATION.
 
     rv_bool = boolc( sy-subrc = 0 ).
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
   ENDMETHOD.
 
 

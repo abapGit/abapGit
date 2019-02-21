@@ -10,6 +10,7 @@ CLASS zcl_abapgit_object_suso DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           is_item     TYPE zif_abapgit_definitions=>ty_item
           iv_language TYPE spras.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA:
       mv_objectname TYPE tobj-objct.
@@ -158,11 +159,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~delete.
 
     " FM SUSR_DELETE_OBJECT calls the UI. Therefore we reimplement it here.
@@ -250,6 +246,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSO IMPLEMENTATION.
       WHERE objct = ms_item-obj_name.
     rv_bool = boolc( sy-subrc = 0 ).
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
   ENDMETHOD.
 
 

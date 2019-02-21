@@ -250,11 +250,6 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~delete.
     DATA: lv_t100a          TYPE t100a,
           lv_frozen         TYPE abap_bool,
@@ -399,6 +394,11 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
       WHERE arbgb = ms_item-obj_name.                   "#EC CI_GENBUFF
     rv_bool = boolc( sy-subrc = 0 ).
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
   ENDMETHOD.
 
 
