@@ -291,6 +291,13 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_code_inspector~is_successful.
+
+    rv_success = mv_success.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_code_inspector~run.
 
     DATA: lo_set     TYPE REF TO cl_ci_objectset,
