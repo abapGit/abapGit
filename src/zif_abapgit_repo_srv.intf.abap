@@ -40,6 +40,7 @@ INTERFACE zif_abapgit_repo_srv
     IMPORTING
       !iv_url         TYPE string
       !iv_branch_name TYPE string
+      iv_display_name TYPE string OPTIONAL
       !iv_package     TYPE devclass
     RETURNING
       VALUE(ro_repo)  TYPE REF TO zcl_abapgit_repo_online

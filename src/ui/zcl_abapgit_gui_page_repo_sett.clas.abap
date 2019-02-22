@@ -27,7 +27,9 @@ CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
         !io_html TYPE REF TO zcl_abapgit_html .
     METHODS render_local_settings
       IMPORTING
-        !io_html TYPE REF TO zcl_abapgit_html .
+        !io_html TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     METHODS save
       IMPORTING
         !it_postdata TYPE cnht_post_data_tab
@@ -179,6 +181,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
     io_html->add( '<h2>Local settings</h2>' ).
 
+    IF mo_repo->is_offline( ) = abap_false.
+      io_html->add( '<br>' ).
+      io_html->add( 'Display name: <input name="display_name" type="text" size="30" value="' &&
+        ls_settings-display_name && '">' ).
+      io_html->add( '<br>' ).
+    ENDIF.
+
     CLEAR lv_checked.
     IF ls_settings-write_protected = abap_true.
       lv_checked = | checked|.
@@ -272,6 +281,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
 
     ls_settings = mo_repo->get_local_settings( ).
+
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'display_name'.
+    ASSERT sy-subrc = 0.
+    ls_settings-display_name = ls_post_field-value.
 
     READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'write_protected' value = 'on'.
     IF sy-subrc = 0.

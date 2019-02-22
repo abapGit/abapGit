@@ -20,6 +20,7 @@ INTERFACE zif_abapgit_persistence PUBLIC.
 
   TYPES:
     BEGIN OF ty_local_settings,
+      display_name                 TYPE string,
       ignore_subpackages           TYPE abap_bool,
       write_protected              TYPE abap_bool,
       only_local_objects           TYPE abap_bool,

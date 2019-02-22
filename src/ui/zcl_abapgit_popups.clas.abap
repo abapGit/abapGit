@@ -67,11 +67,12 @@ CLASS zcl_abapgit_popups DEFINITION
           !e_salv_function .
     METHODS extract_field_values
       IMPORTING
-        it_fields  TYPE ty_sval_tt
+        it_fields       TYPE ty_sval_tt
       EXPORTING
-        ev_url     TYPE abaptxt255-line
-        ev_package TYPE tdevc-devclass
-        ev_branch  TYPE textl-line .
+        ev_url          TYPE abaptxt255-line
+        ev_package      TYPE tdevc-devclass
+        ev_branch       TYPE textl-line
+        ev_display_name TYPE trm255-text.
     TYPES:
       ty_lt_fields TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
     METHODS _popup_2_get_values
@@ -161,7 +162,8 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     CLEAR: ev_url,
            ev_package,
-           ev_branch.
+           ev_branch,
+           ev_display_name.
 
     READ TABLE it_fields INDEX 1 ASSIGNING <ls_field>.
     ASSERT sy-subrc = 0.
@@ -175,6 +177,10 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     READ TABLE it_fields INDEX 3 ASSIGNING <ls_field>.
     ASSERT sy-subrc = 0.
     ev_branch = <ls_field>-value.
+
+    READ TABLE it_fields INDEX 4 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    ev_display_name = <ls_field>-value.
 
   ENDMETHOD.
 
@@ -1003,19 +1009,20 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
   METHOD zif_abapgit_popups~repo_popup.
 
-    DATA: lv_returncode TYPE c,
-          lv_icon_ok    TYPE icon-name,
-          lv_icon_br    TYPE icon-name,
-          lt_fields     TYPE TABLE OF sval,
-          lv_uattr      TYPE spo_fattr,
-          lv_pattr      TYPE spo_fattr,
-          lv_button2    TYPE svalbutton-buttontext,
-          lv_icon2      TYPE icon-name,
-          lv_package    TYPE tdevc-devclass,
-          lv_url        TYPE abaptxt255-line,
-          lv_branch     TYPE textl-line,
-          lv_finished   TYPE abap_bool,
-          lx_error      TYPE REF TO zcx_abapgit_exception.
+    DATA: lv_returncode   TYPE c,
+          lv_icon_ok      TYPE icon-name,
+          lv_icon_br      TYPE icon-name,
+          lt_fields       TYPE TABLE OF sval,
+          lv_uattr        TYPE spo_fattr,
+          lv_pattr        TYPE spo_fattr,
+          lv_button2      TYPE svalbutton-buttontext,
+          lv_icon2        TYPE icon-name,
+          lv_package      TYPE tdevc-devclass,
+          lv_url          TYPE abaptxt255-line,
+          lv_branch       TYPE textl-line,
+          lv_display_name TYPE trm255-text,
+          lv_finished     TYPE abap_bool,
+          lx_error        TYPE REF TO zcx_abapgit_exception.
 
     IF iv_freeze_url = abap_true.
       lv_uattr = '05'.
@@ -1059,6 +1066,12 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
                            iv_field_attr = '05'
                  CHANGING ct_fields      = lt_fields ).
 
+      add_field( EXPORTING iv_tabname    = 'TRM255'
+                           iv_fieldname  = 'TEXT'
+                           iv_fieldtext  = 'Display name (opt.)'
+                           iv_value      = lv_display_name
+                 CHANGING ct_fields      = lt_fields ).
+
       lv_icon_ok  = icon_okay.
       lv_icon_br  = icon_workflow_fork.
 
@@ -1092,11 +1105,12 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
       extract_field_values(
         EXPORTING
-          it_fields  = lt_fields
+          it_fields       = lt_fields
         IMPORTING
-          ev_url     = lv_url
-          ev_package = lv_package
-          ev_branch  = lv_branch ).
+          ev_url          = lv_url
+          ev_package      = lv_package
+          ev_branch       = lv_branch
+          ev_display_name = lv_display_name ).
 
       lv_finished = abap_true.
 
@@ -1113,9 +1127,10 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     ENDWHILE.
 
-    rs_popup-url         = lv_url.
-    rs_popup-package     = lv_package.
-    rs_popup-branch_name = lv_branch.
+    rs_popup-url          = lv_url.
+    rs_popup-package      = lv_package.
+    rs_popup-branch_name  = lv_branch.
+    rs_popup-display_name = lv_display_name.
 
   ENDMETHOD.
 

@@ -7,6 +7,7 @@ INTERFACE zif_abapgit_popups
       url          TYPE string,
       package      TYPE devclass,
       branch_name  TYPE string,
+      display_name TYPE string,
       folder_logic TYPE string,
       cancel       TYPE abap_bool,
     END OF ty_popup .

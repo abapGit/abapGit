@@ -25,7 +25,6 @@ CLASS zcl_abapgit_repo DEFINITION
       RETURNING
         VALUE(rv_key) TYPE zif_abapgit_persistence=>ty_value .
     METHODS get_name
-          ABSTRACT
       RETURNING
         VALUE(rv_name) TYPE string
       RAISING
@@ -109,7 +108,7 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS switch_repo_type
       IMPORTING
-        !iv_offline TYPE abap_bool
+        iv_offline TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -698,4 +697,12 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     set( it_checksums = lt_checksums ).
 
   ENDMETHOD.
+
+
+  METHOD get_name.
+
+    rv_name = ms_data-local_settings-display_name.
+
+  ENDMETHOD.
+
 ENDCLASS.

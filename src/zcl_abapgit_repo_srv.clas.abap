@@ -303,11 +303,11 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
     lo_dot_abapgit->set_folder_logic( iv_folder_logic ).
 
     lv_key = zcl_abapgit_persist_factory=>get_repo( )->add(
-      iv_url         = iv_url
-      iv_branch_name = ''
-      iv_package     = iv_package
-      iv_offline     = abap_true
-      is_dot_abapgit = lo_dot_abapgit->get_data( ) ).
+      iv_url          = iv_url
+      iv_branch_name  = ''
+      iv_package      = iv_package
+      iv_offline      = abap_true
+      is_dot_abapgit  = lo_dot_abapgit->get_data( ) ).
 
     TRY.
         ls_repo = zcl_abapgit_persist_factory=>get_repo( )->read( lv_key ).
@@ -334,11 +334,12 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
     zcl_abapgit_url=>validate( |{ iv_url }| ).
 
     lv_key = zcl_abapgit_persist_factory=>get_repo( )->add(
-      iv_url         = iv_url
-      iv_branch_name = iv_branch_name
-      iv_package     = iv_package
-      iv_offline     = abap_false
-      is_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ) ).
+      iv_url          = iv_url
+      iv_branch_name  = iv_branch_name
+      iv_display_name = iv_display_name
+      iv_package      = iv_package
+      iv_offline      = abap_false
+      is_dot_abapgit  = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ) ).
     TRY.
         ls_repo = zcl_abapgit_persist_factory=>get_repo( )->read( lv_key ).
       CATCH zcx_abapgit_not_found.

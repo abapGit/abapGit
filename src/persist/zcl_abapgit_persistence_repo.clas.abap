@@ -151,6 +151,8 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
     GET TIME STAMP FIELD ls_repo-created_at.
     ls_repo-dot_abapgit  = is_dot_abapgit.
 
+    ls_repo-local_settings-display_name = iv_display_name.
+
     lv_repo_as_xml = to_xml( ls_repo ).
 
     rv_key = get_next_id( ).
