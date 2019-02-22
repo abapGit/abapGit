@@ -7,6 +7,7 @@ INTERFACE zif_abapgit_persist_repo
       !iv_url         TYPE string
       !iv_branch_name TYPE string
       !iv_branch      TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
+      iv_display_name TYPE string OPTIONAL
       !iv_package     TYPE devclass
       !iv_offline     TYPE abap_bool DEFAULT abap_false
       !is_dot_abapgit TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit
