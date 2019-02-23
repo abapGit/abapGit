@@ -13,6 +13,7 @@ INTERFACE zif_abapgit_object
     IMPORTING
       !iv_package TYPE devclass
       !io_xml     TYPE REF TO zcl_abapgit_xml_input
+      !iv_step    TYPE string
     RAISING
       zcx_abapgit_exception .
   METHODS delete
@@ -49,4 +50,7 @@ INTERFACE zif_abapgit_object
       VALUE(ri_comparator) TYPE REF TO zif_abapgit_comparator
     RAISING
       zcx_abapgit_exception .
+  METHODS get_deserialize_steps
+    RETURNING
+      VALUE(rt_steps) TYPE zcl_abapgit_objects=>ty_deserialization_step_tt .
 ENDINTERFACE.

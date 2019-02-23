@@ -173,17 +173,34 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
       lv_popup = zcl_abapgit_ui_factory=>get_gui_functions( )->gui_is_available( ).
 
-      CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
-        EXPORTING
-          activate_ddic_objects  = iv_ddic
-          with_popup             = lv_popup
-        TABLES
-          objects                = gt_objects
-        EXCEPTIONS
-          excecution_error       = 1
-          cancelled              = 2
-          insert_into_corr_error = 3
-          OTHERS                 = 4.
+      IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
+        CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
+          EXPORTING
+            suppress_generation    = abap_true " speed up the import??? (Generation can fail a lot cause we will import the DDIC later)
+            suppress_syntax_check  = abap_true " force abap objects to activate even with errors
+            activate_ddic_objects  = iv_ddic
+*           with_popup             = lv_popup
+            with_popup             = abap_false " No dialog, user have to activate with error (how to tell user he has to o that? - so better don't show at all?)
+          TABLES
+            objects                = gt_objects
+          EXCEPTIONS
+            excecution_error       = 1
+            cancelled              = 2
+            insert_into_corr_error = 3
+            OTHERS                 = 4.
+      ELSE.
+        CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
+          EXPORTING
+            activate_ddic_objects  = iv_ddic
+            with_popup             = lv_popup
+          TABLES
+            objects                = gt_objects
+          EXCEPTIONS
+            excecution_error       = 1
+            cancelled              = 2
+            insert_into_corr_error = 3
+            OTHERS                 = 4.
+      ENDIF.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'error from RS_WORKING_OBJECTS_ACTIVATE' ).
       ENDIF.
