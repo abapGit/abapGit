@@ -27,11 +27,12 @@ CLASS zcl_abapgit_objects DEFINITION
                                             WITH DEFAULT KEY .
     TYPES:
       BEGIN OF ty_step_data,
-        id      TYPE string,
-        order   TYPE i,
-        descr   TYPE string,
-        is_ddic TYPE abap_bool,
-        objects TYPE ty_deserialization_tt,
+        id           TYPE string,
+        order        TYPE i,
+        descr        TYPE string,
+        is_ddic      TYPE abap_bool,
+        syntax_check TYPE abap_bool,
+        objects      TYPE ty_deserialization_tt,
       END OF ty_step_data.
     TYPES:
       ty_step_data_tt TYPE STANDARD TABLE OF ty_step_data
@@ -195,9 +196,9 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_objects
       IMPORTING
-        is_step    TYPE ty_step_data
+        is_step  TYPE ty_step_data
       CHANGING
-        ct_files   TYPE zif_abapgit_definitions=>ty_file_signatures_tt
+        ct_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS check_objects_locked
@@ -236,6 +237,9 @@ CLASS zcl_abapgit_objects DEFINITION
         it_results        TYPE zif_abapgit_definitions=>ty_results_tt
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt.
+    CLASS-METHODS get_deserialize_steps
+      RETURNING
+        VALUE(rt_steps) TYPE ty_step_data_tt.
 
 ENDCLASS.
 
@@ -545,29 +549,10 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
                    <ls_step>    TYPE LINE OF ty_step_data_tt,
                    <ls_deser>   TYPE LINE OF ty_deserialization_tt.
 
-    APPEND INITIAL LINE TO lt_steps ASSIGNING <ls_step>.
-    <ls_step>-id      = gc_step_id-abap.
-    <ls_step>-descr   = 'Early ABAP Elements'.
-    <ls_step>-is_ddic = abap_false.
-    IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
-      <ls_step>-order   = 1.
-    ELSE.
-      <ls_step>-order   = 2.
-    ENDIF.
-    APPEND INITIAL LINE TO lt_steps ASSIGNING <ls_step>.
-    <ls_step>-id      = gc_step_id-ddic.
-    <ls_step>-descr   = 'Data Dictonary'.
-    <ls_step>-is_ddic = abap_true.
-    IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
-      <ls_step>-order   = 2.
-    ELSE.
-      <ls_step>-order   = 1.
-    ENDIF.
-    APPEND INITIAL LINE TO lt_steps ASSIGNING <ls_step>.
-    <ls_step>-id      = gc_step_id-late.
-    <ls_step>-descr   = 'Late ABAP Elements'.
-    <ls_step>-is_ddic = abap_false.
-    <ls_step>-order   = 3.
+    DATA lv_experimental_features TYPE abap_bool.
+    lv_experimental_features = zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ).
+
+    lt_steps = get_deserialize_steps( ).
 
     lv_package = io_repo->get_package( ).
 
@@ -635,7 +620,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
       li_obj->mo_files = lo_files.
 
-      IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
+      IF lv_experimental_features = abap_true.
         TRY. " ToDo: Implement the new IF method in all object - see fallback for basic logic
             lt_steps_id = li_obj->get_deserialize_steps( ).
           CATCH cx_sy_dyn_call_illegal_method.
@@ -643,7 +628,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         ENDTRY.
       ENDIF.
 
-      IF lt_steps_id IS INITIAL. " Fallback (can be removed if all objects implement the new IF method get_deserialize_steps)
+      " Fallback (can be removed if all objects implement the new IF method get_deserialize_steps)
+      IF lt_steps_id IS INITIAL.
         IF li_obj->get_metadata( )-late_deser = abap_true.
           READ TABLE lt_steps WITH KEY id = gc_step_id-late ASSIGNING <ls_step>.
         ELSEIF li_obj->get_metadata( )-ddic = abap_true.
@@ -737,7 +723,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       APPEND LINES OF <ls_obj>-obj->mo_files->get_accessed_files( ) TO ct_files.
     ENDLOOP.
 
-    zcl_abapgit_objects_activation=>activate( is_step-is_ddic ).
+    zcl_abapgit_objects_activation=>activate( iv_ddic         = is_step-is_ddic
+                                              iv_syntax_check = is_step-syntax_check ).
 
   ENDMETHOD.
 
@@ -783,6 +770,38 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     DELETE rt_results WHERE obj_type IS INITIAL.
     DELETE rt_results WHERE lstate = zif_abapgit_definitions=>c_state-added AND rstate IS INITIAL.
 
+  ENDMETHOD.
+
+
+  METHOD get_deserialize_steps.
+    FIELD-SYMBOLS: <ls_step>    TYPE LINE OF ty_step_data_tt.
+
+    APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
+    <ls_step>-id           = gc_step_id-abap.
+    <ls_step>-descr        = 'Early ABAP Elements'.
+    <ls_step>-is_ddic      = abap_false.
+    <ls_step>-syntax_check = abap_false.
+    IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
+      <ls_step>-order      = 1.
+    ELSE.
+      <ls_step>-order      = 2.
+    ENDIF.
+    APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
+    <ls_step>-id          = gc_step_id-ddic.
+    <ls_step>-descr       = 'Data Dictonary'.
+    <ls_step>-is_ddic     = abap_true.
+    <ls_step>-syntax_check = abap_false.
+    IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
+      <ls_step>-order     = 2.
+    ELSE.
+      <ls_step>-order     = 1.
+    ENDIF.
+    APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
+    <ls_step>-id           = gc_step_id-late.
+    <ls_step>-descr        = 'Late ABAP Elements'.
+    <ls_step>-is_ddic      = abap_false.
+    <ls_step>-syntax_check = abap_true.
+    <ls_step>-order        = 3.
   ENDMETHOD.
 
 

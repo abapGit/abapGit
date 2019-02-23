@@ -12,7 +12,8 @@ CLASS zcl_abapgit_objects_activation DEFINITION PUBLIC CREATE PUBLIC.
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS activate
-      IMPORTING iv_ddic TYPE abap_bool DEFAULT abap_false
+      IMPORTING iv_ddic         TYPE abap_bool DEFAULT abap_false
+                iv_syntax_check TYPE abap_bool DEFAULT abap_false
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS clear.
@@ -31,12 +32,14 @@ CLASS zcl_abapgit_objects_activation DEFINITION PUBLIC CREATE PUBLIC.
         VALUE(rv_use_new_activation_logic) TYPE abap_bool .
     CLASS-METHODS activate_new
       IMPORTING
-        !iv_ddic TYPE abap_bool DEFAULT abap_false
+        !iv_ddic         TYPE abap_bool DEFAULT abap_false
+        !iv_syntax_check TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS activate_old
       IMPORTING
-        !iv_ddic TYPE abap_bool DEFAULT abap_false
+        !iv_ddic         TYPE abap_bool DEFAULT abap_false
+        !iv_syntax_check TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS activate_ddic
@@ -57,9 +60,11 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
   METHOD activate.
 
     IF use_new_activation_logic( ) = abap_true.
-      activate_new( iv_ddic ).
+      activate_new( iv_ddic         = iv_ddic
+                    iv_syntax_check = iv_syntax_check ).
     ELSE.
-      activate_old( iv_ddic ).
+      activate_old( iv_ddic         = iv_ddic
+                    iv_syntax_check = iv_syntax_check ).
     ENDIF.
 
     update_where_used( ).
@@ -158,7 +163,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
       li_progress->show( iv_current = 98
                          iv_text    = 'Activating non DDIC' ).
 
-      activate_old( ).
+      activate_old( iv_ddic         = iv_ddic
+                    iv_syntax_check = iv_syntax_check ).
 
     ENDIF.
 
@@ -167,20 +173,27 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
   METHOD activate_old.
 
-    DATA: lv_popup TYPE abap_bool.
+    DATA:
+      lv_popup                 TYPE abap_bool,
+      lv_suppress_syntax_check TYPE abap_bool.
 
     IF gt_objects IS NOT INITIAL.
 
       lv_popup = zcl_abapgit_ui_factory=>get_gui_functions( )->gui_is_available( ).
 
       IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
+        lv_suppress_syntax_check = boolc( iv_syntax_check = abap_false ).
+
         CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
           EXPORTING
-            suppress_generation    = abap_true " speed up the import??? (Generation can fail a lot cause we will import the DDIC later)
-            suppress_syntax_check  = abap_true " force abap objects to activate even with errors
+            " speed up the import??? (Generation can fail a lot cause we will import the DDIC later)
+            suppress_generation    = abap_true
+            " for example WAPA need a syntax check or activation will fail
+            suppress_syntax_check  = lv_suppress_syntax_check
             activate_ddic_objects  = iv_ddic
-*           with_popup             = lv_popup
-            with_popup             = abap_false " No dialog, user have to activate with error (how to tell user he has to o that? - so better don't show at all?)
+            "No dialog, user have to activate with error!
+            "How to tell the user he has to do that? - so better don't show at all.
+            with_popup             = abap_false
           TABLES
             objects                = gt_objects
           EXCEPTIONS

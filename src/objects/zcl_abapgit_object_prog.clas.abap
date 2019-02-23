@@ -236,9 +236,9 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
 
-    APPEND 'ABAP' TO rt_steps.
+    APPEND zcl_abapgit_objects=>gc_step_id-abap TO rt_steps.
 
-    APPEND 'LATE' TO rt_steps.
+    APPEND zcl_abapgit_objects=>gc_step_id-late TO rt_steps.
 
   ENDMETHOD.
 

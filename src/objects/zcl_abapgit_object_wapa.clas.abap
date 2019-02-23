@@ -552,6 +552,13 @@ CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_deserialize_steps.
+
+    APPEND zcl_abapgit_objects=>gc_step_id-late TO rt_steps.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
   ENDMETHOD.
