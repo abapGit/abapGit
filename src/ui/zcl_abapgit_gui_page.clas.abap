@@ -77,13 +77,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page IMPLEMENTATION.
-
-  METHOD constructor.
-
-    mo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
-
-  ENDMETHOD.
+CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
 
   METHOD add_hotkeys.
@@ -138,6 +132,13 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD constructor.
+
+    mo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+
+  ENDMETHOD.
+
+
   METHOD footer.
 
     CREATE OBJECT ro_html.
@@ -184,16 +185,8 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
     ro_html->add( '<title>abapGit</title>' ).               "#EC NOTEXT
     ro_html->add( '<link rel="stylesheet" type="text/css" href="css/common.css">' ).
+    ro_html->add( '<link rel="stylesheet" type="text/css" href="css/ag-icons.css">' ).
     ro_html->add( '<script type="text/javascript" src="js/common.js"></script>' ). "#EC NOTEXT
-
-    IF mo_settings->get_octicons_disabled( ) = abap_false.
-
-      lv_font = |<link rel="stylesheet" type="text/css" href="|
-        && 'https://cdnjs.cloudflare.com/ajax/libs/octicons/4.4.0/font/octicons.min.css'
-        && '">'.                                            "#EC NOTEXT
-      ro_html->add( lv_font ). " Web fonts
-
-    ENDIF.
 
     ro_html->add( '</head>' ).                              "#EC NOTEXT
 
