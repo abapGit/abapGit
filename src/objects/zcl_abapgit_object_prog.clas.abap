@@ -147,7 +147,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
 
     IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
       CASE iv_step.
-        WHEN 'ABAP'.
+        WHEN zcl_abapgit_objects=>gc_step_id-abap.
 
           lt_source = mo_files->read_abap( ).
 
@@ -176,7 +176,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
 
           deserialize_longtexts( io_xml ).
 
-        WHEN 'LATE'.
+        WHEN zcl_abapgit_objects=>gc_step_id-late.
           io_xml->read( EXPORTING iv_name = 'DYNPROS'
                         CHANGING cg_data  = lt_dynpros ).
           deserialize_dynpros( lt_dynpros ).

@@ -894,7 +894,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
     IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
       CASE iv_step.
-        WHEN 'ABAP'.
+        WHEN zcl_abapgit_objects=>gc_step_id-abap.
           io_xml->read( EXPORTING iv_name = 'FUNCTIONS'
                         CHANGING cg_data = lt_functions ).
           deserialize_functions( it_functions = lt_functions
@@ -913,7 +913,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
                            is_cua = ls_cua ).
 
 
-        WHEN 'LATE'.
+        WHEN zcl_abapgit_objects=>gc_step_id-late.
           io_xml->read( EXPORTING iv_name = 'FUNCTIONS'
                         CHANGING cg_data = lt_functions ).
           deserialize_functions( it_functions = lt_functions
