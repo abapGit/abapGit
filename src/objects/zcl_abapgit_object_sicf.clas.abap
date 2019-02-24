@@ -202,6 +202,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
         application               = space
         icfserdesc                = ls_icfserdesc
         icfactive                 = abap_true
+        icfaltnme                 = is_icfservice-icfaltnme
       EXCEPTIONS
         empty_icf_name            = 1
         no_new_virtual_host       = 2
@@ -588,6 +589,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
     CLEAR ls_icfservice-icf_user.
     CLEAR ls_icfservice-icf_cclnt.
     CLEAR ls_icfservice-icf_mclnt.
+    CLEAR ls_icfservice-icfaltnme_orig.
 
     io_xml->add( iv_name = 'URL'
                  ig_data = lv_url ).
