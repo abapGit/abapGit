@@ -26,6 +26,7 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     DATA: mo_repo         TYPE REF TO zcl_abapgit_repo,
@@ -285,7 +286,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
                      io_sub = lo_tb_advanced ) ##NO_TEXT.
     ro_toolbar->add( iv_txt = 'Refresh'
                      iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh }?{ lv_key }| ).
-    ro_toolbar->add( iv_txt = zcl_abapgit_html=>icon( iv_name = 'settings/grey70' )
+    ro_toolbar->add( iv_txt = zcl_abapgit_html=>icon( iv_name = 'cog/grey70' )
                      io_sub = build_grid_menu( ) ).
 
   ENDMETHOD.
@@ -295,7 +296,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
     IF is_item-inactive = abap_true.
       rv_inactive_html_code = zcl_abapgit_html=>icon(
-        iv_name  = 'zap/orange'
+        iv_name  = 'flash/orange'
         iv_hint  = 'Object or object part is inactive'
         iv_class = 'inactive' ).
     ENDIF.
@@ -360,15 +361,15 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
       WHEN 'PROG' OR 'CLAS' OR 'FUGR'.
         rv_html = zcl_abapgit_html=>icon( 'file-code/darkgrey' ).
       WHEN 'W3MI' OR 'W3HT'.
-        rv_html = zcl_abapgit_html=>icon( 'file-binary/darkgrey' ).
+        rv_html = zcl_abapgit_html=>icon( 'file-image/darkgrey' ).
       WHEN ''.
         rv_html = space. " no icon
       WHEN OTHERS.
-        rv_html = zcl_abapgit_html=>icon( 'file/darkgrey' ).
+        rv_html = zcl_abapgit_html=>icon( 'doc/darkgrey' ).
     ENDCASE.
 
     IF is_item-is_dir = abap_true.
-      rv_html = zcl_abapgit_html=>icon( 'file-directory/darkgrey' ).
+      rv_html = zcl_abapgit_html=>icon( 'folder/darkgrey' ).
     ENDIF.
 
   ENDMETHOD.
@@ -639,7 +640,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<tr class="folder">' ).
-    ro_html->add( |<td class="icon">{ zcl_abapgit_html=>icon( 'dir' ) }</td>| ).
+    ro_html->add( |<td class="icon">{ zcl_abapgit_html=>icon( 'folder' ) }</td>| ).
     ro_html->add( |<td class="object" colspan="4">{ build_dir_jump_link( '..' ) }</td>| ).
     IF mo_repo->has_remote_source( ) = abap_true.
       ro_html->add( |<td colspan="1"></td>| ). " Dummy for online

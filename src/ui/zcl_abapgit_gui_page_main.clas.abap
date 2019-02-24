@@ -238,7 +238,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
     ro_html->add( '<td>' ).
     ro_html->add( lo_allbar->render_as_droplist(
-      iv_label  = zcl_abapgit_html=>icon( iv_name = 'three-bars/blue' )
+      iv_label  = zcl_abapgit_html=>icon( iv_name = 'menu/blue' )
       iv_action = c_actions-overview
       iv_right  = abap_true
       iv_sort   = abap_true ) ).

@@ -37,6 +37,7 @@ CLASS zcl_abapgit_html_toolbar DEFINITION
         RETURNING
           VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_item,
@@ -68,7 +69,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
 
 
   METHOD add.
@@ -194,10 +195,10 @@ CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
 
       IF lv_has_icons = abap_true.
         IF <ls_item>-chk = abap_true.
-          lv_icon  = zcl_abapgit_html=>icon( 'check/blue' ).
+          lv_icon  = zcl_abapgit_html=>icon( 'ok/blue' ).
           lv_check = ' data-check="X"'.
         ELSEIF <ls_item>-chk = abap_false.
-          lv_icon = zcl_abapgit_html=>icon( 'check/grey' ).
+          lv_icon = zcl_abapgit_html=>icon( 'ok/grey' ).
           lv_check = ' data-check=""'.
         ELSE. " abap_undefined -> not a check box
           lv_icon = zcl_abapgit_html=>icon( <ls_item>-ico ).
