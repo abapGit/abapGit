@@ -161,10 +161,10 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     LOOP AT it_functions INTO ls_func.
 
       IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
-        IF iv_step = 'ABAP' AND ls_func-remote_call = 'R'.
-          CLEAR ls_func-remote_call
-          . " DDIC elements may not in system at this step, check for remote types will fail!
-        ELSEIF iv_step = 'LATE'.
+        IF iv_step = zcl_abapgit_objects=>gc_step_id-abap AND ls_func-remote_call = 'R'.
+          CLEAR ls_func-remote_call.
+          " DDIC elements may not in system at this step, check for remote types will fail!
+        ELSEIF iv_step = zcl_abapgit_objects=>gc_step_id-late.
           CHECK ls_func-remote_call = 'R'. " second time only required for remot functions
         ENDIF.
       ENDIF.
