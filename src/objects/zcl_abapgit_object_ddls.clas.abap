@@ -133,8 +133,9 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
           EXPORTING
             name = ms_item-obj_name.
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise(
+          iv_text     = |DDLS, { ms_item-obj_name } { lx_error->get_text( ) }|
+          ix_previous = lx_error ).
     ENDTRY.
 
   ENDMETHOD.
