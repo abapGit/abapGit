@@ -39,9 +39,9 @@ CLASS zcl_abapgit_objects DEFINITION
                                 WITH DEFAULT KEY .
     CONSTANTS:
       BEGIN OF gc_step_id,
-        abap TYPE string VALUE `ABAP`,
-        ddic TYPE string VALUE `DDIC`,
-        late TYPE string VALUE `LATE`,
+        abap TYPE ty_deserialization_step VALUE `ABAP`,
+        ddic TYPE ty_deserialization_step VALUE `DDIC`,
+        late TYPE ty_deserialization_step VALUE `LATE`,
       END OF gc_step_id.
 
     CLASS-METHODS serialize
@@ -632,10 +632,19 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       IF lt_steps_id IS INITIAL.
         IF li_obj->get_metadata( )-late_deser = abap_true.
           READ TABLE lt_steps WITH KEY id = gc_step_id-late ASSIGNING <ls_step>.
+          IF sy-subrc <> 0.
+            zcx_abapgit_exception=>raise( |Step { gc_step_id-late } is not defined| ).
+          ENDIF.
         ELSEIF li_obj->get_metadata( )-ddic = abap_true.
           READ TABLE lt_steps WITH KEY id = gc_step_id-ddic ASSIGNING <ls_step>.
+          IF sy-subrc <> 0.
+            zcx_abapgit_exception=>raise( |Step { gc_step_id-ddic } is not defined| ).
+          ENDIF.
         ELSE.
-          READ TABLE lt_steps WITH KEY id = gc_step_id-late ASSIGNING <ls_step>.
+          READ TABLE lt_steps WITH KEY id = gc_step_id-abap ASSIGNING <ls_step>.
+          IF sy-subrc <> 0.
+            zcx_abapgit_exception=>raise( |Step { gc_step_id-abap } is not defined| ).
+          ENDIF.
         ENDIF.
         APPEND INITIAL LINE TO <ls_step>-objects ASSIGNING <ls_deser>.
         <ls_deser>-item    = ls_item.
@@ -646,10 +655,10 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         LOOP AT lt_steps_id ASSIGNING <lv_step_id>.
           READ TABLE lt_steps WITH KEY id = <lv_step_id> ASSIGNING <ls_step>.
           IF sy-subrc <> 0.
-            zcx_abapgit_exception=>raise( 'Step is not defined' ).
+            zcx_abapgit_exception=>raise( |Step { <lv_step_id> } is not defined| ).
           ELSEIF <ls_step>-is_ddic = abap_true AND li_obj->get_metadata( )-ddic = abap_false.
             " DDIC only for DDIC obejcts
-            zcx_abapgit_exception=>raise( 'Step is only for DDIC obejcts' ).
+            zcx_abapgit_exception=>raise( |Step { <lv_step_id> } is only for DDIC objects| ).
           ENDIF.
           APPEND INITIAL LINE TO <ls_step>-objects ASSIGNING <ls_deser>.
           <ls_deser>-item    = ls_item.
