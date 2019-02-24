@@ -44,6 +44,11 @@ input:focus, textarea:focus {
   border: 1px solid #8cadd9;
 }
 
+/* overload style for icons */
+[class^="icon-"]:before, [class*=" icon-"]:before {
+  text-decoration: none;
+}
+
 /* COLOR PALETTE */
 .grey             { color: lightgrey  !important; }
 .grey70           { color: #b3b3b3    !important; }
@@ -74,6 +79,7 @@ input:focus, textarea:focus {
 .float-right      { float: right; }
 .pad-right        { padding-right: 6px; }
 .inline           { display: inline; }
+.large-icon       { font-size: 200%; }
 
 /* PANELS */
 div.panel {
