@@ -27,8 +27,8 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       END OF ty_function .
     TYPES:
       ty_function_tt TYPE STANDARD TABLE OF ty_function WITH DEFAULT KEY .
-    TYPES:
-      ty_sobj_name_tt TYPE STANDARD TABLE OF sobj_name  WITH DEFAULT KEY .
+
+    TYPES: ty_sobj_name_tt TYPE STANDARD TABLE OF sobj_name  WITH DEFAULT KEY .
 
     METHODS update_where_used
       IMPORTING
@@ -55,7 +55,6 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         zcx_abapgit_exception .
     METHODS deserialize_functions
       IMPORTING
-        !iv_step      TYPE string
         !it_functions TYPE ty_function_tt
       RAISING
         zcx_abapgit_exception .
@@ -103,15 +102,15 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         zcx_abapgit_exception .
     METHODS get_abap_version
       IMPORTING
-        !io_xml                TYPE REF TO zcl_abapgit_xml_input
+        io_xml                 TYPE REF TO zcl_abapgit_xml_input
       RETURNING
         VALUE(rv_abap_version) TYPE progdir-uccheck
       RAISING
         zcx_abapgit_exception .
     METHODS update_func_group_short_text
       IMPORTING
-        !iv_group      TYPE rs38l-area
-        !iv_short_text TYPE tftit-stext .
+        iv_group      TYPE rs38l-area
+        iv_short_text TYPE tftit-stext.
 ENDCLASS.
 
 
@@ -155,24 +154,15 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
           lv_area      TYPE rs38l-area,
           lv_group     TYPE rs38l-area,
           lv_namespace TYPE rs38l-namespace,
-          lt_source    TYPE TABLE OF abaptxt255,
-          ls_func      LIKE LINE OF it_functions.
+          lt_source    TYPE TABLE OF abaptxt255.
 
-    LOOP AT it_functions INTO ls_func.
+    FIELD-SYMBOLS: <ls_func> LIKE LINE OF it_functions.
 
-      IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
-        IF iv_step = zcl_abapgit_objects=>gc_step_id-abap AND ls_func-remote_call = 'R'.
-          CLEAR ls_func-remote_call.
-          " DDIC elements may not in system at this step, check for remote types will fail!
-        ELSEIF iv_step = zcl_abapgit_objects=>gc_step_id-late.
-          CHECK ls_func-remote_call = 'R'. " second time only required for remot functions
-        ENDIF.
-      ENDIF.
+    LOOP AT it_functions ASSIGNING <ls_func>.
 
-      lt_source = mo_files->read_abap( iv_extra = ls_func-funcname ).
+      lt_source = mo_files->read_abap( iv_extra = <ls_func>-funcname ).
 
       lv_area = ms_item-obj_name.
-
 
       CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
         EXPORTING
@@ -189,7 +179,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
       CALL FUNCTION 'FUNCTION_EXISTS'
         EXPORTING
-          funcname           = ls_func-funcname
+          funcname           = <ls_func>-funcname
         IMPORTING
           include            = lv_include
         EXCEPTIONS
@@ -199,7 +189,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 * havent found a nice way to update the paramters
         CALL FUNCTION 'FUNCTION_DELETE'
           EXPORTING
-            funcname                 = ls_func-funcname
+            funcname                 = <ls_func>-funcname
             suppress_success_message = abap_true
           EXCEPTIONS
             error_message            = 1
@@ -211,24 +201,24 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
       CALL FUNCTION 'RS_FUNCTIONMODULE_INSERT'
         EXPORTING
-          funcname                = ls_func-funcname
+          funcname                = <ls_func>-funcname
           function_pool           = lv_group
-          interface_global        = ls_func-global_flag
-          remote_call             = ls_func-remote_call
-          short_text              = ls_func-short_text
-          update_task             = ls_func-update_task
-          exception_class         = ls_func-exception_classes
+          interface_global        = <ls_func>-global_flag
+          remote_call             = <ls_func>-remote_call
+          short_text              = <ls_func>-short_text
+          update_task             = <ls_func>-update_task
+          exception_class         = <ls_func>-exception_classes
           namespace               = lv_namespace
-          remote_basxml_supported = ls_func-remote_basxml
+          remote_basxml_supported = <ls_func>-remote_basxml
         IMPORTING
           function_include        = lv_include
         TABLES
-          import_parameter        = ls_func-import
-          export_parameter        = ls_func-export
-          tables_parameter        = ls_func-tables
-          changing_parameter      = ls_func-changing
-          exception_list          = ls_func-exception
-          parameter_docu          = ls_func-documentation
+          import_parameter        = <ls_func>-import
+          export_parameter        = <ls_func>-export
+          tables_parameter        = <ls_func>-tables
+          changing_parameter      = <ls_func>-changing
+          exception_list          = <ls_func>-exception
+          parameter_docu          = <ls_func>-documentation
         EXCEPTIONS
           double_task             = 1
           error_message           = 2
@@ -892,59 +882,24 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       io_xml     = io_xml
       iv_package = iv_package ).
 
-    IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
-      CASE iv_step.
-        WHEN zcl_abapgit_objects=>gc_step_id-abap.
-          io_xml->read( EXPORTING iv_name = 'FUNCTIONS'
-                        CHANGING cg_data = lt_functions ).
-          deserialize_functions( it_functions = lt_functions
-                                 iv_step      = iv_step ).
+    io_xml->read( EXPORTING iv_name = 'FUNCTIONS'
+                  CHANGING cg_data = lt_functions ).
+    deserialize_functions( lt_functions ).
 
-          deserialize_includes(
-            io_xml     = io_xml
-            iv_package = iv_package ).
+    deserialize_includes(
+      io_xml     = io_xml
+      iv_package = iv_package ).
 
-          lv_program_name = main_name( ).
+    lv_program_name = main_name( ).
 
+    io_xml->read( EXPORTING iv_name = 'DYNPROS'
+                  CHANGING cg_data = lt_dynpros ).
+    deserialize_dynpros( lt_dynpros ).
 
-          io_xml->read( EXPORTING iv_name = 'CUA'
-                        CHANGING cg_data = ls_cua ).
-          deserialize_cua( iv_program_name = lv_program_name
-                           is_cua = ls_cua ).
-
-
-        WHEN zcl_abapgit_objects=>gc_step_id-late.
-          io_xml->read( EXPORTING iv_name = 'FUNCTIONS'
-                        CHANGING cg_data = lt_functions ).
-          deserialize_functions( it_functions = lt_functions
-                                 iv_step      = iv_step ).
-
-          io_xml->read( EXPORTING iv_name = 'DYNPROS'
-                        CHANGING cg_data = lt_dynpros ).
-          deserialize_dynpros( lt_dynpros ).
-      ENDCASE.
-    ELSE.
-      io_xml->read( EXPORTING iv_name = 'FUNCTIONS'
-                    CHANGING cg_data = lt_functions ).
-      deserialize_functions( it_functions = lt_functions
-                             iv_step      = iv_step ).
-
-      deserialize_includes(
-        io_xml     = io_xml
-        iv_package = iv_package ).
-
-      lv_program_name = main_name( ).
-
-
-      io_xml->read( EXPORTING iv_name = 'CUA'
-                    CHANGING cg_data = ls_cua ).
-      deserialize_cua( iv_program_name = lv_program_name
-                       is_cua = ls_cua ).
-
-      io_xml->read( EXPORTING iv_name = 'DYNPROS'
-                    CHANGING cg_data = lt_dynpros ).
-      deserialize_dynpros( lt_dynpros ).
-    ENDIF.
+    io_xml->read( EXPORTING iv_name = 'CUA'
+                  CHANGING cg_data = ls_cua ).
+    deserialize_cua( iv_program_name = lv_program_name
+                     is_cua = ls_cua ).
 
   ENDMETHOD.
 
@@ -967,15 +922,6 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_comparator.
     RETURN.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~get_deserialize_steps.
-
-    APPEND zcl_abapgit_objects=>gc_step_id-abap TO rt_steps.
-
-    APPEND zcl_abapgit_objects=>gc_step_id-late TO rt_steps.
-
   ENDMETHOD.
 
 

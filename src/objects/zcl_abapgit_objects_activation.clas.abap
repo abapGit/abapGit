@@ -179,41 +179,26 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
     IF gt_objects IS NOT INITIAL.
 
-      lv_popup = zcl_abapgit_ui_factory=>get_gui_functions( )->gui_is_available( ).
+* only supress checks if step does not need it
+      lv_suppress_syntax_check = boolc( iv_syntax_check = abap_false ).
 
-      IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
-        lv_suppress_syntax_check = boolc( iv_syntax_check = abap_false ).
-
-        CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
-          EXPORTING
-            " speed up the import??? (Generation can fail a lot cause we will import the DDIC later)
-            suppress_generation    = abap_true
-            " for example WAPA need a syntax check or activation will fail
-            suppress_syntax_check  = lv_suppress_syntax_check
-            activate_ddic_objects  = iv_ddic
-            "No dialog, user have to activate with error!
-            "How to tell the user he has to do that? - so better don't show at all.
-            with_popup             = abap_false
-          TABLES
-            objects                = gt_objects
-          EXCEPTIONS
-            excecution_error       = 1
-            cancelled              = 2
-            insert_into_corr_error = 3
-            OTHERS                 = 4.
-      ELSE.
-        CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
-          EXPORTING
-            activate_ddic_objects  = iv_ddic
-            with_popup             = lv_popup
-          TABLES
-            objects                = gt_objects
-          EXCEPTIONS
-            excecution_error       = 1
-            cancelled              = 2
-            insert_into_corr_error = 3
-            OTHERS                 = 4.
-      ENDIF.
+      CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
+        EXPORTING
+          " speed up the import??? (Generation can fail a lot cause we will import the DDIC later)
+          suppress_generation    = abap_true
+          " for example WAPA need a syntax check or activation will fail
+          suppress_syntax_check  = lv_suppress_syntax_check
+          activate_ddic_objects  = iv_ddic
+          "No dialog, user have to activate with error!
+          "How to tell the user he has to do that? - so better don't show at all.
+          with_popup             = abap_false
+        TABLES
+          objects                = gt_objects
+        EXCEPTIONS
+          excecution_error       = 1
+          cancelled              = 2
+          insert_into_corr_error = 3
+          OTHERS                 = 4.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'error from RS_WORKING_OBJECTS_ACTIVATE' ).
       ENDIF.

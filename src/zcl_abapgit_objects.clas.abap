@@ -549,9 +549,6 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
                    <ls_step>    TYPE LINE OF ty_step_data_tt,
                    <ls_deser>   TYPE LINE OF ty_deserialization_tt.
 
-    DATA lv_experimental_features TYPE abap_bool.
-    lv_experimental_features = zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ).
-
     lt_steps = get_deserialize_steps( ).
 
     lv_package = io_repo->get_package( ).
@@ -620,55 +617,51 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
       li_obj->mo_files = lo_files.
 
-      IF lv_experimental_features = abap_true.
-        TRY. " ToDo: Implement the new IF method in all object - see fallback for basic logic
-            lt_steps_id = li_obj->get_deserialize_steps( ).
-          CATCH cx_sy_dyn_call_illegal_method.
-            CLEAR lt_steps_id.
-        ENDTRY.
-      ENDIF.
+      TRY.
+* Get required steps for deserialize the object
+          lt_steps_id = li_obj->get_deserialize_steps( ).
 
-      " Fallback (can be removed if all objects implement the new IF method get_deserialize_steps)
-      IF lt_steps_id IS INITIAL.
-        IF li_obj->get_metadata( )-late_deser = abap_true.
-          READ TABLE lt_steps WITH KEY id = gc_step_id-late ASSIGNING <ls_step>.
-          IF sy-subrc <> 0.
-            zcx_abapgit_exception=>raise( |Step { gc_step_id-late } is not defined| ).
-          ENDIF.
-        ELSEIF li_obj->get_metadata( )-ddic = abap_true.
-          READ TABLE lt_steps WITH KEY id = gc_step_id-ddic ASSIGNING <ls_step>.
-          IF sy-subrc <> 0.
-            zcx_abapgit_exception=>raise( |Step { gc_step_id-ddic } is not defined| ).
-          ENDIF.
-        ELSE.
-          READ TABLE lt_steps WITH KEY id = gc_step_id-abap ASSIGNING <ls_step>.
-          IF sy-subrc <> 0.
-            zcx_abapgit_exception=>raise( |Step { gc_step_id-abap } is not defined| ).
-          ENDIF.
-        ENDIF.
-        APPEND INITIAL LINE TO <ls_step>-objects ASSIGNING <ls_deser>.
-        <ls_deser>-item    = ls_item.
-        <ls_deser>-obj     = li_obj.
-        <ls_deser>-xml     = lo_xml.
-        <ls_deser>-package = lv_package.
-      ELSE.
-        LOOP AT lt_steps_id ASSIGNING <lv_step_id>.
-          READ TABLE lt_steps WITH KEY id = <lv_step_id> ASSIGNING <ls_step>.
-          IF sy-subrc <> 0.
-            zcx_abapgit_exception=>raise( |Step { <lv_step_id> } is not defined| ).
-          ELSEIF <ls_step>-is_ddic = abap_true AND li_obj->get_metadata( )-ddic = abap_false.
-            " DDIC only for DDIC obejcts
-            zcx_abapgit_exception=>raise( |Step { <lv_step_id> } is only for DDIC objects| ).
+          LOOP AT lt_steps_id ASSIGNING <lv_step_id>.
+            READ TABLE lt_steps WITH KEY id = <lv_step_id> ASSIGNING <ls_step>.
+            IF sy-subrc <> 0.
+              zcx_abapgit_exception=>raise( |Step { <lv_step_id> } is not defined| ).
+            ELSEIF <ls_step>-is_ddic = abap_true AND li_obj->get_metadata( )-ddic = abap_false.
+              " DDIC only for DDIC obejcts
+              zcx_abapgit_exception=>raise( |Step { <lv_step_id> } is only for DDIC objects| ).
+            ENDIF.
+            APPEND INITIAL LINE TO <ls_step>-objects ASSIGNING <ls_deser>.
+            <ls_deser>-item    = ls_item.
+            <ls_deser>-obj     = li_obj.
+            <ls_deser>-xml     = lo_xml.
+            <ls_deser>-package = lv_package.
+          ENDLOOP.
+        CATCH cx_sy_dyn_call_illegal_method.
+          " Fallback (can be removed if all objects implement the new IF method get_deserialize_steps)
+          IF li_obj->get_metadata( )-late_deser = abap_true.
+            READ TABLE lt_steps WITH KEY id = gc_step_id-late ASSIGNING <ls_step>.
+            IF sy-subrc <> 0.
+              zcx_abapgit_exception=>raise( |Step { gc_step_id-late } is not defined| ).
+            ENDIF.
+          ELSEIF li_obj->get_metadata( )-ddic = abap_true.
+            READ TABLE lt_steps WITH KEY id = gc_step_id-ddic ASSIGNING <ls_step>.
+            IF sy-subrc <> 0.
+              zcx_abapgit_exception=>raise( |Step { gc_step_id-ddic } is not defined| ).
+            ENDIF.
+          ELSE.
+            READ TABLE lt_steps WITH KEY id = gc_step_id-abap ASSIGNING <ls_step>.
+            IF sy-subrc <> 0.
+              zcx_abapgit_exception=>raise( |Step { gc_step_id-abap } is not defined| ).
+            ENDIF.
           ENDIF.
           APPEND INITIAL LINE TO <ls_step>-objects ASSIGNING <ls_deser>.
           <ls_deser>-item    = ls_item.
           <ls_deser>-obj     = li_obj.
           <ls_deser>-xml     = lo_xml.
           <ls_deser>-package = lv_package.
-        ENDLOOP.
-      ENDIF.
+      ENDTRY.
     ENDLOOP.
 
+* run deserialize for all step and it's obejcts
     SORT lt_steps BY order.
     LOOP AT lt_steps ASSIGNING <ls_step>.
       deserialize_objects( EXPORTING is_step = <ls_step>
@@ -790,21 +783,15 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     <ls_step>-descr        = 'Early ABAP Elements'.
     <ls_step>-is_ddic      = abap_false.
     <ls_step>-syntax_check = abap_false.
-    IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
-      <ls_step>-order      = 1.
-    ELSE.
-      <ls_step>-order      = 2.
-    ENDIF.
+    <ls_step>-order        = 1.
+
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
-    <ls_step>-id          = gc_step_id-ddic.
-    <ls_step>-descr       = 'Data Dictonary'.
-    <ls_step>-is_ddic     = abap_true.
+    <ls_step>-id           = gc_step_id-ddic.
+    <ls_step>-descr        = 'Data Dictonary'.
+    <ls_step>-is_ddic      = abap_true.
     <ls_step>-syntax_check = abap_false.
-    IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
-      <ls_step>-order     = 2.
-    ELSE.
-      <ls_step>-order     = 1.
-    ENDIF.
+    <ls_step>-order        = 2.
+
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-id           = gc_step_id-late.
     <ls_step>-descr        = 'Late ABAP Elements'.
