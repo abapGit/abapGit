@@ -46,7 +46,8 @@ input:focus, textarea:focus {
 
 /* overload style for icons */
 [class^="icon-"]:before, [class*=" icon-"]:before {
-  text-decoration: none;
+  text-decoration: none !important;
+  margin-right: 0px !important;
 }
 
 /* COLOR PALETTE */
