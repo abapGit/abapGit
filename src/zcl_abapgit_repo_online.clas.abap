@@ -39,14 +39,15 @@ CLASS zcl_abapgit_repo_online DEFINITION
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception .
+
     METHODS get_files_remote
-      REDEFINITION .
+        REDEFINITION .
     METHODS get_name
-      REDEFINITION .
-    METHODS rebuild_local_checksums
-      REDEFINITION .
+        REDEFINITION .
     METHODS has_remote_source
-      REDEFINITION .
+        REDEFINITION .
+    METHODS rebuild_local_checksums
+        REDEFINITION .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -179,16 +180,16 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     " TODO: method unify to base class !
 
     DATA:
-          lt_remote    TYPE zif_abapgit_definitions=>ty_files_tt,
-          lt_local     TYPE zif_abapgit_definitions=>ty_files_item_tt,
-          ls_last_item TYPE zif_abapgit_definitions=>ty_item,
-          lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
+      lt_remote    TYPE zif_abapgit_definitions=>ty_files_tt,
+      lt_local     TYPE zif_abapgit_definitions=>ty_files_item_tt,
+      ls_last_item TYPE zif_abapgit_definitions=>ty_item,
+      lt_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt.
 
     FIELD-SYMBOLS:
-                   <ls_checksum> LIKE LINE OF lt_checksums,
-                   <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
-                   <ls_remote>   LIKE LINE OF lt_remote,
-                   <ls_local>    LIKE LINE OF lt_local.
+      <ls_checksum> LIKE LINE OF lt_checksums,
+      <ls_file_sig> LIKE LINE OF <ls_checksum>-files,
+      <ls_remote>   LIKE LINE OF lt_remote,
+      <ls_local>    LIKE LINE OF lt_local.
 
     lt_local  = get_files_local( ).
 
