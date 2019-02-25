@@ -411,9 +411,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
         unknown_objectclass = 3
         OTHERS              = 4.
     IF sy-subrc = 1.
-      zcx_abapgit_exception=>raise( 'Cancelled' ).
+      zcx_abapgit_exception=>raise( |RS_CORR_INSERT, Cancelled, { sy-msgid }, { sy-msgno }| ).
     ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT' ).
+      zcx_abapgit_exception=>raise( |error from RS_CORR_INSERT, { sy-msgid }, { sy-msgno }| ).
     ENDIF.
 
     READ TABLE it_tpool INTO ls_tpool WITH KEY id = 'R'.
