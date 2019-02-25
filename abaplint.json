@@ -10,6 +10,12 @@
       "enabled": true,
       "exclude": []
     },
+    "avoid_use": {
+      "enabled": true,
+      "exclude": [],
+      "define": false,
+      "endselect": true
+    },
     "breakpoint": {
       "enabled": true,
       "exclude": []
@@ -77,7 +83,11 @@
     "indentation": {
       "enabled": true,
       "exclude": [],
-      "ignoreExceptions": true
+      "ignoreExceptions": true,
+      "alignTryCatch": false,
+      "globalClassSkipFirst": false,
+      "ignoreGlobalClassDefinition": false,
+      "ignoreGlobalInterface": false
     },
     "inline_data_old_versions": {
       "enabled": true,
@@ -87,7 +97,9 @@
       "enabled": true,
       "exclude": [],
       "ignoreExceptions": true,
-      "ignoreLowerClassImplmentationStatement": true
+      "ignoreLowerClassImplmentationStatement": true,
+      "ignoreGlobalClassDefinition": false,
+      "ignoreGlobalInterface": false
     },
     "line_length": {
       "enabled": true,
@@ -120,10 +132,6 @@
       "enabled": false,
       "exclude": []
     },
-    "message_text_empty": {
-      "enabled": true,
-      "exclude": []
-    },
     "method_length": {
       "enabled": true,
       "exclude": [],
@@ -154,13 +162,21 @@
       "exclude": [],
       "depth": 5
     },
+    "no_exec_sql": {
+      "enabled": true,
+      "exclude": []
+    },
+    "no_public_attributes": {
+      "enabled": true,
+      "exclude": []
+    },
     "object_naming": {
       "enabled": true,
       "exclude": [],
-      "clas": "^ZC(L|X)\\_",
-      "intf": "^ZIF\\_",
-      "prog": "^Z",
-      "fugr": "^Z",
+      "clas": "^ZC(L|X)\\_ABAPGIT\\_",
+      "intf": "^ZIF\\_ABAPGIT\\_",
+      "prog": "^ZABAPGIT",
+      "fugr": "^ZABAPGIT",
       "tabl": "^Z",
       "ttyp": "^Z",
       "dtel": "^Z",
@@ -202,6 +218,10 @@
     },
     "superclass_final": {
       "enabled": false,
+      "exclude": []
+    },
+    "when_others_last": {
+      "enabled": true,
       "exclude": []
     },
     "whitespace_end": {
