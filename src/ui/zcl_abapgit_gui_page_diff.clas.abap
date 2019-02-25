@@ -64,7 +64,8 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
           mv_repo_key      TYPE zif_abapgit_persistence=>ty_repo-key,
           mv_seed          TYPE string, " Unique page id to bind JS sessionStorage
           mv_patch_mode    TYPE abap_bool,
-          mo_stage         TYPE REF TO zcl_abapgit_stage.
+          mo_stage         TYPE REF TO zcl_abapgit_stage,
+          mv_section_count TYPE i.
 
     METHODS render_diff
       IMPORTING is_diff        TYPE ty_file_diff
@@ -529,15 +530,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
   METHOD get_patch_data.
 
+    DATA: lv_section TYPE string.
+
     CLEAR: ev_filename, ev_line_index.
 
     IF iv_action <> c_patch_action-add AND iv_action <> c_patch_action-remove.
       zcx_abapgit_exception=>raise( |Invalid action { iv_action }| ).
     ENDIF.
 
-    FIND FIRST OCCURRENCE OF REGEX iv_action && `_patch_(.*)_(\d+)`
+    FIND FIRST OCCURRENCE OF REGEX `patch_line_` && iv_action && `_(.*)_(\d)+_(\d+)`
          IN iv_patch
-         SUBMATCHES ev_filename ev_line_index.
+         SUBMATCHES ev_filename lv_section ev_line_index.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Invalid patch| ).
     ENDIF.
@@ -591,6 +594,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
+    mv_section_count = mv_section_count + 1.
+
     IF is_diff_line-beacon > 0.
       lt_beacons = is_diff-o_diff->get_beacons( ).
       READ TABLE lt_beacons INTO lv_beacon INDEX is_diff_line-beacon.
@@ -598,11 +603,30 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       lv_beacon = '---'.
     ENDIF.
 
-
     ro_html->add( '<thead class="nav_line">' ).
     ro_html->add( '<tr>' ).
 
-    ro_html->add( '<th class="num"></th>' ).
+    IF mv_patch_mode = abap_true.
+
+      ro_html->add( |<th class="patch">| ).
+
+      ro_html->add_a( iv_txt   = |{ c_patch_action-add }|
+                      iv_act   = |patch_section_add('{ is_diff-filename }','{ mv_section_count }')|
+                      iv_id    = |patch_section_add_{ is_diff-filename }_{ mv_section_count }|
+                      iv_class = |patch_section_add|
+                      iv_typ   = zif_abapgit_definitions=>c_action_type-dummy ).
+
+      ro_html->add_a( iv_txt   = |{ c_patch_action-remove }|
+                      iv_act   = |patch_section_remove('{ is_diff-filename }', '{ mv_section_count }')|
+                      iv_id    = |patch_section_remove_{ is_diff-filename }_{ mv_section_count }|
+                      iv_class = |patch_section_remove|
+                      iv_typ   = zif_abapgit_definitions=>c_action_type-dummy ).
+
+      ro_html->add( '</th>' ).
+
+    ELSE.
+      ro_html->add( '<th class="num"></th>' ).
+    ENDIF.
     IF mv_unified = abap_true.
       ro_html->add( '<th class="num"></th>' ).
       ro_html->add( |<th>@@ { is_diff_line-new_num } @@ { lv_beacon }</th>| ).
@@ -623,6 +647,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
 
     CREATE OBJECT ro_html.
+
+    CLEAR: mv_section_count.
 
     li_progress = zcl_abapgit_progress=>get_instance( lines( mt_diff_files ) ).
 
@@ -900,31 +926,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     IF iv_patch_line_possible = abap_true.
 
-      lv_id = |patch_{ lv_object }_{ iv_index }|.
+      lv_id = |{ lv_object }_{ mv_section_count }_{ iv_index }|.
 
       io_html->add( |<td class="{ c_css_class-patch }">| ).
 
-      lv_left_class = |{ c_patch_action-add } |.
-      lv_right_class = |{ c_patch_action-remove } |.
-
       IF is_diff_line-patch_flag = abap_true.
-
-        lv_left_class = lv_left_class && |{ c_css_class-patch_active }|.
-
+        lv_left_class = c_css_class-patch_active.
       ELSE.
-
-        lv_right_class = lv_right_class && |{ c_css_class-patch_active }|.
-
+        lv_right_class = c_css_class-patch_active.
       ENDIF.
 
       io_html->add_a( iv_txt   = |{ c_patch_action-add }|
                       iv_act   = ||
-                      iv_id    = |{ c_patch_action-add }_{ lv_id }|
+                      iv_id    = |patch_line_{ c_patch_action-add }_{ lv_id }|
                       iv_typ   = zif_abapgit_definitions=>c_action_type-dummy
                       iv_class = lv_left_class ).
       io_html->add_a( iv_txt   = |{ c_patch_action-remove }|
                       iv_act   = ||
-                      iv_id    = |{ c_patch_action-remove }_{ lv_id }|
+                      iv_id    = |patch_line_{ c_patch_action-remove }_{ lv_id }|
                       iv_typ   = zif_abapgit_definitions=>c_action_type-dummy
                       iv_class = lv_right_class ).
 
@@ -944,15 +963,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     io_html->add( |<th class="patch">| ).
 
-    io_html->add_a( iv_txt = |{ c_patch_action-add }|
-                    iv_act = |patch_add_all('{ is_diff-filename }')|
-                    iv_id  = |patch_add_all|
-                    iv_typ = zif_abapgit_definitions=>c_action_type-dummy ).
+    io_html->add_a( iv_txt   = |{ c_patch_action-add }|
+                    iv_act   = |patch_file_add('{ is_diff-filename }')|
+                    iv_id    = |patch_file_add_{ is_diff-filename }|
+                    iv_class = |patch_file_add|
+                    iv_typ   = zif_abapgit_definitions=>c_action_type-dummy ).
 
-    io_html->add_a( iv_txt = |{ c_patch_action-remove }|
-                    iv_act = |patch_remove_all('{ is_diff-filename }')|
-                    iv_id  = |patch_remove_all|
-                    iv_typ = zif_abapgit_definitions=>c_action_type-dummy ).
+    io_html->add_a( iv_txt   = |{ c_patch_action-remove }|
+                    iv_act   = |patch_file_remove('{ is_diff-filename }')|
+                    iv_id    = |patch_file_remove_{ is_diff-filename }|
+                    iv_class = |patch_file_remove|
+                    iv_typ   = zif_abapgit_definitions=>c_action_type-dummy ).
 
     io_html->add( '</th>' ).
 
