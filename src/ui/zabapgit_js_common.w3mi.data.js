@@ -985,109 +985,14 @@ function setKeyBindings(oKeyMap){
   Patch / git add -p
   */
 
-function CSSPatchClassCombination(sClassLinkClicked, sClassCorrespondingLink){
-  this.sClassLinkClicked = sClassLinkClicked;
-  this.sClassCorrespondingLink = sClassCorrespondingLink;
-}
+function Patch() { }
 
-function Patch() {
-
-  this.CSS_CLASS = {
-    ADD:          "add",
-    REMOVE:       "remove",
-    PATCH:        "patch",
-    PATCH_ACTIVE: "patch-active"
-  };
-
-  this.ID = {
-    STAGE:            "stage",
-    PATCH_ADD_ALL:    "patch_add_all",
-    PATCH_REMOVE_ALL: "patch_remove_all"
-  };
-
-  this.ACTION = {
-    PATCH_STAGE: "patch_stage"
-  };
-
-  this.ADD_REMOVE = new CSSPatchClassCombination(this.CSS_CLASS.ADD, this.CSS_CLASS.REMOVE);
-  this.REMOVE_ADD = new CSSPatchClassCombination(this.CSS_CLASS.REMOVE, this.CSS_CLASS.ADD);
-
-}
-
-Patch.prototype.preparePatch = function(){
-
-  this.registerClickHandlerSingleLine();
-  this.registerClickHandlerAllFile();
-
+Patch.prototype.ID = {
+  STAGE: "stage"
 };
 
-Patch.prototype.registerClickHandlerSingleLine = function(){
-
-  // registers the link handlers for add and remove single lines
-
-  this.registerClickHandlerForPatchLink(this.ADD_REMOVE);
-  this.registerClickHandlerForPatchLink(this.REMOVE_ADD);
-
-};
-
-Patch.prototype.registerClickHandlerAllFile = function(){
-
-  // registers the link handlers for add and remove all changes for a file
-
-  this.registerClickHandlerForPatchLinkAll("#" + this.ID.PATCH_ADD_ALL, this.ADD_REMOVE);
-  this.registerClickHandlerForPatchLinkAll("#" + this.ID.PATCH_REMOVE_ALL, this.REMOVE_ADD);
-
-};
-
-Patch.prototype.registerClickHandlerForPatchLink = function(oClassCombination) {
-  // register onclick handler. When a link is clicked it is
-  // deactivated and its corresponding link gets active
-  //
-  // e.g. if you click on 'add' add is deactivated and 'remove'
-  // is activated.
-
-  var elLinkAll = document.querySelectorAll("." + this.CSS_CLASS.PATCH + " a." + oClassCombination.sClassLinkClicked);
-
-  [].forEach.call(elLinkAll,function(elLink){
-
-    elLink.addEventListener("click",function(oEvent){
-      this.togglePatchActiveForClassLink(oEvent, elLink, oClassCombination);
-    }.bind(this));
-
-  }.bind(this));
-
-};
-
-Patch.prototype.togglePatchActive = function(oEvent, elClicked, elCorrespondingLink){
-
-  if (!elClicked.classList.contains(this.CSS_CLASS.PATCH_ACTIVE)){
-    elClicked.classList.toggle(this.CSS_CLASS.PATCH_ACTIVE);
-    elCorrespondingLink.classList.toggle(this.CSS_CLASS.PATCH_ACTIVE);
-  }
-
-  oEvent.preventDefault();
-};
-
-
-Patch.prototype.togglePatchActiveForClassLink = function(oEvent, elClicked, oClassCombination) {
-
-  var sCorrespondingLinkId = this.getCorrespodingLinkId(elClicked.id, oClassCombination);
-  var elCorrespondingLink = document.querySelector('[ID="' + this.escape(sCorrespondingLinkId) + '"]');
-
-  this.togglePatchActive(oEvent, elClicked, elCorrespondingLink);
-};
-
-Patch.prototype.getCorrespodingLinkId = function(sClickedLinkId, oClassCombination){
-
-  // e.g.
-  //
-  //   add_patch_z_test_git_add_p.prog.abap_28 => remove_patch_z_test_git_add_p.prog.abap_28
-  //
-  // and vice versa
-
-  var oRegexPatchClassPrefix = new RegExp("^" + oClassCombination.sClassLinkClicked );
-  return sClickedLinkId.replace(oRegexPatchClassPrefix, oClassCombination.sClassCorrespondingLink);
-
+Patch.prototype.ACTION = {
+  PATCH_STAGE: "patch_stage"
 };
 
 Patch.prototype.escape = function(sFileName){
@@ -1096,27 +1001,249 @@ Patch.prototype.escape = function(sFileName){
     .replace(/#/g, "\\#");
 };
 
-Patch.prototype.patchLinkClickAll = function(oClassCombination) {
-  return function(oEvent) {
+/*
+  We have three type of cascading links, each of them has two verbs, add and remove.
+  Which means that by clicking a file or section link all corresponding line links are clicked.
 
-    var sTableId = oEvent.srcElement.parentElement.parentElement.parentElement.parentElement.id;
-    var elAddAll = document.querySelectorAll('[ID="' + this.escape(sTableId) + '"] a.' + oClassCombination.sClassLinkClicked);
+  The id of the link indicates its semantics and its membership.
 
-    [].forEach.call(elAddAll,function(elem){
-      this.togglePatchActiveForClassLink(oEvent, elem, oClassCombination);
-    }.bind(this));
+  */
 
-    oEvent.preventDefault();
+/*
+  1) file links
 
-  };
+      example id of file link
+
+      patch_file_add_zcl_abapgit_user_exit.clas.abap
+      \________/  ^  \_____________________________/
+          |       |              |
+          |       |              |____ file name
+          |       |
+          |     verb [add|remove]
+          |
+      constant prefix
+
+  */
+
+function PatchFile(sId){
+  var oRegex = new RegExp("(" + this.ID.FILE + ")_(add|remove)_(.*$)");
+  var oMatch = sId.match(oRegex);
+  this.id        = sId;
+  this.prefix    = oMatch[1];
+  this.verb      = oMatch[2];
+  this.file_name = oMatch[3];
+}
+
+PatchFile.prototype.ID = {
+  FILE:   "patch_file",
+  ADD:    "patch_file_add",
+  REMOVE: "patch_file_remove"
 };
 
-Patch.prototype.registerClickHandlerForPatchLinkAll = function(sSelector, oClassCombination){
+/*
+  2) section links within a file
+
+      example id of section link
+
+      patch_section_add_zcl_abapgit_user_exit.clas.abap_1
+      \___________/  ^  \_____________________________/ ^
+            |        |              |                   |
+            |        |          file name               |
+            |        |                                  |
+            |      verb [add|remove]                    ------ section
+            |
+      constant prefix
+
+    */
+
+function PatchSection(sId){
+  var oRegex = new RegExp("(" + this.ID.SECTION + ")_(add|remove)_(.*)_(\\d+$)");
+  var oMatch = sId.match(oRegex);
+  this.id        = sId;
+  this.prefix    = oMatch[1];
+  this.verb      = oMatch[2];
+  this.file_name = oMatch[3];
+  this.section   = oMatch[4];
+}
+
+PatchSection.prototype.ID = {
+  SECTION: "patch_section",
+  ADD:     "patch_section_add",
+  REMOVE:  "patch_section_remove"
+};
+
+/*
+  3) line links within a section
+
+      example id of line link
+
+      patch_line_add_zcl_abapgit_user_exit.clas.abap_1_25
+      \________/  ^  \_____________________________/ ^  ^
+            ^     |                ^                 |  |
+            |     |                |                 |  ------- line number
+            |     |             file name            |
+            |     |                               section
+            |   verb [add|remove]
+            |
+      constant prefix
+
+  */
+function PatchLine(sId){
+  var oRegex = new RegExp("(" + this.ID.LINE + ")_(add|remove)_(.*)_(\\d+)_(\\d+$)");
+  var oMatch = sId.match(oRegex);
+
+  this.id        = sId;
+  this.prefix    = oMatch[1];
+  this.verb      = oMatch[2];
+  this.file_name = oMatch[3];
+  this.section   = oMatch[4];
+  this.line      = oMatch[5];
+
+  this.corresponding_verb = this.CORRESPONDING_VERBS[this.verb];
+  this.elem               = document.querySelector("#" + Patch.prototype.escape(this.id));
+  this.correspondingLink  = this.getCorrespodingLink();
+}
+
+PatchLine.prototype.ID = {
+  LINE:   "patch_line",
+  ADD:    "patch_line_add",
+  REMOVE: "patch_line_remove"
+};
+
+PatchLine.prototype.CSS_CLASS = {
+  PATCH:        "patch",
+  PATCH_ACTIVE: "patch-active"
+};
+
+PatchLine.prototype.CORRESPONDING_VERBS = {
+  add:    "remove",
+  remove: "add"
+};
+
+PatchLine.prototype.getCorrespodingLinkId = function(){
+
+  // e.g.
+  //
+  //   patch_line_add_z_test_git_add_p.prog.abap_3_28 => patch_line_remove_z_test_git_add_p.prog.abap_3_28
+  //
+  // and vice versa
+
+  var oRegexPatchIdPrefix = new RegExp("^" + this.ID.LINE + "_" + this.verb );
+  return this.id.replace(oRegexPatchIdPrefix, this.ID.LINE + "_" + this.corresponding_verb);
+
+};
+
+PatchLine.prototype.toggle = function(){
+
+  if (!this.elem.classList.contains(this.CSS_CLASS.PATCH_ACTIVE)){
+    this.elem.classList.toggle(this.CSS_CLASS.PATCH_ACTIVE);
+    this.correspondingLink.classList.toggle(this.CSS_CLASS.PATCH_ACTIVE);
+  }
+
+};
+
+PatchLine.prototype.getCorrespodingLink = function(){
+  var sCorrespondingLinkId = this.getCorrespodingLinkId();
+  return document.querySelector('[ID="' + Patch.prototype.escape(sCorrespondingLinkId) + '"]');
+};
+
+Patch.prototype.preparePatch = function(){
+
+  this.registerClickHandlerForFiles();
+  this.registerClickHandlerForSections();
+  this.registerClickHandlerForLines();
+
+};
+
+Patch.prototype.registerClickHandlerForFiles = function(){
+  // registers the link handlers for add and remove files
+  this.registerClickHandlerForPatchFile("a[id^='" + PatchFile.prototype.ID.ADD + "']");
+  this.registerClickHandlerForPatchFile("a[id^='" + PatchFile.prototype.ID.REMOVE + "']");
+};
+
+Patch.prototype.registerClickHandlerForSections = function(){
+  // registers the link handlers for add and remove sections
+  this.registerClickHandlerForPatchSection("a[id^='" + PatchSection.prototype.ID.ADD + "']");
+  this.registerClickHandlerForPatchSection("a[id^='" + PatchSection.prototype.ID.REMOVE + "']");
+};
+
+Patch.prototype.registerClickHandlerForLines = function(){
+  // registers the link handlers for add and remove lines
+  this.registerClickHandlerForPatchLine("a[id^='" + PatchLine.prototype.ID.ADD + "']");
+  this.registerClickHandlerForPatchLine("a[id^='" + PatchLine.prototype.ID.REMOVE + "']");
+};
+
+Patch.prototype.registerClickHandlerForSelector = function(sSelector, fnCallback){
 
   var elAll = document.querySelectorAll(sSelector);
 
   [].forEach.call(elAll, function(elem){
-    elem.addEventListener("click", this.patchLinkClickAll(oClassCombination).bind(this));
+    elem.addEventListener("click", fnCallback.bind(this));
+  }.bind(this));
+
+};
+
+Patch.prototype.registerClickHandlerForPatchFile = function(sSelector){
+  this.registerClickHandlerForSelector(sSelector, this.patchLinkClickFile);
+};
+
+Patch.prototype.registerClickHandlerForPatchSection = function(sSelector){
+  this.registerClickHandlerForSelector(sSelector, this.patchLinkClickSection);
+};
+
+Patch.prototype.registerClickHandlerForPatchLine = function(sSelector) {
+  this.registerClickHandlerForSelector(sSelector, this.patchLinkClickLine);
+};
+
+Patch.prototype.patchLinkClickLine = function(oEvent){
+  this.togglePatchForElem(oEvent.srcElement);
+  oEvent.preventDefault();
+};
+
+Patch.prototype.togglePatchForElem = function(elLink) {
+  new PatchLine(elLink.id).toggle();
+};
+
+Patch.prototype.getAllLineLinksForId = function(sId, sIdPrefix){
+  var oRegex = new RegExp("^" + sIdPrefix);
+  sId = sId.replace(oRegex, PatchLine.prototype.ID.LINE);
+  return document.querySelectorAll("a[id^='"+ this.escape(sId) + "']");
+};
+
+Patch.prototype.getAllLineLinksForFile = function(oFile){
+  return this.getAllLineLinksForId(oFile.id, PatchFile.prototype.ID.FILE);
+};
+
+Patch.prototype.getAllLineLinksForSection = function(oSection){
+  return this.getAllLineLinksForId(oSection.id, PatchSection.prototype.ID.SECTION);
+};
+
+Patch.prototype.patchLinkClickFile = function(oEvent) {
+
+  var oFile = new PatchFile(oEvent.srcElement.id);
+  var elAllLineLinksOfFile = this.getAllLineLinksForFile(oFile);
+
+  [].forEach.call(elAllLineLinksOfFile,function(elem){
+    this.togglePatchForElem(elem);
+  }.bind(this));
+
+  oEvent.preventDefault();
+};
+
+Patch.prototype.patchLinkClickSection = function(oEvent){
+  var oSection = new PatchSection(oEvent.srcElement.id);
+  this.clickAllLineLinksInSection(oEvent, oSection.section);
+  oEvent.preventDefault();
+};
+
+Patch.prototype.clickAllLineLinksInSection = function(oEvent){
+
+  var oSection = new PatchSection(oEvent.srcElement.id);
+  var elAllLineLinksOfSection = this.getAllLineLinksForSection(oSection);
+
+  [].forEach.call(elAllLineLinksOfSection,function(elem){
+    this.togglePatchForElem(elem);
+    oEvent.preventDefault();
   }.bind(this));
 
 };
@@ -1137,37 +1264,34 @@ Patch.prototype.stagePatch = function() {
 
   // Collect add and remove info and submit to backend
 
-  var aAddPatch = this.collectActiveElementsForSelector("." + this.CSS_CLASS.PATCH +" a." + this.CSS_CLASS.ADD);
-  var aRemovePatch = this.collectActiveElementsForSelector("." + this.CSS_CLASS.PATCH + " a." + this.CSS_CLASS.REMOVE);
+  var aAddPatch = this.collectActiveElementsForId( PatchLine.prototype.ID.ADD );
+  var aRemovePatch = this.collectActiveElementsForId( PatchLine.prototype.ID.REMOVE );
 
   submitSapeventForm({"add": aAddPatch, "remove": aRemovePatch}, this.ACTION.PATCH_STAGE, "post");
 
 };
 
-Patch.prototype.collectActiveElementsForSelector = function(sSelector){
+Patch.prototype.collectActiveElementsForId = function(sId){
+
+  var sSelector = "." + PatchLine.prototype.CSS_CLASS.PATCH + " a[id^='" + sId + "']";
 
   return [].slice.call(document.querySelectorAll(sSelector))
     .filter(function(elem){
-      return elem.classList.contains(this.CSS_CLASS.PATCH_ACTIVE);
-    }.bind(this))
-    .map(function(elem){
+      return elem.classList.contains(PatchLine.prototype.CSS_CLASS.PATCH_ACTIVE);
+    }).map(function(elem){
       return elem.id;
     });
 
 };
 
 function preparePatch(){
-
   var oPatch = new Patch();
   oPatch.preparePatch();
-
 }
 
 function registerStagePatch(){
-
   var oPatch = new Patch();
   oPatch.registerStagePatch();
-
 }
 
 /**********************************************************
