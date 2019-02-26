@@ -104,7 +104,7 @@ CLASS ZCL_ABAPGIT_TAG_POPUPS IMPLEMENTATION.
 
       MOVE-CORRESPONDING <ls_tag> TO ls_tag_out.
 
-      ls_tag_out-name = zcl_abapgit_tag=>remove_tag_prefix( ls_tag_out-name ).
+      ls_tag_out-name = zcl_abapgit_git_tag=>remove_tag_prefix( ls_tag_out-name ).
 
       IF ls_tag_out-body IS NOT INITIAL.
         ls_tag_out-body_icon = |{ icon_display_text }|.
@@ -280,7 +280,7 @@ CLASS ZCL_ABAPGIT_TAG_POPUPS IMPLEMENTATION.
     LOOP AT lt_tags ASSIGNING <ls_tag>.
 
       INSERT INITIAL LINE INTO lt_selection INDEX 1 ASSIGNING <ls_sel>.
-      <ls_sel>-varoption = zcl_abapgit_tag=>remove_tag_prefix( <ls_tag>-name ).
+      <ls_sel>-varoption = zcl_abapgit_git_tag=>remove_tag_prefix( <ls_tag>-name ).
 
     ENDLOOP.
 
@@ -310,7 +310,7 @@ CLASS ZCL_ABAPGIT_TAG_POPUPS IMPLEMENTATION.
     READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
     ASSERT sy-subrc = 0.
 
-    lv_name_with_prefix = zcl_abapgit_tag=>add_tag_prefix( <ls_sel>-varoption ).
+    lv_name_with_prefix = zcl_abapgit_git_tag=>add_tag_prefix( <ls_sel>-varoption ).
 
     READ TABLE lt_tags ASSIGNING <ls_tag> WITH KEY name = lv_name_with_prefix.
     ASSERT sy-subrc = 0.

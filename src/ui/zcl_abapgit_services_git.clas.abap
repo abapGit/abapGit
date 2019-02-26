@@ -201,7 +201,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
       iv_url = lo_repo->get_url( )
       is_tag = ls_tag ).
 
-    lv_text = |Tag { zcl_abapgit_tag=>remove_tag_prefix( ls_tag-name ) } deleted| ##NO_TEXT.
+    lv_text = |Tag { zcl_abapgit_git_tag=>remove_tag_prefix( ls_tag-name ) } deleted| ##NO_TEXT.
 
     MESSAGE lv_text TYPE 'S'.
 

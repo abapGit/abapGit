@@ -233,7 +233,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
 
       CHECK sy-subrc = 0.
 
-      lv_tag = zcl_abapgit_tag=>remove_tag_prefix( <ls_tag>-name ).
+      lv_tag = zcl_abapgit_git_tag=>remove_tag_prefix( <ls_tag>-name ).
       INSERT lv_tag INTO TABLE <ls_commit>-tags.
 
     ENDLOOP.
