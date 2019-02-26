@@ -8,6 +8,21 @@ Legend
 + : added
 - : removed
 
+2019-02-26 v1.85.0
+------------------
+* ENHO, check esistence before deletion
++ New global user setting "Disable octicons", for offline
++ New user setting, disable parallel processing
+! SPRX serialization logic changed
+* SOTR skip creation if already exists
+! Parallel DDIC activation
+* Deserialization performance
+* VCLS data sorted
+* SICF fixes for altnames
++ Online repo display name setting
++ Patch / git add -p: Add and remove sections
+* Refactoring
+
 2019-02-15 v1.84.0
 ------------------
 * PINF fix deserialization sequence
