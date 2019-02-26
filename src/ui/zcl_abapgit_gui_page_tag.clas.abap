@@ -90,7 +90,7 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Please supply a tag name| ).
     ENDIF.
 
-    ls_tag-name = zcl_abapgit_tag=>add_tag_prefix( ls_tag-name ).
+    ls_tag-name = zcl_abapgit_git_tag=>add_tag_prefix( ls_tag-name ).
     ASSERT ls_tag-name CP 'refs/tags/+*'.
 
     CASE mv_selected_type.
@@ -117,9 +117,9 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
     ENDTRY.
 
     IF ls_tag-type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
-      lv_text = |Lightweight tag { zcl_abapgit_tag=>remove_tag_prefix( ls_tag-name ) } created| ##NO_TEXT.
+      lv_text = |Lightweight tag { zcl_abapgit_git_tag=>remove_tag_prefix( ls_tag-name ) } created| ##NO_TEXT.
     ELSEIF ls_tag-type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
-      lv_text = |Annotated tag { zcl_abapgit_tag=>remove_tag_prefix( ls_tag-name ) } created| ##NO_TEXT.
+      lv_text = |Annotated tag { zcl_abapgit_git_tag=>remove_tag_prefix( ls_tag-name ) } created| ##NO_TEXT.
     ENDIF.
 
     MESSAGE lv_text TYPE 'S'.
