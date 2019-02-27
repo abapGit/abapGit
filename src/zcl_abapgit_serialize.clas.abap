@@ -93,6 +93,8 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
   METHOD determine_max_threads.
 
+    DATA lt_user_info TYPE STANDARD TABLE OF uinfo2.
+
     IF iv_force_sequential = abap_true.
       rv_threads = 1.
       RETURN.
@@ -137,20 +139,20 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     "There may be some used threads.. Otherwise, you will get "Maxium NUmber of GUI Session reached"
     IF gv_max_threads > 1.
-      DATA lt_user_info TYPE STANDARD TABLE OF uinfo2.
+
       CALL FUNCTION 'TH_LONG_USR_INFO'
         EXPORTING
           user      = sy-uname
         TABLES
           user_info = lt_user_info.
-          
+
       gv_max_threads = gv_max_threads - 1 - lines( lt_user_info ).
-      
+
       IF gv_max_threads LT 1.
         gv_max_threads = 1 .
       ENDIF.
-      
-    ENDIF.
+
+    ENDIF. "IF gv_max_threads > 1.
 
     ASSERT gv_max_threads >= 1.
 
