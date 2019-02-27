@@ -143,10 +143,13 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
           user      = sy-uname
         TABLES
           user_info = lt_user_info.
+          
       gv_max_threads = gv_max_threads - 1 - lines( lt_user_info ).
+      
       IF gv_max_threads LT 1.
         gv_max_threads = 1 .
       ENDIF.
+      
     ENDIF.
 
     ASSERT gv_max_threads >= 1.
