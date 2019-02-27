@@ -135,8 +135,18 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
+    "There may be some used threads.. Otherwise, you will get "Maxium NUmber of GUI Session reached"
     IF gv_max_threads > 1.
-      gv_max_threads = gv_max_threads - 1.
+      DATA lt_user_info TYPE STANDARD TABLE OF uinfo2.
+      CALL FUNCTION 'TH_LONG_USR_INFO'
+        EXPORTING
+          user      = sy-uname
+        TABLES
+          user_info = lt_user_info.
+      gv_max_threads = gv_max_threads - 1 - lines( lt_user_info ).
+      IF gv_max_threads LT 1.
+        gv_max_threads = 1 .
+      ENDIF.
     ENDIF.
 
     ASSERT gv_max_threads >= 1.
