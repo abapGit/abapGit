@@ -733,7 +733,7 @@ function LinkHints(sLinkHintKey, sColor){
   this.aTooltipElements = document.querySelectorAll("a span");
 }
 
-LinkHints.prototype.fnRenderTooltip = function (oTooltip, iTooltipCounter) {
+LinkHints.prototype.renderTooltip = function (oTooltip, iTooltipCounter) {
   if (this.bTooltipsOn) {
     oTooltip.classList.remove("hidden");
   } else {
@@ -751,7 +751,7 @@ LinkHints.prototype.getTooltipStartValue = function(iToolTipCount){
 
 };
 
-LinkHints.prototype.fnRenderTooltips = function () {
+LinkHints.prototype.renderTooltips = function () {
 
   // all possible links which should be accessed via tooltip have
   // sub span which is hidden by default. If we like to show the
@@ -767,23 +767,27 @@ LinkHints.prototype.fnRenderTooltips = function () {
 
   [].forEach.call(this.aTooltipElements, function(oTooltip){
     iTooltipCounter += 1;
-    this.fnRenderTooltip(oTooltip, iTooltipCounter);
+    this.renderTooltip(oTooltip, iTooltipCounter);
   }.bind(this));
 
 };
 
-LinkHints.prototype.fnToggleAllTooltips = function () {
+LinkHints.prototype.toggleAllTooltips = function () {
 
   this.sPending = "";
   this.bTooltipsOn = !this.bTooltipsOn;
-  this.fnRenderTooltips();
+  this.renderTooltips();
 
 };
 
-LinkHints.prototype.fnRemoveAllTooltips = function () {
-
+LinkHints.prototype.disableTooltips = function(){
   this.sPending = "";
   this.bTooltipsOn = false;
+};
+
+LinkHints.prototype.removeAllTooltips = function () {
+
+  this.disableTooltips();
 
   [].forEach.call(this.aTooltipElements, function (oTooltip) {
     oTooltip.classList.add("hidden");
@@ -791,7 +795,7 @@ LinkHints.prototype.fnRemoveAllTooltips = function () {
 
 };
 
-LinkHints.prototype.fnFilterTooltips = function (sPending) { // eslint-disable-line no-unused-vars
+LinkHints.prototype.filterTooltips = function (sPending) { // eslint-disable-line no-unused-vars
 
   Object
     .keys(this.oTooltipMap)
@@ -813,22 +817,22 @@ LinkHints.prototype.fnFilterTooltips = function (sPending) { // eslint-disable-l
 
 };
 
-LinkHints.prototype.fnActivateDropDownMenu = function (oTooltip) {
+LinkHints.prototype.activateDropDownMenu = function (oTooltip) {
   // to enable link hint navigation for drop down menu, we must expand
   // like if they were hovered
   oTooltip.parentElement.parentElement.classList.toggle("block");
 };
 
 
-LinkHints.prototype.fnTooltipActivate = function (oTooltip) {
+LinkHints.prototype.tooltipActivate = function (oTooltip) {
 
   // a tooltips was successfully specified, so we try to trigger the link
   // and remove all tooltips
-  this.fnRemoveAllTooltips();
+  this.removeAllTooltips();
   oTooltip.parentElement.click();
 
   // in case it is a dropdownmenu we have to expand and focus it
-  this.fnActivateDropDownMenu(oTooltip);
+  this.activateDropDownMenu(oTooltip);
   oTooltip.parentElement.focus();
 
 };
@@ -845,7 +849,7 @@ LinkHints.prototype.onkeypress = function(oEvent){
   // Maybe we must add other types here in the future
   if (oEvent.key === this.sLinkHintKey && activeElementType !== "INPUT" && activeElementType !== "TEXTAREA") {
 
-    this.fnToggleAllTooltips();
+    this.toggleAllTooltips();
 
   } else if (this.bTooltipsOn === true) {
 
@@ -855,14 +859,32 @@ LinkHints.prototype.onkeypress = function(oEvent){
 
     if (oTooltip) {
       // we are there, we have a fully specified tooltip. Let's activate it
-      this.fnTooltipActivate(oTooltip);
+      this.tooltipActivate(oTooltip);
     } else {
       // we are not there yet, but let's filter the link so that only
       // the partially matched are shown
-      this.fnFilterTooltips(this.sPending);
+      this.filterTooltips(this.sPending);
+      this.disableTooltipsIfNoTooltipIsVisible();
     }
 
   }
+
+};
+
+LinkHints.prototype.disableTooltipsIfNoTooltipIsVisible = function(){
+
+  if (!this.isAnyTooltipVisible()) {
+    this.disableTooltips();
+  }
+};
+
+LinkHints.prototype.isAnyTooltipVisible = function(){
+
+  return (Object
+    .keys(this.oTooltipMap)
+    .filter(function (key) {
+      return !this.oTooltipMap[key].classList.contains("hidden");
+    }.bind(this)).length > 0);
 
 };
 
