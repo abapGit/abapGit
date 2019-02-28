@@ -250,7 +250,7 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
         class_not_existing = 1
         OTHERS             = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from CL_OO_SOURCE' ).
+      zcx_abapgit_exception=>raise( |Error from CL_OO_SOURCE. Subrc = { sy-subrc }| ).
     ENDIF.
 
     lo_source->read( 'A' ).

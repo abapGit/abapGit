@@ -134,7 +134,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
         internal_error_insert_report   = 11
         OTHERS                         = 12.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from SEO_METHOD_GENERATE_INCLUDE' ).
+      zcx_abapgit_exception=>raise( |Error from SEO_METHOD_GENERATE_INCLUDE. Subrc = { sy-subrc }| ).
     ENDIF.
 
     rv_program = cl_oo_classname_service=>get_method_include( ls_mtdkey ).
@@ -174,7 +174,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
         _internal_class_overflow      = 19
         OTHERS                        = 20.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from SEO_CLASS_GENERATE_CLASSPOOL' ).
+      zcx_abapgit_exception=>raise( |Error from SEO_CLASS_GENERATE_CLASSPOOL. Subrc = { sy-subrc }| ).
     ENDIF.
 
   ENDMETHOD.
@@ -283,7 +283,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
             OTHERS             = 3.
     ENDTRY.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error instantiating CL_OO_CLASS_SECTION_SOURCE' ).
+      zcx_abapgit_exception=>raise( |Error instantiating CL_OO_CLASS_SECTION_SOURCE. Subrc = { sy-subrc }| ).
     ENDIF.
 
     lo_update->set_dark_mode( seox_true ).
@@ -301,7 +301,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
         scan_abap_source_error = 1
         OTHERS                 = 2 ).
     IF sy-subrc <> 0 OR lv_scan_error = abap_true.
-      zcx_abapgit_exception=>raise( 'CLAS, error while scanning source' ).
+      zcx_abapgit_exception=>raise( |CLAS, error while scanning source. Subrc = { sy-subrc }| ).
     ENDIF.
 
 * this will update the SEO* database tables
@@ -397,7 +397,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
         other           = 6
         OTHERS          = 7.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |error from SEO_CLASS_CREATE_COMPLETE: { sy-subrc }| ).
+      zcx_abapgit_exception=>raise( |Error from SEO_CLASS_CREATE_COMPLETE. Subrc = { sy-subrc }| ).
     ENDIF.
 
   ENDMETHOD.
@@ -421,7 +421,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
           object_not_found = 1
           OTHERS           = 2.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from SOTR_OBJECT_GET_OBJECTS' ).
+        zcx_abapgit_exception=>raise( |error from SOTR_OBJECT_GET_OBJECTS. Subrc = { sy-subrc }| ).
       ENDIF.
 
       READ TABLE lt_objects INDEX 1 INTO lv_object.
@@ -458,7 +458,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
           no_entry_found                = 18
           OTHERS                        = 19.
       IF sy-subrc <> 0 AND sy-subrc <> 5.
-        zcx_abapgit_exception=>raise( 'error from SOTR_CREATE_CONCEPT,' && sy-subrc ).
+        zcx_abapgit_exception=>raise( |Error from SOTR_CREATE_CONCEPT. Subrc = { sy-subrc }| ).
       ENDIF.
     ENDLOOP.
 
@@ -481,7 +481,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
 * this can happen when the SXCI object is deleted before the implementing CLAS
       RETURN.
     ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from SEO_CLASS_DELETE_COMPLETE: { sy-subrc }| ).
+      zcx_abapgit_exception=>raise( |Error from SEO_CLASS_DELETE_COMPLETE. Subrc = { sy-subrc }| ).
     ENDIF.
   ENDMETHOD.
 
@@ -629,7 +629,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
     IF sy-subrc = 1.
       RETURN. " in case only inactive version exists
     ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from seo_clif_get' ).
+      zcx_abapgit_exception=>raise( |Error from SEO_CLIF_GET. Subrc = { sy-subrc }| ).
     ENDIF.
   ENDMETHOD.
 

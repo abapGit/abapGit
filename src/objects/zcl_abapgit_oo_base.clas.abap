@@ -26,7 +26,21 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_oo_base IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
+
+
+  METHOD convert_attrib_to_vseoattrib.
+    FIELD-SYMBOLS: <ls_attribute>  LIKE LINE OF it_attributes,
+                   <ls_vseoattrib> LIKE LINE OF rt_vseoattrib.
+
+    LOOP AT it_attributes ASSIGNING <ls_attribute>.
+      INSERT INITIAL LINE INTO TABLE rt_vseoattrib ASSIGNING <ls_vseoattrib>.
+      MOVE-CORRESPONDING <ls_attribute> TO <ls_vseoattrib>.
+      <ls_vseoattrib>-clsname = iv_clsname.
+      UNASSIGN <ls_vseoattrib>.
+    ENDLOOP.
+    UNASSIGN <ls_attribute>.
+  ENDMETHOD.
 
 
   METHOD deserialize_abap_source_new.
@@ -99,7 +113,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
         class_not_existing = 1
         OTHERS             = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from CL_OO_SOURCE' ).
+      zcx_abapgit_exception=>raise( |Error from CL_OO_SOURCE. Subrc = { sy-subrc }| ).
     ENDIF.
 
     TRY.
@@ -138,7 +152,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
         ret_code = 1
         OTHERS   = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DOCU_UPD' ).
+      zcx_abapgit_exception=>raise( |Error from DOCU_UPD. Subrc = { sy-subrc }| ).
     ENDIF.
   ENDMETHOD.
 
@@ -208,6 +222,17 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~insert_text_pool.
     ASSERT 0 = 1. "Subclass responsibility
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_oo_object_fnc~read_attributes.
+    SELECT cmpname attbusobj attkeyfld
+      FROM seocompodf
+      INTO CORRESPONDING FIELDS OF TABLE rt_attributes
+      WHERE clsname = iv_object_name
+        AND ( attbusobj <> space OR attkeyfld <> space )
+        AND version = '1'
+      ORDER BY PRIMARY KEY.
   ENDMETHOD.
 
 
@@ -287,29 +312,5 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
   METHOD zif_abapgit_oo_object_fnc~update_descriptions.
     DELETE FROM seocompotx WHERE clsname = is_key-clsname. "#EC CI_SUBRC
     INSERT seocompotx FROM TABLE it_descriptions.         "#EC CI_SUBRC
-  ENDMETHOD.
-
-  METHOD zif_abapgit_oo_object_fnc~read_attributes.
-    SELECT cmpname attbusobj attkeyfld
-      FROM seocompodf
-      INTO CORRESPONDING FIELDS OF TABLE rt_attributes
-      WHERE clsname = iv_object_name
-        AND ( attbusobj <> space OR attkeyfld <> space )
-        AND version = '1'
-      ORDER BY PRIMARY KEY.
-  ENDMETHOD.
-
-
-  METHOD convert_attrib_to_vseoattrib.
-    FIELD-SYMBOLS: <ls_attribute>  LIKE LINE OF it_attributes,
-                   <ls_vseoattrib> LIKE LINE OF rt_vseoattrib.
-
-    LOOP AT it_attributes ASSIGNING <ls_attribute>.
-      INSERT INITIAL LINE INTO TABLE rt_vseoattrib ASSIGNING <ls_vseoattrib>.
-      MOVE-CORRESPONDING <ls_attribute> TO <ls_vseoattrib>.
-      <ls_vseoattrib>-clsname = iv_clsname.
-      UNASSIGN <ls_vseoattrib>.
-    ENDLOOP.
-    UNASSIGN <ls_attribute>.
   ENDMETHOD.
 ENDCLASS.
