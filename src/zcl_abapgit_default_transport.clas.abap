@@ -31,6 +31,7 @@ CLASS zcl_abapgit_default_transport DEFINITION
           zcx_abapgit_exception .
 
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-DATA go_instance TYPE REF TO zcl_abapgit_default_transport .
@@ -57,7 +58,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_default_transport IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_DEFAULT_TRANSPORT IMPLEMENTATION.
 
 
   METHOD clear.
@@ -75,7 +76,7 @@ CLASS zcl_abapgit_default_transport IMPLEMENTATION.
         OTHERS           = 4.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from TR_TASK_RESET { sy-subrc }| ).
+      zcx_abapgit_exception=>raise( |Error from TR_TASK_RESET. Subrc = { sy-subrc }| ).
     ENDIF.
 
   ENDMETHOD.
@@ -102,7 +103,7 @@ CLASS zcl_abapgit_default_transport IMPLEMENTATION.
         OTHERS           = 4.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from TR_TASK_GET { sy-subrc }| ).
+      zcx_abapgit_exception=>raise( |Error from TR_TASK_GET. Subrc = { sy-subrc }| ).
     ENDIF.
 
     READ TABLE lt_e070use INTO rs_default_task
@@ -169,7 +170,7 @@ CLASS zcl_abapgit_default_transport IMPLEMENTATION.
         OTHERS            = 7.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from TR_TASK_SET { sy-subrc }| ).
+      zcx_abapgit_exception=>raise( |Error from TR_TASK_SET. Subrc = { sy-subrc }| ).
     ENDIF.
 
   ENDMETHOD.
@@ -213,7 +214,7 @@ CLASS zcl_abapgit_default_transport IMPLEMENTATION.
         OTHERS            = 7.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from TR_TASK_SET { sy-subrc }| ).
+      zcx_abapgit_exception=>raise( |Error from TR_TASK_SET. Subrc = { sy-subrc }| ).
     ENDIF.
 
   ENDMETHOD.
