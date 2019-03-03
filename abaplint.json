@@ -14,7 +14,9 @@
       "enabled": true,
       "exclude": [],
       "define": false,
-      "endselect": true
+      "endselect": true,
+      "execSQL": true,
+      "kernelCall": true
     },
     "breakpoint": {
       "enabled": true,
@@ -55,6 +57,20 @@
       "enabled": true,
       "exclude": []
     },
+    "double_space": {
+      "enabled": true,
+      "exclude": []
+    },
+    "empty_line_in_statement": {
+      "enabled": true,
+      "exclude": [],
+      "allowChained": true
+    },
+    "empty_loop": {
+      "enabled": true,
+      "exclude": [],
+      "length": 120
+    },
     "empty_statement": {
       "enabled": true,
       "exclude": []
@@ -77,6 +93,10 @@
       "exclude": []
     },
     "identical_form_names": {
+      "enabled": true,
+      "exclude": []
+    },
+    "if_in_if": {
       "enabled": true,
       "exclude": []
     },
@@ -128,7 +148,7 @@
       "enabled": true,
       "exclude": []
     },
-    "message": {
+    "message_exists": {
       "enabled": false,
       "exclude": []
     },
@@ -161,10 +181,6 @@
       "enabled": true,
       "exclude": [],
       "depth": 5
-    },
-    "no_exec_sql": {
-      "enabled": true,
-      "exclude": []
     },
     "no_public_attributes": {
       "enabled": true,
@@ -203,10 +219,21 @@
       "enabled": true,
       "exclude": []
     },
+    "remove_descriptions": {
+      "enabled": true,
+      "exclude": [],
+      "ignoreExceptions": true
+    },
     "sequential_blank": {
       "enabled": true,
       "exclude": [],
       "lines": 4
+    },
+    "short_case": {
+      "enabled": true,
+      "exclude": [],
+      "length": 1,
+      "allow": ["iv_action", "sy"]
     },
     "space_before_colon": {
       "enabled": true,
@@ -218,6 +245,10 @@
     },
     "superclass_final": {
       "enabled": false,
+      "exclude": []
+    },
+    "tabl_enhancement_category": {
+      "enabled": true,
       "exclude": []
     },
     "when_others_last": {
