@@ -146,7 +146,7 @@ CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
 
     TYPES: BEGIN OF lty_color_line,
              color TYPE lvc_t_scol.
-        INCLUDE TYPE ty_requirement_status.
+            INCLUDE TYPE ty_requirement_status.
     TYPES: END OF lty_color_line,
     lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
 

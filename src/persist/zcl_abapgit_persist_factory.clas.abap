@@ -1,7 +1,6 @@
 CLASS zcl_abapgit_persist_factory DEFINITION
   PUBLIC
   CREATE PRIVATE
-
   GLOBAL FRIENDS zcl_abapgit_persist_injector .
 
   PUBLIC SECTION.

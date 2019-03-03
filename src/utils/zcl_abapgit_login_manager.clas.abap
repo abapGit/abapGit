@@ -29,6 +29,7 @@ CLASS zcl_abapgit_login_manager DEFINITION
         VALUE(rv_auth) TYPE string
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES:
@@ -38,16 +39,14 @@ CLASS zcl_abapgit_login_manager DEFINITION
       END OF ty_auth .
 
     CLASS-DATA:
-      gt_auth TYPE TABLE OF ty_auth WITH DEFAULT KEY.
+      gt_auth TYPE TABLE OF ty_auth WITH DEFAULT KEY .
 
-    CLASS-METHODS:
-      append
-        IMPORTING
-          !iv_uri  TYPE string
-          !iv_auth TYPE string
-        RAISING
-          zcx_abapgit_exception.
-
+    CLASS-METHODS append
+      IMPORTING
+        !iv_uri  TYPE string
+        !iv_auth TYPE string
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
