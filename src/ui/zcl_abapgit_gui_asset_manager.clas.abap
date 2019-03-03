@@ -219,8 +219,13 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
     ENDCASE.
 
     IF lt_data IS NOT INITIAL.
-      CONCATENATE LINES OF lt_data INTO lv_str SEPARATED BY zif_abapgit_definitions=>c_newline.
-      rs_asset-content = zcl_abapgit_string_utils=>string_to_xstring( lv_str ).
+      IF rs_asset-type = 'text'. " TODO refactor
+        CONCATENATE LINES OF lt_data INTO lv_str SEPARATED BY zif_abapgit_definitions=>c_newline.
+        rs_asset-content = zcl_abapgit_string_utils=>string_to_xstring( lv_str ).
+      ELSE.
+        CONCATENATE LINES OF lt_data INTO lv_str.
+        rs_asset-content = zcl_abapgit_string_utils=>base64_to_xstring( lv_str ).
+      ENDIF.
     ELSE.
       rs_asset-content = get_mime_asset( lv_mime_name ).
     ENDIF.
