@@ -2,7 +2,6 @@ CLASS zcl_abapgit_branch_overview DEFINITION
   PUBLIC
   FINAL
   CREATE PRIVATE
-
   GLOBAL FRIENDS zcl_abapgit_factory .
 
   PUBLIC SECTION.
