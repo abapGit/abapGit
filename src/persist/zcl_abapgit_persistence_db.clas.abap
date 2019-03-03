@@ -65,13 +65,15 @@ CLASS zcl_abapgit_persistence_db DEFINITION
         !iv_data  TYPE zif_abapgit_persistence=>ty_content-data_str
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-DATA go_db TYPE REF TO zcl_abapgit_persistence_db .
-    DATA: mv_update_function TYPE funcname.
+    DATA mv_update_function TYPE funcname .
 
-    METHODS get_update_function RETURNING VALUE(rv_funcname) TYPE funcname.
-
+    METHODS get_update_function
+      RETURNING
+        VALUE(rv_funcname) TYPE funcname .
     METHODS validate_and_unprettify_xml
       IMPORTING
         !iv_xml       TYPE string

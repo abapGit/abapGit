@@ -16,7 +16,7 @@ CLASS zcl_abapgit_gui_page_merge DEFINITION
         zcx_abapgit_exception .
 
     METHODS zif_abapgit_gui_page~on_event
-        REDEFINITION.
+         REDEFINITION.
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
 
