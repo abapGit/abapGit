@@ -44,12 +44,6 @@ input:focus, textarea:focus {
   border: 1px solid #8cadd9;
 }
 
-/* overload style for icons */
-[class^="icon-"]:before, [class*=" icon-"]:before {
-  text-decoration: none !important;
-  margin-right: 0px !important;
-}
-
 /* COLOR PALETTE */
 .grey             { color: lightgrey  !important; }
 .grey70           { color: #b3b3b3    !important; }
@@ -80,7 +74,6 @@ input:focus, textarea:focus {
 .float-right      { float: right; }
 .pad-right        { padding-right: 6px; }
 .inline           { display: inline; }
-.large-icon       { font-size: 200%; }
 
 /* PANELS */
 div.panel {
@@ -148,7 +141,7 @@ div.log {
   border-radius: 4px;
 }
 div.log > span   { display:block; }
-div.log .octicon { padding-right: 6px; }
+div.log .icon { padding-right: 6px; }
 
 /* REPOSITORY */
 div.repo {
@@ -172,9 +165,8 @@ div.repo {
   font-size: 12pt;
   margin-left: 0.5em;
 }
-.repo_name img {
-  vertical-align: baseline;
-  margin: 0 5px 0 5px;
+.repo_name .icon {
+  padding-right: 4px;
 }
 .repo_attr {
   color: grey;
@@ -791,7 +783,7 @@ div.tutorial h2 {
 /* icons - text-align strictly left - otherwise look ugly
    + bite a bit of left padding for nicer look 
    + forbids item text wrapping (maybe can be done differently) */
-.nav-container ul ul li a .octicon {
+.nav-container ul ul li a .icon {
   padding-right: 10px;
   margin-left: -3px;
 }

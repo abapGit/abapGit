@@ -1,60 +1,51 @@
 @font-face {
-  font-family: 'ag-icons';
-  src: url('../font/ag-icons.woff') format('woff');
-  font-weight: normal;
-  font-style: normal;
+    font-family: "ag-icons";
+    font-weight: normal;
+    font-style: normal;
+    src: url("../font/ag-icons.woff") format("woff");
 }
- 
-[class^="icon-"]:before, [class*=" icon-"]:before {
-  font-family: "ag-icons";
-  font-style: normal;
-  font-weight: normal;
-  speak: none;
- 
-  display: inline-block;
-  text-decoration: inherit;
-  width: 1em;
-  margin-right: .2em;
-  text-align: center;
-  /* opacity: .8; */
- 
-  /* For safety - reset parent styles, that can break glyph codes*/
-  font-variant: normal;
-  text-transform: none;
- 
-  /* fix buttons height, for twitter bootstrap */
-  line-height: 1em;
- 
-  /* Animation center compensation - margins should be symmetric */
-  /* remove if not needed */
-  margin-left: .2em;
- 
-  /* you can be more comfortable with increased icons size */
-  /* font-size: 120%; */
- 
-  /* Font smoothing. That was taken from TWBS */
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
- 
-  /* Uncomment for 3D effect */
-  /* text-shadow: 1px 1px 1px rgba(127, 127, 127, 0.3); */
+
+.icon {
+    line-height: 1;
 }
- 
-.icon-attention:before { content: '\e800'; } /* '' */
-.icon-ok:before { content: '\e801'; } /* '' */
-.icon-folder:before { content: '\e802'; } /* '' */
-.icon-doc:before { content: '\e803'; } /* '' */
-.icon-flow-branch:before { content: '\e804'; } /* '' */
-.icon-lock:before { content: '\e805'; } /* '' */
-.icon-cog:before { content: '\e806'; } /* '' */
-.icon-star:before { content: '\e807'; } /* '' */
-.icon-error:before { content: '\e808'; } /* '' */
-.icon-briefcase:before { content: '\e809'; } /* '' */
-.icon-flash:before { content: '\e80a'; } /* '' */
-.icon-up-circled:before { content: '\f0aa'; } /* '' */
-.icon-menu:before { content: '\f0c9'; } /* '' */
-.icon-upload-cloud:before { content: '\f0ee'; } /* '' */
-.icon-box:before { content: '\f187'; } /* '' */
-.icon-file-image:before { content: '\f1c5'; } /* '' */
-.icon-file-code:before { content: '\f1c9'; } /* '' */
-.icon-plug:before { content: '\f1e6'; } /* '' */
+
+.icon:before {
+    font-family: ag-icons !important;
+    font-style: normal;
+    font-weight: normal !important;
+
+    display: inline-block;
+    text-decoration: none;
+    text-align: center;
+    vertical-align: text-top;
+    width: 1em;
+
+    /* For safety - reset parent styles, that can break glyph codes*/
+    font-variant: normal;
+    text-transform: none;
+}
+
+.icon.large { font-size: 200%; }
+
+.icon-arrow-circle-up:before { content: "\f101"; }
+.icon-bars:before { content: "\f102"; }
+.icon-bolt:before { content: "\f103"; }
+.icon-box:before { content: "\f104"; }
+.icon-briefcase:before { content: "\f105"; }
+.icon-check:before { content: "\f106"; }
+.icon-cloud-upload-alt:before { content: "\f107"; }
+.icon-code-branch:before { content: "\f108"; }
+.icon-cog:before { content: "\f109"; }
+.icon-exclamation-circle:before { content: "\f10a"; }
+.icon-exclamation-triangle:before { content: "\f10b"; }
+.icon-file-alt:before { content: "\f10c"; }
+.icon-file-code:before { content: "\f10d"; }
+.icon-file-image:before { content: "\f10e"; }
+.icon-file:before { content: "\f10f"; }
+.icon-fire-alt:before { content: "\f110"; }
+.icon-folder:before { content: "\f111"; }
+.icon-lock:before { content: "\f112"; }
+.icon-plug:before { content: "\f113"; }
+.icon-sliders-h:before { content: "\f114"; }
+.icon-snowflake:before { content: "\f115"; }
+.icon-star:before { content: "\f116"; }
