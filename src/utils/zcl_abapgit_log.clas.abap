@@ -58,7 +58,7 @@ CLASS zcl_abapgit_log DEFINITION
       RETURNING
         VALUE(rt_log_out) TYPE zcl_abapgit_log=>tty_log_out .
 
-    PRIVATE SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
