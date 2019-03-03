@@ -232,10 +232,10 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
     lv_xpixel = cl_gui_cfw=>compute_pixel_from_metric( x_or_y = 'X' in = 1 ).
     IF lv_xpixel >= 2.
-      lv_large_icon = ' large-icon'.
+      lv_large_icon = ' large'.
     ENDIF.
 
-    rv_str = |<i class="icon-{ lv_name }{ lv_large_icon }{ lv_color }{ lv_class }" { lv_hint }></i>|.
+    rv_str = |<i class="icon{ lv_large_icon } icon-{ lv_name }{ lv_color }{ lv_class }" { lv_hint }></i>|.
 
   ENDMETHOD.
 

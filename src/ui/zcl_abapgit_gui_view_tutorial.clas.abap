@@ -46,7 +46,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_TUTORIAL IMPLEMENTATION.
     ro_html->add( '<h2>Repository list and favorites</h2>' ).
     ro_html->add( '<p><ul>' ).
     ro_html->add( |<li>To choose a repo press {
-                  zcl_abapgit_html=>icon( 'menu/blue' ) } at the favorite bar.</li>| ).
+                  zcl_abapgit_html=>icon( 'bars/blue' ) } at the favorite bar.</li>| ).
     ro_html->add( |<li>To favorite a repo click {
                   zcl_abapgit_html=>icon( 'star/darkgrey' ) } icon at repo toolbar.</li>| ).
     ro_html->add( '</ul></p>' ).

@@ -195,10 +195,10 @@ CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
 
       IF lv_has_icons = abap_true.
         IF <ls_item>-chk = abap_true.
-          lv_icon  = zcl_abapgit_html=>icon( 'ok/blue' ).
+          lv_icon  = zcl_abapgit_html=>icon( 'check/blue' ).
           lv_check = ' data-check="X"'.
         ELSEIF <ls_item>-chk = abap_false.
-          lv_icon = zcl_abapgit_html=>icon( 'ok/grey' ).
+          lv_icon = zcl_abapgit_html=>icon( 'check/grey' ).
           lv_check = ' data-check=""'.
         ELSE. " abap_undefined -> not a check box
           lv_icon = zcl_abapgit_html=>icon( <ls_item>-ico ).

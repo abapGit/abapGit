@@ -296,7 +296,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
     IF is_item-inactive = abap_true.
       rv_inactive_html_code = zcl_abapgit_html=>icon(
-        iv_name  = 'flash/orange'
+        iv_name  = 'bolt/orange'
         iv_hint  = 'Object or object part is inactive'
         iv_class = 'inactive' ).
     ENDIF.
@@ -365,7 +365,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
       WHEN ''.
         rv_html = space. " no icon
       WHEN OTHERS.
-        rv_html = zcl_abapgit_html=>icon( 'doc/darkgrey' ).
+        rv_html = zcl_abapgit_html=>icon( 'file-alt/darkgrey' ).
     ENDCASE.
 
     IF is_item-is_dir = abap_true.

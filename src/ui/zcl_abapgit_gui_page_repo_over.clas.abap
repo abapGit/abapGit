@@ -454,7 +454,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       IF <ls_overview>-type = abap_true.
         lv_type_icon = 'plug/darkgrey'.
       ELSE.
-        lv_type_icon = 'upload-cloud/darkgrey'.
+        lv_type_icon = 'cloud-upload-alt/darkgrey'.
       ENDIF.
 
       IF <ls_overview>-favorite = abap_true.
