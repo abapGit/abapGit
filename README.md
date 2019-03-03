@@ -38,3 +38,7 @@ See [dotabap.org](http://dotabap.org)
 For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/larshp/abapGit/issues)
 
 ![abapgit](http://docs.abapgit.org/img/abapgit_1_73_0.png)
+
+## Credits and references
+
+Icons used in abapGit are created from [Font Awesome](https://fontawesome.com/) free icon set ([CC BY 4.0 License](https://fontawesome.com/license/free)).
