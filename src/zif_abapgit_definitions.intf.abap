@@ -24,7 +24,7 @@ INTERFACE zif_abapgit_definitions
            ty_file_signature WITH UNIQUE KEY path filename .
   TYPES:
     BEGIN OF ty_file.
-      INCLUDE TYPE ty_file_signature.
+          INCLUDE TYPE ty_file_signature.
   TYPES: data TYPE xstring,
          END OF ty_file .
   TYPES:
@@ -99,7 +99,7 @@ INTERFACE zif_abapgit_definitions
     ty_yes_no TYPE c LENGTH 1 .
   TYPES:
     BEGIN OF ty_overwrite.
-      INCLUDE TYPE ty_item.
+          INCLUDE TYPE ty_item.
   TYPES: decision TYPE ty_yes_no,
          END OF ty_overwrite .
   TYPES:
@@ -202,7 +202,7 @@ INTERFACE zif_abapgit_definitions
     ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY .
   TYPES:
     BEGIN OF ty_tpool.
-      INCLUDE TYPE textpool.
+          INCLUDE TYPE textpool.
   TYPES:   split TYPE c LENGTH 8.
   TYPES: END OF ty_tpool .
   TYPES:
@@ -430,16 +430,13 @@ INTERFACE zif_abapgit_definitions
       repo_syntax_check        TYPE string VALUE 'repo_syntax_check',
       repo_code_inspector      TYPE string VALUE 'repo_code_inspector',
       repo_open_in_master_lang TYPE string VALUE 'repo_open_in_master_lang',
-
       abapgit_home             TYPE string VALUE 'abapgit_home',
       abapgit_install          TYPE string VALUE 'abapgit_install',
-
       zip_import               TYPE string VALUE 'zip_import',
       zip_export               TYPE string VALUE 'zip_export',
       zip_package              TYPE string VALUE 'zip_package',
       zip_transport            TYPE string VALUE 'zip_transport',
       zip_object               TYPE string VALUE 'zip_object',
-
       git_pull                 TYPE string VALUE 'git_pull',
       git_reset                TYPE string VALUE 'git_reset',
       git_branch_create        TYPE string VALUE 'git_branch_create',
@@ -449,11 +446,9 @@ INTERFACE zif_abapgit_definitions
       git_tag_delete           TYPE string VALUE 'git_tag_delete',
       git_tag_switch           TYPE string VALUE 'git_tag_switch',
       git_commit               TYPE string VALUE 'git_commit',
-
       db_display               TYPE string VALUE 'db_display',
       db_edit                  TYPE string VALUE 'db_edit',
       bg_update                TYPE string VALUE 'bg_update',
-
       go_main                  TYPE string VALUE 'go_main',
       go_explore               TYPE string VALUE 'go_explore',
       go_repo_overview         TYPE string VALUE 'go_repo_overview',
@@ -470,11 +465,9 @@ INTERFACE zif_abapgit_definitions
       go_settings              TYPE string VALUE 'go_settings',
       go_tutorial              TYPE string VALUE 'go_tutorial',
       go_patch                 TYPE string VALUE 'go_patch',
-
       jump                     TYPE string VALUE 'jump',
       jump_pkg                 TYPE string VALUE 'jump_pkg',
       jump_transport           TYPE string VALUE 'jump_transport',
-
       url                      TYPE string VALUE 'url',
     END OF c_action .
   CONSTANTS c_tag_prefix TYPE string VALUE 'refs/tags/' ##NO_TEXT.
