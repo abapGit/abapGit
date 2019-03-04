@@ -661,7 +661,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       ENDTRY.
     ENDLOOP.
 
-* run deserialize for all step and it's obejcts
+* run deserialize for all step and it's objets
     SORT lt_steps BY order.
     LOOP AT lt_steps ASSIGNING <ls_step>.
       deserialize_objects( EXPORTING is_step = <ls_step>
@@ -725,8 +725,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       APPEND LINES OF <ls_obj>-obj->mo_files->get_accessed_files( ) TO ct_files.
     ENDLOOP.
 
-    zcl_abapgit_objects_activation=>activate( iv_ddic         = is_step-is_ddic
-                                              iv_syntax_check = is_step-syntax_check ).
+    zcl_abapgit_objects_activation=>activate( iv_ddic         = is_step-is_ddic ).
 
   ENDMETHOD.
 
@@ -779,22 +778,22 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_step>    TYPE LINE OF ty_step_data_tt.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
-    <ls_step>-id           = gc_step_id-abap.
-    <ls_step>-descr        = 'Early ABAP Elements'.
-    <ls_step>-is_ddic      = abap_false.
+    <ls_step>-id           = gc_step_id-ddic.
+    <ls_step>-descr        = 'Import DDIC objects'.
+    <ls_step>-is_ddic      = abap_true.
     <ls_step>-syntax_check = abap_false.
     <ls_step>-order        = 1.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
-    <ls_step>-id           = gc_step_id-ddic.
-    <ls_step>-descr        = 'Data Dictonary'.
-    <ls_step>-is_ddic      = abap_true.
+    <ls_step>-id           = gc_step_id-abap.
+    <ls_step>-descr        = 'Import objects main'.
+    <ls_step>-is_ddic      = abap_false.
     <ls_step>-syntax_check = abap_false.
     <ls_step>-order        = 2.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-id           = gc_step_id-late.
-    <ls_step>-descr        = 'Late ABAP Elements'.
+    <ls_step>-descr        = 'Import late objects'.
     <ls_step>-is_ddic      = abap_false.
     <ls_step>-syntax_check = abap_true.
     <ls_step>-order        = 3.
