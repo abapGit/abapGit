@@ -70,18 +70,14 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
     DO lv_len TIMES.
 
       IF sy-index = 1.
-
         "Intialize
-        CASE lv_bitbyte+lv_offset(1).
-          WHEN '1'.
-            rv_int = 1.
-        ENDCASE.
-
+        IF lv_bitbyte+lv_offset(1) = '1'.
+          rv_int = 1.
+        ENDIF.
       ELSE.
-        CASE lv_bitbyte+lv_offset(1).
-          WHEN '1'.
-            rv_int = rv_int + ( 2 ** ( sy-index - 1 ) ).
-        ENDCASE.
+        IF lv_bitbyte+lv_offset(1) = '1'.
+          rv_int = rv_int + ( 2 ** ( sy-index - 1 ) ).
+        ENDIF.
       ENDIF.
 
       lv_offset = lv_offset - 1. "Move Cursor

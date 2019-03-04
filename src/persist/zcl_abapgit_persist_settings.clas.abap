@@ -15,6 +15,7 @@ CLASS zcl_abapgit_persist_settings DEFINITION
     CLASS-METHODS get_instance
       RETURNING
         VALUE(ro_settings) TYPE REF TO zcl_abapgit_persist_settings .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     DATA mo_settings TYPE REF TO zcl_abapgit_settings .
@@ -23,7 +24,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_persist_settings IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_PERSIST_SETTINGS IMPLEMENTATION.
 
 
   METHOD get_instance.

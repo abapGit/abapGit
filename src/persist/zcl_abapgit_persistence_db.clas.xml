@@ -12,14 +12,6 @@
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
    </VSEOCLASS>
-   <DESCRIPTIONS>
-    <SEOCOMPOTX>
-     <CLSNAME>ZCL_ABAPGIT_PERSISTENCE_DB</CLSNAME>
-     <CMPNAME>GO_DB</CMPNAME>
-     <LANGU>E</LANGU>
-     <DESCRIPT>Database persistence</DESCRIPT>
-    </SEOCOMPOTX>
-   </DESCRIPTIONS>
   </asx:values>
  </asx:abap>
 </abapGit>

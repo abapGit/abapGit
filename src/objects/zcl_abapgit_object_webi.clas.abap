@@ -193,7 +193,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    IF  mi_vi->has_soap_extension_virtinfc( sews_c_vif_version-inactive ) = abap_true.
+    IF mi_vi->has_soap_extension_virtinfc( sews_c_vif_version-inactive ) = abap_true.
       li_soap = mi_vi->get_soap_extension_virtinfc( sews_c_vif_version-inactive ).
     ELSE.
       li_soap = mi_vi->create_soap_extension_virtinfc( ls_soap-soap_appl_uri ).

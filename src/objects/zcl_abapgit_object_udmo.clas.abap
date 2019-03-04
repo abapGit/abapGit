@@ -19,14 +19,15 @@ CLASS zcl_abapgit_object_udmo DEFINITION
   PRIVATE SECTION.
 
     TYPES:
-      " You are reminded that the text serialisation / de-serialisation methods depend upon a common type.
-      " To make the dependency explicit, there is one common definition.
+        " You are reminded that the text serialisation / de-serialisation methods depend upon a common type.
+        " To make the dependency explicit, there is one common definition.
       BEGIN OF ty_udmo_text_type.
     TYPES sprache TYPE dm40t-sprache.
     TYPES dmoid TYPE dm40t-dmoid.
     TYPES langbez TYPE dm40t-langbez.
     TYPES as4local TYPE dm40t-as4local.
     TYPES END OF ty_udmo_text_type .
+
     DATA mv_data_model TYPE uddmodl .
     DATA mv_text_object TYPE doku_obj .
     DATA mv_lxe_text_name TYPE lxeobjname .
