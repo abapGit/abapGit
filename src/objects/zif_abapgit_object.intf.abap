@@ -13,7 +13,7 @@ INTERFACE zif_abapgit_object
     IMPORTING
       !iv_package TYPE devclass
       !io_xml     TYPE REF TO zcl_abapgit_xml_input
-      !iv_step    TYPE string
+      !iv_step    TYPE zcl_abapgit_objects=>ty_deserialization_step
     RAISING
       zcx_abapgit_exception .
   METHODS delete
