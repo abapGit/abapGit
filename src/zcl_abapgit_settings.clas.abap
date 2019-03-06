@@ -111,12 +111,6 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
           VALUE(rt_hotkeys) TYPE zif_abapgit_definitions=>tty_hotkey
         RAISING
           zcx_abapgit_exception,
-      set_octicons_disabled
-        IMPORTING
-          iv_octions_disabled TYPE abap_bool,
-      get_octicons_disabled
-        RETURNING
-          VALUE(rv_octions_disabled) TYPE abap_bool,
       set_parallel_proc_disabled
         IMPORTING
           iv_disable_parallel_proc TYPE abap_bool,
@@ -389,13 +383,6 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD get_octicons_disabled.
-    rv_octions_disabled = ms_user_settings-octicons_disabled.
-  ENDMETHOD.
-
-  METHOD set_octicons_disabled.
-    ms_user_settings-octicons_disabled = iv_octions_disabled.
-  ENDMETHOD.
 
   METHOD set_parallel_proc_disabled.
     ms_user_settings-parallel_proc_disabled = iv_disable_parallel_proc.

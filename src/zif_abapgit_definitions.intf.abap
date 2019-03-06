@@ -336,7 +336,6 @@ INTERFACE zif_abapgit_definitions
       link_hint_key              TYPE char01,
       link_hint_background_color TYPE string,
       hotkeys                    TYPE tty_hotkey,
-      octicons_disabled          TYPE abap_bool,
       parallel_proc_disabled     TYPE abap_bool,
     END OF ty_s_user_settings .
   TYPES:
