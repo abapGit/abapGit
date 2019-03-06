@@ -202,13 +202,30 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
         rs_asset-subtype = 'javascript'.
         lv_mime_name     = 'ZABAPGIT_JS_COMMON'.
         " @@abapmerge include zabapgit_js_common.w3mi.data.js > _inline '$$'.
+      WHEN 'css/ag-icons.css'.
+        rs_asset-url     = iv_asset_url.
+        rs_asset-type    = 'text'.
+        rs_asset-subtype = 'css'.
+        lv_mime_name     = 'ZABAPGIT_ICON_FONT_CSS'.
+        " @@abapmerge include zabapgit_icon_font_css.w3mi.data.css > _inline '$$'.
+      WHEN 'font/ag-icons.woff'.
+        rs_asset-url     = iv_asset_url.
+        rs_asset-type    = 'font'.
+        rs_asset-subtype = 'woff'.
+        lv_mime_name     = 'ZABAPGIT_ICON_FONT'.
+        " @@abapmerge include-base64 zabapgit_icon_font.w3mi.data.woff > _inline '$$'.
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( |No inline resource: { iv_asset_url }| ).
     ENDCASE.
 
     IF lt_data IS NOT INITIAL.
-      CONCATENATE LINES OF lt_data INTO lv_str SEPARATED BY zif_abapgit_definitions=>c_newline.
-      rs_asset-content = zcl_abapgit_string_utils=>string_to_xstring( lv_str ).
+      IF rs_asset-type = 'text'. " TODO refactor
+        CONCATENATE LINES OF lt_data INTO lv_str SEPARATED BY zif_abapgit_definitions=>c_newline.
+        rs_asset-content = zcl_abapgit_string_utils=>string_to_xstring( lv_str ).
+      ELSE.
+        CONCATENATE LINES OF lt_data INTO lv_str.
+        rs_asset-content = zcl_abapgit_string_utils=>base64_to_xstring( lv_str ).
+      ENDIF.
     ELSE.
       rs_asset-content = get_mime_asset( lv_mime_name ).
     ENDIF.
@@ -229,6 +246,10 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
     ls_asset = get_textlike_asset( 'css/common.css' ).
     APPEND ls_asset TO rt_assets.
     ls_asset = get_textlike_asset( 'js/common.js' ).
+    APPEND ls_asset TO rt_assets.
+    ls_asset = get_textlike_asset( 'css/ag-icons.css' ).
+    APPEND ls_asset TO rt_assets.
+    ls_asset = get_textlike_asset( 'font/ag-icons.woff' ).
     APPEND ls_asset TO rt_assets.
 
     lt_assets = get_inline_images( ).

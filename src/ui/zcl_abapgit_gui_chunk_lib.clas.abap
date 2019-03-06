@@ -102,7 +102,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
     ro_html->add( |<span class="{ lv_class }">| ).
-    ro_html->add_icon( iv_name = 'git-branch/darkgrey' iv_hint = 'Current branch' ).
+    ro_html->add_icon( iv_name = 'code-branch/grey70' iv_hint = 'Current branch' ).
     IF iv_interactive = abap_true.
       ro_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ io_repo->get_key( ) }|
                       iv_txt = lv_text ).
@@ -147,7 +147,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ENDIF.
 
     ro_html->add( '<div class="dummydiv error">' ).
-    ro_html->add( |{ zcl_abapgit_html=>icon( 'alert/red' ) } Error: { lv_error }| ).
+    ro_html->add( |{ zcl_abapgit_html=>icon( 'exclamation-circle/red' ) } Error: { lv_error }| ).
     ro_html->add( '</div>' ).
 
   ENDMETHOD.
@@ -239,7 +239,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     IF iv_hint IS NOT INITIAL.
       ro_html->add( '<div class="info-hint">'
-        && zcl_abapgit_html=>icon( iv_name = 'alert' iv_class = 'pad-right' )
+        && zcl_abapgit_html=>icon( iv_name = 'exclamation-triangle' iv_class = 'pad-right' )
         && iv_hint
         && '</div>' ).
     ENDIF.
@@ -297,7 +297,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
   METHOD render_js_error_banner.
     CREATE OBJECT ro_html.
     ro_html->add( '<div id="js-error-banner" class="dummydiv error">' ).
-    ro_html->add( |{ zcl_abapgit_html=>icon( 'alert/red' ) }| &&
+    ro_html->add( |{ zcl_abapgit_html=>icon( 'exclamation-triangle/red' ) }| &&
                   ' If this does not disappear soon,' &&
                   ' then there is a JS init error, please log an issue' ).
     ro_html->add( '</div>' ).
@@ -366,7 +366,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       lv_icon = 'plug/darkgrey' ##NO_TEXT.
       lv_hint = 'Offline repository' ##NO_TEXT.
     ELSE.
-      lv_icon = 'cloud-upload/blue' ##NO_TEXT.
+      lv_icon = 'cloud-upload-alt/blue' ##NO_TEXT.
       lv_hint = 'On-line repository' ##NO_TEXT.
     ENDIF.
 
@@ -390,9 +390,9 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     " News
     IF io_news IS BOUND AND io_news->has_news( ) = abap_true.
       IF io_news->has_updates( ) = abap_true.
-        lv_icon = 'arrow-up/warning'.
+        lv_icon = 'arrow-circle-up/warning'.
       ELSE.
-        lv_icon = 'arrow-up/grey80'.
+        lv_icon = 'arrow-circle-up/grey80'.
       ENDIF.
       ro_html->add_a( iv_act = |toggleDisplay('news')|
                       iv_typ = zif_abapgit_definitions=>c_action_type-onclick
@@ -422,7 +422,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     " Write protect
     IF io_repo->get_local_settings( )-write_protected = abap_true.
-      ro_html->add_icon( iv_name = 'lock/darkgrey' iv_hint = 'Locked from pulls' ).
+      ro_html->add_icon( iv_name = 'lock/grey70' iv_hint = 'Locked from pulls' ).
     ENDIF.
 
     " Branch
@@ -443,7 +443,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     " Package
     IF iv_show_package = abap_true.
-      ro_html->add_icon( iv_name = 'package/darkgrey' iv_hint = 'SAP package' ).
+      ro_html->add_icon( iv_name = 'box/grey70' iv_hint = 'SAP package' ).
       ro_html->add( '<span>' ).
       ro_html->add_a( iv_txt = io_repo->get_package( )
                       iv_act = |{ zif_abapgit_definitions=>c_action-jump_pkg }?{ io_repo->get_package( ) }| ).

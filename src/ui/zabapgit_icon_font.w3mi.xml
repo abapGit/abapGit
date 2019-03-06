@@ -2,26 +2,26 @@
 <abapGit version="v1.0.0" serializer="LCL_OBJECT_W3MI" serializer_version="v2.0.0">
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
-   <NAME>ZABAPGIT_CSS_COMMON</NAME>
-   <TEXT>Abapgit common CSS</TEXT>
+   <NAME>ZABAPGIT_ICON_FONT</NAME>
+   <TEXT>Icon set for abapgit</TEXT>
    <PARAMS>
     <WWWPARAMS>
      <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_CSS_COMMON</OBJID>
+     <OBJID>ZABAPGIT_ICON_FONT</OBJID>
      <NAME>fileextension</NAME>
-     <VALUE>.css</VALUE>
+     <VALUE>.woff</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
      <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_CSS_COMMON</OBJID>
+     <OBJID>ZABAPGIT_ICON_FONT</OBJID>
      <NAME>filename</NAME>
-     <VALUE>common.css</VALUE>
+     <VALUE>ag-icons.woff</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
      <RELID>MI</RELID>
-     <OBJID>ZABAPGIT_CSS_COMMON</OBJID>
+     <OBJID>ZABAPGIT_ICON_FONT</OBJID>
      <NAME>mimetype</NAME>
-     <VALUE>text/plain</VALUE>
+     <VALUE>font/woff</VALUE>
     </WWWPARAMS>
    </PARAMS>
   </asx:values>

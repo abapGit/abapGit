@@ -37,6 +37,7 @@ CLASS zcl_abapgit_html_toolbar DEFINITION
         RETURNING
           VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_item,
@@ -68,7 +69,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
 
 
   METHOD add.

@@ -57,11 +57,13 @@ CLASS zcl_abapgit_log DEFINITION
     METHODS prepare_log_for_display
       RETURNING
         VALUE(rt_log_out) TYPE zcl_abapgit_log=>tty_log_out .
+
+  PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_log IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
 
 
   METHOD add.
@@ -216,13 +218,13 @@ CLASS zcl_abapgit_log IMPLEMENTATION.
     LOOP AT mt_log ASSIGNING <ls_log>.
       CASE <ls_log>-type.
         WHEN 'W'.
-          lv_icon  = 'alert'.
+          lv_icon  = 'attention'.
           lv_class = 'warning'.
         WHEN 'E'.
-          lv_icon  = 'flame'.
+          lv_icon  = 'error'.
           lv_class = 'error'.
         WHEN OTHERS. " ??? unexpected
-          lv_icon  = 'flame'.
+          lv_icon  = 'error'.
           lv_class = 'error'.
       ENDCASE.
 

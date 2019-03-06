@@ -50,6 +50,7 @@ CLASS zcl_abapgit_html DEFINITION
         !iv_class     TYPE string OPTIONAL
       RETURNING
         VALUE(rv_str) TYPE string .
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-DATA: go_single_tags_re TYPE REF TO cl_abap_regex.
 
@@ -90,7 +91,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_html IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
 
   METHOD a.
@@ -214,7 +215,7 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
           lv_name          TYPE string,
           lv_color         TYPE string,
           lv_class         TYPE string,
-          lv_octicon_class TYPE string,
+          lv_large_icon    TYPE string,
           lv_xpixel        TYPE i.
 
     SPLIT iv_name AT '/' INTO lv_name lv_color.
@@ -231,12 +232,10 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
 
     lv_xpixel = cl_gui_cfw=>compute_pixel_from_metric( x_or_y = 'X' in = 1 ).
     IF lv_xpixel >= 2.
-      lv_octicon_class = 'mega-octicon'.
-    ELSE.
-      lv_octicon_class = 'octicon'.
+      lv_large_icon = ' large'.
     ENDIF.
 
-    rv_str = |<i class="{ lv_octicon_class } octicon-{ lv_name }{ lv_color }{ lv_class }" { lv_hint }></i>|.
+    rv_str = |<i class="icon{ lv_large_icon } icon-{ lv_name }{ lv_color }{ lv_class }" { lv_hint }></i>|.
 
   ENDMETHOD.
 
