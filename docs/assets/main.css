@@ -2,6 +2,27 @@ body {
   font-family: Arial,Helvetica,sans-serif;
   background:  #F8F8F8;
   margin: auto;
+  font-size: 12pt;
+}
+
+div.highlight {
+  margin: 0em 1em;
+  padding: 0em 1em;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+  background-color: rgba(255, 255, 255, 0.7);
+}
+
+pre.highlight {
+  background-color: transparent;
+}
+
+:not(.highlight) > code {
+    background-color: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(0, 0, 0, 0.07);
+    border-radius: 3px;
+    padding-left: 0.3em;
+    padding-right: 0.3em;
 }
 
 a, a:visited {
