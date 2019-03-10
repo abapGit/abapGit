@@ -23,10 +23,11 @@ CLASS zcl_abapgit_objects DEFINITION
 
     CLASS-METHODS serialize
       IMPORTING
-        !is_item                 TYPE zif_abapgit_definitions=>ty_item
-        !iv_language             TYPE spras
+        !is_item                     TYPE zif_abapgit_definitions=>ty_item
+        !iv_language                 TYPE spras
+        iv_force_old_serializer_clas TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rs_files_and_item) TYPE zcl_abapgit_objects=>ty_serialization
+        VALUE(rs_files_and_item)     TYPE zcl_abapgit_objects=>ty_serialization
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS deserialize
@@ -188,12 +189,13 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception.
     CLASS-METHODS create_object
       IMPORTING
-        is_item        TYPE zif_abapgit_definitions=>ty_item
-        iv_language    TYPE spras
-        is_metadata    TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
-        iv_native_only TYPE abap_bool DEFAULT abap_false
+        is_item                      TYPE zif_abapgit_definitions=>ty_item
+        iv_language                  TYPE spras
+        is_metadata                  TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
+        iv_native_only               TYPE abap_bool DEFAULT abap_false
+        iv_force_old_serializer_clas TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ri_obj)  TYPE REF TO zif_abapgit_object
+        VALUE(ri_obj)                TYPE REF TO zif_abapgit_object
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS map_tadir_to_items
@@ -221,7 +223,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD adjust_namespaces.
@@ -406,10 +408,18 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     REPLACE FIRST OCCURRENCE OF 'LCL' IN lv_class_name WITH 'ZCL_ABAPGIT'.
 
     TRY.
-        CREATE OBJECT ri_obj TYPE (lv_class_name)
-          EXPORTING
-            is_item     = is_item
-            iv_language = iv_language.
+        IF lv_class_name = 'ZCL_ABAPGIT_OBJECT_CLAS'.
+          CREATE OBJECT ri_obj TYPE zcl_abapgit_object_clas
+            EXPORTING
+              is_item                 = is_item
+              iv_language             = iv_language
+              iv_force_old_serializer = iv_force_old_serializer_clas.
+        ELSE.
+          CREATE OBJECT ri_obj TYPE (lv_class_name)
+            EXPORTING
+              is_item     = is_item
+              iv_language = iv_language.
+        ENDIF.
       CATCH cx_sy_create_object_error.
         lv_message = |Object type { is_item-obj_type } not supported, serialize|. "#EC NOTEXT
         IF iv_native_only = abap_false.
@@ -906,8 +916,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       EXPORTING
         is_item = rs_files_and_item-item.
 
-    li_obj = create_object( is_item     = rs_files_and_item-item
-                            iv_language = iv_language ).
+    li_obj = create_object( is_item                      = rs_files_and_item-item
+                            iv_language                  = iv_language
+                            iv_force_old_serializer_clas = iv_force_old_serializer_clas ).
     li_obj->mo_files = lo_files.
     CREATE OBJECT lo_xml.
     li_obj->serialize( lo_xml ).

@@ -33,6 +33,12 @@
        <PARAMETER>IV_PATH</PARAMETER>
        <TYP>STRING</TYP>
       </RSIMP>
+      <RSIMP>
+       <PARAMETER>IV_FORCE_OLD_SERIALIZER_CLAS</PARAMETER>
+       <DEFAULT>ABAP_FALSE</DEFAULT>
+       <OPTIONAL>X</OPTIONAL>
+       <TYP>XFELD</TYP>
+      </RSIMP>
      </IMPORT>
      <EXPORT>
       <RSEXP>
@@ -80,19 +86,24 @@
        <INDEX> 005</INDEX>
       </RSFDO>
       <RSFDO>
-       <PARAMETER>EV_RESULT</PARAMETER>
+       <PARAMETER>IV_FORCE_OLD_SERIALIZER_CLAS</PARAMETER>
        <KIND>P</KIND>
        <INDEX> 006</INDEX>
       </RSFDO>
       <RSFDO>
-       <PARAMETER>EV_PATH</PARAMETER>
+       <PARAMETER>EV_RESULT</PARAMETER>
        <KIND>P</KIND>
        <INDEX> 007</INDEX>
       </RSFDO>
       <RSFDO>
+       <PARAMETER>EV_PATH</PARAMETER>
+       <KIND>P</KIND>
+       <INDEX> 008</INDEX>
+      </RSFDO>
+      <RSFDO>
        <PARAMETER>ERROR</PARAMETER>
        <KIND>X</KIND>
-       <INDEX> 008</INDEX>
+       <INDEX> 009</INDEX>
       </RSFDO>
      </DOCUMENTATION>
     </item>

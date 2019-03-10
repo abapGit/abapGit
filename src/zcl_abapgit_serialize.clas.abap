@@ -10,12 +10,13 @@ CLASS zcl_abapgit_serialize DEFINITION
         !p_task TYPE clike .
     METHODS serialize
       IMPORTING
-        !it_tadir            TYPE zif_abapgit_definitions=>ty_tadir_tt
-        !iv_language         TYPE langu DEFAULT sy-langu
-        !io_log              TYPE REF TO zcl_abapgit_log OPTIONAL
-        !iv_force_sequential TYPE abap_bool DEFAULT abap_false
+        !it_tadir                    TYPE zif_abapgit_definitions=>ty_tadir_tt
+        !iv_language                 TYPE langu DEFAULT sy-langu
+        !io_log                      TYPE REF TO zcl_abapgit_log OPTIONAL
+        !iv_force_sequential         TYPE abap_bool DEFAULT abap_false
+        iv_force_old_serializer_clas TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rt_files)      TYPE zif_abapgit_definitions=>ty_files_item_tt
+        VALUE(rt_files)              TYPE zif_abapgit_definitions=>ty_files_item_tt
       RAISING
         zcx_abapgit_exception .
 
@@ -32,16 +33,18 @@ CLASS zcl_abapgit_serialize DEFINITION
         !is_fils_item TYPE zcl_abapgit_objects=>ty_serialization .
     METHODS run_parallel
       IMPORTING
-        !iv_group    TYPE rzlli_apcl
-        !is_tadir    TYPE zif_abapgit_definitions=>ty_tadir
-        !iv_language TYPE langu
-        !iv_task     TYPE sychar32
+        !iv_group                    TYPE rzlli_apcl
+        !is_tadir                    TYPE zif_abapgit_definitions=>ty_tadir
+        !iv_language                 TYPE langu
+        !iv_task                     TYPE sychar32
+        iv_force_old_serializer_clas TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
     METHODS run_sequential
       IMPORTING
-        !is_tadir    TYPE zif_abapgit_definitions=>ty_tadir
-        !iv_language TYPE langu
+        !is_tadir                    TYPE zif_abapgit_definitions=>ty_tadir
+        !iv_language                 TYPE langu
+        iv_force_old_serializer_clas TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
     METHODS determine_max_threads
@@ -210,16 +213,17 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
         DESTINATION IN GROUP iv_group
         CALLING on_end_of_task ON END OF TASK
         EXPORTING
-          iv_obj_type           = is_tadir-object
-          iv_obj_name           = is_tadir-obj_name
-          iv_devclass           = is_tadir-devclass
-          iv_language           = iv_language
-          iv_path               = is_tadir-path
+          iv_obj_type                  = is_tadir-object
+          iv_obj_name                  = is_tadir-obj_name
+          iv_devclass                  = is_tadir-devclass
+          iv_language                  = iv_language
+          iv_path                      = is_tadir-path
+          iv_force_old_serializer_clas = iv_force_old_serializer_clas
         EXCEPTIONS
-          system_failure        = 1 MESSAGE lv_msg
-          communication_failure = 2 MESSAGE lv_msg
-          resource_failure      = 3
-          OTHERS                = 4.
+          system_failure               = 1 MESSAGE lv_msg
+          communication_failure        = 2 MESSAGE lv_msg
+          resource_failure             = 3
+          OTHERS                       = 4.
       IF sy-subrc = 3.
         lv_free = mv_free.
         WAIT UNTIL mv_free <> lv_free UP TO 1 SECONDS.
@@ -247,8 +251,9 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     TRY.
         ls_fils_item = zcl_abapgit_objects=>serialize(
-          is_item     = ls_fils_item-item
-          iv_language = iv_language ).
+          is_item                      = ls_fils_item-item
+          iv_language                  = iv_language
+          iv_force_old_serializer_clas = iv_force_old_serializer_clas ).
 
         add_to_return( is_fils_item = ls_fils_item
                        iv_path      = is_tadir-path ).
@@ -285,8 +290,9 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
       IF lv_max = 1.
         run_sequential(
-          is_tadir    = <ls_tadir>
-          iv_language = iv_language ).
+          is_tadir                     = <ls_tadir>
+          iv_language                  = iv_language
+          iv_force_old_serializer_clas = iv_force_old_serializer_clas ).
       ELSE.
         run_parallel(
           iv_group    = 'parallel_generators'    " todo

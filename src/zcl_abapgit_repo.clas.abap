@@ -164,7 +164,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -357,9 +357,10 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     CREATE OBJECT lo_serialize.
 
     lt_found = lo_serialize->serialize(
-      it_tadir    = lt_tadir
-      iv_language = get_dot_abapgit( )->get_master_language( )
-      io_log      = io_log ).
+      it_tadir                     = lt_tadir
+      iv_language                  = get_dot_abapgit( )->get_master_language( )
+      io_log                       = io_log
+      iv_force_old_serializer_clas = get_dot_abapgit( )->get_force_method_order( ) ).
     APPEND LINES OF lt_found TO rt_files.
 
     mt_local                 = rt_files.

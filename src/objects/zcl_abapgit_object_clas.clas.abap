@@ -5,8 +5,9 @@ CLASS zcl_abapgit_object_clas DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
     METHODS: constructor
       IMPORTING
-        is_item     TYPE zif_abapgit_definitions=>ty_item
-        iv_language TYPE spras.
+        is_item                 TYPE zif_abapgit_definitions=>ty_item
+        iv_language             TYPE spras
+        iv_force_old_serializer TYPE abap_bool DEFAULT abap_false.
 
   PROTECTED SECTION.
     DATA: mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc,
@@ -35,16 +36,19 @@ CLASS zcl_abapgit_object_clas DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       is_class_locked
         RETURNING VALUE(rv_is_class_locked) TYPE abap_bool
         RAISING   zcx_abapgit_exception.
+    DATA:
+      mv_force_old_serializer TYPE abap_bool.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
+CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
 
   METHOD constructor.
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
+    mv_force_old_serializer = iv_force_old_serializer.
 
     CREATE OBJECT mi_object_oriented_object_fct TYPE zcl_abapgit_oo_class.
   ENDMETHOD.
@@ -401,7 +405,9 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
         version = seoc_version_inactive
         force   = seox_true.
 
-    lt_source = mi_object_oriented_object_fct->serialize_abap( ls_class_key ).
+    lt_source = mi_object_oriented_object_fct->serialize_abap(
+      is_class_key            = ls_class_key
+      iv_force_old_serializer = mv_force_old_serializer ).
 
     mo_files->add_abap( lt_source ).
 

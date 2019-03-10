@@ -1,4 +1,4 @@
-FUNCTION z_abapgit_serialize_parallel.
+FUNCTION Z_ABAPGIT_SERIALIZE_PARALLEL.
 *"----------------------------------------------------------------------
 *"*"Local Interface:
 *"  IMPORTING
@@ -7,13 +7,14 @@ FUNCTION z_abapgit_serialize_parallel.
 *"     VALUE(IV_DEVCLASS) TYPE  TADIR-DEVCLASS
 *"     VALUE(IV_LANGUAGE) TYPE  SY-LANGU
 *"     VALUE(IV_PATH) TYPE  STRING
+*"     VALUE(IV_FORCE_OLD_SERIALIZER_CLAS) TYPE  XFELD DEFAULT
+*"       ABAP_FALSE
 *"  EXPORTING
 *"     VALUE(EV_RESULT) TYPE  XSTRING
 *"     VALUE(EV_PATH) TYPE  STRING
 *"  EXCEPTIONS
 *"      ERROR
 *"----------------------------------------------------------------------
-
   DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item,
         lx_error TYPE REF TO zcx_abapgit_exception,
         lv_text  TYPE c LENGTH 200,

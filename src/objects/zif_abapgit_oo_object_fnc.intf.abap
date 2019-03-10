@@ -75,10 +75,11 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
         VALUE(rv_exists) TYPE abap_bool,
     serialize_abap
       IMPORTING
-        is_class_key     TYPE seoclskey
-        iv_type          TYPE seop_include_ext_app OPTIONAL
+        is_class_key            TYPE seoclskey
+        iv_type                 TYPE seop_include_ext_app OPTIONAL
+        iv_force_old_serializer TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
+        VALUE(rt_source)        TYPE zif_abapgit_definitions=>ty_string_tt
       RAISING
         zcx_abapgit_exception
         cx_sy_dyn_call_error,

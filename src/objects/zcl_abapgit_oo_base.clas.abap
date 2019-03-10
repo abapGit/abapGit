@@ -22,10 +22,6 @@ CLASS zcl_abapgit_oo_base DEFINITION PUBLIC ABSTRACT.
                 it_source TYPE zif_abapgit_definitions=>ty_string_tt
       RAISING   zcx_abapgit_exception
                 cx_sy_dyn_call_error.
-
-    METHODS get_force_method_order
-      IMPORTING iv_clsname                   TYPE seoclsname
-      RETURNING VALUE(rv_force_method_order) TYPE abap_bool.
 ENDCLASS.
 
 
@@ -310,7 +306,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
       WHEN OTHERS.
         rt_source = lo_oo_serializer->serialize_abap_clif_source(
           is_class_key            = is_class_key
-          iv_force_old_serializer = get_force_method_order( is_class_key-clsname ) ).
+          iv_force_old_serializer = iv_force_old_serializer ).
     ENDCASE.
   ENDMETHOD.
 
@@ -318,36 +314,5 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
   METHOD zif_abapgit_oo_object_fnc~update_descriptions.
     DELETE FROM seocompotx WHERE clsname = is_key-clsname. "#EC CI_SUBRC
     INSERT seocompotx FROM TABLE it_descriptions.         "#EC CI_SUBRC
-  ENDMETHOD.
-
-  METHOD get_force_method_order.
-    DATA: lv_object_package TYPE devclass,
-          lt_packages       TYPE zif_abapgit_sap_package=>ty_devclass_tt,
-          lv_obj_name       TYPE sobj_name,
-          lo_repo           TYPE REF TO zcl_abapgit_repo.
-
-    lv_obj_name = iv_clsname.
-    rv_force_method_order = abap_false.
-    ##TODO.
-    " get_repo_by_object or get_repo_by_package would be nice...
-    TRY.
-        lv_object_package = zcl_abapgit_factory=>get_tadir( )->get_object_package(
-          iv_object   = 'CLAS'
-          iv_obj_name = lv_obj_name ).
-        IF lv_object_package IS INITIAL.
-          RETURN. " This will happen for INTF
-        ENDIF.
-        lt_packages = zcl_abapgit_factory=>get_sap_package( lv_object_package )->list_superpackages( ).
-        LOOP AT zcl_abapgit_repo_srv=>get_instance( )->list( ) INTO lo_repo.
-          LOOP AT lt_packages TRANSPORTING NO FIELDS WHERE table_line = lo_repo->get_package( ).
-            EXIT.
-          ENDLOOP.
-          IF sy-subrc = 0.
-            rv_force_method_order = lo_repo->get_dot_abapgit( )->get_force_method_order( ).
-            RETURN.
-          ENDIF.
-        ENDLOOP.
-      CATCH zcx_abapgit_exception ##NO_HANDLER.
-    ENDTRY.
   ENDMETHOD.
 ENDCLASS.
