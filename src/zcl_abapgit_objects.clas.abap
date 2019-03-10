@@ -27,7 +27,7 @@ CLASS zcl_abapgit_objects DEFINITION
                                             WITH DEFAULT KEY .
     TYPES:
       BEGIN OF ty_step_data,
-        id           TYPE string,
+        step_id      TYPE ty_deserialization_step,
         order        TYPE i,
         descr        TYPE string,
         is_ddic      TYPE abap_bool,
@@ -36,7 +36,7 @@ CLASS zcl_abapgit_objects DEFINITION
       END OF ty_step_data.
     TYPES:
       ty_step_data_tt TYPE STANDARD TABLE OF ty_step_data
-                                WITH DEFAULT KEY .
+                                WITH DEFAULT KEY.
     CONSTANTS:
       BEGIN OF gc_step_id,
         abap TYPE ty_deserialization_step VALUE `ABAP`,
@@ -622,11 +622,10 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           lt_steps_id = li_obj->get_deserialize_steps( ).
 
           LOOP AT lt_steps_id ASSIGNING <lv_step_id>.
-            READ TABLE lt_steps WITH KEY id = <lv_step_id> ASSIGNING <ls_step>.
-            IF sy-subrc <> 0.
-              zcx_abapgit_exception=>raise( |Step { <lv_step_id> } is not defined| ).
-            ELSEIF <ls_step>-is_ddic = abap_true AND li_obj->get_metadata( )-ddic = abap_false.
-              " DDIC only for DDIC obejcts
+            READ TABLE lt_steps WITH KEY step_id = <lv_step_id> ASSIGNING <ls_step>.
+            ASSERT sy-subrc = 0.
+            IF <ls_step>-is_ddic = abap_true AND li_obj->get_metadata( )-ddic = abap_false.
+              " DDIC only for DDIC objects
               zcx_abapgit_exception=>raise( |Step { <lv_step_id> } is only for DDIC objects| ).
             ENDIF.
             APPEND INITIAL LINE TO <ls_step>-objects ASSIGNING <ls_deser>.
@@ -635,23 +634,18 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
             <ls_deser>-xml     = lo_xml.
             <ls_deser>-package = lv_package.
           ENDLOOP.
+
         CATCH cx_sy_dyn_call_illegal_method.
           " Fallback (can be removed if all objects implement the new IF method get_deserialize_steps)
           IF li_obj->get_metadata( )-late_deser = abap_true.
-            READ TABLE lt_steps WITH KEY id = gc_step_id-late ASSIGNING <ls_step>.
-            IF sy-subrc <> 0.
-              zcx_abapgit_exception=>raise( |Step { gc_step_id-late } is not defined| ).
-            ENDIF.
+            READ TABLE lt_steps WITH KEY step_id = gc_step_id-late ASSIGNING <ls_step>.
+            ASSERT sy-subrc = 0.
           ELSEIF li_obj->get_metadata( )-ddic = abap_true.
-            READ TABLE lt_steps WITH KEY id = gc_step_id-ddic ASSIGNING <ls_step>.
-            IF sy-subrc <> 0.
-              zcx_abapgit_exception=>raise( |Step { gc_step_id-ddic } is not defined| ).
-            ENDIF.
+            READ TABLE lt_steps WITH KEY step_id = gc_step_id-ddic ASSIGNING <ls_step>.
+            ASSERT sy-subrc = 0.
           ELSE.
-            READ TABLE lt_steps WITH KEY id = gc_step_id-abap ASSIGNING <ls_step>.
-            IF sy-subrc <> 0.
-              zcx_abapgit_exception=>raise( |Step { gc_step_id-abap } is not defined| ).
-            ENDIF.
+            READ TABLE lt_steps WITH KEY step_id = gc_step_id-abap ASSIGNING <ls_step>.
+            ASSERT sy-subrc = 0.
           ENDIF.
           APPEND INITIAL LINE TO <ls_step>-objects ASSIGNING <ls_deser>.
           <ls_deser>-item    = ls_item.
@@ -721,7 +715,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
       <ls_obj>-obj->deserialize( iv_package = <ls_obj>-package
                                  io_xml     = <ls_obj>-xml
-                                 iv_step    = is_step-id  ).
+                                 iv_step    = is_step-step_id ).
       APPEND LINES OF <ls_obj>-obj->mo_files->get_accessed_files( ) TO ct_files.
     ENDLOOP.
 
@@ -778,21 +772,21 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_step>    TYPE LINE OF ty_step_data_tt.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
-    <ls_step>-id           = gc_step_id-ddic.
+    <ls_step>-step_id      = gc_step_id-ddic.
     <ls_step>-descr        = 'Import DDIC objects'.
     <ls_step>-is_ddic      = abap_true.
     <ls_step>-syntax_check = abap_false.
     <ls_step>-order        = 1.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
-    <ls_step>-id           = gc_step_id-abap.
+    <ls_step>-step_id      = gc_step_id-abap.
     <ls_step>-descr        = 'Import objects main'.
     <ls_step>-is_ddic      = abap_false.
     <ls_step>-syntax_check = abap_false.
     <ls_step>-order        = 2.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
-    <ls_step>-id           = gc_step_id-late.
+    <ls_step>-step_id      = gc_step_id-late.
     <ls_step>-descr        = 'Import late objects'.
     <ls_step>-is_ddic      = abap_false.
     <ls_step>-syntax_check = abap_true.
