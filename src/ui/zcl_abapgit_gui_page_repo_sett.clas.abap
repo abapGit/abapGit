@@ -60,7 +60,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -104,7 +104,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
           lv_selected          TYPE string,
           lt_folder_logic      TYPE stringtab,
           lv_req_index         TYPE i,
-          lv_requirement_count TYPE i.
+          lv_requirement_count TYPE i,
+          lv_checked           TYPE string.
 
     FIELD-SYMBOLS: <lv_folder_logic> TYPE LINE OF stringtab,
                    <ls_requirement>  TYPE zif_abapgit_dot_abapgit=>ty_requirement.
@@ -147,6 +148,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     io_html->add( 'Starting folder: <input name="starting_folder" type="text" size="10" value="' &&
       ls_dot-starting_folder && '">' ).
     io_html->add( '<br>' ).
+
+    IF ls_dot-force_method_order = abap_true.
+      lv_checked = | checked|.
+    ENDIF.
+    io_html->add( |Force alphabetical method order <input name="force_meth_order" type="checkbox"{ lv_checked }><br>| ).
 
     io_html->add( '<h3>Requirements</h3>' ).
     io_html->add( '<table class="repo_tab" id="requirement-tab" style="max-width: 300px;">' ).
@@ -253,6 +259,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'starting_folder'.
     ASSERT sy-subrc = 0.
     lo_dot->set_starting_folder( ls_post_field-value ).
+
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'force_meth_order' value = 'on'.
+    IF sy-subrc = 0.
+      lo_dot->set_force_method_order( abap_true ).
+    ELSE.
+      lo_dot->set_force_method_order( abap_false ).
+    ENDIF.
 
     lo_requirements = lcl_requirements=>new( ).
     LOOP AT it_post_fields INTO ls_post_field WHERE name CP 'req_*'.

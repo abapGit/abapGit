@@ -71,6 +71,11 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
     METHODS set_requirements
       IMPORTING
         it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
+    METHODS set_force_method_order
+      IMPORTING
+        iv_force_method_order TYPE abap_bool.
+    METHODS get_force_method_order
+      RETURNING VALUE(rv_force_method_order) TYPE abap_bool.
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: ms_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
@@ -88,7 +93,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
+CLASS zcl_abapgit_dot_abapgit IMPLEMENTATION.
 
 
   METHOD add_ignore.
@@ -298,5 +303,13 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
       WITH '<?xml version="1.0" encoding="utf-8"?>'.
     ASSERT sy-subrc = 0.
 
+  ENDMETHOD.
+
+  METHOD get_force_method_order.
+    rv_force_method_order = ms_data-force_method_order.
+  ENDMETHOD.
+
+  METHOD set_force_method_order.
+    ms_data-force_method_order = iv_force_method_order.
   ENDMETHOD.
 ENDCLASS.

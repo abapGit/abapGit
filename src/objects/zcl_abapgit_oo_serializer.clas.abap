@@ -6,9 +6,10 @@ CLASS zcl_abapgit_oo_serializer DEFINITION
 
     METHODS serialize_abap_clif_source
       IMPORTING
-        !is_class_key    TYPE seoclskey
+        !is_class_key           TYPE seoclskey
+        iv_force_old_serializer TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
+        VALUE(rt_source)        TYPE zif_abapgit_definitions=>ty_string_tt
       RAISING
         zcx_abapgit_exception
         cx_sy_dyn_call_error .
@@ -84,7 +85,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
+CLASS zcl_abapgit_oo_serializer IMPLEMENTATION.
 
 
   METHOD are_test_classes_skipped.
@@ -206,6 +207,11 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
 
 
   METHOD serialize_abap_clif_source.
+    IF iv_force_old_serializer = abap_true.
+      rt_source = serialize_abap_old( is_class_key ).
+      RETURN.
+    ENDIF.
+
     TRY.
         rt_source = serialize_abap_new( is_class_key ).
       CATCH cx_sy_dyn_call_error.
