@@ -4,7 +4,7 @@ CLASS ltcl_apack_manifest_reader DEFINITION FOR TESTING RISK LEVEL HARMLESS DURA
     METHODS:
       setup,
       manifest_descriptor FOR TESTING RAISING cx_static_check,
-      verify_own_descriptor IMPORTING is_manifest_descriptor TYPE zif_abapgit_definitions=>ty_apack_descriptor.
+      verify_own_descriptor IMPORTING is_manifest_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor.
 
     DATA: mo_manifest_reader TYPE REF TO zcl_abapgit_apack_reader.
 ENDCLASS.
@@ -16,7 +16,7 @@ CLASS ltcl_apack_manifest_reader IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD setup.
-    DATA: ls_apack_manifest_descriptor TYPE zif_abapgit_definitions=>ty_apack_descriptor.
+    DATA: ls_apack_manifest_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor.
 
     ls_apack_manifest_descriptor-group_id = 'github.com/larshp'.
     ls_apack_manifest_descriptor-artifact_id = 'abapGit'.

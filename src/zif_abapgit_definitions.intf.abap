@@ -345,25 +345,6 @@ INTERFACE zif_abapgit_definitions
     tty_lines TYPE STANDARD TABLE OF i
                         WITH NON-UNIQUE DEFAULT KEY .
 
-  TYPES:
-    BEGIN OF ty_apack_dependency,
-      group_id       TYPE string,
-      artifact_id    TYPE string,
-      git_url        TYPE string,
-      target_package TYPE devclass,
-    END OF ty_apack_dependency,
-    tt_apack_dependencies    TYPE STANDARD TABLE OF ty_apack_dependency
-                               WITH NON-UNIQUE DEFAULT KEY,
-    ty_apack_repository_type TYPE string,
-    BEGIN OF ty_apack_descriptor,
-      group_id        TYPE string,
-      artifact_id     TYPE string,
-      version         TYPE string,
-      repository_type TYPE ty_apack_repository_type,
-      git_url         TYPE string,
-      dependencies    TYPE tt_apack_dependencies,
-    END OF ty_apack_descriptor.
-
   CONSTANTS:
     BEGIN OF c_git_branch_type,
       branch          TYPE ty_git_branch_type VALUE 'HD',
@@ -430,8 +411,6 @@ INTERFACE zif_abapgit_definitions
   CONSTANTS c_english TYPE spras VALUE 'E' ##NO_TEXT.
   CONSTANTS c_root_dir TYPE string VALUE '/' ##NO_TEXT.
   CONSTANTS c_dot_abapgit TYPE string VALUE '.abapgit.xml' ##NO_TEXT.
-  CONSTANTS c_dot_apack_manifest TYPE string VALUE '.apack-manifest.xml' ##NO_TEXT.
-  CONSTANTS c_apack_repository_type TYPE ty_apack_repository_type VALUE 'abapGit' ##NO_TEXT.
   CONSTANTS c_author_regex TYPE string VALUE '^([\\\w\s\.\*\,\#@\-_1-9\(\) ]+) <(.*)> (\d{10})\s?.\d{4}$' ##NO_TEXT.
   CONSTANTS:
     BEGIN OF c_action,

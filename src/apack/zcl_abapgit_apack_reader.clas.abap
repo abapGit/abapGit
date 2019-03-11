@@ -11,8 +11,8 @@ CLASS zcl_abapgit_apack_reader DEFINITION
                                    RETURNING VALUE(ro_manifest_reader) TYPE REF TO zcl_abapgit_apack_reader.
     METHODS:
       get_manifest_descriptor RETURNING VALUE(rs_manifest_descriptor)
-                                        TYPE zif_abapgit_definitions=>ty_apack_descriptor,
-      set_manifest_descriptor IMPORTING is_manifest_descriptor  TYPE zif_abapgit_definitions=>ty_apack_descriptor,
+                                        TYPE zif_abapgit_apack_definitions=>ty_descriptor,
+      set_manifest_descriptor IMPORTING is_manifest_descriptor  TYPE zif_abapgit_apack_definitions=>ty_descriptor,
       has_manifest RETURNING VALUE(rv_has_manifest) TYPE abap_bool.
 
   PROTECTED SECTION.
@@ -24,7 +24,7 @@ CLASS zcl_abapgit_apack_reader DEFINITION
            END OF ty_s_manifest_declaration.
 
     DATA: mv_package_name      TYPE ty_package_name,
-          ms_cached_descriptor TYPE zif_abapgit_definitions=>ty_apack_descriptor,
+          ms_cached_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor,
           mv_is_cached         TYPE abap_bool.
 
     METHODS: constructor IMPORTING iv_package_name TYPE ty_package_name.
@@ -82,7 +82,7 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
 
   METHOD has_manifest.
 
-    DATA: ls_returned_manifest TYPE zif_abapgit_definitions=>ty_apack_descriptor.
+    DATA: ls_returned_manifest TYPE zif_abapgit_apack_definitions=>ty_descriptor.
 
     ls_returned_manifest = me->get_manifest_descriptor( ).
 

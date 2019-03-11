@@ -8,7 +8,7 @@ CLASS ltcl_apack_manifest_writer IMPLEMENTATION.
 
   METHOD the_serializator.
 
-    DATA: ls_apack_manifest_descriptor TYPE zif_abapgit_definitions=>ty_apack_descriptor,
+    DATA: ls_apack_manifest_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor,
           lo_manifest_writer           TYPE REF TO zcl_abapgit_apack_writer,
           lv_actual_xml                TYPE string.
 
