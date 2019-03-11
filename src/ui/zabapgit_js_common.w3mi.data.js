@@ -1377,5 +1377,21 @@ BranchOverview.prototype.hideCommit = function (event){ // eslint-disable-line n
 
 // Top Horizontal Scroller on GitGraph
 function GitGraphScroller() {
-  document.querySelector(".gitGraph-Wrapper").scrollLeft = document.querySelector(".gitGraph-scrollWrapper").scrollLeft;
+
+  var gitGraphEl,
+      gitGraphWidth, 
+      HTopScrollerEl, 
+      gitGraphWrapperEl, 
+      gitGraphscrollWrapperEl;
+  
+  gitGraphEl    = document.getElementById('gitGraph');
+  gitGraphWidth = gitGraphEl.offsetWidth;
+
+  HTopScrollerEl          = document.querySelector(".gitGraph-HTopScroller");
+  gitGraphWrapperEl       = document.querySelector(".gitGraph-Wrapper");
+  gitGraphscrollWrapperEl = document.querySelector(".gitGraph-scrollWrapper");
+  
+
+  HTopScrollerEl.style.width = gitGraphWidth + 'px';
+  gitGraphWrapperEl.scrollLeft = gitGraphscrollWrapperEl.scrollLeft;
 }
