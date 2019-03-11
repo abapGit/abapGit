@@ -186,6 +186,10 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
 
     ro_html->add( '</script>' ).
 
+    ro_html->add( '</script>' ).
+    ro_html->add( 'setGitGraphScroller();' ).
+    ro_html->add( '<script>' ).
+
     ro_html->add( render_commit_popups( ) ).
 
   ENDMETHOD.
