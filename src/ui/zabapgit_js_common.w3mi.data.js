@@ -1374,3 +1374,8 @@ BranchOverview.prototype.showCommit = function(event){
 BranchOverview.prototype.hideCommit = function (event){ // eslint-disable-line no-unused-vars
   this.toggleCommit();
 };
+
+// Top Horizontal Scroller on GitGraph
+function GitGraphScroller() {
+  document.querySelector(".gitGraph-Wrapper").scrollLeft = document.querySelector(".gitGraph-scrollWrapper").scrollLeft;
+}
