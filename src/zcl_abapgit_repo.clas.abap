@@ -353,7 +353,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     ls_apack_file = build_apack_manifest_file( ).
     IF ls_apack_file IS NOT INITIAL.
       APPEND INITIAL LINE TO rt_files ASSIGNING <ls_return>.
-      <ls_return>-file = build_apack_manifest_file( ).
+      <ls_return>-file = ls_apack_file.
     ENDIF.
 
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
