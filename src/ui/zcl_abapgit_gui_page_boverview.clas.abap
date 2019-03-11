@@ -91,7 +91,13 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
     ro_html->add( build_menu( )->render( ) ).
 
 * see http://stackoverflow.com/questions/6081483/maximum-size-of-a-canvas-element
+    ro_html->add( '<div class="gitGraph-scrollWrapper" onscroll="GitGraphScroller()">' ).
+    ro_html->add( '<div class="gitGraph-HTopScroller"></div>' ).
+    ro_html->add( '</div>' ).
+
+    ro_html->add( '<div class="gitGraph-Wrapper">' ).
     ro_html->add( '<canvas id="gitGraph"></canvas>' ).
+    ro_html->add( '</div>' ).
 
     ro_html->add( '<script type="text/javascript" src="https://cdnjs.' &&
       'cloudflare.com/ajax/libs/gitgraph.js/1.14.0/gitgraph.min.js">' &&
