@@ -20,14 +20,10 @@ CLASS zcl_abapgit_objects DEFINITION
         files TYPE zif_abapgit_definitions=>ty_files_tt,
         item  TYPE zif_abapgit_definitions=>ty_item,
       END OF ty_serialization .
-    TYPES:
-      ty_deserialization_step TYPE string.
-    TYPES:
-      ty_deserialization_step_tt TYPE STANDARD TABLE OF ty_deserialization_step
-                                            WITH DEFAULT KEY .
+
     TYPES:
       BEGIN OF ty_step_data,
-        step_id      TYPE ty_deserialization_step,
+        step_id      TYPE zif_abapgit_object=>ty_deserialization_step,
         order        TYPE i,
         descr        TYPE string,
         is_ddic      TYPE abap_bool,
@@ -37,12 +33,6 @@ CLASS zcl_abapgit_objects DEFINITION
     TYPES:
       ty_step_data_tt TYPE STANDARD TABLE OF ty_step_data
                                 WITH DEFAULT KEY.
-    CONSTANTS:
-      BEGIN OF gc_step_id,
-        abap TYPE ty_deserialization_step VALUE `ABAP`,
-        ddic TYPE ty_deserialization_step VALUE `DDIC`,
-        late TYPE ty_deserialization_step VALUE `LATE`,
-      END OF gc_step_id.
 
     CLASS-METHODS serialize
       IMPORTING
@@ -540,12 +530,12 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           li_progress TYPE REF TO zif_abapgit_progress,
           lv_path     TYPE string,
           lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
-          lt_steps_id TYPE ty_deserialization_step_tt,
+          lt_steps_id TYPE zif_abapgit_object=>ty_deserialization_step_tt,
           lt_steps    TYPE ty_step_data_tt.
     DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_result>  TYPE zif_abapgit_definitions=>ty_result,
-                   <lv_step_id> TYPE LINE OF ty_deserialization_step_tt,
+                   <lv_step_id> TYPE LINE OF zif_abapgit_object=>ty_deserialization_step_tt,
                    <ls_step>    TYPE LINE OF ty_step_data_tt,
                    <ls_deser>   TYPE LINE OF ty_deserialization_tt.
 
@@ -638,13 +628,13 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         CATCH cx_sy_dyn_call_illegal_method.
           " Fallback (can be removed if all objects implement the new IF method get_deserialize_steps)
           IF li_obj->get_metadata( )-late_deser = abap_true.
-            READ TABLE lt_steps WITH KEY step_id = gc_step_id-late ASSIGNING <ls_step>.
+            READ TABLE lt_steps WITH KEY step_id = zif_abapgit_object=>gc_step_id-late ASSIGNING <ls_step>.
             ASSERT sy-subrc = 0.
           ELSEIF li_obj->get_metadata( )-ddic = abap_true.
-            READ TABLE lt_steps WITH KEY step_id = gc_step_id-ddic ASSIGNING <ls_step>.
+            READ TABLE lt_steps WITH KEY step_id = zif_abapgit_object=>gc_step_id-ddic ASSIGNING <ls_step>.
             ASSERT sy-subrc = 0.
           ELSE.
-            READ TABLE lt_steps WITH KEY step_id = gc_step_id-abap ASSIGNING <ls_step>.
+            READ TABLE lt_steps WITH KEY step_id = zif_abapgit_object=>gc_step_id-abap ASSIGNING <ls_step>.
             ASSERT sy-subrc = 0.
           ENDIF.
           APPEND INITIAL LINE TO <ls_step>-objects ASSIGNING <ls_deser>.
@@ -772,21 +762,21 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_step>    TYPE LINE OF ty_step_data_tt.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
-    <ls_step>-step_id      = gc_step_id-ddic.
+    <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-ddic.
     <ls_step>-descr        = 'Import DDIC objects'.
     <ls_step>-is_ddic      = abap_true.
     <ls_step>-syntax_check = abap_false.
     <ls_step>-order        = 1.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
-    <ls_step>-step_id      = gc_step_id-abap.
+    <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-abap.
     <ls_step>-descr        = 'Import objects main'.
     <ls_step>-is_ddic      = abap_false.
     <ls_step>-syntax_check = abap_false.
     <ls_step>-order        = 2.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
-    <ls_step>-step_id      = gc_step_id-late.
+    <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-late.
     <ls_step>-descr        = 'Import late objects'.
     <ls_step>-is_ddic      = abap_false.
     <ls_step>-syntax_check = abap_true.
