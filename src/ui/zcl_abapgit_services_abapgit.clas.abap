@@ -23,11 +23,11 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
         zcx_abapgit_cancel .
     CLASS-METHODS is_installed
       RETURNING
-        VALUE(rv_installed) TYPE abap_bool .
+        VALUE(rv_devclass) TYPE tadir-devclass .
     CLASS-METHODS prepare_gui_startup
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS do_install
       IMPORTING iv_title   TYPE c
@@ -50,7 +50,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
 
 
   METHOD do_install.
@@ -92,16 +92,76 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_package_from_adt.
+
+    DATA: ls_item    TYPE zif_abapgit_definitions=>ty_item,
+          lr_context TYPE REF TO data,
+          lt_fields  TYPE tihttpnvp.
+
+
+    FIELD-SYMBOLS: <ls_context>    TYPE any,
+                   <lv_parameters> TYPE string,
+                   <ls_field>      LIKE LINE OF lt_fields.
+
+    ls_item-obj_type = 'CLAS'.
+    ls_item-obj_name = 'CL_ADT_GUI_INTEGRATION_CONTEXT'.
+
+    IF zcl_abapgit_objects=>exists( ls_item  ) = abap_false.
+      " ADT is not supported in this NW release
+      RETURN.
+    ENDIF.
+
+    TRY.
+        CREATE DATA lr_context TYPE ('CL_ADT_GUI_INTEGRATION_CONTEXT=>TY_CONTEXT_INFO').
+
+        ASSIGN lr_context->* TO <ls_context>.
+        ASSERT sy-subrc = 0.
+
+        CALL METHOD ('CL_ADT_GUI_INTEGRATION_CONTEXT')=>read_context
+          RECEIVING
+            result = <ls_context>.
+
+        ASSIGN COMPONENT 'PARAMETERS'
+               OF STRUCTURE <ls_context>
+               TO <lv_parameters>.
+        ASSERT sy-subrc = 0.
+
+        lt_fields = cl_http_utility=>string_to_fields(
+                        cl_http_utility=>unescape_url(
+                            <lv_parameters> ) ).
+
+        READ TABLE lt_fields ASSIGNING <ls_field>
+                             WITH KEY name = 'p_package_name'.
+        IF sy-subrc = 0.
+          rv_package = <ls_field>-value.
+
+          " We want to open the repo just once. Therefore we delete the parameters
+          " and initialize the ADT context.
+          CLEAR <lv_parameters>.
+          CALL METHOD ('CL_ADT_GUI_INTEGRATION_CONTEXT')=>initialize_instance
+            EXPORTING
+              context_info = <ls_context>.
+
+        ENDIF.
+
+      CATCH cx_root.
+        " Some problems with dynamic ADT access.
+        " Let's ignore it for now and fail silently
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD install_abapgit.
 
     CONSTANTS lc_title TYPE c LENGTH 40 VALUE 'Install abapGit'.
     DATA lv_text       TYPE c LENGTH 100.
 
-    IF is_installed( ) = abap_true.
+    IF NOT is_installed( ) IS INITIAL.
       lv_text = 'Seems like abapGit package is already installed. No changes to be done'.
       zcl_abapgit_ui_factory=>get_popups( )->popup_to_inform(
-        iv_titlebar              = lc_title
-        iv_text_message          = lv_text ).
+        iv_titlebar     = lc_title
+        iv_text_message = lv_text ).
       RETURN.
     ENDIF.
 
@@ -114,15 +174,14 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD is_installed.
 
-    DATA: ls_item TYPE zif_abapgit_definitions=>ty_item.
-
-    ls_item-obj_type = 'TRAN'.
-    ls_item-obj_name = c_abapgit_tcode.
-    rv_installed = zcl_abapgit_objects=>exists( ls_item ).
+    SELECT SINGLE devclass FROM tadir INTO rv_devclass
+      WHERE object = 'TRAN' AND obj_name = c_abapgit_tcode.
 
   ENDMETHOD.
+
 
   METHOD open_abapgit_homepage.
 
@@ -146,6 +205,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
 
   METHOD prepare_gui_startup.
 
@@ -234,65 +294,4 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
-
-  METHOD get_package_from_adt.
-
-    DATA: ls_item    TYPE zif_abapgit_definitions=>ty_item,
-          lr_context TYPE REF TO data,
-          lt_fields  TYPE tihttpnvp.
-
-
-    FIELD-SYMBOLS: <ls_context>    TYPE any,
-                   <lv_parameters> TYPE string,
-                   <ls_field>      LIKE LINE OF lt_fields.
-
-    ls_item-obj_type = 'CLAS'.
-    ls_item-obj_name = 'CL_ADT_GUI_INTEGRATION_CONTEXT'.
-
-    IF zcl_abapgit_objects=>exists( ls_item  ) = abap_false.
-      " ADT is not supported in this NW release
-      RETURN.
-    ENDIF.
-
-    TRY.
-        CREATE DATA lr_context TYPE ('CL_ADT_GUI_INTEGRATION_CONTEXT=>TY_CONTEXT_INFO').
-
-        ASSIGN lr_context->* TO <ls_context>.
-        ASSERT sy-subrc = 0.
-
-        CALL METHOD ('CL_ADT_GUI_INTEGRATION_CONTEXT')=>read_context
-          RECEIVING
-            result = <ls_context>.
-
-        ASSIGN COMPONENT 'PARAMETERS'
-               OF STRUCTURE <ls_context>
-               TO <lv_parameters>.
-        ASSERT sy-subrc = 0.
-
-        lt_fields = cl_http_utility=>string_to_fields(
-                        cl_http_utility=>unescape_url(
-                            <lv_parameters> ) ).
-
-        READ TABLE lt_fields ASSIGNING <ls_field>
-                             WITH KEY name = 'p_package_name'.
-        IF sy-subrc = 0.
-          rv_package = <ls_field>-value.
-
-          " We want to open the repo just once. Therefore we delete the parameters
-          " and initialize the ADT context.
-          CLEAR <lv_parameters>.
-          CALL METHOD ('CL_ADT_GUI_INTEGRATION_CONTEXT')=>initialize_instance
-            EXPORTING
-              context_info = <ls_context>.
-
-        ENDIF.
-
-      CATCH cx_root.
-        " Some problems with dynamic ADT access.
-        " Let's ignore it for now and fail silently
-    ENDTRY.
-
-  ENDMETHOD.
-
 ENDCLASS.
