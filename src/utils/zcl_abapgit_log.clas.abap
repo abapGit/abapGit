@@ -6,18 +6,26 @@ CLASS zcl_abapgit_log DEFINITION
 
     METHODS add
       IMPORTING
-        !iv_msg  TYPE csequence
-        !iv_type TYPE symsgty DEFAULT 'E'
-        !iv_rc   TYPE balsort OPTIONAL .
+        !iv_msg      TYPE csequence
+        !iv_type     TYPE symsgty DEFAULT 'E'
+        !iv_rc       TYPE balsort OPTIONAL
+        !iv_obj_type TYPE tadir-object OPTIONAL
+        !iv_obj_name TYPE tadir-obj_name OPTIONAL .
     METHODS add_error
       IMPORTING
-        !iv_msg TYPE csequence .
+        !iv_msg      TYPE csequence
+        !iv_obj_type TYPE tadir-object OPTIONAL
+        !iv_obj_name TYPE tadir-obj_name OPTIONAL .
     METHODS add_info
       IMPORTING
-        !iv_msg TYPE csequence .
+        !iv_msg      TYPE csequence
+        !iv_obj_type TYPE tadir-object OPTIONAL
+        !iv_obj_name TYPE tadir-obj_name OPTIONAL .
     METHODS add_warning
       IMPORTING
-        !iv_msg TYPE csequence .
+        !iv_msg      TYPE csequence
+        !iv_obj_type TYPE tadir-object OPTIONAL
+        !iv_obj_name TYPE tadir-obj_name OPTIONAL .
     METHODS clear .
     METHODS count
       RETURNING
@@ -38,9 +46,11 @@ CLASS zcl_abapgit_log DEFINITION
 
     TYPES:
       BEGIN OF ty_log,
-        msg  TYPE string,
-        type TYPE symsgty,
-        rc   TYPE balsort,
+        msg      TYPE string,
+        type     TYPE symsgty,
+        rc       TYPE balsort,
+        obj_type TYPE tadir-object,
+        obj_name TYPE tadir-obj_name,
       END OF ty_log .
     TYPES:
       BEGIN OF ty_log_out,
@@ -57,7 +67,6 @@ CLASS zcl_abapgit_log DEFINITION
     METHODS prepare_log_for_display
       RETURNING
         VALUE(rt_log_out) TYPE zcl_abapgit_log=>tty_log_out .
-
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -71,9 +80,11 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_log> LIKE LINE OF mt_log.
 
     APPEND INITIAL LINE TO mt_log ASSIGNING <ls_log>.
-    <ls_log>-msg  = iv_msg.
-    <ls_log>-type = iv_type.
-    <ls_log>-rc   = iv_rc.
+    <ls_log>-msg      = iv_msg.
+    <ls_log>-type     = iv_type.
+    <ls_log>-rc       = iv_rc.
+    <ls_log>-obj_type = iv_obj_type.
+    <ls_log>-obj_name = iv_obj_name.
 
   ENDMETHOD.
 
