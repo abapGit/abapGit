@@ -607,42 +607,23 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
       li_obj->mo_files = lo_files.
 
-      TRY.
 * Get required steps for deserialize the object
-          lt_steps_id = li_obj->get_deserialize_steps( ).
+      lt_steps_id = li_obj->get_deserialize_steps( ).
 
-          LOOP AT lt_steps_id ASSIGNING <lv_step_id>.
-            READ TABLE lt_steps WITH KEY step_id = <lv_step_id> ASSIGNING <ls_step>.
-            ASSERT sy-subrc = 0.
-            IF <ls_step>-is_ddic = abap_true AND li_obj->get_metadata( )-ddic = abap_false.
-              " DDIC only for DDIC objects
-              zcx_abapgit_exception=>raise( |Step { <lv_step_id> } is only for DDIC objects| ).
-            ENDIF.
-            APPEND INITIAL LINE TO <ls_step>-objects ASSIGNING <ls_deser>.
-            <ls_deser>-item    = ls_item.
-            <ls_deser>-obj     = li_obj.
-            <ls_deser>-xml     = lo_xml.
-            <ls_deser>-package = lv_package.
-          ENDLOOP.
+      LOOP AT lt_steps_id ASSIGNING <lv_step_id>.
+        READ TABLE lt_steps WITH KEY step_id = <lv_step_id> ASSIGNING <ls_step>.
+        ASSERT sy-subrc = 0.
+        IF <ls_step>-is_ddic = abap_true AND li_obj->get_metadata( )-ddic = abap_false.
+          " DDIC only for DDIC objects
+          zcx_abapgit_exception=>raise( |Step { <lv_step_id> } is only for DDIC objects| ).
+        ENDIF.
+        APPEND INITIAL LINE TO <ls_step>-objects ASSIGNING <ls_deser>.
+        <ls_deser>-item    = ls_item.
+        <ls_deser>-obj     = li_obj.
+        <ls_deser>-xml     = lo_xml.
+        <ls_deser>-package = lv_package.
+      ENDLOOP.
 
-        CATCH cx_sy_dyn_call_illegal_method.
-          " Fallback (can be removed if all objects implement the new IF method get_deserialize_steps)
-          IF li_obj->get_metadata( )-late_deser = abap_true.
-            READ TABLE lt_steps WITH KEY step_id = zif_abapgit_object=>gc_step_id-late ASSIGNING <ls_step>.
-            ASSERT sy-subrc = 0.
-          ELSEIF li_obj->get_metadata( )-ddic = abap_true.
-            READ TABLE lt_steps WITH KEY step_id = zif_abapgit_object=>gc_step_id-ddic ASSIGNING <ls_step>.
-            ASSERT sy-subrc = 0.
-          ELSE.
-            READ TABLE lt_steps WITH KEY step_id = zif_abapgit_object=>gc_step_id-abap ASSIGNING <ls_step>.
-            ASSERT sy-subrc = 0.
-          ENDIF.
-          APPEND INITIAL LINE TO <ls_step>-objects ASSIGNING <ls_deser>.
-          <ls_deser>-item    = ls_item.
-          <ls_deser>-obj     = li_obj.
-          <ls_deser>-xml     = lo_xml.
-          <ls_deser>-package = lv_package.
-      ENDTRY.
     ENDLOOP.
 
 * run deserialize for all step and it's objets
