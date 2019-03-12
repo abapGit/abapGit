@@ -1390,7 +1390,7 @@ function setGitGraphScroller(){ // eslint-disable-line no-unused-vars
 
 // Setup Top Horizontal Scroller on GitGraph event
 function GitGraphScroller() { // eslint-disable-line no-unused-vars
-  var gitGraphWrapperEl = document.querySelector(".gitGraph-Wrapper"); 
+  var gitGraphWrapperEl = document.querySelector(".gitGraph-Wrapper");
   var gitGraphscrollWrapperEl = document.querySelector(".gitGraph-scrollWrapper");
   gitGraphWrapperEl.scrollLeft = gitGraphscrollWrapperEl.scrollLeft;
 }
