@@ -90,10 +90,11 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
     ro_html->add( '<br>' ).
     ro_html->add( build_menu( )->render( ) ).
 
-* see http://stackoverflow.com/questions/6081483/maximum-size-of-a-canvas-element
 
-    "CSS gitGraph-scrollWrapper, gitGraph-HTopScroller and gitGraph-Wrapper will be used to manage the Horizonal Scroll bar on top of gitGraph Element
+    "CSS gitGraph-scrollWrapper, gitGraph-HTopScroller and gitGraph-Wrapper
+    " - Used to manage the Horizonal Scroll bar on top of gitGraph Element
     ro_html->add( '<div class="gitGraph-scrollWrapper" onscroll="GitGraphScroller()">' ).
+    "see http://stackoverflow.com/questions/6081483/maximum-size-of-a-canvas-element
     ro_html->add( '<div class="gitGraph-HTopScroller"></div>' ).
     ro_html->add( '</div>' ).
 
