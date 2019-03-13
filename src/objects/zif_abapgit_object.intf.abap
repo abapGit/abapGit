@@ -16,6 +16,8 @@ INTERFACE zif_abapgit_object
       late TYPE zif_abapgit_object=>ty_deserialization_step VALUE `LATE`,
     END OF gc_step_id.
 
+  CONSTANTS c_abap_version_sap_cp TYPE progdir-uccheck VALUE '5' ##NO_TEXT.
+  CONSTANTS c_abap_version_default TYPE progdir-uccheck VALUE 'X' ##NO_TEXT.
 
   METHODS serialize
     IMPORTING
