@@ -11,9 +11,12 @@ INTERFACE zif_abapgit_object
 
   CONSTANTS:
     BEGIN OF gc_step_id,
-      abap TYPE zif_abapgit_object=>ty_deserialization_step VALUE `ABAP`,
+      abap_before_ddic TYPE zif_abapgit_object=>ty_deserialization_step VALUE `ABAP_BFEORE_DDIC`,
+      abap_after_ddic  TYPE zif_abapgit_object=>ty_deserialization_step VALUE `ABAP_AFTER_DDIC`,
+      abap_as_ddic     TYPE zif_abapgit_object=>ty_deserialization_step VALUE `ABAP_AS_DDIC`,
+      abap TYPE zif_abapgit_object=>ty_deserialization_step VALUE `ABAP_BFEORE_DDIC`,
       ddic TYPE zif_abapgit_object=>ty_deserialization_step VALUE `DDIC`,
-      late TYPE zif_abapgit_object=>ty_deserialization_step VALUE `LATE`,
+      late TYPE zif_abapgit_object=>ty_deserialization_step VALUE `ABAP_AFTER_DDIC`,
     END OF gc_step_id.
 
 

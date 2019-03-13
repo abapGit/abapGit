@@ -23,12 +23,13 @@ CLASS zcl_abapgit_objects DEFINITION
 
     TYPES:
       BEGIN OF ty_step_data,
-        step_id      TYPE zif_abapgit_object=>ty_deserialization_step,
-        order        TYPE i,
-        descr        TYPE string,
-        is_ddic      TYPE abap_bool,
-        syntax_check TYPE abap_bool,
-        objects      TYPE ty_deserialization_tt,
+        step_id         TYPE zif_abapgit_object=>ty_deserialization_step,
+        order           TYPE i,
+        descr           TYPE string,
+        is_ddic         TYPE abap_bool,
+        no_syntax_check TYPE abap_bool,
+        old_activation  TYPE abap_bool,
+        objects         TYPE ty_deserialization_tt,
       END OF ty_step_data.
     TYPES:
       ty_step_data_tt TYPE STANDARD TABLE OF ty_step_data
@@ -690,7 +691,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       APPEND LINES OF <ls_obj>-obj->mo_files->get_accessed_files( ) TO ct_files.
     ENDLOOP.
 
-    zcl_abapgit_objects_activation=>activate( iv_ddic         = is_step-is_ddic ).
+    zcl_abapgit_objects_activation=>activate( iv_ddic            = is_step-is_ddic
+                                              iv_no_syntax_check = is_step-no_syntax_check
+                                              iv_old_activation  = is_step-old_activation ).
 
   ENDMETHOD.
 
@@ -743,25 +746,33 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_step>    TYPE LINE OF ty_step_data_tt.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
-    <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-ddic.
-    <ls_step>-descr        = 'Import DDIC objects'.
-    <ls_step>-is_ddic      = abap_true.
-    <ls_step>-syntax_check = abap_false.
-    <ls_step>-order        = 1.
+    <ls_step>-step_id         = zif_abapgit_object=>gc_step_id-abap_before_ddic.
+    <ls_step>-descr           = 'Import abap before DDIC'.
+    <ls_step>-is_ddic         = abap_false.
+    <ls_step>-no_syntax_check = abap_true.
+    <ls_step>-order           = 1.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
-    <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-abap.
-    <ls_step>-descr        = 'Import objects main'.
-    <ls_step>-is_ddic      = abap_false.
-    <ls_step>-syntax_check = abap_false.
-    <ls_step>-order        = 2.
+    <ls_step>-step_id         = zif_abapgit_object=>gc_step_id-abap_as_ddic.
+    <ls_step>-descr           = 'Import ABAP as DDIC objects'.
+    <ls_step>-is_ddic         = abap_true.
+    <ls_step>-no_syntax_check = abap_false.
+    <ls_step>-old_activation  = abap_true.
+    <ls_step>-order           = 2.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
-    <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-late.
-    <ls_step>-descr        = 'Import late objects'.
-    <ls_step>-is_ddic      = abap_false.
-    <ls_step>-syntax_check = abap_true.
-    <ls_step>-order        = 3.
+    <ls_step>-step_id         = zif_abapgit_object=>gc_step_id-ddic.
+    <ls_step>-descr           = 'Import DDIC objects'.
+    <ls_step>-is_ddic         = abap_true.
+    <ls_step>-no_syntax_check = abap_false.
+    <ls_step>-order           = 3.
+
+    APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
+    <ls_step>-step_id         = zif_abapgit_object=>gc_step_id-abap_after_ddic.
+    <ls_step>-descr           = 'Import abap after DDIC'.
+    <ls_step>-is_ddic         = abap_false.
+    <ls_step>-no_syntax_check = abap_false.
+    <ls_step>-order           = 4.
   ENDMETHOD.
 
 

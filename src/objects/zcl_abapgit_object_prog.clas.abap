@@ -145,37 +145,41 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
 
     lv_program_name = ms_item-obj_name.
 
-    lt_source = mo_files->read_abap( ).
+    CASE iv_step.
+      WHEN zif_abapgit_object=>gc_step_id-abap_before_ddic.
 
-    io_xml->read( EXPORTING iv_name = 'TPOOL'
-                  CHANGING cg_data = lt_tpool_ext ).
-    lt_tpool = read_tpool( lt_tpool_ext ).
+        lt_source = mo_files->read_abap( ).
 
-    io_xml->read( EXPORTING iv_name = 'PROGDIR'
-                  CHANGING cg_data  = ls_progdir ).
-    deserialize_program( is_progdir = ls_progdir
-                         it_source  = lt_source
-                         it_tpool   = lt_tpool
-                         iv_package = iv_package ).
+        io_xml->read( EXPORTING iv_name = 'TPOOL'
+                      CHANGING cg_data = lt_tpool_ext ).
+        lt_tpool = read_tpool( lt_tpool_ext ).
 
-    io_xml->read( EXPORTING iv_name = 'DYNPROS'
-                  CHANGING cg_data  = lt_dynpros ).
-    deserialize_dynpros( lt_dynpros ).
+        io_xml->read( EXPORTING iv_name = 'PROGDIR'
+                      CHANGING cg_data  = ls_progdir ).
+        deserialize_program( is_progdir = ls_progdir
+                             it_source  = lt_source
+                             it_tpool   = lt_tpool
+                             iv_package = iv_package ).
 
-    io_xml->read( EXPORTING iv_name = 'CUA'
-                  CHANGING cg_data  = ls_cua ).
-    deserialize_cua( iv_program_name = lv_program_name
-                     is_cua = ls_cua ).
+        io_xml->read( EXPORTING iv_name = 'CUA'
+                      CHANGING cg_data  = ls_cua ).
+        deserialize_cua( iv_program_name = lv_program_name
+                         is_cua = ls_cua ).
 
-    " Texts deserializing (English)
-    deserialize_textpool( iv_program = lv_program_name
-                          it_tpool   = lt_tpool ).
+        " Texts deserializing (English)
+        deserialize_textpool( iv_program = lv_program_name
+                              it_tpool   = lt_tpool ).
 
-    " Texts deserializing (translations)
-    deserialize_texts( io_xml ).
+        " Texts deserializing (translations)
+        deserialize_texts( io_xml ).
 
-    deserialize_longtexts( io_xml ).
+        deserialize_longtexts( io_xml ).
 
+      WHEN zif_abapgit_object=>gc_step_id-abap_after_ddic.
+        io_xml->read( EXPORTING iv_name = 'DYNPROS'
+                      CHANGING cg_data  = lt_dynpros ).
+        deserialize_dynpros( lt_dynpros ).
+    ENDCASE.
   ENDMETHOD.
 
 
@@ -198,17 +202,9 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
 
-    DATA: ls_meta TYPE zif_abapgit_definitions=>ty_metadata.
-
-    ls_meta = zif_abapgit_object~get_metadata( ).
-
-    IF ls_meta-late_deser = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
-    ELSEIF ls_meta-ddic = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
-    ELSE.
-      APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
-    ENDIF.
+    APPEND zif_abapgit_object=>gc_step_id-abap_before_ddic TO rt_steps.
+    " Dynpro need active DDIC in the system
+    APPEND zif_abapgit_object=>gc_step_id-abap_after_ddic TO rt_steps.
 
   ENDMETHOD.
 
