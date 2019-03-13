@@ -163,8 +163,9 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       IF iv_step = zif_abapgit_object=>gc_step_id-abap_before_ddic AND ls_func-remote_call = 'R'.
         " DDIC elements may not in system at this step, check for remote types will fail!
         CLEAR ls_func-remote_call.
-      ELSEIF iv_step = zif_abapgit_object=>gc_step_id-abap_before_ddic.
-        CHECK ls_func-remote_call = 'R'. " second time only required for remote function modules
+      ELSEIF iv_step = zif_abapgit_object=>gc_step_id-abap_after_ddic.
+        " after ddic only required for remote function modules
+        CHECK ls_func-remote_call = 'R'.
       ENDIF.
 
       lt_source = mo_files->read_abap( iv_extra = ls_func-funcname ).

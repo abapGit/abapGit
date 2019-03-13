@@ -183,6 +183,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
         EXPORTING
           " force abap objects to activate even with errors
           suppress_syntax_check  = iv_no_syntax_check
+          " no genration because DDIC elements ar not in the system yet
+          suppress_generation    = abap_true
           activate_ddic_objects  = iv_ddic
           " No dialog, user have to activate with error (how to tell user he has to do that? - so better don't show at all?)
           with_popup             = abap_false
