@@ -50,13 +50,13 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
     CLASS-METHODS file_encode
       IMPORTING
         !iv_key          TYPE zif_abapgit_persistence=>ty_repo-key
-        !ig_file         TYPE any                                                                               "assuming ty_file
+        !ig_file         TYPE any
       RETURNING
         VALUE(rv_string) TYPE string .
     CLASS-METHODS obj_encode
       IMPORTING
         !iv_key          TYPE zif_abapgit_persistence=>ty_repo-key
-        !ig_object       TYPE any                                                                 "assuming ty_item
+        !ig_object       TYPE any
       RETURNING
         VALUE(rv_string) TYPE string .
     CLASS-METHODS file_obj_decode
