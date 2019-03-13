@@ -8,7 +8,7 @@ All object serializers must be named ZCL_ABAPGIT_OBJECT_`type`, where `type` is 
 Use SAP Standard APIs for retriving and updating object information where possible.
 If not possible try using ZCL_ABAPGIT_OBJECTS_GENERIC
 
-As code is stored in git, no usernames, timestamps or other system specific information should be part of the serialized object files.
+As code is stored in git, no usernames, timestamps, states (e.g. active/inactive) or other system specific information should be part of the serialized object files.
 
 Serializers must implement interface ZIF_ABAPGIT_OBJECT:
 
