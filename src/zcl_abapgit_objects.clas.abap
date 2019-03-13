@@ -727,14 +727,14 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     rt_results = it_results.
 
     DELETE rt_results WHERE match = abap_true.     " Full match
+    DELETE rt_results WHERE obj_type IS INITIAL.
+    DELETE rt_results WHERE lstate = zif_abapgit_definitions=>c_state-added AND rstate IS INITIAL.
+
     SORT rt_results
       BY obj_type ASCENDING
          obj_name ASCENDING
          rstate   DESCENDING. " ensures that non-empty rstate is kept
     DELETE ADJACENT DUPLICATES FROM rt_results COMPARING obj_type obj_name.
-
-    DELETE rt_results WHERE obj_type IS INITIAL.
-    DELETE rt_results WHERE lstate = zif_abapgit_definitions=>c_state-added AND rstate IS INITIAL.
 
   ENDMETHOD.
 
