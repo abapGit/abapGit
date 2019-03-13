@@ -9,7 +9,7 @@ CLASS zcl_abapgit_environment DEFINITION
         VALUE(rv_cloud) TYPE abap_bool .
   PROTECTED SECTION.
 
-    CLASS-DATA mv_cloud TYPE abap_bool VALUE abap_undefined ##NO_TEXT.
+    CLASS-DATA gv_cloud TYPE abap_bool VALUE abap_undefined ##NO_TEXT.
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -20,17 +20,17 @@ CLASS ZCL_ABAPGIT_ENVIRONMENT IMPLEMENTATION.
 
   METHOD is_cloud.
 
-    IF mv_cloud = abap_undefined.
+    IF gv_cloud = abap_undefined.
       TRY.
           CALL METHOD ('CL_COS_UTILITIES')=>('IS_SAP_CLOUD_PLATFORM')
             RECEIVING
-              rv_is_sap_cloud_platform = mv_cloud.
+              rv_is_sap_cloud_platform = gv_cloud.
         CATCH cx_sy_dyn_call_illegal_method.
-          mv_cloud = abap_false.
+          gv_cloud = abap_false.
       ENDTRY.
     ENDIF.
 
-    rv_cloud = mv_cloud.
+    rv_cloud = gv_cloud.
 
   ENDMETHOD.
 ENDCLASS.
