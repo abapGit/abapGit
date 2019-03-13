@@ -1,7 +1,6 @@
 CLASS zcl_abapgit_factory DEFINITION
   PUBLIC
   CREATE PRIVATE
-
   GLOBAL FRIENDS zcl_abapgit_injector .
 
   PUBLIC SECTION.
