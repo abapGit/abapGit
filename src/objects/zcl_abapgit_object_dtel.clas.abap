@@ -42,7 +42,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
           lt_dd04_texts TYPE tt_dd04_texts.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
-                   <ls_dd04_text> TYPE ty_dd04_texts.
+                   <ls_dd04_text> LIKE LINE OF lt_dd04_texts.
 
 
     lv_name = ms_item-obj_name.
@@ -77,7 +77,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
           put_refused       = 5
           OTHERS            = 6.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from DDIF_DTEL_PUT @TEXTS' ).
+        zcx_abapgit_exception=>raise( |error from DDIF_DTEL_PUT @TEXTS, { sy-subrc }| ).
       ENDIF.
     ENDLOOP.
 
@@ -93,7 +93,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
           lt_i18n_langs TYPE TABLE OF langu.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
-                   <ls_dd04_text> TYPE ty_dd04_texts.
+                   <ls_dd04_text> LIKE LINE OF lt_dd04_texts.
 
 
     lv_name = ms_item-obj_name.
@@ -181,14 +181,11 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_dd04v TYPE dd04v,
-          lv_name  TYPE ddobjname,
-          ls_tpara TYPE tpara.
+          lv_name  TYPE ddobjname.
 
 
     io_xml->read( EXPORTING iv_name = 'DD04V'
                   CHANGING cg_data = ls_dd04v ).
-    io_xml->read( EXPORTING iv_name = 'TPARA'
-                  CHANGING cg_data = ls_tpara ).
 
     corr_insert( iv_package = iv_package iv_object_class = 'DICT' ).
 
@@ -206,7 +203,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
         put_refused       = 5
         OTHERS            = 6.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DDIF_DTEL_PUT' ).
+      zcx_abapgit_exception=>raise( |error from DDIF_DTEL_PUT, { sy-subrc }| ).
     ENDIF.
 
     deserialize_texts( io_xml   = io_xml
@@ -285,8 +282,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
 * done directly from here
 
     DATA: lv_name  TYPE ddobjname,
-          ls_dd04v TYPE dd04v,
-          ls_tpara TYPE tpara.
+          ls_dd04v TYPE dd04v.
 
     lv_name = ms_item-obj_name.
 
@@ -297,7 +293,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers = '0000'.
     IF sy-subrc <> 0 OR ls_dd04v IS INITIAL.
-      zcx_abapgit_exception=>raise( 'Not found in DD04L' ).
+      zcx_abapgit_exception=>raise( 'Not found in DD04L' ) ##NO_TEXT.
     ENDIF.
 
     SELECT SINGLE * FROM dd04t
@@ -306,15 +302,6 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
       AND ddlanguage = mv_language
       AND as4local = 'A'
       AND as4vers = '0000'.
-
-    IF NOT ls_dd04v-memoryid IS INITIAL.
-      SELECT SINGLE tpara~paramid tparat~partext
-        FROM tpara LEFT JOIN tparat
-        ON tparat~paramid = tpara~paramid AND
-        tparat~sprache = mv_language
-        INTO ls_tpara
-        WHERE tpara~paramid = ls_dd04v-memoryid.       "#EC CI_BUFFJOIN
-    ENDIF.
 
     CLEAR: ls_dd04v-as4user,
            ls_dd04v-as4date,
@@ -343,8 +330,6 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
 
     io_xml->add( iv_name = 'DD04V'
                  ig_data = ls_dd04v ).
-    io_xml->add( iv_name = 'TPARA'
-                 ig_data = ls_tpara ).
 
     serialize_texts( io_xml ).
 
