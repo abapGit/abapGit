@@ -297,6 +297,10 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
           lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit.
 
 
+    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-create_repo ) = abap_false.
+      zcx_abapgit_exception=>raise( 'Not authorized' ).
+    ENDIF.
+
     validate_package( iv_package ).
 
     lo_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( ).
@@ -329,6 +333,10 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
     ASSERT NOT iv_url IS INITIAL
       AND NOT iv_branch_name IS INITIAL
       AND NOT iv_package IS INITIAL.
+
+    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-create_repo ) = abap_false.
+      zcx_abapgit_exception=>raise( 'Not authorized' ).
+    ENDIF.
 
     validate_package( iv_package ).
     zcl_abapgit_url=>validate( |{ iv_url }| ).
