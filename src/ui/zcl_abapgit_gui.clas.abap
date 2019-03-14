@@ -38,8 +38,6 @@ CLASS zcl_abapgit_gui DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    METHODS free.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -196,16 +194,6 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     mi_router    = ii_router.
     mi_asset_man = ii_asset_man.
     startup( ).
-
-  ENDMETHOD.
-
-
-  METHOD free.
-
-    SET HANDLER me->on_event FOR mo_html_viewer ACTIVATION space.
-    mo_html_viewer->close_document( ).
-    mo_html_viewer->free( ).
-    FREE mo_html_viewer.
 
   ENDMETHOD.
 
