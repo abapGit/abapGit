@@ -3,53 +3,24 @@ CLASS zcl_abapgit_html DEFINITION
   CREATE PUBLIC.
 
   PUBLIC SECTION.
+    INTERFACES zif_abapgit_html.
+
+    ALIASES:
+      add      FOR zif_abapgit_html~add,
+      render   FOR zif_abapgit_html~render,
+      is_empty FOR zif_abapgit_html~is_empty,
+      add_a    FOR zif_abapgit_html~add_a,
+      a        FOR zif_abapgit_html~a,
+      icon     FOR zif_abapgit_html~icon.
 
     CONSTANTS c_indent_size TYPE i VALUE 2 ##NO_TEXT.
 
     CLASS-METHODS class_constructor .
-    METHODS add
-      IMPORTING
-        !ig_chunk TYPE any .
-    METHODS render
-      IMPORTING
-        !iv_no_indent_jscss TYPE abap_bool OPTIONAL
-      RETURNING
-        VALUE(rv_html)      TYPE string .
-    METHODS is_empty
-      RETURNING
-        VALUE(rv_yes) TYPE abap_bool .
-    METHODS add_a
-      IMPORTING
-        !iv_txt   TYPE string
-        !iv_act   TYPE string
-        !iv_typ   TYPE char1 DEFAULT zif_abapgit_definitions=>c_action_type-sapevent
-        !iv_opt   TYPE clike OPTIONAL
-        !iv_class TYPE string OPTIONAL
-        !iv_id    TYPE string OPTIONAL
-        !iv_style TYPE string OPTIONAL.
     METHODS add_icon
       IMPORTING
         !iv_name  TYPE string
         !iv_hint  TYPE string OPTIONAL
         !iv_class TYPE string OPTIONAL .
-    CLASS-METHODS a
-      IMPORTING
-        !iv_txt       TYPE string
-        !iv_act       TYPE string
-        !iv_typ       TYPE char1 DEFAULT zif_abapgit_definitions=>c_action_type-sapevent
-        !iv_opt       TYPE clike OPTIONAL
-        !iv_class     TYPE string OPTIONAL
-        !iv_id        TYPE string OPTIONAL
-        !iv_style     TYPE string OPTIONAL
-      RETURNING
-        VALUE(rv_str) TYPE string .
-    CLASS-METHODS icon
-      IMPORTING
-        !iv_name      TYPE string
-        !iv_hint      TYPE string OPTIONAL
-        !iv_class     TYPE string OPTIONAL
-      RETURNING
-        VALUE(rv_str) TYPE string .
   PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-DATA: go_single_tags_re TYPE REF TO cl_abap_regex.
