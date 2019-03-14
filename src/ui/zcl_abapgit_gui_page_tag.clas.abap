@@ -376,16 +376,16 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
 
         create_tag( it_postdata ).
 
-        ev_state = zif_abapgit_definitions=>c_event_state-go_back.
+        ev_state = zcl_abapgit_gui=>c_event_state-go_back.
 
       WHEN c_action-change_tag_type.
 
         parse_change_tag_type_request( it_postdata ).
 
-        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_action-commit_cancel.
-        ev_state = zif_abapgit_definitions=>c_event_state-go_back.
+        ev_state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
 
   ENDMETHOD.

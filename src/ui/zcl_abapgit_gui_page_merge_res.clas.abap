@@ -570,15 +570,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
         ENDIF.
 
         IF mv_current_conflict_index IS NOT INITIAL.
-          ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+          ev_state = zcl_abapgit_gui=>c_event_state-re_render.
         ELSE.
           ei_page = mo_merge_page.
-          ev_state = zif_abapgit_definitions=>c_event_state-go_back.
+          ev_state = zcl_abapgit_gui=>c_event_state-go_back.
         ENDIF.
 
       WHEN c_actions-toggle_mode.
         toggle_merge_mode( ).
-        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
 
     ENDCASE.
 

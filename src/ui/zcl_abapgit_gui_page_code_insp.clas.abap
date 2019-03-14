@@ -260,12 +260,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
           CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_stage
             EXPORTING
               io_repo = lo_repo_online.
-          ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+          ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
         ELSE.
 
           ei_page = me.
-          ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
+          ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
         ENDIF.
 
@@ -279,12 +279,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
             EXPORTING
               io_repo  = lo_repo_online
               io_stage = mo_stage.
-          ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+          ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
         ELSE.
 
           ei_page = me.
-          ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
+          ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
         ENDIF.
 
@@ -293,7 +293,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
         run_code_inspector( ).
 
         ei_page = me.
-        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN OTHERS.
         super->zif_abapgit_gui_page~on_event(
           EXPORTING

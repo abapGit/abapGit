@@ -1084,7 +1084,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       WHEN c_actions-toggle_unified. " Toggle file diplay
 
         mv_unified = zcl_abapgit_persistence_user=>get_instance( )->toggle_diff_unified( ).
-        ev_state   = zif_abapgit_definitions=>c_event_state-re_render.
+        ev_state   = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-stage.
 
@@ -1095,7 +1095,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
           EXPORTING
             io_repo  = lo_repo
             io_stage = mo_stage.
-        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
     ENDCASE.
 

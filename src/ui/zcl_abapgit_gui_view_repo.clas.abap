@@ -662,24 +662,24 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     CASE iv_action.
       WHEN c_actions-toggle_hide_files. " Toggle file diplay
         mv_hide_files   = zcl_abapgit_persistence_user=>get_instance( )->toggle_hide_files( ).
-        ev_state        = zif_abapgit_definitions=>c_event_state-re_render.
+        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-change_dir.        " Change dir
         lv_path         = zcl_abapgit_html_action_utils=>dir_decode( iv_getdata ).
         mv_cur_dir      = zcl_abapgit_path=>change_dir( iv_cur_dir = mv_cur_dir iv_cd = lv_path ).
-        ev_state        = zif_abapgit_definitions=>c_event_state-re_render.
+        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-toggle_folders.    " Toggle folder view
         mv_show_folders = boolc( mv_show_folders <> abap_true ).
         mv_cur_dir      = '/'. " Root
-        ev_state        = zif_abapgit_definitions=>c_event_state-re_render.
+        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-toggle_changes.    " Toggle changes only view
         mv_changes_only = zcl_abapgit_persistence_user=>get_instance( )->toggle_changes_only( ).
-        ev_state        = zif_abapgit_definitions=>c_event_state-re_render.
+        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-display_more.      " Increase MAX lines limit
         mv_max_lines    = mv_max_lines + mv_max_setting.
-        ev_state        = zif_abapgit_definitions=>c_event_state-re_render.
+        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_open_in_master_lang.
         open_in_master_language( ).
-        ev_state        = zif_abapgit_definitions=>c_event_state-re_render.
+        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD.

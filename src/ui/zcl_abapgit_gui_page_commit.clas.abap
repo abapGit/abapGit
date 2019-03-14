@@ -349,10 +349,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
                                   io_repo     = mo_repo
                                   io_stage    = mo_stage ).
 
-        ev_state = zif_abapgit_definitions=>c_event_state-go_back_to_bookmark.
+        ev_state = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark.
 
       WHEN c_action-commit_cancel.
-        ev_state = zif_abapgit_definitions=>c_event_state-go_back.
+        ev_state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
 
   ENDMETHOD.

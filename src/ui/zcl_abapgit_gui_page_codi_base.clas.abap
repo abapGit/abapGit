@@ -192,7 +192,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
               is_sub_item    = ls_sub_item
               iv_line_number = lv_line_number ).
 
-        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
     ENDCASE.
 
