@@ -992,3 +992,22 @@ table.commit tr .title {
 .ro-detail {
   display: none;
 }
+
+/* Branch Overview Page */
+.gitGraph-scrollWrapper, .gitGraph-Wrapper{
+  overflow-y:hidden;
+}
+
+.gitGraph-scrollWrapper{
+  overflow-x: auto; 
+  height: 20px; 
+}
+
+.gitGraph-Wrapper{
+  overflow-x: hidden; 
+}
+ 
+.gitGraph-HTopScroller {
+  width:1000px; 
+  height: 20px; 
+}

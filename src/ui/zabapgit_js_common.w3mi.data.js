@@ -1374,3 +1374,23 @@ BranchOverview.prototype.showCommit = function(event){
 BranchOverview.prototype.hideCommit = function (event){ // eslint-disable-line no-unused-vars
   this.toggleCommit();
 };
+
+// Initialize Top Horizontal Scroller on GitGraph
+function setGitGraphScroller(){ // eslint-disable-line no-unused-vars
+
+  // Get gitGraph Element Canvas Width
+  var gitGraphEl = document.getElementById("gitGraph");
+  var gitGraphWidth = gitGraphEl.offsetWidth;
+
+  // Initialize gitGraph-HTopScroller Element width as gitGraph
+  var HTopScrollerEl = document.querySelector(".gitGraph-HTopScroller");
+  HTopScrollerEl.style.width = gitGraphWidth + "px";
+
+}
+
+// Setup Top Horizontal Scroller on GitGraph event
+function GitGraphScroller() { // eslint-disable-line no-unused-vars
+  var gitGraphWrapperEl = document.querySelector(".gitGraph-Wrapper");
+  var gitGraphscrollWrapperEl = document.querySelector(".gitGraph-scrollWrapper");
+  gitGraphWrapperEl.scrollLeft = gitGraphscrollWrapperEl.scrollLeft;
+}

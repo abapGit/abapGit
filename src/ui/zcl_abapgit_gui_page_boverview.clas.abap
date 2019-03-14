@@ -90,8 +90,17 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
     ro_html->add( '<br>' ).
     ro_html->add( build_menu( )->render( ) ).
 
-* see http://stackoverflow.com/questions/6081483/maximum-size-of-a-canvas-element
+
+    "CSS gitGraph-scrollWrapper, gitGraph-HTopScroller and gitGraph-Wrapper
+    " - Used to manage the Horizonal Scroll bar on top of gitGraph Element
+    ro_html->add( '<div class="gitGraph-scrollWrapper" onscroll="GitGraphScroller()">' ).
+    "see http://stackoverflow.com/questions/6081483/maximum-size-of-a-canvas-element
+    ro_html->add( '<div class="gitGraph-HTopScroller"></div>' ).
+    ro_html->add( '</div>' ).
+
+    ro_html->add( '<div class="gitGraph-Wrapper">' ).
     ro_html->add( '<canvas id="gitGraph"></canvas>' ).
+    ro_html->add( '</div>' ).
 
     ro_html->add( '<script type="text/javascript" src="https://cdnjs.' &&
       'cloudflare.com/ajax/libs/gitgraph.js/1.14.0/gitgraph.min.js">' &&
@@ -178,6 +187,10 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
     ro_html->add(
        |gitGraph.addEventListener( "commit:mouseout",  gBranchOveriew.hideCommit.bind(gBranchOveriew) );| ).
 
+    ro_html->add( '</script>' ).
+
+    ro_html->add( '<script>' ).
+    ro_html->add( 'setGitGraphScroller();' ).
     ro_html->add( '</script>' ).
 
     ro_html->add( render_commit_popups( ) ).
