@@ -382,17 +382,6 @@ INTERFACE zif_abapgit_definitions
       dir        TYPE ty_chmod VALUE '40000 ',
     END OF c_chmod .
   CONSTANTS:
-    BEGIN OF c_event_state,
-      not_handled         VALUE 0,
-      re_render           VALUE 1,
-      new_page            VALUE 2,
-      go_back             VALUE 3,
-      no_more_act         VALUE 4,
-      new_page_w_bookmark VALUE 5,
-      go_back_to_bookmark VALUE 6,
-      new_page_replacing  VALUE 7,
-    END OF c_event_state .
-  CONSTANTS:
     BEGIN OF c_html_opt,
       strong   TYPE c VALUE 'E',
       cancel   TYPE c VALUE 'C',
@@ -448,7 +437,6 @@ INTERFACE zif_abapgit_definitions
       db_display               TYPE string VALUE 'db_display',
       db_edit                  TYPE string VALUE 'db_edit',
       bg_update                TYPE string VALUE 'bg_update',
-      go_main                  TYPE string VALUE 'go_main',
       go_explore               TYPE string VALUE 'go_explore',
       go_repo_overview         TYPE string VALUE 'go_repo_overview',
       go_db                    TYPE string VALUE 'go_db',

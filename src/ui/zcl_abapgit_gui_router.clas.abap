@@ -180,7 +180,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
     CASE is_event_data-action.
         " General PAGE routing
-      WHEN zif_abapgit_definitions=>c_action-go_main.                          " Go Main page
+      WHEN zcl_abapgit_gui=>c_action-go_home.                          " Go Main page
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
         ev_state = zif_abapgit_definitions=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_explore.                     " Go Explore page

@@ -318,7 +318,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
     CASE iv_action.
       WHEN zif_abapgit_definitions=>c_action-bg_update.
         update( decode( iv_getdata ) ).
-        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD.
