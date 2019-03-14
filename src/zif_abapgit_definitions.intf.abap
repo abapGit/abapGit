@@ -381,20 +381,6 @@ INTERFACE zif_abapgit_definitions
       executable TYPE ty_chmod VALUE '100755',
       dir        TYPE ty_chmod VALUE '40000 ',
     END OF c_chmod .
-  CONSTANTS:
-    BEGIN OF c_html_opt,
-      strong   TYPE c VALUE 'E',
-      cancel   TYPE c VALUE 'C',
-      crossout TYPE c VALUE 'X',
-    END OF c_html_opt .
-  CONSTANTS:
-    BEGIN OF c_action_type,
-      sapevent  TYPE c VALUE 'E',
-      url       TYPE c VALUE 'U',
-      onclick   TYPE c VALUE 'C',
-      separator TYPE c VALUE 'S',
-      dummy     TYPE c VALUE '_',
-    END OF c_action_type .
   CONSTANTS c_crlf TYPE abap_cr_lf VALUE cl_abap_char_utilities=>cr_lf ##NO_TEXT.
   CONSTANTS c_newline TYPE abap_char1 VALUE cl_abap_char_utilities=>newline ##NO_TEXT.
   CONSTANTS c_english TYPE spras VALUE 'E' ##NO_TEXT.

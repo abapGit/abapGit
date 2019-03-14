@@ -246,12 +246,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
     lo_toolbar->add( iv_act = 'submitFormById(''commit_form'');'
                      iv_txt = 'Commit'
-                     iv_typ = zif_abapgit_definitions=>c_action_type-onclick
-                     iv_opt = zif_abapgit_definitions=>c_html_opt-strong ) ##NO_TEXT.
+                     iv_typ = zif_abapgit_html=>c_action_type-onclick
+                     iv_opt = zif_abapgit_html=>c_html_opt-strong ) ##NO_TEXT.
 
     lo_toolbar->add( iv_act = c_action-commit_cancel
                      iv_txt = 'Cancel'
-                     iv_opt = zif_abapgit_definitions=>c_html_opt-cancel ) ##NO_TEXT.
+                     iv_opt = zif_abapgit_html=>c_html_opt-cancel ) ##NO_TEXT.
 
     ro_html->add( '<div class="paddings">' ).
     ro_html->add( lo_toolbar->render( ) ).

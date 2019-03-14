@@ -116,7 +116,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
                   iv_cur = abap_false ) ##NO_TEXT.
 
     IF is_stage_allowed( ) = abap_false.
-      lv_opt = zif_abapgit_definitions=>c_html_opt-crossout.
+      lv_opt = zif_abapgit_html=>c_html_opt-crossout.
     ENDIF.
 
     IF mo_repo->is_offline( ) = abap_true.

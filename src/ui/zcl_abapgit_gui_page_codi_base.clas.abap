@@ -123,7 +123,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
         io_html->add_a( iv_txt = |{ <ls_result>-objtype } { <ls_result>-objname }|
                         iv_act = |{ <ls_result>-objtype }{ <ls_result>-objname }| &&
                                  |{ c_object_separator }{ c_object_separator }{ <ls_result>-line }|
-                        iv_typ = zif_abapgit_definitions=>c_action_type-sapevent ).
+                        iv_typ = zif_abapgit_html=>c_action_type-sapevent ).
 
       ELSE.
         io_html->add_a( iv_txt = |{ <ls_result>-objtype } { <ls_result>-objname }| &&
@@ -131,7 +131,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
                         iv_act = |{ <ls_result>-objtype }{ <ls_result>-objname }| &&
                                  |{ c_object_separator }{ <ls_result>-sobjtype }{ <ls_result>-sobjname }| &&
                                  |{ c_object_separator }{ <ls_result>-line }|
-                        iv_typ = zif_abapgit_definitions=>c_action_type-sapevent ).
+                        iv_typ = zif_abapgit_html=>c_action_type-sapevent ).
 
       ENDIF.
       io_html->add( '</div>' ).

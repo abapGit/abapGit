@@ -76,13 +76,13 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
     lv_class = iv_class.
 
-    IF iv_opt CA zif_abapgit_definitions=>c_html_opt-strong.
+    IF iv_opt CA zif_abapgit_html=>c_html_opt-strong.
       lv_class = lv_class && ' emphasis' ##NO_TEXT.
     ENDIF.
-    IF iv_opt CA zif_abapgit_definitions=>c_html_opt-cancel.
+    IF iv_opt CA zif_abapgit_html=>c_html_opt-cancel.
       lv_class = lv_class && ' attention' ##NO_TEXT.
     ENDIF.
-    IF iv_opt CA zif_abapgit_definitions=>c_html_opt-crossout.
+    IF iv_opt CA zif_abapgit_html=>c_html_opt-crossout.
       lv_class = lv_class && ' crossout grey' ##NO_TEXT.
     ENDIF.
     IF lv_class IS NOT INITIAL.
@@ -91,16 +91,16 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     ENDIF.
 
     lv_href  = ' href="#"'. " Default, dummy
-    IF iv_act IS NOT INITIAL OR iv_typ = zif_abapgit_definitions=>c_action_type-dummy.
+    IF iv_act IS NOT INITIAL OR iv_typ = zif_abapgit_html=>c_action_type-dummy.
       CASE iv_typ.
-        WHEN zif_abapgit_definitions=>c_action_type-url.
+        WHEN zif_abapgit_html=>c_action_type-url.
           lv_href  = | href="{ iv_act }"|.
-        WHEN zif_abapgit_definitions=>c_action_type-sapevent.
+        WHEN zif_abapgit_html=>c_action_type-sapevent.
           lv_href  = | href="sapevent:{ iv_act }"|.
-        WHEN zif_abapgit_definitions=>c_action_type-onclick.
+        WHEN zif_abapgit_html=>c_action_type-onclick.
           lv_href  = ' href="#"'.
           lv_click = | onclick="{ iv_act }"|.
-        WHEN zif_abapgit_definitions=>c_action_type-dummy.
+        WHEN zif_abapgit_html=>c_action_type-dummy.
           lv_href  = ' href="#"'.
       ENDCASE.
     ENDIF.
@@ -279,7 +279,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       indent_line( CHANGING cs_context = ls_context cv_line = <lv_line_c> ).
     ENDLOOP.
 
-    CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY zif_abapgit_definitions=>c_newline.
+    CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY cl_abap_char_utilities=>newline.
 
   ENDMETHOD.
 

@@ -361,7 +361,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     io_html->add( zcl_abapgit_html=>a(
       iv_txt = 'Toggle detail'
       iv_act = |toggleRepoListDetail()|
-      iv_typ = zif_abapgit_definitions=>c_action_type-onclick ) ).
+      iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
 
     io_html->add( |</div>| ).
 
