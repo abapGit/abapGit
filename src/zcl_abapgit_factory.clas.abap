@@ -33,9 +33,6 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-METHODS get_cts_api
       RETURNING
         VALUE(ri_cts_api) TYPE REF TO zif_abapgit_cts_api .
-    CLASS-METHODS get_frontend_services
-      RETURNING
-        VALUE(ri_fe_serv) TYPE REF TO zif_abapgit_frontend_services .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -46,7 +43,7 @@ CLASS zcl_abapgit_factory DEFINITION
       END OF ty_sap_package .
     TYPES:
       tty_sap_package TYPE HASHED TABLE OF ty_sap_package
-                            WITH UNIQUE KEY package .
+                              WITH UNIQUE KEY package .
     TYPES:
       BEGIN OF ty_code_inspector,
         package  TYPE devclass,
@@ -54,14 +51,13 @@ CLASS zcl_abapgit_factory DEFINITION
       END OF ty_code_inspector .
     TYPES:
       tty_code_inspector TYPE HASHED TABLE OF ty_code_inspector
-                               WITH UNIQUE KEY package .
+                                 WITH UNIQUE KEY package .
 
     CLASS-DATA gi_tadir TYPE REF TO zif_abapgit_tadir .
     CLASS-DATA gt_sap_package TYPE tty_sap_package .
     CLASS-DATA gt_code_inspector TYPE tty_code_inspector .
     CLASS-DATA gi_stage_logic TYPE REF TO zif_abapgit_stage_logic .
     CLASS-DATA gi_cts_api TYPE REF TO zif_abapgit_cts_api .
-    CLASS-DATA gi_fe_services TYPE REF TO zif_abapgit_frontend_services .
 ENDCLASS.
 
 
@@ -110,17 +106,6 @@ CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
     ENDIF.
 
     ri_cts_api = gi_cts_api.
-  ENDMETHOD.
-
-
-  METHOD get_frontend_services.
-
-    IF gi_fe_services IS INITIAL.
-      CREATE OBJECT gi_fe_services TYPE zcl_abapgit_frontend_services.
-    ENDIF.
-
-    ri_fe_serv = gi_fe_services.
-
   ENDMETHOD.
 
 
