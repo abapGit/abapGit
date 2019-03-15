@@ -7,7 +7,7 @@ CLASS zcl_abapgit_gui_asset_manager DEFINITION PUBLIC FINAL CREATE PUBLIC .
     TYPES:
       BEGIN OF ty_asset_entry.
         INCLUDE TYPE zif_abapgit_gui_asset_manager~ty_web_asset.
-        TYPES:  mime_name TYPE wwwdatatab-objid,
+      TYPES:  mime_name TYPE wwwdatatab-objid,
       END OF ty_asset_entry ,
       tt_asset_register TYPE STANDARD TABLE OF ty_asset_entry WITH KEY url .
 
@@ -126,15 +126,15 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
 
     APPEND ls_asset TO mt_asset_register.
 
-  endmethod.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_asset_manager~get_all_assets.
 
-    FIELD-SYMBOLS <a> LIKE LINE OF mt_asset_register.
+    FIELD-SYMBOLS <ls_a> LIKE LINE OF mt_asset_register.
 
-    LOOP AT mt_asset_register ASSIGNING <a>.
-      APPEND load_asset( <a> ) TO rt_assets.
+    LOOP AT mt_asset_register ASSIGNING <ls_a>.
+      APPEND load_asset( <ls_a> ) TO rt_assets.
     ENDLOOP.
 
   ENDMETHOD.
@@ -142,13 +142,13 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_asset_manager~get_asset.
 
-    FIELD-SYMBOLS <a> LIKE LINE of mt_asset_register.
+    FIELD-SYMBOLS <ls_a> LIKE LINE of mt_asset_register.
 
-    READ TABLE mt_asset_register WITH KEY url = iv_url ASSIGNING <a>.
-    IF <a> IS NOT ASSIGNED.
+    READ TABLE mt_asset_register WITH KEY url = iv_url ASSIGNING <ls_a>.
+    IF <ls_a> IS NOT ASSIGNED.
       zcx_abapgit_exception=>raise( |Cannot find GUI asset: { iv_url }| ).
     ENDIF.
-    rs_asset = load_asset( <a> ).
+    rs_asset = load_asset( <ls_a> ).
 
   ENDMETHOD.
 
