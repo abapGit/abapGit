@@ -153,3 +153,9 @@ ENDMETHOD.
 
 todo:
 [https://github.com/larshp/abapGit/issues/1331](https://github.com/larshp/abapGit/issues/1331)
+
+*******************************
+
+## Progress indicator
+
+The default progress indicator shows progress in SAP GUI, however it is possible to inject a custom progress indicator via `ZCL_ABAPGIT_PROGRESS=>SET_INSTANCE` which can catch the status in non SAP GUI scenarios.
