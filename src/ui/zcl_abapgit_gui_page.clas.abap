@@ -280,11 +280,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-url.
 
         call_browser( iv_getdata ).
-        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
       WHEN OTHERS.
 
-        ev_state = zif_abapgit_definitions=>c_event_state-not_handled.
+        ev_state = zcl_abapgit_gui=>c_event_state-not_handled.
 
     ENDCASE.
 

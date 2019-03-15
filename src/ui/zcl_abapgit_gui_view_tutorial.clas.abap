@@ -79,7 +79,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_TUTORIAL IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_page~on_event.
-    ev_state = zif_abapgit_definitions=>c_event_state-not_handled.
+    ev_state = zcl_abapgit_gui=>c_event_state-not_handled.
   ENDMETHOD.
 
 

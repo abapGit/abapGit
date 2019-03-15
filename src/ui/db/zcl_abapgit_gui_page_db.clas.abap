@@ -201,7 +201,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
       WHEN c_action-delete.
         ls_db = zcl_abapgit_html_action_utils=>dbkey_decode( iv_getdata ).
         delete( ls_db ).
-        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
 
   ENDMETHOD.

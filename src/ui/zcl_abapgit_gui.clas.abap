@@ -3,6 +3,22 @@ CLASS zcl_abapgit_gui DEFINITION
   FINAL .
 
   PUBLIC SECTION.
+    CONSTANTS:
+      BEGIN OF c_event_state,
+        not_handled         VALUE 0,
+        re_render           VALUE 1,
+        new_page            VALUE 2,
+        go_back             VALUE 3,
+        no_more_act         VALUE 4,
+        new_page_w_bookmark VALUE 5,
+        go_back_to_bookmark VALUE 6,
+        new_page_replacing  VALUE 7,
+      END OF c_event_state .
+
+    CONSTANTS:
+      BEGIN OF c_action,
+        go_home TYPE string VALUE 'go_home',
+      END OF c_action.
 
     METHODS go_home
       RAISING zcx_abapgit_exception.
@@ -194,7 +210,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD go_home.
 
-    on_event( action = |{ zif_abapgit_definitions=>c_action-go_main }| ). " doesn't accept strings directly
+    on_event( action = |{ c_action-go_home }| ). " doesn't accept strings directly
 
   ENDMETHOD.
 
@@ -231,19 +247,19 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         ENDIF.
 
         CASE lv_state.
-          WHEN zif_abapgit_definitions=>c_event_state-re_render.
+          WHEN c_event_state-re_render.
             render( ).
-          WHEN zif_abapgit_definitions=>c_event_state-new_page.
+          WHEN c_event_state-new_page.
             call_page( li_page ).
-          WHEN zif_abapgit_definitions=>c_event_state-new_page_w_bookmark.
+          WHEN c_event_state-new_page_w_bookmark.
             call_page( ii_page = li_page iv_with_bookmark = abap_true ).
-          WHEN zif_abapgit_definitions=>c_event_state-new_page_replacing.
+          WHEN c_event_state-new_page_replacing.
             call_page( ii_page = li_page iv_replacing = abap_true ).
-          WHEN zif_abapgit_definitions=>c_event_state-go_back.
+          WHEN c_event_state-go_back.
             back( ).
-          WHEN zif_abapgit_definitions=>c_event_state-go_back_to_bookmark.
+          WHEN c_event_state-go_back_to_bookmark.
             back( abap_true ).
-          WHEN zif_abapgit_definitions=>c_event_state-no_more_act.
+          WHEN c_event_state-no_more_act.
             " Do nothing, handling completed
           WHEN OTHERS.
             zcx_abapgit_exception=>raise( |Unknown action: { iv_action }| ).

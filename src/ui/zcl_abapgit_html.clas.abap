@@ -3,53 +3,24 @@ CLASS zcl_abapgit_html DEFINITION
   CREATE PUBLIC.
 
   PUBLIC SECTION.
+    INTERFACES zif_abapgit_html.
+
+    ALIASES:
+      add      FOR zif_abapgit_html~add,
+      render   FOR zif_abapgit_html~render,
+      is_empty FOR zif_abapgit_html~is_empty,
+      add_a    FOR zif_abapgit_html~add_a,
+      a        FOR zif_abapgit_html~a,
+      icon     FOR zif_abapgit_html~icon.
 
     CONSTANTS c_indent_size TYPE i VALUE 2 ##NO_TEXT.
 
     CLASS-METHODS class_constructor .
-    METHODS add
-      IMPORTING
-        !ig_chunk TYPE any .
-    METHODS render
-      IMPORTING
-        !iv_no_indent_jscss TYPE abap_bool OPTIONAL
-      RETURNING
-        VALUE(rv_html)      TYPE string .
-    METHODS is_empty
-      RETURNING
-        VALUE(rv_yes) TYPE abap_bool .
-    METHODS add_a
-      IMPORTING
-        !iv_txt   TYPE string
-        !iv_act   TYPE string
-        !iv_typ   TYPE char1 DEFAULT zif_abapgit_definitions=>c_action_type-sapevent
-        !iv_opt   TYPE clike OPTIONAL
-        !iv_class TYPE string OPTIONAL
-        !iv_id    TYPE string OPTIONAL
-        !iv_style TYPE string OPTIONAL.
     METHODS add_icon
       IMPORTING
         !iv_name  TYPE string
         !iv_hint  TYPE string OPTIONAL
         !iv_class TYPE string OPTIONAL .
-    CLASS-METHODS a
-      IMPORTING
-        !iv_txt       TYPE string
-        !iv_act       TYPE string
-        !iv_typ       TYPE char1 DEFAULT zif_abapgit_definitions=>c_action_type-sapevent
-        !iv_opt       TYPE clike OPTIONAL
-        !iv_class     TYPE string OPTIONAL
-        !iv_id        TYPE string OPTIONAL
-        !iv_style     TYPE string OPTIONAL
-      RETURNING
-        VALUE(rv_str) TYPE string .
-    CLASS-METHODS icon
-      IMPORTING
-        !iv_name      TYPE string
-        !iv_hint      TYPE string OPTIONAL
-        !iv_class     TYPE string OPTIONAL
-      RETURNING
-        VALUE(rv_str) TYPE string .
   PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-DATA: go_single_tags_re TYPE REF TO cl_abap_regex.
@@ -105,13 +76,13 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
     lv_class = iv_class.
 
-    IF iv_opt CA zif_abapgit_definitions=>c_html_opt-strong.
+    IF iv_opt CA zif_abapgit_html=>c_html_opt-strong.
       lv_class = lv_class && ' emphasis' ##NO_TEXT.
     ENDIF.
-    IF iv_opt CA zif_abapgit_definitions=>c_html_opt-cancel.
+    IF iv_opt CA zif_abapgit_html=>c_html_opt-cancel.
       lv_class = lv_class && ' attention' ##NO_TEXT.
     ENDIF.
-    IF iv_opt CA zif_abapgit_definitions=>c_html_opt-crossout.
+    IF iv_opt CA zif_abapgit_html=>c_html_opt-crossout.
       lv_class = lv_class && ' crossout grey' ##NO_TEXT.
     ENDIF.
     IF lv_class IS NOT INITIAL.
@@ -120,16 +91,16 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     ENDIF.
 
     lv_href  = ' href="#"'. " Default, dummy
-    IF iv_act IS NOT INITIAL OR iv_typ = zif_abapgit_definitions=>c_action_type-dummy.
+    IF iv_act IS NOT INITIAL OR iv_typ = zif_abapgit_html=>c_action_type-dummy.
       CASE iv_typ.
-        WHEN zif_abapgit_definitions=>c_action_type-url.
+        WHEN zif_abapgit_html=>c_action_type-url.
           lv_href  = | href="{ iv_act }"|.
-        WHEN zif_abapgit_definitions=>c_action_type-sapevent.
+        WHEN zif_abapgit_html=>c_action_type-sapevent.
           lv_href  = | href="sapevent:{ iv_act }"|.
-        WHEN zif_abapgit_definitions=>c_action_type-onclick.
+        WHEN zif_abapgit_html=>c_action_type-onclick.
           lv_href  = ' href="#"'.
           lv_click = | onclick="{ iv_act }"|.
-        WHEN zif_abapgit_definitions=>c_action_type-dummy.
+        WHEN zif_abapgit_html=>c_action_type-dummy.
           lv_href  = ' href="#"'.
       ENDCASE.
     ENDIF.
@@ -308,7 +279,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       indent_line( CHANGING cs_context = ls_context cv_line = <lv_line_c> ).
     ENDLOOP.
 
-    CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY zif_abapgit_definitions=>c_newline.
+    CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY cl_abap_char_utilities=>newline.
 
   ENDMETHOD.
 

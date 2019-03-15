@@ -232,7 +232,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
                && '<div class="float-right">'
                && zcl_abapgit_html=>a(
                     iv_txt   = '&#x274c;'
-                    iv_typ   = zif_abapgit_definitions=>c_action_type-onclick
+                    iv_typ   = zif_abapgit_html=>c_action_type-onclick
                     iv_act   = |toggleDisplay('{ iv_div_id }')|
                     iv_class = 'close-btn' )
                && '</div></div>' ).
@@ -395,7 +395,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
         lv_icon = 'arrow-circle-up/grey80'.
       ENDIF.
       ro_html->add_a( iv_act = |toggleDisplay('news')|
-                      iv_typ = zif_abapgit_definitions=>c_action_type-onclick
+                      iv_typ = zif_abapgit_html=>c_action_type-onclick
                       iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_icon
                                                        iv_class = 'pad-sides'
                                                        iv_hint  = 'Display changelog' ) ).
