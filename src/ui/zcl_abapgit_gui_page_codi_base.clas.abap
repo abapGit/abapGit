@@ -31,17 +31,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
 
   METHOD jump.
+
     DATA: lo_test               TYPE REF TO cl_ci_test_root,
           ls_info               TYPE scir_rest,
           lo_result             TYPE REF TO cl_ci_result_root,
-          lv_check_variant_name TYPE sci_chkv,
-          lv_package            TYPE devclass.
-    DATA: lv_adt_jump_enabled   TYPE abap_bool.
-    DATA: lv_line_number        TYPE i.
-    DATA: ls_item               TYPE zif_abapgit_definitions=>ty_item.
-    DATA: ls_sub_item           TYPE zif_abapgit_definitions=>ty_item.
+          lv_adt_jump_enabled   TYPE abap_bool,
+          lv_line_number        TYPE i,
+          ls_item               TYPE zif_abapgit_definitions=>ty_item,
+          ls_sub_item           TYPE zif_abapgit_definitions=>ty_item.
 
     FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
+
 
     IF is_sub_item IS NOT INITIAL.
       READ TABLE mt_result WITH KEY objtype  = is_item-obj_type
@@ -62,9 +62,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
     ls_sub_item-obj_name = <ls_result>-sobjname.
     ls_sub_item-obj_type = <ls_result>-sobjtype.
-
-    lv_package = mo_repo->get_package( ).
-    lv_check_variant_name = mo_repo->get_local_settings( )-code_inspector_check_variant.
 
     " see SCI_LCL_DYNP_530 / HANDLE_DOUBLE_CLICK
 
@@ -87,8 +84,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        lo_test ?= cl_ci_tests=>get_test_ref( <ls_result>-test ).
-
+        lo_test = cl_ci_tests=>get_test_ref( <ls_result>-test ).
       CATCH cx_root.
         zcx_abapgit_exception=>raise( |Jump to object not supported in your NW release|  ).
     ENDTRY.

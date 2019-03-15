@@ -243,10 +243,6 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
   METHOD deserialize_long_texts.
 
-    TYPES BEGIN OF language_type.
-    TYPES language TYPE dm40t-sprache.
-    TYPES END OF language_type.
-
     DATA BEGIN OF ls_udmo_long_text.
     DATA language TYPE dm40t-sprache.
     DATA header   TYPE thead.
@@ -774,7 +770,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     ENDIF.
 
     serialize_model( io_xml ).
-    me->serialize_entities( io_xml  ).
+    me->serialize_entities( io_xml ).
     me->serialize_short_texts( io_xml ).
     me->serialize_long_texts( io_xml ).
 

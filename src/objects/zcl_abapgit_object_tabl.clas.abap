@@ -32,21 +32,30 @@ CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS delete_idoc_segment RETURNING VALUE(rv_deleted) TYPE abap_bool
                                 RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
-    CONSTANTS c_extension_xml    TYPE string   VALUE 'xml' ##NO_TEXT.
+
+    TYPES:
+      ty_dd03p_tt TYPE STANDARD TABLE OF dd03p .
+
     CONSTANTS c_longtext_id_tabl TYPE dokil-id VALUE 'TB' ##NO_TEXT.
-    CONSTANTS: BEGIN OF c_s_dataname,
-                 segment_definition TYPE string VALUE 'SEGMENT_DEFINITION' ##NO_TEXT,
-               END OF c_s_dataname.
-    TYPES: ty_dd03p_tt TYPE STANDARD TABLE OF dd03p.
+    CONSTANTS:
+      BEGIN OF c_s_dataname,
+        segment_definition TYPE string VALUE 'SEGMENT_DEFINITION' ##NO_TEXT,
+      END OF c_s_dataname .
 
     METHODS clear_dd03p_fields
-      CHANGING ct_dd03p TYPE ty_dd03p_tt.
+      CHANGING
+        !ct_dd03p TYPE ty_dd03p_tt .
     "! Check if structure is an IDoc segment
     "! @raising zcx_abapgit_exception | It's not an IDoc segment
-    METHODS check_is_idoc_segment RAISING zcx_abapgit_exception.
-    METHODS clear_dd03p_fields_common CHANGING cs_dd03p TYPE dd03p.
-    METHODS clear_dd03p_fields_dataelement CHANGING cs_dd03p TYPE dd03p.
-
+    METHODS check_is_idoc_segment
+      RAISING
+        zcx_abapgit_exception .
+    METHODS clear_dd03p_fields_common
+      CHANGING
+        !cs_dd03p TYPE dd03p .
+    METHODS clear_dd03p_fields_dataelement
+      CHANGING
+        !cs_dd03p TYPE dd03p .
 ENDCLASS.
 
 

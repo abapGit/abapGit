@@ -174,8 +174,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD html_head.
 
-    DATA lv_font TYPE string.
-
     CREATE OBJECT ro_html.
 
     ro_html->add( '<head>' ).                               "#EC NOTEXT

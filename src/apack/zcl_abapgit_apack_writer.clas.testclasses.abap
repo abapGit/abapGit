@@ -17,8 +17,7 @@ CLASS ltcl_apack_manifest_writer IMPLEMENTATION.
     ls_apack_manifest_descriptor-version = '1.8'.
     ls_apack_manifest_descriptor-git_url = 'https://github.com/larshp/abapGit.git'.
 
-    lo_manifest_writer = zcl_abapgit_apack_writer=>create_instance(
-                           is_apack_manifest_descriptor = ls_apack_manifest_descriptor ).
+    lo_manifest_writer = zcl_abapgit_apack_writer=>create_instance( ls_apack_manifest_descriptor ).
     lv_actual_xml = lo_manifest_writer->serialize( ).
     cl_abap_unit_assert=>assert_not_initial( lv_actual_xml ).
     cl_abap_unit_assert=>assert_true( boolc( contains( val = lv_actual_xml
