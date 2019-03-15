@@ -7,7 +7,7 @@ CLASS zcl_abapgit_gui_asset_manager DEFINITION PUBLIC FINAL CREATE PUBLIC .
     TYPES:
       BEGIN OF ty_asset_entry.
         INCLUDE TYPE zif_abapgit_gui_asset_manager~ty_web_asset.
-      TYPES:  mime_name TYPE wwwdatatab-objid,
+    TYPES:  mime_name TYPE wwwdatatab-objid,
       END OF ty_asset_entry ,
       tt_asset_register TYPE STANDARD TABLE OF ty_asset_entry WITH KEY url .
 
