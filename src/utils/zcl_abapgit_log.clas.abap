@@ -4,36 +4,28 @@ CLASS zcl_abapgit_log DEFINITION
 
   PUBLIC SECTION.
 
-    METHODS add
-      IMPORTING
-        !iv_msg  TYPE csequence
-        !iv_type TYPE symsgty DEFAULT 'E'
-        !iv_rc   TYPE balsort OPTIONAL .
-    METHODS add_error
-      IMPORTING
-        !iv_msg TYPE csequence .
-    METHODS add_info
-      IMPORTING
-        !iv_msg TYPE csequence .
-    METHODS add_warning
-      IMPORTING
-        !iv_msg TYPE csequence .
-    METHODS clear .
-    METHODS count
-      RETURNING
-        VALUE(rv_count) TYPE i .
-    METHODS has_rc
-      IMPORTING
-        !iv_rc        TYPE balsort
-      RETURNING
-        VALUE(rv_yes) TYPE abap_bool .
-    METHODS show
-      IMPORTING
-        !iv_header_text TYPE csequence DEFAULT 'Log' .
-    METHODS to_html
-      RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
-    METHODS write .
+    INTERFACES zif_abapgit_log .
+
+    ALIASES add
+      FOR zif_abapgit_log~add .
+    ALIASES add_error
+      FOR zif_abapgit_log~add_error .
+    ALIASES add_info
+      FOR zif_abapgit_log~add_info .
+    ALIASES add_warning
+      FOR zif_abapgit_log~add_warning .
+    ALIASES clear
+      FOR zif_abapgit_log~clear .
+    ALIASES count
+      FOR zif_abapgit_log~count .
+    ALIASES has_rc
+      FOR zif_abapgit_log~has_rc .
+    ALIASES show
+      FOR zif_abapgit_log~show .
+    ALIASES to_html
+      FOR zif_abapgit_log~to_html .
+    ALIASES write
+      FOR zif_abapgit_log~write .
   PROTECTED SECTION.
 
     TYPES:
@@ -49,7 +41,7 @@ CLASS zcl_abapgit_log DEFINITION
       END OF ty_log_out .
     TYPES:
       tty_log_out TYPE STANDARD TABLE OF ty_log_out
-                              WITH NON-UNIQUE DEFAULT KEY .
+                                WITH NON-UNIQUE DEFAULT KEY .
 
     DATA:
       mt_log TYPE STANDARD TABLE OF ty_log WITH DEFAULT KEY .
@@ -57,67 +49,12 @@ CLASS zcl_abapgit_log DEFINITION
     METHODS prepare_log_for_display
       RETURNING
         VALUE(rt_log_out) TYPE zcl_abapgit_log=>tty_log_out .
-
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
-
-
-  METHOD add.
-
-    FIELD-SYMBOLS: <ls_log> LIKE LINE OF mt_log.
-
-    APPEND INITIAL LINE TO mt_log ASSIGNING <ls_log>.
-    <ls_log>-msg  = iv_msg.
-    <ls_log>-type = iv_type.
-    <ls_log>-rc   = iv_rc.
-
-  ENDMETHOD.
-
-
-  METHOD add_error.
-
-    add( iv_msg  = iv_msg
-         iv_type = 'E' ).
-
-  ENDMETHOD.
-
-
-  METHOD add_info.
-
-    add( iv_msg  = iv_msg
-         iv_type = 'I' ).
-
-  ENDMETHOD.
-
-
-  METHOD add_warning.
-
-    add( iv_msg  = iv_msg
-         iv_type = 'W' ).
-
-  ENDMETHOD.
-
-
-  METHOD clear.
-    CLEAR mt_log.
-  ENDMETHOD.
-
-
-  METHOD count.
-    rv_count = lines( mt_log ).
-  ENDMETHOD.
-
-
-  METHOD has_rc.
-* todo, this method is only used in unit tests
-
-    READ TABLE mt_log WITH KEY rc = iv_rc TRANSPORTING NO FIELDS.
-    rv_yes = boolc( sy-subrc = 0 ).
-  ENDMETHOD.
 
 
   METHOD prepare_log_for_display.
@@ -150,7 +87,61 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD show.
+  METHOD zif_abapgit_log~add.
+
+    FIELD-SYMBOLS: <ls_log> LIKE LINE OF mt_log.
+
+    APPEND INITIAL LINE TO mt_log ASSIGNING <ls_log>.
+    <ls_log>-msg  = iv_msg.
+    <ls_log>-type = iv_type.
+    <ls_log>-rc   = iv_rc.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_log~add_error.
+
+    add( iv_msg  = iv_msg
+         iv_type = 'E' ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_log~add_info.
+
+    add( iv_msg  = iv_msg
+         iv_type = 'I' ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_log~add_warning.
+
+    add( iv_msg  = iv_msg
+         iv_type = 'W' ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_log~clear.
+    CLEAR mt_log.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_log~count.
+    rv_count = lines( mt_log ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_log~has_rc.
+* todo, this method is only used in unit tests
+
+    READ TABLE mt_log WITH KEY rc = iv_rc TRANSPORTING NO FIELDS.
+    rv_yes = boolc( sy-subrc = 0 ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_log~show.
 
     DATA: lt_log         TYPE tty_log_out,
           lo_alv         TYPE REF TO cl_salv_table,
@@ -202,7 +193,7 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD to_html.
+  METHOD zif_abapgit_log~to_html.
 
     DATA: lv_class TYPE string,
           lv_icon  TYPE string.
@@ -237,7 +228,7 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD write.
+  METHOD zif_abapgit_log~write.
 
     DATA: ls_log  LIKE LINE OF mt_log,
           lv_text TYPE string.
