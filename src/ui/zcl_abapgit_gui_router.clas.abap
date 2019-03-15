@@ -635,7 +635,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
     CASE is_event_data-action.
         " ZIP services actions
       WHEN zif_abapgit_definitions=>c_action-zip_import.                      " Import repo from ZIP
-        lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+        lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         lv_path = zcl_abapgit_ui_factory=>get_frontend_services( )->show_file_open_dialog(
           iv_title            = 'Import ZIP'
           iv_default_filename = '*.zip' ).

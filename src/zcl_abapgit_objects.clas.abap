@@ -690,7 +690,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       APPEND LINES OF <ls_obj>-obj->mo_files->get_accessed_files( ) TO ct_files.
     ENDLOOP.
 
-    zcl_abapgit_objects_activation=>activate( iv_ddic         = is_step-is_ddic ).
+    zcl_abapgit_objects_activation=>activate( is_step-is_ddic ).
 
   ENDMETHOD.
 
