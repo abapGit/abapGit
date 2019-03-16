@@ -6,26 +6,6 @@ CLASS zcl_abapgit_log DEFINITION
 
     INTERFACES zif_abapgit_log .
 
-    ALIASES add
-      FOR zif_abapgit_log~add .
-    ALIASES add_error
-      FOR zif_abapgit_log~add_error .
-    ALIASES add_info
-      FOR zif_abapgit_log~add_info .
-    ALIASES add_warning
-      FOR zif_abapgit_log~add_warning .
-    ALIASES clear
-      FOR zif_abapgit_log~clear .
-    ALIASES count
-      FOR zif_abapgit_log~count .
-    ALIASES has_rc
-      FOR zif_abapgit_log~has_rc .
-    ALIASES show
-      FOR zif_abapgit_log~show .
-    ALIASES to_html
-      FOR zif_abapgit_log~to_html .
-    ALIASES write
-      FOR zif_abapgit_log~write .
   PROTECTED SECTION.
 
     TYPES:
@@ -101,24 +81,27 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
 
   METHOD zif_abapgit_log~add_error.
 
-    add( iv_msg  = iv_msg
-         iv_type = 'E' ).
+    zif_abapgit_log~add(
+      iv_msg  = iv_msg
+      iv_type = 'E' ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_log~add_info.
 
-    add( iv_msg  = iv_msg
-         iv_type = 'I' ).
+    zif_abapgit_log~add(
+      iv_msg  = iv_msg
+      iv_type = 'I' ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_log~add_warning.
 
-    add( iv_msg  = iv_msg
-         iv_type = 'W' ).
+    zif_abapgit_log~add(
+      iv_msg  = iv_msg
+      iv_type = 'W' ).
 
   ENDMETHOD.
 
@@ -202,7 +185,7 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    IF count( ) = 0.
+    IF zif_abapgit_log~count( ) = 0.
       RETURN.
     ENDIF.
 

@@ -8,7 +8,7 @@ CLASS zcl_abapgit_background_push_au DEFINITION
     INTERFACES zif_abapgit_background .
   PROTECTED SECTION.
 
-    DATA mo_log TYPE REF TO zcl_abapgit_log .
+    DATA mi_log TYPE REF TO zif_abapgit_log .
 
     METHODS build_comment
       IMPORTING
@@ -141,7 +141,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
           changed_by = lv_changed_by
           TRANSPORTING NO FIELDS.
         IF sy-subrc = 0.
-          mo_log->add_info( |stage: {
+          mi_log->add_info( |stage: {
             ls_comment-committer-name } {
             <ls_local>-file-path } {
             <ls_local>-file-filename }| ).
@@ -156,7 +156,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
               WHERE filename = <ls_local>-file-filename
               AND path <> <ls_local>-file-path
               AND filename <> 'package.devc.xml'.
-            mo_log->add_info( |rm: {
+            mi_log->add_info( |rm: {
               <ls_remote>-path } {
               <ls_remote>-filename }| ).
 
@@ -198,7 +198,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
 
     LOOP AT is_files-remote ASSIGNING <ls_remote>.
 
-      mo_log->add_info( |removed: {
+      mi_log->add_info( |removed: {
         <ls_remote>-path } {
         <ls_remote>-filename }| ).
 
@@ -237,11 +237,11 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
 
     DATA: ls_files TYPE zif_abapgit_definitions=>ty_stage_files.
 
-    mo_log = io_log.
+    mi_log = ii_log.
     ls_files = zcl_abapgit_factory=>get_stage_logic( )->get( io_repo ).
 
     IF lines( ls_files-local ) = 0 AND lines( ls_files-remote ) = 0.
-      io_log->add_info( 'Nothing to stage' ) ##NO_TEXT.
+      ii_log->add_info( 'Nothing to stage' ) ##NO_TEXT.
       RETURN.
     ENDIF.
 

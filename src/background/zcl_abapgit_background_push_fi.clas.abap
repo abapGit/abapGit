@@ -13,7 +13,7 @@ CLASS zcl_abapgit_background_push_fi DEFINITION
         name  TYPE string VALUE 'NAME',
         email TYPE string VALUE 'EMAIL',
       END OF c_settings .
-    DATA mo_log TYPE REF TO zcl_abapgit_log .
+    DATA mi_log TYPE REF TO zif_abapgit_log .
 
     METHODS build_comment
       IMPORTING
@@ -80,7 +80,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_FI IMPLEMENTATION.
     CREATE OBJECT lo_stage.
 
     LOOP AT ls_files-local ASSIGNING <ls_local>.
-      mo_log->add_info( |stage: {
+      mi_log->add_info( |stage: {
         <ls_local>-file-path } {
         <ls_local>-file-filename }| ).
       lo_stage->add( iv_path     = <ls_local>-file-path
@@ -90,7 +90,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_FI IMPLEMENTATION.
 
     LOOP AT ls_files-remote ASSIGNING <ls_remote>.
 
-      mo_log->add_info( |removed: {
+      mi_log->add_info( |removed: {
         <ls_remote>-path } {
         <ls_remote>-filename }| ).
 
@@ -145,11 +145,11 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_FI IMPLEMENTATION.
           lv_name    TYPE string,
           lv_email   TYPE string.
 
-    mo_log = io_log.
+    mi_log = ii_log.
     ls_files = zcl_abapgit_factory=>get_stage_logic( )->get( io_repo ).
 
     IF lines( ls_files-local ) = 0 AND lines( ls_files-remote ) = 0.
-      io_log->add_info( 'Nothing to stage' ).
+      ii_log->add_info( 'Nothing to stage' ).
       RETURN.
     ENDIF.
 

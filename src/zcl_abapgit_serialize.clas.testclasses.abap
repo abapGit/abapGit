@@ -99,8 +99,8 @@ CLASS ltcl_serialize IMPLEMENTATION.
   METHOD unsupported.
 
     DATA: lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          lo_log1  TYPE REF TO zcl_abapgit_log,
-          lo_log2  TYPE REF TO zcl_abapgit_log.
+          li_log1  TYPE REF TO zif_abapgit_log,
+          li_log2  TYPE REF TO zif_abapgit_log.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF lt_tadir.
 
@@ -109,25 +109,25 @@ CLASS ltcl_serialize IMPLEMENTATION.
     <ls_tadir>-object   = 'ABCD'.
     <ls_tadir>-obj_name = 'OBJECT'.
 
-    CREATE OBJECT lo_log1.
+    CREATE OBJECT li_log1 TYPE zcl_abapgit_log.
     mo_cut->serialize(
       it_tadir            = lt_tadir
-      io_log              = lo_log1
+      ii_log              = li_log1
       iv_force_sequential = abap_true ).
 
-    CREATE OBJECT lo_log2.
+    CREATE OBJECT li_log2 TYPE zcl_abapgit_log.
     mo_cut->serialize(
       it_tadir            = lt_tadir
-      io_log              = lo_log2
+      ii_log              = li_log2
       iv_force_sequential = abap_false ).
 
     cl_abap_unit_assert=>assert_char_cp(
-      act = lo_log1->to_html( )->render( )
+      act = li_log1->to_html( )->render( )
       exp = '*Object type ignored, not supported*' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = lo_log1->to_html( )->render( )
-      exp = lo_log2->to_html( )->render( ) ).
+      act = li_log1->to_html( )->render( )
+      exp = li_log2->to_html( )->render( ) ).
 
   ENDMETHOD.
 
