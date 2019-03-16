@@ -1,20 +1,21 @@
-class ZCL_ABAPGIT_GUI_UTILS definition
-  public
-  final
-  create public .
+CLASS zcl_abapgit_gui_utils DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  class-methods IS_RENDERABLE
-    importing
-      !IO_OBJ type ref to OBJECT
-    returning
-      value(RV_YES) type ABAP_BOOL .
-  class-methods IS_EVENT_HANDLER
-    importing
-      !IO_OBJ type ref to OBJECT
-    returning
-      value(RV_YES) type ABAP_BOOL .
+    CLASS-METHODS is_renderable
+      IMPORTING
+        !io_obj TYPE REF TO object
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool .
+    CLASS-METHODS is_event_handler
+      IMPORTING
+        !io_obj TYPE REF TO object
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool .
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
