@@ -314,7 +314,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         parent               = cl_gui_container=>screen0.
 
     lt_assets = mi_asset_man->get_all_assets( ).
-    LOOP AT lt_assets ASSIGNING <ls_asset>.
+    LOOP AT lt_assets ASSIGNING <ls_asset> WHERE is_cacheable = abap_true.
       cache_asset( iv_xdata   = <ls_asset>-content
                    iv_url     = <ls_asset>-url
                    iv_type    = <ls_asset>-type
