@@ -356,6 +356,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
     ls_hotkey_action-default_hotkey = |d|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
+    ls_hotkey_action-name           = |Run code inspector|.
+    ls_hotkey_action-action         = zif_abapgit_definitions=>c_action-repo_code_inspector.
+    ls_hotkey_action-default_hotkey = |i|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
   ENDMETHOD.
 
 

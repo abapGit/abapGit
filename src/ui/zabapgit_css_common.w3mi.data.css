@@ -1011,3 +1011,20 @@ table.commit tr .title {
   width:1000px; 
   height: 20px; 
 }
+
+/* code inspector */
+.ci-head {
+  background-color: #f2f2f2;
+  padding: 0.5em 1em;
+  margin-bottom: 3px;
+}
+.ci-variant {
+  font-weight: bold;
+  color: #444;
+}
+.ci-result {
+
+}
+.ci-result li {
+  list-style-type: none;
+}
