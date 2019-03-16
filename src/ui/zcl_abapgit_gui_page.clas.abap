@@ -300,7 +300,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ENDIF.
 
     " Real page
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ro_html TYPE zcl_abapgit_html.
 
     ro_html->add( '<!DOCTYPE html>' ).                      "#EC NOTEXT
     ro_html->add( '<html>' ).                               "#EC NOTEXT

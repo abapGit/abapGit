@@ -58,7 +58,7 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
   METHOD get_gui.
 
     DATA:
-      li_router    TYPE REF TO zif_abapgit_gui_router,
+      li_router    TYPE REF TO zif_abapgit_gui_event_handler,
       li_asset_man TYPE REF TO zif_abapgit_gui_asset_manager.
 
     IF go_gui IS INITIAL.
@@ -66,7 +66,7 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
       CREATE OBJECT li_router TYPE zcl_abapgit_gui_router.
       CREATE OBJECT go_gui
         EXPORTING
-          ii_router    = li_router
+          io_component = li_router
           ii_asset_man = li_asset_man.
     ENDIF.
     ro_gui = go_gui.

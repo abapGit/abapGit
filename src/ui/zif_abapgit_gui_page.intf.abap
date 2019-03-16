@@ -1,16 +1,8 @@
 INTERFACE zif_abapgit_gui_page PUBLIC.
 
-  METHODS on_event
-    IMPORTING iv_action    TYPE clike
-              iv_prev_page TYPE clike
-              iv_getdata   TYPE clike OPTIONAL
-              it_postdata  TYPE cnht_post_data_tab OPTIONAL
-    EXPORTING ei_page      TYPE REF TO zif_abapgit_gui_page
-              ev_state     TYPE i
-    RAISING   zcx_abapgit_exception zcx_abapgit_cancel.
-
-  METHODS render
-    RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-    RAISING   zcx_abapgit_exception.
+  INTERFACES zif_abapgit_gui_event_handler.
+  INTERFACES zif_abapgit_gui_renderable.
+  ALIASES on_event FOR zif_abapgit_gui_event_handler~on_event.
+  ALIASES render FOR zif_abapgit_gui_renderable~render.
 
 ENDINTERFACE.
