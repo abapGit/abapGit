@@ -695,8 +695,9 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
           lv_max               TYPE abap_bool,
           lv_max_str           TYPE string,
           lv_add_str           TYPE string,
-          lo_log               TYPE REF TO zcl_abapgit_log,
+          li_log               TYPE REF TO zif_abapgit_log,
           lv_render_transports TYPE abap_bool.
+
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
@@ -728,10 +729,10 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
         ro_html->add( render_head_line( iv_lstate = lv_lstate
                                         iv_rstate = lv_rstate ) ).
 
-        lo_log = lo_browser->get_log( ).
-        IF mo_repo->is_offline( ) = abap_false AND lo_log->count( ) > 0.
+        li_log = lo_browser->get_log( ).
+        IF mo_repo->is_offline( ) = abap_false AND li_log->count( ) > 0.
           ro_html->add( '<div class="log">' ).
-          ro_html->add( lo_log->to_html( ) ). " shows eg. list of unsupported objects
+          ro_html->add( li_log->to_html( ) ). " shows eg. list of unsupported objects
           ro_html->add( '</div>' ).
         ENDIF.
 

@@ -90,12 +90,12 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
   METHOD export.
 
-    DATA: lo_log     TYPE REF TO zcl_abapgit_log,
+    DATA: li_log     TYPE REF TO zif_abapgit_log,
           lt_zip     TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lv_package TYPE devclass.
 
 
-    CREATE OBJECT lo_log.
+    CREATE OBJECT li_log TYPE zcl_abapgit_log.
 
     lv_package = io_repo->get_package( ).
 
@@ -103,11 +103,11 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Package { lv_package } doesn't exist| ).
     ENDIF.
 
-    lt_zip = io_repo->get_files_local( io_log    = lo_log
+    lt_zip = io_repo->get_files_local( ii_log    = li_log
                                        it_filter = it_filter ).
 
-    IF lo_log->count( ) > 0.
-      lo_log->show( ).
+    IF li_log->count( ) > 0.
+      li_log->show( ).
     ENDIF.
 
     rv_xstr = encode_files( lt_zip ).

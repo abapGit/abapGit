@@ -7,7 +7,7 @@ CLASS zcl_abapgit_file_status DEFINITION
 
     CLASS-METHODS status
       IMPORTING io_repo           TYPE REF TO zcl_abapgit_repo
-                io_log            TYPE REF TO zcl_abapgit_log OPTIONAL
+                ii_log            TYPE REF TO zif_abapgit_log OPTIONAL
       RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING   zcx_abapgit_exception.
 
@@ -24,7 +24,7 @@ CLASS zcl_abapgit_file_status DEFINITION
         RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
         RAISING   zcx_abapgit_exception,
       run_checks
-        IMPORTING io_log     TYPE REF TO zcl_abapgit_log
+        IMPORTING ii_log     TYPE REF TO zif_abapgit_log
                   it_results TYPE zif_abapgit_definitions=>ty_results_tt
                   io_dot     TYPE REF TO zcl_abapgit_dot_abapgit
                   iv_top     TYPE devclass
@@ -317,18 +317,19 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
   METHOD run_checks.
 
-    DATA: lv_path     TYPE string,
-          ls_item     TYPE zif_abapgit_definitions=>ty_item,
-          ls_file     TYPE zif_abapgit_definitions=>ty_file_signature,
-          lt_res_sort LIKE it_results,
-          lt_item_idx LIKE it_results.
-    DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
+    DATA: lv_path         TYPE string,
+          ls_item         TYPE zif_abapgit_definitions=>ty_item,
+          ls_file         TYPE zif_abapgit_definitions=>ty_file_signature,
+          lt_res_sort     LIKE it_results,
+          lt_item_idx     LIKE it_results,
+          lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_res1> LIKE LINE OF it_results,
                    <ls_res2> LIKE LINE OF it_results.
 
 
-    IF io_log IS INITIAL.
+    IF ii_log IS INITIAL.
+* huh?
       RETURN.
     ENDIF.
 
@@ -355,7 +356,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
         BINARY SEARCH. " Sorted above
 
       IF sy-subrc <> 0 OR <ls_res1>-path <> <ls_res2>-path. " All paths are same
-        io_log->add( iv_msg = |Files for object { <ls_res1>-obj_type } {
+        ii_log->add( iv_msg = |Files for object { <ls_res1>-obj_type } {
                        <ls_res1>-obj_name } are not placed in the same folder|
                      iv_type = 'W'
                      iv_rc    = '1' ) ##no_text.
@@ -371,7 +372,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
         io_dot     = io_dot
         iv_package = <ls_res1>-package ).
       IF lv_path <> <ls_res1>-path.
-        io_log->add( iv_msg = |Package and path does not match for object, {
+        ii_log->add( iv_msg = |Package and path does not match for object, {
                        <ls_res1>-obj_type } { <ls_res1>-obj_name }|
                      iv_type = 'W'
                      iv_rc    = '2' ) ##no_text.
@@ -383,13 +384,13 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
     LOOP AT lt_res_sort ASSIGNING <ls_res1> WHERE obj_type <> 'DEVC'.
       IF <ls_res1>-filename IS NOT INITIAL AND <ls_res1>-filename = ls_file-filename.
-        io_log->add( iv_msg  = |Multiple files with same filename, { <ls_res1>-filename }|
+        ii_log->add( iv_msg  = |Multiple files with same filename, { <ls_res1>-filename }|
                      iv_type = 'W'
                      iv_rc   = '3' ) ##no_text.
       ENDIF.
 
       IF <ls_res1>-filename IS INITIAL.
-        io_log->add( iv_msg  = |Filename is empty for object { <ls_res1>-obj_type } { <ls_res1>-obj_name }|
+        ii_log->add( iv_msg  = |Filename is empty for object { <ls_res1>-obj_type } { <ls_res1>-obj_name }|
                      iv_type = 'W'
                      iv_rc   = '4' ) ##no_text.
       ENDIF.
@@ -411,7 +412,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     rt_results = calculate_status(
       iv_devclass  = io_repo->get_package( )
       io_dot       = io_repo->get_dot_abapgit( )
-      it_local     = io_repo->get_files_local( io_log = io_log )
+      it_local     = io_repo->get_files_local( ii_log = ii_log )
       it_remote    = io_repo->get_files_remote( )
       it_cur_state = io_repo->get_local_checksums_per_file( ) ).
 
@@ -429,7 +430,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     ENDLOOP.
 
     run_checks(
-      io_log     = io_log
+      ii_log     = ii_log
       it_results = rt_results
       io_dot     = lo_dot_abapgit
       iv_top     = io_repo->get_package( ) ).

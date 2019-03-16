@@ -31,7 +31,7 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS get_files_local
       IMPORTING
-        !io_log         TYPE REF TO zcl_abapgit_log OPTIONAL
+        !ii_log         TYPE REF TO zif_abapgit_log OPTIONAL
         !it_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
@@ -101,7 +101,7 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(rv_yes) TYPE abap_bool .
     METHODS status
       IMPORTING
-        !io_log           TYPE REF TO zcl_abapgit_log OPTIONAL
+        !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
@@ -379,7 +379,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       iv_ignore_subpackages = get_local_settings( )-ignore_subpackages
       iv_only_local_objects = get_local_settings( )-only_local_objects
       io_dot                = get_dot_abapgit( )
-      io_log                = io_log ).
+      ii_log                = ii_log ).
 
     apply_filter( EXPORTING it_filter = it_filter
                   CHANGING ct_tadir  = lt_tadir ).
@@ -389,7 +389,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     lt_found = lo_serialize->serialize(
       it_tadir    = lt_tadir
       iv_language = get_dot_abapgit( )->get_master_language( )
-      io_log      = io_log ).
+      ii_log      = ii_log ).
     APPEND LINES OF lt_found TO rt_files.
 
     mt_local                 = rt_files.
@@ -616,7 +616,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     IF lines( mt_status ) = 0.
       mt_status = zcl_abapgit_file_status=>status(
         io_repo = me
-        io_log  = io_log ).
+        ii_log  = ii_log ).
     ENDIF.
 
     rt_results = mt_status.

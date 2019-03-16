@@ -12,7 +12,7 @@ CLASS zcl_abapgit_serialize DEFINITION
       IMPORTING
         !it_tadir            TYPE zif_abapgit_definitions=>ty_tadir_tt
         !iv_language         TYPE langu DEFAULT sy-langu
-        !io_log              TYPE REF TO zcl_abapgit_log OPTIONAL
+        !ii_log              TYPE REF TO zif_abapgit_log OPTIONAL
         !iv_force_sequential TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rt_files)      TYPE zif_abapgit_definitions=>ty_files_item_tt
@@ -24,7 +24,7 @@ CLASS zcl_abapgit_serialize DEFINITION
     CLASS-DATA gv_max_threads TYPE i .
     DATA mt_files TYPE zif_abapgit_definitions=>ty_files_item_tt .
     DATA mv_free TYPE i .
-    DATA mo_log TYPE REF TO zcl_abapgit_log .
+    DATA mi_log TYPE REF TO zif_abapgit_log .
     DATA mv_group TYPE rzlli_apcl .
 
     METHODS add_to_return
@@ -185,8 +185,8 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
         error     = 1
         OTHERS    = 2.
     IF sy-subrc <> 0.
-      IF NOT mo_log IS INITIAL.
-        mo_log->add_error( |{ sy-msgv1 }{ sy-msgv2 }{ sy-msgv3 }{ sy-msgv3 }| ).
+      IF NOT mi_log IS INITIAL.
+        mi_log->add_error( |{ sy-msgv1 }{ sy-msgv2 }{ sy-msgv3 }{ sy-msgv3 }| ).
       ENDIF.
     ELSE.
       IMPORT data = ls_fils_item FROM DATA BUFFER lv_result. "#EC CI_SUBRC
@@ -257,8 +257,8 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
         add_to_return( is_fils_item = ls_fils_item
                        iv_path      = is_tadir-path ).
       CATCH zcx_abapgit_exception INTO lx_error.
-        IF NOT mo_log IS INITIAL.
-          mo_log->add_error( lx_error->get_text( ) ).
+        IF NOT mi_log IS INITIAL.
+          mi_log->add_error( lx_error->get_text( ) ).
         ENDIF.
     ENDTRY.
 
@@ -277,7 +277,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
     lv_max = determine_max_threads( iv_force_sequential ).
     mv_free = lv_max.
-    mo_log = io_log.
+    mi_log = ii_log.
 
     li_progress = zcl_abapgit_progress=>get_instance( lines( it_tadir ) ).
 

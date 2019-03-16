@@ -256,9 +256,10 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
     DATA: lt_lines      TYPE STANDARD TABLE OF trlog,
           lv_logname_db TYPE ddprh-protname,
-          lo_log        TYPE REF TO zcl_abapgit_log.
+          li_log        TYPE REF TO zif_abapgit_log.
 
     FIELD-SYMBOLS: <ls_line> LIKE LINE OF lt_lines.
+
 
     lv_logname_db = iv_logname.
 
@@ -279,14 +280,14 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
     DELETE lt_lines WHERE severity <> 'E'.
 
-    CREATE OBJECT lo_log.
+    CREATE OBJECT li_log TYPE zcl_abapgit_log.
 
     LOOP AT lt_lines ASSIGNING <ls_line>.
-      lo_log->add( <ls_line>-line ).
+      li_log->add( <ls_line>-line ).
     ENDLOOP.
 
-    IF lo_log->count( ) > 0.
-      lo_log->show( ).
+    IF li_log->count( ) > 0.
+      li_log->show( ).
     ENDIF.
 
   ENDMETHOD.

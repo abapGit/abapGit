@@ -19,7 +19,7 @@ CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
   PRIVATE SECTION.
     DATA: mt_results TYPE zif_abapgit_definitions=>ty_results_tt,
           mo_dot     TYPE REF TO zcl_abapgit_dot_abapgit,
-          mo_log     TYPE REF TO zcl_abapgit_log.
+          mi_log     TYPE REF TO zif_abapgit_log.
 
     METHODS:
       setup,
@@ -35,7 +35,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
   METHOD setup.
 
-    CREATE OBJECT mo_log.
+    CREATE OBJECT mi_log TYPE zcl_abapgit_log.
 
     mo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
     mo_dot->set_starting_folder( '/' ).
@@ -55,13 +55,13 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'  'zdoma2.doma.xml'.
 
     zcl_abapgit_file_status=>run_checks(
-      io_log     = mo_log
+      ii_log     = mi_log
       it_results = mt_results
       io_dot     = mo_dot
       iv_top     = '$Z$' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_log->count( )
+      act = mi_log->count( )
       exp = 0 ).
 
   ENDMETHOD.
@@ -79,18 +79,18 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    'zdoma2.doma.xml'.
 
     zcl_abapgit_file_status=>run_checks(
-      io_log     = mo_log
+      ii_log     = mi_log
       it_results = mt_results
       io_dot     = mo_dot
       iv_top     = '$Z$' ).
 
     " This one is not pure - incorrect path also triggers path vs package check
     cl_abap_unit_assert=>assert_equals(
-      act = mo_log->count( )
+      act = mi_log->count( )
       exp = 2 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_log->has_rc( '1' )
+      act = mi_log->has_rc( '1' )
       exp = abap_true ).
 
   ENDMETHOD.
@@ -108,17 +108,17 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     _append_result 'DOMA' '$$ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    '$$zdoma2.doma.xml'.
 
     zcl_abapgit_file_status=>run_checks(
-      io_log     = mo_log
+      ii_log     = mi_log
       it_results = mt_results
       io_dot     = mo_dot
       iv_top     = '$Z$' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_log->count( )
+      act = mi_log->count( )
       exp = 1 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_log->has_rc( '2' )
+      act = mi_log->has_rc( '2' )
       exp = abap_true ).
 
   ENDMETHOD.
@@ -136,17 +136,17 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     _append_result 'DOMA' '$$ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    '$$zdoma1.doma.xml'.
 
     zcl_abapgit_file_status=>run_checks(
-      io_log     = mo_log
+      ii_log     = mi_log
       it_results = mt_results
       io_dot     = mo_dot
       iv_top     = '$Z$' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_log->count( )
+      act = mi_log->count( )
       exp = 1 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_log->has_rc( '3' )
+      act = mi_log->has_rc( '3' )
       exp = abap_true ).
 
   ENDMETHOD.
@@ -163,17 +163,17 @@ CLASS ltcl_run_checks IMPLEMENTATION.
     _append_result 'DOMA' '$$ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    ''.
 
     zcl_abapgit_file_status=>run_checks(
-      io_log     = mo_log
+      ii_log     = mi_log
       it_results = mt_results
       io_dot     = mo_dot
       iv_top     = '$Z$' ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_log->count( )
+      act = mi_log->count( )
       exp = 1 ).
 
     cl_abap_unit_assert=>assert_equals(
-      act = mo_log->has_rc( '4' )
+      act = mi_log->has_rc( '4' )
       exp = abap_true ).
 
   ENDMETHOD.

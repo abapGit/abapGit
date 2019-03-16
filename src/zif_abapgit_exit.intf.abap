@@ -40,7 +40,7 @@ INTERFACE zif_abapgit_exit
   METHODS change_tadir
     IMPORTING
       !iv_package TYPE devclass
-      !io_log     TYPE REF TO zcl_abapgit_log
+      !ii_log     TYPE REF TO zif_abapgit_log
     CHANGING
       !ct_tadir   TYPE zif_abapgit_definitions=>ty_tadir_tt .
   METHODS get_ssl_id
