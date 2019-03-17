@@ -21,15 +21,24 @@ CLASS zcl_abapgit_gui DEFINITION
       END OF c_action.
 
     METHODS go_home
-      RAISING zcx_abapgit_exception.
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS back
-      IMPORTING iv_to_bookmark TYPE abap_bool DEFAULT abap_false
-      RETURNING VALUE(rv_exit) TYPE abap_bool
-      RAISING   zcx_abapgit_exception.
+      IMPORTING
+        iv_to_bookmark TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(rv_exit) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS on_event FOR EVENT sapevent OF cl_gui_html_viewer
-      IMPORTING action frame getdata postdata query_table.
+      IMPORTING
+        action
+        frame
+        getdata
+        postdata
+        query_table.
 
     METHODS constructor
       IMPORTING
@@ -41,10 +50,11 @@ CLASS zcl_abapgit_gui DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    TYPES: BEGIN OF ty_page_stack,
-             page     TYPE REF TO zif_abapgit_gui_renderable,
-             bookmark TYPE abap_bool,
-           END OF ty_page_stack.
+    TYPES:
+      BEGIN OF ty_page_stack,
+        page     TYPE REF TO zif_abapgit_gui_renderable,
+        bookmark TYPE abap_bool,
+      END OF ty_page_stack.
 
     DATA: mi_cur_page    TYPE REF TO zif_abapgit_gui_renderable,
           mt_stack       TYPE STANDARD TABLE OF ty_page_stack,
@@ -53,38 +63,48 @@ CLASS zcl_abapgit_gui DEFINITION
           mo_html_viewer TYPE REF TO cl_gui_html_viewer.
 
     METHODS startup
-      RAISING zcx_abapgit_exception.
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS cache_html
-      IMPORTING iv_text       TYPE string
-      RETURNING VALUE(rv_url) TYPE w3url.
+      IMPORTING
+        iv_text       TYPE string
+      RETURNING
+        VALUE(rv_url) TYPE w3url.
 
     METHODS cache_asset
-      IMPORTING iv_text       TYPE string OPTIONAL
-                iv_xdata      TYPE xstring OPTIONAL
-                iv_url        TYPE w3url OPTIONAL
-                iv_type       TYPE c
-                iv_subtype    TYPE c
-      RETURNING VALUE(rv_url) TYPE w3url.
+      IMPORTING
+        iv_text       TYPE string OPTIONAL
+        iv_xdata      TYPE xstring OPTIONAL
+        iv_url        TYPE w3url OPTIONAL
+        iv_type       TYPE c
+        iv_subtype    TYPE c
+      RETURNING
+        VALUE(rv_url) TYPE w3url.
 
     METHODS render
-      RAISING zcx_abapgit_exception.
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS get_current_page_name
-      RETURNING VALUE(rv_page_name) TYPE string.
+      RETURNING
+        VALUE(rv_page_name) TYPE string.
 
     METHODS call_page
-      IMPORTING ii_page          TYPE REF TO zif_abapgit_gui_renderable
-                iv_with_bookmark TYPE abap_bool DEFAULT abap_false
-                iv_replacing     TYPE abap_bool DEFAULT abap_false
-      RAISING   zcx_abapgit_exception.
+      IMPORTING
+        ii_page          TYPE REF TO zif_abapgit_gui_renderable
+        iv_with_bookmark TYPE abap_bool DEFAULT abap_false
+        iv_replacing     TYPE abap_bool DEFAULT abap_false
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS handle_action
-      IMPORTING iv_action      TYPE c
-                iv_frame       TYPE c OPTIONAL
-                iv_getdata     TYPE c OPTIONAL
-                it_postdata    TYPE cnht_post_data_tab OPTIONAL
-                it_query_table TYPE cnht_query_table OPTIONAL.
+      IMPORTING
+        iv_action      TYPE c
+        iv_frame       TYPE c OPTIONAL
+        iv_getdata     TYPE c OPTIONAL
+        it_postdata    TYPE cnht_post_data_tab OPTIONAL
+        it_query_table TYPE cnht_query_table OPTIONAL.
 
 ENDCLASS.
 
@@ -166,9 +186,10 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD cache_html.
 
-    rv_url = cache_asset( iv_text    = iv_text
-                          iv_type    = 'text'
-                          iv_subtype = 'html' ).
+    rv_url = cache_asset(
+      iv_text    = iv_text
+      iv_type    = 'text'
+      iv_subtype = 'html' ).
 
   ENDMETHOD.
 
@@ -209,10 +230,9 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
 
   METHOD get_current_page_name.
+
     IF mi_cur_page IS BOUND.
-      rv_page_name =
-        cl_abap_classdescr=>describe_by_object_ref( mi_cur_page
-          )->get_relative_name( ).
+      rv_page_name = cl_abap_classdescr=>describe_by_object_ref( mi_cur_page )->get_relative_name( ).
     ENDIF." ELSE - return is empty => initial page
 
   ENDMETHOD.
