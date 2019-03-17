@@ -194,6 +194,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
     ro_html->add( '<div class="ci-head">' ).
     ro_html->add( |Code inspector check variant: <span class="ci-variant">{ mv_check_variant }</span>| ).
+    ro_html->add( |<div class="float-right package-name">{
+      zcl_abapgit_html=>icon( 'box/grey70' ) }<span>{
+      mo_repo->get_package( ) }</span></div>| ).
     ro_html->add( '</div>' ).
 
     IF lines( mt_result ) = 0.

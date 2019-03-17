@@ -17,6 +17,11 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM 
       IMPORTING
         !io_html   TYPE REF TO zcl_abapgit_html
         !is_result TYPE scir_alvlist .
+    METHODS build_nav_link
+      IMPORTING
+        !is_result TYPE scir_alvlist
+      RETURNING
+        VALUE(rv_link) TYPE string.
     METHODS jump
       IMPORTING
         !is_item        TYPE zif_abapgit_definitions=>ty_item
@@ -25,13 +30,24 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM 
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
-    CONSTANTS: c_object_separator TYPE char1 VALUE '|'.
+    CONSTANTS c_object_separator TYPE char1 VALUE '|'.
+    CONSTANTS c_ci_sig TYPE string VALUE 'cinav:'.
 
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
+
+
+  METHOD build_nav_link.
+
+    rv_link = |{ c_ci_sig }| &&
+      |{ is_result-objtype }{ is_result-objname }| &&
+      |{ c_object_separator }{ is_result-sobjtype }{ is_result-sobjname }| &&
+      |{ c_object_separator }{ is_result-line }|.
+
+  ENDMETHOD.
 
 
   METHOD jump.
@@ -117,6 +133,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
         is_result = <ls_result> ).
     ENDLOOP.
 
+    io_html->add( '</div>' ).
+
     IF lines( it_result ) > lc_limit.
       io_html->add( '<div class="dummydiv warning">' ).
       io_html->add( zcl_abapgit_html=>icon( 'exclamation-triangle' ) ).
@@ -124,47 +142,41 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
       io_html->add( '</div>' ).
     ENDIF.
 
-    io_html->add( '</div>' ).
-
   ENDMETHOD.
 
 
   METHOD render_result_line.
 
-    DATA: lv_class TYPE string,
-          lv_line  TYPE string.
+    DATA: lv_class   TYPE string,
+          lv_obj_txt TYPE string,
+          lv_msg     TYPE string.
 
     CASE is_result-kind.
       WHEN 'E'.
-        lv_class = 'error'.
+        lv_class = 'ci-error'.
       WHEN 'W'.
-        lv_class = 'warning'.
+        lv_class = 'ci-warning'.
       WHEN OTHERS.
-        lv_class = 'grey'.
+        lv_class = 'ci-info'.
     ENDCASE.
 
-    lv_line = zcl_abapgit_convert=>alpha_output( is_result-line ).
+    lv_msg = escape( val = is_result-text format = cl_abap_format=>e_html_attr ).
 
-
-    io_html->add( '<li>' ).
     IF is_result-sobjname IS INITIAL OR
        ( is_result-sobjname = is_result-objname AND
          is_result-sobjtype = is_result-sobjtype ).
-      io_html->add_a( iv_txt = |{ is_result-objtype } { is_result-objname }|
-                      iv_act = |{ is_result-objtype }{ is_result-objname }| &&
-                               |{ c_object_separator }{ c_object_separator }{ is_result-line }|
-                      iv_typ = zif_abapgit_html=>c_action_type-sapevent ).
-
+      lv_obj_txt = |{ is_result-objtype } { is_result-objname }|.
     ELSE.
-      io_html->add_a( iv_txt = |{ is_result-objtype } { is_result-objname }| &&
-                               | &lt; { is_result-sobjtype } { is_result-sobjname }|
-                      iv_act = |{ is_result-objtype }{ is_result-objname }| &&
-                               |{ c_object_separator }{ is_result-sobjtype }{ is_result-sobjname }| &&
-                               |{ c_object_separator }{ is_result-line }|
-                      iv_typ = zif_abapgit_html=>c_action_type-sapevent ).
-
+      lv_obj_txt = |{ is_result-objtype } { is_result-objname } &gt; { is_result-sobjtype } { is_result-sobjname }|.
     ENDIF.
-    io_html->add( |<div class="{ lv_class }">Line { lv_line }: { is_result-text }</div>| ).
+    lv_obj_txt = |{ lv_obj_txt } [ @{ zcl_abapgit_convert=>alpha_output( is_result-line ) } ]|.
+
+    io_html->add( |<li class="{ lv_class }">| ).
+    io_html->add_a(
+      iv_txt = lv_obj_txt
+      iv_act = build_nav_link( is_result )
+      iv_typ = zif_abapgit_html=>c_action_type-sapevent ).
+    io_html->add( |<span>{ lv_msg }</span>| ).
     io_html->add( '</li>' ).
 
   ENDMETHOD.
@@ -173,36 +185,35 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
   METHOD zif_abapgit_gui_page~on_event.
     DATA: ls_item          TYPE zif_abapgit_definitions=>ty_item,
           ls_sub_item      TYPE zif_abapgit_definitions=>ty_item,
+          lv_temp          TYPE string,
           lv_main_object   TYPE string,
           lv_sub_object    TYPE string,
           lv_line_number_s TYPE string,
           lv_line_number   TYPE i.
 
+    lv_temp = iv_action.
+    SHIFT lv_temp LEFT DELETING LEADING c_ci_sig.
 
-    CASE iv_action.
+    IF lv_temp <> iv_action. " CI navigation request detected
 
-      WHEN zif_abapgit_definitions=>c_action-abapgit_home.
-        RETURN.
+      SPLIT lv_temp AT c_object_separator INTO lv_main_object lv_sub_object lv_line_number_s.
+      ls_item-obj_type = lv_main_object(4).
+      ls_item-obj_name = lv_main_object+4(*).
 
-      WHEN OTHERS.
-        SPLIT iv_action AT c_object_separator INTO lv_main_object lv_sub_object lv_line_number_s.
-        ls_item-obj_type = lv_main_object(4).
-        ls_item-obj_name = lv_main_object+4(*).
+      IF lv_sub_object IS NOT INITIAL.
+        ls_sub_item-obj_type = lv_sub_object(4).
+        ls_sub_item-obj_name = lv_sub_object+4(*).
+      ENDIF.
 
-        IF lv_sub_object IS NOT INITIAL.
-          ls_sub_item-obj_type = lv_sub_object(4).
-          ls_sub_item-obj_name = lv_sub_object+4(*).
-        ENDIF.
+      lv_line_number = lv_line_number_s.
 
-        lv_line_number = lv_line_number_s.
+      jump( is_item        = ls_item
+            is_sub_item    = ls_sub_item
+            iv_line_number = lv_line_number ).
 
-        jump( is_item        = ls_item
-              is_sub_item    = ls_sub_item
-              iv_line_number = lv_line_number ).
+      ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-
-    ENDCASE.
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
