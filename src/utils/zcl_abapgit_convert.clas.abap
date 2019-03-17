@@ -68,6 +68,8 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
       IMPORTING
         output = rv_str.
 
+    CONDENSE rv_str.
+
   ENDMETHOD.
 
 
