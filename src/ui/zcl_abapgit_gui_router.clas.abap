@@ -5,7 +5,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_gui_router.
+    INTERFACES zif_abapgit_gui_event_handler.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -22,7 +22,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
       IMPORTING
         !is_event_data TYPE ty_event_data
       EXPORTING
-        !ei_page       TYPE REF TO zif_abapgit_gui_page
+        !ei_page       TYPE REF TO zif_abapgit_gui_renderable
         !ev_state      TYPE i
       RAISING
         zcx_abapgit_exception
@@ -31,7 +31,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
       IMPORTING
         !is_event_data TYPE ty_event_data
       EXPORTING
-        !ei_page       TYPE REF TO zif_abapgit_gui_page
+        !ei_page       TYPE REF TO zif_abapgit_gui_renderable
         !ev_state      TYPE i
       RAISING
         zcx_abapgit_exception
@@ -40,7 +40,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
       IMPORTING
         !is_event_data TYPE ty_event_data
       EXPORTING
-        !ei_page       TYPE REF TO zif_abapgit_gui_page
+        !ei_page       TYPE REF TO zif_abapgit_gui_renderable
         !ev_state      TYPE i
       RAISING
         zcx_abapgit_exception
@@ -55,7 +55,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
       IMPORTING
         !is_event_data TYPE ty_event_data
       EXPORTING
-        !ei_page       TYPE REF TO zif_abapgit_gui_page
+        !ei_page       TYPE REF TO zif_abapgit_gui_renderable
         !ev_state      TYPE i
       RAISING
         zcx_abapgit_exception
@@ -64,7 +64,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
       IMPORTING
         !is_event_data TYPE ty_event_data
       EXPORTING
-        !ei_page       TYPE REF TO zif_abapgit_gui_page
+        !ei_page       TYPE REF TO zif_abapgit_gui_renderable
         !ev_state      TYPE i
       RAISING
         zcx_abapgit_exception
@@ -73,7 +73,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
       IMPORTING
         !is_event_data TYPE ty_event_data
       EXPORTING
-        !ei_page       TYPE REF TO zif_abapgit_gui_page
+        !ei_page       TYPE REF TO zif_abapgit_gui_renderable
         !ev_state      TYPE i
       RAISING
         zcx_abapgit_exception
@@ -82,7 +82,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
       IMPORTING
         !is_event_data TYPE ty_event_data
       EXPORTING
-        !ei_page       TYPE REF TO zif_abapgit_gui_page
+        !ei_page       TYPE REF TO zif_abapgit_gui_renderable
         !ev_state      TYPE i
       RAISING
         zcx_abapgit_exception
@@ -91,7 +91,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
       IMPORTING
         !is_event_data TYPE ty_event_data
       EXPORTING
-        !ei_page       TYPE REF TO zif_abapgit_gui_page
+        !ei_page       TYPE REF TO zif_abapgit_gui_renderable
         !ev_state      TYPE i
       RAISING
         zcx_abapgit_exception
@@ -101,33 +101,33 @@ CLASS zcl_abapgit_gui_router DEFINITION
         !iv_getdata    TYPE clike
         !iv_prev_page  TYPE clike
       RETURNING
-        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
+        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
     METHODS get_page_branch_overview
       IMPORTING
         !iv_getdata    TYPE clike
       RETURNING
-        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
+        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
     METHODS get_page_stage
       IMPORTING
         !iv_getdata    TYPE clike
       RETURNING
-        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
+        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
     METHODS get_page_background
       IMPORTING
         !iv_key        TYPE zif_abapgit_persistence=>ty_repo-key
       RETURNING
-        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
+        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
     METHODS get_page_playground
       RETURNING
-        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
+        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception
         zcx_abapgit_cancel .
@@ -548,7 +548,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_router~on_event.
+  METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: ls_event_data TYPE ty_event_data.
 
