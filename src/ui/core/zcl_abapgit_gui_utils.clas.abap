@@ -30,7 +30,8 @@ CLASS ZCL_ABAPGIT_GUI_UTILS IMPLEMENTATION.
     TRY.
         li_event_handler ?= io_obj.
         rv_yes = abap_true.
-      CATCH cx_sy_move_cast_error ##NO_HANDLER.
+      CATCH cx_sy_move_cast_error.
+        rv_yes = abap_false.
     ENDTRY.
   ENDMETHOD.
 
@@ -40,7 +41,8 @@ CLASS ZCL_ABAPGIT_GUI_UTILS IMPLEMENTATION.
     TRY.
         li_renderable ?= io_obj.
         rv_yes = abap_true.
-      CATCH cx_sy_move_cast_error ##NO_HANDLER.
+      CATCH cx_sy_move_cast_error.
+        rv_yes = abap_false.
     ENDTRY.
   ENDMETHOD.
 ENDCLASS.
