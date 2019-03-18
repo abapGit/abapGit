@@ -9,6 +9,7 @@ CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FIN
     METHODS convert_int FOR TESTING RAISING zcx_abapgit_exception.
     METHODS split_string FOR TESTING.
     METHODS convert_bitbyte FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS alpha_output FOR TESTING.
 
 ENDCLASS.
 
@@ -18,6 +19,21 @@ ENDCLASS.
 *
 *----------------------------------------------------------------------*
 CLASS ltcl_convert IMPLEMENTATION.
+
+  METHOD alpha_output.
+
+    DATA lv_alpha TYPE c LENGTH 10 VALUE '0000001234'.
+    DATA lv_numc TYPE n LENGTH 6 VALUE '001234'.
+
+    cl_abap_unit_assert=>assert_equals(
+        act = zcl_abapgit_convert=>alpha_output( lv_alpha )
+        exp = '1234' ).
+
+    cl_abap_unit_assert=>assert_equals(
+        act = zcl_abapgit_convert=>alpha_output( lv_numc )
+        exp = '1234' ).
+
+  ENDMETHOD.
 
   METHOD convert_bitbyte.
 

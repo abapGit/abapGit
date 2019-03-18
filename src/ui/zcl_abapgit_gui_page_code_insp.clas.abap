@@ -188,26 +188,27 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     IF mv_check_variant IS INITIAL.
-      ro_html->add( |No check variant supplied.| ).
+      ro_html->add( zcl_abapgit_gui_chunk_lib=>render_error( iv_error = 'No check variant supplied.' ) ).
       RETURN.
     ENDIF.
 
-    ro_html->add( '<div class="toc"><br/>' ).
-
-    ro_html->add( |Code inspector check variant: {
-                    mv_check_variant
-                  }<br/>| ).
+    ro_html->add( '<div class="ci-head">' ).
+    ro_html->add( |Code inspector check variant: <span class="ci-variant">{ mv_check_variant }</span>| ).
+    ro_html->add( |<div class="float-right package-name">{
+      zcl_abapgit_html=>icon( 'box/grey70' ) }<span>{
+      mo_repo->get_package( ) }</span></div>| ).
+    ro_html->add( '</div>' ).
 
     IF lines( mt_result ) = 0.
-      ro_html->add( '<br/><div class="success">No code inspector findings</div>' ).
+      ro_html->add( '<div class="dummydiv success">' ).
+      ro_html->add( zcl_abapgit_html=>icon( 'check' ) ).
+      ro_html->add( 'No code inspector findings' ).
+      ro_html->add( '</div>' ).
+    ELSE.
+      render_result(
+        io_html   = ro_html
+        it_result = mt_result ).
     ENDIF.
-
-    ro_html->add( |<br/>| ).
-
-    render_result( io_html   = ro_html
-                   it_result = mt_result ).
-
-    ro_html->add( '</div>' ).
 
   ENDMETHOD.
 
