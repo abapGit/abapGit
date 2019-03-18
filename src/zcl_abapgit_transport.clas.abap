@@ -73,8 +73,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
 
-    SORT lt_super.
-    READ TABLE lt_super INDEX 1 INTO rv_package.
+    READ TABLE lt_super INDEX lines( lt_super ) INTO rv_package.
   ENDMETHOD.
 
 
