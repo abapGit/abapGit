@@ -24,6 +24,13 @@ CLASS zcl_abapgit_gui DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS go_page
+      IMPORTING
+        io_page TYPE REF TO zif_abapgit_gui_renderable
+        iv_clear_stack TYPE abap_bool DEFAULT abap_true
+      RAISING
+        zcx_abapgit_exception.
+
     METHODS back
       IMPORTING
         iv_to_bookmark TYPE abap_bool DEFAULT abap_false
@@ -46,6 +53,12 @@ CLASS zcl_abapgit_gui DEFINITION
         ii_asset_man TYPE REF TO zif_abapgit_gui_asset_manager OPTIONAL
       RAISING
         zcx_abapgit_exception.
+
+    METHODS free.
+
+    EVENTS on_handle_error
+      EXPORTING
+        VALUE(io_exception) TYPE REF TO cx_root.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -229,6 +242,16 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD free.
+
+    SET HANDLER me->on_event FOR mo_html_viewer ACTIVATION space.
+    mo_html_viewer->close_document( ).
+    mo_html_viewer->free( ).
+    FREE mo_html_viewer.
+
+  ENDMETHOD.
+
+
   METHOD get_current_page_name.
 
     IF mi_cur_page IS BOUND.
@@ -251,6 +274,18 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       ENDIF.
       render( ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD go_page.
+
+    IF iv_clear_stack = abap_true.
+      CLEAR mt_stack.
+    ENDIF.
+
+    mi_cur_page = io_page.
+    render( ).
 
   ENDMETHOD.
 
@@ -310,8 +345,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         ENDCASE.
 
       CATCH zcx_abapgit_exception INTO lx_exception.
-        ROLLBACK WORK.
-        MESSAGE lx_exception TYPE 'S' DISPLAY LIKE 'E'.
+        RAISE EVENT on_handle_error EXPORTING io_exception = lx_exception.
       CATCH zcx_abapgit_cancel ##NO_HANDLER.
         " Do nothing = gc_event_state-no_more_act
     ENDTRY.
