@@ -61,6 +61,8 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
       li_router    TYPE REF TO zif_abapgit_gui_event_handler,
       li_asset_man TYPE REF TO zif_abapgit_gui_asset_manager.
 
+    DATA lo_error_handler TYPE REF TO lcl_gui_error_handler.
+
     IF go_gui IS INITIAL.
       li_asset_man ?= init_asset_manager( ).
       CREATE OBJECT li_router TYPE zcl_abapgit_gui_router.
@@ -68,6 +70,8 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
         EXPORTING
           io_component = li_router
           ii_asset_man = li_asset_man.
+      CREATE OBJECT lo_error_handler.
+      SET HANDLER lo_error_handler->on_gui_error FOR go_gui.
     ENDIF.
     ro_gui = go_gui.
 
