@@ -186,7 +186,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
           " no genration because DDIC elements ar not in the system yet
           suppress_generation    = abap_true
           activate_ddic_objects  = iv_ddic
-          " No dialog, user have to activate with error (how to tell user he has to do that? - so better don't show at all?)
+          " No dialog, user have to activate with error!!!
+          "(how to tell user he has to do that? - so better don't show at all?)
           with_popup             = abap_false
         TABLES
           objects                = gt_objects
