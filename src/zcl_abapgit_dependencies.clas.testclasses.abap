@@ -97,7 +97,6 @@ CLASS ltcl_resolve_packages DEFINITION FOR TESTING
         IMPORTING
           iv_object        TYPE tadir-object
           iv_obj_name      TYPE tadir-obj_name
-          iv_korrnum       TYPE tadir-korrnum
           iv_super_package TYPE devclass,
 
       when_packages_are_resolved,
@@ -118,27 +117,24 @@ CLASS ltcl_resolve_packages IMPLEMENTATION.
 
     given_tadir( iv_object        = 'DEVC'
                  iv_obj_name      = 'Z_MAIN'
-                 iv_korrnum       = '9990'
                  iv_super_package = '' ).
 
     given_tadir( iv_object        = 'DEVC'
                  iv_obj_name      = 'Z_SUB1'
-                 iv_korrnum       = '9990'
                  iv_super_package = 'Z_MAIN' ).
 
     given_tadir( iv_object        = 'DEVC'
                  iv_obj_name      = 'Z_SUB2'
-                 iv_korrnum       = '9990'
                  iv_super_package = 'Z_MAIN' ).
 
     when_packages_are_resolved( ).
 
     then_korrnum_should_be( iv_line    = 1
-                            iv_korrnum = '9990' ).
+                            iv_korrnum = |{ zcl_abapgit_dependencies=>gc_korrnum  }| ).
     then_korrnum_should_be( iv_line    = 2
-                            iv_korrnum = '9989' ).
+                            iv_korrnum = |{ zcl_abapgit_dependencies=>gc_korrnum + 1 }| ).
     then_korrnum_should_be( iv_line    = 3
-                            iv_korrnum = '9989' ).
+                            iv_korrnum = |{ zcl_abapgit_dependencies=>gc_korrnum + 2 }| ).
 
   ENDMETHOD.
 
@@ -150,7 +146,6 @@ CLASS ltcl_resolve_packages IMPLEMENTATION.
 
     ls_tadir-object   = iv_object.
     ls_tadir-obj_name = iv_obj_name.
-    ls_tadir-korrnum  = iv_korrnum.
     INSERT ls_tadir INTO TABLE mt_tadir.
 
     IF iv_super_package IS NOT INITIAL.
@@ -174,7 +169,7 @@ CLASS ltcl_resolve_packages IMPLEMENTATION.
     zcl_abapgit_injector=>set_sap_package( iv_package     = 'Z_MAIN'
                                            ii_sap_package = lo_mock_sap_package ).
 
-    zcl_abapgit_dependencies=>resolve_packages(
+    zcl_abapgit_dependencies=>resolve(
       CHANGING
         ct_tadir = mt_tadir ).
 
