@@ -169,6 +169,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     DATA lv_result              LIKE sy-subrc.
 
     IF is_idoc_segment( ) = abap_false.
+      rv_deleted = abap_false.
       RETURN. "previous XML version or no IDoc segment
     ENDIF.
 
