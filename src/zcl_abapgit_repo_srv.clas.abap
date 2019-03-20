@@ -54,8 +54,9 @@ CLASS zcl_abapgit_repo_srv DEFINITION
         zcx_abapgit_exception .
     METHODS validate_sub_super_packages
       IMPORTING
-        !iv_package TYPE devclass
-        !it_repos   TYPE zif_abapgit_persistence=>tt_repo
+        !iv_package    TYPE devclass
+        !it_repos      TYPE zif_abapgit_persistence=>tt_repo
+        !iv_ign_subpkg TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
 
@@ -178,7 +179,10 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
       IF lo_repo->get_local_settings( )-ignore_subpackages = abap_false.
         APPEND LINES OF lo_package->list_subpackages( ) TO lt_packages.
       ENDIF.
-      APPEND LINES OF lo_package->list_superpackages( ) TO lt_packages.
+
+      IF iv_ign_subpkg = abap_false.
+        APPEND LINES OF lo_package->list_superpackages( ) TO lt_packages.
+      ENDIF.
 
       READ TABLE lt_packages TRANSPORTING NO FIELDS
         WITH KEY table_line = iv_package.

@@ -54,7 +54,8 @@ INTERFACE zif_abapgit_repo_srv
       zcx_abapgit_exception .
   METHODS validate_package
     IMPORTING
-      !iv_package TYPE devclass
+      !iv_package    TYPE devclass
+      !iv_ign_subpkg TYPE abap_bool DEFAULT abap_false
     RAISING
       zcx_abapgit_exception .
 ENDINTERFACE.
