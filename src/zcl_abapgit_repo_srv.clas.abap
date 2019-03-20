@@ -330,8 +330,9 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_srv~new_online.
 
-    DATA: ls_repo TYPE zif_abapgit_persistence=>ty_repo,
-          lv_key  TYPE zif_abapgit_persistence=>ty_repo-key.
+    DATA: ls_repo        TYPE zif_abapgit_persistence=>ty_repo,
+          lv_key         TYPE zif_abapgit_persistence=>ty_repo-key,
+          ls_dot_abapgit TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
 
     ASSERT NOT iv_url IS INITIAL
@@ -342,8 +343,13 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Not authorized' ).
     ENDIF.
 
-    validate_package( iv_package ).
+    validate_package( iv_package = iv_package
+                      iv_ign_subpkg = iv_ign_subpkg ).
+
     zcl_abapgit_url=>validate( |{ iv_url }| ).
+
+    ls_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ).
+    ls_dot_abapgit-folder_logic = iv_folder_logic.
 
     lv_key = zcl_abapgit_persist_factory=>get_repo( )->add(
       iv_url          = iv_url
@@ -351,14 +357,20 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
       iv_display_name = iv_display_name
       iv_package      = iv_package
       iv_offline      = abap_false
-      is_dot_abapgit  = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ) ).
+      is_dot_abapgit  = ls_dot_abapgit ).
     TRY.
         ls_repo = zcl_abapgit_persist_factory=>get_repo( )->read( lv_key ).
       CATCH zcx_abapgit_not_found.
         zcx_abapgit_exception=>raise( 'new_online not found' ).
     ENDTRY.
 
+
     ro_repo ?= instantiate_and_add( ls_repo ).
+
+    IF ls_repo-local_settings-ignore_subpackages <> iv_ign_subpkg.
+      ls_repo-local_settings-ignore_subpackages = iv_ign_subpkg.
+      ro_repo->set_local_settings( ls_repo-local_settings ).
+    ENDIF.
 
     ro_repo->refresh( ).
     ro_repo->find_remote_dot_abapgit( ).
@@ -428,7 +440,8 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
     ENDIF.
 
     validate_sub_super_packages(
-      iv_package = iv_package
-      it_repos   = lt_repos ).
+      iv_package    = iv_package
+      it_repos      = lt_repos
+      iv_ign_subpkg = iv_ign_subpkg ).
   ENDMETHOD.
 ENDCLASS.
