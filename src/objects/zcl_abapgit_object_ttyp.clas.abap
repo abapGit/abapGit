@@ -103,7 +103,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TTYP IMPLEMENTATION.
         WHEN OTHERS.
       ENDCASE.
 
-      zcx_abapgit_exception=>raise( iv_text = lv_msg ).
+      zcx_abapgit_exception=>raise( lv_msg ).
     ENDIF.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).

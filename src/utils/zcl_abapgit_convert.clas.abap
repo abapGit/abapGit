@@ -46,6 +46,11 @@ CLASS zcl_abapgit_convert DEFINITION
         iv_spras        TYPE spras
       RETURNING
         VALUE(rv_spras) TYPE laiso.
+    CLASS-METHODS alpha_output
+      IMPORTING
+        iv_val        TYPE clike
+      RETURNING
+        VALUE(rv_str) TYPE string.
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -53,6 +58,19 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
+
+
+  METHOD alpha_output.
+
+    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
+      EXPORTING
+        input  = iv_val
+      IMPORTING
+        output = rv_str.
+
+    CONDENSE rv_str.
+
+  ENDMETHOD.
 
 
   METHOD bitbyte_to_int.

@@ -23,35 +23,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
-
-
-  METHOD add_interface_source_classic.
-    DATA: lo_source      TYPE REF TO cl_oo_source,
-          lt_source_code TYPE zif_abapgit_definitions=>ty_string_tt.
-
-    CREATE OBJECT lo_source
-      EXPORTING
-        clskey             = is_clskey
-      EXCEPTIONS
-        class_not_existing = 1
-        OTHERS             = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from CL_OO_SOURCE' ) ##NO_TEXT.
-    ENDIF.
-
-    TRY.
-        lo_source->access_permission( seok_access_modify ).
-        lt_source_code = get_interface_source( ).
-        lo_source->set_source( lt_source_code ).
-        lo_source->save( ).
-        lo_source->access_permission( seok_access_free ).
-      CATCH cx_oo_access_permission.
-        zcx_abapgit_exception=>raise( 'permission error' ) ##NO_TEXT.
-      CATCH cx_oo_source_save_failure.
-        zcx_abapgit_exception=>raise( 'save failure' ) ##NO_TEXT.
-    ENDTRY.
-  ENDMETHOD.
+CLASS ZCL_ABAPGIT_APACK_MIGRATION IMPLEMENTATION.
 
 
   METHOD add_interface_source.
@@ -94,19 +66,37 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
         CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~UNLOCK').
 
       CATCH cx_sy_dyn_call_error.
-        add_interface_source_classic( is_clskey = is_clskey ).
+        add_interface_source_classic( is_clskey ).
     ENDTRY.
 
   ENDMETHOD.
 
 
-  METHOD run.
+  METHOD add_interface_source_classic.
+    DATA: lo_source      TYPE REF TO cl_oo_source,
+          lt_source_code TYPE zif_abapgit_definitions=>ty_string_tt.
 
-    DATA: lo_apack_migration TYPE REF TO zcl_abapgit_apack_migration.
+    CREATE OBJECT lo_source
+      EXPORTING
+        clskey             = is_clskey
+      EXCEPTIONS
+        class_not_existing = 1
+        OTHERS             = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from CL_OO_SOURCE' ) ##NO_TEXT.
+    ENDIF.
 
-    CREATE OBJECT lo_apack_migration.
-    lo_apack_migration->perform_migration( ).
-
+    TRY.
+        lo_source->access_permission( seok_access_modify ).
+        lt_source_code = get_interface_source( ).
+        lo_source->set_source( lt_source_code ).
+        lo_source->save( ).
+        lo_source->access_permission( seok_access_free ).
+      CATCH cx_oo_access_permission.
+        zcx_abapgit_exception=>raise( 'permission error' ) ##NO_TEXT.
+      CATCH cx_oo_source_save_failure.
+        zcx_abapgit_exception=>raise( 'save failure' ) ##NO_TEXT.
+    ENDTRY.
   ENDMETHOD.
 
 
@@ -144,7 +134,7 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
 
     ls_clskey-clsname = c_interface_name.
 
-    add_interface_source( is_clskey = ls_clskey ).
+    add_interface_source( ls_clskey ).
 
     ls_inactive_object-object   = 'INTF'.
     ls_inactive_object-obj_name = c_interface_name.
@@ -212,6 +202,16 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
     IF interface_exists( ) = abap_false.
       create_interface( ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD run.
+
+    DATA: lo_apack_migration TYPE REF TO zcl_abapgit_apack_migration.
+
+    CREATE OBJECT lo_apack_migration.
+    lo_apack_migration->perform_migration( ).
 
   ENDMETHOD.
 ENDCLASS.

@@ -280,11 +280,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     " Action buttons
     ro_html->add( '<td class="indent5em">' ).
     ro_html->add_a( iv_act   = 'errorStub(event)' " Will be reinit by JS
-                    iv_typ   = zif_abapgit_definitions=>c_action_type-onclick
+                    iv_typ   = zif_abapgit_html=>c_action_type-onclick
                     iv_id    = 'commitButton'
                     iv_style = 'display: none'
                     iv_txt   = 'Commit (<span id="fileCounter"></span>)'
-                    iv_opt   = zif_abapgit_definitions=>c_html_opt-strong ) ##NO_TEXT.
+                    iv_opt   = zif_abapgit_html=>c_html_opt-strong ) ##NO_TEXT.
     ro_html->add_a( iv_act = |{ c_action-stage_all }|
                     iv_id  = 'commitAllButton'
                     iv_txt = lv_add_all_txt ) ##NO_TEXT.
@@ -521,9 +521,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           EXPORTING
             io_repo  = mo_repo
             io_stage = lo_stage.
-        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
-        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN c_action-stage_commit.
 
@@ -533,7 +533,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           EXPORTING
             io_repo  = mo_repo
             io_stage = lo_stage.
-        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN c_action-stage_filter.
 
@@ -545,14 +545,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
                                                             it_field = lt_fields
                                                   CHANGING  cg_field = mv_filter_value ).
 
-        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
       WHEN zif_abapgit_definitions=>c_action-go_patch.                         " Go Patch page
 
         ei_page  = get_page_patch(
           iv_getdata   = iv_getdata
           iv_prev_page = iv_prev_page ).
-        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN OTHERS.
         RETURN.

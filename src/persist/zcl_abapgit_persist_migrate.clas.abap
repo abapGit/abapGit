@@ -217,7 +217,7 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
     DATA: li_element            TYPE REF TO if_ixml_element,
           ls_setting_to_migrate LIKE LINE OF ct_settings_to_migrate.
 
-    li_element = ci_document->find_from_name( iv_name  ).
+    li_element = ci_document->find_from_name( iv_name ).
     IF li_element IS BOUND.
 
       " The element is present in the global config.

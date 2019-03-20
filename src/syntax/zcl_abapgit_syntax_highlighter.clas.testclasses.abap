@@ -71,8 +71,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
 
     lo_syntax = zcl_abapgit_syntax_highlighter=>create( iv_filename ).
-    lo_syntax->parse_line( EXPORTING iv_line    = iv_line
-                    IMPORTING et_matches = lt_matches_act ).
+    lt_matches_act = lo_syntax->parse_line( iv_line ).
 
     SORT lt_matches_act BY offset.
 

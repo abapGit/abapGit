@@ -690,6 +690,8 @@ div.tutorial h2 {
   float: left;
   margin: 0;
   padding: 0;
+  white-space: nowrap;
+  text-align: left;
 }
 .nav-container.float-right ul { float: right; }
 
@@ -991,4 +993,63 @@ table.commit tr .title {
 
 .ro-detail {
   display: none;
+}
+
+/* Branch Overview Page */
+.gitGraph-scrollWrapper, .gitGraph-Wrapper{
+  overflow-y:hidden;
+}
+
+.gitGraph-scrollWrapper{
+  overflow-x: auto; 
+  height: 20px; 
+}
+
+.gitGraph-Wrapper{
+  overflow-x: hidden; 
+}
+ 
+.gitGraph-HTopScroller {
+  width:1000px; 
+  height: 20px; 
+}
+
+/* code inspector */
+.ci-head {
+  background-color: #f2f2f2;
+  padding: 0.5em 1em;
+}
+.ci-head .package-name span {
+  margin-left: 0.3em;
+  color: grey;
+}
+.ci-variant {
+  font-weight: bold;
+  color: #444;
+}
+.ci-result {
+  background-color: #f6f6f6;
+  padding: 6px;
+  margin-top: 4px;
+}
+.ci-result li {
+  list-style-type: none;
+  padding: 0.3em 0.8em;
+  margin-top: 6px;
+  color: #444;
+}
+.ci-result li:first-child {
+  margin-top: 0px;
+}
+.ci-result li.ci-error {
+  border-left: 4px solid #cd5353;
+}
+.ci-result li.ci-warning {
+  border-left: 4px solid #ecd227;
+}
+.ci-result li.ci-info {
+  border-left: 4px solid #acacac;
+}
+.ci-result li span {
+  display: block;
 }

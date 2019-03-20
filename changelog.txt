@@ -8,6 +8,20 @@ Legend
 + : added
 - : removed
 
+2019-03-15 v1.86.0
+------------------
++ IWPR support
+* SPRX downport
++ Offline icons
+* Deserialize steps refactored
+* Tutorial, show correct installed package
+* Fix for "undecided" error
++ Possibility for repo creation authorization check
+* Branch overview, horizontal scrollbar
+* DTEL, TPARA removed from XML
++ Allow injection of progress indicator
+* GUI refactorings
+
 2019-02-26 v1.85.0
 ------------------
 * ENHO, check esistence before deletion

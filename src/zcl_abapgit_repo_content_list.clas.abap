@@ -15,7 +15,8 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
       RAISING   zcx_abapgit_exception.
 
     METHODS get_log
-      RETURNING VALUE(ro_log) TYPE REF TO zcl_abapgit_log.
+      RETURNING VALUE(ri_log) TYPE REF TO zif_abapgit_log.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_sortkey,
                  default    TYPE i VALUE 9999,
@@ -27,7 +28,7 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
                END OF c_sortkey.
 
     DATA: mo_repo TYPE REF TO zcl_abapgit_repo,
-          mo_log  TYPE REF TO zcl_abapgit_log.
+          mi_log  TYPE REF TO zif_abapgit_log.
 
     METHODS build_repo_items_local_only
       RETURNING VALUE(rt_repo_items) TYPE zif_abapgit_definitions=>tt_repo_items
@@ -134,14 +135,14 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
   METHOD build_repo_items_with_remote.
 
     DATA:
-          ls_file        TYPE zif_abapgit_definitions=>ty_repo_file,
-          lt_status      TYPE zif_abapgit_definitions=>ty_results_tt.
+      ls_file   TYPE zif_abapgit_definitions=>ty_repo_file,
+      lt_status TYPE zif_abapgit_definitions=>ty_results_tt.
 
     FIELD-SYMBOLS: <ls_status>    LIKE LINE OF lt_status,
                    <ls_repo_item> LIKE LINE OF rt_repo_items.
 
 
-    lt_status       = mo_repo->status( mo_log ).
+    lt_status = mo_repo->status( mi_log ).
 
     LOOP AT lt_status ASSIGNING <ls_status>.
       AT NEW obj_name. "obj_type + obj_name
@@ -190,7 +191,7 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
 
   METHOD constructor.
     mo_repo = io_repo.
-    CREATE OBJECT mo_log.
+    CREATE OBJECT mi_log TYPE zcl_abapgit_log.
   ENDMETHOD.
 
 
@@ -202,13 +203,13 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
 
 
   METHOD get_log.
-    ro_log = mo_log.
+    ri_log = mi_log.
   ENDMETHOD.
 
 
   METHOD list.
 
-    mo_log->clear( ).
+    mi_log->clear( ).
 
     IF mo_repo->has_remote_source( ) = abap_true.
       rt_repo_items = build_repo_items_with_remote( ).

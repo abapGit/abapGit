@@ -207,8 +207,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SOTS IMPLEMENTATION.
 
     DATA: lt_sots    TYPE tty_sots,
           lt_objects TYPE sotr_objects,
-          lv_object  LIKE LINE OF lt_objects,
-          lx_error   TYPE REF TO zcx_abapgit_exception.
+          lv_object  LIKE LINE OF lt_objects.
 
     FIELD-SYMBOLS: <ls_sots>  TYPE ty_sots,
                    <ls_entry> LIKE LINE OF <ls_sots>-entries.
@@ -247,7 +246,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SOTS IMPLEMENTATION.
             <ls_entry>-text = mo_files->read_string( iv_extra = get_raw_text_filename( <ls_entry> )
                                                      iv_ext   = 'txt' ).
 
-          CATCH zcx_abapgit_exception INTO lx_error.
+          CATCH zcx_abapgit_exception.
             " Most probably file not found -> ignore
             CONTINUE.
         ENDTRY.

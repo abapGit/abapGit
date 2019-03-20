@@ -174,8 +174,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD html_head.
 
-    DATA lv_font TYPE string.
-
     CREATE OBJECT ro_html.
 
     ro_html->add( '<head>' ).                               "#EC NOTEXT
@@ -280,11 +278,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-url.
 
         call_browser( iv_getdata ).
-        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
       WHEN OTHERS.
 
-        ev_state = zif_abapgit_definitions=>c_event_state-not_handled.
+        ev_state = zcl_abapgit_gui=>c_event_state-not_handled.
 
     ENDCASE.
 
@@ -302,7 +300,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ENDIF.
 
     " Real page
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ro_html TYPE zcl_abapgit_html.
 
     ro_html->add( '<!DOCTYPE html>' ).                      "#EC NOTEXT
     ro_html->add( '<html>' ).                               "#EC NOTEXT

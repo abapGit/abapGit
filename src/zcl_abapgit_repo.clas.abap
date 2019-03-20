@@ -31,7 +31,7 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS get_files_local
       IMPORTING
-        !io_log         TYPE REF TO zcl_abapgit_log OPTIONAL
+        !ii_log         TYPE REF TO zif_abapgit_log OPTIONAL
         !it_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
@@ -101,7 +101,7 @@ CLASS zcl_abapgit_repo DEFINITION
         VALUE(rv_yes) TYPE abap_bool .
     METHODS status
       IMPORTING
-        !io_log           TYPE REF TO zcl_abapgit_log OPTIONAL
+        !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
       RETURNING
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
@@ -169,7 +169,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -203,6 +203,24 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD bind_listener.
     mi_listener = ii_listener.
+  ENDMETHOD.
+
+
+  METHOD build_apack_manifest_file.
+    DATA: lo_manifest_reader TYPE REF TO zcl_abapgit_apack_reader,
+          ls_descriptor      TYPE zif_abapgit_apack_definitions=>ty_descriptor,
+          lo_manifest_writer TYPE REF TO zcl_abapgit_apack_writer.
+
+    lo_manifest_reader = zcl_abapgit_apack_reader=>create_instance( ms_data-package ).
+    IF lo_manifest_reader->has_manifest( ) = abap_true.
+      ls_descriptor = lo_manifest_reader->get_manifest_descriptor( ).
+      lo_manifest_writer = zcl_abapgit_apack_writer=>create_instance( ls_descriptor ).
+      rs_file-path     = zif_abapgit_definitions=>c_root_dir.
+      rs_file-filename = zif_abapgit_apack_definitions=>c_dot_apack_manifest.
+      rs_file-data     = zcl_abapgit_convert=>string_to_xstring_utf8( lo_manifest_writer->serialize( ) ).
+      rs_file-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
+                                                 iv_data = rs_file-data ).
+    ENDIF.
   ENDMETHOD.
 
 
@@ -361,7 +379,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       iv_ignore_subpackages = get_local_settings( )-ignore_subpackages
       iv_only_local_objects = get_local_settings( )-only_local_objects
       io_dot                = get_dot_abapgit( )
-      io_log                = io_log ).
+      ii_log                = ii_log ).
 
     apply_filter( EXPORTING it_filter = it_filter
                   CHANGING ct_tadir  = lt_tadir ).
@@ -371,7 +389,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     lt_found = lo_serialize->serialize(
       it_tadir    = lt_tadir
       iv_language = get_dot_abapgit( )->get_master_language( )
-      io_log      = io_log ).
+      ii_log      = ii_log ).
     APPEND LINES OF lt_found TO rt_files.
 
     mt_local                 = rt_files.
@@ -409,6 +427,13 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   METHOD get_local_settings.
 
     rs_settings = ms_data-local_settings.
+
+  ENDMETHOD.
+
+
+  METHOD get_name.
+
+    rv_name = ms_data-local_settings-display_name.
 
   ENDMETHOD.
 
@@ -591,7 +616,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     IF lines( mt_status ) = 0.
       mt_status = zcl_abapgit_file_status=>status(
         io_repo = me
-        io_log  = io_log ).
+        ii_log  = ii_log ).
     ENDIF.
 
     rt_results = mt_status.
@@ -709,29 +734,4 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     set( it_checksums = lt_checksums ).
 
   ENDMETHOD.
-
-
-  METHOD get_name.
-
-    rv_name = ms_data-local_settings-display_name.
-
-  ENDMETHOD.
-
-  METHOD build_apack_manifest_file.
-    DATA: lo_manifest_reader TYPE REF TO zcl_abapgit_apack_reader,
-          ls_descriptor      TYPE zif_abapgit_apack_definitions=>ty_descriptor,
-          lo_manifest_writer TYPE REF TO zcl_abapgit_apack_writer.
-
-    lo_manifest_reader = zcl_abapgit_apack_reader=>create_instance( iv_package_name = ms_data-package ).
-    IF lo_manifest_reader->has_manifest( ) = abap_true.
-      ls_descriptor = lo_manifest_reader->get_manifest_descriptor( ).
-      lo_manifest_writer = zcl_abapgit_apack_writer=>create_instance( is_apack_manifest_descriptor = ls_descriptor ).
-      rs_file-path     = zif_abapgit_definitions=>c_root_dir.
-      rs_file-filename = zif_abapgit_apack_definitions=>c_dot_apack_manifest.
-      rs_file-data     = zcl_abapgit_convert=>string_to_xstring_utf8( lo_manifest_writer->serialize( ) ).
-      rs_file-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
-                                                 iv_data = rs_file-data ).
-    ENDIF.
-  ENDMETHOD.
-
 ENDCLASS.

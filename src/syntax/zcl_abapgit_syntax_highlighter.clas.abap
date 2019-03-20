@@ -23,51 +23,55 @@ CLASS zcl_abapgit_syntax_highlighter DEFINITION
         offset   TYPE i,      " Beginning position of the string that should be formatted
         length   TYPE i,      " Length of the string that should be formatted
         text_tag TYPE string, " Type of text tag
-      END OF ty_match.
-
+      END OF ty_match .
     TYPES:
-      ty_match_tt  TYPE STANDARD TABLE OF ty_match WITH DEFAULT KEY.
-
+      ty_match_tt  TYPE STANDARD TABLE OF ty_match WITH DEFAULT KEY .
     TYPES:
       BEGIN OF ty_rule,
         regex             TYPE REF TO cl_abap_regex,
         token             TYPE char1,
         style             TYPE string,
         relevant_submatch TYPE i,
-      END OF ty_rule.
+      END OF ty_rule .
 
-    CONSTANTS c_token_none TYPE c VALUE '.'.
-
-    DATA mt_rules TYPE STANDARD TABLE OF ty_rule.
+    CONSTANTS c_token_none TYPE c VALUE '.' ##NO_TEXT.
+    DATA:
+      mt_rules TYPE STANDARD TABLE OF ty_rule .
 
     METHODS add_rule
       IMPORTING
-        iv_regex    TYPE string
-        iv_token    TYPE c
-        iv_style    TYPE string
-        iv_submatch TYPE i OPTIONAL.
-
+        !iv_regex    TYPE string
+        !iv_token    TYPE c
+        !iv_style    TYPE string
+        !iv_submatch TYPE i OPTIONAL .
     METHODS parse_line
-      IMPORTING iv_line    TYPE string
-      EXPORTING et_matches TYPE ty_match_tt.
-
-    METHODS order_matches ABSTRACT
-      IMPORTING iv_line    TYPE string
-      CHANGING  ct_matches TYPE ty_match_tt.
-
+      IMPORTING
+        !iv_line          TYPE string
+      RETURNING
+        VALUE(rt_matches) TYPE ty_match_tt .
+    METHODS order_matches
+          ABSTRACT
+      IMPORTING
+        !iv_line    TYPE string
+      CHANGING
+        !ct_matches TYPE ty_match_tt .
     METHODS extend_matches
-      IMPORTING iv_line    TYPE string
-      CHANGING  ct_matches TYPE ty_match_tt.
-
+      IMPORTING
+        !iv_line    TYPE string
+      CHANGING
+        !ct_matches TYPE ty_match_tt .
     METHODS format_line
-      IMPORTING iv_line        TYPE string
-                it_matches     TYPE ty_match_tt
-      RETURNING VALUE(rv_line) TYPE string.
-
+      IMPORTING
+        !iv_line       TYPE string
+        !it_matches    TYPE ty_match_tt
+      RETURNING
+        VALUE(rv_line) TYPE string .
     METHODS apply_style
-      IMPORTING iv_line        TYPE string
-                iv_class       TYPE string
-      RETURNING VALUE(rv_line) TYPE string.
+      IMPORTING
+        !iv_line       TYPE string
+        !iv_class      TYPE string
+      RETURNING
+        VALUE(rv_line) TYPE string .
 ENDCLASS.
 
 
@@ -194,8 +198,6 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
       <ls_submatch> LIKE LINE OF <ls_result>-submatches.
 
 
-    CLEAR et_matches.
-
     " Process syntax-dependent regex table and find all matches
     LOOP AT mt_rules ASSIGNING <ls_regex>.
       lo_regex   = <ls_regex>-regex.
@@ -209,7 +211,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
           ls_match-token  = <ls_regex>-token.
           ls_match-offset = <ls_result>-offset.
           ls_match-length = <ls_result>-length.
-          APPEND ls_match TO et_matches.
+          APPEND ls_match TO rt_matches.
         ELSE.
           READ TABLE <ls_result>-submatches ASSIGNING <ls_submatch> INDEX <ls_regex>-relevant_submatch.
           "submatch might be empty if only discarted parts matched
@@ -217,7 +219,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
             ls_match-token  = <ls_regex>-token.
             ls_match-offset = <ls_submatch>-offset.
             ls_match-length = <ls_submatch>-length.
-            APPEND ls_match TO et_matches.
+            APPEND ls_match TO rt_matches.
           ENDIF.
         ENDIF.
       ENDLOOP.
@@ -234,8 +236,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    me->parse_line( EXPORTING iv_line    = iv_line
-                    IMPORTING et_matches = lt_matches ).
+    lt_matches = me->parse_line( iv_line ).
 
     me->order_matches( EXPORTING iv_line    = iv_line
                        CHANGING  ct_matches = lt_matches ).

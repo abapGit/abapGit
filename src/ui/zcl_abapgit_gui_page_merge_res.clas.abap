@@ -293,8 +293,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
         ro_html->add( '<th>Merge - ' ).                     "#EC NOTEXT
         ro_html->add_a( iv_act = 'submitFormById(''merge_form'');' "#EC NOTEXT
                         iv_txt = 'Apply'
-                        iv_typ = zif_abapgit_definitions=>c_action_type-onclick
-                        iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
+                        iv_typ = zif_abapgit_html=>c_action_type-onclick
+                        iv_opt = zif_abapgit_html=>c_html_opt-strong ).
         ro_html->add( '</th> ' ).                           "#EC NOTEXT
         ro_html->add( '</tr>' ).                            "#EC NOTEXT
         ro_html->add( '</thead>' ).                         "#EC NOTEXT
@@ -458,8 +458,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
       ro_html->add( '<th>Target - ' && mo_repo->get_branch_name( ) && ' - ' ). "#EC NOTEXT
       ro_html->add_a( iv_act = 'submitFormById(''target_form'');' "#EC NOTEXT
                       iv_txt = 'Apply'
-                      iv_typ = zif_abapgit_definitions=>c_action_type-onclick
-                      iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
+                      iv_typ = zif_abapgit_html=>c_action_type-onclick
+                      iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ro_html->add( '</th> ' ).                             "#EC NOTEXT
       ro_html->add( '</form>' ).                            "#EC NOTEXT
       ro_html->add( '<th class="num"></th>' ).              "#EC NOTEXT
@@ -467,8 +467,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
       ro_html->add( '<th>Source  - ' && mo_merge->get_source_branch( ) && ' - ' ). "#EC NOTEXT
       ro_html->add_a( iv_act = 'submitFormById(''source_form'');' "#EC NOTEXT
                       iv_txt = 'Apply'
-                      iv_typ = zif_abapgit_definitions=>c_action_type-onclick
-                      iv_opt = zif_abapgit_definitions=>c_html_opt-strong ).
+                      iv_typ = zif_abapgit_html=>c_action_type-onclick
+                      iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ro_html->add( '</th> ' ).                             "#EC NOTEXT
       ro_html->add( '</form>' ).                            "#EC NOTEXT
     ELSE.
@@ -570,15 +570,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
         ENDIF.
 
         IF mv_current_conflict_index IS NOT INITIAL.
-          ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+          ev_state = zcl_abapgit_gui=>c_event_state-re_render.
         ELSE.
           ei_page = mo_merge_page.
-          ev_state = zif_abapgit_definitions=>c_event_state-go_back.
+          ev_state = zcl_abapgit_gui=>c_event_state-go_back.
         ENDIF.
 
       WHEN c_actions-toggle_mode.
         toggle_merge_mode( ).
-        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
 
     ENDCASE.
 

@@ -79,13 +79,13 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_TUTORIAL IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_page~on_event.
-    ev_state = zif_abapgit_definitions=>c_event_state-not_handled.
+    ev_state = zcl_abapgit_gui=>c_event_state-not_handled.
   ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_page~render.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ro_html TYPE zcl_abapgit_html.
 
     ro_html->add( '<div class="tutorial">' ).
     ro_html->add( render_content( ) ).

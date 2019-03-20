@@ -15,12 +15,6 @@ CLASS ltcl_xml_output DEFINITION FOR TESTING  DURATION SHORT RISK LEVEL HARMLESS
              bar TYPE c LENGTH 1,
            END OF st_old.
 
-    TYPES: BEGIN OF st_new,
-             foo TYPE i,
-             bar TYPE c LENGTH 1,
-             moo TYPE f,
-           END OF st_new.
-
 ENDCLASS.
 CLASS ltcl_xml_output IMPLEMENTATION.
 

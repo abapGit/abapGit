@@ -155,7 +155,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
       WHILE li_elem IS NOT INITIAL.
         li_list = li_elem->get_children( ).
 
-        li_textit = li_list->create_rev_iterator_filtered( li_filter  ).
+        li_textit = li_list->create_rev_iterator_filtered( li_filter ).
         li_text ?= li_textit->get_next( ).
         IF li_text IS NOT INITIAL.
           lv_value = li_text->get_data( ).
@@ -170,13 +170,6 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
       CLEAR: li_abapctrl, li_elem, li_iter.
 
     ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_ecatt_download~get_xml_stream.
-
-    rv_xml_stream = mv_xml_stream.
 
   ENDMETHOD.
 
@@ -453,6 +446,13 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
             previous      = ex_ecatt
             called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_SCRIPT_TO_TEMPLATE' ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_ecatt_download~get_xml_stream.
+
+    rv_xml_stream = mv_xml_stream.
 
   ENDMETHOD.
 ENDCLASS.

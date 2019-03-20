@@ -106,7 +106,7 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
     ls_item-obj_type = 'CLAS'.
     ls_item-obj_name = 'CL_ADT_GUI_INTEGRATION_CONTEXT'.
 
-    IF zcl_abapgit_objects=>exists( ls_item  ) = abap_false.
+    IF zcl_abapgit_objects=>exists( ls_item ) = abap_false.
       " ADT is not supported in this NW release
       RETURN.
     ENDIF.

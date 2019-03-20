@@ -694,7 +694,6 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     zcl_abapgit_objects_activation=>activate( iv_ddic            = is_step-is_ddic
                                               iv_no_syntax_check = is_step-no_syntax_check
                                               iv_old_activation  = is_step-old_activation ).
-
   ENDMETHOD.
 
 
@@ -730,14 +729,14 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     rt_results = it_results.
 
     DELETE rt_results WHERE match = abap_true.     " Full match
+    DELETE rt_results WHERE obj_type IS INITIAL.
+    DELETE rt_results WHERE lstate = zif_abapgit_definitions=>c_state-added AND rstate IS INITIAL.
+
     SORT rt_results
       BY obj_type ASCENDING
          obj_name ASCENDING
          rstate   DESCENDING. " ensures that non-empty rstate is kept
     DELETE ADJACENT DUPLICATES FROM rt_results COMPARING obj_type obj_name.
-
-    DELETE rt_results WHERE obj_type IS INITIAL.
-    DELETE rt_results WHERE lstate = zif_abapgit_definitions=>c_state-added AND rstate IS INITIAL.
 
   ENDMETHOD.
 

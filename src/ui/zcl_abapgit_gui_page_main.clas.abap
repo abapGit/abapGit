@@ -356,6 +356,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
     ls_hotkey_action-default_hotkey = |d|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
+    ls_hotkey_action-name           = |Run code inspector|.
+    ls_hotkey_action-action         = zif_abapgit_definitions=>c_action-repo_code_inspector.
+    ls_hotkey_action-default_hotkey = |i|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
   ENDMETHOD.
 
 
@@ -376,7 +381,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
           ei_page      = ei_page
           ev_state     = ev_state ).
 
-      IF ev_state <> zif_abapgit_definitions=>c_event_state-not_handled.
+      IF ev_state <> zcl_abapgit_gui=>c_event_state-not_handled.
         RETURN.
       ENDIF.
     ENDIF.
@@ -390,17 +395,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
             zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->refresh( ).
           CATCH zcx_abapgit_exception ##NO_HANDLER.
         ENDTRY.
-        ev_state = zif_abapgit_definitions=>c_event_state-re_render.
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-changed_by.
         test_changed_by( ).
-        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
       WHEN c_actions-documentation.
         zcl_abapgit_services_abapgit=>open_abapgit_wikipage( ).
-        ev_state = zif_abapgit_definitions=>c_event_state-no_more_act.
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
       WHEN c_actions-overview.
         CREATE OBJECT li_repo_overview TYPE zcl_abapgit_gui_page_repo_over.
         ei_page = li_repo_overview.
-        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN OTHERS.
         super->zif_abapgit_gui_page~on_event(
           EXPORTING

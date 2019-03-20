@@ -282,9 +282,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
     ls_settings = mo_repo->get_local_settings( ).
 
-    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'display_name'.
-    ASSERT sy-subrc = 0.
-    ls_settings-display_name = ls_post_field-value.
+    IF mo_repo->is_offline( ) = abap_false.
+      READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'display_name'.
+      ASSERT sy-subrc = 0.
+      ls_settings-display_name = ls_post_field-value.
+    ENDIF.
 
     READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'write_protected' value = 'on'.
     IF sy-subrc = 0.
@@ -342,7 +344,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     CASE iv_action.
       WHEN c_action-save_settings.
         save( it_postdata ).
-        ev_state = zif_abapgit_definitions=>c_event_state-go_back.
+        ev_state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
 
   ENDMETHOD.

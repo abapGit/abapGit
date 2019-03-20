@@ -1,4 +1,4 @@
-INTERFACE zif_abapgit_gui_router
+INTERFACE zif_abapgit_gui_event_handler
   PUBLIC .
 
   METHODS on_event
@@ -8,7 +8,7 @@ INTERFACE zif_abapgit_gui_router
       iv_getdata   TYPE clike OPTIONAL
       it_postdata  TYPE cnht_post_data_tab OPTIONAL
     EXPORTING
-      ei_page      TYPE REF TO zif_abapgit_gui_page
+      ei_page      TYPE REF TO zif_abapgit_gui_renderable
       ev_state     TYPE i
     RAISING
       zcx_abapgit_exception

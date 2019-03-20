@@ -29,7 +29,7 @@ CLASS zcl_abapgit_tadir DEFINITION
         !io_dot                TYPE REF TO zcl_abapgit_dot_abapgit
         !iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
         !iv_only_local_objects TYPE abap_bool
-        !io_log                TYPE REF TO zcl_abapgit_log OPTIONAL
+        !ii_log                TYPE REF TO zif_abapgit_log OPTIONAL
       RETURNING
         VALUE(rt_tadir)        TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
@@ -99,7 +99,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
     CREATE OBJECT lo_skip_objects.
     rt_tadir = lo_skip_objects->skip_sadl_generated_objects(
       it_tadir = rt_tadir
-      io_log   = io_log ).
+      ii_log   = ii_log ).
 
     LOOP AT lt_packages ASSIGNING <lv_package>.
       " Local packages are not in TADIR, only in TDEVC, act as if they were
@@ -234,13 +234,13 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
                       io_dot                = io_dot
                       iv_ignore_subpackages = iv_ignore_subpackages
                       iv_only_local_objects = iv_only_local_objects
-                      io_log                = io_log ).
+                      ii_log                = ii_log ).
 
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->change_tadir(
       EXPORTING
         iv_package = iv_package
-        io_log     = io_log
+        ii_log     = ii_log
       CHANGING
         ct_tadir   = rt_tadir ).
 

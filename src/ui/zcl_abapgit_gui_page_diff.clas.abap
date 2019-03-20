@@ -386,10 +386,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
       " File types
       IF lines( lt_types ) > 1.
-        lo_sub->add( iv_txt = 'TYPE' iv_typ = zif_abapgit_definitions=>c_action_type-separator ).
+        lo_sub->add( iv_txt = 'TYPE' iv_typ = zif_abapgit_html=>c_action_type-separator ).
         LOOP AT lt_types ASSIGNING <lv_i>.
           lo_sub->add( iv_txt = <lv_i>
-                       iv_typ = zif_abapgit_definitions=>c_action_type-onclick
+                       iv_typ = zif_abapgit_html=>c_action_type-onclick
                        iv_aux = 'type'
                        iv_chk = abap_true ).
         ENDLOOP.
@@ -397,10 +397,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
       " Changed by
       IF lines( lt_users ) > 1.
-        lo_sub->add( iv_txt = 'CHANGED BY' iv_typ = zif_abapgit_definitions=>c_action_type-separator ).
+        lo_sub->add( iv_txt = 'CHANGED BY' iv_typ = zif_abapgit_html=>c_action_type-separator ).
         LOOP AT lt_users ASSIGNING <lv_i>.
           lo_sub->add( iv_txt = <lv_i>
-                       iv_typ = zif_abapgit_definitions=>c_action_type-onclick
+                       iv_typ = zif_abapgit_html=>c_action_type-onclick
                        iv_aux = 'changed-by'
                        iv_chk = abap_true ).
         ENDLOOP.
@@ -414,7 +414,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       ro_menu->add( iv_txt = 'Stage'
                     iv_act = c_actions-stage
                     iv_id  = 'stage'
-                    iv_typ = zif_abapgit_definitions=>c_action_type-dummy
+                    iv_typ = zif_abapgit_html=>c_action_type-dummy
                      ) ##NO_TEXT.
     ENDIF.
 
@@ -614,13 +614,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
                       iv_act   = |patch_section_add('{ is_diff-filename }','{ mv_section_count }')|
                       iv_id    = |patch_section_add_{ is_diff-filename }_{ mv_section_count }|
                       iv_class = |patch_section_add|
-                      iv_typ   = zif_abapgit_definitions=>c_action_type-dummy ).
+                      iv_typ   = zif_abapgit_html=>c_action_type-dummy ).
 
       ro_html->add_a( iv_txt   = |{ c_patch_action-remove }|
                       iv_act   = |patch_section_remove('{ is_diff-filename }', '{ mv_section_count }')|
                       iv_id    = |patch_section_remove_{ is_diff-filename }_{ mv_section_count }|
                       iv_class = |patch_section_remove|
-                      iv_typ   = zif_abapgit_definitions=>c_action_type-dummy ).
+                      iv_typ   = zif_abapgit_html=>c_action_type-dummy ).
 
       ro_html->add( '</th>' ).
 
@@ -939,12 +939,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       io_html->add_a( iv_txt   = |{ c_patch_action-add }|
                       iv_act   = ||
                       iv_id    = |patch_line_{ c_patch_action-add }_{ lv_id }|
-                      iv_typ   = zif_abapgit_definitions=>c_action_type-dummy
+                      iv_typ   = zif_abapgit_html=>c_action_type-dummy
                       iv_class = lv_left_class ).
       io_html->add_a( iv_txt   = |{ c_patch_action-remove }|
                       iv_act   = ||
                       iv_id    = |patch_line_{ c_patch_action-remove }_{ lv_id }|
-                      iv_typ   = zif_abapgit_definitions=>c_action_type-dummy
+                      iv_typ   = zif_abapgit_html=>c_action_type-dummy
                       iv_class = lv_right_class ).
 
       io_html->add( |</td>| ).
@@ -967,13 +967,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
                     iv_act   = |patch_file_add('{ is_diff-filename }')|
                     iv_id    = |patch_file_add_{ is_diff-filename }|
                     iv_class = |patch_file_add|
-                    iv_typ   = zif_abapgit_definitions=>c_action_type-dummy ).
+                    iv_typ   = zif_abapgit_html=>c_action_type-dummy ).
 
     io_html->add_a( iv_txt   = |{ c_patch_action-remove }|
                     iv_act   = |patch_file_remove('{ is_diff-filename }')|
                     iv_id    = |patch_file_remove_{ is_diff-filename }|
                     iv_class = |patch_file_remove|
-                    iv_typ   = zif_abapgit_definitions=>c_action_type-dummy ).
+                    iv_typ   = zif_abapgit_html=>c_action_type-dummy ).
 
     io_html->add( '</th>' ).
 
@@ -1084,7 +1084,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       WHEN c_actions-toggle_unified. " Toggle file diplay
 
         mv_unified = zcl_abapgit_persistence_user=>get_instance( )->toggle_diff_unified( ).
-        ev_state   = zif_abapgit_definitions=>c_event_state-re_render.
+        ev_state   = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-stage.
 
@@ -1095,7 +1095,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
           EXPORTING
             io_repo  = lo_repo
             io_stage = mo_stage.
-        ev_state = zif_abapgit_definitions=>c_event_state-new_page.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
     ENDCASE.
 

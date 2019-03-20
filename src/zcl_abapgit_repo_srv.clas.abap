@@ -297,6 +297,10 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
           lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit.
 
 
+    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-create_repo ) = abap_false.
+      zcx_abapgit_exception=>raise( 'Not authorized' ).
+    ENDIF.
+
     validate_package( iv_package ).
 
     lo_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( ).
@@ -329,6 +333,10 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
     ASSERT NOT iv_url IS INITIAL
       AND NOT iv_branch_name IS INITIAL
       AND NOT iv_package IS INITIAL.
+
+    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-create_repo ) = abap_false.
+      zcx_abapgit_exception=>raise( 'Not authorized' ).
+    ENDIF.
 
     validate_package( iv_package ).
     zcl_abapgit_url=>validate( |{ iv_url }| ).
@@ -380,7 +388,12 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
   METHOD zif_abapgit_repo_srv~validate_package.
 
     DATA: lv_as4user TYPE tdevc-as4user,
-          lt_repos   TYPE zif_abapgit_persistence=>tt_repo.
+          lt_repos   TYPE zif_abapgit_persistence=>tt_repo,
+          lv_name    TYPE zif_abapgit_persistence=>ty_local_settings-display_name,
+          lv_owner   TYPE zif_abapgit_persistence=>ty_local_settings-display_name.
+
+    FIELD-SYMBOLS:
+          <ls_repo>  LIKE LINE OF lt_repos.
 
     IF iv_package IS INITIAL.
       zcx_abapgit_exception=>raise( 'add, package empty' ).
@@ -403,9 +416,11 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
     " make sure its not already in use for a different repository
     lt_repos = zcl_abapgit_persist_factory=>get_repo( )->list( ).
-    READ TABLE lt_repos WITH KEY package = iv_package TRANSPORTING NO FIELDS.
+    READ TABLE lt_repos WITH KEY package = iv_package ASSIGNING <ls_repo>.
     IF sy-subrc = 0.
-      zcx_abapgit_exception=>raise( |Package { iv_package } already in use| ).
+      lv_name = zcl_abapgit_repo_srv=>get_instance( )->get( <ls_repo>-key )->get_name( ).
+      lv_owner = <ls_repo>-created_by.
+      zcx_abapgit_exception=>raise( |Package { iv_package } already versioned as { lv_name } by { lv_owner }| ).
     ENDIF.
 
     validate_sub_super_packages(

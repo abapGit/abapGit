@@ -6,8 +6,10 @@ CLASS zcl_abapgit_zip DEFINITION
 
     CLASS-METHODS export
       IMPORTING
-        !io_repo   TYPE REF TO zcl_abapgit_repo
-        !it_filter TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
+        !io_repo       TYPE REF TO zcl_abapgit_repo
+        !it_filter     TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
+      RETURNING
+        VALUE(rv_xstr) TYPE xstring
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS export_object
@@ -15,10 +17,15 @@ CLASS zcl_abapgit_zip DEFINITION
         zcx_abapgit_exception
         zcx_abapgit_cancel .
     CLASS-METHODS export_package
+      EXPORTING
+        !ev_xstr    TYPE xstring
+        !ev_package TYPE devclass
       RAISING
         zcx_abapgit_exception
         zcx_abapgit_cancel .
     CLASS-METHODS load
+      IMPORTING
+        !iv_xstr        TYPE xstring
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING
@@ -39,12 +46,6 @@ CLASS zcl_abapgit_zip DEFINITION
       EXPORTING
         !ev_path     TYPE string
         !ev_filename TYPE string
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS file_download
-      IMPORTING
-        !iv_package TYPE devclass
-        !iv_xstr    TYPE xstring
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS normalize_path
@@ -89,12 +90,12 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
   METHOD export.
 
-    DATA: lo_log     TYPE REF TO zcl_abapgit_log,
+    DATA: li_log     TYPE REF TO zif_abapgit_log,
           lt_zip     TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lv_package TYPE devclass.
 
 
-    CREATE OBJECT lo_log.
+    CREATE OBJECT li_log TYPE zcl_abapgit_log.
 
     lv_package = io_repo->get_package( ).
 
@@ -102,15 +103,14 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Package { lv_package } doesn't exist| ).
     ENDIF.
 
-    lt_zip = io_repo->get_files_local( io_log    = lo_log
+    lt_zip = io_repo->get_files_local( ii_log    = li_log
                                        it_filter = it_filter ).
 
-    IF lo_log->count( ) > 0.
-      lo_log->show( ).
+    IF li_log->count( ) > 0.
+      li_log->show( ).
     ENDIF.
 
-    file_download( iv_package = io_repo->get_package( )
-                   iv_xstr    = encode_files( lt_zip ) ).
+    rv_xstr = encode_files( lt_zip ).
 
   ENDMETHOD.
 
@@ -228,7 +228,8 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
       EXPORTING
         is_data = ls_data.
 
-    export( lo_repo ).
+    ev_xstr = export( lo_repo ).
+    ev_package = ls_data-package.
 
   ENDMETHOD.
 
@@ -253,44 +254,9 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD file_download.
-
-    DATA:
-      lv_path    TYPE string,
-      lv_default TYPE string,
-      lo_fe_serv TYPE REF TO zif_abapgit_frontend_services,
-      lv_package TYPE devclass.
-
-    lv_package = iv_package.
-    TRANSLATE lv_package USING '/#'.
-    CONCATENATE lv_package '_' sy-datlo '_' sy-timlo INTO lv_default.
-
-    lo_fe_serv = zcl_abapgit_factory=>get_frontend_services( ).
-
-    lv_path = lo_fe_serv->show_file_save_dialog(
-      iv_title            = 'Export ZIP'
-      iv_extension        = 'zip'
-      iv_default_filename = lv_default ).
-
-    lo_fe_serv->file_download(
-      iv_path = lv_path
-      iv_xstr = iv_xstr ).
-
-  ENDMETHOD.
-
-
   METHOD load.
 
-    DATA: lv_path TYPE string,
-          lv_xstr TYPE xstring.
-
-    lv_path = zcl_abapgit_factory=>get_frontend_services( )->show_file_open_dialog(
-      iv_title            = 'Import ZIP'
-      iv_default_filename = '*.zip' ).
-
-    lv_xstr = zcl_abapgit_factory=>get_frontend_services( )->file_upload( lv_path ).
-
-    rt_files = unzip_file( lv_xstr ).
+    rt_files = unzip_file( iv_xstr ).
 
   ENDMETHOD.
 

@@ -268,18 +268,17 @@ CLASS ZCL_ABAPGIT_SYNTAX_ABAP IMPLEMENTATION.
 
     DATA lv_index TYPE i.
 
-    FIELD-SYMBOLS <ls_match> LIKE LINE OF et_matches.
+    FIELD-SYMBOLS <ls_match> LIKE LINE OF rt_matches.
 
-    super->parse_line( EXPORTING iv_line    = iv_line
-                       IMPORTING et_matches = et_matches ).
+    rt_matches = super->parse_line( iv_line ).
 
     " Remove non-keywords
-    LOOP AT et_matches ASSIGNING <ls_match> WHERE token = c_token-keyword.
+    LOOP AT rt_matches ASSIGNING <ls_match> WHERE token = c_token-keyword.
       lv_index = sy-tabix.
       IF abap_false = is_keyword( substring( val = iv_line
                                              off = <ls_match>-offset
                                              len = <ls_match>-length ) ).
-        DELETE et_matches INDEX lv_index.
+        DELETE rt_matches INDEX lv_index.
       ENDIF.
     ENDLOOP.
 
