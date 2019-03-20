@@ -263,6 +263,7 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
 
     rv_string = iv_string.
 
+    REPLACE ALL OCCURRENCES OF '\' IN rv_string WITH '\\'.
     REPLACE ALL OCCURRENCES OF '"' IN rv_string WITH '\"'.
 
   ENDMETHOD.
