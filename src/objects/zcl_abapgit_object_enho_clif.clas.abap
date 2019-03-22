@@ -61,15 +61,21 @@ CLASS zcl_abapgit_object_enho_clif IMPLEMENTATION.
   METHOD serialize.
 
     DATA: lt_tab_attributes TYPE enhclasstabattrib,
+          lt_tab_types      TYPE enhtype_tab,
           lt_tab_methods    TYPE enhnewmeth_tab.
 
     FIELD-SYMBOLS: <ls_attr> LIKE LINE OF lt_tab_attributes,
+                   <ls_type> LIKE LINE OF lt_tab_types,
                    <ls_meth> LIKE LINE OF lt_tab_methods.
 
 
     io_clif->get_enhattributes(
       IMPORTING
         tab_attributes = lt_tab_attributes ).
+
+    io_clif->get_enhatypes(
+      IMPORTING
+        tab_types = lt_tab_types ).
 
     io_clif->get_enh_new_methodes(
       IMPORTING
@@ -79,6 +85,13 @@ CLASS zcl_abapgit_object_enho_clif IMPLEMENTATION.
                         io_files = io_files ).
 
     LOOP AT lt_tab_attributes ASSIGNING <ls_attr>.
+      CLEAR: <ls_attr>-author,
+             <ls_attr>-createdon,
+             <ls_attr>-changedby,
+             <ls_attr>-changedon.
+    ENDLOOP.
+
+    LOOP AT lt_tab_types ASSIGNING <ls_type>.
       CLEAR: <ls_attr>-author,
              <ls_attr>-createdon,
              <ls_attr>-changedby,
@@ -95,6 +108,8 @@ CLASS zcl_abapgit_object_enho_clif IMPLEMENTATION.
 
     io_xml->add( iv_name = 'TAB_ATTRIBUTES'
                  ig_data = lt_tab_attributes ).
+    io_xml->add( iv_name = 'TAB_TYPES'
+                 ig_data = lt_tab_types ).
     io_xml->add( iv_name = 'TAB_METHODS'
                  ig_data = lt_tab_methods ).
 
@@ -103,20 +118,35 @@ CLASS zcl_abapgit_object_enho_clif IMPLEMENTATION.
   METHOD deserialize.
 
     DATA: lt_tab_attributes TYPE enhclasstabattrib,
+          lt_tab_types      TYPE enhtype_tab,
           lt_tab_methods    TYPE enhnewmeth_tab,
+          ls_type_line      TYPE vseotype,
           ls_header         TYPE vseomethod,
           ls_param          TYPE vseomepara,
           ls_exc            TYPE vseoexcep.
 
-    FIELD-SYMBOLS: <ls_method> LIKE LINE OF lt_tab_methods,
+    FIELD-SYMBOLS: <ls_type>   LIKE LINE OF lt_tab_types,
+                   <ls_method> LIKE LINE OF lt_tab_methods,
                    <ls_param>  LIKE LINE OF <ls_method>-meth_param,
                    <ls_exc>    LIKE LINE OF <ls_method>-meth_exc.
 
 
     io_xml->read( EXPORTING iv_name = 'TAB_ATTRIBUTES'
                   CHANGING cg_data = lt_tab_attributes ).
+    io_xml->read( EXPORTING iv_name = 'TAB_TYPES'
+                  CHANGING cg_data = lt_tab_types ).
     io_xml->read( EXPORTING iv_name = 'TAB_METHODS'
                   CHANGING cg_data = lt_tab_methods ).
+
+    LOOP AT lt_tab_types ASSIGNING <ls_type>.
+      MOVE-CORRESPONDING <ls_type> TO ls_type_line.
+      TRY.
+          io_clif->add_change_enha_type( type_line = ls_type_line ).
+        CATCH cx_enh_mod_not_allowed
+        cx_enh_is_not_enhanceable.
+          " TODO
+      ENDTRY.
+    ENDLOOP.
 
     io_clif->set_enhattributes( lt_tab_attributes ).
 
