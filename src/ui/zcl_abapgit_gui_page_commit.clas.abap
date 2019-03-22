@@ -353,6 +353,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
       WHEN c_action-commit_cancel.
         ev_state = zcl_abapgit_gui=>c_event_state-go_back.
+
+      WHEN OTHERS.
+        super->zif_abapgit_gui_page~on_event(
+          EXPORTING
+            iv_action    = iv_action
+            iv_prev_page = iv_prev_page
+            iv_getdata   = iv_getdata
+            it_postdata  = it_postdata
+          IMPORTING
+            ei_page      = ei_page
+            ev_state     = ev_state  ).
     ENDCASE.
 
   ENDMETHOD.
