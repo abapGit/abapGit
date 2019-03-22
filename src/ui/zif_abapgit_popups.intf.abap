@@ -9,6 +9,7 @@ INTERFACE zif_abapgit_popups
       branch_name  TYPE string,
       display_name TYPE string,
       folder_logic TYPE string,
+      ign_subpkg   TYPE abap_bool,
       cancel       TYPE abap_bool,
     END OF ty_popup .
 

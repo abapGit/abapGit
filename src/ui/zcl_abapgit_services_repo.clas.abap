@@ -172,7 +172,9 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       iv_url          = ls_popup-url
       iv_branch_name  = ls_popup-branch_name
       iv_package      = ls_popup-package
-      iv_display_name = ls_popup-display_name ).
+      iv_display_name = ls_popup-display_name
+      iv_folder_logic = ls_popup-folder_logic
+      iv_ign_subpkg   = ls_popup-ign_subpkg ).
 
     toggle_favorite( ro_repo->get_key( ) ).
 
