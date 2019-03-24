@@ -3,11 +3,26 @@ title: Developing UI
 order: 91
 ---
 
-TL;DR
+## TL;DR
+
+- To create a new page in abapGit you subclass `ZCL_ABAPGIT_GUI_PAGE` and redefine `RENDER_CONTENT` method
+- Use `ZCL_ABAPGIT_HTML` to collect HTML content
+- Use `ZCL_ABAPGIT_HTML=>ICON` to render icons
+- Use `ZCL_ABAPGIT_HTML=>A` to render anchors, don't render them manually `<a>...</a>`
+- Please, please, care about usability, content readability and style in general :pray: ;)
+- Check `ZCL_ABAPGIT_GUI_CHUNK_LIB` for some existing html chunks like `render_error`
+
+## GUI components
+
+There 3 main parts of the GUI
+
+- ZCL_ABAPGIT_GUI - the class which initializes `CL_GUI_HTML_VIEWER` and manages page stack
+- ZCL_ABAPGIT_GUI_ASSET_MANAGER - manages static assets like images, css, js code and fonts
+- ZCL_ABAPGIT_HTML - helper for HTML accumulation and rendering
+- ZCL_ABAPGIT_GUI_ROUTER - abapGit specific global event handling, main to route between the pages or run globally defined actions like repo installation
 
 abapGit UI is based on HTML and `CL_GUI_HTML_VIEWER`
 
-To create a new page in abapGit you should subclass `ZCL_ABAPGIT_GUI_PAGE` and redefine `RENDER_CONTENT` method
 
 `ZCL_ABAPGIT_GUI_PAGE` is a component that renders typical html headers and abapGit related java scripts. So in most cases you probably just want to subclass it and render just the content
 
@@ -21,7 +36,7 @@ METHOD render_content.
     ro_html->add( '<div>' ).
     ro_html->add( '<h1>My content</h1>' ).
     ro_html->add_icon( 'star/error' ).
-    ro_html->add_a( iv_txt = 'click me' iv_act = 'on_click' ).
+    ro_html->add_a( iv_txt = 'click me' iv_act = 'do_some_stuff_in_apab' ).
     ro_html->add( render_some_stuff( ) ).
     ro_html->add( '</div>' ).
 
@@ -67,18 +82,6 @@ In order to indicate the result of event handling an `on_event` implementation m
 - `go_back_to_bookmark` - go back and skip all the page stack till the first bookmark (works with `new_page_w_bookmark`)
 - `no_more_act` - action was handled, no further processing required, and in particular **no re-rendering**
 
-### GUI components
-
-There 3 main parts of the GUI
-
-- ZCL_ABAPGIT_GUI - the class which initializes `CL_GUI_HTML_VIEWER` and manages page stack
-- ZCL_ABAPGIT_GUI_ASSET_MANAGER - manages static assets like images, css, js code and fonts
-- ZCL_ABAPGIT_HTML - helper for HTML accumulation and rendering
-- ZCL_ABAPGIT_GUI_ROUTER - abapGit specific global event handling, main to route between the pages or run globally defined actions like repo installation
-
-
-### in abapGit
-ZCL_ABAPGIT_GUI_CHUNK_LIB
 
 ### ZCL_ABAPGIT_GUI_ASSET_MANAGER
 
