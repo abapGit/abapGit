@@ -79,6 +79,12 @@ CLASS zcl_abapgit_objects_files DEFINITION
     METHODS get_accessed_files
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_file_signatures_tt .
+    METHODS contains
+      IMPORTING
+        !iv_extra TYPE clike OPTIONAL
+        !iv_ext   TYPE string
+      RETURNING
+        VALUE(rv_present) TYPE abap_bool.
   PROTECTED SECTION.
 
     METHODS read_file
@@ -345,4 +351,23 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
   METHOD set_files.
     mt_files = it_files.
   ENDMETHOD.
+
+  METHOD contains.
+    DATA: lv_filename TYPE string.
+
+    lv_filename = filename( iv_extra = iv_extra
+                            iv_ext   = iv_ext ).
+
+    IF mv_path IS NOT INITIAL.
+      READ TABLE mt_files TRANSPORTING NO FIELDS WITH KEY path     = mv_path
+                                                          filename = lv_filename.
+    ELSE.
+      READ TABLE mt_files TRANSPORTING NO FIELDS WITH KEY filename = lv_filename.
+    ENDIF.
+
+    IF sy-subrc = 0.
+      rv_present = abap_true.
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.
