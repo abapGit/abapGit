@@ -103,8 +103,7 @@ INTERFACE zif_abapgit_popups
     RETURNING
       VALUE(rs_transport_branch) TYPE zif_abapgit_definitions=>ty_transport_to_branch
     RAISING
-      zcx_abapgit_exception
-      zcx_abapgit_cancel .
+      zcx_abapgit_exception.
   METHODS popup_to_select_transports
     RETURNING
       VALUE(rt_trkorr) TYPE trwbo_request_headers .
@@ -117,7 +116,6 @@ INTERFACE zif_abapgit_popups
     EXPORTING
       VALUE(et_list)         TYPE STANDARD TABLE
     RAISING
-      zcx_abapgit_cancel
       zcx_abapgit_exception .
   METHODS branch_popup_callback
     IMPORTING
@@ -143,6 +141,5 @@ INTERFACE zif_abapgit_popups
     RETURNING
       VALUE(rv_transport) TYPE trkorr
     RAISING
-      zcx_abapgit_exception
-      zcx_abapgit_cancel .
+      zcx_abapgit_exception.
 ENDINTERFACE.

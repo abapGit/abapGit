@@ -14,15 +14,13 @@ CLASS zcl_abapgit_zip DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS export_object
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     CLASS-METHODS export_package
       EXPORTING
         !ev_xstr    TYPE xstring
         !ev_package TYPE devclass
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     CLASS-METHODS load
       IMPORTING
         !iv_xstr        TYPE xstring

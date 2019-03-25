@@ -25,8 +25,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
         !ei_page       TYPE REF TO zif_abapgit_gui_renderable
         !ev_state      TYPE i
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     METHODS abapgit_services_actions
       IMPORTING
         !is_event_data TYPE ty_event_data
@@ -34,8 +33,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
         !ei_page       TYPE REF TO zif_abapgit_gui_renderable
         !ev_state      TYPE i
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     METHODS db_actions
       IMPORTING
         !is_event_data TYPE ty_event_data
@@ -43,8 +41,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
         !ei_page       TYPE REF TO zif_abapgit_gui_renderable
         !ev_state      TYPE i
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     CLASS-METHODS file_download
       IMPORTING
         !iv_package TYPE devclass
@@ -58,8 +55,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
         !ei_page       TYPE REF TO zif_abapgit_gui_renderable
         !ev_state      TYPE i
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     METHODS remote_origin_manipulations
       IMPORTING
         !is_event_data TYPE ty_event_data
@@ -67,8 +63,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
         !ei_page       TYPE REF TO zif_abapgit_gui_renderable
         !ev_state      TYPE i
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     METHODS sap_gui_actions
       IMPORTING
         !is_event_data TYPE ty_event_data
@@ -76,8 +71,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
         !ei_page       TYPE REF TO zif_abapgit_gui_renderable
         !ev_state      TYPE i
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     METHODS zip_services
       IMPORTING
         !is_event_data TYPE ty_event_data
@@ -85,8 +79,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
         !ei_page       TYPE REF TO zif_abapgit_gui_renderable
         !ev_state      TYPE i
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     METHODS repository_services
       IMPORTING
         !is_event_data TYPE ty_event_data
@@ -94,8 +87,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
         !ei_page       TYPE REF TO zif_abapgit_gui_renderable
         !ev_state      TYPE i
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     METHODS get_page_diff
       IMPORTING
         !iv_getdata    TYPE clike
@@ -129,8 +121,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     CLASS-METHODS jump_display_transport
       IMPORTING
         !iv_getdata TYPE clike .
