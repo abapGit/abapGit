@@ -70,7 +70,7 @@ CLASS zcl_abapgit_services_repo DEFINITION
         !io_repo TYPE REF TO zcl_abapgit_repo
       RAISING
         zcx_abapgit_exception .
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-METHODS popup_overwrite
