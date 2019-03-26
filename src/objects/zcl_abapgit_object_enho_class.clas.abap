@@ -186,7 +186,7 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
           lv_editorder   TYPE n LENGTH 3,
           lv_methname    TYPE seocpdname,
           lt_abap        TYPE rswsourcet,
-          lx             TYPE REF TO cx_enh_root.
+          lx_enh         TYPE REF TO cx_enh_root.
 
     FIELD-SYMBOLS: <ls_method> LIKE LINE OF lt_tab_methods.
 
@@ -204,8 +204,8 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
               clsname    = <ls_method>-methkey-clsname
               methname   = lv_methname
               methsource = lt_abap ).
-        CATCH cx_enh_mod_not_allowed cx_enh_is_not_enhanceable INTO lx.
-          zcx_abapgit_exception=>raise( iv_text = 'Error deserializing ENHO method include' ix_previous = lx ).
+        CATCH cx_enh_mod_not_allowed cx_enh_is_not_enhanceable INTO lx_enh.
+          zcx_abapgit_exception=>raise( iv_text = 'Error deserializing ENHO method include' ix_previous = lx_enh ).
       ENDTRY.
 
     ENDLOOP.
