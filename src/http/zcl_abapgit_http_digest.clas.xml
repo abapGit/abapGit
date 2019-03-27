@@ -4,7 +4,6 @@
   <asx:values>
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_HTTP_DIGEST</CLSNAME>
-    <VERSION>1</VERSION>
     <LANGU>E</LANGU>
     <DESCRIPT>HTTP digest authentication</DESCRIPT>
     <STATE>1</STATE>

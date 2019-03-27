@@ -4,7 +4,6 @@
   <asx:values>
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_CODE_INSP</CLSNAME>
-    <VERSION>1</VERSION>
     <LANGU>E</LANGU>
     <DESCRIPT>GUI - Syntax check page</DESCRIPT>
     <STATE>1</STATE>
