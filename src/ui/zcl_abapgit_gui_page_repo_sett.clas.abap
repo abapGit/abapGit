@@ -12,7 +12,7 @@ CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
       IMPORTING
         !io_repo TYPE REF TO zcl_abapgit_repo .
 
-    METHODS zif_abapgit_gui_page~on_event
+    METHODS zif_abapgit_gui_event_handler~on_event
         REDEFINITION .
   PROTECTED SECTION.
 
@@ -339,7 +339,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page~on_event.
+  METHOD zif_abapgit_gui_event_handler~on_event.
 
     CASE iv_action.
       WHEN c_action-save_settings.

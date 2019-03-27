@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM zcl_abapgit_gui_page.
   PUBLIC SECTION.
     METHODS:
-      zif_abapgit_gui_page~on_event
+      zif_abapgit_gui_event_handler~on_event
         REDEFINITION.
 
   PROTECTED SECTION.
@@ -182,7 +182,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page~on_event.
+  METHOD zif_abapgit_gui_event_handler~on_event.
     DATA: ls_item          TYPE zif_abapgit_definitions=>ty_item,
           ls_sub_item      TYPE zif_abapgit_definitions=>ty_item,
           lv_temp          TYPE string,
