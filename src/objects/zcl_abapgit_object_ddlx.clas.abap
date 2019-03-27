@@ -76,6 +76,15 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
     clear_field( EXPORTING iv_fieldname = 'CONTAINER_REF-PACKAGE_NAME'
                  CHANGING  cs_metadata  = <lg_metadata> ).
 
+    clear_field( EXPORTING iv_fieldname = 'VERSION'
+                 CHANGING  cs_metadata  = <lg_metadata> ).
+
+    clear_field( EXPORTING iv_fieldname = 'RESPONSIBLE'
+                 CHANGING  cs_metadata  = <lg_metadata> ).
+
+    clear_field( EXPORTING iv_fieldname = 'MASTER_SYSTEM'
+                 CHANGING  cs_metadata  = <lg_metadata> ).
+
   ENDMETHOD.
 
 

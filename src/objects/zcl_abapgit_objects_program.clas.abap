@@ -684,7 +684,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
            rs_progdir-sdate,
            rs_progdir-stime,
            rs_progdir-idate,
-           rs_progdir-itime.
+           rs_progdir-itime,
+           rs_progdir-state.
 
   ENDMETHOD.
 

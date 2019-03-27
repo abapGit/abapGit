@@ -188,7 +188,9 @@ CLASS ZCL_ABAPGIT_OBJECT_ENQU IMPLEMENTATION.
 
     CLEAR: ls_dd25v-as4user,
            ls_dd25v-as4date,
-           ls_dd25v-as4time.
+           ls_dd25v-as4time,
+           ls_dd25v-as4local,
+           ls_dd25v-as4vers.
 
     _clear_dd27p_fields( CHANGING ct_dd27p = lt_dd27p ).
 
