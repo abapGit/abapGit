@@ -83,14 +83,12 @@ CLASS zcl_abapgit_popups DEFINITION
       EXPORTING ev_value_1        TYPE spo_value
                 ev_value_2        TYPE spo_value
       CHANGING  ct_fields         TYPE ty_lt_fields
-      RAISING   zcx_abapgit_exception
-                zcx_abapgit_cancel.
+      RAISING   zcx_abapgit_exception.
     METHODS validate_folder_logic
       IMPORTING
         iv_folder_logic TYPE string
       RAISING
         zcx_abapgit_exception.
-
 ENDCLASS.
 
 

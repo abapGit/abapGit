@@ -1,6 +1,6 @@
 CLASS zcx_abapgit_cancel DEFINITION
   PUBLIC
-  INHERITING FROM cx_static_check
+  INHERITING FROM zcx_abapgit_exception
   FINAL
   CREATE PUBLIC .
 
@@ -10,6 +10,5 @@ CLASS zcx_abapgit_cancel DEFINITION
 ENDCLASS.
 
 
-
-CLASS zcx_abapgit_cancel IMPLEMENTATION.
+CLASS ZCX_ABAPGIT_CANCEL IMPLEMENTATION.
 ENDCLASS.

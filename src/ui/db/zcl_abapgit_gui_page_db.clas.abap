@@ -26,8 +26,7 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
       IMPORTING
         !is_key TYPE zif_abapgit_persistence=>ty_content
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     METHODS explain_content
       IMPORTING
         !is_data       TYPE zif_abapgit_persistence=>ty_content

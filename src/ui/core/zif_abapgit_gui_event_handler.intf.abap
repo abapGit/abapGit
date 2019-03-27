@@ -11,7 +11,6 @@ INTERFACE zif_abapgit_gui_event_handler
       ei_page      TYPE REF TO zif_abapgit_gui_renderable
       ev_state     TYPE i
     RAISING
-      zcx_abapgit_exception
-      zcx_abapgit_cancel.
+      zcx_abapgit_exception.
 
 ENDINTERFACE.

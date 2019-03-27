@@ -11,8 +11,7 @@ CLASS zcl_abapgit_services_repo DEFINITION
       RETURNING
         VALUE(ro_repo) TYPE REF TO zcl_abapgit_repo_online
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     CLASS-METHODS refresh
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
@@ -22,42 +21,35 @@ CLASS zcl_abapgit_services_repo DEFINITION
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     CLASS-METHODS purge
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     CLASS-METHODS new_offline
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     CLASS-METHODS remote_attach
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     CLASS-METHODS remote_detach
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     CLASS-METHODS remote_change
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     CLASS-METHODS refresh_local_checksums
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     CLASS-METHODS toggle_favorite
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
@@ -72,27 +64,25 @@ CLASS zcl_abapgit_services_repo DEFINITION
       IMPORTING
         !iv_repository_key TYPE zif_abapgit_persistence=>ty_value
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     CLASS-METHODS gui_deserialize
       IMPORTING
         !io_repo TYPE REF TO zcl_abapgit_repo
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-METHODS popup_overwrite
       CHANGING
         !ct_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     CLASS-METHODS popup_package_overwrite
       CHANGING
         !ct_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
 ENDCLASS.
 
 

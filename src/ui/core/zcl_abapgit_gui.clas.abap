@@ -344,10 +344,10 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
             zcx_abapgit_exception=>raise( |Unknown action: { iv_action }| ).
         ENDCASE.
 
-      CATCH zcx_abapgit_exception INTO lx_exception.
-        RAISE EVENT on_handle_error EXPORTING io_exception = lx_exception.
       CATCH zcx_abapgit_cancel ##NO_HANDLER.
         " Do nothing = gc_event_state-no_more_act
+      CATCH zcx_abapgit_exception INTO lx_exception.
+        RAISE EVENT on_handle_error EXPORTING io_exception = lx_exception.
     ENDTRY.
 
   ENDMETHOD.
