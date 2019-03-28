@@ -109,11 +109,11 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
              sha1 TYPE zif_abapgit_definitions=>ty_sha1,
            END OF ty_branch_with_time.
 
-    DATA: mt_branches_sorted_by_time TYPE SORTED TABLE OF ty_branch_with_time WITH NON-UNIQUE KEY time,
+    DATA: lt_branches_sorted_by_time TYPE SORTED TABLE OF ty_branch_with_time WITH NON-UNIQUE KEY time,
           ls_branches_with_time      TYPE ty_branch_with_time.
 
     FIELD-SYMBOLS: <ls_branch>                LIKE LINE OF mt_branches,
-                   <ls_branch_sorted_by_time> LIKE LINE OF mt_branches_sorted_by_time,
+                   <ls_branch_sorted_by_time> LIKE LINE OF lt_branches_sorted_by_time,
                    <ls_head>                  LIKE LINE OF mt_branches,
                    <ls_commit>                LIKE LINE OF mt_commits,
                    <ls_create>                LIKE LINE OF <ls_commit>-create.
@@ -144,14 +144,14 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
           ls_branches_with_time-time = <ls_commit>-time.
         ENDIF.
 
-        INSERT ls_branches_with_time INTO TABLE mt_branches_sorted_by_time.
+        INSERT ls_branches_with_time INTO TABLE lt_branches_sorted_by_time.
         CLEAR ls_branches_with_time.
 
       ENDIF.
     ENDLOOP.
 
 
-    LOOP AT mt_branches_sorted_by_time ASSIGNING <ls_branch_sorted_by_time>.
+    LOOP AT lt_branches_sorted_by_time ASSIGNING <ls_branch_sorted_by_time>.
 
       READ TABLE mt_commits ASSIGNING <ls_commit> WITH KEY sha1 = <ls_branch_sorted_by_time>-sha1.
       ASSERT sy-subrc = 0.
