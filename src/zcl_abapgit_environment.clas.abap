@@ -1,12 +1,12 @@
-class ZCL_ABAPGIT_ENVIRONMENT definition
-  public
-  create public .
+CLASS zcl_abapgit_environment DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  class-methods IS_SAP_CLOUD_PLATFORM
-    returning
-      value(RV_CLOUD) type ABAP_BOOL .
+    CLASS-METHODS is_sap_cloud_platform
+      RETURNING
+        VALUE(rv_cloud) TYPE abap_bool .
   PROTECTED SECTION.
 
     CLASS-DATA gv_cloud TYPE abap_bool VALUE abap_undefined ##NO_TEXT.
@@ -18,7 +18,7 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_ENVIRONMENT IMPLEMENTATION.
 
 
-  METHOD IS_SAP_CLOUD_PLATFORM.
+  METHOD is_sap_cloud_platform.
 
     IF gv_cloud = abap_undefined.
       TRY.
