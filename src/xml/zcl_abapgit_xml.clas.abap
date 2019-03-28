@@ -117,7 +117,7 @@ CLASS ZCL_ABAPGIT_XML IMPLEMENTATION.
     li_parser = mi_ixml->create_parser( stream_factory = li_stream_factory
                                         istream        = li_istream
                                         document       = mi_xml_doc ).
-    li_parser->set_normalizing( iv_normalize ).
+    li_parser->add_strip_space_element( ).
     IF li_parser->parse( ) <> 0.
       error( li_parser ).
     ENDIF.
