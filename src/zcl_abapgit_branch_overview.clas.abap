@@ -121,34 +121,35 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
       EXIT.
     ENDLOOP.
 
-    LOOP AT mt_branches ASSIGNING <ls_branch>.
+    LOOP AT mt_commits ASSIGNING <ls_commit>.
 
-      lv_name = <ls_branch>-name+11.
-      READ TABLE mt_commits ASSIGNING <ls_commit> WITH KEY sha1 = <ls_branch>-sha1.
-      ASSERT sy-subrc = 0.
-
-      IF <ls_commit>-branch IS INITIAL.
-        <ls_commit>-branch = lv_name.
-      ENDIF.
-
-      READ TABLE mt_commits ASSIGNING <ls_commit> WITH KEY sha1 = <ls_commit>-parent1.
-      IF <ls_commit>-parent1 IS INITIAL.
-        <ls_commit>-branch = lv_name.
+      READ TABLE mt_branches ASSIGNING <ls_branch> WITH KEY sha1 = <ls_commit>-sha1.
+      IF sy-subrc = 0.
+        <ls_commit>-branch = <ls_branch>-name+11.
       ENDIF.
 
     ENDLOOP.
 
-    LOOP AT mt_commits ASSIGNING <ls_commit>.
+    LOOP AT mt_commits ASSIGNING <ls_commit> WHERE branch IS NOT INITIAL.
 
-      IF <ls_commit>-parent1 IS INITIAL.
-        CONTINUE.
-      ENDIF.
+      DO.
 
-      LOOP AT mt_commits ASSIGNING FIELD-SYMBOL(<ls_dest_commit>) WHERE parent1 = <ls_commit>-sha1.
-        APPEND INITIAL LINE TO <ls_commit>-create ASSIGNING <ls_create>.
-        <ls_create>-name = <ls_dest_commit>-branch.
-        <ls_create>-parent = <ls_commit>-branch.
-      ENDLOOP.
+        READ TABLE mt_commits ASSIGNING FIELD-SYMBOL(<ls_parent_commit>) WITH KEY sha1 = <ls_commit>-parent1.
+
+        IF sy-subrc <> 0.
+          EXIT.
+        ELSEIF <ls_parent_commit>-parent1 IS INITIAL.
+          <ls_parent_commit>-branch = <ls_commit>-branch.
+          EXIT.
+        ELSEIF <ls_parent_commit>-branch IS INITIAL.
+          <ls_parent_commit>-branch = <ls_commit>-branch.
+        ENDIF.
+
+        APPEND INITIAL LINE TO <ls_parent_commit>-create ASSIGNING <ls_create>.
+        <ls_create>-name = <ls_commit>-branch.
+        <ls_create>-parent = <ls_parent_commit>-branch.
+
+      ENDDO.
 
     ENDLOOP.
 
