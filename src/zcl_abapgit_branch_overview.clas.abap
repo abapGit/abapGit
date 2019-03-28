@@ -103,15 +103,23 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
     CONSTANTS: lc_head TYPE string VALUE 'HEAD'.
 
-    DATA: lv_name TYPE string.
+    TYPES: BEGIN OF ty_branch_with_time,
+             time TYPE string,
+             name TYPE string,
+             sha1 TYPE zif_abapgit_definitions=>ty_sha1,
+           END OF ty_branch_with_time.
 
-    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF mt_branches,
-                   <ls_head>   LIKE LINE OF mt_branches,
-                   <ls_commit> LIKE LINE OF mt_commits,
-                   <ls_create> LIKE LINE OF <ls_commit>-create.
+    DATA: mt_branches_sorted_by_time TYPE SORTED TABLE OF ty_branch_with_time WITH NON-UNIQUE KEY time,
+          ls_branches_with_time      TYPE ty_branch_with_time.
+
+    FIELD-SYMBOLS: <ls_branch>                LIKE LINE OF mt_branches,
+                   <ls_branch_sorted_by_time> LIKE LINE OF mt_branches_sorted_by_time,
+                   <ls_head>                  LIKE LINE OF mt_branches,
+                   <ls_commit>                LIKE LINE OF mt_commits,
+                   <ls_create>                LIKE LINE OF <ls_commit>-create.
 
 
-* exchange HEAD, and make sure the branch determination starts with the HEAD branch
+* Exchange HEAD, and make sure the branch determination starts with the HEAD branch
     READ TABLE mt_branches ASSIGNING <ls_head> WITH KEY name = lc_head.
     ASSERT sy-subrc = 0.
     LOOP AT mt_branches ASSIGNING <ls_branch>
@@ -121,34 +129,50 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
       EXIT.
     ENDLOOP.
 
-    LOOP AT mt_commits ASSIGNING <ls_commit>.
+* Sort Branches by Commit Time
+    LOOP AT mt_branches ASSIGNING <ls_branch>.
 
-      READ TABLE mt_branches ASSIGNING <ls_branch> WITH KEY sha1 = <ls_commit>-sha1.
+      READ TABLE mt_commits ASSIGNING <ls_commit> WITH KEY sha1 = <ls_branch>-sha1.
       IF sy-subrc = 0.
-        <ls_commit>-branch = <ls_branch>-name+11.
-      ENDIF.
 
-    ENDLOOP.
+        ls_branches_with_time-name = <ls_branch>-name+11.
+        ls_branches_with_time-sha1 = <ls_branch>-sha1.
 
-    LOOP AT mt_commits ASSIGNING <ls_commit> WHERE branch IS NOT INITIAL.
-
-      DO.
-
-        READ TABLE mt_commits ASSIGNING FIELD-SYMBOL(<ls_parent_commit>) WITH KEY sha1 = <ls_commit>-parent1.
-
-        IF sy-subrc <> 0.
-          EXIT.
-        ELSEIF <ls_parent_commit>-parent1 IS INITIAL.
-          <ls_parent_commit>-branch = <ls_commit>-branch.
-          EXIT.
-        ELSEIF <ls_parent_commit>-branch IS INITIAL.
-          <ls_parent_commit>-branch = <ls_commit>-branch.
+        IF <ls_branch>-is_head = abap_true.
+          ls_branches_with_time-time = '0000000000'. "Force HEAD to be the first one
+        ELSE.
+          ls_branches_with_time-time = <ls_commit>-time.
         ENDIF.
 
-        APPEND INITIAL LINE TO <ls_parent_commit>-create ASSIGNING <ls_create>.
-        <ls_create>-name = <ls_commit>-branch.
-        <ls_create>-parent = <ls_parent_commit>-branch.
+        INSERT ls_branches_with_time INTO TABLE mt_branches_sorted_by_time.
+        CLEAR ls_branches_with_time.
 
+      ENDIF.
+    ENDLOOP.
+
+
+    LOOP AT mt_branches_sorted_by_time ASSIGNING <ls_branch_sorted_by_time>.
+
+      READ TABLE mt_commits ASSIGNING <ls_commit> WITH KEY sha1 = <ls_branch_sorted_by_time>-sha1.
+      ASSERT sy-subrc = 0.
+
+      DO.
+        IF <ls_commit>-branch IS INITIAL.
+          <ls_commit>-branch = <ls_branch_sorted_by_time>-name.
+        ELSE.
+          APPEND INITIAL LINE TO <ls_commit>-create ASSIGNING <ls_create>.
+          <ls_create>-name = <ls_branch_sorted_by_time>-name.
+          <ls_create>-parent = <ls_commit>-branch.
+          EXIT.
+        ENDIF.
+
+        IF <ls_commit>-parent1 IS INITIAL.
+          EXIT.
+        ELSE.
+          READ TABLE mt_commits ASSIGNING <ls_commit>
+              WITH KEY sha1 = <ls_commit>-parent1.
+          ASSERT sy-subrc = 0.
+        ENDIF.
       ENDDO.
 
     ENDLOOP.
