@@ -30,7 +30,7 @@ CLASS zcl_abapgit_zlib_stream DEFINITION
         iv_length       TYPE i
       RETURNING
         VALUE(rv_bytes) TYPE xstring.
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: mv_compressed TYPE xstring,
           mv_bits       TYPE string.
@@ -39,7 +39,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ZLIB_STREAM IMPLEMENTATION.
+CLASS zcl_abapgit_zlib_stream IMPLEMENTATION.
 
 
   METHOD constructor.
