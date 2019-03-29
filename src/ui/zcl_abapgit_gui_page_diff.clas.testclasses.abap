@@ -25,7 +25,7 @@ CLASS ltcl_patch IMPLEMENTATION.
 
     zcl_abapgit_gui_page_diff=>get_patch_data(
       EXPORTING
-        iv_patch      = |add_patch_zcl_test_git_add_p.clas.abap_19|
+        iv_patch      = |patch_line_add_zcl_test_git_add_p.clas.abap_0_19|
         iv_action     = |add|
       IMPORTING
         ev_filename   = lv_file_name
@@ -48,7 +48,7 @@ CLASS ltcl_patch IMPLEMENTATION.
 
     zcl_abapgit_gui_page_diff=>get_patch_data(
       EXPORTING
-        iv_patch      = |remove_patch_ztest_patch.prog.abap_39|
+        iv_patch      = |patch_line_remove_ztest_patch.prog.abap_0_39|
         iv_action     = |remove|
       IMPORTING
         ev_filename   = lv_file_name
