@@ -16,7 +16,8 @@ CLASS ltcl_test IMPLEMENTATION.
     DATA: lo_stream    TYPE REF TO zcl_abapgit_zlib_stream,
           lv_remaining TYPE i,
           lv_int       TYPE i,
-          lv_bits      TYPE string.
+          lv_bits      TYPE string,
+          lv_bytes     TYPE xstring.
 
 
     CREATE OBJECT lo_stream
@@ -40,6 +41,12 @@ CLASS ltcl_test IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_int
       exp = 34 ).
+
+    lv_bytes = lo_stream->take_bytes( 2 ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_bytes
+      exp = '3344' ).
 
   ENDMETHOD.
 
