@@ -92,10 +92,11 @@ CLASS zcl_abapgit_object_enho_clif IMPLEMENTATION.
     ENDLOOP.
 
     LOOP AT lt_tab_types ASSIGNING <ls_type>.
-      CLEAR: <ls_attr>-author,
-             <ls_attr>-createdon,
-             <ls_attr>-changedby,
-             <ls_attr>-changedon.
+      CLEAR: <ls_type>-author,
+             <ls_type>-createdon,
+             <ls_type>-changedby,
+             <ls_type>-changedon,
+             <ls_type>-descript_id.
     ENDLOOP.
 
     LOOP AT lt_tab_methods ASSIGNING <ls_meth>.
