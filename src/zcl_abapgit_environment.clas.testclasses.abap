@@ -23,7 +23,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
   METHOD is_cloud.
 
-    mo_cut->is_cloud( ).
+    mo_cut->is_sap_cloud_platform( ).
 * no assertions, just make sure the dynamic code runs
 
   ENDMETHOD.
