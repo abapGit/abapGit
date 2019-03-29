@@ -39,7 +39,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-    METHODS zif_abapgit_gui_page~on_event
+    METHODS zif_abapgit_gui_event_handler~on_event
         REDEFINITION .
   PROTECTED SECTION.
     METHODS:
@@ -1076,7 +1076,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page~on_event.
+  METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: lo_repo TYPE REF TO zcl_abapgit_repo_online.
 

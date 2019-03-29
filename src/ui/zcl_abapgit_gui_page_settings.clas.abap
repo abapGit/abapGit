@@ -12,7 +12,7 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
       END OF c_action.
 
     METHODS constructor.
-    METHODS zif_abapgit_gui_page~on_event REDEFINITION.
+    METHODS zif_abapgit_gui_event_handler~on_event REDEFINITION.
 
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
@@ -680,7 +680,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page~on_event.
+  METHOD zif_abapgit_gui_event_handler~on_event.
 * todo, check input values eg INT
 
     DATA:

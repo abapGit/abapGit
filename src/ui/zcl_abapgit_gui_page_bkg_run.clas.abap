@@ -9,7 +9,7 @@ CLASS zcl_abapgit_gui_page_bkg_run DEFINITION
 
     METHODS constructor .
 
-    METHODS zif_abapgit_gui_page~on_event
+    METHODS zif_abapgit_gui_event_handler~on_event
         REDEFINITION .
   PROTECTED SECTION.
     METHODS render_content        REDEFINITION.
@@ -79,7 +79,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG_RUN IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page~on_event.
+  METHOD zif_abapgit_gui_event_handler~on_event.
     RETURN.
   ENDMETHOD.
 ENDCLASS.

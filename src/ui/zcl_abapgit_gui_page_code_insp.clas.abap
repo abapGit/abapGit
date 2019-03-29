@@ -12,10 +12,10 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
         RAISING
           zcx_abapgit_exception,
 
-      zif_abapgit_gui_page~on_event
+      zif_abapgit_gui_event_handler~on_event
         REDEFINITION,
 
-      zif_abapgit_gui_page~render
+      zif_abapgit_gui_renderable~render
         REDEFINITION.
 
   PROTECTED SECTION.
@@ -245,7 +245,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page~on_event.
+  METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
 
@@ -296,7 +296,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
         ei_page = me.
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN OTHERS.
-        super->zif_abapgit_gui_page~on_event(
+        super->zif_abapgit_gui_event_handler~on_event(
           EXPORTING
             iv_action             = iv_action
             iv_prev_page          = iv_prev_page
@@ -310,10 +310,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page~render.
+  METHOD zif_abapgit_gui_renderable~render.
 
     ms_control-page_menu = build_menu( ).
-    ro_html = super->zif_abapgit_gui_page~render( ).
+    ro_html = super->zif_abapgit_gui_renderable~render( ).
 
   ENDMETHOD.
 ENDCLASS.

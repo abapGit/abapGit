@@ -9,7 +9,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
 
     METHODS constructor .
 
-    METHODS zif_abapgit_gui_page~on_event
+    METHODS zif_abapgit_gui_event_handler~on_event
         REDEFINITION .
 
   PROTECTED SECTION.
@@ -554,7 +554,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page~on_event.
+  METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: lv_key  TYPE zif_abapgit_persistence=>ty_value.
 
@@ -589,7 +589,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
       WHEN OTHERS.
 
-        super->zif_abapgit_gui_page~on_event(
+        super->zif_abapgit_gui_event_handler~on_event(
           EXPORTING
             iv_action    = iv_action
             iv_prev_page = iv_prev_page

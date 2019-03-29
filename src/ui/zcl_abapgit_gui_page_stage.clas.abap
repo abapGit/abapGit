@@ -18,7 +18,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
                   io_repo TYPE REF TO zcl_abapgit_repo_online
                   iv_seed TYPE string OPTIONAL
         RAISING   zcx_abapgit_exception,
-      zif_abapgit_gui_page~on_event REDEFINITION.
+      zif_abapgit_gui_event_handler~on_event REDEFINITION.
 
   PROTECTED SECTION.
     METHODS:
@@ -83,7 +83,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
     METHODS get_page_patch
       IMPORTING iv_getdata     TYPE clike
                 iv_prev_page   TYPE clike
-      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_page
+      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING   zcx_abapgit_exception.
 ENDCLASS.
 
@@ -495,7 +495,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page~on_event.
+  METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: lo_stage  TYPE REF TO zcl_abapgit_stage,
           lv_string TYPE string,
@@ -555,7 +555,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN OTHERS.
-        super->zif_abapgit_gui_page~on_event(
+        super->zif_abapgit_gui_event_handler~on_event(
           EXPORTING
             iv_action    = iv_action
             iv_prev_page = iv_prev_page

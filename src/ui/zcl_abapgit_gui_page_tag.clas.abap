@@ -15,7 +15,7 @@ CLASS zcl_abapgit_gui_page_tag DEFINITION PUBLIC FINAL
         IMPORTING io_repo TYPE REF TO zcl_abapgit_repo
         RAISING   zcx_abapgit_exception,
 
-      zif_abapgit_gui_page~on_event REDEFINITION.
+      zif_abapgit_gui_event_handler~on_event REDEFINITION.
 
   PROTECTED SECTION.
     METHODS:
@@ -369,7 +369,7 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page~on_event.
+  METHOD zif_abapgit_gui_event_handler~on_event.
 
     CASE iv_action.
       WHEN c_action-commit_post.
