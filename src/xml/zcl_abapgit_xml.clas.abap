@@ -1,12 +1,11 @@
 CLASS zcl_abapgit_xml DEFINITION
   PUBLIC
   ABSTRACT
-  CREATE PUBLIC.
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    METHODS:
-      constructor.
 
+    METHODS constructor .
   PROTECTED SECTION.
     DATA: mi_ixml     TYPE REF TO if_ixml,
           mi_xml_doc  TYPE REF TO if_ixml_document,
@@ -22,8 +21,7 @@ CLASS zcl_abapgit_xml DEFINITION
       RETURNING VALUE(rv_xml) TYPE string.
 
     METHODS parse
-      IMPORTING iv_normalize TYPE abap_bool DEFAULT abap_true
-                iv_xml       TYPE string
+      IMPORTING iv_xml TYPE string
       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
@@ -38,7 +36,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_XML IMPLEMENTATION.
+CLASS zcl_abapgit_xml IMPLEMENTATION.
 
 
   METHOD constructor.
