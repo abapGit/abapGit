@@ -41,6 +41,8 @@ CLASS zcl_abapgit_zlib DEFINITION
         RETURNING VALUE(rv_distance) TYPE i,
       dynamic,
       fixed,
+      not_compressed,
+      decode_loop,
       read_pair
         IMPORTING iv_length      TYPE i
         RETURNING VALUE(rs_pair) TYPE ty_pair,
@@ -51,7 +53,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
+CLASS zcl_abapgit_zlib IMPLEMENTATION.
 
 
   METHOD copy_out.
@@ -128,27 +130,18 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
 
       lv_btype = go_stream->take_bits( 2 ).
       CASE lv_btype.
+        WHEN '00'.
+          not_compressed( ).
+          EXIT.
         WHEN '01'.
           fixed( ).
+          decode_loop( ).
         WHEN '10'.
           dynamic( ).
+          decode_loop( ).
         WHEN OTHERS.
           ASSERT 1 = 0.
       ENDCASE.
-
-      DO.
-        lv_symbol = decode( go_lencode ).
-
-        IF lv_symbol < 256.
-          lv_x = zcl_abapgit_zlib_convert=>int_to_hex( lv_symbol ).
-          CONCATENATE gv_out lv_x INTO gv_out IN BYTE MODE.
-        ELSEIF lv_symbol = 256.
-          EXIT.
-        ELSE.
-          copy_out( read_pair( lv_symbol ) ).
-        ENDIF.
-
-      ENDDO.
 
       IF lv_bfinal = '1'.
         EXIT.
@@ -449,4 +442,42 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
     rs_pair-distance = map_distance( lv_symbol ).
 
   ENDMETHOD.
+
+  METHOD not_compressed.
+
+    DATA: lv_len  TYPE i,
+          lv_nlen TYPE i.
+
+    go_stream->take_bits( 5 ).
+
+    lv_len = go_stream->take_int( 16 ).
+    lv_nlen = go_stream->take_int( 16 ).
+
+    gv_out = go_stream->take_bytes( lv_len ).
+
+  ENDMETHOD.
+
+
+  METHOD decode_loop.
+
+    DATA lv_x TYPE x.
+    DATA lv_symbol TYPE i.
+
+    DO.
+      lv_symbol = decode( go_lencode ).
+
+      IF lv_symbol < 256.
+        lv_x = zcl_abapgit_zlib_convert=>int_to_hex( lv_symbol ).
+        CONCATENATE gv_out lv_x INTO gv_out IN BYTE MODE.
+      ELSEIF lv_symbol = 256.
+        EXIT.
+      ELSE.
+        copy_out( read_pair( lv_symbol ) ).
+      ENDIF.
+
+    ENDDO.
+
+  ENDMETHOD.
+
 ENDCLASS.
+
