@@ -473,7 +473,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
   METHOD render_form_end.
 
     CREATE OBJECT ro_html.
-    ro_html->add( '<input type="submit" value="Save" class="submit">' ).
+    ro_html->add( '<input type="submit" value="Save" class="floating-button blue-set emphasis">' ).
     ro_html->add( '</form>' ).
     ro_html->add( '</div>' ).
 
