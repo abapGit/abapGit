@@ -67,6 +67,7 @@ INTERFACE zif_abapgit_popups
       !iv_freeze_package TYPE abap_bool OPTIONAL
       !iv_freeze_url     TYPE abap_bool OPTIONAL
       !iv_title          TYPE clike DEFAULT 'New Online Project'
+      !iv_display_name   TYPE string OPTIONAL
     RETURNING
       VALUE(rs_popup)    TYPE zif_abapgit_popups=>ty_popup
     RAISING
