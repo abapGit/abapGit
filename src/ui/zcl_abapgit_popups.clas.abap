@@ -1051,6 +1051,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       lv_icon2   = icon_folder.
     ENDIF.
 
+    lv_display_name = iv_display_name.
     lv_package = iv_package.
     lv_url     = iv_url.
     lv_branch  = iv_branch.
