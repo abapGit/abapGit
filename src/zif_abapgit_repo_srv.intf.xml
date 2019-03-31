@@ -4,7 +4,6 @@
   <asx:values>
    <VSEOINTERF>
     <CLSNAME>ZIF_ABAPGIT_REPO_SRV</CLSNAME>
-    <VERSION>1</VERSION>
     <LANGU>E</LANGU>
     <DESCRIPT>Repo services</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>
