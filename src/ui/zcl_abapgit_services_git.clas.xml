@@ -4,7 +4,6 @@
   <asx:values>
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_SERVICES_GIT</CLSNAME>
-    <VERSION>1</VERSION>
     <LANGU>E</LANGU>
     <DESCRIPT>UI - Git services</DESCRIPT>
     <STATE>1</STATE>

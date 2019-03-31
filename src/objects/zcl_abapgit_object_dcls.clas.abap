@@ -213,6 +213,15 @@ CLASS ZCL_ABAPGIT_OBJECT_DCLS IMPLEMENTATION.
         ASSERT sy-subrc = 0.
         CLEAR <lg_field>.
 
+        ASSIGN COMPONENT 'AS4LOCAL' OF STRUCTURE <lg_data> TO <lg_field>.
+        ASSERT sy-subrc = 0.
+        CLEAR <lg_field>.
+
+        ASSIGN COMPONENT 'ABAP_LANGUAGE_VERSION' OF STRUCTURE <lg_data> TO <lg_field>.
+        IF sy-subrc = 0.
+          CLEAR <lg_field>.
+        ENDIF.
+
         ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <lg_data> TO <lg_field>.
         ASSERT sy-subrc = 0.
 

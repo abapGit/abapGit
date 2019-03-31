@@ -4,7 +4,6 @@
   <asx:values>
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_UI_INJECTOR</CLSNAME>
-    <VERSION>1</VERSION>
     <LANGU>E</LANGU>
     <DESCRIPT>abapGit UI injector</DESCRIPT>
     <STATE>1</STATE>
