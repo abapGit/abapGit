@@ -41,6 +41,9 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
     METHODS render_max_lines
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    METHODS render_icon_scaling
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     METHODS render_adt_jump_enabled
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
@@ -178,7 +181,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
   METHOD post.
 
-    DATA: lv_i_param_value TYPE i.
+    DATA lv_i_param_value TYPE i.
+    DATA lv_c_param_value TYPE c.
 
     FIELD-SYMBOLS: <ls_post_field> TYPE ihttpnvp.
 
@@ -232,6 +236,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
       mo_settings->set_parallel_proc_disabled( abap_true ).
     ELSE.
       mo_settings->set_parallel_proc_disabled( abap_false ).
+    ENDIF.
+
+    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'icon_scaling'.
+    IF sy-subrc = 0.
+      lv_c_param_value = <ls_post_field>-value.
+      mo_settings->set_icon_scaling( lv_c_param_value ).
+    ELSE.
+      mo_settings->set_icon_scaling( '' ).
     ENDIF.
 
     post_hotkeys( ).
@@ -408,6 +420,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ro_html->add( render_section_begin( |User specific settings| ) ).
     ro_html->add( render_start_up( ) ).
     ro_html->add( render_max_lines( ) ).
+    ro_html->add( render_icon_scaling( ) ).
     ro_html->add( |<hr>| ).
     ro_html->add( render_adt_jump_enabled( ) ).
     ro_html->add( |<hr>| ).
@@ -532,6 +545,41 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ro_html->add( '</tr>' ).
 
     ro_html->add( '</table>' ).
+
+    ro_html->add( |<br>| ).
+    ro_html->add( |<br>| ).
+
+  ENDMETHOD.
+
+
+  METHOD render_icon_scaling.
+
+    DATA:
+      BEGIN OF ls_selected,
+        auto TYPE string,
+        large TYPE string,
+        small TYPE string,
+      END OF ls_selected.
+
+    CASE mo_settings->get_icon_scaling( ).
+      WHEN zcl_abapgit_settings=>c_icon_scaling-large.
+        ls_selected-large = ' selected'.
+      WHEN zcl_abapgit_settings=>c_icon_scaling-small.
+        ls_selected-small = ' selected'.
+      WHEN OTHERS.
+        ls_selected-auto = ' selected'.
+    ENDCASE.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( |<h2>UI Icon scaling</h2>| ).
+    ro_html->add( |<label for="icon_scaling">High DPI icon scaling</label>| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<select name="icon_scaling" size="3">| ).
+    ro_html->add( |<option value=""{ ls_selected-auto }>Auto</option>| ).
+    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_icon_scaling-large }"{ ls_selected-large }>Large</option>| ).
+    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_icon_scaling-small }"{ ls_selected-small }>Small</option>| ).
+    ro_html->add( |</select>| ).
 
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).
@@ -675,11 +723,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-    RETURN.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_gui_event_handler~on_event.
 * todo, check input values eg INT
 
@@ -702,5 +745,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
         ev_state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+    RETURN.
   ENDMETHOD.
 ENDCLASS.
