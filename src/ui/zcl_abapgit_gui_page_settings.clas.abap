@@ -555,19 +555,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
   METHOD render_icon_scaling.
 
     DATA:
-      BEGIN OF ls_selected,
+      BEGIN OF ls_sel,
         auto TYPE string,
         large TYPE string,
         small TYPE string,
-      END OF ls_selected.
+      END OF ls_sel.
 
     CASE mo_settings->get_icon_scaling( ).
       WHEN zcl_abapgit_settings=>c_icon_scaling-large.
-        ls_selected-large = ' selected'.
+        ls_sel-large = ' selected'.
       WHEN zcl_abapgit_settings=>c_icon_scaling-small.
-        ls_selected-small = ' selected'.
+        ls_sel-small = ' selected'.
       WHEN OTHERS.
-        ls_selected-auto = ' selected'.
+        ls_sel-auto = ' selected'.
     ENDCASE.
 
     CREATE OBJECT ro_html.
@@ -576,9 +576,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ro_html->add( |<label for="icon_scaling">High DPI icon scaling</label>| ).
     ro_html->add( |<br>| ).
     ro_html->add( |<select name="icon_scaling" size="3">| ).
-    ro_html->add( |<option value=""{ ls_selected-auto }>Auto</option>| ).
-    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_icon_scaling-large }"{ ls_selected-large }>Large</option>| ).
-    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_icon_scaling-small }"{ ls_selected-small }>Small</option>| ).
+    ro_html->add( |<option value=""{ ls_sel-auto }>Auto</option>| ).
+    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_icon_scaling-large }"{ ls_sel-large }>Large</option>| ).
+    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_icon_scaling-small }"{ ls_sel-small }>Small</option>| ).
     ro_html->add( |</select>| ).
 
     ro_html->add( |<br>| ).
