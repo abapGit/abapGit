@@ -614,10 +614,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       LOOP AT lt_steps_id ASSIGNING <lv_step_id>.
         READ TABLE lt_steps WITH KEY step_id = <lv_step_id> ASSIGNING <ls_step>.
         ASSERT sy-subrc = 0.
-        IF <ls_step>-is_ddic = abap_true AND li_obj->get_metadata( )-ddic = abap_false.
-          " DDIC only for DDIC objects
-          zcx_abapgit_exception=>raise( |Step { <lv_step_id> } is only for DDIC objects| ).
-        ENDIF.
+
         APPEND INITIAL LINE TO <ls_step>-objects ASSIGNING <ls_deser>.
         <ls_deser>-item    = ls_item.
         <ls_deser>-obj     = li_obj.
