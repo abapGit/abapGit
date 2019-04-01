@@ -156,7 +156,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SFBS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
 
-     APPEND zif_abapgit_object=>gc_step_id-abap_as_ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap_as_ddic TO rt_steps.
 
   ENDMETHOD.
 
