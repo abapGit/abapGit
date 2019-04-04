@@ -261,6 +261,11 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
     LOOP AT lt_includes ASSIGNING <lv_include>.
 
+      "ignore simple transformation includes (as long as they remain in existing repositories)
+      IF strlen( <lv_include> ) = 33 AND <lv_include>+30(3) = 'XTI'.
+        CONTINUE.
+      ENDIF.
+
       lt_source = mo_files->read_abap( iv_extra = <lv_include> ).
 
       lo_xml = mo_files->read_xml( <lv_include> ).
@@ -479,17 +484,24 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       " these includes might reside in a different package or might be shared between multiple function groups
       " or other programs and are hence no part of the to serialized FUGR object
       " they will be handled as individual objects when serializing their package
+      " in addition, referenced XTI includes referencing (simple) transformations must be ignored
       SELECT obj_name
         INTO TABLE lt_tadir_includes
         FROM tadir
         FOR ALL ENTRIES IN rt_includes
-        WHERE pgmid = 'R3TR'
+        WHERE pgmid      = 'R3TR'
               AND object = 'PROG'
               AND obj_name = rt_includes-table_line.
       LOOP AT rt_includes ASSIGNING <lv_include>.
         READ TABLE lt_tadir_includes WITH KEY table_line = <lv_include> TRANSPORTING NO FIELDS.
         IF sy-subrc = 0.
           DELETE rt_includes.
+          CONTINUE.
+        ENDIF.
+        IF strlen( <lv_include> ) = 33 AND <lv_include>+30(3) = 'XTI'.
+          "ignore referenced (simple) transformation includes
+          DELETE rt_includes.
+          CONTINUE.
         ENDIF.
       ENDLOOP.
 
