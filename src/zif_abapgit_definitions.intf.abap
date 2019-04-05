@@ -337,6 +337,7 @@ INTERFACE zif_abapgit_definitions
       link_hint_background_color TYPE string,
       hotkeys                    TYPE tty_hotkey,
       parallel_proc_disabled     TYPE abap_bool,
+      icon_scaling               TYPE c LENGTH 1,
     END OF ty_s_user_settings .
   TYPES:
     tty_dokil TYPE STANDARD TABLE OF dokil
