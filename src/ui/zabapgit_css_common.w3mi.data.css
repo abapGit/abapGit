@@ -1065,6 +1065,7 @@ table.commit tr .title {
   border-width: 1px;
   border-style: solid;
   box-shadow: 2px 2px 6px 0px #ccc;
+  cursor: pointer;
 }
 .blue-set {
   border-color: #abc3e3;
