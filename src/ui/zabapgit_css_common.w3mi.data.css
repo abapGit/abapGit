@@ -1053,3 +1053,27 @@ table.commit tr .title {
 .ci-result li span {
   display: block;
 }
+
+/* Floating buttons and color sets */
+
+.floating-button {
+  position: fixed;
+  top: 6em;
+  right: 2.8em;
+  padding: 1em 1.8em;
+  border-radius: 4px;
+  border-width: 1px;
+  border-style: solid;
+  box-shadow: 2px 2px 6px 0px #ccc;
+  cursor: pointer;
+}
+.blue-set {
+  border-color: #abc3e3;
+  color: #5e8dc9;
+  background-color: #d9e4f2;
+}
+.grey-set {
+  border-color: #c7c7c7;
+  color: #808080;
+  background-color: #e6e6e6;
+}
