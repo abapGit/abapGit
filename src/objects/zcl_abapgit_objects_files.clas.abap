@@ -200,6 +200,25 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD contains.
+    DATA: lv_filename TYPE string.
+
+    lv_filename = filename( iv_extra = iv_extra
+                            iv_ext   = iv_ext ).
+
+    IF mv_path IS NOT INITIAL.
+      READ TABLE mt_files TRANSPORTING NO FIELDS WITH KEY path     = mv_path
+                                                          filename = lv_filename.
+    ELSE.
+      READ TABLE mt_files TRANSPORTING NO FIELDS WITH KEY filename = lv_filename.
+    ENDIF.
+
+    IF sy-subrc = 0.
+      rv_present = abap_true.
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD filename.
 
     DATA: lv_obj_name TYPE string.
@@ -343,7 +362,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     CREATE OBJECT ro_xml
       EXPORTING
-        iv_xml = lv_xml.
+        iv_xml      = lv_xml
+        iv_filename = lv_filename.
 
   ENDMETHOD.
 
@@ -351,23 +371,4 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
   METHOD set_files.
     mt_files = it_files.
   ENDMETHOD.
-
-  METHOD contains.
-    DATA: lv_filename TYPE string.
-
-    lv_filename = filename( iv_extra = iv_extra
-                            iv_ext   = iv_ext ).
-
-    IF mv_path IS NOT INITIAL.
-      READ TABLE mt_files TRANSPORTING NO FIELDS WITH KEY path     = mv_path
-                                                          filename = lv_filename.
-    ELSE.
-      READ TABLE mt_files TRANSPORTING NO FIELDS WITH KEY filename = lv_filename.
-    ENDIF.
-
-    IF sy-subrc = 0.
-      rv_present = abap_true.
-    ENDIF.
-  ENDMETHOD.
-
 ENDCLASS.
