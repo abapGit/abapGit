@@ -25,7 +25,7 @@ CLASS zcl_abapgit_xml_input DEFINITION
     METHODS get_metadata
       RETURNING
         VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata .
-protected section.
+
   PRIVATE SECTION.
     METHODS: fix_xml.
 
