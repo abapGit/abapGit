@@ -60,22 +60,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
-
-
-  METHOD is_idoc_segment.
-
-    DATA lv_segment_type TYPE edilsegtyp.
-
-    lv_segment_type = ms_item-obj_name.
-
-    SELECT SINGLE segtyp
-           FROM edisegment
-           INTO lv_segment_type
-           WHERE segtyp = lv_segment_type.
-    rv_is_idoc_segment = boolc( sy-subrc = 0 ).
-
-  ENDMETHOD.
+CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -282,6 +267,21 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from TR_TADIR_INTERFACE' ).
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD is_idoc_segment.
+
+    DATA lv_segment_type TYPE edilsegtyp.
+
+    lv_segment_type = ms_item-obj_name.
+
+    SELECT SINGLE segtyp
+           FROM edisegment
+           INTO lv_segment_type
+           WHERE segtyp = lv_segment_type.
+    rv_is_idoc_segment = boolc( sy-subrc = 0 ).
+
   ENDMETHOD.
 
 
@@ -607,19 +607,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-
-    DATA: ls_meta TYPE zif_abapgit_definitions=>ty_metadata.
-
-    ls_meta = zif_abapgit_object~get_metadata( ).
-
-    IF ls_meta-late_deser = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
-    ELSEIF ls_meta-ddic = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
-    ELSE.
-      APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
-    ENDIF.
-
+    APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
   ENDMETHOD.
 
 
