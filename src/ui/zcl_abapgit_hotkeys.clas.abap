@@ -5,19 +5,11 @@ CLASS zcl_abapgit_hotkeys DEFINITION
 
   PUBLIC SECTION.
     CLASS-METHODS:
-      get_default_hotkeys_from_pages
+      get_all_default_hotkeys
         IMPORTING
-          io_page TYPE REF TO zcl_abapgit_gui_page OPTIONAL
+          io_page                  TYPE REF TO zcl_abapgit_gui_page OPTIONAL
         RETURNING
-          VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action
-        RAISING
-          zcx_abapgit_exception,
-
-      get_relevant_hotkeys_for_page
-        IMPORTING
-          io_page           TYPE REF TO zcl_abapgit_gui_page
-        RETURNING
-          VALUE(rt_hotkeys) TYPE zif_abapgit_definitions=>tty_hotkey
+          VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name
         RAISING
           zcx_abapgit_exception.
 
@@ -32,15 +24,16 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
+CLASS zcl_abapgit_hotkeys IMPLEMENTATION.
 
 
-  METHOD get_default_hotkeys_from_pages.
+  METHOD get_all_default_hotkeys.
 
-    DATA: lt_hotkey_actions TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action,
+    DATA: lt_hotkey_actions TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name,
           lo_interface      TYPE REF TO cl_oo_interface,
           lv_class_name     TYPE abap_abstypename,
-          lt_classes        TYPE seo_relkeys.
+          lt_classes        TYPE seo_relkeys,
+          lv_where          TYPE string.
 
     FIELD-SYMBOLS: <ls_class> TYPE seorelkey.
 
@@ -56,10 +49,11 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
     IF io_page IS BOUND.
       lv_class_name = cl_abap_classdescr=>get_class_name( io_page ).
       SHIFT lv_class_name LEFT DELETING LEADING '\CLASS='.
+      lv_where = |CLSNAME = LV_CLASS_NAME|.
     ENDIF.
 
-    LOOP AT lt_classes ASSIGNING <ls_class>.
-      CHECK lv_class_name IS INITIAL OR lv_class_name = <ls_class>-clsname.
+    LOOP AT lt_classes ASSIGNING <ls_class>
+                       WHERE (lv_where).
 
       CALL METHOD (<ls_class>-clsname)=>zif_abapgit_gui_page_hotkey~get_hotkey_actions
         RECEIVING
@@ -70,57 +64,9 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
     ENDLOOP.
 
     " the global shortcuts are defined in the base class
-    lt_hotkey_actions = zcl_abapgit_gui_page=>get_hotkey_actions( ).
-    INSERT LINES OF lt_hotkey_actions INTO TABLE rt_hotkey_actions.
+    INSERT LINES OF zcl_abapgit_gui_page=>get_global_hotkeys( ) INTO TABLE rt_hotkey_actions.
 
-    SORT rt_hotkey_actions.
-    DELETE ADJACENT DUPLICATES FROM rt_hotkey_actions.
-
-  ENDMETHOD.
-
-
-  METHOD get_relevant_hotkeys_for_page.
-
-    DATA: lo_settings                    TYPE REF TO zcl_abapgit_settings,
-          lv_class_name                  TYPE abap_abstypename,
-          lt_hotkey_actions_of_curr_page TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action,
-          lv_save_tabix                  TYPE syst-tabix,
-          lt_hotkey_actions              TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action.
-
-    FIELD-SYMBOLS: <ls_hotkey>              TYPE zif_abapgit_definitions=>ty_hotkey.
-
-    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
-
-    rt_hotkeys = lo_settings->get_hotkeys( ).
-
-    lv_class_name = cl_abap_classdescr=>get_class_name( io_page ).
-
-    TRY.
-        CALL METHOD (lv_class_name)=>zif_abapgit_gui_page_hotkey~get_hotkey_actions
-          RECEIVING
-            rt_hotkey_actions = lt_hotkey_actions_of_curr_page.
-
-      CATCH cx_root.
-        RETURN.
-    ENDTRY.
-
-    " these are the global shortcuts
-    lt_hotkey_actions = zcl_abapgit_gui_page=>get_hotkey_actions( ).
-    INSERT LINES OF lt_hotkey_actions INTO TABLE lt_hotkey_actions_of_curr_page.
-
-    LOOP AT rt_hotkeys ASSIGNING <ls_hotkey>.
-
-      lv_save_tabix = sy-tabix.
-
-      READ TABLE lt_hotkey_actions_of_curr_page TRANSPORTING NO FIELDS
-                                                WITH TABLE KEY action
-                                                COMPONENTS action = <ls_hotkey>-action.
-      IF sy-subrc <> 0.
-        " We only offer hotkeys which are supported by the current page or globally
-        DELETE rt_hotkeys INDEX lv_save_tabix.
-      ENDIF.
-
-    ENDLOOP.
+    SORT rt_hotkey_actions BY name.
 
   ENDMETHOD.
 

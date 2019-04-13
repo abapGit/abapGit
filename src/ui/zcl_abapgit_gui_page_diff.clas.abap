@@ -1068,9 +1068,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
 
-    ls_hotkey_action-name           = |Stage changes|.
-    ls_hotkey_action-action         = |stagePatch|.
-    ls_hotkey_action-default_hotkey = |s|.
+    ls_hotkey_action-name   = |Stage changes|.
+    ls_hotkey_action-action = |stagePatch|.
+    ls_hotkey_action-hotkey = |s|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
