@@ -7,7 +7,8 @@ CLASS zcl_abapgit_xml_input DEFINITION
 
     METHODS constructor
       IMPORTING
-        !iv_xml TYPE clike
+        !iv_xml      TYPE clike
+        !iv_filename TYPE string OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS read
@@ -24,6 +25,7 @@ CLASS zcl_abapgit_xml_input DEFINITION
     METHODS get_metadata
       RETURNING
         VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata .
+
   PRIVATE SECTION.
     METHODS: fix_xml.
 
@@ -36,7 +38,7 @@ CLASS ZCL_ABAPGIT_XML_INPUT IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( ).
+    super->constructor( iv_filename ).
     parse( iv_xml ).
     fix_xml( ).
 
@@ -89,7 +91,11 @@ CLASS ZCL_ABAPGIT_XML_INPUT IMPLEMENTATION.
           SOURCE XML mi_xml_doc
           RESULT (lt_rtab) ##no_text.
       CATCH cx_transformation_error INTO lx_error.
-        zcx_abapgit_exception=>raise( lx_error->if_message~get_text( ) ).
+        IF mv_filename IS INITIAL.
+          zcx_abapgit_exception=>raise( lx_error->if_message~get_text( ) ).
+        ELSE.
+          zcx_abapgit_exception=>raise( |File { mv_filename }: { lx_error->if_message~get_text( ) }| ).
+        ENDIF.
     ENDTRY.
 
   ENDMETHOD.
