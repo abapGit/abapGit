@@ -8,7 +8,7 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
     METHODS:
       constructor
         RAISING zcx_abapgit_exception,
-      zif_abapgit_gui_page~on_event REDEFINITION.
+      zif_abapgit_gui_event_handler~on_event REDEFINITION.
 
   PROTECTED SECTION.
     METHODS:
@@ -364,14 +364,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page~on_event.
+  METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: lv_key           TYPE zif_abapgit_persistence=>ty_repo-key,
-          li_repo_overview TYPE REF TO zif_abapgit_gui_page.
+          li_repo_overview TYPE REF TO zif_abapgit_gui_renderable.
 
 
     IF NOT mo_repo_content IS INITIAL.
-      mo_repo_content->zif_abapgit_gui_page~on_event(
+      mo_repo_content->zif_abapgit_gui_event_handler~on_event(
         EXPORTING
           iv_action    = iv_action
           iv_prev_page = iv_prev_page
@@ -407,7 +407,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
         ei_page = li_repo_overview.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN OTHERS.
-        super->zif_abapgit_gui_page~on_event(
+        super->zif_abapgit_gui_event_handler~on_event(
           EXPORTING
             iv_action    = iv_action
             iv_prev_page = iv_prev_page

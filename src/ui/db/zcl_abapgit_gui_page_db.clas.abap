@@ -9,7 +9,7 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
 
     METHODS constructor .
 
-    METHODS zif_abapgit_gui_page~on_event
+    METHODS zif_abapgit_gui_event_handler~on_event
         REDEFINITION .
   PROTECTED SECTION.
 
@@ -26,8 +26,7 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
       IMPORTING
         !is_key TYPE zif_abapgit_persistence=>ty_content
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     METHODS explain_content
       IMPORTING
         !is_data       TYPE zif_abapgit_persistence=>ty_content
@@ -193,7 +192,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page~on_event.
+  METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: ls_db TYPE zif_abapgit_persistence=>ty_content.
 

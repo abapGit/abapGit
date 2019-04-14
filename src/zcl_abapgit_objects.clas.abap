@@ -363,7 +363,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
       CREATE OBJECT lo_remote_version
         EXPORTING
-          iv_xml = zcl_abapgit_convert=>xstring_to_string_utf8( ls_remote_file-data ).
+          iv_xml      = zcl_abapgit_convert=>xstring_to_string_utf8( ls_remote_file-data )
+          iv_filename = ls_remote_file-filename.
 
       ls_result = li_comparator->compare( lo_remote_version ).
       IF ls_result-text IS INITIAL.

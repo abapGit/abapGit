@@ -19,8 +19,7 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS install_abapgit
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     CLASS-METHODS is_installed
       RETURNING
         VALUE(rv_devclass) TYPE tadir-devclass .

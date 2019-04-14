@@ -163,7 +163,8 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
     DATA: lv_object  TYPE dokhl-object,
           lt_objects TYPE STANDARD TABLE OF dokhl-object
                           WITH NON-UNIQUE DEFAULT KEY,
-          lt_dokil   TYPE zif_abapgit_definitions=>tty_dokil.
+          lt_dokil   TYPE zif_abapgit_definitions=>tty_dokil,
+          ls_dokil   LIKE LINE OF lt_dokil.
 
     FIELD-SYMBOLS: <ls_t100>  TYPE t100.
 
@@ -183,6 +184,9 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
              FOR ALL ENTRIES IN lt_objects
              WHERE id     = 'NA'
              AND   object = lt_objects-table_line.
+
+    CLEAR ls_dokil-dokstate.
+    MODIFY lt_dokil FROM ls_dokil TRANSPORTING dokstate WHERE dokstate IS NOT INITIAL.
 
     IF lines( lt_dokil ) > 0.
       serialize_longtexts( io_xml   = io_xml

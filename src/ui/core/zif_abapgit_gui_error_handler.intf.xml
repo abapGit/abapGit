@@ -3,10 +3,9 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOINTERF>
-    <CLSNAME>ZIF_ABAPGIT_GUI_PAGE</CLSNAME>
-    <VERSION>1</VERSION>
+    <CLSNAME>ZIF_ABAPGIT_GUI_ERROR_HANDLER</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>GUI page</DESCRIPT>
+    <DESCRIPT>abapGit GUI error handler</DESCRIPT>
     <EXPOSURE>2</EXPOSURE>
     <STATE>1</STATE>
     <UNICODE>X</UNICODE>

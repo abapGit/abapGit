@@ -20,6 +20,17 @@ CLASS zcl_abapgit_zlib_stream DEFINITION
     METHODS remaining
       RETURNING
         VALUE(rv_length) TYPE i .
+    "! Take bytes, there's an implicit realignment to start at the beginning of a byte
+    "! i.e. if next bit of current byte is not the first bit, then this byte is skipped
+    "! and the bytes are taken from the next one.
+    "! @parameter iv_length | <p class="shorttext synchronized" lang="en">Number of BYTES to read (not bits)</p>
+    "! @parameter rv_bytes | <p class="shorttext synchronized" lang="en">Bytes taken</p>
+    METHODS take_bytes
+      IMPORTING
+        iv_length       TYPE i
+      RETURNING
+        VALUE(rv_bytes) TYPE xstring.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: mv_compressed TYPE xstring,
           mv_bits       TYPE string.
@@ -28,7 +39,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ZLIB_STREAM IMPLEMENTATION.
+CLASS zcl_abapgit_zlib_stream IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -69,6 +80,14 @@ CLASS ZCL_ABAPGIT_ZLIB_STREAM IMPLEMENTATION.
       ENDIF.
 
     ENDWHILE.
+
+  ENDMETHOD.
+
+
+  METHOD take_bytes.
+
+    rv_bytes = mv_compressed(iv_length).
+    mv_compressed = mv_compressed+iv_length.
 
   ENDMETHOD.
 

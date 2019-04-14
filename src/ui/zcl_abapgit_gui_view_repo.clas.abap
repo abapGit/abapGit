@@ -5,11 +5,12 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_gui_page .
+    INTERFACES zif_abapgit_gui_renderable .
+    INTERFACES zif_abapgit_gui_event_handler .
     INTERFACES zif_abapgit_gui_page_hotkey.
 
     ALIASES render
-      FOR zif_abapgit_gui_page~render .
+      FOR zif_abapgit_gui_renderable~render .
 
     CONSTANTS:
       BEGIN OF c_actions,
@@ -650,12 +651,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page~on_event.
+  METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: lv_path TYPE string.
 
@@ -685,7 +681,12 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page~render.
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_renderable~render.
 
     DATA: lt_repo_items        TYPE zif_abapgit_definitions=>tt_repo_items,
           lo_browser           TYPE REF TO zcl_abapgit_repo_content_list,

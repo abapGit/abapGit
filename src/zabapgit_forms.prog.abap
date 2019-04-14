@@ -128,7 +128,9 @@ ENDFORM.
 FORM exit RAISING zcx_abapgit_exception.
   CASE sy-ucomm.
     WHEN 'CBAC'.  "Back
-      IF zcl_abapgit_ui_factory=>get_gui( )->back( ) IS INITIAL.
+      IF zcl_abapgit_ui_factory=>get_gui( )->back( ) = abap_true. " end of stack
+        zcl_abapgit_ui_factory=>get_gui( )->free( ). " Graceful shutdown
+      ELSE.
         LEAVE TO SCREEN 1001.
       ENDIF.
   ENDCASE.

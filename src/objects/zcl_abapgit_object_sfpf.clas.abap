@@ -18,6 +18,9 @@ CLASS zcl_abapgit_object_sfpf DEFINITION
         zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    CONSTANTS c_layout_file_ext TYPE string VALUE 'xdp'.
+
     METHODS:
       load
         RETURNING VALUE(ri_wb_form) TYPE REF TO if_fp_wb_form
@@ -106,18 +109,49 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
 
   METHOD form_to_xstring.
 
-    DATA: li_fp_form TYPE REF TO if_fp_form,
-          li_wb_form TYPE REF TO if_fp_wb_form.
+    CONSTANTS: lc_empty_data TYPE xstring VALUE ''.
 
+    DATA: li_fp_form     TYPE REF TO if_fp_form,
+          li_wb_form     TYPE REF TO if_fp_wb_form,
+          li_fp_layout   TYPE REF TO if_fp_layout,
+          lx_fp_err      TYPE REF TO cx_fp_api,
+          lx_fp_conv_err TYPE REF TO cx_fp_api,
+          lv_layout_data TYPE xstring.
+
+    li_wb_form = load( ).
+    li_fp_form ?= li_wb_form->get_object( ).
+    li_fp_layout = li_fp_form->get_layout( ).
+    lv_layout_data = li_fp_layout->get_layout_data( ).
+
+    mo_files->add_raw( iv_ext = c_layout_file_ext
+                       iv_data = lv_layout_data ).
 
     TRY.
-        li_wb_form = load( ).
-        li_fp_form ?= li_wb_form->get_object( ).
-        rv_xstr = cl_fp_helper=>convert_form_to_xstring( li_fp_form ).
-      CATCH cx_fp_api.
-        zcx_abapgit_exception=>raise( 'SFPF error, form_to_xstring' ).
+        li_fp_layout->set_layout_data( i_layout_data   = lc_empty_data
+                                       i_set_xliff_ids = abap_false ).
+      CATCH cx_fp_api INTO lx_fp_err.
+        zcx_abapgit_exception=>raise( |SFPF remove layout: { lx_fp_err->get_text( ) }| ).
     ENDTRY.
 
+    TRY.
+        rv_xstr = cl_fp_helper=>convert_form_to_xstring( li_fp_form ).
+      CATCH cx_fp_api INTO lx_fp_conv_err.
+        " Pass - the exception is handled below!
+    ENDTRY.
+
+    TRY.
+        li_fp_layout->set_layout_data( i_layout_data   = lv_layout_data
+                                       i_set_xliff_ids = abap_false ).
+      CATCH cx_fp_api INTO lx_fp_err.
+        " Be aware that there might be another exception
+        " raised by cl_fp_helper=>convert_form_to_xstring( )
+        zcx_abapgit_exception=>raise( |SFPF recover layout: { lx_fp_err->get_text( ) }| ).
+    ENDTRY.
+
+    IF lx_fp_conv_err IS BOUND.
+      " This statement handles the exception raised from cl_fp_helper=>convert_form_to_xstring( )
+      zcx_abapgit_exception=>raise( |SFPF convert_form_to_xstring: { lx_fp_conv_err->get_text( ) }| ).
+    ENDIF.
   ENDMETHOD.
 
 
@@ -178,9 +212,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA: lv_xstr      TYPE xstring,
+          lv_layout    TYPE xstring,
           lv_name      TYPE fpname,
           li_wb_object TYPE REF TO if_fp_wb_form,
-          li_form      TYPE REF TO if_fp_form.
+          li_form      TYPE REF TO if_fp_form,
+          lx_fp_err    TYPE REF TO cx_fp_api.
 
 
     lv_name = ms_item-obj_name.
@@ -188,6 +224,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
 
     TRY.
         li_form = cl_fp_helper=>convert_xstring_to_form( lv_xstr ).
+
+        IF mo_files->contains( c_layout_file_ext ) = abap_true.
+          lv_layout = mo_files->read_raw( c_layout_file_ext ).
+          li_form->get_layout( )->set_layout_data( lv_layout ).
+        ENDIF.
 
         IF zif_abapgit_object~exists( ) = abap_true.
           cl_fp_wb_form=>delete( lv_name ).
@@ -198,8 +239,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
                                               i_form = li_form ).
         li_wb_object->save( ).
         li_wb_object->free( ).
-      CATCH cx_fp_api.
-        zcx_abapgit_exception=>raise( 'SFPF error, deserialize' ).
+      CATCH cx_fp_api INTO lx_fp_err.
+        zcx_abapgit_exception=>raise( |SFPF deserialization error: { lx_fp_err->get_text( ) }| ).
     ENDTRY.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).

@@ -459,7 +459,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
         IF sy-msgid = 'EU' AND sy-msgno = '510'.
           zcx_abapgit_exception=>raise( 'User is currently editing program' ).
         ELSE.
-          zcx_abapgit_exception=>raise( 'PROG, error updating' ).
+          zcx_abapgit_exception=>raise( |PROG { is_progdir-name }, updating error: { sy-msgid } { sy-msgno }| ).
         ENDIF.
       ENDIF.
 
@@ -684,7 +684,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
            rs_progdir-sdate,
            rs_progdir-stime,
            rs_progdir-idate,
-           rs_progdir-itime.
+           rs_progdir-itime,
+           rs_progdir-varcl,
+           rs_progdir-state.
 
   ENDMETHOD.
 

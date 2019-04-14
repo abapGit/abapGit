@@ -2,7 +2,8 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
 
   PUBLIC SECTION.
     INTERFACES:
-      zif_abapgit_gui_page.
+      zif_abapgit_gui_renderable,
+      zif_abapgit_gui_event_handler.
 
     CONSTANTS:
       BEGIN OF c_global_page_action,
@@ -186,6 +187,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( '<link rel="stylesheet" type="text/css" href="css/ag-icons.css">' ).
     ro_html->add( '<script type="text/javascript" src="js/common.js"></script>' ). "#EC NOTEXT
 
+    CASE mo_settings->get_icon_scaling( ). " Enforce icon scaling
+      WHEN mo_settings->c_icon_scaling-large.
+        ro_html->add( '<style>.icon { font-size: 200% }</style>' ).
+      WHEN mo_settings->c_icon_scaling-small.
+        ro_html->add( '<style>.icon.large { font-size: inherit }</style>' ).
+    ENDCASE.
+
     ro_html->add( '</head>' ).                              "#EC NOTEXT
 
   ENDMETHOD.
@@ -272,7 +280,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page~on_event.
+  METHOD zif_abapgit_gui_event_handler~on_event.
 
     CASE iv_action.
       WHEN zif_abapgit_definitions=>c_action-url.
@@ -289,7 +297,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page~render.
+  METHOD zif_abapgit_gui_renderable~render.
 
     DATA lo_script TYPE REF TO zcl_abapgit_html.
 

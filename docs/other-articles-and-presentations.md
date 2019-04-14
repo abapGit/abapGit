@@ -100,3 +100,7 @@ SAP Teched Barcelona
 [abapGit & lint](https://speakerdeck.com/mkysoft/abapgit-and-lint), Mustafa Kerim Yılmaz
 
 [Using abapGit and Phabricator for easy and simultaneously development on different multi-system-landscapes](https://blogs.sap.com/2018/12/02/using-abapgit-and-phabricator-for-easy-and-simultaneously-development-on-different-multi-system-landscapes/), Sascha Wächter
+
+### 2019
+
+[abapGit for enterprise, executive summary](https://docs.google.com/presentation/d/1SuRax4sxg4AyjS0VzX7Nrjt0Iuf-m5tf736MroTpN7g/edit?usp=sharing) - Alexander Tsybulsky
