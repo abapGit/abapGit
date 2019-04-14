@@ -103,6 +103,10 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPI IMPLEMENTATION.
     lv_name = ms_item-obj_name.
     lv_xstr = cl_ixml_80_20=>render_to_xstring( io_xml->get_raw( ) ).
 
+    IF zif_abapgit_object~exists( ) = abap_true.
+      zif_abapgit_object~delete( ).
+    ENDIF.
+
     TRY.
         li_interface = cl_fp_helper=>convert_xstring_to_interface( lv_xstr ).
         tadir_insert( iv_package ).

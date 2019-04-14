@@ -45,6 +45,8 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
           lt_spaces          TYPE ty_spaces_tt,
           lt_enhancements    TYPE enh_hook_impl_it.
 
+    FIELD-SYMBOLS: <ls_enhancement> LIKE LINE OF lt_enhancements.
+
 
     lo_hook_impl ?= ii_enh_tool.
 
@@ -59,6 +61,11 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
         program   = ls_original_object-programname ).
     ls_original_object-include_bound = lo_hook_impl->get_include_bound( ).
     lt_enhancements = lo_hook_impl->get_hook_impls( ).
+
+    LOOP AT lt_enhancements ASSIGNING <ls_enhancement>.
+      CLEAR: <ls_enhancement>-extid,
+             <ls_enhancement>-id.
+    ENDLOOP.
 
     hook_impl_serialize(
       IMPORTING et_spaces = lt_spaces

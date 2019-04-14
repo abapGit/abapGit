@@ -8,6 +8,32 @@ Legend
 + : added
 - : removed
 
+2019-03-31 v1.86.2
+------------------
+! CLAS field VSEOCLASS-VERSION
+! INTF field VSEOINTERF-VERSION cleared
+! PROG fields PROGDIR-STATE & PROGDIR-VARCL cleared
+! DCLS fields AS4LOCAL & ABAP_LANGUAGE_VERSION cleared
+! DDLS field ABAP_LANGUAGE_VERSION cleared
+! DDLX fields VERSION & RESPONSIBLE & MASTER_SYSTEM cleared
+! MSAG field DOKIL-DOKSTATE cleared
+! ENQU fields DD25V-AS4LOCAL and DD25V-AS4VERS cleared
+* ENHO diff fix
+* zlib decompress uncompressed data
+* azure-pipelines.yml added to default ignore
+* Fix error determining default main package
+
+2019-03-29 v1.86.1
+------------------
+! Sort branches in branch overview by time
+* ENHO clif handle types
+* SFPF save layout in solo XDP file
+! Option to ignore subpackages for new online repo
+* Escape slashes in branch overview
+* SCI page redesign
+* Logging refactorings
+* GUI refactorings
+
 2019-03-15 v1.86.0
 ------------------
 + IWPR support

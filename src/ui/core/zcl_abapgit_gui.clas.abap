@@ -51,14 +51,11 @@ CLASS zcl_abapgit_gui DEFINITION
       IMPORTING
         io_component TYPE REF TO object OPTIONAL
         ii_asset_man TYPE REF TO zif_abapgit_gui_asset_manager OPTIONAL
+        ii_error_handler TYPE REF TO zif_abapgit_gui_error_handler OPTIONAL
       RAISING
         zcx_abapgit_exception.
 
     METHODS free.
-
-    EVENTS on_handle_error
-      EXPORTING
-        VALUE(io_exception) TYPE REF TO cx_root.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -69,11 +66,12 @@ CLASS zcl_abapgit_gui DEFINITION
         bookmark TYPE abap_bool,
       END OF ty_page_stack.
 
-    DATA: mi_cur_page    TYPE REF TO zif_abapgit_gui_renderable,
-          mt_stack       TYPE STANDARD TABLE OF ty_page_stack,
-          mi_router      TYPE REF TO zif_abapgit_gui_event_handler,
-          mi_asset_man   TYPE REF TO zif_abapgit_gui_asset_manager,
-          mo_html_viewer TYPE REF TO cl_gui_html_viewer.
+    DATA: mi_cur_page      TYPE REF TO zif_abapgit_gui_renderable,
+          mt_stack         TYPE STANDARD TABLE OF ty_page_stack,
+          mi_router        TYPE REF TO zif_abapgit_gui_event_handler,
+          mi_asset_man     TYPE REF TO zif_abapgit_gui_asset_manager,
+          mi_error_handler TYPE REF TO zif_abapgit_gui_error_handler,
+          mo_html_viewer   TYPE REF TO cl_gui_html_viewer.
 
     METHODS startup
       RAISING
@@ -237,6 +235,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     ENDIF.
 
     mi_asset_man = ii_asset_man.
+    mi_error_handler = ii_error_handler.
     startup( ).
 
   ENDMETHOD.
@@ -347,7 +346,9 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       CATCH zcx_abapgit_cancel ##NO_HANDLER.
         " Do nothing = gc_event_state-no_more_act
       CATCH zcx_abapgit_exception INTO lx_exception.
-        RAISE EVENT on_handle_error EXPORTING io_exception = lx_exception.
+        IF mi_error_handler IS BOUND.
+          mi_error_handler->handle_error( lx_exception ).
+        ENDIF.
     ENDTRY.
 
   ENDMETHOD.

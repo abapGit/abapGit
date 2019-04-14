@@ -4,7 +4,6 @@
   <asx:values>
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_REPO_SETT</CLSNAME>
-    <VERSION>1</VERSION>
     <LANGU>E</LANGU>
     <DESCRIPT>GUI - Repo settings page</DESCRIPT>
     <STATE>1</STATE>

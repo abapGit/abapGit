@@ -66,12 +66,12 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
     IF go_gui IS INITIAL.
       li_asset_man ?= init_asset_manager( ).
       CREATE OBJECT li_router TYPE zcl_abapgit_gui_router.
+      CREATE OBJECT lo_error_handler.
       CREATE OBJECT go_gui
         EXPORTING
-          io_component = li_router
-          ii_asset_man = li_asset_man.
-      CREATE OBJECT lo_error_handler.
-      SET HANDLER lo_error_handler->on_gui_error FOR go_gui.
+          io_component     = li_router
+          ii_error_handler = lo_error_handler
+          ii_asset_man     = li_asset_man.
     ENDIF.
     ro_gui = go_gui.
 
