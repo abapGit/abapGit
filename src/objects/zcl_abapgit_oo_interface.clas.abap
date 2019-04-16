@@ -30,6 +30,7 @@ CLASS ZCL_ABAPGIT_OO_INTERFACE IMPLEMENTATION.
       EXPORTING
         devclass        = iv_package
         overwrite       = iv_overwrite
+        suppress_dialog = abap_true
       CHANGING
         interface       = cg_properties
         attributes      = lt_vseoattrib

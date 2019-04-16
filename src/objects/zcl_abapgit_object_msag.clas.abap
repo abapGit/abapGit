@@ -297,6 +297,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
         object             = lv_message_id
         object_class       = 'MSAG'
         mode               = 'D'
+        suppress_dialog    = abap_true
       EXCEPTIONS
         cancelled          = 01
         permission_failure = 02.

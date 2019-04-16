@@ -70,6 +70,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
         object              = lv_paramid
         object_class        = 'PARA'
         mode                = 'D'
+        suppress_dialog     = abap_true
       IMPORTING
         transport_key       = ls_transpkey
       EXCEPTIONS
@@ -124,6 +125,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
         global_lock         = abap_true
         devclass            = iv_package
         master_language     = mv_language
+        suppress_dialog     = abap_true
       EXCEPTIONS
         cancelled           = 1
         permission_failure  = 2

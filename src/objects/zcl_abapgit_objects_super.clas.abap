@@ -164,7 +164,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
         devclass            = iv_package
         master_language     = mv_language
         global_lock         = abap_true
-        author              = sy-uname
         mode                = 'I'
         suppress_dialog     = abap_true
       EXCEPTIONS
