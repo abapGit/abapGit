@@ -31,9 +31,7 @@ CLASS zcl_abapgit_hotkeys DEFINITION
         IMPORTING
           io_page           TYPE REF TO zcl_abapgit_gui_page
         RETURNING
-          VALUE(rt_hotkeys) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name
-        RAISING
-          cx_class_not_existent,
+          VALUE(rt_hotkeys) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name,
 
       get_hotkeys_from_local_intf
         IMPORTING
@@ -58,15 +56,11 @@ CLASS zcl_abapgit_hotkeys IMPLEMENTATION.
 
   METHOD get_all_default_hotkeys.
 
-    TRY.
-        rt_hotkey_actions = get_hotkeys_from_global_intf( io_page ).
-
-      CATCH cx_class_not_existent.
-
-        " abapGit repo isn't installed
-        rt_hotkey_actions = get_hotkeys_from_local_intf( io_page ).
-
-    ENDTRY.
+    IF zcl_abapgit_environment=>is_merged( ) = abap_true.
+      rt_hotkey_actions = get_hotkeys_from_local_intf( io_page ).
+    ELSE.
+      rt_hotkey_actions = get_hotkeys_from_global_intf( io_page ).
+    ENDIF.
 
     " the global shortcuts are defined in the base class
     INSERT LINES OF zcl_abapgit_gui_page=>get_global_hotkeys( ) INTO TABLE rt_hotkey_actions.
@@ -94,7 +88,12 @@ CLASS zcl_abapgit_hotkeys IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_class> LIKE LINE OF lt_classes.
 
-    lo_interface ?= cl_oo_class=>get_instance( |{ mc_hotkey_interface }| ).
+    TRY.
+        lo_interface ?= cl_oo_class=>get_instance( |{ mc_hotkey_interface }| ).
+      CATCH cx_class_not_existent.
+        RETURN.
+    ENDTRY.
+
     lt_classes = lo_interface->get_implementing_classes( ).
 
     IF io_page IS BOUND.
