@@ -37,8 +37,8 @@ CLASS ZCL_ABAPGIT_PASSWORD_DIALOG IMPLEMENTATION.
           CALL METHOD ('ZCL_ABAPGIT_DEFAULT_AUTH_INFO')=>('GET_USER')
             RECEIVING
               rv_user = cv_user.
-          CATCH cx_root.
-            RETURN.
+        CATCH cx_root.
+          RETURN.
       ENDTRY.
       TRY.
           CALL METHOD ('ZCL_ABAPGIT_DEFAULT_AUTH_INFO')=>('GET_PASSWORD')
