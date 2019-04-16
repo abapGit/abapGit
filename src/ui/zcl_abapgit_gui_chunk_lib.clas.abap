@@ -158,10 +158,12 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     DATA: lv_hint                 TYPE string,
           lt_user_defined_hotkeys TYPE zif_abapgit_definitions=>tty_hotkey,
           lt_hotkeys_for_page     TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name,
-          lo_settings             TYPE REF TO zcl_abapgit_settings.
+          lo_settings             TYPE REF TO zcl_abapgit_settings,
+          lv_hotkey               TYPE string.
 
-    FIELD-SYMBOLS: <ls_hotkey> TYPE zif_abapgit_definitions=>ty_hotkey,
-                   <ls_action> LIKE LINE OF lt_hotkeys_for_page.
+    FIELD-SYMBOLS:
+      <ls_hotkey>              LIKE LINE OF lt_hotkeys_for_page,
+      <ls_user_defined_hotkey> LIKE LINE OF lt_user_defined_hotkeys.
 
     lo_settings             = zcl_abapgit_persist_settings=>get_instance( )->read( ).
     lt_user_defined_hotkeys = lo_settings->get_hotkeys( ).
@@ -171,26 +173,43 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     " Render hotkeys
     ro_html->add( '<ul class="hotkeys">' ).
-    LOOP AT lt_user_defined_hotkeys ASSIGNING <ls_hotkey>.
+    LOOP AT lt_hotkeys_for_page ASSIGNING <ls_hotkey>.
 
-      READ TABLE lt_hotkeys_for_page ASSIGNING <ls_action>
-                                     WITH TABLE KEY action
-                                     COMPONENTS action = <ls_hotkey>-action.
+      READ TABLE lt_user_defined_hotkeys ASSIGNING <ls_user_defined_hotkey>
+                                         WITH TABLE KEY action
+                                         COMPONENTS action = <ls_hotkey>-action.
       IF sy-subrc = 0.
-        ro_html->add( |<li>|
-          && |<span class="key-id">{ <ls_hotkey>-hotkey }</span>|
-          && |<span class="key-descr">{ <ls_action>-name }</span>|
-          && |</li>| ).
+        lv_hotkey = <ls_user_defined_hotkey>-hotkey.
+      ELSE.
+        lv_hotkey = <ls_hotkey>-hotkey.
       ENDIF.
+
+      ro_html->add( |<li>|
+          && |<span class="key-id">{ lv_hotkey }</span>|
+          && |<span class="key-descr">{ <ls_hotkey>-name }</span>|
+          && |</li>| ).
 
     ENDLOOP.
     ro_html->add( '</ul>' ).
 
     " Wrap
-    READ TABLE lt_user_defined_hotkeys ASSIGNING <ls_hotkey>
+    CLEAR: lv_hotkey.
+
+    READ TABLE lt_hotkeys_for_page ASSIGNING <ls_hotkey>
       WITH TABLE KEY action
       COMPONENTS action = zcl_abapgit_gui_page=>c_global_page_action-showhotkeys.
     IF sy-subrc = 0.
+      lv_hotkey = <ls_hotkey>-hotkey.
+    ENDIF.
+
+    READ TABLE lt_user_defined_hotkeys ASSIGNING <ls_user_defined_hotkey>
+      WITH TABLE KEY action
+      COMPONENTS action = zcl_abapgit_gui_page=>c_global_page_action-showhotkeys.
+    IF sy-subrc = 0.
+      lv_hotkey = <ls_user_defined_hotkey>-hotkey.
+    ENDIF.
+
+    IF lv_hotkey IS NOT INITIAL.
       lv_hint = |Close window with '{ <ls_hotkey>-hotkey }' or upper right corner 'X'|.
     ENDIF.
 
