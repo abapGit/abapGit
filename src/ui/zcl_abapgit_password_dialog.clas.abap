@@ -32,7 +32,12 @@ CLASS ZCL_ABAPGIT_PASSWORD_DIALOG IMPLEMENTATION.
         USING iv_repo_url
         CHANGING cv_user cv_pass.
     ELSE.
-      "check if ZCL_ABAPGIT_DEFAULT_AUTH_INFO exists (part of ADT_Backend project)
+      "Extract user credentials from the environment...
+      "Class ZCL_ABAPGIT_DEFAULT_AUTH_INFO is part of https://github.com/abapGit/ADT_Backend.
+      "It stores the credentials of a private repository as long as the session exists.
+      "Usually this class should belong to abapGit core and a refactoring is recommended.
+      "As a temporary solution - and to avoid a DYNPRO_SEND_IN_BACKGROUND dump - a generic
+      "call of the getter methods for username and password is implemented by PR#2635.
       TRY.
           CALL METHOD ('ZCL_ABAPGIT_DEFAULT_AUTH_INFO')=>('GET_USER')
             RECEIVING
