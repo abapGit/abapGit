@@ -254,6 +254,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_SAXX_SUPER IMPLEMENTATION.
             global_lock         = abap_true
             devclass            = iv_package
             master_language     = mv_language
+            suppress_dialog     = abap_true
           EXCEPTIONS
             cancelled           = 1
             permission_failure  = 2

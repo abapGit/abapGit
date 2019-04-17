@@ -107,6 +107,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CUS1 IMPLEMENTATION.
         global_lock         = abap_true
         devclass            = iv_package
         master_language     = sy-langu
+        suppress_dialog     = abap_true
       EXCEPTIONS
         cancelled           = 1
         permission_failure  = 2

@@ -205,6 +205,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
         master_language     = mv_language
         mode                = 'INSERT'
         global_lock         = abap_true
+        suppress_dialog     = abap_true
       EXCEPTIONS
         cancelled           = 1
         permission_failure  = 2
