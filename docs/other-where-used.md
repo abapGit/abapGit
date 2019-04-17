@@ -11,6 +11,7 @@ order: 50
 * RheinEnergie AG, Cologne, Germany
 * Sword Holdings
 * [CHS Inc.](https://www.chsinc.com)
+
 ### SAP
 * [SAP IBSO](https://www.sap.com/services/application-development.html)
 * [SAP Labs Czech Republic](https://www.facebook.com/SAPLabsCZ/)
