@@ -104,13 +104,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        lo_test = cl_ci_tests=>get_test_ref( <ls_result>-test ).
+        CALL METHOD ('CL_CI_TESTS')=>('GET_TEST_REF')
+          EXPORTING
+            p_test   = <ls_result>-test
+          RECEIVING
+            p_result = lo_test.
       CATCH cx_root.
         zcx_abapgit_exception=>raise( |Jump to object not supported in your NW release|  ).
     ENDTRY.
 
     lo_result = lo_test->get_result_node( <ls_result>-kind ).
-
 
     MOVE-CORRESPONDING <ls_result> TO ls_info.
 
