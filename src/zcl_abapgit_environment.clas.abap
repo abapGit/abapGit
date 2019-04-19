@@ -7,15 +7,20 @@ CLASS zcl_abapgit_environment DEFINITION
     CLASS-METHODS is_sap_cloud_platform
       RETURNING
         VALUE(rv_cloud) TYPE abap_bool .
+
+    CLASS-METHODS is_merged
+      RETURNING
+        VALUE(rv_is_merged) TYPE abap_bool .
   PROTECTED SECTION.
 
     CLASS-DATA gv_cloud TYPE abap_bool VALUE abap_undefined ##NO_TEXT.
+    CLASS-DATA gv_is_merged TYPE abap_bool VALUE abap_undefined ##NO_TEXT.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ENVIRONMENT IMPLEMENTATION.
+CLASS zcl_abapgit_environment IMPLEMENTATION.
 
 
   METHOD is_sap_cloud_platform.
@@ -33,4 +38,25 @@ CLASS ZCL_ABAPGIT_ENVIRONMENT IMPLEMENTATION.
     rv_cloud = gv_cloud.
 
   ENDMETHOD.
+
+
+  METHOD is_merged.
+
+    DATA lo_marker TYPE REF TO data ##NEEDED.
+
+    IF gv_is_merged = abap_undefined.
+      TRY.
+          CREATE DATA lo_marker TYPE REF TO ('LIF_ABAPMERGE_MARKER')  ##no_text.
+          "No exception --> marker found
+          gv_is_merged = abap_true.
+
+        CATCH cx_sy_create_data_error.
+          gv_is_merged = abap_false.
+      ENDTRY.
+    ENDIF.
+
+    rv_is_merged = gv_is_merged.
+
+  ENDMETHOD.
+
 ENDCLASS.

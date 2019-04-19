@@ -87,7 +87,7 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
         zcx_abapgit_exception .
     METHODS get_possible_hotkey_actions
       RETURNING
-        VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action
+        VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name
       RAISING
         zcx_abapgit_exception .
     METHODS get_default_hotkeys
@@ -108,7 +108,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -119,16 +119,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
   METHOD get_default_hotkeys.
 
-    DATA: lt_actions TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action,
+    DATA: lt_actions TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name,
           ls_hotkey  LIKE LINE OF rt_default_hotkeys.
 
     FIELD-SYMBOLS: <ls_action> LIKE LINE OF lt_actions.
 
-    lt_actions = zcl_abapgit_hotkeys=>get_default_hotkeys_from_pages( ).
+    lt_actions = zcl_abapgit_hotkeys=>get_all_default_hotkeys( ).
 
     LOOP AT lt_actions ASSIGNING <ls_action>.
       ls_hotkey-action   = <ls_action>-action.
-      ls_hotkey-sequence = <ls_action>-default_hotkey.
+      ls_hotkey-hotkey = <ls_action>-hotkey.
       INSERT ls_hotkey INTO TABLE rt_default_hotkeys.
     ENDLOOP.
 
@@ -139,7 +139,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
     DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
 
-    rt_hotkey_actions = zcl_abapgit_hotkeys=>get_default_hotkeys_from_pages( ).
+    rt_hotkey_actions = zcl_abapgit_hotkeys=>get_all_default_hotkeys( ).
 
     " insert empty row at the beginning, so that we can unset a hotkey
     INSERT ls_hotkey_action INTO rt_hotkey_actions INDEX 1.
@@ -315,16 +315,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
            IN <ls_post_field>-name
            SUBMATCHES lv_column.
 
-      INSERT INITIAL LINE INTO TABLE lt_key_bindings ASSIGNING <ls_key_binding>.
       CASE lv_column.
         WHEN 'sequence'.
-          <ls_key_binding>-sequence = <ls_post_field>-value.
+          INSERT INITIAL LINE INTO TABLE lt_key_bindings ASSIGNING <ls_key_binding>.
+          <ls_key_binding>-hotkey = <ls_post_field>-value.
         WHEN 'action'.
           <ls_key_binding>-action = <ls_post_field>-value.
       ENDCASE.
     ENDLOOP.
 
-    DELETE lt_key_bindings WHERE sequence IS INITIAL
+    DELETE lt_key_bindings WHERE hotkey IS INITIAL
                            OR    action IS INITIAL.
 
     mo_settings->set_hotkeys( lt_key_bindings ).
@@ -485,7 +485,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     DATA: lv_index    TYPE i,
           lt_hotkeys  TYPE zif_abapgit_definitions=>tty_hotkey,
           lv_selected TYPE string,
-          lt_actions  TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action.
+          lt_actions  TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name.
 
     FIELD-SYMBOLS: <ls_key_binding> LIKE LINE OF lt_hotkeys,
                    <ls_action>      LIKE LINE OF lt_actions.
@@ -517,7 +517,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
       ro_html->add( '<tr>' ).
       ro_html->add( |<td><input name="key_sequence_{ lv_index }" maxlength=1 type="text" | &&
-                    |value="{ <ls_key_binding>-sequence }"></td>| ).
+                    |value="{ <ls_key_binding>-hotkey }"></td>| ).
 
       ro_html->add( |<td><select name="key_action_{ lv_index }">| ).
 
@@ -556,7 +556,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
     DATA:
       BEGIN OF ls_sel,
-        auto TYPE string,
+        auto  TYPE string,
         large TYPE string,
         small TYPE string,
       END OF ls_sel.

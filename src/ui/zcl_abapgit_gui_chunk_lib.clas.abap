@@ -84,7 +84,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
+CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
 
   METHOD render_branch_span.
@@ -155,42 +155,62 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
   METHOD render_hotkey_overview.
 
-    DATA: lv_hint     TYPE string,
-          lt_hotkeys  TYPE zif_abapgit_definitions=>tty_hotkey,
-          lt_actions  TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action,
-          lo_settings TYPE REF TO zcl_abapgit_settings.
+    DATA: lv_hint                 TYPE string,
+          lt_user_defined_hotkeys TYPE zif_abapgit_definitions=>tty_hotkey,
+          lt_hotkeys_for_page     TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name,
+          lo_settings             TYPE REF TO zcl_abapgit_settings,
+          lv_hotkey               TYPE string.
 
-    FIELD-SYMBOLS: <ls_hotkey> TYPE zif_abapgit_definitions=>ty_hotkey,
-                   <ls_action> LIKE LINE OF lt_actions.
+    FIELD-SYMBOLS:
+      <ls_hotkey>              LIKE LINE OF lt_hotkeys_for_page,
+      <ls_user_defined_hotkey> LIKE LINE OF lt_user_defined_hotkeys.
 
-    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
-    lt_hotkeys  = lo_settings->get_hotkeys( ).
-    lt_actions  = zcl_abapgit_hotkeys=>get_default_hotkeys_from_pages( io_page ).
+    lo_settings             = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+    lt_user_defined_hotkeys = lo_settings->get_hotkeys( ).
+    lt_hotkeys_for_page     = zcl_abapgit_hotkeys=>get_all_default_hotkeys( io_page ).
 
     CREATE OBJECT ro_html.
 
     " Render hotkeys
     ro_html->add( '<ul class="hotkeys">' ).
-    LOOP AT lt_hotkeys ASSIGNING <ls_hotkey>.
+    LOOP AT lt_hotkeys_for_page ASSIGNING <ls_hotkey>.
 
-      READ TABLE lt_actions ASSIGNING <ls_action>
-                            WITH TABLE KEY action
-                            COMPONENTS action = <ls_hotkey>-action.
+      READ TABLE lt_user_defined_hotkeys ASSIGNING <ls_user_defined_hotkey>
+                                         WITH TABLE KEY action
+                                         COMPONENTS action = <ls_hotkey>-action.
       IF sy-subrc = 0.
-        ro_html->add( |<li>|
-          && |<span class="key-id">{ <ls_hotkey>-sequence }</span>|
-          && |<span class="key-descr">{ <ls_action>-name }</span>|
-          && |</li>| ).
+        lv_hotkey = <ls_user_defined_hotkey>-hotkey.
+      ELSE.
+        lv_hotkey = <ls_hotkey>-hotkey.
       ENDIF.
+
+      ro_html->add( |<li>|
+          && |<span class="key-id">{ lv_hotkey }</span>|
+          && |<span class="key-descr">{ <ls_hotkey>-name }</span>|
+          && |</li>| ).
 
     ENDLOOP.
     ro_html->add( '</ul>' ).
 
     " Wrap
-    READ TABLE lt_hotkeys ASSIGNING <ls_hotkey>
-      WITH KEY action = zcl_abapgit_gui_page=>c_global_page_action-showhotkeys.
+    CLEAR: lv_hotkey.
+
+    READ TABLE lt_hotkeys_for_page ASSIGNING <ls_hotkey>
+      WITH TABLE KEY action
+      COMPONENTS action = zcl_abapgit_gui_page=>c_global_page_action-showhotkeys.
     IF sy-subrc = 0.
-      lv_hint = |Close window with '{ <ls_hotkey>-sequence }' or upper right corner 'X'|.
+      lv_hotkey = <ls_hotkey>-hotkey.
+    ENDIF.
+
+    READ TABLE lt_user_defined_hotkeys ASSIGNING <ls_user_defined_hotkey>
+      WITH TABLE KEY action
+      COMPONENTS action = zcl_abapgit_gui_page=>c_global_page_action-showhotkeys.
+    IF sy-subrc = 0.
+      lv_hotkey = <ls_user_defined_hotkey>-hotkey.
+    ENDIF.
+
+    IF lv_hotkey IS NOT INITIAL.
+      lv_hint = |Close window with '{ <ls_hotkey>-hotkey }' or upper right corner 'X'|.
     ENDIF.
 
     ro_html = render_infopanel(
@@ -203,7 +223,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     IF <ls_hotkey> IS ASSIGNED AND zcl_abapgit_hotkeys=>should_show_hint( ) = abap_true.
       ro_html->add( |<div id="hotkeys-hint" class="corner-hint">|
-        && |Press '{ <ls_hotkey>-sequence }' to get keyboard shortcuts list|
+        && |Press '{ <ls_hotkey>-hotkey }' to get keyboard shortcuts list|
         && |</div>| ).
     ENDIF.
 

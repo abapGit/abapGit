@@ -24,7 +24,7 @@ INTERFACE zif_abapgit_definitions
            ty_file_signature WITH UNIQUE KEY path filename .
   TYPES:
     BEGIN OF ty_file.
-          INCLUDE TYPE ty_file_signature.
+      INCLUDE TYPE ty_file_signature.
   TYPES: data TYPE xstring,
          END OF ty_file .
   TYPES:
@@ -60,12 +60,14 @@ INTERFACE zif_abapgit_definitions
     ty_git_tag_list_tt TYPE STANDARD TABLE OF ty_git_tag WITH DEFAULT KEY .
   TYPES:
     BEGIN OF ty_hotkey,
-      sequence TYPE string,
-      action   TYPE string,
+      action TYPE string,
+      hotkey TYPE string,
     END OF ty_hotkey .
   TYPES:
     tty_hotkey TYPE STANDARD TABLE OF ty_hotkey
-                    WITH NON-UNIQUE DEFAULT KEY .
+                    WITH NON-UNIQUE DEFAULT KEY
+                    WITH NON-UNIQUE SORTED KEY action
+                         COMPONENTS action.
   TYPES:
     BEGIN OF ty_git_user,
       name  TYPE string,
@@ -99,7 +101,7 @@ INTERFACE zif_abapgit_definitions
     ty_yes_no TYPE c LENGTH 1 .
   TYPES:
     BEGIN OF ty_overwrite.
-          INCLUDE TYPE ty_item.
+      INCLUDE TYPE ty_item.
   TYPES: decision TYPE ty_yes_no,
          END OF ty_overwrite .
   TYPES:
@@ -202,7 +204,7 @@ INTERFACE zif_abapgit_definitions
     ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY .
   TYPES:
     BEGIN OF ty_tpool.
-          INCLUDE TYPE textpool.
+      INCLUDE TYPE textpool.
   TYPES:   split TYPE c LENGTH 8.
   TYPES: END OF ty_tpool .
   TYPES:
