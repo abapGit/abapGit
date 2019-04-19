@@ -29,7 +29,7 @@ CLASS ltcl_xml DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
         RETURNING
           VALUE(rv_xml) TYPE string.
 
-    DATA: lo_xml TYPE REF TO ltcl_xml_concrete.
+    DATA: mo_xml TYPE REF TO ltcl_xml_concrete.
 
 ENDCLASS.
 
@@ -41,14 +41,14 @@ CLASS ltcl_xml IMPLEMENTATION.
     DATA: lv_xml TYPE string.
 
 
-    CREATE OBJECT lo_xml.
+    CREATE OBJECT mo_xml.
 
     lv_xml = |<?xml version="1.0"?>|
-          && |<{ lo_xml->c_abapgit_tag } { lo_xml->c_attr_version }="{ zif_abapgit_version=>gc_xml_version }">|
+          && |<{ mo_xml->c_abapgit_tag } { mo_xml->c_attr_version }="{ zif_abapgit_version=>gc_xml_version }">|
           && iv_xml
-          && |</{ lo_xml->c_abapgit_tag }>|.
+          && |</{ mo_xml->c_abapgit_tag }>|.
 
-    lo_xml->parse( iv_xml = lv_xml ).
+    mo_xml->parse( iv_xml = lv_xml ).
 
   ENDMETHOD.
 
@@ -77,9 +77,9 @@ CLASS ltcl_xml IMPLEMENTATION.
           li_renderer      TYPE REF TO if_ixml_renderer,
           li_streamfactory TYPE REF TO if_ixml_stream_factory.
 
-    li_element = lo_xml->mi_xml_doc->find_from_path( |/{ lo_xml->c_abapgit_tag }/{ iv_name }| ).
+    li_element = mo_xml->mi_xml_doc->find_from_path( |/{ mo_xml->c_abapgit_tag }/{ iv_name }| ).
 
-    li_streamfactory = lo_xml->mi_ixml->create_stream_factory( ).
+    li_streamfactory = mo_xml->mi_ixml->create_stream_factory( ).
 
     li_ostream = li_streamfactory->create_ostream_cstring( rv_xml ).
 
