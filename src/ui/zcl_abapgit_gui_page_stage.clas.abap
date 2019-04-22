@@ -15,8 +15,9 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
     METHODS:
       constructor
         IMPORTING
-                  io_repo TYPE REF TO zcl_abapgit_repo_online
-                  iv_seed TYPE string OPTIONAL
+                  io_repo                TYPE REF TO zcl_abapgit_repo_online
+                  iv_seed                TYPE string OPTIONAL
+                  iv_filter_by_transport TYPE trkorr OPTIONAL
         RAISING   zcx_abapgit_exception,
       zif_abapgit_gui_event_handler~on_event REDEFINITION.
 
@@ -45,6 +46,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
     DATA ms_files TYPE zif_abapgit_definitions=>ty_stage_files .
     DATA mv_seed TYPE string .   " Unique page id to bind JS sessionStorage
     DATA mv_filter_value TYPE string.
+    DATA mv_filter_by_transport TYPE trkorr.
 
     METHODS find_changed_by
       IMPORTING
@@ -89,7 +91,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -114,6 +116,23 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     mo_repo               = io_repo.
     ms_files              = zcl_abapgit_factory=>get_stage_logic( )->get( mo_repo ).
     mv_seed               = iv_seed.
+
+    mv_filter_by_transport = iv_filter_by_transport.
+
+    IF mv_filter_by_transport IS NOT INITIAL.
+      DATA(li_cts) = zcl_abapgit_factory=>get_cts_api( ).
+      LOOP AT ms_files-local ASSIGNING FIELD-SYMBOL(<ls_file>).
+        ##TODO. " Code Duplication with later find_transports
+        TRY.
+            IF li_cts->get_current_transport_for_obj(
+                 iv_object_type = <ls_file>-item-obj_type
+                 iv_object_name = <ls_file>-item-obj_name ) <> mv_filter_by_transport.
+              DELETE ms_files-local USING KEY loop_key.
+            ENDIF.
+          CATCH zcx_abapgit_exception ##TODO.
+        ENDTRY.
+      ENDLOOP.
+    ENDIF.
 
     IF mv_seed IS INITIAL. " Generate based on time unless obtained from diff page
       GET TIME STAMP FIELD lv_ts.
@@ -188,9 +207,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
   METHOD get_page_patch.
 
-    DATA: lo_page   TYPE REF TO zcl_abapgit_gui_page_diff,
-          lv_key    TYPE zif_abapgit_persistence=>ty_repo-key,
-          lo_stage  TYPE REF TO zcl_abapgit_stage.
+    DATA: lo_page  TYPE REF TO zcl_abapgit_gui_page_diff,
+          lv_key   TYPE zif_abapgit_persistence=>ty_repo-key,
+          lo_stage TYPE REF TO zcl_abapgit_stage.
 
     zcl_abapgit_html_action_utils=>file_obj_decode(
       EXPORTING

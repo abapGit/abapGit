@@ -68,7 +68,8 @@ CLASS zcl_abapgit_gui_page_transport IMPLEMENTATION.
         mo_repo->set_branch_name( zcl_abapgit_git_branch_list=>complete_heads_branch_name( iv_getdata ) ).
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_stage
           EXPORTING
-            io_repo = mo_repo.
+            io_repo                = mo_repo
+            iv_filter_by_transport = CONV #( iv_getdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
 
       WHEN c_action-revert_transport.
