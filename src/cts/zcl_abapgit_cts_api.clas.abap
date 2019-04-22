@@ -115,4 +115,53 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
   METHOD zif_abapgit_cts_api~is_chrec_possible_for_package.
     rv_possible = zcl_abapgit_factory=>get_sap_package( iv_package )->are_changes_recorded_in_tr_req( ).
   ENDMETHOD.
+
+  METHOD zif_abapgit_cts_api~get_current_trs_for_objs.
+    FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects,
+                   <ls_new>    LIKE LINE OF rt_objects.
+    DATA: ls_new_line LIKE LINE OF rt_objects.
+
+    LOOP AT it_objects ASSIGNING <ls_object>.
+      TRY.
+          CLEAR ls_new_line.
+          MOVE-CORRESPONDING <ls_object> TO ls_new_line.
+          INSERT ls_new_line INTO TABLE rt_objects ASSIGNING <ls_new>.
+          <ls_new>-transport = zif_abapgit_cts_api~get_current_transport_for_obj(
+            iv_program_id  = ls_new_line-program_id
+            iv_object_type = ls_new_line-object_type
+            iv_object_name = ls_new_line-object_name
+          ).
+        CATCH zcx_abapgit_exception ##NO_HANDLER.
+      ENDTRY.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_cts_api~get_request_header.
+    DATA: ls_request TYPE trwbo_request.
+
+    CALL FUNCTION 'TR_READ_REQUEST'
+      EXPORTING
+        iv_read_e07t     = abap_true
+        iv_read_e070     = abap_true
+        iv_trkorr        = iv_transport
+      CHANGING
+        cs_request       = ls_request
+      EXCEPTIONS
+        error_occured    = 1
+        no_authorization = 2
+        OTHERS           = 3.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    rs_header-transport = ls_request-h-trkorr.
+    rs_header-owner = ls_request-h-as4user.
+    rs_header-changed_date = ls_request-h-as4date.
+    rs_header-changed_time = ls_request-h-as4time.
+    rs_header-text = ls_request-h-as4text.
+    rs_header-source_client = ls_request-h-client.
+    rs_header-target_client = ls_request-h-tarclient.
+    rs_header-layer = ls_request-h-tarlayer.
+    rs_header-target_system = ls_request-h-tarsystem.
+  ENDMETHOD.
 ENDCLASS.
