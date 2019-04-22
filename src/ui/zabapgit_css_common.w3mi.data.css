@@ -53,7 +53,7 @@ input:focus, textarea:focus {
 .attention        { color: red        !important; }
 .error            { color: #d41919    !important; }
 .warning          { color: #efb301    !important; }
-.success          { color: green   	  !important; }
+.success          { color: green      !important; }
 .blue             { color: #5e8dc9    !important; }
 .red              { color: red        !important; }
 .white            { color: white      !important; }
@@ -302,6 +302,35 @@ table.repo_tab {
 }
 .repo_tab .inactive       { color: orange; }
 
+table.repo_transport_tab {
+  border: 1px solid #DDD;
+  border-radius: 3px;
+  background: #fff;
+  width: 100%;
+}
+
+table.repo_transport_tab th {
+  text-align: left;
+  padding-left: 0.5em;
+  padding-right: 0,5em;
+}
+
+table.repo_transport_tab tr.transport {
+  background: #EEE;
+}
+
+table.repo_transport_tab tr.transport td {
+  padding-top: 5px;
+  padding-bottom: 5px;
+  padding-left: 0.5em;
+  padding-right: 0,5em;
+}
+
+table.repo_transport_tab table.repo_tab {
+  border: 0px !important;
+  border-radius: 0px !important;
+}
+
 /* STAGE */
 div.stage-container { width: 850px; }
 input.stage-filter { width: 18em; }
@@ -492,7 +521,7 @@ table.diff_tab {
   font-size: 10pt;
   width: 100%;
 }
-table.diff_tab td,th {
+table.diff_tab td {
   color: #444;
   padding-left: 0.5em;
   padding-right: 0.5em;
@@ -502,6 +531,9 @@ table.diff_tab th {
   font-weight: normal;
   padding-top: 3px;
   padding-bottom: 3px;
+  color: #444;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
 }
 table.diff_tab thead.header th {
   color: #EEE;
