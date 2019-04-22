@@ -112,7 +112,7 @@ CLASS zcl_abapgit_xml IMPLEMENTATION.
 
         CALL FUNCTION 'POPUP_TO_INFORM'
           EXPORTING
-            titel = |Error from XML parser|   "#EC NOTEXT
+            titel = 'Error from XML parser'   "#EC NOTEXT
             txt1  = lv_txt1
             txt2  = lv_txt2
             txt3  = lv_txt3
