@@ -165,12 +165,12 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     ASSERT iv_text IS SUPPLIED OR iv_xdata IS SUPPLIED.
 
     IF iv_text IS SUPPLIED. " String input
-      lv_xstr = zcl_abapgit_string_utils=>string_to_xstring( iv_text ).
+      lv_xstr = zcl_abapgit_convert=>string_to_xstring( iv_text ).
     ELSE. " Raw input
       lv_xstr = iv_xdata.
     ENDIF.
 
-    zcl_abapgit_string_utils=>xstring_to_bintab(
+    zcl_abapgit_convert=>xstring_to_bintab(
       EXPORTING
         iv_xstr   = lv_xstr
       IMPORTING
