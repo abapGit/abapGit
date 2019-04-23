@@ -158,9 +158,7 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
     DATA ls_asset TYPE zif_abapgit_gui_asset_manager~ty_web_asset.
     ls_asset = me->zif_abapgit_gui_asset_manager~get_asset( iv_url ).
 
-    rv_asset = cl_bcs_convert=>xstring_to_string(
-      iv_xstr = ls_asset-content
-      iv_cp   = '4110' ). " UTF8
+    rv_asset = zcl_abapgit_convert=>xstring_to_string_utf8( ls_asset-content ).
 
   ENDMETHOD.
 ENDCLASS.
