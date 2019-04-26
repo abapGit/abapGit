@@ -197,7 +197,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
       <ls_men> TYPE rsmpe_men.
 
     IF cs_adm IS NOT INITIAL
-    AND cs_adm-actcode <> 'X'. "Fix 26-04-2019 : somehow an 'X' value is found in ACTCODE and has to be fixed by this method, the RS_CUA_INTERNAL_WRITE fail with sy-subrc = 2
+    AND cs_adm-actcode <> 'X'. "Allow 'X' values to be fixed as well
       RETURN.
     ENDIF.
 
