@@ -58,13 +58,15 @@ CLASS zcl_abapgit_gui_page_transport IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
+    DATA: lv_branch TYPE string.
+
     CASE iv_action.
       WHEN c_action-create_branch.
-        DATA(lv_branch) = create_branch_for_transport( CONV #( iv_getdata ) ).
+        lv_branch = create_branch_for_transport( CONV #( iv_getdata ) ).
         MESSAGE |Created branch '{ lv_branch }'.| TYPE 'S'.
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+
       WHEN c_action-commit_transport.
-        DATA(lv_previous_branch) = mo_repo->get_branch_name( ).
         mo_repo->set_branch_name( zcl_abapgit_git_branch_list=>complete_heads_branch_name( iv_getdata ) ).
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_stage
           EXPORTING
@@ -81,16 +83,19 @@ CLASS zcl_abapgit_gui_page_transport IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD create_branch_for_transport.
-    DATA(lv_current_branch) = mo_repo->get_branch_name( ).
-    DATA(lv_new_branch) = to_upper( iv_transport ). " branch name = transport request for now
+    DATA: lv_current_branch TYPE zif_abapgit_persistence=>ty_repo-branch_name,
+          lv_new_branch     TYPE string,
+          lv_answer         TYPE char1.
+
+    lv_current_branch = mo_repo->get_branch_name( ).
+    lv_new_branch = to_upper( iv_transport ). " branch name = transport request for now
     IF lv_new_branch IS INITIAL.
       zcx_abapgit_exception=>raise( 'Could not determine branch name for transport.' ).
     ENDIF.
 
-    DATA(lv_answer) = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
+    lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
       iv_titlebar      = 'Continue?'
-      iv_text_question = |A new branch '{ lv_new_branch }' will be created based on 'master'. Continue?|
-    ).
+      iv_text_question = |A new branch '{ lv_new_branch }' will be created based on 'master'. Continue?| ).
 
     IF lv_answer <> '1'.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
