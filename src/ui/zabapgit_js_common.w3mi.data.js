@@ -207,6 +207,24 @@ function toggleRepoListDetail() {
 }
 
 /**********************************************************
+ * Transport Overview Logic
+ **********************************************************/
+function toggleTransportChildren(transport, sender) {
+  var transportTab = document.getElementById("repo_tab_" + transport);
+  if (transportTab) {
+    transportTab.style.display = transportTab.style.display === "none" ? "" : "none";
+    for (var i = 0; i < sender.childNodes.length; i++) {
+      var child = sender.childNodes[i];
+      if (child.className === "icon icon-plus-square") {
+        child.className = "icon icon-minus-square"
+      } else if (child.className === "icon icon-minus-square") {
+        child.className = "icon icon-plus-square"
+      }
+    }
+  }
+}
+
+/**********************************************************
  * STAGE PAGE Logic
  **********************************************************/
 

@@ -45,7 +45,9 @@
 .icon-fire-alt:before { content: "\f110"; }
 .icon-folder:before { content: "\f111"; }
 .icon-lock:before { content: "\f112"; }
-.icon-plug:before { content: "\f113"; }
-.icon-sliders-h:before { content: "\f114"; }
-.icon-snowflake:before { content: "\f115"; }
-.icon-star:before { content: "\f116"; }
+.icon-minus-square:before { content: "\f113"; }
+.icon-plug:before { content: "\f114"; }
+.icon-plus-square:before { content: "\f115"; }
+.icon-sliders-h:before { content: "\f116"; }
+.icon-snowflake:before { content: "\f117"; }
+.icon-star:before { content: "\f118"; }

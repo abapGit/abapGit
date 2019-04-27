@@ -326,6 +326,10 @@ table.repo_transport_tab tr.transport td {
   padding-right: 0,5em;
 }
 
+table.repo_transport_tab tr.transport td.toggle {
+  width: 1em;
+}
+
 table.repo_transport_tab table.repo_tab {
   border: 0px !important;
   border-radius: 0px !important;

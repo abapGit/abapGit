@@ -657,6 +657,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
   METHOD render_transport.
     DATA: lv_link    TYPE string,
+          lv_toggle  TYPE string,
           lv_actions TYPE string,
           lo_actions TYPE REF TO zcl_abapgit_html_toolbar.
 
@@ -668,6 +669,10 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     lv_link = zcl_abapgit_html=>a(
           iv_txt = |{ is_item-transport }|
           iv_act = |{ zif_abapgit_definitions=>c_action-jump_transport }?| && is_item-transport ).
+
+    lv_toggle = zcl_abapgit_html=>a( iv_txt = zcl_abapgit_html=>icon( iv_name = 'minus-square' iv_hint = 'Toggle' )
+                                     iv_act = |toggleTransportChildren('{ is_item-transport }', this)|
+                                     iv_typ = zif_abapgit_html=>c_action_type-onclick ).
 
     IF is_item-tr_branch IS INITIAL.
       lo_actions->add(
@@ -681,8 +686,9 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    ro_html->add( |<tr class="transport"><td>{ lv_link }</td><td>{ is_item-tr_description }</td><td>| &&
-                  |{ is_item-tr_owner }</td><td>{ is_item-tr_target }</td><td>{ is_item-tr_branch }</td><td>| ).
+    ro_html->add( |<tr class="transport"><td class="toggle">{ lv_toggle }</td><td>{ lv_link }</td>| &&
+                  |<td>{ is_item-tr_description }</td><td>{ is_item-tr_owner }</td>| &&
+                  |<td>{ is_item-tr_target }</td><td>{ is_item-tr_branch }</td><td>| ).
     ro_html->add( lo_actions->render( ) ).
     ro_html->add( |</td></tr>| ).
   ENDMETHOD.
@@ -748,7 +754,8 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
           lv_max_str           TYPE string,
           lv_add_str           TYPE string,
           li_log               TYPE REF TO zif_abapgit_log,
-          lv_render_transports TYPE abap_bool.
+          lv_render_transports TYPE abap_bool,
+          lv_last_transport    TYPE trkorr.
 
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
@@ -844,12 +851,13 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
         ELSEIF mv_display_mode = c_display_modes-transports.
           ro_html->add( |<table class="repo_transport_tab">| ).
-          ro_html->add( |<tr><th>Transport</th><th>Description</th><th>Owner</th><th>Target</th><th>Branch</th>| &&
-                        |<th>Actions</th></tr>| ).
+          ro_html->add( |<tr><th></th><th>Transport</th><th>Description</th><th>Owner</th><th>Target</th>| &&
+                        |<th>Branch</th><th>Actions</th></tr>| ).
           DATA(lv_content_started) = abap_false.
           LOOP AT lt_repo_items ASSIGNING <ls_item>.
             IF <ls_item>-is_transport = abap_false AND lv_content_started = abap_false.
-              ro_html->add( '<tr><td colspan="6"><table class="repo_tab fixed_columns">' ).
+              ro_html->add( |<tr><td colspan="7">| ).
+              ro_html->add( |<table class="repo_tab fixed_columns" id="repo_tab_{ lv_last_transport }">| ).
               lv_content_started = abap_true.
             ELSEIF <ls_item>-is_transport = abap_true AND lv_content_started = abap_true.
               ro_html->add( |</table></td></tr>| ).
@@ -857,6 +865,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
             ENDIF.
 
             IF <ls_item>-is_transport = abap_true.
+              lv_last_transport = <ls_item>-transport.
               ro_html->add( render_transport( <ls_item> ) ).
             ELSE.
               ro_html->add( render_item( is_item = <ls_item> iv_render_transports = lv_render_transports ) ).
