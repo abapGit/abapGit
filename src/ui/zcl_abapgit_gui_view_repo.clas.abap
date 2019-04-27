@@ -76,6 +76,16 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
+      render_repo
+        IMPORTING it_repo_items  TYPE zif_abapgit_definitions=>tt_repo_items
+                  iv_lstate      TYPE char1
+                  iv_rstate      TYPE char1
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        RAISING   zcx_abapgit_exception,
+      render_repo_for_transports
+        IMPORTING it_repo_items  TYPE zif_abapgit_definitions=>tt_repo_items
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        RAISING   zcx_abapgit_exception,
       get_item_class
         IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
         RETURNING VALUE(rv_html) TYPE string,
@@ -745,17 +755,12 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA: lt_repo_items        TYPE zif_abapgit_definitions=>tt_repo_items,
-          lo_browser           TYPE REF TO zcl_abapgit_repo_content_list,
-          lx_error             TYPE REF TO zcx_abapgit_exception,
-          lv_lstate            TYPE char1,
-          lv_rstate            TYPE char1,
-          lv_max               TYPE abap_bool,
-          lv_max_str           TYPE string,
-          lv_add_str           TYPE string,
-          li_log               TYPE REF TO zif_abapgit_log,
-          lv_render_transports TYPE abap_bool,
-          lv_last_transport    TYPE trkorr.
+    DATA: lt_repo_items TYPE zif_abapgit_definitions=>tt_repo_items,
+          lo_browser    TYPE REF TO zcl_abapgit_repo_content_list,
+          lx_error      TYPE REF TO zcx_abapgit_exception,
+          lv_lstate     TYPE char1,
+          lv_rstate     TYPE char1,
+          li_log        TYPE REF TO zif_abapgit_log.
 
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
@@ -766,10 +771,6 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     CREATE OBJECT ro_html TYPE zcl_abapgit_html.
 
     TRY.
-
-        lv_render_transports = zcl_abapgit_factory=>get_cts_api(
-          )->is_chrec_possible_for_package( mo_repo->get_package( ) ).
-
         CREATE OBJECT lo_browser
           EXPORTING
             io_repo = mo_repo.
@@ -802,81 +803,11 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
         ro_html->add( '<div class="repo_container">' ).
 
         IF mv_display_mode = c_display_modes-branch.
-
-          " Offline match banner
-          IF mo_repo->is_offline( ) = abap_true AND mo_repo->has_remote_source( ) = abap_true
-            AND lv_lstate IS INITIAL AND lv_rstate IS INITIAL.
-            ro_html->add(
-              |<div class="repo_banner panel success">|
-              && |ZIP source is attached and completely <b>matches</b> to the local state|
-              && |</div>| ).
-          ENDIF.
-
-          " Repo content table
-          ro_html->add( '<table class="repo_tab">' ).
-
-          IF zcl_abapgit_path=>is_root( mv_cur_dir ) = abap_false.
-            ro_html->add( render_parent_dir( ) ).
-          ENDIF.
-
-          IF lines( lt_repo_items ) = 0.
-            ro_html->add( render_empty_package( ) ).
-          ELSE.
-            LOOP AT lt_repo_items ASSIGNING <ls_item>.
-              IF mv_max_lines > 0 AND sy-tabix > mv_max_lines.
-                lv_max = abap_true.
-                EXIT. " current loop
-              ENDIF.
-              ro_html->add( render_item( is_item = <ls_item> iv_render_transports = lv_render_transports ) ).
-            ENDLOOP.
-          ENDIF.
-
-          ro_html->add( '</table>' ).
-
-          IF lv_max = abap_true.
-            ro_html->add( '<div class = "dummydiv">' ).
-            IF mv_max_lines = 1.
-              lv_max_str = '1 object'.
-            ELSE.
-              lv_max_str = |first { mv_max_lines } objects|.
-            ENDIF.
-            lv_add_str = |+{ mv_max_setting }|.
-            ro_html->add( |Only { lv_max_str } shown in list. Display {
-              zcl_abapgit_html=>a( iv_txt = lv_add_str iv_act = c_actions-display_more )
-              } more. (Set in Advanced > {
-              zcl_abapgit_html=>a( iv_txt = 'Settings' iv_act = zif_abapgit_definitions=>c_action-go_settings )
-              } )| ).
-            ro_html->add( '</div>' ).
-          ENDIF.
-
+          ro_html->add( render_repo( it_repo_items = lt_repo_items
+                                     iv_lstate     = lv_lstate
+                                     iv_rstate     = lv_rstate ) ).
         ELSEIF mv_display_mode = c_display_modes-transports.
-          ro_html->add( |<table class="repo_transport_tab">| ).
-          ro_html->add( |<tr><th></th><th>Transport</th><th>Description</th><th>Owner</th><th>Target</th>| &&
-                        |<th>Branch</th><th>Actions</th></tr>| ).
-          DATA(lv_content_started) = abap_false.
-          LOOP AT lt_repo_items ASSIGNING <ls_item>.
-            IF <ls_item>-is_transport = abap_false AND lv_content_started = abap_false.
-              ro_html->add( |<tr><td colspan="7">| ).
-              ro_html->add( |<table class="repo_tab fixed_columns" id="repo_tab_{ lv_last_transport }">| ).
-              lv_content_started = abap_true.
-            ELSEIF <ls_item>-is_transport = abap_true AND lv_content_started = abap_true.
-              ro_html->add( |</table></td></tr>| ).
-              lv_content_started = abap_false.
-            ENDIF.
-
-            IF <ls_item>-is_transport = abap_true.
-              lv_last_transport = <ls_item>-transport.
-              ro_html->add( render_transport( <ls_item> ) ).
-            ELSE.
-              ro_html->add( render_item( is_item = <ls_item> iv_render_transports = lv_render_transports ) ).
-            ENDIF.
-          ENDLOOP.
-
-          IF lv_content_started = abap_true.
-            ro_html->add( |</table></td></tr>| ).
-            lv_content_started = abap_false.
-          ENDIF.
-          ro_html->add( |</table>| ).
+          ro_html->add( render_repo_for_transports( lt_repo_items ) ).
         ENDIF.
 
         ro_html->add( '</div>' ).
@@ -886,5 +817,100 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
         ro_html->add( zcl_abapgit_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
     ENDTRY.
 
+  ENDMETHOD.
+
+  METHOD render_repo.
+    DATA: lv_max               TYPE abap_bool,
+          lv_max_str           TYPE string,
+          lv_add_str           TYPE string,
+          lv_render_transports TYPE abap_bool.
+    FIELD-SYMBOLS: <ls_item> LIKE LINE OF it_repo_items.
+
+    CREATE OBJECT ro_html.
+
+    lv_render_transports = zcl_abapgit_factory=>get_cts_api(
+      )->is_chrec_possible_for_package( mo_repo->get_package( ) ).
+
+    " Offline match banner
+    IF mo_repo->is_offline( ) = abap_true AND mo_repo->has_remote_source( ) = abap_true
+      AND iv_lstate IS INITIAL AND iv_rstate IS INITIAL.
+      ro_html->add(
+        |<div class="repo_banner panel success">|
+        && |ZIP source is attached and completely <b>matches</b> to the local state|
+        && |</div>| ).
+    ENDIF.
+
+    " Repo content table
+    ro_html->add( '<table class="repo_tab">' ).
+
+    IF zcl_abapgit_path=>is_root( mv_cur_dir ) = abap_false.
+      ro_html->add( render_parent_dir( ) ).
+    ENDIF.
+
+    IF lines( it_repo_items ) = 0.
+      ro_html->add( render_empty_package( ) ).
+    ELSE.
+      LOOP AT it_repo_items ASSIGNING <ls_item>.
+        IF mv_max_lines > 0 AND sy-tabix > mv_max_lines.
+          lv_max = abap_true.
+          EXIT. " current loop
+        ENDIF.
+        ro_html->add( render_item( is_item = <ls_item> iv_render_transports = lv_render_transports ) ).
+      ENDLOOP.
+    ENDIF.
+
+    ro_html->add( '</table>' ).
+
+    IF lv_max = abap_true.
+      ro_html->add( '<div class = "dummydiv">' ).
+      IF mv_max_lines = 1.
+        lv_max_str = '1 object'.
+      ELSE.
+        lv_max_str = |first { mv_max_lines } objects|.
+      ENDIF.
+      lv_add_str = |+{ mv_max_setting }|.
+      ro_html->add( |Only { lv_max_str } shown in list. Display {
+        zcl_abapgit_html=>a( iv_txt = lv_add_str iv_act = c_actions-display_more )
+        } more. (Set in Advanced > {
+        zcl_abapgit_html=>a( iv_txt = 'Settings' iv_act = zif_abapgit_definitions=>c_action-go_settings )
+        } )| ).
+      ro_html->add( '</div>' ).
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD render_repo_for_transports.
+    DATA: lv_content_started TYPE abap_bool,
+          lv_last_transport  TYPE trkorr.
+    FIELD-SYMBOLS: <ls_item> LIKE LINE OF it_repo_items.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( |<table class="repo_transport_tab">| ).
+    ro_html->add( |<tr><th></th><th>Transport</th><th>Description</th><th>Owner</th><th>Target</th>| &&
+                  |<th>Branch</th><th>Actions</th></tr>| ).
+
+    LOOP AT it_repo_items ASSIGNING <ls_item>.
+      IF <ls_item>-is_transport = abap_false AND lv_content_started = abap_false.
+        ro_html->add( |<tr><td colspan="7">| ).
+        ro_html->add( |<table class="repo_tab fixed_columns" id="repo_tab_{ lv_last_transport }">| ).
+        lv_content_started = abap_true.
+      ELSEIF <ls_item>-is_transport = abap_true AND lv_content_started = abap_true.
+        ro_html->add( |</table></td></tr>| ).
+        lv_content_started = abap_false.
+      ENDIF.
+
+      IF <ls_item>-is_transport = abap_true.
+        lv_last_transport = <ls_item>-transport.
+        ro_html->add( render_transport( <ls_item> ) ).
+      ELSE.
+        ro_html->add( render_item( is_item = <ls_item> iv_render_transports = abap_true ) ).
+      ENDIF.
+    ENDLOOP.
+
+    IF lv_content_started = abap_true.
+      ro_html->add( |</table></td></tr>| ).
+      lv_content_started = abap_false.
+    ENDIF.
+    ro_html->add( |</table>| ).
   ENDMETHOD.
 ENDCLASS.
