@@ -298,15 +298,17 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
         <ls_transport_item>-sortkey = c_sortkey-default.
         <ls_transport_item>-path = lv_current_transport.
         <ls_transport_item>-is_transport = abap_true.
-        <ls_transport_item>-transport = lv_current_transport.
+        <ls_transport_item>-cts_info-transport = lv_current_transport.
         <ls_transport_item>-changes = 0.
 
         ls_request_header = li_cts->get_request_header( lv_current_transport ).
-        <ls_transport_item>-tr_owner = ls_request_header-owner.
-        <ls_transport_item>-tr_description = ls_request_header-text.
-        <ls_transport_item>-tr_target = ls_request_header-target_system &&
-                                        |{ COND #( WHEN ls_request_header-target_client IS NOT INITIAL
-                                                   THEN |.{ ls_request_header-target_client }| ) }|.
+        <ls_transport_item>-cts_info-owner = ls_request_header-owner.
+        <ls_transport_item>-cts_info-description = ls_request_header-text.
+        <ls_transport_item>-cts_info-target = ls_request_header-target_system.
+        IF ls_request_header-target_client IS NOT INITIAL.
+          <ls_transport_item>-cts_info-target = <ls_transport_item>-cts_info-target &&
+                                                |.{ ls_request_header-target_client }|.
+        ENDIF.
 
         " Assume branch name = transport request number for now TODO
         lv_branch_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name( to_upper( lv_current_transport ) ).
@@ -319,11 +321,11 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
         IF sy-subrc = 0.
           " A branch exists for this transport, show uncommitted changes to this branch
           lo_repo_online->set_branch_name( lv_branch_name ).
-          <ls_transport_item>-tr_branch = to_upper( lv_current_transport ).
+          <ls_transport_item>-cts_info-branch = to_upper( lv_current_transport ).
         ELSE.
           " A branch does not exist for this transport, show all changes compared to target branch (~=master)
           lo_repo_online->set_branch_name( lv_target_branch ).
-          <ls_transport_item>-tr_branch = space.
+          <ls_transport_item>-cts_info-branch = space.
         ENDIF.
 
         " This calculates the whole status, should be filtered by objects in the transport instead TODO

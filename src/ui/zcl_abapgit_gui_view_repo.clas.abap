@@ -666,39 +666,41 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD render_transport.
-    DATA: lv_link    TYPE string,
-          lv_toggle  TYPE string,
-          lv_actions TYPE string,
-          lo_actions TYPE REF TO zcl_abapgit_html_toolbar.
+    DATA: lv_link     TYPE string,
+          lv_toggle   TYPE string,
+          lv_actions  TYPE string,
+          lo_actions  TYPE REF TO zcl_abapgit_html_toolbar,
+          ls_cts_info TYPE zif_abapgit_definitions=>ty_repo_item_cts_info.
 
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_actions.
 
     ASSERT is_item-is_transport = abap_true.
+    ls_cts_info = is_item-cts_info.
 
     lv_link = zcl_abapgit_html=>a(
-          iv_txt = |{ is_item-transport }|
-          iv_act = |{ zif_abapgit_definitions=>c_action-jump_transport }?| && is_item-transport ).
+          iv_txt = |{ is_item-cts_info-transport }|
+          iv_act = |{ zif_abapgit_definitions=>c_action-jump_transport }?| && ls_cts_info-transport ).
 
     lv_toggle = zcl_abapgit_html=>a( iv_txt = zcl_abapgit_html=>icon( iv_name = 'minus-square' iv_hint = 'Toggle' )
-                                     iv_act = |toggleTransportChildren('{ is_item-transport }', this)|
+                                     iv_act = |toggleTransportChildren('{ ls_cts_info-transport }', this)|
                                      iv_typ = zif_abapgit_html=>c_action_type-onclick ).
 
-    IF is_item-tr_branch IS INITIAL.
+    IF ls_cts_info-branch IS INITIAL.
       lo_actions->add(
         iv_txt = 'Create branch'
-        iv_act = |{ zcl_abapgit_gui_page_transport=>c_action-create_branch }?{ is_item-transport }| ).
+        iv_act = |{ zcl_abapgit_gui_page_transport=>c_action-create_branch }?{ ls_cts_info-transport }| ).
     ELSE.
       IF is_item-lstate <> zif_abapgit_definitions=>c_state-unchanged.
         lo_actions->add(
           iv_txt = 'Stage'
-          iv_act = |{ zcl_abapgit_gui_page_transport=>c_action-commit_transport }?{ is_item-transport }| ).
+          iv_act = |{ zcl_abapgit_gui_page_transport=>c_action-commit_transport }?{ ls_cts_info-transport }| ).
       ENDIF.
     ENDIF.
 
     ro_html->add( |<tr class="transport"><td class="toggle">{ lv_toggle }</td><td>{ lv_link }</td>| &&
-                  |<td>{ is_item-tr_description }</td><td>{ is_item-tr_owner }</td>| &&
-                  |<td>{ is_item-tr_target }</td><td>{ is_item-tr_branch }</td><td>| ).
+                  |<td>{ ls_cts_info-description }</td><td>{ ls_cts_info-owner }</td>| &&
+                  |<td>{ ls_cts_info-target }</td><td>{ ls_cts_info-branch }</td><td>| ).
     ro_html->add( lo_actions->render( ) ).
     ro_html->add( |</td></tr>| ).
   ENDMETHOD.
@@ -900,7 +902,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       ENDIF.
 
       IF <ls_item>-is_transport = abap_true.
-        lv_last_transport = <ls_item>-transport.
+        lv_last_transport = <ls_item>-cts_info-transport.
         ro_html->add( render_transport( <ls_item> ) ).
       ELSE.
         ro_html->add( render_item( is_item = <ls_item> iv_render_transports = abap_true ) ).

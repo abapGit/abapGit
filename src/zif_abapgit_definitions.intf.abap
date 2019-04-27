@@ -315,24 +315,27 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     tt_merge_conflict TYPE STANDARD TABLE OF ty_merge_conflict WITH DEFAULT KEY .
   TYPES:
+    BEGIN OF ty_repo_item_cts_info,
+      transport   TYPE trkorr,
+      owner       TYPE syuname,
+      description TYPE trordertxt,
+      target      TYPE string,
+      branch      TYPE string,
+    END OF ty_repo_item_cts_info,
     BEGIN OF ty_repo_item,
-      obj_type       TYPE tadir-object,
-      obj_name       TYPE tadir-obj_name,
-      inactive       TYPE abap_bool,
-      sortkey        TYPE i,
-      path           TYPE string,
-      is_dir         TYPE abap_bool,
-      changes        TYPE i,
-      lstate         TYPE char1,
-      rstate         TYPE char1,
-      files          TYPE tt_repo_files,
-      is_transport   TYPE abap_bool,
-      transport      TYPE trkorr,
-      tr_owner       TYPE syuname,
-      tr_description TYPE trordertxt,
-      tr_target      TYPE string,
-      tr_branch      TYPE string,
-    END OF ty_repo_item .
+      obj_type     TYPE tadir-object,
+      obj_name     TYPE tadir-obj_name,
+      inactive     TYPE abap_bool,
+      sortkey      TYPE i,
+      path         TYPE string,
+      is_dir       TYPE abap_bool,
+      is_transport TYPE abap_bool,
+      changes      TYPE i,
+      lstate       TYPE char1,
+      rstate       TYPE char1,
+      files        TYPE tt_repo_files,
+      cts_info     TYPE ty_repo_item_cts_info,
+    END OF ty_repo_item.
   TYPES:
     tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY .
   TYPES:
