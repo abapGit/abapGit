@@ -849,7 +849,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
           DATA(lv_content_started) = abap_false.
           LOOP AT lt_repo_items ASSIGNING <ls_item>.
             IF <ls_item>-is_transport = abap_false AND lv_content_started = abap_false.
-              ro_html->add( '<tr><td colspan="6"><table class="repo_tab">' ).
+              ro_html->add( '<tr><td colspan="6"><table class="repo_tab fixed_columns">' ).
               lv_content_started = abap_true.
             ELSEIF <ls_item>-is_transport = abap_true AND lv_content_started = abap_true.
               ro_html->add( |</table></td></tr>| ).

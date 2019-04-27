@@ -331,6 +331,27 @@ table.repo_transport_tab table.repo_tab {
   border-radius: 0px !important;
 }
 
+table.repo_tab.fixed_columns {
+  table-layout: fixed;
+}
+table.repo_tab.fixed_columns td.icon {
+  width: 1em;
+}
+table.repo_tab.fixed_columns td.type {
+  width: 3em;
+}
+table.repo_tab.fixed_columns td.object {
+  width: 24em;
+}
+table.repo_tab.fixed_columns td.files {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+table.repo_tab.fixed_columns td.cmd {
+  width: 6em;
+}
+
 /* STAGE */
 div.stage-container { width: 850px; }
 input.stage-filter { width: 18em; }
