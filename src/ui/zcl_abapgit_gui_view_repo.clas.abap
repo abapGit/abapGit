@@ -565,17 +565,20 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
   METHOD render_item_command.
 
-    DATA: lv_difflink TYPE string,
-          ls_file     LIKE LINE OF is_item-files.
+    DATA: lv_difflink       TYPE string,
+          ls_file           LIKE LINE OF is_item-files,
+          lv_dir_span_class TYPE string.
 
     CREATE OBJECT ro_html.
 
-    IF is_item-is_dir = abap_true. " Directory
-
+    IF is_item-is_dir = abap_true OR is_item-is_transport = abap_true. " Directory / transport
+      IF is_item-is_dir = abap_true.
+        lv_dir_span_class = 'grey'.
+      ENDIF.
       ro_html->add( '<div>' ).
-      ro_html->add( |<span class="grey">{ is_item-changes } changes</span>| ).
+      ro_html->add( |<span class="{ lv_dir_span_class }">{ is_item-changes } changes</span>| ).
       ro_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_item-lstate
-                                                          iv_rstate = is_item-rstate ) ).
+                                                                  iv_rstate = is_item-rstate ) ).
       ro_html->add( '</div>' ).
 
     ELSEIF is_item-changes > 0.
@@ -706,6 +709,8 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
                   |<td>{ ls_cts_info-description }</td><td>{ ls_cts_info-owner }</td>| &&
                   |<td>{ ls_cts_info-target }</td><td>{ ls_cts_info-branch }</td><td>| ).
     ro_html->add( lo_actions->render( ) ).
+    ro_html->add( |</td><td class="cmd">| ).
+    ro_html->add( render_item_command( is_item ) ).
     ro_html->add( |</td></tr>| ).
   ENDMETHOD.
 
@@ -897,11 +902,11 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     ro_html->add( |<table class="repo_transport_tab">| ).
     ro_html->add( |<tr><th></th><th>Transport</th><th>Description</th><th>Owner</th><th>Target</th>| &&
-                  |<th>Branch</th><th>Actions</th></tr>| ).
+                  |<th>Branch</th><th>Actions</th><th></th></tr>| ).
 
     LOOP AT it_repo_items ASSIGNING <ls_item>.
       IF <ls_item>-is_transport = abap_false AND lv_content_started = abap_false.
-        ro_html->add( |<tr><td colspan="7">| ).
+        ro_html->add( |<tr><td colspan="8">| ).
         ro_html->add( |<table class="repo_tab fixed_columns" id="repo_tab_{ lv_last_transport }">| ).
         lv_content_started = abap_true.
       ELSEIF <ls_item>-is_transport = abap_true AND lv_content_started = abap_true.

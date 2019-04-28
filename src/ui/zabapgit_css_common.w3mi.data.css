@@ -253,7 +253,7 @@ table.repo_tab {
 .repo_tab td.files {
   padding-left: 0.5em;
 }
-.repo_tab td.cmd {
+td.cmd {
   text-align: right;
   padding-left: 0.5em;
   padding-right: 0.7em;
@@ -262,7 +262,7 @@ table.repo_tab {
 .repo_tab tr.modified       { background: #fbf7e9; }
 .repo_tab tr:first-child td { border-top: 0px; }
 .repo_tab td.current_dir    { color: #ccc; }
-.repo_tab td.cmd span.state-block {
+td.cmd span.state-block {
   margin-left: 1em;
   font-family: Consolas, Lucida Console, Courier, monospace;
   font-size: x-small;
@@ -270,32 +270,32 @@ table.repo_tab {
   display: inline-block;
   text-align: center;
 }
-.repo_tab td.cmd span.state-block span {
+td.cmd span.state-block span {
   display: inline-block;
   padding: 0px 2px;
   border: 1px solid #000;
 }
-.repo_tab td.cmd span.state-block span.added {
+td.cmd span.state-block span.added {
   background-color: #69ad74;
   border-color: #579e64;
   color: white;
 }
-.repo_tab td.cmd span.state-block span.changed {
+td.cmd span.state-block span.changed {
   background-color: #e0c150;
   border-color: #d4af25;
   color: white;
 }
-.repo_tab td.cmd span.state-block span.mixed {
+td.cmd span.state-block span.mixed {
   background-color: #e0c150;
   border-color: #579e64;
   color: #69ad74;
 }
-.repo_tab td.cmd span.state-block span.deleted {
+td.cmd span.state-block span.deleted {
   background-color: #c76861;
   border-color: #b8605a;
   color: white;
 }
-.repo_tab td.cmd span.state-block span.none {
+td.cmd span.state-block span.none {
   background-color: #e8e8e8;
   border-color: #dbdbdb;
   color: #c8c8c8;
