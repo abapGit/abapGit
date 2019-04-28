@@ -50,6 +50,11 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
 
     METHODS filter_changes
       CHANGING ct_repo_items TYPE zif_abapgit_definitions=>tt_repo_items.
+
+    METHODS get_locked_objects
+      IMPORTING ii_cts_api        TYPE REF TO zif_abapgit_cts_api
+      RETURNING VALUE(rt_objects) TYPE zif_abapgit_cts_api=>gty_object_transport_tab
+      RAISING   zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -242,20 +247,15 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
 
   METHOD list_by_transport.
     DATA: lo_repo_online       TYPE REF TO zcl_abapgit_repo_online,
-          ls_item              TYPE zif_abapgit_definitions=>ty_item,
-          lt_objects           TYPE zif_abapgit_cts_api=>gty_object_tab,
           lt_objects_with_tr   TYPE STANDARD TABLE OF zif_abapgit_cts_api=>gty_object_transport,
           lv_target_branch     TYPE string,
           lv_previous_branch   TYPE string,
           lv_branch_name       TYPE string,
           li_cts               TYPE REF TO zif_abapgit_cts_api,
-          lt_files             TYPE zif_abapgit_definitions=>ty_files_item_tt,
           ls_request_header    TYPE zif_abapgit_cts_api=>gty_request_header,
           lv_current_transport TYPE trkorr,
-          lt_status            TYPE zif_abapgit_definitions=>ty_results_tt,
-          ls_object            LIKE LINE OF lt_objects.
-    FIELD-SYMBOLS: <ls_file>           LIKE LINE OF lt_files,
-                   <ls_object_with_tr> TYPE zif_abapgit_cts_api=>gty_object_transport,
+          lt_status            TYPE zif_abapgit_definitions=>ty_results_tt.
+    FIELD-SYMBOLS: <ls_object_with_tr> TYPE zif_abapgit_cts_api=>gty_object_transport,
                    <ls_transport_item> TYPE zif_abapgit_definitions=>ty_repo_item,
                    <ls_item>           TYPE zif_abapgit_definitions=>ty_repo_item,
                    <ls_object_status>  TYPE zif_abapgit_definitions=>ty_result,
@@ -278,21 +278,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
     ENDIF.
 
     li_cts = zcl_abapgit_factory=>get_cts_api( ).
-
-    lt_files = mo_repo->get_files_local( ii_log = mi_log ).
-    LOOP AT lt_files ASSIGNING <ls_file>.
-      IF <ls_file>-item-obj_type = ls_item-obj_type AND <ls_file>-item-obj_name = ls_item-obj_name.
-        CONTINUE.
-      ENDIF.
-      ls_item = <ls_file>-item.
-      ls_object-program_id = 'R3TR'.
-      ls_object-object_type = ls_item-obj_type.
-      ls_object-object_name = ls_item-obj_name.
-      APPEND ls_object TO lt_objects.
-    ENDLOOP.
-
-    lt_objects_with_tr = li_cts->get_current_trs_for_objs( lt_objects ).
-    DELETE lt_objects_with_tr WHERE transport IS INITIAL.
+    lt_objects_with_tr = get_locked_objects( li_cts ).
     SORT lt_objects_with_tr BY transport program_id object_type object_name.
 
     LOOP AT lt_objects_with_tr ASSIGNING <ls_object_with_tr>.
@@ -389,5 +375,29 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
     IF lo_repo_online->get_branch_name( ) <> lv_previous_branch.
       lo_repo_online->set_branch_name( lv_previous_branch ).
     ENDIF.
+  ENDMETHOD.
+
+  METHOD get_locked_objects.
+    DATA: lt_files   TYPE zif_abapgit_definitions=>ty_files_item_tt,
+          lt_objects TYPE zif_abapgit_cts_api=>gty_object_tab,
+          ls_object  LIKE LINE OF lt_objects,
+          ls_item    TYPE zif_abapgit_definitions=>ty_item.
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF lt_files.
+
+    lt_files = mo_repo->get_files_local( ii_log = mi_log ).
+
+    LOOP AT lt_files ASSIGNING <ls_file>.
+      IF <ls_file>-item-obj_type = ls_item-obj_type AND <ls_file>-item-obj_name = ls_item-obj_name.
+        CONTINUE.
+      ENDIF.
+      ls_item = <ls_file>-item.
+      ls_object-program_id = 'R3TR'.
+      ls_object-object_type = ls_item-obj_type.
+      ls_object-object_name = ls_item-obj_name.
+      APPEND ls_object TO lt_objects.
+    ENDLOOP.
+
+    rt_objects = ii_cts_api->get_current_trs_for_objs( lt_objects ).
+    DELETE rt_objects WHERE transport IS INITIAL.
   ENDMETHOD.
 ENDCLASS.
