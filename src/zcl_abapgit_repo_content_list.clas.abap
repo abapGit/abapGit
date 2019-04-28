@@ -254,7 +254,8 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
           li_cts               TYPE REF TO zif_abapgit_cts_api,
           ls_request_header    TYPE zif_abapgit_cts_api=>gty_request_header,
           lv_current_transport TYPE trkorr,
-          lt_status            TYPE zif_abapgit_definitions=>ty_results_tt.
+          lt_status            TYPE zif_abapgit_definitions=>ty_results_tt,
+          lt_remote_branches   TYPE zif_abapgit_definitions=>ty_git_branch_list_tt.
     FIELD-SYMBOLS: <ls_object_with_tr> TYPE zif_abapgit_cts_api=>gty_object_transport,
                    <ls_transport_item> TYPE zif_abapgit_definitions=>ty_repo_item,
                    <ls_item>           TYPE zif_abapgit_definitions=>ty_repo_item,
@@ -273,6 +274,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
     lv_previous_branch = lo_repo_online->get_branch_name( ).
     IF iv_target_branch IS NOT INITIAL.
       lv_target_branch = zcl_abapgit_git_branch_list=>complete_heads_branch_name( iv_target_branch ).
+      lt_remote_branches = zcl_abapgit_factory=>get_branch_overview( lo_repo_online )->get_branches( ).
     ELSE.
       lv_target_branch = lv_previous_branch.
     ENDIF.
@@ -303,12 +305,8 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
         IF iv_target_branch IS NOT INITIAL.
           " Assume branch name = transport request number for now TODO
           lv_branch_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name( to_upper( lv_current_transport ) ).
-          LOOP AT zcl_abapgit_factory=>get_branch_overview( lo_repo_online )->get_branches( )
-                  TRANSPORTING NO FIELDS
-                  WHERE name = lv_branch_name.
-            EXIT.
-          ENDLOOP.
-
+          READ TABLE lt_remote_branches WITH KEY name = lv_branch_name
+                                        TRANSPORTING NO FIELDS.
           IF sy-subrc = 0.
             " A branch exists for this transport, show uncommitted changes to this branch
             lo_repo_online->set_branch_name( lv_branch_name ).
@@ -329,7 +327,6 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
           " Only calculate status once if there's no target branch configured
           lt_status = lo_repo_online->status( mi_log ).
         ENDIF.
-
       ENDIF.
 
       APPEND INITIAL LINE TO rt_repo_items ASSIGNING <ls_item>.
