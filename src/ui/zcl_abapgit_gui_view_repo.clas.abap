@@ -73,8 +73,9 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
       render_transport
-        IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        IMPORTING is_item           TYPE zif_abapgit_definitions=>ty_repo_item
+                  iv_enable_actions TYPE abap_bool
+        RETURNING VALUE(ro_html)    TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       render_repo
         IMPORTING it_repo_items  TYPE zif_abapgit_definitions=>tt_repo_items
@@ -83,8 +84,9 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       render_repo_for_transports
-        IMPORTING it_repo_items  TYPE zif_abapgit_definitions=>tt_repo_items
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        IMPORTING it_repo_items      TYPE zif_abapgit_definitions=>tt_repo_items
+                  iv_enabled_actions TYPE abap_bool
+        RETURNING VALUE(ro_html)     TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
       get_item_class
         IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
@@ -686,15 +688,17 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
                                      iv_act = |toggleTransportChildren('{ ls_cts_info-transport }', this)|
                                      iv_typ = zif_abapgit_html=>c_action_type-onclick ).
 
-    IF ls_cts_info-branch IS INITIAL.
-      lo_actions->add(
-        iv_txt = 'Create branch'
-        iv_act = |{ zcl_abapgit_gui_page_transport=>c_action-create_branch }?{ ls_cts_info-transport }| ).
-    ELSE.
-      IF is_item-lstate <> zif_abapgit_definitions=>c_state-unchanged.
+    IF iv_enable_actions = abap_true.
+      IF ls_cts_info-branch IS INITIAL.
         lo_actions->add(
-          iv_txt = 'Stage'
-          iv_act = |{ zcl_abapgit_gui_page_transport=>c_action-commit_transport }?{ ls_cts_info-transport }| ).
+          iv_txt = 'Create branch'
+          iv_act = |{ zcl_abapgit_gui_page_transport=>c_action-create_branch }?{ ls_cts_info-transport }| ).
+      ELSE.
+        IF is_item-lstate <> zif_abapgit_definitions=>c_state-unchanged.
+          lo_actions->add(
+            iv_txt = 'Stage'
+            iv_act = |{ zcl_abapgit_gui_page_transport=>c_action-commit_transport }?{ ls_cts_info-transport }| ).
+        ENDIF.
       ENDIF.
     ENDIF.
 
@@ -757,12 +761,13 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA: lt_repo_items TYPE zif_abapgit_definitions=>tt_repo_items,
-          lo_browser    TYPE REF TO zcl_abapgit_repo_content_list,
-          lx_error      TYPE REF TO zcx_abapgit_exception,
-          lv_lstate     TYPE char1,
-          lv_rstate     TYPE char1,
-          li_log        TYPE REF TO zif_abapgit_log.
+    DATA: lt_repo_items        TYPE zif_abapgit_definitions=>tt_repo_items,
+          lo_browser           TYPE REF TO zcl_abapgit_repo_content_list,
+          lx_error             TYPE REF TO zcx_abapgit_exception,
+          lv_lstate            TYPE char1,
+          lv_rstate            TYPE char1,
+          li_log               TYPE REF TO zif_abapgit_log,
+          lv_cts_target_branch TYPE string.
 
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
@@ -782,7 +787,8 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
                                             iv_by_folders   = mv_show_folders
                                             iv_changes_only = mv_changes_only ).
         ELSEIF mv_display_mode = c_display_modes-transports.
-          lt_repo_items = lo_browser->list_by_transport( ).
+          lv_cts_target_branch = mo_repo->get_local_settings( )-cts_target_branch.
+          lt_repo_items = lo_browser->list_by_transport( lv_cts_target_branch ).
         ENDIF.
 
         LOOP AT lt_repo_items ASSIGNING <ls_item>.
@@ -809,7 +815,9 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
                                      iv_lstate     = lv_lstate
                                      iv_rstate     = lv_rstate ) ).
         ELSEIF mv_display_mode = c_display_modes-transports.
-          ro_html->add( render_repo_for_transports( lt_repo_items ) ).
+          ro_html->add( render_repo_for_transports(
+            it_repo_items      = lt_repo_items
+            iv_enabled_actions = boolc( lv_cts_target_branch IS NOT INITIAL ) ) ).
         ENDIF.
 
         ro_html->add( '</div>' ).
@@ -903,7 +911,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
       IF <ls_item>-is_transport = abap_true.
         lv_last_transport = <ls_item>-cts_info-transport.
-        ro_html->add( render_transport( <ls_item> ) ).
+        ro_html->add( render_transport( is_item = <ls_item> iv_enable_actions = iv_enabled_actions ) ).
       ELSE.
         ro_html->add( render_item( is_item = <ls_item> iv_render_transports = abap_true ) ).
       ENDIF.

@@ -15,7 +15,7 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
       RAISING   zcx_abapgit_exception.
 
     METHODS list_by_transport
-      IMPORTING iv_target_branch     TYPE string DEFAULT 'master'
+      IMPORTING iv_target_branch     TYPE string OPTIONAL
       RETURNING VALUE(rt_repo_items) TYPE zif_abapgit_definitions=>tt_repo_items
       RAISING   zcx_abapgit_exception.
 
@@ -271,7 +271,11 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
     lo_repo_online ?= mo_repo.
 
     lv_previous_branch = lo_repo_online->get_branch_name( ).
-    lv_target_branch = zcl_abapgit_git_branch_list=>complete_heads_branch_name( iv_target_branch ).
+    IF iv_target_branch IS NOT INITIAL.
+      lv_target_branch = zcl_abapgit_git_branch_list=>complete_heads_branch_name( iv_target_branch ).
+    ELSE.
+      lv_target_branch = lv_previous_branch.
+    ENDIF.
 
     li_cts = zcl_abapgit_factory=>get_cts_api( ).
 
@@ -310,26 +314,35 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
                                                 |.{ ls_request_header-target_client }|.
         ENDIF.
 
-        " Assume branch name = transport request number for now TODO
-        lv_branch_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name( to_upper( lv_current_transport ) ).
-        LOOP AT zcl_abapgit_factory=>get_branch_overview( lo_repo_online )->get_branches( )
-                TRANSPORTING NO FIELDS
-                WHERE name = lv_branch_name.
-          EXIT.
-        ENDLOOP.
+        IF iv_target_branch IS NOT INITIAL.
+          " Assume branch name = transport request number for now TODO
+          lv_branch_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name( to_upper( lv_current_transport ) ).
+          LOOP AT zcl_abapgit_factory=>get_branch_overview( lo_repo_online )->get_branches( )
+                  TRANSPORTING NO FIELDS
+                  WHERE name = lv_branch_name.
+            EXIT.
+          ENDLOOP.
 
-        IF sy-subrc = 0.
-          " A branch exists for this transport, show uncommitted changes to this branch
-          lo_repo_online->set_branch_name( lv_branch_name ).
-          <ls_transport_item>-cts_info-branch = to_upper( lv_current_transport ).
+          IF sy-subrc = 0.
+            " A branch exists for this transport, show uncommitted changes to this branch
+            lo_repo_online->set_branch_name( lv_branch_name ).
+            <ls_transport_item>-cts_info-branch = to_upper( lv_current_transport ).
+          ELSE.
+            " A branch does not exist for this transport, show all changes compared to target branch (~=master)
+            lo_repo_online->set_branch_name( lv_target_branch ).
+            <ls_transport_item>-cts_info-branch = space.
+          ENDIF.
         ELSE.
-          " A branch does not exist for this transport, show all changes compared to target branch (~=master)
-          lo_repo_online->set_branch_name( lv_target_branch ).
           <ls_transport_item>-cts_info-branch = space.
         ENDIF.
 
-        " This calculates the whole status, should be filtered by objects in the transport instead TODO
-        lt_status = lo_repo_online->status( mi_log ).
+        IF iv_target_branch IS NOT INITIAL.
+          " This calculates the whole status, should be filtered by objects in the transport instead TODO
+          lt_status = lo_repo_online->status( mi_log ).
+        ELSEIF lt_status IS INITIAL.
+          " Only calculate status once if there's no target branch configured
+          lt_status = lo_repo_online->status( mi_log ).
+        ENDIF.
 
       ENDIF.
 

@@ -60,7 +60,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -222,6 +222,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     io_html->add( |Block commit commit/push if code inspection has erros: |
                && |<input name="block_commit" type="checkbox"{ lv_checked }><br>| ).
 
+    io_html->add( '<br>' ).
+    io_html->add( |CTS target branch (disabled if empty): <input name="cts_target_branch" type="text" size="30"| &&
+                  | value="{ ls_settings-cts_target_branch }">| ).
+
 
   ENDMETHOD.
 
@@ -332,6 +336,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
         AND ls_settings-code_inspector_check_variant IS INITIAL.
       zcx_abapgit_exception=>raise( |If block commit is active, a check variant has to be maintained.| ).
     ENDIF.
+
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'cts_target_branch'.
+    ASSERT sy-subrc = 0.
+    ls_settings-cts_target_branch = ls_post_field-value.
 
     mo_repo->set_local_settings( ls_settings ).
 

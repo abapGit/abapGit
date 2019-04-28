@@ -92,26 +92,27 @@ CLASS zcl_abapgit_gui_page_transport IMPLEMENTATION.
   METHOD create_branch_for_transport.
     DATA: lv_current_branch TYPE zif_abapgit_persistence=>ty_repo-branch_name,
           lv_new_branch     TYPE string,
+          lv_target_branch  TYPE string,
           lv_answer         TYPE char1.
 
     lv_current_branch = mo_repo->get_branch_name( ).
     lv_new_branch = to_upper( iv_transport ). " branch name = transport request for now
+    lv_target_branch = mo_repo->get_local_settings( )-cts_target_branch.
     IF lv_new_branch IS INITIAL.
       zcx_abapgit_exception=>raise( 'Could not determine branch name for transport.' ).
     ENDIF.
 
     lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
       iv_titlebar      = 'Continue?'
-      iv_text_question = |A new branch '{ lv_new_branch }' will be created based on 'master'. Continue?| ).
+      iv_text_question = |A new branch '{ lv_new_branch }' will be created based on '{ lv_target_branch }'. | &&
+                         |Continue?| ).
 
     IF lv_answer <> '1'.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    " Not sure how to get the SHA1 of master here for iv_from
-    mo_repo->set_branch_name( zcl_abapgit_git_branch_list=>complete_heads_branch_name( 'master' ) ) ##TODO.
+    mo_repo->set_branch_name( zcl_abapgit_git_branch_list=>complete_heads_branch_name( lv_target_branch ) ).
     mo_repo->create_branch( iv_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name( lv_new_branch ) ).
-*    iv_from = CONV #( zcl_abapgit_git_branch_list=>complete_heads_branch_name( 'master' ) ) )
 
     mo_repo->set_branch_name( lv_current_branch ).
 

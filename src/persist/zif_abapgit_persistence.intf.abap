@@ -26,6 +26,7 @@ INTERFACE zif_abapgit_persistence PUBLIC.
       only_local_objects           TYPE abap_bool,
       code_inspector_check_variant TYPE sci_chkv,
       block_commit                 TYPE abap_bool,
+      cts_target_branch            TYPE string,
     END OF ty_local_settings.
 
   TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.
