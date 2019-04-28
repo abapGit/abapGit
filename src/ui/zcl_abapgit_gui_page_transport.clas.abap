@@ -8,11 +8,9 @@ CLASS zcl_abapgit_gui_page_transport DEFINITION
   PUBLIC SECTION.
     CONSTANTS:
       BEGIN OF c_action,
-        jump_all_transports TYPE string VALUE 'jump_all_transports',
-        create_branch       TYPE string VALUE 'create_branch',
-        commit_transport    TYPE string VALUE 'commit_transport',
-        revert_transport    TYPE string VALUE 'revert_transport',
-        refresh             TYPE string VALUE 'refresh',
+        create_branch    TYPE string VALUE 'create_branch',
+        commit_transport TYPE string VALUE 'commit_transport',
+        refresh          TYPE string VALUE 'refresh',
       END OF c_action.
 
     METHODS:
@@ -58,27 +56,36 @@ CLASS zcl_abapgit_gui_page_transport IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
-    DATA: lv_branch TYPE string.
+    DATA: lv_branch    TYPE string,
+          lv_transport TYPE trkorr.
 
     CASE iv_action.
       WHEN c_action-create_branch.
-        lv_branch = create_branch_for_transport( CONV #( iv_getdata ) ).
+        lv_transport = iv_getdata.
+        lv_branch = create_branch_for_transport( lv_transport ).
         MESSAGE |Created branch '{ lv_branch }'.| TYPE 'S'.
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_action-commit_transport.
-        mo_repo->set_branch_name( zcl_abapgit_git_branch_list=>complete_heads_branch_name( iv_getdata ) ).
+        lv_transport = iv_getdata.
+        mo_repo->set_branch_name( zcl_abapgit_git_branch_list=>complete_heads_branch_name( lv_transport ) ).
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_stage
           EXPORTING
             io_repo                = mo_repo
-            iv_filter_by_transport = CONV #( iv_getdata ).
+            iv_filter_by_transport = lv_transport.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
-
-      WHEN c_action-revert_transport.
 
       WHEN c_action-refresh.
         mo_repo->refresh( ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN OTHERS.
+        super->zif_abapgit_gui_event_handler~on_event(
+          iv_action    = iv_action
+          iv_prev_page = iv_prev_page
+          iv_getdata   = iv_getdata
+          it_postdata  = it_postdata ).
+
     ENDCASE.
   ENDMETHOD.
 

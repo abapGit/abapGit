@@ -129,8 +129,7 @@ CLASS zcl_abapgit_cts_api IMPLEMENTATION.
           <ls_new>-transport = zif_abapgit_cts_api~get_current_transport_for_obj(
             iv_program_id  = ls_new_line-program_id
             iv_object_type = ls_new_line-object_type
-            iv_object_name = ls_new_line-object_name
-          ).
+            iv_object_name = ls_new_line-object_name ).
         CATCH zcx_abapgit_exception ##NO_HANDLER.
       ENDTRY.
     ENDLOOP.

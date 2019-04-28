@@ -108,7 +108,9 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA lv_ts TYPE timestamp.
+    DATA: lv_ts  TYPE timestamp,
+          li_cts TYPE REF TO zif_abapgit_cts_api.
+    FIELD-SYMBOLS: <ls_file> TYPE zif_abapgit_definitions=>ty_file_item.
 
     super->constructor( ).
 
@@ -120,8 +122,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     mv_filter_by_transport = iv_filter_by_transport.
 
     IF mv_filter_by_transport IS NOT INITIAL.
-      DATA(li_cts) = zcl_abapgit_factory=>get_cts_api( ).
-      LOOP AT ms_files-local ASSIGNING FIELD-SYMBOL(<ls_file>).
+      li_cts = zcl_abapgit_factory=>get_cts_api( ).
+      LOOP AT ms_files-local ASSIGNING <ls_file>.
         ##TODO. " Code Duplication with later find_transports
         TRY.
             IF li_cts->get_current_transport_for_obj(
