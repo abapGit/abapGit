@@ -76,6 +76,7 @@ CLASS zcl_abapgit_gui_page_transport IMPLEMENTATION.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
 
       WHEN c_action-refresh.
+        mo_repo_content->clear_cache( ).
         mo_repo->refresh( ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
 

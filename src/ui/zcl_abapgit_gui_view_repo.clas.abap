@@ -35,17 +35,20 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
 
+    METHODS clear_cache.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    DATA: mo_repo         TYPE REF TO zcl_abapgit_repo,
-          mv_cur_dir      TYPE string,
-          mv_hide_files   TYPE abap_bool,
-          mv_max_lines    TYPE i,
-          mv_max_setting  TYPE i,
-          mv_show_folders TYPE abap_bool,
-          mv_changes_only TYPE abap_bool,
-          mv_display_mode TYPE gty_display_mode.
+    DATA: mo_repo             TYPE REF TO zcl_abapgit_repo,
+          mv_cur_dir          TYPE string,
+          mv_hide_files       TYPE abap_bool,
+          mv_max_lines        TYPE i,
+          mv_max_setting      TYPE i,
+          mv_show_folders     TYPE abap_bool,
+          mv_changes_only     TYPE abap_bool,
+          mv_display_mode     TYPE gty_display_mode,
+          mt_repo_items_cache TYPE zif_abapgit_definitions=>tt_repo_items.
 
     METHODS:
       render_head_line
@@ -766,8 +769,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA: lt_repo_items        TYPE zif_abapgit_definitions=>tt_repo_items,
-          lo_browser           TYPE REF TO zcl_abapgit_repo_content_list,
+    DATA: lo_browser           TYPE REF TO zcl_abapgit_repo_content_list,
           lx_error             TYPE REF TO zcx_abapgit_exception,
           lv_lstate            TYPE char1,
           lv_rstate            TYPE char1,
@@ -775,7 +777,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
           lv_cts_target_branch TYPE string.
 
 
-    FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
+    FIELD-SYMBOLS <ls_item> LIKE LINE OF mt_repo_items_cache.
 
     " Reinit, for the case of type change
     mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
@@ -787,16 +789,19 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
           EXPORTING
             io_repo = mo_repo.
 
-        IF mv_display_mode = c_display_modes-branch.
-          lt_repo_items = lo_browser->list( iv_path         = mv_cur_dir
-                                            iv_by_folders   = mv_show_folders
-                                            iv_changes_only = mv_changes_only ).
-        ELSEIF mv_display_mode = c_display_modes-transports.
-          lv_cts_target_branch = mo_repo->get_local_settings( )-cts_target_branch.
-          lt_repo_items = lo_browser->list_by_transport( lv_cts_target_branch ).
+        lv_cts_target_branch = mo_repo->get_local_settings( )-cts_target_branch.
+
+        IF mt_repo_items_cache IS INITIAL.
+          IF mv_display_mode = c_display_modes-branch.
+            mt_repo_items_cache = lo_browser->list( iv_path         = mv_cur_dir
+                                              iv_by_folders   = mv_show_folders
+                                              iv_changes_only = mv_changes_only ).
+          ELSEIF mv_display_mode = c_display_modes-transports.
+            mt_repo_items_cache = lo_browser->list_by_transport( lv_cts_target_branch ).
+          ENDIF.
         ENDIF.
 
-        LOOP AT lt_repo_items ASSIGNING <ls_item>.
+        LOOP AT mt_repo_items_cache ASSIGNING <ls_item>.
           zcl_abapgit_state=>reduce( EXPORTING iv_cur = <ls_item>-lstate
                                      CHANGING cv_prev = lv_lstate ).
           zcl_abapgit_state=>reduce( EXPORTING iv_cur = <ls_item>-rstate
@@ -816,18 +821,24 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
         ro_html->add( '<div class="repo_container">' ).
 
         IF mv_display_mode = c_display_modes-branch.
-          ro_html->add( render_repo( it_repo_items = lt_repo_items
+          ro_html->add( render_repo( it_repo_items = mt_repo_items_cache
                                      iv_lstate     = lv_lstate
                                      iv_rstate     = lv_rstate ) ).
         ELSEIF mv_display_mode = c_display_modes-transports.
           ro_html->add( render_repo_for_transports(
-            it_repo_items      = lt_repo_items
+            it_repo_items      = mt_repo_items_cache
             iv_enabled_actions = boolc( lv_cts_target_branch IS NOT INITIAL ) ) ).
         ENDIF.
 
         ro_html->add( '</div>' ).
 
+        IF mv_display_mode <> c_display_modes-transports.
+          " Only cache items in transport mode as list_by_transport can be time expensive
+          CLEAR mt_repo_items_cache.
+        ENDIF.
+
       CATCH zcx_abapgit_exception INTO lx_error.
+        CLEAR mt_repo_items_cache.
         ro_html->add( render_head_line( iv_lstate = lv_lstate iv_rstate = lv_rstate ) ).
         ro_html->add( zcl_abapgit_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
     ENDTRY.
@@ -927,5 +938,9 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       lv_content_started = abap_false.
     ENDIF.
     ro_html->add( |</table>| ).
+  ENDMETHOD.
+
+  METHOD clear_cache.
+    CLEAR mt_repo_items_cache.
   ENDMETHOD.
 ENDCLASS.
