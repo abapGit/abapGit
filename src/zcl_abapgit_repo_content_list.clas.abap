@@ -391,7 +391,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
       ls_object-program_id = 'R3TR'.
       ls_object-object_type = ls_item-obj_type.
       ls_object-object_name = ls_item-obj_name.
-      APPEND ls_object TO lt_objects.
+      INSERT ls_object INTO TABLE lt_objects.
     ENDLOOP.
 
     rt_objects = ii_cts_api->get_current_trs_for_objs( lt_objects ).
