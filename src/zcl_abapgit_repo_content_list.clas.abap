@@ -246,16 +246,17 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD list_by_transport.
-    DATA: lo_repo_online       TYPE REF TO zcl_abapgit_repo_online,
-          lt_objects_with_tr   TYPE STANDARD TABLE OF zif_abapgit_cts_api=>gty_object_transport,
-          lv_target_branch     TYPE string,
-          lv_previous_branch   TYPE string,
-          lv_branch_name       TYPE string,
-          li_cts               TYPE REF TO zif_abapgit_cts_api,
-          ls_request_header    TYPE zif_abapgit_cts_api=>gty_request_header,
-          lv_current_transport TYPE trkorr,
-          lt_status            TYPE zif_abapgit_definitions=>ty_results_tt,
-          lt_remote_branches   TYPE zif_abapgit_definitions=>ty_git_branch_list_tt.
+    DATA: lo_repo_online          TYPE REF TO zcl_abapgit_repo_online,
+          lt_objects_with_tr      TYPE STANDARD TABLE OF zif_abapgit_cts_api=>gty_object_transport,
+          lv_target_branch        TYPE string,
+          lv_previous_branch      TYPE string,
+          lv_branch_name          TYPE string,
+          li_cts                  TYPE REF TO zif_abapgit_cts_api,
+          ls_request_header       TYPE zif_abapgit_cts_api=>gty_request_header,
+          lv_current_transport    TYPE trkorr,
+          lt_status               TYPE zif_abapgit_definitions=>ty_results_tt,
+          lt_remote_branches      TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
+          lt_transport_repo_items TYPE zif_abapgit_definitions=>tt_repo_items.
     FIELD-SYMBOLS: <ls_object_with_tr> TYPE zif_abapgit_cts_api=>gty_object_transport,
                    <ls_transport_item> TYPE zif_abapgit_definitions=>ty_repo_item,
                    <ls_item>           TYPE zif_abapgit_definitions=>ty_repo_item,
@@ -285,6 +286,14 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
 
     LOOP AT lt_objects_with_tr ASSIGNING <ls_object_with_tr>.
       IF lv_current_transport <> <ls_object_with_tr>-transport.
+        IF lt_transport_repo_items IS NOT INITIAL.
+          SORT lt_transport_repo_items BY sortkey  ASCENDING
+                                          obj_type ASCENDING
+                                          obj_name ASCENDING.
+          APPEND LINES OF lt_transport_repo_items TO rt_repo_items.
+          CLEAR lt_transport_repo_items.
+        ENDIF.
+
         lv_current_transport = <ls_object_with_tr>-transport.
         APPEND INITIAL LINE TO rt_repo_items ASSIGNING <ls_transport_item>.
         <ls_transport_item>-sortkey = c_sortkey-default.
@@ -329,7 +338,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      APPEND INITIAL LINE TO rt_repo_items ASSIGNING <ls_item>.
+      APPEND INITIAL LINE TO lt_transport_repo_items ASSIGNING <ls_item>.
       <ls_item>-obj_type = <ls_object_with_tr>-object_type.
       <ls_item>-obj_name = <ls_object_with_tr>-object_name.
       <ls_item>-sortkey  = c_sortkey-default.
@@ -349,7 +358,12 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
           <ls_item>-inactive = abap_true.
         ENDIF.
 
+        IF <ls_object_status>-inactive = abap_true AND <ls_item>-sortkey > c_sortkey-changed.
+          <ls_item>-sortkey = c_sortkey-inactive.
+        ENDIF.
+
         IF <ls_repo_file>-is_changed = abap_true.
+          <ls_item>-sortkey = c_sortkey-changed.
           <ls_item>-changes = <ls_item>-changes + 1.
           <ls_transport_item>-changes = <ls_transport_item>-changes + 1.
           zcl_abapgit_state=>reduce( EXPORTING iv_cur  = <ls_object_status>-lstate
@@ -368,6 +382,14 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
                              |Could not determine status.| ).
       ENDIF.
     ENDLOOP.
+
+    IF lt_transport_repo_items IS NOT INITIAL.
+      SORT lt_transport_repo_items BY sortkey  ASCENDING
+                                      obj_type ASCENDING
+                                      obj_name ASCENDING.
+      APPEND LINES OF lt_transport_repo_items TO rt_repo_items.
+      CLEAR lt_transport_repo_items.
+    ENDIF.
 
     IF lo_repo_online->get_branch_name( ) <> lv_previous_branch.
       lo_repo_online->set_branch_name( lv_previous_branch ).
