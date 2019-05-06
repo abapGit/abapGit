@@ -103,4 +103,6 @@ SAP Teched Barcelona
 
 ### 2019
 
-[abapGit for enterprise, executive summary](https://docs.google.com/presentation/d/1SuRax4sxg4AyjS0VzX7Nrjt0Iuf-m5tf736MroTpN7g/edit?usp=sharing) - Alexander Tsybulsky
+[abapGit for enterprise, executive summary](https://docs.google.com/presentation/d/1SuRax4sxg4AyjS0VzX7Nrjt0Iuf-m5tf736MroTpN7g/edit?usp=sharing), Alexander Tsybulsky
+
+[Introducing APACK – A Package and Dependency Manager for ABAP](https://blogs.sap.com/2019/05/06/introducing-apack-a-package-and-dependency-manager-for-abap/), Sebastian Wolf
