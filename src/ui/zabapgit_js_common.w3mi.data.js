@@ -493,7 +493,7 @@ CheckListWrapper.prototype.onClick = function(e) { // eslint-disable-line no-unu
   var nodeA    = target;
   var nodeLi   = target.parentNode;
   var nodeIcon = target.children[0];
-  if (!nodeIcon.classList.contains("octicon")) return;
+  if (!nodeIcon.classList.contains("icon")) return;
 
   // Node updates
   var option   = nodeA.innerText;
