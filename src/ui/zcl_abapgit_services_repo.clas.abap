@@ -238,7 +238,8 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     DATA: lt_colums_to_display TYPE stringtab,
           lv_column            LIKE LINE OF lt_colums_to_display,
-          lt_selected          LIKE ct_overwrite.
+          lt_selected          LIKE ct_overwrite,
+          lr_popups            TYPE REF TO zcl_abapgit_popups.
 
     FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF ct_overwrite.
 
@@ -253,7 +254,8 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     lv_column = 'DEVCLASS'.
     INSERT lv_column INTO TABLE lt_colums_to_display.
 
-    zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_from_list(
+    lr_popups ?= zcl_abapgit_ui_factory=>get_popups( ).
+    lr_popups->popup_to_select_from_list(
       EXPORTING
         it_list               = ct_overwrite
         iv_header_text        = |The following objects have been created in other packages.|
