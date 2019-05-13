@@ -239,7 +239,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     DATA: lt_colums_to_display TYPE stringtab,
           lv_column            LIKE LINE OF lt_colums_to_display,
           lt_selected          LIKE ct_overwrite,
-          lr_popups            TYPE REF TO zcl_abapgit_popups.
+          lr_popups            TYPE REF TO zif_abapgit_popups.
 
     FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF ct_overwrite.
 
