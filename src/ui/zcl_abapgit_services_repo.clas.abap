@@ -254,7 +254,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     lv_column = 'DEVCLASS'.
     INSERT lv_column INTO TABLE lt_colums_to_display.
 
-    lr_popups ?= zcl_abapgit_ui_factory=>get_popups( ).
+    lr_popups = zcl_abapgit_ui_factory=>get_popups( ).
     lr_popups->popup_to_select_from_list(
       EXPORTING
         it_list               = ct_overwrite
