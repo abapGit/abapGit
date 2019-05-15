@@ -10,16 +10,6 @@ FORM run.
   DATA: lx_exception TYPE REF TO zcx_abapgit_exception,
         lv_ind       TYPE t000-ccnocliind.
 
-
-  SELECT SINGLE ccnocliind FROM t000 INTO lv_ind
-    WHERE mandt = sy-mandt.
-  IF sy-subrc = 0
-      AND lv_ind <> ' '
-      AND lv_ind <> '1'. " check changes allowed
-    WRITE: / 'Wrong client, changes to repository objects not allowed'. "#EC NOTEXT
-    RETURN.
-  ENDIF.
-
   TRY.
       zcl_abapgit_migrations=>run( ).
       PERFORM open_gui.
