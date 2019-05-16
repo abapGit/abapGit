@@ -123,6 +123,8 @@ FORM exit RAISING zcx_abapgit_exception.
       ELSE.
         LEAVE TO SCREEN 1001.
       ENDIF.
+    WHEN 'CEND'. "Exit
+      PERFORM open_gui.
   ENDCASE.
 ENDFORM.
 
