@@ -1,38 +1,46 @@
 CLASS zcl_abapgit_apack_reader DEFINITION
   PUBLIC
   FINAL
-  CREATE PRIVATE.
+  CREATE PRIVATE .
 
   PUBLIC SECTION.
 
-    TYPES: ty_package_name TYPE devclass.
+    TYPES ty_package_name TYPE devclass .
 
-    CLASS-METHODS: create_instance IMPORTING iv_package_name           TYPE ty_package_name
-                                   RETURNING VALUE(ro_manifest_reader) TYPE REF TO zcl_abapgit_apack_reader.
-    METHODS:
-      get_manifest_descriptor RETURNING VALUE(rs_manifest_descriptor)
-                                        TYPE zif_abapgit_apack_definitions=>ty_descriptor,
-      set_manifest_descriptor IMPORTING is_manifest_descriptor  TYPE zif_abapgit_apack_definitions=>ty_descriptor,
-      has_manifest RETURNING VALUE(rv_has_manifest) TYPE abap_bool.
-
+    CLASS-METHODS create_instance
+      IMPORTING
+        !iv_package_name          TYPE ty_package_name
+      RETURNING
+        VALUE(ro_manifest_reader) TYPE REF TO zcl_abapgit_apack_reader .
+    METHODS get_manifest_descriptor
+      RETURNING
+        VALUE(rs_manifest_descriptor) TYPE zif_abapgit_apack_definitions=>ty_descriptor .
+    METHODS set_manifest_descriptor
+      IMPORTING
+        !is_manifest_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor .
+    METHODS has_manifest
+      RETURNING
+        VALUE(rv_has_manifest) TYPE abap_bool .
+    METHODS constructor
+      IMPORTING
+        !iv_package_name TYPE ty_package_name .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    TYPES: BEGIN OF ty_s_manifest_declaration,
-             clsname  TYPE seometarel-clsname,
-             devclass TYPE devclass,
-           END OF ty_s_manifest_declaration.
+    TYPES:
+      BEGIN OF ty_s_manifest_declaration,
+        clsname  TYPE seometarel-clsname,
+        devclass TYPE devclass,
+      END OF ty_s_manifest_declaration .
 
-    DATA: mv_package_name      TYPE ty_package_name,
-          ms_cached_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor,
-          mv_is_cached         TYPE abap_bool.
-
-    METHODS: constructor IMPORTING iv_package_name TYPE ty_package_name.
+    DATA mv_package_name TYPE ty_package_name .
+    DATA ms_cached_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor .
+    DATA mv_is_cached TYPE abap_bool .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_APACK_READER IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -43,6 +51,7 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
   METHOD create_instance.
     CREATE OBJECT ro_manifest_reader EXPORTING iv_package_name = iv_package_name.
   ENDMETHOD.
+
 
   METHOD get_manifest_descriptor.
 
@@ -93,9 +102,9 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD set_manifest_descriptor.
     me->mv_is_cached = abap_true.
     me->ms_cached_descriptor = is_manifest_descriptor.
   ENDMETHOD.
-
 ENDCLASS.
