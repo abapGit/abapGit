@@ -3,7 +3,8 @@
     "version": "v702",
     "skipGeneratedGatewayClasses": true,
     "skipGeneratedPersistentClasses": true,
-    "skipGeneratedFunctionGroups": true
+    "skipGeneratedFunctionGroups": true,
+    "applyUnspecifiedRules": false
   },
   "rules": {
     "7bit_ascii": {
@@ -45,6 +46,10 @@
       "enabled": true,
       "exclude": []
     },
+    "constructor_visibility_public": {
+      "enabled": true,
+      "exclude": []
+    },    
     "contains_tab": {
       "enabled": true,
       "exclude": []
@@ -119,7 +124,8 @@
       "ignoreExceptions": true,
       "ignoreLowerClassImplmentationStatement": true,
       "ignoreGlobalClassDefinition": false,
-      "ignoreGlobalInterface": false
+      "ignoreGlobalInterface": false,
+      "ignoreFunctionModuleName": false
     },
     "line_length": {
       "enabled": true,
@@ -219,6 +225,19 @@
       "enabled": true,
       "exclude": []
     },
+    "preferred_compare_operator": {
+      "enabled": false,
+      "exclude": [],
+      "badOperators": [
+        "EQ",
+        "><",
+        "NE",
+        "GE",
+        "GT",
+        "LT",
+        "LE"
+      ]
+    },
     "remove_descriptions": {
       "enabled": true,
       "exclude": [],
@@ -248,6 +267,10 @@
       "exclude": []
     },
     "tabl_enhancement_category": {
+      "enabled": true,
+      "exclude": []
+    },
+    "unreachable_code": {
       "enabled": true,
       "exclude": []
     },

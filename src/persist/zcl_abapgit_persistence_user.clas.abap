@@ -13,6 +13,10 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         !iv_user       TYPE xubname DEFAULT sy-uname
       RETURNING
         VALUE(ri_user) TYPE REF TO zif_abapgit_persist_user .
+    METHODS constructor
+      IMPORTING
+        !iv_user TYPE xubname DEFAULT sy-uname .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES:
@@ -39,9 +43,6 @@ CLASS zcl_abapgit_persistence_user DEFINITION
     DATA mv_user TYPE xubname .
     CLASS-DATA gi_current_user TYPE REF TO zif_abapgit_persist_user .
 
-    METHODS constructor
-      IMPORTING
-        !iv_user TYPE xubname DEFAULT sy-uname .
     METHODS from_xml
       IMPORTING
         !iv_xml        TYPE string

@@ -8,6 +8,19 @@ Legend
 + : added
 - : removed
 
+2019-04-28 v1.87.0
+------------------
++ HIDPI icon scaling, enable in settings
++ Add exit for CLAS CLIF source deserialization
+! Floating save buttons
+* SFPI deserialization fix
+* Ignore XTI includes in FUGR
+* Downports
+* Hotkeys now works in single file distribution
+* Leading spaces
+* XINX remove UI call
+* RS_CUA_INTERNAL_WRITE fix
+
 2019-03-31 v1.86.2
 ------------------
 ! CLAS field VSEOCLASS-VERSION

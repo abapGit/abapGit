@@ -58,7 +58,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_serialize IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
 
   METHOD add_to_return.
@@ -157,6 +157,7 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
 
     DATA: lv_result    TYPE xstring,
           lv_path      TYPE string,
+          lv_mess      TYPE c LENGTH 200,
           ls_fils_item TYPE zcl_abapgit_objects=>ty_serialization.
 
 
@@ -166,10 +167,16 @@ CLASS zcl_abapgit_serialize IMPLEMENTATION.
         ev_path   = lv_path
       EXCEPTIONS
         error     = 1
-        OTHERS    = 2.
+        system_failure = 2 MESSAGE lv_mess
+        communication_failure = 3 MESSAGE lv_mess
+        OTHERS = 4.
     IF sy-subrc <> 0.
       IF NOT mi_log IS INITIAL.
-        mi_log->add_error( |{ sy-msgv1 }{ sy-msgv2 }{ sy-msgv3 }{ sy-msgv3 }| ).
+        IF NOT lv_mess IS INITIAL.
+          mi_log->add_error( lv_mess ).
+        ELSE.
+          mi_log->add_error( |{ sy-msgv1 }{ sy-msgv2 }{ sy-msgv3 }{ sy-msgv3 }, { sy-subrc }| ).
+        ENDIF.
       ENDIF.
     ELSE.
       IMPORT data = ls_fils_item FROM DATA BUFFER lv_result. "#EC CI_SUBRC

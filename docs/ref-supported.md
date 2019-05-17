@@ -4,7 +4,6 @@ category: reference
 order: 20
 ---
 
-
 Type   | Description   | Supported
 :------------ | :------------ | ------------:
 ACID | Checkpoint Group | Yes
@@ -115,6 +114,8 @@ WDYN | Web Dynpro Component | Yes
 WEBI | Virtual End Point | Yes
 XINX | Extension Index | Yes
 XSLT | Transformation | Yes
+
+If additional object types are required please open an [issue](https://github.com/larshp/abapGit/issues)
 
 Support for customizing planned, see [#1004](https://github.com/larshp/abapGit/issues/1004)
 
