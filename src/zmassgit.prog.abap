@@ -21,9 +21,12 @@
 * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 * SOFTWARE.
 ********************************************************************************
-
+*( )_( )
+*(='.'=)
+*(")_(")
 * This program allow to generate Abapgit ZIP files from transport request(s)
 * in a given folder with the given logic ( FULL or PREFIX )
+
 
 REPORT zmassgit.
 
@@ -45,11 +48,14 @@ CLASS lcl_matchcodes IMPLEMENTATION.
 
   METHOD f4_folder.
 
-    DATA: lv_folder  TYPE string.
+    DATA: lv_folder TYPE string,
+          lv_title  TYPE string.
+
+    lv_title = 'Choose the destination folder for the ZIP files '(t01).
 
     CALL METHOD cl_gui_frontend_services=>directory_browse
       EXPORTING
-        window_title         = | { 'Choose the destination folder for the ZIP files '(t01) } |
+        window_title         = lv_title
         initial_folder       = gv_last_folder
       CHANGING
         selected_folder      = lv_folder
@@ -250,7 +256,7 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
 
   METHOD constructor.
 
-    me->gv_timestamp = |{ sy-datlo }_{ sy-timlo }|.
+    CONCATENATE sy-datlo sy-timlo INTO me->gv_timestamp SEPARATED BY '_'.
 
     me->gv_full_folder = get_full_folder( EXPORTING iv_folder = iv_folder ).
 
