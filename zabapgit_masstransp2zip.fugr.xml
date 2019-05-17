@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_FUGR" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <AREAT>Mass transport to ZIP</AREAT>
+   <INCLUDES>
+    <SOBJ_NAME>LZABAPGIT_MASSTRANSP2ZIPF01</SOBJ_NAME>
+    <SOBJ_NAME>LZABAPGIT_MASSTRANSP2ZIPPLC</SOBJ_NAME>
+    <SOBJ_NAME>LZABAPGIT_MASSTRANSP2ZIPSCR</SOBJ_NAME>
+    <SOBJ_NAME>LZABAPGIT_MASSTRANSP2ZIPTOP</SOBJ_NAME>
+    <SOBJ_NAME>SAPLZABAPGIT_MASSTRANSP2ZIP</SOBJ_NAME>
+   </INCLUDES>
+   <FUNCTIONS>
+    <item>
+     <FUNCNAME>Z_ABAPGIT_TRANSPORTS_2_ZIP</FUNCNAME>
+     <SHORT_TEXT>Select and download transports to zip files in a folder</SHORT_TEXT>
+    </item>
+   </FUNCTIONS>
+   <CUA>
+    <TIT>
+     <RSMPE_TITT>
+      <CODE>0200</CODE>
+      <TEXT>&amp;1</TEXT>
+     </RSMPE_TITT>
+    </TIT>
+   </CUA>
+  </asx:values>
+ </asx:abap>
+</abapGit>
