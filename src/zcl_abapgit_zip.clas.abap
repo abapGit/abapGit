@@ -12,23 +12,23 @@ CLASS zcl_abapgit_zip DEFINITION
       RETURNING
         VALUE(rv_xstr) TYPE xstring
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     CLASS-METHODS export_object
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     CLASS-METHODS export_package
       EXPORTING
         !ev_xstr    TYPE xstring
         !ev_package TYPE devclass
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     CLASS-METHODS load
       IMPORTING
         !iv_xstr        TYPE xstring
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -38,7 +38,7 @@ CLASS zcl_abapgit_zip DEFINITION
       RETURNING
         VALUE(rv_xstr) TYPE xstring
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     CLASS-METHODS filename
       IMPORTING
         !iv_str      TYPE string
@@ -46,7 +46,7 @@ CLASS zcl_abapgit_zip DEFINITION
         !ev_path     TYPE string
         !ev_filename TYPE string
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     CLASS-METHODS normalize_path
       CHANGING
         !ct_files TYPE zif_abapgit_definitions=>ty_files_tt
@@ -58,7 +58,7 @@ CLASS zcl_abapgit_zip DEFINITION
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
