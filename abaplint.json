@@ -46,6 +46,10 @@
       "enabled": true,
       "exclude": []
     },
+    "constructor_visibility_public": {
+      "enabled": true,
+      "exclude": []
+    },    
     "contains_tab": {
       "enabled": true,
       "exclude": []
