@@ -53,7 +53,7 @@ CLASS lcl_matchcodes IMPLEMENTATION.
 
     lv_title = 'Choose the destination folder for the ZIP files '(t01).
 
-    CALL METHOD cl_gui_frontend_services=>directory_browse
+    cl_gui_frontend_services=>directory_browse(
       EXPORTING
         window_title         = lv_title
         initial_folder       = gv_last_folder
@@ -63,7 +63,7 @@ CLASS lcl_matchcodes IMPLEMENTATION.
         cntl_error           = 1
         error_no_gui         = 2
         not_supported_by_gui = 3
-        OTHERS               = 4.
+        OTHERS               = 4 ).
 
     IF sy-subrc EQ 0.
 
@@ -181,13 +181,13 @@ CLASS lcl_reporter IMPLEMENTATION.
           lo_except TYPE REF TO cx_root.
 
     TRY.
-        CALL METHOD cl_salv_table=>factory "get SALV factory instance
+        cl_salv_table=>factory( "get SALV factory instance
           EXPORTING
             list_display = if_salv_c_bool_sap=>false
           IMPORTING
             r_salv_table = lo_alv
           CHANGING
-            t_table      = me->gt_report.
+            t_table      = me->gt_report ).
 
       CATCH cx_salv_msg INTO lo_except.
 
@@ -276,8 +276,7 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
         error_no_gui         = 2
         wrong_parameter      = 3
         not_supported_by_gui = 4
-        OTHERS               = 5
-    ).
+        OTHERS               = 5 ).
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_wrong_data
         MESSAGE e137(c$) WITH 'Internal error checking existence of folder'(m01) iv_folder.
@@ -292,14 +291,14 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
           lv_rc                 TYPE i.
 
 *-obtain file separator character---------------------------------------
-    CALL METHOD cl_gui_frontend_services=>get_file_separator
+    cl_gui_frontend_services=>get_file_separator(
       CHANGING
         file_separator       = lv_sep
       EXCEPTIONS
         cntl_error           = 1
         error_no_gui         = 2
         not_supported_by_gui = 3
-        OTHERS               = 4.
+        OTHERS               = 4 ).
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE cx_wrong_data
         MESSAGE e137(c$) WITH 'Internal error getting file separator'(m03).
