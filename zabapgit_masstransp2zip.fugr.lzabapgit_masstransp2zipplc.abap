@@ -27,24 +27,22 @@
 * This program allow to generate Abapgit ZIP files from transport request(s)
 * in a given folder with the given logic ( FULL or PREFIX )
 
-
-REPORT zmassgit.
-
 *================================ CLASSES =============================*
 
-*============================  MATCHCODES =============================*
-CLASS lcl_matchcodes DEFINITION FINAL.
+*================================  GUI ================================*
+CLASS lcl_gui DEFINITION FINAL.
 
   PUBLIC SECTION.
     CLASS-METHODS f4_folder CHANGING cv_folder TYPE string.
     CLASS-METHODS f4_transport_request CHANGING cv_trkorr TYPE e070v-trkorr.
+    CLASS-METHODS open_folder_frontend IMPORTING iv_folder TYPE string.
 
   PRIVATE SECTION.
     CLASS-DATA: gv_last_folder TYPE string.
 
 ENDCLASS.
 
-CLASS lcl_matchcodes IMPLEMENTATION.
+CLASS lcl_gui IMPLEMENTATION.
 
   METHOD f4_folder.
 
@@ -90,6 +88,30 @@ CLASS lcl_matchcodes IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD open_folder_frontend.
+
+    IF NOT iv_folder IS INITIAL.
+
+      CALL METHOD cl_gui_frontend_services=>execute
+        EXPORTING
+          document               = iv_folder
+        EXCEPTIONS
+          cntl_error             = 1
+          error_no_gui           = 2
+          bad_parameter          = 3
+          file_not_found         = 4
+          path_not_found         = 5
+          file_extension_unknown = 6
+          error_execute_failed   = 7
+          OTHERS                 = 8.
+      IF sy-subrc <> 0.
+        MESSAGE 'Problem when opening output folder'(m05) TYPE 'S' DISPLAY LIKE 'E'.
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 *========================== DATA SELECTOR =============================*
@@ -98,10 +120,7 @@ CLASS lcl_data_selector DEFINITION FINAL.
   PUBLIC SECTION.
 
 * Transport requests structure
-    TYPES: BEGIN OF ty_trkorr,
-             trkorr  TYPE e070v-trkorr,
-             as4text TYPE e070v-as4text,
-           END OF ty_trkorr.
+    TYPES ty_trkorr TYPE trwbo_request_header.
 
 * Transport request extraction table type
     TYPES tt_trkorr TYPE SORTED TABLE OF ty_trkorr WITH UNIQUE KEY trkorr.
@@ -128,9 +147,9 @@ CLASS lcl_data_selector IMPLEMENTATION.
 
   METHOD get_transport_requests.
 
-    SELECT trkorr as4text
+    SELECT * ##TOO_MANY_ITAB_FIELDS
       FROM e070v
-      INTO TABLE rt_trkorr
+      INTO CORRESPONDING FIELDS OF TABLE rt_trkorr
       WHERE trkorr IN is_sel_crit-t_r_trkorr.
     IF sy-subrc <> 0.
       CLEAR rt_trkorr.
@@ -147,7 +166,8 @@ CLASS lcl_reporter DEFINITION FINAL.
 
     TYPES: BEGIN OF ty_report,
              trkorr   TYPE e070v-trkorr,
-             filename TYPE string,
+             as4text  TYPE e070v-as4text,
+             filename TYPE fb_icrc_pfile,
            END OF ty_report.
 
     TYPES tt_report TYPE STANDARD TABLE OF ty_report.
@@ -155,11 +175,15 @@ CLASS lcl_reporter DEFINITION FINAL.
     METHODS fill_report_table IMPORTING is_trkorr   TYPE lcl_data_selector=>ty_trkorr
                                         iv_filename TYPE ty_report-filename.
 
-    METHODS display_report.
+    METHODS display_report IMPORTING iv_start_column TYPE i DEFAULT 5
+                                     iv_end_column   TYPE i DEFAULT 140
+                                     iv_start_line   TYPE i DEFAULT 5
+                                     iv_end_line     TYPE i DEFAULT 20.
 
   PRIVATE SECTION.
 
-    DATA gt_report TYPE tt_report.
+    DATA gt_report    TYPE tt_report.
+    DATA go_alv       TYPE REF TO cl_salv_table.
 
 ENDCLASS.
 
@@ -170,6 +194,7 @@ CLASS lcl_reporter IMPLEMENTATION.
     DATA: ls_report TYPE ty_report.
 
     ls_report-trkorr   = is_trkorr-trkorr.
+    ls_report-as4text  = is_trkorr-as4text.
     ls_report-filename = iv_filename.
     APPEND ls_report TO me->gt_report.
 
@@ -177,15 +202,17 @@ CLASS lcl_reporter IMPLEMENTATION.
 
   METHOD display_report.
 
-    DATA: lo_alv    TYPE REF TO cl_salv_table,
-          lo_except TYPE REF TO cx_root.
+    DATA: lo_except TYPE REF TO cx_root.
+
+    IF me->go_alv IS BOUND.
+      RETURN.
+    ENDIF.
 
     TRY.
-        cl_salv_table=>factory( "get SALV factory instance
-          EXPORTING
-            list_display = if_salv_c_bool_sap=>false
+
+        cl_salv_table=>factory(
           IMPORTING
-            r_salv_table = lo_alv
+            r_salv_table = me->go_alv
           CHANGING
             t_table      = me->gt_report ).
 
@@ -195,13 +222,21 @@ CLASS lcl_reporter IMPLEMENTATION.
 
     ENDTRY.
 
-    lo_alv->get_columns( )->set_optimize( abap_true ).
+    me->go_alv->get_columns( )->set_optimize( abap_true ).
 
-    lo_alv->set_screen_status( pfstatus      = 'STANDARD'
-                               report        = 'SAPLSALV'
-                               set_functions = lo_alv->c_functions_all ).
+    me->go_alv->set_screen_status( pfstatus      = 'STANDARD'
+                                   report        = 'SAPLSALV'
+                                   set_functions = me->go_alv->c_functions_all ).
 
-    lo_alv->display( ). "display grid
+    me->go_alv->set_screen_popup(
+      start_column = iv_start_column
+      start_line   = iv_start_line
+      end_column   = iv_end_column
+      end_line     = iv_end_line ).
+
+    SET TITLEBAR '0200' WITH TEXT-tit.
+
+    me->go_alv->display( ). "display grid
 
   ENDMETHOD.
 
@@ -224,7 +259,7 @@ CLASS lcl_transport_zipper DEFINITION FINAL.
     CONSTANTS gc_zip_ext TYPE string VALUE '.zip' ##NO_TEXT.
 
     DATA: gv_timestamp   TYPE string,
-          gv_full_folder TYPE ty_folder.
+          gv_full_folder TYPE ty_folder READ-ONLY.
 
     METHODS constructor  IMPORTING iv_folder   TYPE ty_folder
                                    io_reporter TYPE REF TO lcl_reporter
@@ -286,9 +321,8 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
 
   METHOD get_full_folder.
 
-    DATA: lv_does_folder_exists TYPE flag,
-          lv_sep                TYPE c,
-          lv_rc                 TYPE i.
+    DATA: lv_sep TYPE c,
+          lv_rc  TYPE i.
 
 *-obtain file separator character---------------------------------------
     cl_gui_frontend_services=>get_file_separator(
@@ -404,7 +438,7 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
 
     LOOP AT it_trkorr INTO ls_trkorr.
 
-      lv_zipbinstring = zcl_abapgit_transport_mass=>zip( EXPORTING iv_trkorr = ls_trkorr-trkorr
+      lv_zipbinstring = zcl_abapgit_transport_mass=>zip( EXPORTING is_trkorr = ls_trkorr
                                                                    iv_logic  = iv_logic ).
 
       me->save_binstring( EXPORTING iv_binstring = lv_zipbinstring
@@ -415,105 +449,3 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
   ENDMETHOD.
 
 ENDCLASS.
-*======================================================================*
-
-*======================== SELECTION SCREEN ============================*
-SELECTION-SCREEN BEGIN OF BLOCK a WITH FRAME TITLE TEXT-t01.
-
-* Transport request
-SELECT-OPTIONS s_trkorr FOR lcl_data_selector=>gv_trkorr OBLIGATORY.
-
-* Output Folder
-PARAMETERS p_folder TYPE lcl_transport_zipper=>ty_folder OBLIGATORY LOWER CASE.
-
-* Package logic
-PARAMETERS p_logic TYPE lcl_transport_zipper=>ty_logic OBLIGATORY DEFAULT lcl_transport_zipper=>gc_logic_full.
-
-SELECTION-SCREEN END OF BLOCK a.
-*======================================================================*
-
-*============================= EVENTS =================================*
-START-OF-SELECTION.
-  PERFORM f_main.
-
-AT SELECTION-SCREEN ON VALUE-REQUEST FOR p_folder.
-  lcl_matchcodes=>f4_folder( CHANGING cv_folder = p_folder ).
-
-AT SELECTION-SCREEN ON VALUE-REQUEST FOR s_trkorr-low.
-  lcl_matchcodes=>f4_transport_request( CHANGING cv_trkorr = s_trkorr-low ).
-
-AT SELECTION-SCREEN ON VALUE-REQUEST FOR s_trkorr-high.
-  lcl_matchcodes=>f4_transport_request( CHANGING cv_trkorr = s_trkorr-high ).
-
-AT SELECTION-SCREEN.
-  PERFORM f_check_folder USING p_folder.
-
-*======================================================================*
-
-*&---------------------------------------------------------------------*
-*& Form F_MAIN
-*&---------------------------------------------------------------------*
-FORM f_main.
-
-  DATA:
-    lt_trkorr   TYPE lcl_data_selector=>tt_trkorr,
-    ls_sel_crit TYPE lcl_data_selector=>ty_sel_criterias.
-
-  DATA:
-    lo_transport_zipper TYPE REF TO lcl_transport_zipper,
-    lo_reporter         TYPE REF TO lcl_reporter,
-    lo_except           TYPE REF TO cx_root.
-
-  ls_sel_crit-t_r_trkorr[] = s_trkorr[].
-
-  TRY.
-
-      lt_trkorr = lcl_data_selector=>get_transport_requests( EXPORTING is_sel_crit = ls_sel_crit ).
-
-      IF lt_trkorr[] IS NOT INITIAL.
-
-* Instantiate reporter
-        lo_reporter = NEW lcl_reporter( ).
-
-* Instantiate transport zipper object that will also create the timestamped output folder
-        lo_transport_zipper = NEW lcl_transport_zipper( iv_folder   = p_folder
-                                                        io_reporter = lo_reporter ).
-
-* Generate the local zip files from the given list of transport requests
-        lo_transport_zipper->generate_files( EXPORTING it_trkorr = lt_trkorr
-                                                       iv_logic  = p_logic ).
-
-      ELSE.
-* No data found for the provided selection criterias
-        RAISE EXCEPTION TYPE cx_wrong_data MESSAGE e008(ciwb_ui).
-      ENDIF.
-
-      lo_reporter->display_report( ).
-
-    CATCH cx_wrong_data
-          zcx_abapgit_exception INTO lo_except.
-
-      MESSAGE lo_except->get_text( ) TYPE 'E'.
-
-  ENDTRY.
-
-ENDFORM.
-
-*&---------------------------------------------------------------------*
-*& Form F_CHECK_FOLDER
-*&---------------------------------------------------------------------*
-FORM f_check_folder  USING iv_folder TYPE string.
-
-  DATA lo_except TYPE REF TO cx_root.
-
-  TRY.
-      IF lcl_transport_zipper=>does_folder_exist( EXPORTING iv_folder = iv_folder ) = abap_false.
-        SET CURSOR FIELD 'P_FOLDER'.
-        MESSAGE e137(c$) WITH 'Invalid folder'(m04) iv_folder.
-      ENDIF.
-    CATCH cx_wrong_data INTO lo_except.
-      MESSAGE lo_except->get_text( ) TYPE 'E'.
-  ENDTRY.
-
-
-ENDFORM.

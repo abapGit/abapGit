@@ -13,7 +13,9 @@ public section.
   class-methods IS_AVAILABLE
     returning
       value(RV_AVAILABLE) type ABAP_BOOL .
+
   class-methods RUN .
+  
   class-methods ZIP
     importing
       !IS_TRKORR type TRWBO_REQUEST_HEADER
@@ -93,7 +95,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT_MASS IMPLEMENTATION.
   METHOD is_available.
 
 * Mass Transport to ZIP file function module
-* Use this check for the abap_merger version ( installator )
+* Use this check for the abap_merger version ( install code )
     CALL FUNCTION 'FUNCTION_EXISTS'
       EXPORTING
         funcname           = gc_fm_name
@@ -107,7 +109,6 @@ CLASS ZCL_ABAPGIT_TRANSPORT_MASS IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
 
   METHOD READ_REQUESTS.
     DATA lt_requests LIKE rt_requests.
@@ -179,6 +180,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT_MASS IMPLEMENTATION.
 
   METHOD run.
 
+* Mass Transport to ZIP file function module
     CALL FUNCTION gc_fm_name.
 
   ENDMETHOD.

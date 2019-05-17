@@ -1,12 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<abapGit version="v1.0.0" serializer="LCL_OBJECT_PROG" serializer_version="v1.0.0">
+<abapGit version="v1.0.0">
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <PROGDIR>
-    <NAME>ZMASSGIT</NAME>
-    <SUBC>1</SUBC>
+    <NAME>SAPLZABAPGIT_MASSTRANSP2ZIP</NAME>
+    <DBAPL>S</DBAPL>
+    <DBNA>D$</DBNA>
+    <SUBC>F</SUBC>
+    <APPL>S</APPL>
     <RLOAD>E</RLOAD>
     <FIXPT>X</FIXPT>
+    <LDBNAME>D$S</LDBNAME>
     <UCCHECK>X</UCCHECK>
    </PROGDIR>
    <TPOOL>
@@ -42,14 +46,33 @@
     </item>
     <item>
      <ID>I</ID>
+     <KEY>M05</KEY>
+     <ENTRY>Problem when opening output folder</ENTRY>
+     <LENGTH>68</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
      <KEY>T01</KEY>
      <ENTRY>Choose the destination folder for the ZIP files</ENTRY>
      <LENGTH>94</LENGTH>
     </item>
     <item>
-     <ID>R</ID>
-     <ENTRY>AbapGit transport mass zip-export</ENTRY>
-     <LENGTH>33</LENGTH>
+     <ID>I</ID>
+     <KEY>T02</KEY>
+     <ENTRY>Options</ENTRY>
+     <LENGTH>17</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>TIT</KEY>
+     <ENTRY>ABAPGit Transport Mass Downloader</ENTRY>
+     <LENGTH>66</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>P_DSPLOG</KEY>
+     <ENTRY>Display ALV Log</ENTRY>
+     <LENGTH>23</LENGTH>
     </item>
     <item>
      <ID>S</ID>
@@ -62,6 +85,12 @@
      <KEY>P_LOGIC</KEY>
      <ENTRY>ABAPGIT Package Logic</ENTRY>
      <LENGTH>29</LENGTH>
+    </item>
+    <item>
+     <ID>S</ID>
+     <KEY>P_OPENFL</KEY>
+     <ENTRY>Open output folder after run</ENTRY>
+     <LENGTH>36</LENGTH>
     </item>
     <item>
      <ID>S</ID>
