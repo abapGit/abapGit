@@ -8,7 +8,14 @@ public section.
   types:
     tt_trkorr TYPE RANGE OF e070-trkorr .
 
+  constants GC_FM_NAME type RS38L-NAME value 'Z_ABAPGIT_TRANSPORTS_2_ZIP' ##NO_TEXT.
+
+  class-methods IS_AVAILABLE
+    returning
+      value(RV_AVAILABLE) type ABAP_BOOL .
+
   class-methods RUN .
+  
   class-methods ZIP
     importing
       !IS_TRKORR type TRWBO_REQUEST_HEADER
@@ -85,6 +92,24 @@ CLASS ZCL_ABAPGIT_TRANSPORT_MASS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_available.
+
+* Mass Transport to ZIP file function module
+* Use this check for the abap_merger version ( install code )
+    CALL FUNCTION 'FUNCTION_EXISTS'
+      EXPORTING
+        funcname           = gc_fm_name
+      EXCEPTIONS
+        function_not_exist = 1
+        OTHERS             = 2.
+    IF sy-subrc = 0.
+      rv_available = abap_true.
+    ELSE.
+      rv_available = abap_false.
+    ENDIF.
+
+  ENDMETHOD.
+
   METHOD READ_REQUESTS.
     DATA lt_requests LIKE rt_requests.
     FIELD-SYMBOLS <ls_trkorr> LIKE LINE OF it_trkorr.
@@ -156,7 +181,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT_MASS IMPLEMENTATION.
   METHOD run.
 
 * Mass Transport to ZIP file function module
-    CALL FUNCTION 'Z_ABAPGIT_TRANSPORTS_2_ZIP'.
+    CALL FUNCTION gc_fm_name.
 
   ENDMETHOD.
 
