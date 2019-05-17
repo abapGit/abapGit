@@ -1,33 +1,34 @@
-CLASS zcl_abapgit_zip DEFINITION
-  PUBLIC
-  CREATE PUBLIC .
+class ZCL_ABAPGIT_ZIP definition
+  public
+  create public .
 
-  PUBLIC SECTION.
+public section.
 
-    CLASS-METHODS export
-      IMPORTING
-        !io_repo       TYPE REF TO zcl_abapgit_repo
-        !it_filter     TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
-      RETURNING
-        VALUE(rv_xstr) TYPE xstring
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS export_object
-      RAISING
-        zcx_abapgit_exception.
-    CLASS-METHODS export_package
-      EXPORTING
-        !ev_xstr    TYPE xstring
-        !ev_package TYPE devclass
-      RAISING
-        zcx_abapgit_exception.
-    CLASS-METHODS load
-      IMPORTING
-        !iv_xstr        TYPE xstring
-      RETURNING
-        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
-      RAISING
-        zcx_abapgit_exception .
+  class-methods EXPORT
+    importing
+      !IO_REPO type ref to ZCL_ABAPGIT_REPO
+      !IV_LOGFLAG type ABAP_BOOL default ABAP_TRUE
+      !IT_FILTER type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT optional
+    returning
+      value(RV_XSTR) type XSTRING
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods EXPORT_OBJECT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods EXPORT_PACKAGE
+    exporting
+      !EV_XSTR type XSTRING
+      !EV_PACKAGE type DEVCLASS
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods LOAD
+    importing
+      !IV_XSTR type XSTRING
+    returning
+      value(RT_FILES) type ZIF_ABAPGIT_DEFINITIONS=>TY_FILES_TT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -104,7 +105,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     lt_zip = io_repo->get_files_local( ii_log    = li_log
                                        it_filter = it_filter ).
 
-    IF li_log->count( ) > 0.
+    IF li_log->count( ) > 0 AND iv_logflag EQ abap_true.
       li_log->show( ).
     ENDIF.
 
