@@ -358,7 +358,13 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
 
   METHOD checkbox.
-    rv_html = |<input type="checkbox" id="{ iv_id }">|.
+
+    DATA: lv_span TYPE string.
+
+    lv_span = |<span class="tooltiptext hidden"></span>|.
+    rv_html = |<input type="checkbox" id="{ iv_id }">|
+           && |{ lv_span }|.
+
   ENDMETHOD.
 
 ENDCLASS.

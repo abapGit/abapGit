@@ -730,7 +730,7 @@ function LinkHints(sLinkHintKey, sColor){
   this.oTooltipMap = {};
   this.bTooltipsOn = false;
   this.sPending = "";
-  this.aTooltipElements = document.querySelectorAll("a span");
+  this.aTooltipElements = document.querySelectorAll("span.tooltiptext");
 }
 
 LinkHints.prototype.renderTooltip = function (oTooltip, iTooltipCounter) {
@@ -829,7 +829,21 @@ LinkHints.prototype.tooltipActivate = function (oTooltip) {
   // a tooltips was successfully specified, so we try to trigger the link
   // and remove all tooltips
   this.removeAllTooltips();
-  oTooltip.parentElement.click();
+
+  // we have technically 2 scenarios
+  // 1) hint to a checkbox: as input field cannot include tags
+  //    we place the span after input
+  // 2) hint to a link: the span in included in the anchor tag
+
+  var elInput = oTooltip.parentElement.querySelector("input");
+
+  if (elInput) {
+    // case 1) toggle the checkbox
+    elInput.checked = !elInput.checked;
+  } else {
+    // case 2) click the link
+    oTooltip.parentElement.click();
+  }
 
   // in case it is a dropdownmenu we have to expand and focus it
   this.activateDropDownMenu(oTooltip);
