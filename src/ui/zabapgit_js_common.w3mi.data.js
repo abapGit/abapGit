@@ -1114,12 +1114,12 @@ Patch.prototype.preparePatch = function(){
 
 Patch.prototype.registerClickHandlerForFiles = function(){
   // registers the link handlers for add and remove files
-  this.registerClickHandlerForPatchFile("input[id^='" + PatchFile.prototype.ID + "']");
+  this.registerClickHandlerForSelector("input[id^='" + PatchFile.prototype.ID + "']", this.onClickFileCheckbox);
 };
 
 Patch.prototype.registerClickHandlerForSections = function(){
   // registers the link handlers for add and remove sections
-  this.registerClickHandlerForPatchSection("input[id^='" + PatchSection.prototype.ID + "']");
+  this.registerClickHandlerForSelector("input[id^='" + PatchSection.prototype.ID + "']", this.onClickSectionCheckbox);
 };
 
 Patch.prototype.registerClickHandlerForSelector = function(sSelector, fnCallback){
@@ -1130,14 +1130,6 @@ Patch.prototype.registerClickHandlerForSelector = function(sSelector, fnCallback
     elem.addEventListener("click", fnCallback.bind(this));
   }.bind(this));
 
-};
-
-Patch.prototype.registerClickHandlerForPatchFile = function(sSelector){
-  this.registerClickHandlerForSelector(sSelector, this.onClickFileCheckbox);
-};
-
-Patch.prototype.registerClickHandlerForPatchSection = function(sSelector){
-  this.registerClickHandlerForSelector(sSelector, this.onClickSectionCheckbox);
 };
 
 Patch.prototype.getAllLineCheckboxesForId = function(sId, sIdPrefix){
@@ -1167,10 +1159,10 @@ Patch.prototype.getAllLineCheckboxesForSection = function(oSection){
 Patch.prototype.onClickFileCheckbox = function(oEvent) {
 
   var oFile = new PatchFile(oEvent.srcElement.id);
-  var elAllCheckboxLinksOfFile = this.getAllLineCheckboxesForFile(oFile);
+  var elAllLineCheckboxesOfFile = this.getAllLineCheckboxesForFile(oFile);
   var elAllSectionCheckboxesOfFile = this.getAllSectionCheckboxesForFile(oFile);
 
-  [].forEach.call(elAllCheckboxLinksOfFile,function(elem){
+  [].forEach.call(elAllLineCheckboxesOfFile,function(elem){
     elem.checked = oEvent.srcElement.checked;
   }.bind(this));
 
@@ -1212,14 +1204,14 @@ Patch.prototype.stagePatch = function() {
 
   // Collect add and remove info and submit to backend
 
-  var aAddPatch = this.collectElementsForId( PatchLine.prototype.ID, true );
-  var aRemovePatch = this.collectElementsForId( PatchLine.prototype.ID, false);
+  var aAddPatch = this.collectElementsForCheckboxId(PatchLine.prototype.ID, true);
+  var aRemovePatch = this.collectElementsForCheckboxId(PatchLine.prototype.ID, false);
 
   submitSapeventForm({"add": aAddPatch, "remove": aRemovePatch}, this.ACTION.PATCH_STAGE, "post");
 
 };
 
-Patch.prototype.collectElementsForId = function(sId, bChecked){
+Patch.prototype.collectElementsForCheckboxId = function(sId, bChecked){
 
   var sSelector = "input[id^='" + sId + "']";
 
