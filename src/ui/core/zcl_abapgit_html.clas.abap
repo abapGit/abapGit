@@ -24,6 +24,7 @@ CLASS zcl_abapgit_html DEFINITION
         !iv_class TYPE string OPTIONAL .
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CONSTANTS: co_span_link_hint TYPE string VALUE `<span class="tooltiptext hidden"></span>`.
     CLASS-DATA: go_single_tags_re TYPE REF TO cl_abap_regex.
 
     DATA: mt_buffer TYPE string_table.
@@ -203,8 +204,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
           lv_href  TYPE string,
           lv_click TYPE string,
           lv_id    TYPE string,
-          lv_style TYPE string,
-          lv_span  TYPE string.
+          lv_style TYPE string.
 
     lv_class = iv_class.
 
@@ -245,9 +245,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       lv_style = | style="{ iv_style }"|.
     ENDIF.
 
-    lv_span = |<span class="tooltiptext hidden"></span>|.
-
-    rv_str = |<a{ lv_id }{ lv_class }{ lv_href }{ lv_click }{ lv_style }>{ iv_txt }{ lv_span }</a>|.
+    rv_str = |<a{ lv_id }{ lv_class }{ lv_href }{ lv_click }{ lv_style }>{ iv_txt }{ co_span_link_hint }</a>|.
 
   ENDMETHOD.
 
@@ -359,11 +357,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
   METHOD checkbox.
 
-    DATA: lv_span TYPE string.
-
-    lv_span = |<span class="tooltiptext hidden"></span>|.
     rv_html = |<input type="checkbox" id="{ iv_id }">|
-           && |{ lv_span }|.
+           && |{ co_span_link_hint }|.
 
   ENDMETHOD.
 
