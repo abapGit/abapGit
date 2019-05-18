@@ -6,12 +6,13 @@ CLASS zcl_abapgit_html DEFINITION
     INTERFACES zif_abapgit_html.
 
     ALIASES:
-      add      FOR zif_abapgit_html~add,
-      render   FOR zif_abapgit_html~render,
-      is_empty FOR zif_abapgit_html~is_empty,
-      add_a    FOR zif_abapgit_html~add_a,
-      a        FOR zif_abapgit_html~a,
-      icon     FOR zif_abapgit_html~icon.
+      add          FOR zif_abapgit_html~add,
+      render       FOR zif_abapgit_html~render,
+      is_empty     FOR zif_abapgit_html~is_empty,
+      add_a        FOR zif_abapgit_html~add_a,
+      add_checkbox FOR zif_abapgit_html~add_checkbox,
+      a            FOR zif_abapgit_html~a,
+      icon         FOR zif_abapgit_html~icon.
 
     CONSTANTS c_indent_size TYPE i VALUE 2 ##NO_TEXT.
 
@@ -59,6 +60,11 @@ CLASS zcl_abapgit_html DEFINITION
         is_context       TYPE ty_indent_context
       RETURNING
         VALUE(rs_result) TYPE ty_study_result.
+    METHODS checkbox
+      IMPORTING
+        iv_id          TYPE string
+      RETURNING
+        VALUE(rv_html) TYPE string.
 
 ENDCLASS.
 
@@ -343,4 +349,16 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY cl_abap_char_utilities=>newline.
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_html~add_checkbox.
+
+    add( checkbox( iv_id ) ).
+
+  ENDMETHOD.
+
+
+  METHOD checkbox.
+    rv_html = |<input type="checkbox" id="{ iv_id }">|.
+  ENDMETHOD.
+
 ENDCLASS.

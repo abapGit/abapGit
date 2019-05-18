@@ -602,7 +602,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     IF mv_patch_mode = abap_true.
 
       ro_html->add( |<th class="patch">| ).
-      ro_html->add( |<input type="checkbox" id="patch_section_{ is_diff-filename }_{ mv_section_count }">| ).
+      ro_html->add_checkbox( iv_id = |patch_section_{ is_diff-filename }_{ mv_section_count }| ).
       ro_html->add( '</th>' ).
 
     ELSE.
@@ -909,7 +909,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
       lv_id = |{ lv_object }_{ mv_section_count }_{ iv_index }|.
 
       io_html->add( |<td class="{ c_css_class-patch }">| ).
-      io_html->add( |<input type="checkbox" id="patch_line_{ lv_id }">| ).
+      io_html->add_checkbox( iv_id = |patch_line_{ lv_id }| ).
       io_html->add( |</td>| ).
 
     ELSE.
@@ -925,7 +925,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   METHOD render_patch_head.
 
     io_html->add( |<th class="patch">| ).
-    io_html->add( |<input type="checkbox" id="patch_file_{ is_diff-filename }">| ).
+    io_html->add_checkbox( iv_id = |patch_file_{ is_diff-filename }| ).
     io_html->add( '</th>' ).
 
   ENDMETHOD.
