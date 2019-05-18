@@ -120,7 +120,6 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         zcx_abapgit_exception .
     METHODS apply_patch_all
       IMPORTING
-        iv_action     TYPE ty_patch_action
         iv_patch      TYPE string
         iv_patch_flag TYPE abap_bool
       RAISING
@@ -154,7 +153,6 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
     CLASS-METHODS get_patch_data
       IMPORTING
         iv_patch      TYPE string
-        iv_action     TYPE string
       EXPORTING
         ev_filename   TYPE string
         ev_line_index TYPE string
@@ -164,7 +162,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
 
   METHOD add_to_stage.
@@ -315,7 +313,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       get_patch_data(
         EXPORTING
           iv_patch      = <lv_patch>
-          iv_action     = iv_action
         IMPORTING
           ev_filename   = lv_filename
           ev_line_index = lv_line_index ).
@@ -534,11 +531,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     CLEAR: ev_filename, ev_line_index.
 
-    IF iv_action <> c_patch_action-add AND iv_action <> c_patch_action-remove.
-      zcx_abapgit_exception=>raise( |Invalid action { iv_action }| ).
-    ENDIF.
-
-    FIND FIRST OCCURRENCE OF REGEX `patch_line_` && iv_action && `_(.*)_(\d)+_(\d+)`
+    FIND FIRST OCCURRENCE OF REGEX `patch_line` && `_(.*)_(\d)+_(\d+)`
          IN iv_patch
          SUBMATCHES ev_filename lv_section ev_line_index.
     IF sy-subrc <> 0.
@@ -609,19 +602,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     IF mv_patch_mode = abap_true.
 
       ro_html->add( |<th class="patch">| ).
-
-      ro_html->add_a( iv_txt   = |{ c_patch_action-add }|
-                      iv_act   = |patch_section_add('{ is_diff-filename }','{ mv_section_count }')|
-                      iv_id    = |patch_section_add_{ is_diff-filename }_{ mv_section_count }|
-                      iv_class = |patch_section_add|
-                      iv_typ   = zif_abapgit_html=>c_action_type-dummy ).
-
-      ro_html->add_a( iv_txt   = |{ c_patch_action-remove }|
-                      iv_act   = |patch_section_remove('{ is_diff-filename }', '{ mv_section_count }')|
-                      iv_id    = |patch_section_remove_{ is_diff-filename }_{ mv_section_count }|
-                      iv_class = |patch_section_remove|
-                      iv_typ   = zif_abapgit_html=>c_action_type-dummy ).
-
+      ro_html->add( |<input type="checkbox" id="patch_section_{ is_diff-filename }_{ mv_section_count }">| ).
       ro_html->add( '</th>' ).
 
     ELSE.
@@ -913,8 +894,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     CONSTANTS:
       BEGIN OF c_css_class,
-        patch_active TYPE string VALUE `patch-active` ##NO_TEXT,
-        patch        TYPE string VALUE `patch` ##NO_TEXT,
+        patch TYPE string VALUE `patch` ##NO_TEXT,
       END OF c_css_class.
 
     DATA: lv_id          TYPE string,
@@ -929,24 +909,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       lv_id = |{ lv_object }_{ mv_section_count }_{ iv_index }|.
 
       io_html->add( |<td class="{ c_css_class-patch }">| ).
-
-      IF is_diff_line-patch_flag = abap_true.
-        lv_left_class = c_css_class-patch_active.
-      ELSE.
-        lv_right_class = c_css_class-patch_active.
-      ENDIF.
-
-      io_html->add_a( iv_txt   = |{ c_patch_action-add }|
-                      iv_act   = ||
-                      iv_id    = |patch_line_{ c_patch_action-add }_{ lv_id }|
-                      iv_typ   = zif_abapgit_html=>c_action_type-dummy
-                      iv_class = lv_left_class ).
-      io_html->add_a( iv_txt   = |{ c_patch_action-remove }|
-                      iv_act   = ||
-                      iv_id    = |patch_line_{ c_patch_action-remove }_{ lv_id }|
-                      iv_typ   = zif_abapgit_html=>c_action_type-dummy
-                      iv_class = lv_right_class ).
-
+      io_html->add( |<input type="checkbox" id="patch_line_{ lv_id }">| ).
       io_html->add( |</td>| ).
 
     ELSE.
@@ -962,19 +925,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
   METHOD render_patch_head.
 
     io_html->add( |<th class="patch">| ).
-
-    io_html->add_a( iv_txt   = |{ c_patch_action-add }|
-                    iv_act   = |patch_file_add('{ is_diff-filename }')|
-                    iv_id    = |patch_file_add_{ is_diff-filename }|
-                    iv_class = |patch_file_add|
-                    iv_typ   = zif_abapgit_html=>c_action_type-dummy ).
-
-    io_html->add_a( iv_txt   = |{ c_patch_action-remove }|
-                    iv_act   = |patch_file_remove('{ is_diff-filename }')|
-                    iv_id    = |patch_file_remove_{ is_diff-filename }|
-                    iv_class = |patch_file_remove|
-                    iv_typ   = zif_abapgit_html=>c_action_type-dummy ).
-
+    io_html->add( |<input type="checkbox" id="patch_file_{ is_diff-filename }">| ).
     io_html->add( '</th>' ).
 
   ENDMETHOD.
@@ -1051,12 +1002,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
                                                         it_field = lt_fields
                                               CHANGING  cg_field = lv_remove ).
 
-    apply_patch_all( iv_action     = c_patch_action-add
-                     iv_patch      = lv_add
+    apply_patch_all( iv_patch      = lv_add
                      iv_patch_flag = abap_true ).
 
-    apply_patch_all( iv_action     = c_patch_action-remove
-                     iv_patch      = lv_remove
+    apply_patch_all( iv_patch      = lv_remove
                      iv_patch_flag = abap_false ).
 
     add_to_stage( ).
