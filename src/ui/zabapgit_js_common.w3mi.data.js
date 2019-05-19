@@ -795,7 +795,7 @@ LinkHints.prototype.removeAllTooltips = function () {
 
 };
 
-LinkHints.prototype.filterTooltips = function (sPending) { // eslint-disable-line no-unused-vars
+LinkHints.prototype.filterTooltips = function () {
 
   Object
     .keys(this.oTooltipMap)
@@ -863,7 +863,7 @@ LinkHints.prototype.onkeypress = function(oEvent){
     } else {
       // we are not there yet, but let's filter the link so that only
       // the partially matched are shown
-      this.filterTooltips(this.sPending);
+      this.filterTooltips();
       this.disableTooltipsIfNoTooltipIsVisible();
     }
 
@@ -1371,7 +1371,7 @@ BranchOverview.prototype.showCommit = function(event){
 };
 
 // Called by commit:mouseout
-BranchOverview.prototype.hideCommit = function (event){ // eslint-disable-line no-unused-vars
+BranchOverview.prototype.hideCommit = function (){
   this.toggleCommit();
 };
 
