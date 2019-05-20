@@ -531,7 +531,7 @@ table.diff_tab td.num, th.num {
 }
 table.diff_tab td.patch, th.patch {
   width: 1%;
-  min-width: 6em;
+  min-width: 1.5em;
   padding-right: 8px;
   padding-left:  8px;
   text-align: right !important;
@@ -932,12 +932,6 @@ div.info-panel div.info-list td {
     border-style: solid;
     border-color: #555 transparent transparent transparent;
 }
-
-/* diff-patch */
-.patch-active {
-  color: lightgrey !important; 
-}
-
 
 /* HOTKEYS */
 ul.hotkeys {
