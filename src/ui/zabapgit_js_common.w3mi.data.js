@@ -1146,18 +1146,6 @@ Patch.prototype.registerClickHandlerForSelector = function(sSelector, fnCallback
 
 };
 
-Patch.prototype.getAllLineCheckboxesForId = function(sId, sIdPrefix){
-  var oRegex = new RegExp("^" + sIdPrefix);
-  sId = sId.replace(oRegex, PatchLine.prototype.ID);
-  return document.querySelectorAll("input[id^='"+ this.escape(sId) + "']");
-};
-
-Patch.prototype.getAllSectionCheckboxesForId = function(sId, sIdPrefix){
-  var oRegex = new RegExp("^" + sIdPrefix);
-  sId = sId.replace(oRegex, PatchSection.prototype.ID);
-  return document.querySelectorAll("input[id^='"+ this.escape(sId) + "']");
-};
-
 Patch.prototype.getAllLineCheckboxesForFile = function(oFile){
   return this.getAllLineCheckboxesForId(oFile.id, PatchFile.prototype.ID);
 };
@@ -1168,6 +1156,20 @@ Patch.prototype.getAllSectionCheckboxesForFile = function(oFile){
 
 Patch.prototype.getAllLineCheckboxesForSection = function(oSection){
   return this.getAllLineCheckboxesForId(oSection.id, PatchSection.prototype.ID);
+};
+
+Patch.prototype.getAllLineCheckboxesForId = function(sId, sIdPrefix){
+  return this.getAllCheckboxesForId(sId, sIdPrefix,PatchLine.prototype.ID);
+};
+
+Patch.prototype.getAllSectionCheckboxesForId = function(sId, sIdPrefix){
+  return this.getAllCheckboxesForId(sId, sIdPrefix, PatchSection.prototype.ID);
+};
+
+Patch.prototype.getAllCheckboxesForId = function(sId, sIdPrefix, sNewIdPrefix){
+  var oRegex = new RegExp("^" + sIdPrefix);
+  sId = sId.replace(oRegex, sNewIdPrefix);
+  return document.querySelectorAll("input[id^='"+ this.escape(sId) + "']");
 };
 
 Patch.prototype.onClickFileCheckbox = function(oEvent) {
