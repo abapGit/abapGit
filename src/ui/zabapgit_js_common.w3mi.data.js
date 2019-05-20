@@ -839,7 +839,7 @@ LinkHints.prototype.tooltipActivate = function (oTooltip) {
 
   if (elInput) {
     // case 1) toggle the checkbox
-    elInput.checked = !elInput.checked;
+    elInput.click();
   } else {
     // case 2) click the link
     oTooltip.parentElement.click();
