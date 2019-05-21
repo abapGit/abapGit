@@ -540,6 +540,7 @@ table.diff_tab td.patch, th.patch {
   border-right: 1px solid #eee;
   -ms-user-select: none;
   user-select: none;
+  cursor: pointer;
 }
 table.diff_tab td.num::before {
   content: attr(line-num);
