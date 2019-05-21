@@ -1021,22 +1021,6 @@ function setKeyBindings(oKeyMap){
   Patch / git add -p
   */
 
-function Patch() { }
-
-Patch.prototype.ID = {
-  STAGE: "stage"
-};
-
-Patch.prototype.ACTION = {
-  PATCH_STAGE: "patch_stage"
-};
-
-Patch.prototype.escape = function(sFileName){
-  return sFileName
-    .replace(/\./g, "\\.")
-    .replace(/#/g, "\\#");
-};
-
 /*
   We have three type of cascading checkboxes.
   Which means that by clicking a file or section checkbox all corresponding line checkboxes are checked.
@@ -1119,6 +1103,22 @@ function PatchLine(){
 
 PatchLine.prototype.ID = "patch_line";
 
+function Patch() { }
+
+Patch.prototype.ID = {
+  STAGE: "stage"
+};
+
+Patch.prototype.ACTION = {
+  PATCH_STAGE: "patch_stage"
+};
+
+Patch.prototype.escape = function(sFileName){
+  return sFileName
+    .replace(/\./g, "\\.")
+    .replace(/#/g, "\\#");
+};
+
 Patch.prototype.preparePatch = function(){
 
   this.registerClickHandlerForFiles();
@@ -1127,16 +1127,20 @@ Patch.prototype.preparePatch = function(){
 
 };
 
+Patch.prototype.buildSelectorInputStartsWithId = function(sId){
+  return "input[id^='" + sId + "']";
+};
+
 Patch.prototype.registerClickHandlerForFiles = function(){
-  this.registerClickHandlerForSelectorParent("input[id^='" + PatchFile.prototype.ID + "']", this.onClickFileCheckbox);
+  this.registerClickHandlerForSelectorParent(this.buildSelectorInputStartsWithId(PatchFile.prototype.ID), this.onClickFileCheckbox);
 };
 
 Patch.prototype.registerClickHandlerForSections = function(){
-  this.registerClickHandlerForSelectorParent("input[id^='" + PatchSection.prototype.ID + "']", this.onClickSectionCheckbox);
+  this.registerClickHandlerForSelectorParent(this.buildSelectorInputStartsWithId(PatchSection.prototype.ID), this.onClickSectionCheckbox);
 };
 
 Patch.prototype.registerClickHandlerForLines = function(){
-  this.registerClickHandlerForSelectorParent("input[id^='" + PatchLine.prototype.ID + "']", this.onClickLineCheckbox);
+  this.registerClickHandlerForSelectorParent(this.buildSelectorInputStartsWithId(PatchLine.prototype.ID), this.onClickLineCheckbox);
 };
 
 Patch.prototype.registerClickHandlerForSelectorParent = function(sSelector, fnCallback){
@@ -1172,7 +1176,7 @@ Patch.prototype.getAllSectionCheckboxesForId = function(sId, sIdPrefix){
 Patch.prototype.getAllCheckboxesForId = function(sId, sIdPrefix, sNewIdPrefix){
   var oRegex = new RegExp("^" + sIdPrefix);
   sId = sId.replace(oRegex, sNewIdPrefix);
-  return document.querySelectorAll("input[id^='"+ this.escape(sId) + "']");
+  return document.querySelectorAll(this.buildSelectorInputStartsWithId(this.escape(sId)));
 };
 
 Patch.prototype.getToggledCheckbox = function(oEvent){
@@ -1257,7 +1261,7 @@ Patch.prototype.stagePatch = function() {
 
 Patch.prototype.collectElementsForCheckboxId = function(sId, bChecked){
 
-  var sSelector = "input[id^='" + sId + "']";
+  var sSelector = this.buildSelectorInputStartsWithId(sId);
 
   return [].slice.call(document.querySelectorAll(sSelector))
     .filter(function(elem){
