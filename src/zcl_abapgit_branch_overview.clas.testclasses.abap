@@ -87,11 +87,15 @@ CLASS ltcl_test IMPLEMENTATION.
     ls_object-data = zcl_abapgit_git_pack=>encode_commit( ls_git_pack_commit ).
     APPEND ls_object TO lt_objects.
 
+    ls_git_pack_commit-author = |Soeren %26 Sascha <soerenschlegel87@gmail.com> 1557574255 +0000|.
+    ls_object-data = zcl_abapgit_git_pack=>encode_commit( ls_git_pack_commit ).
+    APPEND ls_object TO lt_objects.
+
     lt_commits = zcl_abapgit_branch_overview=>parse_commits( lt_objects ).
 
     cl_abap_unit_assert=>assert_equals(
        act = lines( lt_commits )
-       exp = 5 ).
+       exp = 6 ).
 
   ENDMETHOD.
 
