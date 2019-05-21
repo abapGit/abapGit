@@ -357,8 +357,7 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
           unknown_error            = 7
           not_supported_by_gui     = 8
           wrong_parameter          = 9
-          OTHERS                   = 10
-      ).
+          OTHERS                   = 10 ).
       IF sy-subrc <> 0 AND sy-subrc <> 5.
         zcx_abapgit_exception=>raise( 'Error from cl_gui_frontend_services=>directory_create'(e02) ).
       ENDIF.
