@@ -96,16 +96,24 @@ ENDFORM.
 *&---------------------------------------------------------------------*
 FORM f_check_folder  USING iv_folder TYPE string.
 
-  DATA lo_except TYPE REF TO cx_root.
+  DATA:lo_except TYPE REF TO cx_root,
+       lv_error  TYPE string.
 
   TRY.
       IF lcl_transport_zipper=>does_folder_exist( iv_folder = iv_folder ) = abap_false.
         SET CURSOR FIELD 'P_FOLDER'.
 * Invalid folder %1
-        MESSAGE e137(c$) WITH TEXT-m04 iv_folder.
+
+* No data found for the provided selection criterias
+        CONCATENATE 'Invalid folder'(m04) iv_folder INTO lv_error SEPARATED BY space.
+        zcx_abapgit_exception=>raise( lv_error ).
+
       ENDIF.
-    CATCH cx_wrong_data INTO lo_except.
+
+    CATCH zcx_abapgit_exception INTO lo_except.
+
       MESSAGE lo_except->get_text( ) TYPE 'E'.
+
   ENDTRY.
 
 
