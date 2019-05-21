@@ -1123,25 +1123,28 @@ Patch.prototype.preparePatch = function(){
 
   this.registerClickHandlerForFiles();
   this.registerClickHandlerForSections();
+  this.registerClickHandlerForLines();
 
 };
 
 Patch.prototype.registerClickHandlerForFiles = function(){
-  // registers the link handlers for add and remove files
-  this.registerClickHandlerForSelector("input[id^='" + PatchFile.prototype.ID + "']", this.onClickFileCheckbox);
+  this.registerClickHandlerForSelectorParent("input[id^='" + PatchFile.prototype.ID + "']", this.onClickFileCheckbox);
 };
 
 Patch.prototype.registerClickHandlerForSections = function(){
-  // registers the link handlers for add and remove sections
-  this.registerClickHandlerForSelector("input[id^='" + PatchSection.prototype.ID + "']", this.onClickSectionCheckbox);
+  this.registerClickHandlerForSelectorParent("input[id^='" + PatchSection.prototype.ID + "']", this.onClickSectionCheckbox);
 };
 
-Patch.prototype.registerClickHandlerForSelector = function(sSelector, fnCallback){
+Patch.prototype.registerClickHandlerForLines = function(){
+  this.registerClickHandlerForSelectorParent("input[id^='" + PatchLine.prototype.ID + "']", this.onClickLineCheckbox);
+};
+
+Patch.prototype.registerClickHandlerForSelectorParent = function(sSelector, fnCallback){
 
   var elAll = document.querySelectorAll(sSelector);
 
   [].forEach.call(elAll, function(elem){
-    elem.addEventListener("click", fnCallback.bind(this));
+    elem.parentElement.addEventListener("click", fnCallback.bind(this));
   }.bind(this));
 
 };
@@ -1172,34 +1175,59 @@ Patch.prototype.getAllCheckboxesForId = function(sId, sIdPrefix, sNewIdPrefix){
   return document.querySelectorAll("input[id^='"+ this.escape(sId) + "']");
 };
 
+Patch.prototype.getToggledCheckbox = function(oEvent){
+
+  var elCheckbox = null;
+
+  // We have either an input element or any element with input child
+  // in the latter case we have to toggle the checkbox manually
+  if (oEvent.srcElement.nodeName === "INPUT"){
+    elCheckbox = oEvent.srcElement;
+  } else {
+    elCheckbox = this.toggleCheckbox(oEvent.srcElement.querySelector("INPUT"));
+  }
+
+  return elCheckbox;
+};
+
+Patch.prototype.toggleCheckbox = function(elCheckbox) {
+  elCheckbox.checked = !elCheckbox.checked;
+  return elCheckbox;
+};
+
 Patch.prototype.onClickFileCheckbox = function(oEvent) {
 
-  var oFile = new PatchFile(oEvent.srcElement.id);
+  var elCheckbox = this.getToggledCheckbox(oEvent);
+  var oFile = new PatchFile(elCheckbox.id);
   var elAllLineCheckboxesOfFile = this.getAllLineCheckboxesForFile(oFile);
   var elAllSectionCheckboxesOfFile = this.getAllSectionCheckboxesForFile(oFile);
 
   [].forEach.call(elAllLineCheckboxesOfFile,function(elem){
-    elem.checked = oEvent.srcElement.checked;
+    elem.checked = elCheckbox.checked;
   }.bind(this));
 
   [].forEach.call(elAllSectionCheckboxesOfFile,function(elem){
-    elem.checked = oEvent.srcElement.checked;
+    elem.checked = elCheckbox.checked;
   }.bind(this));
 
 };
 
 Patch.prototype.onClickSectionCheckbox = function(oEvent){
-  var oSection = new PatchSection(oEvent.srcElement.id);
-  this.clickAllLineCheckboxesInSection(oEvent, oSection.section);
+  var elSrcElement = this.getToggledCheckbox(oEvent);
+  var oSection = new PatchSection(elSrcElement.id);
+  this.clickAllLineCheckboxesInSection(oSection, elSrcElement.checked);
 };
 
-Patch.prototype.clickAllLineCheckboxesInSection = function(oEvent){
+Patch.prototype.onClickLineCheckbox = function(oEvent){
+  this.getToggledCheckbox(oEvent);
+};
 
-  var oSection = new PatchSection(oEvent.srcElement.id);
+Patch.prototype.clickAllLineCheckboxesInSection = function(oSection, bChecked){
+
   var elAllLineCheckboxesOfSection = this.getAllLineCheckboxesForSection(oSection);
 
   [].forEach.call(elAllLineCheckboxesOfSection,function(elem){
-    elem.checked = oEvent.srcElement.checked;
+    elem.checked = bChecked;
   }.bind(this));
 
 };
