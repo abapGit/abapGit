@@ -10,5 +10,3 @@
   INCLUDE lzabapgit_masstransp2zipplc.    " Local class implement.
   INCLUDE lzabapgit_masstransp2zipscr.    " Screen
   INCLUDE lzabapgit_masstransp2zipf01.    " Subroutines
-
-*INCLUDE lzabapgit_masstransp2zipo01.
