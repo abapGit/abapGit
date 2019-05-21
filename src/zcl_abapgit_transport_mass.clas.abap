@@ -1,58 +1,56 @@
-class ZCL_ABAPGIT_TRANSPORT_MASS definition
-  public
-  final
-  create public .
+CLASS zcl_abapgit_transport_mass DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  types:
-    tt_trkorr TYPE RANGE OF e070-trkorr .
+    TYPES:
+      tt_trkorr TYPE RANGE OF e070-trkorr .
 
-  constants GC_FM_NAME type RS38L-NAME value 'Z_ABAPGIT_TRANSPORTS_2_ZIP' ##NO_TEXT.
+    CONSTANTS gc_fm_name TYPE rs38l-name VALUE 'Z_ABAPGIT_TRANSPORTS_2_ZIP' ##NO_TEXT.
 
-  class-methods IS_AVAILABLE
-    returning
-      value(RV_AVAILABLE) type ABAP_BOOL .
+    CLASS-METHODS is_available
+      RETURNING
+        VALUE(rv_available) TYPE abap_bool .
+    CLASS-METHODS run.
+    CLASS-METHODS zip
+      IMPORTING
+        !is_trkorr     TYPE trwbo_request_header
+        !iv_logic      TYPE string OPTIONAL
+      RETURNING
+        VALUE(rv_xstr) TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS to_tadir
+      IMPORTING
+        !it_transport_headers TYPE trwbo_request_headers
+      RETURNING
+        VALUE(rt_tadir)       TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RAISING
+        zcx_abapgit_exception .
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 
-  class-methods RUN .
-  
-  class-methods ZIP
-    importing
-      !IS_TRKORR type TRWBO_REQUEST_HEADER
-      !IV_LOGIC type STRING optional
-    returning
-      value(RV_XSTR) type XSTRING
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  class-methods TO_TADIR
-    importing
-      !IT_TRANSPORT_HEADERS type TRWBO_REQUEST_HEADERS
-    returning
-      value(RT_TADIR) type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-protected section.
-private section.
-
-  class-methods READ_REQUESTS
-    importing
-      !IT_TRKORR type TRWBO_REQUEST_HEADERS
-    returning
-      value(RT_REQUESTS) type TRWBO_REQUESTS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  class-methods FIND_TOP_PACKAGE
-    importing
-      !IT_TADIR type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT
-    returning
-      value(RV_PACKAGE) type DEVCLASS .
-  class-methods RESOLVE
-    importing
-      !IT_REQUESTS type TRWBO_REQUESTS
-    returning
-      value(RT_TADIR) type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
+    CLASS-METHODS read_requests
+      IMPORTING
+        !it_trkorr         TYPE trwbo_request_headers
+      RETURNING
+        VALUE(rt_requests) TYPE trwbo_requests
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS find_top_package
+      IMPORTING
+        !it_tadir         TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RETURNING
+        VALUE(rv_package) TYPE devclass .
+    CLASS-METHODS resolve
+      IMPORTING
+        !it_requests    TYPE trwbo_requests
+      RETURNING
+        VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -60,7 +58,7 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_TRANSPORT_MASS IMPLEMENTATION.
 
 
-  METHOD FIND_TOP_PACKAGE.
+  METHOD find_top_package.
 * assumption: all objects in transport share a common super package
 
     DATA: lt_obj   TYPE zif_abapgit_sap_package=>ty_devclass_tt,
@@ -95,7 +93,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT_MASS IMPLEMENTATION.
   METHOD is_available.
 
 * Mass Transport to ZIP file function module
-* Use this check for the abap_merger version ( install code )
+* Use this check for the abap_merger version ( installator )
     CALL FUNCTION 'FUNCTION_EXISTS'
       EXPORTING
         funcname           = gc_fm_name
@@ -110,7 +108,8 @@ CLASS ZCL_ABAPGIT_TRANSPORT_MASS IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD READ_REQUESTS.
+
+  METHOD read_requests.
     DATA lt_requests LIKE rt_requests.
     FIELD-SYMBOLS <ls_trkorr> LIKE LINE OF it_trkorr.
 
@@ -132,7 +131,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT_MASS IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD RESOLVE.
+  METHOD resolve.
     DATA: lv_object     TYPE tadir-object,
           lv_obj_name   TYPE tadir-obj_name,
           lv_trobj_name TYPE trobj_name,
@@ -180,13 +179,12 @@ CLASS ZCL_ABAPGIT_TRANSPORT_MASS IMPLEMENTATION.
 
   METHOD run.
 
-* Mass Transport to ZIP file function module
     CALL FUNCTION gc_fm_name.
 
   ENDMETHOD.
 
 
-  METHOD TO_TADIR.
+  METHOD to_tadir.
     DATA: lt_requests TYPE trwbo_requests.
 
 
