@@ -263,7 +263,7 @@ CLASS lcl_transport_zipper DEFINITION FINAL.
 
     METHODS constructor  IMPORTING iv_folder   TYPE ty_folder
                                    io_reporter TYPE REF TO lcl_reporter
-                         RAISING   cx_wrong_data.
+                         RAISING   zcx_abapgit_exception.
 
     METHODS generate_files IMPORTING it_trkorr TYPE lcl_data_selector=>tt_trkorr
                                      iv_logic  TYPE any
@@ -271,7 +271,7 @@ CLASS lcl_transport_zipper DEFINITION FINAL.
 
     CLASS-METHODS does_folder_exist IMPORTING iv_folder              TYPE string
                                     RETURNING VALUE(rv_folder_exist) TYPE abap_bool
-                                    RAISING   cx_wrong_data.
+                                    RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
 
@@ -279,7 +279,7 @@ CLASS lcl_transport_zipper DEFINITION FINAL.
 
     METHODS get_full_folder IMPORTING iv_folder             TYPE ty_folder
                             RETURNING VALUE(rv_full_folder) TYPE ty_folder
-                            RAISING   cx_wrong_data.
+                            RAISING   zcx_abapgit_exception.
 
     METHODS save_binstring IMPORTING is_trkorr    TYPE lcl_data_selector=>ty_trkorr
                                      iv_binstring TYPE xstring
@@ -333,15 +333,14 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
         not_supported_by_gui = 3
         OTHERS               = 4 ).
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_wrong_data
-        MESSAGE e137(c$) WITH 'Internal error getting file separator'(m03).
+      zcx_abapgit_exception=>raise( 'Internal error getting file separator'(m03) ).
     ENDIF.
 
     CONCATENATE iv_folder
                 gv_timestamp
            INTO rv_full_folder SEPARATED BY lv_sep.
 
-    IF does_folder_exist( EXPORTING iv_folder = rv_full_folder ) = abap_false.
+    IF does_folder_exist( iv_folder = rv_full_folder ) = abap_false.
 
       cl_gui_frontend_services=>directory_create(
         EXPORTING
