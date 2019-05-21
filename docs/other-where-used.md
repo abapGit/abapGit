@@ -22,6 +22,7 @@ order: 50
 * [Discovery Consulting](https://www.discoveryconsulting.com.au)
 * [emineo](https://www.emineo.ch/)
 * [INVIXO](http://invixo.com/)
+* [majcon](https://www.majcon.de/)
 * [Microsoft Azure](https://github.com/Microsoft/ABAP-SDK-for-Azure)
 * [objective partner](https://www.objective-partner.de)
 * [percept ltd](https://www.percept.sk)
