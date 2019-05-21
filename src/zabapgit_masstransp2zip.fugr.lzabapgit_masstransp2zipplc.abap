@@ -92,7 +92,7 @@ CLASS lcl_gui IMPLEMENTATION.
 
     IF NOT iv_folder IS INITIAL.
 
-      CALL METHOD cl_gui_frontend_services=>execute
+      cl_gui_frontend_services=>execute(
         EXPORTING
           document               = iv_folder
         EXCEPTIONS
@@ -103,7 +103,7 @@ CLASS lcl_gui IMPLEMENTATION.
           path_not_found         = 5
           file_extension_unknown = 6
           error_execute_failed   = 7
-          OTHERS                 = 8.
+          OTHERS                 = 8 ).
       IF sy-subrc <> 0.
         MESSAGE 'Problem when opening output folder'(m05) TYPE 'S' DISPLAY LIKE 'E'.
       ENDIF.
@@ -293,7 +293,7 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
 
     CONCATENATE sy-datlo sy-timlo INTO me->gv_timestamp SEPARATED BY '_'.
 
-    me->gv_full_folder = get_full_folder( EXPORTING iv_folder = iv_folder ).
+    me->gv_full_folder = get_full_folder( iv_folder = iv_folder ).
 
     me->go_reporter = io_reporter.
 
@@ -313,8 +313,7 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
         not_supported_by_gui = 4
         OTHERS               = 5 ).
     IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE cx_wrong_data
-        MESSAGE e137(c$) WITH 'Internal error checking existence of folder'(m01) iv_folder.
+      zcx_abapgit_exception=>raise( 'Error from cl_gui_frontend_services=>directory_exist'(e03) ).
     ENDIF.
 
   ENDMETHOD.
@@ -362,9 +361,7 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
           OTHERS                   = 10
       ).
       IF sy-subrc <> 0 AND sy-subrc <> 5.
-
-        RAISE EXCEPTION TYPE cx_wrong_data
-          MESSAGE e137(c$) WITH 'Could not create folder'(m02) rv_full_folder.
+        zcx_abapgit_exception=>raise( 'Error from cl_gui_frontend_services=>directory_create'(e02) ).
       ENDIF.
 
     ENDIF.
@@ -424,8 +421,8 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from gui_download'(e01) ).
     ELSE.
-      go_reporter->fill_report_table( EXPORTING is_trkorr = is_trkorr
-                                                iv_filename = lv_filename ).
+      go_reporter->fill_report_table( is_trkorr = is_trkorr
+                                      iv_filename = lv_filename ).
     ENDIF.
 
 
@@ -438,11 +435,11 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
 
     LOOP AT it_trkorr INTO ls_trkorr.
 
-      lv_zipbinstring = zcl_abapgit_transport_mass=>zip( EXPORTING is_trkorr = ls_trkorr
-                                                                   iv_logic  = iv_logic ).
+      lv_zipbinstring = zcl_abapgit_transport_mass=>zip( is_trkorr = ls_trkorr
+                                                         iv_logic  = iv_logic ).
 
-      me->save_binstring( EXPORTING iv_binstring = lv_zipbinstring
-                                    is_trkorr    = ls_trkorr ).
+      me->save_binstring( iv_binstring = lv_zipbinstring
+                          is_trkorr    = ls_trkorr ).
 
     ENDLOOP. "it_trkorr
 
