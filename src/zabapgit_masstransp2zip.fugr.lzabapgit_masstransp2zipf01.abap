@@ -96,8 +96,8 @@ ENDFORM.
 *&---------------------------------------------------------------------*
 FORM f_check_folder  USING iv_folder TYPE string.
 
-  DATA:lo_except TYPE REF TO cx_root,
-       lv_error  TYPE string.
+  DATA: lo_except TYPE REF TO cx_root,
+        lv_error  TYPE string.
 
   TRY.
       IF lcl_transport_zipper=>does_folder_exist( iv_folder = iv_folder ) = abap_false.
