@@ -46,38 +46,40 @@ FORM f_main.
 
   TRY.
 
-      lt_trkorr = lcl_data_selector=>get_transport_requests( EXPORTING is_sel_crit = ls_sel_crit ).
+      lt_trkorr = lcl_data_selector=>get_transport_requests( is_sel_crit = ls_sel_crit ).
 
       IF lt_trkorr[] IS NOT INITIAL.
 
 * Instantiate reporter
-        lo_reporter = NEW lcl_reporter( ).
+        CREATE OBJECT lo_reporter TYPE lcl_reporter.
 
 * Instantiate transport zipper object that will also create the timestamped output folder
-        lo_transport_zipper = NEW lcl_transport_zipper( iv_folder   = p_folder
-                                                        io_reporter = lo_reporter ).
+        CREATE OBJECT lo_transport_zipper TYPE lcl_transport_zipper
+          EXPORTING
+            iv_folder   = p_folder
+            io_reporter = lo_reporter.
 
 * Generate the local zip files from the given list of transport requests
-        lo_transport_zipper->generate_files( EXPORTING it_trkorr = lt_trkorr
-                                                       iv_logic  = p_logic ).
+        lo_transport_zipper->generate_files( it_trkorr = lt_trkorr
+                                             iv_logic  = p_logic ).
 
 * Open output folder if user asked it
         IF p_openfl EQ abap_true.
 
-          lcl_gui=>open_folder_frontend( EXPORTING iv_folder = lo_transport_zipper->gv_full_folder  ).
+          lcl_gui=>open_folder_frontend( iv_folder = lo_transport_zipper->gv_full_folder  ).
 
         ENDIF.
 
       ELSE.
 * No data found for the provided selection criterias
-        RAISE EXCEPTION TYPE cx_wrong_data MESSAGE e008(ciwb_ui).
+        zcx_abapgit_exception=>raise( 'No data found for the provided selection criterias' ).
       ENDIF.
 
       IF p_dsplog EQ abap_true.
-        lo_reporter->display_report( EXPORTING iv_start_column = 5
-                                               iv_end_column   = 140
-                                               iv_start_line   = 5
-                                               iv_end_line     = 20 ).
+        lo_reporter->display_report( iv_start_column = 5
+                                     iv_end_column   = 140
+                                     iv_start_line   = 5
+                                     iv_end_line     = 20 ).
       ENDIF.
 
     CATCH cx_wrong_data
@@ -97,9 +99,10 @@ FORM f_check_folder  USING iv_folder TYPE string.
   DATA lo_except TYPE REF TO cx_root.
 
   TRY.
-      IF lcl_transport_zipper=>does_folder_exist( EXPORTING iv_folder = iv_folder ) = abap_false.
+      IF lcl_transport_zipper=>does_folder_exist( iv_folder = iv_folder ) = abap_false.
         SET CURSOR FIELD 'P_FOLDER'.
-        MESSAGE e137(c$) WITH 'Invalid folder'(m04) iv_folder.
+* Invalid folder %1
+        MESSAGE e137(c$) WITH TEXT-m04 iv_folder.
       ENDIF.
     CATCH cx_wrong_data INTO lo_except.
       MESSAGE lo_except->get_text( ) TYPE 'E'.
