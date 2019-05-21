@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <abapGit version="v1.0.0">
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
@@ -19,6 +19,18 @@
      <KEY>E01</KEY>
      <ENTRY>error from gui_download</ENTRY>
      <LENGTH>46</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>E02</KEY>
+     <ENTRY>Error from cl_gui_frontend_services=&gt;directory_create</ENTRY>
+     <LENGTH>106</LENGTH>
+    </item>
+    <item>
+     <ID>I</ID>
+     <KEY>E03</KEY>
+     <ENTRY>Error from cl_gui_frontend_services=&gt;directory_exist</ENTRY>
+     <LENGTH>104</LENGTH>
     </item>
     <item>
      <ID>I</ID>
