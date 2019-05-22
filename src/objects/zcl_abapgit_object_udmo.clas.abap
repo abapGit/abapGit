@@ -120,7 +120,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
         request_language_denied  = 9
         OTHERS                   = 10.
 
-    IF sy-subrc NE 0.
+    IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ELSE.
       rv_result = abap_true.
@@ -158,7 +158,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
         request_language_denied  = 9
         OTHERS                   = 10.
 
-    IF sy-subrc NE 0.
+    IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ELSE.
       rv_result = abap_true.
@@ -345,14 +345,14 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
       SELECT SINGLE *
         FROM dm40t
         INTO ls_dm40t
-        WHERE sprache  EQ ls_udmo_text-sprache
-        AND   dmoid    EQ ls_udmo_text-dmoid
-        AND   as4local EQ me->mv_activation_state.
+        WHERE sprache  = ls_udmo_text-sprache
+        AND   dmoid    = ls_udmo_text-dmoid
+        AND   as4local = me->mv_activation_state.
 
-      IF sy-subrc EQ 0.
+      IF sy-subrc = 0.
         " There is already an active description for this language
         " but the provided description differs
-        IF ls_dm40t-langbez NE ls_udmo_text-langbez.
+        IF ls_dm40t-langbez <> ls_udmo_text-langbez.
 
           ls_dm40t-langbez = ls_udmo_text-langbez.
           ls_dm40t-lstdate = sy-datum.
@@ -413,8 +413,8 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
     SELECT * FROM dm41s
       INTO TABLE lt_udmo_entities
-      WHERE dmoid EQ me->mv_data_model
-      AND as4local EQ me->mv_activation_state.
+      WHERE dmoid = me->mv_data_model
+      AND as4local = me->mv_activation_state.
 
 
     LOOP AT lt_udmo_entities ASSIGNING <ls_udmo_entity>.
@@ -465,8 +465,8 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     SELECT sprache AS language
       FROM dm40t
       INTO TABLE lt_udmo_languages
-      WHERE dmoid    EQ me->mv_data_model
-      AND   as4local EQ me->mv_activation_state
+      WHERE dmoid    = me->mv_data_model
+      AND   as4local = me->mv_activation_state
       ORDER BY sprache ASCENDING.                       "#EC CI_NOFIRST
 
     " For every language for which a short text is maintained,
@@ -488,7 +488,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
           content = ls_udmo_long_text-content
           pstatus = lv_error_status.
 
-      CHECK lv_error_status EQ 'S'. "Success
+      CHECK lv_error_status = 'S'. "Success
 
       " Administrative information is not serialised
       CLEAR ls_udmo_long_text-header-tdfuser.
@@ -521,11 +521,11 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     SELECT SINGLE *
     FROM dm40l
     INTO ls_dm40l
-    WHERE dmoid    EQ me->mv_data_model
-    AND   as4local EQ me->mv_activation_state.
+    WHERE dmoid    = me->mv_data_model
+    AND   as4local = me->mv_activation_state.
 
 
-    IF sy-subrc NE 0.
+    IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from UDMO - model serialisation' ).
     ENDIF.
 
@@ -553,8 +553,8 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     SELECT sprache dmoid as4local langbez
       FROM dm40t
       INTO CORRESPONDING FIELDS OF TABLE lt_udmo_texts
-      WHERE dmoid    EQ me->mv_data_model
-      AND   as4local EQ me->mv_activation_state
+      WHERE dmoid    = me->mv_data_model
+      AND   as4local = me->mv_activation_state
       ORDER BY sprache ASCENDING.                       "#EC CI_NOFIRST
 
     " You are reminded that descriptions in other languages do not have to be in existence.
@@ -585,7 +585,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
       WHERE  dmoid    = me->mv_data_model
       AND    as4local = me->mv_activation_state.
 
-    IF sy-subrc NE 0.
+    IF sy-subrc <> 0.
       rv_user = c_user_unknown.
     ENDIF.
 
@@ -612,7 +612,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
         is_used          = 4
         OTHERS           = 5.
 
-    IF sy-subrc NE 0.
+    IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
