@@ -170,7 +170,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
       lo_repo = get( ls_repo-key ).
 
       lo_package = zcl_abapgit_factory=>get_sap_package( ls_repo-package ).
-      IF lo_package->exists( ) EQ abap_false.
+      IF lo_package->exists( ) = abap_false.
         " Skip dangling repository
         CONTINUE.
       ENDIF.

@@ -305,7 +305,7 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
                 im_obj_type           = ch_object-s_obj_type
                 im_exists_any_version = 'X' ).
 
-        IF lv_exists EQ space.
+        IF lv_exists = space.
           CALL METHOD lo_ecatt_vo->('SET_TADIR_FOR_NEW_OBJECT')
             EXPORTING
               im_tadir_for_new_object = tadir_preset.
