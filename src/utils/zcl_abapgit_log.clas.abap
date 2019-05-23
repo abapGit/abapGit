@@ -86,9 +86,10 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
   METHOD zif_abapgit_log~add_exception.
 
     DATA lx_exc TYPE REF TO cx_root.
+    DATA lv_msg TYPE string.
     lx_exc ?= ix_exc.
     DO.
-      DATA(lv_msg) = lx_exc->get_text( ).
+      lv_msg = lx_exc->get_text( ).
       zif_abapgit_log~add( iv_msg  = lv_msg
                            iv_type = 'E'
                            is_item = is_item ).
@@ -143,12 +144,13 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
 
 
   METHOD zif_abapgit_log~get_item_status.
-    CLEAR et_item_status.
 
     DATA lr_log         TYPE REF TO ty_log.
     DATA ls_msg         TYPE zif_abapgit_log=>ty_msg.
     DATA ls_item_status TYPE zif_abapgit_log=>ty_item_status_out.
     DATA lr_item_status TYPE REF TO zif_abapgit_log=>ty_item_status_out.
+
+    CLEAR et_item_status.
 
     "collect all message for all objects
     LOOP AT mt_log REFERENCE INTO lr_log.
@@ -183,7 +185,8 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
 
   METHOD zif_abapgit_log~get_messages.
     DATA ls_msg TYPE zif_abapgit_log~ty_log_out.
-    LOOP AT mt_log ASSIGNING FIELD-SYMBOL(<fs_log>).
+    FIELD-SYMBOLS <fs_log> TYPE ty_log.
+    LOOP AT mt_log ASSIGNING <fs_log>.
       ls_msg-type     = <fs_log>-msg-type.
       ls_msg-text     = <fs_log>-msg-text.
       ls_msg-obj_type = <fs_log>-item-obj_type.
