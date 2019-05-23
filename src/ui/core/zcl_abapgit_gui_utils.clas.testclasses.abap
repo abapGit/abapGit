@@ -38,8 +38,10 @@ CLASS ltcl_gui_utils IMPLEMENTATION.
     CREATE OBJECT lo_handler.
     CREATE OBJECT lo_renderable.
 
-    cl_abap_unit_assert=>assert_true( zcl_abapgit_gui_utils=>is_renderable( lo_renderable ) ).
-    cl_abap_unit_assert=>assert_false( zcl_abapgit_gui_utils=>is_renderable( lo_handler ) ).
+    cl_abap_unit_assert=>assert_equals( exp = abap_true
+                                        act = zcl_abapgit_gui_utils=>is_renderable( lo_renderable ) ).
+    cl_abap_unit_assert=>assert_equals( exp = abap_false
+                                        act = zcl_abapgit_gui_utils=>is_renderable( lo_handler ) ).
 
   ENDMETHOD.
 
@@ -51,8 +53,10 @@ CLASS ltcl_gui_utils IMPLEMENTATION.
     CREATE OBJECT lo_handler.
     CREATE OBJECT lo_renderable.
 
-    cl_abap_unit_assert=>assert_false( zcl_abapgit_gui_utils=>is_event_handler( lo_renderable ) ).
-    cl_abap_unit_assert=>assert_true( zcl_abapgit_gui_utils=>is_event_handler( lo_handler ) ).
+    cl_abap_unit_assert=>assert_equals( exp = abap_false
+                                        act = zcl_abapgit_gui_utils=>is_event_handler( lo_renderable ) ).
+    cl_abap_unit_assert=>assert_equals( exp = abap_true
+                                        act = zcl_abapgit_gui_utils=>is_event_handler( lo_handler ) ).
 
   ENDMETHOD.
 
