@@ -262,7 +262,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
           EXPORTING
             clskey                        = ls_clskey
             exposure                      = iv_exposure
-            state                         = 'A'
+            state                         = 'I'
             source                        = it_source
             suppress_constrctr_generation = seox_true
           EXCEPTIONS
@@ -304,8 +304,10 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |CLAS, error while scanning source. Subrc = { sy-subrc }| ).
     ENDIF.
 
+    CALL FUNCTION 'SEO_CLIF_INACTIVE_CHECK'.
+
 * this will update the SEO* database tables
-    lo_update->revert_scan_result( ).
+    lo_update->revert_scan_result( suppress_access_permission = abap_true  ).
 
     IF iv_exposure = seoc_exposure_public.
       generate_classpool( iv_name ).
