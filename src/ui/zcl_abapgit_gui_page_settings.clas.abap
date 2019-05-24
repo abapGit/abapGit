@@ -750,9 +750,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ro_html->add( |<label for="ui_theme">UI Theme</label>| ).
     ro_html->add( |<br>| ).
     ro_html->add( |<select name="ui_theme" size="3">| ).
-    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_ui_theme-default }"{ ls_sel-default }>{ zcl_abapgit_settings=>c_ui_theme-default }</option>| ).
-    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_ui_theme-dark }"{ ls_sel-dark }>{ zcl_abapgit_settings=>c_ui_theme-dark }</option>| ).
-    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_ui_theme-belize }"{ ls_sel-belize }>{ zcl_abapgit_settings=>c_ui_theme-belize }</option>| ).
+    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_ui_theme-default }"{
+      ls_sel-default }>{ zcl_abapgit_settings=>c_ui_theme-default }</option>| ).
+    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_ui_theme-dark }"{
+      ls_sel-dark }>{ zcl_abapgit_settings=>c_ui_theme-dark }</option>| ).
+    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_ui_theme-belize }"{
+      ls_sel-belize }>{ zcl_abapgit_settings=>c_ui_theme-belize }</option>| ).
     ro_html->add( |</select>| ).
 
     ro_html->add( |<br>| ).
