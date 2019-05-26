@@ -88,7 +88,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
+CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
 
   METHOD create_report.
@@ -374,6 +374,32 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
 
     ASSIGN COMPONENT 'CLSNAME' OF STRUCTURE cg_properties TO <lv_clsname>.
     ASSERT sy-subrc = 0.
+    DATA lv_clskey TYPE seoclskey.
+    lv_clskey = <lv_clsname>.
+
+    CALL FUNCTION 'SEO_CLASS_DELETE_COMPLETE'
+      EXPORTING
+        clskey          = lv_clskey   " Class
+        genflag         = abap_false    " Generation Flag
+        authority_check = abap_false " Execute authority check (suppress possible only for GENFLAG
+        suppress_commit = abap_true    " No DB_COMMIT will be executed
+        suppress_corr   = abap_true   " Suppress Corr-Insert and Corr-Check
+        suppress_dialog = abap_true   " X = no user interaction
+      EXCEPTIONS
+        not_existing    = 1
+        is_interface    = 2
+        db_error        = 3
+        no_access       = 4
+        other           = 5
+        OTHERS          = 6.
+    CASE  sy-subrc.
+      WHEN 0.
+        "expected. we successfully deleted the class before creating it.
+      WHEN 1.
+        "not an issue. when the class is not present, the will be no issues with creating it
+      WHEN OTHERS.
+        zcx_abapgit_exception=>raise( |Error from SEO_CLASS_DELETE_COMPLETE. Subrc = { sy-subrc }| ).
+    ENDCASE.
 
     lt_vseoattrib = convert_attrib_to_vseoattrib(
                       iv_clsname    = <lv_clsname>
