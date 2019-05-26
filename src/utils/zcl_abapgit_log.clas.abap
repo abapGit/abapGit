@@ -9,26 +9,26 @@ CLASS zcl_abapgit_log DEFINITION
   PROTECTED SECTION.
 
     TYPES:
-      BEGIN OF ty_log,
-        msg  TYPE string,
+      BEGIN OF ty_msg,
+        text TYPE string,
         type TYPE symsgty,
-        rc   TYPE balsort,
+      END OF ty_msg .
+
+    TYPES:
+      BEGIN OF ty_log, "in order of occurrence
+        msg      TYPE ty_msg,
+        rc       TYPE balsort,
+        item     TYPE zif_abapgit_definitions=>ty_item,
       END OF ty_log .
-    TYPES:
-      BEGIN OF ty_log_out,
-        type TYPE icon_d,
-        msg  TYPE string,
-      END OF ty_log_out .
-    TYPES:
-      tty_log_out TYPE STANDARD TABLE OF ty_log_out
-                                WITH NON-UNIQUE DEFAULT KEY .
 
     DATA:
       mt_log TYPE STANDARD TABLE OF ty_log WITH DEFAULT KEY .
 
-    METHODS prepare_log_for_display
+    METHODS get_messages_status
+      IMPORTING
+        it_msg   TYPE zif_abapgit_log=>tty_msg
       RETURNING
-        VALUE(rt_log_out) TYPE zcl_abapgit_log=>tty_log_out .
+        VALUE(rv_status) TYPE symsgty.
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -37,31 +37,24 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
 
 
-  METHOD prepare_log_for_display.
+  METHOD get_messages_status.
 
-    DATA: ls_log TYPE ty_log_out.
-
-    FIELD-SYMBOLS: <ls_log> TYPE ty_log.
-
-    LOOP AT mt_log ASSIGNING <ls_log>.
-
-      CLEAR: ls_log.
-
-      ls_log-msg = <ls_log>-msg.
-
-      CASE <ls_log>-type.
+    DATA lr_msg TYPE REF TO zif_abapgit_log=>ty_msg.
+    rv_status = 'S'.
+    LOOP AT it_msg REFERENCE INTO lr_msg.
+      CASE lr_msg->type.
         WHEN 'E' OR 'A' OR 'X'.
-          ls_log-type = icon_led_red.
+          rv_status = 'E'. "not okay
+          EXIT.
         WHEN 'W'.
-          ls_log-type = icon_led_yellow.
-        WHEN 'I' OR 'S'.
-          ls_log-type = icon_led_green.
-        WHEN OTHERS.
-          ls_log-type = icon_led_inactive.
+          rv_status = 'W'. "maybe
+          CONTINUE.
+        WHEN 'S' OR 'I'.
+          rv_status = 'S'. "okay
+          CONTINUE.
+        WHEN OTHERS. "unknown
+          CONTINUE.
       ENDCASE.
-
-      INSERT ls_log INTO TABLE rt_log_out.
-
     ENDLOOP.
 
   ENDMETHOD.
@@ -72,9 +65,10 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_log> LIKE LINE OF mt_log.
 
     APPEND INITIAL LINE TO mt_log ASSIGNING <ls_log>.
-    <ls_log>-msg  = iv_msg.
-    <ls_log>-type = iv_type.
-    <ls_log>-rc   = iv_rc.
+    <ls_log>-msg-text = iv_msg.
+    <ls_log>-msg-type = iv_type.
+    <ls_log>-rc       = iv_rc.
+    <ls_log>-item     = is_item.
 
   ENDMETHOD.
 
@@ -82,8 +76,29 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
   METHOD zif_abapgit_log~add_error.
 
     zif_abapgit_log~add(
-      iv_msg  = iv_msg
-      iv_type = 'E' ).
+     iv_msg  = iv_msg
+     iv_type = 'E'
+     is_item = is_item ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_log~add_exception.
+
+    DATA lx_exc TYPE REF TO cx_root.
+    DATA lv_msg TYPE string.
+    lx_exc ?= ix_exc.
+    DO.
+      lv_msg = lx_exc->get_text( ).
+      zif_abapgit_log~add( iv_msg  = lv_msg
+                           iv_type = 'E'
+                           is_item = is_item ).
+      IF lx_exc->previous IS BOUND.
+        lx_exc = lx_exc->previous.
+      ELSE.
+        EXIT.
+      ENDIF.
+    ENDDO.
 
   ENDMETHOD.
 
@@ -92,7 +107,18 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
 
     zif_abapgit_log~add(
       iv_msg  = iv_msg
-      iv_type = 'I' ).
+      iv_type = 'I'
+      is_item = is_item ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_log~add_success.
+
+    zif_abapgit_log~add(
+      iv_msg  = iv_msg
+      iv_type = 'S'
+      is_item = is_item ).
 
   ENDMETHOD.
 
@@ -101,7 +127,8 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
 
     zif_abapgit_log~add(
       iv_msg  = iv_msg
-      iv_type = 'W' ).
+      iv_type = 'W'
+      is_item = is_item ).
 
   ENDMETHOD.
 
@@ -116,111 +143,86 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_log~get_item_status.
+
+    DATA lr_log         TYPE REF TO ty_log.
+    DATA ls_msg         TYPE zif_abapgit_log=>ty_msg.
+    DATA ls_item_status TYPE zif_abapgit_log=>ty_item_status_out.
+    DATA lr_item_status TYPE REF TO zif_abapgit_log=>ty_item_status_out.
+
+    CLEAR et_item_status.
+
+    "collect all message for all objects
+    LOOP AT mt_log REFERENCE INTO lr_log.
+      CLEAR ls_item_status.
+      ls_item_status-item = lr_log->item.
+      READ TABLE et_item_status REFERENCE INTO lr_item_status
+           WITH KEY item-obj_type = ls_item_status-item-obj_type
+                    item-obj_name = ls_item_status-item-obj_name.
+      IF sy-subrc <> 0.
+        INSERT ls_item_status INTO TABLE et_item_status.
+        GET REFERENCE OF ls_item_status INTO lr_item_status.
+      ENDIF.
+      CLEAR ls_msg.
+      ls_msg-type = lr_log->msg-type.
+      ls_msg-text = lr_log->msg-text.
+      INSERT ls_msg INTO TABLE lr_item_status->messages.
+    ENDLOOP.
+
+    "determine object status from object messages
+    LOOP AT et_item_status REFERENCE INTO lr_item_status.
+      lr_item_status->status = get_messages_status( lr_item_status->messages ).
+      IF lr_item_status->messages IS INITIAL.
+        CLEAR ls_msg.
+        ls_msg-type = 'I'.
+        ls_msg-text = 'No message'.
+        INSERT ls_msg INTO TABLE lr_item_status->messages.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_log~get_messages.
+    DATA ls_msg TYPE zif_abapgit_log~ty_log_out.
+    FIELD-SYMBOLS <ls_log> TYPE ty_log.
+    LOOP AT mt_log ASSIGNING <ls_log>.
+      ls_msg-type     = <ls_log>-msg-type.
+      ls_msg-text     = <ls_log>-msg-text.
+      ls_msg-obj_type = <ls_log>-item-obj_type.
+      ls_msg-obj_name = <ls_log>-item-obj_name.
+      APPEND ls_msg TO rt_msg.
+    ENDLOOP.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_log~get_status.
+
+    DATA lr_log TYPE REF TO ty_log.
+    rv_status = 'S'.
+    LOOP AT mt_log REFERENCE INTO lr_log.
+      CASE lr_log->msg-type.
+        WHEN 'E' OR 'A' OR 'X'.
+          rv_status = 'E'. "not okay
+          EXIT.
+        WHEN 'W'.
+          rv_status = 'W'. "maybe
+          CONTINUE.
+        WHEN 'S' OR 'I'.
+          rv_status = 'S'. "okay
+          CONTINUE.
+        WHEN OTHERS. "unknown
+          CONTINUE.
+      ENDCASE.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_log~has_rc.
 * todo, this method is only used in unit tests
 
     READ TABLE mt_log WITH KEY rc = iv_rc TRANSPORTING NO FIELDS.
     rv_yes = boolc( sy-subrc = 0 ).
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_log~show.
-
-    DATA: lt_log         TYPE tty_log_out,
-          lo_alv         TYPE REF TO cl_salv_table,
-          lx_error       TYPE REF TO cx_salv_error,
-          lo_form_header TYPE REF TO cl_salv_form_header_info,
-          lo_columns     TYPE REF TO cl_salv_columns_table,
-          lo_column      TYPE REF TO cl_salv_column,
-          lo_functions   TYPE REF TO cl_salv_functions_list.
-
-    lt_log = prepare_log_for_display( ).
-
-    TRY.
-        cl_salv_table=>factory(
-          IMPORTING
-            r_salv_table = lo_alv
-          CHANGING
-            t_table      = lt_log ).
-
-        lo_functions = lo_alv->get_functions( ).
-        lo_functions->set_all( ).
-
-        lo_columns = lo_alv->get_columns( ).
-
-        lo_columns->set_optimize( ).
-
-        lo_column = lo_columns->get_column( |TYPE| ).
-        lo_column->set_medium_text( |Type| ).
-
-        lo_column = lo_columns->get_column( |MSG| ).
-        lo_column->set_medium_text( |Message| ).
-
-        lo_alv->set_screen_popup( start_column = 10
-                                  end_column   = 120
-                                  start_line   = 4
-                                  end_line     = 20 ).
-
-        CREATE OBJECT lo_form_header
-          EXPORTING
-            text = iv_header_text.
-
-        lo_alv->set_top_of_list( lo_form_header ).
-
-        lo_alv->display( ).
-
-      CATCH cx_salv_error INTO lx_error.
-        MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
-    ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_log~to_html.
-
-    DATA: lv_class TYPE string,
-          lv_icon  TYPE string.
-
-    FIELD-SYMBOLS: <ls_log> LIKE LINE OF mt_log.
-
-    CREATE OBJECT ro_html.
-
-    IF zif_abapgit_log~count( ) = 0.
-      RETURN.
-    ENDIF.
-
-    LOOP AT mt_log ASSIGNING <ls_log>.
-      CASE <ls_log>-type.
-        WHEN 'W'.
-          lv_icon  = 'attention'.
-          lv_class = 'warning'.
-        WHEN 'E'.
-          lv_icon  = 'error'.
-          lv_class = 'error'.
-        WHEN OTHERS. " ??? unexpected
-          lv_icon  = 'error'.
-          lv_class = 'error'.
-      ENDCASE.
-
-      ro_html->add( |<span class="{ lv_class }">| ).
-      ro_html->add_icon( lv_icon ).
-      ro_html->add( <ls_log>-msg ).
-      ro_html->add( '</span>' ).
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_log~write.
-
-    DATA: ls_log  LIKE LINE OF mt_log,
-          lv_text TYPE string.
-
-
-    LOOP AT mt_log INTO ls_log.
-      lv_text = |{ ls_log-type }: { ls_log-msg }|.
-      WRITE: / lv_text.
-    ENDLOOP.
-
   ENDMETHOD.
 ENDCLASS.

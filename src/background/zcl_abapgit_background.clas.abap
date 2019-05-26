@@ -118,7 +118,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
         ii_log      = li_log
         it_settings = <ls_list>-settings ).
 
-      li_log->write( ).
+      zcl_abapgit_log_viewer=>write_log( li_log ).
     ENDLOOP.
 
     IF lines( lt_list ) = 0.

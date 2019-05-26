@@ -733,7 +733,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
         li_log = lo_browser->get_log( ).
         IF mo_repo->is_offline( ) = abap_false AND li_log->count( ) > 0.
           ro_html->add( '<div class="log">' ).
-          ro_html->add( li_log->to_html( ) ). " shows eg. list of unsupported objects
+          ro_html->add( zcl_abapgit_log_viewer=>to_html( li_log ) ). " shows eg. list of unsupported objects
           ro_html->add( '</div>' ).
         ENDIF.
 
