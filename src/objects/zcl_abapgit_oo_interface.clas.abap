@@ -17,11 +17,12 @@ CLASS zcl_abapgit_oo_interface IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~create.
     DATA: lt_vseoattrib TYPE seoo_attributes_r.
+    DATA lv_intkey TYPE seoclskey.
     FIELD-SYMBOLS: <lv_clsname> TYPE seoclsname.
 
     ASSIGN COMPONENT 'CLSNAME' OF STRUCTURE cg_properties TO <lv_clsname>.
     ASSERT sy-subrc = 0.
-    DATA lv_intkey TYPE seoclskey.
+
     lv_intkey = <lv_clsname>.
 
     lt_vseoattrib = convert_attrib_to_vseoattrib( iv_clsname    = <lv_clsname>

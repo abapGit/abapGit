@@ -369,12 +369,12 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
     DATA: lt_vseoattrib TYPE seoo_attributes_r.
     FIELD-SYMBOLS: <lv_clsname> TYPE seoclsname.
-
+    DATA lv_clskey TYPE seoclskey.
 * same as in super class, but with "version = seoc_version_active"
 
     ASSIGN COMPONENT 'CLSNAME' OF STRUCTURE cg_properties TO <lv_clsname>.
     ASSERT sy-subrc = 0.
-    DATA lv_clskey TYPE seoclskey.
+
     lv_clskey = <lv_clsname>.
 
     CALL FUNCTION 'SEO_CLASS_DELETE_COMPLETE'
