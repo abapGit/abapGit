@@ -50,7 +50,9 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
           rv_status = 'W'. "maybe
           CONTINUE.
         WHEN 'S' OR 'I'.
-          rv_status = 'S'. "okay
+          IF rv_status <> 'W'.
+            rv_status = 'S'. "okay
+          ENDIF.
           CONTINUE.
         WHEN OTHERS. "unknown
           CONTINUE.
@@ -209,7 +211,9 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
           rv_status = 'W'. "maybe
           CONTINUE.
         WHEN 'S' OR 'I'.
-          rv_status = 'S'. "okay
+          IF rv_status <> 'W'.
+            rv_status = 'S'. "okay
+          ENDIF.
           CONTINUE.
         WHEN OTHERS. "unknown
           CONTINUE.
