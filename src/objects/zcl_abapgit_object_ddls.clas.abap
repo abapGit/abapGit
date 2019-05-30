@@ -179,6 +179,9 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
             prid       = 0.
 
       CATCH cx_root INTO lx_error.
+
+        me->zif_abapgit_object~delete( ). "(+) Issue #2614
+
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
                                       ix_previous = lx_error ).
     ENDTRY.
