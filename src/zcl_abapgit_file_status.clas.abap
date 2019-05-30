@@ -7,10 +7,11 @@ CLASS zcl_abapgit_file_status DEFINITION
 
     CLASS-METHODS status
       IMPORTING io_repo           TYPE REF TO zcl_abapgit_repo
-                io_log            TYPE REF TO zcl_abapgit_log OPTIONAL
+                ii_log            TYPE REF TO zif_abapgit_log OPTIONAL
       RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING   zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-METHODS:
@@ -23,7 +24,7 @@ CLASS zcl_abapgit_file_status DEFINITION
         RETURNING VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
         RAISING   zcx_abapgit_exception,
       run_checks
-        IMPORTING io_log     TYPE REF TO zcl_abapgit_log
+        IMPORTING ii_log     TYPE REF TO zif_abapgit_log
                   it_results TYPE zif_abapgit_definitions=>ty_results_tt
                   io_dot     TYPE REF TO zcl_abapgit_dot_abapgit
                   iv_top     TYPE devclass
@@ -86,10 +87,10 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
     IF sy-subrc = 0.
       IF ls_file_sig-sha1 <> is_local-file-sha1.
-        rs_result-lstate = zif_abapgit_definitions=>gc_state-modified.
+        rs_result-lstate = zif_abapgit_definitions=>c_state-modified.
       ENDIF.
       IF ls_file_sig-sha1 <> is_remote-sha1.
-        rs_result-rstate = zif_abapgit_definitions=>gc_state-modified.
+        rs_result-rstate = zif_abapgit_definitions=>c_state-modified.
       ENDIF.
       rs_result-match = boolc( rs_result-lstate IS INITIAL
         AND rs_result-rstate IS INITIAL ).
@@ -100,12 +101,12 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       " the user will presumably decide what to do after checking the actual diff
       rs_result-match = boolc( is_local-file-sha1 = is_remote-sha1 ).
       IF rs_result-match = abap_false.
-        rs_result-lstate = zif_abapgit_definitions=>gc_state-modified.
-        rs_result-rstate = zif_abapgit_definitions=>gc_state-modified.
+        rs_result-lstate = zif_abapgit_definitions=>c_state-modified.
+        rs_result-rstate = zif_abapgit_definitions=>c_state-modified.
       ENDIF.
     ENDIF.
 
-  ENDMETHOD.  "build_existing
+  ENDMETHOD.
 
 
   METHOD build_new_local.
@@ -121,9 +122,9 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
     " Match
     rs_result-match    = abap_false.
-    rs_result-lstate   = zif_abapgit_definitions=>gc_state-added.
+    rs_result-lstate   = zif_abapgit_definitions=>c_state-added.
 
-  ENDMETHOD.  "build_new_local
+  ENDMETHOD.
 
 
   METHOD build_new_remote.
@@ -135,7 +136,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     rs_result-path     = is_remote-path.
     rs_result-filename = is_remote-filename.
     rs_result-match    = abap_false.
-    rs_result-rstate   = zif_abapgit_definitions=>gc_state-added.
+    rs_result-rstate   = zif_abapgit_definitions=>c_state-added.
 
     identify_object( EXPORTING iv_filename = is_remote-filename
                                iv_path     = is_remote-path
@@ -166,14 +167,14 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
           rs_result-match = abap_true.
           CLEAR rs_result-rstate.
         ELSE.
-          rs_result-rstate = zif_abapgit_definitions=>gc_state-modified.
+          rs_result-rstate = zif_abapgit_definitions=>c_state-modified.
         ENDIF.
 
         " Item is in state and in cache but with no package - it was deleted
         " OR devclass is the same as repo package (see #532)
         IF ls_item-devclass IS INITIAL OR ls_item-devclass = iv_devclass.
           rs_result-match  = abap_false.
-          rs_result-lstate = zif_abapgit_definitions=>gc_state-deleted.
+          rs_result-lstate = zif_abapgit_definitions=>c_state-deleted.
         ENDIF.
       ENDIF.
 
@@ -181,18 +182,19 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       ASSERT 1 = 1. " No action, just follow defaults
     ENDIF.
 
-  ENDMETHOD.  "build_new_remote
+  ENDMETHOD.
 
 
   METHOD calculate_status.
 
-    DATA: lt_remote    LIKE it_remote,
-          lt_items     TYPE zif_abapgit_definitions=>ty_items_tt,
-          ls_item      LIKE LINE OF lt_items,
-          lv_is_xml    TYPE abap_bool,
-          lt_super     TYPE zif_abapgit_sap_package=>ty_devclass_tt,
-          lt_items_idx TYPE zif_abapgit_definitions=>ty_items_ts,
-          lt_state_idx TYPE zif_abapgit_definitions=>ty_file_signatures_ts. " Sorted by path+filename
+    DATA: lt_remote       LIKE it_remote,
+          lt_items        TYPE zif_abapgit_definitions=>ty_items_tt,
+          ls_item         LIKE LINE OF lt_items,
+          lv_is_xml       TYPE abap_bool,
+          lv_sub_fetched  TYPE abap_bool,
+          lt_sub_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
+          lt_items_idx    TYPE zif_abapgit_definitions=>ty_items_ts,
+          lt_state_idx    TYPE zif_abapgit_definitions=>ty_file_signatures_ts. " Sorted by path+filename
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_remote,
                    <ls_result> LIKE LINE OF rt_results,
@@ -221,8 +223,9 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
         ASSERT <ls_remote>-sha1 IS NOT INITIAL.
         CLEAR <ls_remote>-sha1. " Mark as processed
       ELSE.             " Only L exists
-        <ls_result> = build_new_local( is_local = <ls_local> ).
+        <ls_result> = build_new_local( <ls_local> ).
       ENDIF.
+      <ls_result>-inactive = <ls_local>-item-inactive.
     ENDLOOP.
 
     " Complete item index for unmarked remote files
@@ -236,14 +239,20 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
       CHECK lv_is_xml = abap_true. " Skip all but obj definitions
 
-      ls_item-devclass = zcl_abapgit_tadir=>get_object_package(
-                           iv_object   = ls_item-obj_type
-                           iv_obj_name = ls_item-obj_name ).
+      ls_item-devclass = zcl_abapgit_factory=>get_tadir( )->get_object_package(
+        iv_object   = ls_item-obj_type
+        iv_obj_name = ls_item-obj_name ).
 
-      IF NOT ls_item-devclass IS INITIAL.
+      IF NOT ls_item-devclass IS INITIAL AND iv_devclass <> ls_item-devclass.
+        IF lv_sub_fetched = abap_false.
+          lt_sub_packages = zcl_abapgit_factory=>get_sap_package( iv_devclass )->list_subpackages( ).
+          lv_sub_fetched = abap_true.
+          SORT lt_sub_packages BY table_line. "Optimize Read Access
+        ENDIF.
 * make sure the package is under the repo main package
-        lt_super = zcl_abapgit_sap_package=>get( iv_devclass )->list_superpackages( ).
-        READ TABLE lt_super WITH KEY table_line = ls_item-devclass TRANSPORTING NO FIELDS.
+        READ TABLE lt_sub_packages TRANSPORTING NO FIELDS
+          WITH KEY table_line = ls_item-devclass
+          BINARY SEARCH.
         IF sy-subrc <> 0.
           CLEAR ls_item-devclass.
         ENDIF.
@@ -252,8 +261,8 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       APPEND ls_item TO lt_items.
     ENDLOOP.
 
-    SORT lt_items. " Default key - type, name, pkg
-    DELETE ADJACENT DUPLICATES FROM lt_items.
+    SORT lt_items DESCENDING. " Default key - type, name, pkg, inactive
+    DELETE ADJACENT DUPLICATES FROM lt_items COMPARING obj_type obj_name devclass.
     lt_items_idx = lt_items. " Self protection + UNIQUE records assertion
 
     " Process new remote files (marked above with empty SHA1)
@@ -271,7 +280,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       obj_name ASCENDING
       filename ASCENDING.
 
-  ENDMETHOD.  "calculate_status.
+  ENDMETHOD.
 
 
   METHOD identify_object.
@@ -291,7 +300,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     " Try to get a unique package name for DEVC by using the path
     IF lv_type = 'DEVC'.
       ASSERT lv_name = 'PACKAGE'.
-      lv_name = zcl_abapgit_folder_logic=>path_to_package(
+      lv_name = zcl_abapgit_folder_logic=>get_instance( )->path_to_package(
         iv_top                  = iv_devclass
         io_dot                  = io_dot
         iv_create_if_not_exists = abap_false
@@ -303,22 +312,24 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     es_item-obj_name = lv_name.
     ev_is_xml        = boolc( lv_ext = 'XML' AND strlen( lv_type ) = 4 ).
 
-  ENDMETHOD.  "identify_object.
+  ENDMETHOD.
 
 
   METHOD run_checks.
 
-    DATA: lv_path     TYPE string,
-          ls_item     TYPE zif_abapgit_definitions=>ty_item,
-          ls_file     TYPE zif_abapgit_definitions=>ty_file_signature,
-          lt_res_sort LIKE it_results,
-          lt_item_idx LIKE it_results.
+    DATA: lv_path         TYPE string,
+          ls_item         TYPE zif_abapgit_definitions=>ty_item,
+          ls_file         TYPE zif_abapgit_definitions=>ty_file_signature,
+          lt_res_sort     LIKE it_results,
+          lt_item_idx     LIKE it_results,
+          lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_res1> LIKE LINE OF it_results,
                    <ls_res2> LIKE LINE OF it_results.
 
 
-    IF io_log IS INITIAL.
+    IF ii_log IS INITIAL.
+* huh?
       RETURN.
     ENDIF.
 
@@ -345,7 +356,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
         BINARY SEARCH. " Sorted above
 
       IF sy-subrc <> 0 OR <ls_res1>-path <> <ls_res2>-path. " All paths are same
-        io_log->add( iv_msg = |Files for object { <ls_res1>-obj_type } {
+        ii_log->add( iv_msg = |Files for object { <ls_res1>-obj_type } {
                        <ls_res1>-obj_name } are not placed in the same folder|
                      iv_type = 'W'
                      iv_rc    = '1' ) ##no_text.
@@ -353,14 +364,15 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     ENDLOOP.
 
     " Check that objects are created in package corresponding to folder
+    lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
     LOOP AT it_results ASSIGNING <ls_res1>
         WHERE NOT package IS INITIAL AND NOT path IS INITIAL.
-      lv_path = zcl_abapgit_folder_logic=>package_to_path(
+      lv_path = lo_folder_logic->package_to_path(
         iv_top     = iv_top
         io_dot     = io_dot
         iv_package = <ls_res1>-package ).
       IF lv_path <> <ls_res1>-path.
-        io_log->add( iv_msg = |Package and path does not match for object, {
+        ii_log->add( iv_msg = |Package and path does not match for object, {
                        <ls_res1>-obj_type } { <ls_res1>-obj_name }|
                      iv_type = 'W'
                      iv_rc    = '2' ) ##no_text.
@@ -372,13 +384,13 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
     LOOP AT lt_res_sort ASSIGNING <ls_res1> WHERE obj_type <> 'DEVC'.
       IF <ls_res1>-filename IS NOT INITIAL AND <ls_res1>-filename = ls_file-filename.
-        io_log->add( iv_msg  = |Multiple files with same filename, { <ls_res1>-filename }|
+        ii_log->add( iv_msg  = |Multiple files with same filename, { <ls_res1>-filename }|
                      iv_type = 'W'
                      iv_rc   = '3' ) ##no_text.
       ENDIF.
 
       IF <ls_res1>-filename IS INITIAL.
-        io_log->add( iv_msg  = |Filename is empty for object { <ls_res1>-obj_type } { <ls_res1>-obj_name }|
+        ii_log->add( iv_msg  = |Filename is empty for object { <ls_res1>-obj_type } { <ls_res1>-obj_name }|
                      iv_type = 'W'
                      iv_rc   = '4' ) ##no_text.
       ENDIF.
@@ -386,7 +398,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       MOVE-CORRESPONDING <ls_res1> TO ls_file.
     ENDLOOP.
 
-  ENDMETHOD.                    "check
+  ENDMETHOD.
 
 
   METHOD status.
@@ -400,7 +412,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     rt_results = calculate_status(
       iv_devclass  = io_repo->get_package( )
       io_dot       = io_repo->get_dot_abapgit( )
-      it_local     = io_repo->get_files_local( io_log = io_log )
+      it_local     = io_repo->get_files_local( ii_log = ii_log )
       it_remote    = io_repo->get_files_remote( )
       it_cur_state = io_repo->get_local_checksums_per_file( ) ).
 
@@ -414,15 +426,14 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
           iv_path     = <ls_result>-path
           iv_filename = <ls_result>-filename ) = abap_true.
         DELETE rt_results INDEX lv_index.
-        CONTINUE.
       ENDIF.
     ENDLOOP.
 
     run_checks(
-      io_log     = io_log
+      ii_log     = ii_log
       it_results = rt_results
       io_dot     = lo_dot_abapgit
       iv_top     = io_repo->get_package( ) ).
 
-  ENDMETHOD.  "status
+  ENDMETHOD.
 ENDCLASS.

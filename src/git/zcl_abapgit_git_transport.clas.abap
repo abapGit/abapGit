@@ -12,6 +12,7 @@ CLASS zcl_abapgit_git_transport DEFINITION
                 it_branches    TYPE zif_abapgit_definitions=>ty_git_branch_list_tt OPTIONAL
       EXPORTING et_objects     TYPE zif_abapgit_definitions=>ty_objects_tt
                 ev_branch      TYPE zif_abapgit_definitions=>ty_sha1
+                eo_branch_list TYPE REF TO zcl_abapgit_git_branch_list
       RAISING   zcx_abapgit_exception.
 
 * local to remote
@@ -32,6 +33,12 @@ CLASS zcl_abapgit_git_transport DEFINITION
                  receive TYPE string VALUE 'receive',       "#EC NOTEXT
                  upload  TYPE string VALUE 'upload',        "#EC NOTEXT
                END OF c_service.
+    CONSTANTS: BEGIN OF c_smart_response_check,
+                 BEGIN OF get_refs,
+                   content_regex TYPE string VALUE '^[0-9a-f]{4}#',
+                   content_type  TYPE string VALUE 'application/x-git-<service>-pack-advertisement',
+                 END OF get_refs,
+               END OF c_smart_response_check.
 
     CLASS-METHODS branch_list
       IMPORTING iv_url         TYPE string
@@ -46,6 +53,7 @@ CLASS zcl_abapgit_git_transport DEFINITION
                 iv_branch_name TYPE string
       EXPORTING eo_client      TYPE REF TO zcl_abapgit_http_client
                 ev_branch      TYPE zif_abapgit_definitions=>ty_sha1
+                eo_branch_list TYPE REF TO zcl_abapgit_git_branch_list
       RAISING   zcx_abapgit_exception.
 
     CLASS-METHODS parse
@@ -75,17 +83,24 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
     lo_client->close( ).
 
-  ENDMETHOD.                    "branches
+  ENDMETHOD.
 
 
   METHOD branch_list.
 
     DATA: lv_data TYPE string.
-
+    DATA: lv_expected_content_type TYPE string.
 
     eo_client = zcl_abapgit_http=>create_by_url(
       iv_url     = iv_url
       iv_service = iv_service ).
+
+    lv_expected_content_type = c_smart_response_check-get_refs-content_type.
+    REPLACE '<service>' IN lv_expected_content_type WITH iv_service.
+
+    eo_client->check_smart_response(
+        iv_expected_content_type = lv_expected_content_type
+        iv_content_regex         = c_smart_response_check-get_refs-content_regex ).
 
     lv_data = eo_client->get_cdata( ).
 
@@ -93,12 +108,10 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
       EXPORTING
         iv_data = lv_data.
 
-  ENDMETHOD.                    "branch_list
+  ENDMETHOD.
 
 
   METHOD find_branch.
-
-    DATA: lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list.
 
     branch_list(
       EXPORTING
@@ -106,13 +119,13 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
         iv_service      = iv_service
       IMPORTING
         eo_client       = eo_client
-        eo_branch_list  = lo_branch_list ).
+        eo_branch_list  = eo_branch_list ).
 
     IF ev_branch IS SUPPLIED.
-      ev_branch = lo_branch_list->find_by_name( iv_branch_name )-sha1.
+      ev_branch = eo_branch_list->find_by_name( iv_branch_name )-sha1.
     ENDIF.
 
-  ENDMETHOD.                    "find_branch
+  ENDMETHOD.
 
 
   METHOD parse.
@@ -149,7 +162,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
     ev_pack = lv_pack.
 
-  ENDMETHOD.                    "parse
+  ENDMETHOD.
 
 
   METHOD receive_pack.
@@ -186,7 +199,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
               zcl_abapgit_git_utils=>get_null( ) &&
               ` ` &&
               lv_cap_list &&
-              zif_abapgit_definitions=>gc_newline.          "#EC NOTEXT
+              zif_abapgit_definitions=>c_newline.           "#EC NOTEXT
     lv_cmd_pkt = zcl_abapgit_git_utils=>pkt_string( lv_line ).
 
     lv_buffer = lv_cmd_pkt && '0000'.
@@ -211,9 +224,11 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'failed to update ref' ).
     ELSEIF lv_string CP '*missing necessary objects*'.
       zcx_abapgit_exception=>raise( 'missing necessary objects' ).
+    ELSEIF lv_string CP '*refusing to delete the current branch*'.
+      zcx_abapgit_exception=>raise( 'branch delete not allowed' ).
     ENDIF.
 
-  ENDMETHOD.                    "receive_pack
+  ENDMETHOD.
 
 
   METHOD upload_pack.
@@ -229,7 +244,9 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_branches.
 
 
-    CLEAR et_objects.
+    CLEAR: et_objects,
+           ev_branch,
+           eo_branch_list.
 
     find_branch(
       EXPORTING
@@ -238,6 +255,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
         iv_branch_name = iv_branch_name
       IMPORTING
         eo_client      = lo_client
+        eo_branch_list = eo_branch_list
         ev_branch      = ev_branch ).
 
     IF it_branches IS INITIAL.
@@ -254,22 +272,22 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
       IF sy-tabix = 1.
         lv_capa = 'side-band-64k no-progress multi_ack' ##NO_TEXT.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
-          && ` ` && lv_capa && zif_abapgit_definitions=>gc_newline. "#EC NOTEXT
+          && ` ` && lv_capa && zif_abapgit_definitions=>c_newline. "#EC NOTEXT
       ELSE.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
-          && zif_abapgit_definitions=>gc_newline.           "#EC NOTEXT
+          && zif_abapgit_definitions=>c_newline.            "#EC NOTEXT
       ENDIF.
       lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( lv_line ).
     ENDLOOP.
 
     IF iv_deepen = abap_true.
       lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( 'deepen 1'
-        && zif_abapgit_definitions=>gc_newline ).           "#EC NOTEXT
+        && zif_abapgit_definitions=>c_newline ).            "#EC NOTEXT
     ENDIF.
 
     lv_buffer = lv_buffer
              && '0000'
-             && '0009done' && zif_abapgit_definitions=>gc_newline.
+             && '0009done' && zif_abapgit_definitions=>c_newline.
 
     lv_xstring = lo_client->send_receive_close(
       zcl_abapgit_convert=>string_to_xstring_utf8( lv_buffer ) ).
@@ -283,5 +301,5 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
     et_objects = zcl_abapgit_git_pack=>decode( lv_pack ).
 
-  ENDMETHOD.                    "upload_pack
+  ENDMETHOD.
 ENDCLASS.

@@ -8,7 +8,7 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
       repo_name2 FOR TESTING RAISING zcx_abapgit_exception,
       repo_error FOR TESTING.
 
-ENDCLASS.       "ltcl_Test
+ENDCLASS.
 
 
 CLASS ltcl_test IMPLEMENTATION.
@@ -21,7 +21,7 @@ CLASS ltcl_test IMPLEMENTATION.
       CATCH zcx_abapgit_exception.                      "#EC NO_HANDLER
     ENDTRY.
 
-  ENDMETHOD.                    "repo_error
+  ENDMETHOD.
 
   METHOD repo_host.
 
@@ -33,7 +33,7 @@ CLASS ltcl_test IMPLEMENTATION.
         exp = 'https://github.com'
         act = lv_host ).
 
-  ENDMETHOD.                    "repo_url
+  ENDMETHOD.
 
   METHOD repo_name1.
 

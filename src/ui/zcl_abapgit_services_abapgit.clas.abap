@@ -8,9 +8,8 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
     CONSTANTS c_abapgit_homepage TYPE string VALUE 'http://www.abapgit.org' ##NO_TEXT.
     CONSTANTS c_abapgit_wikipage TYPE string VALUE 'http://docs.abapgit.org' ##NO_TEXT.
     CONSTANTS c_package_abapgit TYPE devclass VALUE '$ABAPGIT' ##NO_TEXT.
-    CONSTANTS c_package_plugins TYPE devclass VALUE '$ABAPGIT_PLUGINS' ##NO_TEXT.
     CONSTANTS c_abapgit_url TYPE string VALUE 'https://github.com/larshp/abapGit.git' ##NO_TEXT.
-    CONSTANTS c_plugins_url TYPE string VALUE 'https://github.com/larshp/abapGit-plugins.git' ##NO_TEXT.
+    CONSTANTS c_abapgit_tcode TYPE tcode VALUE `ZABAPGIT` ##NO_TEXT.
 
     CLASS-METHODS open_abapgit_homepage
       RAISING
@@ -20,26 +19,31 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS install_abapgit
       RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
-    CLASS-METHODS install_abapgit_pi
-      RAISING
-        zcx_abapgit_exception
-        zcx_abapgit_cancel .
+        zcx_abapgit_exception.
     CLASS-METHODS is_installed
       RETURNING
-        VALUE(rv_installed) TYPE abap_bool .
-    CLASS-METHODS is_installed_pi
-      RETURNING
-        VALUE(rv_installed) TYPE abap_bool .
+        VALUE(rv_devclass) TYPE tadir-devclass .
+    CLASS-METHODS prepare_gui_startup
+      RAISING
+        zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
-
     CLASS-METHODS do_install
       IMPORTING iv_title   TYPE c
                 iv_text    TYPE c
                 iv_url     TYPE string
                 iv_package TYPE devclass
       RAISING   zcx_abapgit_exception.
+
+    CLASS-METHODS set_start_repo_from_package
+      IMPORTING
+        iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS get_package_from_adt
+      RETURNING
+        VALUE(rv_package) TYPE devclass.
 
 ENDCLASS.
 
@@ -54,13 +58,13 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
           lv_answer TYPE c LENGTH 1.
 
 
-    lv_answer = zcl_abapgit_popups=>popup_to_confirm(
-      titlebar              = iv_title
-      text_question         = iv_text
-      text_button_1         = 'Continue'
-      text_button_2         = 'Cancel'
-      default_button        = '2'
-      display_cancel_button = abap_false ).                 "#EC NOTEXT
+    lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
+      iv_titlebar              = iv_title
+      iv_text_question         = iv_text
+      iv_text_button_1         = 'Continue'
+      iv_text_button_2         = 'Cancel'
+      iv_default_button        = '2'
+      iv_display_cancel_button = abap_false ).              "#EC NOTEXT
 
     IF lv_answer <> '1'.
       RETURN.
@@ -70,7 +74,7 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
         iv_url              = iv_url
         iv_target_package   = iv_package ).
 
-      zcl_abapgit_sap_package=>create_local( iv_package ).
+      zcl_abapgit_factory=>get_sap_package( iv_package )->create_local( ).
 
       lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
         iv_url         = iv_url
@@ -84,7 +88,67 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
 
     COMMIT WORK.
 
-  ENDMETHOD.  " do_install.
+  ENDMETHOD.
+
+
+  METHOD get_package_from_adt.
+
+    DATA: ls_item    TYPE zif_abapgit_definitions=>ty_item,
+          lr_context TYPE REF TO data,
+          lt_fields  TYPE tihttpnvp.
+
+
+    FIELD-SYMBOLS: <ls_context>    TYPE any,
+                   <lv_parameters> TYPE string,
+                   <ls_field>      LIKE LINE OF lt_fields.
+
+    ls_item-obj_type = 'CLAS'.
+    ls_item-obj_name = 'CL_ADT_GUI_INTEGRATION_CONTEXT'.
+
+    IF zcl_abapgit_objects=>exists( ls_item ) = abap_false.
+      " ADT is not supported in this NW release
+      RETURN.
+    ENDIF.
+
+    TRY.
+        CREATE DATA lr_context TYPE ('CL_ADT_GUI_INTEGRATION_CONTEXT=>TY_CONTEXT_INFO').
+
+        ASSIGN lr_context->* TO <ls_context>.
+        ASSERT sy-subrc = 0.
+
+        CALL METHOD ('CL_ADT_GUI_INTEGRATION_CONTEXT')=>read_context
+          RECEIVING
+            result = <ls_context>.
+
+        ASSIGN COMPONENT 'PARAMETERS'
+               OF STRUCTURE <ls_context>
+               TO <lv_parameters>.
+        ASSERT sy-subrc = 0.
+
+        lt_fields = cl_http_utility=>string_to_fields(
+                        cl_http_utility=>unescape_url(
+                            <lv_parameters> ) ).
+
+        READ TABLE lt_fields ASSIGNING <ls_field>
+                             WITH KEY name = 'p_package_name'.
+        IF sy-subrc = 0.
+          rv_package = <ls_field>-value.
+
+          " We want to open the repo just once. Therefore we delete the parameters
+          " and initialize the ADT context.
+          CLEAR <lv_parameters>.
+          CALL METHOD ('CL_ADT_GUI_INTEGRATION_CONTEXT')=>initialize_instance
+            EXPORTING
+              context_info = <ls_context>.
+
+        ENDIF.
+
+      CATCH cx_root.
+        " Some problems with dynamic ADT access.
+        " Let's ignore it for now and fail silently
+    ENDTRY.
+
+  ENDMETHOD.
 
 
   METHOD install_abapgit.
@@ -92,11 +156,11 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
     CONSTANTS lc_title TYPE c LENGTH 40 VALUE 'Install abapGit'.
     DATA lv_text       TYPE c LENGTH 100.
 
-    IF is_installed( ) = abap_true.
+    IF NOT is_installed( ) IS INITIAL.
       lv_text = 'Seems like abapGit package is already installed. No changes to be done'.
-      zcl_abapgit_popups=>popup_to_inform(
-        titlebar              = lc_title
-        text_message          = lv_text ).
+      zcl_abapgit_ui_factory=>get_popups( )->popup_to_inform(
+        iv_titlebar     = lc_title
+        iv_text_message = lv_text ).
       RETURN.
     ENDIF.
 
@@ -107,57 +171,15 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
                 iv_url     = c_abapgit_url
                 iv_package = c_package_abapgit ).
 
-  ENDMETHOD.  "install_abapgit
-
-
-  METHOD install_abapgit_pi.
-
-    CONSTANTS lc_title TYPE c LENGTH 40 VALUE 'Install abapGit plugins'.
-    DATA lv_text       TYPE c LENGTH 100.
-
-    IF is_installed_pi( ) = abap_true.
-      lv_text = 'Seems like abapGit plugins package is already installed. No changes to be done'.
-      zcl_abapgit_popups=>popup_to_inform(
-        titlebar              = lc_title
-        text_message          = lv_text ).
-      RETURN.
-    ENDIF.
-
-    lv_text = |Confirm to install current version abapGit plugins to package {
-               c_package_plugins }|.
-
-    do_install( iv_title   = lc_title
-                iv_text    = lv_text
-                iv_url     = c_plugins_url
-                iv_package = c_package_plugins ).
-
-  ENDMETHOD.  "install_abapgit_pi
+  ENDMETHOD.
 
 
   METHOD is_installed.
 
-    TRY.
-        rv_installed = zcl_abapgit_repo_srv=>get_instance( )->is_repo_installed( c_abapgit_url ).
-        " TODO, alternative checks for presence in the system
-      CATCH zcx_abapgit_exception.
-        " cannot be installed anyway in this case, e.g. no connection
-        rv_installed = abap_false.
-    ENDTRY.
+    SELECT SINGLE devclass FROM tadir INTO rv_devclass
+      WHERE object = 'TRAN' AND obj_name = c_abapgit_tcode.
 
-  ENDMETHOD.                    "is_installed
-
-
-  METHOD is_installed_pi.
-
-    TRY.
-        rv_installed = zcl_abapgit_repo_srv=>get_instance( )->is_repo_installed( c_plugins_url ).
-        " TODO, alternative checks for presence in the system
-      CATCH zcx_abapgit_exception.
-        " cannot be installed anyway in this case, e.g. no connection
-        rv_installed = abap_false.
-    ENDTRY.
-
-  ENDMETHOD.                    "is_installed_pi
+  ENDMETHOD.
 
 
   METHOD open_abapgit_homepage.
@@ -169,7 +191,7 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Opening page in external browser failed.' ).
     ENDIF.
 
-  ENDMETHOD.  "open_abapgit_homepage
+  ENDMETHOD.
 
 
   METHOD open_abapgit_wikipage.
@@ -181,5 +203,94 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Opening page in external browser failed.' ).
     ENDIF.
 
-  ENDMETHOD.  "open_abapgit_wikipage
+  ENDMETHOD.
+
+
+  METHOD prepare_gui_startup.
+
+    DATA: lv_repo_key    TYPE zif_abapgit_persistence=>ty_value,
+          lv_package     TYPE devclass,
+          lv_package_adt TYPE devclass.
+
+    IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_show_default_repo( ) = abap_false.
+      " Don't show the last seen repo at startup
+      zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( || ).
+    ENDIF.
+
+    " We have three special cases for gui startup
+    "   - open a specific repo by repo key
+    "   - open a specific repo by package name
+    "   - open a specific repo by package name provided by ADT
+    " These overrule the last shown repo
+
+    GET PARAMETER ID zif_abapgit_definitions=>c_spagpa_param_repo_key FIELD lv_repo_key.
+    GET PARAMETER ID zif_abapgit_definitions=>c_spagpa_param_package  FIELD lv_package.
+    lv_package_adt = get_package_from_adt( ).
+
+    IF lv_repo_key IS NOT INITIAL.
+
+      SET PARAMETER ID zif_abapgit_definitions=>c_spagpa_param_repo_key FIELD ''.
+      zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_repo_key ).
+
+    ELSEIF lv_package IS NOT INITIAL.
+
+      SET PARAMETER ID zif_abapgit_definitions=>c_spagpa_param_package FIELD ''.
+      set_start_repo_from_package( lv_package ).
+
+    ELSEIF lv_package_adt IS NOT INITIAL.
+
+      set_start_repo_from_package( lv_package_adt ).
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD set_start_repo_from_package.
+
+    DATA: lo_repo          TYPE REF TO zcl_abapgit_repo,
+          lt_r_package     TYPE RANGE OF devclass,
+          ls_r_package     LIKE LINE OF lt_r_package,
+          lt_superpackages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
+          lo_package       TYPE REF TO zif_abapgit_sap_package,
+          lt_repo_list     TYPE zif_abapgit_definitions=>ty_repo_ref_tt.
+
+    FIELD-SYMBOLS: <lo_repo>         TYPE LINE OF zif_abapgit_definitions=>ty_repo_ref_tt,
+                   <lv_superpackage> LIKE LINE OF lt_superpackages.
+
+    lo_package = zcl_abapgit_factory=>get_sap_package( iv_package ).
+
+    IF lo_package->exists( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    ls_r_package-sign   = 'I'.
+    ls_r_package-option = 'EQ'.
+    ls_r_package-low    = iv_package.
+    INSERT ls_r_package INTO TABLE lt_r_package.
+
+    " Also consider superpackages. E.g. when some open $abapgit_ui, abapGit repo
+    " should be found via package $abapgit
+    lt_superpackages = lo_package->list_superpackages( ).
+    LOOP AT lt_superpackages ASSIGNING <lv_superpackage>.
+      ls_r_package-low = <lv_superpackage>.
+      INSERT ls_r_package INTO TABLE lt_r_package.
+    ENDLOOP.
+
+    lt_repo_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
+
+    LOOP AT lt_repo_list ASSIGNING <lo_repo>.
+
+      IF <lo_repo>->get_package( ) IN lt_r_package.
+        lo_repo = <lo_repo>.
+        EXIT.
+      ENDIF.
+
+    ENDLOOP.
+
+    IF lo_repo IS BOUND.
+      zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lo_repo->get_key( ) ).
+    ENDIF.
+
+  ENDMETHOD.
 ENDCLASS.

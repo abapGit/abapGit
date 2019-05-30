@@ -1,4 +1,3 @@
-*"* use this source file for your ABAP unit test classes
 CLASS ltcl_xml_output DEFINITION DEFERRED.
 CLASS zcl_abapgit_xml_output DEFINITION LOCAL FRIENDS ltcl_xml_output.
 
@@ -16,12 +15,6 @@ CLASS ltcl_xml_output DEFINITION FOR TESTING  DURATION SHORT RISK LEVEL HARMLESS
              bar TYPE c LENGTH 1,
            END OF st_old.
 
-    TYPES: BEGIN OF st_new,
-             foo TYPE i,
-             bar TYPE c LENGTH 1,
-             moo TYPE f,
-           END OF st_new.
-
 ENDCLASS.
 CLASS ltcl_xml_output IMPLEMENTATION.
 
@@ -30,7 +23,6 @@ CLASS ltcl_xml_output IMPLEMENTATION.
     DATA: ls_input       TYPE st_old,
           ls_result      TYPE st_old,
           lv_value       TYPE string,
-          lv_xml         TYPE string,
           li_xml_element TYPE REF TO if_ixml_element,
           lo_output      TYPE REF TO zcl_abapgit_xml_output.
 
@@ -41,10 +33,10 @@ CLASS ltcl_xml_output IMPLEMENTATION.
     lo_output->add( iv_name = 'DATA'
                     ig_data = ls_input ).
 
-    li_xml_element = lo_output->mi_xml_doc->find_from_name( name = 'FOO' ).
+    li_xml_element = lo_output->mi_xml_doc->find_from_name( 'FOO' ).
     lv_value = li_xml_element->get_value( ).
     ls_result-foo = lv_value.
-    li_xml_element = lo_output->mi_xml_doc->find_from_name( name = 'BAR' ).
+    li_xml_element = lo_output->mi_xml_doc->find_from_name( 'BAR' ).
     lv_value = li_xml_element->get_value( ).
     ls_result-bar = lv_value.
 
@@ -69,7 +61,8 @@ CLASS ltcl_xml_output IMPLEMENTATION.
     lv_value =
       '<?xml version="1.0" encoding="utf-16"?>#<abapGit version="v1.0.0">#' &
       ' <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">#' &
-      '  <asx:values>#   <DATA>#    <FOO>2</FOO>#    <BAR>A</BAR>#   </DATA>#  </asx:values># </asx:abap>#</abapGit>#'.
+      '  <asx:values>#   <DATA>#    <FOO>2</FOO>#    <BAR>A' &
+      '</BAR>#   </DATA>#  </asx:values># </asx:abap>#</abapGit>#'.
 
     REPLACE ALL OCCURRENCES OF '#' IN lv_value WITH cl_abap_char_utilities=>newline.
 
@@ -86,7 +79,7 @@ CLASS ltcl_xml_output IMPLEMENTATION.
                        iv_string     = lv_value
                        iv_codepage   = lv_encoding
                        iv_add_bom    = 'X' ).
-      CATCH cx_bcs .
+      CATCH cx_bcs.
     ENDTRY.
 
     lo_conv_in_string = cl_abap_conv_in_ce=>create(

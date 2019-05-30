@@ -4,12 +4,14 @@ CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_tpool_i18n,
              language TYPE langu,
              textpool TYPE zif_abapgit_definitions=>ty_tpool_tt,
            END OF ty_tpool_i18n,
            tt_tpool_i18n TYPE STANDARD TABLE OF ty_tpool_i18n.
+    CONSTANTS: c_longtext_id_prog TYPE dokil-id VALUE 'RE'.
 
     METHODS:
       serialize_texts
@@ -17,7 +19,12 @@ CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING   zcx_abapgit_exception,
       deserialize_texts
         IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_input
-        RAISING   zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception,
+      is_program_locked
+        RETURNING
+          VALUE(rv_is_program_locked) TYPE abap_bool
+        RAISING
+          zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -44,7 +51,15 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
                             it_tpool    = lt_tpool ).
     ENDLOOP.
 
-  ENDMETHOD.                    "deserialize_texts
+  ENDMETHOD.
+
+
+  METHOD is_program_locked.
+
+    rv_is_program_locked = exists_a_lock_entry_for( iv_lock_object = 'ESRDIRE'
+                                                    iv_argument    = |{ ms_item-obj_name }| ).
+
+  ENDMETHOD.
 
 
   METHOD serialize_texts.
@@ -78,7 +93,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
                    ig_data = lt_tpool_i18n ).
     ENDIF.
 
-  ENDMETHOD.                    "serialize_texts
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -88,12 +103,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
     ENDIF.
-  ENDMETHOD.                    "zif_abapgit_object~changed_by
-
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.                    "zif_abapgit_object~compare_to_remote_version
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~delete.
@@ -118,7 +128,9 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error from RS_DELETE_PROGRAM: { sy-subrc }| ).
     ENDIF.
 
-  ENDMETHOD.                    "delete
+    delete_longtexts( c_longtext_id_prog ).
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -148,7 +160,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
 
     io_xml->read( EXPORTING iv_name = 'DYNPROS'
                   CHANGING cg_data  = lt_dynpros ).
-    deserialize_dynpros( it_dynpros = lt_dynpros ).
+    deserialize_dynpros( lt_dynpros ).
 
     io_xml->read( EXPORTING iv_name = 'CUA'
                   CHANGING cg_data  = ls_cua ).
@@ -162,7 +174,9 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
     " Texts deserializing (translations)
     deserialize_texts( io_xml ).
 
-  ENDMETHOD.                    "zif_abapgit_serialize~deserialize
+    deserialize_longtexts( io_xml ).
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -174,21 +188,41 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
       AND r3state = 'A'.
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
 
-    rv_changed = check_prog_changed_since(
-      iv_program   = ms_item-obj_name
-      iv_timestamp = iv_timestamp ).
 
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  METHOD zif_abapgit_object~is_locked.
+
+    IF is_program_locked( )                     = abap_true
+    OR is_any_dynpro_locked( ms_item-obj_name ) = abap_true
+    OR is_cua_locked( ms_item-obj_name )        = abap_true
+    OR is_text_locked( ms_item-obj_name )       = abap_true.
+
+      rv_is_locked = abap_true.
+
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~jump.
@@ -200,10 +234,13 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
         object_type   = 'PROG'
         in_new_window = abap_true.
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
+
+* see SAP note 1025291, run report DELETE_TADIR_FOR_EIMP_INCLUDE to clean bad TADIR entries
+    ASSERT NOT ms_item-obj_name CP '*=E'.
 
     serialize_program( io_xml   = io_xml
                        is_item  = ms_item
@@ -212,5 +249,8 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
     " Texts serializing (translations)
     serialize_texts( io_xml ).
 
-  ENDMETHOD.                    "zif_abapgit_serialize~serialize
+    serialize_longtexts( io_xml         = io_xml
+                         iv_longtext_id = c_longtext_id_prog ).
+
+  ENDMETHOD.
 ENDCLASS.

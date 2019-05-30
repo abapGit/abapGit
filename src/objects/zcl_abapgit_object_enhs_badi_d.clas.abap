@@ -3,9 +3,14 @@ CLASS zcl_abapgit_object_enhs_badi_d DEFINITION PUBLIC.
   PUBLIC SECTION.
     INTERFACES: zif_abapgit_object_enhs.
 
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
-CLASS zcl_abapgit_object_enhs_badi_d IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_OBJECT_ENHS_BADI_D IMPLEMENTATION.
+
 
   METHOD zif_abapgit_object_enhs~deserialize.
 
@@ -13,7 +18,6 @@ CLASS zcl_abapgit_object_enhs_badi_d IMPLEMENTATION.
           lt_enh_badi        TYPE enh_badi_data_it,
           lo_badidef_tool    TYPE REF TO cl_enh_tool_badi_def,
           lv_enh_shorttext   TYPE string,
-*          lv_package         LIKE iv_package,
           li_enh_object      TYPE REF TO if_enh_object,
           li_enh_object_docu TYPE REF TO if_enh_object_docu,
           lv_text            TYPE string,
@@ -29,8 +33,6 @@ CLASS zcl_abapgit_object_enhs_badi_d IMPLEMENTATION.
 
     io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
                   CHANGING  cg_data = lv_enh_shorttext ).
-
-*    lv_package = iv_package.
 
     li_enh_object ?= ii_enh_spot_tool.
     li_enh_object_docu ?= ii_enh_spot_tool.
@@ -54,6 +56,7 @@ CLASS zcl_abapgit_object_enhs_badi_d IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object_enhs~serialize.
 
@@ -87,5 +90,4 @@ CLASS zcl_abapgit_object_enhs_badi_d IMPLEMENTATION.
                  iv_name = 'BADI_DATA' ).
 
   ENDMETHOD.
-
 ENDCLASS.

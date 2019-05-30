@@ -1,5 +1,3 @@
-*"* use this source file for your ABAP unit test classes
-
 *----------------------------------------------------------------------*
 *       CLASS ltcl_dangerous DEFINITION
 *----------------------------------------------------------------------*
@@ -20,7 +18,7 @@ CLASS ltcl_dangerous DEFINITION FOR TESTING RISK LEVEL CRITICAL DURATION LONG FI
 
     CONSTANTS: c_package TYPE devclass VALUE '$ABAPGIT_UNIT_TEST'.
 
-ENDCLASS.                    "ltcl_dangerous DEFINITION
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS ltcl_dangerous IMPLEMENTATION
@@ -37,7 +35,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
         msg   = 'Cancelled. You can enable these tests at the Settings page'
         level = if_aunit_constants=>tolerable ).
     ENDIF.
-  ENDMETHOD.                    "class_setup
+  ENDMETHOD.
 
   METHOD run.
 
@@ -53,7 +51,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
                    <lv_type>   LIKE LINE OF lt_types.
 
 
-    zcl_abapgit_sap_package=>create_local( c_package ).
+    zcl_abapgit_factory=>get_sap_package( c_package )->create_local( ).
 
     lt_types = zcl_abapgit_objects=>supported_list( ).
 
@@ -64,7 +62,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
     lo_repo->status( ).
     lo_repo->deserialize( ls_checks ).
 
-    lt_tadir = zcl_abapgit_tadir=>read( c_package ).
+    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( c_package ).
     LOOP AT lt_types ASSIGNING <lv_type>.
       READ TABLE lt_tadir WITH KEY object = <lv_type> TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
@@ -85,7 +83,7 @@ CLASS ltcl_dangerous IMPLEMENTATION.
     ENDLOOP.
 
     zcl_abapgit_objects=>delete( lt_tadir ).
-    lt_tadir = zcl_abapgit_tadir=>read( c_package ).
+    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( c_package ).
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       lv_msg = |Not deleted properly { <ls_tadir>-object } { <ls_tadir>-obj_name }|.
       cl_abap_unit_assert=>fail(
@@ -97,9 +95,9 @@ CLASS ltcl_dangerous IMPLEMENTATION.
 
     COMMIT WORK.
 
-  ENDMETHOD.                    "run
+  ENDMETHOD.
 
-ENDCLASS.                    "ltcl_dangerous IMPLEMENTATION
+ENDCLASS.
 
 
 *----------------------------------------------------------------------*
@@ -113,7 +111,7 @@ CLASS ltcl_object_types DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHOR
     METHODS:
       not_exist FOR TESTING RAISING zcx_abapgit_exception.
 
-ENDCLASS.                    "ltcl_object_types DEFINITION
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS ltcl_object_types IMPLEMENTATION
@@ -148,9 +146,9 @@ CLASS ltcl_object_types IMPLEMENTATION.
         quit = if_aunit_constants=>no ).
     ENDLOOP.
 
-  ENDMETHOD.                    "not_exist
+  ENDMETHOD.
 
-ENDCLASS.                    "ltcl_object_types IMPLEMENTATION
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS ltcl_serialize DEFINITION
@@ -163,10 +161,9 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
 
     METHODS:
       check
-        IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
+        IMPORTING VALUE(is_item) TYPE zif_abapgit_definitions=>ty_item
         RAISING   zcx_abapgit_exception,
       serialize_tabl FOR TESTING RAISING zcx_abapgit_exception,
-      serialize_enqu FOR TESTING RAISING zcx_abapgit_exception,
       serialize_shlp FOR TESTING RAISING zcx_abapgit_exception,
       serialize_view FOR TESTING RAISING zcx_abapgit_exception,
       serialize_auth FOR TESTING RAISING zcx_abapgit_exception,
@@ -179,7 +176,7 @@ CLASS ltcl_serialize DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT F
       serialize_tran FOR TESTING RAISING zcx_abapgit_exception,
       serialize_ttyp FOR TESTING RAISING zcx_abapgit_exception.
 
-ENDCLASS.                    "ltcl_serialize DEFINITION
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS ltcl_serialize IMPLEMENTATION
@@ -187,18 +184,6 @@ ENDCLASS.                    "ltcl_serialize DEFINITION
 *
 *----------------------------------------------------------------------*
 CLASS ltcl_serialize IMPLEMENTATION.
-
-  METHOD serialize_enqu.
-
-    DATA: ls_item  TYPE zif_abapgit_definitions=>ty_item.
-
-
-    ls_item-obj_type = 'ENQU'.
-    ls_item-obj_name = 'E_USR04'.
-
-    check( ls_item ).
-
-  ENDMETHOD.                    "lcl_abap_unit
 
   METHOD serialize_shlp.
 
@@ -210,7 +195,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "lcl_abap_unit
+  ENDMETHOD.
 
   METHOD serialize_view.
 
@@ -222,7 +207,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "lcl_abap_unit
+  ENDMETHOD.
 
   METHOD serialize_tabl.
 
@@ -234,7 +219,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_table
+  ENDMETHOD.
 
   METHOD serialize_auth.
 
@@ -246,7 +231,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_auth
+  ENDMETHOD.
 
   METHOD serialize_clas.
 
@@ -258,7 +243,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_clas
+  ENDMETHOD.
 
   METHOD serialize_doma.
 
@@ -270,7 +255,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_doma
+  ENDMETHOD.
 
   METHOD serialize_dtel.
 
@@ -282,7 +267,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_dtel
+  ENDMETHOD.
 
   METHOD serialize_fugr.
 
@@ -294,7 +279,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_fugr
+  ENDMETHOD.
 
   METHOD serialize_msag.
 
@@ -306,7 +291,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_msag
+  ENDMETHOD.
 
   METHOD serialize_prog.
 
@@ -318,7 +303,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_prog
+  ENDMETHOD.
 
   METHOD serialize_tran.
 
@@ -330,7 +315,7 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_tran
+  ENDMETHOD.
 
   METHOD serialize_ttyp.
 
@@ -342,17 +327,493 @@ CLASS ltcl_serialize IMPLEMENTATION.
 
     check( ls_item ).
 
-  ENDMETHOD.                    "serialize_ttyp
+  ENDMETHOD.
 
   METHOD check.
 
-    DATA: lt_files TYPE zif_abapgit_definitions=>ty_files_tt.
+    DATA: ls_files_item TYPE zcl_abapgit_objects=>ty_serialization.
 
-    lt_files = zcl_abapgit_objects=>serialize( is_item     = is_item
-                                       iv_language = zif_abapgit_definitions=>gc_english ).
+    ls_files_item = zcl_abapgit_objects=>serialize( is_item     = is_item
+                                                    iv_language = zif_abapgit_definitions=>c_english ).
 
-    cl_abap_unit_assert=>assert_not_initial( lt_files ).
+    cl_abap_unit_assert=>assert_not_initial( ls_files_item-files ).
+    cl_abap_unit_assert=>assert_equals( act = ls_files_item-item
+                                        exp = is_item ).
 
-  ENDMETHOD.                    "check
+  ENDMETHOD.
 
-ENDCLASS.                    "ltcl_serialize IMPLEMENTATION
+ENDCLASS.
+
+CLASS ltcl_object_ddls_mock DEFINITION FOR TESTING.
+
+  PUBLIC SECTION.
+    INTERFACES zif_abapgit_object.
+    METHODS:
+      constructor
+        IMPORTING
+          is_item     TYPE zif_abapgit_definitions=>ty_item
+          iv_language TYPE spras.
+
+  PRIVATE SECTION.
+    DATA ms_item TYPE zif_abapgit_definitions=>ty_item.
+
+ENDCLASS.
+
+CLASS ltcl_object_ddls_mock IMPLEMENTATION.
+
+  METHOD constructor.
+
+    ms_item = is_item.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~is_locked.
+
+    CASE ms_item-obj_name.
+      WHEN 'Z_TEST_DDLS'.
+
+        rv_is_locked = abap_true.
+
+      WHEN 'Z_TEST_DDLS2'.
+
+        rv_is_locked = abap_false.
+
+    ENDCASE.
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~get_deserialize_steps. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~changed_by. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~get_comparator. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~delete. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~deserialize. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~exists. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~get_metadata. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~jump. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~serialize. "##needed
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_object~is_active. "##needed
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltcl_check_objects_locked DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    DATA:
+      mt_given_items    TYPE zif_abapgit_definitions=>ty_items_tt,
+      mv_exception_text TYPE string.
+
+    METHODS:
+      throw_excp_if_object_is_locked FOR TESTING RAISING cx_static_check,
+      no_excp_if_obj_is_not_locked FOR TESTING RAISING cx_static_check,
+      given_locked_object,
+      when_check_objects_locked,
+      then_exception_shd_be_raised,
+      given_not_locked_object,
+      then_no_exception_shd_occur,
+      given_object
+        IMPORTING
+          iv_object_name TYPE string.
+
+ENDCLASS.
+
+CLASS zcl_abapgit_objects DEFINITION LOCAL FRIENDS ltcl_check_objects_locked.
+
+CLASS ltcl_check_objects_locked IMPLEMENTATION.
+
+  METHOD throw_excp_if_object_is_locked.
+
+    given_locked_object( ).
+    when_check_objects_locked( ).
+    then_exception_shd_be_raised( ).
+
+  ENDMETHOD.
+
+  METHOD no_excp_if_obj_is_not_locked.
+
+    given_not_locked_object( ).
+    when_check_objects_locked( ).
+    then_no_exception_shd_occur( ).
+
+  ENDMETHOD.
+
+  METHOD given_locked_object.
+
+    given_object( 'Z_TEST_DDLS' ).
+
+  ENDMETHOD.
+
+
+  METHOD when_check_objects_locked.
+
+    DATA: lx_error TYPE REF TO zcx_abapgit_exception.
+
+    TRY.
+        zcl_abapgit_objects=>check_objects_locked( iv_language = 'E'
+                                                   it_items    = mt_given_items ).
+
+      CATCH zcx_abapgit_exception INTO lx_error.
+        mv_exception_text = lx_error->get_text( ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD then_exception_shd_be_raised.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = |Object DDLS Z_TEST_DDLS is locked. Action not possible.|
+      act = mv_exception_text ).
+
+  ENDMETHOD.
+
+
+  METHOD given_not_locked_object.
+
+    given_object( 'Z_TEST_DDLS2' ).
+
+  ENDMETHOD.
+
+
+  METHOD then_no_exception_shd_occur.
+
+    cl_abap_unit_assert=>assert_initial( mv_exception_text ).
+
+  ENDMETHOD.
+
+
+  METHOD given_object.
+
+    CONSTANTS:
+      lc_obj_type TYPE string VALUE 'DDLS'.
+
+    DATA:
+      ls_item               LIKE LINE OF mt_given_items,
+      ls_obj_serializer_map LIKE LINE OF zcl_abapgit_objects=>gt_obj_serializer_map.
+
+    ls_item-obj_type = lc_obj_type.
+    ls_item-obj_name = iv_object_name.
+    INSERT ls_item INTO TABLE mt_given_items.
+
+    ls_obj_serializer_map-item-obj_type = lc_obj_type.
+    ls_obj_serializer_map-item-obj_name = iv_object_name.
+    ls_obj_serializer_map-metadata-class = '\CLASS-POOL=ZCL_ABAPGIT_OBJECTS\CLASS=LTCL_OBJECT_DDLS_MOCK'.
+    INSERT ls_obj_serializer_map INTO TABLE zcl_abapgit_objects=>gt_obj_serializer_map.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltcl_filter_files_to_deser DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    DATA:
+      mo_objects TYPE REF TO zcl_abapgit_objects,
+      mt_result  TYPE zif_abapgit_definitions=>ty_results_tt.
+
+    METHODS:
+      setup,
+      filter_duplicates FOR TESTING RAISING cx_static_check,
+      filter_duplicates_rstate FOR TESTING RAISING cx_static_check,
+      filter_duplicates_lstate FOR TESTING RAISING cx_static_check,
+      filter_duplicates_match FOR TESTING RAISING cx_static_check,
+      filter_duplicates_init_objtype FOR TESTING RAISING cx_static_check,
+
+      given_result
+        IMPORTING
+          iv_result_line TYPE string,
+
+      when_filter_is_applied.
+
+ENDCLASS.
+
+CLASS zcl_abapgit_objects DEFINITION LOCAL FRIENDS ltcl_filter_files_to_deser.
+
+CLASS ltcl_filter_files_to_deser IMPLEMENTATION.
+
+  METHOD setup.
+
+    CREATE OBJECT mo_objects.
+
+  ENDMETHOD.
+
+  METHOD filter_duplicates.
+
+    given_result( |PROG;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.abap;;;;| ).
+    given_result( |PROG;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.xml;;;;| ).
+
+    when_filter_is_applied( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 1
+      act = lines( mt_result ) ).
+
+  ENDMETHOD.
+
+
+  METHOD filter_duplicates_rstate.
+
+    DATA: ls_exp LIKE LINE OF mt_result,
+          ls_act LIKE LINE OF mt_result.
+
+    given_result( |PROG;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.abap;;;;| ).
+    given_result( |PROG;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.xml;;;;A| ).
+
+    READ TABLE mt_result INDEX 2 INTO ls_exp.
+
+    when_filter_is_applied( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 1
+      act = lines( mt_result ) ).
+
+    READ TABLE mt_result INDEX 1 INTO ls_act.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = ls_exp
+      act = ls_act ).
+
+  ENDMETHOD.
+
+
+  METHOD filter_duplicates_lstate.
+
+    given_result( |PROG;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.abap;;;A;| ).
+    given_result( |PROG;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.xml;;;A;| ).
+
+    when_filter_is_applied( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = lines( mt_result ) ).
+
+  ENDMETHOD.
+
+
+  METHOD filter_duplicates_match.
+
+    given_result( |PROG;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.abap;;X;;| ).
+    given_result( |PROG;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.xml;;X;;| ).
+
+    when_filter_is_applied( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = lines( mt_result ) ).
+
+  ENDMETHOD.
+
+
+  METHOD filter_duplicates_init_objtype.
+
+    given_result( |;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.abap;;;;| ).
+    given_result( |;ZAG_UNIT_TEST;;/src/;zag_unit_test.prog.xml;;;;| ).
+
+    when_filter_is_applied( ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 0
+      act = lines( mt_result ) ).
+
+  ENDMETHOD.
+
+
+  METHOD given_result.
+
+    DATA: ls_result LIKE LINE OF mt_result.
+
+    SPLIT iv_result_line
+      AT ';'
+      INTO ls_result-obj_type
+           ls_result-obj_name
+           ls_result-inactive
+           ls_result-path
+           ls_result-filename
+           ls_result-package
+           ls_result-match
+           ls_result-lstate
+           ls_result-rstate.
+
+    INSERT ls_result INTO TABLE mt_result.
+
+  ENDMETHOD.
+
+
+  METHOD when_filter_is_applied.
+
+    mt_result = mo_objects->filter_files_to_deserialize( mt_result ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltcl_adjust_namespaces DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    METHODS:
+      setup,
+      adjust_namespaces FOR TESTING RAISING cx_static_check.
+
+    DATA:
+      mo_objects TYPE REF TO zcl_abapgit_objects.
+
+ENDCLASS.
+
+CLASS zcl_abapgit_objects DEFINITION LOCAL FRIENDS ltcl_adjust_namespaces.
+
+CLASS ltcl_adjust_namespaces IMPLEMENTATION.
+
+  METHOD setup.
+
+    CREATE OBJECT mo_objects.
+
+  ENDMETHOD.
+
+  METHOD adjust_namespaces.
+
+    DATA: lt_input  TYPE zif_abapgit_definitions=>ty_results_tt,
+          lt_ouptut TYPE zif_abapgit_definitions=>ty_results_tt,
+          ls_result LIKE LINE OF lt_input.
+
+    ls_result-obj_name = |#SAP#ZTEST|.
+    INSERT ls_result INTO TABLE lt_input.
+
+    ls_result-obj_name = |ZTEST|.
+    INSERT ls_result INTO TABLE lt_input.
+
+    lt_ouptut = mo_objects->adjust_namespaces( lt_input ).
+
+    READ TABLE lt_ouptut INTO ls_result INDEX 1.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = |/SAP/ZTEST|
+      act = ls_result-obj_name ).
+
+    READ TABLE lt_ouptut INTO ls_result INDEX 2.
+    cl_abap_unit_assert=>assert_equals(
+      exp = |ZTEST|
+      act = ls_result-obj_name ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltcl_prio_deserialization DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    METHODS:
+      setup,
+      ddls_before_dcls FOR TESTING RAISING cx_static_check,
+
+      given
+        IMPORTING
+          iv_object_type TYPE trobjtype,
+      when_deser_is_priorized,
+      then
+        IMPORTING
+          iv_exp_object_type TYPE trobjtype.
+
+    DATA:
+      mo_objects          TYPE REF TO zcl_abapgit_objects,
+      mt_input            TYPE zif_abapgit_definitions=>ty_results_tt,
+      mt_output           TYPE zif_abapgit_definitions=>ty_results_tt,
+      mv_exp_output_tabix TYPE i.
+
+ENDCLASS.
+
+CLASS zcl_abapgit_objects DEFINITION LOCAL FRIENDS ltcl_prio_deserialization.
+
+CLASS ltcl_prio_deserialization IMPLEMENTATION.
+
+  METHOD setup.
+
+    CREATE OBJECT mo_objects.
+    mv_exp_output_tabix = 0.
+
+  ENDMETHOD.
+
+  METHOD ddls_before_dcls.
+
+    given( 'DCLS' ).
+    given( 'DDLS' ).
+    given( 'DCLS' ).
+    given( 'DDLS' ).
+
+    when_deser_is_priorized( ).
+
+    then( 'DDLS' ).
+    then( 'DDLS' ).
+    then( 'DCLS' ).
+    then( 'DCLS' ).
+
+  ENDMETHOD.
+
+
+  METHOD given.
+
+    DATA: ls_input LIKE LINE OF mt_input.
+
+    ls_input-obj_type = iv_object_type.
+    INSERT ls_input INTO TABLE mt_input.
+
+  ENDMETHOD.
+
+
+  METHOD when_deser_is_priorized.
+
+    mt_output = mo_objects->prioritize_deser( mt_input ).
+
+  ENDMETHOD.
+
+
+  METHOD then.
+
+    DATA: ls_output LIKE LINE OF mt_output.
+
+    mv_exp_output_tabix = mv_exp_output_tabix + 1.
+
+    READ TABLE mt_output INTO ls_output INDEX mv_exp_output_tabix.
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = iv_exp_object_type
+      act = ls_output-obj_type ).
+
+  ENDMETHOD.
+
+ENDCLASS.

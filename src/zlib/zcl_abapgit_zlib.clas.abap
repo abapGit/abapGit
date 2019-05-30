@@ -41,6 +41,8 @@ CLASS zcl_abapgit_zlib DEFINITION
         RETURNING VALUE(rv_distance) TYPE i,
       dynamic,
       fixed,
+      not_compressed,
+      decode_loop,
       read_pair
         IMPORTING iv_length      TYPE i
         RETURNING VALUE(rs_pair) TYPE ty_pair,
@@ -51,7 +53,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
+CLASS zcl_abapgit_zlib IMPLEMENTATION.
 
 
   METHOD copy_out.
@@ -72,7 +74,7 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
       CONCATENATE gv_out lv_x INTO gv_out IN BYTE MODE.
     ENDDO.
 
-  ENDMETHOD.                    "copy_out
+  ENDMETHOD.
 
 
   METHOD decode.
@@ -103,7 +105,7 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
       lv_first = lv_first * 2.
     ENDDO.
 
-  ENDMETHOD.                    "decode
+  ENDMETHOD.
 
 
   METHOD decompress.
@@ -128,27 +130,18 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
 
       lv_btype = go_stream->take_bits( 2 ).
       CASE lv_btype.
+        WHEN '00'.
+          not_compressed( ).
+          EXIT.
         WHEN '01'.
           fixed( ).
+          decode_loop( ).
         WHEN '10'.
           dynamic( ).
+          decode_loop( ).
         WHEN OTHERS.
           ASSERT 1 = 0.
       ENDCASE.
-
-      DO.
-        lv_symbol = decode( go_lencode ).
-
-        IF lv_symbol < 256.
-          lv_x = zcl_abapgit_zlib_convert=>int_to_hex( lv_symbol ).
-          CONCATENATE gv_out lv_x INTO gv_out IN BYTE MODE.
-        ELSEIF lv_symbol = 256.
-          EXIT.
-        ELSE.
-          copy_out( read_pair( lv_symbol ) ).
-        ENDIF.
-
-      ENDDO.
 
       IF lv_bfinal = '1'.
         EXIT.
@@ -159,7 +152,7 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
     rs_data-raw = gv_out.
     rs_data-compressed_len = xstrlen( iv_compressed ) - go_stream->remaining( ).
 
-  ENDMETHOD.                    "decompress
+  ENDMETHOD.
 
 
   METHOD dynamic.
@@ -253,7 +246,7 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
       EXPORTING
         it_lengths = lt_dists.
 
-  ENDMETHOD.                    "dynamic
+  ENDMETHOD.
 
 
   METHOD fixed.
@@ -287,7 +280,7 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
       EXPORTING
         it_lengths = lt_lengths.
 
-  ENDMETHOD.                    "fixed
+  ENDMETHOD.
 
 
   METHOD map_distance.
@@ -362,7 +355,7 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
         ASSERT 1 = 0.
     ENDCASE.
 
-  ENDMETHOD.                    "map_distance
+  ENDMETHOD.
 
 
   METHOD map_length.
@@ -435,7 +428,7 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
         ASSERT 1 = 0.
     ENDCASE.
 
-  ENDMETHOD.                    "map_length
+  ENDMETHOD.
 
 
   METHOD read_pair.
@@ -448,5 +441,43 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
     lv_symbol = decode( go_distcode ).
     rs_pair-distance = map_distance( lv_symbol ).
 
-  ENDMETHOD.                    "read_pair
+  ENDMETHOD.
+
+  METHOD not_compressed.
+
+    DATA: lv_len  TYPE i,
+          lv_nlen TYPE i.
+
+    go_stream->take_bits( 5 ).
+
+    lv_len = go_stream->take_int( 16 ).
+    lv_nlen = go_stream->take_int( 16 ).
+
+    gv_out = go_stream->take_bytes( lv_len ).
+
+  ENDMETHOD.
+
+
+  METHOD decode_loop.
+
+    DATA lv_x TYPE x.
+    DATA lv_symbol TYPE i.
+
+    DO.
+      lv_symbol = decode( go_lencode ).
+
+      IF lv_symbol < 256.
+        lv_x = zcl_abapgit_zlib_convert=>int_to_hex( lv_symbol ).
+        CONCATENATE gv_out lv_x INTO gv_out IN BYTE MODE.
+      ELSEIF lv_symbol = 256.
+        EXIT.
+      ELSE.
+        copy_out( read_pair( lv_symbol ) ).
+      ENDIF.
+
+    ENDDO.
+
+  ENDMETHOD.
+
 ENDCLASS.
+

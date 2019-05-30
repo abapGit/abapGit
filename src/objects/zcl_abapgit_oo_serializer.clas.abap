@@ -1,4 +1,6 @@
-CLASS zcl_abapgit_oo_serializer DEFINITION PUBLIC CREATE PUBLIC.
+CLASS zcl_abapgit_oo_serializer DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
 
@@ -41,34 +43,43 @@ CLASS zcl_abapgit_oo_serializer DEFINITION PUBLIC CREATE PUBLIC.
         VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+
+    DATA mv_skip_testclass TYPE abap_bool .
+
     METHODS calculate_skip_testclass
       IMPORTING
         !it_source               TYPE zif_abapgit_definitions=>ty_string_tt
       RETURNING
         VALUE(rv_skip_testclass) TYPE abap_bool .
-  PRIVATE SECTION.
-    DATA mv_skip_testclass TYPE abap_bool.
     METHODS serialize_abap_old
-      IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !is_clskey       TYPE seoclskey
+      RETURNING
+        VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
+      RAISING
+        zcx_abapgit_exception .
     METHODS serialize_abap_new
-      IMPORTING is_clskey        TYPE seoclskey
-      RETURNING VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
-      RAISING   zcx_abapgit_exception
-                cx_sy_dyn_call_error.
+      IMPORTING
+        !is_clskey       TYPE seoclskey
+      RETURNING
+        VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
+      RAISING
+        zcx_abapgit_exception
+        cx_sy_dyn_call_error .
     METHODS remove_signatures
-      CHANGING ct_source TYPE zif_abapgit_definitions=>ty_string_tt.
-
+      CHANGING
+        !ct_source TYPE zif_abapgit_definitions=>ty_string_tt .
     METHODS read_include
-      IMPORTING is_clskey        TYPE seoclskey
-                iv_type          TYPE seop_include_ext_app
-      RETURNING VALUE(rt_source) TYPE seop_source_string.
-
-
+      IMPORTING
+        !is_clskey       TYPE seoclskey
+        !iv_type         TYPE seop_include_ext_app
+      RETURNING
+        VALUE(rt_source) TYPE seop_source_string .
     METHODS reduce
-      CHANGING ct_source TYPE zif_abapgit_definitions=>ty_string_tt.
+      CHANGING
+        !ct_source TYPE zif_abapgit_definitions=>ty_string_tt .
 ENDCLASS.
 
 
@@ -142,7 +153,7 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
   METHOD reduce.
 
     DATA: lv_source LIKE LINE OF ct_source,
-          lv_found  TYPE sap_bool.
+          lv_found  TYPE abap_bool.
 
 
 * skip files that only contain the standard comments
@@ -153,10 +164,10 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
     IF lv_found = abap_false.
-      CLEAR ct_source[].
+      CLEAR ct_source.
     ENDIF.
 
-  ENDMETHOD.                    "reduce
+  ENDMETHOD.
 
 
   METHOD remove_signatures.
@@ -166,7 +177,7 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
 
     DATA: lv_begin  TYPE string,
           lv_end    TYPE string,
-          lv_remove TYPE sap_bool,
+          lv_remove TYPE abap_bool,
           lv_source LIKE LINE OF ct_source.
 
     "@TODO: Put under test
@@ -191,10 +202,15 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.                    "remove_signatures
+  ENDMETHOD.
 
 
   METHOD serialize_abap_clif_source.
+    rt_source = zcl_abapgit_exit=>get_instance( )->custom_serialize_abap_clif( is_class_key ).
+    IF rt_source IS NOT INITIAL.
+      RETURN.
+    ENDIF.
+
     TRY.
         rt_source = serialize_abap_new( is_class_key ).
       CATCH cx_sy_dyn_call_error.
@@ -239,14 +255,14 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
         class_not_existing = 1
         OTHERS             = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from CL_OO_SOURCE' ).
+      zcx_abapgit_exception=>raise( |Error from CL_OO_SOURCE. Subrc = { sy-subrc }| ).
     ENDIF.
 
     lo_source->read( 'A' ).
     rt_source = lo_source->get_old_source( ).
     remove_signatures( CHANGING ct_source = rt_source ).
 
-  ENDMETHOD.                    "serialize_abap
+  ENDMETHOD.
 
 
   METHOD serialize_locals_def.
@@ -256,7 +272,7 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
 
     reduce( CHANGING ct_source = rt_source ).
 
-  ENDMETHOD.                    "serialize_locals_def
+  ENDMETHOD.
 
 
   METHOD serialize_locals_imp.
@@ -266,7 +282,7 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
 
     reduce( CHANGING ct_source = rt_source ).
 
-  ENDMETHOD.                    "serialize_local
+  ENDMETHOD.
 
 
   METHOD serialize_macros.
@@ -276,7 +292,7 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
 
     reduce( CHANGING ct_source = rt_source ).
 
-  ENDMETHOD.                    "serialize_macro
+  ENDMETHOD.
 
 
   METHOD serialize_testclasses.
@@ -286,5 +302,5 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
 
     mv_skip_testclass = calculate_skip_testclass( rt_source ).
 
-  ENDMETHOD.                    "serialize_test
+  ENDMETHOD.
 ENDCLASS.

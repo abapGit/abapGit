@@ -9,6 +9,7 @@ CLASS zcl_abapgit_object_ddls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       IMPORTING iv_ddls_name TYPE tadir-obj_name
       RAISING   zcx_abapgit_exception.
 
+  PRIVATE SECTION.
 ENDCLASS.
 
 
@@ -18,8 +19,9 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
 
   METHOD open_adt_stob.
 
-    DATA: lr_data                   TYPE REF TO data.
-    DATA: lo_ddl                    TYPE REF TO object.
+    DATA: lr_data  TYPE REF TO data,
+          lo_ddl   TYPE REF TO object,
+          lx_error TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <lt_ddnames>     TYPE STANDARD TABLE.
     FIELD-SYMBOLS: <lt_entity_view> TYPE STANDARD TABLE.
@@ -61,22 +63,24 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
         IF sy-subrc = 0.
           ASSIGN COMPONENT 'DDLNAME' OF STRUCTURE <lg_entity_view> TO <lg_ddlname>.
 
-          jump_adt( i_obj_name = <lg_ddlname>
-                    i_obj_type = 'DDLS' ).
+          jump_adt( iv_obj_name = <lg_ddlname>
+                    iv_obj_type = 'DDLS' ).
 
         ENDIF.
 
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'DDLS Jump Error' ).
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                      ix_previous = lx_error ).
     ENDTRY.
 
-  ENDMETHOD.                    "open_adt_stob
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
 
     DATA: lo_ddl   TYPE REF TO object,
-          lr_data  TYPE REF TO data.
+          lr_data  TYPE REF TO data,
+          lx_error TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <lg_data>  TYPE any,
                    <lg_field> TYPE any.
@@ -102,24 +106,22 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
         IF sy-subrc = 0.
           rv_user = <lg_field>.
         ENDIF.
-      CATCH cx_root.
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                      ix_previous = lx_error ).
     ENDTRY.
 
     IF rv_user IS INITIAL.
       rv_user = c_user_unknown.
     ENDIF.
 
-  ENDMETHOD.                    "zif_abapgit_object~changed_by
-
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.                    "zif_abapgit_object~compare_to_remote_version
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lo_ddl TYPE REF TO object.
+    DATA: lo_ddl   TYPE REF TO object,
+          lx_error TYPE REF TO cx_root.
 
 
     CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
@@ -130,17 +132,20 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
         CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~DELETE')
           EXPORTING
             name = ms_item-obj_name.
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'DDLS error deleting' ).
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise(
+          iv_text     = |DDLS, { ms_item-obj_name } { lx_error->get_text( ) }|
+          ix_previous = lx_error ).
     ENDTRY.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lo_ddl  TYPE REF TO object,
-          lr_data TYPE REF TO data.
+    DATA: lo_ddl   TYPE REF TO object,
+          lr_data  TYPE REF TO data,
+          lx_error TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <lg_data>  TYPE any,
                    <lg_field> TYPE any.
@@ -172,13 +177,15 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
             objectname = ms_item-obj_name
             devclass   = iv_package
             prid       = 0.
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'DDLS error writing TADIR' ).
+
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                      ix_previous = lx_error ).
     ENDTRY.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -207,7 +214,17 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
         rv_bool = abap_false.
     ENDTRY.
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
@@ -215,12 +232,20 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
 
     rs_metadata-ddic         = abap_true.
     rs_metadata-delete_tadir = abap_true.
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESDICT'
+                                            iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~jump.
@@ -238,20 +263,20 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
 
     CASE lv_ddtypekind.
       WHEN 'STOB'.
-
-        me->open_adt_stob( iv_ddls_name = ms_item-obj_name ).
+        me->open_adt_stob( ms_item-obj_name ).
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( 'DDLS Jump Error' ).
     ENDCASE.
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lo_ddl  TYPE REF TO object,
-          lr_data TYPE REF TO data,
-          lt_clr_comps TYPE STANDARD TABLE OF fieldname WITH DEFAULT KEY.
+    DATA: lo_ddl       TYPE REF TO object,
+          lr_data      TYPE REF TO data,
+          lt_clr_comps TYPE STANDARD TABLE OF fieldname WITH DEFAULT KEY,
+          lx_error     TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <lg_data>  TYPE any,
                    <lg_field> TYPE any,
@@ -272,8 +297,9 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
             get_state    = 'A'
           IMPORTING
             ddddlsrcv_wa = <lg_data>.
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( 'DDLS error reading' ).
+      CATCH cx_root INTO lx_error.
+        zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
+                                      ix_previous = lx_error ).
     ENDTRY.
 
     APPEND 'AS4USER' TO lt_clr_comps.
@@ -281,11 +307,13 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
     APPEND 'AS4TIME' TO lt_clr_comps.
     APPEND 'ACTFLAG' TO lt_clr_comps.
     APPEND 'CHGFLAG' TO lt_clr_comps.
+    APPEND 'ABAP_LANGUAGE_VERSION' TO lt_clr_comps.
 
     LOOP AT lt_clr_comps ASSIGNING <lv_comp>.
       ASSIGN COMPONENT <lv_comp> OF STRUCTURE <lg_data> TO <lg_field>.
-      ASSERT sy-subrc = 0.
-      CLEAR <lg_field>.
+      IF sy-subrc = 0.
+        CLEAR <lg_field>.
+      ENDIF.
     ENDLOOP.
 
     ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <lg_data> TO <lg_field>.
@@ -299,5 +327,5 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
     io_xml->add( iv_name = 'DDLS'
                  ig_data = <lg_data> ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 ENDCLASS.

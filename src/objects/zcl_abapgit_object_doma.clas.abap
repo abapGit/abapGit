@@ -4,6 +4,7 @@ CLASS zcl_abapgit_object_doma DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES: BEGIN OF ty_dd01_texts,
@@ -21,6 +22,7 @@ CLASS zcl_abapgit_object_doma DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
            END OF ty_dd07_texts,
            tt_dd01_texts TYPE STANDARD TABLE OF ty_dd01_texts,
            tt_dd07_texts TYPE STANDARD TABLE OF ty_dd07_texts.
+    CONSTANTS: c_longtext_id_doma TYPE dokil-id VALUE 'DO'.
 
     METHODS:
       serialize_texts
@@ -36,7 +38,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_doma IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -105,7 +107,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.  "deserialize_texts
+  ENDMETHOD.
 
 
   METHOD serialize_texts.
@@ -154,7 +156,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
       APPEND INITIAL LINE TO lt_dd01_texts ASSIGNING <ls_dd01_text>.
       MOVE-CORRESPONDING ls_dd01v TO <ls_dd01_text>.
 
-      LOOP AT lt_dd07v ASSIGNING <ls_dd07v>.
+      LOOP AT lt_dd07v ASSIGNING <ls_dd07v> WHERE NOT ddlanguage IS INITIAL.
         APPEND INITIAL LINE TO lt_dd07_texts ASSIGNING <ls_dd07_text>.
         MOVE-CORRESPONDING <ls_dd07v> TO <ls_dd07_text>.
       ENDLOOP.
@@ -176,7 +178,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
                    ig_data = lt_dd07_texts ).
     ENDIF.
 
-  ENDMETHOD.  "serialize_texts
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -189,11 +191,6 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
       rv_user = c_user_unknown.
     ENDIF.
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
 
 
@@ -223,27 +220,26 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
       CATCH cx_sy_dyn_call_param_not_found.
 
-        TRY.
-            CALL FUNCTION 'RS_DD_DELETE_OBJ'
-              EXPORTING
-                no_ask               = abap_true
-                objname              = lv_objname
-                objtype              = 'D'
-*               no_ask_delete_append = abap_true parameter not available in lower NW versions
-              EXCEPTIONS
-                not_executed         = 1
-                object_not_found     = 2
-                object_not_specified = 3
-                permission_failure   = 4.
-            IF sy-subrc <> 0.
-              zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, DOMA' ).
-            ENDIF.
-
-        ENDTRY.
+        CALL FUNCTION 'RS_DD_DELETE_OBJ'
+          EXPORTING
+            no_ask               = abap_true
+            objname              = lv_objname
+            objtype              = 'D'
+*           no_ask_delete_append = abap_true parameter not available in lower NW versions
+          EXCEPTIONS
+            not_executed         = 1
+            object_not_found     = 2
+            object_not_specified = 3
+            permission_failure   = 4.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, DOMA' ).
+        ENDIF.
 
     ENDTRY.
 
-  ENDMETHOD.                    "delete
+    delete_longtexts( c_longtext_id_doma ).
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -264,7 +260,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'DD07V_TAB'
                   CHANGING cg_data = lt_dd07v ).
 
-    corr_insert( iv_package ).
+    corr_insert( iv_package = iv_package iv_object_class = 'DICT' ).
 
     lv_name = ms_item-obj_name. " type conversion
 
@@ -289,9 +285,11 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
                        is_dd01v = ls_dd01v
                        it_dd07v = lt_dd07v ).
 
+    deserialize_longtexts( io_xml ).
+
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -305,32 +303,34 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
       AND as4vers = '0000'.
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-ddic = abap_true.
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
 
-    DATA: lv_date TYPE dats,
-          lv_time TYPE tims.
 
-    SELECT SINGLE as4date as4time FROM dd01l
-      INTO (lv_date, lv_time)
-      WHERE domname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers  = '0000'.
-
-    rv_changed = check_timestamp(
-      iv_timestamp = iv_timestamp
-      iv_date      = lv_date
-      iv_time      = lv_time ).
-
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESDICT'
+                                            iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~jump.
@@ -338,7 +338,7 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
     jump_se11( iv_radio = 'RSRD1-DOMA'
                iv_field = 'RSRD1-DOMA_VAL' ).
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -391,5 +391,8 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
     serialize_texts( io_xml ).
 
-  ENDMETHOD.                    "serialize
+    serialize_longtexts( io_xml         = io_xml
+                         iv_longtext_id = c_longtext_id_doma ).
+
+  ENDMETHOD.
 ENDCLASS.

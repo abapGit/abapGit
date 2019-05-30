@@ -1,5 +1,3 @@
-*"* use this source file for your ABAP unit test classes
-
 CLASS ltcl_split_parameters DEFINITION FINAL FOR TESTING
   DURATION SHORT
   RISK LEVEL HARMLESS.
@@ -20,7 +18,7 @@ CLASS ltcl_split_parameters DEFINITION FINAL FOR TESTING
 
       then_st_tcode_shd_be
         IMPORTING
-          iv_exp_st_tcode TYPE eusel_tcod ,
+          iv_exp_st_tcode TYPE eusel_tcod,
 
       then_st_skip_1_shd_be
         IMPORTING
@@ -111,7 +109,7 @@ CLASS ltcl_split_parameters IMPLEMENTATION.
   METHOD then_st_tcode_shd_be.
 
     cl_abap_unit_assert=>assert_equals(
-      exp = 'X'
+      exp = iv_exp_st_tcode
       act = ms_rsstcd-st_tcode ).
 
   ENDMETHOD.
@@ -120,7 +118,7 @@ CLASS ltcl_split_parameters IMPLEMENTATION.
   METHOD then_st_skip_1_shd_be.
 
     cl_abap_unit_assert=>assert_equals(
-      exp = 'X'
+      exp = iv_st_skip
       act = ms_rsstcd-st_skip_1 ).
 
   ENDMETHOD.
@@ -129,7 +127,7 @@ CLASS ltcl_split_parameters IMPLEMENTATION.
   METHOD then_call_tcode_shd_be.
 
     cl_abap_unit_assert=>assert_equals(
-      exp = 'SM30'
+      exp = iv_call_tcode
       act = ms_rsstcd-call_tcode ).
 
   ENDMETHOD.

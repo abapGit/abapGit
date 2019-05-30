@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_xml_output DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_xml
-  CREATE PUBLIC.
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
 
@@ -18,19 +18,20 @@ CLASS zcl_abapgit_xml_output DEFINITION
       IMPORTING
         !iv_name TYPE clike
         !ii_xml  TYPE REF TO if_ixml_element .
-    METHODS build_asx_node
-      RETURNING
-        VALUE(ri_element) TYPE REF TO if_ixml_element .
     METHODS render
       IMPORTING
-        !iv_normalize TYPE sap_bool DEFAULT abap_true
+        !iv_normalize TYPE abap_bool DEFAULT abap_true
         !is_metadata  TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
       RETURNING
         VALUE(rv_xml) TYPE string .
   PROTECTED SECTION.
   PRIVATE SECTION.
-    DATA: mi_raw  TYPE REF TO if_ixml_element.
 
+    DATA mi_raw TYPE REF TO if_ixml_element .
+
+    METHODS build_asx_node
+      RETURNING
+        VALUE(ri_element) TYPE REF TO if_ixml_element .
 ENDCLASS.
 
 
@@ -126,7 +127,7 @@ CLASS ZCL_ABAPGIT_XML_OUTPUT IMPLEMENTATION.
     ENDIF.
 
     li_git = mi_xml_doc->create_element( c_abapgit_tag ).
-    li_git->set_attribute( name = c_attr_version value = zif_abapgit_definitions=>gc_xml_version ).
+    li_git->set_attribute( name = c_attr_version value = zif_abapgit_version=>gc_xml_version ).
     IF NOT is_metadata IS INITIAL.
       li_git->set_attribute( name  = c_attr_serializer
                              value = is_metadata-class ).
@@ -138,10 +139,10 @@ CLASS ZCL_ABAPGIT_XML_OUTPUT IMPLEMENTATION.
 
     rv_xml = to_xml( iv_normalize ).
 
-  ENDMETHOD.                    "render
+  ENDMETHOD.
 
 
   METHOD set_raw.
     mi_raw = ii_raw.
-  ENDMETHOD.                    "set_raw
+  ENDMETHOD.
 ENDCLASS.

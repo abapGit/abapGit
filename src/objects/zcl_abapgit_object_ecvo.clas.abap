@@ -16,7 +16,8 @@ CLASS zcl_abapgit_object_ecvo DEFINITION
     METHODS:
       get_object_type REDEFINITION,
       get_upload REDEFINITION,
-      get_download REDEFINITION.
+      get_download REDEFINITION,
+      get_lock_object REDEFINITION.
 
 ENDCLASS.
 
@@ -50,6 +51,12 @@ CLASS zcl_abapgit_object_ecvo IMPLEMENTATION.
   METHOD get_download.
 
     CREATE OBJECT ro_download TYPE zcl_abapgit_ecatt_val_obj_down.
+
+  ENDMETHOD.
+
+  METHOD get_lock_object.
+
+    rv_lock_object = 'E_ECATT_TD'.
 
   ENDMETHOD.
 

@@ -16,7 +16,7 @@ CLASS zcl_abapgit_object_enho_badi IMPLEMENTATION.
 
   METHOD constructor.
     ms_item = is_item.
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
   METHOD zif_abapgit_object_enho~serialize.
 
@@ -59,7 +59,7 @@ CLASS zcl_abapgit_object_enho_badi IMPLEMENTATION.
     io_xml->add( iv_name = 'IMPL'
                  ig_data = lt_impl ).
 
-  ENDMETHOD.                    "zif_abapgit_object_enho~serialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object_enho~deserialize.
 
@@ -100,12 +100,12 @@ CLASS zcl_abapgit_object_enho_badi IMPLEMENTATION.
         LOOP AT lt_impl ASSIGNING <ls_impl>.
           lo_badi->add_implementation( <ls_impl> ).
         ENDLOOP.
-        lo_badi->if_enh_object~save( ).
+        lo_badi->if_enh_object~save( run_dark = abap_true ).
         lo_badi->if_enh_object~unlock( ).
       CATCH cx_enh_root.
         zcx_abapgit_exception=>raise( 'error deserializing ENHO badi' ).
     ENDTRY.
 
-  ENDMETHOD.                    "zif_abapgit_object_enho~deserialize
+  ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_enho_badi IMPLEMENTATION
+ENDCLASS.

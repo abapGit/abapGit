@@ -4,25 +4,11 @@ CLASS zcl_abapgit_persist_background DEFINITION
 
   PUBLIC SECTION.
 
-    CONSTANTS: BEGIN OF c_method,
-                 nothing TYPE string VALUE 'nothing' ##NO_TEXT,
-                 pull    TYPE string VALUE 'pull' ##NO_TEXT,
-                 push    TYPE string VALUE 'push' ##NO_TEXT,
-               END OF c_method.
-
-    CONSTANTS: BEGIN OF c_amethod,
-                 fixed TYPE string VALUE 'fixed' ##NO_TEXT,
-                 auto  TYPE string VALUE 'auto' ##NO_TEXT,
-                 user  TYPE string VALUE 'user' ##NO_TEXT,
-               END OF c_amethod.
-
     TYPES: BEGIN OF ty_xml,
              method   TYPE string,
              username TYPE string,
              password TYPE string,
-             amethod  TYPE string,
-             aname    TYPE string,
-             amail    TYPE string,
+             settings TYPE zif_abapgit_background=>ty_settings_tt,
            END OF ty_xml.
 
     TYPES: BEGIN OF ty_background,
@@ -97,7 +83,7 @@ CLASS ZCL_ABAPGIT_PERSIST_BACKGROUND IMPLEMENTATION.
     READ TABLE mt_jobs WITH KEY key = iv_key TRANSPORTING NO FIELDS.
     rv_yes = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.  "exists
+  ENDMETHOD.
 
 
   METHOD from_xml.

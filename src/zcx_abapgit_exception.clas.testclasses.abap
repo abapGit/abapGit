@@ -9,7 +9,14 @@ CLASS ltcl_test DEFINITION
   PUBLIC SECTION.
     METHODS:
       test_direct_text FOR TESTING,
-      test_t100_text FOR TESTING,
+      test_t100_text1 FOR TESTING,
+      test_t100_text2 FOR TESTING,
+      test_t100_text3 FOR TESTING,
+      test_t100_text4 FOR TESTING,
+      test_t100_text5 FOR TESTING,
+      test_t100_text6 FOR TESTING,
+      test_t100_text7 FOR TESTING,
+      test_t100_text8 FOR TESTING,
       test_no_text FOR TESTING.
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -89,7 +96,7 @@ CLASS ltcl_test IMPLEMENTATION.
     ENDTRY.
   ENDMETHOD.
 
-  METHOD test_t100_text.
+  METHOD test_t100_text1.
     CONSTANTS: BEGIN OF lc_msg1,
                  msgid TYPE symsgid VALUE '00',
                  msgno TYPE symsgno VALUE '001',
@@ -97,63 +104,8 @@ CLASS ltcl_test IMPLEMENTATION.
                  msgv2 TYPE symsgv VALUE IS INITIAL,
                  msgv3 TYPE symsgv VALUE IS INITIAL,
                  msgv4 TYPE symsgv VALUE IS INITIAL,
-               END OF lc_msg1,
-               BEGIN OF lc_msg2,
-                 msgid TYPE symsgid VALUE '00',
-                 msgno TYPE symsgno VALUE '001',
-                 msgv1 TYPE symsgv VALUE 'Variable 1',
-                 msgv2 TYPE symsgv VALUE IS INITIAL,
-                 msgv3 TYPE symsgv VALUE IS INITIAL,
-                 msgv4 TYPE symsgv VALUE IS INITIAL,
-               END OF lc_msg2,
-               BEGIN OF lc_msg3,
-                 msgid TYPE symsgid VALUE '00',
-                 msgno TYPE symsgno VALUE '001',
-                 msgv1 TYPE symsgv VALUE 'Variable 1',
-                 msgv2 TYPE symsgv VALUE 'Variable 2',
-                 msgv3 TYPE symsgv VALUE IS INITIAL,
-                 msgv4 TYPE symsgv VALUE IS INITIAL,
-               END OF lc_msg3,
-               BEGIN OF lc_msg4,
-                 msgid TYPE symsgid VALUE '00',
-                 msgno TYPE symsgno VALUE '001',
-                 msgv1 TYPE symsgv VALUE 'Variable 1',
-                 msgv2 TYPE symsgv VALUE 'Variable 2',
-                 msgv3 TYPE symsgv VALUE'Variable 3',
-                 msgv4 TYPE symsgv VALUE IS INITIAL,
-               END OF lc_msg4,
-               BEGIN OF lc_msg5,
-                 msgid TYPE symsgid VALUE '00',
-                 msgno TYPE symsgno VALUE '001',
-                 msgv1 TYPE symsgv VALUE 'Variable 1',
-                 msgv2 TYPE symsgv VALUE 'Variable 2',
-                 msgv3 TYPE symsgv VALUE 'Variable 3',
-                 msgv4 TYPE symsgv VALUE 'Variable 4',
-               END OF lc_msg5,
-               BEGIN OF lc_msg6,
-                 msgid TYPE symsgid VALUE '00',
-                 msgno TYPE symsgno VALUE '003',
-                 msgv1 TYPE symsgv VALUE 'Variable 1',
-                 msgv2 TYPE symsgv VALUE 'Variable 2',
-                 msgv3 TYPE symsgv VALUE 'Variable 3',
-                 msgv4 TYPE symsgv VALUE 'Variable 4',
-               END OF lc_msg6,
-               BEGIN OF lc_msg7,
-                 msgid TYPE symsgid VALUE '00',
-                 msgno TYPE symsgno VALUE '003',
-                 msgv1 TYPE symsgv VALUE IS INITIAL,
-                 msgv2 TYPE symsgv VALUE IS INITIAL,
-                 msgv3 TYPE symsgv VALUE IS INITIAL,
-                 msgv4 TYPE symsgv VALUE IS INITIAL,
-               END OF lc_msg7,
-               BEGIN OF lc_msg8,
-                 msgid TYPE symsgid VALUE '00',
-                 msgno TYPE symsgno VALUE '002',
-                 msgv1 TYPE symsgv VALUE IS INITIAL,
-                 msgv2 TYPE symsgv VALUE IS INITIAL,
-                 msgv3 TYPE symsgv VALUE IS INITIAL,
-                 msgv4 TYPE symsgv VALUE IS INITIAL,
-               END OF lc_msg8.
+               END OF lc_msg1.
+
     DATA: lx_ex   TYPE REF TO zcx_abapgit_exception,
           lv_text TYPE string.
 
@@ -164,9 +116,21 @@ CLASS ltcl_test IMPLEMENTATION.
       CATCH zcx_abapgit_exception INTO lx_ex.
         cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex ) exp = lv_text ).
     ENDTRY.
+  ENDMETHOD.
 
-    CLEAR lv_text.
-    FREE lx_ex.
+
+  METHOD test_t100_text2.
+    CONSTANTS: BEGIN OF lc_msg2,
+                 msgid TYPE symsgid VALUE '00',
+                 msgno TYPE symsgno VALUE '001',
+                 msgv1 TYPE symsgv VALUE 'Variable 1',
+                 msgv2 TYPE symsgv VALUE IS INITIAL,
+                 msgv3 TYPE symsgv VALUE IS INITIAL,
+                 msgv4 TYPE symsgv VALUE IS INITIAL,
+               END OF lc_msg2.
+
+    DATA: lx_ex   TYPE REF TO zcx_abapgit_exception,
+          lv_text TYPE string.
 
     TRY.
         lv_text = get_t100_text( lc_msg2 ).
@@ -176,8 +140,20 @@ CLASS ltcl_test IMPLEMENTATION.
         cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex ) exp = lv_text ).
     ENDTRY.
 
-    CLEAR lv_text.
-    FREE lx_ex.
+  ENDMETHOD.
+
+  METHOD test_t100_text3.
+    CONSTANTS: BEGIN OF lc_msg3,
+                 msgid TYPE symsgid VALUE '00',
+                 msgno TYPE symsgno VALUE '001',
+                 msgv1 TYPE symsgv VALUE 'Variable 1',
+                 msgv2 TYPE symsgv VALUE 'Variable 2',
+                 msgv3 TYPE symsgv VALUE IS INITIAL,
+                 msgv4 TYPE symsgv VALUE IS INITIAL,
+               END OF lc_msg3.
+
+    DATA: lx_ex   TYPE REF TO zcx_abapgit_exception,
+          lv_text TYPE string.
 
     TRY.
         lv_text = get_t100_text( lc_msg3 ).
@@ -187,8 +163,20 @@ CLASS ltcl_test IMPLEMENTATION.
         cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex ) exp = lv_text ).
     ENDTRY.
 
-    CLEAR lv_text.
-    FREE lx_ex.
+  ENDMETHOD.
+
+  METHOD test_t100_text4.
+    CONSTANTS: BEGIN OF lc_msg4,
+                 msgid TYPE symsgid VALUE '00',
+                 msgno TYPE symsgno VALUE '001',
+                 msgv1 TYPE symsgv VALUE 'Variable 1',
+                 msgv2 TYPE symsgv VALUE 'Variable 2',
+                 msgv3 TYPE symsgv VALUE 'Variable 3',
+                 msgv4 TYPE symsgv VALUE IS INITIAL,
+               END OF lc_msg4.
+
+    DATA: lx_ex   TYPE REF TO zcx_abapgit_exception,
+          lv_text TYPE string.
 
     TRY.
         lv_text = get_t100_text( lc_msg4 ).
@@ -198,8 +186,20 @@ CLASS ltcl_test IMPLEMENTATION.
         cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex ) exp = lv_text ).
     ENDTRY.
 
-    CLEAR lv_text.
-    FREE lx_ex.
+  ENDMETHOD.
+
+  METHOD test_t100_text5.
+    CONSTANTS: BEGIN OF lc_msg5,
+                 msgid TYPE symsgid VALUE '00',
+                 msgno TYPE symsgno VALUE '001',
+                 msgv1 TYPE symsgv VALUE 'Variable 1',
+                 msgv2 TYPE symsgv VALUE 'Variable 2',
+                 msgv3 TYPE symsgv VALUE 'Variable 3',
+                 msgv4 TYPE symsgv VALUE 'Variable 4',
+               END OF lc_msg5.
+
+    DATA: lx_ex   TYPE REF TO zcx_abapgit_exception,
+          lv_text TYPE string.
 
     TRY.
         lv_text = get_t100_text( lc_msg5 ).
@@ -209,8 +209,20 @@ CLASS ltcl_test IMPLEMENTATION.
         cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex ) exp = lv_text ).
     ENDTRY.
 
-    CLEAR lv_text.
-    FREE lx_ex.
+  ENDMETHOD.
+
+  METHOD test_t100_text6.
+    CONSTANTS: BEGIN OF lc_msg6,
+                 msgid TYPE symsgid VALUE '00',
+                 msgno TYPE symsgno VALUE '003',
+                 msgv1 TYPE symsgv VALUE 'Variable 1',
+                 msgv2 TYPE symsgv VALUE 'Variable 2',
+                 msgv3 TYPE symsgv VALUE 'Variable 3',
+                 msgv4 TYPE symsgv VALUE 'Variable 4',
+               END OF lc_msg6.
+
+    DATA: lx_ex   TYPE REF TO zcx_abapgit_exception,
+          lv_text TYPE string.
 
     TRY.
         lv_text = get_t100_text( lc_msg6 ).
@@ -220,8 +232,20 @@ CLASS ltcl_test IMPLEMENTATION.
         cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex ) exp = lv_text ).
     ENDTRY.
 
-    CLEAR lv_text.
-    FREE lx_ex.
+  ENDMETHOD.
+
+  METHOD test_t100_text7.
+    CONSTANTS: BEGIN OF lc_msg7,
+                 msgid TYPE symsgid VALUE '00',
+                 msgno TYPE symsgno VALUE '003',
+                 msgv1 TYPE symsgv VALUE IS INITIAL,
+                 msgv2 TYPE symsgv VALUE IS INITIAL,
+                 msgv3 TYPE symsgv VALUE IS INITIAL,
+                 msgv4 TYPE symsgv VALUE IS INITIAL,
+               END OF lc_msg7.
+
+    DATA: lx_ex   TYPE REF TO zcx_abapgit_exception,
+          lv_text TYPE string.
 
     TRY.
         lv_text = get_t100_text( lc_msg7 ).
@@ -231,8 +255,20 @@ CLASS ltcl_test IMPLEMENTATION.
         cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex ) exp = lv_text ).
     ENDTRY.
 
-    CLEAR lv_text.
-    FREE lx_ex.
+  ENDMETHOD.
+
+  METHOD test_t100_text8.
+    CONSTANTS: BEGIN OF lc_msg8,
+                 msgid TYPE symsgid VALUE '00',
+                 msgno TYPE symsgno VALUE '002',
+                 msgv1 TYPE symsgv VALUE IS INITIAL,
+                 msgv2 TYPE symsgv VALUE IS INITIAL,
+                 msgv3 TYPE symsgv VALUE IS INITIAL,
+                 msgv4 TYPE symsgv VALUE IS INITIAL,
+               END OF lc_msg8.
+
+    DATA: lx_ex   TYPE REF TO zcx_abapgit_exception,
+          lv_text TYPE string.
 
     TRY.
         lv_text = get_t100_text( lc_msg8 ).
@@ -242,8 +278,6 @@ CLASS ltcl_test IMPLEMENTATION.
         cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex ) exp = lv_text ).
     ENDTRY.
 
-    CLEAR lv_text.
-    FREE lx_ex.
   ENDMETHOD.
 
   METHOD get_exc_text.

@@ -2,50 +2,57 @@
 CLASS zcx_abapgit_exception DEFINITION
   PUBLIC
   INHERITING FROM cx_static_check
-  CREATE PUBLIC.
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES:
-      if_t100_message.
-    CLASS-METHODS:
-      "! Raise exception with text
-      "! @parameter iv_text | Text
-      "! @parameter ix_previous | Previous exception
-      "! @raising zcx_abapgit_exception | Exception
-      raise IMPORTING iv_text     TYPE clike
-                      ix_previous TYPE REF TO cx_root OPTIONAL
-            RAISING   zcx_abapgit_exception,
-      "! Raise exception with T100 message
-      "! <p>
-      "! Will default to sy-msg* variables. These need to be set right before calling this method.
-      "! </p>
-      "! @parameter iv_msgid | Message ID
-      "! @parameter iv_msgno | Message number
-      "! @parameter iv_msgv1 | Message variable 1
-      "! @parameter iv_msgv2 | Message variable 2
-      "! @parameter iv_msgv3 | Message variable 3
-      "! @parameter iv_msgv4 | Message variable 4
-      "! @raising zcx_abapgit_exception | Exception
-      raise_t100 IMPORTING VALUE(iv_msgid) TYPE symsgid DEFAULT sy-msgid
-                           VALUE(iv_msgno) TYPE symsgno DEFAULT sy-msgno
-                           VALUE(iv_msgv1) TYPE symsgv DEFAULT sy-msgv1
-                           VALUE(iv_msgv2) TYPE symsgv DEFAULT sy-msgv2
-                           VALUE(iv_msgv3) TYPE symsgv DEFAULT sy-msgv3
-                           VALUE(iv_msgv4) TYPE symsgv DEFAULT sy-msgv4
-                 RAISING   zcx_abapgit_exception .
-    METHODS:
-      constructor  IMPORTING textid   LIKE if_t100_message=>t100key OPTIONAL
-                             previous LIKE previous OPTIONAL
-                             msgv1    TYPE symsgv OPTIONAL
-                             msgv2    TYPE symsgv OPTIONAL
-                             msgv3    TYPE symsgv OPTIONAL
-                             msgv4    TYPE symsgv OPTIONAL.
-    DATA:
-      subrc TYPE sysubrc READ-ONLY,
-      msgv1 TYPE symsgv READ-ONLY,
-      msgv2 TYPE symsgv READ-ONLY,
-      msgv3 TYPE symsgv READ-ONLY,
-      msgv4 TYPE symsgv READ-ONLY.
+
+    INTERFACES if_t100_message .
+
+    DATA subrc TYPE sysubrc READ-ONLY .
+    DATA msgv1 TYPE symsgv READ-ONLY .
+    DATA msgv2 TYPE symsgv READ-ONLY .
+    DATA msgv3 TYPE symsgv READ-ONLY .
+    DATA msgv4 TYPE symsgv READ-ONLY .
+
+    "! Raise exception with text
+    "! @parameter iv_text | Text
+    "! @parameter ix_previous | Previous exception
+    "! @raising zcx_abapgit_exception | Exception
+    CLASS-METHODS raise
+      IMPORTING
+        !iv_text     TYPE clike
+        !ix_previous TYPE REF TO cx_root OPTIONAL
+      RAISING
+        zcx_abapgit_exception .
+    "! Raise exception with T100 message
+    "! <p>
+    "! Will default to sy-msg* variables. These need to be set right before calling this method.
+    "! </p>
+    "! @parameter iv_msgid | Message ID
+    "! @parameter iv_msgno | Message number
+    "! @parameter iv_msgv1 | Message variable 1
+    "! @parameter iv_msgv2 | Message variable 2
+    "! @parameter iv_msgv3 | Message variable 3
+    "! @parameter iv_msgv4 | Message variable 4
+    "! @raising zcx_abapgit_exception | Exception
+    CLASS-METHODS raise_t100
+      IMPORTING
+        VALUE(iv_msgid) TYPE symsgid DEFAULT sy-msgid
+        VALUE(iv_msgno) TYPE symsgno DEFAULT sy-msgno
+        VALUE(iv_msgv1) TYPE symsgv DEFAULT sy-msgv1
+        VALUE(iv_msgv2) TYPE symsgv DEFAULT sy-msgv2
+        VALUE(iv_msgv3) TYPE symsgv DEFAULT sy-msgv3
+        VALUE(iv_msgv4) TYPE symsgv DEFAULT sy-msgv4
+      RAISING
+        zcx_abapgit_exception .
+    METHODS constructor
+      IMPORTING
+        !textid   LIKE if_t100_message=>t100key OPTIONAL
+        !previous LIKE previous OPTIONAL
+        !msgv1    TYPE symsgv OPTIONAL
+        !msgv2    TYPE symsgv OPTIONAL
+        !msgv3    TYPE symsgv OPTIONAL
+        !msgv4    TYPE symsgv OPTIONAL .
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
@@ -55,6 +62,8 @@ ENDCLASS.
 
 
 CLASS zcx_abapgit_exception IMPLEMENTATION.
+
+
   METHOD constructor ##ADT_SUPPRESS_GENERATION.
     super->constructor( previous = previous ).
 
@@ -70,6 +79,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
       if_t100_message~t100key = textid.
     ENDIF.
   ENDMETHOD.
+
 
   METHOD raise.
     DATA: lv_msgv1    TYPE symsgv,
@@ -107,6 +117,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
         msgv4    = lv_msgv4
         previous = ix_previous.
   ENDMETHOD.
+
 
   METHOD raise_t100.
     DATA: ls_t100_key TYPE scx_t100key.

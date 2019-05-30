@@ -3,11 +3,16 @@ CLASS zcl_abapgit_object_sfsw DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS:
       get
         RETURNING VALUE(ro_switch) TYPE REF TO cl_sfw_sw
-        RAISING   zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception,
+      wait_for_background_job,
+      wait_for_deletion
+        RAISING
+          zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -31,6 +36,49 @@ CLASS ZCL_ABAPGIT_OBJECT_SFSW IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD wait_for_background_job.
+
+    DATA: lv_job_count TYPE tbtco-jobcount.
+
+    " We wait for at most 5 seconds. If it takes
+    " more than that it probably doesn't matter,
+    " because we have other problems
+
+    DO 5 TIMES.
+
+      SELECT SINGLE jobcount
+             FROM tbtco
+             INTO lv_job_count
+             WHERE jobname = 'SFW_DELETE_SWITCH'
+             AND   status  = 'R'
+             AND   sdluname = sy-uname.
+
+      IF sy-subrc = 0.
+        WAIT UP TO 1 SECONDS.
+      ELSE.
+        EXIT.
+      ENDIF.
+
+    ENDDO.
+
+  ENDMETHOD.
+
+
+  METHOD wait_for_deletion.
+
+    DO 5 TIMES.
+
+      IF zif_abapgit_object~exists( ) = abap_true.
+        WAIT UP TO 1 SECONDS.
+      ELSE.
+        EXIT.
+      ENDIF.
+
+    ENDDO.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~changed_by.
 
     DATA: ls_data TYPE sfw_switch.
@@ -46,11 +94,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SFSW IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~delete.
 
     DATA: lv_switch_id TYPE sfw_switch_id,
@@ -62,11 +105,18 @@ CLASS ZCL_ABAPGIT_OBJECT_SFSW IMPLEMENTATION.
         lo_switch = cl_sfw_sw=>get_switch( lv_switch_id ).
         lo_switch->set_delete_flag( lv_switch_id ).
         lo_switch->save_all( ).
+
+        " deletion via background job. Wait until the job is finished...
+        wait_for_background_job( ).
+
+        " ... the object is deleted
+        wait_for_deletion( ).
+
       CATCH cx_pak_invalid_data cx_pak_invalid_state cx_pak_not_authorized.
         zcx_abapgit_exception=>raise( 'Error deleting Switch' ).
     ENDTRY.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -109,20 +159,21 @@ CLASS ZCL_ABAPGIT_OBJECT_SFSW IMPLEMENTATION.
     lo_switch->set_parent_bf( lt_parent_bf ).
     lo_switch->set_conflicts( lt_conflicts ).
 
-* magic, see function module RS_CORR_INSERT, FORM get_current_devclass
-    SET PARAMETER ID 'EUK' FIELD iv_package.
+    set_default_package( iv_package ).
+    tadir_insert( iv_package ).
+
     lo_switch->save_all(
       EXCEPTIONS
         not_saved = 1
         OTHERS    = 2 ).
-    SET PARAMETER ID 'EUK' FIELD ''.
+
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error in CL_SFW_SW->SAVE_ALL' ).
     ENDIF.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -145,18 +196,33 @@ CLASS ZCL_ABAPGIT_OBJECT_SFSW IMPLEMENTATION.
     ENDIF.
 
     rv_bool = abap_true.
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-ddic = abap_true.
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~jump.
@@ -168,7 +234,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SFSW IMPLEMENTATION.
         object_type   = 'SFSW'
         in_new_window = abap_true.
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -214,5 +280,5 @@ CLASS ZCL_ABAPGIT_OBJECT_SFSW IMPLEMENTATION.
     io_xml->add( ig_data = lt_conflicts
                  iv_name = 'CONFLICTS' ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 ENDCLASS.

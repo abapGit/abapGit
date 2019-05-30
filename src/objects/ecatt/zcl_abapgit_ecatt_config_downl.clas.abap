@@ -4,16 +4,11 @@ CLASS zcl_abapgit_ecatt_config_downl DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    INTERFACES:
+      zif_abapgit_ecatt_download.
+
     METHODS:
-      download REDEFINITION,
-
-      get_xml_stream
-        RETURNING
-          VALUE(rv_xml_stream) TYPE xstring,
-
-      get_xml_stream_size
-        RETURNING
-          VALUE(rv_xml_stream_size) TYPE int4.
+      download REDEFINITION.
 
   PROTECTED SECTION.
     METHODS:
@@ -21,13 +16,14 @@ CLASS zcl_abapgit_ecatt_config_downl DEFINITION
 
   PRIVATE SECTION.
     DATA:
-      mv_xml_stream      TYPE xstring,
-      mv_xml_stream_size TYPE int4.
+      mv_xml_stream TYPE xstring.
 
 ENDCLASS.
 
 
+
 CLASS zcl_abapgit_ecatt_config_downl IMPLEMENTATION.
+
 
   METHOD download.
 
@@ -54,7 +50,9 @@ CLASS zcl_abapgit_ecatt_config_downl IMPLEMENTATION.
 
     set_attributes_to_template( ).
     ecatt_config ?= ecatt_object.
-    set_ecatt_objects_to_template( ).
+
+    CALL METHOD ('SET_ECATT_OBJECTS_TO_TEMPLATE'). " doesn't exist in 702
+
 * MS180406
     set_var_mode_to_dom( ).
 * ENDMS180406
@@ -69,7 +67,7 @@ CLASS zcl_abapgit_ecatt_config_downl IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    set_variants_to_dom( im_params = ecatt_config->params ).
+    set_variants_to_dom( ecatt_config->params ).
 
     download_data( ).
 
@@ -80,26 +78,14 @@ CLASS zcl_abapgit_ecatt_config_downl IMPLEMENTATION.
 
     " Downport
 
-    zcl_abapgit_ecatt_helper=>download_data(
-      EXPORTING
-        ii_template_over_all = template_over_all
-      IMPORTING
-        ev_xml_stream        = mv_xml_stream
-        ev_xml_stream_size   = mv_xml_stream_size ).
+    mv_xml_stream = zcl_abapgit_ecatt_helper=>download_data( template_over_all ).
 
   ENDMETHOD.
 
 
-  METHOD get_xml_stream.
+  METHOD zif_abapgit_ecatt_download~get_xml_stream.
 
     rv_xml_stream = mv_xml_stream.
-
-  ENDMETHOD.
-
-
-  METHOD get_xml_stream_size.
-
-    rv_xml_stream_size = mv_xml_stream_size.
 
   ENDMETHOD.
 

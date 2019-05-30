@@ -5,6 +5,7 @@ CLASS zcl_abapgit_gui_page_debuginfo DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     METHODS constructor .
   PROTECTED SECTION.
@@ -29,7 +30,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     ms_control-page_title = 'DEBUG INFO'.
-  ENDMETHOD.  " constructor.
+  ENDMETHOD.
 
 
   METHOD render_content.
@@ -41,7 +42,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
     ro_html->add( render_supported_object_types( ) ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD render_debug_info.
@@ -61,13 +62,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( |<p>abapGit version: { zif_abapgit_definitions=>gc_abap_version }</p>| ).
-    ro_html->add( |<p>XML version:     { zif_abapgit_definitions=>gc_xml_version }</p>| ).
+    ro_html->add( |<p>abapGit version: { zif_abapgit_version=>gc_abap_version }</p>| ).
+    ro_html->add( |<p>XML version:     { zif_abapgit_version=>gc_xml_version }</p>| ).
     ro_html->add( |<p>GUI version:     { lv_gui_version }</p>| ).
     ro_html->add( |<p>LCL_TIME:        { zcl_abapgit_time=>get( ) }</p>| ).
     ro_html->add( |<p>SY time:         { sy-datum } { sy-uzeit } { sy-tzone }</p>| ).
 
-  ENDMETHOD. "render_debug_info
+  ENDMETHOD.
 
 
   METHOD render_supported_object_types.
@@ -94,10 +95,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
   METHOD scripts.
 
-    CREATE OBJECT ro_html.
+    ro_html = super->scripts( ).
 
     ro_html->add( 'debugOutput("Browser: " + navigator.userAgent + ' &&
       '"<br>Frontend time: " + new Date(), "debug_info");' ).
 
-  ENDMETHOD.  "scripts
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
 ENDCLASS.

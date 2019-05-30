@@ -20,44 +20,87 @@ CLASS zcl_abapgit_object_devc DEFINITION PUBLIC
                          RAISING   zcx_abapgit_exception,
       set_lock IMPORTING ii_package TYPE REF TO if_package
                          iv_lock    TYPE abap_bool
-               RAISING   zcx_abapgit_exception.
+               RAISING   zcx_abapgit_exception,
+      is_empty
+        IMPORTING iv_package_name    TYPE devclass
+        RETURNING VALUE(rv_is_empty) TYPE abap_bool
+        RAISING   zcx_abapgit_exception,
+      load_package
+        IMPORTING iv_package_name   TYPE devclass
+        RETURNING VALUE(ri_package) TYPE REF TO if_package
+        RAISING   zcx_abapgit_exception.
+
     DATA:
       mv_local_devclass TYPE devclass.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_devc IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
 
 
   METHOD constructor.
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
-    mv_local_devclass = is_item-devclass.
+    IF is_item-devclass IS NOT INITIAL.
+      mv_local_devclass = is_item-devclass.
+    ELSE.
+      mv_local_devclass = is_item-obj_name.
+    ENDIF.
   ENDMETHOD.
 
 
   METHOD get_package.
     IF me->zif_abapgit_object~exists( ) = abap_true.
-      cl_package_factory=>load_package(
-        EXPORTING
-          i_package_name             = mv_local_devclass
-          i_force_reload             = abap_true
-        IMPORTING
-          e_package                  = ri_package
-        EXCEPTIONS
-          object_not_existing        = 1
-          unexpected_error           = 2
-          intern_err                 = 3
-          no_access                  = 4
-          object_locked_and_modified = 5
-          OTHERS                     = 6 ).
-      IF sy-subrc = 1.
-        RETURN.
-      ELSEIF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise_t100( ).
-      ENDIF.
+      ri_package = load_package( mv_local_devclass ).
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD is_empty.
+
+    DATA: lv_object_name TYPE tadir-obj_name,
+          lt_subpackages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
+
+    lt_subpackages = zcl_abapgit_factory=>get_sap_package( iv_package_name )->list_subpackages( ).
+
+    IF lines( lt_subpackages ) > 0.
+      rv_is_empty = abap_false.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE obj_name
+           FROM tadir
+           INTO lv_object_name
+           WHERE pgmid    =  'R3TR'
+           AND   NOT ( object = 'DEVC' AND obj_name = iv_package_name )
+           AND   devclass = iv_package_name.
+    rv_is_empty = boolc( sy-subrc <> 0 ).
+
+  ENDMETHOD.
+
+
+  METHOD load_package.
+
+    cl_package_factory=>load_package(
+      EXPORTING
+        i_package_name             = iv_package_name
+        i_force_reload             = abap_true
+      IMPORTING
+        e_package                  = ri_package
+      EXCEPTIONS
+        object_not_existing        = 1
+        unexpected_error           = 2
+        intern_err                 = 3
+        no_access                  = 4
+        object_locked_and_modified = 5
+        OTHERS                     = 6 ).
+    IF sy-subrc = 1.
+      RETURN.
+    ELSEIF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -203,18 +246,116 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~delete.
+
+    DATA: li_package TYPE REF TO if_package,
+          lv_package TYPE devclass.
+
     " Package deletion is a bit tricky. A package can only be deleted if there are no objects
     " contained in it. This includes subpackages, so first the leaf packages need to be deleted.
     " Unfortunately deleted objects that are still contained in an unreleased transport request
     " also count towards the contained objects counter.
-    " -> Package deletion is currently not supported by abapGit
-    RETURN.
+    " -> Currently we delete only empty packages
+    "
+    " If objects are deleted, the TADIR entry is deleted when the transport request is released.
+    " So before we can delete the package, the transport which deletes the objects
+    " in the package has to be released.
+
+    lv_package = ms_item-obj_name.
+
+    IF is_empty( lv_package ) = abap_true.
+
+      li_package = load_package( lv_package ).
+
+      IF li_package IS NOT BOUND.
+        RETURN.
+      ENDIF.
+
+      TRY.
+          CALL METHOD li_package->('SET_CHANGEABLE')
+            EXPORTING
+              i_changeable                = abap_true
+              i_suppress_dialog           = abap_true " Parameter missing in 702
+            EXCEPTIONS
+              object_locked_by_other_user = 1
+              permission_failure          = 2
+              object_already_changeable   = 3
+              object_already_unlocked     = 4
+              object_just_created         = 5
+              object_deleted              = 6
+              object_modified             = 7
+              object_not_existing         = 8
+              object_invalid              = 9
+              unexpected_error            = 10
+              OTHERS                      = 11.
+
+        CATCH cx_root.
+          li_package->set_changeable(
+            EXPORTING
+              i_changeable                = abap_true
+            EXCEPTIONS
+              object_locked_by_other_user = 1
+              permission_failure          = 2
+              object_already_changeable   = 3
+              object_already_unlocked     = 4
+              object_just_created         = 5
+              object_deleted              = 6
+              object_modified             = 7
+              object_not_existing         = 8
+              object_invalid              = 9
+              unexpected_error            = 10
+              OTHERS                      = 11 ).
+      ENDTRY.
+
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+      TRY.
+          CALL METHOD li_package->('DELETE')
+            EXPORTING
+              i_suppress_dialog     = abap_true  " Parameter missing in 702
+            EXCEPTIONS
+              object_not_empty      = 1
+              object_not_changeable = 2
+              object_invalid        = 3
+              intern_err            = 4
+              OTHERS                = 5.
+
+        CATCH cx_root.
+
+          li_package->delete(
+            EXCEPTIONS
+              object_not_empty      = 1
+              object_not_changeable = 2
+              object_invalid        = 3
+              intern_err            = 4
+              OTHERS                = 5 ).
+
+      ENDTRY.
+
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+      li_package->save(
+        EXPORTING
+          i_suppress_dialog     = abap_true
+        EXCEPTIONS
+          object_invalid        = 1
+          object_not_changeable = 2
+          cancelled_in_corr     = 3
+          permission_failure    = 4
+          unexpected_error      = 5
+          intern_err            = 6
+          OTHERS                = 7 ).
+
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -246,14 +387,15 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     " the hierarchy before.
     CLEAR ls_package_data-parentcl.
 
+* Fields not set:
+* korrflag
+* dlvunit
+* parentcl
     ls_data_sign-ctext            = abap_true.
-*    ls_data_sign-korrflag         = abap_true.
     ls_data_sign-as4user          = abap_true.
     ls_data_sign-pdevclass        = abap_true.
-*    ls_data_sign-dlvunit          = abap_true.
     ls_data_sign-comp_posid       = abap_true.
     ls_data_sign-component        = abap_true.
-*    ls_data_sign-parentcl         = abap_true. " No parent package change here
     ls_data_sign-perminher        = abap_true.
     ls_data_sign-intfprefx        = abap_true.
     ls_data_sign-packtype         = abap_true.
@@ -403,13 +545,37 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+
+    DATA: lv_object TYPE eqegraarg.
+
+    lv_object = |DV{ ms_item-obj_name }|.
+    OVERLAY lv_object WITH '                                          '.
+    lv_object = lv_object && '*'.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'EEUDB'
+                                            iv_argument    = lv_object ).
+
   ENDMETHOD.
 
 

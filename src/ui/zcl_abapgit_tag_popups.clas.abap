@@ -1,26 +1,11 @@
 CLASS zcl_abapgit_tag_popups DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC.
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_ui_factory.
 
   PUBLIC SECTION.
-
-    CLASS-METHODS:
-      tag_list_popup
-        IMPORTING
-          io_repo       TYPE REF TO zcl_abapgit_repo_online
-        RETURNING
-          VALUE(rs_tag) TYPE zif_abapgit_definitions=>ty_git_tag
-        RAISING
-          zcx_abapgit_exception,
-
-      tag_select_popup
-        IMPORTING
-          io_repo       TYPE REF TO zcl_abapgit_repo_online
-        RETURNING
-          VALUE(rs_tag) TYPE zif_abapgit_definitions=>ty_git_tag
-        RAISING
-          zcx_abapgit_exception .
+    INTERFACES: zif_abapgit_tag_popups.
 
   PRIVATE SECTION.
     TYPES:
@@ -31,12 +16,12 @@ CLASS zcl_abapgit_tag_popups DEFINITION
            tty_tag_out TYPE STANDARD TABLE OF ty_tag_out
                        WITH NON-UNIQUE DEFAULT KEY.
 
-    CLASS-DATA:
+    DATA:
       mt_tags              TYPE tty_tag_out,
       mo_docking_container TYPE REF TO cl_gui_docking_container,
       mo_text_control      TYPE REF TO cl_gui_textedit.
 
-    CLASS-METHODS:
+    METHODS:
       on_double_click FOR EVENT double_click OF cl_salv_events_table
         IMPORTING row column,
 
@@ -56,7 +41,40 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_tag_popups IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_TAG_POPUPS IMPLEMENTATION.
+
+
+  METHOD clean_up.
+
+    IF mo_text_control IS BOUND.
+
+      mo_text_control->finalize( ).
+      mo_text_control->free(
+        EXCEPTIONS
+          cntl_error        = 1
+          cntl_system_error = 2
+          OTHERS            = 3 ).
+      ASSERT sy-subrc = 0.
+
+      CLEAR: mo_text_control.
+
+    ENDIF.
+
+    IF mo_docking_container IS BOUND.
+
+      mo_docking_container->finalize( ).
+      mo_docking_container->free(
+        EXCEPTIONS
+          cntl_error        = 1
+          cntl_system_error = 2
+          OTHERS            = 3 ).
+      ASSERT sy-subrc = 0.
+
+      CLEAR: mo_docking_container.
+
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD on_double_click.
@@ -86,7 +104,7 @@ CLASS zcl_abapgit_tag_popups IMPLEMENTATION.
 
       MOVE-CORRESPONDING <ls_tag> TO ls_tag_out.
 
-      ls_tag_out-name = zcl_abapgit_tag=>remove_tag_prefix( ls_tag_out-name ).
+      ls_tag_out-name = zcl_abapgit_git_tag=>remove_tag_prefix( ls_tag_out-name ).
 
       IF ls_tag_out-body IS NOT INITIAL.
         ls_tag_out-body_icon = |{ icon_display_text }|.
@@ -99,7 +117,60 @@ CLASS zcl_abapgit_tag_popups IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD tag_list_popup.
+  METHOD show_docking_container_with.
+
+    IF mo_docking_container IS NOT BOUND.
+
+      CREATE OBJECT mo_docking_container
+        EXPORTING
+          side                        = cl_gui_docking_container=>dock_at_bottom
+          extension                   = 120
+        EXCEPTIONS
+          cntl_error                  = 1
+          cntl_system_error           = 2
+          create_error                = 3
+          lifetime_error              = 4
+          lifetime_dynpro_dynpro_link = 5
+          OTHERS                      = 6.
+      ASSERT sy-subrc = 0.
+
+    ENDIF.
+
+    IF mo_text_control IS NOT BOUND.
+      CREATE OBJECT mo_text_control
+        EXPORTING
+          parent                 = mo_docking_container
+        EXCEPTIONS
+          error_cntl_create      = 1
+          error_cntl_init        = 2
+          error_cntl_link        = 3
+          error_dp_create        = 4
+          gui_type_not_supported = 5
+          OTHERS                 = 6.
+      ASSERT sy-subrc = 0.
+
+      mo_text_control->set_readonly_mode(
+        EXCEPTIONS
+          error_cntl_call_method = 1
+          invalid_parameter      = 2
+          OTHERS                 = 3 ).
+      ASSERT sy-subrc = 0.
+
+    ENDIF.
+
+    mo_text_control->set_textstream(
+      EXPORTING
+        text                   = iv_text
+      EXCEPTIONS
+        error_cntl_call_method = 1
+        not_supported_by_gui   = 2
+        OTHERS                 = 3 ).
+    ASSERT sy-subrc = 0.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_tag_popups~tag_list_popup.
 
     DATA: lo_alv          TYPE REF TO cl_salv_table,
           lo_table_header TYPE REF TO cl_salv_form_header_info,
@@ -110,7 +181,7 @@ CLASS zcl_abapgit_tag_popups IMPLEMENTATION.
 
     CLEAR: mt_tags.
 
-    lt_tags = zcl_abapgit_branch_overview=>run( io_repo = io_repo )->get_tags( ).
+    lt_tags = zcl_abapgit_factory=>get_branch_overview( io_repo )->get_tags( ).
 
     IF lines( lt_tags ) = 0.
       zcx_abapgit_exception=>raise( `There are no tags for this repository` ).
@@ -190,7 +261,7 @@ CLASS zcl_abapgit_tag_popups IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD tag_select_popup.
+  METHOD zif_abapgit_tag_popups~tag_select_popup.
 
     DATA: lt_tags             TYPE zif_abapgit_definitions=>ty_git_tag_list_tt,
           lv_answer           TYPE c LENGTH 1,
@@ -200,7 +271,7 @@ CLASS zcl_abapgit_tag_popups IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_sel> LIKE LINE OF lt_selection,
                    <ls_tag> LIKE LINE OF lt_tags.
 
-    lt_tags = zcl_abapgit_branch_overview=>run( io_repo = io_repo )->get_tags( ).
+    lt_tags = zcl_abapgit_factory=>get_branch_overview( io_repo )->get_tags( ).
 
     IF lines( lt_tags ) = 0.
       zcx_abapgit_exception=>raise( `There are no tags for this repository` ).
@@ -209,7 +280,7 @@ CLASS zcl_abapgit_tag_popups IMPLEMENTATION.
     LOOP AT lt_tags ASSIGNING <ls_tag>.
 
       INSERT INITIAL LINE INTO lt_selection INDEX 1 ASSIGNING <ls_sel>.
-      <ls_sel>-varoption = zcl_abapgit_tag=>remove_tag_prefix( <ls_tag>-name ).
+      <ls_sel>-varoption = zcl_abapgit_git_tag=>remove_tag_prefix( <ls_tag>-name ).
 
     ENDLOOP.
 
@@ -239,7 +310,7 @@ CLASS zcl_abapgit_tag_popups IMPLEMENTATION.
     READ TABLE lt_selection ASSIGNING <ls_sel> WITH KEY selflag = abap_true.
     ASSERT sy-subrc = 0.
 
-    lv_name_with_prefix = zcl_abapgit_tag=>add_tag_prefix( <ls_sel>-varoption ).
+    lv_name_with_prefix = zcl_abapgit_git_tag=>add_tag_prefix( <ls_sel>-varoption ).
 
     READ TABLE lt_tags ASSIGNING <ls_tag> WITH KEY name = lv_name_with_prefix.
     ASSERT sy-subrc = 0.
@@ -247,90 +318,4 @@ CLASS zcl_abapgit_tag_popups IMPLEMENTATION.
     rs_tag = <ls_tag>.
 
   ENDMETHOD.
-
-  METHOD clean_up.
-
-    IF mo_text_control IS BOUND.
-
-      mo_text_control->finalize( ).
-      mo_text_control->free(
-        EXCEPTIONS
-          cntl_error        = 1
-          cntl_system_error = 2
-          OTHERS            = 3 ).
-      ASSERT sy-subrc = 0.
-
-      CLEAR: mo_text_control.
-
-    ENDIF.
-
-    IF mo_docking_container IS BOUND.
-
-      mo_docking_container->finalize( ).
-      mo_docking_container->free(
-        EXCEPTIONS
-          cntl_error        = 1
-          cntl_system_error = 2
-          OTHERS            = 3 ).
-      ASSERT sy-subrc = 0.
-
-      CLEAR: mo_docking_container.
-
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD show_docking_container_with.
-
-    IF mo_docking_container IS NOT BOUND.
-
-      CREATE OBJECT mo_docking_container
-        EXPORTING
-          side                        = cl_gui_docking_container=>dock_at_bottom
-          extension                   = 120
-        EXCEPTIONS
-          cntl_error                  = 1
-          cntl_system_error           = 2
-          create_error                = 3
-          lifetime_error              = 4
-          lifetime_dynpro_dynpro_link = 5
-          OTHERS                      = 6.
-      ASSERT sy-subrc = 0.
-
-    ENDIF.
-
-    IF mo_text_control IS NOT BOUND.
-      CREATE OBJECT mo_text_control
-        EXPORTING
-          parent                 = mo_docking_container
-        EXCEPTIONS
-          error_cntl_create      = 1
-          error_cntl_init        = 2
-          error_cntl_link        = 3
-          error_dp_create        = 4
-          gui_type_not_supported = 5
-          OTHERS                 = 6.
-      ASSERT sy-subrc = 0.
-
-      mo_text_control->set_readonly_mode(
-        EXCEPTIONS
-          error_cntl_call_method = 1
-          invalid_parameter      = 2
-          OTHERS                 = 3 ).
-      ASSERT sy-subrc = 0.
-
-    ENDIF.
-
-    mo_text_control->set_textstream(
-      EXPORTING
-        text                   = iv_text
-      EXCEPTIONS
-        error_cntl_call_method = 1
-        not_supported_by_gui   = 2
-        OTHERS                 = 3 ).
-    ASSERT sy-subrc = 0.
-
-  ENDMETHOD.
-
 ENDCLASS.

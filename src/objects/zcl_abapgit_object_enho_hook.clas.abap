@@ -35,7 +35,7 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
   METHOD constructor.
     ms_item = is_item.
     mo_files = io_files.
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
   METHOD zif_abapgit_object_enho~serialize.
 
@@ -44,6 +44,8 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
           ls_original_object TYPE enh_hook_admin,
           lt_spaces          TYPE ty_spaces_tt,
           lt_enhancements    TYPE enh_hook_impl_it.
+
+    FIELD-SYMBOLS: <ls_enhancement> LIKE LINE OF lt_enhancements.
 
 
     lo_hook_impl ?= ii_enh_tool.
@@ -60,6 +62,11 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
     ls_original_object-include_bound = lo_hook_impl->get_include_bound( ).
     lt_enhancements = lo_hook_impl->get_hook_impls( ).
 
+    LOOP AT lt_enhancements ASSIGNING <ls_enhancement>.
+      CLEAR: <ls_enhancement>-extid,
+             <ls_enhancement>-id.
+    ENDLOOP.
+
     hook_impl_serialize(
       IMPORTING et_spaces = lt_spaces
       CHANGING ct_impl = lt_enhancements ).
@@ -75,7 +82,7 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
     io_xml->add( iv_name = 'SPACES'
                  ig_data = lt_spaces ).
 
-  ENDMETHOD.                    "zif_abapgit_object_enho~serialize
+  ENDMETHOD.
 
   METHOD hook_impl_serialize.
 * handle normalization of XML values
@@ -98,7 +105,7 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
         ENDWHILE.
       ENDLOOP.
     ENDLOOP.
-  ENDMETHOD.                    "hook_impl_serialize
+  ENDMETHOD.
 
   METHOD hook_impl_deserialize.
 
@@ -122,7 +129,7 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.                    "hook_impl_deserialize
+  ENDMETHOD.
 
   METHOD zif_abapgit_object_enho~deserialize.
 
@@ -191,6 +198,6 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
         zcx_abapgit_exception=>raise( lx_enh_root->get_text( ) ).
     ENDTRY.
 
-  ENDMETHOD.                    "zif_abapgit_object_enho~deserialize
+  ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_enho_hook IMPLEMENTATION
+ENDCLASS.

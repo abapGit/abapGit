@@ -1,7 +1,7 @@
 ---
 title: SSL setup
-category: online projects
-order: 70
+category: setup
+order: 10
 ---
 
 ##### Option A - Chrome #####
@@ -24,7 +24,7 @@ order: 70
 ##### Then continue here #####
 1. Install the certificates in STRUST transaction:
 * Click on the Change button
-* Open "SSL System Client SSL Client (Anonymous)" folder
+* Open "SSL client Client SSL Client (Anonymous)" folder
 * In the third box, Certificate, click on the bottom-left button "Import certificate" and "Add to certificate list".
 * Upload all the downloaded certificates
 * Save

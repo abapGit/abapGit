@@ -4,16 +4,11 @@ CLASS zcl_abapgit_ecatt_sp_download DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    INTERFACES:
+      zif_abapgit_ecatt_download.
+
     METHODS:
-      download REDEFINITION,
-
-      get_xml_stream
-        RETURNING
-          VALUE(rv_xml_stream) TYPE xstring,
-
-      get_xml_stream_size
-        RETURNING
-          VALUE(rv_xml_stream_size) TYPE int4.
+      download REDEFINITION.
 
   PROTECTED SECTION.
     METHODS:
@@ -21,8 +16,7 @@ CLASS zcl_abapgit_ecatt_sp_download DEFINITION
 
   PRIVATE SECTION.
     DATA:
-      mv_xml_stream      TYPE xstring,
-      mv_xml_stream_size TYPE int4.
+      mv_xml_stream TYPE xstring.
 
     METHODS:
       set_sp_data_to_template.
@@ -31,7 +25,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ecatt_sp_download IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ECATT_SP_DOWNLOAD IMPLEMENTATION.
 
 
   METHOD download.
@@ -40,8 +34,6 @@ CLASS zcl_abapgit_ecatt_sp_download IMPLEMENTATION.
     " doesn't exist in 702
 
     " Downport
-
-    DATA: lv_partyp TYPE string.
 
     load_help = im_load_help.
     typ = im_object_type.
@@ -58,8 +50,6 @@ CLASS zcl_abapgit_ecatt_sp_download IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    lv_partyp = cl_apl_ecatt_const=>params_type_par.
-
     set_attributes_to_template( ).
 
     set_sp_data_to_template( ).
@@ -73,28 +63,10 @@ CLASS zcl_abapgit_ecatt_sp_download IMPLEMENTATION.
 
     " Downport
 
-    zcl_abapgit_ecatt_helper=>download_data(
-      EXPORTING
-        ii_template_over_all = template_over_all
-      IMPORTING
-        ev_xml_stream        = mv_xml_stream
-        ev_xml_stream_size   = mv_xml_stream_size ).
+    mv_xml_stream = zcl_abapgit_ecatt_helper=>download_data( template_over_all ).
 
   ENDMETHOD.
 
-
-  METHOD get_xml_stream.
-
-    rv_xml_stream = mv_xml_stream.
-
-  ENDMETHOD.
-
-
-  METHOD get_xml_stream_size.
-
-    rv_xml_stream_size = mv_xml_stream_size.
-
-  ENDMETHOD.
 
   METHOD set_sp_data_to_template.
 
@@ -106,16 +78,16 @@ CLASS zcl_abapgit_ecatt_sp_download IMPLEMENTATION.
           lv_sp_xml                  TYPE etxml_line_str,
           lo_ecatt_sp                TYPE REF TO object.
 
-    FIELD-SYMBOLS: <ecatt_object> TYPE data.
+    FIELD-SYMBOLS: <lg_ecatt_object> TYPE data.
 
     li_start_profile_data_node = template_over_all->create_simple_element(
                                    name = 'START_PROFILE'
                                    parent = root_node ).
 
-    ASSIGN ('ECATT_OBJECT') TO <ecatt_object>.
+    ASSIGN ('ECATT_OBJECT') TO <lg_ecatt_object>.
     ASSERT sy-subrc = 0.
 
-    lo_ecatt_sp = <ecatt_object>.
+    lo_ecatt_sp = <lg_ecatt_object>.
 
     TRY.
         CALL METHOD lo_ecatt_sp->('GET_SP_ATTRIBUTES')
@@ -132,6 +104,13 @@ CLASS zcl_abapgit_ecatt_sp_download IMPLEMENTATION.
 
     li_element = li_dom->get_root_element( ).
     li_start_profile_data_node->append_child( new_child = li_element ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_ecatt_download~get_xml_stream.
+
+    rv_xml_stream = mv_xml_stream.
 
   ENDMETHOD.
 

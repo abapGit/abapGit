@@ -4,6 +4,7 @@ CLASS zcl_abapgit_object_wdyn DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     DATA:
@@ -52,16 +53,16 @@ CLASS zcl_abapgit_object_wdyn DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RETURNING VALUE(rs_delta) TYPE svrs2_xversionable_object
         RAISING   zcx_abapgit_exception,
       add_fm_param_exporting
-        IMPORTING i_name   TYPE string
-                  i_value  TYPE any
+        IMPORTING iv_name  TYPE string
+                  ig_value TYPE any
         CHANGING  ct_param TYPE abap_func_parmbind_tab,
       add_fm_param_tables
-        IMPORTING i_name   TYPE string
+        IMPORTING iv_name  TYPE string
         CHANGING  ct_value TYPE ANY TABLE
                   ct_param TYPE abap_func_parmbind_tab,
       add_fm_exception
-        IMPORTING i_name       TYPE string
-                  i_value      TYPE i
+        IMPORTING iv_name      TYPE string
+                  iv_value     TYPE i
         CHANGING  ct_exception TYPE abap_func_excpbind_tab.
 
 ENDCLASS.
@@ -75,12 +76,12 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
 
     DATA: ls_exception LIKE LINE OF ct_exception.
 
-    ls_exception-name = i_name.
-    ls_exception-value = i_value.
+    ls_exception-name = iv_name.
+    ls_exception-value = iv_value.
 
     INSERT ls_exception INTO TABLE ct_exception.
 
-  ENDMETHOD.                    "add_fm_exception
+  ENDMETHOD.
 
 
   METHOD add_fm_param_exporting.
@@ -88,12 +89,12 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
     DATA: ls_param LIKE LINE OF ct_param.
 
     ls_param-kind = abap_func_exporting.
-    ls_param-name = i_name.
-    GET REFERENCE OF i_value INTO ls_param-value.
+    ls_param-name = iv_name.
+    GET REFERENCE OF ig_value INTO ls_param-value.
 
     INSERT ls_param INTO TABLE ct_param.
 
-  ENDMETHOD.                    "add_fm_param_exporting
+  ENDMETHOD.
 
 
   METHOD add_fm_param_tables.
@@ -101,12 +102,12 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
     DATA: ls_param LIKE LINE OF ct_param.
 
     ls_param-kind = abap_func_tables.
-    ls_param-name = i_name.
+    ls_param-name = iv_name.
     GET REFERENCE OF ct_value INTO ls_param-value.
 
     INSERT ls_param INTO TABLE ct_param.
 
-  ENDMETHOD.                    "add_fm_param_tables
+  ENDMETHOD.
 
 
   METHOD delta_controller.
@@ -203,7 +204,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from SVRS_MAKE_OBJECT_DELTA' ).
     ENDIF.
 
-  ENDMETHOD.                    "delta_controller
+  ENDMETHOD.
 
 
   METHOD delta_definition.
@@ -260,7 +261,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from SVRS_MAKE_OBJECT_DELTA' ).
     ENDIF.
 
-  ENDMETHOD.                    "delta_definition
+  ENDMETHOD.
 
 
   METHOD delta_view.
@@ -332,7 +333,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from SVRS_MAKE_OBJECT_DELTA' ).
     ENDIF.
 
-  ENDMETHOD.                    "delta_view
+  ENDMETHOD.
 
 
   METHOD get_limu_objects.
@@ -347,7 +348,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       IMPORTING
         limu_objects   = rt_objects.
 
-  ENDMETHOD.                    "get_limu_objects
+  ENDMETHOD.
 
 
   METHOD read.
@@ -421,7 +422,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       cmpname ASCENDING
       line_number ASCENDING.
 
-  ENDMETHOD.                    "read
+  ENDMETHOD.
 
 
   METHOD read_controller.
@@ -440,75 +441,75 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
 *   Calling FM dynamically because version 702 has less parameters
 
 *   FM parameters
-    add_fm_param_exporting( EXPORTING i_name     = 'CONTROLLER_KEY'
-                                      i_value    = is_key
+    add_fm_param_exporting( EXPORTING iv_name     = 'CONTROLLER_KEY'
+                                      ig_value    = is_key
                             CHANGING  ct_param = lt_fm_param ).
-    add_fm_param_exporting( EXPORTING i_name     = 'GET_ALL_TRANSLATIONS'
-                                      i_value    = abap_false
+    add_fm_param_exporting( EXPORTING iv_name     = 'GET_ALL_TRANSLATIONS'
+                                      ig_value    = abap_false
                             CHANGING  ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'DEFINITION'
+    add_fm_param_tables( EXPORTING iv_name = 'DEFINITION'
                          CHANGING  ct_value = lt_definition
                                    ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'DESCRIPTIONS'
+    add_fm_param_tables( EXPORTING iv_name = 'DESCRIPTIONS'
                          CHANGING ct_value = rs_controller-descriptions
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'CONTROLLER_USAGES'
+    add_fm_param_tables( EXPORTING iv_name = 'CONTROLLER_USAGES'
                          CHANGING ct_value = rs_controller-controller_usages
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'CONTROLLER_COMPONENTS'
+    add_fm_param_tables( EXPORTING iv_name = 'CONTROLLER_COMPONENTS'
                          CHANGING ct_value = lt_components
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'CONTROLLER_COMPONENT_SOURCES'
+    add_fm_param_tables( EXPORTING iv_name = 'CONTROLLER_COMPONENT_SOURCES'
                          CHANGING ct_value = lt_sources
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'CONTROLLER_COMPONENT_TEXTS'
+    add_fm_param_tables( EXPORTING iv_name = 'CONTROLLER_COMPONENT_TEXTS'
                          CHANGING ct_value = rs_controller-controller_component_texts
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'CONTROLLER_PARAMETERS'
+    add_fm_param_tables( EXPORTING iv_name = 'CONTROLLER_PARAMETERS'
                          CHANGING ct_value = rs_controller-controller_parameters
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'CONTROLLER_PARAMETER_TEXTS'
+    add_fm_param_tables( EXPORTING iv_name = 'CONTROLLER_PARAMETER_TEXTS'
                          CHANGING ct_value = rs_controller-controller_parameter_texts
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'CONTEXT_NODES'
+    add_fm_param_tables( EXPORTING iv_name = 'CONTEXT_NODES'
                          CHANGING ct_value = rs_controller-context_nodes
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'CONTEXT_ATTRIBUTES'
+    add_fm_param_tables( EXPORTING iv_name = 'CONTEXT_ATTRIBUTES'
                          CHANGING ct_value = rs_controller-context_attributes
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'CONTEXT_MAPPINGS'
+    add_fm_param_tables( EXPORTING iv_name = 'CONTEXT_MAPPINGS'
                          CHANGING ct_value = rs_controller-context_mappings
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'FIELDGROUPS'
+    add_fm_param_tables( EXPORTING iv_name = 'FIELDGROUPS'
                          CHANGING ct_value = rs_controller-fieldgroups
                                   ct_param = lt_fm_param ).
 *   Version 702 doesn't have these two attributes so we
 *   use them dynamically for downward compatibility
     ASSIGN COMPONENT 'CONTROLLER_EXCEPTIONS' OF STRUCTURE rs_controller TO <lt_ctrl_exceptions>.
     IF sy-subrc = 0.
-      add_fm_param_tables( EXPORTING i_name = 'CONTROLLER_EXCEPTIONS'
+      add_fm_param_tables( EXPORTING iv_name = 'CONTROLLER_EXCEPTIONS'
                            CHANGING ct_value = <lt_ctrl_exceptions>
                                     ct_param = lt_fm_param ).
     ENDIF.
     ASSIGN COMPONENT 'CONTROLLER_EXCEPTION_TEXTS' OF STRUCTURE rs_controller TO <lt_ctrl_exception_texts>.
     IF sy-subrc = 0.
-      add_fm_param_tables( EXPORTING i_name = 'CONTROLLER_EXCEPTION_TEXTS'
+      add_fm_param_tables( EXPORTING iv_name = 'CONTROLLER_EXCEPTION_TEXTS'
                            CHANGING ct_value = <lt_ctrl_exception_texts>
                                     ct_param = lt_fm_param ).
     ENDIF.
-    add_fm_param_tables( EXPORTING i_name = 'PSMODILOG'
+    add_fm_param_tables( EXPORTING iv_name = 'PSMODILOG'
                          CHANGING ct_value = lt_psmodilog
                                   ct_param = lt_fm_param ).
-    add_fm_param_tables( EXPORTING i_name = 'PSMODISRC'
+    add_fm_param_tables( EXPORTING iv_name = 'PSMODISRC'
                          CHANGING ct_value = lt_psmodisrc
                                   ct_param = lt_fm_param ).
 
 *   FM exceptions
-    add_fm_exception( EXPORTING i_name = 'NOT_EXISTING'
-                                i_value = 1
+    add_fm_exception( EXPORTING iv_name = 'NOT_EXISTING'
+                                iv_value = 1
                       CHANGING ct_exception = lt_fm_exception ).
-    add_fm_exception( EXPORTING i_name = 'OTHERS'
-                                i_value = 2
+    add_fm_exception( EXPORTING iv_name = 'OTHERS'
+                                iv_value = 2
                       CHANGING ct_exception = lt_fm_exception ).
 
     CALL FUNCTION 'WDYC_GET_OBJECT'
@@ -533,7 +534,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
            rs_controller-definition-changedby,
            rs_controller-definition-changedon.
 
-  ENDMETHOD.                    "read_controller
+  ENDMETHOD.
 
 
   METHOD read_definition.
@@ -578,7 +579,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
            rs_definition-definition-gendate,
            rs_definition-definition-gentime.
 
-  ENDMETHOD.                    "read_definition
+  ENDMETHOD.
 
 
   METHOD read_view.
@@ -631,7 +632,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
            rs_view-definition-changedby,
            rs_view-definition-changedon.
 
-  ENDMETHOD.                    "read_view
+  ENDMETHOD.
 
 
   METHOD recover_controller.
@@ -652,7 +653,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       CHANGING
         corrnr         = lv_corrnr ).
 
-  ENDMETHOD.                    "recover_controller
+  ENDMETHOD.
 
 
   METHOD recover_definition.
@@ -675,7 +676,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       CHANGING
         corrnr        = lv_corrnr ).
 
-  ENDMETHOD.                    "recover_definition
+  ENDMETHOD.
 
 
   METHOD recover_view.
@@ -696,16 +697,11 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       CHANGING
         corrnr   = lv_corrnr ).
 
-  ENDMETHOD.                    "recover_view
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
-  ENDMETHOD.                    "zif_abapgit_object~changed_by
-
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
 
 
@@ -730,7 +726,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       p_wb_request       = lo_request
       p_wb_program_state = li_state ).
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -747,8 +743,6 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
                   CHANGING cg_data = mt_components ).
     io_xml->read( EXPORTING iv_name  = 'SOURCES'
                   CHANGING cg_data = mt_sources ).
-
-*    tadir_insert( iv_package ).
 
     ls_component-comp_metadata-definition-author = sy-uname.
     ls_component-comp_metadata-definition-createdon = sy-datum.
@@ -768,7 +762,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -782,17 +776,32 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       AND version = 'A'.                                "#EC CI_GENBUFF
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~jump.
@@ -804,7 +813,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
         object_type   = ms_item-obj_type
         in_new_window = abap_true.
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -821,5 +830,5 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
     io_xml->add( ig_data = mt_sources
                  iv_name = 'SOURCES' ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 ENDCLASS.

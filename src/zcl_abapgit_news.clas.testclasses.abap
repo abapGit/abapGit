@@ -1,4 +1,57 @@
-*"* use this source file for your ABAP unit test classes
+CLASS ltcl_relevant DEFINITION DEFERRED.
+CLASS zcl_abapgit_news DEFINITION LOCAL FRIENDS ltcl_relevant.
+
+CLASS ltcl_relevant DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
+
+  PRIVATE SECTION.
+
+    METHODS:
+      test01 FOR TESTING,
+      test02 FOR TESTING,
+      test03 FOR TESTING.
+
+ENDCLASS.
+
+CLASS ltcl_relevant IMPLEMENTATION.
+
+  METHOD test01.
+
+    DATA: lv_relevant TYPE abap_bool.
+
+    lv_relevant = zcl_abapgit_news=>is_relevant( 'https://github.com/larshp/abapGit.git' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_relevant
+      exp = abap_true ).
+
+  ENDMETHOD.
+
+  METHOD test02.
+
+    DATA: lv_relevant TYPE abap_bool.
+
+    lv_relevant = zcl_abapgit_news=>is_relevant( 'https://github.com/larshp/abapGit' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_relevant
+      exp = abap_true ).
+
+  ENDMETHOD.
+
+  METHOD test03.
+
+    DATA: lv_relevant TYPE abap_bool.
+
+    lv_relevant = zcl_abapgit_news=>is_relevant( 'https://github.com/larshp/something' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_relevant
+      exp = abap_false ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
 
 CLASS ltcl_news DEFINITION DEFERRED.
 CLASS zcl_abapgit_news DEFINITION LOCAL FRIENDS ltcl_news.
@@ -19,7 +72,7 @@ CLASS ltcl_news DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
       parse_line         FOR TESTING,
       parse              FOR TESTING.
 
-ENDCLASS.                    "ltcl_news DEFINITION
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS ltcl_news IMPLEMENTATION
@@ -39,7 +92,7 @@ CLASS ltcl_news IMPLEMENTATION.
                                         act = lv_version_act
                                         msg = ' Error during conversion of version to numeric value' ).
 
-  ENDMETHOD.                    "convert_version_to_numeric
+  ENDMETHOD.
 
   METHOD compare_versions.
 
@@ -70,7 +123,7 @@ CLASS ltcl_news IMPLEMENTATION.
                                         act = lv_result
                                         msg = ' Error during comparison of versions. Case: A = B' ).
 
-  ENDMETHOD.                    "compare_versions
+  ENDMETHOD.
 
   METHOD normalize_version.
 
@@ -90,7 +143,7 @@ CLASS ltcl_news IMPLEMENTATION.
       act = zcl_abapgit_news=>normalize_version( 'x.y.z' )
       exp = '' ).
 
-  ENDMETHOD.                    "normalize_version
+  ENDMETHOD.
 
   METHOD parse_line.
 
@@ -147,7 +200,7 @@ CLASS ltcl_news IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals( act = ls_log-is_important exp = abap_true ).
     cl_abap_unit_assert=>assert_equals( act = ls_log-text         exp = ' ! important news' ).
 
-  ENDMETHOD.                    "parse_line
+  ENDMETHOD.
 
   METHOD parse.
 
@@ -229,6 +282,6 @@ CLASS ltcl_news IMPLEMENTATION.
                                         act = lt_log_act
                                         msg = ' Error during parsing: Case 3.' ).
 
-  ENDMETHOD.                    "parse
+  ENDMETHOD.
 
-ENDCLASS.                    "ltcl_news IMPLEMENTATION
+ENDCLASS.

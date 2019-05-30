@@ -13,7 +13,7 @@ CLASS zcl_abapgit_stage DEFINITION
       END OF ty_stage .
     TYPES:
       ty_stage_tt TYPE SORTED TABLE OF ty_stage
-        WITH UNIQUE KEY file-path file-filename .
+            WITH UNIQUE KEY file-path file-filename .
 
     CONSTANTS:
       BEGIN OF c_method,
@@ -32,15 +32,7 @@ CLASS zcl_abapgit_stage DEFINITION
         zcx_abapgit_exception .
     METHODS constructor
       IMPORTING
-        !iv_branch_name  TYPE string
-        !iv_branch_sha1  TYPE zif_abapgit_definitions=>ty_sha1
         !iv_merge_source TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL .
-    METHODS get_branch_name
-      RETURNING
-        VALUE(rv_branch) TYPE string .
-    METHODS get_branch_sha1
-      RETURNING
-        VALUE(rv_branch) TYPE zif_abapgit_definitions=>ty_sha1 .
     METHODS add
       IMPORTING
         !iv_path     TYPE zif_abapgit_definitions=>ty_file-path
@@ -76,32 +68,33 @@ CLASS zcl_abapgit_stage DEFINITION
       RETURNING
         VALUE(rt_stage) TYPE ty_stage_tt .
   PRIVATE SECTION.
-    DATA: mt_stage        TYPE ty_stage_tt,
-          mv_branch_name  TYPE string,
-          mv_branch_sha1  TYPE zif_abapgit_definitions=>ty_sha1,
-          mv_merge_source TYPE zif_abapgit_definitions=>ty_sha1.
 
-    METHODS:
-      append
-        IMPORTING iv_path     TYPE zif_abapgit_definitions=>ty_file-path
-                  iv_filename TYPE zif_abapgit_definitions=>ty_file-filename
-                  iv_method   TYPE ty_method
-                  iv_data     TYPE xstring OPTIONAL
-        RAISING   zcx_abapgit_exception.
+    DATA mt_stage TYPE ty_stage_tt .
+    DATA mv_merge_source TYPE zif_abapgit_definitions=>ty_sha1 .
 
+    METHODS append
+      IMPORTING
+        !iv_path     TYPE zif_abapgit_definitions=>ty_file-path
+        !iv_filename TYPE zif_abapgit_definitions=>ty_file-filename
+        !iv_method   TYPE ty_method
+        !iv_data     TYPE xstring OPTIONAL
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_STAGE IMPLEMENTATION.
+CLASS zcl_abapgit_stage IMPLEMENTATION.
 
 
   METHOD add.
+
     append( iv_path     = iv_path
             iv_filename = iv_filename
             iv_method   = c_method-add
             iv_data     = iv_data ).
-  ENDMETHOD.        "add
+
+  ENDMETHOD.
 
 
   METHOD append.
@@ -126,33 +119,21 @@ CLASS ZCL_ABAPGIT_STAGE IMPLEMENTATION.
       INSERT ls_stage INTO TABLE mt_stage.
     ENDIF.
 
-  ENDMETHOD.        "append
+  ENDMETHOD.
 
 
   METHOD constructor.
-    mv_branch_name  = iv_branch_name.
-    mv_branch_sha1  = iv_branch_sha1.
     mv_merge_source = iv_merge_source.
   ENDMETHOD.
 
 
   METHOD count.
     rv_count = lines( mt_stage ).
-  ENDMETHOD.        "count
+  ENDMETHOD.
 
 
   METHOD get_all.
     rt_stage = mt_stage.
-  ENDMETHOD.        "get_all
-
-
-  METHOD get_branch_name.
-    rv_branch = mv_branch_name.
-  ENDMETHOD.
-
-
-  METHOD get_branch_sha1.
-    rv_branch = mv_branch_sha1.
   ENDMETHOD.
 
 
@@ -165,7 +146,7 @@ CLASS ZCL_ABAPGIT_STAGE IMPLEMENTATION.
     append( iv_path     = iv_path
             iv_filename = iv_filename
             iv_method   = c_method-ignore ).
-  ENDMETHOD.        "ignore
+  ENDMETHOD.
 
 
   METHOD method_description.
@@ -181,19 +162,19 @@ CLASS ZCL_ABAPGIT_STAGE IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'unknown staging method type' ).
     ENDCASE.
 
-  ENDMETHOD.        "method_description
+  ENDMETHOD.
 
 
   METHOD reset.
     DELETE mt_stage WHERE file-path     = iv_path
                     AND   file-filename = iv_filename.
     ASSERT sy-subrc = 0.
-  ENDMETHOD.        "reset
+  ENDMETHOD.
 
 
   METHOD rm.
     append( iv_path     = iv_path
             iv_filename = iv_filename
             iv_method   = c_method-rm ).
-  ENDMETHOD.        "rm
+  ENDMETHOD.
 ENDCLASS.

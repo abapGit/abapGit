@@ -15,7 +15,8 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
       RAISING   zcx_abapgit_exception.
 
     METHODS get_log
-      RETURNING VALUE(ro_log) TYPE REF TO zcl_abapgit_log.
+      RETURNING VALUE(ri_log) TYPE REF TO zif_abapgit_log.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_sortkey,
                  default    TYPE i VALUE 9999,
@@ -23,16 +24,17 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
                  dir        TYPE i VALUE 1,
                  orphan     TYPE i VALUE 2,
                  changed    TYPE i VALUE 3,
+                 inactive   TYPE i VALUE 4,
                END OF c_sortkey.
 
     DATA: mo_repo TYPE REF TO zcl_abapgit_repo,
-          mo_log  TYPE REF TO zcl_abapgit_log.
+          mi_log  TYPE REF TO zif_abapgit_log.
 
-    METHODS build_repo_items_offline
+    METHODS build_repo_items_local_only
       RETURNING VALUE(rt_repo_items) TYPE zif_abapgit_definitions=>tt_repo_items
       RAISING   zcx_abapgit_exception.
 
-    METHODS build_repo_items_online
+    METHODS build_repo_items_with_remote
       RETURNING VALUE(rt_repo_items) TYPE zif_abapgit_definitions=>tt_repo_items
       RAISING   zcx_abapgit_exception.
 
@@ -97,18 +99,19 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
       ENDAT.
     ENDLOOP.
 
-  ENDMETHOD. "build_folders
+  ENDMETHOD.
 
 
-  METHOD build_repo_items_offline.
+  METHOD build_repo_items_local_only.
 
-    DATA: lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
+    DATA: lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
     FIELD-SYMBOLS: <ls_repo_item> LIKE LINE OF rt_repo_items,
                    <ls_tadir>     LIKE LINE OF lt_tadir.
 
 
-    lt_tadir = zcl_abapgit_tadir=>read(
+    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
       iv_package = mo_repo->get_package( )
       io_dot     = mo_repo->get_dot_abapgit( ) ).
 
@@ -117,30 +120,36 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
       <ls_repo_item>-obj_type = <ls_tadir>-object.
       <ls_repo_item>-obj_name = <ls_tadir>-obj_name.
       <ls_repo_item>-path     = <ls_tadir>-path.
-      <ls_repo_item>-sortkey  = c_sortkey-default.      " Default sort key
+      MOVE-CORRESPONDING <ls_repo_item> TO ls_item.
+      <ls_repo_item>-inactive = boolc( zcl_abapgit_objects=>is_active( ls_item ) = abap_false ).
+      IF <ls_repo_item>-inactive = abap_true.
+        <ls_repo_item>-sortkey = c_sortkey-inactive.
+      ELSE.
+        <ls_repo_item>-sortkey  = c_sortkey-default.      " Default sort key
+      ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.  "build_repo_items_offline
+  ENDMETHOD.
 
 
-  METHOD build_repo_items_online.
+  METHOD build_repo_items_with_remote.
 
-    DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online,
-          ls_file        TYPE zif_abapgit_definitions=>ty_repo_file,
-          lt_status      TYPE zif_abapgit_definitions=>ty_results_tt.
+    DATA:
+      ls_file   TYPE zif_abapgit_definitions=>ty_repo_file,
+      lt_status TYPE zif_abapgit_definitions=>ty_results_tt.
 
     FIELD-SYMBOLS: <ls_status>    LIKE LINE OF lt_status,
                    <ls_repo_item> LIKE LINE OF rt_repo_items.
 
 
-    lo_repo_online ?= mo_repo.
-    lt_status       = lo_repo_online->status( mo_log ).
+    lt_status = mo_repo->status( mi_log ).
 
     LOOP AT lt_status ASSIGNING <ls_status>.
       AT NEW obj_name. "obj_type + obj_name
         APPEND INITIAL LINE TO rt_repo_items ASSIGNING <ls_repo_item>.
         <ls_repo_item>-obj_type = <ls_status>-obj_type.
         <ls_repo_item>-obj_name = <ls_status>-obj_name.
+        <ls_repo_item>-inactive = <ls_status>-inactive.
         <ls_repo_item>-sortkey  = c_sortkey-default. " Default sort key
         <ls_repo_item>-changes  = 0.
         <ls_repo_item>-path     = <ls_status>-path.
@@ -153,6 +162,11 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
         ls_file-rstate     = <ls_status>-rstate.
         ls_file-lstate     = <ls_status>-lstate.
         APPEND ls_file TO <ls_repo_item>-files.
+
+        IF <ls_status>-inactive = abap_true AND
+           <ls_repo_item>-sortkey > c_sortkey-changed.
+          <ls_repo_item>-sortkey = c_sortkey-inactive.
+        ENDIF.
 
         IF ls_file-is_changed = abap_true.
           <ls_repo_item>-sortkey = c_sortkey-changed. " Changed files
@@ -172,46 +186,35 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
       ENDAT.
     ENDLOOP.
 
-  ENDMETHOD. "build_repo_items_online
+  ENDMETHOD.
 
 
   METHOD constructor.
     mo_repo = io_repo.
-    CREATE OBJECT mo_log.
-  ENDMETHOD.  "constructor
+    CREATE OBJECT mi_log TYPE zcl_abapgit_log.
+  ENDMETHOD.
 
 
   METHOD filter_changes.
 
-    DATA lt_repo_temp LIKE ct_repo_items.
+    DELETE ct_repo_items WHERE changes = 0.
 
-    FIELD-SYMBOLS <ls_item> LIKE LINE OF ct_repo_items.
-
-    LOOP AT ct_repo_items ASSIGNING <ls_item>.
-      CHECK <ls_item>-changes > 0.
-      APPEND <ls_item> TO lt_repo_temp.
-    ENDLOOP.
-
-    IF lines( lt_repo_temp ) > 0. " Prevent showing empty package if no changes, show all
-      ct_repo_items = lt_repo_temp.
-    ENDIF.
-
-  ENDMETHOD. "filter_changes
+  ENDMETHOD.
 
 
   METHOD get_log.
-    ro_log = mo_log.
-  ENDMETHOD. "get_log
+    ri_log = mi_log.
+  ENDMETHOD.
 
 
   METHOD list.
 
-    mo_log->clear( ).
+    mi_log->clear( ).
 
-    IF mo_repo->is_offline( ) = abap_true.
-      rt_repo_items = build_repo_items_offline( ).
+    IF mo_repo->has_remote_source( ) = abap_true.
+      rt_repo_items = build_repo_items_with_remote( ).
     ELSE.
-      rt_repo_items = build_repo_items_online( ).
+      rt_repo_items = build_repo_items_local_only( ).
     ENDIF.
 
     IF iv_by_folders = abap_true.
@@ -221,6 +224,7 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
     ENDIF.
 
     IF iv_changes_only = abap_true.
+      " There are never changes for offline repositories
       filter_changes( CHANGING ct_repo_items = rt_repo_items ).
     ENDIF.
 
@@ -229,5 +233,5 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
       obj_type ASCENDING
       obj_name ASCENDING.
 
-  ENDMETHOD.  "list
+  ENDMETHOD.
 ENDCLASS.

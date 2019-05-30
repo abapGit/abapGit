@@ -1,5 +1,3 @@
-*"* use this source file for your ABAP unit test classes
-
 CLASS ltcl_persistence_settings DEFINITION FINAL FOR TESTING
   DURATION SHORT
   RISK LEVEL DANGEROUS.

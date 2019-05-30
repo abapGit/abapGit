@@ -9,7 +9,6 @@ CLASS zcl_abapgit_merge DEFINITION
       IMPORTING
         !io_repo          TYPE REF TO zcl_abapgit_repo_online
         !iv_source_branch TYPE string
-        !iv_target_branch TYPE string
       RAISING
         zcx_abapgit_exception .
     METHODS get_conflicts
@@ -21,12 +20,9 @@ CLASS zcl_abapgit_merge DEFINITION
     METHODS get_source_branch
       RETURNING
         VALUE(rv_source_branch) TYPE string .
-    METHODS get_target_branch
-      RETURNING
-        VALUE(rv_target_branch) TYPE string .
     METHODS has_conflicts
       RETURNING
-        VALUE(rv_conflicts_exists) TYPE boolean .
+        VALUE(rv_conflicts_exists) TYPE abap_bool .
     METHODS resolve_conflict
       IMPORTING
         !is_conflict TYPE zif_abapgit_definitions=>ty_merge_conflict
@@ -35,6 +31,7 @@ CLASS zcl_abapgit_merge DEFINITION
     METHODS run
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES:
@@ -45,7 +42,6 @@ CLASS zcl_abapgit_merge DEFINITION
     DATA mt_conflicts TYPE zif_abapgit_definitions=>tt_merge_conflict .
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
     DATA mv_source_branch TYPE string .
-    DATA mv_target_branch TYPE string .
 
     METHODS all_files
       RETURNING
@@ -95,8 +91,9 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
 
     DEFINE _from_source.
       READ TABLE mt_objects ASSIGNING <ls_object>
-        WITH KEY type = zif_abapgit_definitions=>gc_type-blob
-        sha1 = <ls_source>-sha1.
+        WITH KEY type COMPONENTS
+          type = zif_abapgit_definitions=>c_type-blob
+          sha1 = <ls_source>-sha1.
       ASSERT sy-subrc = 0.
 
       ms_merge-stage->add( iv_path     = <ls_file>-path
@@ -121,8 +118,6 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
 
     CREATE OBJECT ms_merge-stage
       EXPORTING
-        iv_branch_name  = ms_merge-target-name
-        iv_branch_sha1  = ms_merge-target-sha1
         iv_merge_source = ms_merge-source-sha1.
 
     LOOP AT lt_files ASSIGNING <ls_file>.
@@ -183,13 +178,17 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
         <ls_conflict>-path = <ls_file>-path.
         <ls_conflict>-filename = <ls_file>-name.
         <ls_conflict>-source_sha1 = <ls_source>-sha1.
-        READ TABLE mt_objects ASSIGNING <ls_object> WITH KEY type = zif_abapgit_definitions=>gc_type-blob
-                                                             sha1 = <ls_source>-sha1.
+        READ TABLE mt_objects ASSIGNING <ls_object>
+          WITH KEY type COMPONENTS
+            type = zif_abapgit_definitions=>c_type-blob
+            sha1 = <ls_source>-sha1.
         <ls_conflict>-source_data = <ls_object>-data.
 
         <ls_conflict>-target_sha1 = <ls_target>-sha1.
-        READ TABLE mt_objects ASSIGNING <ls_object> WITH KEY type = zif_abapgit_definitions=>gc_type-blob
-                                                             sha1 = <ls_target>-sha1.
+        READ TABLE mt_objects ASSIGNING <ls_object>
+          WITH KEY type COMPONENTS
+            type = zif_abapgit_definitions=>c_type-blob
+            sha1 = <ls_target>-sha1.
         <ls_conflict>-target_data = <ls_object>-data.
 
 * added in source and target, but different, merge conflict must be resolved
@@ -221,13 +220,17 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
         <ls_conflict>-path = <ls_file>-path.
         <ls_conflict>-filename = <ls_file>-name.
         <ls_conflict>-source_sha1 = <ls_source>-sha1.
-        READ TABLE mt_objects ASSIGNING <ls_object> WITH KEY type = zif_abapgit_definitions=>gc_type-blob
-                                                             sha1 = <ls_source>-sha1.
+        READ TABLE mt_objects ASSIGNING <ls_object>
+          WITH KEY type COMPONENTS
+            type = zif_abapgit_definitions=>c_type-blob
+            sha1 = <ls_source>-sha1.
         <ls_conflict>-source_data = <ls_object>-data.
 
         <ls_conflict>-target_sha1 = <ls_target>-sha1.
-        READ TABLE mt_objects ASSIGNING <ls_object> WITH KEY type = zif_abapgit_definitions=>gc_type-blob
-                                                             sha1 = <ls_target>-sha1.
+        READ TABLE mt_objects ASSIGNING <ls_object>
+          WITH KEY type COMPONENTS
+            type = zif_abapgit_definitions=>c_type-blob
+            sha1 = <ls_target>-sha1.
         <ls_conflict>-target_data = <ls_object>-data.
 
         ms_merge-conflict = |{ <ls_file>-name } merge conflict, changed in source and target branch|.
@@ -239,13 +242,12 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
 
   METHOD constructor.
 
-    IF iv_source_branch EQ iv_target_branch.
+    IF iv_source_branch = io_repo->get_branch_name( ).
       zcx_abapgit_exception=>raise( 'source = target' ).
     ENDIF.
 
     mo_repo = io_repo.
     mv_source_branch = iv_source_branch.
-    mv_target_branch = iv_target_branch.
 
   ENDMETHOD.
 
@@ -255,11 +257,13 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
     DATA: lo_branch_list TYPE REF TO zcl_abapgit_git_branch_list,
           lt_upload      TYPE zif_abapgit_definitions=>ty_git_branch_list_tt.
 
-    lo_branch_list  = zcl_abapgit_git_transport=>branches( ms_merge-repo->get_url( ) ).
+    lo_branch_list = zcl_abapgit_git_transport=>branches( ms_merge-repo->get_url( ) ).
+
     ms_merge-source = lo_branch_list->find_by_name(
       zcl_abapgit_git_branch_list=>complete_heads_branch_name( mv_source_branch ) ).
+
     ms_merge-target = lo_branch_list->find_by_name(
-      zcl_abapgit_git_branch_list=>complete_heads_branch_name( mv_target_branch ) ).
+      zcl_abapgit_git_branch_list=>complete_heads_branch_name( mo_repo->get_branch_name( ) ) ).
 
     APPEND ms_merge-source TO lt_upload.
     APPEND ms_merge-target TO lt_upload.
@@ -299,7 +303,9 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
 
     LOOP AT lt_visit INTO lv_commit.
       READ TABLE mt_objects ASSIGNING <ls_object>
-        WITH KEY type = zif_abapgit_definitions=>gc_type-commit sha1 = lv_commit.
+        WITH KEY type COMPONENTS
+          type = zif_abapgit_definitions=>c_type-commit
+          sha1 = lv_commit.
       ASSERT sy-subrc = 0.
 
       ls_commit = zcl_abapgit_git_pack=>decode_commit( <ls_object>-data ).
@@ -363,13 +369,6 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_target_branch.
-
-    rv_target_branch = mv_target_branch.
-
-  ENDMETHOD.
-
-
   METHOD has_conflicts.
 
     IF lines( mt_conflicts ) > 0.
@@ -386,26 +385,26 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_conflict> TYPE zif_abapgit_definitions=>ty_merge_conflict,
                    <ls_result>   LIKE LINE OF ms_merge-result.
 
-    IF  is_conflict-result_sha1 IS NOT INITIAL
-    AND is_conflict-result_data IS NOT INITIAL.
+    IF is_conflict-result_sha1 IS NOT INITIAL
+        AND is_conflict-result_data IS NOT INITIAL.
       READ TABLE mt_conflicts ASSIGNING <ls_conflict> WITH KEY path = is_conflict-path
                                                                filename = is_conflict-filename.
-      IF sy-subrc EQ 0.
+      IF sy-subrc = 0.
         READ TABLE ms_merge-result ASSIGNING <ls_result> WITH KEY path = is_conflict-path
                                                                   name = is_conflict-filename.
-        IF sy-subrc EQ 0.
+        IF sy-subrc = 0.
           <ls_result>-sha1 = is_conflict-result_sha1.
 
           ms_merge-stage->add( iv_path     = <ls_conflict>-path
-                             iv_filename = <ls_conflict>-filename
-                             iv_data     = is_conflict-result_data ).
+                               iv_filename = <ls_conflict>-filename
+                               iv_data     = is_conflict-result_data ).
 
-          DELETE mt_conflicts WHERE path     EQ is_conflict-path
-                                AND filename EQ is_conflict-filename.
+          DELETE mt_conflicts WHERE path     = is_conflict-path
+                                AND filename = is_conflict-filename.
         ENDIF.
 
         READ TABLE ms_merge-result ASSIGNING <ls_result> WITH KEY sha1 = space.
-        IF sy-subrc EQ 0.
+        IF sy-subrc = 0.
           ms_merge-conflict = |{ <ls_result>-name } merge conflict, changed in source and target branch|.
         ELSE.
           CLEAR ms_merge-conflict.

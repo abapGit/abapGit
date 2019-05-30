@@ -44,11 +44,11 @@ INCLUDE zabapgit_user_exit IF FOUND.
 
 INCLUDE zabapgit_gui_pages_userexit IF FOUND.
 
-INCLUDE zabapgit_unit_test.
 INCLUDE zabapgit_forms.
 
 **********************************************************************
 INITIALIZATION.
+  PERFORM remove_toolbar USING '1001'. " Remove toolbar on html screen
   lcl_password_dialog=>on_screen_init( ).
 
 START-OF-SELECTION.

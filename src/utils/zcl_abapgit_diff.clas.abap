@@ -3,43 +3,65 @@ CLASS zcl_abapgit_diff DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    DATA mt_beacons TYPE zif_abapgit_definitions=>ty_string_tt READ-ONLY.
 
 * assumes data is UTF8 based with newlines
 * only works with lines up to 255 characters
     METHODS constructor
-      IMPORTING iv_new TYPE xstring
-                iv_old TYPE xstring.
-
+      IMPORTING
+        !iv_new TYPE xstring
+        !iv_old TYPE xstring .
     METHODS get
-      RETURNING VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt.
-
+      RETURNING
+        VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt .
     METHODS stats
-      RETURNING VALUE(rs_count) TYPE zif_abapgit_definitions=>ty_count.
+      RETURNING
+        VALUE(rs_count) TYPE zif_abapgit_definitions=>ty_count .
+    METHODS set_patch_new
+      IMPORTING
+        !iv_line_new   TYPE i
+        !iv_patch_flag TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+    METHODS set_patch_old
+      IMPORTING
+        !iv_line_old   TYPE i
+        !iv_patch_flag TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_beacons
+      RETURNING
+        VALUE(rt_beacons) TYPE zif_abapgit_definitions=>ty_string_tt .
+  PROTECTED SECTION.
+
   PRIVATE SECTION.
-    DATA mt_diff     TYPE zif_abapgit_definitions=>ty_diffs_tt.
-    DATA ms_stats    TYPE zif_abapgit_definitions=>ty_count.
 
-    CLASS-METHODS:
-      unpack
-        IMPORTING iv_new TYPE xstring
-                  iv_old TYPE xstring
-        EXPORTING et_new TYPE abaptxt255_tab
-                  et_old TYPE abaptxt255_tab,
-      render
-        IMPORTING it_new         TYPE abaptxt255_tab
-                  it_old         TYPE abaptxt255_tab
-                  it_delta       TYPE vxabapt255_tab
-        RETURNING VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt,
-      compute
-        IMPORTING it_new          TYPE abaptxt255_tab
-                  it_old          TYPE abaptxt255_tab
-        RETURNING VALUE(rt_delta) TYPE vxabapt255_tab.
+    DATA mt_beacons TYPE zif_abapgit_definitions=>ty_string_tt .
+    DATA mt_diff TYPE zif_abapgit_definitions=>ty_diffs_tt .
+    DATA ms_stats TYPE zif_abapgit_definitions=>ty_count .
 
-    METHODS:
-      calculate_line_num_and_stats,
-      map_beacons,
-      shortlist.
+    CLASS-METHODS unpack
+      IMPORTING
+        !iv_new TYPE xstring
+        !iv_old TYPE xstring
+      EXPORTING
+        !et_new TYPE abaptxt255_tab
+        !et_old TYPE abaptxt255_tab .
+    CLASS-METHODS render
+      IMPORTING
+        !it_new        TYPE abaptxt255_tab
+        !it_old        TYPE abaptxt255_tab
+        !it_delta      TYPE vxabapt255_tab
+      RETURNING
+        VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt .
+    CLASS-METHODS compute
+      IMPORTING
+        !it_new         TYPE abaptxt255_tab
+        !it_old         TYPE abaptxt255_tab
+      RETURNING
+        VALUE(rt_delta) TYPE vxabapt255_tab .
+    METHODS calculate_line_num_and_stats .
+    METHODS map_beacons .
+    METHODS shortlist .
 ENDCLASS.
 
 
@@ -82,7 +104,7 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
 
     ENDLOOP.
 
-  ENDMETHOD.                " calculate_line_num_and_stats
+  ENDMETHOD.
 
 
   METHOD compute.
@@ -101,7 +123,7 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
         trdir_delta  = lt_trdir_delta
         text_delta   = rt_delta.
 
-  ENDMETHOD.                    "compute
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -127,12 +149,19 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
     map_beacons( ).
     shortlist( ).
 
-  ENDMETHOD.                    "diff
+  ENDMETHOD.
 
 
   METHOD get.
     rt_diff = mt_diff.
-  ENDMETHOD.                    "get
+  ENDMETHOD.
+
+
+  METHOD get_beacons.
+
+    rt_beacons = mt_beacons.
+
+  ENDMETHOD.
 
 
   METHOD map_beacons.
@@ -194,7 +223,7 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
 
-  ENDMETHOD.                " map_beacons
+  ENDMETHOD.
 
 
   METHOD render.
@@ -255,7 +284,55 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
       ENDIF.
     ENDDO.
 
-  ENDMETHOD.                " render
+  ENDMETHOD.
+
+
+  METHOD set_patch_new.
+
+    DATA: lv_new_num TYPE i.
+    FIELD-SYMBOLS: <ls_diff> TYPE zif_abapgit_definitions=>ty_diff.
+
+    LOOP AT mt_diff ASSIGNING <ls_diff>.
+
+      lv_new_num = <ls_diff>-new_num.
+
+      IF lv_new_num = iv_line_new.
+        EXIT.
+      ENDIF.
+
+    ENDLOOP.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Invalid new line number { iv_line_new }| ).
+    ENDIF.
+
+    <ls_diff>-patch_flag = iv_patch_flag.
+
+  ENDMETHOD.
+
+
+  METHOD set_patch_old.
+
+    DATA: lv_old_num TYPE i.
+    FIELD-SYMBOLS: <ls_diff> TYPE zif_abapgit_definitions=>ty_diff.
+
+    LOOP AT mt_diff ASSIGNING <ls_diff>.
+
+      lv_old_num = <ls_diff>-old_num.
+
+      IF lv_old_num = iv_line_old.
+        EXIT.
+      ENDIF.
+
+    ENDLOOP.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Invalid old line number { iv_line_old }| ).
+    ENDIF.
+
+    <ls_diff>-patch_flag = iv_patch_flag.
+
+  ENDMETHOD.
 
 
   METHOD shortlist.
@@ -293,12 +370,12 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-  ENDMETHOD.                " shortlist
+  ENDMETHOD.
 
 
   METHOD stats.
     rs_count = ms_stats.
-  ENDMETHOD.                    "count
+  ENDMETHOD.
 
 
   METHOD unpack.
@@ -310,8 +387,8 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
     lv_new = zcl_abapgit_convert=>xstring_to_string_utf8( iv_new ).
     lv_old = zcl_abapgit_convert=>xstring_to_string_utf8( iv_old ).
 
-    SPLIT lv_new AT zif_abapgit_definitions=>gc_newline INTO TABLE et_new.
-    SPLIT lv_old AT zif_abapgit_definitions=>gc_newline INTO TABLE et_old.
+    SPLIT lv_new AT zif_abapgit_definitions=>c_newline INTO TABLE et_new.
+    SPLIT lv_old AT zif_abapgit_definitions=>c_newline INTO TABLE et_old.
 
-  ENDMETHOD.                    "unpack
+  ENDMETHOD.
 ENDCLASS.

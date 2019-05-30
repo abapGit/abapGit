@@ -9,7 +9,7 @@ CLASS zcl_abapgit_requirement_helper DEFINITION
       BEGIN OF ty_requirement_status,
         met               TYPE abap_bool,
         component         TYPE dlvunit,
-        description       TYPE text80,
+        description       TYPE cvers_sdu-desc_text,
         installed_release TYPE saprelease,
         installed_patch   TYPE sappatchlv,
         required_release  TYPE saprelease,
@@ -30,6 +30,7 @@ CLASS zcl_abapgit_requirement_helper DEFINITION
         VALUE(rv_status) TYPE zif_abapgit_definitions=>ty_yes_no
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-METHODS show_requirement_popup
@@ -145,7 +146,7 @@ CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
 
     TYPES: BEGIN OF lty_color_line,
              color TYPE lvc_t_scol.
-        INCLUDE TYPE ty_requirement_status.
+            INCLUDE TYPE ty_requirement_status.
     TYPES: END OF lty_color_line,
     lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
 
@@ -194,11 +195,9 @@ CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
         lo_columns->set_optimize( ).
 
         lo_column = lo_columns->get_column( 'REQUIRED_RELEASE' ).
-*        lo_column->set_fixed_header_text( 'S' ).
         lo_column->set_short_text( 'Req. Rel.' ).
 
         lo_column = lo_columns->get_column( 'REQUIRED_PATCH' ).
-*        lo_column->set_fixed_header_text( 'S' ).
         lo_column->set_short_text( 'Req. SP L.' ).
 
         lo_alv->set_screen_popup( start_column = 30
@@ -217,7 +216,7 @@ CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
 
   METHOD version_greater_or_equal.
 
-    DATA: lv_number TYPE numc4 ##NEEDED.
+    DATA: lv_number TYPE n LENGTH 4 ##NEEDED.
 
     TRY.
         MOVE EXACT: is_status-installed_release TO lv_number,

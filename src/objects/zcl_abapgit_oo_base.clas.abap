@@ -2,6 +2,13 @@ CLASS zcl_abapgit_oo_base DEFINITION PUBLIC ABSTRACT.
   PUBLIC SECTION.
     INTERFACES: zif_abapgit_oo_object_fnc.
 
+  PROTECTED SECTION.
+    CLASS-METHODS:
+      convert_attrib_to_vseoattrib
+        IMPORTING iv_clsname           TYPE seoclsname
+                  it_attributes        TYPE zif_abapgit_definitions=>ty_obj_attribute_tt
+        RETURNING VALUE(rt_vseoattrib) TYPE seoo_attributes_r.
+
   PRIVATE SECTION.
     DATA mv_skip_test_classes TYPE abap_bool.
 
@@ -20,6 +27,20 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
+
+
+  METHOD convert_attrib_to_vseoattrib.
+    FIELD-SYMBOLS: <ls_attribute>  LIKE LINE OF it_attributes,
+                   <ls_vseoattrib> LIKE LINE OF rt_vseoattrib.
+
+    LOOP AT it_attributes ASSIGNING <ls_attribute>.
+      INSERT INITIAL LINE INTO TABLE rt_vseoattrib ASSIGNING <ls_vseoattrib>.
+      MOVE-CORRESPONDING <ls_attribute> TO <ls_vseoattrib>.
+      <ls_vseoattrib>-clsname = iv_clsname.
+      UNASSIGN <ls_vseoattrib>.
+    ENDLOOP.
+    UNASSIGN <ls_attribute>.
+  ENDMETHOD.
 
 
   METHOD deserialize_abap_source_new.
@@ -92,7 +113,7 @@ CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
         class_not_existing = 1
         OTHERS             = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from CL_OO_SOURCE' ).
+      zcx_abapgit_exception=>raise( |Error from CL_OO_SOURCE. Subrc = { sy-subrc }| ).
     ENDIF.
 
     TRY.
@@ -131,7 +152,7 @@ CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
         ret_code = 1
         OTHERS   = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DOCU_UPD' ).
+      zcx_abapgit_exception=>raise( |Error from DOCU_UPD. Subrc = { sy-subrc }| ).
     ENDIF.
   ENDMETHOD.
 
@@ -162,7 +183,7 @@ CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
   METHOD zif_abapgit_oo_object_fnc~exists.
     CALL FUNCTION 'SEO_CLASS_EXISTENCE_CHECK'
       EXPORTING
-        clskey        = iv_object_name
+        clskey        = is_object_name
       EXCEPTIONS
         not_specified = 1
         not_existing  = 2
@@ -201,6 +222,17 @@ CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~insert_text_pool.
     ASSERT 0 = 1. "Subclass responsibility
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_oo_object_fnc~read_attributes.
+    SELECT cmpname attbusobj attkeyfld
+      FROM seocompodf
+      INTO CORRESPONDING FIELDS OF TABLE rt_attributes
+      WHERE clsname = iv_object_name
+        AND ( attbusobj <> space OR attkeyfld <> space )
+        AND version = '1'
+      ORDER BY PRIMARY KEY.
   ENDMETHOD.
 
 

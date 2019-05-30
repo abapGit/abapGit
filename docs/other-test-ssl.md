@@ -12,7 +12,8 @@ REPORT zabapgit_test_ssl.
 * See https://github.com/larshp/abapGit/
 
 PARAMETERS: p_url1 TYPE swc_value DEFAULT 'https://github.com',
-            p_url2 TYPE swc_value DEFAULT 'https://api.github.com'.
+            p_url2 TYPE swc_value DEFAULT 'https://api.github.com',
+            p_id   TYPE ssfapplssl DEFAULT 'ANONYM'.
 * api.github.com is used when pushing code back to github
 
 SELECTION-SCREEN BEGIN OF BLOCK proxy WITH FRAME.
@@ -25,6 +26,7 @@ SELECTION-SCREEN END OF BLOCK proxy.
 
 START-OF-SELECTION.
   PERFORM run USING p_url1.
+  WRITE: /, '----', /.
   PERFORM run USING p_url2.
 
 FORM run USING iv_url TYPE swc_value.
@@ -32,6 +34,7 @@ FORM run USING iv_url TYPE swc_value.
   DATA: lv_code          TYPE i,
         lv_url           TYPE string,
         li_client        TYPE REF TO if_http_client,
+        lt_errors        TYPE TABLE OF string,
         lv_error_message TYPE string.
 
   IF iv_url IS INITIAL.
@@ -42,7 +45,7 @@ FORM run USING iv_url TYPE swc_value.
   cl_http_client=>create_by_url(
     EXPORTING
       url           = lv_url
-      ssl_id        = 'ANONYM'
+      ssl_id        = p_id
       proxy_host    = p_proxy
       proxy_service = p_pxport
     IMPORTING
@@ -63,12 +66,15 @@ FORM run USING iv_url TYPE swc_value.
       http_processing_failed     = 3
       OTHERS                     = 4 ).
   IF sy-subrc <> 0.
-    WRITE: / 'Error Number', sy-subrc.
+    WRITE: / 'Error Number', sy-subrc, /.
     MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
     li_client->get_last_error(
       IMPORTING
         message = lv_error_message ).
-    WRITE: / `Error message: ` && lv_error_message.
+    SPLIT lv_error_message AT cl_abap_char_utilities=>newline INTO TABLE lt_errors.
+    LOOP AT lt_errors INTO lv_error_message.
+      WRITE: / lv_error_message.
+    ENDLOOP.
     WRITE: / 'Also check transaction SMICM -> Goto -> Trace File -> Display End'.
     RETURN.
   ENDIF.

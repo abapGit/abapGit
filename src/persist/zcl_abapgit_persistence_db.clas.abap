@@ -65,10 +65,15 @@ CLASS zcl_abapgit_persistence_db DEFINITION
         !iv_data  TYPE zif_abapgit_persistence=>ty_content-data_str
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-DATA go_db TYPE REF TO zcl_abapgit_persistence_db .
+    DATA mv_update_function TYPE funcname .
 
+    METHODS get_update_function
+      RETURNING
+        VALUE(rv_funcname) TYPE funcname .
     METHODS validate_and_unprettify_xml
       IMPORTING
         !iv_xml       TYPE string
@@ -122,6 +127,24 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_update_function.
+    IF mv_update_function IS INITIAL.
+      mv_update_function = 'CALL_V1_PING'.
+      CALL FUNCTION 'FUNCTION_EXISTS'
+        EXPORTING
+          funcname = mv_update_function
+        EXCEPTIONS
+          OTHERS   = 2.
+
+      IF sy-subrc <> 0.
+        mv_update_function = 'BANK_OBJ_WORKL_RELEASE_LOCKS'.
+      ENDIF.
+    ENDIF.
+    rv_funcname = mv_update_function.
+
+  ENDMETHOD.
+
+
   METHOD list.
     SELECT * FROM (c_tabname)
       INTO TABLE rt_content.                              "#EC CI_SUBRC
@@ -137,6 +160,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
 
 
   METHOD lock.
+    DATA: lv_dummy_update_function TYPE funcname.
 
     CALL FUNCTION 'ENQUEUE_EZABAPGIT'
       EXPORTING
@@ -151,8 +175,10 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Could not aquire lock { iv_type } { iv_value }| ).
     ENDIF.
 
+    lv_dummy_update_function = get_update_function( ).
+
 * trigger dummy update task to automatically release locks at commit
-    CALL FUNCTION 'BANK_OBJ_WORKL_RELEASE_LOCKS'
+    CALL FUNCTION lv_dummy_update_function
       IN UPDATE TASK.
 
   ENDMETHOD.
@@ -181,7 +207,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
 
     SELECT SINGLE data_str FROM (c_tabname) INTO rv_data
       WHERE type = iv_type
-      AND value = iv_value.                               "#EC CI_SUBRC
+      AND value = iv_value.
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE zcx_abapgit_not_found.
     ENDIF.
@@ -205,7 +231,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'DB update failed' ).
     ENDIF.
 
-  ENDMETHOD.  "update
+  ENDMETHOD.
 
 
   METHOD validate_and_unprettify_xml.
@@ -215,5 +241,5 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
       iv_unpretty      = abap_true
       iv_ignore_errors = abap_false ).
 
-  ENDMETHOD.  " validate_and_unprettify_xml
+  ENDMETHOD.
 ENDCLASS.

@@ -4,16 +4,11 @@ CLASS zcl_abapgit_ecatt_system_downl DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    INTERFACES:
+      zif_abapgit_ecatt_download.
+
     METHODS:
-      download REDEFINITION,
-
-      get_xml_stream
-        RETURNING
-          VALUE(rv_xml_stream) TYPE xstring,
-
-      get_xml_stream_size
-        RETURNING
-          VALUE(rv_xml_stream_size) TYPE int4.
+      download REDEFINITION.
 
   PROTECTED SECTION.
     METHODS:
@@ -21,8 +16,7 @@ CLASS zcl_abapgit_ecatt_system_downl DEFINITION
 
   PRIVATE SECTION.
     DATA:
-      mv_xml_stream      TYPE xstring,
-      mv_xml_stream_size TYPE int4.
+      mv_xml_stream TYPE xstring.
 
     METHODS:
       set_systems_data_to_template.
@@ -30,13 +24,13 @@ CLASS zcl_abapgit_ecatt_system_downl DEFINITION
 ENDCLASS.
 
 
+
 CLASS zcl_abapgit_ecatt_system_downl IMPLEMENTATION.
+
 
   METHOD download.
 
     " Downport
-
-    DATA: lv_partyp TYPE string.
 
     load_help = im_load_help.
     typ = im_object_type.
@@ -53,14 +47,8 @@ CLASS zcl_abapgit_ecatt_system_downl IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    lv_partyp = cl_apl_ecatt_const=>params_type_par.
-
-* build_schema( ).
-* set_attributes_to_schema( ).
     set_attributes_to_template( ).
-* set_systems_data_to_schema( ).
     set_systems_data_to_template( ).
-* download_schema( ).
     download_data( ).
 
   ENDMETHOD.
@@ -70,26 +58,14 @@ CLASS zcl_abapgit_ecatt_system_downl IMPLEMENTATION.
 
     " Downport
 
-    zcl_abapgit_ecatt_helper=>download_data(
-      EXPORTING
-        ii_template_over_all = template_over_all
-      IMPORTING
-        ev_xml_stream        = mv_xml_stream
-        ev_xml_stream_size   = mv_xml_stream_size ).
+    mv_xml_stream = zcl_abapgit_ecatt_helper=>download_data( template_over_all ).
 
   ENDMETHOD.
 
 
-  METHOD get_xml_stream.
+  METHOD zif_abapgit_ecatt_download~get_xml_stream.
 
     rv_xml_stream = mv_xml_stream.
-
-  ENDMETHOD.
-
-
-  METHOD get_xml_stream_size.
-
-    rv_xml_stream_size = mv_xml_stream_size.
 
   ENDMETHOD.
 
@@ -128,11 +104,11 @@ CLASS zcl_abapgit_ecatt_system_downl IMPLEMENTATION.
         EXCEPTIONS
           illegal_name = 1
           OTHERS       = 2.
+      ASSERT sy-subrc = 0.
 
       etpar_node->append_child( new_child = li_item ).
 
     ENDLOOP.
 
   ENDMETHOD.
-
 ENDCLASS.

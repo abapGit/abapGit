@@ -1,3 +1,6 @@
+CLASS ltcl_oo_serialize DEFINITION DEFERRED.
+CLASS zcl_abapgit_oo_serializer DEFINITION LOCAL FRIENDS ltcl_oo_serialize.
+
 CLASS ltcl_oo_serialize DEFINITION FINAL FOR TESTING
   DURATION SHORT
   RISK LEVEL HARMLESS.
@@ -16,7 +19,7 @@ CLASS ltcl_oo_serialize DEFINITION FINAL FOR TESTING
 
       _given_source_is
         IMPORTING
-          i_source TYPE LINE OF zif_abapgit_definitions=>ty_string_tt,
+          iv_source TYPE LINE OF zif_abapgit_definitions=>ty_string_tt,
       _given_empty_test_include,
       _when_skip_is_calculated,
       _then_should_be_skipped,
@@ -138,7 +141,7 @@ CLASS ltcl_oo_serialize IMPLEMENTATION.
 
   METHOD _given_source_is.
 
-    INSERT i_source INTO TABLE mt_source.
+    INSERT iv_source INTO TABLE mt_source.
 
   ENDMETHOD.
 

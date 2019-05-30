@@ -20,7 +20,7 @@ CLASS ltcl_xml DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
              moo TYPE f,
            END OF st_new.
 
-ENDCLASS.       "ltcl_Xml
+ENDCLASS.
 
 
 CLASS ltcl_xml IMPLEMENTATION.

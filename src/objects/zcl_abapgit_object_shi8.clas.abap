@@ -9,12 +9,16 @@ CLASS zcl_abapgit_object_shi8 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         is_item     TYPE zif_abapgit_definitions=>ty_item
         iv_language TYPE spras.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: mv_assignment_id  TYPE hier_sfw_id.
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_shi8 IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_OBJECT_SHI8 IMPLEMENTATION.
+
 
   METHOD constructor.
 
@@ -23,37 +27,17 @@ CLASS zcl_abapgit_object_shi8 IMPLEMENTATION.
 
     mv_assignment_id = ms_item-obj_name.
 
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "ZIF_ABAPGIT_OBJECT~has_changed_since
 
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown.
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "ZIF_ABAPGIT_OBJECT~get_metadata
-
-  METHOD zif_abapgit_object~jump.
-    zcx_abapgit_exception=>raise( |TODO: Jump SHI8| ).
-  ENDMETHOD.                    "jump
-
-  METHOD zif_abapgit_object~exists.
-
-    CALL FUNCTION 'STREE_SFW_ASSIGNMENT_ID_EXISTS'
-      EXPORTING
-        assignment_id = mv_assignment_id
-      IMPORTING
-        exists        = rv_bool.
-
-  ENDMETHOD.                    "ZIF_ABAPGIT_OBJECT~exists
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_deleted TYPE xfeld,
+    DATA: lv_deleted TYPE abap_bool,
           ls_message TYPE hier_mess.
 
     CALL FUNCTION 'STREE_SFW_ASSIGNMENT_DELETE'
@@ -67,7 +51,82 @@ CLASS zcl_abapgit_object_shi8 IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |{ ls_message-msgtxt }| ).
     ENDIF.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~deserialize.
+
+    DATA: ls_assignment_data TYPE ttree_sfw_nodes,
+          ls_node_data       TYPE hier_iface,
+          lv_saved           TYPE abap_bool,
+          ls_message         TYPE hier_mess.
+
+    io_xml->read(
+      EXPORTING
+        iv_name = 'SHI8'
+      CHANGING
+        cg_data = ls_assignment_data ).
+
+    ls_node_data-tree_id = ls_assignment_data-tree_id.
+    ls_node_data-node_id = ls_assignment_data-node_id.
+
+    CALL FUNCTION 'STREE_SFW_ASSIGNMENT_SAVE'
+      EXPORTING
+        assignment_id = ls_assignment_data-sfw_ass_id
+        switch_id     = ls_assignment_data-switch_id
+        reaction      = ls_assignment_data-reaction
+        node_data     = ls_node_data
+      IMPORTING
+        data_saved    = lv_saved
+        message       = ls_message.
+
+    IF lv_saved = abap_false.
+      zcx_abapgit_exception=>raise( |{ ls_message-msgtxt }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~exists.
+
+    CALL FUNCTION 'STREE_SFW_ASSIGNMENT_ID_EXISTS'
+      EXPORTING
+        assignment_id = mv_assignment_id
+      IMPORTING
+        exists        = rv_bool.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~jump.
+    zcx_abapgit_exception=>raise( |TODO: Jump SHI8| ).
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~serialize.
 
@@ -94,42 +153,5 @@ CLASS zcl_abapgit_object_shi8 IMPLEMENTATION.
     io_xml->add( iv_name = 'SHI8'
                  ig_data = ls_assignment_data ).
 
-  ENDMETHOD.                    "serialize
-
-  METHOD zif_abapgit_object~deserialize.
-
-    DATA: ls_assignment_data TYPE ttree_sfw_nodes,
-          ls_node_data       TYPE hier_iface,
-          lv_saved           TYPE xfeld,
-          ls_message         TYPE hier_mess.
-
-    io_xml->read(
-      EXPORTING
-        iv_name = 'SHI8'
-      CHANGING
-        cg_data = ls_assignment_data ).
-
-    ls_node_data-tree_id = ls_assignment_data-tree_id.
-    ls_node_data-node_id = ls_assignment_data-node_id.
-
-    CALL FUNCTION 'STREE_SFW_ASSIGNMENT_SAVE'
-      EXPORTING
-        assignment_id = ls_assignment_data-sfw_ass_id
-        switch_id     = ls_assignment_data-switch_id
-        reaction      = ls_assignment_data-reaction
-        node_data     = ls_node_data
-      IMPORTING
-        data_saved    = lv_saved
-        message       = ls_message.
-
-    IF lv_saved = abap_false.
-      zcx_abapgit_exception=>raise( |{ ls_message-msgtxt }| ).
-    ENDIF.
-
-  ENDMETHOD.                    "deserialize
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
-
-ENDCLASS.                    "zcl_abapgit_object_shi8 IMPLEMENTATION
+ENDCLASS.
