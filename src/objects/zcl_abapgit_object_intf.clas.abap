@@ -155,7 +155,8 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
            ls_vseointerf-chgdanyby,
            ls_vseointerf-chgdanyon,
            ls_vseointerf-r3release,
-           ls_vseointerf-version.
+           ls_vseointerf-version,
+           ls_vseointerf-state.
 
     io_xml->add( iv_name = 'VSEOINTERF'
                  ig_data = ls_vseointerf ).

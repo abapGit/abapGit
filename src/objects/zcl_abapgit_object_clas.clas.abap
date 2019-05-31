@@ -230,7 +230,8 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
            ls_vseoclass-clsfinal,
            ls_vseoclass-clsabstrct,
            ls_vseoclass-exposure,
-           ls_vseoclass-version.
+           ls_vseoclass-version,
+           ls_vseoclass-state.
 
     IF mv_skip_testclass = abap_true.
       CLEAR ls_vseoclass-with_unit_tests.
