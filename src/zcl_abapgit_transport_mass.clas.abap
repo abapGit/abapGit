@@ -1,29 +1,29 @@
-class ZCL_ABAPGIT_TRANSPORT_MASS definition
-  public
-  final
-  create public .
+CLASS zcl_abapgit_transport_mass DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  constants GC_FM_NAME type RS38L-NAME value 'Z_ABAPGIT_TRANSPORTS_2_ZIP' ##NO_TEXT.
-  constants GC_LOGIC type STRING value 'FULL' ##NO_TEXT.
+    CONSTANTS gc_fm_name TYPE rs38l-name VALUE 'Z_ABAPGIT_TRANSPORTS_2_ZIP' ##NO_TEXT.
+    CONSTANTS gc_logic TYPE string VALUE 'FULL' ##NO_TEXT.
 
-  class-methods RUN .
-  class-methods ZIP
-    importing
-      !IS_TRKORR type TRWBO_REQUEST_HEADER
-      !IV_LOGIC type STRING optional
-    returning
-      value(RV_XSTR) type XSTRING
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  class-methods TO_TADIR
-    importing
-      !IT_TRANSPORT_HEADERS type TRWBO_REQUEST_HEADERS
-    returning
-      value(RT_TADIR) type ZIF_ABAPGIT_DEFINITIONS=>TY_TADIR_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
+    CLASS-METHODS run .
+    CLASS-METHODS zip
+      IMPORTING
+        !is_trkorr     TYPE trwbo_request_header
+        !iv_logic      TYPE string OPTIONAL
+      RETURNING
+        VALUE(rv_xstr) TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS to_tadir
+      IMPORTING
+        !it_transport_headers TYPE trwbo_request_headers
+      RETURNING
+        VALUE(rt_tadir)       TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
