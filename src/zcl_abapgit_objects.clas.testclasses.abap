@@ -60,7 +60,8 @@ CLASS ltcl_dangerous IMPLEMENTATION.
       iv_branch_name = 'refs/heads/master'
       iv_package     = c_package ).
     lo_repo->status( ).
-    lo_repo->deserialize( ls_checks ).
+    lo_repo->deserialize( is_checks = ls_checks
+                          ii_log    = new zcl_abapgit_log( ) ).
 
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( c_package ).
     LOOP AT lt_types ASSIGNING <lv_type>.

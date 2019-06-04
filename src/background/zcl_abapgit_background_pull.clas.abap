@@ -32,7 +32,8 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PULL IMPLEMENTATION.
 
 
 * todo, set defaults in ls_checks
-    io_repo->deserialize( ls_checks ).
+    io_repo->deserialize( is_checks = ls_checks
+                          ii_log    = ii_log ).
 
   ENDMETHOD.
 ENDCLASS.

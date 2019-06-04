@@ -11,6 +11,14 @@
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
    </VSEOCLASS>
+   <DESCRIPTIONS>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ABAPGIT_REPO</CLSNAME>
+     <CMPNAME>MI_LOG</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Log</DESCRIPT>
+    </SEOCOMPOTX>
+   </DESCRIPTIONS>
   </asx:values>
  </asx:abap>
 </abapGit>

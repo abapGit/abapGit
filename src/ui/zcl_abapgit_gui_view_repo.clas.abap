@@ -145,7 +145,8 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
           lv_key         TYPE zif_abapgit_persistence=>ty_value,
           lv_wp_opt      LIKE zif_abapgit_html=>c_html_opt-crossout,
           lv_crossout    LIKE zif_abapgit_html=>c_html_opt-crossout,
-          lv_pull_opt    LIKE zif_abapgit_html=>c_html_opt-crossout.
+          lv_pull_opt    LIKE zif_abapgit_html=>c_html_opt-crossout,
+          li_log         TYPE REF TO zif_abapgit_log.
 
     CREATE OBJECT ro_toolbar.
     CREATE OBJECT lo_tb_branch.
@@ -261,6 +262,11 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
         ro_toolbar->add( iv_txt = 'Show diff'
                          iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ lv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+      ENDIF.
+      mo_repo->get_log( IMPORTING ei_log = li_log ).
+      IF li_log IS BOUND AND li_log->count( ) > 0.
+        ro_toolbar->add( iv_txt = 'Log'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?{ lv_key }| ).
       ENDIF.
       ro_toolbar->add( iv_txt = 'Branch'
                        io_sub = lo_tb_branch ) ##NO_TEXT.
