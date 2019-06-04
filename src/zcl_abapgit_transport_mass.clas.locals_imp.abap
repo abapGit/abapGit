@@ -33,9 +33,12 @@
 CLASS lcl_gui DEFINITION FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS f4_folder CHANGING cv_folder TYPE string.
-    CLASS-METHODS f4_transport_request CHANGING cv_trkorr TYPE e070v-trkorr.
+
+    CLASS lcl_data_selector DEFINITION LOAD.
+
+    CLASS-METHODS f4_folder CHANGING cv_folder TYPE string RAISING zcx_abapgit_exception.
     CLASS-METHODS open_folder_frontend IMPORTING iv_folder TYPE string.
+    CLASS-METHODS select_tr_requests EXPORTING et_trkorr TYPE trwbo_request_headers.
 
   PRIVATE SECTION.
     CLASS-DATA: gv_last_folder TYPE string.
@@ -76,15 +79,9 @@ CLASS lcl_gui IMPLEMENTATION.
 
       ENDIF.
 
+    ELSE.
+      zcx_abapgit_exception=>raise( 'Folder matchcode exception'(002) ).
     ENDIF.
-
-  ENDMETHOD.
-
-  METHOD f4_transport_request.
-
-    CALL FUNCTION 'TR_F4_REQUESTS'
-      IMPORTING
-        ev_selected_request = cv_trkorr.
 
   ENDMETHOD.
 
@@ -112,136 +109,45 @@ CLASS lcl_gui IMPLEMENTATION.
 
   ENDMETHOD.
 
-ENDCLASS.
+  METHOD select_tr_requests.
 
-*========================== DATA SELECTOR =============================*
-CLASS lcl_data_selector DEFINITION FINAL.
+    DATA: ls_popup     TYPE strhi_popup,
+          ls_selection TYPE trwbo_selection.
 
-  PUBLIC SECTION.
+    ls_popup-start_column = 5.
+    ls_popup-start_row    = 5.
 
-* Transport requests structure
-    TYPES ty_trkorr TYPE trwbo_request_header.
+*- Prepare the selection ----------------------------------------------*
+    ls_selection-trkorrpattern = space.
+    ls_selection-client        = space.
+    ls_selection-stdrequest    = space.
+    ls_selection-reqfunctions  = 'K'.
+    ls_selection-reqstatus     = 'RNODL'.
 
-* Transport request extraction table type
-    TYPES tt_trkorr TYPE SORTED TABLE OF ty_trkorr WITH UNIQUE KEY trkorr.
-
-* Range of transport request
-    TYPES tt_r_trkorr TYPE RANGE OF ty_trkorr-trkorr.
-
-* Selection criterias (match selection screen criterias of transport requests )
-    TYPES: BEGIN OF ty_sel_criterias,
-             t_r_trkorr TYPE tt_r_trkorr,
-           END OF ty_sel_criterias.
-
-    CLASS-DATA:
-* Static variable for selection screen
-      gv_trkorr TYPE ty_trkorr-trkorr.
-
-* Extract transport requests from E070V
-    CLASS-METHODS get_transport_requests IMPORTING is_sel_crit      TYPE ty_sel_criterias
-                                         RETURNING VALUE(rt_trkorr) TYPE tt_trkorr.
-
-ENDCLASS.
-
-CLASS lcl_data_selector IMPLEMENTATION.
-
-  METHOD get_transport_requests.
-
-    SELECT * ##TOO_MANY_ITAB_FIELDS
-      FROM e070v
-      INTO CORRESPONDING FIELDS OF TABLE rt_trkorr
-      WHERE trkorr IN is_sel_crit-t_r_trkorr.
+*- Call transport selection popup -------------------------------------*
+    CALL FUNCTION 'TRINT_SELECT_REQUESTS'
+      EXPORTING
+        iv_username_pattern    = '*'
+        iv_via_selscreen       = 'X'
+        is_selection           = ls_selection
+        iv_complete_projects   = space
+        iv_title               = 'ABAPGit Transport Mass Downloader'(p01)
+        is_popup               = ls_popup
+      IMPORTING
+        et_requests            = et_trkorr
+      EXCEPTIONS
+        action_aborted_by_user = 1
+        OTHERS                 = 2.
     IF sy-subrc <> 0.
-      CLEAR rt_trkorr.
+      CLEAR et_trkorr.
+    ELSE.
+      SORT et_trkorr BY trkorr.
+      DELETE ADJACENT DUPLICATES FROM et_trkorr COMPARING trkorr.
     ENDIF.
 
   ENDMETHOD.
 
 ENDCLASS.
-
-*========================== REPORTER =============================*
-CLASS lcl_reporter DEFINITION FINAL.
-
-  PUBLIC SECTION.
-
-    TYPES: BEGIN OF ty_report,
-             trkorr   TYPE e070v-trkorr,
-             as4text  TYPE e070v-as4text,
-             filename TYPE fb_icrc_pfile,
-           END OF ty_report.
-
-    TYPES tt_report TYPE STANDARD TABLE OF ty_report.
-
-    METHODS fill_report_table IMPORTING is_trkorr   TYPE lcl_data_selector=>ty_trkorr
-                                        iv_filename TYPE ty_report-filename.
-
-    METHODS display_report IMPORTING iv_start_column TYPE i DEFAULT 5
-                                     iv_end_column   TYPE i DEFAULT 140
-                                     iv_start_line   TYPE i DEFAULT 5
-                                     iv_end_line     TYPE i DEFAULT 20.
-
-  PRIVATE SECTION.
-
-    DATA gt_report    TYPE tt_report.
-    DATA go_alv       TYPE REF TO cl_salv_table.
-
-ENDCLASS.
-
-CLASS lcl_reporter IMPLEMENTATION.
-
-  METHOD fill_report_table.
-
-    DATA: ls_report TYPE ty_report.
-
-    ls_report-trkorr   = is_trkorr-trkorr.
-    ls_report-as4text  = is_trkorr-as4text.
-    ls_report-filename = iv_filename.
-    APPEND ls_report TO me->gt_report.
-
-  ENDMETHOD.
-
-  METHOD display_report.
-
-    DATA: lo_except TYPE REF TO cx_root.
-
-    IF me->go_alv IS BOUND.
-      RETURN.
-    ENDIF.
-
-    TRY.
-
-        cl_salv_table=>factory(
-          IMPORTING
-            r_salv_table = me->go_alv
-          CHANGING
-            t_table      = me->gt_report ).
-
-      CATCH cx_salv_msg INTO lo_except.
-
-        MESSAGE lo_except->get_text( ) TYPE 'E'.
-
-    ENDTRY.
-
-    me->go_alv->get_columns( )->set_optimize( abap_true ).
-
-    me->go_alv->set_screen_status( pfstatus      = 'STANDARD'
-                                   report        = 'SAPLSALV'
-                                   set_functions = me->go_alv->c_functions_all ).
-
-    me->go_alv->set_screen_popup(
-      start_column = iv_start_column
-      start_line   = iv_start_line
-      end_column   = iv_end_column
-      end_line     = iv_end_line ).
-
-    SET TITLEBAR '0200' WITH TEXT-tit.
-
-    me->go_alv->display( ). "display grid
-
-  ENDMETHOD.
-
-ENDCLASS.
-
 
 *=================== TRANSPORT ZIPPER =============================*
 CLASS lcl_transport_zipper DEFINITION FINAL.
@@ -249,23 +155,18 @@ CLASS lcl_transport_zipper DEFINITION FINAL.
   PUBLIC SECTION.
 * Folder
     TYPES ty_folder TYPE string.
-* Logic
-    TYPES ty_logic TYPE string.
 * Filename
     TYPES ty_filename TYPE fb_icrc_pfile.
-* Default logic
-    CONSTANTS gc_logic_full(4) TYPE c VALUE 'FULL'.
 * File extension
     CONSTANTS gc_zip_ext TYPE string VALUE '.zip' ##NO_TEXT.
 
     DATA: gv_timestamp   TYPE string,
           gv_full_folder TYPE ty_folder READ-ONLY.
 
-    METHODS constructor  IMPORTING iv_folder   TYPE ty_folder
-                                   io_reporter TYPE REF TO lcl_reporter
+    METHODS constructor  IMPORTING iv_folder TYPE ty_folder
                          RAISING   zcx_abapgit_exception.
 
-    METHODS generate_files IMPORTING it_trkorr TYPE lcl_data_selector=>tt_trkorr
+    METHODS generate_files IMPORTING it_trkorr TYPE trwbo_request_headers
                                      iv_logic  TYPE any
                            RAISING   zcx_abapgit_exception.
 
@@ -275,13 +176,11 @@ CLASS lcl_transport_zipper DEFINITION FINAL.
 
   PRIVATE SECTION.
 
-    DATA: go_reporter TYPE REF TO lcl_reporter.
-
     METHODS get_full_folder IMPORTING iv_folder             TYPE ty_folder
                             RETURNING VALUE(rv_full_folder) TYPE ty_folder
                             RAISING   zcx_abapgit_exception.
 
-    METHODS save_binstring IMPORTING is_trkorr    TYPE lcl_data_selector=>ty_trkorr
+    METHODS save_binstring IMPORTING is_trkorr    TYPE trwbo_request_header
                                      iv_binstring TYPE xstring
                            RAISING   zcx_abapgit_exception.
 
@@ -294,8 +193,6 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
     CONCATENATE sy-datlo sy-timlo INTO me->gv_timestamp SEPARATED BY '_'.
 
     me->gv_full_folder = get_full_folder( iv_folder = iv_folder ).
-
-    me->go_reporter = io_reporter.
 
   ENDMETHOD.
 
@@ -357,7 +254,8 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
           unknown_error            = 7
           not_supported_by_gui     = 8
           wrong_parameter          = 9
-          OTHERS                   = 10 ).
+          OTHERS                   = 10
+      ).
       IF sy-subrc <> 0 AND sy-subrc <> 5.
         zcx_abapgit_exception=>raise( 'Error from cl_gui_frontend_services=>directory_create'(e02) ).
       ENDIF.
@@ -418,9 +316,6 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
         OTHERS                    = 24 ).
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from gui_download'(e01) ).
-    ELSE.
-      go_reporter->fill_report_table( is_trkorr = is_trkorr
-                                      iv_filename = lv_filename ).
     ENDIF.
 
 

@@ -15,13 +15,13 @@ CLASS zcl_abapgit_zip DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS export_object
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     CLASS-METHODS export_package
       EXPORTING
         !ev_xstr    TYPE xstring
         !ev_package TYPE devclass
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     CLASS-METHODS load
       IMPORTING
         !iv_xstr        TYPE xstring
@@ -51,7 +51,7 @@ CLASS zcl_abapgit_zip DEFINITION
       CHANGING
         !ct_files TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     CLASS-METHODS unzip_file
       IMPORTING
         !iv_xstr        TYPE xstring
