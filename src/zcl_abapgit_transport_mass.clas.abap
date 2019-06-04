@@ -183,7 +183,7 @@ CLASS zcl_abapgit_transport_mass IMPLEMENTATION.
 
 * Generate the local zip files from the given list of transport requests
           lo_transport_zipper->generate_files( it_trkorr = lt_trkorr
-                                               iv_logic  = zcl_abapgit_ui_factory=>get_popups( )->popup_folder_logic( ) ).
+                                              iv_logic = zcl_abapgit_ui_factory=>get_popups( )->popup_folder_logic( ) ).
 
 * Open output folder if user asked it
           lcl_gui=>open_folder_frontend( iv_folder = lo_transport_zipper->gv_full_folder  ).
