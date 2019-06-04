@@ -46,6 +46,8 @@ ENQU | Lock Object | Yes
 ENSC | Composite Enhancement Spot | Yes
 FORM | SAPscript form | Yes
 FUGR | Function Group | Yes
+G4BA | SAP Gateway OData V4 Backend Service Group & Assigments | [#2704](https://github.com/larshp/abapGit/issues/2704)
+G4BS | SAP Gateway OData V4 Backend Service | [#2704](https://github.com/larshp/abapGit/issues/2704)
 IAMU | Language-Independent IAC Binary Data | Yes
 IARP | Parameters of IAC Language Resource | Yes
 IASP | Parameters of an IAC service | Yes

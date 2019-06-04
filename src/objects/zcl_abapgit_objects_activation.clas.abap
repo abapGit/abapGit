@@ -287,7 +287,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
     ENDLOOP.
 
     IF li_log->count( ) > 0.
-      li_log->show( ).
+      zcl_abapgit_log_viewer=>show_log( iv_header_text = 'Activation Errors'
+                                        ii_log         = li_log ).
     ENDIF.
 
   ENDMETHOD.

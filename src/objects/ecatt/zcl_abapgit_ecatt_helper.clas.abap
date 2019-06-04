@@ -137,7 +137,7 @@ CLASS zcl_abapgit_ecatt_helper IMPLEMENTATION.
       RECEIVING
         rval = lv_count.
 
-    WHILE lv_index LT lv_count.
+    WHILE lv_index < lv_count.
       li_n_xmlref_typ = li_nc_xmlref_typ->get_item( lv_index ).
       li_n_xmlref_typ->set_name( 'X-MLREF_TYP' ).
       lv_index = lv_index + 1.

@@ -105,8 +105,9 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     lt_zip = io_repo->get_files_local( ii_log    = li_log
                                        it_filter = it_filter ).
 
-    IF li_log->count( ) > 0 AND iv_logflag EQ abap_true.
-      li_log->show( ).
+    IF li_log->count( ) > 0.
+      zcl_abapgit_log_viewer=>show_log( iv_header_text = 'Zip Export Log'
+                                        ii_log         = li_log ).
     ENDIF.
 
     rv_xstr = encode_files( lt_zip ).

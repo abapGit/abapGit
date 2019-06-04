@@ -226,7 +226,7 @@
       "exclude": []
     },
     "preferred_compare_operator": {
-      "enabled": false,
+      "enabled": true,
       "exclude": [],
       "badOperators": [
         "EQ",
@@ -241,7 +241,7 @@
     "remove_descriptions": {
       "enabled": true,
       "exclude": [],
-      "ignoreExceptions": true
+      "ignoreExceptions": false
     },
     "sequential_blank": {
       "enabled": true,

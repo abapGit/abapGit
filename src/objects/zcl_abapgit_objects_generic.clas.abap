@@ -192,7 +192,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
     SELECT * FROM objsl INTO CORRESPONDING FIELDS OF TABLE mt_object_table
       WHERE objectname = is_item-obj_type
       AND objecttype = lc_logical_transport_object
-      AND tobject = 'TABU'.
+      AND tobject = 'TABU'
+      ORDER BY PRIMARY KEY.
     IF mt_object_table IS INITIAL.
       zcx_abapgit_exception=>raise( |Obviously corrupted object-type {
         is_item-obj_type }: No tables defined| ).
@@ -204,7 +205,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
 * object methods
     SELECT * FROM objm INTO TABLE mt_object_method
       WHERE objectname = is_item-obj_type
-      AND   objecttype = lc_logical_transport_object.
+      AND   objecttype = lc_logical_transport_object
+      ORDER BY PRIMARY KEY.
 
     ms_item = is_item.
 
@@ -596,7 +598,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
 
       SELECT * FROM (<ls_object_table>-tobj_name)
         INTO TABLE <lt_data>
-        WHERE (lv_where).
+        WHERE (lv_where)
+        ORDER BY PRIMARY KEY.
 
       io_xml->add(
         iv_name = <ls_object_table>-tobj_name
