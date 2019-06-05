@@ -186,15 +186,23 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_COMPAR IMPLEMENTATION.
         IF ls_current_table_field-rollname <> ls_previous_table_field-rollname.
           IF ls_current_table_field-rollname IS NOT INITIAL AND ls_previous_table_field-rollname IS NOT INITIAL.
             ii_log->add_info(
-              iv_msg  = |Field { ls_previous_table_field-fieldname }: Data element changed from { ls_previous_table_field-rollname } to { ls_current_table_field-rollname }|
+              iv_msg  = |Field { ls_previous_table_field-fieldname }: | &
+                        |Data element changed from { ls_previous_table_field-rollname } | &
+                        |to { ls_current_table_field-rollname }|
               is_item = ls_item ).
           ELSEIF ls_current_table_field-rollname IS NOT INITIAL.
             ii_log->add_info(
-              iv_msg  = |Field { ls_previous_table_field-fieldname }: Data type from internal type { ls_previous_table_field-inttype }(length { ls_previous_table_field-intlen }) to data element { ls_current_table_field-rollname }|
+              iv_msg  = |Field { ls_previous_table_field-fieldname }: | &
+                        |Data type changed from internal type | &
+                        |{ ls_previous_table_field-inttype }(length { ls_previous_table_field-intlen }) | &
+                        |to data element { ls_current_table_field-rollname }|
               is_item = ls_item ).
           ELSEIF ls_previous_table_field-rollname IS NOT INITIAL.
             ii_log->add_info(
-              iv_msg  = |Field { ls_previous_table_field-fieldname }: Data type from date element { ls_previous_table_field-rollname } to internal type { ls_current_table_field-inttype }(length { ls_current_table_field-intlen })|
+              iv_msg  = |Field { ls_previous_table_field-fieldname }: | &
+                        |Data type changed from date element { ls_previous_table_field-rollname } | &
+                        |to internal type | &
+                        |{ ls_current_table_field-inttype }(length { ls_current_table_field-intlen })|
               is_item = ls_item ).
           ENDIF.
           "TODO: perform several other checks, e.g. field length truncated, ...
