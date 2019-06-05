@@ -327,8 +327,9 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
 
     LOOP AT it_trkorr INTO ls_trkorr.
 
-      lv_zipbinstring = zcl_abapgit_transport_mass=>zip( is_trkorr = ls_trkorr
-                                                         iv_logic  = iv_logic ).
+      lv_zipbinstring = zcl_abapgit_transport_mass=>zip( is_trkorr         = ls_trkorr
+                                                         iv_logic          = iv_logic
+                                                         iv_show_log_popup = abap_false ).
 
       me->save_binstring( iv_binstring = lv_zipbinstring
                           is_trkorr    = ls_trkorr ).

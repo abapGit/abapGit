@@ -14,33 +14,9 @@
    <TPOOL>
     <item>
      <ID>I</ID>
-     <KEY>001</KEY>
-     <ENTRY>error from TR_READ_REQUEST_WITH_TASKS</ENTRY>
-     <LENGTH>74</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
      <KEY>002</KEY>
      <ENTRY>Folder matchcode exception</ENTRY>
      <LENGTH>52</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
-     <KEY>003</KEY>
-     <ENTRY>empty transport</ENTRY>
-     <LENGTH>25</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
-     <KEY>004</KEY>
-     <ENTRY>error from GET_R3TR_OBJECT_FROM_LIMU_OBJ</ENTRY>
-     <LENGTH>80</LENGTH>
-    </item>
-    <item>
-     <ID>I</ID>
-     <KEY>005</KEY>
-     <ENTRY>error finding super package</ENTRY>
-     <LENGTH>54</LENGTH>
     </item>
     <item>
      <ID>I</ID>
