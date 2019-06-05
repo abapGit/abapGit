@@ -401,10 +401,12 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
             text_not_found        = 1
             OTHERS                = 2.                        "#EC NOTEXT
         IF sy-subrc <> 0 OR lv_answer = 1.
-          zcx_abapgit_exception=>raise( |Deserialization for object { is_result-obj_name } (type { is_result-obj_type }) aborted by user| ).
+          zcx_abapgit_exception=>raise( |Deserialization for object { is_result-obj_name } | &
+                                        |(type { is_result-obj_type }) aborted by user| ).
         ENDIF.
       ELSE.
-        zcx_abapgit_exception=>raise( |Deserialization for object { is_result-obj_name } (type { is_result-obj_type }) aborted, user descision required| ).
+        zcx_abapgit_exception=>raise( |Deserialization for object { is_result-obj_name } | &
+                                      |(type { is_result-obj_type }) aborted, user descision required| ).
       ENDIF.
     ENDIF.
 
@@ -802,8 +804,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           ls_item-devclass = lr_object->package.
           ls_item-obj_type = lr_object->obj_type.
           ls_item-obj_name = lr_object->obj_name.
-          ii_log->add_success( iv_msg  = |Object { ls_item-obj_name } (type { ls_item-obj_type }) not changed; no import required|
-                               is_item = ls_item ).
+          ii_log->add_success(
+            iv_msg  = |Object { ls_item-obj_name } (type { ls_item-obj_type }) not changed; no import required|
+            is_item = ls_item ).
           "ignore object for further messages
           DELETE lt_objects INDEX lv_tabix.
         ENDIF.
@@ -819,8 +822,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         ls_item-devclass = lr_object->package.
         ls_item-obj_type = lr_object->obj_type.
         ls_item-obj_name = lr_object->obj_name.
-        ii_log->add_warning( iv_msg  = |Object type for { ls_item-obj_name } not defined - will be ignored by abapGit|
-                             is_item = ls_item ).
+        ii_log->add_warning(
+          iv_msg  = |Object type for { ls_item-obj_name } not defined - will be ignored by abapGit|
+          is_item = ls_item ).
       ENDLOOP.
       DELETE lt_objects WHERE obj_type IS INITIAL.
     ENDIF.
@@ -840,8 +844,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           ls_item-devclass = lr_object->package.
           ls_item-obj_type = lr_object->obj_type.
           ls_item-obj_name = lr_object->obj_name.
-          ii_log->add_success( iv_msg  = |Object { ls_item-obj_name } (type { ls_item-obj_type }) only exists local; no import required|
-                               is_item = ls_item ).
+          ii_log->add_success(
+            iv_msg  = |Object { ls_item-obj_name } (type { ls_item-obj_type }) only exists local; no import required|
+            is_item = ls_item ).
           "ignore object for further messages
           DELETE lt_objects INDEX lv_tabix.
         ENDIF.
