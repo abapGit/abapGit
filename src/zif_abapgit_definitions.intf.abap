@@ -340,6 +340,7 @@ INTERFACE zif_abapgit_definitions
       hotkeys                    TYPE tty_hotkey,
       parallel_proc_disabled     TYPE abap_bool,
       icon_scaling               TYPE c LENGTH 1,
+      ui_theme                   TYPE string,
     END OF ty_s_user_settings .
   TYPES:
     tty_dokil TYPE STANDARD TABLE OF dokil
