@@ -89,7 +89,7 @@ CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
         ORDER BY PRIMARY KEY.
 
       LOOP AT lt_dev_clients ASSIGNING <lv_dev_client>.
-        SELECT p~name_text a~smtp_addr INTO (ms_user-name,ms_user-email)
+        SELECT SINGLE p~name_text a~smtp_addr INTO (ms_user-name,ms_user-email)
           FROM usr21 AS u
           INNER JOIN adrp AS p ON p~persnumber = u~persnumber
                               AND p~client     = u~mandt
@@ -100,9 +100,8 @@ CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
           WHERE u~mandt      = <lv_dev_client>
             AND u~bname      = iv_user
             AND p~date_from <= sy-datum
-            AND p~date_to   >= sy-datum.
-          EXIT.
-        ENDSELECT.
+            AND p~date_to   >= sy-datum
+            AND a~date_from <= sy-datum.
 
         IF sy-subrc = 0.
           EXIT.
