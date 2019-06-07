@@ -221,7 +221,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
       WHEN zcl_abapgit_settings=>c_ui_theme-dark.
         ro_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-default.css">' ). "TODO
       WHEN zcl_abapgit_settings=>c_ui_theme-belize.
-        ro_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-default.css">' ). "TODO
+        ro_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-belize-blue.css">' ).
       WHEN OTHERS.
         ro_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-default.css">' ).
     ENDCASE.
