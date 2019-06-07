@@ -167,8 +167,8 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
     LOOP AT ls_files_item-files ASSIGNING <ls_file>.
       CONCATENATE lv_folder lv_sep <ls_file>-filename INTO lv_fullpath.
 
-      save_binstring_to_localfile( EXPORTING iv_filename = lv_fullpath
-                                             iv_binstring = <ls_file>-data ).
+      save_binstring_to_localfile( iv_filename = lv_fullpath
+                                   iv_binstring = <ls_file>-data ).
 
     ENDLOOP.
 
