@@ -2,8 +2,17 @@
  * ABAPGIT COLOR THEME CSS - DEFAULT
  */
 
+:root {
+  --theme-background-color: #E8E8E8;
+  --theme-accent-color: #f2f2f2;
+  --theme-primary-font: Arial,Helvetica,sans-serif;
+}
+
 /* GLOBALS */
-body          { background-color: #E8E8E8; }
+body {
+  background-color: var(--theme-background-color);
+  font-family: var(--theme-primary-font);
+}
 a, a:visited  { color:  #4078c0; }
 input, textarea, select     { border-color: #ddd; }
 input:focus, textarea:focus { border-color: #8cadd9; }
@@ -41,12 +50,12 @@ div.panel.success {
   background-color: #c5eac5;
 }
 #debug-output { color: #ccc; }
-div.dummydiv { background-color: #f2f2f2; }
+div.dummydiv { background-color: var(--theme-accent-color); }
 
 /* STRUCTURE DIVS, HEADER & FOOTER */
 div#header { border-bottom-color:  lightgrey; }
 div#header span.page_title { color: #bbb; }
-div#toc    { background-color: #f2f2f2; }
+div#toc    { background-color: var(--theme-accent-color); }
 div#footer span.version { color: grey; }
 div#footer { border-top-color:  lightgrey; }
 
@@ -57,7 +66,7 @@ div.log {
 }
 
 /* REPOSITORY */
-div.repo { background-color: #f2f2f2; }
+div.repo { background-color: var(--theme-accent-color); }
 .repo_name span.name { color: #333; }
 .repo_name span.url  { color: #ccc; }
 .repo_name a.url { color: #ccc; }
@@ -156,11 +165,11 @@ form.aligned-form span.sub-title { color: #bbb; }
 /* SETTINGS STYLES */
 div.settings_container {
   color: #444;
-  background-color: #f2f2f2;
+  background-color: var(--theme-accent-color);
 }
 
 /* DIFF */
-div.diff { background-color: #f2f2f2; }
+div.diff { background-color: var(--theme-accent-color); }
 span.diff_name { color: grey; }
 span.diff_name strong { color: #333; }
 span.diff_changed_by  { color: grey; }
@@ -262,7 +271,7 @@ table.db_tab th {
 
 /* DB ENTRY DISPLAY */
 div.db_entry {
-  background-color: #f2f2f2;
+  background-color: var(--theme-accent-color);
 }
 div.db_entry pre {
   background-color: #fcfcfc;
@@ -275,7 +284,7 @@ table.tag {
 table.tag td.label { background-color: #b3c1cc; }
 
 /* TUTORIAL */
-div.tutorial { background-color: #f2f2f2; }
+div.tutorial { background-color: var(--theme-accent-color); }
 div.tutorial hr { border-color: #ccc; }
 div.tutorial h1, h2 { color: #404040; }
 
@@ -329,7 +338,7 @@ div.corner-hint {
 }
 
 /* code inspector */
-.ci-head { background-color: #f2f2f2; }
+.ci-head { background-color: var(--theme-accent-color); }
 .ci-head .package-name span { color: grey; }
 .ci-variant   { color: #444; }
 .ci-result    { background-color: #f6f6f6; }
