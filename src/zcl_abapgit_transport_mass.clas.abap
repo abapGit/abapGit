@@ -29,16 +29,15 @@ CLASS ZCL_ABAPGIT_TRANSPORT_MASS IMPLEMENTATION.
 
     TRY.
 
-        lcl_gui=>select_tr_requests( IMPORTING et_trkorr = lt_trkorr ).
+        lt_trkorr = lcl_gui=>select_tr_requests( ).
 
         IF lt_trkorr[] IS NOT INITIAL.
 
-* Call destination folder popup
-          lcl_gui=>f4_folder( CHANGING cv_folder = lv_folder ).
+          lv_folder = lcl_gui=>f4_folder( ).
 
           IF lv_folder IS INITIAL.
 * Empty folder
-            zcx_abapgit_exception=>raise( 'Empty destination folder'(006) ).
+            zcx_abapgit_exception=>raise( 'Empty destination folder' ).
           ENDIF.
 
 * Instantiate transport zipper object that will also create the timestamped output folder
@@ -47,15 +46,16 @@ CLASS ZCL_ABAPGIT_TRANSPORT_MASS IMPLEMENTATION.
               iv_folder = lv_folder.
 
 * Generate the local zip files from the given list of transport requests
-          lo_transport_zipper->generate_files( it_trkorr = lt_trkorr
-                                               iv_logic  = zcl_abapgit_ui_factory=>get_popups( )->popup_folder_logic( ) ).
+          lo_transport_zipper->generate_files(
+            it_trkorr = lt_trkorr
+            iv_logic  = zcl_abapgit_ui_factory=>get_popups( )->popup_folder_logic( ) ).
 
 * Open output folder if user asked it
-          lcl_gui=>open_folder_frontend( iv_folder = lo_transport_zipper->gv_full_folder  ).
+          lcl_gui=>open_folder_frontend( lo_transport_zipper->gv_full_folder  ).
 
         ELSE.
 * No data found for the provided selection criterias
-          zcx_abapgit_exception=>raise( 'No transport requests selected'(007) ).
+          zcx_abapgit_exception=>raise( 'No transport requests selected' ).
         ENDIF.
 
       CATCH cx_wrong_data

@@ -208,9 +208,9 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
         is_data = ls_data.
 
     rv_xstr = zcl_abapgit_zip=>export(
-      io_repo    = lo_repo
-      it_filter  = lt_tadir
-      iv_logflag = iv_show_log_popup ).
+      io_repo     = lo_repo
+      it_filter   = lt_tadir
+      iv_show_log = iv_show_log_popup ).
 
   ENDMETHOD.
 ENDCLASS.

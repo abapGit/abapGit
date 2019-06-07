@@ -1,44 +1,10 @@
-********************************************************************************
-* The MIT License (MIT)
-*
-* Copyright (c) 2019 abapGit Contributors
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in all
-* copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-* SOFTWARE.
-********************************************************************************
-*( )_( )
-*(='.'=)
-*(")_(")
-* This program allow to generate Abapgit ZIP files from transport request(s)
-* in a given folder with the given logic ( FULL or PREFIX )
-
-*================================ CLASSES =============================*
-
-*================================  GUI ================================*
 CLASS lcl_gui DEFINITION FINAL.
 
   PUBLIC SECTION.
 
-    CLASS lcl_data_selector DEFINITION LOAD.
-
-    CLASS-METHODS f4_folder CHANGING cv_folder TYPE string RAISING zcx_abapgit_exception.
+    CLASS-METHODS f4_folder RETURNING VALUE(rv_folder) TYPE string RAISING zcx_abapgit_exception.
     CLASS-METHODS open_folder_frontend IMPORTING iv_folder TYPE string.
-    CLASS-METHODS select_tr_requests EXPORTING et_trkorr TYPE trwbo_request_headers.
+    CLASS-METHODS select_tr_requests RETURNING VALUE(rt_trkorr) TYPE trwbo_request_headers.
 
   PRIVATE SECTION.
     CLASS-DATA: gv_last_folder TYPE string.
@@ -49,17 +15,16 @@ CLASS lcl_gui IMPLEMENTATION.
 
   METHOD f4_folder.
 
-    DATA: lv_folder TYPE string,
-          lv_title  TYPE string.
+    DATA: lv_title  TYPE string.
 
-    lv_title = 'Choose the destination folder for the ZIP files '(t01).
+    lv_title = 'Choose the destination folder for the ZIP files'.
 
     cl_gui_frontend_services=>directory_browse(
       EXPORTING
         window_title         = lv_title
         initial_folder       = gv_last_folder
       CHANGING
-        selected_folder      = lv_folder
+        selected_folder      = rv_folder
       EXCEPTIONS
         cntl_error           = 1
         error_no_gui         = 2
@@ -67,20 +32,9 @@ CLASS lcl_gui IMPLEMENTATION.
         OTHERS               = 4 ).
 
     IF sy-subrc = 0.
-
-      IF lv_folder IS NOT INITIAL.
-
-        cv_folder      = lv_folder.
-        gv_last_folder = lv_folder. "Store the last directory for user friendly UI
-
-      ELSE.
-
-        cv_folder = gv_last_folder.
-
-      ENDIF.
-
+      gv_last_folder = rv_folder. "Store the last directory for user friendly UI
     ELSE.
-      zcx_abapgit_exception=>raise( 'Folder matchcode exception'(002) ).
+      zcx_abapgit_exception=>raise( 'Folder matchcode exception' ).
     ENDIF.
 
   ENDMETHOD.
@@ -102,7 +56,7 @@ CLASS lcl_gui IMPLEMENTATION.
           error_execute_failed   = 7
           OTHERS                 = 8 ).
       IF sy-subrc <> 0.
-        MESSAGE 'Problem when opening output folder'(m05) TYPE 'S' DISPLAY LIKE 'E'.
+        MESSAGE 'Problem when opening output folder' TYPE 'S' DISPLAY LIKE 'E'.
       ENDIF.
 
     ENDIF.
@@ -131,36 +85,37 @@ CLASS lcl_gui IMPLEMENTATION.
         iv_via_selscreen       = 'X'
         is_selection           = ls_selection
         iv_complete_projects   = space
-        iv_title               = 'ABAPGit Transport Mass Downloader'(p01)
+        iv_title               = 'ABAPGit Transport Mass Downloader'
         is_popup               = ls_popup
       IMPORTING
-        et_requests            = et_trkorr
+        et_requests            = rt_trkorr
       EXCEPTIONS
         action_aborted_by_user = 1
         OTHERS                 = 2.
     IF sy-subrc <> 0.
-      CLEAR et_trkorr.
+      CLEAR rt_trkorr.
     ELSE.
-      SORT et_trkorr BY trkorr.
-      DELETE ADJACENT DUPLICATES FROM et_trkorr COMPARING trkorr.
+      SORT rt_trkorr BY trkorr.
+      DELETE ADJACENT DUPLICATES FROM rt_trkorr COMPARING trkorr.
     ENDIF.
 
   ENDMETHOD.
 
 ENDCLASS.
 
-*=================== TRANSPORT ZIPPER =============================*
 CLASS lcl_transport_zipper DEFINITION FINAL.
 
   PUBLIC SECTION.
 * Folder
     TYPES ty_folder TYPE string.
 * Filename
-    TYPES ty_filename TYPE fb_icrc_pfile.
+    TYPES ty_filename TYPE string.
+
 * File extension
     CONSTANTS gc_zip_ext TYPE string VALUE '.zip' ##NO_TEXT.
 
     DATA: gv_timestamp   TYPE string,
+          gv_separator   TYPE c,
           gv_full_folder TYPE ty_folder READ-ONLY.
 
     METHODS constructor  IMPORTING iv_folder TYPE ty_folder
@@ -180,9 +135,8 @@ CLASS lcl_transport_zipper DEFINITION FINAL.
                             RETURNING VALUE(rv_full_folder) TYPE ty_folder
                             RAISING   zcx_abapgit_exception.
 
-    METHODS save_binstring IMPORTING is_trkorr    TYPE trwbo_request_header
-                                     iv_binstring TYPE xstring
-                           RAISING   zcx_abapgit_exception.
+    METHODS get_filename IMPORTING is_trkorr          TYPE trwbo_request_header
+                         RETURNING VALUE(rv_filename) TYPE ty_filename.
 
 ENDCLASS.
 
@@ -193,6 +147,18 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
     CONCATENATE sy-datlo sy-timlo INTO me->gv_timestamp SEPARATED BY '_'.
 
     me->gv_full_folder = get_full_folder( iv_folder = iv_folder ).
+
+    cl_gui_frontend_services=>get_file_separator(
+      CHANGING
+        file_separator       = gv_separator
+      EXCEPTIONS
+        cntl_error           = 1
+        error_no_gui         = 2
+        not_supported_by_gui = 3
+        OTHERS               = 4 ).
+    IF sy-subrc <> 0.
+      gv_separator = '\'. "Default MS Windows separator
+    ENDIF.
 
   ENDMETHOD.
 
@@ -210,7 +176,7 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
         not_supported_by_gui = 4
         OTHERS               = 5 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from cl_gui_frontend_services=>directory_exist'(e03) ).
+      zcx_abapgit_exception=>raise( 'Error from cl_gui_frontend_services=>directory_exist' ).
     ENDIF.
 
   ENDMETHOD.
@@ -230,7 +196,7 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
         not_supported_by_gui = 3
         OTHERS               = 4 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Internal error getting file separator'(m03) ).
+      zcx_abapgit_exception=>raise( 'Internal error getting file separator' ).
     ENDIF.
 
     CONCATENATE iv_folder
@@ -256,67 +222,23 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
           wrong_parameter          = 9
           OTHERS                   = 10 ).
       IF sy-subrc <> 0 AND sy-subrc <> 5.
-        zcx_abapgit_exception=>raise( 'Error from cl_gui_frontend_services=>directory_create'(e02) ).
+        zcx_abapgit_exception=>raise( 'Error from cl_gui_frontend_services=>directory_create' ).
       ENDIF.
 
     ENDIF.
 
   ENDMETHOD.
 
-  METHOD save_binstring.
-
-    DATA: lv_filename TYPE lcl_transport_zipper=>ty_filename.
-
-    DATA:
-      lt_rawdata  TYPE solix_tab.
+  METHOD get_filename .
 
 * Generate filename
     CONCATENATE is_trkorr-trkorr '_' is_trkorr-as4text '_' gv_timestamp gc_zip_ext
-    INTO lv_filename.
+    INTO rv_filename.
 
 * Remove reserved characters (for Windows based systems)
-    TRANSLATE lv_filename USING '/ \ : " * > < ? | '.
+    TRANSLATE rv_filename USING '/ \ : " * > < ? | '.
 
-    lt_rawdata = cl_bcs_convert=>xstring_to_solix( iv_binstring ).
-
-    CONCATENATE gv_full_folder lv_filename INTO lv_filename SEPARATED BY '\'.
-
-    cl_gui_frontend_services=>gui_download(
-      EXPORTING
-        bin_filesize              = xstrlen( iv_binstring )
-        filename                  = lv_filename
-        filetype                  = 'BIN'
-      CHANGING
-        data_tab                  = lt_rawdata
-      EXCEPTIONS
-        file_write_error          = 1
-        no_batch                  = 2
-        gui_refuse_filetransfer   = 3
-        invalid_type              = 4
-        no_authority              = 5
-        unknown_error             = 6
-        header_not_allowed        = 7
-        separator_not_allowed     = 8
-        filesize_not_allowed      = 9
-        header_too_long           = 10
-        dp_error_create           = 11
-        dp_error_send             = 12
-        dp_error_write            = 13
-        unknown_dp_error          = 14
-        access_denied             = 15
-        dp_out_of_memory          = 16
-        disk_full                 = 17
-        dp_timeout                = 18
-        file_not_found            = 19
-        dataprovider_exception    = 20
-        control_flush_error       = 21
-        not_supported_by_gui      = 22
-        error_no_gui              = 23
-        OTHERS                    = 24 ).
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from gui_download'(e01) ).
-    ENDIF.
-
+    CONCATENATE gv_full_folder rv_filename INTO rv_filename SEPARATED BY gv_separator.
 
   ENDMETHOD.
 
@@ -331,8 +253,8 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
                                                          iv_logic          = iv_logic
                                                          iv_show_log_popup = abap_false ).
 
-      me->save_binstring( iv_binstring = lv_zipbinstring
-                          is_trkorr    = ls_trkorr ).
+      zcl_abapgit_zip=>save_binstring_to_localfile( iv_binstring = lv_zipbinstring
+                                                    iv_filename  = get_filename( ls_trkorr ) ).
 
     ENDLOOP. "it_trkorr
 
