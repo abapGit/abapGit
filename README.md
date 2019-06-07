@@ -32,7 +32,7 @@ http://docs.abapgit.org
 
 ## Contributing
 
-You can find the contributiion guidelines [here](CONTRIBUTING.md).
+You can find the contribution guidelines [here](CONTRIBUTING.md).
 
 ## Projects using abapGit
 
