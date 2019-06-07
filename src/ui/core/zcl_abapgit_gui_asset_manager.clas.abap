@@ -187,9 +187,10 @@ CLASS zcl_abapgit_gui_asset_manager IMPLEMENTATION.
     DATA: lt_css_variables    TYPE gty_css_var_tab,
           lt_css_vars_in_file TYPE gty_css_var_tab,
           lt_assets           TYPE STANDARD TABLE OF lty_asset_refs WITH DEFAULT KEY.
-    FIELD-SYMBOLS: <ls_asset>        LIKE LINE OF mt_asset_register,
-                   <ls_css_variable> LIKE LINE OF lt_css_vars_in_file,
-                   <ls_asset_refs>   LIKE LINE OF lt_assets.
+    FIELD-SYMBOLS: <ls_asset>              LIKE LINE OF mt_asset_register,
+                   <ls_css_variable>       TYPE gty_css_var,
+                   <ls_other_css_variable> TYPE gty_css_var,
+                   <ls_asset_refs>         LIKE LINE OF lt_assets.
 
     " 1. Get all CSS assets and determine variable values. The latest variable definition overrides all previous ones.
     LOOP AT mt_asset_register ASSIGNING <ls_asset> WHERE type         = 'text'
@@ -213,7 +214,16 @@ CLASS zcl_abapgit_gui_asset_manager IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
 
-    " 2. Replace all variable usages by inlining the values.
+    " 2. Replace all variable usages in variables
+    LOOP AT lt_css_variables ASSIGNING <ls_css_variable>.
+      LOOP AT lt_css_variables ASSIGNING <ls_other_css_variable> WHERE name <> <ls_css_variable>-name.
+        REPLACE ALL OCCURRENCES OF |var(--{ <ls_other_css_variable>-name })|
+                IN <ls_css_variable>-value
+                WITH <ls_other_css_variable>-value.
+      ENDLOOP.
+    ENDLOOP.
+
+    " 3. Replace all other variable usages by inlining the values.
     LOOP AT lt_assets ASSIGNING <ls_asset_refs>.
       LOOP AT lt_css_variables ASSIGNING <ls_css_variable>.
         REPLACE ALL OCCURRENCES OF |var(--{ <ls_css_variable>-name })|
