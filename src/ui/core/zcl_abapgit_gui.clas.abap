@@ -265,6 +265,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     DATA ls_stack LIKE LINE OF mt_stack.
 
     IF mi_router IS BOUND.
+      CLEAR mt_stack.
       on_event( action = |{ c_action-go_home }| ). " doesn't accept strings directly
     ELSE.
       IF lines( mt_stack ) > 0.
