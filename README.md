@@ -30,9 +30,13 @@ Recommend using SAP GUI for Windows, there are multiple issues related to runnin
 ## Documentation/Guides
 http://docs.abapgit.org
 
+## Contributing
+
+You can find the contribution guidelines [here](CONTRIBUTING.md).
+
 ## Projects using abapGit
 
-See [dotabap.org](http://dotabap.org)
+See [dotabap.org](http://dotabap.org) or [this page](https://docs.abapgit.org/other-where-used.html).
 
 ## FAQ
 For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/larshp/abapGit/issues)

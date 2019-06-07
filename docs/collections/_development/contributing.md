@@ -3,6 +3,10 @@ title: Contributing
 order: 5
 ---
 
+General contribution guidelines can be found [here](https://github.com/larshp/abapGit/blob/master/CONTRIBUTING.md).
+
+How to submit a pull request:
+
 *******************************
 
 1: Install the development version of abapGit by cloning the repository using an online repository, or downloading the zip file and installing it using an offline repository.
