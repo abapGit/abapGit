@@ -217,13 +217,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( '<title>abapGit</title>' ).               "#EC NOTEXT
     ro_html->add( '<link rel="stylesheet" type="text/css" href="css/common.css">' ).
 
+    ro_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-default.css">' ).
+
     CASE mo_settings->get_ui_theme( ).
       WHEN zcl_abapgit_settings=>c_ui_theme-dark.
-        ro_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-default.css">' ). "TODO
+        "TODO
       WHEN zcl_abapgit_settings=>c_ui_theme-belize.
         ro_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-belize-blue.css">' ).
-      WHEN OTHERS.
-        ro_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-default.css">' ).
     ENDCASE.
 
     ro_html->add( '<link rel="stylesheet" type="text/css" href="css/ag-icons.css">' ).
