@@ -256,5 +256,6 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
         && '/PogUvEwPUGFiE+SX4gAtQa1gkhV7onQR4oJMR5oxC6stDeghd7Dh6E+CPw/HL4vVO2f'
         && 'cpUAAAAASUVORK5CYII=' ).
 
+    ro_asset_man->finalize_registration( ).
   ENDMETHOD.
 ENDCLASS.
