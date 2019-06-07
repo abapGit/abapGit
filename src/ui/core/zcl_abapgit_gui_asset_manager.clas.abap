@@ -226,7 +226,7 @@ CLASS zcl_abapgit_gui_asset_manager IMPLEMENTATION.
 
   METHOD get_css_vars_in_string.
     CONSTANTS: lc_root_pattern     TYPE string VALUE `:root\s*\{([^\}]*)\}`,
-               lc_variable_pattern TYPE string VALUE `\-\-([\w\d-]+)\s*:\s*([^\n\r\s]*)\s*;`.
+               lc_variable_pattern TYPE string VALUE `\-\-([\w\d-]+)\s*:\s*([^\n\r]*);`.
     DATA: lv_root     TYPE string,
           lo_matcher  TYPE REF TO cl_abap_matcher,
           lo_regex    TYPE REF TO cl_abap_regex,
