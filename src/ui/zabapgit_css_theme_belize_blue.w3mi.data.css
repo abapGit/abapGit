@@ -24,6 +24,10 @@
   --theme-link-color: var(--fiori-color-font-highlighted);
   --theme-container-border-color: var(--fiori-color-gui-container-border);
   --theme-table-border-color: #E5E5E5; /* ALV border color */
+  --theme-greyscale-dark: #666666;
+  --theme-greyscale-medium: #BFBFBF;
+  --theme-greyscale-light: #CCCCCC;
+  --theme-greyscale-lighter: #E5E5E5;
 }
 
 #header a, #header a:visited {
