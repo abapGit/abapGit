@@ -41,7 +41,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
+CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
 
 
   METHOD get_frontend_services.
@@ -139,13 +139,16 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
 
     " TODO theme-dark
 
-    CLEAR lt_inline.
-    " @@abapmerge include zabapgit_css_theme_belize_blue.w3mi.data.css > _inline '$$'.
-    ro_asset_man->register_asset(
-      iv_url       = 'css/theme-belize-blue.css'
-      iv_type      = 'text/css'
-      iv_mime_name = 'ZABAPGIT_CSS_THEME_BELIZE_BLUE'
-      iv_inline    = concat_lines_of( table = lt_inline sep = cl_abap_char_utilities=>newline ) ).
+    IF zcl_abapgit_persist_settings=>get_instance( )->read(
+         )->get_ui_theme( ) = zcl_abapgit_settings=>c_ui_theme-belize.
+      CLEAR lt_inline.
+      " @@abapmerge include zabapgit_css_theme_belize_blue.w3mi.data.css > _inline '$$'.
+      ro_asset_man->register_asset(
+        iv_url       = 'css/theme-belize-blue.css'
+        iv_type      = 'text/css'
+        iv_mime_name = 'ZABAPGIT_CSS_THEME_BELIZE_BLUE'
+        iv_inline    = concat_lines_of( table = lt_inline sep = cl_abap_char_utilities=>newline ) ).
+    ENDIF.
 
     CLEAR lt_inline.
     " @@abapmerge include zabapgit_js_common.w3mi.data.js > _inline '$$'.
