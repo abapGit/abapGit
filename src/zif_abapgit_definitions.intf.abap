@@ -28,7 +28,9 @@ INTERFACE zif_abapgit_definitions
   TYPES: data TYPE xstring,
          END OF ty_file .
   TYPES:
-    ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY .
+    ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY
+                     WITH NON-UNIQUE SORTED KEY filename
+                     COMPONENTS filename .
   TYPES:
     ty_string_tt TYPE STANDARD TABLE OF string WITH DEFAULT KEY .
   TYPES:
