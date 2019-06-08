@@ -9,6 +9,7 @@
   --theme-primary-font: Arial,Helvetica,sans-serif;
   --theme-primary-font-color: #333333;
   --theme-primary-font-color-reduced: #ccc;
+  --theme-font-size: 12pt;
   --theme-link-color: #4078c0;
   --theme-table-border-color: #eee;
 }
@@ -18,6 +19,7 @@ body {
   background-color: var(--theme-background-color);
   font-family: var(--theme-primary-font);
   color: var(--theme-primary-font-color);
+  font-size: var(--theme-font-size);
 }
 a, a:visited  { color: var(--theme-link-color); }
 input, textarea, select     { border-color: #ddd; }
