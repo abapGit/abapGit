@@ -415,8 +415,8 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       " Less equal two means that we have only the .abapgit.xml and the package in
       " our local repository. In this case we have to update our local .abapgit.xml
       " from the remote one. Otherwise we get errors when e.g. the folder starting
-      " folder is diferent.
-      io_repo->update_dot_abapgit_from_remote( ).
+      " folder is different.
+      io_repo->find_remote_dot_abapgit( ).
     ENDIF.
 
     rt_results = calculate_status(

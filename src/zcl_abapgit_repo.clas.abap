@@ -111,9 +111,7 @@ CLASS zcl_abapgit_repo DEFINITION
         iv_offline TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
-    METHODS update_dot_abapgit_from_remote
-      RAISING
-        zcx_abapgit_exception.
+
   PROTECTED SECTION.
 
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
@@ -737,26 +735,4 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     set( it_checksums = lt_checksums ).
 
   ENDMETHOD.
-
-  METHOD update_dot_abapgit_from_remote.
-
-    DATA: lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
-          lt_remote      TYPE zif_abapgit_definitions=>ty_files_tt.
-
-    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF lt_remote.
-
-    lo_dot_abapgit  = get_dot_abapgit( ).
-    lt_remote = get_files_remote( ).
-
-    READ TABLE lt_remote ASSIGNING <ls_remote>
-                         WITH KEY filename
-                         COMPONENTS filename = zif_abapgit_definitions=>c_dot_abapgit.
-    IF sy-subrc = 0.
-      lo_dot_abapgit = lo_dot_abapgit->deserialize( <ls_remote>-data ).
-      set_dot_abapgit( lo_dot_abapgit ).
-      refresh( iv_drop_cache = abap_true ).
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.
