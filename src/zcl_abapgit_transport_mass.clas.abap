@@ -58,8 +58,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT_MASS IMPLEMENTATION.
           zcx_abapgit_exception=>raise( 'No transport requests selected' ).
         ENDIF.
 
-      CATCH cx_wrong_data
-            zcx_abapgit_exception INTO lo_except.
+      CATCH zcx_abapgit_exception INTO lo_except.
 
         MESSAGE lo_except->get_text( ) TYPE 'S' DISPLAY LIKE 'E'.
 
