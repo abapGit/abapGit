@@ -647,10 +647,8 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         file_download( iv_package = lv_package
                        iv_xstr    = lv_xstr ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-      WHEN zif_abapgit_definitions=>c_action-zip_transport.                   " Export transport as ZIP
-        lv_xstr = zcl_abapgit_transport=>zip( ).
-        file_download( iv_package = 'TRANSPORT'
-                       iv_xstr    = lv_xstr ).
+      WHEN zif_abapgit_definitions=>c_action-zip_transport.                   " Export transports as ZIP
+        zcl_abapgit_transport_mass=>run( ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>c_action-zip_object.                      " Export object as ZIP
         zcl_abapgit_zip=>export_object( ).

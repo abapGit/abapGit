@@ -1,13 +1,16 @@
 CLASS zcl_abapgit_transport DEFINITION
   PUBLIC
-  FINAL
   CREATE PUBLIC .
 
   PUBLIC SECTION.
 
     CLASS-METHODS zip
+      IMPORTING
+        !iv_show_log_popup TYPE abap_bool DEFAULT abap_true
+        !iv_logic          TYPE string OPTIONAL
+        !is_trkorr         TYPE trwbo_request_header OPTIONAL
       RETURNING
-        VALUE(rv_xstr) TYPE xstring
+        VALUE(rv_xstr)     TYPE xstring
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS to_tadir
@@ -17,7 +20,7 @@ CLASS zcl_abapgit_transport DEFINITION
         VALUE(rt_tadir)       TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
-  PRIVATE SECTION.
+  PROTECTED SECTION.
 
     CLASS-METHODS read_requests
       IMPORTING
@@ -38,6 +41,7 @@ CLASS zcl_abapgit_transport DEFINITION
         VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
+  PRIVATE SECTION.
 ENDCLASS.
 
 
@@ -168,7 +172,12 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
           lt_trkorr   TYPE trwbo_request_headers.
 
 
-    lt_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transports( ).
+    IF is_trkorr IS SUPPLIED.
+      APPEND is_trkorr TO lt_trkorr.
+    ELSE.
+      lt_trkorr = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_transports( ).
+    ENDIF.
+
     IF lines( lt_trkorr ) = 0.
       RETURN.
     ENDIF.
@@ -188,15 +197,20 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
     ls_data-package     = lv_package.
     ls_data-dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ).
 
-    ls_data-dot_abapgit-folder_logic = zcl_abapgit_ui_factory=>get_popups( )->popup_folder_logic( ).
+    IF iv_logic IS SUPPLIED AND iv_logic IS NOT INITIAL.
+      ls_data-dot_abapgit-folder_logic = iv_logic.
+    ELSE.
+      ls_data-dot_abapgit-folder_logic = zcl_abapgit_ui_factory=>get_popups( )->popup_folder_logic( ).
+    ENDIF.
 
     CREATE OBJECT lo_repo
       EXPORTING
         is_data = ls_data.
 
     rv_xstr = zcl_abapgit_zip=>export(
-      io_repo   = lo_repo
-      it_filter = lt_tadir ).
+      io_repo     = lo_repo
+      it_filter   = lt_tadir
+      iv_show_log = iv_show_log_popup ).
 
   ENDMETHOD.
 ENDCLASS.
