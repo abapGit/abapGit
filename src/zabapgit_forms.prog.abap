@@ -124,17 +124,9 @@ FORM exit RAISING zcx_abapgit_exception.
         LEAVE TO SCREEN 1001.
       ENDIF.
     WHEN 'CEND'.
-      PERFORM on_exit_pressed.
+      zcl_abapgit_ui_factory=>get_gui( )->go_home( ).
+      LEAVE TO SCREEN 1001.
   ENDCASE.
-ENDFORM.
-
-FORM on_exit_pressed RAISING zcx_abapgit_exception.
-  IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_show_default_repo( ) = abap_false.
-    " Don't show the last seen repo at startup
-    zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( || ).
-  ENDIF.
-  zcl_abapgit_ui_factory=>get_gui( )->go_home( ).
-  LEAVE TO SCREEN 1001.
 ENDFORM.
 
 FORM password_popup
