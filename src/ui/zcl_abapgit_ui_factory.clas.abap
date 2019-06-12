@@ -134,6 +134,7 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
     ro_asset_man->register_asset(
       iv_url       = 'css/theme-default.css'
       iv_type      = 'text/css'
+      iv_cachable  = abap_false
       iv_mime_name = 'ZABAPGIT_CSS_THEME_DEFAULT'
       iv_inline    = concat_lines_of( table = lt_inline sep = cl_abap_char_utilities=>newline ) ).
 
@@ -146,6 +147,7 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
       ro_asset_man->register_asset(
         iv_url       = 'css/theme-belize-blue.css'
         iv_type      = 'text/css'
+        iv_cachable  = abap_false
         iv_mime_name = 'ZABAPGIT_CSS_THEME_BELIZE_BLUE'
         iv_inline    = concat_lines_of( table = lt_inline sep = cl_abap_char_utilities=>newline ) ).
     ENDIF.
@@ -258,7 +260,5 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
         && 'X9K+ygQTFGDcHhaaoGJyouDNV7JH+eGj4mF6gspoC+tzJt1ObsT4MDsF2zxs886+Ml5v'
         && '/PogUvEwPUGFiE+SX4gAtQa1gkhV7onQR4oJMR5oxC6stDeghd7Dh6E+CPw/HL4vVO2f'
         && 'cpUAAAAASUVORK5CYII=' ).
-
-    ro_asset_man->finalize_registration( ).
   ENDMETHOD.
 ENDCLASS.
