@@ -116,6 +116,7 @@ FORM output.
 ENDFORM.
 
 FORM exit RAISING zcx_abapgit_exception.
+  DATA li_page TYPE REF TO zif_abapgit_gui_renderable.
   CASE sy-ucomm.
     WHEN 'CBAC'.  "Back
       IF zcl_abapgit_ui_factory=>get_gui( )->back( ) = abap_true. " end of stack
@@ -124,7 +125,6 @@ FORM exit RAISING zcx_abapgit_exception.
         LEAVE TO SCREEN 1001.
       ENDIF.
     WHEN 'CEND'.
-      DATA li_page TYPE REF TO zif_abapgit_gui_renderable.
       CREATE OBJECT li_page TYPE zcl_abapgit_gui_page_main.
       zcl_abapgit_ui_factory=>get_gui( )->go_page( li_page ).
       LEAVE TO SCREEN 1001.
