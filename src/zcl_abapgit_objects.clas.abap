@@ -512,7 +512,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
             wi_tadir_pgmid        = 'R3TR'
             wi_tadir_object       = is_item-obj_type
             wi_tadir_obj_name     = is_item-obj_name
-            wi_test_modus         = abap_false.
+            wi_test_modus         = abap_false
+          EXCEPTIONS
+            OTHERS                = 1.
       ENDIF.
     ENDIF.
 
