@@ -20,7 +20,11 @@ CLASS zcl_abapgit_gui_css_processor DEFINITION
       gty_css_var_tab TYPE SORTED TABLE OF gty_css_var WITH UNIQUE KEY name.
     METHODS:
       get_css_vars_in_string IMPORTING iv_string           TYPE string
-                             RETURNING VALUE(rt_variables) TYPE gty_css_var_tab.
+                             RETURNING VALUE(rt_variables) TYPE gty_css_var_tab,
+      resolve_var_recursively IMPORTING iv_variable_name TYPE string
+                              CHANGING  ct_variables     TYPE gty_css_var_tab
+                              RETURNING VALUE(rv_value)  TYPE string
+                              RAISING   zcx_abapgit_exception.
     DATA:
       mi_asset_manager TYPE REF TO zif_abapgit_gui_asset_manager,
       mt_files         TYPE STANDARD TABLE OF string.
@@ -43,11 +47,11 @@ CLASS zcl_abapgit_gui_css_processor IMPLEMENTATION.
           lv_content          TYPE string,
           lt_css_variables    TYPE gty_css_var_tab,
           lt_css_vars_in_file TYPE gty_css_var_tab.
-    FIELD-SYMBOLS: <lv_url>                TYPE string,
-                   <ls_css_variable>       LIKE LINE OF lt_css_vars_in_file,
-                   <ls_other_css_variable> LIKE LINE OF lt_css_variables,
-                   <lv_content>            LIKE LINE OF lt_contents.
+    FIELD-SYMBOLS: <lv_url>          TYPE string,
+                   <ls_css_variable> LIKE LINE OF lt_css_vars_in_file,
+                   <lv_content>      LIKE LINE OF lt_contents.
 
+    " 1. Determine all variables and their values. Later definitions overwrite previous ones.
     LOOP AT mt_files ASSIGNING <lv_url>.
       ls_asset = mi_asset_manager->get_asset( <lv_url> ).
       ASSERT ls_asset-type = 'text' AND ls_asset-subtype = 'css'.
@@ -66,13 +70,9 @@ CLASS zcl_abapgit_gui_css_processor IMPLEMENTATION.
     ENDLOOP.
 
     " 2. Replace all variable usages in variables
-    " TODO: this only handles one level of referencing
-    LOOP AT lt_css_variables ASSIGNING <ls_css_variable>.
-      LOOP AT lt_css_variables ASSIGNING <ls_other_css_variable> WHERE name <> <ls_css_variable>-name.
-        REPLACE ALL OCCURRENCES OF |var(--{ <ls_other_css_variable>-name })|
-                IN <ls_css_variable>-value
-                WITH <ls_other_css_variable>-value.
-      ENDLOOP.
+    LOOP AT lt_css_variables ASSIGNING <ls_css_variable> WHERE value CS 'var(--'.
+      resolve_var_recursively( EXPORTING iv_variable_name = <ls_css_variable>-name
+                               CHANGING  ct_variables     = lt_css_variables ).
     ENDLOOP.
 
     " 3. Replace all other variable usages by inlining the values.
@@ -84,12 +84,12 @@ CLASS zcl_abapgit_gui_css_processor IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
 
-    rv_result = concat_lines_of( table = lt_contents sep = cl_abap_char_utilities=>cr_lf ).
+    rv_result = concat_lines_of( table = lt_contents sep = cl_abap_char_utilities=>newline ).
   ENDMETHOD.
 
   METHOD get_css_vars_in_string.
     CONSTANTS: lc_root_pattern     TYPE string VALUE `:root\s*\{([^\}]*)\}`,
-               lc_variable_pattern TYPE string VALUE `\-\-([\w\d-]+)\s*:\s*([^\n\r]*);`.
+               lc_variable_pattern TYPE string VALUE `\-\-([\w\d-]+)\s*:\s*([^\n\r;]*);`.
     DATA: lv_root     TYPE string,
           lo_matcher  TYPE REF TO cl_abap_matcher,
           lo_regex    TYPE REF TO cl_abap_regex,
@@ -111,6 +111,34 @@ CLASS zcl_abapgit_gui_css_processor IMPLEMENTATION.
           MODIFY TABLE rt_variables FROM ls_variable.
         ENDIF.
       ENDWHILE.
+    ENDIF.
+  ENDMETHOD.
+
+  METHOD resolve_var_recursively.
+    CONSTANTS: lc_variable_usage_pattern TYPE string VALUE `var\(\-\-([^\)]*)\)`.
+    DATA: lv_variable_name  TYPE string,
+          lv_variable_value TYPE string.
+    FIELD-SYMBOLS: <ls_variable> LIKE LINE OF ct_variables.
+
+    READ TABLE ct_variables WITH TABLE KEY name = iv_variable_name ASSIGNING <ls_variable>.
+    IF sy-subrc = 0.
+      DO.
+        FIND FIRST OCCURRENCE OF REGEX lc_variable_usage_pattern
+             IN <ls_variable>-value
+             SUBMATCHES lv_variable_name.
+        IF sy-subrc = 0.
+          lv_variable_value = resolve_var_recursively( EXPORTING iv_variable_name = lv_variable_name
+                                                       CHANGING  ct_variables     = ct_variables ).
+          REPLACE FIRST OCCURRENCE OF |var(--{ lv_variable_name })|
+                  IN <ls_variable>-value
+                  WITH lv_variable_value.
+        ELSE.
+          rv_value = <ls_variable>-value.
+          EXIT.
+        ENDIF.
+      ENDDO.
+    ELSE.
+      zcx_abapgit_exception=>raise( |CSS variable { iv_variable_name } not resolveable| ).
     ENDIF.
   ENDMETHOD.
 ENDCLASS.
