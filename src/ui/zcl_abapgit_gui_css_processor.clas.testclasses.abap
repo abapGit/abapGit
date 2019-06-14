@@ -1,6 +1,6 @@
 *"* use this source file for your ABAP unit test classes
 
-CLASS lcl_asset_manager_double DEFINITION FOR TESTING.
+CLASS ltcl_asset_manager_double DEFINITION FOR TESTING.
   PUBLIC SECTION.
     INTERFACES:
       zif_abapgit_gui_asset_manager.
@@ -10,7 +10,7 @@ CLASS lcl_asset_manager_double DEFINITION FOR TESTING.
   PRIVATE SECTION.
 ENDCLASS.
 
-CLASS lcl_asset_manager_double IMPLEMENTATION.
+CLASS ltcl_asset_manager_double IMPLEMENTATION.
   METHOD zif_abapgit_gui_asset_manager~get_all_assets.
     cl_abap_unit_assert=>fail( ).
   ENDMETHOD.
@@ -34,7 +34,7 @@ CLASS ltcl_test_base DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT A
       add_file IMPORTING iv_url     TYPE string
                          iv_content TYPE string OPTIONAL.
     DATA:
-      mo_asset_manager TYPE REF TO lcl_asset_manager_double,
+      mo_asset_manager TYPE REF TO ltcl_asset_manager_double,
       mo_cut           TYPE REF TO zcl_abapgit_gui_css_processor.
   PRIVATE SECTION.
     METHODS:

@@ -23,7 +23,6 @@ CLASS zcl_abapgit_gui_css_processor DEFINITION
                              RETURNING VALUE(rt_variables) TYPE gty_css_var_tab,
       resolve_var_recursively IMPORTING iv_variable_name TYPE string
                               CHANGING  ct_variables     TYPE gty_css_var_tab
-                              RETURNING VALUE(rv_value)  TYPE string
                               RAISING   zcx_abapgit_exception.
     DATA:
       mi_asset_manager TYPE REF TO zif_abapgit_gui_asset_manager,
@@ -116,9 +115,9 @@ CLASS zcl_abapgit_gui_css_processor IMPLEMENTATION.
 
   METHOD resolve_var_recursively.
     CONSTANTS: lc_variable_usage_pattern TYPE string VALUE `var\(\-\-([^\)]*)\)`.
-    DATA: lv_variable_name  TYPE string,
-          lv_variable_value TYPE string.
-    FIELD-SYMBOLS: <ls_variable> LIKE LINE OF ct_variables.
+    DATA: lv_variable_name  TYPE string.
+    FIELD-SYMBOLS: <ls_variable>       LIKE LINE OF ct_variables,
+                   <ls_other_variable> LIKE LINE OF ct_variables.
 
     READ TABLE ct_variables WITH TABLE KEY name = iv_variable_name ASSIGNING <ls_variable>.
     IF sy-subrc = 0.
@@ -127,13 +126,13 @@ CLASS zcl_abapgit_gui_css_processor IMPLEMENTATION.
              IN <ls_variable>-value
              SUBMATCHES lv_variable_name.
         IF sy-subrc = 0.
-          lv_variable_value = resolve_var_recursively( EXPORTING iv_variable_name = lv_variable_name
-                                                       CHANGING  ct_variables     = ct_variables ).
+          resolve_var_recursively( EXPORTING iv_variable_name = lv_variable_name
+                                   CHANGING  ct_variables     = ct_variables ).
+          READ TABLE ct_variables WITH TABLE KEY name = lv_variable_name ASSIGNING <ls_other_variable>.
           REPLACE FIRST OCCURRENCE OF |var(--{ lv_variable_name })|
                   IN <ls_variable>-value
-                  WITH lv_variable_value.
+                  WITH <ls_other_variable>-value.
         ELSE.
-          rv_value = <ls_variable>-value.
           EXIT.
         ENDIF.
       ENDDO.
