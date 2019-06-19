@@ -219,7 +219,7 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
             ri_log->add_error( iv_msg = lr_repo_msg->text ).
           WHEN 'W'.
             ri_log->add_warning( iv_msg = lr_repo_msg->text ).
-          WHEN others.
+          WHEN OTHERS.
             CONTINUE.
         ENDCASE.
       ENDLOOP.
