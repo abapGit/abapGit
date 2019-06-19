@@ -118,9 +118,8 @@ CLASS zcl_abapgit_repo DEFINITION
       RETURNING
         VALUE(ri_log) TYPE REF TO zif_abapgit_log .
     METHODS get_log
-      EXPORTING
-        !ei_log   TYPE REF TO zif_abapgit_log
-        !ev_title TYPE string .
+      RETURNING
+        VALUE(ri_log) TYPE REF TO zif_abapgit_log .
     METHODS reset_log .
   PROTECTED SECTION.
 
@@ -131,7 +130,6 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA mv_request_remote_refresh TYPE abap_bool .
     DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
     DATA mi_log TYPE REF TO zif_abapgit_log .
-    DATA mv_log_title TYPE string .
 
     METHODS set
       IMPORTING
@@ -261,7 +259,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD create_new_log.
 
     CREATE OBJECT mi_log TYPE zcl_abapgit_log.
-    mv_log_title = iv_title.
+    mi_log->set_title( iv_title ).
 
     ri_log = mi_log.
 
@@ -456,8 +454,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD get_log.
-    ei_log   = mi_log.
-    ev_title = mv_log_title.
+    ri_log = mi_log.
   ENDMETHOD.
 
 
@@ -547,7 +544,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD reset_log.
     CLEAR mi_log.
-    CLEAR mv_log_title.
   ENDMETHOD.
 
 

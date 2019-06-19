@@ -263,7 +263,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
                          iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ lv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ENDIF.
-      mo_repo->get_log( IMPORTING ei_log = li_log ).
+      li_log = mo_repo->get_log( ).
       IF li_log IS BOUND AND li_log->count( ) > 0.
         ro_toolbar->add( iv_txt = 'Log'
                          iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?{ lv_key }| ).

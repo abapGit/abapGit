@@ -459,11 +459,9 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
   METHOD repository_services.
 
-    DATA: lv_url       TYPE string,
-          lv_key       TYPE zif_abapgit_persistence=>ty_repo-key,
-          li_log       TYPE REF TO zif_abapgit_log,
-          lv_log_title TYPE string.
-
+    DATA: lv_url TYPE string,
+          lv_key TYPE zif_abapgit_persistence=>ty_repo-key,
+          li_log TYPE REF TO zif_abapgit_log.
 
     lv_key = is_event_data-getdata. " TODO refactor
     lv_url = is_event_data-getdata. " TODO refactor
@@ -498,7 +496,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       WHEN 'install'.    " 'install' is for explore page
         zcl_abapgit_services_repo=>new_online( lv_url ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN zif_abapgit_definitions=>c_action-repo_refresh_checksums.          " Rebuil local checksums
+      WHEN zif_abapgit_definitions=>c_action-repo_refresh_checksums.          " Rebuild local checksums
         zcl_abapgit_services_repo=>refresh_local_checksums( lv_key ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_toggle_fav.                 " Toggle repo as favorite
@@ -513,11 +511,8 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
             io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-repo_log.
-        zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->get_log(
-          IMPORTING
-            ei_log   = li_log
-            ev_title = lv_log_title ).
-        zcl_abapgit_log_viewer=>show_log( ii_log = li_log iv_header_text = lv_log_title ).
+        li_log = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->get_log( ).
+        zcl_abapgit_log_viewer=>show_log( ii_log = li_log iv_header_text = li_log->get_title( ) ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
     ENDCASE.
 
