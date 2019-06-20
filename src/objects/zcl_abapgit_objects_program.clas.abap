@@ -358,9 +358,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
 
         IF  <ls_field>-type = 'CHECK'
-          and <ls_field>-from_dict = abap_true
-          and <ls_field>-text IS INITIAL
-          and <ls_field>-modific IS INITIAL.
+          AND <ls_field>-from_dict = abap_true
+          AND <ls_field>-text IS INITIAL
+          AND <ls_field>-modific IS INITIAL.
 
               "If the previous conditions are
               "met the value 'F' will be taken over 
