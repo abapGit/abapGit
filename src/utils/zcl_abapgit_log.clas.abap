@@ -13,22 +13,22 @@ CLASS zcl_abapgit_log DEFINITION
         text TYPE string,
         type TYPE symsgty,
       END OF ty_msg .
-
     TYPES:
       BEGIN OF ty_log, "in order of occurrence
-        msg      TYPE ty_msg,
-        rc       TYPE balsort,
-        item     TYPE zif_abapgit_definitions=>ty_item,
+        msg  TYPE ty_msg,
+        rc   TYPE balsort,
+        item TYPE zif_abapgit_definitions=>ty_item,
       END OF ty_log .
 
     DATA:
       mt_log TYPE STANDARD TABLE OF ty_log WITH DEFAULT KEY .
+    DATA mv_title TYPE string .
 
     METHODS get_messages_status
       IMPORTING
-        it_msg   TYPE zif_abapgit_log=>tty_msg
+        !it_msg          TYPE zif_abapgit_log=>tty_msg
       RETURNING
-        VALUE(rv_status) TYPE symsgty.
+        VALUE(rv_status) TYPE symsgty .
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -223,10 +223,23 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_log~get_title.
+    rv_title = mv_title.
+    IF rv_title IS INITIAL.
+      rv_title = 'Log'.
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_log~has_rc.
 * todo, this method is only used in unit tests
 
     READ TABLE mt_log WITH KEY rc = iv_rc TRANSPORTING NO FIELDS.
     rv_yes = boolc( sy-subrc = 0 ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_log~set_title.
+    mv_title = iv_title.
   ENDMETHOD.
 ENDCLASS.

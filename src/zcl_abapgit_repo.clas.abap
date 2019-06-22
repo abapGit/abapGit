@@ -59,6 +59,7 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS deserialize
       IMPORTING
         !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
+        !ii_log    TYPE REF TO zif_abapgit_log
       RAISING
         zcx_abapgit_exception .
     METHODS refresh
@@ -108,9 +109,18 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS switch_repo_type
       IMPORTING
-        iv_offline TYPE abap_bool
+        !iv_offline TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
+    METHODS create_new_log
+      IMPORTING
+        !iv_title     TYPE string OPTIONAL
+      RETURNING
+        VALUE(ri_log) TYPE REF TO zif_abapgit_log .
+    METHODS get_log
+      RETURNING
+        VALUE(ri_log) TYPE REF TO zif_abapgit_log .
+    METHODS reset_log .
   PROTECTED SECTION.
 
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
@@ -119,6 +129,7 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA ms_data TYPE zif_abapgit_persistence=>ty_repo .
     DATA mv_request_remote_refresh TYPE abap_bool .
     DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
+    DATA mi_log TYPE REF TO zif_abapgit_log .
 
     METHODS set
       IMPORTING
@@ -245,6 +256,16 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD create_new_log.
+
+    CREATE OBJECT mi_log TYPE zcl_abapgit_log.
+    mi_log->set_title( iv_title ).
+
+    ri_log = mi_log.
+
+  ENDMETHOD.
+
+
   METHOD delete_checks.
 
     DATA: li_package TYPE REF TO zif_abapgit_sap_package.
@@ -274,7 +295,8 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     TRY.
         lt_updated_files = zcl_abapgit_objects=>deserialize(
             io_repo   = me
-            is_checks = is_checks ).
+            is_checks = is_checks
+            ii_log    = ii_log ).
       CATCH zcx_abapgit_exception INTO lx_error.
 * ensure to reset default transport request task
         zcl_abapgit_default_transport=>get_instance( )->reset( ).
@@ -431,6 +453,11 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_log.
+    ri_log = mi_log.
+  ENDMETHOD.
+
+
   METHOD get_name.
 
     rv_name = ms_data-local_settings-display_name.
@@ -506,10 +533,17 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     mv_request_local_refresh = abap_true.
     reset_remote( ).
 
+    CLEAR mi_log.
+
     IF iv_drop_cache = abap_true.
       CLEAR: mt_local.
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD reset_log.
+    CLEAR mi_log.
   ENDMETHOD.
 
 

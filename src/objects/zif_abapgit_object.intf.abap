@@ -29,6 +29,7 @@ INTERFACE zif_abapgit_object
       !iv_package TYPE devclass
       !io_xml     TYPE REF TO zcl_abapgit_xml_input
       !iv_step    TYPE ty_deserialization_step
+      !ii_log     TYPE REF TO zif_abapgit_log
     RAISING
       zcx_abapgit_exception .
   METHODS delete

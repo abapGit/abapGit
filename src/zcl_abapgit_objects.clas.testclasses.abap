@@ -44,12 +44,14 @@ CLASS ltcl_dangerous IMPLEMENTATION.
           lv_msg     TYPE string,
           lt_results TYPE zif_abapgit_definitions=>ty_results_tt,
           ls_checks  TYPE zif_abapgit_definitions=>ty_deserialize_checks,
-          lt_types   TYPE zcl_abapgit_objects=>ty_types_tt.
+          lt_types   TYPE zcl_abapgit_objects=>ty_types_tt,
+          lo_log     TYPE REF TO zif_abapgit_log.
 
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF lt_results,
                    <ls_tadir>  LIKE LINE OF lt_tadir,
                    <lv_type>   LIKE LINE OF lt_types.
 
+    CREATE OBJECT lo_log TYPE zcl_abapgit_log.
 
     zcl_abapgit_factory=>get_sap_package( c_package )->create_local( ).
 
@@ -60,7 +62,8 @@ CLASS ltcl_dangerous IMPLEMENTATION.
       iv_branch_name = 'refs/heads/master'
       iv_package     = c_package ).
     lo_repo->status( ).
-    lo_repo->deserialize( ls_checks ).
+    lo_repo->deserialize( is_checks = ls_checks
+                          ii_log    = lo_log ).
 
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( c_package ).
     LOOP AT lt_types ASSIGNING <lv_type>.
