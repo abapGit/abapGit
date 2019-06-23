@@ -300,7 +300,8 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     TRY.
         " Home must be processed by router if it presents
         IF ( iv_action <> c_action-go_home OR mi_router IS NOT BOUND )
-          AND mi_cur_page IS BOUND AND zcl_abapgit_gui_utils=>is_event_handler( mi_cur_page ) = abap_true.
+            AND mi_cur_page IS BOUND
+            AND zcl_abapgit_gui_utils=>is_event_handler( mi_cur_page ) = abap_true.
           li_page_eh ?= mi_cur_page.
           li_page_eh->on_event(
             EXPORTING
