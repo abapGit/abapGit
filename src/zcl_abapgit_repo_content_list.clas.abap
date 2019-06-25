@@ -163,8 +163,8 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
         ls_file-lstate     = <ls_status>-lstate.
         APPEND ls_file TO <ls_repo_item>-files.
 
-        IF <ls_status>-inactive = abap_true AND
-           <ls_repo_item>-sortkey > c_sortkey-changed.
+        IF <ls_status>-inactive = abap_true
+            AND <ls_repo_item>-sortkey > c_sortkey-changed.
           <ls_repo_item>-sortkey = c_sortkey-inactive.
         ENDIF.
 
