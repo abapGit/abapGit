@@ -532,9 +532,6 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
                     ev_obj_name = ls_item-obj_name ).
         zcl_abapgit_objects=>jump( ls_item ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-      WHEN zif_abapgit_definitions=>c_action-jump_pkg.                      " Open SE80
-        zcl_abapgit_services_repo=>open_se80( |{ is_event_data-getdata }| ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>c_action-jump_transport.
         jump_display_transport( is_event_data-getdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
