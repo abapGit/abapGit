@@ -143,12 +143,12 @@ CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
 
   METHOD show_requirement_popup.
 
-
     TYPES: BEGIN OF lty_color_line,
              color TYPE lvc_t_scol.
-            INCLUDE TYPE ty_requirement_status.
-    TYPES: END OF lty_color_line,
-    lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
+        INCLUDE TYPE ty_requirement_status.
+    TYPES: END OF lty_color_line.
+
+    TYPES: lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
 
     DATA: lo_alv            TYPE REF TO cl_salv_table,
           lo_column         TYPE REF TO cl_salv_column,

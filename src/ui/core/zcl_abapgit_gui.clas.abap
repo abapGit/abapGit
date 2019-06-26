@@ -26,7 +26,7 @@ CLASS zcl_abapgit_gui DEFINITION
 
     METHODS go_page
       IMPORTING
-        io_page TYPE REF TO zif_abapgit_gui_renderable
+        io_page        TYPE REF TO zif_abapgit_gui_renderable
         iv_clear_stack TYPE abap_bool DEFAULT abap_true
       RAISING
         zcx_abapgit_exception.
@@ -41,16 +41,16 @@ CLASS zcl_abapgit_gui DEFINITION
 
     METHODS on_event FOR EVENT sapevent OF cl_gui_html_viewer
       IMPORTING
-        action
-        frame
-        getdata
-        postdata
-        query_table.
+          action
+          frame
+          getdata
+          postdata
+          query_table.
 
     METHODS constructor
       IMPORTING
-        io_component TYPE REF TO object OPTIONAL
-        ii_asset_man TYPE REF TO zif_abapgit_gui_asset_manager OPTIONAL
+        io_component     TYPE REF TO object OPTIONAL
+        ii_asset_man     TYPE REF TO zif_abapgit_gui_asset_manager OPTIONAL
         ii_error_handler TYPE REF TO zif_abapgit_gui_error_handler OPTIONAL
       RAISING
         zcx_abapgit_exception.
@@ -121,7 +121,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
+CLASS zcl_abapgit_gui IMPLEMENTATION.
 
 
   METHOD back.
@@ -300,7 +300,8 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     TRY.
         " Home must be processed by router if it presents
         IF ( iv_action <> c_action-go_home OR mi_router IS NOT BOUND )
-          AND mi_cur_page IS BOUND AND zcl_abapgit_gui_utils=>is_event_handler( mi_cur_page ) = abap_true.
+            AND mi_cur_page IS BOUND
+            AND zcl_abapgit_gui_utils=>is_event_handler( mi_cur_page ) = abap_true.
           li_page_eh ?= mi_cur_page.
           li_page_eh->on_event(
             EXPORTING
@@ -369,12 +370,31 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD render.
 
-    DATA: lv_url  TYPE w3url,
-          li_html TYPE REF TO zif_abapgit_html.
+    DATA: lv_url           TYPE w3url,
+          li_html          TYPE REF TO zif_abapgit_html,
+          lo_css_processor TYPE REF TO zcl_abapgit_gui_css_processor.
 
     IF mi_cur_page IS NOT BOUND.
       zcx_abapgit_exception=>raise( 'GUI error: no current page' ).
     ENDIF.
+
+    CREATE OBJECT lo_css_processor
+      EXPORTING
+        ii_asset_manager = mi_asset_man.
+
+    lo_css_processor->add_file( 'css/theme-default.css' ).
+
+    CASE zcl_abapgit_persist_settings=>get_instance( )->read( )->get_ui_theme( ).
+      WHEN zcl_abapgit_settings=>c_ui_theme-dark.
+        "TODO
+      WHEN zcl_abapgit_settings=>c_ui_theme-belize.
+        lo_css_processor->add_file( 'css/theme-belize-blue.css' ).
+    ENDCASE.
+
+    cache_asset( iv_text    = lo_css_processor->process( )
+                 iv_url     = 'css/theme.css'
+                 iv_type    = 'text'
+                 iv_subtype = 'css' ).
 
     li_html = mi_cur_page->render( ).
     lv_url  = cache_html( li_html->render( iv_no_indent_jscss = abap_true ) ).

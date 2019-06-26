@@ -97,8 +97,9 @@ CLASS ZCL_ABAPGIT_PROGRESS IMPLEMENTATION.
     ENDIF.
 
     "We only do a progress indication if enough time has passed
-    IF lv_time  >= mv_cv_time_next  AND sy-datum = mv_cv_datum_next  OR
-       sy-datum >  mv_cv_datum_next.
+    IF lv_time >= mv_cv_time_next
+        AND sy-datum = mv_cv_datum_next
+        OR sy-datum > mv_cv_datum_next.
 
       lv_pct = calc_pct( iv_current ).
 

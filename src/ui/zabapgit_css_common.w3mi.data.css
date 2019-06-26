@@ -5,9 +5,7 @@
 /* GLOBALS */
 
 body {
-  font-family:      Arial,Helvetica,sans-serif;
-  font-size:        12pt;
-  overflow-x:       hidden;
+  overflow-x: hidden;
 }
 a, a:visited {
   text-decoration:  none;

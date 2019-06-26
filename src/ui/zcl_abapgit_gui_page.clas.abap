@@ -87,7 +87,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
 
   METHOD call_browser.
@@ -217,13 +217,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( '<title>abapGit</title>' ).               "#EC NOTEXT
     ro_html->add( '<link rel="stylesheet" type="text/css" href="css/common.css">' ).
 
+    " theme.css is created at runtime in ZCL_ABAPGIT_GUI->RENDER( )
+    ro_html->add( '<link rel="stylesheet" type="text/css" href="css/theme.css">' ).
+
     CASE mo_settings->get_ui_theme( ).
       WHEN zcl_abapgit_settings=>c_ui_theme-dark.
-        ro_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-default.css">' ). "TODO
+        "TODO
       WHEN zcl_abapgit_settings=>c_ui_theme-belize.
-        ro_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-default.css">' ). "TODO
-      WHEN OTHERS.
-        ro_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-default.css">' ).
+        ro_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-belize-blue.css">' ).
     ENDCASE.
 
     ro_html->add( '<link rel="stylesheet" type="text/css" href="css/ag-icons.css">' ).
@@ -366,7 +367,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA lo_script TYPE REF TO zcl_abapgit_html.
+    DATA: lo_script TYPE REF TO zcl_abapgit_html.
 
     " Redirect
     IF ms_control-redirect_url IS NOT INITIAL.

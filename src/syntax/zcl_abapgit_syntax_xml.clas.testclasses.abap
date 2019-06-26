@@ -4,7 +4,7 @@ CLASS ltcl_abapgit_syntax_xml DEFINITION FINAL FOR TESTING
 
   PRIVATE SECTION.
     DATA:
-    mo_cut TYPE REF TO zcl_abapgit_syntax_xml.
+      mo_cut TYPE REF TO zcl_abapgit_syntax_xml.
 
     METHODS:
       setup,

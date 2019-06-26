@@ -229,11 +229,11 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD get_filename .
+  METHOD get_filename.
 
 * Generate filename
     CONCATENATE is_trkorr-trkorr '_' is_trkorr-as4text '_' gv_timestamp gc_zip_ext
-    INTO rv_filename.
+      INTO rv_filename.
 
 * Remove reserved characters (for Windows based systems)
     TRANSLATE rv_filename USING '/ \ : " * > < ? | '.
@@ -256,7 +256,7 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
       zcl_abapgit_zip=>save_binstring_to_localfile( iv_binstring = lv_zipbinstring
                                                     iv_filename  = get_filename( ls_trkorr ) ).
 
-    ENDLOOP. "it_trkorr
+    ENDLOOP.
 
   ENDMETHOD.
 
