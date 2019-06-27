@@ -124,7 +124,9 @@ CLASS zcl_abapgit_gui_router DEFINITION
         zcx_abapgit_exception.
     CLASS-METHODS jump_display_transport
       IMPORTING
-        !iv_getdata TYPE clike .
+        !iv_getdata TYPE clike
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -423,14 +425,39 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD jump_display_transport.
-    DATA: lv_transport TYPE trkorr.
+ METHOD jump_display_transport.
+
+    DATA: lv_transport         TYPE trkorr,
+          lv_transport_adt_uri TYPE string,
+          lv_adt_link          TYPE string,
+          lv_adt_jump_enabled  TYPE abap_bool.
 
     lv_transport = iv_getdata.
 
-    CALL FUNCTION 'TR_DISPLAY_REQUEST'
-      EXPORTING
-        i_trkorr = lv_transport.
+    lv_adt_jump_enabled = zcl_abapgit_persist_settings=>get_instance( )->read( )->get_adt_jump_enabled( ).
+    IF lv_adt_jump_enabled = abap_true.
+      TRY.
+          CALL METHOD ('CL_CTS_ADT_TM_URI_BUILDER')=>('CREATE_ADT_URI')
+            EXPORTING
+              trnumber = lv_transport
+            RECEIVING
+              result   = lv_transport_adt_uri.
+          lv_adt_link = |adt://{ sy-sysid }{ lv_transport_adt_uri }|.
+
+          cl_gui_frontend_services=>execute( EXPORTING  document = lv_adt_link
+                                             EXCEPTIONS OTHERS   = 1 ).
+          IF sy-subrc <> 0.
+            zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
+          ENDIF.
+        CATCH cx_root.
+          zcx_abapgit_exception=>raise( 'Jump to object not supported in your NW release' ).
+      ENDTRY.
+    ELSE.
+      CALL FUNCTION 'TR_DISPLAY_REQUEST'
+        EXPORTING
+          i_trkorr = lv_transport.
+    ENDIF.
+
   ENDMETHOD.
 
 
