@@ -425,7 +425,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
   ENDMETHOD.
 
 
- METHOD jump_display_transport.
+  METHOD jump_display_transport.
 
     DATA: lv_transport         TYPE trkorr,
           lv_transport_adt_uri TYPE string,
