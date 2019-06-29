@@ -5,7 +5,7 @@ CLASS zcx_abapgit_exception DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    CONSTANTS: co_memid TYPE char30 VALUE `ZABAPGIT_CALLSTACK` .
+    CONSTANTS: gc_memory_id TYPE char30 VALUE `ZABAPGIT_CALLSTACK` .
 
     INTERFACES if_t100_message .
 
@@ -212,7 +212,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
     IF li_gui_functions->gui_is_available( ) = abap_true.
       " We store the callstack in ABAP memory so that we can retrieve it later when the
       " user clicks on an message to display the long text.
-      EXPORT callstack = mt_callstack TO MEMORY ID co_memid.
+      EXPORT callstack = mt_callstack TO MEMORY ID gc_memory_id.
     ENDIF.
 
   ENDMETHOD.
