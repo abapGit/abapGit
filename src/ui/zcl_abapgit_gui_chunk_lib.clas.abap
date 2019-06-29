@@ -373,11 +373,11 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
   METHOD render_repo_top.
 
-    DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online,
-          lo_pback       TYPE REF TO zcl_abapgit_persist_background,
-          lv_hint        TYPE string,
-          lv_icon        TYPE string.
-
+    DATA: lo_repo_online       TYPE REF TO zcl_abapgit_repo_online,
+          lo_pback             TYPE REF TO zcl_abapgit_persist_background,
+          lv_hint              TYPE string,
+          lv_icon              TYPE string,
+          lv_package_jump_data TYPE string.
 
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_pback.
@@ -465,8 +465,13 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     IF iv_show_package = abap_true.
       ro_html->add_icon( iv_name = 'box/grey70' iv_hint = 'SAP package' ).
       ro_html->add( '<span>' ).
+
+      lv_package_jump_data = zcl_abapgit_html_action_utils=>jump_encode(
+        iv_obj_type = 'DEVC'
+        iv_obj_name = io_repo->get_package( ) ).
+
       ro_html->add_a( iv_txt = io_repo->get_package( )
-                      iv_act = |{ zif_abapgit_definitions=>c_action-jump_pkg }?{ io_repo->get_package( ) }| ).
+                      iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_package_jump_data }| ).
       ro_html->add( '</span>' ).
     ENDIF.
 
