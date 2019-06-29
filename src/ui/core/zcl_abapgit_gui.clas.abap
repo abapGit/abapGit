@@ -20,6 +20,10 @@ CLASS zcl_abapgit_gui DEFINITION
         go_home TYPE string VALUE 'go_home',
       END OF c_action.
 
+    INTERFACES zif_abapgit_gui_services.
+    ALIASES:
+      cache_asset FOR zif_abapgit_gui_services~cache_asset.
+
     METHODS go_home
       RAISING
         zcx_abapgit_exception.
@@ -83,16 +87,6 @@ CLASS zcl_abapgit_gui DEFINITION
       RETURNING
         VALUE(rv_url) TYPE w3url.
 
-    METHODS cache_asset
-      IMPORTING
-        iv_text       TYPE string OPTIONAL
-        iv_xdata      TYPE xstring OPTIONAL
-        iv_url        TYPE w3url OPTIONAL
-        iv_type       TYPE c
-        iv_subtype    TYPE c
-      RETURNING
-        VALUE(rv_url) TYPE w3url.
-
     METHODS render
       RAISING
         zcx_abapgit_exception.
@@ -121,7 +115,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
 
   METHOD back.
@@ -152,45 +146,6 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
 
     mi_cur_page = ls_stack-page. " last page always stays
     render( ).
-
-  ENDMETHOD.
-
-
-  METHOD cache_asset.
-
-    DATA: lv_xstr  TYPE xstring,
-          lt_xdata TYPE lvc_t_mime,
-          lv_size  TYPE int4.
-
-    ASSERT iv_text IS SUPPLIED OR iv_xdata IS SUPPLIED.
-
-    IF iv_text IS SUPPLIED. " String input
-      lv_xstr = zcl_abapgit_convert=>string_to_xstring( iv_text ).
-    ELSE. " Raw input
-      lv_xstr = iv_xdata.
-    ENDIF.
-
-    zcl_abapgit_convert=>xstring_to_bintab(
-      EXPORTING
-        iv_xstr   = lv_xstr
-      IMPORTING
-        ev_size   = lv_size
-        et_bintab = lt_xdata ).
-
-    mo_html_viewer->load_data(
-      EXPORTING
-        type         = iv_type
-        subtype      = iv_subtype
-        size         = lv_size
-        url          = iv_url
-      IMPORTING
-        assigned_url = rv_url
-      CHANGING
-        data_table   = lt_xdata
-      EXCEPTIONS
-        OTHERS       = 1 ) ##NO_TEXT.
-
-    ASSERT sy-subrc = 0. " Image data error
 
   ENDMETHOD.
 
@@ -433,6 +388,45 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
 
     mo_html_viewer->set_registered_events( lt_events ).
     SET HANDLER me->on_event FOR mo_html_viewer.
+
+  ENDMETHOD.
+
+
+  METHOD cache_asset.
+
+    DATA: lv_xstr  TYPE xstring,
+          lt_xdata TYPE lvc_t_mime,
+          lv_size  TYPE int4.
+
+    ASSERT iv_text IS SUPPLIED OR iv_xdata IS SUPPLIED.
+
+    IF iv_text IS SUPPLIED. " String input
+      lv_xstr = zcl_abapgit_convert=>string_to_xstring( iv_text ).
+    ELSE. " Raw input
+      lv_xstr = iv_xdata.
+    ENDIF.
+
+    zcl_abapgit_convert=>xstring_to_bintab(
+      EXPORTING
+        iv_xstr   = lv_xstr
+      IMPORTING
+        ev_size   = lv_size
+        et_bintab = lt_xdata ).
+
+    mo_html_viewer->load_data(
+      EXPORTING
+        type         = iv_type
+        subtype      = iv_subtype
+        size         = lv_size
+        url          = iv_url
+      IMPORTING
+        assigned_url = rv_url
+      CHANGING
+        data_table   = lt_xdata
+      EXCEPTIONS
+        OTHERS       = 1 ) ##NO_TEXT.
+
+    ASSERT sy-subrc = 0. " Image data error
 
   ENDMETHOD.
 ENDCLASS.
