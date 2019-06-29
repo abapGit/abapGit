@@ -5,6 +5,7 @@ CLASS zcx_abapgit_exception DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    CONSTANTS: co_memid TYPE char30 VALUE `ZABAPGIT_CALLSTACK` .
 
     INTERFACES if_t100_message .
 
@@ -56,7 +57,30 @@ CLASS zcx_abapgit_exception DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
-      gc_generic_error_msg TYPE string VALUE `An error occured (ZCX_ABAPGIT_EXCEPTION)` ##NO_TEXT.
+      gc_generic_error_msg TYPE string VALUE `An error occured (ZCX_ABAPGIT_EXCEPTION)` ##NO_TEXT,
+      BEGIN OF co_msg,
+        BEGIN OF abapgit,
+          msgid TYPE symsgid VALUE 'ZABAPGIT',
+          msgno TYPE symsgno VALUE '000',
+        END OF abapgit,
+        BEGIN OF default,
+          msgid TYPE symsgid VALUE '00',
+          msgno TYPE symsgno VALUE '001',
+        END OF default,
+      END OF co_msg.
+    CLASS-DATA gv_is_merged TYPE abap_bool VALUE abap_undefined ##NO_TEXT.
+
+    CLASS-METHODS:
+      set_msg_vars_for_clike
+        IMPORTING
+          text TYPE string,
+      is_merged
+        RETURNING
+          VALUE(rv_is_merged) TYPE abap_bool.
+
+    METHODS:
+      save_callstack.
+
 ENDCLASS.
 
 
@@ -78,6 +102,9 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
     ELSE.
       if_t100_message~t100key = textid.
     ENDIF.
+
+    save_callstack( ).
+
   ENDMETHOD.
 
 
@@ -95,7 +122,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
       lv_text = iv_text.
     ENDIF.
 
-    cl_message_helper=>set_msg_vars_for_clike( lv_text ).
+    set_msg_vars_for_clike( lv_text ).
 
     ls_t100_key-msgid = sy-msgid.
     ls_t100_key-msgno = sy-msgno.
@@ -141,4 +168,90 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
         msgv3  = iv_msgv3
         msgv4  = iv_msgv4.
   ENDMETHOD.
+
+  METHOD set_msg_vars_for_clike.
+
+    TYPES:
+      BEGIN OF ty_msg,
+        msgv1 TYPE symsgv,
+        msgv2 TYPE symsgv,
+        msgv3 TYPE symsgv,
+        msgv4 TYPE symsgv,
+      END OF ty_msg.
+
+    DATA: ls_msg TYPE ty_msg.
+
+    ls_msg = text.
+
+    " You should remember that we use the abapGit message if we have
+    " the full abapGit repository installed. If not we use the default one.
+    "
+    " Purpose of the abapGit message is to provide more context in the longtext.
+
+    IF is_merged( ) = abap_true.
+      sy-msgid = co_msg-default-msgid.
+      sy-msgno = co_msg-default-msgno.
+    ELSE.
+      sy-msgid = co_msg-abapgit-msgid.
+      sy-msgno = co_msg-abapgit-msgno.
+    ENDIF.
+
+    sy-msgv1 = ls_msg-msgv1.
+    sy-msgv2 = ls_msg-msgv2.
+    sy-msgv3 = ls_msg-msgv3.
+    sy-msgv4 = ls_msg-msgv4.
+
+  ENDMETHOD.
+
+
+  METHOD save_callstack.
+
+    DATA: lt_callstack TYPE abap_callstack.
+    FIELD-SYMBOLS: <ls_callstack> TYPE abap_callstack_line.
+
+    CALL FUNCTION 'SYSTEM_CALLSTACK'
+      IMPORTING
+        callstack = lt_callstack.
+
+    " You should remember that the first lines are from zcx_abapgit_exception
+    " and are removed so that highest level in the callstack is the position where
+    " the exception is raised.
+    LOOP AT lt_callstack ASSIGNING <ls_callstack>.
+
+      IF <ls_callstack>-mainprogram CP |ZCX_ABAPGIT_EXCEPTION*|.
+        DELETE TABLE lt_callstack FROM <ls_callstack>.
+      ELSE.
+        EXIT.
+      ENDIF.
+
+    ENDLOOP.
+
+    EXPORT callstack = lt_callstack
+           TO MEMORY ID co_memid.
+
+  ENDMETHOD.
+
+
+  METHOD is_merged.
+
+    " Temporal duplication of zcl_abapgit_environment=>is_merged,
+    " it doesn't work yet inside exception classes. #2763
+
+    DATA lo_marker TYPE REF TO data ##NEEDED.
+
+    IF gv_is_merged = abap_undefined.
+      TRY.
+          CREATE DATA lo_marker TYPE REF TO ('LIF_ABAPMERGE_MARKER')  ##no_text.
+          "No exception --> marker found
+          gv_is_merged = abap_true.
+
+        CATCH cx_sy_create_data_error.
+          gv_is_merged = abap_false.
+      ENDTRY.
+    ENDIF.
+
+    rv_is_merged = gv_is_merged.
+
+  ENDMETHOD.
+
 ENDCLASS.
