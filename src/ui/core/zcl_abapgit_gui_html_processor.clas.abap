@@ -11,7 +11,7 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR DEFINITION
 
     METHODS constructor
       IMPORTING
-        ii_asset_man TYPE REF TO zcl_abapgit_gui_asset_manager.
+        ii_asset_man TYPE REF TO zif_abapgit_gui_asset_manager.
 
     METHODS preserve_css
       IMPORTING
@@ -20,7 +20,7 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA mt_preserve_css TYPE string_table.
-    DATA mi_asset_man TYPE REF TO zcl_abapgit_gui_asset_manager.
+    DATA mi_asset_man TYPE REF TO zif_abapgit_gui_asset_manager.
 
     METHODS patch_html
       IMPORTING
