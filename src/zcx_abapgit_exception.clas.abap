@@ -57,17 +57,7 @@ CLASS zcx_abapgit_exception DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
-      gc_generic_error_msg TYPE string VALUE `An error occured (ZCX_ABAPGIT_EXCEPTION)` ##NO_TEXT,
-      BEGIN OF co_msg,
-        BEGIN OF abapgit,
-          msgid TYPE symsgid VALUE 'ZABAPGIT',
-          msgno TYPE symsgno VALUE '000',
-        END OF abapgit,
-        BEGIN OF default,
-          msgid TYPE symsgid VALUE '00',
-          msgno TYPE symsgno VALUE '001',
-        END OF default,
-      END OF co_msg.
+      gc_generic_error_msg TYPE string VALUE `An error occured (ZCX_ABAPGIT_EXCEPTION)` ##NO_TEXT.
     CLASS-DATA gv_is_merged TYPE abap_bool VALUE abap_undefined ##NO_TEXT.
 
     CLASS-METHODS:
@@ -179,7 +169,8 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
         msgv4 TYPE symsgv,
       END OF ty_msg.
 
-    DATA: ls_msg TYPE ty_msg.
+    DATA: ls_msg   TYPE ty_msg,
+          lv_dummy TYPE string.
 
     ls_msg = text.
 
@@ -189,17 +180,14 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
     " Purpose of the abapGit message is to provide more context in the longtext.
 
     IF is_merged( ) = abap_true.
-      sy-msgid = co_msg-default-msgid.
-      sy-msgno = co_msg-default-msgno.
+      " &1&2&3&4&5&6&7&8
+      MESSAGE e001(00) WITH ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4
+                       INTO lv_dummy.
     ELSE.
-      sy-msgid = co_msg-abapgit-msgid.
-      sy-msgno = co_msg-abapgit-msgno.
+      " &1&2&3&4&5&6&7&8
+      MESSAGE e001(zabapgit) WITH ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4
+                             INTO lv_dummy.
     ENDIF.
-
-    sy-msgv1 = ls_msg-msgv1.
-    sy-msgv2 = ls_msg-msgv2.
-    sy-msgv3 = ls_msg-msgv3.
-    sy-msgv4 = ls_msg-msgv4.
 
   ENDMETHOD.
 
