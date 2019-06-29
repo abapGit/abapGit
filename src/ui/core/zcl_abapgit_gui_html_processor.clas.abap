@@ -6,6 +6,8 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR DEFINITION
   PUBLIC SECTION.
 
     CONSTANTS c_css_build_name TYPE string VALUE 'css/bundle.css'.
+    CONSTANTS c_comment_start TYPE string VALUE `<!-- by AG HTML preprocessor `.
+    CONSTANTS c_comment_end TYPE string VALUE `-->`.
 
     INTERFACES zif_abapgit_gui_html_processor .
 
@@ -89,7 +91,7 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR IMPLEMENTATION.
         lv_off = lo_matcher->get_offset( ).
         lv_len = lo_matcher->get_length( ).
         ev_html = ev_html && substring( val = iv_html off = lv_cur len = lv_off - lv_cur ).
-        ev_html = ev_html && '<!--' && substring( val = iv_html off = lv_off len = lv_len ) && '-->'.
+        ev_html = ev_html && c_comment_start && substring( val = iv_html off = lv_off len = lv_len ) && c_comment_end.
         lv_cur  = lv_off + lv_len.
         APPEND lv_css_path TO et_css_urls.
       ENDIF.
@@ -97,7 +99,10 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR IMPLEMENTATION.
 
     ev_html = ev_html && substring( val = iv_html off = lv_cur len = lv_head_end - lv_cur ).
     IF lines( et_css_urls ) > 0.
-      ev_html = ev_html && cl_abap_char_utilities=>newline && `    ` && lc_css_build. " Assume 4 space indent, improve?
+      ev_html = ev_html
+        && cl_abap_char_utilities=>newline && `    ` " Assume 4 space indent, maybe improve and detect ?
+        && c_comment_start && c_comment_end
+        && lc_css_build.
     ENDIF.
     ev_html = ev_html && substring( val = iv_html off = lv_head_end ).
 
