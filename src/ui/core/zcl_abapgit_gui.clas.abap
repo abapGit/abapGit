@@ -56,6 +56,7 @@ CLASS zcl_abapgit_gui DEFINITION
         io_component     TYPE REF TO object OPTIONAL
         ii_asset_man     TYPE REF TO zif_abapgit_gui_asset_manager OPTIONAL
         ii_error_handler TYPE REF TO zif_abapgit_gui_error_handler OPTIONAL
+        ii_html_processor TYPE REF TO zif_abapgit_gui_html_processor OPTIONAL
       RAISING
         zcx_abapgit_exception.
 
@@ -75,6 +76,7 @@ CLASS zcl_abapgit_gui DEFINITION
           mi_router        TYPE REF TO zif_abapgit_gui_event_handler,
           mi_asset_man     TYPE REF TO zif_abapgit_gui_asset_manager,
           mi_error_handler TYPE REF TO zif_abapgit_gui_error_handler,
+          mi_html_processor TYPE REF TO zif_abapgit_gui_html_processor,
           mo_html_viewer   TYPE REF TO cl_gui_html_viewer.
 
     METHODS startup
@@ -191,6 +193,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     mi_asset_man = ii_asset_man.
     mi_error_handler = ii_error_handler.
+    mi_html_processor = ii_html_processor. " Maybe improve to middlewares stack ??
     startup( ).
 
   ENDMETHOD.
@@ -326,6 +329,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
   METHOD render.
 
     DATA: lv_url           TYPE w3url,
+          lv_html          TYPE string,
           li_html          TYPE REF TO zif_abapgit_html,
           lo_css_processor TYPE REF TO zcl_abapgit_gui_css_processor.
 
@@ -333,27 +337,16 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'GUI error: no current page' ).
     ENDIF.
 
-    CREATE OBJECT lo_css_processor
-      EXPORTING
-        ii_asset_manager = mi_asset_man.
-
-    lo_css_processor->add_file( 'css/theme-default.css' ).
-
-    CASE zcl_abapgit_persist_settings=>get_instance( )->read( )->get_ui_theme( ).
-      WHEN zcl_abapgit_settings=>c_ui_theme-dark.
-        "TODO
-      WHEN zcl_abapgit_settings=>c_ui_theme-belize.
-        lo_css_processor->add_file( 'css/theme-belize-blue.css' ).
-    ENDCASE.
-
-    cache_asset( iv_text    = lo_css_processor->process( )
-                 iv_url     = 'css/theme.css'
-                 iv_type    = 'text'
-                 iv_subtype = 'css' ).
-
     li_html = mi_cur_page->render( ).
-    lv_url  = cache_html( li_html->render( iv_no_indent_jscss = abap_true ) ).
+    lv_html = li_html->render( iv_no_indent_jscss = abap_true ).
 
+    IF mi_html_processor IS BOUND.
+      lv_html = mi_html_processor->process(
+        iv_html         = lv_html
+        ii_gui_services = me ).
+    ENDIF.
+
+    lv_url  = cache_html( lv_html ).
     mo_html_viewer->show_url( lv_url ).
 
   ENDMETHOD.
