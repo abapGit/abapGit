@@ -1,4 +1,4 @@
-CLASS ltcl_gui_mock DEFINITION.
+CLASS lcl_gui_mock DEFINITION.
   PUBLIC SECTION.
     TYPES:
       BEGIN OF ty_cache_signature,
@@ -11,7 +11,7 @@ CLASS ltcl_gui_mock DEFINITION.
     INTERFACES zif_abapgit_gui_services.
 ENDCLASS.
 
-CLASS ltcl_gui_mock IMPLEMENTATION.
+CLASS lcl_gui_mock IMPLEMENTATION.
   METHOD zif_abapgit_gui_services~cache_asset.
     ms_last_cache_signature-url  = iv_url.
     ms_last_cache_signature-type = iv_type && '/' && iv_subtype.
@@ -28,7 +28,7 @@ CLASS ltcl_html_processor_test DEFINITION
   PRIVATE SECTION.
     DATA mv_source TYPE string.
     DATA mo_cut TYPE REF TO zcl_abapgit_gui_html_processor.
-    DATA mo_gui_mock TYPE REF TO ltcl_gui_mock.
+    DATA mo_gui_mock TYPE REF TO lcl_gui_mock.
 
     METHODS render_html
       IMPORTING
@@ -161,12 +161,12 @@ CLASS ltcl_html_processor_test IMPLEMENTATION.
   METHOD process_fails.
 
     TRY .
-      " BTW this is valid HTML, maybe refactor the code ...
-      mo_cut->zif_abapgit_gui_html_processor~process(
-        iv_html = '<html><body></body></html>'
-        ii_gui_services = mo_gui_mock ).
-      cl_abap_unit_assert=>fail( ).
-    CATCH zcx_abapgit_exception ##NO_HANDLER.
+        " BTW this is valid HTML, maybe refactor the code ...
+        mo_cut->zif_abapgit_gui_html_processor~process(
+          iv_html = '<html><body></body></html>'
+          ii_gui_services = mo_gui_mock ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
 
   ENDMETHOD.

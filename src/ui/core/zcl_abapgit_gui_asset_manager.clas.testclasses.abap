@@ -57,12 +57,12 @@ CLASS ltcl_abapgit_gui_asset_manager IMPLEMENTATION.
       exp = 'ABC' ).
 
     TRY .
-      lo_assetman->zif_abapgit_gui_asset_manager~get_text_asset(
-        iv_url = 'css/common.css'
-        iv_assert_subtype = 'xyz' ).
-      cl_abap_unit_assert=>fail( ).
-    CATCH zcx_abapgit_exception.
-      " no futher check
+        lo_assetman->zif_abapgit_gui_asset_manager~get_text_asset(
+          iv_url = 'css/common.css'
+          iv_assert_subtype = 'xyz' ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception.
+        " no futher check
     ENDTRY.
 
     lo_assetman->register_asset(
@@ -71,10 +71,10 @@ CLASS ltcl_abapgit_gui_asset_manager IMPLEMENTATION.
       iv_inline    = 'XYZ' ).
 
     TRY .
-      lo_assetman->zif_abapgit_gui_asset_manager~get_text_asset( 'css/common.xyz' ).
-      cl_abap_unit_assert=>fail( ).
-    CATCH zcx_abapgit_exception.
-      " no futher check
+        lo_assetman->zif_abapgit_gui_asset_manager~get_text_asset( 'css/common.xyz' ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception.
+        " no futher check
     ENDTRY.
 
   ENDMETHOD.

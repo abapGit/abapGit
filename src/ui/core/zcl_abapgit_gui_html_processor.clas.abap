@@ -1,4 +1,4 @@
-CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR DEFINITION
+CLASS zcl_abapgit_gui_html_processor DEFINITION
   PUBLIC
   FINAL
   CREATE PUBLIC .
@@ -60,8 +60,6 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR IMPLEMENTATION.
   METHOD patch_html.
 
     CONSTANTS lc_css_re TYPE string VALUE `<link\s+rel="stylesheet"\s+type="text/css"\s+href="(\S+)">`.
-    DATA lc_css_build TYPE string value '<link rel="stylesheet" type="text/css" href="$BUILD_NAME">'.
-    REPLACE FIRST OCCURRENCE OF '$BUILD_NAME' IN lc_css_build WITH c_css_build_name. " Mmmm
 
     DATA lv_head_end TYPE i.
     DATA lo_css_re   TYPE REF TO cl_abap_regex.
@@ -71,6 +69,9 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR IMPLEMENTATION.
     DATA lv_off TYPE i.
     DATA lv_len TYPE i.
     DATA lv_cur TYPE i.
+
+    DATA lc_css_build TYPE string value '<link rel="stylesheet" type="text/css" href="$BUILD_NAME">'.
+    REPLACE FIRST OCCURRENCE OF '$BUILD_NAME' IN lc_css_build WITH c_css_build_name. " Mmmm
 
     CLEAR: ev_html, et_css_urls.
 
@@ -120,7 +121,7 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR IMPLEMENTATION.
     DATA lt_css_urls TYPE string_table.
     DATA lv_css_build TYPE string.
 
-    FIELD-SYMBOLS <u> LIKE LINE OF lt_css_urls.
+    FIELD-SYMBOLS <lv_url> LIKE LINE OF lt_css_urls.
 
     patch_html(
       EXPORTING
@@ -134,8 +135,8 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR IMPLEMENTATION.
         EXPORTING
           ii_asset_manager = mi_asset_man.
 
-      LOOP AT lt_css_urls ASSIGNING <u>.
-        lo_css_processor->add_file( <u> ).
+      LOOP AT lt_css_urls ASSIGNING <lv_url>.
+        lo_css_processor->add_file( <lv_url> ).
       ENDLOOP.
 
       lv_css_build = lo_css_processor->process( ).
