@@ -237,7 +237,7 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_top_of_stack> LIKE LINE OF mt_callstack.
 
     IMPORT callstack = mt_callstack
-           FROM MEMORY ID zcx_abapgit_exception=>co_memid.
+           FROM MEMORY ID zcx_abapgit_exception=>gc_memory_id.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |No callstack found in memory| ).
     ENDIF.
