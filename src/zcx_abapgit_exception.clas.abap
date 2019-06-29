@@ -14,6 +14,7 @@ CLASS zcx_abapgit_exception DEFINITION
     DATA msgv2 TYPE symsgv READ-ONLY .
     DATA msgv3 TYPE symsgv READ-ONLY .
     DATA msgv4 TYPE symsgv READ-ONLY .
+    DATA mt_callstack TYPE abap_callstack READ-ONLY.
 
     "! Raise exception with text
     "! @parameter iv_text | Text
@@ -98,6 +99,29 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_merged.
+
+    " Temporal duplication of zcl_abapgit_environment=>is_merged,
+    " it doesn't work yet inside exception classes. #2763
+
+    DATA lo_marker TYPE REF TO data ##NEEDED.
+
+    IF gv_is_merged = abap_undefined.
+      TRY.
+          CREATE DATA lo_marker TYPE REF TO ('LIF_ABAPMERGE_MARKER')  ##no_text.
+          "No exception --> marker found
+          gv_is_merged = abap_true.
+
+        CATCH cx_sy_create_data_error.
+          gv_is_merged = abap_false.
+      ENDTRY.
+    ENDIF.
+
+    rv_is_merged = gv_is_merged.
+
+  ENDMETHOD.
+
+
   METHOD raise.
     DATA: lv_msgv1    TYPE symsgv,
           lv_msgv2    TYPE symsgv,
@@ -159,6 +183,41 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
         msgv4  = iv_msgv4.
   ENDMETHOD.
 
+
+  METHOD save_callstack.
+
+    DATA: li_gui_functions TYPE REF TO zif_abapgit_gui_functions.
+
+    FIELD-SYMBOLS: <ls_callstack> TYPE abap_callstack_line.
+
+    CALL FUNCTION 'SYSTEM_CALLSTACK'
+      IMPORTING
+        callstack = mt_callstack.
+
+    " You should remember that the first lines are from zcx_abapgit_exception
+    " and are removed so that highest level in the callstack is the position where
+    " the exception is raised.
+    LOOP AT mt_callstack ASSIGNING <ls_callstack>.
+
+      IF <ls_callstack>-mainprogram CP |ZCX_ABAPGIT_EXCEPTION*|.
+        DELETE TABLE mt_callstack FROM <ls_callstack>.
+      ELSE.
+        EXIT.
+      ENDIF.
+
+    ENDLOOP.
+
+    li_gui_functions = zcl_abapgit_ui_factory=>get_gui_functions( ).
+
+    IF li_gui_functions->gui_is_available( ) = abap_true.
+      " We store the callstack in ABAP memory so that we can retrieve it later when the
+      " user clicks on an message to display the long text.
+      EXPORT callstack = mt_callstack TO MEMORY ID co_memid.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD set_msg_vars_for_clike.
 
     TYPES:
@@ -190,56 +249,4 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
-
-  METHOD save_callstack.
-
-    DATA: lt_callstack TYPE abap_callstack.
-    FIELD-SYMBOLS: <ls_callstack> TYPE abap_callstack_line.
-
-    CALL FUNCTION 'SYSTEM_CALLSTACK'
-      IMPORTING
-        callstack = lt_callstack.
-
-    " You should remember that the first lines are from zcx_abapgit_exception
-    " and are removed so that highest level in the callstack is the position where
-    " the exception is raised.
-    LOOP AT lt_callstack ASSIGNING <ls_callstack>.
-
-      IF <ls_callstack>-mainprogram CP |ZCX_ABAPGIT_EXCEPTION*|.
-        DELETE TABLE lt_callstack FROM <ls_callstack>.
-      ELSE.
-        EXIT.
-      ENDIF.
-
-    ENDLOOP.
-
-    EXPORT callstack = lt_callstack
-           TO MEMORY ID co_memid.
-
-  ENDMETHOD.
-
-
-  METHOD is_merged.
-
-    " Temporal duplication of zcl_abapgit_environment=>is_merged,
-    " it doesn't work yet inside exception classes. #2763
-
-    DATA lo_marker TYPE REF TO data ##NEEDED.
-
-    IF gv_is_merged = abap_undefined.
-      TRY.
-          CREATE DATA lo_marker TYPE REF TO ('LIF_ABAPMERGE_MARKER')  ##no_text.
-          "No exception --> marker found
-          gv_is_merged = abap_true.
-
-        CATCH cx_sy_create_data_error.
-          gv_is_merged = abap_false.
-      ENDTRY.
-    ENDIF.
-
-    rv_is_merged = gv_is_merged.
-
-  ENDMETHOD.
-
 ENDCLASS.
