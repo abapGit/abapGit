@@ -70,7 +70,7 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR IMPLEMENTATION.
     DATA lv_len TYPE i.
     DATA lv_cur TYPE i.
 
-    DATA lc_css_build TYPE string value '<link rel="stylesheet" type="text/css" href="$BUILD_NAME">'.
+    DATA lc_css_build TYPE string VALUE '<link rel="stylesheet" type="text/css" href="$BUILD_NAME">'.
     REPLACE FIRST OCCURRENCE OF '$BUILD_NAME' IN lc_css_build WITH c_css_build_name. " Mmmm
 
     CLEAR: ev_html, et_css_urls.
