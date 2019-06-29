@@ -183,9 +183,9 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
     TRY.
         cl_salv_table=>factory(
           IMPORTING
-            r_salv_table   = lo_alv
+            r_salv_table = lo_alv
           CHANGING
-            t_table        = mt_callstack ).
+            t_table      = mt_callstack ).
 
         lo_alv->get_columns( )->set_optimize( ).
 
@@ -232,8 +232,6 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
 
   METHOD process.
 
-    DATA: lx_error  TYPE REF TO zcx_abapgit_exception.
-
     FIELD-SYMBOLS: <ls_top_of_stack> LIKE LINE OF mt_callstack.
 
     IMPORT callstack = mt_callstack
@@ -256,7 +254,6 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
       WHEN 'ZABAPGIT_GOTO_SOURCE'.
 
         go_to_source_code( <ls_top_of_stack> ).
-
 
       WHEN 'ZABAPGIT_CALLSTACK'.
 
