@@ -242,6 +242,10 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |No callstack found in memory| ).
     ENDIF.
 
+    " We mustn't delete the callstack from ABAP memory, because
+    " the code can be executed multiple times for an exception.
+    " DELETE FROM MEMORY ID zcx_abapgit_exception=>gc_memory_id.
+
     READ TABLE mt_callstack INDEX 1
                             ASSIGNING <ls_top_of_stack>.
     IF sy-subrc <> 0.
