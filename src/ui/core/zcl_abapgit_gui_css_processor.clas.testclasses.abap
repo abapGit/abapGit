@@ -70,13 +70,12 @@ CLASS ltcl_single_file IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD test_empty_file.
-    " TODO REMOVE ?? why test empty files ?
     add_file( 'does/exist.css' ).
     mo_cut->add_file( 'does/exist.css' ).
     TRY.
         mo_cut->process( ).
+        cl_abap_unit_assert=>fail( ). " Assetman fails on empty content
       CATCH zcx_abapgit_exception.
-        cl_abap_unit_assert=>fail( ).
     ENDTRY.
   ENDMETHOD.
 
