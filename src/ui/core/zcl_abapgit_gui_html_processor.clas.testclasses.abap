@@ -160,7 +160,7 @@ CLASS ltcl_html_processor_test IMPLEMENTATION.
 
   METHOD process_fails.
 
-    TRY .
+    TRY.
         " BTW this is valid HTML, maybe refactor the code ...
         mo_cut->zif_abapgit_gui_html_processor~process(
           iv_html = '<html><body></body></html>'

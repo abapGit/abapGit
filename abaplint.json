@@ -49,7 +49,7 @@
     "constructor_visibility_public": {
       "enabled": true,
       "exclude": []
-    },    
+    },
     "contains_tab": {
       "enabled": true,
       "exclude": []
@@ -63,22 +63,31 @@
       "exclude": []
     },
     "double_space": {
-      "enabled": true,
-      "exclude": []
+      "enabled": false,
+      "exclude": [],
+      "keywords": true,
+      "startParen": true,
+      "endParen": true
     },
     "empty_line_in_statement": {
       "enabled": true,
       "exclude": [],
       "allowChained": true
     },
-    "empty_loop": {
-      "enabled": true,
-      "exclude": [],
-      "length": 120
-    },
     "empty_statement": {
       "enabled": true,
       "exclude": []
+    },
+    "empty_structure": {
+      "enabled": true,
+      "exclude": [],
+      "loop": true,
+      "if": false,
+      "while": true,
+      "case": true,
+      "select": true,
+      "do": true,
+      "at": true
     },
     "exit_or_check": {
       "enabled": true,
@@ -104,6 +113,11 @@
     "if_in_if": {
       "enabled": true,
       "exclude": []
+    },
+    "in_statement_indentation": {
+      "enabled": false,
+      "exclude": [],
+      "ignoreExceptions": true
     },
     "indentation": {
       "enabled": true,
@@ -258,6 +272,12 @@
       "enabled": true,
       "exclude": []
     },
+    "space_before_dot": {
+      "enabled": true,
+      "exclude": [],
+      "ignoreGlobalDefinition": true,
+      "ignoreExceptions": true
+    },
     "start_at_tab": {
       "enabled": true,
       "exclude": []
@@ -271,6 +291,10 @@
       "exclude": []
     },
     "unreachable_code": {
+      "enabled": true,
+      "exclude": []
+    },
+    "use_new": {
       "enabled": true,
       "exclude": []
     },
