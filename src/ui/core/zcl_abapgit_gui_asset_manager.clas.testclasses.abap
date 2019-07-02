@@ -56,7 +56,7 @@ CLASS ltcl_abapgit_gui_asset_manager IMPLEMENTATION.
         iv_assert_subtype = 'css' )
       exp = 'ABC' ).
 
-    TRY .
+    TRY.
         lo_assetman->zif_abapgit_gui_asset_manager~get_text_asset(
           iv_url = 'css/common.css'
           iv_assert_subtype = 'xyz' ).
@@ -70,7 +70,7 @@ CLASS ltcl_abapgit_gui_asset_manager IMPLEMENTATION.
       iv_type      = 'nottext/bin'
       iv_inline    = 'XYZ' ).
 
-    TRY .
+    TRY.
         lo_assetman->zif_abapgit_gui_asset_manager~get_text_asset( 'css/common.xyz' ).
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception.
