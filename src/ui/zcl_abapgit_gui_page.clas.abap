@@ -87,7 +87,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
 
   METHOD call_browser.
@@ -216,10 +216,10 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
     ro_html->add( '<title>abapGit</title>' ).               "#EC NOTEXT
     ro_html->add( '<link rel="stylesheet" type="text/css" href="css/common.css">' ).
+    ro_html->add( '<link rel="stylesheet" type="text/css" href="css/ag-icons.css">' ).
 
-    " theme.css is created at runtime in ZCL_ABAPGIT_GUI->RENDER( )
-    ro_html->add( '<link rel="stylesheet" type="text/css" href="css/theme.css">' ).
-
+    " Themes
+    ro_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-default.css">' ). " Theme basis
     CASE mo_settings->get_ui_theme( ).
       WHEN zcl_abapgit_settings=>c_ui_theme-dark.
         "TODO
@@ -227,7 +227,6 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
         ro_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-belize-blue.css">' ).
     ENDCASE.
 
-    ro_html->add( '<link rel="stylesheet" type="text/css" href="css/ag-icons.css">' ).
     ro_html->add( '<script type="text/javascript" src="js/common.js"></script>' ). "#EC NOTEXT
 
     CASE mo_settings->get_icon_scaling( ). " Enforce icon scaling
