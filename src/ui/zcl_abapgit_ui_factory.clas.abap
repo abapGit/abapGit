@@ -41,7 +41,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
 
 
   METHOD get_frontend_services.
@@ -62,15 +62,23 @@ CLASS zcl_abapgit_ui_factory IMPLEMENTATION.
       li_asset_man TYPE REF TO zif_abapgit_gui_asset_manager.
 
     DATA lo_error_handler TYPE REF TO lcl_gui_error_handler.
+    DATA lo_html_preprocessor TYPE REF TO zcl_abapgit_gui_html_processor.
 
     IF go_gui IS INITIAL.
       li_asset_man ?= init_asset_manager( ).
+
+      CREATE OBJECT lo_html_preprocessor EXPORTING ii_asset_man = li_asset_man.
+      lo_html_preprocessor->preserve_css( 'css/ag-icons.css' ).
+      lo_html_preprocessor->preserve_css( 'css/common.css' ).
+
       CREATE OBJECT li_router TYPE zcl_abapgit_gui_router.
       CREATE OBJECT lo_error_handler.
+
       CREATE OBJECT go_gui
         EXPORTING
           io_component     = li_router
           ii_error_handler = lo_error_handler
+          ii_html_processor = lo_html_preprocessor
           ii_asset_man     = li_asset_man.
     ENDIF.
     ro_gui = go_gui.
