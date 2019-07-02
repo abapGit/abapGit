@@ -601,18 +601,18 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
     TRY.
         cl_apl_ecatt_object=>get_version_info_object(
           EXPORTING
-            im_name          = mv_object_name
-            im_obj_type      = lv_object_type
+            im_name         = mv_object_name
+            im_obj_type     = lv_object_type
           IMPORTING
-            ex_version_info  = lt_version_info  ).
+            ex_version_info = lt_version_info ).
 
         li_document = cl_ixml=>create( )->create_document( ).
 
         serialize_versions(
           EXPORTING
-            it_version_info  = lt_version_info
+            it_version_info = lt_version_info
           CHANGING
-            ci_document      = li_document ).
+            ci_document     = li_document ).
 
         io_xml->set_raw( li_document->get_root_element( ) ).
 

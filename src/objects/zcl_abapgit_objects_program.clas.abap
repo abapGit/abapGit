@@ -356,15 +356,13 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
           ENDIF.
         ENDIF.
 
-        IF  <ls_field>-type = 'CHECK'
-          AND <ls_field>-from_dict = abap_true
-          AND <ls_field>-text IS INITIAL
-          AND <ls_field>-modific IS INITIAL.
-              "If the previous conditions are
-              "met the value 'F' will be taken over
-              "during de-serialization potentially
-              "overlapping other fields in the screen,
-              "we set the tag to the correct value 'X':
+* If the previous conditions are met the value 'F' will be taken over
+* during de-serialization potentially overlapping other fields in the screen,
+* we set the tag to the correct value 'X'
+        IF <ls_field>-type = 'CHECK'
+            AND <ls_field>-from_dict = abap_true
+            AND <ls_field>-text IS INITIAL
+            AND <ls_field>-modific IS INITIAL.
           <ls_field>-modific = 'X'.
         ENDIF.
 
@@ -372,7 +370,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
         IF <ls_field>-foreignkey IS INITIAL.
           <ls_field>-foreignkey = lc_rpyty_force_off.
         ENDIF.
-
 
       ENDLOOP.
 
