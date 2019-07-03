@@ -64,7 +64,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
 
 
   METHOD body.
@@ -303,78 +303,6 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_content.
-
-    CREATE OBJECT ro_html.
-
-    ro_html->add( '<div id="toc">' ).
-    ro_html->add( body( ) ).
-    ro_html->add( '</div>' ).
-
-  ENDMETHOD.
-
-
-  METHOD render_merge.
-
-    CREATE OBJECT ro_html.
-
-    ro_html->add( '<form id="commit_form" method="post" action="sapevent:merge">' ).
-    ro_html->add( 'Merge' ) ##NO_TEXT.
-    ro_html->add( form_select( 'source' ) ) ##NO_TEXT.
-    ro_html->add( 'into' ) ##NO_TEXT.
-    ro_html->add( form_select( 'target' ) ) ##NO_TEXT.
-    ro_html->add( '<input type="submit" value="Submit">' ).
-    ro_html->add( '</form>' ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_event_handler~on_event.
-
-    DATA: ls_merge TYPE ty_merge,
-          lo_merge TYPE REF TO zcl_abapgit_gui_page_merge.
-
-
-    CASE iv_action.
-      WHEN c_actions-refresh.
-        refresh( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN c_actions-uncompress.
-        mv_compress = abap_false.
-        refresh( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN c_actions-compress.
-        mv_compress = abap_true.
-        refresh( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN c_actions-merge.
-        ls_merge = decode_merge( it_postdata ).
-        CREATE OBJECT lo_merge
-          EXPORTING
-            io_repo   = mo_repo
-            iv_source = ls_merge-source
-            iv_target = ls_merge-target.
-        ei_page = lo_merge.
-        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
-      WHEN OTHERS.
-        super->zif_abapgit_gui_event_handler~on_event(
-          EXPORTING
-            iv_action    = iv_action
-            iv_prev_page = iv_prev_page
-            iv_getdata   = iv_getdata
-            it_postdata  = it_postdata
-          IMPORTING
-            ei_page      = ei_page
-            ev_state     = ev_state  ).
-    ENDCASE.
-
-  ENDMETHOD.
-
   METHOD render_commit_popups.
 
     DATA: lv_time    TYPE char10,
@@ -433,4 +361,76 @@ CLASS zcl_abapgit_gui_page_boverview IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD render_content.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( '<div id="toc">' ).
+    ro_html->add( body( ) ).
+    ro_html->add( '</div>' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_merge.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( '<form id="commit_form" method="post" action="sapevent:merge">' ).
+    ro_html->add( 'Merge' ) ##NO_TEXT.
+    ro_html->add( form_select( 'source' ) ) ##NO_TEXT.
+    ro_html->add( 'into' ) ##NO_TEXT.
+    ro_html->add( form_select( 'target' ) ) ##NO_TEXT.
+    ro_html->add( '<input type="submit" value="Submit">' ).
+    ro_html->add( '</form>' ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_event_handler~on_event.
+
+    DATA: ls_merge TYPE ty_merge,
+          lo_merge TYPE REF TO zcl_abapgit_gui_page_merge.
+
+
+    CASE iv_action.
+      WHEN c_actions-refresh.
+        refresh( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_actions-uncompress.
+        mv_compress = abap_false.
+        refresh( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_actions-compress.
+        mv_compress = abap_true.
+        refresh( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_actions-merge.
+        ls_merge = decode_merge( it_postdata ).
+        CREATE OBJECT lo_merge
+          EXPORTING
+            io_repo   = mo_repo
+            iv_source = ls_merge-source
+            iv_target = ls_merge-target.
+        ei_page = lo_merge.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+      WHEN OTHERS.
+        super->zif_abapgit_gui_event_handler~on_event(
+          EXPORTING
+            iv_action    = iv_action
+            iv_prev_page = iv_prev_page
+            iv_getdata   = iv_getdata
+            it_postdata  = it_postdata
+          IMPORTING
+            ei_page      = ei_page
+            ev_state     = ev_state ).
+    ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
 ENDCLASS.

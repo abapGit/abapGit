@@ -110,7 +110,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
           RECEIVING
             p_result = lo_test.
       CATCH cx_root.
-        zcx_abapgit_exception=>raise( |Jump to object not supported in your NW release|  ).
+        zcx_abapgit_exception=>raise( |Jump to object not supported in your NW release| ).
     ENDTRY.
 
     lo_result = lo_test->get_result_node( <ls_result>-kind ).
