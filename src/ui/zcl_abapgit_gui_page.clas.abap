@@ -421,22 +421,23 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
+    " You should remember that we render the message panel only
+    " if we have an error text.
+
     IF mv_error_text IS NOT INITIAL.
       ro_html->add( |<div id="message" class="info-panel message-panel-fixed">|
-                 && |  <div></div>|
-                 && |    <ul class="hotkeys">|
-                 && |      <div class="message-panel-border">|
-                 && |        <div class="message-panel-outer">|
-                 && |          <div id="message-text" class="message-panel-inner">|
-                 && |            { mv_error_text }|
-                 && |          </div>|
-                 && |        </div>|
+                 && |  <div class="message-panel-border">|
+                 && |    <div class="message-panel-outer">|
+                 && |      <div id="message-text" class="message-panel-inner">|
+                 && |        { mv_error_text }|
                  && |      </div>|
-                 && |    </ul>|
+                 && |    </div>|
                  && |  </div>|
                  && |</div>| ).
     ENDIF.
 
+    " You should remember that we render the message panel just once
+    " for each exception/error text.
     CLEAR: mv_error_text.
 
   ENDMETHOD.

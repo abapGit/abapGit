@@ -311,11 +311,14 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
               ii_page  = mi_cur_page
               ix_error = lx_exception ).
           TRY.
+              " We rerender the current page to display the error panel
               render( ).
             CATCH zcx_abapgit_exception INTO lx_exception.
+              " In case of fire we just fallback to plain old message
               MESSAGE lx_exception TYPE 'S' DISPLAY LIKE 'E'.
           ENDTRY.
         ENDIF.
+
     ENDTRY.
 
   ENDMETHOD.
