@@ -15,7 +15,7 @@ a:hover, a:active {
   text-decoration: underline;
 }
 
-img { 
+img {
   border-width: 0px;
   vertical-align: middle;
 }
@@ -673,6 +673,40 @@ div.info-panel .version-marker {
 
 div.info-panel .update { border:  1px solid; }
 div.info-panel div.info-list td { padding-right: 1em }
+
+/* Error message Panel */
+div.message-panel-fixed {
+  margin: auto;
+  position: fixed;
+  top: 95%;
+  left: 0;
+  right: 0;
+  bottom: 5%;
+  width: 99%;
+}
+
+div.message-panel-border {
+  background: var(--theme-background-color) !important;
+}
+
+div.message-panel-outer {
+  border: 1px solid;
+  border-radius: 10px;
+  border-color: red;
+  background: red !important;
+}
+
+div.message-panel-inner{
+  padding: 3px;
+  margin: 5px;
+  border: 1px solid;
+  border-radius: 5px;
+  border-color: lightpink;
+  background-color:lightpink !important;
+  font-size: larger;
+  font-weight: bold;
+}
+
 
 /* Tooltip text */
 .tooltiptext {

@@ -36,8 +36,9 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
-    DATA: mo_settings TYPE REF TO zcl_abapgit_settings,
-          mt_hotkeys  TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name.
+    DATA: mo_settings   TYPE REF TO zcl_abapgit_settings,
+          mt_hotkeys    TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name,
+          mv_error_text TYPE string.
     METHODS html_head
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
@@ -82,6 +83,11 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
     METHODS get_default_hotkeys
       RETURNING
         VALUE(rt_default_hotkeys) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name.
+    METHODS render_message_box
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -386,6 +392,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( title( ) ).
     ro_html->add( render_hotkey_overview( ) ).
     ro_html->add( render_content( ) ).
+    ro_html->add( render_message_box( ) ).
     ro_html->add( footer( ) ).
     ro_html->add( '</body>' ).                              "#EC NOTEXT
 
@@ -401,4 +408,37 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( '</html>' ).                              "#EC NOTEXT
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_renderable~show_error.
+
+    mv_error_text = ix_error->get_text( ).
+
+  ENDMETHOD.
+
+
+  METHOD render_message_box.
+
+    CREATE OBJECT ro_html.
+
+    IF mv_error_text IS NOT INITIAL.
+      ro_html->add( |<div id="message" class="info-panel message-panel-fixed">|
+                 && |  <div></div>|
+                 && |    <ul class="hotkeys">|
+                 && |      <div class="message-panel-border">|
+                 && |        <div class="message-panel-outer">|
+                 && |          <div id="message-text" class="message-panel-inner">|
+                 && |            { mv_error_text }|
+                 && |          </div>|
+                 && |        </div>|
+                 && |      </div>|
+                 && |    </ul>|
+                 && |  </div>|
+                 && |</div>| ).
+    ENDIF.
+
+    CLEAR: mv_error_text.
+
+  ENDMETHOD.
+
 ENDCLASS.

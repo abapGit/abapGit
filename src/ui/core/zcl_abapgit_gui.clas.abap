@@ -53,9 +53,9 @@ CLASS zcl_abapgit_gui DEFINITION
 
     METHODS constructor
       IMPORTING
-        io_component     TYPE REF TO object OPTIONAL
-        ii_asset_man     TYPE REF TO zif_abapgit_gui_asset_manager OPTIONAL
-        ii_error_handler TYPE REF TO zif_abapgit_gui_error_handler OPTIONAL
+        io_component      TYPE REF TO object OPTIONAL
+        ii_asset_man      TYPE REF TO zif_abapgit_gui_asset_manager OPTIONAL
+        ii_error_handler  TYPE REF TO zif_abapgit_gui_error_handler OPTIONAL
         ii_html_processor TYPE REF TO zif_abapgit_gui_html_processor OPTIONAL
       RAISING
         zcx_abapgit_exception.
@@ -71,13 +71,13 @@ CLASS zcl_abapgit_gui DEFINITION
         bookmark TYPE abap_bool,
       END OF ty_page_stack.
 
-    DATA: mi_cur_page      TYPE REF TO zif_abapgit_gui_renderable,
-          mt_stack         TYPE STANDARD TABLE OF ty_page_stack,
-          mi_router        TYPE REF TO zif_abapgit_gui_event_handler,
-          mi_asset_man     TYPE REF TO zif_abapgit_gui_asset_manager,
-          mi_error_handler TYPE REF TO zif_abapgit_gui_error_handler,
+    DATA: mi_cur_page       TYPE REF TO zif_abapgit_gui_renderable,
+          mt_stack          TYPE STANDARD TABLE OF ty_page_stack,
+          mi_router         TYPE REF TO zif_abapgit_gui_event_handler,
+          mi_asset_man      TYPE REF TO zif_abapgit_gui_asset_manager,
+          mi_error_handler  TYPE REF TO zif_abapgit_gui_error_handler,
           mi_html_processor TYPE REF TO zif_abapgit_gui_html_processor,
-          mo_html_viewer   TYPE REF TO cl_gui_html_viewer.
+          mo_html_viewer    TYPE REF TO cl_gui_html_viewer.
 
     METHODS startup
       RAISING
@@ -307,7 +307,14 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         " Do nothing = gc_event_state-no_more_act
       CATCH zcx_abapgit_exception INTO lx_exception.
         IF mi_error_handler IS BOUND.
-          mi_error_handler->handle_error( lx_exception ).
+          mi_error_handler->handle_error(
+              ii_page  = mi_cur_page
+              ix_error = lx_exception ).
+          TRY.
+              render( ).
+            CATCH zcx_abapgit_exception INTO lx_exception.
+              MESSAGE lx_exception TYPE 'S' DISPLAY LIKE 'E'.
+          ENDTRY.
         ENDIF.
     ENDTRY.
 

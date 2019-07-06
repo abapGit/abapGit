@@ -7,4 +7,8 @@ INTERFACE zif_abapgit_gui_renderable
     RAISING
       zcx_abapgit_exception.
 
+  METHODS show_error
+    IMPORTING
+      ix_error TYPE REF TO zcx_abapgit_exception.
+
 ENDINTERFACE.
