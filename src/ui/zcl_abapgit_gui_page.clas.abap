@@ -38,7 +38,8 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
   PRIVATE SECTION.
     DATA: mo_settings   TYPE REF TO zcl_abapgit_settings,
           mt_hotkeys    TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name,
-          mv_error_text TYPE string.
+          mv_error_text TYPE string,
+          mv_longtext   TYPE string.
     METHODS html_head
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
@@ -320,6 +321,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     link_hints( ro_html ).
     insert_hotkeys_to_page( ro_html ).
+    ro_html->add( |errorMessagePanelRegisterClick();| ).
 
   ENDMETHOD.
 
@@ -413,6 +415,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   METHOD zif_abapgit_gui_renderable~show_error.
 
     mv_error_text = ix_error->get_text( ).
+    mv_longtext = ix_error->get_longtext( abap_true ).
+
+    REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline
+            IN mv_longtext
+            WITH '<br>'.
 
   ENDMETHOD.
 
@@ -425,11 +432,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     " if we have an error text.
 
     IF mv_error_text IS NOT INITIAL.
-      ro_html->add( |<div id="message" class="info-panel message-panel-fixed">|
+      ro_html->add( |<div id="message" class="message-panel-fixed">|
                  && |  <div class="message-panel-border">|
                  && |    <div class="message-panel-outer">|
-                 && |      <div id="message-text" class="message-panel-inner">|
-                 && |        { mv_error_text }|
+                 && |      <div id="message-header" class="message-panel-inner message-header">{ mv_error_text }</div>|
+                 && |      <div id="message-detail" class="message-panel-inner" style="display:none" >|
+                 && |        { mv_longtext  }|
                  && |      </div>|
                  && |    </div>|
                  && |  </div>|
@@ -438,7 +446,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     " You should remember that we render the message panel just once
     " for each exception/error text.
-    CLEAR: mv_error_text.
+    CLEAR:
+      mv_error_text,
+      mv_longtext.
 
   ENDMETHOD.
 

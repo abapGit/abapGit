@@ -675,13 +675,15 @@ div.info-panel .update { border:  1px solid; }
 div.info-panel div.info-list td { padding-right: 1em }
 
 /* Error message Panel */
+
 div.message-panel-fixed {
+  z-index: 99;
+  box-shadow: 1px 1px 3px 2px #dcdcdc;
   margin: auto;
   position: fixed;
-  top: 95%;
   left: 0;
   right: 0;
-  bottom: 5%;
+  bottom: 2%;
   width: 99%;
 }
 
@@ -704,9 +706,11 @@ div.message-panel-inner{
   border-color: lightpink;
   background-color:lightpink !important;
   font-size: larger;
-  font-weight: bold;
 }
 
+div.message-header {
+  font-weight: bold;
+}
 
 /* Tooltip text */
 .tooltiptext {

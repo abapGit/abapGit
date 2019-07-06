@@ -55,6 +55,7 @@ CLASS zcx_abapgit_exception DEFINITION
         !msgv2    TYPE symsgv OPTIONAL
         !msgv3    TYPE symsgv OPTIONAL
         !msgv4    TYPE symsgv OPTIONAL .
+    METHODS get_longtext REDEFINITION.
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
@@ -65,12 +66,46 @@ CLASS zcx_abapgit_exception DEFINITION
       set_msg_vars_for_clike
         IMPORTING
           text TYPE string,
+
       is_merged
         RETURNING
           VALUE(rv_is_merged) TYPE abap_bool.
 
     METHODS:
-      save_callstack.
+      save_callstack,
+      set_single_msg_var
+        IMPORTING
+          iv_arg    TYPE clike
+        EXPORTING
+          ev_target TYPE c,
+
+      get_t100_longtext_itf
+        RETURNING
+          VALUE(itf_itab) TYPE tline_tab,
+
+      set_single_msg_var_clike
+        IMPORTING
+          iv_arg    TYPE clike
+        EXPORTING
+          ev_target TYPE c,
+
+      set_single_msg_var_numeric
+        IMPORTING
+          iv_arg    TYPE numeric
+        EXPORTING
+          ev_target TYPE c,
+
+      set_single_msg_var_xseq
+        IMPORTING
+          iv_arg    TYPE xsequence
+        EXPORTING
+          ev_target TYPE c,
+
+      itf_to_string
+        IMPORTING
+          it_itf           TYPE tline_tab
+        RETURNING
+          VALUE(rv_result) TYPE string.
 
 ENDCLASS.
 
@@ -95,6 +130,86 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
     ENDIF.
 
     save_callstack( ).
+
+  ENDMETHOD.
+
+
+  METHOD get_t100_longtext_itf.
+
+    "cl_message_helper=>get_t100_longtext_itf
+
+    DATA lv_docu_key TYPE doku_obj.
+    CONCATENATE if_t100_message~t100key-msgid if_t100_message~t100key-msgno INTO lv_docu_key.
+    CALL FUNCTION 'DOCU_GET'
+      EXPORTING
+        id     = 'NA'
+        langu  = sy-langu
+        object = lv_docu_key
+        typ    = 'E'
+      TABLES
+        line   = itf_itab
+      EXCEPTIONS
+        OTHERS = 1.
+
+    IF sy-subrc = 0.
+      set_single_msg_var(
+        EXPORTING
+          iv_arg    = if_t100_message~t100key-attr1
+        IMPORTING
+          ev_target = sy-msgv1 ).
+
+      REPLACE '&V1&' IN TABLE itf_itab
+                     WITH sy-msgv1.
+
+      set_single_msg_var(
+       EXPORTING
+         iv_arg    = if_t100_message~t100key-attr2
+       IMPORTING
+         ev_target = sy-msgv2 ).
+
+      REPLACE '&V2&' IN TABLE itf_itab
+                     WITH sy-msgv2.
+
+      set_single_msg_var(
+       EXPORTING
+         iv_arg    = if_t100_message~t100key-attr3
+       IMPORTING
+         ev_target = sy-msgv3 ).
+
+      REPLACE '&V3&' IN TABLE itf_itab
+                     WITH sy-msgv3.
+
+      set_single_msg_var(
+       EXPORTING
+         iv_arg    = if_t100_message~t100key-attr4
+       IMPORTING
+         ev_target = sy-msgv4 ).
+
+      REPLACE '&V4&' IN TABLE itf_itab
+                     WITH sy-msgv4.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_longtext.
+
+    result = super->get_longtext( ).
+
+    IF if_t100_message~t100key IS NOT INITIAL.
+*      result = cl_message_helper=>get_longtext_for_message(
+*                                      text               = me    " Message
+*                                      preserve_newlines  = abap_true
+*                                      t100_prepend_short = abap_false  ).
+      result = itf_to_string( get_t100_longtext_itf( ) ).
+    ENDIF.
+
+*    result = |Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore |
+*          && |et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. |
+*          && |Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, |
+*          && |consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, |
+*          && |sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, |
+*          && |no sea takimata sanctus est Lorem ipsum dolor sit amet.|.
 
   ENDMETHOD.
 
@@ -249,4 +364,123 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+
+  METHOD set_single_msg_var.
+
+    FIELD-SYMBOLS <fs> TYPE any.
+
+    IF iv_arg IS INITIAL.
+      CLEAR ev_target.
+    ELSE.
+      TRY.
+          ASSIGN me->(iv_arg) TO <fs>.
+          IF sy-subrc <> 0.
+            RAISE EXCEPTION TYPE cx_sy_assign_cast_illegal_cast.
+          ENDIF.
+          " We cannot catch all conversion exceptions on MOVE => use CALL
+          set_single_msg_var_clike(
+            EXPORTING
+              iv_arg    = <fs>
+            IMPORTING
+              ev_target = ev_target ).
+
+        CATCH cx_sy_dyn_call_illegal_type.
+          TRY.
+              set_single_msg_var_numeric(
+                EXPORTING
+                  iv_arg    = <fs>
+                IMPORTING
+                  ev_target = ev_target ).
+
+            CATCH cx_sy_dyn_call_illegal_type.
+              TRY.
+                  set_single_msg_var_xseq(
+                    EXPORTING
+                      iv_arg    = <fs>
+                    IMPORTING
+                      ev_target = ev_target ).
+
+                CATCH cx_sy_dyn_call_illegal_type.
+                  CONCATENATE '&' iv_arg '&' INTO ev_target.
+              ENDTRY.
+          ENDTRY.
+
+        CATCH cx_sy_assign_cast_illegal_cast.
+          CONCATENATE '&' iv_arg '&' INTO ev_target.
+      ENDTRY.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD set_single_msg_var_clike.
+    " a kind of MOVE where all conversion errors are signalled by exceptions
+    WRITE iv_arg LEFT-JUSTIFIED TO ev_target.
+  ENDMETHOD.
+
+
+  METHOD set_single_msg_var_numeric.
+    " a kind of MOVE where all conversion errors are signalled by exceptions
+    WRITE iv_arg LEFT-JUSTIFIED TO ev_target.
+  ENDMETHOD.
+
+
+  METHOD set_single_msg_var_xseq.
+    " a kind of MOVE where all conversion errors are signalled by exceptions
+    WRITE iv_arg LEFT-JUSTIFIED TO ev_target.
+  ENDMETHOD.
+
+
+  METHOD itf_to_string.
+
+    DATA:
+      lt_stream TYPE TABLE OF tdline,
+      lt_string TYPE TABLE OF string,
+      ls_string LIKE LINE OF lt_string,
+      lt_itf    TYPE tline_tab.
+
+    lt_itf = it_itf.
+
+    " You should remember that we replace the U1 format because
+    " that preserves the section header of longtexts.
+    " Like CAUSE, WHAT_TO_DO, etc.
+    LOOP AT lt_itf ASSIGNING FIELD-SYMBOL(<ls_itf>)
+                   WHERE tdformat = 'U1'.
+
+      CASE <ls_itf>-tdline.
+        WHEN '&CAUSE&'.
+          <ls_itf>-tdline = 'Cause'.
+        WHEN '&SYSTEM_RESPONSE&'.
+          <ls_itf>-tdline = 'System response'.
+        WHEN '&WHAT_TO_DO&'.
+          <ls_itf>-tdline = 'What to do'.
+        WHEN '&SYS_ADMIN&'.
+          <ls_itf>-tdline = 'System administration'.
+      ENDCASE.
+
+    ENDLOOP.
+
+    CALL FUNCTION 'CONVERT_ITF_TO_STREAM_TEXT'
+      EXPORTING
+        lf           = 'X'
+      IMPORTING
+        stream_lines = lt_string
+      TABLES
+        itf_text     = lt_itf
+        text_stream  = lt_stream.
+
+    LOOP AT lt_string INTO ls_string.
+      IF sy-tabix = 1.
+        rv_result = ls_string.
+      ELSE.
+        CONCATENATE rv_result ls_string
+                    INTO rv_result
+                    SEPARATED BY cl_abap_char_utilities=>newline.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.

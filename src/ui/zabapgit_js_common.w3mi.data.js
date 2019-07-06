@@ -1360,3 +1360,13 @@ function GitGraphScroller() { // eslint-disable-line no-unused-vars
   var gitGraphscrollWrapperEl = document.querySelector(".gitGraph-scrollWrapper");
   gitGraphWrapperEl.scrollLeft = gitGraphscrollWrapperEl.scrollLeft;
 }
+
+// Click on error message panel toggles longtext
+function errorMessagePanelRegisterClick(){
+  var elMessage = document.getElementById("message");
+  if (elMessage){
+    elMessage.addEventListener("click", function(){ 
+      toggleDisplay("message-detail");
+    });
+  };
+}
