@@ -358,7 +358,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
             it_postdata  = it_postdata
           IMPORTING
             ei_page      = ei_page
-            ev_state     = ev_state  ).
+            ev_state     = ev_state ).
     ENDCASE.
 
   ENDMETHOD.
