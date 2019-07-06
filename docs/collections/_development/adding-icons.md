@@ -22,4 +22,4 @@ To add an icon to the icon set follow the next procedure:
 
 Please **mind the licensing** when adding icons not from Font Awesome
 
-P.S. Alternatively you can use [w3mipoller](https://github.com/sbcgua/abap_w3mi_poller) for upload step
+P.S. Alternatively you can use [w3mipoller](https://github.com/sbcgua/abap_w3mi_poller) for upload step. See also [UI - CSS and assets](./developing-ui-css.html).

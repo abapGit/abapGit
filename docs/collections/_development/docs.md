@@ -1,5 +1,5 @@
 ---
-title: docs
+title: Technical documentation
 order: 200
 ---
 
