@@ -327,11 +327,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: ls_commit TYPE zcl_abapgit_services_git=>ty_commit_fields.
@@ -345,9 +340,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
         ls_commit-repo_key = mo_repo->get_key( ).
 
-        zcl_abapgit_services_git=>commit( is_commit   = ls_commit
-                                  io_repo     = mo_repo
-                                  io_stage    = mo_stage ).
+        zcl_abapgit_services_git=>commit(
+          is_commit = ls_commit
+          io_repo   = mo_repo
+          io_stage  = mo_stage ).
 
         ev_state = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark.
 
@@ -363,8 +359,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
             it_postdata  = it_postdata
           IMPORTING
             ei_page      = ei_page
-            ev_state     = ev_state  ).
+            ev_state     = ev_state ).
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 ENDCLASS.
