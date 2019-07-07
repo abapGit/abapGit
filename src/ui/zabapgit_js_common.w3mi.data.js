@@ -22,6 +22,7 @@
 /* exported onDirectionChange */
 /* exported onOrderByChange  */
 /* exported onTagTypeChange */
+/* exported errorMessagePanelRegisterClick */
 
 /**********************************************************
  * Polyfills
