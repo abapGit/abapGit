@@ -685,6 +685,7 @@ div.message-panel-fixed {
   right: 0;
   bottom: 2%;
   width: 99%;
+  cursor: pointer;
 }
 
 div.message-panel-border {

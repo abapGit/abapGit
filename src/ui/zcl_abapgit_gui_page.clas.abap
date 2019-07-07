@@ -456,7 +456,14 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
       ro_html->add( |<div id="message" class="message-panel-fixed">|
                  && |  <div class="message-panel-border">|
                  && |    <div class="message-panel-outer">|
-                 && |      <div id="message-header" class="message-panel-inner message-header">{ mv_error_text }</div>|
+                 && |      <div id="message-header" class="message-panel-inner message-header">{ mv_error_text }|
+                 && |        <div class="float-right">|
+                 && |          <a class="close-btn" href="#" onclick="toggleDisplay('message')">|
+                 && |            &#x274c;|
+                 && |            <span class="tooltiptext hidden"></span>|
+                 && |          </a>|
+                 && |        </div>|
+                 && |      </div>|
                  && |      <div id="message-detail" class="message-panel-inner" style="display:none" >|
                  && |        { mv_longtext  }|
                  && |        <br>|
