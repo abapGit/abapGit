@@ -148,7 +148,7 @@ CLASS ZCL_ABAPGIT_EXCEPTION_VIEWER IMPLEMENTATION.
     DATA: ls_item TYPE zif_abapgit_definitions=>ty_item.
 
     ls_item-obj_name =  substring_before( val   = is_callstack-mainprogram
-                                          regex = '=+CP' ).
+                                          regex = 'CP$' ).
 
     IF ls_item-obj_name IS INITIAL.
       ls_item-obj_name = is_callstack-mainprogram.
