@@ -446,6 +446,8 @@ INTERFACE zif_abapgit_definitions
       jump                     TYPE string VALUE 'jump',
       jump_transport           TYPE string VALUE 'jump_transport',
       url                      TYPE string VALUE 'url',
+      goto_source              TYPE string VALUE 'goto_source',
+      callstack                TYPE string VALUE 'callstack',
     END OF c_action .
   CONSTANTS c_tag_prefix TYPE string VALUE 'refs/tags/' ##NO_TEXT.
   CONSTANTS c_spagpa_param_repo_key TYPE char20 VALUE 'REPO_KEY' ##NO_TEXT.

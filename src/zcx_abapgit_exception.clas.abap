@@ -66,7 +66,6 @@ CLASS zcx_abapgit_exception DEFINITION
       set_msg_vars_for_clike
         IMPORTING
           text TYPE string,
-
       is_merged
         RETURNING
           VALUE(rv_is_merged) TYPE abap_bool.
@@ -197,19 +196,8 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
     result = super->get_longtext( ).
 
     IF if_t100_message~t100key IS NOT INITIAL.
-*      result = cl_message_helper=>get_longtext_for_message(
-*                                      text               = me    " Message
-*                                      preserve_newlines  = abap_true
-*                                      t100_prepend_short = abap_false  ).
       result = itf_to_string( get_t100_longtext_itf( ) ).
     ENDIF.
-
-*    result = |Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore |
-*          && |et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. |
-*          && |Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, |
-*          && |consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, |
-*          && |sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, |
-*          && |no sea takimata sanctus est Lorem ipsum dolor sit amet.|.
 
   ENDMETHOD.
 
@@ -322,14 +310,6 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
 
     ENDLOOP.
 
-    li_gui_functions = zcl_abapgit_ui_factory=>get_gui_functions( ).
-
-    IF li_gui_functions->gui_is_available( ) = abap_true.
-      " We store the callstack in ABAP memory so that we can retrieve it later when the
-      " user clicks on an message to display the long text.
-      EXPORT callstack = mt_callstack TO MEMORY ID gc_memory_id.
-    ENDIF.
-
   ENDMETHOD.
 
 
@@ -348,20 +328,9 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
 
     ls_msg = text.
 
-    " You should remember that we use the abapGit message if we have
-    " the full abapGit repository installed. If not we use the default one.
-    "
-    " Purpose of the abapGit message is to provide more context in the longtext.
-
-    IF is_merged( ) = abap_true.
-      " &1&2&3&4&5&6&7&8
-      MESSAGE e001(00) WITH ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4
-                       INTO lv_dummy.
-    ELSE.
-      " &1&2&3&4&5&6&7&8
-      MESSAGE e001(zabapgit) WITH ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4
-                             INTO lv_dummy.
-    ENDIF.
+    " &1&2&3&4&5&6&7&8
+    MESSAGE e001(00) WITH ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4
+                     INTO lv_dummy.
 
   ENDMETHOD.
 
@@ -435,18 +404,43 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
   METHOD itf_to_string.
 
     DATA:
-      lt_stream TYPE TABLE OF tdline,
-      lt_string TYPE TABLE OF string,
-      ls_string LIKE LINE OF lt_string,
-      lt_itf    TYPE tline_tab.
+      lt_stream          TYPE TABLE OF tdline,
+      lt_string          TYPE TABLE OF string,
+      ls_string          LIKE LINE OF lt_string,
+      lt_itf             TYPE tline_tab,
+      lv_has_content     TYPE abap_bool,
+      lv_save_tabix_from TYPE syst-tabix,
+      lv_save_tabix_to   TYPE i.
 
     lt_itf = it_itf.
 
     " You should remember that we replace the U1 format because
     " that preserves the section header of longtexts.
-    " Like CAUSE, WHAT_TO_DO, etc.
     LOOP AT lt_itf ASSIGNING FIELD-SYMBOL(<ls_itf>)
                    WHERE tdformat = 'U1'.
+
+      CLEAR:
+        lv_has_content,
+        lv_save_tabix_to.
+
+      lv_save_tabix_from = sy-tabix.
+
+      LOOP AT lt_itf ASSIGNING FIELD-SYMBOL(<ls_itf2>)
+                     FROM sy-tabix + 1.
+
+        IF <ls_itf2>-tdformat = 'U1'.
+          lv_save_tabix_to = sy-tabix.
+          EXIT.
+        ELSEIF <ls_itf2>-tdline IS NOT INITIAL.
+          lv_has_content = abap_true.
+        ENDIF.
+
+      ENDLOOP.
+
+      IF lv_has_content = abap_false.
+        DELETE lt_itf FROM lv_save_tabix_from TO lv_save_tabix_to.
+        CONTINUE.
+      ENDIF.
 
       CASE <ls_itf>-tdline.
         WHEN '&CAUSE&'.
@@ -454,7 +448,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
         WHEN '&SYSTEM_RESPONSE&'.
           <ls_itf>-tdline = 'System response'.
         WHEN '&WHAT_TO_DO&'.
-          <ls_itf>-tdline = 'What to do'.
+          <ls_itf>-tdline = 'Procedure'.
         WHEN '&SYS_ADMIN&'.
           <ls_itf>-tdline = 'System administration'.
       ENDCASE.

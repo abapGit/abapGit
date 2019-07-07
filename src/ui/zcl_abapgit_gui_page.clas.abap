@@ -36,10 +36,9 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
-    DATA: mo_settings   TYPE REF TO zcl_abapgit_settings,
-          mt_hotkeys    TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name,
-          mv_error_text TYPE string,
-          mv_longtext   TYPE string.
+    DATA: mo_settings TYPE REF TO zcl_abapgit_settings,
+          mt_hotkeys  TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name,
+          mx_error    TYPE REF TO zcx_abapgit_exception.
     METHODS html_head
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
@@ -357,10 +356,30 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
+    DATA: lo_exception_viewer TYPE REF TO zcl_abapgit_exception_viewer.
+
     CASE iv_action.
       WHEN zif_abapgit_definitions=>c_action-url.
 
         call_browser( iv_getdata ).
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
+      WHEN  zif_abapgit_definitions=>c_action-goto_source.
+
+        CREATE OBJECT lo_exception_viewer
+          EXPORTING
+            ix_error = mx_error.
+        lo_exception_viewer->goto_source( ).
+
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
+      WHEN  zif_abapgit_definitions=>c_action-callstack.
+
+        CREATE OBJECT lo_exception_viewer
+          EXPORTING
+            ix_error = mx_error.
+        lo_exception_viewer->callstack( ).
+
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
       WHEN OTHERS.
@@ -414,34 +433,45 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~show_error.
 
-    mv_error_text = ix_error->get_text( ).
-    mv_longtext = ix_error->get_longtext( abap_true ).
-
-    REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline
-            IN mv_longtext
-            WITH '<br>'.
+    mx_error = ix_error.
 
   ENDMETHOD.
 
 
   METHOD render_message_box.
 
+    DATA:
+      mv_error_text TYPE string,
+      mv_longtext   TYPE string.
+
     CREATE OBJECT ro_html.
 
     " You should remember that we render the message panel only
     " if we have an error text.
 
-    IF mv_error_text IS NOT INITIAL.
+    IF mx_error IS BOUND.
+
+      mv_error_text = mx_error->get_text( ).
+      mv_longtext = mx_error->get_longtext( abap_true ).
+
+      REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline
+              IN mv_longtext
+              WITH '<br>'.
+
       ro_html->add( |<div id="message" class="message-panel-fixed">|
                  && |  <div class="message-panel-border">|
                  && |    <div class="message-panel-outer">|
                  && |      <div id="message-header" class="message-panel-inner message-header">{ mv_error_text }</div>|
                  && |      <div id="message-detail" class="message-panel-inner" style="display:none" >|
                  && |        { mv_longtext  }|
+                 && |        <br>|
+                 && |        <br><a id="a_goto_source" href="sapevent:goto_source">Goto source</a>|
+                 && |        <br><a id="a_callstack" href="sapevent:callstack">Callstack</a>|
                  && |      </div>|
                  && |    </div>|
                  && |  </div>|
                  && |</div>| ).
+
     ENDIF.
 
     " You should remember that we render the message panel just once

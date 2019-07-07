@@ -2,25 +2,28 @@ CLASS zcl_abapgit_exception_viewer DEFINITION
   PUBLIC
   CREATE PUBLIC.
 
+
   PUBLIC SECTION.
     METHODS:
-      run.
-
-  PRIVATE SECTION.
-    DATA:
-      mt_callstack TYPE abap_callstack.
-
-    METHODS:
-      go_to_source_code
+      constructor
         IMPORTING
-          is_callstack TYPE abap_callstack_line
+          ix_error TYPE REF TO zcx_abapgit_exception,
+
+      goto_source
         RAISING
           zcx_abapgit_exception,
 
-      show_callstack
-        IMPORTING
-          is_top_of_stack TYPE abap_callstack_line,
+      callstack
+        RAISING
+          zcx_abapgit_exception.
 
+protected section.
+  PRIVATE SECTION.
+    DATA:
+      mx_error     TYPE REF TO zcx_abapgit_exception,
+      mt_callstack TYPE abap_callstack.
+
+    METHODS:
       get_top_of_list
         IMPORTING
           is_top_of_stack TYPE abap_callstack_line
@@ -45,7 +48,13 @@ CLASS zcl_abapgit_exception_viewer DEFINITION
         RAISING
           cx_salv_not_found,
 
-      process
+      show_callstack
+        IMPORTING
+          is_top_of_stack TYPE abap_callstack_line,
+
+      go_to_source_code
+        IMPORTING
+          is_callstack TYPE abap_callstack_line
         RAISING
           zcx_abapgit_exception.
 
@@ -53,7 +62,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_EXCEPTION_VIEWER IMPLEMENTATION.
 
 
   METHOD add_row.
@@ -67,6 +76,29 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
 
     lo_row->create_label( position = 2
                           text     = iv_col_2 ).
+
+  ENDMETHOD.
+
+
+  METHOD callstack.
+
+    FIELD-SYMBOLS: <ls_top_of_stack> LIKE LINE OF mt_callstack.
+
+    READ TABLE mt_callstack INDEX 1
+                            ASSIGNING <ls_top_of_stack>.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Callstack is empty| ).
+    ENDIF.
+
+    show_callstack( <ls_top_of_stack> ).
+
+  ENDMETHOD.
+
+
+  METHOD constructor.
+
+    mx_error = ix_error.
+    mt_callstack = mx_error->mt_callstack.
 
   ENDMETHOD.
 
@@ -92,6 +124,21 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
              iv_col_2 = |{ is_top_of_stack-line }| ).
 
     ro_form = lo_grid.
+
+  ENDMETHOD.
+
+
+  METHOD goto_source.
+
+    FIELD-SYMBOLS: <ls_top_of_stack> LIKE LINE OF mt_callstack.
+
+    READ TABLE mt_callstack INDEX 1
+                            ASSIGNING <ls_top_of_stack>.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Callstack is empty| ).
+    ENDIF.
+
+    go_to_source_code( <ls_top_of_stack> ).
 
   ENDMETHOD.
 
@@ -131,20 +178,6 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
 
     TRY.
         go_to_source_code( <ls_callstack> ).
-
-      CATCH zcx_abapgit_exception INTO lx_error.
-        MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
-    ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD run.
-
-    DATA: lx_error TYPE REF TO zcx_abapgit_exception.
-
-    TRY.
-        process( ).
 
       CATCH zcx_abapgit_exception INTO lx_error.
         MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
@@ -229,38 +262,4 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
-
-  METHOD process.
-
-    FIELD-SYMBOLS: <ls_top_of_stack> LIKE LINE OF mt_callstack.
-
-    IMPORT callstack = mt_callstack
-           FROM MEMORY ID zcx_abapgit_exception=>gc_memory_id.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |No callstack found in memory| ).
-    ENDIF.
-
-    " We mustn't delete the callstack from ABAP memory, because
-    " the code can be executed multiple times for an exception.
-    " DELETE FROM MEMORY ID zcx_abapgit_exception=>gc_memory_id.
-
-    READ TABLE mt_callstack INDEX 1
-                            ASSIGNING <ls_top_of_stack>.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Callstack is empty| ).
-    ENDIF.
-
-    CASE sy-tcode.
-      WHEN 'ZABAPGIT_GOTO_SOURCE'.
-
-        go_to_source_code( <ls_top_of_stack> ).
-
-      WHEN 'ZABAPGIT_CALLSTACK'.
-
-        show_callstack( <ls_top_of_stack> ).
-
-    ENDCASE.
-
-  ENDMETHOD.
-
 ENDCLASS.
