@@ -448,6 +448,7 @@ INTERFACE zif_abapgit_definitions
       url                      TYPE string VALUE 'url',
       goto_source              TYPE string VALUE 'goto_source',
       callstack                TYPE string VALUE 'callstack',
+      goto_message             TYPE string VALUE 'goto_message',
     END OF c_action .
   CONSTANTS c_tag_prefix TYPE string VALUE 'refs/tags/' ##NO_TEXT.
   CONSTANTS c_spagpa_param_repo_key TYPE char20 VALUE 'REPO_KEY' ##NO_TEXT.

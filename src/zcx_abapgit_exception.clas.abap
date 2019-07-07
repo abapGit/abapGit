@@ -80,7 +80,7 @@ CLASS zcx_abapgit_exception DEFINITION
 
       get_t100_longtext_itf
         RETURNING
-          VALUE(itf_itab) TYPE tline_tab,
+          VALUE(rt_itf) TYPE tline_tab,
 
       set_single_msg_var_clike
         IMPORTING
@@ -137,8 +137,11 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
 
     "cl_message_helper=>get_t100_longtext_itf
 
-    DATA lv_docu_key TYPE doku_obj.
-    CONCATENATE if_t100_message~t100key-msgid if_t100_message~t100key-msgno INTO lv_docu_key.
+    DATA: lv_docu_key TYPE doku_obj,
+          ls_itf      LIKE LINE OF rt_itf.
+
+    lv_docu_key = if_t100_message~t100key-msgid && if_t100_message~t100key-msgno.
+
     CALL FUNCTION 'DOCU_GET'
       EXPORTING
         id     = 'NA'
@@ -146,7 +149,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
         object = lv_docu_key
         typ    = 'E'
       TABLES
-        line   = itf_itab
+        line   = rt_itf
       EXCEPTIONS
         OTHERS = 1.
 
@@ -157,7 +160,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
         IMPORTING
           ev_target = sy-msgv1 ).
 
-      REPLACE '&V1&' IN TABLE itf_itab
+      REPLACE '&V1&' IN TABLE rt_itf
                      WITH sy-msgv1.
 
       set_single_msg_var(
@@ -166,7 +169,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
        IMPORTING
          ev_target = sy-msgv2 ).
 
-      REPLACE '&V2&' IN TABLE itf_itab
+      REPLACE '&V2&' IN TABLE rt_itf
                      WITH sy-msgv2.
 
       set_single_msg_var(
@@ -175,7 +178,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
        IMPORTING
          ev_target = sy-msgv3 ).
 
-      REPLACE '&V3&' IN TABLE itf_itab
+      REPLACE '&V3&' IN TABLE rt_itf
                      WITH sy-msgv3.
 
       set_single_msg_var(
@@ -184,9 +187,13 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
        IMPORTING
          ev_target = sy-msgv4 ).
 
-      REPLACE '&V4&' IN TABLE itf_itab
+      REPLACE '&V4&' IN TABLE rt_itf
                      WITH sy-msgv4.
     ENDIF.
+
+    ls_itf-tdformat = '*'.
+    ls_itf-tdline   = |T100-Message: { if_t100_message~t100key-msgid } { if_t100_message~t100key-msgno } |.
+    INSERT ls_itf INTO rt_itf INDEX 1.
 
   ENDMETHOD.
 

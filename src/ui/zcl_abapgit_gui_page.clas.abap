@@ -377,6 +377,13 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
         ENDIF.
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
+      WHEN zif_abapgit_definitions=>c_action-goto_message.
+
+        IF mo_exception_viewer IS BOUND.
+          mo_exception_viewer->goto_message( ).
+        ENDIF.
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
       WHEN OTHERS.
 
         ev_state = zcl_abapgit_gui=>c_event_state-not_handled.
@@ -452,6 +459,10 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
       REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline
               IN lv_longtext
               WITH '<br>'.
+
+      REPLACE ALL OCCURRENCES OF REGEX `(T100-Message:\s*)(.{2})\s(.{3})`
+              IN lv_longtext
+              WITH `$1<a id="a_goto_message" href="sapevent:goto_message">$2 $3</a><br>`.
 
       ro_html->add( |<div id="message" class="message-panel-fixed">|
                  && |  <div class="message-panel-border">|
