@@ -477,8 +477,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     " You should remember that we render the message panel just once
     " for each exception/error text.
     CLEAR:
-      mv_error_text,
-      mv_longtext.
+      mx_error.
 
   ENDMETHOD.
 
