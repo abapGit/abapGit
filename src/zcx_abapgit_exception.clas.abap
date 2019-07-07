@@ -344,48 +344,50 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
 
   METHOD set_single_msg_var.
 
-    FIELD-SYMBOLS <fs> TYPE any.
+    FIELD-SYMBOLS <lv_arg> TYPE any.
+
+    CLEAR ev_target.
 
     IF iv_arg IS INITIAL.
-      CLEAR ev_target.
-    ELSE.
-      TRY.
-          ASSIGN me->(iv_arg) TO <fs>.
-          IF sy-subrc <> 0.
-            RAISE EXCEPTION TYPE cx_sy_assign_cast_illegal_cast.
-          ENDIF.
-          " We cannot catch all conversion exceptions on MOVE => use CALL
-          set_single_msg_var_clike(
-            EXPORTING
-              iv_arg    = <fs>
-            IMPORTING
-              ev_target = ev_target ).
-
-        CATCH cx_sy_dyn_call_illegal_type.
-          TRY.
-              set_single_msg_var_numeric(
-                EXPORTING
-                  iv_arg    = <fs>
-                IMPORTING
-                  ev_target = ev_target ).
-
-            CATCH cx_sy_dyn_call_illegal_type.
-              TRY.
-                  set_single_msg_var_xseq(
-                    EXPORTING
-                      iv_arg    = <fs>
-                    IMPORTING
-                      ev_target = ev_target ).
-
-                CATCH cx_sy_dyn_call_illegal_type.
-                  CONCATENATE '&' iv_arg '&' INTO ev_target.
-              ENDTRY.
-          ENDTRY.
-
-        CATCH cx_sy_assign_cast_illegal_cast.
-          CONCATENATE '&' iv_arg '&' INTO ev_target.
-      ENDTRY.
+      RETURN.
     ENDIF.
+
+    TRY.
+        ASSIGN me->(iv_arg) TO <lv_arg>.
+        IF sy-subrc <> 0.
+          RAISE EXCEPTION TYPE cx_sy_assign_cast_illegal_cast.
+        ENDIF.
+        " We cannot catch all conversion exceptions on MOVE => use CALL
+        set_single_msg_var_clike(
+          EXPORTING
+            iv_arg    = <lv_arg>
+          IMPORTING
+            ev_target = ev_target ).
+
+      CATCH cx_sy_dyn_call_illegal_type.
+        TRY.
+            set_single_msg_var_numeric(
+              EXPORTING
+                iv_arg    = <lv_arg>
+              IMPORTING
+                ev_target = ev_target ).
+
+          CATCH cx_sy_dyn_call_illegal_type.
+            TRY.
+                set_single_msg_var_xseq(
+                  EXPORTING
+                    iv_arg    = <lv_arg>
+                  IMPORTING
+                    ev_target = ev_target ).
+
+              CATCH cx_sy_dyn_call_illegal_type.
+                CONCATENATE '&' iv_arg '&' INTO ev_target.
+            ENDTRY.
+        ENDTRY.
+
+      CATCH cx_sy_assign_cast_illegal_cast.
+        CONCATENATE '&' iv_arg '&' INTO ev_target.
+    ENDTRY.
 
   ENDMETHOD.
 
