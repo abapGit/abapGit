@@ -2,18 +2,18 @@
 CLASS zcx_abapgit_exception DEFINITION
   PUBLIC
   INHERITING FROM cx_static_check
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
-    CONSTANTS: gc_memory_id TYPE char30 VALUE `ZABAPGIT_CALLSTACK` .
+    CONSTANTS: gc_memory_id TYPE char30 VALUE `ZABAPGIT_CALLSTACK`.
 
-    INTERFACES if_t100_message .
+    INTERFACES if_t100_message.
 
-    DATA subrc TYPE sysubrc READ-ONLY .
-    DATA msgv1 TYPE symsgv READ-ONLY .
-    DATA msgv2 TYPE symsgv READ-ONLY .
-    DATA msgv3 TYPE symsgv READ-ONLY .
-    DATA msgv4 TYPE symsgv READ-ONLY .
+    DATA subrc TYPE sysubrc READ-ONLY.
+    DATA msgv1 TYPE symsgv READ-ONLY.
+    DATA msgv2 TYPE symsgv READ-ONLY.
+    DATA msgv3 TYPE symsgv READ-ONLY.
+    DATA msgv4 TYPE symsgv READ-ONLY.
     DATA mt_callstack TYPE abap_callstack READ-ONLY.
 
     "! Raise exception with text
@@ -25,7 +25,7 @@ CLASS zcx_abapgit_exception DEFINITION
         !iv_text     TYPE clike
         !ix_previous TYPE REF TO cx_root OPTIONAL
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     "! Raise exception with T100 message
     "! <p>
     "! Will default to sy-msg* variables. These need to be set right before calling this method.
@@ -46,7 +46,7 @@ CLASS zcx_abapgit_exception DEFINITION
         VALUE(iv_msgv3) TYPE symsgv DEFAULT sy-msgv3
         VALUE(iv_msgv4) TYPE symsgv DEFAULT sy-msgv4
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS constructor
       IMPORTING
         !textid   LIKE if_t100_message=>t100key OPTIONAL
@@ -54,7 +54,7 @@ CLASS zcx_abapgit_exception DEFINITION
         !msgv1    TYPE symsgv OPTIONAL
         !msgv2    TYPE symsgv OPTIONAL
         !msgv3    TYPE symsgv OPTIONAL
-        !msgv4    TYPE symsgv OPTIONAL .
+        !msgv4    TYPE symsgv OPTIONAL.
     METHODS get_longtext REDEFINITION.
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -412,11 +412,14 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
       lv_save_tabix_from TYPE syst-tabix,
       lv_save_tabix_to   TYPE i.
 
+    FIELD-SYMBOLS: <ls_itf>  TYPE tline,
+                   <ls_itf2> TYPE tline.
+
     lt_itf = it_itf.
 
     " You should remember that we replace the U1 format because
     " that preserves the section header of longtexts.
-    LOOP AT lt_itf ASSIGNING FIELD-SYMBOL(<ls_itf>)
+    LOOP AT lt_itf ASSIGNING <ls_itf>
                    WHERE tdformat = 'U1'.
 
       CLEAR:
@@ -425,7 +428,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
 
       lv_save_tabix_from = sy-tabix.
 
-      LOOP AT lt_itf ASSIGNING FIELD-SYMBOL(<ls_itf2>)
+      LOOP AT lt_itf ASSIGNING <ls_itf2>
                      FROM sy-tabix + 1.
 
         IF <ls_itf2>-tdformat = 'U1'.

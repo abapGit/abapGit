@@ -436,8 +436,8 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
   METHOD render_message_box.
 
     DATA:
-      mv_error_text TYPE string,
-      mv_longtext   TYPE string.
+      lv_error_text TYPE string,
+      lv_longtext   TYPE string.
 
     CREATE OBJECT ro_html.
 
@@ -446,17 +446,17 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
     IF mx_error IS BOUND.
 
-      mv_error_text = mx_error->get_text( ).
-      mv_longtext = mx_error->get_longtext( abap_true ).
+      lv_error_text = mx_error->get_text( ).
+      lv_longtext = mx_error->get_longtext( abap_true ).
 
       REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline
-              IN mv_longtext
+              IN lv_longtext
               WITH '<br>'.
 
       ro_html->add( |<div id="message" class="message-panel-fixed">|
                  && |  <div class="message-panel-border">|
                  && |    <div class="message-panel-outer">|
-                 && |      <div id="message-header" class="message-panel-inner message-header">{ mv_error_text }|
+                 && |      <div id="message-header" class="message-panel-inner message-header">{ lv_error_text }|
                  && |        <div class="float-right">|
                  && |          <a class="close-btn" href="#" onclick="toggleDisplay('message')">|
                  && |            &#x274c;|
@@ -465,7 +465,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
                  && |        </div>|
                  && |      </div>|
                  && |      <div id="message-detail" class="message-panel-inner" style="display:none" >|
-                 && |        { mv_longtext  }|
+                 && |        { lv_longtext  }|
                  && |        <br>|
                  && |        <br><a id="a_goto_source" href="sapevent:goto_source">Goto source</a>|
                  && |        <br><a id="a_callstack" href="sapevent:callstack">Callstack</a>|
