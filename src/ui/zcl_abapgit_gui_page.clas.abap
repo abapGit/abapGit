@@ -460,9 +460,25 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
               IN lv_longtext
               WITH '<br>'.
 
-      REPLACE ALL OCCURRENCES OF REGEX `(T100-Message:\s*)(.{2})\s(.{3})`
+      REPLACE FIRST OCCURRENCE OF REGEX `(.{5})`
               IN lv_longtext
-              WITH `$1<a id="a_goto_message" href="sapevent:goto_message">$2 $3</a><br>`.
+              WITH `<a id="a_goto_message" href="sapevent:goto_message">$1</a>`.
+
+      REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcx_abapgit_exception=>co_section_text-cause }<br>)|
+              IN lv_longtext
+              WITH |<h3>$1</h3>|.
+
+      REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcx_abapgit_exception=>co_section_text-system_response }<br>)|
+              IN lv_longtext
+              WITH |<h3>$1</h3>|.
+
+      REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcx_abapgit_exception=>co_section_text-what_to_do }<br>)|
+              IN lv_longtext
+              WITH |<h3>$1</h3>|.
+
+      REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcx_abapgit_exception=>co_section_text-sys_admin }<br>)|
+              IN lv_longtext
+              WITH |<h3>$1</h3>|.
 
       ro_html->add( |<div id="message" class="message-panel-fixed">|
                  && |  <div class="message-panel-border">|

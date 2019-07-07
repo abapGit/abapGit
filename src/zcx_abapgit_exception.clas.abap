@@ -5,7 +5,13 @@ CLASS zcx_abapgit_exception DEFINITION
   CREATE PUBLIC.
 
   PUBLIC SECTION.
-    CONSTANTS: gc_memory_id TYPE char30 VALUE `ZABAPGIT_CALLSTACK`.
+    CONSTANTS: gc_memory_id TYPE char30 VALUE `ZABAPGIT_CALLSTACK`,
+               BEGIN OF co_section_text,
+                       cause           TYPE string VALUE `Cause`,
+                       system_response TYPE string VALUE `System response`,
+                       what_to_do      TYPE string VALUE `Procedure`,
+                       sys_admin       TYPE string VALUE `System administration`,
+                     END OF co_section_text.
 
     INTERFACES if_t100_message.
 
@@ -59,19 +65,22 @@ CLASS zcx_abapgit_exception DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
-      gc_generic_error_msg TYPE string VALUE `An error occured (ZCX_ABAPGIT_EXCEPTION)` ##NO_TEXT.
-    CLASS-DATA gv_is_merged TYPE abap_bool VALUE abap_undefined ##NO_TEXT.
+      gc_generic_error_msg TYPE string VALUE `An error occured (ZCX_ABAPGIT_EXCEPTION)` ##NO_TEXT,
+      BEGIN OF co_section_token,
+        cause           TYPE string VALUE `&CAUSE&`,
+        system_response TYPE string VALUE `&SYSTEM_RESPONSE&`,
+        what_to_do      TYPE string VALUE `&WHAT_TO_DO&`,
+        sys_admin       TYPE string VALUE `&SYS_ADMIN&`,
+      END OF co_section_token.
 
     CLASS-METHODS:
       set_msg_vars_for_clike
         IMPORTING
-          text TYPE string,
-      is_merged
-        RETURNING
-          VALUE(rv_is_merged) TYPE abap_bool.
+          text TYPE string.
 
     METHODS:
       save_callstack,
+
       set_single_msg_var
         IMPORTING
           iv_arg    TYPE clike
@@ -104,7 +113,18 @@ CLASS zcx_abapgit_exception DEFINITION
         IMPORTING
           it_itf           TYPE tline_tab
         RETURNING
-          VALUE(rv_result) TYPE string.
+          VALUE(rv_result) TYPE string,
+
+      remove_empty_section
+        IMPORTING
+          iv_tabix_from TYPE i
+          iv_tabix_to   TYPE i
+        CHANGING
+          ct_itf        TYPE tline_tab,
+
+      replace_section_head_with_text
+        CHANGING
+          cs_itf TYPE tline.
 
 ENDCLASS.
 
@@ -134,8 +154,6 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
 
 
   METHOD get_t100_longtext_itf.
-
-    "cl_message_helper=>get_t100_longtext_itf
 
     DATA: lv_docu_key TYPE doku_obj,
           ls_itf      LIKE LINE OF rt_itf.
@@ -192,7 +210,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
     ENDIF.
 
     ls_itf-tdformat = '*'.
-    ls_itf-tdline   = |T100-Message: { if_t100_message~t100key-msgid } { if_t100_message~t100key-msgno } |.
+    ls_itf-tdline   = |{ if_t100_message~t100key-msgid }{ if_t100_message~t100key-msgno }|.
     INSERT ls_itf INTO rt_itf INDEX 1.
 
   ENDMETHOD.
@@ -209,25 +227,82 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD is_merged.
+  METHOD itf_to_string.
 
-    " Temporal duplication of zcl_abapgit_environment=>is_merged,
-    " it doesn't work yet inside exception classes. #2763
+    CONSTANTS: co_format_section TYPE string VALUE 'U1' ##NO_TEXT.
 
-    DATA lo_marker TYPE REF TO data ##NEEDED.
+    DATA:
+      lt_stream      TYPE TABLE OF tdline,
+      lt_string      TYPE TABLE OF string,
+      ls_string      LIKE LINE OF lt_string,
+      lt_itf         TYPE tline_tab,
+      lv_has_content TYPE abap_bool,
+      lv_tabix_from  TYPE syst-tabix,
+      lv_tabix_to    TYPE syst-tabix.
 
-    IF gv_is_merged = abap_undefined.
-      TRY.
-          CREATE DATA lo_marker TYPE REF TO ('LIF_ABAPMERGE_MARKER')  ##no_text.
-          "No exception --> marker found
-          gv_is_merged = abap_true.
+    FIELD-SYMBOLS: <ls_itf_section>      TYPE tline,
+                   <ls_itf_section_item> TYPE tline.
 
-        CATCH cx_sy_create_data_error.
-          gv_is_merged = abap_false.
-      ENDTRY.
-    ENDIF.
+    lt_itf = it_itf.
 
-    rv_is_merged = gv_is_merged.
+    " You should remember that we replace the U1 format because
+    " that preserves the section header of longtexts.
+    LOOP AT lt_itf ASSIGNING <ls_itf_section>
+                   WHERE tdformat = co_format_section.
+
+      CLEAR:
+        lv_has_content,
+        lv_tabix_to.
+
+      lv_tabix_from = sy-tabix.
+
+      LOOP AT lt_itf ASSIGNING <ls_itf_section_item>
+                     FROM sy-tabix + 1.
+
+        IF <ls_itf_section_item>-tdformat = co_format_section.
+          lv_tabix_to = sy-tabix.
+          EXIT.
+        ELSEIF <ls_itf_section_item>-tdline IS NOT INITIAL.
+          lv_has_content = abap_true.
+        ENDIF.
+
+      ENDLOOP.
+
+      IF lv_has_content = abap_false.
+        remove_empty_section(
+          EXPORTING
+            iv_tabix_from = lv_tabix_from
+            iv_tabix_to   = lv_tabix_to
+          CHANGING
+            ct_itf        = lt_itf ).
+        CONTINUE.
+      ENDIF.
+
+      replace_section_head_with_text(
+        CHANGING
+          cs_itf = <ls_itf_section> ).
+
+    ENDLOOP.
+
+    CALL FUNCTION 'CONVERT_ITF_TO_STREAM_TEXT'
+      EXPORTING
+        lf           = 'X'
+      IMPORTING
+        stream_lines = lt_string
+      TABLES
+        itf_text     = lt_itf
+        text_stream  = lt_stream.
+
+    LOOP AT lt_string INTO ls_string.
+      IF sy-tabix = 1.
+        rv_result = ls_string.
+      ELSE.
+        CONCATENATE rv_result ls_string
+                    INTO rv_result
+                    SEPARATED BY cl_abap_char_utilities=>newline.
+      ENDIF.
+
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -294,9 +369,28 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD save_callstack.
+  METHOD remove_empty_section.
+    DELETE ct_itf FROM iv_tabix_from TO iv_tabix_to.
+  ENDMETHOD.
 
-    DATA: li_gui_functions TYPE REF TO zif_abapgit_gui_functions.
+
+  METHOD replace_section_head_with_text.
+
+    CASE cs_itf-tdline.
+      WHEN co_section_token-cause.
+        cs_itf-tdline = co_section_text-cause.
+      WHEN co_section_token-system_response.
+        cs_itf-tdline = co_section_text-system_response.
+      WHEN co_section_token-what_to_do.
+        cs_itf-tdline = co_section_text-what_to_do.
+      WHEN co_section_token-sys_admin.
+        cs_itf-tdline = co_section_text-sys_admin.
+    ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD save_callstack.
 
     FIELD-SYMBOLS: <ls_callstack> TYPE abap_callstack_line.
 
@@ -408,85 +502,4 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
     " a kind of MOVE where all conversion errors are signalled by exceptions
     WRITE iv_arg LEFT-JUSTIFIED TO ev_target.
   ENDMETHOD.
-
-
-  METHOD itf_to_string.
-
-    DATA:
-      lt_stream          TYPE TABLE OF tdline,
-      lt_string          TYPE TABLE OF string,
-      ls_string          LIKE LINE OF lt_string,
-      lt_itf             TYPE tline_tab,
-      lv_has_content     TYPE abap_bool,
-      lv_save_tabix_from TYPE syst-tabix,
-      lv_save_tabix_to   TYPE i.
-
-    FIELD-SYMBOLS: <ls_itf>  TYPE tline,
-                   <ls_itf2> TYPE tline.
-
-    lt_itf = it_itf.
-
-    " You should remember that we replace the U1 format because
-    " that preserves the section header of longtexts.
-    LOOP AT lt_itf ASSIGNING <ls_itf>
-                   WHERE tdformat = 'U1'.
-
-      CLEAR:
-        lv_has_content,
-        lv_save_tabix_to.
-
-      lv_save_tabix_from = sy-tabix.
-
-      LOOP AT lt_itf ASSIGNING <ls_itf2>
-                     FROM sy-tabix + 1.
-
-        IF <ls_itf2>-tdformat = 'U1'.
-          lv_save_tabix_to = sy-tabix.
-          EXIT.
-        ELSEIF <ls_itf2>-tdline IS NOT INITIAL.
-          lv_has_content = abap_true.
-        ENDIF.
-
-      ENDLOOP.
-
-      IF lv_has_content = abap_false.
-        DELETE lt_itf FROM lv_save_tabix_from TO lv_save_tabix_to.
-        CONTINUE.
-      ENDIF.
-
-      CASE <ls_itf>-tdline.
-        WHEN '&CAUSE&'.
-          <ls_itf>-tdline = 'Cause'.
-        WHEN '&SYSTEM_RESPONSE&'.
-          <ls_itf>-tdline = 'System response'.
-        WHEN '&WHAT_TO_DO&'.
-          <ls_itf>-tdline = 'Procedure'.
-        WHEN '&SYS_ADMIN&'.
-          <ls_itf>-tdline = 'System administration'.
-      ENDCASE.
-
-    ENDLOOP.
-
-    CALL FUNCTION 'CONVERT_ITF_TO_STREAM_TEXT'
-      EXPORTING
-        lf           = 'X'
-      IMPORTING
-        stream_lines = lt_string
-      TABLES
-        itf_text     = lt_itf
-        text_stream  = lt_stream.
-
-    LOOP AT lt_string INTO ls_string.
-      IF sy-tabix = 1.
-        rv_result = ls_string.
-      ELSE.
-        CONCATENATE rv_result ls_string
-                    INTO rv_result
-                    SEPARATED BY cl_abap_char_utilities=>newline.
-      ENDIF.
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
 ENDCLASS.
