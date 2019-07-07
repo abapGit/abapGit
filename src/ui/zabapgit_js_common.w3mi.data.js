@@ -1366,10 +1366,10 @@ function GitGraphScroller() { // eslint-disable-line no-unused-vars
 function errorMessagePanelRegisterClick(){
   var elMessage = document.getElementById("message");
   if (elMessage){
-    elMessage.addEventListener("click", function(oEvent){ 
-      toggleMessageDetail(oEvent);
+    elMessage.addEventListener("click", function(oEvent){  
+      toggleMessageDetail(oEvent);    
     });
-  };
+  }
 }
 
 function toggleMessageDetail(oEvent){
