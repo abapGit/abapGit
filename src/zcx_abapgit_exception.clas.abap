@@ -6,12 +6,12 @@ CLASS zcx_abapgit_exception DEFINITION
 
   PUBLIC SECTION.
     CONSTANTS: gc_memory_id TYPE char30 VALUE `ZABAPGIT_CALLSTACK`,
-               BEGIN OF co_section_text,
-                       cause           TYPE string VALUE `Cause`,
-                       system_response TYPE string VALUE `System response`,
-                       what_to_do      TYPE string VALUE `Procedure`,
-                       sys_admin       TYPE string VALUE `System administration`,
-                     END OF co_section_text.
+               BEGIN OF gc_section_text,
+                 cause           TYPE string VALUE `Cause`,
+                 system_response TYPE string VALUE `System response`,
+                 what_to_do      TYPE string VALUE `Procedure`,
+                 sys_admin       TYPE string VALUE `System administration`,
+               END OF gc_section_text.
 
     INTERFACES if_t100_message.
 
@@ -66,12 +66,12 @@ CLASS zcx_abapgit_exception DEFINITION
   PRIVATE SECTION.
     CONSTANTS:
       gc_generic_error_msg TYPE string VALUE `An error occured (ZCX_ABAPGIT_EXCEPTION)` ##NO_TEXT,
-      BEGIN OF co_section_token,
+      BEGIN OF gc_section_token,
         cause           TYPE string VALUE `&CAUSE&`,
         system_response TYPE string VALUE `&SYSTEM_RESPONSE&`,
         what_to_do      TYPE string VALUE `&WHAT_TO_DO&`,
         sys_admin       TYPE string VALUE `&SYS_ADMIN&`,
-      END OF co_section_token.
+      END OF gc_section_token.
 
     CLASS-METHODS:
       set_msg_vars_for_clike
@@ -229,7 +229,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
 
   METHOD itf_to_string.
 
-    CONSTANTS: co_format_section TYPE string VALUE 'U1' ##NO_TEXT.
+    CONSTANTS: lc_format_section TYPE string VALUE 'U1' ##NO_TEXT.
 
     DATA:
       lt_stream      TYPE TABLE OF tdline,
@@ -248,7 +248,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
     " You should remember that we replace the U1 format because
     " that preserves the section header of longtexts.
     LOOP AT lt_itf ASSIGNING <ls_itf_section>
-                   WHERE tdformat = co_format_section.
+                   WHERE tdformat = lc_format_section.
 
       CLEAR:
         lv_has_content,
@@ -259,7 +259,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
       LOOP AT lt_itf ASSIGNING <ls_itf_section_item>
                      FROM sy-tabix + 1.
 
-        IF <ls_itf_section_item>-tdformat = co_format_section.
+        IF <ls_itf_section_item>-tdformat = lc_format_section.
           lv_tabix_to = sy-tabix.
           EXIT.
         ELSEIF <ls_itf_section_item>-tdline IS NOT INITIAL.
@@ -377,14 +377,14 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
   METHOD replace_section_head_with_text.
 
     CASE cs_itf-tdline.
-      WHEN co_section_token-cause.
-        cs_itf-tdline = co_section_text-cause.
-      WHEN co_section_token-system_response.
-        cs_itf-tdline = co_section_text-system_response.
-      WHEN co_section_token-what_to_do.
-        cs_itf-tdline = co_section_text-what_to_do.
-      WHEN co_section_token-sys_admin.
-        cs_itf-tdline = co_section_text-sys_admin.
+      WHEN gc_section_token-cause.
+        cs_itf-tdline = gc_section_text-cause.
+      WHEN gc_section_token-system_response.
+        cs_itf-tdline = gc_section_text-system_response.
+      WHEN gc_section_token-what_to_do.
+        cs_itf-tdline = gc_section_text-what_to_do.
+      WHEN gc_section_token-sys_admin.
+        cs_itf-tdline = gc_section_text-sys_admin.
     ENDCASE.
 
   ENDMETHOD.
