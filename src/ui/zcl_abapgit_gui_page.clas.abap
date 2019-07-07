@@ -36,9 +36,10 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
-    DATA: mo_settings TYPE REF TO zcl_abapgit_settings,
-          mt_hotkeys  TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name,
-          mx_error    TYPE REF TO zcx_abapgit_exception.
+    DATA: mo_settings         TYPE REF TO zcl_abapgit_settings,
+          mt_hotkeys          TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name,
+          mx_error            TYPE REF TO zcx_abapgit_exception,
+          mo_exception_viewer TYPE REF TO zcl_abapgit_exception_viewer.
     METHODS html_head
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
@@ -93,7 +94,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
 
   METHOD call_browser.
@@ -356,8 +357,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA: lo_exception_viewer TYPE REF TO zcl_abapgit_exception_viewer.
-
     CASE iv_action.
       WHEN zif_abapgit_definitions=>c_action-url.
 
@@ -366,20 +365,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
       WHEN  zif_abapgit_definitions=>c_action-goto_source.
 
-        CREATE OBJECT lo_exception_viewer
-          EXPORTING
-            ix_error = mx_error.
-        lo_exception_viewer->goto_source( ).
-
+        IF mo_exception_viewer IS BOUND.
+          mo_exception_viewer->goto_source( ).
+        ENDIF.
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
       WHEN  zif_abapgit_definitions=>c_action-callstack.
 
-        CREATE OBJECT lo_exception_viewer
-          EXPORTING
-            ix_error = mx_error.
-        lo_exception_viewer->callstack( ).
-
+        IF mo_exception_viewer IS BOUND.
+          mo_exception_viewer->callstack( ).
+        ENDIF.
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
       WHEN OTHERS.
@@ -472,12 +467,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
                  && |  </div>|
                  && |</div>| ).
 
-    ENDIF.
+      CREATE OBJECT mo_exception_viewer
+        EXPORTING
+          ix_error = mx_error.
 
-    " You should remember that we render the message panel just once
-    " for each exception/error text.
-    CLEAR:
-      mx_error.
+      " You should remember that we render the message panel just once
+      " for each exception/error text.
+      CLEAR:
+        mx_error.
+
+    ENDIF.
 
   ENDMETHOD.
 
