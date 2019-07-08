@@ -5,13 +5,13 @@ CLASS zcx_abapgit_exception DEFINITION
   CREATE PUBLIC.
 
   PUBLIC SECTION.
-    CONSTANTS: gc_memory_id TYPE char30 VALUE `ZABAPGIT_CALLSTACK`,
-               BEGIN OF gc_section_text,
-                 cause           TYPE string VALUE `Cause`,
-                 system_response TYPE string VALUE `System response`,
-                 what_to_do      TYPE string VALUE `Procedure`,
-                 sys_admin       TYPE string VALUE `System administration`,
-               END OF gc_section_text.
+    CONSTANTS:
+      BEGIN OF gc_section_text,
+        cause           TYPE string VALUE `Cause`,
+        system_response TYPE string VALUE `System response`,
+        what_to_do      TYPE string VALUE `Procedure`,
+        sys_admin       TYPE string VALUE `System administration`,
+      END OF gc_section_text.
 
     INTERFACES if_t100_message.
 
