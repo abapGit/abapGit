@@ -330,101 +330,101 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     " You should remember that we render the message panel only
     " if we have an error text.
 
-    IF mx_error IS BOUND.
+    IF mx_error IS NOT BOUND.
+      RETURN.
+    ENDIF.
 
-      lv_error_text = mx_error->get_text( ).
-      lv_longtext = mx_error->get_longtext( abap_true ).
+    lv_error_text = mx_error->get_text( ).
+    lv_longtext = mx_error->get_longtext( abap_true ).
 
-      REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline
+    REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline
+            IN lv_longtext
+            WITH '<br>'.
+
+    FIND FIRST OCCURRENCE OF REGEX lc_regex_msgid_and_msgno
+         IN lv_longtext
+         SUBMATCHES lv_msgid_and_msgno.
+
+    IF sy-subrc = 0.
+      REPLACE FIRST OCCURRENCE OF REGEX lc_regex_msgid_and_msgno
               IN lv_longtext
-              WITH '<br>'.
+              WITH ``.
+    ENDIF.
 
-      FIND FIRST OCCURRENCE OF REGEX lc_regex_msgid_and_msgno
-           IN lv_longtext
-           SUBMATCHES lv_msgid_and_msgno.
+    REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcx_abapgit_exception=>gc_section_text-cause }<br>)|
+            IN lv_longtext
+            WITH |<h3>$1</h3>|.
 
-      IF sy-subrc = 0.
-        REPLACE FIRST OCCURRENCE OF REGEX lc_regex_msgid_and_msgno
-                IN lv_longtext
-                WITH ``.
-      ENDIF.
+    REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcx_abapgit_exception=>gc_section_text-system_response }<br>)|
+            IN lv_longtext
+            WITH |<h3>$1</h3>|.
 
-      REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcx_abapgit_exception=>gc_section_text-cause }<br>)|
-              IN lv_longtext
-              WITH |<h3>$1</h3>|.
+    REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcx_abapgit_exception=>gc_section_text-what_to_do }<br>)|
+            IN lv_longtext
+            WITH |<h3>$1</h3>|.
 
-      REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcx_abapgit_exception=>gc_section_text-system_response }<br>)|
-              IN lv_longtext
-              WITH |<h3>$1</h3>|.
+    REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcx_abapgit_exception=>gc_section_text-sys_admin }<br>)|
+            IN lv_longtext
+            WITH |<h3>$1</h3>|.
 
-      REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcx_abapgit_exception=>gc_section_text-what_to_do }<br>)|
-              IN lv_longtext
-              WITH |<h3>$1</h3>|.
+    ro_html->add( |<div id="message" class="message-panel-fixed">|
+               && |  <div class="message-panel-border">|
+               && |    <div class="message-panel-outer">|
+               && |      <div id="message-header" class="message-panel-inner message-header">{ lv_error_text }|
+               && |        <div class="float-right">| ).
 
-      REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcx_abapgit_exception=>gc_section_text-sys_admin }<br>)|
-              IN lv_longtext
-              WITH |<h3>$1</h3>|.
+    ro_html->add_a(
+        iv_txt   = `&#x274c;`
+        iv_act   = `toggleDisplay('message')`
+        iv_class = `close-btn`
+        iv_typ   = zif_abapgit_html=>c_action_type-onclick ).
 
-      ro_html->add( |<div id="message" class="message-panel-fixed">|
-                 && |  <div class="message-panel-border">|
-                 && |    <div class="message-panel-outer">|
-                 && |      <div id="message-header" class="message-panel-inner message-header">{ lv_error_text }|
-                 && |        <div class="float-right">| ).
+    ro_html->add( |        </div>|
+               && |      </div>|
+               && |      <div id="message-detail" class="message-panel-inner" style="display:none" >| ).
+
+    IF lv_msgid_and_msgno IS NOT INITIAL.
 
       ro_html->add_a(
-          iv_txt   = `&#x274c;`
-          iv_act   = `toggleDisplay('message')`
-          iv_class = `close-btn`
-          iv_typ   = zif_abapgit_html=>c_action_type-onclick ).
-
-      ro_html->add( |        </div>|
-                 && |      </div>|
-                 && |      <div id="message-detail" class="message-panel-inner" style="display:none" >| ).
-
-      IF lv_msgid_and_msgno IS NOT INITIAL.
-
-        ro_html->add_a(
-            iv_txt = lv_msgid_and_msgno
-            iv_typ = zif_abapgit_html=>c_action_type-sapevent
-            iv_act = `goto_message`
-            iv_id  = `a_goto_message` ).
-
-      ENDIF.
-
-      ro_html->add( |        { lv_longtext  }|
-                 && |        <br>|
-                 && |        <br>| ).
-
-      ro_html->add_a(
-          iv_txt = `Goto source`
-          iv_act = `goto_source`
+          iv_txt = lv_msgid_and_msgno
           iv_typ = zif_abapgit_html=>c_action_type-sapevent
-          iv_id  = `a_goto_source` ).
-
-      ro_html->add( |        <br>| ).
-
-      ro_html->add_a(
-          iv_txt = `Callstack`
-          iv_act = `callstack`
-          iv_typ = zif_abapgit_html=>c_action_type-sapevent
-          iv_id  = `a_callstack` ).
-
-      ro_html->add( |        <br>|
-                 && |      </div>|
-                 && |    </div>|
-                 && |  </div>|
-                 && |</div>| ).
-
-      CREATE OBJECT mo_exception_viewer
-        EXPORTING
-          ix_error = mx_error.
-
-      " You should remember that we render the message panel just once
-      " for each exception/error text.
-      CLEAR:
-        mx_error.
+          iv_act = zif_abapgit_definitions=>c_action-goto_message
+          iv_id  = `a_goto_message` ).
 
     ENDIF.
+
+    ro_html->add( |        { lv_longtext  }|
+               && |        <br>|
+               && |        <br>| ).
+
+    ro_html->add_a(
+        iv_txt = `Goto source`
+        iv_act = zif_abapgit_definitions=>c_action-goto_source
+        iv_typ = zif_abapgit_html=>c_action_type-sapevent
+        iv_id  = `a_goto_source` ).
+
+    ro_html->add( |        <br>| ).
+
+    ro_html->add_a(
+        iv_txt = `Callstack`
+        iv_act = zif_abapgit_definitions=>c_action-callstack
+        iv_typ = zif_abapgit_html=>c_action_type-sapevent
+        iv_id  = `a_callstack` ).
+
+    ro_html->add( |        <br>|
+               && |      </div>|
+               && |    </div>|
+               && |  </div>|
+               && |</div>| ).
+
+    CREATE OBJECT mo_exception_viewer
+      EXPORTING
+        ix_error = mx_error.
+
+    " You should remember that we render the message panel just once
+    " for each exception/error text.
+    CLEAR:
+      mx_error.
 
   ENDMETHOD.
 
