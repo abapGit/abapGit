@@ -800,4 +800,9 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_gui_renderable~show_error.
+    ##TODO
+  ENDMETHOD.
+
 ENDCLASS.

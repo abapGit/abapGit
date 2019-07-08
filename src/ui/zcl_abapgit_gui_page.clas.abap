@@ -436,6 +436,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
   METHOD zif_abapgit_gui_renderable~show_error.
 
     mx_error = ix_error.
+    rv_handled = abap_true.
 
   ENDMETHOD.
 

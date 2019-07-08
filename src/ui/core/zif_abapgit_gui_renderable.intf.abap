@@ -9,6 +9,8 @@ INTERFACE zif_abapgit_gui_renderable
 
   METHODS show_error
     IMPORTING
-      ix_error TYPE REF TO zcx_abapgit_exception.
+      ix_error          TYPE REF TO zcx_abapgit_exception
+    RETURNING
+      VALUE(rv_handled) TYPE abap_bool.
 
 ENDINTERFACE.

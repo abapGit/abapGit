@@ -93,4 +93,10 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_TUTORIAL IMPLEMENTATION.
     ro_html->add( '</div>' ).
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_renderable~show_error.
+    ##TODO
+  ENDMETHOD.
+
 ENDCLASS.
