@@ -6,8 +6,11 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
       zif_abapgit_gui_event_handler.
 
     CONSTANTS:
+      " You should remember that these actions are handled in the UI.
+      " Have a look at the JS file.
       BEGIN OF c_global_page_action,
-        showhotkeys TYPE string VALUE `showHotkeys` ##NO_TEXT,
+        showhotkeys         TYPE string VALUE `showHotkeys` ##NO_TEXT,
+        togglemessagedetail TYPE string VALUE `toggleMessageDetail` ##NO_TEXT,
       END OF c_global_page_action.
 
     CLASS-METHODS:
@@ -204,9 +207,14 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
     DATA: ls_hotkey_action LIKE LINE OF rt_hotkey.
 
-    ls_hotkey_action-name           = |Show hotkeys help|.
-    ls_hotkey_action-action         = c_global_page_action-showhotkeys.
+    ls_hotkey_action-name   = |Show hotkeys help|.
+    ls_hotkey_action-action = c_global_page_action-showhotkeys.
     ls_hotkey_action-hotkey = |?|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey.
+
+    ls_hotkey_action-name   = |Toggle error message longtext|.
+    ls_hotkey_action-action = c_global_page_action-togglemessagedetail.
+    ls_hotkey_action-hotkey = |m|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey.
 
   ENDMETHOD.
@@ -304,139 +312,6 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
                   ms_control-redirect_url }">| ).           "#EC NOTEXT
     ro_html->add( '</head>' ).                              "#EC NOTEXT
     ro_html->add( '</html>' ).                              "#EC NOTEXT
-
-  ENDMETHOD.
-
-
-  METHOD render_hotkey_overview.
-
-    ro_html = zcl_abapgit_gui_chunk_lib=>render_hotkey_overview( me ).
-
-  ENDMETHOD.
-
-
-  METHOD scripts.
-
-    CREATE OBJECT ro_html.
-
-    link_hints( ro_html ).
-    insert_hotkeys_to_page( ro_html ).
-    ro_html->add( |errorMessagePanelRegisterClick();| ).
-
-  ENDMETHOD.
-
-
-  METHOD title.
-
-    CREATE OBJECT ro_html.
-
-    ro_html->add( '<div id="header">' ).                    "#EC NOTEXT
-    ro_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
-
-    ro_html->add( |<td class="logo">{
-                  zcl_abapgit_html=>a( iv_txt = '<img src="img/logo" alt="logo">'
-                                       iv_id  = 'abapGitLogo'
-                                       iv_act = zif_abapgit_definitions=>c_action-abapgit_home )
-                  }</td>| ).                                "#EC NOTEXT
-
-    ro_html->add( |<td><span class="page_title"> &#x25BA; {
-                  ms_control-page_title
-                  }</span></td>| ).                         "#EC NOTEXT
-
-    IF ms_control-page_menu IS BOUND.
-      ro_html->add( '<td class="right">' ).                 "#EC NOTEXT
-      ro_html->add( ms_control-page_menu->render( iv_right = abap_true ) ).
-      ro_html->add( '</td>' ).                              "#EC NOTEXT
-    ENDIF.
-
-    ro_html->add( '</tr></table>' ).                        "#EC NOTEXT
-    ro_html->add( '</div>' ).                               "#EC NOTEXT
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_event_handler~on_event.
-
-    CASE iv_action.
-      WHEN zif_abapgit_definitions=>c_action-url.
-
-        call_browser( iv_getdata ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-
-      WHEN  zif_abapgit_definitions=>c_action-goto_source.
-
-        IF mo_exception_viewer IS BOUND.
-          mo_exception_viewer->goto_source( ).
-        ENDIF.
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-
-      WHEN  zif_abapgit_definitions=>c_action-callstack.
-
-        IF mo_exception_viewer IS BOUND.
-          mo_exception_viewer->callstack( ).
-        ENDIF.
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-
-      WHEN zif_abapgit_definitions=>c_action-goto_message.
-
-        IF mo_exception_viewer IS BOUND.
-          mo_exception_viewer->goto_message( ).
-        ENDIF.
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-
-      WHEN OTHERS.
-
-        ev_state = zcl_abapgit_gui=>c_event_state-not_handled.
-
-    ENDCASE.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_renderable~render.
-
-    DATA: lo_script TYPE REF TO zcl_abapgit_html.
-
-    " Redirect
-    IF ms_control-redirect_url IS NOT INITIAL.
-      ro_html = redirect( ).
-      RETURN.
-    ENDIF.
-
-    mt_hotkeys = define_hotkeys( ).
-
-    " Real page
-    CREATE OBJECT ro_html TYPE zcl_abapgit_html.
-
-    ro_html->add( '<!DOCTYPE html>' ).                      "#EC NOTEXT
-    ro_html->add( '<html>' ).                               "#EC NOTEXT
-    ro_html->add( html_head( ) ).
-    ro_html->add( '<body>' ).                               "#EC NOTEXT
-    ro_html->add( title( ) ).
-    ro_html->add( render_hotkey_overview( ) ).
-    ro_html->add( render_content( ) ).
-    ro_html->add( render_error_message_box( ) ).
-    ro_html->add( footer( ) ).
-    ro_html->add( '</body>' ).                              "#EC NOTEXT
-
-    lo_script = scripts( ).
-
-    IF lo_script IS BOUND AND lo_script->is_empty( ) = abap_false.
-      ro_html->add( '<script type="text/javascript">' ).
-      ro_html->add( lo_script ).
-      ro_html->add( 'confirmInitialized();' ).
-      ro_html->add( '</script>' ).
-    ENDIF.
-
-    ro_html->add( '</html>' ).                              "#EC NOTEXT
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_renderable~handle_error.
-
-    mx_error = ix_error.
-    rv_handled = abap_true.
 
   ENDMETHOD.
 
@@ -553,4 +428,136 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD render_hotkey_overview.
+
+    ro_html = zcl_abapgit_gui_chunk_lib=>render_hotkey_overview( me ).
+
+  ENDMETHOD.
+
+
+  METHOD scripts.
+
+    CREATE OBJECT ro_html.
+
+    link_hints( ro_html ).
+    insert_hotkeys_to_page( ro_html ).
+    ro_html->add( |errorMessagePanelRegisterClick();| ).
+
+  ENDMETHOD.
+
+
+  METHOD title.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( '<div id="header">' ).                    "#EC NOTEXT
+    ro_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
+
+    ro_html->add( |<td class="logo">{
+                  zcl_abapgit_html=>a( iv_txt = '<img src="img/logo" alt="logo">'
+                                       iv_id  = 'abapGitLogo'
+                                       iv_act = zif_abapgit_definitions=>c_action-abapgit_home )
+                  }</td>| ).                                "#EC NOTEXT
+
+    ro_html->add( |<td><span class="page_title"> &#x25BA; {
+                  ms_control-page_title
+                  }</span></td>| ).                         "#EC NOTEXT
+
+    IF ms_control-page_menu IS BOUND.
+      ro_html->add( '<td class="right">' ).                 "#EC NOTEXT
+      ro_html->add( ms_control-page_menu->render( iv_right = abap_true ) ).
+      ro_html->add( '</td>' ).                              "#EC NOTEXT
+    ENDIF.
+
+    ro_html->add( '</tr></table>' ).                        "#EC NOTEXT
+    ro_html->add( '</div>' ).                               "#EC NOTEXT
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_event_handler~on_event.
+
+    CASE iv_action.
+      WHEN zif_abapgit_definitions=>c_action-url.
+
+        call_browser( iv_getdata ).
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
+      WHEN  zif_abapgit_definitions=>c_action-goto_source.
+
+        IF mo_exception_viewer IS BOUND.
+          mo_exception_viewer->goto_source( ).
+        ENDIF.
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
+      WHEN  zif_abapgit_definitions=>c_action-callstack.
+
+        IF mo_exception_viewer IS BOUND.
+          mo_exception_viewer->callstack( ).
+        ENDIF.
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
+      WHEN zif_abapgit_definitions=>c_action-goto_message.
+
+        IF mo_exception_viewer IS BOUND.
+          mo_exception_viewer->goto_message( ).
+        ENDIF.
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
+      WHEN OTHERS.
+
+        ev_state = zcl_abapgit_gui=>c_event_state-not_handled.
+
+    ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_renderable~handle_error.
+
+    mx_error = ix_error.
+    rv_handled = abap_true.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_renderable~render.
+
+    DATA: lo_script TYPE REF TO zcl_abapgit_html.
+
+    " Redirect
+    IF ms_control-redirect_url IS NOT INITIAL.
+      ro_html = redirect( ).
+      RETURN.
+    ENDIF.
+
+    mt_hotkeys = define_hotkeys( ).
+
+    " Real page
+    CREATE OBJECT ro_html TYPE zcl_abapgit_html.
+
+    ro_html->add( '<!DOCTYPE html>' ).                      "#EC NOTEXT
+    ro_html->add( '<html>' ).                               "#EC NOTEXT
+    ro_html->add( html_head( ) ).
+    ro_html->add( '<body>' ).                               "#EC NOTEXT
+    ro_html->add( title( ) ).
+    ro_html->add( render_hotkey_overview( ) ).
+    ro_html->add( render_content( ) ).
+    ro_html->add( render_error_message_box( ) ).
+    ro_html->add( footer( ) ).
+    ro_html->add( '</body>' ).                              "#EC NOTEXT
+
+    lo_script = scripts( ).
+
+    IF lo_script IS BOUND AND lo_script->is_empty( ) = abap_false.
+      ro_html->add( '<script type="text/javascript">' ).
+      ro_html->add( lo_script ).
+      ro_html->add( 'confirmInitialized();' ).
+      ro_html->add( '</script>' ).
+    ENDIF.
+
+    ro_html->add( '</html>' ).                              "#EC NOTEXT
+
+  ENDMETHOD.
 ENDCLASS.
