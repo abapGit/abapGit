@@ -84,7 +84,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
     METHODS get_default_hotkeys
       RETURNING
         VALUE(rt_default_hotkeys) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name.
-    METHODS render_message_box
+    METHODS render_error_message_box
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
@@ -415,7 +415,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ro_html->add( title( ) ).
     ro_html->add( render_hotkey_overview( ) ).
     ro_html->add( render_content( ) ).
-    ro_html->add( render_message_box( ) ).
+    ro_html->add( render_error_message_box( ) ).
     ro_html->add( footer( ) ).
     ro_html->add( '</body>' ).                              "#EC NOTEXT
 
@@ -433,7 +433,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_renderable~show_error.
+  METHOD zif_abapgit_gui_renderable~handle_error.
 
     mx_error = ix_error.
     rv_handled = abap_true.
@@ -441,11 +441,14 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_message_box.
+  METHOD render_error_message_box.
+
+    CONSTANTS: lc_regex_msgid_and_msgno TYPE string VALUE `(.{5})` ##NO_TEXT.
 
     DATA:
-      lv_error_text TYPE string,
-      lv_longtext   TYPE string.
+      lv_error_text      TYPE string,
+      lv_longtext        TYPE string,
+      lv_msgid_and_msgno TYPE string.
 
     CREATE OBJECT ro_html.
 
@@ -461,9 +464,15 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
               IN lv_longtext
               WITH '<br>'.
 
-      REPLACE FIRST OCCURRENCE OF REGEX `(.{5})`
-              IN lv_longtext
-              WITH `<a id="a_goto_message" href="sapevent:goto_message">$1</a>`.
+      FIND FIRST OCCURRENCE OF REGEX lc_regex_msgid_and_msgno
+           IN lv_longtext
+           SUBMATCHES lv_msgid_and_msgno.
+
+      IF sy-subrc = 0.
+        REPLACE FIRST OCCURRENCE OF REGEX lc_regex_msgid_and_msgno
+                IN lv_longtext
+                WITH ``.
+      ENDIF.
 
       REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcx_abapgit_exception=>gc_section_text-cause }<br>)|
               IN lv_longtext
@@ -485,18 +494,47 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
                  && |  <div class="message-panel-border">|
                  && |    <div class="message-panel-outer">|
                  && |      <div id="message-header" class="message-panel-inner message-header">{ lv_error_text }|
-                 && |        <div class="float-right">|
-                 && |          <a class="close-btn" href="#" onclick="toggleDisplay('message')">|
-                 && |            &#x274c;|
-                 && |            <span class="tooltiptext hidden"></span>|
-                 && |          </a>|
-                 && |        </div>|
+                 && |        <div class="float-right">| ).
+
+      ro_html->add_a(
+          iv_txt   = `&#x274c;`
+          iv_act   = `toggleDisplay('message')`
+          iv_class = `close-btn`
+          iv_typ   = zif_abapgit_html=>c_action_type-onclick ).
+
+      ro_html->add( |        </div>|
                  && |      </div>|
-                 && |      <div id="message-detail" class="message-panel-inner" style="display:none" >|
-                 && |        { lv_longtext  }|
+                 && |      <div id="message-detail" class="message-panel-inner" style="display:none" >| ).
+
+      IF lv_msgid_and_msgno IS NOT INITIAL.
+
+        ro_html->add_a(
+            iv_txt = lv_msgid_and_msgno
+            iv_typ = zif_abapgit_html=>c_action_type-sapevent
+            iv_act = `goto_message`
+            iv_id  = `a_goto_message` ).
+
+      ENDIF.
+
+      ro_html->add( |        { lv_longtext  }|
                  && |        <br>|
-                 && |        <br><a id="a_goto_source" href="sapevent:goto_source">Goto source</a>|
-                 && |        <br><a id="a_callstack" href="sapevent:callstack">Callstack</a>|
+                 && |        <br>| ).
+
+      ro_html->add_a(
+          iv_txt = `Goto source`
+          iv_act = `goto_source`
+          iv_typ = zif_abapgit_html=>c_action_type-sapevent
+          iv_id  = `a_goto_source` ).
+
+      ro_html->add( |        <br>| ).
+
+      ro_html->add_a(
+          iv_txt = `Callstack`
+          iv_act = `callstack`
+          iv_typ = zif_abapgit_html=>c_action_type-sapevent
+          iv_id  = `a_callstack` ).
+
+      ro_html->add( |        <br>|
                  && |      </div>|
                  && |    </div>|
                  && |  </div>|

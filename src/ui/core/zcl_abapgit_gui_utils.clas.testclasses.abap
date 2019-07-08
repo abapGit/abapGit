@@ -5,7 +5,7 @@ ENDCLASS.
 CLASS lcl_renderable IMPLEMENTATION.
   METHOD zif_abapgit_gui_renderable~render.
   ENDMETHOD.
-  METHOD zif_abapgit_gui_renderable~show_error.
+  METHOD zif_abapgit_gui_renderable~handle_error.
   ENDMETHOD.
 
 ENDCLASS.
