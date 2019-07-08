@@ -56,7 +56,7 @@ CLASS zcl_abapgit_exception_viewer DEFINITION
         IMPORTING
           is_top_of_stack TYPE abap_callstack_line,
 
-      go_to_source_code
+      _goto_source_code
         IMPORTING
           is_callstack TYPE abap_callstack_line
         RAISING
@@ -142,12 +142,12 @@ CLASS ZCL_ABAPGIT_EXCEPTION_VIEWER IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Callstack is empty| ).
     ENDIF.
 
-    go_to_source_code( <ls_top_of_stack> ).
+    _goto_source_code( <ls_top_of_stack> ).
 
   ENDMETHOD.
 
 
-  METHOD go_to_source_code.
+  METHOD _goto_source_code.
 
     DATA: ls_item TYPE zif_abapgit_definitions=>ty_item.
 
@@ -181,7 +181,7 @@ CLASS ZCL_ABAPGIT_EXCEPTION_VIEWER IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        go_to_source_code( <ls_callstack> ).
+        _goto_source_code( <ls_callstack> ).
 
       CATCH zcx_abapgit_exception INTO lx_error.
         MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
@@ -229,7 +229,7 @@ CLASS ZCL_ABAPGIT_EXCEPTION_VIEWER IMPLEMENTATION.
         lo_alv->set_top_of_list( get_top_of_list( is_top_of_stack ) ).
 
         lo_alv->set_screen_popup( start_column = 10
-                                  end_column   = 150
+                                  end_column   = 180
                                   start_line   = 3
                                   end_line     = 30 ).
 
