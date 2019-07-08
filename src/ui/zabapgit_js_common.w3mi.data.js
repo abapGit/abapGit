@@ -1373,9 +1373,9 @@ function errorMessagePanelRegisterClick(){
 }
 
 function toggleMessageDetail(oEvent){
-  if (oEvent.target.id === "a_goto_source"
-   || oEvent.target.id === "a_callstack"
-   || oEvent.target.id === "a_goto_message") {
+  if (oEvent &&  ( oEvent.target.id === "a_goto_source"
+                || oEvent.target.id === "a_callstack"
+                || oEvent.target.id === "a_goto_message") ) {
     return;
   }
   toggleDisplay("message-detail");
