@@ -431,7 +431,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     render_table_header( io_html ).
     render_table_body( io_html     = io_html
-                       it_overview = it_overview  ).
+                       it_overview = it_overview ).
 
     io_html->add( |</table>| ).
     io_html->add( |</div>| ).
@@ -549,11 +549,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: lv_key  TYPE zif_abapgit_persistence=>ty_value.
@@ -597,9 +592,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
             it_postdata  = it_postdata
           IMPORTING
             ei_page      = ei_page
-            ev_state     = ev_state  ).
+            ev_state     = ev_state ).
 
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 ENDCLASS.

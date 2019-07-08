@@ -10,6 +10,13 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
         small TYPE c VALUE 'S',
       END OF c_icon_scaling.
 
+    CONSTANTS:
+      BEGIN OF c_ui_theme,
+        default TYPE string VALUE 'default',
+        dark TYPE string VALUE 'dark',
+        belize TYPE string VALUE 'belize',
+      END OF c_ui_theme.
+
     METHODS:
       set_proxy_url
         IMPORTING
@@ -128,7 +135,13 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
           VALUE(rv_scaling) TYPE zif_abapgit_definitions=>ty_s_user_settings-icon_scaling,
       set_icon_scaling
         IMPORTING
-          iv_scaling TYPE zif_abapgit_definitions=>ty_s_user_settings-icon_scaling.
+          iv_scaling TYPE zif_abapgit_definitions=>ty_s_user_settings-icon_scaling,
+      get_ui_theme
+        RETURNING
+          VALUE(rv_ui_theme) TYPE zif_abapgit_definitions=>ty_s_user_settings-ui_theme,
+      set_ui_theme
+        IMPORTING
+          iv_ui_theme TYPE zif_abapgit_definitions=>ty_s_user_settings-ui_theme.
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_s_settings,
@@ -152,7 +165,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_settings IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
 
   METHOD get_adt_jump_enabled.
@@ -247,6 +260,11 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
   METHOD get_show_default_repo.
     rv_show_default_repo = ms_user_settings-show_default_repo.
+  ENDMETHOD.
+
+
+  METHOD get_ui_theme.
+    rv_ui_theme = ms_user_settings-ui_theme.
   ENDMETHOD.
 
 
@@ -364,6 +382,16 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
   METHOD set_show_default_repo.
     ms_user_settings-show_default_repo = iv_show_default_repo.
+  ENDMETHOD.
+
+
+  METHOD set_ui_theme.
+    ms_user_settings-ui_theme = iv_ui_theme.
+    IF ms_user_settings-ui_theme <> c_ui_theme-default
+        AND ms_user_settings-ui_theme <> c_ui_theme-dark
+        AND ms_user_settings-ui_theme <> c_ui_theme-belize.
+      ms_user_settings-ui_theme = c_ui_theme-default. " Reset to default
+    ENDIF.
   ENDMETHOD.
 
 

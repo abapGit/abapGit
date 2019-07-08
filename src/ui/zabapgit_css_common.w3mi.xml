@@ -15,13 +15,13 @@
      <RELID>MI</RELID>
      <OBJID>ZABAPGIT_CSS_COMMON</OBJID>
      <NAME>filename</NAME>
-     <VALUE>common.css</VALUE>
+     <VALUE>~wwwtmp.css</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
      <RELID>MI</RELID>
      <OBJID>ZABAPGIT_CSS_COMMON</OBJID>
      <NAME>mimetype</NAME>
-     <VALUE>text/plain</VALUE>
+     <VALUE>text/css</VALUE>
     </WWWPARAMS>
    </PARAMS>
   </asx:values>

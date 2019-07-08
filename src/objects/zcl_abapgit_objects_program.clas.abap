@@ -355,6 +355,22 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
             <ls_field>-get_param = lc_rpyty_force_off.
           ENDIF.
         ENDIF.
+
+* If the previous conditions are met the value 'F' will be taken over
+* during de-serialization potentially overlapping other fields in the screen,
+* we set the tag to the correct value 'X'
+        IF <ls_field>-type = 'CHECK'
+            AND <ls_field>-from_dict = abap_true
+            AND <ls_field>-text IS INITIAL
+            AND <ls_field>-modific IS INITIAL.
+          <ls_field>-modific = 'X'.
+        ENDIF.
+
+        "fix for issue #2747:
+        IF <ls_field>-foreignkey IS INITIAL.
+          <ls_field>-foreignkey = lc_rpyty_force_off.
+        ENDIF.
+
       ENDLOOP.
 
       CALL FUNCTION 'RPY_DYNPRO_INSERT'

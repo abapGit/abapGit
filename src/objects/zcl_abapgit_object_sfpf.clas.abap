@@ -82,7 +82,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
 *   Renumber id='o...' attributes
     li_iterator = ii_document->create_iterator_filtered(
       ii_document->create_filter_and(
-        filter1 = ii_document->create_filter_node_type( if_ixml_node=>co_node_element  )
+        filter1 = ii_document->create_filter_node_type( if_ixml_node=>co_node_element )
         filter2 = ii_document->create_filter_attribute( 'id' ) ) ).
     li_elem ?= li_iterator->get_next( ).
     WHILE li_elem IS NOT INITIAL.

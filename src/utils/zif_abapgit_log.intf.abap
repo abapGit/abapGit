@@ -1,6 +1,7 @@
 INTERFACE zif_abapgit_log
   PUBLIC .
 
+
   TYPES:
     BEGIN OF ty_log_out,
       type     TYPE symsgty,
@@ -11,7 +12,6 @@ INTERFACE zif_abapgit_log
   TYPES:
     tty_log_out TYPE STANDARD TABLE OF ty_log_out
                 WITH NON-UNIQUE DEFAULT KEY .
-
   TYPES:
     BEGIN OF ty_msg,
       text TYPE string,
@@ -20,16 +20,15 @@ INTERFACE zif_abapgit_log
   TYPES:
     tty_msg TYPE STANDARD TABLE OF ty_msg
                           WITH NON-UNIQUE DEFAULT KEY .
-
   TYPES:
     BEGIN OF ty_item_status_out,
-      item     TYPE zif_abapgit_definitions=>ty_item ,
+      item     TYPE zif_abapgit_definitions=>ty_item,
       status   TYPE symsgty,
       messages TYPE tty_msg,
     END OF ty_item_status_out .
   TYPES:
     tty_item_status_out TYPE SORTED TABLE OF ty_item_status_out
-                        WITH UNIQUE KEY item-obj_type item-obj_name.
+                        WITH UNIQUE KEY item-obj_type item-obj_name .
 
   METHODS add
     IMPORTING
@@ -66,7 +65,19 @@ INTERFACE zif_abapgit_log
       !iv_rc        TYPE balsort
     RETURNING
       VALUE(rv_yes) TYPE abap_bool .
-  METHODS get_messages RETURNING VALUE(rt_msg) TYPE tty_log_out.
-  METHODS get_item_status EXPORTING et_item_status TYPE tty_item_status_out.
-  METHODS get_status RETURNING VALUE(rv_status) TYPE symsgty.
+  METHODS get_messages
+    RETURNING
+      VALUE(rt_msg) TYPE tty_log_out .
+  METHODS get_item_status
+    EXPORTING
+      !et_item_status TYPE tty_item_status_out .
+  METHODS get_status
+    RETURNING
+      VALUE(rv_status) TYPE symsgty .
+  METHODS get_title
+    RETURNING
+      VALUE(rv_title) TYPE string .
+  METHODS set_title
+    IMPORTING
+      !iv_title TYPE string .
 ENDINTERFACE.

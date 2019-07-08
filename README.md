@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/larshp/abapGit.svg?branch=master)](https://travis-ci.org/larshp/abapGit)
-[![abaplint](https://abaplint.org/badges/larshp/abapGit)](https://abaplint.org/project/larshp/abapGit)
+[![abaplint](https://app.abaplint.org/badges/larshp/abapGit)](https://app.abaplint.org/project/larshp/abapGit)
 [![Slack](https://abapgit-slackinviter.herokuapp.com/badge.svg)](https://abapgit-slackinviter.herokuapp.com/)
 
 # abapGit
@@ -30,9 +30,13 @@ Recommend using SAP GUI for Windows, there are multiple issues related to runnin
 ## Documentation/Guides
 http://docs.abapgit.org
 
+## Contributing
+
+You can find the contribution guidelines [here](CONTRIBUTING.md).
+
 ## Projects using abapGit
 
-See [dotabap.org](http://dotabap.org)
+See [dotabap.org](http://dotabap.org) or [this page](https://docs.abapgit.org/other-where-used.html).
 
 ## FAQ
 For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/larshp/abapGit/issues)

@@ -49,8 +49,7 @@ CLASS ZCL_ABAPGIT_SKIP_OBJECTS IMPLEMENTATION.
     rt_tadir = it_tadir.
     LOOP AT it_tadir INTO ls_tadir WHERE object = 'DDLS'.
       LOOP AT rt_tadir INTO ls_tadir_class
-       WHERE object = 'CLAS' AND obj_name CS ls_tadir-obj_name.
-
+          WHERE object = 'CLAS' AND obj_name CS ls_tadir-obj_name.
         IF has_sadl_superclass( ls_tadir_class ) = abap_true.
           APPEND ls_tadir_class TO lt_lines_to_delete.
         ENDIF.

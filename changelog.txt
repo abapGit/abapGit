@@ -8,6 +8,21 @@ Legend
 + : added
 - : removed
 
+2019-06-22 v1.88.0
+------------------
+* parallel serialization, show errors
+* fix diff filter
+* downport
+! allow abapGit to run in production/qa
+* fix jump for VIEW and TOBJ
+* fix author regex
+! improved logging
++ odata v4 supported
+* WEBI overwrite
++ ui themes support
+! transport to zip, umutiple transport requests
+* fixes for TADIR handling
+
 2019-04-28 v1.87.0
 ------------------
 + HIDPI icon scaling, enable in settings

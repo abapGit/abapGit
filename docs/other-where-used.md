@@ -10,6 +10,7 @@ order: 50
 * Queensland Health
 * RheinEnergie AG, Cologne, Germany
 * Sword Holdings
+* bonprix Handelsgesellschaft mbH, Germany 
 * [CHS Inc.](https://www.chsinc.com)
 
 ### SAP

@@ -124,7 +124,9 @@ CLASS zcl_abapgit_gui_router DEFINITION
         zcx_abapgit_exception.
     CLASS-METHODS jump_display_transport
       IMPORTING
-        !iv_getdata TYPE clike .
+        !iv_getdata TYPE clike
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -424,13 +426,40 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
 
   METHOD jump_display_transport.
-    DATA: lv_transport TYPE trkorr.
+
+    DATA: lv_transport         TYPE trkorr,
+          lv_transport_adt_uri TYPE string,
+          lv_adt_link          TYPE string,
+          lv_adt_jump_enabled  TYPE abap_bool.
 
     lv_transport = iv_getdata.
 
-    CALL FUNCTION 'TR_DISPLAY_REQUEST'
-      EXPORTING
-        i_trkorr = lv_transport.
+    lv_adt_jump_enabled = zcl_abapgit_persist_settings=>get_instance( )->read( )->get_adt_jump_enabled( ).
+    IF lv_adt_jump_enabled = abap_true.
+      TRY.
+          CALL METHOD ('CL_CTS_ADT_TM_URI_BUILDER')=>('CREATE_ADT_URI')
+            EXPORTING
+              trnumber = lv_transport
+            RECEIVING
+              result   = lv_transport_adt_uri.
+          lv_adt_link = |adt://{ sy-sysid }{ lv_transport_adt_uri }|.
+
+          cl_gui_frontend_services=>execute( EXPORTING  document = lv_adt_link
+                                             EXCEPTIONS OTHERS   = 1 ).
+          IF sy-subrc <> 0.
+            zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
+          ENDIF.
+        CATCH cx_root.
+          CALL FUNCTION 'TR_DISPLAY_REQUEST'
+            EXPORTING
+              i_trkorr = lv_transport.
+      ENDTRY.
+    ELSE.
+      CALL FUNCTION 'TR_DISPLAY_REQUEST'
+        EXPORTING
+          i_trkorr = lv_transport.
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -460,8 +489,8 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
   METHOD repository_services.
 
     DATA: lv_url TYPE string,
-          lv_key TYPE zif_abapgit_persistence=>ty_repo-key.
-
+          lv_key TYPE zif_abapgit_persistence=>ty_repo-key,
+          li_log TYPE REF TO zif_abapgit_log.
 
     lv_key = is_event_data-getdata. " TODO refactor
     lv_url = is_event_data-getdata. " TODO refactor
@@ -496,7 +525,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       WHEN 'install'.    " 'install' is for explore page
         zcl_abapgit_services_repo=>new_online( lv_url ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN zif_abapgit_definitions=>c_action-repo_refresh_checksums.          " Rebuil local checksums
+      WHEN zif_abapgit_definitions=>c_action-repo_refresh_checksums.          " Rebuild local checksums
         zcl_abapgit_services_repo=>refresh_local_checksums( lv_key ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_toggle_fav.                 " Toggle repo as favorite
@@ -510,6 +539,10 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
           EXPORTING
             io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-repo_log.
+        li_log = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->get_log( ).
+        zcl_abapgit_log_viewer=>show_log( ii_log = li_log iv_header_text = li_log->get_title( ) ).
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
     ENDCASE.
 
   ENDMETHOD.
@@ -527,9 +560,6 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
           IMPORTING ev_obj_type = ls_item-obj_type
                     ev_obj_name = ls_item-obj_name ).
         zcl_abapgit_objects=>jump( ls_item ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-      WHEN zif_abapgit_definitions=>c_action-jump_pkg.                      " Open SE80
-        zcl_abapgit_services_repo=>open_se80( |{ is_event_data-getdata }| ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>c_action-jump_transport.
         jump_display_transport( is_event_data-getdata ).
@@ -647,10 +677,8 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         file_download( iv_package = lv_package
                        iv_xstr    = lv_xstr ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-      WHEN zif_abapgit_definitions=>c_action-zip_transport.                   " Export transport as ZIP
-        lv_xstr = zcl_abapgit_transport=>zip( ).
-        file_download( iv_package = 'TRANSPORT'
-                       iv_xstr    = lv_xstr ).
+      WHEN zif_abapgit_definitions=>c_action-zip_transport.                   " Export transports as ZIP
+        zcl_abapgit_transport_mass=>run( ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
       WHEN zif_abapgit_definitions=>c_action-zip_object.                      " Export object as ZIP
         zcl_abapgit_zip=>export_object( ).

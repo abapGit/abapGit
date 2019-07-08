@@ -172,7 +172,7 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
 * added in source and target
         <ls_result>-sha1 = <ls_source>-sha1.
       ELSEIF lv_found_common = abap_false
-         AND <ls_target>-sha1 <> <ls_source>-sha1.
+          AND <ls_target>-sha1 <> <ls_source>-sha1.
 
         INSERT INITIAL LINE INTO TABLE mt_conflicts ASSIGNING <ls_conflict>.
         <ls_conflict>-path = <ls_file>-path.
@@ -197,8 +197,8 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
       ENDIF.
 
       IF lv_found_source = abap_false
-      OR lv_found_target = abap_false
-      OR lv_found_common = abap_false.
+          OR lv_found_target = abap_false
+          OR lv_found_common = abap_false.
         ms_merge-conflict = |{ <ls_file>-name } merge conflict, not found anywhere|.
         CONTINUE.
       ENDIF.

@@ -7,18 +7,18 @@ CLASS zcl_abapgit_gui_asset_manager DEFINITION PUBLIC FINAL CREATE PUBLIC .
     TYPES:
       BEGIN OF ty_asset_entry.
         INCLUDE TYPE zif_abapgit_gui_asset_manager~ty_web_asset.
-    TYPES:  mime_name TYPE wwwdatatab-objid,
-      END OF ty_asset_entry ,
-      tt_asset_register TYPE STANDARD TABLE OF ty_asset_entry WITH KEY url .
+    TYPES: mime_name TYPE wwwdatatab-objid,
+           END OF ty_asset_entry ,
+           tt_asset_register TYPE STANDARD TABLE OF ty_asset_entry WITH KEY url.
 
     METHODS register_asset
       IMPORTING
-        !iv_url TYPE string
-        !iv_type TYPE string
-        !iv_cachable TYPE abap_bool DEFAULT abap_true
+        !iv_url       TYPE string
+        !iv_type      TYPE string
+        !iv_cachable  TYPE abap_bool DEFAULT abap_true
         !iv_mime_name TYPE wwwdatatab-objid OPTIONAL
-        !iv_base64 TYPE string OPTIONAL
-        !iv_inline TYPE string OPTIONAL .
+        !iv_base64    TYPE string OPTIONAL
+        !iv_inline    TYPE string OPTIONAL .
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -35,7 +35,7 @@ CLASS zcl_abapgit_gui_asset_manager DEFINITION PUBLIC FINAL CREATE PUBLIC .
 
     METHODS load_asset
       IMPORTING
-        is_asset_entry TYPE ty_asset_entry
+        is_asset_entry  TYPE ty_asset_entry
       RETURNING
         VALUE(rs_asset) TYPE zif_abapgit_gui_asset_manager~ty_web_asset
       RAISING
@@ -142,7 +142,7 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_asset_manager~get_asset.
 
-    FIELD-SYMBOLS <ls_a> LIKE LINE of mt_asset_register.
+    FIELD-SYMBOLS <ls_a> LIKE LINE OF mt_asset_register.
 
     READ TABLE mt_asset_register WITH KEY url = iv_url ASSIGNING <ls_a>.
     IF <ls_a> IS NOT ASSIGNED.
@@ -157,6 +157,14 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
 
     DATA ls_asset TYPE zif_abapgit_gui_asset_manager~ty_web_asset.
     ls_asset = me->zif_abapgit_gui_asset_manager~get_asset( iv_url ).
+
+    IF ls_asset-type <> 'text'.
+      zcx_abapgit_exception=>raise( |Not a text asset: { iv_url }| ).
+    ENDIF.
+
+    IF iv_assert_subtype IS NOT INITIAL AND ls_asset-subtype <> iv_assert_subtype.
+      zcx_abapgit_exception=>raise( |Wrong subtype ({ iv_assert_subtype }): { iv_url }| ).
+    ENDIF.
 
     rv_asset = zcl_abapgit_convert=>xstring_to_string_utf8( ls_asset-content ).
 

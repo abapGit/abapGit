@@ -44,7 +44,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
 
   METHOD build_main_menu.
@@ -307,6 +307,63 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_gui_event_handler~on_event.
+
+    DATA: lv_key           TYPE zif_abapgit_persistence=>ty_repo-key,
+          li_repo_overview TYPE REF TO zif_abapgit_gui_renderable.
+
+
+    IF NOT mo_repo_content IS INITIAL.
+      mo_repo_content->zif_abapgit_gui_event_handler~on_event(
+        EXPORTING
+          iv_action    = iv_action
+          iv_prev_page = iv_prev_page
+          iv_getdata   = iv_getdata
+          it_postdata  = it_postdata
+        IMPORTING
+          ei_page      = ei_page
+          ev_state     = ev_state ).
+
+      IF ev_state <> zcl_abapgit_gui=>c_event_state-not_handled.
+        RETURN.
+      ENDIF.
+    ENDIF.
+
+    lv_key = iv_getdata.
+
+    CASE iv_action.
+      WHEN c_actions-show.
+        zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
+        TRY.
+            zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->refresh( ).
+          CATCH zcx_abapgit_exception ##NO_HANDLER.
+        ENDTRY.
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_actions-changed_by.
+        test_changed_by( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+      WHEN c_actions-documentation.
+        zcl_abapgit_services_abapgit=>open_abapgit_wikipage( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+      WHEN c_actions-overview.
+        CREATE OBJECT li_repo_overview TYPE zcl_abapgit_gui_page_repo_over.
+        ei_page = li_repo_overview.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+      WHEN OTHERS.
+        super->zif_abapgit_gui_event_handler~on_event(
+          EXPORTING
+            iv_action    = iv_action
+            iv_prev_page = iv_prev_page
+            iv_getdata   = iv_getdata
+            it_postdata  = it_postdata
+          IMPORTING
+            ei_page      = ei_page
+            ev_state     = ev_state ).
+    ENDCASE.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
     DATA: ls_hotkey_action TYPE zif_abapgit_gui_page_hotkey=>ty_hotkey_with_name.
@@ -361,62 +418,10 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     ls_hotkey_action-hotkey = |i|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_event_handler~on_event.
-
-    DATA: lv_key           TYPE zif_abapgit_persistence=>ty_repo-key,
-          li_repo_overview TYPE REF TO zif_abapgit_gui_renderable.
-
-
-    IF NOT mo_repo_content IS INITIAL.
-      mo_repo_content->zif_abapgit_gui_event_handler~on_event(
-        EXPORTING
-          iv_action    = iv_action
-          iv_prev_page = iv_prev_page
-          iv_getdata   = iv_getdata
-          it_postdata  = it_postdata
-        IMPORTING
-          ei_page      = ei_page
-          ev_state     = ev_state ).
-
-      IF ev_state <> zcl_abapgit_gui=>c_event_state-not_handled.
-        RETURN.
-      ENDIF.
-    ENDIF.
-
-    lv_key = iv_getdata.
-
-    CASE iv_action.
-      WHEN c_actions-show.
-        zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
-        TRY.
-            zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->refresh( ).
-          CATCH zcx_abapgit_exception ##NO_HANDLER.
-        ENDTRY.
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN c_actions-changed_by.
-        test_changed_by( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-      WHEN c_actions-documentation.
-        zcl_abapgit_services_abapgit=>open_abapgit_wikipage( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-      WHEN c_actions-overview.
-        CREATE OBJECT li_repo_overview TYPE zcl_abapgit_gui_page_repo_over.
-        ei_page = li_repo_overview.
-        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
-      WHEN OTHERS.
-        super->zif_abapgit_gui_event_handler~on_event(
-          EXPORTING
-            iv_action    = iv_action
-            iv_prev_page = iv_prev_page
-            iv_getdata   = iv_getdata
-            it_postdata  = it_postdata
-          IMPORTING
-            ei_page      = ei_page
-            ev_state     = ev_state  ).
-    ENDCASE.
+    ls_hotkey_action-name   = |Show log|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_log.
+    ls_hotkey_action-hotkey = |l|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
 ENDCLASS.

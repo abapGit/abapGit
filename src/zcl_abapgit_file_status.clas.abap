@@ -404,10 +404,20 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
   METHOD status.
 
     DATA: lv_index       LIKE sy-tabix,
-          lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit.
+          lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
+          lt_local       TYPE zif_abapgit_definitions=>ty_files_item_tt.
 
-    FIELD-SYMBOLS <ls_result> LIKE LINE OF rt_results.
+    FIELD-SYMBOLS: <ls_result> LIKE LINE OF rt_results.
 
+    lt_local = io_repo->get_files_local( ii_log = ii_log ).
+
+    IF lines( lt_local ) <= 2.
+      " Less equal two means that we have only the .abapgit.xml and the package in
+      " our local repository. In this case we have to update our local .abapgit.xml
+      " from the remote one. Otherwise we get errors when e.g. the folder starting
+      " folder is different.
+      io_repo->find_remote_dot_abapgit( ).
+    ENDIF.
 
     rt_results = calculate_status(
       iv_devclass  = io_repo->get_package( )
