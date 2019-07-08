@@ -452,11 +452,13 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    ASSIGN me->(iv_arg) TO <lv_arg>.
+    IF sy-subrc <> 0.
+      CONCATENATE '&' iv_arg '&' INTO ev_target.
+      RETURN.
+    ENDIF.
+
     TRY.
-        ASSIGN me->(iv_arg) TO <lv_arg>.
-        IF sy-subrc <> 0.
-          RAISE EXCEPTION TYPE cx_sy_assign_cast_illegal_cast.
-        ENDIF.
         " We cannot catch all conversion exceptions on MOVE => use CALL
         set_single_msg_var_clike(
           EXPORTING
@@ -484,9 +486,6 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
                 CONCATENATE '&' iv_arg '&' INTO ev_target.
             ENDTRY.
         ENDTRY.
-
-      CATCH cx_sy_assign_cast_illegal_cast.
-        CONCATENATE '&' iv_arg '&' INTO ev_target.
     ENDTRY.
 
   ENDMETHOD.
