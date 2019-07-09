@@ -92,7 +92,7 @@ CLASS ZCL_ABAPGIT_2FA_AUTH_BASE IMPLEMENTATION.
         url                = iv_url
         ssl_id             = zcl_abapgit_exit=>get_instance( )->get_ssl_id( )
         proxy_host         = lo_proxy->get_proxy_url( iv_url )
-        proxy_service      = lo_proxy->get_proxy_port( iv_url  )
+        proxy_service      = lo_proxy->get_proxy_port( iv_url )
       IMPORTING
         client             = ri_client
       EXCEPTIONS

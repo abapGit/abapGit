@@ -1,32 +1,3 @@
-*"* use this source file for your ABAP unit test classes
-
-CLASS ltcl_asset_manager_double DEFINITION FOR TESTING.
-  PUBLIC SECTION.
-    INTERFACES:
-      zif_abapgit_gui_asset_manager.
-    DATA:
-      mt_assets TYPE zif_abapgit_gui_asset_manager=>tt_web_assets.
-  PROTECTED SECTION.
-  PRIVATE SECTION.
-ENDCLASS.
-
-CLASS ltcl_asset_manager_double IMPLEMENTATION.
-  METHOD zif_abapgit_gui_asset_manager~get_all_assets.
-    cl_abap_unit_assert=>fail( ).
-  ENDMETHOD.
-
-  METHOD zif_abapgit_gui_asset_manager~get_asset.
-    READ TABLE mt_assets WITH KEY url = iv_url INTO rs_asset.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Asset not found' ).
-    ENDIF.
-  ENDMETHOD.
-
-  METHOD zif_abapgit_gui_asset_manager~get_text_asset.
-    cl_abap_unit_assert=>fail( ).
-  ENDMETHOD.
-ENDCLASS.
-
 CLASS ltcl_test_base DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT ABSTRACT.
   PUBLIC SECTION.
   PROTECTED SECTION.
@@ -34,7 +5,7 @@ CLASS ltcl_test_base DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT A
       add_file IMPORTING iv_url     TYPE string
                          iv_content TYPE string OPTIONAL.
     DATA:
-      mo_asset_manager TYPE REF TO ltcl_asset_manager_double,
+      mo_asset_manager TYPE REF TO zcl_abapgit_gui_asset_manager,
       mo_cut           TYPE REF TO zcl_abapgit_gui_css_processor.
   PRIVATE SECTION.
     METHODS:
@@ -57,12 +28,10 @@ CLASS ltcl_test_base IMPLEMENTATION.
   METHOD add_file.
     DATA: ls_asset TYPE zif_abapgit_gui_asset_manager=>ty_web_asset.
 
-    ls_asset-url = iv_url.
-    ls_asset-type = 'text'.
-    ls_asset-subtype = 'css'.
-    ls_asset-content = zcl_abapgit_convert=>string_to_xstring_utf8( iv_content ).
-
-    APPEND ls_asset TO mo_asset_manager->mt_assets.
+    mo_asset_manager->register_asset(
+      iv_url = iv_url
+      iv_type = 'text/css'
+      iv_inline = iv_content ).
   ENDMETHOD.
 ENDCLASS.
 
@@ -105,8 +74,8 @@ CLASS ltcl_single_file IMPLEMENTATION.
     mo_cut->add_file( 'does/exist.css' ).
     TRY.
         mo_cut->process( ).
+        cl_abap_unit_assert=>fail( ). " Assetman fails on empty content
       CATCH zcx_abapgit_exception.
-        cl_abap_unit_assert=>fail( ).
     ENDTRY.
   ENDMETHOD.
 

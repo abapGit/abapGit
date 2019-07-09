@@ -54,7 +54,11 @@ IASP | Parameters of an IAC service | Yes
 IATU | Language-Independent IAC Templates | Yes
 IDOC | IDoc Type | Yes
 IEXT | Enhancement | Yes
-IWPR | Gateway Business Suite Enablement - Service Builder Project | [#75](https://github.com/larshp/abapGit/issues/75)
+IWMO |Gateway Business Suite Enablement - Model | Yes
+IWOM | Gateway: Model Metadata | Yes
+IWPR | Gateway Business Suite Enablement - Service Builder Project | Yes
+IWSG | Gateway: Service Groups Metadata | Yes
+IWSV | Gateway Business Suite Enablement - Service | Yes
 JOBD | Technical Job Definition | Yes
 LPDC | Launchpad short texts | [#107](https://github.com/larshp/abapGit/issues/107)
 MSAG | Message Class | Yes
