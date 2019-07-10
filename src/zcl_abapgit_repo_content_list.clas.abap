@@ -254,7 +254,7 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
 
     SORT rt_repo_items BY
       sortkey ASCENDING
-      obj_type ASCENDING
+      path ASCENDING
       obj_name ASCENDING.
 
   ENDMETHOD.
