@@ -21,7 +21,7 @@ CLASS zcl_abapgit_message_helper DEFINITION
     CLASS-METHODS:
       set_msg_vars_for_clike
         IMPORTING
-          text TYPE string.
+          iv_text TYPE string.
 
     METHODS:
       constructor
@@ -98,6 +98,69 @@ CLASS zcl_abapgit_message_helper IMPLEMENTATION.
   METHOD get_t100_longtext.
 
     rv_longtext = itf_to_string( get_t100_longtext_itf( ) ).
+
+  ENDMETHOD.
+
+
+  METHOD get_t100_longtext_itf.
+
+    DATA: lv_docu_key TYPE doku_obj,
+          ls_itf      LIKE LINE OF rt_itf.
+
+    lv_docu_key = mi_t100_message->t100key-msgid && mi_t100_message->t100key-msgno.
+
+    CALL FUNCTION 'DOCU_GET'
+      EXPORTING
+        id     = 'NA'
+        langu  = sy-langu
+        object = lv_docu_key
+        typ    = 'E'
+      TABLES
+        line   = rt_itf
+      EXCEPTIONS
+        OTHERS = 1.
+
+    IF sy-subrc = 0.
+      set_single_msg_var(
+        EXPORTING
+          iv_arg    = mi_t100_message->t100key-attr1
+        IMPORTING
+          ev_target = sy-msgv1 ).
+
+      REPLACE '&V1&' IN TABLE rt_itf
+                     WITH sy-msgv1.
+
+      set_single_msg_var(
+       EXPORTING
+         iv_arg    = mi_t100_message->t100key-attr2
+       IMPORTING
+         ev_target = sy-msgv2 ).
+
+      REPLACE '&V2&' IN TABLE rt_itf
+                     WITH sy-msgv2.
+
+      set_single_msg_var(
+       EXPORTING
+         iv_arg    = mi_t100_message->t100key-attr3
+       IMPORTING
+         ev_target = sy-msgv3 ).
+
+      REPLACE '&V3&' IN TABLE rt_itf
+                     WITH sy-msgv3.
+
+      set_single_msg_var(
+       EXPORTING
+         iv_arg    = mi_t100_message->t100key-attr4
+       IMPORTING
+         ev_target = sy-msgv4 ).
+
+      REPLACE '&V4&' IN TABLE rt_itf
+                     WITH sy-msgv4.
+    ENDIF.
+
+    ls_itf-tdformat = '*'.
+    ls_itf-tdline   = |{ mi_t100_message->t100key-msgid }{ mi_t100_message->t100key-msgno }|.
+    INSERT ls_itf INTO rt_itf INDEX 1.
 
   ENDMETHOD.
 
@@ -181,68 +244,6 @@ CLASS zcl_abapgit_message_helper IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD get_t100_longtext_itf.
-
-    DATA: lv_docu_key TYPE doku_obj,
-          ls_itf      LIKE LINE OF rt_itf.
-
-    lv_docu_key = mi_t100_message->t100key-msgid && mi_t100_message->t100key-msgno..
-
-    CALL FUNCTION 'DOCU_GET'
-      EXPORTING
-        id     = 'NA'
-        langu  = sy-langu
-        object = lv_docu_key
-        typ    = 'E'
-      TABLES
-        line   = rt_itf
-      EXCEPTIONS
-        OTHERS = 1.
-
-    IF sy-subrc = 0.
-      set_single_msg_var(
-        EXPORTING
-          iv_arg    = mi_t100_message->t100key-attr1
-        IMPORTING
-          ev_target = sy-msgv1 ).
-
-      REPLACE '&V1&' IN TABLE rt_itf
-                     WITH sy-msgv1.
-
-      set_single_msg_var(
-       EXPORTING
-         iv_arg    = mi_t100_message->t100key-attr2
-       IMPORTING
-         ev_target = sy-msgv2 ).
-
-      REPLACE '&V2&' IN TABLE rt_itf
-                     WITH sy-msgv2.
-
-      set_single_msg_var(
-       EXPORTING
-         iv_arg    = mi_t100_message->t100key-attr3
-       IMPORTING
-         ev_target = sy-msgv3 ).
-
-      REPLACE '&V3&' IN TABLE rt_itf
-                     WITH sy-msgv3.
-
-      set_single_msg_var(
-       EXPORTING
-         iv_arg    = mi_t100_message->t100key-attr4
-       IMPORTING
-         ev_target = sy-msgv4 ).
-
-      REPLACE '&V4&' IN TABLE rt_itf
-                     WITH sy-msgv4.
-    ENDIF.
-
-    ls_itf-tdformat = '*'.
-    ls_itf-tdline   = |{ mi_t100_message->t100key-msgid }{ mi_t100_message->t100key-msgno }|.
-    INSERT ls_itf INTO rt_itf INDEX 1.
-
-  ENDMETHOD.
-
 
   METHOD remove_empty_section.
     DELETE ct_itf FROM iv_tabix_from TO iv_tabix_to.
@@ -278,7 +279,7 @@ CLASS zcl_abapgit_message_helper IMPLEMENTATION.
     DATA: ls_msg   TYPE ty_msg,
           lv_dummy TYPE string.
 
-    ls_msg = text.
+    ls_msg = iv_text.
 
     " &1&2&3&4&5&6&7&8
     MESSAGE e001(00) WITH ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4
