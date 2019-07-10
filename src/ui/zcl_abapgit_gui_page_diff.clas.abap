@@ -474,7 +474,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
       ENDLOOP.
 
     ELSE.                             " Diff for the whole repo
-
+      SORT lt_status BY
+        path ASCENDING
+        filename ASCENDING.
       LOOP AT lt_status ASSIGNING <ls_status> WHERE match IS INITIAL.
         append_diff( it_remote = lt_remote
                      it_local  = lt_local
