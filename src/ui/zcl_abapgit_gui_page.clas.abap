@@ -351,19 +351,19 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
               WITH ``.
     ENDIF.
 
-    REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcx_abapgit_exception=>gc_section_text-cause }<br>)|
+    REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcl_abapgit_message_helper=>gc_section_text-cause }<br>)|
             IN lv_longtext
             WITH |<h3>$1</h3>|.
 
-    REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcx_abapgit_exception=>gc_section_text-system_response }<br>)|
+    REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcl_abapgit_message_helper=>gc_section_text-system_response }<br>)|
             IN lv_longtext
             WITH |<h3>$1</h3>|.
 
-    REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcx_abapgit_exception=>gc_section_text-what_to_do }<br>)|
+    REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcl_abapgit_message_helper=>gc_section_text-what_to_do }<br>)|
             IN lv_longtext
             WITH |<h3>$1</h3>|.
 
-    REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcx_abapgit_exception=>gc_section_text-sys_admin }<br>)|
+    REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcl_abapgit_message_helper=>gc_section_text-sys_admin }<br>)|
             IN lv_longtext
             WITH |<h3>$1</h3>|.
 
