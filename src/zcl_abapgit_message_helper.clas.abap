@@ -305,34 +305,42 @@ CLASS zcl_abapgit_message_helper IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        " We cannot catch all conversion exceptions on MOVE => use CALL
         set_single_msg_var_clike(
           EXPORTING
             iv_arg    = <lv_arg>
           IMPORTING
             ev_target = ev_target ).
 
-      CATCH cx_sy_dyn_call_illegal_type.
-        TRY.
-            set_single_msg_var_numeric(
-              EXPORTING
-                iv_arg    = <lv_arg>
-              IMPORTING
-                ev_target = ev_target ).
+        RETURN.
 
-          CATCH cx_sy_dyn_call_illegal_type.
-            TRY.
-                set_single_msg_var_xseq(
-                  EXPORTING
-                    iv_arg    = <lv_arg>
-                  IMPORTING
-                    ev_target = ev_target ).
-
-              CATCH cx_sy_dyn_call_illegal_type.
-                CONCATENATE '&' iv_arg '&' INTO ev_target.
-            ENDTRY.
-        ENDTRY.
+      CATCH cx_sy_dyn_call_illegal_type ##no_handler.
     ENDTRY.
+
+    TRY.
+        set_single_msg_var_numeric(
+          EXPORTING
+            iv_arg    = <lv_arg>
+          IMPORTING
+            ev_target = ev_target ).
+
+        RETURN.
+
+      CATCH cx_sy_dyn_call_illegal_type ##no_handler.
+    ENDTRY.
+
+    TRY.
+        set_single_msg_var_xseq(
+          EXPORTING
+            iv_arg    = <lv_arg>
+          IMPORTING
+            ev_target = ev_target ).
+
+        RETURN.
+
+      CATCH cx_sy_dyn_call_illegal_type ##no_handler.
+    ENDTRY.
+
+    CONCATENATE '&' iv_arg '&' INTO ev_target.
 
   ENDMETHOD.
 
