@@ -96,7 +96,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_TUTORIAL IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_renderable~handle_error.
-    ##TODO
+    rv_handled = abap_false.
   ENDMETHOD.
 
 ENDCLASS.
