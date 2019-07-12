@@ -1,7 +1,9 @@
 ---
-title: Developing UI
+title: UI - HTML pages
 order: 91
 ---
+
+This doc covers page creation, html rendering and event handling. See also [UI - CSS and assets](./developing-ui-css.html).
 
 ## TL;DR
 
@@ -84,52 +86,3 @@ In order to indicate the result of event handling an `on_event` implementation m
 - `new_page_w_bookmark` - `ei_page` and put a bookmark - allows to use `go_back_to_bookmark` action that will skip all the page stack till the first bookmark
 - `new_page_replacing` - `ei_page` and replace the current page in stack (so that F3 returns to the parent of the current page)
 - `go_back_to_bookmark` - go back and skip all the page stack till the first bookmark (works with `new_page_w_bookmark`)
-
-## Asset manager
-
-`ZCL_ABAPGIT_GUI_ASSET_MANAGER` class is responsible for managing static assets. Very briefly: relevant assets must be registered in the asset manager instance during GUI initiation so that they can be used in the browser UI. The registration happens in `ZCL_ABAPGIT_UI_FACTORY=>INIT_ASSET_MANAGER`. Here is an abstract from the method for example:
-
-```abap
-DEFINE _inline.
-    APPEND &1 TO lt_inline. " <<< THIS IS USED TO INCLUDE ASSET IN-CODE WITH ABAPMERGE
-END-OF-DEFINITION.
-
-DATA lt_inline TYPE string_table.
-
-CLEAR lt_inline.
-" @@abapmerge include zabapgit_css_common.w3mi.data.css > _inline '$$'.
-ro_asset_man->register_asset(
-    iv_url       = 'css/common.css'         " <<< PATH TO THE ASSET FROM HTML, WHICH IS ALSO IT'S UNIQUE NAME
-    iv_type      = 'text/css'               " <<< CONTENT TYPE OF THE ASSET
-    iv_mime_name = 'ZABAPGIT_CSS_COMMON'    " <<< MIME OBJECT NAME
-    iv_inline    = concat_lines_of( table = lt_inline sep = cl_abap_char_utilities=>newline ) ).
-
-CLEAR lt_inline.
-" @@abapmerge include-base64 zabapgit_icon_font.w3mi.data.woff > _inline '$$'. " <<< THE FILE BINARY !!!
-ro_asset_man->register_asset(
-    iv_url       = 'font/ag-icons.woff'
-    iv_type      = 'font/woff'
-    iv_mime_name = 'ZABAPGIT_ICON_FONT'
-    iv_base64    = concat_lines_of( table = lt_inline ) ).
-
-" see https://github.com/larshp/abapGit/issues/201 for source SVG
-ro_asset_man->register_asset(
-    iv_url       = 'img/logo'
-    iv_type      = 'image/png'
-    iv_base64    =
-        'iVBORw0KGgoAAAANSUhENCSVQICAgIfAhkiAAA...'.
-
-```
-
-There are several ways to store content of a static asset in abapGit.
-
-1. Pass the asset inline. e.g. the logo at the end is a PNG image. It is encoded as BASE64 and passed as `iv_base64` param
-2. Inline can be also a text then should be passed with `iv_inline`
-3. Read from a MIME object - if inline is not passed, the assets falls back to the MIME
-
-The tricky thing is that abapGit can be either installed as a development version, deploying all the MIME objects in particular **or** as a single file. This single file must contain all the assets (images, css, js and fonts) **in-code**. This is enabled by **abapmerge** tool. Consider the `css/common.css` registration above. 
-
-- First, `lt_inline` is cleared. And in the development version of abapGit it is then just passed to `register_asset` being initial. The asset manager is thus falls back to `ZABAPGIT_CSS_COMMON` MIME object (which is conveniently deployed in case of dev version).
-- in case of one-file abapGit version there is no MIME object. However, `@@abapmerge include` statement is processed by abapmerge and the file `zabapgit_css_common.w3mi.data.css` is included to the code line by line in form of `_inline '$$'`, where `$$` is the text file line. Thus, at the moment of `register_asset` the content of `lt_inline` is **not** initial and takes the priority over the missing MIME.
-
-Note: for the binary files, like fonts, use `@@abapmerge include-base64` pragma.
