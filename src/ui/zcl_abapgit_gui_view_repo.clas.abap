@@ -801,8 +801,4 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_gui_renderable~handle_error.
-    rv_handled = abap_false.
-  ENDMETHOD.
-
 ENDCLASS.

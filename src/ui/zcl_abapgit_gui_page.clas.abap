@@ -3,7 +3,8 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
   PUBLIC SECTION.
     INTERFACES:
       zif_abapgit_gui_renderable,
-      zif_abapgit_gui_event_handler.
+      zif_abapgit_gui_event_handler,
+      zif_abapgit_gui_error_handler.
 
     CONSTANTS:
       " You should remember that these actions are handled in the UI.
