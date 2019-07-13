@@ -41,7 +41,7 @@ CLASS lcl_password_dialog DEFINITION FINAL.
     CLASS-METHODS on_screen_output.
     CLASS-METHODS on_screen_event
       IMPORTING
-        iv_ucomm TYPE syucomm.
+        iv_ucomm TYPE sy-ucomm.
 
   PRIVATE SECTION.
     CLASS-DATA gv_confirm TYPE abap_bool.

@@ -37,7 +37,7 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
     CLASS-METHODS get_type
       IMPORTING
         !iv_branch_name       TYPE clike
-        !it_result            TYPE stringtab OPTIONAL
+        !it_result            TYPE string_table OPTIONAL
         !iv_current_row_index TYPE sytabix OPTIONAL
       RETURNING
         VALUE(rv_type)        TYPE zif_abapgit_definitions=>ty_git_branch_type .
@@ -197,7 +197,7 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
 
     DATA: lv_annotated_tag_with_suffix TYPE string.
 
-    FIELD-SYMBOLS: <lv_result> TYPE LINE OF stringtab.
+    FIELD-SYMBOLS: <lv_result> TYPE LINE OF string_table.
 
     rv_type = zif_abapgit_definitions=>c_git_branch_type-other.
 

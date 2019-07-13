@@ -113,7 +113,7 @@ INTERFACE zif_abapgit_popups
       !it_list               TYPE STANDARD TABLE
       !iv_header_text        TYPE csequence
       !iv_select_column_text TYPE csequence
-      !it_columns_to_display TYPE stringtab
+      !it_columns_to_display TYPE string_table
     EXPORTING
       VALUE(et_list)         TYPE STANDARD TABLE
     RAISING

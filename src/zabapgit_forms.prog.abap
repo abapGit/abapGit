@@ -142,7 +142,7 @@ FORM password_popup
 
 ENDFORM.
 
-FORM remove_toolbar USING pv_dynnr TYPE char4.
+FORM remove_toolbar USING pv_dynnr TYPE sy-dynnr.
 
   DATA: ls_header               TYPE rpy_dyhead,
         lt_containers           TYPE dycatt_tab,
