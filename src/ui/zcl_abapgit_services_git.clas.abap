@@ -262,7 +262,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
           lv_answer                 TYPE c LENGTH 1,
           lt_unnecessary_local_objs TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lt_selected               LIKE lt_unnecessary_local_objs,
-          lt_columns                TYPE stringtab,
+          lt_columns                TYPE string_table,
           ls_checks                 TYPE zif_abapgit_definitions=>ty_delete_checks,
           li_popups                 TYPE REF TO zif_abapgit_popups.
 

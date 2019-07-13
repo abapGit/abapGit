@@ -41,7 +41,7 @@ CLASS zcl_abapgit_2fa_github_auth DEFINITION
       IMPORTING
         !ii_response  TYPE REF TO if_http_response
       RETURNING
-        VALUE(rt_ids) TYPE stringtab .
+        VALUE(rt_ids) TYPE string_table .
     CLASS-METHODS set_del_token_request
       IMPORTING
         !ii_request  TYPE REF TO if_http_request
@@ -249,7 +249,8 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
     DATA: li_http_client           TYPE REF TO if_http_client,
           lv_http_code             TYPE i,
           lv_http_code_description TYPE string,
-          lt_tobedeleted_tokens    TYPE stringtab.
+          lt_tobedeleted_tokens    TYPE string_table.
+
     FIELD-SYMBOLS: <lv_id> TYPE string.
 
     li_http_client = get_authenticated_client( iv_username  = iv_username

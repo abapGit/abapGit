@@ -244,7 +244,7 @@ INTERFACE zif_abapgit_definitions
       email      TYPE string,
       time       TYPE string,
       message    TYPE string,
-      body       TYPE stringtab,
+      body       TYPE string_table,
       branch     TYPE string,
       merge      TYPE string,
       tags       TYPE stringtab,

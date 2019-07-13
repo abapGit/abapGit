@@ -38,7 +38,7 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
       IMPORTING
         !iv_branch_name       TYPE clike
         !it_result            TYPE string_table OPTIONAL
-        !iv_current_row_index TYPE sytabix OPTIONAL
+        !iv_current_row_index TYPE sy-tabix OPTIONAL
       RETURNING
         VALUE(rv_type)        TYPE zif_abapgit_definitions=>ty_git_branch_type .
     CLASS-METHODS complete_heads_branch_name
