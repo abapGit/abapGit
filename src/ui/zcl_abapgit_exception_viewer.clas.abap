@@ -62,7 +62,13 @@ CLASS zcl_abapgit_exception_viewer DEFINITION
         IMPORTING
           iv_mainprogram      TYPE abap_callstack_line-mainprogram
         RETURNING
-          VALUE(rv_classname) TYPE tadir-obj_name.
+          VALUE(rv_classname) TYPE tadir-obj_name,
+
+      get_top_of_callstack
+        RETURNING
+          VALUE(rs_top_of_callstack) TYPE abap_callstack_line
+        RAISING
+          zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -170,15 +176,7 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
 
   METHOD goto_source.
 
-    FIELD-SYMBOLS: <ls_top_of_stack> LIKE LINE OF mt_callstack.
-
-    READ TABLE mt_callstack INDEX 1
-                            ASSIGNING <ls_top_of_stack>.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Callstack is empty| ).
-    ENDIF.
-
-    goto_source_code( <ls_top_of_stack> ).
+    goto_source_code( get_top_of_callstack( ) ).
 
   ENDMETHOD.
 
@@ -267,14 +265,6 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
           lo_columns TYPE REF TO cl_salv_columns_table,
           lo_alv     TYPE REF TO cl_salv_table.
 
-    FIELD-SYMBOLS: <ls_top_of_stack> LIKE LINE OF mt_callstack.
-
-    READ TABLE mt_callstack INDEX 1
-                            ASSIGNING <ls_top_of_stack>.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Callstack is empty| ).
-    ENDIF.
-
     TRY.
         cl_salv_table=>factory(
           IMPORTING
@@ -284,7 +274,7 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
 
         lo_alv->get_columns( )->set_optimize( ).
 
-        lo_alv->set_top_of_list( build_top_of_list( <ls_top_of_stack> ) ).
+        lo_alv->set_top_of_list( build_top_of_list( get_top_of_callstack( ) ) ).
 
         lo_alv->set_screen_popup( start_column = 10
                                   end_column   = 180
@@ -325,10 +315,22 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD extract_classname.
 
     rv_classname = substring_before( val   = iv_mainprogram
                                      regex = '=*CP$' ).
+
+  ENDMETHOD.
+
+
+  METHOD get_top_of_callstack.
+
+    READ TABLE mt_callstack INDEX 1
+                            INTO rs_top_of_callstack.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Callstack is empty| ).
+    ENDIF.
 
   ENDMETHOD.
 
