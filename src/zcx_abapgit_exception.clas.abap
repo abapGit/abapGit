@@ -57,13 +57,7 @@ CLASS zcx_abapgit_exception DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
-      gc_generic_error_msg TYPE string VALUE `An error occured (ZCX_ABAPGIT_EXCEPTION)` ##NO_TEXT,
-      BEGIN OF gc_section_token,
-        cause           TYPE string VALUE `&CAUSE&`,
-        system_response TYPE string VALUE `&SYSTEM_RESPONSE&`,
-        what_to_do      TYPE string VALUE `&WHAT_TO_DO&`,
-        sys_admin       TYPE string VALUE `&SYS_ADMIN&`,
-      END OF gc_section_token.
+      gc_generic_error_msg TYPE string VALUE `An error occured (ZCX_ABAPGIT_EXCEPTION)` ##NO_TEXT.
 
     METHODS:
       save_callstack.
