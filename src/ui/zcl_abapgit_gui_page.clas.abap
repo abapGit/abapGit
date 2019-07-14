@@ -85,14 +85,20 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
         VALUE(rt_hotkeys) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name
       RAISING
         zcx_abapgit_exception.
+
     METHODS get_default_hotkeys
       RETURNING
         VALUE(rt_default_hotkeys) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name.
+
     METHODS render_error_message_box
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
         zcx_abapgit_exception.
+
+    METHODS reg_error_message_panel_click
+      IMPORTING
+        io_html TYPE REF TO zcl_abapgit_html.
 
 ENDCLASS.
 
@@ -359,7 +365,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
     link_hints( ro_html ).
     insert_hotkeys_to_page( ro_html ).
-    ro_html->add( |errorMessagePanelRegisterClick();| ).
+    reg_error_message_panel_click( ro_html ).
 
   ENDMETHOD.
 
@@ -477,4 +483,9 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ro_html->add( '</html>' ).                              "#EC NOTEXT
 
   ENDMETHOD.
+
+  METHOD reg_error_message_panel_click.
+    io_html->add( |errorMessagePanelRegisterClick();| ).
+  ENDMETHOD.
+
 ENDCLASS.
