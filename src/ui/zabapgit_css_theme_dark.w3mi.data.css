@@ -5,25 +5,15 @@
 /* https://experience.sap.com/fiori-design-web/colors/ */
 
 :root {
-  --fiori-color-global-light-base: #00000; /* Background in SAP GUI */
-  --fiori-color-gui-tab-background: #11111; /* Tabstrip background */
-  --fiori-color-gui-container-border: #D1E0EE;
-  --fiori-color-gui-uneditable-background: #020202; /* Textbox not editable */
-  --fiori-color-gui-editable-background: #121212; /* Textbox editable */
-  --fiori-color-font-primary: #cccccc; /* Grayscale 1 */
-  --fiori-color-font-secondary: #EEEEEE; /* Grayscale 2 */
-  --fiori-color-font-highlighted: #003D84;
-  --fiori-color-message-box-background: #2F3C48; /* Bottom message container */
-
-  --theme-background-color: #333333; /*var(--fiori-color-global-light-base);*/
-  --theme-container-background-color: #444444; /*var(--fiori-color-gui-tab-background);*/
+  --theme-background-color: #333333;
+  --theme-container-background-color: #444444;
   --theme-primary-font: "72", Arial, Helvetica, sans-serif;
-  --theme-primary-font-color: #cccccc; /*var(--fiori-color-font-primary);*/
-  --theme-primary-font-color-reduced: #EEEEEE; /*var(--fiori-color-font-secondary);*/
+  --theme-primary-font-color: #cccccc;
+  --theme-primary-font-color-reduced: #EEEEEE;
   --theme-font-size: 11pt;
-  --theme-link-color: #d9ffff; /*var(--fiori-color-font-highlighted);*/
+  --theme-link-color: #d9ffff;
   --theme-link-color-hover: #f6f6f6;
-  --theme-container-border-color: #D1E0EE; /*var(--fiori-color-gui-container-border);*/
+  --theme-container-border-color: #D1E0EE;
   --theme-table-border-color: #E5E5E5; /* ALV border color */
   --theme-greyscale-dark: #666666;
   --theme-greyscale-medium: #bfbfbf;
