@@ -93,7 +93,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
 
     " You should remember that we have to call ZCL_ABAPGIT_MESSAGE_HELPER
     " dynamically, because the compiled abapGit report puts the definition
-    " of the exception classes on the top and thereforeZCL_ABAPGIT_MESSAGE_HELPER
+    " of the exception classes on the top and therefore ZCL_ABAPGIT_MESSAGE_HELPER
     " isn't statically known
 
     DATA: lo_message_helper TYPE REF TO object.
