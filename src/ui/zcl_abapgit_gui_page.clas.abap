@@ -408,10 +408,10 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
         ENDIF.
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
-      WHEN  zif_abapgit_definitions=>c_action-callstack.
+      WHEN  zif_abapgit_definitions=>c_action-show_callstack.
 
         IF mo_exception_viewer IS BOUND.
-          mo_exception_viewer->callstack( ).
+          mo_exception_viewer->show_callstack( ).
         ENDIF.
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 

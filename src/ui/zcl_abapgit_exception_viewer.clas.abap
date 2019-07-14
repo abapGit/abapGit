@@ -13,11 +13,11 @@ CLASS zcl_abapgit_exception_viewer DEFINITION
         RAISING
           zcx_abapgit_exception,
 
-      callstack
+      goto_message
         RAISING
           zcx_abapgit_exception,
 
-      goto_message
+      show_callstack
         RAISING
           zcx_abapgit_exception.
 
@@ -28,7 +28,7 @@ CLASS zcl_abapgit_exception_viewer DEFINITION
       mt_callstack TYPE abap_callstack.
 
     METHODS:
-      get_top_of_list
+      build_top_of_list
         IMPORTING
           is_top_of_stack TYPE abap_callstack_line
         RETURNING
@@ -51,10 +51,6 @@ CLASS zcl_abapgit_exception_viewer DEFINITION
           iv_text    TYPE string
         RAISING
           cx_salv_not_found,
-
-      show_callstack
-        IMPORTING
-          is_top_of_stack TYPE abap_callstack_line,
 
       goto_source_code
         IMPORTING
@@ -90,21 +86,6 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD callstack.
-
-    FIELD-SYMBOLS: <ls_top_of_stack> LIKE LINE OF mt_callstack.
-
-    READ TABLE mt_callstack INDEX 1
-                            ASSIGNING <ls_top_of_stack>.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Callstack is empty| ).
-    ENDIF.
-
-    show_callstack( <ls_top_of_stack> ).
-
-  ENDMETHOD.
-
-
   METHOD constructor.
 
     mx_error = ix_error.
@@ -113,7 +94,7 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_top_of_list.
+  METHOD build_top_of_list.
 
     DATA: lo_grid TYPE REF TO cl_salv_form_layout_grid.
 
@@ -286,6 +267,14 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
           lo_columns TYPE REF TO cl_salv_columns_table,
           lo_alv     TYPE REF TO cl_salv_table.
 
+    FIELD-SYMBOLS: <ls_top_of_stack> LIKE LINE OF mt_callstack.
+
+    READ TABLE mt_callstack INDEX 1
+                            ASSIGNING <ls_top_of_stack>.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Callstack is empty| ).
+    ENDIF.
+
     TRY.
         cl_salv_table=>factory(
           IMPORTING
@@ -295,7 +284,7 @@ CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
 
         lo_alv->get_columns( )->set_optimize( ).
 
-        lo_alv->set_top_of_list( get_top_of_list( is_top_of_stack ) ).
+        lo_alv->set_top_of_list( build_top_of_list( <ls_top_of_stack> ) ).
 
         lo_alv->set_screen_popup( start_column = 10
                                   end_column   = 180

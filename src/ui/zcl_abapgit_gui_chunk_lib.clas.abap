@@ -570,7 +570,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     ro_html->add_a(
         iv_txt = `Callstack`
-        iv_act = zif_abapgit_definitions=>c_action-callstack
+        iv_act = zif_abapgit_definitions=>c_action-show_callstack
         iv_typ = zif_abapgit_html=>c_action_type-sapevent
         iv_id  = `a_callstack` ).
 
