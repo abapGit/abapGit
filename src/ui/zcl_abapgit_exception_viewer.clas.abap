@@ -56,17 +56,23 @@ CLASS zcl_abapgit_exception_viewer DEFINITION
         IMPORTING
           is_top_of_stack TYPE abap_callstack_line,
 
-      _goto_source_code
+      goto_source_code
         IMPORTING
           is_callstack TYPE abap_callstack_line
         RAISING
-          zcx_abapgit_exception.
+          zcx_abapgit_exception,
+
+      extract_classname
+        IMPORTING
+          iv_mainprogram      TYPE abap_callstack_line-mainprogram
+        RETURNING
+          VALUE(rv_classname) TYPE tadir-obj_name.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_EXCEPTION_VIEWER IMPLEMENTATION.
+CLASS zcl_abapgit_exception_viewer IMPLEMENTATION.
 
 
   METHOD add_row.
@@ -132,6 +138,55 @@ CLASS ZCL_ABAPGIT_EXCEPTION_VIEWER IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD goto_message.
+
+    DATA: lt_bdcdata TYPE STANDARD TABLE OF bdcdata,
+          ls_bdcdata LIKE LINE OF lt_bdcdata.
+
+    ls_bdcdata-program  = 'SAPLWBMESSAGES'.
+    ls_bdcdata-dynpro   = '0100'.
+    ls_bdcdata-dynbegin = abap_true.
+    INSERT ls_bdcdata INTO TABLE lt_bdcdata.
+
+    CLEAR: ls_bdcdata.
+    ls_bdcdata-fnam = 'RSDAG-ARBGB'.
+    ls_bdcdata-fval = mx_error->if_t100_message~t100key-msgid.
+    INSERT ls_bdcdata INTO TABLE lt_bdcdata.
+
+    CLEAR: ls_bdcdata.
+    ls_bdcdata-fnam = 'MSG_NUMMER'.
+    ls_bdcdata-fval = mx_error->if_t100_message~t100key-msgno.
+    INSERT ls_bdcdata INTO TABLE lt_bdcdata.
+
+    CLEAR: ls_bdcdata.
+    ls_bdcdata-fnam = 'RSDAG-MSGFLAG'.
+    ls_bdcdata-fval = 'X'.
+    INSERT ls_bdcdata INTO TABLE lt_bdcdata.
+
+    CLEAR: ls_bdcdata.
+    ls_bdcdata-fnam = 'BDC_OKCODE'.
+    ls_bdcdata-fval = '=WB_DISPLAY'.
+    INSERT ls_bdcdata INTO TABLE lt_bdcdata.
+
+    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
+      STARTING NEW TASK 'GIT'
+      EXPORTING
+        tcode                   = 'SE91'
+        mode_val                = 'E'
+      TABLES
+        using_tab               = lt_bdcdata
+      EXCEPTIONS
+        call_transaction_denied = 1
+        tcode_invalid           = 2
+        OTHERS                  = 3.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD goto_source.
 
     FIELD-SYMBOLS: <ls_top_of_stack> LIKE LINE OF mt_callstack.
@@ -142,29 +197,43 @@ CLASS ZCL_ABAPGIT_EXCEPTION_VIEWER IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Callstack is empty| ).
     ENDIF.
 
-    _goto_source_code( <ls_top_of_stack> ).
+    goto_source_code( <ls_top_of_stack> ).
 
   ENDMETHOD.
 
 
-  METHOD _goto_source_code.
+  METHOD goto_source_code.
 
-    DATA: ls_item TYPE zif_abapgit_definitions=>ty_item.
+    CONSTANTS:
+      BEGIN OF lc_obj_type,
+        class   TYPE trobjtype VALUE `CLAS`,
+        program TYPE trobjtype VALUE `PROG`,
+      END OF lc_obj_type.
 
-    ls_item-obj_name = substring_before( val   = is_callstack-mainprogram
-                                         regex = '=*CP$' ).
+    DATA:
+      ls_item      TYPE zif_abapgit_definitions=>ty_item,
+      lv_classname LIKE ls_item-obj_name.
 
-    IF ls_item-obj_name IS INITIAL.
-      ls_item-obj_name = is_callstack-mainprogram.
-      ls_item-obj_type = |PROG|.
+    " you should remember that we distinct two cases
+    " 1) we navigate to a global class
+    " 2) we navigate to a program
+    " the latter one is the default case
+
+    lv_classname = extract_classname( is_callstack-mainprogram ).
+
+    IF lv_classname IS NOT INITIAL.
+      ls_item-obj_name = lv_classname.
+      ls_item-obj_type = lc_obj_type-class.
     ELSE.
-      ls_item-obj_type = |CLAS|.
+      ls_item-obj_name = is_callstack-mainprogram.
+      ls_item-obj_type = lc_obj_type-program.
     ENDIF.
 
-    zcl_abapgit_objects=>jump( is_item         = ls_item
-                               iv_line_number  = is_callstack-line
-                               iv_sub_obj_name = is_callstack-include
-                               iv_sub_obj_type = |PROG| ).
+    zcl_abapgit_objects=>jump(
+        is_item         = ls_item
+        iv_line_number  = is_callstack-line
+        iv_sub_obj_name = is_callstack-include
+        iv_sub_obj_type = lc_obj_type-program ).
 
   ENDMETHOD.
 
@@ -181,7 +250,7 @@ CLASS ZCL_ABAPGIT_EXCEPTION_VIEWER IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        _goto_source_code( <ls_callstack> ).
+        goto_source_code( <ls_callstack> ).
 
       CATCH zcx_abapgit_exception INTO lx_error.
         MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.
@@ -267,52 +336,10 @@ CLASS ZCL_ABAPGIT_EXCEPTION_VIEWER IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD extract_classname.
 
-  METHOD goto_message.
-
-    DATA: lt_bdcdata TYPE STANDARD TABLE OF bdcdata,
-          ls_bdcdata LIKE LINE OF lt_bdcdata.
-
-    ls_bdcdata-program  = 'SAPLWBMESSAGES'.
-    ls_bdcdata-dynpro   = '0100'.
-    ls_bdcdata-dynbegin = abap_true.
-    INSERT ls_bdcdata INTO TABLE lt_bdcdata.
-
-    CLEAR: ls_bdcdata.
-    ls_bdcdata-fnam = 'RSDAG-ARBGB'.
-    ls_bdcdata-fval = mx_error->if_t100_message~t100key-msgid.
-    INSERT ls_bdcdata INTO TABLE lt_bdcdata.
-
-    CLEAR: ls_bdcdata.
-    ls_bdcdata-fnam = 'MSG_NUMMER'.
-    ls_bdcdata-fval = mx_error->if_t100_message~t100key-msgno.
-    INSERT ls_bdcdata INTO TABLE lt_bdcdata.
-
-    CLEAR: ls_bdcdata.
-    ls_bdcdata-fnam = 'RSDAG-MSGFLAG'.
-    ls_bdcdata-fval = 'X'.
-    INSERT ls_bdcdata INTO TABLE lt_bdcdata.
-
-    CLEAR: ls_bdcdata.
-    ls_bdcdata-fnam = 'BDC_OKCODE'.
-    ls_bdcdata-fval = '=WB_DISPLAY'.
-    INSERT ls_bdcdata INTO TABLE lt_bdcdata.
-
-    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
-      STARTING NEW TASK 'GIT'
-      EXPORTING
-        tcode                   = 'SE91'
-        mode_val                = 'E'
-      TABLES
-        using_tab               = lt_bdcdata
-      EXCEPTIONS
-        call_transaction_denied = 1
-        tcode_invalid           = 2
-        OTHERS                  = 3.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
+    rv_classname = substring_before( val   = iv_mainprogram
+                                     regex = '=*CP$' ).
 
   ENDMETHOD.
 

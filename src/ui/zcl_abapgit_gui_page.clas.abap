@@ -325,7 +325,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     " You should remember that we render the message panel only
-    " if we have an error text.
+    " if we have an error.
     IF mx_error IS NOT BOUND.
       RETURN.
     ENDIF.
@@ -431,7 +431,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_renderable~handle_error.
+  METHOD zif_abapgit_gui_error_handler~handle_error.
 
     mx_error = ix_error.
     rv_handled = abap_true.
