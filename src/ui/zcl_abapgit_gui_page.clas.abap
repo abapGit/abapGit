@@ -330,7 +330,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    ro_html = zcl_abapgit_gui_chunk_lib=>render_error_message_panel( mx_error ).
+    ro_html = zcl_abapgit_gui_chunk_lib=>render_error_message_box( mx_error ).
 
     " You should remember that the exception viewer dispatches the events of
     " error message panel
