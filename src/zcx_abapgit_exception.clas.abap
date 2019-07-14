@@ -91,17 +91,25 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
 
   METHOD get_longtext.
 
-    DATA: lo_message_helper TYPE REF TO zcl_abapgit_message_helper.
+    " You should remember that we have to call ZCL_ABAPGIT_MESSAGE_HELPER
+    " dynamically, because the compiled abapGit report puts the definition
+    " of the exception classes on the top and thereforeZCL_ABAPGIT_MESSAGE_HELPER
+    " isn't statically known
+
+    DATA: lo_message_helper TYPE REF TO object.
 
     result = super->get_longtext( ).
 
     IF if_t100_message~t100key IS NOT INITIAL.
 
-      CREATE OBJECT lo_message_helper
+      CREATE OBJECT lo_message_helper TYPE ('ZCL_ABAPGIT_MESSAGE_HELPER')
         EXPORTING
           ii_t100_message = me.
 
-      result = lo_message_helper->get_t100_longtext( ).
+      CALL METHOD lo_message_helper->('GET_T100_LONGTEXT')
+        RECEIVING
+          rv_longtext = result.
+
     ENDIF.
 
   ENDMETHOD.
@@ -121,7 +129,9 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
       lv_text = iv_text.
     ENDIF.
 
-    zcl_abapgit_message_helper=>set_msg_vars_for_clike( lv_text ).
+    CALL METHOD ('ZCL_ABAPGIT_MESSAGE_HELPER')=>set_msg_vars_for_clike
+      EXPORTING
+        iv_text = lv_text.
 
     ls_t100_key-msgid = sy-msgid.
     ls_t100_key-msgno = sy-msgno.
