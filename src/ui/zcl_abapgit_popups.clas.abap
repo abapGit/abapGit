@@ -283,7 +283,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
   METHOD on_select_list_link_click.
 
-    DATA: lv_line TYPE sytabix.
+    DATA: lv_line TYPE sy-tabix.
 
     FIELD-SYMBOLS: <lt_table>    TYPE STANDARD TABLE,
                    <lg_line>     TYPE any,
@@ -294,8 +294,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     lv_line = row.
 
-    READ TABLE <lt_table> ASSIGNING <lg_line>
-                       INDEX lv_line.
+    READ TABLE <lt_table> ASSIGNING <lg_line> INDEX lv_line.
     IF sy-subrc = 0.
 
       ASSIGN COMPONENT c_fieldname_selected

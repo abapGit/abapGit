@@ -102,11 +102,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     CONSTANTS: lc_requirement_edit_count TYPE i VALUE 5.
     DATA: ls_dot               TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
           lv_selected          TYPE string,
-          lt_folder_logic      TYPE stringtab,
+          lt_folder_logic      TYPE string_table,
           lv_req_index         TYPE i,
           lv_requirement_count TYPE i.
 
-    FIELD-SYMBOLS: <lv_folder_logic> TYPE LINE OF stringtab,
+    FIELD-SYMBOLS: <lv_folder_logic> TYPE LINE OF string_table,
                    <ls_requirement>  TYPE zif_abapgit_dot_abapgit=>ty_requirement.
 
     ls_dot = mo_repo->get_dot_abapgit( )->get_data( ).

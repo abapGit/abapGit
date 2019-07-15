@@ -87,7 +87,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
       IMPORTING is_diff_line   TYPE zif_abapgit_definitions=>ty_diff
                 iv_filename    TYPE string
                 iv_fstate      TYPE char1
-                iv_index       TYPE sytabix
+                iv_index       TYPE sy-tabix
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_line_unified
       IMPORTING is_diff_line   TYPE zif_abapgit_definitions=>ty_diff OPTIONAL
@@ -112,7 +112,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         iv_patch_line_possible TYPE abap_bool
         iv_filename            TYPE string
         is_diff_line           TYPE zif_abapgit_definitions=>ty_diff
-        iv_index               TYPE sytabix.
+        iv_index               TYPE sy-tabix.
     METHODS start_staging
       IMPORTING
         it_postdata TYPE cnht_post_data_tab
@@ -162,7 +162,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
 
   METHOD add_to_stage.
@@ -497,7 +497,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   METHOD get_diff_line.
 
     DATA: lt_diff       TYPE zif_abapgit_definitions=>ty_diffs_tt,
-          lv_line_index TYPE sytabix.
+          lv_line_index TYPE sy-tabix.
 
 
     lv_line_index = iv_line_index.
@@ -1015,18 +1015,6 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
-
-    ls_hotkey_action-name   = |Stage changes|.
-    ls_hotkey_action-action = |stagePatch|.
-    ls_hotkey_action-hotkey = |s|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: lo_repo TYPE REF TO zcl_abapgit_repo_online.
@@ -1061,6 +1049,18 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
              ev_state     = ev_state ).
 
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+
+    ls_hotkey_action-name   = |Stage changes|.
+    ls_hotkey_action-action = |stagePatch|.
+    ls_hotkey_action-hotkey = |s|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
 ENDCLASS.

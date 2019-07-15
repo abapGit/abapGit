@@ -64,7 +64,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_COMPAR IMPLEMENTATION.
 
   METHOD get_where_used_recursive.
 
-    DATA: lt_findstrings TYPE stringtab,
+    DATA: lt_findstrings TYPE string_table,
           lt_founds      TYPE STANDARD TABLE OF rsfindlst,
           lt_scope       TYPE tty_seu_obj,
           lv_findstring  LIKE LINE OF lt_findstrings.
