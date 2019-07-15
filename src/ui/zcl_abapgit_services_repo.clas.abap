@@ -192,7 +192,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
   METHOD popup_overwrite.
 
-    DATA: lt_columns  TYPE stringtab,
+    DATA: lt_columns  TYPE string_table,
           lt_selected LIKE ct_overwrite,
           lv_column   LIKE LINE OF lt_columns,
           li_popups   TYPE REF TO zif_abapgit_popups.
@@ -237,7 +237,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
   METHOD popup_package_overwrite.
 
-    DATA: lt_colums_to_display TYPE stringtab,
+    DATA: lt_colums_to_display TYPE string_table,
           lv_column            LIKE LINE OF lt_colums_to_display,
           lt_selected          LIKE ct_overwrite,
           li_popups            TYPE REF TO zif_abapgit_popups.
