@@ -2,11 +2,11 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_page
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_gui_page_hotkey .
+    INTERFACES zif_abapgit_gui_page_hotkey.
 
     TYPES:
       BEGIN OF ty_file_diff,
@@ -18,16 +18,16 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         o_diff     TYPE REF TO zcl_abapgit_diff,
         changed_by TYPE xubname,
         type       TYPE string,
-      END OF ty_file_diff .
+      END OF ty_file_diff.
     TYPES:
-      tt_file_diff TYPE STANDARD TABLE OF ty_file_diff .
+      tt_file_diff TYPE STANDARD TABLE OF ty_file_diff.
 
     CONSTANTS:
       BEGIN OF c_fstate,
         local  TYPE char1 VALUE 'L',
         remote TYPE char1 VALUE 'R',
         both   TYPE char1 VALUE 'B',
-      END OF c_fstate .
+      END OF c_fstate.
 
     METHODS constructor
       IMPORTING
@@ -37,10 +37,10 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         !io_stage      TYPE REF TO zcl_abapgit_stage OPTIONAL
         !iv_patch_mode TYPE abap_bool DEFAULT abap_false
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
     METHODS zif_abapgit_gui_event_handler~on_event
-        REDEFINITION .
+        REDEFINITION.
   PROTECTED SECTION.
     METHODS:
       render_content REDEFINITION,
@@ -117,7 +117,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
       IMPORTING
         it_postdata TYPE cnht_post_data_tab
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS apply_patch_all
       IMPORTING
         iv_patch      TYPE string
@@ -150,6 +150,11 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         VALUE(rs_diff) TYPE zif_abapgit_definitions=>ty_diff
       RAISING
         zcx_abapgit_exception.
+    METHODS are_all_lines_patched
+      IMPORTING
+        it_diff                         TYPE zif_abapgit_definitions=>ty_diffs_tt
+      RETURNING
+        VALUE(rv_are_all_lines_patched) TYPE abap_bool.
     CLASS-METHODS get_patch_data
       IMPORTING
         iv_patch      TYPE string
@@ -199,10 +204,21 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
       lv_patch = lo_git_add_patch->get_patch_binary( ).
 
-      mo_stage->add(
-          iv_path     = <ls_diff_file>-path
-          iv_filename = <ls_diff_file>-filename
-          iv_data     = lv_patch ).
+      IF  <ls_diff_file>-lstate = 'D'
+      AND are_all_lines_patched( lt_diff ) = abap_true.
+
+        mo_stage->rm(
+            iv_path     = <ls_diff_file>-path
+            iv_filename = <ls_diff_file>-filename ).
+
+      ELSE.
+
+        mo_stage->add(
+            iv_path     = <ls_diff_file>-path
+            iv_filename = <ls_diff_file>-filename
+            iv_data     = lv_patch ).
+
+      ENDIF.
 
     ENDLOOP.
 
@@ -1051,4 +1067,21 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
+
+
+  METHOD are_all_lines_patched.
+
+    DATA: lv_patch_count TYPE i.
+
+    FIELD-SYMBOLS: <ls_diff> TYPE zif_abapgit_definitions=>ty_diff.
+
+    LOOP AT it_diff ASSIGNING <ls_diff>
+                    WHERE patch_flag = abap_true.
+      lv_patch_count = lv_patch_count + 1.
+    ENDLOOP.
+
+    rv_are_all_lines_patched = xsdbool( lv_patch_count = lines( it_diff ) ).
+
+  ENDMETHOD.
+
 ENDCLASS.
