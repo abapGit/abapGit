@@ -291,7 +291,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
       IF li_log IS BOUND AND li_log->count( ) > 0.
         ro_toolbar->add( iv_txt = 'Log'
                          iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?{ lv_key }| ).
-      ENDIF.                       
+      ENDIF.
     ENDIF.
 
     ro_toolbar->add( iv_txt = 'Advanced'
