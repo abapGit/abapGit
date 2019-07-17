@@ -22,6 +22,7 @@ CLASS zcl_abapgit_proxy_config DEFINITION PUBLIC FINAL CREATE PUBLIC.
         RETURNING
           VALUE(rv_auth) TYPE abap_bool.
 
+protected section.
   PRIVATE SECTION.
     DATA: mo_settings TYPE REF TO zcl_abapgit_settings,
           mi_exit     TYPE REF TO zif_abapgit_exit.
@@ -64,6 +65,8 @@ CLASS ZCL_ABAPGIT_PROXY_CONFIG IMPLEMENTATION.
         iv_repo_url  = iv_repo_url
       CHANGING
         cv_proxy_port = rv_port ).
+
+    CONDENSE rv_port.
 
   ENDMETHOD.
 
