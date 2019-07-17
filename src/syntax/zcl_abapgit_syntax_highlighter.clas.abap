@@ -19,7 +19,7 @@ CLASS zcl_abapgit_syntax_highlighter DEFINITION
 
     TYPES:
       BEGIN OF ty_match,
-        token    TYPE char1,  " Type of matches
+        token    TYPE c LENGTH 1,  " Type of matches
         offset   TYPE i,      " Beginning position of the string that should be formatted
         length   TYPE i,      " Length of the string that should be formatted
         text_tag TYPE string, " Type of text tag
@@ -29,7 +29,7 @@ CLASS zcl_abapgit_syntax_highlighter DEFINITION
     TYPES:
       BEGIN OF ty_rule,
         regex             TYPE REF TO cl_abap_regex,
-        token             TYPE char1,
+        token             TYPE c LENGTH 1,
         style             TYPE string,
         relevant_submatch TYPE i,
       END OF ty_rule .
@@ -72,6 +72,7 @@ CLASS zcl_abapgit_syntax_highlighter DEFINITION
         !iv_class      TYPE string
       RETURNING
         VALUE(rv_line) TYPE string .
+  PRIVATE SECTION.
 ENDCLASS.
 
 

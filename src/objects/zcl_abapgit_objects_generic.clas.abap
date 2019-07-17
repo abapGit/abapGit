@@ -32,8 +32,8 @@ CLASS zcl_abapgit_objects_generic DEFINITION
 
     TYPES:
       BEGIN OF ty_s_objkey,
-        num   TYPE numc3,
-        value TYPE char128,
+        num   TYPE n LENGTH 3,
+        value TYPE c LENGTH 128,
       END OF ty_s_objkey .
     TYPES:
       ty_t_objkey TYPE SORTED TABLE OF ty_s_objkey WITH UNIQUE KEY num .

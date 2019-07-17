@@ -51,7 +51,7 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
     DATA mo_merge_page TYPE REF TO zcl_abapgit_gui_page_merge .
     DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
     DATA ms_diff_file TYPE ty_file_diff .
-    DATA mv_current_conflict_index TYPE sytabix .
+    DATA mv_current_conflict_index TYPE sy-tabix .
     DATA mv_merge_mode TYPE string .
     DATA mt_conflicts TYPE zif_abapgit_definitions=>tt_merge_conflict .
 
@@ -531,11 +531,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     FIELD-SYMBOLS: <ls_conflict> TYPE zif_abapgit_definitions=>ty_merge_conflict.
@@ -581,6 +576,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
 
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 ENDCLASS.
