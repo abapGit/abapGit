@@ -143,6 +143,8 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'TOOL'
                   CHANGING cg_data = lv_tool ).
 
+    tadir_insert( iv_package = iv_package ).
+
     li_enho = factory( lv_tool ).
 
     li_enho->deserialize( io_xml     = io_xml
