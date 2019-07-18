@@ -84,6 +84,29 @@ CLASS zcl_abapgit_object_enho_badi IMPLEMENTATION.
     lv_enhname = ms_item-obj_name.
     lv_package = iv_package.
     TRY.
+        "this creates the actual enhancement implementation in tadir
+        cl_adt_corr_insert_dark=>get_instance( )->corr_insert(
+          exporting
+            obj_type                 = 'ENHO'
+            obj_name                 = lv_enhname
+            mode                     = 'MODIFY'
+            global_lock              = abap_true
+            masterlang               = sy-langu
+            use_korrnum_immediatedly = abap_true
+            operation                = 'I' "Insert operation
+          changing
+            devclass                 = lv_package
+            author                   = sy-uname
+          exceptions
+            cancelled                = 1
+            permission_failure       = 2
+            unknown_objectclass      = 3
+            other_exception          = 4
+            others                   = 5 ).
+        if sy-subrc <> 0.
+            zcx_abapgit_exception=>raise( 'error deserializing ENHO badi' ).
+        endif.
+
         cl_enh_factory=>create_enhancement(
           EXPORTING
             enhname     = lv_enhname

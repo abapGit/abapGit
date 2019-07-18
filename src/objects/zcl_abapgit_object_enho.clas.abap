@@ -122,7 +122,6 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO IMPLEMENTATION.
           enhancement_id = lv_enh_id
           lock           = abap_true ).
         li_enh_object->delete( ).
-        li_enh_object->save( run_dark = abap_true ).
         li_enh_object->unlock( ).
       CATCH cx_enh_root.
         zcx_abapgit_exception=>raise( 'Error deleting ENHO' ).
