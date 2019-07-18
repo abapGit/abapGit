@@ -65,6 +65,8 @@ CLASS ZCL_ABAPGIT_PROXY_CONFIG IMPLEMENTATION.
       CHANGING
         cv_proxy_port = rv_port ).
 
+    CONDENSE rv_port.
+
   ENDMETHOD.
 
 
