@@ -1092,7 +1092,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       lv_patch_count = lv_patch_count + 1.
     ENDLOOP.
 
-    rv_are_all_lines_patched = xsdbool( lv_patch_count = lines( it_diff ) ).
+    rv_are_all_lines_patched = boolc( lv_patch_count = lines( it_diff ) ).
 
   ENDMETHOD.
 
