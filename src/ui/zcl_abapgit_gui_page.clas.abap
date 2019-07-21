@@ -11,7 +11,6 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
       " Have a look at the JS file.
       BEGIN OF c_global_page_action,
         showhotkeys         TYPE string VALUE `showHotkeys` ##NO_TEXT,
-        togglemessagedetail TYPE string VALUE `toggleMessageDetail` ##NO_TEXT,
       END OF c_global_page_action.
 
     CLASS-METHODS:
@@ -217,11 +216,6 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ls_hotkey_action-name   = |Show hotkeys help|.
     ls_hotkey_action-action = c_global_page_action-showhotkeys.
     ls_hotkey_action-hotkey = |?|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey.
-
-    ls_hotkey_action-name   = |Toggle error message longtext|.
-    ls_hotkey_action-action = c_global_page_action-togglemessagedetail.
-    ls_hotkey_action-hotkey = |m|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey.
 
   ENDMETHOD.
