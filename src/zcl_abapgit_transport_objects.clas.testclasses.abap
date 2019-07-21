@@ -280,7 +280,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
 
     then_it_should_not_raise_excpt( ).
   ENDMETHOD.
-  
+
   METHOD shouldnt_remove_no_delflag.
     given_the_transport_object(
        iv_obj_name   = 'CL_FOO'
