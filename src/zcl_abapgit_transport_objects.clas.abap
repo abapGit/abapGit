@@ -65,8 +65,10 @@ CLASS ZCL_ABAPGIT_TRANSPORT_OBJECTS IMPLEMENTATION.
             ENDIF.
           WHEN zif_abapgit_definitions=>c_state-deleted.
             IF ls_transport_object-delflag = abap_false.
-              zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
+              IF ls_transport_object-object NE 'SUSC'.
+                zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
                 } should be removed, but has NO deletion flag in transport| ).
+              ENDIF.
             ENDIF.
             io_stage->rm(
               iv_path     = ls_object_status-path
