@@ -81,6 +81,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
           lv_click TYPE string,
           lv_id    TYPE string,
           lv_style TYPE string.
+          lv_title TYPE string.
 
     lv_class = iv_class.
 
@@ -121,7 +122,12 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       lv_style = | style="{ iv_style }"|.
     ENDIF.
 
-    rv_str = |<a{ lv_id }{ lv_class }{ lv_href }{ lv_click }{ lv_style }>{ iv_txt }{ co_span_link_hint }</a>|.
+    IF iv_title IS NOT INITIAL.
+      lv_title = | title="{ iv_title }"|.
+    ENDIF.
+
+    rv_str = |<a{ lv_id }{ lv_class }{ lv_href }{ lv_click }{ lv_style }{ lv_title }>|
+          && |{ iv_txt }{ co_span_link_hint }</a>|.
 
   ENDMETHOD.
 
@@ -164,7 +170,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
             iv_opt   = iv_opt
             iv_class = iv_class
             iv_id    = iv_id
-            iv_style = iv_style ) ).
+            iv_style = iv_style
+            iv_title = iv_title ) ).
 
   ENDMETHOD.
 

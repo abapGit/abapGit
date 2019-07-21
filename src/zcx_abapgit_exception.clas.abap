@@ -54,6 +54,7 @@ CLASS zcx_abapgit_exception DEFINITION
         !msgv3    TYPE symsgv OPTIONAL
         !msgv4    TYPE symsgv OPTIONAL.
     METHODS get_longtext REDEFINITION.
+    METHODS get_source_position REDEFINITION.
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
@@ -208,5 +209,23 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD get_source_position.
+
+    READ TABLE mt_callstack ASSIGNING FIELD-SYMBOL(<ls_callstack>)
+                            INDEX 1.
+    IF sy-subrc = 0.
+      program_name = <ls_callstack>-mainprogram.
+      include_name = <ls_callstack>-include.
+      source_line  = <ls_callstack>-line.
+    ELSE.
+      super->get_source_position(
+        IMPORTING
+          program_name = program_name
+          include_name = include_name
+          source_line  = source_line   ).
+    ENDIF.
+
+  ENDMETHOD.
 
 ENDCLASS.

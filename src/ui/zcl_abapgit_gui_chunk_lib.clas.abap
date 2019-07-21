@@ -165,7 +165,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     DATA:
       lv_error_text      TYPE string,
       lv_longtext        TYPE string,
-      lv_msgid_and_msgno TYPE string.
+      lv_msgid_and_msgno TYPE string,
+      lv_program_name    TYPE syrepid.
 
 
     CREATE OBJECT ro_html.
@@ -203,11 +204,9 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
             IN lv_longtext
             WITH |<h3>$1</h3>|.
 
-    ro_html->add( |<div id="message" class="message-panel-fixed">|
-               && |  <div class="message-panel-border">|
-               && |    <div class="message-panel-outer">|
-               && |      <div id="message-header" class="message-panel-inner message-header">{ lv_error_text }|
-               && |        <div class="float-right">| ).
+    ro_html->add( |<div id="message" class="message-panel">| ).
+    ro_html->add( |{ lv_error_text }| ).
+    ro_html->add( |<div class="float-right">| ).
 
     ro_html->add_a(
         iv_txt   = `&#x274c;`
@@ -215,31 +214,28 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
         iv_class = `close-btn`
         iv_typ   = zif_abapgit_html=>c_action_type-onclick ).
 
-    ro_html->add( |        </div>|
-               && |      </div>|
-               && |      <div id="message-detail" class="message-panel-inner" style="display:none" >| ).
+    ro_html->add( |</div>| ).
+
+    ro_html->add( |<div class="float-right message-panel-commands">| ).
 
     IF lv_msgid_and_msgno IS NOT INITIAL.
-
       ro_html->add_a(
           iv_txt = lv_msgid_and_msgno
           iv_typ = zif_abapgit_html=>c_action_type-sapevent
           iv_act = zif_abapgit_definitions=>c_action-goto_message
           iv_id  = `a_goto_message` ).
-
     ENDIF.
 
-    ro_html->add( |        { lv_longtext  }|
-               && |        <br>|
-               && |        <br>| ).
+    ix_error->get_source_position(
+      IMPORTING
+        program_name = lv_program_name ).
 
     ro_html->add_a(
-        iv_txt = `Goto source`
-        iv_act = zif_abapgit_definitions=>c_action-goto_source
-        iv_typ = zif_abapgit_html=>c_action_type-sapevent
-        iv_id  = `a_goto_source` ).
-
-    ro_html->add( |        <br>| ).
+        iv_txt   = `Goto source`
+        iv_act   = zif_abapgit_definitions=>c_action-goto_source
+        iv_typ   = zif_abapgit_html=>c_action_type-sapevent
+        iv_title = |{ lv_program_name }|
+        iv_id    = `a_goto_source` ).
 
     ro_html->add_a(
         iv_txt = `Callstack`
@@ -247,11 +243,11 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
         iv_typ = zif_abapgit_html=>c_action_type-sapevent
         iv_id  = `a_callstack` ).
 
-    ro_html->add( |        <br>|
-               && |      </div>|
-               && |    </div>|
-               && |  </div>|
-               && |</div>| ).
+    ro_html->add( |</div>| ).
+    ro_html->add( |<div class="message-panel-commands">| ).
+    ro_html->add( |{ lv_longtext }| ).
+    ro_html->add( |</div>| ).
+    ro_html->add( |</div>| ).
 
   ENDMETHOD.
 

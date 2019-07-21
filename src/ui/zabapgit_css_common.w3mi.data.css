@@ -676,41 +676,46 @@ div.info-panel div.info-list td { padding-right: 1em }
 
 /* Error message Panel */
 
-div.message-panel-fixed {
+div.message-panel {
   z-index: 99;
-  box-shadow: 1px 1px 3px 2px #dcdcdc;
-  margin: auto;
+  box-shadow: 2px 2px 4px 0px hsla(0, 0%, 0%, .1);
+  padding: 12px;
+  margin-left: -48%;
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 2%;
-  width: 99%;
-  cursor: pointer;
-}
+  bottom: 12px;
+  width: 94%;
+  left: 50%;
 
-div.message-panel-border {
-  background: var(--theme-background-color) !important;
-}
-
-div.message-panel-outer {
-  border: 1px solid;
-  border-radius: 10px;
-  border-color: red;
-  background: red !important;
-}
-
-div.message-panel-inner{
-  padding: 3px;
-  margin: 5px;
   border: 1px solid;
   border-radius: 5px;
-  border-color: lightpink;
-  background-color:lightpink !important;
-  font-size: larger;
+  border-color: hsl(0, 42%, 64%);
+  background-color: hsla(0, 42%, 90%, 1);
 }
 
-div.message-header {
-  font-weight: bold;
+.message-panel .close-btn{
+  position: absolute;
+  right: 20px;
+  bottom: 10px;
+}
+
+.message-panel-commands {
+  display: none;
+  margin-right: 2em;
+}
+
+.message-panel-commands a {
+  padding: 0em 0.5em;
+  border-left: 1px solid;
+  border-left-color: #ccc;
+}
+
+.message-panel-commands a:first-child {
+  padding-left: 0;
+  border-left: none;
+}
+
+div.message-panel:hover .message-panel-commands {
+  display: block
 }
 
 /* Tooltip text */
