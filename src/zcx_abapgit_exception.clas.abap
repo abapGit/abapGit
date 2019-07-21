@@ -212,7 +212,9 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
 
   METHOD get_source_position.
 
-    READ TABLE mt_callstack ASSIGNING FIELD-SYMBOL(<ls_callstack>)
+    FIELD-SYMBOLS: <ls_callstack> TYPE abap_callstack_line.
+
+    READ TABLE mt_callstack ASSIGNING <ls_callstack>
                             INDEX 1.
     IF sy-subrc = 0.
       program_name = <ls_callstack>-mainprogram.

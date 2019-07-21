@@ -16,12 +16,12 @@ CLASS zcl_abapgit_html DEFINITION
 
     CONSTANTS c_indent_size TYPE i VALUE 2 ##NO_TEXT.
 
-    CLASS-METHODS class_constructor .
+    CLASS-METHODS class_constructor.
     METHODS add_icon
       IMPORTING
         !iv_name  TYPE string
         !iv_hint  TYPE string OPTIONAL
-        !iv_class TYPE string OPTIONAL .
+        !iv_class TYPE string OPTIONAL.
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS: co_span_link_hint TYPE string VALUE `<span class="tooltiptext hidden"></span>`.
@@ -80,7 +80,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
           lv_href  TYPE string,
           lv_click TYPE string,
           lv_id    TYPE string,
-          lv_style TYPE string.
+          lv_style TYPE string,
           lv_title TYPE string.
 
     lv_class = iv_class.
