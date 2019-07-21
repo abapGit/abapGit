@@ -322,6 +322,23 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD deserialize_texts.
+    DATA: lt_tpool_i18n TYPE tt_tpool_i18n,
+          lt_tpool      TYPE textpool_table.
+
+    FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
+    io_xml->read( EXPORTING iv_name = 'I18N_TPOOL'
+                  CHANGING  cg_data = lt_tpool_i18n ).
+
+    LOOP AT lt_tpool_i18n ASSIGNING <ls_tpool>.
+      lt_tpool = read_tpool( <ls_tpool>-textpool ).
+      deserialize_textpool( iv_program  = iv_prog_name
+                            iv_language = <ls_tpool>-language
+                            it_tpool    = lt_tpool ).
+    ENDLOOP.
+  ENDMETHOD.
+
+
   METHOD deserialize_xml.
 
     DATA: lv_complete     TYPE rs38l-area,
@@ -757,29 +774,9 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD serialize_xml.
-
-    DATA: lt_includes TYPE ty_sobj_name_tt,
-          lv_areat    TYPE tlibt-areat.
-
-
-    SELECT SINGLE areat INTO lv_areat
-      FROM tlibt
-      WHERE spras = mv_language
-      AND area = ms_item-obj_name.        "#EC CI_GENBUFF "#EC CI_SUBRC
-
-    lt_includes = includes( ).
-
-    io_xml->add( iv_name = 'AREAT'
-                 ig_data = lv_areat ).
-    io_xml->add( iv_name = 'INCLUDES'
-                 ig_data = lt_includes ).
-
-  ENDMETHOD.
-
   METHOD serialize_texts.
-    DATA:   lt_tpool_i18n TYPE tt_tpool_i18n,
-        lt_tpool      TYPE textpool_table.
+    DATA: lt_tpool_i18n TYPE tt_tpool_i18n,
+          lt_tpool      TYPE textpool_table.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
     " Table d010tinf stores info. on languages in which program is maintained
@@ -806,21 +803,27 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
-  METHOD deserialize_texts.
-    DATA: lt_tpool_i18n TYPE tt_tpool_i18n,
-          lt_tpool      TYPE textpool_table.
 
-    FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
-    io_xml->read( EXPORTING iv_name = 'I18N_TPOOL'
-                  CHANGING  cg_data = lt_tpool_i18n ).
+  METHOD serialize_xml.
 
-    LOOP AT lt_tpool_i18n ASSIGNING <ls_tpool>.
-      lt_tpool = read_tpool( <ls_tpool>-textpool ).
-      deserialize_textpool( iv_program  = iv_prog_name
-                            iv_language = <ls_tpool>-language
-                            it_tpool    = lt_tpool ).
-    ENDLOOP.
+    DATA: lt_includes TYPE ty_sobj_name_tt,
+          lv_areat    TYPE tlibt-areat.
+
+
+    SELECT SINGLE areat INTO lv_areat
+      FROM tlibt
+      WHERE spras = mv_language
+      AND area = ms_item-obj_name.        "#EC CI_GENBUFF "#EC CI_SUBRC
+
+    lt_includes = includes( ).
+
+    io_xml->add( iv_name = 'AREAT'
+                 ig_data = lv_areat ).
+    io_xml->add( iv_name = 'INCLUDES'
+                 ig_data = lt_includes ).
+
   ENDMETHOD.
+
 
   METHOD update_func_group_short_text.
 
@@ -986,8 +989,8 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
     lv_program_name = main_name( ).
 
-    deserialize_texts(  iv_prog_name = lv_program_name
-                        io_xml       = io_xml    ).
+    deserialize_texts( iv_prog_name = lv_program_name
+                       io_xml       = io_xml ).
 
     io_xml->read( EXPORTING iv_name = 'DYNPROS'
                   CHANGING cg_data = lt_dynpros ).
@@ -1097,7 +1100,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     ls_progdir = read_progdir( lv_program_name ).
 
     serialize_texts( iv_prog_name = lv_program_name
-                     io_xml       = io_xml    ).
+                     io_xml       = io_xml ).
 
     IF ls_progdir-subc = 'F'.
       lt_dynpros = serialize_dynpros( lv_program_name ).
