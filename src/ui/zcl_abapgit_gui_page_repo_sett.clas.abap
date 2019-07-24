@@ -190,7 +190,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
     CLEAR lv_checked.
     IF ls_settings-write_protected = abap_true.
-      IF zcl_abapgit_environment=>is_repo_object_changes_allowed( ) = abap_true.
+      IF zcl_abapgit_environment=>get_instance( )->is_repo_object_changes_allowed( ) = abap_true.
         lv_checked = | checked|.
       ELSE.
         lv_checked = | checked disabled|.

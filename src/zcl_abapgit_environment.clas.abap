@@ -1,25 +1,36 @@
 CLASS zcl_abapgit_environment DEFINITION
-  PUBLIC
-  CREATE PUBLIC .
+  public
+  final
+  create private .
 
-  PUBLIC SECTION.
+PUBLIC SECTION.
 
-    CLASS-METHODS is_sap_cloud_platform
-      RETURNING
-        VALUE(rv_cloud) TYPE abap_bool.
+  INTERFACES zif_abapgit_environment .
 
-    CLASS-METHODS is_merged
-      RETURNING
-        VALUE(rv_is_merged) TYPE abap_bool.
+  ALIASES compare_with_inactive
+    FOR zif_abapgit_environment~compare_with_inactive .
+  ALIASES is_merged
+    FOR zif_abapgit_environment~is_merged .
+  ALIASES is_repo_object_changes_allowed
+    FOR zif_abapgit_environment~is_repo_object_changes_allowed .
+  ALIASES is_restart_required
+    FOR zif_abapgit_environment~is_restart_required .
+  ALIASES is_sap_cloud_platform
+    FOR zif_abapgit_environment~is_sap_cloud_platform .
 
-    CLASS-METHODS is_repo_object_changes_allowed
-      RETURNING VALUE(rv_allowed) TYPE abap_bool.
-  PROTECTED SECTION.
+  CLASS-METHODS get_instance
+    RETURNING
+      VALUE(ro_instance) TYPE REF TO zif_abapgit_environment .
+PROTECTED SECTION.
+private section.
 
-    CLASS-DATA gv_cloud TYPE abap_bool VALUE abap_undefined ##NO_TEXT.
-    CLASS-DATA gv_is_merged TYPE abap_bool VALUE abap_undefined ##NO_TEXT.
-    CLASS-DATA gv_client_modifiable TYPE abap_bool VALUE abap_undefined.
-  PRIVATE SECTION.
+  class-data GO_INSTANCE type ref to zIF_ABAPGIT_ENVIRONMENT .
+  data MO_DELEGATE type ref to zIF_ABAPGIT_ENVIRONMENT .
+
+  methods CONSTRUCTOR .
+  methods INJECT
+    importing
+      !IO_ABAPGIT_ENVIRONMENT type ref to zIF_ABAPGIT_ENVIRONMENT .
 ENDCLASS.
 
 
@@ -27,56 +38,45 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_ENVIRONMENT IMPLEMENTATION.
 
 
-  METHOD is_merged.
-
-    DATA lo_marker TYPE REF TO data ##NEEDED.
-
-    IF gv_is_merged = abap_undefined.
-      TRY.
-          CREATE DATA lo_marker TYPE REF TO ('LIF_ABAPMERGE_MARKER')  ##no_text.
-          "No exception --> marker found
-          gv_is_merged = abap_true.
-
-        CATCH cx_sy_create_data_error.
-          gv_is_merged = abap_false.
-      ENDTRY.
-    ENDIF.
-
-    rv_is_merged = gv_is_merged.
-
-  ENDMETHOD.
+METHOD constructor.
+  CREATE OBJECT mo_delegate TYPE lcl_abapgit_environment_logic.
+ENDMETHOD.
 
 
-  METHOD is_repo_object_changes_allowed.
-    DATA lv_ind TYPE t000-ccnocliind.
-
-    IF gv_client_modifiable = abap_undefined.
-      SELECT SINGLE ccnocliind FROM t000 INTO lv_ind
-             WHERE mandt = sy-mandt.
-      IF sy-subrc = 0
-          AND ( lv_ind = ' ' OR lv_ind = '1' ). "check changes allowed
-        gv_client_modifiable = abap_true.
-      ELSE.
-        gv_client_modifiable = abap_false.
-      ENDIF.
-    ENDIF.
-    rv_allowed = gv_client_modifiable.
-  ENDMETHOD.
+METHOD get_instance.
+  IF go_instance IS NOT BOUND.
+    CREATE OBJECT go_instance TYPE zcl_Abapgit_environment.
+  ENDIF.
+  ro_instance = go_instance.
+ENDMETHOD.
 
 
-  METHOD is_sap_cloud_platform.
+METHOD inject.
+  mo_delegate = io_abapgit_environment.
+ENDMETHOD.
 
-    IF gv_cloud = abap_undefined.
-      TRY.
-          CALL METHOD ('CL_COS_UTILITIES')=>('IS_SAP_CLOUD_PLATFORM')
-            RECEIVING
-              rv_is_sap_cloud_platform = gv_cloud.
-        CATCH cx_sy_dyn_call_illegal_method.
-          gv_cloud = abap_false.
-      ENDTRY.
-    ENDIF.
 
-    rv_cloud = gv_cloud.
+METHOD zif_abapgit_environment~compare_with_inactive.
+  rv_result = mo_delegate->compare_with_inactive( ).
+ENDMETHOD.
 
-  ENDMETHOD.
+
+METHOD zif_abapgit_environment~is_merged.
+  rv_result = mo_delegate->is_merged( ).
+ENDMETHOD.
+
+
+METHOD zif_abapgit_environment~is_repo_object_changes_allowed.
+  rv_result = mo_delegate->is_repo_object_changes_allowed( ).
+ENDMETHOD.
+
+
+METHOD zif_abapgit_environment~is_restart_required.
+  rv_result = mo_delegate->is_restart_required( ).
+ENDMETHOD.
+
+
+METHOD zif_abapgit_environment~is_sap_cloud_platform.
+  rv_result = mo_delegate->is_sap_cloud_platform( ).
+ENDMETHOD.
 ENDCLASS.
