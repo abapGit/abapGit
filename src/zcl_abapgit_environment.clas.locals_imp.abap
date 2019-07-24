@@ -212,24 +212,23 @@ CLASS ltcl_test_simple_positive IMPLEMENTATION.
   METHOD setup.
     mo_cut = zcl_abapgit_environment=>get_instance( ).
 
-    DATA mo_cut_downcast TYPE REF TO zcl_abapgit_environment.
-    mo_cut_downcast ?= mo_cut.
+    DATA lo_cut_downcast TYPE REF TO zcl_abapgit_environment.
+    lo_cut_downcast ?= mo_cut.
 
     DATA ltd_Stub TYPE REF TO ltd_abapgit_environment_stub.
     CREATE OBJECT ltd_stub.
 
-    DATA ms_config TYPE ltd_abapgit_environment_stub=>ty_return_value_config.
+    DATA ls_config TYPE ltd_abapgit_environment_stub=>ty_return_value_config.
 
     "Define stub configuration
-    ms_config-compare_with_inactive-return_value = abap_true.
-    ms_config-is_merged-return_value = abap_true.
-    ms_config-is_repo_object_changes_allowed-return_value = abap_true.
-    ms_config-is_restart_required-return_value = abap_true.
-    ms_config-is_sap_cloud_platform-return_value = abap_true.
+    ls_config-compare_with_inactive-return_value = abap_true.
+    ls_config-is_merged-return_value = abap_true.
+    ls_config-is_repo_object_changes_allowed-return_value = abap_true.
+    ls_config-is_restart_required-return_value = abap_true.
+    ls_config-is_sap_cloud_platform-return_value = abap_true.
 
-    ltd_stub->define_return_value_config( ms_config ).
-
-    mo_cut_downcast->inject( ltd_stub ).
+    ltd_stub->define_return_value_config( ls_config ).
+    lo_cut_downcast->inject( ltd_stub ).
   ENDMETHOD.
 
   METHOD compare_with_inactive.
@@ -258,28 +257,28 @@ CLASS ltcl_test_simple_positive IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-CLASS ltcl_test_simple_NEGATIVE IMPLEMENTATION.
+CLASS ltcl_test_simple_negative IMPLEMENTATION.
 
   METHOD setup.
     mo_cut = zcl_abapgit_environment=>get_instance( ).
 
-    DATA mo_cut_downcast TYPE REF TO zcl_abapgit_environment.
-    mo_cut_downcast ?= mo_cut.
+    DATA lo_cut_downcast TYPE REF TO zcl_abapgit_environment.
+    lo_cut_downcast ?= mo_cut.
 
     DATA ltd_Stub TYPE REF TO ltd_abapgit_environment_stub.
     CREATE OBJECT ltd_stub.
 
-    DATA ms_config TYPE ltd_abapgit_environment_stub=>ty_return_value_config.
+    DATA ls_config TYPE ltd_abapgit_environment_stub=>ty_return_value_config.
 
     "Define stub configuration
-    ms_config-compare_with_inactive-return_value = abap_false.
-    ms_config-is_merged-return_value = abap_false.
-    ms_config-is_repo_object_changes_allowed-return_value = abap_false.
-    ms_config-is_restart_required-return_value = abap_false.
-    ms_config-is_sap_cloud_platform-return_value = abap_false.
+    ls_config-compare_with_inactive-return_value = abap_false.
+    ls_config-is_merged-return_value = abap_false.
+    ls_config-is_repo_object_changes_allowed-return_value = abap_false.
+    ls_config-is_restart_required-return_value = abap_false.
+    ls_config-is_sap_cloud_platform-return_value = abap_false.
 
-    ltd_stub->define_return_value_config( ms_config ).
-    mo_cut_downcast->inject( ltd_stub ).
+    ltd_stub->define_return_value_config( ls_config ).
+    lo_cut_downcast->inject( ltd_stub ).
   ENDMETHOD.
 
   METHOD compare_with_inactive.
