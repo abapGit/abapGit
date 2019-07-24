@@ -18,7 +18,7 @@ CLASS zcl_abapgit_hotkeys DEFINITION
         RETURNING
           VALUE(rv_yes) TYPE abap_bool.
 
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
       mc_hotkey_interface TYPE string VALUE `ZIF_ABAPGIT_GUI_PAGE_HOTKEY` ##NO_TEXT.
