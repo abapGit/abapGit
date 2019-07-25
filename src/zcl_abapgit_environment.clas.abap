@@ -3,15 +3,13 @@ CLASS zcl_abapgit_environment DEFINITION
   FINAL
   CREATE PRIVATE
 
-  GLOBAL FRIENDS zcl_abapgit_factory .
+  GLOBAL FRIENDS zcl_abapgit_factory.
 
   PUBLIC SECTION.
-
-    INTERFACES zif_abapgit_environment .
+    INTERFACES zif_abapgit_environment.
   PROTECTED SECTION.
 
   PRIVATE SECTION.
-
     DATA mv_cloud TYPE abap_bool VALUE abap_undefined ##NO_TEXT.
     DATA mv_is_merged TYPE abap_bool VALUE abap_undefined ##NO_TEXT.
     DATA mv_client_modifiable TYPE abap_bool VALUE abap_undefined ##NO_TEXT.
