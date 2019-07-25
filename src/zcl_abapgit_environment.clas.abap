@@ -1,27 +1,16 @@
-CLASS zcl_abapgit_environment DEFINITION
-  PUBLIC
-  FINAL
-  CREATE PRIVATE .
+class ZCL_ABAPGIT_ENVIRONMENT definition
+  public
+  final
+  create private .
 
-  PUBLIC SECTION.
+public section.
 
-    INTERFACES zif_abapgit_environment .
+  interfaces ZIF_ABAPGIT_ENVIRONMENT .
 
-    ALIASES compare_with_inactive
-      FOR zif_abapgit_environment~compare_with_inactive .
-    ALIASES is_merged
-      FOR zif_abapgit_environment~is_merged .
-    ALIASES is_repo_object_changes_allowed
-      FOR zif_abapgit_environment~is_repo_object_changes_allowed .
-    ALIASES is_restart_required
-      FOR zif_abapgit_environment~is_restart_required .
-    ALIASES is_sap_cloud_platform
-      FOR zif_abapgit_environment~is_sap_cloud_platform .
-
-    CLASS-METHODS get_instance
-      RETURNING
-        VALUE(ro_instance) TYPE REF TO zif_abapgit_environment .
-    METHODS constructor .
+  class-methods GET_INSTANCE
+    returning
+      value(RO_INSTANCE) type ref to ZIF_ABAPGIT_ENVIRONMENT .
+  methods CONSTRUCTOR .
   PROTECTED SECTION.
 
   PRIVATE SECTION.
