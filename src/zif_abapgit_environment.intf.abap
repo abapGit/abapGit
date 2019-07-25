@@ -8,7 +8,7 @@ INTERFACE zif_abapgit_environment
       VALUE(rv_result) TYPE abap_bool .
   METHODS is_repo_object_changes_allowed
     RETURNING
-      VALUE(rV_result) TYPE abap_bool .
+      VALUE(rv_result) TYPE abap_bool .
   METHODS compare_with_inactive
     RETURNING
       VALUE(rv_result) TYPE boolean .

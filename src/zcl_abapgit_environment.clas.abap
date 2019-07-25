@@ -21,13 +21,13 @@ CLASS zcl_abapgit_environment DEFINITION
     CLASS-METHODS get_instance
       RETURNING
         VALUE(ro_instance) TYPE REF TO zif_abapgit_environment .
+    METHODS constructor .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-DATA go_instance TYPE REF TO zif_abapgit_environment .
     DATA mo_delegate TYPE REF TO zif_abapgit_environment .
 
-    METHODS constructor .
     METHODS inject
       IMPORTING
         !io_abapgit_environment TYPE REF TO zif_abapgit_environment .
@@ -45,7 +45,7 @@ CLASS ZCL_ABAPGIT_ENVIRONMENT IMPLEMENTATION.
 
   METHOD get_instance.
     IF go_instance IS NOT BOUND.
-      CREATE OBJECT go_instance TYPE zcl_Abapgit_environment.
+      CREATE OBJECT go_instance TYPE zcl_abapgit_environment.
     ENDIF.
     ro_instance = go_instance.
   ENDMETHOD.

@@ -88,7 +88,7 @@ CLASS lcl_abapgit_environment_logic IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS ltd_abapgit_environment_stub DEFINITION FOR TESTING.
+CLASS ltcl_abapgit_environment_stub DEFINITION FOR TESTING.
 
   PUBLIC SECTION.
     INTERFACES
@@ -124,7 +124,7 @@ CLASS ltd_abapgit_environment_stub DEFINITION FOR TESTING.
 
 ENDCLASS.
 
-CLASS ltd_abapgit_environment_stub IMPLEMENTATION.
+CLASS ltcl_abapgit_environment_stub IMPLEMENTATION.
 
   METHOD compare_with_inactive.
     rv_result = ms_config-compare_with_inactive-return_value.
@@ -210,15 +210,14 @@ ENDCLASS.
 CLASS ltcl_test_simple_positive IMPLEMENTATION.
 
   METHOD setup.
-    mo_cut = zcl_abapgit_environment=>get_instance( ).
-
     DATA lo_cut_downcast TYPE REF TO zcl_abapgit_environment.
+    DATA lo_stub TYPE REF TO ltcl_abapgit_environment_stub.
+    DATA ls_config TYPE ltcl_abapgit_environment_stub=>ty_return_value_config.
+
+    mo_cut = zcl_abapgit_environment=>get_instance( ).
     lo_cut_downcast ?= mo_cut.
 
-    DATA ltd_Stub TYPE REF TO ltd_abapgit_environment_stub.
-    CREATE OBJECT ltd_stub.
-
-    DATA ls_config TYPE ltd_abapgit_environment_stub=>ty_return_value_config.
+    CREATE OBJECT lo_stub.
 
     "Define stub configuration
     ls_config-compare_with_inactive-return_value = abap_true.
@@ -227,8 +226,8 @@ CLASS ltcl_test_simple_positive IMPLEMENTATION.
     ls_config-is_restart_required-return_value = abap_true.
     ls_config-is_sap_cloud_platform-return_value = abap_true.
 
-    ltd_stub->define_return_value_config( ls_config ).
-    lo_cut_downcast->inject( ltd_stub ).
+    lo_stub->define_return_value_config( ls_config ).
+    lo_cut_downcast->inject( lo_stub ).
   ENDMETHOD.
 
   METHOD compare_with_inactive.
@@ -260,15 +259,14 @@ ENDCLASS.
 CLASS ltcl_test_simple_negative IMPLEMENTATION.
 
   METHOD setup.
-    mo_cut = zcl_abapgit_environment=>get_instance( ).
-
     DATA lo_cut_downcast TYPE REF TO zcl_abapgit_environment.
+    DATA lo_stub TYPE REF TO ltcl_abapgit_environment_stub.
+    DATA ls_config TYPE ltcl_abapgit_environment_stub=>ty_return_value_config.
+
+    mo_cut = zcl_abapgit_environment=>get_instance( ).
     lo_cut_downcast ?= mo_cut.
 
-    DATA ltd_Stub TYPE REF TO ltd_abapgit_environment_stub.
-    CREATE OBJECT ltd_stub.
-
-    DATA ls_config TYPE ltd_abapgit_environment_stub=>ty_return_value_config.
+    CREATE OBJECT lo_stub.
 
     "Define stub configuration
     ls_config-compare_with_inactive-return_value = abap_false.
@@ -277,8 +275,8 @@ CLASS ltcl_test_simple_negative IMPLEMENTATION.
     ls_config-is_restart_required-return_value = abap_false.
     ls_config-is_sap_cloud_platform-return_value = abap_false.
 
-    ltd_stub->define_return_value_config( ls_config ).
-    lo_cut_downcast->inject( ltd_stub ).
+    lo_stub->define_return_value_config( ls_config ).
+    lo_cut_downcast->inject( lo_stub ).
   ENDMETHOD.
 
   METHOD compare_with_inactive.
