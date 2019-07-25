@@ -1,16 +1,16 @@
-class ZCL_ABAPGIT_ENVIRONMENT definition
-  public
-  final
-  create private .
+CLASS zcl_abapgit_environment DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PRIVATE .
 
-public section.
+  PUBLIC SECTION.
 
-  interfaces ZIF_ABAPGIT_ENVIRONMENT .
+    INTERFACES zif_abapgit_environment .
 
-  class-methods GET_INSTANCE
-    returning
-      value(RO_INSTANCE) type ref to ZIF_ABAPGIT_ENVIRONMENT .
-  methods CONSTRUCTOR .
+    CLASS-METHODS get_instance
+      RETURNING
+        VALUE(ro_instance) TYPE REF TO zif_abapgit_environment .
+    METHODS constructor .
   PROTECTED SECTION.
 
   PRIVATE SECTION.
