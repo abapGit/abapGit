@@ -23,14 +23,14 @@ CLASS zcl_abapgit_environment DEFINITION
         VALUE(ro_instance) TYPE REF TO zif_abapgit_environment .
     METHODS constructor .
   PROTECTED SECTION.
-private section.
 
-  class-data GO_INSTANCE type ref to ZIF_ABAPGIT_ENVIRONMENT .
-  data MO_DELEGATE type ref to ZIF_ABAPGIT_ENVIRONMENT .
+  PRIVATE SECTION.
+    CLASS-DATA go_instance TYPE REF TO zif_abapgit_environment .
+    DATA mo_delegate TYPE REF TO zif_abapgit_environment .
 
-  methods INJECT
-    importing
-      !IO_ABAPGIT_ENVIRONMENT type ref to ZIF_ABAPGIT_ENVIRONMENT .
+    METHODS inject
+      IMPORTING
+        !io_abapgit_environment TYPE REF TO zif_abapgit_environment .
 ENDCLASS.
 
 
