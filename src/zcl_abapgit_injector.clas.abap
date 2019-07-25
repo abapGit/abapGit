@@ -1,29 +1,32 @@
-CLASS zcl_abapgit_injector DEFINITION
-  PUBLIC
-  CREATE PRIVATE
-  FOR TESTING .
+class ZCL_ABAPGIT_INJECTOR definition
+  public
+  create private
+  for testing .
 
-  PUBLIC SECTION.
+public section.
 
-    CLASS-METHODS set_tadir
-      IMPORTING
-        !ii_tadir TYPE REF TO zif_abapgit_tadir .
-    CLASS-METHODS set_sap_package
-      IMPORTING
-        !iv_package     TYPE devclass
-        !ii_sap_package TYPE REF TO zif_abapgit_sap_package .
-    CLASS-METHODS set_code_inspector
-      IMPORTING
-        !iv_package        TYPE devclass
-        !ii_code_inspector TYPE REF TO zif_abapgit_code_inspector .
-    CLASS-METHODS set_stage_logic
-      IMPORTING
-        !ii_logic TYPE REF TO zif_abapgit_stage_logic .
-    CLASS-METHODS set_cts_api
-      IMPORTING
-        !ii_cts_api TYPE REF TO zif_abapgit_cts_api .
+  class-methods SET_TADIR
+    importing
+      !II_TADIR type ref to ZIF_ABAPGIT_TADIR .
+  class-methods SET_SAP_PACKAGE
+    importing
+      !IV_PACKAGE type DEVCLASS
+      !II_SAP_PACKAGE type ref to ZIF_ABAPGIT_SAP_PACKAGE .
+  class-methods SET_CODE_INSPECTOR
+    importing
+      !IV_PACKAGE type DEVCLASS
+      !II_CODE_INSPECTOR type ref to ZIF_ABAPGIT_CODE_INSPECTOR .
+  class-methods SET_STAGE_LOGIC
+    importing
+      !II_LOGIC type ref to ZIF_ABAPGIT_STAGE_LOGIC .
+  class-methods SET_CTS_API
+    importing
+      !II_CTS_API type ref to ZIF_ABAPGIT_CTS_API .
+  class-methods SET_ENVIRONMENT
+    importing
+      !IO_ENVIRONMENT type ref to ZIF_ABAPGIT_ENVIRONMENT .
   PROTECTED SECTION.
-  PRIVATE SECTION.
+private section.
 ENDCLASS.
 
 
@@ -59,6 +62,11 @@ CLASS ZCL_ABAPGIT_INJECTOR IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_environment.
+    zcl_abapgit_factory=>go_environment = io_environment.
+  ENDMETHOD.
+
+
   METHOD set_sap_package.
 
     DATA: ls_sap_package TYPE zcl_abapgit_factory=>ty_sap_package.
@@ -83,15 +91,11 @@ CLASS ZCL_ABAPGIT_INJECTOR IMPLEMENTATION.
 
 
   METHOD set_stage_logic.
-
     zcl_abapgit_factory=>gi_stage_logic = ii_logic.
-
   ENDMETHOD.
 
 
   METHOD set_tadir.
-
     zcl_abapgit_factory=>gi_tadir = ii_tadir.
-
   ENDMETHOD.
 ENDCLASS.
