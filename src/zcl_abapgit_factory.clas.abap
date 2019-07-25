@@ -1,19 +1,18 @@
 CLASS zcl_abapgit_factory DEFINITION
   PUBLIC
   CREATE PRIVATE
-
-  GLOBAL FRIENDS zcl_abapgit_injector .
+  GLOBAL FRIENDS zcl_abapgit_injector.
 
   PUBLIC SECTION.
 
     CLASS-METHODS get_tadir
       RETURNING
-        VALUE(ri_tadir) TYPE REF TO zif_abapgit_tadir .
+        VALUE(ri_tadir) TYPE REF TO zif_abapgit_tadir.
     CLASS-METHODS get_sap_package
       IMPORTING
         !iv_package           TYPE devclass
       RETURNING
-        VALUE(ri_sap_package) TYPE REF TO zif_abapgit_sap_package .
+        VALUE(ri_sap_package) TYPE REF TO zif_abapgit_sap_package.
     CLASS-METHODS get_code_inspector
       IMPORTING
         !iv_package              TYPE devclass
@@ -30,13 +29,13 @@ CLASS zcl_abapgit_factory DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS get_stage_logic
       RETURNING
-        VALUE(ri_logic) TYPE REF TO zif_abapgit_stage_logic .
+        VALUE(ri_logic) TYPE REF TO zif_abapgit_stage_logic.
     CLASS-METHODS get_cts_api
       RETURNING
-        VALUE(ri_cts_api) TYPE REF TO zif_abapgit_cts_api .
+        VALUE(ri_cts_api) TYPE REF TO zif_abapgit_cts_api.
     CLASS-METHODS get_environment
       RETURNING
-        VALUE(ro_environment) TYPE REF TO zif_abapgit_environment .
+        VALUE(ro_environment) TYPE REF TO zif_abapgit_environment.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -47,7 +46,7 @@ CLASS zcl_abapgit_factory DEFINITION
       END OF ty_sap_package .
     TYPES:
       tty_sap_package TYPE HASHED TABLE OF ty_sap_package
-                                WITH UNIQUE KEY package .
+                                WITH UNIQUE KEY package.
     TYPES:
       BEGIN OF ty_code_inspector,
         package  TYPE devclass,
@@ -55,13 +54,13 @@ CLASS zcl_abapgit_factory DEFINITION
       END OF ty_code_inspector .
     TYPES:
       tty_code_inspector TYPE HASHED TABLE OF ty_code_inspector
-                                   WITH UNIQUE KEY package .
+                                   WITH UNIQUE KEY package.
 
-    CLASS-DATA gi_tadir TYPE REF TO zif_abapgit_tadir .
-    CLASS-DATA gt_sap_package TYPE tty_sap_package .
-    CLASS-DATA gt_code_inspector TYPE tty_code_inspector .
-    CLASS-DATA gi_stage_logic TYPE REF TO zif_abapgit_stage_logic .
-    CLASS-DATA gi_cts_api TYPE REF TO zif_abapgit_cts_api .
+    CLASS-DATA gi_tadir TYPE REF TO zif_abapgit_tadir.
+    CLASS-DATA gt_sap_package TYPE tty_sap_package.
+    CLASS-DATA gt_code_inspector TYPE tty_code_inspector.
+    CLASS-DATA gi_stage_logic TYPE REF TO zif_abapgit_stage_logic.
+    CLASS-DATA gi_cts_api TYPE REF TO zif_abapgit_cts_api.
     CLASS-DATA go_environment TYPE REF TO zif_abapgit_environment.
 ENDCLASS.
 
