@@ -11,20 +11,6 @@
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
    </VSEOCLASS>
-   <DESCRIPTIONS>
-    <SEOCOMPOTX>
-     <CLSNAME>ZCL_ABAPGIT_ENVIRONMENT</CLSNAME>
-     <CMPNAME>GO_INSTANCE</CMPNAME>
-     <LANGU>E</LANGU>
-     <DESCRIPT>Singleton</DESCRIPT>
-    </SEOCOMPOTX>
-    <SEOCOMPOTX>
-     <CLSNAME>ZCL_ABAPGIT_ENVIRONMENT</CLSNAME>
-     <CMPNAME>MO_DELEGATE</CMPNAME>
-     <LANGU>E</LANGU>
-     <DESCRIPT>Object to delegate to determination logic</DESCRIPT>
-    </SEOCOMPOTX>
-   </DESCRIPTIONS>
   </asx:values>
  </asx:abap>
 </abapGit>
