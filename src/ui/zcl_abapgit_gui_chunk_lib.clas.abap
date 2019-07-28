@@ -75,16 +75,22 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS render_infopanel
       IMPORTING
-        !iv_div_id     TYPE string
-        !iv_title      TYPE string
-        !iv_hide       TYPE abap_bool DEFAULT abap_true
-        !iv_hint       TYPE string OPTIONAL
-        !iv_scrollable TYPE abap_bool DEFAULT abap_true
-        !io_content    TYPE REF TO zcl_abapgit_html
+        iv_div_id      TYPE string
+        iv_title       TYPE string
+        iv_hide        TYPE abap_bool DEFAULT abap_true
+        iv_hint        TYPE string OPTIONAL
+        iv_scrollable  TYPE abap_bool DEFAULT abap_true
+        io_content     TYPE REF TO zcl_abapgit_html
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS get_t100_text
+      IMPORTING
+        iv_msgid       TYPE scx_t100key-msgid
+        iv_msgno       TYPE scx_t100key-msgno
+      RETURNING
+        VALUE(rv_text) TYPE string.
 ENDCLASS.
 
 
@@ -160,33 +166,18 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
   METHOD render_error_message_box.
 
-    CONSTANTS: lc_regex_msgid_and_msgno TYPE string VALUE `(.{5})` ##NO_TEXT.
-
     DATA:
       lv_error_text      TYPE string,
       lv_longtext        TYPE string,
       lv_msgid_and_msgno TYPE string,
-      lv_program_name    TYPE syrepid.
+      lv_program_name    TYPE syrepid,
+      lv_title           TYPE string.
 
 
     CREATE OBJECT ro_html.
 
     lv_error_text = ix_error->get_text( ).
     lv_longtext = ix_error->get_longtext( abap_true ).
-
-    REPLACE ALL OCCURRENCES OF cl_abap_char_utilities=>newline
-            IN lv_longtext
-            WITH '<br>'.
-
-    FIND FIRST OCCURRENCE OF REGEX lc_regex_msgid_and_msgno
-         IN lv_longtext
-         SUBMATCHES lv_msgid_and_msgno.
-
-    IF sy-subrc = 0.
-      REPLACE FIRST OCCURRENCE OF REGEX lc_regex_msgid_and_msgno
-              IN lv_longtext
-              WITH ``.
-    ENDIF.
 
     REPLACE FIRST OCCURRENCE OF REGEX |(<br>{ zcl_abapgit_message_helper=>gc_section_text-cause }<br>)|
             IN lv_longtext
@@ -218,12 +209,21 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     ro_html->add( |<div class="float-right message-panel-commands">| ).
 
+    lv_msgid_and_msgno = |{ ix_error->if_t100_message~t100key-msgid }{ ix_error->if_t100_message~t100key-msgno }|.
+
     IF lv_msgid_and_msgno IS NOT INITIAL.
+
+      lv_title = get_t100_text(
+                    iv_msgid = ix_error->if_t100_message~t100key-msgid
+                    iv_msgno = ix_error->if_t100_message~t100key-msgno ).
+
       ro_html->add_a(
-          iv_txt = lv_msgid_and_msgno
-          iv_typ = zif_abapgit_html=>c_action_type-sapevent
-          iv_act = zif_abapgit_definitions=>c_action-goto_message
-          iv_id  = `a_goto_message` ).
+          iv_txt   = lv_msgid_and_msgno
+          iv_typ   = zif_abapgit_html=>c_action_type-sapevent
+          iv_act   = zif_abapgit_definitions=>c_action-goto_message
+          iv_title = lv_title
+          iv_id    = `a_goto_message` ).
+
     ENDIF.
 
     ix_error->get_source_position(
@@ -578,4 +578,16 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ro_html->add( '</tr></table>' ).
 
   ENDMETHOD.
+
+  METHOD get_t100_text.
+
+    SELECT SINGLE text
+           FROM t100
+           INTO rv_text
+           WHERE arbgb = iv_msgid
+           AND   msgnr = iv_msgno
+           AND   sprsl = sy-langu.
+
+  ENDMETHOD.
+
 ENDCLASS.
