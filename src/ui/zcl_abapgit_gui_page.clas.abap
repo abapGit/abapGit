@@ -95,10 +95,6 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
       RAISING
         zcx_abapgit_exception.
 
-    METHODS reg_error_message_panel_click
-      IMPORTING
-        io_html TYPE REF TO zcl_abapgit_html.
-
 ENDCLASS.
 
 
@@ -315,11 +311,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD reg_error_message_panel_click.
-    io_html->add( |errorMessagePanelRegisterClick();| ).
-  ENDMETHOD.
-
-
   METHOD render_error_message_box.
 
     " You should remember that the we have to instantiate ro_html even
@@ -362,7 +353,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     link_hints( ro_html ).
     insert_hotkeys_to_page( ro_html ).
-    reg_error_message_panel_click( ro_html ).
 
   ENDMETHOD.
 
