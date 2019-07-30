@@ -167,11 +167,11 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
   METHOD render_error_message_box.
 
     DATA:
-      lv_error_text      TYPE string,
-      lv_longtext        TYPE string,
-      lv_msgid_and_msgno TYPE string,
-      lv_program_name    TYPE syrepid,
-      lv_title           TYPE string.
+      lv_error_text   TYPE string,
+      lv_longtext     TYPE string,
+      lv_program_name TYPE syrepid,
+      lv_title        TYPE string,
+      lv_text         TYPE string.
 
 
     CREATE OBJECT ro_html.
@@ -209,16 +209,16 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     ro_html->add( |<div class="float-right message-panel-commands">| ).
 
-    lv_msgid_and_msgno = |{ ix_error->if_t100_message~t100key-msgid }{ ix_error->if_t100_message~t100key-msgno }|.
-
-    IF lv_msgid_and_msgno IS NOT INITIAL.
+    IF ix_error->if_t100_message~t100key-msgid IS NOT INITIAL.
 
       lv_title = get_t100_text(
                     iv_msgid = ix_error->if_t100_message~t100key-msgid
                     iv_msgno = ix_error->if_t100_message~t100key-msgno ).
 
+      lv_text = |Message ({ ix_error->if_t100_message~t100key-msgid }/{ ix_error->if_t100_message~t100key-msgno })|.
+
       ro_html->add_a(
-          iv_txt   = lv_msgid_and_msgno
+          iv_txt   = lv_text
           iv_typ   = zif_abapgit_html=>c_action_type-sapevent
           iv_act   = zif_abapgit_definitions=>c_action-goto_message
           iv_title = lv_title
