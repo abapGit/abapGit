@@ -243,7 +243,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD adjust_namespaces.
@@ -959,8 +959,8 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
       ENDTRY.
 
     ELSEIF iv_line_number IS NOT INITIAL
-       AND iv_sub_obj_type IS NOT INITIAL
-       AND iv_sub_obj_name IS NOT INITIAL.
+        AND iv_sub_obj_type IS NOT INITIAL
+        AND iv_sub_obj_name IS NOT INITIAL.
 
       " For the line navigation we have to supply the sub object type (i_sub_obj_type).
       " If we use is_item-obj_type it navigates only to the object.
