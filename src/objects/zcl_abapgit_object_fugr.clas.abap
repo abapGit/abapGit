@@ -29,11 +29,14 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       ty_function_tt TYPE STANDARD TABLE OF ty_function WITH DEFAULT KEY .
     TYPES:
       ty_sobj_name_tt TYPE STANDARD TABLE OF sobj_name  WITH DEFAULT KEY .
-    TYPES: BEGIN OF ty_tpool_i18n,
-             language TYPE langu,
-             textpool TYPE zif_abapgit_definitions=>ty_tpool_tt,
-           END OF ty_tpool_i18n,
-           tt_tpool_i18n TYPE STANDARD TABLE OF ty_tpool_i18n.
+    TYPES:
+      BEGIN OF ty_tpool_i18n,
+        language TYPE langu,
+        textpool TYPE zif_abapgit_definitions=>ty_tpool_tt,
+      END OF ty_tpool_i18n .
+    TYPES:
+      tt_tpool_i18n TYPE STANDARD TABLE OF ty_tpool_i18n .
+
     METHODS update_where_used
       IMPORTING
         !it_includes TYPE ty_sobj_name_tt .
@@ -118,13 +121,17 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !iv_group      TYPE rs38l-area
         !iv_short_text TYPE tftit-stext .
     METHODS serialize_texts
-        IMPORTING
-            iv_prog_name TYPE programm
-            !io_xml      TYPE REF TO zcl_abapgit_xml_output.
+      IMPORTING
+        !iv_prog_name TYPE programm
+        !io_xml       TYPE REF TO zcl_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
     METHODS deserialize_texts
-        IMPORTING
-            iv_prog_name  TYPE programm
-            !io_xml       TYPE REF TO zcl_abapgit_xml_input.
+      IMPORTING
+        !iv_prog_name TYPE programm
+        !io_xml       TYPE REF TO zcl_abapgit_xml_input
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
