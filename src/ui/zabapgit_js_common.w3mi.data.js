@@ -14,7 +14,7 @@
 /* exported perfLog */
 /* exported perfClear */
 /* exported enableArrowListNavigation */
-/* exported setLinkHints */
+/* exported activateLinkHints */
 /* exported setKeyBindings */
 /* exported preparePatch */
 /* exported registerStagePatch */
@@ -74,12 +74,12 @@ if (!String.prototype.includes) {
 
 // String startsWith polyfill, taken from https://developer.mozilla.org
 if (!String.prototype.startsWith) {
-    Object.defineProperty(String.prototype, 'startsWith', {
-        value: function(search, pos) {
-            pos = !pos || pos < 0 ? 0 : +pos;
-            return this.substring(pos, pos + search.length) === search;
-        }
-    });
+  Object.defineProperty(String.prototype, "startsWith", {
+    value: function(search, pos) {
+      pos = !pos || pos < 0 ? 0 : +pos;
+      return this.substring(pos, pos + search.length) === search;
+    }
+  });
 }
 
 /**********************************************************
@@ -799,18 +799,18 @@ LinkHints.prototype.deployHintContainers = function() {
 
   hintsMap.last = codeCounter - 1;
   return hintsMap;
-}
+};
 
 LinkHints.prototype.patchAndHookStyleSheets = function() {
   var sheet = getIndocStyleSheet();
   // Seems like 0 is a must for IE
   sheet.insertRule(".link-hint::after { border-top-color: " + this.hintBgColor + " }", 0);
   sheet.insertRule(".link-hint { background-color: " + this.hintBgColor + " }", 0);
-}
+};
 
 LinkHints.prototype.getHandler = function() {
   return this.handleKeydown.bind(this);
-}
+};
 
 LinkHints.prototype.handleKeydown = function(event){
 
@@ -878,10 +878,10 @@ LinkHints.prototype.displayHints = function(isActivate) {
 };
 
 LinkHints.prototype.hintActivate = function (hint) {
-  if (hint.parent.nodeName === 'A'
+  if (hint.parent.nodeName === "A"
     && hint.parent.href === document.location.href  // href is #
     && !hint.parent.onclick                         // no handler
-    && hint.parent.parentElement && hint.parent.parentElement.nodeName === 'LI') {
+    && hint.parent.parentElement && hint.parent.parentElement.nodeName === "LI") {
     // probably it is a dropdown ...
     hint.parent.parentElement.classList.toggle("force-nav-hover");
     hint.parent.focus();
