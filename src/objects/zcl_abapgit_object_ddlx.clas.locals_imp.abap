@@ -5,7 +5,7 @@ CLASS lcl_tadir DEFINITION CREATE PUBLIC.
     METHODS:
       constructor
         IMPORTING
-          outer TYPE REF TO zcl_abapgit_object_ddlx.
+          io_outer TYPE REF TO zcl_abapgit_object_ddlx.
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: mo_outer TYPE REF TO zcl_abapgit_object_ddlx.
@@ -21,7 +21,7 @@ CLASS lcl_tadir IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD constructor.
-    mo_outer = outer.
+    mo_outer = io_outer.
   ENDMETHOD.
 
 ENDCLASS.

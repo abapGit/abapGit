@@ -3,5 +3,5 @@ INTERFACE lif_tadir.
     IMPORTING
       iv_package TYPE devclass
     RAISING
-      zcx_abapgit_exception .
+      zcx_abapgit_exception.
 ENDINTERFACE.

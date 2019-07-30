@@ -36,7 +36,7 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
         VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata .
     METHODS corr_insert
       IMPORTING
-        !iv_package TYPE devclass
+        !iv_package      TYPE devclass
         !iv_object_class TYPE any OPTIONAL
       RAISING
         zcx_abapgit_exception .
@@ -308,7 +308,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
     ls_e071_tadir-obj_name = ms_item-obj_name.
     INSERT ls_e071_tadir INTO TABLE lt_e071_tadirs.
 
-CALL FUNCTION 'RS_INACTIVE_OBJECTS_WARNING'
+    CALL FUNCTION 'RS_INACTIVE_OBJECTS_WARNING'
       EXPORTING
         suppress_protocol         = abap_false
         with_program_includes     = abap_false
