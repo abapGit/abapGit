@@ -4,27 +4,27 @@ CLASS zcl_abapgit_object_ddlx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
-  PROTECTED SECTION.
-    DATA: mo_persistence TYPE REF TO if_wb_object_persist.
-
   PRIVATE SECTION.
-    METHODS:
-      get_persistence
-        RETURNING
-          VALUE(ri_persistence) TYPE REF TO if_wb_object_persist
-        RAISING
-          zcx_abapgit_exception,
+    DATA:
+      mo_tadir_interface TYPE REF TO lif_tadir,
+      mo_persistence     TYPE REF TO if_wb_object_persist.
 
-      clear_fields
-        CHANGING
-          cs_data TYPE any,
-
-      clear_field
-        IMPORTING
-          iv_fieldname TYPE csequence
-        CHANGING
-          cs_metadata  TYPE any.
-
+    METHODS get_persistence
+      RETURNING
+        VALUE(ri_persistence) TYPE REF TO if_wb_object_persist
+      RAISING
+        zcx_abapgit_exception .
+    METHODS clear_fields
+      CHANGING
+        !cs_data TYPE any .
+    METHODS clear_field
+      IMPORTING
+        !iv_fieldname TYPE csequence
+      CHANGING
+        !cs_metadata  TYPE any .
+    METHODS get_tadir_interface
+      RETURNING
+        VALUE(ri_tadir) TYPE REF TO lif_tadir .
 ENDCLASS.
 
 
@@ -110,6 +110,16 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_tadir_interface.
+    IF mo_tadir_interface IS NOT BOUND.
+      CREATE OBJECT mo_tadir_interface TYPE lcl_tadir
+        EXPORTING
+          outer = me.
+    ENDIF.
+    ri_tadir = mo_tadir_interface.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown.
   ENDMETHOD.
@@ -118,21 +128,19 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
 
     DATA: lv_object_key TYPE seu_objkey,
-          li_data_model TYPE REF TO if_wb_object_data_model,
           lx_error      TYPE REF TO cx_root.
 
 
     lv_object_key = ms_item-obj_name.
 
     TRY.
-        CREATE OBJECT li_data_model TYPE ('CL_DDLX_WB_OBJECT_DATA').
 
         get_persistence( )->delete( p_object_key = lv_object_key
                                     p_version    = swbm_version_active ).
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error ).
+                                      ix_previous = lx_error->previous ).
     ENDTRY.
 
   ENDMETHOD.
@@ -146,7 +154,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lg_data>    TYPE any,
                    <lg_source>  TYPE data,
-                   <lg_version> TYPE data.
+                   <lg_version> TYPE data,
+                   <lg_package> TYPE data.
 
     TRY.
         CREATE DATA lr_data
@@ -166,7 +175,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
             " If the file doesn't exist that's ok, because previously
             " the source code was stored in the xml. We are downward compatible.
             <lg_source> = mo_files->read_string( 'asddlxs' ) ##no_text.
-          CATCH zcx_abapgit_exception.
+          CATCH zcx_abapgit_exception ##NO_HANDLER.
         ENDTRY.
 
         CREATE OBJECT li_data_model
@@ -179,15 +188,21 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
         " and also creates transport request entry if necessary
         <lg_version> = 'inactive'.
 
+        "package needed to be able to determine ABAP language version
+        ASSIGN COMPONENT 'METADATA-PACKAGE_REF-NAME' OF STRUCTURE <lg_data> TO <lg_package>.
+        IF <lg_package> IS ASSIGNED.
+          <lg_package> = iv_package.
+        ENDIF.
+
         li_data_model->set_data( <lg_data> ).
 
         get_persistence( )->save( li_data_model ).
 
-        tadir_insert( iv_package ).
+        get_tadir_interface( )->tadir_insert( iv_package ).
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error ).
+                                      ix_previous = lx_error->previous ).
     ENDTRY.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
@@ -238,7 +253,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_locked.
 
-    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESDICT'
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESWB_EO'
                                             iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
 
   ENDMETHOD.
@@ -279,12 +294,33 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
           TYPE ('CL_DDLX_WB_OBJECT_DATA').
 
         li_persistence = get_persistence( ).
-        li_persistence->get(
-          EXPORTING
-            p_object_key  = lv_object_key
-            p_version     = swbm_version_active
-          CHANGING
-            p_object_data = li_data_model ).
+
+        IF zcl_abapgit_factory=>get_environment( )->compare_with_inactive( ) = abap_true.
+          "Retrieve inactive version
+          li_persistence->get(
+            EXPORTING
+              p_object_key  = lv_object_key
+              p_version     = swbm_version_active
+            CHANGING
+              p_object_data = li_data_model ).
+          IF li_data_model->get_object_name( ) IS INITIAL.
+            "Fallback: retrieve active version
+            li_persistence->get(
+              EXPORTING
+                p_object_key  = lv_object_key
+                p_version     = swbm_version_active
+              CHANGING
+                p_object_data = li_data_model ).
+          ENDIF.
+        ELSE.
+          "Retrieve active version
+          li_persistence->get(
+            EXPORTING
+              p_object_key  = lv_object_key
+              p_version     = swbm_version_active
+            CHANGING
+              p_object_data = li_data_model ).
+        ENDIF.
 
         li_data_model->get_data(
           IMPORTING
@@ -305,7 +341,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
-                                      ix_previous = lx_error ).
+                                      ix_previous = lx_error->previous ).
     ENDTRY.
 
   ENDMETHOD.

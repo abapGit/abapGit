@@ -308,11 +308,12 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
     ls_e071_tadir-obj_name = ms_item-obj_name.
     INSERT ls_e071_tadir INTO TABLE lt_e071_tadirs.
 
-    CALL FUNCTION 'RS_INACTIVE_OBJECTS_WARNING'
+CALL FUNCTION 'RS_INACTIVE_OBJECTS_WARNING'
       EXPORTING
         suppress_protocol         = abap_false
         with_program_includes     = abap_false
         suppress_dictionary_check = abap_false
+        phased_activation         = abap_false
       TABLES
         p_e071                    = lt_e071_tadirs
         p_xmsg                    = lt_messages.

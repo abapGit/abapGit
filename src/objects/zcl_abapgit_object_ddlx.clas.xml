@@ -11,6 +11,14 @@
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
    </VSEOCLASS>
+   <DESCRIPTIONS>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ABAPGIT_OBJECT_DDLX</CLSNAME>
+     <CMPNAME>MO_TADIR_INTERFACE</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Boolean Variable (X = True, - = False, Space = Unknown)</DESCRIPT>
+    </SEOCOMPOTX>
+   </DESCRIPTIONS>
   </asx:values>
  </asx:abap>
 </abapGit>

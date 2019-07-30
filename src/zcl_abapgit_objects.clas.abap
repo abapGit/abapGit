@@ -1084,7 +1084,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
                             iv_language = iv_language ).
     li_obj->mo_files = lo_files.
     CREATE OBJECT lo_xml.
-    li_obj->serialize( lo_xml ).
+    li_obj->serialize( io_xml      = lo_xml
+                       ii_log      = NEW zcl_abapgit_log( ) ). "to be replaced by item logger
     lo_files->add_xml( io_xml      = lo_xml
                        is_metadata = li_obj->get_metadata( ) ).
 

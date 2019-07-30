@@ -188,7 +188,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
     LOOP AT lt_content INTO ls_content.
       MOVE-CORRESPONDING from_xml( ls_content-data_str ) TO ls_repo.
       IF ls_repo-local_settings-write_protected = abap_false AND
-         zcl_abapgit_environment=>is_repo_object_changes_allowed( ) = abap_false.
+         zcl_abapgit_factory=>get_environment( )->is_repo_object_changes_allowed( ) = abap_false.
         ls_repo-local_settings-write_protected = abap_true.
       ENDIF.
       ls_repo-key = ls_content-value.
