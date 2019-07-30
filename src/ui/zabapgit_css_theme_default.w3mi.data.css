@@ -334,9 +334,7 @@ div.info-panel .update {
 }
 
 /* Tooltips text */
-.tooltiptext { color: #000; }
-/* Tooltip arrow */
-.tooltiptext::after { border-color: #555 transparent transparent transparent; }
+.link-hint { color: var(--theme-primary-font-color); }
 
 /* HOTKEYS */
 ul.hotkeys span.key-id {
