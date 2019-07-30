@@ -1,27 +1,27 @@
-class lcl_tadir definition create public.
+CLASS lcl_tadir DEFINITION CREATE PUBLIC.
 
-  public section.
+  PUBLIC SECTION.
     INTERFACES lif_tadir.
-    methods:
+    METHODS:
       constructor
-        importing
-          outer type ref to zcl_abapgit_object_ddlx.
-  protected section.
-  private section.
-    data: mo_outer type ref to zcl_abapgit_object_ddlx.
+        IMPORTING
+          outer TYPE REF TO zcl_abapgit_object_ddlx.
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+    DATA: mo_outer TYPE REF TO zcl_abapgit_object_ddlx.
 
-endclass.
+ENDCLASS.
 
-class zcl_abapgit_object_ddlx definition local friends lcl_tadir.
-class lcl_tadir implementation.
+CLASS zcl_abapgit_object_ddlx DEFINITION LOCAL FRIENDS lcl_tadir.
 
+CLASS lcl_tadir IMPLEMENTATION.
 
-  method lif_tadir~tadir_insert.
+  METHOD lif_tadir~tadir_insert.
     mo_outer->tadir_insert( iv_package = iv_package ).
-  endmethod.
+  ENDMETHOD.
 
-  method constructor.
+  METHOD constructor.
     mo_outer = outer.
-  endmethod.
+  ENDMETHOD.
 
-endclass.
+ENDCLASS.
