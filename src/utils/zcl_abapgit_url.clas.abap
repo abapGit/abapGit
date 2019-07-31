@@ -31,6 +31,7 @@ CLASS zcl_abapgit_url DEFINITION
         VALUE(rv_path_name) TYPE string
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-METHODS regex
@@ -59,8 +60,17 @@ CLASS ZCL_ABAPGIT_URL IMPLEMENTATION.
 
   METHOD name.
 
+    DATA: lv_path TYPE string.
+
     regex( EXPORTING iv_url = iv_url
-           IMPORTING ev_name = rv_name ).
+           IMPORTING ev_name = rv_name
+                     ev_path = lv_path ).
+
+    IF rv_name IS INITIAL.
+      FIND REGEX '([\w-]+)/$' IN lv_path SUBMATCHES rv_name.
+    ENDIF.
+
+    ASSERT NOT rv_name IS INITIAL.
 
   ENDMETHOD.
 
