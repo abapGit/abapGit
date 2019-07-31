@@ -32,6 +32,7 @@ CLASS zcl_abapgit_message_helper DEFINITION
         RETURNING
           VALUE(rv_longtext) TYPE string.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA:
       mi_t100_message TYPE REF TO if_t100_message.
@@ -86,7 +87,8 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_message_helper IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
+
 
   METHOD constructor.
 
@@ -131,28 +133,28 @@ CLASS zcl_abapgit_message_helper IMPLEMENTATION.
                      WITH sy-msgv1.
 
       set_single_msg_var(
-       EXPORTING
-         iv_arg    = mi_t100_message->t100key-attr2
-       IMPORTING
-         ev_target = sy-msgv2 ).
+        EXPORTING
+          iv_arg    = mi_t100_message->t100key-attr2
+        IMPORTING
+          ev_target = sy-msgv2 ).
 
       REPLACE '&V2&' IN TABLE rt_itf
                      WITH sy-msgv2.
 
       set_single_msg_var(
-       EXPORTING
-         iv_arg    = mi_t100_message->t100key-attr3
-       IMPORTING
-         ev_target = sy-msgv3 ).
+        EXPORTING
+          iv_arg    = mi_t100_message->t100key-attr3
+        IMPORTING
+          ev_target = sy-msgv3 ).
 
       REPLACE '&V3&' IN TABLE rt_itf
                      WITH sy-msgv3.
 
       set_single_msg_var(
-       EXPORTING
-         iv_arg    = mi_t100_message->t100key-attr4
-       IMPORTING
-         ev_target = sy-msgv4 ).
+        EXPORTING
+          iv_arg    = mi_t100_message->t100key-attr4
+        IMPORTING
+          ev_target = sy-msgv4 ).
 
       REPLACE '&V4&' IN TABLE rt_itf
                      WITH sy-msgv4.

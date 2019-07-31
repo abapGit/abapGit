@@ -99,9 +99,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_COMPAR IMPLEMENTATION.
           object_not_exist         = 8
           OTHERS                   = 9.
 
-      IF sy-subrc = 1
-      OR sy-subrc = 2
-      OR lines( lt_founds ) = 0.
+      IF sy-subrc = 1 OR sy-subrc = 2 OR lines( lt_founds ) = 0.
         EXIT.
       ELSEIF sy-subrc > 2.
         zcx_abapgit_exception=>raise_t100( ).

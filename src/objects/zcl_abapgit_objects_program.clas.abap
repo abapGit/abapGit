@@ -202,9 +202,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
       <ls_men> TYPE rsmpe_men.
 
     IF cs_adm IS NOT INITIAL
-    AND (     cs_adm-actcode CO lc_num_n_space
-          AND cs_adm-mencode CO lc_num_n_space
-          AND cs_adm-pfkcode CO lc_num_n_space ). "Check performed in form check_adm of include LSMPIF03
+        AND ( cs_adm-actcode CO lc_num_n_space
+        AND cs_adm-mencode CO lc_num_n_space
+        AND cs_adm-pfkcode CO lc_num_n_space ). "Check performed in form check_adm of include LSMPIF03
       RETURN.
     ENDIF.
 
@@ -347,7 +347,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 * if the DDIC element has a PARAMETER_ID and the flag "from_dict" is active
 * the import will enable the SET-/GET_PARAM flag. In this case: "force off"
         IF <ls_field>-param_id IS NOT INITIAL
-           AND <ls_field>-from_dict = abap_true.
+            AND <ls_field>-from_dict = abap_true.
           IF <ls_field>-set_param IS INITIAL.
             <ls_field>-set_param = lc_rpyty_force_off.
           ENDIF.
@@ -498,9 +498,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
       " http://help.sap.com/abapdocu_751/en/abapinsert_report_internal.htm#!ABAP_ADDITION_1@1@
       " This e.g. occurs in case of transportable Code Inspector variants (ending with ===VC)
       INSERT REPORT is_progdir-name
-       FROM it_source
-       STATE 'I'
-       EXTENSION TYPE is_progdir-name+30.
+        FROM it_source
+        STATE 'I'
+        EXTENSION TYPE is_progdir-name+30.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'error from INSERT REPORT .. EXTENSION TYPE' ).
       ENDIF.
