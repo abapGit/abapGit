@@ -160,10 +160,6 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
                      WITH sy-msgv4.
     ENDIF.
 
-    ls_itf-tdformat = '*'.
-    ls_itf-tdline   = |{ mi_t100_message->t100key-msgid }{ mi_t100_message->t100key-msgno }|.
-    INSERT ls_itf INTO rt_itf INDEX 1.
-
   ENDMETHOD.
 
 

@@ -6,7 +6,8 @@ CLASS zcl_abapgit_gui_html_processor DEFINITION
   PUBLIC SECTION.
 
     CONSTANTS c_css_build_name TYPE string VALUE 'css/bundle.css'.
-    CONSTANTS c_comment_start TYPE string VALUE `<!-- by AG HTML preprocessor `.
+    CONSTANTS c_preprocess_marker TYPE string VALUE `<!-- abapgit HTML preprocessor -->`.
+    CONSTANTS c_comment_start TYPE string VALUE `<!--`.
     CONSTANTS c_comment_end TYPE string VALUE `-->`.
 
     INTERFACES zif_abapgit_gui_html_processor .
@@ -65,6 +66,7 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR IMPLEMENTATION.
     DATA lo_css_re   TYPE REF TO cl_abap_regex.
     DATA lo_matcher  TYPE REF TO cl_abap_matcher.
     DATA lv_css_path TYPE string.
+    DATA lv_marker   TYPE string.
 
     DATA lv_off TYPE i.
     DATA lv_len TYPE i.
@@ -100,10 +102,12 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR IMPLEMENTATION.
 
     ev_html = ev_html && substring( val = iv_html off = lv_cur len = lv_head_end - lv_cur ).
     IF lines( et_css_urls ) > 0.
-      ev_html = ev_html
-        && cl_abap_char_utilities=>newline && `    ` " Assume 4 space indent, maybe improve and detect ?
-        && c_comment_start && c_comment_end
-        && lc_css_build.
+      lv_marker = cl_abap_char_utilities=>newline
+        && `    ` " Assume 4 space indent, maybe improve and detect ?
+        && c_preprocess_marker
+        && cl_abap_char_utilities=>newline
+        && `    `.
+      ev_html = ev_html && lv_marker && lc_css_build.
     ENDIF.
     ev_html = ev_html && substring( val = iv_html off = lv_head_end ).
 
