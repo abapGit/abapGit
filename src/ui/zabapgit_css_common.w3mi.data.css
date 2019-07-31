@@ -72,6 +72,10 @@ div.dummydiv {
   text-align:       center;
 }
 
+a.close-btn {
+  text-decoration: none;
+}
+
 /* STRUCTURE DIVS, HEADER & FOOTER */
 #abapGitLogo { outline: none; }
 
@@ -691,12 +695,6 @@ div.message-panel {
   border-radius: 5px;
   border-color: hsl(0, 42%, 64%);
   background-color: hsla(0, 42%, 90%, 1);
-}
-
-.message-panel .close-btn{
-  position: absolute;
-  right: 20px;
-  bottom: 10px;
 }
 
 .message-panel-commands {

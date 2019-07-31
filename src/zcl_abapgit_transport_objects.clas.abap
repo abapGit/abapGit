@@ -67,7 +67,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT_OBJECTS IMPLEMENTATION.
 * SUSC, see https://github.com/larshp/abapGit/issues/2772
             IF ls_transport_object-delflag = abap_false AND ls_transport_object-object <> 'SUSC'.
               zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
-              } should be removed, but has NO deletion flag in transport| ).
+                } should be removed, but has NO deletion flag in transport| ).
             ENDIF.
             io_stage->rm(
               iv_path     = ls_object_status-path
