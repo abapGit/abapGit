@@ -799,10 +799,10 @@ LinkHints.prototype.deployHintContainers = function() {
 };
 
 LinkHints.prototype.getHandler = function() {
-  return this.handleKeydown.bind(this);
+  return this.handleKey.bind(this);
 };
 
-LinkHints.prototype.handleKeydown = function(event){
+LinkHints.prototype.handleKey = function(event){
 
   if (event.defaultPrevented) {
     return;
@@ -814,29 +814,13 @@ LinkHints.prototype.handleKeydown = function(event){
   // Maybe we must add other types here in the future
   if (event.key === this.linkHintHotKey && activeElementType !== "INPUT" && activeElementType !== "TEXTAREA") {
 
-    this.displayHints(!this.areHintsDisplayed);
     this.pendingPath    = "";
+    this.displayHints(!this.areHintsDisplayed);
 
   } else if (this.areHintsDisplayed) {
 
-    if (event.keyCode === 27 || event.keyCode === 8 && this.pendingPath === "") {
-      // Escape or backspace with initial entry - abort search
-      this.displayHints(false);
-      return;
-    }
-
     // the user tries to reach a hint
-    if (event.keyCode === 8) { // Backspace
-      this.pendingPath = this.pendingPath.substring(0, this.pendingPath.length - 1);
-    } else {
-      this.pendingPath += event.key;
-    }
-
-    if (this.pendingPath === "") { // Empty after backspace ? Just reset all
-      this.displayHints(true);
-      return;
-    }
-
+    this.pendingPath += event.key;
     var hint = this.hintsMap[this.pendingPath];
 
     if (hint) { // we are there, we have a fully specified tooltip. Let's activate it
@@ -899,7 +883,7 @@ LinkHints.prototype.filterHints = function () {
 function activateLinkHints(linkHintHotKey) {
   if (!linkHintHotKey) return;
   var oLinkHint = new LinkHints(linkHintHotKey);
-  document.addEventListener("keydown", oLinkHint.getHandler());
+  document.addEventListener("keypress", oLinkHint.getHandler());
 }
 
 /* HOTKEYS */
