@@ -750,14 +750,11 @@ function enableArrowListNavigation() {
 
 /* LINK HINTS - Vimium like link hints */
 
-function LinkHints(linkHintHotKey, hintBgColor){
+function LinkHints(linkHintHotKey){
   this.linkHintHotKey    = linkHintHotKey;
-  this.hintBgColor       = hintBgColor;
   this.areHintsDisplayed = false;
   this.pendingPath       = "";
-
-  this.patchAndHookStyleSheets();
-  this.hintsMap = this.deployHintContainers();
+  this.hintsMap          = this.deployHintContainers();
 }
 
 LinkHints.prototype.getHintStartValue = function(targetsCount){
@@ -799,13 +796,6 @@ LinkHints.prototype.deployHintContainers = function() {
 
   hintsMap.last = codeCounter - 1;
   return hintsMap;
-};
-
-LinkHints.prototype.patchAndHookStyleSheets = function() {
-  var sheet = getIndocStyleSheet();
-  // Seems like 0 is a must for IE
-  sheet.insertRule(".link-hint::after { border-top-color: " + this.hintBgColor + " }", 0);
-  sheet.insertRule(".link-hint { background-color: " + this.hintBgColor + " }", 0);
 };
 
 LinkHints.prototype.getHandler = function() {
@@ -906,9 +896,9 @@ LinkHints.prototype.filterHints = function () {
   return visibleHints;
 };
 
-function activateLinkHints(linkHintHotKey, hintBgColor) {
-  if (!linkHintHotKey || !hintBgColor) return;
-  var oLinkHint = new LinkHints(linkHintHotKey, hintBgColor);
+function activateLinkHints(linkHintHotKey) {
+  if (!linkHintHotKey) return;
+  var oLinkHint = new LinkHints(linkHintHotKey);
   document.addEventListener("keydown", oLinkHint.getHandler());
 }
 

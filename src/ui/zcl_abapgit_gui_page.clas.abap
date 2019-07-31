@@ -288,12 +288,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
           lv_background_color TYPE string.
 
     lv_link_hint_key = mo_settings->get_link_hint_key( ).
-    lv_background_color = mo_settings->get_link_hint_background_color( ).
 
-    IF mo_settings->get_link_hints_enabled( ) = abap_true
-    AND lv_link_hint_key IS NOT INITIAL.
+    IF mo_settings->get_link_hints_enabled( ) = abap_true AND lv_link_hint_key IS NOT INITIAL.
 
-      io_html->add( |activateLinkHints("{ lv_link_hint_key }","{ lv_background_color }");| ).
+      io_html->add( |activateLinkHints("{ lv_link_hint_key }");| ).
       io_html->add( |setInitialFocusWithQuerySelector('a span', true);| ).
       io_html->add( |enableArrowListNavigation();| ).
 
