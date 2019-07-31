@@ -755,6 +755,7 @@ function LinkHints(linkHintHotKey){
   this.areHintsDisplayed = false;
   this.pendingPath       = "";
   this.hintsMap          = this.deployHintContainers();
+  this.activatedDropdown = null;
 }
 
 LinkHints.prototype.getHintStartValue = function(targetsCount){
@@ -814,7 +815,9 @@ LinkHints.prototype.handleKey = function(event){
   // Maybe we must add other types here in the future
   if (event.key === this.linkHintHotKey && activeElementType !== "INPUT" && activeElementType !== "TEXTAREA") {
 
-    this.pendingPath    = "";
+    if (this.areHintsDisplayed && this.activatedDropdown) this.closeActivatedDropdown();
+
+    this.pendingPath       = "";
     this.displayHints(!this.areHintsDisplayed);
 
   } else if (this.areHintsDisplayed) {
@@ -831,11 +834,18 @@ LinkHints.prototype.handleKey = function(event){
       // the partially matched are shown
       var visibleHints = this.filterHints();
       if (!visibleHints) this.displayHints(false);
+      if (!visibleHints && this.activatedDropdown) this.closeActivatedDropdown();
     }
 
   }
 
 };
+
+LinkHints.prototype.closeActivatedDropdown = function() {
+  if (!this.activatedDropdown) return;
+  this.activatedDropdown.classList.remove("force-nav-hover");
+  this.activatedDropdown = null;
+}
 
 LinkHints.prototype.displayHints = function(isActivate) {
   this.areHintsDisplayed = isActivate;
@@ -857,7 +867,8 @@ LinkHints.prototype.hintActivate = function (hint) {
     && !hint.parent.onclick                         // no handler
     && hint.parent.parentElement && hint.parent.parentElement.nodeName === "LI") {
     // probably it is a dropdown ...
-    hint.parent.parentElement.classList.toggle("force-nav-hover");
+    this.activatedDropdown = hint.parent.parentElement;
+    this.activatedDropdown.classList.toggle("force-nav-hover");
     hint.parent.focus();
   } else {
     hint.parent.click();
