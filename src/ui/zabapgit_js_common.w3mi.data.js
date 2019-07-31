@@ -753,8 +753,8 @@ function enableArrowListNavigation() {
 function LinkHints(linkHintHotKey){
   this.linkHintHotKey    = linkHintHotKey;
   this.areHintsDisplayed = false;
-  this.pendingPath       = "";
-  this.hintsMap          = this.deployHintContainers();
+  this.pendingPath       = ""; // already typed code prefix
+  this.hintsMap          = this.deployHintContainers(); 
   this.activatedDropdown = null;
 }
 
@@ -770,7 +770,9 @@ LinkHints.prototype.deployHintContainers = function() {
   var codeCounter = this.getHintStartValue(hintTargets.length);
   var hintsMap    = { first: codeCounter };
 
-  // <span class="link-hint" data-code="123"><span class="pending">12</span><span>3</span></span>
+  // <span class="link-hint" data-code="123">
+  //   <span class="pending">12</span><span>3</span>
+  // </span>
   for (var i = 0, N = hintTargets.length; i < N; i++) {
     var hint = {};
     hint.container     = document.createElement("span");
@@ -784,10 +786,11 @@ LinkHints.prototype.deployHintContainers = function() {
 
     hint.pendingSpan.classList.add("pending");
     hint.container.classList.add("link-hint");
-    hint.container.classList.add("nodisplay");
+    hint.container.classList.add("nodisplay");            // hide by default
     hint.container.dataset.code = codeCounter.toString(); // not really needed, more for debug
 
     if (hintTargets[i].nodeName === "INPUT") {
+      // does not work if inside the input, so appending right after
       hintTargets[i].insertAdjacentElement("afterend", hint.container);
     } else {
       hintTargets[i].appendChild(hint.container);
@@ -815,9 +818,10 @@ LinkHints.prototype.handleKey = function(event){
   // Maybe we must add other types here in the future
   if (event.key === this.linkHintHotKey && activeElementType !== "INPUT" && activeElementType !== "TEXTAREA") {
 
+    // on user hide hints, close an opened dropdown too
     if (this.areHintsDisplayed && this.activatedDropdown) this.closeActivatedDropdown();
 
-    this.pendingPath       = "";
+    this.pendingPath = "";
     this.displayHints(!this.areHintsDisplayed);
 
   } else if (this.areHintsDisplayed) {
@@ -833,19 +837,19 @@ LinkHints.prototype.handleKey = function(event){
       // we are not there yet, but let's filter the link so that only
       // the partially matched are shown
       var visibleHints = this.filterHints();
-      if (!visibleHints) this.displayHints(false);
-      if (!visibleHints && this.activatedDropdown) this.closeActivatedDropdown();
+      if (!visibleHints) {
+        this.displayHints(false);
+        if (this.activatedDropdown) this.closeActivatedDropdown();
+      } 
     }
-
   }
-
 };
 
 LinkHints.prototype.closeActivatedDropdown = function() {
   if (!this.activatedDropdown) return;
   this.activatedDropdown.classList.remove("force-nav-hover");
   this.activatedDropdown = null;
-}
+};
 
 LinkHints.prototype.displayHints = function(isActivate) {
   this.areHintsDisplayed = isActivate;
@@ -882,7 +886,7 @@ LinkHints.prototype.filterHints = function () {
     if (i.toString().startsWith(this.pendingPath)) {
       hint.pendingSpan.innerText   = this.pendingPath;
       hint.remainingSpan.innerText = hint.code.substring(this.pendingPath.length);
-      hint.container.classList.remove("nodisplay"); // for backspace
+      // hint.container.classList.remove("nodisplay"); // for backspace
       visibleHints++;
     } else {
       hint.container.classList.add("nodisplay");
