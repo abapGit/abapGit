@@ -22,6 +22,9 @@ CLASS zcl_abapgit_injector DEFINITION
     CLASS-METHODS set_cts_api
       IMPORTING
         !ii_cts_api TYPE REF TO zif_abapgit_cts_api .
+    CLASS-METHODS set_environment
+      IMPORTING
+        !io_environment TYPE REF TO zif_abapgit_environment .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -59,6 +62,11 @@ CLASS ZCL_ABAPGIT_INJECTOR IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_environment.
+    zcl_abapgit_factory=>go_environment = io_environment.
+  ENDMETHOD.
+
+
   METHOD set_sap_package.
 
     DATA: ls_sap_package TYPE zcl_abapgit_factory=>ty_sap_package.
@@ -90,8 +98,6 @@ CLASS ZCL_ABAPGIT_INJECTOR IMPLEMENTATION.
 
 
   METHOD set_tadir.
-
     zcl_abapgit_factory=>gi_tadir = ii_tadir.
-
   ENDMETHOD.
 ENDCLASS.
