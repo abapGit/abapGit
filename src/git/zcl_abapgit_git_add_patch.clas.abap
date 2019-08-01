@@ -12,7 +12,7 @@ CLASS zcl_abapgit_git_add_patch DEFINITION
 
       get_patch
         RETURNING
-          VALUE(rt_patch) TYPE stringtab
+          VALUE(rt_patch) TYPE string_table
         RAISING
           zcx_abapgit_exception,
 
@@ -21,20 +21,18 @@ CLASS zcl_abapgit_git_add_patch DEFINITION
           VALUE(rv_patch_binary) TYPE xstring
         RAISING
           zcx_abapgit_exception.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA:
       mt_diff  TYPE zif_abapgit_definitions=>ty_diffs_tt,
-      mt_patch TYPE stringtab.
+      mt_patch TYPE string_table.
 
     METHODS:
       calculate_patch
         RETURNING
-          VALUE(rt_patch) TYPE stringtab
+          VALUE(rt_patch) TYPE string_table
         RAISING
           zcx_abapgit_exception.
-
 ENDCLASS.
 
 

@@ -46,7 +46,7 @@ CLASS ltcl_calculate_patch DEFINITION FINAL FOR TESTING
 
     DATA:
       mt_diff  TYPE zif_abapgit_definitions=>ty_diffs_tt,
-      mt_patch TYPE stringtab,
+      mt_patch TYPE string_table,
       mx_error TYPE REF TO zcx_abapgit_exception.
 
 ENDCLASS.

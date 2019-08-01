@@ -204,7 +204,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
     LOOP AT lt_segment_definitions ASSIGNING <ls_segment_definition>.
       <ls_segment_definition>-segmentheader-presp =
-      <ls_segment_definition>-segmentheader-pwork = cl_abap_syst=>get_user_name( ).
+        <ls_segment_definition>-segmentheader-pwork = cl_abap_syst=>get_user_name( ).
 
       CALL FUNCTION 'SEGMENT_READ'
         EXPORTING

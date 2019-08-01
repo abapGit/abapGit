@@ -106,10 +106,10 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
           zcx_abapgit_exception,
       set_link_hint_key
         IMPORTING
-          iv_link_hint_key TYPE char01,
+          iv_link_hint_key TYPE string,
       get_link_hint_key
         RETURNING
-          VALUE(rv_link_hint_key) TYPE char01,
+          VALUE(rv_link_hint_key) TYPE string,
       get_link_hint_background_color
         RETURNING
           VALUE(rv_background_color) TYPE string,

@@ -3,11 +3,14 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
   PUBLIC SECTION.
     INTERFACES:
       zif_abapgit_gui_renderable,
-      zif_abapgit_gui_event_handler.
+      zif_abapgit_gui_event_handler,
+      zif_abapgit_gui_error_handler.
 
     CONSTANTS:
+      " You should remember that these actions are handled in the UI.
+      " Have a look at the JS file.
       BEGIN OF c_global_page_action,
-        showhotkeys TYPE string VALUE `showHotkeys` ##NO_TEXT,
+        showhotkeys         TYPE string VALUE `showHotkeys` ##NO_TEXT,
       END OF c_global_page_action.
 
     CLASS-METHODS:
@@ -36,8 +39,10 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
-    DATA: mo_settings TYPE REF TO zcl_abapgit_settings,
-          mt_hotkeys  TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name.
+    DATA: mo_settings         TYPE REF TO zcl_abapgit_settings,
+          mt_hotkeys          TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name,
+          mx_error            TYPE REF TO zcx_abapgit_exception,
+          mo_exception_viewer TYPE REF TO zcl_abapgit_exception_viewer.
     METHODS html_head
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
@@ -79,15 +84,26 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
         VALUE(rt_hotkeys) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name
       RAISING
         zcx_abapgit_exception.
+
     METHODS get_default_hotkeys
       RETURNING
         VALUE(rt_default_hotkeys) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name.
+
+    METHODS render_error_message_box
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS reg_error_message_panel_click
+      IMPORTING
+        io_html TYPE REF TO zcl_abapgit_html.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
 
   METHOD call_browser.
@@ -197,8 +213,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     DATA: ls_hotkey_action LIKE LINE OF rt_hotkey.
 
-    ls_hotkey_action-name           = |Show hotkeys help|.
-    ls_hotkey_action-action         = c_global_page_action-showhotkeys.
+    ls_hotkey_action-name   = |Show hotkeys help|.
+    ls_hotkey_action-action = c_global_page_action-showhotkeys.
     ls_hotkey_action-hotkey = |?|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey.
 
@@ -301,6 +317,35 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_error_message_box.
+
+    " You should remember that the we have to instantiate ro_html even
+    " it's overwritten further down. Because ADD checks whether it's
+    " bound.
+    CREATE OBJECT ro_html.
+
+    " You should remember that we render the message panel only
+    " if we have an error.
+    IF mx_error IS NOT BOUND.
+      RETURN.
+    ENDIF.
+
+    ro_html = zcl_abapgit_gui_chunk_lib=>render_error_message_box( mx_error ).
+
+    " You should remember that the exception viewer dispatches the events of
+    " error message panel
+    CREATE OBJECT mo_exception_viewer
+      EXPORTING
+        ix_error = mx_error.
+
+    " You should remember that we render the message panel just once
+    " for each exception/error text.
+    CLEAR:
+      mx_error.
+
+  ENDMETHOD.
+
+
   METHOD render_hotkey_overview.
 
     ro_html = zcl_abapgit_gui_chunk_lib=>render_hotkey_overview( me ).
@@ -314,6 +359,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     link_hints( ro_html ).
     insert_hotkeys_to_page( ro_html ).
+    reg_error_message_panel_click( ro_html ).
 
   ENDMETHOD.
 
@@ -355,11 +401,40 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
         call_browser( iv_getdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
+      WHEN  zif_abapgit_definitions=>c_action-goto_source.
+
+        IF mo_exception_viewer IS BOUND.
+          mo_exception_viewer->goto_source( ).
+        ENDIF.
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
+      WHEN  zif_abapgit_definitions=>c_action-show_callstack.
+
+        IF mo_exception_viewer IS BOUND.
+          mo_exception_viewer->show_callstack( ).
+        ENDIF.
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
+      WHEN zif_abapgit_definitions=>c_action-goto_message.
+
+        IF mo_exception_viewer IS BOUND.
+          mo_exception_viewer->goto_message( ).
+        ENDIF.
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
       WHEN OTHERS.
 
         ev_state = zcl_abapgit_gui=>c_event_state-not_handled.
 
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_error_handler~handle_error.
+
+    mx_error = ix_error.
+    rv_handled = abap_true.
 
   ENDMETHOD.
 
@@ -386,6 +461,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( title( ) ).
     ro_html->add( render_hotkey_overview( ) ).
     ro_html->add( render_content( ) ).
+    ro_html->add( render_error_message_box( ) ).
     ro_html->add( footer( ) ).
     ro_html->add( '</body>' ).                              "#EC NOTEXT
 
@@ -401,4 +477,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( '</html>' ).                              "#EC NOTEXT
 
   ENDMETHOD.
+
+  METHOD reg_error_message_panel_click.
+    io_html->add( |errorMessagePanelRegisterClick();| ).
+  ENDMETHOD.
+
 ENDCLASS.

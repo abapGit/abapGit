@@ -61,7 +61,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -208,7 +208,7 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
           lv_s_param   TYPE string,
           lo_settings  TYPE REF TO zcl_abapgit_settings,
           lv_body_size TYPE i,
-          lt_type      TYPE stringtab,
+          lt_type      TYPE string_table,
           lv_selected  TYPE string.
 
     FIELD-SYMBOLS: <lv_type> LIKE LINE OF lt_type.
@@ -390,8 +390,8 @@ CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
-
 ENDCLASS.
