@@ -1,4 +1,4 @@
-CLASS zCL_ABAPGIT_ENVIRONMENT DEFINITION
+CLASS ZCL_ABAPGIT_ENVIRONMENT DEFINITION
   PUBLIC
   FINAL
   CREATE PRIVATE
@@ -6,19 +6,7 @@ CLASS zCL_ABAPGIT_ENVIRONMENT DEFINITION
   GLOBAL FRIENDS zCL_ABAPGIT_FACTORY .
 
   PUBLIC SECTION.
-
-    INTERFACES zif_abapgit_environment .
-
-    ALIASES compare_with_inactive
-      FOR zif_abapgit_environment~compare_with_inactive .
-    ALIASES is_merged
-      FOR zif_abapgit_environment~is_merged .
-    ALIASES is_repo_object_changes_allowed
-      FOR zif_abapgit_environment~is_repo_object_changes_allowed .
-    ALIASES is_restart_required
-      FOR zif_abapgit_environment~is_restart_required .
-    ALIASES is_sap_cloud_platform
-      FOR zif_abapgit_environment~is_sap_cloud_platform .
+    INTERFACES zif_abapgit_environment.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -33,7 +21,7 @@ CLASS ZCL_ABAPGIT_ENVIRONMENT IMPLEMENTATION.
 
 
   METHOD zif_abapgit_environment~compare_with_inactive.
-    rv_result = is_sap_cloud_platform( ).
+    rv_result = zif_abapgit_environment~is_sap_cloud_platform( ).
   ENDMETHOD.
 
 

@@ -1,11 +1,8 @@
 CLASS zcl_abapgit_factory DEFINITION
   PUBLIC
   CREATE PRIVATE
-
-  GLOBAL FRIENDS zcl_abapgit_injector .
-
+  GLOBAL FRIENDS zcl_abapgit_injector.
   PUBLIC SECTION.
-
     CLASS-METHODS get_tadir
       RETURNING
         VALUE(ri_tadir) TYPE REF TO zif_abapgit_tadir .
