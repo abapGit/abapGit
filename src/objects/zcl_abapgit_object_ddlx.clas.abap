@@ -3,24 +3,21 @@ CLASS zcl_abapgit_object_ddlx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
-
-private section.
-
-  data MO_PERSISTENCE type ref to IF_WB_OBJECT_PERSIST .
-
-  methods GET_PERSISTENCE
-    returning
-      value(RI_PERSISTENCE) type ref to IF_WB_OBJECT_PERSIST
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods CLEAR_FIELDS
-    changing
-      !CS_DATA type ANY .
-  methods CLEAR_FIELD
-    importing
-      !IV_FIELDNAME type CSEQUENCE
-    changing
-      !CS_METADATA type ANY .
+  PRIVATE SECTION.
+    DATA mo_persistence TYPE REF TO if_wb_object_persist .
+    METHODS get_persistence
+      RETURNING
+        VALUE(ri_persistence) TYPE REF TO if_wb_object_persist
+      RAISING
+        zcx_abapgit_exception .
+    METHODS clear_fields
+      CHANGING
+        !cs_data TYPE any .
+    METHODS clear_field
+      IMPORTING
+        !iv_fieldname TYPE csequence
+      CHANGING
+        !cs_metadata  TYPE any .
 ENDCLASS.
 
 
