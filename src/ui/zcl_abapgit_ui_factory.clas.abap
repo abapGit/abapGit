@@ -143,7 +143,14 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
       iv_mime_name = 'ZABAPGIT_CSS_THEME_DEFAULT'
       iv_inline    = concat_lines_of( table = lt_inline sep = cl_abap_char_utilities=>newline ) ).
 
-    " TODO theme-dark
+    CLEAR lt_inline.
+    " @@abapmerge include zabapgit_css_theme_dark.w3mi.data.css > _inline '$$'.
+    ro_asset_man->register_asset(
+      iv_url       = 'css/theme-dark.css'
+      iv_type      = 'text/css'
+      iv_cachable  = abap_false
+      iv_mime_name = 'ZABAPGIT_CSS_THEME_DARK'
+      iv_inline    = concat_lines_of( table = lt_inline sep = cl_abap_char_utilities=>newline ) ).
 
     CLEAR lt_inline.
     " @@abapmerge include zabapgit_css_theme_belize_blue.w3mi.data.css > _inline '$$'.

@@ -1,3 +1,5 @@
+CLASS ltcl_test DEFINITION DEFERRED.
+CLASS zcl_abapgit_environment DEFINITION LOCAL FRIENDS ltcl_test.
 
 CLASS ltcl_test DEFINITION FOR TESTING
   DURATION SHORT
@@ -5,7 +7,7 @@ CLASS ltcl_test DEFINITION FOR TESTING
 
   PRIVATE SECTION.
     DATA:
-      mo_cut TYPE REF TO zcl_abapgit_environment.
+      mi_cut TYPE REF TO zif_abapgit_environment.
 
     METHODS:
       setup,
@@ -17,13 +19,13 @@ CLASS ltcl_test IMPLEMENTATION.
 
   METHOD setup.
 
-    CREATE OBJECT mo_cut.
+    CREATE OBJECT mi_cut TYPE zcl_abapgit_environment.
 
   ENDMETHOD.
 
   METHOD is_cloud.
 
-    mo_cut->is_sap_cloud_platform( ).
+    mi_cut->is_sap_cloud_platform( ).
 * no assertions, just make sure the dynamic code runs
 
   ENDMETHOD.

@@ -494,8 +494,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
                                                                iv_ext   = lv_ext ) ).
       lt_local_content = to_page_content( get_page_content( lo_page ) ).
 
-      IF ls_local_page = <ls_remote_page>
-      AND lt_local_content = lt_remote_content.
+      IF ls_local_page = <ls_remote_page> AND lt_local_content = lt_remote_content.
         " no changes -> nothing to do
         CONTINUE.
       ENDIF.
