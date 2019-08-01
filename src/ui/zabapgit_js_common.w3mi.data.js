@@ -23,6 +23,7 @@
 /* exported onOrderByChange  */
 /* exported onTagTypeChange */
 /* exported errorMessagePanelRegisterClick */
+/* exported getIndocStyleSheet */
 
 /**********************************************************
  * Polyfills
@@ -754,7 +755,7 @@ function LinkHints(linkHintHotKey){
   this.linkHintHotKey    = linkHintHotKey;
   this.areHintsDisplayed = false;
   this.pendingPath       = ""; // already typed code prefix
-  this.hintsMap          = this.deployHintContainers(); 
+  this.hintsMap          = this.deployHintContainers();
   this.activatedDropdown = null;
 }
 
@@ -840,7 +841,7 @@ LinkHints.prototype.handleKey = function(event){
       if (!visibleHints) {
         this.displayHints(false);
         if (this.activatedDropdown) this.closeActivatedDropdown();
-      } 
+      }
     }
   }
 };
