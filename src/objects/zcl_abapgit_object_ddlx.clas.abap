@@ -4,27 +4,23 @@ CLASS zcl_abapgit_object_ddlx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
-  PRIVATE SECTION.
+private section.
 
-    DATA mo_tadir_interface TYPE REF TO lif_tadir .
-    DATA mo_persistence TYPE REF TO if_wb_object_persist .
+  data MO_PERSISTENCE type ref to IF_WB_OBJECT_PERSIST .
 
-    METHODS get_persistence
-      RETURNING
-        VALUE(ri_persistence) TYPE REF TO if_wb_object_persist
-      RAISING
-        zcx_abapgit_exception .
-    METHODS clear_fields
-      CHANGING
-        !cs_data TYPE any .
-    METHODS clear_field
-      IMPORTING
-        !iv_fieldname TYPE csequence
-      CHANGING
-        !cs_metadata  TYPE any .
-    METHODS get_tadir_interface
-      RETURNING
-        VALUE(ri_tadir) TYPE REF TO lif_tadir .
+  methods GET_PERSISTENCE
+    returning
+      value(RI_PERSISTENCE) type ref to IF_WB_OBJECT_PERSIST
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods CLEAR_FIELDS
+    changing
+      !CS_DATA type ANY .
+  methods CLEAR_FIELD
+    importing
+      !IV_FIELDNAME type CSEQUENCE
+    changing
+      !CS_METADATA type ANY .
 ENDCLASS.
 
 
@@ -110,16 +106,6 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_tadir_interface.
-    IF mo_tadir_interface IS NOT BOUND.
-      CREATE OBJECT mo_tadir_interface TYPE lcl_tadir
-        EXPORTING
-          io_outer = me.
-    ENDIF.
-    ri_tadir = mo_tadir_interface.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown.
   ENDMETHOD.
@@ -198,7 +184,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
 
         get_persistence( )->save( li_data_model ).
 
-        get_tadir_interface( )->tadir_insert( iv_package ).
+        tadir_insert( iv_package ).
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
