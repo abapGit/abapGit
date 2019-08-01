@@ -15,7 +15,7 @@ a:hover, a:active {
   text-decoration: underline;
 }
 
-img { 
+img {
   border-width: 0px;
   vertical-align: middle;
 }
@@ -69,6 +69,10 @@ div.panel {
 div.dummydiv {
   padding:          0.5em 1em;
   text-align:       center;
+}
+
+a.close-btn {
+  text-decoration: none;
 }
 
 /* STRUCTURE DIVS, HEADER & FOOTER */
@@ -673,6 +677,44 @@ div.info-panel .version-marker {
 
 div.info-panel .update { border:  1px solid; }
 div.info-panel div.info-list td { padding-right: 1em }
+
+/* Error message Panel */
+
+div.message-panel {
+  z-index: 99;
+  box-shadow: 2px 2px 4px 0px hsla(0, 0%, 0%, .1);
+  padding: 12px;
+  margin-left: -48%;
+  position: fixed;
+  bottom: 12px;
+  width: 94%;
+  left: 50%;
+
+  border: 1px solid;
+  border-radius: 5px;
+  border-color: hsl(0, 42%, 64%);
+  background-color: hsla(0, 42%, 90%, 1);
+}
+
+.message-panel-commands {
+  display: none;
+  margin-right: 2em;
+}
+
+.message-panel-commands a {
+  padding: 0em 0.5em;
+  border-left: 1px solid;
+  border-left-color: #ccc;
+}
+
+.message-panel-commands a:first-child {
+  padding-left: 0;
+  border-left: none;
+}
+
+div.message-panel:hover .message-panel-commands {
+  display: block
+}
 
 /* Tooltip text */
 .tooltiptext {

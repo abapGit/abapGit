@@ -61,7 +61,6 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
       li_router    TYPE REF TO zif_abapgit_gui_event_handler,
       li_asset_man TYPE REF TO zif_abapgit_gui_asset_manager.
 
-    DATA lo_error_handler TYPE REF TO lcl_gui_error_handler.
     DATA lo_html_preprocessor TYPE REF TO zcl_abapgit_gui_html_processor.
 
     IF go_gui IS INITIAL.
@@ -72,14 +71,12 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
       lo_html_preprocessor->preserve_css( 'css/common.css' ).
 
       CREATE OBJECT li_router TYPE zcl_abapgit_gui_router.
-      CREATE OBJECT lo_error_handler.
 
       CREATE OBJECT go_gui
         EXPORTING
-          io_component     = li_router
-          ii_error_handler = lo_error_handler
+          io_component      = li_router
           ii_html_processor = lo_html_preprocessor
-          ii_asset_man     = li_asset_man.
+          ii_asset_man      = li_asset_man.
     ENDIF.
     ro_gui = go_gui.
 
@@ -146,7 +143,14 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
       iv_mime_name = 'ZABAPGIT_CSS_THEME_DEFAULT'
       iv_inline    = concat_lines_of( table = lt_inline sep = cl_abap_char_utilities=>newline ) ).
 
-    " TODO theme-dark
+    CLEAR lt_inline.
+    " @@abapmerge include zabapgit_css_theme_dark.w3mi.data.css > _inline '$$'.
+    ro_asset_man->register_asset(
+      iv_url       = 'css/theme-dark.css'
+      iv_type      = 'text/css'
+      iv_cachable  = abap_false
+      iv_mime_name = 'ZABAPGIT_CSS_THEME_DARK'
+      iv_inline    = concat_lines_of( table = lt_inline sep = cl_abap_char_utilities=>newline ) ).
 
     CLEAR lt_inline.
     " @@abapmerge include zabapgit_css_theme_belize_blue.w3mi.data.css > _inline '$$'.

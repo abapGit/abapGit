@@ -51,15 +51,14 @@ CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    SELECT COUNT(*) FROM cross WHERE ( type = 'P' OR
-                               type = 'Q' )
-                              AND name   = lv_paramid.
+    SELECT COUNT(*) FROM cross
+      WHERE ( type = 'P' OR type = 'Q' ) AND name = lv_paramid.
     IF sy-subrc = 0.
       zcx_abapgit_exception=>raise( 'PARA: Parameter is still used' ).
     ELSE.
       SELECT COUNT(*) FROM dd04l BYPASSING BUFFER
-      WHERE  memoryid = lv_paramid
-      AND as4local = 'A'.
+        WHERE memoryid = lv_paramid
+        AND as4local = 'A'.
       IF sy-subrc = 0.
         zcx_abapgit_exception=>raise( 'PARA: Parameter is still used' ).
       ENDIF.

@@ -22,6 +22,7 @@
 /* exported onDirectionChange */
 /* exported onOrderByChange  */
 /* exported onTagTypeChange */
+/* exported errorMessagePanelRegisterClick */
 
 /**********************************************************
  * Polyfills
@@ -1359,4 +1360,23 @@ function GitGraphScroller() { // eslint-disable-line no-unused-vars
   var gitGraphWrapperEl = document.querySelector(".gitGraph-Wrapper");
   var gitGraphscrollWrapperEl = document.querySelector(".gitGraph-scrollWrapper");
   gitGraphWrapperEl.scrollLeft = gitGraphscrollWrapperEl.scrollLeft;
+}
+
+// Click on error message panel toggles longtext
+function errorMessagePanelRegisterClick(){
+  var elMessage = document.getElementById("message");
+  if (elMessage){
+    elMessage.addEventListener("click", function(oEvent){
+      toggleMessageDetail(oEvent);
+    });
+  }
+}
+
+function toggleMessageDetail(oEvent){
+  if (oEvent &&  ( oEvent.target.id === "a_goto_source"
+                || oEvent.target.id === "a_callstack"
+                || oEvent.target.id === "a_goto_message") ) {
+    return;
+  }
+  toggleDisplay("message-detail");
 }
