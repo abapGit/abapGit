@@ -83,7 +83,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
     lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
 
-    IF zcl_abapgit_environment=>is_merged( ) = abap_true
+    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true
         OR lo_settings->get_parallel_proc_disabled( ) = abap_true.
       gv_max_threads = 1.
     ENDIF.

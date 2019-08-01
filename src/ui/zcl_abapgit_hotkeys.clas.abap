@@ -18,6 +18,7 @@ CLASS zcl_abapgit_hotkeys DEFINITION
         RETURNING
           VALUE(rv_yes) TYPE abap_bool.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
       mc_hotkey_interface TYPE string VALUE `ZIF_ABAPGIT_GUI_PAGE_HOTKEY` ##NO_TEXT.
@@ -51,12 +52,12 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_hotkeys IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
 
 
   METHOD get_all_default_hotkeys.
 
-    IF zcl_abapgit_environment=>is_merged( ) = abap_true.
+    IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
       rt_hotkey_actions = get_hotkeys_from_local_intf( io_page ).
     ELSE.
       rt_hotkey_actions = get_hotkeys_from_global_intf( io_page ).
@@ -67,14 +68,6 @@ CLASS zcl_abapgit_hotkeys IMPLEMENTATION.
 
     SORT rt_hotkey_actions BY name.
 
-  ENDMETHOD.
-
-
-  METHOD should_show_hint.
-    IF gv_hint_was_shown = abap_false.
-      rv_yes = abap_true.
-      gv_hint_was_shown = abap_true.
-    ENDIF.
   ENDMETHOD.
 
 
@@ -185,4 +178,11 @@ CLASS zcl_abapgit_hotkeys IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD should_show_hint.
+    IF gv_hint_was_shown = abap_false.
+      rv_yes = abap_true.
+      gv_hint_was_shown = abap_true.
+    ENDIF.
+  ENDMETHOD.
 ENDCLASS.
