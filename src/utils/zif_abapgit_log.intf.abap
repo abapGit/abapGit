@@ -4,10 +4,11 @@ INTERFACE zif_abapgit_log
 
   TYPES:
     BEGIN OF ty_log_out,
-      type     TYPE symsgty,
-      text     TYPE string,
-      obj_type TYPE trobjtype,
-      obj_name TYPE sobj_name,
+      type      TYPE symsgty,
+      text      TYPE string,
+      obj_type  TYPE trobjtype,
+      obj_name  TYPE sobj_name,
+      exception TYPE REF TO cx_root,
     END OF ty_log_out .
   TYPES:
     tty_log_out TYPE STANDARD TABLE OF ty_log_out
@@ -35,7 +36,8 @@ INTERFACE zif_abapgit_log
       !iv_msg  TYPE csequence
       !iv_type TYPE symsgty DEFAULT 'E'
       !iv_rc   TYPE balsort OPTIONAL
-      !is_item TYPE zif_abapgit_definitions=>ty_item OPTIONAL .
+      !is_item TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+      !ix_exc  TYPE REF TO cx_root OPTIONAL.
   METHODS add_error
     IMPORTING
       !iv_msg  TYPE csequence
