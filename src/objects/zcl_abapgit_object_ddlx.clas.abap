@@ -283,7 +283,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
           li_persistence->get(
             EXPORTING
               p_object_key  = lv_object_key
-              p_version     = swbm_version_active
+              p_version     = swbm_version_inactive
             CHANGING
               p_object_data = li_data_model ).
           IF li_data_model->get_object_name( ) IS INITIAL.

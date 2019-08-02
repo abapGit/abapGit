@@ -21,17 +21,14 @@ INTERFACE zif_abapgit_object
   METHODS serialize
     IMPORTING
       !io_xml TYPE REF TO zcl_abapgit_xml_output
-      !ii_log TYPE REF TO zif_abapgit_log
     RAISING
       zcx_abapgit_exception .
   METHODS deserialize
     IMPORTING
-      !iv_package               TYPE devclass
-      !io_xml                   TYPE REF TO zcl_abapgit_xml_input
-      !iv_step                  TYPE ty_deserialization_step
-      !ii_log                   TYPE REF TO zif_abapgit_log
-    RETURNING
-      VALUE(rv_complete_status) TYPE ty_complete_status
+      !iv_package TYPE devclass
+      !io_xml     TYPE REF TO zcl_abapgit_xml_input
+      !iv_step    TYPE ty_deserialization_step
+      !ii_log     TYPE REF TO zif_abapgit_log
     RAISING
       zcx_abapgit_exception .
   METHODS delete
