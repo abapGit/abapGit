@@ -110,12 +110,6 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
       get_link_hint_key
         RETURNING
           VALUE(rv_link_hint_key) TYPE string,
-      get_link_hint_background_color
-        RETURNING
-          VALUE(rv_background_color) TYPE string,
-      set_link_hint_background_color
-        IMPORTING
-          iv_background_color TYPE string,
       set_hotkeys
         IMPORTING
           it_hotkeys TYPE zif_abapgit_definitions=>tty_hotkey,
@@ -158,8 +152,7 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
           ms_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
 
     METHODS:
-      set_default_link_hint_key,
-      set_default_link_hint_bg_color.
+      set_default_link_hint_key.
 
 ENDCLASS.
 
@@ -200,11 +193,6 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
   METHOD get_link_hints_enabled.
     rv_link_hints_enabled = ms_user_settings-link_hints_enabled.
-  ENDMETHOD.
-
-
-  METHOD get_link_hint_background_color.
-    rv_background_color = ms_user_settings-link_hint_background_color.
   ENDMETHOD.
 
 
@@ -301,14 +289,8 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
     set_commitmsg_comment_length( c_commitmsg_comment_length_dft ).
     set_commitmsg_body_size( c_commitmsg_body_size_dft ).
     set_default_link_hint_key( ).
-    set_default_link_hint_bg_color( ).
     set_icon_scaling( '' ).
 
-  ENDMETHOD.
-
-
-  METHOD set_default_link_hint_bg_color.
-    set_link_hint_background_color( |lightgreen| ).
   ENDMETHOD.
 
 
@@ -337,11 +319,6 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
   METHOD set_link_hints_enabled.
     ms_user_settings-link_hints_enabled = iv_link_hints_enabled.
-  ENDMETHOD.
-
-
-  METHOD set_link_hint_background_color.
-    ms_user_settings-link_hint_background_color = iv_background_color.
   ENDMETHOD.
 
 
@@ -402,9 +379,6 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
       set_default_link_hint_key( ).
     ENDIF.
 
-    IF ms_user_settings-link_hint_background_color IS INITIAL.
-      set_default_link_hint_bg_color( ).
-    ENDIF.
   ENDMETHOD.
 
 

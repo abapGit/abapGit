@@ -16,6 +16,7 @@
   --theme-greyscale-medium: #b3b3b3;
   --theme-greyscale-light: #ccc;
   --theme-greyscale-lighter: lightgrey;
+  --theme-linkhint-background: lightgreen;
 }
 
 /* GLOBALS */
@@ -334,9 +335,9 @@ div.info-panel .update {
 }
 
 /* Tooltips text */
-.tooltiptext { color: #000; }
-/* Tooltip arrow */
-.tooltiptext::after { border-color: #555 transparent transparent transparent; }
+.link-hint { color: var(--theme-primary-font-color); }
+.link-hint { background-color: var(--theme-linkhint-background) }
+.link-hint::after { border-top-color: var(--theme-linkhint-background) }
 
 /* HOTKEYS */
 ul.hotkeys span.key-id {

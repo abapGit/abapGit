@@ -336,7 +336,6 @@ INTERFACE zif_abapgit_definitions
       show_default_repo          TYPE abap_bool,
       link_hints_enabled         TYPE abap_bool,
       link_hint_key              TYPE c LENGTH 1,
-      link_hint_background_color TYPE string,
       hotkeys                    TYPE tty_hotkey,
       parallel_proc_disabled     TYPE abap_bool,
       icon_scaling               TYPE c LENGTH 1,
