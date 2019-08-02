@@ -2,19 +2,20 @@ INTERFACE zif_abapgit_object
   PUBLIC .
 
   TYPES:
-    ty_deserialization_step TYPE string .
+    ty_deserialization_step TYPE string.
   TYPES:
-    ty_deserialization_step_tt TYPE STANDARD TABLE OF ty_deserialization_step WITH DEFAULT KEY .
-  TYPES:
-    ty_complete_status TYPE c LENGTH 1 .
+    ty_deserialization_step_tt TYPE STANDARD TABLE OF ty_deserialization_step
+                                          WITH DEFAULT KEY .
 
   DATA mo_files TYPE REF TO zcl_abapgit_objects_files .
+
   CONSTANTS:
     BEGIN OF gc_step_id,
       abap TYPE zif_abapgit_object=>ty_deserialization_step VALUE `ABAP`,
       ddic TYPE zif_abapgit_object=>ty_deserialization_step VALUE `DDIC`,
       late TYPE zif_abapgit_object=>ty_deserialization_step VALUE `LATE`,
-    END OF gc_step_id .
+    END OF gc_step_id.
+
   CONSTANTS c_abap_version_sap_cp TYPE progdir-uccheck VALUE '5' ##NO_TEXT.
   CONSTANTS c_abap_version_default TYPE progdir-uccheck VALUE 'X' ##NO_TEXT.
 
