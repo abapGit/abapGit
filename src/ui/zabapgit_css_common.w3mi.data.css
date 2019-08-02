@@ -53,6 +53,7 @@ input:focus, textarea:focus {
 .pad-right    { padding-right: 6px; }
 .inline       { display: inline; }
 .hidden       { visibility: hidden; }
+.nodisplay    { display: none }
 
 /* PANELS */
 div.panel {
@@ -527,7 +528,7 @@ div.tutorial h2 { font-size: 14pt;}
 }
 .nav-container.float-right ul ul { left: auto; right: 0; }
 .nav-container ul li.current-menu-item { font-weight: 700; }
-.nav-container ul li.block ul { display: block; }
+.nav-container ul li.force-nav-hover ul { display: block; }
 .nav-container ul li:hover > ul { display: block; }
 
 /* special selection style for 1st level items (see also .corner below) */
@@ -717,26 +718,23 @@ div.message-panel:hover .message-panel-commands {
 }
 
 /* Tooltip text */
-.tooltiptext {
-    line-height: 15px;
-    width: 60px;
+.link-hint {
+    line-height: 1em;
     text-align: center;
-    padding: 5px 0;
-    border-radius: 6px;
+    padding: 5px 15px;
+    border-radius: 4px;
 
     /* Position the tooltip text */
     position: absolute;
     z-index: 1;
     margin-left: -60px;
     margin-top: -30px;
-
-    /* Fade in tooltip */
-    opacity: 1;
-    transition: opacity 0.3s;
 }
 
+.link-hint .pending { color: hsla(0, 0%, 0%, 0.2); }
+
 /* Tooltip arrow */
-.tooltiptext::after {
+.link-hint::after {
     content: "";
     position: absolute;
     top: 100%;
@@ -744,6 +742,7 @@ div.message-panel:hover .message-panel-commands {
     margin-left: -5px;
     border-width: 5px;
     border-style: solid;
+    border-color: transparent;
 }
 
 /* HOTKEYS */

@@ -103,7 +103,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
 
   METHOD call_browser.
@@ -288,12 +288,10 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
           lv_background_color TYPE string.
 
     lv_link_hint_key = mo_settings->get_link_hint_key( ).
-    lv_background_color = mo_settings->get_link_hint_background_color( ).
 
-    IF mo_settings->get_link_hints_enabled( ) = abap_true
-    AND lv_link_hint_key IS NOT INITIAL.
+    IF mo_settings->get_link_hints_enabled( ) = abap_true AND lv_link_hint_key IS NOT INITIAL.
 
-      io_html->add( |setLinkHints("{ lv_link_hint_key }","{ lv_background_color }");| ).
+      io_html->add( |activateLinkHints("{ lv_link_hint_key }");| ).
       io_html->add( |setInitialFocusWithQuerySelector('a span', true);| ).
       io_html->add( |enableArrowListNavigation();| ).
 
@@ -314,6 +312,11 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ro_html->add( '</head>' ).                              "#EC NOTEXT
     ro_html->add( '</html>' ).                              "#EC NOTEXT
 
+  ENDMETHOD.
+
+
+  METHOD reg_error_message_panel_click.
+    io_html->add( |errorMessagePanelRegisterClick();| ).
   ENDMETHOD.
 
 
@@ -393,6 +396,14 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_gui_error_handler~handle_error.
+
+    mx_error = ix_error.
+    rv_handled = abap_true.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     CASE iv_action.
@@ -427,14 +438,6 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
         ev_state = zcl_abapgit_gui=>c_event_state-not_handled.
 
     ENDCASE.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_error_handler~handle_error.
-
-    mx_error = ix_error.
-    rv_handled = abap_true.
 
   ENDMETHOD.
 
@@ -477,9 +480,4 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ro_html->add( '</html>' ).                              "#EC NOTEXT
 
   ENDMETHOD.
-
-  METHOD reg_error_message_panel_click.
-    io_html->add( |errorMessagePanelRegisterClick();| ).
-  ENDMETHOD.
-
 ENDCLASS.

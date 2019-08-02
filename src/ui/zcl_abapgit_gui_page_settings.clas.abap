@@ -230,11 +230,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
       mo_settings->set_link_hint_key( |{ <ls_post_field>-value }| ).
     ENDIF.
 
-    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'link_hint_background_color'.
-    IF sy-subrc = 0.
-      mo_settings->set_link_hint_background_color( |{ <ls_post_field>-value }| ).
-    ENDIF.
-
     IF is_post_field_checked( 'parallel_proc_disabled' ) = abap_true.
       mo_settings->set_parallel_proc_disabled( abap_true ).
     ELSE.
@@ -609,7 +604,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ENDIF.
 
     lv_link_hint_key = mo_settings->get_link_hint_key( ).
-    lv_link_background_color = mo_settings->get_link_hint_background_color( ).
 
     CREATE OBJECT ro_html.
     ro_html->add( |<h2>Vimium like link hints</h2>| ).
@@ -619,11 +613,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ro_html->add( |<br>| ).
     ro_html->add( |<input type="text" name="link_hint_key" size="1" maxlength="1" value="{ lv_link_hint_key }" |
                && |> Single key to activate links| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<input type="text" name="link_hint_background_color" size="20" maxlength="20"|
-               && | value="{ lv_link_background_color }"|
-               && |> Background Color (HTML colors e.g. lightgreen or #42f47a)| ).
 
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).
