@@ -14,7 +14,7 @@
 /* exported perfLog */
 /* exported perfClear */
 /* exported enableArrowListNavigation */
-/* exported setLinkHints */
+/* exported activateLinkHints */
 /* exported setKeyBindings */
 /* exported preparePatch */
 /* exported registerStagePatch */
@@ -23,6 +23,7 @@
 /* exported onOrderByChange  */
 /* exported onTagTypeChange */
 /* exported errorMessagePanelRegisterClick */
+/* exported getIndocStyleSheet */
 
 /**********************************************************
  * Polyfills
@@ -56,7 +57,7 @@ if (!Function.prototype.bind) {
   };
 }
 
-// String includes polyfill, taken from https://developer.mozilla.org/de/docs/Web/JavaScript/Reference/Global_Objects/String/includes
+// String includes polyfill, taken from https://developer.mozilla.org
 if (!String.prototype.includes) {
   String.prototype.includes = function(search, start) {
     "use strict";
@@ -70,6 +71,16 @@ if (!String.prototype.includes) {
       return this.indexOf(search, start) !== -1;
     }
   };
+}
+
+// String startsWith polyfill, taken from https://developer.mozilla.org
+if (!String.prototype.startsWith) {
+  Object.defineProperty(String.prototype, "startsWith", {
+    value: function(search, pos) {
+      pos = !pos || pos < 0 ? 0 : +pos;
+      return this.substring(pos, pos + search.length) === search;
+    }
+  });
 }
 
 /**********************************************************
@@ -194,10 +205,23 @@ function onDirectionChange(oSelectObject){
 }
 
 function findStyleSheetByName(name) {
-  var classes = document.styleSheets[0].cssRules || document.styleSheets[0].rules;
-  for (var i = 0; i < classes.length; i++) {
-    if (classes[i].selectorText === name) return classes[i];
+  for (var s = 0; s < document.styleSheets.length; s++) {
+    var styleSheet = document.styleSheets[s];
+    var classes    = styleSheet.cssRules || styleSheet.rules;
+    for (var i = 0; i < classes.length; i++) {
+      if (classes[i].selectorText === name) return classes[i];
+    }
   }
+}
+
+function getIndocStyleSheet() {
+  for (var s = 0; s < document.styleSheets.length; s++) {
+    if (!document.styleSheets[s].href) return document.styleSheets[s]; // One with empty href
+  }
+  // None found ? create one
+  var style = document.createElement("style");
+  document.head.appendChild(style);
+  return style.sheet;
 }
 
 function toggleRepoListDetail() {
@@ -725,196 +749,163 @@ function enableArrowListNavigation() {
 
 }
 
-function LinkHints(sLinkHintKey, sColor){
-  this.sLinkHintKey = sLinkHintKey;
-  this.sColor = sColor;
-  this.oTooltipMap = {};
-  this.bTooltipsOn = false;
-  this.sPending = "";
-  this.aTooltipElements = document.querySelectorAll("span.tooltiptext");
+/* LINK HINTS - Vimium like link hints */
+
+function LinkHints(linkHintHotKey){
+  this.linkHintHotKey    = linkHintHotKey;
+  this.areHintsDisplayed = false;
+  this.pendingPath       = ""; // already typed code prefix
+  this.hintsMap          = this.deployHintContainers();
+  this.activatedDropdown = null;
 }
 
-LinkHints.prototype.renderTooltip = function (oTooltip, iTooltipCounter) {
-  if (this.bTooltipsOn) {
-    oTooltip.classList.remove("hidden");
-  } else {
-    oTooltip.classList.add("hidden");
-  }
-  oTooltip.innerHTML = iTooltipCounter;
-  oTooltip.style.backgroundColor = this.sColor;
-  this.oTooltipMap[iTooltipCounter] = oTooltip;
+LinkHints.prototype.getHintStartValue = function(targetsCount){
+  // if we have 321 tooltips we start from 100
+  var maxHintStringLength = targetsCount.toString().length;
+  return Math.pow(10, maxHintStringLength - 1);
 };
 
-LinkHints.prototype.getTooltipStartValue = function(iToolTipCount){
+LinkHints.prototype.deployHintContainers = function() {
 
-  // if whe have 333 tooltips we start from 100
-  return Math.pow(10,iToolTipCount.toString().length - 1);
+  var hintTargets = document.querySelectorAll("a, input[type='checkbox']");
+  var codeCounter = this.getHintStartValue(hintTargets.length);
+  var hintsMap    = { first: codeCounter };
 
-};
+  // <span class="link-hint" data-code="123">
+  //   <span class="pending">12</span><span>3</span>
+  // </span>
+  for (var i = 0, N = hintTargets.length; i < N; i++) {
+    var hint = {};
+    hint.container     = document.createElement("span");
+    hint.pendingSpan   = document.createElement("span");
+    hint.remainingSpan = document.createElement("span");
+    hint.parent        = hintTargets[i];
+    hint.code          = codeCounter.toString();
 
-LinkHints.prototype.renderTooltips = function () {
+    hint.container.appendChild(hint.pendingSpan);
+    hint.container.appendChild(hint.remainingSpan);
 
-  // all possible links which should be accessed via tooltip have
-  // sub span which is hidden by default. If we like to show the
-  // tooltip we have to toggle the css class 'hidden'.
-  //
-  // We use numeric values for the tooltip label. Maybe we can
-  // support also alphanumeric chars in the future. Then we have to
-  // calculate permutations and that's work. So for the sake of simplicity
-  // we stick to numeric values and just increment them.
+    hint.pendingSpan.classList.add("pending");
+    hint.container.classList.add("link-hint");
+    hint.container.classList.add("nodisplay");            // hide by default
+    hint.container.dataset.code = codeCounter.toString(); // not really needed, more for debug
 
-  var
-    iTooltipCounter = this.getTooltipStartValue(this.aTooltipElements.length);
-
-  [].forEach.call(this.aTooltipElements, function(oTooltip){
-    iTooltipCounter += 1;
-    this.renderTooltip(oTooltip, iTooltipCounter);
-  }.bind(this));
-
-};
-
-LinkHints.prototype.toggleAllTooltips = function () {
-
-  this.sPending = "";
-  this.bTooltipsOn = !this.bTooltipsOn;
-  this.renderTooltips();
-
-};
-
-LinkHints.prototype.disableTooltips = function(){
-  this.sPending = "";
-  this.bTooltipsOn = false;
-};
-
-LinkHints.prototype.removeAllTooltips = function () {
-
-  this.disableTooltips();
-
-  [].forEach.call(this.aTooltipElements, function (oTooltip) {
-    oTooltip.classList.add("hidden");
-  });
-
-};
-
-LinkHints.prototype.filterTooltips = function () {
-
-  Object
-    .keys(this.oTooltipMap)
-    .forEach(function (sKey) {
-
-      // we try to partially match, but only from the beginning!
-      var regex = new RegExp("^" + this.sPending);
-      var oTooltip = this.oTooltipMap[sKey];
-
-      if (regex.test(sKey)) {
-        // we have a partial match, grey out the matched part
-        oTooltip.innerHTML = sKey.replace(regex, "<div style='display:inline;color:lightgray'>" + this.sPending + "</div>");
-      } else {
-        // and hide the not matched tooltips
-        oTooltip.classList.add("hidden");
-      }
-
-    }.bind(this));
-
-};
-
-LinkHints.prototype.activateDropDownMenu = function (oTooltip) {
-  // to enable link hint navigation for drop down menu, we must expand
-  // like if they were hovered
-  oTooltip.parentElement.parentElement.classList.toggle("block");
-};
-
-
-LinkHints.prototype.tooltipActivate = function (oTooltip) {
-
-  // a tooltips was successfully specified, so we try to trigger the link
-  // and remove all tooltips
-  this.removeAllTooltips();
-
-  // we have technically 2 scenarios
-  // 1) hint to a checkbox: as input field cannot include tags
-  //    we place the span after input
-  // 2) hint to a link: the span in included in the anchor tag
-
-  var elInput = oTooltip.parentElement.querySelector("input");
-
-  if (elInput) {
-    // case 1) toggle the checkbox
-    elInput.click();
-  } else {
-    // case 2) click the link
-    oTooltip.parentElement.click();
+    if (hintTargets[i].nodeName === "INPUT") {
+      // does not work if inside the input, so appending right after
+      hintTargets[i].insertAdjacentElement("afterend", hint.container);
+    } else {
+      hintTargets[i].appendChild(hint.container);
+    }
+    hintsMap[codeCounter++] = hint;
   }
 
-  // in case it is a dropdownmenu we have to expand and focus it
-  this.activateDropDownMenu(oTooltip);
-  oTooltip.parentElement.focus();
-
+  hintsMap.last = codeCounter - 1;
+  return hintsMap;
 };
 
-LinkHints.prototype.onkeypress = function(oEvent){
+LinkHints.prototype.getHandler = function() {
+  return this.handleKey.bind(this);
+};
 
-  if (oEvent.defaultPrevented) {
+LinkHints.prototype.handleKey = function(event){
+
+  if (event.defaultPrevented) {
     return;
   }
 
-  var activeElementType = ((document.activeElement && document.activeElement.nodeName) || "");
+  var activeElementType = (document.activeElement && document.activeElement.nodeName) || "";
 
   // link hints are disabled for input and textareas for obvious reasons.
   // Maybe we must add other types here in the future
-  if (oEvent.key === this.sLinkHintKey && activeElementType !== "INPUT" && activeElementType !== "TEXTAREA") {
+  if (event.key === this.linkHintHotKey && activeElementType !== "INPUT" && activeElementType !== "TEXTAREA") {
 
-    this.toggleAllTooltips();
+    // on user hide hints, close an opened dropdown too
+    if (this.areHintsDisplayed && this.activatedDropdown) this.closeActivatedDropdown();
 
-  } else if (this.bTooltipsOn === true) {
+    this.pendingPath = "";
+    this.displayHints(!this.areHintsDisplayed);
 
-    // the user tries to reach a tooltip
-    this.sPending += oEvent.key;
-    var oTooltip = this.oTooltipMap[this.sPending];
+  } else if (this.areHintsDisplayed) {
 
-    if (oTooltip) {
-      // we are there, we have a fully specified tooltip. Let's activate it
-      this.tooltipActivate(oTooltip);
+    // the user tries to reach a hint
+    this.pendingPath += event.key;
+    var hint = this.hintsMap[this.pendingPath];
+
+    if (hint) { // we are there, we have a fully specified tooltip. Let's activate it
+      this.displayHints(false);
+      this.hintActivate(hint);
     } else {
       // we are not there yet, but let's filter the link so that only
       // the partially matched are shown
-      this.filterTooltips();
-      this.disableTooltipsIfNoTooltipIsVisible();
+      var visibleHints = this.filterHints();
+      if (!visibleHints) {
+        this.displayHints(false);
+        if (this.activatedDropdown) this.closeActivatedDropdown();
+      }
     }
-
-  }
-
-};
-
-LinkHints.prototype.disableTooltipsIfNoTooltipIsVisible = function(){
-
-  if (!this.isAnyTooltipVisible()) {
-    this.disableTooltips();
   }
 };
 
-LinkHints.prototype.isAnyTooltipVisible = function(){
-
-  return (Object
-    .keys(this.oTooltipMap)
-    .filter(function (key) {
-      return !this.oTooltipMap[key].classList.contains("hidden");
-    }.bind(this)).length > 0);
-
+LinkHints.prototype.closeActivatedDropdown = function() {
+  if (!this.activatedDropdown) return;
+  this.activatedDropdown.classList.remove("force-nav-hover");
+  this.activatedDropdown = null;
 };
 
-// Vimium like link hints
-function setLinkHints(sLinkHintKey, sColor) {
-
-  if (!sLinkHintKey || !sColor) {
-    return;
+LinkHints.prototype.displayHints = function(isActivate) {
+  this.areHintsDisplayed = isActivate;
+  for (var i = this.hintsMap.first; i <= this.hintsMap.last; i++) {
+    var hint = this.hintsMap[i];
+    if (isActivate) {
+      hint.container.classList.remove("nodisplay");
+      hint.pendingSpan.innerText   = "";
+      hint.remainingSpan.innerText = hint.code;
+    } else {
+      hint.container.classList.add("nodisplay");
+    }
   }
+};
 
-  var oLinkHint = new LinkHints(sLinkHintKey, sColor);
+LinkHints.prototype.hintActivate = function (hint) {
+  if (hint.parent.nodeName === "A"
+    // hint.parent.href doesn't have a # at the end while accessing dropdowns the first time.
+    // Seems like a idiosyncrasy of SAPGUI's IE. So let's ignore the last character.
+    && ( hint.parent.href.substr(0, hint.parent.href.length - 1) === document.location.href ) // href is #
+    && !hint.parent.onclick                         // no handler
+    && hint.parent.parentElement && hint.parent.parentElement.nodeName === "LI") {
+    // probably it is a dropdown ...
+    this.activatedDropdown = hint.parent.parentElement;
+    this.activatedDropdown.classList.toggle("force-nav-hover");
+    hint.parent.focus();
+  } else {
+    hint.parent.click();
+    if (this.activatedDropdown) this.closeActivatedDropdown();
+  }
+};
 
-  document.addEventListener("keypress", oLinkHint.onkeypress.bind(oLinkHint));
+LinkHints.prototype.filterHints = function () {
+  var visibleHints = 0;
+  for (var i = this.hintsMap.first; i <= this.hintsMap.last; i++) {
+    var hint = this.hintsMap[i];
+    if (i.toString().startsWith(this.pendingPath)) {
+      hint.pendingSpan.innerText   = this.pendingPath;
+      hint.remainingSpan.innerText = hint.code.substring(this.pendingPath.length);
+      // hint.container.classList.remove("nodisplay"); // for backspace
+      visibleHints++;
+    } else {
+      hint.container.classList.add("nodisplay");
+    }
+  }
+  return visibleHints;
+};
 
+function activateLinkHints(linkHintHotKey) {
+  if (!linkHintHotKey) return;
+  var oLinkHint = new LinkHints(linkHintHotKey);
+  document.addEventListener("keypress", oLinkHint.getHandler());
 }
+
+/* HOTKEYS */
 
 function Hotkeys(oKeyMap){
 
