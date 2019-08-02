@@ -17,7 +17,9 @@
       "define": false,
       "endselect": true,
       "execSQL": true,
-      "kernelCall": true
+      "kernelCall": true,
+      "communication": true,
+      "statics": false
     },
     "breakpoint": {
       "enabled": true,
@@ -25,7 +27,8 @@
     },
     "check_variables": {
       "enabled": false,
-      "exclude": []
+      "exclude": ["zcl_abapgit_ecatt"],
+      "errorNamespace": "^(Z|Y)"
     },
     "class_attribute_names": {
       "enabled": true,
@@ -219,7 +222,7 @@
       "doma": "^Z",
       "msag": "^Z",
       "tran": "^Z",
-      "enqu": "^Z",
+      "enqu": "^EZ",
       "auth": "^Z",
       "pinf": "^Z"
     },
@@ -284,7 +287,7 @@
     },
     "superclass_final": {
       "enabled": false,
-      "exclude": []
+      "exclude": ["zcl_abapgit_ecatt"]
     },
     "tabl_enhancement_category": {
       "enabled": true,
