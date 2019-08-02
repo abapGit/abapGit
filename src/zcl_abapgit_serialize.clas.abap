@@ -248,7 +248,9 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
                        iv_path      = is_tadir-path ).
       CATCH zcx_abapgit_exception INTO lx_error.
         IF NOT mi_log IS INITIAL.
-          mi_log->add_error( lx_error->get_text( ) ).
+          mi_log->add_exception(
+              ix_exc  = lx_error
+              is_item = ls_fils_item-item ).
         ENDIF.
     ENDTRY.
 
