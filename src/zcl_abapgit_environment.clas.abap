@@ -68,7 +68,7 @@ CLASS ZCL_ABAPGIT_ENVIRONMENT IMPLEMENTATION.
         CALL METHOD ('CL_APJ_SCP_TOOLS')=>('IS_RESTART_REQUIRED')
           RECEIVING
             restart_required = rv_result.
-      CATCH cx_sy_dyn_call_illegal_method.
+      CATCH cx_sy_dyn_call_illegal_method cx_sy_dyn_call_illegal_class.
         rv_result = abap_false.
     ENDTRY.
   ENDMETHOD.
