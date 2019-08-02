@@ -36,7 +36,7 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
         VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata .
     METHODS corr_insert
       IMPORTING
-        !iv_package      TYPE devclass
+        !iv_package TYPE devclass
         !iv_object_class TYPE any OPTIONAL
       RAISING
         zcx_abapgit_exception .
