@@ -15,9 +15,10 @@ CLASS zcl_abapgit_log DEFINITION
       END OF ty_msg .
     TYPES:
       BEGIN OF ty_log, "in order of occurrence
-        msg  TYPE ty_msg,
-        rc   TYPE balsort,
-        item TYPE zif_abapgit_definitions=>ty_item,
+        msg       TYPE ty_msg,
+        rc        TYPE balsort,
+        item      TYPE zif_abapgit_definitions=>ty_item,
+        exception TYPE REF TO cx_root,
       END OF ty_log .
 
     DATA:
@@ -34,7 +35,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
+CLASS zcl_abapgit_log IMPLEMENTATION.
 
 
   METHOD get_messages_status.
@@ -67,10 +68,11 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_log> LIKE LINE OF mt_log.
 
     APPEND INITIAL LINE TO mt_log ASSIGNING <ls_log>.
-    <ls_log>-msg-text = iv_msg.
-    <ls_log>-msg-type = iv_type.
-    <ls_log>-rc       = iv_rc.
-    <ls_log>-item     = is_item.
+    <ls_log>-msg-text  = iv_msg.
+    <ls_log>-msg-type  = iv_type.
+    <ls_log>-rc        = iv_rc.
+    <ls_log>-item      = is_item.
+    <ls_log>-exception = ix_exc.
 
   ENDMETHOD.
 
@@ -94,7 +96,8 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
       lv_msg = lx_exc->get_text( ).
       zif_abapgit_log~add( iv_msg  = lv_msg
                            iv_type = 'E'
-                           is_item = is_item ).
+                           is_item = is_item
+                           ix_exc  = lx_exc ).
       IF lx_exc->previous IS BOUND.
         lx_exc = lx_exc->previous.
       ELSE.
@@ -189,10 +192,11 @@ CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
     DATA ls_msg TYPE zif_abapgit_log~ty_log_out.
     FIELD-SYMBOLS <ls_log> TYPE ty_log.
     LOOP AT mt_log ASSIGNING <ls_log>.
-      ls_msg-type     = <ls_log>-msg-type.
-      ls_msg-text     = <ls_log>-msg-text.
-      ls_msg-obj_type = <ls_log>-item-obj_type.
-      ls_msg-obj_name = <ls_log>-item-obj_name.
+      ls_msg-type      = <ls_log>-msg-type.
+      ls_msg-text      = <ls_log>-msg-text.
+      ls_msg-obj_type  = <ls_log>-item-obj_type.
+      ls_msg-obj_name  = <ls_log>-item-obj_name.
+      ls_msg-exception = <ls_log>-exception.
       APPEND ls_msg TO rt_msg.
     ENDLOOP.
   ENDMETHOD.
