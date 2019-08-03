@@ -40,6 +40,10 @@ CLASS ltcl_normalize_program_name IMPLEMENTATION.
       act = mo_chunk_lib->normalize_program_name( 'ZABAPGIT_FULL' )
       exp = `ZABAPGIT_FULL` ).
 
+    cl_abap_unit_assert=>assert_equals(
+      act = mo_chunk_lib->normalize_program_name( 'ZSOME_PROG_ENDING_WITH_CP' )
+      exp = `ZSOME_PROG_ENDING_WITH_CP` ).
+
   ENDMETHOD.
 
 ENDCLASS.
