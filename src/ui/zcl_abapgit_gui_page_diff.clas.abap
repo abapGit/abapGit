@@ -429,10 +429,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
                     iv_id  = 'stage'
                     iv_typ = zif_abapgit_html=>c_action_type-dummy
                      ) ##NO_TEXT.
+    ELSE.
+      ro_menu->add( iv_txt = 'Split/Unified view'
+                    iv_act = c_actions-toggle_unified ) ##NO_TEXT.
     ENDIF.
 
-    ro_menu->add( iv_txt = 'Split/Unified view'
-                  iv_act = c_actions-toggle_unified ) ##NO_TEXT.
 
   ENDMETHOD.
 
