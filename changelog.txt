@@ -8,6 +8,18 @@ Legend
 + : added
 - : removed
 
+2019-08-05 v1.89.0
+------------------
++ belize and dark themes
+* ADT jump for package link and transports
++ additional gateway support
+* consistent sort ordering of files
+* misc fixes for dynpros
+* show error when pushing to protected branch
+* show log for offline install
++ FUGR serialization of text pool
++ new error GUI
+
 2019-06-22 v1.88.0
 ------------------
 * parallel serialization, show errors
