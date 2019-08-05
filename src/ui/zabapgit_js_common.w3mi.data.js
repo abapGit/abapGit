@@ -786,6 +786,12 @@ LinkHints.prototype.deployHintContainers = function() {
 
     hint.pendingSpan.classList.add("pending");
     hint.container.classList.add("link-hint");
+    if (hint.parent.nodeName === "INPUT"){
+      hint.container.classList.add("link-hint-input");
+    } else {
+      hint.container.classList.add("link-hint-a");
+    }
+
     hint.container.classList.add("nodisplay");            // hide by default
     hint.container.dataset.code = codeCounter.toString(); // not really needed, more for debug
 
