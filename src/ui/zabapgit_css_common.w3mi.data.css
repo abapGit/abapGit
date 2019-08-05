@@ -727,8 +727,15 @@ div.message-panel:hover .message-panel-commands {
     /* Position the tooltip text */
     position: absolute;
     z-index: 1;
-    margin-left: -60px;
     margin-top: -30px;
+}
+
+.link-hint-a {
+  margin-left: -60px;
+}
+
+.link-hint-input {
+  margin-left: -30px;
 }
 
 .link-hint .pending { color: hsla(0, 0%, 0%, 0.2); }
