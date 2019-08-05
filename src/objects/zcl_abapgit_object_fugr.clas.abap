@@ -3,6 +3,13 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
+    METHODS:
+      constructor
+        IMPORTING
+          is_item     TYPE zif_abapgit_definitions=>ty_item
+          iv_language TYPE spras
+        RAISING
+          zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -36,6 +43,7 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       END OF ty_tpool_i18n .
     TYPES:
       tt_tpool_i18n TYPE STANDARD TABLE OF ty_tpool_i18n .
+    DATA: mv_corrnum TYPE e070use-ordernum.
 
     METHODS update_where_used
       IMPORTING
@@ -136,7 +144,17 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
+CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
+
+  METHOD constructor.
+
+    super->constructor(
+               is_item     = is_item
+               iv_language = iv_language ).
+
+    mv_corrnum = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
+
+  ENDMETHOD.
 
 
   METHOD are_exceptions_class_based.
@@ -236,6 +254,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
           exception_class         = <ls_func>-exception_classes
           namespace               = lv_namespace
           remote_basxml_supported = <ls_func>-remote_basxml
+          corrnum                 = mv_corrnum
         IMPORTING
           function_include        = lv_include
         TABLES
@@ -392,6 +411,8 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
         namespace               = lv_namespace
         devclass                = iv_package
         unicode_checks          = lv_abap_version
+        corrnum                 = mv_corrnum
+        suppress_corr_check     = abap_false
       EXCEPTIONS
         name_already_exists     = 1
         name_not_correct        = 2
@@ -952,6 +973,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
         area                   = lv_area
         suppress_popups        = abap_true
         skip_progress_ind      = abap_true
+        corrnum                = mv_corrnum
       EXCEPTIONS
         canceled_in_corr       = 1
         enqueue_system_failure = 2
