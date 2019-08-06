@@ -176,9 +176,12 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
           lv_group     TYPE rs38l-area,
           lv_namespace TYPE rs38l-namespace,
           lt_source    TYPE TABLE OF abaptxt255,
-          lv_msg       TYPE string.
+          lv_msg       TYPE string,
+          lv_corrnum   TYPE e070use-ordernum.
 
     FIELD-SYMBOLS: <ls_func> LIKE LINE OF it_functions.
+
+    lv_corrnum   = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
 
     LOOP AT it_functions ASSIGNING <ls_func>.
 
@@ -236,6 +239,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
           exception_class         = <ls_func>-exception_classes
           namespace               = lv_namespace
           remote_basxml_supported = <ls_func>-remote_basxml
+          corrnum                 = lv_corrnum
         IMPORTING
           function_include        = lv_include
         TABLES
@@ -353,7 +357,8 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
           lv_areat        TYPE tlibt-areat,
           lv_stext        TYPE tftit-stext,
           lv_group        TYPE rs38l-area,
-          lv_abap_version TYPE trdir-uccheck.
+          lv_abap_version TYPE trdir-uccheck,
+          lv_corrnum      TYPE e070use-ordernum.
 
     lv_abap_version = get_abap_version( io_xml ).
     lv_complete = ms_item-obj_name.
@@ -384,6 +389,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'AREAT'
                   CHANGING cg_data = lv_areat ).
     lv_stext = lv_areat.
+    lv_corrnum = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
 
     CALL FUNCTION 'RS_FUNCTION_POOL_INSERT'
       EXPORTING
@@ -392,6 +398,8 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
         namespace               = lv_namespace
         devclass                = iv_package
         unicode_checks          = lv_abap_version
+        corrnum                 = lv_corrnum
+        suppress_corr_check     = abap_false
       EXCEPTIONS
         name_already_exists     = 1
         name_not_correct        = 2
@@ -940,18 +948,21 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
 
     DATA: lv_area     TYPE rs38l-area,
-          lt_includes TYPE ty_sobj_name_tt.
+          lt_includes TYPE ty_sobj_name_tt,
+          lv_corrnum  TYPE e070use-ordernum.
 
 
     lt_includes = includes( ).
 
     lv_area = ms_item-obj_name.
+    lv_corrnum = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
 
     CALL FUNCTION 'RS_FUNCTION_POOL_DELETE'
       EXPORTING
         area                   = lv_area
         suppress_popups        = abap_true
         skip_progress_ind      = abap_true
+        corrnum                = lv_corrnum
       EXCEPTIONS
         canceled_in_corr       = 1
         enqueue_system_failure = 2
