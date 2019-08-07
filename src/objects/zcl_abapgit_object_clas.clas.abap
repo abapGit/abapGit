@@ -95,7 +95,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
     mi_object_oriented_object_fct->generate_locals(
       is_key                   = ls_class_key
-      iv_force                 = seox_true
+      iv_force                 = abap_true
       it_local_definitions     = lt_local_definitions
       it_local_implementations = lt_local_implementations
       it_local_macros          = lt_local_macros
@@ -401,11 +401,11 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
     CALL FUNCTION 'SEO_BUFFER_REFRESH'
       EXPORTING
         version = seoc_version_active
-        force   = seox_true.
+        force   = abap_true.
     CALL FUNCTION 'SEO_BUFFER_REFRESH'
       EXPORTING
         version = seoc_version_inactive
-        force   = seox_true.
+        force   = abap_true.
 
     lt_source = mi_object_oriented_object_fct->serialize_abap( ls_class_key ).
 

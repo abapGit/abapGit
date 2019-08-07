@@ -118,7 +118,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
 
     CALL FUNCTION 'SEO_METHOD_GENERATE_INCLUDE'
       EXPORTING
-        suppress_mtdkey_check          = seox_true
+        suppress_mtdkey_check          = abap_true
         mtdkey                         = ls_mtdkey
       EXCEPTIONS
         not_existing                   = 1
@@ -151,7 +151,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
     CALL FUNCTION 'SEO_CLASS_GENERATE_CLASSPOOL'
       EXPORTING
         clskey                        = ls_clskey
-        suppress_corr                 = seox_true
+        suppress_corr                 = abap_true
       EXCEPTIONS
         not_existing                  = 1
         model_only                    = 2
@@ -252,7 +252,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
 
     DATA: lo_update     TYPE REF TO cl_oo_class_section_source,
           ls_clskey     TYPE seoclskey,
-          lv_scan_error TYPE seox_boolean.
+          lv_scan_error TYPE abap_bool.
 
 
     ls_clskey-clsname = iv_name.
@@ -264,7 +264,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
             exposure                      = iv_exposure
             state                         = 'A'
             source                        = it_source
-            suppress_constrctr_generation = seox_true
+            suppress_constrctr_generation = abap_true
           EXCEPTIONS
             class_not_existing            = 1
             read_source_error             = 2
@@ -286,7 +286,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error instantiating CL_OO_CLASS_SECTION_SOURCE. Subrc = { sy-subrc }| ).
     ENDIF.
 
-    lo_update->set_dark_mode( seox_true ).
+    lo_update->set_dark_mode( abap_true ).
     TRY.
         CALL METHOD lo_update->('SET_AMDP_SUPPORT')
           EXPORTING
