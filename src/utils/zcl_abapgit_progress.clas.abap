@@ -45,6 +45,8 @@ CLASS ZCL_ABAPGIT_PROGRESS IMPLEMENTATION.
 
     IF rv_pct = 100.
       rv_pct = 99.
+    ELSEIF rv_pct = 0.
+      rv_pct = 1.
     ENDIF.
 
   ENDMETHOD.
