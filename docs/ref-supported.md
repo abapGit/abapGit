@@ -48,8 +48,8 @@ FORM | SAPscript form | Yes
 FUGR | Function Group | Yes
 FUGS | Function Group with Customer Include: SAP Part | [#2851](https://github.com/larshp/abapGit/issues/2851)
 FUGX | Function Group with Customer Include: Customer Part | [#2851](https://github.com/larshp/abapGit/issues/2851)
-G4BA | SAP Gateway OData V4 Backend Service Group & Assigments | [#2704](https://github.com/larshp/abapGit/issues/2704)
-G4BS | SAP Gateway OData V4 Backend Service | [#2704](https://github.com/larshp/abapGit/issues/2704)
+G4BA | SAP Gateway OData V4 Backend Service Group & Assigments | Yes
+G4BS | SAP Gateway OData V4 Backend Service | Yes
 IAMU | Language-Independent IAC Binary Data | Yes
 IARP | Parameters of IAC Language Resource | Yes
 IASP | Parameters of an IAC service | Yes
