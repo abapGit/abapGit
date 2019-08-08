@@ -15,6 +15,7 @@ div.highlight {
 
 pre.highlight {
   background-color: transparent;
+  overflow-x: auto;
 }
 
 :not(.highlight) > code {
