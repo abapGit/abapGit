@@ -36,7 +36,7 @@ CLASS zcl_abapgit_zip DEFINITION
 
   PROTECTED SECTION.
 
-    CLASS-DATA mv_prev TYPE string .
+    CLASS-DATA gv_prev TYPE string .
   PRIVATE SECTION.
 
     CLASS-METHODS encode_files
@@ -151,14 +151,14 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     cl_gui_frontend_services=>directory_browse(
       EXPORTING
-        initial_folder  = mv_prev
+        initial_folder  = gv_prev
       CHANGING
         selected_folder = lv_folder ).
     IF lv_folder IS INITIAL.
       RETURN.
     ENDIF.
 
-    mv_prev = lv_folder.
+    gv_prev = lv_folder.
 
     cl_gui_frontend_services=>get_file_separator(
       CHANGING
