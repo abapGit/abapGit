@@ -229,6 +229,8 @@ CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'missing necessary objects' ).
     ELSEIF lv_string CP '*refusing to delete the current branch*'.
       zcx_abapgit_exception=>raise( 'branch delete not allowed' ).
+    ELSEIF lv_string CP '*cannot lock ref*reference already exists*'.
+      zcx_abapgit_exception=>raise( 'branch already exists' ).
     ENDIF.
 
   ENDMETHOD.
