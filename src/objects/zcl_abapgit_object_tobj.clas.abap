@@ -63,7 +63,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TOBJ IMPLEMENTATION.
                                         event   = <ls_tvimf>-event
                                TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
-        DELETE tvimf FROM <ls_tvimf>.
+        DELETE FROM tvimf
+          WHERE tabname = <ls_tvimf>-tabname
+          AND event = <ls_tvimf>-event.
       ENDIF.
     ENDLOOP.
 
