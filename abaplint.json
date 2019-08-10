@@ -23,6 +23,7 @@
       "seoc_version_inactive",
       "seok_access_free",
       "seok_access_modify",
+      "seok_pgmid_r3tr",
       "seop_ext_class_locals_def",
       "seop_ext_class_locals_imp",
       "seop_ext_class_macros",
