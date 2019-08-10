@@ -6,7 +6,13 @@
     "skipGeneratedFunctionGroups": true,
     "applyUnspecifiedRules": false
   },
-  "dependencies": [],
+  "dependencies": [
+    {
+      "url": "https://github.com/abaplint/deps",
+      "folder": "/deps",
+      "files": "/src/**/*.*"
+    }
+  ],
   "syntax": {
     "errorNamespace": "^(Z|Y)",
     "globalConstants": [
