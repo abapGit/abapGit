@@ -59,6 +59,10 @@
       "enabled": true,
       "exclude": []
     },
+    "ambiguous_statement": {
+      "enabled": true,
+      "exclude": []
+    },
     "avoid_use": {
       "enabled": true,
       "exclude": [],
@@ -74,8 +78,8 @@
       "exclude": []
     },
     "check_variables": {
-      "enabled": false,
-      "exclude": ["zcl_abapgit_ecatt"]
+      "enabled": true,
+      "exclude": []
     },
     "class_attribute_names": {
       "enabled": true,
@@ -337,8 +341,8 @@
       "exclude": []
     },
     "superclass_final": {
-      "enabled": false,
-      "exclude": ["zcl_abapgit_ecatt"]
+      "enabled": true,
+      "exclude": []
     },
     "tabl_enhancement_category": {
       "enabled": true,
