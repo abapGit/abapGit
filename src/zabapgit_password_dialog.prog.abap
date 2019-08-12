@@ -1,12 +1,11 @@
 *&---------------------------------------------------------------------*
 *&  Include           ZABAPGIT_PASSWORD_DIALOG
 *&---------------------------------------------------------------------*
-TABLES sscrfields.
 
 SELECTION-SCREEN BEGIN OF SCREEN 1002 TITLE s_title.
 SELECTION-SCREEN BEGIN OF LINE.
 SELECTION-SCREEN COMMENT 1(10) s_url FOR FIELD p_url.
-PARAMETERS: p_url  TYPE string LOWER CASE VISIBLE LENGTH 40 ##SEL_WRONG.
+PARAMETERS: p_url TYPE string LOWER CASE VISIBLE LENGTH 40 ##SEL_WRONG.
 SELECTION-SCREEN END OF LINE.
 SELECTION-SCREEN BEGIN OF LINE.
 SELECTION-SCREEN COMMENT 1(10) s_user FOR FIELD p_user.

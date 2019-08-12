@@ -6,7 +6,13 @@
     "skipGeneratedFunctionGroups": true,
     "applyUnspecifiedRules": false
   },
-  "dependencies": [],
+  "dependencies": [
+    {
+      "url": "https://github.com/abaplint/deps",
+      "folder": "/deps",
+      "files": "/src/**/*.*"
+    }
+  ],
   "syntax": {
     "errorNamespace": "^(Z|Y)",
     "globalConstants": [
@@ -23,6 +29,7 @@
       "seoc_version_inactive",
       "seok_access_free",
       "seok_access_modify",
+      "seok_pgmid_r3tr",
       "seop_ext_class_locals_def",
       "seop_ext_class_locals_imp",
       "seop_ext_class_macros",
@@ -52,6 +59,10 @@
       "enabled": true,
       "exclude": []
     },
+    "ambiguous_statement": {
+      "enabled": true,
+      "exclude": []
+    },
     "avoid_use": {
       "enabled": true,
       "exclude": [],
@@ -67,8 +78,8 @@
       "exclude": []
     },
     "check_variables": {
-      "enabled": false,
-      "exclude": ["zcl_abapgit_ecatt"]
+      "enabled": true,
+      "exclude": []
     },
     "class_attribute_names": {
       "enabled": true,
@@ -330,8 +341,8 @@
       "exclude": []
     },
     "superclass_final": {
-      "enabled": false,
-      "exclude": ["zcl_abapgit_ecatt"]
+      "enabled": true,
+      "exclude": []
     },
     "tabl_enhancement_category": {
       "enabled": true,
