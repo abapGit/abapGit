@@ -359,6 +359,10 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
                  im_object_type    = lv_object_type
                  io_download       = lo_download ).
 
+    IF lv_xml IS INITIAL.
+      zcx_abapgit_exception=>raise( |ECATT, empty xml, { mv_object_name }| ).
+    ENDIF.
+
     li_document = cl_ixml_80_20=>parse_to_document( stream_xstring = lv_xml ).
 
     clear_attributes(
