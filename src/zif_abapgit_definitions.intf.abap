@@ -180,6 +180,7 @@ INTERFACE zif_abapgit_definitions
       devclass TYPE tadir-devclass,
       korrnum  TYPE tadir-korrnum,
       delflag  TYPE tadir-delflag,
+      genflag  TYPE tadir-genflag,
       path     TYPE string,
     END OF ty_tadir .
   TYPES:
@@ -331,16 +332,16 @@ INTERFACE zif_abapgit_definitions
     tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY .
   TYPES:
     BEGIN OF ty_s_user_settings,
-      max_lines                  TYPE i,
-      adt_jump_enabled           TYPE abap_bool,
-      show_default_repo          TYPE abap_bool,
-      link_hints_enabled         TYPE abap_bool,
-      link_hint_key              TYPE c LENGTH 1,
-      hotkeys                    TYPE tty_hotkey,
-      parallel_proc_disabled     TYPE abap_bool,
-      icon_scaling               TYPE c LENGTH 1,
-      ui_theme                   TYPE string,
-      hide_sapgui_hint           TYPE abap_bool,
+      max_lines              TYPE i,
+      adt_jump_enabled       TYPE abap_bool,
+      show_default_repo      TYPE abap_bool,
+      link_hints_enabled     TYPE abap_bool,
+      link_hint_key          TYPE c LENGTH 1,
+      hotkeys                TYPE tty_hotkey,
+      parallel_proc_disabled TYPE abap_bool,
+      icon_scaling           TYPE c LENGTH 1,
+      ui_theme               TYPE string,
+      hide_sapgui_hint       TYPE abap_bool,
     END OF ty_s_user_settings .
   TYPES:
     tty_dokil TYPE STANDARD TABLE OF dokil
