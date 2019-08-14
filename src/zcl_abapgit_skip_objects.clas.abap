@@ -42,13 +42,17 @@ CLASS ZCL_ABAPGIT_SKIP_OBJECTS IMPLEMENTATION.
 
 
   METHOD skip_sadl_generated_objects.
+
     DATA: ls_tadir_class     LIKE LINE OF rt_tadir,
           ls_tadir           LIKE LINE OF rt_tadir,
+          lt_candidates      LIKE rt_tadir,
           lt_lines_to_delete TYPE zif_abapgit_definitions=>ty_tadir_tt.
 
-    rt_tadir = it_tadir.
+    lt_candidates = it_tadir.
+    DELETE lt_candidates WHERE object <> 'CLAS' OR genflag = abap_false.
+
     LOOP AT it_tadir INTO ls_tadir WHERE object = 'DDLS'.
-      LOOP AT rt_tadir INTO ls_tadir_class
+      LOOP AT lt_candidates INTO ls_tadir_class
           WHERE object = 'CLAS' AND obj_name CS ls_tadir-obj_name.
         IF has_sadl_superclass( ls_tadir_class ) = abap_true.
           APPEND ls_tadir_class TO lt_lines_to_delete.
@@ -56,6 +60,7 @@ CLASS ZCL_ABAPGIT_SKIP_OBJECTS IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
 
+    rt_tadir = it_tadir.
     DELETE ADJACENT DUPLICATES FROM lt_lines_to_delete.
     LOOP AT lt_lines_to_delete INTO ls_tadir_class.
       DELETE TABLE rt_tadir FROM ls_tadir_class.
