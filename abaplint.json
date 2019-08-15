@@ -59,6 +59,11 @@
       "enabled": true,
       "exclude": []
     },
+    "allowed_object_types": {
+      "enabled": true,
+      "exclude": [],
+      "allowed": ["PROG", "CLAS", "INTF", "FUGR", "DEVC", "TRAN", "W3MI"]
+    },
     "ambiguous_statement": {
       "enabled": true,
       "exclude": []
@@ -72,6 +77,10 @@
       "kernelCall": true,
       "communication": true,
       "statics": true
+    },
+    "begin_end_names": {
+      "enabled": true,
+      "exclude": []
     },
     "breakpoint": {
       "enabled": true,
