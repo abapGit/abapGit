@@ -108,3 +108,5 @@ SAP Teched Barcelona
 [Introducing APACK – A Package and Dependency Manager for ABAP](https://blogs.sap.com/2019/05/06/introducing-apack-a-package-and-dependency-manager-for-abap/), Sebastian Wolf
 
 [ASUG82855 - How Microsoft Uses Git for ABAP Code Management](https://blog.asug.com/hubfs/2019%20AC%20Slide%20Decks%20Wednesday/ASUG82855%20-%20How%20Microsoft%20Uses%20Git%20for%20ABAP%20Code%20Management.pdf), Gopal Nair and Ram Bairavarsu
+
+[Brainstorming on abapGIT](https://blogs.sap.com/2019/08/15/brainstorming-on-abapgit/), Jörg Krause
