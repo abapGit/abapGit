@@ -94,11 +94,12 @@ CLASS ltcl_html_processor_test IMPLEMENTATION.
         `<html>\n` &&
         `  <head>\n` &&
         `    <title>abapGit</title>\n` &&
-        `    <!-- by AG HTML preprocessor <LINK  rel="stylesheet" type="text/css" href="css/style1.css">-->\n` &&
-        `    <!-- by AG HTML preprocessor <link rel="stylesheet" type="text/css" href="css/style2.css">-->\n` &&
-        `    <!-- by AG HTML preprocessor <link rel="stylesheet" type="text/css" href="css/style3.css">-->\n` &&
+        `    <!--<LINK  rel="stylesheet" type="text/css" href="css/style1.css">-->\n` &&
+        `    <!--<link rel="stylesheet" type="text/css" href="css/style2.css">-->\n` &&
+        `    <!--<link rel="stylesheet" type="text/css" href="css/style3.css">-->\n` &&
         `    <script type="text/javascript" src="js/common.js"></script>\n` &&
-        `    <!-- by AG HTML preprocessor --><link rel="stylesheet" type="text/css" href="css/bundle.css">\n` &&
+        `    <!-- abapgit HTML preprocessor -->\n` &&
+        `    <link rel="stylesheet" type="text/css" href="css/bundle.css">\n` &&
         `  </head>\n` &&
         `  <body>hello</body>\n` &&
         `</html>\n`
@@ -132,11 +133,12 @@ CLASS ltcl_html_processor_test IMPLEMENTATION.
         `<html>\n` &&
         `  <head>\n` &&
         `    <title>abapGit</title>\n` &&
-        `    <!-- by AG HTML preprocessor <LINK  rel="stylesheet" type="text/css" href="css/style1.css">-->\n` &&
+        `    <!--<LINK  rel="stylesheet" type="text/css" href="css/style1.css">-->\n` &&
         `    <link rel="stylesheet" type="text/css" href="css/style2.css">\n` && " Preserved
-        `    <!-- by AG HTML preprocessor <link rel="stylesheet" type="text/css" href="css/style3.css">-->\n` &&
+        `    <!--<link rel="stylesheet" type="text/css" href="css/style3.css">-->\n` &&
         `    <script type="text/javascript" src="js/common.js"></script>\n` &&
-        `    <!-- by AG HTML preprocessor --><link rel="stylesheet" type="text/css" href="css/bundle.css">\n` &&
+        `    <!-- abapgit HTML preprocessor -->\n` &&
+        `    <link rel="stylesheet" type="text/css" href="css/bundle.css">\n` &&
         `  </head>\n` &&
         `  <body>hello</body>\n` &&
         `</html>\n`
