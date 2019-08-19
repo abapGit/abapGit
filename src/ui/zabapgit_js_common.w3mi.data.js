@@ -191,7 +191,7 @@ function onTagTypeChange(oSelectObject){
 }
 
 /**********************************************************
- * Repo Overview Logic
+ * Order By Logic
  **********************************************************/
 function onOrderByChange(oSelectObject){
   var sValue = oSelectObject.value;
@@ -203,6 +203,9 @@ function onDirectionChange(oSelectObject){
   submitSapeventForm({ direction: sValue }, "direction", "post");
 }
 
+/**********************************************************
+ * Repo Overview Logic
+ **********************************************************/
 function findStyleSheetByName(name) {
   for (var s = 0; s < document.styleSheets.length; s++) {
     var styleSheet = document.styleSheets[s];
