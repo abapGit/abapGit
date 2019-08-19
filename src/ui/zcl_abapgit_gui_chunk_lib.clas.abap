@@ -61,6 +61,25 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         ix_error       TYPE REF TO zcx_abapgit_exception
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+    CLASS-METHODS render_order_by_direction
+      IMPORTING
+        iv_order_descending TYPE abap_bool
+      RETURNING
+        VALUE(ro_html)      TYPE REF TO zcl_abapgit_html.
+    CLASS-METHODS parse_change_order_by
+      IMPORTING
+        it_postdata        TYPE cnht_post_data_tab
+      RETURNING
+        VALUE(rv_order_by) TYPE string.
+    CLASS-METHODS parse_direction
+      IMPORTING
+        it_postdata                TYPE cnht_post_data_tab
+      RETURNING
+        VALUE(rv_order_descending) TYPE char01.
+    CLASS-METHODS render_order_by
+      IMPORTING it_options     TYPE stringtab
+                iv_value       TYPE string
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -96,11 +115,28 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         iv_program_name                   TYPE syrepid
       RETURNING
         VALUE(rv_normalized_program_name) TYPE string.
+    CLASS-METHODS add_option
+      IMPORTING
+        iv_option   TYPE string
+        iv_selected TYPE abap_bool
+        io_html     TYPE REF TO zcl_abapgit_html.
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
+
+
+  METHOD get_t100_text.
+
+    SELECT SINGLE text
+           FROM t100
+           INTO rv_text
+           WHERE arbgb = iv_msgid
+           AND   msgnr = iv_msgno
+           AND   sprsl = sy-langu.
+
+  ENDMETHOD.
 
 
   METHOD normalize_program_name.
@@ -486,6 +522,25 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_order_by_direction.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( |<select name="direction" onchange="onDirectionChange(this)">| ).
+
+    add_option( iv_option   = |ASCENDING|
+                iv_selected = boolc( iv_order_descending = abap_false )
+                io_html     = ro_html ).
+
+    add_option( iv_option   = |DESCENDING|
+                iv_selected = iv_order_descending
+                io_html     = ro_html ).
+
+    ro_html->add( |</select>| ).
+
+  ENDMETHOD.
+
+
   METHOD render_repo_top.
 
     DATA: lo_repo_online       TYPE REF TO zcl_abapgit_repo_online,
@@ -595,14 +650,77 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD get_t100_text.
 
-    SELECT SINGLE text
-           FROM t100
-           INTO rv_text
-           WHERE arbgb = iv_msgid
-           AND   msgnr = iv_msgno
-           AND   sprsl = sy-langu.
+  METHOD parse_change_order_by.
+
+    FIELD-SYMBOLS: <lv_postdata> TYPE cnht_post_data_line.
+
+    READ TABLE it_postdata ASSIGNING <lv_postdata>
+                           INDEX 1.
+    IF sy-subrc = 0.
+      FIND FIRST OCCURRENCE OF REGEX `orderBy=(.*)`
+           IN <lv_postdata>
+           SUBMATCHES rv_order_by.
+    ENDIF.
+
+    rv_order_by = condense( rv_order_by ).
+
+  ENDMETHOD.
+
+
+  METHOD parse_direction.
+
+    DATA: lv_direction TYPE string.
+
+    FIELD-SYMBOLS: <lv_postdata> TYPE cnht_post_data_line.
+
+    READ TABLE it_postdata ASSIGNING <lv_postdata>
+                           INDEX 1.
+    IF sy-subrc = 0.
+      FIND FIRST OCCURRENCE OF REGEX `direction=(.*)`
+           IN <lv_postdata>
+           SUBMATCHES lv_direction.
+    ENDIF.
+
+    IF condense( lv_direction ) = 'DESCENDING'.
+      rv_order_descending = abap_true.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD render_order_by.
+
+    FIELD-SYMBOLS: <lv_option> TYPE LINE OF stringtab.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( |Order by: <select name="order_by" onchange="onOrderByChange(this)">| ).
+
+    LOOP AT it_options ASSIGNING <lv_option>.
+
+      add_option(
+          iv_option   = <lv_option>
+          iv_selected = boolc( iv_value = <lv_option> )
+          io_html     = ro_html ).
+
+    ENDLOOP.
+
+    ro_html->add( |</select>| ).
+
+  ENDMETHOD.
+
+
+  METHOD add_option.
+
+    DATA: lv_selected TYPE string.
+
+    IF iv_selected = abap_true.
+      lv_selected = 'selected'.
+    ENDIF.
+
+    io_html->add( |<option value="{ iv_option }" { lv_selected }>|
+               && |{ to_mixed( iv_option ) }</option>| ).
 
   ENDMETHOD.
 

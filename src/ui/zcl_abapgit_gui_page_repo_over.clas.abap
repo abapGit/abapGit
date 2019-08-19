@@ -53,14 +53,6 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
                   iv_max_length  TYPE string OPTIONAL
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
 
-      parse_change_order_by
-        IMPORTING
-          iv_query_str TYPE clike,
-
-      parse_direction
-        IMPORTING
-          iv_query_str TYPE clike,
-
       parse_filter
         IMPORTING
           it_postdata TYPE cnht_post_data_tab,
@@ -95,6 +87,9 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
           io_html     TYPE REF TO zcl_abapgit_html
           it_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview,
 
+      render_order_by
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
+
       render_header_bar
         IMPORTING
           io_html TYPE REF TO zcl_abapgit_html.
@@ -103,7 +98,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -213,30 +208,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD parse_change_order_by.
-
-    FIND FIRST OCCURRENCE OF REGEX `orderBy=(.*)`
-      IN iv_query_str
-      SUBMATCHES mv_order_by.
-
-    mv_order_by = condense( mv_order_by ).
-
-  ENDMETHOD.
-
-
-  METHOD parse_direction.
-
-    DATA: lv_direction TYPE string.
-
-    FIND FIRST OCCURRENCE OF REGEX `direction=(.*)`
-      IN iv_query_str
-      SUBMATCHES lv_direction.
-
-    mv_order_descending = boolc( condense( lv_direction ) = 'DESCENDING' ).
-
-  ENDMETHOD.
-
-
   METHOD parse_filter.
 
     FIELD-SYMBOLS: <lv_postdata> LIKE LINE OF it_postdata.
@@ -280,6 +251,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     io_html->add( |<div class="form-container">| ).
 
     io_html->add( |<form class="inline" method="post" action="sapevent:{ c_action-apply_filter }">| ).
+
+    io_html->add( render_order_by( ) ).
+
     io_html->add( render_text_input(
       iv_name  = |filter|
       iv_label = |Filter: |
@@ -293,6 +267,30 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
 
     io_html->add( |</div>| ).
+
+  ENDMETHOD.
+
+
+  METHOD render_order_by.
+
+    DATA: lt_options TYPE stringtab.
+
+    INSERT `TYPE` INTO TABLE lt_options.
+    INSERT `KEY` INTO TABLE lt_options.
+    INSERT `NAME` INTO TABLE lt_options.
+    INSERT `URL` INTO TABLE lt_options.
+    INSERT `PACKAGE` INTO TABLE lt_options.
+    INSERT `BRANCH` INTO TABLE lt_options.
+    INSERT `CREATED_AT` INTO TABLE lt_options.
+    INSERT `CREATED_BY` INTO TABLE lt_options.
+    INSERT `DESERIALIZED_AT` INTO TABLE lt_options.
+    INSERT `DESERIALIZED_BY` INTO TABLE lt_options.
+    INSERT `ENDMETHOD` INTO TABLE lt_options.
+
+    ro_html = zcl_abapgit_gui_chunk_lib=>render_order_by(
+                                            it_options = lt_options
+                                            iv_value   = mv_order_by ).
+    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_direction( mv_order_descending ) ).
 
   ENDMETHOD.
 
@@ -315,8 +313,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   METHOD render_table_body.
 
     DATA:
-          lv_type_icon     TYPE string,
-          lv_favorite_icon TYPE string.
+      lv_type_icon     TYPE string,
+      lv_favorite_icon TYPE string.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
@@ -509,13 +507,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
       WHEN c_action-change_order_by.
 
-        CLEAR mv_order_descending.
-        parse_change_order_by( iv_getdata ).
+        mv_order_by = zcl_abapgit_gui_chunk_lib=>parse_change_order_by( it_postdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_action-direction.
 
-        parse_direction( iv_getdata ).
+        mv_order_descending = zcl_abapgit_gui_chunk_lib=>parse_direction( it_postdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_action-apply_filter.

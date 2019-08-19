@@ -18,9 +18,11 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         toggle_hide_files TYPE string VALUE 'toggle_hide_files' ##NO_TEXT,
         toggle_folders    TYPE string VALUE 'toggle_folders' ##NO_TEXT,
         toggle_changes    TYPE string VALUE 'toggle_changes' ##NO_TEXT,
+        toggle_order_by   TYPE string VALUE 'toggle_order_by' ##NO_TEXT,
         display_more      TYPE string VALUE 'display_more' ##NO_TEXT,
+        change_order_by   TYPE string VALUE 'change_order_by' ##NO_TEXT,
+        direction         TYPE string VALUE 'direction' ##NO_TEXT,
       END OF c_actions .
-
     METHODS constructor
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
@@ -30,13 +32,16 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    DATA: mo_repo         TYPE REF TO zcl_abapgit_repo,
-          mv_cur_dir      TYPE string,
-          mv_hide_files   TYPE abap_bool,
-          mv_max_lines    TYPE i,
-          mv_max_setting  TYPE i,
-          mv_show_folders TYPE abap_bool,
-          mv_changes_only TYPE abap_bool.
+    DATA: mo_repo             TYPE REF TO zcl_abapgit_repo,
+          mv_cur_dir          TYPE string,
+          mv_hide_files       TYPE abap_bool,
+          mv_max_lines        TYPE i,
+          mv_max_setting      TYPE i,
+          mv_show_folders     TYPE abap_bool,
+          mv_changes_only     TYPE abap_bool,
+          mv_show_order_by    TYPE abap_bool,
+          mv_order_by         TYPE string,
+          mv_order_descending TYPE char01.
 
     METHODS:
       render_head_line
@@ -89,13 +94,22 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         IMPORTING is_item                      TYPE zif_abapgit_definitions=>ty_repo_item
         RETURNING VALUE(rv_inactive_html_code) TYPE string,
       open_in_master_language
-        RAISING zcx_abapgit_exception.
+        RAISING zcx_abapgit_exception,
+      render_order_by
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        RAISING   zcx_abapgit_exception,
+      add_order_by_option
+        IMPORTING iv_option TYPE string
+                  iv_name   TYPE string
+                  io_html   TYPE REF TO zcl_abapgit_html,
+      apply_order_by
+        CHANGING ct_repo_items TYPE zif_abapgit_definitions=>tt_repo_items.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
 
   METHOD build_dir_jump_link.
@@ -133,6 +147,11 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
       iv_txt = 'Show folders'
       iv_chk = mv_show_folders
       iv_act = c_actions-toggle_folders ).
+
+    ro_toolbar->add(
+      iv_txt = 'Show order by'
+      iv_chk = mv_show_order_by
+      iv_act = c_actions-toggle_order_by ).
 
   ENDMETHOD.
 
@@ -335,10 +354,11 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
     super->constructor( ).
 
-    mo_repo         = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    mv_cur_dir      = '/'. " Root
-    mv_hide_files   = zcl_abapgit_persistence_user=>get_instance( )->get_hide_files( ).
-    mv_changes_only = zcl_abapgit_persistence_user=>get_instance( )->get_changes_only( ).
+    mo_repo          = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    mv_cur_dir       = '/'. " Root
+    mv_hide_files    = zcl_abapgit_persistence_user=>get_instance( )->get_hide_files( ).
+    mv_changes_only  = zcl_abapgit_persistence_user=>get_instance( )->get_changes_only( ).
+    mv_show_order_by = zcl_abapgit_persistence_user=>get_instance( )->get_show_order_by( ).
 
     " Read global settings to get max # of objects to be listed
     lo_settings     = zcl_abapgit_persist_settings=>get_instance( )->read( ).
@@ -478,6 +498,12 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
     IF mv_show_folders = abap_true.
       ro_html->add( |<td class="current_dir">{ mv_cur_dir }</td>| ).
+    ENDIF.
+
+    IF zcl_abapgit_persistence_user=>get_instance( )->get_show_order_by( ) = abap_true.
+      ro_html->add( '<td>' ).
+      ro_html->add( render_order_by( ) ).
+      ro_html->add( '</td>' ).
     ENDIF.
 
     ro_html->add( '<td class="right">' ).
@@ -681,9 +707,18 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
       WHEN c_actions-toggle_changes.    " Toggle changes only view
         mv_changes_only = zcl_abapgit_persistence_user=>get_instance( )->toggle_changes_only( ).
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_actions-toggle_order_by.
+        mv_show_order_by = zcl_abapgit_persistence_user=>get_instance( )->toggle_show_order_by( ).
+        ev_state         = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-display_more.      " Increase MAX lines limit
         mv_max_lines    = mv_max_lines + mv_max_setting.
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_actions-change_order_by.
+        mv_order_by     = zcl_abapgit_gui_chunk_lib=>parse_change_order_by( it_postdata ).
+        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_actions-direction.
+        mv_order_descending = zcl_abapgit_gui_chunk_lib=>parse_direction( it_postdata ).
+        ev_state            = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_open_in_master_lang.
         open_in_master_language( ).
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
@@ -730,6 +765,8 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
         lt_repo_items = lo_browser->list( iv_path         = mv_cur_dir
                                           iv_by_folders   = mv_show_folders
                                           iv_changes_only = mv_changes_only ).
+
+        apply_order_by( CHANGING ct_repo_items = lt_repo_items ).
 
         LOOP AT lt_repo_items ASSIGNING <ls_item>.
           zcl_abapgit_state=>reduce( EXPORTING iv_cur = <ls_item>-lstate
