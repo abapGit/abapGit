@@ -112,3 +112,6 @@ SAP Teched Barcelona
 [Brainstorming on abapGIT](https://blogs.sap.com/2019/08/15/brainstorming-on-abapgit/), Jörg Krause
 
 [APACK - ABAP Package and Dependency Manager](https://www.youtube.com/watch?v=PfB2w7wuHQI), Sebastian Wolf
+
+[Versioning your local objects using abapgit](https://blogs.sap.com/2019/08/19/versioning-your-local-objects-using-abapgit/), 
+Frederik Hudak
