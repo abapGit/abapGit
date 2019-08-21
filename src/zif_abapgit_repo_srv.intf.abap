@@ -59,6 +59,7 @@ INTERFACE zif_abapgit_repo_srv
     IMPORTING
       !iv_package    TYPE devclass
       !iv_ign_subpkg TYPE abap_bool DEFAULT abap_false
+      !iv_excl_pkg   TYPE string OPTIONAL
     RAISING
       zcx_abapgit_exception .
 ENDINTERFACE.
