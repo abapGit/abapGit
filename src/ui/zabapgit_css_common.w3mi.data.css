@@ -831,7 +831,7 @@ table.commit tr .title {
   border-left: 4px solid;
 }
 .ci-result li:first-child { margin-top: 0px; }
-.ci-result li span { display: block; }
+.ci-result li > span { display: block; }
 
 /* Floating buttons */
 
