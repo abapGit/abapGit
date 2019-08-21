@@ -371,6 +371,11 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
       ls_repo-local_settings-ignore_subpackages = iv_ign_subpkg.
       ro_repo->set_local_settings( ls_repo-local_settings ).
     ENDIF.
+    
+    IF ls_repo-local_settings-excluded_packages <> iv_excl_packages.
+      ls_repo-local_settings-excluded_packages = iv_excl_packages.
+      ro_repo->set_local_settings( ls_repo-local_settings ).
+    ENDIF.
 
     ro_repo->refresh( ).
     ro_repo->find_remote_dot_abapgit( ).
