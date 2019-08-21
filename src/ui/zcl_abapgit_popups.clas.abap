@@ -166,7 +166,8 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
            ev_branch,
            ev_display_name,
            ev_folder_logic,
-           ev_ign_subpkg.
+           ev_ign_subpkg,
+           ev_excl_pkg.
 
     READ TABLE it_fields INDEX 1 ASSIGNING <ls_field>.
     ASSERT sy-subrc = 0.
@@ -194,6 +195,11 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     ASSERT sy-subrc = 0.
     ev_ign_subpkg = <ls_field>-value.
     TRANSLATE ev_ign_subpkg TO UPPER CASE.
+
+    READ TABLE it_fields INDEX 7 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    ev_excl_pkg = <ls_field>-value.
+    TRANSLATE ev_excl_pkg TO UPPER CASE.
 
   ENDMETHOD.
 
