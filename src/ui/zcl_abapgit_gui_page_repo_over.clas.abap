@@ -487,10 +487,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     TYPES:
       BEGIN OF lty_col_spec,
-        tech_name    type string,
-        display_name type string,
-        css_class    type string,
-        add_tz       type abap_bool,
+        tech_name    TYPE string,
+        display_name TYPE string,
+        css_class    TYPE string,
+        add_tz       TYPE abap_bool,
       END OF lty_col_spec.
     DATA lt_colspec TYPE STANDARD TABLE OF lty_col_spec.
     DATA lv_tmp     TYPE string.
