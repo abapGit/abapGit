@@ -28,6 +28,7 @@ CLASS zcl_abapgit_tadir DEFINITION
         !iv_top                TYPE tadir-devclass
         !io_dot                TYPE REF TO zcl_abapgit_dot_abapgit
         !iv_ignore_subpackages TYPE abap_bool DEFAULT abap_false
+        !iv_excluded_packages  TYPE string
         !iv_only_local_objects TYPE abap_bool
         !ii_log                TYPE REF TO zif_abapgit_log OPTIONAL
       RETURNING
@@ -43,15 +44,18 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
 
   METHOD build.
 
-    DATA: lv_path         TYPE string,
-          lo_skip_objects TYPE REF TO zcl_abapgit_skip_objects,
-          lt_excludes     TYPE RANGE OF trobjtype,
-          lt_srcsystem    TYPE RANGE OF tadir-srcsystem,
-          ls_srcsystem    LIKE LINE OF lt_srcsystem,
-          ls_exclude      LIKE LINE OF lt_excludes,
-          lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic,
-          lv_last_package TYPE devclass VALUE cl_abap_char_utilities=>horizontal_tab,
-          lt_packages     TYPE zif_abapgit_sap_package=>ty_devclass_tt.
+    DATA: lv_path                TYPE string,
+          lo_skip_objects        TYPE REF TO zcl_abapgit_skip_objects,
+          lt_excludes            TYPE RANGE OF trobjtype,
+          lt_srcsystem           TYPE RANGE OF tadir-srcsystem,
+          ls_srcsystem           LIKE LINE OF lt_srcsystem,
+          ls_exclude             LIKE LINE OF lt_excludes,
+          lo_folder_logic        TYPE REF TO zcl_abapgit_folder_logic,
+          lv_last_package        TYPE devclass VALUE cl_abap_char_utilities=>horizontal_tab,
+          lt_packages            TYPE zif_abapgit_sap_package=>ty_devclass_tt,
+          lt_r_excluded_packages TYPE rseloption,
+          ls_r_subpackages       TYPE rsdsselopt,
+          lt_r_subpackages       TYPE rseloption.
 
     FIELD-SYMBOLS: <ls_tadir>   LIKE LINE OF rt_tadir,
                    <lv_package> LIKE LINE OF lt_packages.
@@ -62,6 +66,47 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
       lt_packages = zcl_abapgit_factory=>get_sap_package( iv_package )->list_subpackages( ).
     ENDIF.
     INSERT iv_package INTO lt_packages INDEX 1.
+
+    "Determine Packages to Filter
+    IF iv_excluded_packages CN ' _0'.
+
+      SPLIT iv_excluded_packages AT ';' INTO TABLE DATA(lt_subpackages).
+
+      DELETE lt_subpackages WHERE table_line CO ' _0'.
+      SORT lt_subpackages.
+      DELETE ADJACENT DUPLICATES FROM lt_subpackages.
+
+      WHILE lt_subpackages IS NOT INITIAL.
+
+        CLEAR: lt_r_subpackages.
+
+        LOOP AT lt_subpackages ASSIGNING FIELD-SYMBOL(<lv_subpackage>).
+
+          ls_r_subpackages-sign   = 'I'.
+          ls_r_subpackages-option = 'EQ'.
+          ls_r_subpackages-low    = <lv_subpackage>.
+
+          APPEND ls_r_subpackages TO lt_r_subpackages.
+          APPEND ls_r_subpackages TO lt_r_excluded_packages.
+
+        ENDLOOP.
+
+        CLEAR: lt_subpackages.
+
+        SELECT devclass
+            FROM tdevc
+            WHERE parentcl IN @lt_r_subpackages
+            INTO TABLE @lt_subpackages.
+
+      ENDWHILE.
+
+      IF lt_r_excluded_packages IS NOT INITIAL.
+
+        DELETE lt_packages WHERE table_line IN lt_r_excluded_packages.
+
+      ENDIF.
+
+    ENDIF.
 
     ls_exclude-sign = 'I'.
     ls_exclude-option = 'EQ'.
