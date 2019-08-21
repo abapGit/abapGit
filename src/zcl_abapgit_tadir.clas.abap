@@ -82,7 +82,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
 
         CLEAR: lt_r_subpackages.
 
-        LOOP AT lt_subpackages ASSIGNING FIELD-SYMBOL(<lv_subpackage>).
+        LOOP AT lt_subpackages ASSIGNING <lv_subpackage>.
 
           ls_r_subpackages-sign   = 'I'.
           ls_r_subpackages-option = 'EQ'.
