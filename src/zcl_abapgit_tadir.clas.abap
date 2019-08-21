@@ -97,8 +97,8 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
 
         SELECT devclass
             FROM tdevc
-            WHERE parentcl IN @lt_r_subpackages
-            INTO TABLE @lt_subpackages.
+            INTO TABLE lt_subpackages
+            WHERE parentcl IN lt_r_subpackages.
 
       ENDWHILE.
 
