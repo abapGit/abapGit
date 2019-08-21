@@ -74,7 +74,8 @@ CLASS zcl_abapgit_popups DEFINITION
         ev_branch       TYPE textl-line
         ev_display_name TYPE trm255-text
         ev_folder_logic TYPE string
-        ev_ign_subpkg   TYPE abap_bool.
+        ev_ign_subpkg   TYPE abap_bool
+        ev_excl_pkg     TYPE string.
     TYPES:
       ty_lt_fields TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
     METHODS _popup_2_get_values
