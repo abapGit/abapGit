@@ -278,6 +278,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
                       iv_top                = iv_package
                       io_dot                = io_dot
                       iv_ignore_subpackages = iv_ignore_subpackages
+                      iv_excluded_packages  = iv_excluded_packages
                       iv_only_local_objects = iv_only_local_objects
                       ii_log                = ii_log ).
 
