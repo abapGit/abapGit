@@ -5,10 +5,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_gui_page_hotkey.
-
     METHODS constructor .
-
     METHODS zif_abapgit_gui_event_handler~on_event
         REDEFINITION .
 
@@ -36,7 +33,6 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
                    WITH NON-UNIQUE DEFAULT KEY.
     CONSTANTS:
       BEGIN OF c_action,
-        delete          TYPE string VALUE 'delete',
         select          TYPE string VALUE 'select',
         change_order_by TYPE string VALUE 'change_order_by',
         direction       TYPE string VALUE 'direction',
@@ -69,17 +65,6 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         IMPORTING
           it_postdata TYPE cnht_post_data_tab,
 
-      add_order_by_option
-        IMPORTING
-          iv_option TYPE string
-          io_html   TYPE REF TO zcl_abapgit_html,
-
-      add_direction_option
-        IMPORTING
-          iv_option   TYPE string
-          io_html     TYPE REF TO zcl_abapgit_html
-          iv_selected TYPE abap_bool,
-
       apply_order_by
         CHANGING
           ct_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview,
@@ -110,14 +95,6 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
           io_html     TYPE REF TO zcl_abapgit_html
           it_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview,
 
-      render_order_by
-        IMPORTING
-          io_html TYPE REF TO zcl_abapgit_html,
-
-      render_order_by_direction
-        IMPORTING
-          io_html TYPE REF TO zcl_abapgit_html,
-
       render_header_bar
         IMPORTING
           io_html TYPE REF TO zcl_abapgit_html.
@@ -127,34 +104,6 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
-
-
-  METHOD add_direction_option.
-
-    DATA: lv_selected TYPE string.
-
-    IF iv_selected = abap_true.
-      lv_selected = 'selected'.
-    ENDIF.
-
-    io_html->add( |<option value="{ iv_option }" { lv_selected }>|
-               && |{ to_mixed( iv_option ) }</option>| ).
-
-  ENDMETHOD.
-
-
-  METHOD add_order_by_option.
-
-    DATA: lv_selected TYPE string.
-
-    IF mv_order_by = iv_option.
-      lv_selected = 'selected'.
-    ENDIF.
-
-    io_html->add( |<option value="{ iv_option }" { lv_selected }>|
-               && |{ to_mixed( iv_option ) }</option>| ).
-
-  ENDMETHOD.
 
 
   METHOD apply_filter.
@@ -331,10 +280,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     io_html->add( |<div class="form-container">| ).
 
     io_html->add( |<form class="inline" method="post" action="sapevent:{ c_action-apply_filter }">| ).
-
-    render_order_by( io_html ).
-    render_order_by_direction( io_html ).
-
     io_html->add( render_text_input(
       iv_name  = |filter|
       iv_label = |Filter: |
@@ -348,62 +293,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
 
     io_html->add( |</div>| ).
-
-  ENDMETHOD.
-
-
-  METHOD render_order_by.
-
-    io_html->add( |Order by: <select name="order_by" onchange="onOrderByChange(this)">| ).
-
-    add_order_by_option( iv_option = |TYPE|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |KEY|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |NAME|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |URL|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |PACKAGE|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |BRANCH|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |CREATED_BY|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |CREATED_AT|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |DESERIALIZED_BY|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |DESERIALIZED_AT|
-                         io_html   = io_html ).
-
-    io_html->add( |</select>| ).
-
-  ENDMETHOD.
-
-
-  METHOD render_order_by_direction.
-
-    io_html->add( |<select name="direction" onchange="onDirectionChange(this)">| ).
-
-    add_direction_option( iv_option   = |ASCENDING|
-                          iv_selected = mv_order_descending
-                          io_html     = io_html ).
-
-    add_direction_option( iv_option   = |DESCENDING|
-                          iv_selected = mv_order_descending
-                          io_html     = io_html ).
-
-    io_html->add( |</select>| ).
 
   ENDMETHOD.
 
@@ -645,11 +534,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
             ev_state     = ev_state ).
 
     ENDCASE.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 ENDCLASS.
