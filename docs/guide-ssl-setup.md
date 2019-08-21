@@ -47,7 +47,7 @@ The certificate list should end up looking something like this:
 Private Repositories are supported but the login process requires the certificates for [https://**api**.github.com](https://api.github.com), too. Repeat the download and STRUST import steps as described in the sections above accordingly. (See also [Issue#1491](https://github.com/larshp/abapGit/issues/1491))
 
 ### Note about GitHub
-On [2018-02-22](https://githubengineering.com/crypto-removal-notice/), GitHub deprectated weak TSL connections.
+On [2018-02-22](https://githubengineering.com/crypto-removal-notice/), GitHub deprectated weak TLS connections.
 
 See [SAP note 510007](https://launchpad.support.sap.com/#/notes/510007), section 7, for information on how to configure SSL.
 
