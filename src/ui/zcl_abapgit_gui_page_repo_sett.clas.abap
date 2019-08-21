@@ -341,7 +341,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'excl_packages'.
     ASSERT sy-subrc = 0.
     ls_settings-excluded_packages = ls_post_field-value.
-    
+
     mo_repo->set_local_settings( ls_settings ).
 
   ENDMETHOD.
