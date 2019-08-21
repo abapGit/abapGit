@@ -289,7 +289,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     io_html->add( zcl_abapgit_html=>a(
       iv_txt = 'Toggle detail'
-      iv_act = |toggleRepoListDetail()|
+      iv_act = |gHelper.toggleRepoListDetail()|
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
 
     io_html->add( |</div>| ).
@@ -483,6 +483,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     ro_html = super->scripts( ).
 
     ro_html->add( 'setInitialFocus("filter");' ).
+    ro_html->add( 'var gHelper = new RepoOverViewHelper();' ).
 
   ENDMETHOD.
 
