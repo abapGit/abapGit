@@ -39,7 +39,7 @@ You can find the contribution guidelines [here](CONTRIBUTING.md).
 See [dotabap.org](http://dotabap.org) or [this page](https://docs.abapgit.org/other-where-used.html).
 
 ## FAQ
-For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/larshp/abapGit/issues)
+For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/larshp/abapGit/issues).
 
 ![abapgit](http://docs.abapgit.org/img/abapgit_1_73_0.png)
 
