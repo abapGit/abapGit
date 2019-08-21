@@ -222,6 +222,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     io_html->add( |Block commit commit/push if code inspection has erros: |
                && |<input name="block_commit" type="checkbox"{ lv_checked }><br>| ).
 
+    io_html->add( '<br>' ).
+    io_html->add( 'Exclude Packages: <input name="excl_packages" type="text" size="120" value="' &&
+      ls_settings-excluded_packages && '">' ).
+    io_html->add( '<br>' ).
+    io_html->add( 'Note: Use Semicolon to separate single package names from eachother like this: ZTEST;Z_TEST;ZZ_TEST' ).
+    io_html->add( '<br>' ).
 
   ENDMETHOD.
 
@@ -283,7 +289,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
           ls_post_field    LIKE LINE OF it_post_fields,
           lv_check_variant TYPE sci_chkv.
 
-
     ls_settings = mo_repo->get_local_settings( ).
 
     IF mo_repo->is_offline( ) = abap_false.
@@ -333,6 +338,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |If block commit is active, a check variant has to be maintained.| ).
     ENDIF.
 
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'excl_packages'.
+    ASSERT sy-subrc = 0.
+    ls_settings-excluded_packages = ls_post_field-value.
+    
     mo_repo->set_local_settings( ls_settings ).
 
   ENDMETHOD.
