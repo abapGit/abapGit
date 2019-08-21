@@ -235,7 +235,7 @@ RepoOverViewHelper.prototype.toggleRepoListDetail = function(forceDisplay) {
     this.isDetailsDisplayed = forceDisplay || !this.isDetailsDisplayed;
     this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
   }
-}
+};
 
 RepoOverViewHelper.prototype.setHooks = function() {
   window.onbeforeunload = this.onPageUnload.bind(this);
