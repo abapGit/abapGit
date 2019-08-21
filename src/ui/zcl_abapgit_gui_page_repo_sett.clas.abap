@@ -226,7 +226,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     io_html->add( 'Exclude Packages: <input name="excl_packages" type="text" size="120" value="' &&
       ls_settings-excluded_packages && '">' ).
     io_html->add( '<br>' ).
-    io_html->add( 'Note: Use Semicolon to separate single package names from eachother like this: ZTEST;Z_TEST;ZZ_TEST' ).
+    io_html->add( 'Use Semicolon to separate single package names from eachother like this: ZTEST;Z_TEST;ZZ_TEST' ).
     io_html->add( '<br>' ).
 
   ENDMETHOD.
