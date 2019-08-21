@@ -399,6 +399,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
       iv_package            = get_package( )
       iv_ignore_subpackages = get_local_settings( )-ignore_subpackages
+      iv_excluded_packages  = get_local_settings( )-excluded_packages
       iv_only_local_objects = get_local_settings( )-only_local_objects
       io_dot                = get_dot_abapgit( )
       ii_log                = ii_log ).
