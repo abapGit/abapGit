@@ -54,6 +54,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
           lv_last_package        TYPE devclass VALUE cl_abap_char_utilities=>horizontal_tab,
           lt_packages            TYPE zif_abapgit_sap_package=>ty_devclass_tt,
           lt_r_excluded_packages TYPE rseloption,
+          lt_subpackages         TYPE TABLE OF string,
           ls_r_subpackages       TYPE rsdsselopt,
           lt_r_subpackages       TYPE rseloption.
 
@@ -70,7 +71,7 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
     "Determine Packages to Filter
     IF iv_excluded_packages CN ' _0'.
 
-      SPLIT iv_excluded_packages AT ';' INTO TABLE DATA(lt_subpackages).
+      SPLIT iv_excluded_packages AT ';' INTO TABLE lt_subpackages.
 
       DELETE lt_subpackages WHERE table_line CO ' _0'.
       SORT lt_subpackages.
