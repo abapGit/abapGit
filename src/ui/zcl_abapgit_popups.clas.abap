@@ -1166,7 +1166,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
           IF iv_freeze_package = abap_false.
             zcl_abapgit_repo_srv=>get_instance( )->validate_package( iv_package    = lv_package
                                                                      iv_ign_subpkg = lv_ign_subpkg
-                                                                     ev_excl_pkg   = lv_excl_pkg).
+                                                                     ev_excl_pkg   = lv_excl_pkg ).
           ENDIF.
           validate_folder_logic( lv_folder_logic ).
         CATCH zcx_abapgit_exception INTO lx_error.
