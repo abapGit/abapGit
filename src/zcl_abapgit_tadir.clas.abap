@@ -58,8 +58,9 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
           ls_r_subpackages       TYPE rsdsselopt,
           lt_r_subpackages       TYPE rseloption.
 
-    FIELD-SYMBOLS: <ls_tadir>   LIKE LINE OF rt_tadir,
-                   <lv_package> LIKE LINE OF lt_packages.
+    FIELD-SYMBOLS: <ls_tadir>      LIKE LINE OF rt_tadir,
+                   <lv_package>    LIKE LINE OF lt_packages,
+                   <lv_subpackage> LIKE LINE OF lt_subpackages.
 
 
     "Determine Packages to Read
