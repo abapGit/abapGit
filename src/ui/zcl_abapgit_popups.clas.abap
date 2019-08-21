@@ -1157,7 +1157,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
           ev_display_name = lv_display_name
           ev_folder_logic = lv_folder_logic
           ev_ign_subpkg   = lv_ign_subpkg
-          ev_excl_pkg     = lv_excl_pkg).
+          ev_excl_pkg     = lv_excl_pkg ).
 
       lv_finished = abap_true.
 
