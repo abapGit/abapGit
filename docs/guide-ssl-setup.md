@@ -36,15 +36,18 @@ order: 10
 
 Report [ZABAPGIT_TEST_SSL](./other-test-ssl.html) can be used to verify that the connection works.
 
-Also see blogs
-* http://scn.sap.com/people/jens.gleichmann/blog/2008/10/31/calling-webservices-from-abap-via-httpsssl-with-pfx-certificates
-* http://scn.sap.com/people/thomas.jung/blog/2004/11/17/bsp-a-developers-journal-part-xiv--consuming-webservices-with-abap
+Also see the following blog posts on SCN:
+* [Calling WebServices from ABAP via HTTPS/SSL with pfx certificates](http://scn.sap.com/people/jens.gleichmann/blog/2008/10/31/calling-webservices-from-abap-via-httpsssl-with-pfx-certificates)
+* [BSP a Developer’s Journal Part XIV – Consuming WebServices with ABAP](http://scn.sap.com/people/thomas.jung/blog/2004/11/17/bsp-a-developers-journal-part-xiv--consuming-webservices-with-abap)
 
 The certificate list should end up looking something like this:
 ![](img/strust.png)
 
+### Note on actions that require authentication
+To perform operations that require authentication, like e.g. cloning a private or pushing to any GitHub repository, you need to install not only the certificates for github.com but also for [https://**api**.github.com](https://api.github.com). Repeat the download and STRUST import steps as described in the sections above accordingly. (See also [Issue#1491](https://github.com/larshp/abapGit/issues/1491))
+
 ### Note about GitHub
-On [Feburary 22nd](https://githubengineering.com/crypto-removal-notice/), GitHub deprectated weak TSL connections.
+On [2018-02-22](https://githubengineering.com/crypto-removal-notice/), GitHub deprectated weak TLS connections.
 
 See [SAP note 510007](https://launchpad.support.sap.com/#/notes/510007), section 7, for information on how to configure SSL.
 
