@@ -23,6 +23,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
   PROTECTED SECTION.
     METHODS:
       render_content REDEFINITION,
+      get_events     REDEFINITION,
       scripts        REDEFINITION.
 
   PRIVATE SECTION.
@@ -147,7 +148,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
   ENDMETHOD.
 
-
   METHOD find_transports.
     DATA: li_cts_api TYPE REF TO zif_abapgit_cts_api,
           ls_new     LIKE LINE OF rt_transports.
@@ -183,6 +183,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
       CATCH zcx_abapgit_exception.
         ASSERT 1 = 2.
     ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD get_events.
+
+    FIELD-SYMBOLS: <ls_event> TYPE zcl_abapgit_gui_page=>ty_event.
+
+    APPEND INITIAL LINE TO rt_events ASSIGNING <ls_event>.
+    <ls_event>-method = 'post'.
+    <ls_event>-name = 'stage_commit'.
+
   ENDMETHOD.
 
 

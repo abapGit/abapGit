@@ -28,9 +28,25 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
              page_menu    TYPE REF TO zcl_abapgit_html_toolbar,
            END OF  ty_control.
 
+    TYPES: BEGIN OF ty_event,
+             method TYPE string,
+             name TYPE string,
+           END OF  ty_event.
+
+    TYPES: tt_events TYPE STANDARD TABLE OF ty_event WITH DEFAULT KEY.
+
     DATA: ms_control TYPE ty_control.
 
     METHODS render_content ABSTRACT
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING   zcx_abapgit_exception.
+
+    METHODS get_events
+      RETURNING VALUE(rt_events) TYPE tt_events
+      RAISING   zcx_abapgit_exception.
+
+    METHODS render_event_as_form
+      IMPORTING is_event TYPE ty_event
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING   zcx_abapgit_exception.
 
@@ -346,6 +362,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD get_events.
+
+    " Return actions you need on your page.
+
+  ENDMETHOD.
+
+  METHOD render_event_as_form.
+
+    CREATE OBJECT ro_html.
+    ro_html->add(
+      |<form id='form_{ is_event-name }' method={ is_event-method } action='sapevent:{ is_event-name }'></from>| ).
+
+  ENDMETHOD.
 
   METHOD scripts.
 
@@ -434,7 +463,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA: lo_script TYPE REF TO zcl_abapgit_html.
+    DATA: lo_script TYPE REF TO zcl_abapgit_html,
+          lt_events TYPE zcl_abapgit_gui_page=>tt_events.
+
+    FIELD-SYMBOLS:
+          <ls_event> LIKE LINE OF lt_events.
 
     " Redirect
     IF ms_control-redirect_url IS NOT INITIAL.
@@ -455,6 +488,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( render_hotkey_overview( ) ).
     ro_html->add( render_content( ) ).
     ro_html->add( render_error_message_box( ) ).
+
+    lt_events = me->get_events( ).
+    LOOP AT lt_events ASSIGNING <ls_event>.
+      ro_html->add( render_event_as_form( <ls_event> ) ).
+    ENDLOOP.
+
     ro_html->add( footer( ) ).
     ro_html->add( '</body>' ).                              "#EC NOTEXT
 
