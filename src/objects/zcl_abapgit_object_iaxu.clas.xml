@@ -3,22 +3,14 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_ABAPGIT_OBJECTS_SUPER</CLSNAME>
+    <CLSNAME>ZCL_ABAPGIT_OBJECT_IAXU</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Objects super</DESCRIPT>
+    <DESCRIPT>IAXU</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
    </VSEOCLASS>
-   <DESCRIPTIONS>
-    <SEOCOMPOTX>
-     <CLSNAME>ZCL_ABAPGIT_OBJECTS_SUPER</CLSNAME>
-     <CMPNAME>MO_FILES</CMPNAME>
-     <LANGU>E</LANGU>
-     <DESCRIPT>Files</DESCRIPT>
-    </SEOCOMPOTX>
-   </DESCRIPTIONS>
   </asx:values>
  </asx:abap>
 </abapGit>
