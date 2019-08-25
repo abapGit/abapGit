@@ -288,11 +288,11 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
           is_tadir    = <ls_tadir>
           iv_task     = |{ sy-tabix }|
           iv_language = iv_language ).
-        WAIT UNTIL mv_free > 0 UP TO 10 SECONDS.
+        WAIT UNTIL mv_free > 0 UP TO 120 SECONDS.
       ENDIF.
     ENDLOOP.
 
-    WAIT UNTIL mv_free = lv_max UP TO 10 SECONDS.
+    WAIT UNTIL mv_free = lv_max UP TO 120 SECONDS.
     rt_files = mt_files.
 
   ENDMETHOD.

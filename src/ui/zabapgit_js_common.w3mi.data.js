@@ -93,11 +93,17 @@ function debugOutput(text, dstID) {
   stdout.innerHTML = stdout.innerHTML + wrapped;
 }
 
-// Create hidden form and submit with sapevent
+// Use a pre-created form or create a hidden form
+// and submit with sapevent
 function submitSapeventForm(params, action, method) {
-  var form = document.createElement("form");
-  form.setAttribute("method", method || "post");
-  form.setAttribute("action", "sapevent:" + action);
+  var stub_form_id = "form_" + action;
+  var form = document.getElementById(stub_form_id);
+
+  if (form === null) {
+    form = document.createElement("form");
+    form.setAttribute("method", method || "post");
+    form.setAttribute("action", "sapevent:" + action);
+  }
 
   for(var key in params) {
     var hiddenField = document.createElement("input");
@@ -107,7 +113,10 @@ function submitSapeventForm(params, action, method) {
     form.appendChild(hiddenField);
   }
 
-  document.body.appendChild(form);
+  if (form.id !== stub_form_id) {
+    document.body.appendChild(form);
+  }
+
   form.submit();
 }
 
