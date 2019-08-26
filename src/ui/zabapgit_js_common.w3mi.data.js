@@ -567,6 +567,9 @@ function DiffHelper(params) {
   this.repoKey = this.dom.diffList.getAttribute("data-repo-key");
   if (!this.repoKey) return; // Unexpected
 
+  this.dom.jump = document.getElementById(params.ids.jump);
+  this.dom.jump.onclick = this.onJump.bind(this);
+
   // Checklist wrapper
   if (document.getElementById(params.ids.filterMenu)) {
     this.checkList = new CheckListWrapper(params.ids.filterMenu, this.onFilter.bind(this));
@@ -579,6 +582,17 @@ function DiffHelper(params) {
     this.dom.stageButton.onclick = this.onStage.bind(this);
   }
 }
+
+// Action on jump click
+DiffHelper.prototype.onJump = function(e){
+  if (!e.target.text) return;
+  var elFile = document.querySelector("[data-file*='" + e.target.text + "']");
+  if (!elFile) return;
+
+  setTimeout(function(){
+    elFile.scrollIntoView();
+  }, 100);
+};
 
 // Action on filter click
 DiffHelper.prototype.onFilter = function(attr, target, state) {
