@@ -19,8 +19,6 @@
 /* exported preparePatch */
 /* exported registerStagePatch */
 /* exported toggleRepoListDetail */
-/* exported onDirectionChange */
-/* exported onOrderByChange  */
 /* exported onTagTypeChange */
 /* exported getIndocStyleSheet */
 
@@ -202,16 +200,6 @@ function onTagTypeChange(oSelectObject){
 /**********************************************************
  * Repo Overview Logic
  **********************************************************/
-function onOrderByChange(oSelectObject){ // TODO remove
-  var sValue = oSelectObject.value;
-  submitSapeventForm({ orderBy: sValue }, "change_order_by", "post");
-}
-
-function onDirectionChange(oSelectObject){ // TODO remove
-  var sValue = oSelectObject.value;
-  submitSapeventForm({ direction: sValue }, "direction", "post");
-}
-
 function findStyleSheetByName(name) {
   for (var s = 0; s < document.styleSheets.length; s++) {
     var styleSheet = document.styleSheets[s];
