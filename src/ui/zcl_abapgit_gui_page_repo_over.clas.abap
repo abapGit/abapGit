@@ -395,6 +395,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       <ls_col>-add_tz       = &4.
     END-OF-DEFINITION.
 
+    "        technical name    display name      css class   add timezone
     _add_col 'FAVORITE'        ''                'wmin'      ''.
     _add_col 'TYPE'            ''                'wmin'      ''.
     _add_col 'NAME'            'Name'            ''          ''.
