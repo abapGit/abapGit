@@ -21,6 +21,7 @@
 /* exported toggleRepoListDetail */
 /* exported onTagTypeChange */
 /* exported getIndocStyleSheet */
+/* exported addMarginBottom */
 
 /**********************************************************
  * Polyfills
@@ -665,6 +666,11 @@ DiffHelper.prototype.highlightButton = function(state) {
     this.dom.filterButton.classList.remove("bgorange");
   }
 };
+
+// Add Bottom margin, so that we can scroll to the top of the last file
+function addMarginBottom(){
+  document.getElementsByTagName("body")[0].style.marginBottom = screen.height + "px";
+}
 
 /**********************************************************
  * Other functions

@@ -965,6 +965,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       ro_html->add( 'registerStagePatch();' ).
     ENDIF.
 
+    ro_html->add( 'addMarginBottom();' ).
+
   ENDMETHOD.
 
 
