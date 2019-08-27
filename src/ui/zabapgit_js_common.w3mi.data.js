@@ -19,8 +19,6 @@
 /* exported preparePatch */
 /* exported registerStagePatch */
 /* exported toggleRepoListDetail */
-/* exported onDirectionChange */
-/* exported onOrderByChange  */
 /* exported onTagTypeChange */
 /* exported getIndocStyleSheet */
 
@@ -202,16 +200,6 @@ function onTagTypeChange(oSelectObject){
 /**********************************************************
  * Repo Overview Logic
  **********************************************************/
-function onOrderByChange(oSelectObject){
-  var sValue = oSelectObject.value;
-  submitSapeventForm({ orderBy: sValue }, "change_order_by", "post");
-}
-
-function onDirectionChange(oSelectObject){
-  var sValue = oSelectObject.value;
-  submitSapeventForm({ direction: sValue }, "direction", "post");
-}
-
 function findStyleSheetByName(name) {
   for (var s = 0; s < document.styleSheets.length; s++) {
     var styleSheet = document.styleSheets[s];
@@ -232,12 +220,36 @@ function getIndocStyleSheet() {
   return style.sheet;
 }
 
-function toggleRepoListDetail() {
-  var detailClass = findStyleSheetByName(".ro-detail");
-  if (detailClass) {
-    detailClass.style.display = detailClass.style.display === "none" ? "" : "none";
-  }
+function RepoOverViewHelper() {
+  this.setHooks();
+  this.pageId = "RepoOverViewHelperState"; // constant is OK for this case
+  this.isDetailsDisplayed = false;
+  this.detailCssClass = findStyleSheetByName(".ro-detail");
 }
+
+RepoOverViewHelper.prototype.toggleRepoListDetail = function(forceDisplay) {
+  if (this.detailCssClass) {
+    this.isDetailsDisplayed = forceDisplay || !this.isDetailsDisplayed;
+    this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
+  }
+};
+
+RepoOverViewHelper.prototype.setHooks = function() {
+  window.onbeforeunload = this.onPageUnload.bind(this);
+  window.onload         = this.onPageLoad.bind(this);
+};
+
+RepoOverViewHelper.prototype.onPageUnload = function() {
+  if (!window.sessionStorage) return;
+  var data = { isDetailsDisplayed: this.isDetailsDisplayed };
+  window.sessionStorage.setItem(this.pageId, JSON.stringify(data));
+};
+
+RepoOverViewHelper.prototype.onPageLoad = function() {
+  var data = window.sessionStorage && JSON.parse(window.sessionStorage.getItem(this.pageId));
+  if (data && data.isDetailsDisplayed) this.toggleRepoListDetail(true);
+  debugOutput("RepoOverViewHelper.onPageLoad: " + ((data) ? "from Storage" : "initial state"));
+};
 
 /**********************************************************
  * STAGE PAGE Logic
