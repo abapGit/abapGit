@@ -1075,6 +1075,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     LOOP AT mt_diff_files ASSIGNING <ls_diff>.
 
       lo_sub_jump->add(
+          iv_id  = |li_jump_{ sy-tabix }|
           iv_txt = <ls_diff>-filename
           iv_typ = zif_abapgit_html=>c_action_type-onclick ).
 

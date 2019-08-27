@@ -615,9 +615,18 @@ DiffHelper.prototype.onFilter = function(attr, target, state) {
 
 // Hide/show diff based on params
 DiffHelper.prototype.applyFilter = function (attr, target, state) {
+
+  var jumpListItems = Array.prototype.slice.call(document.querySelectorAll("[id*=li_jump]"));
+
   this.iterateDiffList(function(div) {
     if (div.getAttribute("data-"+attr) === target) {
       div.style.display = state ? "" : "none";
+
+      // hide the file in the jump list
+      var dataFile = div.getAttribute("data-file");
+      jumpListItems
+        .filter(function(item){ return dataFile.includes(item.text) })
+        .map(function(item){ item.style.display = div.style.display });
     }
   });
 };
