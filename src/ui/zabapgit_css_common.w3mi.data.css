@@ -846,3 +846,40 @@ table.commit tr .title {
   box-shadow: 2px 2px 6px 0px #ccc;
   cursor: pointer;
 }
+
+/* Command palette */
+
+.cmd-palette {
+  position: absolute;
+  z-index: 99;
+  top: 36px;
+  left: 50%;
+  width: 40em;
+  margin-left: -20em;
+  box-shadow: 1px 1px 3px 2px #dcdcdc;
+  background-color: white;
+  border: solid 2px;
+  padding: 0px 1px;
+}
+
+.cmd-palette input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cmd-palette ul {
+  max-height: 10em;
+  overflow-y: scroll;
+  margin: 4px 0;
+  padding: 2px 4px;
+}
+
+.cmd-palette li {
+  list-style-type: none;
+  cursor: default;
+  padding: 4px 6px;
+}
+
+.cmd-palette li .icon {
+  margin-right: 10px;
+}

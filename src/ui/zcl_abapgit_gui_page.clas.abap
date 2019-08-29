@@ -219,6 +219,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_events.
+
+    " Return actions you need on your page.
+
+  ENDMETHOD.
+
+
   METHOD get_global_hotkeys.
 
     " these are the global shortcuts active on all pages
@@ -356,18 +363,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_hotkey_overview.
-
-    ro_html = zcl_abapgit_gui_chunk_lib=>render_hotkey_overview( me ).
-
-  ENDMETHOD.
-
-  METHOD get_events.
-
-    " Return actions you need on your page.
-
-  ENDMETHOD.
-
   METHOD render_event_as_form.
 
     CREATE OBJECT ro_html.
@@ -376,12 +371,21 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD render_hotkey_overview.
+
+    ro_html = zcl_abapgit_gui_chunk_lib=>render_hotkey_overview( me ).
+
+  ENDMETHOD.
+
+
   METHOD scripts.
 
     CREATE OBJECT ro_html.
 
     link_hints( ro_html ).
     insert_hotkeys_to_page( ro_html ).
+    ro_html->add( 'var gCommandPalette = new CommandPalette(enumerateTocAllRepos, "g", "Go to repo ...");' ).
 
   ENDMETHOD.
 

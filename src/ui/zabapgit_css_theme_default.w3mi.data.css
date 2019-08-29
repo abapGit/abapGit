@@ -359,3 +359,19 @@ div.corner-hint {
 .ci-result li.ci-error   { border-left-color: #cd5353; }
 .ci-result li.ci-warning { border-left-color: #ecd227; }
 .ci-result li.ci-info    { border-left-color: #acacac; }
+
+/* Command palette */
+
+.cmd-palette {
+  border-color: #ccc;
+}
+
+.cmd-palette li.selected {
+  background-color: hsla(214, 50%, 90%, 1);
+}
+
+.cmd-palette mark {
+  color: white;
+  background-color: #79a0d2;
+  /* todo merge with stage search */
+}

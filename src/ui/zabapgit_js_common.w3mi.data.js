@@ -793,7 +793,6 @@ KeyNavigation.prototype.onArrowUp = function (oEvent) {
 function enableArrowListNavigation() {
 
   var oKeyNavigation = new KeyNavigation();
-
   document.addEventListener("keydown", oKeyNavigation.onkeydown.bind(oKeyNavigation));
 
 }
@@ -1406,4 +1405,242 @@ function GitGraphScroller() { // eslint-disable-line no-unused-vars
   var gitGraphWrapperEl = document.querySelector(".gitGraph-Wrapper");
   var gitGraphscrollWrapperEl = document.querySelector(".gitGraph-scrollWrapper");
   gitGraphWrapperEl.scrollLeft = gitGraphscrollWrapperEl.scrollLeft;
+}
+
+/**********************************************************
+ * Ctrl + P - command palette
+ **********************************************************/
+
+// fuzzy match helper
+// return non empty marked string in case it fits the filter
+// abc + b = a<mark>b</mark>c
+function fuzzyMatchAndMark(str, filter){
+  var markedStr = "";
+  var cur = 0;
+
+  for (var i = 0; i < filter.length; i++) {
+    while (filter[i] !== str[cur] && cur < str.length) {
+      markedStr += str[cur++];
+    }
+    if (cur === str.length) break;
+    markedStr += "<mark>" + str[cur++] + "</mark>";
+  }
+
+  var matched = i === filter.length;
+  if (matched && cur < str.length) markedStr += str.substring(cur);
+  return matched ? markedStr : null;
+}
+
+function CommandPalette(commandEnumerator, toggleKey, hotkeyDescription) {
+  if (typeof commandEnumerator !== "function") throw "commandEnumerator must be a function";
+  if (typeof toggleKey !== "string" || !toggleKey) throw "toggleKey must be a string";
+  this.commands = commandEnumerator();
+  if (!this.commands) return;
+  // array of
+  // {
+  //   action:    "sapevent:..."
+  //   iconClass: "icon icon_x ..."
+  //   title:     "my command X"
+  // };
+
+  this.toggleKey      = toggleKey;
+  this.hotkeyDescription = hotkeyDescription;
+  this.isDisplayed    = false;
+  this.paletteElement = null;
+  this.ulElement      = null;
+  this.inputElement   = null;
+  this.selectedItem   = null;
+  this.selectIndex    = 0;
+  this.filter         = "";
+  this.renderAndBindElements();
+  document.addEventListener("keydown", this.handleToggleKey.bind(this));
+  this.inputElement.addEventListener("keyup", this.handleInputKey.bind(this));
+  this.ulElement.addEventListener("click", this.handleUlClick.bind(this));
+  this.updateHotkeys();
+  // TODO
+  // - case insensitive search
+  // - g cannot be typed
+  // - conflicts with enableArrowListNavigation??
+  // - fine tuning, cleanups, maybe perf test ...
+}
+
+CommandPalette.prototype.updateHotkeys = function(){
+  var hotkeysUl = document.querySelector("#hotkeys ul.hotkeys");
+  if (!hotkeysUl) return; // fail silently?
+  var li = document.createElement("li");
+  var spanId = document.createElement("span");
+  spanId.className = "key-id";
+  spanId.innerText = this.toggleKey;
+  var spanDescr = document.createElement("span");
+  spanDescr.className = "key-descr";
+  spanDescr.innerText = this.hotkeyDescription;
+  li.appendChild(spanId);
+  li.appendChild(spanDescr);
+  hotkeysUl.appendChild(li);
+}
+
+CommandPalette.prototype.renderAndBindElements = function(){
+  var div = document.createElement("div");
+  div.className       = "cmd-palette";
+  div.style.display   = "none";
+  this.paletteElement = div;
+
+  var input = document.createElement("input");
+  input.placeholder = this.hotkeyDescription;
+  div.appendChild(input);
+  this.inputElement = input;
+
+  var ul = document.createElement("ul");
+  div.appendChild(ul);
+  this.ulElement = ul;
+
+  for (var i = 0; i < this.commands.length; i++) {
+    var cmd = this.commands[i];
+    var li = document.createElement("li");
+    if (cmd.iconClass) {
+      var icon = document.createElement("i");
+      icon.className = cmd.iconClass;
+      li.appendChild(icon);
+    }
+    var titleSpan = document.createElement("span");
+    li.appendChild(titleSpan);
+    cmd.element = li;
+    cmd.titleSpan = titleSpan;
+    ul.appendChild(li);
+  }
+
+  document.body.appendChild(div);
+}
+
+CommandPalette.prototype.handleToggleKey = function(event){
+  if (event.key !== this.toggleKey) return;
+  event.preventDefault();
+  this.toggleDisplay();
+}
+
+CommandPalette.prototype.handleInputKey = function(event){
+  if ((event.key === "ArrowUp" || event.key === "Up") && this.selectIndex > 0) {
+    this.selectIndex--;
+    this.highlight();
+  } else if ((event.key === "ArrowDown" || event.key === "Down") && this.selectIndex < this.commands.length - 1) {
+    this.selectIndex++;
+    this.highlight();
+  } else if (event.key === "Enter") {
+    this.exec(this.selectedItem);
+  } else if (this.filter !== this.inputElement.value) {
+    this.selectIndex = 0;
+    this.filter = this.inputElement.value;
+    this.applyFilter();
+    this.highlight();
+  }
+  event.preventDefault();
+}
+
+CommandPalette.prototype.applyFilter = function(){
+  for (var i = 0; i < this.commands.length; i++) {
+    var cmd = this.commands[i];
+    if (!this.filter) {
+      cmd.element.style.display = "";
+      cmd.titleSpan.innerText   = cmd.title;
+      cmd.element.classList.remove("selected");
+    } else {
+      var matchedTitle = fuzzyMatchAndMark(cmd.title, this.filter);
+      if (matchedTitle) {
+        cmd.titleSpan.innerHTML   = matchedTitle;
+        cmd.element.style.display = "";
+      } else {
+        cmd.element.style.display = "none";
+      }
+    }
+  }
+}
+
+CommandPalette.prototype.highlight = function(){
+  if (this.selectedItem) this.selectedItem.element.classList.remove("selected");
+  
+  var index = 0;
+  for (var i = 0; i < this.commands.length; i++) {
+    var cmd = this.commands[i];
+    if (cmd.element.style.display === "none") continue;
+    if (this.selectIndex === index) {
+      cmd.element.classList.add("selected");
+      this.selectedItem = cmd;
+      this.adjustScrollPosition(cmd.element);
+      break;
+    } else {
+      index ++;
+    }
+  }
+}
+
+CommandPalette.prototype.adjustScrollPosition = function(itemElement){
+  var bItem         = itemElement.getBoundingClientRect();
+  var bContainer    = this.ulElement.getBoundingClientRect();
+  bItem.top         = Math.round(bItem.top);
+  bItem.bottom      = Math.round(bItem.bottom);
+  bItem.height      = Math.round(bItem.height);
+  bItem.mid         = Math.round(bItem.top + bItem.height / 2);
+  bContainer.top    = Math.round(bContainer.top);
+  bContainer.bottom = Math.round(bContainer.bottom);
+
+  if ( bItem.mid > bContainer.bottom - 2 ) {
+    this.ulElement.scrollTop += bItem.bottom - bContainer.bottom;
+  } else if ( bItem.mid < bContainer.top + 2 ) {
+    this.ulElement.scrollTop += bItem.top - bContainer.top;
+  }
+}
+
+CommandPalette.prototype.toggleDisplay = function(forceState) {
+  this.isDisplayed = forceState !== undefined ? forceState : !this.isDisplayed;
+  this.paletteElement.style.display = this.isDisplayed ? "" : "none";
+  if (this.isDisplayed) {
+    this.selectedItem = this.commands[0];
+    this.selectIndex = 0;
+    this.inputElement.value = "";
+    this.inputElement.focus();
+    this.applyFilter();
+    this.highlight();
+  }
+};
+
+CommandPalette.prototype.handleUlClick = function(event) {
+  var element = event.target || event.srcElement;
+  if (!element) return;
+  if (element.nodeName === "SPAN") element = element.parentNode;
+  if (element.nodeName === "I") element = element.parentNode;
+  if (element.nodeName !== "LI") return;
+  for (var i = 0; i < this.commands.length; i++) {
+    var cmd = this.commands[i];
+    if (cmd.element === element) {
+      this.exec(cmd);
+      break;
+    }
+  }
+}
+
+CommandPalette.prototype.exec = function(cmd) {
+  this.toggleDisplay(false);
+  console.log("EXEC", cmd.title);
+  submitSapeventForm(null, cmd.action);
+}
+
+function enumerateTocAllRepos() {
+  var root = document.getElementById("toc-all-repos");
+  if (!root || root.nodeName !== "UL") return null;
+
+  var items = [];
+  for (var i = 0; i < root.children.length; i++) {
+    if (root.children[i].nodeName === 'LI') items.push(root.children[i]);
+  }
+
+  items = items.map(function(listItem) {
+    var anchor = listItem.children[0];
+    return {
+      action:    anchor.href.replace("sapevent:", ""),  // a
+      iconClass: anchor.childNodes[0].className,        // i with icon
+      title:     anchor.childNodes[1].textContent       // text with repo name
+    };
+  });
+
+  return items;
 }
