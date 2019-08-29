@@ -4,6 +4,7 @@ CLASS zcl_abapgit_apack_migration DEFINITION
   CREATE PRIVATE.
 
   PUBLIC SECTION.
+    CONSTANTS: c_apack_interface_version TYPE i VALUE 1.
     CLASS-METHODS: run RAISING zcx_abapgit_exception.
     METHODS: perform_migration RAISING zcx_abapgit_exception.
   PROTECTED SECTION.
@@ -13,17 +14,19 @@ CLASS zcl_abapgit_apack_migration DEFINITION
 
     METHODS:
       interface_exists RETURNING VALUE(rv_interface_exists) TYPE abap_bool,
+      interface_valid RETURNING VALUE(rv_interface_valid) TYPE abap_bool,
       create_interface RAISING zcx_abapgit_exception,
       add_interface_source_classic IMPORTING is_clskey TYPE seoclskey
                                    RAISING   zcx_abapgit_exception,
       add_interface_source IMPORTING is_clskey TYPE seoclskey
                            RAISING   zcx_abapgit_exception,
-      get_interface_source RETURNING VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt.
+      get_interface_source RETURNING VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt,
+      add_intf_source_and_activate RAISING zcx_abapgit_exception.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_APACK_MIGRATION IMPLEMENTATION.
+CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
 
 
   METHOD add_interface_source.
@@ -102,10 +105,7 @@ CLASS ZCL_ABAPGIT_APACK_MIGRATION IMPLEMENTATION.
 
   METHOD create_interface.
 
-    DATA: ls_interface_properties TYPE vseointerf,
-          ls_clskey               TYPE seoclskey,
-          ls_inactive_object      TYPE dwinactiv,
-          lt_inactive_objects     TYPE TABLE OF dwinactiv.
+    DATA: ls_interface_properties TYPE vseointerf.
 
     ls_interface_properties-clsname  = c_interface_name.
     ls_interface_properties-version  = '1'.
@@ -132,25 +132,7 @@ CLASS ZCL_ABAPGIT_APACK_MIGRATION IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Error from SEO_INTERFACE_CREATE_COMPLETE' ) ##NO_TEXT.
     ENDIF.
 
-    ls_clskey-clsname = c_interface_name.
-
-    add_interface_source( ls_clskey ).
-
-    ls_inactive_object-object   = 'INTF'.
-    ls_inactive_object-obj_name = c_interface_name.
-    INSERT ls_inactive_object INTO TABLE lt_inactive_objects.
-
-    CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
-      TABLES
-        objects                = lt_inactive_objects
-      EXCEPTIONS
-        excecution_error       = 1
-        cancelled              = 2
-        insert_into_corr_error = 3
-        OTHERS                 = 4.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_WORKING_OBJECTS_ACTIVATE' ) ##NO_TEXT.
-    ENDIF.
+    add_intf_source_and_activate( ).
 
   ENDMETHOD.
 
@@ -162,6 +144,7 @@ CLASS ZCL_ABAPGIT_APACK_MIGRATION IMPLEMENTATION.
     INSERT `  TYPES: BEGIN OF ty_dependency,` INTO TABLE rt_source ##NO_TEXT.
     INSERT `           group_id       TYPE string,` INTO TABLE rt_source ##NO_TEXT.
     INSERT `           artifact_id    TYPE string,` INTO TABLE rt_source ##NO_TEXT.
+    INSERT `           version        TYPE string,` INTO TABLE rt_source ##NO_TEXT.
     INSERT `           git_url        TYPE string,` INTO TABLE rt_source ##NO_TEXT.
     INSERT `           target_package TYPE devclass,` INTO TABLE rt_source ##NO_TEXT.
     INSERT `         END OF ty_dependency,` INTO TABLE rt_source ##NO_TEXT.
@@ -177,8 +160,9 @@ CLASS ZCL_ABAPGIT_APACK_MIGRATION IMPLEMENTATION.
     INSERT `           dependencies    TYPE ty_dependencies,` INTO TABLE rt_source ##NO_TEXT.
     INSERT `         END OF ty_descriptor.` INTO TABLE rt_source ##NO_TEXT.
     INSERT `` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `  CONSTANTS: co_file_name TYPE string VALUE '.apack-manifest.xml',` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `             co_abap_git  TYPE ty_repository_type VALUE 'abapGit'.` INTO TABLE rt_source ##NO_TEXT.
+    INSERT `  CONSTANTS: co_file_name         TYPE string VALUE '.apack-manifest.xml',` INTO TABLE rt_source ##NO_TEXT.
+    INSERT `             co_abap_git          TYPE ty_repository_type VALUE 'abapGit',` INTO TABLE rt_source ##NO_TEXT.
+    INSERT `             co_interface_version TYPE i VALUE 1.` INTO TABLE rt_source ##NO_TEXT.
     INSERT `` INTO TABLE rt_source ##NO_TEXT.
     INSERT `  DATA: descriptor TYPE ty_descriptor READ-ONLY.` INTO TABLE rt_source ##NO_TEXT.
     INSERT `` INTO TABLE rt_source ##NO_TEXT.
@@ -201,6 +185,8 @@ CLASS ZCL_ABAPGIT_APACK_MIGRATION IMPLEMENTATION.
 
     IF interface_exists( ) = abap_false.
       create_interface( ).
+    ELSEIF interface_valid( ) = abap_false.
+      add_intf_source_and_activate( ).
     ENDIF.
 
   ENDMETHOD.
@@ -214,4 +200,48 @@ CLASS ZCL_ABAPGIT_APACK_MIGRATION IMPLEMENTATION.
     lo_apack_migration->perform_migration( ).
 
   ENDMETHOD.
+
+  METHOD interface_valid.
+
+    FIELD-SYMBOLS: <lv_interface_version> TYPE i.
+
+    ASSIGN ('ZIF_APACK_MANIFEST')=>('CO_INTERFACE_VERSION') TO <lv_interface_version>.
+    IF <lv_interface_version> IS ASSIGNED AND <lv_interface_version> >= c_apack_interface_version.
+      rv_interface_valid = abap_true.
+    ELSE.
+      rv_interface_valid = abap_false.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD add_intf_source_and_activate.
+
+    DATA: ls_clskey           TYPE seoclskey,
+          ls_inactive_object  TYPE dwinactiv,
+          lt_inactive_objects TYPE TABLE OF dwinactiv.
+
+    ls_clskey-clsname = c_interface_name.
+
+    add_interface_source( ls_clskey ).
+
+    ls_inactive_object-object   = 'INTF'.
+    ls_inactive_object-obj_name = c_interface_name.
+    INSERT ls_inactive_object INTO TABLE lt_inactive_objects.
+
+    CALL FUNCTION 'RS_WORKING_OBJECTS_ACTIVATE'
+      TABLES
+        objects                = lt_inactive_objects
+      EXCEPTIONS
+        excecution_error       = 1
+        cancelled              = 2
+        insert_into_corr_error = 3
+        OTHERS                 = 4.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from RS_WORKING_OBJECTS_ACTIVATE' ) ##NO_TEXT.
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.
