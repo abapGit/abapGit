@@ -1,6 +1,6 @@
 {
   "global": {
-    "version": "v702",
+    "files": "/src/**/*.*",
     "skipGeneratedGatewayClasses": true,
     "skipGeneratedPersistentClasses": true,
     "skipGeneratedFunctionGroups": true,
@@ -14,6 +14,7 @@
     }
   ],
   "syntax": {
+    "version": "v702",
     "errorNamespace": "^(Z|Y)",
     "globalConstants": [
       "abap_func_exporting",
