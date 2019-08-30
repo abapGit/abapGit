@@ -87,6 +87,10 @@
       "enabled": true,
       "exclude": []
     },
+    "check_transformation_exists": {
+      "enabled": true,
+      "exclude": []
+    },
     "check_variables": {
       "enabled": true,
       "exclude": []
@@ -161,6 +165,10 @@
       "enabled": true,
       "exclude": []
     },
+    "form_tables_obsolete": {
+      "enabled": false,
+      "exclude": []
+    },
     "functional_writing": {
       "enabled": true,
       "exclude": [],
@@ -175,6 +183,10 @@
       "exclude": []
     },
     "if_in_if": {
+      "enabled": true,
+      "exclude": []
+    },
+    "implement_methods": {
       "enabled": true,
       "exclude": []
     },
@@ -231,6 +243,10 @@
       "expectedData": "^L._.*$",
       "expectedConstant": "^LC_.*$",
       "expectedFS": "^<L._.*>$"
+    },
+    "main_file_contents": {
+      "enabled": true,
+      "exclude": []
     },
     "max_one_statement": {
       "enabled": true,
@@ -289,7 +305,8 @@
       "tran": "^Z",
       "enqu": "^EZ",
       "auth": "^Z",
-      "pinf": "^Z"
+      "pinf": "^Z",
+      "idoc": "^Z"
     },
     "obsolete_statement": {
       "enabled": true,
@@ -356,6 +373,10 @@
     },
     "tabl_enhancement_category": {
       "enabled": true,
+      "exclude": []
+    },
+    "type_form_parameters": {
+      "enabled": false,
       "exclude": []
     },
     "unreachable_code": {
