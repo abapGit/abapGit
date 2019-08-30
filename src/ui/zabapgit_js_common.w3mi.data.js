@@ -21,6 +21,7 @@
 /* exported toggleRepoListDetail */
 /* exported onTagTypeChange */
 /* exported getIndocStyleSheet */
+/* exported addMarginBottom */
 
 /**********************************************************
  * Polyfills
@@ -579,6 +580,9 @@ function DiffHelper(params) {
   this.repoKey = this.dom.diffList.getAttribute("data-repo-key");
   if (!this.repoKey) return; // Unexpected
 
+  this.dom.jump = document.getElementById(params.ids.jump);
+  this.dom.jump.onclick = this.onJump.bind(this);
+
   // Checklist wrapper
   if (document.getElementById(params.ids.filterMenu)) {
     this.checkList = new CheckListWrapper(params.ids.filterMenu, this.onFilter.bind(this));
@@ -592,6 +596,17 @@ function DiffHelper(params) {
   }
 }
 
+// Action on jump click
+DiffHelper.prototype.onJump = function(e){
+  if (!e.target.text) return;
+  var elFile = document.querySelector("[data-file*='" + e.target.text + "']");
+  if (!elFile) return;
+
+  setTimeout(function(){
+    elFile.scrollIntoView();
+  }, 100);
+};
+
 // Action on filter click
 DiffHelper.prototype.onFilter = function(attr, target, state) {
   this.applyFilter(attr, target, state);
@@ -600,9 +615,18 @@ DiffHelper.prototype.onFilter = function(attr, target, state) {
 
 // Hide/show diff based on params
 DiffHelper.prototype.applyFilter = function (attr, target, state) {
+
+  var jumpListItems = Array.prototype.slice.call(document.querySelectorAll("[id*=li_jump]"));
+
   this.iterateDiffList(function(div) {
     if (div.getAttribute("data-"+attr) === target) {
       div.style.display = state ? "" : "none";
+
+      // hide the file in the jump list
+      var dataFile = div.getAttribute("data-file");
+      jumpListItems
+        .filter(function(item){ return dataFile.includes(item.text) })
+        .map(function(item){ item.style.display = div.style.display });
     }
   });
 };
@@ -651,6 +675,11 @@ DiffHelper.prototype.highlightButton = function(state) {
     this.dom.filterButton.classList.remove("bgorange");
   }
 };
+
+// Add Bottom margin, so that we can scroll to the top of the last file
+function addMarginBottom(){
+  document.getElementsByTagName("body")[0].style.marginBottom = screen.height + "px";
+}
 
 /**********************************************************
  * Other functions
