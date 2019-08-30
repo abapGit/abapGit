@@ -22,6 +22,7 @@
 /* exported onTagTypeChange */
 /* exported getIndocStyleSheet */
 /* exported addMarginBottom */
+/* exported enumerateTocAllRepos */
 
 /**********************************************************
  * Polyfills
@@ -696,7 +697,6 @@ function KeyNavigation() {
 }
 
 KeyNavigation.prototype.onkeydown = function(oEvent) {
-
   if (oEvent.defaultPrevented) {
     return;
   }
@@ -1415,11 +1415,13 @@ function GitGraphScroller() { // eslint-disable-line no-unused-vars
 // return non empty marked string in case it fits the filter
 // abc + b = a<mark>b</mark>c
 function fuzzyMatchAndMark(str, filter){
-  var markedStr = "";
-  var cur = 0;
+  var markedStr   = "";
+  var filterLower = filter.toLowerCase();
+  var strLower    = str.toLowerCase();
+  var cur         = 0;
 
   for (var i = 0; i < filter.length; i++) {
-    while (filter[i] !== str[cur] && cur < str.length) {
+    while (filterLower[i] !== strLower[cur] && cur < str.length) {
       markedStr += str[cur++];
     }
     if (cur === str.length) break;
@@ -1431,9 +1433,10 @@ function fuzzyMatchAndMark(str, filter){
   return matched ? markedStr : null;
 }
 
-function CommandPalette(commandEnumerator, toggleKey, hotkeyDescription) {
-  if (typeof commandEnumerator !== "function") throw "commandEnumerator must be a function";
-  if (typeof toggleKey !== "string" || !toggleKey) throw "toggleKey must be a string";
+function CommandPalette(commandEnumerator, opts) {
+  if (typeof commandEnumerator !== "function") throw Error("commandEnumerator must be a function");
+  if (typeof opts !== "object") throw Error("opts must be an object");
+  if (typeof opts.toggleKey !== "string" || !opts.toggleKey) throw Error("toggleKey must be a string");
   this.commands = commandEnumerator();
   if (!this.commands) return;
   // array of
@@ -1443,23 +1446,29 @@ function CommandPalette(commandEnumerator, toggleKey, hotkeyDescription) {
   //   title:     "my command X"
   // };
 
-  this.toggleKey      = toggleKey;
-  this.hotkeyDescription = hotkeyDescription;
-  this.isDisplayed    = false;
-  this.paletteElement = null;
-  this.ulElement      = null;
-  this.inputElement   = null;
-  this.selectedItem   = null;
-  this.selectIndex    = 0;
-  this.filter         = "";
+  if (opts.toggleKey[0] === '^') {
+    this.toggleKeyCtrl = true;
+    this.toggleKey     = opts.toggleKey.substring(1);
+    if (!this.toggleKey) throw Error("Incorrect toggleKey");
+  } else {
+    this.toggleKeyCtrl = false;
+    this.toggleKey     = opts.toggleKey;
+  }
+
+  this.hotkeyDescription = opts.hotkeyDescription;
+  this.isDisplayed       = false;
+  this.paletteElement    = null;
+  this.ulElement         = null;
+  this.inputElement      = null;
+  this.selectedItem      = null;
+  this.selectIndex       = 0;
+  this.filter            = "";
   this.renderAndBindElements();
   document.addEventListener("keydown", this.handleToggleKey.bind(this));
   this.inputElement.addEventListener("keyup", this.handleInputKey.bind(this));
   this.ulElement.addEventListener("click", this.handleUlClick.bind(this));
   this.updateHotkeys();
   // TODO
-  // - case insensitive search
-  // - g cannot be typed
   // - conflicts with enableArrowListNavigation??
   // - fine tuning, cleanups, maybe perf test ...
 }
@@ -1468,16 +1477,16 @@ CommandPalette.prototype.updateHotkeys = function(){
   var hotkeysUl = document.querySelector("#hotkeys ul.hotkeys");
   if (!hotkeysUl) return; // fail silently?
   var li = document.createElement("li");
-  var spanId = document.createElement("span");
-  spanId.className = "key-id";
-  spanId.innerText = this.toggleKey;
-  var spanDescr = document.createElement("span");
+  var spanId          = document.createElement("span");
+  spanId.className    = "key-id";
+  spanId.innerText    = (this.toggleKeyCtrl ? "^" : "") + this.toggleKey;
+  var spanDescr       = document.createElement("span");
   spanDescr.className = "key-descr";
   spanDescr.innerText = this.hotkeyDescription;
   li.appendChild(spanId);
   li.appendChild(spanDescr);
   hotkeysUl.appendChild(li);
-}
+};
 
 CommandPalette.prototype.renderAndBindElements = function(){
   var div = document.createElement("div");
@@ -1510,13 +1519,14 @@ CommandPalette.prototype.renderAndBindElements = function(){
   }
 
   document.body.appendChild(div);
-}
+};
 
 CommandPalette.prototype.handleToggleKey = function(event){
   if (event.key !== this.toggleKey) return;
+  if (this.toggleKeyCtrl && !event.ctrlKey) return;
   event.preventDefault();
   this.toggleDisplay();
-}
+};
 
 CommandPalette.prototype.handleInputKey = function(event){
   if ((event.key === "ArrowUp" || event.key === "Up") && this.selectIndex > 0) {
@@ -1534,7 +1544,7 @@ CommandPalette.prototype.handleInputKey = function(event){
     this.highlight();
   }
   event.preventDefault();
-}
+};
 
 CommandPalette.prototype.applyFilter = function(){
   for (var i = 0; i < this.commands.length; i++) {
@@ -1553,11 +1563,11 @@ CommandPalette.prototype.applyFilter = function(){
       }
     }
   }
-}
+};
 
 CommandPalette.prototype.highlight = function(){
   if (this.selectedItem) this.selectedItem.element.classList.remove("selected");
-  
+
   var index = 0;
   for (var i = 0; i < this.commands.length; i++) {
     var cmd = this.commands[i];
@@ -1571,7 +1581,7 @@ CommandPalette.prototype.highlight = function(){
       index ++;
     }
   }
-}
+};
 
 CommandPalette.prototype.adjustScrollPosition = function(itemElement){
   var bItem         = itemElement.getBoundingClientRect();
@@ -1588,7 +1598,7 @@ CommandPalette.prototype.adjustScrollPosition = function(itemElement){
   } else if ( bItem.mid < bContainer.top + 2 ) {
     this.ulElement.scrollTop += bItem.top - bContainer.top;
   }
-}
+};
 
 CommandPalette.prototype.toggleDisplay = function(forceState) {
   this.isDisplayed = forceState !== undefined ? forceState : !this.isDisplayed;
@@ -1616,13 +1626,12 @@ CommandPalette.prototype.handleUlClick = function(event) {
       break;
     }
   }
-}
+};
 
 CommandPalette.prototype.exec = function(cmd) {
   this.toggleDisplay(false);
-  console.log("EXEC", cmd.title);
   submitSapeventForm(null, cmd.action);
-}
+};
 
 function enumerateTocAllRepos() {
   var root = document.getElementById("toc-all-repos");
@@ -1630,7 +1639,7 @@ function enumerateTocAllRepos() {
 
   var items = [];
   for (var i = 0; i < root.children.length; i++) {
-    if (root.children[i].nodeName === 'LI') items.push(root.children[i]);
+    if (root.children[i].nodeName === "LI") items.push(root.children[i]);
   }
 
   items = items.map(function(listItem) {
