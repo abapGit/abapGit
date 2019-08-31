@@ -1446,7 +1446,7 @@ function CommandPalette(commandEnumerator, opts) {
   //   title:     "my command X"
   // };
 
-  if (opts.toggleKey[0] === '^') {
+  if (opts.toggleKey[0] === "^") {
     this.toggleKeyCtrl = true;
     this.toggleKey     = opts.toggleKey.substring(1);
     if (!this.toggleKey) throw Error("Incorrect toggleKey");
@@ -1456,27 +1456,29 @@ function CommandPalette(commandEnumerator, opts) {
   }
 
   this.hotkeyDescription = opts.hotkeyDescription;
-  this.isDisplayed       = false;
-  this.paletteElement    = null;
-  this.ulElement         = null;
-  this.inputElement      = null;
-  this.selectedItem      = null;
+  this.elements = {
+    palette: null,
+    ul:      null,
+    input:   null
+  };
+  // this.selectedItem      = null;
   this.selectIndex       = 0;
   this.filter            = "";
   this.renderAndBindElements();
-  document.addEventListener("keydown", this.handleToggleKey.bind(this));
-  this.inputElement.addEventListener("keyup", this.handleInputKey.bind(this));
-  this.ulElement.addEventListener("click", this.handleUlClick.bind(this));
+  this.hookEvents();
   this.updateHotkeys();
   // TODO
   // - conflicts with enableArrowListNavigation??
-  // - fine tuning, cleanups, maybe perf test ...
 }
 
-CommandPalette.prototype.updateHotkeys = function(){
-  var hotkeysUl = document.querySelector("#hotkeys ul.hotkeys");
-  if (!hotkeysUl) return; // fail silently?
-  var li = document.createElement("li");
+CommandPalette.prototype.hookEvents = function(){
+  document.addEventListener("keydown", this.handleToggleKey.bind(this));
+  this.elements.input.addEventListener("keyup", this.handleInputKey.bind(this));
+  this.elements.ul.addEventListener("click", this.handleUlClick.bind(this));
+}
+
+CommandPalette.prototype.renderHotkeyItem = function(){
+  var li              = document.createElement("li");
   var spanId          = document.createElement("span");
   spanId.className    = "key-id";
   spanId.innerText    = (this.toggleKeyCtrl ? "^" : "") + this.toggleKey;
@@ -1485,37 +1487,45 @@ CommandPalette.prototype.updateHotkeys = function(){
   spanDescr.innerText = this.hotkeyDescription;
   li.appendChild(spanId);
   li.appendChild(spanDescr);
-  hotkeysUl.appendChild(li);
+  return li;
+};
+
+CommandPalette.prototype.updateHotkeys = function(){
+  var hotkeysUl = document.querySelector("#hotkeys ul.hotkeys");
+  if (hotkeysUl) hotkeysUl.appendChild(this.renderHotkeyItem());
+};
+
+CommandPalette.prototype.renderCommandItem = function(cmd){
+  var li = document.createElement("li");
+  if (cmd.iconClass) {
+    var icon       = document.createElement("i");
+    icon.className = cmd.iconClass;
+    li.appendChild(icon);
+  }
+  var titleSpan = document.createElement("span");
+  li.appendChild(titleSpan);
+  cmd.element   = li;
+  cmd.titleSpan = titleSpan;
+  return li;
 };
 
 CommandPalette.prototype.renderAndBindElements = function(){
-  var div = document.createElement("div");
-  div.className       = "cmd-palette";
-  div.style.display   = "none";
-  this.paletteElement = div;
+  var div               = document.createElement("div");
+  div.className         = "cmd-palette";
+  div.style.display     = "none";
+  this.elements.palette = div;
 
-  var input = document.createElement("input");
-  input.placeholder = this.hotkeyDescription;
+  var input           = document.createElement("input");
+  input.placeholder   = this.hotkeyDescription;
+  this.elements.input = input;
   div.appendChild(input);
-  this.inputElement = input;
 
-  var ul = document.createElement("ul");
+  var ul           = document.createElement("ul");
+  this.elements.ul = ul;
   div.appendChild(ul);
-  this.ulElement = ul;
 
   for (var i = 0; i < this.commands.length; i++) {
-    var cmd = this.commands[i];
-    var li = document.createElement("li");
-    if (cmd.iconClass) {
-      var icon = document.createElement("i");
-      icon.className = cmd.iconClass;
-      li.appendChild(icon);
-    }
-    var titleSpan = document.createElement("span");
-    li.appendChild(titleSpan);
-    cmd.element = li;
-    cmd.titleSpan = titleSpan;
-    ul.appendChild(li);
+    ul.appendChild(this.renderCommandItem(this.commands[i]));
   }
 
   document.body.appendChild(div);
@@ -1524,8 +1534,8 @@ CommandPalette.prototype.renderAndBindElements = function(){
 CommandPalette.prototype.handleToggleKey = function(event){
   if (event.key !== this.toggleKey) return;
   if (this.toggleKeyCtrl && !event.ctrlKey) return;
-  event.preventDefault();
   this.toggleDisplay();
+  event.preventDefault();
 };
 
 CommandPalette.prototype.handleInputKey = function(event){
@@ -1537,9 +1547,9 @@ CommandPalette.prototype.handleInputKey = function(event){
     this.highlight();
   } else if (event.key === "Enter") {
     this.exec(this.selectedItem);
-  } else if (this.filter !== this.inputElement.value) {
+  } else if (this.filter !== this.elements.input.value) {
     this.selectIndex = 0;
-    this.filter = this.inputElement.value;
+    this.filter = this.elements.input.value;
     this.applyFilter();
     this.highlight();
   }
@@ -1565,6 +1575,16 @@ CommandPalette.prototype.applyFilter = function(){
   }
 };
 
+CommandPalette.prototype.getSelectedItem = function(){
+  var index = 0;
+  for (var i = 0; i < this.commands.length; i++) {
+    var cmd = this.commands[i];
+    if (cmd.element.style.display === "none") continue; // skip hidden
+    if (this.selectIndex === index) return cmd;
+    index ++;
+  }
+};
+
 CommandPalette.prototype.highlight = function(){
   if (this.selectedItem) this.selectedItem.element.classList.remove("selected");
 
@@ -1585,7 +1605,7 @@ CommandPalette.prototype.highlight = function(){
 
 CommandPalette.prototype.adjustScrollPosition = function(itemElement){
   var bItem         = itemElement.getBoundingClientRect();
-  var bContainer    = this.ulElement.getBoundingClientRect();
+  var bContainer    = this.elements.ul.getBoundingClientRect();
   bItem.top         = Math.round(bItem.top);
   bItem.bottom      = Math.round(bItem.bottom);
   bItem.height      = Math.round(bItem.height);
@@ -1594,24 +1614,32 @@ CommandPalette.prototype.adjustScrollPosition = function(itemElement){
   bContainer.bottom = Math.round(bContainer.bottom);
 
   if ( bItem.mid > bContainer.bottom - 2 ) {
-    this.ulElement.scrollTop += bItem.bottom - bContainer.bottom;
+    this.elements.ul.scrollTop += bItem.bottom - bContainer.bottom;
   } else if ( bItem.mid < bContainer.top + 2 ) {
-    this.ulElement.scrollTop += bItem.top - bContainer.top;
+    this.elements.ul.scrollTop += bItem.top - bContainer.top;
   }
 };
 
 CommandPalette.prototype.toggleDisplay = function(forceState) {
-  this.isDisplayed = forceState !== undefined ? forceState : !this.isDisplayed;
-  this.paletteElement.style.display = this.isDisplayed ? "" : "none";
-  if (this.isDisplayed) {
+  var isDisplayed = (this.elements.palette.style.display !== "none");
+  isDisplayed = forceState !== undefined ? forceState : !isDisplayed;
+  this.elements.palette.style.display = isDisplayed ? "" : "none";
+  if (isDisplayed) {
     this.selectedItem = this.commands[0];
     this.selectIndex = 0;
-    this.inputElement.value = "";
-    this.inputElement.focus();
+    this.elements.input.value = "";
+    this.elements.input.focus();
     this.applyFilter();
     this.highlight();
   }
 };
+
+
+CommandPalette.prototype.getCommandByElement = function(element) {
+  for (var i = 0; i < this.commands.length; i++) {
+    if (this.commands[i].element === element) return this.commands[i];
+  }
+}
 
 CommandPalette.prototype.handleUlClick = function(event) {
   var element = event.target || event.srcElement;
@@ -1619,19 +1647,16 @@ CommandPalette.prototype.handleUlClick = function(event) {
   if (element.nodeName === "SPAN") element = element.parentNode;
   if (element.nodeName === "I") element = element.parentNode;
   if (element.nodeName !== "LI") return;
-  for (var i = 0; i < this.commands.length; i++) {
-    var cmd = this.commands[i];
-    if (cmd.element === element) {
-      this.exec(cmd);
-      break;
-    }
-  }
+  this.exec(this.getCommandByElement(element));
 };
 
 CommandPalette.prototype.exec = function(cmd) {
+  if (!cmd) return;
   this.toggleDisplay(false);
   submitSapeventForm(null, cmd.action);
 };
+
+/* COMMAND ENUMERATORS */
 
 function enumerateTocAllRepos() {
   var root = document.getElementById("toc-all-repos");
