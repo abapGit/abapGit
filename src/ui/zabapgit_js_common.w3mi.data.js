@@ -692,109 +692,124 @@ function toggleDisplay(divId) {
   if (div) div.style.display = (div.style.display) ? "" : "none";
 }
 
-function KeyNavigation() {
+function KeyNavigation() { }
 
-}
-
-KeyNavigation.prototype.onkeydown = function(oEvent) {
-  if (oEvent.defaultPrevented) {
-    return;
-  }
+KeyNavigation.prototype.onkeydown = function(event) {
+  if (event.defaultPrevented) return;
 
   // navigate with arrows through list items and support pressing links with enter and space
-  if (oEvent.key === "ENTER" || oEvent.key === "") {
-    this.onEnterOrSpace();
-  } else if (/Down$/.test(oEvent.key)) {
-    this.onArrowDown(oEvent);
-  } else if (/Up$/.test(oEvent.key)) {
-    this.onArrowUp(oEvent);
+  var isHandled = false;
+  if (event.key === "Enter" || event.key === "") {
+    isHandled = this.onEnterOrSpace();
+  } else if (/Down$/.test(event.key)) {
+    isHandled = this.onArrowDown();
+  } else if (/Up$/.test(event.key)) {
+    isHandled = this.onArrowUp()
+  } else if (event.key === "Backspace") {
+    isHandled = this.onBackspace()
   }
-
-};
-
-KeyNavigation.prototype.getLiSelected = function() {
-  return document.querySelector("li .selected");
-};
-
-KeyNavigation.prototype.getActiveElement = function () {
-  return document.activeElement;
-};
-
-KeyNavigation.prototype.getActiveElementParent = function () {
-  return this.getActiveElement().parentElement;
+  
+  if (isHandled) event.preventDefault();
 };
 
 KeyNavigation.prototype.onEnterOrSpace = function () {
+  if (document.activeElement.nodeName !== "A") return;
+  var anchor = document.activeElement;
 
-  // Enter or space clicks the selected link
-
-  var liSelected = this.getLiSelected();
-
-  if (liSelected) {
-    liSelected.firstElementChild.click();
-  }
-
-};
-
-
-KeyNavigation.prototype.onArrowDown = function (oEvent) {
-
-  var
-    liNext,
-    liSelected = this.getLiSelected(),
-    oActiveElementParent = this.getActiveElementParent();
-
-  if (liSelected) {
-
-    // we deselect the current li and select the next sibling
-    liNext = oActiveElementParent.nextElementSibling;
-    if (liNext) {
-      liSelected.classList.toggle("selected");
-      liNext.firstElementChild.focus();
-      oActiveElementParent.classList.toggle("selected");
-      oEvent.preventDefault();
-    }
-
+  if (anchor.href.replace(/#$/, "") === document.location.href.replace(/#$/, "")
+    && !anchor.onclick
+    && anchor.parentElement
+    && anchor.parentElement.nodeName === "LI" ) {
+    anchor.parentElement.classList.toggle("force-nav-hover");
   } else {
-
-    // we don't have any li selected, we have lookup where to start...
-    // the right element should have been activated in fnTooltipActivate
-    liNext = this.getActiveElement().nextElementSibling;
-    if (liNext) {
-      liNext.classList.toggle("selected");
-      liNext.firstElementChild.firstElementChild.focus();
-      oEvent.preventDefault();
-    }
-
+    anchor.click();
   }
-
+  return true;
 };
 
+KeyNavigation.prototype.focusListItem = function (li) {
+  var anchor = li.firstElementChild;
+  if (!anchor || anchor.nodeName !== "A") return false;
+  anchor.focus();
+  return true;
+}
 
-KeyNavigation.prototype.onArrowUp = function (oEvent) {
+KeyNavigation.prototype.closeDropdown = function (dropdownLi) {
+  dropdownLi.classList.remove("force-nav-hover");
+  if (dropdownLi.firstElementChild.nodeName === "A") dropdownLi.firstElementChild.focus();
+  return true;
+}
 
-  var
-    liSelected = this.getLiSelected(),
-    liPrevious = this.getActiveElementParent().previousElementSibling;
+KeyNavigation.prototype.onBackspace = function () {
+  var activeElement = document.activeElement;
 
-  if (liSelected && liPrevious) {
-
-    liSelected.classList.toggle("selected");
-    liPrevious.firstElementChild.focus();
-    this.getActiveElementParent().classList.toggle("selected");
-    oEvent.preventDefault();
-
+  // Detect opened subsequent dropdown
+  if (activeElement.nodeName === "A"
+    && activeElement.parentElement
+    && activeElement.parentElement.nodeName === "LI"
+    && activeElement.parentElement.classList.contains("force-nav-hover")) {
+    return this.closeDropdown(activeElement.parentElement);
   }
 
+  // Detect opened parent dropdown
+  if (activeElement.nodeName === "A"
+    && activeElement.parentElement
+    && activeElement.parentElement.nodeName === "LI"
+    && activeElement.parentElement.parentElement
+    && activeElement.parentElement.parentElement.nodeName === "UL"
+    && activeElement.parentElement.parentElement.parentElement
+    && activeElement.parentElement.parentElement.parentElement.nodeName === "LI"
+    && activeElement.parentElement.parentElement.parentElement.classList.contains("force-nav-hover")) {
+    return this.closeDropdown(activeElement.parentElement.parentElement.parentElement);
+  }
+}
+
+KeyNavigation.prototype.onArrowDown = function () {
+  var activeElement = document.activeElement;
+
+  // Start of dropdown list: LI > selected A :: UL > LI > A
+  if (activeElement.nodeName === "A"
+    && activeElement.parentElement
+    && activeElement.parentElement.nodeName === "LI"
+    && activeElement.parentElement.classList.contains("force-nav-hover") // opened dropdown
+    && activeElement.nextElementSibling
+    && activeElement.nextElementSibling.nodeName === "UL"
+    && activeElement.nextElementSibling.firstElementChild
+    && activeElement.nextElementSibling.firstElementChild.nodeName === "LI") {
+    return this.focusListItem(activeElement.nextElementSibling.firstElementChild);
+  }
+
+  // Next item of dropdown list: ( LI > selected A ) :: LI > A
+  if (activeElement.nodeName === "A"
+    && activeElement.parentElement
+    && activeElement.parentElement.nodeName === "LI"
+    && activeElement.parentElement.nextElementSibling
+    && activeElement.parentElement.nextElementSibling.nodeName === "LI") {
+    return this.focusListItem(activeElement.parentElement.nextElementSibling);
+  }
 };
+
+KeyNavigation.prototype.onArrowUp = function () {
+  var activeElement = document.activeElement;
+
+  // Prev item of dropdown list: ( LI > selected A ) <:: LI > A
+  if (activeElement.nodeName === "A"
+    && activeElement.parentElement
+    && activeElement.parentElement.nodeName === "LI"
+    && activeElement.parentElement.previousElementSibling
+    && activeElement.parentElement.previousElementSibling.nodeName === "LI") {
+    return this.focusListItem(activeElement.parentElement.previousElementSibling);
+  }
+};
+
+KeyNavigation.prototype.getHandler = function () {
+  return this.onkeydown.bind(this);
+}
 
 // this functions enables the navigation with arrows through list items (li)
 // e.g. in dropdown menus
 function enableArrowListNavigation() {
-
-  var oKeyNavigation = new KeyNavigation();
-  document.addEventListener("keydown", oKeyNavigation.onkeydown.bind(oKeyNavigation));
-
+  document.addEventListener("keydown", new KeyNavigation().getHandler());
 }
 
 /* LINK HINTS - Vimium like link hints */
@@ -1050,6 +1065,23 @@ Hotkeys.prototype.onkeydown = function(oEvent){
     fnHotkey.call(this, oEvent);
   }
 };
+
+Hotkeys.addHotkeyToHelpSheet = function(key, description) {
+  var hotkeysUl = document.querySelector("#hotkeys ul.hotkeys");
+  if (!hotkeysUl) return;
+
+  var li              = document.createElement("li");
+  var spanId          = document.createElement("span");
+  spanId.className    = "key-id";
+  spanId.innerText    = key;
+  var spanDescr       = document.createElement("span");
+  spanDescr.className = "key-descr";
+  spanDescr.innerText = description;
+  li.appendChild(spanId);
+  li.appendChild(spanDescr);
+
+  hotkeysUl.appendChild(li);
+}
 
 function setKeyBindings(oKeyMap){
 
@@ -1439,12 +1471,11 @@ function CommandPalette(commandEnumerator, opts) {
   if (typeof opts.toggleKey !== "string" || !opts.toggleKey) throw Error("toggleKey must be a string");
   this.commands = commandEnumerator();
   if (!this.commands) return;
-  // array of
-  // {
-  //   action:    "sapevent:..."
+  // this.commands = [{
+  //   action:    "sap_event_action_code_with_params"
   //   iconClass: "icon icon_x ..."
   //   title:     "my command X"
-  // };
+  // }, ...];
 
   if (opts.toggleKey[0] === "^") {
     this.toggleKeyCtrl = true;
@@ -1462,37 +1493,17 @@ function CommandPalette(commandEnumerator, opts) {
     input:   null
   };
   // this.selectedItem      = null;
-  this.selectIndex       = 0;
+  // this.selectIndex       = 0;
   this.filter            = "";
   this.renderAndBindElements();
   this.hookEvents();
-  this.updateHotkeys();
-  // TODO
-  // - conflicts with enableArrowListNavigation??
+  Hotkeys.addHotkeyToHelpSheet(opts.toggleKey, opts.hotkeyDescription);
 }
 
 CommandPalette.prototype.hookEvents = function(){
   document.addEventListener("keydown", this.handleToggleKey.bind(this));
   this.elements.input.addEventListener("keyup", this.handleInputKey.bind(this));
   this.elements.ul.addEventListener("click", this.handleUlClick.bind(this));
-}
-
-CommandPalette.prototype.renderHotkeyItem = function(){
-  var li              = document.createElement("li");
-  var spanId          = document.createElement("span");
-  spanId.className    = "key-id";
-  spanId.innerText    = (this.toggleKeyCtrl ? "^" : "") + this.toggleKey;
-  var spanDescr       = document.createElement("span");
-  spanDescr.className = "key-descr";
-  spanDescr.innerText = this.hotkeyDescription;
-  li.appendChild(spanId);
-  li.appendChild(spanDescr);
-  return li;
-};
-
-CommandPalette.prototype.updateHotkeys = function(){
-  var hotkeysUl = document.querySelector("#hotkeys ul.hotkeys");
-  if (hotkeysUl) hotkeysUl.appendChild(this.renderHotkeyItem());
 };
 
 CommandPalette.prototype.renderCommandItem = function(cmd){
@@ -1510,24 +1521,19 @@ CommandPalette.prototype.renderCommandItem = function(cmd){
 };
 
 CommandPalette.prototype.renderAndBindElements = function(){
-  var div               = document.createElement("div");
-  div.className         = "cmd-palette";
-  div.style.display     = "none";
-  this.elements.palette = div;
-
-  var input           = document.createElement("input");
-  input.placeholder   = this.hotkeyDescription;
-  this.elements.input = input;
+  var div           = document.createElement("div");
+  div.className     = "cmd-palette";
+  div.style.display = "none";
+  var input         = document.createElement("input");
+  input.placeholder = this.hotkeyDescription;
+  var ul            = document.createElement("ul");
+  for (var i = 0; i < this.commands.length; i++) ul.appendChild(this.renderCommandItem(this.commands[i]));
   div.appendChild(input);
-
-  var ul           = document.createElement("ul");
-  this.elements.ul = ul;
   div.appendChild(ul);
 
-  for (var i = 0; i < this.commands.length; i++) {
-    ul.appendChild(this.renderCommandItem(this.commands[i]));
-  }
-
+  this.elements.palette = div;
+  this.elements.input   = input;
+  this.elements.ul      = ul;
   document.body.appendChild(div);
 };
 
@@ -1539,19 +1545,20 @@ CommandPalette.prototype.handleToggleKey = function(event){
 };
 
 CommandPalette.prototype.handleInputKey = function(event){
-  if ((event.key === "ArrowUp" || event.key === "Up") && this.selectIndex > 0) {
-    this.selectIndex--;
-    this.highlight();
-  } else if ((event.key === "ArrowDown" || event.key === "Down") && this.selectIndex < this.commands.length - 1) {
-    this.selectIndex++;
-    this.highlight();
-  } else if (event.key === "Enter") {
-    this.exec(this.selectedItem);
-  } else if (this.filter !== this.elements.input.value) {
-    this.selectIndex = 0;
+  // if ((event.key === "ArrowUp" || event.key === "Up") && this.selectIndex > 0) {
+  //   this.selectIndex--;
+  //   this.highlight();
+  // } else if ((event.key === "ArrowDown" || event.key === "Down") && this.selectIndex < this.commands.length - 1) {
+  //   this.selectIndex++;
+  //   this.highlight();
+  // } else if (event.key === "Enter") {
+  //   this.exec(this.selectedItem);
+  // } else 
+  if (this.filter !== this.elements.input.value) {
+    // this.selectIndex = 0;
     this.filter = this.elements.input.value;
     this.applyFilter();
-    this.highlight();
+    // this.highlight();
   }
   event.preventDefault();
 };
@@ -1562,7 +1569,7 @@ CommandPalette.prototype.applyFilter = function(){
     if (!this.filter) {
       cmd.element.style.display = "";
       cmd.titleSpan.innerText   = cmd.title;
-      cmd.element.classList.remove("selected");
+      // cmd.element.classList.remove("selected");
     } else {
       var matchedTitle = fuzzyMatchAndMark(cmd.title, this.filter);
       if (matchedTitle) {
@@ -1575,33 +1582,33 @@ CommandPalette.prototype.applyFilter = function(){
   }
 };
 
-CommandPalette.prototype.getSelectedItem = function(){
-  var index = 0;
-  for (var i = 0; i < this.commands.length; i++) {
-    var cmd = this.commands[i];
-    if (cmd.element.style.display === "none") continue; // skip hidden
-    if (this.selectIndex === index) return cmd;
-    index ++;
-  }
-};
+// CommandPalette.prototype.getSelectedItem = function(){
+//   var index = 0;
+//   for (var i = 0; i < this.commands.length; i++) {
+//     var cmd = this.commands[i];
+//     if (cmd.element.style.display === "none") continue; // skip hidden
+//     if (this.selectIndex === index) return cmd;
+//     index ++;
+//   }
+// };
 
-CommandPalette.prototype.highlight = function(){
-  if (this.selectedItem) this.selectedItem.element.classList.remove("selected");
+// CommandPalette.prototype.highlight = function(){
+//   if (this.selectedItem) this.selectedItem.element.classList.remove("selected");
 
-  var index = 0;
-  for (var i = 0; i < this.commands.length; i++) {
-    var cmd = this.commands[i];
-    if (cmd.element.style.display === "none") continue;
-    if (this.selectIndex === index) {
-      cmd.element.classList.add("selected");
-      this.selectedItem = cmd;
-      this.adjustScrollPosition(cmd.element);
-      break;
-    } else {
-      index ++;
-    }
-  }
-};
+//   var index = 0;
+//   for (var i = 0; i < this.commands.length; i++) {
+//     var cmd = this.commands[i];
+//     if (cmd.element.style.display === "none") continue;
+//     if (this.selectIndex === index) {
+//       cmd.element.classList.add("selected");
+//       this.selectedItem = cmd;
+//       this.adjustScrollPosition(cmd.element);
+//       break;
+//     } else {
+//       index ++;
+//     }
+//   }
+// };
 
 CommandPalette.prototype.adjustScrollPosition = function(itemElement){
   var bItem         = itemElement.getBoundingClientRect();
@@ -1622,18 +1629,17 @@ CommandPalette.prototype.adjustScrollPosition = function(itemElement){
 
 CommandPalette.prototype.toggleDisplay = function(forceState) {
   var isDisplayed = (this.elements.palette.style.display !== "none");
-  isDisplayed = forceState !== undefined ? forceState : !isDisplayed;
-  this.elements.palette.style.display = isDisplayed ? "" : "none";
-  if (isDisplayed) {
-    this.selectedItem = this.commands[0];
-    this.selectIndex = 0;
+  var tobeDisplayed = (forceState !== undefined) ? forceState : !isDisplayed;
+  this.elements.palette.style.display = tobeDisplayed ? "" : "none";
+  if (tobeDisplayed) {
+    // this.selectedItem = this.commands[0];
+    // this.selectIndex = 0;
     this.elements.input.value = "";
     this.elements.input.focus();
     this.applyFilter();
-    this.highlight();
+    // this.highlight();
   }
 };
-
 
 CommandPalette.prototype.getCommandByElement = function(element) {
   for (var i = 0; i < this.commands.length; i++) {
