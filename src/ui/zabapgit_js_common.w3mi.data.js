@@ -704,11 +704,11 @@ KeyNavigation.prototype.onkeydown = function(event) {
   } else if (/Down$/.test(event.key)) {
     isHandled = this.onArrowDown();
   } else if (/Up$/.test(event.key)) {
-    isHandled = this.onArrowUp()
+    isHandled = this.onArrowUp();
   } else if (event.key === "Backspace") {
-    isHandled = this.onBackspace()
+    isHandled = this.onBackspace();
   }
-  
+
   if (isHandled) event.preventDefault();
 };
 
@@ -732,13 +732,13 @@ KeyNavigation.prototype.focusListItem = function (li) {
   if (!anchor || anchor.nodeName !== "A") return false;
   anchor.focus();
   return true;
-}
+};
 
 KeyNavigation.prototype.closeDropdown = function (dropdownLi) {
   dropdownLi.classList.remove("force-nav-hover");
   if (dropdownLi.firstElementChild.nodeName === "A") dropdownLi.firstElementChild.focus();
   return true;
-}
+};
 
 KeyNavigation.prototype.onBackspace = function () {
   var activeElement = document.activeElement;
@@ -762,7 +762,7 @@ KeyNavigation.prototype.onBackspace = function () {
     && activeElement.parentElement.parentElement.parentElement.classList.contains("force-nav-hover")) {
     return this.closeDropdown(activeElement.parentElement.parentElement.parentElement);
   }
-}
+};
 
 KeyNavigation.prototype.onArrowDown = function () {
   var activeElement = document.activeElement;
@@ -804,7 +804,7 @@ KeyNavigation.prototype.onArrowUp = function () {
 
 KeyNavigation.prototype.getHandler = function () {
   return this.onkeydown.bind(this);
-}
+};
 
 // this functions enables the navigation with arrows through list items (li)
 // e.g. in dropdown menus
@@ -1081,7 +1081,7 @@ Hotkeys.addHotkeyToHelpSheet = function(key, description) {
   li.appendChild(spanDescr);
 
   hotkeysUl.appendChild(li);
-}
+};
 
 function setKeyBindings(oKeyMap){
 
@@ -1553,7 +1553,7 @@ CommandPalette.prototype.handleInputKey = function(event){
   //   this.highlight();
   // } else if (event.key === "Enter") {
   //   this.exec(this.selectedItem);
-  // } else 
+  // } else
   if (this.filter !== this.elements.input.value) {
     // this.selectIndex = 0;
     this.filter = this.elements.input.value;
@@ -1645,7 +1645,7 @@ CommandPalette.prototype.getCommandByElement = function(element) {
   for (var i = 0; i < this.commands.length; i++) {
     if (this.commands[i].element === element) return this.commands[i];
   }
-}
+};
 
 CommandPalette.prototype.handleUlClick = function(event) {
   var element = event.target || event.srcElement;
