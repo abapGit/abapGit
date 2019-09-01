@@ -385,9 +385,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     link_hints( ro_html ).
     insert_hotkeys_to_page( ro_html ).
-    ro_html->add( 'var gCommandPalette = new CommandPalette(enumerateTocAllRepos, {' ).
-    ro_html->add( 'toggleKey: "F2",' ).
-    ro_html->add( 'hotkeyDescription: "Go to repo ..."' ).
+    ro_html->add( 'var gGoRepoPalette = new CommandPalette(enumerateTocAllRepos, {' ).
+    ro_html->add( '  toggleKey: "F2",' ).
+    ro_html->add( '  hotkeyDescription: "Go to repo ..."' ).
     ro_html->add( '});' ).
   ENDMETHOD.
 
