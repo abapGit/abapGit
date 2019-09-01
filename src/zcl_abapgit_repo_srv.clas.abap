@@ -441,7 +441,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     IF sy-subrc = 0.
       lv_name = zcl_abapgit_repo_srv=>get_instance( )->get( <ls_repo>-key )->get_name( ).
       lv_owner = <ls_repo>-created_by.
-      zcx_abapgit_exception=>raise( |Package { iv_package } already versioned as { lv_name } by { lv_owner }| ).
+      zcx_abapgit_exception=>raise( |Package { iv_package } already versioned as { lv_name } by  { lv_owner }| ).
     ENDIF.
 
     " take filtered packages into account to make sure repo
@@ -460,7 +460,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       IF sy-subrc = 0.
         lv_name = zcl_abapgit_repo_srv=>get_instance( )->get( <ls_repo>-key )->get_name( ).
         lv_owner = <ls_repo>-created_by.
-        zcx_abapgit_exception=>raise( |Package { iv_package } already versioned as { lv_name } by { lv_owner }| ).
+        zcx_abapgit_exception=>raise( |Package { iv_package } already versioned as { lv_name } by  { lv_owner }| ).
         EXIT.
       ENDIF.
 
