@@ -60,7 +60,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -100,6 +100,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
   METHOD render_dot_abapgit.
 
     CONSTANTS: lc_requirement_edit_count TYPE i VALUE 5.
+
     DATA: ls_dot               TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
           lv_selected          TYPE string,
           lt_folder_logic      TYPE string_table,
@@ -174,8 +175,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
     DATA: lv_checked  TYPE string,
           ls_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings.
-
-
 
     ls_settings = mo_repo->get_local_settings( ).
 

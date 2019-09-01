@@ -64,7 +64,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
+CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
 
   METHOD add.
@@ -443,6 +443,28 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
       lv_owner = <ls_repo>-created_by.
       zcx_abapgit_exception=>raise( |Package { iv_package } already versioned as { lv_name } by { lv_owner }| ).
     ENDIF.
+
+    " take filtered packages into account to make sure repo
+    " is not already in use for a different repository
+    DATA: lo_excluded_package    TYPE REF TO zcl_abapgit_excluded_package,
+          lt_r_excluded_packages TYPE rseloption.
+
+    lo_excluded_package = NEW zcl_abapgit_excluded_package( ).
+
+    LOOP AT lt_repos ASSIGNING <ls_repo> WHERE local_settings-excluded_packages IS NOT INITIAL.
+
+      CLEAR: lt_r_excluded_packages.
+      lt_r_excluded_packages = lo_excluded_package->get_packages( <ls_repo>-local_settings-excluded_packages ).
+
+      READ TABLE lt_r_excluded_packages WITH KEY low = iv_package TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0.
+        lv_name = zcl_abapgit_repo_srv=>get_instance( )->get( <ls_repo>-key )->get_name( ).
+        lv_owner = <ls_repo>-created_by.
+        zcx_abapgit_exception=>raise( |Package { iv_package } already versioned as { lv_name } by { lv_owner }| ).
+        EXIT.
+      ENDIF.
+
+    ENDLOOP.
 
     validate_sub_super_packages(
       iv_package    = iv_package

@@ -39,7 +39,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
+CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
 
   METHOD build.
@@ -53,15 +53,11 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
           lo_folder_logic        TYPE REF TO zcl_abapgit_folder_logic,
           lv_last_package        TYPE devclass VALUE cl_abap_char_utilities=>horizontal_tab,
           lt_packages            TYPE zif_abapgit_sap_package=>ty_devclass_tt,
-          lt_r_excluded_packages TYPE rseloption,
-          lt_subpackages         TYPE TABLE OF string,
-          ls_r_subpackages       TYPE rsdsselopt,
-          lt_r_subpackages       TYPE rseloption.
+          lo_excluded_package    TYPE REF TO zcl_abapgit_excluded_package,
+          lt_r_excluded_packages TYPE rseloption.
 
-    FIELD-SYMBOLS: <ls_tadir>      LIKE LINE OF rt_tadir,
-                   <lv_package>    LIKE LINE OF lt_packages,
-                   <lv_subpackage> LIKE LINE OF lt_subpackages.
-
+    FIELD-SYMBOLS: <ls_tadir>   LIKE LINE OF rt_tadir,
+                   <lv_package> LIKE LINE OF lt_packages.
 
     "Determine Packages to Read
     IF iv_ignore_subpackages = abap_false.
@@ -72,35 +68,8 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
     "Determine Packages to Filter
     IF iv_excluded_packages CN ' _0'.
 
-      SPLIT iv_excluded_packages AT ';' INTO TABLE lt_subpackages.
-
-      DELETE lt_subpackages WHERE table_line CO ' _0'.
-      SORT lt_subpackages.
-      DELETE ADJACENT DUPLICATES FROM lt_subpackages.
-
-      WHILE lt_subpackages IS NOT INITIAL.
-
-        CLEAR: lt_r_subpackages.
-
-        LOOP AT lt_subpackages ASSIGNING <lv_subpackage>.
-
-          ls_r_subpackages-sign   = 'I'.
-          ls_r_subpackages-option = 'EQ'.
-          ls_r_subpackages-low    = <lv_subpackage>.
-
-          APPEND ls_r_subpackages TO lt_r_subpackages.
-          APPEND ls_r_subpackages TO lt_r_excluded_packages.
-
-        ENDLOOP.
-
-        CLEAR: lt_subpackages.
-
-        SELECT devclass
-            FROM tdevc
-            INTO TABLE lt_subpackages
-            WHERE parentcl IN lt_r_subpackages.
-
-      ENDWHILE.
+      lo_excluded_package = NEW zcl_abapgit_excluded_package(  ).
+      lt_r_excluded_packages = lo_excluded_package->get_packages( iv_excluded_packages ).
 
       IF lt_r_excluded_packages IS NOT INITIAL.
 
