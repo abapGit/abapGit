@@ -1492,8 +1492,7 @@ function CommandPalette(commandEnumerator, opts) {
     ul:      null,
     input:   null
   };
-  // this.selectedItem      = null;
-  // this.selectIndex       = 0;
+  this.selectIndex       = -1; // not selected
   this.filter            = "";
   this.renderAndBindElements();
   this.hookEvents();
@@ -1545,20 +1544,16 @@ CommandPalette.prototype.handleToggleKey = function(event){
 };
 
 CommandPalette.prototype.handleInputKey = function(event){
-  // if ((event.key === "ArrowUp" || event.key === "Up") && this.selectIndex > 0) {
-  //   this.selectIndex--;
-  //   this.highlight();
-  // } else if ((event.key === "ArrowDown" || event.key === "Down") && this.selectIndex < this.commands.length - 1) {
-  //   this.selectIndex++;
-  //   this.highlight();
-  // } else if (event.key === "Enter") {
-  //   this.exec(this.selectedItem);
-  // } else
-  if (this.filter !== this.elements.input.value) {
-    // this.selectIndex = 0;
+  if (event.key === "ArrowUp" || event.key === "Up") {
+    this.selectPrev();
+  } else if (event.key === "ArrowDown" || event.key === "Down") {
+    this.selectNext();
+  } else if (event.key === "Enter") {
+    this.exec(this.getSelected());
+  } else if (this.filter !== this.elements.input.value) {
     this.filter = this.elements.input.value;
     this.applyFilter();
-    // this.highlight();
+    this.selectFirst();
   }
   event.preventDefault();
 };
@@ -1569,7 +1564,6 @@ CommandPalette.prototype.applyFilter = function(){
     if (!this.filter) {
       cmd.element.style.display = "";
       cmd.titleSpan.innerText   = cmd.title;
-      // cmd.element.classList.remove("selected");
     } else {
       var matchedTitle = fuzzyMatchAndMark(cmd.title, this.filter);
       if (matchedTitle) {
@@ -1582,33 +1576,43 @@ CommandPalette.prototype.applyFilter = function(){
   }
 };
 
-// CommandPalette.prototype.getSelectedItem = function(){
-//   var index = 0;
-//   for (var i = 0; i < this.commands.length; i++) {
-//     var cmd = this.commands[i];
-//     if (cmd.element.style.display === "none") continue; // skip hidden
-//     if (this.selectIndex === index) return cmd;
-//     index ++;
-//   }
-// };
+CommandPalette.prototype.applySelectIndex = function(newIndex){
+  if (newIndex !== this.selectIndex) {
+    if (this.selectIndex >= 0) this.commands[this.selectIndex].element.classList.remove("selected");
+    var newCmd = this.commands[newIndex];
+    newCmd.element.classList.add("selected");
+    this.selectIndex = newIndex;
+    this.adjustScrollPosition(newCmd.element);
+  }
+}
 
-// CommandPalette.prototype.highlight = function(){
-//   if (this.selectedItem) this.selectedItem.element.classList.remove("selected");
+CommandPalette.prototype.selectFirst = function(){
+  for (var i = 0; i < this.commands.length; i++) {
+    if (this.commands[i].element.style.display === "none") continue; // skip hidden
+    this.applySelectIndex(i);
+    break;
+  }
+}
 
-//   var index = 0;
-//   for (var i = 0; i < this.commands.length; i++) {
-//     var cmd = this.commands[i];
-//     if (cmd.element.style.display === "none") continue;
-//     if (this.selectIndex === index) {
-//       cmd.element.classList.add("selected");
-//       this.selectedItem = cmd;
-//       this.adjustScrollPosition(cmd.element);
-//       break;
-//     } else {
-//       index ++;
-//     }
-//   }
-// };
+CommandPalette.prototype.selectNext = function(){
+  for (var i = this.selectIndex + 1; i < this.commands.length; i++) {
+    if (this.commands[i].element.style.display === "none") continue; // skip hidden
+    this.applySelectIndex(i);
+    break;
+  }
+}
+
+CommandPalette.prototype.selectPrev = function(){
+  for (var i = this.selectIndex - 1; i >= 0; i--) {
+    if (this.commands[i].element.style.display === "none") continue; // skip hidden
+    this.applySelectIndex(i);
+    break;
+  }
+}
+
+CommandPalette.prototype.getSelected = function(){
+  return this.commands[this.selectIndex];
+}
 
 CommandPalette.prototype.adjustScrollPosition = function(itemElement){
   var bItem         = itemElement.getBoundingClientRect();
@@ -1632,12 +1636,10 @@ CommandPalette.prototype.toggleDisplay = function(forceState) {
   var tobeDisplayed = (forceState !== undefined) ? forceState : !isDisplayed;
   this.elements.palette.style.display = tobeDisplayed ? "" : "none";
   if (tobeDisplayed) {
-    // this.selectedItem = this.commands[0];
-    // this.selectIndex = 0;
     this.elements.input.value = "";
     this.elements.input.focus();
     this.applyFilter();
-    // this.highlight();
+    this.selectFirst();
   }
 };
 
