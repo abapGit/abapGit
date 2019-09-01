@@ -408,13 +408,14 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_srv~validate_package.
 
-    DATA: lv_as4user TYPE tdevc-as4user,
-          lt_repos   TYPE zif_abapgit_persistence=>tt_repo,
-          lv_name    TYPE zif_abapgit_persistence=>ty_local_settings-display_name,
-          lv_owner   TYPE zif_abapgit_persistence=>ty_local_settings-display_name.
+    DATA: lv_as4user             TYPE tdevc-as4user,
+          lt_repos               TYPE zif_abapgit_persistence=>tt_repo,
+          lv_name                TYPE zif_abapgit_persistence=>ty_local_settings-display_name,
+          lv_owner               TYPE zif_abapgit_persistence=>ty_local_settings-display_name,
+          lo_excluded_package    TYPE REF TO zcl_abapgit_excluded_package,
+          lt_r_excluded_packages TYPE rseloption.
 
-    FIELD-SYMBOLS:
-          <ls_repo>  LIKE LINE OF lt_repos.
+    FIELD-SYMBOLS: <ls_repo>  LIKE LINE OF lt_repos.
 
     IF iv_package IS INITIAL.
       zcx_abapgit_exception=>raise( 'add, package empty' ).
@@ -446,10 +447,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     " take filtered packages into account to make sure repo
     " is not already in use for a different repository
-    DATA: lo_excluded_package    TYPE REF TO zcl_abapgit_excluded_package,
-          lt_r_excluded_packages TYPE rseloption.
-
-    lo_excluded_package = NEW zcl_abapgit_excluded_package( ).
+    CREATE OBJECT lo_excluded_package.
 
     LOOP AT lt_repos ASSIGNING <ls_repo> WHERE local_settings-excluded_packages IS NOT INITIAL.
 

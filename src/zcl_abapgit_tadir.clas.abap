@@ -68,7 +68,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
     "Determine Packages to Filter
     IF iv_excluded_packages CN ' _0'.
 
-      lo_excluded_package = NEW zcl_abapgit_excluded_package(  ).
+      CREATE OBJECT lo_excluded_package.
       lt_r_excluded_packages = lo_excluded_package->get_packages( iv_excluded_packages ).
 
       IF lt_r_excluded_packages IS NOT INITIAL.
