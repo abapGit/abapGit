@@ -1692,15 +1692,16 @@ function enumerateTocAllRepos() {
 function enumerateToolbarActions() {
 
   var items = [];
-  function processUL(ulNode) {
+  function processUL(ulNode, prefix) {
     for (var i = 0; i < ulNode.children.length; i++) {
       var item = ulNode.children[i];
       if (item.nodeName !== "LI") continue; // unexpected node
       if (item.children.length >=2 && item.children[1].nodeName === "UL") {
-        processUL(item.children[1]); // submenu detected
+        // submenu detected
+        processUL(item.children[1], item.children[0].innerText);
       } else if (item.firstElementChild && item.firstElementChild.nodeName === "A") {
         var anchor = item.firstElementChild;
-        if (anchor.href && anchor.href !== "#") items.push(anchor);
+        if (anchor.href && anchor.href !== "#") items.push([anchor, prefix]);
       }
     }
   }
@@ -1712,10 +1713,12 @@ function enumerateToolbarActions() {
   // Add more toolbars ?
   if (items.length === 0) return;
 
-  items = items.map(function(anchor) {
+  items = items.map(function(item) {
+    var anchor = item[0];
+    var prefix = item[1];
     return {
       action:    anchor.href.replace("sapevent:", ""),
-      title:     anchor.innerText
+      title:     (prefix ? prefix + ": " : "") + anchor.innerText
     };
   });
 
