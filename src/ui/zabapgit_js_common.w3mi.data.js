@@ -1550,6 +1550,8 @@ CommandPalette.prototype.handleInputKey = function(event){
     this.selectNext();
   } else if (event.key === "Enter") {
     this.exec(this.getSelected());
+  } else if (event.key === "Backspace" && !this.filter) {
+    this.toggleDisplay(false);
   } else if (this.filter !== this.elements.input.value) {
     this.filter = this.elements.input.value;
     this.applyFilter();
@@ -1584,7 +1586,7 @@ CommandPalette.prototype.applySelectIndex = function(newIndex){
     this.selectIndex = newIndex;
     this.adjustScrollPosition(newCmd.element);
   }
-}
+};
 
 CommandPalette.prototype.selectFirst = function(){
   for (var i = 0; i < this.commands.length; i++) {
@@ -1592,7 +1594,7 @@ CommandPalette.prototype.selectFirst = function(){
     this.applySelectIndex(i);
     break;
   }
-}
+};
 
 CommandPalette.prototype.selectNext = function(){
   for (var i = this.selectIndex + 1; i < this.commands.length; i++) {
@@ -1600,7 +1602,7 @@ CommandPalette.prototype.selectNext = function(){
     this.applySelectIndex(i);
     break;
   }
-}
+};
 
 CommandPalette.prototype.selectPrev = function(){
   for (var i = this.selectIndex - 1; i >= 0; i--) {
@@ -1608,11 +1610,11 @@ CommandPalette.prototype.selectPrev = function(){
     this.applySelectIndex(i);
     break;
   }
-}
+};
 
 CommandPalette.prototype.getSelected = function(){
   return this.commands[this.selectIndex];
-}
+};
 
 CommandPalette.prototype.adjustScrollPosition = function(itemElement){
   var bItem         = itemElement.getBoundingClientRect();
