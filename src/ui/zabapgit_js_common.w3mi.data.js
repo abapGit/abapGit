@@ -1688,3 +1688,36 @@ function enumerateTocAllRepos() {
 
   return items;
 }
+
+function enumerateToolbarActions() {
+
+  var items = [];
+  function processUL(ulNode) {
+    for (var i = 0; i < ulNode.children.length; i++) {
+      var item = ulNode.children[i];
+      if (item.nodeName !== "LI") continue; // unexpected node
+      if (item.children.length >=2 && item.children[1].nodeName === "UL") {
+        processUL(item.children[1]); // submenu detected
+      } else if (item.firstElementChild && item.firstElementChild.nodeName === "A") {
+        var anchor = item.firstElementChild;
+        if (anchor.href && anchor.href !== "#") items.push(anchor);
+      }
+    }
+  }
+
+  var toolbarRoot = document.getElementById("toolbar-main");
+  if (toolbarRoot && toolbarRoot.nodeName === "UL") processUL(toolbarRoot);
+  toolbarRoot = document.getElementById("toolbar-repo");
+  if (toolbarRoot && toolbarRoot.nodeName === "UL") processUL(toolbarRoot);
+  // Add more toolbars ?
+  if (items.length === 0) return;
+
+  items = items.map(function(anchor) {
+    return {
+      action:    anchor.href.replace("sapevent:", ""),
+      title:     anchor.innerText
+    };
+  });
+
+  return items;
+}
