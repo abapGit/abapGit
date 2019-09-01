@@ -1,33 +1,33 @@
-CLASS zcl_abapgit_excluded_package DEFINITION
-  PUBLIC
-  FINAL
-  CREATE PUBLIC .
+class ZCL_ABAPGIT_EXCLUDED_PACKAGE definition
+  public
+  final
+  create public .
 
-  PUBLIC SECTION.
+public section.
 
-    TYPES ty_excluded_packages TYPE string .
-    TYPES ty_t_excluded_packages TYPE string_table .
+  types TY_EXCLUDED_PACKAGES type STRING .
+  types TY_T_EXCLUDED_PACKAGES type STRING_TABLE .
 
-    CONSTANTS:
-      c_separator TYPE c LENGTH 1 VALUE ';' ##NO_TEXT.
+  constants:
+    c_separator TYPE c LENGTH 1 value ';' ##NO_TEXT.
 
-    METHODS get_packages
-      IMPORTING
-        !iv_excluded_packages TYPE ty_excluded_packages
-      RETURNING
-        VALUE(rt_r_packages)  TYPE rseloption.
-    METHODS to_table
-      IMPORTING
-        !iv_excluded_packages TYPE ty_excluded_packages
-      RETURNING
-        VALUE(rt_packages)    TYPE ty_t_excluded_packages .
+  methods GET_PACKAGES
+    importing
+      !IV_EXCLUDED_PACKAGES type TY_EXCLUDED_PACKAGES
+    returning
+      value(RT_R_PACKAGES) type RSELOPTION .
+  methods TO_TABLE
+    importing
+      !IV_EXCLUDED_PACKAGES type TY_EXCLUDED_PACKAGES
+    returning
+      value(RT_PACKAGES) type TY_T_EXCLUDED_PACKAGES .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_excluded_package IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_EXCLUDED_PACKAGE IMPLEMENTATION.
 
 
   METHOD get_packages.
