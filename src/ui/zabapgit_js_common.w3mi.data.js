@@ -1736,8 +1736,6 @@ function enumerateJumpAllFiles() {
   var root = document.getElementById("jump");
   if (!root || root.nodeName !== "UL") return null;
 
-  window.print = function(){};
-
   return Array
     .prototype.slice.call(root.children)
     .filter(function(elem) { return elem.nodeName === "LI" })
