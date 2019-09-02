@@ -1667,7 +1667,7 @@ CommandPalette.prototype.exec = function(cmd) {
   if (!cmd) return;
   this.toggleDisplay(false);
   if (typeof cmd.action === "function"){
-    cmd.action(cmd.title);
+    cmd.action();
   } else {
     submitSapeventForm(null, cmd.action);
   }
@@ -1740,8 +1740,9 @@ function enumerateJumpAllFiles() {
     .prototype.slice.call(root.children)
     .filter(function(elem) { return elem.nodeName === "LI" })
     .map(function(listItem) {
+      var title = listItem.children[0].childNodes[0].textContent;
       return {
-        action: root.onclick,
-        title:  listItem.children[0].childNodes[0].textContent
+        action: root.onclick.bind(null, title),
+        title:  title
       };});
 }
