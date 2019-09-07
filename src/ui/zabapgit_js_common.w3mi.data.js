@@ -19,10 +19,9 @@
 /* exported preparePatch */
 /* exported registerStagePatch */
 /* exported toggleRepoListDetail */
-/* exported onDirectionChange */
-/* exported onOrderByChange  */
 /* exported onTagTypeChange */
 /* exported getIndocStyleSheet */
+/* exported addMarginBottom */
 
 /**********************************************************
  * Polyfills
@@ -202,16 +201,6 @@ function onTagTypeChange(oSelectObject){
 /**********************************************************
  * Repo Overview Logic
  **********************************************************/
-function onOrderByChange(oSelectObject){
-  var sValue = oSelectObject.value;
-  submitSapeventForm({ orderBy: sValue }, "change_order_by", "post");
-}
-
-function onDirectionChange(oSelectObject){
-  var sValue = oSelectObject.value;
-  submitSapeventForm({ direction: sValue }, "direction", "post");
-}
-
 function findStyleSheetByName(name) {
   for (var s = 0; s < document.styleSheets.length; s++) {
     var styleSheet = document.styleSheets[s];
@@ -232,12 +221,36 @@ function getIndocStyleSheet() {
   return style.sheet;
 }
 
-function toggleRepoListDetail() {
-  var detailClass = findStyleSheetByName(".ro-detail");
-  if (detailClass) {
-    detailClass.style.display = detailClass.style.display === "none" ? "" : "none";
-  }
+function RepoOverViewHelper() {
+  this.setHooks();
+  this.pageId = "RepoOverViewHelperState"; // constant is OK for this case
+  this.isDetailsDisplayed = false;
+  this.detailCssClass = findStyleSheetByName(".ro-detail");
 }
+
+RepoOverViewHelper.prototype.toggleRepoListDetail = function(forceDisplay) {
+  if (this.detailCssClass) {
+    this.isDetailsDisplayed = forceDisplay || !this.isDetailsDisplayed;
+    this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
+  }
+};
+
+RepoOverViewHelper.prototype.setHooks = function() {
+  window.onbeforeunload = this.onPageUnload.bind(this);
+  window.onload         = this.onPageLoad.bind(this);
+};
+
+RepoOverViewHelper.prototype.onPageUnload = function() {
+  if (!window.sessionStorage) return;
+  var data = { isDetailsDisplayed: this.isDetailsDisplayed };
+  window.sessionStorage.setItem(this.pageId, JSON.stringify(data));
+};
+
+RepoOverViewHelper.prototype.onPageLoad = function() {
+  var data = window.sessionStorage && JSON.parse(window.sessionStorage.getItem(this.pageId));
+  if (data && data.isDetailsDisplayed) this.toggleRepoListDetail(true);
+  debugOutput("RepoOverViewHelper.onPageLoad: " + ((data) ? "from Storage" : "initial state"));
+};
 
 /**********************************************************
  * STAGE PAGE Logic
@@ -567,6 +580,9 @@ function DiffHelper(params) {
   this.repoKey = this.dom.diffList.getAttribute("data-repo-key");
   if (!this.repoKey) return; // Unexpected
 
+  this.dom.jump = document.getElementById(params.ids.jump);
+  this.dom.jump.onclick = this.onJump.bind(this);
+
   // Checklist wrapper
   if (document.getElementById(params.ids.filterMenu)) {
     this.checkList = new CheckListWrapper(params.ids.filterMenu, this.onFilter.bind(this));
@@ -580,6 +596,17 @@ function DiffHelper(params) {
   }
 }
 
+// Action on jump click
+DiffHelper.prototype.onJump = function(e){
+  if (!e.target.text) return;
+  var elFile = document.querySelector("[data-file*='" + e.target.text + "']");
+  if (!elFile) return;
+
+  setTimeout(function(){
+    elFile.scrollIntoView();
+  }, 100);
+};
+
 // Action on filter click
 DiffHelper.prototype.onFilter = function(attr, target, state) {
   this.applyFilter(attr, target, state);
@@ -588,9 +615,18 @@ DiffHelper.prototype.onFilter = function(attr, target, state) {
 
 // Hide/show diff based on params
 DiffHelper.prototype.applyFilter = function (attr, target, state) {
+
+  var jumpListItems = Array.prototype.slice.call(document.querySelectorAll("[id*=li_jump]"));
+
   this.iterateDiffList(function(div) {
     if (div.getAttribute("data-"+attr) === target) {
       div.style.display = state ? "" : "none";
+
+      // hide the file in the jump list
+      var dataFile = div.getAttribute("data-file");
+      jumpListItems
+        .filter(function(item){ return dataFile.includes(item.text) })
+        .map(function(item){ item.style.display = div.style.display });
     }
   });
 };
@@ -639,6 +675,11 @@ DiffHelper.prototype.highlightButton = function(state) {
     this.dom.filterButton.classList.remove("bgorange");
   }
 };
+
+// Add Bottom margin, so that we can scroll to the top of the last file
+function addMarginBottom(){
+  document.getElementsByTagName("body")[0].style.marginBottom = screen.height + "px";
+}
 
 /**********************************************************
  * Other functions

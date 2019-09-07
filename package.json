@@ -1,11 +1,11 @@
 {
   "license": "MIT",
   "scripts": {
-    "pretest": "abaplint --version && abaplint \"src/**/*.*\"",
+    "pretest": "abaplint --version && abaplint",
     "test": "npm run eslint",
     "posttest": "abapmerge src/zabapgit.prog.abap > zabapgit.abap",
     "_disabled_posttest": "abaplint zabapgit.abap",
-    "lint": "abaplint \"src/**/*.*\"",
+    "lint": "abaplint",
     "eslint": "eslint src"
   },
   "repository": {
@@ -13,7 +13,7 @@
     "url": "git+https://github.com/larshp/abapGit.git"
   },
   "devDependencies": {
-    "abaplint": "^1.7.23",
+    "abaplint": "^2.0.0",
     "abapmerge": "^0.11.5",
     "eslint": "^5.11.1"
   }
