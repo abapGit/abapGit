@@ -348,7 +348,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
       WHEN c_actions-documentation.
         zcl_abapgit_services_abapgit=>open_abapgit_wikipage( ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-      when c_actions-changelog.
+      WHEN c_actions-changelog.
         zcl_abapgit_services_abapgit=>open_abapgit_changelog( ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
       WHEN c_actions-overview.
