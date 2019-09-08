@@ -81,7 +81,6 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-
     lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
                     iv_titlebar              = 'Not supported SAPGUI'
                     iv_text_question         = 'SAPGUI for Java is not supported! There might be some issues.'
