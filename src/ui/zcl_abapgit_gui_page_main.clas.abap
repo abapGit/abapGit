@@ -53,7 +53,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     DATA: lo_advsub  TYPE REF TO zcl_abapgit_html_toolbar,
           lo_helpsub TYPE REF TO zcl_abapgit_html_toolbar.
 
-    CREATE OBJECT ro_menu.
+    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-main'.
     CREATE OBJECT lo_advsub.
     CREATE OBJECT lo_helpsub.
 
@@ -173,7 +173,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_favbar.
-    CREATE OBJECT lo_allbar.
+    CREATE OBJECT lo_allbar EXPORTING iv_id = 'toc-all-repos'.
     CREATE OBJECT lo_pback.
 
     lt_favorites = zcl_abapgit_persistence_user=>get_instance( )->get_favorites( ).

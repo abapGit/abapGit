@@ -69,6 +69,7 @@ OTGR | Object type group | [#1515](https://github.com/larshp/abapGit/issues/1515
 PARA | SPA/GPA Parameters | Yes
 PDTS | Standard Task | [#153](https://github.com/larshp/abapGit/issues/153)
 PDWS | Workflow templates | [#154](https://github.com/larshp/abapGit/issues/154)
+PERS | Personalization object | Yes
 PINF | Package interface | Yes
 PRAG | Pragma in ABAP Source Code | Yes
 PROG | Program | Yes

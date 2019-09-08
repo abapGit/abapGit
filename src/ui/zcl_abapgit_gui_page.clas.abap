@@ -223,6 +223,13 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_events.
+
+    " Return actions you need on your page.
+
+  ENDMETHOD.
+
+
   METHOD get_global_hotkeys.
 
     " these are the global shortcuts active on all pages
@@ -360,18 +367,6 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_hotkey_overview.
-
-    ro_html = zcl_abapgit_gui_chunk_lib=>render_hotkey_overview( me ).
-
-  ENDMETHOD.
-
-  METHOD get_events.
-
-    " Return actions you need on your page.
-
-  ENDMETHOD.
-
   METHOD render_event_as_form.
 
     CREATE OBJECT ro_html.
@@ -380,13 +375,24 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD render_hotkey_overview.
+
+    ro_html = zcl_abapgit_gui_chunk_lib=>render_hotkey_overview( me ).
+
+  ENDMETHOD.
+
+
   METHOD scripts.
 
     CREATE OBJECT ro_html.
 
     link_hints( ro_html ).
     insert_hotkeys_to_page( ro_html ).
-
+    ro_html->add( 'var gGoRepoPalette = new CommandPalette(enumerateTocAllRepos, {' ).
+    ro_html->add( '  toggleKey: "F2",' ).
+    ro_html->add( '  hotkeyDescription: "Go to repo ..."' ).
+    ro_html->add( '});' ).
   ENDMETHOD.
 
 
