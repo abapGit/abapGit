@@ -148,7 +148,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
           lv_pull_opt    LIKE zif_abapgit_html=>c_html_opt-crossout,
           li_log         TYPE REF TO zif_abapgit_log.
 
-    CREATE OBJECT ro_toolbar.
+    CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-repo'.
     CREATE OBJECT lo_tb_branch.
     CREATE OBJECT lo_tb_advanced.
     CREATE OBJECT lo_tb_tag.
@@ -805,5 +805,4 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
-
 ENDCLASS.
