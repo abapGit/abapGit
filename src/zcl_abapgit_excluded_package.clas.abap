@@ -42,6 +42,8 @@ CLASS zcl_abapgit_excluded_package IMPLEMENTATION.
 
     WHILE lt_packages IS NOT INITIAL.
 
+      CLEAR: lt_r_packages.
+
       LOOP AT lt_packages ASSIGNING <lv_packages> WHERE table_line CN ' _0'.
 
         ls_r_packages-sign = 'I'.
