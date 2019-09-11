@@ -1,35 +1,35 @@
-CLASS zcl_abapgit_services_abapgit DEFINITION
-  PUBLIC
-  FINAL
-  CREATE PUBLIC .
+class ZCL_ABAPGIT_SERVICES_ABAPGIT definition
+  public
+  final
+  create public .
 
-  PUBLIC SECTION.
+public section.
 
-    CONSTANTS: c_abapgit_homepage  TYPE string VALUE 'http://www.abapgit.org' ##NO_TEXT,
-               c_abapgit_wikipage  TYPE string VALUE 'http://docs.abapgit.org' ##NO_TEXT,
-               c_abapgit_changelog TYPE string VALUE 'https://github.com/larshp/abapGit/blob/master/changelog.txt' ##NO_TEXT,
-               c_abapgit_package   TYPE devclass VALUE '$ABAPGIT' ##NO_TEXT,
-               c_abapgit_url       TYPE string VALUE 'https://github.com/larshp/abapGit.git' ##NO_TEXT,
-               c_abapgit_tcode     TYPE tcode  VALUE `ZABAPGIT` ##NO_TEXT.
+  constants C_ABAPGIT_REPO type STRING value 'https://github.com/larshp/abapGit' ##NO_TEXT.
+  constants C_ABAPGIT_HOMEPAGE type STRING value 'http://www.abapgit.org' ##NO_TEXT.
+  constants C_ABAPGIT_WIKIPAGE type STRING value 'http://docs.abapgit.org' ##NO_TEXT.
+  constants C_ABAPGIT_PACKAGE type DEVCLASS value '$ABAPGIT' ##NO_TEXT.
+  constants C_ABAPGIT_URL type STRING value 'https://github.com/larshp/abapGit.git' ##NO_TEXT.
+  constants C_ABAPGIT_TCODE type TCODE value `ZABAPGIT` ##NO_TEXT.
 
-    CLASS-METHODS open_abapgit_homepage
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS open_abapgit_wikipage
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS open_abapgit_changelog
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS install_abapgit
-      RAISING
-        zcx_abapgit_exception.
-    CLASS-METHODS is_installed
-      RETURNING
-        VALUE(rv_devclass) TYPE tadir-devclass .
-    CLASS-METHODS prepare_gui_startup
-      RAISING
-        zcx_abapgit_exception .
+  class-methods OPEN_ABAPGIT_HOMEPAGE
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods OPEN_ABAPGIT_WIKIPAGE
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods OPEN_ABAPGIT_CHANGELOG
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods INSTALL_ABAPGIT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods IS_INSTALLED
+    returning
+      value(RV_DEVCLASS) type TADIR-DEVCLASS .
+  class-methods PREPARE_GUI_STARTUP
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
   PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS do_install
@@ -56,7 +56,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
 
 
   METHOD check_sapgui.
@@ -231,7 +231,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
   METHOD open_abapgit_changelog.
 
     cl_gui_frontend_services=>execute(
-      EXPORTING document = c_abapgit_changelog
+      EXPORTING document = c_abapgit_repo && '/blob/master/changelog.txt'
       EXCEPTIONS OTHERS = 1 ).
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Opening page in external browser failed.' ).
