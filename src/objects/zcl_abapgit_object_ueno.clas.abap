@@ -1,17 +1,17 @@
-class ZCL_ABAPGIT_OBJECT_UENO definition
-  public
-  inheriting from ZCL_ABAPGIT_OBJECTS_SUPER
-  final
-  create public .
+CLASS zcl_abapgit_object_ueno DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  FINAL
+  CREATE PUBLIC.
 
-public section.
+  PUBLIC SECTION.
 
-  interfaces ZIF_ABAPGIT_OBJECT .
+    INTERFACES zif_abapgit_object.
 
-  methods CONSTRUCTOR
-    importing
-      !IS_ITEM type ZIF_ABAPGIT_DEFINITIONS=>TY_ITEM
-      !IV_LANGUAGE type SPRAS .
+    METHODS constructor
+      IMPORTING
+        !is_item     TYPE zif_abapgit_definitions=>ty_item
+        !iv_language TYPE spras.
   PROTECTED SECTION.
 
     METHODS corr_insert
