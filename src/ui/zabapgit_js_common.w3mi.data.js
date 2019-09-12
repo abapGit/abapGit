@@ -19,10 +19,11 @@
 /* exported preparePatch */
 /* exported registerStagePatch */
 /* exported toggleRepoListDetail */
-/* exported onDirectionChange */
-/* exported onOrderByChange  */
 /* exported onTagTypeChange */
 /* exported getIndocStyleSheet */
+/* exported addMarginBottom */
+/* exported enumerateTocAllRepos */
+/* exported enumerateJumpAllFiles */
 
 /**********************************************************
  * Polyfills
@@ -202,16 +203,6 @@ function onTagTypeChange(oSelectObject){
 /**********************************************************
  * Repo Overview Logic
  **********************************************************/
-function onOrderByChange(oSelectObject){
-  var sValue = oSelectObject.value;
-  submitSapeventForm({ orderBy: sValue }, "change_order_by", "post");
-}
-
-function onDirectionChange(oSelectObject){
-  var sValue = oSelectObject.value;
-  submitSapeventForm({ direction: sValue }, "direction", "post");
-}
-
 function findStyleSheetByName(name) {
   for (var s = 0; s < document.styleSheets.length; s++) {
     var styleSheet = document.styleSheets[s];
@@ -232,12 +223,36 @@ function getIndocStyleSheet() {
   return style.sheet;
 }
 
-function toggleRepoListDetail() {
-  var detailClass = findStyleSheetByName(".ro-detail");
-  if (detailClass) {
-    detailClass.style.display = detailClass.style.display === "none" ? "" : "none";
-  }
+function RepoOverViewHelper() {
+  this.setHooks();
+  this.pageId = "RepoOverViewHelperState"; // constant is OK for this case
+  this.isDetailsDisplayed = false;
+  this.detailCssClass = findStyleSheetByName(".ro-detail");
 }
+
+RepoOverViewHelper.prototype.toggleRepoListDetail = function(forceDisplay) {
+  if (this.detailCssClass) {
+    this.isDetailsDisplayed = forceDisplay || !this.isDetailsDisplayed;
+    this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
+  }
+};
+
+RepoOverViewHelper.prototype.setHooks = function() {
+  window.onbeforeunload = this.onPageUnload.bind(this);
+  window.onload         = this.onPageLoad.bind(this);
+};
+
+RepoOverViewHelper.prototype.onPageUnload = function() {
+  if (!window.sessionStorage) return;
+  var data = { isDetailsDisplayed: this.isDetailsDisplayed };
+  window.sessionStorage.setItem(this.pageId, JSON.stringify(data));
+};
+
+RepoOverViewHelper.prototype.onPageLoad = function() {
+  var data = window.sessionStorage && JSON.parse(window.sessionStorage.getItem(this.pageId));
+  if (data && data.isDetailsDisplayed) this.toggleRepoListDetail(true);
+  debugOutput("RepoOverViewHelper.onPageLoad: " + ((data) ? "from Storage" : "initial state"));
+};
 
 /**********************************************************
  * STAGE PAGE Logic
@@ -567,6 +582,9 @@ function DiffHelper(params) {
   this.repoKey = this.dom.diffList.getAttribute("data-repo-key");
   if (!this.repoKey) return; // Unexpected
 
+  this.dom.jump = document.getElementById(params.ids.jump);
+  this.dom.jump.onclick = this.onJump.bind(this);
+
   // Checklist wrapper
   if (document.getElementById(params.ids.filterMenu)) {
     this.checkList = new CheckListWrapper(params.ids.filterMenu, this.onFilter.bind(this));
@@ -580,6 +598,19 @@ function DiffHelper(params) {
   }
 }
 
+// Action on jump click
+DiffHelper.prototype.onJump = function(e){
+  var text = ((e.target && e.target.text) || e);
+  if (!text) return;
+
+  var elFile = document.querySelector("[data-file*='" + text + "']");
+  if (!elFile) return;
+
+  setTimeout(function(){
+    elFile.scrollIntoView();
+  }, 100);
+};
+
 // Action on filter click
 DiffHelper.prototype.onFilter = function(attr, target, state) {
   this.applyFilter(attr, target, state);
@@ -588,9 +619,18 @@ DiffHelper.prototype.onFilter = function(attr, target, state) {
 
 // Hide/show diff based on params
 DiffHelper.prototype.applyFilter = function (attr, target, state) {
+
+  var jumpListItems = Array.prototype.slice.call(document.querySelectorAll("[id*=li_jump]"));
+
   this.iterateDiffList(function(div) {
     if (div.getAttribute("data-"+attr) === target) {
       div.style.display = state ? "" : "none";
+
+      // hide the file in the jump list
+      var dataFile = div.getAttribute("data-file");
+      jumpListItems
+        .filter(function(item){ return dataFile.includes(item.text) })
+        .map(function(item){ item.style.display = div.style.display });
     }
   });
 };
@@ -640,6 +680,11 @@ DiffHelper.prototype.highlightButton = function(state) {
   }
 };
 
+// Add Bottom margin, so that we can scroll to the top of the last file
+function addMarginBottom(){
+  document.getElementsByTagName("body")[0].style.marginBottom = screen.height + "px";
+}
+
 /**********************************************************
  * Other functions
  **********************************************************/
@@ -650,111 +695,124 @@ function toggleDisplay(divId) {
   if (div) div.style.display = (div.style.display) ? "" : "none";
 }
 
-function KeyNavigation() {
+function KeyNavigation() { }
 
-}
-
-KeyNavigation.prototype.onkeydown = function(oEvent) {
-
-  if (oEvent.defaultPrevented) {
-    return;
-  }
+KeyNavigation.prototype.onkeydown = function(event) {
+  if (event.defaultPrevented) return;
 
   // navigate with arrows through list items and support pressing links with enter and space
-  if (oEvent.key === "ENTER" || oEvent.key === "") {
-    this.onEnterOrSpace();
-  } else if (/Down$/.test(oEvent.key)) {
-    this.onArrowDown(oEvent);
-  } else if (/Up$/.test(oEvent.key)) {
-    this.onArrowUp(oEvent);
+  var isHandled = false;
+  if (event.key === "Enter" || event.key === "") {
+    isHandled = this.onEnterOrSpace();
+  } else if (/Down$/.test(event.key)) {
+    isHandled = this.onArrowDown();
+  } else if (/Up$/.test(event.key)) {
+    isHandled = this.onArrowUp();
+  } else if (event.key === "Backspace") {
+    isHandled = this.onBackspace();
   }
 
-};
-
-KeyNavigation.prototype.getLiSelected = function() {
-  return document.querySelector("li .selected");
-};
-
-KeyNavigation.prototype.getActiveElement = function () {
-  return document.activeElement;
-};
-
-KeyNavigation.prototype.getActiveElementParent = function () {
-  return this.getActiveElement().parentElement;
+  if (isHandled) event.preventDefault();
 };
 
 KeyNavigation.prototype.onEnterOrSpace = function () {
+  if (document.activeElement.nodeName !== "A") return;
+  var anchor = document.activeElement;
 
-  // Enter or space clicks the selected link
-
-  var liSelected = this.getLiSelected();
-
-  if (liSelected) {
-    liSelected.firstElementChild.click();
-  }
-
-};
-
-
-KeyNavigation.prototype.onArrowDown = function (oEvent) {
-
-  var
-    liNext,
-    liSelected = this.getLiSelected(),
-    oActiveElementParent = this.getActiveElementParent();
-
-  if (liSelected) {
-
-    // we deselect the current li and select the next sibling
-    liNext = oActiveElementParent.nextElementSibling;
-    if (liNext) {
-      liSelected.classList.toggle("selected");
-      liNext.firstElementChild.focus();
-      oActiveElementParent.classList.toggle("selected");
-      oEvent.preventDefault();
-    }
-
+  if (anchor.href.replace(/#$/, "") === document.location.href.replace(/#$/, "")
+    && !anchor.onclick
+    && anchor.parentElement
+    && anchor.parentElement.nodeName === "LI" ) {
+    anchor.parentElement.classList.toggle("force-nav-hover");
   } else {
-
-    // we don't have any li selected, we have lookup where to start...
-    // the right element should have been activated in fnTooltipActivate
-    liNext = this.getActiveElement().nextElementSibling;
-    if (liNext) {
-      liNext.classList.toggle("selected");
-      liNext.firstElementChild.firstElementChild.focus();
-      oEvent.preventDefault();
-    }
-
+    anchor.click();
   }
-
+  return true;
 };
 
+KeyNavigation.prototype.focusListItem = function (li) {
+  var anchor = li.firstElementChild;
+  if (!anchor || anchor.nodeName !== "A") return false;
+  anchor.focus();
+  return true;
+};
 
-KeyNavigation.prototype.onArrowUp = function (oEvent) {
+KeyNavigation.prototype.closeDropdown = function (dropdownLi) {
+  dropdownLi.classList.remove("force-nav-hover");
+  if (dropdownLi.firstElementChild.nodeName === "A") dropdownLi.firstElementChild.focus();
+  return true;
+};
 
-  var
-    liSelected = this.getLiSelected(),
-    liPrevious = this.getActiveElementParent().previousElementSibling;
+KeyNavigation.prototype.onBackspace = function () {
+  var activeElement = document.activeElement;
 
-  if (liSelected && liPrevious) {
-
-    liSelected.classList.toggle("selected");
-    liPrevious.firstElementChild.focus();
-    this.getActiveElementParent().classList.toggle("selected");
-    oEvent.preventDefault();
-
+  // Detect opened subsequent dropdown
+  if (activeElement.nodeName === "A"
+    && activeElement.parentElement
+    && activeElement.parentElement.nodeName === "LI"
+    && activeElement.parentElement.classList.contains("force-nav-hover")) {
+    return this.closeDropdown(activeElement.parentElement);
   }
 
+  // Detect opened parent dropdown
+  if (activeElement.nodeName === "A"
+    && activeElement.parentElement
+    && activeElement.parentElement.nodeName === "LI"
+    && activeElement.parentElement.parentElement
+    && activeElement.parentElement.parentElement.nodeName === "UL"
+    && activeElement.parentElement.parentElement.parentElement
+    && activeElement.parentElement.parentElement.parentElement.nodeName === "LI"
+    && activeElement.parentElement.parentElement.parentElement.classList.contains("force-nav-hover")) {
+    return this.closeDropdown(activeElement.parentElement.parentElement.parentElement);
+  }
+};
+
+KeyNavigation.prototype.onArrowDown = function () {
+  var activeElement = document.activeElement;
+
+  // Start of dropdown list: LI > selected A :: UL > LI > A
+  if (activeElement.nodeName === "A"
+    && activeElement.parentElement
+    && activeElement.parentElement.nodeName === "LI"
+    && activeElement.parentElement.classList.contains("force-nav-hover") // opened dropdown
+    && activeElement.nextElementSibling
+    && activeElement.nextElementSibling.nodeName === "UL"
+    && activeElement.nextElementSibling.firstElementChild
+    && activeElement.nextElementSibling.firstElementChild.nodeName === "LI") {
+    return this.focusListItem(activeElement.nextElementSibling.firstElementChild);
+  }
+
+  // Next item of dropdown list: ( LI > selected A ) :: LI > A
+  if (activeElement.nodeName === "A"
+    && activeElement.parentElement
+    && activeElement.parentElement.nodeName === "LI"
+    && activeElement.parentElement.nextElementSibling
+    && activeElement.parentElement.nextElementSibling.nodeName === "LI") {
+    return this.focusListItem(activeElement.parentElement.nextElementSibling);
+  }
+};
+
+KeyNavigation.prototype.onArrowUp = function () {
+  var activeElement = document.activeElement;
+
+  // Prev item of dropdown list: ( LI > selected A ) <:: LI > A
+  if (activeElement.nodeName === "A"
+    && activeElement.parentElement
+    && activeElement.parentElement.nodeName === "LI"
+    && activeElement.parentElement.previousElementSibling
+    && activeElement.parentElement.previousElementSibling.nodeName === "LI") {
+    return this.focusListItem(activeElement.parentElement.previousElementSibling);
+  }
+};
+
+KeyNavigation.prototype.getHandler = function () {
+  return this.onkeydown.bind(this);
 };
 
 // this functions enables the navigation with arrows through list items (li)
 // e.g. in dropdown menus
 function enableArrowListNavigation() {
-
-  var oKeyNavigation = new KeyNavigation();
-
-  document.addEventListener("keydown", oKeyNavigation.onkeydown.bind(oKeyNavigation));
-
+  document.addEventListener("keydown", new KeyNavigation().getHandler());
 }
 
 /* LINK HINTS - Vimium like link hints */
@@ -1009,6 +1067,23 @@ Hotkeys.prototype.onkeydown = function(oEvent){
   if (fnHotkey) {
     fnHotkey.call(this, oEvent);
   }
+};
+
+Hotkeys.addHotkeyToHelpSheet = function(key, description) {
+  var hotkeysUl = document.querySelector("#hotkeys ul.hotkeys");
+  if (!hotkeysUl) return;
+
+  var li              = document.createElement("li");
+  var spanId          = document.createElement("span");
+  spanId.className    = "key-id";
+  spanId.innerText    = key;
+  var spanDescr       = document.createElement("span");
+  spanDescr.className = "key-descr";
+  spanDescr.innerText = description;
+  li.appendChild(spanId);
+  li.appendChild(spanDescr);
+
+  hotkeysUl.appendChild(li);
 };
 
 function setKeyBindings(oKeyMap){
@@ -1365,4 +1440,309 @@ function GitGraphScroller() { // eslint-disable-line no-unused-vars
   var gitGraphWrapperEl = document.querySelector(".gitGraph-Wrapper");
   var gitGraphscrollWrapperEl = document.querySelector(".gitGraph-scrollWrapper");
   gitGraphWrapperEl.scrollLeft = gitGraphscrollWrapperEl.scrollLeft;
+}
+
+/**********************************************************
+ * Ctrl + P - command palette
+ **********************************************************/
+
+// fuzzy match helper
+// return non empty marked string in case it fits the filter
+// abc + b = a<mark>b</mark>c
+function fuzzyMatchAndMark(str, filter){
+  var markedStr   = "";
+  var filterLower = filter.toLowerCase();
+  var strLower    = str.toLowerCase();
+  var cur         = 0;
+
+  for (var i = 0; i < filter.length; i++) {
+    while (filterLower[i] !== strLower[cur] && cur < str.length) {
+      markedStr += str[cur++];
+    }
+    if (cur === str.length) break;
+    markedStr += "<mark>" + str[cur++] + "</mark>";
+  }
+
+  var matched = i === filter.length;
+  if (matched && cur < str.length) markedStr += str.substring(cur);
+  return matched ? markedStr : null;
+}
+
+function CommandPalette(commandEnumerator, opts) {
+  if (typeof commandEnumerator !== "function") throw Error("commandEnumerator must be a function");
+  if (typeof opts !== "object") throw Error("opts must be an object");
+  if (typeof opts.toggleKey !== "string" || !opts.toggleKey) throw Error("toggleKey must be a string");
+  this.commands = commandEnumerator();
+  if (!this.commands) return;
+  // this.commands = [{
+  //   action:    "sap_event_action_code_with_params"
+  //   iconClass: "icon icon_x ..."
+  //   title:     "my command X"
+  // }, ...];
+
+  if (opts.toggleKey[0] === "^") {
+    this.toggleKeyCtrl = true;
+    this.toggleKey     = opts.toggleKey.substring(1);
+    if (!this.toggleKey) throw Error("Incorrect toggleKey");
+  } else {
+    this.toggleKeyCtrl = false;
+    this.toggleKey     = opts.toggleKey;
+  }
+
+  this.hotkeyDescription = opts.hotkeyDescription;
+  this.elements = {
+    palette: null,
+    ul:      null,
+    input:   null
+  };
+  this.selectIndex       = -1; // not selected
+  this.filter            = "";
+  this.renderAndBindElements();
+  this.hookEvents();
+  Hotkeys.addHotkeyToHelpSheet(opts.toggleKey, opts.hotkeyDescription);
+}
+
+CommandPalette.prototype.hookEvents = function(){
+  document.addEventListener("keydown", this.handleToggleKey.bind(this));
+  this.elements.input.addEventListener("keyup", this.handleInputKey.bind(this));
+  this.elements.ul.addEventListener("click", this.handleUlClick.bind(this));
+};
+
+CommandPalette.prototype.renderCommandItem = function(cmd){
+  var li = document.createElement("li");
+  if (cmd.iconClass) {
+    var icon       = document.createElement("i");
+    icon.className = cmd.iconClass;
+    li.appendChild(icon);
+  }
+  var titleSpan = document.createElement("span");
+  li.appendChild(titleSpan);
+  cmd.element   = li;
+  cmd.titleSpan = titleSpan;
+  return li;
+};
+
+CommandPalette.prototype.renderAndBindElements = function(){
+  var div           = document.createElement("div");
+  div.className     = "cmd-palette";
+  div.style.display = "none";
+  var input         = document.createElement("input");
+  input.placeholder = this.hotkeyDescription;
+  var ul            = document.createElement("ul");
+  for (var i = 0; i < this.commands.length; i++) ul.appendChild(this.renderCommandItem(this.commands[i]));
+  div.appendChild(input);
+  div.appendChild(ul);
+
+  this.elements.palette = div;
+  this.elements.input   = input;
+  this.elements.ul      = ul;
+  document.body.appendChild(div);
+};
+
+CommandPalette.prototype.handleToggleKey = function(event){
+  if (event.key !== this.toggleKey) return;
+  if (this.toggleKeyCtrl && !event.ctrlKey) return;
+  this.toggleDisplay();
+  event.preventDefault();
+};
+
+CommandPalette.prototype.handleInputKey = function(event){
+  if (event.key === "ArrowUp" || event.key === "Up") {
+    this.selectPrev();
+  } else if (event.key === "ArrowDown" || event.key === "Down") {
+    this.selectNext();
+  } else if (event.key === "Enter") {
+    this.exec(this.getSelected());
+  } else if (event.key === "Backspace" && !this.filter) {
+    this.toggleDisplay(false);
+  } else if (this.filter !== this.elements.input.value) {
+    this.filter = this.elements.input.value;
+    this.applyFilter();
+    this.selectFirst();
+  }
+  event.preventDefault();
+};
+
+CommandPalette.prototype.applyFilter = function(){
+  for (var i = 0; i < this.commands.length; i++) {
+    var cmd = this.commands[i];
+    if (!this.filter) {
+      cmd.element.style.display = "";
+      cmd.titleSpan.innerText   = cmd.title;
+    } else {
+      var matchedTitle = fuzzyMatchAndMark(cmd.title, this.filter);
+      if (matchedTitle) {
+        cmd.titleSpan.innerHTML   = matchedTitle;
+        cmd.element.style.display = "";
+      } else {
+        cmd.element.style.display = "none";
+      }
+    }
+  }
+};
+
+CommandPalette.prototype.applySelectIndex = function(newIndex){
+  if (newIndex !== this.selectIndex) {
+    if (this.selectIndex >= 0) this.commands[this.selectIndex].element.classList.remove("selected");
+    var newCmd = this.commands[newIndex];
+    newCmd.element.classList.add("selected");
+    this.selectIndex = newIndex;
+    this.adjustScrollPosition(newCmd.element);
+  }
+};
+
+CommandPalette.prototype.selectFirst = function(){
+  for (var i = 0; i < this.commands.length; i++) {
+    if (this.commands[i].element.style.display === "none") continue; // skip hidden
+    this.applySelectIndex(i);
+    break;
+  }
+};
+
+CommandPalette.prototype.selectNext = function(){
+  for (var i = this.selectIndex + 1; i < this.commands.length; i++) {
+    if (this.commands[i].element.style.display === "none") continue; // skip hidden
+    this.applySelectIndex(i);
+    break;
+  }
+};
+
+CommandPalette.prototype.selectPrev = function(){
+  for (var i = this.selectIndex - 1; i >= 0; i--) {
+    if (this.commands[i].element.style.display === "none") continue; // skip hidden
+    this.applySelectIndex(i);
+    break;
+  }
+};
+
+CommandPalette.prototype.getSelected = function(){
+  return this.commands[this.selectIndex];
+};
+
+CommandPalette.prototype.adjustScrollPosition = function(itemElement){
+  var bItem         = itemElement.getBoundingClientRect();
+  var bContainer    = this.elements.ul.getBoundingClientRect();
+  bItem.top         = Math.round(bItem.top);
+  bItem.bottom      = Math.round(bItem.bottom);
+  bItem.height      = Math.round(bItem.height);
+  bItem.mid         = Math.round(bItem.top + bItem.height / 2);
+  bContainer.top    = Math.round(bContainer.top);
+  bContainer.bottom = Math.round(bContainer.bottom);
+
+  if ( bItem.mid > bContainer.bottom - 2 ) {
+    this.elements.ul.scrollTop += bItem.bottom - bContainer.bottom;
+  } else if ( bItem.mid < bContainer.top + 2 ) {
+    this.elements.ul.scrollTop += bItem.top - bContainer.top;
+  }
+};
+
+CommandPalette.prototype.toggleDisplay = function(forceState) {
+  var isDisplayed = (this.elements.palette.style.display !== "none");
+  var tobeDisplayed = (forceState !== undefined) ? forceState : !isDisplayed;
+  this.elements.palette.style.display = tobeDisplayed ? "" : "none";
+  if (tobeDisplayed) {
+    this.elements.input.value = "";
+    this.elements.input.focus();
+    this.applyFilter();
+    this.selectFirst();
+  }
+};
+
+CommandPalette.prototype.getCommandByElement = function(element) {
+  for (var i = 0; i < this.commands.length; i++) {
+    if (this.commands[i].element === element) return this.commands[i];
+  }
+};
+
+CommandPalette.prototype.handleUlClick = function(event) {
+  var element = event.target || event.srcElement;
+  if (!element) return;
+  if (element.nodeName === "SPAN") element = element.parentNode;
+  if (element.nodeName === "I") element = element.parentNode;
+  if (element.nodeName !== "LI") return;
+  this.exec(this.getCommandByElement(element));
+};
+
+CommandPalette.prototype.exec = function(cmd) {
+  if (!cmd) return;
+  this.toggleDisplay(false);
+  if (typeof cmd.action === "function"){
+    cmd.action();
+  } else {
+    submitSapeventForm(null, cmd.action);
+  }
+};
+
+/* COMMAND ENUMERATORS */
+
+function enumerateTocAllRepos() {
+  var root = document.getElementById("toc-all-repos");
+  if (!root || root.nodeName !== "UL") return null;
+
+  var items = [];
+  for (var i = 0; i < root.children.length; i++) {
+    if (root.children[i].nodeName === "LI") items.push(root.children[i]);
+  }
+
+  items = items.map(function(listItem) {
+    var anchor = listItem.children[0];
+    return {
+      action:    anchor.href.replace("sapevent:", ""),  // a
+      iconClass: anchor.childNodes[0].className,        // i with icon
+      title:     anchor.childNodes[1].textContent       // text with repo name
+    };
+  });
+
+  return items;
+}
+
+function enumerateToolbarActions() {
+
+  var items = [];
+  function processUL(ulNode, prefix) {
+    for (var i = 0; i < ulNode.children.length; i++) {
+      var item = ulNode.children[i];
+      if (item.nodeName !== "LI") continue; // unexpected node
+      if (item.children.length >=2 && item.children[1].nodeName === "UL") {
+        // submenu detected
+        processUL(item.children[1], item.children[0].innerText);
+      } else if (item.firstElementChild && item.firstElementChild.nodeName === "A") {
+        var anchor = item.firstElementChild;
+        if (anchor.href && anchor.href !== "#") items.push([anchor, prefix]);
+      }
+    }
+  }
+
+  var toolbarRoot = document.getElementById("toolbar-main");
+  if (toolbarRoot && toolbarRoot.nodeName === "UL") processUL(toolbarRoot);
+  toolbarRoot = document.getElementById("toolbar-repo");
+  if (toolbarRoot && toolbarRoot.nodeName === "UL") processUL(toolbarRoot);
+  // Add more toolbars ?
+  if (items.length === 0) return;
+
+  items = items.map(function(item) {
+    var anchor = item[0];
+    var prefix = item[1];
+    return {
+      action:    anchor.href.replace("sapevent:", ""),
+      title:     (prefix ? prefix + ": " : "") + anchor.innerText
+    };
+  });
+
+  return items;
+}
+
+function enumerateJumpAllFiles() {
+  var root = document.getElementById("jump");
+  if (!root || root.nodeName !== "UL") return null;
+
+  return Array
+    .prototype.slice.call(root.children)
+    .filter(function(elem) { return elem.nodeName === "LI" })
+    .map(function(listItem) {
+      var title = listItem.children[0].childNodes[0].textContent;
+      return {
+        action: root.onclick.bind(null, title),
+        title:  title
+      };});
 }
