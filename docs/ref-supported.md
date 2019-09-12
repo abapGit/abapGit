@@ -56,7 +56,8 @@ IASP | Parameters of an IAC service | Yes
 IATU | Language-Independent IAC Templates | Yes
 IDOC | IDoc Type | Yes
 IEXT | Enhancement | Yes
-IWMO |Gateway Business Suite Enablement - Model | Yes
+INTF | Interface (ABAP objects) | Yes
+IWMO | Gateway Business Suite Enablement - Model | Yes
 IWOM | Gateway: Model Metadata | Yes
 IWPR | Gateway Business Suite Enablement - Service Builder Project | Yes
 IWSG | Gateway: Service Groups Metadata | Yes
