@@ -5,12 +5,12 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
 
   PUBLIC SECTION.
 
-    CONSTANTS c_abapgit_repo TYPE string VALUE 'https://github.com/larshp/abapGit' ##NO_TEXT.
-    CONSTANTS c_abapgit_homepage TYPE string VALUE 'http://www.abapgit.org' ##NO_TEXT.
-    CONSTANTS c_abapgit_wikipage TYPE string VALUE 'http://docs.abapgit.org' ##NO_TEXT.
-    CONSTANTS c_abapgit_package TYPE devclass VALUE '$ABAPGIT' ##NO_TEXT.
-    CONSTANTS c_abapgit_url TYPE string VALUE 'https://github.com/larshp/abapGit.git' ##NO_TEXT.
-    CONSTANTS c_abapgit_tcode TYPE tcode VALUE `ZABAPGIT` ##NO_TEXT.
+    CONSTANTS: c_abapgit_repo     TYPE string   VALUE 'https://github.com/larshp/abapGit'     ##NO_TEXT,
+               c_abapgit_homepage TYPE string   VALUE 'http://www.abapgit.org'                ##NO_TEXT,
+               c_abapgit_wikipage TYPE string   VALUE 'http://docs.abapgit.org'               ##NO_TEXT,
+               c_abapgit_package  TYPE devclass VALUE '$ABAPGIT'                              ##NO_TEXT,
+               c_abapgit_url      TYPE string   VALUE 'https://github.com/larshp/abapGit.git' ##NO_TEXT,
+               c_abapgit_tcode    TYPE tcode    VALUE `ZABAPGIT`                              ##NO_TEXT.
 
     CLASS-METHODS open_abapgit_homepage
       RAISING

@@ -186,11 +186,9 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
     ro_html->add( '<div id="footer">' ).                    "#EC NOTEXT
 
-    ro_html->add( |{
-              zcl_abapgit_html=>a( iv_txt = '<img src="img/logo" alt="logo">'
-                                   iv_id  = 'abapGitLogo'
-                                   iv_act = zif_abapgit_definitions=>c_action-abapgit_home )
-              }| ).
+    ro_html->add( zcl_abapgit_html=>a( iv_txt = '<img src="img/logo" alt="logo">'
+                                       iv_id  = 'abapGitLogo'
+                                       iv_act = zif_abapgit_definitions=>c_action-abapgit_home ) ).
     ro_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
 
     ro_html->add( '<td class="w40"></td>' ).                "#EC NOTEXT
