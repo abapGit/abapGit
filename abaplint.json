@@ -56,22 +56,20 @@
     "globalMacros": []
   },
   "rules": {
-    "7bit_ascii": {
-      "enabled": true,
-      "exclude": []
-    },
+    "7bit_ascii": {},
     "allowed_object_types": {
-      "enabled": true,
-      "exclude": [],
-      "allowed": ["PROG", "CLAS", "INTF", "FUGR", "DEVC", "TRAN", "W3MI"]
+      "allowed": [
+        "PROG",
+        "CLAS",
+        "INTF",
+        "FUGR",
+        "DEVC",
+        "TRAN",
+        "W3MI"
+      ]
     },
-    "ambiguous_statement": {
-      "enabled": true,
-      "exclude": []
-    },
+    "ambiguous_statement": {},
     "avoid_use": {
-      "enabled": true,
-      "exclude": [],
       "define": false,
       "endselect": true,
       "execSQL": true,
@@ -79,76 +77,33 @@
       "communication": true,
       "statics": true
     },
-    "begin_end_names": {
-      "enabled": true,
-      "exclude": []
-    },
-    "breakpoint": {
-      "enabled": true,
-      "exclude": []
-    },
-    "check_transformation_exists": {
-      "enabled": true,
-      "exclude": []
-    },
-    "check_variables": {
-      "enabled": true,
-      "exclude": []
-    },
+    "begin_end_names": {},
+    "breakpoint": {},
+    "check_transformation_exists": {},
+    "check_variables": {},
     "class_attribute_names": {
-      "enabled": true,
-      "exclude": [],
       "ignoreExceptions": true,
       "statics": "^G._.*$",
       "instance": "^M._.*$"
     },
-    "cloud_types": {
-      "enabled": true,
-      "exclude": []
-    },
-    "colon_missing_space": {
-      "enabled": true,
-      "exclude": []
-    },
-    "commented_code": {
-      "enabled": true,
-      "exclude": []
-    },
-    "constructor_visibility_public": {
-      "enabled": true,
-      "exclude": []
-    },
-    "contains_tab": {
-      "enabled": true,
-      "exclude": []
-    },
-    "definitions_top": {
-      "enabled": true,
-      "exclude": []
-    },
-    "description_empty": {
-      "enabled": true,
-      "exclude": []
-    },
+    "cloud_types": {},
+    "colon_missing_space": {},
+    "commented_code": {},
+    "constructor_visibility_public": {},
+    "contains_tab": {},
+    "definitions_top": {},
+    "description_empty": {},
     "double_space": {
       "enabled": false,
-      "exclude": [],
       "keywords": true,
       "startParen": true,
       "endParen": true
     },
     "empty_line_in_statement": {
-      "enabled": true,
-      "exclude": [],
       "allowChained": true
     },
-    "empty_statement": {
-      "enabled": true,
-      "exclude": []
-    },
+    "empty_statement": {},
     "empty_structure": {
-      "enabled": true,
-      "exclude": [],
       "loop": true,
       "if": false,
       "while": true,
@@ -157,60 +112,31 @@
       "do": true,
       "at": true
     },
-    "exit_or_check": {
-      "enabled": true,
-      "exclude": []
-    },
-    "exporting": {
-      "enabled": true,
-      "exclude": []
-    },
+    "exit_or_check": {},
+    "exporting": {},
     "form_tables_obsolete": {
-      "enabled": false,
-      "exclude": []
+      "enabled": false
     },
     "functional_writing": {
-      "enabled": true,
-      "exclude": [],
       "ignoreExceptions": true
     },
-    "global_class": {
-      "enabled": true,
-      "exclude": []
-    },
-    "identical_form_names": {
-      "enabled": true,
-      "exclude": []
-    },
-    "if_in_if": {
-      "enabled": true,
-      "exclude": []
-    },
-    "implement_methods": {
-      "enabled": true,
-      "exclude": []
-    },
+    "global_class": {},
+    "identical_form_names": {},
+    "if_in_if": {},
+    "implement_methods": {},
     "in_statement_indentation": {
       "enabled": false,
-      "exclude": [],
       "ignoreExceptions": true
     },
     "indentation": {
-      "enabled": true,
-      "exclude": [],
       "ignoreExceptions": true,
       "alignTryCatch": false,
       "globalClassSkipFirst": false,
       "ignoreGlobalClassDefinition": false,
       "ignoreGlobalInterface": false
     },
-    "inline_data_old_versions": {
-      "enabled": true,
-      "exclude": []
-    },
+    "inline_data_old_versions": {},
     "keywords_upper": {
-      "enabled": true,
-      "exclude": [],
       "ignoreExceptions": true,
       "ignoreLowerClassImplmentationStatement": true,
       "ignoreGlobalClassDefinition": false,
@@ -218,52 +144,30 @@
       "ignoreFunctionModuleName": false
     },
     "line_length": {
-      "enabled": true,
-      "exclude": [],
       "length": 120
     },
     "line_only_punc": {
-      "enabled": true,
-      "exclude": [],
       "ignoreExceptions": true
     },
     "local_class_naming": {
-      "enabled": true,
-      "exclude": [],
       "local": "^LCL_.*$",
       "test": "^LTCL_.*$"
     },
-    "local_testclass_location": {
-      "enabled": true,
-      "exclude": []
-    },
+    "local_testclass_location": {},
     "local_variable_names": {
-      "enabled": true,
-      "exclude": [],
       "expectedData": "^L._.*$",
       "expectedConstant": "^LC_.*$",
       "expectedFS": "^<L._.*>$"
     },
-    "main_file_contents": {
-      "enabled": true,
-      "exclude": []
-    },
-    "max_one_statement": {
-      "enabled": true,
-      "exclude": []
-    },
+    "main_file_contents": {},
+    "max_one_statement": {},
     "message_exists": {
-      "enabled": false,
-      "exclude": []
+      "enabled": false
     },
     "method_length": {
-      "enabled": true,
-      "exclude": [],
       "statements": 100
     },
     "method_parameter_names": {
-      "enabled": true,
-      "exclude": [],
       "ignoreExceptions": true,
       "importing": "^I._.*$",
       "returning": "^R._.*$",
@@ -273,26 +177,13 @@
         "P_TASK"
       ]
     },
-    "mix_returning": {
-      "enabled": true,
-      "exclude": []
-    },
-    "msag_consistency": {
-      "enabled": true,
-      "exclude": []
-    },
+    "mix_returning": {},
+    "msag_consistency": {},
     "nesting": {
-      "enabled": true,
-      "exclude": [],
       "depth": 5
     },
-    "no_public_attributes": {
-      "enabled": true,
-      "exclude": []
-    },
+    "no_public_attributes": {},
     "object_naming": {
-      "enabled": true,
-      "exclude": [],
       "clas": "^ZC(L|X)\\_ABAPGIT\\_",
       "intf": "^ZIF\\_ABAPGIT\\_",
       "prog": "^ZABAPGIT",
@@ -309,8 +200,6 @@
       "idoc": "^Z"
     },
     "obsolete_statement": {
-      "enabled": true,
-      "exclude": [],
       "refresh": true,
       "compute": true,
       "add": true,
@@ -320,13 +209,8 @@
       "divide": true,
       "requested": true
     },
-    "parser_error": {
-      "enabled": true,
-      "exclude": []
-    },
+    "parser_error": {},
     "preferred_compare_operator": {
-      "enabled": true,
-      "exclude": [],
       "badOperators": [
         "EQ",
         "><",
@@ -338,62 +222,32 @@
       ]
     },
     "remove_descriptions": {
-      "enabled": true,
-      "exclude": [],
       "ignoreExceptions": false
     },
     "sequential_blank": {
-      "enabled": true,
-      "exclude": [],
       "lines": 4
     },
     "short_case": {
-      "enabled": true,
-      "exclude": [],
       "length": 1,
-      "allow": ["iv_action", "sy"]
+      "allow": [
+        "iv_action",
+        "sy"
+      ]
     },
-    "space_before_colon": {
-      "enabled": true,
-      "exclude": []
-    },
+    "space_before_colon": {},
     "space_before_dot": {
-      "enabled": true,
-      "exclude": [],
       "ignoreGlobalDefinition": true,
       "ignoreExceptions": true
     },
-    "start_at_tab": {
-      "enabled": true,
-      "exclude": []
-    },
-    "superclass_final": {
-      "enabled": true,
-      "exclude": []
-    },
-    "tabl_enhancement_category": {
-      "enabled": true,
-      "exclude": []
-    },
+    "start_at_tab": {},
+    "superclass_final": {},
+    "tabl_enhancement_category": {},
     "type_form_parameters": {
-      "enabled": false,
-      "exclude": []
+      "enabled": false
     },
-    "unreachable_code": {
-      "enabled": true,
-      "exclude": []
-    },
-    "use_new": {
-      "enabled": true,
-      "exclude": []
-    },
-    "when_others_last": {
-      "enabled": true,
-      "exclude": []
-    },
-    "whitespace_end": {
-      "enabled": true,
-      "exclude": []
-    }
+    "unreachable_code": {},
+    "use_new": {},
+    "when_others_last": {},
+    "whitespace_end": {}
   }
 }
