@@ -23,6 +23,7 @@
 /* exported getIndocStyleSheet */
 /* exported addMarginBottom */
 /* exported enumerateTocAllRepos */
+/* exported enumerateJumpAllFiles */
 
 /**********************************************************
  * Polyfills
@@ -599,8 +600,10 @@ function DiffHelper(params) {
 
 // Action on jump click
 DiffHelper.prototype.onJump = function(e){
-  if (!e.target.text) return;
-  var elFile = document.querySelector("[data-file*='" + e.target.text + "']");
+  var text = ((e.target && e.target.text) || e);
+  if (!text) return;
+
+  var elFile = document.querySelector("[data-file*='" + text + "']");
   if (!elFile) return;
 
   setTimeout(function(){
@@ -1663,7 +1666,11 @@ CommandPalette.prototype.handleUlClick = function(event) {
 CommandPalette.prototype.exec = function(cmd) {
   if (!cmd) return;
   this.toggleDisplay(false);
-  submitSapeventForm(null, cmd.action);
+  if (typeof cmd.action === "function"){
+    cmd.action();
+  } else {
+    submitSapeventForm(null, cmd.action);
+  }
 };
 
 /* COMMAND ENUMERATORS */
@@ -1723,4 +1730,19 @@ function enumerateToolbarActions() {
   });
 
   return items;
+}
+
+function enumerateJumpAllFiles() {
+  var root = document.getElementById("jump");
+  if (!root || root.nodeName !== "UL") return null;
+
+  return Array
+    .prototype.slice.call(root.children)
+    .filter(function(elem) { return elem.nodeName === "LI" })
+    .map(function(listItem) {
+      var title = listItem.children[0].childNodes[0].textContent;
+      return {
+        action: root.onclick.bind(null, title),
+        title:  title
+      };});
 }
