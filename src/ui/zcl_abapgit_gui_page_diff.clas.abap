@@ -967,6 +967,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     ro_html->add( 'addMarginBottom();' ).
 
+    ro_html->add( 'var gGoJumpPalette = new CommandPalette(enumerateJumpAllFiles, {' ).
+    ro_html->add( '  toggleKey: "F2",' ).
+    ro_html->add( '  hotkeyDescription: "Jump to file ..."' ).
+    ro_html->add( '});' ).
+
   ENDMETHOD.
 
 
