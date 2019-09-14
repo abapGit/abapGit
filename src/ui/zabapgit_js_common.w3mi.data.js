@@ -23,6 +23,7 @@
 /* exported getIndocStyleSheet */
 /* exported addMarginBottom */
 /* exported enumerateTocAllRepos */
+/* exported enumerateJumpAllFiles */
 
 /**********************************************************
  * Polyfills
@@ -599,8 +600,10 @@ function DiffHelper(params) {
 
 // Action on jump click
 DiffHelper.prototype.onJump = function(e){
-  if (!e.target.text) return;
-  var elFile = document.querySelector("[data-file*='" + e.target.text + "']");
+  var text = ((e.target && e.target.text) || e);
+  if (!text) return;
+
+  var elFile = document.querySelector("[data-file*='" + text + "']");
   if (!elFile) return;
 
   setTimeout(function(){
@@ -1663,7 +1666,11 @@ CommandPalette.prototype.handleUlClick = function(event) {
 CommandPalette.prototype.exec = function(cmd) {
   if (!cmd) return;
   this.toggleDisplay(false);
-  submitSapeventForm(null, cmd.action);
+  if (typeof cmd.action === "function"){
+    cmd.action();
+  } else {
+    submitSapeventForm(null, cmd.action);
+  }
 };
 
 /* COMMAND ENUMERATORS */
@@ -1687,4 +1694,55 @@ function enumerateTocAllRepos() {
   });
 
   return items;
+}
+
+function enumerateToolbarActions() {
+
+  var items = [];
+  function processUL(ulNode, prefix) {
+    for (var i = 0; i < ulNode.children.length; i++) {
+      var item = ulNode.children[i];
+      if (item.nodeName !== "LI") continue; // unexpected node
+      if (item.children.length >=2 && item.children[1].nodeName === "UL") {
+        // submenu detected
+        processUL(item.children[1], item.children[0].innerText);
+      } else if (item.firstElementChild && item.firstElementChild.nodeName === "A") {
+        var anchor = item.firstElementChild;
+        if (anchor.href && anchor.href !== "#") items.push([anchor, prefix]);
+      }
+    }
+  }
+
+  var toolbarRoot = document.getElementById("toolbar-main");
+  if (toolbarRoot && toolbarRoot.nodeName === "UL") processUL(toolbarRoot);
+  toolbarRoot = document.getElementById("toolbar-repo");
+  if (toolbarRoot && toolbarRoot.nodeName === "UL") processUL(toolbarRoot);
+  // Add more toolbars ?
+  if (items.length === 0) return;
+
+  items = items.map(function(item) {
+    var anchor = item[0];
+    var prefix = item[1];
+    return {
+      action:    anchor.href.replace("sapevent:", ""),
+      title:     (prefix ? prefix + ": " : "") + anchor.innerText
+    };
+  });
+
+  return items;
+}
+
+function enumerateJumpAllFiles() {
+  var root = document.getElementById("jump");
+  if (!root || root.nodeName !== "UL") return null;
+
+  return Array
+    .prototype.slice.call(root.children)
+    .filter(function(elem) { return elem.nodeName === "LI" })
+    .map(function(listItem) {
+      var title = listItem.children[0].childNodes[0].textContent;
+      return {
+        action: root.onclick.bind(null, title),
+        title:  title
+      };});
 }

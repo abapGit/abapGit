@@ -70,7 +70,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
+CLASS zcl_abapgit_zip IMPLEMENTATION.
 
 
   METHOD encode_files.
@@ -132,11 +132,14 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ls_files_item-files.
 
+    WHILE ls_tadir IS INITIAL.
 
-    ls_tadir = zcl_abapgit_ui_factory=>get_popups( )->popup_object( ).
-    IF ls_tadir IS INITIAL.
-      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
-    ENDIF.
+      ls_tadir = zcl_abapgit_ui_factory=>get_popups( )->popup_object( ).
+      IF ls_tadir IS INITIAL.
+        MESSAGE |Object couldn't be found| TYPE 'S' DISPLAY LIKE 'E'.
+      ENDIF.
+
+    ENDWHILE.
 
     ls_files_item-item-obj_type = ls_tadir-object.
     ls_files_item-item-obj_name = ls_tadir-obj_name.
