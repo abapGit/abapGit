@@ -252,7 +252,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
 
     rv_string = iv_string.
 
-    TRANSLATE rv_string USING '-_._'.
+    TRANSLATE rv_string USING '-_._#_'.
 
     rv_string = |branch_{ rv_string }|.
 
