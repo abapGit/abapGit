@@ -64,7 +64,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
+CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
 
   METHOD add.
@@ -231,7 +231,6 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
   METHOD zif_abapgit_repo_srv~get.
 
     FIELD-SYMBOLS: <lo_list> LIKE LINE OF mt_list.
-
 
     IF mv_init = abap_false.
       refresh( ).

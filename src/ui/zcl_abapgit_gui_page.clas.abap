@@ -10,7 +10,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
       " You should remember that these actions are handled in the UI.
       " Have a look at the JS file.
       BEGIN OF c_global_page_action,
-        showhotkeys         TYPE string VALUE `showHotkeys` ##NO_TEXT,
+        showhotkeys TYPE string VALUE `showHotkeys` ##NO_TEXT,
       END OF c_global_page_action.
 
     CLASS-METHODS:
@@ -30,7 +30,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
 
     TYPES: BEGIN OF ty_event,
              method TYPE string,
-             name TYPE string,
+             name   TYPE string,
            END OF  ty_event.
 
     TYPES: tt_events TYPE STANDARD TABLE OF ty_event WITH DEFAULT KEY.
@@ -46,7 +46,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
       RAISING   zcx_abapgit_exception.
 
     METHODS render_event_as_form
-      IMPORTING is_event TYPE ty_event
+      IMPORTING is_event       TYPE ty_event
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING   zcx_abapgit_exception.
 
@@ -115,7 +115,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
 
   METHOD call_browser.
@@ -186,7 +186,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     ro_html->add( '<div id="footer">' ).                    "#EC NOTEXT
 
-    ro_html->add( '<img src="img/logo" alt="logo">' ).      "#EC NOTEXT
+    ro_html->add( zcl_abapgit_html=>a( iv_txt = '<img src="img/logo" alt="logo">'
+                                       iv_id  = 'abapGitLogo'
+                                       iv_act = zif_abapgit_definitions=>c_action-abapgit_home ) ).
     ro_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
 
     ro_html->add( '<td class="w40"></td>' ).                "#EC NOTEXT
