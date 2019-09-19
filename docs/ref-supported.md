@@ -111,7 +111,7 @@ TTYP | Table Type | Yes
 TYPE | Type Group | Yes
 UCSA | Unified Connectivity Service Assembly | Yes
 UDMO | Data model | Yes
-UENO | Entity type | [#1906](https://github.com/larshp/abapGit/issues/1906)
+UENO | Entity type | Yes
 VCLS | View cluster | Yes
 VIEW | View | Yes
 W3HT | Web Reporting/Internet Transaction Server HTML Templates | Yes
