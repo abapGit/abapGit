@@ -85,9 +85,6 @@ CLASS ZCL_ABAPGIT_OBJECT_NROB IMPLEMENTATION.
   ENDMETHOD.
 
 
-
-
-
   METHOD zif_abapgit_object~changed_by.
 
     DATA: lv_objectid TYPE cdhdr-objectid,
