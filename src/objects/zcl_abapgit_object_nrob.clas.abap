@@ -8,9 +8,6 @@ CLASS zcl_abapgit_object_nrob DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PRIVATE SECTION.
     METHODS:
       delete_intervals IMPORTING iv_object TYPE inri-object
-                       RAISING   zcx_abapgit_exception,
-
-      tr_object_insert IMPORTING iv_package TYPE devclass
                        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
@@ -88,29 +85,7 @@ CLASS ZCL_ABAPGIT_OBJECT_NROB IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD tr_object_insert.
 
-    DATA: ls_ko200 TYPE ko200.
-
-    ls_ko200-devclass = iv_package.
-    ls_ko200-pgmid    = 'R3TR'.
-    ls_ko200-object   = 'NROB'.
-    ls_ko200-obj_name = ms_item-obj_name.
-
-    CALL FUNCTION 'TR_OBJECT_INSERT'
-      EXPORTING
-        wi_ko200                = ls_ko200
-        iv_old_call             = abap_true
-      EXCEPTIONS
-        cancel_edit_other_error = 1
-        show_only_other_error   = 2
-        OTHERS                  = 3.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
@@ -205,7 +180,7 @@ CLASS ZCL_ABAPGIT_OBJECT_NROB IMPLEMENTATION.
     ENDIF.
 
     tadir_insert( iv_package ).
-    tr_object_insert( iv_package ).
+    corr_insert( iv_package ).
 
     CALL FUNCTION 'NUMBER_RANGE_OBJECT_CLOSE'
       EXPORTING
