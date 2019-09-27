@@ -842,7 +842,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     ENDIF.
 
     "ignore objects that exists only local
-    DELETE rt_results WHERE lstate = zif_abapgit_definitions=>c_state-added AND rstate IS INITIAL.
+    DELETE rt_results WHERE lstate = if_abapgit_definitions=>c_state-added AND rstate IS INITIAL.
     "log objects that exists only local
     IF sy-subrc = 0 AND ii_log IS BOUND.
       SORT rt_results BY obj_type obj_name.
@@ -853,13 +853,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
                               BINARY SEARCH TRANSPORTING NO FIELDS.
         IF sy-subrc <> 0.
           "all parts exists only local
-          ls_item-devclass = lr_object->package.
-          ls_item-obj_type = lr_object->obj_type.
-          ls_item-obj_name = lr_object->obj_name.
-          ii_log->add_success(
-            iv_msg  = |Object { ls_item-obj_name } (type { ls_item-obj_type }) only exists local; no import required|
-            is_item = ls_item ).
-          "ignore object for further messages
+          "no log message; ignore object for further messages
           DELETE lt_objects INDEX lv_tabix.
         ENDIF.
       ENDLOOP.
