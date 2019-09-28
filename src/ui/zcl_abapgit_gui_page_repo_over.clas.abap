@@ -57,10 +57,6 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         IMPORTING
           it_postdata TYPE cnht_post_data_tab,
 
-      apply_order_by
-        CHANGING
-          ct_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview,
-
       apply_filter
         CHANGING
           ct_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview,
@@ -87,12 +83,12 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
           io_html     TYPE REF TO zcl_abapgit_html
           it_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview,
 
-      render_order_by
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
-
       render_header_bar
         IMPORTING
-          io_html TYPE REF TO zcl_abapgit_html.
+          io_html TYPE REF TO zcl_abapgit_html,
+      apply_order_by
+            CHANGING
+              ct_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview.
 
 ENDCLASS.
 
@@ -114,25 +110,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
                            AND created_at      NS mv_filter
                            AND deserialized_by NS mv_filter
                            AND deserialized_at NS mv_filter.
-
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD apply_order_by.
-
-    DATA:
-      lt_sort TYPE abap_sortorder_tab,
-      ls_sort LIKE LINE OF lt_sort.
-
-    IF mv_order_by IS NOT INITIAL.
-
-      ls_sort-name       = mv_order_by.
-      ls_sort-descending = mv_order_descending.
-      ls_sort-astext     = abap_true.
-      INSERT ls_sort INTO TABLE lt_sort.
-      SORT ct_overview BY (lt_sort).
 
     ENDIF.
 
@@ -229,7 +206,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     DATA: lt_overview TYPE tty_overview.
 
-
     lt_overview = map_repo_list_to_overview(
       zcl_abapgit_persist_factory=>get_repo( )->list( ) ).
 
@@ -252,8 +228,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     io_html->add( |<form class="inline" method="post" action="sapevent:{ c_action-apply_filter }">| ).
 
-    io_html->add( render_order_by( ) ).
-
     io_html->add( render_text_input(
       iv_name  = |filter|
       iv_label = |Filter: |
@@ -267,30 +241,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
 
     io_html->add( |</div>| ).
-
-  ENDMETHOD.
-
-
-  METHOD render_order_by.
-
-    DATA: lt_options TYPE stringtab.
-
-    INSERT `TYPE` INTO TABLE lt_options.
-    INSERT `KEY` INTO TABLE lt_options.
-    INSERT `NAME` INTO TABLE lt_options.
-    INSERT `URL` INTO TABLE lt_options.
-    INSERT `PACKAGE` INTO TABLE lt_options.
-    INSERT `BRANCH` INTO TABLE lt_options.
-    INSERT `CREATED_AT` INTO TABLE lt_options.
-    INSERT `CREATED_BY` INTO TABLE lt_options.
-    INSERT `DESERIALIZED_AT` INTO TABLE lt_options.
-    INSERT `DESERIALIZED_BY` INTO TABLE lt_options.
-    INSERT `ENDMETHOD` INTO TABLE lt_options.
-
-    ro_html = zcl_abapgit_gui_chunk_lib=>render_order_by(
-                                            it_options = lt_options
-                                            iv_value   = mv_order_by ).
-    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_direction( mv_order_descending ) ).
 
   ENDMETHOD.
 
@@ -372,21 +322,14 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   METHOD render_table_header.
 
-    TYPES:
-      BEGIN OF lty_col_spec,
-        tech_name    TYPE string,
-        display_name TYPE string,
-        css_class    TYPE string,
-        add_tz       TYPE abap_bool,
-      END OF lty_col_spec.
-    DATA lt_colspec TYPE STANDARD TABLE OF lty_col_spec.
+    DATA lt_col_spec TYPE zif_abapgit_definitions=>tty_col_spec.
     DATA lv_tmp     TYPE string.
     DATA lv_disp_name TYPE string.
 
-    FIELD-SYMBOLS <ls_col> LIKE LINE OF lt_colspec.
+    FIELD-SYMBOLS <ls_col> LIKE LINE OF lt_col_spec.
 
     DEFINE _add_col.
-      APPEND INITIAL LINE TO lt_colspec ASSIGNING <ls_col>.
+      APPEND INITIAL LINE TO lt_col_spec ASSIGNING <ls_col>.
       <ls_col>-tech_name    = &1.
       <ls_col>-display_name = &2.
       <ls_col>-css_class    = &3.
@@ -409,48 +352,10 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     io_html->add( |<thead>| ).
     io_html->add( |<tr>| ).
-
-    LOOP AT lt_colspec ASSIGNING <ls_col>.
-      " e.g. <th class="ro-detail">Created at [{ mv_time_zone }]</th>
-      lv_tmp = '<th'.
-      IF <ls_col>-css_class IS NOT INITIAL.
-        lv_tmp = lv_tmp && | class="{ <ls_col>-css_class }"|.
-      ENDIF.
-      lv_tmp = lv_tmp && '>'.
-
-      IF <ls_col>-display_name IS NOT INITIAL.
-        lv_disp_name = <ls_col>-display_name.
-        IF <ls_col>-add_tz = abap_true.
-          lv_disp_name = lv_disp_name && | [{ mv_time_zone }]|.
-        ENDIF.
-        IF <ls_col>-tech_name = mv_order_by.
-          IF mv_order_descending = abap_true.
-            lv_tmp = lv_tmp && zcl_abapgit_html=>a(
-              iv_txt = lv_disp_name
-              iv_act = |{ c_action-direction }?direction=ASCENDING| ).
-          ELSE.
-            lv_tmp = lv_tmp && zcl_abapgit_html=>a(
-              iv_txt = lv_disp_name
-              iv_act = |{ c_action-direction }?direction=DESCENDING| ).
-          ENDIF.
-        ELSE.
-          lv_tmp = lv_tmp && zcl_abapgit_html=>a(
-            iv_txt = lv_disp_name
-            iv_act = |{ c_action-change_order_by }?orderBy={ <ls_col>-tech_name }| ).
-        ENDIF.
-      ENDIF.
-      IF <ls_col>-tech_name = mv_order_by.
-        IF mv_order_descending = abap_true.
-          lv_tmp = lv_tmp && | &#x25B4;|. " arrow up
-        ELSE.
-          lv_tmp = lv_tmp && | &#x25BE;|. " arrow down
-        ENDIF.
-      ENDIF.
-
-      lv_tmp = lv_tmp && '</th>'.
-      io_html->add( lv_tmp ).
-    ENDLOOP.
-
+    io_html->add( zcl_abapgit_gui_chunk_lib=>render_cols_pec(
+                      it_col_spec         = lt_col_spec
+                      iv_order_by         = mv_order_by
+                      iv_order_descending = mv_order_descending ) ).
     io_html->add( '</tr>' ).
     io_html->add( '</thead>' ).
 
@@ -507,12 +412,12 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
       WHEN c_action-change_order_by.
 
-        mv_order_by = zcl_abapgit_gui_chunk_lib=>parse_change_order_by( it_postdata ).
+        mv_order_by = zcl_abapgit_gui_chunk_lib=>parse_change_order_by( iv_getdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_action-direction.
 
-        mv_order_descending = zcl_abapgit_gui_chunk_lib=>parse_direction( it_postdata ).
+        mv_order_descending = zcl_abapgit_gui_chunk_lib=>parse_direction( iv_getdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_action-apply_filter.
@@ -535,4 +440,23 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
+
+  METHOD apply_order_by.
+
+    DATA:
+      lt_sort TYPE abap_sortorder_tab,
+      ls_sort LIKE LINE OF lt_sort.
+
+    IF mv_order_by IS NOT INITIAL.
+
+      ls_sort-name       = mv_order_by.
+      ls_sort-descending = mv_order_descending.
+      ls_sort-astext     = abap_true.
+      INSERT ls_sort INTO TABLE lt_sort.
+      SORT ct_overview BY (lt_sort).
+
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

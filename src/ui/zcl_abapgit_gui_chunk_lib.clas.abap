@@ -5,6 +5,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
 
   PUBLIC SECTION.
 
+    CLASS-METHODS class_constructor.
     CLASS-METHODS render_error
       IMPORTING
         !ix_error      TYPE REF TO zcx_abapgit_exception OPTIONAL
@@ -68,20 +69,36 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(ro_html)      TYPE REF TO zcl_abapgit_html.
     CLASS-METHODS parse_change_order_by
       IMPORTING
-        it_postdata        TYPE cnht_post_data_tab
+        iv_query_str       TYPE clike
       RETURNING
         VALUE(rv_order_by) TYPE string.
     CLASS-METHODS parse_direction
       IMPORTING
-        it_postdata                TYPE cnht_post_data_tab
+        iv_query_str               TYPE clike
       RETURNING
-        VALUE(rv_order_descending) TYPE char01.
+        VALUE(rv_order_descending) TYPE abap_bool.
     CLASS-METHODS render_order_by
       IMPORTING it_options     TYPE stringtab
                 iv_value       TYPE string
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+    CLASS-METHODS render_cols_pec
+      IMPORTING
+        it_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec
+        iv_order_by         TYPE string
+        iv_order_descending TYPE abap_bool
+      RETURNING
+        VALUE(ro_html)      TYPE REF TO zcl_abapgit_html.
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CONSTANTS:
+      BEGIN OF c_action,
+        select          TYPE string VALUE 'select',
+        change_order_by TYPE string VALUE 'change_order_by',
+        direction       TYPE string VALUE 'direction',
+        apply_filter    TYPE string VALUE 'apply_filter',
+      END OF c_action .
+
+    CLASS-DATA gv_time_zone TYPE timezone.
 
     CLASS-METHODS render_branch_span
       IMPORTING
@@ -127,6 +144,33 @@ ENDCLASS.
 CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
 
+  METHOD add_option.
+
+    DATA: lv_selected TYPE string.
+
+    IF iv_selected = abap_true.
+      lv_selected = 'selected'.
+    ENDIF.
+
+    io_html->add( |<option value="{ iv_option }" { lv_selected }>|
+               && |{ to_mixed( iv_option ) }</option>| ).
+
+  ENDMETHOD.
+
+
+  METHOD class_constructor.
+
+    CALL FUNCTION 'GET_SYSTEM_TIMEZONE'
+      IMPORTING
+        timezone            = gv_time_zone
+      EXCEPTIONS
+        customizing_missing = 1
+        OTHERS              = 2.
+    ASSERT sy-subrc = 0.
+
+  ENDMETHOD.
+
+
   METHOD get_t100_text.
 
     SELECT SINGLE text
@@ -144,6 +188,30 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     rv_normalized_program_name = substring_before(
                                      val   = iv_program_name
                                      regex = `(=+CP)?$` ).
+
+  ENDMETHOD.
+
+
+  METHOD parse_change_order_by.
+
+    FIND FIRST OCCURRENCE OF REGEX `orderBy=(.*)`
+         IN iv_query_str
+         SUBMATCHES rv_order_by.
+
+    rv_order_by = condense( rv_order_by ).
+
+  ENDMETHOD.
+
+
+  METHOD parse_direction.
+
+    DATA: lv_direction TYPE string.
+
+    FIND FIRST OCCURRENCE OF REGEX `direction=(.*)`
+         IN iv_query_str
+         SUBMATCHES lv_direction.
+
+    rv_order_descending = boolc( condense( lv_direction ) = 'DESCENDING' ).
 
   ENDMETHOD.
 
@@ -171,6 +239,60 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       ro_html->add( lv_text ).
     ENDIF.
     ro_html->add( '</span>' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_cols_pec.
+
+    DATA lt_colspec TYPE zif_abapgit_definitions=>tty_col_spec.
+    DATA lv_tmp     TYPE string.
+    DATA lv_disp_name TYPE string.
+
+    FIELD-SYMBOLS <ls_col> LIKE LINE OF lt_colspec.
+
+    CREATE OBJECT ro_html.
+
+    LOOP AT it_col_spec ASSIGNING <ls_col>.
+      " e.g. <th class="ro-detail">Created at [{ mv_time_zone }]</th>
+      lv_tmp = '<th'.
+      IF <ls_col>-css_class IS NOT INITIAL.
+        lv_tmp = lv_tmp && | class="{ <ls_col>-css_class }"|.
+      ENDIF.
+      lv_tmp = lv_tmp && '>'.
+
+      IF <ls_col>-display_name IS NOT INITIAL.
+        lv_disp_name = <ls_col>-display_name.
+        IF <ls_col>-add_tz = abap_true.
+          lv_disp_name = lv_disp_name && | [{ gv_time_zone }]|.
+        ENDIF.
+        IF <ls_col>-tech_name = iv_order_by.
+          IF iv_order_descending = abap_true.
+            lv_tmp = lv_tmp && zcl_abapgit_html=>a(
+              iv_txt = lv_disp_name
+              iv_act = |{ c_action-direction }?direction=ASCENDING| ).
+          ELSE.
+            lv_tmp = lv_tmp && zcl_abapgit_html=>a(
+              iv_txt = lv_disp_name
+              iv_act = |{ c_action-direction }?direction=DESCENDING| ).
+          ENDIF.
+        ELSE.
+          lv_tmp = lv_tmp && zcl_abapgit_html=>a(
+            iv_txt = lv_disp_name
+            iv_act = |{ c_action-change_order_by }?orderBy={ <ls_col>-tech_name }| ).
+        ENDIF.
+      ENDIF.
+      IF <ls_col>-tech_name = iv_order_by.
+        IF iv_order_descending = abap_true.
+          lv_tmp = lv_tmp && | &#x25B4;|. " arrow up
+        ELSE.
+          lv_tmp = lv_tmp && | &#x25BE;|. " arrow down
+        ENDIF.
+      ENDIF.
+
+      lv_tmp = lv_tmp && '</th>'.
+      ro_html->add( lv_tmp ).
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -522,6 +644,28 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_order_by.
+
+    FIELD-SYMBOLS: <lv_option> TYPE LINE OF stringtab.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( |Order by: <select name="order_by" onchange="onOrderByChange(this)">| ).
+
+    LOOP AT it_options ASSIGNING <lv_option>.
+
+      add_option(
+          iv_option   = <lv_option>
+          iv_selected = boolc( iv_value = <lv_option> )
+          io_html     = ro_html ).
+
+    ENDLOOP.
+
+    ro_html->add( |</select>| ).
+
+  ENDMETHOD.
+
+
   METHOD render_order_by_direction.
 
     CREATE OBJECT ro_html.
@@ -649,79 +793,4 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ro_html->add( '</tr></table>' ).
 
   ENDMETHOD.
-
-
-  METHOD parse_change_order_by.
-
-    FIELD-SYMBOLS: <lv_postdata> TYPE cnht_post_data_line.
-
-    READ TABLE it_postdata ASSIGNING <lv_postdata>
-                           INDEX 1.
-    IF sy-subrc = 0.
-      FIND FIRST OCCURRENCE OF REGEX `orderBy=(.*)`
-           IN <lv_postdata>
-           SUBMATCHES rv_order_by.
-    ENDIF.
-
-    rv_order_by = condense( rv_order_by ).
-
-  ENDMETHOD.
-
-
-  METHOD parse_direction.
-
-    DATA: lv_direction TYPE string.
-
-    FIELD-SYMBOLS: <lv_postdata> TYPE cnht_post_data_line.
-
-    READ TABLE it_postdata ASSIGNING <lv_postdata>
-                           INDEX 1.
-    IF sy-subrc = 0.
-      FIND FIRST OCCURRENCE OF REGEX `direction=(.*)`
-           IN <lv_postdata>
-           SUBMATCHES lv_direction.
-    ENDIF.
-
-    IF condense( lv_direction ) = 'DESCENDING'.
-      rv_order_descending = abap_true.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD render_order_by.
-
-    FIELD-SYMBOLS: <lv_option> TYPE LINE OF stringtab.
-
-    CREATE OBJECT ro_html.
-
-    ro_html->add( |Order by: <select name="order_by" onchange="onOrderByChange(this)">| ).
-
-    LOOP AT it_options ASSIGNING <lv_option>.
-
-      add_option(
-          iv_option   = <lv_option>
-          iv_selected = boolc( iv_value = <lv_option> )
-          io_html     = ro_html ).
-
-    ENDLOOP.
-
-    ro_html->add( |</select>| ).
-
-  ENDMETHOD.
-
-
-  METHOD add_option.
-
-    DATA: lv_selected TYPE string.
-
-    IF iv_selected = abap_true.
-      lv_selected = 'selected'.
-    ENDIF.
-
-    io_html->add( |<option value="{ iv_option }" { lv_selected }>|
-               && |{ to_mixed( iv_option ) }</option>| ).
-
-  ENDMETHOD.
-
 ENDCLASS.

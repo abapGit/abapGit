@@ -350,6 +350,16 @@ INTERFACE zif_abapgit_definitions
     tty_lines TYPE STANDARD TABLE OF i
                         WITH NON-UNIQUE DEFAULT KEY .
 
+    TYPES:
+      BEGIN OF ty_col_spec,
+        tech_name    TYPE string,
+        display_name TYPE string,
+        css_class    TYPE string,
+        add_tz       TYPE abap_bool,
+      END OF ty_col_spec,
+      tty_col_spec TYPE STANDARD TABLE OF ty_col_spec
+                        WITH EMPTY KEY.
+
   CONSTANTS:
     BEGIN OF c_git_branch_type,
       branch          TYPE ty_git_branch_type VALUE 'HD',

@@ -94,16 +94,7 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         IMPORTING is_item                      TYPE zif_abapgit_definitions=>ty_repo_item
         RETURNING VALUE(rv_inactive_html_code) TYPE string,
       open_in_master_language
-        RAISING zcx_abapgit_exception,
-      render_order_by
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-        RAISING   zcx_abapgit_exception,
-      add_order_by_option
-        IMPORTING iv_option TYPE string
-                  iv_name   TYPE string
-                  io_html   TYPE REF TO zcl_abapgit_html,
-      apply_order_by
-        CHANGING ct_repo_items TYPE zif_abapgit_definitions=>tt_repo_items.
+        RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -500,12 +491,6 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       ro_html->add( |<td class="current_dir">{ mv_cur_dir }</td>| ).
     ENDIF.
 
-    IF zcl_abapgit_persistence_user=>get_instance( )->get_show_order_by( ) = abap_true.
-      ro_html->add( '<td>' ).
-      ro_html->add( render_order_by( ) ).
-      ro_html->add( '</td>' ).
-    ENDIF.
-
     ro_html->add( '<td class="right">' ).
     ro_html->add( lo_toolbar->render( iv_right = abap_true ) ).
     ro_html->add( '</td>' ).
@@ -714,10 +699,10 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
         mv_max_lines    = mv_max_lines + mv_max_setting.
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-change_order_by.
-        mv_order_by     = zcl_abapgit_gui_chunk_lib=>parse_change_order_by( it_postdata ).
+        mv_order_by     = zcl_abapgit_gui_chunk_lib=>parse_change_order_by( iv_getdata ).
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-direction.
-        mv_order_descending = zcl_abapgit_gui_chunk_lib=>parse_direction( it_postdata ).
+        mv_order_descending = zcl_abapgit_gui_chunk_lib=>parse_direction( iv_getdata ).
         ev_state            = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_open_in_master_lang.
         open_in_master_language( ).
@@ -766,8 +751,6 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
                                           iv_by_folders   = mv_show_folders
                                           iv_changes_only = mv_changes_only ).
 
-        apply_order_by( CHANGING ct_repo_items = lt_repo_items ).
-
         LOOP AT lt_repo_items ASSIGNING <ls_item>.
           zcl_abapgit_state=>reduce( EXPORTING iv_cur = <ls_item>-lstate
                                      CHANGING cv_prev = lv_lstate ).
@@ -802,6 +785,10 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
         IF zcl_abapgit_path=>is_root( mv_cur_dir ) = abap_false.
           ro_html->add( render_parent_dir( ) ).
+        ENDIF.
+
+        IF zcl_abapgit_persistence_user=>get_instance( )->get_show_order_by( ) = abap_true.
+          ro_html->add( |<thead><tr>test</tr></thead>| ).
         ENDIF.
 
         IF lines( lt_repo_items ) = 0.
