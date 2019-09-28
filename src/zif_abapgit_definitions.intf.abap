@@ -356,6 +356,7 @@ INTERFACE zif_abapgit_definitions
       display_name TYPE string,
       css_class    TYPE string,
       add_tz       TYPE abap_bool,
+      title        TYPE string,
     END OF ty_col_spec,
     tty_col_spec TYPE STANDARD TABLE OF ty_col_spec
                       WITH NON-UNIQUE KEY tech_name.

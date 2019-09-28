@@ -98,8 +98,7 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
       render_order_by
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
       apply_order_by
-        CHANGING
-          ct_repo_items TYPE zif_abapgit_definitions=>tt_repo_items.
+        CHANGING ct_repo_items TYPE zif_abapgit_definitions=>tt_repo_items.
 
 ENDCLASS.
 
@@ -756,7 +755,9 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
                                           iv_by_folders   = mv_show_folders
                                           iv_changes_only = mv_changes_only ).
 
-        apply_order_by( CHANGING ct_repo_items = lt_repo_items ).
+        IF mv_show_order_by = abap_true.
+          apply_order_by( CHANGING ct_repo_items = lt_repo_items ).
+        ENDIF.
 
         LOOP AT lt_repo_items ASSIGNING <ls_item>.
           zcl_abapgit_state=>reduce( EXPORTING iv_cur = <ls_item>-lstate
@@ -794,7 +795,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
           ro_html->add( render_parent_dir( ) ).
         ENDIF.
 
-        IF zcl_abapgit_persistence_user=>get_instance( )->get_show_order_by( ) = abap_true.
+        IF mv_show_order_by = abap_true.
           ro_html->add( render_order_by( ) ).
         ENDIF.
 
@@ -840,7 +841,9 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
   METHOD render_order_by.
 
-    DATA lt_col_spec TYPE zif_abapgit_definitions=>tty_col_spec.
+    DATA:
+      lt_col_spec TYPE zif_abapgit_definitions=>tty_col_spec,
+      lv_icon     TYPE string.
     FIELD-SYMBOLS <ls_col> LIKE LINE OF lt_col_spec.
 
     DEFINE _add_col.
@@ -849,16 +852,21 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       <ls_col>-display_name = &2.
       <ls_col>-css_class    = &3.
       <ls_col>-add_tz       = &4.
+      <ls_col>-title        = &5.
     END-OF-DEFINITION.
 
     CREATE OBJECT ro_html.
 
-    "        technical name    display name      css class   add timezone
-    _add_col 'ICON'              ''                ''          ''.
-    _add_col 'OBJ_TYPE'          'Type'            ''          ''.
-    _add_col 'OBJ_NAME'          'Name'            ''          ''.
-    _add_col 'PATH'              ''                ''          ''.
-    _add_col 'COMMAND'           ''                ''          ''.
+    IF mv_order_by IS NOT INITIAL.
+      lv_icon = |&osol;|. " remove filter
+    ENDIF.
+
+    "        technical name    display name      css class   add timezone   title
+    _add_col 'ICON'              lv_icon           ''          ''           'Clear'.
+    _add_col 'OBJ_TYPE'          'Type'            ''          ''           ''.
+    _add_col 'OBJ_NAME'          'Name'            ''          ''           ''.
+    _add_col 'PATH'              ''                ''          ''           ''.
+    _add_col 'COMMAND'           ''                ''          ''           ''.
 
     ro_html->add( |<thead>| ).
     ro_html->add( |<tr>| ).
@@ -877,6 +885,12 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     DATA:
       lt_sort TYPE abap_sortorder_tab,
       ls_sort LIKE LINE OF lt_sort.
+
+    IF mv_order_by = |ICON|.
+      CLEAR:
+        mv_order_by,
+        mv_order_descending.
+    ENDIF.
 
     IF mv_order_by IS NOT INITIAL.
 
