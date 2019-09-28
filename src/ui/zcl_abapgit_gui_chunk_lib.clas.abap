@@ -125,31 +125,12 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         iv_program_name                   TYPE syrepid
       RETURNING
         VALUE(rv_normalized_program_name) TYPE string.
-    CLASS-METHODS add_option
-      IMPORTING
-        iv_option   TYPE string
-        iv_selected TYPE abap_bool
-        io_html     TYPE REF TO zcl_abapgit_html.
+
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
-
-
-  METHOD add_option.
-
-    DATA: lv_selected TYPE string.
-
-    IF iv_selected = abap_true.
-      lv_selected = 'selected'.
-    ENDIF.
-
-    io_html->add( |<option value="{ iv_option }" { lv_selected }>|
-               && |{ to_mixed( iv_option ) }</option>| ).
-
-  ENDMETHOD.
-
 
   METHOD class_constructor.
 
@@ -238,9 +219,10 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
   METHOD render_cols_pec.
 
-    DATA lt_colspec TYPE zif_abapgit_definitions=>tty_col_spec.
-    DATA lv_tmp     TYPE string.
-    DATA lv_disp_name TYPE string.
+    DATA:
+      lt_colspec   TYPE zif_abapgit_definitions=>tty_col_spec,
+      lv_tmp       TYPE string,
+      lv_disp_name TYPE string.
 
     FIELD-SYMBOLS <ls_col> LIKE LINE OF lt_colspec.
 

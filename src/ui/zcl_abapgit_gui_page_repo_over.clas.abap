@@ -86,9 +86,9 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       render_header_bar
         IMPORTING
           io_html TYPE REF TO zcl_abapgit_html,
+
       apply_order_by
-            CHANGING
-              ct_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview.
+        CHANGING ct_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview.
 
 ENDCLASS.
 
