@@ -633,7 +633,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       iv_hint    = lv_hint
       iv_hide    = boolc( io_news->has_unseen( ) = abap_false )
       io_content = ro_html ).
-    add_option( iv_option   = |DESCENDING|
 
   ENDMETHOD.
 
