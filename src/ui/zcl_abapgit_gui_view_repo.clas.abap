@@ -866,7 +866,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     _add_col 'PATH'              ''                ''          ''           ''.
     _add_col 'COMMAND'           ''                ''          ''           ''.
 
-    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_col_spec(
+    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_table_header(
                       it_col_spec         = lt_col_spec
                       iv_order_by         = mv_order_by
                       iv_order_descending = mv_order_descending ) ).

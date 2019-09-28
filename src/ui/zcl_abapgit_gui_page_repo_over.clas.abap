@@ -344,7 +344,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     _add_col 'CREATED_AT'      'Created at'      'ro-detail' 'X'.
     _add_col 'KEY'             'Key'             'ro-detail' ''.
 
-    io_html->add( zcl_abapgit_gui_chunk_lib=>render_col_spec(
+    io_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_table_header(
                       it_col_spec         = lt_col_spec
                       iv_order_by         = mv_order_by
                       iv_order_descending = mv_order_descending ) ).
