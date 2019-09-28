@@ -862,7 +862,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ENDIF.
 
     "        technical name    display name      css class   add timezone   title
-    _add_col 'ICON'              lv_icon           ''          ''           'Clear'.
+    _add_col 'CLEAR'             lv_icon           ''          ''           'Clear'.
     _add_col 'OBJ_TYPE'          'Type'            ''          ''           ''.
     _add_col 'OBJ_NAME'          'Name'            ''          ''           ''.
     _add_col 'PATH'              ''                ''          ''           ''.
@@ -886,7 +886,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       lt_sort TYPE abap_sortorder_tab,
       ls_sort LIKE LINE OF lt_sort.
 
-    IF mv_order_by = |ICON|.
+    IF mv_order_by = |CLEAR|.
       CLEAR:
         mv_order_by,
         mv_order_descending.
