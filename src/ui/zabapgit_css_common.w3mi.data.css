@@ -201,7 +201,7 @@ table.repo_tab {
   text-align: left;
 }
 .repo_tab td.type {
-  width: 3em;
+  width: 3.5em;
 }
 .repo_tab td.object {
   padding-left: 0.5em;
