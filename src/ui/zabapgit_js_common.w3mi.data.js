@@ -255,6 +255,34 @@ RepoOverViewHelper.prototype.onPageLoad = function() {
 };
 
 /**********************************************************
+ * Order By Logic - for pages with order by feature
+ * store the sort order in the session storae
+ **********************************************************/
+function OrderByHelper() {
+  this.setHooks();
+  this.pageId = "OrderByHelperState"; // constant is OK for this case
+  this.isDetailsDisplayed = false;
+  this.detailCssClass = findStyleSheetByName(".ro-detail");
+}
+
+OrderByHelper.prototype.setHooks = function() {
+  window.onbeforeunload = this.onPageUnload.bind(this);
+  window.onload         = this.onPageLoad.bind(this);
+};
+
+OrderByHelper.prototype.onPageUnload = function() {
+  if (!window.sessionStorage) return;
+  var data = { isDetailsDisplayed: this.isDetailsDisplayed };
+  window.sessionStorage.setItem(this.pageId, JSON.stringify(data));
+};
+
+OrderByHelper.prototype.onPageLoad = function() {
+  var data = window.sessionStorage && JSON.parse(window.sessionStorage.getItem(this.pageId));
+  if (data && data.isDetailsDisplayed) this.toggleRepoListDetail(true);
+  debugOutput("OrderByHelper.onPageLoad: " + ((data) ? "from Storage" : "initial state"));
+};
+
+/**********************************************************
  * STAGE PAGE Logic
  **********************************************************/
 
