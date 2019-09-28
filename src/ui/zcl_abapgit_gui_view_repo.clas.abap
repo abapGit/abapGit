@@ -94,7 +94,8 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         IMPORTING is_item                      TYPE zif_abapgit_definitions=>ty_repo_item
         RETURNING VALUE(rv_inactive_html_code) TYPE string,
       open_in_master_language
-        RAISING zcx_abapgit_exception.
+        RAISING zcx_abapgit_exception,
+      render_order_by.
 
 ENDCLASS.
 
@@ -788,7 +789,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
         ENDIF.
 
         IF zcl_abapgit_persistence_user=>get_instance( )->get_show_order_by( ) = abap_true.
-          ro_html->add( |<thead><tr>test</tr></thead>| ).
+          render_order_by( ).
         ENDIF.
 
         IF lines( lt_repo_items ) = 0.
@@ -829,4 +830,10 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
+
+  METHOD render_order_by.
+
+  ENDMETHOD.
+
 ENDCLASS.

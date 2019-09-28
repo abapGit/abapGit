@@ -62,11 +62,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         ix_error       TYPE REF TO zcx_abapgit_exception
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
-    CLASS-METHODS render_order_by_direction
-      IMPORTING
-        iv_order_descending TYPE abap_bool
-      RETURNING
-        VALUE(ro_html)      TYPE REF TO zcl_abapgit_html.
+
     CLASS-METHODS parse_change_order_by
       IMPORTING
         iv_query_str       TYPE clike
@@ -77,10 +73,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         iv_query_str               TYPE clike
       RETURNING
         VALUE(rv_order_descending) TYPE abap_bool.
-    CLASS-METHODS render_order_by
-      IMPORTING it_options     TYPE stringtab
-                iv_value       TYPE string
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+
     CLASS-METHODS render_cols_pec
       IMPORTING
         it_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec
@@ -640,47 +633,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       iv_hint    = lv_hint
       iv_hide    = boolc( io_news->has_unseen( ) = abap_false )
       io_content = ro_html ).
-
-  ENDMETHOD.
-
-
-  METHOD render_order_by.
-
-    FIELD-SYMBOLS: <lv_option> TYPE LINE OF stringtab.
-
-    CREATE OBJECT ro_html.
-
-    ro_html->add( |Order by: <select name="order_by" onchange="onOrderByChange(this)">| ).
-
-    LOOP AT it_options ASSIGNING <lv_option>.
-
-      add_option(
-          iv_option   = <lv_option>
-          iv_selected = boolc( iv_value = <lv_option> )
-          io_html     = ro_html ).
-
-    ENDLOOP.
-
-    ro_html->add( |</select>| ).
-
-  ENDMETHOD.
-
-
-  METHOD render_order_by_direction.
-
-    CREATE OBJECT ro_html.
-
-    ro_html->add( |<select name="direction" onchange="onDirectionChange(this)">| ).
-
-    add_option( iv_option   = |ASCENDING|
-                iv_selected = boolc( iv_order_descending = abap_false )
-                io_html     = ro_html ).
-
     add_option( iv_option   = |DESCENDING|
-                iv_selected = iv_order_descending
-                io_html     = ro_html ).
-
-    ro_html->add( |</select>| ).
 
   ENDMETHOD.
 

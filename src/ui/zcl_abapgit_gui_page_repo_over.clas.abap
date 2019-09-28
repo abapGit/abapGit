@@ -323,9 +323,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
   METHOD render_table_header.
 
     DATA lt_col_spec TYPE zif_abapgit_definitions=>tty_col_spec.
-    DATA lv_tmp     TYPE string.
-    DATA lv_disp_name TYPE string.
-
     FIELD-SYMBOLS <ls_col> LIKE LINE OF lt_col_spec.
 
     DEFINE _add_col.
