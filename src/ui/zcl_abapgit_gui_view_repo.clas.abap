@@ -39,7 +39,7 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
           mv_changes_only     TYPE abap_bool,
           mv_show_order_by    TYPE abap_bool,
           mv_order_by         TYPE string,
-          mv_order_descending TYPE char01.
+          mv_order_descending TYPE abap_bool.
 
     METHODS:
       render_head_line
