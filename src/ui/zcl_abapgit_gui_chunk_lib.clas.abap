@@ -72,7 +72,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         iv_query_str               TYPE clike
       RETURNING
         VALUE(rv_order_descending) TYPE abap_bool.
-    CLASS-METHODS render_cols_pec
+    CLASS-METHODS render_col_spec
       IMPORTING
         it_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec
         iv_order_by         TYPE string
@@ -208,7 +208,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_cols_pec.
+  METHOD render_col_spec.
 
     DATA:
       lt_colspec   TYPE zif_abapgit_definitions=>tty_col_spec,

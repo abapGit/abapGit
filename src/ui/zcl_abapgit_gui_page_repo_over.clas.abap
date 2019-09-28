@@ -347,7 +347,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     io_html->add( |<thead>| ).
     io_html->add( |<tr>| ).
-    io_html->add( zcl_abapgit_gui_chunk_lib=>render_cols_pec(
+    io_html->add( zcl_abapgit_gui_chunk_lib=>render_col_spec(
                       it_col_spec         = lt_col_spec
                       iv_order_by         = mv_order_by
                       iv_order_descending = mv_order_descending ) ).
