@@ -62,7 +62,6 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         ix_error       TYPE REF TO zcx_abapgit_exception
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
-
     CLASS-METHODS parse_change_order_by
       IMPORTING
         iv_query_str       TYPE clike
@@ -73,7 +72,6 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         iv_query_str               TYPE clike
       RETURNING
         VALUE(rv_order_descending) TYPE abap_bool.
-
     CLASS-METHODS render_cols_pec
       IMPORTING
         it_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec
@@ -81,16 +79,9 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         iv_order_descending TYPE abap_bool
       RETURNING
         VALUE(ro_html)      TYPE REF TO zcl_abapgit_html.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CONSTANTS:
-      BEGIN OF c_action,
-        select          TYPE string VALUE 'select',
-        change_order_by TYPE string VALUE 'change_order_by',
-        direction       TYPE string VALUE 'direction',
-        apply_filter    TYPE string VALUE 'apply_filter',
-      END OF c_action .
-
     CLASS-DATA gv_time_zone TYPE timezone.
 
     CLASS-METHODS render_branch_span
@@ -245,18 +236,18 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
           IF iv_order_descending = abap_true.
             lv_tmp = lv_tmp && zcl_abapgit_html=>a(
               iv_txt   = lv_disp_name
-              iv_act   = |{ c_action-direction }?direction=ASCENDING|
+              iv_act   = |{ zif_abapgit_definitions=>c_action-direction }?direction=ASCENDING|
               iv_title = <ls_col>-title ).
           ELSE.
             lv_tmp = lv_tmp && zcl_abapgit_html=>a(
               iv_txt   = lv_disp_name
-              iv_act   = |{ c_action-direction }?direction=DESCENDING|
+              iv_act   = |{ zif_abapgit_definitions=>c_action-direction }?direction=DESCENDING|
               iv_title = <ls_col>-title ).
           ENDIF.
         ELSE.
           lv_tmp = lv_tmp && zcl_abapgit_html=>a(
             iv_txt   = lv_disp_name
-            iv_act   = |{ c_action-change_order_by }?orderBy={ <ls_col>-tech_name }|
+            iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }?orderBy={ <ls_col>-tech_name }|
             iv_title = <ls_col>-title ).
         ENDIF.
       ENDIF.

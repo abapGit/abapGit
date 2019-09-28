@@ -20,8 +20,6 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         toggle_changes    TYPE string VALUE 'toggle_changes' ##NO_TEXT,
         toggle_order_by   TYPE string VALUE 'toggle_order_by' ##NO_TEXT,
         display_more      TYPE string VALUE 'display_more' ##NO_TEXT,
-        change_order_by   TYPE string VALUE 'change_order_by' ##NO_TEXT,
-        direction         TYPE string VALUE 'direction' ##NO_TEXT,
       END OF c_actions .
     METHODS constructor
       IMPORTING
@@ -702,10 +700,10 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       WHEN c_actions-display_more.      " Increase MAX lines limit
         mv_max_lines    = mv_max_lines + mv_max_setting.
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN c_actions-change_order_by.
+      WHEN zif_abapgit_definitions=>c_action-change_order_by.
         mv_order_by     = zcl_abapgit_gui_chunk_lib=>parse_change_order_by( iv_getdata ).
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN c_actions-direction.
+      WHEN zif_abapgit_definitions=>c_action-direction.
         mv_order_descending = zcl_abapgit_gui_chunk_lib=>parse_direction( iv_getdata ).
         ev_state            = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_open_in_master_lang.

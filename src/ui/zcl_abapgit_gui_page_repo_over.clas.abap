@@ -34,8 +34,6 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
     CONSTANTS:
       BEGIN OF c_action,
         select          TYPE string VALUE 'select',
-        change_order_by TYPE string VALUE 'change_order_by',
-        direction       TYPE string VALUE 'direction',
         apply_filter    TYPE string VALUE 'apply_filter',
       END OF c_action .
 
@@ -407,12 +405,12 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
         ev_state = zcl_abapgit_gui=>c_event_state-go_back.
 
-      WHEN c_action-change_order_by.
+      WHEN zif_abapgit_definitions=>c_action-change_order_by.
 
         mv_order_by = zcl_abapgit_gui_chunk_lib=>parse_change_order_by( iv_getdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
 
-      WHEN c_action-direction.
+      WHEN zif_abapgit_definitions=>c_action-direction.
 
         mv_order_descending = zcl_abapgit_gui_chunk_lib=>parse_direction( iv_getdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
