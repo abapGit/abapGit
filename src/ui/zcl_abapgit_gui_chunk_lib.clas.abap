@@ -219,6 +219,9 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
+    ro_html->add( |<thead>| ).
+    ro_html->add( |<tr>| ).
+
     LOOP AT it_col_spec ASSIGNING <ls_col>.
       " e.g. <th class="ro-detail">Created at [{ mv_time_zone }]</th>
       lv_tmp = '<th'.
@@ -262,6 +265,9 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       lv_tmp = lv_tmp && '</th>'.
       ro_html->add( lv_tmp ).
     ENDLOOP.
+
+    ro_html->add( '</tr>' ).
+    ro_html->add( '</thead>' ).
 
   ENDMETHOD.
 
