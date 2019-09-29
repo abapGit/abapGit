@@ -349,12 +349,12 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     super->constructor( ).
 
-    mo_repo              = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    mv_cur_dir           = '/'. " Root
-    mv_hide_files        = zcl_abapgit_persistence_user=>get_instance( )->get_hide_files( ).
-    mv_changes_only      = zcl_abapgit_persistence_user=>get_instance( )->get_changes_only( ).
-    mv_show_order_by     = zcl_abapgit_persistence_user=>get_instance( )->get_show_order_by( ).
-    mv_diff_first = abap_true.
+    mo_repo          = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    mv_cur_dir       = '/'. " Root
+    mv_hide_files    = zcl_abapgit_persistence_user=>get_instance( )->get_hide_files( ).
+    mv_changes_only  = zcl_abapgit_persistence_user=>get_instance( )->get_changes_only( ).
+    mv_show_order_by = zcl_abapgit_persistence_user=>get_instance( )->get_show_order_by( ).
+    mv_diff_first    = abap_true.
 
     " Read global settings to get max # of objects to be listed
     lo_settings     = zcl_abapgit_persist_settings=>get_instance( )->read( ).
