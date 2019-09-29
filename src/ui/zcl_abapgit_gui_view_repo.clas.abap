@@ -927,14 +927,11 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     IF mv_diff_first = abap_true.
       " fix diffs on the top, right after non-code and metadata
       LOOP AT lt_code_items ASSIGNING <ls_repo_item>
-                            WHERE lstate IS NOT INITIAL
-                            OR    rstate IS NOT INITIAL.
+                            WHERE changes > 0.
         INSERT <ls_repo_item> INTO TABLE lt_diff_items.
       ENDLOOP.
 
-      DELETE lt_code_items WHERE lstate IS NOT INITIAL
-                           OR    rstate IS NOT INITIAL.
-
+      DELETE lt_code_items WHERE changes > 0.
     ENDIF.
 
     CLEAR: ct_repo_items.
