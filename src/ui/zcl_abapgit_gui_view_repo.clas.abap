@@ -787,7 +787,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
         ENDIF.
 
         " Repo content table
-        ro_html->add( '<table class="repo_tab db_tab">' ).
+        ro_html->add( '<table class="repo_tab">' ).
 
         IF zcl_abapgit_path=>is_root( mv_cur_dir ) = abap_false.
           ro_html->add( render_parent_dir( ) ).

@@ -184,6 +184,12 @@ table.repo_tab {
   border-radius: 3px;
   width: 100%;
 }
+.repo_tab th {
+  text-align: left;
+  padding: 0.5em;
+  border-bottom: 1px solid;
+  font-weight: normal;
+}
 .repo_tab td {
   border-top: 1px solid;
   vertical-align: middle;
@@ -201,7 +207,8 @@ table.repo_tab {
   text-align: left;
 }
 .repo_tab td.type {
-  width: 3.5em;
+  width: 4em;
+  padding-left: 0.5em;
 }
 .repo_tab td.object {
   padding-left: 0.5em;
