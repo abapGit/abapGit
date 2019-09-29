@@ -19,6 +19,7 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         toggle_folders    TYPE string VALUE 'toggle_folders' ##NO_TEXT,
         toggle_changes    TYPE string VALUE 'toggle_changes' ##NO_TEXT,
         toggle_order_by   TYPE string VALUE 'toggle_order_by' ##NO_TEXT,
+        toggle_diff_first TYPE string VALUE 'toggle_diff_first ' ##NO_TEXT,
         display_more      TYPE string VALUE 'display_more' ##NO_TEXT,
       END OF c_actions .
     METHODS constructor
@@ -39,7 +40,8 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
           mv_changes_only     TYPE abap_bool,
           mv_show_order_by    TYPE abap_bool,
           mv_order_by         TYPE string,
-          mv_order_descending TYPE abap_bool.
+          mv_order_descending TYPE abap_bool,
+          mv_diff_first       TYPE abap_bool.
 
     METHODS:
       render_head_line
@@ -347,11 +349,12 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     super->constructor( ).
 
-    mo_repo          = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    mv_cur_dir       = '/'. " Root
-    mv_hide_files    = zcl_abapgit_persistence_user=>get_instance( )->get_hide_files( ).
-    mv_changes_only  = zcl_abapgit_persistence_user=>get_instance( )->get_changes_only( ).
-    mv_show_order_by = zcl_abapgit_persistence_user=>get_instance( )->get_show_order_by( ).
+    mo_repo              = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    mv_cur_dir           = '/'. " Root
+    mv_hide_files        = zcl_abapgit_persistence_user=>get_instance( )->get_hide_files( ).
+    mv_changes_only      = zcl_abapgit_persistence_user=>get_instance( )->get_changes_only( ).
+    mv_show_order_by     = zcl_abapgit_persistence_user=>get_instance( )->get_show_order_by( ).
+    mv_diff_first = abap_true.
 
     " Read global settings to get max # of objects to be listed
     lo_settings     = zcl_abapgit_persist_settings=>get_instance( )->read( ).
@@ -697,6 +700,9 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       WHEN c_actions-toggle_order_by.
         mv_show_order_by = zcl_abapgit_persistence_user=>get_instance( )->toggle_show_order_by( ).
         ev_state         = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_actions-toggle_diff_first.
+        mv_diff_first = boolc( mv_diff_first = abap_false ).
+        ev_state             = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-display_more.      " Increase MAX lines limit
         mv_max_lines    = mv_max_lines + mv_max_setting.
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
@@ -841,7 +847,8 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     DATA:
       lt_col_spec TYPE zif_abapgit_definitions=>tty_col_spec,
-      lv_icon     TYPE string.
+      lv_icon     TYPE string,
+      lv_html     TYPE string.
     FIELD-SYMBOLS <ls_col> LIKE LINE OF lt_col_spec.
 
     DEFINE _add_col.
@@ -855,21 +862,36 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    IF mv_order_by IS NOT INITIAL.
-      lv_icon = |&osol;|. " remove filter
-    ENDIF.
-
     "        technical name    display name      css class   add timezone   title
-    _add_col 'CLEAR'             lv_icon           ''          ''           'Clear'.
+    _add_col ''                  ''                ''          ''           ''.
     _add_col 'OBJ_TYPE'          'Type'            ''          ''           ''.
     _add_col 'OBJ_NAME'          'Name'            ''          ''           ''.
-    _add_col 'PATH'              ''                ''          ''           ''.
-    _add_col 'COMMAND'           ''                ''          ''           ''.
+    _add_col 'PATH'              'Path'            ''          ''           ''.
 
-    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_table_header(
+    ro_html->add( |<thead>| ).
+    ro_html->add( |<tr>| ).
+
+    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_header_cells(
                       it_col_spec         = lt_col_spec
                       iv_order_by         = mv_order_by
                       iv_order_descending = mv_order_descending ) ).
+
+    IF mv_diff_first = abap_true.
+      lv_icon = 'check/blue'.
+    ELSE.
+      lv_icon = 'check/grey'.
+    ENDIF.
+
+    lv_html = |<th class="cmd">|
+           && zcl_abapgit_html=>icon( lv_icon )
+           && zcl_abapgit_html=>a(
+                  iv_txt = |diffs first|
+                  iv_act = c_actions-toggle_diff_first ).
+
+    ro_html->add( lv_html ).
+
+    ro_html->add( '</tr>' ).
+    ro_html->add( '</thead>' ).
 
   ENDMETHOD.
 
@@ -880,19 +902,13 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       lt_sort                        TYPE abap_sortorder_tab,
       ls_sort                        LIKE LINE OF lt_sort,
       lt_non_code_and_metadata_items LIKE ct_repo_items,
-      lt_code_items                  LIKE ct_repo_items.
+      lt_code_items                  LIKE ct_repo_items,
+      lt_diff_items                  LIKE ct_repo_items.
 
     FIELD-SYMBOLS:
       <ls_repo_item> TYPE zif_abapgit_definitions=>ty_repo_item.
 
     IF mv_order_by IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    IF mv_order_by = |CLEAR|.
-      CLEAR:
-        mv_order_by,
-        mv_order_descending.
       RETURN.
     ENDIF.
 
@@ -908,6 +924,19 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     ENDLOOP.
 
+    IF mv_diff_first = abap_true.
+      " fix diffs on the top, right after non-code and metadata
+      LOOP AT lt_code_items ASSIGNING <ls_repo_item>
+                            WHERE lstate IS NOT INITIAL
+                            OR    rstate IS NOT INITIAL.
+        INSERT <ls_repo_item> INTO TABLE lt_diff_items.
+      ENDLOOP.
+
+      DELETE lt_code_items WHERE lstate IS NOT INITIAL
+                           OR    rstate IS NOT INITIAL.
+
+    ENDIF.
+
     CLEAR: ct_repo_items.
 
     ls_sort-name       = mv_order_by.
@@ -915,8 +944,10 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ls_sort-astext     = abap_true.
     INSERT ls_sort INTO TABLE lt_sort.
     SORT lt_code_items BY (lt_sort).
+    SORT lt_diff_items BY (lt_sort).
 
     INSERT LINES OF lt_non_code_and_metadata_items INTO TABLE ct_repo_items.
+    INSERT LINES OF lt_diff_items INTO TABLE ct_repo_items.
     INSERT LINES OF lt_code_items INTO TABLE ct_repo_items.
 
   ENDMETHOD.

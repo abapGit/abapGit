@@ -33,8 +33,8 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
                    WITH NON-UNIQUE DEFAULT KEY.
     CONSTANTS:
       BEGIN OF c_action,
-        select          TYPE string VALUE 'select',
-        apply_filter    TYPE string VALUE 'apply_filter',
+        select       TYPE string VALUE 'select',
+        apply_filter TYPE string VALUE 'apply_filter',
       END OF c_action .
 
     DATA:
@@ -344,10 +344,16 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     _add_col 'CREATED_AT'      'Created at'      'ro-detail' 'X'.
     _add_col 'KEY'             'Key'             'ro-detail' ''.
 
-    io_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_table_header(
+    io_html->add( |<thead>| ).
+    io_html->add( |<tr>| ).
+
+    io_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_header_cells(
                       it_col_spec         = lt_col_spec
                       iv_order_by         = mv_order_by
                       iv_order_descending = mv_order_descending ) ).
+
+    io_html->add( '</tr>' ).
+    io_html->add( '</thead>' ).
 
   ENDMETHOD.
 

@@ -72,7 +72,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         iv_query_str               TYPE clike
       RETURNING
         VALUE(rv_order_descending) TYPE abap_bool.
-    CLASS-METHODS render_order_by_table_header
+    CLASS-METHODS render_order_by_header_cells
       IMPORTING
         it_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec
         iv_order_by         TYPE string
@@ -208,7 +208,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_order_by_table_header.
+  METHOD render_order_by_header_cells.
 
     DATA:
       lt_colspec   TYPE zif_abapgit_definitions=>tty_col_spec,
@@ -218,9 +218,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     FIELD-SYMBOLS <ls_col> LIKE LINE OF lt_colspec.
 
     CREATE OBJECT ro_html.
-
-    ro_html->add( |<thead>| ).
-    ro_html->add( |<tr>| ).
 
     LOOP AT it_col_spec ASSIGNING <ls_col>.
       " e.g. <th class="ro-detail">Created at [{ gv_time_zone }]</th>
@@ -254,7 +251,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
             iv_title = <ls_col>-title ).
         ENDIF.
       ENDIF.
-      IF <ls_col>-tech_name = iv_order_by.
+      IF <ls_col>-tech_name = iv_order_by
+      AND iv_order_by IS NOT INITIAL.
         IF iv_order_descending = abap_true.
           lv_tmp = lv_tmp && | &#x25B4;|. " arrow up
         ELSE.
@@ -265,9 +263,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       lv_tmp = lv_tmp && '</th>'.
       ro_html->add( lv_tmp ).
     ENDLOOP.
-
-    ro_html->add( '</tr>' ).
-    ro_html->add( '</thead>' ).
 
   ENDMETHOD.
 
