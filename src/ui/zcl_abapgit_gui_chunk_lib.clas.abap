@@ -223,7 +223,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ro_html->add( |<tr>| ).
 
     LOOP AT it_col_spec ASSIGNING <ls_col>.
-      " e.g. <th class="ro-detail">Created at [{ mv_time_zone }]</th>
+      " e.g. <th class="ro-detail">Created at [{ gv_time_zone }]</th>
       lv_tmp = '<th'.
       IF <ls_col>-css_class IS NOT INITIAL.
         lv_tmp = lv_tmp && | class="{ <ls_col>-css_class }"|.
