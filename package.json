@@ -1,11 +1,9 @@
 {
   "license": "MIT",
   "scripts": {
-    "pretest": "abaplint --version && abaplint",
-    "test": "npm run eslint",
-    "posttest": "abapmerge src/zabapgit.prog.abap > zabapgit.abap",
-    "_disabled_posttest": "abaplint zabapgit.abap",
-    "lint": "abaplint",
+    "test": "npm run eslint && npm run abaplint",
+    "merge": "abapmerge -f src/zabapgit.prog.abap > zabapgit.abap",
+    "abaplint": "abaplint",
     "eslint": "eslint src"
   },
   "repository": {
