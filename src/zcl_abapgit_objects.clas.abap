@@ -842,7 +842,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     ENDIF.
 
     "ignore objects that exists only local
-    DELETE rt_results WHERE lstate = if_abapgit_definitions=>c_state-added AND rstate IS INITIAL.
+    DELETE rt_results WHERE lstate = zif_abapgit_definitions=>c_state-added AND rstate IS INITIAL.
     "log objects that exists only local
     IF sy-subrc = 0 AND ii_log IS BOUND.
       SORT rt_results BY obj_type obj_name.
