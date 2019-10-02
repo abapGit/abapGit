@@ -99,6 +99,13 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         IMPORTING iv_key                 TYPE zif_abapgit_persistence=>ty_value
                   iv_wp_opt              LIKE zif_abapgit_html=>c_html_opt-crossout
         RETURNING VALUE(ro_tag_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
+        RAISING   zcx_abapgit_exception,
+      build_advanced_dropdown
+        IMPORTING iv_key                      TYPE zif_abapgit_persistence=>ty_value
+                  iv_wp_opt                   LIKE zif_abapgit_html=>c_html_opt-crossout
+                  iv_lstate                   TYPE char1
+                  iv_rstate                   TYPE char1
+        RETURNING VALUE(ro_advanced_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
         RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
@@ -153,8 +160,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
           lo_tb_branch   TYPE REF TO zcl_abapgit_html_toolbar,
           lo_tb_tag      TYPE REF TO zcl_abapgit_html_toolbar,
           lv_key         TYPE zif_abapgit_persistence=>ty_value,
-          lv_wp_opt      LIKE zif_abapgit_html=>c_html_opt-crossout,
-          lv_crossout    LIKE zif_abapgit_html=>c_html_opt-crossout,
+          iv_wp_opt      LIKE zif_abapgit_html=>c_html_opt-crossout,
           lv_pull_opt    LIKE zif_abapgit_html=>c_html_opt-crossout,
           li_log         TYPE REF TO zif_abapgit_log.
 
@@ -164,7 +170,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     lv_key = mo_repo->get_key( ).
 
     IF mo_repo->get_local_settings( )-write_protected = abap_true.
-      lv_wp_opt   = zif_abapgit_html=>c_html_opt-crossout.
+      iv_wp_opt   = zif_abapgit_html=>c_html_opt-crossout.
       lv_pull_opt = zif_abapgit_html=>c_html_opt-crossout.
     ELSE.
       lv_pull_opt = zif_abapgit_html=>c_html_opt-strong.
@@ -172,71 +178,17 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
     lo_tb_branch = build_branch_dropdown(
                        iv_key    = lv_key
-                       iv_wp_opt = lv_wp_opt ).
+                       iv_wp_opt = iv_wp_opt ).
 
     lo_tb_tag = build_tag_dropdown(
                     iv_key    = lv_key
-                    iv_wp_opt = lv_wp_opt ).
+                    iv_wp_opt = iv_wp_opt ).
 
-    " Build advanced drop-down ========================
-    IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " In case of asyncronicities
-      lo_tb_advanced->add( iv_txt = 'Reset local'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-git_reset }?{ lv_key }|
-                           iv_opt = lv_wp_opt ).
-    ENDIF.
-    IF mo_repo->is_offline( ) = abap_false. " Online ?
-      lo_tb_advanced->add( iv_txt = 'Background mode'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-go_background }?{ lv_key }| ).
-      lo_tb_advanced->add( iv_txt = 'Change remote'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_change }?{ lv_key }| ).
-      lo_tb_advanced->add( iv_txt = 'Make off-line'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_detach }?{ lv_key }| ).
-      lo_tb_advanced->add( iv_txt = 'Force stage'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ lv_key }| ).
-
-      CLEAR lv_crossout.
-      IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-transport_to_branch ) = abap_false.
-        lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
-      ENDIF.
-      lo_tb_advanced->add( iv_txt = 'Transport to Branch'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-repo_transport_to_branch }?{ lv_key }|
-                           iv_opt = lv_crossout ).
-
-    ELSE.
-      lo_tb_advanced->add( iv_txt = 'Make on-line'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_attach }?{ lv_key }| ).
-    ENDIF.
-    lo_tb_advanced->add( iv_txt = 'Syntax Check'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_syntax_check }?{ lv_key }| ).
-    lo_tb_advanced->add( iv_txt = 'Run Code Inspector'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?{ lv_key }| ).
-    lo_tb_advanced->add( iv_txt = 'Repo settings'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?{ lv_key }| ).
-
-    CLEAR lv_crossout.
-    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-update_local_checksum ) = abap_false.
-      lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
-    ENDIF.
-    lo_tb_advanced->add( iv_txt = 'Update local checksums'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh_checksums }?{ lv_key }|
-                         iv_opt = lv_crossout ).
-
-    IF mo_repo->get_dot_abapgit( )->get_master_language( ) <> sy-langu.
-      lo_tb_advanced->add( iv_txt = 'Open in master language'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-repo_open_in_master_lang }?{ lv_key }| ).
-    ENDIF.
-
-    lo_tb_advanced->add( iv_txt = 'Remove'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_remove }?{ lv_key }| ).
-
-    CLEAR lv_crossout.
-    IF mo_repo->get_local_settings( )-write_protected = abap_true
-        OR zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-uninstall ) = abap_false.
-      lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
-    ENDIF.
-    lo_tb_advanced->add( iv_txt = 'Uninstall'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_purge }?{ lv_key }|
-                         iv_opt = lv_crossout ).
+    lo_tb_advanced = build_advanced_dropdown(
+                         iv_key    = lv_key
+                         iv_wp_opt = iv_wp_opt
+                         iv_rstate = iv_rstate
+                         iv_lstate = iv_lstate ).
 
     " Build main toolbar ==============================
     IF mo_repo->is_offline( ) = abap_false. " Online ?
