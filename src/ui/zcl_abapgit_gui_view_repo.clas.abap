@@ -89,7 +89,17 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         IMPORTING is_item                      TYPE zif_abapgit_definitions=>ty_repo_item
         RETURNING VALUE(rv_inactive_html_code) TYPE string,
       open_in_master_language
-        RAISING zcx_abapgit_exception.
+        RAISING zcx_abapgit_exception,
+      build_branch_dropdown
+        IMPORTING iv_key                    TYPE zif_abapgit_persistence=>ty_value
+                  iv_wp_opt                 LIKE zif_abapgit_html=>c_html_opt-crossout
+        RETURNING VALUE(ro_branch_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
+        RAISING   zcx_abapgit_exception,
+      build_tag_dropdown
+        IMPORTING iv_key                 TYPE zif_abapgit_persistence=>ty_value
+                  iv_wp_opt              LIKE zif_abapgit_html=>c_html_opt-crossout
+        RETURNING VALUE(ro_tag_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -149,9 +159,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
           li_log         TYPE REF TO zif_abapgit_log.
 
     CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-repo'.
-    CREATE OBJECT lo_tb_branch.
     CREATE OBJECT lo_tb_advanced.
-    CREATE OBJECT lo_tb_tag.
 
     lv_key = mo_repo->get_key( ).
 
@@ -162,29 +170,13 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
       lv_pull_opt = zif_abapgit_html=>c_html_opt-strong.
     ENDIF.
 
-    " Build branch drop-down ========================
-    IF mo_repo->is_offline( ) = abap_false. " Online ?
-      lo_tb_branch->add( iv_txt = 'Overview'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-go_branch_overview }?{ lv_key }| ).
-      lo_tb_branch->add( iv_txt = 'Switch'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ lv_key }|
-                         iv_opt = lv_wp_opt ).
-      lo_tb_branch->add( iv_txt = 'Create'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_create }?{ lv_key }| ).
-      lo_tb_branch->add( iv_txt = 'Delete'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_delete }?{ lv_key }| ).
+    lo_tb_branch = build_branch_dropdown(
+                       iv_key    = lv_key
+                       iv_wp_opt = lv_wp_opt ).
 
-      lo_tb_tag->add( iv_txt = 'Overview'
-                      iv_act = |{ zif_abapgit_definitions=>c_action-go_tag_overview }?{ lv_key }| ).
-      lo_tb_tag->add( iv_txt = 'Switch'
-                      iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_switch }?{ lv_key }|
-                      iv_opt = lv_wp_opt ).
-      lo_tb_tag->add( iv_txt = 'Create'
-                      iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_create }?{ lv_key }| ).
-      lo_tb_tag->add( iv_txt = 'Delete'
-                      iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_delete }?{ lv_key }| ).
-
-    ENDIF.
+    lo_tb_tag = build_tag_dropdown(
+                    iv_key    = lv_key
+                    iv_wp_opt = lv_wp_opt ).
 
     " Build advanced drop-down ========================
     IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " In case of asyncronicities
@@ -805,4 +797,48 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
+
+  METHOD build_branch_dropdown.
+
+    CREATE OBJECT ro_branch_dropdown.
+
+    IF mo_repo->is_offline( ) = abap_true.
+      RETURN.
+    ENDIF.
+
+    ro_branch_dropdown->add( iv_txt = 'Overview'
+                             iv_act = |{ zif_abapgit_definitions=>c_action-go_branch_overview }?{ iv_key }| ).
+    ro_branch_dropdown->add( iv_txt = 'Switch'
+                             iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ iv_key }|
+                             iv_opt = iv_wp_opt ).
+    ro_branch_dropdown->add( iv_txt = 'Create'
+                             iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_create }?{ iv_key }| ).
+    ro_branch_dropdown->add( iv_txt = 'Delete'
+                             iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_delete }?{ iv_key }| ).
+
+  ENDMETHOD.
+
+
+  METHOD build_tag_dropdown.
+
+    CREATE OBJECT ro_tag_dropdown.
+
+    IF mo_repo->is_offline( ) = abap_true.
+      RETURN.
+    ENDIF.
+
+    ro_tag_dropdown->add( iv_txt = 'Overview'
+                          iv_act = |{ zif_abapgit_definitions=>c_action-go_tag_overview }?{ iv_key }| ).
+    ro_tag_dropdown->add( iv_txt = 'Switch'
+                          iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_switch }?{ iv_key }|
+                          iv_opt = iv_wp_opt ).
+    ro_tag_dropdown->add( iv_txt = 'Create'
+                          iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_create }?{ iv_key }| ).
+    ro_tag_dropdown->add( iv_txt = 'Delete'
+                          iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_delete }?{ iv_key }| ).
+
+
+  ENDMETHOD.
+
 ENDCLASS.
