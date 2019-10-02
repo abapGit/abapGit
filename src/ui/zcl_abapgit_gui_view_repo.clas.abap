@@ -257,7 +257,6 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     DATA: lo_tb_advanced TYPE REF TO zcl_abapgit_html_toolbar,
           lo_tb_branch   TYPE REF TO zcl_abapgit_html_toolbar,
           lo_tb_tag      TYPE REF TO zcl_abapgit_html_toolbar,
-          mv_key         TYPE zif_abapgit_persistence=>ty_value,
           lv_wp_opt      LIKE zif_abapgit_html=>c_html_opt-crossout,
           lv_pull_opt    LIKE zif_abapgit_html=>c_html_opt-crossout.
 
