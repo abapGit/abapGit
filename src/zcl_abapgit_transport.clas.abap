@@ -15,9 +15,14 @@ CLASS zcl_abapgit_transport DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS to_tadir
       IMPORTING
-        !it_transport_headers TYPE trwbo_request_headers
+        it_transport_headers TYPE trwbo_request_headers
       RETURNING
-        VALUE(rt_tadir)       TYPE zif_abapgit_definitions=>ty_tadir_tt
+        VALUE(rt_tadir)      TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS add_all_objects_to_trans_req
+      IMPORTING
+        iv_key TYPE zif_abapgit_persistence=>ty_value
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -42,6 +47,13 @@ CLASS zcl_abapgit_transport DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
+    CLASS-METHODS collect_all_objects
+      IMPORTING
+        iv_key            TYPE zif_abapgit_persistence=>ty_value
+      RETURNING
+        VALUE(rt_objects) TYPE tr_objects
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -213,4 +225,110 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
       iv_show_log = iv_show_log_popup ).
 
   ENDMETHOD.
+
+
+  METHOD add_all_objects_to_trans_req.
+
+    DATA:
+      ls_request      TYPE trwbo_request_header,
+      lt_e071         TYPE tr_objects,
+      lv_text         TYPE string,
+      lv_answer       TYPE char1,
+      lv_lock_objects TYPE trparflag.
+
+    lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
+                    iv_titlebar              = `Lock objects?`
+                    iv_text_question         = `Shall all objects be locked in the transport request?`
+                    iv_display_cancel_button = abap_false ).
+
+    IF lv_answer = '1'.
+      lv_lock_objects = abap_true.
+    ENDIF.
+
+    lt_e071 = collect_all_objects( iv_key ).
+
+    CALL FUNCTION 'TR_REQUEST_CHOICE'
+      EXPORTING
+        it_e071              = lt_e071
+        iv_lock_objects      = lv_lock_objects
+      IMPORTING
+        es_request           = ls_request
+      EXCEPTIONS
+        invalid_request      = 1
+        invalid_request_type = 2
+        user_not_owner       = 3
+        no_objects_appended  = 4
+        enqueue_error        = 5
+        cancelled_by_user    = 6
+        recursive_call       = 7
+        OTHERS               = 8.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    lv_text = |Objects successfully added to { ls_request-trkorr }|.
+    MESSAGE lv_text TYPE 'S'.
+
+  ENDMETHOD.
+
+
+  METHOD collect_all_objects.
+
+    DATA:
+      lt_objects     TYPE scts_tadir,
+      lt_objects_all LIKE lt_objects,
+      lt_e071        TYPE tr_objects,
+      ls_e071        LIKE LINE OF lt_e071,
+      lo_repo        TYPE REF TO zcl_abapgit_repo,
+      lv_package     TYPE zif_abapgit_persistence=>ty_repo-package,
+      lt_packages    TYPE zif_abapgit_sap_package=>ty_devclass_tt.
+
+    FIELD-SYMBOLS:
+      <ls_package> TYPE devclass,
+      <ls_object>  TYPE tadir.
+
+    lo_repo     = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    lv_package  = lo_repo->get_package( ).
+    lt_packages = zcl_abapgit_factory=>get_sap_package( lv_package )->list_subpackages( ).
+    INSERT lv_package INTO TABLE lt_packages.
+
+    LOOP AT lt_packages ASSIGNING <ls_package>.
+
+      CLEAR: lt_objects.
+
+      CALL FUNCTION 'TRINT_SELECT_OBJECTS'
+        EXPORTING
+          iv_devclass       = <ls_package>
+          iv_via_selscreen  = abap_false
+        IMPORTING
+          et_objects_tadir  = lt_objects
+        EXCEPTIONS
+          cancelled_by_user = 1
+          invalid_input     = 2
+          OTHERS            = 3.
+
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |FM TRINT_SELECT_OBJECTS subrc={ sy-subrc }| ).
+      ENDIF.
+
+      INSERT LINES OF lt_objects INTO TABLE lt_objects_all.
+
+    ENDLOOP.
+
+    IF lines( lt_objects_all ) = 0.
+      zcx_abapgit_exception=>raise( |No objects found| ).
+    ENDIF.
+
+    LOOP AT lt_objects_all ASSIGNING <ls_object>.
+
+      CLEAR: ls_e071.
+
+      MOVE-CORRESPONDING <ls_object> TO ls_e071.
+      INSERT ls_e071 INTO TABLE rt_objects.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.
