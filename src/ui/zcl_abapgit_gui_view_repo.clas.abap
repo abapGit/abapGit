@@ -131,54 +131,55 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " In case of asyncronicities
       ro_advanced_dropdown->add( iv_txt = 'Reset local'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-git_reset }?{ mv_key }|
-                           iv_opt = iv_wp_opt ).
+                                 iv_act = |{ zif_abapgit_definitions=>c_action-git_reset }?{ mv_key }|
+                                 iv_opt = iv_wp_opt ).
     ENDIF.
 
     IF mo_repo->is_offline( ) = abap_false. " Online ?
       ro_advanced_dropdown->add( iv_txt = 'Background mode'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-go_background }?{ mv_key }| ).
+                                 iv_act = |{ zif_abapgit_definitions=>c_action-go_background }?{ mv_key }| ).
       ro_advanced_dropdown->add( iv_txt = 'Change remote'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_change }?{ mv_key }| ).
+                                 iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_change }?{ mv_key }| ).
       ro_advanced_dropdown->add( iv_txt = 'Make off-line'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_detach }?{ mv_key }| ).
+                                 iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_detach }?{ mv_key }| ).
       ro_advanced_dropdown->add( iv_txt = 'Force stage'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ mv_key }| ).
+                                 iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ mv_key }| ).
 
       CLEAR lv_crossout.
       IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-transport_to_branch ) = abap_false.
         lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
       ENDIF.
       ro_advanced_dropdown->add( iv_txt = 'Transport to Branch'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-repo_transport_to_branch }?{ mv_key }|
-                           iv_opt = lv_crossout ).
+                                 iv_act = |{ zif_abapgit_definitions=>c_action-repo_transport_to_branch }?{ mv_key }|
+                                 iv_opt = lv_crossout ).
 
     ELSE.
       ro_advanced_dropdown->add( iv_txt = 'Make on-line'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_attach }?{ mv_key }| ).
+                                 iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_attach }?{ mv_key }| ).
     ENDIF.
+
     ro_advanced_dropdown->add( iv_txt = 'Syntax Check'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_syntax_check }?{ mv_key }| ).
+                               iv_act = |{ zif_abapgit_definitions=>c_action-repo_syntax_check }?{ mv_key }| ).
     ro_advanced_dropdown->add( iv_txt = 'Run Code Inspector'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?{ mv_key }| ).
+                               iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?{ mv_key }| ).
     ro_advanced_dropdown->add( iv_txt = 'Repo settings'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?{ mv_key }| ).
+                               iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?{ mv_key }| ).
 
     CLEAR lv_crossout.
     IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-update_local_checksum ) = abap_false.
       lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
     ENDIF.
     ro_advanced_dropdown->add( iv_txt = 'Update local checksums'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh_checksums }?{ mv_key }|
-                         iv_opt = lv_crossout ).
+                               iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh_checksums }?{ mv_key }|
+                               iv_opt = lv_crossout ).
 
     IF mo_repo->get_dot_abapgit( )->get_master_language( ) <> sy-langu.
       ro_advanced_dropdown->add( iv_txt = 'Open in master language'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-repo_open_in_master_lang }?{ mv_key }| ).
+                                 iv_act = |{ zif_abapgit_definitions=>c_action-repo_open_in_master_lang }?{ mv_key }| ).
     ENDIF.
 
     ro_advanced_dropdown->add( iv_txt = 'Remove'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_remove }?{ mv_key }| ).
+                               iv_act = |{ zif_abapgit_definitions=>c_action-repo_remove }?{ mv_key }| ).
 
     CLEAR lv_crossout.
     IF mo_repo->get_local_settings( )-write_protected = abap_true
@@ -186,8 +187,8 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
     ENDIF.
     ro_advanced_dropdown->add( iv_txt = 'Uninstall'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_purge }?{ mv_key }|
-                         iv_opt = lv_crossout ).
+                               iv_act = |{ zif_abapgit_definitions=>c_action-repo_purge }?{ mv_key }|
+                               iv_opt = lv_crossout ).
 
   ENDMETHOD.
 
