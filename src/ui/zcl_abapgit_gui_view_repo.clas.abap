@@ -18,9 +18,10 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         toggle_hide_files TYPE string VALUE 'toggle_hide_files' ##NO_TEXT,
         toggle_folders    TYPE string VALUE 'toggle_folders' ##NO_TEXT,
         toggle_changes    TYPE string VALUE 'toggle_changes' ##NO_TEXT,
+        toggle_order_by   TYPE string VALUE 'toggle_order_by' ##NO_TEXT,
+        toggle_diff_first TYPE string VALUE 'toggle_diff_first ' ##NO_TEXT,
         display_more      TYPE string VALUE 'display_more' ##NO_TEXT,
       END OF c_actions .
-
     METHODS constructor
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
@@ -30,14 +31,17 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    DATA: mo_repo         TYPE REF TO zcl_abapgit_repo,
-          mv_cur_dir      TYPE string,
-          mv_hide_files   TYPE abap_bool,
-          mv_max_lines    TYPE i,
-          mv_max_setting  TYPE i,
-          mv_show_folders TYPE abap_bool,
-          mv_changes_only TYPE abap_bool,
-          mv_key          TYPE zif_abapgit_persistence=>ty_value.
+    DATA: mo_repo             TYPE REF TO zcl_abapgit_repo,
+          mv_cur_dir          TYPE string,
+          mv_hide_files       TYPE abap_bool,
+          mv_max_lines        TYPE i,
+          mv_max_setting      TYPE i,
+          mv_show_folders     TYPE abap_bool,
+          mv_changes_only     TYPE abap_bool,
+          mv_show_order_by    TYPE abap_bool,
+          mv_order_by         TYPE string,
+          mv_order_descending TYPE abap_bool,
+          mv_diff_first       TYPE abap_bool.
 
     METHODS:
       render_head_line
@@ -250,6 +254,11 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       iv_chk = mv_show_folders
       iv_act = c_actions-toggle_folders ).
 
+    ro_toolbar->add(
+      iv_txt = 'Show order by'
+      iv_chk = mv_show_order_by
+      iv_act = c_actions-toggle_order_by ).
+
   ENDMETHOD.
 
 
@@ -405,11 +414,12 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     super->constructor( ).
 
-    mv_key          = iv_key.
-    mo_repo         = zcl_abapgit_repo_srv=>get_instance( )->get( mv_key ).
-    mv_cur_dir      = '/'. " Root
-    mv_hide_files   = zcl_abapgit_persistence_user=>get_instance( )->get_hide_files( ).
-    mv_changes_only = zcl_abapgit_persistence_user=>get_instance( )->get_changes_only( ).
+    mo_repo          = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    mv_cur_dir       = '/'. " Root
+    mv_hide_files    = zcl_abapgit_persistence_user=>get_instance( )->get_hide_files( ).
+    mv_changes_only  = zcl_abapgit_persistence_user=>get_instance( )->get_changes_only( ).
+    mv_show_order_by = zcl_abapgit_persistence_user=>get_instance( )->get_show_order_by( ).
+    mv_diff_first    = abap_true.
 
     " Read global settings to get max # of objects to be listed
     lo_settings     = zcl_abapgit_persist_settings=>get_instance( )->read( ).
@@ -752,9 +762,21 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
       WHEN c_actions-toggle_changes.    " Toggle changes only view
         mv_changes_only = zcl_abapgit_persistence_user=>get_instance( )->toggle_changes_only( ).
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_actions-toggle_order_by.
+        mv_show_order_by = zcl_abapgit_persistence_user=>get_instance( )->toggle_show_order_by( ).
+        ev_state         = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_actions-toggle_diff_first.
+        mv_diff_first = boolc( mv_diff_first = abap_false ).
+        ev_state             = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-display_more.      " Increase MAX lines limit
         mv_max_lines    = mv_max_lines + mv_max_setting.
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-change_order_by.
+        mv_order_by     = zcl_abapgit_gui_chunk_lib=>parse_change_order_by( iv_getdata ).
+        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-direction.
+        mv_order_descending = zcl_abapgit_gui_chunk_lib=>parse_direction( iv_getdata ).
+        ev_state            = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_open_in_master_lang.
         open_in_master_language( ).
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
@@ -802,6 +824,10 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
                                           iv_by_folders   = mv_show_folders
                                           iv_changes_only = mv_changes_only ).
 
+        IF mv_show_order_by = abap_true.
+          apply_order_by( CHANGING ct_repo_items = lt_repo_items ).
+        ENDIF.
+
         LOOP AT lt_repo_items ASSIGNING <ls_item>.
           zcl_abapgit_state=>reduce( EXPORTING iv_cur = <ls_item>-lstate
                                      CHANGING cv_prev = lv_lstate ).
@@ -836,6 +862,10 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
         IF zcl_abapgit_path=>is_root( mv_cur_dir ) = abap_false.
           ro_html->add( render_parent_dir( ) ).
+        ENDIF.
+
+        IF mv_show_order_by = abap_true.
+          ro_html->add( render_order_by( ) ).
         ENDIF.
 
         IF lines( lt_repo_items ) = 0.
@@ -876,4 +906,113 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
+
+  METHOD render_order_by.
+
+    DATA:
+      lt_col_spec TYPE zif_abapgit_definitions=>tty_col_spec,
+      lv_icon     TYPE string,
+      lv_html     TYPE string.
+    FIELD-SYMBOLS <ls_col> LIKE LINE OF lt_col_spec.
+
+    DEFINE _add_col.
+      APPEND INITIAL LINE TO lt_col_spec ASSIGNING <ls_col>.
+      <ls_col>-tech_name    = &1.
+      <ls_col>-display_name = &2.
+      <ls_col>-css_class    = &3.
+      <ls_col>-add_tz       = &4.
+      <ls_col>-title        = &5.
+    END-OF-DEFINITION.
+
+    CREATE OBJECT ro_html.
+
+    "        technical name    display name      css class   add timezone   title
+    _add_col ''                  ''                ''          ''           ''.
+    _add_col 'OBJ_TYPE'          'Type'            ''          ''           ''.
+    _add_col 'OBJ_NAME'          'Name'            ''          ''           ''.
+    _add_col 'PATH'              'Path'            ''          ''           ''.
+
+    ro_html->add( |<thead>| ).
+    ro_html->add( |<tr>| ).
+
+    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_header_cells(
+                      it_col_spec         = lt_col_spec
+                      iv_order_by         = mv_order_by
+                      iv_order_descending = mv_order_descending ) ).
+
+    IF mv_diff_first = abap_true.
+      lv_icon = 'check/blue'.
+    ELSE.
+      lv_icon = 'check/grey'.
+    ENDIF.
+
+    lv_html = |<th class="cmd">|
+           && zcl_abapgit_html=>icon( lv_icon )
+           && zcl_abapgit_html=>a(
+                  iv_txt = |diffs first|
+                  iv_act = c_actions-toggle_diff_first ).
+
+    ro_html->add( lv_html ).
+
+    ro_html->add( '</tr>' ).
+    ro_html->add( '</thead>' ).
+
+  ENDMETHOD.
+
+
+  METHOD apply_order_by.
+
+    DATA:
+      lt_sort                        TYPE abap_sortorder_tab,
+      ls_sort                        LIKE LINE OF lt_sort,
+      lt_non_code_and_metadata_items LIKE ct_repo_items,
+      lt_code_items                  LIKE ct_repo_items,
+      lt_diff_items                  LIKE ct_repo_items.
+
+    FIELD-SYMBOLS:
+      <ls_repo_item> TYPE zif_abapgit_definitions=>ty_repo_item.
+
+    IF mv_order_by IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    " we want to preserve non-code and metadata files at the top,
+    " so we isolate them and and sort only the code artifacts
+    LOOP AT ct_repo_items ASSIGNING <ls_repo_item>.
+
+      IF  <ls_repo_item>-obj_type IS INITIAL
+      AND <ls_repo_item>-is_dir = abap_false.
+        INSERT <ls_repo_item> INTO TABLE lt_non_code_and_metadata_items.
+      ELSE.
+        INSERT <ls_repo_item> INTO TABLE lt_code_items.
+      ENDIF.
+
+    ENDLOOP.
+
+    IF mv_diff_first = abap_true.
+      " fix diffs on the top, right after non-code and metadata
+      LOOP AT lt_code_items ASSIGNING <ls_repo_item>
+                            WHERE changes > 0.
+        INSERT <ls_repo_item> INTO TABLE lt_diff_items.
+      ENDLOOP.
+
+      DELETE lt_code_items WHERE changes > 0.
+    ENDIF.
+
+    CLEAR: ct_repo_items.
+
+    ls_sort-name       = mv_order_by.
+    ls_sort-descending = mv_order_descending.
+    ls_sort-astext     = abap_true.
+    INSERT ls_sort INTO TABLE lt_sort.
+    SORT lt_code_items BY (lt_sort).
+    SORT lt_diff_items BY (lt_sort).
+
+    INSERT LINES OF lt_non_code_and_metadata_items INTO TABLE ct_repo_items.
+    INSERT LINES OF lt_diff_items INTO TABLE ct_repo_items.
+    INSERT LINES OF lt_code_items INTO TABLE ct_repo_items.
+
+  ENDMETHOD.
+
 ENDCLASS.
