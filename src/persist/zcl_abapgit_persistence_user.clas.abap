@@ -34,6 +34,7 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         repo_show        TYPE zif_abapgit_persistence=>ty_repo-key,
         hide_files       TYPE abap_bool,
         changes_only     TYPE abap_bool,
+        show_order_by    TYPE abap_bool,
         diff_unified     TYPE abap_bool,
         favorites        TYPE tt_favorites,
         repo_config      TYPE ty_repo_config_tt,
@@ -453,4 +454,25 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
     rv_hide = ls_user-hide_files.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_persist_user~get_show_order_by.
+
+    rv_show_order_by = read( )-show_order_by.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_persist_user~toggle_show_order_by.
+
+    DATA ls_user TYPE ty_user.
+
+    ls_user = read( ).
+    ls_user-show_order_by = boolc( ls_user-show_order_by = abap_false ).
+    update( ls_user ).
+
+    rv_show_order_by = ls_user-show_order_by.
+
+  ENDMETHOD.
+
 ENDCLASS.
