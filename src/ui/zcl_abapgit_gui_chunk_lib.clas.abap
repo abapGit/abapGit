@@ -79,6 +79,11 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         iv_order_descending TYPE abap_bool
       RETURNING
         VALUE(ro_html)      TYPE REF TO zcl_abapgit_html.
+    CLASS-METHODS render_warning_banner
+      IMPORTING
+        iv_text        TYPE string
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -722,4 +727,15 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ro_html->add( '</tr></table>' ).
 
   ENDMETHOD.
+
+  METHOD render_warning_banner.
+
+    CREATE OBJECT ro_html.
+    ro_html->add( '<div class="dummydiv warning">' ).
+    ro_html->add( |{ zcl_abapgit_html=>icon( 'exclamation-triangle/yellow' ) }| &&
+                  | { iv_text }| ).
+    ro_html->add( '</div>' ).
+
+  ENDMETHOD.
+
 ENDCLASS.
