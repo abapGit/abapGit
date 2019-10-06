@@ -269,7 +269,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
         database_error            = 4
         OTHERS                    = 5.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error saving SCP1, { sy-tabix }| ).
+      zcx_abapgit_exception=>raise( |Error saving SCP1, { sy-subrc }| ).
     ENDIF.
 
   ENDMETHOD.
@@ -277,9 +277,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
 
   METHOD save_hier.
 
-    DATA: ls_scp1 TYPE ty_scp1,
-          lt_sub  TYPE STANDARD TABLE OF scproprof WITH DEFAULT KEY,
-          ls_text TYPE scprtext.
+    DATA: ls_scp1  TYPE ty_scp1,
+          ls_profs LIKE LINE OF ls_scp1-subprofs,
+          lt_sub   TYPE STANDARD TABLE OF scproprof WITH DEFAULT KEY,
+          ls_sub   LIKE LINE OF lt_sub,
+          ls_text  TYPE scprtext.
 
 
 * copy everything to local, the function module changes the values
@@ -287,7 +289,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
 
     READ TABLE ls_scp1-scprtext INTO ls_text WITH KEY langu = sy-langu. "#EC CI_SUBRC
 
-* todo, ls_scp1-subprofs to lt_sub relation?
+* see fm SCPR_PRSET_DB_STORE, only this field and sequence is used
+    LOOP AT ls_scp1-subprofs INTO ls_profs.
+      ls_sub-id = ls_profs-subprofile.
+      APPEND ls_sub TO lt_sub.
+    ENDLOOP.
 
     CALL FUNCTION 'SCPR_PRSET_MN_BCSET_SAVE'
       EXPORTING
@@ -311,7 +317,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
         error_in_transport_layer = 2
         OTHERS                   = 3.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error saving SCP1, { sy-tabix }| ).
+      zcx_abapgit_exception=>raise( |Error saving SCP1, { sy-subrc }| ).
     ENDIF.
 
   ENDMETHOD.
