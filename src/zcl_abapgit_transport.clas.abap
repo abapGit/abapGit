@@ -239,11 +239,16 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
     lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
                     iv_titlebar              = `Lock objects?`
                     iv_text_question         = `Shall all objects be locked in the transport request?`
-                    iv_display_cancel_button = abap_false ).
+                    iv_display_cancel_button = abap_true ).
 
-    IF lv_answer = '1'.
-      lv_lock_objects = abap_true.
-    ENDIF.
+    CASE lv_answer.
+      WHEN '1'.
+        lv_lock_objects = abap_true.
+      WHEN '2'.
+        lv_lock_objects = abap_false.
+      WHEN OTHERS.
+        RETURN.
+    ENDCASE.
 
     lt_e071 = collect_all_objects( iv_key ).
 
