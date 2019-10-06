@@ -134,7 +134,8 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
   METHOD build_advanced_dropdown.
 
     DATA:
-      lv_crossout LIKE zif_abapgit_html=>c_html_opt-crossout.
+      lv_crossout LIKE zif_abapgit_html=>c_html_opt-crossout,
+      lv_package  TYPE zif_abapgit_persistence=>ty_repo-package.
 
     CREATE OBJECT ro_advanced_dropdown.
 
@@ -165,6 +166,13 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     ELSE.
       ro_advanced_dropdown->add( iv_txt = 'Make on-line'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_attach }?{ mv_key }| ).
+    ENDIF.
+
+    lv_package = mo_repo->get_package( ).
+    IF zcl_abapgit_factory=>get_sap_package( lv_package )->are_changes_recorded_in_tr_req( ) = abap_true.
+      ro_advanced_dropdown->add(
+          iv_txt  = 'Add all objects to transport request'
+          iv_act = |{ zif_abapgit_definitions=>c_action-repo_add_all_obj_to_trans_req }?{ mv_key }| ).
     ENDIF.
 
     ro_advanced_dropdown->add( iv_txt = 'Syntax Check'
