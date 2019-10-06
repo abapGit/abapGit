@@ -350,6 +350,17 @@ INTERFACE zif_abapgit_definitions
     tty_lines TYPE STANDARD TABLE OF i
                         WITH NON-UNIQUE DEFAULT KEY .
 
+  TYPES:
+    BEGIN OF ty_col_spec,
+      tech_name    TYPE string,
+      display_name TYPE string,
+      css_class    TYPE string,
+      add_tz       TYPE abap_bool,
+      title        TYPE string,
+    END OF ty_col_spec,
+    tty_col_spec TYPE STANDARD TABLE OF ty_col_spec
+                      WITH NON-UNIQUE KEY tech_name.
+
   CONSTANTS:
     BEGIN OF c_git_branch_type,
       branch          TYPE ty_git_branch_type VALUE 'HD',
@@ -450,6 +461,8 @@ INTERFACE zif_abapgit_definitions
       goto_source              TYPE string VALUE 'goto_source',
       show_callstack           TYPE string VALUE 'show_callstack',
       goto_message             TYPE string VALUE 'goto_message',
+      change_order_by          TYPE string VALUE 'change_order_by',
+      direction                TYPE string VALUE 'direction',
     END OF c_action .
   CONSTANTS c_tag_prefix TYPE string VALUE 'refs/tags/' ##NO_TEXT.
   CONSTANTS c_spagpa_param_repo_key TYPE char20 VALUE 'REPO_KEY' ##NO_TEXT.

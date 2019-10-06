@@ -24,6 +24,7 @@
 /* exported addMarginBottom */
 /* exported enumerateTocAllRepos */
 /* exported enumerateJumpAllFiles */
+/* exported enumerateToolbarActions */
 
 /**********************************************************
  * Polyfills
