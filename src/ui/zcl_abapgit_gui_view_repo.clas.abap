@@ -41,7 +41,8 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
           mv_show_order_by    TYPE abap_bool,
           mv_order_by         TYPE string,
           mv_order_descending TYPE abap_bool,
-          mv_diff_first       TYPE abap_bool.
+          mv_diff_first       TYPE abap_bool,
+          mv_key TYPE zif_abapgit_persistence=>ty_value.
 
     METHODS:
       render_head_line
@@ -95,6 +96,10 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         RETURNING VALUE(rv_inactive_html_code) TYPE string,
       open_in_master_language
         RAISING zcx_abapgit_exception,
+      render_order_by
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
+      apply_order_by
+        CHANGING ct_repo_items TYPE zif_abapgit_definitions=>tt_repo_items,
       build_branch_dropdown
         IMPORTING iv_wp_opt                 LIKE zif_abapgit_html=>c_html_opt-crossout
         RETURNING VALUE(ro_branch_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
@@ -414,6 +419,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     super->constructor( ).
 
+    mv_key           = iv_key.
     mo_repo          = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     mv_cur_dir       = '/'. " Root
     mv_hide_files    = zcl_abapgit_persistence_user=>get_instance( )->get_hide_files( ).
