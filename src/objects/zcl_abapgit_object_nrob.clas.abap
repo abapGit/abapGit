@@ -176,6 +176,9 @@ CLASS ZCL_ABAPGIT_OBJECT_NROB IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from NUMBER_RANGE_OBJECT_UPDATE' ).
     ENDIF.
 
+    tadir_insert( iv_package ).
+    corr_insert( iv_package ).
+
     CALL FUNCTION 'NUMBER_RANGE_OBJECT_CLOSE'
       EXPORTING
         object                 = ls_attributes-object
@@ -184,8 +187,6 @@ CLASS ZCL_ABAPGIT_OBJECT_NROB IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from NUMBER_RANGE_OBJECT_CLOSE' ).
     ENDIF.
-
-    tadir_insert( iv_package ).
 
   ENDMETHOD.
 

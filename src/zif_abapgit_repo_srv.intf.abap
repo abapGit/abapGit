@@ -45,7 +45,7 @@ INTERFACE zif_abapgit_repo_srv
       !iv_folder_logic TYPE string DEFAULT 'PREFIX'
       !iv_ign_subpkg   TYPE abap_bool DEFAULT abap_false
     RETURNING
-      VALUE(ro_repo)  TYPE REF TO zcl_abapgit_repo_online
+      VALUE(ro_repo)   TYPE REF TO zcl_abapgit_repo_online
     RAISING
       zcx_abapgit_exception .
   METHODS purge

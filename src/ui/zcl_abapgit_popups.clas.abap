@@ -93,7 +93,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
+CLASS zcl_abapgit_popups IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -613,20 +613,15 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
                          iv_fieldtext = 'Name'
                CHANGING ct_fields     = lt_fields ).
 
-    TRY.
+    _popup_2_get_values( EXPORTING iv_popup_title    = 'Object' "#EC NOTEXT
+                                   iv_no_value_check = abap_true
+                         IMPORTING ev_value_1        = lv_object_type
+                                   ev_value_2        = lv_object_name
+                         CHANGING  ct_fields         = lt_fields ).
 
-        _popup_2_get_values( EXPORTING iv_popup_title    = 'Object' "#EC NOTEXT
-                                       iv_no_value_check = abap_true
-                             IMPORTING ev_value_1        = lv_object_type
-                                       ev_value_2        = lv_object_name
-                             CHANGING  ct_fields         = lt_fields ).
-
-        rs_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
-          iv_object   = to_upper( lv_object_type )
-          iv_obj_name = to_upper( lv_object_name ) ).
-
-      CATCH zcx_abapgit_cancel.
-    ENDTRY.
+    rs_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
+      iv_object   = to_upper( lv_object_type )
+      iv_obj_name = to_upper( lv_object_name ) ).
 
   ENDMETHOD.
 
@@ -1212,7 +1207,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       EXCEPTIONS
         OTHERS         = 1 ##NO_TEXT.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from POPUP_GET_VALUES' ).
+      zcx_abapgit_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.
 
     IF lv_answer = c_answer_cancel.

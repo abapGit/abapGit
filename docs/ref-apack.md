@@ -4,7 +4,9 @@ category: reference
 order: 80
 ---
 
-Packages with a class that implements `ZIF_APACK_MANIFEST` (interface is automatically created at initial start of abapGit) can define metadata that is interpreted by clients which support the APACK package and dependency management framework. Such an implementation class must reside in the top-level ABAP package which is serialized by abapGit so that it can be detected properly. After the class is instantiated, it needs to have the field `ZIF_APACK_MANIFEST~DESCRIPTOR` populated with the respective APACK metadata.
+Packages with a class that implements `ZIF_APACK_MANIFEST` (interface is automatically created at initial start of abapGit) can define metadata that is interpreted by clients which support the APACK package and dependency management framework. **Note:** APACK including dependencies is currently only supported by abapGit for ABAP Development Tools (ADT). Please also see the [respective tutorial](https://developers.sap.com/tutorials/abap-environment-abapgit.html) for details.
+
+Such an APACK implementation class must reside in the top-level ABAP package which is serialized by abapGit so that it can be detected properly. After the class is instantiated, it needs to have the field `ZIF_APACK_MANIFEST~DESCRIPTOR` populated with the respective APACK metadata.
 
 **Note:** Don't put any functionality in such implementation classes, only use them to advertise APACK metadata.
 
@@ -24,6 +26,6 @@ The interface `ZIF_APACK_MANIFEST` is automatically created as local object, i.e
 
 ### Examples
 
-See the sample code on GitHub (uses `IF_APACK_MANIFEST` which is exclusively available on the SAP Cloud Platform ABAP Environment, descriptor format is compatible with `ZIF_APACK_MANIFEST`):
+See the sample code on GitHub (uses `IF_APACK_MANIFEST` which is exclusively available on the SAP Cloud Platform ABAP Environment. However, the descriptor format is compatible with `ZIF_APACK_MANIFEST`.):
 - [YY Data Service](https://github.com/SAP/abap-platform-yy)
 - [JSON ABAP Konverter](https://github.com/SAP/abap-platform-jak) (specifies a dependency to the YY Data Service)
