@@ -86,6 +86,9 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
                 iv_prev_page   TYPE clike
       RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING   zcx_abapgit_exception.
+    METHODS render_master_language_warning
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+
 ENDCLASS.
 
 
@@ -336,6 +339,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     ro_html->add( '<div class="repo">' ).
     ro_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
     ro_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
+    ro_html->add( render_master_language_warning( ) ).
 
     ro_html->add( '<div class="stage-container">' ).
     ro_html->add( render_actions( ) ).
@@ -582,4 +586,22 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
+
+
+  METHOD render_master_language_warning.
+
+    DATA: ls_dot_abapgit TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
+
+    CREATE OBJECT ro_html.
+
+    ls_dot_abapgit = mo_repo->get_dot_abapgit( )->get_data( ).
+
+    IF ls_dot_abapgit-master_language <> sy-langu.
+      ro_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner(
+                        |Caution: Master language of the repo is '{ ls_dot_abapgit-master_language }', |
+                     && |but you're logged on in '{ sy-langu }'| ) ).
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.
