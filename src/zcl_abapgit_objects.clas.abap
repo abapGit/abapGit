@@ -1298,7 +1298,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         iv_path = <ls_result>-path ).
 
       lo_package = zcl_abapgit_factory=>get_sap_package( lv_package ).
-      IF lo_package->is_main_package( ).
+      IF lo_package->is_main_package( ) = abap_true.
         zcx_abapgit_exception=>raise( |{ lv_package }: is main package and can not have objects. | ).
       ENDIF.
 
