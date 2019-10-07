@@ -37,6 +37,7 @@ CLASS zcl_abapgit_objects DEFINITION
       IMPORTING
         !is_item                 TYPE zif_abapgit_definitions=>ty_item
         !iv_language             TYPE spras
+        !iv_serialize_master_lang_only TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rs_files_and_item) TYPE zcl_abapgit_objects=>ty_serialization
       RAISING
@@ -1114,6 +1115,11 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
                             iv_language = iv_language ).
     li_obj->mo_files = lo_files.
     CREATE OBJECT lo_xml.
+
+    IF iv_serialize_master_lang_only = abap_true.
+      lo_xml->i18n_params( iv_serialize_master_lang_only = abap_true ).
+    ENDIF.
+
     li_obj->serialize( lo_xml ).
     lo_files->add_xml( io_xml      = lo_xml
                        is_metadata = li_obj->get_metadata( ) ).

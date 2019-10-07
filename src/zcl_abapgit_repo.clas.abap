@@ -406,7 +406,9 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     apply_filter( EXPORTING it_filter = it_filter
                   CHANGING ct_tadir  = lt_tadir ).
 
-    CREATE OBJECT lo_serialize.
+    CREATE OBJECT lo_serialize
+      EXPORTING
+        iv_serialize_master_lang_only = ms_data-local_settings-serialize_master_lang_only.
 
     lt_found = lo_serialize->serialize(
       it_tadir    = lt_tadir
