@@ -258,6 +258,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
       iv_value = |<input name="block_commit" type="checkbox"{ lv_checked }>|
     ) ).
 
+    CLEAR lv_checked.
+    IF ls_settings-serialize_master_lang_only = abap_true.
+      lv_checked = | checked|.
+    ENDIF.
+    io_html->add( render_table_row(
+      iv_name  = 'Serialize master language only'
+      iv_value = |<input name="serialize_master_lang_only" type="checkbox"{ lv_checked }>|
+    ) ).
+
     io_html->add( '</table>' ).
 
   ENDMETHOD.
@@ -340,25 +349,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     ENDIF.
 
     READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'write_protected' value = 'on'.
-    IF sy-subrc = 0.
-      ls_settings-write_protected = abap_true.
-    ELSE.
-      ls_settings-write_protected = abap_false.
-    ENDIF.
+    ls_settings-write_protected = boolc( sy-subrc = 0 ).
 
     READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'ignore_subpackages' value = 'on'.
-    IF sy-subrc = 0.
-      ls_settings-ignore_subpackages = abap_true.
-    ELSE.
-      ls_settings-ignore_subpackages = abap_false.
-    ENDIF.
+    ls_settings-ignore_subpackages = boolc( sy-subrc = 0 ).
 
     READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'only_local_objects' value = 'on'.
-    IF sy-subrc = 0.
-      ls_settings-only_local_objects = abap_true.
-    ELSE.
-      ls_settings-only_local_objects = abap_false.
-    ENDIF.
+    ls_settings-only_local_objects = boolc( sy-subrc = 0 ).
 
     READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'check_variant'.
     ASSERT sy-subrc = 0.
@@ -369,16 +366,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     ls_settings-code_inspector_check_variant = lv_check_variant.
 
     READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'block_commit' value = 'on'.
-    IF sy-subrc = 0.
-      ls_settings-block_commit = abap_true.
-    ELSE.
-      ls_settings-block_commit = abap_false.
-    ENDIF.
+    ls_settings-block_commit = boolc( sy-subrc = 0 ).
 
     IF ls_settings-block_commit = abap_true
         AND ls_settings-code_inspector_check_variant IS INITIAL.
       zcx_abapgit_exception=>raise( |If block commit is active, a check variant has to be maintained.| ).
     ENDIF.
+
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'serialize_master_lang_only' value = 'on'.
+    ls_settings-serialize_master_lang_only = boolc( sy-subrc = 0 ).
 
     mo_repo->set_local_settings( ls_settings ).
 
