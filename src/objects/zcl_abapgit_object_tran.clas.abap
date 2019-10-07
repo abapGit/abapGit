@@ -319,6 +319,10 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
 
     DATA lt_tpool_i18n TYPE TABLE OF tstct.
 
+    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+      RETURN.
+    ENDIF.
+
     " Skip master language - it was already serialized
     " Don't serialize t-code itself
     SELECT sprsl ttext
