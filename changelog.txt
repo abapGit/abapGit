@@ -8,6 +8,30 @@ Legend
 + : added
 - : removed
 
+2019-10-07 v1.90.0
+------------------
+* FUGR, fix transport request recording
+* AUTH jump fix
+* Cancel branch creation if already exists
+* Progress indicator fixes for belize theme
+* ecatt, show error instead of dumping
+* optimize skip logic
+! increase parallel serialization timeout
+* Workaround for JavaGUI
++ Column sorting in repo overview
+* APACK fixes
++ PERS serialization
++ Command palette, shortcut F1
++ Syntax check, rerun button added
+* Footer redesign
++ UENO serialization
+* PERS downport
+* DDLS write transport entry
+* NROB write transport entry
++ Order by on repo page
+* Warning when languages does not match
+* CLAS serialization, fix redefinition shortdump
+
 2019-08-05 v1.89.0
 ------------------
 + belize and dark themes
