@@ -263,6 +263,18 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_sap_package~is_main_package.
+    DATA lv_mainpack TYPE tdevc-mainpack.
+
+    SELECT SINGLE mainpack
+      FROM tdevc
+      INTO lv_mainpack
+      WHERE devclass = mv_package.
+
+    rv_bool = boolc( lv_mainpack = 'X' ).
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_sap_package~list_subpackages.
 
     DATA: lt_list     LIKE rt_list.

@@ -1285,6 +1285,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
+    DATA: lo_package  TYPE REF TO zif_abapgit_sap_package.
+
     FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
 
     lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
@@ -1294,6 +1296,11 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         iv_top  = io_repo->get_package( )
         io_dot  = io_repo->get_dot_abapgit( )
         iv_path = <ls_result>-path ).
+
+      lo_package = zcl_abapgit_factory=>get_sap_package( lv_package ).
+      IF lo_package->is_main_package( ).
+        zcx_abapgit_exception=>raise( |{ lv_package }: is main package and can not have objects. | ).
+      ENDIF.
 
       ls_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
         iv_object   = <ls_result>-obj_type
