@@ -488,6 +488,10 @@ CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
 
     _sort_tdlines_by_windows( CHANGING ct_form_windows  = es_form_data-windows
                                        ct_lines         = et_lines ).
+
+    es_form_data-form_header-tdversion = '00001'.
+    es_form_data-text_header-tdversion = '00001'.
+
   ENDMETHOD.
 
 
