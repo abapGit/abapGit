@@ -246,7 +246,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
     io_html->add( render_table_row(
       iv_name  = 'Code inspector check variant'
-      iv_value = |<input name="check_variant" type="text" size="30" value="{ ls_settings-code_inspector_check_variant }">|
+      iv_value = |<input name="check_variant" type="text" size="30" value="{
+        ls_settings-code_inspector_check_variant }">|
     ) ).
 
     CLEAR lv_checked.
