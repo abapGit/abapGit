@@ -294,12 +294,21 @@ form.aligned-form span.cell { display: table-cell; }
 
 /* SETTINGS STYLES */
 div.settings_container {
-  padding: 0.5em;
+  padding: 0.5em 0.5em 1em;
   font-size: 10pt;
 }
 
 div.settings_section {
   margin-left:50px
+}
+
+table.settings td:first-child {
+  padding-left: 1em;
+  padding-right: 1em;
+}
+
+table.settings-package-requirements {
+  /*max-width: 300px;*/
 }
 
 /* DIFF */
