@@ -423,7 +423,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
         _clear_changed_fields( CHANGING cs_form_data = ls_form_data ).
 
         compress_lines( is_form_data = ls_form_data
-                         it_lines     = lt_lines ).
+                        it_lines     = lt_lines ).
 
         INSERT ls_form_data INTO TABLE lt_form_data.
 
@@ -534,6 +534,9 @@ CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
       lv_firstloop = abap_true.
       READ TABLE lt_lines INTO ls_lines WITH KEY tdformat = lv_elt_windows
                                                  tdline   = ls_form_windows-tdwindow.
+      IF sy-subrc <> 0.
+        CONTINUE. " current loop
+      ENDIF.
       LOOP AT lt_lines INTO ls_lines FROM sy-tabix.
         IF lv_firstloop = abap_false AND
            ls_lines-tdformat = lv_elt_windows.
