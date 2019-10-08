@@ -33,6 +33,10 @@
        <PARAMETER>IV_PATH</PARAMETER>
        <TYP>STRING</TYP>
       </RSIMP>
+      <RSIMP>
+       <PARAMETER>IV_SERIALIZE_MASTER_LANG_ONLY</PARAMETER>
+       <TYP>CHAR1</TYP>
+      </RSIMP>
      </IMPORT>
      <EXPORT>
       <RSEXP>
@@ -80,19 +84,25 @@
        <INDEX> 005</INDEX>
       </RSFDO>
       <RSFDO>
-       <PARAMETER>EV_RESULT</PARAMETER>
+       <PARAMETER>IV_SERIALIZE_MASTER_LANG_ONLY</PARAMETER>
        <KIND>P</KIND>
+       <STEXT>Single-Character Indicator</STEXT>
        <INDEX> 006</INDEX>
       </RSFDO>
       <RSFDO>
-       <PARAMETER>EV_PATH</PARAMETER>
+       <PARAMETER>EV_RESULT</PARAMETER>
        <KIND>P</KIND>
        <INDEX> 007</INDEX>
       </RSFDO>
       <RSFDO>
+       <PARAMETER>EV_PATH</PARAMETER>
+       <KIND>P</KIND>
+       <INDEX> 008</INDEX>
+      </RSFDO>
+      <RSFDO>
        <PARAMETER>ERROR</PARAMETER>
        <KIND>X</KIND>
-       <INDEX> 008</INDEX>
+       <INDEX> 009</INDEX>
       </RSFDO>
      </DOCUMENTATION>
     </item>
