@@ -253,7 +253,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
         bcset_type                = ls_scp1-scprattr-type
         fldtxtvar_supplied        = 'YES'
         with_transp_insert        = abap_false
-        with_progress_indicator   = abap_true
+        with_progress_indicator   = abap_false
         remove_denied_data        = abap_true
         ask_for_cont_after_remove = abap_true
       TABLES
@@ -309,6 +309,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
         minrelease               = ls_scp1-scprattr-minrelease
         maxrelease               = ls_scp1-scprattr-maxrelease
         act_info                 = ls_scp1-scprattr-act_info
+        with_transp_insert       = abap_false
+        with_progress_indicator  = abap_false
       TABLES
         subprofs                 = lt_sub
         texts                    = ls_scp1-scprtext
