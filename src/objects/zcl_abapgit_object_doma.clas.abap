@@ -125,6 +125,9 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
                    <ls_dd01_text> LIKE LINE OF lt_dd01_texts,
                    <ls_dd07_text> LIKE LINE OF lt_dd07_texts.
 
+    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+      RETURN.
+    ENDIF.
 
     lv_name = ms_item-obj_name.
 

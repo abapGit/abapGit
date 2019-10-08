@@ -95,6 +95,9 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
                    <ls_dd04_text> LIKE LINE OF lt_dd04_texts.
 
+    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+      RETURN.
+    ENDIF.
 
     lv_name = ms_item-obj_name.
 

@@ -5,6 +5,11 @@ CLASS zcl_abapgit_xml_output DEFINITION
 
   PUBLIC SECTION.
 
+    TYPES:
+      BEGIN OF ty_i18n_params,
+        serialize_master_lang_only TYPE abap_bool,
+      END OF ty_i18n_params.
+
     METHODS add
       IMPORTING
         !iv_name TYPE clike
@@ -24,10 +29,17 @@ CLASS zcl_abapgit_xml_output DEFINITION
         !is_metadata  TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
       RETURNING
         VALUE(rv_xml) TYPE string .
+    METHODS i18n_params
+      IMPORTING
+        iv_serialize_master_lang_only TYPE ty_i18n_params-serialize_master_lang_only OPTIONAL
+      RETURNING
+        VALUE(rs_params) TYPE ty_i18n_params.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
     DATA mi_raw TYPE REF TO if_ixml_element .
+    DATA ms_i18n_params TYPE ty_i18n_params .
 
     METHODS build_asx_node
       RETURNING
@@ -106,6 +118,17 @@ CLASS ZCL_ABAPGIT_XML_OUTPUT IMPLEMENTATION.
       prefix = 'xmlns' ).
     li_attr->if_ixml_node~set_value( 'http://www.sap.com/abapxml' ).
     ri_element->set_attribute_node_ns( li_attr ).
+
+  ENDMETHOD.
+
+
+  METHOD i18n_params.
+
+    IF iv_serialize_master_lang_only IS SUPPLIED.
+      ms_i18n_params-serialize_master_lang_only = iv_serialize_master_lang_only.
+    ENDIF.
+
+    rs_params = ms_i18n_params.
 
   ENDMETHOD.
 
