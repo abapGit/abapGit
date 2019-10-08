@@ -4,7 +4,9 @@ CLASS zcl_abapgit_serialize DEFINITION
 
   PUBLIC SECTION.
 
-    METHODS constructor.
+    METHODS constructor
+      IMPORTING
+        iv_serialize_master_lang_only TYPE abap_bool DEFAULT abap_false.
     METHODS on_end_of_task
       IMPORTING
         !p_task TYPE clike .
@@ -26,6 +28,7 @@ CLASS zcl_abapgit_serialize DEFINITION
     DATA mv_free TYPE i .
     DATA mi_log TYPE REF TO zif_abapgit_log .
     DATA mv_group TYPE rzlli_apcl .
+    DATA mv_serialize_master_lang_only TYPE abap_bool.
 
     METHODS add_to_return
       IMPORTING
@@ -89,6 +92,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
     ENDIF.
 
     mv_group = 'parallel_generators' ##NO_TEXT.
+    mv_serialize_master_lang_only = iv_serialize_master_lang_only.
 
   ENDMETHOD.
 
@@ -209,6 +213,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
           iv_devclass           = is_tadir-devclass
           iv_language           = iv_language
           iv_path               = is_tadir-path
+          iv_serialize_master_lang_only = mv_serialize_master_lang_only
         EXCEPTIONS
           system_failure        = 1 MESSAGE lv_msg
           communication_failure = 2 MESSAGE lv_msg
@@ -242,6 +247,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
     TRY.
         ls_fils_item = zcl_abapgit_objects=>serialize(
           is_item     = ls_fils_item-item
+          iv_serialize_master_lang_only = mv_serialize_master_lang_only
           iv_language = iv_language ).
 
         add_to_return( is_fils_item = ls_fils_item
