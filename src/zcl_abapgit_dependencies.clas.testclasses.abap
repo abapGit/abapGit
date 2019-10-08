@@ -79,6 +79,10 @@ CLASS ltcl_sap_package IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~is_main_package. "##needed
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS ltcl_resolve_packages DEFINITION FOR TESTING
