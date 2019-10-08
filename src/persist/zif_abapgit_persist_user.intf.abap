@@ -3,6 +3,11 @@ INTERFACE zif_abapgit_persist_user
 
   TYPES tt_favorites TYPE zif_abapgit_persistence=>tt_repo_keys .
 
+  METHODS get_show_order_by
+    RETURNING
+      VALUE(rv_show_order_by) TYPE abap_bool
+    RAISING
+      zcx_abapgit_exception .
   METHODS get_changes_only
     RETURNING
       VALUE(rv_changes_only) TYPE abap_bool
@@ -142,6 +147,11 @@ INTERFACE zif_abapgit_persist_user
       is_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings
     RAISING
       zcx_abapgit_exception.
+  METHODS toggle_show_order_by
+    RETURNING
+      VALUE(rv_show_order_by) TYPE abap_bool
+    RAISING
+      zcx_abapgit_exception .
 
 
 ENDINTERFACE.

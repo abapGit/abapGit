@@ -376,6 +376,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     DATA: lt_tadir      TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lo_serialize  TYPE REF TO zcl_abapgit_serialize,
           lt_found      LIKE rt_files,
+          lv_force      TYPE abap_bool,
           ls_apack_file TYPE zif_abapgit_definitions=>ty_file.
 
     FIELD-SYMBOLS: <ls_return> LIKE LINE OF rt_files.
@@ -410,10 +411,16 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       EXPORTING
         iv_serialize_master_lang_only = ms_data-local_settings-serialize_master_lang_only.
 
+* if there are less than 10 objects run in single thread
+* this helps a lot when debugging, plus performance gain
+* with low number of objects does not matter much
+    lv_force = boolc( lines( lt_tadir ) < 10 ).
+
     lt_found = lo_serialize->serialize(
-      it_tadir    = lt_tadir
-      iv_language = get_dot_abapgit( )->get_master_language( )
-      ii_log      = ii_log ).
+      it_tadir            = lt_tadir
+      iv_language         = get_dot_abapgit( )->get_master_language( )
+      ii_log              = ii_log
+      iv_force_sequential = lv_force ).
     APPEND LINES OF lt_found TO rt_files.
 
     mt_local                 = rt_files.
