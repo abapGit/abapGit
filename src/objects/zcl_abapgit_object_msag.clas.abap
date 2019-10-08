@@ -205,6 +205,10 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
 
     lv_msg_id = ms_item-obj_name.
 
+    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+      RETURN. " skip
+    ENDIF.
+
     " Collect additional languages
     " Skip master lang - it has been already serialized
     SELECT DISTINCT sprsl AS langu INTO TABLE lt_i18n_langs

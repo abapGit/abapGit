@@ -116,3 +116,8 @@ footer.nav-footer {
 .nav-refs a {
   color: #808080;
 }
+
+.anchor-link {
+  margin-left: 5px;
+  font-size: 80%;
+}

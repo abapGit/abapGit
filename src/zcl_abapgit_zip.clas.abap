@@ -70,7 +70,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_zip IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
 
   METHOD encode_files.
@@ -136,7 +136,7 @@ CLASS zcl_abapgit_zip IMPLEMENTATION.
 
       ls_tadir = zcl_abapgit_ui_factory=>get_popups( )->popup_object( ).
       IF ls_tadir IS INITIAL.
-        MESSAGE |Object couldn't be found| TYPE 'S' DISPLAY LIKE 'E'.
+        MESSAGE 'Object couldn''t be found' TYPE 'S' DISPLAY LIKE 'E'.
       ENDIF.
 
     ENDWHILE.
