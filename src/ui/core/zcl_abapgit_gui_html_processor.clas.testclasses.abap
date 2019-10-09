@@ -2,7 +2,7 @@ CLASS lcl_gui_mock DEFINITION.
   PUBLIC SECTION.
     TYPES:
       BEGIN OF ty_cache_signature,
-        url TYPE string,
+        url  TYPE string,
         type TYPE string,
         data TYPE string,
       END OF ty_cache_signature.
@@ -19,6 +19,10 @@ CLASS lcl_gui_mock IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
+
+CLASS ltcl_html_processor_test DEFINITION DEFERRED.
+CLASS zcl_abapgit_gui_html_processor DEFINITION LOCAL FRIENDS ltcl_html_processor_test.
+
 CLASS ltcl_html_processor_test DEFINITION
   FOR TESTING
   DURATION SHORT
@@ -32,7 +36,7 @@ CLASS ltcl_html_processor_test DEFINITION
 
     METHODS render_html
       IMPORTING
-        iv_src TYPE string
+        iv_src         TYPE string
       RETURNING
         VALUE(rv_html) TYPE string.
 
@@ -41,7 +45,7 @@ CLASS ltcl_html_processor_test DEFINITION
     METHODS process_with_preserve FOR TESTING RAISING zcx_abapgit_exception.
     METHODS process_no_css FOR TESTING RAISING zcx_abapgit_exception.
     METHODS process_fails FOR TESTING RAISING zcx_abapgit_exception.
-
+    METHODS find_head_closing_tag FOR TESTING RAISING zcx_abapgit_exception.
 ENDCLASS.
 
 CLASS ltcl_html_processor_test IMPLEMENTATION.
@@ -105,7 +109,7 @@ CLASS ltcl_html_processor_test IMPLEMENTATION.
         `</html>\n`
       ) ).
 
-      " GUI call checks
+    " GUI call checks
     cl_abap_unit_assert=>assert_equals(
       act = mo_gui_mock->ms_last_cache_signature-url
       exp = 'css/bundle.css' ).
@@ -170,6 +174,31 @@ CLASS ltcl_html_processor_test IMPLEMENTATION.
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD find_head_closing_tag.
+    "given
+    DATA: lv_head_end TYPE i,
+          lv_html     TYPE string.
+
+     lv_html = '<!DOCTYPE html><html><head><title>abapGit</title><link rel="stylesheet" type="text/css" ' &&
+               'href="css/common.css"><link rel="stylesheet" type="text/css" href="css/ag-icons.css">' &&
+               '<link rel="stylesheet" type="text/css" href="css/theme-default.css"><script type="text/javascript" src="js/common.js"></script></head>'.
+
+    "when
+    TRY.
+        lv_head_end = mo_cut->find_head_offset( iv_html = lv_html ).
+      CATCH zcx_abapgit_exception.
+      cl_abap_unit_assert=>fail( msg = 'HEAD closing tag could not be found').
+    ENDTRY.
+
+    "then
+    cl_abap_unit_assert=>assert_equals(
+          act = lv_head_end
+          exp = 299
+          msg = 'Head closing tag was not found' ).
 
   ENDMETHOD.
 
