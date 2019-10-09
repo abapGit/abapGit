@@ -183,15 +183,16 @@ CLASS ltcl_html_processor_test IMPLEMENTATION.
     DATA: lv_head_end TYPE i,
           lv_html     TYPE string.
 
-     lv_html = '<!DOCTYPE html><html><head><title>abapGit</title><link rel="stylesheet" type="text/css" ' &&
-               'href="css/common.css"><link rel="stylesheet" type="text/css" href="css/ag-icons.css">' &&
-               '<link rel="stylesheet" type="text/css" href="css/theme-default.css"><script type="text/javascript" src="js/common.js"></script></head>'.
+    lv_html = '<!DOCTYPE html><html><head><title>abapGit</title><link rel="stylesheet" type="text/css" ' &&
+              'href="css/common.css"><link rel="stylesheet" type="text/css" href="css/ag-icons.css">' &&
+              '<link rel="stylesheet" type="text/css" href="css/theme-default.css"><script type="text/javascript"' &&
+              ' src="js/common.js"></script></head>'.
 
     "when
     TRY.
         lv_head_end = mo_cut->find_head_offset( iv_html = lv_html ).
       CATCH zcx_abapgit_exception.
-      cl_abap_unit_assert=>fail( msg = 'HEAD closing tag could not be found').
+      cl_abap_unit_assert=>fail( msg = 'HEAD closing tag could not be found' ).
     ENDTRY.
 
     "then
