@@ -42,15 +42,19 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
     METHODS get_starting_folder
       RETURNING
         VALUE(rv_path) TYPE string .
+
     METHODS get_folder_logic
       RETURNING
         VALUE(rv_logic) TYPE string .
+
     METHODS set_folder_logic
       IMPORTING
         !iv_logic TYPE string .
+
     METHODS set_starting_folder
       IMPORTING
         !iv_path TYPE string .
+
     METHODS get_master_language
       RETURNING
         VALUE(rv_language) TYPE spras .
@@ -61,6 +65,13 @@ CLASS zcl_abapgit_dot_abapgit DEFINITION
         VALUE(rs_signature) TYPE zif_abapgit_definitions=>ty_file_signature
       RAISING
         zcx_abapgit_exception .
+    METHODS get_requirements
+      RETURNING
+        VALUE(rt_requirements) TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
+    METHODS set_requirements
+      IMPORTING
+        it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: ms_data TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
@@ -106,7 +117,7 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
 
     ls_data-master_language = sy-langu.
-    ls_data-starting_folder = '/'.
+    ls_data-starting_folder = '/src/'.
     ls_data-folder_logic    = zif_abapgit_dot_abapgit=>c_folder_logic-prefix.
 
     APPEND '/.gitignore' TO ls_data-ignore.
@@ -114,6 +125,9 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
     APPEND '/README.md' TO ls_data-ignore.
     APPEND '/package.json' TO ls_data-ignore.
     APPEND '/.travis.yml' TO ls_data-ignore.
+    APPEND '/.gitlab-ci.yml' TO ls_data-ignore.
+    APPEND '/abaplint.json' TO ls_data-ignore.
+    APPEND '/azure-pipelines.yml' TO ls_data-ignore.
 
     CREATE OBJECT ro_dot_abapgit
       EXPORTING
@@ -182,14 +196,19 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_requirements.
+    rt_requirements = ms_data-requirements.
+  ENDMETHOD.
+
+
   METHOD get_signature.
 
-    rs_signature-path     = zif_abapgit_definitions=>gc_root_dir.
-    rs_signature-filename = zif_abapgit_definitions=>gc_dot_abapgit.
-    rs_signature-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>gc_type-blob
+    rs_signature-path     = zif_abapgit_definitions=>c_root_dir.
+    rs_signature-filename = zif_abapgit_definitions=>c_dot_abapgit.
+    rs_signature-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
                                                     iv_data = serialize( ) ).
 
-  ENDMETHOD. "get_signature
+  ENDMETHOD.
 
 
   METHOD get_starting_folder.
@@ -209,7 +228,7 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
     lv_name = iv_path && iv_filename.
 
     CONCATENATE ms_data-starting_folder '*' INTO lv_starting.
-    CONCATENATE '/' zif_abapgit_definitions=>gc_dot_abapgit INTO lv_dot.
+    CONCATENATE '/' zif_abapgit_definitions=>c_dot_abapgit INTO lv_dot.
 
     LOOP AT ms_data-ignore INTO lv_ignore.
       FIND ALL OCCURRENCES OF '/' IN lv_name MATCH COUNT lv_count.
@@ -252,6 +271,11 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   METHOD set_folder_logic.
     ms_data-folder_logic = iv_logic.
+  ENDMETHOD.
+
+
+  METHOD set_requirements.
+    ms_data-requirements = it_requirements.
   ENDMETHOD.
 
 

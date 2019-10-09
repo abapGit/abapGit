@@ -50,7 +50,7 @@ CLASS ZCL_ABAPGIT_PROXY_CONFIG IMPLEMENTATION.
       EXPORTING
         iv_repo_url            = iv_repo_url
       CHANGING
-        c_proxy_authentication = rv_auth ).
+        cv_proxy_authentication = rv_auth ).
 
   ENDMETHOD.
 
@@ -63,7 +63,9 @@ CLASS ZCL_ABAPGIT_PROXY_CONFIG IMPLEMENTATION.
       EXPORTING
         iv_repo_url  = iv_repo_url
       CHANGING
-        c_proxy_port = rv_port ).
+        cv_proxy_port = rv_port ).
+
+    CONDENSE rv_port.
 
   ENDMETHOD.
 
@@ -76,7 +78,7 @@ CLASS ZCL_ABAPGIT_PROXY_CONFIG IMPLEMENTATION.
       EXPORTING
         iv_repo_url = iv_repo_url
       CHANGING
-        c_proxy_url = rv_proxy_url ).
+        cv_proxy_url = rv_proxy_url ).
 
   ENDMETHOD.
 ENDCLASS.

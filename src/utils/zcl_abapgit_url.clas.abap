@@ -5,32 +5,38 @@ CLASS zcl_abapgit_url DEFINITION
 
   PUBLIC SECTION.
 
+    CLASS-METHODS validate
+      IMPORTING
+        !iv_url TYPE string
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS host
       IMPORTING
-        !iv_repo       TYPE string
+        !iv_url        TYPE string
       RETURNING
         VALUE(rv_host) TYPE string
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS name
       IMPORTING
-        !iv_repo       TYPE string
+        !iv_url        TYPE string
       RETURNING
         VALUE(rv_name) TYPE string
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS path_name
       IMPORTING
-        !iv_repo            TYPE string
+        !iv_url             TYPE string
       RETURNING
         VALUE(rv_path_name) TYPE string
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     CLASS-METHODS regex
       IMPORTING
-        !iv_repo TYPE string
+        !iv_url  TYPE string
       EXPORTING
         !ev_host TYPE string
         !ev_path TYPE string
@@ -46,7 +52,7 @@ CLASS ZCL_ABAPGIT_URL IMPLEMENTATION.
 
   METHOD host.
 
-    regex( EXPORTING iv_repo = iv_repo
+    regex( EXPORTING iv_url = iv_url
            IMPORTING ev_host = rv_host ).
 
   ENDMETHOD.
@@ -54,8 +60,17 @@ CLASS ZCL_ABAPGIT_URL IMPLEMENTATION.
 
   METHOD name.
 
-    regex( EXPORTING iv_repo = iv_repo
-           IMPORTING ev_name = rv_name ).
+    DATA: lv_path TYPE string.
+
+    regex( EXPORTING iv_url = iv_url
+           IMPORTING ev_name = rv_name
+                     ev_path = lv_path ).
+
+    IF rv_name IS INITIAL.
+      FIND REGEX '([\w-]+)/$' IN lv_path SUBMATCHES rv_name.
+    ENDIF.
+
+    ASSERT NOT rv_name IS INITIAL.
 
   ENDMETHOD.
 
@@ -64,7 +79,7 @@ CLASS ZCL_ABAPGIT_URL IMPLEMENTATION.
 
     DATA: lv_host TYPE string ##NEEDED.
 
-    FIND REGEX '(.*://[^/]*)(.*)' IN iv_repo
+    FIND REGEX '(.*://[^/]*)(.*)' IN iv_url
       SUBMATCHES lv_host rv_path_name.
 
   ENDMETHOD.
@@ -72,11 +87,18 @@ CLASS ZCL_ABAPGIT_URL IMPLEMENTATION.
 
   METHOD regex.
 
-    FIND REGEX '(.*://[^/]*)(.*/)([^\.]*)[\.git]?' IN iv_repo
+    FIND REGEX '(.*://[^/]*)(.*/)([^\.]*)[\.git]?' IN iv_url
       SUBMATCHES ev_host ev_path ev_name.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Malformed URL' ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD validate.
+
+    regex( iv_url ).
 
   ENDMETHOD.
 ENDCLASS.

@@ -41,6 +41,45 @@ CLASS zcl_abapgit_convert DEFINITION
         !iv_string      TYPE string
       RETURNING
         VALUE(rt_lines) TYPE string_table .
+    CLASS-METHODS conversion_exit_isola_output
+      IMPORTING
+        iv_spras        TYPE spras
+      RETURNING
+        VALUE(rv_spras) TYPE laiso.
+    CLASS-METHODS alpha_output
+      IMPORTING
+        iv_val        TYPE clike
+      RETURNING
+        VALUE(rv_str) TYPE string.
+
+    CLASS-METHODS string_to_xstring
+      IMPORTING
+        iv_str         TYPE string
+      RETURNING
+        VALUE(rv_xstr) TYPE xstring.
+
+    CLASS-METHODS base64_to_xstring
+      IMPORTING
+        iv_base64      TYPE string
+      RETURNING
+        VALUE(rv_xstr) TYPE xstring.
+
+    CLASS-METHODS bintab_to_xstring
+      IMPORTING
+        it_bintab      TYPE lvc_t_mime
+        iv_size        TYPE i
+      RETURNING
+        VALUE(rv_xstr) TYPE xstring.
+
+    CLASS-METHODS xstring_to_bintab
+      IMPORTING
+        iv_xstr   TYPE xstring
+      EXPORTING
+        ev_size   TYPE i
+        et_bintab TYPE lvc_t_mime.
+
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
@@ -48,23 +87,88 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
 
 
+  METHOD alpha_output.
+
+    CALL FUNCTION 'CONVERSION_EXIT_ALPHA_OUTPUT'
+      EXPORTING
+        input  = iv_val
+      IMPORTING
+        output = rv_str.
+
+    CONDENSE rv_str.
+
+  ENDMETHOD.
+
+
+  METHOD base64_to_xstring.
+
+    CALL FUNCTION 'SSFC_BASE64_DECODE'
+      EXPORTING
+        b64data = iv_base64
+      IMPORTING
+        bindata = rv_xstr
+      EXCEPTIONS
+        OTHERS  = 1.
+    ASSERT sy-subrc = 0.
+
+  ENDMETHOD.
+
+
+  METHOD bintab_to_xstring.
+
+    CALL FUNCTION 'SCMS_BINARY_TO_XSTRING'
+      EXPORTING
+        input_length = iv_size
+      IMPORTING
+        buffer       = rv_xstr
+      TABLES
+        binary_tab   = it_bintab
+      EXCEPTIONS
+        failed       = 1 ##FM_SUBRC_OK.
+    ASSERT sy-subrc = 0.
+
+  ENDMETHOD.
+
+
   METHOD bitbyte_to_int.
 
-    DATA: lv_bits TYPE string.
+    DATA: lv_bitbyte TYPE string,
+          lv_len     TYPE i,
+          lv_offset  TYPE i.
 
-
-    lv_bits = iv_bits.
+    lv_bitbyte = iv_bits.
+    SHIFT lv_bitbyte LEFT DELETING LEADING '0 '.
+    lv_len     = strlen( lv_bitbyte ).
+    lv_offset  = lv_len - 1.
 
     rv_int = 0.
-    WHILE strlen( lv_bits ) > 0.
-      rv_int = rv_int * 2.
-      IF lv_bits(1) = '1'.
-        rv_int = rv_int + 1.
-      ENDIF.
-      lv_bits = lv_bits+1.
-    ENDWHILE.
+    DO lv_len TIMES.
 
-  ENDMETHOD.                    "bitbyte_to_int
+      IF sy-index = 1.
+        "Intialize
+        IF lv_bitbyte+lv_offset(1) = '1'.
+          rv_int = 1.
+        ENDIF.
+      ELSEIF lv_bitbyte+lv_offset(1) = '1'.
+        rv_int = rv_int + ( 2 ** ( sy-index - 1 ) ).
+      ENDIF.
+
+      lv_offset = lv_offset - 1. "Move Cursor
+
+    ENDDO.
+
+  ENDMETHOD.
+
+
+  METHOD conversion_exit_isola_output.
+
+    CALL FUNCTION 'CONVERSION_EXIT_ISOLA_OUTPUT'
+      EXPORTING
+        input  = iv_spras
+      IMPORTING
+        output = rv_spras.
+
+  ENDMETHOD.
 
 
   METHOD int_to_xstring4.
@@ -76,7 +180,7 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
     lv_x = iv_i.
     rv_xstring = lv_x.
 
-  ENDMETHOD.                    "int_to_xstring
+  ENDMETHOD.
 
 
   METHOD split_string.
@@ -90,7 +194,21 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
       SPLIT iv_string AT cl_abap_char_utilities=>newline INTO TABLE rt_lines.
     ENDIF.
 
-  ENDMETHOD.                    "split_string
+  ENDMETHOD.
+
+
+  METHOD string_to_xstring.
+
+    CALL FUNCTION 'SCMS_STRING_TO_XSTRING'
+      EXPORTING
+        text   = iv_str
+      IMPORTING
+        buffer = rv_xstr
+      EXCEPTIONS
+        OTHERS = 1.
+    ASSERT sy-subrc = 0.
+
+  ENDMETHOD.
 
 
   METHOD string_to_xstring_utf8.
@@ -110,7 +228,20 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
             cx_parameter_invalid_type.                  "#EC NO_HANDLER
     ENDTRY.
 
-  ENDMETHOD.                    "string_to_xstring_utf8
+  ENDMETHOD.
+
+
+  METHOD xstring_to_bintab.
+
+    CALL FUNCTION 'SCMS_XSTRING_TO_BINARY'
+      EXPORTING
+        buffer        = iv_xstr
+      IMPORTING
+        output_length = ev_size
+      TABLES
+        binary_tab    = et_bintab.
+
+  ENDMETHOD.
 
 
   METHOD xstring_to_int.
@@ -126,7 +257,7 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
       lv_xstring = lv_xstring+1.
     ENDWHILE.
 
-  ENDMETHOD.                    "xstring_to_int
+  ENDMETHOD.
 
 
   METHOD xstring_to_string_utf8.
@@ -150,19 +281,21 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
             cx_parameter_invalid_type.                  "#EC NO_HANDLER
     ENDTRY.
 
-  ENDMETHOD.                    "xstring_to_string_utf8
+  ENDMETHOD.
 
 
   METHOD x_to_bitbyte.
 
-    DATA: lv_b TYPE n.
-
     CLEAR rv_bitbyte.
 
-    DO 8 TIMES.
-      GET BIT sy-index OF iv_x INTO lv_b.
-      CONCATENATE rv_bitbyte lv_b INTO rv_bitbyte.
-    ENDDO.
+    GET BIT 1 OF iv_x INTO rv_bitbyte+0(1).
+    GET BIT 2 OF iv_x INTO rv_bitbyte+1(1).
+    GET BIT 3 OF iv_x INTO rv_bitbyte+2(1).
+    GET BIT 4 OF iv_x INTO rv_bitbyte+3(1).
+    GET BIT 5 OF iv_x INTO rv_bitbyte+4(1).
+    GET BIT 6 OF iv_x INTO rv_bitbyte+5(1).
+    GET BIT 7 OF iv_x INTO rv_bitbyte+6(1).
+    GET BIT 8 OF iv_x INTO rv_bitbyte+7(1).
 
-  ENDMETHOD.                    "x_to_bitbyte
+  ENDMETHOD.
 ENDCLASS.

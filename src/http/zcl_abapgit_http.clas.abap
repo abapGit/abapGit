@@ -1,37 +1,49 @@
 CLASS zcl_abapgit_http DEFINITION
   PUBLIC
-  FINAL
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    CONSTANTS: BEGIN OF c_scheme,
-                 digest TYPE string VALUE 'Digest',
-               END OF c_scheme.
 
-    CLASS-METHODS:
-      get_agent
-        RETURNING VALUE(rv_agent) TYPE string,
-      create_by_url
-        IMPORTING iv_url           TYPE string
-                  iv_service       TYPE string
-        RETURNING VALUE(ro_client) TYPE REF TO zcl_abapgit_http_client
-        RAISING   zcx_abapgit_exception.
+    CONSTANTS:
+      BEGIN OF c_scheme,
+        digest TYPE string VALUE 'Digest',
+      END OF c_scheme .
+
+    CLASS-METHODS get_agent
+      RETURNING
+        VALUE(rv_agent) TYPE string .
+    CLASS-METHODS create_by_url
+      IMPORTING
+        !iv_url          TYPE string
+        !iv_service      TYPE string
+      RETURNING
+        VALUE(ro_client) TYPE REF TO zcl_abapgit_http_client
+      RAISING
+        zcx_abapgit_exception .
+  PROTECTED SECTION.
+
+    CLASS-METHODS check_auth_requested
+      IMPORTING
+        !ii_client               TYPE REF TO if_http_client
+      RETURNING
+        VALUE(rv_auth_requested) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS is_local_system
+      IMPORTING
+        !iv_url        TYPE string
+      RETURNING
+        VALUE(rv_bool) TYPE abap_bool .
+    CLASS-METHODS acquire_login_details
+      IMPORTING
+        !ii_client       TYPE REF TO if_http_client
+        !io_client       TYPE REF TO zcl_abapgit_http_client
+        !iv_url          TYPE string
+      RETURNING
+        VALUE(rv_scheme) TYPE string
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
-    CLASS-METHODS:
-      check_auth_requested
-        IMPORTING ii_client                TYPE REF TO if_http_client
-        RETURNING VALUE(rv_auth_requested) TYPE abap_bool
-        RAISING   zcx_abapgit_exception,
-      is_local_system
-        IMPORTING iv_url         TYPE string
-        RETURNING VALUE(rv_bool) TYPE abap_bool,
-      acquire_login_details
-        IMPORTING ii_client        TYPE REF TO if_http_client
-                  io_client        TYPE REF TO zcl_abapgit_http_client
-                  iv_url           TYPE string
-        RETURNING VALUE(rv_scheme) TYPE string
-        RAISING   zcx_abapgit_exception.
-
 ENDCLASS.
 
 
@@ -96,7 +108,7 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
           password = lv_pass ).
     ENDCASE.
 
-  ENDMETHOD.  "acquire_login_details
+  ENDMETHOD.
 
 
   METHOD check_auth_requested.
@@ -110,7 +122,7 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
       rv_auth_requested = abap_true.
     ENDIF.
 
-  ENDMETHOD.  "check_auth_requested
+  ENDMETHOD.
 
 
   METHOD create_by_url.
@@ -124,30 +136,36 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
 
     CREATE OBJECT lo_proxy_configuration.
 
-    cl_http_client=>create_by_url(
-      EXPORTING
-        url                = zcl_abapgit_url=>host( iv_url )
-        ssl_id             = 'ANONYM'
-        proxy_host         = lo_proxy_configuration->get_proxy_url( iv_url )
-        proxy_service      = lo_proxy_configuration->get_proxy_port( iv_url )
-      IMPORTING
-        client             = li_client
-      EXCEPTIONS
-        argument_not_found = 1
-        plugin_not_active  = 2
-        internal_error     = 3
-        OTHERS             = 4 ).
-    IF sy-subrc <> 0.
-      CASE sy-subrc.
-        WHEN 1.
-          " make sure:
-          " a) SSL is setup properly in STRUST
-          lv_text = 'HTTPS ARGUMENT_NOT_FOUND | STRUST/SSL Setup correct?'.
-        WHEN OTHERS.
-          lv_text = 'While creating HTTP Client'.           "#EC NOTEXT
+    li_client = zcl_abapgit_exit=>get_instance( )->create_http_client( iv_url ).
 
-      ENDCASE.
-      zcx_abapgit_exception=>raise( lv_text ).
+    IF li_client IS NOT BOUND.
+
+      cl_http_client=>create_by_url(
+        EXPORTING
+          url                = zcl_abapgit_url=>host( iv_url )
+          ssl_id             = zcl_abapgit_exit=>get_instance( )->get_ssl_id( )
+          proxy_host         = lo_proxy_configuration->get_proxy_url( iv_url )
+          proxy_service      = lo_proxy_configuration->get_proxy_port( iv_url )
+        IMPORTING
+          client             = li_client
+        EXCEPTIONS
+          argument_not_found = 1
+          plugin_not_active  = 2
+          internal_error     = 3
+          OTHERS             = 4 ).
+      IF sy-subrc <> 0.
+        CASE sy-subrc.
+          WHEN 1.
+            " make sure:
+            " a) SSL is setup properly in STRUST
+            lv_text = 'HTTPS ARGUMENT_NOT_FOUND | STRUST/SSL Setup correct?'.
+          WHEN OTHERS.
+            lv_text = 'While creating HTTP Client'.         "#EC NOTEXT
+
+        ENDCASE.
+        zcx_abapgit_exception=>raise( lv_text ).
+      ENDIF.
+
     ENDIF.
 
     IF lo_proxy_configuration->get_proxy_authentication( iv_url ) = abap_true.
@@ -180,8 +198,13 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
     " Disable internal auth dialog (due to its unclarity)
     li_client->propertytype_logon_popup = if_http_client=>co_disabled.
 
-    zcl_abapgit_login_manager=>load( iv_uri    = iv_url
-                                     ii_client = li_client ).
+    zcl_abapgit_login_manager=>load(
+      iv_uri    = iv_url
+      ii_client = li_client ).
+
+    zcl_abapgit_exit=>get_instance( )->http_client(
+      iv_url    = iv_url
+      ii_client = li_client ).
 
     ro_client->send_receive( ).
     IF check_auth_requested( li_client ) = abap_true.
@@ -203,7 +226,8 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
   METHOD get_agent.
 
 * bitbucket require agent prefix = "git/"
-    rv_agent = 'git/abapGit-' && zif_abapgit_definitions=>gc_abap_version.
+* also see https://github.com/larshp/abapGit/issues/1432
+    rv_agent = |git/2.0 (abapGit { zif_abapgit_version=>gc_abap_version })|.
 
   ENDMETHOD.
 

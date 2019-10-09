@@ -41,7 +41,7 @@ CLASS zcl_abapgit_2fa_github_auth DEFINITION
       IMPORTING
         !ii_response  TYPE REF TO if_http_response
       RETURNING
-        VALUE(rt_ids) TYPE stringtab .
+        VALUE(rt_ids) TYPE string_table .
     CLASS-METHODS set_del_token_request
       IMPORTING
         !ii_request  TYPE REF TO if_http_request
@@ -80,8 +80,7 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
 
   METHOD get_authenticated_client.
     DATA: lv_http_code             TYPE i,
-          lv_http_code_description TYPE string,
-          lo_settings              TYPE REF TO zcl_abapgit_settings.
+          lv_http_code_description TYPE string.
 
     " If there is a cached client return it instead
     IF is_session_running( ) = abap_true AND mi_authenticated_session IS BOUND.
@@ -90,25 +89,7 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
     ENDIF.
 
     " Try to login to GitHub API with username, password and 2fa token
-
-    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
-
-    cl_http_client=>create_by_url(
-      EXPORTING
-        url                = mv_github_api_url
-        ssl_id             = 'ANONYM'
-        proxy_host         = lo_settings->get_proxy_url( )
-        proxy_service      = lo_settings->get_proxy_port( )
-      IMPORTING
-        client             = ri_client
-      EXCEPTIONS
-        argument_not_found = 1
-        plugin_not_active  = 2
-        internal_error     = 3
-        OTHERS             = 4 ).
-    IF sy-subrc <> 0.
-      raise_comm_error_from_sy( ).
-    ENDIF.
+    ri_client = get_http_client_for_url( mv_github_api_url ).
 
     " https://developer.github.com/v3/auth/#working-with-two-factor-authentication
     ri_client->propertytype_accept_cookie = if_http_client=>co_enabled.
@@ -229,7 +210,7 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
     " 2. Create an access token which can be used instead of a password
     " https://developer.github.com/v3/oauth_authorizations/#create-a-new-authorization
 
-    set_new_token_request( ii_request = li_http_client->request ).
+    set_new_token_request( li_http_client->request ).
 
     li_http_client->send( EXCEPTIONS OTHERS = 1 ).
     IF sy-subrc <> 0.
@@ -268,7 +249,8 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
     DATA: li_http_client           TYPE REF TO if_http_client,
           lv_http_code             TYPE i,
           lv_http_code_description TYPE string,
-          lt_tobedeleted_tokens    TYPE stringtab.
+          lt_tobedeleted_tokens    TYPE string_table.
+
     FIELD-SYMBOLS: <lv_id> TYPE string.
 
     li_http_client = get_authenticated_client( iv_username  = iv_username
@@ -333,28 +315,9 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
 
   METHOD zif_abapgit_2fa_authenticator~is_2fa_required.
 
-    DATA: li_client TYPE REF TO if_http_client,
-          lo_proxy  TYPE REF TO zcl_abapgit_proxy_config.
+    DATA: li_client TYPE REF TO if_http_client.
 
-
-    CREATE OBJECT lo_proxy.
-
-    cl_http_client=>create_by_url(
-      EXPORTING
-        url                = mv_github_api_url
-        ssl_id             = 'ANONYM'
-        proxy_host         = lo_proxy->get_proxy_url( )
-        proxy_service      = lo_proxy->get_proxy_port(  )
-      IMPORTING
-        client             = li_client
-      EXCEPTIONS
-        argument_not_found = 1
-        plugin_not_active  = 2
-        internal_error     = 3
-        OTHERS             = 4 ).
-    IF sy-subrc <> 0.
-      raise_comm_error_from_sy( ).
-    ENDIF.
+    li_client = get_http_client_for_url( mv_github_api_url ).
 
     li_client->propertytype_logon_popup = if_http_client=>co_disabled.
 
@@ -374,6 +337,8 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
 
     li_client->receive( EXCEPTIONS OTHERS = 1 ).
     IF sy-subrc <> 0.
+* if the code fails here with a SSL error, make sure STRUST is setup to
+* work with https://api.github.com
       raise_comm_error_from_sy( ).
     ENDIF.
 

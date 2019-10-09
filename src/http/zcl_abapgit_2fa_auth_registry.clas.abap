@@ -1,4 +1,4 @@
-"! Static registry class to find <em>LIF_2FA_AUTHENTICATOR</em> instances
+"! Static registry class to find {@link ZIF_ABAPGIT_2FA_AUTHENTICATOR} instances
 CLASS zcl_abapgit_2fa_auth_registry DEFINITION
   PUBLIC
   FINAL
@@ -9,8 +9,8 @@ CLASS zcl_abapgit_2fa_auth_registry DEFINITION
       class_constructor,
       "! Retrieve an authenticator instance by url
       "! @parameter iv_url | Url of the repository / service
-      "! @parameter ro_authenticator | Found authenticator instance
-      "! @raising lcx_2fa_unsupported | No authenticator found that supports the service
+      "! @parameter ri_authenticator | Found authenticator instance
+      "! @raising zcx_abapgit_2fa_unsupported | No authenticator found that supports the service
       get_authenticator_for_url IMPORTING iv_url                  TYPE string
                                 RETURNING VALUE(ri_authenticator) TYPE REF TO zif_abapgit_2fa_authenticator
                                 RAISING   zcx_abapgit_2fa_unsupported,
@@ -34,10 +34,13 @@ CLASS zcl_abapgit_2fa_auth_registry DEFINITION
                           CHANGING  cv_username TYPE string
                                     cv_password TYPE string
                           RAISING   zcx_abapgit_exception.
+
+  PROTECTED SECTION.
     CLASS-DATA:
       "! All authenticators managed by the registry
       gt_registered_authenticators TYPE HASHED TABLE OF REF TO zif_abapgit_2fa_authenticator
-                                        WITH UNIQUE KEY table_line READ-ONLY.
+                                        WITH UNIQUE KEY table_line.
+
   PRIVATE SECTION.
     CLASS-METHODS:
       popup_token
@@ -62,6 +65,7 @@ CLASS ZCL_ABAPGIT_2FA_AUTH_REGISTRY IMPLEMENTATION.
     TRY.
         lo_class ?= cl_oo_class=>get_instance( 'ZCL_ABAPGIT_2FA_AUTH_BASE' ).
         lt_sub = lo_class->get_subclasses( ).
+        SORT lt_sub BY clsname ASCENDING AS TEXT.
         LOOP AT lt_sub INTO ls_sub.
           CREATE OBJECT li_authenticator TYPE (ls_sub-clsname).
           INSERT li_authenticator INTO TABLE gt_registered_authenticators.

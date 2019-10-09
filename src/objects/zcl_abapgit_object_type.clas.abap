@@ -4,6 +4,7 @@ CLASS zcl_abapgit_object_type DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS: c_prefix TYPE c LENGTH 3 VALUE '%_C'.
 
@@ -21,86 +22,10 @@ CLASS zcl_abapgit_object_type DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_type IMPLEMENTATION.
-
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
-
-  METHOD zif_abapgit_object~changed_by.
-    rv_user = c_user_unknown. " todo
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
-
-  METHOD zif_abapgit_object~exists.
-
-    TRY.
-        read( ).
-        rv_bool = abap_true.
-      CATCH zcx_abapgit_not_found zcx_abapgit_exception.
-        rv_bool = abap_false.
-    ENDTRY.
-
-  ENDMETHOD.                    "zif_abapgit_object~exists
-
-  METHOD read.
-
-    DATA: lv_typdname  TYPE rsedd0-typegroup,
-          lt_psmodisrc TYPE TABLE OF smodisrc,
-          lt_psmodilog TYPE TABLE OF smodilog,
-          lt_ptrdir    TYPE TABLE OF trdir.
 
 
-    SELECT SINGLE ddtext FROM ddtypet
-      INTO ev_ddtext
-      WHERE typegroup = ms_item-obj_name
-      AND ddlanguage = mv_language.
-    IF sy-subrc <> 0.
-      RAISE EXCEPTION TYPE zcx_abapgit_not_found.
-    ENDIF.
+CLASS ZCL_ABAPGIT_OBJECT_TYPE IMPLEMENTATION.
 
-    lv_typdname = ms_item-obj_name.
-    CALL FUNCTION 'TYPD_GET_OBJECT'
-      EXPORTING
-        typdname          = lv_typdname
-      TABLES
-        psmodisrc         = lt_psmodisrc
-        psmodilog         = lt_psmodilog
-        psource           = et_source
-        ptrdir            = lt_ptrdir
-      EXCEPTIONS
-        version_not_found = 1
-        reps_not_exist    = 2
-        OTHERS            = 3.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from TYPD_GET_OBJECT' ).
-    ENDIF.
-
-  ENDMETHOD.                    "read
-
-  METHOD zif_abapgit_object~serialize.
-
-    DATA: lv_ddtext TYPE ddtypet-ddtext,
-          lt_source TYPE abaptxt255_tab.
-
-
-    TRY.
-        read( IMPORTING
-                ev_ddtext = lv_ddtext
-                et_source = lt_source ).
-      CATCH zcx_abapgit_not_found.
-        RETURN.
-    ENDTRY.
-
-    io_xml->add( iv_name = 'DDTEXT'
-                 ig_data = lv_ddtext ).
-
-    mo_files->add_abap( lt_source ).
-
-  ENDMETHOD.                    "serialize
 
   METHOD create.
 
@@ -136,7 +61,75 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error setting uccheck' ).
     ENDIF.
 
-  ENDMETHOD.                    "create
+  ENDMETHOD.
+
+
+  METHOD read.
+
+    DATA: lv_typdname  TYPE rsedd0-typegroup,
+          lt_psmodisrc TYPE TABLE OF smodisrc,
+          lt_psmodilog TYPE TABLE OF smodilog,
+          lt_ptrdir    TYPE TABLE OF trdir.
+
+
+    SELECT SINGLE ddtext FROM ddtypet
+      INTO ev_ddtext
+      WHERE typegroup = ms_item-obj_name
+      AND ddlanguage = mv_language.
+    IF sy-subrc <> 0.
+      RAISE EXCEPTION TYPE zcx_abapgit_not_found.
+    ENDIF.
+
+    lv_typdname = ms_item-obj_name.
+    CALL FUNCTION 'TYPD_GET_OBJECT'
+      EXPORTING
+        typdname          = lv_typdname
+      TABLES
+        psmodisrc         = lt_psmodisrc
+        psmodilog         = lt_psmodilog
+        psource           = et_source
+        ptrdir            = lt_ptrdir
+      EXCEPTIONS
+        version_not_found = 1
+        reps_not_exist    = 2
+        OTHERS            = 3.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from TYPD_GET_OBJECT' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~changed_by.
+    rv_user = c_user_unknown. " todo
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~delete.
+
+    DATA: lv_objname TYPE rsedd0-ddobjname.
+
+
+    lv_objname = ms_item-obj_name.
+
+    CALL FUNCTION 'RS_DD_DELETE_OBJ'
+      EXPORTING
+        no_ask               = abap_true
+        objname              = lv_objname
+        objtype              = 'G'
+      EXCEPTIONS
+        not_executed         = 1
+        object_not_found     = 2
+        object_not_specified = 3
+        permission_failure   = 4
+        dialog_needed        = 5
+        OTHERS               = 6.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error deleting TYPE' ).
+    ENDIF.
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -165,40 +158,70 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
-  ENDMETHOD.                    "deserialize
-
-  METHOD zif_abapgit_object~delete.
-
-    DATA: lv_objname TYPE rsedd0-ddobjname.
+  ENDMETHOD.
 
 
-    lv_objname = ms_item-obj_name.
+  METHOD zif_abapgit_object~exists.
 
-    CALL FUNCTION 'RS_DD_DELETE_OBJ'
-      EXPORTING
-        no_ask               = abap_true
-        objname              = lv_objname
-        objtype              = 'G'
-      EXCEPTIONS
-        not_executed         = 1
-        object_not_found     = 2
-        object_not_specified = 3
-        permission_failure   = 4
-        dialog_needed        = 5
-        OTHERS               = 6.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error deleting TYPE' ).
-    ENDIF.
+    TRY.
+        read( ).
+        rv_bool = abap_true.
+      CATCH zcx_abapgit_not_found zcx_abapgit_exception.
+        rv_bool = abap_false.
+    ENDTRY.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~jump.
     jump_se11( iv_radio = 'RSRD1-TYMA'
                iv_field = 'RSRD1-TYMA_VAL' ).
-  ENDMETHOD.                    "jump
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_type IMPLEMENTATION
+
+  METHOD zif_abapgit_object~serialize.
+
+    DATA: lv_ddtext TYPE ddtypet-ddtext,
+          lt_source TYPE abaptxt255_tab.
+
+
+    TRY.
+        read( IMPORTING
+                ev_ddtext = lv_ddtext
+                et_source = lt_source ).
+      CATCH zcx_abapgit_not_found.
+        RETURN.
+    ENDTRY.
+
+    io_xml->add( iv_name = 'DDTEXT'
+                 ig_data = lv_ddtext ).
+
+    mo_files->add_abap( lt_source ).
+
+  ENDMETHOD.
+ENDCLASS.

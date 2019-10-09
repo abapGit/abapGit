@@ -4,6 +4,7 @@ CLASS zcl_abapgit_object_dtel DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES: BEGIN OF ty_dd04_texts,
@@ -15,6 +16,7 @@ CLASS zcl_abapgit_object_dtel DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
              scrtext_l  TYPE dd04t-scrtext_l,
            END OF ty_dd04_texts,
            tt_dd04_texts TYPE STANDARD TABLE OF ty_dd04_texts.
+    CONSTANTS: c_longtext_id_dtel TYPE dokil-id VALUE 'DE'.
 
     METHODS:
       serialize_texts
@@ -40,7 +42,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
           lt_dd04_texts TYPE tt_dd04_texts.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
-                   <ls_dd04_text> TYPE ty_dd04_texts.
+                   <ls_dd04_text> LIKE LINE OF lt_dd04_texts.
 
 
     lv_name = ms_item-obj_name.
@@ -75,7 +77,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
           put_refused       = 5
           OTHERS            = 6.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from DDIF_DTEL_PUT @TEXTS' ).
+        zcx_abapgit_exception=>raise( |error from DDIF_DTEL_PUT @TEXTS, { sy-subrc }| ).
       ENDIF.
     ENDLOOP.
 
@@ -91,8 +93,11 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
           lt_i18n_langs TYPE TABLE OF langu.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
-                   <ls_dd04_text> TYPE ty_dd04_texts.
+                   <ls_dd04_text> LIKE LINE OF lt_dd04_texts.
 
+    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+      RETURN.
+    ENDIF.
 
     lv_name = ms_item-obj_name.
 
@@ -150,11 +155,6 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~delete.
 
     DATA: lv_objname TYPE rsedd0-ddobjname.
@@ -173,25 +173,24 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
         object_not_specified = 3
         permission_failure   = 4.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, DTEL' ).
+      zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, DTEL,' && sy-subrc ).
     ENDIF.
 
-  ENDMETHOD.                    "delete
+    delete_longtexts( c_longtext_id_dtel ).
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_dd04v TYPE dd04v,
-          lv_name  TYPE ddobjname,
-          ls_tpara TYPE tpara.
+          lv_name  TYPE ddobjname.
 
 
     io_xml->read( EXPORTING iv_name = 'DD04V'
                   CHANGING cg_data = ls_dd04v ).
-    io_xml->read( EXPORTING iv_name = 'TPARA'
-                  CHANGING cg_data = ls_tpara ).
 
-    corr_insert( iv_package ).
+    corr_insert( iv_package = iv_package iv_object_class = 'DICT' ).
 
     lv_name = ms_item-obj_name. " type conversion
 
@@ -207,15 +206,17 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
         put_refused       = 5
         OTHERS            = 6.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DDIF_DTEL_PUT' ).
+      zcx_abapgit_exception=>raise( |error from DDIF_DTEL_PUT, { sy-subrc }| ).
     ENDIF.
 
     deserialize_texts( io_xml   = io_xml
                        is_dd04v = ls_dd04v ).
 
+    deserialize_longtexts( io_xml ).
+
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -229,32 +230,34 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
       AND as4vers = '0000'.
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-ddic = abap_true.
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
 
-    DATA: lv_date TYPE dats,
-          lv_time TYPE tims.
 
-    SELECT SINGLE as4date as4time FROM dd04l
-      INTO (lv_date, lv_time)
-      WHERE rollname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers = '0000'.
-
-    rv_changed = check_timestamp(
-      iv_timestamp = iv_timestamp
-      iv_date      = lv_date
-      iv_time      = lv_time ).
-
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESDICT'
+                                            iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~jump.
@@ -262,7 +265,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
     jump_se11( iv_radio = 'RSRD1-DDTYPE'
                iv_field = 'RSRD1-DDTYPE_VAL' ).
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -270,8 +273,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
 * done directly from here
 
     DATA: lv_name  TYPE ddobjname,
-          ls_dd04v TYPE dd04v,
-          ls_tpara TYPE tpara.
+          ls_dd04v TYPE dd04v.
 
     lv_name = ms_item-obj_name.
 
@@ -282,7 +284,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers = '0000'.
     IF sy-subrc <> 0 OR ls_dd04v IS INITIAL.
-      zcx_abapgit_exception=>raise( 'Not found in DD04L' ).
+      zcx_abapgit_exception=>raise( 'Not found in DD04L' ) ##NO_TEXT.
     ENDIF.
 
     SELECT SINGLE * FROM dd04t
@@ -291,15 +293,6 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
       AND ddlanguage = mv_language
       AND as4local = 'A'
       AND as4vers = '0000'.
-
-    IF NOT ls_dd04v-memoryid IS INITIAL.
-      SELECT SINGLE tpara~paramid tparat~partext
-        FROM tpara LEFT JOIN tparat
-        ON tparat~paramid = tpara~paramid AND
-        tparat~sprache = mv_language
-        INTO ls_tpara
-        WHERE tpara~paramid = ls_dd04v-memoryid.       "#EC CI_BUFFJOIN
-    ENDIF.
 
     CLEAR: ls_dd04v-as4user,
            ls_dd04v-as4date,
@@ -328,10 +321,11 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
 
     io_xml->add( iv_name = 'DD04V'
                  ig_data = ls_dd04v ).
-    io_xml->add( iv_name = 'TPARA'
-                 ig_data = ls_tpara ).
 
     serialize_texts( io_xml ).
 
-  ENDMETHOD.                    "serialize
+    serialize_longtexts( io_xml         = io_xml
+                         iv_longtext_id = c_longtext_id_dtel ).
+
+  ENDMETHOD.
 ENDCLASS.

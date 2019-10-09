@@ -18,20 +18,49 @@ INTERFACE zif_abapgit_persistence PUBLIC.
            files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
          END OF ty_local_checksum.
 
+  TYPES:
+    BEGIN OF ty_local_settings,
+      display_name                 TYPE string,
+      ignore_subpackages           TYPE abap_bool,
+      write_protected              TYPE abap_bool,
+      only_local_objects           TYPE abap_bool,
+      code_inspector_check_variant TYPE sci_chkv,
+      block_commit                 TYPE abap_bool,
+      serialize_master_lang_only   TYPE abap_bool,
+    END OF ty_local_settings.
+
   TYPES: ty_local_checksum_tt TYPE STANDARD TABLE OF ty_local_checksum WITH DEFAULT KEY.
 
   TYPES: BEGIN OF ty_repo_xml,
-           url                TYPE string,
-           branch_name        TYPE string,
-           sha1               TYPE zif_abapgit_definitions=>ty_sha1,
-           package            TYPE devclass,
-           offline            TYPE sap_bool,
-           local_checksums    TYPE ty_local_checksum_tt,
-           dot_abapgit        TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
-           head_branch        TYPE string,   " HEAD symref of the repo, master branch
-           write_protect      TYPE sap_bool, " Deny destructive ops: pull, switch branch ...
-           ignore_subpackages TYPE sap_bool,
+           url             TYPE string,
+           branch_name     TYPE string,
+           package         TYPE devclass,
+           created_by      TYPE xubname,
+           created_at      TYPE timestampl,
+           deserialized_by TYPE xubname,
+           deserialized_at TYPE timestampl,
+           offline         TYPE abap_bool,
+           local_checksums TYPE ty_local_checksum_tt,
+           dot_abapgit     TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
+           head_branch     TYPE string,   " HEAD symref of the repo, master branch
+           local_settings  TYPE ty_local_settings,
          END OF ty_repo_xml.
+
+  TYPES:
+    BEGIN OF ty_repo_meta_mask,
+      url             TYPE abap_bool,
+      branch_name     TYPE abap_bool,
+      package         TYPE abap_bool,
+      created_by      TYPE abap_bool,
+      created_at      TYPE abap_bool,
+      deserialized_by TYPE abap_bool,
+      deserialized_at TYPE abap_bool,
+      offline         TYPE abap_bool,
+      local_checksums TYPE abap_bool,
+      dot_abapgit     TYPE abap_bool,
+      head_branch     TYPE abap_bool,
+      local_settings  TYPE abap_bool,
+    END OF ty_repo_meta_mask.
 
   TYPES: BEGIN OF ty_repo,
            key TYPE zif_abapgit_persistence=>ty_value.

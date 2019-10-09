@@ -1,0 +1,904 @@
+/*
+ * ABAPGIT COMMON CSS
+ */
+
+/* GLOBALS */
+
+body {
+  overflow-x: hidden;
+}
+a, a:visited {
+  text-decoration:  none;
+}
+a:hover, a:active {
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+img {
+  border-width: 0px;
+  vertical-align: middle;
+}
+table { border-collapse: collapse; }
+pre { display: inline; }
+sup {
+  vertical-align: top;
+  position: relative;
+  top: -0.5em;
+  font-size: 75%;
+}
+
+input, textarea, select {
+  padding: 3px 6px;
+  border: 1px solid;
+}
+input:focus, textarea:focus {
+  border: 1px solid;
+}
+
+/* MODIFIERS */
+.emphasis     { font-weight: bold !important; }
+.crossout     { text-decoration: line-through !important; }
+.right        { text-align:right; }
+.center       { text-align:center; }
+.paddings     { padding: 0.5em 0.5em; }
+.pad-sides    { padding-left: 0.3em; padding-right: 0.3em; }
+.margin-v5    { margin-top: 0.5em; margin-bottom: 0.5em; }
+.indent5em    { padding-left: 0.5em; }
+.pad4px       { padding: 4px; }
+.w100         { width: 100%; }
+.wmin         { width: 1%; }
+.w40          { width: 40%; }
+.float-right  { float: right; }
+.pad-right    { padding-right: 6px; }
+.inline       { display: inline; }
+.hidden       { visibility: hidden; }
+.nodisplay    { display: none }
+
+/* PANELS */
+div.panel {
+  border-radius: 3px;
+}
+
+#debug-output {
+  text-align: right;
+  padding-right: 0.5em;
+  font-style: italic;
+  font-size: small;
+}
+
+div.dummydiv {
+  padding:          0.5em 1em;
+  text-align:       center;
+}
+
+a.close-btn {
+  text-decoration: none;
+}
+
+/* STRUCTURE DIVS, HEADER & FOOTER */
+#abapGitLogo { outline: none; }
+
+div#header {
+  padding:          0.5em 0.5em;
+  border-bottom:    3px double;
+}
+div#header td:not(.logo) { padding-top: 11px; } /* align with logo H */
+div#header td.logo       { width: 164px; }
+div#header td:not(.logo) { padding-top: 11px; } /* align with logo H */
+div#header span.page_title {
+  font-weight: normal;
+  font-size: 18pt;
+  padding-left: 0.4em;
+}
+
+div#toc { padding: 0.5em 1em; }
+div#toc .favorites a { opacity: 0.5; }
+div#toc .favorites:hover a { opacity: 1; }
+
+div#footer {
+  padding:          0.5em 1em;
+  border-top:       3px double;
+  text-align:       center;
+}
+div#footer span.version {
+  display: block;
+  margin-top: 0.3em;
+}
+
+/* ERROR LOG */
+
+div.log {
+  padding: 6px;
+  margin: 4px;
+  border: 1px  solid;
+  border-radius: 4px;
+}
+div.log > span   { display:block; }
+div.log .icon { padding-right: 6px; }
+
+/* REPOSITORY */
+div.repo {
+  margin-top: 3px;
+  padding: 0.5em 1em 0.5em 1em;
+  position: relative;
+}
+.repo_name span.name {
+  font-weight: bold;
+  font-size: 14pt;
+}
+.repo_name a.url {
+  font-size: 12pt;
+  margin-left: 0.5em;
+}
+.repo_name span.url {
+  font-size: 12pt;
+  margin-left: 0.5em;
+}
+.repo_name .icon {
+  padding-right: 4px;
+}
+.repo_attr {
+  font-size: 12pt;
+}
+.repo_attr span {
+  margin-left: 0.2em;
+  margin-right: 0.5em;
+}
+.repo_attr span.bg_marker {
+  border: 1px solid;
+  border-radius: 3px;
+  font-size: 8pt;
+  padding: 4px 2px 3px 2px;
+}
+.repo_attr span.branch {
+  padding: 2px 4px;
+  border: 1px solid;
+  border-radius: 4px;
+}
+
+/* MISC AND REFACTOR */
+.hidden-submit {
+  border: 0 none;
+  height: 0;
+  width: 0;
+  padding: 0;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* REPOSITORY TABLE*/
+div.repo_container {
+  position: relative;
+}
+
+div.repo_banner {
+  margin: 0em 1.2em 1em;
+  padding: 0.5em 0.5em;
+  text-align: center;
+  font-size: 85%;
+}
+
+table.repo_tab {
+  border: 1px solid;
+  border-radius: 3px;
+  width: 100%;
+}
+.repo_tab th {
+  text-align: left;
+  padding: 0.5em;
+  border-bottom: 1px solid;
+  font-weight: normal;
+}
+.repo_tab td {
+  border-top: 1px solid;
+  vertical-align: middle;
+  padding-top: 2px;
+  padding-bottom: 2px;
+}
+.repo_tab td.icon {
+  width: 1px;
+  text-align: center;
+  padding-left: 8px;
+  padding-right: 4px;
+}
+.repo_tab td.icon:not(:first-child) {
+  width: 26px;
+  text-align: left;
+}
+.repo_tab td.type {
+  width: 4em;
+  padding-left: 0.5em;
+}
+.repo_tab td.object {
+  padding-left: 0.5em;
+}
+.repo_tab td.files {
+  padding-left: 0.5em;
+}
+.repo_tab td.cmd, .repo_tab th.cmd {
+  text-align: right;
+  padding-left: 0.5em;
+  padding-right: 0.7em;
+}
+.repo_tab th.cmd .icon{
+  padding-right: 8px;
+}
+.repo_tab tr:first-child td { border-top: 0px; }
+.repo_tab td.cmd span.state-block {
+  margin-left: 1em;
+  font-family: Consolas, Lucida Console, Courier, monospace;
+  font-size: x-small;
+  vertical-align: 13%;
+  display: inline-block;
+  text-align: center;
+}
+.repo_tab td.cmd span.state-block span {
+  display: inline-block;
+  padding: 0px 2px;
+  border: 1px solid;
+}
+
+/* STAGE */
+div.stage-container { width: 850px; }
+input.stage-filter { width: 18em; }
+
+.stage_tab {
+  border: 1px solid;
+  margin-top: 0.2em;
+}
+.stage_tab td {
+  border-top: 1px solid;
+  vertical-align: middle;
+  padding: 2px 0.5em;
+}
+.stage_tab th {
+  text-align: left;
+  font-weight: normal;
+  padding: 4px 0.5em;
+}
+.stage_tab td.status {
+  width: 2em;
+  text-align: center;
+}
+.stage_tab td.highlight {
+  font-weight: bold;
+}
+
+.stage_tab td.cmd {  cursor: pointer; }
+.stage_tab td.cmd a { padding: 0px 4px; }
+.stage_tab th.cmd a { padding: 0px 4px; }
+.stage_tab tbody tr:first-child td { padding-top: 0.5em; }
+.stage_tab tbody tr:last-child td { padding-bottom: 0.5em; }
+
+/* COMMIT */
+div.form-container {
+  padding: 1em 1em;
+}
+
+form.aligned-form {
+  display: table;
+  border-spacing: 2px;
+}
+
+form.aligned-form label {
+  padding-right: 1em;
+  vertical-align: middle;
+}
+
+form.aligned-form select {
+  padding-right: 1em;
+  vertical-align: middle;
+}
+
+form.aligned-form span.sub-title {
+  font-size: smaller;
+  padding-top: 8px;
+}
+
+form.aligned-form div.row { display: table-row; }
+form.aligned-form label { display: table-cell; }
+form.aligned-form input { display: table-cell; }
+form.aligned-form input[type="text"] { width: 25em; }
+form.aligned-form span.cell { display: table-cell; }
+
+/* SETTINGS STYLES */
+div.settings_container {
+  padding: 0.5em 0.5em 1em;
+  font-size: 10pt;
+}
+
+div.settings_section {
+  margin-left:50px
+}
+
+table.settings td:first-child {
+  padding-left: 1em;
+  padding-right: 1em;
+}
+
+table.settings-package-requirements {
+  /*max-width: 300px;*/
+}
+
+/* DIFF */
+div.diff {
+  padding: 0.7em
+}
+div.diff_head {
+  padding-bottom: 0.7em;
+}
+span.diff_name {
+  padding-left: 0.5em;
+}
+span.diff_changed_by {
+  float: right;
+}
+span.diff_changed_by span.user {
+  border-radius: 3px;
+  border: solid 1px;
+  padding: 1px 0.4em;
+}
+span.diff_banner {
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 3px;
+  padding-left: 0.3em;
+  padding-right: 0.3em;
+}
+div.diff_content {
+  border-top: 1px solid;
+  border-bottom: 1px solid;
+}
+
+div.diff_content tbody tr td{
+  width: 50%;
+  vertical-align: top
+}
+
+div.diff_head span.state-block {
+  margin-left: 0.5em;
+  font-family: Consolas, Lucida Console, Courier, monospace;
+  display: inline-block;
+  text-align: center;
+}
+div.diff_head span.state-block span {
+  display: inline-block;
+  padding: 0px 4px;
+  border: 1px solid;
+}
+
+/* DIFF TABLE */
+table.diff_tab {
+  font-family: Consolas, Courier, monospace;
+  font-size: 10pt;
+  width: 100%;
+}
+table.diff_tab td,th {
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+table.diff_tab th {
+  text-align: left;
+  font-weight: normal;
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+table.diff_tab thead.header th {
+  text-align: left;
+  font-weight: bold;
+  padding-left: 0.5em;
+  font-size: 9pt;
+}
+table.diff_tab td.num, th.num {
+  width: 1%;
+  min-width: 2em;
+  padding-right: 8px;
+  padding-left:  8px;
+  text-align: right !important;
+  border-left: 1px solid;
+  border-right: 1px solid;
+  -ms-user-select: none;
+  user-select: none;
+}
+table.diff_tab td.patch, th.patch {
+  width: 1%;
+  min-width: 1.5em;
+  padding-right: 8px;
+  padding-left:  8px;
+  text-align: right !important;
+  border-left: 1px solid;
+  border-right: 1px solid;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: pointer;
+}
+table.diff_tab td.num::before {
+  content: attr(line-num);
+}
+table.diff_tab code {
+  font-family: inherit;
+  white-space: pre;
+}
+table.diff_tab td.code {
+  word-wrap: break-word;
+  white-space: pre-wrap;
+  overflow: visible;
+}
+
+table.diff_tab tbody tr:first-child td { padding-top: 0.5em; }
+table.diff_tab tbody tr:last-child td { padding-bottom: 0.5em; }
+
+/* DEBUG INFO STYLES */
+div.debug_container {
+  padding: 0.5em;
+  font-size: 10pt;
+  font-family: Consolas, Courier, monospace;
+}
+
+div.debug_container p {
+  margin: 0px;
+}
+
+/* DB ENTRIES */
+div.db_list {
+  padding: 0.5em;
+  overflow-x: auto;
+}
+
+table.db_tab pre {
+  display: inline-block;
+  overflow: hidden;
+  word-wrap:break-word;
+  white-space: pre-wrap;
+  margin: 0px;
+  width: 30em;
+}
+
+table.db_tab tr.firstrow td { padding-top: 0.5em; }
+table.db_tab th {
+  text-align: left;
+  padding: 0.5em;
+  border-bottom: 1px solid;
+}
+table.db_tab td {
+  padding: 4px 8px;
+  vertical-align: middle;
+}
+table.db_tab td.data {
+  font-style: italic;
+}
+
+/* DB ENTRY DISPLAY */
+div.db_entry {
+  padding: 0.5em;
+}
+
+div.db_entry pre {
+  display: block;
+  font-size: 10pt;
+  overflow: hidden;
+  word-wrap:break-word;
+  white-space: pre-wrap;
+  border: 1px  solid;
+  border-radius: 3px;
+  padding: 0.5em;
+  margin: 0.5em 0em;
+  width: 60em;
+}
+
+div.db_entry textarea { margin: 0.5em 0em; }
+div.db_entry table.toolbar {
+  width: 50em;
+}
+
+table.tag {
+  display: inline-block;
+  border: 1px  solid;
+  border-radius: 3px;
+  margin-right: 0.5em;
+}
+table.tag td { padding: 0.2em 0.5em; }
+
+/* TUTORIAL */
+
+div.tutorial {
+  margin-top:       3px;
+  padding: 0.5em 1em 0.5em 1em;
+}
+
+div.tutorial li { margin: 2px 0px }
+div.tutorial h1 { font-size: 18pt; }
+div.tutorial h2 { font-size: 14pt;}
+
+/* MENU */
+/* Special credits to example at https://codepen.io/philhoyt/pen/ujHzd */
+/* container div, aligned left,
+   but with .float-right modifier alignes right */
+
+.nav-container ul {
+  list-style: none;
+  position: relative;
+  float: left;
+  margin: 0;
+  padding: 0;
+  white-space: nowrap;
+  text-align: left;
+}
+.nav-container.float-right ul { float: right; }
+
+.nav-container ul a {
+  display: block;
+  text-decoration: none;
+  line-height: 30px;
+  padding: 0 12px;
+}
+
+/* clearfix https://css-tricks.com/snippets/css/clear-fix/ */
+.nav-container:after { clear: both; display: block; content: ""; }
+
+/* submenues align to left or right border of the active item
+   depending on .float-right modifier */
+.nav-container ul li {
+  position: relative;
+  float: left;
+  margin: 0;
+  padding: 0;
+}
+.nav-container.float-right ul ul { left: auto; right: 0; }
+.nav-container ul li.current-menu-item { font-weight: 700; }
+.nav-container ul li.force-nav-hover ul { display: block; }
+.nav-container ul li:hover > ul { display: block; }
+
+/* special selection style for 1st level items (see also .corner below) */
+
+.nav-container ul ul {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 1;
+  padding: 0;
+  box-shadow: 1px 1px 3px 0px #bbb;
+}
+
+.nav-container ul ul li {
+  float: none;
+  min-width: 160px;
+}
+
+.nav-container ul ul a {
+  line-height: 120%;
+  padding: 8px 15px;
+}
+
+.nav-container ul ul ul {
+  top: 0;
+  left: 100%;
+}
+
+.nav-container.float-right ul ul ul {
+  left: auto;
+  right: 100%;
+}
+
+/* Minizone to extent hover area,
+   aligned to the left or to the right of the selected item
+   depending on .float-right modifier */
+.nav-container > ul > li > div.minizone {
+  display: none;
+  z-index: 1;
+  position: absolute;
+  padding: 0px;
+  width: 16px;
+  height: 100%;
+  bottom: 0px;
+  left: 100%;
+}
+.nav-container > ul > li:hover div.minizone { display: block; }
+.nav-container.float-right > ul > li > div.minizone {
+  left: auto;
+  right: 100%;
+}
+
+/* icons - text-align strictly left - otherwise look ugly
+   + bite a bit of left padding for nicer look
+   + forbids item text wrapping (maybe can be done differently) */
+.nav-container ul ul li a .icon {
+  padding-right: 10px;
+  margin-left: -3px;
+}
+.nav-container ul.with-icons li {
+  text-align: left;
+  white-space: nowrap;
+}
+
+/* Special .corner modifier - hangs menu at the top right corner
+   and cancels 1st level background coloring */
+.nav-container.corner {
+  position: absolute;
+  right: 0px;
+}
+
+/* Toolbar separator style */
+.nav-container ul ul li.separator {
+  font-size: x-small;
+  text-align: center;
+  padding: 4px 0;
+  text-transform: uppercase;
+  border-bottom: 1px solid;
+  border-top: 1px solid;
+}
+.nav-container ul ul li.separator:first-child { border-top: none; }
+
+/* News Announcement */
+
+div.info-panel {
+  position: absolute;
+  z-index: 99;
+  top: 36px;
+  left: 50%;
+  width: 40em;
+  margin-left: -20em;
+  box-shadow: 1px 1px 3px 2px #dcdcdc;
+}
+
+div.info-panel-fixed {
+  position: fixed;
+  top: 15%;
+}
+
+div.info-panel div.info-hint {
+  text-transform: uppercase;
+  font-size: small;
+  padding: 8px 6px 0px;
+  text-align: center;
+}
+
+div.info-panel div.info-title {
+  text-transform: uppercase;
+  font-size: small;
+  padding: 6px;
+  text-align: center;
+}
+
+div.info-panel div.info-title a.close-btn {
+  padding-left: 12px;
+  padding-right: 2px;
+  position: relative;
+  bottom: 1px;
+}
+
+div.info-panel div.info-list {
+  padding: 0.8em 0.7em 1em;
+}
+
+div.info-panel li {
+  padding-left: 10px;
+  list-style-type: none;
+}
+
+div.info-panel h1:first-child { margin: auto; }
+div.info-panel h1 {
+  font-size: inherit;
+  padding: 6px 4px;
+  margin: 4px auto auto;
+  text-decoration: underline;
+  font-weight: normal;
+}
+
+div.info-panel .version-marker {
+  display: inline-block;
+  margin-left: 20px;
+  border-radius: 3px;
+  padding: 0px 6px;
+  border:  1px solid;
+}
+
+div.info-panel .update { border:  1px solid; }
+div.info-panel div.info-list td { padding-right: 1em }
+
+/* Error message Panel */
+
+div.message-panel {
+  z-index: 99;
+  box-shadow: 2px 2px 4px 0px hsla(0, 0%, 0%, .1);
+  padding: 12px;
+  margin-left: -48%;
+  position: fixed;
+  bottom: 12px;
+  width: 94%;
+  left: 50%;
+
+  border: 1px solid;
+  border-radius: 5px;
+  border-color: hsl(0, 42%, 64%);
+  background-color: hsla(0, 42%, 90%, 1);
+}
+
+.message-panel-commands {
+  display: none;
+  margin-right: 2em;
+}
+
+.message-panel-commands a {
+  padding: 0em 0.5em;
+  border-left: 1px solid;
+  border-left-color: #ccc;
+}
+
+.message-panel-commands a:first-child {
+  padding-left: 0;
+  border-left: none;
+}
+
+div.message-panel:hover .message-panel-commands {
+  display: block
+}
+
+/* Tooltip text */
+.link-hint {
+    line-height: 1em;
+    text-align: center;
+    padding: 5px 15px;
+    border-radius: 4px;
+
+    /* Position the tooltip text */
+    position: absolute;
+    z-index: 1;
+    margin-top: -30px;
+}
+
+.link-hint-a {
+  margin-left: -60px;
+}
+
+.link-hint-input {
+  margin-left: -30px;
+}
+
+.link-hint .pending { color: hsla(0, 0%, 0%, 0.2); }
+
+/* Tooltip arrow */
+.link-hint::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent;
+}
+
+/* HOTKEYS */
+ul.hotkeys {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+  font-size: smaller;
+}
+
+ul.hotkeys span.key-id {
+  border: 1px solid;
+  border-radius: 3px;
+  padding: 1px 7px;
+  width: 1em;
+  display: inline-block;
+  text-align: center;
+  margin-top: 0.2em;
+}
+
+ul.hotkeys span.key-descr {
+  margin-left: 1.2em;
+}
+
+div.corner-hint {
+  position: fixed;
+  bottom: 10px;
+  right: 10px;
+  border: 1px solid;
+  border-radius: 3px;
+  padding: 4px;
+  font-size: smaller;
+  opacity: 0.5;
+  z-index: 99;
+}
+
+/* Commit popup */
+table.commit tr .title {
+  font-weight: bold;
+  vertical-align: top;
+}
+
+/* Repo overview */
+.repo-overview { font-size: smaller; }
+.repo-overview tbody td { height: 2em; }
+.ro-detail { display: none; }
+
+/* Branch Overview Page */
+.gitGraph-scrollWrapper, .gitGraph-Wrapper{
+  overflow-y: hidden;
+}
+
+.gitGraph-scrollWrapper{
+  overflow-x: auto;
+  height: 20px;
+}
+
+.gitGraph-Wrapper{
+  overflow-x: hidden;
+}
+
+.gitGraph-HTopScroller {
+  width:1000px;
+  height: 20px;
+}
+
+/* code inspector */
+.ci-head { padding: 0.5em 1em; }
+.ci-head .package-name span { margin-left: 0.3em; }
+.ci-variant { font-weight: bold; }
+.ci-result {
+  padding: 6px;
+  margin-top: 4px;
+}
+.ci-result li {
+  list-style-type: none;
+  padding: 0.3em 0.8em;
+  margin-top: 6px;
+  border-left: 4px solid;
+}
+.ci-result li:first-child { margin-top: 0px; }
+.ci-result li > span { display: block; }
+
+/* Floating buttons */
+
+.floating-button {
+  position: fixed;
+  top: 6em;
+  right: 2.8em;
+  padding: 1em 1.8em;
+  border-radius: 4px;
+  border-width: 1px;
+  border-style: solid;
+  box-shadow: 2px 2px 6px 0px #ccc;
+  cursor: pointer;
+}
+
+/* Command palette */
+
+.cmd-palette {
+  position: absolute;
+  z-index: 99;
+  top: 36px;
+  left: 50%;
+  width: 40em;
+  margin-left: -20em;
+  box-shadow: 1px 1px 3px 2px #dcdcdc;
+  background-color: white;
+  border: solid 2px;
+  padding: 0px 1px;
+}
+
+.cmd-palette input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.cmd-palette ul {
+  max-height: 10em;
+  overflow-y: scroll;
+  margin: 4px 0;
+  padding: 2px 4px;
+}
+
+.cmd-palette li {
+  list-style-type: none;
+  cursor: default;
+  padding: 4px 6px;
+}
+
+.cmd-palette li .icon {
+  margin-right: 10px;
+}

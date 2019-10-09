@@ -4,13 +4,18 @@ category: reference
 order: 20
 ---
 
-
 Type   | Description   | Supported
 :------------ | :------------ | ------------:
 ACID | Checkpoint Group | Yes
 AOBJ | Archiving Object | [#804](https://github.com/larshp/abapGit/issues/804)
+ASFC | Field Catalog | Yes
+ASIS | Archiving Information Structure | [#1579](https://github.com/larshp/abapGit/issues/1579)
 AUTH | Authorization Check Fields | Yes
+AVAS | Classification | [#1360](https://github.com/larshp/abapGit/issues/1360)
+BDEF | Behaviour Definition | [#2021](https://github.com/larshp/abapGit/issues/2021)
+BMFR | Application Component | [#2108](https://github.com/larshp/abapGit/issues/2108)
 BOBF | BOPF: Business Object Model | [#165](https://github.com/larshp/abapGit/issues/165)
+CHAR | Object characteristic | Yes
 CHDO | Change Document Object | [#802](https://github.com/larshp/abapGit/issues/802)
 CLAS | Class (ABAP Objects) | Yes
 CMOD | Customer enhancement projects | [#151](https://github.com/larshp/abapGit/issues/151)
@@ -28,31 +33,52 @@ DOCV | Documentation (Independent) | Yes
 DOMA | Domain | Yes
 DSYS | Chapter of a Book Structure | Yes
 DTEL | Data Element | Yes
-ECAT | eCATT Test Script | [#163](https://github.com/larshp/abapGit/issues/163)
-ECTD | eCATT Test Data Container | [#105](https://github.com/larshp/abapGit/issues/105)
+ECAT | eCATT Test Script | Yes
+ECSD | eCATT System Data Container | Yes
+ECSP | eCATT Start Profile | Yes
+ECTC | eCATT Test Configuration | Yes
+ECTD | eCATT Test Data Container | Yes
+ECVO | eCATT Validation Object | Yes
 ENHC | Composite Enhancement Implementation | Yes
 ENHO | Enhancement Implementation | Yes
 ENHS | Enhancement Spot | Yes
 ENQU | Lock Object | Yes
+ENSC | Composite Enhancement Spot | Yes
 FORM | SAPscript form | Yes
 FUGR | Function Group | Yes
+FUGS | Function Group with Customer Include: SAP Part | [#2851](https://github.com/larshp/abapGit/issues/2851)
+FUGX | Function Group with Customer Include: Customer Part | [#2851](https://github.com/larshp/abapGit/issues/2851)
+G4BA | SAP Gateway OData V4 Backend Service Group & Assigments | Yes
+G4BS | SAP Gateway OData V4 Backend Service | Yes
 IAMU | Language-Independent IAC Binary Data | Yes
 IARP | Parameters of IAC Language Resource | Yes
 IASP | Parameters of an IAC service | Yes
 IATU | Language-Independent IAC Templates | Yes
-IWPR | Gateway Business Suite Enablement - Service Builder Project | [#75](https://github.com/larshp/abapGit/issues/75)
+IDOC | IDoc Type | Yes
+IEXT | Enhancement | Yes
+INTF | Interface (ABAP objects) | Yes
+IWMO | Gateway Business Suite Enablement - Model | Yes
+IWOM | Gateway: Model Metadata | Yes
+IWPR | Gateway Business Suite Enablement - Service Builder Project | Yes
+IWSG | Gateway: Service Groups Metadata | Yes
+IWSV | Gateway Business Suite Enablement - Service | Yes
 JOBD | Technical Job Definition | Yes
 LPDC | Launchpad short texts | [#107](https://github.com/larshp/abapGit/issues/107)
 MSAG | Message Class | Yes
 NROB | Number Range Objects | Yes
+OTGR | Object type group | [#1515](https://github.com/larshp/abapGit/issues/1515)
 PARA | SPA/GPA Parameters | Yes
 PDTS | Standard Task | [#153](https://github.com/larshp/abapGit/issues/153)
 PDWS | Workflow templates | [#154](https://github.com/larshp/abapGit/issues/154)
+PERS | Personalization object | Yes
 PINF | Package interface | Yes
 PRAG | Pragma in ABAP Source Code | Yes
 PROG | Program | Yes
+SAJC | Application job catalog entry | [#1580](https://github.com/larshp/abapGit/issues/1580)
+SAJT | Application job template | [1581](https://github.com/larshp/abapGit/issues/1581)
 SAMC | ABAP Messaging Channels | Yes
 SAPC | ABAP Push Channels | Yes
+SCP1 | BC Set or Customizing Profile | [#1004](https://github.com/larshp/abapGit/issues/1004)
 SFBF | Business Function + Assignment | Yes
 SFBS | Business Function Set + Assignment | Yes
 SFPF | Form Object: Form | Yes
@@ -65,14 +91,17 @@ SHLP | Search Help | Yes
 SHMA | Shared Objects: Defined Area Attributes | Yes
 SICF | ICF Service | Yes
 SMIM | Info Object from the MIME Repository | Yes
-SOTS | All Concepts (OTR) of a Package - Long Texts | [#792](https://github.com/larshp/abapGit/issues/792)
+SOTS | All Concepts (OTR) of a Package - Long Texts | Yes
 SPLO | Format Types | Yes
-SPRX | Proxy Object | [#87](https://github.com/larshp/abapGit/issues/87)
+SPRX | Proxy Object | Yes
+SQSC | Database Procedure Proxy | Yes
 SRFC | RFC Service | Yes
 SSFO | SAP Smart Form | Yes
 SSST | SAP Smart Style | Yes
 STYL | SAPscript style | Yes
+SUCU | Authorization Groups (TBRG_AUTH) | Yes
 SUSC | Authorization object class | Yes
+SUSH | Assignment: Service --> Authorization Objects | [#1582](https://github.com/larshp/abapGit/issues/1582)
 SUSO | Authorization object | Yes
 SXCI | Business Add-Ins - Implementations | Yes
 TABL | Table | Yes
@@ -81,6 +110,8 @@ TRAN | Transaction | Yes
 TTYP | Table Type | Yes
 TYPE | Type Group | Yes
 UCSA | Unified Connectivity Service Assembly | Yes
+UDMO | Data model | Yes
+UENO | Entity type | Yes
 VCLS | View cluster | Yes
 VIEW | View | Yes
 W3HT | Web Reporting/Internet Transaction Server HTML Templates | Yes
@@ -91,6 +122,11 @@ WDCC | Web Dynpro Component Configuration | [#78](https://github.com/larshp/abap
 WDYA | Web Dynpro Application | Yes
 WDYN | Web Dynpro Component | Yes
 WEBI | Virtual End Point | Yes
+XINX | Extension Index | Yes
 XSLT | Transformation | Yes
+
+If additional object types are required please open an [issue](https://github.com/larshp/abapGit/issues)
+
+Support for customizing planned, see [#1004](https://github.com/larshp/abapGit/issues/1004)
 
 Also see [https://github.com/larshp/abapGit-Plugins](https://github.com/larshp/abapGit-Plugins)

@@ -10,11 +10,11 @@ INTERFACE zif_abapgit_dot_abapgit PUBLIC.
     ty_requirement_tt TYPE STANDARD TABLE OF ty_requirement WITH DEFAULT KEY .
   TYPES:
     BEGIN OF ty_dot_abapgit,
-      master_language TYPE spras,
-      starting_folder TYPE string,
-      folder_logic    TYPE string,
-      ignore          TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-      requirements    TYPE ty_requirement_tt,
+      master_language              TYPE spras,
+      starting_folder              TYPE string,
+      folder_logic                 TYPE string,
+      ignore                       TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
+      requirements                 TYPE ty_requirement_tt,
     END OF ty_dot_abapgit .
 
   CONSTANTS:

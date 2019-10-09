@@ -3,6 +3,7 @@ CLASS zcl_abapgit_object_enhs_hook_d DEFINITION PUBLIC.
   PUBLIC SECTION.
     INTERFACES: zif_abapgit_object_enhs.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_hook_defifnition,
              pgmid     TYPE pgmid,
@@ -16,7 +17,10 @@ CLASS zcl_abapgit_object_enhs_hook_d DEFINITION PUBLIC.
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_enhs_hook_d IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_OBJECT_ENHS_HOOK_D IMPLEMENTATION.
+
 
   METHOD zif_abapgit_object_enhs~deserialize.
 
@@ -68,6 +72,7 @@ CLASS zcl_abapgit_object_enhs_hook_d IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD zif_abapgit_object_enhs~serialize.
 
     DATA: lo_hookdef_tool    TYPE REF TO cl_enh_tool_hook_def,
@@ -89,7 +94,7 @@ CLASS zcl_abapgit_object_enhs_hook_d IMPLEMENTATION.
         obj_type  = ls_hook_definition-obj_type
         main_type = ls_hook_definition-main_type
         main_name = ls_hook_definition-main_name
-        program   = ls_hook_definition-program       ).
+        program   = ls_hook_definition-program ).
 
     io_xml->add( ig_data = ii_enh_spot_tool->get_tool( )
                  iv_name = 'TOOL' ).
@@ -101,5 +106,4 @@ CLASS zcl_abapgit_object_enhs_hook_d IMPLEMENTATION.
                  iv_name = 'BADI_DATA' ).
 
   ENDMETHOD.
-
 ENDCLASS.

@@ -3,15 +3,14 @@ CLASS zcl_abapgit_object_shma DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
 
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
-CLASS zcl_abapgit_object_shma IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~has_changed_since.
 
-    rv_changed = abap_true.
+CLASS ZCL_ABAPGIT_OBJECT_SHMA IMPLEMENTATION.
 
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -19,82 +18,6 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~get_metadata.
-
-    rs_metadata = get_metadata( ).
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~exists.
-
-    DATA: lv_area_name TYPE shm_area_name.
-
-    SELECT SINGLE area_name
-           FROM shma_attributes
-           INTO lv_area_name
-           WHERE area_name = ms_item-obj_name.
-
-    rv_bool = boolc( sy-subrc = 0 ).
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~serialize.
-
-    DATA: lv_area_name       TYPE shm_area_name,
-          ls_area_attributes TYPE shma_attributes.
-
-    lv_area_name = ms_item-obj_name.
-
-    TRY.
-        CALL METHOD ('\PROGRAM=SAPLSHMA\CLASS=LCL_SHMA_HELPER')=>('READ_AREA_ATTRIBUTES_ALL')
-          EXPORTING
-            area_name       = lv_area_name
-          IMPORTING
-            area_attributes = ls_area_attributes.
-
-        CLEAR: ls_area_attributes-chg_user,
-               ls_area_attributes-chg_date,
-               ls_area_attributes-chg_time,
-               ls_area_attributes-cls_gen_user,
-               ls_area_attributes-cls_gen_date,
-               ls_area_attributes-cls_gen_time.
-
-        io_xml->add( iv_name = 'AREA_ATTRIBUTES'
-                     ig_data = ls_area_attributes ).
-
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( |Error serializing SHMA { ms_item-obj_name }| ).
-    ENDTRY.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~deserialize.
-
-    DATA: lv_area_name       TYPE shm_area_name,
-          ls_area_attributes TYPE shma_attributes.
-
-    lv_area_name = ms_item-obj_name.
-
-    io_xml->read(
-      EXPORTING
-        iv_name = 'AREA_ATTRIBUTES'
-      CHANGING
-        cg_data = ls_area_attributes ).
-
-    TRY.
-        CALL METHOD ('\PROGRAM=SAPLSHMA\CLASS=LCL_SHMA_HELPER')=>('INSERT_AREA')
-          EXPORTING
-            area_name           = lv_area_name
-            attributes          = ls_area_attributes
-            force_overwrite     = abap_true
-            no_class_generation = abap_true
-            silent_mode         = abap_true.
-
-      CATCH cx_root.
-        zcx_abapgit_exception=>raise( |Error serializing SHMA { ms_item-obj_name }| ).
-    ENDTRY.
-
-  ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
 
@@ -224,6 +147,79 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_object~deserialize.
+
+    DATA: lv_area_name       TYPE shm_area_name,
+          ls_area_attributes TYPE shma_attributes.
+
+    lv_area_name = ms_item-obj_name.
+
+    io_xml->read(
+      EXPORTING
+        iv_name = 'AREA_ATTRIBUTES'
+      CHANGING
+        cg_data = ls_area_attributes ).
+
+    tadir_insert( iv_package ).
+
+    TRY.
+        CALL METHOD ('\PROGRAM=SAPLSHMA\CLASS=LCL_SHMA_HELPER')=>('INSERT_AREA')
+          EXPORTING
+            area_name           = lv_area_name
+            attributes          = ls_area_attributes
+            force_overwrite     = abap_true
+            no_class_generation = abap_true
+            silent_mode         = abap_true.
+
+      CATCH cx_root.
+        zcx_abapgit_exception=>raise( |Error serializing SHMA { ms_item-obj_name }| ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~exists.
+
+    DATA: lv_area_name TYPE shm_area_name.
+
+    SELECT SINGLE area_name
+           FROM shma_attributes
+           INTO lv_area_name
+           WHERE area_name = ms_item-obj_name.
+
+    rv_bool = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_metadata.
+
+    rs_metadata = get_metadata( ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~jump.
 
     DATA: ls_bcdata TYPE bdcdata,
@@ -260,10 +256,34 @@ CLASS zcl_abapgit_object_shma IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
 
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
+  METHOD zif_abapgit_object~serialize.
+
+    DATA: lv_area_name       TYPE shm_area_name,
+          ls_area_attributes TYPE shma_attributes.
+
+    lv_area_name = ms_item-obj_name.
+
+    TRY.
+        CALL METHOD ('\PROGRAM=SAPLSHMA\CLASS=LCL_SHMA_HELPER')=>('READ_AREA_ATTRIBUTES_ALL')
+          EXPORTING
+            area_name       = lv_area_name
+          IMPORTING
+            area_attributes = ls_area_attributes.
+
+        CLEAR: ls_area_attributes-chg_user,
+               ls_area_attributes-chg_date,
+               ls_area_attributes-chg_time,
+               ls_area_attributes-cls_gen_user,
+               ls_area_attributes-cls_gen_date,
+               ls_area_attributes-cls_gen_time.
+
+        io_xml->add( iv_name = 'AREA_ATTRIBUTES'
+                     ig_data = ls_area_attributes ).
+
+      CATCH cx_root.
+        zcx_abapgit_exception=>raise( |Error serializing SHMA { ms_item-obj_name }| ).
+    ENDTRY.
 
   ENDMETHOD.
-
 ENDCLASS.

@@ -1,0 +1,112 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_FUGR" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <AREAT>abapGit - Parallel Processing</AREAT>
+   <INCLUDES>
+    <SOBJ_NAME>LZABAPGIT_PARALLELTOP</SOBJ_NAME>
+    <SOBJ_NAME>SAPLZABAPGIT_PARALLEL</SOBJ_NAME>
+   </INCLUDES>
+   <FUNCTIONS>
+    <item>
+     <FUNCNAME>Z_ABAPGIT_SERIALIZE_PARALLEL</FUNCNAME>
+     <REMOTE_CALL>R</REMOTE_CALL>
+     <SHORT_TEXT>Serialize object</SHORT_TEXT>
+     <IMPORT>
+      <RSIMP>
+       <PARAMETER>IV_OBJ_TYPE</PARAMETER>
+       <TYP>TADIR-OBJECT</TYP>
+      </RSIMP>
+      <RSIMP>
+       <PARAMETER>IV_OBJ_NAME</PARAMETER>
+       <TYP>TADIR-OBJ_NAME</TYP>
+      </RSIMP>
+      <RSIMP>
+       <PARAMETER>IV_DEVCLASS</PARAMETER>
+       <TYP>TADIR-DEVCLASS</TYP>
+      </RSIMP>
+      <RSIMP>
+       <PARAMETER>IV_LANGUAGE</PARAMETER>
+       <TYP>SY-LANGU</TYP>
+      </RSIMP>
+      <RSIMP>
+       <PARAMETER>IV_PATH</PARAMETER>
+       <TYP>STRING</TYP>
+      </RSIMP>
+      <RSIMP>
+       <PARAMETER>IV_SERIALIZE_MASTER_LANG_ONLY</PARAMETER>
+       <TYP>CHAR1</TYP>
+      </RSIMP>
+     </IMPORT>
+     <EXPORT>
+      <RSEXP>
+       <PARAMETER>EV_RESULT</PARAMETER>
+       <TYP>XSTRING</TYP>
+      </RSEXP>
+      <RSEXP>
+       <PARAMETER>EV_PATH</PARAMETER>
+       <TYP>STRING</TYP>
+      </RSEXP>
+     </EXPORT>
+     <EXCEPTION>
+      <RSEXC>
+       <EXCEPTION>ERROR</EXCEPTION>
+      </RSEXC>
+     </EXCEPTION>
+     <DOCUMENTATION>
+      <RSFDO>
+       <PARAMETER>IV_OBJ_TYPE</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>Object Type</STEXT>
+       <INDEX> 001</INDEX>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IV_OBJ_NAME</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>Object Name in Object Directory</STEXT>
+       <INDEX> 002</INDEX>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IV_DEVCLASS</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>Package</STEXT>
+       <INDEX> 003</INDEX>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IV_LANGUAGE</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>ABAP System Field: Language Key of Text Environment</STEXT>
+       <INDEX> 004</INDEX>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IV_PATH</PARAMETER>
+       <KIND>P</KIND>
+       <INDEX> 005</INDEX>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IV_SERIALIZE_MASTER_LANG_ONLY</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>Single-Character Indicator</STEXT>
+       <INDEX> 006</INDEX>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>EV_RESULT</PARAMETER>
+       <KIND>P</KIND>
+       <INDEX> 007</INDEX>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>EV_PATH</PARAMETER>
+       <KIND>P</KIND>
+       <INDEX> 008</INDEX>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>ERROR</PARAMETER>
+       <KIND>X</KIND>
+       <INDEX> 009</INDEX>
+      </RSFDO>
+     </DOCUMENTATION>
+    </item>
+   </FUNCTIONS>
+  </asx:values>
+ </asx:abap>
+</abapGit>

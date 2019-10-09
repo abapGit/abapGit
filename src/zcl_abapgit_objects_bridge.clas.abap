@@ -11,6 +11,7 @@ CLASS zcl_abapgit_objects_bridge DEFINITION PUBLIC FINAL CREATE PUBLIC INHERITIN
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: mo_plugin TYPE REF TO object.
 
@@ -87,7 +88,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP. "at plugins
 
-  ENDMETHOD.                    "class_constructor
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -95,7 +96,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
     DATA ls_objtype_map LIKE LINE OF gt_objtype_map.
 
     super->constructor( is_item = is_item
-                        iv_language = zif_abapgit_definitions=>gc_english ).
+                        iv_language = zif_abapgit_definitions=>c_english ).
 
 *    determine the responsible plugin
     READ TABLE gt_objtype_map INTO ls_objtype_map
@@ -112,16 +113,11 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
         EXPORTING
           classname = 'LCL_OBJECTS_BRIDGE'.
     ENDIF.
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
 
 
@@ -134,7 +130,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
         zcx_abapgit_exception=>raise( lx_plugin->get_text( ) ).
     ENDTRY.
 
-  ENDMETHOD.                    "lif_object~delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -149,7 +145,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
       CATCH cx_static_check INTO lx_plugin.
         zcx_abapgit_exception=>raise( lx_plugin->get_text( ) ).
     ENDTRY.
-  ENDMETHOD.                    "lif_object~deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -158,7 +154,29 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
       RECEIVING
         rv_bool = rv_bool.
 
-  ENDMETHOD.                    "lif_object~exists
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+
+    DATA: ls_meta TYPE zif_abapgit_definitions=>ty_metadata.
+
+    ls_meta = zif_abapgit_object~get_metadata( ).
+
+    IF ls_meta-late_deser = abap_true.
+      APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
+    ELSEIF ls_meta-ddic = abap_true.
+      APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    ELSE.
+      APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
@@ -167,19 +185,26 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
       RECEIVING
         rs_metadata = rs_metadata.
 
-  ENDMETHOD.                    "lif_object~get_metadata
+  ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "lif_object~has_changed_since
+  METHOD zif_abapgit_object~is_active.
+    rv_active = abap_true.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~jump.
 
     CALL METHOD mo_plugin->('ZIF_ABAPGITP_PLUGIN~JUMP').
 
-  ENDMETHOD.                    "lif_object~jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -188,5 +213,5 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
       EXPORTING
         io_xml = io_xml.
 
-  ENDMETHOD.                    "lif_object~serialize
+  ENDMETHOD.
 ENDCLASS.

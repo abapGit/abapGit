@@ -36,7 +36,7 @@ CLASS ZCL_ABAPGIT_GIT_UTILS IMPLEMENTATION.
     lv_z = <lv_y>.
     rv_c = lv_z(1).
 
-  ENDMETHOD.                    "get_null
+  ENDMETHOD.
 
 
   METHOD length_utf8_hex.
@@ -69,7 +69,7 @@ CLASS ZCL_ABAPGIT_GIT_UTILS IMPLEMENTATION.
     lv_x = lv_char4.
     rv_len = lv_x.
 
-  ENDMETHOD.                    "length_utf8_hex
+  ENDMETHOD.
 
 
   METHOD pkt_string.
@@ -88,5 +88,5 @@ CLASS ZCL_ABAPGIT_GIT_UTILS IMPLEMENTATION.
 
     rv_pkt = rv_pkt && '00' && lv_x && iv_string.
 
-  ENDMETHOD.                    "pkt_string
+  ENDMETHOD.
 ENDCLASS.

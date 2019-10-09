@@ -5,6 +5,7 @@ CLASS zcl_abapgit_gui_page_debuginfo DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     METHODS constructor .
   PROTECTED SECTION.
@@ -29,7 +30,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     ms_control-page_title = 'DEBUG INFO'.
-  ENDMETHOD.  " constructor.
+  ENDMETHOD.
 
 
   METHOD render_content.
@@ -41,7 +42,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
     ro_html->add( render_supported_object_types( ) ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD render_debug_info.
@@ -61,51 +62,48 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( |<p>abapGit version: { zif_abapgit_definitions=>gc_abap_version }</p>| ).
-    ro_html->add( |<p>XML version:     { zif_abapgit_definitions=>gc_xml_version }</p>| ).
+    ro_html->add( |<p>abapGit version: { zif_abapgit_version=>gc_abap_version }</p>| ).
+    ro_html->add( |<p>XML version:     { zif_abapgit_version=>gc_xml_version }</p>| ).
     ro_html->add( |<p>GUI version:     { lv_gui_version }</p>| ).
     ro_html->add( |<p>LCL_TIME:        { zcl_abapgit_time=>get( ) }</p>| ).
     ro_html->add( |<p>SY time:         { sy-datum } { sy-uzeit } { sy-tzone }</p>| ).
 
-  ENDMETHOD. "render_debug_info
+  ENDMETHOD.
 
 
   METHOD render_supported_object_types.
 
-    DATA: lt_objects TYPE STANDARD TABLE OF ko100,
-          lv_list    TYPE string,
-          ls_item    TYPE zif_abapgit_definitions=>ty_item.
+    DATA: lv_list  TYPE string,
+          lt_types TYPE zcl_abapgit_objects=>ty_types_tt,
+          lv_type  LIKE LINE OF lt_types.
 
-    FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
 
-    CALL FUNCTION 'TR_OBJECT_TABLE'
-      TABLES
-        wt_object_text = lt_objects
-      EXCEPTIONS
-        OTHERS         = 1 ##FM_SUBRC_OK.
+    lt_types = zcl_abapgit_objects=>supported_list( ).
 
-    LOOP AT lt_objects ASSIGNING <ls_object> WHERE pgmid = 'R3TR'.
-      ls_item-obj_type = <ls_object>-object.
-      IF zcl_abapgit_objects=>is_supported( is_item = ls_item iv_native_only = abap_true ) = abap_true.
-        IF lv_list IS INITIAL.
-          lv_list = ls_item-obj_type.
-        ELSE.
-          lv_list = lv_list && `, ` && ls_item-obj_type.
-        ENDIF.
+    LOOP AT lt_types INTO lv_type.
+      IF lv_list IS INITIAL.
+        lv_list = lv_type.
+      ELSE.
+        lv_list = lv_list && `, ` && lv_type.
       ENDIF.
     ENDLOOP.
 
     rv_html = |<p>Supported objects: { lv_list }</p>|.
 
-  ENDMETHOD.  " render_supported_object_types
+  ENDMETHOD.
 
 
   METHOD scripts.
 
-    CREATE OBJECT ro_html.
+    ro_html = super->scripts( ).
 
     ro_html->add( 'debugOutput("Browser: " + navigator.userAgent + ' &&
       '"<br>Frontend time: " + new Date(), "debug_info");' ).
 
-  ENDMETHOD.  "scripts
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+  ENDMETHOD.
 ENDCLASS.

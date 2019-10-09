@@ -7,7 +7,7 @@ CLASS zcl_abapgit_transport_objects DEFINITION
 
     METHODS constructor
       IMPORTING
-        !it_transport_objects TYPE scts_tadir .
+        !it_transport_objects TYPE zif_abapgit_definitions=>ty_tadir_tt .
     METHODS to_stage
       IMPORTING
         !io_stage           TYPE REF TO zcl_abapgit_stage
@@ -15,9 +15,10 @@ CLASS zcl_abapgit_transport_objects DEFINITION
         !it_object_statuses TYPE zif_abapgit_definitions=>ty_results_tt
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
-    DATA mt_transport_objects TYPE scts_tadir.
 
+    DATA mt_transport_objects TYPE zif_abapgit_definitions=>ty_tadir_tt .
 ENDCLASS.
 
 
@@ -31,7 +32,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT_OBJECTS IMPLEMENTATION.
 
 
   METHOD to_stage.
-    DATA: ls_transport_object TYPE tadir,
+    DATA: ls_transport_object LIKE LINE OF mt_transport_objects,
           ls_local_file       TYPE zif_abapgit_definitions=>ty_file_item,
           ls_object_status    TYPE zif_abapgit_definitions=>ty_result.
 
@@ -42,10 +43,10 @@ CLASS ZCL_ABAPGIT_TRANSPORT_OBJECTS IMPLEMENTATION.
           AND NOT lstate IS INITIAL.
 
         CASE ls_object_status-lstate.
-          WHEN zif_abapgit_definitions=>gc_state-added OR zif_abapgit_definitions=>gc_state-modified.
+          WHEN zif_abapgit_definitions=>c_state-added OR zif_abapgit_definitions=>c_state-modified.
             IF ls_transport_object-delflag = abap_true.
               zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
-              } should be added/modified, but has deletion flag in transport| ).
+                } should be added/modified, but has deletion flag in transport| ).
             ENDIF.
 
             READ TABLE is_stage_objects-local
@@ -55,17 +56,18 @@ CLASS ZCL_ABAPGIT_TRANSPORT_OBJECTS IMPLEMENTATION.
                        file-filename = ls_object_status-filename.
             IF sy-subrc <> 0.
               zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
-              } not found in the local repository files| ).
+                } not found in the local repository files| ).
+            ELSE.
+              io_stage->add(
+                iv_path     = ls_local_file-file-path
+                iv_filename = ls_local_file-file-filename
+                iv_data     = ls_local_file-file-data ).
             ENDIF.
-
-            io_stage->add(
-              iv_path     = ls_local_file-file-path
-              iv_filename = ls_local_file-file-filename
-              iv_data     = ls_local_file-file-data ).
-          WHEN zif_abapgit_definitions=>gc_state-deleted.
-            IF ls_transport_object-delflag = abap_false.
+          WHEN zif_abapgit_definitions=>c_state-deleted.
+* SUSC, see https://github.com/larshp/abapGit/issues/2772
+            IF ls_transport_object-delflag = abap_false AND ls_transport_object-object <> 'SUSC'.
               zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
-              } should be removed, but has NO deletion flag in transport| ).
+                } should be removed, but has NO deletion flag in transport| ).
             ENDIF.
             io_stage->rm(
               iv_path     = ls_object_status-path
@@ -75,8 +77,9 @@ CLASS ZCL_ABAPGIT_TRANSPORT_OBJECTS IMPLEMENTATION.
         ENDCASE.
       ENDLOOP.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
-        } not found in the local repository files| ).
+        " Since not all objects in a transport might be in the local repo
+        " i.e generated SADL objects, we don't add these objects to
+        " the stage.
       ENDIF.
     ENDLOOP.
   ENDMETHOD.

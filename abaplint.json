@@ -1,0 +1,255 @@
+{
+  "global": {
+    "files": "/src/**/*.*",
+    "skipGeneratedGatewayClasses": true,
+    "skipGeneratedPersistentClasses": true,
+    "skipGeneratedFunctionGroups": true,
+    "applyUnspecifiedRules": false
+  },
+  "dependencies": [
+    {
+      "url": "https://github.com/abaplint/deps",
+      "folder": "/deps",
+      "files": "/src/**/*.*"
+    }
+  ],
+  "syntax": {
+    "version": "v702",
+    "errorNamespace": "^(Z|Y)",
+    "globalConstants": [
+      "abap_func_exporting",
+      "abap_func_tables",
+      "cssf_formtype_text",
+      "seoc_category_exception",
+      "seoc_category_webdynpro_class",
+      "seoc_exposure_private",
+      "seoc_exposure_protected",
+      "seoc_exposure_public",
+      "seoc_exposure_public",
+      "seoc_version_active",
+      "seoc_version_inactive",
+      "seok_access_free",
+      "seok_access_modify",
+      "seok_pgmid_r3tr",
+      "seop_ext_class_locals_def",
+      "seop_ext_class_locals_imp",
+      "seop_ext_class_macros",
+      "seop_ext_class_testclasses",
+      "sews_c_vif_version",
+      "skwfc_obtype_folder",
+      "skwfc_obtype_loio",
+      "so2_controller",
+      "ststc_c_type_dialog",
+      "ststc_c_type_object",
+      "ststc_c_type_parameters",
+      "ststc_c_type_report",
+      "swbm_c_op_delete_no_dialog",
+      "swbm_c_type_ddic_db_tabxinx",
+      "swbm_c_type_wdy_application",
+      "swbm_version_active",
+      "swbm_version_inactive",
+      "wbmr_c_skwf_folder_class",
+      "wdyn_limu_component_controller",
+      "wdyn_limu_component_definition",
+      "wdyn_limu_component_view"
+    ],
+    "globalMacros": []
+  },
+  "rules": {
+    "7bit_ascii": {},
+    "allowed_object_types": {
+      "allowed": [
+        "PROG",
+        "CLAS",
+        "INTF",
+        "FUGR",
+        "DEVC",
+        "TRAN",
+        "W3MI"
+      ]
+    },
+    "ambiguous_statement": {},
+    "avoid_use": {
+      "define": false,
+      "endselect": true,
+      "execSQL": true,
+      "kernelCall": true,
+      "communication": true,
+      "statics": true
+    },
+    "begin_end_names": {},
+    "breakpoint": {},
+    "check_transformation_exists": {},
+    "check_variables": {},
+    "class_attribute_names": {
+      "ignoreExceptions": true,
+      "statics": "^G._.*$",
+      "instance": "^M._.*$"
+    },
+    "cloud_types": {},
+    "colon_missing_space": {},
+    "commented_code": {},
+    "constructor_visibility_public": {},
+    "contains_tab": {},
+    "definitions_top": {},
+    "description_empty": {},
+    "double_space": {
+      "enabled": false,
+      "keywords": true,
+      "startParen": true,
+      "endParen": true
+    },
+    "empty_line_in_statement": {
+      "allowChained": true
+    },
+    "empty_statement": {},
+    "empty_structure": {
+      "loop": true,
+      "if": false,
+      "while": true,
+      "case": true,
+      "select": true,
+      "do": true,
+      "at": true
+    },
+    "exit_or_check": {},
+    "exporting": {},
+    "form_tables_obsolete": {
+      "enabled": false
+    },
+    "functional_writing": {
+      "ignoreExceptions": true
+    },
+    "global_class": {},
+    "identical_form_names": {},
+    "if_in_if": {},
+    "implement_methods": {},
+    "in_statement_indentation": {
+      "enabled": false,
+      "ignoreExceptions": true
+    },
+    "indentation": {
+      "ignoreExceptions": true,
+      "alignTryCatch": false,
+      "globalClassSkipFirst": false,
+      "ignoreGlobalClassDefinition": false,
+      "ignoreGlobalInterface": false
+    },
+    "inline_data_old_versions": {},
+    "keywords_upper": {
+      "ignoreExceptions": true,
+      "ignoreLowerClassImplmentationStatement": true,
+      "ignoreGlobalClassDefinition": false,
+      "ignoreGlobalInterface": false,
+      "ignoreFunctionModuleName": false
+    },
+    "line_length": {
+      "length": 120
+    },
+    "line_only_punc": {
+      "ignoreExceptions": true
+    },
+    "local_class_naming": {
+      "local": "^LCL_.*$",
+      "test": "^LTCL_.*$"
+    },
+    "local_testclass_location": {},
+    "local_variable_names": {
+      "expectedData": "^L._.*$",
+      "expectedConstant": "^LC_.*$",
+      "expectedFS": "^<L._.*>$"
+    },
+    "main_file_contents": {},
+    "max_one_statement": {},
+    "message_exists": {
+      "enabled": false
+    },
+    "method_length": {
+      "statements": 100
+    },
+    "method_parameter_names": {
+      "ignoreExceptions": true,
+      "importing": "^I._.*$",
+      "returning": "^R._.*$",
+      "changing": "^C._.*$",
+      "exporting": "^E._.*$",
+      "ignoreNames": [
+        "P_TASK"
+      ]
+    },
+    "mix_returning": {},
+    "msag_consistency": {},
+    "nesting": {
+      "depth": 5
+    },
+    "no_public_attributes": {},
+    "object_naming": {
+      "clas": "^ZC(L|X)\\_ABAPGIT\\_",
+      "intf": "^ZIF\\_ABAPGIT\\_",
+      "prog": "^ZABAPGIT",
+      "fugr": "^ZABAPGIT",
+      "tabl": "^Z",
+      "ttyp": "^Z",
+      "dtel": "^Z",
+      "doma": "^Z",
+      "msag": "^Z",
+      "tran": "^Z",
+      "enqu": "^EZ",
+      "auth": "^Z",
+      "pinf": "^Z",
+      "idoc": "^Z"
+    },
+    "obsolete_statement": {
+      "refresh": true,
+      "compute": true,
+      "add": true,
+      "subtract": true,
+      "multiply": true,
+      "move": true,
+      "divide": true,
+      "requested": true
+    },
+    "parser_error": {},
+    "preferred_compare_operator": {
+      "badOperators": [
+        "EQ",
+        "><",
+        "NE",
+        "GE",
+        "GT",
+        "LT",
+        "LE"
+      ]
+    },
+    "release_idoc": true,
+    "remove_descriptions": {
+      "ignoreExceptions": false
+    },
+    "rfc_error_handling": false,
+    "sequential_blank": {
+      "lines": 4
+    },
+    "short_case": {
+      "length": 1,
+      "allow": [
+        "iv_action",
+        "sy"
+      ]
+    },
+    "space_before_colon": {},
+    "space_before_dot": {
+      "ignoreGlobalDefinition": true,
+      "ignoreExceptions": true
+    },
+    "start_at_tab": {},
+    "superclass_final": {},
+    "tabl_enhancement_category": {},
+    "type_form_parameters": {
+      "enabled": false
+    },
+    "unreachable_code": {},
+    "use_new": {},
+    "when_others_last": {},
+    "whitespace_end": {}
+  }
+}

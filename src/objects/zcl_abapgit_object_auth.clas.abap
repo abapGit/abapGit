@@ -3,6 +3,13 @@ CLASS zcl_abapgit_object_auth DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
+    METHODS constructor
+      IMPORTING
+        is_item     TYPE zif_abapgit_definitions=>ty_item
+        iv_language TYPE spras.
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+    DATA: mv_fieldname TYPE authx-fieldname.
 
 ENDCLASS.
 
@@ -11,40 +18,63 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_OBJECT_AUTH IMPLEMENTATION.
 
 
+  METHOD constructor.
+
+    super->constructor( is_item     = is_item
+                        iv_language = iv_language ).
+
+    mv_fieldname = ms_item-obj_name.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~changed_by.
 * looks like "changed by user" is not stored in the database
     rv_user = c_user_unknown.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_fieldname TYPE authx-fieldname.
+    " there is a bug in SAP standard, the TADIR entries are not deleted
+    " when the AUTH object is deleted in transaction SU20
 
+    " FM SUSR_AUTF_DELETE_FIELD calls the UI, therefore we reimplement its logic
 
-    lv_fieldname = ms_item-obj_name.
+    DATA:
+      lt_objlst TYPE susr_t_xuobject,
+      lo_auth   TYPE REF TO cl_auth_tools,
+      lv_dummy  TYPE string.
 
-* there is a bug in SAP standard, the TADIR entries are not deleted
-* when the AUTH object is deleted in transaction SU20
-    CALL FUNCTION 'SUSR_AUTF_DELETE_FIELD'
-      EXPORTING
-        fieldname           = lv_fieldname
-      EXCEPTIONS
-        delete_not_possible = 1
-        field_in_use        = 2
-        not_existing        = 3
-        no_authority        = 4
-        OTHERS              = 5.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from SUSR_AUTF_DELETE_FIELD' ).
+    " authority check
+    CREATE OBJECT lo_auth.
+    IF lo_auth->authority_check_suso( actvt     = '06'
+                                      fieldname = mv_fieldname ) <> 0.
+      MESSAGE e463(01) WITH mv_fieldname INTO lv_dummy.
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-  ENDMETHOD.                    "zif_abapgit_object~delete
+    " if field is used check
+    lt_objlst = lo_auth->suso_where_used_afield( mv_fieldname ).
+    IF lt_objlst IS NOT INITIAL.
+      MESSAGE i453(01) WITH mv_fieldname INTO lv_dummy.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    " collect fieldname into a transport task
+    IF lo_auth->add_afield_to_trkorr( mv_fieldname ) <> 0.
+      "no transport -> no deletion
+      MESSAGE e507(0m) INTO lv_dummy.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    DELETE FROM authx WHERE fieldname = mv_fieldname.
+    IF sy-subrc <> 0.
+      MESSAGE e507(0m) INTO lv_dummy.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -56,6 +86,8 @@ CLASS ZCL_ABAPGIT_OBJECT_AUTH IMPLEMENTATION.
 
     io_xml->read( EXPORTING iv_name = 'AUTHX'
                   CHANGING cg_data = ls_authx ).
+
+    tadir_insert( iv_package ).
 
     CREATE OBJECT lo_auth.
 
@@ -71,45 +103,60 @@ CLASS ZCL_ABAPGIT_OBJECT_AUTH IMPLEMENTATION.
     CALL FUNCTION 'DB_COMMIT'.
     lo_auth->set_authfld_info_from_db( ls_authx-fieldname ).
 
-  ENDMETHOD.                    "zif_abapgit_object~deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lv_fieldname TYPE authx-fieldname.
-
-
     SELECT SINGLE fieldname FROM authx
-      INTO lv_fieldname
+      INTO mv_fieldname
       WHERE fieldname = ms_item-obj_name.               "#EC CI_GENBUFF
     rv_bool = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+    rs_metadata-delete_tadir = abap_true.
+  ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~jump.
-
-    DATA: lv_field TYPE fieldname.
-
-    lv_field = ms_item-obj_name.
-
-* TODO, this function module does not exist in 702
-    CALL FUNCTION 'SU20_MAINTAIN_SNGL'
+    CALL FUNCTION 'FUNCTION_EXISTS'
       EXPORTING
-        id_field    = lv_field
-        id_wbo_mode = abap_false.
-
-  ENDMETHOD.                    "zif_abapgit_object~jump
+        funcname           = 'SU20_MAINTAIN_SNGL'
+      EXCEPTIONS
+        function_not_exist = 1
+        OTHERS             = 2.
+    IF sy-subrc = 0.
+      " this function module does not exist in 740
+      CALL FUNCTION 'SU20_MAINTAIN_SNGL'
+        EXPORTING
+          id_field    = mv_fieldname
+          id_wbo_mode = abap_false.
+    ENDIF.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -126,5 +173,5 @@ CLASS ZCL_ABAPGIT_OBJECT_AUTH IMPLEMENTATION.
     io_xml->add( iv_name = 'AUTHX'
                  ig_data = ls_authx ).
 
-  ENDMETHOD.                    "zif_abapgit_object~serialize
+  ENDMETHOD.
 ENDCLASS.

@@ -16,9 +16,9 @@ CLASS zcl_abapgit_news DEFINITION
     TYPES:
       tt_log TYPE STANDARD TABLE OF ty_log WITH DEFAULT KEY .
 
-    CONSTANTS c_tail_length TYPE i VALUE 5 ##NO_TEXT. " Number of versions to display if no updates
+    CONSTANTS c_tail_length TYPE i VALUE 5 ##NO_TEXT.     " Number of versions to display if no updates
 
-    CLASS-METHODS create " TODO REFACTOR
+    CLASS-METHODS create     " TODO REFACTOR
       IMPORTING
         !io_repo           TYPE REF TO zcl_abapgit_repo
       RETURNING
@@ -28,9 +28,6 @@ CLASS zcl_abapgit_news DEFINITION
     METHODS get_log
       RETURNING
         VALUE(rt_log) TYPE tt_log .
-    METHODS latest_version
-      RETURNING
-        VALUE(rv_version) TYPE string .
     METHODS has_news
       RETURNING
         VALUE(rv_boolean) TYPE abap_bool .
@@ -43,38 +40,55 @@ CLASS zcl_abapgit_news DEFINITION
     METHODS has_unseen
       RETURNING
         VALUE(rv_boolean) TYPE abap_bool .
+    METHODS constructor
+      IMPORTING
+        !iv_rawdata          TYPE xstring
+        !iv_lastseen_version TYPE string
+        !iv_current_version  TYPE string .
+  PROTECTED SECTION.
   PRIVATE SECTION.
-    DATA: mt_log              TYPE tt_log,
-          mv_current_version  TYPE string,
-          mv_lastseen_version TYPE string,
-          mv_latest_version   TYPE string.
 
-    METHODS:
-      constructor
-        IMPORTING iv_rawdata          TYPE xstring
-                  iv_lastseen_version TYPE string
-                  iv_current_version  TYPE string.
+    DATA mt_log TYPE tt_log .
+    DATA mv_current_version TYPE string .
+    DATA mv_lastseen_version TYPE string .
+    DATA mv_latest_version TYPE string .
 
-    CLASS-METHODS:
-      version_to_numeric
-        IMPORTING iv_version        TYPE string
-        RETURNING VALUE(rv_version) TYPE i,
-      normalize_version
-        IMPORTING iv_version        TYPE string
-        RETURNING VALUE(rv_version) TYPE string,
-      compare_versions
-        IMPORTING iv_a             TYPE string
-                  iv_b             TYPE string
-        RETURNING VALUE(rv_result) TYPE i,
-      parse_line
-        IMPORTING iv_line            TYPE string
-                  iv_current_version TYPE string
-        RETURNING VALUE(rs_log)      TYPE ty_log,
-      parse
-        IMPORTING it_lines           TYPE string_table
-                  iv_current_version TYPE string
-        RETURNING VALUE(rt_log)      TYPE tt_log.
-
+    CLASS-METHODS is_relevant
+      IMPORTING
+        !iv_url            TYPE string
+      RETURNING
+        VALUE(rv_relevant) TYPE abap_bool .
+    METHODS latest_version
+      RETURNING
+        VALUE(rv_version) TYPE string .
+    CLASS-METHODS version_to_numeric
+      IMPORTING
+        !iv_version       TYPE string
+      RETURNING
+        VALUE(rv_version) TYPE i .
+    CLASS-METHODS normalize_version
+      IMPORTING
+        !iv_version       TYPE string
+      RETURNING
+        VALUE(rv_version) TYPE string .
+    CLASS-METHODS compare_versions
+      IMPORTING
+        !iv_a            TYPE string
+        !iv_b            TYPE string
+      RETURNING
+        VALUE(rv_result) TYPE i .
+    CLASS-METHODS parse_line
+      IMPORTING
+        !iv_line            TYPE string
+        !iv_current_version TYPE string
+      RETURNING
+        VALUE(rs_log)       TYPE ty_log .
+    CLASS-METHODS parse
+      IMPORTING
+        !it_lines           TYPE string_table
+        !iv_current_version TYPE string
+      RETURNING
+        VALUE(rt_log)       TYPE tt_log .
 ENDCLASS.
 
 
@@ -100,7 +114,7 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
       rv_result = 0.
     ENDIF.
 
-  ENDMETHOD.                    "compare_versions
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -123,7 +137,7 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
     READ TABLE mt_log INTO ls_log_line INDEX 1.
     mv_latest_version = ls_log_line-version. " Empty if not found
 
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
 
   METHOD create.
@@ -148,8 +162,7 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
     lo_repo_online ?= io_repo.
     lv_url          = lo_repo_online->get_url( ).
 
-    " News announcement temporary restricted to abapGit only
-    IF lv_url NS '/abapGit.git'. " TODO refactor
+    IF is_relevant( lv_url ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -164,57 +177,66 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
 
     READ TABLE lt_remote ASSIGNING <ls_file>
       WITH KEY path = lc_log_path filename = lc_log_filename.
-
     IF sy-subrc = 0.
       CREATE OBJECT ro_instance
         EXPORTING
           iv_rawdata          = <ls_file>-data
-          iv_current_version  = zif_abapgit_definitions=>gc_abap_version " TODO refactor
+          iv_current_version  = zif_abapgit_version=>gc_abap_version " TODO refactor
           iv_lastseen_version = normalize_version( lv_last_seen ).
     ENDIF.
 
-    IF ro_instance IS BOUND.
+    IF ro_instance IS BOUND AND lv_last_seen <> ro_instance->latest_version( ).
       zcl_abapgit_persistence_user=>get_instance( )->set_repo_last_change_seen(
         iv_url     = lv_url
         iv_version = ro_instance->latest_version( ) ).
     ENDIF.
 
-  ENDMETHOD.                    "create
+  ENDMETHOD.
 
 
   METHOD get_log.
     rt_log = me->mt_log.
-  ENDMETHOD.                    "get_log
+  ENDMETHOD.
 
 
   METHOD has_important.
     READ TABLE mt_log WITH KEY is_important = abap_true TRANSPORTING NO FIELDS.
     rv_boolean = boolc( sy-subrc IS INITIAL ).
-  ENDMETHOD.                    "has_important_news
+  ENDMETHOD.
 
 
   METHOD has_news.
     rv_boolean = boolc( lines( mt_log ) > 0 ).
-  ENDMETHOD.                    "has_news
+  ENDMETHOD.
 
 
   METHOD has_unseen.
     rv_boolean = boolc( compare_versions(
       iv_a = mv_latest_version
       iv_b = mv_lastseen_version ) > 0 ).
-  ENDMETHOD.                    "has_unseen
+  ENDMETHOD.
 
 
   METHOD has_updates.
     rv_boolean = boolc( compare_versions(
       iv_a = mv_latest_version
       iv_b = mv_current_version ) > 0 ).
-  ENDMETHOD.                    "has_updates
+  ENDMETHOD.
+
+
+  METHOD is_relevant.
+
+    " News announcement restricted to abapGit only
+    IF iv_url CS '/abapGit' OR iv_url CS '/abapGit.git'.
+      rv_relevant = abap_true.
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD latest_version.
     rv_version = me->mv_latest_version.
-  ENDMETHOD.                    "latest_version
+  ENDMETHOD.
 
 
   METHOD normalize_version.
@@ -225,7 +247,7 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
     FIND FIRST OCCURRENCE OF REGEX lc_version_pattern
       IN iv_version SUBMATCHES rv_version.
 
-  ENDMETHOD.                    "normalize_version
+  ENDMETHOD.
 
 
   METHOD parse.
@@ -269,7 +291,7 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
       APPEND ls_log TO rt_log.
     ENDLOOP.
 
-  ENDMETHOD.                    "parse
+  ENDMETHOD.
 
 
   METHOD parse_line.
@@ -297,19 +319,19 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
 
     rs_log-text = iv_line.
 
-  ENDMETHOD.                    "parse_line
+  ENDMETHOD.
 
 
   METHOD version_to_numeric.
 
-    DATA: lv_major   TYPE numc4,
-          lv_minor   TYPE numc4,
-          lv_release TYPE numc4.
+    DATA: lv_major   TYPE n LENGTH 4,
+          lv_minor   TYPE n LENGTH 4,
+          lv_release TYPE n LENGTH 4.
 
     SPLIT iv_version AT '.' INTO lv_major lv_minor lv_release.
 
     " Calculated value of version number, empty version will become 0 which is OK
     rv_version = lv_major * 1000000 + lv_minor * 1000 + lv_release.
 
-  ENDMETHOD.                    "convert_version_to_numeric
+  ENDMETHOD.
 ENDCLASS.

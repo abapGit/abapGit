@@ -30,9 +30,12 @@ CLASS ltcl_syntax_cases DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS
       test_xml_02  FOR TESTING,
       test_xml_03  FOR TESTING,
       test_xml_04  FOR TESTING,
-      test_xml_05  FOR TESTING.
+      test_xml_05  FOR TESTING,
+      test_xml_06  FOR TESTING,
+      test_xml_07  FOR TESTING,
+      test_xml_08  FOR TESTING.
 
-ENDCLASS.                       " ltcl_syntax_cases
+ENDCLASS.
 *----------------------------------------------------------------------*
 *       CLASS ltcl_syntax_cases IMPLEMENTATION
 *----------------------------------------------------------------------*
@@ -43,7 +46,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     ms_match-offset   = &2.
     ms_match-length   = &3.
     APPEND ms_match TO mt_after_parse.
-  END-OF-DEFINITION.           " _generate_parse
+  END-OF-DEFINITION.
 
   DEFINE _generate_order.
     ms_match-token    = &1.
@@ -51,7 +54,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     ms_match-length   = &3.
     ms_match-text_tag = &4.
     APPEND ms_match TO mt_after_order.
-  END-OF-DEFINITION.           " _generate_order
+  END-OF-DEFINITION.
 
   DEFINE _generate_extend.
     ms_match-token    = &1.
@@ -59,7 +62,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     ms_match-length   = &3.
     ms_match-text_tag = &4.
     APPEND ms_match TO mt_after_extend.
-  END-OF-DEFINITION.           " _generate_extend
+  END-OF-DEFINITION.
 
   METHOD do_test.
 
@@ -68,8 +71,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
 
     lo_syntax = zcl_abapgit_syntax_highlighter=>create( iv_filename ).
-    lo_syntax->parse_line( EXPORTING iv_line    = iv_line
-                    IMPORTING et_matches = lt_matches_act ).
+    lt_matches_act = lo_syntax->parse_line( iv_line ).
 
     SORT lt_matches_act BY offset.
 
@@ -94,7 +96,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                                         act = lt_matches_act
                                         msg = | Error during extending: { iv_line }| ).
 
-  ENDMETHOD.                    "test
+  ENDMETHOD.
 
 ******************************************************
 * Test parsing and ordering of comments              *
@@ -122,7 +124,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     do_test( iv_line = lv_line iv_filename = '*.abap' ).
 
-  ENDMETHOD.                    " test_abap_01
+  ENDMETHOD.
 
 ******************************************************
 * Test parsing and ordering of remainder of string   *
@@ -149,7 +151,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     do_test( iv_line = lv_line iv_filename = '*.abap' ).
 
-  ENDMETHOD.                    " test_abap_02
+  ENDMETHOD.
 
 ******************************************************
 * Test parsing and ordering of key words & texts     *
@@ -185,7 +187,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     do_test( iv_line = lv_line iv_filename = '*.abap' ).
 
-  ENDMETHOD.                    " test_abap_03
+  ENDMETHOD.
 
 ******************************************************
 * Test parsing and ordering of key words in texts    *
@@ -222,7 +224,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     do_test( iv_line = lv_line iv_filename = '*.abap' ).
 
-  ENDMETHOD.                    " test_abap_04
+  ENDMETHOD.
 
 ******************************************************
 * Test parsing and ordering texts in curly brackets  *
@@ -261,7 +263,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     do_test( iv_line = lv_line iv_filename = '*.abap' ).
 
-  ENDMETHOD.                    " test_abap_05
+  ENDMETHOD.
 
 ******************************************************
 * Test parsing and ordering of texts                 *
@@ -318,7 +320,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     do_test( iv_line = lv_line iv_filename = '*.abap' ).
 
-  ENDMETHOD.                    " test_abap_06
+  ENDMETHOD.
 
 ********************************************************
 * Check that '*' in select statement is not a match    *
@@ -345,7 +347,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     do_test( iv_line = lv_line iv_filename = '*.abap' ).
 
-  ENDMETHOD.                    " test_abap_07
+  ENDMETHOD.
 
 ********************************************************
 * Test parsing and ordering of key words in structures *
@@ -365,7 +367,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     do_test( iv_line = lv_line iv_filename = '*.abap' ).
 
-  ENDMETHOD.                    " test_abap_08
+  ENDMETHOD.
 
 ********************************************************
 * Test parsing and ordering of tags in xml             *
@@ -393,7 +395,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     do_test( iv_line = lv_line iv_filename = '*.xml' ).
 
-  ENDMETHOD.                    " test_xml_01
+  ENDMETHOD.
 
   METHOD test_xml_02.
 
@@ -413,7 +415,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     do_test( iv_line = lv_line iv_filename = '*.xml' ).
 
-  ENDMETHOD.                    " test_xml_02
+  ENDMETHOD.
 
   METHOD test_xml_03.
 
@@ -442,7 +444,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     do_test( iv_line = lv_line iv_filename = '*.xml' ).
 
-  ENDMETHOD.                    " test_xml_03
+  ENDMETHOD.
 
   METHOD test_xml_04.
 
@@ -471,7 +473,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     do_test( iv_line = lv_line iv_filename = '*.xml' ).
 
-  ENDMETHOD.                    " test_xml_04
+  ENDMETHOD.
 
   METHOD test_xml_05.
 
@@ -513,9 +515,90 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     do_test( iv_line = lv_line iv_filename = '*.xml' ).
 
-  ENDMETHOD.                    " test_xml_05
+  ENDMETHOD.
 
-ENDCLASS.                       " ltcl_syntax_cases IMPLEMENTATION
+  METHOD test_xml_06.
+    DATA lv_line TYPE string.
+
+    "unclosed tag
+    lv_line = '<ns:tag ns:a1="v1"'.                                     "#EC NOTEXT
+
+    " Generate table with expected values after parsing
+    _generate_parse 'X' 0  1.
+    _generate_parse 'A' 7  6.
+    _generate_parse 'V' 14 4.
+
+    " Generate table with expected values after ordering
+    _generate_order 'X' 0  7 '<'.
+    _generate_order 'A' 7  6 ''.
+    _generate_order 'V' 14 4 ''.
+
+    " Generate table with expected values after extending
+    _generate_extend 'X' 0  7 '<'.
+    _generate_extend 'A' 7  6 ''.
+    _generate_extend '.' 13 1 ''.
+    _generate_extend 'V' 14 4 ''.
+
+    do_test( iv_line = lv_line iv_filename = '*.xml' ).
+  ENDMETHOD.
+
+  METHOD test_xml_07.
+    "invalid XML characters in a string
+    DATA lv_line TYPE string.
+
+    "xml special characters in attribute
+    lv_line = '<tag attribute=" '' > "/>'.                   "#EC NOTEXT
+
+    " Generate table with expected values after parsing
+    _generate_parse 'X' 0  1.
+    _generate_parse 'A' 4  10.
+    _generate_parse 'V' 15 7.
+    _generate_parse 'X' 23 1.
+
+    " Generate table with expected values after ordering
+    _generate_order 'X' 0  4 '<'.
+    _generate_order 'A' 4  10 ''.
+    _generate_order 'V' 15 7 ''.
+    _generate_order 'X' 22 2 '>'.
+
+    " Generate table with expected values after extending
+    _generate_extend 'X' 0  4 '<'.
+    _generate_extend 'A' 4  10 ''.
+    _generate_extend '.' 14 1 ''.
+    _generate_extend 'V' 15 7 ''.
+    _generate_extend 'X' 22 2 '>'.
+
+    do_test( iv_line = lv_line iv_filename = '*.xml' ).
+
+
+  ENDMETHOD.
+
+
+  METHOD test_xml_08.
+    "invalid XML characters in a string
+    DATA lv_line TYPE string.
+
+    "attribute at beginning of line
+    lv_line = 'attribute=''>" '''.                   "#EC NOTEXT
+
+    " Generate table with expected values after parsing
+    _generate_parse 'A' 0  9.
+    _generate_parse 'V' 10 5.
+
+    " Generate table with expected values after ordering
+    _generate_order 'A' 0  9 ''.
+    _generate_order 'V' 10 5 ''.
+
+    " Generate table with expected values after extending
+    _generate_extend 'A' 0  9 ''.
+    _generate_extend '.' 9 1 ''.
+    _generate_extend 'V' 10 5 ''.
+
+    do_test( iv_line = lv_line iv_filename = '*.xml' ).
+
+  ENDMETHOD.
+
+ENDCLASS.
 
 CLASS ltcl_syntax_basic_logic DEFINITION DEFERRED.
 CLASS zcl_abapgit_syntax_highlighter DEFINITION LOCAL FRIENDS ltcl_syntax_basic_logic.
@@ -530,7 +613,7 @@ CLASS ltcl_syntax_basic_logic DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS
 
   PRIVATE SECTION.
 
-    DATA mo TYPE REF TO zcl_abapgit_syntax_highlighter.
+    DATA mo_syntax_highlighter TYPE REF TO zcl_abapgit_syntax_highlighter.
 
     METHODS:
       setup,
@@ -538,7 +621,7 @@ CLASS ltcl_syntax_basic_logic DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS
       format_line   FOR TESTING,
       apply_style   FOR TESTING.
 
-ENDCLASS.                       " ltcl_syntax_basic_logic
+ENDCLASS.
 
 *----------------------------------------------------------------------*
 *       CLASS ltcl_syntax_highlighter IMPLEMENTATION
@@ -546,8 +629,8 @@ ENDCLASS.                       " ltcl_syntax_basic_logic
 CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
 
   METHOD setup.
-    mo = zcl_abapgit_syntax_highlighter=>create( '*.abap' ).
-  ENDMETHOD.                    " setup
+    mo_syntax_highlighter = zcl_abapgit_syntax_highlighter=>create( '*.abap' ).
+  ENDMETHOD.
 
   METHOD format_line.
 
@@ -564,20 +647,20 @@ CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
       ' <span class="text">&#39;FM_NAME&#39;</span>.' &&    "#EC NOTEXT
       ' <span class="comment">&quot; Commented</span>'.     "#EC NOTEXT
 
-    lv_line_act = mo->process_line( iv_line = lv_line ).
+    lv_line_act = mo_syntax_highlighter->process_line( lv_line ).
 
     cl_abap_unit_assert=>assert_equals( exp = lv_line_exp
                                         act = lv_line_act
                                         msg = | Error during formating: { lv_line }| ).
 
-  ENDMETHOD.                    " format_line
+  ENDMETHOD.
 
   METHOD apply_style.
 
     DATA lv_line_act TYPE string.
 
     " Call the method and compare results
-    lv_line_act = mo->apply_style( iv_line  = 'CALL FUNCTION' "#EC NOTEXT
+    lv_line_act = mo_syntax_highlighter->apply_style( iv_line  = 'CALL FUNCTION' "#EC NOTEXT
                                    iv_class = zcl_abapgit_syntax_abap=>c_css-keyword ).
 
     cl_abap_unit_assert=>assert_equals(
@@ -585,14 +668,14 @@ CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
       exp = '<span class="keyword">CALL FUNCTION</span>'    "#EC NOTEXT
       msg = 'Failure during applying of style.' ).          "#EC NOTEXT
 
-  ENDMETHOD.                    " apply_style
+  ENDMETHOD.
 
   METHOD process_line.
 
     DATA lv_line_act TYPE string.
 
     " Call the method with empty parameter and compare results
-    lv_line_act = mo->process_line( iv_line  = '' ).
+    lv_line_act = mo_syntax_highlighter->process_line( '' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_line_act
@@ -600,13 +683,13 @@ CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
       msg = 'Failure in method process_line.' ).            "#EC NOTEXT
 
     " Call the method with non-empty line and compare results
-    lv_line_act = mo->process_line( iv_line  = '* CALL FUNCTION' ). "#EC NOTEXT
+    lv_line_act = mo_syntax_highlighter->process_line( '* CALL FUNCTION' ). "#EC NOTEXT
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_line_act
       exp = '<span class="comment">* CALL FUNCTION</span>'  "#EC NOTEXT
       msg = 'Failure in method process_line.' ).            "#EC NOTEXT
 
-  ENDMETHOD.                    " process_line
+  ENDMETHOD.
 
-ENDCLASS.                       " ltcl_syntax_highlighter
+ENDCLASS.

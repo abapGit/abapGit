@@ -3,6 +3,7 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+
     METHODS constructor
       IMPORTING
         !iv_data TYPE string
@@ -15,11 +16,6 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
         VALUE(rs_branch) TYPE zif_abapgit_definitions=>ty_git_branch
       RAISING
         zcx_abapgit_exception .
-    METHODS get_head   " For potential future use
-      RETURNING
-        VALUE(rs_branch) TYPE zif_abapgit_definitions=>ty_git_branch
-      RAISING
-        zcx_abapgit_exception .
     METHODS get_head_symref
       RETURNING
         VALUE(rv_head_symref) TYPE string .
@@ -28,16 +24,11 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
         VALUE(rt_branches) TYPE zif_abapgit_definitions=>ty_git_branch_list_tt
       RAISING
         zcx_abapgit_exception .
-    METHODS get_tags_only   " For potential future use
+    METHODS get_tags_only         " For potential future use
       RETURNING
-        VALUE(rt_branches) TYPE zif_abapgit_definitions=>ty_git_branch_list_tt
+        VALUE(rt_tags) TYPE zif_abapgit_definitions=>ty_git_branch_list_tt
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS is_ignored
-      IMPORTING
-        !iv_branch_name  TYPE clike
-      RETURNING
-        VALUE(rv_ignore) TYPE abap_bool .
     CLASS-METHODS get_display_name
       IMPORTING
         !iv_branch_name        TYPE clike
@@ -45,9 +36,11 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
         VALUE(rv_display_name) TYPE string .
     CLASS-METHODS get_type
       IMPORTING
-        !iv_branch_name TYPE clike
+        !iv_branch_name       TYPE clike
+        !it_result            TYPE string_table OPTIONAL
+        !iv_current_row_index TYPE sy-tabix OPTIONAL
       RETURNING
-        VALUE(rv_type)  TYPE zif_abapgit_definitions=>ty_git_branch_type .
+        VALUE(rv_type)        TYPE zif_abapgit_definitions=>ty_git_branch_type .
     CLASS-METHODS complete_heads_branch_name
       IMPORTING
         !iv_branch_name TYPE clike
@@ -58,11 +51,24 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
         !iv_branch_name TYPE clike
       RETURNING
         VALUE(rv_name)  TYPE string .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     DATA mt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt .
     DATA mv_head_symref TYPE string .
 
+    CLASS-METHODS skip_first_pkt
+      IMPORTING
+        !iv_data       TYPE string
+      RETURNING
+        VALUE(rv_data) TYPE string .
+    METHODS find_tag_by_name
+      IMPORTING
+        !iv_branch_name  TYPE string
+      RETURNING
+        VALUE(rs_branch) TYPE zif_abapgit_definitions=>ty_git_branch
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS parse_branch_list
       IMPORTING
         !iv_data        TYPE string
@@ -76,6 +82,11 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
         !iv_data              TYPE string
       RETURNING
         VALUE(rv_head_symref) TYPE string .
+    CLASS-METHODS is_ignored
+      IMPORTING
+        !iv_branch_name  TYPE clike
+      RETURNING
+        VALUE(rv_ignore) TYPE abap_bool .
 ENDCLASS.
 
 
@@ -89,7 +100,7 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
     ELSE.
       rv_name = 'refs/heads/' && iv_branch_name.
     ENDIF.
-  ENDMETHOD.  "complete_heads_branch_name
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -97,22 +108,49 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
       EXPORTING iv_data        = iv_data
       IMPORTING et_list        = me->mt_branches
                 ev_head_symref = me->mv_head_symref ).
-  ENDMETHOD.  "create
+  ENDMETHOD.
 
 
   METHOD find_by_name.
 
     IF iv_branch_name IS INITIAL.
-      zcx_abapgit_exception=>raise( 'Branch name empty' ).
+      zcx_abapgit_exception=>raise( 'Branch name empty' ) ##NO_TEXT.
     ENDIF.
+
+    IF iv_branch_name CP |refs/tags/*|.
+      rs_branch = find_tag_by_name( iv_branch_name ).
+    ELSE.
+
+      READ TABLE mt_branches INTO rs_branch
+        WITH KEY name = iv_branch_name.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Branch not found: { iv_branch_name }| ).
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD find_tag_by_name.
+
+    DATA: lv_branch_name TYPE string.
+
+    lv_branch_name = iv_branch_name && '^{}'.
 
     READ TABLE mt_branches INTO rs_branch
-      WITH KEY name = iv_branch_name.
+        WITH KEY name = lv_branch_name.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Branch not found' ).
+
+      READ TABLE mt_branches INTO rs_branch
+        WITH KEY name = iv_branch_name.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Branch not found' ) ##NO_TEXT.
+      ENDIF.
+
     ENDIF.
 
-  ENDMETHOD.  "find_by_name
+  ENDMETHOD.
 
 
   METHOD get_branches_only.
@@ -123,7 +161,7 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
         APPEND <ls_branch> TO rt_branches.
       ENDIF.
     ENDLOOP.
-  ENDMETHOD.  "get_branches_only
+  ENDMETHOD.
 
 
   METHOD get_display_name.
@@ -135,37 +173,32 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
       REPLACE FIRST OCCURRENCE OF 'refs/' IN rv_display_name WITH ''.
     ENDIF.
 
-  ENDMETHOD.  "get_display_name
-
-
-  METHOD get_head.
-
-    IF mv_head_symref IS NOT INITIAL.
-      rs_branch = find_by_name( mv_head_symref ).
-    ELSE.
-      rs_branch = find_by_name( zif_abapgit_definitions=>c_head_name ).
-    ENDIF.
-
-  ENDMETHOD.  "get_head
+  ENDMETHOD.
 
 
   METHOD get_head_symref.
     rv_head_symref = mv_head_symref.
-  ENDMETHOD.  " get_head_symref.
+  ENDMETHOD.
 
 
   METHOD get_tags_only.
     FIELD-SYMBOLS <ls_branch> LIKE LINE OF mt_branches.
 
-    LOOP AT mt_branches ASSIGNING <ls_branch>.
-      IF <ls_branch>-type = zif_abapgit_definitions=>c_git_branch_type-tag.
-        APPEND <ls_branch> TO rt_branches.
-      ENDIF.
+    LOOP AT mt_branches ASSIGNING <ls_branch>
+                        WHERE type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag
+                           OR type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
+      APPEND <ls_branch> TO rt_tags.
     ENDLOOP.
-  ENDMETHOD.  "get_tags_only
+
+  ENDMETHOD.
 
 
   METHOD get_type.
+
+    DATA: lv_annotated_tag_with_suffix TYPE string.
+
+    FIELD-SYMBOLS: <lv_result> TYPE LINE OF string_table.
+
     rv_type = zif_abapgit_definitions=>c_git_branch_type-other.
 
     IF iv_branch_name CP 'refs/heads/*' OR iv_branch_name = zif_abapgit_definitions=>c_head_name.
@@ -174,10 +207,20 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
     ENDIF.
 
     IF iv_branch_name CP 'refs/tags/*'.
-      rv_type = zif_abapgit_definitions=>c_git_branch_type-tag.
+
+      lv_annotated_tag_with_suffix = iv_branch_name && '^{}'.
+
+      READ TABLE it_result ASSIGNING <lv_result>
+                           INDEX iv_current_row_index + 1.
+      IF sy-subrc = 0 AND <lv_result> CP '*' && lv_annotated_tag_with_suffix.
+        rv_type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
+      ELSE.
+        rv_type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
+      ENDIF.
+
     ENDIF.
 
-  ENDMETHOD.  "get_type
+  ENDMETHOD.
 
 
   METHOD is_ignored.
@@ -193,7 +236,7 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
       rv_ignore = abap_true.
     ENDIF.
 
-  ENDMETHOD.  "is_ignored
+  ENDMETHOD.
 
 
   METHOD normalize_branch_name.
@@ -201,39 +244,41 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
     rv_name = iv_branch_name. " Force convert to string
     REPLACE ALL OCCURRENCES OF ` ` IN rv_name WITH '-'. " Disallow space in branch name
 
-  ENDMETHOD.  " normalize_branch_name.
+  ENDMETHOD.
 
 
   METHOD parse_branch_list.
 
-    DATA: lt_result      TYPE TABLE OF string,
-          lv_hash        TYPE zif_abapgit_definitions=>ty_sha1,
-          lv_name        TYPE string,
-          lv_head_params TYPE string,
-          lv_char        TYPE c,
-          lv_data        LIKE LINE OF lt_result.
+    DATA: lt_result            TYPE TABLE OF string,
+          lv_hash              TYPE zif_abapgit_definitions=>ty_sha1,
+          lv_name              TYPE string,
+          lv_head_params       TYPE string,
+          lv_char              TYPE c,
+          lv_data              LIKE LINE OF lt_result,
+          lv_current_row_index TYPE syst-tabix.
 
     FIELD-SYMBOLS: <ls_branch> LIKE LINE OF et_list.
 
     CLEAR: et_list, ev_head_symref.
 
-    SPLIT iv_data AT zif_abapgit_definitions=>gc_newline INTO TABLE lt_result.
+    lv_data = skip_first_pkt( iv_data ).
+    SPLIT lv_data AT zif_abapgit_definitions=>c_newline INTO TABLE lt_result.
 
     LOOP AT lt_result INTO lv_data.
-      IF sy-tabix = 1.
-        CONTINUE. " current loop
-      ELSEIF sy-tabix = 2 AND strlen( lv_data ) > 49.
+      lv_current_row_index = sy-tabix.
+
+      IF sy-tabix = 1 AND strlen( lv_data ) > 49.
         lv_hash = lv_data+8.
         lv_name = lv_data+49.
         lv_char = zcl_abapgit_git_utils=>get_null( ).
 
         SPLIT lv_name AT lv_char INTO lv_name lv_head_params.
         ev_head_symref = parse_head_params( lv_head_params ).
-      ELSEIF sy-tabix > 2 AND strlen( lv_data ) > 45.
+      ELSEIF sy-tabix > 1 AND strlen( lv_data ) > 45.
         lv_hash = lv_data+4.
         lv_name = lv_data+45.
-      ELSEIF sy-tabix = 2 AND strlen( lv_data ) = 8 AND lv_data(8) = '00000000'.
-        zcx_abapgit_exception=>raise( 'No branches, create branch manually by adding file' ).
+      ELSEIF sy-tabix = 1 AND strlen( lv_data ) = 8 AND lv_data(8) = '00000000'.
+        zcx_abapgit_exception=>raise( 'No branches, create branch manually by adding file' ) ##NO_TEXT.
       ELSE.
         CONTINUE.
       ENDIF.
@@ -245,19 +290,21 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
       <ls_branch>-sha1         = lv_hash.
       <ls_branch>-name         = lv_name.
       <ls_branch>-display_name = get_display_name( lv_name ).
-      <ls_branch>-type         = get_type( lv_name ).
+      <ls_branch>-type         = get_type( iv_branch_name       = lv_name
+                                           it_result            = lt_result
+                                           iv_current_row_index = lv_current_row_index ).
       IF <ls_branch>-name = zif_abapgit_definitions=>c_head_name OR <ls_branch>-name = ev_head_symref.
         <ls_branch>-is_head    = abap_true.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.                    "parse_branch_list
+  ENDMETHOD.
 
 
   METHOD parse_head_params.
 
     DATA: ls_match    TYPE match_result,
-          ls_submatch TYPE submatch_result.
+          ls_submatch LIKE LINE OF ls_match-submatches.
 
     FIND FIRST OCCURRENCE OF REGEX '\ssymref=HEAD:([^\s]+)' IN iv_data RESULTS ls_match.
     READ TABLE ls_match-submatches INTO ls_submatch INDEX 1.
@@ -265,5 +312,22 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
       rv_head_symref = iv_data+ls_submatch-offset(ls_submatch-length).
     ENDIF.
 
-  ENDMETHOD.  "parse_head_params
+  ENDMETHOD.
+
+
+  METHOD skip_first_pkt.
+
+    DATA: lv_hex    TYPE x LENGTH 1,
+          lv_length TYPE i.
+
+
+* channel
+    ASSERT iv_data(2) = '00'.
+
+    lv_hex = to_upper( iv_data+2(2) ).
+    lv_length = lv_hex.
+
+    rv_data = iv_data+lv_length.
+
+  ENDMETHOD.
 ENDCLASS.

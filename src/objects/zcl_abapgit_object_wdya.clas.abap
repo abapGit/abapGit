@@ -4,6 +4,7 @@ CLASS zcl_abapgit_object_wdya DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS read
       EXPORTING es_app        TYPE wdy_application
@@ -18,61 +19,10 @@ CLASS zcl_abapgit_object_wdya DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_wdya IMPLEMENTATION.
-
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
-
-  METHOD zif_abapgit_object~changed_by.
-
-    DATA: li_app  TYPE REF TO if_wdy_md_application,
-          ls_app  TYPE wdy_application,
-          lv_name TYPE wdy_application_name.
 
 
-    lv_name = ms_item-obj_name.
-    TRY.
-        li_app = cl_wdy_md_application=>get_object_by_key(
-                   name    = lv_name
-                   version = 'A' ).
+CLASS ZCL_ABAPGIT_OBJECT_WDYA IMPLEMENTATION.
 
-        li_app->if_wdy_md_object~get_definition( IMPORTING definition = ls_app ).
-
-        IF ls_app-changedby IS INITIAL.
-          rv_user = ls_app-author.
-        ELSE.
-          rv_user = ls_app-changedby.
-        ENDIF.
-      CATCH cx_root.
-        rv_user = c_user_unknown.
-    ENDTRY.
-
-  ENDMETHOD.
-
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
-
-  METHOD zif_abapgit_object~exists.
-
-    DATA: lv_name TYPE wdy_application_name.
-
-
-    lv_name = ms_item-obj_name.
-
-    TRY.
-        cl_wdy_md_application=>get_object_by_key(
-          name    = lv_name
-          version = 'A' ).
-        rv_bool = abap_true.
-      CATCH cx_wdy_md_not_existing.
-        rv_bool = abap_false.
-      CATCH cx_wdy_md_permission_failure.
-        zcx_abapgit_exception=>raise( 'WDYA, permission failure' ).
-    ENDTRY.
-
-  ENDMETHOD.                    "zif_abapgit_object~exists
 
   METHOD read.
 
@@ -110,23 +60,8 @@ CLASS zcl_abapgit_object_wdya IMPLEMENTATION.
       APPEND ls_prop TO et_properties.
     ENDDO.
 
-  ENDMETHOD.                    "read
+  ENDMETHOD.
 
-  METHOD zif_abapgit_object~serialize.
-
-    DATA: ls_app        TYPE wdy_application,
-          lt_properties TYPE wdy_app_property_table.
-
-
-    read( IMPORTING es_app        = ls_app
-                    et_properties = lt_properties ).
-
-    io_xml->add( iv_name = 'APP'
-                 ig_data = ls_app ).
-    io_xml->add( iv_name = 'PROPERTIES'
-                 ig_data = lt_properties ).
-
-  ENDMETHOD.                    "serialize
 
   METHOD save.
 
@@ -155,24 +90,35 @@ CLASS zcl_abapgit_object_wdya IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'error saving WDYA' ).
     ENDTRY.
 
-  ENDMETHOD.                    "save
-
-  METHOD zif_abapgit_object~deserialize.
-
-    DATA: ls_app        TYPE wdy_application,
-          lt_properties TYPE wdy_app_property_table.
+  ENDMETHOD.
 
 
-    io_xml->read( EXPORTING iv_name = 'APP'
-                  CHANGING cg_data = ls_app ).
-    io_xml->read( EXPORTING iv_name = 'PROPERTIES'
-                  CHANGING cg_data = lt_properties ).
+  METHOD zif_abapgit_object~changed_by.
 
-    save( is_app        = ls_app
-          it_properties = lt_properties
-          iv_package    = iv_package ).
+    DATA: li_app  TYPE REF TO if_wdy_md_application,
+          ls_app  TYPE wdy_application,
+          lv_name TYPE wdy_application_name.
 
-  ENDMETHOD.                    "deserialize
+
+    lv_name = ms_item-obj_name.
+    TRY.
+        li_app = cl_wdy_md_application=>get_object_by_key(
+                   name    = lv_name
+                   version = 'A' ).
+
+        li_app->if_wdy_md_object~get_definition( IMPORTING definition = ls_app ).
+
+        IF ls_app-changedby IS INITIAL.
+          rv_user = ls_app-author.
+        ELSE.
+          rv_user = ls_app-changedby.
+        ENDIF.
+      CATCH cx_root.
+        rv_user = c_user_unknown.
+    ENDTRY.
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~delete.
 
@@ -208,7 +154,72 @@ CLASS zcl_abapgit_object_wdya IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'WDYA, error deleting' ).
     ENDTRY.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~deserialize.
+
+    DATA: ls_app        TYPE wdy_application,
+          lt_properties TYPE wdy_app_property_table.
+
+
+    io_xml->read( EXPORTING iv_name = 'APP'
+                  CHANGING cg_data = ls_app ).
+    io_xml->read( EXPORTING iv_name = 'PROPERTIES'
+                  CHANGING cg_data = lt_properties ).
+
+    save( is_app        = ls_app
+          it_properties = lt_properties
+          iv_package    = iv_package ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~exists.
+
+    DATA: lv_name TYPE wdy_application_name.
+
+
+    lv_name = ms_item-obj_name.
+
+    TRY.
+        cl_wdy_md_application=>get_object_by_key(
+          name    = lv_name
+          version = 'A' ).
+        rv_bool = abap_true.
+      CATCH cx_wdy_md_not_existing.
+        rv_bool = abap_false.
+      CATCH cx_wdy_md_permission_failure.
+        zcx_abapgit_exception=>raise( 'WDYA, permission failure' ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~jump.
 
@@ -219,10 +230,22 @@ CLASS zcl_abapgit_object_wdya IMPLEMENTATION.
         object_type   = ms_item-obj_type
         in_new_window = abap_true.
 
-  ENDMETHOD.                    "jump
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_wdya IMPLEMENTATION
+
+  METHOD zif_abapgit_object~serialize.
+
+    DATA: ls_app        TYPE wdy_application,
+          lt_properties TYPE wdy_app_property_table.
+
+
+    read( IMPORTING es_app        = ls_app
+                    et_properties = lt_properties ).
+
+    io_xml->add( iv_name = 'APP'
+                 ig_data = ls_app ).
+    io_xml->add( iv_name = 'PROPERTIES'
+                 ig_data = lt_properties ).
+
+  ENDMETHOD.
+ENDCLASS.

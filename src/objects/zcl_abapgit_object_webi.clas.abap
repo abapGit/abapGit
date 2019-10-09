@@ -3,6 +3,7 @@ CLASS zcl_abapgit_object_webi DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_webi,
              veptext         TYPE veptext,
@@ -22,6 +23,8 @@ CLASS zcl_abapgit_object_webi DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
              pvependpoint    TYPE STANDARD TABLE OF vependpoint WITH DEFAULT KEY,
              pvepvisoapext   TYPE STANDARD TABLE OF vepvisoapext WITH DEFAULT KEY,
              pvepparasoapext TYPE STANDARD TABLE OF vepparasoapext WITH DEFAULT KEY,
+             pwsheader       TYPE STANDARD TABLE OF wsheader WITH DEFAULT KEY,
+             pwssoapprop     TYPE STANDARD TABLE OF wssoapprop WITH DEFAULT KEY,
            END OF ty_webi.
 
     DATA: mi_vi TYPE REF TO if_ws_md_vif.
@@ -43,12 +46,22 @@ CLASS zcl_abapgit_object_webi DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         IMPORTING is_webi TYPE ty_webi
         RAISING   zcx_abapgit_exception
                   cx_ws_md_exception.
+    METHODS handle_single_parameter
+      IMPORTING
+        iv_parameter_type   TYPE vepparamtype
+        iv_name             TYPE vepparameter-vepparam
+        ii_function         TYPE REF TO if_ws_md_vif_func
+      RETURNING
+        VALUE(ri_parameter) TYPE REF TO if_ws_md_vif_param
+      RAISING
+        zcx_abapgit_exception
+        cx_ws_md_exception.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
+CLASS zcl_abapgit_object_webi IMPLEMENTATION.
 
 
   METHOD handle_endpoint.
@@ -78,25 +91,22 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'todo, WEBI BAPI' ).
     ENDIF.
 
-    IF lines( is_webi-pvepfunction ) <> 1.
-      zcx_abapgit_exception=>raise( 'todo, WEBI, function name' ).
-    ENDIF.
-
 * field ls_endpoint-endpointname does not exist in 702
     READ TABLE is_webi-pvepfunction INDEX 1 ASSIGNING <ls_function>.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |WEBI { ms_item-obj_name }: couldn't detect endpoint name| ).
+    ENDIF.
+
     li_endpoint->set_data(
       data_version = '1'
       data         = <ls_function>-function ).
 
-  ENDMETHOD.                    "handle_endpoint
+  ENDMETHOD.
 
 
   METHOD handle_function.
 
-    CONSTANTS: BEGIN OF lc_parameter_type,
-                 import TYPE vepparamtype VALUE 'I',
-                 export TYPE vepparamtype VALUE 'O',
-               END OF lc_parameter_type.
+
 
     DATA: li_parameter TYPE REF TO if_ws_md_vif_param,
           li_soap      TYPE REF TO if_ws_md_soap_ext_func,
@@ -112,33 +122,31 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
     LOOP AT is_webi-pvepfunction ASSIGNING <ls_function>.
 
       IF mi_vi->has_function( funcname = <ls_function>-function
-          version = sews_c_vif_version-active ) = abap_true.
+                              version  = sews_c_vif_version-active ) = abap_true.
         CONTINUE.
       ENDIF.
 
-      li_function = mi_vi->create_function(
-        funcname    = <ls_function>-function
-        mapped_name = <ls_function>-mappedname ).
+      IF mi_vi->has_function( funcname = <ls_function>-function
+                              version  = sews_c_vif_version-inactive ) = abap_true.
+
+        li_function = mi_vi->get_function( funcname = <ls_function>-function
+                                           version  = sews_c_vif_version-inactive ).
+
+      ELSE.
+
+        li_function = mi_vi->create_function( funcname    = <ls_function>-function
+                                              mapped_name = <ls_function>-mappedname ).
+
+      ENDIF.
 
       li_function->set_is_exposed( <ls_function>-is_exposed ).
 
       LOOP AT is_webi-pvepparameter ASSIGNING <ls_parameter>
           WHERE function = <ls_function>-function.
 
-        CASE <ls_parameter>-vepparamtype.
-          WHEN lc_parameter_type-import.
-
-            li_parameter = li_function->create_incoming_parameter(
-              <ls_parameter>-vepparam ).
-
-          WHEN lc_parameter_type-export.
-
-            li_parameter = li_function->create_outgoing_parameter(
-              <ls_parameter>-vepparam ).
-
-          WHEN OTHERS.
-            ASSERT 0 = 1.
-        ENDCASE.
+        li_parameter = me->handle_single_parameter( iv_name        = <ls_parameter>-vepparam
+                                                    ii_function    = li_function
+                                                    iv_parameter_type = <ls_parameter>-vepparamtype ).
 
         li_parameter->set_name_mapped_to( <ls_parameter>-mappedname ).
         li_parameter->set_is_exposed( <ls_parameter>-is_exposed ).
@@ -150,6 +158,9 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
 
       LOOP AT is_webi-pvepfuncsoapext ASSIGNING <ls_soap>
           WHERE function = <ls_function>-function.
+        IF li_function->has_soap_extension_function( 'I' ) = abap_true.
+          li_function->delete_soap_extension_function( ).
+        ENDIF.
         li_soap = li_function->create_soap_extension_function( ).
         li_soap->set_soap_request_name( <ls_soap>-requestname ).
         li_soap->set_soap_response_name( <ls_soap>-responsename ).
@@ -160,13 +171,12 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
           WHERE function = <ls_function>-function.
         li_fault = li_function->create_fault( <ls_fault>-fault ).
         li_fault->set_name_mapped_to( <ls_fault>-mappedname ).
-*        li_fault->set_description( <ls_fault>-description_id ).
         li_fault->set_detail( <ls_fault>-detail ).
       ENDLOOP.
 
     ENDLOOP.
 
-  ENDMETHOD.                    "handle_function
+  ENDMETHOD.
 
 
   METHOD handle_soap.
@@ -182,10 +192,15 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    li_soap = mi_vi->create_soap_extension_virtinfc( ls_soap-soap_appl_uri ).
+    IF mi_vi->has_soap_extension_virtinfc( sews_c_vif_version-inactive ) = abap_true.
+      li_soap = mi_vi->get_soap_extension_virtinfc( sews_c_vif_version-inactive ).
+    ELSE.
+      li_soap = mi_vi->create_soap_extension_virtinfc( ls_soap-soap_appl_uri ).
+    ENDIF.
+
     li_soap->set_namespace( ls_soap-namespace ).
 
-  ENDMETHOD.                    "handle_soap
+  ENDMETHOD.
 
 
   METHOD handle_types.
@@ -267,16 +282,11 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.                    "handle_types
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
-  ENDMETHOD.                    "zif_abapgit_object~changed_by
-
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
 
 
@@ -295,24 +305,31 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'error deleting WEBI' ).
     ENDTRY.
 
-  ENDMETHOD.                    "zif_abapgit_object~delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: ls_webi   TYPE ty_webi,
-          lv_name   TYPE vepname,
-          ls_header LIKE LINE OF ls_webi-pvepheader,
-          lv_text   TYPE string ##needed,
-          lx_root   TYPE REF TO cx_root,
-          lv_exists TYPE abap_bool,
-          li_root   TYPE REF TO if_ws_md_vif_root.
+    DATA: ls_webi     TYPE ty_webi,
+          lv_name     TYPE vepname,
+          ls_header   LIKE LINE OF ls_webi-pvepheader,
+          lx_root     TYPE REF TO cx_root,
+          lv_exists   TYPE abap_bool,
+          li_root     TYPE REF TO if_ws_md_vif_root,
+          ls_endpoint LIKE LINE OF ls_webi-pvependpoint.
 
 
     io_xml->read( EXPORTING iv_name = 'WEBI'
-                  CHANGING cg_data = ls_webi ).
+                  CHANGING  cg_data = ls_webi ).
 
     lv_name = ms_item-obj_name.
+
+    READ TABLE ls_webi-pvependpoint INDEX 1 INTO ls_endpoint.
+    ASSERT sy-subrc = 0.
+    IF ls_endpoint-auto_generated = abap_true.
+      " handled by SPRX.
+      RETURN.
+    ENDIF.
 
     READ TABLE ls_webi-pvepheader INDEX 1 INTO ls_header.
     ASSERT sy-subrc = 0.
@@ -339,6 +356,8 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
         handle_function( ls_webi ).
         handle_soap( ls_webi ).
 
+        tadir_insert( iv_package ).
+
         mi_vi->if_ws_md_lockable_object~save( ).
         mi_vi->if_ws_md_lockable_object~unlock( ).
       CATCH cx_ws_md_exception INTO lx_root.
@@ -346,13 +365,12 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
             mi_vi->if_ws_md_lockable_object~unlock( ).
           CATCH cx_ws_md_exception ##no_handler.
         ENDTRY.
-        lv_text = lx_root->if_message~get_text( ).
-        zcx_abapgit_exception=>raise( 'error deserializing WEBI' ).
+        zcx_abapgit_exception=>raise( lx_root->if_message~get_text( ) ).
     ENDTRY.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
-  ENDMETHOD.                    "zif_abapgit_object~deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -366,17 +384,32 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
       name      = lv_name
       i_version = sews_c_vif_version-active ).
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+  ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~jump.
@@ -388,7 +421,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
         object_type   = ms_item-obj_type
         in_new_window = abap_true.
 
-  ENDMETHOD.                    "zif_abapgit_object~jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -398,8 +431,9 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
           li_vi      TYPE REF TO if_ws_md_vif,
           lv_name    TYPE vepname.
 
-    FIELD-SYMBOLS: <ls_header>   LIKE LINE OF ls_webi-pvepheader,
-                   <ls_endpoint> LIKE LINE OF ls_webi-pvependpoint.
+    FIELD-SYMBOLS: <ls_vepheader>   LIKE LINE OF ls_webi-pvepheader,
+                   <ls_vependpoint> LIKE LINE OF ls_webi-pvependpoint,
+                   <ls_wsheader>    TYPE wsheader.
 
     CALL FUNCTION 'WEBI_GET_OBJECT'
       EXPORTING
@@ -422,6 +456,8 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
         pvependpoint      = ls_webi-pvependpoint
         pvepvisoapext     = ls_webi-pvepvisoapext
         pvepparasoapext   = ls_webi-pvepparasoapext
+        pwsheader         = ls_webi-pwsheader
+        pwssoapprop       = ls_webi-pwssoapprop
       EXCEPTIONS
         version_not_found = 1
         webi_not_exist    = 2
@@ -443,23 +479,68 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'error serializing WEBI' ).
     ENDTRY.
 
-    LOOP AT ls_webi-pvepheader ASSIGNING <ls_header>.
-      CLEAR <ls_header>-author.
-      CLEAR <ls_header>-createdon.
-      CLEAR <ls_header>-changedby.
-      CLEAR <ls_header>-changedon.
-      CLEAR <ls_header>-ctime.
-      CLEAR <ls_header>-text_id.
-      CLEAR <ls_header>-utime.
-      CLEAR <ls_header>-wsint_version.
+    LOOP AT ls_webi-pvepheader ASSIGNING <ls_vepheader>.
+      CLEAR <ls_vepheader>-author.
+      CLEAR <ls_vepheader>-createdon.
+      CLEAR <ls_vepheader>-changedby.
+      CLEAR <ls_vepheader>-changedon.
+      CLEAR <ls_vepheader>-ctime.
+      CLEAR <ls_vepheader>-text_id.
+      CLEAR <ls_vepheader>-utime.
+      CLEAR <ls_vepheader>-wsint_version.
     ENDLOOP.
 
-    LOOP AT ls_webi-pvependpoint ASSIGNING <ls_endpoint>.
-      CLEAR: <ls_endpoint>-clustd.
+    LOOP AT ls_webi-pvependpoint ASSIGNING <ls_vependpoint>.
+      CLEAR <ls_vependpoint>-clustd.
+    ENDLOOP.
+
+    LOOP AT ls_webi-pwsheader ASSIGNING <ls_wsheader>.
+
+      CLEAR:
+        <ls_wsheader>-author,
+        <ls_wsheader>-createdon,
+        <ls_wsheader>-changedby,
+        <ls_wsheader>-changedon,
+        <ls_wsheader>-ctime,
+        <ls_wsheader>-utime.
+
     ENDLOOP.
 
     io_xml->add( iv_name = 'WEBI'
                  ig_data = ls_webi ).
 
-  ENDMETHOD.                    "zif_abapgit_object~serialize
+  ENDMETHOD.
+
+  METHOD handle_single_parameter.
+    CONSTANTS:
+      BEGIN OF lc_parameter_type,
+        import TYPE vepparamtype VALUE 'I',
+        export TYPE vepparamtype VALUE 'O',
+      END OF lc_parameter_type.
+
+    CASE iv_parameter_type.
+      WHEN lc_parameter_type-import.
+        ri_parameter = ii_function->get_incoming_parameter( parameter_name  = iv_name
+                                                            version         = 'I' ).
+        IF ri_parameter IS BOUND.
+          ii_function->delete_incoming_parameter( ri_parameter ).
+        ENDIF.
+        ri_parameter = ii_function->create_incoming_parameter( iv_name ).
+
+      WHEN lc_parameter_type-export.
+
+        ri_parameter = ii_function->get_outgoing_parameter( parameter_name  = iv_name
+                                                            version         = 'I' ).
+        IF ri_parameter IS BOUND.
+          ii_function->delete_outgoing_parameter( parameter = ri_parameter ).
+        ENDIF.
+
+        ri_parameter = ii_function->create_outgoing_parameter( iv_name ).
+
+      WHEN OTHERS.
+        ASSERT 0 = 1.
+    ENDCASE.
+
+  ENDMETHOD.
+
 ENDCLASS.

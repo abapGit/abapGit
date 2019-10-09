@@ -1,33 +1,20 @@
-CLASS zcl_abapgit_sap_package DEFINITION PUBLIC CREATE PUBLIC.
+CLASS zcl_abapgit_sap_package DEFINITION
+    PUBLIC CREATE PRIVATE
+    GLOBAL FRIENDS zcl_abapgit_factory.
 
   PUBLIC SECTION.
-    CLASS-METHODS:
-      get
-        IMPORTING iv_package        TYPE devclass
-        RETURNING VALUE(ri_package) TYPE REF TO zif_abapgit_sap_package,
-      create
-        IMPORTING is_package TYPE scompkdtln
-        RAISING   zcx_abapgit_exception,
-      create_local
-        IMPORTING iv_package TYPE devclass
-        RAISING   zcx_abapgit_exception.
-
     METHODS:
       constructor
         IMPORTING iv_package TYPE devclass.
 
     INTERFACES: zif_abapgit_sap_package.
 
-    TYPES: BEGIN OF ty_injected,
-             package TYPE devclass,
-             object  TYPE REF TO zif_abapgit_sap_package,
-           END OF ty_injected.
-
-* TODO, isolate this variable?
-    CLASS-DATA: gt_injected TYPE STANDARD TABLE OF ty_injected.
-
   PRIVATE SECTION.
     DATA: mv_package TYPE devclass.
+
+    ALIASES:
+      create FOR zif_abapgit_sap_package~create,
+      create_local FOR zif_abapgit_sap_package~create_local.
 
 ENDCLASS.
 
@@ -41,7 +28,33 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD create.
+  METHOD zif_abapgit_sap_package~are_changes_recorded_in_tr_req.
+
+    DATA: li_package TYPE REF TO if_package.
+
+    cl_package_factory=>load_package(
+      EXPORTING
+        i_package_name             = mv_package
+      IMPORTING
+        e_package                  = li_package
+      EXCEPTIONS
+        object_not_existing        = 1
+        unexpected_error           = 2
+        intern_err                 = 3
+        no_access                  = 4
+        object_locked_and_modified = 5
+        OTHERS                     = 6 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from CL_PACKAGE_FACTORY=>LOAD_PACKAGE { sy-subrc }| ).
+    ENDIF.
+
+    rv_are_changes_rec_in_tr_req = li_package->wbo_korr_flag.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_sap_package~create.
 
     DATA: lv_err     TYPE string,
           li_package TYPE REF TO if_package,
@@ -144,39 +157,6 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD create_local.
-
-    DATA: ls_package TYPE scompkdtln.
-
-
-    ls_package-devclass  = iv_package.
-    ls_package-ctext     = iv_package.
-    ls_package-parentcl  = '$TMP'.
-    ls_package-dlvunit   = 'LOCAL'.
-    ls_package-as4user   = sy-uname.
-
-    create( ls_package ).
-
-  ENDMETHOD.                    "create
-
-
-  METHOD get.
-
-    FIELD-SYMBOLS: <ls_injected> LIKE LINE OF gt_injected.
-
-    IF lines( gt_injected ) > 0.
-      READ TABLE gt_injected ASSIGNING <ls_injected> WITH KEY package = iv_package.
-      ASSERT sy-subrc = 0. " unit test should be in control
-      ri_package = <ls_injected>-object.
-    ELSE.
-      CREATE OBJECT ri_package TYPE zcl_abapgit_sap_package
-        EXPORTING
-          iv_package = iv_package.
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_sap_package~create_child.
 
     DATA: li_parent TYPE REF TO if_package,
@@ -200,12 +180,29 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
     ls_child-devclass  = iv_child.
     ls_child-dlvunit   = li_parent->software_component.
+    ls_child-component = li_parent->application_component.
     ls_child-ctext     = iv_child.
     ls_child-parentcl  = mv_package.
     ls_child-pdevclass = li_parent->transport_layer.
     ls_child-as4user   = sy-uname.
 
     create( ls_child ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_sap_package~create_local.
+
+    DATA: ls_package TYPE scompkdtln.
+
+
+    ls_package-devclass  = mv_package.
+    ls_package-ctext     = mv_package.
+    ls_package-parentcl  = '$TMP'.
+    ls_package-dlvunit   = 'LOCAL'.
+    ls_package-as4user   = sy-uname.
+
+    create( ls_package ).
 
   ENDMETHOD.
 
@@ -226,20 +223,66 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_sap_package~get_transport_type.
+    DATA: lv_err_prefix TYPE string,
+          lv_pkg_name   TYPE e071-obj_name.
+
+    lv_err_prefix = |TRINT_GET_REQUEST_TYPE(R3TR, DEVC, { mv_package })|.
+    lv_pkg_name = mv_package.
+
+    CALL FUNCTION 'TRINT_GET_REQUEST_TYPE'
+      EXPORTING
+        iv_pgmid                   = 'R3TR'
+        iv_object                  = 'DEVC'
+        iv_obj_name                = lv_pkg_name
+      IMPORTING
+        ev_request_type            = rv_transport_type-request
+        ev_task_type               = rv_transport_type-task
+      EXCEPTIONS
+        no_request_needed          = 1
+        internal_error             = 2
+        cts_initialization_failure = 3.
+
+    CASE sy-subrc.
+      WHEN 0.
+        " OK!
+
+      WHEN 1.
+        zcx_abapgit_exception=>raise( |{ lv_err_prefix }: transport is not needed| ).
+
+      WHEN 2.
+        zcx_abapgit_exception=>raise( |{ lv_err_prefix }: internal error| ).
+
+      WHEN 3.
+        zcx_abapgit_exception=>raise( |{ lv_err_prefix }: failed to initialized CTS| ).
+
+      WHEN OTHERS.
+        zcx_abapgit_exception=>raise( |{ lv_err_prefix }: unrecognized return code| ).
+    ENDCASE.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_sap_package~list_subpackages.
 
-    DATA: lt_list     LIKE rt_list,
-          lv_devclass LIKE LINE OF rt_list.
+    DATA: lt_list     LIKE rt_list.
 
+    SELECT devclass FROM tdevc
+      INTO TABLE lt_list
+      WHERE parentcl = mv_package
+      ORDER BY PRIMARY KEY.               "#EC CI_SUBRC "#EC CI_GENBUFF
 
-    SELECT devclass INTO TABLE rt_list
-      FROM tdevc WHERE parentcl = mv_package. "#EC CI_GENBUFF "#EC CI_SUBRC
+    rt_list = lt_list.
+    WHILE lines( lt_list ) > 0.
 
-* note the recursion, since packages are added to the list
-    LOOP AT rt_list INTO lv_devclass.
-      lt_list = get( lv_devclass )->list_subpackages( ).
+      SELECT devclass FROM tdevc
+        INTO TABLE lt_list
+        FOR ALL ENTRIES IN lt_list
+        WHERE parentcl = lt_list-table_line
+        ORDER BY PRIMARY KEY.             "#EC CI_SUBRC "#EC CI_GENBUFF
       APPEND LINES OF lt_list TO rt_list.
-    ENDLOOP.
+
+    ENDWHILE.
 
   ENDMETHOD.
 
@@ -252,12 +295,10 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 
     APPEND mv_package TO rt_list.
 
-    SELECT SINGLE parentcl INTO lv_parent
-      FROM tdevc WHERE devclass = mv_package.           "#EC CI_GENBUFF
+    lv_parent = zif_abapgit_sap_package~read_parent( ).
 
     IF sy-subrc = 0 AND NOT lv_parent IS INITIAL.
-      APPEND lv_parent TO rt_list.
-      lt_list = get( lv_parent )->list_superpackages( ).
+      lt_list = zcl_abapgit_factory=>get_sap_package( lv_parent )->list_superpackages( ).
       APPEND LINES OF lt_list TO rt_list.
     ENDIF.
 

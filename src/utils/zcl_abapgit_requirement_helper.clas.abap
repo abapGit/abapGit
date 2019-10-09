@@ -9,85 +9,55 @@ CLASS zcl_abapgit_requirement_helper DEFINITION
       BEGIN OF ty_requirement_status,
         met               TYPE abap_bool,
         component         TYPE dlvunit,
-        description       TYPE text80,
+        description       TYPE cvers_sdu-desc_text,
         installed_release TYPE saprelease,
         installed_patch   TYPE sappatchlv,
         required_release  TYPE saprelease,
         required_patch    TYPE sappatchlv,
       END OF ty_requirement_status .
-
     TYPES:
       ty_requirement_status_tt TYPE STANDARD TABLE OF ty_requirement_status WITH DEFAULT KEY .
 
-    CLASS-METHODS:
-      check_requirements
-        IMPORTING
-          !it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt
-          !iv_show_popup   TYPE abap_bool DEFAULT abap_true
-        RAISING
-          zcx_abapgit_exception,
-
-      get_requirement_met_status
-        IMPORTING
-          !it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt
-        RETURNING
-          VALUE(rt_status) TYPE ty_requirement_status_tt
-        RAISING
-          zcx_abapgit_exception .
-
+    CLASS-METHODS requirements_popup
+      IMPORTING
+        !it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS is_requirements_met
+      IMPORTING
+        !it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt
+      RETURNING
+        VALUE(rv_status) TYPE zif_abapgit_definitions=>ty_yes_no
+      RAISING
+        zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CLASS-METHODS:
-      show_requirement_popup
-        IMPORTING
-          !it_requirements TYPE ty_requirement_status_tt
-        RAISING
-          zcx_abapgit_exception,
-
-      version_greater_or_equal
-        IMPORTING
-          !is_status     TYPE ty_requirement_status
-        RETURNING
-          VALUE(rv_true) TYPE abap_bool .
-
+    CLASS-METHODS show_requirement_popup
+      IMPORTING
+        !it_requirements TYPE ty_requirement_status_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS get_requirement_met_status
+      IMPORTING
+        !it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt
+      RETURNING
+        VALUE(rt_status) TYPE ty_requirement_status_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS version_greater_or_equal
+      IMPORTING
+        !is_status     TYPE ty_requirement_status
+      RETURNING
+        VALUE(rv_true) TYPE abap_bool .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
-
-
-  METHOD check_requirements.
-
-    DATA: lt_met_status TYPE ty_requirement_status_tt,
-          lv_answer     TYPE c LENGTH 1.
-
-    lt_met_status = get_requirement_met_status( it_requirements ).
-
-    IF iv_show_popup = abap_true.
-      show_requirement_popup( lt_met_status ).
-    ENDIF.
-
-    LOOP AT lt_met_status TRANSPORTING NO FIELDS WHERE met = abap_false.
-      EXIT.
-    ENDLOOP.
-
-    IF sy-subrc = 0.
-      CALL FUNCTION 'POPUP_TO_CONFIRM'
-        EXPORTING
-          text_question = 'The project has unmet requirements. Do you want to continue?'
-        IMPORTING
-          answer        = lv_answer.
-      IF lv_answer <> '1'.
-        zcx_abapgit_exception=>raise( 'Cancelling because of unmet requirements.' ).
-      ENDIF.
-    ENDIF.
-
-  ENDMETHOD.
+CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
 
 
   METHOD get_requirement_met_status.
-
 
     DATA: lt_installed TYPE STANDARD TABLE OF cvers_sdu.
 
@@ -132,14 +102,53 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD show_requirement_popup.
+  METHOD is_requirements_met.
 
+    DATA: lt_met_status TYPE ty_requirement_status_tt.
+
+
+    lt_met_status = get_requirement_met_status( it_requirements ).
+
+    READ TABLE lt_met_status TRANSPORTING NO FIELDS WITH KEY met = abap_false.
+    IF sy-subrc = 0.
+      rv_status = 'N'.
+    ELSE.
+      rv_status = 'Y'.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD requirements_popup.
+
+    DATA: lt_met_status TYPE ty_requirement_status_tt,
+          lv_answer     TYPE c LENGTH 1.
+
+
+    lt_met_status = get_requirement_met_status( it_requirements ).
+
+    show_requirement_popup( lt_met_status ).
+
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        text_question = 'The project has unmet requirements. Do you want to continue?'
+      IMPORTING
+        answer        = lv_answer.
+    IF lv_answer <> '1'.
+      zcx_abapgit_exception=>raise( 'Cancelling because of unmet requirements.' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD show_requirement_popup.
 
     TYPES: BEGIN OF lty_color_line,
              color TYPE lvc_t_scol.
         INCLUDE TYPE ty_requirement_status.
-    TYPES: END OF lty_color_line,
-    lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
+    TYPES: END OF lty_color_line.
+
+    TYPES: lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
 
     DATA: lo_alv            TYPE REF TO cl_salv_table,
           lo_column         TYPE REF TO cl_salv_column,
@@ -186,11 +195,9 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
         lo_columns->set_optimize( ).
 
         lo_column = lo_columns->get_column( 'REQUIRED_RELEASE' ).
-*        lo_column->set_fixed_header_text( 'S' ).
         lo_column->set_short_text( 'Req. Rel.' ).
 
         lo_column = lo_columns->get_column( 'REQUIRED_PATCH' ).
-*        lo_column->set_fixed_header_text( 'S' ).
         lo_column->set_short_text( 'Req. SP L.' ).
 
         lo_alv->set_screen_popup( start_column = 30
@@ -209,7 +216,7 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
 
   METHOD version_greater_or_equal.
 
-    DATA: lv_number TYPE numc4 ##NEEDED.
+    DATA: lv_number TYPE n LENGTH 4 ##NEEDED.
 
     TRY.
         MOVE EXACT: is_status-installed_release TO lv_number,
@@ -225,9 +232,9 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
 
     " Versions are comparable by number, compare release and if necessary patch level
     IF is_status-installed_release > is_status-required_release
-       OR ( is_status-installed_release = is_status-required_release
-            AND ( is_status-required_patch IS INITIAL OR
-                  is_status-installed_patch >= is_status-required_patch ) ).
+        OR ( is_status-installed_release = is_status-required_release
+        AND ( is_status-required_patch IS INITIAL OR
+        is_status-installed_patch >= is_status-required_patch ) ).
 
       rv_true = abap_true.
     ENDIF.

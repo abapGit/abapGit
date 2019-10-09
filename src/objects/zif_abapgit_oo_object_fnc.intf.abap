@@ -9,15 +9,16 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
     create
       IMPORTING
         iv_package    TYPE devclass
-        iv_overwrite  TYPE seox_boolean DEFAULT seox_true
+        iv_overwrite  TYPE abap_bool DEFAULT abap_true
+        it_attributes TYPE zif_abapgit_definitions=>ty_obj_attribute_tt OPTIONAL
       CHANGING
-        is_properties TYPE any
+        cg_properties TYPE any
       RAISING
         zcx_abapgit_exception,
     generate_locals
       IMPORTING
         is_key                   TYPE seoclskey
-        iv_force                 TYPE seox_boolean DEFAULT seox_true
+        iv_force                 TYPE abap_bool DEFAULT abap_true
         it_local_definitions     TYPE seop_source_string OPTIONAL
         it_local_implementations TYPE seop_source_string OPTIONAL
         it_local_macros          TYPE seop_source_string OPTIONAL
@@ -69,7 +70,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
         zcx_abapgit_exception,
     exists
       IMPORTING
-        iv_object_name   TYPE seoclskey
+        is_object_name   TYPE seoclskey
       RETURNING
         VALUE(rv_exists) TYPE abap_bool,
     serialize_abap
@@ -131,6 +132,10 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
       IMPORTING
         iv_classname         TYPE seoclsname
       RETURNING
-        VALUE(rv_superclass) TYPE seoclsname.
-
+        VALUE(rv_superclass) TYPE seoclsname,
+    read_attributes
+      IMPORTING
+        iv_object_name       TYPE seoclsname
+      RETURNING
+        VALUE(rt_attributes) TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
 ENDINTERFACE.

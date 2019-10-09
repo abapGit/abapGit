@@ -9,8 +9,10 @@ CLASS zcl_abapgit_object_cmpt DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     INTERFACES zif_abapgit_object.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
-    DATA: mo_cmp_db TYPE REF TO object.
+    DATA: mo_cmp_db TYPE REF TO object,
+          mv_name   TYPE c LENGTH 30.
 
 ENDCLASS.
 
@@ -32,6 +34,8 @@ CLASS ZCL_ABAPGIT_OBJECT_CMPT IMPLEMENTATION.
       CATCH cx_root.
     ENDTRY.
 
+    mv_name = ms_item-obj_name.
+
   ENDMETHOD.
 
 
@@ -42,7 +46,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CMPT IMPLEMENTATION.
     TRY.
         CALL METHOD ('CL_CMP_TEMPLATE')=>('S_CREATE_FROM_DB')
           EXPORTING
-            i_name         = |{ ms_item-obj_name }|
+            i_name         = mv_name
             i_version      = 'A'
           RECEIVING
             r_ref_template = lo_cmp_template.
@@ -58,13 +62,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CMPT IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~delete.
 
     DATA: lv_deleted TYPE abap_bool.
@@ -72,7 +69,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CMPT IMPLEMENTATION.
     TRY.
         CALL METHOD mo_cmp_db->('IF_CMP_TEMPLATE_DB~DELETE_TEMPLATE')
           EXPORTING
-            i_name        = |{ ms_item-obj_name }|
+            i_name        = mv_name
             i_version     = 'A'
             i_flg_header  = abap_true
             i_flg_lines   = abap_true
@@ -123,6 +120,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CMPT IMPLEMENTATION.
         global_lock         = abap_true
         devclass            = iv_package
         master_language     = mv_language
+        suppress_dialog     = abap_true
       EXCEPTIONS
         cancelled           = 1
         permission_failure  = 2
@@ -138,14 +136,10 @@ CLASS ZCL_ABAPGIT_OBJECT_CMPT IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lv_name TYPE c LENGTH 30.
-
-    lv_name = ms_item-obj_name.
-
     TRY.
         CALL METHOD ('CL_CMP_TEMPLATE')=>('S_TEMPLATE_EXISTS')
           EXPORTING
-            i_name       = lv_name
+            i_name       = mv_name
             i_version    = 'A'
           RECEIVING
             r_flg_exists = rv_bool.
@@ -157,6 +151,16 @@ CLASS ZCL_ABAPGIT_OBJECT_CMPT IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~get_metadata.
 
     rs_metadata = get_metadata( ).
@@ -165,9 +169,14 @@ CLASS ZCL_ABAPGIT_OBJECT_CMPT IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
 
-    rv_changed = abap_true.
+
+  METHOD zif_abapgit_object~is_locked.
+
+    rv_is_locked = abap_false.
 
   ENDMETHOD.
 
@@ -213,7 +222,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CMPT IMPLEMENTATION.
       CATCH cx_root.
         zcx_abapgit_exception=>raise( 'CMPT not supported' ).
     ENDTRY.
-
 
   ENDMETHOD.
 ENDCLASS.

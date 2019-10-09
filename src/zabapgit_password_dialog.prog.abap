@@ -1,12 +1,11 @@
 *&---------------------------------------------------------------------*
 *&  Include           ZABAPGIT_PASSWORD_DIALOG
 *&---------------------------------------------------------------------*
-TABLES sscrfields.
 
 SELECTION-SCREEN BEGIN OF SCREEN 1002 TITLE s_title.
 SELECTION-SCREEN BEGIN OF LINE.
 SELECTION-SCREEN COMMENT 1(10) s_url FOR FIELD p_url.
-PARAMETERS: p_url  TYPE string LOWER CASE VISIBLE LENGTH 40 ##SEL_WRONG.
+PARAMETERS: p_url TYPE string LOWER CASE VISIBLE LENGTH 40 ##SEL_WRONG.
 SELECTION-SCREEN END OF LINE.
 SELECTION-SCREEN BEGIN OF LINE.
 SELECTION-SCREEN COMMENT 1(10) s_user FOR FIELD p_user.
@@ -41,7 +40,7 @@ CLASS lcl_password_dialog DEFINITION FINAL.
     CLASS-METHODS on_screen_output.
     CLASS-METHODS on_screen_event
       IMPORTING
-        iv_ucomm TYPE syucomm.
+        iv_ucomm TYPE sy-ucomm.
 
   PRIVATE SECTION.
     CLASS-DATA gv_confirm TYPE abap_bool.
@@ -49,7 +48,7 @@ CLASS lcl_password_dialog DEFINITION FINAL.
       IMPORTING
         iv_repo_url TYPE string.
 
-ENDCLASS. "lcl_password_dialog DEFINITION
+ENDCLASS.
 
 CLASS lcl_password_dialog IMPLEMENTATION.
 
@@ -74,14 +73,14 @@ CLASS lcl_password_dialog IMPLEMENTATION.
 
     CLEAR: p_url, p_user, p_pass.
 
-  ENDMETHOD.  "popup
+  ENDMETHOD.
 
   METHOD on_screen_init.
     s_title = 'Login'     ##NO_TEXT.
     s_url   = 'Repo URL'  ##NO_TEXT.
     s_user  = 'User'      ##NO_TEXT.
     s_pass  = 'Password'  ##NO_TEXT.
-  ENDMETHOD.  "on_screen_init
+  ENDMETHOD.
 
   METHOD on_screen_output.
     DATA lt_ucomm TYPE TABLE OF sy-ucomm.
@@ -116,7 +115,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
       SET CURSOR FIELD 'P_PASS'.
     ENDIF.
 
-  ENDMETHOD.  "on_screen_output
+  ENDMETHOD.
 
   METHOD on_screen_event.
     ASSERT sy-dynnr = c_dynnr.
@@ -136,7 +135,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
         LEAVE TO SCREEN 0.
     ENDCASE.
 
-  ENDMETHOD.  "on_screen_event
+  ENDMETHOD.
 
 
   METHOD enrich_title_by_hostname.
@@ -144,11 +143,11 @@ CLASS lcl_password_dialog IMPLEMENTATION.
     DATA lv_host TYPE string.
 
     FIND REGEX 'https?://([^/^:]*)' IN iv_repo_url SUBMATCHES lv_host.
-    IF lv_host IS NOT INITIAL AND lv_host NE space.
-      CLEAR: s_title.
+    IF lv_host IS NOT INITIAL AND lv_host <> space.
+      CLEAR s_title.
       CONCATENATE 'Login:' lv_host INTO s_title IN CHARACTER MODE SEPARATED BY space.
     ENDIF.
 
   ENDMETHOD.
 
-ENDCLASS. " lcl_password_dialog IMPLEMENTATION
+ENDCLASS.

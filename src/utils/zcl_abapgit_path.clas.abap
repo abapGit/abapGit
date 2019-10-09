@@ -64,7 +64,7 @@ CLASS ZCL_ABAPGIT_PATH IMPLEMENTATION.
 
     " TODO: improve logic and cases
 
-  ENDMETHOD. "change_dir
+  ENDMETHOD.
 
 
   METHOD get_filename_from_syspath.
@@ -86,12 +86,12 @@ CLASS ZCL_ABAPGIT_PATH IMPLEMENTATION.
 
     READ TABLE lt_split INDEX lv_index INTO rv_filename.
 
-  ENDMETHOD.  " get_filename_from_syspath.
+  ENDMETHOD.
 
 
   METHOD is_root.
     rv_yes = boolc( iv_path = '/' ).
-  ENDMETHOD. "is_root
+  ENDMETHOD.
 
 
   METHOD is_subdir.
@@ -105,7 +105,7 @@ CLASS ZCL_ABAPGIT_PATH IMPLEMENTATION.
                  AND iv_path+0(lv_len) = iv_parent
                  AND ( iv_parent+lv_last(1) = '/' OR iv_path+lv_len(1) = '/' ) ).
 
-  ENDMETHOD. "is_subdir
+  ENDMETHOD.
 
 
   METHOD split_file_location.
@@ -125,5 +125,5 @@ CLASS ZCL_ABAPGIT_PATH IMPLEMENTATION.
       ev_filename = iv_fullpath.
     ENDIF.
 
-  ENDMETHOD.  "split_file_location
+  ENDMETHOD.
 ENDCLASS.

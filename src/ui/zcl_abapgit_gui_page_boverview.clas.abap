@@ -4,19 +4,22 @@ CLASS zcl_abapgit_gui_page_boverview DEFINITION
   CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
+    INTERFACES: zif_abapgit_gui_page_hotkey.
+
     METHODS:
       constructor
         IMPORTING io_repo TYPE REF TO zcl_abapgit_repo_online
         RAISING   zcx_abapgit_exception,
-      zif_abapgit_gui_page~on_event REDEFINITION.
+      zif_abapgit_gui_event_handler~on_event REDEFINITION.
 
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
-    DATA: mo_repo     TYPE REF TO zcl_abapgit_repo_online,
-          mv_compress TYPE abap_bool VALUE abap_false,
-          mt_commits  TYPE zif_abapgit_definitions=>ty_commit_tt.
+    DATA: mo_repo            TYPE REF TO zcl_abapgit_repo_online,
+          mv_compress        TYPE abap_bool VALUE abap_false,
+          mt_commits         TYPE zif_abapgit_definitions=>ty_commit_tt,
+          mi_branch_overview TYPE REF TO zif_abapgit_branch_overview.
 
     CONSTANTS: BEGIN OF c_actions,
                  uncompress TYPE string VALUE 'uncompress' ##NO_TEXT,
@@ -53,7 +56,10 @@ CLASS zcl_abapgit_gui_page_boverview DEFINITION
         RETURNING VALUE(rv_string) TYPE string,
       escape_message
         IMPORTING iv_string        TYPE string
-        RETURNING VALUE(rv_string) TYPE string.
+        RETURNING VALUE(rv_string) TYPE string,
+      render_commit_popups
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        RAISING   zcx_abapgit_exception.
 ENDCLASS.
 
 
@@ -62,7 +68,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
 
 
   METHOD body.
-    DATA: lv_tag TYPE string.
+
+    DATA: lv_tag                 TYPE string,
+          lv_branch_display_name TYPE string.
 
     FIELD-SYMBOLS: <ls_commit> LIKE LINE OF mt_commits,
                    <ls_create> LIKE LINE OF <ls_commit>-create.
@@ -82,11 +90,20 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
     ro_html->add( '<br>' ).
     ro_html->add( build_menu( )->render( ) ).
 
-* see http://stackoverflow.com/questions/6081483/maximum-size-of-a-canvas-element
+
+    "CSS gitGraph-scrollWrapper, gitGraph-HTopScroller and gitGraph-Wrapper
+    " - Used to manage the Horizonal Scroll bar on top of gitGraph Element
+    ro_html->add( '<div class="gitGraph-scrollWrapper" onscroll="GitGraphScroller()">' ).
+    "see http://stackoverflow.com/questions/6081483/maximum-size-of-a-canvas-element
+    ro_html->add( '<div class="gitGraph-HTopScroller"></div>' ).
+    ro_html->add( '</div>' ).
+
+    ro_html->add( '<div class="gitGraph-Wrapper">' ).
     ro_html->add( '<canvas id="gitGraph"></canvas>' ).
+    ro_html->add( '</div>' ).
 
     ro_html->add( '<script type="text/javascript" src="https://cdnjs.' &&
-      'cloudflare.com/ajax/libs/gitgraph.js/1.2.3/gitgraph.min.js">' &&
+      'cloudflare.com/ajax/libs/gitgraph.js/1.14.0/gitgraph.min.js">' &&
       '</script>' ) ##NO_TEXT.
 
     ro_html->add( '<script type="text/javascript">' ).
@@ -107,13 +124,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
     ro_html->add( '  template: myTemplateConfig,' ).
     ro_html->add( '  orientation: "vertical-reverse"' ).
     ro_html->add( '});' ).
+    ro_html->add( 'var gBranchOveriew = new BranchOverview();' ).
 
     LOOP AT mt_commits ASSIGNING <ls_commit>.
+
       IF sy-tabix = 1.
-* assumption: all branches are created from master, todo
+        " assumption: all branches are created from master, todo
         ro_html->add( |var {
           escape_branch( <ls_commit>-branch ) } = gitgraph.branch("{
           <ls_commit>-branch }");| ).
+      ENDIF.
+
+      IF <ls_commit>-branch IS INITIAL.
+        CONTINUE. " we skip orphaned commits
       ENDIF.
 
       IF <ls_commit>-compressed = abap_true.
@@ -130,26 +153,47 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
                                   sep   = ` | ` ).
 
         ro_html->add( |{ escape_branch( <ls_commit>-branch ) }.commit(\{message: "{
-          escape_message( <ls_commit>-message ) }", author: "{
+          escape_message( <ls_commit>-message ) }", long: "{ escape_message( concat_lines_of( table = <ls_commit>-body
+                                                                                              sep   = ` ` ) )
+          }", author: "{
           <ls_commit>-author }", sha1: "{
-          <ls_commit>-sha1(7) }", tag: "{ lv_tag }"\});| ).
+          <ls_commit>-sha1(7) }", tag: "{ lv_tag
+          }", onClick:gBranchOveriew.onCommitClick.bind(gBranchOveriew)\});| ).
       ELSE.
         ro_html->add( |{ escape_branch( <ls_commit>-merge ) }.merge({
           escape_branch( <ls_commit>-branch ) }, \{message: "{
-          escape_message( <ls_commit>-message ) }", author: "{
-          <ls_commit>-author }", sha1: "{
-          <ls_commit>-sha1(7) }"\});| ).
+          escape_message( <ls_commit>-message ) }", long: "{ escape_message( concat_lines_of( table = <ls_commit>-body
+                                                                                              sep   = ` ` ) )
+          }", author: "{ <ls_commit>-author }", sha1: "{
+          <ls_commit>-sha1(7) }", onClick:gBranchOveriew.onCommitClick.bind(gBranchOveriew)\});| ).
       ENDIF.
 
       LOOP AT <ls_commit>-create ASSIGNING <ls_create>.
+        IF <ls_create>-name CS zcl_abapgit_branch_overview=>c_deleted_branch_name_prefix.
+          lv_branch_display_name = ''.
+        ELSE.
+          lv_branch_display_name = <ls_create>-name.
+        ENDIF.
+
         ro_html->add( |var { escape_branch( <ls_create>-name ) } = {
-          escape_branch( <ls_create>-parent ) }.branch("{
-          <ls_create>-name }");| ).
+                      escape_branch( <ls_create>-parent ) }.branch("{
+                      lv_branch_display_name }");| ).
       ENDLOOP.
 
     ENDLOOP.
 
+    ro_html->add(
+       |gitGraph.addEventListener( "commit:mouseover", gBranchOveriew.showCommit.bind(gBranchOveriew) );| ).
+    ro_html->add(
+       |gitGraph.addEventListener( "commit:mouseout",  gBranchOveriew.hideCommit.bind(gBranchOveriew) );| ).
+
     ro_html->add( '</script>' ).
+
+    ro_html->add( '<script>' ).
+    ro_html->add( 'setGitGraphScroller();' ).
+    ro_html->add( '</script>' ).
+
+    ro_html->add( render_commit_popups( ) ).
 
   ENDMETHOD.
 
@@ -208,7 +252,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
 
     rv_string = iv_string.
 
-    TRANSLATE rv_string USING '-_._'.
+    TRANSLATE rv_string USING '-_._#_'.
 
     rv_string = |branch_{ rv_string }|.
 
@@ -219,6 +263,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
 
     rv_string = iv_string.
 
+    REPLACE ALL OCCURRENCES OF '\' IN rv_string WITH '\\'.
     REPLACE ALL OCCURRENCES OF '"' IN rv_string WITH '\"'.
 
   ENDMETHOD.
@@ -234,7 +279,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    lt_branches = zcl_abapgit_branch_overview=>get_branches( ).
+    lt_branches = mi_branch_overview->get_branches( ).
 
     ro_html->add( |<select name="{ iv_name }">| ).
     LOOP AT lt_branches ASSIGNING <ls_branch>.
@@ -248,10 +293,71 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
 
   METHOD refresh.
 
-    mt_commits = zcl_abapgit_branch_overview=>run( mo_repo ).
+    mi_branch_overview = zcl_abapgit_factory=>get_branch_overview( mo_repo ).
+
+    mt_commits = mi_branch_overview->get_commits( ).
     IF mv_compress = abap_true.
-      mt_commits = zcl_abapgit_branch_overview=>compress( mt_commits ).
+      mt_commits = mi_branch_overview->compress( mt_commits ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD render_commit_popups.
+
+    DATA: lv_time    TYPE char10,
+          lv_date    TYPE sy-datum,
+          lv_content TYPE string.
+
+    FIELD-SYMBOLS: <ls_commit> LIKE LINE OF mt_commits.
+
+    CREATE OBJECT ro_html.
+
+    LOOP AT mt_commits ASSIGNING <ls_commit>.
+
+      CLEAR: lv_time, lv_date.
+
+      PERFORM p6_to_date_time_tz IN PROGRAM rstr0400
+                                 USING <ls_commit>-time
+                                       lv_time
+                                       lv_date.
+
+      lv_content = |<table class="commit">|
+                && |  <tr>|
+                && |    <td class="title">Author</td>|
+                && |    <td>{ <ls_commit>-author }</td>|
+                && |  </tr>|
+                && |  <tr>|
+                && |    <td class="title">SHA1</td>|
+                && |    <td>{ <ls_commit>-sha1 }</td>|
+                && |  </tr>|
+                && |  <tr>|
+                && |    <td class="title">Date/Time</td>|
+                && |    <td>{ lv_date DATE = USER }</td>|
+                && |  </tr>|
+                && |  <tr>|
+                && |    <td class="title">Message</td>|
+                && |    <td>{ <ls_commit>-message }</td>|
+                && |  </tr>|
+                && |  <tr>|.
+
+      IF <ls_commit>-body IS NOT INITIAL.
+        lv_content = lv_content
+                  && |<td class="title">Body</td>|
+                  && |<td>{ concat_lines_of( table = <ls_commit>-body
+                                             sep   = |<br/>| ) }</td>|.
+      ENDIF.
+
+      lv_content = lv_content
+                && |  </tr>|
+                && |</table>|.
+
+      ro_html->add( zcl_abapgit_gui_chunk_lib=>render_commit_popup( iv_id      = <ls_commit>-sha1(7)
+                                                                    iv_content = lv_content ) ).
+
+    ENDLOOP.
+
+
 
   ENDMETHOD.
 
@@ -264,7 +370,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
     ro_html->add( body( ) ).
     ro_html->add( '</div>' ).
 
-  ENDMETHOD.  "render_content
+  ENDMETHOD.
 
 
   METHOD render_merge.
@@ -282,7 +388,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page~on_event.
+  METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: ls_merge TYPE ty_merge,
           lo_merge TYPE REF TO zcl_abapgit_gui_page_merge.
@@ -291,15 +397,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
     CASE iv_action.
       WHEN c_actions-refresh.
         refresh( ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-uncompress.
         mv_compress = abap_false.
         refresh( ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-compress.
         mv_compress = abap_true.
         refresh( ).
-        ev_state = zif_abapgit_definitions=>gc_event_state-re_render.
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-merge.
         ls_merge = decode_merge( it_postdata ).
         CREATE OBJECT lo_merge
@@ -308,8 +414,23 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
             iv_source = ls_merge-source
             iv_target = ls_merge-target.
         ei_page = lo_merge.
-        ev_state = zif_abapgit_definitions=>gc_event_state-new_page.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+      WHEN OTHERS.
+        super->zif_abapgit_gui_event_handler~on_event(
+          EXPORTING
+            iv_action    = iv_action
+            iv_prev_page = iv_prev_page
+            iv_getdata   = iv_getdata
+            it_postdata  = it_postdata
+          IMPORTING
+            ei_page      = ei_page
+            ev_state     = ev_state ).
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 ENDCLASS.

@@ -5,27 +5,28 @@ CLASS zcl_abapgit_syntax_xml DEFINITION
 
   PUBLIC SECTION.
 
-    METHODS constructor.
-
     CONSTANTS:
       BEGIN OF c_css,
         xml_tag  TYPE string VALUE 'xml_tag',               "#EC NOTEXT
         attr     TYPE string VALUE 'attr',                  "#EC NOTEXT
         attr_val TYPE string VALUE 'attr_val',              "#EC NOTEXT
-      END OF c_css,
-
+      END OF c_css .
+    CONSTANTS:
       BEGIN OF c_token,
         xml_tag  TYPE c VALUE 'X',                          "#EC NOTEXT
         attr     TYPE c VALUE 'A',                          "#EC NOTEXT
         attr_val TYPE c VALUE 'V',                          "#EC NOTEXT
-      END OF c_token,
-
+      END OF c_token .
+    CONSTANTS:
       BEGIN OF c_regex,
-        xml_tag  TYPE string VALUE '[<>]',                  "#EC NOTEXT
-        attr     TYPE string VALUE '\s[-a-z:_0-9]+\s*(?==)', "#EC NOTEXT
-        attr_val TYPE string VALUE '["''][^''"]+[''"]',     "#EC NOTEXT
-      END OF c_regex.
+        "for XML tags, we will use a submatch
+        " main pattern includes quoted strings so we can ignore < and > in attr values
+        xml_tag  TYPE string VALUE '(?:"[^"]*")|(?:''[^'']*'')|([<>])',    "#EC NOTEXT
+        attr     TYPE string VALUE '(?:^|\s)[-a-z:_0-9]+\s*(?==)', "#EC NOTEXT
+        attr_val TYPE string VALUE '("[^"]*")|(''[^'']*'')',     "#EC NOTEXT
+      END OF c_regex .
 
+    METHODS constructor .
   PROTECTED SECTION.
 
     METHODS order_matches REDEFINITION.
@@ -43,9 +44,10 @@ CLASS ZCL_ABAPGIT_SYNTAX_XML IMPLEMENTATION.
 
     " Initialize instances of regular expressions
 
-    add_rule( iv_regex = c_regex-xml_tag
-              iv_token = c_token-xml_tag
-              iv_style = c_css-xml_tag ).
+    add_rule( iv_regex    = c_regex-xml_tag
+              iv_token    = c_token-xml_tag
+              iv_style    = c_css-xml_tag
+              iv_submatch = 1 ).
 
     add_rule( iv_regex = c_regex-attr
               iv_token = c_token-attr
@@ -91,8 +93,10 @@ CLASS ZCL_ABAPGIT_SYNTAX_XML IMPLEMENTATION.
             " Adjust length and offset of closing tag
           ELSEIF <ls_match>-text_tag = '>' AND lv_prev_token <> c_token-xml_tag.
             lv_state = 'C'.
-            <ls_match>-length = <ls_match>-offset - <ls_prev>-offset - <ls_prev>-length + <ls_match>-length.
-            <ls_match>-offset = <ls_prev>-offset + <ls_prev>-length.
+            IF <ls_prev> IS ASSIGNED.
+              <ls_match>-length = <ls_match>-offset - <ls_prev>-offset - <ls_prev>-length + <ls_match>-length.
+              <ls_match>-offset = <ls_prev>-offset + <ls_prev>-length.
+            ENDIF.
           ELSE.
             lv_state = 'O'.
           ENDIF.
@@ -113,5 +117,18 @@ CLASS ZCL_ABAPGIT_SYNTAX_XML IMPLEMENTATION.
       ASSIGN <ls_match> TO <ls_prev>.
     ENDLOOP.
 
-  ENDMETHOD.                    " order_matches
+    "if the last XML tag is not closed, extend it to the end of the tag
+    IF lv_prev_token = c_token-xml_tag
+        AND <ls_prev> IS ASSIGNED
+        AND <ls_prev>-length  = 1
+        AND <ls_prev>-text_tag = '<'.
+
+      FIND REGEX '<\s*[^\s]*' IN iv_line+<ls_prev>-offset MATCH LENGTH <ls_prev>-length.
+      IF sy-subrc <> 0.
+        <ls_prev>-length = 1.
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
 ENDCLASS.

@@ -4,6 +4,7 @@ CLASS zcl_abapgit_object_docv DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS: c_typ     TYPE dokhl-typ VALUE 'E',
                c_version TYPE dokhl-dokversion VALUE '0001',
@@ -20,18 +21,10 @@ CLASS zcl_abapgit_object_docv DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_docv IMPLEMENTATION.
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
-  METHOD zif_abapgit_object~changed_by.
-    rv_user = read( )-head-tdluser.
-    IF rv_user IS INITIAL.
-      rv_user = c_user_unknown.
-    ENDIF.
-  ENDMETHOD.                    "zif_abapgit_object~changed_by
+CLASS ZCL_ABAPGIT_OBJECT_DOCV IMPLEMENTATION.
+
 
   METHOD read.
 
@@ -55,35 +48,16 @@ CLASS zcl_abapgit_object_docv IMPLEMENTATION.
       TABLES
         line     = rs_data-lines.
 
-  ENDMETHOD.                    "read
-
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-    rs_metadata-delete_tadir = abap_true.
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
-
-  METHOD zif_abapgit_object~exists.
-
-    DATA: lv_id     TYPE dokhl-id,
-          lv_object TYPE dokhl-object.
+  ENDMETHOD.
 
 
-    lv_id = ms_item-obj_name(2).
-    lv_object = ms_item-obj_name+2.
+  METHOD zif_abapgit_object~changed_by.
+    rv_user = read( )-head-tdluser.
+    IF rv_user IS INITIAL.
+      rv_user = c_user_unknown.
+    ENDIF.
+  ENDMETHOD.
 
-    SELECT SINGLE id FROM dokil INTO lv_id
-      WHERE id     = lv_id
-        AND object = lv_object.                         "#EC CI_GENBUFF
-
-    rv_bool = boolc( sy-subrc = 0 ).
-
-  ENDMETHOD.                    "zif_abapgit_object~exists
-
-  METHOD zif_abapgit_object~jump.
-
-    zcx_abapgit_exception=>raise( 'todo, jump DOCV' ).
-
-  ENDMETHOD.                    "jump
 
   METHOD zif_abapgit_object~delete.
 
@@ -107,7 +81,8 @@ CLASS zcl_abapgit_object_docv IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from DOCU_DEL' ).
     ENDIF.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -126,7 +101,59 @@ CLASS zcl_abapgit_object_docv IMPLEMENTATION.
       TABLES
         line    = ls_data-lines.
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~exists.
+
+    DATA: lv_id     TYPE dokhl-id,
+          lv_object TYPE dokhl-object.
+
+
+    lv_id = ms_item-obj_name(2).
+    lv_object = ms_item-obj_name+2.
+
+    SELECT SINGLE id FROM dokil INTO lv_id
+      WHERE id     = lv_id
+        AND object = lv_object.                         "#EC CI_GENBUFF
+
+    rv_bool = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+    rs_metadata-delete_tadir = abap_true.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~jump.
+
+    zcx_abapgit_exception=>raise( 'todo, jump DOCV' ).
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object~serialize.
 
@@ -147,10 +174,5 @@ CLASS zcl_abapgit_object_docv IMPLEMENTATION.
     io_xml->add( iv_name = c_name
                  ig_data = ls_data ).
 
-  ENDMETHOD.                    "serialize
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
-
-ENDCLASS.                    "zcl_abapgit_object_msag IMPLEMENTATION
+ENDCLASS.

@@ -9,6 +9,16 @@
     {% endfor %}
 </ul>
 
+<h3>Setup</h3>
+<ul>
+    {% assign pages = site.pages | sort: 'order' %}
+    {% for doc in pages %}
+      {% if doc.category == "setup" %}
+        <li><a href=".{{ doc.url }}">{{ doc.title }}</a></li>
+      {% endif %}
+    {% endfor %}
+</ul>
+
 <h3>Online Projects</h3>
 <ul>
     {% assign pages = site.pages | sort: 'order' %}
@@ -48,3 +58,5 @@
       {% endif %}
     {% endfor %}
 </ul>
+
+<a href="/development">Development</a>

@@ -3,6 +3,7 @@ CLASS zcl_abapgit_object_sfbs DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS:
       get
@@ -49,11 +50,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SFBS IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~delete.
 
     DATA: lv_bfset  TYPE sfw_bset,
@@ -72,7 +68,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SFBS IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Error deleting SFBS' ).
     ENDIF.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
@@ -119,14 +115,14 @@ CLASS ZCL_ABAPGIT_OBJECT_SFBS IMPLEMENTATION.
     lo_bfs->set_assigned_bfs( lt_nested_bfs ).
     lo_bfs->set_nested_parent( lt_parent_bfs ).
 
-* magic, see function module RS_CORR_INSERT, FORM get_current_devclass
-    SET PARAMETER ID 'EUK' FIELD iv_package.
+    set_default_package( iv_package ).
+    tadir_insert( iv_package ).
+
     lo_bfs->save_all( ).
-    SET PARAMETER ID 'EUK' FIELD ''.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
-  ENDMETHOD.                    "deserialize
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
@@ -150,18 +146,34 @@ CLASS ZCL_ABAPGIT_OBJECT_SFBS IMPLEMENTATION.
 
     rv_bool = abap_true.
 
-  ENDMETHOD.                    "zif_abapgit_object~exists
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
     rs_metadata-ddic = abap_true.
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
+    rs_metadata-delete_tadir = abap_true.
+  ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~jump.
@@ -173,7 +185,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SFBS IMPLEMENTATION.
         object_type   = 'SFBS'
         in_new_window = abap_true.
 
-  ENDMETHOD.                    "jump
+  ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
@@ -223,5 +235,5 @@ CLASS ZCL_ABAPGIT_OBJECT_SFBS IMPLEMENTATION.
     io_xml->add( ig_data = lt_parent_bfs
                  iv_name = 'PARENT_BFS' ).
 
-  ENDMETHOD.                    "serialize
+  ENDMETHOD.
 ENDCLASS.

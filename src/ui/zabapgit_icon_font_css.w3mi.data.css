@@ -1,0 +1,51 @@
+@font-face {
+    font-family: "ag-icons";
+    font-weight: normal;
+    font-style: normal;
+    src: url("../font/ag-icons.woff") format("woff");
+}
+
+.icon {
+    line-height: 1;
+}
+
+.icon:before {
+    font-family: ag-icons !important;
+    font-style: normal;
+    font-weight: normal !important;
+
+    display: inline-block;
+    text-decoration: none;
+    text-align: center;
+    vertical-align: text-top;
+    width: 1em;
+
+    /* For safety - reset parent styles, that can break glyph codes*/
+    font-variant: normal;
+    text-transform: none;
+}
+
+.icon.large { font-size: 200%; }
+
+.icon-arrow-circle-up:before { content: "\f101"; }
+.icon-bars:before { content: "\f102"; }
+.icon-bolt:before { content: "\f103"; }
+.icon-box:before { content: "\f104"; }
+.icon-briefcase:before { content: "\f105"; }
+.icon-check:before { content: "\f106"; }
+.icon-cloud-upload-alt:before { content: "\f107"; }
+.icon-code-branch:before { content: "\f108"; }
+.icon-cog:before { content: "\f109"; }
+.icon-exclamation-circle:before { content: "\f10a"; }
+.icon-exclamation-triangle:before { content: "\f10b"; }
+.icon-file-alt:before { content: "\f10c"; }
+.icon-file-code:before { content: "\f10d"; }
+.icon-file-image:before { content: "\f10e"; }
+.icon-file:before { content: "\f10f"; }
+.icon-fire-alt:before { content: "\f110"; }
+.icon-folder:before { content: "\f111"; }
+.icon-lock:before { content: "\f112"; }
+.icon-plug:before { content: "\f113"; }
+.icon-sliders-h:before { content: "\f114"; }
+.icon-snowflake:before { content: "\f115"; }
+.icon-star:before { content: "\f116"; }

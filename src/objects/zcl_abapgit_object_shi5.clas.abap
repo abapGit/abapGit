@@ -10,6 +10,7 @@ CLASS zcl_abapgit_object_shi5 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         iv_language TYPE spras.
 
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: tty_ttree_extt TYPE STANDARD TABLE OF ttree_extt
                                WITH NON-UNIQUE DEFAULT KEY,
@@ -22,7 +23,10 @@ CLASS zcl_abapgit_object_shi5 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_OBJECT_SHI5 IMPLEMENTATION.
+
 
   METHOD constructor.
 
@@ -31,37 +35,13 @@ CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
 
     mv_extension = ms_item-obj_name.
 
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
-  ENDMETHOD.  "zif_abapgit_object~has_changed_since
 
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown.
   ENDMETHOD.
 
-  METHOD zif_abapgit_object~get_metadata.
-    rs_metadata = get_metadata( ).
-  ENDMETHOD.                    "zif_abapgit_object~get_metadata
-
-  METHOD zif_abapgit_object~jump.
-    zcx_abapgit_exception=>raise( |TODO: Jump { ms_item-obj_type }| ).
-  ENDMETHOD.                    "jump
-
-  METHOD zif_abapgit_object~exists.
-
-    DATA: ls_extension_header TYPE ttree_ext.
-
-    CALL FUNCTION 'STREE_EXTENSION_EXISTS'
-      EXPORTING
-        extension        = mv_extension
-      IMPORTING
-        extension_header = ls_extension_header.
-
-    rv_bool = boolc( ls_extension_header IS NOT INITIAL ).
-
-  ENDMETHOD.                    "zif_abapgit_object~exists
 
   METHOD zif_abapgit_object~delete.
 
@@ -79,26 +59,8 @@ CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
       zcx_abapgit_exception=>raise( ls_message-msgtxt ).
     ENDIF.
 
-  ENDMETHOD.                    "delete
+  ENDMETHOD.
 
-  METHOD zif_abapgit_object~serialize.
-
-    DATA: ls_extension TYPE ty_extension.
-
-    CALL FUNCTION 'STREE_EXTENSION_EXISTS'
-      EXPORTING
-        extension        = mv_extension
-      IMPORTING
-        extension_header = ls_extension-header.
-
-    SELECT * FROM ttree_extt
-             INTO TABLE ls_extension-texts
-             WHERE extension = mv_extension.
-
-    io_xml->add( iv_name = 'SHI5'
-                 ig_data = ls_extension ).
-
-  ENDMETHOD.                    "serialize
 
   METHOD zif_abapgit_object~deserialize.
 
@@ -120,10 +82,70 @@ CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
 
     tadir_insert( iv_package ).
 
-  ENDMETHOD.                    "deserialize
-
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
   ENDMETHOD.
 
-ENDCLASS.                    "zcl_abapgit_object_shi5 IMPLEMENTATION
+
+  METHOD zif_abapgit_object~exists.
+
+    DATA: ls_extension_header TYPE ttree_ext.
+
+    CALL FUNCTION 'STREE_EXTENSION_EXISTS'
+      EXPORTING
+        extension        = mv_extension
+      IMPORTING
+        extension_header = ls_extension_header.
+
+    rv_bool = boolc( ls_extension_header IS NOT INITIAL ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+    rv_is_locked = abap_false.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~jump.
+    zcx_abapgit_exception=>raise( |TODO: Jump { ms_item-obj_type }| ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~serialize.
+
+    DATA: ls_extension TYPE ty_extension.
+
+    CALL FUNCTION 'STREE_EXTENSION_EXISTS'
+      EXPORTING
+        extension        = mv_extension
+      IMPORTING
+        extension_header = ls_extension-header.
+
+    SELECT * FROM ttree_extt
+             INTO TABLE ls_extension-texts
+             WHERE extension = mv_extension.
+
+    io_xml->add( iv_name = 'SHI5'
+                 ig_data = ls_extension ).
+
+  ENDMETHOD.
+ENDCLASS.

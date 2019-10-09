@@ -20,7 +20,16 @@ CLASS zcl_abapgit_object_devc DEFINITION PUBLIC
                          RAISING   zcx_abapgit_exception,
       set_lock IMPORTING ii_package TYPE REF TO if_package
                          iv_lock    TYPE abap_bool
-               RAISING   zcx_abapgit_exception.
+               RAISING   zcx_abapgit_exception,
+      is_empty
+        IMPORTING iv_package_name    TYPE devclass
+        RETURNING VALUE(rv_is_empty) TYPE abap_bool
+        RAISING   zcx_abapgit_exception,
+      load_package
+        IMPORTING iv_package_name   TYPE devclass
+        RETURNING VALUE(ri_package) TYPE REF TO if_package
+        RAISING   zcx_abapgit_exception.
+
     DATA:
       mv_local_devclass TYPE devclass.
 ENDCLASS.
@@ -33,31 +42,65 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
   METHOD constructor.
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
-    mv_local_devclass = is_item-devclass.
+    IF is_item-devclass IS NOT INITIAL.
+      mv_local_devclass = is_item-devclass.
+    ELSE.
+      mv_local_devclass = is_item-obj_name.
+    ENDIF.
   ENDMETHOD.
 
 
   METHOD get_package.
     IF me->zif_abapgit_object~exists( ) = abap_true.
-      cl_package_factory=>load_package(
-        EXPORTING
-          i_package_name             = mv_local_devclass
-          i_force_reload             = abap_true
-        IMPORTING
-          e_package                  = ri_package
-        EXCEPTIONS
-          object_not_existing        = 1
-          unexpected_error           = 2
-          intern_err                 = 3
-          no_access                  = 4
-          object_locked_and_modified = 5
-          OTHERS                     = 6 ).
-      IF sy-subrc = 1.
-        RETURN.
-      ELSEIF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error from CL_PACKAGE_FACTORY=>LOAD_PACKAGE { sy-subrc }| ).
-      ENDIF.
+      ri_package = load_package( mv_local_devclass ).
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD is_empty.
+
+    DATA: lv_object_name TYPE tadir-obj_name,
+          lt_subpackages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
+
+    lt_subpackages = zcl_abapgit_factory=>get_sap_package( iv_package_name )->list_subpackages( ).
+
+    IF lines( lt_subpackages ) > 0.
+      rv_is_empty = abap_false.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE obj_name
+           FROM tadir
+           INTO lv_object_name
+           WHERE pgmid    =  'R3TR'
+           AND   NOT ( object = 'DEVC' AND obj_name = iv_package_name )
+           AND   devclass = iv_package_name.
+    rv_is_empty = boolc( sy-subrc <> 0 ).
+
+  ENDMETHOD.
+
+
+  METHOD load_package.
+
+    cl_package_factory=>load_package(
+      EXPORTING
+        i_package_name             = iv_package_name
+        i_force_reload             = abap_true
+      IMPORTING
+        e_package                  = ri_package
+      EXCEPTIONS
+        object_not_existing        = 1
+        unexpected_error           = 2
+        intern_err                 = 3
+        no_access                  = 4
+        object_locked_and_modified = 5
+        OTHERS                     = 6 ).
+    IF sy-subrc = 1.
+      RETURN.
+    ELSEIF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -82,14 +125,15 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
           unexpected_error            = 10
           OTHERS                      = 11 ).
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->SET_CHANGEABLE { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDIF.
 
     ii_package->set_permissions_changeable(
       EXPORTING
         i_changeable                = iv_lock
-        i_suppress_dialog           = abap_true
+* downport, does not exist in 7.30. Let's see if we can get along without it
+*        i_suppress_dialog           = abap_true
       EXCEPTIONS
         object_already_changeable   = 1
         object_already_unlocked     = 2
@@ -104,7 +148,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
     IF ( sy-subrc = 1 AND iv_lock = abap_true ) OR ( sy-subrc = 2 AND iv_lock = abap_false ).
       " There's no getter to find out beforehand...
     ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->SET_PERMISSIONS_CHANGEABLE { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
   ENDMETHOD.
 
@@ -126,7 +170,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
         unexpected_error = 2
         OTHERS           = 3 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from IF_PACKAGE=>GET_PERMISSIONS_TO_USE { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     ls_data_sign-err_sever = abap_true.
@@ -151,8 +195,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
             intern_err            = 3
             OTHERS                = 4 ).
         IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise(
-            |Error from IF_PACKAGE_PERMISSION_TO_USE->SET_ALL_ATTRIBUTES { sy-subrc }| ).
+          zcx_abapgit_exception=>raise_t100( ).
         ENDIF.
 
       ELSE.
@@ -169,7 +212,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
             unexpected_error        = 5
             OTHERS                  = 6 ).
         IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->ADD_PERMISSION_TO_USE { sy-subrc }| ).
+          zcx_abapgit_exception=>raise_t100( ).
         ENDIF.
 
       ENDIF.
@@ -188,11 +231,11 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
         EXCEPTIONS
           object_not_changeable = 1
           object_invalid        = 2
-          deletion_not_allowed  = 3
+*          deletion_not_allowed  = 3 downport, does not exist in 7.30
           intern_err            = 4
           OTHERS                = 5 ).
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->DELETE { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
@@ -203,26 +246,125 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~compare_to_remote_version.
-    CREATE OBJECT ro_comparison_result TYPE zcl_abapgit_comparison_null.
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_object~delete.
+
+    DATA: li_package TYPE REF TO if_package,
+          lv_package TYPE devclass.
+
     " Package deletion is a bit tricky. A package can only be deleted if there are no objects
     " contained in it. This includes subpackages, so first the leaf packages need to be deleted.
     " Unfortunately deleted objects that are still contained in an unreleased transport request
     " also count towards the contained objects counter.
-    " -> Package deletion is currently not supported by abapGit
+    " -> Currently we delete only empty packages
+    "
+    " If objects are deleted, the TADIR entry is deleted when the transport request is released.
+    " So before we can delete the package, the transport which deletes the objects
+    " in the package has to be released.
+
+    lv_package = ms_item-obj_name.
+
+    IF is_empty( lv_package ) = abap_true.
+
+      li_package = load_package( lv_package ).
+
+      IF li_package IS NOT BOUND.
+        RETURN.
+      ENDIF.
+
+      TRY.
+          CALL METHOD li_package->('SET_CHANGEABLE')
+            EXPORTING
+              i_changeable                = abap_true
+              i_suppress_dialog           = abap_true " Parameter missing in 702
+            EXCEPTIONS
+              object_locked_by_other_user = 1
+              permission_failure          = 2
+              object_already_changeable   = 3
+              object_already_unlocked     = 4
+              object_just_created         = 5
+              object_deleted              = 6
+              object_modified             = 7
+              object_not_existing         = 8
+              object_invalid              = 9
+              unexpected_error            = 10
+              OTHERS                      = 11.
+
+        CATCH cx_root.
+          li_package->set_changeable(
+            EXPORTING
+              i_changeable                = abap_true
+            EXCEPTIONS
+              object_locked_by_other_user = 1
+              permission_failure          = 2
+              object_already_changeable   = 3
+              object_already_unlocked     = 4
+              object_just_created         = 5
+              object_deleted              = 6
+              object_modified             = 7
+              object_not_existing         = 8
+              object_invalid              = 9
+              unexpected_error            = 10
+              OTHERS                      = 11 ).
+      ENDTRY.
+
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+      TRY.
+          CALL METHOD li_package->('DELETE')
+            EXPORTING
+              i_suppress_dialog     = abap_true  " Parameter missing in 702
+            EXCEPTIONS
+              object_not_empty      = 1
+              object_not_changeable = 2
+              object_invalid        = 3
+              intern_err            = 4
+              OTHERS                = 5.
+
+        CATCH cx_root.
+
+          li_package->delete(
+            EXCEPTIONS
+              object_not_empty      = 1
+              object_not_changeable = 2
+              object_invalid        = 3
+              intern_err            = 4
+              OTHERS                = 5 ).
+
+      ENDTRY.
+
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+      li_package->save(
+        EXPORTING
+          i_suppress_dialog     = abap_true
+        EXCEPTIONS
+          object_invalid        = 1
+          object_not_changeable = 2
+          cancelled_in_corr     = 3
+          permission_failure    = 4
+          unexpected_error      = 5
+          intern_err            = 6
+          OTHERS                = 7 ).
+
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
+    ENDIF.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
-    DATA: li_package         TYPE REF TO if_package,
-          ls_package_data    TYPE scompkdtln,
-          ls_data_sign       TYPE scompksign,
-          lt_usage_data      TYPE scomppdata,
-          ls_save_sign       TYPE paksavsign.
+    DATA: li_package      TYPE REF TO if_package,
+          ls_package_data TYPE scompkdtln,
+          ls_data_sign    TYPE scompksign,
+          lt_usage_data   TYPE scomppdata,
+          ls_save_sign    TYPE paksavsign.
 
     FIELD-SYMBOLS: <ls_usage_data> TYPE scomppdtln.
 
@@ -239,19 +381,21 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
 
     " Swap out repository package name with the local installation package name
     ls_package_data-devclass = mv_local_devclass.
+    ls_package_data-pdevclass = li_package->transport_layer.
 
     " Parent package is not changed. Assume the folder logic already created the package and set
     " the hierarchy before.
     CLEAR ls_package_data-parentcl.
 
+* Fields not set:
+* korrflag
+* dlvunit
+* parentcl
     ls_data_sign-ctext            = abap_true.
-*    ls_data_sign-korrflag         = abap_true.
     ls_data_sign-as4user          = abap_true.
     ls_data_sign-pdevclass        = abap_true.
-*    ls_data_sign-dlvunit          = abap_true.
     ls_data_sign-comp_posid       = abap_true.
     ls_data_sign-component        = abap_true.
-*    ls_data_sign-parentcl         = abap_true. " No parent package change here
     ls_data_sign-perminher        = abap_true.
     ls_data_sign-intfprefx        = abap_true.
     ls_data_sign-packtype         = abap_true.
@@ -297,11 +441,11 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
           prefix_in_use              = 13
           unexpected_error           = 14
           intern_err                 = 15
-          wrong_mainpack_value       = 16
-          superpackage_invalid       = 17
+*          wrong_mainpack_value       = 16  downport, does not exist in 7.30
+*          superpackage_invalid       = 17  downport, does not exist in 7.30
           OTHERS                     = 18 ).
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->SET_ALL_ATTRIBUTES { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
 *      " If the application component was cleared SET_ALL_ATTRIBUTES doesn't change it
@@ -335,13 +479,13 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
           unexpected_error           = 15
           intern_err                 = 16
           no_access                  = 17
-          invalid_translation_depth  = 18
-          wrong_mainpack_value       = 19
-          superpackage_invalid       = 20
+*          invalid_translation_depth  = 18 downport, does not exist in 7.30
+*          wrong_mainpack_value       = 19 downport, does not exist in 7.30
+*          superpackage_invalid       = 20 downport, does not exist in 7.30
 *          error_in_cts_checks        = 21 downport, does not exist in 7.31
           OTHERS                     = 22 ).
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error from CL_PACKAGE_FACTORY=>CREATE_NEW_PACKAGE { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDIF.
 
@@ -374,7 +518,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
         object_invalid        = 4
         OTHERS                = 5 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->SAVE_GENERIC { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     set_lock( ii_package = li_package iv_lock = abap_false ).
@@ -382,7 +526,6 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~exists.
-
     " Check remote package if deserialize has not been called before this
     IF mv_local_devclass IS INITIAL.
       rv_bool = abap_false.
@@ -396,9 +539,19 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
           intern_err              = 1
           OTHERS                  = 2 ).
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error from CL_PACKAGE_HELPER=>CHECK_PACKAGE_EXISTENCE { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_comparator.
+    RETURN.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~get_deserialize_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
 
 
@@ -407,8 +560,22 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_object~has_changed_since.
-    rv_changed = abap_true.
+  METHOD zif_abapgit_object~is_active.
+    rv_active = is_active( ).
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_object~is_locked.
+
+    DATA: lv_object TYPE eqegraarg.
+
+    lv_object = |DV{ ms_item-obj_name }|.
+    OVERLAY lv_object WITH '                                          '.
+    lv_object = lv_object && '*'.
+
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'EEUDB'
+                                            iv_argument    = lv_object ).
+
   ENDMETHOD.
 
 
@@ -424,7 +591,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
         invalid_object_type = 2
         OTHERS              = 3.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from RS_TOOL_ACCESS, DEVC| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
   ENDMETHOD.
 
@@ -454,7 +621,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
         intern_err      = 3
         OTHERS          = 4 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->GET_ALL_ATTRIBUTES { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     CLEAR: ls_package_data-devclass,
@@ -470,8 +637,14 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
     " Clear text descriptions that might be localized
     CLEAR: ls_package_data-comp_text,
            ls_package_data-dlvu_text,
-           ls_package_data-translation_depth_text,
            ls_package_data-layer_text.
+
+    ASSIGN COMPONENT 'TRANSLATION_DEPTH_TEXT'
+           OF STRUCTURE ls_package_data
+           TO <lg_field>.
+    IF sy-subrc = 0.
+      CLEAR: <lg_field>.
+    ENDIF.
 
     ASSIGN COMPONENT 'TRANSLATION_GRAPH_DEPTH_TEXT'
            OF STRUCTURE ls_package_data
@@ -486,7 +659,12 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
            ls_package_data-pdevclass.
 
     " Not usable on customer systems
-    CLEAR: ls_package_data-translation_depth.
+    ASSIGN COMPONENT 'TRANSLATION_DEPTH'
+           OF STRUCTURE ls_package_data
+           TO <lg_field>.
+    IF sy-subrc = 0.
+      CLEAR: <lg_field>.
+    ENDIF.
 
     ASSIGN COMPONENT 'TRANSLATION_GRAPH_DEPTH'
            OF STRUCTURE ls_package_data
@@ -508,7 +686,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
         unexpected_error = 2
         OTHERS           = 3 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from IF_PACKAGE->GET_PERMISSION_TO_USE { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     LOOP AT lt_intf_usages INTO li_usage.
@@ -520,8 +698,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
           intern_err        = 2
           OTHERS            = 3 ).
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise(
-          |Error from IF_PACKAGE_PERMISSION_TO_USE->GET_ALL_ATTRIBUTES { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
       CLEAR: ls_usage_data-pack_name, ls_usage_data-client_pak.

@@ -50,7 +50,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_ABAP IMPLEMENTATION.
 
     init_keywords( ).
 
-  ENDMETHOD.                    " class_constructor
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -71,7 +71,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_ABAP IMPLEMENTATION.
               iv_token = c_token-text
               iv_style = c_css-text ).
 
-  ENDMETHOD.                    " constructor
+  ENDMETHOD.
 
 
   METHOD init_keywords.
@@ -179,7 +179,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_ABAP IMPLEMENTATION.
     SPLIT lv_keywords AT '|' INTO TABLE lt_keywords.
     gt_keywords = lt_keywords. " Hash table
 
-  ENDMETHOD.                    " init_keywords
+  ENDMETHOD.
 
 
   METHOD is_keyword.
@@ -190,7 +190,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_ABAP IMPLEMENTATION.
     READ TABLE gt_keywords WITH KEY table_line = lv_str TRANSPORTING NO FIELDS.
     rv_yes = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.  " is_keyword.
+  ENDMETHOD.
 
 
   METHOD order_matches.
@@ -219,12 +219,11 @@ CLASS ZCL_ABAPGIT_SYNTAX_ABAP IMPLEMENTATION.
 
       CASE <ls_match>-token.
         WHEN c_token-keyword.
-          IF <ls_match>-offset > 0.
+          IF <ls_match>-offset > 0
+              AND substring( val = iv_line off = ( <ls_match>-offset - 1 ) len = 1 ) CA '-<'.
             " Delete match if keyword is part of structure or field symbol
-            IF substring( val = iv_line off = ( <ls_match>-offset - 1 ) len = 1 ) CA '-<'.
-              DELETE ct_matches INDEX lv_index.
-              CONTINUE.
-            ENDIF.
+            DELETE ct_matches INDEX lv_index.
+            CONTINUE.
           ENDIF.
 
         WHEN c_token-comment.
@@ -262,25 +261,24 @@ CLASS ZCL_ABAPGIT_SYNTAX_ABAP IMPLEMENTATION.
       ASSIGN <ls_match> TO <ls_prev>.
     ENDLOOP.
 
-  ENDMETHOD.                    " order_matches.
+  ENDMETHOD.
 
 
   METHOD parse_line. "REDEFINITION
 
     DATA lv_index TYPE i.
 
-    FIELD-SYMBOLS <ls_match> LIKE LINE OF et_matches.
+    FIELD-SYMBOLS <ls_match> LIKE LINE OF rt_matches.
 
-    super->parse_line( EXPORTING iv_line    = iv_line
-                       IMPORTING et_matches = et_matches ).
+    rt_matches = super->parse_line( iv_line ).
 
     " Remove non-keywords
-    LOOP AT et_matches ASSIGNING <ls_match> WHERE token = c_token-keyword.
+    LOOP AT rt_matches ASSIGNING <ls_match> WHERE token = c_token-keyword.
       lv_index = sy-tabix.
       IF abap_false = is_keyword( substring( val = iv_line
                                              off = <ls_match>-offset
                                              len = <ls_match>-length ) ).
-        DELETE et_matches INDEX lv_index.
+        DELETE rt_matches INDEX lv_index.
       ENDIF.
     ENDLOOP.
 
