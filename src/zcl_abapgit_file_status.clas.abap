@@ -52,7 +52,15 @@ CLASS zcl_abapgit_file_status DEFINITION
                   io_dot      TYPE REF TO zcl_abapgit_dot_abapgit
         EXPORTING es_item     TYPE zif_abapgit_definitions=>ty_item
                   ev_is_xml   TYPE abap_bool
-        RAISING   zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception,
+      get_object_package
+        IMPORTING
+          iv_object       TYPE tadir-object
+          iv_obj_name     TYPE tadir-obj_name
+        RETURNING
+          VALUE(r_result) TYPE devclass
+        RAISING
+          zcx_abapgit_exception .
 
 ENDCLASS.
 
@@ -239,7 +247,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
       CHECK lv_is_xml = abap_true. " Skip all but obj definitions
 
-      ls_item-devclass = zcl_abapgit_factory=>get_tadir( )->get_object_package(
+      ls_item-devclass = get_object_package(
         iv_object   = ls_item-obj_type
         iv_obj_name = ls_item-obj_name ).
 
@@ -445,5 +453,21 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       io_dot     = lo_dot_abapgit
       iv_top     = io_repo->get_package( ) ).
 
+  ENDMETHOD.
+
+  METHOD get_object_package.
+    DATA: packname TYPE devclass,
+          pack     TYPE REF TO zif_abapgit_sap_package.
+
+    r_result = zcl_abapgit_factory=>get_tadir( )->get_object_package(
+      iv_object   = iv_object        iv_obj_name = iv_obj_name ).
+    IF r_result IS INITIAL and iv_object = 'DEVC' and iv_obj_name(1) = '$'.
+      " local packages usually have no tadir entry
+      packname = iv_obj_name.
+      pack = zcl_abapgit_factory=>get_sap_package( packname ).
+      IF pack->exists(  ) = abap_true.
+        r_result = packname.
+      ENDIF.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.
