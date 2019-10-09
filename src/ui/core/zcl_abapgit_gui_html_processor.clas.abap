@@ -112,7 +112,7 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR IMPLEMENTATION.
         && c_preprocess_marker
         && cl_abap_char_utilities=>newline
         && `    `.
-      ev_html = ev_html && lv_marker && lc_css_build && cl_abap_char_utilities=>newline.
+      ev_html = ev_html && lv_marker && lc_css_build.
     ENDIF.
     ev_html = ev_html && substring( val = iv_html off = lv_head_end ).
 
