@@ -199,8 +199,8 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     DELETE lt_local " Remove non-code related files except .abapgit
       WHERE item IS INITIAL
-      AND NOT ( file-path     = zif_abapgit_definitions=>c_root_dir
-      AND       file-filename = zif_abapgit_definitions=>c_dot_abapgit ).
+      AND NOT ( file-path = zif_abapgit_definitions=>c_root_dir
+      AND file-filename = zif_abapgit_definitions=>c_dot_abapgit ).
     SORT lt_local BY item.
 
     lt_remote = get_files_remote( ).

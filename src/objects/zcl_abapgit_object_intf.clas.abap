@@ -198,7 +198,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
       INTO TABLE lt_reposrc
       FOR ALL ENTRIES IN lt_includes
       WHERE progname = lt_includes-programm
-      AND   r3state = 'A'.
+      AND r3state = 'A'.
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
     ELSE.

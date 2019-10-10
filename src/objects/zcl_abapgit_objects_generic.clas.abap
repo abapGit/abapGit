@@ -205,7 +205,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
 * object methods
     SELECT * FROM objm INTO TABLE mt_object_method
       WHERE objectname = is_item-obj_type
-      AND   objecttype = lc_logical_transport_object
+      AND objecttype = lc_logical_transport_object
       ORDER BY PRIMARY KEY.
 
     ms_item = is_item.

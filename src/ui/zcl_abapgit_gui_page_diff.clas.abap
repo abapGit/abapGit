@@ -210,8 +210,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
       lv_patch = lo_git_add_patch->get_patch_binary( ).
 
-      IF  <ls_diff_file>-lstate = 'D'
-      AND are_all_lines_patched( lt_diff ) = abap_true.
+      IF <ls_diff_file>-lstate = 'D' AND are_all_lines_patched( lt_diff ) = abap_true.
 
         mo_stage->rm(
             iv_path     = <ls_diff_file>-path
@@ -370,7 +369,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
       WHEN zif_abapgit_definitions=>c_diff-delete.
 
-        lv_line =  ls_diff_line-old_num.
+        lv_line = ls_diff_line-old_num.
 
         lo_diff->set_patch_old( iv_line_old   = lv_line
                                 iv_patch_flag = iv_patch_flag ).
@@ -447,8 +446,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
       LOOP AT lt_status ASSIGNING <ls_status>
           WHERE obj_type = is_object-obj_type
-          AND   obj_name = is_object-obj_name
-          AND   match IS INITIAL.
+          AND obj_name = is_object-obj_name
+          AND match IS INITIAL.
         append_diff( it_remote = lt_remote
                      it_local  = lt_local
                      is_status = <ls_status> ).

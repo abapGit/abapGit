@@ -1004,8 +1004,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
     " so we isolate them and and sort only the code artifacts
     LOOP AT ct_repo_items ASSIGNING <ls_repo_item>.
 
-      IF  <ls_repo_item>-obj_type IS INITIAL
-      AND <ls_repo_item>-is_dir = abap_false.
+      IF <ls_repo_item>-obj_type IS INITIAL AND <ls_repo_item>-is_dir = abap_false.
         INSERT <ls_repo_item> INTO TABLE lt_non_code_and_metadata_items.
       ELSE.
         INSERT <ls_repo_item> INTO TABLE lt_code_items.
