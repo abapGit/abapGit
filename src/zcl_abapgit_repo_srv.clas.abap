@@ -190,7 +190,8 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
         READ TABLE lt_packages TRANSPORTING NO FIELDS
           WITH KEY table_line = iv_package.
         IF sy-subrc = 0.
-          zcx_abapgit_exception=>raise( |Repository { lo_repo->get_name( ) } already contains subpackage of { iv_package } | ).
+          zcx_abapgit_exception=>raise( |Repository { lo_repo->get_name( ) } |
+                                    &&  |already contains subpackage of { iv_package } | ).
         ENDIF.
       ENDIF.
 
