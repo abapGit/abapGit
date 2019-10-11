@@ -180,10 +180,10 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
     ENDLOOP.
 
     SELECT * FROM dokil
-             INTO TABLE lt_dokil
-             FOR ALL ENTRIES IN lt_objects
-             WHERE id     = 'NA'
-             AND   object = lt_objects-table_line.
+      INTO TABLE lt_dokil
+      FOR ALL ENTRIES IN lt_objects
+      WHERE id = 'NA'
+      AND object = lt_objects-table_line.
 
     CLEAR ls_dokil-dokstate.
     MODIFY lt_dokil FROM ls_dokil TRANSPORTING dokstate WHERE dokstate IS NOT INITIAL.
@@ -214,7 +214,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
     SELECT DISTINCT sprsl AS langu INTO TABLE lt_i18n_langs
       FROM t100t
       WHERE arbgb = lv_msg_id
-      AND   sprsl <> mv_language.       "#EC CI_BYPASS "#EC CI_GENBUFF.
+      AND sprsl <> mv_language.       "#EC CI_BYPASS "#EC CI_GENBUFF
 
     SORT lt_i18n_langs ASCENDING.
 

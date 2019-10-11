@@ -446,14 +446,14 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
         call_browser( iv_getdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
-      WHEN  zif_abapgit_definitions=>c_action-goto_source.
+      WHEN zif_abapgit_definitions=>c_action-goto_source.
 
         IF mo_exception_viewer IS BOUND.
           mo_exception_viewer->goto_source( ).
         ENDIF.
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
-      WHEN  zif_abapgit_definitions=>c_action-show_callstack.
+      WHEN zif_abapgit_definitions=>c_action-show_callstack.
 
         IF mo_exception_viewer IS BOUND.
           mo_exception_viewer->show_callstack( ).

@@ -142,7 +142,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     SELECT *
       FROM dm02l
       INTO TABLE lt_dm02l
-      WHERE entid    EQ me->mv_entity_id.
+      WHERE entid = me->mv_entity_id.
 
     LOOP AT lt_dm02l INTO ls_dm02l.
 
@@ -188,7 +188,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     SELECT *
       FROM dm42s
       INTO TABLE lt_dm42s
-      WHERE entidto  EQ me->mv_entity_id.
+      WHERE entidto = me->mv_entity_id.
 
     LOOP AT lt_dm42s INTO ls_dm42s.
 
@@ -238,7 +238,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     SELECT *
       FROM dm45l
       INTO TABLE lt_dm45l
-      WHERE entid EQ me->ms_item-obj_name.
+      WHERE entid = me->ms_item-obj_name.
 
     LOOP AT lt_dm45l INTO ls_dm45l.
 
@@ -480,8 +480,8 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
 
     SELECT SINGLE lstuser INTO rv_user
       FROM dm02l
-      WHERE entid    EQ me->mv_entity_id
-      AND   as4local EQ c_active_state.
+      WHERE entid = me->mv_entity_id
+      AND as4local = c_active_state.
 
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
