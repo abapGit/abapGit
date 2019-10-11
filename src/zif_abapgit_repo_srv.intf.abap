@@ -1,64 +1,64 @@
-interface ZIF_ABAPGIT_REPO_SRV
-  public .
+INTERFACE zif_abapgit_repo_srv
+  PUBLIC .
 
 
-  methods DELETE
-    importing
-      !IO_REPO type ref to ZCL_ABAPGIT_REPO
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods GET
-    importing
-      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_VALUE
-    returning
-      value(RO_REPO) type ref to ZCL_ABAPGIT_REPO
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods IS_REPO_INSTALLED
-    importing
-      !IV_URL type STRING
-      !IV_TARGET_PACKAGE type DEVCLASS optional
-    returning
-      value(RV_INSTALLED) type ABAP_BOOL
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods LIST
-    returning
-      value(RT_LIST) type ZIF_ABAPGIT_DEFINITIONS=>TY_REPO_REF_TT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods NEW_OFFLINE
-    importing
-      !IV_URL type STRING
-      !IV_PACKAGE type DEVCLASS
-      !IV_FOLDER_LOGIC type STRING default ZIF_ABAPGIT_DOT_ABAPGIT=>C_FOLDER_LOGIC-FULL
-    returning
-      value(RO_REPO) type ref to ZCL_ABAPGIT_REPO_OFFLINE
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods NEW_ONLINE
-    importing
-      !IV_URL type STRING
-      !IV_BRANCH_NAME type STRING
-      !IV_DISPLAY_NAME type STRING optional
-      !IV_PACKAGE type DEVCLASS
-      !IV_FOLDER_LOGIC type STRING default 'PREFIX'
-      !IV_IGN_SUBPKG type ABAP_BOOL default ABAP_FALSE
-    returning
-      value(RO_REPO) type ref to ZCL_ABAPGIT_REPO_ONLINE
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods PURGE
-    importing
-      !IO_REPO type ref to ZCL_ABAPGIT_REPO
-      !IS_CHECKS type ZIF_ABAPGIT_DEFINITIONS=>TY_DELETE_CHECKS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods VALIDATE_PACKAGE
-    importing
-      !IV_PACKAGE type DEVCLASS
-      !IV_IGN_SUBPKG type ABAP_BOOL default ABAP_FALSE
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods INVALIDATE_BUFFER .
-endinterface.
+  METHODS delete
+    IMPORTING
+      !io_repo TYPE REF TO zcl_abapgit_repo
+    RAISING
+      zcx_abapgit_exception .
+  METHODS get
+    IMPORTING
+      !iv_key        TYPE zif_abapgit_persistence=>ty_value
+    RETURNING
+      VALUE(ro_repo) TYPE REF TO zcl_abapgit_repo
+    RAISING
+      zcx_abapgit_exception .
+  METHODS is_repo_installed
+    IMPORTING
+      !iv_url             TYPE string
+      !iv_target_package  TYPE devclass OPTIONAL
+    RETURNING
+      VALUE(rv_installed) TYPE abap_bool
+    RAISING
+      zcx_abapgit_exception .
+  METHODS list
+    RETURNING
+      VALUE(rt_list) TYPE zif_abapgit_definitions=>ty_repo_ref_tt
+    RAISING
+      zcx_abapgit_exception .
+  METHODS new_offline
+    IMPORTING
+      !iv_url          TYPE string
+      !iv_package      TYPE devclass
+      !iv_folder_logic TYPE string DEFAULT zif_abapgit_dot_abapgit=>c_folder_logic-full
+    RETURNING
+      VALUE(ro_repo)   TYPE REF TO zcl_abapgit_repo_offline
+    RAISING
+      zcx_abapgit_exception .
+  METHODS new_online
+    IMPORTING
+      !iv_url          TYPE string
+      !iv_branch_name  TYPE string
+      !iv_display_name TYPE string OPTIONAL
+      !iv_package      TYPE devclass
+      !iv_folder_logic TYPE string DEFAULT 'PREFIX'
+      !iv_ign_subpkg   TYPE abap_bool DEFAULT abap_false
+    RETURNING
+      VALUE(ro_repo)   TYPE REF TO zcl_abapgit_repo_online
+    RAISING
+      zcx_abapgit_exception .
+  METHODS purge
+    IMPORTING
+      !io_repo   TYPE REF TO zcl_abapgit_repo
+      !is_checks TYPE zif_abapgit_definitions=>ty_delete_checks
+    RAISING
+      zcx_abapgit_exception .
+  METHODS validate_package
+    IMPORTING
+      !iv_package    TYPE devclass
+      !iv_ign_subpkg TYPE abap_bool DEFAULT abap_false
+    RAISING
+      zcx_abapgit_exception .
+  METHODS invalidate_buffer .
+ENDINTERFACE.
