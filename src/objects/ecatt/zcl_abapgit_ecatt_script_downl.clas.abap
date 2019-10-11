@@ -98,7 +98,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
               set_deep_stru_to_dom( ecatt_script->params ).
               set_deep_data_to_dom( ecatt_script->params ).
               IF wa_parm-xmlref_typ = cl_apl_ecatt_const=>ref_type_c_tcd.
-                set_control_data_for_tcd( is_param  =  wa_parm
+                set_control_data_for_tcd( is_param  = wa_parm
                                           io_params = ecatt_script->params ).
 
               ENDIF.
@@ -272,8 +272,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lt_tab> TYPE STANDARD TABLE.
 
-    IF is_param-xmlref_typ <> cl_apl_ecatt_const=>ref_type_c_tcd
-      OR  io_params IS INITIAL.
+    IF is_param-xmlref_typ <> cl_apl_ecatt_const=>ref_type_c_tcd OR io_params IS INITIAL.
       RETURN.
     ENDIF.
 
