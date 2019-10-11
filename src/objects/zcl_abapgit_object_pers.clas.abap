@@ -91,7 +91,7 @@ CLASS zcl_abapgit_object_pers IMPLEMENTATION.
 
     lo_personalization_object->set_reg_data(
         p_pers_reg      = ls_personalization_object-pers_reg
-        p_pers_reg_text = ls_personalization_object-pers_reg_text     ).
+        p_pers_reg_text = ls_personalization_object-pers_reg_text ).
 
     lo_personalization_object->save(
       EXPORTING

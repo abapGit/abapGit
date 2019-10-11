@@ -72,9 +72,9 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
     SELECT SINGLE obj_name
            FROM tadir
            INTO lv_object_name
-           WHERE pgmid    =  'R3TR'
-           AND   NOT ( object = 'DEVC' AND obj_name = iv_package_name )
-           AND   devclass = iv_package_name.
+           WHERE pgmid = 'R3TR'
+           AND NOT ( object = 'DEVC' AND obj_name = iv_package_name )
+           AND devclass = iv_package_name.
     rv_is_empty = boolc( sy-subrc <> 0 ).
 
   ENDMETHOD.
