@@ -226,7 +226,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
 
     UPDATE (c_tabname) SET data_str = lv_data
       WHERE type  = iv_type
-      AND   value = iv_value.
+      AND value = iv_value.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'DB update failed' ).
     ENDIF.

@@ -246,7 +246,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
                  ig_data = add_tpool( lt_tpool ) ).
 
     IF ls_vseoclass-category = seoc_category_exception.
-      lt_sotr =  mi_object_oriented_object_fct->read_sotr( ms_item-obj_name ).
+      lt_sotr = mi_object_oriented_object_fct->read_sotr( ms_item-obj_name ).
       IF lines( lt_sotr ) > 0.
         io_xml->add( iv_name = 'SOTR'
                      ig_data = lt_sotr ).
@@ -299,7 +299,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
       INTO TABLE lt_reposrc
       FOR ALL ENTRIES IN lt_includes
       WHERE progname = lt_includes-programm
-      AND   r3state = 'A'.
+      AND r3state = 'A'.
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
     ELSE.
@@ -367,11 +367,8 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
     lv_classpool = cl_oo_classname_service=>get_classpool_name( |{ ms_item-obj_name }| ).
 
-    IF is_class_locked( )             = abap_true
-    OR is_text_locked( lv_classpool ) = abap_true.
-
+    IF is_class_locked( ) = abap_true OR is_text_locked( lv_classpool ) = abap_true.
       rv_is_locked = abap_true.
-
     ENDIF.
 
   ENDMETHOD.
