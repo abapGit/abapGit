@@ -9,11 +9,10 @@ CLASS zcl_abapgit_object_ddls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       IMPORTING iv_ddls_name TYPE tadir-obj_name
       RAISING   zcx_abapgit_exception.
 
-private section.
-
-  methods IS_BASEINFO_SUPPORTED
-    returning
-      value(RV_SUPPORTED) type ABAP_BOOL .
+  PRIVATE SECTION.
+    METHODS is_baseinfo_supported
+      RETURNING
+        VALUE(rv_supported) TYPE abap_bool .
 ENDCLASS.
 
 
@@ -364,7 +363,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
             ASSIGN COMPONENT 'AS4LOCAL' OF STRUCTURE <ls_data_baseinfo> TO <lg_as4local>.
             ASSERT sy-subrc = 0.
 
-            IF <lg_ddlname> EQ ms_item-obj_name AND <lg_as4local> EQ 'A'.
+            IF <lg_ddlname> = ms_item-obj_name AND <lg_as4local> = 'A'.
               ASSIGN COMPONENT 'BASEINFO_STRING' OF STRUCTURE <ls_data_baseinfo> TO <lg_field>.
               ASSERT sy-subrc = 0.
               mo_files->add_string( iv_ext    = 'baseinfo'
