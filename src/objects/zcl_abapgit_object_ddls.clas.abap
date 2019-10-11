@@ -331,6 +331,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
                    <lg_field>         TYPE any,
                    <lv_comp>          LIKE LINE OF lt_clr_comps,
                    <lg_data_baseinfo> TYPE ANY TABLE,
+                   <ls_data_baseinfo> TYPE any,
                    <lg_ddlname>       TYPE any,
                    <lg_as4local>      TYPE any.
 
@@ -346,6 +347,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
         IF is_baseinfo_supported( ) = abap_true.
           CREATE DATA lr_data_baseinfo TYPE ('IF_DD_DDL_TYPES=>TY_T_BASEINFO_STRING').
           ASSIGN lr_data_baseinfo->* TO <lg_data_baseinfo>.
+          ASSIGN lr_data_baseinfo->* TO <ls_data_baseinfo>.
 
           CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~READ')
             EXPORTING
@@ -355,7 +357,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
               ddddlsrcv_wa    = <lg_data>
               baseinfo_string = <lg_data_baseinfo>.
 
-          LOOP AT <lg_data_baseinfo> ASSIGNING FIELD-SYMBOL(<ls_data_baseinfo>).
+          LOOP AT <lg_data_baseinfo> ASSIGNING <ls_data_baseinfo>.
             ASSIGN COMPONENT 'DDLNAME' OF STRUCTURE <ls_data_baseinfo> TO <lg_ddlname>.
             ASSERT sy-subrc = 0.
 
