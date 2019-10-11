@@ -64,7 +64,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
 
   METHOD add.
@@ -245,6 +245,11 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     zcx_abapgit_exception=>raise( 'repo not found, get' ).
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_srv~invalidate_buffer.
+    mv_init = abap_false.
   ENDMETHOD.
 
 

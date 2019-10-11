@@ -184,6 +184,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
 
     lt_content = mo_db->list_by_type( zcl_abapgit_persistence_db=>c_type_repo ).
+    zcl_abapgit_repo_srv=>get_instance( )->invalidate_buffer( ).
 
     LOOP AT lt_content INTO ls_content.
       MOVE-CORRESPONDING from_xml( ls_content-data_str ) TO ls_repo.
