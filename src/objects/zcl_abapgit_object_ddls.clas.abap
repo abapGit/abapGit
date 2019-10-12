@@ -10,11 +10,30 @@ CLASS zcl_abapgit_object_ddls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
+    METHODS is_baseinfo_supported
+      RETURNING
+        VALUE(rv_supported) TYPE abap_bool .
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
+
+
+  METHOD is_baseinfo_supported.
+
+    DATA:
+      lr_data_baseinfo TYPE REF TO data,
+      lx_error         TYPE REF TO cx_root.
+
+    TRY.
+        CREATE DATA lr_data_baseinfo TYPE ('IF_DD_DDL_TYPES=>TY_S_BASEINFO_STRING_SAVE').
+        rv_supported = abap_true.
+      CATCH cx_root INTO lx_error.
+        rv_supported = abap_false.
+    ENDTRY.
+
+  ENDMETHOD.
 
 
   METHOD open_adt_stob.
@@ -143,34 +162,60 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lo_ddl   TYPE REF TO object,
-          lr_data  TYPE REF TO data,
-          lx_error TYPE REF TO cx_root.
+    DATA:
+      lo_ddl           TYPE REF TO object,
+      lr_data          TYPE REF TO data,
+      lr_data_baseinfo TYPE REF TO data,
+      lx_error         TYPE REF TO cx_root.
 
-    FIELD-SYMBOLS: <lg_data>  TYPE any,
-                   <lg_field> TYPE any.
-
-
-    CREATE DATA lr_data TYPE ('DDDDLSRCV').
-    ASSIGN lr_data->* TO <lg_data>.
-
-    io_xml->read( EXPORTING iv_name = 'DDLS'
-                  CHANGING cg_data  = <lg_data> ).
-
-    ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <lg_data> TO <lg_field>.
-    ASSERT sy-subrc = 0.
-    <lg_field> = mo_files->read_string( 'asddls' ) ##no_text.
-
-    CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
-      RECEIVING
-        handler = lo_ddl.
+    FIELD-SYMBOLS:
+      <lg_data>             TYPE any,
+      <lg_data_baseinfo>    TYPE any,
+      <lg_source>           TYPE any,
+      <lg_field_baseinfo>   TYPE any,
+      <lg_baseinfo_string>  TYPE any,
+      <lg_baseinfo_ddlname> TYPE any.
 
     TRY.
-        CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~SAVE')
-          EXPORTING
-            name         = ms_item-obj_name
-            put_state    = 'N'
-            ddddlsrcv_wa = <lg_data>.
+        CREATE DATA lr_data TYPE ('DDDDLSRCV').
+        ASSIGN lr_data->* TO <lg_data>.
+
+        io_xml->read( EXPORTING iv_name = 'DDLS'
+                      CHANGING cg_data  = <lg_data> ).
+
+        ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <lg_data> TO <lg_source>.
+        ASSERT sy-subrc = 0.
+        <lg_source> = mo_files->read_string( 'asddls' ) ##no_text.
+
+        CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
+          RECEIVING
+            handler = lo_ddl.
+
+        IF is_baseinfo_supported( ) = abap_true.
+          CREATE DATA lr_data_baseinfo TYPE ('IF_DD_DDL_TYPES=>TY_S_BASEINFO_STRING_SAVE').
+          ASSIGN lr_data_baseinfo->* TO <lg_data_baseinfo>.
+
+          ASSIGN COMPONENT 'BASEINFO_STRING' OF STRUCTURE <lg_data_baseinfo> TO <lg_baseinfo_string>.
+          ASSERT sy-subrc = 0.
+          <lg_baseinfo_string> = mo_files->read_string( 'baseinfo' ) ##no_text.
+
+          ASSIGN COMPONENT 'DDLNAME' OF STRUCTURE <lg_data_baseinfo> TO <lg_baseinfo_ddlname>.
+          ASSERT sy-subrc = 0.
+          <lg_baseinfo_ddlname> = ms_item-obj_name.
+
+          CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~SAVE')
+            EXPORTING
+              name            = ms_item-obj_name
+              put_state       = 'N'
+              ddddlsrcv_wa    = <lg_data>
+              baseinfo_string = <lg_data_baseinfo>.
+        ELSE.
+          CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~SAVE')
+            EXPORTING
+              name         = ms_item-obj_name
+              put_state    = 'N'
+              ddddlsrcv_wa = <lg_data>.
+        ENDIF.
 
         CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~WRITE_TADIR')
           EXPORTING
@@ -275,30 +320,66 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lo_ddl       TYPE REF TO object,
-          lr_data      TYPE REF TO data,
-          lt_clr_comps TYPE STANDARD TABLE OF fieldname WITH DEFAULT KEY,
-          lx_error     TYPE REF TO cx_root.
+    DATA: lo_ddl           TYPE REF TO object,
+          lr_data          TYPE REF TO data,
+          lr_data_baseinfo TYPE REF TO data,
+          lt_clr_comps     TYPE STANDARD TABLE OF fieldname WITH DEFAULT KEY,
+          lx_error         TYPE REF TO cx_root.
 
-    FIELD-SYMBOLS: <lg_data>  TYPE any,
-                   <lg_field> TYPE any,
-                   <lv_comp>  LIKE LINE OF lt_clr_comps.
+    FIELD-SYMBOLS: <lg_data>          TYPE any,
+                   <lg_field>         TYPE any,
+                   <lv_comp>          LIKE LINE OF lt_clr_comps,
+                   <lg_data_baseinfo> TYPE ANY TABLE,
+                   <ls_data_baseinfo> TYPE any,
+                   <lg_ddlname>       TYPE any,
+                   <lg_as4local>      TYPE any.
 
-
-    CREATE DATA lr_data TYPE ('DDDDLSRCV').
-    ASSIGN lr_data->* TO <lg_data>.
-
-    CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
-      RECEIVING
-        handler = lo_ddl.
 
     TRY.
-        CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~READ')
-          EXPORTING
-            name         = ms_item-obj_name
-            get_state    = 'A'
-          IMPORTING
-            ddddlsrcv_wa = <lg_data>.
+        CREATE DATA lr_data TYPE ('DDDDLSRCV').
+        ASSIGN lr_data->* TO <lg_data>.
+
+        CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
+          RECEIVING
+            handler = lo_ddl.
+
+        IF is_baseinfo_supported( ) = abap_true.
+          CREATE DATA lr_data_baseinfo TYPE ('IF_DD_DDL_TYPES=>TY_T_BASEINFO_STRING').
+          ASSIGN lr_data_baseinfo->* TO <lg_data_baseinfo>.
+          ASSIGN lr_data_baseinfo->* TO <ls_data_baseinfo>.
+
+          CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~READ')
+            EXPORTING
+              name            = ms_item-obj_name
+              get_state       = 'A'
+            IMPORTING
+              ddddlsrcv_wa    = <lg_data>
+              baseinfo_string = <lg_data_baseinfo>.
+
+          LOOP AT <lg_data_baseinfo> ASSIGNING <ls_data_baseinfo>.
+            ASSIGN COMPONENT 'DDLNAME' OF STRUCTURE <ls_data_baseinfo> TO <lg_ddlname>.
+            ASSERT sy-subrc = 0.
+
+            ASSIGN COMPONENT 'AS4LOCAL' OF STRUCTURE <ls_data_baseinfo> TO <lg_as4local>.
+            ASSERT sy-subrc = 0.
+
+            IF <lg_ddlname> = ms_item-obj_name AND <lg_as4local> = 'A'.
+              ASSIGN COMPONENT 'BASEINFO_STRING' OF STRUCTURE <ls_data_baseinfo> TO <lg_field>.
+              ASSERT sy-subrc = 0.
+              mo_files->add_string( iv_ext    = 'baseinfo'
+                                    iv_string = <lg_field> ) ##no_text.
+              EXIT.
+            ENDIF.
+          ENDLOOP.
+        ELSE.
+          CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~READ')
+            EXPORTING
+              name         = ms_item-obj_name
+              get_state    = 'A'
+            IMPORTING
+              ddddlsrcv_wa = <lg_data>.
+        ENDIF.
+
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
                                       ix_previous = lx_error ).

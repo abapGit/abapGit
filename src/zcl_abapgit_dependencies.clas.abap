@@ -250,7 +250,7 @@ CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
 
       LOOP AT lt_dependency ASSIGNING <ls_dependency>
                             WHERE deptyp = 'DDLS'
-                            AND   refname = <ls_tadir_ddls>-obj_name.
+                            AND refname = <ls_tadir_ddls>-obj_name.
 
         READ TABLE ct_tadir ASSIGNING <ls_tadir_dependent>
                             WITH KEY pgmid    = 'R3TR'
