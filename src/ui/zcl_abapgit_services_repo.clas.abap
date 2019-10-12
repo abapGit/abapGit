@@ -353,7 +353,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    lv_question =  'This will rebuild and overwrite local repo checksums.'.
+    lv_question = 'This will rebuild and overwrite local repo checksums.'.
 
     IF lo_repo->is_offline( ) = abap_false.
       lv_question = lv_question

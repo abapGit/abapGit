@@ -117,16 +117,13 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error deserializing { ms_item-obj_type } { ms_item-obj_name }| ).
     ENDIF.
 
-    LOOP AT lt_message ASSIGNING <ls_message>
-                       WHERE msgtyp CA 'EAX'.
-
-      MESSAGE ID     <ls_message>-msgid
-              TYPE   <ls_message>-msgtyp
-              NUMBER <ls_message>-msgnr
-              WITH   <ls_message>-msgv1 <ls_message>-msgv2 <ls_message>-msgv3 <ls_message>-msgv4
-              INTO sy-msgli.
+    LOOP AT lt_message ASSIGNING <ls_message> WHERE msgtyp CA 'EAX'.
+      MESSAGE ID <ls_message>-msgid
+        TYPE <ls_message>-msgtyp
+        NUMBER <ls_message>-msgnr
+        WITH <ls_message>-msgv1 <ls_message>-msgv2 <ls_message>-msgv3 <ls_message>-msgv4
+        INTO sy-msgli.
       zcx_abapgit_exception=>raise_t100( ).
-
     ENDLOOP.
 
   ENDMETHOD.
