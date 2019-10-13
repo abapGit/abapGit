@@ -58,7 +58,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -348,12 +348,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
           io_stage  = mo_stage ).
 
 
-          li_popups = zcl_abapgit_ui_factory=>get_popups( ).
-          li_popups->popup_to_inform(
-            iv_titlebar = 'Commit was successful'
-            iv_text_message = 'The commit was successful.'
-
-           ).
+        li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+        li_popups->popup_to_inform(
+          iv_titlebar     = 'Commit was successful'
+          iv_text_message = 'The commit was successful.' ).
 
         ev_state = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark.
 
