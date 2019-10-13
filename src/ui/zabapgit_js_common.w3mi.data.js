@@ -827,10 +827,9 @@ function LinkHints(linkHintHotKey){
 }
 
 LinkHints.prototype.getHintStartValue = function(targetsCount){
-  // e.g. if we have 89 tooltips we start from 100
-  //      if we have 95 tooltips we start from 100
-  //      if we have 109 tooltips we start from 100
-  //      if we have 901 tooltips we start from 1000
+  // e.g. if we have 89 tooltips we start from 10
+  //      if we have 90 tooltips we start from 100
+  //      if we have 900 tooltips we start from 1000
   var
     baseLength = Math.pow(10, targetsCount.toString().length - 1),
     maxHintStringLength = (targetsCount + baseLength).toString().length;
