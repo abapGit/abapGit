@@ -329,10 +329,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA: ls_commit TYPE zcl_abapgit_services_git=>ty_commit_fields.
+    DATA: ls_commit TYPE zcl_abapgit_services_git=>ty_commit_fields,
+          li_popups TYPE REF TO zif_abapgit_popups.
 
     CASE iv_action.
       WHEN c_action-commit_post.
+
 
         parse_commit_request(
           EXPORTING it_postdata = it_postdata
@@ -344,6 +346,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
           is_commit = ls_commit
           io_repo   = mo_repo
           io_stage  = mo_stage ).
+
+
+          li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+          li_popups->popup_to_inform(
+            iv_titlebar = 'Commit was successful'
+            iv_text_message = 'The commit was successful.'
+
+           ).
 
         ev_state = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark.
 
