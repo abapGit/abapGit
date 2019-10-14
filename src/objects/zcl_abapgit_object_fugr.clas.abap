@@ -706,8 +706,8 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       lt_new_source TYPE rsfb_source,
       ls_function   LIKE LINE OF rt_functions.
 
-    FIELD-SYMBOLS: <ls_func> LIKE LINE OF lt_functab.
-
+    FIELD-SYMBOLS: <ls_func>          LIKE LINE OF lt_functab,
+                   <ls_documentation> TYPE LINE OF ty_function-documentation.
 
     lt_functab = functions( ).
 
@@ -749,6 +749,10 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       ELSEIF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'Error from RPY_FUNCTIONMODULE_READ_NEW' ).
       ENDIF.
+
+      LOOP AT ls_function-documentation ASSIGNING <ls_documentation>.
+        CLEAR <ls_documentation>-index.
+      ENDLOOP.
 
       ls_function-exception_classes = are_exceptions_class_based( <ls_func>-funcname ).
 
