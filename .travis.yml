@@ -3,12 +3,22 @@ node_js:
   - "10"
 notifications:
   email: false
+script:
+  - npm run eslint
+  - npm run abaplint
 deploy:
-  provider: script
-  script: ./travis.sh
-  skip_cleanup: true
-  on:
-    branch: master
+  - provider: script
+    script: ./ci/deploy-merged-build.sh
+    skip_cleanup: true
+    on:
+      branch: master
+      tags: false
+  - provider: script
+    script: ./ci/deploy-release-tag.sh
+    skip_cleanup: true
+    on:
+      branch: master
+      tags: false
 env:
   global:
     secure: "JEKitZ+1to7pt4/lLcWJ0mtWuCRFxEBbps9hEFtHrenxBZR0dSekrLkhXBm9qRLJ6b0QLdYV0855/BiZlvOWuecB5kujbYLoCClx7+DWFszLQKgLf9UPbBoqkoLhvAtpGbAx7aMuBrqFnAD4ZBjybjEDJ5SHnxsWfu7AA2YrtPOUZvFZLqdP4muhwfVuYv+1CRZNJMZHtR4lw1R7kVQggaQmD04iMP/NKQuqNyjEC13zUxDLv5tskDAvl3OrPA3Ybx7Z0GM6piA+EkUoXtc3qnpe7e7j0IHBWpLwOjBOju4n1gMdZ13q1UzoLLsJV17jrg8tSoWw/F/Yqlo50qdRAsg6RCX4k5UpIP7mttStb9iT2pZlfwIAWHQF6aN67ic8F/AuPquMHKEgu/qfj1NK+6lfX0OHM6ovtAnNOozkSUikf7JxMeTlZLLOk+ZSTIYbxDsojMra8jeYmLtOLeFRu485fooXPt0n0aAzHDNuq7xQejvWZ0TGgxytc+A5b5y9YTsLSTZrQZmnxPweSgDSfLPY5HXK51nzEYGSP0tP4BlPAxysAsFoeLgr4oiham1ZxKfCNs7g5Cjc6Zbo1Zuq4Iza4HFl57I96QgyjFLgyFTdzfK6HJvUyIb/+fLK2RfCy0QbYboHej2Ki111I5UjkYITd+nyzmYiX9clJqSBeww="

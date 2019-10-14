@@ -69,6 +69,9 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
 
+    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+      RETURN.
+    ENDIF.
 
     " Table d010tinf stores info. on languages in which program is maintained
     " Select all active translations of program texts
@@ -77,8 +80,8 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
       INTO CORRESPONDING FIELDS OF TABLE lt_tpool_i18n
       FROM d010tinf
       WHERE r3state = 'A'
-      AND   prog = ms_item-obj_name
-      AND   language <> mv_language.
+      AND prog = ms_item-obj_name
+      AND language <> mv_language.
 
     SORT lt_tpool_i18n BY language ASCENDING.
     LOOP AT lt_tpool_i18n ASSIGNING <ls_tpool>.
@@ -213,10 +216,10 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_locked.
 
-    IF is_program_locked( )                     = abap_true
-    OR is_any_dynpro_locked( ms_item-obj_name ) = abap_true
-    OR is_cua_locked( ms_item-obj_name )        = abap_true
-    OR is_text_locked( ms_item-obj_name )       = abap_true.
+    IF is_program_locked( ) = abap_true
+        OR is_any_dynpro_locked( ms_item-obj_name ) = abap_true
+        OR is_cua_locked( ms_item-obj_name ) = abap_true
+        OR is_text_locked( ms_item-obj_name ) = abap_true.
 
       rv_is_locked = abap_true.
 

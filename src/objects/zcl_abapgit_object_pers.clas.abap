@@ -53,7 +53,11 @@ CLASS zcl_abapgit_object_pers IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    get_personalization_object( )->delete(
+    DATA: lo_personalization_object TYPE REF TO cl_pers_reg.
+
+    lo_personalization_object = get_personalization_object( ).
+
+    lo_personalization_object->delete(
       EXPORTING
         p_no_confirm       = abap_true
       EXCEPTIONS
@@ -87,7 +91,7 @@ CLASS zcl_abapgit_object_pers IMPLEMENTATION.
 
     lo_personalization_object->set_reg_data(
         p_pers_reg      = ls_personalization_object-pers_reg
-        p_pers_reg_text = ls_personalization_object-pers_reg_text     ).
+        p_pers_reg_text = ls_personalization_object-pers_reg_text ).
 
     lo_personalization_object->save(
       EXPORTING
@@ -191,9 +195,12 @@ CLASS zcl_abapgit_object_pers IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA:
+      lo_personalization_object TYPE REF TO cl_pers_reg,
       ls_personalization_object TYPE ty_personalization_object.
 
-    get_personalization_object( iv_view_only = abap_true )->get_reg_data(
+    lo_personalization_object = get_personalization_object( iv_view_only = abap_true ).
+
+    lo_personalization_object->get_reg_data(
       IMPORTING
         p_pers_reg      = ls_personalization_object-pers_reg
         p_pers_reg_text = ls_personalization_object-pers_reg_text ).

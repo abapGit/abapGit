@@ -18,9 +18,10 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         toggle_hide_files TYPE string VALUE 'toggle_hide_files' ##NO_TEXT,
         toggle_folders    TYPE string VALUE 'toggle_folders' ##NO_TEXT,
         toggle_changes    TYPE string VALUE 'toggle_changes' ##NO_TEXT,
+        toggle_order_by   TYPE string VALUE 'toggle_order_by' ##NO_TEXT,
+        toggle_diff_first TYPE string VALUE 'toggle_diff_first ' ##NO_TEXT,
         display_more      TYPE string VALUE 'display_more' ##NO_TEXT,
       END OF c_actions .
-
     METHODS constructor
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
@@ -30,13 +31,19 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    DATA: mo_repo         TYPE REF TO zcl_abapgit_repo,
-          mv_cur_dir      TYPE string,
-          mv_hide_files   TYPE abap_bool,
-          mv_max_lines    TYPE i,
-          mv_max_setting  TYPE i,
-          mv_show_folders TYPE abap_bool,
-          mv_changes_only TYPE abap_bool.
+    DATA: mo_repo                       TYPE REF TO zcl_abapgit_repo,
+          mv_cur_dir                    TYPE string,
+          mv_hide_files                 TYPE abap_bool,
+          mv_max_lines                  TYPE i,
+          mv_max_setting                TYPE i,
+          mv_show_folders               TYPE abap_bool,
+          mv_changes_only               TYPE abap_bool,
+          mv_show_order_by              TYPE abap_bool,
+          mv_order_by                   TYPE string,
+          mv_order_descending           TYPE abap_bool,
+          mv_diff_first                 TYPE abap_bool,
+          mv_key                        TYPE zif_abapgit_persistence=>ty_value,
+          mv_are_changes_recorded_in_tr TYPE abap_bool.
 
     METHODS:
       render_head_line
@@ -89,13 +96,139 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         IMPORTING is_item                      TYPE zif_abapgit_definitions=>ty_repo_item
         RETURNING VALUE(rv_inactive_html_code) TYPE string,
       open_in_master_language
-        RAISING zcx_abapgit_exception.
+        RAISING zcx_abapgit_exception,
+      render_order_by
+        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
+      apply_order_by
+        CHANGING ct_repo_items TYPE zif_abapgit_definitions=>tt_repo_items,
+      build_branch_dropdown
+        IMPORTING iv_wp_opt                 LIKE zif_abapgit_html=>c_html_opt-crossout
+        RETURNING VALUE(ro_branch_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
+        RAISING   zcx_abapgit_exception,
+      build_tag_dropdown
+        IMPORTING iv_wp_opt              LIKE zif_abapgit_html=>c_html_opt-crossout
+        RETURNING VALUE(ro_tag_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
+        RAISING   zcx_abapgit_exception,
+      build_advanced_dropdown
+        IMPORTING iv_wp_opt                   LIKE zif_abapgit_html=>c_html_opt-crossout
+                  iv_lstate                   TYPE char1
+                  iv_rstate                   TYPE char1
+        RETURNING VALUE(ro_advanced_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
+        RAISING   zcx_abapgit_exception,
+      build_main_toolbar
+        IMPORTING iv_pull_opt       LIKE zif_abapgit_html=>c_html_opt-crossout
+                  iv_lstate         TYPE char1
+                  iv_rstate         TYPE char1
+                  io_tb_branch      TYPE REF TO zcl_abapgit_html_toolbar
+                  io_tb_tag         TYPE REF TO zcl_abapgit_html_toolbar
+                  io_tb_advanced    TYPE REF TO zcl_abapgit_html_toolbar
+        RETURNING VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
+        RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
+
+
+  METHOD build_advanced_dropdown.
+
+    DATA:
+      lv_crossout LIKE zif_abapgit_html=>c_html_opt-crossout,
+      lv_package  TYPE zif_abapgit_persistence=>ty_repo-package.
+
+    CREATE OBJECT ro_advanced_dropdown.
+
+    IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " In case of asyncronicities
+      ro_advanced_dropdown->add( iv_txt = 'Reset local'
+                                 iv_act = |{ zif_abapgit_definitions=>c_action-git_reset }?{ mv_key }|
+                                 iv_opt = iv_wp_opt ).
+    ENDIF.
+
+    IF mo_repo->is_offline( ) = abap_false. " Online ?
+      ro_advanced_dropdown->add( iv_txt = 'Background mode'
+                                 iv_act = |{ zif_abapgit_definitions=>c_action-go_background }?{ mv_key }| ).
+      ro_advanced_dropdown->add( iv_txt = 'Change remote'
+                                 iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_change }?{ mv_key }| ).
+      ro_advanced_dropdown->add( iv_txt = 'Make off-line'
+                                 iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_detach }?{ mv_key }| ).
+      ro_advanced_dropdown->add( iv_txt = 'Force stage'
+                                 iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ mv_key }| ).
+
+      CLEAR lv_crossout.
+      IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-transport_to_branch ) = abap_false.
+        lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
+      ENDIF.
+      ro_advanced_dropdown->add( iv_txt = 'Transport to Branch'
+                                 iv_act = |{ zif_abapgit_definitions=>c_action-repo_transport_to_branch }?{ mv_key }|
+                                 iv_opt = lv_crossout ).
+
+    ELSE.
+      ro_advanced_dropdown->add( iv_txt = 'Make on-line'
+                                 iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_attach }?{ mv_key }| ).
+    ENDIF.
+
+    IF mv_are_changes_recorded_in_tr = abap_true.
+      ro_advanced_dropdown->add(
+          iv_txt  = 'Add all objects to transport request'
+          iv_act = |{ zif_abapgit_definitions=>c_action-repo_add_all_obj_to_trans_req }?{ mv_key }| ).
+    ENDIF.
+
+    ro_advanced_dropdown->add( iv_txt = 'Syntax Check'
+                               iv_act = |{ zif_abapgit_definitions=>c_action-repo_syntax_check }?{ mv_key }| ).
+    ro_advanced_dropdown->add( iv_txt = 'Run Code Inspector'
+                               iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?{ mv_key }| ).
+    ro_advanced_dropdown->add( iv_txt = 'Repo settings'
+                               iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?{ mv_key }| ).
+
+    CLEAR lv_crossout.
+    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-update_local_checksum ) = abap_false.
+      lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
+    ENDIF.
+    ro_advanced_dropdown->add( iv_txt = 'Update local checksums'
+                               iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh_checksums }?{ mv_key }|
+                               iv_opt = lv_crossout ).
+
+    IF mo_repo->get_dot_abapgit( )->get_master_language( ) <> sy-langu.
+      ro_advanced_dropdown->add( iv_txt = 'Open in master language'
+                                 iv_act = |{ zif_abapgit_definitions=>c_action-repo_open_in_master_lang }?{ mv_key }| ).
+    ENDIF.
+
+    ro_advanced_dropdown->add( iv_txt = 'Remove'
+                               iv_act = |{ zif_abapgit_definitions=>c_action-repo_remove }?{ mv_key }| ).
+
+    CLEAR lv_crossout.
+    IF mo_repo->get_local_settings( )-write_protected = abap_true
+        OR zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-uninstall ) = abap_false.
+      lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
+    ENDIF.
+    ro_advanced_dropdown->add( iv_txt = 'Uninstall'
+                               iv_act = |{ zif_abapgit_definitions=>c_action-repo_purge }?{ mv_key }|
+                               iv_opt = lv_crossout ).
+
+  ENDMETHOD.
+
+
+  METHOD build_branch_dropdown.
+
+    CREATE OBJECT ro_branch_dropdown.
+
+    IF mo_repo->is_offline( ) = abap_true.
+      RETURN.
+    ENDIF.
+
+    ro_branch_dropdown->add( iv_txt = 'Overview'
+                             iv_act = |{ zif_abapgit_definitions=>c_action-go_branch_overview }?{ mv_key }| ).
+    ro_branch_dropdown->add( iv_txt = 'Switch'
+                             iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ mv_key }|
+                             iv_opt = iv_wp_opt ).
+    ro_branch_dropdown->add( iv_txt = 'Create'
+                             iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_create }?{ mv_key }| ).
+    ro_branch_dropdown->add( iv_txt = 'Delete'
+                             iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_delete }?{ mv_key }| ).
+
+  ENDMETHOD.
 
 
   METHOD build_dir_jump_link.
@@ -134,6 +267,11 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
       iv_chk = mv_show_folders
       iv_act = c_actions-toggle_folders ).
 
+    ro_toolbar->add(
+      iv_txt = 'Show order by'
+      iv_chk = mv_show_order_by
+      iv_act = c_actions-toggle_order_by ).
+
   ENDMETHOD.
 
 
@@ -142,18 +280,8 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     DATA: lo_tb_advanced TYPE REF TO zcl_abapgit_html_toolbar,
           lo_tb_branch   TYPE REF TO zcl_abapgit_html_toolbar,
           lo_tb_tag      TYPE REF TO zcl_abapgit_html_toolbar,
-          lv_key         TYPE zif_abapgit_persistence=>ty_value,
           lv_wp_opt      LIKE zif_abapgit_html=>c_html_opt-crossout,
-          lv_crossout    LIKE zif_abapgit_html=>c_html_opt-crossout,
-          lv_pull_opt    LIKE zif_abapgit_html=>c_html_opt-crossout,
-          li_log         TYPE REF TO zif_abapgit_log.
-
-    CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-repo'.
-    CREATE OBJECT lo_tb_branch.
-    CREATE OBJECT lo_tb_advanced.
-    CREATE OBJECT lo_tb_tag.
-
-    lv_key = mo_repo->get_key( ).
+          lv_pull_opt    LIKE zif_abapgit_html=>c_html_opt-crossout.
 
     IF mo_repo->get_local_settings( )-write_protected = abap_true.
       lv_wp_opt   = zif_abapgit_html=>c_html_opt-crossout.
@@ -162,144 +290,22 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
       lv_pull_opt = zif_abapgit_html=>c_html_opt-strong.
     ENDIF.
 
-    " Build branch drop-down ========================
-    IF mo_repo->is_offline( ) = abap_false. " Online ?
-      lo_tb_branch->add( iv_txt = 'Overview'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-go_branch_overview }?{ lv_key }| ).
-      lo_tb_branch->add( iv_txt = 'Switch'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ lv_key }|
-                         iv_opt = lv_wp_opt ).
-      lo_tb_branch->add( iv_txt = 'Create'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_create }?{ lv_key }| ).
-      lo_tb_branch->add( iv_txt = 'Delete'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_delete }?{ lv_key }| ).
+    lo_tb_branch = build_branch_dropdown( lv_wp_opt ).
 
-      lo_tb_tag->add( iv_txt = 'Overview'
-                      iv_act = |{ zif_abapgit_definitions=>c_action-go_tag_overview }?{ lv_key }| ).
-      lo_tb_tag->add( iv_txt = 'Switch'
-                      iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_switch }?{ lv_key }|
-                      iv_opt = lv_wp_opt ).
-      lo_tb_tag->add( iv_txt = 'Create'
-                      iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_create }?{ lv_key }| ).
-      lo_tb_tag->add( iv_txt = 'Delete'
-                      iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_delete }?{ lv_key }| ).
+    lo_tb_tag = build_tag_dropdown( lv_wp_opt ).
 
-    ENDIF.
+    lo_tb_advanced = build_advanced_dropdown(
+                         iv_wp_opt = lv_wp_opt
+                         iv_rstate = iv_rstate
+                         iv_lstate = iv_lstate ).
 
-    " Build advanced drop-down ========================
-    IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " In case of asyncronicities
-      lo_tb_advanced->add( iv_txt = 'Reset local'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-git_reset }?{ lv_key }|
-                           iv_opt = lv_wp_opt ).
-    ENDIF.
-    IF mo_repo->is_offline( ) = abap_false. " Online ?
-      lo_tb_advanced->add( iv_txt = 'Background mode'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-go_background }?{ lv_key }| ).
-      lo_tb_advanced->add( iv_txt = 'Change remote'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_change }?{ lv_key }| ).
-      lo_tb_advanced->add( iv_txt = 'Make off-line'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_detach }?{ lv_key }| ).
-      lo_tb_advanced->add( iv_txt = 'Force stage'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ lv_key }| ).
-
-      CLEAR lv_crossout.
-      IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-transport_to_branch ) = abap_false.
-        lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
-      ENDIF.
-      lo_tb_advanced->add( iv_txt = 'Transport to Branch'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-repo_transport_to_branch }?{ lv_key }|
-                           iv_opt = lv_crossout ).
-
-    ELSE.
-      lo_tb_advanced->add( iv_txt = 'Make on-line'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_attach }?{ lv_key }| ).
-    ENDIF.
-    lo_tb_advanced->add( iv_txt = 'Syntax Check'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_syntax_check }?{ lv_key }| ).
-    lo_tb_advanced->add( iv_txt = 'Run Code Inspector'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?{ lv_key }| ).
-    lo_tb_advanced->add( iv_txt = 'Repo settings'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?{ lv_key }| ).
-
-    CLEAR lv_crossout.
-    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-update_local_checksum ) = abap_false.
-      lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
-    ENDIF.
-    lo_tb_advanced->add( iv_txt = 'Update local checksums'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh_checksums }?{ lv_key }|
-                         iv_opt = lv_crossout ).
-
-    IF mo_repo->get_dot_abapgit( )->get_master_language( ) <> sy-langu.
-      lo_tb_advanced->add( iv_txt = 'Open in master language'
-                           iv_act = |{ zif_abapgit_definitions=>c_action-repo_open_in_master_lang }?{ lv_key }| ).
-    ENDIF.
-
-    lo_tb_advanced->add( iv_txt = 'Remove'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_remove }?{ lv_key }| ).
-
-    CLEAR lv_crossout.
-    IF mo_repo->get_local_settings( )-write_protected = abap_true
-        OR zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-uninstall ) = abap_false.
-      lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
-    ENDIF.
-    lo_tb_advanced->add( iv_txt = 'Uninstall'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_purge }?{ lv_key }|
-                         iv_opt = lv_crossout ).
-
-    " Build main toolbar ==============================
-    IF mo_repo->is_offline( ) = abap_false. " Online ?
-      IF iv_rstate IS NOT INITIAL. " Something new at remote
-        ro_toolbar->add( iv_txt = 'Pull'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?{ lv_key }|
-                         iv_opt = lv_pull_opt ).
-      ENDIF.
-      IF iv_lstate IS NOT INITIAL. " Something new at local
-        ro_toolbar->add( iv_txt = 'Stage'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ lv_key }|
-                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
-      ENDIF.
-      IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " Any changes
-        ro_toolbar->add( iv_txt = 'Show diff'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ lv_key }|
-                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
-      ENDIF.
-      li_log = mo_repo->get_log( ).
-      IF li_log IS BOUND AND li_log->count( ) > 0.
-        ro_toolbar->add( iv_txt = 'Log'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?{ lv_key }| ).
-      ENDIF.
-      ro_toolbar->add( iv_txt = 'Branch'
-                       io_sub = lo_tb_branch ) ##NO_TEXT.
-      ro_toolbar->add( iv_txt = 'Tag'
-                       io_sub = lo_tb_tag ) ##NO_TEXT.
-    ELSE.
-      IF mo_repo->has_remote_source( ) = abap_true AND iv_rstate IS NOT INITIAL.
-        ro_toolbar->add( iv_txt = 'Pull <sup>zip</sup>'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?{ lv_key }|
-                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
-        ro_toolbar->add( iv_txt = 'Show diff'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ lv_key }|
-                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
-      ENDIF.
-      ro_toolbar->add( iv_txt = 'Import <sup>zip</sup>'
-                       iv_act = |{ zif_abapgit_definitions=>c_action-zip_import }?{ lv_key }|
-                       iv_opt = zif_abapgit_html=>c_html_opt-strong ).
-      ro_toolbar->add( iv_txt = 'Export <sup>zip</sup>'
-                       iv_act = |{ zif_abapgit_definitions=>c_action-zip_export }?{ lv_key }|
-                       iv_opt = zif_abapgit_html=>c_html_opt-strong ).
-      li_log = mo_repo->get_log( ).
-      IF li_log IS BOUND AND li_log->count( ) > 0.
-        ro_toolbar->add( iv_txt = 'Log'
-                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?{ lv_key }| ).
-      ENDIF.
-    ENDIF.
-
-    ro_toolbar->add( iv_txt = 'Advanced'
-                     io_sub = lo_tb_advanced ) ##NO_TEXT.
-    ro_toolbar->add( iv_txt = 'Refresh'
-                     iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh }?{ lv_key }| ).
-    ro_toolbar->add( iv_txt = zcl_abapgit_html=>icon( iv_name = 'cog/grey70' )
-                     io_sub = build_grid_menu( ) ).
+    ro_toolbar = build_main_toolbar(
+                     iv_pull_opt    = lv_pull_opt
+                     iv_rstate      = iv_rstate
+                     iv_lstate      = iv_lstate
+                     io_tb_branch   = lo_tb_branch
+                     io_tb_tag      = lo_tb_tag
+                     io_tb_advanced = lo_tb_advanced ).
 
   ENDMETHOD.
 
@@ -312,6 +318,70 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
         iv_hint  = 'Object or object part is inactive'
         iv_class = 'inactive' ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD build_main_toolbar.
+
+    DATA:
+      li_log TYPE REF TO zif_abapgit_log.
+
+    CREATE OBJECT ro_toolbar EXPORTING iv_id = 'toolbar-repo'.
+
+    IF mo_repo->is_offline( ) = abap_false.
+      IF iv_rstate IS NOT INITIAL. " Something new at remote
+        ro_toolbar->add( iv_txt = 'Pull'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?{ mv_key }|
+                         iv_opt = iv_pull_opt ).
+      ENDIF.
+      IF iv_lstate IS NOT INITIAL. " Something new at local
+        ro_toolbar->add( iv_txt = 'Stage'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ mv_key }|
+                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+      ENDIF.
+      IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " Any changes
+        ro_toolbar->add( iv_txt = 'Show diff'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ mv_key }|
+                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+      ENDIF.
+      li_log = mo_repo->get_log( ).
+      IF li_log IS BOUND AND li_log->count( ) > 0.
+        ro_toolbar->add( iv_txt = 'Log'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?{ mv_key }| ).
+      ENDIF.
+      ro_toolbar->add( iv_txt = 'Branch'
+                       io_sub = io_tb_branch ) ##NO_TEXT.
+      ro_toolbar->add( iv_txt = 'Tag'
+                       io_sub = io_tb_tag ) ##NO_TEXT.
+    ELSE.
+      IF mo_repo->has_remote_source( ) = abap_true AND iv_rstate IS NOT INITIAL.
+        ro_toolbar->add( iv_txt = 'Pull <sup>zip</sup>'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?{ mv_key }|
+                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+        ro_toolbar->add( iv_txt = 'Show diff'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ mv_key }|
+                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+      ENDIF.
+      ro_toolbar->add( iv_txt = 'Import <sup>zip</sup>'
+                       iv_act = |{ zif_abapgit_definitions=>c_action-zip_import }?{ mv_key }|
+                       iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+      ro_toolbar->add( iv_txt = 'Export <sup>zip</sup>'
+                       iv_act = |{ zif_abapgit_definitions=>c_action-zip_export }?{ mv_key }|
+                       iv_opt = zif_abapgit_html=>c_html_opt-strong ).
+      li_log = mo_repo->get_log( ).
+      IF li_log IS BOUND AND li_log->count( ) > 0.
+        ro_toolbar->add( iv_txt = 'Log'
+                         iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?{ mv_key }| ).
+      ENDIF.
+    ENDIF.
+
+    ro_toolbar->add( iv_txt = 'Advanced'
+                     io_sub = io_tb_advanced ) ##NO_TEXT.
+    ro_toolbar->add( iv_txt = 'Refresh'
+                     iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh }?{ mv_key }| ).
+    ro_toolbar->add( iv_txt = zcl_abapgit_html=>icon( iv_name = 'cog/grey70' )
+                     io_sub = build_grid_menu( ) ).
 
   ENDMETHOD.
 
@@ -329,21 +399,52 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD build_tag_dropdown.
+
+    CREATE OBJECT ro_tag_dropdown.
+
+    IF mo_repo->is_offline( ) = abap_true.
+      RETURN.
+    ENDIF.
+
+    ro_tag_dropdown->add( iv_txt = 'Overview'
+                          iv_act = |{ zif_abapgit_definitions=>c_action-go_tag_overview }?{ mv_key }| ).
+    ro_tag_dropdown->add( iv_txt = 'Switch'
+                          iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_switch }?{ mv_key }|
+                          iv_opt = iv_wp_opt ).
+    ro_tag_dropdown->add( iv_txt = 'Create'
+                          iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_create }?{ mv_key }| ).
+    ro_tag_dropdown->add( iv_txt = 'Delete'
+                          iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_delete }?{ mv_key }| ).
+
+
+  ENDMETHOD.
+
+
   METHOD constructor.
 
-    DATA lo_settings TYPE REF TO zcl_abapgit_settings.
+    DATA: lo_settings TYPE REF TO zcl_abapgit_settings,
+          lv_package  TYPE devclass.
 
     super->constructor( ).
 
-    mo_repo         = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    mv_cur_dir      = '/'. " Root
-    mv_hide_files   = zcl_abapgit_persistence_user=>get_instance( )->get_hide_files( ).
-    mv_changes_only = zcl_abapgit_persistence_user=>get_instance( )->get_changes_only( ).
+    mv_key           = iv_key.
+    mo_repo          = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    mv_cur_dir       = '/'. " Root
+    mv_hide_files    = zcl_abapgit_persistence_user=>get_instance( )->get_hide_files( ).
+    mv_changes_only  = zcl_abapgit_persistence_user=>get_instance( )->get_changes_only( ).
+    mv_show_order_by = zcl_abapgit_persistence_user=>get_instance( )->get_show_order_by( ).
+    mv_diff_first    = abap_true.
 
     " Read global settings to get max # of objects to be listed
     lo_settings     = zcl_abapgit_persist_settings=>get_instance( )->read( ).
     mv_max_lines    = lo_settings->get_max_lines( ).
     mv_max_setting  = mv_max_lines.
+
+    lv_package = mo_repo->get_package( ).
+
+    mv_are_changes_recorded_in_tr = zcl_abapgit_factory=>get_sap_package( lv_package
+                                                      )->are_changes_recorded_in_tr_req( ).
 
   ENDMETHOD.
 
@@ -681,9 +782,21 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
       WHEN c_actions-toggle_changes.    " Toggle changes only view
         mv_changes_only = zcl_abapgit_persistence_user=>get_instance( )->toggle_changes_only( ).
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_actions-toggle_order_by.
+        mv_show_order_by = zcl_abapgit_persistence_user=>get_instance( )->toggle_show_order_by( ).
+        ev_state         = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_actions-toggle_diff_first.
+        mv_diff_first = boolc( mv_diff_first = abap_false ).
+        ev_state             = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-display_more.      " Increase MAX lines limit
         mv_max_lines    = mv_max_lines + mv_max_setting.
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-change_order_by.
+        mv_order_by     = zcl_abapgit_gui_chunk_lib=>parse_change_order_by( iv_getdata ).
+        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-direction.
+        mv_order_descending = zcl_abapgit_gui_chunk_lib=>parse_direction( iv_getdata ).
+        ev_state            = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_open_in_master_lang.
         open_in_master_language( ).
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
@@ -731,6 +844,10 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
                                           iv_by_folders   = mv_show_folders
                                           iv_changes_only = mv_changes_only ).
 
+        IF mv_show_order_by = abap_true.
+          apply_order_by( CHANGING ct_repo_items = lt_repo_items ).
+        ENDIF.
+
         LOOP AT lt_repo_items ASSIGNING <ls_item>.
           zcl_abapgit_state=>reduce( EXPORTING iv_cur = <ls_item>-lstate
                                      CHANGING cv_prev = lv_lstate ).
@@ -765,6 +882,10 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
         IF zcl_abapgit_path=>is_root( mv_cur_dir ) = abap_false.
           ro_html->add( render_parent_dir( ) ).
+        ENDIF.
+
+        IF mv_show_order_by = abap_true.
+          ro_html->add( render_order_by( ) ).
         ENDIF.
 
         IF lines( lt_repo_items ) = 0.
@@ -805,4 +926,115 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
+
+  METHOD render_order_by.
+
+    DATA:
+      lt_col_spec TYPE zif_abapgit_definitions=>tty_col_spec,
+      lv_icon     TYPE string,
+      lv_html     TYPE string.
+    FIELD-SYMBOLS <ls_col> LIKE LINE OF lt_col_spec.
+
+    DEFINE _add_col.
+      APPEND INITIAL LINE TO lt_col_spec ASSIGNING <ls_col>.
+      <ls_col>-tech_name    = &1.
+      <ls_col>-display_name = &2.
+      <ls_col>-css_class    = &3.
+      <ls_col>-add_tz       = &4.
+      <ls_col>-title        = &5.
+    END-OF-DEFINITION.
+
+    CREATE OBJECT ro_html.
+
+    "        technical name    display name      css class   add timezone   title
+    _add_col ''                  ''                ''          ''           ''.
+    IF mv_are_changes_recorded_in_tr = abap_true.
+      _add_col ''                ''                ''          ''           ''.
+    ENDIF.
+    _add_col 'OBJ_TYPE'          'Type'            ''          ''           ''.
+    _add_col 'OBJ_NAME'          'Name'            ''          ''           ''.
+    _add_col 'PATH'              'Path'            ''          ''           ''.
+
+    ro_html->add( |<thead>| ).
+    ro_html->add( |<tr>| ).
+
+    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_header_cells(
+                      it_col_spec         = lt_col_spec
+                      iv_order_by         = mv_order_by
+                      iv_order_descending = mv_order_descending ) ).
+
+    IF mv_diff_first = abap_true.
+      lv_icon = 'check/blue'.
+    ELSE.
+      lv_icon = 'check/grey'.
+    ENDIF.
+
+    lv_html = |<th class="cmd">|
+           && zcl_abapgit_html=>icon( lv_icon )
+           && zcl_abapgit_html=>a(
+                  iv_txt = |diffs first|
+                  iv_act = c_actions-toggle_diff_first ).
+
+    ro_html->add( lv_html ).
+
+    ro_html->add( '</tr>' ).
+    ro_html->add( '</thead>' ).
+
+  ENDMETHOD.
+
+
+  METHOD apply_order_by.
+
+    DATA:
+      lt_sort                        TYPE abap_sortorder_tab,
+      ls_sort                        LIKE LINE OF lt_sort,
+      lt_non_code_and_metadata_items LIKE ct_repo_items,
+      lt_code_items                  LIKE ct_repo_items,
+      lt_diff_items                  LIKE ct_repo_items.
+
+    FIELD-SYMBOLS:
+      <ls_repo_item> TYPE zif_abapgit_definitions=>ty_repo_item.
+
+    IF mv_order_by IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    " we want to preserve non-code and metadata files at the top,
+    " so we isolate them and and sort only the code artifacts
+    LOOP AT ct_repo_items ASSIGNING <ls_repo_item>.
+
+      IF <ls_repo_item>-obj_type IS INITIAL AND <ls_repo_item>-is_dir = abap_false.
+        INSERT <ls_repo_item> INTO TABLE lt_non_code_and_metadata_items.
+      ELSE.
+        INSERT <ls_repo_item> INTO TABLE lt_code_items.
+      ENDIF.
+
+    ENDLOOP.
+
+    IF mv_diff_first = abap_true.
+      " fix diffs on the top, right after non-code and metadata
+      LOOP AT lt_code_items ASSIGNING <ls_repo_item>
+                            WHERE changes > 0.
+        INSERT <ls_repo_item> INTO TABLE lt_diff_items.
+      ENDLOOP.
+
+      DELETE lt_code_items WHERE changes > 0.
+    ENDIF.
+
+    CLEAR: ct_repo_items.
+
+    ls_sort-name       = mv_order_by.
+    ls_sort-descending = mv_order_descending.
+    ls_sort-astext     = abap_true.
+    INSERT ls_sort INTO TABLE lt_sort.
+    SORT lt_code_items BY (lt_sort).
+    SORT lt_diff_items BY (lt_sort).
+
+    INSERT LINES OF lt_non_code_and_metadata_items INTO TABLE ct_repo_items.
+    INSERT LINES OF lt_diff_items INTO TABLE ct_repo_items.
+    INSERT LINES OF lt_code_items INTO TABLE ct_repo_items.
+
+  ENDMETHOD.
+
 ENDCLASS.

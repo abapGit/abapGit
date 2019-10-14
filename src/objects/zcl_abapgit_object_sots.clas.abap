@@ -68,10 +68,10 @@ CLASS ZCL_ABAPGIT_OBJECT_SOTS IMPLEMENTATION.
 
     PERFORM btfr_create
       IN PROGRAM saplsotr_db_string
-      USING    iv_object
-               lv_source_langu
-               lv_flag_correction_entry
-               lv_flag_is_string
+      USING iv_object
+            lv_source_langu
+            lv_flag_correction_entry
+            lv_flag_is_string
       CHANGING lv_text_tab
                lt_entries
                ls_header

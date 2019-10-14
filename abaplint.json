@@ -221,9 +221,11 @@
         "LE"
       ]
     },
+    "release_idoc": true,
     "remove_descriptions": {
       "ignoreExceptions": false
     },
+    "rfc_error_handling": false,
     "sequential_blank": {
       "lines": 4
     },

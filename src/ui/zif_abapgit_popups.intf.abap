@@ -19,6 +19,7 @@ INTERFACE zif_abapgit_popups
     EXPORTING
       !ev_package      TYPE devclass
       !ev_folder_logic TYPE string
+      !ev_serialize_master_lang_only TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
   METHODS popup_folder_logic

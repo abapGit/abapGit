@@ -180,10 +180,10 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
     ENDLOOP.
 
     SELECT * FROM dokil
-             INTO TABLE lt_dokil
-             FOR ALL ENTRIES IN lt_objects
-             WHERE id     = 'NA'
-             AND   object = lt_objects-table_line.
+      INTO TABLE lt_dokil
+      FOR ALL ENTRIES IN lt_objects
+      WHERE id = 'NA'
+      AND object = lt_objects-table_line.
 
     CLEAR ls_dokil-dokstate.
     MODIFY lt_dokil FROM ls_dokil TRANSPORTING dokstate WHERE dokstate IS NOT INITIAL.
@@ -205,12 +205,16 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
 
     lv_msg_id = ms_item-obj_name.
 
+    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+      RETURN. " skip
+    ENDIF.
+
     " Collect additional languages
     " Skip master lang - it has been already serialized
     SELECT DISTINCT sprsl AS langu INTO TABLE lt_i18n_langs
       FROM t100t
       WHERE arbgb = lv_msg_id
-      AND   sprsl <> mv_language.       "#EC CI_BYPASS "#EC CI_GENBUFF.
+      AND sprsl <> mv_language.       "#EC CI_BYPASS "#EC CI_GENBUFF
 
     SORT lt_i18n_langs ASCENDING.
 

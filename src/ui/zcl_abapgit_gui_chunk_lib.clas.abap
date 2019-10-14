@@ -5,6 +5,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
 
   PUBLIC SECTION.
 
+    CLASS-METHODS class_constructor.
     CLASS-METHODS render_error
       IMPORTING
         !ix_error      TYPE REF TO zcx_abapgit_exception OPTIONAL
@@ -61,8 +62,32 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         ix_error       TYPE REF TO zcx_abapgit_exception
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+    CLASS-METHODS parse_change_order_by
+      IMPORTING
+        iv_query_str       TYPE clike
+      RETURNING
+        VALUE(rv_order_by) TYPE string.
+    CLASS-METHODS parse_direction
+      IMPORTING
+        iv_query_str               TYPE clike
+      RETURNING
+        VALUE(rv_order_descending) TYPE abap_bool.
+    CLASS-METHODS render_order_by_header_cells
+      IMPORTING
+        it_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec
+        iv_order_by         TYPE string
+        iv_order_descending TYPE abap_bool
+      RETURNING
+        VALUE(ro_html)      TYPE REF TO zcl_abapgit_html.
+    CLASS-METHODS render_warning_banner
+      IMPORTING
+        iv_text        TYPE string
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
+    CLASS-DATA gv_time_zone TYPE timezone.
 
     CLASS-METHODS render_branch_span
       IMPORTING
@@ -96,11 +121,36 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         iv_program_name                   TYPE syrepid
       RETURNING
         VALUE(rv_normalized_program_name) TYPE string.
+
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
+
+  METHOD class_constructor.
+
+    CALL FUNCTION 'GET_SYSTEM_TIMEZONE'
+      IMPORTING
+        timezone            = gv_time_zone
+      EXCEPTIONS
+        customizing_missing = 1
+        OTHERS              = 2.
+    ASSERT sy-subrc = 0.
+
+  ENDMETHOD.
+
+
+  METHOD get_t100_text.
+
+    SELECT SINGLE text
+           FROM t100
+           INTO rv_text
+           WHERE arbgb = iv_msgid
+           AND msgnr = iv_msgno
+           AND sprsl = sy-langu.
+
+  ENDMETHOD.
 
 
   METHOD normalize_program_name.
@@ -108,6 +158,30 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     rv_normalized_program_name = substring_before(
                                      val   = iv_program_name
                                      regex = `(=+CP)?$` ).
+
+  ENDMETHOD.
+
+
+  METHOD parse_change_order_by.
+
+    FIND FIRST OCCURRENCE OF REGEX `orderBy=(.*)`
+         IN iv_query_str
+         SUBMATCHES rv_order_by.
+
+    rv_order_by = condense( rv_order_by ).
+
+  ENDMETHOD.
+
+
+  METHOD parse_direction.
+
+    DATA: lv_direction TYPE string.
+
+    FIND FIRST OCCURRENCE OF REGEX `direction=(.*)`
+         IN iv_query_str
+         SUBMATCHES lv_direction.
+
+    rv_order_descending = boolc( condense( lv_direction ) = 'DESCENDING' ).
 
   ENDMETHOD.
 
@@ -135,6 +209,65 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       ro_html->add( lv_text ).
     ENDIF.
     ro_html->add( '</span>' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_order_by_header_cells.
+
+    DATA:
+      lt_colspec   TYPE zif_abapgit_definitions=>tty_col_spec,
+      lv_tmp       TYPE string,
+      lv_disp_name TYPE string.
+
+    FIELD-SYMBOLS <ls_col> LIKE LINE OF lt_colspec.
+
+    CREATE OBJECT ro_html.
+
+    LOOP AT it_col_spec ASSIGNING <ls_col>.
+      " e.g. <th class="ro-detail">Created at [{ gv_time_zone }]</th>
+      lv_tmp = '<th'.
+      IF <ls_col>-css_class IS NOT INITIAL.
+        lv_tmp = lv_tmp && | class="{ <ls_col>-css_class }"|.
+      ENDIF.
+      lv_tmp = lv_tmp && '>'.
+
+      IF <ls_col>-display_name IS NOT INITIAL.
+        lv_disp_name = <ls_col>-display_name.
+        IF <ls_col>-add_tz = abap_true.
+          lv_disp_name = lv_disp_name && | [{ gv_time_zone }]|.
+        ENDIF.
+        IF <ls_col>-tech_name = iv_order_by.
+          IF iv_order_descending = abap_true.
+            lv_tmp = lv_tmp && zcl_abapgit_html=>a(
+              iv_txt   = lv_disp_name
+              iv_act   = |{ zif_abapgit_definitions=>c_action-direction }?direction=ASCENDING|
+              iv_title = <ls_col>-title ).
+          ELSE.
+            lv_tmp = lv_tmp && zcl_abapgit_html=>a(
+              iv_txt   = lv_disp_name
+              iv_act   = |{ zif_abapgit_definitions=>c_action-direction }?direction=DESCENDING|
+              iv_title = <ls_col>-title ).
+          ENDIF.
+        ELSE.
+          lv_tmp = lv_tmp && zcl_abapgit_html=>a(
+            iv_txt   = lv_disp_name
+            iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }?orderBy={ <ls_col>-tech_name }|
+            iv_title = <ls_col>-title ).
+        ENDIF.
+      ENDIF.
+      IF <ls_col>-tech_name = iv_order_by
+      AND iv_order_by IS NOT INITIAL.
+        IF iv_order_descending = abap_true.
+          lv_tmp = lv_tmp && | &#x25B4;|. " arrow up
+        ELSE.
+          lv_tmp = lv_tmp && | &#x25BE;|. " arrow down
+        ENDIF.
+      ENDIF.
+
+      lv_tmp = lv_tmp && '</th>'.
+      ro_html->add( lv_tmp ).
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -595,14 +728,13 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD get_t100_text.
+  METHOD render_warning_banner.
 
-    SELECT SINGLE text
-           FROM t100
-           INTO rv_text
-           WHERE arbgb = iv_msgid
-           AND   msgnr = iv_msgno
-           AND   sprsl = sy-langu.
+    CREATE OBJECT ro_html.
+    ro_html->add( '<div class="dummydiv warning">' ).
+    ro_html->add( |{ zcl_abapgit_html=>icon( 'exclamation-triangle/yellow' ) }| &&
+                  | { iv_text }| ).
+    ro_html->add( '</div>' ).
 
   ENDMETHOD.
 
