@@ -329,8 +329,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA: ls_commit TYPE zcl_abapgit_services_git=>ty_commit_fields,
-          li_popups TYPE REF TO zif_abapgit_popups.
+    DATA: ls_commit TYPE zcl_abapgit_services_git=>ty_commit_fields.
 
     CASE iv_action.
       WHEN c_action-commit_post.
