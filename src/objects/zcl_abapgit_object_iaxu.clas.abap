@@ -73,8 +73,7 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
         object_already_existing   = 3
         not_authorized            = 4
         action_cancelled          = 5
-        OTHERS                    = 6
-    ).
+        OTHERS                    = 6 ).
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error from w3_api_xml3~create_new| ).
