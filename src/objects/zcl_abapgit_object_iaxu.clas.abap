@@ -1,36 +1,36 @@
-class ZCL_ABAPGIT_OBJECT_IAXU definition
-  public
-  inheriting from ZCL_ABAPGIT_OBJECTS_SUPER
-  final
-  create public .
+CLASS zcl_abapgit_object_iaxu DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  FINAL
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  interfaces ZIF_ABAPGIT_OBJECT .
-  ALIASES mo_files FOR zif_abapgit_object~mo_files.
-protected section.
-private section.
+    INTERFACES zif_abapgit_object .
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 
-  methods READ
-    exporting
-      !ES_ATTR type W3TEMPATTR
-      !EV_SOURCE type STRING
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SAVE
-    importing
-      !IS_ATTR type W3TEMPATTR
-      !IV_SOURCE type STRING
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
+    METHODS read
+      EXPORTING
+        !es_attr   TYPE w3tempattr
+        !ev_source TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    METHODS save
+      IMPORTING
+        !is_attr   TYPE w3tempattr
+        !iv_source TYPE string
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_IAXU IMPLEMENTATION.
+CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
 
-  METHOD READ.
+  METHOD read.
 
     DATA: li_template TYPE REF TO if_w3_api_template,
           lt_source   TYPE w3htmltabtype,
@@ -67,7 +67,7 @@ CLASS ZCL_ABAPGIT_OBJECT_IAXU IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD SAVE.
+  METHOD save.
 
     DATA: lt_source   TYPE w3htmltabtype,
           lv_source   TYPE string,
