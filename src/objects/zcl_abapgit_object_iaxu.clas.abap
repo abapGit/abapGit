@@ -1,28 +1,22 @@
-CLASS zcl_abapgit_object_iaxu DEFINITION
-  PUBLIC
-  INHERITING FROM zcl_abapgit_objects_super
-  FINAL
-  CREATE PUBLIC .
+CLASS zcl_abapgit_object_iaxu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_super FINAL.
 
   PUBLIC SECTION.
+    INTERFACES zif_abapgit_object.
 
-    INTERFACES zif_abapgit_object .
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
   PROTECTED SECTION.
   PRIVATE SECTION.
+    DATA: mo_xml_api           TYPE REF TO cl_w3_api_xml3,
+          mc_source_style_2006 TYPE w3style VALUE 'XML',
+          mc_generator_class   TYPE w3styleclass VALUE 'CL_ITS_GENERATE_XML3'.
 
-    METHODS read
-      EXPORTING
-        !es_attr   TYPE w3tempattr
-        !ev_source TYPE string
-      RAISING
-        zcx_abapgit_exception .
-    METHODS save
-      IMPORTING
-        !is_attr   TYPE w3tempattr
-        !iv_source TYPE string
-      RAISING
-        zcx_abapgit_exception .
+    METHODS:
+      read
+        EXPORTING es_attr TYPE w3tempattr
+        RAISING   zcx_abapgit_exception,
+      save
+        IMPORTING is_attr TYPE w3tempattr
+        RAISING   zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -32,67 +26,61 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
   METHOD read.
 
-    DATA: li_template TYPE REF TO if_w3_api_template,
-          lt_source   TYPE w3htmltabtype,
-          ls_name     TYPE iacikeyt.
+    DATA: li_service TYPE REF TO cl_w3_api_xml3,
+          lv_name    TYPE iacikeyt.
 
 
-    ls_name = ms_item-obj_name.
+    lv_name = ms_item-obj_name.
 
-    cl_w3_api_template=>if_w3_api_template~load(
+    cl_w3_api_xml3=>load(
       EXPORTING
-        p_template_name     = ls_name
+        p_xml_name          = lv_name
       IMPORTING
-        p_template          = li_template
+        p_xml               = mo_xml_api
+        p_attributes        = es_attr
       EXCEPTIONS
         object_not_existing = 1
         permission_failure  = 2
-        error_occured       = 3
-        OTHERS              = 4 ).
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from w3api_template~load' ).
-    ENDIF.
+        data_corrupt        = 3
+        error_occured       = 4
+        OTHERS              = 5 ).
 
-    li_template->get_attributes( IMPORTING p_attributes = es_attr ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from w3_api_xml3~load' ).
+    ENDIF.
 
     CLEAR: es_attr-chname,
            es_attr-tdate,
            es_attr-ttime,
            es_attr-devclass.
 
-    li_template->get_source( IMPORTING p_source = lt_source ).
-
-    CONCATENATE LINES OF lt_source INTO ev_source RESPECTING BLANKS.
-
   ENDMETHOD.
 
 
   METHOD save.
 
-    DATA: lt_source   TYPE w3htmltabtype,
-          lv_source   TYPE string,
-          li_template TYPE REF TO if_w3_api_template.
+    cl_w3_api_xml3=>create_new(
+      EXPORTING
+        p_source_style_2006       = mc_source_style_2006
+        p_xml_data                = is_attr
+        p_generator_class         = mc_generator_class
+        p_program_name            = is_attr-programm
+      IMPORTING
+        p_xml                     = mo_xml_api
+      EXCEPTIONS
+        undefined_name            = 1
+        error_occured             = 2
+        object_already_existing   = 3
+        not_authorized            = 4
+        action_cancelled          = 5
+        OTHERS                    = 6
+    ).
 
-
-    cl_w3_api_template=>if_w3_api_template~create_new(
-      EXPORTING p_template_data = is_attr
-                p_program_name = is_attr-programm
-      IMPORTING p_template = li_template ).
-
-    li_template->set_attributes( is_attr ).
-
-    lv_source = iv_source.
-    WHILE strlen( lv_source ) >= 255.
-      APPEND lv_source(255) TO lt_source.
-      lv_source = lv_source+255.
-    ENDWHILE.
-    IF NOT lv_source IS INITIAL.
-      APPEND lv_source TO lt_source.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from w3_api_xml3~create_new| ).
     ENDIF.
 
-    li_template->set_source( lt_source ).
-
-    li_template->if_w3_api_object~save( ).
+    mo_xml_api->if_w3_api_object~save( ).
 
   ENDMETHOD.
 
@@ -104,68 +92,85 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: li_template TYPE REF TO if_w3_api_template,
-          ls_name     TYPE iacikeyt.
+    DATA: lo_xml_api TYPE REF TO cl_w3_api_xml3,
+          lv_name    TYPE iacikeyt.
 
-    ls_name = ms_item-obj_name.
 
-    cl_w3_api_template=>if_w3_api_template~load(
+    lv_name = ms_item-obj_name.
+
+    cl_w3_api_xml3=>load(
       EXPORTING
-        p_template_name     = ls_name
+        p_xml_name          = lv_name
       IMPORTING
-        p_template          = li_template
+        p_xml               = lo_xml_api
       EXCEPTIONS
         object_not_existing = 1
         permission_failure  = 2
-        error_occured       = 3
-        OTHERS              = 4 ).
+        data_corrupt        = 3
+        error_occured       = 4
+        OTHERS              = 5 ).
+
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from if_w3_api_template~load' ).
+      zcx_abapgit_exception=>raise( 'error from w3_api_xml3~load' ).
     ENDIF.
 
-    li_template->if_w3_api_object~set_changeable( abap_true ).
-    li_template->if_w3_api_object~delete( ).
-    li_template->if_w3_api_object~save( ).
+    lo_xml_api->get_source(
+      IMPORTING
+        p_source       = DATA(lv_source)
+      EXCEPTIONS
+        object_invalid = 1
+        xml_deleted    = 2
+        error_occured  = 3
+        OTHERS         = 4
+    ).
+
+    IF sy-subrc <> 0.
+*     MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+*                WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+    ENDIF.
+
+    lo_xml_api->if_w3_api_object~set_changeable( abap_true ).
+    lo_xml_api->if_w3_api_object~delete( ).
+    lo_xml_api->if_w3_api_object~save( ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: ls_attr   TYPE w3tempattr,
-          lv_source TYPE string.
+    DATA: ls_attr TYPE w3tempattr.
+
 
     io_xml->read( EXPORTING iv_name = 'ATTR'
                   CHANGING cg_data = ls_attr ).
 
-    lv_source = mo_files->read_string( 'html' ) ##NO_TEXT.
-
     ls_attr-devclass = iv_package.
-
-    save( is_attr   = ls_attr
-          iv_source = lv_source ).
+    save( is_attr = ls_attr ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lv_name TYPE itsappl.
+    DATA: lv_name TYPE iacikeyt.
+
 
     lv_name = ms_item-obj_name.
 
-    cl_w3_api_service=>if_w3_api_service~load(
+    cl_w3_api_xml3=>load(
       EXPORTING
-        p_service_name      = lv_name
+        p_xml_name          = lv_name
       EXCEPTIONS
         object_not_existing = 1
         permission_failure  = 2
-        error_occured       = 3
-        OTHERS              = 4 ).
+        data_corrupt        = 3
+        error_occured       = 4
+        OTHERS              = 5 ).
+
     IF sy-subrc = 1.
       rv_bool = abap_false.
     ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from w3_api_service~load' ).
+      zcx_abapgit_exception=>raise( 'error from w3_api_xml3~load' ).
     ELSE.
       rv_bool = abap_true.
     ENDIF.
@@ -211,21 +216,17 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: ls_attr   TYPE w3tempattr,
-          lv_source TYPE string.
+    DATA: ls_attr TYPE w3tempattr.
+
 
     IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
-    read( IMPORTING es_attr   = ls_attr
-                    ev_source = lv_source ).
+    read( IMPORTING es_attr = ls_attr ).
 
     io_xml->add( iv_name = 'ATTR'
                  ig_data = ls_attr ).
-
-    mo_files->add_string( iv_ext    = 'html'
-                          iv_string = lv_source ) ##NO_TEXT.
 
   ENDMETHOD.
 ENDCLASS.
