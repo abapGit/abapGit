@@ -114,21 +114,6 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from w3_api_xml3~load' ).
     ENDIF.
 
-    lo_xml_api->get_source(
-      IMPORTING
-        p_source       = DATA(lv_source)
-      EXCEPTIONS
-        object_invalid = 1
-        xml_deleted    = 2
-        error_occured  = 3
-        OTHERS         = 4
-    ).
-
-    IF sy-subrc <> 0.
-*     MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-*                WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-    ENDIF.
-
     lo_xml_api->if_w3_api_object~set_changeable( abap_true ).
     lo_xml_api->if_w3_api_object~delete( ).
     lo_xml_api->if_w3_api_object~save( ).
