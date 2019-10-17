@@ -83,7 +83,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
       lt_dd07v_tmp = it_dd07v.
       LOOP AT lt_dd07v_tmp ASSIGNING <ls_dd07v>.
         READ TABLE lt_dd07_texts ASSIGNING <ls_dd07_text>
-          WITH KEY ddlanguage = <lv_lang> valpos = <ls_dd07v>-valpos.
+          WITH KEY ddlanguage = <lv_lang> domvalue_l = <ls_dd07v>-domvalue_l
+                   domvalue_h = <ls_dd07v>-domvalue_h.
         CHECK sy-subrc = 0. " ! no translation -> master translation remain (maybe not OK)
         MOVE-CORRESPONDING <ls_dd07_text> TO <ls_dd07v>.
         DELETE lt_dd07_texts INDEX sy-tabix. " Optimization
@@ -135,7 +136,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd01v
       WHERE domname = lv_name
-      AND ddlanguage <> mv_language.                    "#EC CI_SUBRC
+      AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
 
     LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
       lv_index = sy-tabix.
@@ -169,6 +170,10 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
     SORT lt_i18n_langs ASCENDING.
     SORT lt_dd01_texts BY ddlanguage ASCENDING.
     SORT lt_dd07_texts BY valpos ASCENDING ddlanguage ASCENDING.
+
+    LOOP AT lt_dd07_texts ASSIGNING <ls_dd07_text>.
+      CLEAR <ls_dd07_text>-valpos.
+    ENDLOOP.
 
     IF lines( lt_i18n_langs ) > 0.
       io_xml->add( iv_name = 'I18N_LANGS'
