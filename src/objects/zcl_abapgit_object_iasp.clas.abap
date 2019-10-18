@@ -98,7 +98,7 @@ CLASS ZCL_ABAPGIT_OBJECT_IASP IMPLEMENTATION.
         error_occured       = 3
         OTHERS              = 4 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from if_w3_api_service~load' ).
+      zcx_abapgit_exception=>raise( 'error from w3_api_service~load' ).
     ENDIF.
 
     li_service->if_w3_api_object~set_changeable( abap_true ).
