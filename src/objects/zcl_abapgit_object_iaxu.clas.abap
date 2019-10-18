@@ -188,11 +188,9 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
     ls_attr-devclass = iv_package.
 
-    CASE zif_abapgit_object~exists( ).
-      WHEN abap_true.
-        zif_abapgit_object~delete( ).
-
-    ENDCASE.
+    IF zif_abapgit_object~exists( ) EQ abap_true.
+      zif_abapgit_object~delete( ).
+    ENDIF.
 
     save( is_attr = ls_attr ).
 
