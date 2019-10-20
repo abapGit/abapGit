@@ -802,22 +802,22 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
   METHOD is_min_702_sp14_check.
 
-    DATA: patchlevel   TYPE sappatchlv,
-          patchlevel_i TYPE i.
+    DATA: lv_patchlevel   TYPE sappatchlv,
+          lv_patchlevel_i TYPE i.
 
     rv_is_min_702_sp14 = abap_true.
 
     SELECT SINGLE extrelease
            FROM cvers
-           INTO ( patchlevel )
+           INTO ( lv_patchlevel )
            WHERE component = 'SAP_ABA'
              AND release = '702'.
     IF sy-subrc <> 0.
       " 702 is min version => must be >702
     ELSE.
-      patchlevel_i = patchlevel.
+      lv_patchlevel_i = lv_patchlevel.
 
-      IF patchlevel_i < 14.
+      IF lv_patchlevel_i < 14.
 
         rv_is_min_702_sp14 = abap_false.
 
