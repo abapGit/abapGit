@@ -84,11 +84,14 @@ CLASS zcl_abapgit_oo_class DEFINITION
       IMPORTING
         !iv_classname              TYPE seoclsname
         !iv_number_of_impl_methods TYPE i .
+    CLASS-METHODS is_min_702_sp14_check
+      RETURNING
+        VALUE(rv_is_min_702_sp14) TYPE abap_bool.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
+CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
 
   METHOD create_report.
@@ -235,11 +238,15 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
                lc_active_version         TYPE r3state VALUE 'A'.
 
 
-    create_report( iv_program      = cl_oo_classname_service=>get_cs_name( iv_classname )
-                   it_source       = it_source
-                   iv_extension    = lc_class_source_extension
-                   iv_program_type = lc_include_program_type
-                   iv_version      = lc_active_version ).
+    IF is_min_702_sp14_check( ) = abap_true.
+
+      create_report( iv_program      = cl_oo_classname_service=>get_cs_name( iv_classname )
+                     it_source       = it_source
+                     iv_extension    = lc_class_source_extension
+                     iv_program_type = lc_include_program_type
+                     iv_version      = lc_active_version ).
+
+    ENDIF.
 
     " Assuming that all methods that were scanned are implemented
     update_cs_number_of_methods( iv_classname              = iv_classname
@@ -379,23 +386,44 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
                       iv_clsname    = <lv_clsname>
                       it_attributes = it_attributes ).
 
-    CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
-      EXPORTING
-        devclass        = iv_package
-        overwrite       = iv_overwrite
-        version         = seoc_version_active
-        suppress_dialog = abap_true
-      CHANGING
-        class           = cg_properties
-        attributes      = lt_vseoattrib
-      EXCEPTIONS
-        existing        = 1
-        is_interface    = 2
-        db_error        = 3
-        component_error = 4
-        no_access       = 5
-        other           = 6
-        OTHERS          = 7.
+    TRY.
+        CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
+          EXPORTING
+            devclass        = iv_package
+            overwrite       = iv_overwrite
+            version         = seoc_version_active
+            suppress_dialog = abap_true
+          CHANGING
+            class           = cg_properties
+            attributes      = lt_vseoattrib
+          EXCEPTIONS
+            existing        = 1
+            is_interface    = 2
+            db_error        = 3
+            component_error = 4
+            no_access       = 5
+            other           = 6
+            OTHERS          = 7.
+      CATCH cx_sy_dyn_call_param_not_found.
+        " Old support packages of 7.02 versions don't have parameter SUPPRESS_DIALOG
+        CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
+          EXPORTING
+            devclass        = iv_package
+            overwrite       = iv_overwrite
+            version         = seoc_version_active
+          CHANGING
+            class           = cg_properties
+            attributes      = lt_vseoattrib
+          EXCEPTIONS
+            existing        = 1
+            is_interface    = 2
+            db_error        = 3
+            component_error = 4
+            no_access       = 5
+            other           = 6
+            OTHERS          = 7.
+    ENDTRY.
+
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error from SEO_CLASS_CREATE_COMPLETE. Subrc = { sy-subrc }| ).
     ENDIF.
@@ -770,4 +798,34 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
     lv_cp = cl_oo_classname_service=>get_classpool_name( iv_class_name ).
     READ TEXTPOOL lv_cp INTO rt_text_pool LANGUAGE iv_language. "#EC CI_READ_REP
   ENDMETHOD.
+
+
+  METHOD is_min_702_sp14_check.
+
+    DATA: patchlevel   TYPE sappatchlv,
+          patchlevel_i TYPE i.
+
+    rv_is_min_702_sp14 = abap_true.
+
+    SELECT SINGLE extrelease
+           FROM cvers
+           INTO ( patchlevel )
+           WHERE component = 'SAP_ABA'
+             AND release = '702'.
+    IF sy-subrc <> 0.
+      " 702 is min version => must be >702
+    ELSE.
+      patchlevel_i = patchlevel.
+
+      IF patchlevel_i < 14.
+
+        rv_is_min_702_sp14 = abap_false.
+
+      ENDIF.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
 ENDCLASS.
