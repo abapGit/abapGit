@@ -263,6 +263,7 @@ RepoOverViewHelper.prototype.onPageLoad = function() {
 function StageHelper(params) {
   this.pageSeed        = params.seed;
   this.formAction      = params.formAction;
+  this.user            = params.user;
   this.choiseCount     = 0;
   this.lastFilterValue = "";
 
@@ -296,7 +297,24 @@ function StageHelper(params) {
   };
 
   this.setHooks();
+  if (this.user) this.injectFilterMe();
 }
+
+StageHelper.prototype.injectFilterMe = function() {
+  var changedByHead = this.dom.stageTab.tHead.rows[0].cells[this.colIndex.user];
+  changedByHead.innerText = changedByHead.innerText + " (";
+  var a = document.createElement("A");
+  a.appendChild(document.createTextNode("me"));
+  a.onclick = this.onFilterMe.bind(this);
+  a.href = "#";
+  changedByHead.appendChild(a);
+  changedByHead.appendChild(document.createTextNode(")"));
+};
+
+StageHelper.prototype.onFilterMe = function() {
+  this.dom.objectSearch.value = this.user;
+  this.onFilter({ type: "keypress", which: 13, target: this.dom.objectSearch });
+};
 
 // Hook global click listener on table, load/unload actions
 StageHelper.prototype.setHooks = function() {
@@ -383,7 +401,7 @@ StageHelper.prototype.onTableClick = function (event) {
 StageHelper.prototype.onFilter = function (e) {
   if ( // Enter hit or clear, IE SUCKS !
     e.type === "input" && !e.target.value && this.lastFilterValue
-    || e.type === "keypress" && e.which === 13 ) {
+    || e.type === "keypress" && (e.which === 13 || e.key === "Enter") ) {
 
     this.applyFilterValue(e.target.value);
     submitSapeventForm({ filterValue: e.target.value }, "stage_filter", "post");
