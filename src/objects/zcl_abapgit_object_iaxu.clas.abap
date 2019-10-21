@@ -90,12 +90,12 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
     w3_api_load( EXPORTING is_name    = ls_name
                  IMPORTING eo_xml_api = lo_xml_api ).
 
-    w3_api_set_changeable( EXPORTING io_xml_api    = lo_xml_api
-                                     iv_changeable = abap_true ).
+    w3_api_set_changeable( io_xml_api    = lo_xml_api
+                           iv_changeable = abap_true ).
 
-    w3_api_delete( EXPORTING io_xml_api = lo_xml_api ).
+    w3_api_delete( io_xml_api = lo_xml_api ).
 
-    w3_api_save( EXPORTING io_xml_api = lo_xml_api ).
+    w3_api_save( io_xml_api = lo_xml_api ).
 
   ENDMETHOD.
 
@@ -127,7 +127,7 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
     ls_name = ms_item-obj_name.
 
     TRY.
-        w3_api_load( EXPORTING is_name = ls_name ).
+        w3_api_load( is_name = ls_name ).
 
         rv_bool = abap_true.
 
