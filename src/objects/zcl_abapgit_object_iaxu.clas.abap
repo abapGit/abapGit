@@ -14,6 +14,25 @@ CLASS zcl_abapgit_object_iaxu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING   zcx_abapgit_exception,
       save
         IMPORTING is_attr TYPE w3tempattr
+        RAISING   zcx_abapgit_exception,
+      w3_api_load
+        IMPORTING is_name    TYPE iacikeyt
+        EXPORTING eo_xml_api TYPE REF TO cl_w3_api_xml3
+                  es_attr    TYPE w3tempattr
+        RAISING   zcx_abapgit_exception,
+      w3_api_set_changeable
+        IMPORTING io_xml_api    TYPE REF TO cl_w3_api_xml3
+                  iv_changeable TYPE abap_bool
+        RAISING   zcx_abapgit_exception,
+      w3_api_delete
+        IMPORTING io_xml_api TYPE REF TO cl_w3_api_xml3
+        RAISING   zcx_abapgit_exception,
+      w3_api_save
+        IMPORTING io_xml_api TYPE REF TO cl_w3_api_xml3
+        RAISING   zcx_abapgit_exception,
+      w3_api_create_new
+        IMPORTING is_attr    TYPE w3tempattr
+        EXPORTING eo_xml_api TYPE REF TO cl_w3_api_xml3
         RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
@@ -30,21 +49,8 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
     ls_name = ms_item-obj_name.
 
-    cl_w3_api_xml3=>load(
-      EXPORTING
-        p_xml_name          = ls_name
-      IMPORTING
-        p_attributes        = es_attr
-      EXCEPTIONS
-        object_not_existing = 1
-        permission_failure  = 2
-        data_corrupt        = 3
-        error_occured       = 4
-        OTHERS              = 5 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |error from w3_api_xml3~load subrc={ sy-subrc }| ).
-    ENDIF.
+    w3_api_load( EXPORTING is_name = ls_name
+                 IMPORTING es_attr = es_attr ).
 
     CLEAR: es_attr-chname,
            es_attr-tdate,
@@ -59,40 +65,10 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
     DATA: lo_xml_api TYPE REF TO cl_w3_api_xml3.
 
 
-    cl_w3_api_xml3=>create_new(
-      EXPORTING
-        p_source_style_2006       = mc_source_style_2006
-        p_xml_data                = is_attr
-        p_generator_class         = mc_generator_class
-        p_program_name            = is_attr-programm
-      IMPORTING
-        p_xml                     = lo_xml_api
-      EXCEPTIONS
-        undefined_name            = 1
-        error_occured             = 2
-        object_already_existing   = 3
-        not_authorized            = 4
-        action_cancelled          = 5
-        OTHERS                    = 6 ).
+    w3_api_create_new( EXPORTING is_attr    = is_attr
+                       IMPORTING eo_xml_api = lo_xml_api ).
 
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from w3_api_xml3~create_new subrc={ sy-subrc }| ).
-    ENDIF.
-
-    lo_xml_api->if_w3_api_object~save(
-          EXCEPTIONS
-            object_invalid        = 1
-            object_not_changeable = 2
-            action_cancelled      = 3
-            permission_failure    = 4
-            not_changed           = 5
-            data_invalid          = 6
-            error_occured         = 7
-            OTHERS                = 8 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from w3_api_xml3~save subrc={ sy-subrc }| ).
-    ENDIF.
+    w3_api_save( io_xml_api = lo_xml_api ).
 
   ENDMETHOD.
 
@@ -105,75 +81,21 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
 
     DATA: lo_xml_api TYPE REF TO cl_w3_api_xml3,
-          ls_name    TYPE iacikeyt.
+          ls_name    TYPE iacikeyt,
+          lx_root    TYPE REF TO zcx_abapgit_exception.
 
 
     ls_name = ms_item-obj_name.
 
-    cl_w3_api_xml3=>load(
-      EXPORTING
-        p_xml_name          = ls_name
-      IMPORTING
-        p_xml               = lo_xml_api
-      EXCEPTIONS
-        object_not_existing = 1
-        permission_failure  = 2
-        data_corrupt        = 3
-        error_occured       = 4
-        OTHERS              = 5 ).
+    w3_api_load( EXPORTING is_name    = ls_name
+                 IMPORTING eo_xml_api = lo_xml_api ).
 
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from w3_api_xml3~load subrc={ sy-subrc }' ).
-    ENDIF.
+    w3_api_set_changeable( EXPORTING io_xml_api    = lo_xml_api
+                                     iv_changeable = abap_true ).
 
-    lo_xml_api->if_w3_api_object~set_changeable(
-      EXPORTING
-        p_changeable                 = abap_true
-      EXCEPTIONS
-        action_cancelled             = 1
-        object_locked_by_other_user  = 2
-        permission_failure           = 3
-        object_already_changeable    = 4
-        object_already_unlocked      = 5
-        object_just_created          = 6
-        object_deleted               = 7
-        object_modified              = 8
-        object_not_existing          = 9
-        object_invalid               = 10
-        error_occured                = 11
-        content_data_error           = 12
-        OTHERS                       = 13 ).
+    w3_api_delete( EXPORTING io_xml_api = lo_xml_api ).
 
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from w3_api_xml3~set_changeable subrc={ sy-subrc }' ).
-    ENDIF.
-
-    lo_xml_api->if_w3_api_object~delete(
-      EXCEPTIONS
-        object_not_empty      = 1
-        object_not_changeable = 2
-        object_invalid        = 3
-        error_occured         = 4
-        OTHERS                = 5 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from w3_api_xml3~delete subrc={ sy-subrc }' ).
-    ENDIF.
-
-    lo_xml_api->if_w3_api_object~save(
-      EXCEPTIONS
-        object_invalid        = 1
-        object_not_changeable = 2
-        action_cancelled      = 3
-        permission_failure    = 4
-        not_changed           = 5
-        data_invalid          = 6
-        error_occured         = 7
-        OTHERS                = 8 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from w3_api_xml3~save subrc={ sy-subrc }' ).
-    ENDIF.
+    w3_api_save( EXPORTING io_xml_api = lo_xml_api ).
 
   ENDMETHOD.
 
@@ -204,23 +126,15 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
     ls_name = ms_item-obj_name.
 
-    cl_w3_api_xml3=>load(
-      EXPORTING
-        p_xml_name          = ls_name
-      EXCEPTIONS
-        object_not_existing = 1
-        permission_failure  = 2
-        data_corrupt        = 3
-        error_occured       = 4
-        OTHERS              = 5 ).
+    TRY.
+        w3_api_load( EXPORTING is_name = ls_name ).
 
-    IF sy-subrc = 1.
-      rv_bool = abap_false.
-    ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from w3_api_xml3~load subrc={ sy-subrc }' ).
-    ELSE.
-      rv_bool = abap_true.
-    ENDIF.
+        rv_bool = abap_true.
+
+      CATCH zcx_abapgit_object_not_found.
+        rv_bool = abap_false.
+
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -277,4 +191,115 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD w3_api_load.
+
+    cl_w3_api_xml3=>load(
+      EXPORTING
+        p_xml_name          = is_name
+      IMPORTING
+        p_attributes        = es_attr
+      EXCEPTIONS
+        object_not_existing = 1
+        permission_failure  = 2
+        data_corrupt        = 3
+        error_occured       = 4
+        OTHERS              = 5 ).
+
+    IF sy-subrc = 1.
+      zcx_abapgit_object_not_found=>raise( |Error from w3_api_xml3~load subrc={ sy-subrc }| ).
+    ELSEIF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from w3_api_xml3~load subrc={ sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD w3_api_set_changeable.
+
+    io_xml_api->if_w3_api_object~set_changeable(
+      EXPORTING
+        p_changeable                 = abap_true
+      EXCEPTIONS
+        action_cancelled             = 1
+        object_locked_by_other_user  = 2
+        permission_failure           = 3
+        object_already_changeable    = 4
+        object_already_unlocked      = 5
+        object_just_created          = 6
+        object_deleted               = 7
+        object_modified              = 8
+        object_not_existing          = 9
+        object_invalid               = 10
+        error_occured                = 11
+        content_data_error           = 12
+        OTHERS                       = 13 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from w3_api_xml3~set_changeable subrc={ sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD w3_api_create_new.
+
+    cl_w3_api_xml3=>create_new(
+      EXPORTING
+        p_source_style_2006       = mc_source_style_2006
+        p_xml_data                = is_attr
+        p_generator_class         = mc_generator_class
+        p_program_name            = is_attr-programm
+      IMPORTING
+        p_xml                     = eo_xml_api
+      EXCEPTIONS
+        undefined_name            = 1
+        error_occured             = 2
+        object_already_existing   = 3
+        not_authorized            = 4
+        action_cancelled          = 5
+        OTHERS                    = 6 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from w3_api_xml3~create_new subrc={ sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD w3_api_delete.
+
+    io_xml_api->if_w3_api_object~delete(
+      EXCEPTIONS
+        object_not_empty      = 1
+        object_not_changeable = 2
+        object_invalid        = 3
+        error_occured         = 4
+        OTHERS                = 5 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from w3_api_xml3~delete subrc={ sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD w3_api_save.
+
+    io_xml_api->if_w3_api_object~save(
+      EXCEPTIONS
+        object_invalid        = 1
+        object_not_changeable = 2
+        action_cancelled      = 3
+        permission_failure    = 4
+        not_changed           = 5
+        data_invalid          = 6
+        error_occured         = 7
+        OTHERS                = 8 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from w3_api_xml3~save subrc={ sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
 ENDCLASS.
