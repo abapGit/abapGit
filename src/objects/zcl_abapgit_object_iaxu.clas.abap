@@ -70,6 +70,9 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
     w3_api_save( io_xml_api = lo_xml_api ).
 
+    w3_api_set_changeable( io_xml_api    = lo_xml_api
+                           iv_changeable = abap_false ).
+
   ENDMETHOD.
 
 
@@ -213,7 +216,7 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
     io_xml_api->if_w3_api_object~set_changeable(
       EXPORTING
-        p_changeable                 = abap_true
+        p_changeable                 = iv_changeable
       EXCEPTIONS
         action_cancelled             = 1
         object_locked_by_other_user  = 2
