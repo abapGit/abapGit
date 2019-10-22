@@ -151,6 +151,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD find_transports.
     DATA: li_cts_api TYPE REF TO zif_abapgit_cts_api,
           ls_new     LIKE LINE OF rt_transports.
@@ -188,6 +189,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
 
   METHOD get_events.
 
@@ -480,12 +482,30 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_master_language_warning.
+
+    DATA: ls_dot_abapgit TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
+
+    CREATE OBJECT ro_html.
+
+    ls_dot_abapgit = mo_repo->get_dot_abapgit( )->get_data( ).
+
+    IF ls_dot_abapgit-master_language <> sy-langu.
+      ro_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner(
+                        |Caution: Master language of the repo is '{ ls_dot_abapgit-master_language }', |
+                     && |but you're logged on in '{ sy-langu }'| ) ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD scripts.
 
     ro_html = super->scripts( ).
 
     ro_html->add( 'var gStageParams = {' ).
     ro_html->add( |  seed:            "{ mv_seed }",| ). " Unique page id
+    ro_html->add( |  user:            "{ to_lower( sy-uname ) }",| ).
     ro_html->add( '  formAction:      "stage_commit",' ).
 
     ro_html->add( '  ids: {' ).
@@ -586,22 +606,4 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
-
-
-  METHOD render_master_language_warning.
-
-    DATA: ls_dot_abapgit TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
-
-    CREATE OBJECT ro_html.
-
-    ls_dot_abapgit = mo_repo->get_dot_abapgit( )->get_data( ).
-
-    IF ls_dot_abapgit-master_language <> sy-langu.
-      ro_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner(
-                        |Caution: Master language of the repo is '{ ls_dot_abapgit-master_language }', |
-                     && |but you're logged on in '{ sy-langu }'| ) ).
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.
