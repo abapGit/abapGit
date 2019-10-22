@@ -17,8 +17,7 @@ CLASS zcl_abapgit_object_iaxu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING   zcx_abapgit_exception,
       w3_api_load
         IMPORTING is_name    TYPE iacikeyt
-        EXPORTING ev_subrc   TYPE sysubrc
-                  eo_xml_api TYPE REF TO cl_w3_api_xml3
+        EXPORTING eo_xml_api TYPE REF TO cl_w3_api_xml3
                   es_attr    TYPE w3tempattr
         RAISING   zcx_abapgit_exception,
       w3_api_set_changeable
@@ -129,24 +128,8 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
     ls_name = ms_item-obj_name.
 
-    TRY.
-        w3_api_load( EXPORTING is_name  = ls_name
-                     IMPORTING ev_subrc = lv_subrc ).
-
-      CATCH zcx_abapgit_exception INTO lx_exc.
-    ENDTRY.
-
-    CASE lv_subrc.
-      WHEN 0.
-        rv_bool = abap_true.
-
-      WHEN 1.
-        rv_bool = abap_false.
-
-      WHEN OTHERS.
-        RAISE EXCEPTION lx_exc.
-
-    ENDCASE.
+    cl_w3_api_xml3=>s_check_exist( EXPORTING p_xml_name = ls_name
+                                   IMPORTING p_exists   = rv_bool ).
 
   ENDMETHOD.
 
@@ -220,7 +203,6 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
         OTHERS              = 5 ).
 
     IF sy-subrc <> 0.
-      ev_subrc = sy-subrc.
       zcx_abapgit_exception=>raise( |Error from w3_api_xml3~load subrc={ sy-subrc }| ).
     ENDIF.
 
