@@ -17,7 +17,8 @@ CLASS zcl_abapgit_object_iaxu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING   zcx_abapgit_exception,
       w3_api_load
         IMPORTING is_name    TYPE iacikeyt
-        EXPORTING eo_xml_api TYPE REF TO cl_w3_api_xml3
+        EXPORTING ev_subrc   TYPE sysubrc
+                  eo_xml_api TYPE REF TO cl_w3_api_xml3
                   es_attr    TYPE w3tempattr
         RAISING   zcx_abapgit_exception,
       w3_api_set_changeable
@@ -90,10 +91,6 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
     w3_api_load( EXPORTING is_name    = ls_name
                  IMPORTING eo_xml_api = lo_xml_api ).
 
-    IF lo_xml_api IS NOT BOUND.
-      zcx_abapgit_exception=>raise( |Error from w3_api_xml3~load subrc={ sy-subrc }| ).
-    ENDIF.
-
     w3_api_set_changeable( io_xml_api    = lo_xml_api
                            iv_changeable = abap_true ).
 
@@ -125,20 +122,31 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: ls_name    TYPE iacikeyt,
-          lo_xml_api TYPE REF TO cl_w3_api_xml3.
+    DATA: ls_name  TYPE iacikeyt,
+          lv_subrc TYPE sysubrc,
+          lx_exc   TYPE REF TO zcx_abapgit_exception.
 
 
     ls_name = ms_item-obj_name.
 
-    w3_api_load( EXPORTING is_name = ls_name
-                 IMPORTING eo_xml_api = lo_xml_api ).
+    TRY.
+        w3_api_load( EXPORTING is_name  = ls_name
+                     IMPORTING ev_subrc = lv_subrc ).
 
-    IF lo_xml_api IS BOUND.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+      CATCH zcx_abapgit_exception INTO lx_exc.
+    ENDTRY.
+
+    CASE lv_subrc.
+      WHEN 0.
+        rv_bool = abap_true.
+
+      WHEN 1.
+        rv_bool = abap_false.
+
+      WHEN OTHERS.
+        RAISE EXCEPTION lx_exc.
+
+    ENDCASE.
 
   ENDMETHOD.
 
@@ -211,8 +219,8 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
         error_occured       = 4
         OTHERS              = 5 ).
 
-    IF    sy-subrc <> 1
-      AND sy-subrc <> 0.
+    IF sy-subrc <> 0.
+      ev_subrc = sy-subrc.
       zcx_abapgit_exception=>raise( |Error from w3_api_xml3~load subrc={ sy-subrc }| ).
     ENDIF.
 
