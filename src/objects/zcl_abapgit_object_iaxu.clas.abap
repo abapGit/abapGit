@@ -90,6 +90,10 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
     w3_api_load( EXPORTING is_name    = ls_name
                  IMPORTING eo_xml_api = lo_xml_api ).
 
+    IF lo_xml_api IS NOT BOUND.
+      zcx_abapgit_exception=>raise( |Error from w3_api_xml3~load subrc={ sy-subrc }| ).
+    ENDIF.
+
     w3_api_set_changeable( io_xml_api    = lo_xml_api
                            iv_changeable = abap_true ).
 
@@ -121,20 +125,20 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: ls_name TYPE iacikeyt.
+    DATA: ls_name    TYPE iacikeyt,
+          lo_xml_api TYPE REF TO cl_w3_api_xml3.
 
 
     ls_name = ms_item-obj_name.
 
-    TRY.
-        w3_api_load( is_name = ls_name ).
+    w3_api_load( EXPORTING is_name = ls_name
+                 IMPORTING eo_xml_api = lo_xml_api ).
 
-        rv_bool = abap_true.
-
-      CATCH zcx_abapgit_object_not_found.
-        rv_bool = abap_false.
-
-    ENDTRY.
+    IF lo_xml_api IS BOUND.
+      rv_bool = abap_true.
+    ELSE.
+      rv_bool = abap_false.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -199,6 +203,7 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
         p_xml_name          = is_name
       IMPORTING
         p_attributes        = es_attr
+        p_xml               = eo_xml_api
       EXCEPTIONS
         object_not_existing = 1
         permission_failure  = 2
@@ -206,9 +211,8 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
         error_occured       = 4
         OTHERS              = 5 ).
 
-    IF sy-subrc = 1.
-      zcx_abapgit_object_not_found=>raise( |Error from w3_api_xml3~load subrc={ sy-subrc }| ).
-    ELSEIF sy-subrc <> 0.
+    IF    sy-subrc <> 1
+      AND sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error from w3_api_xml3~load subrc={ sy-subrc }| ).
     ENDIF.
 
