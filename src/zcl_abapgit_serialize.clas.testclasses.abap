@@ -122,12 +122,12 @@ CLASS ltcl_serialize IMPLEMENTATION.
       iv_force_sequential = abap_false ).
 
     cl_abap_unit_assert=>assert_char_cp(
-      act = li_log1->to_html( )->render( )
+      act = zcl_abapgit_log_viewer=>to_html( li_log1 )->render( )
       exp = '*Object type ignored, not supported*' ).
 
-    cl_abap_unit_assert=>assert_equals(
-      act = li_log1->to_html( )->render( )
-      exp = li_log2->to_html( )->render( ) ).
+    cl_abap_unit_assert=>assert_char_cp(
+      act = zcl_abapgit_log_viewer=>to_html( li_log2 )->render( )
+      exp = '*Object type ignored, not supported*' ).
 
   ENDMETHOD.
 

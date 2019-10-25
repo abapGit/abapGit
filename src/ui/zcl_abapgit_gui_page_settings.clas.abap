@@ -44,6 +44,9 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
     METHODS render_icon_scaling
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    METHODS render_ui_theme
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     METHODS render_adt_jump_enabled
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
@@ -87,7 +90,7 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
         zcx_abapgit_exception .
     METHODS get_possible_hotkey_actions
       RETURNING
-        VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action
+        VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name
       RAISING
         zcx_abapgit_exception .
     METHODS get_default_hotkeys
@@ -119,16 +122,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
   METHOD get_default_hotkeys.
 
-    DATA: lt_actions TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action,
+    DATA: lt_actions TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name,
           ls_hotkey  LIKE LINE OF rt_default_hotkeys.
 
     FIELD-SYMBOLS: <ls_action> LIKE LINE OF lt_actions.
 
-    lt_actions = zcl_abapgit_hotkeys=>get_default_hotkeys_from_pages( ).
+    lt_actions = zcl_abapgit_hotkeys=>get_all_default_hotkeys( ).
 
     LOOP AT lt_actions ASSIGNING <ls_action>.
       ls_hotkey-action   = <ls_action>-action.
-      ls_hotkey-sequence = <ls_action>-default_hotkey.
+      ls_hotkey-hotkey = <ls_action>-hotkey.
       INSERT ls_hotkey INTO TABLE rt_default_hotkeys.
     ENDLOOP.
 
@@ -139,7 +142,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
     DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
 
-    rt_hotkey_actions = zcl_abapgit_hotkeys=>get_default_hotkeys_from_pages( ).
+    rt_hotkey_actions = zcl_abapgit_hotkeys=>get_all_default_hotkeys( ).
 
     " insert empty row at the beginning, so that we can unset a hotkey
     INSERT ls_hotkey_action INTO rt_hotkey_actions INDEX 1.
@@ -227,11 +230,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
       mo_settings->set_link_hint_key( |{ <ls_post_field>-value }| ).
     ENDIF.
 
-    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'link_hint_background_color'.
-    IF sy-subrc = 0.
-      mo_settings->set_link_hint_background_color( |{ <ls_post_field>-value }| ).
-    ENDIF.
-
     IF is_post_field_checked( 'parallel_proc_disabled' ) = abap_true.
       mo_settings->set_parallel_proc_disabled( abap_true ).
     ELSE.
@@ -244,6 +242,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
       mo_settings->set_icon_scaling( lv_c_param_value ).
     ELSE.
       mo_settings->set_icon_scaling( '' ).
+    ENDIF.
+
+    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'ui_theme'.
+    IF sy-subrc = 0.
+      mo_settings->set_ui_theme( <ls_post_field>-value ).
+    ELSE.
+      mo_settings->set_ui_theme( zcl_abapgit_settings=>c_ui_theme-default ).
     ENDIF.
 
     post_hotkeys( ).
@@ -315,17 +320,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
            IN <ls_post_field>-name
            SUBMATCHES lv_column.
 
-      INSERT INITIAL LINE INTO TABLE lt_key_bindings ASSIGNING <ls_key_binding>.
       CASE lv_column.
         WHEN 'sequence'.
-          <ls_key_binding>-sequence = <ls_post_field>-value.
+          INSERT INITIAL LINE INTO TABLE lt_key_bindings ASSIGNING <ls_key_binding>.
+          <ls_key_binding>-hotkey = <ls_post_field>-value.
         WHEN 'action'.
           <ls_key_binding>-action = <ls_post_field>-value.
       ENDCASE.
     ENDLOOP.
 
-    DELETE lt_key_bindings WHERE sequence IS INITIAL
-                           OR    action IS INITIAL.
+    DELETE lt_key_bindings WHERE hotkey IS INITIAL OR action IS INITIAL.
 
     mo_settings->set_hotkeys( lt_key_bindings ).
 
@@ -421,6 +425,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ro_html->add( render_start_up( ) ).
     ro_html->add( render_max_lines( ) ).
     ro_html->add( render_icon_scaling( ) ).
+    ro_html->add( render_ui_theme( ) ).
     ro_html->add( |<hr>| ).
     ro_html->add( render_adt_jump_enabled( ) ).
     ro_html->add( |<hr>| ).
@@ -485,7 +490,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     DATA: lv_index    TYPE i,
           lt_hotkeys  TYPE zif_abapgit_definitions=>tty_hotkey,
           lv_selected TYPE string,
-          lt_actions  TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action.
+          lt_actions  TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name.
 
     FIELD-SYMBOLS: <ls_key_binding> LIKE LINE OF lt_hotkeys,
                    <ls_action>      LIKE LINE OF lt_actions.
@@ -517,7 +522,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
       ro_html->add( '<tr>' ).
       ro_html->add( |<td><input name="key_sequence_{ lv_index }" maxlength=1 type="text" | &&
-                    |value="{ <ls_key_binding>-sequence }"></td>| ).
+                    |value="{ <ls_key_binding>-hotkey }"></td>| ).
 
       ro_html->add( |<td><select name="key_action_{ lv_index }">| ).
 
@@ -556,7 +561,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
     DATA:
       BEGIN OF ls_sel,
-        auto TYPE string,
+        auto  TYPE string,
         large TYPE string,
         small TYPE string,
       END OF ls_sel.
@@ -598,7 +603,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ENDIF.
 
     lv_link_hint_key = mo_settings->get_link_hint_key( ).
-    lv_link_background_color = mo_settings->get_link_hint_background_color( ).
 
     CREATE OBJECT ro_html.
     ro_html->add( |<h2>Vimium like link hints</h2>| ).
@@ -608,11 +612,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ro_html->add( |<br>| ).
     ro_html->add( |<input type="text" name="link_hint_key" size="1" maxlength="1" value="{ lv_link_hint_key }" |
                && |> Single key to activate links| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<input type="text" name="link_hint_background_color" size="20" maxlength="20"|
-               && | value="{ lv_link_background_color }"|
-               && |> Background Color (HTML colors e.g. lightgreen or #42f47a)| ).
 
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).
@@ -713,10 +712,50 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_ui_theme.
+
+    " TODO: unify with render_icon_scaling, make list component
+
+    DATA:
+      BEGIN OF ls_sel,
+        default TYPE string,
+        dark TYPE string,
+        belize TYPE string,
+      END OF ls_sel.
+
+    CASE mo_settings->get_ui_theme( ).
+      WHEN zcl_abapgit_settings=>c_ui_theme-default.
+        ls_sel-default = ' selected'.
+      WHEN zcl_abapgit_settings=>c_ui_theme-dark.
+        ls_sel-dark = ' selected'.
+      WHEN zcl_abapgit_settings=>c_ui_theme-belize.
+        ls_sel-belize = ' selected'.
+    ENDCASE.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( |<h2>UI Theme</h2>| ).
+    ro_html->add( |<label for="ui_theme">UI Theme</label>| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<select name="ui_theme" size="3">| ).
+    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_ui_theme-default }"{
+      ls_sel-default }>{ zcl_abapgit_settings=>c_ui_theme-default }</option>| ).
+    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_ui_theme-dark }"{
+      ls_sel-dark }>{ zcl_abapgit_settings=>c_ui_theme-dark }</option>| ).
+    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_ui_theme-belize }"{
+      ls_sel-belize }>{ zcl_abapgit_settings=>c_ui_theme-belize }</option>| ).
+    ro_html->add( |</select>| ).
+
+    ro_html->add( |<br>| ).
+    ro_html->add( |<br>| ).
+
+  ENDMETHOD.
+
+
   METHOD validate_settings.
 
-    IF ( mo_settings->get_proxy_url( ) IS NOT INITIAL AND  mo_settings->get_proxy_port( ) IS INITIAL ) OR
-                 ( mo_settings->get_proxy_url( ) IS INITIAL AND  mo_settings->get_proxy_port( ) IS NOT INITIAL ).
+    IF ( mo_settings->get_proxy_url( ) IS NOT INITIAL AND mo_settings->get_proxy_port( ) IS INITIAL ) OR
+                 ( mo_settings->get_proxy_url( ) IS INITIAL AND mo_settings->get_proxy_port( ) IS NOT INITIAL ).
       MESSAGE 'If specifying proxy, specify both URL and port' TYPE 'W'.
     ENDIF.
 

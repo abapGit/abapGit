@@ -82,7 +82,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
 *   Renumber id='o...' attributes
     li_iterator = ii_document->create_iterator_filtered(
       ii_document->create_filter_and(
-        filter1 = ii_document->create_filter_node_type( if_ixml_node=>co_node_element  )
+        filter1 = ii_document->create_filter_node_type( if_ixml_node=>co_node_element )
         filter2 = ii_document->create_filter_attribute( 'id' ) ) ).
     li_elem ?= li_iterator->get_next( ).
     WHILE li_elem IS NOT INITIAL.
@@ -267,19 +267,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-
-    DATA: ls_meta TYPE zif_abapgit_definitions=>ty_metadata.
-
-    ls_meta = zif_abapgit_object~get_metadata( ).
-
-    IF ls_meta-late_deser = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
-    ELSEIF ls_meta-ddic = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
-    ELSE.
-      APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
-    ENDIF.
-
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
 
 

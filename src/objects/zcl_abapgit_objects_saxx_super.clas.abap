@@ -289,7 +289,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_SAXX_SUPER IMPLEMENTATION.
     TRY.
         mo_persistence->get( p_object_key           = lv_object_key
                              p_version              = 'A'
-                             p_existence_check_only = abap_true  ).
+                             p_existence_check_only = abap_true ).
 
       CATCH cx_swb_object_does_not_exist cx_swb_exception.
         rv_bool = abap_false.

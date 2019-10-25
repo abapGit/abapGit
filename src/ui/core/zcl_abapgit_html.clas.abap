@@ -6,21 +6,22 @@ CLASS zcl_abapgit_html DEFINITION
     INTERFACES zif_abapgit_html.
 
     ALIASES:
-      add      FOR zif_abapgit_html~add,
-      render   FOR zif_abapgit_html~render,
-      is_empty FOR zif_abapgit_html~is_empty,
-      add_a    FOR zif_abapgit_html~add_a,
-      a        FOR zif_abapgit_html~a,
-      icon     FOR zif_abapgit_html~icon.
+      add          FOR zif_abapgit_html~add,
+      render       FOR zif_abapgit_html~render,
+      is_empty     FOR zif_abapgit_html~is_empty,
+      add_a        FOR zif_abapgit_html~add_a,
+      add_checkbox FOR zif_abapgit_html~add_checkbox,
+      a            FOR zif_abapgit_html~a,
+      icon         FOR zif_abapgit_html~icon.
 
     CONSTANTS c_indent_size TYPE i VALUE 2 ##NO_TEXT.
 
-    CLASS-METHODS class_constructor .
+    CLASS-METHODS class_constructor.
     METHODS add_icon
       IMPORTING
         !iv_name  TYPE string
         !iv_hint  TYPE string OPTIONAL
-        !iv_class TYPE string OPTIONAL .
+        !iv_class TYPE string OPTIONAL.
   PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-DATA: go_single_tags_re TYPE REF TO cl_abap_regex.
@@ -59,6 +60,11 @@ CLASS zcl_abapgit_html DEFINITION
         is_context       TYPE ty_indent_context
       RETURNING
         VALUE(rs_result) TYPE ty_study_result.
+    METHODS checkbox
+      IMPORTING
+        iv_id          TYPE string
+      RETURNING
+        VALUE(rv_html) TYPE string.
 
 ENDCLASS.
 
@@ -72,6 +78,13 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     add( icon( iv_name  = iv_name
                iv_class = iv_class
                iv_hint  = iv_hint ) ).
+
+  ENDMETHOD.
+
+
+  METHOD checkbox.
+
+    rv_html = |<input type="checkbox" id="{ iv_id }">|.
 
   ENDMETHOD.
 
@@ -94,11 +107,11 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       iv_line    = cv_line ).
 
     " First closing tag - shift back exceptionally
-    IF (  ls_study-script_close = abap_true
-       OR ls_study-style_close = abap_true
-       OR ls_study-curly_close = abap_true
-       OR ls_study-tag_close = abap_true )
-       AND cs_context-indent > 0.
+    IF ( ls_study-script_close = abap_true
+        OR ls_study-style_close = abap_true
+        OR ls_study-curly_close = abap_true
+        OR ls_study-tag_close = abap_true )
+        AND cs_context-indent > 0.
       lv_x_str = repeat( val = ` ` occ = ( cs_context-indent - 1 ) * c_indent_size ).
       cv_line  = lv_x_str && cv_line.
     ELSE.
@@ -198,7 +211,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
           lv_click TYPE string,
           lv_id    TYPE string,
           lv_style TYPE string,
-          lv_span  TYPE string.
+          lv_title TYPE string.
 
     lv_class = iv_class.
 
@@ -239,9 +252,12 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       lv_style = | style="{ iv_style }"|.
     ENDIF.
 
-    lv_span = |<span class="tooltiptext hidden"></span>|.
+    IF iv_title IS NOT INITIAL.
+      lv_title = | title="{ iv_title }"|.
+    ENDIF.
 
-    rv_str = |<a{ lv_id }{ lv_class }{ lv_href }{ lv_click }{ lv_style }>{ iv_txt }{ lv_span }</a>|.
+    rv_str = |<a{ lv_id }{ lv_class }{ lv_href }{ lv_click }{ lv_style }{ lv_title }>|
+          && |{ iv_txt }</a>|.
 
   ENDMETHOD.
 
@@ -284,7 +300,15 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
             iv_opt   = iv_opt
             iv_class = iv_class
             iv_id    = iv_id
-            iv_style = iv_style ) ).
+            iv_style = iv_style
+            iv_title = iv_title ) ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_html~add_checkbox.
+
+    add( checkbox( iv_id ) ).
 
   ENDMETHOD.
 

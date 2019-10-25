@@ -20,13 +20,17 @@ CLASS zcl_abapgit_gui DEFINITION
         go_home TYPE string VALUE 'go_home',
       END OF c_action.
 
+    INTERFACES zif_abapgit_gui_services.
+    ALIASES:
+      cache_asset FOR zif_abapgit_gui_services~cache_asset.
+
     METHODS go_home
       RAISING
         zcx_abapgit_exception.
 
     METHODS go_page
       IMPORTING
-        io_page TYPE REF TO zif_abapgit_gui_renderable
+        io_page        TYPE REF TO zif_abapgit_gui_renderable
         iv_clear_stack TYPE abap_bool DEFAULT abap_true
       RAISING
         zcx_abapgit_exception.
@@ -41,17 +45,17 @@ CLASS zcl_abapgit_gui DEFINITION
 
     METHODS on_event FOR EVENT sapevent OF cl_gui_html_viewer
       IMPORTING
-        action
-        frame
-        getdata
-        postdata
-        query_table.
+          action
+          frame
+          getdata
+          postdata
+          query_table.
 
     METHODS constructor
       IMPORTING
-        io_component TYPE REF TO object OPTIONAL
-        ii_asset_man TYPE REF TO zif_abapgit_gui_asset_manager OPTIONAL
-        ii_error_handler TYPE REF TO zif_abapgit_gui_error_handler OPTIONAL
+        io_component      TYPE REF TO object OPTIONAL
+        ii_asset_man      TYPE REF TO zif_abapgit_gui_asset_manager OPTIONAL
+        ii_html_processor TYPE REF TO zif_abapgit_gui_html_processor OPTIONAL
       RAISING
         zcx_abapgit_exception.
 
@@ -66,12 +70,12 @@ CLASS zcl_abapgit_gui DEFINITION
         bookmark TYPE abap_bool,
       END OF ty_page_stack.
 
-    DATA: mi_cur_page      TYPE REF TO zif_abapgit_gui_renderable,
-          mt_stack         TYPE STANDARD TABLE OF ty_page_stack,
-          mi_router        TYPE REF TO zif_abapgit_gui_event_handler,
-          mi_asset_man     TYPE REF TO zif_abapgit_gui_asset_manager,
-          mi_error_handler TYPE REF TO zif_abapgit_gui_error_handler,
-          mo_html_viewer   TYPE REF TO cl_gui_html_viewer.
+    DATA: mi_cur_page       TYPE REF TO zif_abapgit_gui_renderable,
+          mt_stack          TYPE STANDARD TABLE OF ty_page_stack,
+          mi_router         TYPE REF TO zif_abapgit_gui_event_handler,
+          mi_asset_man      TYPE REF TO zif_abapgit_gui_asset_manager,
+          mi_html_processor TYPE REF TO zif_abapgit_gui_html_processor,
+          mo_html_viewer    TYPE REF TO cl_gui_html_viewer.
 
     METHODS startup
       RAISING
@@ -80,16 +84,6 @@ CLASS zcl_abapgit_gui DEFINITION
     METHODS cache_html
       IMPORTING
         iv_text       TYPE string
-      RETURNING
-        VALUE(rv_url) TYPE w3url.
-
-    METHODS cache_asset
-      IMPORTING
-        iv_text       TYPE string OPTIONAL
-        iv_xdata      TYPE xstring OPTIONAL
-        iv_url        TYPE w3url OPTIONAL
-        iv_type       TYPE c
-        iv_subtype    TYPE c
       RETURNING
         VALUE(rv_url) TYPE w3url.
 
@@ -117,11 +111,15 @@ CLASS zcl_abapgit_gui DEFINITION
         it_postdata    TYPE cnht_post_data_tab OPTIONAL
         it_query_table TYPE cnht_query_table OPTIONAL.
 
+    METHODS handle_error
+      IMPORTING
+        ix_exception TYPE REF TO zcx_abapgit_exception.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
+CLASS zcl_abapgit_gui IMPLEMENTATION.
 
 
   METHOD back.
@@ -152,45 +150,6 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     mi_cur_page = ls_stack-page. " last page always stays
     render( ).
-
-  ENDMETHOD.
-
-
-  METHOD cache_asset.
-
-    DATA: lv_xstr  TYPE xstring,
-          lt_xdata TYPE lvc_t_mime,
-          lv_size  TYPE int4.
-
-    ASSERT iv_text IS SUPPLIED OR iv_xdata IS SUPPLIED.
-
-    IF iv_text IS SUPPLIED. " String input
-      lv_xstr = zcl_abapgit_string_utils=>string_to_xstring( iv_text ).
-    ELSE. " Raw input
-      lv_xstr = iv_xdata.
-    ENDIF.
-
-    zcl_abapgit_string_utils=>xstring_to_bintab(
-      EXPORTING
-        iv_xstr   = lv_xstr
-      IMPORTING
-        ev_size   = lv_size
-        et_bintab = lt_xdata ).
-
-    mo_html_viewer->load_data(
-      EXPORTING
-        type         = iv_type
-        subtype      = iv_subtype
-        size         = lv_size
-        url          = iv_url
-      IMPORTING
-        assigned_url = rv_url
-      CHANGING
-        data_table   = lt_xdata
-      EXCEPTIONS
-        OTHERS       = 1 ) ##NO_TEXT.
-
-    ASSERT sy-subrc = 0. " Image data error
 
   ENDMETHOD.
 
@@ -235,7 +194,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     ENDIF.
 
     mi_asset_man = ii_asset_man.
-    mi_error_handler = ii_error_handler.
+    mi_html_processor = ii_html_processor. " Maybe improve to middlewares stack ??
     startup( ).
 
   ENDMETHOD.
@@ -265,6 +224,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     DATA ls_stack LIKE LINE OF mt_stack.
 
     IF mi_router IS BOUND.
+      CLEAR mt_stack.
       on_event( action = |{ c_action-go_home }| ). " doesn't accept strings directly
     ELSE.
       IF lines( mt_stack ) > 0.
@@ -299,7 +259,8 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     TRY.
         " Home must be processed by router if it presents
         IF ( iv_action <> c_action-go_home OR mi_router IS NOT BOUND )
-          AND mi_cur_page IS BOUND AND zcl_abapgit_gui_utils=>is_event_handler( mi_cur_page ) = abap_true.
+            AND mi_cur_page IS BOUND
+            AND zcl_abapgit_gui_utils=>is_event_handler( mi_cur_page ) = abap_true.
           li_page_eh ?= mi_cur_page.
           li_page_eh->on_event(
             EXPORTING
@@ -346,9 +307,8 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       CATCH zcx_abapgit_cancel ##NO_HANDLER.
         " Do nothing = gc_event_state-no_more_act
       CATCH zcx_abapgit_exception INTO lx_exception.
-        IF mi_error_handler IS BOUND.
-          mi_error_handler->handle_error( lx_exception ).
-        ENDIF.
+        ROLLBACK WORK.
+        handle_error( lx_exception ).
     ENDTRY.
 
   ENDMETHOD.
@@ -368,16 +328,25 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD render.
 
-    DATA: lv_url  TYPE w3url,
-          li_html TYPE REF TO zif_abapgit_html.
+    DATA: lv_url           TYPE w3url,
+          lv_html          TYPE string,
+          li_html          TYPE REF TO zif_abapgit_html,
+          lo_css_processor TYPE REF TO zcl_abapgit_gui_css_processor.
 
     IF mi_cur_page IS NOT BOUND.
       zcx_abapgit_exception=>raise( 'GUI error: no current page' ).
     ENDIF.
 
     li_html = mi_cur_page->render( ).
-    lv_url  = cache_html( li_html->render( iv_no_indent_jscss = abap_true ) ).
+    lv_html = li_html->render( iv_no_indent_jscss = abap_true ).
 
+    IF mi_html_processor IS BOUND.
+      lv_html = mi_html_processor->process(
+        iv_html         = lv_html
+        ii_gui_services = me ).
+    ENDIF.
+
+    lv_url  = cache_html( lv_html ).
     mo_html_viewer->show_url( lv_url ).
 
   ENDMETHOD.
@@ -414,4 +383,66 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     SET HANDLER me->on_event FOR mo_html_viewer.
 
   ENDMETHOD.
+
+
+  METHOD cache_asset.
+
+    DATA: lv_xstr  TYPE xstring,
+          lt_xdata TYPE lvc_t_mime,
+          lv_size  TYPE int4.
+
+    ASSERT iv_text IS SUPPLIED OR iv_xdata IS SUPPLIED.
+
+    IF iv_text IS SUPPLIED. " String input
+      lv_xstr = zcl_abapgit_convert=>string_to_xstring( iv_text ).
+    ELSE. " Raw input
+      lv_xstr = iv_xdata.
+    ENDIF.
+
+    zcl_abapgit_convert=>xstring_to_bintab(
+      EXPORTING
+        iv_xstr   = lv_xstr
+      IMPORTING
+        ev_size   = lv_size
+        et_bintab = lt_xdata ).
+
+    mo_html_viewer->load_data(
+      EXPORTING
+        type         = iv_type
+        subtype      = iv_subtype
+        size         = lv_size
+        url          = iv_url
+      IMPORTING
+        assigned_url = rv_url
+      CHANGING
+        data_table   = lt_xdata
+      EXCEPTIONS
+        OTHERS       = 1 ) ##NO_TEXT.
+
+    ASSERT sy-subrc = 0. " Image data error
+
+  ENDMETHOD.
+
+  METHOD handle_error.
+
+    DATA: li_gui_error_handler TYPE REF TO zif_abapgit_gui_error_handler,
+          lx_exception         TYPE REF TO cx_root.
+
+    TRY.
+        li_gui_error_handler ?= mi_cur_page.
+
+        IF li_gui_error_handler->handle_error( ix_exception ) = abap_true.
+          " We rerender the current page to display the error box
+          render( ).
+        ELSE.
+          MESSAGE ix_exception TYPE 'S' DISPLAY LIKE 'E'.
+        ENDIF.
+
+      CATCH zcx_abapgit_exception cx_sy_move_cast_error INTO lx_exception.
+        " In case of fire we just fallback to plain old message
+        MESSAGE lx_exception TYPE 'S' DISPLAY LIKE 'E'.
+    ENDTRY.
+
+  ENDMETHOD.
+
 ENDCLASS.

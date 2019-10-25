@@ -54,9 +54,9 @@ CLASS ZCL_ABAPGIT_LONGTEXTS IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_dokil> TYPE dokil.
 
     SELECT * FROM dokil
-             INTO TABLE lt_dokil
-             WHERE id     = iv_longtext_id
-             AND   object = iv_longtext_id.
+      INTO TABLE lt_dokil
+      WHERE id = iv_longtext_id
+      AND object = iv_longtext_id.
 
     LOOP AT lt_dokil ASSIGNING <ls_dokil>.
 

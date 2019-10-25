@@ -217,11 +217,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SPRX IMPLEMENTATION.
     rv_user = c_user_unknown.
 
     SELECT SINGLE changed_by
-           FROM sproxhdr
-           INTO lv_changed_by
-           WHERE object     = mv_object
-           AND   obj_name   = mv_obj_name
-           AND   inactive   = abap_false.
+      FROM sproxhdr
+      INTO lv_changed_by
+      WHERE object = mv_object
+      AND obj_name = mv_obj_name
+      AND inactive = abap_false.
 
     IF sy-subrc = 0 AND lv_changed_by IS NOT INITIAL.
       rv_user = lv_changed_by.
@@ -311,19 +311,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SPRX IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-
-    DATA: ls_meta TYPE zif_abapgit_definitions=>ty_metadata.
-
-    ls_meta = zif_abapgit_object~get_metadata( ).
-
-    IF ls_meta-late_deser = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
-    ELSEIF ls_meta-ddic = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
-    ELSE.
-      APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
-    ENDIF.
-
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
 
 

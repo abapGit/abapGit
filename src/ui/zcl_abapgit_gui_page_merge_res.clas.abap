@@ -51,7 +51,7 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
     DATA mo_merge_page TYPE REF TO zcl_abapgit_gui_page_merge .
     DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
     DATA ms_diff_file TYPE ty_file_diff .
-    DATA mv_current_conflict_index TYPE sytabix .
+    DATA mv_current_conflict_index TYPE sy-tabix .
     DATA mv_merge_mode TYPE string .
     DATA mt_conflicts TYPE zif_abapgit_definitions=>tt_merge_conflict .
 
@@ -275,7 +275,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
     " Content
     IF is_diff-type <> 'binary'.
 
-      IF mv_merge_mode EQ c_merge_mode-selection.
+      IF mv_merge_mode = c_merge_mode-selection.
         ro_html->add( '<div class="diff_content">' ).       "#EC NOTEXT
         ro_html->add( '<table class="diff_tab syntax-hl">' ). "#EC NOTEXT
         ro_html->add( render_table_head( ) ).
@@ -307,7 +307,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
         ro_html->add( '</table>' ).                         "#EC NOTEXT
 
         READ TABLE mt_conflicts ASSIGNING <ls_conflict> INDEX mv_current_conflict_index.
-        IF sy-subrc EQ 0.
+        IF sy-subrc = 0.
           lv_target_content = zcl_abapgit_convert=>xstring_to_string_utf8( <ls_conflict>-target_data ).
           lv_target_content = escape( val = lv_target_content format = cl_abap_format=>e_html_text ).
         ENDIF.
@@ -453,7 +453,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
     ro_html->add( '<tr>' ).                                 "#EC NOTEXT
     ro_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
 
-    IF mv_merge_mode EQ c_merge_mode-selection.
+    IF mv_merge_mode = c_merge_mode-selection.
       ro_html->add( '<form id="target_form" method="post" action="sapevent:apply_target">' ). "#EC NOTEXT
       ro_html->add( '<th>Target - ' && mo_repo->get_branch_name( ) && ' - ' ). "#EC NOTEXT
       ro_html->add_a( iv_act = 'submitFormById(''target_form'');' "#EC NOTEXT
@@ -491,7 +491,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
     CLEAR ms_diff_file.
 
     READ TABLE mt_conflicts ASSIGNING <ls_conflict> INDEX mv_current_conflict_index.
-    IF sy-subrc NE 0.
+    IF sy-subrc <> 0.
       RETURN.
     ENDIF.
 
@@ -522,16 +522,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
   METHOD toggle_merge_mode.
 
-    IF mv_merge_mode EQ c_merge_mode-selection.
+    IF mv_merge_mode = c_merge_mode-selection.
       mv_merge_mode = c_merge_mode-merge.
     ELSE.
       mv_merge_mode = c_merge_mode-selection.
     ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 
@@ -581,6 +576,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
 
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 ENDCLASS.

@@ -1,26 +1,32 @@
 CLASS zcl_abapgit_apack_writer DEFINITION
   PUBLIC
   FINAL
-  CREATE PRIVATE.
+  CREATE PRIVATE .
 
   PUBLIC SECTION.
-    CLASS-METHODS:
-       create_instance IMPORTING is_apack_manifest_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor
-                       RETURNING VALUE(ro_manifest_writer)    TYPE REF TO zcl_abapgit_apack_writer.
-    METHODS:
-      serialize RETURNING VALUE(rv_xml) TYPE string RAISING zcx_abapgit_exception.
 
+    CLASS-METHODS create_instance
+      IMPORTING
+        !is_apack_manifest_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor
+      RETURNING
+        VALUE(ro_manifest_writer)     TYPE REF TO zcl_abapgit_apack_writer .
+    METHODS serialize
+      RETURNING
+        VALUE(rv_xml) TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    METHODS constructor
+      IMPORTING
+        !is_apack_manifest_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor .
   PROTECTED SECTION.
   PRIVATE SECTION.
-    DATA: ms_manifest_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor.
-    METHODS:
-      constructor IMPORTING is_apack_manifest_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor.
+
+    DATA ms_manifest_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_apack_writer IMPLEMENTATION.
-
+CLASS ZCL_ABAPGIT_APACK_WRITER IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -51,5 +57,4 @@ CLASS zcl_abapgit_apack_writer IMPLEMENTATION.
       WITH '<?xml version="1.0" encoding="utf-8"?>'.
 
   ENDMETHOD.
-
 ENDCLASS.

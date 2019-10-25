@@ -165,12 +165,15 @@ CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
                                     IMPORTING ei_code_item_element   = li_element
                                     CHANGING  cv_within_code_section = cv_within_code_section ).
 
+* for downwards compatibility, this code can be removed sometime in the future
         lv_leading_spaces = li_element->get_attribute_ns(
           name = zcl_abapgit_object_ssfo=>attrib_abapgit_leadig_spaces ).
 
         lv_coding_line = li_element->get_value( ).
-        SHIFT lv_coding_line RIGHT BY lv_leading_spaces PLACES.
-        li_element->set_value( lv_coding_line ).
+        IF strlen( lv_coding_line ) >= 1 AND lv_coding_line(1) <> | |.
+          SHIFT lv_coding_line RIGHT BY lv_leading_spaces PLACES.
+          li_element->set_value( lv_coding_line ).
+        ENDIF.
       CATCH zcx_abapgit_exception ##no_handler.
     ENDTRY.
 
@@ -179,30 +182,30 @@ CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
 
   METHOD set_attribute_leading_spaces.
 
-    DATA: li_element             TYPE REF TO if_ixml_element.
-    DATA: lv_code_line           TYPE string.
-    DATA: lv_offset              TYPE i.
-
-    TRY.
-        code_item_section_handling( EXPORTING iv_name                = iv_name
-                                              ii_node                = ii_node
-                                    IMPORTING ei_code_item_element   = li_element
-                                    CHANGING  cv_within_code_section = cv_within_code_section ).
-
-        lv_code_line = ii_node->get_value( ).
-        "find 1st non space char
-        FIND FIRST OCCURRENCE OF REGEX '\S' IN lv_code_line MATCH OFFSET lv_offset.
-        IF sy-subrc = 0 AND lv_offset > 0.
-          TRY.
-              li_element ?= ii_node.
-              li_element->set_attribute( name  = zcl_abapgit_object_ssfo=>attrib_abapgit_leadig_spaces
-                                      value = |{ lv_offset }| ).
-
-            CATCH cx_sy_move_cast_error ##no_handler.
-          ENDTRY.
-        ENDIF.
-      CATCH zcx_abapgit_exception ##no_handler.
-    ENDTRY.
+*    DATA: li_element             TYPE REF TO if_ixml_element.
+*    DATA: lv_code_line           TYPE string.
+*    DATA: lv_offset              TYPE i.
+*
+*    TRY.
+*        code_item_section_handling( EXPORTING iv_name                = iv_name
+*                                              ii_node                = ii_node
+*                                    IMPORTING ei_code_item_element   = li_element
+*                                    CHANGING  cv_within_code_section = cv_within_code_section ).
+*
+*        lv_code_line = ii_node->get_value( ).
+*        "find 1st non space char
+*        FIND FIRST OCCURRENCE OF REGEX '\S' IN lv_code_line MATCH OFFSET lv_offset.
+*        IF sy-subrc = 0 AND lv_offset > 0.
+*          TRY.
+*              li_element ?= ii_node.
+*              li_element->set_attribute( name  = zcl_abapgit_object_ssfo=>attrib_abapgit_leadig_spaces
+*                                      value = |{ lv_offset }| ).
+*
+*            CATCH cx_sy_move_cast_error ##no_handler.
+*          ENDTRY.
+*        ENDIF.
+*      CATCH zcx_abapgit_exception ##no_handler.
+*    ENDTRY.
 
   ENDMETHOD.
 
@@ -324,19 +327,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-
-    DATA: ls_meta TYPE zif_abapgit_definitions=>ty_metadata.
-
-    ls_meta = zif_abapgit_object~get_metadata( ).
-
-    IF ls_meta-late_deser = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
-    ELSEIF ls_meta-ddic = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
-    ELSE.
-      APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
-    ENDIF.
-
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
 
 

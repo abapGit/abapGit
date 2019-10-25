@@ -46,12 +46,22 @@ CLASS zcl_abapgit_object_webi DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         IMPORTING is_webi TYPE ty_webi
         RAISING   zcx_abapgit_exception
                   cx_ws_md_exception.
+    METHODS handle_single_parameter
+      IMPORTING
+        iv_parameter_type   TYPE vepparamtype
+        iv_name             TYPE vepparameter-vepparam
+        ii_function         TYPE REF TO if_ws_md_vif_func
+      RETURNING
+        VALUE(ri_parameter) TYPE REF TO if_ws_md_vif_param
+      RAISING
+        zcx_abapgit_exception
+        cx_ws_md_exception.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
+CLASS zcl_abapgit_object_webi IMPLEMENTATION.
 
 
   METHOD handle_endpoint.
@@ -96,10 +106,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
 
   METHOD handle_function.
 
-    CONSTANTS: BEGIN OF lc_parameter_type,
-                 import TYPE vepparamtype VALUE 'I',
-                 export TYPE vepparamtype VALUE 'O',
-               END OF lc_parameter_type.
+
 
     DATA: li_parameter TYPE REF TO if_ws_md_vif_param,
           li_soap      TYPE REF TO if_ws_md_soap_ext_func,
@@ -137,20 +144,9 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
       LOOP AT is_webi-pvepparameter ASSIGNING <ls_parameter>
           WHERE function = <ls_function>-function.
 
-        CASE <ls_parameter>-vepparamtype.
-          WHEN lc_parameter_type-import.
-
-            li_parameter = li_function->create_incoming_parameter(
-              <ls_parameter>-vepparam ).
-
-          WHEN lc_parameter_type-export.
-
-            li_parameter = li_function->create_outgoing_parameter(
-              <ls_parameter>-vepparam ).
-
-          WHEN OTHERS.
-            ASSERT 0 = 1.
-        ENDCASE.
+        li_parameter = me->handle_single_parameter( iv_name        = <ls_parameter>-vepparam
+                                                    ii_function    = li_function
+                                                    iv_parameter_type = <ls_parameter>-vepparamtype ).
 
         li_parameter->set_name_mapped_to( <ls_parameter>-mappedname ).
         li_parameter->set_is_exposed( <ls_parameter>-is_exposed ).
@@ -162,6 +158,9 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
 
       LOOP AT is_webi-pvepfuncsoapext ASSIGNING <ls_soap>
           WHERE function = <ls_function>-function.
+        IF li_function->has_soap_extension_function( 'I' ) = abap_true.
+          li_function->delete_soap_extension_function( ).
+        ENDIF.
         li_soap = li_function->create_soap_extension_function( ).
         li_soap->set_soap_request_name( <ls_soap>-requestname ).
         li_soap->set_soap_response_name( <ls_soap>-responsename ).
@@ -394,19 +393,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-
-    DATA: ls_meta TYPE zif_abapgit_definitions=>ty_metadata.
-
-    ls_meta = zif_abapgit_object~get_metadata( ).
-
-    IF ls_meta-late_deser = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
-    ELSEIF ls_meta-ddic = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
-    ELSE.
-      APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
-    ENDIF.
-
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
 
 
@@ -523,4 +510,37 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
                  ig_data = ls_webi ).
 
   ENDMETHOD.
+
+  METHOD handle_single_parameter.
+    CONSTANTS:
+      BEGIN OF lc_parameter_type,
+        import TYPE vepparamtype VALUE 'I',
+        export TYPE vepparamtype VALUE 'O',
+      END OF lc_parameter_type.
+
+    CASE iv_parameter_type.
+      WHEN lc_parameter_type-import.
+        ri_parameter = ii_function->get_incoming_parameter( parameter_name  = iv_name
+                                                            version         = 'I' ).
+        IF ri_parameter IS BOUND.
+          ii_function->delete_incoming_parameter( ri_parameter ).
+        ENDIF.
+        ri_parameter = ii_function->create_incoming_parameter( iv_name ).
+
+      WHEN lc_parameter_type-export.
+
+        ri_parameter = ii_function->get_outgoing_parameter( parameter_name  = iv_name
+                                                            version         = 'I' ).
+        IF ri_parameter IS BOUND.
+          ii_function->delete_outgoing_parameter( parameter = ri_parameter ).
+        ENDIF.
+
+        ri_parameter = ii_function->create_outgoing_parameter( iv_name ).
+
+      WHEN OTHERS.
+        ASSERT 0 = 1.
+    ENDCASE.
+
+  ENDMETHOD.
+
 ENDCLASS.

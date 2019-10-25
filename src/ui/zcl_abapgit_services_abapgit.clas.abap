@@ -5,11 +5,12 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
 
   PUBLIC SECTION.
 
-    CONSTANTS c_abapgit_homepage TYPE string VALUE 'http://www.abapgit.org' ##NO_TEXT.
-    CONSTANTS c_abapgit_wikipage TYPE string VALUE 'http://docs.abapgit.org' ##NO_TEXT.
-    CONSTANTS c_package_abapgit TYPE devclass VALUE '$ABAPGIT' ##NO_TEXT.
-    CONSTANTS c_abapgit_url TYPE string VALUE 'https://github.com/larshp/abapGit.git' ##NO_TEXT.
-    CONSTANTS c_abapgit_tcode TYPE tcode VALUE `ZABAPGIT` ##NO_TEXT.
+    CONSTANTS: c_abapgit_repo     TYPE string   VALUE 'https://github.com/larshp/abapGit'     ##NO_TEXT,
+               c_abapgit_homepage TYPE string   VALUE 'http://www.abapgit.org'                ##NO_TEXT,
+               c_abapgit_wikipage TYPE string   VALUE 'http://docs.abapgit.org'               ##NO_TEXT,
+               c_abapgit_package  TYPE devclass VALUE '$ABAPGIT'                              ##NO_TEXT,
+               c_abapgit_url      TYPE string   VALUE 'https://github.com/larshp/abapGit.git' ##NO_TEXT,
+               c_abapgit_tcode    TYPE tcode    VALUE `ZABAPGIT`                              ##NO_TEXT.
 
     CLASS-METHODS open_abapgit_homepage
       RAISING
@@ -17,9 +18,12 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
     CLASS-METHODS open_abapgit_wikipage
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS open_abapgit_changelog
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS install_abapgit
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     CLASS-METHODS is_installed
       RETURNING
         VALUE(rv_devclass) TYPE tadir-devclass .
@@ -44,12 +48,54 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
     CLASS-METHODS get_package_from_adt
       RETURNING
         VALUE(rv_package) TYPE devclass.
+    CLASS-METHODS check_sapgui
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
+CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
+
+
+  METHOD check_sapgui.
+
+    CONSTANTS:
+      lc_hide_sapgui_hint TYPE string VALUE '2' ##NO_TEXT.
+
+    DATA:
+      lv_answer           TYPE char1,
+      ls_settings         TYPE zif_abapgit_definitions=>ty_s_user_settings,
+      lo_user_persistence TYPE REF TO zif_abapgit_persist_user.
+
+    lo_user_persistence = zcl_abapgit_persistence_user=>get_instance( ).
+
+    ls_settings = lo_user_persistence->get_settings( ).
+
+    IF ls_settings-hide_sapgui_hint = abap_true.
+      RETURN.
+    ENDIF.
+
+    IF zcl_abapgit_ui_factory=>get_gui_functions( )->is_sapgui_for_java( ) = abap_false.
+      RETURN.
+    ENDIF.
+
+    lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
+                    iv_titlebar              = 'Not supported SAPGUI'
+                    iv_text_question         = 'SAPGUI for Java is not supported! There might be some issues.'
+                    iv_text_button_1         = 'Got it'
+                    iv_icon_button_1         = |{ icon_okay }|
+                    iv_text_button_2         = 'Hide'
+                    iv_icon_button_2         = |{ icon_set_state }|
+                    iv_display_cancel_button = abap_false ).
+
+    IF lv_answer = lc_hide_sapgui_hint.
+      ls_settings-hide_sapgui_hint = abap_true.
+      lo_user_persistence->set_settings( ls_settings ).
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD do_install.
@@ -164,12 +210,12 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lv_text = |Confirm to install current version of abapGit to package { c_package_abapgit }|.
+    lv_text = |Confirm to install current version of abapGit to package { c_abapgit_package }|.
 
     do_install( iv_title   = lc_title
                 iv_text    = lv_text
                 iv_url     = c_abapgit_url
-                iv_package = c_package_abapgit ).
+                iv_package = c_abapgit_package ).
 
   ENDMETHOD.
 
@@ -178,6 +224,18 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
 
     SELECT SINGLE devclass FROM tadir INTO rv_devclass
       WHERE object = 'TRAN' AND obj_name = c_abapgit_tcode.
+
+  ENDMETHOD.
+
+
+  METHOD open_abapgit_changelog.
+
+    cl_gui_frontend_services=>execute(
+      EXPORTING document = c_abapgit_repo && '/blob/master/changelog.txt'
+      EXCEPTIONS OTHERS = 1 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Opening page in external browser failed.' ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -211,6 +269,8 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
     DATA: lv_repo_key    TYPE zif_abapgit_persistence=>ty_value,
           lv_package     TYPE devclass,
           lv_package_adt TYPE devclass.
+
+    check_sapgui( ).
 
     IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_show_default_repo( ) = abap_false.
       " Don't show the last seen repo at startup

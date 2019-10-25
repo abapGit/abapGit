@@ -98,7 +98,7 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
         error_no_gui            = 18
         OTHERS                  = 19 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from gui_upload' ). "#EC NOTEXT
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     CONCATENATE LINES OF lt_data INTO rv_xstr IN BYTE MODE.

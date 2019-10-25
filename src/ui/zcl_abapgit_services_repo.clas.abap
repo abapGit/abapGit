@@ -120,7 +120,8 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     ENDTRY.
 
 * and pass decisions to deserialize
-    io_repo->deserialize( ls_checks ).
+    io_repo->deserialize( is_checks = ls_checks
+                          ii_log    = io_repo->create_new_log( 'Pull Log' ) ).
 
   ENDMETHOD.
 
@@ -191,7 +192,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
   METHOD popup_overwrite.
 
-    DATA: lt_columns  TYPE stringtab,
+    DATA: lt_columns  TYPE string_table,
           lt_selected LIKE ct_overwrite,
           lv_column   LIKE LINE OF lt_columns,
           li_popups   TYPE REF TO zif_abapgit_popups.
@@ -236,9 +237,10 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
   METHOD popup_package_overwrite.
 
-    DATA: lt_colums_to_display TYPE stringtab,
+    DATA: lt_colums_to_display TYPE string_table,
           lv_column            LIKE LINE OF lt_colums_to_display,
-          lt_selected          LIKE ct_overwrite.
+          lt_selected          LIKE ct_overwrite,
+          li_popups            TYPE REF TO zif_abapgit_popups.
 
     FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF ct_overwrite.
 
@@ -253,7 +255,8 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     lv_column = 'DEVCLASS'.
     INSERT lv_column INTO TABLE lt_colums_to_display.
 
-    zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_from_list(
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popups->popup_to_select_from_list(
       EXPORTING
         it_list               = ct_overwrite
         iv_header_text        = |The following objects have been created in other packages.|
@@ -308,7 +311,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
         iv_text_button_2         = 'Cancel'
         iv_icon_button_2         = 'ICON_CANCEL'
         iv_default_button        = '2'
-        iv_display_cancel_button = abap_false ).               "#EC NOTEXT
+        iv_display_cancel_button = abap_false ).            "#EC NOTEXT
 
       IF lv_answer = '2'.
         RAISE EXCEPTION TYPE zcx_abapgit_cancel.
@@ -319,7 +322,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     ls_checks = lo_repo->delete_checks( ).
     IF ls_checks-transport-required = abap_true.
       ls_checks-transport-transport = zcl_abapgit_ui_factory=>get_popups(
-                                        )->popup_transport_request(  ls_checks-transport-type ).
+                                        )->popup_transport_request( ls_checks-transport-type ).
     ENDIF.
 
     zcl_abapgit_repo_srv=>get_instance( )->purge( io_repo   = lo_repo
@@ -350,7 +353,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
-    lv_question =  'This will rebuild and overwrite local repo checksums.'.
+    lv_question = 'This will rebuild and overwrite local repo checksums.'.
 
     IF lo_repo->is_offline( ) = abap_false.
       lv_question = lv_question
@@ -369,7 +372,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       iv_text_button_2         = 'Cancel'
       iv_icon_button_2         = 'ICON_CANCEL'
       iv_default_button        = '2'
-      iv_display_cancel_button = abap_false ).                 "#EC NOTEXT
+      iv_display_cancel_button = abap_false ).              "#EC NOTEXT
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
@@ -385,7 +388,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
   METHOD remote_attach.
 
     DATA: ls_popup TYPE zif_abapgit_popups=>ty_popup,
-          ls_loc TYPE zif_abapgit_persistence=>ty_repo-local_settings,
+          ls_loc   TYPE zif_abapgit_persistence=>ty_repo-local_settings,
           lo_repo  TYPE REF TO zcl_abapgit_repo_online.
 
     ls_loc = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key )->get_local_settings( ).
@@ -417,7 +420,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
   METHOD remote_change.
 
     DATA: ls_popup TYPE zif_abapgit_popups=>ty_popup,
-          ls_loc TYPE zif_abapgit_persistence=>ty_repo-local_settings,
+          ls_loc   TYPE zif_abapgit_persistence=>ty_repo-local_settings,
           lo_repo  TYPE REF TO zcl_abapgit_repo_online.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
@@ -457,7 +460,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       iv_text_button_2         = 'Cancel'
       iv_icon_button_2         = 'ICON_CANCEL'
       iv_default_button        = '2'
-      iv_display_cancel_button = abap_false ).                 "#EC NOTEXT
+      iv_display_cancel_button = abap_false ).              "#EC NOTEXT
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
@@ -491,7 +494,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       iv_text_button_2         = 'Cancel'
       iv_icon_button_2         = 'ICON_CANCEL'
       iv_default_button        = '2'
-      iv_display_cancel_button = abap_false ).                 "#EC NOTEXT
+      iv_display_cancel_button = abap_false ).              "#EC NOTEXT
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.

@@ -122,19 +122,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AUTH IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-
-    DATA: ls_meta TYPE zif_abapgit_definitions=>ty_metadata.
-
-    ls_meta = zif_abapgit_object~get_metadata( ).
-
-    IF ls_meta-late_deser = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
-    ELSEIF ls_meta-ddic = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
-    ELSE.
-      APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
-    ENDIF.
-
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
 
 
@@ -155,13 +143,19 @@ CLASS ZCL_ABAPGIT_OBJECT_AUTH IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-
-* TODO, this function module does not exist in 702
-    CALL FUNCTION 'SU20_MAINTAIN_SNGL'
+    CALL FUNCTION 'FUNCTION_EXISTS'
       EXPORTING
-        id_field    = mv_fieldname
-        id_wbo_mode = abap_false.
-
+        funcname           = 'SU20_MAINTAIN_SNGL'
+      EXCEPTIONS
+        function_not_exist = 1
+        OTHERS             = 2.
+    IF sy-subrc = 0.
+      " this function module does not exist in 740
+      CALL FUNCTION 'SU20_MAINTAIN_SNGL'
+        EXPORTING
+          id_field    = mv_fieldname
+          id_wbo_mode = abap_false.
+    ENDIF.
   ENDMETHOD.
 
 

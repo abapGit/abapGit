@@ -28,6 +28,7 @@ CLASS zcl_abapgit_git_transport DEFINITION
       IMPORTING iv_url                TYPE string
       RETURNING VALUE(ro_branch_list) TYPE REF TO zcl_abapgit_git_branch_list
       RAISING   zcx_abapgit_exception.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_service,
                  receive TYPE string VALUE 'receive',       "#EC NOTEXT
@@ -65,7 +66,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_git_transport IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
 
 
   METHOD branches.
@@ -216,6 +217,8 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'unpack not ok' ).
     ELSEIF lv_string CP '*pre-receive hook declined*'.
       zcx_abapgit_exception=>raise( 'pre-receive hook declined' ).
+    ELSEIF lv_string CP '*protected branch hook declined*'.
+      zcx_abapgit_exception=>raise( 'protected branch hook declined' ).
     ELSEIF lv_string CP '*push declined due to email privacy*'.
       zcx_abapgit_exception=>raise( 'push declined due to email privacy' ).
     ELSEIF lv_string CP '*funny refname*'.
@@ -226,6 +229,8 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'missing necessary objects' ).
     ELSEIF lv_string CP '*refusing to delete the current branch*'.
       zcx_abapgit_exception=>raise( 'branch delete not allowed' ).
+    ELSEIF lv_string CP '*cannot lock ref*reference already exists*'.
+      zcx_abapgit_exception=>raise( 'branch already exists' ).
     ENDIF.
 
   ENDMETHOD.

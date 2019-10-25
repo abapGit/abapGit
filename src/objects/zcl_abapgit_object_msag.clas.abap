@@ -180,10 +180,10 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
     ENDLOOP.
 
     SELECT * FROM dokil
-             INTO TABLE lt_dokil
-             FOR ALL ENTRIES IN lt_objects
-             WHERE id     = 'NA'
-             AND   object = lt_objects-table_line.
+      INTO TABLE lt_dokil
+      FOR ALL ENTRIES IN lt_objects
+      WHERE id = 'NA'
+      AND object = lt_objects-table_line.
 
     CLEAR ls_dokil-dokstate.
     MODIFY lt_dokil FROM ls_dokil TRANSPORTING dokstate WHERE dokstate IS NOT INITIAL.
@@ -205,12 +205,16 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
 
     lv_msg_id = ms_item-obj_name.
 
+    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+      RETURN. " skip
+    ENDIF.
+
     " Collect additional languages
     " Skip master lang - it has been already serialized
     SELECT DISTINCT sprsl AS langu INTO TABLE lt_i18n_langs
       FROM t100t
       WHERE arbgb = lv_msg_id
-      AND   sprsl <> mv_language.       "#EC CI_BYPASS "#EC CI_GENBUFF.
+      AND sprsl <> mv_language.       "#EC CI_BYPASS "#EC CI_GENBUFF
 
     SORT lt_i18n_langs ASCENDING.
 
@@ -263,12 +267,12 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
 * parameter SUPPRESS_DIALOG doesnt exist in all versions of FM RS_DELETE_MESSAGE_ID
 * replaced with a copy
     lv_message_id = ms_item-obj_name.
-    IF ms_item-obj_name EQ space.
+    IF ms_item-obj_name = space.
       zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."blank message id
     ENDIF.
 
     SELECT SINGLE * FROM t100a INTO lv_t100a WHERE arbgb = ms_item-obj_name.
-    IF sy-subrc NE 0.
+    IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."not found
     ENDIF.
 
@@ -285,7 +289,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
       EXCEPTIONS
         OTHERS          = 1.
 
-    IF sy-subrc NE 0 OR lv_frozen NE space.
+    IF sy-subrc <> 0 OR lv_frozen <> space.
       zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."can't access
     ENDIF.
 
@@ -302,7 +306,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
         cancelled          = 01
         permission_failure = 02.
 
-    IF sy-subrc NE 0.
+    IF sy-subrc <> 0.
       IF lv_access_granted = abap_true.
         free_access_permission( lv_message_id ).
       ENDIF.
@@ -408,19 +412,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-
-    DATA: ls_meta TYPE zif_abapgit_definitions=>ty_metadata.
-
-    ls_meta = zif_abapgit_object~get_metadata( ).
-
-    IF ls_meta-late_deser = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
-    ELSEIF ls_meta-ddic = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
-    ELSE.
-      APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
-    ENDIF.
-
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
 
 

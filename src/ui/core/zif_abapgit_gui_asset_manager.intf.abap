@@ -28,9 +28,10 @@ INTERFACE zif_abapgit_gui_asset_manager
 
   METHODS get_text_asset
     IMPORTING
-      iv_url          TYPE string
+      iv_url            TYPE string
+      iv_assert_subtype TYPE string OPTIONAL
     RETURNING
-      VALUE(rv_asset) TYPE string
+      VALUE(rv_asset)   TYPE string
     RAISING
       zcx_abapgit_exception.
 

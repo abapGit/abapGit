@@ -19,6 +19,7 @@ INTERFACE zif_abapgit_popups
     EXPORTING
       !ev_package      TYPE devclass
       !ev_folder_logic TYPE string
+      !ev_serialize_master_lang_only TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
   METHODS popup_folder_logic
@@ -113,7 +114,7 @@ INTERFACE zif_abapgit_popups
       !it_list               TYPE STANDARD TABLE
       !iv_header_text        TYPE csequence
       !iv_select_column_text TYPE csequence
-      !it_columns_to_display TYPE stringtab
+      !it_columns_to_display TYPE string_table
     EXPORTING
       VALUE(et_list)         TYPE STANDARD TABLE
     RAISING

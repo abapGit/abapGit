@@ -51,15 +51,14 @@ CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    SELECT COUNT(*) FROM cross WHERE ( type = 'P' OR
-                               type = 'Q' )
-                              AND name   = lv_paramid.
+    SELECT COUNT(*) FROM cross
+      WHERE ( type = 'P' OR type = 'Q' ) AND name = lv_paramid.
     IF sy-subrc = 0.
       zcx_abapgit_exception=>raise( 'PARA: Parameter is still used' ).
     ELSE.
       SELECT COUNT(*) FROM dd04l BYPASSING BUFFER
-      WHERE  memoryid = lv_paramid
-      AND as4local = 'A'.
+        WHERE memoryid = lv_paramid
+        AND as4local = 'A'.
       IF sy-subrc = 0.
         zcx_abapgit_exception=>raise( 'PARA: Parameter is still used' ).
       ENDIF.
@@ -162,19 +161,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-
-    DATA: ls_meta TYPE zif_abapgit_definitions=>ty_metadata.
-
-    ls_meta = zif_abapgit_object~get_metadata( ).
-
-    IF ls_meta-late_deser = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
-    ELSEIF ls_meta-ddic = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
-    ELSE.
-      APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
-    ENDIF.
-
+    APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
   ENDMETHOD.
 
 

@@ -64,7 +64,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
+CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
 
   METHOD add.
@@ -170,7 +170,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
       lo_repo = get( ls_repo-key ).
 
       lo_package = zcl_abapgit_factory=>get_sap_package( ls_repo-package ).
-      IF lo_package->exists( ) EQ abap_false.
+      IF lo_package->exists( ) = abap_false.
         " Skip dangling repository
         CONTINUE.
       ENDIF.
@@ -178,17 +178,23 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
       CLEAR lt_packages.
       IF lo_repo->get_local_settings( )-ignore_subpackages = abap_false.
         APPEND LINES OF lo_package->list_subpackages( ) TO lt_packages.
+        READ TABLE lt_packages TRANSPORTING NO FIELDS
+          WITH KEY table_line = iv_package.
+        IF sy-subrc = 0.
+          zcx_abapgit_exception=>raise( |Repository { lo_repo->get_name( ) } already contains { iv_package } | ).
+        ENDIF.
       ENDIF.
 
       IF iv_ign_subpkg = abap_false.
         APPEND LINES OF lo_package->list_superpackages( ) TO lt_packages.
+        READ TABLE lt_packages TRANSPORTING NO FIELDS
+          WITH KEY table_line = iv_package.
+        IF sy-subrc = 0.
+          zcx_abapgit_exception=>raise( |Repository { lo_repo->get_name( ) } |
+                                    &&  |already contains subpackage of { iv_package } | ).
+        ENDIF.
       ENDIF.
 
-      READ TABLE lt_packages TRANSPORTING NO FIELDS
-        WITH KEY table_line = iv_package.
-      IF sy-subrc = 0.
-        zcx_abapgit_exception=>raise( |Repository { lo_repo->get_name( ) } already contains { iv_package } | ).
-      ENDIF.
     ENDLOOP.
   ENDMETHOD.
 
@@ -231,7 +237,6 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
   METHOD zif_abapgit_repo_srv~get.
 
     FIELD-SYMBOLS: <lo_list> LIKE LINE OF mt_list.
-
 
     IF mv_init = abap_false.
       refresh( ).
@@ -427,7 +432,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
     ENDIF.
 
     IF is_sap_object_allowed( ) = abap_false AND lv_as4user = 'SAP'.
-      zcx_abapgit_exception=>raise( |Package { iv_package } not allowed| ).
+      zcx_abapgit_exception=>raise( |Package { iv_package } not allowed, responsible user = 'SAP'| ).
     ENDIF.
 
     " make sure its not already in use for a different repository

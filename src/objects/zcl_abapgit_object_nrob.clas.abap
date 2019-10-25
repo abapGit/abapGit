@@ -176,6 +176,9 @@ CLASS ZCL_ABAPGIT_OBJECT_NROB IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from NUMBER_RANGE_OBJECT_UPDATE' ).
     ENDIF.
 
+    tadir_insert( iv_package ).
+    corr_insert( iv_package ).
+
     CALL FUNCTION 'NUMBER_RANGE_OBJECT_CLOSE'
       EXPORTING
         object                 = ls_attributes-object
@@ -184,8 +187,6 @@ CLASS ZCL_ABAPGIT_OBJECT_NROB IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from NUMBER_RANGE_OBJECT_CLOSE' ).
     ENDIF.
-
-    tadir_insert( iv_package ).
 
   ENDMETHOD.
 
@@ -208,19 +209,7 @@ CLASS ZCL_ABAPGIT_OBJECT_NROB IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-
-    DATA: ls_meta TYPE zif_abapgit_definitions=>ty_metadata.
-
-    ls_meta = zif_abapgit_object~get_metadata( ).
-
-    IF ls_meta-late_deser = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
-    ELSEIF ls_meta-ddic = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
-    ELSE.
-      APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
-    ENDIF.
-
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 

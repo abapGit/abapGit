@@ -117,16 +117,13 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error deserializing { ms_item-obj_type } { ms_item-obj_name }| ).
     ENDIF.
 
-    LOOP AT lt_message ASSIGNING <ls_message>
-                       WHERE msgtyp CA 'EAX'.
-
-      MESSAGE ID     <ls_message>-msgid
-              TYPE   <ls_message>-msgtyp
-              NUMBER <ls_message>-msgnr
-              WITH   <ls_message>-msgv1 <ls_message>-msgv2 <ls_message>-msgv3 <ls_message>-msgv4
-              INTO sy-msgli.
+    LOOP AT lt_message ASSIGNING <ls_message> WHERE msgtyp CA 'EAX'.
+      MESSAGE ID <ls_message>-msgid
+        TYPE <ls_message>-msgtyp
+        NUMBER <ls_message>-msgnr
+        WITH <ls_message>-msgv1 <ls_message>-msgv2 <ls_message>-msgv3 <ls_message>-msgv4
+        INTO sy-msgli.
       zcx_abapgit_exception=>raise_t100( ).
-
     ENDLOOP.
 
   ENDMETHOD.
@@ -318,6 +315,10 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
   METHOD serialize_texts.
 
     DATA lt_tpool_i18n TYPE TABLE OF tstct.
+
+    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+      RETURN.
+    ENDIF.
 
     " Skip master language - it was already serialized
     " Don't serialize t-code itself
@@ -658,19 +659,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-
-    DATA: ls_meta TYPE zif_abapgit_definitions=>ty_metadata.
-
-    ls_meta = zif_abapgit_object~get_metadata( ).
-
-    IF ls_meta-late_deser = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
-    ELSEIF ls_meta-ddic = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
-    ELSE.
-      APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
-    ENDIF.
-
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
 
 

@@ -23,7 +23,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_transport_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_TRANSPORT_OBJECTS IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -46,7 +46,7 @@ CLASS zcl_abapgit_transport_objects IMPLEMENTATION.
           WHEN zif_abapgit_definitions=>c_state-added OR zif_abapgit_definitions=>c_state-modified.
             IF ls_transport_object-delflag = abap_true.
               zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
-              } should be added/modified, but has deletion flag in transport| ).
+                } should be added/modified, but has deletion flag in transport| ).
             ENDIF.
 
             READ TABLE is_stage_objects-local
@@ -56,7 +56,7 @@ CLASS zcl_abapgit_transport_objects IMPLEMENTATION.
                        file-filename = ls_object_status-filename.
             IF sy-subrc <> 0.
               zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
-               } not found in the local repository files| ).
+                } not found in the local repository files| ).
             ELSE.
               io_stage->add(
                 iv_path     = ls_local_file-file-path
@@ -64,9 +64,10 @@ CLASS zcl_abapgit_transport_objects IMPLEMENTATION.
                 iv_data     = ls_local_file-file-data ).
             ENDIF.
           WHEN zif_abapgit_definitions=>c_state-deleted.
-            IF ls_transport_object-delflag = abap_false.
+* SUSC, see https://github.com/larshp/abapGit/issues/2772
+            IF ls_transport_object-delflag = abap_false AND ls_transport_object-object <> 'SUSC'.
               zcx_abapgit_exception=>raise( |Object { ls_transport_object-obj_name
-              } should be removed, but has NO deletion flag in transport| ).
+                } should be removed, but has NO deletion flag in transport| ).
             ENDIF.
             io_stage->rm(
               iv_path     = ls_object_status-path

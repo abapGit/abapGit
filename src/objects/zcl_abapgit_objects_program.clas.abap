@@ -191,29 +191,37 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
   METHOD auto_correct_cua_adm.
     " issue #1807 automatic correction of CUA interfaces saved incorrectly in the past (ADM was not saved in the XML)
+
+    CONSTANTS:
+      lc_num_n_space TYPE string VALUE ' 0123456789',
+      lc_num_only    TYPE string VALUE '0123456789'.
+
     FIELD-SYMBOLS:
       <ls_pfk> TYPE rsmpe_pfk,
       <ls_act> TYPE rsmpe_act,
       <ls_men> TYPE rsmpe_men.
 
-    IF cs_adm IS NOT INITIAL.
+    IF cs_adm IS NOT INITIAL
+        AND ( cs_adm-actcode CO lc_num_n_space
+        AND cs_adm-mencode CO lc_num_n_space
+        AND cs_adm-pfkcode CO lc_num_n_space ). "Check performed in form check_adm of include LSMPIF03
       RETURN.
     ENDIF.
 
     LOOP AT is_cua-act ASSIGNING <ls_act>.
-      IF <ls_act>-code+6(14) IS INITIAL AND <ls_act>-code(6) CO '0123456789'.
+      IF <ls_act>-code+6(14) IS INITIAL AND <ls_act>-code(6) CO lc_num_only.
         cs_adm-actcode = <ls_act>-code.
       ENDIF.
     ENDLOOP.
 
     LOOP AT is_cua-men ASSIGNING <ls_men>.
-      IF <ls_men>-code+6(14) IS INITIAL AND <ls_men>-code(6) CO '0123456789'.
+      IF <ls_men>-code+6(14) IS INITIAL AND <ls_men>-code(6) CO lc_num_only.
         cs_adm-mencode = <ls_men>-code.
       ENDIF.
     ENDLOOP.
 
     LOOP AT is_cua-pfk ASSIGNING <ls_pfk>.
-      IF <ls_pfk>-code+6(14) IS INITIAL AND <ls_pfk>-code(6) CO '0123456789'.
+      IF <ls_pfk>-code+6(14) IS INITIAL AND <ls_pfk>-code(6) CO lc_num_only.
         cs_adm-pfkcode = <ls_pfk>-code.
       ENDIF.
     ENDLOOP.
@@ -339,7 +347,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 * if the DDIC element has a PARAMETER_ID and the flag "from_dict" is active
 * the import will enable the SET-/GET_PARAM flag. In this case: "force off"
         IF <ls_field>-param_id IS NOT INITIAL
-           AND <ls_field>-from_dict = abap_true.
+            AND <ls_field>-from_dict = abap_true.
           IF <ls_field>-set_param IS INITIAL.
             <ls_field>-set_param = lc_rpyty_force_off.
           ENDIF.
@@ -347,6 +355,22 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
             <ls_field>-get_param = lc_rpyty_force_off.
           ENDIF.
         ENDIF.
+
+* If the previous conditions are met the value 'F' will be taken over
+* during de-serialization potentially overlapping other fields in the screen,
+* we set the tag to the correct value 'X'
+        IF <ls_field>-type = 'CHECK'
+            AND <ls_field>-from_dict = abap_true
+            AND <ls_field>-text IS INITIAL
+            AND <ls_field>-modific IS INITIAL.
+          <ls_field>-modific = 'X'.
+        ENDIF.
+
+        "fix for issue #2747:
+        IF <ls_field>-foreignkey IS INITIAL.
+          <ls_field>-foreignkey = lc_rpyty_force_off.
+        ENDIF.
+
       ENDLOOP.
 
       CALL FUNCTION 'RPY_DYNPRO_INSERT'
@@ -369,7 +393,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
           illegal_field_position = 9
           OTHERS                 = 10.
       IF sy-subrc <> 2 AND sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error from RPY_DYNPRO_INSERT: { sy-subrc }| ).
+        zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 * todo, RPY_DYNPRO_UPDATE?
 
@@ -474,9 +498,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
       " http://help.sap.com/abapdocu_751/en/abapinsert_report_internal.htm#!ABAP_ADDITION_1@1@
       " This e.g. occurs in case of transportable Code Inspector variants (ending with ===VC)
       INSERT REPORT is_progdir-name
-       FROM it_source
-       STATE 'I'
-       EXTENSION TYPE is_progdir-name+30.
+        FROM it_source
+        STATE 'I'
+        EXTENSION TYPE is_progdir-name+30.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'error from INSERT REPORT .. EXTENSION TYPE' ).
       ENDIF.
@@ -743,18 +767,25 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
 
   METHOD serialize_dynpros.
-
     DATA: ls_header               TYPE rpy_dyhead,
           lt_containers           TYPE dycatt_tab,
           lt_fields_to_containers TYPE dyfatc_tab,
           lt_flow_logic           TYPE swydyflow,
-          lt_d020s                TYPE TABLE OF d020s.
+          lt_d020s                TYPE TABLE OF d020s,
+          lt_fieldlist_int        TYPE TABLE OF d021s. "internal format
 
     FIELD-SYMBOLS: <ls_d020s>       LIKE LINE OF lt_d020s,
                    <lv_outputstyle> TYPE scrpostyle,
                    <ls_container>   LIKE LINE OF lt_containers,
                    <ls_field>       LIKE LINE OF lt_fields_to_containers,
-                   <ls_dynpro>      LIKE LINE OF rt_dynpro.
+                   <ls_dynpro>      LIKE LINE OF rt_dynpro,
+                   <ls_field_int>   LIKE LINE OF lt_fieldlist_int.
+
+    "#2746: relevant flag values (taken from include MSEUSBIT)
+    CONSTANTS:    lc_flg1ddf TYPE x VALUE '20',
+                  lc_flg3fku TYPE x VALUE '08',
+                  lc_flg3for TYPE x VALUE '04',
+                  lc_flg3fdu TYPE x VALUE '02'.
 
 
     CALL FUNCTION 'RS_SCREEN_LIST'
@@ -796,12 +827,38 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |Error while reading dynpro: { sy-subrc }| ).
       ENDIF.
 
+      "#2746: we need the dynpro fields in internal format:
+      FREE lt_fieldlist_int.
+
+      CALL FUNCTION 'RPY_DYNPRO_READ_NATIVE'
+        EXPORTING
+          progname  = iv_program_name
+          dynnr     = <ls_d020s>-dnum
+        TABLES
+          fieldlist = lt_fieldlist_int.
+
+
       LOOP AT lt_fields_to_containers ASSIGNING <ls_field>.
 * output style is a NUMC field, the XML conversion will fail if it contains invalid value
 * field does not exist in all versions
         ASSIGN COMPONENT 'OUTPUTSTYLE' OF STRUCTURE <ls_field> TO <lv_outputstyle>.
         IF sy-subrc = 0 AND <lv_outputstyle> = '  '.
           CLEAR <lv_outputstyle>.
+        ENDIF.
+
+        "2746: we apply the same logic as in SAPLWBSCREEN
+        "for setting or unsetting the foreignkey field:
+        UNASSIGN <ls_field_int>.
+        READ TABLE lt_fieldlist_int ASSIGNING <ls_field_int> WITH KEY fnam = <ls_field>-name.
+        IF <ls_field_int> IS ASSIGNED.
+          IF <ls_field_int>-flg1 O lc_flg1ddf AND
+              <ls_field_int>-flg3 O lc_flg3for AND
+              <ls_field_int>-flg3 Z lc_flg3fdu AND
+              <ls_field_int>-flg3 Z lc_flg3fku.
+            <ls_field>-foreignkey = 'X'.
+          ELSE.
+            CLEAR <ls_field>-foreignkey.
+          ENDIF.
         ENDIF.
       ENDLOOP.
 

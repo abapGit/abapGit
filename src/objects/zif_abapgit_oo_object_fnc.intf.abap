@@ -9,7 +9,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
     create
       IMPORTING
         iv_package    TYPE devclass
-        iv_overwrite  TYPE seox_boolean DEFAULT seox_true
+        iv_overwrite  TYPE abap_bool DEFAULT abap_true
         it_attributes TYPE zif_abapgit_definitions=>ty_obj_attribute_tt OPTIONAL
       CHANGING
         cg_properties TYPE any
@@ -18,7 +18,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
     generate_locals
       IMPORTING
         is_key                   TYPE seoclskey
-        iv_force                 TYPE seox_boolean DEFAULT seox_true
+        iv_force                 TYPE abap_bool DEFAULT abap_true
         it_local_definitions     TYPE seop_source_string OPTIONAL
         it_local_implementations TYPE seop_source_string OPTIONAL
         it_local_macros          TYPE seop_source_string OPTIONAL

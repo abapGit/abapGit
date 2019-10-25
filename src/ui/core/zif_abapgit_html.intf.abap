@@ -34,7 +34,11 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_opt   TYPE clike OPTIONAL
       !iv_class TYPE string OPTIONAL
       !iv_id    TYPE string OPTIONAL
-      !iv_style TYPE string OPTIONAL.
+      !iv_style TYPE string OPTIONAL
+      !iv_title TYPE string OPTIONAL.
+  METHODS add_checkbox
+    IMPORTING
+      iv_id TYPE string.
   CLASS-METHODS a
     IMPORTING
       !iv_txt       TYPE string
@@ -44,6 +48,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_class     TYPE string OPTIONAL
       !iv_id        TYPE string OPTIONAL
       !iv_style     TYPE string OPTIONAL
+      !iv_title     TYPE string OPTIONAL
     RETURNING
       VALUE(rv_str) TYPE string .
   CLASS-METHODS icon

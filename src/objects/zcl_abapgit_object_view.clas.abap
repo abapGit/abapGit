@@ -6,6 +6,39 @@ CLASS zcl_abapgit_object_view DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+    TYPES: tty_dd26v TYPE STANDARD TABLE OF dd26v
+                          WITH NON-UNIQUE DEFAULT KEY,
+           tty_dd27p TYPE STANDARD TABLE OF dd27p
+                          WITH NON-UNIQUE DEFAULT KEY,
+           tty_dd28j TYPE STANDARD TABLE OF dd28j
+                          WITH NON-UNIQUE DEFAULT KEY,
+           tty_dd28v TYPE STANDARD TABLE OF dd28v
+                          WITH NON-UNIQUE DEFAULT KEY.
+    CONSTANTS: BEGIN OF co_viewclass,
+                 help         TYPE viewclass VALUE 'H',
+                 database     TYPE viewclass VALUE 'D',
+                 projection   TYPE viewclass VALUE 'P',
+                 structure    TYPE viewclass VALUE 'S',
+                 maintenance  TYPE viewclass VALUE 'C',
+                 entity       TYPE viewclass VALUE 'E',
+                 view_variant TYPE viewclass VALUE 'V',
+                 append       TYPE viewclass VALUE 'A',
+                 external     TYPE viewclass VALUE 'X',
+                 replication  TYPE viewclass VALUE 'R',
+               END OF co_viewclass.
+
+    METHODS:
+      read_view
+        EXPORTING
+          es_dd25v TYPE dd25v
+          es_dd09l TYPE dd09l
+          et_dd26v TYPE zcl_abapgit_object_view=>tty_dd26v
+          et_dd27p TYPE zcl_abapgit_object_view=>tty_dd27p
+          et_dd28j TYPE zcl_abapgit_object_view=>tty_dd28j
+          et_dd28v TYPE zcl_abapgit_object_view=>tty_dd28v
+        RAISING
+          zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -140,19 +173,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-
-    DATA: ls_meta TYPE zif_abapgit_definitions=>ty_metadata.
-
-    ls_meta = zif_abapgit_object~get_metadata( ).
-
-    IF ls_meta-late_deser = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
-    ELSEIF ls_meta-ddic = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
-    ELSE.
-      APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
-    ENDIF.
-
+    APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
   ENDMETHOD.
 
 
@@ -174,46 +195,60 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
 
-    jump_se11( iv_radio = 'RSRD1-VIMA'
-               iv_field = 'RSRD1-VIMA_VAL' ).
+    DATA: ls_dd25v TYPE dd25v.
+
+    read_view(
+      IMPORTING
+        es_dd25v              = ls_dd25v ).
+
+    CASE ls_dd25v-viewclass.
+      WHEN co_viewclass-view_variant.
+
+        CALL FUNCTION 'RS_TOOL_ACCESS'
+          EXPORTING
+            operation           = 'SHOW'
+            object_name         = ms_item-obj_name
+            object_type         = ms_item-obj_type
+            in_new_window       = abap_true
+          EXCEPTIONS
+            not_executed        = 1
+            invalid_object_type = 2
+            OTHERS              = 3.
+
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( |Error from RS_TOOL_ACCESS. Subrc={ sy-subrc }| ).
+        ENDIF.
+
+      WHEN OTHERS.
+
+        jump_se11( iv_radio = 'RSRD1-VIMA'
+                   iv_field = 'RSRD1-VIMA_VAL' ).
+
+    ENDCASE.
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lv_name  TYPE ddobjname,
-          ls_dd25v TYPE dd25v,
+    DATA: ls_dd25v TYPE dd25v,
           ls_dd09l TYPE dd09l,
-          lt_dd26v TYPE TABLE OF dd26v,
-          lt_dd27p TYPE TABLE OF dd27p,
-          lt_dd28j TYPE TABLE OF dd28j,
-          lt_dd28v TYPE TABLE OF dd28v.
+          lt_dd26v TYPE tty_dd26v,
+          lt_dd27p TYPE tty_dd27p,
+          lt_dd28j TYPE tty_dd28j,
+          lt_dd28v TYPE tty_dd28v.
 
     FIELD-SYMBOLS: <ls_dd27p> LIKE LINE OF lt_dd27p.
 
-
-    lv_name = ms_item-obj_name.
-
-    CALL FUNCTION 'DDIF_VIEW_GET'
-      EXPORTING
-        name          = lv_name
-        state         = 'A'
-        langu         = mv_language
+    read_view(
       IMPORTING
-        dd25v_wa      = ls_dd25v
-        dd09l_wa      = ls_dd09l
-      TABLES
-        dd26v_tab     = lt_dd26v
-        dd27p_tab     = lt_dd27p
-        dd28j_tab     = lt_dd28j
-        dd28v_tab     = lt_dd28v
-      EXCEPTIONS
-        illegal_input = 1
-        OTHERS        = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DDIF_VIEW_GET' ).
-    ENDIF.
+        es_dd25v = ls_dd25v
+        es_dd09l = ls_dd09l
+        et_dd26v = lt_dd26v
+        et_dd27p = lt_dd27p
+        et_dd28j = lt_dd28j
+        et_dd28v = lt_dd28v ).
+
     IF ls_dd25v IS INITIAL.
       RETURN. " does not exist in system
     ENDIF.
@@ -264,4 +299,33 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
                  iv_name = 'DD28V_TABLE' ).
 
   ENDMETHOD.
+
+  METHOD read_view.
+
+    DATA: lv_name TYPE ddobjname.
+
+    lv_name = ms_item-obj_name.
+
+    CALL FUNCTION 'DDIF_VIEW_GET'
+      EXPORTING
+        name          = lv_name
+        state         = 'A'
+        langu         = mv_language
+      IMPORTING
+        dd25v_wa      = es_dd25v
+        dd09l_wa      = es_dd09l
+      TABLES
+        dd26v_tab     = et_dd26v
+        dd27p_tab     = et_dd27p
+        dd28j_tab     = et_dd28j
+        dd28v_tab     = et_dd28v
+      EXCEPTIONS
+        illegal_input = 1
+        OTHERS        = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from DDIF_VIEW_GET' ).
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

@@ -10,6 +10,13 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
         small TYPE c VALUE 'S',
       END OF c_icon_scaling.
 
+    CONSTANTS:
+      BEGIN OF c_ui_theme,
+        default TYPE string VALUE 'default',
+        dark TYPE string VALUE 'dark',
+        belize TYPE string VALUE 'belize',
+      END OF c_ui_theme.
+
     METHODS:
       set_proxy_url
         IMPORTING
@@ -99,16 +106,10 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
           zcx_abapgit_exception,
       set_link_hint_key
         IMPORTING
-          iv_link_hint_key TYPE char01,
+          iv_link_hint_key TYPE string,
       get_link_hint_key
         RETURNING
-          VALUE(rv_link_hint_key) TYPE char01,
-      get_link_hint_background_color
-        RETURNING
-          VALUE(rv_background_color) TYPE string,
-      set_link_hint_background_color
-        IMPORTING
-          iv_background_color TYPE string,
+          VALUE(rv_link_hint_key) TYPE string,
       set_hotkeys
         IMPORTING
           it_hotkeys TYPE zif_abapgit_definitions=>tty_hotkey,
@@ -128,7 +129,13 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
           VALUE(rv_scaling) TYPE zif_abapgit_definitions=>ty_s_user_settings-icon_scaling,
       set_icon_scaling
         IMPORTING
-          iv_scaling TYPE zif_abapgit_definitions=>ty_s_user_settings-icon_scaling.
+          iv_scaling TYPE zif_abapgit_definitions=>ty_s_user_settings-icon_scaling,
+      get_ui_theme
+        RETURNING
+          VALUE(rv_ui_theme) TYPE zif_abapgit_definitions=>ty_s_user_settings-ui_theme,
+      set_ui_theme
+        IMPORTING
+          iv_ui_theme TYPE zif_abapgit_definitions=>ty_s_user_settings-ui_theme.
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_s_settings,
@@ -145,8 +152,7 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
           ms_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
 
     METHODS:
-      set_default_link_hint_key,
-      set_default_link_hint_bg_color.
+      set_default_link_hint_key.
 
 ENDCLASS.
 
@@ -176,31 +182,7 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
 
   METHOD get_hotkeys.
-
-    DATA: lt_default_hotkeys TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_action,
-          ls_hotkey          LIKE LINE OF rt_hotkeys.
-
-    FIELD-SYMBOLS: <ls_default_hotkey> LIKE LINE OF lt_default_hotkeys.
-
-    IF lines( ms_user_settings-hotkeys ) > 0.
-
-      rt_hotkeys = ms_user_settings-hotkeys.
-
-    ELSE.
-
-      " provide default hotkeys
-      lt_default_hotkeys = zcl_abapgit_hotkeys=>get_default_hotkeys_from_pages( ).
-
-      LOOP AT lt_default_hotkeys ASSIGNING <ls_default_hotkey>.
-
-        ls_hotkey-action   = <ls_default_hotkey>-action.
-        ls_hotkey-sequence = <ls_default_hotkey>-default_hotkey.
-        INSERT ls_hotkey INTO TABLE rt_hotkeys.
-
-      ENDLOOP.
-
-    ENDIF.
-
+    rt_hotkeys = ms_user_settings-hotkeys.
   ENDMETHOD.
 
 
@@ -211,11 +193,6 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
   METHOD get_link_hints_enabled.
     rv_link_hints_enabled = ms_user_settings-link_hints_enabled.
-  ENDMETHOD.
-
-
-  METHOD get_link_hint_background_color.
-    rv_background_color = ms_user_settings-link_hint_background_color.
   ENDMETHOD.
 
 
@@ -274,6 +251,11 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_ui_theme.
+    rv_ui_theme = ms_user_settings-ui_theme.
+  ENDMETHOD.
+
+
   METHOD get_user_settings.
     rs_settings = ms_user_settings.
   ENDMETHOD.
@@ -307,14 +289,8 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
     set_commitmsg_comment_length( c_commitmsg_comment_length_dft ).
     set_commitmsg_body_size( c_commitmsg_body_size_dft ).
     set_default_link_hint_key( ).
-    set_default_link_hint_bg_color( ).
     set_icon_scaling( '' ).
 
-  ENDMETHOD.
-
-
-  METHOD set_default_link_hint_bg_color.
-    set_link_hint_background_color( |lightgreen| ).
   ENDMETHOD.
 
 
@@ -343,11 +319,6 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
   METHOD set_link_hints_enabled.
     ms_user_settings-link_hints_enabled = iv_link_hints_enabled.
-  ENDMETHOD.
-
-
-  METHOD set_link_hint_background_color.
-    ms_user_settings-link_hint_background_color = iv_background_color.
   ENDMETHOD.
 
 
@@ -391,6 +362,16 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_ui_theme.
+    ms_user_settings-ui_theme = iv_ui_theme.
+    IF ms_user_settings-ui_theme <> c_ui_theme-default
+        AND ms_user_settings-ui_theme <> c_ui_theme-dark
+        AND ms_user_settings-ui_theme <> c_ui_theme-belize.
+      ms_user_settings-ui_theme = c_ui_theme-default. " Reset to default
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD set_user_settings.
     ms_user_settings = is_user_settings.
 
@@ -398,9 +379,6 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
       set_default_link_hint_key( ).
     ENDIF.
 
-    IF ms_user_settings-link_hint_background_color IS INITIAL.
-      set_default_link_hint_bg_color( ).
-    ENDIF.
   ENDMETHOD.
 
 

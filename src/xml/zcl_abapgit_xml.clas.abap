@@ -1,13 +1,12 @@
 CLASS zcl_abapgit_xml DEFINITION
   PUBLIC
   ABSTRACT
-  CREATE PUBLIC.
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
     METHODS:
       constructor
         IMPORTING iv_filename TYPE string OPTIONAL.
-
   PROTECTED SECTION.
     DATA: mi_ixml     TYPE REF TO if_ixml,
           mi_xml_doc  TYPE REF TO if_ixml_document,
@@ -24,8 +23,7 @@ CLASS zcl_abapgit_xml DEFINITION
       RETURNING VALUE(rv_xml) TYPE string.
 
     METHODS parse
-      IMPORTING iv_normalize TYPE abap_bool DEFAULT abap_true
-                iv_xml       TYPE string
+      IMPORTING iv_xml TYPE string
       RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
 
@@ -39,7 +37,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_XML IMPLEMENTATION.
+CLASS zcl_abapgit_xml IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -114,7 +112,7 @@ CLASS ZCL_ABAPGIT_XML IMPLEMENTATION.
 
         CALL FUNCTION 'POPUP_TO_INFORM'
           EXPORTING
-            titel = |Error from XML parser|   "#EC NOTEXT
+            titel = 'Error from XML parser'   "#EC NOTEXT
             txt1  = lv_txt1
             txt2  = lv_txt2
             txt3  = lv_txt3
@@ -147,7 +145,7 @@ CLASS ZCL_ABAPGIT_XML IMPLEMENTATION.
     li_parser = mi_ixml->create_parser( stream_factory = li_stream_factory
                                         istream        = li_istream
                                         document       = mi_xml_doc ).
-    li_parser->set_normalizing( iv_normalize ).
+    li_parser->add_strip_space_element( ).
     IF li_parser->parse( ) <> 0.
       error( li_parser ).
     ENDIF.

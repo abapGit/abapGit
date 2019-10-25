@@ -104,13 +104,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        lo_test = cl_ci_tests=>get_test_ref( <ls_result>-test ).
+        CALL METHOD ('CL_CI_TESTS')=>('GET_TEST_REF')
+          EXPORTING
+            p_test   = <ls_result>-test
+          RECEIVING
+            p_result = lo_test.
       CATCH cx_root.
-        zcx_abapgit_exception=>raise( |Jump to object not supported in your NW release|  ).
+        zcx_abapgit_exception=>raise( |Jump to object not supported in your NW release| ).
     ENDTRY.
 
     lo_result = lo_test->get_result_node( <ls_result>-kind ).
-
 
     MOVE-CORRESPONDING <ls_result> TO ls_info.
 
@@ -191,8 +194,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
           lv_line_number_s TYPE string,
           lv_line_number   TYPE i.
 
-    lv_temp = iv_action.
-    SHIFT lv_temp LEFT DELETING LEADING c_ci_sig.
+    lv_temp = replace( val   = iv_action
+                       regex = |^{ c_ci_sig }|
+                       with  = `` ).
 
     IF lv_temp <> iv_action. " CI navigation request detected
 

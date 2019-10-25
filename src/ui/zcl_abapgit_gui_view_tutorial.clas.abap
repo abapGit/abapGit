@@ -1,11 +1,11 @@
-CLASS zcl_abapgit_gui_view_tutorial DEFINITION PUBLIC FINAL CREATE PUBLIC.
+CLASS zcl_abapgit_gui_view_tutorial DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_gui_renderable.
-    INTERFACES zif_abapgit_gui_event_handler.
-    INTERFACES zif_abapgit_gui_page_hotkey.
-    ALIASES render FOR zif_abapgit_gui_renderable~render.
 
+    INTERFACES zif_abapgit_gui_renderable .
   PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS render_content
@@ -70,16 +70,6 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_TUTORIAL IMPLEMENTATION.
 
     ro_html->add( '</li>' ).
     ro_html->add( '</ul></p>' ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_event_handler~on_event.
-    ev_state = zcl_abapgit_gui=>c_event_state-not_handled.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 

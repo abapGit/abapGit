@@ -2,11 +2,11 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_page
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_gui_page_hotkey .
+    INTERFACES zif_abapgit_gui_page_hotkey.
 
     TYPES:
       BEGIN OF ty_file_diff,
@@ -18,16 +18,16 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         o_diff     TYPE REF TO zcl_abapgit_diff,
         changed_by TYPE xubname,
         type       TYPE string,
-      END OF ty_file_diff .
+      END OF ty_file_diff.
     TYPES:
-      tt_file_diff TYPE STANDARD TABLE OF ty_file_diff .
+      tt_file_diff TYPE STANDARD TABLE OF ty_file_diff.
 
     CONSTANTS:
       BEGIN OF c_fstate,
         local  TYPE char1 VALUE 'L',
         remote TYPE char1 VALUE 'R',
         both   TYPE char1 VALUE 'B',
-      END OF c_fstate .
+      END OF c_fstate.
 
     METHODS constructor
       IMPORTING
@@ -37,10 +37,10 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         !io_stage      TYPE REF TO zcl_abapgit_stage OPTIONAL
         !iv_patch_mode TYPE abap_bool DEFAULT abap_false
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
     METHODS zif_abapgit_gui_event_handler~on_event
-        REDEFINITION .
+        REDEFINITION.
   PROTECTED SECTION.
     METHODS:
       render_content REDEFINITION,
@@ -87,7 +87,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
       IMPORTING is_diff_line   TYPE zif_abapgit_definitions=>ty_diff
                 iv_filename    TYPE string
                 iv_fstate      TYPE char1
-                iv_index       TYPE sytabix
+                iv_index       TYPE sy-tabix
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     METHODS render_line_unified
       IMPORTING is_diff_line   TYPE zif_abapgit_definitions=>ty_diff OPTIONAL
@@ -112,15 +112,14 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         iv_patch_line_possible TYPE abap_bool
         iv_filename            TYPE string
         is_diff_line           TYPE zif_abapgit_definitions=>ty_diff
-        iv_index               TYPE sytabix.
+        iv_index               TYPE sy-tabix.
     METHODS start_staging
       IMPORTING
         it_postdata TYPE cnht_post_data_tab
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS apply_patch_all
       IMPORTING
-        iv_action     TYPE ty_patch_action
         iv_patch      TYPE string
         iv_patch_flag TYPE abap_bool
       RAISING
@@ -151,10 +150,20 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         VALUE(rs_diff) TYPE zif_abapgit_definitions=>ty_diff
       RAISING
         zcx_abapgit_exception.
+    METHODS are_all_lines_patched
+      IMPORTING
+        it_diff                         TYPE zif_abapgit_definitions=>ty_diffs_tt
+      RETURNING
+        VALUE(rv_are_all_lines_patched) TYPE abap_bool.
+    METHODS add_jump_sub_menu
+      IMPORTING
+        io_menu TYPE REF TO zcl_abapgit_html_toolbar.
+    METHODS add_filter_sub_menu
+      IMPORTING
+        io_menu TYPE REF TO zcl_abapgit_html_toolbar.
     CLASS-METHODS get_patch_data
       IMPORTING
         iv_patch      TYPE string
-        iv_action     TYPE string
       EXPORTING
         ev_filename   TYPE string
         ev_line_index TYPE string
@@ -201,10 +210,20 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
       lv_patch = lo_git_add_patch->get_patch_binary( ).
 
-      mo_stage->add(
-          iv_path     = <ls_diff_file>-path
-          iv_filename = <ls_diff_file>-filename
-          iv_data     = lv_patch ).
+      IF <ls_diff_file>-lstate = 'D' AND are_all_lines_patched( lt_diff ) = abap_true.
+
+        mo_stage->rm(
+            iv_path     = <ls_diff_file>-path
+            iv_filename = <ls_diff_file>-filename ).
+
+      ELSE.
+
+        mo_stage->add(
+            iv_path     = <ls_diff_file>-path
+            iv_filename = <ls_diff_file>-filename
+            iv_data     = lv_patch ).
+
+      ENDIF.
 
     ENDLOOP.
 
@@ -315,7 +334,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       get_patch_data(
         EXPORTING
           iv_patch      = <lv_patch>
-          iv_action     = iv_action
         IMPORTING
           ev_filename   = lv_filename
           ev_line_index = lv_line_index ).
@@ -351,7 +369,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
       WHEN zif_abapgit_definitions=>c_diff-delete.
 
-        lv_line =  ls_diff_line-old_num.
+        lv_line = ls_diff_line-old_num.
 
         lo_diff->set_patch_old( iv_line_old   = lv_line
                                 iv_patch_flag = iv_patch_flag ).
@@ -363,52 +381,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
   METHOD build_menu.
 
-    DATA: lo_sub   TYPE REF TO zcl_abapgit_html_toolbar,
-          lt_types TYPE string_table,
-          lt_users TYPE string_table.
-
-    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff_files,
-                   <lv_i>    TYPE string.
-
-    " Get unique
-    LOOP AT mt_diff_files ASSIGNING <ls_diff>.
-      APPEND <ls_diff>-type TO lt_types.
-      APPEND <ls_diff>-changed_by TO lt_users.
-    ENDLOOP.
-
-    SORT: lt_types, lt_users.
-    DELETE ADJACENT DUPLICATES FROM: lt_types, lt_users.
-
     CREATE OBJECT ro_menu.
 
-    IF lines( lt_types ) > 1 OR lines( lt_users ) > 1.
-      CREATE OBJECT lo_sub EXPORTING iv_id = 'diff-filter'.
-
-      " File types
-      IF lines( lt_types ) > 1.
-        lo_sub->add( iv_txt = 'TYPE' iv_typ = zif_abapgit_html=>c_action_type-separator ).
-        LOOP AT lt_types ASSIGNING <lv_i>.
-          lo_sub->add( iv_txt = <lv_i>
-                       iv_typ = zif_abapgit_html=>c_action_type-onclick
-                       iv_aux = 'type'
-                       iv_chk = abap_true ).
-        ENDLOOP.
-      ENDIF.
-
-      " Changed by
-      IF lines( lt_users ) > 1.
-        lo_sub->add( iv_txt = 'CHANGED BY' iv_typ = zif_abapgit_html=>c_action_type-separator ).
-        LOOP AT lt_users ASSIGNING <lv_i>.
-          lo_sub->add( iv_txt = <lv_i>
-                       iv_typ = zif_abapgit_html=>c_action_type-onclick
-                       iv_aux = 'changed-by'
-                       iv_chk = abap_true ).
-        ENDLOOP.
-      ENDIF.
-
-      ro_menu->add( iv_txt = 'Filter'
-                    io_sub = lo_sub ) ##NO_TEXT.
-    ENDIF.
+    add_jump_sub_menu( ro_menu ).
+    add_filter_sub_menu( ro_menu ).
 
     IF mv_patch_mode = abap_true.
       ro_menu->add( iv_txt = 'Stage'
@@ -416,10 +392,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
                     iv_id  = 'stage'
                     iv_typ = zif_abapgit_html=>c_action_type-dummy
                      ) ##NO_TEXT.
+    ELSE.
+      ro_menu->add( iv_txt = 'Split/Unified view'
+                    iv_act = c_actions-toggle_unified ) ##NO_TEXT.
     ENDIF.
 
-    ro_menu->add( iv_txt = 'Split/Unified view'
-                  iv_act = c_actions-toggle_unified ) ##NO_TEXT.
 
   ENDMETHOD.
 
@@ -469,15 +446,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
       LOOP AT lt_status ASSIGNING <ls_status>
           WHERE obj_type = is_object-obj_type
-          AND   obj_name = is_object-obj_name
-          AND   match IS INITIAL.
+          AND obj_name = is_object-obj_name
+          AND match IS INITIAL.
         append_diff( it_remote = lt_remote
                      it_local  = lt_local
                      is_status = <ls_status> ).
       ENDLOOP.
 
     ELSE.                             " Diff for the whole repo
-
+      SORT lt_status BY
+        path ASCENDING
+        filename ASCENDING.
       LOOP AT lt_status ASSIGNING <ls_status> WHERE match IS INITIAL.
         append_diff( it_remote = lt_remote
                      it_local  = lt_local
@@ -498,7 +477,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
   METHOD get_diff_line.
 
     DATA: lt_diff       TYPE zif_abapgit_definitions=>ty_diffs_tt,
-          lv_line_index TYPE sytabix.
+          lv_line_index TYPE sy-tabix.
 
 
     lv_line_index = iv_line_index.
@@ -534,11 +513,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     CLEAR: ev_filename, ev_line_index.
 
-    IF iv_action <> c_patch_action-add AND iv_action <> c_patch_action-remove.
-      zcx_abapgit_exception=>raise( |Invalid action { iv_action }| ).
-    ENDIF.
-
-    FIND FIRST OCCURRENCE OF REGEX `patch_line_` && iv_action && `_(.*)_(\d)+_(\d+)`
+    FIND FIRST OCCURRENCE OF REGEX `patch_line` && `_(.*)_(\d)+_(\d+)`
          IN iv_patch
          SUBMATCHES ev_filename lv_section ev_line_index.
     IF sy-subrc <> 0.
@@ -609,19 +584,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     IF mv_patch_mode = abap_true.
 
       ro_html->add( |<th class="patch">| ).
-
-      ro_html->add_a( iv_txt   = |{ c_patch_action-add }|
-                      iv_act   = |patch_section_add('{ is_diff-filename }','{ mv_section_count }')|
-                      iv_id    = |patch_section_add_{ is_diff-filename }_{ mv_section_count }|
-                      iv_class = |patch_section_add|
-                      iv_typ   = zif_abapgit_html=>c_action_type-dummy ).
-
-      ro_html->add_a( iv_txt   = |{ c_patch_action-remove }|
-                      iv_act   = |patch_section_remove('{ is_diff-filename }', '{ mv_section_count }')|
-                      iv_id    = |patch_section_remove_{ is_diff-filename }_{ mv_section_count }|
-                      iv_class = |patch_section_remove|
-                      iv_typ   = zif_abapgit_html=>c_action_type-dummy ).
-
+      ro_html->add_checkbox( iv_id = |patch_section_{ is_diff-filename }_{ mv_section_count }| ).
       ro_html->add( '</th>' ).
 
     ELSE.
@@ -913,8 +876,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     CONSTANTS:
       BEGIN OF c_css_class,
-        patch_active TYPE string VALUE `patch-active` ##NO_TEXT,
-        patch        TYPE string VALUE `patch` ##NO_TEXT,
+        patch TYPE string VALUE `patch` ##NO_TEXT,
       END OF c_css_class.
 
     DATA: lv_id          TYPE string,
@@ -929,24 +891,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       lv_id = |{ lv_object }_{ mv_section_count }_{ iv_index }|.
 
       io_html->add( |<td class="{ c_css_class-patch }">| ).
-
-      IF is_diff_line-patch_flag = abap_true.
-        lv_left_class = c_css_class-patch_active.
-      ELSE.
-        lv_right_class = c_css_class-patch_active.
-      ENDIF.
-
-      io_html->add_a( iv_txt   = |{ c_patch_action-add }|
-                      iv_act   = ||
-                      iv_id    = |patch_line_{ c_patch_action-add }_{ lv_id }|
-                      iv_typ   = zif_abapgit_html=>c_action_type-dummy
-                      iv_class = lv_left_class ).
-      io_html->add_a( iv_txt   = |{ c_patch_action-remove }|
-                      iv_act   = ||
-                      iv_id    = |patch_line_{ c_patch_action-remove }_{ lv_id }|
-                      iv_typ   = zif_abapgit_html=>c_action_type-dummy
-                      iv_class = lv_right_class ).
-
+      io_html->add_checkbox( iv_id = |patch_line_{ lv_id }| ).
       io_html->add( |</td>| ).
 
     ELSE.
@@ -962,19 +907,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
   METHOD render_patch_head.
 
     io_html->add( |<th class="patch">| ).
-
-    io_html->add_a( iv_txt   = |{ c_patch_action-add }|
-                    iv_act   = |patch_file_add('{ is_diff-filename }')|
-                    iv_id    = |patch_file_add_{ is_diff-filename }|
-                    iv_class = |patch_file_add|
-                    iv_typ   = zif_abapgit_html=>c_action_type-dummy ).
-
-    io_html->add_a( iv_txt   = |{ c_patch_action-remove }|
-                    iv_act   = |patch_file_remove('{ is_diff-filename }')|
-                    iv_id    = |patch_file_remove_{ is_diff-filename }|
-                    iv_class = |patch_file_remove|
-                    iv_typ   = zif_abapgit_html=>c_action_type-dummy ).
-
+    io_html->add_checkbox( iv_id = |patch_file_{ is_diff-filename }| ).
     io_html->add( '</th>' ).
 
   ENDMETHOD.
@@ -1020,6 +953,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ro_html->add( 'var gHelper = new DiffHelper({' ).
     ro_html->add( |  seed:        "{ mv_seed }",| ).
     ro_html->add( '  ids: {' ).
+    ro_html->add( '    jump:        "jump",' ).
     ro_html->add( '    diffList:    "diff-list",' ).
     ro_html->add( '    filterMenu:  "diff-filter",' ).
     ro_html->add( '  }' ).
@@ -1029,6 +963,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       ro_html->add( 'preparePatch();' ).
       ro_html->add( 'registerStagePatch();' ).
     ENDIF.
+
+    ro_html->add( 'addMarginBottom();' ).
+
+    ro_html->add( 'var gGoJumpPalette = new CommandPalette(enumerateJumpAllFiles, {' ).
+    ro_html->add( '  toggleKey: "F2",' ).
+    ro_html->add( '  hotkeyDescription: "Jump to file ..."' ).
+    ro_html->add( '});' ).
 
   ENDMETHOD.
 
@@ -1051,27 +992,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
                                                         it_field = lt_fields
                                               CHANGING  cg_field = lv_remove ).
 
-    apply_patch_all( iv_action     = c_patch_action-add
-                     iv_patch      = lv_add
+    apply_patch_all( iv_patch      = lv_add
                      iv_patch_flag = abap_true ).
 
-    apply_patch_all( iv_action     = c_patch_action-remove
-                     iv_patch      = lv_remove
+    apply_patch_all( iv_patch      = lv_remove
                      iv_patch_flag = abap_false ).
 
     add_to_stage( ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
-
-    ls_hotkey_action-name           = |Stage changes|.
-    ls_hotkey_action-action         = |stagePatch|.
-    ls_hotkey_action-default_hotkey = |s|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
 
@@ -1097,7 +1024,120 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
             io_stage = mo_stage.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
+      WHEN OTHERS.
+
+        super->zif_abapgit_gui_event_handler~on_event(
+           EXPORTING
+             iv_action    = iv_action
+             iv_prev_page = iv_prev_page
+             iv_getdata   = iv_getdata
+             it_postdata  = it_postdata
+           IMPORTING
+             ei_page      = ei_page
+             ev_state     = ev_state ).
+
     ENDCASE.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+
+    ls_hotkey_action-name   = |Stage changes|.
+    ls_hotkey_action-action = |stagePatch|.
+    ls_hotkey_action-hotkey = |s|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+  ENDMETHOD.
+
+
+  METHOD are_all_lines_patched.
+
+    DATA: lv_patch_count TYPE i.
+
+    FIELD-SYMBOLS: <ls_diff> TYPE zif_abapgit_definitions=>ty_diff.
+
+    LOOP AT it_diff ASSIGNING <ls_diff>
+                    WHERE patch_flag = abap_true.
+      lv_patch_count = lv_patch_count + 1.
+    ENDLOOP.
+
+    rv_are_all_lines_patched = boolc( lv_patch_count = lines( it_diff ) ).
+
+  ENDMETHOD.
+
+
+  METHOD add_jump_sub_menu.
+
+    DATA: lo_sub_jump TYPE REF TO zcl_abapgit_html_toolbar.
+    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff_files.
+
+    CREATE OBJECT lo_sub_jump EXPORTING iv_id = 'jump'.
+
+    LOOP AT mt_diff_files ASSIGNING <ls_diff>.
+
+      lo_sub_jump->add(
+          iv_id  = |li_jump_{ sy-tabix }|
+          iv_txt = <ls_diff>-filename
+          iv_typ = zif_abapgit_html=>c_action_type-onclick ).
+
+    ENDLOOP.
+
+    io_menu->add( iv_txt = 'Jump'
+                  io_sub = lo_sub_jump ) ##NO_TEXT.
+
+  ENDMETHOD.
+
+
+  METHOD add_filter_sub_menu.
+
+    DATA:
+      lo_sub_filter TYPE REF TO zcl_abapgit_html_toolbar,
+      lt_types      TYPE string_table,
+      lt_users      TYPE string_table.
+
+    FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff_files,
+                   <lv_i>    TYPE string.
+    " Get unique
+    LOOP AT mt_diff_files ASSIGNING <ls_diff>.
+      APPEND <ls_diff>-type TO lt_types.
+      APPEND <ls_diff>-changed_by TO lt_users.
+    ENDLOOP.
+
+    SORT: lt_types, lt_users.
+    DELETE ADJACENT DUPLICATES FROM: lt_types, lt_users.
+
+    IF lines( lt_types ) > 1 OR lines( lt_users ) > 1.
+      CREATE OBJECT lo_sub_filter EXPORTING iv_id = 'diff-filter'.
+
+      " File types
+      IF lines( lt_types ) > 1.
+        lo_sub_filter->add( iv_txt = 'TYPE' iv_typ = zif_abapgit_html=>c_action_type-separator ).
+        LOOP AT lt_types ASSIGNING <lv_i>.
+          lo_sub_filter->add( iv_txt = <lv_i>
+                       iv_typ = zif_abapgit_html=>c_action_type-onclick
+                       iv_aux = 'type'
+                       iv_chk = abap_true ).
+        ENDLOOP.
+      ENDIF.
+
+      " Changed by
+      IF lines( lt_users ) > 1.
+        lo_sub_filter->add( iv_txt = 'CHANGED BY' iv_typ = zif_abapgit_html=>c_action_type-separator ).
+        LOOP AT lt_users ASSIGNING <lv_i>.
+          lo_sub_filter->add( iv_txt = <lv_i>
+                       iv_typ = zif_abapgit_html=>c_action_type-onclick
+                       iv_aux = 'changed-by'
+                       iv_chk = abap_true ).
+        ENDLOOP.
+      ENDIF.
+
+      io_menu->add( iv_txt = 'Filter'
+                    io_sub = lo_sub_filter ) ##NO_TEXT.
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

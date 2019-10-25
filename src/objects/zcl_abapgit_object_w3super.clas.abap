@@ -89,9 +89,10 @@ CLASS ZCL_ABAPGIT_OBJECT_W3SUPER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_metadata. "Redefinition
-    rs_metadata         = super->get_metadata( ).
-    rs_metadata-version = 'v2.0.0'. " Seriazation v2, separate data file
+  METHOD get_metadata.
+    rs_metadata              = super->get_metadata( ).
+    rs_metadata-version      = 'v2.0.0'. " Serialization v2, separate data file
+    rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.
 
 
@@ -139,8 +140,8 @@ CLASS ZCL_ABAPGIT_OBJECT_W3SUPER IMPLEMENTATION.
     SELECT SINGLE chname INTO rv_user
       FROM wwwdata
       WHERE relid = ms_key-relid
-      AND   objid = ms_key-objid
-      AND   srtf2 = 0.
+      AND objid = ms_key-objid
+      AND srtf2 = 0.
 
     IF sy-subrc IS NOT INITIAL OR rv_user IS INITIAL.
       rv_user = c_user_unknown.
@@ -322,8 +323,8 @@ CLASS ZCL_ABAPGIT_OBJECT_W3SUPER IMPLEMENTATION.
     SELECT SINGLE objid INTO ms_key-objid
       FROM wwwdata
       WHERE relid = ms_key-relid
-      AND   objid = ms_key-objid
-      AND   srtf2 = 0.
+      AND objid = ms_key-objid
+      AND srtf2 = 0.
 
     IF sy-subrc IS NOT INITIAL.
       RETURN.
@@ -340,19 +341,7 @@ CLASS ZCL_ABAPGIT_OBJECT_W3SUPER IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-
-    DATA: ls_meta TYPE zif_abapgit_definitions=>ty_metadata.
-
-    ls_meta = zif_abapgit_object~get_metadata( ).
-
-    IF ls_meta-late_deser = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
-    ELSEIF ls_meta-ddic = abap_true.
-      APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
-    ELSE.
-      APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
-    ENDIF.
-
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
 
 
@@ -442,8 +431,8 @@ CLASS ZCL_ABAPGIT_OBJECT_W3SUPER IMPLEMENTATION.
     SELECT SINGLE * INTO CORRESPONDING FIELDS OF ms_key
       FROM wwwdata
       WHERE relid = ms_key-relid
-      AND   objid = ms_key-objid
-      AND   srtf2 = 0.
+      AND objid = ms_key-objid
+      AND srtf2 = 0.
 
     IF sy-subrc IS NOT INITIAL.
       RETURN.

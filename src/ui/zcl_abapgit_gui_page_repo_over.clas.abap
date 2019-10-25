@@ -5,10 +5,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_gui_page_hotkey.
-
     METHODS constructor .
-
     METHODS zif_abapgit_gui_event_handler~on_event
         REDEFINITION .
 
@@ -36,16 +33,13 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
                    WITH NON-UNIQUE DEFAULT KEY.
     CONSTANTS:
       BEGIN OF c_action,
-        delete          TYPE string VALUE 'delete',
-        select          TYPE string VALUE 'select',
-        change_order_by TYPE string VALUE 'change_order_by',
-        direction       TYPE string VALUE 'direction',
-        apply_filter    TYPE string VALUE 'apply_filter',
+        select       TYPE string VALUE 'select',
+        apply_filter TYPE string VALUE 'apply_filter',
       END OF c_action .
 
     DATA:
       mv_order_by         TYPE string,
-      mv_order_descending TYPE char01,
+      mv_order_descending TYPE abap_bool,
       mv_filter           TYPE string,
       mv_time_zone        TYPE timezone.
 
@@ -57,32 +51,9 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
                   iv_max_length  TYPE string OPTIONAL
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
 
-      parse_change_order_by
-        IMPORTING
-          it_postdata TYPE cnht_post_data_tab,
-
-      parse_direction
-        IMPORTING
-          it_postdata TYPE cnht_post_data_tab,
-
       parse_filter
         IMPORTING
           it_postdata TYPE cnht_post_data_tab,
-
-      add_order_by_option
-        IMPORTING
-          iv_option TYPE string
-          io_html   TYPE REF TO zcl_abapgit_html,
-
-      add_direction_option
-        IMPORTING
-          iv_option   TYPE string
-          io_html     TYPE REF TO zcl_abapgit_html
-          iv_selected TYPE abap_bool,
-
-      apply_order_by
-        CHANGING
-          ct_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview,
 
       apply_filter
         CHANGING
@@ -110,51 +81,18 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
           io_html     TYPE REF TO zcl_abapgit_html
           it_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview,
 
-      render_order_by
-        IMPORTING
-          io_html TYPE REF TO zcl_abapgit_html,
-
-      render_order_by_direction
-        IMPORTING
-          io_html TYPE REF TO zcl_abapgit_html,
-
       render_header_bar
         IMPORTING
-          io_html TYPE REF TO zcl_abapgit_html.
+          io_html TYPE REF TO zcl_abapgit_html,
+
+      apply_order_by
+        CHANGING ct_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
-
-
-  METHOD add_direction_option.
-
-    DATA: lv_selected TYPE string.
-
-    IF iv_selected = abap_true.
-      lv_selected = 'selected'.
-    ENDIF.
-
-    io_html->add( |<option value="{ iv_option }" { lv_selected }>|
-               && |{ to_mixed( iv_option ) }</option>| ).
-
-  ENDMETHOD.
-
-
-  METHOD add_order_by_option.
-
-    DATA: lv_selected TYPE string.
-
-    IF mv_order_by = iv_option.
-      lv_selected = 'selected'.
-    ENDIF.
-
-    io_html->add( |<option value="{ iv_option }" { lv_selected }>|
-               && |{ to_mixed( iv_option ) }</option>| ).
-
-  ENDMETHOD.
+CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -170,25 +108,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
                            AND created_at      NS mv_filter
                            AND deserialized_by NS mv_filter
                            AND deserialized_at NS mv_filter.
-
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD apply_order_by.
-
-    DATA:
-      lt_sort TYPE abap_sortorder_tab,
-      ls_sort LIKE LINE OF lt_sort.
-
-    IF mv_order_by IS NOT INITIAL.
-
-      ls_sort-name       = mv_order_by.
-      ls_sort-descending = mv_order_descending.
-      ls_sort-astext     = abap_true.
-      INSERT ls_sort INTO TABLE lt_sort.
-      SORT ct_overview BY (lt_sort).
 
     ENDIF.
 
@@ -264,46 +183,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD parse_change_order_by.
-
-    FIELD-SYMBOLS: <lv_postdata> TYPE cnht_post_data_line.
-
-    READ TABLE it_postdata ASSIGNING <lv_postdata>
-                           INDEX 1.
-    IF sy-subrc = 0.
-      FIND FIRST OCCURRENCE OF REGEX `orderBy=(.*)`
-           IN <lv_postdata>
-           SUBMATCHES mv_order_by.
-    ENDIF.
-
-    mv_order_by = condense( mv_order_by ).
-
-  ENDMETHOD.
-
-
-  METHOD parse_direction.
-
-    DATA: lv_direction TYPE string.
-
-    FIELD-SYMBOLS: <lv_postdata> TYPE cnht_post_data_line.
-
-    CLEAR: mv_order_descending.
-
-    READ TABLE it_postdata ASSIGNING <lv_postdata>
-                           INDEX 1.
-    IF sy-subrc = 0.
-      FIND FIRST OCCURRENCE OF REGEX `direction=(.*)`
-           IN <lv_postdata>
-           SUBMATCHES lv_direction.
-    ENDIF.
-
-    IF condense( lv_direction ) = 'DESCENDING'.
-      mv_order_descending = abap_true.
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD parse_filter.
 
     FIELD-SYMBOLS: <lv_postdata> LIKE LINE OF it_postdata.
@@ -324,7 +203,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   METHOD render_content.
 
     DATA: lt_overview TYPE tty_overview.
-
 
     lt_overview = map_repo_list_to_overview(
       zcl_abapgit_persist_factory=>get_repo( )->list( ) ).
@@ -348,9 +226,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     io_html->add( |<form class="inline" method="post" action="sapevent:{ c_action-apply_filter }">| ).
 
-    render_order_by( io_html ).
-    render_order_by_direction( io_html ).
-
     io_html->add( render_text_input(
       iv_name  = |filter|
       iv_label = |Filter: |
@@ -360,66 +235,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     io_html->add( zcl_abapgit_html=>a(
       iv_txt = 'Toggle detail'
-      iv_act = |toggleRepoListDetail()|
+      iv_act = |gHelper.toggleRepoListDetail()|
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
 
     io_html->add( |</div>| ).
-
-  ENDMETHOD.
-
-
-  METHOD render_order_by.
-
-    io_html->add( |Order by: <select name="order_by" onchange="onOrderByChange(this)">| ).
-
-    add_order_by_option( iv_option = |TYPE|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |KEY|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |NAME|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |URL|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |PACKAGE|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |BRANCH|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |CREATED_BY|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |CREATED_AT|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |DESERIALIZED_BY|
-                         io_html   = io_html ).
-
-    add_order_by_option( iv_option = |DESERIALIZED_AT|
-                         io_html   = io_html ).
-
-    io_html->add( |</select>| ).
-
-  ENDMETHOD.
-
-
-  METHOD render_order_by_direction.
-
-    io_html->add( |<select name="direction" onchange="onDirectionChange(this)">| ).
-
-    add_direction_option( iv_option   = |ASCENDING|
-                          iv_selected = mv_order_descending
-                          io_html     = io_html ).
-
-    add_direction_option( iv_option   = |DESCENDING|
-                          iv_selected = mv_order_descending
-                          io_html     = io_html ).
-
-    io_html->add( |</select>| ).
 
   ENDMETHOD.
 
@@ -431,7 +250,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     render_table_header( io_html ).
     render_table_body( io_html     = io_html
-                       it_overview = it_overview  ).
+                       it_overview = it_overview ).
 
     io_html->add( |</table>| ).
     io_html->add( |</div>| ).
@@ -442,8 +261,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   METHOD render_table_body.
 
     DATA:
-          lv_type_icon     TYPE string,
-          lv_favorite_icon TYPE string.
+      lv_type_icon     TYPE string,
+      lv_favorite_icon TYPE string.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
@@ -501,19 +320,38 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
   METHOD render_table_header.
 
+    DATA lt_col_spec TYPE zif_abapgit_definitions=>tty_col_spec.
+    FIELD-SYMBOLS <ls_col> LIKE LINE OF lt_col_spec.
+
+    DEFINE _add_col.
+      APPEND INITIAL LINE TO lt_col_spec ASSIGNING <ls_col>.
+      <ls_col>-tech_name    = &1.
+      <ls_col>-display_name = &2.
+      <ls_col>-css_class    = &3.
+      <ls_col>-add_tz       = &4.
+    END-OF-DEFINITION.
+
+    "        technical name    display name      css class   add timezone
+    _add_col 'FAVORITE'        ''                'wmin'      ''.
+    _add_col 'TYPE'            ''                'wmin'      ''.
+    _add_col 'NAME'            'Name'            ''          ''.
+    _add_col 'URL'             'Url'             ''          ''.
+    _add_col 'PACKAGE'         'Package'         ''          ''.
+    _add_col 'BRANCH'          'Branch'          ''          ''.
+    _add_col 'DESERIALIZED_BY' 'Deserialized by' 'ro-detail' ''.
+    _add_col 'DESERIALIZED_AT' 'Deserialized at' 'ro-detail' 'X'.
+    _add_col 'CREATED_BY'      'Created by'      'ro-detail' ''.
+    _add_col 'CREATED_AT'      'Created at'      'ro-detail' 'X'.
+    _add_col 'KEY'             'Key'             'ro-detail' ''.
+
     io_html->add( |<thead>| ).
     io_html->add( |<tr>| ).
-    io_html->add( |<th class="wmin"></th>| ). " Fav icon
-    io_html->add( |<th class="wmin"></th>| ). " Repo type
-    io_html->add( |<th>Name</th>| ).
-    io_html->add( |<th>Url</th>| ).
-    io_html->add( |<th>Package</th>| ).
-    io_html->add( |<th>Branch name</th>| ).
-    io_html->add( |<th class="ro-detail">Deserialized by</th>| ).
-    io_html->add( |<th class="ro-detail">Deserialized at [{ mv_time_zone }]</th>| ).
-    io_html->add( |<th class="ro-detail">Creator</th>| ).
-    io_html->add( |<th class="ro-detail">Created at [{ mv_time_zone }]</th>| ).
-    io_html->add( |<th class="ro-detail">Key</th>| ).
+
+    io_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_header_cells(
+                      it_col_spec         = lt_col_spec
+                      iv_order_by         = mv_order_by
+                      iv_order_descending = mv_order_descending ) ).
+
     io_html->add( '</tr>' ).
     io_html->add( '</thead>' ).
 
@@ -545,11 +383,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     ro_html = super->scripts( ).
 
     ro_html->add( 'setInitialFocus("filter");' ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+    ro_html->add( 'var gHelper = new RepoOverViewHelper();' ).
 
   ENDMETHOD.
 
@@ -572,14 +406,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
         ev_state = zcl_abapgit_gui=>c_event_state-go_back.
 
-      WHEN c_action-change_order_by.
+      WHEN zif_abapgit_definitions=>c_action-change_order_by.
 
-        parse_change_order_by( it_postdata ).
+        mv_order_by = zcl_abapgit_gui_chunk_lib=>parse_change_order_by( iv_getdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
 
-      WHEN c_action-direction.
+      WHEN zif_abapgit_definitions=>c_action-direction.
 
-        parse_direction( it_postdata ).
+        mv_order_descending = zcl_abapgit_gui_chunk_lib=>parse_direction( iv_getdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_action-apply_filter.
@@ -597,9 +431,28 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
             it_postdata  = it_postdata
           IMPORTING
             ei_page      = ei_page
-            ev_state     = ev_state  ).
+            ev_state     = ev_state ).
 
     ENDCASE.
 
   ENDMETHOD.
+
+  METHOD apply_order_by.
+
+    DATA:
+      lt_sort TYPE abap_sortorder_tab,
+      ls_sort LIKE LINE OF lt_sort.
+
+    IF mv_order_by IS NOT INITIAL.
+
+      ls_sort-name       = mv_order_by.
+      ls_sort-descending = mv_order_descending.
+      ls_sort-astext     = abap_true.
+      INSERT ls_sort INTO TABLE lt_sort.
+      SORT ct_overview BY (lt_sort).
+
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

@@ -7,18 +7,18 @@ CLASS zcl_abapgit_gui_asset_manager DEFINITION PUBLIC FINAL CREATE PUBLIC .
     TYPES:
       BEGIN OF ty_asset_entry.
         INCLUDE TYPE zif_abapgit_gui_asset_manager~ty_web_asset.
-    TYPES:  mime_name TYPE wwwdatatab-objid,
-      END OF ty_asset_entry ,
-      tt_asset_register TYPE STANDARD TABLE OF ty_asset_entry WITH KEY url .
+    TYPES: mime_name TYPE wwwdatatab-objid,
+           END OF ty_asset_entry ,
+           tt_asset_register TYPE STANDARD TABLE OF ty_asset_entry WITH KEY url.
 
     METHODS register_asset
       IMPORTING
-        !iv_url TYPE string
-        !iv_type TYPE string
-        !iv_cachable TYPE abap_bool DEFAULT abap_true
+        !iv_url       TYPE string
+        !iv_type      TYPE string
+        !iv_cachable  TYPE abap_bool DEFAULT abap_true
         !iv_mime_name TYPE wwwdatatab-objid OPTIONAL
-        !iv_base64 TYPE string OPTIONAL
-        !iv_inline TYPE string OPTIONAL .
+        !iv_base64    TYPE string OPTIONAL
+        !iv_inline    TYPE string OPTIONAL .
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -35,7 +35,7 @@ CLASS zcl_abapgit_gui_asset_manager DEFINITION PUBLIC FINAL CREATE PUBLIC .
 
     METHODS load_asset
       IMPORTING
-        is_asset_entry TYPE ty_asset_entry
+        is_asset_entry  TYPE ty_asset_entry
       RETURNING
         VALUE(rs_asset) TYPE zif_abapgit_gui_asset_manager~ty_web_asset
       RAISING
@@ -89,7 +89,7 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    rv_xdata = zcl_abapgit_string_utils=>bintab_to_xstring(
+    rv_xdata = zcl_abapgit_convert=>bintab_to_xstring(
       iv_size   = lv_size
       it_bintab = lt_w3mime ).
 
@@ -119,9 +119,9 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
     ls_asset-mime_name    = iv_mime_name.
     ls_asset-is_cacheable = iv_cachable.
     IF iv_base64 IS NOT INITIAL.
-      ls_asset-content = zcl_abapgit_string_utils=>base64_to_xstring( iv_base64 ).
+      ls_asset-content = zcl_abapgit_convert=>base64_to_xstring( iv_base64 ).
     ELSEIF iv_inline IS NOT INITIAL.
-      ls_asset-content = zcl_abapgit_string_utils=>string_to_xstring( iv_inline ).
+      ls_asset-content = zcl_abapgit_convert=>string_to_xstring( iv_inline ).
     ENDIF.
 
     APPEND ls_asset TO mt_asset_register.
@@ -142,7 +142,7 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_asset_manager~get_asset.
 
-    FIELD-SYMBOLS <ls_a> LIKE LINE of mt_asset_register.
+    FIELD-SYMBOLS <ls_a> LIKE LINE OF mt_asset_register.
 
     READ TABLE mt_asset_register WITH KEY url = iv_url ASSIGNING <ls_a>.
     IF <ls_a> IS NOT ASSIGNED.
@@ -158,9 +158,15 @@ CLASS ZCL_ABAPGIT_GUI_ASSET_MANAGER IMPLEMENTATION.
     DATA ls_asset TYPE zif_abapgit_gui_asset_manager~ty_web_asset.
     ls_asset = me->zif_abapgit_gui_asset_manager~get_asset( iv_url ).
 
-    rv_asset = cl_bcs_convert=>xstring_to_string(
-      iv_xstr = ls_asset-content
-      iv_cp   = '4110' ). " UTF8
+    IF ls_asset-type <> 'text'.
+      zcx_abapgit_exception=>raise( |Not a text asset: { iv_url }| ).
+    ENDIF.
+
+    IF iv_assert_subtype IS NOT INITIAL AND ls_asset-subtype <> iv_assert_subtype.
+      zcx_abapgit_exception=>raise( |Wrong subtype ({ iv_assert_subtype }): { iv_url }| ).
+    ENDIF.
+
+    rv_asset = zcl_abapgit_convert=>xstring_to_string_utf8( ls_asset-content ).
 
   ENDMETHOD.
 ENDCLASS.
