@@ -54,6 +54,7 @@ IAMU | Language-Independent IAC Binary Data | Yes
 IARP | Parameters of IAC Language Resource | Yes
 IASP | Parameters of an IAC service | Yes
 IATU | Language-Independent IAC Templates | Yes
+IAXU | ITS: XML Templates for HTML Templates | Yes
 IDOC | IDoc Type | Yes
 IEXT | Enhancement | Yes
 INTF | Interface (ABAP objects) | Yes
