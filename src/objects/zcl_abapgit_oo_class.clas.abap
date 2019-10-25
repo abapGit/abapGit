@@ -189,6 +189,8 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
         ro_scanner->scan( ).
       CATCH cx_clif_scan_error.
         zcx_abapgit_exception=>raise( 'error initializing CLAS scanner' ).
+      CATCH cx_oo_class_scan_error into data(lo_error).
+        zcx_abapgit_exception=>raise( lo_error->get_text( ) ).
     ENDTRY.
 
   ENDMETHOD.
