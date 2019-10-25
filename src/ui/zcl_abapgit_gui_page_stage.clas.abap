@@ -65,6 +65,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         !iv_context    TYPE string
         !is_file       TYPE zif_abapgit_definitions=>ty_file
         !is_item       TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+        !is_status     TYPE zif_abapgit_definitions=>ty_result
         !iv_changed_by TYPE xubname OPTIONAL
         !iv_transport  TYPE trkorr OPTIONAL
       RETURNING
@@ -234,6 +235,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           ls_file   TYPE zif_abapgit_definitions=>ty_file.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local,
+                   <ls_status> LIKE LINE OF ms_files-status,
                    <ls_item> LIKE LINE OF lt_fields.
 
     CONCATENATE LINES OF it_postdata INTO lv_string.
@@ -252,6 +254,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           ev_path     = ls_file-path
           ev_filename = ls_file-filename ).
 
+      READ TABLE ms_files-status ASSIGNING <ls_status>
+        WITH KEY
+          path     = ls_file-path
+          filename = ls_file-filename.
+      ASSERT sy-subrc = 0.
+
       CASE <ls_item>-value.
         WHEN zcl_abapgit_stage=>c_method-add.
           READ TABLE ms_files-local ASSIGNING <ls_file>
@@ -264,12 +272,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
           io_stage->add( iv_path     = <ls_file>-file-path
                          iv_filename = <ls_file>-file-filename
+                         is_status   = <ls_status>
                          iv_data     = <ls_file>-file-data ).
         WHEN zcl_abapgit_stage=>c_method-ignore.
           io_stage->ignore( iv_path     = ls_file-path
                             iv_filename = ls_file-filename ).
         WHEN zcl_abapgit_stage=>c_method-rm.
           io_stage->rm( iv_path     = ls_file-path
+                        is_status   = <ls_status>
                         iv_filename = ls_file-filename ).
         WHEN zcl_abapgit_stage=>c_method-skip.
           " Do nothing
@@ -374,6 +384,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     REPLACE ALL OCCURRENCES OF ` ` IN lv_filename WITH '&nbsp;'.
 
     ro_html->add( |<tr class="{ iv_context }">| ).
+    ro_html->add( '<td>' ).
+    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state(
+      iv_lstate = is_status-lstate
+      iv_rstate = is_status-rstate ) ).
+    ro_html->add( '</td>' ).
 
     CASE iv_context.
       WHEN 'local'.
@@ -417,6 +432,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           ls_transport  LIKE LINE OF lt_transports.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF ms_files-remote,
+                   <ls_status> LIKE LINE OF ms_files-status,
                    <ls_local>  LIKE LINE OF ms_files-local.
 
     CREATE OBJECT ro_html.
@@ -430,6 +446,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     LOOP AT ms_files-local ASSIGNING <ls_local>.
       AT FIRST.
         ro_html->add( '<thead><tr class="local">' ).
+        ro_html->add( '<th></th>' ). " Diff state
         ro_html->add( '<th>Type</th>' ).
         ro_html->add( '<th>Files to add (click to see diff)</th>' ).
         ro_html->add( '<th>Changed by</th>' ).
@@ -444,11 +461,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
       READ TABLE lt_changed_by INTO ls_changed_by WITH KEY item = <ls_local>-item. "#EC CI_SUBRC
       READ TABLE lt_transports INTO ls_transport WITH KEY item = <ls_local>-item. "#EC CI_SUBRC
+      READ TABLE ms_files-status ASSIGNING <ls_status>
+        WITH KEY
+          path     = <ls_local>-file-path
+          filename = <ls_local>-file-filename.
+      ASSERT sy-subrc = 0.
 
       ro_html->add( render_file(
         iv_context = 'local'
         is_file       = <ls_local>-file
         is_item       = <ls_local>-item
+        is_status     = <ls_status>
         iv_changed_by = ls_changed_by-name
         iv_transport  = ls_transport-transport ) ).
 
@@ -463,6 +486,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     LOOP AT ms_files-remote ASSIGNING <ls_remote>.
       AT FIRST.
         ro_html->add( '<thead><tr class="remote">' ).
+        ro_html->add( '<th></th>' ). " Diff state
         ro_html->add( '<th></th>' ). " Type
         ro_html->add( '<th colspan="3">Files to remove or non-code</th>' ).
         ro_html->add( '<th></th>' ). " Status
@@ -473,8 +497,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
         ro_html->add( '<tbody>' ).
       ENDAT.
 
+      READ TABLE ms_files-status ASSIGNING <ls_status>
+        WITH KEY
+          path     = <ls_local>-file-path
+          filename = <ls_local>-file-filename.
+      ASSERT sy-subrc = 0.
+
       ro_html->add( render_file(
         iv_context = 'remote'
+        is_status  = <ls_status>
         is_file    = <ls_remote> ) ).
 
       AT LAST.
@@ -534,6 +565,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           lt_fields TYPE tihttpnvp.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local.
+    FIELD-SYMBOLS: <ls_status> LIKE LINE OF ms_files-status.
 
 
     CREATE OBJECT lo_stage.
@@ -544,9 +576,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
       WHEN c_action-stage_all.
 
         LOOP AT ms_files-local ASSIGNING <ls_file>.
-          lo_stage->add( iv_path     = <ls_file>-file-path
-                         iv_filename = <ls_file>-file-filename
-                         iv_data     = <ls_file>-file-data ).
+          READ TABLE ms_files-status ASSIGNING <ls_status>
+            WITH KEY
+              path = <ls_file>-file-path
+              filename = <ls_file>-file-filename.
+          ASSERT sy-subrc = 0.
+
+          lo_stage->add(
+            iv_path     = <ls_file>-file-path
+            iv_filename = <ls_file>-file-filename
+            is_status   = <ls_status>
+            iv_data     = <ls_file>-file-data ).
         ENDLOOP.
 
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
@@ -559,7 +599,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
       WHEN c_action-stage_commit.
 
-        process_stage_list( it_postdata = it_postdata io_stage = lo_stage ).
+        process_stage_list(
+          it_postdata = it_postdata
+          io_stage    = lo_stage ).
 
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
           EXPORTING
