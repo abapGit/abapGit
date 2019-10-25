@@ -264,17 +264,21 @@ function StageHelper(params) {
   this.pageSeed        = params.seed;
   this.formAction      = params.formAction;
   this.user            = params.user;
-  this.choiseCount     = 0;
+  this.selectedCount   = 0;
+  this.filteredCount   = 0;
   this.lastFilterValue = "";
 
   // DOM nodes
   this.dom = {
-    stageTab:     document.getElementById(params.ids.stageTab),
-    commitBtn:    document.getElementById(params.ids.commitBtn),
-    commitAllBtn: document.getElementById(params.ids.commitAllBtn),
-    objectSearch: document.getElementById(params.ids.objectSearch),
-    fileCounter:  document.getElementById(params.ids.fileCounter)
+    stageTab:          document.getElementById(params.ids.stageTab),
+    commitAllBtn:      document.getElementById(params.ids.commitAllBtn),
+    commitSelectedBtn: document.getElementById(params.ids.commitSelectedBtn),
+    commitFilteredBtn: document.getElementById(params.ids.commitFilteredBtn),
+    objectSearch:      document.getElementById(params.ids.objectSearch),
+    selectedCounter:   null,
+    filteredCounter:   null,
   };
+  this.findCounters();
 
   // Table columns (autodetection)
   this.colIndex      = this.detectColumns();
@@ -300,6 +304,11 @@ function StageHelper(params) {
   if (this.user) this.injectFilterMe();
 }
 
+StageHelper.prototype.findCounters = function() {
+  this.dom.selectedCounter = this.dom.commitSelectedBtn.querySelector("span.counter");
+  this.dom.filteredCounter = this.dom.commitFilteredBtn.querySelector("span.counter");
+};
+
 StageHelper.prototype.injectFilterMe = function() {
   var changedByHead = this.dom.stageTab.tHead.rows[0].cells[this.colIndex.user];
   changedByHead.innerText = changedByHead.innerText + " (";
@@ -318,12 +327,13 @@ StageHelper.prototype.onFilterMe = function() {
 
 // Hook global click listener on table, load/unload actions
 StageHelper.prototype.setHooks = function() {
-  this.dom.stageTab.onclick        = this.onTableClick.bind(this);
-  this.dom.commitBtn.onclick       = this.submit.bind(this);
-  this.dom.objectSearch.oninput    = this.onFilter.bind(this);
-  this.dom.objectSearch.onkeypress = this.onFilter.bind(this);
-  window.onbeforeunload            = this.onPageUnload.bind(this);
-  window.onload                    = this.onPageLoad.bind(this);
+  this.dom.stageTab.onclick          = this.onTableClick.bind(this);
+  this.dom.commitSelectedBtn.onclick = this.submit.bind(this);
+  this.dom.commitFilteredBtn.onclick = this.submitVisible.bind(this);
+  this.dom.objectSearch.oninput      = this.onFilter.bind(this);
+  this.dom.objectSearch.onkeypress   = this.onFilter.bind(this);
+  window.onbeforeunload              = this.onPageUnload.bind(this);
+  window.onload                      = this.onPageLoad.bind(this);
 };
 
 // Detect column index
@@ -411,7 +421,8 @@ StageHelper.prototype.onFilter = function (e) {
 StageHelper.prototype.applyFilterValue = function(sFilterValue) {
 
   this.lastFilterValue = sFilterValue;
-  this.iterateStageTab(true, this.applyFilterToRow, sFilterValue);
+  this.filteredCount = this.iterateStageTab(true, this.applyFilterToRow, sFilterValue);
+  this.updateMenu();
 
 };
 
@@ -445,6 +456,7 @@ StageHelper.prototype.applyFilterToRow = function (row, filter) {
   for (var j = targets.length - 1; j >= 0; j--) {
     if (targets[j].isChanged) targets[j].elem.innerHTML = targets[j].newHtml;
   }
+  return isVisible ? 1 : 0;
 };
 
 // Get how status should affect object counter
@@ -469,7 +481,7 @@ StageHelper.prototype.updateRow = function (row, newStatus) {
     this.updateRowCommand(row, newStatus); // For initial run
   }
 
-  this.choiseCount += this.getStatusImpact(newStatus) - this.getStatusImpact(oldStatus);
+  this.selectedCount += this.getStatusImpact(newStatus) - this.getStatusImpact(oldStatus);
 };
 
 // Update Status cell (render set of commands)
@@ -496,13 +508,29 @@ StageHelper.prototype.updateRowCommand = function (row, status) {
 
 // Update menu items visibility
 StageHelper.prototype.updateMenu = function () {
-  this.dom.commitBtn.style.display    = (this.choiseCount > 0) ? ""     : "none";
-  this.dom.commitAllBtn.style.display = (this.choiseCount > 0) ? "none" : "";
-  this.dom.fileCounter.innerHTML      = this.choiseCount.toString();
+  var display;
+  if (this.selectedCount > 0) {
+    display = "selected";
+    this.dom.selectedCounter.innerText = this.selectedCount.toString();
+  } else if (this.lastFilterValue) {
+    display = "filtered";
+    this.dom.filteredCounter.innerText = this.filteredCount.toString();
+  } else {
+    display = "default";
+  }
+
+  this.dom.commitAllBtn.style.display      = display === "default" ? "" : "none";
+  this.dom.commitSelectedBtn.style.display = display === "selected" ? "" : "none";
+  this.dom.commitFilteredBtn.style.display = display === "filtered" ? "" : "none";
 };
 
 // Submit stage state to the server
 StageHelper.prototype.submit = function () {
+  submitSapeventForm(this.collectData(), this.formAction);
+};
+
+StageHelper.prototype.submitVisible = function () {
+  this.markVisiblesAsAdded();
   submitSapeventForm(this.collectData(), this.formAction);
 };
 
@@ -515,10 +543,24 @@ StageHelper.prototype.collectData = function () {
   return data;
 };
 
+StageHelper.prototype.markVisiblesAsAdded = function () {
+  this.iterateStageTab(false, function (row) {
+    var name = row.cells[this.colIndex["name"]].innerText;
+    var cellStatus = row.cells[this.colIndex["status"]];
+    // TODO refacotr, unify updateRow logic
+    if (row.style.display === "" && row.className === "local") { // visible
+      this.updateRow(row, this.STATUS.add);
+    } else {
+      this.updateRow(row, this.STATUS.reset);
+    }
+  });
+};
+
 // Table iteration helper
 StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {
   var restArgs = Array.prototype.slice.call(arguments, 2);
   var table    = this.dom.stageTab;
+  var retTotal = 0;
 
   if (changeMode) {
     var scrollOffset = window.pageYOffset;
@@ -529,7 +571,8 @@ StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {
     var tbody = table.tBodies[b];
     for (var r = 0, rN = tbody.rows.length; r < rN; r++) {
       var args = [tbody.rows[r]].concat(restArgs);
-      cb.apply(this, args); // callback
+      var retVal = cb.apply(this, args); // callback
+      if (typeof retVal === "number") retTotal += retVal;
     }
   }
 
@@ -537,6 +580,8 @@ StageHelper.prototype.iterateStageTab = function (changeMode, cb /*, ...*/) {
     this.dom.stageTab.style.display = "";
     window.scrollTo(0, scrollOffset);
   }
+
+  return retTotal;
 };
 
 /**********************************************************
