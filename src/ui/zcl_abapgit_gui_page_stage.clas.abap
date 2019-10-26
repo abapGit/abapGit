@@ -255,7 +255,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           ev_filename = ls_file-filename ).
 
       READ TABLE ms_files-status ASSIGNING <ls_status>
-        WITH KEY
+        WITH TABLE KEY
           path     = ls_file-path
           filename = ls_file-filename.
       ASSERT sy-subrc = 0.
@@ -462,7 +462,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
       READ TABLE lt_changed_by INTO ls_changed_by WITH KEY item = <ls_local>-item. "#EC CI_SUBRC
       READ TABLE lt_transports INTO ls_transport WITH KEY item = <ls_local>-item. "#EC CI_SUBRC
       READ TABLE ms_files-status ASSIGNING <ls_status>
-        WITH KEY
+        WITH TABLE KEY
           path     = <ls_local>-file-path
           filename = <ls_local>-file-filename.
       ASSERT sy-subrc = 0.
@@ -498,7 +498,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
       ENDAT.
 
       READ TABLE ms_files-status ASSIGNING <ls_status>
-        WITH KEY
+        WITH TABLE KEY
           path     = <ls_local>-file-path
           filename = <ls_local>-file-filename.
       ASSERT sy-subrc = 0.
@@ -577,7 +577,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
         LOOP AT ms_files-local ASSIGNING <ls_file>.
           READ TABLE ms_files-status ASSIGNING <ls_status>
-            WITH KEY
+            WITH TABLE KEY
               path = <ls_file>-file-path
               filename = <ls_file>-file-filename.
           ASSERT sy-subrc = 0.
