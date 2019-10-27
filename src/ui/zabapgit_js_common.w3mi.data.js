@@ -302,6 +302,7 @@ function StageHelper(params) {
 
   this.setHooks();
   if (this.user) this.injectFilterMe();
+  this.dom.objectSearch.focus();
 }
 
 StageHelper.prototype.findCounters = function() {
@@ -327,6 +328,7 @@ StageHelper.prototype.onFilterMe = function() {
 
 // Hook global click listener on table, load/unload actions
 StageHelper.prototype.setHooks = function() {
+  window.onkeypress                  = this.onCtrlEnter.bind(this);
   this.dom.stageTab.onclick          = this.onTableClick.bind(this);
   this.dom.commitSelectedBtn.onclick = this.submit.bind(this);
   this.dom.commitFilteredBtn.onclick = this.submitVisible.bind(this);
@@ -407,11 +409,22 @@ StageHelper.prototype.onTableClick = function (event) {
   this.updateMenu();
 };
 
+StageHelper.prototype.onCtrlEnter = function (e) {
+  if (e.ctrlKey && (e.which === 10 || e.key === "Enter")){
+    var clickMap = {
+      "default":  this.dom.commitAllBtn,
+      "selected": this.dom.commitSelectedBtn,
+      "filtered": this.dom.commitFilteredBtn
+    };
+    clickMap[this.calculateActiveCommitCommand()].click();
+  }
+};
+
 // Search object
 StageHelper.prototype.onFilter = function (e) {
   if ( // Enter hit or clear, IE SUCKS !
     e.type === "input" && !e.target.value && this.lastFilterValue
-    || e.type === "keypress" && (e.which === 13 || e.key === "Enter") ) {
+    || e.type === "keypress" && (e.which === 13 || e.key === "Enter") && !e.ctrlKey ) {
 
     this.applyFilterValue(e.target.value);
     submitSapeventForm({ filterValue: e.target.value }, "stage_filter", "post");
@@ -506,19 +519,24 @@ StageHelper.prototype.updateRowCommand = function (row, status) {
   }
 };
 
+StageHelper.prototype.calculateActiveCommitCommand = function () {
+  var active;
+  if (this.selectedCount > 0) {
+    active = "selected";
+  } else if (this.lastFilterValue) {
+    active = "filtered";
+  } else {
+    active = "default";
+  }
+  return active;
+};
+
 // Update menu items visibility
 StageHelper.prototype.updateMenu = function () {
-  var display;
-  if (this.selectedCount > 0) {
-    display = "selected";
-    this.dom.selectedCounter.innerText = this.selectedCount.toString();
-  } else if (this.lastFilterValue) {
-    display = "filtered";
-    this.dom.filteredCounter.innerText = this.filteredCount.toString();
-  } else {
-    display = "default";
-  }
-
+  var display = this.calculateActiveCommitCommand();
+  if (display === "selected") this.dom.selectedCounter.innerText = this.selectedCount.toString();
+  if (display === "filtered") this.dom.filteredCounter.innerText = this.filteredCount.toString();
+  
   this.dom.commitAllBtn.style.display      = display === "default" ? "" : "none";
   this.dom.commitSelectedBtn.style.display = display === "selected" ? "" : "none";
   this.dom.commitFilteredBtn.style.display = display === "filtered" ? "" : "none";
