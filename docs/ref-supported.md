@@ -45,6 +45,7 @@ ENHS | Enhancement Spot | Yes
 ENQU | Lock Object | Yes
 ENSC | Composite Enhancement Spot | Yes
 FORM | SAPscript form | Yes
+FTGL | Feature Toggle | Yes
 FUGR | Function Group | Yes
 FUGS | Function Group with Customer Include: SAP Part | [#2851](https://github.com/larshp/abapGit/issues/2851)
 FUGX | Function Group with Customer Include: Customer Part | [#2851](https://github.com/larshp/abapGit/issues/2851)
