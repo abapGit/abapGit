@@ -536,7 +536,7 @@ StageHelper.prototype.updateMenu = function () {
   var display = this.calculateActiveCommitCommand();
   if (display === "selected") this.dom.selectedCounter.innerText = this.selectedCount.toString();
   if (display === "filtered") this.dom.filteredCounter.innerText = this.filteredCount.toString();
-  
+
   this.dom.commitAllBtn.style.display      = display === "default" ? "" : "none";
   this.dom.commitSelectedBtn.style.display = display === "selected" ? "" : "none";
   this.dom.commitFilteredBtn.style.display = display === "filtered" ? "" : "none";
@@ -563,8 +563,6 @@ StageHelper.prototype.collectData = function () {
 
 StageHelper.prototype.markVisiblesAsAdded = function () {
   this.iterateStageTab(false, function (row) {
-    var name = row.cells[this.colIndex["name"]].innerText;
-    var cellStatus = row.cells[this.colIndex["status"]];
     // TODO refacotr, unify updateRow logic
     if (row.style.display === "" && row.className === "local") { // visible
       this.updateRow(row, this.STATUS.add);
