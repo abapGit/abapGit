@@ -167,6 +167,25 @@ div.repo {
   overflow: hidden;
 }
 
+
+/* STATE BLOCK COMMON*/
+span.state-block {
+  margin-left: 1em;
+  font-family: Consolas, Lucida Console, Courier, monospace;
+  font-size: x-small;
+  vertical-align: 13%;
+  display: inline-block;
+  text-align: center;
+  white-space: nowrap;
+}
+span.state-block span {
+  display: inline-block;
+  padding: 0px 3px;
+  border-width: 1px;
+  border-style: solid;
+}
+
+
 /* REPOSITORY TABLE*/
 div.repo_container {
   position: relative;
@@ -225,22 +244,9 @@ table.repo_tab {
   padding-right: 8px;
 }
 .repo_tab tr:first-child td { border-top: 0px; }
-.repo_tab td.cmd span.state-block {
-  margin-left: 1em;
-  font-family: Consolas, Lucida Console, Courier, monospace;
-  font-size: x-small;
-  vertical-align: 13%;
-  display: inline-block;
-  text-align: center;
-}
-.repo_tab td.cmd span.state-block span {
-  display: inline-block;
-  padding: 0px 2px;
-  border: 1px solid;
-}
 
 /* STAGE */
-div.stage-container { width: 850px; }
+div.stage-container { width: 900px; }
 input.stage-filter { width: 18em; }
 
 .stage_tab {
@@ -358,14 +364,11 @@ div.diff_content tbody tr td{
 
 div.diff_head span.state-block {
   margin-left: 0.5em;
-  font-family: Consolas, Lucida Console, Courier, monospace;
-  display: inline-block;
-  text-align: center;
+  font-size: inherit;
+  vertical-align: initial;
 }
 div.diff_head span.state-block span {
-  display: inline-block;
   padding: 0px 4px;
-  border: 1px solid;
 }
 
 /* DIFF TABLE */

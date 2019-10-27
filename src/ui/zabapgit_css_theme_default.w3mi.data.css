@@ -120,9 +120,9 @@ table.repo_tab {
 .repo_tab tr.unsupported { color: var(--theme-greyscale-lighter); }
 .repo_tab tr.modified    { background-color: #fbf7e9; }
 .repo_tab td.current_dir { color: var(--theme-primary-font-color-reduced); }
-.repo_tab td.cmd span.state-block span { border-color: #000; }
 
-.repo_tab td.cmd span.state-block span.added {
+/*.repo_tab td.cmd span.state-block span { border-color: #000; }*/
+/*.repo_tab td.cmd span.state-block span.added {
   background-color: #69ad74;
   border-color: #579e64;
   color: white;
@@ -147,7 +147,7 @@ table.repo_tab {
   border-color: #dbdbdb;
   color: #c8c8c8;
 }
-
+*/
 /* STAGE */
 .stage_tab {
   border-color: #ddd;
@@ -211,7 +211,7 @@ div.diff_content {
   border-top-color: #ddd;
   border-bottom-color: #ddd;
 }
-div.diff_head span.state-block span {
+/*div.diff_head span.state-block span {
   border-color: #000;
 }
 div.diff_head span.state-block span.added {
@@ -239,6 +239,38 @@ div.diff_head span.state-block span.none {
   border-color: #dbdbdb;
   color: #c8c8c8;
 }
+*/
+
+/* STATE BLOCK COLORS */
+/*span.state-block span {
+  border-color: #000;
+}*/
+span.state-block span.added {
+  background-color: #69ad74;
+  border-color: #579e64;
+  color: white;
+}
+span.state-block span.changed {
+  background-color: #e0c150;
+  border-color: #d4af25;
+  color: white;
+}
+span.state-block span.mixed {
+  background-color: #e0c150;
+  border-color: #579e64;
+  color: #69ad74;
+}
+span.state-block span.deleted {
+  background-color: #c76861;
+  border-color: #b8605a;
+  color: white;
+}
+span.state-block span.none {
+  background-color: #e8e8e8;
+  border-color: #dbdbdb;
+  color: #c8c8c8;
+}
+
 
 /* DIFF TABLE */
 table.diff_tab td,th {
