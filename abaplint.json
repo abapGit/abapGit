@@ -57,6 +57,15 @@
   },
   "rules": {
     "7bit_ascii": {},
+    "abapdoc": {
+      "enabled": false,
+      "checkLocal": false
+    },
+    "check_ddic": true,
+    "check_include": true,
+    "form_no_dash": {
+      "enabled": false
+    },
     "allowed_object_types": {
       "allowed": [
         "PROG",
@@ -80,7 +89,7 @@
     "begin_end_names": {},
     "breakpoint": {},
     "check_transformation_exists": {},
-    "check_variables": {},
+    "check_syntax": {},
     "class_attribute_names": {
       "ignoreExceptions": true,
       "statics": "^G._.*$",
@@ -165,7 +174,8 @@
       "enabled": false
     },
     "method_length": {
-      "statements": 100
+      "statements": 100,
+      "errorWhenEmpty": false
     },
     "method_parameter_names": {
       "ignoreExceptions": true,
