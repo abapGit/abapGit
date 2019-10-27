@@ -531,7 +531,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
       ASSERT sy-subrc = 0.
 
       IF <ls_status>-lstate = zif_abapgit_definitions=>c_state-deleted
-        and <ls_status>-rstate = zif_abapgit_definitions=>c_state-unchanged.
+        AND <ls_status>-rstate = zif_abapgit_definitions=>c_state-unchanged.
 
         ro_stage->rm(
           iv_path     = <ls_remote>-path
