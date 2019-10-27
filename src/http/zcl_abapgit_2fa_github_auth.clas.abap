@@ -127,8 +127,8 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
 
   METHOD get_tobedel_tokens_from_resp.
     CONSTANTS: lc_search_regex TYPE string
-               VALUE `\{"id": ?(\d+)[^\{]*"app":\{[^\{^\}]*\}[^\{]*"fingerprint": ?` &
-               `"abapGit2FA"[^\{]*\}`.
+      VALUE `\{"id": ?(\d+)[^\{]*"app":\{[^\{^\}]*\}[^\{]*"fingerprint": ?"abapGit2FA"[^\{]*\}`.
+
     DATA: lv_response TYPE string,
           lo_regex    TYPE REF TO cl_abap_regex,
           lo_matcher  TYPE REF TO cl_abap_matcher.
