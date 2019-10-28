@@ -10,6 +10,7 @@ CLASS zcl_abapgit_stage DEFINITION
       BEGIN OF ty_stage,
         file   TYPE zif_abapgit_definitions=>ty_file,
         method TYPE ty_method,
+        status TYPE zif_abapgit_definitions=>ty_result,
       END OF ty_stage .
     TYPES:
       ty_stage_tt TYPE SORTED TABLE OF ty_stage
@@ -38,6 +39,7 @@ CLASS zcl_abapgit_stage DEFINITION
         !iv_path     TYPE zif_abapgit_definitions=>ty_file-path
         !iv_filename TYPE zif_abapgit_definitions=>ty_file-filename
         !iv_data     TYPE xstring
+        !is_status   TYPE zif_abapgit_definitions=>ty_result OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS reset
@@ -50,6 +52,7 @@ CLASS zcl_abapgit_stage DEFINITION
       IMPORTING
         !iv_path     TYPE zif_abapgit_definitions=>ty_file-path
         !iv_filename TYPE zif_abapgit_definitions=>ty_file-filename
+        !is_status   TYPE zif_abapgit_definitions=>ty_result OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS ignore
@@ -67,6 +70,7 @@ CLASS zcl_abapgit_stage DEFINITION
     METHODS get_all
       RETURNING
         VALUE(rt_stage) TYPE ty_stage_tt .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
     DATA mt_stage TYPE ty_stage_tt .
@@ -77,6 +81,7 @@ CLASS zcl_abapgit_stage DEFINITION
         !iv_path     TYPE zif_abapgit_definitions=>ty_file-path
         !iv_filename TYPE zif_abapgit_definitions=>ty_file-filename
         !iv_method   TYPE ty_method
+        !is_status   TYPE zif_abapgit_definitions=>ty_result OPTIONAL
         !iv_data     TYPE xstring OPTIONAL
       RAISING
         zcx_abapgit_exception .
@@ -84,7 +89,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_stage IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_STAGE IMPLEMENTATION.
 
 
   METHOD add.
@@ -92,6 +97,7 @@ CLASS zcl_abapgit_stage IMPLEMENTATION.
     append( iv_path     = iv_path
             iv_filename = iv_filename
             iv_method   = c_method-add
+            is_status   = is_status
             iv_data     = iv_data ).
 
   ENDMETHOD.
@@ -116,6 +122,7 @@ CLASS zcl_abapgit_stage IMPLEMENTATION.
       ls_stage-file-filename = iv_filename.
       ls_stage-file-data     = iv_data.
       ls_stage-method        = iv_method.
+      ls_stage-status        = is_status.
       INSERT ls_stage INTO TABLE mt_stage.
     ENDIF.
 
@@ -174,6 +181,7 @@ CLASS zcl_abapgit_stage IMPLEMENTATION.
   METHOD rm.
     append( iv_path     = iv_path
             iv_filename = iv_filename
+            is_status   = is_status
             iv_method   = c_method-rm ).
   ENDMETHOD.
 ENDCLASS.

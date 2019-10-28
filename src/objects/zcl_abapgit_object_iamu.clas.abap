@@ -153,7 +153,7 @@ CLASS ZCL_ABAPGIT_OBJECT_IAMU IMPLEMENTATION.
         OTHERS                  = 8 ).
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~create_ne| ).
+      zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~create_new| ).
     ENDIF.
 
     mo_mime_api->if_w3_api_object~save(

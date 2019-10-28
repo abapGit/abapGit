@@ -125,5 +125,7 @@ CLASS ZCL_ABAPGIT_PATH IMPLEMENTATION.
       ev_filename = iv_fullpath.
     ENDIF.
 
+    ev_filename = cl_http_utility=>unescape_url( escaped = ev_filename ).
+
   ENDMETHOD.
 ENDCLASS.
