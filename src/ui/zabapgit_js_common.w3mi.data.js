@@ -302,6 +302,7 @@ function StageHelper(params) {
 
   this.setHooks();
   if (this.user) this.injectFilterMe();
+  Hotkeys.addHotkeyToHelpSheet("^↵", "Commit");
   this.dom.objectSearch.focus();
 }
 

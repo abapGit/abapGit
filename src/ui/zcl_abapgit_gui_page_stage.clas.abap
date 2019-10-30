@@ -95,6 +95,9 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
       RAISING   zcx_abapgit_exception.
     METHODS render_master_language_warning
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+    METHODS count_default_files_to_commit
+      RETURNING
+        VALUE(rv_count) TYPE i.
 
 ENDCLASS.
 
@@ -132,6 +135,29 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     ENDIF.
 
     ms_control-page_menu  = build_menu( ).
+
+  ENDMETHOD.
+
+
+  METHOD count_default_files_to_commit.
+
+    FIELD-SYMBOLS <ls_status> LIKE LINE OF ms_files-status.
+    FIELD-SYMBOLS <ls_remote> LIKE LINE OF ms_files-remote.
+
+    rv_count = lines( ms_files-local ).
+
+    LOOP AT ms_files-remote ASSIGNING <ls_remote>.
+      READ TABLE ms_files-status ASSIGNING <ls_status>
+        WITH TABLE KEY
+          path     = <ls_remote>-path
+          filename = <ls_remote>-filename.
+      ASSERT sy-subrc = 0.
+
+      IF <ls_status>-lstate = zif_abapgit_definitions=>c_state-deleted
+        AND <ls_status>-rstate = zif_abapgit_definitions=>c_state-unchanged.
+        rv_count = rv_count + 1.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -242,7 +268,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           ls_file        TYPE zif_abapgit_definitions=>ty_file.
 
     CREATE OBJECT ro_html.
-    lv_local_count = lines( ms_files-local ).
+    lv_local_count = count_default_files_to_commit( ).
     IF lv_local_count > 0.
       lv_add_all_txt = |Add all and commit ({ lv_local_count })|.
       " Otherwise empty, but the element (id) is preserved for JS
