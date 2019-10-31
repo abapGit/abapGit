@@ -17,7 +17,8 @@ Works with: [GitHub](https://github.com/),
 
 ABAP Version: 702 or higher
 
-Latest build: [zabapgit.abap](https://raw.githubusercontent.com/abapGit/build/master/zabapgit.abap)
+Latest build: [zabapgit.abap](https://raw.githubusercontent.com/abapGit/build/master/zabapgit.abap)  
+*NB: Some people reported that browsers have issues displaying the file with 75k lines. The easiest solution is to "Save as" the link above and then open it with any editor/viewer (notepad included) and copy from there.*
 
 Recommend using SAP GUI for Windows, there are multiple issues related to running abapGit and Java SAP GUI. Focus is on supporting [ADT](https://github.com/abapGit/ADT_Frontend) instead of supporting Java SAP GUI.
 

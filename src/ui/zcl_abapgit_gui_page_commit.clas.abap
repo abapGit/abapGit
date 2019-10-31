@@ -274,15 +274,20 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
     ro_html->add( '<table class="stage_tab">' ).
     ro_html->add( '<thead>' ).
     ro_html->add( '<tr>' ).
-    ro_html->add( '<th colspan="2">Staged files</th>' ).
+    ro_html->add( '<th colspan="3">Staged files</th>' ).
     ro_html->add( '</tr>' ).
     ro_html->add( '</thead>' ).
 
     ro_html->add( '<tbody>' ).
     LOOP AT lt_stage ASSIGNING <ls_stage>.
       ro_html->add( '<tr>' ).
+      ro_html->add( '<td>' ).
+      ro_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state(
+        iv_lstate = <ls_stage>-status-lstate
+        iv_rstate = <ls_stage>-status-rstate ) ).
+      ro_html->add( '</td>' ).
       ro_html->add( '<td class="method">' ).
-      ro_html->add( zcl_abapgit_stage=>method_description( <ls_stage>-method ) ).
+      ro_html->add( |<b>{ zcl_abapgit_stage=>method_description( <ls_stage>-method ) }</b>| ).
       ro_html->add( '</td>' ).
       ro_html->add( '<td>' ).
       ro_html->add( <ls_stage>-file-path && <ls_stage>-file-filename ).
@@ -344,6 +349,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
           is_commit = ls_commit
           io_repo   = mo_repo
           io_stage  = mo_stage ).
+
+        MESSAGE 'Commit was successful' TYPE 'S' ##NO_TEXT.
 
         ev_state = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark.
 
