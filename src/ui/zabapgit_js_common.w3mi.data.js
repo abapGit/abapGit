@@ -1073,6 +1073,11 @@ function Hotkeys(oKeyMap){
 
     var action = this.oKeyMap[sKey];
 
+    // add a tooltip/title with the hotkey, currently only sapevents are supported
+    [].slice.call(document.querySelectorAll("a[href^='sapevent:" + action + "']")).forEach(function(elAnchor) {
+      elAnchor.title = elAnchor.title + " [" + sKey + "]";
+    });
+
     // We replace the actions with callback functions to unify
     // the hotkey execution
     this.oKeyMap[sKey] = function(oEvent) {
@@ -1086,6 +1091,7 @@ function Hotkeys(oKeyMap){
       // Or a global function
       if (window[action]) {
         window[action].call(this);
+        return;
       }
 
       // Or a SAP event
