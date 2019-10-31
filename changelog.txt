@@ -8,6 +8,21 @@ Legend
 + : added
 - : removed
 
+2019-10-31 v1.91.0
+------------------
+! FUGR serialization changed, RSFDO-INDEX cleared
+* FORM serialization fixes
++ SCP1, add support for sets of sets
++ Support for baseinfo string, DDLS
++ Possibility to export with only master language
+* Better error messages
++ SMTG support
++ IAXU support
++ FTGL support
+* Fix for program names containing "="
++ Tooltips with hotkeys
+* User interface enhancements
+
 2019-10-07 v1.90.0
 ------------------
 * FUGR, fix transport request recording
