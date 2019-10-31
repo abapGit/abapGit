@@ -192,7 +192,7 @@
     "nesting": {
       "depth": 5
     },
-    "no_public_attributes": {},
+    "no_public_attributes": false,
     "object_naming": {
       "clas": "^ZC(L|X)\\_ABAPGIT\\_",
       "intf": "^ZIF\\_ABAPGIT\\_",
