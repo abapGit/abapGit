@@ -127,6 +127,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
     DATA: lv_name   TYPE string,
           lv_cancel TYPE abap_bool,
           lo_repo   TYPE REF TO zcl_abapgit_repo_online,
+          lv_msg    TYPE string,
           li_popups TYPE REF TO zif_abapgit_popups.
 
 
@@ -143,7 +144,8 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
     lo_repo->create_branch( lv_name ).
 
-    MESSAGE |Switched to new branch { zcl_abapgit_git_branch_list=>get_display_name( lv_name ) }| TYPE 'S' ##NO_TEXT.
+    lv_msg = |Switched to new branch { zcl_abapgit_git_branch_list=>get_display_name( lv_name ) }|.
+    MESSAGE lv_msg TYPE 'S' ##NO_TEXT.
 
   ENDMETHOD.
 
@@ -152,6 +154,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
 
     DATA: lo_repo   TYPE REF TO zcl_abapgit_repo_online,
           ls_branch TYPE zif_abapgit_definitions=>ty_git_branch,
+          lv_msg    TYPE string,
           lo_popups TYPE REF TO zif_abapgit_popups.
 
 
@@ -169,7 +172,8 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
       iv_url    = lo_repo->get_url( )
       is_branch = ls_branch ).
 
-    MESSAGE |Branch { ls_branch-display_name } deleted| TYPE 'S'.
+    lv_msg = |Branch { ls_branch-display_name } deleted|.
+    MESSAGE lv_msg TYPE 'S'.
 
   ENDMETHOD.
 
