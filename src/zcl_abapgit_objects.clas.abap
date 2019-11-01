@@ -450,7 +450,6 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       ls_obj_serializer_map-item      = is_item.
       ls_obj_serializer_map-metadata  = is_metadata.
       INSERT ls_obj_serializer_map INTO TABLE gt_obj_serializer_map.
-
       lv_class_name = is_metadata-class.
     ELSE.
       lv_class_name = class_name( is_item ).
