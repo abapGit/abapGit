@@ -1,4 +1,4 @@
-CLASS lcl_gui_mock DEFINITION FOR TESTING FINAL.
+CLASS ltcl_gui_mock DEFINITION FOR TESTING FINAL.
   PUBLIC SECTION.
     TYPES:
       BEGIN OF ty_cache_signature,
@@ -15,7 +15,7 @@ CLASS lcl_gui_mock DEFINITION FOR TESTING FINAL.
     DATA ms_last_cache_signature TYPE ty_cache_signature.
 ENDCLASS.
 
-CLASS lcl_gui_mock IMPLEMENTATION.
+CLASS ltcl_gui_mock IMPLEMENTATION.
   METHOD zif_abapgit_gui_services~cache_asset.
     ms_last_cache_signature-url  = iv_url.
     ms_last_cache_signature-type = iv_type && '/' && iv_subtype.
@@ -40,7 +40,7 @@ CLASS ltcl_html_processor_test DEFINITION
   PRIVATE SECTION.
     DATA mv_source TYPE string.
     DATA mo_cut TYPE REF TO zcl_abapgit_gui_html_processor.
-    DATA mo_gui_mock TYPE REF TO lcl_gui_mock.
+    DATA mo_gui_mock TYPE REF TO ltcl_gui_mock.
 
     METHODS render_html
       IMPORTING
