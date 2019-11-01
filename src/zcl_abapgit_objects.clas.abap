@@ -305,7 +305,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           lv_all_duplicates TYPE string.
 
     FIELD-SYMBOLS:
-      <lv_file> like line of it_files.
+      <lv_file> LIKE LINE OF it_files.
 
     lt_files = it_files.
     SORT lt_files BY path ASCENDING filename ASCENDING.
