@@ -47,3 +47,7 @@ Possibility to change the default `ANONYM` ssl id to something system specific
 ### CUSTOM_SERIALIZE_ABAP_CLIF
 Allows for a custom serializer to be used for global classes' CLIF sources. See [#2321](https://github.com/larshp/abapGit/issues/2321) and [#2491](https://github.com/larshp/abapGit/pull/2491) for use cases.  
 This [example implementation](https://gist.github.com/flaiker/999c8165b89131608b05cd371529fef5) forces the old class serializer to be used for specific packages.
+
+### CUSTOM_DESERIALIZE_ABAP_CLIF
+Allows for a custom deserializer to be used for global classes' CLIF sources. See [#2671](https://github.com/larshp/abapGit/issues/2671) for use case.
+This [example implementation](https://gist.github.com/sandraros/fee3543aed40845888541554c7e87b4f) deserializes as usual except that the __exact__ source code is not deserialized (feature not available in old 7.02 kernel).
