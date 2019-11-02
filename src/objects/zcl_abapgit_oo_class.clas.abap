@@ -209,7 +209,6 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
   METHOD zif_abapgit_oo_object_fnc~deserialize_source.
 
     zcl_abapgit_oo_deserializer=>deserialize_abap_clif_source(
-      EXPORTING
         iv_object_type = 'CLAS'
         is_key         = is_key
         it_source      = it_source ).

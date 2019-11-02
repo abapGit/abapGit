@@ -155,7 +155,6 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
   METHOD zif_abapgit_exit~custom_deserialize_abap_clif.
     TRY.
         rv_done = gi_exit->custom_deserialize_abap_clif(
-          EXPORTING
             iv_object_type = iv_object_type
             is_key         = is_key
             it_source      = it_source ).
