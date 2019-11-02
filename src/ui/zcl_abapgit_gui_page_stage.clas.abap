@@ -238,8 +238,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
   METHOD get_page_patch.
 
     DATA: lo_page   TYPE REF TO zcl_abapgit_gui_page_diff,
-          lv_key    TYPE zif_abapgit_persistence=>ty_repo-key,
-          lo_stage  TYPE REF TO zcl_abapgit_stage.
+          lv_key    TYPE zif_abapgit_persistence=>ty_repo-key.
 
     zcl_abapgit_html_action_utils=>file_obj_decode(
       EXPORTING
@@ -247,13 +246,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
       IMPORTING
         ev_key    = lv_key ).
 
-    CREATE OBJECT lo_stage.
-
     CREATE OBJECT lo_page
       EXPORTING
         iv_key        = lv_key
-        iv_patch_mode = abap_true
-        io_stage      = lo_stage.
+        iv_patch_mode = abap_true.
 
     ri_page = lo_page.
 
