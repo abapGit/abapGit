@@ -19,12 +19,17 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
     METHODS get_head_symref
       RETURNING
         VALUE(rv_head_symref) TYPE string .
+    METHODS get_all
+      RETURNING
+        VALUE(rt_branches) TYPE zif_abapgit_definitions=>ty_git_branch_list_tt
+      RAISING
+        zcx_abapgit_exception .
     METHODS get_branches_only
       RETURNING
         VALUE(rt_branches) TYPE zif_abapgit_definitions=>ty_git_branch_list_tt
       RAISING
         zcx_abapgit_exception .
-    METHODS get_tags_only           " For potential future use
+    METHODS get_tags_only             " For potential future use
       RETURNING
         VALUE(rt_tags) TYPE zif_abapgit_definitions=>ty_git_branch_list_tt
       RAISING
@@ -148,6 +153,13 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
       ENDIF.
 
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_all.
+
+    rt_branches =  mt_branches.
 
   ENDMETHOD.
 
