@@ -32,9 +32,9 @@ CLASS ltcl_parse IMPLEMENTATION.
 
     zcl_abapgit_git_branch_list=>parse_branch_list(
       EXPORTING
-        iv_data = lv_data
+        iv_data   = lv_data
       IMPORTING
-        et_list = lt_list ).
+        et_list   = lt_list ).
 
     cl_abap_unit_assert=>assert_not_initial( lt_list ).
 
