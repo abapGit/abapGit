@@ -38,7 +38,7 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
     DATA mo_stage TYPE REF TO zcl_abapgit_stage .
-    DATA ms_commit TYPE zif_abapgit_definitions=>ty_commit_fields .
+    DATA ms_commit TYPE zif_abapgit_services_git=>ty_commit_fields .
 
     METHODS render_menu
       RETURNING

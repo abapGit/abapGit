@@ -49,7 +49,7 @@ CLASS zcl_abapgit_services_git DEFINITION
     CLASS-METHODS commit
       IMPORTING
         !io_repo   TYPE REF TO zcl_abapgit_repo_online
-        !is_commit TYPE zif_abapgit_definitions=>ty_commit_fields
+        !is_commit TYPE zif_abapgit_services_git=>ty_commit_fields
         !io_stage  TYPE REF TO zcl_abapgit_stage
       RAISING
         zcx_abapgit_exception.

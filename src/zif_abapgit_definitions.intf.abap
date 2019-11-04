@@ -363,16 +363,6 @@ INTERFACE zif_abapgit_definitions
     END OF ty_col_spec,
     tty_col_spec TYPE STANDARD TABLE OF ty_col_spec
                       WITH NON-UNIQUE KEY tech_name.
-  TYPES:
-    BEGIN OF ty_commit_fields,
-      repo_key        TYPE zif_abapgit_persistence=>ty_repo-key,
-      committer_name  TYPE string,
-      committer_email TYPE string,
-      author_name     TYPE string,
-      author_email    TYPE string,
-      comment         TYPE string,
-      body            TYPE string,
-    END OF ty_commit_fields.
 
   CONSTANTS:
     BEGIN OF c_git_branch_type,
