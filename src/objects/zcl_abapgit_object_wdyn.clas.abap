@@ -69,7 +69,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
+CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
 
 
   METHOD add_fm_exception.
@@ -646,12 +646,16 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
     ls_key-component_name  = is_controller-definition-component_name.
     ls_key-controller_name = is_controller-definition-controller_name.
 
-    cl_wdy_md_controller=>recover_version(
-      EXPORTING
-        controller_key = ls_key
-        delta          = ls_delta-wdyc
-      CHANGING
-        corrnr         = lv_corrnr ).
+    TRY.
+        cl_wdy_md_controller=>recover_version(
+          EXPORTING
+            controller_key = ls_key
+            delta          = ls_delta-wdyc
+          CHANGING
+            corrnr         = lv_corrnr ).
+      CATCH cx_wdy_md_exception.
+        zcx_abapgit_exception=>raise( 'error recovering version of controller' ).
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -669,12 +673,16 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
 
     ls_key-component_name = is_definition-definition-component_name.
 
-    cl_wdy_md_component=>recover_version(
-      EXPORTING
-        component_key = ls_key
-        delta         = ls_delta-wdyd
-      CHANGING
-        corrnr        = lv_corrnr ).
+    TRY.
+        cl_wdy_md_component=>recover_version(
+          EXPORTING
+            component_key = ls_key
+            delta         = ls_delta-wdyd
+          CHANGING
+            corrnr        = lv_corrnr ).
+      CATCH cx_wdy_md_exception.
+        zcx_abapgit_exception=>raise( 'error recovering version of component' ).
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -690,12 +698,16 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
     ls_key-component_name = is_view-definition-component_name.
     ls_key-view_name      = is_view-definition-view_name.
 
-    cl_wdy_md_abstract_view=>recover_version(
-      EXPORTING
-        view_key = ls_key
-        delta    = ls_delta-wdyv
-      CHANGING
-        corrnr   = lv_corrnr ).
+    TRY.
+        cl_wdy_md_abstract_view=>recover_version(
+          EXPORTING
+            view_key = ls_key
+            delta    = ls_delta-wdyv
+          CHANGING
+            corrnr   = lv_corrnr ).
+      CATCH cx_wdy_md_exception.
+        zcx_abapgit_exception=>raise( 'error recovering version of abstract view' ).
+    ENDTRY.
 
   ENDMETHOD.
 
