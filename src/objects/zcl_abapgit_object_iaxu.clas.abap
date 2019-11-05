@@ -84,8 +84,7 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
 
     DATA: lo_xml_api TYPE REF TO cl_w3_api_xml3,
-          ls_name    TYPE iacikeyt,
-          lx_root    TYPE REF TO zcx_abapgit_exception.
+          ls_name    TYPE iacikeyt.
 
 
     ls_name = ms_item-obj_name.
@@ -124,9 +123,7 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: ls_name  TYPE iacikeyt,
-          lv_subrc TYPE sysubrc,
-          lx_exc   TYPE REF TO zcx_abapgit_exception.
+    DATA: ls_name  TYPE iacikeyt.
 
 
     ls_name = ms_item-obj_name.
