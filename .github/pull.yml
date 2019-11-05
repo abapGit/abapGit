@@ -1,0 +1,8 @@
+version: "1"
+rules:
+  - base: master
+    upstream: larshp:master
+    mergeMethod: merge
+  - base: package_filter
+    upstream: larshp:master
+    mergeMethod: merge
