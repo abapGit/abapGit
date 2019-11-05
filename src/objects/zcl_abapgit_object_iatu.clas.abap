@@ -106,8 +106,8 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
       APPEND lv_source TO lt_source.
     ENDIF.
 
-    w3_api_set_source( EXPORTING io_template = lo_template
-                                 it_source   = lt_source ).
+    w3_api_set_source( io_template = lo_template
+                       it_source   = lt_source ).
 
     w3_api_save( lo_template ).
 
