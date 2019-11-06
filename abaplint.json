@@ -56,6 +56,11 @@
     "globalMacros": []
   },
   "rules": {
+    "chain_mainly_declarations": true,
+    "check_abstract": true,
+    "check_text_elements": true,
+    "type_begin_single_include": true,
+    "types_naming": false,
     "7bit_ascii": {},
     "abapdoc": {
       "enabled": false,
@@ -217,7 +222,8 @@
       "multiply": true,
       "move": true,
       "divide": true,
-      "requested": true
+      "requested": true,
+      "occurs": true
     },
     "parser_error": {},
     "preferred_compare_operator": {
