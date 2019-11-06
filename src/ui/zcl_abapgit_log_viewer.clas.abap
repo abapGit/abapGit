@@ -327,22 +327,10 @@ CLASS zcl_abapgit_log_viewer IMPLEMENTATION.
 
     DATA: lx_abapgit TYPE REF TO zcx_abapgit_exception.
 
-    TYPES: BEGIN OF dummy1.
-        INCLUDE TYPE dselc.
-    TYPES: END OF dummy1,
-    tty_dummy1 TYPE STANDARD TABLE OF dummy1
-                        WITH NON-UNIQUE DEFAULT KEY,
-      BEGIN OF dummy2.
-        INCLUDE TYPE dval.
-    TYPES: END OF dummy2,
-    tty_dummy2 TYPE STANDARD TABLE OF dummy2
-                        WITH NON-UNIQUE DEFAULT KEY.
-
-    DATA:
-      lv_docu_object TYPE dokhl-object,
-      lt_dummy1      TYPE tty_dummy1,
-      lt_dummy2      TYPE tty_dummy2,
-      ls_help_info   TYPE help_info.
+    DATA: lv_docu_object TYPE dokhl-object,
+          lt_dummy1      TYPE TABLE OF dselc,
+          lt_dummy2      TYPE TABLE OF dval,
+          ls_help_info   TYPE help_info.
 
     IF is_log-exception IS NOT BOUND.
       RETURN.

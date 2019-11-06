@@ -190,8 +190,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       APPEND <ls_diff>-changed_by TO lt_users.
     ENDLOOP.
 
-    SORT: lt_types, lt_users.
-    DELETE ADJACENT DUPLICATES FROM: lt_types, lt_users.
+    SORT lt_types.
+    DELETE ADJACENT DUPLICATES FROM lt_types.
+
+    SORT lt_users.
+    DELETE ADJACENT DUPLICATES FROM lt_users.
 
     IF lines( lt_types ) > 1 OR lines( lt_users ) > 1.
       CREATE OBJECT lo_sub_filter EXPORTING iv_id = 'diff-filter'.
