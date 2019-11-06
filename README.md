@@ -13,7 +13,8 @@ Works with: [GitHub](https://github.com/),
 [abapGitServer](https://github.com/larshp/abapGitServer),
 [SCP](http://go.sap.com/denmark/developer/tutorials/hcp-webide-commit-git.html),
 [AWS](https://aws.amazon.com/codecommit/),
-[TFS](https://www.visualstudio.com/team-services/git/) and more
+[TFS](https://www.visualstudio.com/team-services/git/),
+[Azure DevOps](https://azure.microsoft.com/en-us/services/devops) and more.
 
 ABAP Version: 702 or higher
 

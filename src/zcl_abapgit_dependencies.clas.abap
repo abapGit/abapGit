@@ -49,20 +49,13 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
+CLASS zcl_abapgit_dependencies IMPLEMENTATION.
 
 
   METHOD get_ddls_dependencies.
 
-    TYPES: BEGIN OF ty_ddls_name.
-        INCLUDE TYPE ddsymtab.
-    TYPES: END OF ty_ddls_name.
-
-    TYPES: tty_ddls_names TYPE STANDARD TABLE OF ty_ddls_name
-                               WITH NON-UNIQUE DEFAULT KEY.
-
-    DATA: lt_ddls_name TYPE tty_ddls_names,
-          ls_ddls_name LIKE LINE OF lt_ddls_name.
+    DATA: lt_ddls_name TYPE TABLE OF ddsymtab,
+          ls_ddls_name TYPE ddsymtab.
 
     ls_ddls_name-name = iv_ddls_name.
     INSERT ls_ddls_name INTO TABLE lt_ddls_name.

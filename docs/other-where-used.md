@@ -12,6 +12,7 @@ order: 50
 * Sword Holdings
 * bonprix Handelsgesellschaft mbH, Germany 
 * [CHS Inc.](https://www.chsinc.com)
+* [TRR, Sweden](https://www.trr.se)
 
 ### SAP
 * [SAP IBSO](https://www.sap.com/services/application-development.html)
