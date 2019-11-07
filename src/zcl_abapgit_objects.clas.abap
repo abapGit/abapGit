@@ -298,10 +298,11 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
   METHOD check_duplicates.
 
-    DATA: lt_files TYPE zif_abapgit_definitions=>ty_files_tt,
-          lv_path TYPE string,
-          lv_filename TYPE string,
-          lt_duplicates TYPE stringtab,
+    DATA: lt_files          TYPE zif_abapgit_definitions=>ty_files_tt,
+          lv_path           TYPE string,
+          lv_filename       TYPE string,
+          lt_duplicates     TYPE stringtab,
+          lv_duplicates     LIKE LINE OF lt_duplicates,
           lv_all_duplicates TYPE string.
 
     FIELD-SYMBOLS:
@@ -312,7 +313,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     LOOP AT lt_files ASSIGNING <lv_file>.
       IF lv_path = <lv_file>-path AND lv_filename = <lv_file>-filename.
-        APPEND <lv_file>-path && <lv_file>-filename TO lt_duplicates.
+        CONCATENATE <lv_file>-path <lv_file>-filename INTO lv_duplicates.
+        APPEND lv_duplicates TO lt_duplicates.
       ENDIF.
       lv_path = <lv_file>-path.
       lv_filename = <lv_file>-filename.
