@@ -303,7 +303,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           lv_filename TYPE string,
           lt_duplicates TYPE stringtab,
           lv_all_duplicates TYPE string,
-          lv_file_path TYPE string.
+          lv_path_file TYPE string.
 
     FIELD-SYMBOLS:
       <lv_file> LIKE LINE OF it_files.
