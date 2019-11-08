@@ -302,7 +302,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           lv_path TYPE string,
           lv_filename TYPE string,
           lt_duplicates TYPE stringtab,
-          lv_all_duplicates TYPE string.
+          lv_all_duplicates TYPE string,
+          lv_file_path TYPE string.
 
     FIELD-SYMBOLS:
       <lv_file> LIKE LINE OF it_files.
@@ -312,7 +313,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     LOOP AT lt_files ASSIGNING <lv_file>.
       IF lv_path = <lv_file>-path AND lv_filename = <lv_file>-filename.
-        APPEND <lv_file>-path && <lv_file>-filename TO lt_duplicates.
+        lv_path_file = <lv_file>-path && <lv_file>-filename.
+        APPEND lv_path_file TO lt_duplicates.
       ENDIF.
       lv_path = <lv_file>-path.
       lv_filename = <lv_file>-filename.
