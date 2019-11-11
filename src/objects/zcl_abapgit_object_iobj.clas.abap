@@ -23,7 +23,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
     CALL FUNCTION 'RSD_IOBJ_GET'
       EXPORTING
         i_iobjnm  = lv_objna
-        i_objvers = rs_c_objvers-active
+        i_objvers = 'A'
       IMPORTING
         e_s_viobj = ls_viobj.
 
@@ -104,12 +104,12 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
     CALL FUNCTION 'RSD_IOBJ_GET'
       EXPORTING
-        i_iobjnm  = lv_objna        " InfoObject
-        i_objvers = rs_c_objvers-active               " Version
+        i_iobjnm  = lv_objna
+        i_objvers = 'A'
       IMPORTING
         e_s_viobj = ls_viobj.
 
-    IF ls_viobj-objstat = rs_c_objstat-active.
+    IF ls_viobj-objstat = 'ACT'.
       rv_active = abap_true.
     ENDIF.
 
@@ -131,13 +131,13 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
     lv_infoprov = ms_item-obj_name.
 
-    CALL METHOD cl_rsd_dta=>enqueue
+    cl_rsd_dta=>enqueue(
       EXPORTING
         i_infoprov   = lv_infoprov
       EXCEPTIONS
         foreign_lock = 1
         sys_failure  = 2
-        OTHERS       = 3.
+        OTHERS       = 3 ).
 
     rv_is_locked =  boolc( sy-subrc <> 0 ).
   ENDMETHOD.
