@@ -6,3 +6,6 @@ rules:
   - base: package_filter
     upstream: larshp:master
     mergeMethod: merge
+  - base: revert_commit
+    upstream: larshp:master
+    mergeMethod: merge
