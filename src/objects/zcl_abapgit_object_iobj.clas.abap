@@ -76,7 +76,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
         infoobjects = lt_infoobj
         return      = lt_return.
 
-    READ TABLE lt_return WITH KEY type = 'E' into ls_return.
+    READ TABLE lt_return WITH KEY type = 'E' INTO ls_return.
     IF sy-subrc = 0.
       zcx_abapgit_exception=>raise( |Error when activating iobj: { ls_return-message }| ).
     ENDIF.
