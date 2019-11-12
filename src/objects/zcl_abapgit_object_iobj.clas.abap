@@ -42,26 +42,44 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
       EXPORTING
         i_t_iobjnm = lt_iobjname.
 
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error when deleting iobj | ).
+    ENDIF.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_details TYPE bapi6108,
-          lt_infoobj TYPE STANDARD TABLE OF bapi6108io.
+          lt_infoobj TYPE STANDARD TABLE OF bapi6108io,
+          ls_return  TYPE bapiret2,
+          lt_return  TYPE STANDARD TABLE OF bapiret2.
 
     io_xml->read( EXPORTING iv_name = 'IOBJ'
-                CHANGING cg_data = ls_details ).
+                   CHANGING cg_data = ls_details ).
 
     CALL FUNCTION 'BAPI_IOBJ_CREATE'
       EXPORTING
-        details = ls_details.
+        details = ls_details
+      IMPORTING
+        return  = ls_return.
+
+    IF ls_return-type = 'E'.
+      zcx_abapgit_exception=>raise( |Error when creating iobj: { ls_return-message }| ).
+    ENDIF.
 
     APPEND ls_details-infoobject TO lt_infoobj.
 
     CALL FUNCTION 'BAPI_IOBJ_ACTIVATE_MULTIPLE'
       TABLES
-        infoobjects = lt_infoobj.
+        infoobjects = lt_infoobj
+        return      = lt_return.
+
+    READ TABLE lt_return WITH KEY type = 'E' into ls_return.
+    IF sy-subrc = 0.
+      zcx_abapgit_exception=>raise( |Error when activating iobj: { ls_return-message }| ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -118,28 +136,15 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_locked.
 
-    DATA: lv_iobjnm   TYPE rsdiobjnm,
-          lv_selsubrc TYPE sy-subrc,
-          lv_infoprov TYPE rsinfoprov.
+    DATA: lv_object TYPE eqegraarg.
 
+    lv_object =  ms_item-obj_name.
+    OVERLAY lv_object WITH '                                          '.
+    lv_object = lv_object && '*'.
 
-    SELECT SINGLE iobjnm
-    FROM rsdiobj
-    INTO lv_iobjnm
-    WHERE iobjnm = ms_item-obj_name.
-    lv_selsubrc = sy-subrc.
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'E_BIW_PROV'
+                                            iv_argument    = lv_object ).
 
-    lv_infoprov = ms_item-obj_name.
-
-    cl_rsd_dta=>enqueue(
-      EXPORTING
-        i_infoprov   = lv_infoprov
-      EXCEPTIONS
-        foreign_lock = 1
-        sys_failure  = 2
-        OTHERS       = 3 ).
-
-    rv_is_locked =  boolc( sy-subrc <> 0 ).
   ENDMETHOD.
 
 
@@ -151,6 +156,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA: lv_iobjnam TYPE rsiobjnm,
+          ls_return  TYPE bapiret2,
           ls_details TYPE bapi6108.
 
     lv_iobjnam = ms_item-obj_name.
@@ -159,12 +165,17 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
       EXPORTING
         infoobject = lv_iobjnam
       IMPORTING
-        details    = ls_details.
+        details    = ls_details
+        return     = ls_return.
+
+    IF ls_return-type = 'E'.
+      zcx_abapgit_exception=>raise( |Error when geting getails of iobj: { ls_return-message }| ).
+    ENDIF.
 
     CLEAR: ls_details-tstpnm, ls_details-timestmp, ls_details-dbroutid.
 
     io_xml->add( iv_name = 'IOBJ'
-           ig_data = ls_details ).
+                 ig_data = ls_details ).
 
   ENDMETHOD.
 ENDCLASS.
