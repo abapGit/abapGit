@@ -47,7 +47,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_URL IMPLEMENTATION.
+CLASS zcl_abapgit_url IMPLEMENTATION.
 
 
   METHOD host.
@@ -98,7 +98,17 @@ CLASS ZCL_ABAPGIT_URL IMPLEMENTATION.
 
   METHOD validate.
 
-    regex( iv_url ).
+    DATA: lv_host TYPE string,
+          lv_name TYPE string.
+
+    regex( EXPORTING iv_url = iv_url
+           IMPORTING ev_host = lv_host
+                     ev_name = lv_name ).
+
+    IF   lv_host IS INITIAL
+      OR lv_name IS INITIAL.
+      zcx_abapgit_exception=>raise( 'Malformed URL' ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
