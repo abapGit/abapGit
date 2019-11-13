@@ -1182,7 +1182,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     add_field( EXPORTING iv_tabname   = 'TEXTL'
                          iv_fieldname = 'LINE'
                          iv_fieldtext = 'Name'
-                         iv_value     = 'zcl_abapgit_gui_'
+                         iv_value     = 'zcl_abapgit_gui_page_'
                CHANGING  ct_fields    = lt_fields ).
 
     TRY.
