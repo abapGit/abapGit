@@ -3,6 +3,9 @@ rules:
   - base: master
     upstream: larshp:master
     mergeMethod: merge
+  - base: original
+    upstream: larshp:master
+    mergeMethod: merge
   - base: package_filter
     upstream: larshp:master
     mergeMethod: merge
