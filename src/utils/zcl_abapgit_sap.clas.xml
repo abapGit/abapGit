@@ -1,0 +1,30 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_CLAS" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <VSEOCLASS>
+    <CLSNAME>ZCL_ABAPGIT_SAP</CLSNAME>
+    <LANGU>E</LANGU>
+    <DESCRIPT>SAP System Interaction</DESCRIPT>
+    <STATE>1</STATE>
+    <CLSCCINCL>X</CLSCCINCL>
+    <FIXPT>X</FIXPT>
+    <UNICODE>X</UNICODE>
+   </VSEOCLASS>
+   <DESCRIPTIONS>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ABAPGIT_SAP</CLSNAME>
+     <CMPNAME>GET_NAMESPACE</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Get Object Namespace</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ABAPGIT_SAP</CLSNAME>
+     <CMPNAME>IS_SAP_NAMESPACE</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Check if Object is an SAP Object</DESCRIPT>
+    </SEOCOMPOTX>
+   </DESCRIPTIONS>
+  </asx:values>
+ </asx:abap>
+</abapGit>
