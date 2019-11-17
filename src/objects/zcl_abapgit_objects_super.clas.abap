@@ -435,41 +435,21 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
 
   METHOD jump_se11.
 
-    DATA: lt_bdcdata TYPE TABLE OF bdcdata.
-
-    FIELD-SYMBOLS: <ls_bdcdata> LIKE LINE OF lt_bdcdata.
-
-
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-program  = 'SAPLSD_ENTRY'.
-    <ls_bdcdata>-dynpro   = '1000'.
-    <ls_bdcdata>-dynbegin = abap_true.
-
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-fnam = 'BDC_OKCODE'.
-    <ls_bdcdata>-fval = '=WB_DISPLAY'.
-
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-fnam = iv_radio.
-    <ls_bdcdata>-fval = abap_true.
-
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-fnam = iv_field.
-    <ls_bdcdata>-fval = ms_item-obj_name.
-
-    CALL FUNCTION 'ABAP4_CALL_TRANSACTION'
-      STARTING NEW TASK 'GIT'
+    CALL FUNCTION 'RS_TOOL_ACCESS'
       EXPORTING
-        tcode                 = 'SE11'
-        mode_val              = 'E'
-      TABLES
-        using_tab             = lt_bdcdata
+        operation           = 'SHOW'
+        object_name         = ms_item-obj_name
+        object_type         = ms_item-obj_type
+        devclass            = ms_item-devclass
+        in_new_window       = abap_true
       EXCEPTIONS
-        system_failure        = 1
-        communication_failure = 2
-        resource_failure      = 3
-        OTHERS                = 4
-        ##fm_subrc_ok.                                                   "#EC CI_SUBRC
+        not_executed        = 1
+        invalid_object_type = 2
+        OTHERS              = 3.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Jump to SE11 failed (subrc={ sy-subrc } ).| ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -515,8 +495,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
         iv_delflag          = abap_false
       EXCEPTIONS
         OTHERS              = 1.
+
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from TR_TADIR_INTERFACE' ).
+      zcx_abapgit_exception=>raise( |Error from TR_TADIR_INTERFACE (subrc={ sy-subrc } ).| ).
     ENDIF.
 
   ENDMETHOD.
