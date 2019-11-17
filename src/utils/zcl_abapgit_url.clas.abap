@@ -47,7 +47,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_URL IMPLEMENTATION.
+CLASS zcl_abapgit_url IMPLEMENTATION.
 
 
   METHOD host.
@@ -68,9 +68,10 @@ CLASS ZCL_ABAPGIT_URL IMPLEMENTATION.
 
     IF rv_name IS INITIAL.
       FIND REGEX '([\w-]+)/$' IN lv_path SUBMATCHES rv_name.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'Malformed URL' ).
+      ENDIF.
     ENDIF.
-
-    ASSERT NOT rv_name IS INITIAL.
 
   ENDMETHOD.
 
@@ -98,7 +99,7 @@ CLASS ZCL_ABAPGIT_URL IMPLEMENTATION.
 
   METHOD validate.
 
-    regex( iv_url ).
+    name( iv_url ).
 
   ENDMETHOD.
 ENDCLASS.
