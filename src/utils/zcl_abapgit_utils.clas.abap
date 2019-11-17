@@ -10,6 +10,11 @@ CLASS zcl_abapgit_utils DEFINITION
         !iv_data      TYPE xstring
       RETURNING
         VALUE(rv_yes) TYPE abap_bool .
+    CLASS-METHODS is_commit_author
+      IMPORTING
+        !iv_author    TYPE string
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -45,6 +50,17 @@ CLASS ZCL_ABAPGIT_UTILS IMPLEMENTATION.
         EXIT.
       ENDIF.
     ENDDO.
+
+  ENDMETHOD.
+
+
+  METHOD is_commit_author.
+
+    FIND REGEX zif_abapgit_definitions=>c_author_regex IN iv_author.
+
+    IF sy-subrc = 0.
+      rv_yes = abap_true.
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

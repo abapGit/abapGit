@@ -21,59 +21,44 @@ CLASS zcl_abapgit_test_regex IMPLEMENTATION.
 
     DATA: ls_commit TYPE zif_abapgit_definitions=>ty_commit.
 
-    cl_abap_unit_assert=>assert_text_matches(
-      EXPORTING
-        pattern = zif_abapgit_definitions=>c_author_regex
-        text    = 'pull[bot] <39814207+pull[bot]@users.noreply.github.com> 1573216988 +0000' ).
+    cl_abap_unit_assert=>assert_true( zcl_abapgit_utils=>is_commit_author(
+     'pull[bot] <39814207+pull[bot]@users.noreply.github.com> 1573216988 +0000' ) ).
 
-    cl_abap_unit_assert=>assert_text_matches(
-      EXPORTING
-        pattern = zif_abapgit_definitions=>c_author_regex
-        text    = 'Volker Jägle <github@beimir.net> 1573216988 +0000' ).
+    " language-specific characters are supported in author name
+    cl_abap_unit_assert=>assert_true( zcl_abapgit_utils=>is_commit_author(
+     'Volker Jägle äÖüßÐÑÒסעף <github@beimir.net> 1573216988 +0000' ) ).
 
     " special characters are supported in author name
-    cl_abap_unit_assert=>assert_text_matches(
-      EXPORTING
-        pattern = zif_abapgit_definitions=>c_author_regex
-        text    = 'pull[bot&%#$] <39814207+pull[bot]@users.noreply.github.com> 1573216988 +0000'
-        quit    = if_aunit_constants=>no ).
+    cl_abap_unit_assert=>assert_true( zcl_abapgit_utils=>is_commit_author(
+     'pull[bot&%#$] <39814207+pull[bot]@users.noreply.github.com> 1573216988 +0000' ) ).
 
-*    " +00001 too long
-*    cl_abap_unit_assert=>assert_true(
-*      cl_abap_unit_assert=>assert_text_matches(
-*        EXPORTING
-*          pattern = zif_abapgit_definitions=>c_author_regex
-*          text    = 'pull[bot] <39814207+pull[bot]@users.noreply.github.com> 1573216988 +00001'
-*          quit    = if_aunit_constants=>no
-*          level   = if_aunit_constants=>tolerable ) ).
-*
-*    " datetime is too long
-*    cl_abap_unit_assert=>assert_true(
-*      cl_abap_unit_assert=>assert_text_matches(
-*        EXPORTING
-*          pattern = zif_abapgit_definitions=>c_author_regex
-*          text    = 'pull[bot] <39814207+pull[bot]@users.noreply.github.com> 15732169881 +0000'
-*          quit    = if_aunit_constants=>no ) ).
-*
-*    " FALSE: no author
-*    cl_abap_unit_assert=>assert_true(
-*      cl_abap_unit_assert=>assert_text_matches(
-*        EXPORTING
-*          pattern = zif_abapgit_definitions=>c_author_regex
-*          text    = '<39814207+pull[bot]@users.noreply.github.com> 1573216988 +0000'
-*          quit    = if_aunit_constants=>no ) ).
+    " +00001 too long
+    cl_abap_unit_assert=>assert_false( zcl_abapgit_utils=>is_commit_author(
+     'pull[bot] <39814207+pull[bot]@users.noreply.github.com> 1573216988 +00001' ) ).
 
-    " TRUE: special characters from other languages also valid
-    cl_abap_unit_assert=>assert_text_matches(
-      EXPORTING
-        pattern = zif_abapgit_definitions=>c_author_regex
-        text    = 'äÖüßÐÑÒסעף <+pull[bot]@users.noreply.github.com> 1573216988 +0000' ).
+    " datetime is too long
+    cl_abap_unit_assert=>assert_false( zcl_abapgit_utils=>is_commit_author(
+     'pull[bot] <39814207+pull[bot]@users.noreply.github.com> 15732169881 +0000' ) ).
 
-    " TRUE: brackets don't confuse regex
-    cl_abap_unit_assert=>assert_text_matches(
-      EXPORTING
-        pattern = zif_abapgit_definitions=>c_author_regex
-        text    = '<pull[bot]> <39814207+pull[bot]@users.noreply.github.com> 1573216988 +0000' ).
+    " no author
+    cl_abap_unit_assert=>assert_false( zcl_abapgit_utils=>is_commit_author(
+     '<39814207+pull[bot]@users.noreply.github.com> 1573216988 +0000' ) ).
+
+    " no email address
+    cl_abap_unit_assert=>assert_false( zcl_abapgit_utils=>is_commit_author(
+     'pull[bot] 1573216988 +0000' ) ).
+
+    " no datetime
+    cl_abap_unit_assert=>assert_false( zcl_abapgit_utils=>is_commit_author(
+     'pull[bot] <39814207+pull[bot]@users.noreply.github.com> +0000' ) ).
+
+    " missing +0000
+    cl_abap_unit_assert=>assert_false( zcl_abapgit_utils=>is_commit_author(
+     'pull[bot] <39814207+pull[bot]@users.noreply.github.com> 1573216988' ) ).
+
+    " brackets don't confuse regex
+    cl_abap_unit_assert=>assert_true( zcl_abapgit_utils=>is_commit_author(
+     '<pull[bot]> <39814207+pull[bot]@users.noreply.github.com> 1573216988 +0000' ) ).
 
   ENDMETHOD.
 ENDCLASS.
