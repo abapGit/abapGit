@@ -406,7 +406,7 @@ INTERFACE zif_abapgit_definitions
   CONSTANTS c_root_dir TYPE string VALUE '/' ##NO_TEXT.
   CONSTANTS c_dot_abapgit TYPE string VALUE '.abapgit.xml' ##NO_TEXT.
   CONSTANTS:
-    c_author_regex TYPE string VALUE '^([\\\w\s\.\*\,\#@%\-_1-9\(\)\[\] ]+) <(.*)> (\d{10})\s?.\d{4}$' ##NO_TEXT.
+    c_author_regex TYPE string VALUE '^(.+) <(.*)> (\d{10})\s?.\d{4}$' ##NO_TEXT.
   CONSTANTS:
     BEGIN OF c_action,
       repo_refresh                  TYPE string VALUE 'repo_refresh',

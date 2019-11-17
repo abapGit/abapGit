@@ -412,8 +412,9 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
         ls_commit-email
         ls_commit-time ##NO_TEXT.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'Error author regex' ).
+        zcx_abapgit_exception=>raise( |Error author regex value='{ ls_raw-author }'| ).
       ENDIF.
+
       APPEND ls_commit TO rt_commits.
 
     ENDLOOP.
