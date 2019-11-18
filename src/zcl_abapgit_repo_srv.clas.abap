@@ -339,10 +339,9 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
           lv_key         TYPE zif_abapgit_persistence=>ty_repo-key,
           ls_dot_abapgit TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
-
-    ASSERT NOT iv_url IS INITIAL
-      AND NOT iv_branch_name IS INITIAL
-      AND NOT iv_package IS INITIAL.
+    ASSERT NOT iv_url         IS INITIAL
+       AND NOT iv_branch_name IS INITIAL
+       AND NOT iv_package     IS INITIAL.
 
     IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-create_repo ) = abap_false.
       zcx_abapgit_exception=>raise( 'Not authorized' ).
@@ -363,12 +362,12 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       iv_package      = iv_package
       iv_offline      = abap_false
       is_dot_abapgit  = ls_dot_abapgit ).
+
     TRY.
         ls_repo = zcl_abapgit_persist_factory=>get_repo( )->read( lv_key ).
       CATCH zcx_abapgit_not_found.
         zcx_abapgit_exception=>raise( 'new_online not found' ).
     ENDTRY.
-
 
     ro_repo ?= instantiate_and_add( ls_repo ).
 
