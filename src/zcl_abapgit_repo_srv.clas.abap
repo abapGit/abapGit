@@ -336,7 +336,6 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
   METHOD zif_abapgit_repo_srv~new_online.
 
     DATA: ls_repo        TYPE zif_abapgit_persistence=>ty_repo,
-          lv_key         TYPE zif_abapgit_persistence=>ty_repo-key,
           ls_dot_abapgit TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
     ASSERT NOT iv_url         IS INITIAL
@@ -355,7 +354,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     ls_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( )->get_data( ).
     ls_dot_abapgit-folder_logic = iv_folder_logic.
 
-    lv_key = zcl_abapgit_persist_factory=>get_repo( )->add(
+    ev_repo_key = zcl_abapgit_persist_factory=>get_repo( )->add(
       iv_url          = iv_url
       iv_branch_name  = iv_branch_name
       iv_display_name = iv_display_name
@@ -364,7 +363,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       is_dot_abapgit  = ls_dot_abapgit ).
 
     TRY.
-        ls_repo = zcl_abapgit_persist_factory=>get_repo( )->read( lv_key ).
+        ls_repo = zcl_abapgit_persist_factory=>get_repo( )->read( ev_repo_key ).
       CATCH zcx_abapgit_not_found.
         zcx_abapgit_exception=>raise( 'new_online not found' ).
     ENDTRY.

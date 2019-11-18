@@ -100,9 +100,10 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
   METHOD do_install.
 
-    DATA: lo_repo   TYPE REF TO zcl_abapgit_repo_online,
-          lv_answer TYPE c LENGTH 1.
-
+    DATA: lo_repo     TYPE REF TO zcl_abapgit_repo_online,
+          lv_repo_key TYPE zif_abapgit_persistence=>ty_repo-key,
+          lv_answer   TYPE c LENGTH 1,
+          lx_abapgit  TYPE REF TO zcx_abapgit_exception.
 
     lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
       iv_titlebar              = iv_title
@@ -122,14 +123,27 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
       zcl_abapgit_factory=>get_sap_package( iv_package )->create_local( ).
 
-      lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
-        iv_url         = iv_url
-        iv_branch_name = 'refs/heads/master'
-        iv_package     = iv_package ) ##NO_TEXT.
+      TRY.
+          lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
+            EXPORTING
+              iv_url         = iv_url
+              iv_branch_name = 'refs/heads/master'
+              iv_package     = iv_package
+            IMPORTING
+              ev_repo_key    = lv_repo_key ).
 
-      zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
+          zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
+
+        CATCH zcx_abapgit_exception INTO lx_abapgit.
+          IF lv_repo_key IS NOT INITIAL.
+            zcl_abapgit_services_repo=>toggle_favorite( lv_repo_key ).
+          ENDIF.
+          RAISE EXCEPTION lx_abapgit.
+
+      ENDTRY.
 
       zcl_abapgit_services_repo=>toggle_favorite( lo_repo->get_key( ) ).
+
     ENDIF.
 
     COMMIT WORK.
