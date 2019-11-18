@@ -404,15 +404,13 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
         INSERT <lv_body> INTO TABLE ls_commit-body.
       ENDLOOP.
 
-* unix time stamps are in same time zone, so ignore the zone
-      FIND REGEX zif_abapgit_definitions=>c_author_regex IN ls_raw-author
-        SUBMATCHES
-        ls_commit-author
-        ls_commit-email
-        ls_commit-time ##NO_TEXT.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error author regex value='{ ls_raw-author }'| ).
-      ENDIF.
+      zcl_abapgit_utils=>extract_author_data(
+        EXPORTING
+          iv_author = ls_raw-author
+        IMPORTING
+          ev_author = ls_commit-author
+          ev_email  = ls_commit-email
+          ev_time   = ls_commit-time ).
 
       APPEND ls_commit TO rt_commits.
 

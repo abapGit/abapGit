@@ -10,18 +10,22 @@ CLASS zcl_abapgit_utils DEFINITION
         !iv_data      TYPE xstring
       RETURNING
         VALUE(rv_yes) TYPE abap_bool .
-    CLASS-METHODS is_commit_author
+    CLASS-METHODS extract_author_data
       IMPORTING
-        !iv_author    TYPE string
-      RETURNING
-        VALUE(rv_yes) TYPE abap_bool .
+        !iv_author TYPE string
+      EXPORTING
+        !ev_author  TYPE zif_abapgit_definitions=>ty_commit-author
+        !ev_email   TYPE zif_abapgit_definitions=>ty_commit-email
+        !ev_time    TYPE zif_abapgit_definitions=>ty_commit-time
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_UTILS IMPLEMENTATION.
+CLASS zcl_abapgit_utils IMPLEMENTATION.
 
 
   METHOD is_binary.
@@ -54,12 +58,17 @@ CLASS ZCL_ABAPGIT_UTILS IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD is_commit_author.
+  METHOD extract_author_data.
 
-    FIND REGEX zif_abapgit_definitions=>c_author_regex IN iv_author.
+    " unix time stamps are in same time zone, so ignore the zone
+    FIND REGEX zif_abapgit_definitions=>c_author_regex IN iv_author
+      SUBMATCHES
+      ev_author
+      ev_email
+      ev_time ##NO_TEXT.
 
-    IF sy-subrc = 0.
-      rv_yes = abap_true.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error author regex value='{ iv_author }'| ).
     ENDIF.
 
   ENDMETHOD.
