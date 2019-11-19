@@ -90,33 +90,33 @@ CLASS ZCL_ABAPGIT_OBJECT_IWSV IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
 
-    DATA technical_name TYPE /iwbep/med_grp_technical_name.
-    DATA version TYPE /iwbep/med_grp_version.
-    DATA bdcdata_tab TYPE TABLE OF bdcdata.
-    DATA opt TYPE ctu_params.
+    DATA: lv_technical_name TYPE /iwbep/med_grp_technical_name,
+          lv_version        TYPE /iwbep/med_grp_version,
+          lt_bdcdata        TYPE TABLE OF bdcdata,
+          ls_opt            TYPE ctu_params.
 
-    FIELD-SYMBOLS: <fs_bdcdata> LIKE LINE OF bdcdata_tab.
+    FIELD-SYMBOLS: <fs_bdcdata> LIKE LINE OF lt_bdcdata.
 
-    technical_name = ms_item-obj_name.
-    version = ms_item-obj_name+36(4).
+    lv_technical_name = ms_item-obj_name.
+    lv_version = ms_item-obj_name+36(4).
 
-    APPEND INITIAL LINE TO bdcdata_tab ASSIGNING <fs_bdcdata>.
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <fs_bdcdata>.
     <fs_bdcdata>-program  = '/IWBEP/R_DST_SERVICE_BUILDER'.
     <fs_bdcdata>-dynpro   = '0100'.
     <fs_bdcdata>-dynbegin = 'X'.
-    APPEND INITIAL LINE TO bdcdata_tab ASSIGNING <fs_bdcdata>.
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <fs_bdcdata>.
     <fs_bdcdata>-fnam = 'GS_SCREEN_100-TECHNICAL_NAME'.
-    <fs_bdcdata>-fval = technical_name.
-    APPEND INITIAL LINE TO bdcdata_tab ASSIGNING <fs_bdcdata>.
+    <fs_bdcdata>-fval = lv_technical_name.
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <fs_bdcdata>.
     <fs_bdcdata>-fnam = 'GS_SCREEN_100-VERSION'.
-    <fs_bdcdata>-fval = version.
+    <fs_bdcdata>-fval = lv_version.
 
-    opt-dismode = 'E'.
-    opt-defsize = 'X'.
+    ls_opt-dismode = 'E'.
+    ls_opt-defsize = 'X'.
 
     TRY.
         CALL TRANSACTION '/IWBEP/REG_SERVICE' WITH AUTHORITY-CHECK
-                                USING bdcdata_tab OPTIONS FROM opt.
+                                USING lt_bdcdata OPTIONS FROM ls_opt.
       CATCH cx_sy_authorization_error.
         zcx_abapgit_exception=>raise( |Transaction could not be started| ).
     ENDTRY.
