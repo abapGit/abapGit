@@ -103,11 +103,9 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error when activating iobj: { ls_return-message }| ).
     ENDIF.
 
-    tadir_insert( iv_package = iv_package ).
+    tadir_insert( iv_package ).
 
-    corr_insert(
-      EXPORTING
-        iv_package      = iv_package ).
+    corr_insert( iv_package ).
 
   ENDMETHOD.
 
