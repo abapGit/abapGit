@@ -90,7 +90,30 @@ CLASS ZCL_ABAPGIT_OBJECT_IWSV IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
 
-    zcx_abapgit_exception=>raise( |TODO: Jump| ).
+    DATA technical_name TYPE /iwbep/med_grp_technical_name.
+    DATA version TYPE /iwbep/med_grp_version.
+    DATA bdcdata_tab TYPE TABLE OF bdcdata.
+    DATA opt TYPE ctu_params.
+
+    technical_name = ms_item-obj_name.
+    version = ms_item-obj_name+36(4).
+
+    bdcdata_tab = VALUE #(
+      ( program  = '/IWBEP/R_DST_SERVICE_BUILDER' dynpro   = '0100' dynbegin = 'X' )
+      ( fnam = 'GS_SCREEN_100-TECHNICAL_NAME' fval = technical_name )
+      ( fnam = 'GS_SCREEN_100-VERSION' fval = version )
+      ).
+
+    opt-dismode = 'E'.
+    opt-defsize = 'X'.
+
+    TRY.
+        CALL TRANSACTION '/IWBEP/REG_SERVICE' WITH AUTHORITY-CHECK
+                                USING bdcdata_tab OPTIONS FROM opt.
+      CATCH cx_sy_authorization_error.
+        zcx_abapgit_exception=>raise( |Transaction could not be started| ).
+    ENDTRY.
+
 
   ENDMETHOD.
 
