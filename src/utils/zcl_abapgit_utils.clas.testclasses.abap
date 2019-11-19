@@ -14,7 +14,7 @@ CLASS ltcl_utils_test IMPLEMENTATION.
 
     TRY.
         zcl_abapgit_utils=>extract_author_data(
-          'Volker Jägle äÖüß <github@beimir.net> 1573216988 +0000').
+          'Volker Jägle äÖüß <github@beimir.net> 1573216988 +0000' ).
       CATCH zcx_abapgit_exception.
         cl_abap_unit_assert=>fail( |Language-related special characters in author name are allowed.| ).
     ENDTRY.
