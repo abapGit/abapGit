@@ -95,21 +95,21 @@ CLASS ZCL_ABAPGIT_OBJECT_IWMO IMPLEMENTATION.
           lt_bdcdata            TYPE TABLE OF bdcdata,
           ls_opt                TYPE ctu_params.
 
-    FIELD-SYMBOLS: <fs_bdcdata> LIKE LINE OF lt_bdcdata.
+    FIELD-SYMBOLS: <ls_bdcdata> LIKE LINE OF lt_bdcdata.
 
     lv_mdl_technical_name = ms_item-obj_name.
     lv_version = ms_item-obj_name+33(4).
 
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <fs_bdcdata>.
-    <fs_bdcdata>-program  = '/IWBEP/R_DST_MODEL_BUILDER'.
-    <fs_bdcdata>-dynpro   = '0100'.
-    <fs_bdcdata>-dynbegin = 'X'.
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <fs_bdcdata>.
-    <fs_bdcdata>-fnam = 'GS_MODEL_SCREEN_100-TECHNICAL_NAME'.
-    <fs_bdcdata>-fval = lv_mdl_technical_name.
-    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <fs_bdcdata>.
-    <fs_bdcdata>-fnam = 'GS_MODEL_SCREEN_100-VERSION'.
-    <fs_bdcdata>-fval = lv_version.
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-program  = '/IWBEP/R_DST_MODEL_BUILDER'.
+    <ls_bdcdata>-dynpro   = '0100'.
+    <ls_bdcdata>-dynbegin = 'X'.
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = 'GS_MODEL_SCREEN_100-TECHNICAL_NAME'.
+    <ls_bdcdata>-fval = lv_mdl_technical_name.
+    APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
+    <ls_bdcdata>-fnam = 'GS_MODEL_SCREEN_100-VERSION'.
+    <ls_bdcdata>-fval = lv_version.
 
     ls_opt-dismode = 'E'.
     ls_opt-defsize = 'X'.
