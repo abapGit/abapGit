@@ -95,14 +95,21 @@ CLASS ZCL_ABAPGIT_OBJECT_IWSV IMPLEMENTATION.
     DATA bdcdata_tab TYPE TABLE OF bdcdata.
     DATA opt TYPE ctu_params.
 
+    FIELD-SYMBOLS: <fs_bdcdata> LIKE LINE OF bdcdata_tab.
+
     technical_name = ms_item-obj_name.
     version = ms_item-obj_name+36(4).
 
-    bdcdata_tab = VALUE #(
-      ( program  = '/IWBEP/R_DST_SERVICE_BUILDER' dynpro   = '0100' dynbegin = 'X' )
-      ( fnam = 'GS_SCREEN_100-TECHNICAL_NAME' fval = technical_name )
-      ( fnam = 'GS_SCREEN_100-VERSION' fval = version )
-      ).
+    APPEND INITIAL LINE TO bdcdata_tab ASSIGNING <fs_bdcdata>.
+    <fs_bdcdata>-program  = '/IWBEP/R_DST_SERVICE_BUILDER'.
+    <fs_bdcdata>-dynpro   = '0100'.
+    <fs_bdcdata>-dynbegin = 'X'.
+    APPEND INITIAL LINE TO bdcdata_tab ASSIGNING <fs_bdcdata>.
+    <fs_bdcdata>-fnam = 'GS_SCREEN_100-TECHNICAL_NAME'.
+    <fs_bdcdata>-fval = technical_name.
+    APPEND INITIAL LINE TO bdcdata_tab ASSIGNING <fs_bdcdata>.
+    <fs_bdcdata>-fnam = 'GS_SCREEN_100-VERSION'.
+    <fs_bdcdata>-fval = version.
 
     opt-dismode = 'E'.
     opt-defsize = 'X'.
@@ -113,7 +120,6 @@ CLASS ZCL_ABAPGIT_OBJECT_IWSV IMPLEMENTATION.
       CATCH cx_sy_authorization_error.
         zcx_abapgit_exception=>raise( |Transaction could not be started| ).
     ENDTRY.
-
 
   ENDMETHOD.
 
