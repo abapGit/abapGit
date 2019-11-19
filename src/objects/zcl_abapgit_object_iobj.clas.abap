@@ -34,7 +34,9 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lt_iobjname TYPE rsd_t_c30.
+    DATA: lt_iobjname     TYPE rsd_t_c30,
+          lv_object       TYPE string,
+          lv_object_class TYPE string.
 
     APPEND ms_item-obj_name TO lt_iobjname.
 
@@ -43,7 +45,27 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
         i_t_iobjnm = lt_iobjname.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error when deleting iobj | ).
+      zcx_abapgit_exception=>raise( |Error when deleting infoObject | ).
+    ENDIF.
+
+    lv_object_class = ms_item-obj_type.
+    lv_object       = ms_item-obj_name.
+
+    CALL FUNCTION 'RS_CORR_INSERT'
+      EXPORTING
+        object              = lv_object
+        object_class        = lv_object_class
+        master_language     = mv_language
+        global_lock         = abap_true
+        mode                = 'D'
+        suppress_dialog     = abap_true
+      EXCEPTIONS
+        cancelled           = 1
+        permission_failure  = 2
+        unknown_objectclass = 3
+        OTHERS              = 4.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
   ENDMETHOD.
@@ -80,6 +102,12 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
     IF sy-subrc = 0.
       zcx_abapgit_exception=>raise( |Error when activating iobj: { ls_return-message }| ).
     ENDIF.
+
+    tadir_insert( iv_package = iv_package ).
+
+    corr_insert(
+      EXPORTING
+        iv_package      = iv_package ).
 
   ENDMETHOD.
 
@@ -149,7 +177,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-    RETURN.
+    zcx_abapgit_exception=>raise( |Jump to infoObjects is not yet supported| ).
   ENDMETHOD.
 
 
