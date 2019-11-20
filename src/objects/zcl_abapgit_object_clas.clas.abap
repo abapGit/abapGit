@@ -8,41 +8,40 @@ CLASS zcl_abapgit_object_clas DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         is_item     TYPE zif_abapgit_definitions=>ty_item
         iv_language TYPE spras.
 
+  PROTECTED SECTION.
 
-protected section.
+    DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc .
+    DATA mv_skip_testclass TYPE abap_bool .
+    DATA mt_langu_additional TYPE zif_abapgit_definitions=>tt_langu .
+    DATA mv_classpool_name TYPE progname .
 
-  data MI_OBJECT_ORIENTED_OBJECT_FCT type ref to ZIF_ABAPGIT_OO_OBJECT_FNC .
-  data MV_SKIP_TESTCLASS type ABAP_BOOL .
-  data MT_LANGU_ADDITIONAL type ZIF_ABAPGIT_DEFINITIONS=>TT_LANGU .
-  data MV_CLASSPOOL_NAME type PROGNAME .
-
-  methods DESERIALIZE_ABAP
-    importing
-      !IO_XML type ref to ZCL_ABAPGIT_XML_INPUT
-      !IV_PACKAGE type DEVCLASS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods DESERIALIZE_DOCU
-    importing
-      !IO_XML type ref to ZCL_ABAPGIT_XML_INPUT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods DESERIALIZE_TPOOL
-    importing
-      !IO_XML type ref to ZCL_ABAPGIT_XML_INPUT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods DESERIALIZE_SOTR
-    importing
-      !IO_XML type ref to ZCL_ABAPGIT_XML_INPUT
-      !IV_PACKAGE type DEVCLASS
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods SERIALIZE_XML
-    importing
-      !IO_XML type ref to ZCL_ABAPGIT_XML_OUTPUT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
+    METHODS deserialize_abap
+      IMPORTING
+        !io_xml     TYPE REF TO zcl_abapgit_xml_input
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_docu
+      IMPORTING
+        !io_xml TYPE REF TO zcl_abapgit_xml_input
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_tpool
+      IMPORTING
+        !io_xml TYPE REF TO zcl_abapgit_xml_input
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_sotr
+      IMPORTING
+        !io_xml     TYPE REF TO zcl_abapgit_xml_input
+        !iv_package TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_xml
+      IMPORTING
+        !io_xml TYPE REF TO zcl_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
     METHODS:
       is_class_locked
