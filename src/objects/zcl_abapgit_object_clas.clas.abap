@@ -56,14 +56,13 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA: lv_clsname TYPE seoclsname. " #3066 Class text elements translation
+    DATA: lv_clsname TYPE seoclsname.
 
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
 
     CREATE OBJECT mi_object_oriented_object_fct TYPE zcl_abapgit_oo_class.
 
-    "<!-- #3066 Class text elements translation
     lv_clsname = is_item-obj_name.
 
     mv_classpool_name   = cl_oo_classname_service=>get_classpool_name( lv_clsname ).
@@ -77,7 +76,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
       WHERE r3state = 'A'
       AND prog = mv_classpool_name
       AND language NE iv_language.
-    "--> #3066 Class text elements translation
 
   ENDMETHOD.
 
@@ -168,7 +166,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
       iv_object_name = lv_object
       iv_language    = mv_language ).
 
-    "<!-- #3066 Class text elements translation
     io_xml->read( EXPORTING iv_name = 'I18N_LINES'
                   CHANGING cg_data = lt_i18n_lines ).
 
@@ -179,7 +176,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
         iv_language      = ls_i18n_lines-language
         iv_no_masterlang = abap_true ).
     ENDLOOP.
-    "--> #3066 Class text elements translation
 
   ENDMETHOD.
 
@@ -225,7 +221,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
       it_text_pool  = lt_tpool
       iv_language   = mv_language ).
 
-    "<!-- #3066 Class text elements translation
     io_xml->read( EXPORTING iv_name = 'I18N_TPOOL'
                   CHANGING  cg_data = lt_i18n_tpool ).
 
@@ -237,7 +232,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
         iv_language   = ls_i18n_tpool-language
         iv_state      = 'A' ).
     ENDLOOP.
-    "--> #3066 Class text elements translation
 
   ENDMETHOD.
 
@@ -314,7 +308,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
     io_xml->add( iv_name = 'TPOOL'
                  ig_data = add_tpool( lt_tpool ) ).
 
-    "<!-- #3066 Class text elements translation
     IF io_xml->i18n_params( )-serialize_master_lang_only IS INITIAL.
       CLEAR: lt_i18n_tpool[].
       LOOP AT mt_langu_additional INTO l_langu.
@@ -335,7 +328,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
                      ig_data = lt_i18n_tpool ).
       ENDIF.
     ENDIF.
-    "--> #3066 Class text elements translation
 
     IF ls_vseoclass-category = seoc_category_exception.
       lt_sotr = mi_object_oriented_object_fct->read_sotr( ms_item-obj_name ).
@@ -353,7 +345,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
                    ig_data = lt_lines ).
     ENDIF.
 
-    "<!-- #3066 Class text elements translation
     IF io_xml->i18n_params( )-serialize_master_lang_only IS INITIAL.
       CLEAR: lt_i18n_lines[].
       LOOP AT mt_langu_additional INTO l_langu.
@@ -374,7 +365,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
                      ig_data = lt_i18n_lines ).
       ENDIF.
     ENDIF.
-    "--> #3066 Class text elements translation
 
     lt_descriptions = mi_object_oriented_object_fct->read_descriptions( ls_clskey-clsname ).
     IF lines( lt_descriptions ) > 0.

@@ -146,7 +146,7 @@ CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
         id            = 'CL'
         langu         = iv_language
         object        = iv_object_name
-        no_masterlang = iv_no_masterlang  " Class text elements translation #3066
+        no_masterlang = iv_no_masterlang
       TABLES
         line          = it_lines
       EXCEPTIONS

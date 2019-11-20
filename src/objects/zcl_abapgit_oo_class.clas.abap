@@ -694,7 +694,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
     INSERT TEXTPOOL lv_cp
       FROM it_text_pool
       LANGUAGE iv_language
-      STATE iv_state. " Class text elements translation #3066
+      STATE iv_state.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from INSERT TEXTPOOL' ).
     ENDIF.
