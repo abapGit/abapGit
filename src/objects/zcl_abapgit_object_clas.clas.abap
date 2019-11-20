@@ -10,6 +10,7 @@ CLASS zcl_abapgit_object_clas DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
 protected section.
 
+
   data MI_OBJECT_ORIENTED_OBJECT_FCT type ref to ZIF_ABAPGIT_OO_OBJECT_FNC .
   data MV_SKIP_TESTCLASS type ABAP_BOOL .
   data MT_LANGU_ADDITIONAL type ZIF_ABAPGIT_DEFINITIONS=>TT_LANGU .
@@ -75,7 +76,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
       FROM d010tinf
       WHERE r3state = 'A'
       AND prog = mv_classpool_name
-      AND language NE iv_language.
+      AND language <> iv_language.
 
   ENDMETHOD.
 
@@ -259,7 +260,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
           lt_sotr         TYPE zif_abapgit_definitions=>ty_sotr_tt,
           lt_lines        TYPE tlinetab,
           lt_attributes   TYPE zif_abapgit_definitions=>ty_obj_attribute_tt,
-          l_langu         TYPE langu,
+          lv_langu        TYPE langu,
           lt_i18n_tpool   TYPE zif_abapgit_definitions=>tt_i18n_tpool,
           ls_i18n_tpool   TYPE zif_abapgit_definitions=>ty_i18n_tpool,
           lt_i18n_lines   TYPE zif_abapgit_definitions=>tt_i18n_lines,
@@ -310,14 +311,14 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
     IF io_xml->i18n_params( )-serialize_master_lang_only IS INITIAL.
       CLEAR: lt_i18n_tpool[].
-      LOOP AT mt_langu_additional INTO l_langu.
+      LOOP AT mt_langu_additional INTO lv_langu.
         CLEAR: ls_i18n_tpool.
 
         lt_tpool = mi_object_oriented_object_fct->read_text_pool(
               iv_class_name = ls_clskey-clsname
-              iv_language   = l_langu ).
+              iv_language   = lv_langu ).
 
-        ls_i18n_tpool-language = l_langu.
+        ls_i18n_tpool-language = lv_langu.
         ls_i18n_tpool-textpool = add_tpool( lt_tpool ).
         INSERT ls_i18n_tpool INTO TABLE lt_i18n_tpool.
 
@@ -347,14 +348,14 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
     IF io_xml->i18n_params( )-serialize_master_lang_only IS INITIAL.
       CLEAR: lt_i18n_lines[].
-      LOOP AT mt_langu_additional INTO l_langu.
+      LOOP AT mt_langu_additional INTO lv_langu.
         CLEAR: ls_i18n_lines.
 
         lt_lines = mi_object_oriented_object_fct->read_documentation(
           iv_class_name = ls_clskey-clsname
-          iv_language   = l_langu ).
+          iv_language   = lv_langu ).
 
-        ls_i18n_lines-language = l_langu.
+        ls_i18n_lines-language = lv_langu.
         ls_i18n_lines-lines    = lt_lines.
         INSERT ls_i18n_lines INTO TABLE lt_i18n_lines.
 
