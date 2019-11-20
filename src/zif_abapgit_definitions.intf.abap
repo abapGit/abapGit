@@ -102,7 +102,7 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     BEGIN OF ty_overwrite.
       INCLUDE TYPE ty_item.
-      TYPES: decision TYPE ty_yes_no,
+  TYPES: decision TYPE ty_yes_no,
     END OF ty_overwrite .
   TYPES:
     ty_overwrite_tt TYPE STANDARD TABLE OF ty_overwrite WITH DEFAULT KEY
@@ -209,7 +209,7 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     BEGIN OF ty_tpool.
       INCLUDE TYPE textpool.
-      TYPES:   split TYPE c LENGTH 8.
+  TYPES:   split TYPE c LENGTH 8.
   TYPES: END OF ty_tpool .
   TYPES:
     ty_tpool_tt TYPE STANDARD TABLE OF ty_tpool WITH DEFAULT KEY .
