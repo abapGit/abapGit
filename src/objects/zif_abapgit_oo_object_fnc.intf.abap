@@ -1,141 +1,146 @@
-INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
+interface ZIF_ABAPGIT_OO_OBJECT_FNC
+  public .
 
-  TYPES: BEGIN OF ty_includes,
+
+  types:
+    BEGIN OF ty_includes,
            programm TYPE programm,
-         END OF ty_includes,
-         ty_includes_tt TYPE STANDARD TABLE OF ty_includes WITH DEFAULT KEY.
+         END OF ty_includes .
+  types:
+    ty_includes_tt TYPE STANDARD TABLE OF ty_includes WITH DEFAULT KEY .
 
-  METHODS:
-    create
-      IMPORTING
-        iv_package    TYPE devclass
-        iv_overwrite  TYPE abap_bool DEFAULT abap_true
-        it_attributes TYPE zif_abapgit_definitions=>ty_obj_attribute_tt OPTIONAL
-      CHANGING
-        cg_properties TYPE any
-      RAISING
-        zcx_abapgit_exception,
-    generate_locals
-      IMPORTING
-        is_key                   TYPE seoclskey
-        iv_force                 TYPE abap_bool DEFAULT abap_true
-        it_local_definitions     TYPE seop_source_string OPTIONAL
-        it_local_implementations TYPE seop_source_string OPTIONAL
-        it_local_macros          TYPE seop_source_string OPTIONAL
-        it_local_test_classes    TYPE seop_source_string OPTIONAL
-      RAISING
-        zcx_abapgit_exception,
-    deserialize_source
-      IMPORTING
-        is_key    TYPE seoclskey
-        it_source TYPE zif_abapgit_definitions=>ty_string_tt
-      RAISING
-        zcx_abapgit_exception
-        cx_sy_dyn_call_error,
-    insert_text_pool
-      IMPORTING
-        iv_class_name TYPE seoclsname
-        it_text_pool  TYPE textpool_table
-        iv_language   TYPE spras
-      RAISING
-        zcx_abapgit_exception,
-    update_descriptions
-      IMPORTING
-        is_key          TYPE seoclskey
-        it_descriptions TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
-    add_to_activation_list
-      IMPORTING
-        is_item TYPE zif_abapgit_definitions=>ty_item
-      RAISING
-        zcx_abapgit_exception,
-    create_sotr
-      IMPORTING
-        iv_package TYPE devclass
-        it_sotr    TYPE zif_abapgit_definitions=>ty_sotr_tt
-      RAISING
-        zcx_abapgit_exception,
-    create_documentation
-      IMPORTING
-        it_lines       TYPE tlinetab
-        iv_object_name TYPE dokhl-object
-        iv_language    TYPE spras
-      RAISING
-        zcx_abapgit_exception,
-    get_includes
-      IMPORTING
-        iv_object_name     TYPE sobj_name
-      RETURNING
-        VALUE(rt_includes) TYPE ty_includes_tt
-      RAISING
-        zcx_abapgit_exception,
-    exists
-      IMPORTING
-        is_object_name   TYPE seoclskey
-      RETURNING
-        VALUE(rv_exists) TYPE abap_bool,
-    serialize_abap
-      IMPORTING
-        is_class_key     TYPE seoclskey
-        iv_type          TYPE seop_include_ext_app OPTIONAL
-      RETURNING
-        VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
-      RAISING
-        zcx_abapgit_exception
-        cx_sy_dyn_call_error,
-    get_skip_test_classes
-      RETURNING
-        VALUE(rv_skip) TYPE abap_bool,
-    get_class_properties
-      IMPORTING
-        is_class_key               TYPE seoclskey
-      RETURNING
-        VALUE(rs_class_properties) TYPE vseoclass
-      RAISING
-        zcx_abapgit_exception,
-    get_interface_properties
-      IMPORTING
-        is_interface_key               TYPE seoclskey
-      RETURNING
-        VALUE(rs_interface_properties) TYPE vseointerf
-      RAISING
-        zcx_abapgit_exception,
-    read_text_pool
-      IMPORTING
-        iv_class_name       TYPE seoclsname
-        iv_language         TYPE spras
-      RETURNING
-        VALUE(rt_text_pool) TYPE textpool_table,
-    read_documentation
-      IMPORTING
-        iv_class_name   TYPE seoclsname
-        iv_language     TYPE spras
-      RETURNING
-        VALUE(rt_lines) TYPE tlinetab,
-    read_sotr
-      IMPORTING
-        iv_object_name TYPE sobj_name
-      RETURNING
-        VALUE(rt_sotr) TYPE zif_abapgit_definitions=>ty_sotr_tt
-      RAISING
-        zcx_abapgit_exception,
-    read_descriptions
-      IMPORTING
-        iv_obejct_name         TYPE seoclsname
-      RETURNING
-        VALUE(rt_descriptions) TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
-    delete
-      IMPORTING
-        is_deletion_key TYPE seoclskey
-      RAISING
-        zcx_abapgit_exception,
-    read_superclass
-      IMPORTING
-        iv_classname         TYPE seoclsname
-      RETURNING
-        VALUE(rv_superclass) TYPE seoclsname,
-    read_attributes
-      IMPORTING
-        iv_object_name       TYPE seoclsname
-      RETURNING
-        VALUE(rt_attributes) TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
-ENDINTERFACE.
+  methods CREATE
+    importing
+      !IV_PACKAGE type DEVCLASS
+      !IV_OVERWRITE type ABAP_BOOL default ABAP_TRUE
+      !IT_ATTRIBUTES type ZIF_ABAPGIT_DEFINITIONS=>TY_OBJ_ATTRIBUTE_TT optional
+    changing
+      !CG_PROPERTIES type ANY
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods GENERATE_LOCALS
+    importing
+      !IS_KEY type SEOCLSKEY
+      !IV_FORCE type ABAP_BOOL default ABAP_TRUE
+      !IT_LOCAL_DEFINITIONS type SEOP_SOURCE_STRING optional
+      !IT_LOCAL_IMPLEMENTATIONS type SEOP_SOURCE_STRING optional
+      !IT_LOCAL_MACROS type SEOP_SOURCE_STRING optional
+      !IT_LOCAL_TEST_CLASSES type SEOP_SOURCE_STRING optional
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods DESERIALIZE_SOURCE
+    importing
+      !IS_KEY type SEOCLSKEY
+      !IT_SOURCE type ZIF_ABAPGIT_DEFINITIONS=>TY_STRING_TT
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      CX_SY_DYN_CALL_ERROR .
+  methods INSERT_TEXT_POOL
+    importing
+      !IV_CLASS_NAME type SEOCLSNAME
+      !IT_TEXT_POOL type TEXTPOOL_TABLE
+      !IV_LANGUAGE type SPRAS
+      !IV_STATE type C default 'I'
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods UPDATE_DESCRIPTIONS
+    importing
+      !IS_KEY type SEOCLSKEY
+      !IT_DESCRIPTIONS type ZIF_ABAPGIT_DEFINITIONS=>TY_SEOCOMPOTX_TT .
+  methods ADD_TO_ACTIVATION_LIST
+    importing
+      !IS_ITEM type ZIF_ABAPGIT_DEFINITIONS=>TY_ITEM
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods CREATE_SOTR
+    importing
+      !IV_PACKAGE type DEVCLASS
+      !IT_SOTR type ZIF_ABAPGIT_DEFINITIONS=>TY_SOTR_TT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods CREATE_DOCUMENTATION
+    importing
+      !IT_LINES type TLINETAB
+      !IV_OBJECT_NAME type DOKHL-OBJECT
+      !IV_LANGUAGE type SPRAS
+      !IV_NO_MASTERLANG type ABAP_BOOL optional
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods GET_INCLUDES
+    importing
+      !IV_OBJECT_NAME type SOBJ_NAME
+    returning
+      value(RT_INCLUDES) type TY_INCLUDES_TT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods EXISTS
+    importing
+      !IS_OBJECT_NAME type SEOCLSKEY
+    returning
+      value(RV_EXISTS) type ABAP_BOOL .
+  methods SERIALIZE_ABAP
+    importing
+      !IS_CLASS_KEY type SEOCLSKEY
+      !IV_TYPE type SEOP_INCLUDE_EXT_APP optional
+    returning
+      value(RT_SOURCE) type ZIF_ABAPGIT_DEFINITIONS=>TY_STRING_TT
+    raising
+      ZCX_ABAPGIT_EXCEPTION
+      CX_SY_DYN_CALL_ERROR .
+  methods GET_SKIP_TEST_CLASSES
+    returning
+      value(RV_SKIP) type ABAP_BOOL .
+  methods GET_CLASS_PROPERTIES
+    importing
+      !IS_CLASS_KEY type SEOCLSKEY
+    returning
+      value(RS_CLASS_PROPERTIES) type VSEOCLASS
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods GET_INTERFACE_PROPERTIES
+    importing
+      !IS_INTERFACE_KEY type SEOCLSKEY
+    returning
+      value(RS_INTERFACE_PROPERTIES) type VSEOINTERF
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods READ_TEXT_POOL
+    importing
+      !IV_CLASS_NAME type SEOCLSNAME
+      !IV_LANGUAGE type SPRAS
+    returning
+      value(RT_TEXT_POOL) type TEXTPOOL_TABLE .
+  methods READ_DOCUMENTATION
+    importing
+      !IV_CLASS_NAME type SEOCLSNAME
+      !IV_LANGUAGE type SPRAS
+    returning
+      value(RT_LINES) type TLINETAB .
+  methods READ_SOTR
+    importing
+      !IV_OBJECT_NAME type SOBJ_NAME
+    returning
+      value(RT_SOTR) type ZIF_ABAPGIT_DEFINITIONS=>TY_SOTR_TT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods READ_DESCRIPTIONS
+    importing
+      !IV_OBEJCT_NAME type SEOCLSNAME
+    returning
+      value(RT_DESCRIPTIONS) type ZIF_ABAPGIT_DEFINITIONS=>TY_SEOCOMPOTX_TT .
+  methods DELETE
+    importing
+      !IS_DELETION_KEY type SEOCLSKEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods READ_SUPERCLASS
+    importing
+      !IV_CLASSNAME type SEOCLSNAME
+    returning
+      value(RV_SUPERCLASS) type SEOCLSNAME .
+  methods READ_ATTRIBUTES
+    importing
+      !IV_OBJECT_NAME type SEOCLSNAME
+    returning
+      value(RT_ATTRIBUTES) type ZIF_ABAPGIT_DEFINITIONS=>TY_OBJ_ATTRIBUTE_TT .
+endinterface.
