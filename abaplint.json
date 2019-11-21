@@ -150,7 +150,8 @@
       "ignoreGlobalInterface": false
     },
     "inline_data_old_versions": {},
-    "keywords_upper": {
+    "keyword_case": {
+      "style": "upper",
       "ignoreExceptions": true,
       "ignoreLowerClassImplmentationStatement": true,
       "ignoreGlobalClassDefinition": false,
@@ -180,6 +181,7 @@
     },
     "method_length": {
       "statements": 100,
+      "ignoreTestClasses": false,
       "errorWhenEmpty": false
     },
     "method_parameter_names": {
