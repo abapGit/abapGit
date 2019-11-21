@@ -61,7 +61,10 @@
     "check_text_elements": true,
     "type_begin_single_include": true,
     "types_naming": false,
-    "7bit_ascii": {},
+    "7bit_ascii": {
+      "enabled": true,
+      "exclude": ["zcl_abapgit_utils.clas.testclasses.abap"]
+    },
     "abapdoc": {
       "enabled": false,
       "checkLocal": false
