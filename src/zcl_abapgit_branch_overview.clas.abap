@@ -7,7 +7,6 @@ CLASS zcl_abapgit_branch_overview DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_branch_overview .
-    TYPES: ty_commits TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_commit WITH DEFAULT KEY .
     CONSTANTS c_deleted_branch_name_prefix TYPE string VALUE '__DELETED_BRANCH_' ##NO_TEXT.
 
     METHODS constructor
@@ -23,14 +22,14 @@ CLASS zcl_abapgit_branch_overview DEFINITION
       tyt_commit_sha1_range TYPE RANGE OF zif_abapgit_definitions=>ty_sha1 .
 
     DATA mt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt .
-    DATA mt_commits TYPE ty_commits .
+    DATA mt_commits TYPE zif_abapgit_definitions=>ty_commit_tt .
     DATA mt_tags TYPE zif_abapgit_definitions=>ty_git_tag_list_tt .
 
     CLASS-METHODS parse_commits
       IMPORTING
         !it_objects       TYPE zif_abapgit_definitions=>ty_objects_tt
       RETURNING
-        VALUE(rt_commits) TYPE ty_commits
+        VALUE(rt_commits) TYPE zif_abapgit_definitions=>ty_commit_tt
       RAISING
         zcx_abapgit_exception .
     METHODS parse_annotated_tags
@@ -59,7 +58,7 @@ CLASS zcl_abapgit_branch_overview DEFINITION
         zcx_abapgit_exception .
     METHODS _sort_commits
       CHANGING
-        !ct_commits TYPE ty_commits .
+        !ct_commits TYPE zif_abapgit_definitions=>ty_commit_tt .
     METHODS _get_1st_child_commit
       IMPORTING
         !it_commit_sha1s TYPE tyt_commit_sha1_range
@@ -67,10 +66,10 @@ CLASS zcl_abapgit_branch_overview DEFINITION
         !et_commit_sha1s TYPE tyt_commit_sha1_range
         !es_1st_commit   TYPE zif_abapgit_definitions=>ty_commit
       CHANGING
-        !ct_commits      TYPE ty_commits .
+        !ct_commits      TYPE zif_abapgit_definitions=>ty_commit_tt .
     METHODS _reverse_sort_order
       CHANGING
-        !ct_commits TYPE ty_commits .
+        !ct_commits TYPE zif_abapgit_definitions=>ty_commit_tt .
 ENDCLASS.
 
 
@@ -405,15 +404,14 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
         INSERT <lv_body> INTO TABLE ls_commit-body.
       ENDLOOP.
 
-* unix time stamps are in same time zone, so ignore the zone,
-      FIND REGEX zif_abapgit_definitions=>c_author_regex IN ls_raw-author
-        SUBMATCHES
-        ls_commit-author
-        ls_commit-email
-        ls_commit-time ##NO_TEXT.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'Error author regex' ).
-      ENDIF.
+      zcl_abapgit_utils=>extract_author_data(
+        EXPORTING
+          iv_author = ls_raw-author
+        IMPORTING
+          ev_author = ls_commit-author
+          ev_email  = ls_commit-email
+          ev_time   = ls_commit-time ).
+
       APPEND ls_commit TO rt_commits.
 
     ENDLOOP.
@@ -506,7 +504,7 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
   METHOD _get_1st_child_commit.
 
-    DATA: lt_1stchild_commits TYPE ty_commits,
+    DATA: lt_1stchild_commits TYPE zif_abapgit_definitions=>ty_commit_tt,
           ls_parent           LIKE LINE OF it_commit_sha1s,
           lt_commit_sha1s     LIKE it_commit_sha1s.
 
@@ -544,7 +542,7 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
 
   METHOD _reverse_sort_order.
-    DATA: lt_commits           TYPE ty_commits.
+    DATA: lt_commits           TYPE zif_abapgit_definitions=>ty_commit_tt.
     FIELD-SYMBOLS: <ls_commit> TYPE zif_abapgit_definitions=>ty_commit.
 
     LOOP AT ct_commits ASSIGNING <ls_commit>.
@@ -558,7 +556,7 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
   METHOD _sort_commits.
 
-    DATA: lt_sorted_commits TYPE ty_commits,
+    DATA: lt_sorted_commits TYPE zif_abapgit_definitions=>ty_commit_tt,
           ls_next_commit    TYPE zif_abapgit_definitions=>ty_commit,
           lt_parents        TYPE tyt_commit_sha1_range,
           ls_parent         LIKE LINE OF lt_parents.

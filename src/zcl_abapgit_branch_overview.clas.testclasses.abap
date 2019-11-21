@@ -21,7 +21,7 @@ CLASS ltcl_test IMPLEMENTATION.
   METHOD parse_commits.
 
     DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
-          lt_commits TYPE zcl_abapgit_branch_overview=>ty_commits,
+          lt_commits TYPE zif_abapgit_definitions=>ty_commit_tt,
           ls_commit  LIKE LINE OF lt_commits,
           ls_object  LIKE LINE OF lt_objects.
 
@@ -58,7 +58,7 @@ CLASS ltcl_test IMPLEMENTATION.
   METHOD check_author_regex.
 
     DATA: lt_objects           TYPE zif_abapgit_definitions=>ty_objects_tt,
-          lt_commits           TYPE zcl_abapgit_branch_overview=>ty_commits,
+          lt_commits           TYPE zif_abapgit_definitions=>ty_commit_tt,
           ls_object            LIKE LINE OF lt_objects,
           ls_git_pack_commit   TYPE zcl_abapgit_git_pack=>ty_commit.
 
