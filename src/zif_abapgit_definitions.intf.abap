@@ -364,8 +364,6 @@ INTERFACE zif_abapgit_definitions
     tty_col_spec TYPE STANDARD TABLE OF ty_col_spec
                       WITH NON-UNIQUE KEY tech_name.
 
-  TYPES: tt_langu TYPE STANDARD TABLE OF langu.
-
   TYPES: BEGIN OF ty_i18n_tpool,
            language TYPE langu,
            textpool TYPE zif_abapgit_definitions=>ty_tpool_tt,

@@ -12,7 +12,7 @@ CLASS zcl_abapgit_object_clas DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc .
     DATA mv_skip_testclass TYPE abap_bool .
-    DATA mt_langu_additional TYPE zif_abapgit_definitions=>tt_langu .
+    DATA mt_langu_additional TYPE tt_langu .
     DATA mv_classpool_name TYPE progname .
 
     METHODS deserialize_abap
@@ -42,6 +42,23 @@ CLASS zcl_abapgit_object_clas DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !io_xml TYPE REF TO zcl_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
+    METHODS serialize_docu
+      IMPORTING
+        !io_xml     TYPE REF TO zcl_abapgit_xml_output
+        !iv_clsname TYPE seoclsname
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_tpool
+      IMPORTING
+        !io_xml     TYPE REF TO zcl_abapgit_xml_output
+        !iv_clsname TYPE seoclsname
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_sotr
+      IMPORTING
+        !io_xml TYPE REF TO zcl_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
     METHODS:
       is_class_locked
@@ -51,7 +68,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
+CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -65,7 +82,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
     lv_clsname = is_item-obj_name.
 
-    mv_classpool_name   = cl_oo_classname_service=>get_classpool_name( lv_clsname ).
+    mv_classpool_name = cl_oo_classname_service=>get_classpool_name( lv_clsname ).
 
     " Table d010tinf stores info. on languages in which program is maintained
     " Select all active translations of program texts
@@ -302,69 +319,15 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
     io_xml->add( iv_name = 'VSEOCLASS'
                  ig_data = ls_vseoclass ).
 
-    lt_tpool = mi_object_oriented_object_fct->read_text_pool(
-      iv_class_name = ls_clskey-clsname
-      iv_language   = mv_language ).
-    io_xml->add( iv_name = 'TPOOL'
-                 ig_data = add_tpool( lt_tpool ) ).
-
-    IF io_xml->i18n_params( )-serialize_master_lang_only IS INITIAL.
-      CLEAR: lt_i18n_tpool[].
-      LOOP AT mt_langu_additional INTO lv_langu.
-        CLEAR: ls_i18n_tpool.
-
-        lt_tpool = mi_object_oriented_object_fct->read_text_pool(
-              iv_class_name = ls_clskey-clsname
-              iv_language   = lv_langu ).
-
-        ls_i18n_tpool-language = lv_langu.
-        ls_i18n_tpool-textpool = add_tpool( lt_tpool ).
-        INSERT ls_i18n_tpool INTO TABLE lt_i18n_tpool.
-
-      ENDLOOP.
-
-      IF lines( lt_i18n_tpool ) > 0.
-        io_xml->add( iv_name = 'I18N_TPOOL'
-                     ig_data = lt_i18n_tpool ).
-      ENDIF.
-    ENDIF.
+    serialize_tpool( io_xml     = io_xml
+                     iv_clsname = ls_clskey-clsname ).
 
     IF ls_vseoclass-category = seoc_category_exception.
-      lt_sotr = mi_object_oriented_object_fct->read_sotr( ms_item-obj_name ).
-      IF lines( lt_sotr ) > 0.
-        io_xml->add( iv_name = 'SOTR'
-                     ig_data = lt_sotr ).
-      ENDIF.
+      serialize_sotr( io_xml ).
     ENDIF.
 
-    lt_lines = mi_object_oriented_object_fct->read_documentation(
-      iv_class_name = ls_clskey-clsname
-      iv_language   = mv_language ).
-    IF lines( lt_lines ) > 0.
-      io_xml->add( iv_name = 'LINES'
-                   ig_data = lt_lines ).
-    ENDIF.
-
-    IF io_xml->i18n_params( )-serialize_master_lang_only IS INITIAL.
-      CLEAR: lt_i18n_lines[].
-      LOOP AT mt_langu_additional INTO lv_langu.
-        CLEAR: ls_i18n_lines.
-
-        lt_lines = mi_object_oriented_object_fct->read_documentation(
-          iv_class_name = ls_clskey-clsname
-          iv_language   = lv_langu ).
-
-        ls_i18n_lines-language = lv_langu.
-        ls_i18n_lines-lines    = lt_lines.
-        INSERT ls_i18n_lines INTO TABLE lt_i18n_lines.
-
-      ENDLOOP.
-
-      IF lines( lt_i18n_lines ) > 0.
-        io_xml->add( iv_name = 'I18N_LINES'
-                     ig_data = lt_i18n_lines ).
-      ENDIF.
-    ENDIF.
+    serialize_docu( io_xml     = io_xml
+                    iv_clsname = ls_clskey-clsname ).
 
     lt_descriptions = mi_object_oriented_object_fct->read_descriptions( ls_clskey-clsname ).
     IF lines( lt_descriptions ) > 0.
@@ -377,6 +340,93 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
       io_xml->add( iv_name = 'ATTRIBUTES'
                    ig_data = lt_attributes ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD serialize_docu.
+
+    DATA: lt_i18n_lines TYPE zif_abapgit_definitions=>tt_i18n_lines,
+          ls_i18n_lines TYPE zif_abapgit_definitions=>ty_i18n_lines.
+
+    DATA(lt_lines) = mi_object_oriented_object_fct->read_documentation(
+      iv_class_name = iv_clsname
+      iv_language   = mv_language ).
+    IF lines( lt_lines ) > 0.
+      io_xml->add( iv_name = 'LINES'
+                   ig_data = lt_lines ).
+    ENDIF.
+
+    IF io_xml->i18n_params( )-serialize_master_lang_only IS NOT INITIAL.
+      RETURN.
+    ENDIF.
+
+    LOOP AT mt_langu_additional INTO DATA(lv_langu).
+      CLEAR: ls_i18n_lines.
+
+      lt_lines = mi_object_oriented_object_fct->read_documentation(
+        iv_class_name = iv_clsname
+        iv_language   = lv_langu ).
+
+      ls_i18n_lines-language = lv_langu.
+      ls_i18n_lines-lines    = lt_lines.
+      INSERT ls_i18n_lines INTO TABLE lt_i18n_lines.
+
+    ENDLOOP.
+
+    IF lines( lt_i18n_lines ) > 0.
+      io_xml->add( iv_name = 'I18N_LINES'
+                   ig_data = lt_i18n_lines ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD serialize_tpool.
+
+    DATA: lt_i18n_tpool TYPE zif_abapgit_definitions=>tt_i18n_tpool,
+          ls_i18n_tpool TYPE zif_abapgit_definitions=>ty_i18n_tpool.
+
+    DATA(lt_tpool) = mi_object_oriented_object_fct->read_text_pool(
+      iv_class_name = iv_clsname
+      iv_language   = mv_language ).
+    io_xml->add( iv_name = 'TPOOL'
+                 ig_data = add_tpool( lt_tpool ) ).
+
+    IF io_xml->i18n_params( )-serialize_master_lang_only IS NOT INITIAL.
+      RETURN.
+    ENDIF.
+
+    LOOP AT mt_langu_additional INTO DATA(lv_langu).
+      CLEAR: ls_i18n_tpool.
+
+      lt_tpool = mi_object_oriented_object_fct->read_text_pool(
+            iv_class_name = iv_clsname
+            iv_language   = lv_langu ).
+
+      ls_i18n_tpool-language = lv_langu.
+      ls_i18n_tpool-textpool = add_tpool( lt_tpool ).
+      INSERT ls_i18n_tpool INTO TABLE lt_i18n_tpool.
+
+    ENDLOOP.
+
+    IF lines( lt_i18n_tpool ) > 0.
+      io_xml->add( iv_name = 'I18N_TPOOL'
+                   ig_data = lt_i18n_tpool ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD serialize_sotr.
+
+    DATA(lt_sotr) = mi_object_oriented_object_fct->read_sotr( ms_item-obj_name ).
+    IF lines( lt_sotr ) = 0.
+      RETURN.
+    ENDIF.
+
+    io_xml->add( iv_name = 'SOTR'
+                 ig_data = lt_sotr ).
 
   ENDMETHOD.
 
