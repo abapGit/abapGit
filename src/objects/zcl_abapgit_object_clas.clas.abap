@@ -346,10 +346,12 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
   METHOD serialize_docu.
 
-    DATA: lt_i18n_lines TYPE zif_abapgit_definitions=>tt_i18n_lines,
+    DATA: lt_lines      TYPE tlinetab,
+          lv_langu      TYPE langu,
+          lt_i18n_lines TYPE zif_abapgit_definitions=>tt_i18n_lines,
           ls_i18n_lines TYPE zif_abapgit_definitions=>ty_i18n_lines.
 
-    DATA(lt_lines) = mi_object_oriented_object_fct->read_documentation(
+    lt_lines = mi_object_oriented_object_fct->read_documentation(
       iv_class_name = iv_clsname
       iv_language   = mv_language ).
     IF lines( lt_lines ) > 0.
@@ -361,7 +363,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    LOOP AT mt_langu_additional INTO DATA(lv_langu).
+    LOOP AT mt_langu_additional INTO lv_langu.
       CLEAR: ls_i18n_lines.
 
       lt_lines = mi_object_oriented_object_fct->read_documentation(
@@ -384,10 +386,12 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
   METHOD serialize_tpool.
 
-    DATA: lt_i18n_tpool TYPE zif_abapgit_definitions=>tt_i18n_tpool,
+    DATA: lt_tpool      TYPE textpool_table,
+          lv_langu      TYPE langu,
+          lt_i18n_tpool TYPE zif_abapgit_definitions=>tt_i18n_tpool,
           ls_i18n_tpool TYPE zif_abapgit_definitions=>ty_i18n_tpool.
 
-    DATA(lt_tpool) = mi_object_oriented_object_fct->read_text_pool(
+    lt_tpool = mi_object_oriented_object_fct->read_text_pool(
       iv_class_name = iv_clsname
       iv_language   = mv_language ).
     io_xml->add( iv_name = 'TPOOL'
@@ -397,7 +401,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    LOOP AT mt_langu_additional INTO DATA(lv_langu).
+    LOOP AT mt_langu_additional INTO lv_langu.
       CLEAR: ls_i18n_tpool.
 
       lt_tpool = mi_object_oriented_object_fct->read_text_pool(
@@ -420,7 +424,9 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
   METHOD serialize_sotr.
 
-    DATA(lt_sotr) = mi_object_oriented_object_fct->read_sotr( ms_item-obj_name ).
+    DATA: lt_sotr TYPE zif_abapgit_definitions=>ty_sotr_tt.
+
+    lt_sotr = mi_object_oriented_object_fct->read_sotr( ms_item-obj_name ).
     IF lines( lt_sotr ) = 0.
       RETURN.
     ENDIF.
