@@ -12,7 +12,7 @@ CLASS zcl_abapgit_object_clas DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc .
     DATA mv_skip_testclass TYPE abap_bool .
-    DATA mt_langu_additional TYPE tt_langu .
+    DATA mt_langu_additional TYPE zif_abapgit_lang_definitions=>tt_langu .
     DATA mv_classpool_name TYPE progname .
 
     METHODS deserialize_abap
@@ -40,6 +40,18 @@ CLASS zcl_abapgit_object_clas DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS serialize_xml
       IMPORTING
         !io_xml TYPE REF TO zcl_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_attr
+      IMPORTING
+        !io_xml     TYPE REF TO zcl_abapgit_xml_output
+        !iv_clsname TYPE seoclsname
+      RAISING
+        zcx_abapgit_exception .
+    METHODS serialize_descr
+      IMPORTING
+        !io_xml     TYPE REF TO zcl_abapgit_xml_output
+        !iv_clsname TYPE seoclsname
       RAISING
         zcx_abapgit_exception .
     METHODS serialize_docu
@@ -166,8 +178,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     DATA: lt_lines      TYPE tlinetab,
           lv_object     TYPE dokhl-object,
-          lt_i18n_lines TYPE zif_abapgit_definitions=>tt_i18n_lines,
-          ls_i18n_lines TYPE zif_abapgit_definitions=>ty_i18n_lines.
+          lt_i18n_lines TYPE zif_abapgit_lang_definitions=>tt_i18n_lines,
+          ls_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines.
 
     io_xml->read( EXPORTING iv_name = 'LINES'
                   CHANGING cg_data = lt_lines ).
@@ -219,8 +231,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     DATA: lv_clsname    TYPE seoclsname,
           lt_tpool_ext  TYPE zif_abapgit_definitions=>ty_tpool_tt,
           lt_tpool      TYPE textpool_table,
-          lt_i18n_tpool TYPE zif_abapgit_definitions=>tt_i18n_tpool,
-          ls_i18n_tpool TYPE zif_abapgit_definitions=>ty_i18n_tpool.
+          lt_i18n_tpool TYPE zif_abapgit_lang_definitions=>tt_i18n_tpool,
+          ls_i18n_tpool TYPE zif_abapgit_lang_definitions=>ty_i18n_tpool.
 
 
     io_xml->read( EXPORTING iv_name = 'TPOOL'
@@ -269,18 +281,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
   METHOD serialize_xml.
 
-    DATA: ls_vseoclass    TYPE vseoclass,
-          lt_tpool        TYPE textpool_table,
-          lt_descriptions TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
-          ls_clskey       TYPE seoclskey,
-          lt_sotr         TYPE zif_abapgit_definitions=>ty_sotr_tt,
-          lt_lines        TYPE tlinetab,
-          lt_attributes   TYPE zif_abapgit_definitions=>ty_obj_attribute_tt,
-          lv_langu        TYPE langu,
-          lt_i18n_tpool   TYPE zif_abapgit_definitions=>tt_i18n_tpool,
-          ls_i18n_tpool   TYPE zif_abapgit_definitions=>ty_i18n_tpool,
-          lt_i18n_lines   TYPE zif_abapgit_definitions=>tt_i18n_lines,
-          ls_i18n_lines   TYPE zif_abapgit_definitions=>ty_i18n_lines.
+    DATA: ls_vseoclass TYPE vseoclass,
+          ls_clskey    TYPE seoclskey.
 
     ls_clskey-clsname = ms_item-obj_name.
 
@@ -329,17 +331,41 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     serialize_docu( io_xml     = io_xml
                     iv_clsname = ls_clskey-clsname ).
 
-    lt_descriptions = mi_object_oriented_object_fct->read_descriptions( ls_clskey-clsname ).
-    IF lines( lt_descriptions ) > 0.
-      io_xml->add( iv_name = 'DESCRIPTIONS'
-                   ig_data = lt_descriptions ).
+    serialize_descr( io_xml     = io_xml
+                     iv_clsname = ls_clskey-clsname ).
+
+    serialize_attr( io_xml     = io_xml
+                    iv_clsname = ls_clskey-clsname ).
+
+  ENDMETHOD.
+
+
+  METHOD serialize_attr.
+
+    DATA: lt_attributes TYPE zif_abapgit_definitions=>ty_obj_attribute_tt.
+
+    lt_attributes = mi_object_oriented_object_fct->read_attributes( iv_clsname ).
+    IF lines( lt_attributes ) = 0.
+      RETURN.
     ENDIF.
 
-    lt_attributes = mi_object_oriented_object_fct->read_attributes( ls_clskey-clsname ).
-    IF lines( lt_attributes ) > 0.
-      io_xml->add( iv_name = 'ATTRIBUTES'
-                   ig_data = lt_attributes ).
+    io_xml->add( iv_name = 'ATTRIBUTES'
+                 ig_data = lt_attributes ).
+
+  ENDMETHOD.
+
+
+  METHOD serialize_descr.
+
+    DATA: lt_descriptions TYPE zif_abapgit_definitions=>ty_seocompotx_tt.
+
+    lt_descriptions = mi_object_oriented_object_fct->read_descriptions( iv_clsname ).
+    IF lines( lt_descriptions ) = 0.
+      RETURN.
     ENDIF.
+
+    io_xml->add( iv_name = 'DESCRIPTIONS'
+                 ig_data = lt_descriptions ).
 
   ENDMETHOD.
 
@@ -348,8 +374,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     DATA: lt_lines      TYPE tlinetab,
           lv_langu      TYPE langu,
-          lt_i18n_lines TYPE zif_abapgit_definitions=>tt_i18n_lines,
-          ls_i18n_lines TYPE zif_abapgit_definitions=>ty_i18n_lines.
+          lt_i18n_lines TYPE zif_abapgit_lang_definitions=>tt_i18n_lines,
+          ls_i18n_lines TYPE zif_abapgit_lang_definitions=>ty_i18n_lines.
 
     lt_lines = mi_object_oriented_object_fct->read_documentation(
       iv_class_name = iv_clsname
@@ -388,8 +414,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     DATA: lt_tpool      TYPE textpool_table,
           lv_langu      TYPE langu,
-          lt_i18n_tpool TYPE zif_abapgit_definitions=>tt_i18n_tpool,
-          ls_i18n_tpool TYPE zif_abapgit_definitions=>ty_i18n_tpool.
+          lt_i18n_tpool TYPE zif_abapgit_lang_definitions=>tt_i18n_tpool,
+          ls_i18n_tpool TYPE zif_abapgit_lang_definitions=>ty_i18n_tpool.
 
     lt_tpool = mi_object_oriented_object_fct->read_text_pool(
       iv_class_name = iv_clsname

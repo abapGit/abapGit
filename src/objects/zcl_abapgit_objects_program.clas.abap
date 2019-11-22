@@ -34,8 +34,6 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
              uccheck TYPE progdir-uccheck,
            END OF ty_progdir.
 
-    TYPES: tt_langu TYPE STANDARD TABLE OF langu.
-
     METHODS serialize_program
       IMPORTING io_xml     TYPE REF TO zcl_abapgit_xml_output OPTIONAL
                 is_item    TYPE zif_abapgit_definitions=>ty_item

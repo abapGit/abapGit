@@ -26,7 +26,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
+CLASS zcl_abapgit_oo_base IMPLEMENTATION.
 
 
   METHOD convert_attrib_to_vseoattrib.
