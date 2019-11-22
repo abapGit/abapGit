@@ -368,15 +368,15 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'new_online not found' ).
     ENDTRY.
 
-    ro_repo ?= instantiate_and_add( ls_repo ).
+    eo_repo ?= instantiate_and_add( ls_repo ).
 
     IF ls_repo-local_settings-ignore_subpackages <> iv_ign_subpkg.
       ls_repo-local_settings-ignore_subpackages = iv_ign_subpkg.
-      ro_repo->set_local_settings( ls_repo-local_settings ).
+      eo_repo->set_local_settings( ls_repo-local_settings ).
     ENDIF.
 
-    ro_repo->refresh( ).
-    ro_repo->find_remote_dot_abapgit( ).
+    eo_repo->refresh( ).
+    eo_repo->find_remote_dot_abapgit( ).
 
   ENDMETHOD.
 

@@ -124,13 +124,14 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
       zcl_abapgit_factory=>get_sap_package( iv_package )->create_local( ).
 
       TRY.
-          lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
+          zcl_abapgit_repo_srv=>get_instance( )->new_online(
             EXPORTING
               iv_url         = iv_url
               iv_branch_name = 'refs/heads/master'
               iv_package     = iv_package
             IMPORTING
-              ev_repo_key    = lv_repo_key ).
+              ev_repo_key    = lv_repo_key
+              eo_repo        = lo_repo ).
 
           zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
 

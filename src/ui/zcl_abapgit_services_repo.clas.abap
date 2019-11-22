@@ -87,7 +87,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
 
   METHOD gui_deserialize.
@@ -159,13 +159,16 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    ro_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
-      iv_url          = ls_popup-url
-      iv_branch_name  = ls_popup-branch_name
-      iv_package      = ls_popup-package
-      iv_display_name = ls_popup-display_name
-      iv_folder_logic = ls_popup-folder_logic
-      iv_ign_subpkg   = ls_popup-ign_subpkg ).
+    zcl_abapgit_repo_srv=>get_instance( )->new_online(
+      EXPORTING
+        iv_url          = ls_popup-url
+        iv_branch_name  = ls_popup-branch_name
+        iv_package      = ls_popup-package
+        iv_display_name = ls_popup-display_name
+        iv_folder_logic = ls_popup-folder_logic
+        iv_ign_subpkg   = ls_popup-ign_subpkg
+      IMPORTING
+        eo_repo         = ro_repo ).
 
     toggle_favorite( ro_repo->get_key( ) ).
 

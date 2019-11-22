@@ -46,8 +46,7 @@ INTERFACE zif_abapgit_repo_srv
       !iv_ign_subpkg   TYPE abap_bool DEFAULT abap_false
     EXPORTING
       !ev_repo_key     TYPE zif_abapgit_persistence=>ty_repo-key
-    RETURNING
-      VALUE(ro_repo)   TYPE REF TO zcl_abapgit_repo_online
+      !eo_repo         TYPE REF TO zcl_abapgit_repo_online
     RAISING
       zcx_abapgit_exception .
   METHODS purge

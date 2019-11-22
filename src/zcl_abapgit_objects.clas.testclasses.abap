@@ -57,10 +57,13 @@ CLASS ltcl_dangerous IMPLEMENTATION.
 
     lt_types = zcl_abapgit_objects=>supported_list( ).
 
-    lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
-      iv_url         = 'https://github.com/abapGit/Test-Objects.git'
-      iv_branch_name = 'refs/heads/master'
-      iv_package     = c_package ).
+    zcl_abapgit_repo_srv=>get_instance( )->new_online(
+      EXPORTING
+        iv_url         = 'https://github.com/abapGit/Test-Objects.git'
+        iv_branch_name = 'refs/heads/master'
+        iv_package     = c_package
+      IMPORTING
+        eo_repo        = lo_repo ).
     lo_repo->status( ).
     lo_repo->deserialize( is_checks = ls_checks
                           ii_log    = lo_log ).
