@@ -4,64 +4,81 @@ CLASS zcl_abapgit_git_transport DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+
 * remote to local
     CLASS-METHODS upload_pack
-      IMPORTING iv_url         TYPE string
-                iv_branch_name TYPE string
-                iv_deepen      TYPE abap_bool DEFAULT abap_true
-                it_branches    TYPE zif_abapgit_definitions=>ty_git_branch_list_tt OPTIONAL
-      EXPORTING et_objects     TYPE zif_abapgit_definitions=>ty_objects_tt
-                ev_branch      TYPE zif_abapgit_definitions=>ty_sha1
-                eo_branch_list TYPE REF TO zcl_abapgit_git_branch_list
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !iv_url         TYPE string
+        !iv_branch_name TYPE string
+        !iv_deepen      TYPE abap_bool DEFAULT abap_true
+        !it_branches    TYPE zif_abapgit_definitions=>ty_git_branch_list_tt OPTIONAL
+      EXPORTING
+        !et_objects     TYPE zif_abapgit_definitions=>ty_objects_tt
+        !ev_branch      TYPE zif_abapgit_definitions=>ty_sha1
+        !eo_branch_list TYPE REF TO zcl_abapgit_git_branch_list
+      RAISING
+        zcx_abapgit_exception .
 * local to remote
     CLASS-METHODS receive_pack
-      IMPORTING iv_url         TYPE string
-                iv_old         TYPE zif_abapgit_definitions=>ty_sha1
-                iv_new         TYPE zif_abapgit_definitions=>ty_sha1
-                iv_branch_name TYPE string
-                iv_pack        TYPE xstring
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !iv_url         TYPE string
+        !iv_old         TYPE zif_abapgit_definitions=>ty_sha1
+        !iv_new         TYPE zif_abapgit_definitions=>ty_sha1
+        !iv_branch_name TYPE string
+        !iv_pack        TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS branches
-      IMPORTING iv_url                TYPE string
-      RETURNING VALUE(ro_branch_list) TYPE REF TO zcl_abapgit_git_branch_list
-      RAISING   zcx_abapgit_exception.
+      IMPORTING
+        !iv_url               TYPE string
+        !iv_filter            TYPE abap_bool DEFAULT abap_true
+      RETURNING
+        VALUE(ro_branch_list) TYPE REF TO zcl_abapgit_git_branch_list
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CONSTANTS: BEGIN OF c_service,
-                 receive TYPE string VALUE 'receive',       "#EC NOTEXT
-                 upload  TYPE string VALUE 'upload',        "#EC NOTEXT
-               END OF c_service.
-    CONSTANTS: BEGIN OF c_smart_response_check,
-                 BEGIN OF get_refs,
-                   content_regex TYPE string VALUE '^[0-9a-f]{4}#',
-                   content_type  TYPE string VALUE 'application/x-git-<service>-pack-advertisement',
-                 END OF get_refs,
-               END OF c_smart_response_check.
+
+    CONSTANTS:
+      BEGIN OF c_service,
+        receive TYPE string VALUE 'receive',                "#EC NOTEXT
+        upload  TYPE string VALUE 'upload',                 "#EC NOTEXT
+      END OF c_service .
+    CONSTANTS:
+      BEGIN OF c_smart_response_check,
+        BEGIN OF get_refs,
+          content_regex TYPE string VALUE '^[0-9a-f]{4}#',
+          content_type  TYPE string VALUE 'application/x-git-<service>-pack-advertisement',
+        END OF get_refs,
+      END OF c_smart_response_check .
 
     CLASS-METHODS branch_list
-      IMPORTING iv_url         TYPE string
-                iv_service     TYPE string
-      EXPORTING eo_client      TYPE REF TO zcl_abapgit_http_client
-                eo_branch_list TYPE REF TO zcl_abapgit_git_branch_list
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !iv_url         TYPE string
+        !iv_service     TYPE string
+      EXPORTING
+        !eo_client      TYPE REF TO zcl_abapgit_http_client
+        !eo_branch_list TYPE REF TO zcl_abapgit_git_branch_list
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS find_branch
-      IMPORTING iv_url         TYPE string
-                iv_service     TYPE string
-                iv_branch_name TYPE string
-      EXPORTING eo_client      TYPE REF TO zcl_abapgit_http_client
-                ev_branch      TYPE zif_abapgit_definitions=>ty_sha1
-                eo_branch_list TYPE REF TO zcl_abapgit_git_branch_list
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !iv_url         TYPE string
+        !iv_service     TYPE string
+        !iv_branch_name TYPE string
+      EXPORTING
+        !eo_client      TYPE REF TO zcl_abapgit_http_client
+        !ev_branch      TYPE zif_abapgit_definitions=>ty_sha1
+        !eo_branch_list TYPE REF TO zcl_abapgit_git_branch_list
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS parse
-      EXPORTING ev_pack TYPE xstring
-      CHANGING  cv_data TYPE xstring
-      RAISING   zcx_abapgit_exception.
-
+      EXPORTING
+        !ev_pack TYPE xstring
+      CHANGING
+        !cv_data TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 

@@ -56,7 +56,15 @@
     "globalMacros": []
   },
   "rules": {
-    "7bit_ascii": {},
+    "chain_mainly_declarations": true,
+    "check_abstract": true,
+    "check_text_elements": true,
+    "type_begin_single_include": true,
+    "types_naming": false,
+    "7bit_ascii": {
+      "enabled": true,
+      "exclude": ["zcl_abapgit_utils.clas.testclasses.abap"]
+    },
     "abapdoc": {
       "enabled": false,
       "checkLocal": false
@@ -145,7 +153,8 @@
       "ignoreGlobalInterface": false
     },
     "inline_data_old_versions": {},
-    "keywords_upper": {
+    "keyword_case": {
+      "style": "upper",
       "ignoreExceptions": true,
       "ignoreLowerClassImplmentationStatement": true,
       "ignoreGlobalClassDefinition": false,
@@ -175,6 +184,7 @@
     },
     "method_length": {
       "statements": 100,
+      "ignoreTestClasses": false,
       "errorWhenEmpty": false
     },
     "method_parameter_names": {
@@ -217,7 +227,8 @@
       "multiply": true,
       "move": true,
       "divide": true,
-      "requested": true
+      "requested": true,
+      "occurs": true
     },
     "parser_error": {},
     "preferred_compare_operator": {

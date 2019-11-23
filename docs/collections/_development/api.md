@@ -16,8 +16,6 @@ DATA(lo_repo) = zcl_abapgit_repo_srv=>get_instance( )->new_online(
   iv_package     = lv_package ).
 ```
 
-todo, how to list branches?
-
 ### Create Offline
 
 ```abap
@@ -80,10 +78,10 @@ todo, should this be refactored to the repo object instead?
 ## Branches
 
 ### List
-`zcl_abapgit_factory=>get_branch_overview( mo_repo )->get_branches( ).`
+`zcl_abapgit_git_transport=>branches( io_repo->get_url( ) ).`
 
 ### Switching
-`repo->set_branch_name( )`
+`repo->set_branch_name( lv_name )`
 
 ### Creating
 `repo->create_branch( )`
