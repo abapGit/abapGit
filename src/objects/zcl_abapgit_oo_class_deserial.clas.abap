@@ -5,13 +5,6 @@ CLASS zcl_abapgit_oo_class_deserial DEFINITION
 
   PUBLIC SECTION.
 
-*    METHODS constructor
-*      IMPORTING
-*        !is_key    TYPE seoclskey
-*        !it_source TYPE zif_abapgit_definitions=>ty_string_tt
-*      RAISING
-*        zcx_abapgit_exception .
-
     METHODS init_scanner
       IMPORTING
         !it_source        TYPE zif_abapgit_definitions=>ty_string_tt
@@ -77,32 +70,8 @@ CLASS zcl_abapgit_oo_class_deserial DEFINITION
         !iv_clsname TYPE csequence
         !io_scanner TYPE REF TO cl_oo_source_scanner_class .
 
-    DATA:
-*      ms_key     TYPE seoclskey,
-*      mt_source  TYPE zif_abapgit_definitions=>ty_string_tt,
-      mo_scanner TYPE REF TO cl_oo_source_scanner_class.
-
+  PROTECTED SECTION.
   PRIVATE SECTION.
-
-*  METHOD constructor.
-*
-*    me->ms_key = is_key.
-*    me->mt_source = it_source.
-*
-*    "Buffer needs to be refreshed,
-*    "otherwise standard SAP CLIF_SOURCE reorder methods alphabetically
-*    CALL FUNCTION 'SEO_BUFFER_INIT'.
-*    CALL FUNCTION 'SEO_BUFFER_REFRESH'
-*      EXPORTING
-*        cifkey  = is_key
-*        version = seoc_version_inactive.
-*
-*    mo_scanner = init_scanner(
-*      it_source = it_source
-*      iv_name   = ms_key-clsname ).
-*
-*  ENDMETHOD.
-
 
 ENDCLASS.
 
