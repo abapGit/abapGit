@@ -1,42 +1,18 @@
-CLASS zcl_abapgit_oo_deserializer DEFINITION
+CLASS zcl_abapgit_oo_class_deserial DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PUBLIC
+  GLOBAL FRIENDS zcl_abapgit_oo_class.
 
   PUBLIC SECTION.
 
-    CLASS-METHODS deserialize_abap_clif_source
-      IMPORTING
-        !iv_object_type TYPE tadir-object
-        !is_key         TYPE seoclskey
-        !it_source      TYPE zif_abapgit_definitions=>ty_string_tt
-      RAISING
-        zcx_abapgit_exception .
     METHODS constructor
       IMPORTING
         !is_key    TYPE seoclskey
         !it_source TYPE zif_abapgit_definitions=>ty_string_tt
       RAISING
         zcx_abapgit_exception .
-    METHODS deserialize_definition
-      RAISING
-        zcx_abapgit_exception
-        cx_sy_dyn_call_error .
-    METHODS deserialize_implementation
-      RAISING
-        zcx_abapgit_exception .
-    METHODS deserialize_full_class_include
-      IMPORTING
-        !it_source TYPE zif_abapgit_definitions=>ty_string_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS update_source_index
-      RAISING
-        zcx_abapgit_exception .
-  PROTECTED SECTION.
 
-  PRIVATE SECTION.
-
-    CLASS-METHODS init_scanner
+    METHODS init_scanner
       IMPORTING
         !it_source        TYPE zif_abapgit_definitions=>ty_string_tt
         !iv_name          TYPE seoclsname
@@ -54,7 +30,7 @@ CLASS zcl_abapgit_oo_deserializer DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-    CLASS-METHODS update_meta
+    METHODS update_meta
       IMPORTING
         !iv_name     TYPE seoclsname
         !iv_exposure TYPE seoexpose
@@ -62,13 +38,13 @@ CLASS zcl_abapgit_oo_deserializer DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-    CLASS-METHODS generate_classpool
+    METHODS generate_classpool
       IMPORTING
         !iv_name TYPE seoclsname
       RAISING
         zcx_abapgit_exception .
 
-    CLASS-METHODS determine_method_include
+    METHODS determine_method_include
       IMPORTING
         !iv_name          TYPE seoclsname
         !iv_method        TYPE seocpdname
@@ -77,7 +53,7 @@ CLASS zcl_abapgit_oo_deserializer DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-    CLASS-METHODS create_report
+    METHODS create_report
       IMPORTING
         !iv_program      TYPE programm
         !it_source       TYPE string_table
@@ -85,54 +61,40 @@ CLASS zcl_abapgit_oo_deserializer DEFINITION
         !iv_program_type TYPE sychar01
         !iv_version      TYPE r3state .
 
-    CLASS-METHODS update_cs_number_of_methods
+    METHODS update_cs_number_of_methods
       IMPORTING
         !iv_classname              TYPE seoclsname
         !iv_number_of_impl_methods TYPE i .
 
+    METHODS update_full_class_include
+      IMPORTING
+        !iv_classname TYPE seoclsname
+        !it_source    TYPE string_table
+        !it_methods   TYPE cl_oo_source_scanner_class=>type_method_implementations .
+
+    METHODS update_source_index
+      IMPORTING
+        !iv_clsname TYPE csequence
+        !io_scanner TYPE REF TO cl_oo_source_scanner_class .
+
     DATA:
       ms_key     TYPE seoclskey,
+      mt_source  TYPE zif_abapgit_definitions=>ty_string_tt,
       mo_scanner TYPE REF TO cl_oo_source_scanner_class.
+
+  PRIVATE SECTION.
 
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_oo_deserializer IMPLEMENTATION.
+CLASS zcl_abapgit_oo_class_deserial IMPLEMENTATION.
 
-
-  METHOD deserialize_abap_clif_source.
-
-    DATA: lo_deserializer TYPE REF TO zcl_abapgit_oo_deserializer,
-          lv_done         TYPE abap_bool.
-
-
-    lv_done = zcl_abapgit_exit=>get_instance( )->custom_deserialize_abap_clif(
-                                              iv_object_type   = iv_object_type
-                                              is_key           = is_key
-                                              it_source        = it_source ).
-    IF lv_done = abap_true.
-      RETURN.
-    ENDIF.
-
-    CREATE OBJECT lo_deserializer
-      EXPORTING
-        is_key    = is_key
-        it_source = it_source.
-
-    lo_deserializer->deserialize_definition( ).
-
-    lo_deserializer->deserialize_implementation( ).
-
-    lo_deserializer->deserialize_full_class_include( it_source = it_source ).
-
-    lo_deserializer->update_source_index( ).
-
-  ENDMETHOD.
 
   METHOD constructor.
 
     me->ms_key = is_key.
+    me->mt_source = it_source.
 
     "Buffer needs to be refreshed,
     "otherwise standard SAP CLIF_SOURCE reorder methods alphabetically
@@ -144,7 +106,7 @@ CLASS zcl_abapgit_oo_deserializer IMPLEMENTATION.
 
     mo_scanner = init_scanner(
       it_source = it_source
-      iv_name   = is_key-clsname ).
+      iv_name   = ms_key-clsname ).
 
   ENDMETHOD.
 
@@ -152,113 +114,6 @@ CLASS zcl_abapgit_oo_deserializer IMPLEMENTATION.
   METHOD create_report.
     INSERT REPORT iv_program FROM it_source EXTENSION TYPE iv_extension STATE iv_version PROGRAM TYPE iv_program_type.
     ASSERT sy-subrc = 0.
-  ENDMETHOD.
-
-
-  METHOD deserialize_definition.
-
-    DATA: lv_updated TYPE abap_bool,
-          lv_program TYPE program,
-          lt_public  TYPE seop_source_string,
-          lt_auxsrc  TYPE seop_source_string,
-          lt_source  TYPE seop_source_string.
-
-* public
-    lt_public = mo_scanner->get_public_section_source( ).
-    IF lt_public IS NOT INITIAL.
-      lv_program = cl_oo_classname_service=>get_pubsec_name( ms_key-clsname ).
-      lv_updated = update_report( iv_program = lv_program
-                                  it_source  = lt_public ).
-      IF lv_updated = abap_true.
-        update_meta( iv_name     = ms_key-clsname
-                     iv_exposure = seoc_exposure_public
-                     it_source   = lt_public ).
-      ENDIF.
-    ENDIF.
-
-* protected
-    lt_source = mo_scanner->get_protected_section_source( ).
-    IF lt_source IS NOT INITIAL.
-      lv_program = cl_oo_classname_service=>get_prosec_name( ms_key-clsname ).
-      lv_updated = update_report( iv_program = lv_program
-                                  it_source  = lt_source ).
-      IF lv_updated = abap_true.
-        lt_auxsrc = lt_public.
-        APPEND LINES OF lt_source TO lt_auxsrc.
-
-        update_meta( iv_name     = ms_key-clsname
-                     iv_exposure = seoc_exposure_protected
-                     it_source   = lt_auxsrc ).
-      ENDIF.
-    ENDIF.
-
-* private
-    lt_source = mo_scanner->get_private_section_source( ).
-    IF lt_source IS NOT INITIAL.
-      lv_program = cl_oo_classname_service=>get_prisec_name( ms_key-clsname ).
-      lv_updated = update_report( iv_program = lv_program
-                                  it_source  = lt_source ).
-      IF lv_updated = abap_true.
-        lt_auxsrc = lt_public.
-        APPEND LINES OF lt_source TO lt_auxsrc.
-
-        update_meta( iv_name     = ms_key-clsname
-                     iv_exposure = seoc_exposure_private
-                     it_source   = lt_auxsrc ).
-      ENDIF.
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD deserialize_full_class_include.
-
-    DATA: lt_methods TYPE cl_oo_source_scanner_class=>type_method_implementations.
-    CONSTANTS: lc_class_source_extension TYPE sychar02 VALUE 'CS',
-               lc_include_program_type   TYPE sychar01 VALUE 'I',
-               lc_active_version         TYPE r3state VALUE 'A'.
-
-
-    create_report( iv_program      = cl_oo_classname_service=>get_cs_name( ms_key-clsname )
-                   it_source       = it_source
-                   iv_extension    = lc_class_source_extension
-                   iv_program_type = lc_include_program_type
-                   iv_version      = lc_active_version ).
-
-    lt_methods = mo_scanner->get_method_implementations( ).
-
-    " Assuming that all methods that were scanned are implemented
-    update_cs_number_of_methods( iv_classname              = ms_key-clsname
-                                 iv_number_of_impl_methods = lines( lt_methods ) ).
-
-  ENDMETHOD.
-
-
-  METHOD deserialize_implementation.
-
-    DATA: lv_program TYPE program,
-          lt_methods TYPE cl_oo_source_scanner_class=>type_method_implementations,
-          lv_method  LIKE LINE OF lt_methods,
-          lt_source  TYPE seop_source_string.
-
-* methods
-    lt_methods = mo_scanner->get_method_implementations( ).
-
-    LOOP AT lt_methods INTO lv_method.
-      TRY.
-          lt_source = mo_scanner->get_method_impl_source( lv_method ).
-        CATCH cx_oo_clif_component.
-          zcx_abapgit_exception=>raise( 'error from GET_METHOD_IMPL_SOURCE' ).
-      ENDTRY.
-      lv_program = determine_method_include(
-        iv_name   = ms_key-clsname
-        iv_method = lv_method ).
-
-      update_report(
-        iv_program = lv_program
-        it_source  = lt_source ).
-    ENDLOOP.
-
   ENDMETHOD.
 
 
@@ -479,6 +334,26 @@ CLASS zcl_abapgit_oo_deserializer IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD update_full_class_include.
+
+    CONSTANTS: lc_class_source_extension TYPE sychar02 VALUE 'CS',
+               lc_include_program_type   TYPE sychar01 VALUE 'I',
+               lc_active_version         TYPE r3state VALUE 'A'.
+
+
+    create_report( iv_program      = cl_oo_classname_service=>get_cs_name( iv_classname )
+                   it_source       = it_source
+                   iv_extension    = lc_class_source_extension
+                   iv_program_type = lc_include_program_type
+                   iv_version      = lc_active_version ).
+
+    " Assuming that all methods that were scanned are implemented
+    update_cs_number_of_methods( iv_classname              = iv_classname
+                                 iv_number_of_impl_methods = lines( it_methods ) ).
+
+  ENDMETHOD.
+
+
   METHOD update_source_index.
 
     CONSTANTS:
@@ -493,13 +368,13 @@ CLASS zcl_abapgit_oo_deserializer IMPLEMENTATION.
 
         CALL METHOD lo_index_helper->('IF_OO_SOURCE_POS_INDEX_HELPER~CREATE_INDEX_WITH_SCANNER')
           EXPORTING
-            class_name = ms_key-clsname
+            class_name = iv_clsname
             version    = lc_version_active
-            scanner    = mo_scanner.
+            scanner    = io_scanner.
 
         CALL METHOD lo_index_helper->('IF_OO_SOURCE_POS_INDEX_HELPER~DELETE_INDEX')
           EXPORTING
-            class_name = ms_key-clsname
+            class_name = iv_clsname
             version    = lc_version_inactive.
 
       CATCH cx_root.

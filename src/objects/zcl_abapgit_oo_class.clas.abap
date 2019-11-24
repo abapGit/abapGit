@@ -27,41 +27,11 @@ CLASS zcl_abapgit_oo_class DEFINITION
         REDEFINITION .
   PROTECTED SECTION.
   PRIVATE SECTION.
-
-    CLASS-METHODS update_report
-      IMPORTING
-        !iv_program       TYPE programm
-        !it_source        TYPE string_table
-      RETURNING
-        VALUE(rv_updated) TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception .
-
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_oo_class IMPLEMENTATION.
-
-
-  METHOD update_report.
-
-    DATA: lt_old TYPE string_table.
-
-    READ REPORT iv_program INTO lt_old.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Fatal error. Include { iv_program } should have been created previously!| ).
-    ENDIF.
-
-    IF lt_old <> it_source.
-      INSERT REPORT iv_program FROM it_source.
-      ASSERT sy-subrc = 0.
-      rv_updated = abap_true.
-    ELSE.
-      rv_updated = abap_false.
-    ENDIF.
-
-  ENDMETHOD.
 
 
   METHOD zif_abapgit_oo_object_fnc~create.
@@ -78,44 +48,23 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
                       iv_clsname    = <lv_clsname>
                       it_attributes = it_attributes ).
 
-    TRY.
-        CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
-          EXPORTING
-            devclass        = iv_package
-            overwrite       = iv_overwrite
-            version         = seoc_version_active
-            suppress_dialog = abap_true
-          CHANGING
-            class           = cg_properties
-            attributes      = lt_vseoattrib
-          EXCEPTIONS
-            existing        = 1
-            is_interface    = 2
-            db_error        = 3
-            component_error = 4
-            no_access       = 5
-            other           = 6
-            OTHERS          = 7.
-      CATCH cx_sy_dyn_call_param_not_found.
-        " Old support packages of 7.02 versions don't have parameter SUPPRESS_DIALOG
-        CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
-          EXPORTING
-            devclass        = iv_package
-            overwrite       = iv_overwrite
-            version         = seoc_version_active
-          CHANGING
-            class           = cg_properties
-            attributes      = lt_vseoattrib
-          EXCEPTIONS
-            existing        = 1
-            is_interface    = 2
-            db_error        = 3
-            component_error = 4
-            no_access       = 5
-            other           = 6
-            OTHERS          = 7.
-    ENDTRY.
-
+    CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
+      EXPORTING
+        devclass        = iv_package
+        overwrite       = iv_overwrite
+        version         = seoc_version_active
+        suppress_dialog = abap_true
+      CHANGING
+        class           = cg_properties
+        attributes      = lt_vseoattrib
+      EXCEPTIONS
+        existing        = 1
+        is_interface    = 2
+        db_error        = 3
+        component_error = 4
+        no_access       = 5
+        other           = 6
+        OTHERS          = 7.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error from SEO_CLASS_CREATE_COMPLETE. Subrc = { sy-subrc }| ).
     ENDIF.
@@ -208,10 +157,114 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~deserialize_source.
 
-    zcl_abapgit_oo_deserializer=>deserialize_abap_clif_source(
-        iv_object_type = 'CLAS'
-        is_key         = is_key
-        it_source      = it_source ).
+    DATA: lv_updated         TYPE abap_bool,
+          lv_program         TYPE program,
+          lo_scanner         TYPE REF TO cl_oo_source_scanner_class,
+          lt_methods         TYPE cl_oo_source_scanner_class=>type_method_implementations,
+          lv_method          LIKE LINE OF lt_methods,
+          lt_public          TYPE seop_source_string,
+          lt_auxsrc          TYPE seop_source_string,
+          lt_source          TYPE seop_source_string,
+          lo_oo_deserializer TYPE REF TO zcl_abapgit_oo_class_deserial.
+
+    CREATE OBJECT lo_oo_deserializer
+      EXPORTING
+        is_key    = is_key
+        it_source = it_source.
+
+
+    "Buffer needs to be refreshed,
+    "otherwise standard SAP CLIF_SOURCE reorder methods alphabetically
+    CALL FUNCTION 'SEO_BUFFER_INIT'.
+    CALL FUNCTION 'SEO_BUFFER_REFRESH'
+      EXPORTING
+        cifkey  = is_key
+        version = seoc_version_inactive.
+
+    lo_scanner = lo_oo_deserializer->init_scanner(
+      it_source = it_source
+      iv_name   = is_key-clsname ).
+
+* public
+    lt_public = lo_scanner->get_public_section_source( ).
+    IF lt_public IS NOT INITIAL.
+      lv_program = cl_oo_classname_service=>get_pubsec_name( is_key-clsname ).
+      lv_updated = lo_oo_deserializer->update_report( iv_program = lv_program
+                                                      it_source  = lt_public ).
+      IF lv_updated = abap_true.
+        lo_oo_deserializer->update_meta(
+                     iv_name     = is_key-clsname
+                     iv_exposure = seoc_exposure_public
+                     it_source   = lt_public ).
+      ENDIF.
+    ENDIF.
+
+* protected
+    lt_source = lo_scanner->get_protected_section_source( ).
+    IF lt_source IS NOT INITIAL.
+      lv_program = cl_oo_classname_service=>get_prosec_name( is_key-clsname ).
+      lv_updated = lo_oo_deserializer->update_report( iv_program = lv_program
+                                  it_source  = lt_source ).
+      IF lv_updated = abap_true.
+        lt_auxsrc = lt_public.
+        APPEND LINES OF lt_source TO lt_auxsrc.
+
+        lo_oo_deserializer->update_meta(
+                     iv_name     = is_key-clsname
+                     iv_exposure = seoc_exposure_protected
+                     it_source   = lt_auxsrc ).
+      ENDIF.
+    ENDIF.
+
+* private
+    lt_source = lo_scanner->get_private_section_source( ).
+    IF lt_source IS NOT INITIAL.
+      lv_program = cl_oo_classname_service=>get_prisec_name( is_key-clsname ).
+      lv_updated = lo_oo_deserializer->update_report( iv_program = lv_program
+                                  it_source  = lt_source ).
+      IF lv_updated = abap_true.
+        lt_auxsrc = lt_public.
+        APPEND LINES OF lt_source TO lt_auxsrc.
+
+        lo_oo_deserializer->update_meta(
+                     iv_name     = is_key-clsname
+                     iv_exposure = seoc_exposure_private
+                     it_source   = lt_auxsrc ).
+      ENDIF.
+    ENDIF.
+
+* methods
+    lt_methods = lo_scanner->get_method_implementations( ).
+
+    LOOP AT lt_methods INTO lv_method.
+      TRY.
+          lt_source = lo_scanner->get_method_impl_source( lv_method ).
+        CATCH cx_oo_clif_component.
+          zcx_abapgit_exception=>raise( 'error from GET_METHOD_IMPL_SOURCE' ).
+      ENDTRY.
+      lv_program = lo_oo_deserializer->determine_method_include(
+        iv_name   = is_key-clsname
+        iv_method = lv_method ).
+
+      lo_oo_deserializer->update_report(
+        iv_program = lv_program
+        it_source  = lt_source ).
+    ENDLOOP.
+
+* full class include
+    lo_oo_deserializer->update_full_class_include(
+                               iv_classname = is_key-clsname
+                               it_source    = it_source
+                               it_methods   = lt_methods ).
+
+    lo_oo_deserializer->update_source_index(
+      iv_clsname = is_key-clsname
+      io_scanner = lo_scanner ).
+
+* TODO, perhaps move this call to somewhere else, to be done while cleaning up the CLAS deserialization
+    zcl_abapgit_objects_activation=>add(
+      iv_type = 'CLAS'
+      iv_name = is_key-clsname ).
 
   ENDMETHOD.
 
@@ -223,25 +276,29 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
     IF lines( it_local_definitions ) > 0.
       lv_program = cl_oo_classname_service=>get_ccdef_name( is_key-clsname ).
-      update_report( iv_program = lv_program
+      zcl_abapgit_oo_class_deserial=>update_report(
+                     iv_program = lv_program
                      it_source  = it_local_definitions ).
     ENDIF.
 
     IF lines( it_local_implementations ) > 0.
       lv_program = cl_oo_classname_service=>get_ccimp_name( is_key-clsname ).
-      update_report( iv_program = lv_program
+      zcl_abapgit_oo_class_deserial=>update_report(
+                     iv_program = lv_program
                      it_source  = it_local_implementations ).
     ENDIF.
 
     IF lines( it_local_macros ) > 0.
       lv_program = cl_oo_classname_service=>get_ccmac_name( is_key-clsname ).
-      update_report( iv_program = lv_program
+      zcl_abapgit_oo_class_deserial=>update_report(
+                     iv_program = lv_program
                      it_source  = it_local_macros ).
     ENDIF.
 
     IF lines( it_local_test_classes ) > 0.
       lv_program = cl_oo_classname_service=>get_ccau_name( is_key-clsname ).
-      update_report( iv_program = lv_program
+      zcl_abapgit_oo_class_deserial=>update_report(
+                     iv_program = lv_program
                      it_source  = it_local_test_classes ).
     ENDIF.
 

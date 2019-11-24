@@ -150,17 +150,4 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
       CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
     ENDTRY.
   ENDMETHOD.
-
-
-  METHOD zif_abapgit_exit~custom_deserialize_abap_clif.
-    TRY.
-        rv_done = gi_exit->custom_deserialize_abap_clif(
-            iv_object_type = iv_object_type
-            is_key         = is_key
-            it_source      = it_source ).
-      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
-    ENDTRY.
-  ENDMETHOD.
-
-
 ENDCLASS.

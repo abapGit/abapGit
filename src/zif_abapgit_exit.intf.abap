@@ -53,13 +53,4 @@ INTERFACE zif_abapgit_exit
       VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
     RAISING
       zcx_abapgit_exception.
-  METHODS custom_deserialize_abap_clif
-    IMPORTING
-      iv_object_type TYPE tadir-object
-      is_key         TYPE seoclskey
-      it_source      TYPE zif_abapgit_definitions=>ty_string_tt
-    RETURNING
-      VALUE(rv_done) TYPE abap_bool
-    RAISING
-      zcx_abapgit_exception.
 ENDINTERFACE.

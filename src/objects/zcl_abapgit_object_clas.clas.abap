@@ -330,11 +330,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
                       iv_package = iv_package ).
 
     deserialize_docu( io_xml ).
-
-    zcl_abapgit_objects_activation=>add(
-      iv_type = 'CLAS'
-      iv_name = ms_item-obj_name ).
-
   ENDMETHOD.
 
 
