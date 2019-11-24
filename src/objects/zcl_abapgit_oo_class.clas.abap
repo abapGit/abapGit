@@ -157,21 +157,17 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~deserialize_source.
 
-    DATA: lv_updated         TYPE abap_bool,
-          lv_program         TYPE program,
-          lo_scanner         TYPE REF TO cl_oo_source_scanner_class,
-          lt_methods         TYPE cl_oo_source_scanner_class=>type_method_implementations,
-          lv_method          LIKE LINE OF lt_methods,
-          lt_public          TYPE seop_source_string,
-          lt_auxsrc          TYPE seop_source_string,
-          lt_source          TYPE seop_source_string,
-          lo_oo_deserializer TYPE REF TO zcl_abapgit_oo_class_deserial.
+    DATA: lv_updated TYPE abap_bool,
+          lv_program TYPE program,
+          lo_scanner TYPE REF TO cl_oo_source_scanner_class,
+          lt_methods TYPE cl_oo_source_scanner_class=>type_method_implementations,
+          lv_method  LIKE LINE OF lt_methods,
+          lt_public  TYPE seop_source_string,
+          lt_auxsrc  TYPE seop_source_string,
+          lt_source  TYPE seop_source_string.
+    DATA: lo_oo_deserializer TYPE REF TO zcl_abapgit_oo_class_deserial.
 
-    CREATE OBJECT lo_oo_deserializer
-      EXPORTING
-        is_key    = is_key
-        it_source = it_source.
-
+    CREATE OBJECT lo_oo_deserializer.
 
     "Buffer needs to be refreshed,
     "otherwise standard SAP CLIF_SOURCE reorder methods alphabetically
@@ -192,10 +188,9 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
       lv_updated = lo_oo_deserializer->update_report( iv_program = lv_program
                                                       it_source  = lt_public ).
       IF lv_updated = abap_true.
-        lo_oo_deserializer->update_meta(
-                     iv_name     = is_key-clsname
-                     iv_exposure = seoc_exposure_public
-                     it_source   = lt_public ).
+        lo_oo_deserializer->update_meta( iv_name     = is_key-clsname
+                                         iv_exposure = seoc_exposure_public
+                                         it_source   = lt_public ).
       ENDIF.
     ENDIF.
 
