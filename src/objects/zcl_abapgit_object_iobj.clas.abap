@@ -36,7 +36,16 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
     DATA: lt_iobjname     TYPE rsd_t_c30,
           lv_object       TYPE string,
-          lv_object_class TYPE string.
+          lv_object_class TYPE string,
+          ls_tadir        TYPE zif_abapgit_definitions=>ty_tadir,
+          lv_transp_pkg   TYPE abap_bool.
+
+    ls_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
+                                                   iv_object   = ms_item-obj_type
+                                                   iv_obj_name = ms_item-obj_name ).
+
+    lv_transp_pkg =
+    zcl_abapgit_factory=>get_sap_package( iv_package = ls_tadir-devclass )->are_changes_recorded_in_tr_req( ).
 
     APPEND ms_item-obj_name TO lt_iobjname.
 
@@ -48,24 +57,28 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error when deleting infoObject | ).
     ENDIF.
 
-    lv_object_class = ms_item-obj_type.
-    lv_object       = ms_item-obj_name.
+    IF lv_transp_pkg = abap_true.
 
-    CALL FUNCTION 'RS_CORR_INSERT'
-      EXPORTING
-        object              = lv_object
-        object_class        = lv_object_class
-        master_language     = mv_language
-        global_lock         = abap_true
-        mode                = 'D'
-        suppress_dialog     = abap_true
-      EXCEPTIONS
-        cancelled           = 1
-        permission_failure  = 2
-        unknown_objectclass = 3
-        OTHERS              = 4.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
+      lv_object_class = ms_item-obj_type.
+      lv_object       = ms_item-obj_name.
+
+      CALL FUNCTION 'RS_CORR_INSERT'
+        EXPORTING
+          object              = lv_object
+          object_class        = lv_object_class
+          master_language     = mv_language
+          global_lock         = abap_true
+          mode                = 'D'
+          suppress_dialog     = abap_true
+        EXCEPTIONS
+          cancelled           = 1
+          permission_failure  = 2
+          unknown_objectclass = 3
+          OTHERS              = 4.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise_t100( ).
+      ENDIF.
+
     ENDIF.
 
   ENDMETHOD.
@@ -135,6 +148,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_metadata.
+    rs_metadata = get_metadata( ).
     rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.
 
