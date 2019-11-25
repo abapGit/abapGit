@@ -26,6 +26,9 @@
 /* exported enumerateJumpAllFiles */
 /* exported enumerateToolbarActions */
 
+var selectedColumnIdx = -1;
+var lineNumColumnIdx = -1;
+
 /**********************************************************
  * Polyfills
  **********************************************************/
@@ -1836,4 +1839,107 @@ function enumerateJumpAllFiles() {
         action: root.onclick.bind(null, title),
         title:  title
       };});
+}
+
+function addMousedownEventListener() {
+  // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
+  // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
+  // Process mousedown event for all TD elements -> apply CSS class at TABLE level.
+  // (https://stackoverflow.com/questions/40956717/how-to-addeventlistener-to-multiple-elements-in-a-single-line)
+  document.addEventListener('mousedown', function(e){
+	if (e.button !== 0) return; // function is only valid for main button 
+    var td = e.target;
+	while (td != undefined && td.tagName != 'TD' && td.tagName != 'TBODY') td = td.parentElement;
+	if (td == undefined) return;
+	var patchColumns = 0;
+	if (td.parentElement.cells[0].classList.contains('patch')) {
+	  patchColumns = 1;
+	}
+	var table = td.parentElement.parentElement;
+    if (td.classList.contains('diff_right')) {
+	  table.classList.remove('diff_select_left');
+	  table.classList.add('diff_select_right');
+	  if (!e.shiftKey || ( window.getSelection() && selectedColumnIdx != 5 + patchColumns )) {
+        // https://stackoverflow.com/questions/22914075/javascript-error-800a025e-using-range-selector
+        if (document.body.createTextRange) { // All IE but Edge
+          var range = document.body.createTextRange();
+          range.collapse();
+          range.select();
+        } else {
+          document.getSelection().removeAllRanges();
+        }
+	  }
+	  selectedColumnIdx = 5 + patchColumns;
+	  lineNumColumnIdx = 3 + patchColumns;
+	} else if (td.classList.contains('diff_left')) {
+	  table.classList.remove('diff_select_right');
+	  table.classList.add('diff_select_left');
+	  if (!e.shiftKey || ( window.getSelection() && selectedColumnIdx != 2 + patchColumns )) {
+        // https://stackoverflow.com/questions/22914075/javascript-error-800a025e-using-range-selector
+        if (document.body.createTextRange) { // All IE but Edge
+          var range = document.body.createTextRange();
+          range.collapse();
+          range.select();
+        } else {
+          document.getSelection().removeAllRanges();
+        }
+	  }
+	  selectedColumnIdx = 2 + patchColumns;
+	  lineNumColumnIdx = 0 + patchColumns;
+	} else if (td.classList.contains('diff_unified')) {
+	  selectedColumnIdx = 3;
+	  lineNumColumnIdx = 0;
+	} else {
+	  selectedColumnIdx = -1;
+	  lineNumColumnIdx = -1;
+	}
+  });
+}
+
+function addCopyEventListener() {
+  // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
+  // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
+  document.addEventListener('copy', function(e){
+	var td = e.target;
+	while (td != undefined && td.tagName != 'TD' && td.tagName != 'TBODY') td = td.parentElement;
+	if(td != undefined){
+	  // Use window.clipboardData instead of e.clipboardData
+	  // (https://stackoverflow.com/questions/23470958/ie-10-copy-paste-issue)
+	  var clipboardData = e.clipboardData == undefined ? window.clipboardData : e.clipboardData;
+	  var text = getSelectedText();
+	  clipboardData.setData('text', text);
+      e.preventDefault();
+  }});
+}
+
+function getSelectedText() {
+  // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
+  // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
+  var sel = window.getSelection(),
+      range = sel.getRangeAt(0),
+      doc = range.cloneContents(),
+      nodes = doc.querySelectorAll('tr'),
+      text = '';
+
+  if (nodes.length === 0) {
+    text = doc.textContent;
+  } else {
+    // special processing for TD tag which sometimes contains newline
+    // (/src/ui/zabapgit_js_common.w3mi.data.js) so don't add newline in that case.
+    var newline = '';
+	[].forEach.call(nodes, function(tr, i) {
+	  var cellIdx = ( i==0 ? 0 : selectedColumnIdx );
+	  if (tr.cells.length > cellIdx) {
+        var tdSelected = tr.cells[cellIdx];
+        var tdLineNum = tr.cells[lineNumColumnIdx];
+        // copy is interesting for remote code, don't copy lines which exist only locally
+		if (i==0 || tdLineNum.getAttribute('line-num')!='') {
+          text += newline + tdSelected.textContent;
+		  var lastChar = tdSelected.textContent[ tdSelected.textContent.length - 1 ];
+		  if ( lastChar == '\n' ) newline = '';
+		  else newline = '\n';
+    }}});
+  }
+
+  return text;
 }
