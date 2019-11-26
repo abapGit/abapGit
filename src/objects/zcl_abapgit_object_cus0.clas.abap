@@ -70,7 +70,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CUS0 IMPLEMENTATION.
         cg_data = ls_img_activity ).
 
     READ TABLE ls_img_activity-texts INTO ls_text
-                                     WITH KEY spras = sy-langu.
+                                     WITH KEY spras = mv_language.
 
     CALL FUNCTION 'S_CUS_IMG_ACTIVITY_SAVE'
       EXPORTING
@@ -88,7 +88,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CUS0 IMPLEMENTATION.
         mode                = 'I'
         global_lock         = abap_true
         devclass            = iv_package
-        master_language     = sy-langu
+        master_language     = mv_language
         suppress_dialog     = abap_true
       EXCEPTIONS
         cancelled           = 1
