@@ -189,8 +189,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
         io_xml->read( EXPORTING iv_name = c_s_dataname-segment_definition
                       CHANGING  cg_data = lt_segment_definitions ).
 
-
-      CATCH zcx_abapgit_exception ##no_handler.
+      CATCH zcx_abapgit_exception.
         RETURN. "previous XML version or no IDoc segment
     ENDTRY.
 
