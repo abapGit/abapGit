@@ -321,7 +321,7 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
       EXPORTING
         name          = mv_name
         id            = mv_id
-        langu         = sy-langu
+        langu         = mv_language
       IMPORTING
         dd12v_wa      = ls_extension_index-dd12v
       TABLES

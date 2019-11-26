@@ -857,7 +857,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     "   FORM GROUP_CHANGE
 
     UPDATE tlibt SET areat = iv_short_text
-                 WHERE spras = sy-langu
+                 WHERE spras = mv_language
                  AND   area  = iv_group.
 
   ENDMETHOD.
