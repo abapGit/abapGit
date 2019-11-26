@@ -85,7 +85,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
       LOOP AT lt_dd07v_tmp ASSIGNING <ls_dd07v>.
         lv_valpos = <ls_dd07v>-valpos.
         READ TABLE lt_dd07_texts ASSIGNING <ls_dd07_text>
-          WITH KEY ddlanguage = <lv_lang> valpos = <ls_dd07v>-valpos.
+          WITH KEY ddlanguage = <lv_lang> domvalue_l = <ls_dd07v>-domvalue_l
+                   domvalue_h = <ls_dd07v>-domvalue_h.
         CHECK sy-subrc = 0. " ! no translation -> master translation remain (maybe not OK)
         MOVE-CORRESPONDING <ls_dd07_text> TO <ls_dd07v>.
         <ls_dd07v>-valpos = lv_valpos.
@@ -172,6 +173,10 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
     SORT lt_i18n_langs ASCENDING.
     SORT lt_dd01_texts BY ddlanguage ASCENDING.
     SORT lt_dd07_texts BY valpos ASCENDING ddlanguage ASCENDING.
+
+    LOOP AT lt_dd07_texts ASSIGNING <ls_dd07_text>.
+      CLEAR: <ls_dd07_text>-valpos.
+    ENDLOOP.
 
     IF lines( lt_i18n_langs ) > 0.
       io_xml->add( iv_name = 'I18N_LANGS'
@@ -360,6 +365,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
           lv_masklen TYPE c LENGTH 4,
           lt_dd07v   TYPE TABLE OF dd07v.
 
+    FIELD-SYMBOLS <ls_dd07v> TYPE dd07v.
 
     lv_name = ms_item-obj_name.
 
@@ -395,6 +401,10 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
     SORT lt_dd07v BY
       valpos ASCENDING
       ddlanguage ASCENDING.
+
+    LOOP AT lt_dd07v ASSIGNING <ls_dd07v>.
+      CLEAR: <ls_dd07v>-domname, <ls_dd07v>-valpos.
+    ENDLOOP.
 
     io_xml->add( iv_name = 'DD01V'
                  ig_data = ls_dd01v ).
