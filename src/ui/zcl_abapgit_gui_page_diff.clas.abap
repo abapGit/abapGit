@@ -1060,9 +1060,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ro_html->add( '});' ).
 
     " Select text in a column of an HTML table and copy to clipboard (in DIFF view)
-    " (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
-    ro_html->add( 'addMousedownEventListener();' ).
-    ro_html->add( 'addCopyEventListener();' ).
+    ro_html->add( 'var columnSelection = DiffColumnSelection_Initialize( );' ).
 
   ENDMETHOD.
 

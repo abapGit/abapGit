@@ -26,9 +26,6 @@
 /* exported enumerateJumpAllFiles */
 /* exported enumerateToolbarActions */
 
-var selectedColumnIdx = -1;
-var lineNumColumnIdx = -1;
-
 /**********************************************************
  * Polyfills
  **********************************************************/
@@ -1845,75 +1842,125 @@ function enumerateJumpAllFiles() {
       };});
 }
 
-function addMousedownEventListener() {
+function DiffColumnSelection_Initialize() {
+  DiffColumnSelection.prototype.addMousedownEventListener = DiffColumnSelection_addMousedownEventListener;
+  DiffColumnSelection.prototype.mousedownHandler = DiffColumnSelection_mousedownHandler;
+  DiffColumnSelection.prototype.addCopyEventListener = DiffColumnSelection_addCopyEventListener;
+  DiffColumnSelection.prototype.copyHandler = DiffColumnSelection_copyHandler;
+  DiffColumnSelection.prototype.getSelectedText = DiffColumnSelection_getSelectedText;
+  var columnSelection = new DiffColumnSelection();
+  return columnSelection;
+}
+
+function DiffColumnSelection() {
+  this.addMousedownEventListener();
+  this.addCopyEventListener();
+  this.selectedColumnIdx = -1;
+  this.lineNumColumnIdx = -1;
+}
+
+function DiffColumnSelection_addMousedownEventListener() {
   // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
   // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
   // Process mousedown event for all TD elements -> apply CSS class at TABLE level.
   // (https://stackoverflow.com/questions/40956717/how-to-addeventlistener-to-multiple-elements-in-a-single-line)
-  document.addEventListener("mousedown", function(e){
-    if (e.button !== 0) return; // function is only valid for main button
-    var td = e.target;
-    while (td != undefined && td.tagName != "TD" && td.tagName != "TBODY") td = td.parentElement;
-    if (td == undefined) return;
-    var patchColumns = 0;
-    if (td.parentElement.cells[0].classList.contains("patch")) {
-      patchColumns = 1;
-    }
-    var table = td.parentElement.parentElement;
-    if (td.classList.contains("diff_right")) {
+  document.addEventListener("mousedown", 
+    //https://stackoverflow.com/questions/2749244/javascript-setinterval-and-this-solution
+    (function(self) {
+      return function(e) {
+        self.mousedownHandler(e);
+      }})(this));
+}
+
+function DiffColumnSelection_mousedownHandler(e) {
+  unifiedLineNumColumnIdx = 0;
+  unifiedCodeColumnIdx = 3;
+  splitLineNumLeftColumnIdx = 0;
+  splitCodeLeftColumnIdx = 2;
+  splitLineNumRightColumnIdx = 3;
+  splitCodeRightColumnIdx = 5;
+
+  if (e.button !== 0) return; // function is only valid for left button, not right button
+
+  var td = e.target;
+  while (td != undefined && td.tagName != "TD" && td.tagName != "TBODY") td = td.parentElement;
+  if (td == undefined) return;
+  var table = td.parentElement.parentElement;
+
+  var patchColumnCount = 0;
+  if (td.parentElement.cells[0].classList.contains("patch")) {
+    patchColumnCount = 1;
+  }
+
+  if (td.classList.contains("diff_left")) {
+    table.classList.remove("diff_select_right");
+    table.classList.add("diff_select_left");
+    if ( window.getSelection() && this.selectedColumnIdx != splitCodeLeftColumnIdx + patchColumnCount ) {
+      // De-select to avoid effect of dragging selection in case the right column was first selected
+      if (document.body.createTextRange) { // All IE but Edge
+        // document.getSelection().removeAllRanges() may trigger error
+        // so use this code which is equivalent but does not fail
+        // (https://stackoverflow.com/questions/22914075/javascript-error-800a025e-using-range-selector)
+        range = document.body.createTextRange();
+        range.collapse();
+        range.select();
+      } else {
+        document.getSelection().removeAllRanges();
+      }}
+    this.selectedColumnIdx = splitCodeLeftColumnIdx + patchColumnCount;
+    this.lineNumColumnIdx = splitLineNumLeftColumnIdx + patchColumnCount;
+
+  } else if (td.classList.contains("diff_right")) {
       table.classList.remove("diff_select_left");
       table.classList.add("diff_select_right");
-      if (!e.shiftKey || ( window.getSelection() && selectedColumnIdx != 5 + patchColumns )) {
-        // https://stackoverflow.com/questions/22914075/javascript-error-800a025e-using-range-selector
+      if ( window.getSelection() && this.selectedColumnIdx != splitCodeRightColumnIdx + patchColumnCount ) {
         if (document.body.createTextRange) { // All IE but Edge
+          // document.getSelection().removeAllRanges() may trigger error
+          // so use this code which is equivalent but does not fail
+          // (https://stackoverflow.com/questions/22914075/javascript-error-800a025e-using-range-selector)
           var range = document.body.createTextRange();
           range.collapse();
           range.select();
         } else {
           document.getSelection().removeAllRanges();
         }}
-      selectedColumnIdx = 5 + patchColumns;
-      lineNumColumnIdx = 3 + patchColumns;
-    } else if (td.classList.contains("diff_left")) {
-      table.classList.remove("diff_select_right");
-      table.classList.add("diff_select_left");
-      if (!e.shiftKey || ( window.getSelection() && selectedColumnIdx != 2 + patchColumns )) {
-        // https://stackoverflow.com/questions/22914075/javascript-error-800a025e-using-range-selector
-        if (document.body.createTextRange) { // All IE but Edge
-          range = document.body.createTextRange();
-          range.collapse();
-          range.select();
-        } else {
-          document.getSelection().removeAllRanges();
-        }}
-      selectedColumnIdx = 2 + patchColumns;
-      lineNumColumnIdx = 0 + patchColumns;
-    } else if (td.classList.contains("diff_unified")) {
-      selectedColumnIdx = 3;
-      lineNumColumnIdx = 0;
-    } else {
-      selectedColumnIdx = -1;
-      lineNumColumnIdx = -1;
-    }});
+      this.selectedColumnIdx = splitCodeRightColumnIdx + patchColumnCount;
+      this.lineNumColumnIdx = splitLineNumRightColumnIdx + patchColumnCount;
+
+  } else if (td.classList.contains("diff_unified")) {
+    this.selectedColumnIdx = unifiedCodeColumnIdx;
+    this.lineNumColumnIdx = unifiedLineNumColumnIdx;
+
+  } else {
+    this.selectedColumnIdx = -1;
+    this.lineNumColumnIdx = -1;
+  }
 }
 
-function addCopyEventListener() {
+function DiffColumnSelection_addCopyEventListener() {
   // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
   // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
-  document.addEventListener("copy", function(e){
-    var td = e.target;
-    while (td != undefined && td.tagName != "TD" && td.tagName != "TBODY") td = td.parentElement;
-    if(td != undefined){
-      // Use window.clipboardData instead of e.clipboardData
-      // (https://stackoverflow.com/questions/23470958/ie-10-copy-paste-issue)
-      var clipboardData = e.clipboardData == undefined ? window.clipboardData : e.clipboardData;
-      var text = getSelectedText();
-      clipboardData.setData("text", text);
-      e.preventDefault();
-    }});
+  document.addEventListener("copy", 
+    (function(self) {
+      return function(e) {
+        self.copyHandler(e);
+      }})(this));
 }
 
-function getSelectedText() {
+function DiffColumnSelection_copyHandler(e) {
+  var td = e.target;
+  while (td != undefined && td.tagName != "TD" && td.tagName != "TBODY") td = td.parentElement;
+  if(td != undefined){
+    // Use window.clipboardData instead of e.clipboardData
+    // (https://stackoverflow.com/questions/23470958/ie-10-copy-paste-issue)
+    var clipboardData = e.clipboardData == undefined ? window.clipboardData : e.clipboardData;
+    var text = this.getSelectedText();
+    clipboardData.setData("text", text);
+    e.preventDefault();
+    };
+}
+
+function DiffColumnSelection_getSelectedText() {
   // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
   // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
   var sel = window.getSelection(),
@@ -1921,26 +1968,24 @@ function getSelectedText() {
     doc = range.cloneContents(),
     nodes = doc.querySelectorAll("tr"),
     text = "";
-
   if (nodes.length === 0) {
     text = doc.textContent;
   } else {
-    // special processing for TD tag which sometimes contains newline
-    // (/src/ui/zabapgit_js_common.w3mi.data.js) so don't add newline in that case.
-    var newline = "";
+    var newline = "",
+      realThis = this;
     [].forEach.call(nodes, function(tr, i) {
-      var cellIdx = ( i==0 ? 0 : selectedColumnIdx );
+      var cellIdx = ( i==0 ? 0 : realThis.selectedColumnIdx );
       if (tr.cells.length > cellIdx) {
         var tdSelected = tr.cells[cellIdx];
-        var tdLineNum = tr.cells[lineNumColumnIdx];
+        var tdLineNum = tr.cells[realThis.lineNumColumnIdx];
         // copy is interesting for remote code, don't copy lines which exist only locally
         if (i==0 || tdLineNum.getAttribute("line-num")!="") {
           text += newline + tdSelected.textContent;
+          // special processing for TD tag which sometimes contains newline
+          // (expl: /src/ui/zabapgit_js_common.w3mi.data.js) so don't add newline again in that case.
           var lastChar = tdSelected.textContent[ tdSelected.textContent.length - 1 ];
           if ( lastChar == "\n" ) newline = "";
           else newline = "\n";
-        }}});
-  }
-
+        }}})};
   return text;
 }
