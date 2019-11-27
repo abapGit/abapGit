@@ -59,6 +59,7 @@ IAXU | ITS: XML Templates for HTML Templates | Yes
 IDOC | IDoc Type | Yes
 IEXT | Enhancement | Yes
 INTF | Interface (ABAP objects) | Yes
+IOBJ | BW: InfoObject | Yes
 IWMO | Gateway Business Suite Enablement - Model | Yes
 IWOM | Gateway: Model Metadata | Yes
 IWPR | Gateway Business Suite Enablement - Service Builder Project | Yes
