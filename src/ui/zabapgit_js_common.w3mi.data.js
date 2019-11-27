@@ -312,7 +312,11 @@ StageHelper.prototype.findCounters = function() {
 };
 
 StageHelper.prototype.injectFilterMe = function() {
-  var changedByHead = this.dom.stageTab.tHead.rows[0].cells[this.colIndex.user];
+  var tabFirstHead = this.dom.stageTab.tHead.rows[0];
+  if (!tabFirstHead || tabFirstHead.className !== "local") {
+    return; // for the case only "remove part" is displayed
+  }
+  var changedByHead = tabFirstHead.cells[this.colIndex.user];
   changedByHead.innerText = changedByHead.innerText + " (";
   var a = document.createElement("A");
   a.appendChild(document.createTextNode("me"));
