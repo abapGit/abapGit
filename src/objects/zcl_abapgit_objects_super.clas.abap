@@ -211,7 +211,6 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
 
 
-
   METHOD get_metadata.
 
     DATA: lv_class TYPE string.
