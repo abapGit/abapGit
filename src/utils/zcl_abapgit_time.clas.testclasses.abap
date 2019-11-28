@@ -40,13 +40,12 @@ CLASS ltcl_time_test IMPLEMENTATION.
         lv_unix+12 = lv_utcdiff.
 
         cl_abap_unit_assert=>assert_equals(
-          EXPORTING
             act                  = zcl_abapgit_time=>get_unix( iv_date = '20191124'
                                                                iv_time = '152521' )
             exp                  = lv_unix ). " User-specific test!
 
       CATCH cx_root.
-        cl_abap_unit_assert=>fail('Exception was unexpectedly  thrown.').
+        cl_abap_unit_assert=>fail( 'Exception was unexpectedly  thrown.' ).
 
     ENDTRY.
 
@@ -82,7 +81,6 @@ CLASS ltcl_time_test IMPLEMENTATION.
                                          ev_time = lv_time ).
 
     cl_abap_unit_assert=>assert_equals(
-      EXPORTING
         act = lv_date
         exp = '20191124' ).
 
@@ -94,7 +92,6 @@ CLASS ltcl_time_test IMPLEMENTATION.
     ENDCASE.
 
     cl_abap_unit_assert=>assert_equals(
-      EXPORTING
         act = lv_time
         exp = '152521' ). " This is GMT +1. Please provide the expected value by your timezone!
 
