@@ -789,12 +789,12 @@ function DiffColumnSelection() {
 DiffColumnSelection.prototype.addMousedownEventListener = function() {
   //https://stackoverflow.com/questions/2749244/javascript-setinterval-and-this-solution
   document.addEventListener("mousedown", this.mousedownEventListener.bind(this));
-}
+};
 
 DiffColumnSelection.prototype.addCopyEventListener = function() {
   //https://stackoverflow.com/questions/2749244/javascript-setinterval-and-this-solution
   document.addEventListener("copy", this.copyEventListener.bind(this));
-}
+};
 
 DiffColumnSelection.prototype.mousedownEventListener = function(e) {
   // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
@@ -863,7 +863,7 @@ DiffColumnSelection.prototype.mousedownEventListener = function(e) {
     this.selectedColumnIdx = -1;
     this.lineNumColumnIdx = -1;
   }
-}
+};
 
 DiffColumnSelection.prototype.copyEventListener = function(e) {
   // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
@@ -878,7 +878,7 @@ DiffColumnSelection.prototype.copyEventListener = function(e) {
     clipboardData.setData("text", text);
     e.preventDefault();
   }
-}
+};
 
 DiffColumnSelection.prototype.getSelectedText = function() {
   // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
@@ -908,7 +908,7 @@ DiffColumnSelection.prototype.getSelectedText = function() {
           else newline = "\n";
         }}});}
   return text;
-}
+};
 
 /**********************************************************
  * Other functions
