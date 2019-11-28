@@ -1,133 +1,129 @@
-class ZCL_ABAPGIT_OBJECT_ODSO definition
-  public
-  inheriting from ZCL_ABAPGIT_OBJECTS_SUPER
-  final
-  create public .
+CLASS zcl_abapgit_object_odso DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  FINAL
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  interfaces ZIF_ABAPGIT_OBJECT .
+    INTERFACES zif_abapgit_object .
 
-  aliases MO_FILES
-    for ZIF_ABAPGIT_OBJECT~MO_FILES .
+    ALIASES mo_files
+      FOR zif_abapgit_object~mo_files .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
 
 
-
-CLASS ZCL_ABAPGIT_OBJECT_ODSO IMPLEMENTATION.
+CLASS zcl_abapgit_object_odso IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~changed_by.
 
-    DATA: ls_viobj TYPE rsd_s_viobj,
-          lv_objna TYPE rsd_iobjnm.
+    DATA: lv_dsonam  TYPE rsobjvers,
+          ls_return  TYPE bapiret2,
+          ls_details TYPE bapi6116.
 
-    lv_objna = ms_item-obj_name.
+    lv_dsonam = ms_item-obj_name.
 
-    CALL FUNCTION 'RSD_IOBJ_GET'
+    CALL FUNCTION 'BAPI_ODSO_GETDETAIL'
       EXPORTING
-        i_iobjnm  = lv_objna
-        i_objvers = 'A'
+        odsobject = lv_dsonam
       IMPORTING
-        e_s_viobj = ls_viobj.
+        details   = ls_details
+        return    = ls_return.
 
-    rv_user = ls_viobj-tstpnm.
+    IF ls_return-type = 'E'.
+      zcx_abapgit_exception=>raise( |Error when geting changed by of ODSO: { ls_return-message }| ).
+    ENDIF.
+
+    rv_user = ls_details-tstpnm.
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lt_iobjname     TYPE rsd_t_c30,
-          lv_object       TYPE string,
-          lv_object_class TYPE string,
-          ls_tadir        TYPE zif_abapgit_definitions=>ty_tadir,
-          lv_transp_pkg   TYPE abap_bool.
+    DATA: lv_odso         TYPE rsdodsobject,
+          lv_objname      TYPE sobj_name,
+          lr_collection   TYPE REF TO cl_rsd_odso_collection.
 
-    ls_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
-                                                   iv_object   = ms_item-obj_type
-                                                   iv_obj_name = ms_item-obj_name ).
+    lv_odso = ms_item-obj_name.
+    lv_objname =  ms_item-obj_name.
 
-    lv_transp_pkg =
-    zcl_abapgit_factory=>get_sap_package( iv_package = ls_tadir-devclass )->are_changes_recorded_in_tr_req( ).
+    CREATE OBJECT lr_collection.
 
-    APPEND ms_item-obj_name TO lt_iobjname.
+    TRY.
+        lr_collection->add_tlogo(
+          EXPORTING
+            i_objnm          = lv_objname
+            i_modify         = abap_true
+            i_delete         = abap_true  ).
 
-    CALL FUNCTION 'RSDG_IOBJ_MULTI_DELETE'
-      EXPORTING
-        i_t_iobjnm = lt_iobjname.
+        lr_collection->delete( ).
 
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error when deleting infoObject | ).
-    ENDIF.
-
-    IF lv_transp_pkg = abap_true.
-
-      lv_object_class = ms_item-obj_type.
-      lv_object       = ms_item-obj_name.
-
-      CALL FUNCTION 'RS_CORR_INSERT'
-        EXPORTING
-          object              = lv_object
-          object_class        = lv_object_class
-          master_language     = mv_language
-          global_lock         = abap_true
-          mode                = 'D'
-          suppress_dialog     = abap_true
-        EXCEPTIONS
-          cancelled           = 1
-          permission_failure  = 2
-          unknown_objectclass = 3
-          OTHERS              = 4.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise_t100( ).
-      ENDIF.
-
-    ENDIF.
+      CATCH cx_rs_cancelled.
+        zcx_abapgit_exception=>raise( |Canceled deletion of ODSO: { ms_item-obj_name }| ).
+      CATCH cx_rs_existing.
+      CATCH cx_rs_not_found.
+        zcx_abapgit_exception=>raise( |ODSO not found: { ms_item-obj_name }| ).
+    ENDTRY.
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: ls_details TYPE bapi6108,
-          lt_infoobj TYPE STANDARD TABLE OF bapi6108io,
-          ls_return  TYPE bapiret2,
-          lt_return  TYPE STANDARD TABLE OF bapiret2.
+    DATA: lv_odso        TYPE rsdodsobject,
+          ls_details     TYPE bapi6116,
+          lt_infoobjects TYPE STANDARD TABLE OF bapi6116io,
+          lt_navigation  TYPE STANDARD TABLE OF bapi6116na,
+          lt_indexes     TYPE STANDARD TABLE OF bapi6116in,
+          lt_index_iobj  TYPE STANDARD TABLE OF bapi6116ii,
+          lt_return      TYPE STANDARD TABLE OF bapiret2,
+          ls_return      TYPE bapiret2.
 
     io_xml->read( EXPORTING iv_name = 'ODSO'
-                   CHANGING cg_data = ls_details ).
+                  CHANGING  cg_data = ls_details ).
 
+    io_xml->read( EXPORTING iv_name = 'INFOOBJECTS'
+                  CHANGING  cg_data =  lt_infoobjects ).
+
+    io_xml->read( EXPORTING iv_name = 'NAVIGATION'
+                  CHANGING  cg_data =  lt_navigation ).
+
+    io_xml->read( EXPORTING iv_name = 'INDEXES'
+                  CHANGING  cg_data =  lt_indexes ).
+
+    io_xml->read( EXPORTING iv_name = 'INDEX_IOBJ'
+                  CHANGING  cg_data =  lt_index_iobj ).
 
     CALL FUNCTION 'BAPI_ODSO_CREATE'
       EXPORTING
-        details              = ls_details                 " DataStore Object - Details
-*      IMPORTING
-*        odsobject            =                  " DataStore Object
-*      TABLES
-*        infoobjects          =                  " InfoObjects in DataStore Object
-*        navigationattributes =                  " Navigation Attributes for the DataStore Object
-*        indexes              =                  " Indexes for a DataStore Object
-*        indexesinfoobjects   =                  " DataStore Object InfoObjects in Indexes
-        return               =  ls_return                " Detailed log in case of error
-.
-
-    IF ls_return-type = 'E'.
-      zcx_abapgit_exception=>raise( |Error when creating iobj: { ls_return-message }| ).
-    ENDIF.
-
-    APPEND ls_details-infoobject TO lt_infoobj.
-
-    CALL FUNCTION 'BAPI_IOBJ_ACTIVATE_MULTIPLE'
+        details              = ls_details
+      IMPORTING
+        odsobject            = lv_odso
       TABLES
-        infoobjects = lt_infoobj
-        return      = lt_return.
+        infoobjects          = lt_infoobjects
+        navigationattributes = lt_navigation
+        indexes              = lt_indexes
+        indexesinfoobjects   = lt_index_iobj
+        return               = lt_return.
 
     READ TABLE lt_return WITH KEY type = 'E' INTO ls_return.
     IF sy-subrc = 0.
-      zcx_abapgit_exception=>raise( |Error when activating iobj: { ls_return-message }| ).
+      zcx_abapgit_exception=>raise( |Error when creating ODSO: { ls_return-message }| ).
+    ENDIF.
+
+    CALL FUNCTION 'BAPI_ODSO_ACTIVATE'
+      EXPORTING
+        odsobject = lv_odso
+      TABLES
+        return    = lt_return.
+
+    READ TABLE lt_return WITH KEY type = 'E' INTO ls_return.
+    IF sy-subrc = 0.
+      zcx_abapgit_exception=>raise( |Error when activating ODSO: { ls_return-message }| ).
     ENDIF.
 
     tadir_insert( iv_package ).
@@ -163,14 +159,12 @@ CLASS ZCL_ABAPGIT_OBJECT_ODSO IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-    rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~is_active.
 
-    DATA: lv_dsona TYPE  rsdodsobject,
-          lr_odso  TYPE REF TO cl_rsd_odso.
+    DATA: lv_dsona TYPE  rsdodsobject.
 
     lv_dsona = ms_item-obj_name.
 
@@ -194,7 +188,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ODSO IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-    zcx_abapgit_exception=>raise( |Jump to DSO is not yet supported| ).
+    zcx_abapgit_exception=>raise( |Jump to ODSO is not yet supported| ).
   ENDMETHOD.
 
 
@@ -223,24 +217,24 @@ CLASS ZCL_ABAPGIT_OBJECT_ODSO IMPLEMENTATION.
         indexesinfoobjects   = lt_index_iobj.
 
     IF ls_return-type = 'E'.
-      zcx_abapgit_exception=>raise( |Error when geting getails of DSO: { ls_return-message }| ).
+      zcx_abapgit_exception=>raise( |Error when geting getails of ODSO: { ls_return-message }| ).
     ENDIF.
 
     CLEAR: ls_details-tstpnm, ls_details-timestmp, ls_details-tstpnm, ls_details-conttimestmp,ls_details-owner.
 
-    io_xml->add( iv_name = 'DSO'
+    io_xml->add( iv_name = 'ODSO'
                  ig_data = ls_details ).
 
-    io_xml->add( iv_name = 'DSO_INFOOBJECTS'
+    io_xml->add( iv_name = 'INFOOBJECTS'
                  ig_data = lt_infoobjects ).
 
-    io_xml->add( iv_name = 'DSO_NAVIGATION'
+    io_xml->add( iv_name = 'NAVIGATION'
                  ig_data = lt_navigation ).
 
-    io_xml->add( iv_name = 'DSO_INDEXES'
+    io_xml->add( iv_name = 'INDEXES'
                  ig_data = lt_indexes ).
 
-    io_xml->add( iv_name = 'DSO_INDEX_IOBJ'
+    io_xml->add( iv_name = 'INDEX_IOBJ'
                  ig_data = lt_index_iobj ).
 
   ENDMETHOD.
