@@ -9,7 +9,7 @@ CLASS zcl_abapgit_adt_link DEFINITION
                   iv_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
                   iv_sub_obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type OPTIONAL
                   iv_line_number  TYPE i OPTIONAL
-        RETURNING VALUE(result)   TYPE string
+        RETURNING VALUE(rv_result)   TYPE string
         RAISING   zcx_abapgit_exception.
 
   PROTECTED SECTION.
@@ -88,7 +88,7 @@ CLASS zcl_abapgit_adt_link IMPLEMENTATION.
 
         CONCATENATE 'adt://' sy-sysid <lv_uri> INTO lv_adt_link.
 
-        result = lv_adt_link.
+        rv_result = lv_adt_link.
       CATCH cx_root.
         zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
     ENDTRY.
