@@ -55,7 +55,6 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
 
     TRY.
         lr_collection->add_tlogo(
-          EXPORTING
             i_objnm          = lv_objname
             i_modify         = abap_true
             i_delete         = abap_true  ).
