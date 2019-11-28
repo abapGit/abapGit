@@ -1059,8 +1059,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ro_html->add( '  hotkeyDescription: "Jump to file ..."' ).
     ro_html->add( '});' ).
 
-    " Select text in a column of an HTML table and copy to clipboard (in DIFF view)
-    ro_html->add( 'var columnSelection = DiffColumnSelection_Initialize( );' ).
+    " Feature for selecting ABAP code by column and copy to clipboard
+    ro_html->add( 'var columnSelection = new DiffColumnSelection();' ).
 
   ENDMETHOD.
 
