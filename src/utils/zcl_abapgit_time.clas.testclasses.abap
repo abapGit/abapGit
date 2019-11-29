@@ -4,7 +4,7 @@ CLASS ltcl_time_test DEFINITION FINAL
   RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
-    METHODS get_unix FOR TESTING.
+    METHODS get_unix FOR TESTING RAISING cx_static_check.
     METHODS get_utc FOR TESTING.
 ENDCLASS.
 
@@ -34,20 +34,14 @@ CLASS ltcl_time_test IMPLEMENTATION.
         conversion_error = 1
         OTHERS           = 2.
 
-    TRY.
-        lv_unix = '1574605521'.
-        lv_unix+11 = lv_utcsign.
-        lv_unix+12 = lv_utcdiff.
+    lv_unix = '1574605521'.
+    lv_unix+11 = lv_utcsign.
+    lv_unix+12 = lv_utcdiff.
 
-        cl_abap_unit_assert=>assert_equals(
-            act                  = zcl_abapgit_time=>get_unix( iv_date = '20191124'
-                                                               iv_time = '152521' )
-            exp                  = lv_unix ). " User-specific test!
-
-      CATCH cx_root.
-        cl_abap_unit_assert=>fail( 'Exception was unexpectedly  thrown.' ).
-
-    ENDTRY.
+    cl_abap_unit_assert=>assert_equals(
+        act                  = zcl_abapgit_time=>get_unix( iv_date = '20191124'
+                                                           iv_time = '152521' )
+        exp                  = lv_unix ). " User-specific test!
 
   ENDMETHOD.
 
