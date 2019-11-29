@@ -776,25 +776,12 @@ function addMarginBottom(){
  **********************************************************/
 
 function DiffColumnSelection() {
-  //this.addMousedownEventListener();
-  //this.addCopyEventListener();
   this.selectedColumnIdx = -1;
   this.lineNumColumnIdx = -1;
   //https://stackoverflow.com/questions/2749244/javascript-setinterval-and-this-solution
   document.addEventListener("mousedown", this.mousedownEventListener.bind(this));
-  //https://stackoverflow.com/questions/2749244/javascript-setinterval-and-this-solution
   document.addEventListener("copy", this.copyEventListener.bind(this));
 }
-
-DiffColumnSelection.prototype.addMousedownEventListener = function() {
-  //https://stackoverflow.com/questions/2749244/javascript-setinterval-and-this-solution
-  document.addEventListener("mousedown", this.mousedownEventListener.bind(this));
-};
-
-DiffColumnSelection.prototype.addCopyEventListener = function() {
-  //https://stackoverflow.com/questions/2749244/javascript-setinterval-and-this-solution
-  document.addEventListener("copy", this.copyEventListener.bind(this));
-};
 
 DiffColumnSelection.prototype.mousedownEventListener = function(e) {
   // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
@@ -873,7 +860,7 @@ DiffColumnSelection.prototype.copyEventListener = function(e) {
   if(td != undefined){
     // Use window.clipboardData instead of e.clipboardData
     // (https://stackoverflow.com/questions/23470958/ie-10-copy-paste-issue)
-    var clipboardData = e.clipboardData == undefined ? window.clipboardData : e.clipboardData;
+    var clipboardData = ( e.clipboardData == undefined ? window.clipboardData : e.clipboardData );
     var text = this.getSelectedText();
     clipboardData.setData("text", text);
     e.preventDefault();
