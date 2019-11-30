@@ -165,7 +165,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
         lo_char->if_cls_attribute~set_obj_values_have_subtypes( ls_char-cls_attribute-objs_w_subtype ).
         lo_char->if_cls_attribute~set_arbtry_val_type( ls_char-cls_attribute-arbtry_val_type ).
 
-        READ TABLE ls_char-cls_attributet INTO ls_description WITH KEY langu = sy-langu.
+        READ TABLE ls_char-cls_attributet INTO ls_description WITH KEY langu = mv_language.
         IF sy-subrc <> 0.
           READ TABLE ls_char-cls_attributet INTO ls_description INDEX 1.
         ENDIF.

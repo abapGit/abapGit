@@ -234,7 +234,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
 * copy everything to local, the function module changes the values
     ls_scp1 = is_scp1.
 
-    READ TABLE ls_scp1-scprtext INTO ls_text WITH KEY langu = sy-langu. "#EC CI_SUBRC
+    READ TABLE ls_scp1-scprtext INTO ls_text WITH KEY langu = mv_language. "#EC CI_SUBRC
 
     CALL FUNCTION 'SCPR_TEMPL_MN_TEMPLATE_SAVE'
       EXPORTING
@@ -287,7 +287,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
 * copy everything to local, the function module changes the values
     ls_scp1 = is_scp1.
 
-    READ TABLE ls_scp1-scprtext INTO ls_text WITH KEY langu = sy-langu. "#EC CI_SUBRC
+    READ TABLE ls_scp1-scprtext INTO ls_text WITH KEY langu = mv_language. "#EC CI_SUBRC
 
 * see fm SCPR_PRSET_DB_STORE, only this field and sequence is used
     LOOP AT ls_scp1-subprofs INTO ls_profs.
