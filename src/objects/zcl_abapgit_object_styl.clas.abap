@@ -146,7 +146,7 @@ CLASS ZCL_ABAPGIT_OBJECT_STYL IMPLEMENTATION.
 
     CLEAR ls_bcdata.
     ls_bcdata-fnam     = 'RSSCS-TDSPRAS'.
-    ls_bcdata-fval     = sy-langu.
+    ls_bcdata-fval     = mv_language.
     APPEND ls_bcdata TO lt_bcdata.
 
     CLEAR ls_bcdata.
