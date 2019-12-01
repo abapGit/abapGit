@@ -1098,6 +1098,16 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
+* IOBJ before ODSOs
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'IOBJ'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
+* ODSOs after IOBJ
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'ODSO'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
   ENDMETHOD.
 
 

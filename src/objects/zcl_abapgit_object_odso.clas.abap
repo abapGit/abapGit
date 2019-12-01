@@ -44,9 +44,11 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_odso         TYPE rsdodsobject,
-          lv_objname      TYPE sobj_name,
-          lr_collection   TYPE REF TO cl_rsd_odso_collection.
+    DATA: lv_odso       TYPE rsdodsobject,
+          lv_objname    TYPE sobj_name,
+          lr_collection TYPE REF TO cl_rsd_odso_collection,
+          lt_msg        TYPE rs_t_msg,
+          ls_msg        TYPE bal_s_msg.
 
     lv_odso = ms_item-obj_name.
     lv_objname =  ms_item-obj_name.
@@ -60,6 +62,16 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
             i_delete         = abap_true  ).
 
         lr_collection->delete( ).
+
+        cl_rso_application_log=>appl_log_msg_read(
+          IMPORTING
+            e_t_msg             =  lt_msg ).
+
+        READ TABLE lt_msg WITH KEY msgty = 'E' INTO ls_msg.
+        IF sy-subrc = 0.
+          zcx_abapgit_exception=>raise(
+          |Error when creating ODSO: { ms_item-obj_name } { ls_msg-msgv1 } { ls_msg-msgv2 }| ).
+        ENDIF.
 
       CATCH cx_rs_cancelled.
         zcx_abapgit_exception=>raise( |Canceled deletion of ODSO: { ms_item-obj_name }| ).
@@ -81,6 +93,10 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
           lt_index_iobj  TYPE STANDARD TABLE OF bapi6116ii,
           lt_return      TYPE STANDARD TABLE OF bapiret2,
           ls_return      TYPE bapiret2.
+
+    IF  cl_rs_b4hana_util=>get_b4hana_switch( ) = cl_rs_b4hana_util=>n_c_switch-b4hana.
+      zcx_abapgit_exception=>raise( |ODSO is not supported on BW4HANA| ).
+    ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'ODSO'
                   CHANGING  cg_data = ls_details ).
