@@ -770,6 +770,133 @@ function addMarginBottom(){
   document.getElementsByTagName("body")[0].style.marginBottom = screen.height + "px";
 }
 
+
+/**********************************************************
+ * Diff page logic of column selection
+ **********************************************************/
+
+function DiffColumnSelection() {
+  this.selectedColumnIdx = -1;
+  this.lineNumColumnIdx = -1;
+  //https://stackoverflow.com/questions/2749244/javascript-setinterval-and-this-solution
+  document.addEventListener("mousedown", this.mousedownEventListener.bind(this));
+  document.addEventListener("copy", this.copyEventListener.bind(this));
+}
+
+DiffColumnSelection.prototype.mousedownEventListener = function(e) {
+  // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
+  // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
+  // Process mousedown event for all TD elements -> apply CSS class at TABLE level.
+  // (https://stackoverflow.com/questions/40956717/how-to-addeventlistener-to-multiple-elements-in-a-single-line)
+  var unifiedLineNumColumnIdx = 0;
+  var unifiedCodeColumnIdx = 3;
+  var splitLineNumLeftColumnIdx = 0;
+  var splitCodeLeftColumnIdx = 2;
+  var splitLineNumRightColumnIdx = 3;
+  var splitCodeRightColumnIdx = 5;
+
+  if (e.button !== 0) return; // function is only valid for left button, not right button
+
+  var td = e.target;
+  while (td != undefined && td.tagName != "TD" && td.tagName != "TBODY") td = td.parentElement;
+  if (td == undefined) return;
+  var table = td.parentElement.parentElement;
+
+  var patchColumnCount = 0;
+  if (td.parentElement.cells[0].classList.contains("patch")) {
+    patchColumnCount = 1;
+  }
+
+  if (td.classList.contains("diff_left")) {
+    table.classList.remove("diff_select_right");
+    table.classList.add("diff_select_left");
+    if ( window.getSelection() && this.selectedColumnIdx != splitCodeLeftColumnIdx + patchColumnCount ) {
+      // De-select to avoid effect of dragging selection in case the right column was first selected
+      if (document.body.createTextRange) { // All IE but Edge
+        // document.getSelection().removeAllRanges() may trigger error
+        // so use this code which is equivalent but does not fail
+        // (https://stackoverflow.com/questions/22914075/javascript-error-800a025e-using-range-selector)
+        range = document.body.createTextRange();
+        range.collapse();
+        range.select();
+      } else {
+        document.getSelection().removeAllRanges();
+      }}
+    this.selectedColumnIdx = splitCodeLeftColumnIdx + patchColumnCount;
+    this.lineNumColumnIdx = splitLineNumLeftColumnIdx + patchColumnCount;
+
+  } else if (td.classList.contains("diff_right")) {
+    table.classList.remove("diff_select_left");
+    table.classList.add("diff_select_right");
+    if ( window.getSelection() && this.selectedColumnIdx != splitCodeRightColumnIdx + patchColumnCount ) {
+      if (document.body.createTextRange) { // All IE but Edge
+        // document.getSelection().removeAllRanges() may trigger error
+        // so use this code which is equivalent but does not fail
+        // (https://stackoverflow.com/questions/22914075/javascript-error-800a025e-using-range-selector)
+        var range = document.body.createTextRange();
+        range.collapse();
+        range.select();
+      } else {
+        document.getSelection().removeAllRanges();
+      }}
+    this.selectedColumnIdx = splitCodeRightColumnIdx + patchColumnCount;
+    this.lineNumColumnIdx = splitLineNumRightColumnIdx + patchColumnCount;
+
+  } else if (td.classList.contains("diff_unified")) {
+    this.selectedColumnIdx = unifiedCodeColumnIdx;
+    this.lineNumColumnIdx = unifiedLineNumColumnIdx;
+
+  } else {
+    this.selectedColumnIdx = -1;
+    this.lineNumColumnIdx = -1;
+  }
+};
+
+DiffColumnSelection.prototype.copyEventListener = function(e) {
+  // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
+  // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
+  var td = e.target;
+  while (td != undefined && td.tagName != "TD" && td.tagName != "TBODY") td = td.parentElement;
+  if(td != undefined){
+    // Use window.clipboardData instead of e.clipboardData
+    // (https://stackoverflow.com/questions/23470958/ie-10-copy-paste-issue)
+    var clipboardData = ( e.clipboardData == undefined ? window.clipboardData : e.clipboardData );
+    var text = this.getSelectedText();
+    clipboardData.setData("text", text);
+    e.preventDefault();
+  }
+};
+
+DiffColumnSelection.prototype.getSelectedText = function() {
+  // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
+  // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
+  var sel = window.getSelection(),
+    range = sel.getRangeAt(0),
+    doc = range.cloneContents(),
+    nodes = doc.querySelectorAll("tr"),
+    text = "";
+  if (nodes.length === 0) {
+    text = doc.textContent;
+  } else {
+    var newline = "",
+      realThis = this;
+    [].forEach.call(nodes, function(tr, i) {
+      var cellIdx = ( i==0 ? 0 : realThis.selectedColumnIdx );
+      if (tr.cells.length > cellIdx) {
+        var tdSelected = tr.cells[cellIdx];
+        var tdLineNum = tr.cells[realThis.lineNumColumnIdx];
+        // copy is interesting for remote code, don't copy lines which exist only locally
+        if (i==0 || tdLineNum.getAttribute("line-num")!="") {
+          text += newline + tdSelected.textContent;
+          // special processing for TD tag which sometimes contains newline
+          // (expl: /src/ui/zabapgit_js_common.w3mi.data.js) so don't add newline again in that case.
+          var lastChar = tdSelected.textContent[ tdSelected.textContent.length - 1 ];
+          if ( lastChar == "\n" ) newline = "";
+          else newline = "\n";
+        }}});}
+  return text;
+};
+
 /**********************************************************
  * Other functions
  **********************************************************/
