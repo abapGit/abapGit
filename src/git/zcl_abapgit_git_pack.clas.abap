@@ -723,7 +723,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
     DATA: lv_string TYPE string,
           lv_time   TYPE zcl_abapgit_time=>ty_unixtime.
 
-    lv_time = zcl_abapgit_time=>get( ).
+    lv_time = zcl_abapgit_time=>get_unix( ).
 
     lv_string = |object { is_tag-object }{ zif_abapgit_definitions=>c_newline }|
              && |type { is_tag-type }{ zif_abapgit_definitions=>c_newline }|
