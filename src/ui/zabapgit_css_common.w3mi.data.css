@@ -432,6 +432,58 @@ table.diff_tab td.code {
 table.diff_tab tbody tr:first-child td { padding-top: 0.5em; }
 table.diff_tab tbody tr:last-child td { padding-bottom: 0.5em; }
 
+table.diff_tab td.mark, th.mark {
+  width: 0.1%;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+
+.diff_select_left td.diff_right,
+.diff_select_left td.diff_right *,
+.diff_select_left th.diff_right,
+.diff_select_left th.diff_right *,
+.diff_select_right td.diff_left,
+.diff_select_right td.diff_left *,
+.diff_select_right th.diff_left,
+.diff_select_right th.diff_left * {
+  -ms-user-select: none;
+  user-select: none;
+  cursor: text;
+}
+
+.diff_select_left td.diff_left,
+.diff_select_left td.diff_left *,
+.diff_select_left th.diff_left,
+.diff_select_left th.diff_left *,
+.diff_select_right td.diff_right,
+.diff_select_right td.diff_right *,
+.diff_select_right th.diff_right,
+.diff_select_right th.diff_right * {
+  -ms-user-select: text;
+  user-select: text;
+}
+
+td.diff_others::selection,
+td.diff_others *::selection,
+th.diff_others::selection,
+th.diff_others *::selection {
+  background-color: transparent;
+  cursor: default;
+}
+
+.diff_select_left td.diff_right::selection,
+.diff_select_left td.diff_right *::selection,
+.diff_select_left th.diff_right::selection,
+.diff_select_left th.diff_right *::selection,
+.diff_select_right td.diff_left::selection,
+.diff_select_right td.diff_left *::selection,
+.diff_select_right th.diff_left::selection,
+.diff_select_right th.diff_left *::selection {
+  background-color: transparent;
+  cursor: text;
+}
+
 /* DEBUG INFO STYLES */
 div.debug_container {
   padding: 0.5em;
