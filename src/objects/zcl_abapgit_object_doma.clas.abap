@@ -44,6 +44,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
   METHOD deserialize_texts.
 
     DATA: lv_name       TYPE ddobjname,
+          lv_valpos     TYPE valpos,
           ls_dd01v_tmp  TYPE dd01v,
           lt_dd07v_tmp  TYPE TABLE OF dd07v,
           lt_i18n_langs TYPE TABLE OF langu,
@@ -82,10 +83,12 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
       " Domain values
       lt_dd07v_tmp = it_dd07v.
       LOOP AT lt_dd07v_tmp ASSIGNING <ls_dd07v>.
+        lv_valpos = <ls_dd07v>-valpos.
         READ TABLE lt_dd07_texts ASSIGNING <ls_dd07_text>
           WITH KEY ddlanguage = <lv_lang> valpos = <ls_dd07v>-valpos.
         CHECK sy-subrc = 0. " ! no translation -> master translation remain (maybe not OK)
         MOVE-CORRESPONDING <ls_dd07_text> TO <ls_dd07v>.
+        <ls_dd07v>-valpos = lv_valpos.
         DELETE lt_dd07_texts INDEX sy-tabix. " Optimization
       ENDLOOP.
 
@@ -135,7 +138,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd01v
       WHERE domname = lv_name
-      AND ddlanguage <> mv_language.                    "#EC CI_SUBRC
+      AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
 
     LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
       lv_index = sy-tabix.
@@ -257,6 +260,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
           ls_dd01v TYPE dd01v,
           lt_dd07v TYPE TABLE OF dd07v.
 
+    FIELD-SYMBOLS <ls_dd07v> TYPE dd07v.
 
     io_xml->read( EXPORTING iv_name = 'DD01V'
                   CHANGING cg_data = ls_dd01v ).
@@ -266,6 +270,11 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
     corr_insert( iv_package = iv_package iv_object_class = 'DICT' ).
 
     lv_name = ms_item-obj_name. " type conversion
+
+    LOOP AT lt_dd07v ASSIGNING <ls_dd07v>.
+      <ls_dd07v>-domname = lv_name.
+      <ls_dd07v>-valpos = sy-tabix.
+    ENDLOOP.
 
     CALL FUNCTION 'DDIF_DOMA_PUT'
       EXPORTING
