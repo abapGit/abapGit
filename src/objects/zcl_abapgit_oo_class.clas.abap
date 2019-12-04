@@ -201,13 +201,14 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
       lv_updated = lo_oo_deserializer->update_report( iv_program = lv_program
                                   it_source  = lt_source ).
       IF lv_updated = abap_true.
-        lt_auxsrc = lt_public.
-        APPEND LINES OF lt_source TO lt_auxsrc.
+* todo, see issue #3053
+*        lt_auxsrc = lt_public.
+*        APPEND LINES OF lt_source TO lt_auxsrc.
 
         lo_oo_deserializer->update_meta(
                      iv_name     = is_key-clsname
                      iv_exposure = seoc_exposure_protected
-                     it_source   = lt_auxsrc ).
+                     it_source   = lt_source ).
       ENDIF.
     ENDIF.
 
@@ -218,13 +219,14 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
       lv_updated = lo_oo_deserializer->update_report( iv_program = lv_program
                                   it_source  = lt_source ).
       IF lv_updated = abap_true.
-        lt_auxsrc = lt_public.
-        APPEND LINES OF lt_source TO lt_auxsrc.
+* todo, see issue #3053
+*        lt_auxsrc = lt_public.
+*        APPEND LINES OF lt_source TO lt_auxsrc.
 
         lo_oo_deserializer->update_meta(
                      iv_name     = is_key-clsname
                      iv_exposure = seoc_exposure_private
-                     it_source   = lt_auxsrc ).
+                     it_source   = lt_source ).
       ENDIF.
     ENDIF.
 
