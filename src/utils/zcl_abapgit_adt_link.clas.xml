@@ -3,14 +3,13 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_ABAPGIT_TIME</CLSNAME>
+    <CLSNAME>ZCL_ABAPGIT_ADT_LINK</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Time</DESCRIPT>
+    <DESCRIPT>ADT link generator</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
-    <WITH_UNIT_TESTS>X</WITH_UNIT_TESTS>
    </VSEOCLASS>
   </asx:values>
  </asx:abap>
