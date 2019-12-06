@@ -107,50 +107,36 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
     DATA: ls_details TYPE bapi6108,
           lt_infoobj TYPE STANDARD TABLE OF bapi6108io,
           ls_return  TYPE bapiret2,
-          lt_return  TYPE STANDARD TABLE OF bapiret2,
-          lt_comptab TYPE STANDARD TABLE OF spam_cvers.
-
-    CALL FUNCTION 'OCS_GET_INSTALLED_COMPS'
-      TABLES
-        tt_comptab       = lt_comptab
-      EXCEPTIONS
-        no_release_found = 1
-        wrong_release    = 2
-        OTHERS           = 3.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error when getting system components| ).
-    ENDIF.
-
-    READ TABLE lt_comptab TRANSPORTING NO FIELDS WITH KEY component = 'SAP_BW'.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |System component SAP BW not found| ).
-    ENDIF.
+          lt_return  TYPE STANDARD TABLE OF bapiret2.
 
     io_xml->read( EXPORTING iv_name = 'IOBJ'
                    CHANGING cg_data = ls_details ).
+    TRY.
+        CALL FUNCTION 'BAPI_IOBJ_CREATE'
+          EXPORTING
+            details = ls_details
+          IMPORTING
+            return  = ls_return.
 
-    CALL FUNCTION 'BAPI_IOBJ_CREATE'
-      EXPORTING
-        details = ls_details
-      IMPORTING
-        return  = ls_return.
+        IF ls_return-type = 'E'.
+          zcx_abapgit_exception=>raise( |Error when creating iobj: { ls_return-message }| ).
+        ENDIF.
 
-    IF ls_return-type = 'E'.
-      zcx_abapgit_exception=>raise( |Error when creating iobj: { ls_return-message }| ).
-    ENDIF.
+        APPEND ls_details-infoobject TO lt_infoobj.
 
-    APPEND ls_details-infoobject TO lt_infoobj.
+        CALL FUNCTION 'BAPI_IOBJ_ACTIVATE_MULTIPLE'
+          TABLES
+            infoobjects = lt_infoobj
+            return      = lt_return.
 
-    CALL FUNCTION 'BAPI_IOBJ_ACTIVATE_MULTIPLE'
-      TABLES
-        infoobjects = lt_infoobj
-        return      = lt_return.
+        READ TABLE lt_return WITH KEY type = 'E' INTO ls_return.
+        IF sy-subrc = 0.
+          zcx_abapgit_exception=>raise( |Error when activating iobj: { ls_return-message }| ).
+        ENDIF.
 
-    READ TABLE lt_return WITH KEY type = 'E' INTO ls_return.
-    IF sy-subrc = 0.
-      zcx_abapgit_exception=>raise( |Error when activating iobj: { ls_return-message }| ).
-    ENDIF.
+      CATCH  cx_sy_dyn_call_illegal_func.
+        zcx_abapgit_exception=>raise( |Necessary BW function modules not found| ).
+    ENDTRY.
 
     tadir_insert( iv_package ).
 
@@ -217,7 +203,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
     ASSIGN COMPONENT 'OBJSTAT' OF STRUCTURE <ls_viobj> TO <lv_objstat>.
 
-    IF <lv_objstat> = 'ACT'.
+    IF <lv_objstat> = 'ACT' AND sy-subrc = 0.
       rv_active = abap_true.
     ENDIF.
 
