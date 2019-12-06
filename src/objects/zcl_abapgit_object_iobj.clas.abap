@@ -16,18 +16,16 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
   METHOD zif_abapgit_object~changed_by.
 
     DATA: lv_objna TYPE c LENGTH 30,
-          lr_viobj TYPE REF TO data,
-          lv_type  TYPE string.
+          lr_viobj TYPE REF TO data.
 
     FIELD-SYMBOLS:
       <lv_tstpnm> TYPE any,
       <ls_viobj>  TYPE any.
 
-    lv_type  = 'rsd_s_viobj'.
     lv_objna = ms_item-obj_name.
 
     TRY.
-        CREATE DATA lr_viobj TYPE (lv_type).
+        CREATE DATA lr_viobj TYPE ('RSD_S_VI_OBJ').
       CATCH cx_sy_create_data_error.
         zcx_abapgit_exception=>raise( |IOBJ is not supported on this system| ).
     ENDTRY.
@@ -194,18 +192,16 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
   METHOD zif_abapgit_object~is_active.
 
     DATA: lv_objna TYPE c LENGTH 30,
-          lr_viobj TYPE REF TO data,
-          lv_type  TYPE string.
+          lr_viobj TYPE REF TO data.
 
     FIELD-SYMBOLS:
       <lv_objstat> TYPE any,
       <ls_viobj>   TYPE any.
 
-    lv_type  = 'rsd_s_viobj'.
     lv_objna = ms_item-obj_name.
 
     TRY.
-        CREATE DATA lr_viobj TYPE (lv_type).
+        CREATE DATA lr_viobj TYPE ('RSD_S_VI_OBJ').
       CATCH cx_sy_create_data_error.
         zcx_abapgit_exception=>raise( |IOBJ is not supported on this system| ).
     ENDTRY.
