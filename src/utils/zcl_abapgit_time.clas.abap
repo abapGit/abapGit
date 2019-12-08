@@ -11,18 +11,11 @@ CLASS zcl_abapgit_time DEFINITION
                 iv_time        TYPE syuzeit DEFAULT sy-uzeit
       RETURNING VALUE(rv_time) TYPE ty_unixtime
       RAISING   zcx_abapgit_exception.
+
     CLASS-METHODS get_utc
       IMPORTING iv_unix TYPE ty_unixtime
       EXPORTING ev_date TYPE sydatum
                 ev_time TYPE syuzeit.
-    CLASS-METHODS date_to_string
-      IMPORTING iv_date        TYPE rsd_chavl_ext
-      RETURNING VALUE(rv_date) TYPE string
-      RAISING   zcx_abapgit_exception.
-    CLASS-METHODS time_to_string
-      IMPORTING iv_time        TYPE rsd_chavl_ext
-      RETURNING VALUE(rv_time) TYPE string
-      RAISING   zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS: c_epoch TYPE d VALUE '19700101'.
@@ -31,6 +24,7 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_TIME IMPLEMENTATION.
+
 
   METHOD get_unix.
 
@@ -103,42 +97,6 @@ CLASS ZCL_ABAPGIT_TIME IMPLEMENTATION.
     lv_i = lv_i - ev_time.
     lv_i = lv_i / 86400.
     ev_date = lv_i + c_epoch.
-
-  ENDMETHOD.
-
-
-  METHOD date_to_string.
-
-    CALL FUNCTION 'RRSV_IN_EX_CONVERT'
-      EXPORTING
-        i_chavl_int = iv_date
-        i_inttp     = rsr_c_inttp-date
-      IMPORTING
-        e_chavl_ext = rv_date
-      EXCEPTIONS
-        OTHERS      = 0.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Date to String Conversion failed. sy-subrc: { sy-subrc }| ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD time_to_string.
-
-    CALL FUNCTION 'RRSV_IN_EX_CONVERT'
-      EXPORTING
-        i_chavl_int = iv_time
-        i_inttp     = rsr_c_inttp-time
-      IMPORTING
-        e_chavl_ext = rv_time
-      EXCEPTIONS
-        OTHERS      = 0.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Time to String Conversion failed. sy-subrc: { sy-subrc }| ).
-    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

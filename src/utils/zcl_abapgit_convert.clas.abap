@@ -78,6 +78,22 @@ CLASS zcl_abapgit_convert DEFINITION
         ev_size   TYPE i
         et_bintab TYPE lvc_t_mime.
 
+    CLASS-METHODS date_to_string
+      IMPORTING
+        iv_date        TYPE rsd_chavl_ext
+      RETURNING
+        VALUE(rv_date) TYPE string
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS time_to_string
+      IMPORTING
+        iv_time        TYPE rsd_chavl_ext
+      RETURNING
+        VALUE(rv_time) TYPE string
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -171,6 +187,24 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD date_to_string.
+
+    CALL FUNCTION 'RRSV_IN_EX_CONVERT'
+      EXPORTING
+        i_chavl_int = iv_date
+        i_inttp     = rsr_c_inttp-date
+      IMPORTING
+        e_chavl_ext = rv_date
+      EXCEPTIONS
+        OTHERS      = 0.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Date to String Conversion failed. sy-subrc: { sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD int_to_xstring4.
 * returns xstring of length 4 containing the integer value iv_i
 
@@ -227,6 +261,24 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
             cx_sy_conversion_codepage
             cx_parameter_invalid_type.                  "#EC NO_HANDLER
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD time_to_string.
+
+    CALL FUNCTION 'RRSV_IN_EX_CONVERT'
+      EXPORTING
+        i_chavl_int = iv_time
+        i_inttp     = rsr_c_inttp-time
+      IMPORTING
+        e_chavl_ext = rv_time
+      EXCEPTIONS
+        OTHERS      = 0.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Time to String Conversion failed. sy-subrc: { sy-subrc }| ).
+    ENDIF.
 
   ENDMETHOD.
 
