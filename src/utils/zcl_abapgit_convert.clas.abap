@@ -318,7 +318,7 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
   METHOD date_to_string.
 
-    CONSTANTS: lc_date TYPE rsd_s_cob_pro-inttp VALUE 'D'.
+    CONSTANTS: lc_date TYPE char1 VALUE 'D'.
 
     CALL FUNCTION 'RRSV_IN_EX_CONVERT'
       EXPORTING
@@ -338,7 +338,7 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
   METHOD time_to_string.
 
-    CONSTANTS: lc_time TYPE rsd_s_cob_pro-inttp VALUE 'T'.
+    CONSTANTS: lc_time TYPE char1 VALUE 'T'.
 
     CALL FUNCTION 'RRSV_IN_EX_CONVERT'
       EXPORTING
