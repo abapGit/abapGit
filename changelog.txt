@@ -8,6 +8,21 @@ Legend
 + : added
 - : removed
 
+2019-12-05 v1.92.0
+------------------
+! handling of redefined protected methods
+* downport
+* show duplicate object names
+* ITAU exception handling
++ IWVB support
++ IOBJ support
+* additional checking of URLs when creating online repo
+* author regex
+* TABL popup being closed fixed
+* Preparations for DOMA clearing value
++ Code selection by colum on diff screen
++ add adt links on diff page
+
 2019-10-31 v1.91.0
 ------------------
 ! FUGR serialization changed, RSFDO-INDEX cleared
