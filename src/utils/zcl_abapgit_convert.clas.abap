@@ -100,7 +100,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
+CLASS zcl_abapgit_convert IMPLEMENTATION.
 
 
   METHOD alpha_output.
@@ -187,24 +187,6 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD date_to_string.
-
-    CALL FUNCTION 'RRSV_IN_EX_CONVERT'
-      EXPORTING
-        i_chavl_int = iv_date
-        i_inttp     = rsr_c_inttp-date
-      IMPORTING
-        e_chavl_ext = rv_date
-      EXCEPTIONS
-        OTHERS      = 0.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Date to String Conversion failed. sy-subrc: { sy-subrc }| ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD int_to_xstring4.
 * returns xstring of length 4 containing the integer value iv_i
 
@@ -261,24 +243,6 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
             cx_sy_conversion_codepage
             cx_parameter_invalid_type.                  "#EC NO_HANDLER
     ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD time_to_string.
-
-    CALL FUNCTION 'RRSV_IN_EX_CONVERT'
-      EXPORTING
-        i_chavl_int = iv_time
-        i_inttp     = rsr_c_inttp-time
-      IMPORTING
-        e_chavl_ext = rv_time
-      EXCEPTIONS
-        OTHERS      = 0.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Time to String Conversion failed. sy-subrc: { sy-subrc }| ).
-    ENDIF.
 
   ENDMETHOD.
 
@@ -348,6 +312,42 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
     GET BIT 6 OF iv_x INTO rv_bitbyte+5(1).
     GET BIT 7 OF iv_x INTO rv_bitbyte+6(1).
     GET BIT 8 OF iv_x INTO rv_bitbyte+7(1).
+
+  ENDMETHOD.
+
+
+  METHOD date_to_string.
+
+    CALL FUNCTION 'RRSV_IN_EX_CONVERT'
+      EXPORTING
+        i_chavl_int = iv_date
+        i_inttp     = rsr_c_inttp-date
+      IMPORTING
+        e_chavl_ext = rv_date
+      EXCEPTIONS
+        OTHERS      = 0.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Date to String Conversion failed. sy-subrc: { sy-subrc }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD time_to_string.
+
+    CALL FUNCTION 'RRSV_IN_EX_CONVERT'
+      EXPORTING
+        i_chavl_int = iv_time
+        i_inttp     = rsr_c_inttp-time
+      IMPORTING
+        e_chavl_ext = rv_time
+      EXCEPTIONS
+        OTHERS      = 0.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Time to String Conversion failed. sy-subrc: { sy-subrc }| ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
