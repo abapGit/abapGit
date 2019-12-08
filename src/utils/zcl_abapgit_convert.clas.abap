@@ -318,10 +318,12 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
   METHOD date_to_string.
 
+    CONSTANTS: lc_date TYPE rsd_s_cob_pro-inttp VALUE 'D'.
+
     CALL FUNCTION 'RRSV_IN_EX_CONVERT'
       EXPORTING
         i_chavl_int = iv_date
-        i_inttp     = rsr_c_inttp-date
+        i_inttp     = lc_date
       IMPORTING
         e_chavl_ext = rv_date
       EXCEPTIONS
@@ -336,10 +338,12 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
 
   METHOD time_to_string.
 
+    CONSTANTS: lc_time TYPE rsd_s_cob_pro-inttp VALUE 'T'.
+
     CALL FUNCTION 'RRSV_IN_EX_CONVERT'
       EXPORTING
         i_chavl_int = iv_time
-        i_inttp     = rsr_c_inttp-time
+        i_inttp     = lc_time
       IMPORTING
         e_chavl_ext = rv_time
       EXCEPTIONS
