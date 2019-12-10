@@ -204,7 +204,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
                   CHANGING  cg_data = lt_texts ).
 
     IF zif_abapgit_object~exists( ) = abap_true.
-      zif_abapgit_object~delete( ).
+      zif_abapgit_object~delete( iv_package ).
     ENDIF.
 
     CALL FUNCTION 'STREE_HIERARCHY_SAVE'
