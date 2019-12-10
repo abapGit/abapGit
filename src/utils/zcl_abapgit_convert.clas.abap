@@ -80,17 +80,9 @@ CLASS zcl_abapgit_convert DEFINITION
 
     CLASS-METHODS date_to_string
       IMPORTING
-        iv_date        TYPE rsd_chavl_ext
+        iv_date        TYPE sydatum
       RETURNING
         VALUE(rv_date) TYPE string
-      RAISING
-        zcx_abapgit_exception.
-
-    CLASS-METHODS time_to_string
-      IMPORTING
-        iv_time        TYPE rsd_chavl_ext
-      RETURNING
-        VALUE(rv_time) TYPE string
       RAISING
         zcx_abapgit_exception.
 
@@ -183,6 +175,24 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
         input  = iv_spras
       IMPORTING
         output = rv_spras.
+
+  ENDMETHOD.
+
+
+  METHOD date_to_string.
+
+    CALL FUNCTION 'CONVERT_DATE_TO_EXTERNAL'
+      EXPORTING
+        date_internal            = iv_date
+      IMPORTING
+        date_external            = rv_date
+      EXCEPTIONS
+        date_internal_is_invalid = 1
+        OTHERS                   = 2.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Date to String Conversion failed. sy-subrc: { sy-subrc }| ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -312,46 +322,6 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
     GET BIT 6 OF iv_x INTO rv_bitbyte+5(1).
     GET BIT 7 OF iv_x INTO rv_bitbyte+6(1).
     GET BIT 8 OF iv_x INTO rv_bitbyte+7(1).
-
-  ENDMETHOD.
-
-
-  METHOD date_to_string.
-
-    CONSTANTS: lc_date TYPE char1 VALUE 'D'.
-
-    CALL FUNCTION 'RRSV_IN_EX_CONVERT'
-      EXPORTING
-        i_chavl_int = iv_date
-        i_inttp     = lc_date
-      IMPORTING
-        e_chavl_ext = rv_date
-      EXCEPTIONS
-        OTHERS      = 0.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Date to String Conversion failed. sy-subrc: { sy-subrc }| ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD time_to_string.
-
-    CONSTANTS: lc_time TYPE char1 VALUE 'T'.
-
-    CALL FUNCTION 'RRSV_IN_EX_CONVERT'
-      EXPORTING
-        i_chavl_int = iv_time
-        i_inttp     = lc_time
-      IMPORTING
-        e_chavl_ext = rv_time
-      EXCEPTIONS
-        OTHERS      = 0.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Time to String Conversion failed. sy-subrc: { sy-subrc }| ).
-    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
