@@ -86,6 +86,14 @@ CLASS zcl_abapgit_convert DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS time_to_string
+      IMPORTING
+        iv_time        TYPE syuzeit
+      RETURNING
+        VALUE(rv_time) TYPE string
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -324,4 +332,12 @@ CLASS zcl_abapgit_convert IMPLEMENTATION.
     GET BIT 8 OF iv_x INTO rv_bitbyte+7(1).
 
   ENDMETHOD.
+
+
+  METHOD time_to_string.
+
+    CONCATENATE iv_time(2) iv_time+2(2) iv_time+4(2) INTO rv_time SEPARATED BY ':'.
+
+  ENDMETHOD.
+
 ENDCLASS.

@@ -11,6 +11,7 @@ CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FIN
     METHODS convert_bitbyte FOR TESTING RAISING zcx_abapgit_exception.
     METHODS alpha_output FOR TESTING.
     METHODS date_to_string FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS time_to_string FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
@@ -123,6 +124,13 @@ CLASS ltcl_convert IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals( exp = '08.12.2019'
                                         act = zcl_abapgit_convert=>date_to_string( '20191208' ) ). " User-specific test!
+
+  ENDMETHOD.
+
+  METHOD time_to_string.
+
+    cl_abap_unit_assert=>assert_equals( exp = '17:56:43'
+                                        act = zcl_abapgit_convert=>time_to_string( '175643' ) ).
 
   ENDMETHOD.
 ENDCLASS.
