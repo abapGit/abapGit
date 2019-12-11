@@ -173,9 +173,7 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
           lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
 
     lt_packages = zcl_abapgit_factory=>get_sap_package( mv_package )->list_subpackages( ).
-    IF lines( lt_packages ) = 0.
-      RETURN.
-    ENDIF.
+    INSERT mv_package INTO TABLE lt_packages.
 
     SELECT object AS objtype obj_name AS objname
       FROM tadir
