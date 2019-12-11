@@ -55,15 +55,10 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
     DATA: lt_iobjname     TYPE STANDARD TABLE OF t_iobj,
           lv_object       TYPE string,
           lv_object_class TYPE string,
-          ls_tadir        TYPE zif_abapgit_definitions=>ty_tadir,
           lv_transp_pkg   TYPE abap_bool.
 
-    ls_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
-                                                   iv_object   = ms_item-obj_type
-                                                   iv_obj_name = ms_item-obj_name ).
-
-    lv_transp_pkg =
-    zcl_abapgit_factory=>get_sap_package( iv_package = ls_tadir-devclass )->are_changes_recorded_in_tr_req( ).
+    lv_transp_pkg = zcl_abapgit_factory=>get_sap_package( iv_package
+                                      )->are_changes_recorded_in_tr_req( ).
 
     APPEND ms_item-obj_name TO lt_iobjname.
 
