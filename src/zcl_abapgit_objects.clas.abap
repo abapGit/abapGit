@@ -181,7 +181,8 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_package TYPE devclass .
     CLASS-METHODS delete_obj
       IMPORTING
-        !is_item TYPE zif_abapgit_definitions=>ty_item
+        !iv_package TYPE devclass
+        !is_item    TYPE zif_abapgit_definitions=>ty_item
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS compare_remote_to_local
@@ -516,7 +517,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           CLEAR ls_item.
           ls_item-obj_type = <ls_tadir>-object.
           ls_item-obj_name = <ls_tadir>-obj_name.
-          delete_obj( ls_item ).
+          delete_obj(
+            iv_package = <ls_tadir>-devclass
+            is_item    = ls_item ).
 
 * make sure to save object deletions
           COMMIT WORK.
@@ -542,7 +545,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       li_obj = create_object( is_item     = is_item
                               iv_language = zif_abapgit_definitions=>c_english ).
 
-      li_obj->delete( ).
+      li_obj->delete( iv_package ).
 
       IF li_obj->get_metadata( )-delete_tadir = abap_true.
         CALL FUNCTION 'TR_TADIR_INTERFACE'
