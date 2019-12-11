@@ -553,7 +553,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
 
 
     IF zif_abapgit_object~exists( ) = abap_true.
-      zif_abapgit_object~delete( ).
+      zif_abapgit_object~delete( iv_package ).
     ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'TSTC'

@@ -103,6 +103,7 @@ CLASS zcl_abapgit_object_sqsc DEFINITION
     METHODS:
       delete_interface_if_it_exists
         IMPORTING
+          iv_package   TYPE devclass
           iv_interface TYPE ty_abap_name
         RAISING
           zcx_abapgit_exception.
@@ -161,7 +162,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SQSC IMPLEMENTATION.
           is_item     = ls_item
           iv_language = mv_language.
 
-      lo_interface->zif_abapgit_object~delete( ).
+      lo_interface->zif_abapgit_object~delete( iv_package ).
 
     ENDIF.
 
@@ -203,7 +204,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SQSC IMPLEMENTATION.
 
     IF zif_abapgit_object~exists( ) = abap_false.
 
-      delete_interface_if_it_exists( ls_proxy-header-interface_pool ).
+      delete_interface_if_it_exists(
+          iv_package   = iv_package
+          iv_interface = ls_proxy-header-interface_pool ).
 
       CALL METHOD mo_proxy->('IF_DBPROC_PROXY_UI~CREATE')
         EXPORTING
