@@ -104,7 +104,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPI IMPLEMENTATION.
     lv_xstr = cl_ixml_80_20=>render_to_xstring( io_xml->get_raw( ) ).
 
     IF zif_abapgit_object~exists( ) = abap_true.
-      zif_abapgit_object~delete( ).
+      zif_abapgit_object~delete( iv_package ).
     ENDIF.
 
     TRY.

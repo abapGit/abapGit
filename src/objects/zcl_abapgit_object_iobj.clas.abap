@@ -15,37 +15,50 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
 
-    DATA: ls_viobj TYPE rsd_s_viobj,
-          lv_objna TYPE rsd_iobjnm.
+    DATA: lv_objna TYPE c LENGTH 30,
+          lr_viobj TYPE REF TO data.
+
+    FIELD-SYMBOLS:
+      <lv_tstpnm> TYPE any,
+      <ls_viobj>  TYPE any.
 
     lv_objna = ms_item-obj_name.
+
+    TRY.
+        CREATE DATA lr_viobj TYPE ('RSD_S_VI_OBJ').
+      CATCH cx_sy_create_data_error.
+        zcx_abapgit_exception=>raise( |IOBJ is not supported on this system| ).
+    ENDTRY.
+
+    ASSIGN lr_viobj->* TO <ls_viobj>.
 
     CALL FUNCTION 'RSD_IOBJ_GET'
       EXPORTING
         i_iobjnm  = lv_objna
         i_objvers = 'A'
       IMPORTING
-        e_s_viobj = ls_viobj.
+        e_s_viobj = <ls_viobj>.
 
-    rv_user = ls_viobj-tstpnm.
+    ASSIGN COMPONENT 'TSTPNM' OF STRUCTURE <ls_viobj> TO <lv_tstpnm>.
+
+    rv_user = <lv_tstpnm>.
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lt_iobjname     TYPE rsd_t_c30,
+    TYPES: BEGIN OF t_iobj,
+             objnm TYPE c LENGTH 30.
+    TYPES END OF t_iobj.
+
+    DATA: lt_iobjname     TYPE STANDARD TABLE OF t_iobj,
           lv_object       TYPE string,
           lv_object_class TYPE string,
-          ls_tadir        TYPE zif_abapgit_definitions=>ty_tadir,
           lv_transp_pkg   TYPE abap_bool.
 
-    ls_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
-                                                   iv_object   = ms_item-obj_type
-                                                   iv_obj_name = ms_item-obj_name ).
-
-    lv_transp_pkg =
-    zcl_abapgit_factory=>get_sap_package( iv_package = ls_tadir-devclass )->are_changes_recorded_in_tr_req( ).
+    lv_transp_pkg = zcl_abapgit_factory=>get_sap_package( iv_package
+                                      )->are_changes_recorded_in_tr_req( ).
 
     APPEND ms_item-obj_name TO lt_iobjname.
 
@@ -93,28 +106,32 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
     io_xml->read( EXPORTING iv_name = 'IOBJ'
                    CHANGING cg_data = ls_details ).
+    TRY.
+        CALL FUNCTION 'BAPI_IOBJ_CREATE'
+          EXPORTING
+            details = ls_details
+          IMPORTING
+            return  = ls_return.
 
-    CALL FUNCTION 'BAPI_IOBJ_CREATE'
-      EXPORTING
-        details = ls_details
-      IMPORTING
-        return  = ls_return.
+        IF ls_return-type = 'E'.
+          zcx_abapgit_exception=>raise( |Error when creating iobj: { ls_return-message }| ).
+        ENDIF.
 
-    IF ls_return-type = 'E'.
-      zcx_abapgit_exception=>raise( |Error when creating iobj: { ls_return-message }| ).
-    ENDIF.
+        APPEND ls_details-infoobject TO lt_infoobj.
 
-    APPEND ls_details-infoobject TO lt_infoobj.
+        CALL FUNCTION 'BAPI_IOBJ_ACTIVATE_MULTIPLE'
+          TABLES
+            infoobjects = lt_infoobj
+            return      = lt_return.
 
-    CALL FUNCTION 'BAPI_IOBJ_ACTIVATE_MULTIPLE'
-      TABLES
-        infoobjects = lt_infoobj
-        return      = lt_return.
+        READ TABLE lt_return WITH KEY type = 'E' INTO ls_return.
+        IF sy-subrc = 0.
+          zcx_abapgit_exception=>raise( |Error when activating iobj: { ls_return-message }| ).
+        ENDIF.
 
-    READ TABLE lt_return WITH KEY type = 'E' INTO ls_return.
-    IF sy-subrc = 0.
-      zcx_abapgit_exception=>raise( |Error when activating iobj: { ls_return-message }| ).
-    ENDIF.
+      CATCH  cx_sy_dyn_call_illegal_func.
+        zcx_abapgit_exception=>raise( |Necessary BW function modules not found| ).
+    ENDTRY.
 
     tadir_insert( iv_package ).
 
@@ -125,7 +142,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lv_iobjnm TYPE rsdiobjnm.
+    DATA: lv_iobjnm TYPE char30.
 
     SELECT SINGLE iobjnm
     FROM rsdiobj
@@ -155,19 +172,33 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_active.
 
-    DATA: ls_viobj TYPE rsd_s_viobj,
-          lv_objna TYPE rsd_iobjnm.
+    DATA: lv_objna TYPE c LENGTH 30,
+          lr_viobj TYPE REF TO data.
+
+    FIELD-SYMBOLS:
+      <lv_objstat> TYPE any,
+      <ls_viobj>   TYPE any.
 
     lv_objna = ms_item-obj_name.
+
+    TRY.
+        CREATE DATA lr_viobj TYPE ('RSD_S_VI_OBJ').
+      CATCH cx_sy_create_data_error.
+        zcx_abapgit_exception=>raise( |IOBJ is not supported on this system| ).
+    ENDTRY.
+
+    ASSIGN lr_viobj->* TO <ls_viobj>.
 
     CALL FUNCTION 'RSD_IOBJ_GET'
       EXPORTING
         i_iobjnm  = lv_objna
         i_objvers = 'A'
       IMPORTING
-        e_s_viobj = ls_viobj.
+        e_s_viobj = <ls_viobj>.
 
-    IF ls_viobj-objstat = 'ACT'.
+    ASSIGN COMPONENT 'OBJSTAT' OF STRUCTURE <ls_viobj> TO <lv_objstat>.
+
+    IF <lv_objstat> = 'ACT' AND sy-subrc = 0.
       rv_active = abap_true.
     ENDIF.
 
