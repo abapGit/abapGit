@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <abapGit version="v1.0.0" serializer="LCL_OBJECT_W3MI" serializer_version="v2.0.0">
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
@@ -15,13 +15,13 @@
      <RELID>MI</RELID>
      <OBJID>ZABAPGIT_ICON_FONT_CSS</OBJID>
      <NAME>filename</NAME>
-     <VALUE>ag-icons.css</VALUE>
+     <VALUE>zabapgit_icon_font_css.w3mi.data.css</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
      <RELID>MI</RELID>
      <OBJID>ZABAPGIT_ICON_FONT_CSS</OBJID>
      <NAME>mimetype</NAME>
-     <VALUE>text/plain</VALUE>
+     <VALUE>text/css</VALUE>
     </WWWPARAMS>
    </PARAMS>
   </asx:values>
