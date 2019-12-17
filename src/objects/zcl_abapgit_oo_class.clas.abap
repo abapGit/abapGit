@@ -258,6 +258,10 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
     ls_clskey-clsname = iv_name.
 
     TRY.
+        CALL FUNCTION 'SEO_BUFFER_REFRESH'
+          EXPORTING
+            cifkey  = ls_clskey
+            version = seoc_version_active.
         CREATE OBJECT lo_update TYPE ('CL_OO_CLASS_SECTION_SOURCE')
           EXPORTING
             clskey                        = ls_clskey
