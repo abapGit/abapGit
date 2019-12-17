@@ -33,6 +33,8 @@ INTERFACE zif_abapgit_object
     RAISING
       zcx_abapgit_exception .
   METHODS delete
+    IMPORTING
+      iv_package TYPE devclass
     RAISING
       zcx_abapgit_exception .
   METHODS exists

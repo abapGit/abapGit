@@ -18,10 +18,6 @@ CLASS zcl_abapgit_code_inspector DEFINITION
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
-
-    TYPES:
-      ty_tdevc_tt TYPE STANDARD TABLE OF tdevc WITH DEFAULT KEY .
-
     DATA mv_package TYPE devclass .
 
     METHODS create_variant
@@ -52,11 +48,7 @@ CLASS zcl_abapgit_code_inspector DEFINITION
     DATA mv_name TYPE sci_objs .
     DATA mv_run_mode TYPE sychar01 .
 
-    METHODS find_all_subpackages
-      IMPORTING
-        !iv_package        TYPE devclass
-      RETURNING
-        VALUE(rt_packages) TYPE ty_tdevc_tt .
+
     METHODS create_objectset
       RETURNING
         VALUE(ro_set) TYPE REF TO cl_ci_objectset .
@@ -178,19 +170,16 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
   METHOD create_objectset.
 
     DATA: lt_objs     TYPE scit_objs,
-          lt_packages TYPE ty_tdevc_tt.
+          lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
 
-
-    lt_packages = find_all_subpackages( mv_package ).
-    IF lines( lt_packages ) = 0.
-      RETURN.
-    ENDIF.
+    lt_packages = zcl_abapgit_factory=>get_sap_package( mv_package )->list_subpackages( ).
+    INSERT mv_package INTO TABLE lt_packages.
 
     SELECT object AS objtype obj_name AS objname
       FROM tadir
       INTO CORRESPONDING FIELDS OF TABLE lt_objs
       FOR ALL ENTRIES IN lt_packages
-      WHERE devclass = lt_packages-devclass
+      WHERE devclass = lt_packages-table_line
       AND delflag = abap_false
       AND pgmid = 'R3TR'.                               "#EC CI_GENBUFF
 
@@ -224,30 +213,6 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
       WHEN 2.
         zcx_abapgit_exception=>raise( |Parameter missing for check variant { iv_variant }| ).
     ENDCASE.
-
-  ENDMETHOD.
-
-
-  METHOD find_all_subpackages.
-
-* TODO, in the future, move this method to the ABAPGIT global package class
-
-    DATA: ls_package LIKE LINE OF rt_packages,
-          lt_found   LIKE rt_packages,
-          lt_sub     LIKE rt_packages.
-
-
-    SELECT SINGLE * FROM tdevc INTO ls_package WHERE devclass = iv_package.
-    ASSERT sy-subrc = 0.
-    APPEND ls_package TO rt_packages.
-
-    SELECT * FROM tdevc APPENDING TABLE lt_sub
-      WHERE parentcl = ls_package-devclass.
-
-    LOOP AT lt_sub INTO ls_package.
-      lt_found = find_all_subpackages( ls_package-devclass ).
-      APPEND LINES OF lt_found TO rt_packages.
-    ENDLOOP.
 
   ENDMETHOD.
 
