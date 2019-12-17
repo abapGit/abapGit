@@ -370,15 +370,15 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
   METHOD split_text.
 
     CONSTANTS:
-      co_length_of_msgv           TYPE i VALUE 50,
-      co_offset_of_last_character TYPE i VALUE 49.
+      lc_length_of_msgv           TYPE i VALUE 50,
+      lc_offset_of_last_character TYPE i VALUE 49.
 
     TYPES:
       ty_char200 TYPE c LENGTH 200.
 
     DATA:
-      lv_text    TYPE c LENGTH 200,
-      lv_msg_var TYPE c LENGTH 50,
+      lv_text    TYPE ty_char200,
+      lv_msg_var TYPE c LENGTH lc_length_of_msgv,
       lv_rest    TYPE ty_char200,
       lv_index   TYPE syst-index.
 
@@ -390,13 +390,13 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
 
       CALL FUNCTION 'TEXT_SPLIT'
         EXPORTING
-          length = co_length_of_msgv
+          length = lc_length_of_msgv
           text   = lv_text
         IMPORTING
           line   = lv_msg_var
           rest   = lv_rest.
 
-      IF lv_msg_var+co_offset_of_last_character = space.
+      IF lv_msg_var+lc_offset_of_last_character = space.
         " keep the space at the beginning of the rest
         " because otherwise it's lost
         lv_rest = | { lv_rest }|.
