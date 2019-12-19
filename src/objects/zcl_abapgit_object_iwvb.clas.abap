@@ -90,7 +90,10 @@ CLASS ZCL_ABAPGIT_OBJECT_IWVB IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
 
-    zcx_abapgit_exception=>raise( |TODO: Jump| ).
+    SUBMIT /iwbep/r_dst_vocan_register
+      WITH ip_aname = ms_item-obj_name
+      WITH ip_avers = ms_item-obj_name+32(4)
+      AND RETURN.
 
   ENDMETHOD.
 
