@@ -90,7 +90,9 @@ CLASS ZCL_ABAPGIT_OBJECT_IWPR IMPLEMENTATION.
 
   METHOD zif_abapgit_object~jump.
 
-    zcx_abapgit_exception=>raise( |TODO: Jump| ).
+    SUBMIT /iwbep/r_sbui_service_builder
+      WITH i_prname = ms_item-obj_name
+      AND RETURN.
 
   ENDMETHOD.
 
