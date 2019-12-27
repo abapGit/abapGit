@@ -264,11 +264,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
       lv_name = li_node->get_name( ).
       CASE lv_name.
         WHEN 'LASTDATE'.
-          li_node->set_value(
-            sy-datum(4) && '-' && sy-datum+4(2) && '-' && sy-datum+6(2) ).
+          li_node->set_value( sy-datum(4) && '-' && sy-datum+4(2) && '-' && sy-datum+6(2) ).
         WHEN 'LASTTIME'.
-          li_node->set_value(
-            sy-uzeit(2) && ':' && sy-uzeit+2(2) && ':' && sy-uzeit+4(2) ).
+          li_node->set_value( sy-uzeit(2) && ':' && sy-uzeit+2(2) && ':' && sy-uzeit+4(2) ).
         WHEN 'FIRSTUSER' OR 'LASTUSER'.
           li_node->set_value( sy-uname && '' ).
 

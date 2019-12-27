@@ -57,8 +57,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
           lv_object_class TYPE string,
           lv_transp_pkg   TYPE abap_bool.
 
-    lv_transp_pkg = zcl_abapgit_factory=>get_sap_package( iv_package
-                                      )->are_changes_recorded_in_tr_req( ).
+    lv_transp_pkg = zcl_abapgit_factory=>get_sap_package( iv_package )->are_changes_recorded_in_tr_req( ).
 
     APPEND ms_item-obj_name TO lt_iobjname.
 

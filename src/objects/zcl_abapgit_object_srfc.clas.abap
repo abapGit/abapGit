@@ -176,9 +176,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SRFC IMPLEMENTATION.
           CHANGING
             p_object_data = li_object_data ).
 
-        li_object_data->get_data(
-          IMPORTING
-            p_data = <lg_srfc_data> ).
+        li_object_data->get_data( IMPORTING p_data = <lg_srfc_data> ).
 
       CATCH cx_root INTO lx_error.
         lv_text = lx_error->get_text( ).

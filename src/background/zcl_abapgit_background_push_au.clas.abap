@@ -156,9 +156,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
               WHERE filename = <ls_local>-file-filename
               AND path <> <ls_local>-file-path
               AND filename <> 'package.devc.xml'.
-            mi_log->add_info( |rm: {
-              <ls_remote>-path } {
-              <ls_remote>-filename }| ).
+            mi_log->add_info( |rm: { <ls_remote>-path } { <ls_remote>-filename }| ).
 
 * rm old file when object has moved
             lo_stage->rm(
@@ -198,9 +196,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
 
     LOOP AT is_files-remote ASSIGNING <ls_remote>.
 
-      mi_log->add_info( |removed: {
-        <ls_remote>-path } {
-        <ls_remote>-filename }| ).
+      mi_log->add_info( |removed: { <ls_remote>-path } { <ls_remote>-filename }| ).
 
       lo_stage->rm( iv_path     = <ls_remote>-path
                     iv_filename = <ls_remote>-filename ).
