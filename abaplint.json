@@ -56,8 +56,16 @@
     "globalMacros": []
   },
   "rules": {
+    "allowed_object_naming": true,
+    "check_comments": false,
+    "fully_type_constants": false,
+    "keep_single_parameter_on_one_line": false,
+    "selection_screen_naming": true,
+    "sicf_consistency": true,
+    "sql_escape_host_variables": true,
+    "xml_consistency": true,
     "check_no_handler_pragma": true,
-    "newline_between_methods": false,    
+    "newline_between_methods": false,
     "chain_mainly_declarations": true,
     "check_abstract": true,
     "check_text_elements": true,
@@ -94,6 +102,7 @@
       "execSQL": true,
       "kernelCall": true,
       "communication": true,
+      "systemCall": true,
       "statics": true
     },
     "begin_end_names": {},
@@ -116,6 +125,7 @@
       "enabled": false,
       "keywords": true,
       "startParen": true,
+      "afterColon": true,
       "endParen": true
     },
     "empty_line_in_statement": {
@@ -170,6 +180,7 @@
       "ignoreExceptions": true
     },
     "local_class_naming": {
+      "exception": "^LCL_.*$",
       "local": "^LCL_.*$",
       "test": "^LTCL_.*$"
     },
@@ -219,7 +230,8 @@
       "enqu": "^EZ",
       "auth": "^Z",
       "pinf": "^Z",
-      "idoc": "^Z"
+      "idoc": "^Z",
+      "xslt": "^Z"
     },
     "obsolete_statement": {
       "refresh": true,
