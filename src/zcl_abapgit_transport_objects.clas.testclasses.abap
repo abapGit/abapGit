@@ -181,8 +181,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_filename = 'CL_FOO.abap'
       iv_path     = '/path'
       iv_data     = 'data' ).
-    then_it_should_raise_exception(
-          iv_with_text = 'Object CL_FOO not found in the local repository files' ).
+    then_it_should_raise_exception( iv_with_text = 'Object CL_FOO not found in the local repository files' ).
   ENDMETHOD.
 
   METHOD cant_be_added_with_del_flag.

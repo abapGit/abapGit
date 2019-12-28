@@ -199,9 +199,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
       IMPORTING
         p_page    = lo_page ).
 
-    lo_page->get_attrs(
-      IMPORTING
-        p_attrs = rs_page-attributes ).
+    lo_page->get_attrs( IMPORTING p_attrs = rs_page-attributes ).
 
     IF rs_page-attributes-pagetype <> so2_controller.
 

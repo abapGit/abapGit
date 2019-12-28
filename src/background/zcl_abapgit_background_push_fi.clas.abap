@@ -80,9 +80,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_FI IMPLEMENTATION.
     CREATE OBJECT lo_stage.
 
     LOOP AT ls_files-local ASSIGNING <ls_local>.
-      mi_log->add_info( |stage: {
-        <ls_local>-file-path } {
-        <ls_local>-file-filename }| ).
+      mi_log->add_info( |stage: { <ls_local>-file-path } { <ls_local>-file-filename }| ).
       lo_stage->add( iv_path     = <ls_local>-file-path
                      iv_filename = <ls_local>-file-filename
                      iv_data     = <ls_local>-file-data ).
@@ -90,9 +88,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_FI IMPLEMENTATION.
 
     LOOP AT ls_files-remote ASSIGNING <ls_remote>.
 
-      mi_log->add_info( |removed: {
-        <ls_remote>-path } {
-        <ls_remote>-filename }| ).
+      mi_log->add_info( |removed: { <ls_remote>-path } { <ls_remote>-filename }| ).
 
       lo_stage->rm( iv_path     = <ls_remote>-path
                     iv_filename = <ls_remote>-filename ).

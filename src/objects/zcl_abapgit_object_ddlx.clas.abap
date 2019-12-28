@@ -305,9 +305,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
               p_object_data = li_data_model ).
         ENDIF.
 
-        li_data_model->get_data(
-          IMPORTING
-            p_data = <lg_data> ).
+        li_data_model->get_data( IMPORTING p_data = <lg_data> ).
 
         clear_fields( CHANGING cs_data = <lg_data> ).
 

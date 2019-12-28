@@ -235,9 +235,7 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
           <lv_i_akh> = <lv_d_akh>.
         ENDIF.
 
-        super->upload(
-          CHANGING
-            ch_object = ch_object ).
+        super->upload( CHANGING ch_object = ch_object ).
 
         upload_data_from_stream( ch_object-filename ).
       CATCH cx_ecatt_apl INTO lx_ex.

@@ -379,9 +379,7 @@ CLASS ZCL_ABAPGIT_OBJECT_W3SUPER IMPLEMENTATION.
     ls_bdcdata-dynbegin = 'X'.
     APPEND ls_bdcdata TO lt_bdcdata.
 
-    change_bdc_jump_data(
-      CHANGING
-        ct_bdcdata = lt_bdcdata ).
+    change_bdc_jump_data( CHANGING ct_bdcdata = lt_bdcdata ).
 
     CLEAR ls_bdcdata.
     ls_bdcdata-fnam = 'BDC_OKCODE'.

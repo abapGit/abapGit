@@ -163,9 +163,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
 
     gv_prev = lv_folder.
 
-    cl_gui_frontend_services=>get_file_separator(
-      CHANGING
-        file_separator = lv_sep ).
+    cl_gui_frontend_services=>get_file_separator( CHANGING file_separator = lv_sep ).
 
     LOOP AT ls_files_item-files ASSIGNING <ls_file>.
       CONCATENATE lv_folder lv_sep <ls_file>-filename INTO lv_fullpath.

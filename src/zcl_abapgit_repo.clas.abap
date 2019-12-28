@@ -341,8 +341,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
 
     lt_requirements = get_dot_abapgit( )->get_data( )-requirements.
-    rs_checks-requirements-met = zcl_abapgit_requirement_helper=>is_requirements_met(
-      lt_requirements ).
+    rs_checks-requirements-met = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements ).
 
   ENDMETHOD.
 
