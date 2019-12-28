@@ -43,9 +43,7 @@ CLASS zcl_abapgit_http_client IMPLEMENTATION.
     DATA: lv_code TYPE i,
           lv_text TYPE string.
 
-    mi_client->response->get_status(
-      IMPORTING
-        code   = lv_code ).
+    mi_client->response->get_status( IMPORTING code = lv_code ).
     CASE lv_code.
       WHEN 200.
         RETURN.

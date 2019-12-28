@@ -864,9 +864,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    get_selected_rows(
-      IMPORTING
-        et_list = et_list ).
+    get_selected_rows( IMPORTING et_list = et_list ).
 
     CLEAR: mo_select_list_popup,
            mr_table,

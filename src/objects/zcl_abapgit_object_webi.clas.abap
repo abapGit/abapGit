@@ -227,8 +227,7 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
       li_elem->set_signed( <ls_elem>-signed ).
       li_elem->set_abaptype( <ls_elem>-abaptype ).
 
-      IF li_elem->if_ws_md_vif_type~has_soap_extension_type(
-          sews_c_vif_version-all ) = abap_false.
+      IF li_elem->if_ws_md_vif_type~has_soap_extension_type( sews_c_vif_version-all ) = abap_false.
         READ TABLE is_webi-pveptypesoapext ASSIGNING <ls_soap>
           WITH KEY typename = <ls_elem>-typename.
         IF sy-subrc = 0.
@@ -271,8 +270,7 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
       li_table->set_line_type( mi_vi->get_type( typename = <ls_table>-typeref
                                                 version  = sews_c_vif_version-inactive ) ).
 
-      IF li_table->if_ws_md_vif_type~has_soap_extension_type(
-          sews_c_vif_version-all ) = abap_false.
+      IF li_table->if_ws_md_vif_type~has_soap_extension_type( sews_c_vif_version-all ) = abap_false.
         READ TABLE is_webi-pveptypesoapext ASSIGNING <ls_soap>
           WITH KEY typename = <ls_table>-typename.
         IF sy-subrc = 0.
