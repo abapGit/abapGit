@@ -171,9 +171,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
                TO <lv_parameters>.
         ASSERT sy-subrc = 0.
 
-        lt_fields = cl_http_utility=>string_to_fields(
-                        cl_http_utility=>unescape_url(
-                            <lv_parameters> ) ).
+        lt_fields = cl_http_utility=>string_to_fields( cl_http_utility=>unescape_url( <lv_parameters> ) ).
 
         READ TABLE lt_fields ASSIGNING <ls_field>
                              WITH KEY name = 'p_package_name'.

@@ -91,9 +91,7 @@ CLASS zcl_abapgit_object_enho_fugr IMPLEMENTATION.
 
     lo_fugrdata ?= ii_enh_tool.
 
-    lo_fugrdata->get_fugr(
-      IMPORTING
-        fugr_name = lv_fugr_name ).
+    lo_fugrdata->get_fugr( IMPORTING fugr_name = lv_fugr_name ).
 
     TRY.
         lo_fugrdata->get_all_data_for_fugr(

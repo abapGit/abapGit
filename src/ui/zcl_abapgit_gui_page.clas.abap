@@ -328,8 +328,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ro_html->add( '<!DOCTYPE html>' ).                      "#EC NOTEXT
     ro_html->add( '<html>' ).                               "#EC NOTEXT
     ro_html->add( '<head>' ).                               "#EC NOTEXT
-    ro_html->add( |<meta http-equiv="refresh" content="0; url={
-                  ms_control-redirect_url }">| ).           "#EC NOTEXT
+    ro_html->add( |<meta http-equiv="refresh" content="0; url={ ms_control-redirect_url }">| ). "#EC NOTEXT
     ro_html->add( '</head>' ).                              "#EC NOTEXT
     ro_html->add( '</html>' ).                              "#EC NOTEXT
 
@@ -414,9 +413,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
                                        iv_act = zif_abapgit_definitions=>c_action-abapgit_home )
                   }</td>| ).                                "#EC NOTEXT
 
-    ro_html->add( |<td><span class="page_title"> &#x25BA; {
-                  ms_control-page_title
-                  }</span></td>| ).                         "#EC NOTEXT
+    ro_html->add( |<td><span class="page_title"> &#x25BA; { ms_control-page_title }</span></td>| ). "#EC NOTEXT
 
     IF ms_control-page_menu IS BOUND.
       ro_html->add( '<td class="right">' ).                 "#EC NOTEXT

@@ -13,8 +13,7 @@ CLASS ltcl_utils_test IMPLEMENTATION.
   METHOD extract_author_data.
 
     TRY.
-        zcl_abapgit_utils=>extract_author_data(
-          'Volker Jägle äÖüß <github@beimir.net> 1573216988 +0000' ).
+        zcl_abapgit_utils=>extract_author_data( 'Volker Jägle äÖüß <github@beimir.net> 1573216988 +0000' ).
       CATCH zcx_abapgit_exception.
         cl_abap_unit_assert=>fail( |Language-related special characters in author name are allowed.| ).
     ENDTRY.
@@ -48,15 +47,13 @@ CLASS ltcl_utils_test IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        zcl_abapgit_utils=>extract_author_data(
-          'pull[bot] 1573216988 +0000' ).
+        zcl_abapgit_utils=>extract_author_data( 'pull[bot] 1573216988 +0000' ).
         cl_abap_unit_assert=>fail( |Value shouldn't be valid cause no email was supplied.| ).
       CATCH zcx_abapgit_exception.
     ENDTRY.
 
     TRY.
-        zcl_abapgit_utils=>extract_author_data(
-          'pull[bot] <39814207+pull[bot]@users.noreply.github.com> +0000' ).
+        zcl_abapgit_utils=>extract_author_data( 'pull[bot] <39814207+pull[bot]@users.noreply.github.com> +0000' ).
         cl_abap_unit_assert=>fail( |Value shouldn't be valid cause no time was supplied.| ).
       CATCH zcx_abapgit_exception.
     ENDTRY.

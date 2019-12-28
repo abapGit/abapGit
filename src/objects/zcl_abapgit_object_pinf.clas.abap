@@ -345,8 +345,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
 
     li_interface = load( |{ ms_item-obj_name }| ).
 
-    li_interface->get_all_attributes(
-      IMPORTING es_package_interface_data = ls_pinf-attributes ).
+    li_interface->get_all_attributes( IMPORTING es_package_interface_data = ls_pinf-attributes ).
 
     CLEAR: ls_pinf-attributes-pack_name,
            ls_pinf-attributes-author,
