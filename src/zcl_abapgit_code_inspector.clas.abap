@@ -230,9 +230,7 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Code inspector run failed. Subrc = { sy-subrc }| ).
     ENDIF.
 
-    io_inspection->plain_list(
-      IMPORTING
-        p_list = rt_list ).
+    io_inspection->plain_list( IMPORTING p_list = rt_list ).
 
   ENDMETHOD.
 

@@ -195,8 +195,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
       AND tobject = 'TABU'
       ORDER BY PRIMARY KEY.
     IF mt_object_table IS INITIAL.
-      zcx_abapgit_exception=>raise( |Obviously corrupted object-type {
-        is_item-obj_type }: No tables defined| ).
+      zcx_abapgit_exception=>raise( |Obviously corrupted object-type { is_item-obj_type }: No tables defined| ).
     ENDIF.
 * only unique tables
     SORT mt_object_table BY tobj_name ASCENDING.
@@ -297,8 +296,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
 
       INSERT (<ls_table>-tobj_name) FROM TABLE <lt_data>.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error inserting data, {
-          <ls_table>-tobj_name }| ).
+        zcx_abapgit_exception=>raise( |Error inserting data, { <ls_table>-tobj_name }| ).
       ENDIF.
 
     ENDLOOP.
@@ -669,11 +667,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
         cg_data = <lt_data> ).
 
     IF lines( <lt_data> ) = 0.
-      zcx_abapgit_exception=>raise( |Primary table { lv_primary
-        } not found in imported container | ).
+      zcx_abapgit_exception=>raise( |Primary table { lv_primary } not found in imported container| ).
     ELSEIF lines( <lt_data> ) <> 1.
-      zcx_abapgit_exception=>raise( |Primary table { lv_primary
-        } contains more than one instance! | ).
+      zcx_abapgit_exception=>raise( |Primary table { lv_primary } contains more than one instance!| ).
     ENDIF.
 
     lv_where = get_where_clause( lv_primary ).
@@ -681,8 +677,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
 *  validate that max one local instance was affected by the import
     SELECT COUNT(*) FROM (lv_primary) WHERE (lv_where).
     IF sy-dbcnt > 1.
-      zcx_abapgit_exception=>raise( |More than one instance exists locally in primary table {
-        lv_primary }| ).
+      zcx_abapgit_exception=>raise( |More than one instance exists locally in primary table { lv_primary }| ).
     ENDIF.
 
   ENDMETHOD.

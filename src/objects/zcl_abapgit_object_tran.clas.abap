@@ -12,22 +12,18 @@ CLASS zcl_abapgit_object_tran DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
                                      WITH NON-UNIQUE DEFAULT KEY .
 
     CONSTANTS:
-      c_oo_program(9) VALUE '\PROGRAM=' ##NO_TEXT.
-    CONSTANTS:
-      c_oo_class(7) VALUE '\CLASS=' ##NO_TEXT.
-    CONSTANTS:
-      c_oo_method(8) VALUE '\METHOD=' ##NO_TEXT.
-    CONSTANTS c_oo_tcode TYPE tcode VALUE 'OS_APPLICATION' ##NO_TEXT.
-    CONSTANTS:
-      c_oo_frclass(30) VALUE 'CLASS' ##NO_TEXT.
-    CONSTANTS:
-      c_oo_frmethod(30) VALUE 'METHOD' ##NO_TEXT.
-    CONSTANTS:
-      c_oo_frupdtask(30) VALUE 'UPDATE_MODE' ##NO_TEXT.
-    CONSTANTS c_oo_synchron TYPE c VALUE 'S' ##NO_TEXT.
-    CONSTANTS c_oo_asynchron TYPE c VALUE 'U' ##NO_TEXT.
-    CONSTANTS c_true TYPE c VALUE 'X' ##NO_TEXT.
-    CONSTANTS c_false TYPE c VALUE space ##NO_TEXT.
+      c_oo_program TYPE c LENGTH 9 VALUE '\PROGRAM=' ##NO_TEXT,
+      c_oo_class TYPE c LENGTH 7 VALUE '\CLASS=' ##NO_TEXT,
+      c_oo_method TYPE c LENGTH 8 VALUE '\METHOD=' ##NO_TEXT,
+      c_oo_tcode TYPE tcode VALUE 'OS_APPLICATION' ##NO_TEXT,
+      c_oo_frclass TYPE c LENGTH 30 VALUE 'CLASS' ##NO_TEXT,
+      c_oo_frmethod TYPE c LENGTH 30 VALUE 'METHOD' ##NO_TEXT,
+      c_oo_frupdtask TYPE c LENGTH 30 VALUE 'UPDATE_MODE' ##NO_TEXT,
+      c_oo_synchron TYPE c VALUE 'S' ##NO_TEXT,
+      c_oo_asynchron TYPE c VALUE 'U' ##NO_TEXT,
+      c_true TYPE c VALUE 'X' ##NO_TEXT,
+      c_false TYPE c VALUE space ##NO_TEXT.
+
     DATA:
       mt_bcdata TYPE STANDARD TABLE OF bdcdata .
 

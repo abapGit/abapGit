@@ -90,9 +90,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_SAXX_SUPER IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |{ ms_item-obj_type } not supported| ).
     ENDTRY.
 
-    mo_appl_obj_data->get_data(
-      IMPORTING
-        p_data = eg_data ).
+    mo_appl_obj_data->get_data( IMPORTING p_data = eg_data ).
 
   ENDMETHOD.
 
@@ -177,9 +175,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_SAXX_SUPER IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |{ ms_item-obj_name } not supported| ).
     ENDTRY.
 
-    get_data(
-      IMPORTING
-        eg_data = <lg_data> ).
+    get_data( IMPORTING eg_data = <lg_data> ).
 
     ASSIGN COMPONENT 'HEADER' OF STRUCTURE <lg_data> TO <lg_header>.
     ASSERT sy-subrc = 0.
@@ -370,9 +366,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_SAXX_SUPER IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |{ ms_item-obj_type } not supported| ).
     ENDTRY.
 
-    get_data(
-      IMPORTING
-        eg_data = <lg_data> ).
+    get_data( IMPORTING eg_data = <lg_data> ).
 
     ASSIGN COMPONENT 'HEADER' OF STRUCTURE <lg_data> TO <lg_header>.
     ASSERT sy-subrc = 0.
