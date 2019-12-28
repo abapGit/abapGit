@@ -23,7 +23,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TYPE IMPLEMENTATION.
+CLASS zcl_abapgit_object_type IMPLEMENTATION.
 
 
   METHOD create.
@@ -70,6 +70,11 @@ CLASS ZCL_ABAPGIT_OBJECT_TYPE IMPLEMENTATION.
           lt_psmodilog TYPE TABLE OF smodilog,
           lt_ptrdir    TYPE TABLE OF trdir.
 
+
+    SELECT SINGLE ddtext FROM ddtypet
+      INTO ev_ddtext
+      WHERE typegroup  = ms_item-obj_name
+        AND ddlanguage = mv_language.
 
     lv_typdname = ms_item-obj_name.
     CALL FUNCTION 'TYPD_GET_OBJECT'
