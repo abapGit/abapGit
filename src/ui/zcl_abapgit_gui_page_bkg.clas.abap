@@ -178,13 +178,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
     ro_html->add( '<table>' ).
     ro_html->add( '<tr>' ).
     ro_html->add( '<td>Username:</td>' ).
-    ro_html->add( '<td><input type="text" name="username" value="' &&
-      ls_per-username && '"></td>' ).
+    ro_html->add( '<td><input type="text" name="username" value="' && ls_per-username && '"></td>' ).
     ro_html->add( '</tr>' ).
     ro_html->add( '<tr>' ).
     ro_html->add( '<td>Password:</td>' ).
-    ro_html->add( '<td><input type="text" name="password" value="' &&
-      ls_per-password && '"></td>' ).
+    ro_html->add( '<td><input type="text" name="password" value="' && ls_per-password && '"></td>' ).
     ro_html->add( '</tr>' ).
     ro_html->add( '</table>' ).
 
@@ -230,8 +228,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
       lv_checked = ' checked' ##NO_TEXT.
     ENDIF.
 
-    ro_html->add( '<input type="radio" name="method" value=""' &&
-      lv_checked && '>Do nothing<br>' ) ##NO_TEXT.
+    ro_html->add( '<input type="radio" name="method" value=""' && lv_checked && '>Do nothing<br>' ) ##NO_TEXT.
 
     LOOP AT lt_methods INTO ls_method.
       CLEAR lv_checked.
