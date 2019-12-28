@@ -121,18 +121,14 @@ CLASS zcl_abapgit_object_iasp IMPLEMENTATION.
 
   METHOD w3_api_get_attributes.
 
-    ii_service->get_attributes(
-      IMPORTING
-        p_attributes = rs_attributes ).
+    ii_service->get_attributes( IMPORTING p_attributes = rs_attributes ).
 
   ENDMETHOD.
 
 
   METHOD w3_api_get_parameters.
 
-    ii_service->get_parameters(
-      IMPORTING
-        p_parameters = rt_parameters ).
+    ii_service->get_parameters( IMPORTING p_parameters = rt_parameters ).
 
   ENDMETHOD.
 
