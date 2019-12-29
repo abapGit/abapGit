@@ -168,7 +168,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_program IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
 
   METHOD add_tpool.
@@ -782,10 +782,10 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
                    <ls_field_int>   LIKE LINE OF lt_fieldlist_int.
 
     "#2746: relevant flag values (taken from include MSEUSBIT)
-    CONSTANTS: lc_flg1ddf TYPE x VALUE '20',
-               lc_flg3fku TYPE x VALUE '08',
-               lc_flg3for TYPE x VALUE '04',
-               lc_flg3fdu TYPE x VALUE '02'.
+    CONSTANTS:    lc_flg1ddf TYPE x VALUE '20',
+                  lc_flg3fku TYPE x VALUE '08',
+                  lc_flg3for TYPE x VALUE '04',
+                  lc_flg3fdu TYPE x VALUE '02'.
 
 
     CALL FUNCTION 'RS_SCREEN_LIST'
