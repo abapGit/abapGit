@@ -256,8 +256,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TOBJ IMPLEMENTATION.
         OTHERS            = 2.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Jump not possible. Subrc={ sy-subrc } |
-                                 && |from TR_OBJECT_JUMP_TO_TOOL| ).
+      zcx_abapgit_exception=>raise( |Jump not possible. Subrc={ sy-subrc } from TR_OBJECT_JUMP_TO_TOOL| ).
     ENDIF.
 
   ENDMETHOD.

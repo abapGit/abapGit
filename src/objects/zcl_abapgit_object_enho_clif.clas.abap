@@ -34,21 +34,13 @@ CLASS zcl_abapgit_object_enho_clif IMPLEMENTATION.
                    <ls_event_param> LIKE LINE OF <ls_event>-event_param.
 
 
-    io_clif->get_enhattributes(
-      IMPORTING
-        tab_attributes = lt_tab_attributes ).
+    io_clif->get_enhattributes( IMPORTING tab_attributes = lt_tab_attributes ).
 
-    io_clif->get_enhatypes(
-      IMPORTING
-        tab_types = lt_tab_types ).
+    io_clif->get_enhatypes( IMPORTING tab_types = lt_tab_types ).
 
-    io_clif->get_enh_new_methodes(
-      IMPORTING
-        tab_methodes = lt_tab_methods ).
+    io_clif->get_enh_new_methodes( IMPORTING tab_methodes = lt_tab_methods ).
 
-    io_clif->get_enhevents(
-      IMPORTING
-        tab_eventdata = lt_tab_eventdata ).
+    io_clif->get_enhevents( IMPORTING tab_eventdata = lt_tab_eventdata ).
 
     LOOP AT lt_tab_attributes ASSIGNING <ls_attr>.
       CLEAR: <ls_attr>-author,

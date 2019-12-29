@@ -229,9 +229,7 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
-      replace_section_head_with_text(
-        CHANGING
-          cs_itf = <ls_itf_section> ).
+      replace_section_head_with_text( CHANGING cs_itf = <ls_itf_section> ).
 
     ENDLOOP.
 

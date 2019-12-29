@@ -204,8 +204,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
     DATA: lt_overview TYPE tty_overview.
 
-    lt_overview = map_repo_list_to_overview(
-      zcl_abapgit_persist_factory=>get_repo( )->list( ) ).
+    lt_overview = map_repo_list_to_overview( zcl_abapgit_persist_factory=>get_repo( )->list( ) ).
 
     apply_order_by( CHANGING ct_overview = lt_overview ).
 
