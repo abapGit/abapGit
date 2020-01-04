@@ -196,7 +196,7 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
   METHOD on_link_click.
 
     DATA: lx_error TYPE REF TO zcx_abapgit_exception.
-    FIELD-SYMBOLS: <ls_log> TYPE zcl_abapgit_log_viewer=>ty_log_out.
+    FIELD-SYMBOLS: <ls_log> TYPE ty_log_out.
 
     IF row IS INITIAL
     OR column IS INITIAL.

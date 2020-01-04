@@ -600,7 +600,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
   METHOD is_any_function_module_locked.
 
-    DATA: lt_functions TYPE zcl_abapgit_object_fugr=>ty_rs38l_incl_tt.
+    DATA: lt_functions TYPE ty_rs38l_incl_tt.
 
     FIELD-SYMBOLS: <ls_function> TYPE rs38l_incl.
 
