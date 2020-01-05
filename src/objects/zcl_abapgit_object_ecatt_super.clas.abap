@@ -243,9 +243,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
     ls_object-d_overwrite = abap_true.
 
     TRY.
-        lo_upload->upload(
-          CHANGING
-            ch_object = ls_object ).
+        lo_upload->upload( CHANGING ch_object = ls_object ).
 
       CATCH cx_ecatt INTO lx_error.
         lv_text = lx_error->get_text( ).
@@ -365,13 +363,9 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
 
     li_document = cl_ixml_80_20=>parse_to_document( stream_xstring = lv_xml ).
 
-    clear_attributes(
-      CHANGING
-        ci_document = li_document ).
+    clear_attributes( CHANGING ci_document = li_document ).
 
-    clear_elements(
-      CHANGING
-        ci_document = li_document ).
+    clear_elements( CHANGING ci_document = li_document ).
 
     lo_node = li_document->create_element( co_name-version ).
     lo_node->append_child( li_document->get_root_element( ) ).

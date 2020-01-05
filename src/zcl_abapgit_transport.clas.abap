@@ -127,7 +127,8 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
 
     LOOP AT it_requests ASSIGNING <ls_request>.
       LOOP AT <ls_request>-objects ASSIGNING <ls_object>.
-        IF <ls_object>-pgmid = 'LIMU'.
+        " VARX, see https://github.com/larshp/abapGit/issues/3107
+        IF <ls_object>-pgmid = 'LIMU' AND <ls_object>-object <> 'VARX'.
           CALL FUNCTION 'GET_R3TR_OBJECT_FROM_LIMU_OBJ'
             EXPORTING
               p_limu_objtype = <ls_object>-object

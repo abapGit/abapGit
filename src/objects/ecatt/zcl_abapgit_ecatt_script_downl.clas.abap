@@ -144,8 +144,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
           li_elem     TYPE REF TO if_ixml_element.
 
     li_vars = ii_element->find_from_name_ns( iv_tabname ).
-    li_filter = ii_element->create_filter_node_type(
-    if_ixml_node=>co_node_text ).
+    li_filter = ii_element->create_filter_node_type( if_ixml_node=>co_node_text ).
     IF li_vars IS NOT INITIAL.
       li_abapctrl = ii_element->get_elements_by_tag_name_ns( iv_node ).
 
@@ -404,9 +403,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
       li_element TYPE REF TO if_ixml_element,
       lv_rc      TYPE sy-subrc.
 
-    ecatt_script->get_script_text(
-      CHANGING
-        scripttext = lt_text ).
+    ecatt_script->get_script_text( CHANGING scripttext = lt_text ).
 
     mi_script_node = template_over_all->create_simple_element(
                         name = 'SCRIPT'

@@ -257,9 +257,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
         CLEAR: lv_selected.
       ENDIF.
 
-      ro_html->add( |<option value="{ <lv_type> }" |
-                 && |{ lv_selected }>|
-                 && |{ <lv_type> }</option>| ).
+      ro_html->add( |<option value="{ <lv_type> }" | && |{ lv_selected }>| && |{ <lv_type> }</option>| ).
 
     ENDLOOP.
 
@@ -301,8 +299,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
       IF lv_body_size > lc_body_col_max.
         lv_body_size = lc_body_col_max.
       ENDIF.
-      ro_html->add( |<textarea id="c-body" name="body" rows="10" cols="| &&
-                    |{ lv_body_size }"></textarea>| ).
+      ro_html->add( |<textarea id="c-body" name="body" rows="10" cols="| && |{ lv_body_size }"></textarea>| ).
 
     ENDIF.
 

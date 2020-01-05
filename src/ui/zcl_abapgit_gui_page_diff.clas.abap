@@ -769,11 +769,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     ENDIF.
 
     IF lv_adt_link IS NOT INITIAL.
-      ro_html->add(
-        |<span class="diff_name">{ lv_adt_link }</span>| ). "#EC NOTEXT
+      ro_html->add( |<span class="diff_name">{ lv_adt_link }</span>| ). "#EC NOTEXT
     ELSE.
-      ro_html->add(
-        |<span class="diff_name">{ is_diff-path }{ is_diff-filename }</span>| ). "#EC NOTEXT
+      ro_html->add( |<span class="diff_name">{ is_diff-path }{ is_diff-filename }</span>| ). "#EC NOTEXT
     ENDIF.
 
     ro_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state(

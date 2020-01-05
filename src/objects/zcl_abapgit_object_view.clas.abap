@@ -197,9 +197,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
 
     DATA: ls_dd25v TYPE dd25v.
 
-    read_view(
-      IMPORTING
-        es_dd25v              = ls_dd25v ).
+    read_view( IMPORTING es_dd25v = ls_dd25v ).
 
     CASE ls_dd25v-viewclass.
       WHEN co_viewclass-view_variant.
