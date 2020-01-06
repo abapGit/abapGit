@@ -70,7 +70,7 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
           li_user_persistence TYPE REF TO zif_abapgit_persist_user.
 
     FIELD-SYMBOLS: <lv_user>                     LIKE LINE OF lt_abapgit_users,
-                   <ls_setting_to_migrate>       TYPE zcl_abapgit_persist_migrate=>ty_settings_to_migrate,
+                   <ls_setting_to_migrate>       TYPE ty_settings_to_migrate,
                    <lg_user_specific_setting_val> TYPE data.
 
     " distribute settings to all abapGit users
