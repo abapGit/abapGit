@@ -150,7 +150,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PRAG IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA: lo_pragma TYPE REF TO cl_abap_pragma,
-          ls_pragma TYPE zcl_abapgit_object_prag=>ty_pragma.
+          ls_pragma TYPE ty_pragma.
 
     TRY.
         lo_pragma = cl_abap_pragma=>get_ref( ms_item-obj_name ).

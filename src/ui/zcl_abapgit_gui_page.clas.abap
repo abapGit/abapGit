@@ -476,7 +476,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
   METHOD zif_abapgit_gui_renderable~render.
 
     DATA: lo_script TYPE REF TO zcl_abapgit_html,
-          lt_events TYPE zcl_abapgit_gui_page=>tt_events.
+          lt_events TYPE tt_events.
 
     FIELD-SYMBOLS:
           <ls_event> LIKE LINE OF lt_events.
