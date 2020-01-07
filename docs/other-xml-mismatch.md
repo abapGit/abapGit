@@ -16,11 +16,11 @@ If the latest version of abapGit is installed and the erorr message is shown, th
 
 The steps are:
 
-1. Install old abapGit version, matching the serialized files
+1. Install the old abapGit version, matching the serialized files
 
-2. Install objects into the ABAP system
+2. Install the objects into the ABAP system
 
-3. Install newest abapGit version
+3. Install the newest abapGit version
 
 4. Use the new abapGit to save the files to the git repository
 
@@ -28,5 +28,5 @@ This will overwrite the files in the repository to have the latest format, compa
 
 | abapGit       | Download | XML Serialization |
 | :------------- |:------------- |:-------------|
-| v1.0.0 to current | [Link](https://raw.githubusercontent.com/larshp/abapGit/build/zabapgit.abap) | v1.0.0 |
+| v1.0.0 to current | [Link](https://raw.githubusercontent.com/abapGit/build/master/zabapgit.abap) | v1.0.0 |
 | v0.0.0 to v0.113.0 | [Link](https://raw.githubusercontent.com/larshp/abapGit/v0.113.0/zabapgit.prog.abap) | v0.2-alpha |

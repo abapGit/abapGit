@@ -6,7 +6,9 @@ order: 10
 
 **.abapgit.xml** is a special abapGit file. It contains meta information of the abapGit project.
 
-Example: abapGit own .abapgit.xml
+.abapgit.xml can be edit via "Repo menu > Advanced > Repo settings" or via "abapGit menu > Advanced > Database util". 
+
+Example: abapGit's own .abapgit.xml
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -31,9 +33,12 @@ Example: abapGit own .abapgit.xml
 
 # Description
 
+## Location
+The `.abapgit.xml` file must be located in the root folder of the git repository.
+
 ## Master Language
 
-The language in which all documentation and dictionary elements texts will be created. Follows SAP `sy-langu` values.
+The language in which all documentation and dictionary elements texts will be created. Follows SAP `sy-langu` values. Note that this implies that all objects in a repository will/should have the same master language.
 
 ## Starting Folder
 
@@ -52,11 +57,13 @@ Valid prefix:
   * **ZFOO**_BAR
     * **ZFOO_BAR**_QUX
 
-will give folder structure /foo/bar/qux/
+will give folder structure /bar/qux/
 
 Invalid prefix:
 * ZFOO
   * ZBAR
+
+The folder logic PREFIX allows to install the repository into a different parent package. This can even be local packages(`$*`), in that case no transport order is required.
 
 ### FULL
 
@@ -67,6 +74,38 @@ Any package name is accepted
 
 will give folder structure /zsomething/zhello/
 
+The folder logic FULL forces the installation of the repository into packages with exactly the same name. This can be problematic for contributors who use a system where specific prefixes for the package names are to be used.
+
 ## Ignore
 
 Files which abapGit will not download into your ABAP system.
+
+## Requirements
+
+ToDo
+
+## Local Settings
+
+### Write protected
+
+Write protected is described here: [Write protected](http://docs.abapgit.org/ref-write-protect.html)
+
+### Ignore subpackages
+
+Subpackages would be ignored through this option.
+
+### Only local objects 
+
+ToDo
+
+### Code inspector
+
+The repository objects can be checked with the Code inspector before staging.
+
+#### Code inspector check variant
+
+By entering the Code inspector variant, the check is activated.
+
+#### Block commit commit/push if code inspection has erros
+
+This option can be used to prevent staging if errors occur in the Code Inspector.

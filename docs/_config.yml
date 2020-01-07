@@ -1,9 +1,17 @@
-title: abapGit Docs
-keep_files: [explore.html, repos.json]
+title: abapGit documentation
 highlighter: rouge
+collections_dir: collections
+collections:
+  development:
+    output: true
+plugins:
+  - jekyll-octicons    
 defaults:
-  -
-    scope:
-      path: "" # an empty string here means all files in the project
+  - scope:
+      path: ""
     values:
       layout: "default"
+  - scope:
+      path: "_development"
+    values:
+      layout: "development"

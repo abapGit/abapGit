@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_W3MI" serializer_version="v2.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <NAME>ZABAPGIT_CSS_THEME_DEFAULT</NAME>
+   <TEXT>abapGit default color theme</TEXT>
+   <PARAMS>
+    <WWWPARAMS>
+     <RELID>MI</RELID>
+     <OBJID>ZABAPGIT_CSS_THEME_DEFAULT</OBJID>
+     <NAME>fileextension</NAME>
+     <VALUE>.CSS</VALUE>
+    </WWWPARAMS>
+    <WWWPARAMS>
+     <RELID>MI</RELID>
+     <OBJID>ZABAPGIT_CSS_THEME_DEFAULT</OBJID>
+     <NAME>filename</NAME>
+     <VALUE>~wwwtmp.CSS</VALUE>
+    </WWWPARAMS>
+    <WWWPARAMS>
+     <RELID>MI</RELID>
+     <OBJID>ZABAPGIT_CSS_THEME_DEFAULT</OBJID>
+     <NAME>mimetype</NAME>
+     <VALUE>text/css</VALUE>
+    </WWWPARAMS>
+   </PARAMS>
+  </asx:values>
+ </asx:abap>
+</abapGit>
