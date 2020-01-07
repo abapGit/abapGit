@@ -114,27 +114,27 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
       lo_table_descr  TYPE REF TO cl_abap_tabledescr.
 
     FIELD-SYMBOLS:
-      <details>     TYPE any,
-      <infoobjects> TYPE STANDARD TABLE,
-      <infoobject>  TYPE data.
+      <ls_details>     TYPE any,
+      <ls_infoobject>  TYPE data,
+      <lt_infoobjects> TYPE STANDARD TABLE.
 
     CREATE DATA lr_details TYPE ('BAPI6108').
-    ASSIGN lr_details->* TO <details>.
+    ASSIGN lr_details->* TO <ls_details>.
     ASSERT sy-subrc = 0.
 
-    lo_struct_descr ?= cl_abap_structdescr=>describe_by_data( <details> ).
+    lo_struct_descr ?= cl_abap_structdescr=>describe_by_data( <ls_details> ).
     lo_table_descr = cl_abap_tabledescr=>create( lo_struct_descr ).
 
     CREATE DATA lr_infoobj TYPE HANDLE lo_table_descr.
-    ASSIGN lr_infoobj->* TO <infoobjects>.
+    ASSIGN lr_infoobj->* TO <lt_infoobjects>.
     ASSERT sy-subrc = 0.
 
     io_xml->read( EXPORTING iv_name = 'IOBJ'
-                   CHANGING cg_data = <details> ).
+                   CHANGING cg_data = <ls_details> ).
     TRY.
         CALL FUNCTION 'BAPI_IOBJ_CREATE'
           EXPORTING
-            details = <details>
+            details = <ls_details>
           IMPORTING
             return  = ls_return.
 
@@ -144,15 +144,15 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
         ASSIGN
           COMPONENT 'INFOOBJECT'
-          OF STRUCTURE <details>
-          TO <infoobject>.
+          OF STRUCTURE <ls_details>
+          TO <ls_infoobject>.
         ASSERT sy-subrc = 0.
 
-        APPEND <infoobject> TO <infoobjects>.
+        APPEND <ls_infoobject> TO <lt_infoobjects>.
 
         CALL FUNCTION 'BAPI_IOBJ_ACTIVATE_MULTIPLE'
           TABLES
-            infoobjects = <infoobjects>
+            infoobjects = <lt_infoobjects>
             return      = lt_return.
 
         READ TABLE lt_return WITH KEY type = 'E' INTO ls_return.
@@ -261,10 +261,10 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
           ls_return  TYPE bapiret2,
           lr_details TYPE REF TO  data.
 
-    FIELD-SYMBOLS: <details> TYPE any.
+    FIELD-SYMBOLS: <ls_details> TYPE any.
 
     CREATE DATA lr_details TYPE ('BAPI6108').
-    ASSIGN lr_details->* TO <details>.
+    ASSIGN lr_details->* TO <ls_details>.
     ASSERT sy-subrc = 0.
 
     lv_iobjnam = ms_item-obj_name.
@@ -273,7 +273,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
       EXPORTING
         infoobject = lv_iobjnam
       IMPORTING
-        details    = <details>
+        details    = <ls_details>
         return     = ls_return.
 
     IF ls_return-type = 'E'.
@@ -281,16 +281,16 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
     ENDIF.
 
     clear_field( EXPORTING iv_fieldname = 'TSTPNM'
-                 CHANGING  cs_metadata  = <details> ).
+                 CHANGING  cs_metadata  = <ls_details> ).
 
     clear_field( EXPORTING iv_fieldname = 'TIMESTMP'
-                 CHANGING  cs_metadata  = <details> ).
+                 CHANGING  cs_metadata  = <ls_details> ).
 
     clear_field( EXPORTING iv_fieldname = 'DBROUTID'
-                 CHANGING  cs_metadata  = <details> ).
+                 CHANGING  cs_metadata  = <ls_details> ).
 
     io_xml->add( iv_name = 'IOBJ'
-                 ig_data = <details> ).
+                 ig_data = <ls_details> ).
 
   ENDMETHOD.
 
