@@ -261,7 +261,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
           lv_patch             TYPE xstring,
           lo_git_add_patch     TYPE REF TO zcl_abapgit_git_add_patch.
 
-    FIELD-SYMBOLS: <ls_diff_file> TYPE zcl_abapgit_gui_page_diff=>ty_file_diff.
+    FIELD-SYMBOLS: <ls_diff_file> TYPE ty_file_diff.
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
 
