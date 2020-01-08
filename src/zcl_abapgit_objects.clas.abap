@@ -1170,7 +1170,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     LOOP AT lt_objects ASSIGNING <ls_object> WHERE pgmid = 'R3TR'.
       ls_item-obj_type = <ls_object>-object.
 
-      lv_supported = zcl_abapgit_objects=>is_supported(
+      lv_supported = is_supported(
         is_item        = ls_item
         iv_native_only = abap_true ).
 
