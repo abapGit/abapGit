@@ -6,6 +6,13 @@ CLASS zcl_abapgit_object_iobj DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+    METHODS:
+      clear_field
+        IMPORTING
+          iv_fieldname TYPE string
+        CHANGING
+          cs_metadata  TYPE any.
+
 ENDCLASS.
 
 
@@ -98,17 +105,37 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: ls_details TYPE bapi6108,
-          lt_infoobj TYPE STANDARD TABLE OF bapi6108io,
-          ls_return  TYPE bapiret2,
-          lt_return  TYPE STANDARD TABLE OF bapiret2.
+    DATA:
+      lr_details      TYPE REF TO data,
+      lr_infoobj      TYPE REF TO data,
+      ls_return       TYPE bapiret2,
+      lt_return       TYPE STANDARD TABLE OF bapiret2,
+      lo_struct_descr TYPE REF TO cl_abap_structdescr,
+      lo_table_descr  TYPE REF TO cl_abap_tabledescr.
+
+    FIELD-SYMBOLS:
+      <ls_details>     TYPE any,
+      <ls_infoobject>  TYPE data,
+      <lt_infoobjects> TYPE STANDARD TABLE.
+
+
+    CREATE DATA lr_details TYPE ('BAPI6108').
+    ASSIGN lr_details->* TO <ls_details>.
+    ASSERT sy-subrc = 0.
+
+    lo_struct_descr ?= cl_abap_structdescr=>describe_by_data( <ls_details> ).
+    lo_table_descr = cl_abap_tabledescr=>create( lo_struct_descr ).
+
+    CREATE DATA lr_infoobj TYPE HANDLE lo_table_descr.
+    ASSIGN lr_infoobj->* TO <lt_infoobjects>.
+    ASSERT sy-subrc = 0.
 
     io_xml->read( EXPORTING iv_name = 'IOBJ'
-                   CHANGING cg_data = ls_details ).
+                   CHANGING cg_data = <ls_details> ).
     TRY.
         CALL FUNCTION 'BAPI_IOBJ_CREATE'
           EXPORTING
-            details = ls_details
+            details = <ls_details>
           IMPORTING
             return  = ls_return.
 
@@ -116,11 +143,17 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
           zcx_abapgit_exception=>raise( |Error when creating iobj: { ls_return-message }| ).
         ENDIF.
 
-        APPEND ls_details-infoobject TO lt_infoobj.
+        ASSIGN
+          COMPONENT 'INFOOBJECT'
+          OF STRUCTURE <ls_details>
+          TO <ls_infoobject>.
+        ASSERT sy-subrc = 0.
+
+        APPEND <ls_infoobject> TO <lt_infoobjects>.
 
         CALL FUNCTION 'BAPI_IOBJ_ACTIVATE_MULTIPLE'
           TABLES
-            infoobjects = lt_infoobj
+            infoobjects = <lt_infoobjects>
             return      = lt_return.
 
         READ TABLE lt_return WITH KEY type = 'E' INTO ls_return.
@@ -227,7 +260,13 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
     DATA: lv_iobjnam TYPE rsiobjnm,
           ls_return  TYPE bapiret2,
-          ls_details TYPE bapi6108.
+          lr_details TYPE REF TO  data.
+
+    FIELD-SYMBOLS: <ls_details> TYPE any.
+
+    CREATE DATA lr_details TYPE ('BAPI6108').
+    ASSIGN lr_details->* TO <ls_details>.
+    ASSERT sy-subrc = 0.
 
     lv_iobjnam = ms_item-obj_name.
 
@@ -235,17 +274,39 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
       EXPORTING
         infoobject = lv_iobjnam
       IMPORTING
-        details    = ls_details
+        details    = <ls_details>
         return     = ls_return.
 
     IF ls_return-type = 'E'.
       zcx_abapgit_exception=>raise( |Error when geting getails of iobj: { ls_return-message }| ).
     ENDIF.
 
-    CLEAR: ls_details-tstpnm, ls_details-timestmp, ls_details-dbroutid.
+    clear_field( EXPORTING iv_fieldname = 'TSTPNM'
+                 CHANGING  cs_metadata  = <ls_details> ).
+
+    clear_field( EXPORTING iv_fieldname = 'TIMESTMP'
+                 CHANGING  cs_metadata  = <ls_details> ).
+
+    clear_field( EXPORTING iv_fieldname = 'DBROUTID'
+                 CHANGING  cs_metadata  = <ls_details> ).
 
     io_xml->add( iv_name = 'IOBJ'
-                 ig_data = ls_details ).
+                 ig_data = <ls_details> ).
 
   ENDMETHOD.
+
+
+  METHOD clear_field.
+
+    FIELD-SYMBOLS: <lg_field> TYPE data.
+
+    ASSIGN COMPONENT iv_fieldname
+           OF STRUCTURE cs_metadata
+           TO <lg_field>.
+    ASSERT sy-subrc = 0.
+
+    CLEAR: <lg_field>.
+
+  ENDMETHOD.
+
 ENDCLASS.
