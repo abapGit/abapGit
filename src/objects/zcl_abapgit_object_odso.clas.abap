@@ -20,7 +20,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
 
-    DATA: lv_dsonam  TYPE c LENGTH 1,
+    DATA: lv_dsonam  TYPE c LENGTH 30,
           ls_return  TYPE bapiret2,
           lr_details TYPE REF TO data.
 
@@ -57,7 +57,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_odso       TYPE c LENGTH 30,
+    DATA: lv_odsonam    TYPE c LENGTH 30,
           lv_objname    TYPE sobj_name,
           lo_collection TYPE REF TO object,
           lt_msg        TYPE rs_t_msg,
@@ -71,7 +71,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |ODSO is not supported on this system| ).
     ENDTRY.
 
-    lv_odso    = ms_item-obj_name.
+    lv_odsonam    = ms_item-obj_name.
     lv_objname = ms_item-obj_name.
 
     ls_col_par-kind = cl_abap_objectdescr=>exporting.
@@ -122,7 +122,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lv_odso        TYPE c LENGTH 30,
+    DATA: lv_dsonam      TYPE c LENGTH 30,
           lr_details     TYPE REF TO data,
           lr_infoobjects TYPE REF TO data,
           lr_navigation  TYPE REF TO data,
@@ -174,7 +174,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
           EXPORTING
             details              = <ls_details>
           IMPORTING
-            odsobject            = lv_odso
+            odsobject            = lv_dsonam
           TABLES
             infoobjects          = <lt_infoobjects>
             navigationattributes = <lt_navigation>
@@ -193,7 +193,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
 
     CALL FUNCTION 'BAPI_ODSO_ACTIVATE'
       EXPORTING
-        odsobject = lv_odso
+        odsobject = lv_dsonam
       TABLES
         return    = lt_return.
 
