@@ -32,11 +32,11 @@ CLASS zcl_abapgit_code_inspector DEFINITION
         !io_set TYPE REF TO cl_ci_objectset
       RAISING
         zcx_abapgit_exception .
-    METHODS check_obj_before_add
+    METHODS skip_object
       IMPORTING
         !is_obj       TYPE scir_objs
       RETURNING
-        VALUE(rv_add) TYPE abap_bool.
+        VALUE(rv_skip) TYPE abap_bool.
   PRIVATE SECTION.
 
     DATA mv_success TYPE abap_bool .
@@ -192,7 +192,7 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
 
     LOOP AT lt_objs INTO ls_obj.
 
-      IF check_obj_before_add( ls_obj ) = abap_false.
+      IF skip_object( ls_obj ) = abap_true.
         CONTINUE.
       ENDIF.
 
@@ -207,7 +207,7 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD check_obj_before_add.
+  METHOD skip_object.
 
     DATA: ls_trdir TYPE trdir.
 
@@ -217,14 +217,14 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
           INTO ls_trdir
           FROM trdir
           WHERE name = is_obj-objname.
-        IF ls_trdir-subc = 'I'. " Include program
+        IF ls_trdir-subc <> 'I'. " Include program
           RETURN.
         ENDIF.
 
-        rv_add = abap_true.
+        rv_skip = abap_true.
 
       WHEN OTHERS.
-        rv_add = abap_true.
+        rv_skip = abap_false.
 
     ENDCASE.
 
