@@ -211,16 +211,20 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
 
     DATA: ls_trdir TYPE trdir.
 
-    IF is_obj-objtype =  'PROG'.
+    CASE is_obj-objtype.
+      WHEN 'PROG'.
 
-      SELECT SINGLE *
-        INTO ls_trdir
-        FROM trdir
-        WHERE name = is_obj-objname.
+        SELECT SINGLE *
+          INTO ls_trdir
+          FROM trdir
+          WHERE name = is_obj-objname.
 
-      rv_skip = boolc( ls_trdir-subc = 'I' ). " Include program.
+        rv_skip = boolc( ls_trdir-subc = 'I' ). " Include program.
 
-    ENDIF.
+      WHEN OTHERS.
+        rv_skip = abap_false.
+
+    ENDCASE.
 
   ENDMETHOD.
 
