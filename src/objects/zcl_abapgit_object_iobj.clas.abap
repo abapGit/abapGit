@@ -118,6 +118,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
       <ls_infoobject>  TYPE data,
       <lt_infoobjects> TYPE STANDARD TABLE.
 
+
     CREATE DATA lr_details TYPE ('BAPI6108').
     ASSIGN lr_details->* TO <ls_details>.
     ASSERT sy-subrc = 0.
