@@ -439,7 +439,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     lt_repos = zcl_abapgit_persist_factory=>get_repo( )->list( ).
     READ TABLE lt_repos WITH KEY package = iv_package ASSIGNING <ls_repo>.
     IF sy-subrc = 0.
-      lv_name = zcl_abapgit_repo_srv=>get_instance( )->get( <ls_repo>-key )->get_name( ).
+      lv_name = get_instance( )->get( <ls_repo>-key )->get_name( ).
       lv_owner = <ls_repo>-created_by.
       zcx_abapgit_exception=>raise( |Package { iv_package } already versioned as { lv_name } by { lv_owner }| ).
     ENDIF.

@@ -400,7 +400,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
           lo_page           TYPE REF TO cl_o2_api_pages,
           lt_pages_info     TYPE ty_pages_tt,
           ls_pagekey        TYPE o2pagkey,
-          ls_local_page     TYPE zcl_abapgit_object_wapa=>ty_page,
+          ls_local_page     TYPE ty_page,
           lt_remote_content TYPE o2pageline_table,
           lt_local_content  TYPE o2pageline_table,
           lt_local_pages    TYPE o2pagelist.
