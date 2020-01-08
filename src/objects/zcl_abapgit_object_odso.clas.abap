@@ -20,7 +20,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
 
-    DATA: lv_dsonam  TYPE c length 1,
+    DATA: lv_dsonam  TYPE c LENGTH 1,
           ls_return  TYPE bapiret2,
           lr_details TYPE REF TO data.
 
@@ -122,7 +122,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lv_odso        TYPE c length 30,
+    DATA: lv_odso        TYPE c LENGTH 30,
           lr_details     TYPE REF TO data,
           lr_infoobjects TYPE REF TO data,
           lr_navigation  TYPE REF TO data,
@@ -211,7 +211,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lv_iobjnm TYPE c length 30.
+    DATA: lv_iobjnm TYPE c LENGTH 30.
 
     SELECT SINGLE odsobject
     FROM ('RSDODSO')
@@ -240,7 +240,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_active.
 
-    DATA: lv_dsona TYPE  c length 30.
+    DATA: lv_dsona TYPE  c LENGTH 30.
 
     lv_dsona = ms_item-obj_name.
 
@@ -270,7 +270,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lv_dsonam      TYPE c length 30,
+    DATA: lv_dsonam      TYPE c LENGTH 30,
           lr_details     TYPE REF TO data,
           lr_infoobjects TYPE REF TO data,
           lr_navigation  TYPE REF TO data,
