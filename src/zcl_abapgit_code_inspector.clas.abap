@@ -34,7 +34,7 @@ CLASS zcl_abapgit_code_inspector DEFINITION
         zcx_abapgit_exception .
     METHODS skip_object
       IMPORTING
-        !is_obj       TYPE scir_objs
+        !is_obj        TYPE scir_objs
       RETURNING
         VALUE(rv_skip) TYPE abap_bool.
   PRIVATE SECTION.
@@ -211,22 +211,16 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
 
     DATA: ls_trdir TYPE trdir.
 
-    CASE is_obj-objtype.
-      WHEN 'PROG'.
-        SELECT SINGLE *
-          INTO ls_trdir
-          FROM trdir
-          WHERE name = is_obj-objname.
-        IF ls_trdir-subc <> 'I'. " Include program
-          RETURN.
-        ENDIF.
+    IF is_obj-objtype =  'PROG'.
 
-        rv_skip = abap_true.
+      SELECT SINGLE *
+        INTO ls_trdir
+        FROM trdir
+        WHERE name = is_obj-objname.
 
-      WHEN OTHERS.
-        rv_skip = abap_false.
+      rv_skip = boolc( ls_trdir-subc = 'I' ). " Include program.
 
-    ENDCASE.
+    ENDIF.
 
   ENDMETHOD.
 
