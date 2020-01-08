@@ -65,7 +65,7 @@ CLASS zcl_abapgit_log_viewer DEFINITION
 
       goto_t100_message
         IMPORTING
-          is_log TYPE zcl_abapgit_log_viewer=>ty_log_out
+          is_log TYPE ty_log_out
         RAISING
           zcx_abapgit_exception,
 
@@ -74,7 +74,7 @@ CLASS zcl_abapgit_log_viewer DEFINITION
 
       dispatch
         IMPORTING
-          is_log    TYPE zcl_abapgit_log_viewer=>ty_log_out
+          is_log    TYPE ty_log_out
           iv_column TYPE salv_de_column
         RAISING
           zcx_abapgit_exception,

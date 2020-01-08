@@ -31,7 +31,7 @@ CLASS zcl_abapgit_object_msag DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         zcx_abapgit_exception .
     METHODS serialize_longtexts_msag
       IMPORTING
-        !it_t100 TYPE zcl_abapgit_object_msag=>tty_t100
+        !it_t100 TYPE tty_t100
         !io_xml  TYPE REF TO zcl_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
