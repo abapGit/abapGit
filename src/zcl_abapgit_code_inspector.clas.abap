@@ -221,9 +221,12 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
           RETURN.
         ENDIF.
 
-    ENDCASE.
+        rv_add = abap_true.
 
-    rv_add = abap_true.
+      WHEN OTHERS.
+        rv_add = abap_true.
+
+    ENDCASE.
 
   ENDMETHOD.
 
