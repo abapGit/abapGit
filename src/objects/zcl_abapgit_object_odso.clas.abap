@@ -12,6 +12,13 @@ CLASS zcl_abapgit_object_odso DEFINITION
       FOR zif_abapgit_object~mo_files .
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    METHODS:
+      clear_field
+        IMPORTING
+          iv_fieldname TYPE string
+        CHANGING
+          cs_metadata  TYPE any.
 ENDCLASS.
 
 
@@ -240,11 +247,23 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_active.
 
-    DATA: lv_dsona TYPE  c LENGTH 30.
+    DATA: lv_dsona TYPE c LENGTH 30,
+          lo_odso  TYPE REF TO object,
+          lv_isact TYPE abap_bool.
 
     lv_dsona = ms_item-obj_name.
 
-    rv_active = cl_rsd_odso=>factory( i_odsobject = lv_dsona )->is_active( ).
+    CALL METHOD ('CL_RSD_ODSO')=>('FACTORY')
+      EXPORTING
+        i_odsobject = lv_dsona
+      RECEIVING
+        r_r_odso    = lo_odso.
+
+    CALL METHOD lo_odso->('IS_ACTIVE')
+      RECEIVING
+        r_is_active = lv_isact.
+
+    rv_active = lv_isact.
 
   ENDMETHOD.
 
@@ -322,7 +341,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
     IF ls_return-type = 'E'.
       zcx_abapgit_exception=>raise( |Error when geting details of ODSO: { ls_return-message }| ).
     ENDIF.
-
+*chage to method
     ASSIGN COMPONENT 'TSTPNM'       OF STRUCTURE <ls_details> TO <lv_tstpnm>.
     ASSIGN COMPONENT 'TIMESTMP'     OF STRUCTURE <ls_details> TO <lv_timestmp>.
     ASSIGN COMPONENT 'CONTTIMESTMP' OF STRUCTURE <ls_details> TO <lv_conttimestmp>.
@@ -344,6 +363,19 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
 
     io_xml->add( iv_name = 'INDEX_IOBJ'
                  ig_data = <lt_index_iobj> ).
+
+  ENDMETHOD.
+
+  METHOD clear_field.
+
+    FIELD-SYMBOLS: <lg_field> TYPE data.
+
+    ASSIGN COMPONENT iv_fieldname
+           OF STRUCTURE cs_metadata
+           TO <lg_field>.
+    ASSERT sy-subrc = 0.
+
+    CLEAR: <lg_field>.
 
   ENDMETHOD.
 ENDCLASS.
