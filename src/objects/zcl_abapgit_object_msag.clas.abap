@@ -183,7 +183,8 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
       INTO TABLE lt_dokil
       FOR ALL ENTRIES IN lt_objects
       WHERE id = 'NA'
-      AND object = lt_objects-table_line.
+      AND object = lt_objects-table_line
+      ORDER BY PRIMARY KEY.
 
     CLEAR ls_dokil-dokstate.
     MODIFY lt_dokil FROM ls_dokil TRANSPORTING dokstate WHERE dokstate IS NOT INITIAL.
