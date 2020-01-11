@@ -2,7 +2,7 @@
   "license": "MIT",
   "scripts": {
     "test": "npm run eslint && npm run abaplint",
-    "merge": "abapmerge -f src/zabapgit.prog.abap > zabapgit.abap -c zabapgit_full",
+    "merge": "abapmerge -f src/zabapgit.prog.abap -c zabapgit_full > zabapgit.abap",
     "abaplint": "abaplint",
     "eslint": "eslint src"
   },
