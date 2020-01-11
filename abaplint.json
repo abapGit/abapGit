@@ -3,8 +3,7 @@
     "files": "/src/**/*.*",
     "skipGeneratedGatewayClasses": true,
     "skipGeneratedPersistentClasses": true,
-    "skipGeneratedFunctionGroups": true,
-    "applyUnspecifiedRules": false
+    "skipGeneratedFunctionGroups": true
   },
   "dependencies": [
     {
@@ -56,7 +55,9 @@
     "globalMacros": []
   },
   "rules": {
-    "prefix_is_current_class": false,
+    "prefix_is_current_class": {
+      "omitMeInstanceCalls": false
+    },
     "allowed_object_naming": true,
     "check_comments": false,
     "fully_type_constants": true,
@@ -74,7 +75,6 @@
     "type_begin_single_include": true,
     "types_naming": false,
     "7bit_ascii": {
-      "enabled": true,
       "exclude": ["zcl_abapgit_utils.clas.testclasses.abap"]
     },
     "abapdoc": false,
@@ -100,10 +100,11 @@
       "kernelCall": true,
       "communication": true,
       "systemCall": true,
+      "defaultKey": false,
+      "break": true,
       "statics": true
     },
     "begin_end_names": true,
-    "breakpoint": true,
     "check_transformation_exists": true,
     "check_syntax": true,
     "class_attribute_names": {

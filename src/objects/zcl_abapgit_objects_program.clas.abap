@@ -159,7 +159,7 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
 
     CLASS-METHODS auto_correct_cua_adm
       IMPORTING
-        is_cua TYPE zcl_abapgit_objects_program=>ty_cua
+        is_cua TYPE ty_cua
       CHANGING
         cs_adm TYPE rsmpe_adm.
 

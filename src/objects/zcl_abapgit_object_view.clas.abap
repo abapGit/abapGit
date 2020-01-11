@@ -32,10 +32,10 @@ CLASS zcl_abapgit_object_view DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         EXPORTING
           es_dd25v TYPE dd25v
           es_dd09l TYPE dd09l
-          et_dd26v TYPE zcl_abapgit_object_view=>tty_dd26v
-          et_dd27p TYPE zcl_abapgit_object_view=>tty_dd27p
-          et_dd28j TYPE zcl_abapgit_object_view=>tty_dd28j
-          et_dd28v TYPE zcl_abapgit_object_view=>tty_dd28v
+          et_dd26v TYPE tty_dd26v
+          et_dd27p TYPE tty_dd27p
+          et_dd28j TYPE tty_dd28j
+          et_dd28v TYPE tty_dd28v
         RAISING
           zcx_abapgit_exception.
 
