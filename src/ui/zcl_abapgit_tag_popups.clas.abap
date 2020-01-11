@@ -29,7 +29,7 @@ CLASS zcl_abapgit_tag_popups DEFINITION
         IMPORTING
           it_tags            TYPE zif_abapgit_definitions=>ty_git_tag_list_tt
         RETURNING
-          VALUE(rt_tags_out) TYPE zcl_abapgit_tag_popups=>tty_tag_out,
+          VALUE(rt_tags_out) TYPE tty_tag_out,
 
       clean_up,
 

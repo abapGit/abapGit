@@ -45,7 +45,7 @@ CLASS zcl_abapgit_object_wapa DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       delete_superfluous_pages
         IMPORTING
           it_local_pages  TYPE o2pagelist
-          it_remote_pages TYPE zcl_abapgit_object_wapa=>ty_pages_tt
+          it_remote_pages TYPE ty_pages_tt
         RAISING
           zcx_abapgit_exception.
 

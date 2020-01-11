@@ -56,7 +56,10 @@
     "globalMacros": []
   },
   "rules": {
-    "prefix_is_current_class": false,
+    "prefix_is_current_class": {
+      "enabled": true,
+      "omitMeInstanceCalls": false
+    },
     "allowed_object_naming": true,
     "check_comments": false,
     "fully_type_constants": true,
