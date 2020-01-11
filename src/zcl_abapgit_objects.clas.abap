@@ -39,7 +39,7 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_language             TYPE spras
         !iv_serialize_master_lang_only TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rs_files_and_item) TYPE zcl_abapgit_objects=>ty_serialization
+        VALUE(rs_files_and_item) TYPE ty_serialization
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS deserialize
