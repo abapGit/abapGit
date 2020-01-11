@@ -128,7 +128,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
     METHODS render_patch_head
       IMPORTING
         io_html TYPE REF TO zcl_abapgit_html
-        is_diff TYPE zcl_abapgit_gui_page_diff=>ty_file_diff.
+        is_diff TYPE ty_file_diff.
     METHODS apply_patch_for
       IMPORTING
         iv_filename   TYPE string
