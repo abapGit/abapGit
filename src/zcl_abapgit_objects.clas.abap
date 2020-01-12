@@ -35,11 +35,11 @@ CLASS zcl_abapgit_objects DEFINITION
 
     CLASS-METHODS serialize
       IMPORTING
-        !is_item                 TYPE zif_abapgit_definitions=>ty_item
-        !iv_language             TYPE spras
+        !is_item                       TYPE zif_abapgit_definitions=>ty_item
+        !iv_language                   TYPE spras
         !iv_serialize_master_lang_only TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rs_files_and_item) TYPE ty_serialization
+        VALUE(rs_files_and_item)       TYPE zcl_abapgit_objects=>ty_serialization
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS deserialize
@@ -245,7 +245,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD adjust_namespaces.
@@ -1078,264 +1078,270 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
-    LOOP AT it_results ASSIGNING <ls_result>
-        WHERE obj_type <> 'IASP'
-        AND obj_type <> 'PROG'
-        AND obj_type <> 'XSLT'
-        AND obj_type <> 'PINF'
-        AND obj_type <> 'DEVC'
-        AND obj_type <> 'ENHS'
-        AND obj_type <> 'DDLS'
-        AND obj_type <> 'SPRX'
-        AND obj_type <> 'WEBI'.
-      APPEND <ls_result> TO rt_results.
-    ENDLOOP.
+* IOBJ has to be handled before ODSO
+    loop at it_results assigning <ls_result> where obj_type = 'IOBJ'.
+    APPEND <ls_result> TO rt_results.
+  ENDLOOP.
+
+  LOOP AT it_results ASSIGNING <ls_result>
+      WHERE obj_type <> 'IASP'
+      AND obj_type <> 'PROG'
+      AND obj_type <> 'XSLT'
+      AND obj_type <> 'PINF'
+      AND obj_type <> 'DEVC'
+      AND obj_type <> 'ENHS'
+      AND obj_type <> 'DDLS'
+      AND obj_type <> 'SPRX'
+      AND obj_type <> 'WEBI'
+      AND obj_type <> 'IOBJ'.
+    APPEND <ls_result> TO rt_results.
+  ENDLOOP.
 
 * PINF after everything as it can expose objects
-    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'PINF'.
-      APPEND <ls_result> TO rt_results.
-    ENDLOOP.
+  LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'PINF'.
+    APPEND <ls_result> TO rt_results.
+  ENDLOOP.
 
 * DEVC after PINF, as it can refer for package interface usage
-    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'DEVC'.
-      APPEND <ls_result> TO rt_results.
-    ENDLOOP.
+  LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'DEVC'.
+    APPEND <ls_result> TO rt_results.
+  ENDLOOP.
 
-  ENDMETHOD.
+ENDMETHOD.
 
 
-  METHOD serialize.
+METHOD serialize.
 
-    DATA: li_obj   TYPE REF TO zif_abapgit_object,
-          lo_xml   TYPE REF TO zcl_abapgit_xml_output,
-          lo_files TYPE REF TO zcl_abapgit_objects_files.
+  DATA: li_obj   TYPE REF TO zif_abapgit_object,
+        lo_xml   TYPE REF TO zcl_abapgit_xml_output,
+        lo_files TYPE REF TO zcl_abapgit_objects_files.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF rs_files_and_item-files.
+  FIELD-SYMBOLS: <ls_file> LIKE LINE OF rs_files_and_item-files.
 
-    rs_files_and_item-item = is_item.
+  rs_files_and_item-item = is_item.
 
-    IF is_supported( rs_files_and_item-item ) = abap_false.
-      zcx_abapgit_exception=>raise( |Object type ignored, not supported: {
-        rs_files_and_item-item-obj_type }-{
-        rs_files_and_item-item-obj_name }| ).
+  IF is_supported( rs_files_and_item-item ) = abap_false.
+    zcx_abapgit_exception=>raise( |Object type ignored, not supported: {
+      rs_files_and_item-item-obj_type }-{
+      rs_files_and_item-item-obj_name }| ).
+  ENDIF.
+
+  CREATE OBJECT lo_files
+    EXPORTING
+      is_item = rs_files_and_item-item.
+
+  li_obj = create_object( is_item     = rs_files_and_item-item
+                          iv_language = iv_language ).
+  li_obj->mo_files = lo_files.
+  CREATE OBJECT lo_xml.
+
+  IF iv_serialize_master_lang_only = abap_true.
+    lo_xml->i18n_params( iv_serialize_master_lang_only = abap_true ).
+  ENDIF.
+
+  li_obj->serialize( lo_xml ).
+  lo_files->add_xml( io_xml      = lo_xml
+                     is_metadata = li_obj->get_metadata( ) ).
+
+  rs_files_and_item-files = lo_files->get_files( ).
+
+  check_duplicates( rs_files_and_item-files ).
+
+  rs_files_and_item-item-inactive = boolc( li_obj->is_active( ) = abap_false ).
+
+  LOOP AT rs_files_and_item-files ASSIGNING <ls_file>.
+    <ls_file>-sha1 = zcl_abapgit_hash=>sha1(
+      iv_type = zif_abapgit_definitions=>c_type-blob
+      iv_data = <ls_file>-data ).
+  ENDLOOP.
+
+ENDMETHOD.
+
+
+METHOD supported_list.
+
+  DATA: lt_objects   TYPE STANDARD TABLE OF ko100,
+        lv_supported TYPE abap_bool,
+        ls_item      TYPE zif_abapgit_definitions=>ty_item.
+
+  FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
+
+
+  CALL FUNCTION 'TR_OBJECT_TABLE'
+    TABLES
+      wt_object_text = lt_objects
+    EXCEPTIONS
+      OTHERS         = 1 ##FM_SUBRC_OK.
+
+  LOOP AT lt_objects ASSIGNING <ls_object> WHERE pgmid = 'R3TR'.
+    ls_item-obj_type = <ls_object>-object.
+
+    lv_supported = is_supported(
+      is_item        = ls_item
+      iv_native_only = abap_true ).
+
+    IF lv_supported = abap_true.
+      APPEND <ls_object>-object TO rt_types.
     ENDIF.
+  ENDLOOP.
 
-    CREATE OBJECT lo_files
-      EXPORTING
-        is_item = rs_files_and_item-item.
-
-    li_obj = create_object( is_item     = rs_files_and_item-item
-                            iv_language = iv_language ).
-    li_obj->mo_files = lo_files.
-    CREATE OBJECT lo_xml.
-
-    IF iv_serialize_master_lang_only = abap_true.
-      lo_xml->i18n_params( iv_serialize_master_lang_only = abap_true ).
-    ENDIF.
-
-    li_obj->serialize( lo_xml ).
-    lo_files->add_xml( io_xml      = lo_xml
-                       is_metadata = li_obj->get_metadata( ) ).
-
-    rs_files_and_item-files = lo_files->get_files( ).
-
-    check_duplicates( rs_files_and_item-files ).
-
-    rs_files_and_item-item-inactive = boolc( li_obj->is_active( ) = abap_false ).
-
-    LOOP AT rs_files_and_item-files ASSIGNING <ls_file>.
-      <ls_file>-sha1 = zcl_abapgit_hash=>sha1(
-        iv_type = zif_abapgit_definitions=>c_type-blob
-        iv_data = <ls_file>-data ).
-    ENDLOOP.
-
-  ENDMETHOD.
+ENDMETHOD.
 
 
-  METHOD supported_list.
+METHOD update_package_tree.
 
-    DATA: lt_objects   TYPE STANDARD TABLE OF ko100,
-          lv_supported TYPE abap_bool,
-          ls_item      TYPE zif_abapgit_definitions=>ty_item.
-
-    FIELD-SYMBOLS <ls_object> LIKE LINE OF lt_objects.
+  DATA: lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
+        lv_package  LIKE LINE OF lt_packages,
+        lv_tree     TYPE dirtree-tname.
 
 
-    CALL FUNCTION 'TR_OBJECT_TABLE'
-      TABLES
-        wt_object_text = lt_objects
-      EXCEPTIONS
-        OTHERS         = 1 ##FM_SUBRC_OK.
+  lt_packages = zcl_abapgit_factory=>get_sap_package( iv_package )->list_subpackages( ).
+  APPEND iv_package TO lt_packages.
 
-    LOOP AT lt_objects ASSIGNING <ls_object> WHERE pgmid = 'R3TR'.
-      ls_item-obj_type = <ls_object>-object.
-
-      lv_supported = is_supported(
-        is_item        = ls_item
-        iv_native_only = abap_true ).
-
-      IF lv_supported = abap_true.
-        APPEND <ls_object>-object TO rt_types.
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD update_package_tree.
-
-    DATA: lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
-          lv_package  LIKE LINE OF lt_packages,
-          lv_tree     TYPE dirtree-tname.
-
-
-    lt_packages = zcl_abapgit_factory=>get_sap_package( iv_package )->list_subpackages( ).
-    APPEND iv_package TO lt_packages.
-
-    LOOP AT lt_packages INTO lv_package.
+  LOOP AT lt_packages INTO lv_package.
 * update package tree for SE80
-      lv_tree = 'EU_' && lv_package.
-      CALL FUNCTION 'WB_TREE_ACTUALIZE'
-        EXPORTING
-          tree_name              = lv_tree
-          without_crossreference = abap_true
-          with_tcode_index       = abap_true.
-    ENDLOOP.
+    lv_tree = 'EU_' && lv_package.
+    CALL FUNCTION 'WB_TREE_ACTUALIZE'
+      EXPORTING
+        tree_name              = lv_tree
+        without_crossreference = abap_true
+        with_tcode_index       = abap_true.
+  ENDLOOP.
 
-  ENDMETHOD.
+ENDMETHOD.
 
 
-  METHOD warning_overwrite_adjust.
+METHOD warning_overwrite_adjust.
 
-    DATA: lt_overwrite LIKE it_overwrite,
-          ls_overwrite LIKE LINE OF lt_overwrite.
+  DATA: lt_overwrite LIKE it_overwrite,
+        ls_overwrite LIKE LINE OF lt_overwrite.
 
-    FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF lt_overwrite.
+  FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF lt_overwrite.
 
 
 * make sure to get the current status, as something might have changed in the meanwhile
-    lt_overwrite = warning_overwrite_find( ct_results ).
+  lt_overwrite = warning_overwrite_find( ct_results ).
 
-    LOOP AT lt_overwrite ASSIGNING <ls_overwrite>.
+  LOOP AT lt_overwrite ASSIGNING <ls_overwrite>.
 
-      READ TABLE it_overwrite INTO ls_overwrite
-                              WITH TABLE KEY object_type_and_name
-                              COMPONENTS obj_type = <ls_overwrite>-obj_type
-                                         obj_name = <ls_overwrite>-obj_name.
-      IF sy-subrc <> 0 OR ls_overwrite-decision IS INITIAL.
-        zcx_abapgit_exception=>raise( |Overwrite { <ls_overwrite>-obj_type } {
-          <ls_overwrite>-obj_name } undecided| ).
-      ENDIF.
+    READ TABLE it_overwrite INTO ls_overwrite
+                            WITH TABLE KEY object_type_and_name
+                            COMPONENTS obj_type = <ls_overwrite>-obj_type
+                                       obj_name = <ls_overwrite>-obj_name.
+    IF sy-subrc <> 0 OR ls_overwrite-decision IS INITIAL.
+      zcx_abapgit_exception=>raise( |Overwrite { <ls_overwrite>-obj_type } {
+        <ls_overwrite>-obj_name } undecided| ).
+    ENDIF.
 
-      IF ls_overwrite-decision = 'N'.
-        DELETE ct_results WHERE
-          obj_type = <ls_overwrite>-obj_type AND
-          obj_name = <ls_overwrite>-obj_name.
-        ASSERT sy-subrc = 0.
-      ENDIF.
+    IF ls_overwrite-decision = 'N'.
+      DELETE ct_results WHERE
+        obj_type = <ls_overwrite>-obj_type AND
+        obj_name = <ls_overwrite>-obj_name.
+      ASSERT sy-subrc = 0.
+    ENDIF.
 
-    ENDLOOP.
+  ENDLOOP.
 
-  ENDMETHOD.
+ENDMETHOD.
 
 
-  METHOD warning_overwrite_find.
+METHOD warning_overwrite_find.
 
-    DATA: ls_overwrite LIKE LINE OF rt_overwrite.
+  DATA: ls_overwrite LIKE LINE OF rt_overwrite.
 
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
+  FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
 
-    LOOP AT it_results ASSIGNING <ls_result>
-        WHERE NOT obj_type IS INITIAL.
-      IF <ls_result>-lstate IS NOT INITIAL
-          AND <ls_result>-lstate <> zif_abapgit_definitions=>c_state-deleted
-          AND NOT ( <ls_result>-lstate = zif_abapgit_definitions=>c_state-added
-          AND <ls_result>-rstate IS INITIAL ).
+  LOOP AT it_results ASSIGNING <ls_result>
+      WHERE NOT obj_type IS INITIAL.
+    IF <ls_result>-lstate IS NOT INITIAL
+        AND <ls_result>-lstate <> zif_abapgit_definitions=>c_state-deleted
+        AND NOT ( <ls_result>-lstate = zif_abapgit_definitions=>c_state-added
+        AND <ls_result>-rstate IS INITIAL ).
 * current object has been modified locally, add to table
-        CLEAR ls_overwrite.
-        MOVE-CORRESPONDING <ls_result> TO ls_overwrite.
-        APPEND ls_overwrite TO rt_overwrite.
-      ENDIF.
-    ENDLOOP.
+      CLEAR ls_overwrite.
+      MOVE-CORRESPONDING <ls_result> TO ls_overwrite.
+      APPEND ls_overwrite TO rt_overwrite.
+    ENDIF.
+  ENDLOOP.
 
-    SORT rt_overwrite.
-    DELETE ADJACENT DUPLICATES FROM rt_overwrite.
+  SORT rt_overwrite.
+  DELETE ADJACENT DUPLICATES FROM rt_overwrite.
 
-  ENDMETHOD.
+ENDMETHOD.
 
 
-  METHOD warning_package_adjust.
+METHOD warning_package_adjust.
 
-    DATA: lt_overwrite LIKE it_overwrite,
-          ls_overwrite LIKE LINE OF lt_overwrite.
+  DATA: lt_overwrite LIKE it_overwrite,
+        ls_overwrite LIKE LINE OF lt_overwrite.
 
-    FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF lt_overwrite.
+  FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF lt_overwrite.
 
 
 * make sure to get the current status, as something might have changed in the meanwhile
-    lt_overwrite = warning_package_find(
-      it_results   = ct_results
-      io_repo      = io_repo ).
+  lt_overwrite = warning_package_find(
+    it_results   = ct_results
+    io_repo      = io_repo ).
 
-    LOOP AT lt_overwrite ASSIGNING <ls_overwrite>.
+  LOOP AT lt_overwrite ASSIGNING <ls_overwrite>.
 
-      READ TABLE it_overwrite INTO ls_overwrite
-                              WITH TABLE KEY object_type_and_name
-                              COMPONENTS obj_type = <ls_overwrite>-obj_type
-                                         obj_name = <ls_overwrite>-obj_name.
-      IF sy-subrc <> 0 OR ls_overwrite-decision IS INITIAL.
-        zcx_abapgit_exception=>raise( |Overwrite odd package { <ls_overwrite>-obj_type } {
-          <ls_overwrite>-obj_name } undecided| ).
-      ENDIF.
+    READ TABLE it_overwrite INTO ls_overwrite
+                            WITH TABLE KEY object_type_and_name
+                            COMPONENTS obj_type = <ls_overwrite>-obj_type
+                                       obj_name = <ls_overwrite>-obj_name.
+    IF sy-subrc <> 0 OR ls_overwrite-decision IS INITIAL.
+      zcx_abapgit_exception=>raise( |Overwrite odd package { <ls_overwrite>-obj_type } {
+        <ls_overwrite>-obj_name } undecided| ).
+    ENDIF.
 
-      IF ls_overwrite-decision = 'N'.
-        DELETE ct_results WHERE
-          obj_type = <ls_overwrite>-obj_type AND
-          obj_name = <ls_overwrite>-obj_name.
-        ASSERT sy-subrc = 0.
-      ENDIF.
+    IF ls_overwrite-decision = 'N'.
+      DELETE ct_results WHERE
+        obj_type = <ls_overwrite>-obj_type AND
+        obj_name = <ls_overwrite>-obj_name.
+      ASSERT sy-subrc = 0.
+    ENDIF.
 
-    ENDLOOP.
+  ENDLOOP.
 
-  ENDMETHOD.
+ENDMETHOD.
 
 
-  METHOD warning_package_find.
+METHOD warning_package_find.
 
-    DATA: lv_package         TYPE devclass,
-          lt_overwrite_uniqe TYPE HASHED TABLE OF zif_abapgit_definitions=>ty_overwrite
-                                  WITH UNIQUE KEY obj_type obj_name devclass,
-          ls_overwrite       LIKE LINE OF rt_overwrite,
-          ls_tadir           TYPE zif_abapgit_definitions=>ty_tadir.
+  DATA: lv_package         TYPE devclass,
+        lt_overwrite_uniqe TYPE HASHED TABLE OF zif_abapgit_definitions=>ty_overwrite
+                                WITH UNIQUE KEY obj_type obj_name devclass,
+        ls_overwrite       LIKE LINE OF rt_overwrite,
+        ls_tadir           TYPE zif_abapgit_definitions=>ty_tadir.
 
-    DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
+  DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
+  FIELD-SYMBOLS: <ls_result> LIKE LINE OF it_results.
 
-    lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
-    LOOP AT it_results ASSIGNING <ls_result>.
+  lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
+  LOOP AT it_results ASSIGNING <ls_result>.
 
-      lv_package = lo_folder_logic->path_to_package(
-        iv_top  = io_repo->get_package( )
-        io_dot  = io_repo->get_dot_abapgit( )
-        iv_path = <ls_result>-path ).
+    lv_package = lo_folder_logic->path_to_package(
+      iv_top  = io_repo->get_package( )
+      io_dot  = io_repo->get_dot_abapgit( )
+      iv_path = <ls_result>-path ).
 
-      ls_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
-        iv_object   = <ls_result>-obj_type
-        iv_obj_name = <ls_result>-obj_name ).
+    ls_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
+      iv_object   = <ls_result>-obj_type
+      iv_obj_name = <ls_result>-obj_name ).
 
-      IF NOT ls_tadir IS INITIAL AND ls_tadir-devclass <> lv_package.
+    IF NOT ls_tadir IS INITIAL AND ls_tadir-devclass <> lv_package.
 * overwriting object from different package than expected
-        CLEAR ls_overwrite.
-        ls_overwrite-obj_type = <ls_result>-obj_type.
-        ls_overwrite-obj_name = <ls_result>-obj_name.
-        ls_overwrite-devclass = ls_tadir-devclass.
-        INSERT ls_overwrite INTO TABLE lt_overwrite_uniqe.
-      ENDIF.
+      CLEAR ls_overwrite.
+      ls_overwrite-obj_type = <ls_result>-obj_type.
+      ls_overwrite-obj_name = <ls_result>-obj_name.
+      ls_overwrite-devclass = ls_tadir-devclass.
+      INSERT ls_overwrite INTO TABLE lt_overwrite_uniqe.
+    ENDIF.
 
-    ENDLOOP.
+  ENDLOOP.
 
-    rt_overwrite = lt_overwrite_uniqe.
+  rt_overwrite = lt_overwrite_uniqe.
 
-  ENDMETHOD.
+ENDMETHOD.
 ENDCLASS.

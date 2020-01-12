@@ -78,37 +78,23 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |ODSO is not supported on this system| ).
     ENDTRY.
 
-    lv_odsonam    = ms_item-obj_name.
+    lv_odsonam = ms_item-obj_name.
     lv_objname = ms_item-obj_name.
-
-    ls_col_par-kind = cl_abap_objectdescr=>exporting.
-
-    ls_col_par-name = 'I_OBJNM'.
-    GET REFERENCE OF lv_objname INTO ls_col_par-value.
-    INSERT ls_col_par INTO TABLE lt_col_par.
-
-    ls_col_par-name = 'I_MODIFY'.
-    GET REFERENCE OF abap_true INTO ls_col_par-value.
-    INSERT ls_col_par INTO TABLE lt_col_par.
-
-    ls_col_par-name = 'I_DELETE'.
-    GET REFERENCE OF abap_true INTO ls_col_par-value.
-    INSERT ls_col_par INTO TABLE lt_col_par.
 
     TRY.
         CALL METHOD lo_collection->('ADD_TLOGO')
-          PARAMETER-TABLE lt_col_par.
+          EXPORTING
+            i_objnm  = lv_objname
+            i_modify = abap_true
+            i_delete = abap_true.
 
         CALL METHOD lo_collection->('DELETE').
 
         CLEAR: lt_col_par, ls_col_par.
-        ls_col_par-kind = cl_abap_objectdescr=>importing.
-        ls_col_par-name = 'E_T_MSG'.
-        GET REFERENCE OF lt_msg INTO ls_col_par-value.
-        INSERT ls_col_par INTO TABLE lt_col_par.
 
         CALL METHOD ('CL_RSO_APPLICATION_LOG')=>('APPL_LOG_MSG_READ')
-          PARAMETER-TABLE lt_col_par.
+          IMPORTING
+            e_t_msg = lt_msg.
 
         READ TABLE lt_msg WITH KEY msgty = 'E' INTO ls_msg.
         IF sy-subrc = 0.
@@ -160,7 +146,6 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
     ASSIGN lr_navigation->*  TO <lt_navigation>.
     ASSIGN lr_indexes->*     TO <lt_indexes>.
     ASSIGN lr_index_iobj->*  TO <lt_index_iobj>.
-
 
     io_xml->read( EXPORTING iv_name = 'ODSO'
                   CHANGING  cg_data = <ls_details> ).
@@ -341,13 +326,18 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
     IF ls_return-type = 'E'.
       zcx_abapgit_exception=>raise( |Error when geting details of ODSO: { ls_return-message }| ).
     ENDIF.
-*chage to method
-    ASSIGN COMPONENT 'TSTPNM'       OF STRUCTURE <ls_details> TO <lv_tstpnm>.
-    ASSIGN COMPONENT 'TIMESTMP'     OF STRUCTURE <ls_details> TO <lv_timestmp>.
-    ASSIGN COMPONENT 'CONTTIMESTMP' OF STRUCTURE <ls_details> TO <lv_conttimestmp>.
-    ASSIGN COMPONENT 'OWNER'        OF STRUCTURE <ls_details> TO <lv_owner>.
 
-    CLEAR: <lv_tstpnm>, <lv_timestmp>, <lv_conttimestmp>, <lv_owner>.
+    clear_field( EXPORTING iv_fieldname = 'TSTPNM'
+                 CHANGING  cs_metadata  = <ls_details> ).
+
+    clear_field( EXPORTING iv_fieldname = 'TIMESTMP'
+                 CHANGING  cs_metadata  = <ls_details> ).
+
+    clear_field( EXPORTING iv_fieldname = 'CONTTIMESTMP'
+                 CHANGING  cs_metadata  = <ls_details> ).
+
+    clear_field( EXPORTING iv_fieldname = 'OWNER'
+                 CHANGING  cs_metadata  = <ls_details> ).
 
     io_xml->add( iv_name = 'ODSO'
                  ig_data = <ls_details> ).
