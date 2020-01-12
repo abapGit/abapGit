@@ -105,7 +105,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
       CATCH cx_rs_cancelled.
         zcx_abapgit_exception=>raise( |Canceled deletion of ODSO: { ms_item-obj_name }| ).
       CATCH cx_rs_existing.
-        zcx_abapgit_exception=>raise( | ODSO not exist: { ms_item-obj_name }| ).
+        zcx_abapgit_exception=>raise( |ODSO not exist: { ms_item-obj_name }| ).
       CATCH cx_rs_not_found.
         zcx_abapgit_exception=>raise( |ODSO not found: { ms_item-obj_name }| ).
     ENDTRY.
