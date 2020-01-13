@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "abaplint": "^2.1.6",
-    "abapmerge": "^0.13",
+    "abapmerge": "^0.13.0",
     "eslint": "^6.5.1"
   }
 }
