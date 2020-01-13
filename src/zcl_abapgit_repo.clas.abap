@@ -176,11 +176,16 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS update_last_deserialize
       RAISING
         zcx_abapgit_exception .
+    METHODS filter_files
+      IMPORTING
+        it_files        TYPE zif_abapgit_definitions=>ty_files_tt
+      RETURNING
+        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -429,7 +434,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD get_files_remote.
-    rt_files = mt_remote.
+    rt_files = filter_files( mt_remote ).
   ENDMETHOD.
 
 
@@ -776,4 +781,16 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     set( it_checksums = lt_checksums ).
 
   ENDMETHOD.
+
+
+  METHOD filter_files.
+
+    rt_files = it_files.
+
+    zcl_abapgit_file_filter=>filter(
+      CHANGING
+        ct_files = rt_files ).
+
+  ENDMETHOD.
+
 ENDCLASS.

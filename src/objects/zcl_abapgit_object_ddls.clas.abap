@@ -2,7 +2,13 @@ CLASS zcl_abapgit_object_ddls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
+    INTERFACES zif_abapgit_file_filter.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
+
+    METHODS constructor
+      IMPORTING
+        is_item     TYPE zif_abapgit_definitions=>ty_item
+        iv_language TYPE spras.
 
   PROTECTED SECTION.
     METHODS open_adt_stob
@@ -13,11 +19,25 @@ CLASS zcl_abapgit_object_ddls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS is_baseinfo_supported
       RETURNING
         VALUE(rv_supported) TYPE abap_bool .
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
+CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
+
+
+  METHOD constructor.
+
+    super->constructor(
+        is_item     = is_item
+        iv_language = iv_language ).
+
+    zcl_abapgit_file_filter=>register(
+        iv_id          = 'DDLS'
+        io_file_filter = me ).
+
+  ENDMETHOD.
 
 
   METHOD is_baseinfo_supported.
@@ -410,4 +430,14 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
                  ig_data = <lg_data> ).
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_file_filter~filter.
+
+    IF is_baseinfo_supported( ) = abap_false.
+      DELETE ct_files WHERE filename CP '*ddls.baseinfo'.
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

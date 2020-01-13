@@ -53,4 +53,9 @@ INTERFACE zif_abapgit_exit
       VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
     RAISING
       zcx_abapgit_exception.
+  METHODS
+    filter_remote_files
+      CHANGING
+        ct_files TYPE zif_abapgit_definitions=>ty_files_tt.
+
 ENDINTERFACE.
