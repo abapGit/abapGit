@@ -121,8 +121,7 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
 
   METHOD get_t100_longtext_itf.
 
-    DATA: lv_docu_key TYPE doku_obj,
-          ls_itf      LIKE LINE OF rt_itf.
+    DATA: lv_docu_key TYPE doku_obj.
 
     lv_docu_key = mi_t100_message->t100key-msgid && mi_t100_message->t100key-msgno.
 

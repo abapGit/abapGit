@@ -323,10 +323,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   METHOD append_diff.
 
     DATA:
-      lv_offs      TYPE i,
-      lv_is_binary TYPE abap_bool,
-      ls_r_dummy   LIKE LINE OF it_remote ##NEEDED,
-      ls_l_dummy   LIKE LINE OF it_local  ##NEEDED.
+      lv_offs    TYPE i,
+      ls_r_dummy LIKE LINE OF it_remote ##NEEDED,
+      ls_l_dummy LIKE LINE OF it_local  ##NEEDED.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_remote,
                    <ls_local>  LIKE LINE OF it_local,
@@ -982,10 +981,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         patch TYPE string VALUE `patch` ##NO_TEXT,
       END OF c_css_class.
 
-    DATA: lv_id          TYPE string,
-          lv_left_class  TYPE string,
-          lv_right_class TYPE string,
-          lv_object      TYPE string.
+    DATA: lv_id     TYPE string,
+          lv_object TYPE string.
 
     lv_object = iv_filename.
 
