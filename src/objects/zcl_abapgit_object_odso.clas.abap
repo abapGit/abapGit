@@ -68,9 +68,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
           lv_objname    TYPE sobj_name,
           lo_collection TYPE REF TO object,
           lt_msg        TYPE rs_t_msg,
-          ls_msg        TYPE bal_s_msg,
-          ls_col_par    TYPE abap_parmbind,
-          lt_col_par    TYPE abap_parmbind_tab.
+          ls_msg        TYPE bal_s_msg.
 
     TRY.
         CREATE OBJECT lo_collection TYPE ('CL_RSD_ODSO_COLLECTION').
@@ -89,8 +87,6 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
             i_delete = abap_true.
 
         CALL METHOD lo_collection->('DELETE').
-
-        CLEAR: lt_col_par, ls_col_par.
 
         CALL METHOD ('CL_RSO_APPLICATION_LOG')=>('APPL_LOG_MSG_READ')
           IMPORTING
@@ -284,10 +280,6 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
 
     FIELD-SYMBOLS:
       <ls_details>      TYPE any,
-      <lv_tstpnm>       TYPE any,
-      <lv_timestmp>     TYPE any,
-      <lv_conttimestmp> TYPE any,
-      <lv_owner>        TYPE any,
       <lt_infoobjects>  TYPE STANDARD TABLE,
       <lt_navigation>   TYPE STANDARD TABLE,
       <lt_indexes>      TYPE STANDARD TABLE,
