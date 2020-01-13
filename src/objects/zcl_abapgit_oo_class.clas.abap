@@ -498,7 +498,6 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
           lt_methods TYPE cl_oo_source_scanner_class=>type_method_implementations,
           lv_method  LIKE LINE OF lt_methods,
           lt_public  TYPE seop_source_string,
-          lt_auxsrc  TYPE seop_source_string,
           lt_source  TYPE seop_source_string.
 
     "Buffer needs to be refreshed,
