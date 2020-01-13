@@ -74,7 +74,6 @@ CLASS zcl_abapgit_time IMPLEMENTATION.
   METHOD get_utc.
 
     DATA: lv_i       TYPE i,
-          lv_tz      TYPE tznzone,
           lv_utcdiff TYPE tznutcdiff,
           lv_utcsign TYPE tznutcsign.
 

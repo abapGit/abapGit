@@ -172,7 +172,6 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
       <lg_data>             TYPE any,
       <lg_data_baseinfo>    TYPE any,
       <lg_source>           TYPE any,
-      <lg_field_baseinfo>   TYPE any,
       <lg_baseinfo_string>  TYPE any,
       <lg_baseinfo_ddlname> TYPE any.
 
