@@ -189,8 +189,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
   METHOD build_advanced_dropdown.
 
     DATA:
-      lv_crossout LIKE zif_abapgit_html=>c_html_opt-crossout,
-      lv_package  TYPE zif_abapgit_persistence=>ty_repo-package.
+      lv_crossout LIKE zif_abapgit_html=>c_html_opt-crossout.
 
     CREATE OBJECT ro_advanced_dropdown.
 
