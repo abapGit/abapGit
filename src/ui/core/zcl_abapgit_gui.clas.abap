@@ -330,8 +330,7 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
 
     DATA: lv_url           TYPE w3url,
           lv_html          TYPE string,
-          li_html          TYPE REF TO zif_abapgit_html,
-          lo_css_processor TYPE REF TO zcl_abapgit_gui_css_processor.
+          li_html          TYPE REF TO zif_abapgit_html.
 
     IF mi_cur_page IS NOT BOUND.
       zcx_abapgit_exception=>raise( 'GUI error: no current page' ).
