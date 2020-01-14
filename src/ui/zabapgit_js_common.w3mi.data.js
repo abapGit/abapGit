@@ -452,7 +452,7 @@ StageHelper.prototype.applyFilterToRow = function (row, filter) {
     if (elem.firstChild && elem.firstChild.tagName === "A") elem = elem.firstChild;
     return {
       elem:      elem,
-      plainText: elem.innerText, // without tags
+      plainText: elem.innerText.replace(/ /g, "\u00a0"), // without tags, with encoded spaces
       curHtml:   elem.innerHTML
     };
   }, this);
