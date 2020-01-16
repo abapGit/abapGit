@@ -595,8 +595,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
   METHOD render_link_hints.
 
     DATA: lv_checked               TYPE string,
-          lv_link_hint_key         TYPE char01,
-          lv_link_background_color TYPE string.
+          lv_link_hint_key         TYPE char01.
 
     IF mo_settings->get_link_hints_enabled( ) = abap_true.
       lv_checked = 'checked'.
