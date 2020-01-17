@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_longtexts DEFINITION
   PUBLIC
-  FINAL
-  CREATE PUBLIC.
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_factory.
 
   PUBLIC SECTION.
     METHODS:

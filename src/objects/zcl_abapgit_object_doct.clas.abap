@@ -13,8 +13,6 @@ CLASS zcl_abapgit_object_doct DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PRIVATE SECTION.
     CONSTANTS:
       c_id      TYPE dokhl-id VALUE 'TX',
-      c_typ     TYPE dokhl-typ VALUE 'E',
-      c_version TYPE dokhl-dokversion VALUE '0001',
       c_name    TYPE string VALUE 'DOC'.
 
     DATA:
@@ -39,9 +37,7 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
         is_item     = is_item
         iv_language = iv_language ).
 
-    CREATE OBJECT mo_longtexts
-      EXPORTING
-        iv_longtexts_name = c_name.
+    mo_longtexts = zcl_abapgit_factory=>get_longtexts( c_name ).
 
   ENDMETHOD.
 
