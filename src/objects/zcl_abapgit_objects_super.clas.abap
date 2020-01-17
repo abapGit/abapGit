@@ -84,7 +84,9 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
         VALUE(rv_active) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
+
   PRIVATE SECTION.
+    DATA mo_longtexts TYPE REF TO zcl_abapgit_longtexts.
 
 
 ENDCLASS.
@@ -120,6 +122,8 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     ASSERT NOT ms_item IS INITIAL.
     mv_language = iv_language.
     ASSERT NOT mv_language IS INITIAL.
+
+    CREATE OBJECT mo_longtexts.
   ENDMETHOD.
 
 
@@ -163,16 +167,18 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD delete_longtexts.
 
-    zcl_abapgit_longtexts=>delete( iv_longtext_id = iv_longtext_id
-                                   iv_object_name = ms_item-obj_name ).
+    mo_longtexts->delete(
+        iv_longtext_id = iv_longtext_id
+        iv_object_name = ms_item-obj_name  ).
 
   ENDMETHOD.
 
 
   METHOD deserialize_longtexts.
 
-    zcl_abapgit_longtexts=>deserialize( io_xml             = io_xml
-                                        iv_master_language = mv_language ).
+    mo_longtexts->deserialize(
+        io_xml             = io_xml
+        iv_master_language = mv_language ).
 
   ENDMETHOD.
 
@@ -301,10 +307,11 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD serialize_longtexts.
 
-    zcl_abapgit_longtexts=>serialize( iv_object_name = ms_item-obj_name
-                                      iv_longtext_id = iv_longtext_id
-                                      it_dokil       = it_dokil
-                                      io_xml         = io_xml ).
+    mo_longtexts->serialize(
+        iv_object_name = ms_item-obj_name
+        iv_longtext_id = iv_longtext_id
+        it_dokil       = it_dokil
+        io_xml         = io_xml  ).
 
   ENDMETHOD.
 
