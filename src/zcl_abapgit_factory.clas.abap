@@ -184,8 +184,8 @@ CLASS zcl_abapgit_factory IMPLEMENTATION.
 
   METHOD get_longtexts.
 
-    DATA: ls_longtext TYPE zcl_abapgit_factory=>ty_longtexts.
-    FIELD-SYMBOLS: <ls_longtext> TYPE zcl_abapgit_factory=>ty_longtexts.
+    DATA: ls_longtext TYPE ty_longtexts.
+    FIELD-SYMBOLS: <ls_longtext> TYPE ty_longtexts.
 
     READ TABLE gt_longtexts ASSIGNING <ls_longtext>
                             WITH TABLE KEY longtexts_name = iv_longtexts_name.
