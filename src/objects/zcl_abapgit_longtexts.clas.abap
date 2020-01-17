@@ -66,7 +66,7 @@ CLASS zcl_abapgit_longtexts DEFINITION
           iv_longtext_id      TYPE dokil-id
           it_dokil            TYPE zif_abapgit_definitions=>tty_dokil
         RETURNING
-          VALUE(rt_longtexts) TYPE zcl_abapgit_longtexts=>tty_longtexts
+          VALUE(rt_longtexts) TYPE tty_longtexts
         RAISING
           zcx_abapgit_exception.
 
@@ -167,7 +167,7 @@ CLASS zcl_abapgit_longtexts IMPLEMENTATION.
   METHOD changed_by.
 
     DATA: lt_longtexts TYPE tty_longtexts.
-    FIELD-SYMBOLS: <ls_longtext> TYPE zcl_abapgit_longtexts=>ty_longtext.
+    FIELD-SYMBOLS: <ls_longtext> TYPE ty_longtext.
 
     lt_longtexts = read( iv_object_name = iv_object_name
                          iv_longtext_id = iv_longtext_id
