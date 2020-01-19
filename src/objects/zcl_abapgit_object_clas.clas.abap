@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_object_clas DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_program.
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_object.
+    INTERFACES: zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
     METHODS: constructor
       IMPORTING
@@ -617,4 +617,5 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     serialize_xml( io_xml ).
 
   ENDMETHOD.
+
 ENDCLASS.

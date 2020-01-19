@@ -176,11 +176,16 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS update_last_deserialize
       RAISING
         zcx_abapgit_exception .
-    METHODS filter_files
+    METHODS filter_remote_files
       IMPORTING
         it_files        TYPE zif_abapgit_definitions=>ty_files_tt
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt.
+    METHODS filter_local_files
+      IMPORTING
+        it_files        TYPE zif_abapgit_definitions=>ty_files_item_tt
+      RETURNING
+        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt.
 ENDCLASS.
 
 
@@ -388,7 +393,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     " Serialization happened before and no refresh request
     IF lines( mt_local ) > 0 AND mv_request_local_refresh = abap_false.
-      rt_files = mt_local.
+      rt_files = filter_local_files( mt_local ).
       RETURN.
     ENDIF.
 
@@ -434,7 +439,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD get_files_remote.
-    rt_files = filter_files( mt_remote ).
+    rt_files = filter_remote_files( mt_remote ).
   ENDMETHOD.
 
 
@@ -783,11 +788,22 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD filter_files.
+  METHOD filter_remote_files.
 
     rt_files = it_files.
 
-    zcl_abapgit_file_filter=>filter(
+    zcl_abapgit_file_filter=>filter_remote_files(
+      CHANGING
+        ct_files = rt_files ).
+
+  ENDMETHOD.
+
+
+  METHOD filter_local_files.
+
+    rt_files = it_files.
+
+    zcl_abapgit_file_filter=>filter_local_files(
       CHANGING
         ct_files = rt_files ).
 

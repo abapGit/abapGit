@@ -10,9 +10,13 @@ CLASS zcl_abapgit_file_filter DEFINITION
           iv_id          TYPE string
           io_file_filter TYPE REF TO zif_abapgit_file_filter,
 
-      filter
+      filter_remote_files
         CHANGING
-          ct_files TYPE zif_abapgit_definitions=>ty_files_tt.
+          ct_files TYPE zif_abapgit_definitions=>ty_files_tt,
+
+      filter_local_files
+        CHANGING
+          ct_files TYPE zif_abapgit_definitions=>ty_files_item_tt.
 
   PRIVATE SECTION.
     TYPES:
@@ -46,19 +50,38 @@ CLASS zcl_abapgit_file_filter IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD filter.
+  METHOD filter_remote_files.
 
     DATA: li_exit TYPE REF TO zif_abapgit_exit.
     FIELD-SYMBOLS: <ls_file_filter> LIKE LINE OF gt_file_filters.
 
     LOOP AT gt_file_filters ASSIGNING <ls_file_filter>.
-      <ls_file_filter>-filter->filter(
+      <ls_file_filter>-filter->filter_remote_files(
         CHANGING
           ct_files = ct_files ).
     ENDLOOP.
 
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->filter_remote_files(
+      CHANGING
+        ct_files = ct_files ).
+
+  ENDMETHOD.
+
+
+  METHOD filter_local_files.
+
+    DATA: li_exit TYPE REF TO zif_abapgit_exit.
+    FIELD-SYMBOLS: <ls_file_filter> LIKE LINE OF gt_file_filters.
+
+    LOOP AT gt_file_filters ASSIGNING <ls_file_filter>.
+      <ls_file_filter>-filter->filter_local_files(
+        CHANGING
+          ct_files = ct_files ).
+    ENDLOOP.
+
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->filter_local_files(
       CHANGING
         ct_files = ct_files ).
 

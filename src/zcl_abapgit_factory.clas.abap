@@ -75,7 +75,6 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-DATA gi_cts_api TYPE REF TO zif_abapgit_cts_api .
     CLASS-DATA go_environment TYPE REF TO zif_abapgit_environment .
     CLASS-DATA gt_longtexts TYPE tty_longtexts.
-    CLASS-DATA gi_file_filter TYPE REF TO zif_abapgit_file_filter.
 ENDCLASS.
 
 

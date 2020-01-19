@@ -432,11 +432,16 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_file_filter~filter.
+  METHOD zif_abapgit_file_filter~filter_remote_files.
 
     IF is_baseinfo_supported( ) = abap_false.
       DELETE ct_files WHERE filename CP '*ddls.baseinfo'.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_file_filter~filter_local_files.
 
   ENDMETHOD.
 
