@@ -84,8 +84,6 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
         VALUE(rv_active) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
-  PRIVATE SECTION.
-
 
 ENDCLASS.
 
@@ -163,16 +161,18 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD delete_longtexts.
 
-    zcl_abapgit_longtexts=>delete( iv_longtext_id = iv_longtext_id
-                                   iv_object_name = ms_item-obj_name ).
+    zcl_abapgit_factory=>get_longtexts( )->delete(
+        iv_longtext_id = iv_longtext_id
+        iv_object_name = ms_item-obj_name  ).
 
   ENDMETHOD.
 
 
   METHOD deserialize_longtexts.
 
-    zcl_abapgit_longtexts=>deserialize( io_xml             = io_xml
-                                        iv_master_language = mv_language ).
+    zcl_abapgit_factory=>get_longtexts( )->deserialize(
+        io_xml             = io_xml
+        iv_master_language = mv_language ).
 
   ENDMETHOD.
 
@@ -301,10 +301,11 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD serialize_longtexts.
 
-    zcl_abapgit_longtexts=>serialize( iv_object_name = ms_item-obj_name
-                                      iv_longtext_id = iv_longtext_id
-                                      it_dokil       = it_dokil
-                                      io_xml         = io_xml ).
+    zcl_abapgit_factory=>get_longtexts( )->serialize(
+        iv_object_name = ms_item-obj_name
+        iv_longtext_id = iv_longtext_id
+        it_dokil       = it_dokil
+        io_xml         = io_xml  ).
 
   ENDMETHOD.
 
