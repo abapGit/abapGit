@@ -35,11 +35,11 @@ CLASS zcl_abapgit_objects DEFINITION
 
     CLASS-METHODS serialize
       IMPORTING
-        !is_item                 TYPE zif_abapgit_definitions=>ty_item
-        !iv_language             TYPE spras
+        !is_item                       TYPE zif_abapgit_definitions=>ty_item
+        !iv_language                   TYPE spras
         !iv_serialize_master_lang_only TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rs_files_and_item) TYPE ty_serialization
+        VALUE(rs_files_and_item)       TYPE ty_serialization
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS deserialize
@@ -1078,6 +1078,11 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
+* IOBJ has to be handled before ODSO
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'IOBJ'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
     LOOP AT it_results ASSIGNING <ls_result>
         WHERE obj_type <> 'IASP'
         AND obj_type <> 'PROG'
@@ -1087,7 +1092,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         AND obj_type <> 'ENHS'
         AND obj_type <> 'DDLS'
         AND obj_type <> 'SPRX'
-        AND obj_type <> 'WEBI'.
+        AND obj_type <> 'WEBI'
+        AND obj_type <> 'IOBJ'.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
