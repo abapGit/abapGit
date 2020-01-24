@@ -173,7 +173,6 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
     ii_request->set_header_field( name  = if_http_header_fields_sap=>request_uri
                                   value = lv_url ).
     " Other methods than POST and GET do not have constants unfortunately
-    " ii_request->set_method( if_http_request=>co_request_method_delete ).
     ii_request->set_method( 'DELETE' ).
   ENDMETHOD.
 

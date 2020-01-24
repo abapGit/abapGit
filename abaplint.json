@@ -55,6 +55,7 @@
     "globalMacros": []
   },
   "rules": {
+    "unused_variables": false,
     "prefix_is_current_class": {
       "omitMeInstanceCalls": false
     },

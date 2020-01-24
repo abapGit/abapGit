@@ -532,10 +532,6 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
       lv_updated = update_report( iv_program = lv_program
                                   it_source  = lt_source ).
       IF lv_updated = abap_true.
-* todo, see issue #3053
-*        lt_auxsrc = lt_public.
-*        APPEND LINES OF lt_source TO lt_auxsrc.
-
         update_meta( iv_name     = is_key-clsname
                      iv_exposure = seoc_exposure_protected
                      it_source   = lt_source ).
@@ -549,10 +545,6 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
       lv_updated = update_report( iv_program = lv_program
                                   it_source  = lt_source ).
       IF lv_updated = abap_true.
-* todo, see issue #3053
-*        lt_auxsrc = lt_public.
-*        APPEND LINES OF lt_source TO lt_auxsrc.
-
         update_meta( iv_name     = is_key-clsname
                      iv_exposure = seoc_exposure_private
                      it_source   = lt_source ).
@@ -670,7 +662,6 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
 
 * skip the CS include, as it is sometimes generated on the fly instead of
 * when the methods are changed
-*    APPEND cl_oo_classname_service=>get_cs_name( lv_class_name ) TO rt_includes.
 
     cl_oo_classname_service=>get_all_method_includes(
       EXPORTING
