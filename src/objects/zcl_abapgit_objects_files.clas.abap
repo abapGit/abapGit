@@ -170,10 +170,10 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
   METHOD add_xml.
 
-    DATA: lv_xml     TYPE string,
-          hex(1)     TYPE x VALUE '23',
-          hex_bom(3) TYPE x VALUE 'EFBBBF',
-          ls_file    TYPE zif_abapgit_definitions=>ty_file.
+    DATA: lv_xml        TYPE string,
+          lv_hex(1)     TYPE x VALUE '23',
+          lv_hex_bom(3) TYPE x VALUE 'EFBBBF',
+          ls_file       TYPE zif_abapgit_definitions=>ty_file.
 
 
     lv_xml = io_xml->render( iv_normalize = iv_normalize
@@ -197,9 +197,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
     "has result # as HEX 23 and not HEX EFBBBF.
     "So we have to remove 23 first and add EFBBBF after to serialized string
     IF ls_file-data(3) <> cl_abap_char_utilities=>byte_order_mark_utf8
-    AND ls_file-data(1) = hex.
+    AND ls_file-data(1) = lv_hex.
       REPLACE FIRST OCCURRENCE
-        OF hex IN ls_file-data WITH hex_bom IN BYTE MODE.
+        OF lv_hex IN ls_file-data WITH lv_hex_bom IN BYTE MODE.
       ASSERT sy-subrc = 0.
     ENDIF.
 
