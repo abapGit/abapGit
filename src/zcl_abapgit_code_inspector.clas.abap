@@ -32,6 +32,11 @@ CLASS zcl_abapgit_code_inspector DEFINITION
         !io_set TYPE REF TO cl_ci_objectset
       RAISING
         zcx_abapgit_exception .
+    METHODS skip_object
+      IMPORTING
+        !is_obj        TYPE scir_objs
+      RETURNING
+        VALUE(rv_skip) TYPE abap_bool.
   PRIVATE SECTION.
 
     DATA mv_success TYPE abap_bool .
@@ -71,7 +76,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
+CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
 
 
   METHOD cleanup.
@@ -169,8 +174,10 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
 
   METHOD create_objectset.
 
-    DATA: lt_objs     TYPE scit_objs,
-          lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
+    DATA: lt_objs       TYPE scit_objs,
+          ls_obj        TYPE scir_objs,
+          lt_objs_check TYPE scit_objs,
+          lt_packages   TYPE zif_abapgit_sap_package=>ty_devclass_tt.
 
     lt_packages = zcl_abapgit_factory=>get_sap_package( mv_package )->list_subpackages( ).
     INSERT mv_package INTO TABLE lt_packages.
@@ -183,9 +190,41 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
       AND delflag = abap_false
       AND pgmid = 'R3TR'.                               "#EC CI_GENBUFF
 
+    LOOP AT lt_objs INTO ls_obj.
+
+      IF skip_object( ls_obj ) = abap_true.
+        CONTINUE.
+      ENDIF.
+
+      INSERT ls_obj INTO TABLE lt_objs_check.
+
+    ENDLOOP.
+
     ro_set = cl_ci_objectset=>save_from_list(
       p_name    = mv_name
-      p_objects = lt_objs ).
+      p_objects = lt_objs_check ).
+
+  ENDMETHOD.
+
+
+  METHOD skip_object.
+
+    DATA: ls_trdir TYPE trdir.
+
+    CASE is_obj-objtype.
+      WHEN 'PROG'.
+
+        SELECT SINGLE *
+          INTO ls_trdir
+          FROM trdir
+          WHERE name = is_obj-objname.
+
+        rv_skip = boolc( ls_trdir-subc = 'I' ). " Include program.
+
+      WHEN OTHERS.
+        rv_skip = abap_false.
+
+    ENDCASE.
 
   ENDMETHOD.
 

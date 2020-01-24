@@ -57,13 +57,13 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
 
       apply_filter
         CHANGING
-          ct_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview,
+          ct_overview TYPE tty_overview,
 
       map_repo_list_to_overview
         IMPORTING
           it_repo_list       TYPE zif_abapgit_persistence=>tt_repo
         RETURNING
-          VALUE(rt_overview) TYPE zcl_abapgit_gui_page_repo_over=>tty_overview
+          VALUE(rt_overview) TYPE tty_overview
         RAISING
           zcx_abapgit_exception,
 
@@ -74,19 +74,19 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       render_table
         IMPORTING
           io_html     TYPE REF TO zcl_abapgit_html
-          it_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview,
+          it_overview TYPE tty_overview,
 
       render_table_body
         IMPORTING
           io_html     TYPE REF TO zcl_abapgit_html
-          it_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview,
+          it_overview TYPE tty_overview,
 
       render_header_bar
         IMPORTING
           io_html TYPE REF TO zcl_abapgit_html,
 
       apply_order_by
-        CHANGING ct_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview.
+        CHANGING ct_overview TYPE tty_overview.
 
 ENDCLASS.
 

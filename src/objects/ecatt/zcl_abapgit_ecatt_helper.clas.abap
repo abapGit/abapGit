@@ -65,7 +65,7 @@ CLASS zcl_abapgit_ecatt_helper IMPLEMENTATION.
       CATCH cx_ecatt_apl INTO lx_ecatt.
         lv_text = lx_ecatt->get_text( ).
         zcx_abapgit_exception=>raise( lv_text ).
-        " CATCH cx_ecatt_ui_attachment. " Doesn't exist in 702
+        " note, exception cx_ecatt_ui_attachment doesn't exist in 702
       CATCH cx_ecatt.
         "will never be raised from download, when called with mv_generate_xml_no_download = 'X'.
     ENDTRY.
