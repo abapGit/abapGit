@@ -193,4 +193,5 @@ CLASS zcl_abapgit_xml IMPLEMENTATION.
       CONCATENATE lv_mark rv_xml INTO rv_xml.
     ENDIF.
 
-  ENDMETHOD.ENDCLASS.
+  ENDMETHOD.
+ENDCLASS.
