@@ -170,10 +170,10 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
   METHOD add_xml.
 
-    DATA: lv_xml        TYPE string,
+    DATA: lv_xml     TYPE string,
           lv_hex     TYPE x LENGTH 1 VALUE '23',
-          lv_hex_bom(3) TYPE x VALUE 'EFBBBF',
-          ls_file       TYPE zif_abapgit_definitions=>ty_file.
+          lv_hex_bom TYPE x LENGTH 3 VALUE 'EFBBBF',
+          ls_file    TYPE zif_abapgit_definitions=>ty_file.
 
 
     lv_xml = io_xml->render( iv_normalize = iv_normalize
