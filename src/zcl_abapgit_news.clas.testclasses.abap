@@ -260,7 +260,7 @@ CLASS ltcl_news IMPLEMENTATION.
     _add_news_log_entry '1.28.0' ''   ''  0   '+ Staging page redesigned'.
     _add_news_log_entry '1.28.0' ''   'X' 0   '! Support for core data services'.
 
-    " Case 1. Test parsing of data
+    " Case 1: Test parsing of data
     lt_log_act = zcl_abapgit_news=>parse( it_lines = lt_lines iv_current_version = '1.27.00' ).
     cl_abap_unit_assert=>assert_equals( exp = lt_log_exp
                                         act = lt_log_act
@@ -276,7 +276,7 @@ CLASS ltcl_news IMPLEMENTATION.
     _add_news_log_entry '1.27.0' ''   ''  0   '+ Two factor authentication with github.com'.
     _add_news_log_entry '1.26.0' 'X'  ''  -1  '2017-01-25 v1.26.0'.
 
-    " Case 1. Test parsing of data
+    " Case 1: Test parsing of data
     lt_log_act = zcl_abapgit_news=>parse( it_lines = lt_lines iv_current_version = '1.28.00' ).
     cl_abap_unit_assert=>assert_equals( exp = lt_log_exp
                                         act = lt_log_act
