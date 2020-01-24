@@ -792,9 +792,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     rt_files = it_files.
 
-    zcl_abapgit_file_filter=>filter_remote_files(
-      CHANGING
-        ct_files = rt_files ).
+    zcl_abapgit_file_filter=>filter_remote_files( CHANGING ct_files = rt_files ).
 
   ENDMETHOD.
 
@@ -803,9 +801,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     rt_files = it_files.
 
-    zcl_abapgit_file_filter=>filter_local_files(
-      CHANGING
-        ct_files = rt_files ).
+    zcl_abapgit_file_filter=>filter_local_files( CHANGING ct_files = rt_files ).
 
   ENDMETHOD.
 

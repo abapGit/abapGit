@@ -56,15 +56,11 @@ CLASS zcl_abapgit_file_filter IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_file_filter> LIKE LINE OF gt_file_filters.
 
     LOOP AT gt_file_filters ASSIGNING <ls_file_filter>.
-      <ls_file_filter>-filter->filter_remote_files(
-        CHANGING
-          ct_files = ct_files ).
+      <ls_file_filter>-filter->filter_remote_files( CHANGING ct_files = ct_files ).
     ENDLOOP.
 
     li_exit = zcl_abapgit_exit=>get_instance( ).
-    li_exit->filter_remote_files(
-      CHANGING
-        ct_files = ct_files ).
+    li_exit->filter_remote_files( CHANGING ct_files = ct_files ).
 
   ENDMETHOD.
 
@@ -75,15 +71,11 @@ CLASS zcl_abapgit_file_filter IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_file_filter> LIKE LINE OF gt_file_filters.
 
     LOOP AT gt_file_filters ASSIGNING <ls_file_filter>.
-      <ls_file_filter>-filter->filter_local_files(
-        CHANGING
-          ct_files = ct_files ).
+      <ls_file_filter>-filter->filter_local_files( CHANGING ct_files = ct_files ).
     ENDLOOP.
 
     li_exit = zcl_abapgit_exit=>get_instance( ).
-    li_exit->filter_local_files(
-      CHANGING
-        ct_files = ct_files ).
+    li_exit->filter_local_files( CHANGING ct_files = ct_files ).
 
   ENDMETHOD.
 

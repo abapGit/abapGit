@@ -154,9 +154,7 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
 
   METHOD zif_abapgit_exit~filter_remote_files.
     TRY.
-        gi_exit->filter_remote_files(
-          CHANGING
-            ct_files = ct_files ).
+        gi_exit->filter_remote_files( CHANGING ct_files = ct_files ).
       CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
     ENDTRY.
   ENDMETHOD.
@@ -164,9 +162,7 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
 
   METHOD zif_abapgit_exit~filter_local_files.
     TRY.
-        gi_exit->filter_local_files(
-          CHANGING
-            ct_files = ct_files ).
+        gi_exit->filter_local_files( CHANGING ct_files = ct_files ).
       CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
     ENDTRY.
   ENDMETHOD.
