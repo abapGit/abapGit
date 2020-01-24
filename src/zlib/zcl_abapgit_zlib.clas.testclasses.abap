@@ -53,8 +53,7 @@ CLASS ltcl_zlib IMPLEMENTATION.
     DATA: ls_data        TYPE zcl_abapgit_zlib=>ty_decompress,
           lv_compressed  TYPE xstring,
           lv_decoded     TYPE xstring,
-          lv_hex         TYPE xstring,
-          lv_str         TYPE string.
+          lv_hex         TYPE xstring.
 
     DEFINE _hex.
       lv_hex = &1.

@@ -115,7 +115,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
 
   METHOD call_browser.
@@ -305,8 +305,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
   METHOD link_hints.
 
-    DATA: lv_link_hint_key    TYPE char01,
-          lv_background_color TYPE string.
+    DATA: lv_link_hint_key TYPE char01.
 
     lv_link_hint_key = mo_settings->get_link_hint_key( ).
 
