@@ -448,11 +448,6 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
-*      " If the application component was cleared SET_ALL_ATTRIBUTES doesn't change it
-*      IF ls_package_data-component IS INITIAL AND li_package->application_component IS NOT INITIAL.
-*
-*      ENDIF.
-
     ELSE.
       " Package does not exist yet, create it
       " This shouldn't really happen, because the folder logic initially creates the packages.
