@@ -21,7 +21,7 @@ CLASS zcl_abapgit_convert DEFINITION
         VALUE(rv_xstring) TYPE xstring .
     CLASS-METHODS xstring_to_string_utf8
       IMPORTING
-        !iv_data         TYPE xstring
+        !iv_data         TYPE xsequence
       RETURNING
         VALUE(rv_string) TYPE string .
     CLASS-METHODS xstring_to_int
