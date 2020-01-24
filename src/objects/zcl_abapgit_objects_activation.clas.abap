@@ -326,9 +326,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
   METHOD use_new_activation_logic.
 
-* left for easy rollback, cleanup later
-* IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_experimental_features( ) = abap_true.
-
     CALL FUNCTION 'FUNCTION_EXISTS'
       EXPORTING
         funcname           = 'DD_MASS_ACT_C3'

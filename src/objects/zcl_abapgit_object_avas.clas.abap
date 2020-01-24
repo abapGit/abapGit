@@ -77,13 +77,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
   METHOD insert_links.
 
 * todo, how does links work?
-*    LOOP AT ls_avas-links INTO ls_linked_obj.
-*    ENDLOOP.
-
-**    DELETE FROM cls_linked_obj WHERE guid = ls_avas-header-guid.
-**    INSERT cls_linked_obj FROM TABLE lt_linked.
-*    if sy-subrc <> 0.
-*    endif.
+    RETURN.
 
   ENDMETHOD.
 
