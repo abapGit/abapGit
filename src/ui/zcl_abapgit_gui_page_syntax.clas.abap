@@ -56,8 +56,6 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
 
   METHOD build_menu.
 
-    DATA: lv_opt TYPE c LENGTH 1.
-
     CREATE OBJECT ro_menu.
 
     ro_menu->add( iv_txt = 'Re-Run'
@@ -97,8 +95,6 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
-
-    DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
 
     CASE iv_action.
       WHEN c_actions-rerun.
