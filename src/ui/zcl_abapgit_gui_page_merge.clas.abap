@@ -188,9 +188,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE IMPLEMENTATION.
           <ls_show>-path }{ <ls_show>-name }</td><td><b>{
           <ls_show>-sha1(7) }</b></td>| ).
       ELSE.
-        io_html->add( |<td>{
-          <ls_show>-path }{ <ls_show>-name }</td><td>{
-          <ls_show>-sha1(7) }</td>| ).
+        io_html->add( |<td>{ <ls_show>-path }{ <ls_show>-name }</td><td>{ <ls_show>-sha1(7) }</td>| ).
       ENDIF.
     ELSE.
       io_html->add( '<td></td><td></td>' ).
