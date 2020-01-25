@@ -25,6 +25,12 @@ CLASS zcl_abapgit_branch_overview DEFINITION
     DATA mt_commits TYPE zif_abapgit_definitions=>ty_commit_tt .
     DATA mt_tags TYPE zif_abapgit_definitions=>ty_git_tag_list_tt .
 
+    METHODS compress_internal
+      IMPORTING
+        !iv_name    TYPE string
+      CHANGING
+        !ct_temp    TYPE zif_abapgit_definitions=>ty_commit_tt
+        !ct_commits TYPE zif_abapgit_definitions=>ty_commit_tt .
     CLASS-METHODS parse_commits
       IMPORTING
         !it_objects       TYPE zif_abapgit_definitions=>ty_objects_tt
@@ -74,7 +80,34 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
+
+
+  METHOD compress_internal.
+
+    FIELD-SYMBOLS: <ls_temp>     LIKE LINE OF ct_temp,
+                   <ls_new>      LIKE LINE OF ct_commits,
+                   <ls_temp_end> LIKE LINE OF ct_temp.
+
+
+    IF lines( ct_temp ) >= 10.
+      READ TABLE ct_temp ASSIGNING <ls_temp> INDEX 1.
+      ASSERT sy-subrc = 0.
+      READ TABLE ct_temp ASSIGNING <ls_temp_end> INDEX lines( ct_temp ).
+      ASSERT sy-subrc = 0.
+      APPEND INITIAL LINE TO ct_commits ASSIGNING <ls_new>.
+      <ls_new>-sha1       = <ls_temp_end>-sha1.
+      <ls_new>-parent1    = <ls_temp>-parent1.
+      <ls_new>-time       = <ls_temp>-time.
+      <ls_new>-message    = |Compressed, { lines( ct_temp ) } commits|.
+      <ls_new>-branch     = iv_name.
+      <ls_new>-compressed = abap_true.
+    ELSE.
+      APPEND LINES OF ct_temp TO ct_commits.
+    ENDIF.
+    CLEAR ct_temp.
+
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -421,25 +454,6 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
   METHOD zif_abapgit_branch_overview~compress.
 
-    DEFINE _compress.
-      IF lines( lt_temp ) >= 10.
-        READ TABLE lt_temp ASSIGNING <ls_temp> INDEX 1.
-        ASSERT sy-subrc = 0.
-        READ TABLE lt_temp ASSIGNING <ls_temp_end> INDEX lines( lt_temp ).
-        ASSERT sy-subrc = 0.
-        APPEND INITIAL LINE TO rt_commits ASSIGNING <ls_new>.
-        <ls_new>-sha1       = <ls_temp_end>-sha1.
-        <ls_new>-parent1    = <ls_temp>-parent1.
-        <ls_new>-time       = <ls_temp>-time.
-        <ls_new>-message    = |Compressed, { lines( lt_temp ) } commits|.
-        <ls_new>-branch     = lv_name.
-        <ls_new>-compressed = abap_true.
-      ELSE.
-        APPEND LINES OF lt_temp TO rt_commits.
-      ENDIF.
-      CLEAR lt_temp.
-    END-OF-DEFINITION.
-
     DATA: lv_previous TYPE i,
           lv_index    TYPE i,
           lv_name     TYPE string,
@@ -467,7 +481,12 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
         ENDIF.
 
         IF lv_previous + 1 <> sy-tabix.
-          _compress.
+          compress_internal(
+            EXPORTING
+              iv_name    = lv_name
+            CHANGING
+              ct_temp    = lt_temp
+              ct_commits = rt_commits ).
         ENDIF.
 
         lv_previous = lv_index.
@@ -476,7 +495,12 @@ CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
       ENDLOOP.
 
-      _compress.
+      compress_internal(
+        EXPORTING
+          iv_name    = lv_name
+        CHANGING
+          ct_temp    = lt_temp
+          ct_commits = rt_commits ).
 
     ENDLOOP.
 
