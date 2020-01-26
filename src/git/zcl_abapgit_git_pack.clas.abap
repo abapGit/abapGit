@@ -3,7 +3,6 @@ CLASS zcl_abapgit_git_pack DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-
     TYPES:
       BEGIN OF ty_node,
         chmod TYPE zif_abapgit_definitions=>ty_chmod,
@@ -148,7 +147,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
+CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
 
   METHOD decode.
