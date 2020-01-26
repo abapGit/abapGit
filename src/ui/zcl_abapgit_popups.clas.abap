@@ -99,7 +99,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
+CLASS zcl_abapgit_popups IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -222,27 +222,27 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     lo_selections = mo_select_list_popup->get_selections( ).
 
-    CASE lo_selections->get_selection_mode( ).
-      WHEN if_salv_c_selection_mode=>single.
-        lt_selected_rows = lo_selections->get_selected_rows( ).
+    IF lo_selections->get_selection_mode( ) = if_salv_c_selection_mode=>single.
 
-        LOOP AT lt_selected_rows ASSIGNING <lv_selected_row>.
+      lt_selected_rows = lo_selections->get_selected_rows( ).
 
-          READ TABLE <lt_table>
-            ASSIGNING <lg_line>
-            INDEX <lv_selected_row>.
-          CHECK <lv_selected_row> IS ASSIGNED.
+      LOOP AT lt_selected_rows ASSIGNING <lv_selected_row>.
 
-          ASSIGN COMPONENT c_fieldname_selected
-             OF STRUCTURE <lg_line>
-             TO <lv_selected>.
-          CHECK <lv_selected> IS ASSIGNED.
+        READ TABLE <lt_table>
+          ASSIGNING <lg_line>
+          INDEX <lv_selected_row>.
+        CHECK <lv_selected_row> IS ASSIGNED.
 
-          <lv_selected> = abap_true.
+        ASSIGN COMPONENT c_fieldname_selected
+           OF STRUCTURE <lg_line>
+           TO <lv_selected>.
+        CHECK <lv_selected> IS ASSIGNED.
 
-        ENDLOOP.
+        <lv_selected> = abap_true.
 
-    ENDCASE.
+      ENDLOOP.
+
+    ENDIF.
 
     lv_condition = |{ c_fieldname_selected } = ABAP_TRUE|.
 
@@ -264,11 +264,9 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     lo_selections = mo_select_list_popup->get_selections( ).
 
-    CASE lo_selections->get_selection_mode( ).
-      WHEN if_salv_c_selection_mode=>single.
-        mo_select_list_popup->close_screen( ).
-
-    ENDCASE.
+    IF lo_selections->get_selection_mode( ) = if_salv_c_selection_mode=>single.
+      mo_select_list_popup->close_screen( ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -876,9 +874,9 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
         lo_events = mo_select_list_popup->get_event( ).
 
-        SET HANDLER: on_select_list_link_click     FOR lo_events,
-                     on_select_list_function_click FOR lo_events,
-                     on_double_click               FOR lo_events.
+        SET HANDLER on_select_list_link_click FOR lo_events.
+        SET HANDLER on_select_list_function_click FOR lo_events.
+        SET HANDLER on_double_click FOR lo_events.
 
         IF iv_title CN ' _0'.
           mo_select_list_popup->get_display_settings( )->set_list_header( iv_title ).
@@ -902,18 +900,17 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
           lo_column ?= ls_column-r_column.
 
-          CASE iv_selection_mode.
-            WHEN if_salv_c_selection_mode=>multiple.
-              IF ls_column-columnname = c_fieldname_selected.
-                lo_column->set_cell_type( if_salv_c_cell_type=>checkbox_hotspot ).
-                lo_column->set_output_length( 20 ).
-                lo_column->set_short_text( |{ iv_select_column_text }| ).
-                lo_column->set_medium_text( |{ iv_select_column_text }| ).
-                lo_column->set_long_text( |{ iv_select_column_text }| ).
-                CONTINUE.
-              ENDIF.
+          IF    iv_selection_mode    = if_salv_c_selection_mode=>multiple
+            AND ls_column-columnname = c_fieldname_selected.
 
-          ENDCASE.
+            lo_column->set_cell_type( if_salv_c_cell_type=>checkbox_hotspot ).
+            lo_column->set_output_length( 20 ).
+            lo_column->set_short_text( |{ iv_select_column_text }| ).
+            lo_column->set_medium_text( |{ iv_select_column_text }| ).
+            lo_column->set_long_text( |{ iv_select_column_text }| ).
+            CONTINUE.
+
+          ENDIF.
 
           READ TABLE it_columns_to_display
             ASSIGNING <ls_column_to_display>

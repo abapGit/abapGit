@@ -46,7 +46,7 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
       IMPORTING
         et_objects      = lt_objects ).
 
-    DELETE lt_objects WHERE type NE zif_abapgit_definitions=>c_type-commit.
+    DELETE lt_objects WHERE type <> zif_abapgit_definitions=>c_type-commit.
 
     rt_commits = zcl_abapgit_git_object=>parse_commits( lt_objects ).
     zcl_abapgit_git_object=>sort_commits( CHANGING ct_commits = rt_commits ).

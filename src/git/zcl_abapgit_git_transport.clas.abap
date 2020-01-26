@@ -257,17 +257,18 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
   METHOD upload_pack.
 
-    DATA: lo_client   TYPE REF TO zcl_abapgit_http_client,
-          lo_repo     TYPE REF TO zcl_abapgit_repo_online,
-          lv_buffer   TYPE string,
-          lv_xstring  TYPE xstring,
-          lv_string   TYPE string,
-          lv_line     TYPE string,
-          lv_pack     TYPE xstring,
-          lt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
-          lt_commits  TYPE zif_abapgit_definitions=>ty_git_commit_list_tt,
-          lt_wanteds  TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
-          lv_capa     TYPE string.
+    DATA: lo_client    TYPE REF TO zcl_abapgit_http_client,
+          lo_repo      TYPE REF TO zcl_abapgit_repo_online,
+          lv_buffer    TYPE string,
+          lv_xstring   TYPE xstring,
+          lv_string    TYPE string,
+          lx_exception TYPE REF TO zcx_abapgit_exception,
+          lv_line      TYPE string,
+          lv_pack      TYPE xstring,
+          lt_branches  TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
+          lt_commits   TYPE zif_abapgit_definitions=>ty_git_commit_list_tt,
+          lt_wanteds   TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
+          lv_capa      TYPE string.
 
     FIELD-SYMBOLS: <ls_wanted> LIKE LINE OF lt_wanteds,
                    <ls_branch> LIKE LINE OF lt_branches,
@@ -346,7 +347,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
         et_objects = zcl_abapgit_git_pack=>decode( lv_pack ).
 
-      CATCH zcx_abapgit_exception INTO DATA(lx_exception).
+      CATCH zcx_abapgit_exception INTO lx_exception.
         IF   io_repo IS BOUND
          AND io_repo->is_offline( ) = abap_false.
           lo_repo ?= io_repo.

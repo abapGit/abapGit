@@ -30,9 +30,6 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-
-    CLASS-DATA: mo_instance TYPE REF TO zcl_abapgit_gui_view_repo.
-
     DATA: mo_repo                       TYPE REF TO zcl_abapgit_repo,
           mv_cur_dir                    TYPE string,
           mv_hide_files                 TYPE abap_bool,

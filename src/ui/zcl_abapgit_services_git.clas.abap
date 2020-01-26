@@ -78,11 +78,11 @@ CLASS zcl_abapgit_services_git DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS checkout_commit_build_popup
       IMPORTING
-        !it_commits               TYPE zif_abapgit_definitions=>ty_commit_tt
+        !it_commits         TYPE zif_abapgit_definitions=>ty_commit_tt
+      EXPORTING
+        !es_selected_commit TYPE zif_abapgit_definitions=>ty_commit
       CHANGING
-        !ct_value_tab             TYPE zif_abapgit_definitions=>ty_commit_value_tab_tt
-      RETURNING
-        VALUE(rs_selected_commit) TYPE zif_abapgit_definitions=>ty_commit
+        !ct_value_tab       TYPE zif_abapgit_definitions=>ty_commit_value_tab_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS checkout_commit_handle_select
@@ -129,11 +129,13 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
         et_value_tab   = lt_value_tab
         et_commits     = lt_commits ).
 
-    ls_selected_commit = checkout_commit_build_popup(
+    checkout_commit_build_popup(
       EXPORTING
-        it_commits   = lt_commits
+        it_commits         = lt_commits
+      IMPORTING
+        es_selected_commit = ls_selected_commit
       CHANGING
-        ct_value_tab = lt_value_tab ).
+        ct_value_tab       = lt_value_tab ).
 
     checkout_commit_handle_select( io_repo            = lo_repo
                                    iv_key             = iv_key
@@ -165,7 +167,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       lv_parent_hash = io_repo->get_sha1_remote( ).
     ENDIF.
 
-    DELETE: et_commits WHERE sha1 EQ lv_parent_hash.
+    DELETE et_commits WHERE sha1 = lv_parent_hash.
 
     IF et_commits IS INITIAL.
       zcx_abapgit_exception=>raise( |No commits are available in this branch.| ).
@@ -177,12 +179,12 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       <ls_value_tab>-sha1    = <ls_commit>-sha1.
       <ls_value_tab>-message = <ls_commit>-message.
       lv_unix_time = <ls_commit>-time.
-      CALL METHOD zcl_abapgit_time=>get_utc
+      zcl_abapgit_time=>get_utc(
         EXPORTING
           iv_unix = lv_unix_time
         IMPORTING
           ev_time = lv_time
-          ev_date = lv_date.
+          ev_date = lv_date ).
       WRITE: lv_date TO lv_date_string,
              lv_time TO lv_time_string.
       <ls_value_tab>-datetime = |{ lv_date_string }, | &&
@@ -201,6 +203,8 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_value_tab> TYPE zif_abapgit_definitions=>ty_commit_value_tab,
                    <ls_column>    TYPE zif_abapgit_definitions=>ty_alv_column.
+
+    CLEAR: es_selected_commit.
 
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
     <ls_column>-name   = 'SHA1'.
@@ -239,7 +243,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     ENDIF.
 
     READ TABLE it_commits
-      INTO rs_selected_commit
+      INTO es_selected_commit
       WITH KEY message = <ls_value_tab>-message.
 
   ENDMETHOD.
@@ -435,38 +439,42 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     lt_obsolete_obj = get_unnecessary_local_objs( io_repo ).
 
-    CHECK lines( lt_obsolete_obj ) > 0.
+    IF lines( lt_obsolete_obj ) > 0.
 
-    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
-    <ls_column>-name = 'OBJECT'.
-    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
-    <ls_column>-name = 'OBJ_NAME'.
+      APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+      <ls_column>-name = 'OBJECT'.
+      APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+      <ls_column>-name = 'OBJ_NAME'.
 
-    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
-    li_popups->popup_to_select_from_list(
-      EXPORTING
-        it_list               = lt_obsolete_obj
-        iv_header_text        = |Which unnecessary objects should be deleted?|
-        iv_select_column_text = 'Delete?'
-        it_columns_to_display = lt_columns
-      IMPORTING
-        et_list              = lt_selected ).
+      li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+      li_popups->popup_to_select_from_list(
+        EXPORTING
+          it_list               = lt_obsolete_obj
+          iv_header_text        = |Which unnecessary objects should be deleted?|
+          iv_select_column_text = 'Delete?'
+          it_columns_to_display = lt_columns
+        IMPORTING
+          et_list              = lt_selected ).
 
-    CHECK lines( lt_selected ) > 0.
+      IF lines( lt_selected ) > 0.
 
-    ls_checks = io_repo->delete_checks( ).
-    IF ls_checks-transport-required = abap_true.
-      ls_checks-transport-transport = zcl_abapgit_ui_factory=>get_popups(
-                                        )->popup_transport_request( ls_checks-transport-type ).
+        ls_checks = io_repo->delete_checks( ).
+        IF ls_checks-transport-required = abap_true.
+          ls_checks-transport-transport = zcl_abapgit_ui_factory=>get_popups(
+                                            )->popup_transport_request( ls_checks-transport-type ).
+        ENDIF.
+
+        zcl_abapgit_objects=>delete( it_tadir  = lt_selected
+                                     is_checks = ls_checks ).
+
+        IF iv_refresh = abap_true.
+          io_repo->refresh( ).
+          zcl_abapgit_services_repo=>gui_deserialize( io_repo ).
+        ENDIF.
+
+      ENDIF.
+
     ENDIF.
-
-    zcl_abapgit_objects=>delete( it_tadir  = lt_selected
-                                 is_checks = ls_checks ).
-
-    CHECK iv_refresh EQ abap_true.
-
-    io_repo->refresh( ).
-    zcl_abapgit_services_repo=>gui_deserialize( io_repo ).
 
   ENDMETHOD.
 
