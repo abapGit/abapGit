@@ -19,6 +19,9 @@ CLASS zcl_abapgit_repo_online DEFINITION
     METHODS get_branch_name
       RETURNING
         VALUE(rv_name) TYPE zif_abapgit_persistence=>ty_repo-branch_name .
+    METHODS get_commit_sha1
+      RETURNING
+        VALUE(rv_sha1) TYPE zif_abapgit_persistence=>ty_repo-commit_sha1 .
     METHODS set_url
       IMPORTING
         !iv_url TYPE zif_abapgit_persistence=>ty_repo-url
@@ -26,7 +29,12 @@ CLASS zcl_abapgit_repo_online DEFINITION
         zcx_abapgit_exception .
     METHODS set_branch_name
       IMPORTING
-        !iv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name
+        !iv_name TYPE zif_abapgit_persistence=>ty_repo-branch_name
+      RAISING
+        zcx_abapgit_exception .
+    METHODS set_commit_sha1
+      IMPORTING
+        !iv_sha1 TYPE zif_abapgit_persistence=>ty_repo-commit_sha1
       RAISING
         zcx_abapgit_exception .
     METHODS get_sha1_remote
@@ -71,7 +79,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
+CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
 
   METHOD fetch_remote.
@@ -89,8 +97,10 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
                        iv_text    = 'Fetch remote files' ) ##NO_TEXT.
 
     ls_pull = zcl_abapgit_git_porcelain=>pull(
-      iv_url         = get_url( )
-      iv_branch_name = get_branch_name( ) ).
+      io_repo            = me
+      iv_url             = get_url( )
+      iv_branch_name     = get_branch_name( )
+      iv_commit_sha1     = get_commit_sha1( ) ).
 
     set_files_remote( ls_pull-files ).
     set_objects( ls_pull-objects ).
@@ -101,6 +111,11 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
   METHOD get_branch_name.
     rv_name = ms_data-branch_name.
+  ENDMETHOD.
+
+
+  METHOD get_commit_sha1.
+    rv_sha1 = ms_data-commit_sha1.
   ENDMETHOD.
 
 
@@ -238,7 +253,15 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   METHOD set_branch_name.
 
     reset_remote( ).
-    set( iv_branch_name = iv_branch_name ).
+    set( iv_branch_name = iv_name ).
+
+  ENDMETHOD.
+
+
+  METHOD set_commit_sha1.
+
+    reset_remote( ).
+    set( iv_commit_sha1 = iv_sha1 ).
 
   ENDMETHOD.
 
@@ -302,6 +325,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     handle_stage_ignore( io_stage ).
 
     ls_push = zcl_abapgit_git_porcelain=>push(
+      io_repo        = me
       is_comment     = is_comment
       io_stage       = io_stage
       iv_branch_name = get_branch_name( )

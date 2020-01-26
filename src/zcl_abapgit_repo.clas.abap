@@ -4,7 +4,6 @@ CLASS zcl_abapgit_repo DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-
     METHODS bind_listener
       IMPORTING
         !ii_listener TYPE REF TO zif_abapgit_repo_listener .
@@ -96,6 +95,14 @@ CLASS zcl_abapgit_repo DEFINITION
         !is_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
       RAISING
         zcx_abapgit_exception .
+    METHODS get_local_checksums
+      RETURNING
+        VALUE(rt_checksums) TYPE zif_abapgit_persistence=>ty_local_checksum_tt .
+    METHODS set_local_checksums
+      IMPORTING
+        !it_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt
+      RAISING
+        zcx_abapgit_exception .
     METHODS has_remote_source
           ABSTRACT
       RETURNING
@@ -121,8 +128,8 @@ CLASS zcl_abapgit_repo DEFINITION
       RETURNING
         VALUE(ri_log) TYPE REF TO zif_abapgit_log .
     METHODS reset_log .
-  PROTECTED SECTION.
 
+  PROTECTED SECTION.
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
     DATA mt_remote TYPE zif_abapgit_definitions=>ty_files_tt .
     DATA mv_request_local_refresh TYPE abap_bool .
@@ -136,6 +143,7 @@ CLASS zcl_abapgit_repo DEFINITION
         !it_checksums       TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
         !iv_url             TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
         !iv_branch_name     TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
+        !iv_commit_sha1     TYPE zif_abapgit_persistence=>ty_repo-commit_sha1 OPTIONAL
         !iv_head_branch     TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
         !iv_offline         TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
         !is_dot_abapgit     TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL
@@ -146,13 +154,10 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS reset_status .
     METHODS reset_remote .
-  PRIVATE SECTION.
 
+  PRIVATE SECTION.
     DATA mi_listener TYPE REF TO zif_abapgit_repo_listener .
 
-    METHODS get_local_checksums
-      RETURNING
-        VALUE(rt_checksums) TYPE zif_abapgit_persistence=>ty_local_checksum_tt .
     METHODS notify_listener
       IMPORTING
         !is_change_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask
@@ -180,7 +185,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -571,13 +576,13 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 * TODO: refactor
 
-    DATA:
-          ls_mask        TYPE zif_abapgit_persistence=>ty_repo_meta_mask.
+    DATA: ls_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask.
 
 
     ASSERT it_checksums IS SUPPLIED
       OR iv_url IS SUPPLIED
       OR iv_branch_name IS SUPPLIED
+      OR iv_commit_sha1 IS SUPPLIED
       OR iv_head_branch IS SUPPLIED
       OR iv_offline IS SUPPLIED
       OR is_dot_abapgit IS SUPPLIED
@@ -599,6 +604,11 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     IF iv_branch_name IS SUPPLIED.
       ms_data-branch_name = iv_branch_name.
       ls_mask-branch_name = abap_true.
+    ENDIF.
+
+    IF iv_commit_sha1 IS SUPPLIED.
+      ms_data-commit_sha1 = iv_commit_sha1.
+      ls_mask-commit_sha1 = abap_true.
     ENDIF.
 
     IF iv_head_branch IS SUPPLIED.
@@ -642,6 +652,13 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     mt_remote = it_files.
     mv_request_remote_refresh = abap_false.
+
+  ENDMETHOD.
+
+
+  METHOD set_local_checksums.
+
+    set( it_checksums = it_checksums ).
 
   ENDMETHOD.
 
@@ -701,7 +718,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD update_local_checksums.
 
-    " ASSUMTION: SHA1 in param is actual and correct.
+    " ASSUMPTION: SHA1 in param is actual and correct.
     " Push fills it from local files before pushing, deserialize from remote
     " If this is not true that there is an error somewhere but not here
 
@@ -720,7 +737,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     lt_files_idx = it_files.
     SORT lt_files_idx BY path filename. " Sort for binary search
 
-    " Loop through current chacksum state, update sha1 for common files
+    " Loop through current checksum state, update sha1 for common files
     LOOP AT lt_checksums ASSIGNING <ls_checksum>.
       lv_chks_row = sy-tabix.
 
