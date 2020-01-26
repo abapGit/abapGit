@@ -26,10 +26,12 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    CLASS-DATA: mo_instance TYPE REF TO zcl_abapgit_gui_view_repo.
 
     DATA: mo_repo                       TYPE REF TO zcl_abapgit_repo,
           mv_cur_dir                    TYPE string,
@@ -129,7 +131,35 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
+
+
+  METHOD constructor.
+
+    DATA: lo_settings TYPE REF TO zcl_abapgit_settings,
+          lv_package  TYPE devclass.
+
+    super->constructor(  ).
+
+    mv_key           = iv_key.
+    mo_repo          = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    mv_cur_dir       = '/'. " Root
+    mv_hide_files    = zcl_abapgit_persistence_user=>get_instance( )->get_hide_files( ).
+    mv_changes_only  = zcl_abapgit_persistence_user=>get_instance( )->get_changes_only( ).
+    mv_show_order_by = zcl_abapgit_persistence_user=>get_instance( )->get_show_order_by( ).
+    mv_diff_first    = abap_true.
+
+    " Read global settings to get max # of objects to be listed
+    lo_settings     = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+    mv_max_lines    = lo_settings->get_max_lines( ).
+    mv_max_setting  = mv_max_lines.
+
+    lv_package = mo_repo->get_package( ).
+
+    mv_are_changes_recorded_in_tr = zcl_abapgit_factory=>get_sap_package( lv_package
+                                                      )->are_changes_recorded_in_tr_req( ).
+
+  ENDMETHOD.
 
 
   METHOD apply_order_by.
@@ -196,6 +226,12 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " In case of asyncronicities
       ro_advanced_dropdown->add( iv_txt = 'Reset local'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-git_reset }?{ mv_key }|
+                                 iv_opt = iv_wp_opt ).
+    ENDIF.
+
+    IF mo_repo->is_offline( ) = abap_false.
+      ro_advanced_dropdown->add( iv_txt = 'Checkout commit'
+                                 iv_act = |{ zif_abapgit_definitions=>c_action-git_checkout_commit }?{ mv_key }|
                                  iv_opt = iv_wp_opt ).
     ENDIF.
 
@@ -470,34 +506,6 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     ro_tag_dropdown->add( iv_txt = 'Delete'
                           iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_delete }?{ mv_key }| ).
 
-
-  ENDMETHOD.
-
-
-  METHOD constructor.
-
-    DATA: lo_settings TYPE REF TO zcl_abapgit_settings,
-          lv_package  TYPE devclass.
-
-    super->constructor( ).
-
-    mv_key           = iv_key.
-    mo_repo          = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    mv_cur_dir       = '/'. " Root
-    mv_hide_files    = zcl_abapgit_persistence_user=>get_instance( )->get_hide_files( ).
-    mv_changes_only  = zcl_abapgit_persistence_user=>get_instance( )->get_changes_only( ).
-    mv_show_order_by = zcl_abapgit_persistence_user=>get_instance( )->get_show_order_by( ).
-    mv_diff_first    = abap_true.
-
-    " Read global settings to get max # of objects to be listed
-    lo_settings     = zcl_abapgit_persist_settings=>get_instance( )->read( ).
-    mv_max_lines    = lo_settings->get_max_lines( ).
-    mv_max_setting  = mv_max_lines.
-
-    lv_package = mo_repo->get_package( ).
-
-    mv_are_changes_recorded_in_tr = zcl_abapgit_factory=>get_sap_package( lv_package
-                                                      )->are_changes_recorded_in_tr_req( ).
 
   ENDMETHOD.
 
