@@ -2,6 +2,7 @@ CLASS zcl_abapgit_branch_overview DEFINITION
   PUBLIC
   FINAL
   CREATE PRIVATE
+  INHERITING FROM zcl_abapgit_git_object " TODO: Implement git_branch
   GLOBAL FRIENDS zcl_abapgit_factory .
 
   PUBLIC SECTION.
@@ -17,27 +18,10 @@ CLASS zcl_abapgit_branch_overview DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-
-    TYPES:
-      tyt_commit_sha1_range TYPE RANGE OF zif_abapgit_definitions=>ty_sha1 .
-
     DATA mt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt .
     DATA mt_commits TYPE zif_abapgit_definitions=>ty_commit_tt .
     DATA mt_tags TYPE zif_abapgit_definitions=>ty_git_tag_list_tt .
 
-    METHODS compress_internal
-      IMPORTING
-        !iv_name    TYPE string
-      CHANGING
-        !ct_temp    TYPE zif_abapgit_definitions=>ty_commit_tt
-        !ct_commits TYPE zif_abapgit_definitions=>ty_commit_tt .
-    CLASS-METHODS parse_commits
-      IMPORTING
-        !it_objects       TYPE zif_abapgit_definitions=>ty_objects_tt
-      RETURNING
-        VALUE(rt_commits) TYPE zif_abapgit_definitions=>ty_commit_tt
-      RAISING
-        zcx_abapgit_exception .
     METHODS parse_annotated_tags
       IMPORTING
         !it_objects TYPE zif_abapgit_definitions=>ty_objects_tt
@@ -62,17 +46,7 @@ CLASS zcl_abapgit_branch_overview DEFINITION
     METHODS determine_tags
       RAISING
         zcx_abapgit_exception .
-    METHODS _sort_commits
-      CHANGING
-        !ct_commits TYPE zif_abapgit_definitions=>ty_commit_tt .
-    METHODS _get_1st_child_commit
-      IMPORTING
-        !it_commit_sha1s TYPE tyt_commit_sha1_range
-      EXPORTING
-        !et_commit_sha1s TYPE tyt_commit_sha1_range
-        !es_1st_commit   TYPE zif_abapgit_definitions=>ty_commit
-      CHANGING
-        !ct_commits      TYPE zif_abapgit_definitions=>ty_commit_tt .
+
     METHODS _reverse_sort_order
       CHANGING
         !ct_commits TYPE zif_abapgit_definitions=>ty_commit_tt .
@@ -80,44 +54,18 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
-
-
-  METHOD compress_internal.
-
-    FIELD-SYMBOLS: <ls_temp>     LIKE LINE OF ct_temp,
-                   <ls_new>      LIKE LINE OF ct_commits,
-                   <ls_temp_end> LIKE LINE OF ct_temp.
-
-
-    IF lines( ct_temp ) >= 10.
-      READ TABLE ct_temp ASSIGNING <ls_temp> INDEX 1.
-      ASSERT sy-subrc = 0.
-      READ TABLE ct_temp ASSIGNING <ls_temp_end> INDEX lines( ct_temp ).
-      ASSERT sy-subrc = 0.
-      APPEND INITIAL LINE TO ct_commits ASSIGNING <ls_new>.
-      <ls_new>-sha1       = <ls_temp_end>-sha1.
-      <ls_new>-parent1    = <ls_temp>-parent1.
-      <ls_new>-time       = <ls_temp>-time.
-      <ls_new>-message    = |Compressed, { lines( ct_temp ) } commits|.
-      <ls_new>-branch     = iv_name.
-      <ls_new>-compressed = abap_true.
-    ELSE.
-      APPEND LINES OF ct_temp TO ct_commits.
-    ENDIF.
-    CLEAR ct_temp.
-
-  ENDMETHOD.
+CLASS zcl_abapgit_branch_overview IMPLEMENTATION.
 
 
   METHOD constructor.
 
     DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt.
 
+    super->constructor( ).
     lt_objects = get_git_objects( io_repo ).
 
-    mt_commits = parse_commits( lt_objects ).
-    _sort_commits( CHANGING ct_commits = mt_commits ).
+    mt_commits = zcl_abapgit_git_object=>parse_commits( lt_objects ).
+    zcl_abapgit_git_object=>sort_commits( CHANGING ct_commits = mt_commits ).
 
     parse_annotated_tags( lt_objects ).
 
@@ -403,56 +351,26 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD parse_commits.
-
-    DATA: ls_commit LIKE LINE OF mt_commits,
-          lt_body   TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-          ls_raw    TYPE zcl_abapgit_git_pack=>ty_commit.
-
-    FIELD-SYMBOLS: <ls_object> LIKE LINE OF it_objects,
-                   <lv_body>   TYPE string.
-
-
-    LOOP AT it_objects ASSIGNING <ls_object> USING KEY type
-        WHERE type = zif_abapgit_definitions=>c_type-commit.
-      ls_raw = zcl_abapgit_git_pack=>decode_commit( <ls_object>-data ).
-
-      CLEAR ls_commit.
-      ls_commit-sha1 = <ls_object>-sha1.
-      ls_commit-parent1 = ls_raw-parent.
-      ls_commit-parent2 = ls_raw-parent2.
-
-      SPLIT ls_raw-body AT zif_abapgit_definitions=>c_newline INTO TABLE lt_body.
-
-      READ TABLE lt_body WITH KEY table_line = ' -----END PGP SIGNATURE-----' TRANSPORTING NO FIELDS.
-      IF sy-subrc = 0.
-        DELETE lt_body TO sy-tabix.
-        DELETE lt_body TO 2.
-      ENDIF.
-
-      READ TABLE lt_body INDEX 1 INTO ls_commit-message.  "#EC CI_SUBRC
-      " The second line is always empty. Therefore we omit it.
-      LOOP AT lt_body ASSIGNING <lv_body>
-                      FROM 3.
-        INSERT <lv_body> INTO TABLE ls_commit-body.
-      ENDLOOP.
-
-      zcl_abapgit_utils=>extract_author_data(
-        EXPORTING
-          iv_author = ls_raw-author
-        IMPORTING
-          ev_author = ls_commit-author
-          ev_email  = ls_commit-email
-          ev_time   = ls_commit-time ).
-
-      APPEND ls_commit TO rt_commits.
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_branch_overview~compress.
+
+    DEFINE _compress.
+      IF lines( lt_temp ) >= 10.
+        READ TABLE lt_temp ASSIGNING <ls_temp> INDEX 1.
+        ASSERT sy-subrc = 0.
+        READ TABLE lt_temp ASSIGNING <ls_temp_end> INDEX lines( lt_temp ).
+        ASSERT sy-subrc = 0.
+        APPEND INITIAL LINE TO rt_commits ASSIGNING <ls_new>.
+        <ls_new>-sha1       = <ls_temp_end>-sha1.
+        <ls_new>-parent1    = <ls_temp>-parent1.
+        <ls_new>-time       = <ls_temp>-time.
+        <ls_new>-message    = |Compressed, { lines( lt_temp ) } commits|.
+        <ls_new>-branch     = lv_name.
+        <ls_new>-compressed = abap_true.
+      ELSE.
+        APPEND LINES OF lt_temp TO rt_commits.
+      ENDIF.
+      CLEAR lt_temp.
+    END-OF-DEFINITION.
 
     DATA: lv_previous TYPE i,
           lv_index    TYPE i,
@@ -481,12 +399,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
         ENDIF.
 
         IF lv_previous + 1 <> sy-tabix.
-          compress_internal(
-            EXPORTING
-              iv_name    = lv_name
-            CHANGING
-              ct_temp    = lt_temp
-              ct_commits = rt_commits ).
+          _compress.
         ENDIF.
 
         lv_previous = lv_index.
@@ -495,16 +408,11 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
 
       ENDLOOP.
 
-      compress_internal(
-        EXPORTING
-          iv_name    = lv_name
-        CHANGING
-          ct_temp    = lt_temp
-          ct_commits = rt_commits ).
+      _compress.
 
     ENDLOOP.
 
-    _sort_commits( CHANGING ct_commits = rt_commits ).
+    zcl_abapgit_git_object=>sort_commits( CHANGING ct_commits = rt_commits ).
 
   ENDMETHOD.
 
@@ -526,45 +434,6 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD _get_1st_child_commit.
-
-    DATA: lt_1stchild_commits TYPE zif_abapgit_definitions=>ty_commit_tt,
-          ls_parent           LIKE LINE OF it_commit_sha1s,
-          lt_commit_sha1s     LIKE it_commit_sha1s.
-
-    FIELD-SYMBOLS: <ls_child_commit> TYPE zif_abapgit_definitions=>ty_commit.
-
-    CLEAR: es_1st_commit.
-
-* get all reachable next commits
-    lt_commit_sha1s = it_commit_sha1s.
-    LOOP AT ct_commits ASSIGNING <ls_child_commit> WHERE parent1 IN lt_commit_sha1s
-                                                      OR parent2 IN lt_commit_sha1s.
-      INSERT <ls_child_commit> INTO TABLE lt_1stchild_commits.
-    ENDLOOP.
-
-* return oldest one
-    SORT lt_1stchild_commits BY time ASCENDING.
-    READ TABLE lt_1stchild_commits INTO es_1st_commit INDEX 1.
-
-* remove from available commits
-    DELETE ct_commits WHERE sha1 = es_1st_commit-sha1.
-
-* set relevant parent commit sha1s
-    IF lines( lt_1stchild_commits ) = 1.
-      CLEAR et_commit_sha1s.
-    ELSE.
-      et_commit_sha1s = it_commit_sha1s.
-    ENDIF.
-
-    ls_parent-sign   = 'I'.
-    ls_parent-option = 'EQ'.
-    ls_parent-low    = es_1st_commit-sha1.
-    INSERT ls_parent INTO TABLE et_commit_sha1s.
-
-  ENDMETHOD.
-
-
   METHOD _reverse_sort_order.
     DATA: lt_commits           TYPE zif_abapgit_definitions=>ty_commit_tt.
     FIELD-SYMBOLS: <ls_commit> TYPE zif_abapgit_definitions=>ty_commit.
@@ -577,44 +446,4 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-  METHOD _sort_commits.
-
-    DATA: lt_sorted_commits TYPE zif_abapgit_definitions=>ty_commit_tt,
-          ls_next_commit    TYPE zif_abapgit_definitions=>ty_commit,
-          lt_parents        TYPE tyt_commit_sha1_range,
-          ls_parent         LIKE LINE OF lt_parents.
-
-    FIELD-SYMBOLS: <ls_initial_commit> TYPE zif_abapgit_definitions=>ty_commit.
-
-* find initial commit
-    READ TABLE ct_commits ASSIGNING <ls_initial_commit> WITH KEY parent1 = space.
-    IF sy-subrc = 0.
-
-      ls_parent-sign   = 'I'.
-      ls_parent-option = 'EQ'.
-      ls_parent-low    = <ls_initial_commit>-sha1.
-      INSERT ls_parent INTO TABLE lt_parents.
-
-* first commit
-      INSERT <ls_initial_commit> INTO TABLE lt_sorted_commits.
-
-* remove from available commits
-      DELETE ct_commits WHERE sha1 = <ls_initial_commit>-sha1.
-
-      DO.
-        _get_1st_child_commit( EXPORTING it_commit_sha1s = lt_parents
-                               IMPORTING et_commit_sha1s = lt_parents
-                                         es_1st_commit   = ls_next_commit
-                               CHANGING  ct_commits      = ct_commits ).
-        IF ls_next_commit IS INITIAL.
-          EXIT. "DO
-        ENDIF.
-        INSERT ls_next_commit INTO TABLE lt_sorted_commits.
-      ENDDO.
-    ENDIF.
-
-    ct_commits = lt_sorted_commits.
-
-  ENDMETHOD.
 ENDCLASS.

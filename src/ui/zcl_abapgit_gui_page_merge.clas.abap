@@ -100,7 +100,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE IMPLEMENTATION.
     ro_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
       io_repo         = mo_repo
       iv_show_package = abap_false
-      iv_show_branch  = abap_false ) ).
+      iv_show_branch  = abap_false
+      iv_show_commit  = abap_false ) ).
 
     ro_html->add( '<table>' ).
     ro_html->add( '<tr>' ).

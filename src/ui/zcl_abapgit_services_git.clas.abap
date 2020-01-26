@@ -15,6 +15,11 @@ CLASS zcl_abapgit_services_git DEFINITION
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
         zcx_abapgit_exception.
+    CLASS-METHODS checkout_commit
+      IMPORTING
+        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+      RAISING
+        zcx_abapgit_exception.
     CLASS-METHODS create_branch
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
@@ -63,13 +68,197 @@ CLASS zcl_abapgit_services_git DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
-
+    CLASS-METHODS checkout_commit_build_list
+      IMPORTING
+        io_repo      TYPE REF TO zcl_abapgit_repo_online
+      EXPORTING
+        et_value_tab TYPE zif_abapgit_definitions=>ty_commit_value_tab_tt
+        et_commits   TYPE zif_abapgit_definitions=>ty_commit_tt
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS checkout_commit_build_popup
+      IMPORTING
+        !it_commits               TYPE zif_abapgit_definitions=>ty_commit_tt
+      CHANGING
+        !ct_value_tab             TYPE zif_abapgit_definitions=>ty_commit_value_tab_tt
+      RETURNING
+        VALUE(rs_selected_commit) TYPE zif_abapgit_definitions=>ty_commit
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS checkout_commit_handle_select
+      IMPORTING
+        !io_repo            TYPE REF TO zcl_abapgit_repo_online
+        !iv_key             TYPE zif_abapgit_persistence=>ty_repo-key
+        !is_selected_commit TYPE zif_abapgit_definitions=>ty_commit
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS handle_popup_del_obsolete_obj
+      IMPORTING
+        !io_repo    TYPE REF TO zcl_abapgit_repo
+        !iv_refresh TYPE abap_bool DEFAULT abap_true
+      RAISING
+        zcx_abapgit_exception .
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
+CLASS zcl_abapgit_services_git IMPLEMENTATION.
+
+
+  METHOD checkout_commit.
+
+    DATA: lo_repo            TYPE REF TO zcl_abapgit_repo_online,
+          lv_more_loadable   TYPE abap_bool,
+          lt_value_tab       TYPE zif_abapgit_definitions=>ty_commit_value_tab_tt,
+          lt_commits         TYPE zif_abapgit_definitions=>ty_commit_tt,
+          ls_selected_commit TYPE zif_abapgit_definitions=>ty_commit.
+
+    FIELD-SYMBOLS: <ls_field_desc> TYPE rsvbfidesc.
+
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+
+    IF lo_repo->get_local_settings( )-write_protected = abap_true.
+      zcx_abapgit_exception=>raise( 'Cannot checkout. Local code is write-protected by repo config.' ).
+    ENDIF.
+
+    checkout_commit_build_list(
+      EXPORTING
+        io_repo        = lo_repo
+      IMPORTING
+        et_value_tab   = lt_value_tab
+        et_commits     = lt_commits ).
+
+    ls_selected_commit = checkout_commit_build_popup(
+      EXPORTING
+        it_commits   = lt_commits
+      CHANGING
+        ct_value_tab = lt_value_tab ).
+
+    checkout_commit_handle_select( io_repo            = lo_repo
+                                   iv_key             = iv_key
+                                   is_selected_commit = ls_selected_commit ).
+
+  ENDMETHOD.
+
+
+  METHOD checkout_commit_build_list.
+
+    DATA: lv_unix_time   TYPE zcl_abapgit_time=>ty_unixtime,
+          lv_date        TYPE sydatum,
+          lv_date_string TYPE c LENGTH 12,
+          lv_time        TYPE syuzeit,
+          lv_time_string TYPE c LENGTH 10,
+          lv_parent_hash TYPE zif_abapgit_definitions=>ty_sha1.
+
+    FIELD-SYMBOLS: <ls_commit>    TYPE zif_abapgit_definitions=>ty_commit,
+                   <ls_value_tab> TYPE zif_abapgit_definitions=>ty_commit_value_tab.
+
+    APPEND LINES OF zcl_abapgit_git_commit=>get( io_repo         = io_repo
+                                                 iv_commit_hash  = io_repo->get_sha1_remote( )
+                                                 iv_deepen_level = 99 ) TO et_commits.
+    SORT et_commits BY time DESCENDING.
+
+    IF io_repo->get_commit_sha1( ) IS NOT INITIAL.
+      lv_parent_hash = io_repo->get_commit_sha1( ).
+    ELSE.
+      lv_parent_hash = io_repo->get_sha1_remote( ).
+    ENDIF.
+
+    DELETE: et_commits WHERE sha1 EQ lv_parent_hash.
+
+    IF et_commits IS INITIAL.
+      zcx_abapgit_exception=>raise( |No commits are available in this branch.| ).
+    ENDIF.
+
+    LOOP AT et_commits ASSIGNING <ls_commit>.
+
+      APPEND INITIAL LINE TO et_value_tab ASSIGNING <ls_value_tab>.
+      <ls_value_tab>-sha1    = <ls_commit>-sha1.
+      <ls_value_tab>-message = <ls_commit>-message.
+      lv_unix_time = <ls_commit>-time.
+      CALL METHOD zcl_abapgit_time=>get_utc
+        EXPORTING
+          iv_unix = lv_unix_time
+        IMPORTING
+          ev_time = lv_time
+          ev_date = lv_date.
+      WRITE: lv_date TO lv_date_string,
+             lv_time TO lv_time_string.
+      <ls_value_tab>-datetime = |{ lv_date_string }, | &&
+                                |{ lv_time_string }|.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD checkout_commit_build_popup.
+
+    DATA: lt_columns         TYPE zif_abapgit_definitions=>ty_alv_column_tt,
+          li_popups          TYPE REF TO zif_abapgit_popups,
+          lt_selected_values TYPE zif_abapgit_definitions=>ty_commit_value_tab_tt.
+
+    FIELD-SYMBOLS: <ls_value_tab> TYPE zif_abapgit_definitions=>ty_commit_value_tab,
+                   <ls_column>    TYPE zif_abapgit_definitions=>ty_alv_column.
+
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name   = 'SHA1'.
+    <ls_column>-text   = 'Hash'.
+    <ls_column>-length = 7.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'MESSAGE'.
+    <ls_column>-text = 'Message'.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'DATETIME'.
+    <ls_column>-text = 'Datetime'.
+
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popups->popup_to_select_from_list(
+      EXPORTING
+        it_list               = ct_value_tab
+        iv_title              = |Checkout Commit|
+        iv_end_column         = 83
+        iv_striped_pattern    = abap_true
+        iv_optimize_col_width = abap_false
+        iv_selection_mode     = if_salv_c_selection_mode=>single
+        it_columns_to_display = lt_columns
+      IMPORTING
+        et_list              = lt_selected_values ).
+
+    IF lt_selected_values IS INITIAL.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
+
+    READ TABLE lt_selected_values
+      ASSIGNING <ls_value_tab>
+      INDEX 1.
+
+    IF <ls_value_tab> IS NOT ASSIGNED.
+      zcx_abapgit_exception=>raise( |Though result set of popup wasn't empty selected value couldn't retrieved.| ).
+    ENDIF.
+
+    READ TABLE it_commits
+      INTO rs_selected_commit
+      WITH KEY message = <ls_value_tab>-message.
+
+  ENDMETHOD.
+
+
+  METHOD checkout_commit_handle_select.
+
+    CASE is_selected_commit-sha1.
+      WHEN io_repo->get_sha1_remote( ).
+        io_repo->set_commit_sha1( space ).
+
+      WHEN OTHERS.
+        io_repo->set_commit_sha1( is_selected_commit-sha1 ).
+
+    ENDCASE.
+
+    COMMIT WORK AND WAIT.
+
+  ENDMETHOD.
 
 
   METHOD commit.
@@ -204,7 +393,6 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
                    <ls_tadir>  TYPE zif_abapgit_definitions=>ty_tadir.
 
 
-
     " delete objects which are added locally but are not in remote repo
     lt_status = io_repo->status( ).
 
@@ -235,6 +423,54 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD handle_popup_del_obsolete_obj.
+
+    DATA: lt_columns      TYPE zif_abapgit_definitions=>ty_alv_column_tt,
+          li_popups       TYPE REF TO zif_abapgit_popups,
+          lt_obsolete_obj TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          lt_selected     TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          ls_checks       TYPE zif_abapgit_definitions=>ty_delete_checks.
+
+    FIELD-SYMBOLS: <ls_column> TYPE zif_abapgit_definitions=>ty_alv_column.
+
+    lt_obsolete_obj = get_unnecessary_local_objs( io_repo ).
+
+    CHECK lines( lt_obsolete_obj ) > 0.
+
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'OBJECT'.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'OBJ_NAME'.
+
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popups->popup_to_select_from_list(
+      EXPORTING
+        it_list               = lt_obsolete_obj
+        iv_header_text        = |Which unnecessary objects should be deleted?|
+        iv_select_column_text = 'Delete?'
+        it_columns_to_display = lt_columns
+      IMPORTING
+        et_list              = lt_selected ).
+
+    CHECK lines( lt_selected ) > 0.
+
+    ls_checks = io_repo->delete_checks( ).
+    IF ls_checks-transport-required = abap_true.
+      ls_checks-transport-transport = zcl_abapgit_ui_factory=>get_popups(
+                                        )->popup_transport_request( ls_checks-transport-type ).
+    ENDIF.
+
+    zcl_abapgit_objects=>delete( it_tadir  = lt_selected
+                                 is_checks = ls_checks ).
+
+    CHECK iv_refresh EQ abap_true.
+
+    io_repo->refresh( ).
+    zcl_abapgit_services_repo=>gui_deserialize( io_repo ).
+
+  ENDMETHOD.
+
+
   METHOD pull.
 
     DATA: lo_repo TYPE REF TO zcl_abapgit_repo.
@@ -256,9 +492,11 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
           lv_answer                 TYPE c LENGTH 1,
           lt_unnecessary_local_objs TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lt_selected               LIKE lt_unnecessary_local_objs,
-          lt_columns                TYPE string_table,
+          lt_columns                TYPE zif_abapgit_definitions=>ty_alv_column_tt,
           ls_checks                 TYPE zif_abapgit_definitions=>ty_delete_checks,
           li_popups                 TYPE REF TO zif_abapgit_popups.
+
+    FIELD-SYMBOLS: <ls_column> TYPE zif_abapgit_definitions=>ty_alv_column.
 
     lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
@@ -281,39 +519,7 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    lt_unnecessary_local_objs = get_unnecessary_local_objs( lo_repo ).
-
-    IF lines( lt_unnecessary_local_objs ) > 0.
-
-      INSERT `OBJECT` INTO TABLE lt_columns.
-      INSERT `OBJ_NAME` INTO TABLE lt_columns.
-
-      li_popups = zcl_abapgit_ui_factory=>get_popups( ).
-      li_popups->popup_to_select_from_list(
-        EXPORTING
-          it_list              = lt_unnecessary_local_objs
-          iv_header_text        = |Which unnecessary objects should be deleted?|
-          iv_select_column_text = 'Delete?'
-          it_columns_to_display = lt_columns
-        IMPORTING
-          et_list              = lt_selected ).
-
-      IF lines( lt_selected ) > 0.
-        ls_checks = lo_repo->delete_checks( ).
-        IF ls_checks-transport-required = abap_true.
-          ls_checks-transport-transport = zcl_abapgit_ui_factory=>get_popups(
-                                            )->popup_transport_request( ls_checks-transport-type ).
-        ENDIF.
-
-        zcl_abapgit_objects=>delete( it_tadir  = lt_selected
-                                     is_checks = ls_checks ).
-* update repo cache
-        lo_repo->refresh( ).
-      ENDIF.
-
-    ENDIF.
-
-    zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
+    handle_popup_del_obsolete_obj( io_repo = lo_repo ).
 
   ENDMETHOD.
 
@@ -333,6 +539,8 @@ CLASS ZCL_ABAPGIT_SERVICES_GIT IMPLEMENTATION.
     IF ls_branch IS INITIAL.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
+
+    lo_repo->set_commit_sha1( space ).
 
     IF ls_branch-name = zif_abapgit_popups=>c_new_branch_label.
       create_branch( iv_key ).

@@ -148,7 +148,8 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     ro_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
       io_repo               = io_repo
       io_news               = lo_news
-      iv_interactive_branch = abap_true ) ).
+      iv_interactive_branch = abap_true
+      iv_interactive_commit = abap_true ) ).
 
     ro_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).
 
@@ -282,7 +283,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     IF lv_show_old <> mv_show AND NOT mv_show IS INITIAL.
       CREATE OBJECT mo_repo_content
         EXPORTING
-          iv_key = mv_show. " Reinit content state
+          iv_key = mv_show.
     ENDIF.
 
   ENDMETHOD.
