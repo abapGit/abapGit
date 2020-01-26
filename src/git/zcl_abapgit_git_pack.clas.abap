@@ -3,7 +3,6 @@ CLASS zcl_abapgit_git_pack DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-
     TYPES:
       BEGIN OF ty_node,
         chmod TYPE zif_abapgit_definitions=>ty_chmod,
@@ -79,7 +78,7 @@ CLASS zcl_abapgit_git_pack DEFINITION
         VALUE(rv_data) TYPE xstring .
     CLASS-METHODS encode_tag
       IMPORTING
-        !is_tag        TYPE zcl_abapgit_git_pack=>ty_tag
+        !is_tag        TYPE ty_tag
       RETURNING
         VALUE(rv_data) TYPE xstring
       RAISING
@@ -148,7 +147,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
+CLASS zcl_abapgit_git_pack IMPLEMENTATION.
 
 
   METHOD decode.
