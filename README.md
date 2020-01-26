@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/larshp/abapGit.svg?branch=master)](https://travis-ci.org/larshp/abapGit)
 [![abaplint](https://app.abaplint.org/badges/larshp/abapGit)](https://app.abaplint.org/project/larshp/abapGit)
 [![Slack](https://abapgit-slackinviter.herokuapp.com/badge.svg)](https://abapgit-slackinviter.herokuapp.com/)
+![abap package version](https://img.shields.io/endpoint?url=https://shield.abap.space/version-shield-json/github/larshp/abapGit/src/zif_abapgit_version.intf.abap/gc_abap_version&label=version)
 
 # abapGit
 
