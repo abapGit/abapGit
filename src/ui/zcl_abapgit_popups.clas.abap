@@ -1200,7 +1200,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
   METHOD _popup_3_get_values.
 
-    DATA lv_answer TYPE char1.
+    DATA lv_answer TYPE c LENGTH 1.
     FIELD-SYMBOLS: <ls_field> TYPE sval.
 
     CALL FUNCTION 'POPUP_GET_VALUES'
