@@ -469,7 +469,6 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
         IF iv_refresh = abap_true.
           io_repo->refresh( ).
-          zcl_abapgit_services_repo=>gui_deserialize( io_repo ).
         ENDIF.
 
       ENDIF.
@@ -528,6 +527,8 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     ENDIF.
 
     handle_popup_del_obsolete_obj( io_repo = lo_repo ).
+
+    zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
 
   ENDMETHOD.
 
