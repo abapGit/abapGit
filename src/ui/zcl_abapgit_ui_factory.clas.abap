@@ -24,7 +24,7 @@ CLASS zcl_abapgit_ui_factory DEFINITION
         VALUE(ri_fe_serv) TYPE REF TO zif_abapgit_frontend_services .
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CLASS-DATA mt_inline TYPE string_table. " used by abapmerge
+    CLASS-DATA gt_inline TYPE string_table. " used by abapmerge
 
     CLASS-DATA gi_popups TYPE REF TO zif_abapgit_popups .
     CLASS-DATA gi_tag_popups TYPE REF TO zif_abapgit_tag_popups .
@@ -125,64 +125,64 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
 
     CREATE OBJECT ro_asset_man.
 
-    CLEAR mt_inline.
+    CLEAR gt_inline.
     " @@abapmerge include zabapgit_css_common.w3mi.data.css > _inline( '$$' ).
     ro_asset_man->register_asset(
       iv_url       = 'css/common.css'
       iv_type      = 'text/css'
       iv_mime_name = 'ZABAPGIT_CSS_COMMON'
-      iv_inline    = concat_lines_of( table = mt_inline sep = cl_abap_char_utilities=>newline ) ).
+      iv_inline    = concat_lines_of( table = gt_inline sep = cl_abap_char_utilities=>newline ) ).
 
-    CLEAR mt_inline.
+    CLEAR gt_inline.
     " @@abapmerge include zabapgit_css_theme_default.w3mi.data.css > _inline( '$$' ).
     ro_asset_man->register_asset(
       iv_url       = 'css/theme-default.css'
       iv_type      = 'text/css'
       iv_cachable  = abap_false
       iv_mime_name = 'ZABAPGIT_CSS_THEME_DEFAULT'
-      iv_inline    = concat_lines_of( table = mt_inline sep = cl_abap_char_utilities=>newline ) ).
+      iv_inline    = concat_lines_of( table = gt_inline sep = cl_abap_char_utilities=>newline ) ).
 
-    CLEAR mt_inline.
+    CLEAR gt_inline.
     " @@abapmerge include zabapgit_css_theme_dark.w3mi.data.css > _inline( '$$' ).
     ro_asset_man->register_asset(
       iv_url       = 'css/theme-dark.css'
       iv_type      = 'text/css'
       iv_cachable  = abap_false
       iv_mime_name = 'ZABAPGIT_CSS_THEME_DARK'
-      iv_inline    = concat_lines_of( table = mt_inline sep = cl_abap_char_utilities=>newline ) ).
+      iv_inline    = concat_lines_of( table = gt_inline sep = cl_abap_char_utilities=>newline ) ).
 
-    CLEAR mt_inline.
+    CLEAR gt_inline.
     " @@abapmerge include zabapgit_css_theme_belize_blue.w3mi.data.css > _inline( '$$' ).
     ro_asset_man->register_asset(
       iv_url       = 'css/theme-belize-blue.css'
       iv_type      = 'text/css'
       iv_cachable  = abap_false
       iv_mime_name = 'ZABAPGIT_CSS_THEME_BELIZE_BLUE'
-      iv_inline    = concat_lines_of( table = mt_inline sep = cl_abap_char_utilities=>newline ) ).
+      iv_inline    = concat_lines_of( table = gt_inline sep = cl_abap_char_utilities=>newline ) ).
 
-    CLEAR mt_inline.
+    CLEAR gt_inline.
     " @@abapmerge include zabapgit_js_common.w3mi.data.js > _inline( '$$' ).
     ro_asset_man->register_asset(
       iv_url       = 'js/common.js'
       iv_type      = 'text/javascript'
       iv_mime_name = 'ZABAPGIT_JS_COMMON'
-      iv_inline    = concat_lines_of( table = mt_inline sep = cl_abap_char_utilities=>newline ) ).
+      iv_inline    = concat_lines_of( table = gt_inline sep = cl_abap_char_utilities=>newline ) ).
 
-    CLEAR mt_inline.
+    CLEAR gt_inline.
     " @@abapmerge include zabapgit_icon_font_css.w3mi.data.css > _inline( '$$' ).
     ro_asset_man->register_asset(
       iv_url       = 'css/ag-icons.css'
       iv_type      = 'text/css'
       iv_mime_name = 'ZABAPGIT_ICON_FONT_CSS'
-      iv_inline    = concat_lines_of( table = mt_inline sep = cl_abap_char_utilities=>newline ) ).
+      iv_inline    = concat_lines_of( table = gt_inline sep = cl_abap_char_utilities=>newline ) ).
 
-    CLEAR mt_inline.
+    CLEAR gt_inline.
     " @@abapmerge include-base64 zabapgit_icon_font.w3mi.data.woff > _inline( '$$' ).
     ro_asset_man->register_asset(
       iv_url       = 'font/ag-icons.woff'
       iv_type      = 'font/woff'
       iv_mime_name = 'ZABAPGIT_ICON_FONT'
-      iv_base64    = concat_lines_of( table = mt_inline ) ).
+      iv_base64    = concat_lines_of( table = gt_inline ) ).
 
     " see https://github.com/larshp/abapGit/issues/201 for source SVG
     ro_asset_man->register_asset(
@@ -273,6 +273,6 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
 
   METHOD _inline.
     " used by abapmerge
-    APPEND iv_str TO mt_inline.
+    APPEND iv_str TO gt_inline.
   ENDMETHOD.
 ENDCLASS.
