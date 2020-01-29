@@ -187,7 +187,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UCSA IMPLEMENTATION.
         CALL METHOD lo_persistence->('IF_UCON_SA_PERSIST~LOAD')
           EXPORTING
             version  = c_version-active
-            language = sy-langu.
+            language = mv_language.
 
       CATCH cx_root.
         rv_bool = abap_false.
@@ -270,7 +270,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UCSA IMPLEMENTATION.
         CALL METHOD lo_persistence->('IF_UCON_SA_PERSIST~LOAD')
           EXPORTING
             version  = c_version-active
-            language = sy-langu
+            language = mv_language
           IMPORTING
             sa       = <lg_complete_comm_assembly>.
 

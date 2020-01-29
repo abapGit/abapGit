@@ -45,7 +45,7 @@ CLASS zcl_abapgit_object_wapa DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       delete_superfluous_pages
         IMPORTING
           it_local_pages  TYPE o2pagelist
-          it_remote_pages TYPE zcl_abapgit_object_wapa=>ty_pages_tt
+          it_remote_pages TYPE ty_pages_tt
         RAISING
           zcx_abapgit_exception.
 
@@ -199,9 +199,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
       IMPORTING
         p_page    = lo_page ).
 
-    lo_page->get_attrs(
-      IMPORTING
-        p_attrs = rs_page-attributes ).
+    lo_page->get_attrs( IMPORTING p_attrs = rs_page-attributes ).
 
     IF rs_page-attributes-pagetype <> so2_controller.
 
@@ -402,7 +400,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
           lo_page           TYPE REF TO cl_o2_api_pages,
           lt_pages_info     TYPE ty_pages_tt,
           ls_pagekey        TYPE o2pagkey,
-          ls_local_page     TYPE zcl_abapgit_object_wapa=>ty_page,
+          ls_local_page     TYPE ty_page,
           lt_remote_content TYPE o2pageline_table,
           lt_local_content  TYPE o2pageline_table,
           lt_local_pages    TYPE o2pagelist.

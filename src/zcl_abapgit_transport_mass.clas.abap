@@ -50,7 +50,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT_MASS IMPLEMENTATION.
             iv_logic  = zcl_abapgit_ui_factory=>get_popups( )->popup_folder_logic( ) ).
 
 * Open output folder if user asked it
-          lcl_gui=>open_folder_frontend( lo_transport_zipper->gv_full_folder ).
+          lcl_gui=>open_folder_frontend( lo_transport_zipper->get_folder( ) ).
 
         ELSE.
 * No data found for the provided selection criterias

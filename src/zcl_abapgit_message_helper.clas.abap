@@ -34,6 +34,21 @@ CLASS zcl_abapgit_message_helper DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+    TYPES:
+      BEGIN OF ty_msg,
+        msgv1 TYPE symsgv,
+        msgv2 TYPE symsgv,
+        msgv3 TYPE symsgv,
+        msgv4 TYPE symsgv,
+      END OF ty_msg.
+
+    CLASS-METHODS:
+      split_text
+        IMPORTING
+          iv_text       TYPE string
+        RETURNING
+          VALUE(rs_msg) TYPE ty_msg.
+
     DATA:
       mi_t100_message TYPE REF TO if_t100_message.
 
@@ -106,8 +121,7 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
 
   METHOD get_t100_longtext_itf.
 
-    DATA: lv_docu_key TYPE doku_obj,
-          ls_itf      LIKE LINE OF rt_itf.
+    DATA: lv_docu_key TYPE doku_obj.
 
     lv_docu_key = mi_t100_message->t100key-msgid && mi_t100_message->t100key-msgno.
 
@@ -214,9 +228,7 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
-      replace_section_head_with_text(
-        CHANGING
-          cs_itf = <ls_itf_section> ).
+      replace_section_head_with_text( CHANGING cs_itf = <ls_itf_section> ).
 
     ENDLOOP.
 
@@ -252,13 +264,13 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
 
     CASE cs_itf-tdline.
       WHEN gc_section_token-cause.
-        cs_itf-tdline = zcl_abapgit_message_helper=>gc_section_text-cause.
+        cs_itf-tdline = gc_section_text-cause.
       WHEN gc_section_token-system_response.
-        cs_itf-tdline = zcl_abapgit_message_helper=>gc_section_text-system_response.
+        cs_itf-tdline = gc_section_text-system_response.
       WHEN gc_section_token-what_to_do.
-        cs_itf-tdline = zcl_abapgit_message_helper=>gc_section_text-what_to_do.
+        cs_itf-tdline = gc_section_text-what_to_do.
       WHEN gc_section_token-sys_admin.
-        cs_itf-tdline = zcl_abapgit_message_helper=>gc_section_text-sys_admin.
+        cs_itf-tdline = gc_section_text-sys_admin.
     ENDCASE.
 
   ENDMETHOD.
@@ -266,20 +278,11 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
 
   METHOD set_msg_vars_for_clike.
 
-    TYPES:
-      BEGIN OF ty_msg,
-        msgv1 TYPE symsgv,
-        msgv2 TYPE symsgv,
-        msgv3 TYPE symsgv,
-        msgv4 TYPE symsgv,
-      END OF ty_msg.
-
     DATA: ls_msg   TYPE ty_msg,
           lv_dummy TYPE string.
 
-    ls_msg = iv_text.
+    ls_msg = split_text( iv_text ).
 
-    " &1&2&3&4&5&6&7&8
     MESSAGE e001(00) WITH ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4
                      INTO lv_dummy.
 
@@ -358,5 +361,58 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
   METHOD set_single_msg_var_xseq.
     " a kind of MOVE where all conversion errors are signalled by exceptions
     WRITE iv_arg LEFT-JUSTIFIED TO ev_target.
+  ENDMETHOD.
+
+
+  METHOD split_text.
+
+    CONSTANTS:
+      lc_length_of_msgv           TYPE i VALUE 50,
+      lc_offset_of_last_character TYPE i VALUE 49.
+
+    TYPES:
+      ty_char200 TYPE c LENGTH 200.
+
+    DATA:
+      lv_text    TYPE ty_char200,
+      lv_msg_var TYPE c LENGTH lc_length_of_msgv,
+      lv_rest    TYPE ty_char200,
+      lv_index   TYPE syst-index.
+
+    lv_text = iv_text.
+
+    DO 4 TIMES.
+
+      lv_index = sy-index.
+
+      CALL FUNCTION 'TEXT_SPLIT'
+        EXPORTING
+          length = lc_length_of_msgv
+          text   = lv_text
+        IMPORTING
+          line   = lv_msg_var
+          rest   = lv_rest.
+
+      IF lv_msg_var+lc_offset_of_last_character = space.
+        " keep the space at the beginning of the rest
+        " because otherwise it's lost
+        lv_rest = | { lv_rest }|.
+      ENDIF.
+
+      lv_text = lv_rest.
+
+      CASE lv_index.
+        WHEN 1.
+          rs_msg-msgv1 = lv_msg_var.
+        WHEN 2.
+          rs_msg-msgv2 = lv_msg_var.
+        WHEN 3.
+          rs_msg-msgv3 = lv_msg_var.
+        WHEN 4.
+          rs_msg-msgv4 = lv_msg_var.
+      ENDCASE.
+
+    ENDDO.
+
   ENDMETHOD.
 ENDCLASS.

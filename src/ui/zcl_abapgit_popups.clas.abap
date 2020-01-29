@@ -864,9 +864,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    get_selected_rows(
-      IMPORTING
-        et_list = et_list ).
+    get_selected_rows( IMPORTING et_list = et_list ).
 
     CLEAR: mo_select_list_popup,
            mr_table,
@@ -1182,7 +1180,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     add_field( EXPORTING iv_tabname   = 'TEXTL'
                          iv_fieldname = 'LINE'
                          iv_fieldtext = 'Name'
-                         iv_value     = 'lcl_gui_page_'
+                         iv_value     = 'zcl_abapgit_gui_page_'
                CHANGING  ct_fields    = lt_fields ).
 
     TRY.
@@ -1202,7 +1200,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
   METHOD _popup_3_get_values.
 
-    DATA lv_answer TYPE char1.
+    DATA lv_answer TYPE c LENGTH 1.
     FIELD-SYMBOLS: <ls_field> TYPE sval.
 
     CALL FUNCTION 'POPUP_GET_VALUES'

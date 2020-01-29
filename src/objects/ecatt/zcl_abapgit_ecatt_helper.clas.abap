@@ -65,7 +65,7 @@ CLASS zcl_abapgit_ecatt_helper IMPLEMENTATION.
       CATCH cx_ecatt_apl INTO lx_ecatt.
         lv_text = lx_ecatt->get_text( ).
         zcx_abapgit_exception=>raise( lv_text ).
-        " CATCH cx_ecatt_ui_attachment. " Doesn't exist in 702
+        " note, exception cx_ecatt_ui_attachment doesn't exist in 702
       CATCH cx_ecatt.
         "will never be raised from download, when called with mv_generate_xml_no_download = 'X'.
     ENDTRY.
@@ -91,9 +91,7 @@ CLASS zcl_abapgit_ecatt_helper IMPLEMENTATION.
 
         lo_xml->set_attributes( im_dom = ii_template_over_all ).
 
-        lo_xml->get_attributes(
-          IMPORTING
-            ex_xml = rv_xml_stream ).
+        lo_xml->get_attributes( IMPORTING ex_xml = rv_xml_stream ).
 
       CATCH cx_ecatt_apl_xml.
         RETURN.
@@ -126,13 +124,10 @@ CLASS zcl_abapgit_ecatt_helper IMPLEMENTATION.
                            im_ignore_white_space = 'X'
                            im_uri                = cl_apl_xml_const=>schema_uri ).
 
-    lo_xml->get_attributes(
-      IMPORTING
-        ex_dom = ri_template_over_all ).
+    lo_xml->get_attributes( IMPORTING ex_dom = ri_template_over_all ).
 
 * MD: Workaround, because nodes starting with "XML" are not allowed
-    li_nc_xmlref_typ ?= ri_template_over_all->get_elements_by_tag_name_ns(
-                          'XMLREF_TYP' ).                   "#EC NOTEXT
+    li_nc_xmlref_typ ?= ri_template_over_all->get_elements_by_tag_name_ns( 'XMLREF_TYP' ). "#EC NOTEXT
     CALL METHOD li_nc_xmlref_typ->('GET_LENGTH')  " downport
       RECEIVING
         rval = lv_count.

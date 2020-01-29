@@ -1,6 +1,7 @@
 [![Build Status](https://travis-ci.org/larshp/abapGit.svg?branch=master)](https://travis-ci.org/larshp/abapGit)
 [![abaplint](https://app.abaplint.org/badges/larshp/abapGit)](https://app.abaplint.org/project/larshp/abapGit)
 [![Slack](https://abapgit-slackinviter.herokuapp.com/badge.svg)](https://abapgit-slackinviter.herokuapp.com/)
+![abap package version](https://img.shields.io/endpoint?url=https://shield.abap.space/version-shield-json/github/larshp/abapGit/src/zif_abapgit_version.intf.abap/gc_abap_version&label=version)
 
 # abapGit
 
@@ -13,7 +14,8 @@ Works with: [GitHub](https://github.com/),
 [abapGitServer](https://github.com/larshp/abapGitServer),
 [SCP](http://go.sap.com/denmark/developer/tutorials/hcp-webide-commit-git.html),
 [AWS](https://aws.amazon.com/codecommit/),
-[TFS](https://www.visualstudio.com/team-services/git/) and more
+[TFS](https://www.visualstudio.com/team-services/git/),
+[Azure DevOps](https://azure.microsoft.com/en-us/services/devops) and more.
 
 ABAP Version: 702 or higher
 

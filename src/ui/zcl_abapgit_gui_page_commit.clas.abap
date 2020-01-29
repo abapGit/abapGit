@@ -35,25 +35,32 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
     METHODS scripts
         REDEFINITION .
   PRIVATE SECTION.
-    DATA: mo_repo  TYPE REF TO zcl_abapgit_repo_online,
-          mo_stage TYPE REF TO zcl_abapgit_stage.
 
-    METHODS:
-      render_menu
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
-      render_stage
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-        RAISING   zcx_abapgit_exception,
-      render_form
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-        RAISING   zcx_abapgit_exception,
-      render_text_input
-        IMPORTING iv_name        TYPE string
-                  iv_label       TYPE string
-                  iv_value       TYPE string OPTIONAL
-                  iv_max_length  TYPE string OPTIONAL
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
+    DATA mo_stage TYPE REF TO zcl_abapgit_stage .
+    DATA ms_commit TYPE zif_abapgit_services_git=>ty_commit_fields .
 
+    METHODS render_menu
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    METHODS render_stage
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_form
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_text_input
+      IMPORTING
+        !iv_name       TYPE string
+        !iv_label      TYPE string
+        !iv_value      TYPE string OPTIONAL
+        !iv_max_length TYPE string OPTIONAL
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
 ENDCLASS.
 
 
@@ -159,6 +166,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
     DATA: lv_s_param   TYPE string.
     DATA: lo_settings  TYPE REF TO zcl_abapgit_settings.
     DATA: lv_body_size TYPE i.
+    DATA: lv_comment   TYPE string.
+    DATA: lv_body      TYPE string.
+    DATA: lv_author_name TYPE string.
+    DATA: lv_author_email TYPE string.
 
 * see https://git-scm.com/book/ch5-2.html
 * commit messages should be max 50 characters
@@ -184,6 +195,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
       lv_email = zcl_abapgit_user_master_record=>get_instance( sy-uname )->get_email( ).
     ENDIF.
 
+    IF ms_commit IS NOT INITIAL.
+      lv_user = ms_commit-committer_name.
+      lv_email = ms_commit-committer_email.
+      lv_comment = ms_commit-comment.
+      lv_body = ms_commit-body.
+      lv_author_name = ms_commit-author_name.
+      lv_author_email = ms_commit-author_email.
+    ENDIF.
+
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div class="form-container">' ).
@@ -204,6 +224,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
     ro_html->add( render_text_input( iv_name       = 'comment'
                                      iv_label      = 'comment'
+                                     iv_value      = lv_comment
                                      iv_max_length = lv_s_param ) ).
 
     ro_html->add( '<div class="row">' ).
@@ -214,7 +235,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
       lv_body_size = lc_body_col_max.
     ENDIF.
     ro_html->add( |<textarea id="c-body" name="body" rows="10" cols="| &&
-                  |{ lv_body_size }"></textarea>| ).
+                  |{ lv_body_size }">{ lv_body }</textarea>| ).
 
     ro_html->add( '<input type="submit" class="hidden-submit">' ).
     ro_html->add( '</div>' ).
@@ -226,10 +247,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
     ro_html->add( '</div>' ).
 
     ro_html->add( render_text_input( iv_name  = 'author_name'
-                                     iv_label = 'author name' ) ).
+                                     iv_label = 'author name'
+                                     iv_value = lv_author_name ) ).
 
     ro_html->add( render_text_input( iv_name  = 'author_email'
-                                     iv_label = 'author e-mail' ) ).
+                                     iv_label = 'author e-mail'
+                                     iv_value = lv_author_email ) ).
 
     ro_html->add( '</form>' ).
     ro_html->add( '</div>' ).
@@ -307,11 +330,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    IF iv_value IS NOT INITIAL.
+    IF iv_value IS NOT INITIAL AND
+       iv_max_length IS NOT INITIAL.
+      lv_attrs = | value="{ iv_value }" maxlength="{ iv_max_length }"|.
+    ELSEIF iv_value IS NOT INITIAL.
       lv_attrs = | value="{ iv_value }"|.
-    ENDIF.
 
-    IF iv_max_length IS NOT INITIAL.
+    ELSEIF iv_max_length IS NOT INITIAL.
       lv_attrs = | maxlength="{ iv_max_length }"|.
     ENDIF.
 
@@ -334,19 +359,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA: ls_commit TYPE zcl_abapgit_services_git=>ty_commit_fields.
-
     CASE iv_action.
       WHEN c_action-commit_post.
 
         parse_commit_request(
           EXPORTING it_postdata = it_postdata
-          IMPORTING eg_fields   = ls_commit ).
+          IMPORTING eg_fields   = ms_commit ).
 
-        ls_commit-repo_key = mo_repo->get_key( ).
+        ms_commit-repo_key = mo_repo->get_key( ).
 
         zcl_abapgit_services_git=>commit(
-          is_commit = ls_commit
+          is_commit = ms_commit
           io_repo   = mo_repo
           io_stage  = mo_stage ).
 

@@ -77,13 +77,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
   METHOD insert_links.
 
 * todo, how does links work?
-*    LOOP AT ls_avas-links INTO ls_linked_obj.
-*    ENDLOOP.
-
-**    DELETE FROM cls_linked_obj WHERE guid = ls_avas-header-guid.
-**    INSERT cls_linked_obj FROM TABLE lt_linked.
-*    if sy-subrc <> 0.
-*    endif.
+    RETURN.
 
   ENDMETHOD.
 
@@ -119,9 +113,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
 
     lo_avas = instantiate( ).
 
-    lo_avas->if_pak_wb_object~get_last_changed(
-      IMPORTING
-        ex_changed_by = rv_user ).
+    lo_avas->if_pak_wb_object~get_last_changed( IMPORTING ex_changed_by = rv_user ).
 
     IF rv_user IS INITIAL.
       rv_user = c_user_unknown.
@@ -138,8 +130,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
     lo_avas = instantiate( ).
 
     TRY.
-        lo_avas->if_cls_attr_value_assignment~lock_and_refresh(
-          im_allow_popups = abap_false ).
+        lo_avas->if_cls_attr_value_assignment~lock_and_refresh( im_allow_popups = abap_false ).
       CATCH cx_pak_invalid_state
           cx_pak_invalid_data
           cx_pak_not_authorized
@@ -242,13 +233,9 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
     ls_avas-header-attribute = lo_avas->if_cls_attr_value_assignment~get_attribute( ).
     ls_avas-header-object    = lo_avas->if_cls_attr_value_assignment~get_object( ).
 
-    lo_avas->if_cls_attr_value_assignment~get_values(
-      IMPORTING
-        ex_values = ls_avas-values ).
+    lo_avas->if_cls_attr_value_assignment~get_values( IMPORTING ex_values = ls_avas-values ).
 
-    lo_avas->if_cls_attr_value_assignment~get_links(
-      IMPORTING
-        ex_links = ls_avas-links ).
+    lo_avas->if_cls_attr_value_assignment~get_links( IMPORTING ex_links = ls_avas-links ).
 
     LOOP AT ls_avas-values ASSIGNING <ls_value>.
       CLEAR: <ls_value>-set_by, <ls_value>-changed_on.

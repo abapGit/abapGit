@@ -59,15 +59,18 @@ IAXU | ITS: XML Templates for HTML Templates | Yes
 IDOC | IDoc Type | Yes
 IEXT | Enhancement | Yes
 INTF | Interface (ABAP objects) | Yes
+IOBJ | BW: InfoObject | Yes
 IWMO | Gateway Business Suite Enablement - Model | Yes
 IWOM | Gateway: Model Metadata | Yes
 IWPR | Gateway Business Suite Enablement - Service Builder Project | Yes
 IWSG | Gateway: Service Groups Metadata | Yes
 IWSV | Gateway Business Suite Enablement - Service | Yes
+IWVB | SAP Gateway Business Suite Enablement -Vocabulary Annotation | Yes
 JOBD | Technical Job Definition | Yes
 LPDC | Launchpad short texts | [#107](https://github.com/larshp/abapGit/issues/107)
 MSAG | Message Class | Yes
 NROB | Number Range Objects | Yes
+ODSO | DataStore Object | Yes
 OTGR | Object type group | [#1515](https://github.com/larshp/abapGit/issues/1515)
 PARA | SPA/GPA Parameters | Yes
 PDTS | Standard Task | [#153](https://github.com/larshp/abapGit/issues/153)

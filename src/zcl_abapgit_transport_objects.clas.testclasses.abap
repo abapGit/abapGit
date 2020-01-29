@@ -10,7 +10,8 @@ CLASS ltcl_transport_objects DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HA
       cant_be_added_with_del_flag    FOR TESTING RAISING cx_static_check,
       cant_be_modified_with_del_flag FOR TESTING RAISING cx_static_check,
       deleted_to_removed_files       FOR TESTING RAISING cx_static_check,
-      should_remove_no_delflag FOR TESTING RAISING cx_static_check,
+      should_remove_no_delflag_iwom FOR TESTING RAISING cx_static_check,
+      should_remove_no_delflag_susc FOR TESTING RAISING cx_static_check,
       shouldnt_remove_no_delflag FOR TESTING RAISING cx_static_check,
       should_add_all_local_files FOR TESTING RAISING cx_static_check,
       should_delete_all_related  FOR TESTING RAISING cx_static_check,
@@ -180,8 +181,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_filename = 'CL_FOO.abap'
       iv_path     = '/path'
       iv_data     = 'data' ).
-    then_it_should_raise_exception(
-          iv_with_text = 'Object CL_FOO not found in the local repository files' ).
+    then_it_should_raise_exception( iv_with_text = 'Object CL_FOO not found in the local repository files' ).
   ENDMETHOD.
 
   METHOD cant_be_added_with_del_flag.
@@ -265,7 +265,23 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_path     = '/a_path' ).
   ENDMETHOD.
 
-  METHOD should_remove_no_delflag.
+  METHOD should_remove_no_delflag_iwom.
+    given_the_transport_object(
+       iv_obj_name   = 'ZFOO'
+       iv_obj_type   = 'IWOM'
+       iv_delflag    = abap_false ).
+
+    given_the_object_status(
+      iv_obj_name   = 'ZFOO'
+      iv_obj_type   = 'IWOM'
+      iv_filename   = 'zfoo.iwom.xml'
+      iv_path       = '/a_path'
+      iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
+
+    then_it_should_not_raise_excpt( ).
+  ENDMETHOD.
+
+  METHOD should_remove_no_delflag_susc.
     given_the_transport_object(
        iv_obj_name   = 'ZFOO'
        iv_obj_type   = 'SUSC'

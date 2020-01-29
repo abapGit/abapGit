@@ -34,6 +34,12 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-METHODS get_environment
       RETURNING
         VALUE(ro_environment) TYPE REF TO zif_abapgit_environment .
+    CLASS-METHODS get_longtexts
+      IMPORTING
+        iv_longtexts_name   TYPE string OPTIONAL
+      RETURNING
+        VALUE(ro_longtexts) TYPE REF TO zcl_abapgit_longtexts.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -54,17 +60,26 @@ CLASS zcl_abapgit_factory DEFINITION
       tty_code_inspector TYPE HASHED TABLE OF ty_code_inspector
                                      WITH UNIQUE KEY package .
 
+    TYPES:
+      BEGIN OF ty_longtexts,
+        longtexts_name TYPE string,
+        instance       TYPE REF TO zcl_abapgit_longtexts,
+      END OF ty_longtexts .
+    TYPES:
+      tty_longtexts TYPE HASHED TABLE OF ty_longtexts
+                         WITH UNIQUE KEY longtexts_name .
     CLASS-DATA gi_tadir TYPE REF TO zif_abapgit_tadir .
     CLASS-DATA gt_sap_package TYPE tty_sap_package .
     CLASS-DATA gt_code_inspector TYPE tty_code_inspector .
     CLASS-DATA gi_stage_logic TYPE REF TO zif_abapgit_stage_logic .
     CLASS-DATA gi_cts_api TYPE REF TO zif_abapgit_cts_api .
     CLASS-DATA go_environment TYPE REF TO zif_abapgit_environment .
+    CLASS-DATA gt_longtexts TYPE tty_longtexts.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
+CLASS zcl_abapgit_factory IMPLEMENTATION.
 
 
   METHOD get_branch_overview.
@@ -80,7 +95,7 @@ CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
   METHOD get_code_inspector.
 
     DATA: ls_code_inspector LIKE LINE OF gt_code_inspector.
-    FIELD-SYMBOLS: <ls_code_inspector> TYPE zcl_abapgit_factory=>ty_code_inspector.
+    FIELD-SYMBOLS: <ls_code_inspector> TYPE ty_code_inspector.
 
     READ TABLE gt_code_inspector ASSIGNING <ls_code_inspector>
       WITH TABLE KEY package = iv_package.
@@ -165,4 +180,30 @@ CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
     ri_tadir = gi_tadir.
 
   ENDMETHOD.
+
+
+  METHOD get_longtexts.
+
+    DATA: ls_longtext TYPE ty_longtexts.
+    FIELD-SYMBOLS: <ls_longtext> TYPE ty_longtexts.
+
+    READ TABLE gt_longtexts ASSIGNING <ls_longtext>
+                            WITH TABLE KEY longtexts_name = iv_longtexts_name.
+    IF sy-subrc <> 0.
+
+      ls_longtext-longtexts_name = iv_longtexts_name.
+      CREATE OBJECT ls_longtext-instance
+        EXPORTING
+          iv_longtexts_name = iv_longtexts_name.
+
+      INSERT ls_longtext
+        INTO TABLE gt_longtexts
+        ASSIGNING <ls_longtext>.
+
+    ENDIF.
+
+    ro_longtexts = <ls_longtext>-instance.
+
+  ENDMETHOD.
+
 ENDCLASS.

@@ -73,10 +73,16 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
     METHODS render_actions
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
-    METHODS process_stage_list
+    METHODS stage_selected
       IMPORTING
         !it_postdata TYPE cnht_post_data_tab
-        !io_stage    TYPE REF TO zcl_abapgit_stage
+      RETURNING
+        VALUE(ro_stage)    TYPE REF TO zcl_abapgit_stage
+      RAISING
+        zcx_abapgit_exception .
+    METHODS stage_all
+      RETURNING
+        VALUE(ro_stage)    TYPE REF TO zcl_abapgit_stage
       RAISING
         zcx_abapgit_exception .
     METHODS build_menu
@@ -89,6 +95,9 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
       RAISING   zcx_abapgit_exception.
     METHODS render_master_language_warning
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+    METHODS count_default_files_to_commit
+      RETURNING
+        VALUE(rv_count) TYPE i.
 
 ENDCLASS.
 
@@ -126,6 +135,29 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     ENDIF.
 
     ms_control-page_menu  = build_menu( ).
+
+  ENDMETHOD.
+
+
+  METHOD count_default_files_to_commit.
+
+    FIELD-SYMBOLS <ls_status> LIKE LINE OF ms_files-status.
+    FIELD-SYMBOLS <ls_remote> LIKE LINE OF ms_files-remote.
+
+    rv_count = lines( ms_files-local ).
+
+    LOOP AT ms_files-remote ASSIGNING <ls_remote>.
+      READ TABLE ms_files-status ASSIGNING <ls_status>
+        WITH TABLE KEY
+          path     = <ls_remote>-path
+          filename = <ls_remote>-filename.
+      ASSERT sy-subrc = 0.
+
+      IF <ls_status>-lstate = zif_abapgit_definitions=>c_state-deleted
+        AND <ls_status>-rstate = zif_abapgit_definitions=>c_state-unchanged.
+        rv_count = rv_count + 1.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -206,8 +238,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
   METHOD get_page_patch.
 
     DATA: lo_page   TYPE REF TO zcl_abapgit_gui_page_diff,
-          lv_key    TYPE zif_abapgit_persistence=>ty_repo-key,
-          lo_stage  TYPE REF TO zcl_abapgit_stage.
+          lv_key    TYPE zif_abapgit_persistence=>ty_repo-key.
 
     zcl_abapgit_html_action_utils=>file_obj_decode(
       EXPORTING
@@ -215,78 +246,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
       IMPORTING
         ev_key    = lv_key ).
 
-    CREATE OBJECT lo_stage.
-
     CREATE OBJECT lo_page
       EXPORTING
         iv_key        = lv_key
-        iv_patch_mode = abap_true
-        io_stage      = lo_stage.
+        iv_patch_mode = abap_true.
 
     ri_page = lo_page.
-
-  ENDMETHOD.
-
-
-  METHOD process_stage_list.
-
-    DATA: lv_string TYPE string,
-          lt_fields TYPE tihttpnvp,
-          ls_file   TYPE zif_abapgit_definitions=>ty_file.
-
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local,
-                   <ls_status> LIKE LINE OF ms_files-status,
-                   <ls_item> LIKE LINE OF lt_fields.
-
-    CONCATENATE LINES OF it_postdata INTO lv_string.
-    lt_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_string ).
-
-    IF lines( lt_fields ) = 0.
-      zcx_abapgit_exception=>raise( 'process_stage_list: empty list' ).
-    ENDIF.
-
-    LOOP AT lt_fields ASSIGNING <ls_item>.
-
-      zcl_abapgit_path=>split_file_location(
-        EXPORTING
-          iv_fullpath = <ls_item>-name
-        IMPORTING
-          ev_path     = ls_file-path
-          ev_filename = ls_file-filename ).
-
-      READ TABLE ms_files-status ASSIGNING <ls_status>
-        WITH TABLE KEY
-          path     = ls_file-path
-          filename = ls_file-filename.
-      ASSERT sy-subrc = 0.
-
-      CASE <ls_item>-value.
-        WHEN zcl_abapgit_stage=>c_method-add.
-          READ TABLE ms_files-local ASSIGNING <ls_file>
-            WITH KEY file-path     = ls_file-path
-                     file-filename = ls_file-filename.
-
-          IF sy-subrc <> 0.
-            zcx_abapgit_exception=>raise( |process_stage_list: unknown file { ls_file-path }{ ls_file-filename }| ).
-          ENDIF.
-
-          io_stage->add( iv_path     = <ls_file>-file-path
-                         iv_filename = <ls_file>-file-filename
-                         is_status   = <ls_status>
-                         iv_data     = <ls_file>-file-data ).
-        WHEN zcl_abapgit_stage=>c_method-ignore.
-          io_stage->ignore( iv_path     = ls_file-path
-                            iv_filename = ls_file-filename ).
-        WHEN zcl_abapgit_stage=>c_method-rm.
-          io_stage->rm( iv_path     = ls_file-path
-                        is_status   = <ls_status>
-                        iv_filename = ls_file-filename ).
-        WHEN zcl_abapgit_stage=>c_method-skip.
-          " Do nothing
-        WHEN OTHERS.
-          zcx_abapgit_exception=>raise( |process_stage_list: unknown method { <ls_item>-value }| ).
-      ENDCASE.
-    ENDLOOP.
 
   ENDMETHOD.
 
@@ -299,7 +264,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           ls_file        TYPE zif_abapgit_definitions=>ty_file.
 
     CREATE OBJECT ro_html.
-    lv_local_count = lines( ms_files-local ).
+    lv_local_count = count_default_files_to_commit( ).
     IF lv_local_count > 0.
       lv_add_all_txt = |Add all and commit ({ lv_local_count })|.
       " Otherwise empty, but the element (id) is preserved for JS
@@ -499,8 +464,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
       READ TABLE ms_files-status ASSIGNING <ls_status>
         WITH TABLE KEY
-          path     = <ls_local>-file-path
-          filename = <ls_local>-file-filename.
+          path     = <ls_remote>-path
+          filename = <ls_remote>-filename.
       ASSERT sy-subrc = 0.
 
       ro_html->add( render_file(
@@ -558,66 +523,154 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD stage_all.
+
+    FIELD-SYMBOLS <ls_local> LIKE LINE OF ms_files-local.
+    FIELD-SYMBOLS <ls_remote> LIKE LINE OF ms_files-remote.
+    FIELD-SYMBOLS <ls_status> LIKE LINE OF ms_files-status.
+
+    CREATE OBJECT ro_stage.
+
+    LOOP AT ms_files-local ASSIGNING <ls_local>.
+      READ TABLE ms_files-status ASSIGNING <ls_status>
+        WITH TABLE KEY
+          path     = <ls_local>-file-path
+          filename = <ls_local>-file-filename.
+      ASSERT sy-subrc = 0.
+
+      ro_stage->add(
+        iv_path     = <ls_local>-file-path
+        iv_filename = <ls_local>-file-filename
+        is_status   = <ls_status>
+        iv_data     = <ls_local>-file-data ).
+    ENDLOOP.
+
+    LOOP AT ms_files-remote ASSIGNING <ls_remote>.
+      READ TABLE ms_files-status ASSIGNING <ls_status>
+        WITH TABLE KEY
+          path     = <ls_remote>-path
+          filename = <ls_remote>-filename.
+      ASSERT sy-subrc = 0.
+
+      IF <ls_status>-lstate = zif_abapgit_definitions=>c_state-deleted
+        AND <ls_status>-rstate = zif_abapgit_definitions=>c_state-unchanged.
+
+        ro_stage->rm(
+          iv_path     = <ls_remote>-path
+          iv_filename = <ls_remote>-filename
+          is_status   = <ls_status> ).
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD stage_selected.
+
+    DATA: lv_string TYPE string,
+          lt_fields TYPE tihttpnvp,
+          ls_file   TYPE zif_abapgit_definitions=>ty_file.
+
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local,
+                   <ls_status> LIKE LINE OF ms_files-status,
+                   <ls_item> LIKE LINE OF lt_fields.
+
+    CONCATENATE LINES OF it_postdata INTO lv_string.
+    lt_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_string ).
+
+    IF lines( lt_fields ) = 0.
+      zcx_abapgit_exception=>raise( 'process_stage_list: empty list' ).
+    ENDIF.
+
+    CREATE OBJECT ro_stage.
+
+    LOOP AT lt_fields ASSIGNING <ls_item>.
+
+      zcl_abapgit_path=>split_file_location(
+        EXPORTING
+          iv_fullpath = <ls_item>-name
+        IMPORTING
+          ev_path     = ls_file-path
+          ev_filename = ls_file-filename ).
+
+      READ TABLE ms_files-status ASSIGNING <ls_status>
+        WITH TABLE KEY
+          path     = ls_file-path
+          filename = ls_file-filename.
+      ASSERT sy-subrc = 0.
+
+      CASE <ls_item>-value.
+        WHEN zcl_abapgit_stage=>c_method-add.
+          READ TABLE ms_files-local ASSIGNING <ls_file>
+            WITH KEY file-path     = ls_file-path
+                     file-filename = ls_file-filename.
+
+          IF sy-subrc <> 0.
+            zcx_abapgit_exception=>raise( |process_stage_list: unknown file { ls_file-path }{ ls_file-filename }| ).
+          ENDIF.
+
+          ro_stage->add( iv_path     = <ls_file>-file-path
+                         iv_filename = <ls_file>-file-filename
+                         is_status   = <ls_status>
+                         iv_data     = <ls_file>-file-data ).
+        WHEN zcl_abapgit_stage=>c_method-ignore.
+          ro_stage->ignore( iv_path     = ls_file-path
+                            iv_filename = ls_file-filename ).
+        WHEN zcl_abapgit_stage=>c_method-rm.
+          ro_stage->rm( iv_path     = ls_file-path
+                        is_status   = <ls_status>
+                        iv_filename = ls_file-filename ).
+        WHEN zcl_abapgit_stage=>c_method-skip.
+          " Do nothing
+        WHEN OTHERS.
+          zcx_abapgit_exception=>raise( |process_stage_list: unknown method { <ls_item>-value }| ).
+      ENDCASE.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: lo_stage  TYPE REF TO zcl_abapgit_stage,
-          lv_string TYPE string,
           lt_fields TYPE tihttpnvp.
-
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local.
-    FIELD-SYMBOLS: <ls_status> LIKE LINE OF ms_files-status.
-
-
-    CREATE OBJECT lo_stage.
 
     CLEAR: ei_page, ev_state.
 
     CASE iv_action.
       WHEN c_action-stage_all.
 
-        LOOP AT ms_files-local ASSIGNING <ls_file>.
-          READ TABLE ms_files-status ASSIGNING <ls_status>
-            WITH TABLE KEY
-              path = <ls_file>-file-path
-              filename = <ls_file>-file-filename.
-          ASSERT sy-subrc = 0.
-
-          lo_stage->add(
-            iv_path     = <ls_file>-file-path
-            iv_filename = <ls_file>-file-filename
-            is_status   = <ls_status>
-            iv_data     = <ls_file>-file-data ).
-        ENDLOOP.
+        lo_stage = stage_all( ).
 
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
           EXPORTING
             io_repo  = mo_repo
             io_stage = lo_stage.
-        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN c_action-stage_commit.
 
-        process_stage_list(
-          it_postdata = it_postdata
-          io_stage    = lo_stage ).
+        lo_stage = stage_selected( it_postdata ).
 
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
           EXPORTING
             io_repo  = mo_repo
             io_stage = lo_stage.
+
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN c_action-stage_filter.
 
-        CONCATENATE LINES OF it_postdata INTO lv_string.
+        lt_fields = zcl_abapgit_html_action_utils=>parse_fields( concat_lines_of( table = it_postdata ) ).
 
-        lt_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_string ).
-
-        zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name  = 'filterValue'
-                                                            it_field = lt_fields
-                                                  CHANGING  cg_field = mv_filter_value ).
+        zcl_abapgit_html_action_utils=>get_field(
+          EXPORTING
+            iv_name  = 'filterValue'
+            it_field = lt_fields
+          CHANGING
+            cg_field = mv_filter_value ).
 
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 

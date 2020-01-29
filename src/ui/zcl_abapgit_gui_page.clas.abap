@@ -115,7 +115,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
 
   METHOD call_browser.
@@ -305,8 +305,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
   METHOD link_hints.
 
-    DATA: lv_link_hint_key    TYPE char01,
-          lv_background_color TYPE string.
+    DATA: lv_link_hint_key TYPE char01.
 
     lv_link_hint_key = mo_settings->get_link_hint_key( ).
 
@@ -328,8 +327,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ro_html->add( '<!DOCTYPE html>' ).                      "#EC NOTEXT
     ro_html->add( '<html>' ).                               "#EC NOTEXT
     ro_html->add( '<head>' ).                               "#EC NOTEXT
-    ro_html->add( |<meta http-equiv="refresh" content="0; url={
-                  ms_control-redirect_url }">| ).           "#EC NOTEXT
+    ro_html->add( |<meta http-equiv="refresh" content="0; url={ ms_control-redirect_url }">| ). "#EC NOTEXT
     ro_html->add( '</head>' ).                              "#EC NOTEXT
     ro_html->add( '</html>' ).                              "#EC NOTEXT
 
@@ -414,9 +412,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
                                        iv_act = zif_abapgit_definitions=>c_action-abapgit_home )
                   }</td>| ).                                "#EC NOTEXT
 
-    ro_html->add( |<td><span class="page_title"> &#x25BA; {
-                  ms_control-page_title
-                  }</span></td>| ).                         "#EC NOTEXT
+    ro_html->add( |<td><span class="page_title"> &#x25BA; { ms_control-page_title }</span></td>| ). "#EC NOTEXT
 
     IF ms_control-page_menu IS BOUND.
       ro_html->add( '<td class="right">' ).                 "#EC NOTEXT
@@ -479,7 +475,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
   METHOD zif_abapgit_gui_renderable~render.
 
     DATA: lo_script TYPE REF TO zcl_abapgit_html,
-          lt_events TYPE zcl_abapgit_gui_page=>tt_events.
+          lt_events TYPE tt_events.
 
     FIELD-SYMBOLS:
           <ls_event> LIKE LINE OF lt_events.

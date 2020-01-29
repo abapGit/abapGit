@@ -1,4 +1,4 @@
-CLASS lcl_gui_mock DEFINITION.
+CLASS ltcl_gui_mock DEFINITION FOR TESTING FINAL.
   PUBLIC SECTION.
     TYPES:
       BEGIN OF ty_cache_signature,
@@ -6,16 +6,24 @@ CLASS lcl_gui_mock DEFINITION.
         type TYPE string,
         data TYPE string,
       END OF ty_cache_signature.
-    DATA ms_last_cache_signature TYPE ty_cache_signature.
 
     INTERFACES zif_abapgit_gui_services.
+
+    METHODS get_asset RETURNING VALUE(rs_asset) TYPE ty_cache_signature.
+
+  PRIVATE SECTION.
+    DATA ms_last_cache_signature TYPE ty_cache_signature.
 ENDCLASS.
 
-CLASS lcl_gui_mock IMPLEMENTATION.
+CLASS ltcl_gui_mock IMPLEMENTATION.
   METHOD zif_abapgit_gui_services~cache_asset.
     ms_last_cache_signature-url  = iv_url.
     ms_last_cache_signature-type = iv_type && '/' && iv_subtype.
     ms_last_cache_signature-data = iv_text.
+  ENDMETHOD.
+
+  METHOD get_asset.
+    rs_asset = ms_last_cache_signature.
   ENDMETHOD.
 ENDCLASS.
 
@@ -32,7 +40,7 @@ CLASS ltcl_html_processor_test DEFINITION
   PRIVATE SECTION.
     DATA mv_source TYPE string.
     DATA mo_cut TYPE REF TO zcl_abapgit_gui_html_processor.
-    DATA mo_gui_mock TYPE REF TO lcl_gui_mock.
+    DATA mo_gui_mock TYPE REF TO ltcl_gui_mock.
 
     METHODS render_html
       IMPORTING
@@ -111,13 +119,13 @@ CLASS ltcl_html_processor_test IMPLEMENTATION.
 
     " GUI call checks
     cl_abap_unit_assert=>assert_equals(
-      act = mo_gui_mock->ms_last_cache_signature-url
+      act = mo_gui_mock->get_asset( )-url
       exp = 'css/bundle.css' ).
     cl_abap_unit_assert=>assert_equals(
-      act = mo_gui_mock->ms_last_cache_signature-type
+      act = mo_gui_mock->get_asset( )-type
       exp = 'text/css' ).
     cl_abap_unit_assert=>assert_equals(
-      act = mo_gui_mock->ms_last_cache_signature-data
+      act = mo_gui_mock->get_asset( )-data
       exp = render_html( 'dummy1\ndummy2\ndummy3' ) ).
 
   ENDMETHOD.

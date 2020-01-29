@@ -142,9 +142,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SMIM IMPLEMENTATION.
 
 
     TRY.
-        get_url_for_io(
-          IMPORTING
-            ev_url  = lv_url ).
+        get_url_for_io( IMPORTING ev_url  = lv_url ).
       CATCH zcx_abapgit_not_found.
         RETURN.
     ENDTRY.
@@ -196,7 +194,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SMIM IMPLEMENTATION.
       li_api->create_folder(
         EXPORTING
           i_url              = lv_url
-          i_language         = sy-langu
+          i_language         = mv_language
           i_dev_package      = iv_package
           i_folder_loio      = ls_skwf_io
         EXCEPTIONS

@@ -499,6 +499,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     DATA: lt_reposrc        TYPE STANDARD TABLE OF ty_reposrc WITH DEFAULT KEY,
           ls_reposrc        LIKE LINE OF lt_reposrc,
           lv_program        TYPE program,
+          lv_maintviewname  LIKE LINE OF rt_includes,
           lv_offset_ns      TYPE i,
           lv_tabix          LIKE sy-tabix,
           lt_functab        TYPE ty_rs38l_incl_tt,
@@ -531,15 +532,19 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     ENDLOOP.
 
 * handle generated maintenance views
-    APPEND INITIAL LINE TO rt_includes ASSIGNING <lv_include>.
     IF ms_item-obj_name(1) <> '/'.
       "FGroup name does not contain a namespace
-      <lv_include> = |L{ ms_item-obj_name }T00|.
+      lv_maintviewname = |L{ ms_item-obj_name }T00|.
     ELSE.
       "FGroup name contains a namespace
       lv_offset_ns = find( val = ms_item-obj_name+1 sub = '/' ).
       lv_offset_ns = lv_offset_ns + 2.
-      <lv_include> = |{ ms_item-obj_name(lv_offset_ns) }L{ ms_item-obj_name+lv_offset_ns }T00|.
+      lv_maintviewname = |{ ms_item-obj_name(lv_offset_ns) }L{ ms_item-obj_name+lv_offset_ns }T00|.
+    ENDIF.
+
+    READ TABLE rt_includes WITH KEY table_line = lv_maintviewname TRANSPORTING NO FIELDS.
+    IF sy-subrc <> 0.
+      APPEND lv_maintviewname TO rt_includes.
     ENDIF.
 
     IF lines( rt_includes ) > 0.
@@ -600,7 +605,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
   METHOD is_any_function_module_locked.
 
-    DATA: lt_functions TYPE zcl_abapgit_object_fugr=>ty_rs38l_incl_tt.
+    DATA: lt_functions TYPE ty_rs38l_incl_tt.
 
     FIELD-SYMBOLS: <ls_function> TYPE rs38l_incl.
 
@@ -706,8 +711,8 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       lt_new_source TYPE rsfb_source,
       ls_function   LIKE LINE OF rt_functions.
 
-    FIELD-SYMBOLS: <ls_func> LIKE LINE OF lt_functab.
-
+    FIELD-SYMBOLS: <ls_func>          LIKE LINE OF lt_functab,
+                   <ls_documentation> TYPE LINE OF ty_function-documentation.
 
     lt_functab = functions( ).
 
@@ -749,6 +754,10 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       ELSEIF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'Error from RPY_FUNCTIONMODULE_READ_NEW' ).
       ENDIF.
+
+      LOOP AT ls_function-documentation ASSIGNING <ls_documentation>.
+        CLEAR <ls_documentation>-index.
+      ENDLOOP.
 
       ls_function-exception_classes = are_exceptions_class_based( <ls_func>-funcname ).
 
@@ -853,7 +862,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     "   FORM GROUP_CHANGE
 
     UPDATE tlibt SET areat = iv_short_text
-                 WHERE spras = sy-langu
+                 WHERE spras = mv_language
                  AND   area  = iv_group.
 
   ENDMETHOD.

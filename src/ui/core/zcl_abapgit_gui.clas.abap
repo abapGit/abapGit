@@ -5,14 +5,14 @@ CLASS zcl_abapgit_gui DEFINITION
   PUBLIC SECTION.
     CONSTANTS:
       BEGIN OF c_event_state,
-        not_handled         VALUE 0,
-        re_render           VALUE 1,
-        new_page            VALUE 2,
-        go_back             VALUE 3,
-        no_more_act         VALUE 4,
-        new_page_w_bookmark VALUE 5,
-        go_back_to_bookmark VALUE 6,
-        new_page_replacing  VALUE 7,
+        not_handled         TYPE c LENGTH 1 VALUE '0',
+        re_render           TYPE c LENGTH 1 VALUE '1',
+        new_page            TYPE c LENGTH 1 VALUE '2',
+        go_back             TYPE c LENGTH 1 VALUE '3',
+        no_more_act         TYPE c LENGTH 1 VALUE '4',
+        new_page_w_bookmark TYPE c LENGTH 1 VALUE '5',
+        go_back_to_bookmark TYPE c LENGTH 1 VALUE '6',
+        new_page_replacing  TYPE c LENGTH 1 VALUE '7',
       END OF c_event_state .
 
     CONSTANTS:
@@ -330,8 +330,7 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
 
     DATA: lv_url           TYPE w3url,
           lv_html          TYPE string,
-          li_html          TYPE REF TO zif_abapgit_html,
-          lo_css_processor TYPE REF TO zcl_abapgit_gui_css_processor.
+          li_html          TYPE REF TO zif_abapgit_html.
 
     IF mi_cur_page IS NOT BOUND.
       zcx_abapgit_exception=>raise( 'GUI error: no current page' ).
