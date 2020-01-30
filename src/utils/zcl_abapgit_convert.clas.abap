@@ -240,7 +240,7 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
 
     DATA: lv_hex     TYPE x LENGTH 1 VALUE '23',
           lv_hex_bom TYPE x LENGTH 3 VALUE 'EFBBBF'.
- 
+
     rv_xstring = string_to_xstring_utf8( iv_string ).
 
     "unicode systems always add the byte order mark to the xml, while non-unicode does not
@@ -256,8 +256,8 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-  
-  
+
+
   METHOD xstring_to_bintab.
 
     CALL FUNCTION 'SCMS_XSTRING_TO_BINARY'
