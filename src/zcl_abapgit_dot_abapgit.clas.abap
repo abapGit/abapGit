@@ -260,10 +260,8 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   METHOD serialize.
 
-    DATA: lv_xml     TYPE string,
-          lv_mark    TYPE string,
-          lv_hex     TYPE x LENGTH 1 VALUE '23',
-          lv_hex_bom TYPE x LENGTH 3 VALUE 'EFBBBF'.
+    DATA: lv_xml  TYPE string,
+          lv_mark TYPE string.
 
     lv_xml = to_xml( ms_data ).
 
@@ -274,17 +272,7 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
       CONCATENATE lv_mark lv_xml INTO lv_xml.
     ENDIF.
 
-    rv_xstr = zcl_abapgit_convert=>string_to_xstring_utf8( lv_xml ).
-
-    "In non-unicode systems zcl_abapgit_convert=>xstring_to_string_utf8( cl_abap_char_utilities=>byte_order_mark_utf8 )
-    "has result # as HEX 23 and not HEX EFBBBF.
-    "So we have to remove 23 first and add EFBBBF after to serialized string
-    IF rv_xstr(3) <> cl_abap_char_utilities=>byte_order_mark_utf8
-    AND rv_xstr(1) = lv_hex.
-      REPLACE FIRST OCCURRENCE
-        OF lv_hex IN rv_xstr WITH lv_hex_bom IN BYTE MODE.
-      ASSERT sy-subrc = 0.
-    ENDIF.
+    rv_xstr = zcl_abapgit_convert=>string_to_xstring_utf8_bom( lv_xml ).
 
   ENDMETHOD.
 
