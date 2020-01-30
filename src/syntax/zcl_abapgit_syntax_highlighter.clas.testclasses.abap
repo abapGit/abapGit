@@ -18,6 +18,17 @@ CLASS ltcl_syntax_cases DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS
     METHODS:
       do_test IMPORTING iv_line     TYPE string
                         iv_filename TYPE string,
+      generate_parse IMPORTING iv_token  TYPE char01
+                               iv_offset TYPE i
+                               iv_length TYPE i,
+      generate_order IMPORTING iv_token    TYPE char01
+                               iv_offset   TYPE i
+                               iv_length   TYPE i
+                               iv_text_tag TYPE string,
+      generate_extend IMPORTING iv_token    TYPE char01
+                                iv_offset   TYPE i
+                                iv_length   TYPE i
+                                iv_text_tag TYPE string,
       test_abap_01 FOR TESTING,
       test_abap_02 FOR TESTING,
       test_abap_03 FOR TESTING,
@@ -40,29 +51,6 @@ ENDCLASS.
 *       CLASS ltcl_syntax_cases IMPLEMENTATION
 *----------------------------------------------------------------------*
 CLASS ltcl_syntax_cases IMPLEMENTATION.
-
-  DEFINE _generate_parse.
-    ms_match-token    = &1.
-    ms_match-offset   = &2.
-    ms_match-length   = &3.
-    APPEND ms_match TO mt_after_parse.
-  END-OF-DEFINITION.
-
-  DEFINE _generate_order.
-    ms_match-token    = &1.
-    ms_match-offset   = &2.
-    ms_match-length   = &3.
-    ms_match-text_tag = &4.
-    APPEND ms_match TO mt_after_order.
-  END-OF-DEFINITION.
-
-  DEFINE _generate_extend.
-    ms_match-token    = &1.
-    ms_match-offset   = &2.
-    ms_match-length   = &3.
-    ms_match-text_tag = &4.
-    APPEND ms_match TO mt_after_extend.
-  END-OF-DEFINITION.
 
   METHOD do_test.
 
@@ -98,6 +86,35 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD generate_parse.
+    DATA ls_match TYPE zcl_abapgit_syntax_highlighter=>ty_match.
+
+    ls_match-token    = iv_token.
+    ls_match-offset   = iv_offset.
+    ls_match-length   = iv_length.
+    APPEND ls_match TO mt_after_parse.
+  ENDMETHOD.
+
+  METHOD generate_order.
+    DATA ls_match TYPE zcl_abapgit_syntax_highlighter=>ty_match.
+
+    ls_match-token    = iv_token.
+    ls_match-offset   = iv_offset.
+    ls_match-length   = iv_length.
+    ls_match-text_tag = iv_text_tag.
+    APPEND ls_match TO mt_after_order.
+  ENDMETHOD.
+
+  METHOD generate_extend.
+    DATA ls_match TYPE zcl_abapgit_syntax_highlighter=>ty_match.
+
+    ls_match-token    = iv_token.
+    ls_match-offset   = iv_offset.
+    ls_match-length   = iv_length.
+    ls_match-text_tag = iv_text_tag.
+    APPEND ls_match TO mt_after_extend.
+  ENDMETHOD.
+
 ******************************************************
 * Test parsing and ordering of comments              *
 ******************************************************
@@ -108,19 +125,40 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     lv_line = '* commented out line with key word data'.    "#EC NOTEXT
 
     " Generate table with expected values after parsing
-    _generate_parse 'C' 0  1.
-    _generate_parse 'K' 12 3.
-    _generate_parse 'K' 16 4.
-    _generate_parse 'K' 21 4.
-    _generate_parse 'K' 26 3.
-    _generate_parse 'K' 30 4.
-    _generate_parse 'K' 35 4.
+    generate_parse( iv_token  = 'C'
+                    iv_offset = 0
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 12
+                    iv_length = 3 ).
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 16
+                    iv_length = 4 ).
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 21
+                    iv_length = 4 ).
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 26
+                    iv_length = 3 ).
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 30
+                    iv_length = 4 ).
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 35
+                    iv_length = 4 ).
+
 
     " Generate table with expected values after ordering
-    _generate_order 'C' 0  39 ''.
+    generate_order( iv_token    = 'C'
+                    iv_offset   = 0
+                    iv_length   = 39
+                    iv_text_tag = '' ).
 
     " Generate table with expected values after ordering
-    _generate_extend 'C' 0  39 ''.
+    generate_extend( iv_token    = 'C'
+                     iv_offset   = 0
+                     iv_length   = 39
+                     iv_text_tag = '' ).
 
     do_test( iv_line = lv_line iv_filename = '*.abap' ).
 
@@ -136,18 +174,40 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     lv_line = 'data: lv_var_name type string.'.             "#EC NOTEXT
 
     " Generate table with expected values after parsing
-    _generate_parse 'K' 0  4.
-    _generate_parse 'K' 18 4.
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 0
+                    iv_length = 4 ).
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 18
+                    iv_length = 4 ).
 
     " Generate table with expected values after ordering
-    _generate_order 'K' 0  4  ''.
-    _generate_order 'K' 18 4  ''.
+    generate_order( iv_token    = 'K'
+                    iv_offset   = 0
+                    iv_length   = 4
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'K'
+                    iv_offset   = 18
+                    iv_length   = 4
+                    iv_text_tag = '' ).
 
     " Generate table with expected values after extending
-    _generate_extend 'K' 0  4  ''.
-    _generate_extend '.' 4  14 ''.
-    _generate_extend 'K' 18 4  ''.
-    _generate_extend '.' 22 8  ''.
+    generate_extend( iv_token    = 'K'
+                     iv_offset   = 0
+                     iv_length   = 4
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 4
+                     iv_length   = 14
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'K'
+                     iv_offset   = 18
+                     iv_length   = 4
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 22
+                     iv_length   = 8
+                     iv_text_tag = '' ).
 
     do_test( iv_line = lv_line iv_filename = '*.abap' ).
 
@@ -164,26 +224,69 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     lv_line = 'call function ''FM_NAME''. " Commented'.     "#EC NOTEXT
 
     " Generate table with expected values after parsing
-    _generate_parse 'K' 0  4.
-    _generate_parse 'K' 5  8.
-    _generate_parse 'T' 14 1.
-    _generate_parse 'T' 22 1.
-    _generate_parse 'C' 25 1.
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 0
+                    iv_length = 4 ).
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 5
+                    iv_length = 8 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 14
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 22
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'C'
+                    iv_offset = 25
+                    iv_length = 1 ).
 
     " Generate table with expected values after ordering
-    _generate_order 'K' 0  4  ''.
-    _generate_order 'K' 5  8  ''.
-    _generate_order 'T' 14 9  ''''.
-    _generate_order 'C' 25 11 ''.
+    generate_order( iv_token    = 'K'
+                    iv_offset   = 0
+                    iv_length   = 4
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'K'
+                    iv_offset   = 5
+                    iv_length   = 8
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'T'
+                    iv_offset   = 14
+                    iv_length   = 9
+                    iv_text_tag = '''' ).
+    generate_order( iv_token    = 'C'
+                    iv_offset   = 25
+                    iv_length   = 11
+                    iv_text_tag = '' ).
 
     " Generate table with expected values after extending
-    _generate_extend 'K' 0  4  ''.
-    _generate_extend '.' 4  1  ''.
-    _generate_extend 'K' 5  8  ''.
-    _generate_extend '.' 13 1  ''.
-    _generate_extend 'T' 14 9  ''''.
-    _generate_extend '.' 23 2  ''.
-    _generate_extend 'C' 25 11 ''.
+    generate_extend( iv_token    = 'K'
+                     iv_offset   = 0
+                     iv_length   = 4
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 4
+                     iv_length   = 1
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'K'
+                     iv_offset   = 5
+                     iv_length   = 8
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 13
+                     iv_length   = 1
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'T'
+                     iv_offset   = 14
+                     iv_length   = 9
+                     iv_text_tag = '''' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 23
+                     iv_length   = 2
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'C'
+                     iv_offset   = 25
+                     iv_length   = 11
+                     iv_text_tag = '' ).
 
     do_test( iv_line = lv_line iv_filename = '*.abap' ).
 
@@ -199,28 +302,76 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     lv_line = 'constants: lc_var type string value ''simpletext data simpletext''.'. "#EC NOTEXT
 
     " Generate table with expected values after parsing
-    _generate_parse 'K' 0  9.
-    _generate_parse 'K' 18 4.
-    _generate_parse 'K' 30 5.
-    _generate_parse 'T' 36 1.
-    _generate_parse 'K' 48 4.
-    _generate_parse 'T' 63 1.
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 0
+                    iv_length = 9 ).
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 18
+                    iv_length = 4 ).
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 30
+                    iv_length = 5 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 36
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 48
+                    iv_length = 4 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 63
+                    iv_length = 1 ).
 
     " Generate table with expected values after ordering
-    _generate_order 'K' 0  9  ''.
-    _generate_order 'K' 18 4  ''.
-    _generate_order 'K' 30 5  ''.
-    _generate_order 'T' 36 28 ''''.
+    generate_order( iv_token    = 'K'
+                    iv_offset   = 0
+                    iv_length   = 9
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'K'
+                    iv_offset   = 18
+                    iv_length   = 4
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'K'
+                    iv_offset   = 30
+                    iv_length   = 5
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'T'
+                    iv_offset   = 36
+                    iv_length   = 28
+                    iv_text_tag = '''' ).
 
     " Generate table with expected values after ordering
-    _generate_extend 'K' 0  9  ''.
-    _generate_extend '.' 9  9  ''.
-    _generate_extend 'K' 18 4  ''.
-    _generate_extend '.' 22 8  ''.
-    _generate_extend 'K' 30 5  ''.
-    _generate_extend '.' 35 1  ''.
-    _generate_extend 'T' 36 28 ''''.
-    _generate_extend '.' 64 1  ''.
+    generate_extend( iv_token    = 'K'
+                     iv_offset   = 0
+                     iv_length   = 9
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 9
+                     iv_length   = 9
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'K'
+                     iv_offset   = 18
+                     iv_length   = 4
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 22
+                     iv_length   = 8
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'K'
+                     iv_offset   = 30
+                     iv_length   = 5
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 35
+                     iv_length   = 1
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'T'
+                     iv_offset   = 36
+                     iv_length   = 28
+                     iv_text_tag = '''' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 64
+                     iv_length   = 1
+                     iv_text_tag = '' ).
 
     do_test( iv_line = lv_line iv_filename = '*.abap' ).
 
@@ -236,30 +387,83 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     lv_line = 'a = |{ b }={ c }|.'.                         "#EC NOTEXT
 
     " Generate table with expected values after parsing
-    _generate_parse 'T' 4  1.
-    _generate_parse 'T' 5  1.
-    _generate_parse 'T' 9  1.
-    _generate_parse 'T' 11 1.
-    _generate_parse 'K' 13 1.
-    _generate_parse 'T' 15 1.
-    _generate_parse 'T' 16 1.
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 4
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 5
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 9
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 11
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 13
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 15
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 16
+                    iv_length = 1 ).
 
     " Generate table with expected values after ordering
-    _generate_order 'T' 4  1  '|'.
-    _generate_order 'T' 10 1  '}'.
-    _generate_order 'K' 13 1  ''.
-    _generate_order 'T' 16 1  '}'.
+    generate_order( iv_token    = 'T'
+                    iv_offset   = 4
+                    iv_length   = 1
+                    iv_text_tag = '|' ).
+    generate_order( iv_token    = 'T'
+                    iv_offset   = 10
+                    iv_length   = 1
+                    iv_text_tag = '}' ).
+    generate_order( iv_token    = 'K'
+                    iv_offset   = 13
+                    iv_length   = 1
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'T'
+                    iv_offset   = 16
+                    iv_length   = 1
+                    iv_text_tag = '}' ).
 
     " Generate table with expected values after extending
-    _generate_extend '.' 0  4  ''.
-    _generate_extend 'T' 4  1  '|'.
-    _generate_extend '.' 5  5  ''.
-    _generate_extend 'T' 10 1  '}'.
-    _generate_extend '.' 11 2  ''.
-    _generate_extend 'K' 13 1  ''.
-    _generate_extend '.' 14 2  ''.
-    _generate_extend 'T' 16 1  '}'.
-    _generate_extend '.' 17 1  ''.
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 0
+                     iv_length   = 4
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'T'
+                     iv_offset   = 4
+                     iv_length   = 1
+                     iv_text_tag = '|' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 5
+                     iv_length   = 5
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'T'
+                     iv_offset   = 10
+                     iv_length   = 1
+                     iv_text_tag = '}' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 11
+                     iv_length   = 2
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'K'
+                     iv_offset   = 13
+                     iv_length   = 1
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 14
+                     iv_length   = 2
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'T'
+                     iv_offset   = 16
+                     iv_length   = 1
+                     iv_text_tag = '}' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 17
+                     iv_length   = 1
+                     iv_text_tag = '' ).
 
     do_test( iv_line = lv_line iv_filename = '*.abap' ).
 
@@ -275,48 +479,148 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     lv_line = 'lv_line = lc_constant && |XYZ { ''ab'' && |ac{ ''UU'' }| }|'. "#EC NOTEXT
 
     " Generate table with expected values after parsing
-    _generate_parse 'K' 22 2.
-    _generate_parse 'T' 25 1.
-    _generate_parse 'T' 30 1.
-    _generate_parse 'T' 32 1.
-    _generate_parse 'T' 35 1.
-    _generate_parse 'K' 37 2.
-    _generate_parse 'T' 40 1.
-    _generate_parse 'T' 43 1.
-    _generate_parse 'T' 45 1.
-    _generate_parse 'T' 48 1.
-    _generate_parse 'T' 50 1.
-    _generate_parse 'T' 51 1.
-    _generate_parse 'T' 53 1.
-    _generate_parse 'T' 54 1.
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 22
+                    iv_length = 2 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 25
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 30
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 32
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 35
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 37
+                    iv_length = 2 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 40
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 43
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 45
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 48
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 50
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 51
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 53
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'T'
+                    iv_offset = 54
+                    iv_length = 1 ).
 
     " Generate table with expected values after ordering
-    _generate_order 'K' 22 2  ''.
-    _generate_order 'T' 25 5  '|'.
-    _generate_order 'T' 32 4  ''''.
-    _generate_order 'K' 37 2  ''.
-    _generate_order 'T' 40 3  '|'.
-    _generate_order 'T' 45 4  ''''.
-    _generate_order 'T' 51 1  '}'.
-    _generate_order 'T' 54 1  '}'.
+    generate_order( iv_token    = 'K'
+                    iv_offset   = 22
+                    iv_length   = 2
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'T'
+                    iv_offset   = 25
+                    iv_length   = 5
+                    iv_text_tag = '|' ).
+    generate_order( iv_token    = 'T'
+                    iv_offset   = 32
+                    iv_length   = 4
+                    iv_text_tag = '''' ).
+    generate_order( iv_token    = 'K'
+                    iv_offset   = 37
+                    iv_length   = 2
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'T'
+                    iv_offset   = 40
+                    iv_length   = 3
+                    iv_text_tag = '|' ).
+    generate_order( iv_token    = 'T'
+                    iv_offset   = 45
+                    iv_length   = 4
+                    iv_text_tag = '''' ).
+    generate_order( iv_token    = 'T'
+                    iv_offset   = 51
+                    iv_length   = 1
+                    iv_text_tag = '}' ).
+    generate_order( iv_token    = 'T'
+                    iv_offset   = 54
+                    iv_length   = 1
+                    iv_text_tag = '}' ).
 
     " Generate table with expected values after extending
-    _generate_extend '.' 00 22 ''.
-    _generate_extend 'K' 22 2  ''.
-    _generate_extend '.' 24 1  ''.
-    _generate_extend 'T' 25 5  '|'.
-    _generate_extend '.' 30 2  ''.
-    _generate_extend 'T' 32 4  ''''.
-    _generate_extend '.' 36 1  ''.
-    _generate_extend 'K' 37 2  ''.
-    _generate_extend '.' 39 1  ''.
-    _generate_extend 'T' 40 3  '|'.
-    _generate_extend '.' 43 2  ''.
-    _generate_extend 'T' 45 4  ''''.
-    _generate_extend '.' 49 2  ''.
-    _generate_extend 'T' 51 1  '}'.
-    _generate_extend '.' 52 2  ''.
-    _generate_extend 'T' 54 1  '}'.
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 00
+                     iv_length   = 22
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'K'
+                     iv_offset   = 22
+                     iv_length   = 2
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 24
+                     iv_length   = 1
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'T'
+                     iv_offset   = 25
+                     iv_length   = 5
+                     iv_text_tag = '|' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 30
+                     iv_length   = 2
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'T'
+                     iv_offset   = 32
+                     iv_length   = 4
+                     iv_text_tag = '''' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 36
+                     iv_length   = 1
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'K'
+                     iv_offset   = 37
+                     iv_length   = 2
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 39
+                     iv_length   = 1
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'T'
+                     iv_offset   = 40
+                     iv_length   = 3
+                     iv_text_tag = '|' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 43
+                     iv_length   = 2
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'T'
+                     iv_offset   = 45
+                     iv_length   = 4
+                     iv_text_tag = '''' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 49
+                     iv_length   = 2
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'T'
+                     iv_offset   = 51
+                     iv_length   = 1
+                     iv_text_tag = '}' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 52
+                     iv_length   = 2
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'T'
+                     iv_offset   = 54
+                     iv_length   = 1
+                     iv_text_tag = '}' ).
 
     do_test( iv_line = lv_line iv_filename = '*.abap' ).
 
@@ -332,18 +636,41 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     lv_line = 'SELECT * FROM foo'.                          "#EC NOTEXT
 
     " Generate table with expected values after parsing
-    _generate_parse 'K' 0  6.
-    _generate_parse 'K' 9  4.
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 0
+                    iv_length = 6 ).
+
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 9
+                    iv_length = 4 ).
 
     " Generate table with expected values after ordering
-    _generate_order 'K' 0  6 ''.
-    _generate_order 'K' 9  4 ''.
+    generate_order( iv_token    = 'K'
+                    iv_offset   = 0
+                    iv_length   = 6
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'K'
+                    iv_offset   = 9
+                    iv_length   = 4
+                    iv_text_tag = '' ).
 
     " Generate table with expected values after extending
-    _generate_extend 'K' 0  6 ''.
-    _generate_extend '.' 6  3 ''.
-    _generate_extend 'K' 9  4 ''.
-    _generate_extend '.' 13 4 ''.
+    generate_extend( iv_token    = 'K'
+                     iv_offset   = 0
+                     iv_length   = 6
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 6
+                     iv_length   = 3
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'K'
+                     iv_offset   = 9
+                     iv_length   = 4
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 13
+                     iv_length   = 4
+                     iv_text_tag = '' ).
 
     do_test( iv_line = lv_line iv_filename = '*.abap' ).
 
@@ -359,11 +686,18 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     lv_line = 'lv_length = <match>-length.'.                "#EC NOTEXT
 
     " Generate table with expected values after parsing
-    _generate_parse 'K' 13 5.
-    _generate_parse 'K' 20 6.
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 13
+                    iv_length = 5 ).
+    generate_parse( iv_token  = 'K'
+                    iv_offset = 20
+                    iv_length = 6 ).
 
     " Generate table with expected values after extending
-    _generate_extend '.' 0  27 ''.
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 0
+                     iv_length   = 27
+                     iv_text_tag = '' ).
 
     do_test( iv_line = lv_line iv_filename = '*.abap' ).
 
@@ -379,19 +713,43 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     lv_line = '<tag>Text</tag>'.                            "#EC NOTEXT
 
     " Generate table with expected values after parsing
-    _generate_parse 'X' 0  1.
-    _generate_parse 'X' 4  1.
-    _generate_parse 'X' 9  1.
-    _generate_parse 'X' 14 1.
+    generate_parse( iv_token  = 'X'
+                    iv_offset = 0
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'X'
+                    iv_offset = 4
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'X'
+                    iv_offset = 9
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'X'
+                    iv_offset = 14
+                    iv_length = 1 ).
 
     " Generate table with expected values after ordering
-    _generate_order 'X' 0  5 '<'.
-    _generate_order 'X' 9  6 '<'.
+
+    generate_order( iv_token    = 'X'
+                    iv_offset   = 0
+                    iv_length   = 5
+                    iv_text_tag = '<' ).
+    generate_order( iv_token    = 'X'
+                    iv_offset   = 9
+                    iv_length   = 6
+                    iv_text_tag = '<' ).
 
     " Generate table with expected values after extending
-    _generate_extend 'X' 0  5 '<'.
-    _generate_extend '.' 5  4 ''.
-    _generate_extend 'X' 9  6 '<'.
+    generate_extend( iv_token    = 'X'
+                     iv_offset   = 0
+                     iv_length   = 5
+                     iv_text_tag = '<' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 5
+                     iv_length   = 4
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'X'
+                     iv_offset   = 9
+                     iv_length   = 6
+                     iv_text_tag = '<' ).
 
     do_test( iv_line = lv_line iv_filename = '*.xml' ).
 
@@ -404,14 +762,23 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     lv_line = '<tag/>'.                                     "#EC NOTEXT
 
     " Generate table with expected values after parsing
-    _generate_parse 'X' 0  1.
-    _generate_parse 'X' 5  1.
+    generate_parse( iv_token  = 'X'
+                    iv_offset = 0
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'X'
+                    iv_offset = 5
+                    iv_length = 1 ).
 
     " Generate table with expected values after ordering
-    _generate_order 'X' 0  6 '<'.
-
+    generate_order( iv_token    = 'X'
+                    iv_offset   = 0
+                    iv_length   = 6
+                    iv_text_tag = '<' ).
     " Generate table with expected values after extending
-    _generate_extend 'X' 0  6 '<'.
+    generate_extend( iv_token    = 'X'
+                     iv_offset   = 0
+                     iv_length   = 6
+                     iv_text_tag = '<' ).
 
     do_test( iv_line = lv_line iv_filename = '*.xml' ).
 
@@ -424,23 +791,58 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     lv_line = '<tag attribute="value"/>'.                   "#EC NOTEXT
 
     " Generate table with expected values after parsing
-    _generate_parse 'X' 0  1.
-    _generate_parse 'A' 4  10.
-    _generate_parse 'V' 15 7.
-    _generate_parse 'X' 23 1.
+    generate_parse( iv_token  = 'X'
+                    iv_offset = 0
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'A'
+                    iv_offset = 4
+                    iv_length = 10 ).
+    generate_parse( iv_token  = 'V'
+                    iv_offset = 15
+                    iv_length = 7 ).
+    generate_parse( iv_token  = 'X'
+                    iv_offset = 23
+                    iv_length = 1 ).
 
     " Generate table with expected values after ordering
-    _generate_order 'X' 0  4 '<'.
-    _generate_order 'A' 4  10 ''.
-    _generate_order 'V' 15 7 ''.
-    _generate_order 'X' 22 2 '>'.
+    generate_order( iv_token    = 'X'
+                    iv_offset   = 0
+                    iv_length   = 4
+                    iv_text_tag = '<' ).
+    generate_order( iv_token    = 'A'
+                    iv_offset   = 4
+                    iv_length   = 10
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'V'
+                    iv_offset   = 15
+                    iv_length   = 7
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'X'
+                    iv_offset   = 22
+                    iv_length   = 2
+                    iv_text_tag = '>' ).
 
     " Generate table with expected values after extending
-    _generate_extend 'X' 0  4 '<'.
-    _generate_extend 'A' 4  10 ''.
-    _generate_extend '.' 14 1 ''.
-    _generate_extend 'V' 15 7 ''.
-    _generate_extend 'X' 22 2 '>'.
+    generate_extend( iv_token    = 'X'
+                     iv_offset   = 0
+                     iv_length   = 4
+                     iv_text_tag = '<' ).
+    generate_extend( iv_token    = 'A'
+                     iv_offset   = 4
+                     iv_length   = 10
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 14
+                     iv_length   = 1
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'V'
+                     iv_offset   = 15
+                     iv_length   = 7
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'X'
+                     iv_offset   = 22
+                     iv_length   = 2
+                     iv_text_tag = '>' ).
 
     do_test( iv_line = lv_line iv_filename = '*.xml' ).
 
@@ -453,23 +855,58 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     lv_line = '<?xml version="1.0"?>'.                      "#EC NOTEXT
 
     " Generate table with expected values after parsing
-    _generate_parse 'X' 0  1.
-    _generate_parse 'A' 5  8.
-    _generate_parse 'V' 14 5.
-    _generate_parse 'X' 20 1.
+    generate_parse( iv_token  = 'X'
+                    iv_offset = 0
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'A'
+                    iv_offset = 5
+                    iv_length = 8 ).
+    generate_parse( iv_token  = 'V'
+                    iv_offset = 14
+                    iv_length = 5 ).
+    generate_parse( iv_token  = 'X'
+                    iv_offset = 20
+                    iv_length = 1 ).
 
     " Generate table with expected values after ordering
-    _generate_order 'X' 0  5 '<'.
-    _generate_order 'A' 5  8 ''.
-    _generate_order 'V' 14 5 ''.
-    _generate_order 'X' 19 2 '>'.
+    generate_order( iv_token    = 'X'
+                    iv_offset   = 0
+                    iv_length   = 5
+                    iv_text_tag = '<' ).
+    generate_order( iv_token    = 'A'
+                    iv_offset   = 5
+                    iv_length   = 8
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'V'
+                    iv_offset   = 14
+                    iv_length   = 5
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'X'
+                    iv_offset   = 19
+                    iv_length   = 2
+                    iv_text_tag = '>' ).
 
     " Generate table with expected values after extending
-    _generate_extend 'X' 0  5 '<'.
-    _generate_extend 'A' 5  8 ''.
-    _generate_extend '.' 13 1 ''.
-    _generate_extend 'V' 14 5 ''.
-    _generate_extend 'X' 19 2 '>'.
+    generate_extend( iv_token    = 'X'
+                     iv_offset   = 0
+                     iv_length   = 5
+                     iv_text_tag = '<' ).
+    generate_extend( iv_token    = 'A'
+                     iv_offset   = 5
+                     iv_length   = 8
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 13
+                     iv_length   = 1
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'V'
+                     iv_offset   = 14
+                     iv_length   = 5
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'X'
+                     iv_offset   = 19
+                     iv_length   = 2
+                     iv_text_tag = '>' ).
 
     do_test( iv_line = lv_line iv_filename = '*.xml' ).
 
@@ -482,36 +919,105 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     lv_line = '<ns:tag ns:a1="v1" ns:a2=''v2''>"text"</ns:tag>'. "#EC NOTEXT
 
     " Generate table with expected values after parsing
-    _generate_parse 'X' 0  1.
-    _generate_parse 'A' 7  6.
-    _generate_parse 'V' 14 4.
-    _generate_parse 'A' 18 6.
-    _generate_parse 'V' 25 4.
-    _generate_parse 'X' 29 1.
-    _generate_parse 'V' 30 6.
-    _generate_parse 'X' 36 1.
-    _generate_parse 'X' 44 1.
+    generate_parse( iv_token  = 'X'
+                    iv_offset = 0
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'A'
+                    iv_offset = 7
+                    iv_length = 6 ).
+    generate_parse( iv_token  = 'V'
+                    iv_offset = 14
+                    iv_length = 4 ).
+    generate_parse( iv_token  = 'A'
+                    iv_offset = 18
+                    iv_length = 6 ).
+    generate_parse( iv_token  = 'V'
+                    iv_offset = 25
+                    iv_length = 4 ).
+    generate_parse( iv_token  = 'X'
+                    iv_offset = 29
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'V'
+                    iv_offset = 30
+                    iv_length = 6 ).
+    generate_parse( iv_token  = 'X'
+                    iv_offset = 36
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'X'
+                    iv_offset = 44
+                    iv_length = 1 ).
 
     " Generate table with expected values after ordering
-    _generate_order 'X' 0  7 '<'.
-    _generate_order 'A' 7  6 ''.
-    _generate_order 'V' 14 4 ''.
-    _generate_order 'A' 18 6 ''.
-    _generate_order 'V' 25 4 ''.
-    _generate_order 'X' 29 1 '>'.
-    _generate_order 'X' 36 9 '<'.
+    generate_order( iv_token    = 'X'
+                    iv_offset   = 0
+                    iv_length   = 7
+                    iv_text_tag = '<' ).
+    generate_order( iv_token    = 'A'
+                    iv_offset   = 7
+                    iv_length   = 6
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'V'
+                    iv_offset   = 14
+                    iv_length   = 4
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'A'
+                    iv_offset   = 18
+                    iv_length   = 6
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'V'
+                    iv_offset   = 25
+                    iv_length   = 4
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'X'
+                    iv_offset   = 29
+                    iv_length   = 1
+                    iv_text_tag = '>' ).
+    generate_order( iv_token    = 'X'
+                    iv_offset   = 36
+                    iv_length   = 9
+                    iv_text_tag = '<' ).
 
     " Generate table with expected values after extending
-    _generate_extend 'X' 0  7 '<'.
-    _generate_extend 'A' 7  6 ''.
-    _generate_extend '.' 13 1 ''.
-    _generate_extend 'V' 14 4 ''.
-    _generate_extend 'A' 18 6 ''.
-    _generate_extend '.' 24 1 ''.
-    _generate_extend 'V' 25 4 ''.
-    _generate_extend 'X' 29 1 '>'.
-    _generate_extend '.' 30 6 ''.
-    _generate_extend 'X' 36 9 '<'.
+    generate_extend( iv_token    = 'X'
+                     iv_offset   = 0
+                     iv_length   = 7
+                     iv_text_tag = '<' ).
+    generate_extend( iv_token    = 'A'
+                     iv_offset   = 7
+                     iv_length   = 6
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 13
+                     iv_length   = 1
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'V'
+                     iv_offset   = 14
+                     iv_length   = 4
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'A'
+                     iv_offset   = 18
+                     iv_length   = 6
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 24
+                     iv_length   = 1
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'V'
+                     iv_offset   = 25
+                     iv_length   = 4
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'X'
+                     iv_offset   = 29
+                     iv_length   = 1
+                     iv_text_tag = '>' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 30
+                     iv_length   = 6
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'X'
+                     iv_offset   = 36
+                     iv_length   = 9
+                     iv_text_tag = '<' ).
 
     do_test( iv_line = lv_line iv_filename = '*.xml' ).
 
@@ -521,23 +1027,50 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     DATA lv_line TYPE string.
 
     "unclosed tag
-    lv_line = '<ns:tag ns:a1="v1"'.                                     "#EC NOTEXT
+    lv_line = '<ns:tag ns:a1="v1"'.                         "#EC NOTEXT
 
     " Generate table with expected values after parsing
-    _generate_parse 'X' 0  1.
-    _generate_parse 'A' 7  6.
-    _generate_parse 'V' 14 4.
+    generate_parse( iv_token  = 'X'
+                    iv_offset = 0
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'A'
+                    iv_offset = 7
+                    iv_length = 6 ).
+    generate_parse( iv_token  = 'V'
+                    iv_offset = 14
+                    iv_length = 4 ).
 
     " Generate table with expected values after ordering
-    _generate_order 'X' 0  7 '<'.
-    _generate_order 'A' 7  6 ''.
-    _generate_order 'V' 14 4 ''.
+    generate_order( iv_token    = 'X'
+                    iv_offset   = 0
+                    iv_length   = 7
+                    iv_text_tag = '<' ).
+    generate_order( iv_token    = 'A'
+                    iv_offset   = 7
+                    iv_length   = 6
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'V'
+                    iv_offset   = 14
+                    iv_length   = 4
+                    iv_text_tag = '' ).
 
     " Generate table with expected values after extending
-    _generate_extend 'X' 0  7 '<'.
-    _generate_extend 'A' 7  6 ''.
-    _generate_extend '.' 13 1 ''.
-    _generate_extend 'V' 14 4 ''.
+    generate_extend( iv_token    = 'X'
+                     iv_offset   = 0
+                     iv_length   = 7
+                     iv_text_tag = '<' ).
+    generate_extend( iv_token    = 'A'
+                     iv_offset   = 7
+                     iv_length   = 6
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 13
+                     iv_length   = 1
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'V'
+                     iv_offset   = 14
+                     iv_length   = 4
+                     iv_text_tag = '' ).
 
     do_test( iv_line = lv_line iv_filename = '*.xml' ).
   ENDMETHOD.
@@ -547,26 +1080,61 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     DATA lv_line TYPE string.
 
     "xml special characters in attribute
-    lv_line = '<tag attribute=" '' > "/>'.                   "#EC NOTEXT
+    lv_line = '<tag attribute=" '' > "/>'.                  "#EC NOTEXT
 
     " Generate table with expected values after parsing
-    _generate_parse 'X' 0  1.
-    _generate_parse 'A' 4  10.
-    _generate_parse 'V' 15 7.
-    _generate_parse 'X' 23 1.
+    generate_parse( iv_token  = 'X'
+                    iv_offset = 0
+                    iv_length = 1 ).
+    generate_parse( iv_token  = 'A'
+                    iv_offset = 4
+                    iv_length = 10 ).
+    generate_parse( iv_token  = 'V'
+                    iv_offset = 15
+                    iv_length = 7 ).
+    generate_parse( iv_token  = 'X'
+                    iv_offset = 23
+                    iv_length = 1 ).
 
     " Generate table with expected values after ordering
-    _generate_order 'X' 0  4 '<'.
-    _generate_order 'A' 4  10 ''.
-    _generate_order 'V' 15 7 ''.
-    _generate_order 'X' 22 2 '>'.
+    generate_order( iv_token    = 'X'
+                    iv_offset   = 0
+                    iv_length   = 4
+                    iv_text_tag = '<' ).
+    generate_order( iv_token    = 'A'
+                    iv_offset   = 4
+                    iv_length   = 10
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'V'
+                    iv_offset   = 15
+                    iv_length   = 7
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'X'
+                    iv_offset   = 22
+                    iv_length   = 2
+                    iv_text_tag = '>' ).
 
     " Generate table with expected values after extending
-    _generate_extend 'X' 0  4 '<'.
-    _generate_extend 'A' 4  10 ''.
-    _generate_extend '.' 14 1 ''.
-    _generate_extend 'V' 15 7 ''.
-    _generate_extend 'X' 22 2 '>'.
+    generate_extend( iv_token    = 'X'
+                     iv_offset   = 0
+                     iv_length   = 4
+                     iv_text_tag = '<' ).
+    generate_extend( iv_token    = 'A'
+                     iv_offset   = 4
+                     iv_length   = 10
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 14
+                     iv_length   = 1
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'V'
+                     iv_offset   = 15
+                     iv_length   = 7
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'X'
+                     iv_offset   = 22
+                     iv_length   = 2
+                     iv_text_tag = '>' ).
 
     do_test( iv_line = lv_line iv_filename = '*.xml' ).
 
@@ -579,24 +1147,44 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     DATA lv_line TYPE string.
 
     "attribute at beginning of line
-    lv_line = 'attribute=''>" '''.                   "#EC NOTEXT
+    lv_line = 'attribute=''>" '''.                          "#EC NOTEXT
 
     " Generate table with expected values after parsing
-    _generate_parse 'A' 0  9.
-    _generate_parse 'V' 10 5.
+    generate_parse( iv_token  = 'A'
+                    iv_offset = 0
+                    iv_length = 9 ).
+    generate_parse( iv_token  = 'V'
+                    iv_offset = 10
+                    iv_length = 5 ).
 
     " Generate table with expected values after ordering
-    _generate_order 'A' 0  9 ''.
-    _generate_order 'V' 10 5 ''.
+    generate_order( iv_token    = 'A'
+                    iv_offset   = 0
+                    iv_length   = 9
+                    iv_text_tag = '' ).
+    generate_order( iv_token    = 'V'
+                    iv_offset   = 10
+                    iv_length   = 5
+                    iv_text_tag = '' ).
 
     " Generate table with expected values after extending
-    _generate_extend 'A' 0  9 ''.
-    _generate_extend '.' 9 1 ''.
-    _generate_extend 'V' 10 5 ''.
+    generate_extend( iv_token    = 'A'
+                     iv_offset   = 0
+                     iv_length   = 9
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = '.'
+                     iv_offset   = 9
+                     iv_length   = 1
+                     iv_text_tag = '' ).
+    generate_extend( iv_token    = 'V'
+                     iv_offset   = 10
+                     iv_length   = 5
+                     iv_text_tag = '' ).
 
     do_test( iv_line = lv_line iv_filename = '*.xml' ).
 
   ENDMETHOD.
+
 
 ENDCLASS.
 
