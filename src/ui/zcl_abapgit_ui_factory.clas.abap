@@ -24,7 +24,6 @@ CLASS zcl_abapgit_ui_factory DEFINITION
         VALUE(ri_fe_serv) TYPE REF TO zif_abapgit_frontend_services .
   PROTECTED SECTION.
   PRIVATE SECTION.
-
     CLASS-DATA gi_popups TYPE REF TO zif_abapgit_popups .
     CLASS-DATA gi_tag_popups TYPE REF TO zif_abapgit_tag_popups .
     CLASS-DATA gi_gui_functions TYPE REF TO zif_abapgit_gui_functions .
@@ -117,73 +116,63 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
 
 
   METHOD init_asset_manager.
-    " used by abapmerge
-    DEFINE _inline.
-      APPEND &1 TO lt_inline.
-    END-OF-DEFINITION.
 
-    DATA lt_inline TYPE string_table.
+    DATA lo_buf TYPE REF TO lcl_string_buffer.
 
+    CREATE OBJECT lo_buf.
     CREATE OBJECT ro_asset_man.
 
-    CLEAR lt_inline.
-    " @@abapmerge include zabapgit_css_common.w3mi.data.css > _inline '$$'.
+    " @@abapmerge include zabapgit_css_common.w3mi.data.css > lo_buf->add( '$$' ).
     ro_asset_man->register_asset(
       iv_url       = 'css/common.css'
       iv_type      = 'text/css'
       iv_mime_name = 'ZABAPGIT_CSS_COMMON'
-      iv_inline    = concat_lines_of( table = lt_inline sep = cl_abap_char_utilities=>newline ) ).
+      iv_inline    = lo_buf->join_w_newline_and_flush( ) ).
 
-    CLEAR lt_inline.
-    " @@abapmerge include zabapgit_css_theme_default.w3mi.data.css > _inline '$$'.
+    " @@abapmerge include zabapgit_css_theme_default.w3mi.data.css > lo_buf->add( '$$' ).
     ro_asset_man->register_asset(
       iv_url       = 'css/theme-default.css'
       iv_type      = 'text/css'
       iv_cachable  = abap_false
       iv_mime_name = 'ZABAPGIT_CSS_THEME_DEFAULT'
-      iv_inline    = concat_lines_of( table = lt_inline sep = cl_abap_char_utilities=>newline ) ).
+      iv_inline    = lo_buf->join_w_newline_and_flush( ) ).
 
-    CLEAR lt_inline.
-    " @@abapmerge include zabapgit_css_theme_dark.w3mi.data.css > _inline '$$'.
+    " @@abapmerge include zabapgit_css_theme_dark.w3mi.data.css > lo_buf->add( '$$' ).
     ro_asset_man->register_asset(
       iv_url       = 'css/theme-dark.css'
       iv_type      = 'text/css'
       iv_cachable  = abap_false
       iv_mime_name = 'ZABAPGIT_CSS_THEME_DARK'
-      iv_inline    = concat_lines_of( table = lt_inline sep = cl_abap_char_utilities=>newline ) ).
+      iv_inline    = lo_buf->join_w_newline_and_flush( ) ).
 
-    CLEAR lt_inline.
-    " @@abapmerge include zabapgit_css_theme_belize_blue.w3mi.data.css > _inline '$$'.
+    " @@abapmerge include zabapgit_css_theme_belize_blue.w3mi.data.css > lo_buf->add( '$$' ).
     ro_asset_man->register_asset(
       iv_url       = 'css/theme-belize-blue.css'
       iv_type      = 'text/css'
       iv_cachable  = abap_false
       iv_mime_name = 'ZABAPGIT_CSS_THEME_BELIZE_BLUE'
-      iv_inline    = concat_lines_of( table = lt_inline sep = cl_abap_char_utilities=>newline ) ).
+      iv_inline    = lo_buf->join_w_newline_and_flush( ) ).
 
-    CLEAR lt_inline.
-    " @@abapmerge include zabapgit_js_common.w3mi.data.js > _inline '$$'.
+    " @@abapmerge include zabapgit_js_common.w3mi.data.js > lo_buf->add( '$$' ).
     ro_asset_man->register_asset(
       iv_url       = 'js/common.js'
       iv_type      = 'text/javascript'
       iv_mime_name = 'ZABAPGIT_JS_COMMON'
-      iv_inline    = concat_lines_of( table = lt_inline sep = cl_abap_char_utilities=>newline ) ).
+      iv_inline    = lo_buf->join_w_newline_and_flush( ) ).
 
-    CLEAR lt_inline.
-    " @@abapmerge include zabapgit_icon_font_css.w3mi.data.css > _inline '$$'.
+    " @@abapmerge include zabapgit_icon_font_css.w3mi.data.css > lo_buf->add( '$$' ).
     ro_asset_man->register_asset(
       iv_url       = 'css/ag-icons.css'
       iv_type      = 'text/css'
       iv_mime_name = 'ZABAPGIT_ICON_FONT_CSS'
-      iv_inline    = concat_lines_of( table = lt_inline sep = cl_abap_char_utilities=>newline ) ).
+      iv_inline    = lo_buf->join_w_newline_and_flush( ) ).
 
-    CLEAR lt_inline.
-    " @@abapmerge include-base64 zabapgit_icon_font.w3mi.data.woff > _inline '$$'.
+    " @@abapmerge include-base64 zabapgit_icon_font.w3mi.data.woff > lo_buf->add( '$$' ).
     ro_asset_man->register_asset(
       iv_url       = 'font/ag-icons.woff'
       iv_type      = 'font/woff'
       iv_mime_name = 'ZABAPGIT_ICON_FONT'
-      iv_base64    = concat_lines_of( table = lt_inline ) ).
+      iv_base64    = lo_buf->join_and_flush( ) ).
 
     " see https://github.com/larshp/abapGit/issues/201 for source SVG
     ro_asset_man->register_asset(
