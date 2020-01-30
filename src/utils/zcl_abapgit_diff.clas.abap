@@ -173,16 +173,18 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
           lv_beacon_str  TYPE string,
           lv_beacon_2lev TYPE string,
           lv_submatch    TYPE string,
-          lo_regex       TYPE REF TO cl_abap_regex.
+          lo_regex       TYPE REF TO cl_abap_regex,
+          lt_regex       TYPE ty_regexset_tt.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
 
+    lt_regex = create_regex_set( ).
     LOOP AT mt_diff ASSIGNING <ls_diff>.
 
       CLEAR lv_offs.
       <ls_diff>-beacon = lv_beacon_idx.
 
-      LOOP AT create_regex_set( ) INTO lo_regex.
+      LOOP AT lt_regex INTO lo_regex.
         FIND FIRST OCCURRENCE OF REGEX lo_regex IN <ls_diff>-new SUBMATCHES lv_submatch.
         IF sy-subrc = 0. " Match
           lv_beacon_str = <ls_diff>-new.
