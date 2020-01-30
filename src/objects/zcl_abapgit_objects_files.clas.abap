@@ -170,11 +170,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
   METHOD add_xml.
 
-    DATA: lv_xml     TYPE string,
-          lv_hex     TYPE x LENGTH 1 VALUE '23',
-          lv_hex_bom TYPE x LENGTH 3 VALUE 'EFBBBF',
-          ls_file    TYPE zif_abapgit_definitions=>ty_file.
-
+    DATA: lv_xml  TYPE string,
+          ls_file TYPE zif_abapgit_definitions=>ty_file.
 
     lv_xml = io_xml->render( iv_normalize = iv_normalize
                              is_metadata = is_metadata ).
@@ -189,22 +186,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
       WITH '<?xml version="1.0" encoding="utf-8"?>'.
     ASSERT sy-subrc = 0.
 
-    ls_file-data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_xml ).
-
-    "unicode systems always add the byte order mark to the xml, while non-unicode does not
-    "in class ZCL_ABAPGIT_XML~TO_XML byte order mark was added to XML as #
-    "In non-unicode systems zcl_abapgit_convert=>xstring_to_string_utf8( cl_abap_char_utilities=>byte_order_mark_utf8 )
-    "has result # as HEX 23 and not HEX EFBBBF.
-    "So we have to remove 23 first and add EFBBBF after to serialized string
-    IF ls_file-data(3) <> cl_abap_char_utilities=>byte_order_mark_utf8
-    AND ls_file-data(1) = lv_hex.
-      REPLACE FIRST OCCURRENCE
-        OF lv_hex IN ls_file-data WITH lv_hex_bom IN BYTE MODE.
-      ASSERT sy-subrc = 0.
-    ENDIF.
+    ls_file-data = zcl_abapgit_convert=>string_to_xstring_utf8_bom( lv_xml ).
 
     APPEND ls_file TO mt_files.
-
   ENDMETHOD.
 
   METHOD constructor.
