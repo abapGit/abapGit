@@ -81,7 +81,7 @@
     "abapdoc": false,
     "check_ddic": true,
     "check_include": true,
-    "form_no_dash": false,
+    "form_no_dash": true,
     "allowed_object_types": {
       "allowed": [
         "PROG",
