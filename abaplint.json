@@ -266,7 +266,7 @@
     "start_at_tab": true,
     "superclass_final": true,
     "tabl_enhancement_category": true,
-    "type_form_parameters": false,
+    "type_form_parameters": true,
     "unreachable_code": true,
     "use_new": true,
     "when_others_last": true,
