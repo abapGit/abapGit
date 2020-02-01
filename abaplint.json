@@ -228,6 +228,7 @@
       "move": true,
       "divide": true,
       "requested": true,
+      "setExtended": true,
       "occurs": true
     },
     "parser_error": {},
