@@ -119,3 +119,8 @@ Frederik Hudak
 [Improving your ABAP code quality with open-source tools](https://github.com/jwigert/sapsa-impuls-2019-jw/blob/master/F%C3%B6rb%C3%A4ttra%20kvaliteten%20p%C3%A5%20din%20ABAP-kod%20med%20hj%C3%A4lp%20av%20%C3%B6ppen%20k%C3%A4llkod-verktyg.pdf), Johan Wigert (in Swedish)
 
 [Doing DevOps with SAP](https://www.youtube.com/watch?v=7d8pngf85Ag), Abel Wang, Ram and Gopal
+
+### 2020
+
+[How we do ABAP code review using abapGit](https://blogs.sap.com/2020/01/30/how-we-do-abap-code-review-using-abapgit/), 
+Michael Pang
