@@ -34,6 +34,7 @@ CLASS zcl_abapgit_diff DEFINITION
   PROTECTED SECTION.
 
   PRIVATE SECTION.
+    TYPES ty_regexset_tt TYPE STANDARD TABLE OF REF TO cl_abap_regex WITH KEY table_line.
 
     DATA mt_beacons TYPE zif_abapgit_definitions=>ty_string_tt .
     DATA mt_diff TYPE zif_abapgit_definitions=>ty_diffs_tt .
@@ -62,11 +63,14 @@ CLASS zcl_abapgit_diff DEFINITION
     METHODS calculate_line_num_and_stats .
     METHODS map_beacons .
     METHODS shortlist .
+    METHODS create_regex_set
+      RETURNING
+        VALUE(rt_regex_set) TYPE ty_regexset_tt.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
+CLASS zcl_abapgit_diff IMPLEMENTATION.
 
 
   METHOD calculate_line_num_and_stats.
@@ -158,20 +162,11 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
 
 
   METHOD get_beacons.
-
     rt_beacons = mt_beacons.
-
   ENDMETHOD.
 
 
   METHOD map_beacons.
-
-    DEFINE _add_regex.
-      CREATE OBJECT lo_regex
-        EXPORTING pattern     = &1
-                  ignore_case = abap_true ##NO_TEXT.
-      APPEND lo_regex TO lt_regex_set.
-    END-OF-DEFINITION.
 
     DATA: lv_beacon_idx  TYPE i,
           lv_offs        TYPE i,
@@ -179,21 +174,17 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
           lv_beacon_2lev TYPE string,
           lv_submatch    TYPE string,
           lo_regex       TYPE REF TO cl_abap_regex,
-          lt_regex_set   TYPE TABLE OF REF TO cl_abap_regex.
+          lt_regex       TYPE ty_regexset_tt.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
 
-
-    _add_regex '^\s*(CLASS|FORM|MODULE|REPORT|METHOD)\s'.
-    _add_regex '^\s*START-OF-'.
-    _add_regex '^\s*INITIALIZATION(\s|\.)'.
-
+    lt_regex = create_regex_set( ).
     LOOP AT mt_diff ASSIGNING <ls_diff>.
 
       CLEAR lv_offs.
       <ls_diff>-beacon = lv_beacon_idx.
 
-      LOOP AT lt_regex_set INTO lo_regex. "
+      LOOP AT lt_regex INTO lo_regex.
         FIND FIRST OCCURRENCE OF REGEX lo_regex IN <ls_diff>-new SUBMATCHES lv_submatch.
         IF sy-subrc = 0. " Match
           lv_beacon_str = <ls_diff>-new.
@@ -228,14 +219,6 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
 
   METHOD render.
 
-    DEFINE _append.
-      CLEAR ls_diff.
-      ls_diff-new    = &1.
-      ls_diff-result = &2.
-      ls_diff-old    = &3.
-      APPEND ls_diff TO rt_diff.
-    END-OF-DEFINITION.
-
     DATA: lv_oindex TYPE i VALUE 1,
           lv_nindex TYPE i VALUE 1,
           ls_new    LIKE LINE OF it_new,
@@ -254,16 +237,26 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
 
         CASE ls_delta-vrsflag.
           WHEN zif_abapgit_definitions=>c_diff-delete.
-            _append '' zif_abapgit_definitions=>c_diff-delete ls_delta-line.
+            ls_diff-new = ''.
+            ls_diff-result = zif_abapgit_definitions=>c_diff-delete.
+            ls_diff-old = ls_delta-line.
+
             lv_oindex = lv_oindex + 1.
           WHEN zif_abapgit_definitions=>c_diff-insert.
-            _append ls_delta-line zif_abapgit_definitions=>c_diff-insert ''.
+            ls_diff-new = ls_delta-line.
+            ls_diff-result = zif_abapgit_definitions=>c_diff-insert.
+            ls_diff-old = ''.
+
             lv_nindex = lv_nindex + 1.
           WHEN zif_abapgit_definitions=>c_diff-update.
             CLEAR ls_new.
             READ TABLE it_new INTO ls_new INDEX lv_nindex.
             ASSERT sy-subrc = 0.
-            _append ls_new zif_abapgit_definitions=>c_diff-update ls_delta-line.
+
+            ls_diff-new = ls_new.
+            ls_diff-result = zif_abapgit_definitions=>c_diff-update.
+            ls_diff-old = ls_delta-line.
+
             lv_nindex = lv_nindex + 1.
             lv_oindex = lv_oindex + 1.
           WHEN OTHERS.
@@ -276,11 +269,17 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
         CLEAR ls_old.
         READ TABLE it_old INTO ls_old INDEX lv_oindex.    "#EC CI_SUBRC
         lv_oindex = lv_oindex + 1.
-        _append ls_new '' ls_old.
+
+        ls_diff-new = ls_new.
+        ls_diff-result = ''.
+        ls_diff-old = ls_old.
       ENDIF.
 
+      APPEND ls_diff TO rt_diff.
+      CLEAR ls_diff.
+
       IF lv_nindex > lines( it_new ) AND lv_oindex > lines( it_old ).
-        EXIT. " current loop
+        EXIT.
       ENDIF.
     ENDDO.
 
@@ -391,4 +390,25 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
     SPLIT lv_old AT zif_abapgit_definitions=>c_newline INTO TABLE et_old.
 
   ENDMETHOD.
+
+  METHOD create_regex_set.
+
+    DATA: lo_regex TYPE REF TO cl_abap_regex,
+          lt_regex TYPE zif_abapgit_definitions=>ty_string_tt,
+          ls_regex LIKE LINE OF lt_regex.
+
+    APPEND '^\s*(CLASS|FORM|MODULE|REPORT|METHOD)\s' TO lt_regex.
+    APPEND '^\s*START-OF-' TO lt_regex.
+    APPEND '^\s*INITIALIZATION(\s|\.)' TO lt_regex.
+
+    LOOP AT lt_regex INTO ls_regex.
+      CREATE OBJECT lo_regex
+        EXPORTING
+          pattern     = ls_regex
+          ignore_case = abap_true.
+      APPEND lo_regex TO rt_regex_set.
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.
