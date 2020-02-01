@@ -9,6 +9,15 @@ CLASS ltcl_diff DEFINITION FOR TESTING
           mt_expected TYPE zif_abapgit_definitions=>ty_diffs_tt,
           ms_expected LIKE LINE OF mt_expected.
 
+    METHODS:
+      add_new IMPORTING iv_new TYPE string,
+      add_old IMPORTING iv_old TYPE string,
+      add_expected IMPORTING iv_new_num TYPE zif_abapgit_definitions=>ty_diff-new_num
+                             iv_new     TYPE zif_abapgit_definitions=>ty_diff-new
+                             iv_result  TYPE zif_abapgit_definitions=>ty_diff-result
+                             iv_old_num TYPE zif_abapgit_definitions=>ty_diff-old_num
+                             iv_old     TYPE zif_abapgit_definitions=>ty_diff-old.
+
     METHODS: setup.
     METHODS: test.
 
@@ -25,23 +34,30 @@ ENDCLASS.
 
 CLASS ltcl_diff IMPLEMENTATION.
 
-  DEFINE _new.
-    APPEND &1 TO mt_new.
-  END-OF-DEFINITION.
+  METHOD add_new.
+    DATA ls_new LIKE LINE OF mt_new.
 
-  DEFINE _old.
-    APPEND &1 TO mt_old.
-  END-OF-DEFINITION.
+    ls_new = iv_new.
+    APPEND ls_new TO mt_new.
+  ENDMETHOD.
 
-  DEFINE _expected.
-    CLEAR ms_expected.
-    ms_expected-new_num = &1.
-    ms_expected-new     = &2.
-    ms_expected-result  = &3.
-    ms_expected-old_num = &4.
-    ms_expected-old     = &5.
-    APPEND ms_expected TO mt_expected.
-  END-OF-DEFINITION.
+  METHOD add_old.
+    DATA ls_old LIKE LINE OF mt_old.
+
+    ls_old = iv_old.
+    APPEND ls_old TO mt_old.
+  ENDMETHOD.
+
+  METHOD add_expected.
+    DATA ls_expected LIKE LINE OF mt_expected.
+
+    ls_expected-new_num = iv_new_num.
+    ls_expected-new     = iv_new.
+    ls_expected-result  = iv_result.
+    ls_expected-old_num = iv_old_num.
+    ls_expected-old     = iv_old.
+    APPEND ls_expected TO mt_expected.
+  ENDMETHOD.
 
   METHOD setup.
     CLEAR mt_new.
@@ -81,89 +97,129 @@ CLASS ltcl_diff IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals( act = lt_diff
                                         exp = mt_expected ).
 
-
   ENDMETHOD.
 
   METHOD diff01.
 
-* insert
-    _new 'A'.
+    "insert
+    add_new( iv_new = 'A' ).
 
-    "         " NEW  " STATUS                 " OLD
-    _expected 1 'A'  zif_abapgit_definitions=>c_diff-insert  '' ''.
+    add_expected( iv_new_num = '    1'
+                  iv_new     = 'A'
+                  iv_result  = zif_abapgit_definitions=>c_diff-insert
+                  iv_old_num = ''
+                  iv_old     = '' ).
     test( ).
 
   ENDMETHOD.
 
   METHOD diff02.
 
-* identical
-    _new 'A'.
-    _old 'A'.
+    " identical
+    add_new( iv_new = 'A' ).
+    add_old( iv_old = 'A' ).
 
-    "         " NEW  " STATUS  " OLD
-    _expected 1 'A'  ''        1 'A'.
+    add_expected( iv_new_num = '    1'
+                  iv_new     = 'A'
+                  iv_result  = ''
+                  iv_old_num = '    1'
+                  iv_old     = 'A' ).
     test( ).
 
   ENDMETHOD.
 
   METHOD diff03.
 
-* delete
-    _old 'A'.
+    " delete
+    add_old( iv_old = 'A' ).
 
-    "         " NEW  " STATUS                 " OLD
-    _expected '' ''  zif_abapgit_definitions=>c_diff-delete  1 'A'.
+    add_expected( iv_new_num = ''
+                  iv_new     = ''
+                  iv_result  = zif_abapgit_definitions=>c_diff-delete
+                  iv_old_num = '    1'
+                  iv_old     = 'A' ).
     test( ).
 
   ENDMETHOD.
 
   METHOD diff04.
 
-* update
-    _new 'A+'.
-    _old 'A'.
+    " update
+    add_new( iv_new = 'A+' ).
 
-    "         " NEW   " STATUS                 " OLD
-    _expected 1 'A+'  zif_abapgit_definitions=>c_diff-update  1 'A'.
+    add_old( iv_old = 'A' ).
+
+    add_expected( iv_new_num = '    1'
+                  iv_new     = 'A+'
+                  iv_result  = zif_abapgit_definitions=>c_diff-update
+                  iv_old_num = '    1'
+                  iv_old     = 'A' ).
     test( ).
 
   ENDMETHOD.
 
   METHOD diff05.
 
-* identical
-    _new 'A'.
-    _new 'B'.
-    _old 'A'.
-    _old 'B'.
+    " identical
+    add_new( iv_new = 'A' ).
+    add_new( iv_new = 'B' ).
 
-    "         " NEW  " STATUS  " OLD
-    _expected 1 'A'  ''        1 'A'.
-    _expected 2 'B'  ''        2 'B'.
+    add_old( iv_old = 'A' ).
+    add_old( iv_old = 'B' ).
+
+    add_expected( iv_new_num = '    1'
+                  iv_new     = 'A'
+                  iv_result  = ''
+                  iv_old_num = '    1'
+                  iv_old     = 'A' ).
+    add_expected( iv_new_num = '    2'
+                  iv_new     = 'B'
+                  iv_result  = ''
+                  iv_old_num = '    2'
+                  iv_old     = 'B' ).
     test( ).
 
   ENDMETHOD.
 
   METHOD diff06.
 
-    _new 'A'.
-    _new 'B'.
-    _new 'inserted'.
-    _new 'C'.
-    _new 'D update'.
 
-    _old 'A'.
-    _old 'B'.
-    _old 'C'.
-    _old 'D'.
+    add_new( iv_new = 'A' ).
+    add_new( iv_new = 'B' ).
+    add_new( iv_new = 'inserted' ).
+    add_new( iv_new = 'C' ).
+    add_new( iv_new = 'D update' ).
 
-    "         " NEW         " STATUS                        " OLD
-    _expected 1 'A'         ''                                1 'A'.
-    _expected 2 'B'         ''                                2 'B'.
-    _expected 3 'inserted'  zif_abapgit_definitions=>c_diff-insert   '' ''.
-    _expected 4 'C'         ''                                3 'C'.
-    _expected 5 'D update'  zif_abapgit_definitions=>c_diff-update   4 'D'.
+    add_old( iv_old = 'A' ).
+    add_old( iv_old = 'B' ).
+    add_old( iv_old = 'C' ).
+    add_old( iv_old = 'D' ).
+
+    add_expected( iv_new_num = '    1'
+                  iv_new     = 'A'
+                  iv_result  = ''
+                  iv_old_num = '    1'
+                  iv_old     = 'A' ).
+    add_expected( iv_new_num = '    2'
+                  iv_new     = 'B'
+                  iv_result  = ''
+                  iv_old_num = '    2'
+                  iv_old     = 'B' ).
+    add_expected( iv_new_num = '    3'
+                  iv_new     = 'inserted'
+                  iv_result  = zif_abapgit_definitions=>c_diff-insert
+                  iv_old_num = ''
+                  iv_old     = '' ).
+    add_expected( iv_new_num = '    4'
+                  iv_new     = 'C'
+                  iv_result  = ''
+                  iv_old_num = '    3'
+                  iv_old     = 'C' ).
+    add_expected( iv_new_num = '    5'
+                  iv_new     = 'D update'
+                  iv_result  = zif_abapgit_definitions=>c_diff-update
+                  iv_old_num = '    4'
+                  iv_old     = 'D' ).
 
     test( ).
 
