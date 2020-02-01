@@ -100,11 +100,7 @@ CLASS lcl_log_entries IMPLEMENTATION.
   ENDMETHOD.
 ENDCLASS.
 
-
 **********************************************************************
-
-
-
 
 CLASS ltcl_news DEFINITION DEFERRED.
 CLASS zcl_abapgit_news DEFINITION LOCAL FRIENDS ltcl_news.
