@@ -81,7 +81,7 @@
     "abapdoc": false,
     "check_ddic": true,
     "check_include": true,
-    "form_no_dash": false,
+    "form_no_dash": true,
     "allowed_object_types": {
       "allowed": [
         "PROG",
@@ -228,6 +228,7 @@
       "move": true,
       "divide": true,
       "requested": true,
+      "setExtended": true,
       "occurs": true
     },
     "parser_error": {},
@@ -265,7 +266,7 @@
     "start_at_tab": true,
     "superclass_final": true,
     "tabl_enhancement_category": true,
-    "type_form_parameters": false,
+    "type_form_parameters": true,
     "unreachable_code": true,
     "use_new": true,
     "when_others_last": true,
