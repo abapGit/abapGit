@@ -16,6 +16,7 @@ CLASS zcl_abapgit_zlib DEFINITION
       RETURNING
         VALUE(rs_data) TYPE ty_decompress .
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS: c_maxdcodes TYPE i VALUE 30.
 
@@ -53,7 +54,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_zlib IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
 
 
   METHOD copy_out.
@@ -103,6 +104,28 @@ CLASS zcl_abapgit_zlib IMPLEMENTATION.
       lv_index = lv_index + lv_count.
       lv_first = lv_first + lv_count.
       lv_first = lv_first * 2.
+    ENDDO.
+
+  ENDMETHOD.
+
+
+  METHOD decode_loop.
+
+    DATA lv_x TYPE x.
+    DATA lv_symbol TYPE i.
+
+    DO.
+      lv_symbol = decode( go_lencode ).
+
+      IF lv_symbol < 256.
+        lv_x = zcl_abapgit_zlib_convert=>int_to_hex( lv_symbol ).
+        CONCATENATE gv_out lv_x INTO gv_out IN BYTE MODE.
+      ELSEIF lv_symbol = 256.
+        EXIT.
+      ELSE.
+        copy_out( read_pair( lv_symbol ) ).
+      ENDIF.
+
     ENDDO.
 
   ENDMETHOD.
@@ -285,72 +308,67 @@ CLASS zcl_abapgit_zlib IMPLEMENTATION.
 
   METHOD map_distance.
 
-    DEFINE _distance.
-      rv_distance = go_stream->take_int( &1 ).
-      rv_distance = rv_distance + &2.
-    END-OF-DEFINITION.
-
     CASE iv_code.
       WHEN 0.
-        _distance 0 1.
+        rv_distance = go_stream->take_int( 0 ) + 1.
       WHEN 1.
-        _distance 0 2.
+        rv_distance = go_stream->take_int( 0 ) + 2.
       WHEN 2.
-        _distance 0 3.
+        rv_distance = go_stream->take_int( 0 ) + 3.
       WHEN 3.
-        _distance 0 4.
+        rv_distance = go_stream->take_int( 0 ) + 4.
       WHEN 4.
-        _distance 1 5.
+        rv_distance = go_stream->take_int( 1 ) + 5.
       WHEN 5.
-        _distance 1 7.
+        rv_distance = go_stream->take_int( 1 ) + 7.
       WHEN 6.
-        _distance 2 9.
+        rv_distance = go_stream->take_int( 2 ) + 9.
       WHEN 7.
-        _distance 2 13.
+        rv_distance = go_stream->take_int( 2 ) + 13.
       WHEN 8.
-        _distance 3 17.
+        rv_distance = go_stream->take_int( 3 ) + 17.
       WHEN 9.
-        _distance 3 25.
+        rv_distance = go_stream->take_int( 3 ) + 25.
       WHEN 10.
-        _distance 4 33.
+        rv_distance = go_stream->take_int( 4 ) + 33.
       WHEN 11.
-        _distance 4 49.
+        rv_distance = go_stream->take_int( 4 ) + 49.
       WHEN 12.
-        _distance 5 65.
+        rv_distance = go_stream->take_int( 5 ) + 65.
       WHEN 13.
-        _distance 5 97.
+        rv_distance = go_stream->take_int( 5 ) + 97.
       WHEN 14.
-        _distance 6 129.
+        rv_distance = go_stream->take_int( 6 ) + 129.
       WHEN 15.
-        _distance 6 193.
+        rv_distance = go_stream->take_int( 6 ) + 193.
       WHEN 16.
-        _distance 7 257.
+        rv_distance = go_stream->take_int( 7 ) + 257.
       WHEN 17.
-        _distance 7 385.
+        rv_distance = go_stream->take_int( 7 ) + 385.
       WHEN 18.
-        _distance 8 513.
+        rv_distance = go_stream->take_int( 8 ) + 513.
       WHEN 19.
-        _distance 8 769.
+        rv_distance = go_stream->take_int( 8 ) + 769.
       WHEN 20.
-        _distance 9 1025.
+        rv_distance = go_stream->take_int( 9 ) + 1025.
       WHEN 21.
-        _distance 9 1537.
+        rv_distance = go_stream->take_int( 9 ) + 1537.
       WHEN 22.
-        _distance 10 2049.
+        rv_distance = go_stream->take_int( 10 ) + 2049.
       WHEN 23.
-        _distance 10 3073.
+        rv_distance = go_stream->take_int( 10 ) + 3073.
       WHEN 24.
-        _distance 11 4097.
+        rv_distance = go_stream->take_int( 11 ) + 4097.
       WHEN 25.
-        _distance 11 6145.
+        rv_distance = go_stream->take_int( 11 ) + 6145.
       WHEN 26.
-        _distance 12 8193.
+        rv_distance = go_stream->take_int( 12 ) + 8193.
       WHEN 27.
-        _distance 12 12289.
+        rv_distance = go_stream->take_int( 12 ) + 12289.
       WHEN 28.
-        _distance 13 16385.
+        rv_distance = go_stream->take_int( 13 ) + 16385.
       WHEN 29.
-        _distance 13 24577.
+        rv_distance = go_stream->take_int( 13 ) + 24577.
       WHEN OTHERS.
         ASSERT 1 = 0.
     ENDCASE.
@@ -360,88 +378,71 @@ CLASS zcl_abapgit_zlib IMPLEMENTATION.
 
   METHOD map_length.
 
-    DEFINE _length.
-      rv_length = go_stream->take_int( &1 ).
-      rv_length = rv_length + &2.
-    END-OF-DEFINITION.
-
     CASE iv_code.
       WHEN 257.
-        _length 0 3.
+        rv_length = go_stream->take_int( 0 ) + 3.
       WHEN 258.
-        _length 0 4.
+        rv_length = go_stream->take_int( 0 ) + 4.
       WHEN 259.
-        _length 0 5.
+        rv_length = go_stream->take_int( 0 ) + 5.
       WHEN 260.
-        _length 0 6.
+        rv_length = go_stream->take_int( 0 ) + 6.
       WHEN 261.
-        _length 0 7.
+        rv_length = go_stream->take_int( 0 ) + 7.
       WHEN 262.
-        _length 0 8.
+        rv_length = go_stream->take_int( 0 ) + 8.
       WHEN 263.
-        _length 0 9.
+        rv_length = go_stream->take_int( 0 ) + 9.
       WHEN 264.
-        _length 0 10.
+        rv_length = go_stream->take_int( 0 ) + 10.
       WHEN 265.
-        _length 1 11.
+        rv_length = go_stream->take_int( 1 ) + 11.
       WHEN 266.
-        _length 1 13.
+        rv_length = go_stream->take_int( 1 ) + 13.
       WHEN 267.
-        _length 1 15.
+        rv_length = go_stream->take_int( 1 ) + 15.
       WHEN 268.
-        _length 1 17.
+        rv_length = go_stream->take_int( 1 ) + 17.
       WHEN 269.
-        _length 2 19.
+        rv_length = go_stream->take_int( 2 ) + 19.
       WHEN 270.
-        _length 2 23.
+        rv_length = go_stream->take_int( 2 ) + 23.
       WHEN 271.
-        _length 2 27.
+        rv_length = go_stream->take_int( 2 ) + 27.
       WHEN 272.
-        _length 2 31.
+        rv_length = go_stream->take_int( 2 ) + 31.
       WHEN 273.
-        _length 3 35.
+        rv_length = go_stream->take_int( 3 ) + 35.
       WHEN 274.
-        _length 3 43.
+        rv_length = go_stream->take_int( 3 ) + 43.
       WHEN 275.
-        _length 3 51.
+        rv_length = go_stream->take_int( 3 ) + 51.
       WHEN 276.
-        _length 3 59.
+        rv_length = go_stream->take_int( 3 ) + 59.
       WHEN 277.
-        _length 4 67.
+        rv_length = go_stream->take_int( 4 ) + 67.
       WHEN 278.
-        _length 4 83.
+        rv_length = go_stream->take_int( 4 ) + 83.
       WHEN 279.
-        _length 4 99.
+        rv_length = go_stream->take_int( 4 ) + 99.
       WHEN 280.
-        _length 4 115.
+        rv_length = go_stream->take_int( 4 ) + 115.
       WHEN 281.
-        _length 5 131.
+        rv_length = go_stream->take_int( 5 ) + 131.
       WHEN 282.
-        _length 5 163.
+        rv_length = go_stream->take_int( 5 ) + 163.
       WHEN 283.
-        _length 5 195.
+        rv_length = go_stream->take_int( 5 ) + 195.
       WHEN 284.
-        _length 5 227.
+        rv_length = go_stream->take_int( 5 ) + 227.
       WHEN 285.
-        _length 0 258.
+        rv_length = go_stream->take_int( 0 ) + 258.
       WHEN OTHERS.
         ASSERT 1 = 0.
     ENDCASE.
 
   ENDMETHOD.
 
-
-  METHOD read_pair.
-
-    DATA: lv_symbol TYPE i.
-
-
-    rs_pair-length = map_length( iv_length ).
-
-    lv_symbol = decode( go_distcode ).
-    rs_pair-distance = map_distance( lv_symbol ).
-
-  ENDMETHOD.
 
   METHOD not_compressed.
 
@@ -458,26 +459,15 @@ CLASS zcl_abapgit_zlib IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD decode_loop.
+  METHOD read_pair.
 
-    DATA lv_x TYPE x.
-    DATA lv_symbol TYPE i.
+    DATA: lv_symbol TYPE i.
 
-    DO.
-      lv_symbol = decode( go_lencode ).
 
-      IF lv_symbol < 256.
-        lv_x = zcl_abapgit_zlib_convert=>int_to_hex( lv_symbol ).
-        CONCATENATE gv_out lv_x INTO gv_out IN BYTE MODE.
-      ELSEIF lv_symbol = 256.
-        EXIT.
-      ELSE.
-        copy_out( read_pair( lv_symbol ) ).
-      ENDIF.
+    rs_pair-length = map_length( iv_length ).
 
-    ENDDO.
+    lv_symbol = decode( go_distcode ).
+    rs_pair-distance = map_distance( lv_symbol ).
 
   ENDMETHOD.
-
 ENDCLASS.
-
