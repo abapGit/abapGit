@@ -95,7 +95,7 @@
     },
     "ambiguous_statement": true,
     "avoid_use": {
-      "define": false,
+      "define": true,
       "endselect": true,
       "execSQL": true,
       "kernelCall": true,
