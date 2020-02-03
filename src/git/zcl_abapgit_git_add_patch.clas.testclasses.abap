@@ -54,24 +54,28 @@ ENDCLASS.
 
 CLASS ltcl_calculate_patch IMPLEMENTATION.
 
-  DEFINE given_diff.
-
-    given_diff( iv_patch_flag = &1
-                iv_new_num    = &2
-                iv_new        = &3
-                iv_result     = &4
-                iv_old_num    = &5
-                iv_old        = &6 ).
-
-  END-OF-DEFINITION.
-
   METHOD single_insert.
 
-    given_diff:
-      " patch_flag  new_num   new                result   old_num   old
-          ' '       '    1'   ' '                  ' '    '    1'   ' ',
-          'X'       '    2'   'write: `Test`.'     'I'    '     '   ' ',
-          ' '       '    3'   ' '                  ' '    '    2'   ' '.
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    1'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    1'
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '    2'
+                iv_new        = 'write: `Test`.'
+                iv_result     = 'I'
+                iv_old_num    = '     '
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    3'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    2'
+                iv_old        = ' ' ).
 
     when_patch_is_calculated( ).
 
@@ -84,12 +88,33 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
   METHOD multiple_adjacent_insert.
 
-    given_diff:
-      " patch_flag  new_num   new                      result   old_num   old
-          ' '       '    1'   ' '                        ' '    '    1'   ' ',
-          'X'       '    2'   'write: `Test`.'           'I'    '     '   ' ',
-          'X'       '    3'   'write: `Hello world`.'    'I'    '     '   ' ',
-          ' '       '    4'   ' '                        ' '    '    2'   ' '.
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    1'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    1'
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '    2'
+                iv_new        = 'write: `Test`.'
+                iv_result     = 'I'
+                iv_old_num    = '     '
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '    3'
+                iv_new        = 'write: `Hello world`.'
+                iv_result     = 'I'
+                iv_old_num    = '     '
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    4'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    2'
+                iv_old        = ' ' ).
 
     when_patch_is_calculated( ).
 
@@ -103,13 +128,40 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
   METHOD multiple_non_adjacent_insert.
 
-    given_diff:
-      " patch_flag  new_num   new                      result   old_num   old
-          ' '       '    1'   ' '                        ' '    '    1'   ' ',
-          'X'       '    2'   'write: `Test`.'           'I'    '     '   ' ',
-          ' '       '    3'   ' '                        ' '    '    2'   ' ',
-          'X'       '    4'   'write: `Hello world`.'    'I'    '     '   ' ',
-          ' '       '    5'   ' '                        ' '    '    3'   ' '.
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    1'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    1'
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '    2'
+                iv_new        = 'write: `Test`.'
+                iv_result     = 'I'
+                iv_old_num    = '     '
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    3'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    2'
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '    4'
+                iv_new        = 'write: `Hello world`.'
+                iv_result     = 'I'
+                iv_old_num    = '     '
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    5'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    3'
+                iv_old        = ' ' ).
 
     when_patch_is_calculated( ).
 
@@ -124,13 +176,40 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
   METHOD multiple_partial_insert.
 
-    given_diff:
-      " patch_flag  new_num   new                      result   old_num   old
-          ' '       '    1'   ' '                        ' '    '    1'   ' ',
-          'X'       '    2'   'write: `Test`.'           'I'    '     '   ' ',
-          ' '       '    3'   ' '                        ' '    '    2'   ' ',
-          ' '       '    4'   'write: `Hello world`.'    'I'    '     '   ' ',
-          ' '       '    5'   ' '                        ' '    '    3'   ' '.
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    1'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    1'
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '    2'
+                iv_new        = 'write: `Test`.'
+                iv_result     = 'I'
+                iv_old_num    = '     '
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    3'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    2'
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    4'
+                iv_new        = 'write: `Hello world`.'
+                iv_result     = 'I'
+                iv_old_num    = '     '
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    5'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    3'
+                iv_old        = ' ' ).
 
     when_patch_is_calculated( ).
 
@@ -144,11 +223,26 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
   METHOD single_delete.
 
-    given_diff:
-      " patch_flag  new_num   new result   old_num   old
-          ' '       '    1'   ' '   ' '    '    1'   ' ',
-          'X'       '     '   ' '   'D'    '    2'   'write: `Test`.',
-          ' '       '    2'   ' '   ' '    '    3'   ' '.
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    1'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    1'
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '     '
+                iv_new        = ' '
+                iv_result     = 'D'
+                iv_old_num    = '    2'
+                iv_old        = 'write: `Test`.' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    2'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    3'
+                iv_old        = ' ' ).
 
     when_patch_is_calculated( ).
 
@@ -158,12 +252,33 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
   METHOD multiple_adjacend_delete.
 
-    given_diff:
-      " patch_flag  new_num   new result   old_num   old
-          ' '       '    1'   ' '   ' '    '    1'   ' ',
-          'X'       '     '   ' '   'D'    '    2'   'write: `Test`.',
-          'X'       '     '   ' '   'D'    '    3'   'write: `Hello world`.',
-          ' '       '    2'   ' '   ' '    '    4'   ' '.
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    1'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    1'
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '     '
+                iv_new        = ' '
+                iv_result     = 'D'
+                iv_old_num    = '    2'
+                iv_old        = 'write: `Test`.' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '     '
+                iv_new        = ' '
+                iv_result     = 'D'
+                iv_old_num    = '    3'
+                iv_old        = 'write: `Hello world`.' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    2'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    4'
+                iv_old        = ' ' ).
 
     when_patch_is_calculated( ).
 
@@ -173,13 +288,40 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
   METHOD multiple_non_adjacent_delete.
 
-    given_diff:
-      " patch_flag  new_num   new result   old_num   old
-          ' '       '    1'   ' '   ' '    '    1'   ' ',
-          'X'       '     '   ' '   'D'    '    2'   'write: `Test`.',
-          ' '       '     '   ' '   'D'    '    3'   'write: `Hello world`.',
-          'X'       '     '   ' '   'D'    '    4'   'write: `Hello 123`.',
-          ' '       '    2'   ' '   ' '    '    5'   ' '.
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    1'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    1'
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '     '
+                iv_new        = ' '
+                iv_result     = 'D'
+                iv_old_num    = '    2'
+                iv_old        = 'write: `Test`.' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '     '
+                iv_new        = ' '
+                iv_result     = 'D'
+                iv_old_num    = '    3'
+                iv_old        = 'write: `Hello world`.' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '     '
+                iv_new        = ' '
+                iv_result     = 'D'
+                iv_old_num    = '    4'
+                iv_old        = 'write: `Hello 123`.' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    2'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    5'
+                iv_old        = ' ' ).
 
     when_patch_is_calculated( ).
 
@@ -192,14 +334,47 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
   METHOD multiple_partial_delete.
 
-    given_diff:
-      " patch_flag  new_num   new result   old_num   old
-          ' '       '    1'   ' '   ' '    '    1'   ' ',
-          'X'       '     '   ' '   'D'    '    2'   'write: `Test`.',
-          ' '       '     '   ' '   'D'    '    3'   'write: `Hello world`.',
-          ' '       '     '   ' '   'D'    '    4'   'write: `Hello 123`.',
-          'X'       '     '   ' '   'D'    '    5'   'write: `Hello test`.',
-          ' '       '    2'   ' '   ' '    '    6'   ' '.
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    1'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    1'
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '     '
+                iv_new        = ' '
+                iv_result     = 'D'
+                iv_old_num    = '    2'
+                iv_old        = 'write: `Test`.' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '     '
+                iv_new        = ' '
+                iv_result     = 'D'
+                iv_old_num    = '    3'
+                iv_old        = 'write: `Hello world`.' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '     '
+                iv_new        = ' '
+                iv_result     = 'D'
+                iv_old_num    = '    4'
+                iv_old        = 'write: `Hello 123`.' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '     '
+                iv_new        = ' '
+                iv_result     = 'D'
+                iv_old_num    = '    5'
+                iv_old        = 'write: `Hello test`.' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    2'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    6'
+                iv_old        = ' ' ).
 
     when_patch_is_calculated( ).
 
@@ -213,11 +388,27 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
   METHOD single_update.
 
-    given_diff:
-      " patch_flag  new_num   new                    result   old_num   old
-          ' '       '    1'   ' '                      ' '    '    1'   ' ',
-          'X'       '    2'   'write: `Hello world`.'  'U'    '    2'   'write: `Test`.',
-          ' '       '    3'   ' '                      ' '    '    3'   ' '.
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    1'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    1'
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '    2'
+                iv_new        = 'write: `Hello world`.'
+                iv_result     = 'U'
+                iv_old_num    = '    2'
+                iv_old        = 'write: `Test`.' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    3'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    3'
+                iv_old        = ' ' ).
+
 
     when_patch_is_calculated( ).
 
@@ -230,12 +421,33 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
   METHOD multiple_adjacend_update.
 
-    given_diff:
-      " patch_flag  new_num   new                    result   old_num   old
-          ' '       '    1'   ' '                      ' '    '    1'   ' ',
-          'X'       '    2'   'write: `Hello world`.'  'U'    '    2'   'write: `Test`.',
-          'X'       '    3'   'write: `Test`.'         'U'    '    3'   'write: `Hello world`.',
-          ' '       '    4'   ' '                      ' '    '    4'   ' '.
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    1'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    1'
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '    2'
+                iv_new        = 'write: `Hello world`.'
+                iv_result     = 'U'
+                iv_old_num    = '    2'
+                iv_old        = 'write: `Test`.' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '    3'
+                iv_new        = 'write: `Test`.'
+                iv_result     = 'U'
+                iv_old_num    = '    3'
+                iv_old        = 'write: `Hello world`.' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    4'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    4'
+                iv_old        = ' ' ).
 
     when_patch_is_calculated( ).
 
@@ -249,13 +461,40 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
   METHOD multiple_non_adjacent_update.
 
-    given_diff:
-      " patch_flag  new_num   new                    result   old_num   old
-          ' '       '    1'   ' '                      ' '    '    1'   ' ',
-          'X'       '    2'   'write: `Hello world`.'  'U'    '    2'   'write: `Test`.',
-          ' '       '    3'   ' '                      ' '    '    3'   ' ',
-          'X'       '    4'   'write: `Test`.'         'U'    '    4'   'write: `Hello world`.',
-          ' '       '    5'   ' '                      ' '    '    5'   ' '.
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    1'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    1'
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '    2'
+                iv_new        = 'write: `Hello world`.'
+                iv_result     = 'U'
+                iv_old_num    = '    2'
+                iv_old        = 'write: `Test`.' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    3'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    3'
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '    4'
+                iv_new        = 'write: `Test`.'
+                iv_result     = 'U'
+                iv_old_num    = '    4'
+                iv_old        = 'write: `Hello world`.' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    5'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    5'
+                iv_old        = ' ' ).
 
     when_patch_is_calculated( ).
 
@@ -270,13 +509,41 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
   METHOD multiple_partial_update.
 
-    given_diff:
-      " patch_flag  new_num   new                    result   old_num   old
-          ' '       '    1'   ' '                      ' '    '    1'   ' ',
-          'X'       '    2'   'write: `Hello world`.'  'U'    '    2'   'write: `Test`.',
-          ' '       '    3'   ' '                      ' '    '    3'   ' ',
-          ' '       '    4'   'write: `Test`.'         'U'    '    4'   'write: `Hello world`.',
-          ' '       '    5'   ' '                      ' '    '    5'   ' '.
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    1'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    1'
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '    2'
+                iv_new        = 'write: `Hello world`.'
+                iv_result     = 'U'
+                iv_old_num    = '    2'
+                iv_old        = 'write: `Test`.' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    3'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    3'
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    4'
+                iv_new        = 'write: `Test`.'
+                iv_result     = 'U'
+                iv_old_num    = '    4'
+                iv_old        = 'write: `Hello world`.' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    5'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    5'
+                iv_old        = ' ' ).
 
     when_patch_is_calculated( ).
 
@@ -291,14 +558,47 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
   METHOD mixed.
 
-    given_diff:
-      " patch_flag  new_num   new                    result   old_num   old
-          ' '       '    1'   ' '                      ' '    '    1'   ' ',
-          'X'       '    2'   'write: `Hello world`.'  'U'    '    2'   'write: `Test`.',
-          ' '       '    3'   ' '                      ' '    '    3'   ' ',
-          ' '       '    4'   'write: `Test`.'         'U'    '    4'   'write: `Hello world`.',
-          ' '       '    5'   ' '                      ' '    '    5'   ' ',
-          'X'       '    6'   'write: `newline`.'      'I'    '     '   ' '.
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    1'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    1'
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '    2'
+                iv_new        = 'write: `Hello world`.'
+                iv_result     = 'U'
+                iv_old_num    = '    2'
+                iv_old        = 'write: `Test`.' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    3'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    3'
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    4'
+                iv_new        = 'write: `Test`.'
+                iv_result     = 'U'
+                iv_old_num    = '    4'
+                iv_old        = 'write: `Hello world`.' ).
+
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    5'
+                iv_new        = ' '
+                iv_result     = ' '
+                iv_old_num    = '    5'
+                iv_old        = ' ' ).
+
+    given_diff( iv_patch_flag = 'X'
+                iv_new_num    = '    6'
+                iv_new        = 'write: `newline`.'
+                iv_result     = 'I'
+                iv_old_num    = '     '
+                iv_old        = ' ' ).
 
     when_patch_is_calculated( ).
 
@@ -314,9 +614,12 @@ CLASS ltcl_calculate_patch IMPLEMENTATION.
 
   METHOD unknown_result_type.
 
-    given_diff:
-      " patch_flag  new_num   new   result   old_num   old
-          ' '       '    1'   ' '    'X'     '    1'   ' '.
+    given_diff( iv_patch_flag = ' '
+                iv_new_num    = '    1'
+                iv_new        = ' '
+                iv_result     = 'X'
+                iv_old_num    = '    1'
+                iv_old        = ' ' ).
 
     when_patch_is_calculated( ).
 
