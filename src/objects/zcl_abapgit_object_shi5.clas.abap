@@ -153,11 +153,11 @@ CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
 
     SELECT * FROM ttree_extt
              INTO TABLE ls_extension-texts
-             WHERE extension = mv_extension.
+             WHERE extension = mv_extension ORDER BY PRIMARY KEY.
 
     SELECT * FROM ttrees
             INTO TABLE ls_extension-sequences
-            WHERE extension = mv_extension.
+            WHERE extension = mv_extension ORDER BY PRIMARY KEY.
 
     io_xml->add( iv_name = 'SHI5'
                  ig_data = ls_extension ).
