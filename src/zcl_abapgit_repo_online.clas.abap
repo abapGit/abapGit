@@ -84,8 +84,9 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
   METHOD fetch_remote.
 
-    DATA: li_progress TYPE REF TO zif_abapgit_progress,
-          ls_pull     TYPE zcl_abapgit_git_porcelain=>ty_pull_result.
+    DATA: lx_exception TYPE REF TO zcx_abapgit_exception,
+          li_progress  TYPE REF TO zif_abapgit_progress,
+          ls_pull      TYPE zcl_abapgit_git_porcelain=>ty_pull_result.
 
     IF mv_request_remote_refresh = abap_false.
       RETURN.
@@ -96,15 +97,22 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     li_progress->show( iv_current = 1
                        iv_text    = 'Fetch remote files' ) ##NO_TEXT.
 
-    ls_pull = zcl_abapgit_git_porcelain=>pull(
-      io_repo            = me
-      iv_url             = get_url( )
-      iv_branch_name     = get_branch_name( )
-      iv_commit_sha1     = get_commit_sha1( ) ).
+    TRY.
+        ls_pull = zcl_abapgit_git_porcelain=>pull(
+          iv_url         = get_url( )
+          iv_branch_name = get_branch_name( )
+          iv_commit_sha1 = get_commit_sha1( ) ).
 
-    set_files_remote( ls_pull-files ).
-    set_objects( ls_pull-objects ).
-    mv_branch = ls_pull-branch.
+        set_files_remote( ls_pull-files ).
+        set_objects( ls_pull-objects ).
+        mv_branch = ls_pull-branch.
+
+      CATCH zcx_abapgit_exception INTO lx_exception.
+        IF ms_data-commit_sha1 CN ' _0'.
+          set_commit_sha1( space ).
+        ENDIF.
+
+    ENDTRY.
 
   ENDMETHOD.
 

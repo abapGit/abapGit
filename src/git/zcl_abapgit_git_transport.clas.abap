@@ -7,12 +7,10 @@ CLASS zcl_abapgit_git_transport DEFINITION
 
 * remote to local
     CLASS-METHODS upload_pack
-      IMPORTING io_repo         TYPE REF TO zcl_abapgit_repo OPTIONAL
-                iv_url          TYPE string
+      IMPORTING iv_url          TYPE string
                 iv_branch_name  TYPE string
                 iv_commit_hash  TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
-                iv_deepen       TYPE abap_bool DEFAULT abap_true
-                iv_deepen_level TYPE numc2 DEFAULT '1'
+                iv_deepen_level TYPE numc2 DEFAULT '0'
                 it_branches     TYPE zif_abapgit_definitions=>ty_git_branch_list_tt OPTIONAL
       EXPORTING et_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
                 ev_branch       TYPE zif_abapgit_definitions=>ty_sha1
@@ -326,7 +324,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
       lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( lv_line ).
     ENDLOOP.
 
-    IF iv_deepen = abap_true.
+    IF iv_deepen_level > 0.
       lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( |deepen { iv_deepen_level }| &&
         |{ zif_abapgit_definitions=>c_newline }| ).         "#EC NOTEXT
     ENDIF.
@@ -335,32 +333,16 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
              && '0000'
              && '0009done' && zif_abapgit_definitions=>c_newline.
 
-    TRY.
-        lv_xstring = lo_client->send_receive_close( zcl_abapgit_convert=>string_to_xstring_utf8( lv_buffer ) ).
+    lv_xstring = lo_client->send_receive_close( zcl_abapgit_convert=>string_to_xstring_utf8( lv_buffer ) ).
 
-        parse( IMPORTING ev_pack = lv_pack
-               CHANGING  cv_data = lv_xstring ).
+    parse( IMPORTING ev_pack = lv_pack
+           CHANGING  cv_data = lv_xstring ).
 
-        IF lv_pack IS INITIAL.
-          zcx_abapgit_exception=>raise( 'Response could not be parsed - empty pack returned.' ).
-        ENDIF.
+    IF lv_pack IS INITIAL.
+      zcx_abapgit_exception=>raise( 'Response could not be parsed - empty pack returned.' ).
+    ENDIF.
 
-        et_objects = zcl_abapgit_git_pack=>decode( lv_pack ).
-
-      CATCH zcx_abapgit_exception INTO lx_exception.
-        IF   io_repo IS BOUND
-         AND io_repo->is_offline( ) = abap_false.
-          lo_repo ?= io_repo.
-          lo_repo->set_commit_sha1( space ).
-        ENDIF.
-
-        IF iv_commit_hash IS SUPPLIED.
-          zcx_abapgit_exception=>raise( |Invalid commit was given.| ).
-        ELSE.
-          RAISE EXCEPTION lx_exception.
-        ENDIF.
-
-    ENDTRY.
+    et_objects = zcl_abapgit_git_pack=>decode( lv_pack ).
 
   ENDMETHOD.
 ENDCLASS.

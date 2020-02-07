@@ -98,11 +98,6 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS get_local_checksums
       RETURNING
         VALUE(rt_checksums) TYPE zif_abapgit_persistence=>ty_local_checksum_tt .
-    METHODS set_local_checksums
-      IMPORTING
-        !it_checksums TYPE zif_abapgit_persistence=>ty_local_checksum_tt
-      RAISING
-        zcx_abapgit_exception .
     METHODS has_remote_source
           ABSTRACT
       RETURNING
@@ -185,7 +180,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -652,13 +647,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     mt_remote = it_files.
     mv_request_remote_refresh = abap_false.
-
-  ENDMETHOD.
-
-
-  METHOD set_local_checksums.
-
-    set( it_checksums = it_checksums ).
 
   ENDMETHOD.
 

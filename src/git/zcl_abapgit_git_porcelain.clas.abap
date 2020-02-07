@@ -4,22 +4,24 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    TYPES: BEGIN OF ty_pull_result,
-             files   TYPE zif_abapgit_definitions=>ty_files_tt,
-             objects TYPE zif_abapgit_definitions=>ty_objects_tt,
-             branch  TYPE zif_abapgit_definitions=>ty_sha1,
-             commit  TYPE zif_abapgit_definitions=>ty_sha1,
-           END OF ty_pull_result .
-    TYPES: BEGIN OF ty_push_result,
-             new_files     TYPE zif_abapgit_definitions=>ty_files_tt,
-             branch        TYPE zif_abapgit_definitions=>ty_sha1,
-             updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
-             new_objects   TYPE zif_abapgit_definitions=>ty_objects_tt,
-           END OF ty_push_result .
+
+    TYPES:
+      BEGIN OF ty_pull_result,
+        files   TYPE zif_abapgit_definitions=>ty_files_tt,
+        objects TYPE zif_abapgit_definitions=>ty_objects_tt,
+        branch  TYPE zif_abapgit_definitions=>ty_sha1,
+        commit  TYPE zif_abapgit_definitions=>ty_sha1,
+      END OF ty_pull_result .
+    TYPES:
+      BEGIN OF ty_push_result,
+        new_files     TYPE zif_abapgit_definitions=>ty_files_tt,
+        branch        TYPE zif_abapgit_definitions=>ty_sha1,
+        updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
+        new_objects   TYPE zif_abapgit_definitions=>ty_objects_tt,
+      END OF ty_push_result .
 
     CLASS-METHODS pull
       IMPORTING
-        !io_repo         TYPE REF TO zcl_abapgit_repo
         !iv_url          TYPE string
         !iv_branch_name  TYPE string
         !iv_commit_sha1  TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
@@ -74,21 +76,25 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         VALUE(rt_expanded) TYPE zif_abapgit_definitions=>ty_expanded_tt
       RAISING
         zcx_abapgit_exception .
-
   PROTECTED SECTION.
   PRIVATE SECTION.
-    TYPES: BEGIN OF ty_tree,
+
+    TYPES:
+      BEGIN OF ty_tree,
         path TYPE string,
         data TYPE xstring,
         sha1 TYPE zif_abapgit_definitions=>ty_sha1,
       END OF ty_tree .
-    TYPES: ty_trees_tt TYPE STANDARD TABLE OF ty_tree WITH DEFAULT KEY .
-    TYPES: BEGIN OF ty_folder,
+    TYPES:
+      ty_trees_tt TYPE STANDARD TABLE OF ty_tree WITH DEFAULT KEY .
+    TYPES:
+      BEGIN OF ty_folder,
         path  TYPE string,
         count TYPE i,
         sha1  TYPE zif_abapgit_definitions=>ty_sha1,
       END OF ty_folder .
-    TYPES: ty_folders_tt TYPE STANDARD TABLE OF ty_folder WITH DEFAULT KEY .
+    TYPES:
+      ty_folders_tt TYPE STANDARD TABLE OF ty_folder WITH DEFAULT KEY .
 
     CONSTANTS c_zero TYPE zif_abapgit_definitions=>ty_sha1 VALUE '0000000000000000000000000000000000000000' ##NO_TEXT.
 
@@ -418,10 +424,10 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
     zcl_abapgit_git_transport=>upload_pack(
       EXPORTING
-        io_repo            = io_repo
         iv_url             = iv_url
         iv_branch_name     = iv_branch_name
         iv_commit_hash     = iv_commit_sha1
+        iv_deepen_level    = '1'
       IMPORTING
         et_objects         = rs_result-objects
         ev_branch          = rs_result-branch
