@@ -96,7 +96,7 @@ SHLP | Search Help | Yes
 SHMA | Shared Objects: Defined Area Attributes | Yes
 SICF | ICF Service | Yes
 SMIM | Info Object from the MIME Repository | Yes
-SMTG | OM: Email Template 
+SMTG | OM: Email Template | Yes
 SOTS | All Concepts (OTR) of a Package - Long Texts | Yes
 SPLO | Format Types | Yes
 SPRX | Proxy Object | Yes

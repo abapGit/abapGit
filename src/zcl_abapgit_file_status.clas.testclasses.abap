@@ -1,15 +1,3 @@
-DEFINE _append_result.
-  APPEND INITIAL LINE TO mt_results ASSIGNING <ls_result>.
-  <ls_result>-obj_type = &1.
-  <ls_result>-obj_name = &2.
-  <ls_result>-match    = &3.
-  <ls_result>-lstate   = &4.
-  <ls_result>-rstate   = &5.
-  <ls_result>-package  = &6.
-  <ls_result>-path     = &7.
-  <ls_result>-filename = &8.
-END-OF-DEFINITION.
-
 CLASS ltcl_run_checks DEFINITION DEFERRED.
 CLASS zcl_abapgit_file_status DEFINITION LOCAL FRIENDS ltcl_run_checks.
 
@@ -22,6 +10,14 @@ CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
           mi_log     TYPE REF TO zif_abapgit_log.
 
     METHODS:
+      append_result IMPORTING iv_obj_type TYPE trobjtype
+                              iv_obj_name TYPE sobj_name
+                              iv_match    TYPE abap_bool
+                              iv_lstate   TYPE char1
+                              iv_rstate   TYPE char1
+                              iv_package  TYPE devclass
+                              iv_path     TYPE string
+                              iv_filename TYPE string,
       setup,
       positive FOR TESTING RAISING zcx_abapgit_exception,
       neg_diff_path_for_same_obj FOR TESTING RAISING zcx_abapgit_exception,
@@ -32,6 +28,25 @@ CLASS ltcl_run_checks DEFINITION FOR TESTING RISK LEVEL HARMLESS
 ENDCLASS.
 
 CLASS ltcl_run_checks IMPLEMENTATION.
+
+  METHOD append_result.
+
+    DATA ls_result LIKE LINE OF mt_results.
+
+    ls_result-inactive = abap_false.
+
+    ls_result-obj_type = iv_obj_type.
+    ls_result-obj_name = iv_obj_name.
+    ls_result-match    = iv_match.
+    ls_result-lstate   = iv_lstate.
+    ls_result-rstate   = iv_rstate.
+    ls_result-package  = iv_package.
+    ls_result-path     = iv_path.
+    ls_result-filename = iv_filename.
+
+    APPEND ls_result TO mt_results.
+
+  ENDMETHOD.
 
   METHOD setup.
 
@@ -44,15 +59,43 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
   METHOD positive.
 
-*** 0 Positive
+    " 0 Positive
+    append_result( iv_obj_type = 'CLAS'
+                   iv_obj_name = 'ZCLASS1'
+                   iv_match    = ' '
+                   iv_lstate   = ' '
+                   iv_rstate   = 'A'
+                   iv_package  = '$Z$'
+                   iv_path     = '/'
+                   iv_filename = 'zclass1.clas.abap' ).
 
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF mt_results.
+    append_result( iv_obj_type = 'CLAS'
+                   iv_obj_name = 'ZCLASS1'
+                   iv_match    = 'X'
+                   iv_lstate   = ' '
+                   iv_rstate   = ' '
+                   iv_package  = '$Z$'
+                   iv_path     = '/'
+                   iv_filename = 'zclass1.clas.xml' ).
 
-    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH FILE
-    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'  'zclass1.clas.abap'.
-    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'  'zclass1.clas.xml'.
-    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'  'zdoma1.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'  'zdoma2.doma.xml'.
+    append_result( iv_obj_type = 'DOMA'
+                   iv_obj_name = 'ZDOMA1'
+                   iv_match    = 'X'
+                   iv_lstate   = ' '
+                   iv_rstate   = ' '
+                   iv_package  = '$Z$'
+                   iv_path     = '/'
+                   iv_filename = 'zdoma1.doma.xml' ).
+
+    append_result( iv_obj_type = 'DOMA'
+                   iv_obj_name = 'ZDOMA2'
+                   iv_match    = ' '
+                   iv_lstate   = 'M'
+                   iv_rstate   = ' '
+                   iv_package  = '$Z$'
+                   iv_path     = '/'
+                   iv_filename = 'zdoma2.doma.xml' ).
+
 
     zcl_abapgit_file_status=>run_checks(
       ii_log     = mi_log
@@ -68,15 +111,42 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
   METHOD neg_diff_path_for_same_obj.
 
-*** 1 Negative, different path for same object
+    " 1 Negative, different path for same object
+    append_result( iv_obj_type = 'CLAS'
+                   iv_obj_name = 'ZCLASS1'
+                   iv_match    = ' '
+                   iv_lstate   = ' '
+                   iv_rstate   = 'A'
+                   iv_package  = '$Z$'
+                   iv_path     = '/'
+                   iv_filename = 'zclass1.clas.abap' ).
 
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF mt_results.
+    append_result( iv_obj_type = 'CLAS'
+                   iv_obj_name = 'ZCLASS1'
+                   iv_match    = 'X'
+                   iv_lstate   = ' '
+                   iv_rstate   = ' '
+                   iv_package  = '$Z$'
+                   iv_path     = '/sub'
+                   iv_filename = 'zclass1.clas.xml' ).
 
-    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH   FILE
-    _append_result 'CLAS' 'ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    'zclass1.clas.abap'.
-    _append_result 'CLAS' 'ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/sub' 'zclass1.clas.xml'.
-    _append_result 'DOMA' 'ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    'zdoma1.doma.xml'.
-    _append_result 'DOMA' 'ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    'zdoma2.doma.xml'.
+    append_result( iv_obj_type = 'DOMA'
+                   iv_obj_name = 'ZDOMA1'
+                   iv_match    = 'X'
+                   iv_lstate   = ' '
+                   iv_rstate   = ' '
+                   iv_package  = '$Z$'
+                   iv_path     = '/'
+                   iv_filename = 'zdoma1.doma.xml' ).
+
+    append_result( iv_obj_type = 'DOMA'
+                   iv_obj_name = 'ZDOMA2'
+                   iv_match    = ' '
+                   iv_lstate   = 'M'
+                   iv_rstate   = ' '
+                   iv_package  = '$Z$'
+                   iv_path     = '/'
+                   iv_filename = 'zdoma2.doma.xml' ).
 
     zcl_abapgit_file_status=>run_checks(
       ii_log     = mi_log
@@ -97,15 +167,42 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
   METHOD neg_incorrect_path_vs_pack.
 
-*** 2 Negative, incorrect path vs package
+    " 2 Negative, incorrect path vs package
+    append_result( iv_obj_type = 'CLAS'
+                   iv_obj_name = '$$ZCLASS1'
+                   iv_match    = ' '
+                   iv_lstate   = ' '
+                   iv_rstate   = 'A'
+                   iv_package  = '$Z$'
+                   iv_path     = '/'
+                   iv_filename = '$$zclass1.clas.abap' ).
 
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF mt_results.
+    append_result( iv_obj_type = 'CLAS'
+                   iv_obj_name = '$$ZCLASS1'
+                   iv_match    = 'X'
+                   iv_lstate   = ' '
+                   iv_rstate   = ' '
+                   iv_package  = '$Z$'
+                   iv_path     = '/'
+                   iv_filename = '$$zclass1.clas.xml' ).
 
-    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH   FILE
-    _append_result 'CLAS' '$$ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    '$$zclass1.clas.abap'.
-    _append_result 'CLAS' '$$ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'    '$$zclass1.clas.xml'.
-    _append_result 'DOMA' '$$ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/sub' '$$zdoma1.doma.xml'.
-    _append_result 'DOMA' '$$ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    '$$zdoma2.doma.xml'.
+    append_result( iv_obj_type = 'DOMA'
+                   iv_obj_name = '$$ZDOMA1'
+                   iv_match    = 'X'
+                   iv_lstate   = ' '
+                   iv_rstate   = ' '
+                   iv_package  = '$Z$'
+                   iv_path     = '/sub'
+                   iv_filename = '$$zdoma1.doma.xml' ).
+
+    append_result( iv_obj_type = 'DOMA'
+                   iv_obj_name = '$$ZDOMA2'
+                   iv_match    = ' '
+                   iv_lstate   = 'M'
+                   iv_rstate   = ' '
+                   iv_package  = '$Z$'
+                   iv_path     = '/'
+                   iv_filename = '$$zdoma2.doma.xml' ).
 
     zcl_abapgit_file_status=>run_checks(
       ii_log     = mi_log
@@ -125,15 +222,42 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
   METHOD neg_similar_filenames.
 
-*** 3 Negative, similar filenames
+    " 3 Negative, similar filenames
+    append_result( iv_obj_type = 'CLAS'
+                   iv_obj_name = '$$ZCLASS1'
+                   iv_match    = ' '
+                   iv_lstate   = ' '
+                   iv_rstate   = 'A'
+                   iv_package  = '$Z$'
+                   iv_path     = '/'
+                   iv_filename = '$$zclass1.clas.abap' ).
 
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF mt_results.
+    append_result( iv_obj_type = 'CLAS'
+                   iv_obj_name = '$$ZCLASS1'
+                   iv_match    = 'X'
+                   iv_lstate   = ' '
+                   iv_rstate   = ' '
+                   iv_package  = '$Z$'
+                   iv_path     = '/'
+                   iv_filename = '$$zclass1.clas.xml' ).
 
-    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH   FILE
-    _append_result 'CLAS' '$$ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    '$$zclass1.clas.abap'.
-    _append_result 'CLAS' '$$ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'    '$$zclass1.clas.xml'.
-    _append_result 'DOMA' '$$ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    '$$zdoma1.doma.xml'.
-    _append_result 'DOMA' '$$ZDOMA2'  ' '   'M'   ' '  '$Z$'  '/'    '$$zdoma1.doma.xml'.
+    append_result( iv_obj_type = 'DOMA'
+                   iv_obj_name = '$$ZDOMA1'
+                   iv_match    = 'X'
+                   iv_lstate   = ' '
+                   iv_rstate   = ' '
+                   iv_package  = '$Z$'
+                   iv_path     = '/'
+                   iv_filename = '$$zdoma1.doma.xml' ).
+
+    append_result( iv_obj_type = 'DOMA'
+                   iv_obj_name = '$$ZDOMA2'
+                   iv_match    = ' '
+                   iv_lstate   = 'M'
+                   iv_rstate   = ' '
+                   iv_package  = '$Z$'
+                   iv_path     = '/'
+                   iv_filename = '$$zdoma1.doma.xml' ).
 
     zcl_abapgit_file_status=>run_checks(
       ii_log     = mi_log
@@ -153,14 +277,33 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
   METHOD neg_empty_filenames.
 
-*** 4 Negative, empty filenames
+    " 4 Negative, empty filenames
+    append_result( iv_obj_type = 'CLAS'
+                   iv_obj_name = '$$ZCLASS1'
+                   iv_match    = ' '
+                   iv_lstate   = ' '
+                   iv_rstate   = 'A'
+                   iv_package  = '$Z$'
+                   iv_path     = '/'
+                   iv_filename = '$$zclass1.clas.abap' ).
 
-    FIELD-SYMBOLS: <ls_result> LIKE LINE OF mt_results.
+    append_result( iv_obj_type = 'CLAS'
+                   iv_obj_name = '$$ZCLASS1'
+                   iv_match    = 'X'
+                   iv_lstate   = ' '
+                   iv_rstate   = ' '
+                   iv_package  = '$Z$'
+                   iv_path     = '/'
+                   iv_filename = '$$zclass1.clas.xml' ).
 
-    "EXP RESULT    TYPE   NAME      MATCH LST   RST  PKG    PATH   FILE
-    _append_result 'CLAS' '$$ZCLASS1' ' '   ' '   'A'  '$Z$'  '/'    '$$zclass1.clas.abap'.
-    _append_result 'CLAS' '$$ZCLASS1' 'X'   ' '   ' '  '$Z$'  '/'    '$$zclass1.clas.xml'.
-    _append_result 'DOMA' '$$ZDOMA1'  'X'   ' '   ' '  '$Z$'  '/'    ''.
+    append_result( iv_obj_type = 'DOMA'
+                   iv_obj_name = '$$ZDOMA1'
+                   iv_match    = 'X'
+                   iv_lstate   = ' '
+                   iv_rstate   = ' '
+                   iv_package  = '$Z$'
+                   iv_path     = '/'
+                   iv_filename = '' ).
 
     zcl_abapgit_file_status=>run_checks(
       ii_log     = mi_log
@@ -501,7 +644,7 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
 
     mo_result->assert_lines( 1 ).
 
-* it should appear as not existing locally
+    " it should appear as not existing locally
     cl_abap_unit_assert=>assert_equals(
       act = mo_result->get_line( 1 )-rstate
       exp = zif_abapgit_definitions=>c_state-added ).
