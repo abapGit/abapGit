@@ -5,7 +5,7 @@ CLASS zcl_abapgit_objects DEFINITION
   PUBLIC SECTION.
 
     TYPES:
-      ty_types_tt TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY .
+      ty_types_tt TYPE SORTED TABLE OF tadir-object WITH UNIQUE KEY table_line.
     TYPES:
       BEGIN OF ty_deserialization,
         obj     TYPE REF TO zif_abapgit_object,
@@ -336,6 +336,12 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_item> LIKE LINE OF it_items.
 
     LOOP AT it_items ASSIGNING <ls_item>.
+
+      " You should remember that we ignore not supported objects here,
+      " because otherwise the process aborts which is not desired
+      IF is_supported( <ls_item> ) = abap_false.
+        CONTINUE.
+      ENDIF.
 
       li_obj = create_object( is_item     = <ls_item>
                               iv_language = iv_language ).
@@ -1181,7 +1187,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         iv_native_only = abap_true ).
 
       IF lv_supported = abap_true.
-        APPEND <ls_object>-object TO rt_types.
+        INSERT <ls_object>-object INTO TABLE rt_types.
       ENDIF.
     ENDLOOP.
 
