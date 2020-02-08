@@ -6,8 +6,7 @@ CLASS ltcl_diff DEFINITION FOR TESTING
   PRIVATE SECTION.
     DATA: mt_new      TYPE TABLE OF string,
           mt_old      TYPE TABLE OF string,
-          mt_expected TYPE zif_abapgit_definitions=>ty_diffs_tt,
-          ms_expected LIKE LINE OF mt_expected.
+          mt_expected TYPE zif_abapgit_definitions=>ty_diffs_tt.
 
     METHODS:
       add_new IMPORTING iv_new TYPE string,
