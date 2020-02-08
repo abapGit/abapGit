@@ -61,8 +61,6 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS build_menu
-      IMPORTING
-        VALUE(iv_with_conflict) TYPE abap_bool OPTIONAL
       RETURNING
         VALUE(ro_menu)          TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS is_binary
@@ -97,7 +95,6 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
     METHODS render_line_split
       IMPORTING
         !is_diff_line  TYPE zif_abapgit_definitions=>ty_diff
-        !iv_fstate     TYPE char1
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     METHODS render_table_head
@@ -394,8 +391,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
       CONDENSE <ls_diff>-new_num. "get rid of leading spaces
       CONDENSE <ls_diff>-old_num.
 
-      ro_html->add( render_line_split( is_diff_line = <ls_diff>
-                                       iv_fstate    = is_diff-fstate ) ).
+      ro_html->add( render_line_split( is_diff_line = <ls_diff> ) ).
 
     ENDLOOP.
 
