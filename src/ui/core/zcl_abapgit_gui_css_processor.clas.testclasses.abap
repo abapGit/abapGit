@@ -26,8 +26,6 @@ CLASS ltcl_test_base IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD add_file.
-    DATA: ls_asset TYPE zif_abapgit_gui_asset_manager=>ty_web_asset.
-
     mo_asset_manager->register_asset(
       iv_url = iv_url
       iv_type = 'text/css'
@@ -75,7 +73,7 @@ CLASS ltcl_single_file IMPLEMENTATION.
     TRY.
         mo_cut->process( ).
         cl_abap_unit_assert=>fail( ). " Assetman fails on empty content
-      CATCH zcx_abapgit_exception.
+      CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
   ENDMETHOD.
 
