@@ -85,11 +85,12 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
       RAISING
         zcx_abapgit_exception .
 
+  PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_super IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
 
 
   METHOD check_timestamp.
@@ -205,7 +206,6 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
   ENDMETHOD.
 
 
-
   METHOD get_metadata.
 
     DATA: lv_class TYPE string.
@@ -251,17 +251,16 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD jump_adt.
 
-    DATA: lv_adt_link   TYPE string,
-          lx_error TYPE REF TO cx_root.
+    DATA: lv_adt_link TYPE string,
+          lx_error    TYPE REF TO cx_root.
 
     TRY.
 
         lv_adt_link = zcl_abapgit_adt_link=>generate(
-          iv_obj_name = iv_obj_name
-          iv_obj_type = iv_obj_type
+          iv_obj_name     = iv_obj_name
+          iv_obj_type     = iv_obj_type
           iv_sub_obj_name = iv_sub_obj_name
-          iv_sub_obj_type = iv_sub_obj_type
-          iv_line_number = iv_line_number ).
+          iv_line_number  = iv_line_number ).
 
         cl_gui_frontend_services=>execute(
           EXPORTING  document = lv_adt_link
