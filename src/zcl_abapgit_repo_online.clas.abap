@@ -108,9 +108,8 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
         mv_branch = ls_pull-branch.
 
       CATCH zcx_abapgit_exception INTO lx_exception.
-        IF ms_data-commit_sha1 CN ' _0'.
-          set_commit_sha1( space ).
-        ENDIF.
+        set_commit_sha1( space ).
+        RAISE EXCEPTION lx_exception.
 
     ENDTRY.
 
