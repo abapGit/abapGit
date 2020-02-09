@@ -133,9 +133,7 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
 
   METHOD decompress.
 
-    DATA: lv_x      TYPE x LENGTH 1,
-          lv_symbol TYPE i,
-          lv_bfinal TYPE c LENGTH 1,
+    DATA: lv_bfinal TYPE c LENGTH 1,
           lv_btype  TYPE c LENGTH 2.
 
 
@@ -447,7 +445,7 @@ CLASS ZCL_ABAPGIT_ZLIB IMPLEMENTATION.
   METHOD not_compressed.
 
     DATA: lv_len  TYPE i,
-          lv_nlen TYPE i.
+          lv_nlen TYPE i ##NEEDED.
 
     go_stream->take_bits( 5 ).
 

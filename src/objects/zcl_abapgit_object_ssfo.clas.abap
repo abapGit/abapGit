@@ -6,24 +6,35 @@ CLASS zcl_abapgit_object_ssfo DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-    TYPES: ty_string_range TYPE RANGE OF string.
 
-    CLASS-DATA: gt_range_node_codes TYPE ty_string_range.
-    CONSTANTS: attrib_abapgit_leadig_spaces TYPE string VALUE 'abapgit-leadig-spaces' ##NO_TEXT.
+    TYPES:
+      ty_string_range TYPE RANGE OF string .
 
-    METHODS fix_ids IMPORTING ii_xml_doc TYPE REF TO if_ixml_document.
-    METHODS set_attribute_leading_spaces IMPORTING iv_name                TYPE string
-                                                   ii_node                TYPE REF TO if_ixml_node
-                                         CHANGING  cv_within_code_section TYPE abap_bool.
-    METHODS handle_attrib_leading_spaces IMPORTING iv_name                TYPE string
-                                                   ii_node                TYPE REF TO if_ixml_node
-                                         CHANGING  cv_within_code_section TYPE abap_bool.
-    METHODS get_range_node_codes RETURNING VALUE(rt_range_node_codes) TYPE ty_string_range.
-    METHODS code_item_section_handling IMPORTING iv_name                TYPE string
-                                                 ii_node                TYPE REF TO if_ixml_node
-                                       EXPORTING ei_code_item_element   TYPE REF TO if_ixml_element
-                                       CHANGING  cv_within_code_section TYPE abap_bool
-                                       RAISING   zcx_abapgit_exception.
+    CLASS-DATA gt_range_node_codes TYPE ty_string_range .
+    CONSTANTS attrib_abapgit_leadig_spaces TYPE string VALUE 'abapgit-leadig-spaces' ##NO_TEXT.
+
+    METHODS fix_ids
+      IMPORTING
+        !ii_xml_doc TYPE REF TO if_ixml_document .
+    METHODS handle_attrib_leading_spaces
+      IMPORTING
+        !iv_name                TYPE string
+        !ii_node                TYPE REF TO if_ixml_node
+      CHANGING
+        !cv_within_code_section TYPE abap_bool .
+    METHODS get_range_node_codes
+      RETURNING
+        VALUE(rt_range_node_codes) TYPE ty_string_range .
+    METHODS code_item_section_handling
+      IMPORTING
+        !iv_name                TYPE string
+        !ii_node                TYPE REF TO if_ixml_node
+      EXPORTING
+        !ei_code_item_element   TYPE REF TO if_ixml_element
+      CHANGING
+        !cv_within_code_section TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -175,13 +186,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
         ENDIF.
       CATCH zcx_abapgit_exception ##no_handler.
     ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD set_attribute_leading_spaces.
-
-    RETURN.
 
   ENDMETHOD.
 
@@ -439,10 +443,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
           OR lv_name = 'LASTUSER'.
         li_node->set_value( 'DUMMY' ).
       ENDIF.
-      set_attribute_leading_spaces( EXPORTING iv_name                = lv_name
-                                              ii_node                = li_node
-                                    CHANGING  cv_within_code_section = lv_within_code_section ).
-
       li_node = li_iterator->get_next( ).
     ENDWHILE.
 

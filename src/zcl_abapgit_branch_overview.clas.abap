@@ -459,11 +459,8 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
           lv_name     TYPE string,
           lt_temp     LIKE it_commits.
 
-    FIELD-SYMBOLS: <ls_branch>   LIKE LINE OF mt_branches,
-                   <ls_new>      LIKE LINE OF rt_commits,
-                   <ls_temp>     LIKE LINE OF lt_temp,
-                   <ls_temp_end> LIKE LINE OF lt_temp,
-                   <ls_commit>   LIKE LINE OF it_commits.
+    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF mt_branches,
+                   <ls_commit> LIKE LINE OF it_commits.
 
     LOOP AT mt_branches ASSIGNING <ls_branch>.
 

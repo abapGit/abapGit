@@ -31,7 +31,6 @@ CLASS zcl_abapgit_git_transport DEFINITION
     CLASS-METHODS branches
       IMPORTING
         !iv_url               TYPE string
-        !iv_filter            TYPE abap_bool DEFAULT abap_true
       RETURNING
         VALUE(ro_branch_list) TYPE REF TO zcl_abapgit_git_branch_list
       RAISING

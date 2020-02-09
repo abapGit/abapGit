@@ -50,10 +50,9 @@ CLASS ltcl_zlib IMPLEMENTATION.
 
   METHOD dynamic.
 
-    DATA: ls_data        TYPE zcl_abapgit_zlib=>ty_decompress,
-          lv_compressed  TYPE xstring,
-          lv_decoded     TYPE xstring,
-          lv_hex         TYPE xstring.
+    DATA: ls_data       TYPE zcl_abapgit_zlib=>ty_decompress,
+          lv_compressed TYPE xstring,
+          lv_decoded    TYPE xstring.
 
 
     lv_compressed = |75555D6FE246147DF7AFB8521F1610A0AA8F911A| &&

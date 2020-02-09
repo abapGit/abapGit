@@ -12,8 +12,7 @@ CLASS ltcl_syntax_cases DEFINITION FINAL FOR TESTING RISK LEVEL HARMLESS
     DATA:
       mt_after_parse  TYPE zcl_abapgit_syntax_highlighter=>ty_match_tt,
       mt_after_order  TYPE zcl_abapgit_syntax_highlighter=>ty_match_tt,
-      mt_after_extend TYPE zcl_abapgit_syntax_highlighter=>ty_match_tt,
-      ms_match        TYPE zcl_abapgit_syntax_highlighter=>ty_match.
+      mt_after_extend TYPE zcl_abapgit_syntax_highlighter=>ty_match_tt.
 
     METHODS:
       do_test IMPORTING iv_line     TYPE string
