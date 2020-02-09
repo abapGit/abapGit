@@ -16,7 +16,7 @@ CLASS zcl_abapgit_object_iatu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING   zcx_abapgit_exception,
       w3_api_load
         IMPORTING is_name     TYPE iacikeyt
-        EXPORTING eo_template TYPE REF TO if_w3_api_template
+        RETURNING VALUE(ro_template) TYPE REF TO if_w3_api_template
         RAISING   zcx_abapgit_exception,
       w3_api_set_changeable
         IMPORTING iv_changeable TYPE abap_bool
@@ -30,15 +30,15 @@ CLASS zcl_abapgit_object_iatu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING   zcx_abapgit_exception,
       w3_api_get_attributes
         IMPORTING io_template   TYPE REF TO if_w3_api_template
-        EXPORTING es_attributes TYPE w3tempattr
+        RETURNING VALUE(rs_attributes) TYPE w3tempattr
         RAISING   zcx_abapgit_exception,
       w3_api_get_source
         IMPORTING io_template TYPE REF TO if_w3_api_template
-        EXPORTING et_source   TYPE w3htmltabtype
+        RETURNING VALUE(rt_source)   TYPE w3htmltabtype
         RAISING   zcx_abapgit_exception,
       w3_api_create_new
         IMPORTING is_template_data TYPE w3tempattr
-        EXPORTING eo_template      TYPE REF TO if_w3_api_template
+        RETURNING VALUE(ro_template)      TYPE REF TO if_w3_api_template
         RAISING   zcx_abapgit_exception,
       w3_api_set_attributes
         IMPORTING io_template TYPE REF TO if_w3_api_template
@@ -65,19 +65,16 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
     ls_name = ms_item-obj_name.
 
-    w3_api_load( EXPORTING is_name     = ls_name
-                 IMPORTING eo_template = lo_template ).
+    lo_template = w3_api_load( is_name = ls_name ).
 
-    w3_api_get_attributes( EXPORTING io_template   = lo_template
-                           IMPORTING es_attributes = es_attr ).
+    es_attr = w3_api_get_attributes( io_template = lo_template ).
 
     CLEAR: es_attr-chname,
            es_attr-tdate,
            es_attr-ttime,
            es_attr-devclass.
 
-    w3_api_get_source( EXPORTING io_template = lo_template
-                       IMPORTING et_source   = lt_source ).
+    lt_source = w3_api_get_source( io_template = lo_template ).
 
     CONCATENATE LINES OF lt_source INTO ev_source RESPECTING BLANKS.
 
@@ -91,8 +88,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
           lo_template TYPE REF TO if_w3_api_template.
 
 
-    w3_api_create_new( EXPORTING is_template_data = is_attr
-                       IMPORTING eo_template      = lo_template ).
+    lo_template = w3_api_create_new( is_template_data = is_attr ).
 
     w3_api_set_attributes( io_template = lo_template
                            is_attr     = is_attr ).
@@ -127,8 +123,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
     ls_name = ms_item-obj_name.
 
-    w3_api_load( EXPORTING is_name     = ls_name
-                 IMPORTING eo_template = lo_template ).
+    lo_template = w3_api_load( is_name = ls_name ).
 
     w3_api_set_changeable( io_template   = lo_template
                            iv_changeable = abap_true ).
@@ -235,7 +230,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
       EXPORTING
         p_template_name     = is_name
       IMPORTING
-        p_template          = eo_template
+        p_template          = ro_template
       EXCEPTIONS
         object_not_existing = 1
         permission_failure  = 2
@@ -315,7 +310,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
     io_template->get_attributes(
       IMPORTING
-        p_attributes     = es_attributes
+        p_attributes     = rs_attributes
       EXCEPTIONS
         object_invalid   = 1
         template_deleted = 2
@@ -333,7 +328,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
     io_template->get_source(
       IMPORTING
-        p_source         = et_source
+        p_source         = rt_source
       EXCEPTIONS
         object_invalid   = 1
         template_deleted = 2
@@ -354,7 +349,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
         p_template_data          = is_template_data
         p_program_name           = is_template_data-programm
       IMPORTING
-        p_template               = eo_template
+        p_template               = ro_template
       EXCEPTIONS
         object_already_existing  = 1
         object_just_created      = 2
