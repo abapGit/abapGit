@@ -17,11 +17,8 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !io_repo               TYPE REF TO zcl_abapgit_repo
         !iv_show_package       TYPE abap_bool DEFAULT abap_true
         !iv_show_branch        TYPE abap_bool DEFAULT abap_true
-        !iv_show_commit        TYPE abap_bool DEFAULT abap_true
         !iv_interactive_branch TYPE abap_bool DEFAULT abap_false
-        !iv_interactive_commit TYPE abap_bool DEFAULT abap_false
         !iv_branch             TYPE string OPTIONAL
-        !iv_commit             TYPE string OPTIONAL
         !io_news               TYPE REF TO zcl_abapgit_news OPTIONAL
       RETURNING
         VALUE(ro_html)         TYPE REF TO zcl_abapgit_html
@@ -95,15 +92,6 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
     CLASS-METHODS render_branch_span
       IMPORTING
         !iv_branch      TYPE string
-        !io_repo        TYPE REF TO zcl_abapgit_repo_online
-        !iv_interactive TYPE abap_bool
-      RETURNING
-        VALUE(ro_html)  TYPE REF TO zcl_abapgit_html
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS render_commit_span
-      IMPORTING
-        !iv_commit      TYPE string
         !io_repo        TYPE REF TO zcl_abapgit_repo_online
         !iv_interactive TYPE abap_bool
       RETURNING
@@ -216,28 +204,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ro_html->add_icon( iv_name = 'code-branch/grey70' iv_hint = 'Current branch' ).
     IF iv_interactive = abap_true.
       ro_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ io_repo->get_key( ) }|
-                      iv_txt = lv_text ).
-    ELSE.
-      ro_html->add( lv_text ).
-    ENDIF.
-    ro_html->add( '</span>' ).
-
-  ENDMETHOD.
-
-
-  METHOD render_commit_span.
-
-    DATA: lv_text  TYPE string,
-          lv_class TYPE string.
-
-    lv_text  = iv_commit(7).
-    lv_class = 'commit'.
-
-    CREATE OBJECT ro_html.
-    ro_html->add( |<span class="{ lv_class }">| ).
-    ro_html->add_icon( iv_name = 'code-commit/grey70' iv_hint = 'Current commit' ).
-    IF iv_interactive = abap_true.
-      ro_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-git_commit_switch }?{ io_repo->get_key( ) }|
                       iv_txt = lv_text ).
     ELSE.
       ro_html->add( lv_text ).
@@ -736,21 +702,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
                                             io_repo        = lo_repo_online
                                             iv_interactive = iv_interactive_branch ) ).
         ENDIF.
-      ENDIF.
-    ENDIF.
-
-    " Commit
-    IF io_repo->is_offline( ) = abap_false.
-      lo_repo_online ?= io_repo.
-      IF    iv_show_commit = abap_true
-        AND iv_commit IS NOT INITIAL.
-        ro_html->add( render_commit_span( iv_commit      = iv_commit
-                                          io_repo        = lo_repo_online
-                                          iv_interactive = iv_interactive_commit ) ).
-      ELSEIF lo_repo_online->get_commit_sha1( ) IS NOT INITIAL.
-        ro_html->add( render_commit_span( iv_commit      = lo_repo_online->get_commit_sha1( )
-                                          io_repo        = lo_repo_online
-                                          iv_interactive = iv_interactive_commit ) ).
       ENDIF.
     ENDIF.
 
