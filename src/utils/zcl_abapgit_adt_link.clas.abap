@@ -1,17 +1,20 @@
 CLASS zcl_abapgit_adt_link DEFINITION
-  PUBLIC FINAL.
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    CLASS-METHODS:
-      generate
-        IMPORTING iv_obj_name     TYPE zif_abapgit_definitions=>ty_item-obj_name
-                  iv_obj_type     TYPE zif_abapgit_definitions=>ty_item-obj_type
-                  iv_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
-                  iv_sub_obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type OPTIONAL
-                  iv_line_number  TYPE i OPTIONAL
-        RETURNING VALUE(rv_result)   TYPE string
-        RAISING   zcx_abapgit_exception.
 
+    CLASS-METHODS generate
+      IMPORTING
+        !iv_obj_name     TYPE zif_abapgit_definitions=>ty_item-obj_name
+        !iv_obj_type     TYPE zif_abapgit_definitions=>ty_item-obj_type
+        !iv_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
+        !iv_line_number  TYPE i OPTIONAL
+      RETURNING
+        VALUE(rv_result) TYPE string
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-METHODS:
@@ -37,7 +40,8 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_adt_link IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ADT_LINK IMPLEMENTATION.
+
 
   METHOD generate.
 
@@ -154,6 +158,7 @@ CLASS zcl_abapgit_adt_link IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD is_adt_jump_possible.
 
     DATA: lo_wb_request         TYPE REF TO cl_wb_request,
@@ -196,5 +201,4 @@ CLASS zcl_abapgit_adt_link IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
-
 ENDCLASS.

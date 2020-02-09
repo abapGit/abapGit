@@ -26,7 +26,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SHI5 IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -138,12 +138,7 @@ CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: ls_extension TYPE ty_extension,
-          lt_struc_id  TYPE STANDARD TABLE OF hier_guid,
-          lv_struc_id  TYPE hier_guid,
-          lt_nodes     TYPE TABLE OF hier_iface,
-          lt_texts     TYPE TABLE OF hier_texts,
-          lt_refs      TYPE TABLE OF hier_ref.
+    DATA: ls_extension TYPE ty_extension.
 
     CALL FUNCTION 'STREE_EXTENSION_EXISTS'
       EXPORTING
@@ -163,6 +158,4 @@ CLASS zcl_abapgit_object_shi5 IMPLEMENTATION.
                  ig_data = ls_extension ).
 
   ENDMETHOD.
-
-
 ENDCLASS.

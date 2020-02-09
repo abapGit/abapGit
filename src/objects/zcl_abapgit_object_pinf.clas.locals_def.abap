@@ -2,8 +2,6 @@ INTERFACE lif_package_interface_facade.
 
   METHODS:
     get_elements
-      IMPORTING
-        iv_with_deleted_elements TYPE flag DEFAULT 'X'
       EXPORTING
         et_elements              TYPE tpak_package_interf_elem_list
       RAISING
@@ -16,9 +14,6 @@ INTERFACE lif_package_interface_facade.
         zcx_abapgit_exception,
 
     save_elements
-      IMPORTING
-        iv_transport_request TYPE trkorr OPTIONAL
-        iv_suppress_dialog   TYPE flag DEFAULT ' '
       RAISING
         zcx_abapgit_exception,
 
@@ -35,15 +30,10 @@ INTERFACE lif_package_interface_facade.
         zcx_abapgit_exception,
 
     delete
-      IMPORTING
-        iv_suppress_dialog TYPE flag DEFAULT abap_false
       RAISING
         zcx_abapgit_exception,
 
     save
-      IMPORTING
-        iv_transport_request TYPE trkorr OPTIONAL
-        iv_suppress_dialog   TYPE flag DEFAULT ' '
       RAISING
         zcx_abapgit_exception,
 
