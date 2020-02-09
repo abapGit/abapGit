@@ -31,13 +31,13 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS push
       IMPORTING
-        !io_repo         TYPE REF TO zcl_abapgit_repo_online
         !is_comment      TYPE zif_abapgit_definitions=>ty_comment
         !io_stage        TYPE REF TO zcl_abapgit_stage
         !it_old_objects  TYPE zif_abapgit_definitions=>ty_objects_tt
         !iv_parent       TYPE zif_abapgit_definitions=>ty_sha1
         !iv_url          TYPE string
         !iv_branch_name  TYPE string
+        !iv_commit       TYPE zif_abapgit_definitions=>ty_sha1
       RETURNING
         VALUE(rs_result) TYPE ty_push_result
       RAISING
@@ -475,7 +475,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
     lt_expanded = full_tree( it_objects = it_old_objects
                              iv_branch  = iv_parent
-                             iv_commit  = io_repo->get_commit_sha1( ) ).
+                             iv_commit  = iv_commit ).
 
     lt_stage = io_stage->get_all( ).
     LOOP AT lt_stage ASSIGNING <ls_stage>.

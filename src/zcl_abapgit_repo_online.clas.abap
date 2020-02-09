@@ -332,12 +332,12 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     handle_stage_ignore( io_stage ).
 
     ls_push = zcl_abapgit_git_porcelain=>push(
-      io_repo        = me
       is_comment     = is_comment
       io_stage       = io_stage
       iv_branch_name = get_branch_name( )
       iv_url         = get_url( )
       iv_parent      = get_sha1_remote( )
+      iv_commit      = get_commit_sha1( )
       it_old_objects = get_objects( ) ).
 
     set_objects( ls_push-new_objects ).
