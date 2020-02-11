@@ -10,7 +10,7 @@ CLASS zcl_abapgit_object_iaxu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     METHODS:
       read
-        EXPORTING es_attr TYPE w3tempattr
+        RETURNING VALUE(rs_attr) TYPE w3tempattr
         RAISING   zcx_abapgit_exception,
       save
         IMPORTING is_attr TYPE w3tempattr
@@ -31,8 +31,8 @@ CLASS zcl_abapgit_object_iaxu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         IMPORTING io_xml_api TYPE REF TO object
         RAISING   zcx_abapgit_exception,
       w3_api_create_new
-        IMPORTING is_attr    TYPE w3tempattr
-        EXPORTING eo_xml_api TYPE REF TO object
+        IMPORTING is_attr           TYPE w3tempattr
+        RETURNING VALUE(ro_xml_api) TYPE REF TO object
         RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
@@ -50,12 +50,12 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
     ls_name = ms_item-obj_name.
 
     w3_api_load( EXPORTING is_name = ls_name
-                 IMPORTING es_attr = es_attr ).
+                 IMPORTING es_attr = rs_attr ).
 
-    CLEAR: es_attr-chname,
-           es_attr-tdate,
-           es_attr-ttime,
-           es_attr-devclass.
+    CLEAR: rs_attr-chname,
+           rs_attr-tdate,
+           rs_attr-ttime,
+           rs_attr-devclass.
 
   ENDMETHOD.
 
@@ -64,8 +64,7 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
     DATA: lo_xml_api TYPE REF TO object.
 
-    w3_api_create_new( EXPORTING is_attr    = is_attr
-                       IMPORTING eo_xml_api = lo_xml_api ).
+    lo_xml_api = w3_api_create_new( is_attr = is_attr ).
 
     w3_api_save( io_xml_api = lo_xml_api ).
 
@@ -105,7 +104,7 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error from w3_api_xml3~create_new subrc={ sy-subrc }| ).
     ENDIF.
 
-    eo_xml_api ?= <lo_xml_api>.
+    ro_xml_api ?= <lo_xml_api>.
 
   ENDMETHOD.
 
@@ -310,7 +309,7 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    read( IMPORTING es_attr = ls_attr ).
+    ls_attr = read( ).
 
     io_xml->add( iv_name = 'ATTR'
                  ig_data = ls_attr ).

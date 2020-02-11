@@ -42,8 +42,8 @@ CLASS zcl_abapgit_log_viewer DEFINITION
       prepare_log_for_display
         IMPORTING
           ii_log     TYPE REF TO zif_abapgit_log
-        EXPORTING
-          et_log_out TYPE tty_log_out,
+        RETURNING
+          VALUE(rt_log_out) TYPE tty_log_out,
 
       show_longtext
         IMPORTING
@@ -276,7 +276,7 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
       ls_log-obj_type = lr_message->obj_type.
       ls_log-obj_name = lr_message->obj_name.
 
-      INSERT ls_log INTO TABLE et_log_out.
+      INSERT ls_log INTO TABLE rt_log_out.
 
     ENDLOOP.
 
@@ -295,11 +295,7 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
           lv_add_obj_col TYPE abap_bool,
           lo_event       TYPE REF TO cl_salv_events_table.
 
-    prepare_log_for_display(
-      EXPORTING
-        ii_log     = ii_log
-      IMPORTING
-        et_log_out = gt_log ).
+    gt_log = prepare_log_for_display( ii_log = ii_log ).
 
     "check if log contains any object info
     LOOP AT gt_log REFERENCE INTO lr_log.
