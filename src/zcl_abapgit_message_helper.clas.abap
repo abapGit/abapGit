@@ -76,27 +76,27 @@ CLASS zcl_abapgit_message_helper DEFINITION
 
       set_single_msg_var
         IMPORTING
-          iv_arg    TYPE clike
-        EXPORTING
-          ev_target TYPE c,
+          iv_arg           TYPE clike
+        RETURNING
+          VALUE(rv_target) TYPE char01,
 
       set_single_msg_var_clike
         IMPORTING
-          iv_arg    TYPE clike
-        EXPORTING
-          ev_target TYPE c,
+          iv_arg           TYPE clike
+        RETURNING
+          VALUE(rv_target) TYPE char01,
 
       set_single_msg_var_numeric
         IMPORTING
-          iv_arg    TYPE numeric
-        EXPORTING
-          ev_target TYPE c,
+          iv_arg           TYPE numeric
+        RETURNING
+          VALUE(rv_target) TYPE char01,
 
       set_single_msg_var_xseq
         IMPORTING
-          iv_arg    TYPE xsequence
-        EXPORTING
-          ev_target TYPE c.
+          iv_arg           TYPE xsequence
+        RETURNING
+          VALUE(rv_target) TYPE char01.
 
 ENDCLASS.
 
@@ -137,38 +137,22 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
         OTHERS = 1.
 
     IF sy-subrc = 0.
-      set_single_msg_var(
-        EXPORTING
-          iv_arg    = mi_t100_message->t100key-attr1
-        IMPORTING
-          ev_target = sy-msgv1 ).
+      sy-msgv1 = set_single_msg_var( iv_arg = mi_t100_message->t100key-attr1 ).
 
       REPLACE '&V1&' IN TABLE rt_itf
                      WITH sy-msgv1.
 
-      set_single_msg_var(
-        EXPORTING
-          iv_arg    = mi_t100_message->t100key-attr2
-        IMPORTING
-          ev_target = sy-msgv2 ).
+      sy-msgv2 = set_single_msg_var( iv_arg = mi_t100_message->t100key-attr2 ).
 
       REPLACE '&V2&' IN TABLE rt_itf
                      WITH sy-msgv2.
 
-      set_single_msg_var(
-        EXPORTING
-          iv_arg    = mi_t100_message->t100key-attr3
-        IMPORTING
-          ev_target = sy-msgv3 ).
+      sy-msgv3 = set_single_msg_var( iv_arg = mi_t100_message->t100key-attr3 ).
 
       REPLACE '&V3&' IN TABLE rt_itf
                      WITH sy-msgv3.
 
-      set_single_msg_var(
-        EXPORTING
-          iv_arg    = mi_t100_message->t100key-attr4
-        IMPORTING
-          ev_target = sy-msgv4 ).
+      sy-msgv4 = set_single_msg_var( iv_arg = mi_t100_message->t100key-attr4 ).
 
       REPLACE '&V4&' IN TABLE rt_itf
                      WITH sy-msgv4.
@@ -293,24 +277,18 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
 
     FIELD-SYMBOLS <lv_arg> TYPE any.
 
-    CLEAR ev_target.
-
     IF iv_arg IS INITIAL.
       RETURN.
     ENDIF.
 
     ASSIGN me->(iv_arg) TO <lv_arg>.
     IF sy-subrc <> 0.
-      CONCATENATE '&' iv_arg '&' INTO ev_target.
+      CONCATENATE '&' iv_arg '&' INTO rv_target.
       RETURN.
     ENDIF.
 
     TRY.
-        set_single_msg_var_clike(
-          EXPORTING
-            iv_arg    = <lv_arg>
-          IMPORTING
-            ev_target = ev_target ).
+        rv_target = set_single_msg_var_clike( iv_arg = <lv_arg> ).
 
         RETURN.
 
@@ -318,11 +296,7 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        set_single_msg_var_numeric(
-          EXPORTING
-            iv_arg    = <lv_arg>
-          IMPORTING
-            ev_target = ev_target ).
+        rv_target = set_single_msg_var_numeric( iv_arg = <lv_arg> ).
 
         RETURN.
 
@@ -330,37 +304,33 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        set_single_msg_var_xseq(
-          EXPORTING
-            iv_arg    = <lv_arg>
-          IMPORTING
-            ev_target = ev_target ).
+        rv_target = set_single_msg_var_xseq( iv_arg = <lv_arg> ).
 
         RETURN.
 
       CATCH cx_sy_dyn_call_illegal_type ##no_handler.
     ENDTRY.
 
-    CONCATENATE '&' iv_arg '&' INTO ev_target.
+    CONCATENATE '&' iv_arg '&' INTO rv_target.
 
   ENDMETHOD.
 
 
   METHOD set_single_msg_var_clike.
     " a kind of MOVE where all conversion errors are signalled by exceptions
-    WRITE iv_arg LEFT-JUSTIFIED TO ev_target.
+    WRITE iv_arg LEFT-JUSTIFIED TO rv_target.
   ENDMETHOD.
 
 
   METHOD set_single_msg_var_numeric.
     " a kind of MOVE where all conversion errors are signalled by exceptions
-    WRITE iv_arg LEFT-JUSTIFIED TO ev_target.
+    WRITE iv_arg LEFT-JUSTIFIED TO rv_target.
   ENDMETHOD.
 
 
   METHOD set_single_msg_var_xseq.
     " a kind of MOVE where all conversion errors are signalled by exceptions
-    WRITE iv_arg LEFT-JUSTIFIED TO ev_target.
+    WRITE iv_arg LEFT-JUSTIFIED TO rv_target.
   ENDMETHOD.
 
 
