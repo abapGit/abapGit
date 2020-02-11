@@ -74,7 +74,6 @@ CLASS ltcl_xml IMPLEMENTATION.
 
     DATA: li_element       TYPE REF TO if_ixml_element,
           li_ostream       TYPE REF TO if_ixml_ostream,
-          li_renderer      TYPE REF TO if_ixml_renderer,
           li_streamfactory TYPE REF TO if_ixml_stream_factory.
 
     li_element = mo_xml->mi_xml_doc->find_from_path( |/{ mo_xml->c_abapgit_tag }/{ iv_name }| ).

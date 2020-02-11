@@ -93,7 +93,7 @@
         "W3MI"
       ]
     },
-    "ambiguous_statement": true,
+    "ambiguous_statement": false,
     "avoid_use": {
       "define": true,
       "endselect": true,
