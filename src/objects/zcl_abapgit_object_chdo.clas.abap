@@ -14,11 +14,21 @@ CLASS zcl_abapgit_object_chdo DEFINITION
         iv_language TYPE spras.
 
   PROTECTED SECTION.
+    METHODS get_generic
+      RETURNING
+        VALUE(ro_generic) TYPE REF TO zcl_abapgit_objects_generic
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS after_import
+      RAISING
+        zcx_abapgit_exception.
+
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_change_document,
-             reports_generated TYPE SORTED TABLE OF tcdrp WITH UNIQUE KEY object reportname,
-             objects           TYPE SORTED TABLE OF tcdob WITH UNIQUE KEY object tabname,
-             objects_text      TYPE SORTED TABLE OF tcdobt WITH UNIQUE KEY spras object,
+             reports_generated TYPE SORTED TABLE OF tcdrps WITH UNIQUE KEY object reportname,
+             objects           TYPE SORTED TABLE OF tcdobs WITH UNIQUE KEY object tabname,
+             objects_text      TYPE SORTED TABLE OF tcdobts WITH UNIQUE KEY spras object,
            END OF ty_change_document,
            tt_change_document TYPE STANDARD TABLE OF ty_change_document.
 
@@ -60,6 +70,7 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
     CALL FUNCTION 'CHDO_DELETE'
       EXPORTING
         iv_object        = mv_object
+        iv_with_tadir    = abap_true
       EXCEPTIONS
         object_is_space  = 1
         object_not_found = 2
@@ -77,15 +88,22 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: ls_change_object TYPE ty_change_document,
-          lt_object_clas   TYPE cdobjectclas_tab.
+    DATA: ls_change_object TYPE ty_change_document.
 
     io_xml->read( EXPORTING iv_name = 'CHDO'
                   CHANGING  cg_data = ls_change_object ).
 
-    APPEND mv_object TO lt_object_clas.
+    DELETE FROM tcdobs  WHERE object = mv_object.
+    DELETE FROM tcdobts WHERE object = mv_object.
+    DELETE FROM tcdrps  WHERE object = mv_object.
 
-    tadir_insert( iv_package ).
+    INSERT tcdobs  FROM TABLE ls_change_object-objects.
+    INSERT tcdobts FROM TABLE ls_change_object-objects_text.
+    INSERT tcdrps  FROM TABLE ls_change_object-reports_generated.
+
+    after_import( ).
+
+    corr_insert( iv_package ).
 
   ENDMETHOD.
 
@@ -137,11 +155,6 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
     ls_bdcdata-dynbegin = abap_true.
     APPEND ls_bdcdata TO lt_bdcdata.
 
-*    CLEAR: ls_bdcdata.
-*    ls_bdcdata-fnam = 'BDC_OKCODE'.
-*    ls_bdcdata-fval = 'TCDOB-OBJECT'.
-*    APPEND ls_bdcdata TO lt_bdcdata.
-
     CLEAR: ls_bdcdata.
     ls_bdcdata-fnam = 'TCDOB-OBJECT'.
     ls_bdcdata-fval = mv_object.
@@ -175,11 +188,16 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA: ls_change_object TYPE ty_change_document.
+    FIELD-SYMBOLS: <ls_tcdrps> LIKE LINE OF ls_change_object-reports_generated.
 
     SELECT *
       FROM tcdrp
       INTO TABLE ls_change_object-reports_generated
       WHERE object = mv_object.
+    LOOP AT ls_change_object-reports_generated ASSIGNING <ls_tcdrps>.
+      " At import, when CHDO is generated date & time change, so always detects changes for this fields
+      CLEAR: <ls_tcdrps>-datum, <ls_tcdrps>-uzeit.
+    ENDLOOP.
 
     SELECT *
       FROM tcdob
@@ -193,6 +211,39 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
 
     io_xml->add( iv_name = 'CHDO'
                  ig_data = ls_change_object ).
+
+  ENDMETHOD.
+
+
+  METHOD get_generic.
+
+    CREATE OBJECT ro_generic
+      EXPORTING
+        is_item = ms_item.
+
+  ENDMETHOD.
+
+
+  METHOD after_import.
+
+    CONSTANTS lc_logical_transport_object TYPE c LENGTH 1 VALUE 'L'.
+
+    DATA: lt_cts_object_entry TYPE STANDARD TABLE OF e071 WITH DEFAULT KEY,
+          ls_cts_object_entry LIKE LINE OF lt_cts_object_entry,
+          lt_cts_key          TYPE STANDARD TABLE OF e071k WITH DEFAULT KEY.
+
+    ls_cts_object_entry-pgmid    = seok_pgmid_r3tr.
+    ls_cts_object_entry-object   = ms_item-obj_type.
+    ls_cts_object_entry-obj_name = ms_item-obj_name.
+    INSERT ls_cts_object_entry INTO TABLE lt_cts_object_entry.
+
+    CALL FUNCTION 'AFTER_IMP_CHDO'
+      EXPORTING
+        iv_tarclient  = sy-mandt
+        iv_is_upgrade = abap_false
+      TABLES
+        tt_e071       = lt_cts_object_entry
+        tt_e071k      = lt_cts_key.
 
   ENDMETHOD.
 
