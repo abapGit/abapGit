@@ -245,7 +245,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD adjust_namespaces.
@@ -1118,9 +1118,10 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
   METHOD serialize.
 
-    DATA: li_obj   TYPE REF TO zif_abapgit_object,
-          lo_xml   TYPE REF TO zcl_abapgit_xml_output,
-          lo_files TYPE REF TO zcl_abapgit_objects_files.
+    DATA: li_obj       TYPE REF TO zif_abapgit_object,
+          li_obj_check TYPE REF TO zif_abapgit_object_checks,
+          lo_xml       TYPE REF TO zcl_abapgit_xml_output,
+          lo_files     TYPE REF TO zcl_abapgit_objects_files.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF rs_files_and_item-files.
 
@@ -1138,6 +1139,18 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     li_obj = create_object( is_item     = rs_files_and_item-item
                             iv_language = iv_language ).
+
+    TRY.
+        li_obj_check ?= li_obj.
+
+        IF li_obj_check->skip_serialization( ) = abap_true.
+          RETURN.
+        ENDIF.
+
+      CATCH cx_sy_move_cast_error.
+        CLEAR: li_obj_check.
+    ENDTRY.
+
     li_obj->mo_files = lo_files.
     CREATE OBJECT lo_xml.
 
