@@ -295,7 +295,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
               iv_obj_name = <ls_tadir>-obj_name
             RECEIVING
               rs_tadir    = <ls_tadir>.
-        CATCH cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+        CATCH cx_sy_dyn_call_illegal_method.
           " SICF might not be supported in some systems, assume this code is not called
           lv_sicf_not_supported = abap_true.
           EXIT.
