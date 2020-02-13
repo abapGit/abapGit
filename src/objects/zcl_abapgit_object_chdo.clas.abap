@@ -24,6 +24,18 @@ CLASS zcl_abapgit_object_chdo DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    METHODS delete_tadir_cdnames
+      IMPORTING
+        !is_cdnames TYPE cdnames
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS delete_tadir_tabl
+      IMPORTING
+        !is_tcdrs TYPE tcdrs
+      RAISING
+        zcx_abapgit_exception.
+
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_change_document,
              reports_generated TYPE SORTED TABLE OF tcdrps WITH UNIQUE KEY object reportname,
@@ -65,7 +77,25 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_msg TYPE symsgv.
+    DATA: lt_cdnames TYPE STANDARD TABLE OF cdnames,
+          ls_cdnames TYPE cdnames,
+          lt_tcdrs   TYPE STANDARD TABLE OF tcdrs,
+          ls_tcdrs   TYPE tcdrs,
+          lv_msg     TYPE symsgv.
+
+    CALL FUNCTION 'CDNAMES_GET'
+      EXPORTING
+        iv_object        = mv_object
+      TABLES
+        it_tcdrs         = lt_tcdrs
+        it_names         = lt_cdnames
+      EXCEPTIONS
+        object_space     = 1
+        object_not_found = 2
+        OTHERS           = 3.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
 
     CALL FUNCTION 'CHDO_DELETE'
       EXPORTING
@@ -82,6 +112,14 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
                                          iv_msgno = '869'
                                          iv_msgv1 = lv_msg ).
     ENDIF.
+
+    LOOP AT lt_cdnames INTO ls_cdnames.
+      delete_tadir_cdnames( ls_cdnames ).
+    ENDLOOP.
+
+    LOOP AT lt_tcdrs INTO ls_tcdrs.
+      delete_tadir_tabl( ls_tcdrs ).
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -187,27 +225,43 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: ls_change_object TYPE ty_change_document.
-    FIELD-SYMBOLS: <ls_tcdrps> LIKE LINE OF ls_change_object-reports_generated.
+    DATA: ls_change_object TYPE ty_change_document,
+          lt_tcdrp         TYPE STANDARD TABLE OF tcdrp,
+          lt_tcdob         TYPE STANDARD TABLE OF tcdob,
+          lt_tcdobt        TYPE STANDARD TABLE OF tcdobt.
+    FIELD-SYMBOLS: <ls_reports_generated> LIKE LINE OF ls_change_object-reports_generated,
+                   <ls_objects>           LIKE LINE OF ls_change_object-objects,
+                   <ls_objects_text>      LIKE LINE OF ls_change_object-objects_text.
 
-    SELECT *
-      FROM tcdrp
-      INTO TABLE ls_change_object-reports_generated
-      WHERE object = mv_object.
-    LOOP AT ls_change_object-reports_generated ASSIGNING <ls_tcdrps>.
-      " At import, when CHDO is generated date & time change, so always detects changes for this fields
-      CLEAR: <ls_tcdrps>-datum, <ls_tcdrps>-uzeit.
+    CALL FUNCTION 'CDNAMES_GET'
+      EXPORTING
+        iv_object        = mv_object
+      TABLES
+        it_tcdrp         = lt_tcdrp
+        it_tcdob         = lt_tcdob
+        it_tcdobt        = lt_tcdobt
+      EXCEPTIONS
+        object_space     = 1
+        object_not_found = 2
+        OTHERS           = 3.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    ls_change_object-reports_generated = lt_tcdrp.
+    ls_change_object-objects           = lt_tcdob.
+    ls_change_object-objects_text      = lt_tcdobt.
+
+    " At import, when CHDO is generated date & time change, so always detects changes for this fields
+    LOOP AT ls_change_object-reports_generated ASSIGNING <ls_reports_generated>.
+      CLEAR: <ls_reports_generated>-datum, <ls_reports_generated>-uzeit.
     ENDLOOP.
-
-    SELECT *
-      FROM tcdob
-      INTO TABLE ls_change_object-objects
-      WHERE object  = mv_object.
-
-    SELECT *
-      FROM tcdobt
-      INTO TABLE ls_change_object-objects_text
-      WHERE object  = mv_object.
+    LOOP AT ls_change_object-objects ASSIGNING <ls_objects>.
+      CLEAR: <ls_objects>-udate, <ls_objects>-utime.
+    ENDLOOP.
+    LOOP AT ls_change_object-objects_text ASSIGNING <ls_objects_text>.
+      CLEAR: <ls_objects_text>-udate, <ls_objects_text>-utime.
+    ENDLOOP.
 
     io_xml->add( iv_name = 'CHDO'
                  ig_data = ls_change_object ).
@@ -244,6 +298,116 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
       TABLES
         tt_e071       = lt_cts_object_entry
         tt_e071k      = lt_cts_key.
+
+  ENDMETHOD.
+
+
+  METHOD delete_tadir_cdnames.
+
+    DATA: lv_obj_name TYPE sobj_name.
+
+    IF is_cdnames-repnamec IS NOT INITIAL.
+      lv_obj_name = is_cdnames-repnamec.
+      CALL FUNCTION 'TR_TADIR_INTERFACE'
+        EXPORTING
+          wi_delete_tadir_entry    = abap_true
+          wi_tadir_pgmid           = 'R3TR'
+          wi_tadir_object          = 'PROG'
+          wi_tadir_obj_name        = lv_obj_name
+        EXCEPTIONS
+          tadir_entry_not_existing = 1
+          OTHERS                   = 2.
+      IF sy-subrc > 1.
+        zcx_abapgit_exception=>raise( |Error from TR_TADIR_INTERFACE (subrc={ sy-subrc } ).| ).
+      ENDIF.
+    ENDIF.
+
+    IF is_cdnames-repnamet IS NOT INITIAL.
+      lv_obj_name = is_cdnames-repnamet.
+      CALL FUNCTION 'TR_TADIR_INTERFACE'
+        EXPORTING
+          wi_delete_tadir_entry    = abap_true
+          wi_tadir_pgmid           = 'R3TR'
+          wi_tadir_object          = 'PROG'
+          wi_tadir_obj_name        = lv_obj_name
+        EXCEPTIONS
+          tadir_entry_not_existing = 1
+          OTHERS                   = 2.
+      IF sy-subrc > 1.
+        zcx_abapgit_exception=>raise( |Error from TR_TADIR_INTERFACE (subrc={ sy-subrc } ).| ).
+      ENDIF.
+    ENDIF.
+
+    IF is_cdnames-repnamefix IS NOT INITIAL.
+      lv_obj_name = is_cdnames-repnamefix.
+      CALL FUNCTION 'TR_TADIR_INTERFACE'
+        EXPORTING
+          wi_delete_tadir_entry    = abap_true
+          wi_tadir_pgmid           = 'R3TR'
+          wi_tadir_object          = 'PROG'
+          wi_tadir_obj_name        = lv_obj_name
+        EXCEPTIONS
+          tadir_entry_not_existing = 1
+          OTHERS                   = 2.
+      IF sy-subrc > 1.
+        zcx_abapgit_exception=>raise( |Error from TR_TADIR_INTERFACE (subrc={ sy-subrc } ).| ).
+      ENDIF.
+    ENDIF.
+
+    IF is_cdnames-repnamevar IS NOT INITIAL.
+      lv_obj_name = is_cdnames-repnamevar.
+      CALL FUNCTION 'TR_TADIR_INTERFACE'
+        EXPORTING
+          wi_delete_tadir_entry    = abap_true
+          wi_tadir_pgmid           = 'R3TR'
+          wi_tadir_object          = 'PROG'
+          wi_tadir_obj_name        = lv_obj_name
+        EXCEPTIONS
+          tadir_entry_not_existing = 1
+          OTHERS                   = 2.
+      IF sy-subrc > 1.
+        zcx_abapgit_exception=>raise( |Error from TR_TADIR_INTERFACE (subrc={ sy-subrc } ).| ).
+      ENDIF.
+    ENDIF.
+
+    IF is_cdnames-fgrp IS NOT INITIAL.
+      lv_obj_name = is_cdnames-fgrp.
+      CALL FUNCTION 'TR_TADIR_INTERFACE'
+        EXPORTING
+          wi_delete_tadir_entry    = abap_true
+          wi_tadir_pgmid           = 'R3TR'
+          wi_tadir_object          = 'FUGR'
+          wi_tadir_obj_name        = lv_obj_name
+        EXCEPTIONS
+          tadir_entry_not_existing = 1
+          OTHERS                   = 2.
+      IF sy-subrc > 1.
+        zcx_abapgit_exception=>raise( |Error from TR_TADIR_INTERFACE (subrc={ sy-subrc } ).| ).
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD delete_tadir_tabl.
+
+    DATA: lv_obj_name TYPE sobj_name.
+
+    IF is_tcdrs-tabname IS NOT INITIAL.
+      lv_obj_name = is_tcdrs-tabname.
+      CALL FUNCTION 'TR_TADIR_INTERFACE'
+        EXPORTING
+          wi_delete_tadir_entry    = abap_true
+          wi_tadir_pgmid           = 'R3TR'
+          wi_tadir_object          = 'FUGR'
+          wi_tadir_obj_name        = lv_obj_name
+        EXCEPTIONS
+          tadir_entry_not_existing = 1
+          OTHERS                   = 2.
+      IF sy-subrc > 1.
+        zcx_abapgit_exception=>raise( |Error from TR_TADIR_INTERFACE (subrc={ sy-subrc } ).| ).
+      ENDIF.
+    ENDIF.
 
   ENDMETHOD.
 
