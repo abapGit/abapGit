@@ -168,7 +168,7 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
 
   METHOD map_beacons.
 
-    DATA: lv_beacon_idx  TYPE i,
+    DATA: lv_beacon_idx  TYPE i VALUE 1,
           lv_offs        TYPE i,
           lv_beacon_str  TYPE string,
           lv_beacon_2lev TYPE string,
