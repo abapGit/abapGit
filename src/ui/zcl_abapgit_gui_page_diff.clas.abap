@@ -113,7 +113,9 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         iv_patch_line_possible TYPE abap_bool
         iv_filename            TYPE string
         is_diff_line           TYPE zif_abapgit_definitions=>ty_diff
-        iv_index               TYPE sy-tabix.
+        iv_index               TYPE sy-tabix
+      RAISING
+        zcx_abapgit_exception.
     METHODS start_staging
       IMPORTING
         it_postdata TYPE cnht_post_data_tab
@@ -981,17 +983,19 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         patch TYPE string VALUE `patch` ##NO_TEXT,
       END OF c_css_class.
 
-    DATA: lv_id     TYPE string,
-          lv_object TYPE string.
+    DATA: lv_id      TYPE string,
+          lv_patched TYPE abap_bool.
 
-    lv_object = iv_filename.
+    lv_patched = get_diff_object( iv_filename )->is_line_patched( iv_index ).
 
     IF iv_patch_line_possible = abap_true.
 
-      lv_id = |{ lv_object }_{ mv_section_count }_{ iv_index }|.
+      lv_id = |{ iv_filename }_{ mv_section_count }_{ iv_index }|.
 
       io_html->add( |<td class="{ c_css_class-patch }">| ).
-      io_html->add_checkbox( iv_id = |patch_line_{ lv_id }| ).
+      io_html->add_checkbox(
+          iv_id      = |patch_line_{ lv_id }|
+          iv_checked = lv_patched ).
       io_html->add( |</td>| ).
 
     ELSE.
