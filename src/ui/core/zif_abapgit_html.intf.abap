@@ -38,7 +38,8 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_title TYPE string OPTIONAL.
   METHODS add_checkbox
     IMPORTING
-      iv_id TYPE string.
+      iv_id      TYPE string
+      iv_checked TYPE abap_bool OPTIONAL.
   CLASS-METHODS a
     IMPORTING
       !iv_txt       TYPE string
