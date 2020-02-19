@@ -38,7 +38,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_tadir IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
 
 
   METHOD build.
@@ -270,43 +270,4 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
-
-  METHOD zif_abapgit_tadir~read_obj_type.
-
-    DATA: lv_sicf_not_supported TYPE abap_bool.
-    FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF rt_tadir.
-
-    SELECT *
-      FROM tadir
-      INTO CORRESPONDING FIELDS OF TABLE rt_tadir
-      WHERE pgmid    = iv_pgmid
-        AND object   = iv_object
-        AND devclass = iv_package.
-    IF sy-subrc <> 0 OR iv_object <> 'SICF'.
-      RETURN.
-    ENDIF.
-
-    LOOP AT rt_tadir ASSIGNING <ls_tadir>.
-      TRY.
-          CALL METHOD ('ZCL_ABAPGIT_OBJECT_SICF')=>read_tadir
-            EXPORTING
-              iv_pgmid    = <ls_tadir>-pgmid
-              iv_obj_name = <ls_tadir>-obj_name
-            RECEIVING
-              rs_tadir    = <ls_tadir>.
-        CATCH cx_sy_dyn_call_illegal_method.
-          " SICF might not be supported in some systems, assume this code is not called
-          lv_sicf_not_supported = abap_true.
-          EXIT.
-      ENDTRY.
-    ENDLOOP.
-
-    IF lv_sicf_not_supported = abap_true.
-      CLEAR: rt_tadir.
-    ENDIF.
-
-  ENDMETHOD.
-
-
 ENDCLASS.

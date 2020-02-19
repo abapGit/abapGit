@@ -40,10 +40,6 @@ CLASS ltcl_abapgit_tadir_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_tadir~read_obj_type.
-
-  ENDMETHOD.
-
 ENDCLASS.
 
 CLASS ltcl_no_dependency_injection IMPLEMENTATION.

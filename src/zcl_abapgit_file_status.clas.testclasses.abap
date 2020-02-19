@@ -465,10 +465,6 @@ CLASS ltcl_status_helper IMPLEMENTATION.
     cl_abap_unit_assert=>fail( ).
   ENDMETHOD.
 
-  METHOD zif_abapgit_tadir~read_obj_type.
-    cl_abap_unit_assert=>fail( ).
-  ENDMETHOD.
-
   METHOD add_remote.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.

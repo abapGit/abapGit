@@ -84,11 +84,6 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
         VALUE(rv_active) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
-    METHODS is_generated
-      RETURNING
-        VALUE(rv_generated) TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception.
 
   PRIVATE SECTION.
 ENDCLASS.
@@ -349,24 +344,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error from TR_TADIR_INTERFACE (subrc={ sy-subrc } ).| ).
     ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD is_generated.
-
-    DATA: lt_tadir     TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          ls_tadir     TYPE zif_abapgit_definitions=>ty_tadir,
-          lv_cd_object TYPE cdobjectcl,
-          lt_cd_names  TYPE STANDARD TABLE OF cdnames,
-          ls_cd_names  TYPE cdnames.
-
-    rv_generated = abap_false.
-
-    ls_tadir = zcl_abapgit_factory=>get_tadir( )->read_single( iv_object   = ms_item-obj_type
-                                                               iv_obj_name = ms_item-obj_name ).
-
-    rv_generated = ls_tadir-genflag.
 
   ENDMETHOD.
 ENDCLASS.
