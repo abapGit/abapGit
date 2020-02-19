@@ -32,6 +32,13 @@ CLASS zcl_abapgit_diff DEFINITION
     METHODS get_beacons
       RETURNING
         VALUE(rt_beacons) TYPE zif_abapgit_definitions=>ty_string_tt .
+    METHODS is_line_patched
+      IMPORTING
+        iv_index          TYPE i
+      RETURNING
+        VALUE(rv_patched) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -409,6 +416,21 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
           ignore_case = abap_true.
       APPEND lo_regex TO rt_regex_set.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD is_line_patched.
+
+    FIELD-SYMBOLS: <ls_diff> TYPE zif_abapgit_definitions=>ty_diff.
+
+    READ TABLE mt_diff INDEX iv_index
+                       ASSIGNING <ls_diff>.
+    IF sy-subrc = 0.
+      rv_patched = <ls_diff>-patch_flag.
+    ELSE.
+      zcx_abapgit_exception=>raise( |Diff line not found { iv_index }| ).
+    ENDIF.
 
   ENDMETHOD.
 
