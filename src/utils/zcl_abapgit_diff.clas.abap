@@ -3,6 +3,7 @@ CLASS zcl_abapgit_diff DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    CONSTANTS co_starting_beacon TYPE i VALUE 1.
 
 * assumes data is UTF8 based with newlines
 * only works with lines up to 255 characters
@@ -168,7 +169,7 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
 
   METHOD map_beacons.
 
-    DATA: lv_beacon_idx  TYPE i,
+    DATA: lv_beacon_idx  TYPE i VALUE co_starting_beacon,
           lv_offs        TYPE i,
           lv_beacon_str  TYPE string,
           lv_beacon_2lev TYPE string,
