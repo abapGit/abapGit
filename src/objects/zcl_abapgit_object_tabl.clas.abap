@@ -11,9 +11,6 @@ CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
            END OF ty_segment_definition.
     TYPES: ty_segment_definitions TYPE STANDARD TABLE OF ty_segment_definition WITH DEFAULT KEY.
 
-    METHODS is_generated
-        REDEFINITION.
-
     "! Serialize IDoc Segment type/definition if exits
     "! @parameter io_xml | XML writer
     "! @raising zcx_abapgit_exception | Exceptions
@@ -63,7 +60,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -583,11 +580,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       WHERE tabname = ms_item-obj_name
       AND as4local = 'A'
       AND as4vers = '0000'.
-    IF sy-subrc <> 0.
-      rv_bool = abap_false.
-    ELSE.
-      rv_bool = boolc( is_generated( ) = abap_false ).
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -772,54 +765,6 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
                          iv_longtext_id = c_longtext_id_tabl ).
 
     serialize_idoc_segment( io_xml ).
-
-  ENDMETHOD.
-
-
-  METHOD is_generated.
-
-    DATA: lt_tadir     TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          ls_tadir     TYPE zif_abapgit_definitions=>ty_tadir,
-          lv_cd_object TYPE cdobjectcl,
-          lt_tcdrs     TYPE STANDARD TABLE OF tcdrs,
-          ls_tcdrs     TYPE tcdrs.
-
-    IF super->is_generated( ) = abap_false.
-      rv_generated = abap_false.
-    ELSE.
-
-      lt_tadir = zcl_abapgit_factory=>get_tadir( )->read_obj_type( iv_package = ms_item-devclass
-                                                                   iv_object  = 'CHDO' ).
-
-      LOOP AT lt_tadir INTO ls_tadir.
-
-        lv_cd_object = ls_tadir-obj_name.
-
-        CALL FUNCTION 'CDNAMES_GET'
-          EXPORTING
-            iv_object        = lv_cd_object
-          TABLES
-            it_tcdrs         = lt_tcdrs
-          EXCEPTIONS
-            object_space     = 1
-            object_not_found = 2
-            OTHERS           = 3.
-        IF sy-subrc <> 0.
-          CONTINUE.
-        ENDIF.
-
-        READ TABLE lt_tcdrs TRANSPORTING NO FIELDS
-          WITH KEY tabname = ms_item-obj_name.
-        IF sy-subrc = 0.
-          rv_generated = abap_true.
-          EXIT.
-        ELSE.
-          rv_generated = abap_false.
-        ENDIF.
-
-      ENDLOOP.
-
-    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

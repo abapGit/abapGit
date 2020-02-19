@@ -5,9 +5,6 @@ CLASS zcl_abapgit_object_prog DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PROTECTED SECTION.
-    METHODS is_generated
-        REDEFINITION.
-
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_tpool_i18n,
              language TYPE langu,
@@ -33,7 +30,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_prog IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -191,12 +188,8 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
 
     SELECT SINGLE progname FROM reposrc INTO lv_progname
       WHERE progname = ms_item-obj_name
-        AND r3state = 'A'.
-    IF sy-subrc <> 0.
-      rv_bool = abap_false.
-    ELSE.
-      rv_bool = boolc( is_generated( ) = abap_false ).
-    ENDIF.
+      AND r3state = 'A'.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
@@ -263,53 +256,4 @@ CLASS zcl_abapgit_object_prog IMPLEMENTATION.
                          iv_longtext_id = c_longtext_id_prog ).
 
   ENDMETHOD.
-
-  METHOD is_generated.
-
-    DATA: lt_tadir     TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          ls_tadir     TYPE zif_abapgit_definitions=>ty_tadir,
-          lv_cd_object TYPE cdobjectcl,
-          lt_cd_names  TYPE STANDARD TABLE OF cdnames,
-          ls_cd_names  TYPE cdnames.
-
-    IF super->is_generated( ) = abap_false.
-      rv_generated = abap_false.
-    ELSE.
-
-      lt_tadir = zcl_abapgit_factory=>get_tadir( )->read_obj_type( iv_package = ms_item-devclass
-                                                                   iv_object  = 'CHDO' ).
-
-      LOOP AT lt_tadir INTO ls_tadir.
-
-        lv_cd_object = ls_tadir-obj_name.
-
-        CALL FUNCTION 'CDNAMES_GET'
-          EXPORTING
-            iv_object        = lv_cd_object
-          TABLES
-            it_names         = lt_cd_names
-          EXCEPTIONS
-            object_space     = 1
-            object_not_found = 2
-            OTHERS           = 3.
-        IF sy-subrc <> 0.
-          CONTINUE.
-        ENDIF.
-
-        LOOP AT lt_cd_names INTO ls_cd_names WHERE repnamec   = ms_item-obj_name OR repnamet   = ms_item-obj_name
-                                                OR repnamefix = ms_item-obj_name OR repnamevar = ms_item-obj_name.
-          rv_generated = abap_true.
-          EXIT.
-        ENDLOOP.
-
-        IF rv_generated = abap_true.
-          EXIT.
-        ENDIF.
-
-      ENDLOOP.
-
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.
