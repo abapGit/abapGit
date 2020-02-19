@@ -794,7 +794,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     DATA: lo_highlighter TYPE REF TO zcl_abapgit_syntax_highlighter,
           lt_diffs       TYPE zif_abapgit_definitions=>ty_diffs_tt,
-          lv_insert_nav  TYPE abap_bool,
+          lv_insert_nav  TYPE abap_bool VALUE abap_true,
           lv_tabix       TYPE syst-tabix.
 
     FIELD-SYMBOLS <ls_diff>  LIKE LINE OF lt_diffs.
