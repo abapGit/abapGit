@@ -113,7 +113,9 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         iv_patch_line_possible TYPE abap_bool
         iv_filename            TYPE string
         is_diff_line           TYPE zif_abapgit_definitions=>ty_diff
-        iv_index               TYPE sy-tabix.
+        iv_index               TYPE sy-tabix
+      RAISING
+        zcx_abapgit_exception.
     METHODS start_staging
       IMPORTING
         it_postdata TYPE cnht_post_data_tab
@@ -162,6 +164,21 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
     METHODS add_filter_sub_menu
       IMPORTING
         io_menu TYPE REF TO zcl_abapgit_html_toolbar.
+    METHODS get_patch_id
+      IMPORTING
+        is_diff            TYPE ty_file_diff
+      RETURNING
+        VALUE(rv_filename) TYPE string.
+    METHODS normalize_path
+      IMPORTING
+        iv_path              TYPE string
+      RETURNING
+        VALUE(rv_normalized) TYPE string.
+    METHODS normalize_filename
+      IMPORTING
+        iv_filename          TYPE string
+      RETURNING
+        VALUE(rv_normalized) TYPE string.
     CLASS-METHODS get_patch_data
       IMPORTING
         iv_patch      TYPE string
@@ -600,13 +617,16 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_diff_file> LIKE LINE OF mt_diff_files.
 
-    READ TABLE mt_diff_files ASSIGNING <ls_diff_file>
-                             WITH KEY filename = iv_filename.
-    IF sy-subrc <> 0.
+    LOOP AT mt_diff_files ASSIGNING <ls_diff_file>.
+      IF get_patch_id( <ls_diff_file> ) = iv_filename.
+        ro_diff = <ls_diff_file>-o_diff.
+        EXIT.
+      ENDIF.
+    ENDLOOP.
+
+    IF ro_diff IS NOT BOUND.
       zcx_abapgit_exception=>raise( |Invalid filename { iv_filename }| ).
     ENDIF.
-
-    ro_diff = <ls_diff_file>-o_diff.
 
   ENDMETHOD.
 
@@ -664,7 +684,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     IF mv_patch_mode = abap_true.
 
       ro_html->add( |<th class="patch">| ).
-      ro_html->add_checkbox( iv_id = |patch_section_{ is_diff-filename }_{ mv_section_count }| ).
+      ro_html->add_checkbox( iv_id = |patch_section_{ get_patch_id( is_diff ) }_{ mv_section_count }| ).
       ro_html->add( '</th>' ).
 
     ELSE.
@@ -833,7 +853,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         ro_html->add( render_line_unified( is_diff_line = <ls_diff> ) ).
       ELSE.
         ro_html->add( render_line_split( is_diff_line = <ls_diff>
-                                         iv_filename  = is_diff-filename
+                                         iv_filename  = get_patch_id( is_diff )
                                          iv_fstate    = is_diff-fstate
                                          iv_index     = lv_tabix ) ).
       ENDIF.
@@ -981,17 +1001,19 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         patch TYPE string VALUE `patch` ##NO_TEXT,
       END OF c_css_class.
 
-    DATA: lv_id     TYPE string,
-          lv_object TYPE string.
+    DATA: lv_id      TYPE string,
+          lv_patched TYPE abap_bool.
 
-    lv_object = iv_filename.
+    lv_patched = get_diff_object( iv_filename )->is_line_patched( iv_index ).
 
     IF iv_patch_line_possible = abap_true.
 
-      lv_id = |{ lv_object }_{ mv_section_count }_{ iv_index }|.
+      lv_id = |{ iv_filename }_{ mv_section_count }_{ iv_index }|.
 
       io_html->add( |<td class="{ c_css_class-patch }">| ).
-      io_html->add_checkbox( iv_id = |patch_line_{ lv_id }| ).
+      io_html->add_checkbox(
+          iv_id      = |patch_line_{ lv_id }|
+          iv_checked = lv_patched ).
       io_html->add( |</td>| ).
 
     ELSE.
@@ -1007,7 +1029,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   METHOD render_patch_head.
 
     io_html->add( |<th class="patch">| ).
-    io_html->add_checkbox( iv_id = |patch_file_{ is_diff-filename }| ).
+    io_html->add_checkbox( iv_id = |patch_file_{ get_patch_id( is_diff ) }| ).
     io_html->add( '</th>' ).
 
   ENDMETHOD.
@@ -1023,7 +1045,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     IF mv_unified = abap_true.
       ro_html->add( '<th class="num">old</th>' ).           "#EC NOTEXT
       ro_html->add( '<th class="num">new</th>' ).           "#EC NOTEXT
-      ro_html->add( '<th class="mark"></th>' ).           "#EC NOTEXT
+      ro_html->add( '<th class="mark"></th>' ).             "#EC NOTEXT
       ro_html->add( '<th>code</th>' ).                      "#EC NOTEXT
     ELSE.
 
@@ -1035,10 +1057,10 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
       ENDIF.
 
       ro_html->add( '<th class="num"></th>' ).              "#EC NOTEXT
-      ro_html->add( '<th class="mark"></th>' ).              "#EC NOTEXT
+      ro_html->add( '<th class="mark"></th>' ).             "#EC NOTEXT
       ro_html->add( '<th>LOCAL</th>' ).                     "#EC NOTEXT
       ro_html->add( '<th class="num"></th>' ).              "#EC NOTEXT
-      ro_html->add( '<th class="mark"></th>' ).              "#EC NOTEXT
+      ro_html->add( '<th class="mark"></th>' ).             "#EC NOTEXT
       ro_html->add( '<th>REMOTE</th>' ).                    "#EC NOTEXT
 
     ENDIF.
@@ -1157,4 +1179,34 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
+
+
+  METHOD get_patch_id.
+
+    rv_filename = normalize_path( is_diff-path )
+               && `_`
+               && normalize_filename( is_diff-filename ).
+
+  ENDMETHOD.
+
+
+  METHOD normalize_path.
+
+    rv_normalized = replace( val  = iv_path
+                             sub  = '/'
+                             occ  = 0
+                             with = '_' ).
+
+  ENDMETHOD.
+
+
+  METHOD normalize_filename.
+
+    rv_normalized = replace( val  = iv_filename
+                             sub  = '.'
+                             occ  = 0
+                             with = '_' ).
+
+  ENDMETHOD.
+
 ENDCLASS.
