@@ -3,6 +3,7 @@ CLASS zcl_abapgit_diff DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    CONSTANTS co_starting_beacon TYPE i VALUE 1.
 
 * assumes data is UTF8 based with newlines
 * only works with lines up to 255 characters
@@ -31,6 +32,13 @@ CLASS zcl_abapgit_diff DEFINITION
     METHODS get_beacons
       RETURNING
         VALUE(rt_beacons) TYPE zif_abapgit_definitions=>ty_string_tt .
+    METHODS is_line_patched
+      IMPORTING
+        iv_index          TYPE i
+      RETURNING
+        VALUE(rv_patched) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -168,7 +176,7 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
 
   METHOD map_beacons.
 
-    DATA: lv_beacon_idx  TYPE i,
+    DATA: lv_beacon_idx  TYPE i VALUE co_starting_beacon,
           lv_offs        TYPE i,
           lv_beacon_str  TYPE string,
           lv_beacon_2lev TYPE string,
@@ -408,6 +416,21 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
           ignore_case = abap_true.
       APPEND lo_regex TO rt_regex_set.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD is_line_patched.
+
+    FIELD-SYMBOLS: <ls_diff> TYPE zif_abapgit_definitions=>ty_diff.
+
+    READ TABLE mt_diff INDEX iv_index
+                       ASSIGNING <ls_diff>.
+    IF sy-subrc = 0.
+      rv_patched = <ls_diff>-patch_flag.
+    ELSE.
+      zcx_abapgit_exception=>raise( |Diff line not found { iv_index }| ).
+    ENDIF.
 
   ENDMETHOD.
 
