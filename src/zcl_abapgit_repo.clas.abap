@@ -176,11 +176,9 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS update_last_deserialize
       RAISING
         zcx_abapgit_exception .
-    METHODS get_generated_tadir
-      RETURNING
-        VALUE(rt_tadir) TYPE zif_abapgit_definitions=>ty_tadir_tt
-      RAISING
-        zcx_abapgit_exception.
+    METHODS apply_filter_generated_tadir
+      CHANGING
+        ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
 ENDCLASS.
 
 
@@ -196,13 +194,13 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF ct_tadir.
 
-    lt_filter = get_generated_tadir( ).
+    apply_filter_generated_tadir( CHANGING ct_tadir = ct_tadir ).
 
-    INSERT LINES OF it_filter INTO TABLE lt_filter.
-
-    IF lines( lt_filter ) = 0.
+    IF lines( it_filter ) = 0.
       RETURN.
     ENDIF.
+
+    lt_filter = it_filter.
 
 * this is another loop at TADIR, but typically the filter is blank
     LOOP AT ct_tadir ASSIGNING <ls_tadir>.
@@ -784,10 +782,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_generated_tadir.
+  METHOD apply_filter_generated_tadir.
 
-    DATA: lt_tadir     TYPE SORTED TABLE OF zif_abapgit_definitions=>ty_tadir WITH UNIQUE KEY pgmid object obj_name,
-          ls_tadir     TYPE zif_abapgit_definitions=>ty_tadir,
+    DATA: ls_tadir     TYPE zif_abapgit_definitions=>ty_tadir,
           ls_tadir_gen TYPE zif_abapgit_definitions=>ty_tadir,
           lv_cd_object TYPE cdobjectcl,
           lt_cd_names  TYPE STANDARD TABLE OF cdnames,
@@ -795,9 +792,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
           lt_tcdrs     TYPE STANDARD TABLE OF tcdrs,
           ls_tcdrs     TYPE tcdrs.
 
-    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( get_package( ) ).
-
-    LOOP AT lt_tadir INTO ls_tadir WHERE pgmid = 'R3TR' AND object = 'CHDO'.
+    LOOP AT ct_tadir INTO ls_tadir WHERE pgmid = 'R3TR' AND object = 'CHDO'.
       CLEAR: lv_cd_object, lt_cd_names, ls_tadir_gen, lt_tcdrs, ls_tcdrs.
 
       lv_cd_object = ls_tadir-obj_name.
@@ -816,42 +811,18 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
-      READ TABLE lt_tadir INTO ls_tadir_gen
-        WITH KEY pgmid = 'R3TR' object = 'PROG' obj_name = ls_cd_names-repnamec.
-      IF sy-subrc = 0.
-        INSERT ls_tadir_gen INTO TABLE rt_tadir.
-      ENDIF.
-
-      READ TABLE lt_tadir INTO ls_tadir_gen
-        WITH KEY pgmid = 'R3TR' object = 'PROG' obj_name = ls_cd_names-repnamet.
-      IF sy-subrc = 0.
-        INSERT ls_tadir_gen INTO TABLE rt_tadir.
-      ENDIF.
-
-      READ TABLE lt_tadir INTO ls_tadir_gen
-        WITH KEY pgmid = 'R3TR' object = 'PROG' obj_name = ls_cd_names-repnamefix.
-      IF sy-subrc = 0.
-        INSERT ls_tadir_gen INTO TABLE rt_tadir.
-      ENDIF.
-
-      READ TABLE lt_tadir INTO ls_tadir_gen
-        WITH KEY pgmid = 'R3TR' object = 'PROG' obj_name = ls_cd_names-repnamevar.
-      IF sy-subrc = 0.
-        INSERT ls_tadir_gen INTO TABLE rt_tadir.
-      ENDIF.
-
-      READ TABLE lt_tadir INTO ls_tadir_gen
-        WITH KEY pgmid = 'R3TR' object = 'FUGR' obj_name = ls_cd_names-fgrp.
-      IF sy-subrc = 0.
-        INSERT ls_tadir_gen INTO TABLE rt_tadir.
-      ENDIF.
+      LOOP AT lt_cd_names INTO ls_cd_names.
+        DELETE ct_tadir WHERE pgmid = 'R3TR'
+                          AND ( ( object = 'PROG'
+                              AND ( obj_name = ls_cd_names-repnamec
+                                 OR obj_name = ls_cd_names-repnamet
+                                 OR obj_name = ls_cd_names-repnamefix
+                                 OR obj_name = ls_cd_names-repnamevar ) )
+                               OR object = 'FUGR' AND obj_name = ls_cd_names-fgrp ).
+      ENDLOOP.
 
       LOOP AT lt_tcdrs INTO ls_tcdrs.
-        READ TABLE lt_tadir INTO ls_tadir_gen
-          WITH KEY pgmid = 'R3TR' object = 'TABL' obj_name = ls_tcdrs-tabname.
-        IF sy-subrc = 0.
-          INSERT ls_tadir_gen INTO TABLE rt_tadir.
-        ENDIF.
+        DELETE ct_tadir WHERE pgmid = 'R3TR' AND object = 'TABL' AND obj_name = ls_tcdrs-tabname.
       ENDLOOP.
 
     ENDLOOP.
