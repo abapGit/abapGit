@@ -817,7 +817,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     DATA: lo_highlighter TYPE REF TO zcl_abapgit_syntax_highlighter,
           lt_diffs       TYPE zif_abapgit_definitions=>ty_diffs_tt,
-          lv_insert_nav  TYPE abap_bool VALUE abap_true,
+          lv_insert_nav  TYPE abap_bool,
           lv_tabix       TYPE syst-tabix.
 
     FIELD-SYMBOLS <ls_diff>  LIKE LINE OF lt_diffs.
@@ -826,6 +826,11 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     lt_diffs = is_diff-o_diff->get( ).
+
+    IF mv_patch_mode = abap_true.
+      " add beacon at beginning of file
+      lv_insert_nav = abap_true.
+    ENDIF.
 
     LOOP AT lt_diffs ASSIGNING <ls_diff>.
 
