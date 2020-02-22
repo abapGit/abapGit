@@ -23,6 +23,7 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
     DATA mo_settings TYPE REF TO zcl_abapgit_settings .
     DATA mv_error TYPE abap_bool .
     DATA mt_post_fields TYPE tihttpnvp .
+    DATA mt_proxy_bypass TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url.
 
     METHODS post_commit_msg .
     METHODS post_development_internals .
@@ -359,6 +360,8 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
     ELSE.
       mo_settings->set_proxy_authentication( abap_false ).
     ENDIF.
+
+    mo_settings->set_proxy_bypass( mt_proxy_bypass ).
 
   ENDMETHOD.
 
@@ -790,8 +793,9 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
 
         ev_state = zcl_abapgit_gui=>c_event_state-go_back.
       WHEN c_action-change_proxy_bypass.
+        mt_proxy_bypass = zcl_abapgit_ui_factory=>get_popups( )->popup_proxy_bypass( mo_settings->get_proxy_bypass( ) ).
+
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-        MESSAGE 'popup here' TYPE 'S'.
     ENDCASE.
 
   ENDMETHOD.

@@ -17,8 +17,8 @@ INTERFACE zif_abapgit_popups
 
   METHODS popup_package_export
     EXPORTING
-      !ev_package      TYPE devclass
-      !ev_folder_logic TYPE string
+      !ev_package                    TYPE devclass
+      !ev_folder_logic               TYPE string
       !ev_serialize_master_lang_only TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
@@ -142,6 +142,13 @@ INTERFACE zif_abapgit_popups
       !is_transport_type  TYPE zif_abapgit_definitions=>ty_transport_type
     RETURNING
       VALUE(rv_transport) TYPE trkorr
+    RAISING
+      zcx_abapgit_exception.
+  METHODS popup_proxy_bypass
+    IMPORTING
+      !it_proxy_bypass       TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url
+    RETURNING
+      VALUE(rt_proxy_bypass) TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url
     RAISING
       zcx_abapgit_exception.
 ENDINTERFACE.

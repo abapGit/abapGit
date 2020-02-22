@@ -13,8 +13,8 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
     CONSTANTS:
       BEGIN OF c_ui_theme,
         default TYPE string VALUE 'default',
-        dark TYPE string VALUE 'dark',
-        belize TYPE string VALUE 'belize',
+        dark    TYPE string VALUE 'dark',
+        belize  TYPE string VALUE 'belize',
       END OF c_ui_theme.
 
     METHODS:
@@ -27,6 +27,9 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
       set_proxy_authentication
         IMPORTING
           iv_auth TYPE abap_bool,
+      set_proxy_bypass
+        IMPORTING
+          it_bypass TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url OPTIONAL,
       get_proxy_url
         RETURNING
           VALUE(rv_proxy_url) TYPE string,
@@ -36,6 +39,8 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
       get_proxy_authentication
         RETURNING
           VALUE(rv_auth) TYPE abap_bool,
+      get_proxy_bypass
+        RETURNING VALUE(rt_bypass) TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url,
       set_run_critical_tests
         IMPORTING
           iv_run TYPE abap_bool,
@@ -142,6 +147,7 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
              proxy_url                TYPE string,
              proxy_port               TYPE string,
              proxy_auth               TYPE string,
+             proxy_bypass             TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url,
              run_critical_tests       TYPE abap_bool,
              experimental_features    TYPE abap_bool,
              commitmsg_comment_length TYPE i,
@@ -158,7 +164,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
+CLASS zcl_abapgit_settings IMPLEMENTATION.
 
 
   METHOD get_adt_jump_enabled.
@@ -223,6 +229,11 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
   METHOD get_proxy_url.
     rv_proxy_url = ms_settings-proxy_url.
+  ENDMETHOD.
+
+
+  METHOD get_proxy_bypass.
+    rt_bypass = ms_settings-proxy_bypass.
   ENDMETHOD.
 
 
@@ -352,6 +363,10 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_proxy_bypass.
+    ms_settings-proxy_bypass = it_bypass.
+  ENDMETHOD.
+
   METHOD set_run_critical_tests.
     ms_settings-run_critical_tests = iv_run.
   ENDMETHOD.
@@ -398,4 +413,5 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
         cg_data = ms_settings ).
 
   ENDMETHOD.
+
 ENDCLASS.
