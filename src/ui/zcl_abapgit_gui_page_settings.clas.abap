@@ -8,7 +8,8 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
 
     CONSTANTS:
       BEGIN OF c_action,
-        save_settings TYPE string VALUE 'save_settings',
+        save_settings       TYPE string VALUE 'save_settings',
+        change_proxy_bypass TYPE string VALUE 'change_proxy_bypass',
       END OF c_action.
 
     METHODS constructor.
@@ -111,7 +112,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -594,8 +595,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
   METHOD render_link_hints.
 
-    DATA: lv_checked               TYPE string,
-          lv_link_hint_key         TYPE char01.
+    DATA: lv_checked       TYPE string,
+          lv_link_hint_key TYPE char01.
 
     IF mo_settings->get_link_hints_enabled( ) = abap_true.
       lv_checked = 'checked'.
@@ -669,6 +670,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
       ro_html->add( `<input name="proxy_auth" type="checkbox">` ).
     ENDIF.
     ro_html->add( |<br>| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<label for="proxy_bypass">Bypass proxy settings for these Hosts & Domains</label>| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<a href="sapevent:{ c_action-change_proxy_bypass }">| ).
+    ro_html->add( |<button name="proxy_bypass" type="button" class="grey-set">Maintain</button>| ).
+    ro_html->add( |</a>| ).
+    ro_html->add( |<br>| ).
 
     ro_html->add( |<br>| ).
 
@@ -718,8 +726,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     DATA:
       BEGIN OF ls_sel,
         default TYPE string,
-        dark TYPE string,
-        belize TYPE string,
+        dark    TYPE string,
+        belize  TYPE string,
       END OF ls_sel.
 
     CASE mo_settings->get_ui_theme( ).
@@ -781,6 +789,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
         ENDIF.
 
         ev_state = zcl_abapgit_gui=>c_event_state-go_back.
+      WHEN c_action-change_proxy_bypass.
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+        MESSAGE 'popup here' TYPE 'S'.
     ENDCASE.
 
   ENDMETHOD.
