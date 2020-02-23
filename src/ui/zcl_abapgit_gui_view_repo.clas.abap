@@ -31,6 +31,7 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    DATA  mt_col_spec TYPE zif_abapgit_definitions=>tty_col_spec.
     DATA: mo_repo                       TYPE REF TO zcl_abapgit_repo,
           mv_cur_dir                    TYPE string,
           mv_hide_files                 TYPE abap_bool,
@@ -125,6 +126,10 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         RETURNING VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
         RAISING   zcx_abapgit_exception.
 
+    METHODS _add_col
+      IMPORTING
+        iv_str TYPE string.
+
 ENDCLASS.
 
 
@@ -189,8 +194,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
   METHOD build_advanced_dropdown.
 
     DATA:
-      lv_crossout LIKE zif_abapgit_html=>c_html_opt-crossout,
-      lv_package  TYPE zif_abapgit_persistence=>ty_repo-package.
+      lv_crossout LIKE zif_abapgit_html=>c_html_opt-crossout.
 
     CREATE OBJECT ro_advanced_dropdown.
 
@@ -806,38 +810,28 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
   METHOD render_order_by.
 
     DATA:
-      lt_col_spec TYPE zif_abapgit_definitions=>tty_col_spec,
       lv_icon     TYPE string,
       lv_html     TYPE string.
-    FIELD-SYMBOLS <ls_col> LIKE LINE OF lt_col_spec.
-
-    DEFINE _add_col.
-      APPEND INITIAL LINE TO lt_col_spec ASSIGNING <ls_col>.
-      <ls_col>-tech_name    = &1.
-      <ls_col>-display_name = &2.
-      <ls_col>-css_class    = &3.
-      <ls_col>-add_tz       = &4.
-      <ls_col>-title        = &5.
-    END-OF-DEFINITION.
 
     CREATE OBJECT ro_html.
 
-    "        technical name    display name      css class   add timezone   title
-    _add_col ''                  ''                ''          ''           ''.
+    CLEAR mt_col_spec.
+    _add_col(  ''  ). " all empty
     IF mv_are_changes_recorded_in_tr = abap_true.
-      _add_col ''                ''                ''          ''           ''.
+      _add_col(  ''  ). " all empty
     ENDIF.
-    _add_col 'OBJ_TYPE'          'Type'            ''          ''           ''.
-    _add_col 'OBJ_NAME'          'Name'            ''          ''           ''.
-    _add_col 'PATH'              'Path'            ''          ''           ''.
+    "         technical name     /display name      /css class   /add timezone   /title
+    _add_col( 'OBJ_TYPE          /Type' ).
+    _add_col( 'OBJ_NAME          /Name' ).
+    _add_col( 'PATH              /Path' ).
 
     ro_html->add( |<thead>| ).
     ro_html->add( |<tr>| ).
 
     ro_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_header_cells(
-                      it_col_spec         = lt_col_spec
-                      iv_order_by         = mv_order_by
-                      iv_order_descending = mv_order_descending ) ).
+      it_col_spec         = mt_col_spec
+      iv_order_by         = mv_order_by
+      iv_order_descending = mv_order_descending ) ).
 
     IF mv_diff_first = abap_true.
       lv_icon = 'check/blue'.
@@ -845,12 +839,11 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
       lv_icon = 'check/grey'.
     ENDIF.
 
-    lv_html = |<th class="cmd">|
-           && zcl_abapgit_html=>icon( lv_icon )
-           && zcl_abapgit_html=>a(
-                  iv_txt = |diffs first|
-                  iv_act = c_actions-toggle_diff_first ).
-
+    lv_html = |<th class="cmd">| &&
+      zcl_abapgit_html=>icon( lv_icon ) &&
+      zcl_abapgit_html=>a(
+        iv_txt = |diffs first|
+        iv_act = c_actions-toggle_diff_first ).
     ro_html->add( lv_html ).
 
     ro_html->add( '</tr>' ).
@@ -1036,5 +1029,22 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
         ro_html->add( zcl_abapgit_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
     ENDTRY.
 
+  ENDMETHOD.
+
+
+  METHOD _add_col.
+    FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_col_spec.
+    APPEND INITIAL LINE TO mt_col_spec ASSIGNING <ls_col>.
+    SPLIT iv_str AT '/' INTO
+      <ls_col>-tech_name
+      <ls_col>-display_name
+      <ls_col>-css_class
+      <ls_col>-add_tz
+      <ls_col>-title.
+    CONDENSE <ls_col>-tech_name.
+    CONDENSE <ls_col>-display_name.
+    CONDENSE <ls_col>-css_class.
+    CONDENSE <ls_col>-add_tz.
+    CONDENSE <ls_col>-title.
   ENDMETHOD.
 ENDCLASS.

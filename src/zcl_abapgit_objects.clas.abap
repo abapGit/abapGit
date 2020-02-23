@@ -5,7 +5,7 @@ CLASS zcl_abapgit_objects DEFINITION
   PUBLIC SECTION.
 
     TYPES:
-      ty_types_tt TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY .
+      ty_types_tt TYPE SORTED TABLE OF tadir-object WITH UNIQUE KEY table_line.
     TYPES:
       BEGIN OF ty_deserialization,
         obj     TYPE REF TO zif_abapgit_object,
@@ -35,11 +35,11 @@ CLASS zcl_abapgit_objects DEFINITION
 
     CLASS-METHODS serialize
       IMPORTING
-        !is_item                 TYPE zif_abapgit_definitions=>ty_item
-        !iv_language             TYPE spras
+        !is_item                       TYPE zif_abapgit_definitions=>ty_item
+        !iv_language                   TYPE spras
         !iv_serialize_master_lang_only TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rs_files_and_item) TYPE zcl_abapgit_objects=>ty_serialization
+        VALUE(rs_files_and_item)       TYPE ty_serialization
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS deserialize
@@ -336,6 +336,12 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_item> LIKE LINE OF it_items.
 
     LOOP AT it_items ASSIGNING <ls_item>.
+
+      " You should remember that we ignore not supported objects here,
+      " because otherwise the process aborts which is not desired
+      IF is_supported( <ls_item> ) = abap_false.
+        CONTINUE.
+      ENDIF.
 
       li_obj = create_object( is_item     = <ls_item>
                               iv_language = iv_language ).
@@ -1078,6 +1084,11 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
+* IOBJ has to be handled before ODSO
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'IOBJ'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
     LOOP AT it_results ASSIGNING <ls_result>
         WHERE obj_type <> 'IASP'
         AND obj_type <> 'PROG'
@@ -1087,7 +1098,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         AND obj_type <> 'ENHS'
         AND obj_type <> 'DDLS'
         AND obj_type <> 'SPRX'
-        AND obj_type <> 'WEBI'.
+        AND obj_type <> 'WEBI'
+        AND obj_type <> 'IOBJ'.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
@@ -1175,7 +1187,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         iv_native_only = abap_true ).
 
       IF lv_supported = abap_true.
-        APPEND <ls_object>-object TO rt_types.
+        INSERT <ls_object>-object INTO TABLE rt_types.
       ENDIF.
     ENDLOOP.
 

@@ -41,7 +41,8 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       mv_order_by         TYPE string,
       mv_order_descending TYPE abap_bool,
       mv_filter           TYPE string,
-      mv_time_zone        TYPE timezone.
+      mv_time_zone        TYPE timezone,
+      mt_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec.
 
     METHODS:
       render_text_input
@@ -57,13 +58,13 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
 
       apply_filter
         CHANGING
-          ct_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview,
+          ct_overview TYPE tty_overview,
 
       map_repo_list_to_overview
         IMPORTING
           it_repo_list       TYPE zif_abapgit_persistence=>tt_repo
         RETURNING
-          VALUE(rt_overview) TYPE zcl_abapgit_gui_page_repo_over=>tty_overview
+          VALUE(rt_overview) TYPE tty_overview
         RAISING
           zcx_abapgit_exception,
 
@@ -74,25 +75,29 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       render_table
         IMPORTING
           io_html     TYPE REF TO zcl_abapgit_html
-          it_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview,
+          it_overview TYPE tty_overview,
 
       render_table_body
         IMPORTING
           io_html     TYPE REF TO zcl_abapgit_html
-          it_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview,
+          it_overview TYPE tty_overview,
 
       render_header_bar
         IMPORTING
           io_html TYPE REF TO zcl_abapgit_html,
 
       apply_order_by
-        CHANGING ct_overview TYPE zcl_abapgit_gui_page_repo_over=>tty_overview.
+        CHANGING ct_overview TYPE tty_overview,
+
+      _add_col
+        IMPORTING
+          iv_descriptor TYPE string.
 
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -108,6 +113,25 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
                            AND created_at      NS mv_filter
                            AND deserialized_by NS mv_filter
                            AND deserialized_at NS mv_filter.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD apply_order_by.
+
+    DATA:
+      lt_sort TYPE abap_sortorder_tab,
+      ls_sort LIKE LINE OF lt_sort.
+
+    IF mv_order_by IS NOT INITIAL.
+
+      ls_sort-name       = mv_order_by.
+      ls_sort-descending = mv_order_descending.
+      ls_sort-astext     = abap_true.
+      INSERT ls_sort INTO TABLE lt_sort.
+      SORT ct_overview BY (lt_sort).
 
     ENDIF.
 
@@ -319,35 +343,25 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   METHOD render_table_header.
 
-    DATA lt_col_spec TYPE zif_abapgit_definitions=>tty_col_spec.
-    FIELD-SYMBOLS <ls_col> LIKE LINE OF lt_col_spec.
-
-    DEFINE _add_col.
-      APPEND INITIAL LINE TO lt_col_spec ASSIGNING <ls_col>.
-      <ls_col>-tech_name    = &1.
-      <ls_col>-display_name = &2.
-      <ls_col>-css_class    = &3.
-      <ls_col>-add_tz       = &4.
-    END-OF-DEFINITION.
-
-    "        technical name    display name      css class   add timezone
-    _add_col 'FAVORITE'        ''                'wmin'      ''.
-    _add_col 'TYPE'            ''                'wmin'      ''.
-    _add_col 'NAME'            'Name'            ''          ''.
-    _add_col 'URL'             'Url'             ''          ''.
-    _add_col 'PACKAGE'         'Package'         ''          ''.
-    _add_col 'BRANCH'          'Branch'          ''          ''.
-    _add_col 'DESERIALIZED_BY' 'Deserialized by' 'ro-detail' ''.
-    _add_col 'DESERIALIZED_AT' 'Deserialized at' 'ro-detail' 'X'.
-    _add_col 'CREATED_BY'      'Created by'      'ro-detail' ''.
-    _add_col 'CREATED_AT'      'Created at'      'ro-detail' 'X'.
-    _add_col 'KEY'             'Key'             'ro-detail' ''.
+    CLEAR mt_col_spec.
+    "          technical name  /display name    /css class /add timezone
+    _add_col( 'FAVORITE        /                /wmin      / ' ).
+    _add_col( 'TYPE            /                /wmin      / ' ).
+    _add_col( 'NAME            /Name            /          / ' ).
+    _add_col( 'URL             /Url             /          / ' ).
+    _add_col( 'PACKAGE         /Package         /          / ' ).
+    _add_col( 'BRANCH          /Branch          /          / ' ).
+    _add_col( 'DESERIALIZED_BY /Deserialized by /ro-detail / ' ).
+    _add_col( 'DESERIALIZED_AT /Deserialized at /ro-detail /X' ).
+    _add_col( 'CREATED_BY      /Created by      /ro-detail / ' ).
+    _add_col( 'CREATED_AT      /Created at      /ro-detail /X' ).
+    _add_col( 'KEY             /Key             /ro-detail / ' ).
 
     io_html->add( |<thead>| ).
     io_html->add( |<tr>| ).
 
     io_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_header_cells(
-                      it_col_spec         = lt_col_spec
+                      it_col_spec         = mt_col_spec
                       iv_order_by         = mv_order_by
                       iv_order_descending = mv_order_descending ) ).
 
@@ -436,22 +450,20 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD apply_order_by.
 
-    DATA:
-      lt_sort TYPE abap_sortorder_tab,
-      ls_sort LIKE LINE OF lt_sort.
+  METHOD _add_col.
 
-    IF mv_order_by IS NOT INITIAL.
-
-      ls_sort-name       = mv_order_by.
-      ls_sort-descending = mv_order_descending.
-      ls_sort-astext     = abap_true.
-      INSERT ls_sort INTO TABLE lt_sort.
-      SORT ct_overview BY (lt_sort).
-
-    ENDIF.
+    FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_col_spec.
+    APPEND INITIAL LINE TO mt_col_spec ASSIGNING <ls_col>.
+    SPLIT iv_descriptor AT '/' INTO
+      <ls_col>-tech_name
+      <ls_col>-display_name
+      <ls_col>-css_class
+      <ls_col>-add_tz.
+    CONDENSE <ls_col>-tech_name.
+    CONDENSE <ls_col>-display_name.
+    CONDENSE <ls_col>-css_class.
+    CONDENSE <ls_col>-add_tz.
 
   ENDMETHOD.
-
 ENDCLASS.

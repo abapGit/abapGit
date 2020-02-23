@@ -100,7 +100,7 @@ CLASS ltcl_convert IMPLEMENTATION.
     APPEND 'ABC' TO lt_exp.
     APPEND '123' TO lt_exp.
 
-    " Case 1. String separated by CRLF
+    " Case 1: String separated by CRLF
     lt_act = zcl_abapgit_convert=>split_string( 'ABC' && cl_abap_char_utilities=>cr_lf && '123' ).
 
     cl_abap_unit_assert=>assert_equals( exp = lt_exp
@@ -109,7 +109,7 @@ CLASS ltcl_convert IMPLEMENTATION.
 
     CLEAR: lt_act.
 
-    " Case 2. String separated by LF
+    " Case 2: String separated by LF
     lt_act = zcl_abapgit_convert=>split_string( 'ABC' && cl_abap_char_utilities=>newline && '123' ).
 
     cl_abap_unit_assert=>assert_equals( exp = lt_exp

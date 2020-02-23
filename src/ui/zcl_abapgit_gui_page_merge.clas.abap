@@ -16,7 +16,7 @@ CLASS zcl_abapgit_gui_page_merge DEFINITION
         zcx_abapgit_exception .
 
     METHODS zif_abapgit_gui_event_handler~on_event
-         REDEFINITION.
+        REDEFINITION.
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
 
@@ -30,6 +30,12 @@ CLASS zcl_abapgit_gui_page_merge DEFINITION
         res_conflicts TYPE string VALUE 'res_conflicts' ##NO_TEXT,
       END OF c_actions .
 
+    METHODS show_file
+      IMPORTING
+        !it_expanded TYPE zif_abapgit_definitions=>ty_expanded_tt
+        !io_html     TYPE REF TO zcl_abapgit_html
+        !is_file     TYPE zif_abapgit_definitions=>ty_expanded
+        !is_result   TYPE zif_abapgit_definitions=>ty_expanded .
     METHODS build_menu
       IMPORTING
         VALUE(iv_with_conflict) TYPE abap_bool OPTIONAL
@@ -77,30 +83,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE IMPLEMENTATION.
 
   METHOD render_content.
 
-    DEFINE _show_file.
-      READ TABLE &1 ASSIGNING <ls_show>
-          WITH KEY path = <ls_file>-path name = <ls_file>-name.
-      IF sy-subrc = 0.
-        IF <ls_show>-sha1 = ls_result-sha1.
-          ro_html->add( |<td>{
-            <ls_show>-path }{ <ls_show>-name }</td><td><b>{
-            <ls_show>-sha1(7) }</b></td>| ).
-        ELSE.
-          ro_html->add( |<td>{
-            <ls_show>-path }{ <ls_show>-name }</td><td>{
-            <ls_show>-sha1(7) }</td>| ).
-        ENDIF.
-      ELSE.
-        ro_html->add( '<td></td><td></td>' ).
-      ENDIF.
-    END-OF-DEFINITION.
-
     DATA: ls_merge  TYPE zif_abapgit_definitions=>ty_merge,
           lt_files  LIKE ls_merge-stree,
           ls_result LIKE LINE OF ls_merge-result.
 
-    FIELD-SYMBOLS: <ls_show> LIKE LINE OF lt_files,
-                   <ls_file> LIKE LINE OF lt_files.
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF lt_files.
 
     ls_merge = mo_merge->get_result( ).
 
@@ -158,10 +145,22 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE IMPLEMENTATION.
         WITH KEY path = <ls_file>-path name = <ls_file>-name.
 
       ro_html->add( '<tr>' ).
-      _show_file ls_merge-stree.
-      _show_file ls_merge-ttree.
-      _show_file ls_merge-ctree.
-      _show_file ls_merge-result.
+      show_file( it_expanded = ls_merge-stree
+                 io_html     = ro_html
+                 is_file     = <ls_file>
+                 is_result   = ls_result ).
+      show_file( it_expanded = ls_merge-ttree
+                 io_html     = ro_html
+                 is_file     = <ls_file>
+                 is_result   = ls_result ).
+      show_file( it_expanded = ls_merge-ctree
+                 io_html     = ro_html
+                 is_file     = <ls_file>
+                 is_result   = ls_result ).
+      show_file( it_expanded = ls_merge-result
+                 io_html     = ro_html
+                 is_file     = <ls_file>
+                 is_result   = ls_result ).
       ro_html->add( '</tr>' ).
     ENDLOOP.
     ro_html->add( '</table>' ).
@@ -170,6 +169,28 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE IMPLEMENTATION.
     ro_html->add( ls_merge-conflict ).
     ro_html->add( '</b>' ).
     ro_html->add( '</div>' ).
+
+  ENDMETHOD.
+
+
+  METHOD show_file.
+
+    FIELD-SYMBOLS: <ls_show> LIKE LINE OF it_expanded.
+
+
+    READ TABLE it_expanded ASSIGNING <ls_show>
+        WITH KEY
+        path = is_file-path
+        name = is_file-name.
+    IF sy-subrc = 0.
+      IF <ls_show>-sha1 = is_result-sha1.
+        io_html->add( |<td>{ <ls_show>-path }{ <ls_show>-name }</td><td><b>{ <ls_show>-sha1(7) }</b></td>| ).
+      ELSE.
+        io_html->add( |<td>{ <ls_show>-path }{ <ls_show>-name }</td><td>{ <ls_show>-sha1(7) }</td>| ).
+      ENDIF.
+    ELSE.
+      io_html->add( '<td></td><td></td>' ).
+    ENDIF.
 
   ENDMETHOD.
 

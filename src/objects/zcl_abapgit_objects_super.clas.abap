@@ -84,14 +84,13 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
         VALUE(rv_active) TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
+
   PRIVATE SECTION.
-
-
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_super IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
 
 
   METHOD check_timestamp.
@@ -163,16 +162,18 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD delete_longtexts.
 
-    zcl_abapgit_longtexts=>delete( iv_longtext_id = iv_longtext_id
-                                   iv_object_name = ms_item-obj_name ).
+    zcl_abapgit_factory=>get_longtexts( )->delete(
+        iv_longtext_id = iv_longtext_id
+        iv_object_name = ms_item-obj_name  ).
 
   ENDMETHOD.
 
 
   METHOD deserialize_longtexts.
 
-    zcl_abapgit_longtexts=>deserialize( io_xml             = io_xml
-                                        iv_master_language = mv_language ).
+    zcl_abapgit_factory=>get_longtexts( )->deserialize(
+        io_xml             = io_xml
+        iv_master_language = mv_language ).
 
   ENDMETHOD.
 
@@ -203,7 +204,6 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
 
 
   METHOD get_metadata.
@@ -251,17 +251,16 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD jump_adt.
 
-    DATA: lv_adt_link   TYPE string,
-          lx_error TYPE REF TO cx_root.
+    DATA: lv_adt_link TYPE string,
+          lx_error    TYPE REF TO cx_root.
 
     TRY.
 
         lv_adt_link = zcl_abapgit_adt_link=>generate(
-          iv_obj_name = iv_obj_name
-          iv_obj_type = iv_obj_type
+          iv_obj_name     = iv_obj_name
+          iv_obj_type     = iv_obj_type
           iv_sub_obj_name = iv_sub_obj_name
-          iv_sub_obj_type = iv_sub_obj_type
-          iv_line_number = iv_line_number ).
+          iv_line_number  = iv_line_number ).
 
         cl_gui_frontend_services=>execute(
           EXPORTING  document = lv_adt_link
@@ -301,10 +300,11 @@ CLASS zcl_abapgit_objects_super IMPLEMENTATION.
 
   METHOD serialize_longtexts.
 
-    zcl_abapgit_longtexts=>serialize( iv_object_name = ms_item-obj_name
-                                      iv_longtext_id = iv_longtext_id
-                                      it_dokil       = it_dokil
-                                      io_xml         = io_xml ).
+    zcl_abapgit_factory=>get_longtexts( )->serialize(
+        iv_object_name = ms_item-obj_name
+        iv_longtext_id = iv_longtext_id
+        it_dokil       = it_dokil
+        io_xml         = io_xml  ).
 
   ENDMETHOD.
 

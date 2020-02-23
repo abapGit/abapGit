@@ -36,6 +36,8 @@ CLASS zcl_abapgit_merge DEFINITION
 
     TYPES:
       ty_ancestor_tt TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_ancestor WITH DEFAULT KEY .
+    TYPES:
+      ty_visit_tt TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_sha1 WITH DEFAULT KEY .
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
     DATA ms_merge TYPE zif_abapgit_definitions=>ty_merge .
@@ -43,6 +45,11 @@ CLASS zcl_abapgit_merge DEFINITION
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
     DATA mv_source_branch TYPE string .
 
+    METHODS visit
+      IMPORTING
+        !iv_parent TYPE zif_abapgit_definitions=>ty_sha1
+      CHANGING
+        !ct_visit  TYPE ty_visit_tt .
     METHODS all_files
       RETURNING
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_expanded_tt .
@@ -88,18 +95,6 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
 
 
   METHOD calculate_result.
-
-    DEFINE _from_source.
-      READ TABLE mt_objects ASSIGNING <ls_object>
-        WITH KEY type COMPONENTS
-          type = zif_abapgit_definitions=>c_type-blob
-          sha1 = <ls_source>-sha1.
-      ASSERT sy-subrc = 0.
-
-      ms_merge-stage->add( iv_path     = <ls_file>-path
-                           iv_filename = <ls_file>-name
-                           iv_data     = <ls_object>-data ).
-    END-OF-DEFINITION.
 
     DATA: lt_files        TYPE zif_abapgit_definitions=>ty_expanded_tt,
           lv_found_source TYPE abap_bool,
@@ -161,7 +156,15 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
 
       IF lv_found_target = abap_false.
 * added in source
-        _from_source.
+        READ TABLE mt_objects ASSIGNING <ls_object>
+          WITH KEY type COMPONENTS
+            type = zif_abapgit_definitions=>c_type-blob
+            sha1 = <ls_source>-sha1.
+        ASSERT sy-subrc = 0.
+
+        ms_merge-stage->add( iv_path     = <ls_file>-path
+                             iv_filename = <ls_file>-name
+                             iv_data     = <ls_object>-data ).
         <ls_result>-sha1 = <ls_source>-sha1.
         CONTINUE.
       ELSEIF lv_found_source = abap_false.
@@ -208,7 +211,15 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
         <ls_result>-sha1 = <ls_source>-sha1.
       ELSEIF <ls_target>-sha1 = <ls_common>-sha1.
 * changed in source
-        _from_source.
+        READ TABLE mt_objects ASSIGNING <ls_object>
+          WITH KEY type COMPONENTS
+            type = zif_abapgit_definitions=>c_type-blob
+            sha1 = <ls_source>-sha1.
+        ASSERT sy-subrc = 0.
+
+        ms_merge-stage->add( iv_path     = <ls_file>-path
+                             iv_filename = <ls_file>-name
+                             iv_data     = <ls_object>-data ).
         <ls_result>-sha1 = <ls_source>-sha1.
       ELSEIF <ls_source>-sha1 = <ls_common>-sha1.
 * changed in target
@@ -282,17 +293,8 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
 
   METHOD find_ancestors.
 
-    DEFINE _visit.
-      IF NOT &1 IS INITIAL.
-        READ TABLE lt_visit FROM &1 TRANSPORTING NO FIELDS.
-        IF sy-subrc <> 0.
-          APPEND &1 TO lt_visit.
-        ENDIF.
-      ENDIF.
-    END-OF-DEFINITION.
-
     DATA: ls_commit TYPE zcl_abapgit_git_pack=>ty_commit,
-          lt_visit  TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_sha1,
+          lt_visit  TYPE ty_visit_tt,
           lv_commit LIKE LINE OF lt_visit.
 
     FIELD-SYMBOLS: <ls_ancestor> LIKE LINE OF rt_ancestors,
@@ -310,8 +312,10 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
 
       ls_commit = zcl_abapgit_git_pack=>decode_commit( <ls_object>-data ).
 
-      _visit ls_commit-parent.
-      _visit ls_commit-parent2.
+      visit( EXPORTING iv_parent = ls_commit-parent
+             CHANGING ct_visit   = lt_visit ).
+      visit( EXPORTING iv_parent = ls_commit-parent2
+             CHANGING ct_visit   = lt_visit ).
 
       APPEND INITIAL LINE TO rt_ancestors ASSIGNING <ls_ancestor>.
       <ls_ancestor>-commit = lv_commit.
@@ -442,6 +446,18 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
       iv_branch  = ms_merge-common-commit ).
 
     calculate_result( ).
+
+  ENDMETHOD.
+
+
+  METHOD visit.
+
+    IF NOT iv_parent IS INITIAL.
+      READ TABLE ct_visit FROM iv_parent TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        APPEND iv_parent TO ct_visit.
+      ENDIF.
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

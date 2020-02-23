@@ -63,6 +63,7 @@ CLASS zcl_abapgit_html DEFINITION
     METHODS checkbox
       IMPORTING
         iv_id          TYPE string
+        iv_checked     TYPE abap_bool OPTIONAL
       RETURNING
         VALUE(rv_html) TYPE string.
 
@@ -84,7 +85,13 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
   METHOD checkbox.
 
-    rv_html = |<input type="checkbox" id="{ iv_id }">|.
+    DATA: lv_checked TYPE string.
+
+    IF iv_checked = abap_true.
+      lv_checked = |checked|.
+    ENDIF.
+
+    rv_html = |<input type="checkbox" id="{ iv_id }" { lv_checked }>|.
 
   ENDMETHOD.
 
@@ -308,7 +315,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
   METHOD zif_abapgit_html~add_checkbox.
 
-    add( checkbox( iv_id ) ).
+    add( checkbox( iv_id      = iv_id
+                   iv_checked = iv_checked ) ).
 
   ENDMETHOD.
 
