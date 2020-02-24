@@ -4,9 +4,23 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
     CONSTANTS: c_commitmsg_comment_length_dft TYPE i VALUE 50.
     CONSTANTS: c_commitmsg_body_size_dft      TYPE i VALUE 72.
 
-    METHODS: set_proxy_url
-      IMPORTING
-        iv_url TYPE string,
+    CONSTANTS:
+      BEGIN OF c_icon_scaling,
+        large TYPE c VALUE 'L',
+        small TYPE c VALUE 'S',
+      END OF c_icon_scaling.
+
+    CONSTANTS:
+      BEGIN OF c_ui_theme,
+        default TYPE string VALUE 'default',
+        dark TYPE string VALUE 'dark',
+        belize TYPE string VALUE 'belize',
+      END OF c_ui_theme.
+
+    METHODS:
+      set_proxy_url
+        IMPORTING
+          iv_url TYPE string,
       set_proxy_port
         IMPORTING
           iv_port TYPE string,
@@ -59,7 +73,12 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
           VALUE(rv_length) TYPE i,
       get_settings_xml
         RETURNING
-          VALUE(ev_settings_xml) TYPE string
+          VALUE(rv_settings_xml) TYPE string
+        RAISING
+          zcx_abapgit_exception,
+      get_user_settings
+        RETURNING
+          VALUE(rs_settings) TYPE zif_abapgit_definitions=>ty_s_user_settings
         RAISING
           zcx_abapgit_exception,
       set_xml_settings
@@ -67,8 +86,57 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
           iv_settings_xml TYPE string
         RAISING
           zcx_abapgit_exception,
-      set_defaults.
-
+      set_defaults,
+      set_user_settings
+        IMPORTING
+          is_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings,
+      get_show_default_repo
+        RETURNING
+          VALUE(rv_show_default_repo) TYPE abap_bool,
+      set_show_default_repo
+        IMPORTING
+          iv_show_default_repo TYPE abap_bool,
+      set_link_hints_enabled
+        IMPORTING
+          iv_link_hints_enabled TYPE abap_bool,
+      get_link_hints_enabled
+        RETURNING
+          VALUE(rv_link_hints_enabled) TYPE abap_bool
+        RAISING
+          zcx_abapgit_exception,
+      set_link_hint_key
+        IMPORTING
+          iv_link_hint_key TYPE string,
+      get_link_hint_key
+        RETURNING
+          VALUE(rv_link_hint_key) TYPE string,
+      set_hotkeys
+        IMPORTING
+          it_hotkeys TYPE zif_abapgit_definitions=>tty_hotkey,
+      get_hotkeys
+        RETURNING
+          VALUE(rt_hotkeys) TYPE zif_abapgit_definitions=>tty_hotkey
+        RAISING
+          zcx_abapgit_exception,
+      set_parallel_proc_disabled
+        IMPORTING
+          iv_disable_parallel_proc TYPE abap_bool,
+      get_parallel_proc_disabled
+        RETURNING
+          VALUE(rv_disable_parallel_proc) TYPE abap_bool,
+      get_icon_scaling
+        RETURNING
+          VALUE(rv_scaling) TYPE zif_abapgit_definitions=>ty_s_user_settings-icon_scaling,
+      set_icon_scaling
+        IMPORTING
+          iv_scaling TYPE zif_abapgit_definitions=>ty_s_user_settings-icon_scaling,
+      get_ui_theme
+        RETURNING
+          VALUE(rv_ui_theme) TYPE zif_abapgit_definitions=>ty_s_user_settings-ui_theme,
+      set_ui_theme
+        IMPORTING
+          iv_ui_theme TYPE zif_abapgit_definitions=>ty_s_user_settings-ui_theme.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_s_settings,
              proxy_url                TYPE string,
@@ -76,12 +144,15 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
              proxy_auth               TYPE string,
              run_critical_tests       TYPE abap_bool,
              experimental_features    TYPE abap_bool,
-             max_lines                TYPE i,
-             adt_jump_enabled         TYPE abap_bool,
              commitmsg_comment_length TYPE i,
              commitmsg_body_size      TYPE i,
            END OF ty_s_settings.
-    DATA: ms_settings TYPE ty_s_settings.
+
+    DATA: ms_settings      TYPE ty_s_settings,
+          ms_user_settings TYPE zif_abapgit_definitions=>ty_s_user_settings.
+
+    METHODS:
+      set_default_link_hint_key.
 
 ENDCLASS.
 
@@ -91,7 +162,7 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
 
   METHOD get_adt_jump_enabled.
-    rv_adt_jump_enabled = ms_settings-adt_jump_enabled.
+    rv_adt_jump_enabled = ms_user_settings-adt_jump_enabled.
   ENDMETHOD.
 
 
@@ -110,8 +181,33 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_hotkeys.
+    rt_hotkeys = ms_user_settings-hotkeys.
+  ENDMETHOD.
+
+
+  METHOD get_icon_scaling.
+    rv_scaling = ms_user_settings-icon_scaling.
+  ENDMETHOD.
+
+
+  METHOD get_link_hints_enabled.
+    rv_link_hints_enabled = ms_user_settings-link_hints_enabled.
+  ENDMETHOD.
+
+
+  METHOD get_link_hint_key.
+    rv_link_hint_key = ms_user_settings-link_hint_key.
+  ENDMETHOD.
+
+
   METHOD get_max_lines.
-    rv_lines = ms_settings-max_lines.
+    rv_lines = ms_user_settings-max_lines.
+  ENDMETHOD.
+
+
+  METHOD get_parallel_proc_disabled.
+    rv_disable_parallel_proc = ms_user_settings-parallel_proc_disabled.
   ENDMETHOD.
 
 
@@ -137,20 +233,36 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
   METHOD get_settings_xml.
 
-    DATA: lr_output TYPE REF TO zcl_abapgit_xml_output.
+    DATA: lo_output TYPE REF TO zcl_abapgit_xml_output.
 
-    CREATE OBJECT lr_output.
 
-    lr_output->add( iv_name = zcl_abapgit_persistence_db=>c_type_settings
+    CREATE OBJECT lo_output.
+
+    lo_output->add( iv_name = zcl_abapgit_persistence_db=>c_type_settings
                     ig_data = ms_settings ).
 
-    ev_settings_xml = lr_output->render( ).
+    rv_settings_xml = lo_output->render( ).
 
   ENDMETHOD.
 
 
+  METHOD get_show_default_repo.
+    rv_show_default_repo = ms_user_settings-show_default_repo.
+  ENDMETHOD.
+
+
+  METHOD get_ui_theme.
+    rv_ui_theme = ms_user_settings-ui_theme.
+  ENDMETHOD.
+
+
+  METHOD get_user_settings.
+    rs_settings = ms_user_settings.
+  ENDMETHOD.
+
+
   METHOD set_adt_jump_enanbled.
-    ms_settings-adt_jump_enabled = iv_adt_jump_enabled.
+    ms_user_settings-adt_jump_enabled = iv_adt_jump_enabled.
   ENDMETHOD.
 
 
@@ -172,10 +284,18 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
     set_run_critical_tests( abap_false ).
     set_experimental_features( abap_false ).
     set_max_lines( 500 ).
-    set_adt_jump_enanbled( abap_false ).
+    set_adt_jump_enanbled( abap_true ).
+    set_show_default_repo( abap_false ).
     set_commitmsg_comment_length( c_commitmsg_comment_length_dft ).
     set_commitmsg_body_size( c_commitmsg_body_size_dft ).
+    set_default_link_hint_key( ).
+    set_icon_scaling( '' ).
 
+  ENDMETHOD.
+
+
+  METHOD set_default_link_hint_key.
+    set_link_hint_key( |f| ).
   ENDMETHOD.
 
 
@@ -184,8 +304,36 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_hotkeys.
+    ms_user_settings-hotkeys = it_hotkeys.
+  ENDMETHOD.
+
+
+  METHOD set_icon_scaling.
+    ms_user_settings-icon_scaling = iv_scaling.
+    IF ms_user_settings-icon_scaling NA c_icon_scaling.
+      ms_user_settings-icon_scaling = ''. " Reset to default
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD set_link_hints_enabled.
+    ms_user_settings-link_hints_enabled = iv_link_hints_enabled.
+  ENDMETHOD.
+
+
+  METHOD set_link_hint_key.
+    ms_user_settings-link_hint_key = iv_link_hint_key.
+  ENDMETHOD.
+
+
   METHOD set_max_lines.
-    ms_settings-max_lines = iv_lines.
+    ms_user_settings-max_lines = iv_lines.
+  ENDMETHOD.
+
+
+  METHOD set_parallel_proc_disabled.
+    ms_user_settings-parallel_proc_disabled = iv_disable_parallel_proc.
   ENDMETHOD.
 
 
@@ -209,16 +357,45 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_show_default_repo.
+    ms_user_settings-show_default_repo = iv_show_default_repo.
+  ENDMETHOD.
+
+
+  METHOD set_ui_theme.
+    ms_user_settings-ui_theme = iv_ui_theme.
+    IF ms_user_settings-ui_theme <> c_ui_theme-default
+        AND ms_user_settings-ui_theme <> c_ui_theme-dark
+        AND ms_user_settings-ui_theme <> c_ui_theme-belize.
+      ms_user_settings-ui_theme = c_ui_theme-default. " Reset to default
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD set_user_settings.
+    ms_user_settings = is_user_settings.
+
+    IF ms_user_settings-link_hint_key IS INITIAL.
+      set_default_link_hint_key( ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD set_xml_settings.
 
-    DATA: lr_input TYPE REF TO zcl_abapgit_xml_input.
+    DATA: lo_input TYPE REF TO zcl_abapgit_xml_input.
 
-    CREATE OBJECT lr_input EXPORTING iv_xml = iv_settings_xml.
+
+    CREATE OBJECT lo_input EXPORTING iv_xml = iv_settings_xml.
 
     CLEAR ms_settings.
 
-    lr_input->read( EXPORTING iv_name = zcl_abapgit_persistence_db=>c_type_settings
-                    CHANGING  cg_data = ms_settings ).
+    lo_input->read(
+      EXPORTING
+        iv_name = zcl_abapgit_persistence_db=>c_type_settings
+      CHANGING
+        cg_data = ms_settings ).
 
   ENDMETHOD.
 ENDCLASS.

@@ -82,15 +82,15 @@ CLASS ZCL_ABAPGIT_ZLIB_HUFFMAN IMPLEMENTATION.
       <lv_offset> = <lv_offset> + 1.
     ENDDO.
 
-  ENDMETHOD.                    "constructor
+  ENDMETHOD.
 
 
   METHOD get_count.
     READ TABLE mt_count INDEX iv_index INTO rv_value.     "#EC CI_SUBRC
-  ENDMETHOD.                    "count
+  ENDMETHOD.
 
 
   METHOD get_symbol.
     READ TABLE mt_symbol INDEX iv_index INTO rv_value.    "#EC CI_SUBRC
-  ENDMETHOD.                    "symbol
+  ENDMETHOD.
 ENDCLASS.

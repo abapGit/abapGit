@@ -6,8 +6,16 @@ CLASS ltcl_diff DEFINITION FOR TESTING
   PRIVATE SECTION.
     DATA: mt_new      TYPE TABLE OF string,
           mt_old      TYPE TABLE OF string,
-          mt_expected TYPE zcl_abapgit_diff=>ty_diffs_tt,
-          ms_expected LIKE LINE OF mt_expected.
+          mt_expected TYPE zif_abapgit_definitions=>ty_diffs_tt.
+
+    METHODS:
+      add_new IMPORTING iv_new TYPE string,
+      add_old IMPORTING iv_old TYPE string,
+      add_expected IMPORTING iv_new_num TYPE zif_abapgit_definitions=>ty_diff-new_num
+                             iv_new     TYPE zif_abapgit_definitions=>ty_diff-new
+                             iv_result  TYPE zif_abapgit_definitions=>ty_diff-result
+                             iv_old_num TYPE zif_abapgit_definitions=>ty_diff-old_num
+                             iv_old     TYPE zif_abapgit_definitions=>ty_diff-old.
 
     METHODS: setup.
     METHODS: test.
@@ -20,34 +28,42 @@ CLASS ltcl_diff DEFINITION FOR TESTING
       diff05 FOR TESTING,
       diff06 FOR TESTING.
 
-ENDCLASS.       "ltcl_Diff
+ENDCLASS.
 
 
 CLASS ltcl_diff IMPLEMENTATION.
 
-  DEFINE _new.
-    APPEND &1 TO mt_new.
-  END-OF-DEFINITION.
+  METHOD add_new.
+    DATA ls_new LIKE LINE OF mt_new.
 
-  DEFINE _old.
-    APPEND &1 TO mt_old.
-  END-OF-DEFINITION.
+    ls_new = iv_new.
+    APPEND ls_new TO mt_new.
+  ENDMETHOD.
 
-  DEFINE _expected.
-    CLEAR ms_expected.
-    ms_expected-new_num = &1.
-    ms_expected-new     = &2.
-    ms_expected-result  = &3.
-    ms_expected-old_num = &4.
-    ms_expected-old     = &5.
-    APPEND ms_expected TO mt_expected.
-  END-OF-DEFINITION.
+  METHOD add_old.
+    DATA ls_old LIKE LINE OF mt_old.
+
+    ls_old = iv_old.
+    APPEND ls_old TO mt_old.
+  ENDMETHOD.
+
+  METHOD add_expected.
+    DATA ls_expected LIKE LINE OF mt_expected.
+
+    ls_expected-new_num = iv_new_num.
+    ls_expected-new     = iv_new.
+    ls_expected-result  = iv_result.
+    ls_expected-old_num = iv_old_num.
+    ls_expected-old     = iv_old.
+    ls_expected-beacon  = zcl_abapgit_diff=>co_starting_beacon.
+    APPEND ls_expected TO mt_expected.
+  ENDMETHOD.
 
   METHOD setup.
     CLEAR mt_new.
     CLEAR mt_old.
     CLEAR mt_expected.
-  ENDMETHOD.                    "setup
+  ENDMETHOD.
 
   METHOD test.
 
@@ -56,13 +72,13 @@ CLASS ltcl_diff IMPLEMENTATION.
           lv_old  TYPE string,
           lv_xold TYPE xstring,
           lo_diff TYPE REF TO zcl_abapgit_diff,
-          lt_diff TYPE zcl_abapgit_diff=>ty_diffs_tt.
+          lt_diff TYPE zif_abapgit_definitions=>ty_diffs_tt.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF lt_diff.
 
 
-    CONCATENATE LINES OF mt_new INTO lv_new SEPARATED BY zif_abapgit_definitions=>gc_newline.
-    CONCATENATE LINES OF mt_old INTO lv_old SEPARATED BY zif_abapgit_definitions=>gc_newline.
+    CONCATENATE LINES OF mt_new INTO lv_new SEPARATED BY zif_abapgit_definitions=>c_newline.
+    CONCATENATE LINES OF mt_old INTO lv_old SEPARATED BY zif_abapgit_definitions=>c_newline.
 
     lv_xnew = zcl_abapgit_convert=>string_to_xstring_utf8( lv_new ).
     lv_xold = zcl_abapgit_convert=>string_to_xstring_utf8( lv_old ).
@@ -81,92 +97,132 @@ CLASS ltcl_diff IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals( act = lt_diff
                                         exp = mt_expected ).
 
-
-  ENDMETHOD.                    "test
+  ENDMETHOD.
 
   METHOD diff01.
 
-* insert
-    _new 'A'.
+    "insert
+    add_new( iv_new = 'A' ).
 
-    "         " NEW  " STATUS                 " OLD
-    _expected 1 'A'  zcl_abapgit_diff=>c_diff-insert  '' ''.
+    add_expected( iv_new_num = '    1'
+                  iv_new     = 'A'
+                  iv_result  = zif_abapgit_definitions=>c_diff-insert
+                  iv_old_num = ''
+                  iv_old     = '' ).
     test( ).
 
-  ENDMETHOD.                    "diff01
+  ENDMETHOD.
 
   METHOD diff02.
 
-* identical
-    _new 'A'.
-    _old 'A'.
+    " identical
+    add_new( iv_new = 'A' ).
+    add_old( iv_old = 'A' ).
 
-    "         " NEW  " STATUS  " OLD
-    _expected 1 'A'  ''        1 'A'.
+    add_expected( iv_new_num = '    1'
+                  iv_new     = 'A'
+                  iv_result  = ''
+                  iv_old_num = '    1'
+                  iv_old     = 'A' ).
     test( ).
 
-  ENDMETHOD.                    "diff02
+  ENDMETHOD.
 
   METHOD diff03.
 
-* delete
-    _old 'A'.
+    " delete
+    add_old( iv_old = 'A' ).
 
-    "         " NEW  " STATUS                 " OLD
-    _expected '' ''  zcl_abapgit_diff=>c_diff-delete  1 'A'.
+    add_expected( iv_new_num = ''
+                  iv_new     = ''
+                  iv_result  = zif_abapgit_definitions=>c_diff-delete
+                  iv_old_num = '    1'
+                  iv_old     = 'A' ).
     test( ).
 
-  ENDMETHOD.                    "diff03
+  ENDMETHOD.
 
   METHOD diff04.
 
-* update
-    _new 'A+'.
-    _old 'A'.
+    " update
+    add_new( iv_new = 'A+' ).
 
-    "         " NEW   " STATUS                 " OLD
-    _expected 1 'A+'  zcl_abapgit_diff=>c_diff-update  1 'A'.
+    add_old( iv_old = 'A' ).
+
+    add_expected( iv_new_num = '    1'
+                  iv_new     = 'A+'
+                  iv_result  = zif_abapgit_definitions=>c_diff-update
+                  iv_old_num = '    1'
+                  iv_old     = 'A' ).
     test( ).
 
-  ENDMETHOD.                    "diff04
+  ENDMETHOD.
 
   METHOD diff05.
 
-* identical
-    _new 'A'.
-    _new 'B'.
-    _old 'A'.
-    _old 'B'.
+    " identical
+    add_new( iv_new = 'A' ).
+    add_new( iv_new = 'B' ).
 
-    "         " NEW  " STATUS  " OLD
-    _expected 1 'A'  ''        1 'A'.
-    _expected 2 'B'  ''        2 'B'.
+    add_old( iv_old = 'A' ).
+    add_old( iv_old = 'B' ).
+
+    add_expected( iv_new_num = '    1'
+                  iv_new     = 'A'
+                  iv_result  = ''
+                  iv_old_num = '    1'
+                  iv_old     = 'A' ).
+    add_expected( iv_new_num = '    2'
+                  iv_new     = 'B'
+                  iv_result  = ''
+                  iv_old_num = '    2'
+                  iv_old     = 'B' ).
     test( ).
 
-  ENDMETHOD.                    "diff05
+  ENDMETHOD.
 
   METHOD diff06.
 
-    _new 'A'.
-    _new 'B'.
-    _new 'inserted'.
-    _new 'C'.
-    _new 'D update'.
 
-    _old 'A'.
-    _old 'B'.
-    _old 'C'.
-    _old 'D'.
+    add_new( iv_new = 'A' ).
+    add_new( iv_new = 'B' ).
+    add_new( iv_new = 'inserted' ).
+    add_new( iv_new = 'C' ).
+    add_new( iv_new = 'D update' ).
 
-    "         " NEW         " STATUS                        " OLD
-    _expected 1 'A'         ''                                1 'A'.
-    _expected 2 'B'         ''                                2 'B'.
-    _expected 3 'inserted'  zcl_abapgit_diff=>c_diff-insert   '' ''.
-    _expected 4 'C'         ''                                3 'C'.
-    _expected 5 'D update'  zcl_abapgit_diff=>c_diff-update   4 'D'.
+    add_old( iv_old = 'A' ).
+    add_old( iv_old = 'B' ).
+    add_old( iv_old = 'C' ).
+    add_old( iv_old = 'D' ).
+
+    add_expected( iv_new_num = '    1'
+                  iv_new     = 'A'
+                  iv_result  = ''
+                  iv_old_num = '    1'
+                  iv_old     = 'A' ).
+    add_expected( iv_new_num = '    2'
+                  iv_new     = 'B'
+                  iv_result  = ''
+                  iv_old_num = '    2'
+                  iv_old     = 'B' ).
+    add_expected( iv_new_num = '    3'
+                  iv_new     = 'inserted'
+                  iv_result  = zif_abapgit_definitions=>c_diff-insert
+                  iv_old_num = ''
+                  iv_old     = '' ).
+    add_expected( iv_new_num = '    4'
+                  iv_new     = 'C'
+                  iv_result  = ''
+                  iv_old_num = '    3'
+                  iv_old     = 'C' ).
+    add_expected( iv_new_num = '    5'
+                  iv_new     = 'D update'
+                  iv_result  = zif_abapgit_definitions=>c_diff-update
+                  iv_old_num = '    4'
+                  iv_old     = 'D' ).
 
     test( ).
 
-  ENDMETHOD.                    "diff06
+  ENDMETHOD.
 
 ENDCLASS.

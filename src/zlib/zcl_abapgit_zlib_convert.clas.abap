@@ -1,17 +1,24 @@
-CLASS zcl_abapgit_zlib_convert DEFINITION PUBLIC CREATE PUBLIC.
+CLASS zcl_abapgit_zlib_convert DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    CLASS-METHODS:
-      hex_to_bits
-        IMPORTING iv_hex         TYPE xsequence
-        RETURNING VALUE(rv_bits) TYPE string,
-      bits_to_int
-        IMPORTING iv_bits       TYPE clike
-        RETURNING VALUE(rv_int) TYPE i,
-      int_to_hex
-        IMPORTING iv_int        TYPE i
-        RETURNING VALUE(rv_hex) TYPE xstring.
 
+    CLASS-METHODS hex_to_bits
+      IMPORTING
+        !iv_hex        TYPE xsequence
+      RETURNING
+        VALUE(rv_bits) TYPE string .
+    CLASS-METHODS bits_to_int
+      IMPORTING
+        !iv_bits      TYPE clike
+      RETURNING
+        VALUE(rv_int) TYPE i .
+    CLASS-METHODS int_to_hex
+      IMPORTING
+        !iv_int       TYPE i
+      RETURNING
+        VALUE(rv_hex) TYPE xstring .
 ENDCLASS.
 
 
@@ -33,7 +40,7 @@ CLASS ZCL_ABAPGIT_ZLIB_CONVERT IMPLEMENTATION.
       lv_bits = lv_bits+1.
     ENDWHILE.
 
-  ENDMETHOD.                    "bits_to_int
+  ENDMETHOD.
 
 
   METHOD hex_to_bits.
@@ -55,7 +62,7 @@ CLASS ZCL_ABAPGIT_ZLIB_CONVERT IMPLEMENTATION.
       lv_hex = lv_hex+1.
     ENDWHILE.
 
-  ENDMETHOD.                    "hex_to_bits
+  ENDMETHOD.
 
 
   METHOD int_to_hex.
@@ -66,5 +73,5 @@ CLASS ZCL_ABAPGIT_ZLIB_CONVERT IMPLEMENTATION.
     lv_x = iv_int.
     rv_hex = lv_x.
 
-  ENDMETHOD.                    "int_to_hex
+  ENDMETHOD.
 ENDCLASS.

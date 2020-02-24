@@ -21,5 +21,3 @@ On github there is a link to download repository contents as zip:
 ![](img/offline3.png)
 
 6: Choose file downloaded in step 4
-
-7: Activate. If prompted for package choose the package from step 3.

@@ -50,7 +50,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_ABAP IMPLEMENTATION.
 
     init_keywords( ).
 
-  ENDMETHOD.                    " class_constructor
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -71,7 +71,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_ABAP IMPLEMENTATION.
               iv_token = c_token-text
               iv_style = c_css-text ).
 
-  ENDMETHOD.                    " constructor
+  ENDMETHOD.
 
 
   METHOD init_keywords.
@@ -179,7 +179,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_ABAP IMPLEMENTATION.
     SPLIT lv_keywords AT '|' INTO TABLE lt_keywords.
     gt_keywords = lt_keywords. " Hash table
 
-  ENDMETHOD.                    " init_keywords
+  ENDMETHOD.
 
 
   METHOD is_keyword.
@@ -190,7 +190,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_ABAP IMPLEMENTATION.
     READ TABLE gt_keywords WITH KEY table_line = lv_str TRANSPORTING NO FIELDS.
     rv_yes = boolc( sy-subrc = 0 ).
 
-  ENDMETHOD.  " is_keyword.
+  ENDMETHOD.
 
 
   METHOD order_matches.
@@ -201,55 +201,54 @@ CLASS ZCL_ABAPGIT_SYNTAX_ABAP IMPLEMENTATION.
       lv_prev_token TYPE c.
 
     FIELD-SYMBOLS:
-      <prev>  TYPE ty_match,
-      <match> TYPE ty_match.
+      <ls_prev>  TYPE ty_match,
+      <ls_match> TYPE ty_match.
 
     SORT ct_matches BY offset.
 
     lv_line_len = strlen( iv_line ).
 
-    LOOP AT ct_matches ASSIGNING <match>.
+    LOOP AT ct_matches ASSIGNING <ls_match>.
       lv_index = sy-tabix.
 
       " Delete matches after open text match
-      IF lv_prev_token = c_token-text AND <match>-token <> c_token-text.
+      IF lv_prev_token = c_token-text AND <ls_match>-token <> c_token-text.
         DELETE ct_matches INDEX lv_index.
         CONTINUE.
       ENDIF.
 
-      CASE <match>-token.
+      CASE <ls_match>-token.
         WHEN c_token-keyword.
-          IF <match>-offset > 0.
+          IF <ls_match>-offset > 0
+              AND substring( val = iv_line off = ( <ls_match>-offset - 1 ) len = 1 ) CA '-<'.
             " Delete match if keyword is part of structure or field symbol
-            IF substring( val = iv_line off = ( <match>-offset - 1 ) len = 1 ) CA '-<'.
-              DELETE ct_matches INDEX lv_index.
-              CONTINUE.
-            ENDIF.
+            DELETE ct_matches INDEX lv_index.
+            CONTINUE.
           ENDIF.
 
         WHEN c_token-comment.
-          <match>-length = lv_line_len - <match>-offset.
+          <ls_match>-length = lv_line_len - <ls_match>-offset.
           DELETE ct_matches FROM lv_index + 1.
           CONTINUE.
 
         WHEN c_token-text.
-          <match>-text_tag = substring( val = iv_line
-                                        off = <match>-offset
-                                        len = <match>-length ).
+          <ls_match>-text_tag = substring( val = iv_line
+                                        off = <ls_match>-offset
+                                        len = <ls_match>-length ).
           IF lv_prev_token = c_token-text.
-            IF <match>-text_tag = <prev>-text_tag.
-              <prev>-length = <match>-offset + <match>-length - <prev>-offset.
+            IF <ls_match>-text_tag = <ls_prev>-text_tag.
+              <ls_prev>-length = <ls_match>-offset + <ls_match>-length - <ls_prev>-offset.
               CLEAR lv_prev_token.
-            ELSEIF <prev>-text_tag = '}' AND <match>-text_tag = '{'.
-              <prev>-length = <match>-offset - <prev>-offset - 1.  " Shift } out of scope
-              <prev>-offset = <prev>-offset + 1.                   " Shift { out of scope
+            ELSEIF <ls_prev>-text_tag = '}' AND <ls_match>-text_tag = '{'.
+              <ls_prev>-length = <ls_match>-offset - <ls_prev>-offset - 1.  " Shift } out of scope
+              <ls_prev>-offset = <ls_prev>-offset + 1.                   " Shift { out of scope
               CLEAR lv_prev_token.
-            ELSEIF <match>-text_tag = '{'.
-              <prev>-length = <match>-offset - <prev>-offset.
+            ELSEIF <ls_match>-text_tag = '{'.
+              <ls_prev>-length = <ls_match>-offset - <ls_prev>-offset.
               CLEAR lv_prev_token.
-            ELSEIF <prev>-text_tag = '}'.
-              <prev>-length = <match>-offset - <prev>-offset.
-              <prev>-offset = <prev>-offset + 1.                   " Shift } out of scope
+            ELSEIF <ls_prev>-text_tag = '}'.
+              <ls_prev>-length = <ls_match>-offset - <ls_prev>-offset.
+              <ls_prev>-offset = <ls_prev>-offset + 1.                   " Shift } out of scope
               CLEAR lv_prev_token.
             ENDIF.
             DELETE ct_matches INDEX lv_index.
@@ -258,31 +257,30 @@ CLASS ZCL_ABAPGIT_SYNTAX_ABAP IMPLEMENTATION.
 
       ENDCASE.
 
-      lv_prev_token = <match>-token.
-      ASSIGN <match> TO <prev>.
+      lv_prev_token = <ls_match>-token.
+      ASSIGN <ls_match> TO <ls_prev>.
     ENDLOOP.
 
-  ENDMETHOD.                    " order_matches.
+  ENDMETHOD.
 
 
   METHOD parse_line. "REDEFINITION
 
     DATA lv_index TYPE i.
 
-    FIELD-SYMBOLS <match> LIKE LINE OF et_matches.
+    FIELD-SYMBOLS <ls_match> LIKE LINE OF rt_matches.
 
-    super->parse_line( EXPORTING iv_line    = iv_line
-                       IMPORTING et_matches = et_matches ).
+    rt_matches = super->parse_line( iv_line ).
 
     " Remove non-keywords
-    LOOP AT et_matches ASSIGNING <match> WHERE token = c_token-keyword.
+    LOOP AT rt_matches ASSIGNING <ls_match> WHERE token = c_token-keyword.
       lv_index = sy-tabix.
       IF abap_false = is_keyword( substring( val = iv_line
-                                             off = <match>-offset
-                                             len = <match>-length ) ).
-        DELETE et_matches INDEX lv_index.
+                                             off = <ls_match>-offset
+                                             len = <ls_match>-length ) ).
+        DELETE rt_matches INDEX lv_index.
       ENDIF.
     ENDLOOP.
 
-  ENDMETHOD.  " parse_line.
+  ENDMETHOD.
 ENDCLASS.

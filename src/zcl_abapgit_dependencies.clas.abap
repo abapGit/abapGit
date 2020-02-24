@@ -5,70 +5,59 @@ CLASS zcl_abapgit_dependencies DEFINITION
 
   PUBLIC SECTION.
 
-    TYPES:
-      BEGIN OF ty_tadir,
-        pgmid    TYPE tadir-pgmid,
-        object   TYPE tadir-object,
-        obj_name TYPE tadir-obj_name,
-        devclass TYPE tadir-devclass,
-        korrnum  TYPE tadir-korrnum,
-        path     TYPE string,
-      END OF ty_tadir .
-    TYPES:
-      ty_tadir_tt TYPE STANDARD TABLE OF ty_tadir WITH DEFAULT KEY .
-
     CLASS-METHODS resolve
       CHANGING
-        !ct_tadir TYPE ty_tadir_tt
+        !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
-
+  PROTECTED SECTION.
   PRIVATE SECTION.
-    TYPES: BEGIN OF ty_dependency,
-             depname  TYPE dd02l-tabname,
-             deptyp   TYPE c LENGTH 4,
-             deplocal TYPE dd02l-as4local,
-             refname  TYPE dd02l-tabname,
-             reftyp   TYPE c LENGTH 4,
-             kind     TYPE c LENGTH 1,
-           END OF ty_dependency,
-           tty_dedenpency TYPE STANDARD TABLE OF ty_dependency
-                               WITH NON-UNIQUE DEFAULT KEY.
 
-    TYPES: BEGIN OF ty_item,
-             obj_type TYPE tadir-object,
-             obj_name TYPE tadir-obj_name,
-             devclass TYPE devclass,
-           END OF ty_item.
+    TYPES:
+      BEGIN OF ty_dependency,
+        depname  TYPE dd02l-tabname,
+        deptyp   TYPE c LENGTH 4,
+        deplocal TYPE dd02l-as4local,
+        refname  TYPE dd02l-tabname,
+        reftyp   TYPE c LENGTH 4,
+        kind     TYPE c LENGTH 1,
+      END OF ty_dependency .
+    TYPES:
+      tty_dedenpency TYPE STANDARD TABLE OF ty_dependency
+                                 WITH NON-UNIQUE DEFAULT KEY .
+    TYPES:
+      BEGIN OF ty_item,
+        obj_type TYPE tadir-object,
+        obj_name TYPE tadir-obj_name,
+        devclass TYPE devclass,
+      END OF ty_item .
 
     CLASS-METHODS resolve_ddic
-      CHANGING ct_tadir TYPE ty_tadir_tt
-      RAISING  zcx_abapgit_exception.
-
+      CHANGING
+        !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS get_ddls_dependencies
-      IMPORTING i_ddls_name          TYPE tadir-obj_name
-      RETURNING VALUE(rt_dependency) TYPE tty_dedenpency.
-
+      IMPORTING
+        iv_ddls_name         TYPE tadir-obj_name
+      RETURNING
+        VALUE(rt_dependency) TYPE tty_dedenpency .
+    CLASS-METHODS resolve_packages
+      CHANGING
+        ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
+CLASS zcl_abapgit_dependencies IMPLEMENTATION.
 
 
   METHOD get_ddls_dependencies.
 
-    TYPES: BEGIN OF ty_ddls_name.
-        INCLUDE TYPE ddsymtab.
-    TYPES: END OF ty_ddls_name.
+    DATA: lt_ddls_name TYPE TABLE OF ddsymtab,
+          ls_ddls_name TYPE ddsymtab.
 
-    TYPES: tty_ddls_names TYPE STANDARD TABLE OF ty_ddls_name
-                               WITH NON-UNIQUE DEFAULT KEY.
-
-    DATA: lt_ddls_name TYPE tty_ddls_names,
-          ls_ddls_name LIKE LINE OF lt_ddls_name.
-
-    ls_ddls_name-name = i_ddls_name.
+    ls_ddls_name-name = iv_ddls_name.
     INSERT ls_ddls_name INTO TABLE lt_ddls_name.
 
     PERFORM ('DDLS_GET_DEP') IN PROGRAM ('RADMASDL')
@@ -87,6 +76,8 @@ CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
 
     LOOP AT ct_tadir ASSIGNING <ls_tadir>.
       CASE <ls_tadir>-object.
+        WHEN 'DEVC'.
+          <ls_tadir>-korrnum = '9990'.
         WHEN 'IATU'.
           <ls_tadir>-korrnum = '5500'.
         WHEN 'IARP'.
@@ -109,8 +100,19 @@ CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
           ENDIF.
         WHEN 'DTEL'.
           <ls_tadir>-korrnum = '8000'.
+* ACID after PROG/FUGR/CLAS
+        WHEN 'ACID'.
+          <ls_tadir>-korrnum = '3000'.
+        WHEN 'PARA'.
+* PARA after DTEL
+          <ls_tadir>-korrnum = '8100'.
         WHEN 'DOMA'.
           <ls_tadir>-korrnum = '9000'.
+* AUTH after DCLS
+        WHEN 'DCLS'.
+          <ls_tadir>-korrnum = '7100'.
+        WHEN 'AUTH'.
+          <ls_tadir>-korrnum = '7000'.
         WHEN 'PROG'.
 * delete includes after main programs
           SELECT COUNT(*) FROM reposrc
@@ -122,12 +124,17 @@ CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
           ELSE.
             <ls_tadir>-korrnum = '1000'.
           ENDIF.
+        WHEN 'IDOC'.
+          <ls_tadir>-korrnum = '2000'.
+        WHEN 'IEXT'.
+          <ls_tadir>-korrnum = '1500'.
         WHEN OTHERS.
           <ls_tadir>-korrnum = '1000'.
       ENDCASE.
     ENDLOOP.
 
     resolve_ddic( CHANGING ct_tadir = ct_tadir ).
+    resolve_packages( CHANGING ct_tadir = ct_tadir ).
 
     SORT ct_tadir BY korrnum ASCENDING.
 
@@ -154,9 +161,9 @@ CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
           lt_scope        TYPE STANDARD TABLE OF seu_obj,
           lt_dependency   TYPE tty_dedenpency.
 
-    FIELD-SYMBOLS: <ls_tadir_ddls>      TYPE ty_tadir,
+    FIELD-SYMBOLS: <ls_tadir_ddls>      TYPE zif_abapgit_definitions=>ty_tadir,
                    <ls_dependency>      TYPE ty_dependency,
-                   <ls_tadir_dependent> TYPE ty_tadir,
+                   <ls_tadir_dependent> TYPE zif_abapgit_definitions=>ty_tadir,
                    <ls_tadir>           LIKE LINE OF ct_tadir,
                    <ls_edge>            LIKE LINE OF lt_edges,
                    <ls_found>           LIKE LINE OF lt_founds,
@@ -236,7 +243,7 @@ CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
 
       LOOP AT lt_dependency ASSIGNING <ls_dependency>
                             WHERE deptyp = 'DDLS'
-                            AND   refname = <ls_tadir_ddls>-obj_name.
+                            AND refname = <ls_tadir_ddls>-obj_name.
 
         READ TABLE ct_tadir ASSIGNING <ls_tadir_dependent>
                             WITH KEY pgmid    = 'R3TR'
@@ -282,5 +289,36 @@ CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
       lv_plus = lv_plus + 1.
     ENDDO.
 
-  ENDMETHOD.                    "resolve_ddic
+  ENDMETHOD.
+
+
+  METHOD resolve_packages.
+
+    DATA: lt_subpackages TYPE zif_abapgit_sap_package=>ty_devclass_tt.
+
+    FIELD-SYMBOLS: <ls_tadir>            LIKE LINE OF ct_tadir,
+                   <lv_subpackage>       LIKE LINE OF lt_subpackages,
+                   <ls_tadir_subpackage> LIKE LINE OF ct_tadir.
+
+    " List subpackage before corresponding superpackage
+
+    LOOP AT ct_tadir ASSIGNING <ls_tadir>
+                     WHERE object = 'DEVC'.
+
+      lt_subpackages = zcl_abapgit_factory=>get_sap_package( |{ <ls_tadir>-obj_name }| )->list_subpackages( ).
+
+      LOOP AT lt_subpackages ASSIGNING <lv_subpackage>.
+
+        READ TABLE ct_tadir ASSIGNING <ls_tadir_subpackage>
+                            WITH KEY object   = 'DEVC'
+                                     obj_name = <lv_subpackage>.
+        IF sy-subrc = 0.
+          <ls_tadir_subpackage>-korrnum = condense( |{ <ls_tadir_subpackage>-korrnum - 1 }| ).
+        ENDIF.
+
+      ENDLOOP.
+
+    ENDLOOP.
+
+  ENDMETHOD.
 ENDCLASS.

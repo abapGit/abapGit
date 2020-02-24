@@ -3,23 +3,27 @@ CLASS zcl_abapgit_hash DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    TYPES: ty_adler32 TYPE x LENGTH 4.
 
     CLASS-METHODS adler32
-      IMPORTING iv_xstring         TYPE xstring
-      RETURNING VALUE(rv_checksum) TYPE ty_adler32.
-
+      IMPORTING
+        !iv_xstring        TYPE xstring
+      RETURNING
+        VALUE(rv_checksum) TYPE zif_abapgit_definitions=>ty_adler32 .
     CLASS-METHODS sha1
-      IMPORTING iv_type        TYPE zif_abapgit_definitions=>ty_type
-                iv_data        TYPE xstring
-      RETURNING VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !iv_type       TYPE zif_abapgit_definitions=>ty_type
+        !iv_data       TYPE xstring
+      RETURNING
+        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS sha1_raw
-      IMPORTING iv_data        TYPE xstring
-      RETURNING VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !iv_data       TYPE xstring
+      RETURNING
+        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -70,7 +74,7 @@ CLASS ZCL_ABAPGIT_HASH IMPLEMENTATION.
 
     rv_checksum = lv_char8.
 
-  ENDMETHOD.                                                "adler32
+  ENDMETHOD.
 
 
   METHOD sha1.
@@ -95,7 +99,7 @@ CLASS ZCL_ABAPGIT_HASH IMPLEMENTATION.
 
     rv_sha1 = sha1_raw( lv_xstring ).
 
-  ENDMETHOD.                                                "sha1
+  ENDMETHOD.
 
 
   METHOD sha1_raw.
@@ -121,5 +125,5 @@ CLASS ZCL_ABAPGIT_HASH IMPLEMENTATION.
 
     TRANSLATE rv_sha1 TO LOWER CASE.
 
-  ENDMETHOD.                                                "sha1_raw
+  ENDMETHOD.
 ENDCLASS.

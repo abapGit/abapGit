@@ -4,7 +4,7 @@ category: offline projects
 order: 20
 ---
 
-Assuming the offline project has been created.
+Assuming the offline project has been created:
 
 a: Download zip file
 

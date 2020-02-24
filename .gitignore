@@ -1,3 +1,6 @@
-patches/
+# Artefacts
+node_modules/
 package-lock.json
 zabapgit.abap
+.vscode
+deps

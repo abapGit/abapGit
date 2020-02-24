@@ -10,37 +10,33 @@ CLASS zcl_abapgit_language DEFINITION
 
   PUBLIC SECTION.
 
-    CLASS-DATA:
-      current_language TYPE langu READ-ONLY,
-      login_language   TYPE langu READ-ONLY.
+    CLASS-METHODS class_constructor .
+    CLASS-METHODS restore_login_language .
+    CLASS-METHODS set_current_language
+      IMPORTING
+        !iv_language TYPE langu .
+  PRIVATE SECTION.
 
-    CLASS-METHODS:
-      class_constructor,
-      restore_login_language,
-      set_current_language
-        IMPORTING
-          !iv_language TYPE langu.
-
+    CLASS-DATA gv_login_language TYPE langu .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_language IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_LANGUAGE IMPLEMENTATION.
 
 
   METHOD class_constructor.
 
-
     DATA lv_dummy TYPE string.
 
-    GET LOCALE LANGUAGE login_language COUNTRY lv_dummy MODIFIER lv_dummy.
+    GET LOCALE LANGUAGE gv_login_language COUNTRY lv_dummy MODIFIER lv_dummy.
 
   ENDMETHOD.
 
 
   METHOD restore_login_language.
 
-    SET LOCALE LANGUAGE login_language.
+    SET LOCALE LANGUAGE gv_login_language.
 
   ENDMETHOD.
 

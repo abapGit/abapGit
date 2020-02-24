@@ -1,0 +1,118 @@
+/*
+ * ABAPGIT THEME CSS - DARK
+ */
+
+/* https://experience.sap.com/fiori-design-web/colors/ */
+
+:root {
+  --theme-background-color: #333333;
+  --theme-container-background-color: #444444;
+  --theme-primary-font: "72", Arial, Helvetica, sans-serif;
+  --theme-primary-font-color: #cccccc;
+  --theme-primary-font-color-reduced: #EEEEEE;
+  --theme-font-size: 11pt;
+  --theme-link-color: #d9ffff;
+  --theme-link-color-hover: #f6f6f6;
+  --theme-container-border-color: #D1E0EE;
+  --theme-table-border-color: #E5E5E5; /* ALV border color */
+  --theme-greyscale-dark: #666666;
+  --theme-greyscale-medium: #bfbfbf;
+  --theme-greyscale-light: #CCCCCC;
+  --theme-greyscale-lighter: #E5E5E5;
+  --theme-list-hover-background-color: #666666;
+}
+
+/* GLOBALS */
+body {
+  background-color: var(--theme-background-color);
+  color: var(--theme-primary-font-color);
+}
+select, input, textarea { 
+  color: var(--theme-primary-font-color);
+  border-color: #ffffff;
+  background-color: var(--theme-background-color);
+}
+a:hover { color: var(--theme-link-color-hover); }
+
+/* HEADER */
+#header a, #header a:visited { color: var(--theme-link-color); }
+
+/* MENU */
+div#toc .favorites a { opacity: 1; }
+.nav-container ul a:hover { text-decoration: underline; }
+.nav-container ul ul { background-color: #555555; }
+.nav-container ul ul li:hover { background-color: var(--theme-list-hover-background-color); }
+table.repo_tab {
+    border-color: #var(--theme-container-background-color);
+    background-color: var(--theme-background-color);
+}
+
+/* abapGit logo in header and footer */
+#abapGitLogo>img { background-color: #bfbfbf; }
+#footer>img { background-color: #bfbfbf; }
+
+/* TUTORIAL */
+div.tutorial h1, h2 { color: var(--theme-primary-font-color); }
+
+/* REPOSITORY */
+div.repo { background-color: var(--theme-container-background-color); }
+.repo_attr { color: var(--theme-primary-font-color); }
+.repo_attr span.branch_branch {
+  border-color: #ffffff;
+  background-color: #777777;
+}
+
+/* REPOSITORY TABLE */
+.repo_tab td { color: var(--theme-primary-font-color); }
+.repo_tab tr.unsupported { background-color: #555; }
+.repo_tab tr.modified { background-color: #555; }
+
+/* STAGE */
+.stage_tab { background-color: var(--theme-background-color); }
+.stage_tab td { color: var(--theme-primary-font-color); }
+.stage_tab td.status.highlight { 
+  color: var(--theme-primary-font-color) !important;
+  background-color: var(--theme-background-color);
+}
+.stage_tab td.status { 
+  color: #777;
+  background-color: var(--theme-background-color); 
+}
+.stage_tab th { background-color: var(--theme-container-background-color); }
+
+/* COMMIT */
+div.form-container { background-color: var(--theme-background-color); }
+
+/* SETTINGS STYLES */
+div.settings_container { color: var(--theme-primary-font-color); }
+
+/* DIFF */
+.diff_ins { background-color: #352; }
+.diff_del { background-color: #411; }
+.diff_upd { background-color: #551; }
+div.diff_content { background-color: var(--theme-background-color); }
+
+/* DIFF TABLE */
+table.diff_tab td,th { color: #fff; }
+table.diff_tab thead.nav_line { background-color: var(--theme-container-background-color); }
+
+/* STYLES for Syntax Highlighting */
+.syntax-hl span.keyword  { color: #4af; }
+.syntax-hl span.text     { color: #8f8; }
+.syntax-hl span.comment  { color: #999; }
+.syntax-hl span.xml_tag  { color: #659cff; }
+.syntax-hl span.attr     { color: #bab2f9; }
+.syntax-hl span.attr_val { color: #b777fb; }
+
+/* DEBUG INFO STYLES */
+div.debug_container#debug_info { color: var(--theme-primary-font-color); }
+
+/* DB ENTRIES */
+div.db_list { background-color: var(--theme-container-background-color); }
+table.db_tab td      { color: var(--theme-primary-font-color); }
+table.db_tab td.data { opacity: 0.5; }
+table.db_tab tbody tr:hover, tr:active { background-color: var(--theme-list-hover-background-color); }
+table.db_tab th {
+  color: var(--theme-primary-font-color); }
+  border-bottom-color: #333;
+}

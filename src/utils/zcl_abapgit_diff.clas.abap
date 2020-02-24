@@ -3,73 +3,82 @@ CLASS zcl_abapgit_diff DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    CONSTANTS: BEGIN OF c_diff,
-                 insert TYPE c LENGTH 1 VALUE 'I',
-                 delete TYPE c LENGTH 1 VALUE 'D',
-                 update TYPE c LENGTH 1 VALUE 'U',
-               END OF c_diff.
-
-    TYPES: BEGIN OF ty_diff,
-             new_num TYPE c LENGTH 6,
-             new     TYPE string,
-             result  TYPE c LENGTH 1,
-             old_num TYPE c LENGTH 6,
-             old     TYPE string,
-             short   TYPE abap_bool,
-             beacon  TYPE i,
-           END OF ty_diff.
-    TYPES:  ty_diffs_tt TYPE STANDARD TABLE OF ty_diff WITH DEFAULT KEY.
-
-    TYPES: BEGIN OF ty_count,
-             insert TYPE i,
-             delete TYPE i,
-             update TYPE i,
-           END OF ty_count.
-
-    DATA mt_beacons TYPE zif_abapgit_definitions=>ty_string_tt READ-ONLY.
+    CONSTANTS co_starting_beacon TYPE i VALUE 1.
 
 * assumes data is UTF8 based with newlines
 * only works with lines up to 255 characters
     METHODS constructor
-      IMPORTING iv_new TYPE xstring
-                iv_old TYPE xstring.
-
+      IMPORTING
+        !iv_new TYPE xstring
+        !iv_old TYPE xstring .
     METHODS get
-      RETURNING VALUE(rt_diff) TYPE ty_diffs_tt.
-
+      RETURNING
+        VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt .
     METHODS stats
-      RETURNING VALUE(rs_count) TYPE ty_count.
+      RETURNING
+        VALUE(rs_count) TYPE zif_abapgit_definitions=>ty_count .
+    METHODS set_patch_new
+      IMPORTING
+        !iv_line_new   TYPE i
+        !iv_patch_flag TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+    METHODS set_patch_old
+      IMPORTING
+        !iv_line_old   TYPE i
+        !iv_patch_flag TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_beacons
+      RETURNING
+        VALUE(rt_beacons) TYPE zif_abapgit_definitions=>ty_string_tt .
+    METHODS is_line_patched
+      IMPORTING
+        iv_index          TYPE i
+      RETURNING
+        VALUE(rv_patched) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
+  PROTECTED SECTION.
 
   PRIVATE SECTION.
-    DATA mt_diff     TYPE ty_diffs_tt.
-    DATA ms_stats    TYPE ty_count.
+    TYPES ty_regexset_tt TYPE STANDARD TABLE OF REF TO cl_abap_regex WITH KEY table_line.
 
-    CLASS-METHODS:
-      unpack
-        IMPORTING iv_new TYPE xstring
-                  iv_old TYPE xstring
-        EXPORTING et_new TYPE abaptxt255_tab
-                  et_old TYPE abaptxt255_tab,
-      render
-        IMPORTING it_new         TYPE abaptxt255_tab
-                  it_old         TYPE abaptxt255_tab
-                  it_delta       TYPE vxabapt255_tab
-        RETURNING VALUE(rt_diff) TYPE ty_diffs_tt,
-      compute
-        IMPORTING it_new          TYPE abaptxt255_tab
-                  it_old          TYPE abaptxt255_tab
-        RETURNING VALUE(rt_delta) TYPE vxabapt255_tab.
+    DATA mt_beacons TYPE zif_abapgit_definitions=>ty_string_tt .
+    DATA mt_diff TYPE zif_abapgit_definitions=>ty_diffs_tt .
+    DATA ms_stats TYPE zif_abapgit_definitions=>ty_count .
 
-    METHODS:
-      calculate_line_num_and_stats,
-      map_beacons,
-      shortlist.
-
+    CLASS-METHODS unpack
+      IMPORTING
+        !iv_new TYPE xstring
+        !iv_old TYPE xstring
+      EXPORTING
+        !et_new TYPE abaptxt255_tab
+        !et_old TYPE abaptxt255_tab .
+    CLASS-METHODS render
+      IMPORTING
+        !it_new        TYPE abaptxt255_tab
+        !it_old        TYPE abaptxt255_tab
+        !it_delta      TYPE vxabapt255_tab
+      RETURNING
+        VALUE(rt_diff) TYPE zif_abapgit_definitions=>ty_diffs_tt .
+    CLASS-METHODS compute
+      IMPORTING
+        !it_new         TYPE abaptxt255_tab
+        !it_old         TYPE abaptxt255_tab
+      RETURNING
+        VALUE(rt_delta) TYPE vxabapt255_tab .
+    METHODS calculate_line_num_and_stats .
+    METHODS map_beacons .
+    METHODS shortlist .
+    METHODS create_regex_set
+      RETURNING
+        VALUE(rt_regex_set) TYPE ty_regexset_tt.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
+CLASS zcl_abapgit_diff IMPLEMENTATION.
 
 
   METHOD calculate_line_num_and_stats.
@@ -85,10 +94,10 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
       <ls_diff>-old_num = lv_old.
 
       CASE <ls_diff>-result. " Line nums
-        WHEN c_diff-delete.
+        WHEN zif_abapgit_definitions=>c_diff-delete.
           lv_old = lv_old + 1.
           CLEAR <ls_diff>-new_num.
-        WHEN c_diff-insert.
+        WHEN zif_abapgit_definitions=>c_diff-insert.
           lv_new = lv_new + 1.
           CLEAR <ls_diff>-old_num.
         WHEN OTHERS.
@@ -97,17 +106,17 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
       ENDCASE.
 
       CASE <ls_diff>-result. " Stats
-        WHEN c_diff-insert.
+        WHEN zif_abapgit_definitions=>c_diff-insert.
           ms_stats-insert = ms_stats-insert + 1.
-        WHEN c_diff-delete.
+        WHEN zif_abapgit_definitions=>c_diff-delete.
           ms_stats-delete = ms_stats-delete + 1.
-        WHEN c_diff-update.
+        WHEN zif_abapgit_definitions=>c_diff-update.
           ms_stats-update = ms_stats-update + 1.
       ENDCASE.
 
     ENDLOOP.
 
-  ENDMETHOD.                " calculate_line_num_and_stats
+  ENDMETHOD.
 
 
   METHOD compute.
@@ -126,7 +135,7 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
         trdir_delta  = lt_trdir_delta
         text_delta   = rt_delta.
 
-  ENDMETHOD.                    "compute
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -152,44 +161,38 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
     map_beacons( ).
     shortlist( ).
 
-  ENDMETHOD.                    "diff
+  ENDMETHOD.
 
 
   METHOD get.
     rt_diff = mt_diff.
-  ENDMETHOD.                    "get
+  ENDMETHOD.
+
+
+  METHOD get_beacons.
+    rt_beacons = mt_beacons.
+  ENDMETHOD.
 
 
   METHOD map_beacons.
 
-    DEFINE _add_regex.
-      CREATE OBJECT lo_regex
-        EXPORTING pattern     = &1
-                  ignore_case = abap_true ##NO_TEXT.
-      APPEND lo_regex TO lt_regex_set.
-    END-OF-DEFINITION.
-
-    DATA: lv_beacon_idx  TYPE i,
+    DATA: lv_beacon_idx  TYPE i VALUE co_starting_beacon,
           lv_offs        TYPE i,
           lv_beacon_str  TYPE string,
           lv_beacon_2lev TYPE string,
           lv_submatch    TYPE string,
           lo_regex       TYPE REF TO cl_abap_regex,
-          lt_regex_set   TYPE TABLE OF REF TO cl_abap_regex.
+          lt_regex       TYPE ty_regexset_tt.
 
     FIELD-SYMBOLS: <ls_diff> LIKE LINE OF mt_diff.
 
-
-    _add_regex '^\s*(CLASS|FORM|MODULE|REPORT|METHOD)\s'.
-    _add_regex '^\s*START-OF-'.
-    _add_regex '^\s*INITIALIZATION(\s|\.)'.
-
+    lt_regex = create_regex_set( ).
     LOOP AT mt_diff ASSIGNING <ls_diff>.
 
       CLEAR lv_offs.
       <ls_diff>-beacon = lv_beacon_idx.
 
-      LOOP AT lt_regex_set INTO lo_regex. "
+      LOOP AT lt_regex INTO lo_regex.
         FIND FIRST OCCURRENCE OF REGEX lo_regex IN <ls_diff>-new SUBMATCHES lv_submatch.
         IF sy-subrc = 0. " Match
           lv_beacon_str = <ls_diff>-new.
@@ -219,18 +222,10 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
 
-  ENDMETHOD.                " map_beacons
+  ENDMETHOD.
 
 
   METHOD render.
-
-    DEFINE _append.
-      CLEAR ls_diff.
-      ls_diff-new    = &1.
-      ls_diff-result = &2.
-      ls_diff-old    = &3.
-      APPEND ls_diff TO rt_diff.
-    END-OF-DEFINITION.
 
     DATA: lv_oindex TYPE i VALUE 1,
           lv_nindex TYPE i VALUE 1,
@@ -249,17 +244,27 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
         DELETE lt_delta INDEX sy-tabix.
 
         CASE ls_delta-vrsflag.
-          WHEN c_diff-delete.
-            _append '' c_diff-delete ls_delta-line.
+          WHEN zif_abapgit_definitions=>c_diff-delete.
+            ls_diff-new = ''.
+            ls_diff-result = zif_abapgit_definitions=>c_diff-delete.
+            ls_diff-old = ls_delta-line.
+
             lv_oindex = lv_oindex + 1.
-          WHEN c_diff-insert.
-            _append ls_delta-line c_diff-insert ''.
+          WHEN zif_abapgit_definitions=>c_diff-insert.
+            ls_diff-new = ls_delta-line.
+            ls_diff-result = zif_abapgit_definitions=>c_diff-insert.
+            ls_diff-old = ''.
+
             lv_nindex = lv_nindex + 1.
-          WHEN c_diff-update.
+          WHEN zif_abapgit_definitions=>c_diff-update.
             CLEAR ls_new.
             READ TABLE it_new INTO ls_new INDEX lv_nindex.
             ASSERT sy-subrc = 0.
-            _append ls_new c_diff-update ls_delta-line.
+
+            ls_diff-new = ls_new.
+            ls_diff-result = zif_abapgit_definitions=>c_diff-update.
+            ls_diff-old = ls_delta-line.
+
             lv_nindex = lv_nindex + 1.
             lv_oindex = lv_oindex + 1.
           WHEN OTHERS.
@@ -272,15 +277,69 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
         CLEAR ls_old.
         READ TABLE it_old INTO ls_old INDEX lv_oindex.    "#EC CI_SUBRC
         lv_oindex = lv_oindex + 1.
-        _append ls_new '' ls_old.
+
+        ls_diff-new = ls_new.
+        ls_diff-result = ''.
+        ls_diff-old = ls_old.
       ENDIF.
 
+      APPEND ls_diff TO rt_diff.
+      CLEAR ls_diff.
+
       IF lv_nindex > lines( it_new ) AND lv_oindex > lines( it_old ).
-        EXIT. " current loop
+        EXIT.
       ENDIF.
     ENDDO.
 
-  ENDMETHOD.                " render
+  ENDMETHOD.
+
+
+  METHOD set_patch_new.
+
+    DATA: lv_new_num TYPE i.
+    FIELD-SYMBOLS: <ls_diff> TYPE zif_abapgit_definitions=>ty_diff.
+
+    LOOP AT mt_diff ASSIGNING <ls_diff>.
+
+      lv_new_num = <ls_diff>-new_num.
+
+      IF lv_new_num = iv_line_new.
+        EXIT.
+      ENDIF.
+
+    ENDLOOP.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Invalid new line number { iv_line_new }| ).
+    ENDIF.
+
+    <ls_diff>-patch_flag = iv_patch_flag.
+
+  ENDMETHOD.
+
+
+  METHOD set_patch_old.
+
+    DATA: lv_old_num TYPE i.
+    FIELD-SYMBOLS: <ls_diff> TYPE zif_abapgit_definitions=>ty_diff.
+
+    LOOP AT mt_diff ASSIGNING <ls_diff>.
+
+      lv_old_num = <ls_diff>-old_num.
+
+      IF lv_old_num = iv_line_old.
+        EXIT.
+      ENDIF.
+
+    ENDLOOP.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Invalid old line number { iv_line_old }| ).
+    ENDIF.
+
+    <ls_diff>-patch_flag = iv_patch_flag.
+
+  ENDMETHOD.
 
 
   METHOD shortlist.
@@ -318,12 +377,12 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-  ENDMETHOD.                " shortlist
+  ENDMETHOD.
 
 
   METHOD stats.
     rs_count = ms_stats.
-  ENDMETHOD.                    "count
+  ENDMETHOD.
 
 
   METHOD unpack.
@@ -335,8 +394,44 @@ CLASS ZCL_ABAPGIT_DIFF IMPLEMENTATION.
     lv_new = zcl_abapgit_convert=>xstring_to_string_utf8( iv_new ).
     lv_old = zcl_abapgit_convert=>xstring_to_string_utf8( iv_old ).
 
-    SPLIT lv_new AT zif_abapgit_definitions=>gc_newline INTO TABLE et_new.
-    SPLIT lv_old AT zif_abapgit_definitions=>gc_newline INTO TABLE et_old.
+    SPLIT lv_new AT zif_abapgit_definitions=>c_newline INTO TABLE et_new.
+    SPLIT lv_old AT zif_abapgit_definitions=>c_newline INTO TABLE et_old.
 
-  ENDMETHOD.                    "unpack
+  ENDMETHOD.
+
+  METHOD create_regex_set.
+
+    DATA: lo_regex TYPE REF TO cl_abap_regex,
+          lt_regex TYPE zif_abapgit_definitions=>ty_string_tt,
+          ls_regex LIKE LINE OF lt_regex.
+
+    APPEND '^\s*(CLASS|FORM|MODULE|REPORT|METHOD)\s' TO lt_regex.
+    APPEND '^\s*START-OF-' TO lt_regex.
+    APPEND '^\s*INITIALIZATION(\s|\.)' TO lt_regex.
+
+    LOOP AT lt_regex INTO ls_regex.
+      CREATE OBJECT lo_regex
+        EXPORTING
+          pattern     = ls_regex
+          ignore_case = abap_true.
+      APPEND lo_regex TO rt_regex_set.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD is_line_patched.
+
+    FIELD-SYMBOLS: <ls_diff> TYPE zif_abapgit_definitions=>ty_diff.
+
+    READ TABLE mt_diff INDEX iv_index
+                       ASSIGNING <ls_diff>.
+    IF sy-subrc = 0.
+      rv_patched = <ls_diff>-patch_flag.
+    ELSE.
+      zcx_abapgit_exception=>raise( |Diff line not found { iv_index }| ).
+    ENDIF.
+
+  ENDMETHOD.
+
 ENDCLASS.

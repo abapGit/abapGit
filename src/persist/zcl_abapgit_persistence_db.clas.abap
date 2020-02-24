@@ -7,10 +7,10 @@ CLASS zcl_abapgit_persistence_db DEFINITION
     CONSTANTS c_lock TYPE viewname VALUE 'EZABAPGIT' ##NO_TEXT.
 
     CONSTANTS:
-      c_type_settings TYPE zif_abapgit_persistence=>ty_type VALUE 'SETTINGS' ##NO_TEXT,
-      c_type_repo TYPE zif_abapgit_persistence=>ty_type VALUE 'REPO' ##NO_TEXT,
+      c_type_settings   TYPE zif_abapgit_persistence=>ty_type VALUE 'SETTINGS' ##NO_TEXT,
+      c_type_repo       TYPE zif_abapgit_persistence=>ty_type VALUE 'REPO' ##NO_TEXT,
       c_type_background TYPE zif_abapgit_persistence=>ty_type VALUE 'BACKGROUND' ##NO_TEXT,
-      c_type_user TYPE zif_abapgit_persistence=>ty_type VALUE 'USER' ##NO_TEXT.
+      c_type_user       TYPE zif_abapgit_persistence=>ty_type VALUE 'USER' ##NO_TEXT.
 
     CLASS-METHODS get_instance
       RETURNING
@@ -65,10 +65,15 @@ CLASS zcl_abapgit_persistence_db DEFINITION
         !iv_data  TYPE zif_abapgit_persistence=>ty_content-data_str
       RAISING
         zcx_abapgit_exception .
+  PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CLASS-DATA mo_db TYPE REF TO zcl_abapgit_persistence_db .
+    CLASS-DATA go_db TYPE REF TO zcl_abapgit_persistence_db .
+    DATA mv_update_function TYPE funcname .
 
+    METHODS get_update_function
+      RETURNING
+        VALUE(rv_funcname) TYPE funcname .
     METHODS validate_and_unprettify_xml
       IMPORTING
         !iv_xml       TYPE string
@@ -114,10 +119,28 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
 
   METHOD get_instance.
 
-    IF mo_db IS NOT BOUND.
-      CREATE OBJECT mo_db.
+    IF go_db IS NOT BOUND.
+      CREATE OBJECT go_db.
     ENDIF.
-    ro_db = mo_db.
+    ro_db = go_db.
+
+  ENDMETHOD.
+
+
+  METHOD get_update_function.
+    IF mv_update_function IS INITIAL.
+      mv_update_function = 'CALL_V1_PING'.
+      CALL FUNCTION 'FUNCTION_EXISTS'
+        EXPORTING
+          funcname = mv_update_function
+        EXCEPTIONS
+          OTHERS   = 2.
+
+      IF sy-subrc <> 0.
+        mv_update_function = 'BANK_OBJ_WORKL_RELEASE_LOCKS'.
+      ENDIF.
+    ENDIF.
+    rv_funcname = mv_update_function.
 
   ENDMETHOD.
 
@@ -131,11 +154,13 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
   METHOD list_by_type.
     SELECT * FROM (c_tabname)
       INTO TABLE rt_content
-      WHERE type = iv_type.                               "#EC CI_SUBRC
+      WHERE type = iv_type
+      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
   ENDMETHOD.
 
 
   METHOD lock.
+    DATA: lv_dummy_update_function TYPE funcname.
 
     CALL FUNCTION 'ENQUEUE_EZABAPGIT'
       EXPORTING
@@ -150,8 +175,10 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Could not aquire lock { iv_type } { iv_value }| ).
     ENDIF.
 
+    lv_dummy_update_function = get_update_function( ).
+
 * trigger dummy update task to automatically release locks at commit
-    CALL FUNCTION 'BANK_OBJ_WORKL_RELEASE_LOCKS'
+    CALL FUNCTION lv_dummy_update_function
       IN UPDATE TASK.
 
   ENDMETHOD.
@@ -180,7 +207,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
 
     SELECT SINGLE data_str FROM (c_tabname) INTO rv_data
       WHERE type = iv_type
-      AND value = iv_value.                               "#EC CI_SUBRC
+      AND value = iv_value.
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE zcx_abapgit_not_found.
     ENDIF.
@@ -199,12 +226,12 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
 
     UPDATE (c_tabname) SET data_str = lv_data
       WHERE type  = iv_type
-      AND   value = iv_value.
+      AND value = iv_value.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'DB update failed' ).
     ENDIF.
 
-  ENDMETHOD.  "update
+  ENDMETHOD.
 
 
   METHOD validate_and_unprettify_xml.
@@ -214,5 +241,5 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_DB IMPLEMENTATION.
       iv_unpretty      = abap_true
       iv_ignore_errors = abap_false ).
 
-  ENDMETHOD.  " validate_and_unprettify_xml
+  ENDMETHOD.
 ENDCLASS.

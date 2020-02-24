@@ -20,14 +20,11 @@ Steps:
 
 6. Test backup by staging + commit + pushing from abapGit manually
 
-7. Configure "background mode" for repository, Advanced -> Background mode.
-
-7a. Set to "Automatic push",
-
-7b. Enter username and password(note: password will be stored in clear text). If abapGit and abapGitServer runs on the same ABAP server, then no password is required, as it will automatically use logon tickets.
-
-7c. Set commit author = "Automatic" this will find the user which last changed the objects and use these in the commits.
+7. Configure "background mode" for the repository, Advanced -> Background mode.
+* Set to "Automatic push, auto author" this will find the user which last changed the objects and use these in the commits.
+* ... or set to "Automatic push, fixed author" this will use the user of the background job
+* Enter username and password(note: password will be stored in clear text). If abapGit and abapGitServer runs on the same ABAP server, then no password is required, as it will automatically use logon tickets.
 
 8. On the background mode page: click "Run background logic" to test the setup works
 
-9. Configure ZABAPGIT to run as background job(SM36/SM37). Note: a dummy variant has to be created for the program, use SE38 to create the variant, values in the variant are not used for anything in background mode.
+9. Configure ZABAPGIT to run as a background job(SM36/SM37). Note: a dummy variant has to be created for the program, use SE38 to create the variant, values in the variant are not used for anything in background mode.
