@@ -124,3 +124,5 @@ Frederik Hudak
 
 [How we do ABAP code review using abapGit](https://blogs.sap.com/2020/01/30/how-we-do-abap-code-review-using-abapgit/), 
 Michael Pang
+
+[The journey to Git-based ABAP development: Part 1](https://blogs.sap.com/2020/02/26/the-journey-to-git-based-abap-development-part-1/), Marcello Urbani
