@@ -676,9 +676,8 @@ CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
     ro_html->add( |<br>| ).
     ro_html->add( |<label for="proxy_bypass">Bypass proxy settings for these Hosts & Domains</label>| ).
     ro_html->add( |<br>| ).
-    ro_html->add( |<a href="sapevent:{ c_action-change_proxy_bypass }">| ).
-    ro_html->add( |<button name="proxy_bypass" type="button" class="grey-set">Maintain</button>| ).
-    ro_html->add( |</a>| ).
+    ro_html->add( |<button type="button" name="proxy_bypass" class="grey-set"|
+                & |onclick="location.href='sapevent:{ c_action-change_proxy_bypass }';">Maintain</button>| ).
     ro_html->add( |<br>| ).
 
     ro_html->add( |<br>| ).
