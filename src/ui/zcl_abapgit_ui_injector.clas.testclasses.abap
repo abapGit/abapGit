@@ -96,6 +96,10 @@ CLASS ltcl_abapgit_popups_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
+  METHOD zif_abapgit_popups~popup_proxy_bypass.
+
+  ENDMETHOD.
+
 ENDCLASS.
 
 CLASS ltcl_no_dependency_injection IMPLEMENTATION.
