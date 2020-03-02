@@ -137,7 +137,7 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
     DELETE FROM tcdrps  WHERE object = mv_object.
 
     LOOP AT ls_change_object-reports_generated ASSIGNING <ls_report_generated>.
-      <ls_report_generated>-devclass = ms_item-devclass.
+      <ls_report_generated>-devclass = iv_package.
     ENDLOOP.
 
     INSERT tcdobs  FROM TABLE ls_change_object-objects.
