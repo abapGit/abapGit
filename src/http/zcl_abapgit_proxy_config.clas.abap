@@ -98,7 +98,12 @@ CLASS zcl_abapgit_proxy_config IMPLEMENTATION.
 
   METHOD bypass_proxy.
 
-    IF iv_repo_url IN mo_settings->get_proxy_bypass( ).
+    DATA lt_proxy_bypass TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url.
+
+    lt_proxy_bypass = mo_settings->get_proxy_bypass( ).
+
+    IF lt_proxy_bypass IS NOT INITIAL
+    AND iv_repo_url IN mo_settings->get_proxy_bypass( ).
       rv_bypass_proxy = abap_true.
     ENDIF.
 
