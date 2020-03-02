@@ -287,11 +287,9 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
 
   METHOD after_import.
 
-    CONSTANTS lc_logical_transport_object TYPE c LENGTH 1 VALUE 'L'.
-
     DATA: lt_cts_object_entry TYPE STANDARD TABLE OF e071 WITH DEFAULT KEY,
           ls_cts_object_entry LIKE LINE OF lt_cts_object_entry,
-          lt_cts_key          TYPE STANDARD TABLE OF e071k WITH DEFAULT KEY.
+          lt_errormsg         TYPE STANDARD TABLE OF sprot_u WITH DEFAULT KEY.
 
     ls_cts_object_entry-pgmid    = seok_pgmid_r3tr.
     ls_cts_object_entry-object   = ms_item-obj_type.
@@ -304,7 +302,15 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
         iv_is_upgrade = abap_false
       TABLES
         tt_e071       = lt_cts_object_entry
-        tt_e071k      = lt_cts_key.
+        tt_errormsg   = lt_errormsg.
+
+    LOOP AT lt_errormsg TRANSPORTING NO FIELDS WHERE severity = 'E' OR severity = 'A'.
+      EXIT.
+    ENDLOOP.
+
+    IF sy-subrc = 0.
+      zcx_abapgit_exception=>raise( 'Error from AFTER_IMP_CHDO' ).
+    ENDIF.
 
   ENDMETHOD.
 
