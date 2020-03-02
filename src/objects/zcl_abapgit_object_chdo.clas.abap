@@ -127,6 +127,7 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_change_object TYPE ty_change_document.
+    FIELD-SYMBOLS: <ls_report_generated> LIKE LINE OF ls_change_object-reports_generated.
 
     io_xml->read( EXPORTING iv_name = 'CHDO'
                   CHANGING  cg_data = ls_change_object ).
@@ -134,6 +135,10 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
     DELETE FROM tcdobs  WHERE object = mv_object.
     DELETE FROM tcdobts WHERE object = mv_object.
     DELETE FROM tcdrps  WHERE object = mv_object.
+
+    LOOP AT ls_change_object-reports_generated ASSIGNING <ls_report_generated>.
+      <ls_report_generated>-devclass = ms_item-devclass.
+    ENDLOOP.
 
     INSERT tcdobs  FROM TABLE ls_change_object-objects.
     INSERT tcdobts FROM TABLE ls_change_object-objects_text.
@@ -254,7 +259,9 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
 
     " At import, when CHDO is generated date & time change, so always detects changes for this fields
     LOOP AT ls_change_object-reports_generated ASSIGNING <ls_reports_generated>.
-      CLEAR: <ls_reports_generated>-datum, <ls_reports_generated>-uzeit.
+      CLEAR: <ls_reports_generated>-datum, <ls_reports_generated>-uzeit,
+             <ls_reports_generated>-author, <ls_reports_generated>-updname,
+             <ls_reports_generated>-devclass.
     ENDLOOP.
     LOOP AT ls_change_object-objects ASSIGNING <ls_objects>.
       CLEAR: <ls_objects>-udate, <ls_objects>-utime.
