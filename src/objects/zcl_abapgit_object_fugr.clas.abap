@@ -284,7 +284,9 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       TRY.
           check_rfc_parameters( <ls_func> ).
         CATCH zcx_abapgit_exception INTO lx_error.
-          ii_log->add_error( iv_msg  = |Function module { <ls_func>-funcname }: { lx_error->get_text( ) }| is_item = ms_item ).
+          ii_log->add_error(
+            iv_msg  = |Function module { <ls_func>-funcname }: { lx_error->get_text( ) }|
+            is_item = ms_item ).
           CONTINUE. "with next function module
       ENDTRY.
 
