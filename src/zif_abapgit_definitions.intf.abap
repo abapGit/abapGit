@@ -364,6 +364,10 @@ INTERFACE zif_abapgit_definitions
     tty_col_spec TYPE STANDARD TABLE OF ty_col_spec
                       WITH NON-UNIQUE KEY tech_name.
 
+  TYPES:
+    ty_proxy_bypass_url       TYPE c LENGTH 255,
+    ty_range_proxy_bypass_url TYPE RANGE OF ty_proxy_bypass_url.
+
   CONSTANTS:
     BEGIN OF c_git_branch_type,
       branch          TYPE ty_git_branch_type VALUE 'HD',
