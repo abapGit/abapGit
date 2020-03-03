@@ -532,10 +532,10 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     CONSTANTS: lc_hex_tra TYPE x VALUE '00',
-*               c_hex_men TYPE x VALUE '01',
+*               lc_hex_men TYPE x VALUE '01',
                lc_hex_par TYPE x VALUE '02',
                lc_hex_rep TYPE x VALUE '80',
-*               c_hex_rpv TYPE x VALUE '10',
+*               lc_hex_rpv TYPE x VALUE '10',
                lc_hex_obj TYPE x VALUE '08'.
 
     DATA: lv_dynpro       TYPE d020s-dnum,
@@ -563,15 +563,15 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
     lv_dynpro = ls_tstc-dypno.
 
-    IF     ls_tstc-cinfo O lc_hex_tra.
-      lv_type = ststc_c_type_dialog.
-    ELSEIF ls_tstc-cinfo O lc_hex_rep.
+    IF     ls_tstc-cinfo o lc_hex_rep.
       lv_type = ststc_c_type_report.
-    ELSEIF ls_tstc-cinfo O lc_hex_par.
-      lv_type = ststc_c_type_parameters.
-    ELSEIF ls_tstc-cinfo O lc_hex_obj.
+    ELSEIF ls_tstc-cinfo o lc_hex_obj.
       lv_type = ststc_c_type_object.
       " todo, or ststc_c_type_variant?
+    ELSEIF ls_tstc-cinfo o lc_hex_par.
+      lv_type = ststc_c_type_parameters.
+    ELSEIF ls_tstc-cinfo o lc_hex_tra.
+      lv_type = ststc_c_type_dialog.
     ELSE.
       zcx_abapgit_exception=>raise( 'Transaction, unknown CINFO' ).
     ENDIF.
