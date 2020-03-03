@@ -174,7 +174,6 @@ CLASS zcl_abapgit_object_area IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-*    rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.
 
 
@@ -272,7 +271,7 @@ CLASS zcl_abapgit_object_area IMPLEMENTATION.
 
     SELECT SINGLE * FROM ('RSDAREAT')
     INTO <ls_rsdareat>
-    WHERE infoarea = ms_item-obj_name .
+    WHERE infoarea = ms_item-obj_name.
 
     ASSIGN COMPONENT 'TXTSH' OF STRUCTURE <ls_rsdareat> TO <lv_txtsh>.
     ASSIGN COMPONENT 'TXTLG' OF STRUCTURE <ls_rsdareat> TO <lv_txtlg>.

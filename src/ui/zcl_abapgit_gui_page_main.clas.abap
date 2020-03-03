@@ -45,7 +45,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
 
   METHOD build_main_menu.
@@ -152,9 +152,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
     ro_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).
 
-    IF mo_repo_content IS BOUND.
-      ro_html->add( mo_repo_content->render( ) ).
-    ENDIF.
+    ro_html->add( mo_repo_content->render( ) ).
     ro_html->add( '</div>' ).
 
   ENDMETHOD.
