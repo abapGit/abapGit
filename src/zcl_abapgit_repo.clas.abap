@@ -358,6 +358,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     IF sy-subrc = 0.
       ro_dot = zcl_abapgit_dot_abapgit=>deserialize( <ls_remote>-data ).
       set_dot_abapgit( ro_dot ).
+      COMMIT WORK AND WAIT. " to release lock
     ENDIF.
 
   ENDMETHOD.

@@ -25,6 +25,12 @@ CLASS ZCL_ABAPGIT_OBJECT_SRFC IMPLEMENTATION.
           lx_error        TYPE REF TO cx_root,
           lv_text         TYPE string.
 
+
+    IF zif_abapgit_object~exists( ) = abap_false.
+* the SRFC might already have been deleted with the function module
+      RETURN.
+    ENDIF.
+
     TRY.
         CREATE OBJECT li_srfc_persist TYPE ('CL_UCONRFC_OBJECT_PERSIST').
 
