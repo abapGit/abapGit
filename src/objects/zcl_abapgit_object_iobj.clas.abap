@@ -32,7 +32,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
     lv_objna = ms_item-obj_name.
 
     TRY.
-        CREATE DATA lr_viobj TYPE ('RSD_S_VI_OBJ').
+        CREATE DATA lr_viobj TYPE ('RSD_S_VIOBJ').
       CATCH cx_sy_create_data_error.
         zcx_abapgit_exception=>raise( |IOBJ is not supported on this system| ).
     ENDTRY.
@@ -277,7 +277,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
     lv_objna = ms_item-obj_name.
 
     TRY.
-        CREATE DATA lr_viobj TYPE ('RSD_S_VI_OBJ').
+        CREATE DATA lr_viobj TYPE ('RSD_S_VIOBJ').
       CATCH cx_sy_create_data_error.
         zcx_abapgit_exception=>raise( |IOBJ is not supported on this system| ).
     ENDTRY.
