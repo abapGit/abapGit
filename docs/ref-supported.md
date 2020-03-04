@@ -16,7 +16,7 @@ BDEF | Behaviour Definition | [#2021](https://github.com/larshp/abapGit/issues/2
 BMFR | Application Component | [#2108](https://github.com/larshp/abapGit/issues/2108)
 BOBF | BOPF: Business Object Model | [#165](https://github.com/larshp/abapGit/issues/165)
 CHAR | Object characteristic | Yes
-CHDO | Change Document Object | [#802](https://github.com/larshp/abapGit/issues/802)
+CHDO | Change Document Object | Yes
 CLAS | Class (ABAP Objects) | Yes
 CMOD | Customer enhancement projects | [#151](https://github.com/larshp/abapGit/issues/151)
 CMPT | Code Composer Template | Yes
