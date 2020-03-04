@@ -1005,9 +1005,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   METHOD render_patch.
 
     CONSTANTS:
-      BEGIN OF c_css_class,
+      BEGIN OF lc_css_class,
         patch TYPE string VALUE `patch` ##NO_TEXT,
-      END OF c_css_class.
+      END OF lc_css_class.
 
     DATA: lv_id      TYPE string,
           lv_patched TYPE abap_bool.
@@ -1018,7 +1018,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
       lv_id = |{ iv_filename }_{ mv_section_count }_{ iv_index }|.
 
-      io_html->add( |<td class="{ c_css_class-patch }">| ).
+      io_html->add( |<td class="{ lc_css_class-patch }">| ).
       io_html->add_checkbox(
           iv_id      = |patch_line_{ lv_id }|
           iv_checked = lv_patched ).
@@ -1026,7 +1026,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     ELSE.
 
-      io_html->add( |<td class="{ c_css_class-patch }">| ).
+      io_html->add( |<td class="{ lc_css_class-patch }">| ).
       io_html->add( |</td>| ).
 
     ENDIF.

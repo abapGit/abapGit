@@ -5,18 +5,18 @@ CLASS zcl_abapgit_message_helper DEFINITION
 
   PUBLIC SECTION.
     CONSTANTS:
-      BEGIN OF gc_section_text,
+      BEGIN OF c_section_text,
         cause           TYPE string VALUE `Cause`,
         system_response TYPE string VALUE `System response`,
         what_to_do      TYPE string VALUE `Procedure`,
         sys_admin       TYPE string VALUE `System administration`,
-      END OF gc_section_text,
-      BEGIN OF gc_section_token,
+      END OF c_section_text,
+      BEGIN OF c_section_token,
         cause           TYPE string VALUE `&CAUSE&`,
         system_response TYPE string VALUE `&SYSTEM_RESPONSE&`,
         what_to_do      TYPE string VALUE `&WHAT_TO_DO&`,
         sys_admin       TYPE string VALUE `&SYS_ADMIN&`,
-      END OF gc_section_token.
+      END OF c_section_token.
 
     CLASS-METHODS:
       set_msg_vars_for_clike
@@ -168,7 +168,7 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
     DATA:
       lt_stream      TYPE TABLE OF tdline,
       lt_string      TYPE TABLE OF string,
-      ls_string      LIKE LINE OF lt_string,
+      lv_string      LIKE LINE OF lt_string,
       lt_itf         TYPE tline_tab,
       lv_has_content TYPE abap_bool,
       lv_tabix_from  TYPE syst-tabix,
@@ -225,11 +225,11 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
         itf_text     = lt_itf
         text_stream  = lt_stream.
 
-    LOOP AT lt_string INTO ls_string.
+    LOOP AT lt_string INTO lv_string.
       IF sy-tabix = 1.
-        rv_result = ls_string.
+        rv_result = lv_string.
       ELSE.
-        CONCATENATE rv_result ls_string
+        CONCATENATE rv_result lv_string
                     INTO rv_result
                     SEPARATED BY cl_abap_char_utilities=>newline.
       ENDIF.
@@ -247,14 +247,14 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
   METHOD replace_section_head_with_text.
 
     CASE cs_itf-tdline.
-      WHEN gc_section_token-cause.
-        cs_itf-tdline = gc_section_text-cause.
-      WHEN gc_section_token-system_response.
-        cs_itf-tdline = gc_section_text-system_response.
-      WHEN gc_section_token-what_to_do.
-        cs_itf-tdline = gc_section_text-what_to_do.
-      WHEN gc_section_token-sys_admin.
-        cs_itf-tdline = gc_section_text-sys_admin.
+      WHEN c_section_token-cause.
+        cs_itf-tdline = c_section_text-cause.
+      WHEN c_section_token-system_response.
+        cs_itf-tdline = c_section_text-system_response.
+      WHEN c_section_token-what_to_do.
+        cs_itf-tdline = c_section_text-what_to_do.
+      WHEN c_section_token-sys_admin.
+        cs_itf-tdline = c_section_text-sys_admin.
     ENDCASE.
 
   ENDMETHOD.
@@ -275,20 +275,20 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
 
   METHOD set_single_msg_var.
 
-    FIELD-SYMBOLS <lv_arg> TYPE any.
+    FIELD-SYMBOLS <lg_arg> TYPE any.
 
     IF iv_arg IS INITIAL.
       RETURN.
     ENDIF.
 
-    ASSIGN me->(iv_arg) TO <lv_arg>.
+    ASSIGN me->(iv_arg) TO <lg_arg>.
     IF sy-subrc <> 0.
       CONCATENATE '&' iv_arg '&' INTO rv_target.
       RETURN.
     ENDIF.
 
     TRY.
-        rv_target = set_single_msg_var_clike( iv_arg = <lv_arg> ).
+        rv_target = set_single_msg_var_clike( iv_arg = <lg_arg> ).
 
         RETURN.
 
@@ -296,7 +296,7 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        rv_target = set_single_msg_var_numeric( iv_arg = <lv_arg> ).
+        rv_target = set_single_msg_var_numeric( iv_arg = <lg_arg> ).
 
         RETURN.
 
@@ -304,7 +304,7 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
     ENDTRY.
 
     TRY.
-        rv_target = set_single_msg_var_xseq( iv_arg = <lv_arg> ).
+        rv_target = set_single_msg_var_xseq( iv_arg = <lg_arg> ).
 
         RETURN.
 

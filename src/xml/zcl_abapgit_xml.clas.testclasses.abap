@@ -44,7 +44,7 @@ CLASS ltcl_xml IMPLEMENTATION.
     CREATE OBJECT mo_xml.
 
     lv_xml = |<?xml version="1.0"?>|
-          && |<{ mo_xml->c_abapgit_tag } { mo_xml->c_attr_version }="{ zif_abapgit_version=>gc_xml_version }">|
+          && |<{ mo_xml->c_abapgit_tag } { mo_xml->c_attr_version }="{ zif_abapgit_version=>c_xml_version }">|
           && iv_xml
           && |</{ mo_xml->c_abapgit_tag }>|.
 

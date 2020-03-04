@@ -72,8 +72,8 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHC IMPLEMENTATION.
           lv_longtext_id      TYPE enhdocuobject,
           lv_shorttext        TYPE string.
 
-    FIELD-SYMBOLS: <ls_composite_child> TYPE enhcompositename,
-                   <ls_enh_child>       LIKE LINE OF lt_enh_childs.
+    FIELD-SYMBOLS: <lv_composite_child> TYPE enhcompositename,
+                   <lv_enh_child>       LIKE LINE OF lt_enh_childs.
 
     lv_package = iv_package.
 
@@ -99,12 +99,12 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHC IMPLEMENTATION.
 
         li_enh_composite->if_enh_object_docu~set_shorttext( lv_shorttext ).
 
-        LOOP AT lt_composite_childs ASSIGNING <ls_composite_child>.
-          li_enh_composite->add_composite_child( <ls_composite_child> ).
+        LOOP AT lt_composite_childs ASSIGNING <lv_composite_child>.
+          li_enh_composite->add_composite_child( <lv_composite_child> ).
         ENDLOOP.
 
-        LOOP AT lt_enh_childs ASSIGNING <ls_enh_child>.
-          li_enh_composite->add_enh_child( <ls_enh_child> ).
+        LOOP AT lt_enh_childs ASSIGNING <lv_enh_child>.
+          li_enh_composite->add_enh_child( <lv_enh_child> ).
         ENDLOOP.
 
         li_enh_composite->set_longtext_id( lv_longtext_id ).

@@ -18,7 +18,7 @@ CLASS zcl_abapgit_object_odso DEFINITION
         IMPORTING
           iv_fieldname TYPE string
         CHANGING
-          cs_metadata  TYPE any.
+          cg_metadata  TYPE any.
 ENDCLASS.
 
 
@@ -31,8 +31,8 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
           ls_return  TYPE bapiret2,
           lr_details TYPE REF TO data.
 
-    FIELD-SYMBOLS: <ls_details> TYPE any,
-                   <lv_tstpnm>  TYPE any.
+    FIELD-SYMBOLS: <lg_details> TYPE any,
+                   <lg_tstpnm>  TYPE any.
 
     TRY.
         CREATE DATA lr_details TYPE ('BAPI6116').
@@ -40,7 +40,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |ODSO is not supported on this system| ).
     ENDTRY.
 
-    ASSIGN lr_details->* TO <ls_details>.
+    ASSIGN lr_details->* TO <lg_details>.
 
     lv_dsonam = ms_item-obj_name.
 
@@ -48,16 +48,16 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
       EXPORTING
         odsobject = lv_dsonam
       IMPORTING
-        details   = <ls_details>
+        details   = <lg_details>
         return    = ls_return.
 
     IF ls_return-type = 'E'.
       zcx_abapgit_exception=>raise( |Error when geting changed by of ODSO: { ls_return-message }| ).
     ENDIF.
 
-    ASSIGN COMPONENT 'TSTPNM' OF STRUCTURE <ls_details> TO <lv_tstpnm>.
+    ASSIGN COMPONENT 'TSTPNM' OF STRUCTURE <lg_details> TO <lg_tstpnm>.
 
-    rv_user = <lv_tstpnm>.
+    rv_user = <lg_tstpnm>.
 
   ENDMETHOD.
 
@@ -121,7 +121,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
           ls_return      TYPE bapiret2.
 
     FIELD-SYMBOLS:
-      <ls_details>     TYPE any,
+      <lg_details>     TYPE any,
       <lt_infoobjects> TYPE STANDARD TABLE,
       <lt_navigation>  TYPE STANDARD TABLE,
       <lt_indexes>     TYPE STANDARD TABLE,
@@ -137,14 +137,14 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |ODSO is not supported on this system| ).
     ENDTRY.
 
-    ASSIGN lr_details->*     TO <ls_details>.
+    ASSIGN lr_details->*     TO <lg_details>.
     ASSIGN lr_infoobjects->* TO <lt_infoobjects>.
     ASSIGN lr_navigation->*  TO <lt_navigation>.
     ASSIGN lr_indexes->*     TO <lt_indexes>.
     ASSIGN lr_index_iobj->*  TO <lt_index_iobj>.
 
     io_xml->read( EXPORTING iv_name = 'ODSO'
-                  CHANGING  cg_data = <ls_details> ).
+                  CHANGING  cg_data = <lg_details> ).
 
     io_xml->read( EXPORTING iv_name = 'INFOOBJECTS'
                   CHANGING  cg_data =  <lt_infoobjects> ).
@@ -160,7 +160,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
     TRY.
         CALL FUNCTION 'BAPI_ODSO_CREATE'
           EXPORTING
-            details              = <ls_details>
+            details              = <lg_details>
           IMPORTING
             odsobject            = lv_dsonam
           TABLES
@@ -279,7 +279,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
           ls_return      TYPE bapiret2.
 
     FIELD-SYMBOLS:
-      <ls_details>     TYPE any,
+      <lg_details>     TYPE any,
       <lt_infoobjects> TYPE STANDARD TABLE,
       <lt_navigation>  TYPE STANDARD TABLE,
       <lt_indexes>     TYPE STANDARD TABLE,
@@ -295,7 +295,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |ODSO is not supported on this system| ).
     ENDTRY.
 
-    ASSIGN lr_details->*     TO <ls_details>.
+    ASSIGN lr_details->*     TO <lg_details>.
     ASSIGN lr_infoobjects->* TO <lt_infoobjects>.
     ASSIGN lr_navigation->*  TO <lt_navigation>.
     ASSIGN lr_indexes->*     TO <lt_indexes>.
@@ -307,7 +307,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
       EXPORTING
         odsobject            = lv_dsonam
       IMPORTING
-        details              = <ls_details>
+        details              = <lg_details>
         return               = ls_return
       TABLES
         infoobjects          = <lt_infoobjects>
@@ -320,19 +320,19 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
     ENDIF.
 
     clear_field( EXPORTING iv_fieldname = 'TSTPNM'
-                 CHANGING  cs_metadata  = <ls_details> ).
+                 CHANGING  cg_metadata  = <lg_details> ).
 
     clear_field( EXPORTING iv_fieldname = 'TIMESTMP'
-                 CHANGING  cs_metadata  = <ls_details> ).
+                 CHANGING  cg_metadata  = <lg_details> ).
 
     clear_field( EXPORTING iv_fieldname = 'CONTTIMESTMP'
-                 CHANGING  cs_metadata  = <ls_details> ).
+                 CHANGING  cg_metadata  = <lg_details> ).
 
     clear_field( EXPORTING iv_fieldname = 'OWNER'
-                 CHANGING  cs_metadata  = <ls_details> ).
+                 CHANGING  cg_metadata  = <lg_details> ).
 
     io_xml->add( iv_name = 'ODSO'
-                 ig_data = <ls_details> ).
+                 ig_data = <lg_details> ).
 
     io_xml->add( iv_name = 'INFOOBJECTS'
                  ig_data = <lt_infoobjects> ).
@@ -353,7 +353,7 @@ CLASS zcl_abapgit_object_odso IMPLEMENTATION.
     FIELD-SYMBOLS: <lg_field> TYPE data.
 
     ASSIGN COMPONENT iv_fieldname
-           OF STRUCTURE cs_metadata
+           OF STRUCTURE cg_metadata
            TO <lg_field>.
     ASSERT sy-subrc = 0.
 

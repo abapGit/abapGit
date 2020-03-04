@@ -3,7 +3,7 @@ CLASS zcl_abapgit_diff DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    CONSTANTS co_starting_beacon TYPE i VALUE 1.
+    CONSTANTS c_starting_beacon TYPE i VALUE 1.
 
 * assumes data is UTF8 based with newlines
 * only works with lines up to 255 characters
@@ -176,7 +176,7 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
 
   METHOD map_beacons.
 
-    DATA: lv_beacon_idx  TYPE i VALUE co_starting_beacon,
+    DATA: lv_beacon_idx  TYPE i VALUE c_starting_beacon,
           lv_offs        TYPE i,
           lv_beacon_str  TYPE string,
           lv_beacon_2lev TYPE string,
@@ -403,16 +403,16 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
 
     DATA: lo_regex TYPE REF TO cl_abap_regex,
           lt_regex TYPE zif_abapgit_definitions=>ty_string_tt,
-          ls_regex LIKE LINE OF lt_regex.
+          lv_regex LIKE LINE OF lt_regex.
 
     APPEND '^\s*(CLASS|FORM|MODULE|REPORT|METHOD)\s' TO lt_regex.
     APPEND '^\s*START-OF-' TO lt_regex.
     APPEND '^\s*INITIALIZATION(\s|\.)' TO lt_regex.
 
-    LOOP AT lt_regex INTO ls_regex.
+    LOOP AT lt_regex INTO lv_regex.
       CREATE OBJECT lo_regex
         EXPORTING
-          pattern     = ls_regex
+          pattern     = lv_regex
           ignore_case = abap_true.
       APPEND lo_regex TO rt_regex_set.
     ENDLOOP.

@@ -6,9 +6,9 @@ CLASS zcl_abapgit_ecatt_helper DEFINITION
     CLASS-METHODS:
       build_xml_of_object
         IMPORTING
-          im_object_name       TYPE etobj_name
-          im_object_version    TYPE etobj_ver
-          im_object_type       TYPE etobj_type
+          iv_object_name       TYPE etobj_name
+          iv_object_version    TYPE etobj_ver
+          iv_object_type       TYPE etobj_type
           io_download          TYPE REF TO cl_apl_ecatt_download
         RETURNING
           VALUE(rv_xml_stream) TYPE xstring
@@ -32,7 +32,7 @@ CLASS zcl_abapgit_ecatt_helper DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
-      co_xml TYPE int4 VALUE 1. " downport of if_apl_ecatt_xml=>co_xml
+      c_xml TYPE int4 VALUE 1. " downport of if_apl_ecatt_xml=>co_xml
 
 ENDCLASS.
 
@@ -57,9 +57,9 @@ CLASS zcl_abapgit_ecatt_helper IMPLEMENTATION.
           EXPORTING
             im_maintain_function = ''.
 
-        io_download->download( im_object_name    = im_object_name
-                               im_object_version = im_object_version
-                               im_object_type    = im_object_type
+        io_download->download( im_object_name    = iv_object_name
+                               im_object_version = iv_object_version
+                               im_object_type    = iv_object_type
                                im_load_help      = lo_load_help_dummy ).
 
       CATCH cx_ecatt_apl INTO lx_ecatt.
@@ -85,7 +85,7 @@ CLASS zcl_abapgit_ecatt_helper IMPLEMENTATION.
     TRY.
         CALL METHOD cl_apl_ecatt_xml=>('CREATE') " doesn't exist in 702
           EXPORTING
-            im_type = co_xml
+            im_type = c_xml
           RECEIVING
             re_xml  = lo_xml.
 
@@ -114,7 +114,7 @@ CLASS zcl_abapgit_ecatt_helper IMPLEMENTATION.
 
     CALL METHOD cl_apl_ecatt_xml=>('CREATE') " doesn't exist in 702
       EXPORTING
-        im_type = co_xml
+        im_type = c_xml
       RECEIVING
         re_xml  = lo_xml.
 

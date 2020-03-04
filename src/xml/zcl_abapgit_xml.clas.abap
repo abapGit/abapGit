@@ -52,7 +52,7 @@ CLASS zcl_abapgit_xml IMPLEMENTATION.
     DATA: lv_version TYPE string.
     DATA: lv_file    TYPE string.
 
-    lv_version = |abapGit version: { zif_abapgit_version=>gc_abap_version }|. "#EC NOTEXT
+    lv_version = |abapGit version: { zif_abapgit_version=>c_abap_version }|. "#EC NOTEXT
     IF mv_filename IS NOT INITIAL.
       lv_file = |File: { mv_filename }|.  "#EC NOTEXT
     ENDIF.
@@ -156,7 +156,7 @@ CLASS zcl_abapgit_xml IMPLEMENTATION.
     li_element = mi_xml_doc->find_from_name_ns( depth = 0 name = c_abapgit_tag ).
     li_version = li_element->if_ixml_node~get_attributes(
       )->get_named_item_ns( c_attr_version ) ##no_text.
-    IF li_version->get_value( ) <> zif_abapgit_version=>gc_xml_version.
+    IF li_version->get_value( ) <> zif_abapgit_version=>c_xml_version.
       display_version_mismatch( ).
     ENDIF.
 
