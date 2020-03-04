@@ -831,7 +831,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
   METHOD save_authorizations.
 
-    CONSTANTS: lc_hex_chk type x value '04'.
+    CONSTANTS: lc_hex_chk TYPE x VALUE '04'.
     DATA: ls_transaction TYPE tstc.
 
     transaction_read( EXPORTING iv_transaction = iv_transaction
