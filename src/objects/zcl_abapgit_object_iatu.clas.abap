@@ -16,36 +16,36 @@ CLASS zcl_abapgit_object_iatu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING   zcx_abapgit_exception,
       w3_api_load
         IMPORTING is_name     TYPE iacikeyt
-        RETURNING VALUE(ro_template) TYPE REF TO if_w3_api_template
+        RETURNING VALUE(ri_template) TYPE REF TO if_w3_api_template
         RAISING   zcx_abapgit_exception,
       w3_api_set_changeable
         IMPORTING iv_changeable TYPE abap_bool
-                  io_template   TYPE REF TO if_w3_api_template
+                  ii_template   TYPE REF TO if_w3_api_template
         RAISING   zcx_abapgit_exception,
       w3_api_delete
-        IMPORTING io_template TYPE REF TO if_w3_api_template
+        IMPORTING ii_template TYPE REF TO if_w3_api_template
         RAISING   zcx_abapgit_exception,
       w3_api_save
-        IMPORTING io_template TYPE REF TO if_w3_api_template
+        IMPORTING ii_template TYPE REF TO if_w3_api_template
         RAISING   zcx_abapgit_exception,
       w3_api_get_attributes
-        IMPORTING io_template   TYPE REF TO if_w3_api_template
+        IMPORTING ii_template   TYPE REF TO if_w3_api_template
         RETURNING VALUE(rs_attributes) TYPE w3tempattr
         RAISING   zcx_abapgit_exception,
       w3_api_get_source
-        IMPORTING io_template TYPE REF TO if_w3_api_template
+        IMPORTING ii_template TYPE REF TO if_w3_api_template
         RETURNING VALUE(rt_source)   TYPE w3htmltabtype
         RAISING   zcx_abapgit_exception,
       w3_api_create_new
         IMPORTING is_template_data TYPE w3tempattr
-        RETURNING VALUE(ro_template)      TYPE REF TO if_w3_api_template
+        RETURNING VALUE(ri_template)      TYPE REF TO if_w3_api_template
         RAISING   zcx_abapgit_exception,
       w3_api_set_attributes
-        IMPORTING io_template TYPE REF TO if_w3_api_template
+        IMPORTING ii_template TYPE REF TO if_w3_api_template
                   is_attr     TYPE w3tempattr
         RAISING   zcx_abapgit_exception,
       w3_api_set_source
-        IMPORTING io_template TYPE REF TO if_w3_api_template
+        IMPORTING ii_template TYPE REF TO if_w3_api_template
                   it_source   TYPE w3htmltabtype
         RAISING   zcx_abapgit_exception.
 
@@ -58,23 +58,22 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
   METHOD read.
 
-    DATA: lo_template TYPE REF TO if_w3_api_template,
+    DATA: li_template TYPE REF TO if_w3_api_template,
           lt_source   TYPE w3htmltabtype,
           ls_name     TYPE iacikeyt.
 
-
     ls_name = ms_item-obj_name.
 
-    lo_template = w3_api_load( is_name = ls_name ).
+    li_template = w3_api_load( is_name = ls_name ).
 
-    es_attr = w3_api_get_attributes( io_template = lo_template ).
+    es_attr = w3_api_get_attributes( ii_template = li_template ).
 
     CLEAR: es_attr-chname,
            es_attr-tdate,
            es_attr-ttime,
            es_attr-devclass.
 
-    lt_source = w3_api_get_source( io_template = lo_template ).
+    lt_source = w3_api_get_source( ii_template = li_template ).
 
     CONCATENATE LINES OF lt_source INTO ev_source RESPECTING BLANKS.
 
@@ -85,12 +84,12 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
     DATA: lt_source   TYPE w3htmltabtype,
           lv_source   TYPE string,
-          lo_template TYPE REF TO if_w3_api_template.
+          li_template TYPE REF TO if_w3_api_template.
 
 
-    lo_template = w3_api_create_new( is_template_data = is_attr ).
+    li_template = w3_api_create_new( is_template_data = is_attr ).
 
-    w3_api_set_attributes( io_template = lo_template
+    w3_api_set_attributes( ii_template = li_template
                            is_attr     = is_attr ).
 
     lv_source = iv_source.
@@ -102,10 +101,10 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
       APPEND lv_source TO lt_source.
     ENDIF.
 
-    w3_api_set_source( io_template = lo_template
+    w3_api_set_source( ii_template = li_template
                        it_source   = lt_source ).
 
-    w3_api_save( lo_template ).
+    w3_api_save( li_template ).
 
   ENDMETHOD.
 
@@ -117,20 +116,20 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lo_template TYPE REF TO if_w3_api_template,
+    DATA: li_template TYPE REF TO if_w3_api_template,
           ls_name     TYPE iacikeyt.
 
 
     ls_name = ms_item-obj_name.
 
-    lo_template = w3_api_load( is_name = ls_name ).
+    li_template = w3_api_load( is_name = ls_name ).
 
-    w3_api_set_changeable( io_template   = lo_template
+    w3_api_set_changeable( ii_template   = li_template
                            iv_changeable = abap_true ).
 
-    w3_api_delete( io_template = lo_template ).
+    w3_api_delete( ii_template = li_template ).
 
-    w3_api_save( io_template = lo_template ).
+    w3_api_save( ii_template = li_template ).
 
   ENDMETHOD.
 
@@ -230,7 +229,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
       EXPORTING
         p_template_name     = is_name
       IMPORTING
-        p_template          = ro_template
+        p_template          = ri_template
       EXCEPTIONS
         object_not_existing = 1
         permission_failure  = 2
@@ -246,7 +245,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
   METHOD w3_api_set_changeable.
 
-    io_template->if_w3_api_object~set_changeable(
+    ii_template->if_w3_api_object~set_changeable(
       EXPORTING
         p_changeable                 = iv_changeable
       EXCEPTIONS
@@ -272,7 +271,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
   METHOD w3_api_delete.
 
-    io_template->if_w3_api_object~delete(
+    ii_template->if_w3_api_object~delete(
       EXCEPTIONS
         object_not_empty      = 1
         object_not_changeable = 2
@@ -289,7 +288,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
   METHOD w3_api_save.
 
-    io_template->if_w3_api_object~save(
+    ii_template->if_w3_api_object~save(
       EXCEPTIONS
         object_invalid        = 1
         object_not_changeable = 2
@@ -308,7 +307,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
   METHOD w3_api_get_attributes.
 
-    io_template->get_attributes(
+    ii_template->get_attributes(
       IMPORTING
         p_attributes     = rs_attributes
       EXCEPTIONS
@@ -326,7 +325,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
   METHOD w3_api_get_source.
 
-    io_template->get_source(
+    ii_template->get_source(
       IMPORTING
         p_source         = rt_source
       EXCEPTIONS
@@ -349,7 +348,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
         p_template_data          = is_template_data
         p_program_name           = is_template_data-programm
       IMPORTING
-        p_template               = ro_template
+        p_template               = ri_template
       EXCEPTIONS
         object_already_existing  = 1
         object_just_created      = 2
@@ -369,7 +368,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
   METHOD w3_api_set_attributes.
 
-    io_template->set_attributes(
+    ii_template->set_attributes(
       EXPORTING
         p_attributes          = is_attr
       EXCEPTIONS
@@ -390,7 +389,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
 
   METHOD w3_api_set_source.
 
-    io_template->set_source(
+    ii_template->set_source(
       EXPORTING
         p_source              = it_source
       EXCEPTIONS

@@ -106,12 +106,12 @@ CLASS ltcl_no_dependency_injection IMPLEMENTATION.
 
   METHOD no_injection.
 
-    DATA: lo_popups      TYPE REF TO zif_abapgit_popups,
+    DATA: li_popups      TYPE REF TO zif_abapgit_popups,
           lo_class_descr TYPE REF TO cl_abap_classdescr.
 
-    lo_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
 
-    lo_class_descr ?= cl_abap_classdescr=>describe_by_object_ref( lo_popups ).
+    lo_class_descr ?= cl_abap_classdescr=>describe_by_object_ref( li_popups ).
 
     cl_abap_unit_assert=>assert_equals(
       exp = '\CLASS=ZCL_ABAPGIT_POPUPS'
@@ -135,12 +135,12 @@ CLASS ltcl_simple_dependency_inject IMPLEMENTATION.
 
   METHOD simple_injection.
 
-    DATA: lo_popups      TYPE REF TO zif_abapgit_popups,
+    DATA: li_popups      TYPE REF TO zif_abapgit_popups,
           lo_class_descr TYPE REF TO cl_abap_classdescr.
 
-    lo_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
 
-    lo_class_descr ?= cl_abap_classdescr=>describe_by_object_ref( lo_popups ).
+    lo_class_descr ?= cl_abap_classdescr=>describe_by_object_ref( li_popups ).
 
     cl_abap_unit_assert=>assert_equals(
       exp = '\CLASS-POOL=ZCL_ABAPGIT_UI_INJECTOR\CLASS=LTCL_ABAPGIT_POPUPS_MOCK'
