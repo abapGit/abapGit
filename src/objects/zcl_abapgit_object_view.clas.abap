@@ -14,7 +14,7 @@ CLASS zcl_abapgit_object_view DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
                           WITH NON-UNIQUE DEFAULT KEY,
            tty_dd28v TYPE STANDARD TABLE OF dd28v
                           WITH NON-UNIQUE DEFAULT KEY.
-    CONSTANTS: BEGIN OF c_viewclass,
+    CONSTANTS: BEGIN OF co_viewclass,
                  help         TYPE viewclass VALUE 'H',
                  database     TYPE viewclass VALUE 'D',
                  projection   TYPE viewclass VALUE 'P',
@@ -25,7 +25,7 @@ CLASS zcl_abapgit_object_view DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
                  append       TYPE viewclass VALUE 'A',
                  external     TYPE viewclass VALUE 'X',
                  replication  TYPE viewclass VALUE 'R',
-               END OF c_viewclass.
+               END OF co_viewclass.
 
     METHODS:
       read_view
@@ -107,7 +107,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'DD28V_TABLE'
                   CHANGING cg_data = lt_dd28v ).
 
-    corr_insert( iv_package = iv_package ig_object_class = 'DICT' ).
+    corr_insert( iv_package = iv_package iv_object_class = 'DICT' ).
 
     lv_name = ms_item-obj_name. " type conversion
 
@@ -200,7 +200,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
     read_view( IMPORTING es_dd25v = ls_dd25v ).
 
     CASE ls_dd25v-viewclass.
-      WHEN c_viewclass-view_variant.
+      WHEN co_viewclass-view_variant.
 
         CALL FUNCTION 'RS_TOOL_ACCESS'
           EXPORTING

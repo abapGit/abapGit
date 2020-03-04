@@ -25,11 +25,11 @@ CLASS ZCL_ABAPGIT_ENVIRONMENT IMPLEMENTATION.
 
 
   METHOD zif_abapgit_environment~is_merged.
-    DATA lr_marker TYPE REF TO data ##NEEDED.
+    DATA lo_marker TYPE REF TO data ##NEEDED.
 
     IF mv_is_merged = abap_undefined.
       TRY.
-          CREATE DATA lr_marker TYPE REF TO ('LIF_ABAPMERGE_MARKER')  ##no_text.
+          CREATE DATA lo_marker TYPE REF TO ('LIF_ABAPMERGE_MARKER')  ##no_text.
           "No exception --> marker found
           mv_is_merged = abap_true.
 

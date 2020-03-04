@@ -347,7 +347,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
           lo_repo     TYPE REF TO zcl_abapgit_repo.
 
 
-    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-update_local_checksum ) = abap_false.
+    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-update_local_checksum ) = abap_false.
       zcx_abapgit_exception=>raise( 'Not authorized' ).
     ENDIF.
 
@@ -524,7 +524,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       ls_transport_to_branch TYPE zif_abapgit_definitions=>ty_transport_to_branch.
 
 
-    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-transport_to_branch ) = abap_false.
+    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-transport_to_branch ) = abap_false.
       zcx_abapgit_exception=>raise( 'Not authorized' ).
     ENDIF.
 

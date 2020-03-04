@@ -41,14 +41,14 @@ CLASS zcl_abapgit_code_inspector DEFINITION
 
     DATA mv_success TYPE abap_bool .
     CONSTANTS:
-      BEGIN OF c_run_mode,
+      BEGIN OF co_run_mode,
         run_with_popup   TYPE sychar01 VALUE 'P',
         run_after_popup  TYPE sychar01 VALUE 'A',
         run_via_rfc      TYPE sychar01 VALUE 'R',
         run_in_batch     TYPE sychar01 VALUE 'B',
         run_loc_parallel TYPE sychar01 VALUE 'L',
         run_direct       TYPE sychar01 VALUE 'L',
-      END OF c_run_mode .
+      END OF co_run_mode .
     DATA mo_inspection TYPE REF TO cl_ci_inspection .
     DATA mv_name TYPE sci_objs .
     DATA mv_run_mode TYPE sychar01 .
@@ -128,9 +128,9 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
 
     " We have to disable parallelization in batch because of lock errors.
     IF sy-batch = abap_true.
-      mv_run_mode = c_run_mode-run_via_rfc.
+      mv_run_mode = co_run_mode-run_via_rfc.
     ELSE.
-      mv_run_mode = c_run_mode-run_loc_parallel.
+      mv_run_mode = co_run_mode-run_loc_parallel.
     ENDIF.
 
   ENDMETHOD.

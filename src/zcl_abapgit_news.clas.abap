@@ -181,7 +181,7 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
       CREATE OBJECT ro_instance
         EXPORTING
           iv_rawdata          = <ls_file>-data
-          iv_current_version  = zif_abapgit_version=>c_abap_version " TODO refactor
+          iv_current_version  = zif_abapgit_version=>gc_abap_version " TODO refactor
           iv_lastseen_version = normalize_version( lv_last_seen ).
     ENDIF.
 

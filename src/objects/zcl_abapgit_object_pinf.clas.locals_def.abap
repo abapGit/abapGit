@@ -45,7 +45,7 @@ INTERFACE lif_package_interface_facade.
 
     add_elements
       IMPORTING
-        it_elements_data TYPE scomeldata
+        is_elements_data TYPE scomeldata
       RAISING
         zcx_abapgit_exception,
 

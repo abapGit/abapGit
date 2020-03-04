@@ -215,7 +215,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
                                  iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ mv_key }| ).
 
       CLEAR lv_crossout.
-      IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-transport_to_branch ) = abap_false.
+      IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-transport_to_branch ) = abap_false.
         lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
       ENDIF.
       ro_advanced_dropdown->add( iv_txt = 'Transport to Branch'
@@ -241,7 +241,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?{ mv_key }| ).
 
     CLEAR lv_crossout.
-    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-update_local_checksum ) = abap_false.
+    IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-update_local_checksum ) = abap_false.
       lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
     ENDIF.
     ro_advanced_dropdown->add( iv_txt = 'Update local checksums'
@@ -258,7 +258,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
     CLEAR lv_crossout.
     IF mo_repo->get_local_settings( )-write_protected = abap_true
-        OR zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>c_authorization-uninstall ) = abap_false.
+        OR zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-uninstall ) = abap_false.
       lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
     ENDIF.
     ro_advanced_dropdown->add( iv_txt = 'Uninstall'
@@ -933,7 +933,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     " Reinit, for the case of type change
     mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
 
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    CREATE OBJECT ro_html TYPE zcl_abapgit_html.
 
     TRY.
 
@@ -959,74 +959,74 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
                                      CHANGING cv_prev = lv_rstate ).
         ENDLOOP.
 
-        ri_html->add( render_head_line( iv_lstate = lv_lstate
+        ro_html->add( render_head_line( iv_lstate = lv_lstate
                                         iv_rstate = lv_rstate ) ).
 
         li_log = lo_browser->get_log( ).
         IF mo_repo->is_offline( ) = abap_false AND li_log->count( ) > 0.
-          ri_html->add( '<div class="log">' ).
-          ri_html->add( zcl_abapgit_log_viewer=>to_html( li_log ) ). " shows eg. list of unsupported objects
-          ri_html->add( '</div>' ).
+          ro_html->add( '<div class="log">' ).
+          ro_html->add( zcl_abapgit_log_viewer=>to_html( li_log ) ). " shows eg. list of unsupported objects
+          ro_html->add( '</div>' ).
         ENDIF.
 
-        ri_html->add( '<div class="repo_container">' ).
+        ro_html->add( '<div class="repo_container">' ).
 
         " Offline match banner
         IF mo_repo->is_offline( ) = abap_true
             AND mo_repo->has_remote_source( ) = abap_true
             AND lv_lstate IS INITIAL AND lv_rstate IS INITIAL.
-          ri_html->add(
+          ro_html->add(
             |<div class="repo_banner panel success">|
             && |ZIP source is attached and completely <b>matches</b> to the local state|
             && |</div>| ).
         ENDIF.
 
         " Repo content table
-        ri_html->add( '<table class="repo_tab">' ).
+        ro_html->add( '<table class="repo_tab">' ).
 
         IF zcl_abapgit_path=>is_root( mv_cur_dir ) = abap_false.
-          ri_html->add( render_parent_dir( ) ).
+          ro_html->add( render_parent_dir( ) ).
         ENDIF.
 
         IF mv_show_order_by = abap_true.
-          ri_html->add( render_order_by( ) ).
+          ro_html->add( render_order_by( ) ).
         ENDIF.
 
         IF lines( lt_repo_items ) = 0.
-          ri_html->add( render_empty_package( ) ).
+          ro_html->add( render_empty_package( ) ).
         ELSE.
           LOOP AT lt_repo_items ASSIGNING <ls_item>.
             IF mv_max_lines > 0 AND sy-tabix > mv_max_lines.
               lv_max = abap_true.
               EXIT. " current loop
             ENDIF.
-            ri_html->add( render_item( is_item = <ls_item> iv_render_transports = lv_render_transports ) ).
+            ro_html->add( render_item( is_item = <ls_item> iv_render_transports = lv_render_transports ) ).
           ENDLOOP.
         ENDIF.
 
-        ri_html->add( '</table>' ).
+        ro_html->add( '</table>' ).
 
         IF lv_max = abap_true.
-          ri_html->add( '<div class = "dummydiv">' ).
+          ro_html->add( '<div class = "dummydiv">' ).
           IF mv_max_lines = 1.
             lv_max_str = '1 object'.
           ELSE.
             lv_max_str = |first { mv_max_lines } objects|.
           ENDIF.
           lv_add_str = |+{ mv_max_setting }|.
-          ri_html->add( |Only { lv_max_str } shown in list. Display {
+          ro_html->add( |Only { lv_max_str } shown in list. Display {
             zcl_abapgit_html=>a( iv_txt = lv_add_str iv_act = c_actions-display_more )
             } more. (Set in Advanced > {
             zcl_abapgit_html=>a( iv_txt = 'Settings' iv_act = zif_abapgit_definitions=>c_action-go_settings )
             } )| ).
-          ri_html->add( '</div>' ).
+          ro_html->add( '</div>' ).
         ENDIF.
 
-        ri_html->add( '</div>' ).
+        ro_html->add( '</div>' ).
 
       CATCH zcx_abapgit_exception INTO lx_error.
-        ri_html->add( render_head_line( iv_lstate = lv_lstate iv_rstate = lv_rstate ) ).
-        ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
+        ro_html->add( render_head_line( iv_lstate = lv_lstate iv_rstate = lv_rstate ) ).
+        ro_html->add( zcl_abapgit_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
     ENDTRY.
 
   ENDMETHOD.

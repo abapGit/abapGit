@@ -22,7 +22,7 @@ CLASS zcl_abapgit_object_ftgl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         IMPORTING
           iv_fieldname TYPE string
         CHANGING
-          cg_header    TYPE any.
+          cs_header    TYPE any.
 
 ENDCLASS.
 
@@ -78,21 +78,21 @@ CLASS zcl_abapgit_object_ftgl IMPLEMENTATION.
       lo_toggle TYPE REF TO object,
       lx_error  TYPE REF TO cx_root.
 
-    FIELD-SYMBOLS: <lg_toggle> TYPE data.
+    FIELD-SYMBOLS: <ls_toggle> TYPE data.
 
-    ASSIGN mr_toggle->* TO <lg_toggle>.
+    ASSIGN mr_toggle->* TO <ls_toggle>.
     ASSERT sy-subrc = 0.
 
     io_xml->read(
       EXPORTING
         iv_name = 'FTGL'
       CHANGING
-        cg_data = <lg_toggle> ).
+        cg_data = <ls_toggle> ).
 
     TRY.
         CALL METHOD ('CL_FEATURE_TOGGLE_OBJECT')=>create_toggle_by_content
           EXPORTING
-            is_content = <lg_toggle>
+            is_content = <ls_toggle>
           RECEIVING
             ro_toggle  = lo_toggle.
 
@@ -174,9 +174,9 @@ CLASS zcl_abapgit_object_ftgl IMPLEMENTATION.
       lx_error  TYPE REF TO cx_root,
       lo_toggle TYPE REF TO object.
 
-    FIELD-SYMBOLS: <lg_toggle> TYPE data.
+    FIELD-SYMBOLS: <ls_toggle> TYPE data.
 
-    ASSIGN mr_toggle->* TO <lg_toggle>.
+    ASSIGN mr_toggle->* TO <ls_toggle>.
     ASSERT sy-subrc = 0.
 
     TRY.
@@ -194,33 +194,33 @@ CLASS zcl_abapgit_object_ftgl IMPLEMENTATION.
 
     CALL METHOD lo_toggle->('GET_CONTENT')
       RECEIVING
-        rs_content = <lg_toggle>.
+        rs_content = <ls_toggle>.
 
-    clear_field( EXPORTING iv_fieldname = 'HEADER-OWNER'        CHANGING cg_header = <lg_toggle> ).
-    clear_field( EXPORTING iv_fieldname = 'HEADER-CREATED_DATE' CHANGING cg_header = <lg_toggle> ).
-    clear_field( EXPORTING iv_fieldname = 'HEADER-CREATED_TIME' CHANGING cg_header = <lg_toggle> ).
-    clear_field( EXPORTING iv_fieldname = 'HEADER-CHANGEDBY   ' CHANGING cg_header = <lg_toggle> ).
-    clear_field( EXPORTING iv_fieldname = 'HEADER-CHANGED_DATE' CHANGING cg_header = <lg_toggle> ).
-    clear_field( EXPORTING iv_fieldname = 'HEADER-CHANGED_TIME' CHANGING cg_header = <lg_toggle> ).
+    clear_field( EXPORTING iv_fieldname = 'HEADER-OWNER'        CHANGING cs_header = <ls_toggle> ).
+    clear_field( EXPORTING iv_fieldname = 'HEADER-CREATED_DATE' CHANGING cs_header = <ls_toggle> ).
+    clear_field( EXPORTING iv_fieldname = 'HEADER-CREATED_TIME' CHANGING cs_header = <ls_toggle> ).
+    clear_field( EXPORTING iv_fieldname = 'HEADER-CHANGEDBY   ' CHANGING cs_header = <ls_toggle> ).
+    clear_field( EXPORTING iv_fieldname = 'HEADER-CHANGED_DATE' CHANGING cs_header = <ls_toggle> ).
+    clear_field( EXPORTING iv_fieldname = 'HEADER-CHANGED_TIME' CHANGING cs_header = <ls_toggle> ).
 
     io_xml->add(
         iv_name = 'FTGL'
-        ig_data = <lg_toggle> ).
+        ig_data = <ls_toggle> ).
 
   ENDMETHOD.
 
 
   METHOD clear_field.
 
-    FIELD-SYMBOLS: <lg_field> TYPE data.
+    FIELD-SYMBOLS: <lv_field> TYPE data.
 
     ASSIGN
       COMPONENT iv_fieldname
-      OF STRUCTURE cg_header
-      TO <lg_field>.
+      OF STRUCTURE cs_header
+      TO <lv_field>.
     ASSERT sy-subrc = 0.
 
-    CLEAR: <lg_field>.
+    CLEAR: <lv_field>.
 
   ENDMETHOD.
 

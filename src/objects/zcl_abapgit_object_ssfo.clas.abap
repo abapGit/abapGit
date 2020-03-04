@@ -11,7 +11,7 @@ CLASS zcl_abapgit_object_ssfo DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       ty_string_range TYPE RANGE OF string .
 
     CLASS-DATA gt_range_node_codes TYPE ty_string_range .
-    CONSTANTS c_attrib_abapgit_leadig_spaces TYPE string VALUE 'abapgit-leadig-spaces' ##NO_TEXT.
+    CONSTANTS attrib_abapgit_leadig_spaces TYPE string VALUE 'abapgit-leadig-spaces' ##NO_TEXT.
 
     METHODS fix_ids
       IMPORTING
@@ -177,7 +177,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
                                     CHANGING  cv_within_code_section = cv_within_code_section ).
 
 * for downwards compatibility, this code can be removed sometime in the future
-        lv_leading_spaces = li_element->get_attribute_ns( name = c_attrib_abapgit_leadig_spaces ).
+        lv_leading_spaces = li_element->get_attribute_ns( name = attrib_abapgit_leadig_spaces ).
 
         lv_coding_line = li_element->get_value( ).
         IF strlen( lv_coding_line ) >= 1 AND lv_coding_line(1) <> | |.

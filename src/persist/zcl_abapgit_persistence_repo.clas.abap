@@ -40,7 +40,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_persistence_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -227,10 +227,10 @@ CLASS zcl_abapgit_persistence_repo IMPLEMENTATION.
       lv_blob            TYPE zif_abapgit_persistence=>ty_content-data_str,
       ls_persistent_meta TYPE zif_abapgit_persistence=>ty_repo.
 
-    FIELD-SYMBOLS: <lv_field>   LIKE LINE OF mt_meta_fields,
-                   <lg_dst>     TYPE any,
-                   <lg_src>     TYPE any,
-                   <lv_changed> TYPE abap_bool.
+    FIELD-SYMBOLS <lv_field>   LIKE LINE OF mt_meta_fields.
+    FIELD-SYMBOLS <lv_dst>     TYPE any.
+    FIELD-SYMBOLS <lv_src>     TYPE any.
+    FIELD-SYMBOLS <lv_changed> TYPE abap_bool.
 
     ASSERT NOT iv_key IS INITIAL.
 
@@ -254,11 +254,11 @@ CLASS zcl_abapgit_persistence_repo IMPLEMENTATION.
       ASSIGN COMPONENT <lv_field> OF STRUCTURE is_change_mask TO <lv_changed>.
       ASSERT sy-subrc = 0.
       CHECK <lv_changed> = abap_true.
-      ASSIGN COMPONENT <lv_field> OF STRUCTURE ls_persistent_meta TO <lg_dst>.
+      ASSIGN COMPONENT <lv_field> OF STRUCTURE ls_persistent_meta TO <lv_dst>.
       ASSERT sy-subrc = 0.
-      ASSIGN COMPONENT <lv_field> OF STRUCTURE is_meta TO <lg_src>.
+      ASSIGN COMPONENT <lv_field> OF STRUCTURE is_meta TO <lv_src>.
       ASSERT sy-subrc = 0.
-      <lg_dst> = <lg_src>.
+      <lv_dst> = <lv_src>.
     ENDLOOP.
 
     lv_blob = to_xml( ls_persistent_meta ).

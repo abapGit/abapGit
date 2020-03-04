@@ -8,8 +8,7 @@ CLASS zcl_abapgit_object_idoc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         IMPORTING
           is_item     TYPE zif_abapgit_definitions=>ty_item
           iv_language TYPE spras.
-    CLASS-METHODS clear_idoc_segement_fields
-      CHANGING cg_structure TYPE any.
+    CLASS-METHODS clear_idoc_segement_fields CHANGING cs_structure TYPE any.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -21,24 +20,22 @@ CLASS zcl_abapgit_object_idoc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     DATA: mv_idoctyp TYPE edi_iapi00-idoctyp.
 
-    CLASS-METHODS clear_idoc_segement_field
-      IMPORTING iv_fieldname TYPE csequence
-      CHANGING  cg_structure TYPE any.
+    CLASS-METHODS clear_idoc_segement_field  IMPORTING iv_fieldname TYPE csequence CHANGING cs_structure TYPE any.
 
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_idoc IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_IDOC IMPLEMENTATION.
 
 
   METHOD clear_idoc_segement_field.
 
-    FIELD-SYMBOLS <lg_any_field> TYPE any.
+    FIELD-SYMBOLS <lv_any_field> TYPE any.
 
-    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cg_structure TO <lg_any_field>.
+    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_structure TO <lv_any_field>.
     IF sy-subrc = 0.
-      CLEAR <lg_any_field>.
+      CLEAR <lv_any_field>.
     ENDIF.
 
   ENDMETHOD.
@@ -47,21 +44,21 @@ CLASS zcl_abapgit_object_idoc IMPLEMENTATION.
   METHOD clear_idoc_segement_fields.
 
     clear_idoc_segement_field( EXPORTING iv_fieldname = 'DEVC'
-                               CHANGING  cg_structure = cg_structure ).
+                               CHANGING  cs_structure = cs_structure ).
     clear_idoc_segement_field( EXPORTING iv_fieldname = 'PLAST'
-                               CHANGING  cg_structure = cg_structure ).
+                               CHANGING  cs_structure = cs_structure ).
     clear_idoc_segement_field( EXPORTING iv_fieldname = 'PWORK'
-                               CHANGING  cg_structure = cg_structure ).
+                               CHANGING  cs_structure = cs_structure ).
     clear_idoc_segement_field( EXPORTING iv_fieldname = 'PRESP'
-                               CHANGING  cg_structure = cg_structure ).
+                               CHANGING  cs_structure = cs_structure ).
     clear_idoc_segement_field( EXPORTING iv_fieldname = 'CREDATE'
-                               CHANGING  cg_structure = cg_structure ).
+                               CHANGING  cs_structure = cs_structure ).
     clear_idoc_segement_field( EXPORTING iv_fieldname = 'CRETIME'
-                               CHANGING  cg_structure = cg_structure ).
+                               CHANGING  cs_structure = cs_structure ).
     clear_idoc_segement_field( EXPORTING iv_fieldname = 'LDATE'
-                               CHANGING  cg_structure = cg_structure ).
+                               CHANGING  cs_structure = cs_structure ).
     clear_idoc_segement_field( EXPORTING iv_fieldname = 'LTIME'
-                               CHANGING  cg_structure = cg_structure ).
+                               CHANGING  cs_structure = cs_structure ).
   ENDMETHOD.
 
 
@@ -252,7 +249,7 @@ CLASS zcl_abapgit_object_idoc IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    clear_idoc_segement_fields( CHANGING cg_structure = ls_idoc-attributes ).
+    clear_idoc_segement_fields( CHANGING cs_structure = ls_idoc-attributes ).
 
     io_xml->add( iv_name = 'IDOC'
                  ig_data = ls_idoc ).
