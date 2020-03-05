@@ -55,6 +55,7 @@ CLASS ltcl_diff IMPLEMENTATION.
     ls_expected-result  = iv_result.
     ls_expected-old_num = iv_old_num.
     ls_expected-old     = iv_old.
+    ls_expected-beacon  = zcl_abapgit_diff=>co_starting_beacon.
     APPEND ls_expected TO mt_expected.
   ENDMETHOD.
 

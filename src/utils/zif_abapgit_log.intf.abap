@@ -71,8 +71,7 @@ INTERFACE zif_abapgit_log
     RETURNING
       VALUE(rt_msg) TYPE tty_log_out .
   METHODS get_item_status
-    EXPORTING
-      !et_item_status TYPE tty_item_status_out .
+    RETURNING VALUE(rt_item_status) TYPE tty_item_status_out .
   METHODS get_status
     RETURNING
       VALUE(rv_status) TYPE symsgty .

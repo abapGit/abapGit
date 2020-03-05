@@ -24,7 +24,8 @@ CLASS zcl_abapgit_popups DEFINITION
       popup_to_select_from_list     FOR zif_abapgit_popups~popup_to_select_from_list,
       branch_popup_callback         FOR zif_abapgit_popups~branch_popup_callback,
       package_popup_callback        FOR zif_abapgit_popups~package_popup_callback,
-      popup_transport_request       FOR zif_abapgit_popups~popup_transport_request.
+      popup_transport_request       FOR zif_abapgit_popups~popup_transport_request,
+      popup_proxy_bypass            FOR zif_abapgit_popups~popup_proxy_bypass.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -94,7 +95,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
+CLASS zcl_abapgit_popups IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -1198,6 +1199,32 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_popups~popup_proxy_bypass.
+    rt_proxy_bypass = it_proxy_bypass.
+    CALL FUNCTION 'COMPLEX_SELECTIONS_DIALOG'
+      EXPORTING
+        title             = 'Bypass proxy settings for these Hosts & Domains'
+        signed            = abap_false
+        lower_case        = abap_true
+        no_interval_check = abap_true
+      TABLES
+        range             = rt_proxy_bypass
+      EXCEPTIONS
+        no_range_tab      = 1
+        cancelled         = 2
+        internal_error    = 3
+        invalid_fieldname = 4
+        OTHERS            = 5.
+    CASE sy-subrc.
+      WHEN 0.
+      WHEN 2.
+        RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+      WHEN OTHERS.
+        zcx_abapgit_exception=>raise( 'Error from COMPLEX_SELECTIONS_DIALOG' ).
+    ENDCASE.
+  ENDMETHOD.
+
+
   METHOD _popup_3_get_values.
 
     DATA lv_answer TYPE c LENGTH 1.
@@ -1240,4 +1267,5 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
 ENDCLASS.
