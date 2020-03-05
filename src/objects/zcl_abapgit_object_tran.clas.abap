@@ -5,11 +5,14 @@ CLASS zcl_abapgit_object_tran DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
   PROTECTED SECTION.
+
   PRIVATE SECTION.
 
     TYPES:
       tty_param_values TYPE STANDARD TABLE OF rsparam
-                                     WITH NON-UNIQUE DEFAULT KEY .
+                                     WITH NON-UNIQUE DEFAULT KEY ,
+      tty_tstca        TYPE STANDARD TABLE OF tstca
+                                     WITH DEFAULT KEY.
 
     CONSTANTS:
       c_oo_program   TYPE c LENGTH 9 VALUE '\PROGRAM=' ##NO_TEXT,
@@ -27,6 +30,14 @@ CLASS zcl_abapgit_object_tran DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     DATA:
       mt_bcdata TYPE STANDARD TABLE OF bdcdata .
 
+    METHODS transaction_read
+      IMPORTING
+        iv_transaction TYPE tcode
+      EXPORTING
+        es_transaction TYPE tstc
+        es_gui_attr    TYPE tstcc
+      RAISING
+        zcx_abapgit_exception.
     METHODS shift_param
       CHANGING
         !ct_rsparam TYPE s_param
@@ -74,11 +85,50 @@ CLASS zcl_abapgit_object_tran DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !is_rsstcd  TYPE rsstcd
       RAISING
         zcx_abapgit_exception .
+    METHODS save_authorizations
+      IMPORTING
+        iv_transaction    TYPE tstc-tcode
+        it_authorizations TYPE tty_tstca
+      RAISING
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_object_tran IMPLEMENTATION.
+
+
+  METHOD transaction_read.
+
+    DATA: lt_tcodes   TYPE TABLE OF tstc,
+          lt_gui_attr TYPE TABLE OF tstcc.
+
+    CLEAR: es_transaction, es_gui_attr.
+
+    CALL FUNCTION 'RPY_TRANSACTION_READ'
+      EXPORTING
+        transaction      = iv_transaction
+      TABLES
+        tcodes           = lt_tcodes
+        gui_attributes   = lt_gui_attr
+      EXCEPTIONS
+        permission_error = 1
+        cancelled        = 2
+        not_found        = 3
+        object_not_found = 4
+        OTHERS           = 5.
+    IF sy-subrc = 4 OR sy-subrc = 3.
+      RETURN.
+    ELSEIF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error from RPY_TRANSACTION_READ' ).
+    ENDIF.
+
+    READ TABLE lt_tcodes INDEX 1 INTO es_transaction.
+    ASSERT sy-subrc = 0.
+    READ TABLE lt_gui_attr INDEX 1 INTO es_gui_attr.
+    ASSERT sy-subrc = 0.
+
+  ENDMETHOD.
 
 
   METHOD add_data.
@@ -544,6 +594,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
           ls_tstct        TYPE tstct,
           ls_tstcc        TYPE tstcc,
           ls_tstcp        TYPE tstcp,
+          lt_tstca        TYPE tty_tstca,
           lt_param_values TYPE tty_param_values,
           ls_rsstcd       TYPE rsstcd.
 
@@ -560,6 +611,8 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
                   CHANGING cg_data = ls_tstct ).
     io_xml->read( EXPORTING iv_name = 'TSTCP'
                   CHANGING cg_data = ls_tstcp ).
+    io_xml->read( EXPORTING iv_name = 'AUTHORIZATIONS'
+                  CHANGING cg_data = lt_tstca ).
 
     lv_dynpro = ls_tstc-dypno.
 
@@ -629,6 +682,11 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
         ENDIF.
 
     ENDCASE.
+
+    IF lt_tstca IS NOT INITIAL.
+      save_authorizations( iv_transaction    = ls_tstc-tcode
+                           it_authorizations = lt_tstca ).
+    ENDIF.
 
     " Texts deserializing (translations)
     deserialize_texts( io_xml ).
@@ -723,32 +781,20 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA: lv_transaction TYPE tstc-tcode,
-          lt_tcodes      TYPE TABLE OF tstc,
-          ls_tcode       LIKE LINE OF lt_tcodes,
+          ls_tcode       TYPE tstc,
           ls_tstct       TYPE tstct,
           ls_tstcp       TYPE tstcp,
-          lt_gui_attr    TYPE TABLE OF tstcc,
-          ls_gui_attr    LIKE LINE OF lt_gui_attr.
+          lt_tstca       TYPE tty_tstca,
+          ls_gui_attr    TYPE tstcc.
 
 
     lv_transaction = ms_item-obj_name.
 
-    CALL FUNCTION 'RPY_TRANSACTION_READ'
-      EXPORTING
-        transaction      = lv_transaction
-      TABLES
-        tcodes           = lt_tcodes
-        gui_attributes   = lt_gui_attr
-      EXCEPTIONS
-        permission_error = 1
-        cancelled        = 2
-        not_found        = 3
-        object_not_found = 4
-        OTHERS           = 5.
-    IF sy-subrc = 4 OR sy-subrc = 3.
+    transaction_read( EXPORTING iv_transaction = lv_transaction
+                      IMPORTING es_transaction = ls_tcode
+                                es_gui_attr    = ls_gui_attr ).
+    IF ls_tcode IS INITIAL.
       RETURN.
-    ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from RPY_TRANSACTION_READ' ).
     ENDIF.
 
     SELECT SINGLE * FROM tstct INTO ls_tstct
@@ -758,10 +804,11 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     SELECT SINGLE * FROM tstcp INTO ls_tstcp
       WHERE tcode = lv_transaction.       "#EC CI_SUBRC "#EC CI_GENBUFF
 
-    READ TABLE lt_tcodes INDEX 1 INTO ls_tcode.
-    ASSERT sy-subrc = 0.
-    READ TABLE lt_gui_attr INDEX 1 INTO ls_gui_attr.
-    ASSERT sy-subrc = 0.
+    SELECT * FROM tstca INTO TABLE lt_tstca
+      WHERE tcode = lv_transaction.
+    IF sy-subrc <> 0.
+      CLEAR: lt_tstca.
+    ENDIF.
 
     io_xml->add( iv_name = 'TSTC'
                  ig_data = ls_tcode ).
@@ -773,9 +820,32 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
       io_xml->add( iv_name = 'TSTCP'
                    ig_data = ls_tstcp ).
     ENDIF.
+    io_xml->add( iv_name = 'AUTHORIZATIONS'
+                 ig_data = lt_tstca ).
 
     " Texts serializing (translations)
     serialize_texts( io_xml ).
 
   ENDMETHOD.
+
+
+  METHOD save_authorizations.
+
+    CONSTANTS: lc_hex_chk TYPE x VALUE '04'.
+    DATA: ls_transaction TYPE tstc.
+
+    transaction_read( EXPORTING iv_transaction = iv_transaction
+                      IMPORTING es_transaction = ls_transaction ).
+
+    DELETE FROM tstca WHERE tcode = iv_transaction.
+
+    IF ls_transaction IS NOT INITIAL.
+      INSERT tstca FROM TABLE it_authorizations.
+      ls_transaction-cinfo = ls_transaction-cinfo + lc_hex_chk.
+      UPDATE tstc SET cinfo = ls_transaction-cinfo WHERE tcode = ls_transaction-tcode.
+    ENDIF.
+
+  ENDMETHOD.
+
+
 ENDCLASS.
