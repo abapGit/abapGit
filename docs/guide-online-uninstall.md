@@ -15,4 +15,4 @@ order: 30
 
 * It will now delete all objects in the package specified when installing the repository.
 
-In contrast to "Uninstall": Clicking the button "remove" deletes the reference between the git repository and the ABAP package but does not uninstall the associated ABAP package from the system.
+In contrast to "Uninstall" clicking the "remove" button deletes the reference between the git repository and the ABAP package but does not uninstall the associated ABAP package from the system.
