@@ -767,8 +767,9 @@ DiffHelper.prototype.highlightButton = function(state) {
 };
 
 //Collapse/Expand diffs
-onDiffCollapse = function() {
-  window.alert("ok");
+onDiffCollapse = function(event) {
+  var source = event.target || event.srcElement;
+  window.alert("source");
 };
 
 // Add Bottom margin, so that we can scroll to the top of the last file
