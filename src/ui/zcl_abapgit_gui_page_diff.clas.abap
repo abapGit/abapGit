@@ -195,7 +195,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
 
   METHOD add_filter_sub_menu.
-    "testtesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttesttest
+  
     DATA:
       lo_sub_filter TYPE REF TO zcl_abapgit_html_toolbar,
       lt_types      TYPE string_table,
