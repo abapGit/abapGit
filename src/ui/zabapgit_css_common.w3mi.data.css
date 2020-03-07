@@ -433,7 +433,7 @@ table.diff_tab tbody tr:first-child td { padding-top: 0.5em; }
 table.diff_tab tbody tr:last-child td { padding-bottom: 0.5em; }
 
 table.diff_tab td.mark, th.mark {
-  width: 0.1%;
+  width: 50%;
   -ms-user-select: none;
   user-select: none;
   cursor: default;
