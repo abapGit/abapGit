@@ -447,7 +447,8 @@ table.diff_tab th.collapse {
 }
 
 table.diff_tab a.collapse {
-  text-decoration:none;
+  text-decoration: none !important;
+  color: inherit;
   user-select: none;
 }
 

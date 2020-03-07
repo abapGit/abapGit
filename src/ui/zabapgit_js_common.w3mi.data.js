@@ -25,6 +25,7 @@
 /* exported enumerateTocAllRepos */
 /* exported enumerateJumpAllFiles */
 /* exported enumerateToolbarActions */
+/* exported onDiffCollapse*/
 
 /**********************************************************
  * Polyfills
@@ -763,6 +764,11 @@ DiffHelper.prototype.highlightButton = function(state) {
   } else {
     this.dom.filterButton.classList.remove("bgorange");
   }
+};
+
+//Collapse/Expand diffs
+onDiffCollapse = function() {
+  window.alert("ok");
 };
 
 // Add Bottom margin, so that we can scroll to the top of the last file
