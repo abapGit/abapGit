@@ -448,6 +448,7 @@ table.diff_tab th.collapse {
 
 table.diff_tab a.collapse {
   text-decoration:none;
+  user-select: none;
 }
 
 .diff_select_left td.diff_right,
