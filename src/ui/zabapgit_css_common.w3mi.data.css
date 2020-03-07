@@ -439,6 +439,17 @@ table.diff_tab td.mark, th.mark {
   cursor: default;
 }
 
+table.diff_tab th.collapse {
+  width: 0.1%;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+
+table.diff_tab a.collapse {
+  text-decoration:none;
+}
+
 .diff_select_left td.diff_right,
 .diff_select_left td.diff_right *,
 .diff_select_left th.diff_right,
