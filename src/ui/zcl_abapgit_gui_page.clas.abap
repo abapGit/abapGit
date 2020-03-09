@@ -482,42 +482,42 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     " Redirect
     IF ms_control-redirect_url IS NOT INITIAL.
-      ro_html = redirect( ).
+      ri_html = redirect( ).
       RETURN.
     ENDIF.
 
     mt_hotkeys = define_hotkeys( ).
 
     " Real page
-    CREATE OBJECT ro_html TYPE zcl_abapgit_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( '<!DOCTYPE html>' ).                      "#EC NOTEXT
-    ro_html->add( '<html>' ).                               "#EC NOTEXT
-    ro_html->add( html_head( ) ).
-    ro_html->add( '<body>' ).                               "#EC NOTEXT
-    ro_html->add( title( ) ).
-    ro_html->add( render_hotkey_overview( ) ).
-    ro_html->add( render_content( ) ).
-    ro_html->add( render_error_message_box( ) ).
+    ri_html->add( '<!DOCTYPE html>' ).                      "#EC NOTEXT
+    ri_html->add( '<html>' ).                               "#EC NOTEXT
+    ri_html->add( html_head( ) ).
+    ri_html->add( '<body>' ).                               "#EC NOTEXT
+    ri_html->add( title( ) ).
+    ri_html->add( render_hotkey_overview( ) ).
+    ri_html->add( render_content( ) ).
+    ri_html->add( render_error_message_box( ) ).
 
     lt_events = me->get_events( ).
     LOOP AT lt_events ASSIGNING <ls_event>.
-      ro_html->add( render_event_as_form( <ls_event> ) ).
+      ri_html->add( render_event_as_form( <ls_event> ) ).
     ENDLOOP.
 
-    ro_html->add( footer( ) ).
-    ro_html->add( '</body>' ).                              "#EC NOTEXT
+    ri_html->add( footer( ) ).
+    ri_html->add( '</body>' ).                              "#EC NOTEXT
 
     lo_script = scripts( ).
 
     IF lo_script IS BOUND AND lo_script->is_empty( ) = abap_false.
-      ro_html->add( '<script type="text/javascript">' ).
-      ro_html->add( lo_script ).
-      ro_html->add( 'confirmInitialized();' ).
-      ro_html->add( '</script>' ).
+      ri_html->add( '<script type="text/javascript">' ).
+      ri_html->add( lo_script ).
+      ri_html->add( 'confirmInitialized();' ).
+      ri_html->add( '</script>' ).
     ENDIF.
 
-    ro_html->add( '</html>' ).                              "#EC NOTEXT
+    ri_html->add( '</html>' ).                              "#EC NOTEXT
 
   ENDMETHOD.
 ENDCLASS.

@@ -52,7 +52,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SOTS IMPLEMENTATION.
           lv_source_langu          TYPE spras,
           ls_header                TYPE btfr_head,
           lv_flag_is_string        TYPE btfr_flag VALUE abap_true,
-          lv_text_tab              TYPE sotr_text_tt,
+          lt_text_tab              TYPE sotr_text_tt,
           lv_concept_default       TYPE sotr_conc,
           lt_entries               TYPE sotr_textl_tt,
           lv_concept               LIKE is_sots-header-concept,
@@ -72,7 +72,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SOTS IMPLEMENTATION.
             lv_source_langu
             lv_flag_correction_entry
             lv_flag_is_string
-      CHANGING lv_text_tab
+      CHANGING lt_text_tab
                lt_entries
                ls_header
                lv_concept

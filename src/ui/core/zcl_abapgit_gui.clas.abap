@@ -30,7 +30,7 @@ CLASS zcl_abapgit_gui DEFINITION
 
     METHODS go_page
       IMPORTING
-        io_page        TYPE REF TO zif_abapgit_gui_renderable
+        ii_page        TYPE REF TO zif_abapgit_gui_renderable
         iv_clear_stack TYPE abap_bool DEFAULT abap_true
       RAISING
         zcx_abapgit_exception.
@@ -279,7 +279,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       CLEAR mt_stack.
     ENDIF.
 
-    mi_cur_page = io_page.
+    mi_cur_page = ii_page.
     render( ).
 
   ENDMETHOD.

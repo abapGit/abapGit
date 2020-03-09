@@ -236,8 +236,8 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
         iv_object                  = 'DEVC'
         iv_obj_name                = lv_pkg_name
       IMPORTING
-        ev_request_type            = rv_transport_type-request
-        ev_task_type               = rv_transport_type-task
+        ev_request_type            = rs_transport_type-request
+        ev_task_type               = rs_transport_type-task
       EXCEPTIONS
         no_request_needed          = 1
         internal_error             = 2

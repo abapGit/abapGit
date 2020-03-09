@@ -160,7 +160,7 @@ CLASS lcl_package_interface_facade IMPLEMENTATION.
 
     mi_interface->add_elements(
       EXPORTING
-        i_elements_data        = is_elements_data
+        i_elements_data        = it_elements_data
       EXCEPTIONS
         object_invalid         = 1
         intern_err             = 2
