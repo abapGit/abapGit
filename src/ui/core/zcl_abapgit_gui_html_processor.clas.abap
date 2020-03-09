@@ -80,8 +80,8 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR IMPLEMENTATION.
     DATA lv_len TYPE i.
     DATA lv_cur TYPE i.
 
-    DATA lc_css_build TYPE string VALUE '<link rel="stylesheet" type="text/css" href="$BUILD_NAME">'.
-    REPLACE FIRST OCCURRENCE OF '$BUILD_NAME' IN lc_css_build WITH c_css_build_name. " Mmmm
+    DATA lv_css_build TYPE string VALUE '<link rel="stylesheet" type="text/css" href="$BUILD_NAME">'.
+    REPLACE FIRST OCCURRENCE OF '$BUILD_NAME' IN lv_css_build WITH c_css_build_name. " Mmmm
 
     CLEAR: ev_html, et_css_urls.
 
@@ -112,7 +112,7 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR IMPLEMENTATION.
         && c_preprocess_marker
         && cl_abap_char_utilities=>newline
         && `    `.
-      ev_html = ev_html && lv_marker && lc_css_build.
+      ev_html = ev_html && lv_marker && lv_css_build.
     ENDIF.
     ev_html = ev_html && substring( val = iv_html off = lv_head_end ).
 

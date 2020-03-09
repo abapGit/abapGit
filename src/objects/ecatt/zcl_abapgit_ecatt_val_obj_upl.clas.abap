@@ -221,18 +221,18 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lg_ecatt_vo> TYPE any,
                    <lg_params>   TYPE data,
-                   <lv_d_akh>    TYPE data,
-                   <lv_i_akh>    TYPE data.
+                   <lg_d_akh>    TYPE data,
+                   <lg_i_akh>    TYPE data.
 
     TRY.
         ch_object-i_devclass = ch_object-d_devclass.
 
         ASSIGN COMPONENT 'D_AKH' OF STRUCTURE ch_object
-               TO <lv_d_akh>. " doesn't exist in 702
+               TO <lg_d_akh>. " doesn't exist in 702
         ASSIGN COMPONENT 'I_AKH' OF STRUCTURE ch_object
-               TO <lv_i_akh>. " doesn't exist in 702
-        IF <lv_d_akh> IS ASSIGNED AND <lv_i_akh> IS ASSIGNED.
-          <lv_i_akh> = <lv_d_akh>.
+               TO <lg_i_akh>. " doesn't exist in 702
+        IF <lg_d_akh> IS ASSIGNED AND <lg_i_akh> IS ASSIGNED.
+          <lg_i_akh> = <lg_d_akh>.
         ENDIF.
 
         super->upload( CHANGING ch_object = ch_object ).

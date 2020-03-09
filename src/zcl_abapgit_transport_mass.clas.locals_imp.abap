@@ -116,7 +116,7 @@ CLASS lcl_transport_zipper DEFINITION FINAL.
                          RAISING   zcx_abapgit_exception.
 
     METHODS generate_files IMPORTING it_trkorr TYPE trwbo_request_headers
-                                     iv_logic  TYPE any
+                                     ig_logic  TYPE any
                            RAISING   zcx_abapgit_exception.
 
     METHODS get_folder RETURNING VALUE(rv_full_folder) TYPE ty_folder.
@@ -126,9 +126,9 @@ CLASS lcl_transport_zipper DEFINITION FINAL.
                                     RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
-    DATA: gv_timestamp   TYPE string,
-          gv_separator   TYPE c,
-          gv_full_folder TYPE ty_folder.
+    DATA: mv_timestamp   TYPE string,
+          mv_separator   TYPE c,
+          mv_full_folder TYPE ty_folder.
 
     METHODS get_full_folder IMPORTING iv_folder             TYPE ty_folder
                             RETURNING VALUE(rv_full_folder) TYPE ty_folder
@@ -143,26 +143,26 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
 
   METHOD constructor.
 
-    CONCATENATE sy-datlo sy-timlo INTO me->gv_timestamp SEPARATED BY '_'.
+    CONCATENATE sy-datlo sy-timlo INTO me->mv_timestamp SEPARATED BY '_'.
 
-    me->gv_full_folder = get_full_folder( iv_folder = iv_folder ).
+    me->mv_full_folder = get_full_folder( iv_folder = iv_folder ).
 
     cl_gui_frontend_services=>get_file_separator(
       CHANGING
-        file_separator       = gv_separator
+        file_separator       = mv_separator
       EXCEPTIONS
         cntl_error           = 1
         error_no_gui         = 2
         not_supported_by_gui = 3
         OTHERS               = 4 ).
     IF sy-subrc <> 0.
-      gv_separator = '\'. "Default MS Windows separator
+      mv_separator = '\'. "Default MS Windows separator
     ENDIF.
 
   ENDMETHOD.
 
   METHOD get_folder.
-    rv_full_folder = gv_full_folder.
+    rv_full_folder = mv_full_folder.
   ENDMETHOD.
 
   METHOD does_folder_exist.
@@ -203,7 +203,7 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
     ENDIF.
 
     CONCATENATE iv_folder
-                gv_timestamp
+                mv_timestamp
            INTO rv_full_folder SEPARATED BY lv_sep.
 
     IF does_folder_exist( iv_folder = rv_full_folder ) = abap_false.
@@ -235,13 +235,13 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
   METHOD get_filename.
 
 * Generate filename
-    CONCATENATE is_trkorr-trkorr '_' is_trkorr-as4text '_' gv_timestamp gc_zip_ext
+    CONCATENATE is_trkorr-trkorr '_' is_trkorr-as4text '_' mv_timestamp gc_zip_ext
       INTO rv_filename.
 
 * Remove reserved characters (for Windows based systems)
     TRANSLATE rv_filename USING '/ \ : " * > < ? | '.
 
-    CONCATENATE gv_full_folder rv_filename INTO rv_filename SEPARATED BY gv_separator.
+    CONCATENATE mv_full_folder rv_filename INTO rv_filename SEPARATED BY mv_separator.
 
   ENDMETHOD.
 
@@ -253,7 +253,7 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
     LOOP AT it_trkorr INTO ls_trkorr.
 
       lv_zipbinstring = zcl_abapgit_transport_mass=>zip( is_trkorr         = ls_trkorr
-                                                         iv_logic          = iv_logic
+                                                         iv_logic          = ig_logic
                                                          iv_show_log_popup = abap_false ).
 
       zcl_abapgit_zip=>save_binstring_to_localfile( iv_binstring = lv_zipbinstring

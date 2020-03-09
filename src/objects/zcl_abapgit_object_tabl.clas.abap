@@ -335,9 +335,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
       ENDIF.
 
       zcl_abapgit_object_idoc=>clear_idoc_segement_fields(
-                                 CHANGING cs_structure = ls_segment_definition-segmentdefinition ).
+                                 CHANGING cg_structure = ls_segment_definition-segmentdefinition ).
       zcl_abapgit_object_idoc=>clear_idoc_segement_fields(
-                                 CHANGING cs_structure = ls_segment_definition-segmentheader ).
+                                 CHANGING cg_structure = ls_segment_definition-segmentheader ).
 
       APPEND ls_segment_definition TO lt_segment_definitions.
     ENDLOOP.
@@ -495,7 +495,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
       io_xml->read( EXPORTING iv_name = 'DD36M'
                     CHANGING cg_data = lt_dd36m ).
 
-      corr_insert( iv_package = iv_package iv_object_class = 'DICT' ).
+      corr_insert( iv_package = iv_package ig_object_class = 'DICT' ).
 
       lv_name = ms_item-obj_name. " type conversion
 
