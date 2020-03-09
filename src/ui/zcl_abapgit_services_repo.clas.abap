@@ -72,7 +72,9 @@ public section.
       ZCX_ABAPGIT_EXCEPTION .
   class-methods HANDLE_CUSTOMIZING
     importing
-      !IV_REPOSITORY_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_VALUE .
+      !IV_REPOSITORY_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_VALUE
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -553,7 +555,24 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
   METHOD handle_customizing.
 
-   break gorer.
+*   Customizing transport popup for selection
+    DATA(ls_request_header) = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_customizing_tr( ).
+
+    DATA(ls_request_details) = VALUE trwbo_request( h = ls_request_header ).
+
+*   Read request details
+    CALL FUNCTION 'TR_READ_REQUEST'
+      EXPORTING
+        iv_read_objs_keys = abap_true
+      CHANGING
+        cs_request        = ls_request_details
+      EXCEPTIONS
+        error_occured     = 1
+        no_authorization  = 2
+        OTHERS            = 3.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'error from TR_READ_REQUEST' ).
+    ENDIF. " IF sy-subrc <> 0
 
   ENDMETHOD.
 ENDCLASS.

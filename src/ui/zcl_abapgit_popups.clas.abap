@@ -95,7 +95,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_popups IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -1268,4 +1268,18 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD zif_abapgit_popups~popup_to_select_customizing_tr.
+
+*   Customizing transport selection
+    CALL FUNCTION 'TR_F4_REQUESTS'
+      EXPORTING
+        iv_trfunctions          = 'W'
+        iv_trstatus             = 'D'
+        iv_client               = sy-mandt
+        iv_via_selection_screen = abap_false
+      IMPORTING
+        es_selected_request     = rs_request_header.
+
+  ENDMETHOD.
 ENDCLASS.
