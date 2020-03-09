@@ -537,6 +537,11 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-repo_transport_to_branch.
         zcl_abapgit_services_repo=>transport_to_branch( lv_key ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN zif_abapgit_definitions=>c_action-repo_handle_customizing. " repo_handle_customizing
+        zcl_abapgit_services_repo=>handle_customizing( lv_key ).
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+
       WHEN zif_abapgit_definitions=>c_action-repo_settings.
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_repo_sett
           EXPORTING
@@ -689,5 +694,4 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
-
 ENDCLASS.

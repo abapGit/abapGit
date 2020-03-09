@@ -425,6 +425,7 @@ INTERFACE zif_abapgit_definitions
       repo_refresh_checksums        TYPE string VALUE 'repo_refresh_checksums',
       repo_toggle_fav               TYPE string VALUE 'repo_toggle_fav',
       repo_transport_to_branch      TYPE string VALUE 'repo_transport_to_branch',
+      repo_handle_customizing       TYPE string VALUE 'repo_handle_customizing',
       repo_syntax_check             TYPE string VALUE 'repo_syntax_check',
       repo_code_inspector           TYPE string VALUE 'repo_code_inspector',
       repo_open_in_master_lang      TYPE string VALUE 'repo_open_in_master_lang',

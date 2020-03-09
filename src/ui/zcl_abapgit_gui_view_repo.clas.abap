@@ -222,6 +222,10 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
                                  iv_act = |{ zif_abapgit_definitions=>c_action-repo_transport_to_branch }?{ mv_key }|
                                  iv_opt = lv_crossout ).
 
+*     Handle customizing
+      ro_advanced_dropdown->add( iv_txt = 'Handle Customizing'
+                                 iv_act = |{ zif_abapgit_definitions=>c_action-repo_handle_customizing }?{ mv_key }| ).
+
     ELSE.
       ro_advanced_dropdown->add( iv_txt = 'Make on-line'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_attach }?{ mv_key }| ).

@@ -1,75 +1,78 @@
-CLASS zcl_abapgit_services_repo DEFINITION
-  PUBLIC
-  FINAL
-  CREATE PUBLIC .
+class ZCL_ABAPGIT_SERVICES_REPO definition
+  public
+  final
+  create public .
 
-  PUBLIC SECTION.
+public section.
 
-    CLASS-METHODS new_online
-      IMPORTING
-        !iv_url        TYPE string
-      RETURNING
-        VALUE(ro_repo) TYPE REF TO zcl_abapgit_repo_online
-      RAISING
-        zcx_abapgit_exception.
-    CLASS-METHODS refresh
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS remove
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception.
-    CLASS-METHODS purge
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception.
-    CLASS-METHODS new_offline
-      RAISING
-        zcx_abapgit_exception.
-    CLASS-METHODS remote_attach
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception.
-    CLASS-METHODS remote_detach
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception.
-    CLASS-METHODS remote_change
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception.
-    CLASS-METHODS refresh_local_checksums
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception.
-    CLASS-METHODS toggle_favorite
-      IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS open_se80
-      IMPORTING
-        !iv_package TYPE devclass
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS transport_to_branch
-      IMPORTING
-        !iv_repository_key TYPE zif_abapgit_persistence=>ty_value
-      RAISING
-        zcx_abapgit_exception.
-    CLASS-METHODS gui_deserialize
-      IMPORTING
-        !io_repo TYPE REF TO zcl_abapgit_repo
-      RAISING
-        zcx_abapgit_exception .
+  class-methods NEW_ONLINE
+    importing
+      !IV_URL type STRING
+    returning
+      value(RO_REPO) type ref to ZCL_ABAPGIT_REPO_ONLINE
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods REFRESH
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods REMOVE
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods PURGE
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods NEW_OFFLINE
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods REMOTE_ATTACH
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods REMOTE_DETACH
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods REMOTE_CHANGE
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods REFRESH_LOCAL_CHECKSUMS
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods TOGGLE_FAVORITE
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods OPEN_SE80
+    importing
+      !IV_PACKAGE type DEVCLASS
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods TRANSPORT_TO_BRANCH
+    importing
+      !IV_REPOSITORY_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_VALUE
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods GUI_DESERIALIZE
+    importing
+      !IO_REPO type ref to ZCL_ABAPGIT_REPO
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  class-methods HANDLE_CUSTOMIZING
+    importing
+      !IV_REPOSITORY_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_VALUE .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -544,6 +547,13 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       io_repository          = lo_repository
       is_transport_to_branch = ls_transport_to_branch
       it_transport_objects   = lt_transport_objects ).
+
+  ENDMETHOD.
+
+
+  METHOD handle_customizing.
+
+   break gorer.
 
   ENDMETHOD.
 ENDCLASS.
