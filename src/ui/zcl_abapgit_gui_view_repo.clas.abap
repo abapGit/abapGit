@@ -484,8 +484,6 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     DATA: lo_settings TYPE REF TO zcl_abapgit_settings,
           lv_package  TYPE devclass.
 
-    super->constructor( ).
-
     mv_key           = iv_key.
     mo_repo          = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     mv_cur_dir       = '/'. " Root
