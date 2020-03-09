@@ -306,19 +306,18 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           lv_duplicates     LIKE LINE OF lt_duplicates,
           lv_all_duplicates TYPE string.
 
-    FIELD-SYMBOLS:
-      <lv_file> LIKE LINE OF it_files.
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
 
     lt_files = it_files.
     SORT lt_files BY path ASCENDING filename ASCENDING.
 
-    LOOP AT lt_files ASSIGNING <lv_file>.
-      IF lv_path = <lv_file>-path AND lv_filename = <lv_file>-filename.
-        CONCATENATE <lv_file>-path <lv_file>-filename INTO lv_duplicates.
+    LOOP AT lt_files ASSIGNING <ls_file>.
+      IF lv_path = <ls_file>-path AND lv_filename = <ls_file>-filename.
+        CONCATENATE <ls_file>-path <ls_file>-filename INTO lv_duplicates.
         APPEND lv_duplicates TO lt_duplicates.
       ENDIF.
-      lv_path = <lv_file>-path.
-      lv_filename = <lv_file>-filename.
+      lv_path = <ls_file>-path.
+      lv_filename = <ls_file>-filename.
     ENDLOOP.
 
     IF lt_duplicates IS NOT INITIAL.

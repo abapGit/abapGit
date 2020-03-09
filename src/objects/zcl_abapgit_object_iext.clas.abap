@@ -203,7 +203,7 @@ CLASS ZCL_ABAPGIT_OBJECT_IEXT IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    zcl_abapgit_object_idoc=>clear_idoc_segement_fields( CHANGING cs_structure = ls_extension-attributes ).
+    zcl_abapgit_object_idoc=>clear_idoc_segement_fields( CHANGING cg_structure = ls_extension-attributes ).
 
     io_xml->add( iv_name = c_dataname_iext
                  ig_data = ls_extension ).

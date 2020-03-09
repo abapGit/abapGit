@@ -67,7 +67,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TTYP IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'DD43V'
                   CHANGING cg_data = lt_dd43v ).
 
-    corr_insert( iv_package = iv_package iv_object_class = 'DICT' ).
+    corr_insert( iv_package = iv_package ig_object_class = 'DICT' ).
 
     lv_name = ms_item-obj_name. " type conversion
 
