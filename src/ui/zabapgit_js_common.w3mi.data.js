@@ -769,6 +769,14 @@ DiffHelper.prototype.highlightButton = function(state) {
 //Collapse/Expand diffs
 onDiffCollapse = function(event) {
   var source = event.target || event.srcElement;
+  var table = source.parentElement.parentElement.parentElement;
+
+  //Invert icon
+  source.setText("a");
+  //Flip lines as hidden
+  for (var i = 0, row; row = table.rows[i]; i++) {
+    console.log(row);
+  }
   window.alert(source);
 };
 
