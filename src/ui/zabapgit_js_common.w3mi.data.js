@@ -784,7 +784,7 @@ onDiffCollapse = function(event) {
       var row = table.rows[i];
       if(i === 0)
         continue; //Skip first line (header-like)
-      hide ? row.classList.add("hidden") : row.classList.remove("hidden");
+      hide ? row.classList.add("nodisplay") : row.classList.remove("nodisplay");
   };
 };
 
