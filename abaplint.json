@@ -76,7 +76,7 @@
     "type_begin_single_include": true,
     "types_naming": false,
     "7bit_ascii": {
-      "exclude": ["zcl_abapgit_utils.clas.testclasses.abap", "zcl_abapgit_gui_page_diff.clas.abap "]
+      "exclude": ["zcl_abapgit_utils.clas.testclasses.abap", "zcl_abapgit_gui_page_diff.clas.abap"]
     },
     "abapdoc": false,
     "check_ddic": true,
