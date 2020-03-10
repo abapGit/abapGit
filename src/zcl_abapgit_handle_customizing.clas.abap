@@ -21,6 +21,16 @@ protected section.
 private section.
 
   types:
+    BEGIN OF ty_bcset_metadata,
+      scprattr TYPE scprattr,
+      scprtext TYPE STANDARD TABLE OF scprtext WITH DEFAULT KEY,
+      scprvals TYPE STANDARD TABLE OF scprvals WITH DEFAULT KEY,
+      scprvall TYPE STANDARD TABLE OF scprvall WITH DEFAULT KEY,
+      scprreca TYPE STANDARD TABLE OF scprreca WITH DEFAULT KEY,
+      scprfldv TYPE STANDARD TABLE OF scprfldv WITH DEFAULT KEY,
+      subprofs TYPE STANDARD TABLE OF scprpprl WITH DEFAULT KEY,
+    END OF ty_bcset_metadata .
+  types:
     BEGIN OF ty_handle_customizing_instance,
       transport_request TYPE trkorr,
       instance          TYPE REF TO zcl_abapgit_handle_customizing,
@@ -41,11 +51,19 @@ private section.
       ZCX_ABAPGIT_EXCEPTION .
   methods CREATE_XML
     importing
-      !IS_STATUS_LIST type SCPR_TRANSP_ENTRY
+      !IV_BCSET_IDX type XSTRING
       !IT_RECORD_ATTRIBUTE type SCPRRECATAB
       !IT_BCSET_VALUES type SCPRVALSTAB
     returning
       value(RO_XML_OUTPUT) type ref to ZCL_ABAPGIT_XML_OUTPUT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods CREATE_OBJECT_FILES
+    importing
+      !IV_BCSET_IDX type XSTRING
+      !IO_XML type ref to ZCL_ABAPGIT_XML_OUTPUT
+    returning
+      value(RO_OBJECT_FILES) type ref to ZCL_ABAPGIT_OBJECTS_FILES
     raising
       ZCX_ABAPGIT_EXCEPTION .
 ENDCLASS.
@@ -134,6 +152,9 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
     DATA: lt_recattr TYPE scprrecatab,
           lt_values  TYPE scprvalstab.
 
+*   Declaration of local workarea
+    DATA: ls_files_and_item TYPE zcl_abapgit_objects=>ty_serialization.
+
 *   Create BC set metadata from transport request
     create_bcset_data_from_tr( ).
 
@@ -172,11 +193,41 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
 
       ENDIF. " IF <ls_recattr_group>-clustname IS NOT INITIAL
 
+*     Generate ID
+      CONCATENATE ls_status_list-pgmid
+                  ls_status_list-object
+                  ls_status_list-obj_name
+      INTO DATA(lv_id).
+
+*     Get hash key value
+      cl_abap_message_digest=>calculate_hash_for_char(
+        EXPORTING
+          if_data        = lv_id              " Data
+        IMPORTING
+          ef_hashxstring = DATA(lv_bcset_idx) " Binary hash value as XString
+      ).
+
 *     Create XML file
-      create_xml( is_status_list      = ls_status_list
-                  it_record_attribute = lt_recattr[]
-                  it_bcset_values     = lt_values[]
-                ).
+      DATA(lo_xml_data) = create_xml( iv_bcset_idx        = lv_bcset_idx
+                                      it_record_attribute = lt_recattr[]
+                                      it_bcset_values     = lt_values[]
+                                    ).
+
+*     Create object files
+      DATA(lo_object_files) = create_object_files( iv_bcset_idx = lv_bcset_idx
+                                                   io_xml       = lo_xml_data  " XML Output
+      ).
+
+      ls_files_and_item-item  = VALUE #( obj_type = 'SCP1' obj_name = lv_bcset_idx ).
+      ls_files_and_item-files = lo_object_files->get_files( ).
+
+      LOOP AT ls_files_and_item-files[] ASSIGNING FIELD-SYMBOL(<ls_file>).
+
+        <ls_file>-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
+                                                 iv_data = <ls_file>-data
+                                               ).
+
+      ENDLOOP. " LOOP AT ls_files_and_item-files[] ASSIGNING FIELD-SYMBOL(<ls_file>)
 
     ENDLOOP. " LOOP AT mt_recattr[] ASSIGNING FIELD-SYMBOL(<ls_recattr>)
 
@@ -184,18 +235,6 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
 
 
   METHOD create_xml.
-
-*   Declaration of local structure
-    TYPES:
-      BEGIN OF ty_bcset_metadata,
-        scprattr TYPE scprattr,
-        scprtext TYPE STANDARD TABLE OF scprtext WITH DEFAULT KEY,
-        scprvals TYPE STANDARD TABLE OF scprvals WITH DEFAULT KEY,
-        scprvall TYPE STANDARD TABLE OF scprvall WITH DEFAULT KEY,
-        scprreca TYPE STANDARD TABLE OF scprreca WITH DEFAULT KEY,
-        scprfldv TYPE STANDARD TABLE OF scprfldv WITH DEFAULT KEY,
-        subprofs TYPE STANDARD TABLE OF scprpprl WITH DEFAULT KEY,
-      END OF ty_bcset_metadata.
 
 *   Declaration of local workarea
     DATA: ls_bcset_metadata TYPE ty_bcset_metadata.
@@ -205,20 +244,6 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
 
 *   Instantiate the XML object
     ro_xml_output = NEW #( ).
-
-*   Generate ID
-    CONCATENATE is_status_list-pgmid
-                is_status_list-object
-                is_status_list-obj_name
-    INTO DATA(lv_id).
-
-*   Get hash key value
-    cl_abap_message_digest=>calculate_hash_for_char(
-      EXPORTING
-        if_data        = lv_id              " Data
-      IMPORTING
-        ef_hashxstring = DATA(lv_bcset_idx) " Binary hash value as XString
-    ).
 
 *   Get system type
     CALL FUNCTION 'TR_SYS_PARAMS'
@@ -233,7 +258,7 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
     ENDIF. " IF sy-subrc <> 0
 
 *   Populate BC set header data
-    ls_bcset_metadata = VALUE #( scprattr-id      = lv_bcset_idx
+    ls_bcset_metadata = VALUE #( scprattr-id      = iv_bcset_idx
                                  scprattr-type    = 'A2G'
                                  scprattr-reftype = 'TRAN'
                                  scprattr-refname = ms_request_details-h-trkorr
@@ -244,6 +269,33 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
 *   Populate records and values metadata
     ls_bcset_metadata-scprreca[] = it_record_attribute[].
     ls_bcset_metadata-scprvals[] = it_bcset_values[].
+
+*   Add metadata to XML
+    ro_xml_output->add(
+      EXPORTING
+        iv_name = 'SCP1'
+        ig_data = ls_bcset_metadata
+    ).
+
+  ENDMETHOD.
+
+
+  METHOD create_object_files.
+
+*  Declaration of local workarea
+    DATA: ls_bcset_metadata TYPE ty_bcset_metadata,
+          ls_item           TYPE zif_abapgit_definitions=>ty_item.
+
+    ls_item = VALUE #( obj_type = 'SCP1' obj_name = iv_bcset_idx ).
+
+*   Instantiate object files object
+    ro_object_files = NEW #( is_item = ls_item ).
+
+*   Add XML data to file
+    ro_object_files->add_xml(
+      EXPORTING
+        io_xml = io_xml
+    ).
 
   ENDMETHOD.
 ENDCLASS.
