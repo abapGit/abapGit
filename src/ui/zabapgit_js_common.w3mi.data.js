@@ -25,7 +25,7 @@
 /* exported enumerateTocAllRepos */
 /* exported enumerateJumpAllFiles */
 /* exported enumerateToolbarActions */
-/* global onDiffCollapse*/
+/* exported onDiffCollapse */
 
 /**********************************************************
  * Polyfills
