@@ -146,7 +146,7 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
 
   METHOD get_local_intf_implementations.
 
-    DATA: lt_type_infos             TYPE saboo_vseot,
+    DATA: ls_type_infos             TYPE saboo_vseot,
           lt_method_implementations TYPE saboo_method_impl_tab,
           lt_source                 TYPE saboo_sourt.
 
@@ -159,7 +159,7 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
 
       CALL FUNCTION 'SCAN_ABAP_OBJECTS_CLASSES'
         CHANGING
-          vseo_tabs                   = lt_type_infos
+          vseo_tabs                   = ls_type_infos
           method_impls                = lt_method_implementations
           sourc_tab                   = lt_source
         EXCEPTIONS
@@ -170,7 +170,7 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
 
-      gt_interface_implementations = lt_type_infos-iimpl_tab.
+      gt_interface_implementations = ls_type_infos-iimpl_tab.
 
     ENDIF.
 

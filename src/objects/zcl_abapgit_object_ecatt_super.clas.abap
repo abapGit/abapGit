@@ -141,27 +141,27 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
 
   METHOD clear_attributes.
 
-    DATA: lo_element     TYPE REF TO if_ixml_element,
+    DATA: li_element     TYPE REF TO if_ixml_element,
           lv_object_type TYPE etobj_type.
 
     lv_object_type = get_object_type( ).
 
-    lo_element = ci_document->find_from_name( |{ lv_object_type }| ).
-    lo_element->remove_attribute( |SAPRL| ).
-    lo_element->remove_attribute( |DOWNLOADDATE| ).
-    lo_element->remove_attribute( |DOWNLOADTIME| ).
+    li_element = ci_document->find_from_name( |{ lv_object_type }| ).
+    li_element->remove_attribute( |SAPRL| ).
+    li_element->remove_attribute( |DOWNLOADDATE| ).
+    li_element->remove_attribute( |DOWNLOADTIME| ).
 
   ENDMETHOD.
 
 
   METHOD clear_element.
 
-    DATA: lo_element TYPE REF TO if_ixml_element.
+    DATA: li_element TYPE REF TO if_ixml_element.
 
-    lo_element = ci_document->find_from_name( iv_name ).
+    li_element = ci_document->find_from_name( iv_name ).
 
-    IF lo_element IS BOUND.
-      lo_element->set_value( || ).
+    IF li_element IS BOUND.
+      li_element->set_value( || ).
     ENDIF.
 
   ENDMETHOD.
@@ -296,9 +296,9 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
     lv_object_type = get_object_type( ).
 
     lv_xml = zcl_abapgit_ecatt_helper=>build_xml_of_object(
-                 im_object_name    = mv_object_name
-                 im_object_version = is_version_info-version
-                 im_object_type    = lv_object_type
+                 iv_object_name    = mv_object_name
+                 iv_object_version = is_version_info-version
+                 iv_object_type    = lv_object_type
                  io_download       = lo_download ).
 
     li_document = cl_ixml_80_20=>parse_to_document( stream_xstring = lv_xml ).
@@ -343,7 +343,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
 
     DATA: li_document    TYPE REF TO if_ixml_document,
           lv_xml         TYPE xstring,
-          lo_node        TYPE REF TO if_ixml_element,
+          li_node        TYPE REF TO if_ixml_element,
           lo_download    TYPE REF TO cl_apl_ecatt_download,
           lv_object_type TYPE etobj_type.
 
@@ -352,9 +352,9 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
     lv_object_type = get_object_type( ).
 
     lv_xml = zcl_abapgit_ecatt_helper=>build_xml_of_object(
-                 im_object_name    = mv_object_name
-                 im_object_version = iv_version
-                 im_object_type    = lv_object_type
+                 iv_object_name    = mv_object_name
+                 iv_object_version = iv_version
+                 iv_object_type    = lv_object_type
                  io_download       = lo_download ).
 
     IF lv_xml IS INITIAL.
@@ -367,10 +367,10 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
 
     clear_elements( CHANGING ci_document = li_document ).
 
-    lo_node = li_document->create_element( co_name-version ).
-    lo_node->append_child( li_document->get_root_element( ) ).
+    li_node = li_document->create_element( co_name-version ).
+    li_node->append_child( li_document->get_root_element( ) ).
 
-    ci_node->append_child( lo_node ).
+    ci_node->append_child( li_node ).
 
   ENDMETHOD.
 
@@ -488,7 +488,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
     DATA: li_document         TYPE REF TO if_ixml_document,
           li_versions         TYPE REF TO if_ixml_node_collection,
           li_version_iterator TYPE REF TO if_ixml_node_iterator,
-          lo_version_node     TYPE REF TO if_ixml_node.
+          li_version_node     TYPE REF TO if_ixml_node.
 
     li_document = io_xml->get_raw( ).
 
@@ -498,13 +498,13 @@ CLASS ZCL_ABAPGIT_OBJECT_ECATT_SUPER IMPLEMENTATION.
     li_version_iterator = li_versions->create_iterator( ).
 
     DO.
-      lo_version_node = li_version_iterator->get_next( ).
+      li_version_node = li_version_iterator->get_next( ).
 
-      IF lo_version_node IS NOT BOUND.
+      IF li_version_node IS NOT BOUND.
         EXIT.
       ENDIF.
 
-      deserialize_version( ii_version_node = lo_version_node
+      deserialize_version( ii_version_node = li_version_node
                            iv_package      = iv_package ).
 
     ENDDO.

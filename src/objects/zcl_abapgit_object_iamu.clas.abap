@@ -12,7 +12,7 @@ CLASS zcl_abapgit_object_iamu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
              length     TYPE i,
            END OF ty_internet_appl_comp_binary.
 
-    DATA: mo_mime_api TYPE REF TO if_w3_api_mime.
+    DATA: mi_mime_api TYPE REF TO if_w3_api_mime.
 
     METHODS:
       load_mime_api
@@ -52,7 +52,7 @@ CLASS ZCL_ABAPGIT_OBJECT_IAMU IMPLEMENTATION.
       EXPORTING
         p_mime_name         = ls_mime_name
       IMPORTING
-        p_mime              = mo_mime_api
+        p_mime              = mi_mime_api
       EXCEPTIONS
         object_not_existing = 1
         permission_failure  = 2
@@ -71,7 +71,7 @@ CLASS ZCL_ABAPGIT_OBJECT_IAMU IMPLEMENTATION.
 
     load_mime_api( ).
 
-    mo_mime_api->get_attributes(
+    mi_mime_api->get_attributes(
       IMPORTING
         p_attributes   = rs_internet_appl_comp_binary-attributes
       EXCEPTIONS
@@ -89,7 +89,7 @@ CLASS ZCL_ABAPGIT_OBJECT_IAMU IMPLEMENTATION.
            rs_internet_appl_comp_binary-attributes-ttime,
            rs_internet_appl_comp_binary-attributes-devclass.
 
-    mo_mime_api->get_source(
+    mi_mime_api->get_source(
       IMPORTING
         p_source       = rs_internet_appl_comp_binary-source
         p_datalength   = rs_internet_appl_comp_binary-length
@@ -109,7 +109,7 @@ CLASS ZCL_ABAPGIT_OBJECT_IAMU IMPLEMENTATION.
   METHOD release_lock.
 
     " As a side effect this method removes also existing locks
-    mo_mime_api->if_w3_api_object~set_changeable(
+    mi_mime_api->if_w3_api_object~set_changeable(
       EXPORTING
         p_changeable                 = abap_false
       EXCEPTIONS
@@ -141,7 +141,7 @@ CLASS ZCL_ABAPGIT_OBJECT_IAMU IMPLEMENTATION.
         p_mime_content          = is_internet_appl_comp_binary-source
         p_datalength            = is_internet_appl_comp_binary-length
       IMPORTING
-        p_mime                  = mo_mime_api
+        p_mime                  = mi_mime_api
       EXCEPTIONS
         object_already_existing = 1
         object_just_created     = 2
@@ -156,7 +156,7 @@ CLASS ZCL_ABAPGIT_OBJECT_IAMU IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~create_new| ).
     ENDIF.
 
-    mo_mime_api->if_w3_api_object~save(
+    mi_mime_api->if_w3_api_object~save(
       EXCEPTIONS
         object_invalid        = 1
         object_not_changeable = 2
@@ -187,7 +187,7 @@ CLASS ZCL_ABAPGIT_OBJECT_IAMU IMPLEMENTATION.
 
     load_mime_api( ).
 
-    mo_mime_api->if_w3_api_object~set_changeable(
+    mi_mime_api->if_w3_api_object~set_changeable(
       EXPORTING
         p_changeable                 = abap_true
       EXCEPTIONS
@@ -208,7 +208,7 @@ CLASS ZCL_ABAPGIT_OBJECT_IAMU IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~set_changeable| ).
     ENDIF.
 
-    mo_mime_api->if_w3_api_object~delete(
+    mi_mime_api->if_w3_api_object~delete(
       EXCEPTIONS
         object_not_empty      = 1
         object_not_changeable = 2
@@ -219,7 +219,7 @@ CLASS ZCL_ABAPGIT_OBJECT_IAMU IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error from if_w3_api_mime~delete| ).
     ENDIF.
 
-    mo_mime_api->if_w3_api_object~save(
+    mi_mime_api->if_w3_api_object~save(
       EXCEPTIONS
         object_invalid        = 1
         object_not_changeable = 2

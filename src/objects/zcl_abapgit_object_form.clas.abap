@@ -220,7 +220,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
 
   METHOD order_check_and_insert.
 
-    DATA: ls_order TYPE e071k-trkorr.
+    DATA: lv_order TYPE e071k-trkorr.
 
     CALL FUNCTION 'SAPSCRIPT_ORDER_CHECK'
       EXPORTING
@@ -242,7 +242,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
         form           = mv_form_name
         masterlang     = mv_language
       CHANGING
-        order          = ls_order
+        order          = lv_order
       EXCEPTIONS
         invalid_input  = 1
         order_canceled = 2

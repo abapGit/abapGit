@@ -11,7 +11,7 @@ CLASS zcl_abapgit_object_iobj DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         IMPORTING
           iv_fieldname TYPE string
         CHANGING
-          cs_metadata  TYPE any.
+          cg_metadata  TYPE any.
 
 ENDCLASS.
 
@@ -26,8 +26,8 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
           lr_viobj TYPE REF TO data.
 
     FIELD-SYMBOLS:
-      <lv_tstpnm> TYPE any,
-      <ls_viobj>  TYPE any.
+      <lg_tstpnm> TYPE any,
+      <lg_viobj>  TYPE any.
 
     lv_objna = ms_item-obj_name.
 
@@ -37,18 +37,18 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |IOBJ is not supported on this system| ).
     ENDTRY.
 
-    ASSIGN lr_viobj->* TO <ls_viobj>.
+    ASSIGN lr_viobj->* TO <lg_viobj>.
 
     CALL FUNCTION 'RSD_IOBJ_GET'
       EXPORTING
         i_iobjnm  = lv_objna
         i_objvers = 'A'
       IMPORTING
-        e_s_viobj = <ls_viobj>.
+        e_s_viobj = <lg_viobj>.
 
-    ASSIGN COMPONENT 'TSTPNM' OF STRUCTURE <ls_viobj> TO <lv_tstpnm>.
+    ASSIGN COMPONENT 'TSTPNM' OF STRUCTURE <lg_viobj> TO <lg_tstpnm>.
 
-    rv_user = <lv_tstpnm>.
+    rv_user = <lg_tstpnm>.
 
   ENDMETHOD.
 
@@ -120,7 +120,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
       lr_xxlattributes            TYPE REF TO data.
 
     FIELD-SYMBOLS:
-      <ls_details>                  TYPE any,
+      <lg_details>                  TYPE any,
       <lt_compounds>                TYPE STANDARD TABLE,
       <lt_attributes>               TYPE STANDARD TABLE,
       <lt_navigationattributes>     TYPE STANDARD TABLE,
@@ -129,7 +129,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
       <lt_elimination>              TYPE STANDARD TABLE,
       <lt_hanafieldsmapping>        TYPE STANDARD TABLE,
       <lt_xxlattributes>            TYPE STANDARD TABLE,
-      <ls_infoobject>               TYPE data,
+      <lg_infoobject>               TYPE data,
       <lt_infoobjects>              TYPE STANDARD TABLE.
 
     TRY.
@@ -147,7 +147,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |IOBJ is not supported on this system| ).
     ENDTRY.
 
-    ASSIGN lr_details->* TO <ls_details>.
+    ASSIGN lr_details->* TO <lg_details>.
     ASSIGN lr_compounds->* TO <lt_compounds>.
     ASSIGN lr_attributes->* TO <lt_attributes>.
     ASSIGN lr_navigationattributes->* TO <lt_navigationattributes>.
@@ -159,7 +159,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
     ASSIGN lr_infoobj->* TO <lt_infoobjects>.
 
     io_xml->read( EXPORTING iv_name = 'IOBJ'
-                  CHANGING cg_data = <ls_details> ).
+                  CHANGING cg_data = <lg_details> ).
 
     io_xml->read( EXPORTING iv_name = 'COMPOUNDS'
                   CHANGING  cg_data = <lt_compounds> ).
@@ -189,7 +189,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
         CALL FUNCTION 'BAPI_IOBJ_CREATE'
           EXPORTING
-            details                  = <ls_details>
+            details                  = <lg_details>
           IMPORTING
             return                   = ls_return
           TABLES
@@ -208,11 +208,11 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
         ASSIGN
           COMPONENT 'INFOOBJECT'
-          OF STRUCTURE <ls_details>
-          TO <ls_infoobject>.
+          OF STRUCTURE <lg_details>
+          TO <lg_infoobject>.
         ASSERT sy-subrc = 0.
 
-        APPEND <ls_infoobject> TO <lt_infoobjects>.
+        APPEND <lg_infoobject> TO <lt_infoobjects>.
 
         CALL FUNCTION 'BAPI_IOBJ_ACTIVATE_MULTIPLE'
           TABLES
@@ -271,8 +271,8 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
           lr_viobj TYPE REF TO data.
 
     FIELD-SYMBOLS:
-      <lv_objstat> TYPE any,
-      <ls_viobj>   TYPE any.
+      <lg_objstat> TYPE any,
+      <lg_viobj>   TYPE any.
 
     lv_objna = ms_item-obj_name.
 
@@ -282,18 +282,18 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |IOBJ is not supported on this system| ).
     ENDTRY.
 
-    ASSIGN lr_viobj->* TO <ls_viobj>.
+    ASSIGN lr_viobj->* TO <lg_viobj>.
 
     CALL FUNCTION 'RSD_IOBJ_GET'
       EXPORTING
         i_iobjnm  = lv_objna
         i_objvers = 'A'
       IMPORTING
-        e_s_viobj = <ls_viobj>.
+        e_s_viobj = <lg_viobj>.
 
-    ASSIGN COMPONENT 'OBJSTAT' OF STRUCTURE <ls_viobj> TO <lv_objstat>.
+    ASSIGN COMPONENT 'OBJSTAT' OF STRUCTURE <lg_viobj> TO <lg_objstat>.
 
-    IF <lv_objstat> = 'ACT' AND sy-subrc = 0.
+    IF <lg_objstat> = 'ACT' AND sy-subrc = 0.
       rv_active = abap_true.
     ENDIF.
 
@@ -335,7 +335,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
       lr_xxlattributes            TYPE REF TO data.
 
     FIELD-SYMBOLS:
-      <ls_details>                  TYPE any,
+      <lg_details>                  TYPE any,
       <lt_compounds>                TYPE STANDARD TABLE,
       <lt_attributes>               TYPE STANDARD TABLE,
       <lt_navigationattributes>     TYPE STANDARD TABLE,
@@ -359,7 +359,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |IOBJ is not supported on this system| ).
     ENDTRY.
 
-    ASSIGN lr_details->* TO <ls_details>.
+    ASSIGN lr_details->* TO <lg_details>.
     ASSIGN lr_compounds->* TO <lt_compounds>.
     ASSIGN lr_attributes->* TO <lt_attributes>.
     ASSIGN lr_navigationattributes->* TO <lt_navigationattributes>.
@@ -375,7 +375,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
       EXPORTING
         infoobject               = lv_iobjnam
       IMPORTING
-        details                  = <ls_details>
+        details                  = <lg_details>
         return                   = ls_return
       TABLES
         compounds                = <lt_compounds>
@@ -392,16 +392,16 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
     ENDIF.
 
     clear_field( EXPORTING iv_fieldname = 'TSTPNM'
-                 CHANGING  cs_metadata  = <ls_details> ).
+                 CHANGING  cg_metadata  = <lg_details> ).
 
     clear_field( EXPORTING iv_fieldname = 'TIMESTMP'
-                 CHANGING  cs_metadata  = <ls_details> ).
+                 CHANGING  cg_metadata  = <lg_details> ).
 
     clear_field( EXPORTING iv_fieldname = 'DBROUTID'
-                 CHANGING  cs_metadata  = <ls_details> ).
+                 CHANGING  cg_metadata  = <lg_details> ).
 
     io_xml->add( iv_name = 'IOBJ'
-                 ig_data = <ls_details> ).
+                 ig_data = <lg_details> ).
 
     io_xml->add( iv_name = 'COMPOUNDS'
                  ig_data = <lt_compounds> ).
@@ -435,7 +435,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
     FIELD-SYMBOLS: <lg_field> TYPE data.
 
     ASSIGN COMPONENT iv_fieldname
-           OF STRUCTURE cs_metadata
+           OF STRUCTURE cg_metadata
            TO <lg_field>.
     ASSERT sy-subrc = 0.
 

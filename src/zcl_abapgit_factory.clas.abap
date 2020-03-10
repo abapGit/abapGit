@@ -33,7 +33,7 @@ CLASS zcl_abapgit_factory DEFINITION
         VALUE(ri_cts_api) TYPE REF TO zif_abapgit_cts_api .
     CLASS-METHODS get_environment
       RETURNING
-        VALUE(ro_environment) TYPE REF TO zif_abapgit_environment .
+        VALUE(ri_environment) TYPE REF TO zif_abapgit_environment .
     CLASS-METHODS get_longtexts
       IMPORTING
         iv_longtexts_name   TYPE string OPTIONAL
@@ -73,7 +73,7 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-DATA gt_code_inspector TYPE tty_code_inspector .
     CLASS-DATA gi_stage_logic TYPE REF TO zif_abapgit_stage_logic .
     CLASS-DATA gi_cts_api TYPE REF TO zif_abapgit_cts_api .
-    CLASS-DATA go_environment TYPE REF TO zif_abapgit_environment .
+    CLASS-DATA gi_environment TYPE REF TO zif_abapgit_environment .
     CLASS-DATA gt_longtexts TYPE tty_longtexts.
 ENDCLASS.
 
@@ -127,10 +127,10 @@ CLASS zcl_abapgit_factory IMPLEMENTATION.
 
 
   METHOD get_environment.
-    IF go_environment IS NOT BOUND.
-      CREATE OBJECT go_environment TYPE zcl_abapgit_environment.
+    IF gi_environment IS NOT BOUND.
+      CREATE OBJECT gi_environment TYPE zcl_abapgit_environment.
     ENDIF.
-    ro_environment = go_environment.
+    ri_environment = gi_environment.
   ENDMETHOD.
 
 

@@ -67,11 +67,11 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
     DATA:
       lv_answer           TYPE char1,
       ls_settings         TYPE zif_abapgit_definitions=>ty_s_user_settings,
-      lo_user_persistence TYPE REF TO zif_abapgit_persist_user.
+      li_user_persistence TYPE REF TO zif_abapgit_persist_user.
 
-    lo_user_persistence = zcl_abapgit_persistence_user=>get_instance( ).
+    li_user_persistence = zcl_abapgit_persistence_user=>get_instance( ).
 
-    ls_settings = lo_user_persistence->get_settings( ).
+    ls_settings = li_user_persistence->get_settings( ).
 
     IF ls_settings-hide_sapgui_hint = abap_true.
       RETURN.
@@ -92,7 +92,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
     IF lv_answer = lc_hide_sapgui_hint.
       ls_settings-hide_sapgui_hint = abap_true.
-      lo_user_persistence->set_settings( ls_settings ).
+      li_user_persistence->set_settings( ls_settings ).
     ENDIF.
 
   ENDMETHOD.
@@ -144,7 +144,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
           lt_fields  TYPE tihttpnvp.
 
 
-    FIELD-SYMBOLS: <ls_context>    TYPE any,
+    FIELD-SYMBOLS: <lg_context>    TYPE any,
                    <lv_parameters> TYPE string,
                    <ls_field>      LIKE LINE OF lt_fields.
 
@@ -159,15 +159,15 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
     TRY.
         CREATE DATA lr_context TYPE ('CL_ADT_GUI_INTEGRATION_CONTEXT=>TY_CONTEXT_INFO').
 
-        ASSIGN lr_context->* TO <ls_context>.
+        ASSIGN lr_context->* TO <lg_context>.
         ASSERT sy-subrc = 0.
 
         CALL METHOD ('CL_ADT_GUI_INTEGRATION_CONTEXT')=>read_context
           RECEIVING
-            result = <ls_context>.
+            result = <lg_context>.
 
         ASSIGN COMPONENT 'PARAMETERS'
-               OF STRUCTURE <ls_context>
+               OF STRUCTURE <lg_context>
                TO <lv_parameters>.
         ASSERT sy-subrc = 0.
 
@@ -183,7 +183,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
           CLEAR <lv_parameters>.
           CALL METHOD ('CL_ADT_GUI_INTEGRATION_CONTEXT')=>initialize_instance
             EXPORTING
-              context_info = <ls_context>.
+              context_info = <lg_context>.
 
         ENDIF.
 
@@ -310,15 +310,15 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
           lt_r_package     TYPE RANGE OF devclass,
           ls_r_package     LIKE LINE OF lt_r_package,
           lt_superpackages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
-          lo_package       TYPE REF TO zif_abapgit_sap_package,
+          li_package       TYPE REF TO zif_abapgit_sap_package,
           lt_repo_list     TYPE zif_abapgit_definitions=>ty_repo_ref_tt.
 
     FIELD-SYMBOLS: <lo_repo>         TYPE LINE OF zif_abapgit_definitions=>ty_repo_ref_tt,
                    <lv_superpackage> LIKE LINE OF lt_superpackages.
 
-    lo_package = zcl_abapgit_factory=>get_sap_package( iv_package ).
+    li_package = zcl_abapgit_factory=>get_sap_package( iv_package ).
 
-    IF lo_package->exists( ) = abap_false.
+    IF li_package->exists( ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -329,7 +329,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
     " Also consider superpackages. E.g. when some open $abapgit_ui, abapGit repo
     " should be found via package $abapgit
-    lt_superpackages = lo_package->list_superpackages( ).
+    lt_superpackages = li_package->list_superpackages( ).
     LOOP AT lt_superpackages ASSIGNING <lv_superpackage>.
       ls_r_package-low = <lv_superpackage>.
       INSERT ls_r_package INTO TABLE lt_r_package.
