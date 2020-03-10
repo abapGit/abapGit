@@ -195,7 +195,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
 
   METHOD add_filter_sub_menu.
-  
+
     DATA:
       lo_sub_filter TYPE REF TO zcl_abapgit_html_toolbar,
       lt_types      TYPE string_table,
@@ -1055,6 +1055,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
       ro_html->add( '<th class="num">new</th>' ).           "#EC NOTEXT
       ro_html->add( '<th class="mark"></th>' ).             "#EC NOTEXT
       ro_html->add( '<th>code</th>' ).                      "#EC NOTEXT
+      ro_html->add( '<th class="collapse" onclick="onDiffCollapse(event);">▼</th>' ). "#EC NOTEXT
     ELSE.
 
       IF mv_patch_mode = abap_true.
@@ -1070,6 +1071,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
       ro_html->add( '<th class="num"></th>' ).              "#EC NOTEXT
       ro_html->add( '<th class="mark"></th>' ).             "#EC NOTEXT
       ro_html->add( '<th>REMOTE</th>' ).                    "#EC NOTEXT
+      ro_html->add( '<th class="collapse" onclick="onDiffCollapse(event);">▼</th>' ). "#EC NOTEXT
 
     ENDIF.
 
