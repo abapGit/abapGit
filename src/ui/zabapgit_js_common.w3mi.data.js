@@ -25,7 +25,7 @@
 /* exported enumerateTocAllRepos */
 /* exported enumerateJumpAllFiles */
 /* exported enumerateToolbarActions */
-/* exported onDiffCollapse*/
+/* global onDiffCollapse*/
 
 /**********************************************************
  * Polyfills
@@ -773,20 +773,20 @@ onDiffCollapse = function(event) {
   var hide;
 
   if(event.srcElement.innerText === "▼") {
-    event.srcElement.innerText = "▲"
+    event.srcElement.innerText = "▲";
     hide = true;
   } else {
-    event.srcElement.innerText = "▼"
+    event.srcElement.innerText = "▼";
     hide = false;
   }
-  
+
   //Flip lines as hidden
   for (var i = 0; i < table.rows.length; i++) {
-      var row = table.rows[i];
-      if(i === 0)
-        continue; //Skip first line (header-like)
-      hide ? row.classList.add("nodisplay") : row.classList.remove("nodisplay");
-  };
+    var row = table.rows[i];
+    if(i === 0)
+      continue; //Skip first line (header-like)
+    hide ? row.classList.add("nodisplay") : row.classList.remove("nodisplay");
+  }
 };
 
 // Add Bottom margin, so that we can scroll to the top of the last file
