@@ -770,14 +770,22 @@ DiffHelper.prototype.highlightButton = function(state) {
 onDiffCollapse = function(event) {
   var source = event.target || event.srcElement;
   var table = source.parentElement.parentElement.parentElement;
+  var hide = false;
 
-  //Invert icon
-  source.setText("a");
-  //Flip lines as hidden
-  for (var i = 0, row; row = table.rows[i]; i++) {
-    console.log(row);
+  if(event.srcElement.innerText = "▼") {
+    event.srcElement.innerText = "▲"
+    hide = true;
+  } else {
+    event.srcElement.innerText = "▼"
   }
-  window.alert(source);
+  
+  //Flip lines as hidden
+  for (var i = 0; i < table.rows.length; i++) {
+      var row = table.rows[i];
+      if(i === 0)
+        continue; //Skip first line (header-like)
+      hide ? row.classList.add("hidden") : row.classList.remove("hidden");
+  };
 };
 
 // Add Bottom margin, so that we can scroll to the top of the last file
