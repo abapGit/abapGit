@@ -767,7 +767,7 @@ DiffHelper.prototype.highlightButton = function(state) {
 };
 
 //Collapse/Expand diffs
- function onDiffCollapse(event) {
+function onDiffCollapse(event) {
   var source = event.target || event.srcElement;
   var table = source.parentElement.parentElement.parentElement;
   var hide;
