@@ -772,7 +772,7 @@ onDiffCollapse = function(event) {
   var table = source.parentElement.parentElement.parentElement;
   var hide;
 
-  if(event.srcElement.innerText = "▼") {
+  if(event.srcElement.innerText === "▼") {
     event.srcElement.innerText = "▲"
     hide = true;
   } else {
