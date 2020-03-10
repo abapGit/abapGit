@@ -1279,7 +1279,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
         iv_client               = sy-mandt
         iv_via_selection_screen = abap_false
       IMPORTING
-        es_selected_request     = rs_request_header.
+        ev_selected_request     = rv_transport_request.
 
   ENDMETHOD.
 ENDCLASS.

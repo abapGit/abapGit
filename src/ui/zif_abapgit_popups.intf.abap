@@ -153,5 +153,5 @@ interface ZIF_ABAPGIT_POPUPS
       ZCX_ABAPGIT_EXCEPTION .
   methods POPUP_TO_SELECT_CUSTOMIZING_TR
     returning
-      value(RS_REQUEST_HEADER) type TRWBO_REQUEST_HEADER .
+      value(RV_TRANSPORT_REQUEST) type TRKORR .
 endinterface.
