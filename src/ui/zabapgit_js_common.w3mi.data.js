@@ -770,13 +770,14 @@ DiffHelper.prototype.highlightButton = function(state) {
 onDiffCollapse = function(event) {
   var source = event.target || event.srcElement;
   var table = source.parentElement.parentElement.parentElement;
-  var hide = false;
+  var hide;
 
   if(event.srcElement.innerText = "▼") {
     event.srcElement.innerText = "▲"
     hide = true;
   } else {
     event.srcElement.innerText = "▼"
+    hide = false;
   }
   
   //Flip lines as hidden
