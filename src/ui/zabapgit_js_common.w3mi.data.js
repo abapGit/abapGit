@@ -767,7 +767,7 @@ DiffHelper.prototype.highlightButton = function(state) {
 };
 
 //Collapse/Expand diffs
-onDiffCollapse = function(event) {
+ function onDiffCollapse(event) {
   var source = event.target || event.srcElement;
   var table = source.parentElement.parentElement.parentElement;
   var hide;
@@ -787,7 +787,7 @@ onDiffCollapse = function(event) {
       continue; //Skip first line (header-like)
     hide ? row.classList.add("nodisplay") : row.classList.remove("nodisplay");
   }
-};
+}
 
 // Add Bottom margin, so that we can scroll to the top of the last file
 function addMarginBottom(){
