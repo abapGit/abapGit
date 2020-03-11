@@ -411,8 +411,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     LOOP AT ms_files-local ASSIGNING <ls_local>.
       AT FIRST.
         ro_html->add( '<thead><tr class="local">' ).
-        ro_html->add( '<th></th>' ). " Diff state
-        ro_html->add( '<th>Type</th>' ).
+        ro_html->add( '<th class="stage-status"></th>' ). " Diff state
+        ro_html->add( '<th class="stage-objtype">Type</th>' ).
         ro_html->add( '<th>Files to add (click to see diff)</th>' ).
         ro_html->add( '<th>Changed by</th>' ).
         ro_html->add( '<th>Transport</th>' ).
