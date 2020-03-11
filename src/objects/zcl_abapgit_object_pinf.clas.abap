@@ -55,7 +55,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
+CLASS zcl_abapgit_object_pinf IMPLEMENTATION.
 
 
   METHOD create_facade.
@@ -108,7 +108,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
 
     ii_interface->set_elements_changeable( abap_true ).
 
-    ii_interface->get_elements( IMPORTING et_elements = lt_elements ).
+    lt_elements = ii_interface->get_elements( ).
 
     LOOP AT lt_elements ASSIGNING <li_element>.
       <li_element>->delete( ).
@@ -141,7 +141,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
           lv_changeable TYPE abap_bool.
 
 
-    ii_interface->get_changeable( IMPORTING ev_changeable = lv_changeable ).
+    lv_changeable = ii_interface->get_changeable( ).
     IF lv_changeable = abap_false.
 * at creation the object is already in change mode
       ii_interface->set_changeable( abap_true ).
@@ -183,7 +183,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
 
     ii_interface->set_elements_changeable( abap_true ).
 
-    ii_interface->get_elements( IMPORTING et_elements = lt_existing ).
+    lt_existing = ii_interface->get_elements( ).
 
     LOOP AT is_pinf-elements ASSIGNING <ls_element>.
 
@@ -345,7 +345,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
 
     li_interface = load( |{ ms_item-obj_name }| ).
 
-    li_interface->get_all_attributes( IMPORTING es_package_interface_data = ls_pinf-attributes ).
+    ls_pinf-attributes = li_interface->get_all_attributes( ).
 
     CLEAR: ls_pinf-attributes-pack_name,
            ls_pinf-attributes-author,
@@ -365,7 +365,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
       CLEAR <lg_any>.
     ENDIF.
 
-    li_interface->get_elements( IMPORTING et_elements = lt_elements ).
+    lt_elements = li_interface->get_elements( ).
 
     LOOP AT lt_elements ASSIGNING <li_element>.
       APPEND INITIAL LINE TO ls_pinf-elements ASSIGNING <ls_element>.
