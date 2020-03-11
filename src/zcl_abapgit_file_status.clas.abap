@@ -184,6 +184,17 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
           rs_result-match  = abap_false.
           rs_result-lstate = zif_abapgit_definitions=>c_state-deleted.
         ENDIF.
+
+      ELSEIF rs_result-obj_type = 'SCP1'.
+
+        zcl_abapgit_customizing_comp=>get_instance( )->compare_customizing_with_table(
+                                                         EXPORTING
+                                                           is_file_details = is_remote
+                                                           is_item         = ls_item
+                                                         CHANGING
+                                                           cs_result       = rs_result
+                                                       ).
+
       ENDIF.
 
     ELSE. " Completely unknown file, probably non-abapgit
@@ -265,7 +276,6 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
           CLEAR ls_item-devclass.
         ENDIF.
       ENDIF.
-
       APPEND ls_item TO lt_items.
     ENDLOOP.
 
@@ -454,6 +464,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       iv_top     = io_repo->get_package( ) ).
 
   ENDMETHOD.
+
 
   METHOD get_object_package.
     DATA: lv_name TYPE devclass,

@@ -1,0 +1,18 @@
+interface ZIF_ABAPGIT_CUSTOMIZING_COMP
+  public .
+
+
+  methods COMPARE_CUSTOMIZING_WITH_TABLE
+    importing
+      !IS_FILE_DETAILS type ZIF_ABAPGIT_DEFINITIONS=>TY_FILE
+      !IS_ITEM type ZIF_ABAPGIT_DEFINITIONS=>TY_ITEM
+    changing
+      !CS_RESULT type ZIF_ABAPGIT_DEFINITIONS=>TY_RESULT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods CREATE_LOCAL_FILE
+    changing
+      !RS_FILE type ZIF_ABAPGIT_DEFINITIONS=>TY_STAGE_FILES
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+endinterface.

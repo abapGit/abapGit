@@ -73,6 +73,9 @@ public section.
   class-methods HANDLE_CUSTOMIZING
     importing
       !IV_REPOSITORY_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_VALUE
+    exporting
+      !EI_PAGE type ref to ZIF_ABAPGIT_GUI_RENDERABLE
+      !EV_STATE type I
     raising
       ZCX_ABAPGIT_EXCEPTION .
   PROTECTED SECTION.
@@ -555,6 +558,9 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
   METHOD handle_customizing.
 
+*   Declaration of local object reference
+    DATA: lo_repository TYPE REF TO zcl_abapgit_repo_online.
+
 *   Customizing transport popup for selection
     DATA(lv_transport_request) = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_customizing_tr( ).
 
@@ -563,7 +569,17 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     IF lo_handle_customizing IS BOUND.
 
 *     Stage customizing content
-      lo_handle_customizing->stage_customizing_content( ).
+      DATA(lo_staged_content) = lo_handle_customizing->stage_customizing_content( ).
+
+      lo_repository ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_repository_key ).
+
+*     Instantiate the commit page
+      DATA(lo_gui_page_commit) = NEW zcl_abapgit_gui_page_commit( io_repo  = lo_repository
+                                                                  io_stage = lo_staged_content
+                                                                ).
+
+      ei_page ?= lo_gui_page_commit.
+      ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
     ENDIF. " IF lo_handle_customizing IS BOUND
 

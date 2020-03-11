@@ -94,5 +94,10 @@ CLASS ZCL_ABAPGIT_STAGE_LOGIC IMPLEMENTATION.
     remove_ignored( EXPORTING io_repo  = io_repo
                     CHANGING  cs_files = rs_files ).
 
+    zcl_abapgit_customizing_comp=>get_instance( )->create_local_file(
+      CHANGING
+        rs_file = rs_files
+    ).
+
   ENDMETHOD.
 ENDCLASS.

@@ -539,8 +539,15 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-repo_handle_customizing. " repo_handle_customizing
-        zcl_abapgit_services_repo=>handle_customizing( lv_key ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+
+*       Handle customizing content
+        zcl_abapgit_services_repo=>handle_customizing(
+          EXPORTING
+            iv_repository_key = lv_key
+          IMPORTING
+            ei_page           = ei_page  " abapGit GUI renderable component
+            ev_state          = ev_state
+        ).
 
       WHEN zif_abapgit_definitions=>c_action-repo_settings.
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_repo_sett

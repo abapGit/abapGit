@@ -66,6 +66,12 @@ private section.
       value(RO_OBJECT_FILES) type ref to ZCL_ABAPGIT_OBJECTS_FILES
     raising
       ZCX_ABAPGIT_EXCEPTION .
+  methods STAGE_FILES
+    importing
+      !IV_BCSET_IDX type XSTRING
+      !IO_OBJECT_FILES type ref to ZCL_ABAPGIT_OBJECTS_FILES
+    returning
+      value(RO_STAGED_FILES) type ref to ZCL_ABAPGIT_STAGE .
 ENDCLASS.
 
 
@@ -152,9 +158,6 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
     DATA: lt_recattr TYPE scprrecatab,
           lt_values  TYPE scprvalstab.
 
-*   Declaration of local workarea
-    DATA: ls_files_and_item TYPE zcl_abapgit_objects=>ty_serialization.
-
 *   Create BC set metadata from transport request
     create_bcset_data_from_tr( ).
 
@@ -216,18 +219,12 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
 *     Create object files
       DATA(lo_object_files) = create_object_files( iv_bcset_idx = lv_bcset_idx
                                                    io_xml       = lo_xml_data  " XML Output
-      ).
+                                                 ).
 
-      ls_files_and_item-item  = VALUE #( obj_type = 'SCP1' obj_name = lv_bcset_idx ).
-      ls_files_and_item-files = lo_object_files->get_files( ).
-
-      LOOP AT ls_files_and_item-files[] ASSIGNING FIELD-SYMBOL(<ls_file>).
-
-        <ls_file>-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
-                                                 iv_data = <ls_file>-data
-                                               ).
-
-      ENDLOOP. " LOOP AT ls_files_and_item-files[] ASSIGNING FIELD-SYMBOL(<ls_file>)
+*     Stage created files
+      ro_staged_content = stage_files( iv_bcset_idx    = lv_bcset_idx
+                                       io_object_files = lo_object_files
+                                     ).
 
     ENDLOOP. " LOOP AT mt_recattr[] ASSIGNING FIELD-SYMBOL(<ls_recattr>)
 
@@ -259,6 +256,7 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
 
 *   Populate BC set header data
     ls_bcset_metadata = VALUE #( scprattr-id      = iv_bcset_idx
+                                 scprattr-version = 'N'
                                  scprattr-type    = 'A2G'
                                  scprattr-reftype = 'TRAN'
                                  scprattr-refname = ms_request_details-h-trkorr
@@ -296,6 +294,36 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
       EXPORTING
         io_xml = io_xml
     ).
+
+  ENDMETHOD.
+
+
+  METHOD stage_files.
+
+*   Declaration of local workarea
+    DATA: ls_files_and_item TYPE zcl_abapgit_objects=>ty_serialization.
+
+    ls_files_and_item-item  = VALUE #( obj_type = 'SCP1' obj_name = iv_bcset_idx ).
+    ls_files_and_item-files = io_object_files->get_files( ).
+
+*   Instantiate the stage object
+    ro_staged_files = NEW #( ).
+
+    LOOP AT ls_files_and_item-files[] ASSIGNING FIELD-SYMBOL(<ls_file>).
+
+      <ls_file>-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
+                                               iv_data = <ls_file>-data
+                                             ).
+
+*     Add files to stage
+      ro_staged_files->add(
+        EXPORTING
+          iv_path     = <ls_file>-path
+          iv_filename = <ls_file>-filename
+          iv_data     = <ls_file>-data
+      ).
+
+    ENDLOOP. " LOOP AT ls_files_and_item-files[] ASSIGNING FIELD-SYMBOL(<ls_file>)
 
   ENDMETHOD.
 ENDCLASS.

@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_CLAS" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <VSEOCLASS>
+    <CLSNAME>ZCL_ABAPGIT_CUSTOMIZING_COMP</CLSNAME>
+    <LANGU>E</LANGU>
+    <DESCRIPT>Compare Customizing Content</DESCRIPT>
+    <STATE>1</STATE>
+    <CLSCCINCL>X</CLSCCINCL>
+    <FIXPT>X</FIXPT>
+    <UNICODE>X</UNICODE>
+   </VSEOCLASS>
+   <DESCRIPTIONS>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ABAPGIT_CUSTOMIZING_COMP</CLSNAME>
+     <CMPNAME>GET_INSTANCE</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Get instance</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ABAPGIT_CUSTOMIZING_COMP</CLSNAME>
+     <CMPNAME>IS_A2G_TYPE_BCSET</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Is A2G type BC set?</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ABAPGIT_CUSTOMIZING_COMP</CLSNAME>
+     <CMPNAME>MO_CUSTOMIZING_COMPARE</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Compare Customizing Content</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ABAPGIT_CUSTOMIZING_COMP</CLSNAME>
+     <CMPNAME>MT_RECATTR</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>BC Set Data Record Information Table Type</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ABAPGIT_CUSTOMIZING_COMP</CLSNAME>
+     <CMPNAME>MT_VALUES</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Language-Independent BC Set Data Table Type</DESCRIPT>
+    </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZCL_ABAPGIT_CUSTOMIZING_COMP</CLSNAME>
+     <CMPNAME>READ_BCSET_METADATA</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Read BC set metadata from files</DESCRIPT>
+    </SEOCOMPOTX>
+   </DESCRIPTIONS>
+  </asx:values>
+ </asx:abap>
+</abapGit>
