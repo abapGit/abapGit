@@ -71,7 +71,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
+CLASS zcl_abapgit_html IMPLEMENTATION.
 
 
   METHOD add_icon.
@@ -237,7 +237,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     ENDIF.
 
     lv_href  = ' href="#"'. " Default, dummy
-    IF iv_act IS NOT INITIAL OR iv_typ = zif_abapgit_html=>c_action_type-dummy.
+    IF ( iv_act IS NOT INITIAL OR iv_typ = zif_abapgit_html=>c_action_type-dummy )
+        AND iv_opt NA zif_abapgit_html=>c_html_opt-crossout.
       CASE iv_typ.
         WHEN zif_abapgit_html=>c_action_type-url.
           lv_href  = | href="{ iv_act }"|.
@@ -323,12 +324,12 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
   METHOD icon.
 
-    DATA: lv_hint          TYPE string,
-          lv_name          TYPE string,
-          lv_color         TYPE string,
-          lv_class         TYPE string,
-          lv_large_icon    TYPE string,
-          lv_xpixel        TYPE i.
+    DATA: lv_hint       TYPE string,
+          lv_name       TYPE string,
+          lv_color      TYPE string,
+          lv_class      TYPE string,
+          lv_large_icon TYPE string,
+          lv_xpixel     TYPE i.
 
     SPLIT iv_name AT '/' INTO lv_name lv_color.
 
