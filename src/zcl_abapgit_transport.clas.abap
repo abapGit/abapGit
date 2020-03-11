@@ -291,7 +291,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
       lt_packages    TYPE zif_abapgit_sap_package=>ty_devclass_tt.
 
     FIELD-SYMBOLS:
-      <ls_package> TYPE devclass,
+      <lv_package> TYPE devclass,
       <ls_object>  TYPE tadir.
 
     lo_repo     = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
@@ -299,13 +299,13 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
     lt_packages = zcl_abapgit_factory=>get_sap_package( lv_package )->list_subpackages( ).
     INSERT lv_package INTO TABLE lt_packages.
 
-    LOOP AT lt_packages ASSIGNING <ls_package>.
+    LOOP AT lt_packages ASSIGNING <lv_package>.
 
       CLEAR: lt_objects.
 
       CALL FUNCTION 'TRINT_SELECT_OBJECTS'
         EXPORTING
-          iv_devclass       = <ls_package>
+          iv_devclass       = <lv_package>
           iv_via_selscreen  = abap_false
         IMPORTING
           et_objects_tadir  = lt_objects

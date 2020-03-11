@@ -55,8 +55,8 @@ CLASS zcl_abapgit_file_status DEFINITION
         RAISING   zcx_abapgit_exception,
       get_object_package
         IMPORTING
-          iv_object       TYPE tadir-object
-          iv_obj_name     TYPE tadir-obj_name
+          iv_object          TYPE tadir-object
+          iv_obj_name        TYPE tadir-obj_name
         RETURNING
           VALUE(rv_devclass) TYPE devclass
         RAISING
@@ -66,7 +66,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
+CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -456,8 +456,8 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_object_package.
-    DATA: lv_name TYPE devclass,
-          lo_package     TYPE REF TO zif_abapgit_sap_package.
+    DATA: lv_name    TYPE devclass,
+          li_package TYPE REF TO zif_abapgit_sap_package.
 
     rv_devclass = zcl_abapgit_factory=>get_tadir( )->get_object_package(
       iv_object   = iv_object
@@ -465,8 +465,8 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     IF rv_devclass IS INITIAL AND iv_object = 'DEVC' AND iv_obj_name(1) = '$'.
       " local packages usually have no tadir entry
       lv_name = iv_obj_name.
-      lo_package = zcl_abapgit_factory=>get_sap_package( lv_name ).
-      IF lo_package->exists(  ) = abap_true.
+      li_package = zcl_abapgit_factory=>get_sap_package( lv_name ).
+      IF li_package->exists(  ) = abap_true.
         rv_devclass = lv_name.
       ENDIF.
     ENDIF.

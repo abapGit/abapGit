@@ -76,11 +76,11 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_TUTORIAL IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    CREATE OBJECT ro_html TYPE zcl_abapgit_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( '<div class="tutorial">' ).
-    ro_html->add( render_content( ) ).
-    ro_html->add( '</div>' ).
+    ri_html->add( '<div class="tutorial">' ).
+    ri_html->add( render_content( ) ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 ENDCLASS.
