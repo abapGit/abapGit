@@ -94,18 +94,18 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
           lo_ecatt_sp TYPE REF TO object.
 
     FIELD-SYMBOLS: <lg_ecatt_sp> TYPE any,
-                   <lv_d_akh>    TYPE data,
-                   <lv_i_akh>    TYPE data.
+                   <lg_d_akh>    TYPE data,
+                   <lg_i_akh>    TYPE data.
 
     TRY.
         ch_object-i_devclass = ch_object-d_devclass.
 
         ASSIGN COMPONENT 'D_AKH' OF STRUCTURE ch_object
-               TO <lv_d_akh>. " doesn't exist in 702
+               TO <lg_d_akh>. " doesn't exist in 702
         ASSIGN COMPONENT 'I_AKH' OF STRUCTURE ch_object
-               TO <lv_i_akh>. " doesn't exist in 702
-        IF <lv_d_akh> IS ASSIGNED AND <lv_i_akh> IS ASSIGNED.
-          <lv_i_akh> = <lv_d_akh>.
+               TO <lg_i_akh>. " doesn't exist in 702
+        IF <lg_d_akh> IS ASSIGNED AND <lg_i_akh> IS ASSIGNED.
+          <lg_i_akh> = <lg_d_akh>.
         ENDIF.
 
         super->upload( CHANGING ch_object = ch_object ).

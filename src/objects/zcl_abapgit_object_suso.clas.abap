@@ -92,14 +92,14 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSO IMPLEMENTATION.
       lo_suso                TYPE REF TO object,
       lv_failed              TYPE abap_bool,
       lv_suso_collect_in_cts TYPE i,
-      lv_clskey              TYPE seoclskey.
+      ls_clskey              TYPE seoclskey.
 
     " Downport: CL_SUSO_GEN doesn't exist in 702
-    lv_clskey-clsname = |CL_SUSO_GEN|.
+    ls_clskey-clsname = |CL_SUSO_GEN|.
 
     CALL FUNCTION 'SEO_CLASS_EXISTENCE_CHECK'
       EXPORTING
-        clskey        = lv_clskey
+        clskey        = ls_clskey
       EXCEPTIONS
         not_specified = 1
         not_existing  = 2

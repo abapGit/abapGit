@@ -484,8 +484,6 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     DATA: lo_settings TYPE REF TO zcl_abapgit_settings,
           lv_package  TYPE devclass.
 
-    super->constructor( ).
-
     mv_key           = iv_key.
     mo_repo          = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     mv_cur_dir       = '/'. " Root
@@ -933,7 +931,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     " Reinit, for the case of type change
     mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
 
-    CREATE OBJECT ro_html TYPE zcl_abapgit_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     TRY.
 
@@ -959,74 +957,74 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
                                      CHANGING cv_prev = lv_rstate ).
         ENDLOOP.
 
-        ro_html->add( render_head_line( iv_lstate = lv_lstate
+        ri_html->add( render_head_line( iv_lstate = lv_lstate
                                         iv_rstate = lv_rstate ) ).
 
         li_log = lo_browser->get_log( ).
         IF mo_repo->is_offline( ) = abap_false AND li_log->count( ) > 0.
-          ro_html->add( '<div class="log">' ).
-          ro_html->add( zcl_abapgit_log_viewer=>to_html( li_log ) ). " shows eg. list of unsupported objects
-          ro_html->add( '</div>' ).
+          ri_html->add( '<div class="log">' ).
+          ri_html->add( zcl_abapgit_log_viewer=>to_html( li_log ) ). " shows eg. list of unsupported objects
+          ri_html->add( '</div>' ).
         ENDIF.
 
-        ro_html->add( '<div class="repo_container">' ).
+        ri_html->add( '<div class="repo_container">' ).
 
         " Offline match banner
         IF mo_repo->is_offline( ) = abap_true
             AND mo_repo->has_remote_source( ) = abap_true
             AND lv_lstate IS INITIAL AND lv_rstate IS INITIAL.
-          ro_html->add(
+          ri_html->add(
             |<div class="repo_banner panel success">|
             && |ZIP source is attached and completely <b>matches</b> to the local state|
             && |</div>| ).
         ENDIF.
 
         " Repo content table
-        ro_html->add( '<table class="repo_tab">' ).
+        ri_html->add( '<table class="repo_tab">' ).
 
         IF zcl_abapgit_path=>is_root( mv_cur_dir ) = abap_false.
-          ro_html->add( render_parent_dir( ) ).
+          ri_html->add( render_parent_dir( ) ).
         ENDIF.
 
         IF mv_show_order_by = abap_true.
-          ro_html->add( render_order_by( ) ).
+          ri_html->add( render_order_by( ) ).
         ENDIF.
 
         IF lines( lt_repo_items ) = 0.
-          ro_html->add( render_empty_package( ) ).
+          ri_html->add( render_empty_package( ) ).
         ELSE.
           LOOP AT lt_repo_items ASSIGNING <ls_item>.
             IF mv_max_lines > 0 AND sy-tabix > mv_max_lines.
               lv_max = abap_true.
               EXIT. " current loop
             ENDIF.
-            ro_html->add( render_item( is_item = <ls_item> iv_render_transports = lv_render_transports ) ).
+            ri_html->add( render_item( is_item = <ls_item> iv_render_transports = lv_render_transports ) ).
           ENDLOOP.
         ENDIF.
 
-        ro_html->add( '</table>' ).
+        ri_html->add( '</table>' ).
 
         IF lv_max = abap_true.
-          ro_html->add( '<div class = "dummydiv">' ).
+          ri_html->add( '<div class = "dummydiv">' ).
           IF mv_max_lines = 1.
             lv_max_str = '1 object'.
           ELSE.
             lv_max_str = |first { mv_max_lines } objects|.
           ENDIF.
           lv_add_str = |+{ mv_max_setting }|.
-          ro_html->add( |Only { lv_max_str } shown in list. Display {
+          ri_html->add( |Only { lv_max_str } shown in list. Display {
             zcl_abapgit_html=>a( iv_txt = lv_add_str iv_act = c_actions-display_more )
             } more. (Set in Advanced > {
             zcl_abapgit_html=>a( iv_txt = 'Settings' iv_act = zif_abapgit_definitions=>c_action-go_settings )
             } )| ).
-          ro_html->add( '</div>' ).
+          ri_html->add( '</div>' ).
         ENDIF.
 
-        ro_html->add( '</div>' ).
+        ri_html->add( '</div>' ).
 
       CATCH zcx_abapgit_exception INTO lx_error.
-        ro_html->add( render_head_line( iv_lstate = lv_lstate iv_rstate = lv_rstate ) ).
-        ro_html->add( zcl_abapgit_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
+        ri_html->add( render_head_line( iv_lstate = lv_lstate iv_rstate = lv_rstate ) ).
+        ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
     ENDTRY.
 
   ENDMETHOD.

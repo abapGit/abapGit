@@ -37,7 +37,7 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
     METHODS corr_insert
       IMPORTING
         !iv_package      TYPE devclass
-        !iv_object_class TYPE any OPTIONAL
+        !ig_object_class TYPE any OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS tadir_insert
@@ -127,9 +127,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
     DATA: lv_object       TYPE string,
           lv_object_class TYPE string.
 
-    IF iv_object_class IS NOT INITIAL.
-      lv_object_class = iv_object_class.
-      IF iv_object_class = 'DICT'.
+    IF ig_object_class IS NOT INITIAL.
+      lv_object_class = ig_object_class.
+      IF ig_object_class = 'DICT'.
         CONCATENATE ms_item-obj_type ms_item-obj_name INTO lv_object.
       ELSE.
         lv_object = ms_item-obj_name.

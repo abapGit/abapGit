@@ -34,17 +34,17 @@ ENDCLASS.
 CLASS ltcl_diff IMPLEMENTATION.
 
   METHOD add_new.
-    DATA ls_new LIKE LINE OF mt_new.
+    DATA lv_new LIKE LINE OF mt_new.
 
-    ls_new = iv_new.
-    APPEND ls_new TO mt_new.
+    lv_new = iv_new.
+    APPEND lv_new TO mt_new.
   ENDMETHOD.
 
   METHOD add_old.
-    DATA ls_old LIKE LINE OF mt_old.
+    DATA lv_old LIKE LINE OF mt_old.
 
-    ls_old = iv_old.
-    APPEND ls_old TO mt_old.
+    lv_old = iv_old.
+    APPEND lv_old TO mt_old.
   ENDMETHOD.
 
   METHOD add_expected.

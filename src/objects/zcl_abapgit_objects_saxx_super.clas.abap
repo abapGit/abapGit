@@ -24,8 +24,8 @@ CLASS zcl_abapgit_objects_saxx_super DEFINITION
         VALUE(rv_data_structure_name) TYPE string .
   PRIVATE SECTION.
 
-    DATA mo_persistence TYPE REF TO if_wb_object_persist .
-    DATA mo_appl_obj_data TYPE REF TO if_wb_object_data_model .
+    DATA mi_persistence TYPE REF TO if_wb_object_persist .
+    DATA mi_appl_obj_data TYPE REF TO if_wb_object_data_model .
     DATA mv_data_structure_name TYPE string .
     DATA mv_appl_obj_cls_name TYPE seoclsname .
     DATA mv_persistence_cls_name TYPE seoclsname .
@@ -49,7 +49,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_SAXX_SUPER IMPLEMENTATION.
+CLASS zcl_abapgit_objects_saxx_super IMPLEMENTATION.
 
 
   METHOD create_channel_objects.
@@ -57,12 +57,12 @@ CLASS ZCL_ABAPGIT_OBJECTS_SAXX_SUPER IMPLEMENTATION.
     get_names( ).
 
     TRY.
-        IF mo_appl_obj_data IS NOT BOUND.
-          CREATE OBJECT mo_appl_obj_data TYPE (mv_appl_obj_cls_name).
+        IF mi_appl_obj_data IS NOT BOUND.
+          CREATE OBJECT mi_appl_obj_data TYPE (mv_appl_obj_cls_name).
         ENDIF.
 
-        IF mo_persistence IS NOT BOUND.
-          CREATE OBJECT mo_persistence TYPE (mv_persistence_cls_name).
+        IF mi_persistence IS NOT BOUND.
+          CREATE OBJECT mi_persistence TYPE (mv_persistence_cls_name).
         ENDIF.
 
       CATCH cx_root.
@@ -79,18 +79,18 @@ CLASS ZCL_ABAPGIT_OBJECTS_SAXX_SUPER IMPLEMENTATION.
     lv_object_key = ms_item-obj_name.
 
     TRY.
-        mo_persistence->get(
+        mi_persistence->get(
           EXPORTING
             p_object_key  = lv_object_key
             p_version     = 'A'
           CHANGING
-            p_object_data = mo_appl_obj_data ).
+            p_object_data = mi_appl_obj_data ).
 
       CATCH cx_root.
         zcx_abapgit_exception=>raise( |{ ms_item-obj_type } not supported| ).
     ENDTRY.
 
-    mo_appl_obj_data->get_data( IMPORTING p_data = eg_data ).
+    mi_appl_obj_data->get_data( IMPORTING p_data = eg_data ).
 
   ENDMETHOD.
 
@@ -123,7 +123,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_SAXX_SUPER IMPLEMENTATION.
     lv_object_key = ms_item-obj_name.
     lv_objtype    = ms_item-obj_type.
 
-    mo_persistence->lock(
+    mi_persistence->lock(
       EXPORTING
         p_objname_tr   = lv_objname
         p_object_key   = lv_object_key
@@ -150,7 +150,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_SAXX_SUPER IMPLEMENTATION.
     lv_object_key = ms_item-obj_name.
     lv_objtype    = ms_item-obj_type.
 
-    mo_persistence->unlock( p_objname_tr = lv_objname
+    mi_persistence->unlock( p_objname_tr = lv_objname
                             p_object_key = lv_object_key
                             p_objtype_tr = lv_objtype ).
 
@@ -202,7 +202,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_SAXX_SUPER IMPLEMENTATION.
     TRY.
         lock( ).
 
-        mo_persistence->delete( lv_object_key ).
+        mi_persistence->delete( lv_object_key ).
 
         unlock( ).
 
@@ -261,9 +261,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_SAXX_SUPER IMPLEMENTATION.
           zcx_abapgit_exception=>raise( |Error occured while creating { ms_item-obj_type }| ).
         ENDIF.
 
-        mo_appl_obj_data->set_data( <lg_data> ).
+        mi_appl_obj_data->set_data( <lg_data> ).
 
-        mo_persistence->save( mo_appl_obj_data ).
+        mi_persistence->save( mi_appl_obj_data ).
 
         unlock( ).
 
@@ -283,7 +283,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_SAXX_SUPER IMPLEMENTATION.
     lv_object_key = ms_item-obj_name.
 
     TRY.
-        mo_persistence->get( p_object_key           = lv_object_key
+        mi_persistence->get( p_object_key           = lv_object_key
                              p_version              = 'A'
                              p_existence_check_only = abap_true ).
 

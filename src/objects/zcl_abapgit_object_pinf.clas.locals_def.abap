@@ -1,9 +1,10 @@
 INTERFACE lif_package_interface_facade.
+  TYPES ty_tpak_package_interf_elem_tt TYPE STANDARD TABLE OF tpak_package_interf_elem_ref WITH DEFAULT KEY.
 
   METHODS:
     get_elements
-      EXPORTING
-        et_elements              TYPE tpak_package_interf_elem_list
+      RETURNING
+        VALUE(rt_elements) TYPE ty_tpak_package_interf_elem_tt
       RAISING
         zcx_abapgit_exception,
 
@@ -18,8 +19,8 @@ INTERFACE lif_package_interface_facade.
         zcx_abapgit_exception,
 
     get_all_attributes
-      EXPORTING
-        es_package_interface_data TYPE scompidtln
+      RETURNING
+        VALUE(rs_package_interface_data) TYPE scompidtln
       RAISING
         zcx_abapgit_exception,
 
@@ -45,7 +46,7 @@ INTERFACE lif_package_interface_facade.
 
     add_elements
       IMPORTING
-        is_elements_data TYPE scomeldata
+        it_elements_data TYPE scomeldata
       RAISING
         zcx_abapgit_exception,
 
@@ -57,8 +58,8 @@ INTERFACE lif_package_interface_facade.
         zcx_abapgit_exception,
 
     get_changeable
-      EXPORTING
-        VALUE(ev_changeable) TYPE flag
+      RETURNING
+        VALUE(rv_changeable) TYPE flag
       RAISING
         zcx_abapgit_exception.
 
