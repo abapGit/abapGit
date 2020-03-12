@@ -770,7 +770,7 @@ DiffHelper.prototype.highlightButton = function(state) {
 function onDiffCollapse(event) {
   var source = event.target || event.srcElement;
   var nextDiffContent = source.parentElement.nextElementSibling;
-  //.classList.add("nodisplay");
+  var hide;
 
   if(source.classList.contains("icon-chevron-down")){
     source.classList.remove("icon-chevron-down");
