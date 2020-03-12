@@ -36,6 +36,10 @@ input:focus, textarea:focus {
   border: 1px solid;
 }
 
+cursor-pointer {
+  cursor: pointer;
+}
+
 /* MODIFIERS */
 .emphasis     { font-weight: bold !important; }
 .crossout     { text-decoration: line-through !important; }
@@ -437,19 +441,6 @@ table.diff_tab td.mark, th.mark {
   -ms-user-select: none;
   user-select: none;
   cursor: default;
-}
-
-table.diff_tab th.collapse {
-  width: 0.1%;
-  -ms-user-select: none;
-  user-select: none;
-  cursor: default;
-}
-
-table.diff_tab a.collapse {
-  text-decoration: none !important;
-  color: inherit;
-  user-select: none;
 }
 
 .diff_select_left td.diff_right,
