@@ -36,7 +36,7 @@ input:focus, textarea:focus {
   border: 1px solid;
 }
 
-cursor-pointer {
+.cursor-pointer {
   cursor: pointer;
 }
 
