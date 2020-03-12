@@ -769,24 +769,20 @@ DiffHelper.prototype.highlightButton = function(state) {
 //Collapse/Expand diffs
 function onDiffCollapse(event) {
   var source = event.target || event.srcElement;
-  var table = source.parentElement.parentElement.parentElement;
-  var hide;
+  var nextDiffContent = source.parentElement.nextElementSibling;
+  //.classList.add("nodisplay");
 
-  if(event.srcElement.innerText === "▼") {
-    event.srcElement.innerText = "▲";
+  if(source.classList.contains("icon-chevron-down")){
+    source.classList.remove("icon-chevron-down");
+    source.classList.add("icon-chevron-right");
     hide = true;
   } else {
-    event.srcElement.innerText = "▼";
+    source.classList.remove("icon-chevron-right");
+    source.classList.add("icon-chevron-down");
     hide = false;
   }
 
-  //Flip lines as hidden
-  for (var i = 0; i < table.rows.length; i++) {
-    var row = table.rows[i];
-    if(i === 0)
-      continue; //Skip first line (header-like)
-    hide ? row.classList.add("nodisplay") : row.classList.remove("nodisplay");
-  }
+  hide ? nextDiffContent.classList.add("nodisplay") : nextDiffContent.classList.remove("nodisplay");
 }
 
 // Add Bottom margin, so that we can scroll to the top of the last file
