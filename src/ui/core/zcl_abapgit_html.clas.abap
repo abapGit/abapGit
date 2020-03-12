@@ -354,7 +354,8 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
       lv_large_icon = ' large'.
     ENDIF.
 
-    rv_str = |<i class="icon{ lv_large_icon } icon-{ lv_name }{ lv_color }{ lv_class }" { lv_onclick } { lv_hint }></i>|.
+    rv_str = |<i class="icon{ lv_large_icon } icon-{ lv_name }{ lv_color }|.
+    rv_str = |{ rv_str }{ lv_class }"{ lv_onclick }{ lv_hint }></i>|.
 
   ENDMETHOD.
 
