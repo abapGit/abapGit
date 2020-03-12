@@ -568,10 +568,11 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     DATA(lo_handle_customizing) = zcl_abapgit_handle_customizing=>get_instance( iv_transport_request = lv_transport_request ).
     IF lo_handle_customizing IS BOUND.
 
-*     Stage customizing content
-      DATA(lo_staged_content) = lo_handle_customizing->stage_customizing_content( ).
-
       lo_repository ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_repository_key ).
+
+*     Stage customizing content
+      DATA(lo_staged_content) = lo_handle_customizing->stage_customizing_content( iv_devclass = lo_repository->get_package( )
+                                                                                ).
 
 *     Instantiate the commit page
       DATA(lo_gui_page_commit) = NEW zcl_abapgit_gui_page_commit( io_repo  = lo_repository

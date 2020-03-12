@@ -39,6 +39,7 @@ private section.
     ty_t_handle_customizing TYPE HASHED TABLE OF ty_handle_customizing_instance
                             WITH UNIQUE KEY transport_request .
 
+  data MO_STAGED_FILES type ref to ZCL_ABAPGIT_STAGE .
   data MT_FIELDDESCRS type SCPR_RECORDS .
   data MT_RECATTR type SCPRRECATAB .
   data MT_STATUS_LIST type SCPR_TRANSP_ENTRIES .
@@ -51,7 +52,7 @@ private section.
       ZCX_ABAPGIT_EXCEPTION .
   methods CREATE_XML
     importing
-      !IV_BCSET_IDX type XSTRING
+      !IV_BCSET_ID type SCPR_ID
       !IT_RECORD_ATTRIBUTE type SCPRRECATAB
       !IT_BCSET_VALUES type SCPRVALSTAB
     returning
@@ -60,7 +61,8 @@ private section.
       ZCX_ABAPGIT_EXCEPTION .
   methods CREATE_OBJECT_FILES
     importing
-      !IV_BCSET_IDX type XSTRING
+      !IV_BCSET_ID type SCPR_ID
+      !IV_DEVCLASS type DEVCLASS
       !IO_XML type ref to ZCL_ABAPGIT_XML_OUTPUT
     returning
       value(RO_OBJECT_FILES) type ref to ZCL_ABAPGIT_OBJECTS_FILES
@@ -68,10 +70,9 @@ private section.
       ZCX_ABAPGIT_EXCEPTION .
   methods STAGE_FILES
     importing
-      !IV_BCSET_IDX type XSTRING
-      !IO_OBJECT_FILES type ref to ZCL_ABAPGIT_OBJECTS_FILES
-    returning
-      value(RO_STAGED_FILES) type ref to ZCL_ABAPGIT_STAGE .
+      !IV_BCSET_ID type SCPR_ID
+      !IV_DEVCLASS type DEVCLASS
+      !IO_OBJECT_FILES type ref to ZCL_ABAPGIT_OBJECTS_FILES .
 ENDCLASS.
 
 
@@ -156,7 +157,11 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
 
 *   Declaration of local internal table
     DATA: lt_recattr TYPE scprrecatab,
-          lt_values  TYPE scprvalstab.
+          lt_values  TYPE scprvalstab,
+          lt_objects TYPE scp1_act_objects.
+
+*   Declaration of local variable
+    DATA: lv_bcset_id TYPE scpr_id.
 
 *   Create BC set metadata from transport request
     create_bcset_data_from_tr( ).
@@ -196,37 +201,41 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
 
       ENDIF. " IF <ls_recattr_group>-clustname IS NOT INITIAL
 
-*     Generate ID
-      CONCATENATE ls_status_list-pgmid
-                  ls_status_list-object
-                  ls_status_list-obj_name
-      INTO DATA(lv_id).
-
-*     Get hash key value
-      cl_abap_message_digest=>calculate_hash_for_char(
-        EXPORTING
-          if_data        = lv_id              " Data
+      CALL FUNCTION 'SCPR_ACTIV_EXTRACT_OBJECTS'
         IMPORTING
-          ef_hashxstring = DATA(lv_bcset_idx) " Binary hash value as XString
-      ).
+          act_objects = lt_objects[]
+        TABLES
+          recattr     = lt_recattr[].
+
+      READ TABLE lt_objects[] ASSIGNING FIELD-SYMBOL(<ls_object>) INDEX 1.
+
+*     Generate ID
+      CONCATENATE <ls_object>-objectname
+                  <ls_object>-objecttype
+      INTO lv_bcset_id
+      SEPARATED BY '_'.
 
 *     Create XML file
-      DATA(lo_xml_data) = create_xml( iv_bcset_idx        = lv_bcset_idx
+      DATA(lo_xml_data) = create_xml( iv_bcset_id         = lv_bcset_id
                                       it_record_attribute = lt_recattr[]
                                       it_bcset_values     = lt_values[]
                                     ).
 
 *     Create object files
-      DATA(lo_object_files) = create_object_files( iv_bcset_idx = lv_bcset_idx
-                                                   io_xml       = lo_xml_data  " XML Output
+      DATA(lo_object_files) = create_object_files( iv_bcset_id = lv_bcset_id
+                                                   iv_devclass = iv_devclass
+                                                   io_xml      = lo_xml_data  " XML Output
                                                  ).
 
 *     Stage created files
-      ro_staged_content = stage_files( iv_bcset_idx    = lv_bcset_idx
-                                       io_object_files = lo_object_files
-                                     ).
+      stage_files( iv_bcset_id     = lv_bcset_id
+                   iv_devclass     = iv_devclass
+                   io_object_files = lo_object_files
+                 ).
 
     ENDLOOP. " LOOP AT mt_recattr[] ASSIGNING FIELD-SYMBOL(<ls_recattr>)
+
+    ro_staged_content = mo_staged_files.
 
   ENDMETHOD.
 
@@ -255,7 +264,7 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
     ENDIF. " IF sy-subrc <> 0
 
 *   Populate BC set header data
-    ls_bcset_metadata = VALUE #( scprattr-id      = iv_bcset_idx
+    ls_bcset_metadata = VALUE #( scprattr-id      = iv_bcset_id
                                  scprattr-version = 'N'
                                  scprattr-type    = 'A2G'
                                  scprattr-reftype = 'TRAN'
@@ -267,6 +276,16 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
 *   Populate records and values metadata
     ls_bcset_metadata-scprreca[] = it_record_attribute[].
     ls_bcset_metadata-scprvals[] = it_bcset_values[].
+
+*   Get language values
+    CALL FUNCTION 'SCPR_TEMPL_CT_LANG_ALL_GET'
+      EXPORTING
+        bcset_id    = ls_bcset_metadata-scprattr-id
+      TABLES
+        values      = ls_bcset_metadata-scprvals[]
+        valuesl     = ls_bcset_metadata-scprvall[]
+        recattr     = ls_bcset_metadata-scprreca[]
+        fielddescrs = mt_fielddescrs[].
 
 *   Add metadata to XML
     ro_xml_output->add(
@@ -284,7 +303,7 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
     DATA: ls_bcset_metadata TYPE ty_bcset_metadata,
           ls_item           TYPE zif_abapgit_definitions=>ty_item.
 
-    ls_item = VALUE #( obj_type = 'SCP1' obj_name = iv_bcset_idx ).
+    ls_item = VALUE #( obj_type = 'SCP1' obj_name = iv_bcset_id devclass = iv_devclass ).
 
 *   Instantiate object files object
     ro_object_files = NEW #( is_item = ls_item ).
@@ -303,11 +322,15 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
 *   Declaration of local workarea
     DATA: ls_files_and_item TYPE zcl_abapgit_objects=>ty_serialization.
 
-    ls_files_and_item-item  = VALUE #( obj_type = 'SCP1' obj_name = iv_bcset_idx ).
+    ls_files_and_item-item  = VALUE #( obj_type = 'SCP1' obj_name = iv_bcset_id devclass = iv_devclass ).
     ls_files_and_item-files = io_object_files->get_files( ).
 
-*   Instantiate the stage object
-    ro_staged_files = NEW #( ).
+    IF mo_staged_files IS NOT BOUND.
+
+*     Instantiate the stage object
+      mo_staged_files = NEW #( ).
+
+    ENDIF. " IF mo_staged_files IS NOT BOUND
 
     LOOP AT ls_files_and_item-files[] ASSIGNING FIELD-SYMBOL(<ls_file>).
 
@@ -316,7 +339,7 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
                                              ).
 
 *     Add files to stage
-      ro_staged_files->add(
+      mo_staged_files->add(
         EXPORTING
           iv_path     = <ls_file>-path
           iv_filename = <ls_file>-filename

@@ -204,6 +204,16 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'error from SCPR_TR_READ_DATA' ).
       ENDIF. " IF sy-subrc <> 0
 
+*     Get language values
+      CALL FUNCTION 'SCPR_TEMPL_CT_LANG_ALL_GET'
+        EXPORTING
+          bcset_id    = ls_bcset_metadata-scprattr-id
+        TABLES
+          values      = mt_values[]
+          valuesl     = ls_bcset_metadata-scprvall[]
+          recattr     = mt_recattr[]
+          fielddescrs = mt_fielddescrs[].
+
 *     Instantiate the XML object
       DATA(lo_xml_output) = NEW zcl_abapgit_xml_output( ).
 
