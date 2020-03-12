@@ -19,9 +19,10 @@ CLASS zcl_abapgit_html DEFINITION
     CLASS-METHODS class_constructor.
     METHODS add_icon
       IMPORTING
-        !iv_name  TYPE string
-        !iv_hint  TYPE string OPTIONAL
-        !iv_class TYPE string OPTIONAL.
+        !iv_name    TYPE string
+        !iv_hint    TYPE string OPTIONAL
+        !iv_class   TYPE string OPTIONAL
+        !iv_onclick TYPE string OPTIONAL.
   PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-DATA: go_single_tags_re TYPE REF TO cl_abap_regex.
@@ -76,9 +77,10 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
 
   METHOD add_icon.
 
-    add( icon( iv_name  = iv_name
-               iv_class = iv_class
-               iv_hint  = iv_hint ) ).
+    add( icon( iv_name    = iv_name
+               iv_class   = iv_class
+               iv_hint    = iv_hint
+               iv_onclick = iv_onclick  ) ).
 
   ENDMETHOD.
 
@@ -329,12 +331,16 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
           lv_color      TYPE string,
           lv_class      TYPE string,
           lv_large_icon TYPE string,
-          lv_xpixel     TYPE i.
+          lv_xpixel     TYPE i,
+          lv_onclick    TYPE string.
 
     SPLIT iv_name AT '/' INTO lv_name lv_color.
 
     IF iv_hint IS NOT INITIAL.
       lv_hint  = | title="{ iv_hint }"|.
+    ENDIF.
+    IF iv_onclick IS NOT INITIAL.
+      lv_onclick = | onclick="{ iv_onclick }"|.
     ENDIF.
     IF iv_class IS NOT INITIAL.
       lv_class = | { iv_class }|.
@@ -348,7 +354,8 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
       lv_large_icon = ' large'.
     ENDIF.
 
-    rv_str = |<i class="icon{ lv_large_icon } icon-{ lv_name }{ lv_color }{ lv_class }" { lv_hint }></i>|.
+    rv_str = |<i class="icon{ lv_large_icon } icon-{ lv_name }{ lv_color }|.
+    rv_str = |{ rv_str }{ lv_class }"{ lv_onclick }{ lv_hint }></i>|.
 
   ENDMETHOD.
 
