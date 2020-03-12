@@ -256,4 +256,72 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_customizing_comp~apply_customizing_content.
+
+*   Declaration of local internal table
+    DATA: lt_objects         TYPE scp1_act_objects,
+          lt_mappings        TYPE if_bcfg_config_container=>ty_t_mapping_info,
+          lt_field_values    TYPE if_bcfg_config_container=>ty_t_field_values,
+          lt_field_value_tmp TYPE STANDARD TABLE OF if_bcfg_config_container=>ty_s_field_value,
+          lt_languages       TYPE if_bcfg_config_container=>ty_t_languages.
+
+    ms_bcset_metadata = is_bcset_metadata.
+
+    CALL FUNCTION 'SCPR_ACTIV_EXTRACT_OBJECTS'
+      IMPORTING
+        act_objects = lt_objects[]
+      TABLES
+        recattr     = ms_bcset_metadata-scprreca[].
+
+    lt_mappings[] = CORRESPONDING #( lt_objects[] ).
+
+    lt_field_value_tmp[] = CORRESPONDING #( ms_bcset_metadata-scprvall[] MAPPING rec_id = recnumber ).
+
+    SORT lt_field_value_tmp[] BY langu.
+
+    DELETE ADJACENT DUPLICATES FROM lt_field_value_tmp[]
+    COMPARING langu.
+
+    LOOP AT lt_field_value_tmp[] ASSIGNING FIELD-SYMBOL(<ls_field_value>).
+
+      APPEND <ls_field_value>-langu TO lt_languages[].
+
+    ENDLOOP.
+    IF sy-subrc NE 0.
+      APPEND sy-langu TO lt_languages[].
+    ENDIF.
+
+*   Create configuration container using the mappings
+    DATA(lo_container) = cl_bcfg_config_manager=>create_container( io_container_type  = cl_bcfg_enum_container_type=>classic  " CLASSIC
+                                                                   it_object_mappings = lt_mappings[]
+                                                                   it_langus          = lt_languages[]
+                                                                   io_commit_mode     = cl_bcfg_enum_commit_mode=>auto_commit " AUTO_COMMIT
+                                                                 ).
+
+    lt_field_value_tmp[] = CORRESPONDING #( ms_bcset_metadata-scprvals[] MAPPING rec_id = recnumber ).
+    lt_field_values[] = CORRESPONDING #( ms_bcset_metadata-scprvall[] MAPPING rec_id = recnumber ).
+
+    LOOP AT lt_field_values[] ASSIGNING <ls_field_value>.
+
+      APPEND <ls_field_value> TO lt_field_value_tmp[].
+
+    ENDLOOP.
+
+    lt_field_values[] = lt_field_value_tmp[].
+
+    lo_container->add_lines_by_fields( it_fields = lt_field_values[] ).
+
+    DATA(lo_result) = lo_container->apply( ).
+
+    LOOP AT lo_result->get_log_messages( ) ASSIGNING FIELD-SYMBOL(<ls_return>).
+
+      io_log->add( iv_msg  = <ls_return>-message
+                   iv_type = <ls_return>-type
+                 ).
+
+    ENDLOOP. " LOOP AT lo_result->get_log_messages( ) ASSIGNING FIELD-SYMBOL(<ls_return>)
+
+  ENDMETHOD.
 ENDCLASS.
