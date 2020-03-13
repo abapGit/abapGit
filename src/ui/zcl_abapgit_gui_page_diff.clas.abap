@@ -218,7 +218,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
 
   METHOD add_filter_sub_menu.
@@ -825,6 +825,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div class="diff_head">' ).              "#EC NOTEXT
+
+    ro_html->add_icon(
+      iv_name    = 'chevron-down'
+      iv_hint    = 'Collapse/Expand'
+      iv_class   = 'cursor-pointer'
+      iv_onclick = 'onDiffCollapse(event)' ).
 
     IF is_diff-type <> 'binary'.
       ls_stats = is_diff-o_diff->stats( ).

@@ -63,7 +63,7 @@
     "check_comments": false,
     "fully_type_constants": true,
     "keep_single_parameter_on_one_line": true,
-    "prefer_returning_to_exporting": false,
+    "prefer_returning_to_exporting": true,
     "selection_screen_naming": true,
     "sicf_consistency": true,
     "sql_escape_host_variables": true,
