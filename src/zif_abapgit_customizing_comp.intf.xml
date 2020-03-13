@@ -29,6 +29,12 @@
      <LANGU>E</LANGU>
      <DESCRIPT>Create local file with customizing content</DESCRIPT>
     </SEOCOMPOTX>
+    <SEOCOMPOTX>
+     <CLSNAME>ZIF_ABAPGIT_CUSTOMIZING_COMP</CLSNAME>
+     <CMPNAME>DISPLAY_DIFFERENCES</CMPNAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Display Differences</DESCRIPT>
+    </SEOCOMPOTX>
    </DESCRIPTIONS>
   </asx:values>
  </asx:abap>

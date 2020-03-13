@@ -191,7 +191,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
 
   METHOD add_filter_sub_menu.
@@ -531,7 +531,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
           lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lt_status TYPE zif_abapgit_definitions=>ty_results_tt,
           lo_repo   TYPE REF TO zcl_abapgit_repo,
-          lv_ts     TYPE timestamp.
+          lv_ts     TYPE timestamp,
+          ls_file   TYPE zif_abapgit_definitions=>ty_stage_files.
 
     FIELD-SYMBOLS: <ls_status> LIKE LINE OF lt_status.
 
@@ -556,6 +557,18 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     lt_remote = lo_repo->get_files_remote( ).
     lt_local  = lo_repo->get_files_local( ).
     lt_status = lo_repo->status( ).
+
+    ls_file = VALUE #( local  = lt_local[]
+                       remote = lt_remote[]
+                       status = lt_status[]
+                     ).
+
+    zcl_abapgit_customizing_comp=>get_instance( )->create_local_file(
+      CHANGING
+        rs_file = ls_file
+    ).
+
+    lt_local[] = ls_file-local[].
 
     IF is_file IS NOT INITIAL.        " Diff for one file
 
@@ -1216,5 +1229,4 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
                              with = '_' ).
 
   ENDMETHOD.
-
 ENDCLASS.

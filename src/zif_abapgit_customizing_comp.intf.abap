@@ -30,4 +30,12 @@ interface ZIF_ABAPGIT_CUSTOMIZING_COMP
     importing
       !IS_BCSET_METADATA type TY_BCSET_METADATA
       !IO_LOG type ref to ZIF_ABAPGIT_LOG .
+  methods DISPLAY_DIFFERENCES
+    importing
+      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
+      !IS_FILE type ZIF_ABAPGIT_DEFINITIONS=>TY_FILE
+    returning
+      value(RV_IS_CUSTOMIZING_CONTENT) type ABAP_BOOL
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
 endinterface.

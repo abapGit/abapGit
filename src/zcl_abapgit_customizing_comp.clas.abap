@@ -38,6 +38,12 @@ private section.
   methods IS_A2G_TYPE_BCSET
     returning
       value(RV_IS_A2G_TYPE_BCSET) type ABAP_BOOL .
+  methods CREATE_CONTAINER
+    returning
+      value(RO_CONTAINER) type ref to IF_BCFG_CONFIG_CONTAINER .
+  methods ADD_FIELD_VALUES_TO_CONTAINER
+    importing
+      !IO_CONTAINER type ref to IF_BCFG_CONFIG_CONTAINER .
 ENDCLASS.
 
 
@@ -100,7 +106,7 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
     cl_scpr_runtime_bcset_factory=>set_bcset_runtime_metadata(
       EXPORTING
         is_attributes  = ms_bcset_metadata-scprattr                     " BC Set: Attributes
-        is_bcset_text  = VALUE #( id = ms_bcset_metadata-scprattr-id langu = sy-langu )
+        is_bcset_text  = ms_bcset_metadata-scprtext[ 1 ]
         it_record_attr = ms_bcset_metadata-scprreca[]                   " BC Set Data Record Information Table Type
         it_values      = ms_bcset_metadata-scprvals[]                   " BC Set Data Table Type
         it_values_lang = ms_bcset_metadata-scprvall[]                   " Language-Dependent BC Set Data Table Type
@@ -166,7 +172,7 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
       cl_scpr_runtime_bcset_factory=>set_bcset_runtime_metadata(
         EXPORTING
           is_attributes  = ms_bcset_metadata-scprattr                     " BC Set: Attributes
-          is_bcset_text  = VALUE #( id = ms_bcset_metadata-scprattr-id langu = sy-langu )
+          is_bcset_text  = ms_bcset_metadata-scprtext[ 1 ]
           it_record_attr = ms_bcset_metadata-scprreca[]                   " BC Set Data Record Information Table Type
           it_values      = ms_bcset_metadata-scprvals[]                   " BC Set Data Table Type
           it_values_lang = ms_bcset_metadata-scprvall[]                   " Language-Dependent BC Set Data Table Type
@@ -260,14 +266,55 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
 
   METHOD zif_abapgit_customizing_comp~apply_customizing_content.
 
+    ms_bcset_metadata = is_bcset_metadata.
+
+*   Create configuration container using the mappings
+    DATA(lo_container) = create_container( ).
+
+    add_field_values_to_container( lo_container ).
+
+    DATA(lo_result) = lo_container->apply( ).
+
+    LOOP AT lo_result->get_log_messages( ) ASSIGNING FIELD-SYMBOL(<ls_return>).
+
+      io_log->add( iv_msg  = <ls_return>-message
+                   iv_type = <ls_return>-type
+                 ).
+
+    ENDLOOP. " LOOP AT lo_result->get_log_messages( ) ASSIGNING FIELD-SYMBOL(<ls_return>)
+
+  ENDMETHOD.
+
+
+  METHOD add_field_values_to_container.
+
+*   Declaration of local internal table
+    DATA: lt_field_values    TYPE if_bcfg_config_container=>ty_t_field_values,
+          lt_field_value_tmp TYPE STANDARD TABLE OF if_bcfg_config_container=>ty_s_field_value.
+
+    lt_field_value_tmp[] = CORRESPONDING #( ms_bcset_metadata-scprvals[] MAPPING rec_id = recnumber ).
+    lt_field_values[] = CORRESPONDING #( ms_bcset_metadata-scprvall[] MAPPING rec_id = recnumber ).
+
+    LOOP AT lt_field_values[] ASSIGNING FIELD-SYMBOL(<ls_field_value>).
+
+      APPEND <ls_field_value> TO lt_field_value_tmp[].
+
+    ENDLOOP.
+
+    lt_field_values[] = lt_field_value_tmp[].
+
+    io_container->add_lines_by_fields( it_fields = lt_field_values[] ).
+
+  ENDMETHOD.
+
+
+  METHOD create_container.
+
 *   Declaration of local internal table
     DATA: lt_objects         TYPE scp1_act_objects,
           lt_mappings        TYPE if_bcfg_config_container=>ty_t_mapping_info,
-          lt_field_values    TYPE if_bcfg_config_container=>ty_t_field_values,
           lt_field_value_tmp TYPE STANDARD TABLE OF if_bcfg_config_container=>ty_s_field_value,
           lt_languages       TYPE if_bcfg_config_container=>ty_t_languages.
-
-    ms_bcset_metadata = is_bcset_metadata.
 
     CALL FUNCTION 'SCPR_ACTIV_EXTRACT_OBJECTS'
       IMPORTING
@@ -294,34 +341,57 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
     ENDIF.
 
 *   Create configuration container using the mappings
-    DATA(lo_container) = cl_bcfg_config_manager=>create_container( io_container_type  = cl_bcfg_enum_container_type=>classic  " CLASSIC
-                                                                   it_object_mappings = lt_mappings[]
-                                                                   it_langus          = lt_languages[]
-                                                                   io_commit_mode     = cl_bcfg_enum_commit_mode=>auto_commit " AUTO_COMMIT
-                                                                 ).
+    ro_container = cl_bcfg_config_manager=>create_container( io_container_type  = cl_bcfg_enum_container_type=>classic  " CLASSIC
+                                                             it_object_mappings = lt_mappings[]
+                                                             it_langus          = lt_languages[]
+                                                             io_commit_mode     = cl_bcfg_enum_commit_mode=>auto_commit " AUTO_COMMIT
+                                                           ).
 
-    lt_field_value_tmp[] = CORRESPONDING #( ms_bcset_metadata-scprvals[] MAPPING rec_id = recnumber ).
-    lt_field_values[] = CORRESPONDING #( ms_bcset_metadata-scprvall[] MAPPING rec_id = recnumber ).
+  ENDMETHOD.
 
-    LOOP AT lt_field_values[] ASSIGNING <ls_field_value>.
 
-      APPEND <ls_field_value> TO lt_field_value_tmp[].
+  METHOD zif_abapgit_customizing_comp~display_differences.
 
-    ENDLOOP.
+    DATA(lo_repo) = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    DATA(lt_status) = lo_repo->status( ).
+    DATA(lt_remote) = lo_repo->get_files_remote( ).
 
-    lt_field_values[] = lt_field_value_tmp[].
+    READ TABLE lt_status[] ASSIGNING FIELD-SYMBOL(<ls_status>)
+                           WITH KEY path     = is_file-path
+                                    filename = is_file-filename.
+    IF sy-subrc NE 0 OR <ls_status>-obj_type NE 'SCP1'.
+      RETURN.
+    ENDIF. " IF sy-subrc NE 0 OR <ls_status>-obj_type NE 'SCP1'
 
-    lo_container->add_lines_by_fields( it_fields = lt_field_values[] ).
+    READ TABLE lt_remote[] ASSIGNING FIELD-SYMBOL(<ls_file_details>)
+                           WITH KEY path     = <ls_status>-path
+                                    filename = <ls_status>-filename.
 
-    DATA(lo_result) = lo_container->apply( ).
+    read_bcset_metadata(
+      EXPORTING
+        is_item         = CORRESPONDING #( <ls_status> )
+        is_file_details = <ls_file_details>
+    ).
 
-    LOOP AT lo_result->get_log_messages( ) ASSIGNING FIELD-SYMBOL(<ls_return>).
+    IF is_a2g_type_bcset( ) = abap_false. " ' '
+      RETURN.
+    ENDIF. " IF is_a2g_type_bcset( ) = abap_false
 
-      io_log->add( iv_msg  = <ls_return>-message
-                   iv_type = <ls_return>-type
-                 ).
+*   Create configuration container using the mappings
+    DATA(lo_container) = create_container( ).
 
-    ENDLOOP. " LOOP AT lo_result->get_log_messages( ) ASSIGNING FIELD-SYMBOL(<ls_return>)
+    add_field_values_to_container( lo_container ).
 
+    DATA(lo_key_cobtainer) = lo_container->extract_key_container( ).
+
+    DATA(lo_local_container) = create_container( ).
+
+    lo_local_container->add_current_config( io_keys = lo_key_cobtainer ). " Option 1: specify keys to be read from the database
+
+    DATA(lt_mappings) = lo_local_container->get_mappings( ).
+
+
+*    CATCH cx_bcfg_invalid_mapping.  " raised if a mapping is invalid or missing
+*    CATCH cx_bcfg_operation_failed. " the operation did not complete successfully
   ENDMETHOD.
 ENDCLASS.

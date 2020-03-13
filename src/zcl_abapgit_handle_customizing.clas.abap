@@ -273,6 +273,9 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
                                                                                         ELSE '/CUSTOMER/' )
                                ).
 
+*   Populate short text
+    ls_bcset_metadata-scprtext[] = VALUE #( ( id = iv_bcset_id version = 'N' langu = sy-langu text = 'Generated via ABAPGIT' ) ).
+
 *   Populate records and values metadata
     ls_bcset_metadata-scprreca[] = it_record_attribute[].
     ls_bcset_metadata-scprvals[] = it_bcset_values[].
