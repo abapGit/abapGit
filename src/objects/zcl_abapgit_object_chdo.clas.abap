@@ -45,6 +45,12 @@ CLASS zcl_abapgit_object_chdo DEFINITION
            tt_change_document TYPE STANDARD TABLE OF ty_change_document.
 
     DATA: mv_object TYPE cdobjectcl.
+    METHODS:
+      clear_field
+        IMPORTING
+          iv_fieldname TYPE string
+        CHANGING
+          cs_structure TYPE any.
 
 ENDCLASS.
 
@@ -263,11 +269,37 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
              <ls_reports_generated>-author, <ls_reports_generated>-updname,
              <ls_reports_generated>-devclass.
     ENDLOOP.
+
     LOOP AT ls_change_object-objects ASSIGNING <ls_objects>.
-      CLEAR: <ls_objects>-udate, <ls_objects>-utime.
+
+      clear_field(
+        EXPORTING
+          iv_fieldname = |UDATE|
+        CHANGING
+          cs_structure = <ls_objects> ).
+
+      clear_field(
+        EXPORTING
+          iv_fieldname = |UTIME|
+        CHANGING
+          cs_structure = <ls_objects> ).
+
     ENDLOOP.
+
     LOOP AT ls_change_object-objects_text ASSIGNING <ls_objects_text>.
-      CLEAR: <ls_objects_text>-udate, <ls_objects_text>-utime.
+
+      clear_field(
+        EXPORTING
+          iv_fieldname = |UDATE|
+        CHANGING
+          cs_structure = <ls_objects_text> ).
+
+      clear_field(
+        EXPORTING
+          iv_fieldname = |UTIME|
+        CHANGING
+          cs_structure = <ls_objects_text> ).
+
     ENDLOOP.
 
     io_xml->add( iv_name = 'CHDO'
@@ -424,5 +456,21 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD clear_field.
+
+    FIELD-SYMBOLS: <lv_field> TYPE data.
+
+    ASSIGN
+      COMPONENT iv_fieldname
+      OF STRUCTURE cs_structure
+      TO <lv_field>.
+    IF sy-subrc <> 0.
+      RETURN. " Field is not available in lower NW versions
+    ENDIF.
+
+    CLEAR: <lv_field>.
+
+  ENDMETHOD.
 
 ENDCLASS.
