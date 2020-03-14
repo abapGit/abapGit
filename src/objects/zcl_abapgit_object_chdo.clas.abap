@@ -234,10 +234,10 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
           lt_tcdrp         TYPE STANDARD TABLE OF tcdrp,
           lt_tcdob         TYPE STANDARD TABLE OF tcdob,
           lt_tcdobt        TYPE STANDARD TABLE OF tcdobt,
-          BEGIN OF nulldatetime, " hack ro reset fields when they exist without syntax errors when they don't
+          BEGIN OF ls_nulldatetime, " hack ro reset fields when they exist without syntax errors when they don't
             udate TYPE sy-datum,
             utime TYPE sy-uzeit,
-          END OF nulldatetime.
+          END OF ls_nulldatetime.
 
     FIELD-SYMBOLS: <ls_reports_generated> LIKE LINE OF ls_change_object-reports_generated,
                    <ls_objects>           LIKE LINE OF ls_change_object-objects,
@@ -270,11 +270,11 @@ CLASS zcl_abapgit_object_chdo IMPLEMENTATION.
     ENDLOOP.
 
     LOOP AT ls_change_object-objects ASSIGNING <ls_objects>.
-      MOVE-CORRESPONDING nulldatetime TO <ls_objects>. " reset date and time
+      MOVE-CORRESPONDING ls_nulldatetime TO <ls_objects>. " reset date and time
     ENDLOOP.
 
     LOOP AT ls_change_object-objects_text ASSIGNING <ls_objects_text>.
-      MOVE-CORRESPONDING nulldatetime TO <ls_objects_text>. " reset date and time
+      MOVE-CORRESPONDING ls_nulldatetime TO <ls_objects_text>. " reset date and time
     ENDLOOP.
 
     io_xml->add( iv_name = 'CHDO'
