@@ -116,7 +116,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
     " Create instance of highighter dynamically dependent on syntax type
     IF iv_filename CP '*.abap'.
       CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_abap.
-    ELSEIF iv_filename CP '*.xml'.
+    ELSEIF iv_filename CP '*.xml' OR iv_filename CP '*.html'.
       CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_xml.
     ELSE.
       CLEAR ro_instance.

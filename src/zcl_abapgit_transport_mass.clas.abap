@@ -14,7 +14,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TRANSPORT_MASS IMPLEMENTATION.
+CLASS zcl_abapgit_transport_mass IMPLEMENTATION.
 
 
   METHOD run.
@@ -22,7 +22,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT_MASS IMPLEMENTATION.
     DATA:
       lt_trkorr           TYPE trwbo_request_headers,
       lo_transport_zipper TYPE REF TO lcl_transport_zipper,
-      lo_except           TYPE REF TO cx_root,
+      lx_except           TYPE REF TO cx_root,
       lv_folder           TYPE string,
       lv_text             TYPE string.
 
@@ -47,7 +47,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT_MASS IMPLEMENTATION.
 * Generate the local zip files from the given list of transport requests
           lo_transport_zipper->generate_files(
             it_trkorr = lt_trkorr
-            iv_logic  = zcl_abapgit_ui_factory=>get_popups( )->popup_folder_logic( ) ).
+            ig_logic  = zcl_abapgit_ui_factory=>get_popups( )->popup_folder_logic( ) ).
 
 * Open output folder if user asked it
           lcl_gui=>open_folder_frontend( lo_transport_zipper->get_folder( ) ).
@@ -57,9 +57,9 @@ CLASS ZCL_ABAPGIT_TRANSPORT_MASS IMPLEMENTATION.
           zcx_abapgit_exception=>raise( 'No transport requests selected' ).
         ENDIF.
 
-      CATCH zcx_abapgit_exception INTO lo_except.
+      CATCH zcx_abapgit_exception INTO lx_except.
 
-        lv_text = lo_except->get_text( ).
+        lv_text = lx_except->get_text( ).
         MESSAGE lv_text TYPE 'S' DISPLAY LIKE 'E'.
 
     ENDTRY.

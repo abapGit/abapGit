@@ -260,7 +260,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~delete.
-    DATA: lv_t100a          TYPE t100a,
+    DATA: ls_t100a          TYPE t100a,
           lv_frozen         TYPE abap_bool,
           lv_message_id     TYPE arbgb,
           lv_access_granted TYPE abap_bool.
@@ -272,7 +272,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."blank message id
     ENDIF.
 
-    SELECT SINGLE * FROM t100a INTO lv_t100a WHERE arbgb = ms_item-obj_name.
+    SELECT SINGLE * FROM t100a INTO ls_t100a WHERE arbgb = ms_item-obj_name.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."not found
     ENDIF.

@@ -48,145 +48,172 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
       scripts REDEFINITION.
 
   PRIVATE SECTION.
-    TYPES: ty_patch_action TYPE string.
 
-    CONSTANTS: BEGIN OF c_actions,
-                 stage          TYPE string VALUE 'patch_stage',
-                 toggle_unified TYPE string VALUE 'toggle_unified',
-               END OF c_actions,
-               BEGIN OF c_patch_action,
-                 add    TYPE ty_patch_action VALUE 'add',
-                 remove TYPE ty_patch_action VALUE 'remove',
-               END OF c_patch_action.
+    TYPES ty_patch_action TYPE string .
 
-    DATA: mt_diff_files    TYPE tt_file_diff,
-          mt_delayed_lines TYPE zif_abapgit_definitions=>ty_diffs_tt,
-          mv_unified       TYPE abap_bool VALUE abap_true,
-          mv_repo_key      TYPE zif_abapgit_persistence=>ty_repo-key,
-          mv_seed          TYPE string, " Unique page id to bind JS sessionStorage
-          mv_patch_mode    TYPE abap_bool,
-          mo_stage         TYPE REF TO zcl_abapgit_stage,
-          mv_section_count TYPE i.
+    CONSTANTS:
+      BEGIN OF c_actions,
+        stage          TYPE string VALUE 'patch_stage',
+        toggle_unified TYPE string VALUE 'toggle_unified',
+      END OF c_actions .
+    CONSTANTS:
+      BEGIN OF c_patch_action,
+        add    TYPE ty_patch_action VALUE 'add',
+        remove TYPE ty_patch_action VALUE 'remove',
+      END OF c_patch_action .
+    DATA mt_diff_files TYPE tt_file_diff .
+    DATA mt_delayed_lines TYPE zif_abapgit_definitions=>ty_diffs_tt .
+    DATA mv_unified TYPE abap_bool VALUE abap_true ##NO_TEXT.
+    DATA mv_repo_key TYPE zif_abapgit_persistence=>ty_repo-key .
+    DATA mv_seed TYPE string .            " Unique page id to bind JS sessionStorage
+    DATA mv_patch_mode TYPE abap_bool .
+    DATA mo_stage TYPE REF TO zcl_abapgit_stage .
+    DATA mv_section_count TYPE i .
 
     METHODS render_diff
-      IMPORTING is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+      IMPORTING
+        !is_diff       TYPE ty_file_diff
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     METHODS render_diff_head
-      IMPORTING is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+      IMPORTING
+        !is_diff       TYPE ty_file_diff
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     METHODS render_table_head
-      IMPORTING is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+      IMPORTING
+        !is_diff       TYPE ty_file_diff
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     METHODS render_lines
-      IMPORTING is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+      IMPORTING
+        !is_diff       TYPE ty_file_diff
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     METHODS render_beacon
-      IMPORTING is_diff_line   TYPE zif_abapgit_definitions=>ty_diff
-                is_diff        TYPE ty_file_diff
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+      IMPORTING
+        !is_diff_line  TYPE zif_abapgit_definitions=>ty_diff
+        !is_diff       TYPE ty_file_diff
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     METHODS render_line_split
-      IMPORTING is_diff_line   TYPE zif_abapgit_definitions=>ty_diff
-                iv_filename    TYPE string
-                iv_fstate      TYPE char1
-                iv_index       TYPE sy-tabix
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+      IMPORTING
+        !is_diff_line  TYPE zif_abapgit_definitions=>ty_diff
+        !iv_filename   TYPE string
+        !iv_fstate     TYPE char1
+        !iv_index      TYPE sy-tabix
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     METHODS render_line_unified
-      IMPORTING is_diff_line   TYPE zif_abapgit_definitions=>ty_diff OPTIONAL
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+      IMPORTING
+        !is_diff_line  TYPE zif_abapgit_definitions=>ty_diff OPTIONAL
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     METHODS append_diff
-      IMPORTING it_remote TYPE zif_abapgit_definitions=>ty_files_tt
-                it_local  TYPE zif_abapgit_definitions=>ty_files_item_tt
-                is_status TYPE zif_abapgit_definitions=>ty_result
-      RAISING   zcx_abapgit_exception.
+      IMPORTING
+        !it_remote TYPE zif_abapgit_definitions=>ty_files_tt
+        !it_local  TYPE zif_abapgit_definitions=>ty_files_item_tt
+        !is_status TYPE zif_abapgit_definitions=>ty_result
+      RAISING
+        zcx_abapgit_exception .
     METHODS build_menu
-      RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
+      RETURNING
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS is_binary
-      IMPORTING iv_d1         TYPE xstring
-                iv_d2         TYPE xstring
-      RETURNING VALUE(rv_yes) TYPE abap_bool.
+      IMPORTING
+        !iv_d1        TYPE xstring
+        !iv_d2        TYPE xstring
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool .
     METHODS add_to_stage
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS render_patch
       IMPORTING
-        io_html                TYPE REF TO zcl_abapgit_html
-        iv_patch_line_possible TYPE abap_bool
-        iv_filename            TYPE string
-        is_diff_line           TYPE zif_abapgit_definitions=>ty_diff
-        iv_index               TYPE sy-tabix
+        !io_html                TYPE REF TO zcl_abapgit_html
+        !iv_patch_line_possible TYPE abap_bool
+        !iv_filename            TYPE string
+        !is_diff_line           TYPE zif_abapgit_definitions=>ty_diff
+        !iv_index               TYPE sy-tabix
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS start_staging
       IMPORTING
-        it_postdata TYPE cnht_post_data_tab
+        !it_postdata TYPE cnht_post_data_tab
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS apply_patch_all
       IMPORTING
-        iv_patch      TYPE string
-        iv_patch_flag TYPE abap_bool
+        !iv_patch      TYPE string
+        !iv_patch_flag TYPE abap_bool
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS render_patch_head
       IMPORTING
-        io_html TYPE REF TO zcl_abapgit_html
-        is_diff TYPE ty_file_diff.
+        !io_html TYPE REF TO zcl_abapgit_html
+        !is_diff TYPE ty_file_diff .
     METHODS apply_patch_for
       IMPORTING
-        iv_filename   TYPE string
-        iv_line_index TYPE string
-        iv_patch_flag TYPE abap_bool
+        !iv_filename   TYPE string
+        !iv_line_index TYPE string
+        !iv_patch_flag TYPE abap_bool
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS get_diff_object
       IMPORTING
-        iv_filename    TYPE string
+        !iv_filename   TYPE string
       RETURNING
         VALUE(ro_diff) TYPE REF TO zcl_abapgit_diff
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS get_diff_line
       IMPORTING
-        io_diff        TYPE REF TO zcl_abapgit_diff
-        iv_line_index  TYPE string
+        !io_diff       TYPE REF TO zcl_abapgit_diff
+        !iv_line_index TYPE string
       RETURNING
         VALUE(rs_diff) TYPE zif_abapgit_definitions=>ty_diff
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS are_all_lines_patched
       IMPORTING
-        it_diff                         TYPE zif_abapgit_definitions=>ty_diffs_tt
+        !it_diff                        TYPE zif_abapgit_definitions=>ty_diffs_tt
       RETURNING
-        VALUE(rv_are_all_lines_patched) TYPE abap_bool.
+        VALUE(rv_are_all_lines_patched) TYPE abap_bool .
     METHODS add_jump_sub_menu
       IMPORTING
-        io_menu TYPE REF TO zcl_abapgit_html_toolbar.
+        !io_menu TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS add_filter_sub_menu
       IMPORTING
-        io_menu TYPE REF TO zcl_abapgit_html_toolbar.
+        !io_menu TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS get_patch_id
       IMPORTING
-        is_diff            TYPE ty_file_diff
+        !is_diff           TYPE ty_file_diff
       RETURNING
-        VALUE(rv_filename) TYPE string.
+        VALUE(rv_filename) TYPE string .
     METHODS normalize_path
       IMPORTING
-        iv_path              TYPE string
+        !iv_path             TYPE string
       RETURNING
-        VALUE(rv_normalized) TYPE string.
+        VALUE(rv_normalized) TYPE string .
     METHODS normalize_filename
       IMPORTING
-        iv_filename          TYPE string
+        !iv_filename         TYPE string
       RETURNING
-        VALUE(rv_normalized) TYPE string.
+        VALUE(rv_normalized) TYPE string .
     CLASS-METHODS get_patch_data
       IMPORTING
-        iv_patch      TYPE string
+        !iv_patch      TYPE string
       EXPORTING
-        ev_filename   TYPE string
-        ev_line_index TYPE string
+        !ev_filename   TYPE string
+        !ev_line_index TYPE string
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -650,6 +677,15 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_patch_id.
+
+    rv_filename = normalize_path( is_diff-path )
+               && `_`
+               && normalize_filename( is_diff-filename ).
+
+  ENDMETHOD.
+
+
   METHOD is_binary.
 
     FIELD-SYMBOLS <lv_data> LIKE iv_d1.
@@ -661,6 +697,26 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     ENDIF.
 
     rv_yes = zcl_abapgit_utils=>is_binary( <lv_data> ).
+
+  ENDMETHOD.
+
+
+  METHOD normalize_filename.
+
+    rv_normalized = replace( val  = iv_filename
+                             sub  = '.'
+                             occ  = 0
+                             with = '_' ).
+
+  ENDMETHOD.
+
+
+  METHOD normalize_path.
+
+    rv_normalized = replace( val  = iv_path
+                             sub  = '/'
+                             occ  = 0
+                             with = '_' ).
 
   ENDMETHOD.
 
@@ -769,6 +825,12 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div class="diff_head">' ).              "#EC NOTEXT
+
+    ro_html->add_icon(
+      iv_name    = 'chevron-down'
+      iv_hint    = 'Collapse/Expand'
+      iv_class   = 'cursor-pointer'
+      iv_onclick = 'onDiffCollapse(event)' ).
 
     IF is_diff-type <> 'binary'.
       ls_stats = is_diff-o_diff->stats( ).
@@ -1005,9 +1067,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   METHOD render_patch.
 
     CONSTANTS:
-      BEGIN OF c_css_class,
+      BEGIN OF lc_css_class,
         patch TYPE string VALUE `patch` ##NO_TEXT,
-      END OF c_css_class.
+      END OF lc_css_class.
 
     DATA: lv_id      TYPE string,
           lv_patched TYPE abap_bool.
@@ -1018,7 +1080,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
       lv_id = |{ iv_filename }_{ mv_section_count }_{ iv_index }|.
 
-      io_html->add( |<td class="{ c_css_class-patch }">| ).
+      io_html->add( |<td class="{ lc_css_class-patch }">| ).
       io_html->add_checkbox(
           iv_id      = |patch_line_{ lv_id }|
           iv_checked = lv_patched ).
@@ -1026,7 +1088,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     ELSE.
 
-      io_html->add( |<td class="{ c_css_class-patch }">| ).
+      io_html->add( |<td class="{ lc_css_class-patch }">| ).
       io_html->add( |</td>| ).
 
     ENDIF.
@@ -1187,34 +1249,4 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
-
-
-  METHOD get_patch_id.
-
-    rv_filename = normalize_path( is_diff-path )
-               && `_`
-               && normalize_filename( is_diff-filename ).
-
-  ENDMETHOD.
-
-
-  METHOD normalize_path.
-
-    rv_normalized = replace( val  = iv_path
-                             sub  = '/'
-                             occ  = 0
-                             with = '_' ).
-
-  ENDMETHOD.
-
-
-  METHOD normalize_filename.
-
-    rv_normalized = replace( val  = iv_filename
-                             sub  = '.'
-                             occ  = 0
-                             with = '_' ).
-
-  ENDMETHOD.
-
 ENDCLASS.

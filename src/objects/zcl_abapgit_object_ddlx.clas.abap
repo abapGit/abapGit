@@ -4,7 +4,7 @@ CLASS zcl_abapgit_object_ddlx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
   PRIVATE SECTION.
-    DATA mo_persistence TYPE REF TO if_wb_object_persist .
+    DATA mi_persistence TYPE REF TO if_wb_object_persist .
     METHODS get_persistence
       RETURNING
         VALUE(ri_persistence) TYPE REF TO if_wb_object_persist
@@ -12,17 +12,17 @@ CLASS zcl_abapgit_object_ddlx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         zcx_abapgit_exception .
     METHODS clear_fields
       CHANGING
-        !cs_data TYPE any .
+        !cg_data TYPE any .
     METHODS clear_field
       IMPORTING
         !iv_fieldname TYPE csequence
       CHANGING
-        !cs_metadata  TYPE any .
+        !cg_metadata  TYPE any .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
+CLASS zcl_abapgit_object_ddlx IMPLEMENTATION.
 
 
   METHOD clear_field.
@@ -30,7 +30,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
     FIELD-SYMBOLS: <lg_field> TYPE data.
 
     ASSIGN COMPONENT iv_fieldname
-           OF STRUCTURE cs_metadata
+           OF STRUCTURE cg_metadata
            TO <lg_field>.
     ASSERT sy-subrc = 0.
 
@@ -44,39 +44,39 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
     FIELD-SYMBOLS: <lg_metadata> TYPE any.
 
     ASSIGN COMPONENT 'METADATA'
-           OF STRUCTURE cs_data
+           OF STRUCTURE cg_data
            TO <lg_metadata>.
     ASSERT sy-subrc = 0.
 
     clear_field( EXPORTING iv_fieldname = 'CHANGED_AT'
-                 CHANGING  cs_metadata  = <lg_metadata> ).
+                 CHANGING  cg_metadata  = <lg_metadata> ).
 
     clear_field( EXPORTING iv_fieldname = 'CHANGED_BY'
-                 CHANGING  cs_metadata  = <lg_metadata> ).
+                 CHANGING  cg_metadata  = <lg_metadata> ).
 
     clear_field( EXPORTING iv_fieldname = 'CREATED_AT'
-                 CHANGING  cs_metadata  = <lg_metadata> ).
+                 CHANGING  cg_metadata  = <lg_metadata> ).
 
     clear_field( EXPORTING iv_fieldname = 'CREATED_BY'
-                 CHANGING  cs_metadata  = <lg_metadata> ).
+                 CHANGING  cg_metadata  = <lg_metadata> ).
 
     clear_field( EXPORTING iv_fieldname = 'RESPONSIBLE'
-                 CHANGING  cs_metadata  = <lg_metadata> ).
+                 CHANGING  cg_metadata  = <lg_metadata> ).
 
     clear_field( EXPORTING iv_fieldname = 'PACKAGE_REF-NAME'
-                 CHANGING  cs_metadata  = <lg_metadata> ).
+                 CHANGING  cg_metadata  = <lg_metadata> ).
 
     clear_field( EXPORTING iv_fieldname = 'CONTAINER_REF-PACKAGE_NAME'
-                 CHANGING  cs_metadata  = <lg_metadata> ).
+                 CHANGING  cg_metadata  = <lg_metadata> ).
 
     clear_field( EXPORTING iv_fieldname = 'VERSION'
-                 CHANGING  cs_metadata  = <lg_metadata> ).
+                 CHANGING  cg_metadata  = <lg_metadata> ).
 
     clear_field( EXPORTING iv_fieldname = 'RESPONSIBLE'
-                 CHANGING  cs_metadata  = <lg_metadata> ).
+                 CHANGING  cg_metadata  = <lg_metadata> ).
 
     clear_field( EXPORTING iv_fieldname = 'MASTER_SYSTEM'
-                 CHANGING  cs_metadata  = <lg_metadata> ).
+                 CHANGING  cg_metadata  = <lg_metadata> ).
 
   ENDMETHOD.
 
@@ -86,9 +86,9 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
     DATA: lx_error TYPE REF TO cx_root.
 
     TRY.
-        IF mo_persistence IS NOT BOUND.
+        IF mi_persistence IS NOT BOUND.
 
-          CREATE OBJECT mo_persistence
+          CREATE OBJECT mi_persistence
                  TYPE ('CL_DDLX_ADT_OBJECT_PERSIST').
 
         ENDIF.
@@ -98,7 +98,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
                                       ix_previous = lx_error ).
     ENDTRY.
 
-    ri_persistence = mo_persistence.
+    ri_persistence = mi_persistence.
 
   ENDMETHOD.
 
@@ -307,7 +307,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLX IMPLEMENTATION.
 
         li_data_model->get_data( IMPORTING p_data = <lg_data> ).
 
-        clear_fields( CHANGING cs_data = <lg_data> ).
+        clear_fields( CHANGING cg_data = <lg_data> ).
 
         ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <lg_data> TO <lg_field>.
         ASSERT sy-subrc = 0.
