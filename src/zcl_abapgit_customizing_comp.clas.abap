@@ -137,10 +137,8 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
         lv_is_equal = lo_local_container->if_bcfg_config_container~equals( io_other = lo_remote_container ).
 
       CATCH cx_bcfg_operation_failed INTO lo_operation_failed.
-        zcx_abapgit_exception=>raise(
-          EXPORTING
-            iv_text     = 'Operation Failed'(001)
-            ix_previous = lo_operation_failed ).
+        zcx_abapgit_exception=>raise( iv_text     = 'Operation Failed'(001)
+                                      ix_previous = lo_operation_failed ).
 
     ENDTRY.
 
