@@ -1,49 +1,49 @@
-class ZCL_ABAPGIT_CUSTOMIZING_COMP definition
-  public
-  final
-  create private .
+CLASS zcl_abapgit_customizing_comp DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PRIVATE .
 
-public section.
+  PUBLIC SECTION.
 
-  interfaces ZIF_ABAPGIT_CUSTOMIZING_COMP .
+    INTERFACES zif_abapgit_customizing_comp .
 
-  class-methods GET_INSTANCE
-    returning
-      value(RO_CUSTOMIZING_COMPARE) type ref to ZIF_ABAPGIT_CUSTOMIZING_COMP .
-protected section.
-private section.
+    CLASS-METHODS get_instance
+      RETURNING
+        VALUE(ro_customizing_compare) TYPE REF TO zif_abapgit_customizing_comp .
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 
-  types:
-    BEGIN OF ty_bcset_metadata,
-      scprattr TYPE scprattr,
-      scprtext TYPE STANDARD TABLE OF scprtext WITH DEFAULT KEY,
-      scprvals TYPE STANDARD TABLE OF scprvals WITH DEFAULT KEY,
-      scprvall TYPE STANDARD TABLE OF scprvall WITH DEFAULT KEY,
-      scprreca TYPE STANDARD TABLE OF scprreca WITH DEFAULT KEY,
-      scprfldv TYPE STANDARD TABLE OF scprfldv WITH DEFAULT KEY,
-      subprofs TYPE STANDARD TABLE OF scprpprl WITH DEFAULT KEY,
-    END OF ty_bcset_metadata .
+    TYPES:
+      BEGIN OF ty_bcset_metadata,
+        scprattr TYPE scprattr,
+        scprtext TYPE STANDARD TABLE OF scprtext WITH DEFAULT KEY,
+        scprvals TYPE STANDARD TABLE OF scprvals WITH DEFAULT KEY,
+        scprvall TYPE STANDARD TABLE OF scprvall WITH DEFAULT KEY,
+        scprreca TYPE STANDARD TABLE OF scprreca WITH DEFAULT KEY,
+        scprfldv TYPE STANDARD TABLE OF scprfldv WITH DEFAULT KEY,
+        subprofs TYPE STANDARD TABLE OF scprpprl WITH DEFAULT KEY,
+      END OF ty_bcset_metadata .
 
-  constants MC_BCSET type TROBJTYPE value 'SCP1' ##NO_TEXT.
-  class-data MO_CUSTOMIZING_COMPARE type ref to ZCL_ABAPGIT_CUSTOMIZING_COMP .
-  data MS_BCSET_METADATA type TY_BCSET_METADATA .
-  constants MC_BCSET_TYPE type SCPR_TYPE value 'A2G' ##NO_TEXT.
+    CONSTANTS mc_bcset TYPE trobjtype VALUE 'SCP1' ##NO_TEXT.
+    CLASS-DATA go_customizing_compare TYPE REF TO zcl_abapgit_customizing_comp .
+    DATA ms_bcset_metadata TYPE ty_bcset_metadata .
+    CONSTANTS mc_bcset_type TYPE scpr_type VALUE 'A2G' ##NO_TEXT.
 
-  methods READ_BCSET_METADATA
-    importing
-      !IS_ITEM type ZIF_ABAPGIT_DEFINITIONS=>TY_ITEM
-      !IS_FILE_DETAILS type ZIF_ABAPGIT_DEFINITIONS=>TY_FILE
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods IS_A2G_TYPE_BCSET
-    returning
-      value(RV_IS_A2G_TYPE_BCSET) type ABAP_BOOL .
-  methods CREATE_CONTAINER
-    returning
-      value(RO_CONTAINER) type ref to CL_BCFG_BCSET_CONFIG_CONTAINER .
-  methods ADD_FIELD_VALUES_TO_CONTAINER
-    importing
-      !IO_CONTAINER type ref to IF_BCFG_CONFIG_CONTAINER .
+    METHODS read_bcset_metadata
+      IMPORTING
+        !is_item         TYPE zif_abapgit_definitions=>ty_item
+        !is_file_details TYPE zif_abapgit_definitions=>ty_file
+      RAISING
+        zcx_abapgit_exception .
+    METHODS is_a2g_type_bcset
+      RETURNING
+        VALUE(rv_is_a2g_type_bcset) TYPE abap_bool .
+    METHODS create_container
+      RETURNING
+        VALUE(ro_container) TYPE REF TO cl_bcfg_bcset_config_container .
+    METHODS add_field_values_to_container
+      IMPORTING
+        !io_container TYPE REF TO if_bcfg_config_container .
 ENDCLASS.
 
 
@@ -53,13 +53,13 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
 
   METHOD get_instance.
 
-    IF mo_customizing_compare IS NOT BOUND.
+    IF go_customizing_compare IS NOT BOUND.
 
-      CREATE OBJECT mo_customizing_compare.
+      CREATE OBJECT go_customizing_compare.
 
-    ENDIF. " IF mo_customizing_compare IS NOT BOUND
+    ENDIF. " IF GO_CUSTOMIZING_COMPARE IS NOT BOUND
 
-    ro_customizing_compare ?= mo_customizing_compare.
+    ro_customizing_compare ?= go_customizing_compare.
 
   ENDMETHOD.
 
@@ -94,8 +94,7 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
       EXPORTING
         iv_name = is_item-obj_type
       CHANGING
-        cg_data = ms_bcset_metadata
-    ).
+        cg_data = ms_bcset_metadata ).
 
   ENDMETHOD.
 
@@ -424,11 +423,10 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
     ENDIF.
 
 *   Create configuration container using the mappings
-    ro_container ?= cl_bcfg_config_manager=>create_container( io_container_type  = cl_bcfg_enum_container_type=>classic  " CLASSIC
+    ro_container ?= cl_bcfg_config_manager=>create_container( io_container_type  = cl_bcfg_enum_container_type=>classic     " CLASSIC
                                                               it_object_mappings = lt_mappings[]
                                                               it_langus          = lt_languages[]
-                                                              io_commit_mode     = cl_bcfg_enum_commit_mode=>auto_commit " AUTO_COMMIT
-                                                            ).
+                                                              io_commit_mode     = cl_bcfg_enum_commit_mode=>auto_commit ). " AUTO_COMMIT
 
   ENDMETHOD.
 ENDCLASS.
