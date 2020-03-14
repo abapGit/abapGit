@@ -132,7 +132,7 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
         lo_local_container = create_container( ).
 
 *       Get local data
-        lo_local_container->if_bcfg_config_container~add_current_config( io_keys = lo_key_container ). " Option 1: specify keys to be read from the database
+        lo_local_container->if_bcfg_config_container~add_current_config( io_keys = lo_key_container ).
 
         lv_is_equal = lo_local_container->if_bcfg_config_container~equals( io_other = lo_remote_container ).
 
@@ -418,15 +418,16 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
       APPEND <ls_field_value>-langu TO lt_languages[].
 
     ENDLOOP.
-    IF sy-subrc NE 0.
+    IF lt_field_value[] IS INITIAL.
       APPEND sy-langu TO lt_languages[].
-    ENDIF.
+    ENDIF. " IF lt_field_value[] IS INITIAL
 
 *   Create configuration container using the mappings
-    ro_container ?= cl_bcfg_config_manager=>create_container( io_container_type  = cl_bcfg_enum_container_type=>classic     " CLASSIC
-                                                              it_object_mappings = lt_mappings[]
-                                                              it_langus          = lt_languages[]
-                                                              io_commit_mode     = cl_bcfg_enum_commit_mode=>auto_commit ). " AUTO_COMMIT
+    ro_container ?= cl_bcfg_config_manager=>create_container(
+                       io_container_type  = cl_bcfg_enum_container_type=>classic
+                       it_object_mappings = lt_mappings[]
+                       it_langus          = lt_languages[]
+                       io_commit_mode     = cl_bcfg_enum_commit_mode=>auto_commit ).
 
   ENDMETHOD.
 ENDCLASS.
