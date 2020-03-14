@@ -137,6 +137,9 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
   METHOD build_new_remote.
 
+*   Declaration of local object reference
+    DATA: lo_customizing_compare TYPE REF TO zif_abapgit_customizing_comp.
+
     DATA: ls_item     LIKE LINE OF it_items,
           ls_file_sig LIKE LINE OF it_state.
 
@@ -187,13 +190,14 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
       ELSEIF rs_result-obj_type = 'SCP1'.
 
-        zcl_abapgit_customizing_comp=>get_instance( )->compare_customizing_with_table(
-                                                         EXPORTING
-                                                           is_file_details = is_remote
-                                                           is_item         = ls_item
-                                                         CHANGING
-                                                           cs_result       = rs_result
-                                                       ).
+        lo_customizing_compare = zcl_abapgit_customizing_comp=>get_instance( ).
+        lo_customizing_compare->compare_customizing_with_table(
+                                   EXPORTING
+                                     is_file_details = is_remote
+                                     is_item         = ls_item
+                                   CHANGING
+                                     cs_result       = rs_result
+        ).
 
       ENDIF.
 

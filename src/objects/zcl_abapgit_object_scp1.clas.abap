@@ -352,6 +352,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
+*   Declaration of local object reference
+    DATA: lo_customizing_compare TYPE REF TO zif_abapgit_customizing_comp.
+
     DATA: ls_scp1 TYPE ty_scp1.
 
     io_xml->read(
@@ -360,9 +363,10 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
 
     IF ls_scp1-scprattr-type = 'A2G'.
 
-      zcl_abapgit_customizing_comp=>get_instance( )->apply_customizing_content( is_bcset_metadata = ls_scp1
-                                                                                io_log            = ii_log
-                                                                              ).
+      lo_customizing_compare = zcl_abapgit_customizing_comp=>get_instance( ).
+      lo_customizing_compare->apply_customizing_content( is_bcset_metadata = ls_scp1
+                                                         io_log            = ii_log
+                                                       ).
 
     ELSE.
 

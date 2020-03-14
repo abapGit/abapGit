@@ -87,6 +87,9 @@ CLASS ZCL_ABAPGIT_STAGE_LOGIC IMPLEMENTATION.
 
   METHOD zif_abapgit_stage_logic~get.
 
+*   Declaration of local object reference
+    DATA: lo_customizing_compare TYPE REF TO zif_abapgit_customizing_comp.
+
     rs_files-local  = io_repo->get_files_local( ).
     rs_files-remote = io_repo->get_files_remote( ).
     rs_files-status = io_repo->status( ).
@@ -94,7 +97,8 @@ CLASS ZCL_ABAPGIT_STAGE_LOGIC IMPLEMENTATION.
     remove_ignored( EXPORTING io_repo  = io_repo
                     CHANGING  cs_files = rs_files ).
 
-    zcl_abapgit_customizing_comp=>get_instance( )->create_local_file(
+    lo_customizing_compare = zcl_abapgit_customizing_comp=>get_instance( ).
+    lo_customizing_compare->create_local_file(
       CHANGING
         rs_file = rs_files
     ).

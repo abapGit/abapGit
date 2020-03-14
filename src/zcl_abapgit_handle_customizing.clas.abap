@@ -127,21 +127,29 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
 
   METHOD get_instance.
 
-    READ TABLE mt_handle_customizing_instance[] ASSIGNING FIELD-SYMBOL(<ls_handle_customizing>)
+*   Declaration of local object reference
+    DATA: lo_handle_customizing TYPE REF TO zcl_abapgit_handle_customizing.
+
+*   Declaration of local workarea
+    DATA: ls_handle_customizing TYPE ty_handle_customizing_instance.
+
+    READ TABLE mt_handle_customizing_instance[] INTO ls_handle_customizing
                                                 WITH TABLE KEY transport_request = iv_transport_request.
     IF sy-subrc = 0.
 
-      ro_handle_customizing ?= <ls_handle_customizing>-instance.
+      ro_handle_customizing ?= ls_handle_customizing-instance.
 
     ELSE.
 
       TRY.
 
-          DATA(lo_handle_customizing) = NEW zcl_abapgit_handle_customizing( iv_transport_request = iv_transport_request ).
+          CREATE OBJECT lo_handle_customizing
+            EXPORTING
+              iv_transport_request = iv_transport_request.
 
-          mt_handle_customizing_instance[] = VALUE #( BASE mt_handle_customizing_instance ( transport_request = iv_transport_request
-                                                                                            instance          = lo_handle_customizing
-                                                                                          ) ).
+          ls_handle_customizing-transport_request = iv_transport_request.
+          ls_handle_customizing-instance          = lo_handle_customizing.
+          INSERT ls_handle_customizing INTO TABLE mt_handle_customizing_instance[].
 
           ro_handle_customizing ?= lo_handle_customizing.
 
@@ -155,6 +163,10 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
 
 
   METHOD zif_abapgit_handle_customizing~stage_customizing_content.
+
+*   Declaration of local object reference
+    DATA: lo_xml_data     TYPE REF TO zcl_abapgit_xml_output,
+          lo_object_files TYPE REF TO zcl_abapgit_objects_files.
 
 *   Declaration of local internal table
     DATA: lt_recattr TYPE scprrecatab,
@@ -199,16 +211,16 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
       SEPARATED BY '_'.
 
 *     Create XML file
-      DATA(lo_xml_data) = create_xml( iv_bcset_id         = lv_bcset_id
-                                      it_record_attribute = lt_recattr[]
-                                      it_bcset_values     = lt_values[]
-                                    ).
+      lo_xml_data = create_xml( iv_bcset_id         = lv_bcset_id
+                                it_record_attribute = lt_recattr[]
+                                it_bcset_values     = lt_values[]
+                              ).
 
 *     Create object files
-      DATA(lo_object_files) = create_object_files( iv_bcset_id = lv_bcset_id
-                                                   iv_devclass = iv_devclass
-                                                   io_xml      = lo_xml_data  " XML Output
-                                                 ).
+      lo_object_files = create_object_files( iv_bcset_id = lv_bcset_id
+                                             iv_devclass = iv_devclass
+                                             io_xml      = lo_xml_data  " XML Output
+                                           ).
 
 *     Stage created files
       stage_files( iv_bcset_id     = lv_bcset_id
@@ -226,14 +238,19 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
   METHOD create_xml.
 
 *   Declaration of local workarea
-    DATA: ls_bcset_metadata TYPE ty_bcset_metadata.
+    DATA: ls_bcset_metadata TYPE ty_bcset_metadata,
+          ls_bcset_text     TYPE scprtext.
 
 *   Declaration of local variable
     DATA: lv_system_type TYPE sy-sysid,
           lv_org_id      TYPE scpr_orgid.
 
+*   Declaration of local field symbols
+    FIELD-SYMBOLS: <ls_recattr> TYPE scprreca,
+                   <ls_values>  TYPE scprvals.
+
 *   Instantiate the XML object
-    ro_xml_output = NEW #( ).
+    CREATE OBJECT ro_xml_output.
 
 *   Get system type
     CALL FUNCTION 'TR_SYS_PARAMS'
@@ -256,27 +273,30 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
     ENDIF. " IF lv_system_type = 'SAP'
 
 *   Populate BC set header data
-    ls_bcset_metadata = VALUE #( scprattr-id      = iv_bcset_id
-                                 scprattr-version = mc_version    " N
-                                 scprattr-type    = mc_bcset_type " A2G
-                                 scprattr-reftype = 'TRAN'
-                                 scprattr-refname = ms_request_details-h-trkorr
-                                 scprattr-orgid   = lv_org_id
-                               ).
+    ls_bcset_metadata-scprattr-id      = iv_bcset_id.
+    ls_bcset_metadata-scprattr-version = mc_version.    " N
+    ls_bcset_metadata-scprattr-type    = mc_bcset_type. " A2G
+    ls_bcset_metadata-scprattr-reftype = 'TRAN'.
+    ls_bcset_metadata-scprattr-refname = ms_request_details-h-trkorr.
+    ls_bcset_metadata-scprattr-orgid   = lv_org_id.
 
 *   Populate short text
-    ls_bcset_metadata-scprtext[] = VALUE #( ( id = iv_bcset_id version = mc_version langu = sy-langu text = 'Generated via ABAPGIT'(004) ) ).
+    ls_bcset_text-id      = ls_bcset_metadata-scprattr-id.
+    ls_bcset_text-version = ls_bcset_metadata-scprattr-version.
+    ls_bcset_text-langu   = sy-langu.
+    ls_bcset_text-text    = 'Generated via ABAPGIT'(004).
+    APPEND ls_bcset_text TO ls_bcset_metadata-scprtext[].
 
 *   Populate records and values metadata
     ls_bcset_metadata-scprreca[] = it_record_attribute[].
-    LOOP AT ls_bcset_metadata-scprreca[] ASSIGNING FIELD-SYMBOL(<ls_recattr>).
+    LOOP AT ls_bcset_metadata-scprreca[] ASSIGNING <ls_recattr>.
       <ls_recattr>-id = iv_bcset_id.
-    ENDLOOP. " LOOP AT ls_bcset_metadata-scprreca[] ASSIGNING FIELD-SYMBOL(<ls_recattr>)
+    ENDLOOP. " LOOP AT ls_bcset_metadata-scprreca[] ASSIGNING <ls_recattr>
 
     ls_bcset_metadata-scprvals[] = it_bcset_values[].
-    LOOP AT ls_bcset_metadata-scprvals[] ASSIGNING FIELD-SYMBOL(<ls_values>).
+    LOOP AT ls_bcset_metadata-scprvals[] ASSIGNING <ls_values>.
       <ls_values>-id = iv_bcset_id.
-    ENDLOOP. " LOOP AT ls_bcset_metadata-scprvals[] ASSIGNING FIELD-SYMBOL(<ls_values>)
+    ENDLOOP. " LOOP AT ls_bcset_metadata-scprvals[] ASSIGNING <ls_values>
 
 *   Get language values
     CALL FUNCTION 'SCPR_TEMPL_CT_LANG_ALL_GET'
@@ -300,13 +320,17 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
 
   METHOD create_object_files.
 
-*  Declaration of local workarea
+*   Declaration of local workarea
     DATA: ls_item TYPE zif_abapgit_definitions=>ty_item.
 
-    ls_item = VALUE #( obj_type = mc_bcset obj_name = iv_bcset_id devclass = iv_devclass ).
+    ls_item-obj_type = mc_bcset.    " SCP1
+    ls_item-obj_name = iv_bcset_id.
+    ls_item-devclass = iv_devclass.
 
 *   Instantiate object files object
-    ro_object_files = NEW #( is_item = ls_item ).
+    CREATE OBJECT ro_object_files
+      EXPORTING
+        is_item = ls_item.
 
 *   Add XML data to file
     ro_object_files->add_xml(
@@ -322,17 +346,23 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
 *   Declaration of local workarea
     DATA: ls_files_and_item TYPE zcl_abapgit_objects=>ty_serialization.
 
-    ls_files_and_item-item  = VALUE #( obj_type = mc_bcset obj_name = iv_bcset_id devclass = iv_devclass ).
+*   Declaration of local field symbols
+    FIELD-SYMBOLS: <ls_file> TYPE zif_abapgit_definitions=>ty_file.
+
+    ls_files_and_item-item-obj_type = mc_bcset.    " SCP1
+    ls_files_and_item-item-obj_name = iv_bcset_id.
+    ls_files_and_item-item-devclass = iv_devclass.
+
     ls_files_and_item-files = io_object_files->get_files( ).
 
     IF mo_staged_files IS NOT BOUND.
 
 *     Instantiate the stage object
-      mo_staged_files = NEW #( ).
+      CREATE OBJECT mo_staged_files.
 
     ENDIF. " IF mo_staged_files IS NOT BOUND
 
-    LOOP AT ls_files_and_item-files[] ASSIGNING FIELD-SYMBOL(<ls_file>).
+    LOOP AT ls_files_and_item-files[] ASSIGNING <ls_file>.
 
       <ls_file>-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
                                                iv_data = <ls_file>-data
@@ -346,7 +376,7 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
           iv_data     = <ls_file>-data
       ).
 
-    ENDLOOP. " LOOP AT ls_files_and_item-files[] ASSIGNING FIELD-SYMBOL(<ls_file>)
+    ENDLOOP. " LOOP AT ls_files_and_item-files[] ASSIGNING <ls_file>
 
   ENDMETHOD.
 ENDCLASS.

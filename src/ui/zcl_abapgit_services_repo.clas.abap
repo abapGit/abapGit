@@ -559,25 +559,34 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
   METHOD handle_customizing.
 
 *   Declaration of local object reference
-    DATA: lo_repository TYPE REF TO zcl_abapgit_repo_online.
+    DATA: lo_repository         TYPE REF TO zcl_abapgit_repo_online,
+          lo_handle_customizing TYPE REF TO zif_abapgit_handle_customizing,
+          lo_staged_content     TYPE REF TO zcl_abapgit_stage,
+          lo_gui_page_commit    TYPE REF TO zcl_abapgit_gui_page_commit.
+
+*   Declaration of local variables
+    DATA: lv_transport_request TYPE trkorr,
+          lv_package           TYPE devclass.
 
 *   Customizing transport popup for selection
-    DATA(lv_transport_request) = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_customizing_tr( ).
+    lv_transport_request = zcl_abapgit_ui_factory=>get_popups( )->popup_to_select_customizing_tr( ).
 
 *   Get instance
-    DATA(lo_handle_customizing) = zcl_abapgit_handle_customizing=>get_instance( iv_transport_request = lv_transport_request ).
+    lo_handle_customizing = zcl_abapgit_handle_customizing=>get_instance( iv_transport_request = lv_transport_request ).
     IF lo_handle_customizing IS BOUND.
 
       lo_repository ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_repository_key ).
 
+      lv_package = lo_repository->get_package( ).
+
 *     Stage customizing content
-      DATA(lo_staged_content) = lo_handle_customizing->stage_customizing_content( iv_devclass = lo_repository->get_package( )
-                                                                                ).
+      lo_staged_content = lo_handle_customizing->stage_customizing_content( iv_devclass = lv_package ).
 
 *     Instantiate the commit page
-      DATA(lo_gui_page_commit) = NEW zcl_abapgit_gui_page_commit( io_repo  = lo_repository
-                                                                  io_stage = lo_staged_content
-                                                                ).
+      CREATE OBJECT lo_gui_page_commit
+        EXPORTING
+          io_repo  = lo_repository
+          io_stage = lo_staged_content.
 
       ei_page ?= lo_gui_page_commit.
       ev_state = zcl_abapgit_gui=>c_event_state-new_page.

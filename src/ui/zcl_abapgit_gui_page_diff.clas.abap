@@ -527,6 +527,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
   METHOD constructor.
 
+*   Declaration of local object reference
+    DATA: lo_customizing_compare TYPE REF TO zif_abapgit_customizing_comp.
+
     DATA: lt_remote TYPE zif_abapgit_definitions=>ty_files_tt,
           lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt,
           lt_status TYPE zif_abapgit_definitions=>ty_results_tt,
@@ -563,7 +566,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
                        status = lt_status[]
                      ).
 
-    zcl_abapgit_customizing_comp=>get_instance( )->create_local_file(
+    lo_customizing_compare = zcl_abapgit_customizing_comp=>get_instance( ).
+    lo_customizing_compare->create_local_file(
       CHANGING
         rs_file = ls_file
     ).
