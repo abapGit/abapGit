@@ -197,10 +197,8 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
 
         MOVE-CORRESPONDING <ls_status> TO ls_item.
 
-        read_bcset_metadata(
-          EXPORTING
-            is_item         = ls_item
-            is_file_details = <ls_remote> ).
+        read_bcset_metadata( is_item         = ls_item
+                             is_file_details = <ls_remote> ).
 
         lv_is_a2g_type_bcset = is_a2g_type_bcset( ).
         IF lv_is_a2g_type_bcset = abap_false. " ' '
@@ -229,10 +227,8 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
                 ct_vall = ls_bcset_metadata-scprvall[] ).
 
           CATCH cx_bcfg_operation_failed INTO lo_operation_failed.
-            zcx_abapgit_exception=>raise(
-              EXPORTING
-                iv_text     = 'Operation Failed'(001)
-                ix_previous = lo_operation_failed ).
+            zcx_abapgit_exception=>raise( iv_text     = 'Operation Failed'(001)
+                                          ix_previous = lo_operation_failed ).
 
         ENDTRY.
 
@@ -255,10 +251,8 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
         ENDLOOP. " LOOP AT ls_bcset_metadata-scprreca[] ASSIGNING <ls_recattr>
 
 *       Add metadata to XML
-        lo_xml_output->add(
-          EXPORTING
-            iv_name = mc_bcset          " SCP1
-            ig_data = ls_bcset_metadata ).
+        lo_xml_output->add( iv_name = mc_bcset          " SCP1
+                            ig_data = ls_bcset_metadata ).
 
         ls_item-obj_type = mc_bcset. " SCP1
         ls_item-obj_name = ms_bcset_metadata-scprattr-id.
@@ -269,9 +263,7 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
             is_item = ls_item.
 
 *       Add XML data to file
-        lo_object_files->add_xml(
-          EXPORTING
-            io_xml = lo_xml_output ).
+        lo_object_files->add_xml( io_xml = lo_xml_output ).
 
         lt_files[] = lo_object_files->get_files( ).
 
@@ -319,10 +311,8 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
         lo_result = lo_container->if_bcfg_config_container~apply( ).
 
       CATCH cx_bcfg_operation_failed INTO lo_operation_failed.
-        zcx_abapgit_exception=>raise(
-          EXPORTING
-            iv_text     = 'Operation Failed'(001)
-            ix_previous = lo_operation_failed ).
+        zcx_abapgit_exception=>raise( iv_text     = 'Operation Failed'(001)
+                                      ix_previous = lo_operation_failed ).
 
     ENDTRY.
 

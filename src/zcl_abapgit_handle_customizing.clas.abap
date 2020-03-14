@@ -1,82 +1,82 @@
-class ZCL_ABAPGIT_HANDLE_CUSTOMIZING definition
-  public
-  final
-  create private .
+CLASS zcl_abapgit_handle_customizing DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PRIVATE .
 
-public section.
+  PUBLIC SECTION.
 
-  interfaces ZIF_ABAPGIT_HANDLE_CUSTOMIZING .
+    INTERFACES zif_abapgit_handle_customizing .
 
-  methods CONSTRUCTOR
-    importing
-      !IV_TRANSPORT_REQUEST type TRKORR
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  class-methods GET_INSTANCE
-    importing
-      !IV_TRANSPORT_REQUEST type TRKORR
-    returning
-      value(RO_HANDLE_CUSTOMIZING) type ref to ZIF_ABAPGIT_HANDLE_CUSTOMIZING .
-protected section.
-private section.
+    METHODS constructor
+      IMPORTING
+        !iv_transport_request TYPE trkorr
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS get_instance
+      IMPORTING
+        !iv_transport_request        TYPE trkorr
+      RETURNING
+        VALUE(ro_handle_customizing) TYPE REF TO zif_abapgit_handle_customizing .
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 
-  types:
-    BEGIN OF ty_bcset_metadata,
-      scprattr TYPE scprattr,
-      scprtext TYPE STANDARD TABLE OF scprtext WITH DEFAULT KEY,
-      scprvals TYPE STANDARD TABLE OF scprvals WITH DEFAULT KEY,
-      scprvall TYPE STANDARD TABLE OF scprvall WITH DEFAULT KEY,
-      scprreca TYPE STANDARD TABLE OF scprreca WITH DEFAULT KEY,
-      scprfldv TYPE STANDARD TABLE OF scprfldv WITH DEFAULT KEY,
-      subprofs TYPE STANDARD TABLE OF scprpprl WITH DEFAULT KEY,
-    END OF ty_bcset_metadata .
-  types:
-    BEGIN OF ty_handle_customizing_instance,
-      transport_request TYPE trkorr,
-      instance          TYPE REF TO zcl_abapgit_handle_customizing,
-    END OF ty_handle_customizing_instance .
-  types:
-    ty_t_handle_customizing TYPE HASHED TABLE OF ty_handle_customizing_instance
-                            WITH UNIQUE KEY transport_request .
+    TYPES:
+      BEGIN OF ty_bcset_metadata,
+        scprattr TYPE scprattr,
+        scprtext TYPE STANDARD TABLE OF scprtext WITH DEFAULT KEY,
+        scprvals TYPE STANDARD TABLE OF scprvals WITH DEFAULT KEY,
+        scprvall TYPE STANDARD TABLE OF scprvall WITH DEFAULT KEY,
+        scprreca TYPE STANDARD TABLE OF scprreca WITH DEFAULT KEY,
+        scprfldv TYPE STANDARD TABLE OF scprfldv WITH DEFAULT KEY,
+        subprofs TYPE STANDARD TABLE OF scprpprl WITH DEFAULT KEY,
+      END OF ty_bcset_metadata .
+    TYPES:
+      BEGIN OF ty_handle_customizing_instance,
+        transport_request TYPE trkorr,
+        instance          TYPE REF TO zcl_abapgit_handle_customizing,
+      END OF ty_handle_customizing_instance .
+    TYPES:
+      ty_t_handle_customizing TYPE HASHED TABLE OF ty_handle_customizing_instance
+                              WITH UNIQUE KEY transport_request .
 
-  constants MC_BCSET type TROBJTYPE value 'SCP1' ##NO_TEXT.
-  data MO_STAGED_FILES type ref to ZCL_ABAPGIT_STAGE .
-  data MT_FIELDDESCRS type SCPR_RECORDS .
-  data MT_RECATTR type SCPRRECATAB .
-  data MT_VALUES type SCPRVALSTAB .
-  class-data MT_HANDLE_CUSTOMIZING_INSTANCE type TY_T_HANDLE_CUSTOMIZING .
-  data MS_REQUEST_DETAILS type TRWBO_REQUEST .
-  constants MC_VERSION type SCPR_VERS value 'N' ##NO_TEXT.
-  constants MC_BCSET_TYPE type SCPR_TYPE value 'A2G' ##NO_TEXT.
+    CONSTANTS mc_bcset TYPE trobjtype VALUE 'SCP1' ##NO_TEXT.
+    DATA mo_staged_files TYPE REF TO zcl_abapgit_stage .
+    DATA mt_fielddescrs TYPE scpr_records .
+    DATA mt_recattr TYPE scprrecatab .
+    DATA mt_values TYPE scprvalstab .
+    CLASS-DATA mt_handle_customizing_instance TYPE ty_t_handle_customizing .
+    DATA ms_request_details TYPE trwbo_request .
+    CONSTANTS mc_version TYPE scpr_vers VALUE 'N' ##NO_TEXT.
+    CONSTANTS mc_bcset_type TYPE scpr_type VALUE 'A2G' ##NO_TEXT.
 
-  methods CREATE_BCSET_DATA_FROM_TR
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods CREATE_XML
-    importing
-      !IV_BCSET_ID type SCPR_ID
-      !IT_RECORD_ATTRIBUTE type SCPRRECATAB
-      !IT_BCSET_VALUES type SCPRVALSTAB
-    returning
-      value(RO_XML_OUTPUT) type ref to ZCL_ABAPGIT_XML_OUTPUT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods CREATE_OBJECT_FILES
-    importing
-      !IV_BCSET_ID type SCPR_ID
-      !IV_DEVCLASS type DEVCLASS
-      !IO_XML type ref to ZCL_ABAPGIT_XML_OUTPUT
-    returning
-      value(RO_OBJECT_FILES) type ref to ZCL_ABAPGIT_OBJECTS_FILES
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods STAGE_FILES
-    importing
-      !IV_BCSET_ID type SCPR_ID
-      !IV_DEVCLASS type DEVCLASS
-      !IO_OBJECT_FILES type ref to ZCL_ABAPGIT_OBJECTS_FILES
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
+    METHODS create_bcset_data_from_tr
+      RAISING
+        zcx_abapgit_exception .
+    METHODS create_xml
+      IMPORTING
+        !iv_bcset_id         TYPE scpr_id
+        !it_record_attribute TYPE scprrecatab
+        !it_bcset_values     TYPE scprvalstab
+      RETURNING
+        VALUE(ro_xml_output) TYPE REF TO zcl_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
+    METHODS create_object_files
+      IMPORTING
+        !iv_bcset_id           TYPE scpr_id
+        !iv_devclass           TYPE devclass
+        !io_xml                TYPE REF TO zcl_abapgit_xml_output
+      RETURNING
+        VALUE(ro_object_files) TYPE REF TO zcl_abapgit_objects_files
+      RAISING
+        zcx_abapgit_exception .
+    METHODS stage_files
+      IMPORTING
+        !iv_bcset_id     TYPE scpr_id
+        !iv_devclass     TYPE devclass
+        !io_object_files TYPE REF TO zcl_abapgit_objects_files
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
