@@ -24,23 +24,23 @@ private section.
       subprofs TYPE STANDARD TABLE OF scprpprl WITH DEFAULT KEY,
     END OF ty_bcset_metadata .
 
-  data MT_FIELDDESCRS type SCPR_RECORDS .
-  data MT_RECATTR type SCPRRECATAB .
-  data MT_STATUS_LIST type SCPR_TRANSP_ENTRIES .
-  data MT_VALUES type SCPRVALSTAB .
+  constants MC_BCSET type TROBJTYPE value 'SCP1' ##NO_TEXT.
   class-data MO_CUSTOMIZING_COMPARE type ref to ZCL_ABAPGIT_CUSTOMIZING_COMP .
   data MS_BCSET_METADATA type TY_BCSET_METADATA .
+  constants MC_BCSET_TYPE type SCPR_TYPE value 'A2G' ##NO_TEXT.
 
   methods READ_BCSET_METADATA
     importing
       !IS_ITEM type ZIF_ABAPGIT_DEFINITIONS=>TY_ITEM
-      !IS_FILE_DETAILS type ZIF_ABAPGIT_DEFINITIONS=>TY_FILE .
+      !IS_FILE_DETAILS type ZIF_ABAPGIT_DEFINITIONS=>TY_FILE
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
   methods IS_A2G_TYPE_BCSET
     returning
       value(RV_IS_A2G_TYPE_BCSET) type ABAP_BOOL .
   methods CREATE_CONTAINER
     returning
-      value(RO_CONTAINER) type ref to IF_BCFG_CONFIG_CONTAINER .
+      value(RO_CONTAINER) type ref to CL_BCFG_BCSET_CONFIG_CONTAINER .
   methods ADD_FIELD_VALUES_TO_CONTAINER
     importing
       !IO_CONTAINER type ref to IF_BCFG_CONFIG_CONTAINER .
@@ -66,8 +66,8 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
 
   METHOD is_a2g_type_bcset.
 
-    rv_is_a2g_type_bcset = SWITCH #( ms_bcset_metadata-scprattr-type WHEN 'A2G' THEN abap_true
-                                                                                ELSE abap_false
+    rv_is_a2g_type_bcset = SWITCH #( ms_bcset_metadata-scprattr-type WHEN mc_bcset_type THEN abap_true
+                                                                                        ELSE abap_false
                                    ).
   ENDMETHOD.
 
@@ -93,8 +93,6 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
 
   METHOD zif_abapgit_customizing_comp~compare_customizing_with_table.
 
-    DATA: lv_is_data_equal TYPE char1.
-
     read_bcset_metadata( is_item         = is_item
                          is_file_details = is_file_details
                        ).
@@ -103,56 +101,54 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
       RETURN.
     ENDIF. " IF is_a2g_type_bcset( ) = abap_false
 
-    cl_scpr_runtime_bcset_factory=>set_bcset_runtime_metadata(
-      EXPORTING
-        is_attributes  = ms_bcset_metadata-scprattr                     " BC Set: Attributes
-        is_bcset_text  = ms_bcset_metadata-scprtext[ 1 ]
-        it_record_attr = ms_bcset_metadata-scprreca[]                   " BC Set Data Record Information Table Type
-        it_values      = ms_bcset_metadata-scprvals[]                   " BC Set Data Table Type
-        it_values_lang = ms_bcset_metadata-scprvall[]                   " Language-Dependent BC Set Data Table Type
-    ).
+    TRY.
 
-*   Compare BC set content with customizing tables
-    CALL FUNCTION 'SCPR_PRSET_MN_COMP_CUST_TABLE'
-      EXPORTING
-        bcset_id           = ms_bcset_metadata-scprattr-id
-        with_dialog        = abap_false
-      IMPORTING
-        flag_data_equal    = lv_is_data_equal
-      EXCEPTIONS
-        no_bcset           = 1
-        bcset_selection    = 2
-        no_data            = 3
-        wrong_parameters   = 4
-        no_authority       = 5
-        no_authority_activ = 6
-        internal_error     = 7
-        OTHERS             = 8.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from SCPR_PRSET_MN_COMP_CUST_TABLE' ).
-    ENDIF.
+*       Create configuration container for remote file
+        DATA(lo_remote_container) = create_container( ).
 
-    cs_result-match = SWITCH #( lv_is_data_equal WHEN 'Y' THEN abap_true
-                                                          ELSE abap_false ).
+        add_field_values_to_container( lo_remote_container ).
 
-    cs_result-lstate = SWITCH #( lv_is_data_equal WHEN 'Y' THEN zif_abapgit_definitions=>c_state-unchanged
-                                                           ELSE zif_abapgit_definitions=>c_state-modified ).
+        DATA(lo_key_cobtainer) = lo_remote_container->if_bcfg_config_container~extract_key_container( ).
+
+*       Create configuration container for local file
+        DATA(lo_local_container) = create_container( ).
+
+        lo_local_container->if_bcfg_config_container~add_current_config( io_keys = lo_key_cobtainer ). " Option 1: specify keys to be read from the database
+
+        DATA(lv_is_equal) = lo_local_container->if_bcfg_config_container~equals( io_other = lo_remote_container ).
+
+      CATCH cx_bcfg_operation_failed INTO DATA(lo_operation_failed).
+        zcx_abapgit_exception=>raise(
+          EXPORTING
+            iv_text     = 'Operation Failed'(001)
+            ix_previous = lo_operation_failed
+        ).
+
+    ENDTRY.
+
+    cs_result-match = lv_is_equal.
+
+    IF lv_is_equal = abap_true. " X
+
+      cs_result-lstate = zif_abapgit_definitions=>c_state-unchanged.
+
+    ELSE.
+
+      cs_result-lstate = zif_abapgit_definitions=>c_state-modified.
+
+    ENDIF. " IF lv_is_equal = abap_true
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_customizing_comp~create_local_file.
 
-*   Declaration of local internal table
-    DATA: lt_object TYPE STANDARD TABLE OF e071,
-          lt_keys   TYPE STANDARD TABLE OF e071k.
-
     DATA: ls_bcset_metadata TYPE ty_bcset_metadata,
           ls_item           TYPE zif_abapgit_definitions=>ty_item,
           ls_file           TYPE zif_abapgit_definitions=>ty_file_item.
 
     LOOP AT rs_file-status[] ASSIGNING FIELD-SYMBOL(<ls_status>)
-                             WHERE obj_type = 'SCP1'.
+                             WHERE obj_type = mc_bcset. " SCP1
 
       READ TABLE rs_file-remote[] ASSIGNING FIELD-SYMBOL(<ls_remote>)
                                   WITH KEY path     = <ls_status>-path
@@ -169,73 +165,63 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
         RETURN.
       ENDIF. " IF is_a2g_type_bcset( ) = abap_false
 
-      cl_scpr_runtime_bcset_factory=>set_bcset_runtime_metadata(
-        EXPORTING
-          is_attributes  = ms_bcset_metadata-scprattr                     " BC Set: Attributes
-          is_bcset_text  = ms_bcset_metadata-scprtext[ 1 ]
-          it_record_attr = ms_bcset_metadata-scprreca[]                   " BC Set Data Record Information Table Type
-          it_values      = ms_bcset_metadata-scprvals[]                   " BC Set Data Table Type
-          it_values_lang = ms_bcset_metadata-scprvall[]                   " Language-Dependent BC Set Data Table Type
-      ).
+      TRY.
 
-      CALL FUNCTION 'SCPR_BCSET_DATA_TO_E071'
-        EXPORTING
-          bcset_id                = ms_bcset_metadata-scprattr-id
-        TABLES
-          e071                    = lt_object[]
-          e071k                   = lt_keys[]
-        EXCEPTIONS
-          bcset_dont_exist        = 1
-          bcset_is_empty          = 2
-          bcset_internal_error    = 3
-          wrong_ddic_informations = 4
-          OTHERS                  = 5.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from SCPR_BCSET_DATA_TO_E071' ).
-      ENDIF.
+*         Create configuration container
+          DATA(lo_container) = create_container( ).
 
-*     Read data based on transport request table keys
-      CALL FUNCTION 'SCPR_TR_READ_DATA'
-        IMPORTING
-          tab_fielddescrs = mt_fielddescrs
-          tab_recattr     = mt_recattr[]
-          tab_values      = mt_values[]
-        TABLES
-          tab_e071        = lt_object[]
-          tab_e071k       = lt_keys[]
-        EXCEPTIONS
-          no_data_found   = 1
-          OTHERS          = 2.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from SCPR_TR_READ_DATA' ).
-      ENDIF. " IF sy-subrc <> 0
+          add_field_values_to_container( lo_container ).
 
-*     Get language values
-      CALL FUNCTION 'SCPR_TEMPL_CT_LANG_ALL_GET'
-        EXPORTING
-          bcset_id    = ls_bcset_metadata-scprattr-id
-        TABLES
-          values      = mt_values[]
-          valuesl     = ls_bcset_metadata-scprvall[]
-          recattr     = mt_recattr[]
-          fielddescrs = mt_fielddescrs[].
+          DATA(lo_key_container) = lo_container->if_bcfg_config_container~extract_key_container( ).
+
+          lo_container->if_bcfg_config_container~remove_all( ).
+
+          lo_container->if_bcfg_config_container~add_current_config( lo_key_container ).
+
+          lo_container->if_bcfg_has_data_manager~get_data_manager( )->convert_to_bcset(
+            EXPORTING
+              iv_id   = lo_container->if_bcfg_config_container~get_id( )
+            CHANGING
+              ct_reca = ls_bcset_metadata-scprreca[]
+              ct_vals = ls_bcset_metadata-scprvals[]
+              ct_vall = ls_bcset_metadata-scprvall[]
+          ).
+
+        CATCH cx_bcfg_operation_failed INTO DATA(lo_operation_failed).
+          zcx_abapgit_exception=>raise(
+            EXPORTING
+              iv_text     = 'Operation Failed'(001)
+              ix_previous = lo_operation_failed
+          ).
+
+      ENDTRY.
 
 *     Instantiate the XML object
       DATA(lo_xml_output) = NEW zcl_abapgit_xml_output( ).
 
       ls_bcset_metadata-scprattr   = ms_bcset_metadata-scprattr.
       ls_bcset_metadata-scprtext   = ms_bcset_metadata-scprtext.
-      ls_bcset_metadata-scprreca[] = mt_recattr[].
-      ls_bcset_metadata-scprvals[] = mt_values[].
+
+      LOOP AT ls_bcset_metadata-scprreca[] ASSIGNING FIELD-SYMBOL(<ls_recattr>).
+        <ls_recattr>-id = ms_bcset_metadata-scprattr-id.
+      ENDLOOP. " LOOP AT ls_bcset_metadata-scprreca[] ASSIGNING FIELD-SYMBOL(<ls_recattr>)
+
+      LOOP AT ls_bcset_metadata-scprvals[] ASSIGNING FIELD-SYMBOL(<ls_values>).
+        <ls_values>-id = ms_bcset_metadata-scprattr-id.
+      ENDLOOP. " LOOP AT ls_bcset_metadata-scprreca[] ASSIGNING FIELD-SYMBOL(<ls_recattr>)
+
+      LOOP AT ls_bcset_metadata-scprvall[] ASSIGNING FIELD-SYMBOL(<ls_valuel>).
+        <ls_valuel>-id = ms_bcset_metadata-scprattr-id.
+      ENDLOOP. " LOOP AT ls_bcset_metadata-scprreca[] ASSIGNING FIELD-SYMBOL(<ls_recattr>)
 
 *     Add metadata to XML
       lo_xml_output->add(
         EXPORTING
-          iv_name = 'SCP1'
+          iv_name = mc_bcset          " SCP1
           ig_data = ls_bcset_metadata
       ).
 
-      ls_item = VALUE #( obj_type = 'SCP1' obj_name = ms_bcset_metadata-scprattr-id ).
+      ls_item = VALUE #( obj_type = mc_bcset obj_name = ms_bcset_metadata-scprattr-id ).
 
 *     Instantiate object files object
       DATA(lo_object_files) = NEW zcl_abapgit_objects_files( is_item = ls_item ).
@@ -268,12 +254,23 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
 
     ms_bcset_metadata = is_bcset_metadata.
 
-*   Create configuration container using the mappings
-    DATA(lo_container) = create_container( ).
+    TRY.
 
-    add_field_values_to_container( lo_container ).
+*       Create configuration container using the mappings
+        DATA(lo_container) = create_container( ).
 
-    DATA(lo_result) = lo_container->apply( ).
+        add_field_values_to_container( lo_container ).
+
+        DATA(lo_result) = lo_container->if_bcfg_config_container~apply( ).
+
+      CATCH cx_bcfg_operation_failed INTO DATA(lo_operation_failed).
+        zcx_abapgit_exception=>raise(
+          EXPORTING
+            iv_text     = 'Operation Failed'(001)
+            ix_previous = lo_operation_failed
+        ).
+
+    ENDTRY.
 
     LOOP AT lo_result->get_log_messages( ) ASSIGNING FIELD-SYMBOL(<ls_return>).
 
@@ -341,11 +338,11 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
     ENDIF.
 
 *   Create configuration container using the mappings
-    ro_container = cl_bcfg_config_manager=>create_container( io_container_type  = cl_bcfg_enum_container_type=>classic  " CLASSIC
-                                                             it_object_mappings = lt_mappings[]
-                                                             it_langus          = lt_languages[]
-                                                             io_commit_mode     = cl_bcfg_enum_commit_mode=>auto_commit " AUTO_COMMIT
-                                                           ).
+    ro_container ?= cl_bcfg_config_manager=>create_container( io_container_type  = cl_bcfg_enum_container_type=>classic  " CLASSIC
+                                                              it_object_mappings = lt_mappings[]
+                                                              it_langus          = lt_languages[]
+                                                              io_commit_mode     = cl_bcfg_enum_commit_mode=>auto_commit " AUTO_COMMIT
+                                                            ).
 
   ENDMETHOD.
 
@@ -359,7 +356,7 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
     READ TABLE lt_status[] ASSIGNING FIELD-SYMBOL(<ls_status>)
                            WITH KEY path     = is_file-path
                                     filename = is_file-filename.
-    IF sy-subrc NE 0 OR <ls_status>-obj_type NE 'SCP1'.
+    IF sy-subrc NE 0 OR <ls_status>-obj_type NE mc_bcset. " SCP1
       RETURN.
     ENDIF. " IF sy-subrc NE 0 OR <ls_status>-obj_type NE 'SCP1'
 
@@ -377,21 +374,5 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
       RETURN.
     ENDIF. " IF is_a2g_type_bcset( ) = abap_false
 
-*   Create configuration container using the mappings
-    DATA(lo_container) = create_container( ).
-
-    add_field_values_to_container( lo_container ).
-
-    DATA(lo_key_cobtainer) = lo_container->extract_key_container( ).
-
-    DATA(lo_local_container) = create_container( ).
-
-    lo_local_container->add_current_config( io_keys = lo_key_cobtainer ). " Option 1: specify keys to be read from the database
-
-    DATA(lt_mappings) = lo_local_container->get_mappings( ).
-
-
-*    CATCH cx_bcfg_invalid_mapping.  " raised if a mapping is invalid or missing
-*    CATCH cx_bcfg_operation_failed. " the operation did not complete successfully
   ENDMETHOD.
 ENDCLASS.

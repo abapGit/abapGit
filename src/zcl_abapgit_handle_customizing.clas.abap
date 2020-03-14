@@ -39,13 +39,15 @@ private section.
     ty_t_handle_customizing TYPE HASHED TABLE OF ty_handle_customizing_instance
                             WITH UNIQUE KEY transport_request .
 
+  constants MC_BCSET type TROBJTYPE value 'SCP1' ##NO_TEXT.
   data MO_STAGED_FILES type ref to ZCL_ABAPGIT_STAGE .
   data MT_FIELDDESCRS type SCPR_RECORDS .
   data MT_RECATTR type SCPRRECATAB .
-  data MT_STATUS_LIST type SCPR_TRANSP_ENTRIES .
   data MT_VALUES type SCPRVALSTAB .
   class-data MT_HANDLE_CUSTOMIZING_INSTANCE type TY_T_HANDLE_CUSTOMIZING .
   data MS_REQUEST_DETAILS type TRWBO_REQUEST .
+  constants MC_VERSION type SCPR_VERS value 'N' ##NO_TEXT.
+  constants MC_BCSET_TYPE type SCPR_TYPE value 'A2G' ##NO_TEXT.
 
   methods CREATE_BCSET_DATA_FROM_TR
     raising
@@ -72,7 +74,9 @@ private section.
     importing
       !IV_BCSET_ID type SCPR_ID
       !IV_DEVCLASS type DEVCLASS
-      !IO_OBJECT_FILES type ref to ZCL_ABAPGIT_OBJECTS_FILES .
+      !IO_OBJECT_FILES type ref to ZCL_ABAPGIT_OBJECTS_FILES
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
 ENDCLASS.
 
 
@@ -94,15 +98,13 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
         no_authorization  = 2
         OTHERS            = 3.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from TR_READ_REQUEST' ).
+      zcx_abapgit_exception=>raise( 'error from TR_READ_REQUEST'(001) ).
     ENDIF. " IF sy-subrc <> 0
 
   ENDMETHOD.
 
 
   METHOD create_bcset_data_from_tr.
-
-    DATA: lt_status_list TYPE scpr_transp_entries.
 
 *   Read data based on transport request table keys
     CALL FUNCTION 'SCPR_TR_READ_DATA'
@@ -113,12 +115,11 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
       TABLES
         tab_e071        = ms_request_details-objects[]
         tab_e071k       = ms_request_details-keys[]
-        tab_statuslist  = mt_status_list[]
       EXCEPTIONS
         no_data_found   = 1
         OTHERS          = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from SCPR_TR_READ_DATA' ).
+      zcx_abapgit_exception=>raise( 'error from SCPR_TR_READ_DATA'(002) ).
     ENDIF. " IF sy-subrc <> 0
 
   ENDMETHOD.
@@ -183,24 +184,6 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
                                                                        AND recnumber = ls_recattr_tmp-recnumber )
                              ( ls_values ) ).
 
-*     Retrieve valid transport object details
-      IF <ls_recattr_group>-clustname IS NOT INITIAL.
-
-        DATA(ls_status_list) = mt_status_list[ cust_objname = <ls_recattr_group>-clustname
-                                               cust_objtype = 'C' ].
-
-      ELSEIF <ls_recattr_group>-objectname IS NOT INITIAL
-      AND    <ls_recattr_group>-objecttype IS NOT INITIAL.
-
-        ls_status_list = mt_status_list[ cust_objname = <ls_recattr_group>-objectname
-                                         cust_objtype = <ls_recattr_group>-objecttype ].
-
-      ELSE.
-
-        ls_status_list = mt_status_list[ obj_name = <ls_recattr_group>-tablename ].
-
-      ENDIF. " IF <ls_recattr_group>-clustname IS NOT INITIAL
-
       CALL FUNCTION 'SCPR_ACTIV_EXTRACT_OBJECTS'
         IMPORTING
           act_objects = lt_objects[]
@@ -246,7 +229,8 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
     DATA: ls_bcset_metadata TYPE ty_bcset_metadata.
 
 *   Declaration of local variable
-    DATA: lv_system_type TYPE sy-sysid.
+    DATA: lv_system_type TYPE sy-sysid,
+          lv_org_id      TYPE scpr_orgid.
 
 *   Instantiate the XML object
     ro_xml_output = NEW #( ).
@@ -260,25 +244,39 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
         no_systemtype = 2
         OTHERS        = 3.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from TR_SYS_PARAMS' ).
+      zcx_abapgit_exception=>raise( 'error from TR_SYS_PARAMS'(003) ).
     ENDIF. " IF sy-subrc <> 0
+
+    IF lv_system_type = 'SAP'.
+      lv_org_id = '/0SAP/'.
+
+    ELSE.
+      lv_org_id = '/CUSTOMER/'.
+
+    ENDIF. " IF lv_system_type = 'SAP'
 
 *   Populate BC set header data
     ls_bcset_metadata = VALUE #( scprattr-id      = iv_bcset_id
-                                 scprattr-version = 'N'
-                                 scprattr-type    = 'A2G'
+                                 scprattr-version = mc_version    " N
+                                 scprattr-type    = mc_bcset_type " A2G
                                  scprattr-reftype = 'TRAN'
                                  scprattr-refname = ms_request_details-h-trkorr
-                                 scprattr-orgid   = SWITCH #( lv_system_type WHEN 'SAP' THEN '/0SAP/'
-                                                                                        ELSE '/CUSTOMER/' )
+                                 scprattr-orgid   = lv_org_id
                                ).
 
 *   Populate short text
-    ls_bcset_metadata-scprtext[] = VALUE #( ( id = iv_bcset_id version = 'N' langu = sy-langu text = 'Generated via ABAPGIT' ) ).
+    ls_bcset_metadata-scprtext[] = VALUE #( ( id = iv_bcset_id version = mc_version langu = sy-langu text = 'Generated via ABAPGIT'(004) ) ).
 
 *   Populate records and values metadata
     ls_bcset_metadata-scprreca[] = it_record_attribute[].
+    LOOP AT ls_bcset_metadata-scprreca[] ASSIGNING FIELD-SYMBOL(<ls_recattr>).
+      <ls_recattr>-id = iv_bcset_id.
+    ENDLOOP. " LOOP AT ls_bcset_metadata-scprreca[] ASSIGNING FIELD-SYMBOL(<ls_recattr>)
+
     ls_bcset_metadata-scprvals[] = it_bcset_values[].
+    LOOP AT ls_bcset_metadata-scprvals[] ASSIGNING FIELD-SYMBOL(<ls_values>).
+      <ls_values>-id = iv_bcset_id.
+    ENDLOOP. " LOOP AT ls_bcset_metadata-scprvals[] ASSIGNING FIELD-SYMBOL(<ls_values>)
 
 *   Get language values
     CALL FUNCTION 'SCPR_TEMPL_CT_LANG_ALL_GET'
@@ -293,7 +291,7 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
 *   Add metadata to XML
     ro_xml_output->add(
       EXPORTING
-        iv_name = 'SCP1'
+        iv_name = mc_bcset          " SCP1
         ig_data = ls_bcset_metadata
     ).
 
@@ -303,10 +301,9 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
   METHOD create_object_files.
 
 *  Declaration of local workarea
-    DATA: ls_bcset_metadata TYPE ty_bcset_metadata,
-          ls_item           TYPE zif_abapgit_definitions=>ty_item.
+    DATA: ls_item TYPE zif_abapgit_definitions=>ty_item.
 
-    ls_item = VALUE #( obj_type = 'SCP1' obj_name = iv_bcset_id devclass = iv_devclass ).
+    ls_item = VALUE #( obj_type = mc_bcset obj_name = iv_bcset_id devclass = iv_devclass ).
 
 *   Instantiate object files object
     ro_object_files = NEW #( is_item = ls_item ).
@@ -325,7 +322,7 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
 *   Declaration of local workarea
     DATA: ls_files_and_item TYPE zcl_abapgit_objects=>ty_serialization.
 
-    ls_files_and_item-item  = VALUE #( obj_type = 'SCP1' obj_name = iv_bcset_id devclass = iv_devclass ).
+    ls_files_and_item-item  = VALUE #( obj_type = mc_bcset obj_name = iv_bcset_id devclass = iv_devclass ).
     ls_files_and_item-files = io_object_files->get_files( ).
 
     IF mo_staged_files IS NOT BOUND.

@@ -29,7 +29,9 @@ interface ZIF_ABAPGIT_CUSTOMIZING_COMP
   methods APPLY_CUSTOMIZING_CONTENT
     importing
       !IS_BCSET_METADATA type TY_BCSET_METADATA
-      !IO_LOG type ref to ZIF_ABAPGIT_LOG .
+      !IO_LOG type ref to ZIF_ABAPGIT_LOG
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
   methods DISPLAY_DIFFERENCES
     importing
       !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
