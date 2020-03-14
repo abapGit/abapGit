@@ -1,8 +1,9 @@
-interface ZIF_ABAPGIT_CUSTOMIZING_COMP
-  public .
+"! <p class="shorttext synchronized" lang="en">Compare Customizing Content</p>
+INTERFACE zif_abapgit_customizing_comp
+  PUBLIC .
 
 
-  types:
+  TYPES:
     BEGIN OF ty_bcset_metadata,
       scprattr TYPE scprattr,
       scprtext TYPE STANDARD TABLE OF scprtext WITH DEFAULT KEY,
@@ -13,31 +14,23 @@ interface ZIF_ABAPGIT_CUSTOMIZING_COMP
       subprofs TYPE STANDARD TABLE OF scprpprl WITH DEFAULT KEY,
     END OF ty_bcset_metadata .
 
-  methods COMPARE_CUSTOMIZING_WITH_TABLE
-    importing
-      !IS_FILE_DETAILS type ZIF_ABAPGIT_DEFINITIONS=>TY_FILE
-      !IS_ITEM type ZIF_ABAPGIT_DEFINITIONS=>TY_ITEM
-    changing
-      !CS_RESULT type ZIF_ABAPGIT_DEFINITIONS=>TY_RESULT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods CREATE_LOCAL_FILE
-    changing
-      !RS_FILE type ZIF_ABAPGIT_DEFINITIONS=>TY_STAGE_FILES
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods APPLY_CUSTOMIZING_CONTENT
-    importing
-      !IS_BCSET_METADATA type TY_BCSET_METADATA
-      !IO_LOG type ref to ZIF_ABAPGIT_LOG
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods DISPLAY_DIFFERENCES
-    importing
-      !IV_KEY type ZIF_ABAPGIT_PERSISTENCE=>TY_REPO-KEY
-      !IS_FILE type ZIF_ABAPGIT_DEFINITIONS=>TY_FILE
-    returning
-      value(RV_IS_CUSTOMIZING_CONTENT) type ABAP_BOOL
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-endinterface.
+  METHODS compare_customizing_with_table
+    IMPORTING
+      !is_file_details TYPE zif_abapgit_definitions=>ty_file
+      !is_item         TYPE zif_abapgit_definitions=>ty_item
+    CHANGING
+      !cs_result       TYPE zif_abapgit_definitions=>ty_result
+    RAISING
+      zcx_abapgit_exception .
+  METHODS create_local_file
+    CHANGING
+      !cs_file TYPE zif_abapgit_definitions=>ty_stage_files
+    RAISING
+      zcx_abapgit_exception .
+  METHODS apply_customizing_content
+    IMPORTING
+      !is_bcset_metadata TYPE ty_bcset_metadata
+      !io_log            TYPE REF TO zif_abapgit_log
+    RAISING
+      zcx_abapgit_exception .
+ENDINTERFACE.

@@ -98,10 +98,7 @@ CLASS ZCL_ABAPGIT_STAGE_LOGIC IMPLEMENTATION.
                     CHANGING  cs_files = rs_files ).
 
     lo_customizing_compare = zcl_abapgit_customizing_comp=>get_instance( ).
-    lo_customizing_compare->create_local_file(
-      CHANGING
-        rs_file = rs_files
-    ).
+    lo_customizing_compare->create_local_file( CHANGING rs_file = rs_files ).
 
   ENDMETHOD.
 ENDCLASS.

@@ -213,22 +213,19 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
 *     Create XML file
       lo_xml_data = create_xml( iv_bcset_id         = lv_bcset_id
                                 it_record_attribute = lt_recattr[]
-                                it_bcset_values     = lt_values[]
-                              ).
+                                it_bcset_values     = lt_values[] ).
 
 *     Create object files
       lo_object_files = create_object_files( iv_bcset_id = lv_bcset_id
                                              iv_devclass = iv_devclass
-                                             io_xml      = lo_xml_data  " XML Output
-                                           ).
+                                             io_xml      = lo_xml_data ). " XML Output
 
 *     Stage created files
       stage_files( iv_bcset_id     = lv_bcset_id
                    iv_devclass     = iv_devclass
-                   io_object_files = lo_object_files
-                 ).
+                   io_object_files = lo_object_files ).
 
-    ENDLOOP. " LOOP AT mt_recattr[] ASSIGNING FIELD-SYMBOL(<ls_recattr>)
+    ENDLOOP. " LOOP AT mt_recattr[] ASSIGNING <ls_recattr>
 
     ro_staged_content = mo_staged_files.
 
@@ -309,11 +306,8 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
         fielddescrs = mt_fielddescrs[].
 
 *   Add metadata to XML
-    ro_xml_output->add(
-      EXPORTING
-        iv_name = mc_bcset          " SCP1
-        ig_data = ls_bcset_metadata
-    ).
+    ro_xml_output->add( iv_name = mc_bcset          " SCP1
+                        ig_data = ls_bcset_metadata ).
 
   ENDMETHOD.
 
@@ -333,10 +327,7 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
         is_item = ls_item.
 
 *   Add XML data to file
-    ro_object_files->add_xml(
-      EXPORTING
-        io_xml = io_xml
-    ).
+    ro_object_files->add_xml( io_xml ).
 
   ENDMETHOD.
 
@@ -365,16 +356,12 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
     LOOP AT ls_files_and_item-files[] ASSIGNING <ls_file>.
 
       <ls_file>-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
-                                               iv_data = <ls_file>-data
-                                             ).
+                                               iv_data = <ls_file>-data ).
 
 *     Add files to stage
-      mo_staged_files->add(
-        EXPORTING
-          iv_path     = <ls_file>-path
-          iv_filename = <ls_file>-filename
-          iv_data     = <ls_file>-data
-      ).
+      mo_staged_files->add( iv_path     = <ls_file>-path
+                            iv_filename = <ls_file>-filename
+                            iv_data     = <ls_file>-data ).
 
     ENDLOOP. " LOOP AT ls_files_and_item-files[] ASSIGNING <ls_file>
 

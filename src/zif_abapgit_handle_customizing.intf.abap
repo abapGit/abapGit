@@ -1,5 +1,5 @@
-interface ZIF_ABAPGIT_HANDLE_CUSTOMIZING
-  public .
+INTERFACE zif_abapgit_handle_customizing
+  PUBLIC .
 
 
   methods STAGE_CUSTOMIZING_CONTENT

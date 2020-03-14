@@ -113,8 +113,7 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
           lv_is_equal          TYPE abap_bool.
 
     read_bcset_metadata( is_item         = is_item
-                         is_file_details = is_file_details
-                       ).
+                         is_file_details = is_file_details ).
 
     lv_is_a2g_type_bcset = is_a2g_type_bcset( ).
     IF lv_is_a2g_type_bcset = abap_false. " ' '
@@ -142,8 +141,7 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
         zcx_abapgit_exception=>raise(
           EXPORTING
             iv_text     = 'Operation Failed'(001)
-            ix_previous = lo_operation_failed
-        ).
+            ix_previous = lo_operation_failed ).
 
     ENDTRY.
 
@@ -189,10 +187,10 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
                    <ls_values>  TYPE scprvals,
                    <ls_valuel>  TYPE scprvall.
 
-    LOOP AT rs_file-status[] ASSIGNING <ls_status>
+    LOOP AT cs_file-status[] ASSIGNING <ls_status>
                              WHERE obj_type = mc_bcset. " SCP1
 
-      READ TABLE rs_file-remote[] ASSIGNING <ls_remote>
+      READ TABLE cs_file-remote[] ASSIGNING <ls_remote>
                                   WITH KEY path     = <ls_status>-path
                                            filename = <ls_status>-filename.
       IF sy-subrc = 0.
@@ -202,8 +200,7 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
         read_bcset_metadata(
           EXPORTING
             is_item         = ls_item
-            is_file_details = <ls_remote>
-        ).
+            is_file_details = <ls_remote> ).
 
         lv_is_a2g_type_bcset = is_a2g_type_bcset( ).
         IF lv_is_a2g_type_bcset = abap_false. " ' '
@@ -229,15 +226,13 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
               CHANGING
                 ct_reca = ls_bcset_metadata-scprreca[]
                 ct_vals = ls_bcset_metadata-scprvals[]
-                ct_vall = ls_bcset_metadata-scprvall[]
-            ).
+                ct_vall = ls_bcset_metadata-scprvall[] ).
 
           CATCH cx_bcfg_operation_failed INTO lo_operation_failed.
             zcx_abapgit_exception=>raise(
               EXPORTING
                 iv_text     = 'Operation Failed'(001)
-                ix_previous = lo_operation_failed
-            ).
+                ix_previous = lo_operation_failed ).
 
         ENDTRY.
 
@@ -263,8 +258,7 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
         lo_xml_output->add(
           EXPORTING
             iv_name = mc_bcset          " SCP1
-            ig_data = ls_bcset_metadata
-        ).
+            ig_data = ls_bcset_metadata ).
 
         ls_item-obj_type = mc_bcset. " SCP1
         ls_item-obj_name = ms_bcset_metadata-scprattr-id.
@@ -277,8 +271,7 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
 *       Add XML data to file
         lo_object_files->add_xml(
           EXPORTING
-            io_xml = lo_xml_output
-        ).
+            io_xml = lo_xml_output ).
 
         lt_files[] = lo_object_files->get_files( ).
 
@@ -287,17 +280,16 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
           MOVE-CORRESPONDING <ls_remote> TO ls_file-file.
           ls_file-file-filename = <ls_status>-filename.
           ls_file-file-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
-                                                      iv_data = ls_file-file-data
-                                                    ).
+                                                      iv_data = ls_file-file-data ).
 
         ENDLOOP.
 
         ls_file-item = ls_item.
-        APPEND ls_file TO rs_file-local[].
+        APPEND ls_file TO cs_file-local[].
 
       ENDIF. " IF sy-subrc = 0
 
-    ENDLOOP. " LOOP AT rs_file-status[] ASSIGNING <ls_status>
+    ENDLOOP. " LOOP AT cs_file-status[] ASSIGNING <ls_status>
 
   ENDMETHOD.
 
@@ -330,8 +322,7 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
         zcx_abapgit_exception=>raise(
           EXPORTING
             iv_text     = 'Operation Failed'(001)
-            ix_previous = lo_operation_failed
-        ).
+            ix_previous = lo_operation_failed ).
 
     ENDTRY.
 
@@ -340,8 +331,7 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
     LOOP AT lt_return[] ASSIGNING <ls_return>.
 
       io_log->add( iv_msg  = <ls_return>-message
-                   iv_type = <ls_return>-type
-                 ).
+                   iv_type = <ls_return>-type ).
 
     ENDLOOP. " LOOP AT lo_result->get_log_messages( ) ASSIGNING <ls_return>
 
@@ -449,40 +439,6 @@ CLASS ZCL_ABAPGIT_CUSTOMIZING_COMP IMPLEMENTATION.
                                                               it_langus          = lt_languages[]
                                                               io_commit_mode     = cl_bcfg_enum_commit_mode=>auto_commit " AUTO_COMMIT
                                                             ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_customizing_comp~display_differences.
-
-    IF sy-subrc = 0.
-
-    ENDIF.
-
-*    DATA(lo_repo) = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-*    DATA(lt_status) = lo_repo->status( ).
-*    DATA(lt_remote) = lo_repo->get_files_remote( ).
-*
-*    READ TABLE lt_status[] ASSIGNING FIELD-SYMBOL(<ls_status>)
-*                           WITH KEY path     = is_file-path
-*                                    filename = is_file-filename.
-*    IF sy-subrc NE 0 OR <ls_status>-obj_type NE mc_bcset. " SCP1
-*      RETURN.
-*    ENDIF. " IF sy-subrc NE 0 OR <ls_status>-obj_type NE 'SCP1'
-*
-*    READ TABLE lt_remote[] ASSIGNING FIELD-SYMBOL(<ls_file_details>)
-*                           WITH KEY path     = <ls_status>-path
-*                                    filename = <ls_status>-filename.
-*
-*    read_bcset_metadata(
-*      EXPORTING
-*        is_item         = CORRESPONDING #( <ls_status> )
-*        is_file_details = <ls_file_details>
-*    ).
-*
-*    IF is_a2g_type_bcset( ) = abap_false. " ' '
-*      RETURN.
-*    ENDIF. " IF is_a2g_type_bcset( ) = abap_false
 
   ENDMETHOD.
 ENDCLASS.

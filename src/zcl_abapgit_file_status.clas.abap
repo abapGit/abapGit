@@ -196,8 +196,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
                                      is_file_details = is_remote
                                      is_item         = ls_item
                                    CHANGING
-                                     cs_result       = rs_result
-        ).
+                                     cs_result       = rs_result ).
 
       ENDIF.
 
