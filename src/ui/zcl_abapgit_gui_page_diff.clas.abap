@@ -558,11 +558,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     lt_local  = lo_repo->get_files_local( ).
     lt_status = lo_repo->status( ).
 
-    ls_file = VALUE #( local  = lt_local[]
-                       remote = lt_remote[]
-                       status = lt_status[]
-                     ).
-
     IF is_file IS NOT INITIAL.        " Diff for one file
 
       READ TABLE lt_status ASSIGNING <ls_status>

@@ -365,8 +365,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
 
       lo_customizing_compare = zcl_abapgit_customizing_comp=>get_instance( ).
       lo_customizing_compare->apply_customizing_content( is_bcset_metadata = ls_scp1
-                                                         io_log            = ii_log
-                                                       ).
+                                                         io_log            = ii_log ).
 
     ELSE.
 

@@ -176,6 +176,9 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
 *   Declaration of local variable
     DATA: lv_bcset_id TYPE scpr_id.
 
+*   Declaration of local field symbols
+    FIELD-SYMBOLS: <ls_object> TYPE scp1_act_object.
+
 *   Create BC set metadata from transport request
     create_bcset_data_from_tr( ).
 
@@ -202,7 +205,7 @@ CLASS ZCL_ABAPGIT_HANDLE_CUSTOMIZING IMPLEMENTATION.
         TABLES
           recattr     = lt_recattr[].
 
-      READ TABLE lt_objects[] ASSIGNING FIELD-SYMBOL(<ls_object>) INDEX 1.
+      READ TABLE lt_objects[] ASSIGNING <ls_object> INDEX 1.
 
 *     Generate ID
       CONCATENATE <ls_object>-objectname

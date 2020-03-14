@@ -10,14 +10,6 @@
     <STATE>1</STATE>
     <UNICODE>X</UNICODE>
    </VSEOINTERF>
-   <DESCRIPTIONS>
-    <SEOCOMPOTX>
-     <CLSNAME>ZIF_ABAPGIT_POPUPS</CLSNAME>
-     <CMPNAME>POPUP_TO_SELECT_CUSTOMIZING_TR</CMPNAME>
-     <LANGU>E</LANGU>
-     <DESCRIPT>Customizing Transport Selection</DESCRIPT>
-    </SEOCOMPOTX>
-   </DESCRIPTIONS>
   </asx:values>
  </asx:abap>
 </abapGit>

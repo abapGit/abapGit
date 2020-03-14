@@ -546,8 +546,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
             iv_repository_key = lv_key
           IMPORTING
             ei_page           = ei_page  " abapGit GUI renderable component
-            ev_state          = ev_state
-        ).
+            ev_state          = ev_state ).
 
       WHEN zif_abapgit_definitions=>c_action-repo_settings.
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_repo_sett
