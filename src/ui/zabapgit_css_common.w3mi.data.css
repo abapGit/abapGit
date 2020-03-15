@@ -239,6 +239,7 @@ table.repo_tab {
 }
 .repo_tab td.files {
   padding-left: 0.5em;
+  line-height: 1.5;
 }
 .repo_tab td.cmd, .repo_tab th.cmd {
   text-align: right;
