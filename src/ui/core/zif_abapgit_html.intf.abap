@@ -57,6 +57,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_name      TYPE string
       !iv_hint      TYPE string OPTIONAL
       !iv_class     TYPE string OPTIONAL
+      !iv_onclick   TYPE string OPTIONAL
     RETURNING
       VALUE(rv_str) TYPE string .
 

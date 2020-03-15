@@ -36,6 +36,10 @@ input:focus, textarea:focus {
   border: 1px solid;
 }
 
+.cursor-pointer {
+  cursor: pointer;
+}
+
 /* MODIFIERS */
 .emphasis     { font-weight: bold !important; }
 .crossout     { text-decoration: line-through !important; }

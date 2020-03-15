@@ -25,6 +25,7 @@
 /* exported enumerateTocAllRepos */
 /* exported enumerateJumpAllFiles */
 /* exported enumerateToolbarActions */
+/* exported onDiffCollapse */
 
 /**********************************************************
  * Polyfills
@@ -764,6 +765,25 @@ DiffHelper.prototype.highlightButton = function(state) {
     this.dom.filterButton.classList.remove("bgorange");
   }
 };
+
+//Collapse/Expand diffs
+function onDiffCollapse(event) {
+  var source = event.target || event.srcElement;
+  var nextDiffContent = source.parentElement.nextElementSibling;
+  var hide;
+
+  if(source.classList.contains("icon-chevron-down")){
+    source.classList.remove("icon-chevron-down");
+    source.classList.add("icon-chevron-right");
+    hide = true;
+  } else {
+    source.classList.remove("icon-chevron-right");
+    source.classList.add("icon-chevron-down");
+    hide = false;
+  }
+
+  hide ? nextDiffContent.classList.add("nodisplay") : nextDiffContent.classList.remove("nodisplay");
+}
 
 // Add Bottom margin, so that we can scroll to the top of the last file
 function addMarginBottom(){
