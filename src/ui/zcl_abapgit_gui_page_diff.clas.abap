@@ -56,7 +56,9 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
 
     CONSTANTS:
       BEGIN OF c_actions,
-        refresh        TYPE string VALUE 'patch_refresh',
+        refresh_local  TYPE string VALUE 'patch_refresh_local',
+        refresh_repo   TYPE string VALUE 'patch_refresh_repo',
+        refresh_object TYPE string VALUE 'patch_refresh_object',
         stage          TYPE string VALUE 'patch_stage',
         toggle_unified TYPE string VALUE 'toggle_unified',
       END OF c_actions .
@@ -226,6 +228,12 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
     METHODS apply_patch_from_form_fields
       IMPORTING
         it_postdata TYPE cnht_post_data_tab
+      RAISING
+        zcx_abapgit_exception.
+    METHODS refresh_local
+      RAISING
+        zcx_abapgit_exception.
+    METHODS refresh_repo
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS get_patch_data
@@ -556,6 +564,16 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     CREATE OBJECT ro_menu.
 
+    ro_menu->add(
+        iv_txt = |Refresh local|
+        iv_act = c_actions-refresh_local
+        iv_id  = c_actions-refresh_local ).
+
+    ro_menu->add(
+        iv_txt = |Refresh repo|
+        iv_act = c_actions-refresh_repo
+        iv_id  = c_actions-refresh_repo ).
+
     add_jump_sub_menu( ro_menu ).
     add_filter_sub_menu( ro_menu ).
 
@@ -842,17 +860,16 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
       iv_lstate = is_diff-lstate
       iv_rstate = is_diff-rstate ) ).
 
-    DATA(lv_act_id) = |{ c_actions-refresh }_{ is_diff-obj_type }_{ is_diff-obj_name }|.
+    DATA(lv_act_id) = |{ c_actions-refresh_object }_{ is_diff-obj_type }_{ is_diff-obj_name }|.
 
     ro_html->add_a(
         iv_txt   = |Refresh|
         iv_typ   = zif_abapgit_html=>c_action_type-dummy
         iv_act   = lv_act_id
-*        iv_typ   = c_action_type-sapevent
 *        iv_opt   =
 *        iv_class =
         iv_id    = lv_act_id
-*        iv_style =
+        iv_title = |Refresh| ).
         iv_title = |Refresh|
     ).
 
@@ -1183,7 +1200,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     DATA: lo_repo     TYPE REF TO zcl_abapgit_repo_online,
           lv_obj_type TYPE tadir-object,
-          lv_obj_name TYPE tadir-obj_name.
+          lv_obj_name TYPE tadir-obj_name,
+          lv_regex    TYPE string.
 
 
     CASE iv_action.
@@ -1203,9 +1221,21 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
             io_stage = mo_stage.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
+      WHEN c_actions-refresh_local.
+
+        refresh_local( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN c_actions-refresh_repo.
+
+        refresh_repo( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+
       WHEN OTHERS.
 
-        FIND FIRST OCCURRENCE OF REGEX `.*_(\w{4})_(.*)`
+        lv_regex = c_actions-refresh_object && `_(\w{4})_(.*)`.
+
+        FIND FIRST OCCURRENCE OF REGEX lv_regex
           IN iv_action
           SUBMATCHES lv_obj_type lv_obj_name.
 
@@ -1246,12 +1276,27 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     ls_hotkey_action-hotkey = |s|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
+    ls_hotkey_action-name   = |Patch Refresh|.
+    ls_hotkey_action-action = |{ c_actions-refresh_repo }|.
+    ls_hotkey_action-hotkey = |r|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
   ENDMETHOD.
 
 
   METHOD refresh_object.
 
-    DATA(lt_old_diff) =  mt_diff_files.
+    DATA:
+      lt_diff_files_old TYPE zcl_abapgit_gui_page_diff=>tt_file_diff,
+      lt_diff_old       TYPE zif_abapgit_definitions=>ty_diffs_tt,
+      lv_line           TYPE i.
+
+    FIELD-SYMBOLS:
+      <ls_diff_file>     TYPE zcl_abapgit_gui_page_diff=>ty_file_diff,
+      <ls_diff_file_old> TYPE zcl_abapgit_gui_page_diff=>ty_file_diff,
+      <ls_diff_old>      TYPE zif_abapgit_definitions=>ty_diff.
+
+    lt_diff_files_old = mt_diff_files.
 
     CLEAR: mt_diff_files.
 
@@ -1263,23 +1308,28 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     " restore patch flags
     " but not for the refreshed object, cause it's difficult to restore it
     " in a sensible way. So we let the user decide again which lines to patch
-    LOOP AT mt_diff_files ASSIGNING FIELD-SYMBOL(<ls_diff_file>)
+    LOOP AT mt_diff_files ASSIGNING <ls_diff_file>
 
                           WHERE obj_type <> iv_obj_type
                           AND   obj_name <> iv_obj_name.
 
-      READ TABLE lt_old_diff ASSIGNING FIELD-SYMBOL(<ls_diff_file_old>)
-                             WITH KEY secondary
-                             COMPONENTS path     = <ls_diff_file>-path
-                                        filename = <ls_diff_file>-filename.
+      READ TABLE lt_diff_files_old ASSIGNING <ls_diff_file_old>
+                                   WITH KEY secondary
+                                   COMPONENTS path     = <ls_diff_file>-path
+                                              filename = <ls_diff_file>-filename.
       ASSERT sy-subrc = 0.
 
-      DATA(lt_diff) = <ls_diff_file_old>-o_diff->get( ).
+      lt_diff_old = <ls_diff_file_old>-o_diff->get( ).
 
-      LOOP AT lt_diff ASSIGNING FIELD-SYMBOL(<ls_diff>) WHERE patch_flag = abap_true.
+      LOOP AT lt_diff_old ASSIGNING <ls_diff_old>
+                          WHERE patch_flag = abap_true.
+
+        lv_line = <ls_diff_old>-new_num.
+
         <ls_diff_file>-o_diff->set_patch_new(
-            iv_line_new   = CONV #( <ls_diff>-new_num )
-            iv_patch_flag = <ls_diff>-patch_flag ).
+            iv_line_new   = lv_line
+            iv_patch_flag = <ls_diff_old>-patch_flag ).
+
       ENDLOOP.
 
     ENDLOOP.
@@ -1361,6 +1411,24 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     apply_patch_all( iv_patch      = lv_remove
                      iv_patch_flag = abap_false ).
+
+  ENDMETHOD.
+
+
+  METHOD refresh_local.
+
+    CLEAR: mt_diff_files.
+    mo_repo->refresh_local_objects( ).
+    calculate_diff( ).
+
+  ENDMETHOD.
+
+
+  METHOD refresh_repo.
+
+    CLEAR: mt_diff_files.
+    mo_repo->refresh( abap_true ).
+    calculate_diff( ).
 
   ENDMETHOD.
 

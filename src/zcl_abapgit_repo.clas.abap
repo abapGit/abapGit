@@ -127,6 +127,9 @@ CLASS zcl_abapgit_repo DEFINITION
         iv_obj_name TYPE tadir-obj_name
       RAISING
         zcx_abapgit_exception.
+    METHODS refresh_local_objects
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
 
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
@@ -758,24 +761,39 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD refresh_local_object.
 
-    DATA: ls_tadir TYPE zif_abapgit_definitions=>ty_tadir.
+    DATA:
+      ls_tadir     TYPE zif_abapgit_definitions=>ty_tadir,
+      lt_tadir     TYPE zif_abapgit_definitions=>ty_tadir_tt,
+      lt_remote    TYPE zif_abapgit_definitions=>ty_files_tt,
+      lt_new       TYPE zif_abapgit_definitions=>ty_files_item_tt,
+      lo_serialize TYPE REF TO zcl_abapgit_serialize.
 
-    DATA(lt_tadir) = zcl_abapgit_factory=>get_tadir( )->read(
-                         iv_package = ms_data-package
-                         io_dot     = get_dot_abapgit( ) ).
+    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
+                   iv_package = ms_data-package
+                   io_dot     = get_dot_abapgit( ) ).
 
     READ TABLE lt_tadir INTO ls_tadir
                         WITH KEY object   = iv_obj_type
                                  obj_name = iv_obj_name.
     ASSERT sy-subrc = 0.
 
-    DATA(lt_remote) = get_files_remote( ).
+    lt_remote = get_files_remote( ).
 
     DELETE mt_local WHERE item-obj_type = iv_obj_type
                     AND   item-obj_name = iv_obj_name.
-    DATA(lt_new) = NEW zcl_abapgit_serialize( )->serialize( VALUE #( ( ls_tadir ) ) ).
+
+    CREATE OBJECT lo_serialize.
+    lt_new = lo_serialize->serialize( VALUE #( ( ls_tadir ) ) ).
 
     INSERT LINES OF lt_new INTO TABLE mt_local.
+
+  ENDMETHOD.
+
+
+  METHOD refresh_local_objects.
+
+    mv_request_local_refresh = abap_true.
+    get_files_local( ).
 
   ENDMETHOD.
 
