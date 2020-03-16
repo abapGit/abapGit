@@ -1416,7 +1416,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   METHOD restore_patch_flags.
 
     DATA:
-      lt_diff_old       TYPE zif_abapgit_definitions=>ty_diffs_tt.
+      lt_diff_old TYPE zif_abapgit_definitions=>ty_diffs_tt.
 
     FIELD-SYMBOLS:
       <ls_diff_file>     TYPE ty_file_diff,
