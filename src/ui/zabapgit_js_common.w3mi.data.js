@@ -1562,24 +1562,24 @@ Patch.prototype.clickAllLineCheckboxesInSection = function(oSection, bChecked){
 Patch.prototype.registerStagePatch = function registerStagePatch(){
 
   var elStage = document.querySelector("#" + this.ID.STAGE);
-  elStage.addEventListener("click", this.stagePatch.bind(this));
+  elStage.addEventListener("click", this.submitPatch.bind(this, this.ACTION.PATCH_STAGE));
 
-  var aRefresh = document.querySelectorAll("[id*=patch_refresh_object]");
+  var aRefresh = document.querySelectorAll("[id*=patch_refresh]");
   [].forEach.call(
     aRefresh,
     function(el) {
-      el.addEventListener("click", this.refreshObject.bind(this, el.id));
+      el.addEventListener("click", this.submitPatch.bind(this, el.id));
     }.bind(this)
   );
 
   // for hotkeys
   window.stagePatch = function(){
-    this.stagePatch();
+    this.submitPatch(this.ACTION.PATCH_STAGE);
   }.bind(this);
 
 };
 
-Patch.prototype.stagePatch = function() {
+Patch.prototype.submitPatch = function(action) {
   // Collect add and remove info and submit to backend
 
   var aAddPatch = this.collectElementsForCheckboxId(
@@ -1592,25 +1592,8 @@ Patch.prototype.stagePatch = function() {
   );
 
   submitSapeventForm(
-    { add: aAddPatch, remove: aRemovePatch },
-    this.ACTION.PATCH_STAGE,
-    "post"
+    { add: aAddPatch, remove: aRemovePatch }, action, "post"
   );
-};
-
-Patch.prototype.refreshObject = function(action) {
-  // Collect add and remove info and trigger refresh
-
-  var aAddPatch = this.collectElementsForCheckboxId(
-    PatchLine.prototype.ID,
-    true
-  );
-  var aRemovePatch = this.collectElementsForCheckboxId(
-    PatchLine.prototype.ID,
-    false
-  );
-
-  submitSapeventForm({ add: aAddPatch, remove: aRemovePatch }, action, "post");
 };
 
 Patch.prototype.collectElementsForCheckboxId = function(sId, bChecked){
