@@ -866,17 +866,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         iv_txt   = |Refresh|
         iv_typ   = zif_abapgit_html=>c_action_type-dummy
         iv_act   = lv_act_id
-*        iv_opt   =
-*        iv_class =
         iv_id    = lv_act_id
         iv_title = |Refresh| ).
-        iv_title = |Refresh|
-    ).
-
-*    ro_html->add_icon(
-*        iv_name    = 'arrow-circle-up/blue'
-*        iv_hint    = 'Refresh this file'
-*        iv_onclick = 'onRefresh' ).
 
     IF is_diff-fstate = c_fstate-both AND mv_unified = abap_true.
       ro_html->add( '<span class="attention pad-sides">Attention: Unified mode'
@@ -1309,7 +1300,6 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     " but not for the refreshed object, cause it's difficult to restore it
     " in a sensible way. So we let the user decide again which lines to patch
     LOOP AT mt_diff_files ASSIGNING <ls_diff_file>
-
                           WHERE obj_type <> iv_obj_type
                           AND   obj_name <> iv_obj_name.
 
@@ -1324,11 +1314,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
       LOOP AT lt_diff_old ASSIGNING <ls_diff_old>
                           WHERE patch_flag = abap_true.
 
-        lv_line = <ls_diff_old>-new_num.
-
-        <ls_diff_file>-o_diff->set_patch_new(
-            iv_line_new   = lv_line
-            iv_patch_flag = <ls_diff_old>-patch_flag ).
+        <ls_diff_file>-o_diff->set_patch_line(
+            iv_line       = sy-tabix
+            iv_patch_flag = abap_true ).
 
       ENDLOOP.
 

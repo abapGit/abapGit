@@ -1564,7 +1564,7 @@ Patch.prototype.registerStagePatch = function registerStagePatch(){
   var elStage = document.querySelector("#" + this.ID.STAGE);
   elStage.addEventListener("click", this.stagePatch.bind(this));
 
-  var aRefresh = document.querySelectorAll("[id*=refresh]");
+  var aRefresh = document.querySelectorAll("[id*=patch_refresh_object]");
   [].forEach.call(
     aRefresh,
     function(el) {

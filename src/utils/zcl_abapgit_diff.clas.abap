@@ -39,6 +39,12 @@ CLASS zcl_abapgit_diff DEFINITION
         VALUE(rv_patched) TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
+    METHODS set_patch_line
+      IMPORTING
+        iv_line       TYPE i
+        iv_patch_flag TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -431,6 +437,19 @@ CLASS zcl_abapgit_diff IMPLEMENTATION.
     ELSE.
       zcx_abapgit_exception=>raise( |Diff line not found { iv_index }| ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD set_patch_line.
+
+    READ TABLE mt_diff ASSIGNING FIELD-SYMBOL(<ls_diff>)
+                       INDEX iv_line.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Line { iv_line } not found | ).
+    ENDIF.
+
+    <ls_diff>-patch_flag = iv_patch_flag.
 
   ENDMETHOD.
 
