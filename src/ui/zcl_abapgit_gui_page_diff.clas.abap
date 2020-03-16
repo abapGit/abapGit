@@ -818,7 +818,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   METHOD render_diff_head.
 
     DATA: ls_stats    TYPE zif_abapgit_definitions=>ty_count,
-          lv_adt_link TYPE string.
+          lv_adt_link TYPE string,
+          lv_act_id   TYPE string.
 
     CREATE OBJECT ro_html.
 
@@ -860,7 +861,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
       iv_lstate = is_diff-lstate
       iv_rstate = is_diff-rstate ) ).
 
-    DATA(lv_act_id) = |{ c_actions-refresh_object }_{ is_diff-obj_type }_{ is_diff-obj_name }|.
+    lv_act_id = |{ c_actions-refresh_object }_{ is_diff-obj_type }_{ is_diff-obj_name }|.
 
     ro_html->add_a(
         iv_txt   = |Refresh|
@@ -1278,13 +1279,13 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   METHOD refresh_object.
 
     DATA:
-      lt_diff_files_old TYPE zcl_abapgit_gui_page_diff=>tt_file_diff,
+      lt_diff_files_old TYPE tt_file_diff,
       lt_diff_old       TYPE zif_abapgit_definitions=>ty_diffs_tt,
       lv_line           TYPE i.
 
     FIELD-SYMBOLS:
-      <ls_diff_file>     TYPE zcl_abapgit_gui_page_diff=>ty_file_diff,
-      <ls_diff_file_old> TYPE zcl_abapgit_gui_page_diff=>ty_file_diff,
+      <ls_diff_file>     TYPE ty_file_diff,
+      <ls_diff_file_old> TYPE ty_file_diff,
       <ls_diff_old>      TYPE zif_abapgit_definitions=>ty_diff.
 
     lt_diff_files_old = mt_diff_files.

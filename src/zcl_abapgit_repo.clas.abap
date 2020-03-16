@@ -777,13 +777,17 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
                                  obj_name = iv_obj_name.
     ASSERT sy-subrc = 0.
 
+    CLEAR lt_tadir.
+    INSERT ls_tadir INTO TABLE lt_tadir.
+
     lt_remote = get_files_remote( ).
 
     DELETE mt_local WHERE item-obj_type = iv_obj_type
                     AND   item-obj_name = iv_obj_name.
 
     CREATE OBJECT lo_serialize.
-    lt_new = lo_serialize->serialize( VALUE #( ( ls_tadir ) ) ).
+
+    lt_new = lo_serialize->serialize( lt_tadir ).
 
     INSERT LINES OF lt_new INTO TABLE mt_local.
 
