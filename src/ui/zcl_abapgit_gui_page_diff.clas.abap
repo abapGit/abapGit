@@ -1404,8 +1404,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     CLEAR: mt_diff_files.
 
-    mo_repo->refresh_local_object( iv_obj_type = iv_obj_type
-                                   iv_obj_name = iv_obj_name ).
+    mo_repo->refresh_local_object(
+        iv_obj_type = iv_obj_type
+        iv_obj_name = iv_obj_name ).
     calculate_diff( ).
     restore_patch_flags( lt_diff_files_old ).
 

@@ -1582,18 +1582,10 @@ Patch.prototype.registerStagePatch = function registerStagePatch(){
 Patch.prototype.submitPatch = function(action) {
   // Collect add and remove info and submit to backend
 
-  var aAddPatch = this.collectElementsForCheckboxId(
-    PatchLine.prototype.ID,
-    true
-  );
-  var aRemovePatch = this.collectElementsForCheckboxId(
-    PatchLine.prototype.ID,
-    false
-  );
+  var aAddPatch = this.collectElementsForCheckboxId( PatchLine.prototype.ID, true);
+  var aRemovePatch = this.collectElementsForCheckboxId( PatchLine.prototype.ID, false);
 
-  submitSapeventForm(
-    { add: aAddPatch, remove: aRemovePatch }, action, "post"
-  );
+  submitSapeventForm({ add: aAddPatch, remove: aRemovePatch }, action, "post");
 };
 
 Patch.prototype.collectElementsForCheckboxId = function(sId, bChecked){
