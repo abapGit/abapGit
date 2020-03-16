@@ -1565,12 +1565,9 @@ Patch.prototype.registerStagePatch = function registerStagePatch(){
   elStage.addEventListener("click", this.submitPatch.bind(this, this.ACTION.PATCH_STAGE));
 
   var aRefresh = document.querySelectorAll("[id*=patch_refresh]");
-  [].forEach.call(
-    aRefresh,
-    function(el) {
-      el.addEventListener("click", this.submitPatch.bind(this, el.id));
-    }.bind(this)
-  );
+  [].forEach.call( aRefresh, function(el) {
+    el.addEventListener("click", this.submitPatch.bind(this, el.id));
+  }.bind(this));
 
   // for hotkeys
   window.stagePatch = function(){
