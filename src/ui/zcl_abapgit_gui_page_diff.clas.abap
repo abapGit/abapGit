@@ -871,14 +871,18 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
       iv_lstate = is_diff-lstate
       iv_rstate = is_diff-rstate ) ).
 
-    lv_act_id = |{ c_actions-refresh_local_object }_{ is_diff-obj_type }_{ is_diff-obj_name }|.
+    IF is_diff-obj_type IS NOT INITIAL AND is_diff-obj_name IS NOT INITIAL.
 
-    ro_html->add_a(
-        iv_txt   = |Refresh|
-        iv_typ   = zif_abapgit_html=>c_action_type-dummy
-        iv_act   = lv_act_id
-        iv_id    = lv_act_id
-        iv_title = |Local refresh of this object| ).
+      lv_act_id = |{ c_actions-refresh_local_object }_{ is_diff-obj_type }_{ is_diff-obj_name }|.
+
+      ro_html->add_a(
+          iv_txt   = |Refresh|
+          iv_typ   = zif_abapgit_html=>c_action_type-dummy
+          iv_act   = lv_act_id
+          iv_id    = lv_act_id
+          iv_title = |Local refresh of this object| ).
+
+    ENDIF.
 
     IF is_diff-fstate = c_fstate-both AND mv_unified = abap_true.
       ro_html->add( '<span class="attention pad-sides">Attention: Unified mode'
