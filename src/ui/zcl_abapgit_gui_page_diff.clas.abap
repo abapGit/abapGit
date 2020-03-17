@@ -56,11 +56,11 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
 
     CONSTANTS:
       BEGIN OF c_actions,
+        stage                TYPE string VALUE 'patch_stage',
+        toggle_unified       TYPE string VALUE 'toggle_unified',
         refresh              TYPE string VALUE 'patch_refresh',
         refresh_local        TYPE string VALUE 'patch_refresh_local',
         refresh_local_object TYPE string VALUE 'patch_refresh_local_object',
-        stage                TYPE string VALUE 'patch_stage',
-        toggle_unified       TYPE string VALUE 'toggle_unified',
       END OF c_actions .
     CONSTANTS:
       BEGIN OF c_patch_action,
@@ -213,7 +213,6 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         iv_filename          TYPE string
       RETURNING
         VALUE(rv_normalized) TYPE string .
-
     METHODS calculate_diff
       IMPORTING
         is_file   TYPE zif_abapgit_definitions=>ty_file OPTIONAL
@@ -632,7 +631,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         is_file   = is_file
         is_object = is_object ).
 
-    ms_control-page_menu  = build_menu( ).
+    ms_control-page_menu = build_menu( ).
 
   ENDMETHOD.
 
@@ -1224,10 +1223,10 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
             io_stage = mo_stage.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
-
       WHEN OTHERS.
 
-        IF match( val = iv_action regex = |^{ c_actions-refresh }| ) <> ''.
+        FIND FIRST OCCURRENCE OF REGEX |^{ c_actions-refresh }| IN iv_action.
+        IF sy-subrc = 0.
 
           apply_patch_from_form_fields( it_postdata ).
           refresh( iv_action ).
