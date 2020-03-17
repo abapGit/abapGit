@@ -9,16 +9,17 @@ CLASS zcl_abapgit_html_toolbar DEFINITION
           iv_id TYPE string OPTIONAL,
       add
         IMPORTING
-          iv_txt TYPE string
-          io_sub TYPE REF TO zcl_abapgit_html_toolbar OPTIONAL
-          iv_typ TYPE c         DEFAULT zif_abapgit_html=>c_action_type-sapevent
-          iv_act TYPE string    OPTIONAL
-          iv_ico TYPE string    OPTIONAL
-          iv_cur TYPE abap_bool OPTIONAL
-          iv_opt TYPE c         OPTIONAL
-          iv_chk TYPE abap_bool DEFAULT abap_undefined
-          iv_aux TYPE string    OPTIONAL
-          iv_id  TYPE string    OPTIONAL,
+          iv_txt   TYPE string
+          io_sub   TYPE REF TO zcl_abapgit_html_toolbar OPTIONAL
+          iv_typ   TYPE c         DEFAULT zif_abapgit_html=>c_action_type-sapevent
+          iv_act   TYPE string    OPTIONAL
+          iv_ico   TYPE string    OPTIONAL
+          iv_cur   TYPE abap_bool OPTIONAL
+          iv_opt   TYPE c         OPTIONAL
+          iv_chk   TYPE abap_bool DEFAULT abap_undefined
+          iv_aux   TYPE string    OPTIONAL
+          iv_id    TYPE string    OPTIONAL
+          iv_title TYPE string    OPTIONAL,
       count
         RETURNING VALUE(rv_count) TYPE i,
       render
@@ -41,16 +42,17 @@ CLASS zcl_abapgit_html_toolbar DEFINITION
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_item,
-        txt TYPE string,
-        act TYPE string,
-        ico TYPE string,
-        sub TYPE REF TO zcl_abapgit_html_toolbar,
-        opt TYPE char1,
-        typ TYPE char1,
-        cur TYPE abap_bool,
-        chk TYPE abap_bool,
-        aux TYPE string,
-        id  TYPE string,
+        txt   TYPE string,
+        act   TYPE string,
+        ico   TYPE string,
+        sub   TYPE REF TO zcl_abapgit_html_toolbar,
+        opt   TYPE char1,
+        typ   TYPE char1,
+        cur   TYPE abap_bool,
+        chk   TYPE abap_bool,
+        aux   TYPE string,
+        id    TYPE string,
+        title TYPE string,
       END OF ty_item.
 
     TYPES tt_items TYPE STANDARD TABLE OF ty_item.
@@ -83,16 +85,17 @@ CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
 
     ASSERT NOT ( iv_chk <> abap_undefined AND io_sub IS NOT INITIAL ).
 
-    ls_item-txt = iv_txt.
-    ls_item-act = iv_act.
-    ls_item-ico = iv_ico.
-    ls_item-sub = io_sub.
-    ls_item-opt = iv_opt.
-    ls_item-typ = iv_typ.
-    ls_item-cur = iv_cur.
-    ls_item-chk = iv_chk.
-    ls_item-aux = iv_aux.
-    ls_item-id  = iv_id.
+    ls_item-txt   = iv_txt.
+    ls_item-act   = iv_act.
+    ls_item-ico   = iv_ico.
+    ls_item-sub   = io_sub.
+    ls_item-opt   = iv_opt.
+    ls_item-typ   = iv_typ.
+    ls_item-cur   = iv_cur.
+    ls_item-chk   = iv_chk.
+    ls_item-aux   = iv_aux.
+    ls_item-id    = iv_id.
+    ls_item-title = iv_title.
 
     APPEND ls_item TO mt_items.
 
@@ -219,13 +222,15 @@ CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
                         iv_typ   = <ls_item>-typ
                         iv_act   = <ls_item>-act
                         iv_id    = <ls_item>-id
-                        iv_opt   = <ls_item>-opt ).
+                        iv_opt   = <ls_item>-opt
+                        iv_title = <ls_item>-title ).
       ELSE.
         ro_html->add_a( iv_txt   = lv_icon && <ls_item>-txt
                         iv_typ   = zif_abapgit_html=>c_action_type-dummy
                         iv_act   = ''
                         iv_id    = <ls_item>-id
-                        iv_opt   = <ls_item>-opt ).
+                        iv_opt   = <ls_item>-opt
+                        iv_title = <ls_item>-title ).
         ro_html->add( <ls_item>-sub->render_items( iv_sort ) ).
       ENDIF.
       ro_html->add( '</li>' ).

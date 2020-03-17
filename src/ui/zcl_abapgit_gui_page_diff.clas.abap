@@ -570,16 +570,18 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     CREATE OBJECT ro_menu.
 
     ro_menu->add(
-        iv_txt = |Refresh local|
-        iv_typ = zif_abapgit_html=>c_action_type-dummy
-        iv_act = c_actions-refresh_local
-        iv_id  = c_actions-refresh_local ).
+        iv_txt   = |Refresh local|
+        iv_typ   = zif_abapgit_html=>c_action_type-dummy
+        iv_act   = c_actions-refresh_local
+        iv_id    = c_actions-refresh_local
+        iv_title = |Refresh all local objects, without refreshing the remote| ).
 
     ro_menu->add(
-        iv_txt = |Refresh|
-        iv_typ = zif_abapgit_html=>c_action_type-dummy
-        iv_act = c_actions-refresh
-        iv_id  = c_actions-refresh ).
+        iv_txt   = |Refresh|
+        iv_typ   = zif_abapgit_html=>c_action_type-dummy
+        iv_act   = c_actions-refresh
+        iv_id    = c_actions-refresh
+        iv_title = |Complete refresh of all objects, local and remote| ).
 
     add_jump_sub_menu( ro_menu ).
     add_filter_sub_menu( ro_menu ).
@@ -875,7 +877,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         iv_typ   = zif_abapgit_html=>c_action_type-dummy
         iv_act   = lv_act_id
         iv_id    = lv_act_id
-        iv_title = |Refresh| ).
+        iv_title = |Local refresh of this object| ).
 
     IF is_diff-fstate = c_fstate-both AND mv_unified = abap_true.
       ro_html->add( '<span class="attention pad-sides">Attention: Unified mode'
