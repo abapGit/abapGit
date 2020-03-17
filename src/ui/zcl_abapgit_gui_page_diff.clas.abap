@@ -75,7 +75,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
     DATA mv_patch_mode TYPE abap_bool .
     DATA mo_stage TYPE REF TO zcl_abapgit_stage .
     DATA mv_section_count TYPE i .
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo.
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online.
 
     METHODS render_diff
       IMPORTING
@@ -340,16 +340,13 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
   METHOD add_to_stage.
 
-    DATA: lo_repo              TYPE REF TO zcl_abapgit_repo_online,
-          lt_diff              TYPE zif_abapgit_definitions=>ty_diffs_tt,
+    DATA: lt_diff              TYPE zif_abapgit_definitions=>ty_diffs_tt,
           lv_something_patched TYPE abap_bool,
           ls_status            TYPE zif_abapgit_definitions=>ty_result,
           lv_patch             TYPE xstring,
           lo_git_add_patch     TYPE REF TO zcl_abapgit_git_add_patch.
 
     FIELD-SYMBOLS: <ls_diff_file> TYPE ty_file_diff.
-
-    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
 
     LOOP AT mt_diff_files ASSIGNING <ls_diff_file>.
 
@@ -614,7 +611,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     mv_unified            = zcl_abapgit_persistence_user=>get_instance( )->get_diff_unified( ).
     mv_repo_key           = iv_key.
     mv_patch_mode         = iv_patch_mode.
-    mo_repo               = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    mo_repo              ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     IF mv_patch_mode = abap_true.
       " While patching we always want to be in split mode
@@ -1204,8 +1201,6 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA: lo_repo  TYPE REF TO zcl_abapgit_repo_online.
-
     CASE iv_action.
       WHEN c_actions-toggle_unified. " Toggle file diplay
 
@@ -1216,10 +1211,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
         start_staging( it_postdata ).
 
-        lo_repo  ?= zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
           EXPORTING
-            io_repo  = lo_repo
+            io_repo  = mo_repo
             io_stage = mo_stage.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
