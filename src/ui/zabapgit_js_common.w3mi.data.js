@@ -26,6 +26,7 @@
 /* exported enumerateJumpAllFiles */
 /* exported enumerateToolbarActions */
 /* exported onDiffCollapse */
+/* exported restoreScrollPosition */
 
 /**********************************************************
  * Polyfills
@@ -1566,7 +1567,7 @@ Patch.prototype.registerStagePatch = function registerStagePatch(){
 
   var aRefresh = document.querySelectorAll("[id*=patch_refresh]");
   [].forEach.call( aRefresh, function(el) {
-    el.addEventListener("click", this.submitPatch.bind(this, el.id));
+    el.addEventListener("click", memoizeScrollPosition(this.submitPatch.bind(this, el.id)).bind(this));
   }.bind(this));
 
   // for hotkeys
@@ -1990,4 +1991,26 @@ function enumerateJumpAllFiles() {
         action: root.onclick.bind(null, title),
         title:  title
       };});
+}
+
+function saveScrollPosition(){
+  if (!window.sessionStorage) { return }
+  window.sessionStorage.setItem("scrollTop", document.querySelector("html").scrollTop);
+}
+
+function restoreScrollPosition(){
+  if (!window.sessionStorage) { return }
+
+  var scrollTop = window.sessionStorage.getItem("scrollTop");
+  if (scrollTop) {
+    document.querySelector("html").scrollTop = scrollTop;
+  }
+  window.sessionStorage.setItem("scrollTop", null);
+}
+
+function memoizeScrollPosition(fn){
+  return function(){
+    saveScrollPosition();
+    return fn.call(this, fn.args);
+  }.bind(this);
 }
