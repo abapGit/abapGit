@@ -1237,6 +1237,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
              IMPORTING
                ei_page      = ei_page
                ev_state     = ev_state ).
+
         ENDIF.
 
     ENDCASE.
