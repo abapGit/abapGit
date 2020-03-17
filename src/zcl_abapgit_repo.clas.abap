@@ -764,7 +764,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     DATA:
       ls_tadir     TYPE zif_abapgit_definitions=>ty_tadir,
       lt_tadir     TYPE zif_abapgit_definitions=>ty_tadir_tt,
-      lt_remote    TYPE zif_abapgit_definitions=>ty_files_tt,
       lt_new       TYPE zif_abapgit_definitions=>ty_files_item_tt,
       lo_serialize TYPE REF TO zcl_abapgit_serialize.
 
@@ -779,8 +778,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     CLEAR lt_tadir.
     INSERT ls_tadir INTO TABLE lt_tadir.
-
-    lt_remote = get_files_remote( ).
 
     DELETE mt_local WHERE item-obj_type = iv_obj_type
                     AND   item-obj_name = iv_obj_name.
