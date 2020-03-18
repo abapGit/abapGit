@@ -775,7 +775,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
                         WITH KEY object   = iv_obj_type
                                  obj_name = iv_obj_name.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Tadir entry not found { iv_obj_type } { iv_obj_name }| ).
+      zcx_abapgit_exception=>raise( |TADIR entry not found { iv_obj_type } { iv_obj_name }| ).
     ENDIF.
 
     CLEAR lt_tadir.
