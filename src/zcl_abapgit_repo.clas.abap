@@ -762,10 +762,10 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   METHOD refresh_local_object.
 
     DATA:
-      ls_tadir     TYPE zif_abapgit_definitions=>ty_tadir,
-      lt_tadir     TYPE zif_abapgit_definitions=>ty_tadir_tt,
-      lt_new       TYPE zif_abapgit_definitions=>ty_files_item_tt,
-      lo_serialize TYPE REF TO zcl_abapgit_serialize.
+      ls_tadir           TYPE zif_abapgit_definitions=>ty_tadir,
+      lt_tadir           TYPE zif_abapgit_definitions=>ty_tadir_tt,
+      lt_new_local_files TYPE zif_abapgit_definitions=>ty_files_item_tt,
+      lo_serialize       TYPE REF TO zcl_abapgit_serialize.
 
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
                    iv_package = ms_data-package
@@ -774,7 +774,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     READ TABLE lt_tadir INTO ls_tadir
                         WITH KEY object   = iv_obj_type
                                  obj_name = iv_obj_name.
-    ASSERT sy-subrc = 0.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Tadir entry not found { iv_obj_type } { iv_obj_name }| ).
+    ENDIF.
 
     CLEAR lt_tadir.
     INSERT ls_tadir INTO TABLE lt_tadir.
@@ -784,9 +786,9 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     CREATE OBJECT lo_serialize.
 
-    lt_new = lo_serialize->serialize( lt_tadir ).
+    lt_new_local_files = lo_serialize->serialize( lt_tadir ).
 
-    INSERT LINES OF lt_new INTO TABLE mt_local.
+    INSERT LINES OF lt_new_local_files INTO TABLE mt_local.
 
   ENDMETHOD.
 
