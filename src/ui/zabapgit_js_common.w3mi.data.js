@@ -26,7 +26,6 @@
 /* exported enumerateJumpAllFiles */
 /* exported enumerateToolbarActions */
 /* exported onDiffCollapse */
-/* exported restoreScrollPosition */
 
 /**********************************************************
  * Polyfills
