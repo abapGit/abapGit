@@ -13,8 +13,6 @@ CLASS ltcl_patch DEFINITION FINAL FOR TESTING
 
 ENDCLASS.
 
-CLASS zcl_abapgit_gui_page_diff DEFINITION LOCAL FRIENDS ltcl_patch.
-
 CLASS ltcl_patch IMPLEMENTATION.
 
   METHOD get_patch_data_add.
@@ -22,7 +20,7 @@ CLASS ltcl_patch IMPLEMENTATION.
     DATA: lv_file_name  TYPE string,
           lv_line_index TYPE string.
 
-    zcl_abapgit_gui_page_diff=>get_patch_data(
+    zcl_abapgit_gui_page_patch=>get_patch_data(
       EXPORTING
         iv_patch      = |patch_line_zcl_test_git_add_p.clas.abap_0_19|
       IMPORTING
@@ -44,7 +42,7 @@ CLASS ltcl_patch IMPLEMENTATION.
     DATA: lv_file_name  TYPE string,
           lv_line_index TYPE string.
 
-    zcl_abapgit_gui_page_diff=>get_patch_data(
+    zcl_abapgit_gui_page_patch=>get_patch_data(
       EXPORTING
         iv_patch      = |patch_line_ztest_patch.prog.abap_0_39|
       IMPORTING
@@ -69,7 +67,7 @@ CLASS ltcl_patch IMPLEMENTATION.
           lx_error      TYPE REF TO zcx_abapgit_exception.
 
     TRY.
-        zcl_abapgit_gui_page_diff=>get_patch_data(
+        zcl_abapgit_gui_page_patch=>get_patch_data(
           EXPORTING
             iv_patch      = |patch_39|
           IMPORTING
@@ -93,7 +91,7 @@ CLASS ltcl_patch IMPLEMENTATION.
           lx_error      TYPE REF TO zcx_abapgit_exception.
 
     TRY.
-        zcl_abapgit_gui_page_diff=>get_patch_data(
+        zcl_abapgit_gui_page_patch=>get_patch_data(
           EXPORTING
             iv_patch      = |patch_ztest_patch.prog.abap|
           IMPORTING
