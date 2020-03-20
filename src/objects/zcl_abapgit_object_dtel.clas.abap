@@ -112,6 +112,8 @@ CLASS zcl_abapgit_object_dtel IMPLEMENTATION.
       WHERE rollname = lv_name
       AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
 
+    SORT lt_i18n_langs ASCENDING.
+
     LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
       lv_index = sy-tabix.
       CALL FUNCTION 'DDIF_DTEL_GET'
