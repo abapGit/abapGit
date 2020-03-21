@@ -1167,6 +1167,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     ro_html = super->scripts( ).
 
+    ro_html->add( 'restoreScrollPosition();' ).
     ro_html->add( 'var gHelper = new DiffHelper({' ).
     ro_html->add( |  seed:        "{ mv_seed }",| ).
     ro_html->add( '  ids: {' ).
