@@ -206,6 +206,7 @@ table.repo_tab {
   border: 1px solid;
   border-radius: 3px;
   width: 100%;
+  line-height: 1.5;
 }
 .repo_tab th {
   text-align: left;
@@ -238,6 +239,7 @@ table.repo_tab {
 }
 .repo_tab td.files {
   padding-left: 0.5em;
+  line-height: 1.5;
 }
 .repo_tab td.cmd, .repo_tab th.cmd {
   text-align: right;
@@ -250,12 +252,15 @@ table.repo_tab {
 .repo_tab tr:first-child td { border-top: 0px; }
 
 /* STAGE */
-div.stage-container { width: 900px; }
+
+th.stage-status { width: 30px; }
+th.stage-objtype { width: 30px; }
 input.stage-filter { width: 18em; }
 
 .stage_tab {
   border: 1px solid;
   margin-top: 0.2em;
+  line-height: 1.5;
 }
 .stage_tab td {
   border-top: 1px solid;
