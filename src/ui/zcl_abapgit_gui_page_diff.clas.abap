@@ -1271,6 +1271,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     lt_remote = mo_repo->get_files_remote( ).
     lt_local  = mo_repo->get_files_local( ).
+    mo_repo->reset_status( ).
     lt_status = mo_repo->status( ).
 
     IF is_file IS NOT INITIAL.        " Diff for one file
