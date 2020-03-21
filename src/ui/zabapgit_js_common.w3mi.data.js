@@ -1434,7 +1434,8 @@ Patch.prototype.ID = {
 };
 
 Patch.prototype.ACTION = {
-  PATCH_STAGE: "patch_stage"
+  PATCH_STAGE: "patch_stage",
+  PATCH_REFRESH_LOCAL: "patch_refresh_local"
 };
 
 Patch.prototype.escape = function(sFileName){
@@ -1574,6 +1575,10 @@ Patch.prototype.registerStagePatch = function registerStagePatch(){
   window.stagePatch = function(){
     this.submitPatch(this.ACTION.PATCH_STAGE);
   }.bind(this);
+
+  window.refreshLocal = memoizeScrollPosition(function(){
+    this.submitPatch(this.ACTION.PATCH_REFRESH_LOCAL);
+  }.bind(this));
 
 };
 

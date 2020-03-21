@@ -1258,6 +1258,11 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     ls_hotkey_action-hotkey = |s|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
+    ls_hotkey_action-name   = |Refresh local|.
+    ls_hotkey_action-action = |refreshLocal|.
+    ls_hotkey_action-hotkey = |r|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
   ENDMETHOD.
 
 
