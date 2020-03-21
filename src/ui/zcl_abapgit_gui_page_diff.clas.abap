@@ -1356,7 +1356,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
                                    WITH KEY secondary
                                    COMPONENTS path     = <ls_diff_file>-path
                                               filename = <ls_diff_file>-filename.
-      ASSERT sy-subrc = 0.
+      IF sy-subrc <> 0.
+        CONTINUE. " e.g. new objects
+      ENDIF.
 
       lt_diff_old = <ls_diff_file_old>-o_diff->get( ).
 
