@@ -113,6 +113,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     IF lines( ms_files-local ) > 0.
       ro_menu->add( iv_txt = |All diffs|
                     iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ mo_repo->get_key( ) }| ).
+
+      ro_menu->add( iv_txt = |Patch|
+                    iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?key={ mo_repo->get_key( ) }| ).
     ENDIF.
 
   ENDMETHOD.
@@ -259,9 +262,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
   METHOD render_actions.
 
     DATA: lv_local_count TYPE i,
-          lv_add_all_txt TYPE string,
-          lv_param       TYPE string,
-          ls_file        TYPE zif_abapgit_definitions=>ty_file.
+          lv_add_all_txt TYPE string.
 
     CREATE OBJECT ro_html.
     lv_local_count = count_default_files_to_commit( ).
@@ -289,16 +290,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
                     iv_id  = 'commitAllButton'
                     iv_txt = lv_add_all_txt ) ##NO_TEXT.
 
-    lv_param = zcl_abapgit_html_action_utils=>file_encode( iv_key  = mo_repo->get_key( )
-                                                           ig_file = ls_file ).
 
-
-    ro_html->add( '</td>' ).
-
-    ro_html->add( '<td class="pad-sides">' ).
-    ro_html->add_a(
-      iv_txt = |Patch|
-      iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?{ lv_param }| ).
     ro_html->add( '</td>' ).
 
     " Filter bar
@@ -411,8 +403,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     LOOP AT ms_files-local ASSIGNING <ls_local>.
       AT FIRST.
         ro_html->add( '<thead><tr class="local">' ).
-        ro_html->add( '<th></th>' ). " Diff state
-        ro_html->add( '<th>Type</th>' ).
+        ro_html->add( '<th class="stage-status"></th>' ). " Diff state
+        ro_html->add( '<th class="stage-objtype">Type</th>' ).
         ro_html->add( '<th>Files to add (click to see diff)</th>' ).
         ro_html->add( '<th>Changed by</th>' ).
         ro_html->add( '<th>Transport</th>' ).
