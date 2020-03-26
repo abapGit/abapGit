@@ -44,3 +44,5 @@ Triggered before deserialization to perform checks, eg warn the user that databa
 
 ``ZIF_ABAPGIT_OBJECT~GET_DESERIALIZE_STEPS`` 
 todo
+
+When adding new serializers, add tests to organization https://github.com/abapGit-tests
