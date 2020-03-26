@@ -26,6 +26,7 @@
 /* exported enumerateJumpAllFiles */
 /* exported enumerateToolbarActions */
 /* exported onDiffCollapse */
+/* exported restoreScrollPosition */
 
 /**********************************************************
  * Polyfills
@@ -1433,7 +1434,8 @@ Patch.prototype.ID = {
 };
 
 Patch.prototype.ACTION = {
-  PATCH_STAGE: "patch_stage"
+  PATCH_STAGE: "patch_stage",
+  PATCH_REFRESH_LOCAL: "patch_refresh_local"
 };
 
 Patch.prototype.escape = function(sFileName){
@@ -1562,24 +1564,31 @@ Patch.prototype.clickAllLineCheckboxesInSection = function(oSection, bChecked){
 Patch.prototype.registerStagePatch = function registerStagePatch(){
 
   var elStage = document.querySelector("#" + this.ID.STAGE);
-  elStage.addEventListener("click", this.stagePatch.bind(this));
+  elStage.addEventListener("click", this.submitPatch.bind(this, this.ACTION.PATCH_STAGE));
+
+  var aRefresh = document.querySelectorAll("[id*=patch_refresh]");
+  [].forEach.call( aRefresh, function(el) {
+    el.addEventListener("click", memoizeScrollPosition(this.submitPatch.bind(this, el.id)).bind(this));
+  }.bind(this));
 
   // for hotkeys
   window.stagePatch = function(){
-    this.stagePatch();
+    this.submitPatch(this.ACTION.PATCH_STAGE);
   }.bind(this);
+
+  window.refreshLocal = memoizeScrollPosition(function(){
+    this.submitPatch(this.ACTION.PATCH_REFRESH_LOCAL);
+  }.bind(this));
 
 };
 
-Patch.prototype.stagePatch = function() {
-
+Patch.prototype.submitPatch = function(action) {
   // Collect add and remove info and submit to backend
 
-  var aAddPatch = this.collectElementsForCheckboxId(PatchLine.prototype.ID, true);
-  var aRemovePatch = this.collectElementsForCheckboxId(PatchLine.prototype.ID, false);
+  var aAddPatch = this.collectElementsForCheckboxId( PatchLine.prototype.ID, true);
+  var aRemovePatch = this.collectElementsForCheckboxId( PatchLine.prototype.ID, false);
 
-  submitSapeventForm({"add": aAddPatch, "remove": aRemovePatch}, this.ACTION.PATCH_STAGE, "post");
-
+  submitSapeventForm({ add: aAddPatch, remove: aRemovePatch }, action, "post");
 };
 
 Patch.prototype.collectElementsForCheckboxId = function(sId, bChecked){
@@ -1987,4 +1996,26 @@ function enumerateJumpAllFiles() {
         action: root.onclick.bind(null, title),
         title:  title
       };});
+}
+
+function saveScrollPosition(){
+  if (!window.sessionStorage) { return }
+  window.sessionStorage.setItem("scrollTop", document.querySelector("html").scrollTop);
+}
+
+function restoreScrollPosition(){
+  if (!window.sessionStorage) { return }
+
+  var scrollTop = window.sessionStorage.getItem("scrollTop");
+  if (scrollTop) {
+    document.querySelector("html").scrollTop = scrollTop;
+  }
+  window.sessionStorage.setItem("scrollTop", 0);
+}
+
+function memoizeScrollPosition(fn){
+  return function(){
+    saveScrollPosition();
+    return fn.call(this, fn.args);
+  }.bind(this);
 }
