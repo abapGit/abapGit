@@ -4,6 +4,9 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    INTERFACES:
+      zif_abapgit_gui_page_hotkey.
+
     METHODS:
       constructor
         IMPORTING
@@ -811,6 +814,23 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
     OR is_diff_line-result = zif_abapgit_definitions=>c_diff-delete.
       rv_is_patch_line_possible = abap_true.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+
+    ls_hotkey_action-name   = |Stage changes|.
+    ls_hotkey_action-action = |stagePatch|.
+    ls_hotkey_action-hotkey = |s|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-name   = |Refresh local|.
+    ls_hotkey_action-action = |refreshLocal|.
+    ls_hotkey_action-hotkey = |r|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
 
