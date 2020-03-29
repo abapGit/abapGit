@@ -8,6 +8,23 @@ Legend
 + : added
 - : removed
 
+2020-03-29 v1.94.0
+------------------
+* refactoring, remove macros
+* fix stage of IWMO, IWSG, IWSV3
+* SHI5 fixes
+! Patch UI enhancements
+* DOCU master language fixes
++ New option to bypass proxy
+* Fix dump for non-existing package
+* FUGR proper error messages for RFC parameters
++ CHDO support
+* SRFC clear fields
+* TRAN fix cinfo and authorization objects
++ AREA support
++ highlight XML code
+* DOMA skip domain appends
+
 2020-02-01 v1.93.0
 ------------------
 ! byte order mark added in serialized XML files on non-unicode systems

@@ -46,3 +46,5 @@ Triggered before deserialization to perform checks, eg warn the user that databa
 todo
 
 When adding new serializers, add tests to organization https://github.com/abapGit-tests
+
+Deserialization sequence/prioritization is handled in `ZCL_ABAPGIT_OBJECTS->PRIORITIZE_DESER`
