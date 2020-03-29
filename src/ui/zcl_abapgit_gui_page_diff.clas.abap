@@ -167,6 +167,9 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
         zcx_abapgit_exception.
+    METHODS render_table_head_unified
+      IMPORTING
+        io_html TYPE REF TO zcl_abapgit_html.
 
 ENDCLASS.
 
@@ -727,10 +730,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     ro_html->add( '<tr>' ).                                 "#EC NOTEXT
 
     IF mv_unified = abap_true.
-      ro_html->add( '<th class="num">old</th>' ).           "#EC NOTEXT
-      ro_html->add( '<th class="num">new</th>' ).           "#EC NOTEXT
-      ro_html->add( '<th class="mark"></th>' ).             "#EC NOTEXT
-      ro_html->add( '<th>code</th>' ).                      "#EC NOTEXT
+
+      render_table_head_unified( ro_html ).
+
     ELSE.
 
       render_table_head_non_unified(
@@ -920,6 +922,16 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
       io_html->add( iv_new ). " local
       io_html->add( iv_old ). " remote
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD render_table_head_unified.
+
+    io_html->add( '<th class="num">old</th>' ).             "#EC NOTEXT
+    io_html->add( '<th class="num">new</th>' ).             "#EC NOTEXT
+    io_html->add( '<th class="mark"></th>' ).               "#EC NOTEXT
+    io_html->add( '<th>code</th>' ).                        "#EC NOTEXT
 
   ENDMETHOD.
 
