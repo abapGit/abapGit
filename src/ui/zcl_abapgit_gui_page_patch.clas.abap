@@ -723,6 +723,10 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
     ENDIF.
 
+    super->render_diff_head_after_state(
+        io_html = io_html
+        is_diff = is_diff ).
+
   ENDMETHOD.
 
 

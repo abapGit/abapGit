@@ -533,11 +533,6 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         io_html = ro_html
         is_diff = is_diff ).
 
-    IF is_diff-fstate = c_fstate-both AND mv_unified = abap_true.
-      ro_html->add( '<span class="attention pad-sides">Attention: Unified mode'
-                 && ' highlighting for MM assumes local file is newer ! </span>' ). "#EC NOTEXT
-    ENDIF.
-
     ro_html->add( |<span class="diff_changed_by">last change by: <span class="user">{
       is_diff-changed_by }</span></span>| ).
 
@@ -902,6 +897,11 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
 
   METHOD render_diff_head_after_state.
+
+    IF is_diff-fstate = c_fstate-both AND mv_unified = abap_true.
+      io_html->add( '<span class="attention pad-sides">Attention: Unified mode'
+                 && ' highlighting for MM assumes local file is newer ! </span>' ). "#EC NOTEXT
+    ENDIF.
 
   ENDMETHOD.
 
