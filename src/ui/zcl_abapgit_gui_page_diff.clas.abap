@@ -737,13 +737,6 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
           io_html = ro_html
           is_diff = is_diff ).
 
-      ro_html->add( '<th class="num"></th>' ).              "#EC NOTEXT
-      ro_html->add( '<th class="mark"></th>' ).             "#EC NOTEXT
-      ro_html->add( '<th>LOCAL</th>' ).                     "#EC NOTEXT
-      ro_html->add( '<th class="num"></th>' ).              "#EC NOTEXT
-      ro_html->add( '<th class="mark"></th>' ).             "#EC NOTEXT
-      ro_html->add( '<th>REMOTE</th>' ).                    "#EC NOTEXT
-
     ENDIF.
 
     ro_html->add( '</tr>' ).                                "#EC NOTEXT
@@ -885,6 +878,13 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
 
   METHOD render_table_head_non_unified.
+
+    io_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
+    io_html->add( '<th class="mark"></th>' ).               "#EC NOTEXT
+    io_html->add( '<th>LOCAL</th>' ).                       "#EC NOTEXT
+    io_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
+    io_html->add( '<th class="mark"></th>' ).               "#EC NOTEXT
+    io_html->add( '<th>REMOTE</th>' ).                      "#EC NOTEXT
 
   ENDMETHOD.
 

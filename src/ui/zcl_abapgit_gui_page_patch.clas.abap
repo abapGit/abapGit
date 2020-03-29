@@ -636,6 +636,10 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
     render_patch_head( io_html = io_html
                        is_diff = is_diff ).
 
+    super->render_table_head_non_unified(
+        io_html = io_html
+        is_diff = is_diff ).
+
   ENDMETHOD.
 
 
