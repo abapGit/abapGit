@@ -45,6 +45,21 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
     DATA mo_repo TYPE REF TO zcl_abapgit_repo_online.
     DATA mt_diff_files TYPE tt_file_diff .
     METHODS:
+      get_normalized_fname_with_path
+        IMPORTING
+          is_diff            TYPE ty_file_diff
+        RETURNING
+          VALUE(rv_filename) TYPE string,
+      normalize_path
+        IMPORTING
+          iv_path              TYPE string
+        RETURNING
+          VALUE(rv_normalized) TYPE string,
+      normalize_filename
+        IMPORTING
+          iv_filename          TYPE string
+        RETURNING
+          VALUE(rv_normalized) TYPE string,
       render_content REDEFINITION,
       scripts REDEFINITION,
       add_menu_end
@@ -171,6 +186,34 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
+
+  METHOD normalize_filename.
+
+    rv_normalized = replace( val  = iv_filename
+                             sub  = '.'
+                             occ  = 0
+                             with = '_' ).
+
+  ENDMETHOD.
+
+
+  METHOD normalize_path.
+
+    rv_normalized = replace( val  = iv_path
+                             sub  = '/'
+                             occ  = 0
+                             with = '_' ).
+
+  ENDMETHOD.
+
+
+  METHOD get_normalized_fname_with_path.
+
+    rv_filename = normalize_path( is_diff-path )
+               && `_`
+               && normalize_filename( is_diff-filename ).
+
+  ENDMETHOD.
 
 
   METHOD add_filter_sub_menu.
@@ -585,7 +628,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         ro_html->add( render_line_unified( is_diff_line = <ls_diff> ) ).
       ELSE.
         ro_html->add( render_line_split( is_diff_line = <ls_diff>
-                                         iv_filename  = zcl_abapgit_gui_page_patch=>get_patch_id( is_diff )
+                                         iv_filename  = get_normalized_fname_with_path( is_diff )
                                          iv_fstate    = is_diff-fstate
                                          iv_index     = lv_tabix ) ).
       ENDIF.

@@ -20,12 +20,6 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
       zif_abapgit_gui_event_handler~on_event REDEFINITION.
 
     CLASS-METHODS:
-      get_patch_id
-        IMPORTING
-          is_diff            TYPE ty_file_diff
-        RETURNING
-          VALUE(rv_filename) TYPE string,
-
       get_patch_data
         IMPORTING
           iv_patch      TYPE string
@@ -176,18 +170,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
         RETURNING
           VALUE(rv_is_patch_line_possible) TYPE abap_bool.
 
-    CLASS-METHODS:
-      normalize_path
-        IMPORTING
-          iv_path              TYPE string
-        RETURNING
-          VALUE(rv_normalized) TYPE string,
 
-      normalize_filename
-        IMPORTING
-          iv_filename          TYPE string
-        RETURNING
-          VALUE(rv_normalized) TYPE string.
 
 ENDCLASS.
 
@@ -552,7 +535,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_diff_file> LIKE LINE OF mt_diff_files.
 
     LOOP AT mt_diff_files ASSIGNING <ls_diff_file>.
-      IF get_patch_id( <ls_diff_file> ) = iv_filename.
+      IF get_normalized_fname_with_path( <ls_diff_file> ) = iv_filename.
         ro_diff = <ls_diff_file>-o_diff.
         EXIT.
       ENDIF.
@@ -579,35 +562,6 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Invalid line index { lv_line_index }| ).
     ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD get_patch_id.
-
-    rv_filename = normalize_path( is_diff-path )
-               && `_`
-               && normalize_filename( is_diff-filename ).
-
-  ENDMETHOD.
-
-
-  METHOD normalize_filename.
-
-    rv_normalized = replace( val  = iv_filename
-                             sub  = '.'
-                             occ  = 0
-                             with = '_' ).
-
-  ENDMETHOD.
-
-
-  METHOD normalize_path.
-
-    rv_normalized = replace( val  = iv_path
-                             sub  = '/'
-                             occ  = 0
-                             with = '_' ).
 
   ENDMETHOD.
 
@@ -694,7 +648,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   METHOD render_patch_head.
 
     io_html->add( |<th class="patch">| ).
-    io_html->add_checkbox( iv_id = |patch_file_{ get_patch_id( is_diff ) }| ).
+    io_html->add_checkbox( iv_id = |patch_file_{ get_normalized_fname_with_path( is_diff ) }| ).
     io_html->add( '</th>' ).
 
   ENDMETHOD.
@@ -705,7 +659,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
     mv_section_count = mv_section_count + 1.
 
     io_html->add( |<th class="patch">| ).
-    io_html->add_checkbox( iv_id = |patch_section_{ get_patch_id( is_diff ) }_{ mv_section_count }| ).
+    io_html->add_checkbox( iv_id = |patch_section_{ get_normalized_fname_with_path( is_diff ) }_{ mv_section_count }| ).
     io_html->add( '</th>' ).
 
   ENDMETHOD.
