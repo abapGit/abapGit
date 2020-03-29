@@ -42,7 +42,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
       render_beacon_begin_of_row REDEFINITION,
       render_diff_head_after_state REDEFINITION,
       insert_nav REDEFINITION,
-      render_line_split_middle REDEFINITION.
+      render_line_split_row REDEFINITION.
 
 
   PRIVATE SECTION.
@@ -734,13 +734,23 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_line_split_middle.
+  METHOD render_line_split_row.
 
     render_patch( io_html                = io_html
                   iv_patch_line_possible = iv_patch_line_possible
                   iv_filename            = iv_filename
                   is_diff_line           = is_diff_line
                   iv_index               = iv_index ).
+
+    super->render_line_split_row(
+        io_html                = io_html
+        iv_patch_line_possible = iv_patch_line_possible
+        iv_filename            = iv_filename
+        is_diff_line           = is_diff_line
+        iv_index               = iv_index
+        iv_fstate              = iv_fstate
+        iv_new                 = iv_new
+        iv_old                 = iv_old ).
 
   ENDMETHOD.
 

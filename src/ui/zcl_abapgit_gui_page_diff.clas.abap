@@ -77,13 +77,16 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
       insert_nav
         RETURNING
           VALUE(rv_insert_nav) TYPE abap_bool,
-      render_line_split_middle
+      render_line_split_row
         IMPORTING
           io_html                TYPE REF TO zcl_abapgit_html
           iv_patch_line_possible TYPE abap_bool
           iv_filename            TYPE string
           is_diff_line           TYPE zif_abapgit_definitions=>ty_diff
           iv_index               TYPE sy-tabix
+          iv_fstate              TYPE char1
+          iv_new                 TYPE string
+          iv_old                 TYPE string
         RAISING
           zcx_abapgit_exception,
       build_menu
@@ -654,20 +657,15 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     " render line, inverse sides if remote is newer
     ro_html->add( '<tr>' ).                                 "#EC NOTEXT
 
-    render_line_split_middle(
+    render_line_split_row(
         io_html                = ro_html
         iv_patch_line_possible = lv_patch_line_possible
         iv_filename            = iv_filename
         is_diff_line           = is_diff_line
-        iv_index               = iv_index  ).
-
-    IF iv_fstate = c_fstate-remote. " Remote file leading changes
-      ro_html->add( lv_old ). " local
-      ro_html->add( lv_new ). " remote
-    ELSE.             " Local leading changes or both were modified
-      ro_html->add( lv_new ). " local
-      ro_html->add( lv_old ). " remote
-    ENDIF.
+        iv_index               = iv_index
+        iv_fstate              = iv_fstate
+        iv_old                 = lv_old
+        iv_new                 = lv_new ).
 
     ro_html->add( '</tr>' ).                                "#EC NOTEXT
 
@@ -913,7 +911,15 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_line_split_middle.
+  METHOD render_line_split_row.
+
+    IF iv_fstate = c_fstate-remote. " Remote file leading changes
+      io_html->add( iv_old ). " local
+      io_html->add( iv_new ). " remote
+    ELSE.             " Local leading changes or both were modified
+      io_html->add( iv_new ). " local
+      io_html->add( iv_old ). " remote
+    ENDIF.
 
   ENDMETHOD.
 
