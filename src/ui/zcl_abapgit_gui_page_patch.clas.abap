@@ -69,11 +69,11 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
     METHODS:
       render_patch
         IMPORTING
-          io_html                TYPE REF TO zcl_abapgit_html
-          iv_patch_line_possible TYPE abap_bool
-          iv_filename            TYPE string
-          is_diff_line           TYPE zif_abapgit_definitions=>ty_diff
-          iv_index               TYPE sy-tabix
+          io_html      TYPE REF TO zcl_abapgit_html
+          iv_filename  TYPE string
+          is_diff_line TYPE zif_abapgit_definitions=>ty_diff
+          iv_fstate    TYPE char1
+          iv_index     TYPE sy-tabix
         RAISING
           zcx_abapgit_exception,
 
@@ -164,7 +164,14 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
 
       is_every_changed_line_patched
         RETURNING
-          VALUE(rv_everything_patched) TYPE abap_bool.
+          VALUE(rv_everything_patched) TYPE abap_bool,
+
+      is_patch_line_possible
+        IMPORTING
+          is_diff_line                     TYPE zif_abapgit_definitions=>ty_diff
+          iv_fstate                        TYPE char1
+        RETURNING
+          VALUE(rv_is_patch_line_possible) TYPE abap_bool.
 
     CLASS-METHODS:
       normalize_path
@@ -650,12 +657,18 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
         patch TYPE string VALUE `patch` ##NO_TEXT,
       END OF lc_css_class.
 
-    DATA: lv_id      TYPE string,
-          lv_patched TYPE abap_bool.
+    DATA:
+      lv_id                TYPE string,
+      lv_patched           TYPE abap_bool,
+      lv_is_patch_possible TYPE abap_bool.
 
     lv_patched = get_diff_object( iv_filename )->is_line_patched( iv_index ).
 
-    IF iv_patch_line_possible = abap_true.
+    lv_is_patch_possible = is_patch_line_possible(
+                               is_diff_line = is_diff_line
+                               iv_fstate    = iv_fstate ).
+
+    IF lv_is_patch_possible = abap_true.
 
       lv_id = |{ iv_filename }_{ mv_section_count }_{ iv_index }|.
 
@@ -744,21 +757,20 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
   METHOD render_line_split_row.
 
-    render_patch( io_html                = io_html
-                  iv_patch_line_possible = iv_patch_line_possible
-                  iv_filename            = iv_filename
-                  is_diff_line           = is_diff_line
-                  iv_index               = iv_index ).
+    render_patch( io_html      = io_html
+                  iv_filename  = iv_filename
+                  is_diff_line = is_diff_line
+                  iv_fstate    = iv_fstate
+                  iv_index     = iv_index ).
 
     super->render_line_split_row(
-        io_html                = io_html
-        iv_patch_line_possible = iv_patch_line_possible
-        iv_filename            = iv_filename
-        is_diff_line           = is_diff_line
-        iv_index               = iv_index
-        iv_fstate              = iv_fstate
-        iv_new                 = iv_new
-        iv_old                 = iv_old ).
+        io_html      = io_html
+        iv_filename  = iv_filename
+        is_diff_line = is_diff_line
+        iv_index     = iv_index
+        iv_fstate    = iv_fstate
+        iv_new       = iv_new
+        iv_old       = iv_old ).
 
   ENDMETHOD.
 
@@ -788,6 +800,17 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
       ENDIF.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD is_patch_line_possible.
+
+    IF is_diff_line-result = zif_abapgit_definitions=>c_diff-update
+    OR is_diff_line-result = zif_abapgit_definitions=>c_diff-insert
+    OR is_diff_line-result = zif_abapgit_definitions=>c_diff-delete.
+      rv_is_patch_line_possible = abap_true.
+    ENDIF.
 
   ENDMETHOD.
 

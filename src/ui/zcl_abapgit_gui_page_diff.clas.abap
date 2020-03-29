@@ -79,14 +79,13 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
           VALUE(rv_insert_nav) TYPE abap_bool,
       render_line_split_row
         IMPORTING
-          io_html                TYPE REF TO zcl_abapgit_html
-          iv_patch_line_possible TYPE abap_bool
-          iv_filename            TYPE string
-          is_diff_line           TYPE zif_abapgit_definitions=>ty_diff
-          iv_index               TYPE sy-tabix
-          iv_fstate              TYPE char1
-          iv_new                 TYPE string
-          iv_old                 TYPE string
+          io_html      TYPE REF TO zcl_abapgit_html
+          iv_filename  TYPE string
+          is_diff_line TYPE zif_abapgit_definitions=>ty_diff
+          iv_index     TYPE sy-tabix
+          iv_fstate    TYPE char1
+          iv_new       TYPE string
+          iv_old       TYPE string
         RAISING
           zcx_abapgit_exception,
       build_menu
@@ -605,11 +604,10 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
   METHOD render_line_split.
 
-    DATA: lv_new                 TYPE string,
-          lv_old                 TYPE string,
-          lv_mark                TYPE string,
-          lv_bg                  TYPE string,
-          lv_patch_line_possible TYPE abap_bool.
+    DATA: lv_new  TYPE string,
+          lv_old  TYPE string,
+          lv_mark TYPE string,
+          lv_bg   TYPE string.
 
     CREATE OBJECT ro_html.
 
@@ -628,10 +626,6 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
           && |<td class="mark diff_others">{ lv_mark }</td>|
           && |<td class="code{ lv_bg } diff_left">{ is_diff_line-new }</td>|.
 
-    IF lv_mark <> ` `.
-      lv_patch_line_possible = abap_true.
-    ENDIF.
-
     " Old line
     CLEAR lv_bg.
     lv_mark = ` `.
@@ -648,16 +642,11 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
           && |<td class="mark diff_others">{ lv_mark }</td>|
           && |<td class="code{ lv_bg } diff_right">{ is_diff_line-old }</td>|.
 
-    IF lv_mark <> ` `.
-      lv_patch_line_possible = abap_true.
-    ENDIF.
-
     " render line, inverse sides if remote is newer
     ro_html->add( '<tr>' ).                                 "#EC NOTEXT
 
     render_line_split_row(
         io_html                = ro_html
-        iv_patch_line_possible = lv_patch_line_possible
         iv_filename            = iv_filename
         is_diff_line           = is_diff_line
         iv_index               = iv_index

@@ -1,6 +1,6 @@
 *"* use this source file for your ABAP unit test classes
 
-CLASS ltcl_patch DEFINITION FINAL FOR TESTING
+CLASS ltcl_get_patch_data DEFINITION FINAL FOR TESTING
   DURATION SHORT
   RISK LEVEL HARMLESS.
 
@@ -13,7 +13,43 @@ CLASS ltcl_patch DEFINITION FINAL FOR TESTING
 
 ENDCLASS.
 
-CLASS ltcl_patch IMPLEMENTATION.
+
+CLASS ltcl_is_patch_line_possible DEFINITION FINAL FOR TESTING
+  DURATION SHORT
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    DATA:
+      mo_cut                    TYPE REF TO zcl_abapgit_gui_page_patch,
+      mv_is_patch_line_possible TYPE abap_bool,
+      ms_diff_line              TYPE zif_abapgit_definitions=>ty_diff,
+      mv_fstate                 TYPE char1.
+
+    METHODS:
+      setup RAISING zcx_abapgit_exception,
+      initial_diff_line FOR TESTING RAISING cx_static_check,
+      for_update_patch_shd_be_possbl FOR TESTING RAISING cx_static_check,
+      for_insert_patch_shd_be_possbl FOR TESTING RAISING cx_static_check,
+      for_delete_patch_shd_be_possbl FOR TESTING RAISING cx_static_check,
+
+      given_diff_line
+        IMPORTING
+          is_diff_line TYPE zif_abapgit_definitions=>ty_diff OPTIONAL,
+
+      given_fstate
+        IMPORTING
+          iv_fstate TYPE char1,
+
+      when_is_patch_line_possible,
+
+      then_patch_shd_be_possible,
+      then_patch_shd_not_be_possible.
+
+ENDCLASS.
+
+CLASS zcl_abapgit_gui_page_patch DEFINITION LOCAL FRIENDS ltcl_is_patch_line_possible.
+
+CLASS ltcl_get_patch_data IMPLEMENTATION.
 
   METHOD get_patch_data_add.
 
@@ -105,6 +141,112 @@ CLASS ltcl_patch IMPLEMENTATION.
           exp = |Invalid patch|
           act = lx_error->get_text( ) ).
     ENDTRY.
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+
+
+CLASS ltcl_is_patch_line_possible IMPLEMENTATION.
+
+  METHOD setup.
+
+    CONSTANTS:
+      c_dummy_key TYPE zif_abapgit_persistence=>ty_value VALUE '000000000001'.
+
+    CREATE OBJECT mo_cut
+      EXPORTING
+        iv_key = c_dummy_key.
+
+  ENDMETHOD.
+
+
+  METHOD initial_diff_line.
+
+    given_diff_line( ).
+    when_is_patch_line_possible( ).
+    then_patch_shd_not_be_possible( ).
+
+  ENDMETHOD.
+
+
+  METHOD for_update_patch_shd_be_possbl.
+
+    DATA: ls_diff_line TYPE zif_abapgit_definitions=>ty_diff.
+
+    ls_diff_line-result = zif_abapgit_definitions=>c_diff-update.
+
+    given_diff_line( ls_diff_line ).
+    when_is_patch_line_possible( ).
+    then_patch_shd_be_possible( ).
+
+  ENDMETHOD.
+
+
+  METHOD for_insert_patch_shd_be_possbl.
+
+    DATA: ls_diff_line TYPE zif_abapgit_definitions=>ty_diff.
+
+    ls_diff_line-result = zif_abapgit_definitions=>c_diff-insert.
+
+    given_diff_line( ls_diff_line ).
+    when_is_patch_line_possible( ).
+    then_patch_shd_be_possible( ).
+
+  ENDMETHOD.
+
+
+  METHOD for_delete_patch_shd_be_possbl.
+
+    DATA: ls_diff_line TYPE zif_abapgit_definitions=>ty_diff.
+
+    ls_diff_line-result = zif_abapgit_definitions=>c_diff-delete.
+
+    given_diff_line( ls_diff_line ).
+    when_is_patch_line_possible( ).
+    then_patch_shd_be_possible( ).
+
+  ENDMETHOD.
+
+
+  METHOD when_is_patch_line_possible.
+
+    mv_is_patch_line_possible = mo_cut->is_patch_line_possible(
+            is_diff_line = ms_diff_line
+            iv_fstate    = mv_fstate ).
+
+  ENDMETHOD.
+
+
+  METHOD then_patch_shd_be_possible.
+
+    cl_abap_unit_assert=>assert_not_initial(
+        act = mv_is_patch_line_possible
+        msg = |Patch should be possible| ).
+
+  ENDMETHOD.
+
+
+  METHOD then_patch_shd_not_be_possible.
+
+    cl_abap_unit_assert=>assert_initial(
+        act = mv_is_patch_line_possible
+        msg = |Patch should not be possible| ).
+
+  ENDMETHOD.
+
+
+  METHOD given_diff_line.
+
+    ms_diff_line = is_diff_line.
+
+  ENDMETHOD.
+
+
+  METHOD given_fstate.
+
+    mv_fstate = iv_fstate.
 
   ENDMETHOD.
 
