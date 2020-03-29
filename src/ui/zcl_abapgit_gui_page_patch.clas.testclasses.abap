@@ -153,11 +153,11 @@ CLASS ltcl_is_patch_line_possible IMPLEMENTATION.
   METHOD setup.
 
     CONSTANTS:
-      c_dummy_key TYPE zif_abapgit_persistence=>ty_value VALUE '000000000001'.
+      lc_dummy_key TYPE zif_abapgit_persistence=>ty_value VALUE '000000000001'.
 
     CREATE OBJECT mo_cut
       EXPORTING
-        iv_key = c_dummy_key.
+        iv_key = lc_dummy_key.
 
   ENDMETHOD.
 
