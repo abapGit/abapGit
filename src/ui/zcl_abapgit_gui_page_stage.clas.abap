@@ -75,14 +75,14 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     METHODS stage_selected
       IMPORTING
-        !it_postdata TYPE cnht_post_data_tab
+        !it_postdata    TYPE cnht_post_data_tab
       RETURNING
-        VALUE(ro_stage)    TYPE REF TO zcl_abapgit_stage
+        VALUE(ro_stage) TYPE REF TO zcl_abapgit_stage
       RAISING
         zcx_abapgit_exception .
     METHODS stage_all
       RETURNING
-        VALUE(ro_stage)    TYPE REF TO zcl_abapgit_stage
+        VALUE(ro_stage) TYPE REF TO zcl_abapgit_stage
       RAISING
         zcx_abapgit_exception .
     METHODS build_menu
@@ -103,7 +103,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -240,8 +240,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
   METHOD get_page_patch.
 
-    DATA: lo_page   TYPE REF TO zcl_abapgit_gui_page_diff,
-          lv_key    TYPE zif_abapgit_persistence=>ty_repo-key.
+    DATA: lo_page TYPE REF TO zcl_abapgit_gui_page_patch,
+          lv_key  TYPE zif_abapgit_persistence=>ty_repo-key.
 
     zcl_abapgit_html_action_utils=>file_obj_decode(
       EXPORTING
@@ -251,8 +251,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     CREATE OBJECT lo_page
       EXPORTING
-        iv_key        = lv_key
-        iv_patch_mode = abap_true.
+        iv_key = lv_key.
 
     ri_page = lo_page.
 
@@ -564,9 +563,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           lt_fields TYPE tihttpnvp,
           ls_file   TYPE zif_abapgit_definitions=>ty_file.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local,
+    FIELD-SYMBOLS: <ls_file>   LIKE LINE OF ms_files-local,
                    <ls_status> LIKE LINE OF ms_files-status,
-                   <ls_item> LIKE LINE OF lt_fields.
+                   <ls_item>   LIKE LINE OF lt_fields.
 
     CONCATENATE LINES OF it_postdata INTO lv_string.
     lt_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_string ).
