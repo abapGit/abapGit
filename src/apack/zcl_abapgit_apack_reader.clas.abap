@@ -12,6 +12,12 @@ CLASS zcl_abapgit_apack_reader DEFINITION
         !iv_package_name          TYPE ty_package_name
       RETURNING
         VALUE(ro_manifest_reader) TYPE REF TO zcl_abapgit_apack_reader .
+    CLASS-METHODS deserialize
+      IMPORTING
+        !iv_package_name          TYPE ty_package_name
+        !iv_xstr                  TYPE xstring
+      RETURNING
+        VALUE(ro_manifest_reader) TYPE REF TO zcl_abapgit_apack_reader .
     METHODS get_manifest_descriptor
       RETURNING
         VALUE(rs_manifest_descriptor) TYPE zif_abapgit_apack_definitions=>ty_descriptor .
@@ -39,6 +45,13 @@ CLASS zcl_abapgit_apack_reader DEFINITION
     DATA mv_package_name TYPE ty_package_name .
     DATA ms_cached_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor .
     DATA mv_is_cached TYPE abap_bool .
+
+    CLASS-METHODS from_xml
+      IMPORTING
+        iv_xml         TYPE string
+      RETURNING
+        VALUE(rs_data) TYPE zif_abapgit_apack_definitions=>ty_descriptor.
+
 ENDCLASS.
 
 
@@ -53,6 +66,41 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
 
   METHOD create_instance.
     CREATE OBJECT ro_manifest_reader EXPORTING iv_package_name = iv_package_name.
+  ENDMETHOD.
+
+
+  METHOD deserialize.
+
+    DATA: lv_xml  TYPE string,
+          ls_data TYPE zif_abapgit_apack_definitions=>ty_descriptor.
+
+    lv_xml = zcl_abapgit_convert=>xstring_to_string_utf8( iv_xstr ).
+
+    ls_data = from_xml( lv_xml ).
+
+    ro_manifest_reader = create_instance( iv_package_name ).
+
+    ro_manifest_reader = create_instance( iv_package_name ).
+    ro_manifest_reader->set_manifest_descriptor( ls_data ).
+
+  ENDMETHOD.
+
+
+  METHOD from_xml.
+
+    DATA: lv_xml TYPE string.
+
+    lv_xml = iv_xml.
+
+    " fix downward compatibility
+    REPLACE ALL OCCURRENCES OF '<_--28C_DATA_--29>' IN lv_xml WITH '<DATA>'.
+    REPLACE ALL OCCURRENCES OF '</_--28C_DATA_--29>' IN lv_xml WITH '</DATA>'.
+
+    CALL TRANSFORMATION id
+      OPTIONS value_handling = 'accept_data_loss'
+      SOURCE XML lv_xml
+      RESULT data = rs_data ##NO_TEXT.
+
   ENDMETHOD.
 
 

@@ -25,8 +25,8 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     BEGIN OF ty_file.
       INCLUDE TYPE ty_file_signature.
-  TYPES: data TYPE xstring,
-         END OF ty_file .
+      TYPES: data TYPE xstring,
+    END OF ty_file .
   TYPES:
     ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY .
   TYPES:
@@ -102,8 +102,8 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     BEGIN OF ty_overwrite.
       INCLUDE TYPE ty_item.
-  TYPES: decision TYPE ty_yes_no,
-         END OF ty_overwrite .
+      TYPES: decision TYPE ty_yes_no,
+    END OF ty_overwrite .
   TYPES:
     ty_overwrite_tt TYPE STANDARD TABLE OF ty_overwrite WITH DEFAULT KEY
                               WITH UNIQUE HASHED KEY object_type_and_name
@@ -113,6 +113,10 @@ INTERFACE zif_abapgit_definitions
       met      TYPE ty_yes_no,
       decision TYPE ty_yes_no,
     END OF ty_requirements .
+  TYPES:
+    BEGIN OF ty_dependencies,
+      met TYPE ty_yes_no,
+    END OF ty_dependencies .
   TYPES:
     BEGIN OF ty_transport_type,
       request TYPE trfunction,
@@ -129,6 +133,7 @@ INTERFACE zif_abapgit_definitions
       overwrite       TYPE ty_overwrite_tt,
       warning_package TYPE ty_overwrite_tt,
       requirements    TYPE ty_requirements,
+      dependencies    TYPE ty_dependencies,
       transport       TYPE ty_transport,
     END OF ty_deserialize_checks .
   TYPES:
@@ -209,7 +214,7 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     BEGIN OF ty_tpool.
       INCLUDE TYPE textpool.
-  TYPES:   split TYPE c LENGTH 8.
+      TYPES:   split TYPE c LENGTH 8.
   TYPES: END OF ty_tpool .
   TYPES:
     ty_tpool_tt TYPE STANDARD TABLE OF ty_tpool WITH DEFAULT KEY .

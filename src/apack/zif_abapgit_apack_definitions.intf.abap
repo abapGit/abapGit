@@ -26,7 +26,9 @@ INTERFACE zif_abapgit_apack_definitions PUBLIC.
       INCLUDE TYPE ty_descriptor_wo_dependencies.
   TYPES:
     dependencies TYPE tt_dependencies,
-    END OF ty_descriptor.
+    END OF ty_descriptor,
+
+    tt_descriptor TYPE STANDARD TABLE OF ty_descriptor WITH NON-UNIQUE DEFAULT KEY.
 
   CONSTANTS c_dot_apack_manifest TYPE string VALUE '.apack-manifest.xml' ##NO_TEXT.
   CONSTANTS c_repository_type_abapgit TYPE ty_repository_type VALUE 'abapGit' ##NO_TEXT.

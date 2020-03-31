@@ -9,6 +9,8 @@ CLASS zcl_abapgit_repo DEFINITION
       IMPORTING
         !ii_listener TYPE REF TO zif_abapgit_repo_listener .
     METHODS deserialize_checks
+      IMPORTING
+        !iv_met_checks   TYPE abap_bool DEFAULT abap_true
       RETURNING
         VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
       RAISING
@@ -56,6 +58,14 @@ CLASS zcl_abapgit_repo DEFINITION
         !io_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit
       RAISING
         zcx_abapgit_exception .
+    METHODS get_dot_apack
+      RETURNING
+        VALUE(ro_dot_apack) TYPE REF TO zcl_abapgit_apack_reader .
+    METHODS set_dot_apack
+      IMPORTING
+        !io_dot_apack TYPE REF TO zcl_abapgit_apack_reader
+      RAISING
+        zcx_abapgit_exception .
     METHODS deserialize
       IMPORTING
         !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
@@ -78,6 +88,11 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS find_remote_dot_abapgit
       RETURNING
         VALUE(ro_dot) TYPE REF TO zcl_abapgit_dot_abapgit
+      RAISING
+        zcx_abapgit_exception .
+    METHODS find_remote_dot_apack
+      RETURNING
+        VALUE(ro_dot) TYPE REF TO zcl_abapgit_apack_reader
       RAISING
         zcx_abapgit_exception .
     METHODS is_offline
@@ -149,6 +164,7 @@ CLASS zcl_abapgit_repo DEFINITION
         !iv_head_branch     TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
         !iv_offline         TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
         !is_dot_abapgit     TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL
+        !is_dot_apack       TYPE zif_abapgit_apack_definitions=>ty_descriptor OPTIONAL
         !is_local_settings  TYPE zif_abapgit_persistence=>ty_repo-local_settings OPTIONAL
         !iv_deserialized_at TYPE zif_abapgit_persistence=>ty_repo-deserialized_at OPTIONAL
         !iv_deserialized_by TYPE zif_abapgit_persistence=>ty_repo-deserialized_by OPTIONAL
@@ -256,11 +272,14 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     DATA: lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
           lx_error         TYPE REF TO zcx_abapgit_exception.
 
-
-    deserialize_checks( ).
+    deserialize_checks( abap_false ).
 
     IF is_checks-requirements-met = 'N' AND is_checks-requirements-decision IS INITIAL.
       zcx_abapgit_exception=>raise( 'Requirements not met and undecided' ).
+    ENDIF.
+
+    IF is_checks-dependencies-met = 'N'.
+      zcx_abapgit_exception=>raise( 'APACK dependencies not met' ).
     ENDIF.
 
     IF is_checks-transport-required = abap_true AND is_checks-transport-transport IS INITIAL.
@@ -294,11 +313,13 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   METHOD deserialize_checks.
 
     DATA: lt_requirements    TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
+          lt_dependencies    TYPE zif_abapgit_apack_definitions=>tt_dependencies,
           lv_master_language TYPE spras,
           lv_logon_language  TYPE spras.
 
 
     find_remote_dot_abapgit( ).
+    find_remote_dot_apack( ).
 
     lv_master_language = get_dot_abapgit( )->get_master_language( ).
     lv_logon_language  = sy-langu.
@@ -313,10 +334,17 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
                                  && | Run 'Advanced' > 'Open in master language'| ).
     ENDIF.
 
-    rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
+    IF iv_met_checks = abap_true.
 
-    lt_requirements = get_dot_abapgit( )->get_data( )-requirements.
-    rs_checks-requirements-met = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements ).
+      rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
+
+      lt_requirements = get_dot_abapgit( )->get_data( )-requirements.
+      rs_checks-requirements-met = zcl_abapgit_requirement_helper=>is_requirements_met( lt_requirements ).
+
+      lt_dependencies = get_dot_apack( )->get_manifest_descriptor( )-dependencies.
+      rs_checks-dependencies-met = zcl_abapgit_apack_helper=>are_dependencies_met( lt_dependencies ).
+
+    ENDIF.
 
   ENDMETHOD.
 
@@ -339,10 +367,39 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD find_remote_dot_apack.
+
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
+
+    get_files_remote( ).
+
+    READ TABLE mt_remote ASSIGNING <ls_remote>
+      WITH KEY path     = zif_abapgit_definitions=>c_root_dir
+               filename = zif_abapgit_apack_definitions=>c_dot_apack_manifest.
+    IF sy-subrc = 0.
+      ro_dot = zcl_abapgit_apack_reader=>deserialize( iv_package_name = ms_data-package
+                                                      iv_xstr         = <ls_remote>-data ).
+      set_dot_apack( ro_dot ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD get_dot_abapgit.
     CREATE OBJECT ro_dot_abapgit
       EXPORTING
         is_data = ms_data-dot_abapgit.
+  ENDMETHOD.
+
+
+  METHOD get_dot_apack.
+    ro_dot_apack = zcl_abapgit_apack_reader=>create_instance( ms_data-package ).
+    ro_dot_apack->set_manifest_descriptor( ms_data-dot_apack ).
+  ENDMETHOD.
+
+
+  METHOD set_dot_apack.
+    set( is_dot_apack = io_dot_apack->get_manifest_descriptor( ) ).
   ENDMETHOD.
 
 
@@ -552,8 +609,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 * TODO: refactor
 
-    DATA:
-          ls_mask        TYPE zif_abapgit_persistence=>ty_repo_meta_mask.
+    DATA: ls_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask.
 
 
     ASSERT it_checksums IS SUPPLIED
@@ -562,6 +618,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       OR iv_head_branch IS SUPPLIED
       OR iv_offline IS SUPPLIED
       OR is_dot_abapgit IS SUPPLIED
+      OR is_dot_apack IS SUPPLIED
       OR is_local_settings IS SUPPLIED
       OR iv_deserialized_by IS SUPPLIED
       OR iv_deserialized_at IS SUPPLIED.
@@ -595,6 +652,11 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     IF is_dot_abapgit IS SUPPLIED.
       ms_data-dot_abapgit = is_dot_abapgit.
       ls_mask-dot_abapgit = abap_true.
+    ENDIF.
+
+    IF is_dot_apack IS SUPPLIED.
+      ms_data-dot_apack = is_dot_apack.
+      ls_mask-dot_apack = abap_true.
     ENDIF.
 
     IF is_local_settings IS SUPPLIED.
