@@ -26,7 +26,7 @@ CLASS zcl_abapgit_apack_helper DEFINITION
       BEGIN OF ty_dependency_status,
         met TYPE abap_bool.
         INCLUDE TYPE zif_abapgit_apack_definitions=>ty_dependency.
-    TYPES: END OF ty_dependency_status,
+      TYPES: END OF ty_dependency_status,
       tt_dependency_status TYPE STANDARD TABLE OF ty_dependency_status WITH NON-UNIQUE DEFAULT KEY.
 
     CLASS-METHODS get_installed_packages
@@ -78,9 +78,9 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
 
       ENDLOOP.
 
-      show_dependencies_popup( lt_dependecies_popup ).
-
-      IF rv_status IS INITIAL.
+      IF rv_status = 'N'.
+        show_dependencies_popup( lt_dependecies_popup ).
+      ELSE.
         rv_status = 'Y'.
       ENDIF.
 
@@ -137,7 +137,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
       BEGIN OF lty_color_line,
         color TYPE lvc_t_scol.
         INCLUDE TYPE ty_dependency_status.
-    TYPES: END OF lty_color_line.
+      TYPES: END OF lty_color_line.
 
     TYPES: lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
 
