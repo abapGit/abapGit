@@ -98,10 +98,20 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
                        iv_text    = 'Fetch remote files' ) ##NO_TEXT.
 
     TRY.
-        ls_pull = zcl_abapgit_git_porcelain=>pull(
-          iv_url         = get_url( )
-          iv_branch_name = get_branch_name( )
-          iv_commit_sha1 = get_commit_sha1( ) ).
+        IF get_commit_sha1( ) CN ' _0'.
+
+          ls_pull = zcl_abapgit_git_porcelain=>pull_by_commit(
+            iv_url         = get_url( )
+            iv_branch_name = get_branch_name( )
+            iv_commit_sha1 = get_commit_sha1( ) ).
+
+        ELSE.
+
+          ls_pull = zcl_abapgit_git_porcelain=>pull_by_branch(
+            iv_url         = get_url( )
+            iv_branch_name = get_branch_name( ) ).
+
+        ENDIF.
 
         set_files_remote( ls_pull-files ).
         set_objects( ls_pull-objects ).
