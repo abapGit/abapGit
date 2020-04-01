@@ -107,8 +107,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
 
       READ TABLE lt_installed_packages TRANSPORTING NO FIELDS
         WITH KEY group_id    = ls_dependecy-group_id
-                 artifact_id = ls_dependecy-artifact_id
-                 git_url     = ls_dependecy-git_url.
+                 artifact_id = ls_dependecy-artifact_id.
       IF sy-subrc = 0.
         ls_dependecy_popup-met = abap_true.
       ELSE.
@@ -170,7 +169,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
       BEGIN OF lty_color_line,
         color TYPE lvc_t_scol.
         INCLUDE TYPE ty_dependency_status.
-      TYPES: END OF lty_color_line.
+    TYPES: END OF lty_color_line.
 
     TYPES: lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
 
