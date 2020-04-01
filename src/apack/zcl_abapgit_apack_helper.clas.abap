@@ -12,6 +12,12 @@ CLASS zcl_abapgit_apack_helper DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+    CLASS-METHODS dependencies_popup
+      IMPORTING
+        !it_dependecies TYPE zif_abapgit_apack_definitions=>tt_dependencies
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -26,8 +32,16 @@ CLASS zcl_abapgit_apack_helper DEFINITION
       BEGIN OF ty_dependency_status,
         met TYPE abap_bool.
         INCLUDE TYPE zif_abapgit_apack_definitions=>ty_dependency.
-    TYPES: END OF ty_dependency_status,
+      TYPES: END OF ty_dependency_status,
       tt_dependency_status TYPE STANDARD TABLE OF ty_dependency_status WITH NON-UNIQUE DEFAULT KEY.
+
+    CLASS-METHODS get_dependencies_met_status
+      IMPORTING
+        !it_dependecies  TYPE zif_abapgit_apack_definitions=>tt_dependencies
+      RETURNING
+        VALUE(rt_status) TYPE tt_dependency_status
+      RAISING
+        zcx_abapgit_exception .
 
     CLASS-METHODS get_installed_packages
       RETURNING
@@ -48,43 +62,62 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
 
   METHOD are_dependencies_met.
 
+    DATA: lt_dependecies_status TYPE tt_dependency_status.
+
+    lt_dependecies_status = get_dependencies_met_status( it_dependecies ).
+
+    READ TABLE lt_dependecies_status TRANSPORTING NO FIELDS
+      WITH KEY met = abap_false.
+    IF sy-subrc = 0.
+      rv_status = 'N'.
+    ELSE.
+      rv_status = 'Y'.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD dependencies_popup.
+
+    DATA: lt_met_status TYPE tt_dependency_status.
+
+    lt_met_status = get_dependencies_met_status( it_dependecies ).
+
+    show_dependencies_popup( lt_met_status ).
+
+  ENDMETHOD.
+
+
+  METHOD get_dependencies_met_status.
+
     DATA: lt_installed_packages TYPE zif_abapgit_apack_definitions=>tt_descriptor,
           ls_dependecy          TYPE zif_abapgit_apack_definitions=>ty_dependency,
-          lt_dependecies_popup  TYPE tt_dependency_status,
           ls_dependecy_popup    TYPE ty_dependency_status.
 
     IF it_dependecies IS INITIAL.
-      rv_status = 'Y'.
-    ELSE.
-      lt_installed_packages = get_installed_packages( ).
+      RETURN.
+    ENDIF.
 
-      LOOP AT it_dependecies INTO ls_dependecy.
-        CLEAR: ls_dependecy_popup.
+    lt_installed_packages = get_installed_packages( ).
 
-        MOVE-CORRESPONDING ls_dependecy TO ls_dependecy_popup.
+    LOOP AT it_dependecies INTO ls_dependecy.
+      CLEAR: ls_dependecy_popup.
 
-        READ TABLE lt_installed_packages TRANSPORTING NO FIELDS
-          WITH KEY group_id    = ls_dependecy-group_id
-                   artifact_id = ls_dependecy-artifact_id
-                   git_url     = ls_dependecy-git_url.
-        IF sy-subrc = 0.
-          ls_dependecy_popup-met = abap_true.
-        ELSE.
-          ls_dependecy_popup-met = abap_false.
-          rv_status = 'N'.
-        ENDIF.
+      MOVE-CORRESPONDING ls_dependecy TO ls_dependecy_popup.
 
-        INSERT ls_dependecy_popup INTO TABLE lt_dependecies_popup.
-
-      ENDLOOP.
-
-      IF rv_status = 'N'.
-        show_dependencies_popup( lt_dependecies_popup ).
+      READ TABLE lt_installed_packages TRANSPORTING NO FIELDS
+        WITH KEY group_id    = ls_dependecy-group_id
+                 artifact_id = ls_dependecy-artifact_id
+                 git_url     = ls_dependecy-git_url.
+      IF sy-subrc = 0.
+        ls_dependecy_popup-met = abap_true.
       ELSE.
-        rv_status = 'Y'.
+        ls_dependecy_popup-met = abap_false.
       ENDIF.
 
-    ENDIF.
+      INSERT ls_dependecy_popup INTO TABLE rt_status.
+
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -137,7 +170,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
       BEGIN OF lty_color_line,
         color TYPE lvc_t_scol.
         INCLUDE TYPE ty_dependency_status.
-    TYPES: END OF lty_color_line.
+      TYPES: END OF lty_color_line.
 
     TYPES: lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
 

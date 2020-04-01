@@ -87,13 +87,14 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
 
   METHOD gui_deserialize.
 
     DATA: ls_checks       TYPE zif_abapgit_definitions=>ty_deserialize_checks,
-          lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
+          lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
+          lt_dependencies TYPE zif_abapgit_apack_definitions=>tt_dependencies.
 
 
 * find troublesome objects
@@ -108,6 +109,11 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
           lt_requirements = io_repo->get_dot_abapgit( )->get_data( )-requirements.
           zcl_abapgit_requirement_helper=>requirements_popup( lt_requirements ).
           ls_checks-requirements-decision = 'Y'.
+        ENDIF.
+
+        IF ls_checks-dependencies-met = 'N'.
+          lt_dependencies = io_repo->get_dot_apack( )->get_manifest_descriptor( )-dependencies.
+          zcl_abapgit_apack_helper=>dependencies_popup( lt_dependencies ).
         ENDIF.
 
         IF ls_checks-transport-required = abap_true.
