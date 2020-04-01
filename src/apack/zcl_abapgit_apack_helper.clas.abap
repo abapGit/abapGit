@@ -239,7 +239,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
                                   end_column   = 100
                                   start_line   = 10
                                   end_line     = 20 ).
-        lo_alv->get_display_settings( )->set_list_header( 'Requirements' ).
+        lo_alv->get_display_settings( )->set_list_header( 'APACK dependencies' ).
         lo_alv->display( ).
 
       CATCH cx_salv_msg cx_salv_not_found cx_salv_data_error INTO lx_ex.
