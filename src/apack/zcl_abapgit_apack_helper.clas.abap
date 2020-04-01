@@ -6,7 +6,7 @@ CLASS zcl_abapgit_apack_helper DEFINITION
   PUBLIC SECTION.
     CLASS-METHODS are_dependencies_met
       IMPORTING
-        !it_dependecies  TYPE zif_abapgit_apack_definitions=>tt_dependencies
+        !it_dependencies TYPE zif_abapgit_apack_definitions=>tt_dependencies
       RETURNING
         VALUE(rv_status) TYPE zif_abapgit_definitions=>ty_yes_no
       RAISING
@@ -14,7 +14,7 @@ CLASS zcl_abapgit_apack_helper DEFINITION
 
     CLASS-METHODS dependencies_popup
       IMPORTING
-        !it_dependecies TYPE zif_abapgit_apack_definitions=>tt_dependencies
+        !it_dependencies TYPE zif_abapgit_apack_definitions=>tt_dependencies
       RAISING
         zcx_abapgit_exception.
 
@@ -37,11 +37,11 @@ CLASS zcl_abapgit_apack_helper DEFINITION
 
     CLASS-METHODS get_dependencies_met_status
       IMPORTING
-        !it_dependecies  TYPE zif_abapgit_apack_definitions=>tt_dependencies
+        !it_dependencies TYPE zif_abapgit_apack_definitions=>tt_dependencies
       RETURNING
         VALUE(rt_status) TYPE tt_dependency_status
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
     CLASS-METHODS get_installed_packages
       RETURNING
@@ -49,9 +49,9 @@ CLASS zcl_abapgit_apack_helper DEFINITION
 
     CLASS-METHODS show_dependencies_popup
       IMPORTING
-        !it_dependecies TYPE tt_dependency_status
+        !it_dependencies TYPE tt_dependency_status
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -62,11 +62,11 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
 
   METHOD are_dependencies_met.
 
-    DATA: lt_dependecies_status TYPE tt_dependency_status.
+    DATA: lt_dependencies_status TYPE tt_dependency_status.
 
-    lt_dependecies_status = get_dependencies_met_status( it_dependecies ).
+    lt_dependencies_status = get_dependencies_met_status( it_dependencies ).
 
-    READ TABLE lt_dependecies_status TRANSPORTING NO FIELDS
+    READ TABLE lt_dependencies_status TRANSPORTING NO FIELDS
       WITH KEY met = abap_false.
     IF sy-subrc = 0.
       rv_status = 'N'.
@@ -81,7 +81,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
 
     DATA: lt_met_status TYPE tt_dependency_status.
 
-    lt_met_status = get_dependencies_met_status( it_dependecies ).
+    lt_met_status = get_dependencies_met_status( it_dependencies ).
 
     show_dependencies_popup( lt_met_status ).
 
@@ -94,13 +94,13 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
           ls_dependecy          TYPE zif_abapgit_apack_definitions=>ty_dependency,
           ls_dependecy_popup    TYPE ty_dependency_status.
 
-    IF it_dependecies IS INITIAL.
+    IF it_dependencies IS INITIAL.
       RETURN.
     ENDIF.
 
     lt_installed_packages = get_installed_packages( ).
 
-    LOOP AT it_dependecies INTO ls_dependecy.
+    LOOP AT it_dependencies INTO ls_dependecy.
       CLEAR: ls_dependecy_popup.
 
       MOVE-CORRESPONDING ls_dependecy TO ls_dependecy_popup.
@@ -170,7 +170,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
       BEGIN OF lty_color_line,
         color TYPE lvc_t_scol.
         INCLUDE TYPE ty_dependency_status.
-    TYPES: END OF lty_color_line.
+      TYPES: END OF lty_color_line.
 
     TYPES: lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
 
@@ -184,9 +184,9 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
           lx_ex             TYPE REF TO cx_root.
 
     FIELD-SYMBOLS: <ls_line>       TYPE lty_color_line,
-                   <ls_dependency> LIKE LINE OF it_dependecies.
+                   <ls_dependency> LIKE LINE OF it_dependencies.
 
-    IF it_dependecies IS INITIAL.
+    IF it_dependencies IS INITIAL.
       RETURN.
     ENDIF.
 
@@ -198,7 +198,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
 
     CLEAR ls_color.
 
-    LOOP AT it_dependecies ASSIGNING <ls_dependency>.
+    LOOP AT it_dependencies ASSIGNING <ls_dependency>.
       APPEND INITIAL LINE TO lt_color_table ASSIGNING <ls_line>.
       MOVE-CORRESPONDING <ls_dependency> TO <ls_line>.
     ENDLOOP.
@@ -248,6 +248,4 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
-
-
 ENDCLASS.
