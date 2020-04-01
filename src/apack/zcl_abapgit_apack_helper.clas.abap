@@ -32,7 +32,7 @@ CLASS zcl_abapgit_apack_helper DEFINITION
       BEGIN OF ty_dependency_status,
         met TYPE abap_bool.
         INCLUDE TYPE zif_abapgit_apack_definitions=>ty_dependency.
-      TYPES: END OF ty_dependency_status,
+    TYPES: END OF ty_dependency_status,
       tt_dependency_status TYPE STANDARD TABLE OF ty_dependency_status WITH NON-UNIQUE DEFAULT KEY.
 
     CLASS-METHODS get_dependencies_met_status

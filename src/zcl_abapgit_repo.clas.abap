@@ -393,8 +393,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     ro_dot_apack = mo_apack_reader.
 
-*    ro_dot_apack = zcl_abapgit_apack_reader=>create_instance( ms_data-package ).
-*    ro_dot_apack->set_manifest_descriptor( ms_data-dot_apack ).
   ENDMETHOD.
 
 
