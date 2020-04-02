@@ -368,11 +368,6 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
         lo_column = lo_columns->get_column( 'MET' ).
         lo_column->set_technical( ).
 
-        lo_column = lo_columns->get_column( 'EXCEPTION' ).
-        lo_column->set_short_text( 'Status' ).
-        lo_column->set_medium_text( 'Status' ).
-        lo_column->set_long_text( 'Status' ).
-
         lo_column = lo_columns->get_column( 'GROUP_ID' ).
         lo_column->set_short_text( 'Org/ProjId' ).
 
