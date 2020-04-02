@@ -373,6 +373,15 @@ INTERFACE zif_abapgit_definitions
     ty_proxy_bypass_url       TYPE c LENGTH 255,
     ty_range_proxy_bypass_url TYPE RANGE OF ty_proxy_bypass_url.
 
+  TYPES:
+    BEGIN OF ty_version,
+      major           TYPE i,
+      minor           TYPE i,
+      patch           TYPE i,
+      prerelase       TYPE string,
+      prerelase_patch TYPE i,
+    END OF ty_version.
+
   CONSTANTS:
     BEGIN OF c_git_branch_type,
       branch          TYPE ty_git_branch_type VALUE 'HD',
