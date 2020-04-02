@@ -47,7 +47,7 @@ CLASS zcl_abapgit_apack_helper DEFINITION
       BEGIN OF ty_dependency_status,
         met(1) TYPE c.
         INCLUDE TYPE zif_abapgit_apack_definitions=>ty_dependency.
-      TYPES: END OF ty_dependency_status,
+    TYPES: END OF ty_dependency_status,
       tt_dependency_status TYPE STANDARD TABLE OF ty_dependency_status WITH NON-UNIQUE DEFAULT KEY.
 
     CLASS-METHODS get_dependencies_met_status
@@ -114,8 +114,8 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
 
   METHOD conv_str_to_version.
 
-    DATA: lt_segments TYPE STANDARD TABLE OF string WITH EMPTY KEY,
-          lt_parts    TYPE STANDARD TABLE OF string WITH EMPTY KEY,
+    DATA: lt_segments TYPE STANDARD TABLE OF string,
+          lt_parts    TYPE STANDARD TABLE OF string,
           lv_segment  TYPE string.
 
     SPLIT iv_version AT '-' INTO TABLE lt_segments.
@@ -310,7 +310,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
         exception(1) TYPE c,
         color        TYPE lvc_t_scol.
         INCLUDE TYPE ty_dependency_status.
-        TYPES: t_hyperlink  TYPE salv_t_int4_column,
+    TYPES: t_hyperlink  TYPE salv_t_int4_column,
       END OF lty_color_line.
 
     TYPES: lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
@@ -446,4 +446,6 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
+
 ENDCLASS.
