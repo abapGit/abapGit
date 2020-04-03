@@ -15,6 +15,6 @@ CLASS ZCL_ABAPGIT_GUI_COMPONENT IMPLEMENTATION.
 
 
   METHOD constructor.
-    mi_gui_services = zcl_abapgit_ui_factory=>get_gui( ).
+    mi_gui_services = zcl_abapgit_ui_factory=>get_gui_services( ).
   ENDMETHOD.
 ENDCLASS.

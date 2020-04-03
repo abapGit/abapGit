@@ -18,6 +18,10 @@ CLASS ltcl_is_patch_line_possible DEFINITION FINAL FOR TESTING
   DURATION SHORT
   RISK LEVEL HARMLESS.
 
+  PUBLIC SECTION.
+
+    INTERFACES zif_abapgit_gui_services.
+
   PRIVATE SECTION.
     DATA:
       mo_cut                    TYPE REF TO zcl_abapgit_gui_page_patch,
@@ -154,6 +158,8 @@ CLASS ltcl_is_patch_line_possible IMPLEMENTATION.
 
     CONSTANTS:
       lc_dummy_key TYPE zif_abapgit_persistence=>ty_value VALUE '000000000001'.
+
+    zcl_abapgit_ui_injector=>set_gui_services( me ).
 
     CREATE OBJECT mo_cut
       EXPORTING

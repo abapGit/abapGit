@@ -14,8 +14,14 @@ CLASS zcl_abapgit_ui_injector DEFINITION
 
       set_gui_functions
         IMPORTING
-          ii_gui_functions TYPE REF TO zif_abapgit_gui_functions.
+          ii_gui_functions TYPE REF TO zif_abapgit_gui_functions,
 
+      set_gui_services
+        IMPORTING
+          ii_gui_services TYPE REF TO zif_abapgit_gui_services.
+
+protected section.
+private section.
 ENDCLASS.
 
 
@@ -26,6 +32,13 @@ CLASS ZCL_ABAPGIT_UI_INJECTOR IMPLEMENTATION.
   METHOD set_gui_functions.
 
     zcl_abapgit_ui_factory=>gi_gui_functions = ii_gui_functions.
+
+  ENDMETHOD.
+
+
+  METHOD set_gui_services.
+
+    zcl_abapgit_ui_factory=>gi_gui_services = ii_gui_services.
 
   ENDMETHOD.
 
