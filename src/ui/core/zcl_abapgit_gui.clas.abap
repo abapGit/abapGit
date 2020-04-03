@@ -286,7 +286,6 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
           li_handler->on_event(
             EXPORTING
               iv_action    = iv_action
-              iv_prev_page = zif_abapgit_gui_services~get_current_page_name( )
               iv_getdata   = iv_getdata
               it_postdata  = it_postdata
             IMPORTING

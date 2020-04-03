@@ -90,7 +90,6 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS get_page_patch
       IMPORTING iv_getdata     TYPE clike
-                iv_prev_page   TYPE clike
       RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING   zcx_abapgit_exception.
     METHODS render_master_language_warning
@@ -103,7 +102,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -667,16 +666,13 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
       WHEN zif_abapgit_definitions=>c_action-go_patch.                         " Go Patch page
 
-        ei_page  = get_page_patch(
-          iv_getdata   = iv_getdata
-          iv_prev_page = iv_prev_page ).
+        ei_page  = get_page_patch( iv_getdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN OTHERS.
         super->zif_abapgit_gui_event_handler~on_event(
           EXPORTING
             iv_action    = iv_action
-            iv_prev_page = iv_prev_page
             iv_getdata   = iv_getdata
             it_postdata  = it_postdata
           IMPORTING
