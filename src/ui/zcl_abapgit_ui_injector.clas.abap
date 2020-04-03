@@ -20,8 +20,8 @@ CLASS zcl_abapgit_ui_injector DEFINITION
         IMPORTING
           ii_gui_services TYPE REF TO zif_abapgit_gui_services.
 
-protected section.
-private section.
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 

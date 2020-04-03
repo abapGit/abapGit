@@ -15,7 +15,7 @@ CLASS zcl_abapgit_gui_page_explore DEFINITION
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
 
-private section.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
