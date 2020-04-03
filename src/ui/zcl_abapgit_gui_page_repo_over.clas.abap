@@ -5,7 +5,8 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    METHODS constructor .
+    METHODS constructor
+      RAISING zcx_abapgit_exception.
     METHODS zif_abapgit_gui_event_handler~on_event
         REDEFINITION .
 
