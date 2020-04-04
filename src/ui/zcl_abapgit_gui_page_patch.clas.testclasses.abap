@@ -18,10 +18,6 @@ CLASS ltcl_is_patch_line_possible DEFINITION FINAL FOR TESTING
   DURATION SHORT
   RISK LEVEL HARMLESS.
 
-  PUBLIC SECTION.
-
-    INTERFACES zif_abapgit_gui_services.
-
   PRIVATE SECTION.
     DATA:
       mo_cut                    TYPE REF TO zcl_abapgit_gui_page_patch,
