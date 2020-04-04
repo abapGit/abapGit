@@ -159,7 +159,7 @@ CLASS ltcl_is_patch_line_possible IMPLEMENTATION.
     CONSTANTS:
       lc_dummy_key TYPE zif_abapgit_persistence=>ty_value VALUE '000000000001'.
 
-    zcl_abapgit_ui_injector=>set_gui_services( me ).
+    zcl_abapgit_ui_injector=>set_gui_services( zcl_abapgit_ui_injector=>get_dummy_gui_services( ) ).
 
     CREATE OBJECT mo_cut
       EXPORTING
