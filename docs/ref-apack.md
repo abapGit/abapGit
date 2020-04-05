@@ -16,7 +16,7 @@ The metadata follows the [POM format by Apache Maven](https://maven.apache.org/p
 - `version`: Version of your project, should adhere to the [semantic versioning concept](https://semver.org/), e.g. `1.85`
 - `repository_type`: Currently fixed to `abapGit` as it's currently the only supported repository type and is set automatically during serialization
 - `git_url`: The URL where your main repository is located, e.g. `https://github.com/larshp/abapGit.git`
-- `dependencies`: Optional, only needs to be filled if this project has dependencies to other projects. You only need to specify `group_id`, `artifact_id` and `git_url` to identify the dependency. `target_package` is ignored during serialization. Moreover, versioning is currently not supported - that's why there is no version in this set of dependency data. **Note:** Be sure to specify the `git_url` for each dependency properly as this is currently the only way how dependencies can automatically be resolved.
+- `dependencies`: Optional, only needs to be filled if this project has dependencies to other projects. You only need to specify `group_id`, `artifact_id`, `version` and `git_url` to identify the dependency. `target_package` is ignored during serialization. **Note:** Be sure to specify the `git_url` for each dependency properly as this is currently the only way how dependencies can automatically be resolved.
 
 If such an implementation class is detected during the serialization process, a corresponding `.apack-mainfest.xml` file will be created on the top level of the Git repository. This contains the APACK metadata information.
 
