@@ -26,7 +26,7 @@ INTERFACE zif_abapgit_definitions
     BEGIN OF ty_file.
       INCLUDE TYPE ty_file_signature.
   TYPES: data TYPE xstring,
-         END OF ty_file .
+    END OF ty_file .
   TYPES:
     ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY .
   TYPES:
@@ -103,7 +103,7 @@ INTERFACE zif_abapgit_definitions
     BEGIN OF ty_overwrite.
       INCLUDE TYPE ty_item.
   TYPES: decision TYPE ty_yes_no,
-         END OF ty_overwrite .
+    END OF ty_overwrite .
   TYPES:
     ty_overwrite_tt TYPE STANDARD TABLE OF ty_overwrite WITH DEFAULT KEY
                               WITH UNIQUE HASHED KEY object_type_and_name
@@ -113,6 +113,10 @@ INTERFACE zif_abapgit_definitions
       met      TYPE ty_yes_no,
       decision TYPE ty_yes_no,
     END OF ty_requirements .
+  TYPES:
+    BEGIN OF ty_dependencies,
+      met TYPE ty_yes_no,
+    END OF ty_dependencies .
   TYPES:
     BEGIN OF ty_transport_type,
       request TYPE trfunction,
@@ -129,6 +133,7 @@ INTERFACE zif_abapgit_definitions
       overwrite       TYPE ty_overwrite_tt,
       warning_package TYPE ty_overwrite_tt,
       requirements    TYPE ty_requirements,
+      dependencies    TYPE ty_dependencies,
       transport       TYPE ty_transport,
     END OF ty_deserialize_checks .
   TYPES:
@@ -367,6 +372,15 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     ty_proxy_bypass_url       TYPE c LENGTH 255,
     ty_range_proxy_bypass_url TYPE RANGE OF ty_proxy_bypass_url.
+
+  TYPES:
+    BEGIN OF ty_version,
+      major           TYPE i,
+      minor           TYPE i,
+      patch           TYPE i,
+      prerelase       TYPE string,
+      prerelase_patch TYPE i,
+    END OF ty_version.
 
   CONSTANTS:
     BEGIN OF c_git_branch_type,
