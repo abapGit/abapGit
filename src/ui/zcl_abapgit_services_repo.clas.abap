@@ -105,13 +105,13 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         popup_overwrite( CHANGING ct_overwrite = ls_checks-overwrite ).
         popup_package_overwrite( CHANGING ct_overwrite = ls_checks-warning_package ).
 
-        IF ls_checks-requirements-met = 'N'.
+        IF ls_checks-requirements-met = zif_abapgit_definitions=>gc_no.
           lt_requirements = io_repo->get_dot_abapgit( )->get_data( )-requirements.
           zcl_abapgit_requirement_helper=>requirements_popup( lt_requirements ).
-          ls_checks-requirements-decision = 'Y'.
+          ls_checks-requirements-decision = zif_abapgit_definitions=>gc_yes.
         ENDIF.
 
-        IF ls_checks-dependencies-met = 'N'.
+        IF ls_checks-dependencies-met = zif_abapgit_definitions=>gc_no.
           lt_dependencies = io_repo->get_dot_apack( )->get_manifest_descriptor( )-dependencies.
           zcl_abapgit_apack_helper=>dependencies_popup( lt_dependencies ).
         ENDIF.
