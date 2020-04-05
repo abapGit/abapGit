@@ -59,11 +59,6 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS get_dot_apack
       RETURNING
         VALUE(ro_dot_apack) TYPE REF TO zcl_abapgit_apack_reader .
-    METHODS set_dot_apack
-      IMPORTING
-        !io_dot_apack TYPE REF TO zcl_abapgit_apack_reader
-      RAISING
-        zcx_abapgit_exception .
     METHODS deserialize
       IMPORTING
         !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
@@ -136,13 +131,13 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS reset_log .
     METHODS refresh_local_object
       IMPORTING
-        iv_obj_type TYPE tadir-object
-        iv_obj_name TYPE tadir-obj_name
+        !iv_obj_type TYPE tadir-object
+        !iv_obj_name TYPE tadir-obj_name
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS refresh_local_objects
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS reset_status .
   PROTECTED SECTION.
 
@@ -154,6 +149,11 @@ CLASS zcl_abapgit_repo DEFINITION
     DATA mt_status TYPE zif_abapgit_definitions=>ty_results_tt .
     DATA mi_log TYPE REF TO zif_abapgit_log .
 
+    METHODS set_dot_apack
+      IMPORTING
+        !io_dot_apack TYPE REF TO zcl_abapgit_apack_reader
+      RAISING
+        zcx_abapgit_exception .
     METHODS set
       IMPORTING
         !it_checksums       TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
@@ -198,7 +198,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -396,12 +396,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_dot_apack.
-    get_dot_apack( ).
-    mo_apack_reader->set_manifest_descriptor( io_dot_apack->get_manifest_descriptor( ) ).
-  ENDMETHOD.
-
-
   METHOD get_files_local.
 
     DATA: lo_filter     TYPE REF TO zcl_abapgit_repo_filter,
@@ -587,6 +581,48 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD refresh_local_object.
+
+    DATA:
+      ls_tadir           TYPE zif_abapgit_definitions=>ty_tadir,
+      lt_tadir           TYPE zif_abapgit_definitions=>ty_tadir_tt,
+      lt_new_local_files TYPE zif_abapgit_definitions=>ty_files_item_tt,
+      lo_serialize       TYPE REF TO zcl_abapgit_serialize.
+
+    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
+                   iv_package = ms_data-package
+                   io_dot     = get_dot_abapgit( ) ).
+
+    DELETE mt_local WHERE item-obj_type = iv_obj_type
+                    AND   item-obj_name = iv_obj_name.
+
+    READ TABLE lt_tadir INTO ls_tadir
+                        WITH KEY object   = iv_obj_type
+                                 obj_name = iv_obj_name.
+    IF sy-subrc <> 0 OR ls_tadir-delflag = abap_true.
+      " object doesn't exist anymore, nothing todo here
+      RETURN.
+    ENDIF.
+
+    CLEAR lt_tadir.
+    INSERT ls_tadir INTO TABLE lt_tadir.
+
+    CREATE OBJECT lo_serialize.
+    lt_new_local_files = lo_serialize->serialize( lt_tadir ).
+
+    INSERT LINES OF lt_new_local_files INTO TABLE mt_local.
+
+  ENDMETHOD.
+
+
+  METHOD refresh_local_objects.
+
+    mv_request_local_refresh = abap_true.
+    get_files_local( ).
+
+  ENDMETHOD.
+
+
   METHOD reset_log.
     CLEAR mi_log.
   ENDMETHOD.
@@ -671,6 +707,12 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
   METHOD set_dot_abapgit.
     set( is_dot_abapgit = io_dot_abapgit->get_data( ) ).
+  ENDMETHOD.
+
+
+  METHOD set_dot_apack.
+    get_dot_apack( ).
+    mo_apack_reader->set_manifest_descriptor( io_dot_apack->get_manifest_descriptor( ) ).
   ENDMETHOD.
 
 
@@ -812,47 +854,4 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     set( it_checksums = lt_checksums ).
 
   ENDMETHOD.
-
-
-  METHOD refresh_local_object.
-
-    DATA:
-      ls_tadir           TYPE zif_abapgit_definitions=>ty_tadir,
-      lt_tadir           TYPE zif_abapgit_definitions=>ty_tadir_tt,
-      lt_new_local_files TYPE zif_abapgit_definitions=>ty_files_item_tt,
-      lo_serialize       TYPE REF TO zcl_abapgit_serialize.
-
-    lt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
-                   iv_package = ms_data-package
-                   io_dot     = get_dot_abapgit( ) ).
-
-    DELETE mt_local WHERE item-obj_type = iv_obj_type
-                    AND   item-obj_name = iv_obj_name.
-
-    READ TABLE lt_tadir INTO ls_tadir
-                        WITH KEY object   = iv_obj_type
-                                 obj_name = iv_obj_name.
-    IF sy-subrc <> 0 OR ls_tadir-delflag = abap_true.
-      " object doesn't exist anymore, nothing todo here
-      RETURN.
-    ENDIF.
-
-    CLEAR lt_tadir.
-    INSERT ls_tadir INTO TABLE lt_tadir.
-
-    CREATE OBJECT lo_serialize.
-    lt_new_local_files = lo_serialize->serialize( lt_tadir ).
-
-    INSERT LINES OF lt_new_local_files INTO TABLE mt_local.
-
-  ENDMETHOD.
-
-
-  METHOD refresh_local_objects.
-
-    mv_request_local_refresh = abap_true.
-    get_files_local( ).
-
-  ENDMETHOD.
-
 ENDCLASS.
