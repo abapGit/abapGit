@@ -111,9 +111,9 @@ CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
 
     READ TABLE lt_met_status TRANSPORTING NO FIELDS WITH KEY met = abap_false.
     IF sy-subrc = 0.
-      rv_status = 'N'.
+      rv_status = zif_abapgit_definitions=>gc_no.
     ELSE.
-      rv_status = 'Y'.
+      rv_status = zif_abapgit_definitions=>gc_yes.
     ENDIF.
 
   ENDMETHOD.
