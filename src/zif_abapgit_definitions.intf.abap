@@ -98,7 +98,8 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     ty_files_item_tt TYPE STANDARD TABLE OF ty_file_item WITH DEFAULT KEY .
   TYPES:
-    ty_yes_no TYPE c LENGTH 1 .
+    ty_yes_no         TYPE c LENGTH 1,
+    ty_yes_no_partial TYPE c LENGTH 1.
   TYPES:
     BEGIN OF ty_overwrite.
       INCLUDE TYPE ty_item.
@@ -489,4 +490,9 @@ INTERFACE zif_abapgit_definitions
   CONSTANTS c_tag_prefix TYPE string VALUE 'refs/tags/' ##NO_TEXT.
   CONSTANTS c_spagpa_param_repo_key TYPE char20 VALUE 'REPO_KEY' ##NO_TEXT.
   CONSTANTS c_spagpa_param_package TYPE char20 VALUE 'PACKAGE' ##NO_TEXT.
+
+  CONSTANTS gc_yes TYPE ty_yes_no VALUE 'Y'.
+  CONSTANTS gc_no TYPE ty_yes_no VALUE 'N'.
+  CONSTANTS gc_partial TYPE ty_yes_no_partial VALUE 'P'.
+
 ENDINTERFACE.
