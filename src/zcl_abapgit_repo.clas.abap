@@ -272,11 +272,11 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     deserialize_checks( ).
 
-    IF is_checks-requirements-met = 'N' AND is_checks-requirements-decision IS INITIAL.
+    IF is_checks-requirements-met = zif_abapgit_definitions=>gc_no AND is_checks-requirements-decision IS INITIAL.
       zcx_abapgit_exception=>raise( 'Requirements not met and undecided' ).
     ENDIF.
 
-    IF is_checks-dependencies-met = 'N'.
+    IF is_checks-dependencies-met = zif_abapgit_definitions=>gc_no.
       zcx_abapgit_exception=>raise( 'APACK dependencies not met' ).
     ENDIF.
 
