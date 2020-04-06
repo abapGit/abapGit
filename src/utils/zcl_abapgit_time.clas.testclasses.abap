@@ -13,9 +13,9 @@ CLASS ltcl_time_test IMPLEMENTATION.
 
   METHOD get_unix.
 
-    CONSTANTS: cv_unix TYPE zcl_abapgit_time=>ty_unixtime VALUE '1574605521',
-               cv_date TYPE sydatum VALUE '20191124',
-               cv_time TYPE syuzeit VALUE '152521'.
+    CONSTANTS: lc_unix TYPE zcl_abapgit_time=>ty_unixtime VALUE '1574605521',
+               lc_date TYPE sydatum VALUE '20191124',
+               lc_time TYPE syuzeit VALUE '152521'.
 
     DATA: lv_unix    TYPE zcl_abapgit_time=>ty_unixtime,
           lv_tz      TYPE tznzone,
@@ -29,8 +29,8 @@ CLASS ltcl_time_test IMPLEMENTATION.
     CALL FUNCTION 'TZON_GET_OFFSET'
       EXPORTING
         if_timezone      = lv_tz
-        if_local_date    = cv_date
-        if_local_time    = cv_time
+        if_local_date    = lc_date
+        if_local_time    = lc_time
       IMPORTING
         ef_utcdiff       = lv_utcdiff
         ef_utcsign       = lv_utcsign
@@ -38,19 +38,23 @@ CLASS ltcl_time_test IMPLEMENTATION.
         conversion_error = 1
         OTHERS           = 2.
 
-    lv_unix    = cv_unix.
+    lv_unix    = lc_unix.
     lv_unix+11 = lv_utcsign.
     lv_unix+12 = lv_utcdiff.
 
     cl_abap_unit_assert=>assert_equals(
-        act                  = zcl_abapgit_time=>get_unix( iv_date = cv_date
-                                                           iv_time = cv_time )
+        act                  = zcl_abapgit_time=>get_unix( iv_date = lc_date
+                                                           iv_time = lc_time )
         exp                  = lv_unix ). " User-specific test!
 
   ENDMETHOD.
 
 
   METHOD get_utc.
+
+    CONSTANTS: lc_unix TYPE zcl_abapgit_time=>ty_unixtime VALUE '1574605521',
+               lc_date TYPE sydatum VALUE '20191124',
+               lc_time TYPE syuzeit VALUE '152521'.
 
     DATA: lv_date    TYPE sydatum,
           lv_time    TYPE syuzeit,
@@ -65,8 +69,8 @@ CLASS ltcl_time_test IMPLEMENTATION.
     CALL FUNCTION 'TZON_GET_OFFSET'
       EXPORTING
         if_timezone      = lv_tz
-        if_local_date    = sy-datum
-        if_local_time    = sy-uzeit
+        if_local_date    = lc_date
+        if_local_time    = lc_time
       IMPORTING
         ef_utcdiff       = lv_utcdiff
         ef_utcsign       = lv_utcsign
@@ -74,13 +78,13 @@ CLASS ltcl_time_test IMPLEMENTATION.
         conversion_error = 1
         OTHERS           = 2.
 
-    zcl_abapgit_time=>get_utc( EXPORTING iv_unix = '1574605521'
+    zcl_abapgit_time=>get_utc( EXPORTING iv_unix = lc_unix
                                IMPORTING ev_date = lv_date
                                          ev_time = lv_time ).
 
     cl_abap_unit_assert=>assert_equals(
         act = lv_date
-        exp = '20191124' ).
+        exp = lc_date ).
 
     CASE lv_utcsign.
       WHEN '+'.
@@ -91,7 +95,7 @@ CLASS ltcl_time_test IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
         act = lv_time
-        exp = '152521' ). " This is GMT +1. Please provide the expected value by your timezone!
+        exp = lc_time ). " This is GMT +1. Please provide the expected value by your timezone!
 
   ENDMETHOD.
 
