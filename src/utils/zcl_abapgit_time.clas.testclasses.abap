@@ -13,6 +13,10 @@ CLASS ltcl_time_test IMPLEMENTATION.
 
   METHOD get_unix.
 
+    CONSTANTS: cv_unix TYPE zcl_abapgit_time=>ty_unixtime VALUE '1574605521',
+               cv_date TYPE sydatum VALUE '20191124',
+               cv_time TYPE syuzeit VALUE '152521'.
+
     DATA: lv_unix    TYPE zcl_abapgit_time=>ty_unixtime,
           lv_tz      TYPE tznzone,
           lv_utcdiff TYPE tznutcdiff,
@@ -25,8 +29,8 @@ CLASS ltcl_time_test IMPLEMENTATION.
     CALL FUNCTION 'TZON_GET_OFFSET'
       EXPORTING
         if_timezone      = lv_tz
-        if_local_date    = sy-datum
-        if_local_time    = sy-uzeit
+        if_local_date    = cv_date
+        if_local_time    = cv_time
       IMPORTING
         ef_utcdiff       = lv_utcdiff
         ef_utcsign       = lv_utcsign
@@ -34,13 +38,13 @@ CLASS ltcl_time_test IMPLEMENTATION.
         conversion_error = 1
         OTHERS           = 2.
 
-    lv_unix = '1574605521'.
+    lv_unix    = cv_unix.
     lv_unix+11 = lv_utcsign.
     lv_unix+12 = lv_utcdiff.
 
     cl_abap_unit_assert=>assert_equals(
-        act                  = zcl_abapgit_time=>get_unix( iv_date = '20191124'
-                                                           iv_time = '152521' )
+        act                  = zcl_abapgit_time=>get_unix( iv_date = cv_date
+                                                           iv_time = cv_time )
         exp                  = lv_unix ). " User-specific test!
 
   ENDMETHOD.
