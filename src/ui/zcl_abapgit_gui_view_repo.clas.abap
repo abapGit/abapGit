@@ -1,6 +1,7 @@
 CLASS zcl_abapgit_gui_view_repo DEFINITION
   PUBLIC
   FINAL
+  INHERITING FROM zcl_abapgit_gui_component
   CREATE PUBLIC .
 
   PUBLIC SECTION.
@@ -8,9 +9,6 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
     INTERFACES zif_abapgit_gui_renderable .
     INTERFACES zif_abapgit_gui_event_handler .
     INTERFACES zif_abapgit_gui_page_hotkey.
-
-    ALIASES render
-      FOR zif_abapgit_gui_renderable~render .
 
     CONSTANTS:
       BEGIN OF c_actions,
@@ -484,6 +482,8 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     DATA: lo_settings TYPE REF TO zcl_abapgit_settings,
           lv_package  TYPE devclass.
 
+    super->constructor( ).
+
     mv_key           = iv_key.
     mo_repo          = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
     mv_cur_dir       = '/'. " Root
@@ -927,6 +927,8 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
+
+    mi_gui_services->register_event_handler( me ).
 
     " Reinit, for the case of type change
     mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).

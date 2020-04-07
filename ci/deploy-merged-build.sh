@@ -11,8 +11,8 @@ cd ../build
 
 # Commit
 git status
-git config user.email "builds@travis-ci.com"
-git config user.name "Travis CI"
+git config user.email "ci@abapgit.org"
+git config user.name "CI"
 git add zabapgit.abap
-git commit -m "Travis build $TRAVIS_BUILD_NUMBER" || exit 1
+git commit -m "CI build $TRAVIS_BUILD_NUMBER" || exit 1
 git push -q https://$GITHUB_API_KEY@github.com/abapGit/build.git > /dev/null 2>&1
