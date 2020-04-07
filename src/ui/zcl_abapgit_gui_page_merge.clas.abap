@@ -238,7 +238,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE IMPLEMENTATION.
         super->zif_abapgit_gui_event_handler~on_event(
           EXPORTING
             iv_action    = iv_action
-            iv_prev_page = iv_prev_page
             iv_getdata   = iv_getdata
             it_postdata  = it_postdata
           IMPORTING

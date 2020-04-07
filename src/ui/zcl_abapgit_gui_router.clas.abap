@@ -91,7 +91,6 @@ CLASS zcl_abapgit_gui_router DEFINITION
     METHODS get_page_diff
       IMPORTING
         !iv_getdata    TYPE clike
-        !iv_prev_page  TYPE clike
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -131,7 +130,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_router IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -231,9 +230,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         ei_page  = get_page_background( lv_key ).
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_diff.                         " Go Diff page
-        ei_page  = get_page_diff(
-          iv_getdata   = is_event_data-getdata
-          iv_prev_page = is_event_data-prev_page ).
+        ei_page  = get_page_diff( is_event_data-getdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
       WHEN zif_abapgit_definitions=>c_action-go_stage.                        " Go Staging page
         ei_page  = get_page_stage( is_event_data-getdata ).
@@ -577,7 +574,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     DATA: ls_event_data TYPE ty_event_data.
 
     ls_event_data-action    = iv_action.
-    ls_event_data-prev_page = iv_prev_page.
     ls_event_data-getdata   = iv_getdata.
     ls_event_data-postdata  = it_postdata.
 
@@ -689,5 +685,4 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
-
 ENDCLASS.
