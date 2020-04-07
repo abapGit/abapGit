@@ -5,7 +5,8 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    METHODS constructor .
+    METHODS constructor
+      RAISING zcx_abapgit_exception.
     METHODS zif_abapgit_gui_event_handler~on_event
         REDEFINITION .
 
@@ -439,7 +440,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
         super->zif_abapgit_gui_event_handler~on_event(
           EXPORTING
             iv_action    = iv_action
-            iv_prev_page = iv_prev_page
             iv_getdata   = iv_getdata
             it_postdata  = it_postdata
           IMPORTING

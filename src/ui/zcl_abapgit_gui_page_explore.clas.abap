@@ -9,11 +9,13 @@ CLASS zcl_abapgit_gui_page_explore DEFINITION
     CONSTANTS c_explore_url TYPE string
       VALUE 'https://dotabap.github.io/explore.html'.
 
-    METHODS constructor.
+    METHODS constructor
+      RAISING zcx_abapgit_exception.
 
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
 
+  PRIVATE SECTION.
 ENDCLASS.
 
 

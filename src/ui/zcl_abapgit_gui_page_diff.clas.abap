@@ -185,35 +185,8 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
 ENDCLASS.
 
 
-CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
-  METHOD normalize_filename.
-
-    rv_normalized = replace( val  = iv_filename
-                             sub  = '.'
-                             occ  = 0
-                             with = '_' ).
-
-  ENDMETHOD.
-
-
-  METHOD normalize_path.
-
-    rv_normalized = replace( val  = iv_path
-                             sub  = '/'
-                             occ  = 0
-                             with = '_' ).
-
-  ENDMETHOD.
-
-
-  METHOD get_normalized_fname_with_path.
-
-    rv_filename = normalize_path( is_diff-path )
-               && `_`
-               && normalize_filename( is_diff-filename ).
-
-  ENDMETHOD.
+CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
 
   METHOD add_filter_sub_menu.
@@ -290,6 +263,19 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     io_menu->add( iv_txt = 'Jump'
                   io_sub = lo_sub_jump ) ##NO_TEXT.
+
+  ENDMETHOD.
+
+
+  METHOD add_menu_begin.
+
+  ENDMETHOD.
+
+
+  METHOD add_menu_end.
+
+    io_menu->add( iv_txt = 'Split/Unified view'
+                  iv_act = c_actions-toggle_unified ) ##NO_TEXT.
 
   ENDMETHOD.
 
@@ -393,6 +379,56 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD calculate_diff.
+
+    DATA: lt_remote TYPE zif_abapgit_definitions=>ty_files_tt,
+          lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt,
+          lt_status TYPE zif_abapgit_definitions=>ty_results_tt.
+
+    FIELD-SYMBOLS: <ls_status> LIKE LINE OF lt_status.
+
+    CLEAR: mt_diff_files.
+
+    lt_remote = mo_repo->get_files_remote( ).
+    lt_local  = mo_repo->get_files_local( ).
+    mo_repo->reset_status( ).
+    lt_status = mo_repo->status( ).
+
+    IF is_file IS NOT INITIAL.        " Diff for one file
+
+      READ TABLE lt_status ASSIGNING <ls_status>
+        WITH KEY path = is_file-path filename = is_file-filename.
+
+      append_diff( it_remote = lt_remote
+                   it_local  = lt_local
+                   is_status = <ls_status> ).
+
+    ELSEIF is_object IS NOT INITIAL.  " Diff for whole object
+
+      LOOP AT lt_status ASSIGNING <ls_status>
+          WHERE obj_type = is_object-obj_type
+          AND obj_name = is_object-obj_name
+          AND match IS INITIAL.
+        append_diff( it_remote = lt_remote
+                     it_local  = lt_local
+                     is_status = <ls_status> ).
+      ENDLOOP.
+
+    ELSE.                             " Diff for the whole repo
+      SORT lt_status BY
+        path ASCENDING
+        filename ASCENDING.
+      LOOP AT lt_status ASSIGNING <ls_status> WHERE match IS INITIAL.
+        append_diff( it_remote = lt_remote
+                     it_local  = lt_local
+                     is_status = <ls_status> ).
+      ENDLOOP.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD constructor.
 
     DATA: lv_ts TYPE timestamp.
@@ -421,6 +457,20 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_normalized_fname_with_path.
+
+    rv_filename = normalize_path( is_diff-path )
+               && `_`
+               && normalize_filename( is_diff-filename ).
+
+  ENDMETHOD.
+
+
+  METHOD insert_nav.
+
+  ENDMETHOD.
+
+
   METHOD is_binary.
 
     FIELD-SYMBOLS <lv_data> LIKE iv_d1.
@@ -432,6 +482,26 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     ENDIF.
 
     rv_yes = zcl_abapgit_utils=>is_binary( <lv_data> ).
+
+  ENDMETHOD.
+
+
+  METHOD normalize_filename.
+
+    rv_normalized = replace( val  = iv_filename
+                             sub  = '.'
+                             occ  = 0
+                             with = '_' ).
+
+  ENDMETHOD.
+
+
+  METHOD normalize_path.
+
+    rv_normalized = replace( val  = iv_path
+                             sub  = '/'
+                             occ  = 0
+                             with = '_' ).
 
   ENDMETHOD.
 
@@ -467,6 +537,13 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     ro_html->add( '</tr>' ).
     ro_html->add( '</thead>' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_beacon_begin_of_row.
+
+    io_html->add( '<th class="num"></th>' ).
 
   ENDMETHOD.
 
@@ -579,6 +656,16 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
       is_diff-changed_by }</span></span>| ).
 
     ro_html->add( '</div>' ).                               "#EC NOTEXT
+
+  ENDMETHOD.
+
+
+  METHOD render_diff_head_after_state.
+
+    IF is_diff-fstate = c_fstate-both AND mv_unified = abap_true.
+      io_html->add( '<span class="attention pad-sides">Attention: Unified mode'
+                 && ' highlighting for MM assumes local file is newer ! </span>' ). "#EC NOTEXT
+    ENDIF.
 
   ENDMETHOD.
 
@@ -699,6 +786,19 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_line_split_row.
+
+    IF iv_fstate = c_fstate-remote. " Remote file leading changes
+      io_html->add( iv_old ). " local
+      io_html->add( iv_new ). " remote
+    ELSE.             " Local leading changes or both were modified
+      io_html->add( iv_new ). " local
+      io_html->add( iv_old ). " remote
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD render_line_unified.
 
     FIELD-SYMBOLS <ls_diff_line> LIKE LINE OF mt_delayed_lines.
@@ -776,6 +876,28 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_table_head_non_unified.
+
+    io_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
+    io_html->add( '<th class="mark"></th>' ).               "#EC NOTEXT
+    io_html->add( '<th>LOCAL</th>' ).                       "#EC NOTEXT
+    io_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
+    io_html->add( '<th class="mark"></th>' ).               "#EC NOTEXT
+    io_html->add( '<th>REMOTE</th>' ).                      "#EC NOTEXT
+
+  ENDMETHOD.
+
+
+  METHOD render_table_head_unified.
+
+    io_html->add( '<th class="num">old</th>' ).             "#EC NOTEXT
+    io_html->add( '<th class="num">new</th>' ).             "#EC NOTEXT
+    io_html->add( '<th class="mark"></th>' ).               "#EC NOTEXT
+    io_html->add( '<th>code</th>' ).                        "#EC NOTEXT
+
+  ENDMETHOD.
+
+
   METHOD scripts.
 
     ro_html = super->scripts( ).
@@ -816,7 +938,6 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         super->zif_abapgit_gui_event_handler~on_event(
            EXPORTING
              iv_action    = iv_action
-             iv_prev_page = iv_prev_page
              iv_getdata   = iv_getdata
              it_postdata  = it_postdata
            IMPORTING
@@ -826,125 +947,4 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
-
-
-  METHOD calculate_diff.
-
-    DATA: lt_remote TYPE zif_abapgit_definitions=>ty_files_tt,
-          lt_local  TYPE zif_abapgit_definitions=>ty_files_item_tt,
-          lt_status TYPE zif_abapgit_definitions=>ty_results_tt.
-
-    FIELD-SYMBOLS: <ls_status> LIKE LINE OF lt_status.
-
-    CLEAR: mt_diff_files.
-
-    lt_remote = mo_repo->get_files_remote( ).
-    lt_local  = mo_repo->get_files_local( ).
-    mo_repo->reset_status( ).
-    lt_status = mo_repo->status( ).
-
-    IF is_file IS NOT INITIAL.        " Diff for one file
-
-      READ TABLE lt_status ASSIGNING <ls_status>
-        WITH KEY path = is_file-path filename = is_file-filename.
-
-      append_diff( it_remote = lt_remote
-                   it_local  = lt_local
-                   is_status = <ls_status> ).
-
-    ELSEIF is_object IS NOT INITIAL.  " Diff for whole object
-
-      LOOP AT lt_status ASSIGNING <ls_status>
-          WHERE obj_type = is_object-obj_type
-          AND obj_name = is_object-obj_name
-          AND match IS INITIAL.
-        append_diff( it_remote = lt_remote
-                     it_local  = lt_local
-                     is_status = <ls_status> ).
-      ENDLOOP.
-
-    ELSE.                             " Diff for the whole repo
-      SORT lt_status BY
-        path ASCENDING
-        filename ASCENDING.
-      LOOP AT lt_status ASSIGNING <ls_status> WHERE match IS INITIAL.
-        append_diff( it_remote = lt_remote
-                     it_local  = lt_local
-                     is_status = <ls_status> ).
-      ENDLOOP.
-
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD add_menu_end.
-
-    io_menu->add( iv_txt = 'Split/Unified view'
-                  iv_act = c_actions-toggle_unified ) ##NO_TEXT.
-
-  ENDMETHOD.
-
-
-  METHOD add_menu_begin.
-
-  ENDMETHOD.
-
-
-  METHOD render_table_head_non_unified.
-
-    io_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
-    io_html->add( '<th class="mark"></th>' ).               "#EC NOTEXT
-    io_html->add( '<th>LOCAL</th>' ).                       "#EC NOTEXT
-    io_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
-    io_html->add( '<th class="mark"></th>' ).               "#EC NOTEXT
-    io_html->add( '<th>REMOTE</th>' ).                      "#EC NOTEXT
-
-  ENDMETHOD.
-
-
-  METHOD render_beacon_begin_of_row.
-
-    io_html->add( '<th class="num"></th>' ).
-
-  ENDMETHOD.
-
-
-  METHOD render_diff_head_after_state.
-
-    IF is_diff-fstate = c_fstate-both AND mv_unified = abap_true.
-      io_html->add( '<span class="attention pad-sides">Attention: Unified mode'
-                 && ' highlighting for MM assumes local file is newer ! </span>' ). "#EC NOTEXT
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD insert_nav.
-
-  ENDMETHOD.
-
-
-  METHOD render_line_split_row.
-
-    IF iv_fstate = c_fstate-remote. " Remote file leading changes
-      io_html->add( iv_old ). " local
-      io_html->add( iv_new ). " remote
-    ELSE.             " Local leading changes or both were modified
-      io_html->add( iv_new ). " local
-      io_html->add( iv_old ). " remote
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD render_table_head_unified.
-
-    io_html->add( '<th class="num">old</th>' ).             "#EC NOTEXT
-    io_html->add( '<th class="num">new</th>' ).             "#EC NOTEXT
-    io_html->add( '<th class="mark"></th>' ).               "#EC NOTEXT
-    io_html->add( '<th>code</th>' ).                        "#EC NOTEXT
-
-  ENDMETHOD.
-
 ENDCLASS.

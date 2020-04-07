@@ -1,4 +1,6 @@
-CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
+CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
+  INHERITING FROM zcl_abapgit_gui_component
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
     INTERFACES:
@@ -19,7 +21,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
           VALUE(rt_hotkey) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name.
 
     METHODS:
-      constructor.
+      constructor RAISING zcx_abapgit_exception.
 
   PROTECTED SECTION.
     TYPES: BEGIN OF ty_control,
@@ -144,6 +146,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD constructor.
 
+    super->constructor( ).
     mo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
 
   ENDMETHOD.
@@ -463,10 +466,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
         ENDIF.
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
-      WHEN OTHERS.
-
-        ev_state = zcl_abapgit_gui=>c_event_state-not_handled.
-
     ENDCASE.
 
   ENDMETHOD.
@@ -479,6 +478,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     FIELD-SYMBOLS:
           <ls_event> LIKE LINE OF lt_events.
+
+    mi_gui_services->register_event_handler( me ).
 
     " Redirect
     IF ms_control-redirect_url IS NOT INITIAL.
@@ -497,10 +498,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ri_html->add( '<body>' ).                               "#EC NOTEXT
     ri_html->add( title( ) ).
     ri_html->add( render_hotkey_overview( ) ).
-    ri_html->add( render_content( ) ).
+
+    ri_html->add( render_content( ) ). " TODO -> render child
+
     ri_html->add( render_error_message_box( ) ).
 
-    lt_events = me->get_events( ).
+    lt_events = me->get_events( ). " TODO refactor ???
     LOOP AT lt_events ASSIGNING <ls_event>.
       ri_html->add( render_event_as_form( <ls_event> ) ).
     ENDLOOP.
@@ -508,7 +511,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ri_html->add( footer( ) ).
     ri_html->add( '</body>' ).                              "#EC NOTEXT
 
-    lo_script = scripts( ).
+    lo_script = scripts( ). " TODO refactor
 
     IF lo_script IS BOUND AND lo_script->is_empty( ) = abap_false.
       ri_html->add( '<script type="text/javascript">' ).
