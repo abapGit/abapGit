@@ -12,7 +12,8 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
         change_proxy_bypass TYPE string VALUE 'change_proxy_bypass',
       END OF c_action.
 
-    METHODS constructor.
+    METHODS constructor
+      RAISING zcx_abapgit_exception.
     METHODS zif_abapgit_gui_event_handler~on_event REDEFINITION.
 
   PROTECTED SECTION.
@@ -113,7 +114,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_settings IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
 
   METHOD constructor.
