@@ -153,7 +153,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
     ro_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).
 
     IF mo_repo_content IS BOUND.
-      ro_html->add( mo_repo_content->render( ) ).
+      ro_html->add( mo_repo_content->zif_abapgit_gui_renderable~render( ) ).
     ENDIF.
     ro_html->add( '</div>' ).
 
@@ -322,7 +322,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
       mo_repo_content->zif_abapgit_gui_event_handler~on_event(
         EXPORTING
           iv_action    = iv_action
-          iv_prev_page = iv_prev_page
           iv_getdata   = iv_getdata
           it_postdata  = it_postdata
         IMPORTING
@@ -361,7 +360,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
         super->zif_abapgit_gui_event_handler~on_event(
           EXPORTING
             iv_action    = iv_action
-            iv_prev_page = iv_prev_page
             iv_getdata   = iv_getdata
             it_postdata  = it_postdata
           IMPORTING

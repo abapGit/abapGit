@@ -9,7 +9,8 @@ CLASS zcl_abapgit_gui_page_db_edit DEFINITION
 
     METHODS constructor
       IMPORTING
-        is_key TYPE zif_abapgit_persistence=>ty_content .
+        is_key TYPE zif_abapgit_persistence=>ty_content
+      RAISING zcx_abapgit_exception.
 
     METHODS zif_abapgit_gui_event_handler~on_event
         REDEFINITION .
@@ -139,11 +140,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: ls_db TYPE zif_abapgit_persistence=>ty_content.
@@ -154,6 +150,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
         update( ls_db ).
         ev_state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 ENDCLASS.

@@ -1,6 +1,7 @@
 CLASS zcl_abapgit_gui_view_tutorial DEFINITION
   PUBLIC
   FINAL
+  INHERITING FROM zcl_abapgit_gui_component
   CREATE PUBLIC .
 
   PUBLIC SECTION.

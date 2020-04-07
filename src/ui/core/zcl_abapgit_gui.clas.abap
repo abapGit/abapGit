@@ -5,14 +5,14 @@ CLASS zcl_abapgit_gui DEFINITION
   PUBLIC SECTION.
     CONSTANTS:
       BEGIN OF c_event_state,
-        not_handled         TYPE c LENGTH 1 VALUE '0',
-        re_render           TYPE c LENGTH 1 VALUE '1',
-        new_page            TYPE c LENGTH 1 VALUE '2',
-        go_back             TYPE c LENGTH 1 VALUE '3',
-        no_more_act         TYPE c LENGTH 1 VALUE '4',
-        new_page_w_bookmark TYPE c LENGTH 1 VALUE '5',
-        go_back_to_bookmark TYPE c LENGTH 1 VALUE '6',
-        new_page_replacing  TYPE c LENGTH 1 VALUE '7',
+        not_handled         TYPE i VALUE 0,
+        re_render           TYPE i VALUE 1,
+        new_page            TYPE i VALUE 2,
+        go_back             TYPE i VALUE 3,
+        no_more_act         TYPE i VALUE 4,
+        new_page_w_bookmark TYPE i VALUE 5,
+        go_back_to_bookmark TYPE i VALUE 6,
+        new_page_replacing  TYPE i VALUE 7,
       END OF c_event_state .
 
     CONSTANTS:
@@ -72,6 +72,7 @@ CLASS zcl_abapgit_gui DEFINITION
 
     DATA: mi_cur_page       TYPE REF TO zif_abapgit_gui_renderable,
           mt_stack          TYPE STANDARD TABLE OF ty_page_stack,
+          mt_event_handlers TYPE STANDARD TABLE OF REF TO zif_abapgit_gui_event_handler,
           mi_router         TYPE REF TO zif_abapgit_gui_event_handler,
           mi_asset_man      TYPE REF TO zif_abapgit_gui_asset_manager,
           mi_html_processor TYPE REF TO zif_abapgit_gui_html_processor,
@@ -90,10 +91,6 @@ CLASS zcl_abapgit_gui DEFINITION
     METHODS render
       RAISING
         zcx_abapgit_exception.
-
-    METHODS get_current_page_name
-      RETURNING
-        VALUE(rv_page_name) TYPE string.
 
     METHODS call_page
       IMPORTING
@@ -246,21 +243,13 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_current_page_name.
-
-    IF mi_cur_page IS BOUND.
-      rv_page_name = cl_abap_classdescr=>describe_by_object_ref( mi_cur_page )->get_relative_name( ).
-    ENDIF." ELSE - return is empty => initial page
-
-  ENDMETHOD.
-
-
   METHOD go_home.
 
     DATA ls_stack LIKE LINE OF mt_stack.
 
     IF mi_router IS BOUND.
-      CLEAR mt_stack.
+      CLEAR: mt_stack, mt_event_handlers.
+      APPEND mi_router TO mt_event_handlers.
       on_event( action = |{ c_action-go_home }| ). " doesn't accept strings directly
     ELSE.
       IF lines( mt_stack ) > 0.
@@ -288,38 +277,24 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
   METHOD handle_action.
 
     DATA: lx_exception TYPE REF TO zcx_abapgit_exception,
-          li_page_eh   TYPE REF TO zif_abapgit_gui_event_handler,
+          li_handler   TYPE REF TO zif_abapgit_gui_event_handler,
           li_page      TYPE REF TO zif_abapgit_gui_renderable,
           lv_state     TYPE i.
 
     TRY.
-        " Home must be processed by router if it presents
-        IF ( iv_action <> c_action-go_home OR mi_router IS NOT BOUND )
-            AND mi_cur_page IS BOUND
-            AND zcl_abapgit_gui_utils=>is_event_handler( mi_cur_page ) = abap_true.
-          li_page_eh ?= mi_cur_page.
-          li_page_eh->on_event(
+        LOOP AT mt_event_handlers INTO li_handler.
+          li_handler->on_event(
             EXPORTING
               iv_action    = iv_action
-              iv_prev_page = get_current_page_name( )
               iv_getdata   = iv_getdata
               it_postdata  = it_postdata
             IMPORTING
               ei_page      = li_page
               ev_state     = lv_state ).
-        ENDIF.
-
-        IF lv_state IS INITIAL AND mi_router IS BOUND.
-          mi_router->on_event(
-            EXPORTING
-              iv_action    = iv_action
-              iv_prev_page = get_current_page_name( )
-              iv_getdata   = iv_getdata
-              it_postdata  = it_postdata
-            IMPORTING
-              ei_page      = li_page
-              ev_state     = lv_state ).
-        ENDIF.
+          IF lv_state IS NOT INITIAL AND lv_state <> c_event_state-not_handled. " is handled
+            EXIT.
+          ENDIF.
+        ENDLOOP.
 
         CASE lv_state.
           WHEN c_event_state-re_render.
@@ -327,9 +302,13 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
           WHEN c_event_state-new_page.
             call_page( li_page ).
           WHEN c_event_state-new_page_w_bookmark.
-            call_page( ii_page = li_page iv_with_bookmark = abap_true ).
+            call_page(
+              ii_page = li_page
+              iv_with_bookmark = abap_true ).
           WHEN c_event_state-new_page_replacing.
-            call_page( ii_page = li_page iv_replacing = abap_true ).
+            call_page(
+              ii_page = li_page
+              iv_replacing = abap_true ).
           WHEN c_event_state-go_back.
             back( ).
           WHEN c_event_state-go_back_to_bookmark.
@@ -393,6 +372,11 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'GUI error: no current page' ).
     ENDIF.
 
+    CLEAR mt_event_handlers.
+    IF mi_router IS BOUND.
+      APPEND mi_router TO mt_event_handlers.
+    ENDIF.
+
     li_html = mi_cur_page->render( ).
     lv_html = li_html->render( iv_no_indent_jscss = abap_true ).
 
@@ -438,5 +422,20 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     mo_html_viewer->set_registered_events( lt_events ).
     SET HANDLER me->on_event FOR mo_html_viewer.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_services~get_current_page_name.
+
+    IF mi_cur_page IS BOUND.
+      rv_page_name = cl_abap_classdescr=>describe_by_object_ref( mi_cur_page )->get_relative_name( ).
+    ENDIF." ELSE - return is empty => initial page
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_services~register_event_handler.
+    ASSERT ii_event_handler IS BOUND.
+    INSERT ii_event_handler INTO mt_event_handlers INDEX 1.
   ENDMETHOD.
 ENDCLASS.
