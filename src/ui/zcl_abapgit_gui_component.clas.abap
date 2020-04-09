@@ -1,5 +1,6 @@
-CLASS zcl_abapgit_gui_component DEFINITION ABSTRACT
+CLASS zcl_abapgit_gui_component DEFINITION
   PUBLIC
+  ABSTRACT
   CREATE PUBLIC .
 
   PUBLIC SECTION.
