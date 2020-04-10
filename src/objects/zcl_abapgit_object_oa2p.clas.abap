@@ -96,7 +96,7 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
 
     CALL FUNCTION 'DEQUEUE_EOA2C_PROFILES'
       EXPORTING
-        profile = mv_profile.    " 01th enqueue argument
+        profile = mv_profile.
 
 
     lv_transp_pkg = zcl_abapgit_factory=>get_sap_package( iv_package )->are_changes_recorded_in_tr_req( ).
