@@ -54,11 +54,11 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
       lv_transp_pkg   TYPE abap_bool,
       lv_dummy        TYPE string.
 
-    CONSTANTS: c_actvt TYPE c LENGTH 2 VALUE `06`.
+    CONSTANTS: lc_actvt TYPE c LENGTH 2 VALUE `06`.
 
     "authority check
     AUTHORITY-CHECK OBJECT 'S_OA2C_ADM'
-      ID 'ACTVT'     FIELD c_actvt.
+      ID 'ACTVT'     FIELD lc_actvt.
     IF sy-subrc <> 0.
       MESSAGE e463(01) WITH mv_profile INTO lv_dummy.
       zcx_abapgit_exception=>raise_t100( ).
@@ -75,7 +75,6 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
         OTHERS             = 3.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100(
-        EXPORTING
           iv_msgid              = sy-msgid
           iv_msgno              = sy-msgno
           iv_msgv1              = sy-msgv1
@@ -120,14 +119,12 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
           OTHERS              = 4.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100(
-          EXPORTING
             iv_msgid              = sy-msgid
             iv_msgno              = sy-msgno
             iv_msgv1              = sy-msgv1
             iv_msgv2              = sy-msgv2
             iv_msgv3              = sy-msgv3
-            iv_msgv4              = sy-msgv4
-        ).
+            iv_msgv4              = sy-msgv4 ).
       ENDIF.
     ENDIF.
 
@@ -239,14 +236,16 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
                     INTO ls_profile
                     WHERE profile = mv_profile.         "#EC CI_GENBUFF
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error when geting getails of OAuth2 Profile { mv_profile } from table OA2C_PROFILES.| ).
+      zcx_abapgit_exception=>raise(
+        |Error when geting getails of OAuth2 Profile { mv_profile } from table OA2C_PROFILES.| ).
     ENDIF.
 
     SELECT * FROM oa2p_scopes
              INTO TABLE lt_scope
              WHERE profile = mv_profile.                "#EC CI_GENBUFF
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error when geting Scopes of OAuth2 Profile { mv_profile } from table OA2C_SCOPES.| ).
+      zcx_abapgit_exception=>raise(
+        |Error when geting Scopes of OAuth2 Profile { mv_profile } from table OA2C_SCOPES.| ).
     ENDIF.
 
     io_xml->add( iv_name = 'PROFILE'
