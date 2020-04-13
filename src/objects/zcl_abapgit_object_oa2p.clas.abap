@@ -22,6 +22,7 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
 
+
   METHOD constructor.
 
     super->constructor( is_item     = is_item
@@ -222,7 +223,7 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-    zcx_abapgit_exception=>raise( |Jump to infoObjects is not yet supported| ).
+    zcx_abapgit_exception=>raise( |Jump to OAuth2 Profile is not yet supported| ).
   ENDMETHOD.
 
 
@@ -239,6 +240,13 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
       zcx_abapgit_exception=>raise(
         |Error when geting getails of OAuth2 Profile { mv_profile } from table OA2C_PROFILES.| ).
     ENDIF.
+    CLEAR: ls_profile-changed_at,
+           ls_profile-changed_by,
+           ls_profile-changed_on,
+           ls_profile-created_at,
+           ls_profile-created_by,
+           ls_profile-created_on.
+
 
     SELECT * FROM oa2p_scopes
              INTO TABLE lt_scope

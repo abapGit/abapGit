@@ -16,6 +16,8 @@
     <item>/CODE_OF_CONDUCT.md</item>
     <item>/abaplint.json</item>
     <item>/.eslintrc.yaml</item>
+    <item>/src/ui/zcl_abapgit_gui_page_diff.clas.abap</item>
+    <item>/src/ui/zcl_abapgit_gui_page_diff.clas.xml</item>
    </IGNORE>
   </DATA>
  </asx:values>
