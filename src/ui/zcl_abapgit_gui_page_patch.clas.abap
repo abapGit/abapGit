@@ -733,6 +733,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
+    DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
+
+    lo_repo_online ?= mo_repo.
+
     CASE iv_action.
       WHEN c_actions-stage.
 
@@ -740,7 +744,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
 
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
           EXPORTING
-            io_repo  = mo_repo
+            io_repo  = lo_repo_online
             io_stage = mo_stage.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 

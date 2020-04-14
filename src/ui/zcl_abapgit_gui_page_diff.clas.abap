@@ -42,7 +42,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         REDEFINITION.
   PROTECTED SECTION.
     DATA mv_unified TYPE abap_bool VALUE abap_true ##NO_TEXT.
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online.
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo.
     DATA mt_diff_files TYPE tt_file_diff .
     METHODS:
       get_normalized_fname_with_path
