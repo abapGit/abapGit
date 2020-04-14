@@ -35,14 +35,31 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
 
-    DATA: lv_changed_by TYPE oa2c_profiles-changed_by.
+    DATA: lo_persist     TYPE REF TO cl_oa2p_object_persist,
+          lo_profile     TYPE REF TO if_wb_object_data_model,
+          lv_profile_key TYPE seu_objkey.
 
-    SELECT SINGLE changed_by FROM oa2c_profiles
-                             INTO lv_changed_by
-                             WHERE profile = mv_profile.
-    IF sy-subrc = 0.
-      rv_user = lv_changed_by.
-    ENDIF.
+    lv_profile_key = mv_profile.
+    CREATE OBJECT lo_persist.
+    CREATE OBJECT lo_profile TYPE cl_oa2p_object_data.
+
+    TRY.
+        lo_persist->if_wb_object_persist~get(
+          EXPORTING
+            p_object_key                 = lv_profile_key    " Object Key
+            p_version                    = 'A'    " Version (Active/Inactive)
+          CHANGING
+            p_object_data                = lo_profile   " Object Data
+        ).
+      CATCH cx_swb_object_does_not_exist.
+        zcx_abapgit_exception=>raise(
+          |OAuth2 Profile { lv_profile_key } doesn't exist.| ).
+      CATCH cx_swb_exception.
+        zcx_abapgit_exception=>raise(
+          |Error when geting details of OAuth2 Profile { lv_profile_key }.| ).
+    ENDTRY.
+
+    rv_user = lo_profile->get_changed_by( ).
 
   ENDMETHOD.
 
@@ -57,6 +74,11 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
 
     CONSTANTS: lc_actvt TYPE c LENGTH 2 VALUE `06`.
 
+
+    DATA: lo_persist     TYPE REF TO cl_oa2p_object_persist,
+          lo_profile     TYPE REF TO if_wb_object_data_model,
+          lv_profile_key TYPE seu_objkey.
+
     "authority check
     AUTHORITY-CHECK OBJECT 'S_OA2C_ADM'
       ID 'ACTVT'     FIELD lc_actvt.
@@ -65,40 +87,24 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    "Enqueue
-    CALL FUNCTION 'ENQUEUE_EOA2C_PROFILES'
-      EXPORTING
-        mode_oa2c_profiles = 'X'
-        profile            = mv_profile
-      EXCEPTIONS
-        foreign_lock       = 1
-        system_failure     = 2
-        OTHERS             = 3.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100(
-          iv_msgid              = sy-msgid
-          iv_msgno              = sy-msgno
-          iv_msgv1              = sy-msgv1
-          iv_msgv2              = sy-msgv2
-          iv_msgv3              = sy-msgv3
-          iv_msgv4              = sy-msgv4 ).
-    ENDIF.
+    "delete profile
+    lv_profile_key = mv_profile.
+    CREATE OBJECT lo_persist.
+    CREATE OBJECT lo_profile TYPE cl_oa2p_object_data.
 
-    DELETE FROM oa2c_profiles WHERE profile  = mv_profile.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error when deleting profile { mv_profile } from table OA2C_PROFILES.| ).
-    ENDIF.
-
-    DELETE FROM  oa2p_scopes WHERE profile  = mv_profile.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error when deleting profile { mv_profile } from table OA2P_SCOPES.| ).
-    ENDIF.
-
-    CALL FUNCTION 'DEQUEUE_EOA2C_PROFILES'
-      EXPORTING
-        profile = mv_profile.
+    TRY.
+        lo_persist->if_wb_object_persist~delete(
+          EXPORTING
+            p_object_key                 = lv_profile_key    " Object Key
+        ).
+      CATCH cx_swb_object_does_not_exist.
+      CATCH cx_swb_exception.
+        zcx_abapgit_exception=>raise(
+          |Error when deleting OAuth2 Profile { lv_profile_key }.| ).
+    ENDTRY.
 
 
+    "collect change in transport
     lv_transp_pkg = zcl_abapgit_factory=>get_sap_package( iv_package )->are_changes_recorded_in_tr_req( ).
     IF lv_transp_pkg = abap_true.
 
@@ -135,26 +141,26 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: ls_profile TYPE oa2c_profiles,
-          lt_scope   TYPE STANDARD TABLE OF oa2p_scopes.
-
+    DATA: lo_persist      TYPE REF TO cl_oa2p_object_persist,
+          lo_profile      TYPE REF TO if_wb_object_data_model,
+          ls_profile_data TYPE oa2c_sx_oa2p_object_data.
 
     io_xml->read( EXPORTING iv_name = 'PROFILE'
-                  CHANGING cg_data = ls_profile ).
-
-    io_xml->read( EXPORTING iv_name = 'SCOPES'
-                  CHANGING cg_data = lt_scope ).
+                  CHANGING cg_data = ls_profile_data ).
 
 
-    MODIFY oa2c_profiles FROM ls_profile.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error updating table OA2C_PROFILES when deserialize profile { mv_profile }.| ).
-    ENDIF.
+    CREATE OBJECT lo_profile TYPE cl_oa2p_object_data.
+    lo_profile->set_data( p_data = ls_profile_data ).
 
-    MODIFY oa2p_scopes FROM TABLE lt_scope.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error updating table OA2P_SCOPES when deserialize profile { mv_profile }.| ).
-    ENDIF.
+    CREATE OBJECT lo_persist.
+    TRY.
+        lo_persist->if_wb_object_persist~save(
+          EXPORTING
+            p_object_data    = lo_profile    " Object Data
+        ).
+      CATCH cx_swb_exception.
+        zcx_abapgit_exception=>raise( |Error deserialize profile { mv_profile }.| ).
+    ENDTRY.
 
     tadir_insert( iv_package ).
 
@@ -165,10 +171,7 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    SELECT SINGLE profile FROM oa2c_profiles
-      INTO mv_profile
-      WHERE profile = mv_profile.                       "#EC CI_GENBUFF
-    rv_bool = boolc( sy-subrc = 0 ).
+    rv_bool = cl_oa2p_object_persist=>check_exists_on_db( i_profile = mv_profile ).
 
   ENDMETHOD.
 
@@ -236,38 +239,49 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: ls_profile TYPE oa2c_profiles,
-          lt_scope   TYPE STANDARD TABLE OF oa2p_scopes.
+    DATA: lo_persist      TYPE REF TO cl_oa2p_object_persist,
+          lo_profile      TYPE REF TO if_wb_object_data_model,
+          lv_profile_key  TYPE seu_objkey,
+          ls_profile_data TYPE oa2c_sx_oa2p_object_data.
 
+    lv_profile_key = mv_profile.
+    CREATE OBJECT lo_persist.
+    CREATE OBJECT lo_profile TYPE cl_oa2p_object_data.
 
-    SELECT SINGLE * FROM oa2c_profiles
-                    INTO ls_profile
-                    WHERE profile = mv_profile.         "#EC CI_GENBUFF
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise(
-        |Error when geting getails of OAuth2 Profile { mv_profile } from table OA2C_PROFILES.| ).
-    ENDIF.
-    CLEAR: ls_profile-changed_at,
-           ls_profile-changed_by,
-           ls_profile-changed_on,
-           ls_profile-created_at,
-           ls_profile-created_by,
-           ls_profile-created_on.
+    TRY.
+        lo_persist->if_wb_object_persist~get(
+          EXPORTING
+            p_object_key                 = lv_profile_key    " Object Key
+            p_version                    = 'A'    " Version (Active/Inactive)
+          CHANGING
+            p_object_data                = lo_profile   " Object Data
+        ).
+      CATCH cx_swb_object_does_not_exist.
+        zcx_abapgit_exception=>raise(
+          |OAuth2 Profile { lv_profile_key } doesn't exist.| ).
+      CATCH cx_swb_exception.
+        zcx_abapgit_exception=>raise(
+          |Error when geting details of OAuth2 Profile { lv_profile_key }.| ).
+    ENDTRY.
 
+    "remove system specific information
+    lo_profile->set_changed_by( p_user_name = '' ).
+    lo_profile->set_changed_on( p_date = '00000000'
+                                p_time = '000000' ).
+    lo_profile->set_created_by( p_user_name = '' ).
+    lo_profile->set_created_on( p_date = '00000000'
+                                p_time = '000000' ).
 
-    SELECT * FROM oa2p_scopes
-             INTO TABLE lt_scope
-             WHERE profile = mv_profile.                "#EC CI_GENBUFF
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise(
-        |Error when geting Scopes of OAuth2 Profile { mv_profile } from table OA2C_SCOPES.| ).
-    ENDIF.
+    lo_profile->get_data(
+      IMPORTING
+        p_data          = ls_profile_data ).
+
+    "remove runtime information
+    CLEAR ls_profile_data-o_specifics.
 
     io_xml->add( iv_name = 'PROFILE'
-                 ig_data = ls_profile ).
+                 ig_data = ls_profile_data ).
 
-    io_xml->add( iv_name = 'SCOPES'
-                 ig_data = lt_scope ).
 
   ENDMETHOD.
 ENDCLASS.
