@@ -161,16 +161,15 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
 
       is_every_changed_line_patched
         RETURNING
-          VALUE(rv_everything_patched) TYPE abap_bool,
+          VALUE(rv_everything_patched) TYPE abap_bool.
 
+    CLASS-METHODS:
       is_patch_line_possible
         IMPORTING
           is_diff_line                     TYPE zif_abapgit_definitions=>ty_diff
           iv_fstate                        TYPE char1
         RETURNING
           VALUE(rv_is_patch_line_possible) TYPE abap_bool.
-
-
 
 ENDCLASS.
 
