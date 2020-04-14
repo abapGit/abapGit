@@ -20,13 +20,11 @@ CLASS ltcl_is_patch_line_possible DEFINITION FINAL FOR TESTING
 
   PRIVATE SECTION.
     DATA:
-      mo_cut                    TYPE REF TO zcl_abapgit_gui_page_patch,
       mv_is_patch_line_possible TYPE abap_bool,
       ms_diff_line              TYPE zif_abapgit_definitions=>ty_diff,
       mv_fstate                 TYPE char1.
 
     METHODS:
-      setup RAISING zcx_abapgit_exception,
       initial_diff_line FOR TESTING RAISING cx_static_check,
       for_update_patch_shd_be_possbl FOR TESTING RAISING cx_static_check,
       for_insert_patch_shd_be_possbl FOR TESTING RAISING cx_static_check,
@@ -150,20 +148,6 @@ ENDCLASS.
 
 CLASS ltcl_is_patch_line_possible IMPLEMENTATION.
 
-  METHOD setup.
-
-    CONSTANTS:
-      lc_dummy_key TYPE zif_abapgit_persistence=>ty_value VALUE '000000000001'.
-
-    zcl_abapgit_ui_injector=>set_gui_services( zcl_abapgit_ui_injector=>get_dummy_gui_services( ) ).
-
-    CREATE OBJECT mo_cut
-      EXPORTING
-        iv_key = lc_dummy_key.
-
-  ENDMETHOD.
-
-
   METHOD initial_diff_line.
 
     given_diff_line( ).
@@ -214,7 +198,7 @@ CLASS ltcl_is_patch_line_possible IMPLEMENTATION.
 
   METHOD when_is_patch_line_possible.
 
-    mv_is_patch_line_possible = mo_cut->is_patch_line_possible(
+    mv_is_patch_line_possible = zcl_abapgit_gui_page_patch=>is_patch_line_possible(
             is_diff_line = ms_diff_line
             iv_fstate    = mv_fstate ).
 
