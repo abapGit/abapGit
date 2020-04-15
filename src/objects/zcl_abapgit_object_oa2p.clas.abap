@@ -258,9 +258,7 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
     lo_profile->set_created_on( p_date = '00000000'
                                 p_time = '000000' ).
 
-    lo_profile->get_data(
-      IMPORTING
-        p_data          = ls_profile_data ).
+    lo_profile->get_data( IMPORTING p_data = ls_profile_data ).
 
     "remove runtime information
     CLEAR ls_profile_data-o_specifics.
