@@ -50,11 +50,9 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
           CHANGING
             p_object_data                = lo_profile ).  " Object Data
       CATCH cx_swb_object_does_not_exist.
-        zcx_abapgit_exception=>raise(
-          |OAuth2 Profile { lv_profile_key } doesn't exist.| ).
+        zcx_abapgit_exception=>raise( |OAuth2 Profile { lv_profile_key } doesn't exist.| ).
       CATCH cx_swb_exception.
-        zcx_abapgit_exception=>raise(
-          |Error when geting details of OAuth2 Profile { lv_profile_key }.| ).
+        zcx_abapgit_exception=>raise( |Error when geting details of OAuth2 Profile { lv_profile_key }.| ).
     ENDTRY.
 
     rv_user = lo_profile->get_changed_by( ).
@@ -91,13 +89,10 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
     CREATE OBJECT lo_profile TYPE cl_oa2p_object_data.
 
     TRY.
-        lo_persist->if_wb_object_persist~delete(
-          EXPORTING
-            p_object_key                 = lv_profile_key ).   " Object Key
+        lo_persist->if_wb_object_persist~delete( p_object_key = lv_profile_key ).   " Object Key
       CATCH cx_swb_object_does_not_exist.
       CATCH cx_swb_exception.
-        zcx_abapgit_exception=>raise(
-          |Error when deleting OAuth2 Profile { lv_profile_key }.| ).
+        zcx_abapgit_exception=>raise( |Error when deleting OAuth2 Profile { lv_profile_key }.| ).
     ENDTRY.
 
 
@@ -151,9 +146,7 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
 
     CREATE OBJECT lo_persist.
     TRY.
-        lo_persist->if_wb_object_persist~save(
-          EXPORTING
-            p_object_data    = lo_profile ).   " Object Data
+        lo_persist->if_wb_object_persist~save( p_object_data = lo_profile ).   " Object Data
       CATCH cx_swb_exception.
         zcx_abapgit_exception=>raise( |Error deserialize profile { mv_profile }.| ).
     ENDTRY.
@@ -250,14 +243,11 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
             p_object_key                 = lv_profile_key    " Object Key
             p_version                    = 'A'    " Version (Active/Inactive)
           CHANGING
-            p_object_data                = lo_profile   " Object Data
-        ).
+            p_object_data                = lo_profile ).  " Object Data
       CATCH cx_swb_object_does_not_exist.
-        zcx_abapgit_exception=>raise(
-          |OAuth2 Profile { lv_profile_key } doesn't exist.| ).
+        zcx_abapgit_exception=>raise( |OAuth2 Profile { lv_profile_key } doesn't exist.| ).
       CATCH cx_swb_exception.
-        zcx_abapgit_exception=>raise(
-          |Error when geting details of OAuth2 Profile { lv_profile_key }.| ).
+        zcx_abapgit_exception=>raise( |Error when geting details of OAuth2 Profile { lv_profile_key }.| ).
     ENDTRY.
 
     "remove system specific information
