@@ -22,7 +22,6 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
 
-
   METHOD constructor.
 
     super->constructor( is_item     = is_item
@@ -49,8 +48,7 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
             p_object_key                 = lv_profile_key    " Object Key
             p_version                    = 'A'    " Version (Active/Inactive)
           CHANGING
-            p_object_data                = lo_profile   " Object Data
-        ).
+            p_object_data                = lo_profile ).  " Object Data
       CATCH cx_swb_object_does_not_exist.
         zcx_abapgit_exception=>raise(
           |OAuth2 Profile { lv_profile_key } doesn't exist.| ).
@@ -95,8 +93,7 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
     TRY.
         lo_persist->if_wb_object_persist~delete(
           EXPORTING
-            p_object_key                 = lv_profile_key    " Object Key
-        ).
+            p_object_key                 = lv_profile_key ).   " Object Key
       CATCH cx_swb_object_does_not_exist.
       CATCH cx_swb_exception.
         zcx_abapgit_exception=>raise(
@@ -156,8 +153,7 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
     TRY.
         lo_persist->if_wb_object_persist~save(
           EXPORTING
-            p_object_data    = lo_profile    " Object Data
-        ).
+            p_object_data    = lo_profile ).   " Object Data
       CATCH cx_swb_exception.
         zcx_abapgit_exception=>raise( |Error deserialize profile { mv_profile }.| ).
     ENDTRY.
