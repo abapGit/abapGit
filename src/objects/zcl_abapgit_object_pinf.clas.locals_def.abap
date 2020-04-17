@@ -1,11 +1,10 @@
 INTERFACE lif_package_interface_facade.
+  TYPES ty_tpak_package_interf_elem_tt TYPE STANDARD TABLE OF tpak_package_interf_elem_ref WITH DEFAULT KEY.
 
   METHODS:
     get_elements
-      IMPORTING
-        iv_with_deleted_elements TYPE flag DEFAULT 'X'
-      EXPORTING
-        et_elements              TYPE tpak_package_interf_elem_list
+      RETURNING
+        VALUE(rt_elements) TYPE ty_tpak_package_interf_elem_tt
       RAISING
         zcx_abapgit_exception,
 
@@ -16,15 +15,12 @@ INTERFACE lif_package_interface_facade.
         zcx_abapgit_exception,
 
     save_elements
-      IMPORTING
-        iv_transport_request TYPE trkorr OPTIONAL
-        iv_suppress_dialog   TYPE flag DEFAULT ' '
       RAISING
         zcx_abapgit_exception,
 
     get_all_attributes
-      EXPORTING
-        es_package_interface_data TYPE scompidtln
+      RETURNING
+        VALUE(rs_package_interface_data) TYPE scompidtln
       RAISING
         zcx_abapgit_exception,
 
@@ -35,15 +31,10 @@ INTERFACE lif_package_interface_facade.
         zcx_abapgit_exception,
 
     delete
-      IMPORTING
-        iv_suppress_dialog TYPE flag DEFAULT abap_false
       RAISING
         zcx_abapgit_exception,
 
     save
-      IMPORTING
-        iv_transport_request TYPE trkorr OPTIONAL
-        iv_suppress_dialog   TYPE flag DEFAULT ' '
       RAISING
         zcx_abapgit_exception,
 
@@ -55,7 +46,7 @@ INTERFACE lif_package_interface_facade.
 
     add_elements
       IMPORTING
-        is_elements_data TYPE scomeldata
+        it_elements_data TYPE scomeldata
       RAISING
         zcx_abapgit_exception,
 
@@ -67,8 +58,8 @@ INTERFACE lif_package_interface_facade.
         zcx_abapgit_exception,
 
     get_changeable
-      EXPORTING
-        VALUE(ev_changeable) TYPE flag
+      RETURNING
+        VALUE(rv_changeable) TYPE flag
       RAISING
         zcx_abapgit_exception.
 

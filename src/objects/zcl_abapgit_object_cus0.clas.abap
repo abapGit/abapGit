@@ -151,11 +151,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CUS0 IMPLEMENTATION.
 
 *   doesn't work...
 *    CALL FUNCTION 'S_CUS_IMG_ACTIVITY_MAINTAIN'
-*      EXPORTING
-*        i_display        = 'X'
-*        i_no_replacement = 'X'
-*      CHANGING
-*        img_activity     = mv_img_activity.
 
   ENDMETHOD.
 

@@ -19,9 +19,10 @@ CLASS zcl_abapgit_html DEFINITION
     CLASS-METHODS class_constructor.
     METHODS add_icon
       IMPORTING
-        !iv_name  TYPE string
-        !iv_hint  TYPE string OPTIONAL
-        !iv_class TYPE string OPTIONAL.
+        !iv_name    TYPE string
+        !iv_hint    TYPE string OPTIONAL
+        !iv_class   TYPE string OPTIONAL
+        !iv_onclick TYPE string OPTIONAL.
   PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-DATA: go_single_tags_re TYPE REF TO cl_abap_regex.
@@ -63,6 +64,7 @@ CLASS zcl_abapgit_html DEFINITION
     METHODS checkbox
       IMPORTING
         iv_id          TYPE string
+        iv_checked     TYPE abap_bool OPTIONAL
       RETURNING
         VALUE(rv_html) TYPE string.
 
@@ -70,21 +72,28 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
+CLASS zcl_abapgit_html IMPLEMENTATION.
 
 
   METHOD add_icon.
 
-    add( icon( iv_name  = iv_name
-               iv_class = iv_class
-               iv_hint  = iv_hint ) ).
+    add( icon( iv_name    = iv_name
+               iv_class   = iv_class
+               iv_hint    = iv_hint
+               iv_onclick = iv_onclick  ) ).
 
   ENDMETHOD.
 
 
   METHOD checkbox.
 
-    rv_html = |<input type="checkbox" id="{ iv_id }">|.
+    DATA: lv_checked TYPE string.
+
+    IF iv_checked = abap_true.
+      lv_checked = |checked|.
+    ENDIF.
+
+    rv_html = |<input type="checkbox" id="{ iv_id }" { lv_checked }>|.
 
   ENDMETHOD.
 
@@ -230,7 +239,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     ENDIF.
 
     lv_href  = ' href="#"'. " Default, dummy
-    IF iv_act IS NOT INITIAL OR iv_typ = zif_abapgit_html=>c_action_type-dummy.
+    IF ( iv_act IS NOT INITIAL OR iv_typ = zif_abapgit_html=>c_action_type-dummy )
+        AND iv_opt NA zif_abapgit_html=>c_html_opt-crossout.
       CASE iv_typ.
         WHEN zif_abapgit_html=>c_action_type-url.
           lv_href  = | href="{ iv_act }"|.
@@ -308,24 +318,29 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
   METHOD zif_abapgit_html~add_checkbox.
 
-    add( checkbox( iv_id ) ).
+    add( checkbox( iv_id      = iv_id
+                   iv_checked = iv_checked ) ).
 
   ENDMETHOD.
 
 
   METHOD icon.
 
-    DATA: lv_hint          TYPE string,
-          lv_name          TYPE string,
-          lv_color         TYPE string,
-          lv_class         TYPE string,
-          lv_large_icon    TYPE string,
-          lv_xpixel        TYPE i.
+    DATA: lv_hint       TYPE string,
+          lv_name       TYPE string,
+          lv_color      TYPE string,
+          lv_class      TYPE string,
+          lv_large_icon TYPE string,
+          lv_xpixel     TYPE i,
+          lv_onclick    TYPE string.
 
     SPLIT iv_name AT '/' INTO lv_name lv_color.
 
     IF iv_hint IS NOT INITIAL.
       lv_hint  = | title="{ iv_hint }"|.
+    ENDIF.
+    IF iv_onclick IS NOT INITIAL.
+      lv_onclick = | onclick="{ iv_onclick }"|.
     ENDIF.
     IF iv_class IS NOT INITIAL.
       lv_class = | { iv_class }|.
@@ -339,7 +354,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       lv_large_icon = ' large'.
     ENDIF.
 
-    rv_str = |<i class="icon{ lv_large_icon } icon-{ lv_name }{ lv_color }{ lv_class }" { lv_hint }></i>|.
+    rv_str = |<i class="icon{ lv_large_icon } icon-{ lv_name }{ lv_color }|.
+    rv_str = |{ rv_str }{ lv_class }"{ lv_onclick }{ lv_hint }></i>|.
 
   ENDMETHOD.
 

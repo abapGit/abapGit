@@ -7,7 +7,6 @@ CLASS zcx_abapgit_exception DEFINITION
   PUBLIC SECTION.
     INTERFACES if_t100_message.
 
-    DATA subrc TYPE sysubrc READ-ONLY.
     DATA msgv1 TYPE symsgv READ-ONLY.
     DATA msgv2 TYPE symsgv READ-ONLY.
     DATA msgv3 TYPE symsgv READ-ONLY.

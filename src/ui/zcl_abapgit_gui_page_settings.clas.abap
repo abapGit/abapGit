@@ -8,10 +8,12 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
 
     CONSTANTS:
       BEGIN OF c_action,
-        save_settings TYPE string VALUE 'save_settings',
+        save_settings       TYPE string VALUE 'save_settings',
+        change_proxy_bypass TYPE string VALUE 'change_proxy_bypass',
       END OF c_action.
 
-    METHODS constructor.
+    METHODS constructor
+      RAISING zcx_abapgit_exception.
     METHODS zif_abapgit_gui_event_handler~on_event REDEFINITION.
 
   PROTECTED SECTION.
@@ -22,6 +24,7 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
     DATA mo_settings TYPE REF TO zcl_abapgit_settings .
     DATA mv_error TYPE abap_bool .
     DATA mt_post_fields TYPE tihttpnvp .
+    DATA mt_proxy_bypass TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url.
 
     METHODS post_commit_msg .
     METHODS post_development_internals .
@@ -359,6 +362,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
       mo_settings->set_proxy_authentication( abap_false ).
     ENDIF.
 
+    mo_settings->set_proxy_bypass( mt_proxy_bypass ).
+
   ENDMETHOD.
 
 
@@ -594,9 +599,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
   METHOD render_link_hints.
 
-    DATA: lv_checked               TYPE string,
-          lv_link_hint_key         TYPE char01,
-          lv_link_background_color TYPE string.
+    DATA: lv_checked       TYPE string,
+          lv_link_hint_key TYPE char01.
 
     IF mo_settings->get_link_hints_enabled( ) = abap_true.
       lv_checked = 'checked'.
@@ -670,6 +674,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
       ro_html->add( `<input name="proxy_auth" type="checkbox">` ).
     ENDIF.
     ro_html->add( |<br>| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<label for="proxy_bypass">Bypass proxy settings for these Hosts & Domains</label>| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<button type="button" name="proxy_bypass" class="grey-set"|
+                & |onclick="location.href='sapevent:{ c_action-change_proxy_bypass }';">Maintain</button>| ).
+    ro_html->add( |<br>| ).
 
     ro_html->add( |<br>| ).
 
@@ -719,8 +729,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     DATA:
       BEGIN OF ls_sel,
         default TYPE string,
-        dark TYPE string,
-        belize TYPE string,
+        dark    TYPE string,
+        belize  TYPE string,
       END OF ls_sel.
 
     CASE mo_settings->get_ui_theme( ).
@@ -782,6 +792,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
         ENDIF.
 
         ev_state = zcl_abapgit_gui=>c_event_state-go_back.
+      WHEN c_action-change_proxy_bypass.
+        mt_proxy_bypass = zcl_abapgit_ui_factory=>get_popups( )->popup_proxy_bypass( mo_settings->get_proxy_bypass( ) ).
+
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
     ENDCASE.
 
   ENDMETHOD.

@@ -5,7 +5,7 @@ CLASS zcl_abapgit_objects DEFINITION
   PUBLIC SECTION.
 
     TYPES:
-      ty_types_tt TYPE STANDARD TABLE OF tadir-object WITH DEFAULT KEY .
+      ty_types_tt TYPE SORTED TABLE OF tadir-object WITH UNIQUE KEY table_line.
     TYPES:
       BEGIN OF ty_deserialization,
         obj     TYPE REF TO zif_abapgit_object,
@@ -35,11 +35,11 @@ CLASS zcl_abapgit_objects DEFINITION
 
     CLASS-METHODS serialize
       IMPORTING
-        !is_item                 TYPE zif_abapgit_definitions=>ty_item
-        !iv_language             TYPE spras
+        !is_item                       TYPE zif_abapgit_definitions=>ty_item
+        !iv_language                   TYPE spras
         !iv_serialize_master_lang_only TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rs_files_and_item) TYPE zcl_abapgit_objects=>ty_serialization
+        VALUE(rs_files_and_item)       TYPE ty_serialization
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS deserialize
@@ -181,7 +181,8 @@ CLASS zcl_abapgit_objects DEFINITION
         !iv_package TYPE devclass .
     CLASS-METHODS delete_obj
       IMPORTING
-        !is_item TYPE zif_abapgit_definitions=>ty_item
+        !iv_package TYPE devclass
+        !is_item    TYPE zif_abapgit_definitions=>ty_item
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS compare_remote_to_local
@@ -305,19 +306,18 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           lv_duplicates     LIKE LINE OF lt_duplicates,
           lv_all_duplicates TYPE string.
 
-    FIELD-SYMBOLS:
-      <lv_file> LIKE LINE OF it_files.
+    FIELD-SYMBOLS: <ls_file> LIKE LINE OF it_files.
 
     lt_files = it_files.
     SORT lt_files BY path ASCENDING filename ASCENDING.
 
-    LOOP AT lt_files ASSIGNING <lv_file>.
-      IF lv_path = <lv_file>-path AND lv_filename = <lv_file>-filename.
-        CONCATENATE <lv_file>-path <lv_file>-filename INTO lv_duplicates.
+    LOOP AT lt_files ASSIGNING <ls_file>.
+      IF lv_path = <ls_file>-path AND lv_filename = <ls_file>-filename.
+        CONCATENATE <ls_file>-path <ls_file>-filename INTO lv_duplicates.
         APPEND lv_duplicates TO lt_duplicates.
       ENDIF.
-      lv_path = <lv_file>-path.
-      lv_filename = <lv_file>-filename.
+      lv_path = <ls_file>-path.
+      lv_filename = <ls_file>-filename.
     ENDLOOP.
 
     IF lt_duplicates IS NOT INITIAL.
@@ -335,6 +335,12 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_item> LIKE LINE OF it_items.
 
     LOOP AT it_items ASSIGNING <ls_item>.
+
+      " You should remember that we ignore not supported objects here,
+      " because otherwise the process aborts which is not desired
+      IF is_supported( <ls_item> ) = abap_false.
+        CONTINUE.
+      ENDIF.
 
       li_obj = create_object( is_item     = <ls_item>
                               iv_language = iv_language ).
@@ -516,7 +522,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           CLEAR ls_item.
           ls_item-obj_type = <ls_tadir>-object.
           ls_item-obj_name = <ls_tadir>-obj_name.
-          delete_obj( ls_item ).
+          delete_obj(
+            iv_package = <ls_tadir>-devclass
+            is_item    = ls_item ).
 
 * make sure to save object deletions
           COMMIT WORK.
@@ -542,7 +550,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       li_obj = create_object( is_item     = is_item
                               iv_language = zif_abapgit_definitions=>c_english ).
 
-      li_obj->delete( ).
+      li_obj->delete( iv_package ).
 
       IF li_obj->get_metadata( )-delete_tadir = abap_true.
         CALL FUNCTION 'TR_TADIR_INTERFACE'
@@ -1075,6 +1083,11 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
+* IOBJ has to be handled before ODSO
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'IOBJ'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
     LOOP AT it_results ASSIGNING <ls_result>
         WHERE obj_type <> 'IASP'
         AND obj_type <> 'PROG'
@@ -1084,7 +1097,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         AND obj_type <> 'ENHS'
         AND obj_type <> 'DDLS'
         AND obj_type <> 'SPRX'
-        AND obj_type <> 'WEBI'.
+        AND obj_type <> 'WEBI'
+        AND obj_type <> 'IOBJ'.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
@@ -1167,12 +1181,12 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     LOOP AT lt_objects ASSIGNING <ls_object> WHERE pgmid = 'R3TR'.
       ls_item-obj_type = <ls_object>-object.
 
-      lv_supported = zcl_abapgit_objects=>is_supported(
+      lv_supported = is_supported(
         is_item        = ls_item
         iv_native_only = abap_true ).
 
       IF lv_supported = abap_true.
-        APPEND <ls_object>-object TO rt_types.
+        INSERT <ls_object>-object INTO TABLE rt_types.
       ENDIF.
     ENDLOOP.
 

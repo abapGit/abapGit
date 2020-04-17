@@ -31,7 +31,7 @@ CLASS zcl_abapgit_object_msag DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         zcx_abapgit_exception .
     METHODS serialize_longtexts_msag
       IMPORTING
-        !it_t100 TYPE zcl_abapgit_object_msag=>tty_t100
+        !it_t100 TYPE tty_t100
         !io_xml  TYPE REF TO zcl_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
@@ -183,7 +183,8 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
       INTO TABLE lt_dokil
       FOR ALL ENTRIES IN lt_objects
       WHERE id = 'NA'
-      AND object = lt_objects-table_line.
+      AND object = lt_objects-table_line
+      ORDER BY PRIMARY KEY.
 
     CLEAR ls_dokil-dokstate.
     MODIFY lt_dokil FROM ls_dokil TRANSPORTING dokstate WHERE dokstate IS NOT INITIAL.
@@ -259,7 +260,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~delete.
-    DATA: lv_t100a          TYPE t100a,
+    DATA: ls_t100a          TYPE t100a,
           lv_frozen         TYPE abap_bool,
           lv_message_id     TYPE arbgb,
           lv_access_granted TYPE abap_bool.
@@ -271,7 +272,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."blank message id
     ENDIF.
 
-    SELECT SINGLE * FROM t100a INTO lv_t100a WHERE arbgb = ms_item-obj_name.
+    SELECT SINGLE * FROM t100a INTO ls_t100a WHERE arbgb = ms_item-obj_name.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Error from (copy of) RS_DELETE_MESSAGE_ID' )."not found
     ENDIF.

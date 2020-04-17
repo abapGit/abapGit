@@ -26,7 +26,7 @@ INTERFACE zif_abapgit_definitions
     BEGIN OF ty_file.
       INCLUDE TYPE ty_file_signature.
   TYPES: data TYPE xstring,
-         END OF ty_file .
+    END OF ty_file .
   TYPES:
     ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY .
   TYPES:
@@ -98,12 +98,13 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     ty_files_item_tt TYPE STANDARD TABLE OF ty_file_item WITH DEFAULT KEY .
   TYPES:
-    ty_yes_no TYPE c LENGTH 1 .
+    ty_yes_no         TYPE c LENGTH 1,
+    ty_yes_no_partial TYPE c LENGTH 1.
   TYPES:
     BEGIN OF ty_overwrite.
       INCLUDE TYPE ty_item.
   TYPES: decision TYPE ty_yes_no,
-         END OF ty_overwrite .
+    END OF ty_overwrite .
   TYPES:
     ty_overwrite_tt TYPE STANDARD TABLE OF ty_overwrite WITH DEFAULT KEY
                               WITH UNIQUE HASHED KEY object_type_and_name
@@ -113,6 +114,10 @@ INTERFACE zif_abapgit_definitions
       met      TYPE ty_yes_no,
       decision TYPE ty_yes_no,
     END OF ty_requirements .
+  TYPES:
+    BEGIN OF ty_dependencies,
+      met TYPE ty_yes_no,
+    END OF ty_dependencies .
   TYPES:
     BEGIN OF ty_transport_type,
       request TYPE trfunction,
@@ -129,6 +134,7 @@ INTERFACE zif_abapgit_definitions
       overwrite       TYPE ty_overwrite_tt,
       warning_package TYPE ty_overwrite_tt,
       requirements    TYPE ty_requirements,
+      dependencies    TYPE ty_dependencies,
       transport       TYPE ty_transport,
     END OF ty_deserialize_checks .
   TYPES:
@@ -364,6 +370,19 @@ INTERFACE zif_abapgit_definitions
     tty_col_spec TYPE STANDARD TABLE OF ty_col_spec
                       WITH NON-UNIQUE KEY tech_name.
 
+  TYPES:
+    ty_proxy_bypass_url       TYPE c LENGTH 255,
+    ty_range_proxy_bypass_url TYPE RANGE OF ty_proxy_bypass_url.
+
+  TYPES:
+    BEGIN OF ty_version,
+      major           TYPE i,
+      minor           TYPE i,
+      patch           TYPE i,
+      prerelase       TYPE string,
+      prerelase_patch TYPE i,
+    END OF ty_version.
+
   CONSTANTS:
     BEGIN OF c_git_branch_type,
       branch          TYPE ty_git_branch_type VALUE 'HD',
@@ -471,4 +490,9 @@ INTERFACE zif_abapgit_definitions
   CONSTANTS c_tag_prefix TYPE string VALUE 'refs/tags/' ##NO_TEXT.
   CONSTANTS c_spagpa_param_repo_key TYPE char20 VALUE 'REPO_KEY' ##NO_TEXT.
   CONSTANTS c_spagpa_param_package TYPE char20 VALUE 'PACKAGE' ##NO_TEXT.
+
+  CONSTANTS gc_yes TYPE ty_yes_no VALUE 'Y'.
+  CONSTANTS gc_no TYPE ty_yes_no VALUE 'N'.
+  CONSTANTS gc_partial TYPE ty_yes_no_partial VALUE 'P'.
+
 ENDINTERFACE.

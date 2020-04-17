@@ -1,6 +1,7 @@
 CLASS zcl_abapgit_gui_view_repo DEFINITION
   PUBLIC
   FINAL
+  INHERITING FROM zcl_abapgit_gui_component
   CREATE PUBLIC .
 
   PUBLIC SECTION.
@@ -8,9 +9,6 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
     INTERFACES zif_abapgit_gui_renderable .
     INTERFACES zif_abapgit_gui_event_handler .
     INTERFACES zif_abapgit_gui_page_hotkey.
-
-    ALIASES render
-      FOR zif_abapgit_gui_renderable~render .
 
     CONSTANTS:
       BEGIN OF c_actions,
@@ -31,6 +29,7 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
+    DATA  mt_col_spec TYPE zif_abapgit_definitions=>tty_col_spec.
     DATA: mo_repo                       TYPE REF TO zcl_abapgit_repo,
           mv_cur_dir                    TYPE string,
           mv_hide_files                 TYPE abap_bool,
@@ -125,6 +124,10 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         RETURNING VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
         RAISING   zcx_abapgit_exception.
 
+    METHODS _add_col
+      IMPORTING
+        iv_str TYPE string.
+
 ENDCLASS.
 
 
@@ -189,8 +192,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
   METHOD build_advanced_dropdown.
 
     DATA:
-      lv_crossout LIKE zif_abapgit_html=>c_html_opt-crossout,
-      lv_package  TYPE zif_abapgit_persistence=>ty_repo-package.
+      lv_crossout LIKE zif_abapgit_html=>c_html_opt-crossout.
 
     CREATE OBJECT ro_advanced_dropdown.
 
@@ -806,38 +808,28 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
   METHOD render_order_by.
 
     DATA:
-      lt_col_spec TYPE zif_abapgit_definitions=>tty_col_spec,
       lv_icon     TYPE string,
       lv_html     TYPE string.
-    FIELD-SYMBOLS <ls_col> LIKE LINE OF lt_col_spec.
-
-    DEFINE _add_col.
-      APPEND INITIAL LINE TO lt_col_spec ASSIGNING <ls_col>.
-      <ls_col>-tech_name    = &1.
-      <ls_col>-display_name = &2.
-      <ls_col>-css_class    = &3.
-      <ls_col>-add_tz       = &4.
-      <ls_col>-title        = &5.
-    END-OF-DEFINITION.
 
     CREATE OBJECT ro_html.
 
-    "        technical name    display name      css class   add timezone   title
-    _add_col ''                  ''                ''          ''           ''.
+    CLEAR mt_col_spec.
+    _add_col(  ''  ). " all empty
     IF mv_are_changes_recorded_in_tr = abap_true.
-      _add_col ''                ''                ''          ''           ''.
+      _add_col(  ''  ). " all empty
     ENDIF.
-    _add_col 'OBJ_TYPE'          'Type'            ''          ''           ''.
-    _add_col 'OBJ_NAME'          'Name'            ''          ''           ''.
-    _add_col 'PATH'              'Path'            ''          ''           ''.
+    "         technical name     /display name      /css class   /add timezone   /title
+    _add_col( 'OBJ_TYPE          /Type' ).
+    _add_col( 'OBJ_NAME          /Name' ).
+    _add_col( 'PATH              /Path' ).
 
     ro_html->add( |<thead>| ).
     ro_html->add( |<tr>| ).
 
     ro_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_header_cells(
-                      it_col_spec         = lt_col_spec
-                      iv_order_by         = mv_order_by
-                      iv_order_descending = mv_order_descending ) ).
+      it_col_spec         = mt_col_spec
+      iv_order_by         = mv_order_by
+      iv_order_descending = mv_order_descending ) ).
 
     IF mv_diff_first = abap_true.
       lv_icon = 'check/blue'.
@@ -845,12 +837,11 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
       lv_icon = 'check/grey'.
     ENDIF.
 
-    lv_html = |<th class="cmd">|
-           && zcl_abapgit_html=>icon( lv_icon )
-           && zcl_abapgit_html=>a(
-                  iv_txt = |diffs first|
-                  iv_act = c_actions-toggle_diff_first ).
-
+    lv_html = |<th class="cmd">| &&
+      zcl_abapgit_html=>icon( lv_icon ) &&
+      zcl_abapgit_html=>a(
+        iv_txt = |diffs first|
+        iv_act = c_actions-toggle_diff_first ).
     ro_html->add( lv_html ).
 
     ro_html->add( '</tr>' ).
@@ -937,10 +928,12 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
+    mi_gui_services->register_event_handler( me ).
+
     " Reinit, for the case of type change
     mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
 
-    CREATE OBJECT ro_html TYPE zcl_abapgit_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     TRY.
 
@@ -966,75 +959,92 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
                                      CHANGING cv_prev = lv_rstate ).
         ENDLOOP.
 
-        ro_html->add( render_head_line( iv_lstate = lv_lstate
+        ri_html->add( render_head_line( iv_lstate = lv_lstate
                                         iv_rstate = lv_rstate ) ).
 
         li_log = lo_browser->get_log( ).
         IF mo_repo->is_offline( ) = abap_false AND li_log->count( ) > 0.
-          ro_html->add( '<div class="log">' ).
-          ro_html->add( zcl_abapgit_log_viewer=>to_html( li_log ) ). " shows eg. list of unsupported objects
-          ro_html->add( '</div>' ).
+          ri_html->add( '<div class="log">' ).
+          ri_html->add( zcl_abapgit_log_viewer=>to_html( li_log ) ). " shows eg. list of unsupported objects
+          ri_html->add( '</div>' ).
         ENDIF.
 
-        ro_html->add( '<div class="repo_container">' ).
+        ri_html->add( '<div class="repo_container">' ).
 
         " Offline match banner
         IF mo_repo->is_offline( ) = abap_true
             AND mo_repo->has_remote_source( ) = abap_true
             AND lv_lstate IS INITIAL AND lv_rstate IS INITIAL.
-          ro_html->add(
+          ri_html->add(
             |<div class="repo_banner panel success">|
             && |ZIP source is attached and completely <b>matches</b> to the local state|
             && |</div>| ).
         ENDIF.
 
         " Repo content table
-        ro_html->add( '<table class="repo_tab">' ).
+        ri_html->add( '<table class="repo_tab">' ).
 
         IF zcl_abapgit_path=>is_root( mv_cur_dir ) = abap_false.
-          ro_html->add( render_parent_dir( ) ).
+          ri_html->add( render_parent_dir( ) ).
         ENDIF.
 
         IF mv_show_order_by = abap_true.
-          ro_html->add( render_order_by( ) ).
+          ri_html->add( render_order_by( ) ).
         ENDIF.
 
         IF lines( lt_repo_items ) = 0.
-          ro_html->add( render_empty_package( ) ).
+          ri_html->add( render_empty_package( ) ).
         ELSE.
           LOOP AT lt_repo_items ASSIGNING <ls_item>.
             IF mv_max_lines > 0 AND sy-tabix > mv_max_lines.
               lv_max = abap_true.
               EXIT. " current loop
             ENDIF.
-            ro_html->add( render_item( is_item = <ls_item> iv_render_transports = lv_render_transports ) ).
+            ri_html->add( render_item( is_item = <ls_item> iv_render_transports = lv_render_transports ) ).
           ENDLOOP.
         ENDIF.
 
-        ro_html->add( '</table>' ).
+        ri_html->add( '</table>' ).
 
         IF lv_max = abap_true.
-          ro_html->add( '<div class = "dummydiv">' ).
+          ri_html->add( '<div class = "dummydiv">' ).
           IF mv_max_lines = 1.
             lv_max_str = '1 object'.
           ELSE.
             lv_max_str = |first { mv_max_lines } objects|.
           ENDIF.
           lv_add_str = |+{ mv_max_setting }|.
-          ro_html->add( |Only { lv_max_str } shown in list. Display {
+          ri_html->add( |Only { lv_max_str } shown in list. Display {
             zcl_abapgit_html=>a( iv_txt = lv_add_str iv_act = c_actions-display_more )
             } more. (Set in Advanced > {
             zcl_abapgit_html=>a( iv_txt = 'Settings' iv_act = zif_abapgit_definitions=>c_action-go_settings )
             } )| ).
-          ro_html->add( '</div>' ).
+          ri_html->add( '</div>' ).
         ENDIF.
 
-        ro_html->add( '</div>' ).
+        ri_html->add( '</div>' ).
 
       CATCH zcx_abapgit_exception INTO lx_error.
-        ro_html->add( render_head_line( iv_lstate = lv_lstate iv_rstate = lv_rstate ) ).
-        ro_html->add( zcl_abapgit_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
+        ri_html->add( render_head_line( iv_lstate = lv_lstate iv_rstate = lv_rstate ) ).
+        ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
     ENDTRY.
 
+  ENDMETHOD.
+
+
+  METHOD _add_col.
+    FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_col_spec.
+    APPEND INITIAL LINE TO mt_col_spec ASSIGNING <ls_col>.
+    SPLIT iv_str AT '/' INTO
+      <ls_col>-tech_name
+      <ls_col>-display_name
+      <ls_col>-css_class
+      <ls_col>-add_tz
+      <ls_col>-title.
+    CONDENSE <ls_col>-tech_name.
+    CONDENSE <ls_col>-display_name.
+    CONDENSE <ls_col>-css_class.
+    CONDENSE <ls_col>-add_tz.
+    CONDENSE <ls_col>-title.
   ENDMETHOD.
 ENDCLASS.

@@ -45,7 +45,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
 
   METHOD build_main_menu.
@@ -152,7 +152,9 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
     ro_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).
 
-    ro_html->add( mo_repo_content->render( ) ).
+    IF mo_repo_content IS BOUND.
+      ro_html->add( mo_repo_content->zif_abapgit_gui_renderable~render( ) ).
+    ENDIF.
     ro_html->add( '</div>' ).
 
   ENDMETHOD.
@@ -320,7 +322,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
       mo_repo_content->zif_abapgit_gui_event_handler~on_event(
         EXPORTING
           iv_action    = iv_action
-          iv_prev_page = iv_prev_page
           iv_getdata   = iv_getdata
           it_postdata  = it_postdata
         IMPORTING
@@ -359,7 +360,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
         super->zif_abapgit_gui_event_handler~on_event(
           EXPORTING
             iv_action    = iv_action
-            iv_prev_page = iv_prev_page
             iv_getdata   = iv_getdata
             it_postdata  = it_postdata
           IMPORTING

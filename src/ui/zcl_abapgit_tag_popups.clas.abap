@@ -29,7 +29,7 @@ CLASS zcl_abapgit_tag_popups DEFINITION
         IMPORTING
           it_tags            TYPE zif_abapgit_definitions=>ty_git_tag_list_tt
         RETURNING
-          VALUE(rt_tags_out) TYPE zcl_abapgit_tag_popups=>tty_tag_out,
+          VALUE(rt_tags_out) TYPE tty_tag_out,
 
       clean_up,
 
@@ -79,7 +79,7 @@ CLASS ZCL_ABAPGIT_TAG_POPUPS IMPLEMENTATION.
 
   METHOD on_double_click.
 
-    FIELD-SYMBOLS: <ls_tag> TYPE zcl_abapgit_tag_popups=>ty_tag_out.
+    FIELD-SYMBOLS: <ls_tag> TYPE ty_tag_out.
 
     READ TABLE mt_tags ASSIGNING <ls_tag>
                        INDEX row.

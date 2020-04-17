@@ -12,18 +12,34 @@ CLASS zcl_abapgit_apack_reader DEFINITION
         !iv_package_name          TYPE ty_package_name
       RETURNING
         VALUE(ro_manifest_reader) TYPE REF TO zcl_abapgit_apack_reader .
+    CLASS-METHODS deserialize
+      IMPORTING
+        !iv_package_name          TYPE ty_package_name
+        !iv_xstr                  TYPE xstring
+      RETURNING
+        VALUE(ro_manifest_reader) TYPE REF TO zcl_abapgit_apack_reader
+      RAISING
+        zcx_abapgit_exception.
     METHODS get_manifest_descriptor
       RETURNING
-        VALUE(rs_manifest_descriptor) TYPE zif_abapgit_apack_definitions=>ty_descriptor .
+        VALUE(rs_manifest_descriptor) TYPE zif_abapgit_apack_definitions=>ty_descriptor
+      RAISING
+        zcx_abapgit_exception.
     METHODS set_manifest_descriptor
       IMPORTING
-        !is_manifest_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor .
+        !is_manifest_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor
+      RAISING
+        zcx_abapgit_exception.
     METHODS copy_manifest_descriptor
       IMPORTING
-        !io_manifest_provider TYPE REF TO object .
+        !io_manifest_provider TYPE REF TO object
+      RAISING
+        zcx_abapgit_exception.
     METHODS has_manifest
       RETURNING
-        VALUE(rv_has_manifest) TYPE abap_bool .
+        VALUE(rv_has_manifest) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
     METHODS constructor
       IMPORTING
         !iv_package_name TYPE ty_package_name .
@@ -39,6 +55,17 @@ CLASS zcl_abapgit_apack_reader DEFINITION
     DATA mv_package_name TYPE ty_package_name .
     DATA ms_cached_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor .
     DATA mv_is_cached TYPE abap_bool .
+
+    CLASS-METHODS from_xml
+      IMPORTING
+        iv_xml         TYPE string
+      RETURNING
+        VALUE(rs_data) TYPE zif_abapgit_apack_definitions=>ty_descriptor.
+
+    METHODS format_version
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -47,12 +74,43 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
 
 
   METHOD constructor.
-    me->mv_package_name = iv_package_name.
+    mv_package_name = iv_package_name.
   ENDMETHOD.
 
 
   METHOD create_instance.
     CREATE OBJECT ro_manifest_reader EXPORTING iv_package_name = iv_package_name.
+  ENDMETHOD.
+
+
+  METHOD deserialize.
+
+    DATA: lv_xml  TYPE string,
+          ls_data TYPE zif_abapgit_apack_definitions=>ty_descriptor.
+
+    lv_xml = zcl_abapgit_convert=>xstring_to_string_utf8( iv_xstr ).
+
+    ls_data = from_xml( lv_xml ).
+
+    ro_manifest_reader = create_instance( iv_package_name ).
+
+    ro_manifest_reader = create_instance( iv_package_name ).
+    ro_manifest_reader->set_manifest_descriptor( ls_data ).
+
+  ENDMETHOD.
+
+
+  METHOD from_xml.
+
+    DATA: lv_xml TYPE string.
+
+    lv_xml = iv_xml.
+
+    CALL TRANSFORMATION id
+      OPTIONS value_handling = 'accept_data_loss'
+      SOURCE XML lv_xml
+      RESULT data = rs_data ##NO_TEXT.
+
   ENDMETHOD.
 
 
@@ -90,7 +148,9 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
           me->copy_manifest_descriptor( io_manifest_provider = lo_manifest_provider ).
         ENDIF.
       ENDIF.
-      me->mv_is_cached = abap_true.
+
+      mv_is_cached = abap_true.
+
     ENDIF.
 
     rs_manifest_descriptor = me->ms_cached_descriptor.
@@ -101,7 +161,7 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
 
     DATA: ls_returned_manifest TYPE zif_abapgit_apack_definitions=>ty_descriptor.
 
-    ls_returned_manifest = me->get_manifest_descriptor( ).
+    ls_returned_manifest = get_manifest_descriptor( ).
 
     rv_has_manifest = abap_false.
     IF ls_returned_manifest IS NOT INITIAL.
@@ -112,14 +172,16 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
 
 
   METHOD set_manifest_descriptor.
-    me->mv_is_cached = abap_true.
-    me->ms_cached_descriptor = is_manifest_descriptor.
+    mv_is_cached = abap_true.
+    ms_cached_descriptor = is_manifest_descriptor.
+    format_version( ).
   ENDMETHOD.
 
   METHOD copy_manifest_descriptor.
 
     DATA: ls_my_manifest_wo_deps TYPE zif_abapgit_apack_definitions=>ty_descriptor_wo_dependencies,
-          ls_my_dependency       TYPE zif_abapgit_apack_definitions=>ty_dependency.
+          ls_my_dependency       TYPE zif_abapgit_apack_definitions=>ty_dependency,
+          ls_descriptor          TYPE zif_abapgit_apack_definitions=>ty_descriptor.
 
     FIELD-SYMBOLS: <lg_descriptor>   TYPE any,
                    <lt_dependencies> TYPE ANY TABLE,
@@ -136,13 +198,30 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
       IF <lt_dependencies> IS ASSIGNED.
         LOOP AT <lt_dependencies> ASSIGNING <lg_dependency>.
           MOVE-CORRESPONDING <lg_dependency> TO ls_my_dependency.
-          INSERT ls_my_dependency INTO TABLE me->ms_cached_descriptor-dependencies.
+          INSERT ls_my_dependency INTO TABLE ls_descriptor-dependencies.
         ENDLOOP.
         MOVE-CORRESPONDING <lg_descriptor> TO ls_my_manifest_wo_deps.
-        MOVE-CORRESPONDING ls_my_manifest_wo_deps TO me->ms_cached_descriptor.
+        MOVE-CORRESPONDING ls_my_manifest_wo_deps TO ls_descriptor.
       ENDIF.
     ENDIF.
 
+    set_manifest_descriptor( ls_descriptor ).
+
   ENDMETHOD.
+
+
+  METHOD format_version.
+
+    FIELD-SYMBOLS: <ls_dependency> TYPE zif_abapgit_apack_definitions=>ty_dependency.
+
+    TRANSLATE ms_cached_descriptor-version TO LOWER CASE.
+    ms_cached_descriptor-sem_version = zcl_abapgit_version=>conv_str_to_version( ms_cached_descriptor-version ).
+
+    LOOP AT ms_cached_descriptor-dependencies ASSIGNING <ls_dependency>.
+      <ls_dependency>-sem_version = zcl_abapgit_version=>conv_str_to_version( <ls_dependency>-version ).
+    ENDLOOP.
+
+  ENDMETHOD.
+
 
 ENDCLASS.

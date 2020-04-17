@@ -1,4 +1,6 @@
-CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
+CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
+  INHERITING FROM zcl_abapgit_gui_component
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
     INTERFACES:
@@ -19,7 +21,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT CREATE PUBLIC.
           VALUE(rt_hotkey) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name.
 
     METHODS:
-      constructor.
+      constructor RAISING zcx_abapgit_exception.
 
   PROTECTED SECTION.
     TYPES: BEGIN OF ty_control,
@@ -115,7 +117,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
 
   METHOD call_browser.
@@ -144,6 +146,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
   METHOD constructor.
 
+    super->constructor( ).
     mo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
 
   ENDMETHOD.
@@ -305,8 +308,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
   METHOD link_hints.
 
-    DATA: lv_link_hint_key    TYPE char01,
-          lv_background_color TYPE string.
+    DATA: lv_link_hint_key TYPE char01.
 
     lv_link_hint_key = mo_settings->get_link_hint_key( ).
 
@@ -328,8 +330,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ro_html->add( '<!DOCTYPE html>' ).                      "#EC NOTEXT
     ro_html->add( '<html>' ).                               "#EC NOTEXT
     ro_html->add( '<head>' ).                               "#EC NOTEXT
-    ro_html->add( |<meta http-equiv="refresh" content="0; url={
-                  ms_control-redirect_url }">| ).           "#EC NOTEXT
+    ro_html->add( |<meta http-equiv="refresh" content="0; url={ ms_control-redirect_url }">| ). "#EC NOTEXT
     ro_html->add( '</head>' ).                              "#EC NOTEXT
     ro_html->add( '</html>' ).                              "#EC NOTEXT
 
@@ -414,9 +415,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
                                        iv_act = zif_abapgit_definitions=>c_action-abapgit_home )
                   }</td>| ).                                "#EC NOTEXT
 
-    ro_html->add( |<td><span class="page_title"> &#x25BA; {
-                  ms_control-page_title
-                  }</span></td>| ).                         "#EC NOTEXT
+    ro_html->add( |<td><span class="page_title"> &#x25BA; { ms_control-page_title }</span></td>| ). "#EC NOTEXT
 
     IF ms_control-page_menu IS BOUND.
       ro_html->add( '<td class="right">' ).                 "#EC NOTEXT
@@ -467,10 +466,6 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
         ENDIF.
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
-      WHEN OTHERS.
-
-        ev_state = zcl_abapgit_gui=>c_event_state-not_handled.
-
     ENDCASE.
 
   ENDMETHOD.
@@ -479,49 +474,53 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
   METHOD zif_abapgit_gui_renderable~render.
 
     DATA: lo_script TYPE REF TO zcl_abapgit_html,
-          lt_events TYPE zcl_abapgit_gui_page=>tt_events.
+          lt_events TYPE tt_events.
 
     FIELD-SYMBOLS:
           <ls_event> LIKE LINE OF lt_events.
 
+    mi_gui_services->register_event_handler( me ).
+
     " Redirect
     IF ms_control-redirect_url IS NOT INITIAL.
-      ro_html = redirect( ).
+      ri_html = redirect( ).
       RETURN.
     ENDIF.
 
     mt_hotkeys = define_hotkeys( ).
 
     " Real page
-    CREATE OBJECT ro_html TYPE zcl_abapgit_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( '<!DOCTYPE html>' ).                      "#EC NOTEXT
-    ro_html->add( '<html>' ).                               "#EC NOTEXT
-    ro_html->add( html_head( ) ).
-    ro_html->add( '<body>' ).                               "#EC NOTEXT
-    ro_html->add( title( ) ).
-    ro_html->add( render_hotkey_overview( ) ).
-    ro_html->add( render_content( ) ).
-    ro_html->add( render_error_message_box( ) ).
+    ri_html->add( '<!DOCTYPE html>' ).                      "#EC NOTEXT
+    ri_html->add( '<html>' ).                               "#EC NOTEXT
+    ri_html->add( html_head( ) ).
+    ri_html->add( '<body>' ).                               "#EC NOTEXT
+    ri_html->add( title( ) ).
+    ri_html->add( render_hotkey_overview( ) ).
 
-    lt_events = me->get_events( ).
+    ri_html->add( render_content( ) ). " TODO -> render child
+
+    ri_html->add( render_error_message_box( ) ).
+
+    lt_events = me->get_events( ). " TODO refactor ???
     LOOP AT lt_events ASSIGNING <ls_event>.
-      ro_html->add( render_event_as_form( <ls_event> ) ).
+      ri_html->add( render_event_as_form( <ls_event> ) ).
     ENDLOOP.
 
-    ro_html->add( footer( ) ).
-    ro_html->add( '</body>' ).                              "#EC NOTEXT
+    ri_html->add( footer( ) ).
+    ri_html->add( '</body>' ).                              "#EC NOTEXT
 
-    lo_script = scripts( ).
+    lo_script = scripts( ). " TODO refactor
 
     IF lo_script IS BOUND AND lo_script->is_empty( ) = abap_false.
-      ro_html->add( '<script type="text/javascript">' ).
-      ro_html->add( lo_script ).
-      ro_html->add( 'confirmInitialized();' ).
-      ro_html->add( '</script>' ).
+      ri_html->add( '<script type="text/javascript">' ).
+      ri_html->add( lo_script ).
+      ri_html->add( 'confirmInitialized();' ).
+      ri_html->add( '</script>' ).
     ENDIF.
 
-    ro_html->add( '</html>' ).                              "#EC NOTEXT
+    ri_html->add( '</html>' ).                              "#EC NOTEXT
 
   ENDMETHOD.
 ENDCLASS.

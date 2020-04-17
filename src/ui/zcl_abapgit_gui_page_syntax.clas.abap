@@ -43,20 +43,10 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
-
-
-  METHOD constructor.
-    super->constructor( ).
-    ms_control-page_title = 'SYNTAX CHECK'.
-    mo_repo = io_repo.
-    run_syntax_check( ).
-  ENDMETHOD.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
 
 
   METHOD build_menu.
-
-    DATA: lv_opt TYPE c LENGTH 1.
 
     CREATE OBJECT ro_menu.
 
@@ -64,6 +54,14 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
                   iv_act = c_actions-rerun
                   iv_cur = abap_false ) ##NO_TEXT.
 
+  ENDMETHOD.
+
+
+  METHOD constructor.
+    super->constructor( ).
+    ms_control-page_title = 'SYNTAX CHECK'.
+    mo_repo = io_repo.
+    run_syntax_check( ).
   ENDMETHOD.
 
 
@@ -98,8 +96,6 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
-
     CASE iv_action.
       WHEN c_actions-rerun.
 
@@ -112,7 +108,6 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
         super->zif_abapgit_gui_event_handler~on_event(
           EXPORTING
             iv_action             = iv_action
-            iv_prev_page          = iv_prev_page
             iv_getdata            = iv_getdata
             it_postdata           = it_postdata
           IMPORTING
@@ -127,11 +122,11 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD zif_abapgit_gui_renderable~render.
 
     ms_control-page_menu = build_menu( ).
-    ro_html = super->zif_abapgit_gui_renderable~render( ).
+    ri_html = super->zif_abapgit_gui_renderable~render( ).
 
   ENDMETHOD.
-
 ENDCLASS.

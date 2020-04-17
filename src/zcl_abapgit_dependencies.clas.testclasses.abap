@@ -174,9 +174,7 @@ CLASS ltcl_resolve_packages IMPLEMENTATION.
     zcl_abapgit_injector=>set_sap_package( iv_package     = 'Z_MAIN'
                                            ii_sap_package = lo_mock_sap_package ).
 
-    zcl_abapgit_dependencies=>resolve_packages(
-      CHANGING
-        ct_tadir = mt_tadir ).
+    zcl_abapgit_dependencies=>resolve_packages( CHANGING ct_tadir = mt_tadir ).
 
   ENDMETHOD.
 

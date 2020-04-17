@@ -277,9 +277,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( '<ul class="hotkeys">' ).
-    ro_html->add( |<li>|
-      && |<span>{ iv_content }</span>|
-      && |</li>| ).
+    ro_html->add( |<li>| && |<span>{ iv_content }</span>| && |</li>| ).
     ro_html->add( '</ul>' ).
 
     ro_html = render_infopanel(
@@ -373,9 +371,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     ENDIF.
 
-    ix_error->get_source_position(
-      IMPORTING
-        program_name = lv_program_name ).
+    ix_error->get_source_position( IMPORTING program_name = lv_program_name ).
 
     lv_title = normalize_program_name( lv_program_name ).
 
@@ -732,8 +728,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
     ro_html->add( '<div class="dummydiv warning">' ).
-    ro_html->add( |{ zcl_abapgit_html=>icon( 'exclamation-triangle/yellow' ) }| &&
-                  | { iv_text }| ).
+    ro_html->add( |{ zcl_abapgit_html=>icon( 'exclamation-triangle/yellow' ) }| && | { iv_text }| ).
     ro_html->add( '</div>' ).
 
   ENDMETHOD.

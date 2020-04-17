@@ -96,9 +96,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ACID IMPLEMENTATION.
 
     lo_aab = create_object( ).
 
-    lo_aab->get_state(
-      IMPORTING
-        ex_state = lv_state ).
+    lo_aab->get_state( IMPORTING ex_state = lv_state ).
     rv_bool = boolc( lv_state = abap_true ).
 
   ENDMETHOD.

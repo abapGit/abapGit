@@ -6,6 +6,13 @@ CLASS zcl_abapgit_object_iobj DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PROTECTED SECTION.
   PRIVATE SECTION.
+    METHODS:
+      clear_field
+        IMPORTING
+          iv_fieldname TYPE string
+        CHANGING
+          cg_metadata  TYPE any.
+
 ENDCLASS.
 
 
@@ -15,37 +22,49 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
 
-    DATA: ls_viobj TYPE rsd_s_viobj,
-          lv_objna TYPE rsd_iobjnm.
+    DATA: lv_objna TYPE c LENGTH 30,
+          lr_viobj TYPE REF TO data.
+
+    FIELD-SYMBOLS:
+      <lg_tstpnm> TYPE any,
+      <lg_viobj>  TYPE any.
 
     lv_objna = ms_item-obj_name.
+
+    TRY.
+        CREATE DATA lr_viobj TYPE ('RSD_S_VIOBJ').
+      CATCH cx_sy_create_data_error.
+        zcx_abapgit_exception=>raise( |IOBJ is not supported on this system| ).
+    ENDTRY.
+
+    ASSIGN lr_viobj->* TO <lg_viobj>.
 
     CALL FUNCTION 'RSD_IOBJ_GET'
       EXPORTING
         i_iobjnm  = lv_objna
         i_objvers = 'A'
       IMPORTING
-        e_s_viobj = ls_viobj.
+        e_s_viobj = <lg_viobj>.
 
-    rv_user = ls_viobj-tstpnm.
+    ASSIGN COMPONENT 'TSTPNM' OF STRUCTURE <lg_viobj> TO <lg_tstpnm>.
+
+    rv_user = <lg_tstpnm>.
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lt_iobjname     TYPE rsd_t_c30,
+    TYPES: BEGIN OF t_iobj,
+             objnm TYPE c LENGTH 30.
+    TYPES END OF t_iobj.
+
+    DATA: lt_iobjname     TYPE STANDARD TABLE OF t_iobj,
           lv_object       TYPE string,
           lv_object_class TYPE string,
-          ls_tadir        TYPE zif_abapgit_definitions=>ty_tadir,
           lv_transp_pkg   TYPE abap_bool.
 
-    ls_tadir = zcl_abapgit_factory=>get_tadir( )->read_single(
-                                                   iv_object   = ms_item-obj_type
-                                                   iv_obj_name = ms_item-obj_name ).
-
-    lv_transp_pkg =
-    zcl_abapgit_factory=>get_sap_package( iv_package = ls_tadir-devclass )->are_changes_recorded_in_tr_req( ).
+    lv_transp_pkg = zcl_abapgit_factory=>get_sap_package( iv_package )->are_changes_recorded_in_tr_req( ).
 
     APPEND ms_item-obj_name TO lt_iobjname.
 
@@ -86,35 +105,128 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: ls_details TYPE bapi6108,
-          lt_infoobj TYPE STANDARD TABLE OF bapi6108io,
-          ls_return  TYPE bapiret2,
-          lt_return  TYPE STANDARD TABLE OF bapiret2.
+    DATA:
+      lr_details                  TYPE REF TO data,
+      lr_infoobj                  TYPE REF TO data,
+      ls_return                   TYPE bapiret2,
+      lt_return                   TYPE STANDARD TABLE OF bapiret2,
+      lr_compounds                TYPE REF TO data,
+      lr_attributes               TYPE REF TO data,
+      lr_navigationattributes     TYPE REF TO data,
+      lr_atrnavinfoprovider       TYPE REF TO data,
+      lr_hierarchycharacteristics TYPE REF TO data,
+      lr_elimination              TYPE REF TO data,
+      lr_hanafieldsmapping        TYPE REF TO data,
+      lr_xxlattributes            TYPE REF TO data.
+
+    FIELD-SYMBOLS:
+      <lg_details>                  TYPE any,
+      <lt_compounds>                TYPE STANDARD TABLE,
+      <lt_attributes>               TYPE STANDARD TABLE,
+      <lt_navigationattributes>     TYPE STANDARD TABLE,
+      <lt_atrnavinfoprovider>       TYPE STANDARD TABLE,
+      <lt_hierarchycharacteristics> TYPE STANDARD TABLE,
+      <lt_elimination>              TYPE STANDARD TABLE,
+      <lt_hanafieldsmapping>        TYPE STANDARD TABLE,
+      <lt_xxlattributes>            TYPE STANDARD TABLE,
+      <lg_infoobject>               TYPE data,
+      <lt_infoobjects>              TYPE STANDARD TABLE.
+
+    TRY.
+        CREATE DATA lr_details TYPE ('BAPI6108').
+        CREATE DATA lr_compounds TYPE STANDARD TABLE OF ('BAPI6108CM').
+        CREATE DATA lr_attributes TYPE STANDARD TABLE OF ('BAPI6108AT').
+        CREATE DATA lr_navigationattributes TYPE STANDARD TABLE OF ('BAPI6108AN').
+        CREATE DATA lr_atrnavinfoprovider TYPE STANDARD TABLE OF ('BAPI6108NP').
+        CREATE DATA lr_hierarchycharacteristics TYPE STANDARD TABLE OF ('BAPI6108HC').
+        CREATE DATA lr_elimination TYPE STANDARD TABLE OF ('BAPI6108IE').
+        CREATE DATA lr_hanafieldsmapping TYPE STANDARD TABLE OF ('BAPI6108HANA_MAP').
+        CREATE DATA lr_xxlattributes TYPE STANDARD TABLE OF ('BAPI6108ATXXL').
+        CREATE DATA lr_infoobj TYPE STANDARD TABLE OF ('BAPI6108').
+      CATCH cx_sy_create_data_error.
+        zcx_abapgit_exception=>raise( |IOBJ is not supported on this system| ).
+    ENDTRY.
+
+    ASSIGN lr_details->* TO <lg_details>.
+    ASSIGN lr_compounds->* TO <lt_compounds>.
+    ASSIGN lr_attributes->* TO <lt_attributes>.
+    ASSIGN lr_navigationattributes->* TO <lt_navigationattributes>.
+    ASSIGN lr_atrnavinfoprovider->* TO <lt_atrnavinfoprovider>.
+    ASSIGN lr_hierarchycharacteristics->* TO <lt_hierarchycharacteristics>.
+    ASSIGN lr_elimination->* TO <lt_elimination>.
+    ASSIGN lr_hanafieldsmapping->* TO <lt_hanafieldsmapping>.
+    ASSIGN lr_xxlattributes->* TO <lt_xxlattributes>.
+    ASSIGN lr_infoobj->* TO <lt_infoobjects>.
 
     io_xml->read( EXPORTING iv_name = 'IOBJ'
-                   CHANGING cg_data = ls_details ).
+                  CHANGING cg_data = <lg_details> ).
 
-    CALL FUNCTION 'BAPI_IOBJ_CREATE'
-      EXPORTING
-        details = ls_details
-      IMPORTING
-        return  = ls_return.
+    io_xml->read( EXPORTING iv_name = 'COMPOUNDS'
+                  CHANGING  cg_data = <lt_compounds> ).
 
-    IF ls_return-type = 'E'.
-      zcx_abapgit_exception=>raise( |Error when creating iobj: { ls_return-message }| ).
-    ENDIF.
+    io_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
+                  CHANGING  cg_data = <lt_attributes> ).
 
-    APPEND ls_details-infoobject TO lt_infoobj.
+    io_xml->read( EXPORTING iv_name = 'NAVIGATION_ATTRIBUTES'
+                  CHANGING  cg_data = <lt_navigationattributes> ).
 
-    CALL FUNCTION 'BAPI_IOBJ_ACTIVATE_MULTIPLE'
-      TABLES
-        infoobjects = lt_infoobj
-        return      = lt_return.
+    io_xml->read( EXPORTING iv_name = 'ATTR_NAVIGATION'
+                  CHANGING  cg_data = <lt_atrnavinfoprovider> ).
 
-    READ TABLE lt_return WITH KEY type = 'E' INTO ls_return.
-    IF sy-subrc = 0.
-      zcx_abapgit_exception=>raise( |Error when activating iobj: { ls_return-message }| ).
-    ENDIF.
+    io_xml->read( EXPORTING iv_name = 'HIERARCHY'
+                  CHANGING  cg_data = <lt_hierarchycharacteristics> ).
+
+    io_xml->read( EXPORTING iv_name = 'ELIMINATION'
+                  CHANGING  cg_data = <lt_elimination> ).
+
+    io_xml->read( EXPORTING iv_name = 'HANA_FIELDS_MAPPING'
+                  CHANGING  cg_data = <lt_hanafieldsmapping> ).
+
+    io_xml->read( EXPORTING iv_name = 'XXL_ATTRIBUTES'
+                  CHANGING  cg_data = <lt_xxlattributes> ).
+
+    TRY.
+
+        CALL FUNCTION 'BAPI_IOBJ_CREATE'
+          EXPORTING
+            details                  = <lg_details>
+          IMPORTING
+            return                   = ls_return
+          TABLES
+            compounds                = <lt_compounds>
+            attributes               = <lt_attributes>
+            navigationattributes     = <lt_navigationattributes>
+            atrnavinfoprovider       = <lt_atrnavinfoprovider>
+            hierarchycharacteristics = <lt_hierarchycharacteristics>
+            elimination              = <lt_elimination>
+            hanafieldsmapping        = <lt_hanafieldsmapping>
+            xxlattributes            = <lt_xxlattributes>.
+
+        IF ls_return-type = 'E'.
+          zcx_abapgit_exception=>raise( |Error when creating iobj: { ls_return-message }| ).
+        ENDIF.
+
+        ASSIGN
+          COMPONENT 'INFOOBJECT'
+          OF STRUCTURE <lg_details>
+          TO <lg_infoobject>.
+        ASSERT sy-subrc = 0.
+
+        APPEND <lg_infoobject> TO <lt_infoobjects>.
+
+        CALL FUNCTION 'BAPI_IOBJ_ACTIVATE_MULTIPLE'
+          TABLES
+            infoobjects = <lt_infoobjects>
+            return      = lt_return.
+
+        READ TABLE lt_return WITH KEY type = 'E' INTO ls_return.
+        IF sy-subrc = 0.
+          zcx_abapgit_exception=>raise( |Error when activating iobj: { ls_return-message }| ).
+        ENDIF.
+
+      CATCH  cx_sy_dyn_call_illegal_func.
+        zcx_abapgit_exception=>raise( |Necessary BW function modules not found| ).
+    ENDTRY.
 
     tadir_insert( iv_package ).
 
@@ -125,10 +237,10 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lv_iobjnm TYPE rsdiobjnm.
+    DATA: lv_iobjnm TYPE char30.
 
     SELECT SINGLE iobjnm
-    FROM rsdiobj
+    FROM ('RSDIOBJ')
     INTO lv_iobjnm
     WHERE iobjnm = ms_item-obj_name.
 
@@ -155,19 +267,33 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_active.
 
-    DATA: ls_viobj TYPE rsd_s_viobj,
-          lv_objna TYPE rsd_iobjnm.
+    DATA: lv_objna TYPE c LENGTH 30,
+          lr_viobj TYPE REF TO data.
+
+    FIELD-SYMBOLS:
+      <lg_objstat> TYPE any,
+      <lg_viobj>   TYPE any.
 
     lv_objna = ms_item-obj_name.
+
+    TRY.
+        CREATE DATA lr_viobj TYPE ('RSD_S_VIOBJ').
+      CATCH cx_sy_create_data_error.
+        zcx_abapgit_exception=>raise( |IOBJ is not supported on this system| ).
+    ENDTRY.
+
+    ASSIGN lr_viobj->* TO <lg_viobj>.
 
     CALL FUNCTION 'RSD_IOBJ_GET'
       EXPORTING
         i_iobjnm  = lv_objna
         i_objvers = 'A'
       IMPORTING
-        e_s_viobj = ls_viobj.
+        e_s_viobj = <lg_viobj>.
 
-    IF ls_viobj-objstat = 'ACT'.
+    ASSIGN COMPONENT 'OBJSTAT' OF STRUCTURE <lg_viobj> TO <lg_objstat>.
+
+    IF <lg_objstat> = 'ACT' AND sy-subrc = 0.
       rv_active = abap_true.
     ENDIF.
 
@@ -195,27 +321,126 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lv_iobjnam TYPE rsiobjnm,
-          ls_return  TYPE bapiret2,
-          ls_details TYPE bapi6108.
+    DATA:
+      lv_iobjnam                  TYPE rsiobjnm,
+      ls_return                   TYPE bapiret2,
+      lr_details                  TYPE REF TO data,
+      lr_compounds                TYPE REF TO data,
+      lr_attributes               TYPE REF TO data,
+      lr_navigationattributes     TYPE REF TO data,
+      lr_atrnavinfoprovider       TYPE REF TO data,
+      lr_hierarchycharacteristics TYPE REF TO data,
+      lr_elimination              TYPE REF TO data,
+      lr_hanafieldsmapping        TYPE REF TO data,
+      lr_xxlattributes            TYPE REF TO data.
+
+    FIELD-SYMBOLS:
+      <lg_details>                  TYPE any,
+      <lt_compounds>                TYPE STANDARD TABLE,
+      <lt_attributes>               TYPE STANDARD TABLE,
+      <lt_navigationattributes>     TYPE STANDARD TABLE,
+      <lt_atrnavinfoprovider>       TYPE STANDARD TABLE,
+      <lt_hierarchycharacteristics> TYPE STANDARD TABLE,
+      <lt_elimination>              TYPE STANDARD TABLE,
+      <lt_hanafieldsmapping>        TYPE STANDARD TABLE,
+      <lt_xxlattributes>            TYPE STANDARD TABLE.
+
+    TRY.
+        CREATE DATA lr_details TYPE ('BAPI6108').
+        CREATE DATA lr_compounds TYPE STANDARD TABLE OF ('BAPI6108CM').
+        CREATE DATA lr_attributes TYPE STANDARD TABLE OF ('BAPI6108AT').
+        CREATE DATA lr_navigationattributes TYPE STANDARD TABLE OF ('BAPI6108AN').
+        CREATE DATA lr_atrnavinfoprovider TYPE STANDARD TABLE OF ('BAPI6108NP').
+        CREATE DATA lr_hierarchycharacteristics TYPE STANDARD TABLE OF ('BAPI6108HC').
+        CREATE DATA lr_elimination TYPE STANDARD TABLE OF ('BAPI6108IE').
+        CREATE DATA lr_hanafieldsmapping TYPE STANDARD TABLE OF ('BAPI6108HANA_MAP').
+        CREATE DATA lr_xxlattributes TYPE STANDARD TABLE OF ('BAPI6108ATXXL').
+      CATCH cx_sy_create_data_error.
+        zcx_abapgit_exception=>raise( |IOBJ is not supported on this system| ).
+    ENDTRY.
+
+    ASSIGN lr_details->* TO <lg_details>.
+    ASSIGN lr_compounds->* TO <lt_compounds>.
+    ASSIGN lr_attributes->* TO <lt_attributes>.
+    ASSIGN lr_navigationattributes->* TO <lt_navigationattributes>.
+    ASSIGN lr_atrnavinfoprovider->* TO <lt_atrnavinfoprovider>.
+    ASSIGN lr_hierarchycharacteristics->* TO <lt_hierarchycharacteristics>.
+    ASSIGN lr_elimination->* TO <lt_elimination>.
+    ASSIGN lr_hanafieldsmapping->* TO <lt_hanafieldsmapping>.
+    ASSIGN lr_xxlattributes->* TO <lt_xxlattributes>.
 
     lv_iobjnam = ms_item-obj_name.
 
     CALL FUNCTION 'BAPI_IOBJ_GETDETAIL'
       EXPORTING
-        infoobject = lv_iobjnam
+        infoobject               = lv_iobjnam
       IMPORTING
-        details    = ls_details
-        return     = ls_return.
+        details                  = <lg_details>
+        return                   = ls_return
+      TABLES
+        compounds                = <lt_compounds>
+        attributes               = <lt_attributes>
+        navigationattributes     = <lt_navigationattributes>
+        atrnavinfoprovider       = <lt_atrnavinfoprovider>
+        hierarchycharacteristics = <lt_hierarchycharacteristics>
+        elimination              = <lt_elimination>
+        hanafieldsmapping        = <lt_hanafieldsmapping>
+        xxlattributes            = <lt_xxlattributes>.
 
     IF ls_return-type = 'E'.
       zcx_abapgit_exception=>raise( |Error when geting getails of iobj: { ls_return-message }| ).
     ENDIF.
 
-    CLEAR: ls_details-tstpnm, ls_details-timestmp, ls_details-dbroutid.
+    clear_field( EXPORTING iv_fieldname = 'TSTPNM'
+                 CHANGING  cg_metadata  = <lg_details> ).
+
+    clear_field( EXPORTING iv_fieldname = 'TIMESTMP'
+                 CHANGING  cg_metadata  = <lg_details> ).
+
+    clear_field( EXPORTING iv_fieldname = 'DBROUTID'
+                 CHANGING  cg_metadata  = <lg_details> ).
 
     io_xml->add( iv_name = 'IOBJ'
-                 ig_data = ls_details ).
+                 ig_data = <lg_details> ).
+
+    io_xml->add( iv_name = 'COMPOUNDS'
+                 ig_data = <lt_compounds> ).
+
+    io_xml->add( iv_name = 'ATTRIBUTES'
+                 ig_data = <lt_attributes> ).
+
+    io_xml->add( iv_name = 'NAVIGATION_ATTRIBUTES'
+                 ig_data = <lt_navigationattributes> ).
+
+    io_xml->add( iv_name = 'ATTR_NAVIGATION'
+                  ig_data = <lt_atrnavinfoprovider> ).
+
+    io_xml->add( iv_name = 'HIERARCHY'
+                 ig_data = <lt_hierarchycharacteristics> ).
+
+    io_xml->add( iv_name = 'ELIMINATION'
+                 ig_data = <lt_elimination> ).
+
+    io_xml->add( iv_name = 'HANA_FIELDS_MAPPING'
+                 ig_data = <lt_hanafieldsmapping> ).
+
+    io_xml->add( iv_name = 'XXL_ATTRIBUTES'
+                 ig_data = <lt_xxlattributes> ).
 
   ENDMETHOD.
+
+
+  METHOD clear_field.
+
+    FIELD-SYMBOLS: <lg_field> TYPE data.
+
+    ASSIGN COMPONENT iv_fieldname
+           OF STRUCTURE cg_metadata
+           TO <lg_field>.
+    ASSERT sy-subrc = 0.
+
+    CLEAR: <lg_field>.
+
+  ENDMETHOD.
+
 ENDCLASS.

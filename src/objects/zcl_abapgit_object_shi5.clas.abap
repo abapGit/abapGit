@@ -15,8 +15,9 @@ CLASS zcl_abapgit_object_shi5 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     TYPES: tty_ttree_extt TYPE STANDARD TABLE OF ttree_extt
                                WITH NON-UNIQUE DEFAULT KEY,
            BEGIN OF ty_extension,
-             header TYPE ttree_ext,
-             texts  TYPE tty_ttree_extt,
+             header    TYPE ttree_ext,
+             texts     TYPE tty_ttree_extt,
+             sequences TYPE STANDARD TABLE OF ttrees WITH NON-UNIQUE DEFAULT KEY,
            END OF ty_extension.
 
     DATA: mv_extension TYPE hier_names.
@@ -78,6 +79,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI5 IMPLEMENTATION.
         cg_data = ls_extension ).
 
     INSERT ttree_ext  FROM ls_extension-header.
+
+    DELETE FROM ttrees WHERE extension = ls_extension-header-extension.
+    MODIFY ttrees FROM TABLE ls_extension-sequences.
+
+    DELETE FROM ttree_extt WHERE extension = ls_extension-header-extension.
     MODIFY ttree_extt FROM TABLE ls_extension-texts.
 
     tadir_insert( iv_package ).
@@ -142,7 +148,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI5 IMPLEMENTATION.
 
     SELECT * FROM ttree_extt
              INTO TABLE ls_extension-texts
-             WHERE extension = mv_extension.
+             WHERE extension = mv_extension ORDER BY PRIMARY KEY.
+
+    SELECT * FROM ttrees
+            INTO TABLE ls_extension-sequences
+            WHERE extension = mv_extension ORDER BY PRIMARY KEY.
 
     io_xml->add( iv_name = 'SHI5'
                  ig_data = ls_extension ).

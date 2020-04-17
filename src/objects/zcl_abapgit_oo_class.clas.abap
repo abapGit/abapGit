@@ -258,6 +258,10 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
     ls_clskey-clsname = iv_name.
 
     TRY.
+        CALL FUNCTION 'SEO_BUFFER_REFRESH'
+          EXPORTING
+            cifkey  = ls_clskey
+            version = seoc_version_active.
         CREATE OBJECT lo_update TYPE ('CL_OO_CLASS_SECTION_SOURCE')
           EXPORTING
             clskey                        = ls_clskey
@@ -494,7 +498,6 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
           lt_methods TYPE cl_oo_source_scanner_class=>type_method_implementations,
           lv_method  LIKE LINE OF lt_methods,
           lt_public  TYPE seop_source_string,
-          lt_auxsrc  TYPE seop_source_string,
           lt_source  TYPE seop_source_string.
 
     "Buffer needs to be refreshed,
@@ -529,12 +532,9 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
       lv_updated = update_report( iv_program = lv_program
                                   it_source  = lt_source ).
       IF lv_updated = abap_true.
-        lt_auxsrc = lt_public.
-        APPEND LINES OF lt_source TO lt_auxsrc.
-
         update_meta( iv_name     = is_key-clsname
                      iv_exposure = seoc_exposure_protected
-                     it_source   = lt_auxsrc ).
+                     it_source   = lt_source ).
       ENDIF.
     ENDIF.
 
@@ -545,12 +545,9 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
       lv_updated = update_report( iv_program = lv_program
                                   it_source  = lt_source ).
       IF lv_updated = abap_true.
-        lt_auxsrc = lt_public.
-        APPEND LINES OF lt_source TO lt_auxsrc.
-
         update_meta( iv_name     = is_key-clsname
                      iv_exposure = seoc_exposure_private
-                     it_source   = lt_auxsrc ).
+                     it_source   = lt_source ).
       ENDIF.
     ENDIF.
 
@@ -665,7 +662,6 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
 
 * skip the CS include, as it is sometimes generated on the fly instead of
 * when the methods are changed
-*    APPEND cl_oo_classname_service=>get_cs_name( lv_class_name ) TO rt_includes.
 
     cl_oo_classname_service=>get_all_method_includes(
       EXPORTING
@@ -694,7 +690,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
     INSERT TEXTPOOL lv_cp
       FROM it_text_pool
       LANGUAGE iv_language
-      STATE 'I'.
+      STATE iv_state.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from INSERT TEXTPOOL' ).
     ENDIF.

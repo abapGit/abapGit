@@ -228,23 +228,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
-
-    ls_hotkey_action-name   = |Stage|.
-    ls_hotkey_action-action = c_actions-stage.
-    ls_hotkey_action-hotkey = |s|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-name   = |Re-Run|.
-    ls_hotkey_action-action = c_actions-rerun.
-    ls_hotkey_action-hotkey = |r|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
@@ -299,7 +282,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
         super->zif_abapgit_gui_event_handler~on_event(
           EXPORTING
             iv_action             = iv_action
-            iv_prev_page          = iv_prev_page
             iv_getdata            = iv_getdata
             it_postdata           = it_postdata
           IMPORTING
@@ -310,10 +292,27 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+
+    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+
+    ls_hotkey_action-name   = |Stage|.
+    ls_hotkey_action-action = c_actions-stage.
+    ls_hotkey_action-hotkey = |s|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-name   = |Re-Run|.
+    ls_hotkey_action-action = c_actions-rerun.
+    ls_hotkey_action-hotkey = |r|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_renderable~render.
 
     ms_control-page_menu = build_menu( ).
-    ro_html = super->zif_abapgit_gui_renderable~render( ).
+    ri_html = super->zif_abapgit_gui_renderable~render( ).
 
   ENDMETHOD.
 ENDCLASS.

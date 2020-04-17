@@ -91,7 +91,6 @@ CLASS zcl_abapgit_gui_router DEFINITION
     METHODS get_page_diff
       IMPORTING
         !iv_getdata    TYPE clike
-        !iv_prev_page  TYPE clike
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -176,21 +175,21 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
     DATA:
       lv_path    TYPE string,
       lv_default TYPE string,
-      lo_fe_serv TYPE REF TO zif_abapgit_frontend_services,
+      li_fe_serv TYPE REF TO zif_abapgit_frontend_services,
       lv_package TYPE devclass.
 
     lv_package = iv_package.
     TRANSLATE lv_package USING '/#'.
     CONCATENATE lv_package '_' sy-datlo '_' sy-timlo INTO lv_default.
 
-    lo_fe_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
+    li_fe_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
 
-    lv_path = lo_fe_serv->show_file_save_dialog(
+    lv_path = li_fe_serv->show_file_save_dialog(
       iv_title            = 'Export ZIP'
       iv_extension        = 'zip'
       iv_default_filename = lv_default ).
 
-    lo_fe_serv->file_download(
+    li_fe_serv->file_download(
       iv_path = lv_path
       iv_xstr = iv_xstr ).
 
@@ -231,9 +230,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         ei_page  = get_page_background( lv_key ).
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_diff.                         " Go Diff page
-        ei_page  = get_page_diff(
-          iv_getdata   = is_event_data-getdata
-          iv_prev_page = is_event_data-prev_page ).
+        ei_page  = get_page_diff( is_event_data-getdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
       WHEN zif_abapgit_definitions=>c_action-go_stage.                        " Go Staging page
         ei_page  = get_page_stage( is_event_data-getdata ).
@@ -577,7 +574,6 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
     DATA: ls_event_data TYPE ty_event_data.
 
     ls_event_data-action    = iv_action.
-    ls_event_data-prev_page = iv_prev_page.
     ls_event_data-getdata   = iv_getdata.
     ls_event_data-postdata  = it_postdata.
 
@@ -689,5 +685,4 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
-
 ENDCLASS.

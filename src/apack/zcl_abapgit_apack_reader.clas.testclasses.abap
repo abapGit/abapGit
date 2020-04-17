@@ -2,7 +2,7 @@
 CLASS ltcl_apack_manifest_reader DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
   PRIVATE SECTION.
     METHODS:
-      setup,
+      setup RAISING cx_static_check,
       manifest_descriptor FOR TESTING RAISING cx_static_check,
       verify_own_descriptor IMPORTING is_manifest_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor.
 

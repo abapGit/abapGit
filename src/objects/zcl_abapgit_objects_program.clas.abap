@@ -159,7 +159,7 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
 
     CLASS-METHODS auto_correct_cua_adm
       IMPORTING
-        is_cua TYPE zcl_abapgit_objects_program=>ty_cua
+        is_cua TYPE ty_cua
       CHANGING
         cs_adm TYPE rsmpe_adm.
 
@@ -636,10 +636,10 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
   METHOD is_any_dynpro_locked.
 
-    DATA: lt_dynpros TYPE zcl_abapgit_objects_program=>ty_dynpro_tt,
+    DATA: lt_dynpros TYPE ty_dynpro_tt,
           lv_object  TYPE seqg3-garg.
 
-    FIELD-SYMBOLS: <ls_dynpro> TYPE zcl_abapgit_objects_program=>ty_dynpro.
+    FIELD-SYMBOLS: <ls_dynpro> TYPE ty_dynpro.
 
     lt_dynpros = serialize_dynpros( iv_program ).
 

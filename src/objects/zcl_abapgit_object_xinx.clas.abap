@@ -69,21 +69,21 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
 
     " Reimplement FM RS_DD_INDX_DELETE as it calls the UI
 
-    DATA: lv_enqueue      TYPE ddenqs,
+    DATA: ls_enqueue      TYPE ddenqs,
           lv_protname     TYPE tstrf01-file,
-          lv_del_concname LIKE lv_enqueue-objname,
+          lv_del_concname LIKE ls_enqueue-objname,
           lv_concname     TYPE rsdxx-objname,
-          lv_transp_key   TYPE trkey,
+          ls_transp_key   TYPE trkey,
           ls_e071         TYPE e071,
           lv_clm_corrnum  TYPE e070-trkorr,
           lv_message      TYPE string.
 
     CONCATENATE mv_name '-' mv_id INTO lv_concname.
-    lv_enqueue-objtype = c_objtype_extension_index.
+    ls_enqueue-objtype = c_objtype_extension_index.
 
     CALL FUNCTION 'INT_INDX_DEL_LOCK'
       EXPORTING
-        i_trobjtype        = lv_enqueue-objtype
+        i_trobjtype        = ls_enqueue-objtype
         i_tabname          = mv_name
         i_indexname        = mv_id
       EXCEPTIONS
@@ -96,15 +96,15 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    lv_enqueue-objname = mv_name.
-    lv_enqueue-secname = mv_id.
+    ls_enqueue-objname = mv_name.
+    ls_enqueue-secname = mv_id.
     CALL FUNCTION 'RS_CORR_INSERT'
       EXPORTING
-        object        = lv_enqueue
+        object        = ls_enqueue
         object_class  = 'DICT'
         mode          = 'DELETE'
       IMPORTING
-        transport_key = lv_transp_key
+        transport_key = ls_transp_key
       EXCEPTIONS
         OTHERS        = 1.
 
@@ -117,9 +117,9 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
     CALL FUNCTION 'DD_LOGNPROT_NAME_GET'
       EXPORTING
         task        = 'DEL'
-        obj_type    = lv_enqueue-objtype
-        obj_name    = lv_enqueue-objname
-        ind_name    = lv_enqueue-secname
+        obj_type    = ls_enqueue-objtype
+        obj_name    = ls_enqueue-objname
+        ind_name    = ls_enqueue-secname
       IMPORTING
         protname    = lv_protname
       EXCEPTIONS
@@ -127,12 +127,12 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
 
     PERFORM logdelete IN PROGRAM rddu0001 USING lv_protname.
 
-    lv_del_concname = lv_enqueue-objname.
-    lv_del_concname+16 = lv_enqueue-secname.
+    lv_del_concname = ls_enqueue-objname.
+    lv_del_concname+16 = ls_enqueue-secname.
     CALL FUNCTION 'DD_OBJ_DEL'
       EXPORTING
         object_name = lv_del_concname
-        object_type = lv_enqueue-objtype
+        object_type = ls_enqueue-objtype
         del_state   = 'M'
       EXCEPTIONS
         OTHERS      = 1.
@@ -143,9 +143,9 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
 
     CALL FUNCTION 'DD_DD_TO_E071'
       EXPORTING
-        type          = lv_enqueue-objtype
-        name          = lv_enqueue-objname
-        id            = lv_enqueue-secname
+        type          = ls_enqueue-objtype
+        name          = ls_enqueue-objname
+        id            = ls_enqueue-secname
       IMPORTING
         obj_name      = ls_e071-obj_name
       EXCEPTIONS
@@ -158,7 +158,7 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    ls_e071-object = lv_enqueue-objtype.
+    ls_e071-object = ls_enqueue-objtype.
     CALL FUNCTION 'RS_DELETE_FROM_WORKING_AREA'
       EXPORTING
         object                 = ls_e071-object
@@ -179,18 +179,18 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
     IF mv_id(1) CA 'YZ'.
       CALL FUNCTION 'CLM_INDX_MODIFICATION_DELETE'
         EXPORTING
-          idxobj_name   = lv_enqueue-objname
-          idx_type      = lv_enqueue-objtype
+          idxobj_name   = ls_enqueue-objname
+          idx_type      = ls_enqueue-objtype
           idx_name      = mv_id
-          transport_key = lv_transp_key
+          transport_key = ls_transp_key
           corrnum       = lv_clm_corrnum.
     ENDIF.
 
     CALL FUNCTION 'RS_DD_DEQUEUE'
       EXPORTING
-        objtype = lv_enqueue-objtype
-        objname = lv_enqueue-objname
-        secname = lv_enqueue-secname.
+        objtype = ls_enqueue-objtype
+        objname = ls_enqueue-objname
+        secname = ls_enqueue-secname.
 
   ENDMETHOD.
 
@@ -251,19 +251,19 @@ CLASS zcl_abapgit_object_xinx IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lv_dd12v TYPE dd12v.
+    DATA: ls_dd12v TYPE dd12v.
 
     CALL FUNCTION 'DDIF_INDX_GET'
       EXPORTING
         name          = mv_name
         id            = mv_id
       IMPORTING
-        dd12v_wa      = lv_dd12v
+        dd12v_wa      = ls_dd12v
       EXCEPTIONS
         illegal_input = 1
         OTHERS        = 2.
 
-    rv_bool = boolc( lv_dd12v IS NOT INITIAL ).
+    rv_bool = boolc( ls_dd12v IS NOT INITIAL ).
 
   ENDMETHOD.
 

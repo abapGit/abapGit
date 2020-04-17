@@ -8,6 +8,7 @@ Type   | Description   | Supported
 :------------ | :------------ | ------------:
 ACID | Checkpoint Group | Yes
 AOBJ | Archiving Object | [#804](https://github.com/larshp/abapGit/issues/804)
+AREA | InfoArea | Yes
 ASFC | Field Catalog | Yes
 ASIS | Archiving Information Structure | [#1579](https://github.com/larshp/abapGit/issues/1579)
 AUTH | Authorization Check Fields | Yes
@@ -16,7 +17,7 @@ BDEF | Behaviour Definition | [#2021](https://github.com/larshp/abapGit/issues/2
 BMFR | Application Component | [#2108](https://github.com/larshp/abapGit/issues/2108)
 BOBF | BOPF: Business Object Model | [#165](https://github.com/larshp/abapGit/issues/165)
 CHAR | Object characteristic | Yes
-CHDO | Change Document Object | [#802](https://github.com/larshp/abapGit/issues/802)
+CHDO | Change Document Object | Yes
 CLAS | Class (ABAP Objects) | Yes
 CMOD | Customer enhancement projects | [#151](https://github.com/larshp/abapGit/issues/151)
 CMPT | Code Composer Template | Yes
@@ -70,6 +71,7 @@ JOBD | Technical Job Definition | Yes
 LPDC | Launchpad short texts | [#107](https://github.com/larshp/abapGit/issues/107)
 MSAG | Message Class | Yes
 NROB | Number Range Objects | Yes
+ODSO | DataStore Object | Yes
 OTGR | Object type group | [#1515](https://github.com/larshp/abapGit/issues/1515)
 PARA | SPA/GPA Parameters | Yes
 PDTS | Standard Task | [#153](https://github.com/larshp/abapGit/issues/153)
@@ -95,7 +97,7 @@ SHLP | Search Help | Yes
 SHMA | Shared Objects: Defined Area Attributes | Yes
 SICF | ICF Service | Yes
 SMIM | Info Object from the MIME Repository | Yes
-SMTG | OM: Email Template 
+SMTG | OM: Email Template | Yes
 SOTS | All Concepts (OTR) of a Package - Long Texts | Yes
 SPLO | Format Types | Yes
 SPRX | Proxy Object | Yes

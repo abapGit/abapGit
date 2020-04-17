@@ -75,14 +75,14 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     METHODS stage_selected
       IMPORTING
-        !it_postdata TYPE cnht_post_data_tab
+        !it_postdata    TYPE cnht_post_data_tab
       RETURNING
-        VALUE(ro_stage)    TYPE REF TO zcl_abapgit_stage
+        VALUE(ro_stage) TYPE REF TO zcl_abapgit_stage
       RAISING
         zcx_abapgit_exception .
     METHODS stage_all
       RETURNING
-        VALUE(ro_stage)    TYPE REF TO zcl_abapgit_stage
+        VALUE(ro_stage) TYPE REF TO zcl_abapgit_stage
       RAISING
         zcx_abapgit_exception .
     METHODS build_menu
@@ -90,7 +90,6 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS get_page_patch
       IMPORTING iv_getdata     TYPE clike
-                iv_prev_page   TYPE clike
       RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING   zcx_abapgit_exception.
     METHODS render_master_language_warning
@@ -113,6 +112,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     IF lines( ms_files-local ) > 0.
       ro_menu->add( iv_txt = |All diffs|
                     iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ mo_repo->get_key( ) }| ).
+
+      ro_menu->add( iv_txt = |Patch|
+                    iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?key={ mo_repo->get_key( ) }| ).
     ENDIF.
 
   ENDMETHOD.
@@ -237,8 +239,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
   METHOD get_page_patch.
 
-    DATA: lo_page   TYPE REF TO zcl_abapgit_gui_page_diff,
-          lv_key    TYPE zif_abapgit_persistence=>ty_repo-key.
+    DATA: lo_page TYPE REF TO zcl_abapgit_gui_page_patch,
+          lv_key  TYPE zif_abapgit_persistence=>ty_repo-key.
 
     zcl_abapgit_html_action_utils=>file_obj_decode(
       EXPORTING
@@ -248,8 +250,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     CREATE OBJECT lo_page
       EXPORTING
-        iv_key        = lv_key
-        iv_patch_mode = abap_true.
+        iv_key = lv_key.
 
     ri_page = lo_page.
 
@@ -259,9 +260,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
   METHOD render_actions.
 
     DATA: lv_local_count TYPE i,
-          lv_add_all_txt TYPE string,
-          lv_param       TYPE string,
-          ls_file        TYPE zif_abapgit_definitions=>ty_file.
+          lv_add_all_txt TYPE string.
 
     CREATE OBJECT ro_html.
     lv_local_count = count_default_files_to_commit( ).
@@ -289,16 +288,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
                     iv_id  = 'commitAllButton'
                     iv_txt = lv_add_all_txt ) ##NO_TEXT.
 
-    lv_param = zcl_abapgit_html_action_utils=>file_encode( iv_key  = mo_repo->get_key( )
-                                                           ig_file = ls_file ).
 
-
-    ro_html->add( '</td>' ).
-
-    ro_html->add( '<td class="pad-sides">' ).
-    ro_html->add_a(
-      iv_txt = |Patch|
-      iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?{ lv_param }| ).
     ro_html->add( '</td>' ).
 
     " Filter bar
@@ -411,8 +401,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     LOOP AT ms_files-local ASSIGNING <ls_local>.
       AT FIRST.
         ro_html->add( '<thead><tr class="local">' ).
-        ro_html->add( '<th></th>' ). " Diff state
-        ro_html->add( '<th>Type</th>' ).
+        ro_html->add( '<th class="stage-status"></th>' ). " Diff state
+        ro_html->add( '<th class="stage-objtype">Type</th>' ).
         ro_html->add( '<th>Files to add (click to see diff)</th>' ).
         ro_html->add( '<th>Changed by</th>' ).
         ro_html->add( '<th>Transport</th>' ).
@@ -572,9 +562,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           lt_fields TYPE tihttpnvp,
           ls_file   TYPE zif_abapgit_definitions=>ty_file.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local,
+    FIELD-SYMBOLS: <ls_file>   LIKE LINE OF ms_files-local,
                    <ls_status> LIKE LINE OF ms_files-status,
-                   <ls_item> LIKE LINE OF lt_fields.
+                   <ls_item>   LIKE LINE OF lt_fields.
 
     CONCATENATE LINES OF it_postdata INTO lv_string.
     lt_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_string ).
@@ -676,16 +666,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
       WHEN zif_abapgit_definitions=>c_action-go_patch.                         " Go Patch page
 
-        ei_page  = get_page_patch(
-          iv_getdata   = iv_getdata
-          iv_prev_page = iv_prev_page ).
+        ei_page  = get_page_patch( iv_getdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN OTHERS.
         super->zif_abapgit_gui_event_handler~on_event(
           EXPORTING
             iv_action    = iv_action
-            iv_prev_page = iv_prev_page
             iv_getdata   = iv_getdata
             it_postdata  = it_postdata
           IMPORTING

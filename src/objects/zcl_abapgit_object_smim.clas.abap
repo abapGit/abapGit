@@ -142,9 +142,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SMIM IMPLEMENTATION.
 
 
     TRY.
-        get_url_for_io(
-          IMPORTING
-            ev_url  = lv_url ).
+        get_url_for_io( IMPORTING ev_url  = lv_url ).
       CATCH zcx_abapgit_not_found.
         RETURN.
     ENDTRY.
