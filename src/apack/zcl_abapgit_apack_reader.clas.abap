@@ -117,7 +117,8 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
   METHOD get_manifest_descriptor.
 
     DATA: lo_manifest_provider       TYPE REF TO object,
-          ls_manifest_implementation TYPE ty_s_manifest_declaration.
+          ls_manifest_implementation TYPE ty_s_manifest_declaration,
+          lv_cp                      TYPE program.
 
     IF mv_is_cached IS INITIAL AND mv_package_name IS NOT INITIAL.
       SELECT SINGLE seometarel~clsname tadir~devclass FROM seometarel "#EC CI_NOORDER
@@ -139,13 +140,19 @@ CLASS zcl_abapgit_apack_reader IMPLEMENTATION.
                  tadir~devclass = me->mv_package_name.
       ENDIF.
       IF ls_manifest_implementation IS NOT INITIAL.
-        TRY.
-            CREATE OBJECT lo_manifest_provider TYPE (ls_manifest_implementation-clsname).
-          CATCH cx_sy_create_object_error.
-            CLEAR: rs_manifest_descriptor.
-        ENDTRY.
-        IF lo_manifest_provider IS BOUND.
-          me->copy_manifest_descriptor( io_manifest_provider = lo_manifest_provider ).
+        lv_cp = cl_oo_classname_service=>get_classpool_name( ls_manifest_implementation-clsname ).
+        GENERATE REPORT lv_cp.
+        IF sy-subrc <> 0.
+          CLEAR: rs_manifest_descriptor.
+        ELSE.
+          TRY.
+              CREATE OBJECT lo_manifest_provider TYPE (ls_manifest_implementation-clsname).
+            CATCH cx_sy_create_object_error.
+              CLEAR: rs_manifest_descriptor.
+          ENDTRY.
+          IF lo_manifest_provider IS BOUND.
+            me->copy_manifest_descriptor( io_manifest_provider = lo_manifest_provider ).
+          ENDIF.
         ENDIF.
       ENDIF.
 

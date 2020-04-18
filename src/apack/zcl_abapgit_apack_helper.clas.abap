@@ -33,7 +33,7 @@ CLASS zcl_abapgit_apack_helper DEFINITION
         met TYPE zif_abapgit_definitions=>ty_yes_no_partial.
         INCLUDE TYPE zif_abapgit_apack_definitions=>ty_dependency.
     TYPES: END OF ty_dependency_status,
-      tt_dependency_status TYPE STANDARD TABLE OF ty_dependency_status WITH NON-UNIQUE DEFAULT KEY.
+    tt_dependency_status TYPE STANDARD TABLE OF ty_dependency_status WITH NON-UNIQUE DEFAULT KEY.
 
     CLASS-METHODS get_dependencies_met_status
       IMPORTING
@@ -143,7 +143,8 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
           lt_manifest_implementation TYPE tt_manifest_declaration,
           ls_manifest_implementation TYPE ty_manifest_declaration,
           lo_manifest_provider       TYPE REF TO object,
-          ls_descriptor              TYPE zif_abapgit_apack_definitions=>ty_descriptor.
+          ls_descriptor              TYPE zif_abapgit_apack_definitions=>ty_descriptor,
+          lv_cp                      TYPE program.
 
     SELECT seometarel~clsname tadir~devclass FROM seometarel "#EC CI_NOORDER
        INNER JOIN tadir ON seometarel~clsname = tadir~obj_name "#EC CI_BUFFJOIN
@@ -156,11 +157,17 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
     LOOP AT lt_manifest_implementation INTO ls_manifest_implementation.
       CLEAR: lo_manifest_provider, lo_apack_reader.
 
-      TRY.
-          CREATE OBJECT lo_manifest_provider TYPE (ls_manifest_implementation-clsname).
-        CATCH cx_sy_create_object_error.
-          CLEAR: lo_manifest_provider.
-      ENDTRY.
+      lv_cp = cl_oo_classname_service=>get_classpool_name( ls_manifest_implementation-clsname ).
+      GENERATE REPORT lv_cp.
+      IF sy-subrc <> 0.
+        CLEAR: lo_manifest_provider.
+      ELSE.
+        TRY.
+            CREATE OBJECT lo_manifest_provider TYPE (ls_manifest_implementation-clsname).
+          CATCH cx_sy_create_object_error.
+            CLEAR: lo_manifest_provider.
+        ENDTRY.
+      ENDIF.
 
       IF lo_manifest_provider IS NOT BOUND.
         CONTINUE.
@@ -186,8 +193,8 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
         exception(1) TYPE c,
         color        TYPE lvc_t_scol.
         INCLUDE TYPE ty_dependency_status.
-    TYPES: t_hyperlink  TYPE salv_t_int4_column,
-      END OF lty_color_line.
+    TYPES: t_hyperlink TYPE salv_t_int4_column,
+           END OF lty_color_line.
 
     TYPES: lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
 
