@@ -1,22 +1,22 @@
-class ZCL_ABAPGIT_OBJECT_STVI definition
-  public
-  inheriting from ZCL_ABAPGIT_OBJECTS_SUPER
-  final
-  create public .
+CLASS zcl_abapgit_object_stvi DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  FINAL
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  interfaces ZIF_ABAPGIT_OBJECT .
-protected section.
-PRIVATE SECTION.
+    INTERFACES zif_abapgit_object .
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 
-  TYPES:
-    BEGIN OF ty_transaction_variant,
-      shdtvciu   TYPE shdtvciu,
-      shdttciu   TYPE STANDARD TABLE OF shdttciu   WITH DEFAULT KEY,
-      shdfvguicu TYPE STANDARD TABLE OF shdfvguicu WITH DEFAULT KEY,
-      shdtvsvciu TYPE STANDARD TABLE OF shdtvsvciu WITH DEFAULT KEY,
-    END OF ty_transaction_variant.
+    TYPES:
+      BEGIN OF ty_transaction_variant,
+        shdtvciu   TYPE shdtvciu,
+        shdttciu   TYPE STANDARD TABLE OF shdttciu   WITH DEFAULT KEY,
+        shdfvguicu TYPE STANDARD TABLE OF shdfvguicu WITH DEFAULT KEY,
+        shdtvsvciu TYPE STANDARD TABLE OF shdtvsvciu WITH DEFAULT KEY,
+      END OF ty_transaction_variant.
 ENDCLASS.
 
 
