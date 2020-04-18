@@ -1,22 +1,22 @@
-class ZCL_ABAPGIT_OBJECT_SCVI definition
-  public
-  inheriting from ZCL_ABAPGIT_OBJECTS_SUPER
-  final
-  create public .
+CLASS zcl_abapgit_object_scvi DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  FINAL
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  interfaces ZIF_ABAPGIT_OBJECT .
+    INTERFACES zif_abapgit_object .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES:
       BEGIN OF ty_screen_variant,
-        header                   TYPE shdsvci,
-        texts                    TYPE STANDARD TABLE OF shdsvtxci  WITH DEFAULT KEY,
-        field_contents           TYPE STANDARD TABLE OF shdsvfvci  WITH DEFAULT KEY,
-        guixt_scripts_attributes TYPE STANDARD TABLE OF shdguixt   WITH DEFAULT KEY,
-        guixt_scripts_code       TYPE STANDARD TABLE OF shdgxtcode WITH DEFAULT KEY,
+        shdsvci    TYPE shdsvci,
+        shdsvtxci  TYPE STANDARD TABLE OF shdsvtxci  WITH DEFAULT KEY,
+        shdsvfvci  TYPE STANDARD TABLE OF shdsvfvci  WITH DEFAULT KEY,
+        shdguixt   TYPE STANDARD TABLE OF shdguixt   WITH DEFAULT KEY,
+        shdgxtcode TYPE STANDARD TABLE OF shdgxtcode WITH DEFAULT KEY,
       END OF ty_screen_variant .
 ENDCLASS.
 
@@ -35,10 +35,10 @@ CLASS ZCL_ABAPGIT_OBJECT_SCVI IMPLEMENTATION.
     FROM shdsvci
     INTO rv_user
     WHERE scvariant = lv_screen_variant.
-    IF sy-subrc NE 0
+    IF sy-subrc <> 0
     OR rv_user IS INITIAL.
       rv_user = c_user_unknown.
-    ENDIF. " IF sy-subrc NE 0
+    ENDIF. " IF sy-subrc <> 0
 
   ENDMETHOD.
 
@@ -57,19 +57,16 @@ CLASS ZCL_ABAPGIT_OBJECT_SCVI IMPLEMENTATION.
         no_correction    = 2
         scvariant_used   = 3
         OTHERS           = 4.
-    IF sy-subrc NE 0.
+    IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
-    ENDIF. " IF sy-subrc NE 0
+    ENDIF. " IF sy-subrc <> 0
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lo_screen_variant TYPE REF TO zcl_abapgit_objects_generic.
-
-    DATA: ls_screen_variant TYPE ty_screen_variant,
-          ls_item           TYPE zif_abapgit_definitions=>ty_item.
+    DATA: ls_screen_variant TYPE ty_screen_variant.
 
     DATA: lv_text TYPE natxt.
 
@@ -79,32 +76,27 @@ CLASS ZCL_ABAPGIT_OBJECT_SCVI IMPLEMENTATION.
       CHANGING
         cg_data = ls_screen_variant ).
 
-    ls_item-obj_type = 'SCVI'.
-    ls_item-obj_name = ls_screen_variant-header-scvariant.
-    ls_item-devclass = iv_package.
-
-    CREATE OBJECT lo_screen_variant
-      EXPORTING
-        is_item = ls_item.
-
     CALL FUNCTION 'ENQUEUE_ESSCVARCIU'
       EXPORTING
-        scvariant = ls_screen_variant-header-scvariant
+        scvariant = ls_screen_variant-shdsvci-scvariant
       EXCEPTIONS
         OTHERS    = 01.
-    IF sy-subrc NE 0.
-      MESSAGE e413(ms) WITH ls_screen_variant-header-scvariant INTO lv_text.
+    IF sy-subrc <> 0.
+      MESSAGE e413(ms) WITH ls_screen_variant-shdsvci-scvariant INTO lv_text.
       zcx_abapgit_exception=>raise_t100( ).
-    ENDIF. " IF sy-subrc NE 0
+    ENDIF. " IF sy-subrc <> 0
 
-    lo_screen_variant->deserialize(
-      EXPORTING
-        iv_package = iv_package
-        io_xml     = io_xml ).
+    corr_insert( iv_package = iv_package ).
+
+    MODIFY shdsvci    FROM ls_screen_variant-shdsvci.
+    MODIFY shdsvtxci  FROM TABLE ls_screen_variant-shdsvtxci[].
+    MODIFY shdsvfvci  FROM TABLE ls_screen_variant-shdsvfvci[].
+    MODIFY shdguixt   FROM TABLE ls_screen_variant-shdguixt[].
+    MODIFY shdgxtcode FROM TABLE ls_screen_variant-shdgxtcode[].
 
     CALL FUNCTION 'DEQUEUE_ESSCVARCIU'
       EXPORTING
-        scvariant = ls_screen_variant-header-scvariant.
+        scvariant = ls_screen_variant-shdsvci-scvariant.
 
   ENDMETHOD.
 
@@ -164,32 +156,32 @@ CLASS ZCL_ABAPGIT_OBJECT_SCVI IMPLEMENTATION.
 
     DATA: ls_screen_variant TYPE ty_screen_variant.
 
-    ls_screen_variant-header-scvariant = ms_item-obj_name.
+    ls_screen_variant-shdsvci-scvariant = ms_item-obj_name.
 
     CALL FUNCTION 'RS_HDSYS_READ_SC_VARIANT_DB'
       EXPORTING
-        scvariant        = ls_screen_variant-header-scvariant
+        scvariant        = ls_screen_variant-shdsvci-scvariant
       IMPORTING
-        header_scvariant = ls_screen_variant-header
+        header_scvariant = ls_screen_variant-shdsvci
       TABLES
-        values_scvariant = ls_screen_variant-field_contents[]
-        guixt_scripts    = ls_screen_variant-guixt_scripts_attributes[]
+        values_scvariant = ls_screen_variant-shdsvfvci[]
+        guixt_scripts    = ls_screen_variant-shdguixt[]
       EXCEPTIONS
         no_variant       = 1
         OTHERS           = 2.
-    IF sy-subrc NE 0.
+    IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
-    ENDIF. " IF sy-subrc NE 0
+    ENDIF. " IF sy-subrc <> 0
 
     SELECT *
     FROM shdsvtxci
-    INTO TABLE ls_screen_variant-texts[]
-    WHERE scvariant = ls_screen_variant-header-scvariant.
+    INTO TABLE ls_screen_variant-shdsvtxci[]
+    WHERE scvariant = ls_screen_variant-shdsvci-scvariant.
 
     SELECT *
     FROM shdgxtcode
-    INTO TABLE ls_screen_variant-guixt_scripts_code[]
-    WHERE scvariant = ls_screen_variant-header-scvariant.
+    INTO TABLE ls_screen_variant-shdgxtcode[]
+    WHERE scvariant = ls_screen_variant-shdsvci-scvariant.
 
     io_xml->add( iv_name = 'SCVI'
                  ig_data = ls_screen_variant ).
