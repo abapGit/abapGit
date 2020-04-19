@@ -38,7 +38,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SCVI IMPLEMENTATION.
     IF sy-subrc <> 0
     OR rv_user IS INITIAL.
       rv_user = c_user_unknown.
-    ENDIF. " IF sy-subrc <> 0
+    ENDIF.
 
   ENDMETHOD.
 
@@ -59,7 +59,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SCVI IMPLEMENTATION.
         OTHERS           = 4.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
-    ENDIF. " IF sy-subrc <> 0
+    ENDIF.
 
   ENDMETHOD.
 
@@ -84,7 +84,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SCVI IMPLEMENTATION.
     IF sy-subrc <> 0.
       MESSAGE e413(ms) WITH ls_screen_variant-shdsvci-scvariant INTO lv_text.
       zcx_abapgit_exception=>raise_t100( ).
-    ENDIF. " IF sy-subrc <> 0
+    ENDIF.
 
     corr_insert( iv_package = iv_package ).
 
@@ -140,7 +140,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SCVI IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_locked.
 
-    rv_is_locked = abap_false. " ' '
+    rv_is_locked = abap_false.
 
   ENDMETHOD.
 
@@ -171,7 +171,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SCVI IMPLEMENTATION.
         OTHERS           = 2.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
-    ENDIF. " IF sy-subrc <> 0
+    ENDIF.
 
     SELECT *
     FROM shdsvtxci
