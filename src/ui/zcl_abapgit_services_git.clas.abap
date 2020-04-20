@@ -12,7 +12,8 @@ CLASS zcl_abapgit_services_git DEFINITION
         zcx_abapgit_exception.
     CLASS-METHODS reset
       IMPORTING
-        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+        !iv_key     TYPE zif_abapgit_persistence=>ty_repo-key
+        !iv_refresh TYPE abap_bool DEFAULT abap_true
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS create_branch
@@ -256,9 +257,11 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
           lv_answer                 TYPE c LENGTH 1,
           lt_unnecessary_local_objs TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lt_selected               LIKE lt_unnecessary_local_objs,
-          lt_columns                TYPE string_table,
+          lt_columns                TYPE zif_abapgit_definitions=>ty_alv_column_tt,
           ls_checks                 TYPE zif_abapgit_definitions=>ty_delete_checks,
           li_popups                 TYPE REF TO zif_abapgit_popups.
+
+    FIELD-SYMBOLS: <ls_column> TYPE zif_abapgit_definitions=>ty_alv_column.
 
     lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
@@ -285,13 +288,15 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     IF lines( lt_unnecessary_local_objs ) > 0.
 
-      INSERT `OBJECT` INTO TABLE lt_columns.
-      INSERT `OBJ_NAME` INTO TABLE lt_columns.
+      APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+      <ls_column>-name = 'OBJECT'.
+      APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+      <ls_column>-name = 'OBJ_NAME'.
 
       li_popups = zcl_abapgit_ui_factory=>get_popups( ).
       li_popups->popup_to_select_from_list(
         EXPORTING
-          it_list              = lt_unnecessary_local_objs
+          it_list               = lt_unnecessary_local_objs
           iv_header_text        = |Which unnecessary objects should be deleted?|
           iv_select_column_text = 'Delete?'
           it_columns_to_display = lt_columns
@@ -299,6 +304,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
           et_list              = lt_selected ).
 
       IF lines( lt_selected ) > 0.
+
         ls_checks = lo_repo->delete_checks( ).
         IF ls_checks-transport-required = abap_true.
           ls_checks-transport-transport = zcl_abapgit_ui_factory=>get_popups(
@@ -307,8 +313,11 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
         zcl_abapgit_objects=>delete( it_tadir  = lt_selected
                                      is_checks = ls_checks ).
-* update repo cache
-        lo_repo->refresh( ).
+
+        IF iv_refresh = abap_true.
+          lo_repo->refresh( ).
+        ENDIF.
+
       ENDIF.
 
     ENDIF.
