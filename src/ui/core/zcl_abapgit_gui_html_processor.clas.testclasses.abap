@@ -21,6 +21,10 @@ CLASS ltcl_gui_mock IMPLEMENTATION.
     ms_last_cache_signature-type = iv_type && '/' && iv_subtype.
     ms_last_cache_signature-data = iv_text.
   ENDMETHOD.
+  METHOD zif_abapgit_gui_services~register_event_handler.
+  ENDMETHOD.
+  METHOD zif_abapgit_gui_services~get_current_page_name.
+  ENDMETHOD.
 
   METHOD get_asset.
     rs_asset = ms_last_cache_signature.

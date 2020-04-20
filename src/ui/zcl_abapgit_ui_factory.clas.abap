@@ -19,6 +19,11 @@ CLASS zcl_abapgit_ui_factory DEFINITION
         VALUE(ro_gui) TYPE REF TO zcl_abapgit_gui
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS get_gui_services
+      RETURNING
+        VALUE(ri_gui_services) TYPE REF TO zif_abapgit_gui_services
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS get_frontend_services
       RETURNING
         VALUE(ri_fe_serv) TYPE REF TO zif_abapgit_frontend_services .
@@ -29,6 +34,7 @@ CLASS zcl_abapgit_ui_factory DEFINITION
     CLASS-DATA gi_gui_functions TYPE REF TO zif_abapgit_gui_functions .
     CLASS-DATA go_gui TYPE REF TO zcl_abapgit_gui .
     CLASS-DATA gi_fe_services TYPE REF TO zif_abapgit_frontend_services .
+    CLASS-DATA gi_gui_services TYPE REF TO zif_abapgit_gui_services.
 
     CLASS-METHODS init_asset_manager
       RETURNING
@@ -90,6 +96,14 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
 
     ri_gui_functions = gi_gui_functions.
 
+  ENDMETHOD.
+
+
+  METHOD get_gui_services.
+    IF gi_gui_services IS NOT BOUND.
+      gi_gui_services ?= get_gui( ).
+    ENDIF.
+    ri_gui_services = gi_gui_services.
   ENDMETHOD.
 
 

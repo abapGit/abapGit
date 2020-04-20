@@ -9,7 +9,8 @@ CLASS zcl_abapgit_gui_page_bkg DEFINITION
 
     METHODS constructor
       IMPORTING
-        iv_key TYPE zif_abapgit_persistence=>ty_repo-key .
+        iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+      RAISING zcx_abapgit_exception.
 
     METHODS zif_abapgit_gui_event_handler~on_event
         REDEFINITION .
@@ -315,7 +316,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
         super->zif_abapgit_gui_event_handler~on_event(
           EXPORTING
             iv_action    = iv_action
-            iv_prev_page = iv_prev_page
             iv_getdata   = iv_getdata
             it_postdata  = it_postdata
           IMPORTING
