@@ -100,12 +100,12 @@ ToDo
 
 ### Code inspector
 
-The repository objects can be checked with the Code inspector before staging.
+The repository objects can be checked with the Code inspector or the ABAP Test Cockpit (ATC) before staging. It's possible to perform a code inspector or ABAP Test Cockpit check without maintaing a check variant. In this case the end user is prompted with a F4 search help to choose a check variant during runtime.
 
 #### Code inspector check variant
 
-By entering the Code inspector variant, the check is activated.
+By entering a Code inspector or ABAP Test Cockpit (ATC) check variant, the check is activated. Local and remote check variants are supported. 
 
 #### Block commit commit/push if code inspection has erros
 
-This option can be used to prevent staging if errors occur in the Code Inspector.
+This option can be used to prevent staging if errors of priority 1 and 2 were found during the Code Inspector or ABAP Test Cockpit (ATC) check. Findings of priority &ge; 3 are not reported. A check variant must be configured to activate this option. abapGit won't change its behavior based on the transport settings of the `Transport Tool Integration` of the ATC setup in transaction `ATC`. If this option is not active and errors were found, the end user can stage anyway. It's not possible to view or request exemptions from within abapGit during the staging process. Furthermore it's not able to access the ATC check documentation for a finding from within abapGit.
