@@ -14,7 +14,7 @@ CLASS zcl_abapgit_object_oa2p DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-    DATA: mv_profile TYPE oa2c_profiles-profile.
+    DATA: mv_profile TYPE c LENGTH 30.
 
 ENDCLASS.
 
@@ -34,28 +34,40 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
 
   METHOD zif_abapgit_object~changed_by.
 
-    DATA: lo_persist     TYPE REF TO cl_oa2p_object_persist,
-          lo_profile     TYPE REF TO if_wb_object_data_model,
+    DATA: lo_persist     TYPE REF TO object,
+          lr_wb          TYPE REF TO data,
+          lo_profile     TYPE REF TO object,
           lv_profile_key TYPE seu_objkey.
 
+    FIELD-SYMBOLS: <lo_wb> TYPE any.
+
+
     lv_profile_key = mv_profile.
-    CREATE OBJECT lo_persist.
-    CREATE OBJECT lo_profile TYPE cl_oa2p_object_data.
+    CREATE OBJECT lo_persist TYPE ('CL_OA2P_OBJECT_PERSIST').
+
+    CREATE OBJECT lo_profile TYPE ('CL_OA2P_OBJECT_DATA').
+    CREATE DATA lr_wb TYPE REF TO ('IF_WB_OBJECT_DATA_MODEL').
+    ASSIGN lr_wb->* TO <lo_wb>.
+    <lo_wb> ?= lo_profile.
 
     TRY.
-        lo_persist->if_wb_object_persist~get(
+        CALL METHOD lo_persist->('IF_WB_OBJECT_PERSIST~GET')
           EXPORTING
-            p_object_key                 = lv_profile_key    " Object Key
-            p_version                    = 'A'    " Version (Active/Inactive)
+            p_object_key  = lv_profile_key    " Object Key
+            p_version     = 'A'    " Version (Active/Inactive)
           CHANGING
-            p_object_data                = lo_profile ).  " Object Data
+            p_object_data = <lo_wb>.  " Object Data
       CATCH cx_swb_object_does_not_exist.
         zcx_abapgit_exception=>raise( |OAuth2 Profile { lv_profile_key } doesn't exist.| ).
       CATCH cx_swb_exception.
         zcx_abapgit_exception=>raise( |Error when geting details of OAuth2 Profile { lv_profile_key }.| ).
     ENDTRY.
 
-    rv_user = lo_profile->get_changed_by( ).
+    lo_profile = <lo_wb>.
+    CALL METHOD lo_profile->('IF_WB_OBJECT_DATA_MODEL~GET_CHANGED_BY')
+      RECEIVING
+        p_user_name = rv_user.
+
 
   ENDMETHOD.
 
@@ -71,8 +83,7 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
     CONSTANTS: lc_actvt TYPE c LENGTH 2 VALUE `06`.
 
 
-    DATA: lo_persist     TYPE REF TO cl_oa2p_object_persist,
-          lo_profile     TYPE REF TO if_wb_object_data_model,
+    DATA: lo_persist     TYPE REF TO object,
           lv_profile_key TYPE seu_objkey.
 
     "authority check
@@ -85,11 +96,12 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
 
     "delete profile
     lv_profile_key = mv_profile.
-    CREATE OBJECT lo_persist.
-    CREATE OBJECT lo_profile TYPE cl_oa2p_object_data.
+    CREATE OBJECT lo_persist TYPE ('CL_OA2P_OBJECT_PERSIST').
 
     TRY.
-        lo_persist->if_wb_object_persist~delete( p_object_key = lv_profile_key ).   " Object Key
+        CALL METHOD lo_persist->('IF_WB_OBJECT_PERSIST~DELETE')
+          EXPORTING
+            p_object_key = lv_profile_key.   " Object Key
       CATCH cx_swb_object_does_not_exist.
       CATCH cx_swb_exception.
         zcx_abapgit_exception=>raise( |Error when deleting OAuth2 Profile { lv_profile_key }.| ).
@@ -133,20 +145,35 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lo_persist      TYPE REF TO cl_oa2p_object_persist,
-          lo_profile      TYPE REF TO if_wb_object_data_model,
-          ls_profile_data TYPE oa2c_sx_oa2p_object_data.
+    DATA: lo_persist      TYPE REF TO object,
+          lo_profile      TYPE REF TO object,
+          lr_wb           TYPE REF TO data,
+          lr_profile_data TYPE REF TO data.
+    FIELD-SYMBOLS: <ls_profile_data> TYPE data,
+                   <lo_wb>           TYPE any.
+
+    CREATE DATA lr_profile_data TYPE ('OA2C_SX_OA2P_OBJECT_DATA').
+    ASSIGN lr_profile_data->* TO <ls_profile_data>.
 
     io_xml->read( EXPORTING iv_name = 'PROFILE'
-                  CHANGING cg_data = ls_profile_data ).
+                  CHANGING cg_data = <ls_profile_data> ).
 
 
-    CREATE OBJECT lo_profile TYPE cl_oa2p_object_data.
-    lo_profile->set_data( p_data = ls_profile_data ).
 
-    CREATE OBJECT lo_persist.
+    CREATE OBJECT lo_profile TYPE ('CL_OA2P_OBJECT_DATA').
+    CREATE DATA lr_wb TYPE REF TO ('IF_WB_OBJECT_DATA_MODEL').
+    ASSIGN lr_wb->* TO <lo_wb>.
+    <lo_wb> ?= lo_profile.
+
+    CALL METHOD lo_profile->('IF_WB_OBJECT_DATA_MODEL~SET_DATA')
+      EXPORTING
+        p_data = <ls_profile_data>.
+
+    CREATE OBJECT lo_persist TYPE ('CL_OA2P_OBJECT_PERSIST').
     TRY.
-        lo_persist->if_wb_object_persist~save( p_object_data = lo_profile ).   " Object Data
+        CALL METHOD lo_persist->('IF_WB_OBJECT_PERSIST~SAVE')
+          EXPORTING
+            p_object_data = <lo_wb>.   " Object Data
       CATCH cx_swb_exception.
         zcx_abapgit_exception=>raise( |Error deserialize profile { mv_profile }.| ).
     ENDTRY.
@@ -160,7 +187,11 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    rv_bool = cl_oa2p_object_persist=>check_exists_on_db( i_profile = mv_profile ).
+    CALL METHOD ('CL_OA2P_OBJECT_PERSIST')=>('CHECK_EXISTS_ON_DB')
+      EXPORTING
+        i_profile = mv_profile
+      RECEIVING
+        r_exists  = rv_bool.
 
   ENDMETHOD.
 
@@ -228,22 +259,35 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lo_persist      TYPE REF TO cl_oa2p_object_persist,
-          lo_profile      TYPE REF TO if_wb_object_data_model,
+    DATA: lo_persist      TYPE REF TO object,
+          lo_profile      TYPE REF TO object,
           lv_profile_key  TYPE seu_objkey,
-          ls_profile_data TYPE oa2c_sx_oa2p_object_data.
+          lr_profile_data TYPE REF TO data,
+          lr_wb           TYPE REF TO data.
+
+    FIELD-SYMBOLS: <ls_profile_data> TYPE data,
+                   <lo_specifics>    TYPE any,
+                   <lo_wb>           TYPE any.
+
+    CREATE DATA lr_profile_data TYPE ('OA2C_SX_OA2P_OBJECT_DATA').
+    ASSIGN lr_profile_data->* TO <ls_profile_data>.
+
 
     lv_profile_key = mv_profile.
-    CREATE OBJECT lo_persist.
-    CREATE OBJECT lo_profile TYPE cl_oa2p_object_data.
+    CREATE OBJECT lo_persist TYPE ('CL_OA2P_OBJECT_PERSIST').
+    CREATE OBJECT lo_profile TYPE ('CL_OA2P_OBJECT_DATA').
+    CREATE DATA lr_wb TYPE REF TO ('IF_WB_OBJECT_DATA_MODEL').
+    ASSIGN lr_wb->* TO <lo_wb>.
+    <lo_wb> ?= lo_profile.
+
 
     TRY.
-        lo_persist->if_wb_object_persist~get(
+        CALL METHOD lo_persist->('IF_WB_OBJECT_PERSIST~GET')
           EXPORTING
-            p_object_key                 = lv_profile_key    " Object Key
-            p_version                    = 'A'    " Version (Active/Inactive)
+            p_object_key  = lv_profile_key    " Object Key
+            p_version     = 'A'    " Version (Active/Inactive)
           CHANGING
-            p_object_data                = lo_profile ).  " Object Data
+            p_object_data = <lo_wb>.  " Object Data
       CATCH cx_swb_object_does_not_exist.
         zcx_abapgit_exception=>raise( |OAuth2 Profile { lv_profile_key } doesn't exist.| ).
       CATCH cx_swb_exception.
@@ -251,20 +295,32 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
     ENDTRY.
 
     "remove system specific information
-    lo_profile->set_changed_by( p_user_name = '' ).
-    lo_profile->set_changed_on( p_date = '00000000'
-                                p_time = '000000' ).
-    lo_profile->set_created_by( p_user_name = '' ).
-    lo_profile->set_created_on( p_date = '00000000'
-                                p_time = '000000' ).
+    lo_profile = <lo_wb>.
+    CALL METHOD lo_profile->('IF_WB_OBJECT_DATA_MODEL~SET_CHANGED_BY')
+      EXPORTING
+        p_user_name = ''.
+    CALL METHOD lo_profile->('IF_WB_OBJECT_DATA_MODEL~SET_CHANGED_ON')
+      EXPORTING
+        p_date = '00000000'
+        p_time = '000000'.
+    CALL METHOD lo_profile->('IF_WB_OBJECT_DATA_MODEL~SET_CREATED_BY')
+      EXPORTING
+        p_user_name = ''.
+    CALL METHOD lo_profile->('IF_WB_OBJECT_DATA_MODEL~SET_CREATED_ON')
+      EXPORTING
+        p_date = '00000000'
+        p_time = '000000'.
 
-    lo_profile->get_data( IMPORTING p_data = ls_profile_data ).
+    CALL METHOD lo_profile->('IF_WB_OBJECT_DATA_MODEL~GET_DATA')
+      IMPORTING
+        p_data = <ls_profile_data>.
 
     "remove runtime information
-    CLEAR ls_profile_data-o_specifics.
+    ASSIGN COMPONENT 'O_SPECIFICS' OF STRUCTURE <ls_profile_data> TO <lo_specifics>.
+    CLEAR <lo_specifics>.
 
     io_xml->add( iv_name = 'PROFILE'
-                 ig_data = ls_profile_data ).
+                 ig_data = <ls_profile_data> ).
 
 
   ENDMETHOD.
