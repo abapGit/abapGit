@@ -61,7 +61,8 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
     DATA:
       mo_stage         TYPE REF TO zcl_abapgit_stage,
       mv_section_count TYPE i,
-      mv_pushed        TYPE abap_bool.
+      mv_pushed        TYPE abap_bool,
+      mo_repo_online   TYPE REF TO zcl_abapgit_repo_online.
 
     METHODS:
       render_patch
@@ -382,6 +383,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
       iv_key    = iv_key
       is_file   = is_file
       is_object = is_object ).
+
+    IF mo_repo->is_offline( ) = abap_true.
+      zcx_abapgit_exception=>raise( |Can't patch offline repos| ).
+    ENDIF.
+
+    mo_repo_online ?= mo_repo.
 
     " While patching we always want to be in split mode
     CLEAR: mv_unified.
@@ -740,7 +747,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
 
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
           EXPORTING
-            io_repo  = mo_repo
+            io_repo  = mo_repo_online
             io_stage = mo_stage.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
