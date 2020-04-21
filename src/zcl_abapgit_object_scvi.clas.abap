@@ -88,6 +88,12 @@ CLASS ZCL_ABAPGIT_OBJECT_SCVI IMPLEMENTATION.
 
     corr_insert( iv_package = iv_package ).
 
+*   Populate user details
+    ls_screen_variant-shdsvci-crdate = sy-datum.
+    ls_screen_variant-shdsvci-cruser = sy-uname.
+    ls_screen_variant-shdsvci-chdate = sy-datum.
+    ls_screen_variant-shdsvci-chuser = sy-uname.
+
     MODIFY shdsvci    FROM ls_screen_variant-shdsvci.
     MODIFY shdsvtxci  FROM TABLE ls_screen_variant-shdsvtxci[].
     MODIFY shdsvfvci  FROM TABLE ls_screen_variant-shdsvfvci[].
@@ -172,6 +178,12 @@ CLASS ZCL_ABAPGIT_OBJECT_SCVI IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+
+*   Clear all user details
+    CLEAR: ls_screen_variant-shdsvci-crdate,
+           ls_screen_variant-shdsvci-cruser,
+           ls_screen_variant-shdsvci-chdate,
+           ls_screen_variant-shdsvci-chuser.
 
     SELECT *
     FROM shdsvtxci
