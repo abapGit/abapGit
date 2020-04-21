@@ -87,6 +87,12 @@ CLASS ZCL_ABAPGIT_OBJECT_STVI IMPLEMENTATION.
 
     corr_insert( iv_package = iv_package ).
 
+*   Populate user details
+    ls_transaction_variant-shdtvciu-crdate = sy-datum.
+    ls_transaction_variant-shdtvciu-cruser = sy-uname.
+    ls_transaction_variant-shdtvciu-chdate = sy-datum.
+    ls_transaction_variant-shdtvciu-chuser = sy-uname.
+
     MODIFY shdtvciu   FROM ls_transaction_variant-shdtvciu.
     MODIFY shdttciu   FROM TABLE ls_transaction_variant-shdttciu[].
     INSERT shdfvguicu FROM TABLE ls_transaction_variant-shdfvguicu[] ACCEPTING DUPLICATE KEYS.
@@ -180,6 +186,12 @@ CLASS ZCL_ABAPGIT_OBJECT_STVI IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
+
+*   Clear all user details
+    CLEAR: ls_transaction_variant-shdtvciu-crdate,
+           ls_transaction_variant-shdtvciu-cruser,
+           ls_transaction_variant-shdtvciu-chdate,
+           ls_transaction_variant-shdtvciu-chuser.
 
     SELECT *
     FROM shdttciu
