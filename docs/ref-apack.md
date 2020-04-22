@@ -18,7 +18,7 @@ The metadata follows the [POM format by Apache Maven](https://maven.apache.org/p
 - `git_url`: The URL where your main repository is located, e.g. `https://github.com/larshp/abapGit.git`
 - `dependencies`: Optional, only needs to be filled if this project has dependencies to other projects. You only need to specify `group_id`, `artifact_id`, `version` and `git_url` to identify the dependency. `target_package` is ignored during serialization. **Note:** Be sure to specify the `git_url` for each dependency properly as this is currently the only way how dependencies can automatically be resolved.
 
-If such an implementation class is detected during the serialization process, a corresponding `.apack-mainfest.xml` file will be created on the top level of the Git repository. This contains the APACK metadata information.
+If such an implementation class is detected during the serialization process, a corresponding `.apack-manifest.xml` file will be created on the top level of the Git repository. This contains the APACK metadata information.
 
 ### Transporting APACK implementation classes
 
