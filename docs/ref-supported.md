@@ -85,6 +85,7 @@ SAJT | Application job template | [1581](https://github.com/larshp/abapGit/issue
 SAMC | ABAP Messaging Channels | Yes
 SAPC | ABAP Push Channels | Yes
 SCP1 | BC Set or Customizing Profile | [#1004](https://github.com/larshp/abapGit/issues/1004)
+SCVI | Screen Variants | Yes
 SFBF | Business Function + Assignment | Yes
 SFBS | Business Function Set + Assignment | Yes
 SFPF | Form Object: Form | Yes
