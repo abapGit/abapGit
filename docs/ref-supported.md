@@ -106,6 +106,7 @@ SQSC | Database Procedure Proxy | Yes
 SRFC | RFC Service | Yes
 SSFO | SAP Smart Form | Yes
 SSST | SAP Smart Style | Yes
+STVI | Transaction Variants | Yes
 STYL | SAPscript style | Yes
 SUCU | Authorization Groups (TBRG_AUTH) | Yes
 SUSC | Authorization object class | Yes
