@@ -60,7 +60,17 @@ CLASS zcl_abapgit_object_clas DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         IMPORTING
           !io_xml TYPE REF TO zcl_abapgit_xml_output
         RAISING
-          zcx_abapgit_exception .
+          zcx_abapgit_exception,
+      source_apack_replacement
+        CHANGING
+          !ct_source TYPE seop_source_string
+        RAISING
+          zcx_abapgit_exception,
+      repo_apack_replacement
+        CHANGING
+          !ct_source TYPE seop_source_string
+        RAISING
+          zcx_abapgit_exception.
 
   PRIVATE SECTION.
     METHODS:
@@ -136,6 +146,7 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
       it_local_macros          = lt_local_macros
       it_local_test_classes    = lt_test_classes ).
 
+    repo_apack_replacement( CHANGING ct_source = lt_source ).
     mi_object_oriented_object_fct->deserialize_source(
       is_key    = ls_class_key
       it_source = lt_source ).
@@ -452,6 +463,58 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD source_apack_replacement.
+
+    FIELD-SYMBOLS: <lv_source> LIKE LINE OF ct_source.
+
+    LOOP AT ct_source ASSIGNING <lv_source>.
+
+      FIND FIRST OCCURRENCE OF REGEX '^\s*INTERFACES(:| )\s*zif_apack_manifest\s*.' IN <lv_source>.
+      IF sy-subrc = 0.
+        REPLACE FIRST OCCURRENCE OF 'zif_apack_manifest' IN <lv_source> WITH 'if_apack_manifest' IGNORING CASE.
+
+        REPLACE ALL OCCURRENCES OF 'zif_apack_manifest~descriptor' IN TABLE ct_source
+                              WITH 'if_apack_manifest~descriptor' IGNORING CASE.
+
+        EXIT.
+      ENDIF.
+
+      FIND FIRST OCCURRENCE OF REGEX '^\s*PROTECTED\s*SECTION\s*.' IN <lv_source>.
+      IF sy-subrc = 0.
+        EXIT.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD repo_apack_replacement.
+
+    FIELD-SYMBOLS: <lv_source> LIKE LINE OF ct_source.
+
+    LOOP AT ct_source ASSIGNING <lv_source>.
+
+      FIND FIRST OCCURRENCE OF REGEX '^\s*INTERFACES(:| )\s*if_apack_manifest\s*.' IN <lv_source>.
+      IF sy-subrc = 0.
+        REPLACE FIRST OCCURRENCE OF 'if_apack_manifest' IN <lv_source> WITH 'zif_apack_manifest' IGNORING CASE.
+
+        REPLACE ALL OCCURRENCES OF 'if_apack_manifest~descriptor' IN TABLE ct_source
+                              WITH 'zif_apack_manifest~descriptor' IGNORING CASE.
+
+        EXIT.
+      ENDIF.
+
+      FIND FIRST OCCURRENCE OF REGEX '^\s*PROTECTED\s*SECTION\s*.' IN <lv_source>.
+      IF sy-subrc = 0.
+        EXIT.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~changed_by.
 
     TYPES: BEGIN OF ty_includes,
@@ -578,6 +641,8 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
     lt_source = mi_object_oriented_object_fct->serialize_abap( ls_class_key ).
 
+    source_apack_replacement( CHANGING ct_source = lt_source ).
+
     mo_files->add_abap( lt_source ).
 
     lt_source = mi_object_oriented_object_fct->serialize_abap(
@@ -617,4 +682,6 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     serialize_xml( io_xml ).
 
   ENDMETHOD.
+
+
 ENDCLASS.
