@@ -71,6 +71,7 @@ JOBD | Technical Job Definition | Yes
 LPDC | Launchpad short texts | [#107](https://github.com/larshp/abapGit/issues/107)
 MSAG | Message Class | Yes
 NROB | Number Range Objects | Yes
+OA2P | OAuth2 Profile | Yes
 ODSO | DataStore Object | Yes
 OTGR | Object type group | [#1515](https://github.com/larshp/abapGit/issues/1515)
 PARA | SPA/GPA Parameters | Yes
