@@ -361,7 +361,6 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
       EXPORTING
         iv_url         = io_repo->get_url( )
         iv_branch_name = io_repo->get_branch_name( )
-        iv_deepen      = abap_false
         it_branches    = lt_branches_and_tags
       IMPORTING
         et_objects     = rt_objects ).
