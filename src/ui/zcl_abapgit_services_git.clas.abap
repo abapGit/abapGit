@@ -12,8 +12,7 @@ CLASS zcl_abapgit_services_git DEFINITION
         zcx_abapgit_exception.
     CLASS-METHODS reset
       IMPORTING
-        !iv_key     TYPE zif_abapgit_persistence=>ty_repo-key
-        !iv_refresh TYPE abap_bool DEFAULT abap_true
+        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS create_branch
@@ -314,9 +313,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
         zcl_abapgit_objects=>delete( it_tadir  = lt_selected
                                      is_checks = ls_checks ).
 
-        IF iv_refresh = abap_true.
-          lo_repo->refresh( ).
-        ENDIF.
+        lo_repo->refresh( ).
 
       ENDIF.
 
