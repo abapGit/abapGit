@@ -11,9 +11,6 @@ CLASS zcl_abapgit_object_srvb DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING
           zcx_abapgit_exception.
 
-  PROTECTED SECTION.
-
-
   PRIVATE SECTION.
     METHODS:
       clear_fields
