@@ -116,7 +116,7 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
            TO <lv_source>.
     ASSERT sy-subrc = 0.
 
-    <lv_source> = mo_files->read_string( 'sources' ).
+    <lv_source> = mo_files->read_string( 'assrvd' ).
 
     TRY.
         CREATE OBJECT li_object_data_model TYPE ('CL_SRVD_WB_OBJECT_DATA').
@@ -246,7 +246,7 @@ CLASS zcl_abapgit_object_srvd IMPLEMENTATION.
         ig_data = <ls_service_definition> ).
 
     mo_files->add_string(
-        iv_ext    = 'sources'
+        iv_ext    = 'assrvd'
         iv_string = lv_source ).
 
   ENDMETHOD.
