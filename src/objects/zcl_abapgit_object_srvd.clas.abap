@@ -16,6 +16,10 @@ CLASS zcl_abapgit_object_srvd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PRIVATE SECTION.
     METHODS:
+      clear_fields
+        CHANGING
+          cs_service_definition TYPE any,
+
       clear_field
         IMPORTING
           iv_fieldname          TYPE csequence
@@ -26,11 +30,6 @@ CLASS zcl_abapgit_object_srvd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       mi_persistence            TYPE REF TO if_wb_object_persist,
       mv_service_definition_key TYPE seu_objkey,
       mr_service_definition     TYPE REF TO data.
-
-    METHODS:
-      clear_fields
-        CHANGING
-          cs_service_definition TYPE any.
 
 ENDCLASS.
 
