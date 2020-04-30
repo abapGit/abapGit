@@ -216,6 +216,10 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
               ddddlsrcv_wa = <lg_data>.
         ENDIF.
 
+        CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~ACTIVATE')
+          EXPORTING
+            name = ms_item-obj_name.
+
         CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~WRITE_TADIR')
           EXPORTING
             objectname = ms_item-obj_name
