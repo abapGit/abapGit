@@ -27,7 +27,8 @@ CLASS zcl_abapgit_object_bdef DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         CHANGING
           cs_behaviour_definition TYPE any
         RAISING
-          cx_wb_object_operation_error,
+          cx_wb_object_operation_error
+          zcx_abapgit_exception,
 
       get_transport_req_if_needed
         IMPORTING
@@ -35,12 +36,18 @@ CLASS zcl_abapgit_object_bdef DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RETURNING
           VALUE(rv_transport_request) TYPE trkorr
         RAISING
+          zcx_abapgit_exception,
+
+      get_wb_object_operator
+        RETURNING
+          VALUE(ri_wb_object_operator) TYPE REF TO if_wb_object_operator
+        RAISING
           zcx_abapgit_exception.
 
     DATA:
       mi_persistence              TYPE REF TO if_wb_object_persist,
-      mv_behaviour_definition_key TYPE seu_objkey,
       mi_wb_object_operator       TYPE REF TO if_wb_object_operator,
+      mv_behaviour_definition_key TYPE seu_objkey,
       mr_behaviour_definition     TYPE REF TO data.
 
 ENDCLASS.
@@ -128,10 +135,6 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA:
-      ls_object_type TYPE wbobjtype,
-      lx_error       TYPE REF TO cx_wb_object_operation_error.
-
     super->constructor(
         is_item     = is_item
         iv_language = iv_language ).
@@ -146,31 +149,20 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |BDEF not supported by your NW release| ).
     ENDTRY.
 
-    ls_object_type-objtype_tr = 'BDEF'.
-    ls_object_type-subtype_wb = 'BDO'.
-
-    TRY.
-        mi_wb_object_operator = cl_wb_object_operator=>create_instance(
-                                    object_type = ls_object_type
-                                    object_key  = mv_behaviour_definition_key ).
-
-      CATCH cx_wb_object_operation_error INTO lx_error.
-        zcx_abapgit_exception=>raise(
-            iv_text     = lx_error->get_text( )
-            ix_previous = lx_error ).
-    ENDTRY.
-
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
 
     DATA:
-      li_object_data_model TYPE REF TO if_wb_object_data_model,
-      lx_error             TYPE REF TO cx_wb_object_operation_error.
+      li_object_data_model  TYPE REF TO if_wb_object_data_model,
+      li_wb_object_operator TYPE REF TO if_wb_object_operator,
+      lx_error              TYPE REF TO cx_wb_object_operation_error.
+
+    li_wb_object_operator = get_wb_object_operator( ).
 
     TRY.
-        mi_wb_object_operator->read( IMPORTING eo_object_data = li_object_data_model ).
+        li_wb_object_operator->read( IMPORTING eo_object_data = li_object_data_model ).
 
         rv_user = li_object_data_model->get_changed_by( ).
 
@@ -186,13 +178,16 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
 
     DATA:
-      lx_error             TYPE REF TO cx_wb_object_operation_error,
-      lv_transport_request TYPE trkorr.
+      lx_error              TYPE REF TO cx_wb_object_operation_error,
+      li_wb_object_operator TYPE REF TO if_wb_object_operator,
+      lv_transport_request  TYPE trkorr.
 
     lv_transport_request = get_transport_req_if_needed( iv_package ).
 
+    li_wb_object_operator = get_wb_object_operator( ).
+
     TRY.
-        mi_wb_object_operator->delete( lv_transport_request ).
+        li_wb_object_operator->delete( lv_transport_request ).
 
       CATCH cx_wb_object_operation_error INTO lx_error.
         zcx_abapgit_exception=>raise(
@@ -206,9 +201,10 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA:
-      li_object_data_model TYPE REF TO if_wb_object_data_model,
-      lx_error             TYPE REF TO cx_static_check,
-      lv_transport_request TYPE trkorr.
+      li_object_data_model  TYPE REF TO if_wb_object_data_model,
+      li_wb_object_operator TYPE REF TO if_wb_object_operator,
+      lx_error              TYPE REF TO cx_static_check,
+      lv_transport_request  TYPE trkorr.
 
     FIELD-SYMBOLS:
       <ls_behaviour_definition> TYPE any,
@@ -222,6 +218,8 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
         iv_name = 'BDEF'
       CHANGING
         cg_data = <ls_behaviour_definition> ).
+
+    li_wb_object_operator = get_wb_object_operator( ).
 
     TRY.
         CREATE OBJECT li_object_data_model TYPE ('CL_BLUE_SOURCE_OBJECT_DATA').
@@ -242,7 +240,7 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
           fill_metadata_from_db( CHANGING cs_behaviour_definition = <ls_behaviour_definition> ).
           li_object_data_model->set_data( <ls_behaviour_definition> ).
 
-          mi_wb_object_operator->update(
+          li_wb_object_operator->update(
               io_object_data    = li_object_data_model
               transport_request = lv_transport_request ).
 
@@ -250,20 +248,20 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
 
           li_object_data_model->set_data( <ls_behaviour_definition> ).
 
-          mi_wb_object_operator->create(
+          li_wb_object_operator->create(
               io_object_data    = li_object_data_model
               data_selection    = if_wb_object_data_selection_co=>c_properties
               package           = iv_package
               transport_request = lv_transport_request ).
 
-          mi_wb_object_operator->update(
+          li_wb_object_operator->update(
               io_object_data    = li_object_data_model
               data_selection    = if_wb_object_data_selection_co=>c_data_content
               transport_request = lv_transport_request ).
 
         ENDIF.
 
-        mi_wb_object_operator->activate( ).
+        li_wb_object_operator->activate( ).
 
         corr_insert( iv_package ).
 
@@ -346,9 +344,10 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA:
-      li_object_data_model TYPE REF TO if_wb_object_data_model,
-      lx_error             TYPE REF TO cx_wb_object_operation_error,
-      lv_source            TYPE string.
+      li_object_data_model  TYPE REF TO if_wb_object_data_model,
+      li_wb_object_operator TYPE REF TO if_wb_object_operator,
+      lx_error              TYPE REF TO cx_wb_object_operation_error,
+      lv_source             TYPE string.
 
     FIELD-SYMBOLS:
       <ls_behaviour_definition> TYPE any,
@@ -357,8 +356,10 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
     ASSIGN mr_behaviour_definition->* TO <ls_behaviour_definition>.
     ASSERT sy-subrc = 0.
 
+    li_wb_object_operator = get_wb_object_operator( ).
+
     TRY.
-        mi_wb_object_operator->read(
+        li_wb_object_operator->read(
           EXPORTING
             version        = 'A'
           IMPORTING
@@ -392,6 +393,7 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
   METHOD fill_metadata_from_db.
 
     DATA:
+      li_wb_object_operator       TYPE REF TO if_wb_object_operator,
       lr_behaviour_definition_old TYPE REF TO data.
 
     FIELD-SYMBOLS:
@@ -401,11 +403,13 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
       <lv_created_at_old>           TYPE xsddatetime_z,
       <lv_created_by_old>           TYPE syuname.
 
+    li_wb_object_operator = get_wb_object_operator( ).
+
     CREATE DATA lr_behaviour_definition_old TYPE ('CL_BLUE_SOURCE_OBJECT_DATA=>TY_OBJECT_DATA').
     ASSIGN lr_behaviour_definition_old->* TO <ls_behaviour_definition_old>.
     ASSERT sy-subrc = 0.
 
-    mi_wb_object_operator->read( IMPORTING data = <ls_behaviour_definition_old> ).
+    li_wb_object_operator->read( IMPORTING data = <ls_behaviour_definition_old> ).
 
     ASSIGN COMPONENT 'METADATA-CREATED_BY' OF STRUCTURE cs_behaviour_definition
            TO <lv_created_by>.
@@ -438,6 +442,35 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
     IF li_sap_package->are_changes_recorded_in_tr_req( ) = abap_true.
       rv_transport_request = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_wb_object_operator.
+
+    DATA:
+      ls_object_type TYPE wbobjtype,
+      lx_error       TYPE REF TO cx_wb_object_operation_error.
+
+    IF mi_wb_object_operator IS BOUND.
+      ri_wb_object_operator = mi_wb_object_operator.
+    ENDIF.
+
+    ls_object_type-objtype_tr = 'BDEF'.
+    ls_object_type-subtype_wb = 'BDO'.
+
+    TRY.
+        mi_wb_object_operator = cl_wb_object_operator=>create_instance(
+                                    object_type = ls_object_type
+                                    object_key  = mv_behaviour_definition_key ).
+
+      CATCH cx_wb_object_operation_error INTO lx_error.
+        zcx_abapgit_exception=>raise(
+            iv_text     = lx_error->get_text( )
+            ix_previous = lx_error ).
+    ENDTRY.
+
+    ri_wb_object_operator = mi_wb_object_operator.
 
   ENDMETHOD.
 
