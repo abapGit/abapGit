@@ -7,6 +7,7 @@ order: 20
 Type   | Description   | Supported
 :------------ | :------------ | ------------:
 ACID | Checkpoint Group | Yes
+AMSD |	Logical Database Schema
 AOBJ | Archiving Object | [#804](https://github.com/larshp/abapGit/issues/804)
 AREA | InfoArea | Yes
 ASFC | Field Catalog | Yes
