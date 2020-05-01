@@ -33,6 +33,7 @@ DOCT | General Text | Yes
 DOCV | Documentation (Independent) | Yes
 DOMA | Domain | Yes
 DSYS | Chapter of a Book Structure | Yes
+DTDC | Dynamic Cache
 DTEL | Data Element | Yes
 ECAT | eCATT Test Script | Yes
 ECSD | eCATT System Data Container | Yes
