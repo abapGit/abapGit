@@ -465,7 +465,18 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
   METHOD source_apack_replacement.
 
+    DATA: lv_clsname TYPE seoclsname.
     FIELD-SYMBOLS: <lv_source> LIKE LINE OF ct_source.
+
+    lv_clsname = ms_item-obj_name.
+    SELECT COUNT(*)
+      FROM seometarel
+      WHERE clsname    = lv_clsname
+        AND refclsname = 'ZIF_APACK_MANIFEST'
+        AND version    = '1'.
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
 
     LOOP AT ct_source ASSIGNING <lv_source>.
 
