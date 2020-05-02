@@ -15,10 +15,14 @@ CLASS zcl_abapgit_hotkeys DEFINITION
 
     CLASS-METHODS:
       get_all_default_hotkeys
-        IMPORTING
-          io_page                  TYPE REF TO zcl_abapgit_gui_page OPTIONAL
         RETURNING
-          VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name
+          VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_hotkeys=>tty_hotkey_with_descr
+        RAISING
+          zcx_abapgit_exception,
+
+      merge_hotkeys_with_settings
+        CHANGING
+          ct_hotkey_actions TYPE zif_abapgit_gui_hotkeys=>tty_hotkey_with_descr
         RAISING
           zcx_abapgit_exception.
 
@@ -32,23 +36,42 @@ CLASS zcl_abapgit_hotkeys DEFINITION
 
     DATA mt_hotkey_providers TYPE TABLE OF REF TO zif_abapgit_gui_hotkeys.
 
-    CONSTANTS:
-      mc_hotkey_interface TYPE string VALUE `ZIF_ABAPGIT_GUI_PAGE_HOTKEY` ##NO_TEXT.
-
     CLASS-DATA:
       gv_hint_was_shown            TYPE abap_bool,
       gt_interface_implementations TYPE saboo_iimpt.
 
     CLASS-METHODS:
-      get_hotkeys_from_global_intf
+      filter_relevant_classes
         IMPORTING
-          io_page           TYPE REF TO zcl_abapgit_gui_page
+          it_classes TYPE seo_relkeys
         RETURNING
-          VALUE(rt_hotkeys) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name,
+          VALUE(rt_classes) TYPE seo_relkeys,
+
+      get_class_package
+        IMPORTING
+          iv_class_name TYPE seoclsname
+        RETURNING
+          VALUE(rv_package) TYPE devclass,
+
+      get_referred_class_name
+        IMPORTING
+          io_ref TYPE any
+        RETURNING
+          VALUE(rv_name) TYPE seoclsname,
+
+      get_hotkeys_by_class_name
+        IMPORTING
+          iv_class_name TYPE seoclsname
+        RETURNING
+          VALUE(rt_hotkeys) TYPE zif_abapgit_gui_hotkeys=>tty_hotkey_with_descr,
+
+      get_hotkeys_from_global_intf
+        RETURNING
+          VALUE(rt_hotkeys) TYPE zif_abapgit_gui_hotkeys=>tty_hotkey_with_descr
+        RAISING
+          zcx_abapgit_exception,
 
       get_hotkeys_from_local_intf
-        IMPORTING
-          io_page           TYPE REF TO zcl_abapgit_gui_page
         RETURNING
           VALUE(rt_hotkeys) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name
         RAISING
@@ -67,15 +90,55 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
 
 
+  METHOD filter_relevant_classes.
+
+    DATA lv_this_class_name TYPE seoclsname.
+    DATA lv_this_class_pkg TYPE devclass.
+    DATA lv_class_pkg TYPE devclass.
+    DATA lo_dummy TYPE REF TO zcl_abapgit_hotkeys.
+
+    FIELD-SYMBOLS <ls_class> LIKE LINE OF it_classes.
+
+    lv_this_class_name = get_referred_class_name( lo_dummy ).
+    lv_this_class_pkg = get_class_package( lv_this_class_name ).
+
+    LOOP AT it_classes ASSIGNING <ls_class>.
+      lv_class_pkg = get_class_package( <ls_class>-clsname ).
+      IF lv_class_pkg = lv_this_class_pkg.
+        APPEND <ls_class> TO rt_classes.
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD get_all_default_hotkeys.
 
     IF zcl_abapgit_factory=>get_environment( )->is_merged( ) = abap_true.
-      rt_hotkey_actions = get_hotkeys_from_local_intf( io_page ).
+      rt_hotkey_actions = get_hotkeys_from_local_intf( ).
     ELSE.
-      rt_hotkey_actions = get_hotkeys_from_global_intf( io_page ).
+      rt_hotkey_actions = get_hotkeys_from_global_intf( ).
     ENDIF.
 
-    SORT rt_hotkey_actions BY name.
+  ENDMETHOD.
+
+
+  METHOD get_class_package.
+
+    SELECT SINGLE devclass FROM tadir
+      INTO rv_package
+      WHERE pgmid = 'R3TR'
+      AND object = 'CLAS'
+      AND obj_name = iv_class_name.
+
+  ENDMETHOD.
+
+
+  METHOD get_hotkeys_by_class_name.
+
+    CALL METHOD (iv_class_name)=>zif_abapgit_gui_hotkeys~get_hotkey_actions
+      RECEIVING
+        rt_hotkey_actions = rt_hotkeys.
 
   ENDMETHOD.
 
@@ -84,36 +147,23 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
 
     DATA: lt_hotkey_actions TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name,
           lo_interface      TYPE REF TO cl_oo_interface,
-          lv_class_name     TYPE abap_abstypename,
-          lt_classes        TYPE seo_relkeys,
-          lv_where_clause   TYPE string.
+          li_dummy          TYPE REF TO zif_abapgit_gui_hotkeys,
+          lt_classes        TYPE seo_relkeys.
 
     FIELD-SYMBOLS: <ls_class> LIKE LINE OF lt_classes.
 
     TRY.
-        lo_interface ?= cl_oo_class=>get_instance( |{ mc_hotkey_interface }| ).
+        lo_interface ?= cl_oo_class=>get_instance( get_referred_class_name( li_dummy ) ).
       CATCH cx_class_not_existent.
         RETURN.
     ENDTRY.
 
     lt_classes = lo_interface->get_implementing_classes( ).
+    lt_classes = filter_relevant_classes( lt_classes ). " For security reasons
 
-    IF io_page IS BOUND.
-      lv_class_name = cl_abap_classdescr=>get_class_name( io_page ).
-      lv_class_name = substring_after( val   = lv_class_name
-                                       regex = '^\\CLASS=' ).
-      lv_where_clause = |CLSNAME = LV_CLASS_NAME|.
-    ENDIF.
-
-    LOOP AT lt_classes ASSIGNING <ls_class>
-                       WHERE (lv_where_clause).
-
-      CALL METHOD (<ls_class>-clsname)=>zif_abapgit_gui_page_hotkey~get_hotkey_actions
-        RECEIVING
-          rt_hotkey_actions = lt_hotkey_actions.
-
+    LOOP AT lt_classes ASSIGNING <ls_class>.
+      lt_hotkey_actions = get_hotkeys_by_class_name( <ls_class>-clsname ).
       INSERT LINES OF lt_hotkey_actions INTO TABLE rt_hotkeys.
-
     ENDLOOP.
 
   ENDMETHOD.
@@ -122,32 +172,15 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
   METHOD get_hotkeys_from_local_intf.
 
     DATA: lt_hotkey_actions            TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name,
-          lv_where_clause              TYPE string,
-          lv_class_name                TYPE abap_abstypename,
           lt_interface_implementations TYPE saboo_iimpt.
 
     FIELD-SYMBOLS: <ls_intf_implementation> TYPE vseoimplem.
 
     lt_interface_implementations = get_local_intf_implementations( ).
 
-    lv_where_clause = |REFCLSNAME = MC_HOTKEY_INTERFACE|.
-
-    IF io_page IS BOUND.
-      lv_class_name = cl_abap_classdescr=>get_class_name( io_page ).
-      lv_class_name = substring_after( val   = lv_class_name
-                                       regex = `^\\PROGRAM=` && sy-cprog && `\\CLASS=` ).
-      lv_where_clause = |{ lv_where_clause } AND CLSNAME = LV_CLASS_NAME|.
-    ENDIF.
-
-    LOOP AT lt_interface_implementations ASSIGNING <ls_intf_implementation>
-                                         WHERE (lv_where_clause).
-
-      CALL METHOD (<ls_intf_implementation>-clsname)=>zif_abapgit_gui_page_hotkey~get_hotkey_actions
-        RECEIVING
-          rt_hotkey_actions = lt_hotkey_actions.
-
+    LOOP AT lt_interface_implementations ASSIGNING <ls_intf_implementation>.
+      lt_hotkey_actions = get_hotkeys_by_class_name( <ls_intf_implementation>-clsname ).
       INSERT LINES OF lt_hotkey_actions INTO TABLE rt_hotkeys.
-
     ENDLOOP.
 
   ENDMETHOD.
@@ -184,6 +217,36 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
     ENDIF.
 
     rt_interface_implementations = gt_interface_implementations.
+
+  ENDMETHOD.
+
+
+  METHOD get_referred_class_name.
+
+    DATA lo_ref TYPE REF TO cl_abap_refdescr.
+    lo_ref ?= cl_abap_typedescr=>describe_by_data( io_ref ).
+    rv_name = lo_ref->get_referenced_type( )->get_relative_name( ).
+
+  ENDMETHOD.
+
+
+  METHOD merge_hotkeys_with_settings.
+
+    DATA lt_user_defined_hotkeys TYPE zif_abapgit_definitions=>tty_hotkey.
+    FIELD-SYMBOLS <ls_hotkey> LIKE LINE OF ct_hotkey_actions.
+    FIELD-SYMBOLS <ls_user_defined_hotkey> LIKE LINE OF lt_user_defined_hotkeys.
+
+    lt_user_defined_hotkeys = zcl_abapgit_persist_settings=>get_instance( )->read( )->get_hotkeys( ).
+
+    LOOP AT ct_hotkey_actions ASSIGNING <ls_hotkey>.
+      READ TABLE lt_user_defined_hotkeys ASSIGNING <ls_user_defined_hotkey>
+        WITH TABLE KEY action COMPONENTS
+          ui_component = <ls_hotkey>-ui_component
+          action       = <ls_hotkey>-action.
+      IF sy-subrc = 0.
+        <ls_hotkey>-hotkey = <ls_user_defined_hotkey>-hotkey.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
