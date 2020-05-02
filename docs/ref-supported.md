@@ -7,13 +7,14 @@ order: 20
 Type   | Description   | Supported
 :------------ | :------------ | ------------:
 ACID | Checkpoint Group | Yes
+AMSD |	Logical Database Schema
 AOBJ | Archiving Object | [#804](https://github.com/larshp/abapGit/issues/804)
 AREA | InfoArea | Yes
 ASFC | Field Catalog | Yes
 ASIS | Archiving Information Structure | [#1579](https://github.com/larshp/abapGit/issues/1579)
 AUTH | Authorization Check Fields | Yes
 AVAS | Classification | [#1360](https://github.com/larshp/abapGit/issues/1360)
-BDEF | Behaviour Definition | [#2021](https://github.com/larshp/abapGit/issues/2021)
+BDEF | Behaviour Definition | Yes
 BMFR | Application Component | [#2108](https://github.com/larshp/abapGit/issues/2108)
 BOBF | BOPF: Business Object Model | [#165](https://github.com/larshp/abapGit/issues/165)
 CHAR | Object characteristic | Yes
@@ -105,6 +106,7 @@ SPLO | Format Types | Yes
 SPRX | Proxy Object | Yes
 SQSC | Database Procedure Proxy | Yes
 SRFC | RFC Service | Yes
+SRVB | Service Binding | Yes
 SSFO | SAP Smart Form | Yes
 SSST | SAP Smart Style | Yes
 STVI | Transaction Variants | Yes
