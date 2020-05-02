@@ -4,7 +4,7 @@ INTERFACE zif_abapgit_gui_hotkeys
   TYPES:
     BEGIN OF ty_hotkey_with_descr.
       INCLUDE TYPE zif_abapgit_definitions=>ty_hotkey.
-      TYPES:
+    TYPES:
       description TYPE string,
     END OF ty_hotkey_with_descr .
   TYPES:
