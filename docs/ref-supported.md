@@ -105,6 +105,7 @@ SPLO | Format Types | Yes
 SPRX | Proxy Object | Yes
 SQSC | Database Procedure Proxy | Yes
 SRFC | RFC Service | Yes
+SRVB | Service Binding | Yes
 SSFO | SAP Smart Form | Yes
 SSST | SAP Smart Style | Yes
 STVI | Transaction Variants | Yes
