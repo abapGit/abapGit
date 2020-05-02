@@ -33,6 +33,7 @@ DIAL | Dialog Module | Yes
 DOCT | General Text | Yes
 DOCV | Documentation (Independent) | Yes
 DOMA | Domain | Yes
+DRUL | Dependency Rule
 DSYS | Chapter of a Book Structure | Yes
 DTEL | Data Element | Yes
 ECAT | eCATT Test Script | Yes
