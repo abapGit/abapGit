@@ -4,7 +4,7 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
   CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_gui_page_hotkey, zif_abapgit_gui_hotkeys.
+    INTERFACES: zif_abapgit_gui_hotkeys.
     METHODS:
       constructor
         RAISING zcx_abapgit_exception,
@@ -428,68 +428,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     ls_hotkey_action-description   = |Show log|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_log.
-    ls_hotkey_action-hotkey = |l|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-    DATA: ls_hotkey_action TYPE zif_abapgit_gui_page_hotkey=>ty_hotkey_with_name.
-
-    ls_hotkey_action-name   = |abapGit settings|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_settings.
-    ls_hotkey_action-hotkey = |x|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-name   = |Stage changes|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_stage.
-    ls_hotkey_action-hotkey = |s|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-name   = |Switch branch|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-git_branch_switch.
-    ls_hotkey_action-hotkey = |b|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-name   = |Installed repo list|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_repo_overview.
-    ls_hotkey_action-hotkey = |o|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-name   = |Refresh repository|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_refresh.
-    ls_hotkey_action-hotkey = |r|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-name   = |Pull|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-git_pull.
-    ls_hotkey_action-hotkey = |p|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-name   = |Add online repository|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_newonline.
-    ls_hotkey_action-hotkey = |n|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-name   = |Uninstall repository|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_purge.
-    ls_hotkey_action-hotkey = |u|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-name   = |Show diffs|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_diff.
-    ls_hotkey_action-hotkey = |d|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-name   = |Run code inspector|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_code_inspector.
-    ls_hotkey_action-hotkey = |i|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-name   = |Show log|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_log.
     ls_hotkey_action-hotkey = |l|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.

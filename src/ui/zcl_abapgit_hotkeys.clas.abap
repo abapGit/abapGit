@@ -73,7 +73,7 @@ CLASS zcl_abapgit_hotkeys DEFINITION
 
       get_hotkeys_from_local_intf
         RETURNING
-          VALUE(rt_hotkeys) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name
+          VALUE(rt_hotkeys) TYPE zif_abapgit_gui_hotkeys=>tty_hotkey_with_descr
         RAISING
           zcx_abapgit_exception,
 
@@ -145,7 +145,7 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
 
   METHOD get_hotkeys_from_global_intf.
 
-    DATA: lt_hotkey_actions TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name,
+    DATA: lt_hotkey_actions LIKE rt_hotkeys,
           lo_interface      TYPE REF TO cl_oo_interface,
           li_dummy          TYPE REF TO zif_abapgit_gui_hotkeys,
           lt_classes        TYPE seo_relkeys.
@@ -171,7 +171,7 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
 
   METHOD get_hotkeys_from_local_intf.
 
-    DATA: lt_hotkey_actions            TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name,
+    DATA: lt_hotkey_actions            LIKE rt_hotkeys,
           lt_interface_implementations TYPE saboo_iimpt.
 
     FIELD-SYMBOLS: <ls_intf_implementation> TYPE vseoimplem.
