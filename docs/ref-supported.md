@@ -7,13 +7,14 @@ order: 20
 Type   | Description   | Supported
 :------------ | :------------ | ------------:
 ACID | Checkpoint Group | Yes
+AMSD |	Logical Database Schema
 AOBJ | Archiving Object | [#804](https://github.com/larshp/abapGit/issues/804)
 AREA | InfoArea | Yes
 ASFC | Field Catalog | Yes
 ASIS | Archiving Information Structure | [#1579](https://github.com/larshp/abapGit/issues/1579)
 AUTH | Authorization Check Fields | Yes
 AVAS | Classification | [#1360](https://github.com/larshp/abapGit/issues/1360)
-BDEF | Behaviour Definition | [#2021](https://github.com/larshp/abapGit/issues/2021)
+BDEF | Behaviour Definition | Yes
 BMFR | Application Component | [#2108](https://github.com/larshp/abapGit/issues/2108)
 BOBF | BOPF: Business Object Model | [#165](https://github.com/larshp/abapGit/issues/165)
 CHAR | Object characteristic | Yes
@@ -32,7 +33,9 @@ DIAL | Dialog Module | Yes
 DOCT | General Text | Yes
 DOCV | Documentation (Independent) | Yes
 DOMA | Domain | Yes
+DRUL | Dependency Rule
 DSYS | Chapter of a Book Structure | Yes
+DTDC | Dynamic Cache
 DTEL | Data Element | Yes
 ECAT | eCATT Test Script | Yes
 ECSD | eCATT System Data Container | Yes
@@ -71,6 +74,7 @@ JOBD | Technical Job Definition | Yes
 LPDC | Launchpad short texts | [#107](https://github.com/larshp/abapGit/issues/107)
 MSAG | Message Class | Yes
 NROB | Number Range Objects | Yes
+OA2P | OAuth2 Profile | Yes
 ODSO | DataStore Object | Yes
 OTGR | Object type group | [#1515](https://github.com/larshp/abapGit/issues/1515)
 PARA | SPA/GPA Parameters | Yes
@@ -85,6 +89,7 @@ SAJT | Application job template | [1581](https://github.com/larshp/abapGit/issue
 SAMC | ABAP Messaging Channels | Yes
 SAPC | ABAP Push Channels | Yes
 SCP1 | BC Set or Customizing Profile | [#1004](https://github.com/larshp/abapGit/issues/1004)
+SCVI | Screen Variants | Yes
 SFBF | Business Function + Assignment | Yes
 SFBS | Business Function Set + Assignment | Yes
 SFPF | Form Object: Form | Yes
@@ -103,8 +108,11 @@ SPLO | Format Types | Yes
 SPRX | Proxy Object | Yes
 SQSC | Database Procedure Proxy | Yes
 SRFC | RFC Service | Yes
+SRVB | Service Binding | Yes
+SRVD | Service Definition | Yes
 SSFO | SAP Smart Form | Yes
 SSST | SAP Smart Style | Yes
+STVI | Transaction Variants | Yes
 STYL | SAPscript style | Yes
 SUCU | Authorization Groups (TBRG_AUTH) | Yes
 SUSC | Authorization object class | Yes
