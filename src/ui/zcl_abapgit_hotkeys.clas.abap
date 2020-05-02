@@ -322,7 +322,7 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     lt_registered_hotkeys = zif_abapgit_gui_hotkey_ctl~get_registered_hotkeys( ).
-    SORT lt_registered_hotkeys BY description.
+    SORT lt_registered_hotkeys BY ui_component description.
 
     " Render hotkeys
     ri_html->add( '<ul class="hotkeys">' ).
