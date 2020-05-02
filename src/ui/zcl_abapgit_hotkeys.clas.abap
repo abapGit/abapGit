@@ -263,10 +263,10 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
 
     DATA ls_hotkey LIKE LINE OF rt_hotkey_actions.
 
-    ls_hotkey-ui_component  = 'Hotkeys'.
-    ls_hotkey-action        = c_showhotkeys_action.
-    ls_hotkey-description   = 'Show hotkeys help'.
-    ls_hotkey-hotkey = '?'.
+    ls_hotkey-ui_component = 'Hotkeys'.
+    ls_hotkey-action       = c_showhotkeys_action.
+    ls_hotkey-description  = 'Show hotkeys help'.
+    ls_hotkey-hotkey       = '?'.
     INSERT ls_hotkey INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
@@ -274,40 +274,23 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_hotkey_ctl~get_registered_hotkeys.
 
-    DATA li_hotkey_provider      LIKE LINE OF mt_hotkey_providers.
-    DATA lt_hotkey_portion       LIKE rt_registered_hotkeys.
-    DATA lt_user_defined_hotkeys TYPE zif_abapgit_definitions=>tty_hotkey.
-    DATA lo_settings             TYPE REF TO zcl_abapgit_settings.
-    DATA ls_hotkey_to_add        LIKE LINE OF lt_hotkey_portion.
-
-    FIELD-SYMBOLS <ls_user_defined_hotkey> LIKE LINE OF lt_user_defined_hotkeys.
-
-    lo_settings             = zcl_abapgit_persist_settings=>get_instance( )->read( ).
-    lt_user_defined_hotkeys = lo_settings->get_hotkeys( ).
+    DATA li_hotkey_provider LIKE LINE OF mt_hotkey_providers.
+    DATA lt_hotkeys         LIKE rt_registered_hotkeys.
+    FIELD-SYMBOLS <ls_hotkey> LIKE LINE OF lt_hotkeys.
 
     LOOP AT mt_hotkey_providers INTO li_hotkey_provider.
-      lt_hotkey_portion = li_hotkey_provider->get_hotkey_actions( ).
+      APPEND LINES OF li_hotkey_provider->get_hotkey_actions( ) TO lt_hotkeys.
+    ENDLOOP.
 
-      LOOP AT lt_hotkey_portion INTO ls_hotkey_to_add.
-        READ TABLE lt_user_defined_hotkeys ASSIGNING <ls_user_defined_hotkey>
-          WITH TABLE KEY action COMPONENTS
-            ui_component = ls_hotkey_to_add-ui_component
-            action       = ls_hotkey_to_add-action.
-        IF sy-subrc = 0.
-          ls_hotkey_to_add-hotkey = <ls_user_defined_hotkey>-hotkey.
-        ENDIF.
+    merge_hotkeys_with_settings( CHANGING ct_hotkey_actions = lt_hotkeys ).
 
-        READ TABLE rt_registered_hotkeys TRANSPORTING NO FIELDS
-          WITH TABLE KEY action COMPONENTS
-            ui_component = ls_hotkey_to_add-ui_component
-            action       = ls_hotkey_to_add-action.
-        IF sy-subrc = 0.
-          DELETE rt_registered_hotkeys INDEX sy-tabix.
-        ENDIF.
-      ENDLOOP.
-
-      APPEND LINES OF lt_hotkey_portion TO rt_registered_hotkeys.
-
+    " Compress duplicates
+    LOOP AT lt_hotkeys ASSIGNING <ls_hotkey>.
+      READ TABLE rt_registered_hotkeys WITH KEY hotkey = <ls_hotkey>-hotkey TRANSPORTING NO FIELDS.
+      IF sy-subrc = 0. " If found command with same hotkey
+        DELETE rt_registered_hotkeys INDEX sy-tabix. " Later registered commands enjoys the priority
+      ENDIF.
+      APPEND <ls_hotkey> TO rt_registered_hotkeys.
     ENDLOOP.
 
   ENDMETHOD.
@@ -334,7 +317,7 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_hotkey> LIKE LINE OF lt_registered_hotkeys.
 
-    zif_abapgit_gui_hotkey_ctl~register_hotkeys( me ). " TODO refactor ? don't do this directly ?
+    zif_abapgit_gui_hotkey_ctl~register_hotkeys( me ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -351,19 +334,18 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
     ENDLOOP.
     ri_html->add( '</ul>' ).
 
-    " Wrap
-    CLEAR: lv_hotkey.
+    CLEAR lv_hotkey.
 
-*    READ TABLE lt_registered_hotkeys ASSIGNING <ls_hotkey>
-*      WITH TABLE KEY action COMPONENTS
-*      action = zcl_abapgit_gui_page=>c_global_page_action-showhotkeys.
-*    IF sy-subrc = 0.
-*      lv_hotkey = <ls_hotkey>-hotkey.
-*    ENDIF.
-*
-*    IF lv_hotkey IS NOT INITIAL.
-*      lv_hint = |Close window with '{ <ls_hotkey>-hotkey }' or upper right corner 'X'|.
-*    ENDIF.
+    READ TABLE lt_registered_hotkeys ASSIGNING <ls_hotkey>
+      WITH KEY action = c_showhotkeys_action.
+    IF sy-subrc = 0.
+      lv_hotkey = <ls_hotkey>-hotkey.
+    ENDIF.
+
+    lv_hint = |Close window with upper right corner 'X'|.
+    IF lv_hotkey IS NOT INITIAL.
+      lv_hint = lv_hint && | or '{ <ls_hotkey>-hotkey }'|.
+    ENDIF.
 
     ri_html = zcl_abapgit_gui_chunk_lib=>render_infopanel(
       iv_div_id     = 'hotkeys'
@@ -373,11 +355,11 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
       iv_scrollable = abap_false
       io_content    = ri_html ).
 
-*    IF <ls_hotkey> IS ASSIGNED AND zcl_abapgit_hotkeys=>should_show_hint( ) = abap_true.
-*      ro_html->add( |<div id="hotkeys-hint" class="corner-hint">|
-*        && |Press '{ <ls_hotkey>-hotkey }' to get keyboard shortcuts list|
-*        && |</div>| ).
-*    ENDIF.
+    IF lv_hotkey IS NOT INITIAL AND should_show_hint( ) = abap_true.
+      ri_html->add( |<div id="hotkeys-hint" class="corner-hint">|
+        && |Press '{ <ls_hotkey>-hotkey }' to get keyboard shortcuts list|
+        && |</div>| ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

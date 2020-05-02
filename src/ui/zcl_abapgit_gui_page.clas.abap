@@ -413,10 +413,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ri_html->add( html_head( ) ).
     ri_html->add( '<body>' ).                               "#EC NOTEXT
     ri_html->add( title( ) ).
-    ri_html->add( render_hotkey_overview( ) ).
 
     ri_html->add( render_content( ) ). " TODO -> render child
 
+    ri_html->add( render_hotkey_overview( ) ).
     ri_html->add( render_error_message_box( ) ).
 
     lt_events = me->get_events( ). " TODO refactor ???
