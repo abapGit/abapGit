@@ -7,7 +7,7 @@ order: 20
 Type   | Description   | Supported
 :------------ | :------------ | ------------:
 ACID | Checkpoint Group | Yes
-AMSD |	Logical Database Schema
+AMSD | Logical Database Schema | Yes
 AOBJ | Archiving Object | [#804](https://github.com/larshp/abapGit/issues/804)
 AREA | InfoArea | Yes
 ASFC | Field Catalog | Yes
@@ -33,9 +33,9 @@ DIAL | Dialog Module | Yes
 DOCT | General Text | Yes
 DOCV | Documentation (Independent) | Yes
 DOMA | Domain | Yes
-DRUL | Dependency Rule
+DRUL | Dependency Rule | Yes
 DSYS | Chapter of a Book Structure | Yes
-DTDC | Dynamic Cache
+DTDC | Dynamic Cache | Yes
 DTEL | Data Element | Yes
 ECAT | eCATT Test Script | Yes
 ECSD | eCATT System Data Container | Yes
