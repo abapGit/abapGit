@@ -13,6 +13,9 @@ CLASS zcl_abapgit_object_ddls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS is_baseinfo_supported
       RETURNING
         VALUE(rv_supported) TYPE abap_bool .
+    METHODS read_baseinfo
+      RETURNING
+        VALUE(rv_baseinfo_string) TYPE string.
 ENDCLASS.
 
 
@@ -196,7 +199,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
 
           ASSIGN COMPONENT 'BASEINFO_STRING' OF STRUCTURE <lg_data_baseinfo> TO <lg_baseinfo_string>.
           ASSERT sy-subrc = 0.
-          <lg_baseinfo_string> = mo_files->read_string( 'baseinfo' ) ##no_text.
+
+          <lg_baseinfo_string> = read_baseinfo( ).
 
           ASSIGN COMPONENT 'DDLNAME' OF STRUCTURE <lg_data_baseinfo> TO <lg_baseinfo_ddlname>.
           ASSERT sy-subrc = 0.
@@ -410,4 +414,19 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
                  ig_data = <lg_data> ).
 
   ENDMETHOD.
+
+
+  METHOD read_baseinfo.
+
+    TRY.
+        rv_baseinfo_string = mo_files->read_string( 'baseinfo' ) ##no_text.
+
+      CATCH zcx_abapgit_exception.
+        " File not found. That's ok, as the object could have been created in a
+        " system where baseinfo wasn't supported.
+        RETURN.
+    ENDTRY.
+
+  ENDMETHOD.
+
 ENDCLASS.
