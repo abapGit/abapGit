@@ -27,7 +27,6 @@ CLASS zcl_abapgit_object_amsd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         CHANGING
           cs_logical_db_schema TYPE any
         RAISING
-          cx_wb_object_operation_error
           zcx_abapgit_exception,
 
       get_transport_req_if_needed
@@ -40,7 +39,7 @@ CLASS zcl_abapgit_object_amsd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
       get_wb_object_operator
         RETURNING
-          VALUE(ri_wb_object_operator) TYPE REF TO if_wb_object_operator
+          VALUE(ri_wb_object_operator) TYPE REF TO object
         RAISING
           zcx_abapgit_exception.
 
@@ -48,7 +47,7 @@ CLASS zcl_abapgit_object_amsd DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       mr_logical_db_schema     TYPE REF TO data,
       mv_logical_db_schema_key TYPE seu_objkey,
       mi_persistence           TYPE REF TO if_wb_object_persist,
-      mi_wb_object_operator    TYPE REF TO if_wb_object_operator.
+      mi_wb_object_operator    TYPE REF TO object.
 
 ENDCLASS.
 
@@ -121,7 +120,7 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
   METHOD fill_metadata_from_db.
 
     DATA:
-      li_wb_object_operator    TYPE REF TO if_wb_object_operator,
+      li_wb_object_operator    TYPE REF TO object,
       lr_logical_db_schema_old TYPE REF TO data.
 
     FIELD-SYMBOLS:
@@ -137,7 +136,9 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
     ASSIGN lr_logical_db_schema_old->* TO <ls_logical_db_schema_old>.
     ASSERT sy-subrc = 0.
 
-    li_wb_object_operator->read( IMPORTING data = <ls_logical_db_schema_old> ).
+    CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
+      IMPORTING
+        data = <ls_logical_db_schema_old>.
 
     ASSIGN COMPONENT 'METADATA-CREATED_BY' OF STRUCTURE cs_logical_db_schema
            TO <lv_created_by>.
@@ -178,7 +179,7 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
 
     DATA:
       ls_object_type TYPE wbobjtype,
-      lx_error       TYPE REF TO cx_wb_object_operation_error.
+      lx_error       TYPE REF TO cx_root.
 
     IF mi_wb_object_operator IS BOUND.
       ri_wb_object_operator = mi_wb_object_operator.
@@ -188,11 +189,14 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
     ls_object_type-subtype_wb = 'TYP'.
 
     TRY.
-        mi_wb_object_operator = cl_wb_object_operator=>create_instance(
-                                    object_type = ls_object_type
-                                    object_key  = mv_logical_db_schema_key ).
+        CALL METHOD ('CL_WB_OBJECT_OPERATOR')=>('CREATE_INSTANCE')
+          EXPORTING
+            object_type = ls_object_type
+            object_key  = mv_logical_db_schema_key
+          RECEIVING
+            result      = mi_wb_object_operator.
 
-      CATCH cx_wb_object_operation_error INTO lx_error.
+      CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise(
             iv_text     = lx_error->get_text( )
             ix_previous = lx_error ).
@@ -206,15 +210,20 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
   METHOD zif_abapgit_object~changed_by.
 
     DATA:
-      li_object_data_model TYPE REF TO if_wb_object_data_model,
-      lx_error             TYPE REF TO cx_wb_object_operation_error.
+      li_wb_object_operator TYPE REF TO object,
+      li_object_data_model  TYPE REF TO if_wb_object_data_model,
+      lx_error              TYPE REF TO cx_root.
 
     TRY.
-        get_wb_object_operator( )->read( IMPORTING eo_object_data = li_object_data_model ).
+        li_wb_object_operator = get_wb_object_operator( ).
+
+        CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
+          IMPORTING
+            eo_object_data = li_object_data_model.
 
         rv_user = li_object_data_model->get_changed_by( ).
 
-      CATCH cx_wb_object_operation_error INTO lx_error.
+      CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise(
             iv_text     = lx_error->get_text( )
             ix_previous = lx_error ).
@@ -226,15 +235,19 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
 
     DATA:
-      lx_error             TYPE REF TO cx_wb_object_operation_error,
-      lv_transport_request TYPE trkorr.
+      li_wb_object_operator TYPE REF TO object,
+      lx_error              TYPE REF TO cx_root,
+      lv_transport_request  TYPE trkorr.
 
     lv_transport_request = get_transport_req_if_needed( iv_package ).
+    li_wb_object_operator = get_wb_object_operator( ).
 
     TRY.
-        get_wb_object_operator( )->delete( lv_transport_request ).
+        CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~DELETE')
+          EXPORTING
+            transport_request = lv_transport_request.
 
-      CATCH cx_wb_object_operation_error INTO lx_error.
+      CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise(
             iv_text     = lx_error->get_text( )
             ix_previous = lx_error ).
@@ -247,8 +260,8 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
 
     DATA:
       li_object_data_model  TYPE REF TO if_wb_object_data_model,
-      li_wb_object_operator TYPE REF TO if_wb_object_operator,
-      lx_error              TYPE REF TO cx_static_check,
+      li_wb_object_operator TYPE REF TO object,
+      lx_error              TYPE REF TO cx_root,
       lv_transport_request  TYPE trkorr.
 
     FIELD-SYMBOLS:
@@ -278,32 +291,35 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
           fill_metadata_from_db( CHANGING cs_logical_db_schema = <ls_logical_db_schema> ).
           li_object_data_model->set_data( <ls_logical_db_schema> ).
 
-          li_wb_object_operator->update(
+          CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
+            EXPORTING
               io_object_data    = li_object_data_model
-              transport_request = lv_transport_request ).
+              transport_request = lv_transport_request.
 
         ELSE.
 
           li_object_data_model->set_data( <ls_logical_db_schema> ).
 
-          li_wb_object_operator->create(
+          CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~CREATE')
+            EXPORTING
               io_object_data    = li_object_data_model
-              data_selection    = if_wb_object_data_selection_co=>c_properties
+              data_selection    = 'P' " if_wb_object_data_selection_co=>c_properties
               package           = iv_package
-              transport_request = lv_transport_request ).
+              transport_request = lv_transport_request.
 
-          li_wb_object_operator->update(
+          CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
+            EXPORTING
               io_object_data    = li_object_data_model
-              data_selection    = if_wb_object_data_selection_co=>c_data_content
-              transport_request = lv_transport_request ).
+              data_selection    = 'D' " if_wb_object_data_selection_co=>c_data_content
+              transport_request = lv_transport_request.
 
         ENDIF.
 
-        li_wb_object_operator->activate( ).
+        CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~ACTIVATE').
 
         corr_insert( iv_package ).
 
-      CATCH cx_swb_exception cx_wb_object_operation_error INTO lx_error.
+      CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise(
             iv_text     = lx_error->get_text( )
             ix_previous = lx_error ).
@@ -382,8 +398,9 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA:
-      li_object_data_model TYPE REF TO if_wb_object_data_model,
-      lx_error             TYPE REF TO cx_wb_object_operation_error.
+      li_object_data_model  TYPE REF TO if_wb_object_data_model,
+      lx_error              TYPE REF TO cx_root,
+      li_wb_object_operator TYPE REF TO object.
 
     FIELD-SYMBOLS:
       <ls_logical_db_schema> TYPE any.
@@ -391,17 +408,19 @@ CLASS zcl_abapgit_object_amsd IMPLEMENTATION.
     ASSIGN mr_logical_db_schema->* TO <ls_logical_db_schema>.
     ASSERT sy-subrc = 0.
 
+    li_wb_object_operator = get_wb_object_operator( ).
+
     TRY.
-        get_wb_object_operator( )->read(
+        CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
           EXPORTING
             version        = 'A'
           IMPORTING
             data           = <ls_logical_db_schema>
-            eo_object_data = li_object_data_model ).
+            eo_object_data = li_object_data_model.
 
         clear_fields( CHANGING cs_logical_db_schema = <ls_logical_db_schema> ).
 
-      CATCH cx_wb_object_operation_error INTO lx_error.
+      CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise(
             iv_text     = lx_error->get_text( )
             ix_previous = lx_error ).
