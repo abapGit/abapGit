@@ -66,6 +66,7 @@ CLASS zcl_abapgit_longtexts DEFINITION
           iv_object_name      TYPE sobj_name
           iv_longtext_id      TYPE dokil-id
           it_dokil            TYPE zif_abapgit_definitions=>tty_dokil
+          iv_master_lang_only TYPE abap_bool DEFAULT abap_false
         RETURNING
           VALUE(rt_longtexts) TYPE tty_longtexts
         RAISING
@@ -75,7 +76,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_LONGTEXTS IMPLEMENTATION.
+CLASS zcl_abapgit_longtexts IMPLEMENTATION.
 
 
   METHOD changed_by.
@@ -180,13 +181,20 @@ CLASS ZCL_ABAPGIT_LONGTEXTS IMPLEMENTATION.
       lt_dokil = it_dokil.
 
     ELSEIF iv_longtext_id IS NOT INITIAL.
-
-      SELECT * FROM dokil
-               INTO TABLE lt_dokil
-               WHERE id     = iv_longtext_id
-               AND   object = iv_object_name
-               ORDER BY PRIMARY KEY.
-
+      IF iv_master_lang_only = abap_true.
+        SELECT * FROM dokil
+                 INTO TABLE lt_dokil
+                 WHERE id     = iv_longtext_id
+                 AND   object = iv_object_name
+                 AND masterlang = abap_true
+                 ORDER BY PRIMARY KEY.
+      ELSE.
+        SELECT * FROM dokil
+                 INTO TABLE lt_dokil
+                 WHERE id     = iv_longtext_id
+                 AND   object = iv_object_name
+                 ORDER BY PRIMARY KEY.
+      ENDIF.
     ELSE.
 
       zcx_abapgit_exception=>raise( |serialize_longtexts parameter error| ).
@@ -232,18 +240,23 @@ CLASS ZCL_ABAPGIT_LONGTEXTS IMPLEMENTATION.
 
     DATA lt_longtexts TYPE tty_longtexts.
     DATA lt_dokil LIKE it_dokil.
+    DATA lv_master_lang_only TYPE abap_bool.
 
     lt_dokil = it_dokil.
-    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+    lv_master_lang_only = io_xml->i18n_params( )-serialize_master_lang_only.
+    IF lv_master_lang_only = abap_true.
       DELETE lt_dokil WHERE masterlang <> abap_true.
     ENDIF.
 
     lt_longtexts = read( iv_object_name = iv_object_name
                          iv_longtext_id = iv_longtext_id
-                         it_dokil       = lt_dokil ).
+                         it_dokil       = lt_dokil
+                         iv_master_lang_only = lv_master_lang_only ).
 
     io_xml->add( iv_name = mv_longtexts_name
                  ig_data = lt_longtexts ).
 
   ENDMETHOD.
+
+
 ENDCLASS.
