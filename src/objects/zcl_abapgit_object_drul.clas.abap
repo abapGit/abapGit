@@ -176,14 +176,14 @@ CLASS zcl_abapgit_object_drul IMPLEMENTATION.
           CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~CREATE')
             EXPORTING
               io_object_data    = li_object_data_model
-              data_selection    = if_wb_object_data_selection_co=>c_properties
+              data_selection    = 'P' " if_wb_object_data_selection_co=>c_properties
               package           = iv_package
               transport_request = lv_transport_request.
 
           CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
             EXPORTING
               io_object_data    = li_object_data_model
-              data_selection    = if_wb_object_data_selection_co=>c_data_content
+              data_selection    = 'D' " if_wb_object_data_selection_co=>c_data_content
               transport_request = lv_transport_request.
 
         ENDIF.
