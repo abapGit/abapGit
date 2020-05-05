@@ -40,6 +40,10 @@ input:focus, textarea:focus {
   cursor: pointer;
 }
 
+.repo_tab tr:hover {
+  background: yellow;
+}
+
 /* MODIFIERS */
 .emphasis     { font-weight: bold !important; }
 .crossout     { text-decoration: line-through !important; }
@@ -251,6 +255,11 @@ table.repo_tab {
 }
 .repo_tab tr:first-child td { border-top: 0px; }
 
+.repo_tab tr:hover {
+  background: yellow !important;
+}
+
+
 /* STAGE */
 
 th.stage-status { width: 30px; }
@@ -278,6 +287,10 @@ input.stage-filter { width: 18em; }
 }
 .stage_tab td.highlight {
   font-weight: bold;
+}
+
+.stage_tab tr:hover {
+  background: yellow !important;
 }
 
 .stage_tab td.cmd {  cursor: pointer; }
@@ -369,6 +382,11 @@ div.diff_content {
 div.diff_content tbody tr td{
   width: 50%;
   vertical-align: top
+}
+
+div.diff_content tbody tr:hover{
+  border-top: 1px solid orange;
+  border-bottom: 1px solid orange;
 }
 
 div.diff_head span.state-block {
