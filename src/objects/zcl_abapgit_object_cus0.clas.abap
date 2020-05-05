@@ -174,6 +174,10 @@ CLASS ZCL_ABAPGIT_OBJECT_CUS0 IMPLEMENTATION.
            ls_img_activity-header-ldate,
            ls_img_activity-header-ltime.
 
+    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+      DELETE ls_img_activity-texts WHERE spras <> sy-langu.
+    ENDIF.
+
     io_xml->add( iv_name = 'CUS0'
                  ig_data = ls_img_activity ).
 
