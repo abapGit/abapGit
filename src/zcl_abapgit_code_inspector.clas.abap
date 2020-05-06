@@ -355,6 +355,6 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
       rv_run_mode = co_run_mode-run_via_rfc.
     ENDIF.
 
-ENDMETHOD.
+  ENDMETHOD.
 
 ENDCLASS.
