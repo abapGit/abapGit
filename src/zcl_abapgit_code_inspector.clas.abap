@@ -349,13 +349,12 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
 
     IF sy-batch = abap_true.
       rv_run_mode = co_run_mode-run_via_rfc.
+    ELSEIF lo_settings->get_parallel_proc_disabled( ) = abap_false.
+      rv_run_mode = co_run_mode-run_loc_parallel.
     ELSE.
-      IF lo_settings->get_parallel_proc_disabled( ) = abap_true.
-        rv_run_mode = co_run_mode-run_via_rfc.
-      ELSE.
-        rv_run_mode = co_run_mode-run_loc_parallel.
-      ENDIF.
+      rv_run_mode = co_run_mode-run_via_rfc.
     ENDIF.
-  ENDMETHOD.
+
+ENDMETHOD.
 
 ENDCLASS.
