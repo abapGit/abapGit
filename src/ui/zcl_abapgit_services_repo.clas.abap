@@ -198,22 +198,22 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD popup_overwrite.
 
-    DATA: lt_columns  TYPE string_table,
+    DATA: lt_columns  TYPE zif_abapgit_definitions=>ty_alv_column_tt,
           lt_selected LIKE ct_overwrite,
-          lv_column   LIKE LINE OF lt_columns,
           li_popups   TYPE REF TO zif_abapgit_popups.
 
-    FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF ct_overwrite.
+    FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF ct_overwrite,
+                   <ls_column>    TYPE zif_abapgit_definitions=>ty_alv_column.
 
 
     IF lines( ct_overwrite ) = 0.
       RETURN.
     ENDIF.
 
-    lv_column = 'OBJ_TYPE'.
-    INSERT lv_column INTO TABLE lt_columns.
-    lv_column = 'OBJ_NAME'.
-    INSERT lv_column INTO TABLE lt_columns.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'OBJ_TYPE'.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'OBJ_NAME'.
 
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
     li_popups->popup_to_select_from_list(
@@ -243,23 +243,23 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD popup_package_overwrite.
 
-    DATA: lt_colums_to_display TYPE string_table,
-          lv_column            LIKE LINE OF lt_colums_to_display,
-          lt_selected          LIKE ct_overwrite,
-          li_popups            TYPE REF TO zif_abapgit_popups.
+    DATA: lt_columns  TYPE zif_abapgit_definitions=>ty_alv_column_tt,
+          lt_selected LIKE ct_overwrite,
+          li_popups   TYPE REF TO zif_abapgit_popups.
 
-    FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF ct_overwrite.
+    FIELD-SYMBOLS: <ls_overwrite> LIKE LINE OF ct_overwrite,
+                   <ls_column>    TYPE zif_abapgit_definitions=>ty_alv_column.
 
     IF lines( ct_overwrite ) = 0.
       RETURN.
     ENDIF.
 
-    lv_column = 'OBJ_TYPE'.
-    INSERT lv_column INTO TABLE lt_colums_to_display.
-    lv_column = 'OBJ_NAME'.
-    INSERT lv_column INTO TABLE lt_colums_to_display.
-    lv_column = 'DEVCLASS'.
-    INSERT lv_column INTO TABLE lt_colums_to_display.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'OBJ_TYPE'.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'OBJ_NAME'.
+    APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
+    <ls_column>-name = 'DEVCLASS'.
 
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
     li_popups->popup_to_select_from_list(
@@ -268,7 +268,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         iv_header_text        = |The following objects have been created in other packages.|
                              && | Select the objects which should be overwritten.|
         iv_select_column_text = |Overwrite?|
-        it_columns_to_display = lt_colums_to_display
+        it_columns_to_display = lt_columns
       IMPORTING
         et_list               = lt_selected ).
 

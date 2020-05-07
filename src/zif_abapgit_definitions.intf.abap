@@ -26,7 +26,7 @@ INTERFACE zif_abapgit_definitions
     BEGIN OF ty_file.
       INCLUDE TYPE ty_file_signature.
   TYPES: data TYPE xstring,
-    END OF ty_file .
+         END OF ty_file .
   TYPES:
     ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY .
   TYPES:
@@ -104,7 +104,7 @@ INTERFACE zif_abapgit_definitions
     BEGIN OF ty_overwrite.
       INCLUDE TYPE ty_item.
   TYPES: decision TYPE ty_yes_no,
-    END OF ty_overwrite .
+         END OF ty_overwrite .
   TYPES:
     ty_overwrite_tt TYPE STANDARD TABLE OF ty_overwrite WITH DEFAULT KEY
                               WITH UNIQUE HASHED KEY object_type_and_name
@@ -358,7 +358,6 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     tty_lines TYPE STANDARD TABLE OF i
                         WITH NON-UNIQUE DEFAULT KEY .
-
   TYPES:
     BEGIN OF ty_col_spec,
       tech_name    TYPE string,
@@ -369,11 +368,9 @@ INTERFACE zif_abapgit_definitions
     END OF ty_col_spec,
     tty_col_spec TYPE STANDARD TABLE OF ty_col_spec
                       WITH NON-UNIQUE KEY tech_name.
-
   TYPES:
     ty_proxy_bypass_url       TYPE c LENGTH 255,
     ty_range_proxy_bypass_url TYPE RANGE OF ty_proxy_bypass_url.
-
   TYPES:
     BEGIN OF ty_version,
       major           TYPE i,
@@ -382,7 +379,12 @@ INTERFACE zif_abapgit_definitions
       prerelase       TYPE string,
       prerelase_patch TYPE i,
     END OF ty_version.
-
+  TYPES: BEGIN OF ty_alv_column,
+           name   TYPE string,
+           text   TYPE string,
+           length TYPE lvc_outlen,
+         END OF ty_alv_column,
+         ty_alv_column_tt TYPE TABLE OF ty_alv_column WITH DEFAULT KEY.
   CONSTANTS:
     BEGIN OF c_git_branch_type,
       branch          TYPE ty_git_branch_type VALUE 'HD',
