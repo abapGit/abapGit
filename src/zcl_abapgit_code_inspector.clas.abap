@@ -131,8 +131,6 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
     " Because we want to persist them so we can run it in parallel.
     " Both are deleted afterwards.
     mv_name = |{ sy-uname }_{ sy-datum }_{ sy-uzeit }|.
-
-    " We have to disable parallelization in batch because of lock errors.
     mv_run_mode = decide_run_mode( ).
 
   ENDMETHOD.
@@ -348,6 +346,7 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
     lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
 
     IF sy-batch = abap_true.
+      " We have to disable parallelization in batch because of lock errors.
       rv_run_mode = co_run_mode-run_via_rfc.
     ELSEIF lo_settings->get_parallel_proc_disabled( ) = abap_false.
       rv_run_mode = co_run_mode-run_loc_parallel.
