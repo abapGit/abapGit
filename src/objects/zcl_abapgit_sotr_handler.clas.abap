@@ -1,39 +1,39 @@
-class ZCL_ABAPGIT_SOTR_HANDLER definition
-  public
-  final
-  create public .
+CLASS zcl_abapgit_sotr_handler DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
-  public section.
-    types: yt_SOTR_USE  type standard table of SOTR_USE with default key,
+  PUBLIC SECTION.
+    TYPES: yt_SOTR_USE   TYPE STANDARD TABLE OF sotr_use WITH DEFAULT KEY,
            yt_seocompodf TYPE STANDARD TABLE OF seocompodf WITH DEFAULT KEY.
 
-  class-methods read_sotr_wda
-    importing
-      iv_object_name TYPE sobj_name
-    RETURNING
-      VALUE(rt_sotr) TYPE zif_abapgit_definitions=>ty_sotr_tt
-    RAISING
-      zcx_abapgit_exception.
-  class-methods read_sotr_seocomp
-    IMPORTING
-      iv_object_name TYPE sobj_name
-    RETURNING
-      VALUE(rt_sotr) TYPE zif_abapgit_definitions=>ty_sotr_tt
-    RAISING
-      zcx_abapgit_exception.
-  class-methods create_sotr
-    IMPORTING
-      iv_package TYPE devclass
-      it_sotr    TYPE zif_abapgit_definitions=>ty_sotr_tt
-    RAISING
-      zcx_abapgit_exception.
+    CLASS-METHODS read_sotr_wda
+      IMPORTING
+        iv_object_name TYPE sobj_name
+      RETURNING
+        VALUE(rt_sotr) TYPE zif_abapgit_definitions=>ty_sotr_tt
+      RAISING
+        zcx_abapgit_exception.
+    CLASS-METHODS read_sotr_seocomp
+      IMPORTING
+        iv_object_name TYPE sobj_name
+      RETURNING
+        VALUE(rt_sotr) TYPE zif_abapgit_definitions=>ty_sotr_tt
+      RAISING
+        zcx_abapgit_exception.
+    CLASS-METHODS create_sotr
+      IMPORTING
+        iv_package TYPE devclass
+        it_sotr    TYPE zif_abapgit_definitions=>ty_sotr_tt
+      RAISING
+        zcx_abapgit_exception.
 
-   PROTECTED SECTION.
-     class-methods get_sotr_4_concept
-       importing
-         concept type SOTR_CONC
-       RETURNING
-         VALUE(rt_sotr) TYPE zif_abapgit_definitions=>ty_sotr_tt.
+  PROTECTED SECTION.
+    CLASS-METHODS get_sotr_4_concept
+      IMPORTING
+        concept        TYPE sotr_conc
+      RETURNING
+        VALUE(rt_sotr) TYPE zif_abapgit_definitions=>ty_sotr_tt.
 
 ENDCLASS.
 
@@ -42,7 +42,7 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
 
 
-    METHOD create_sotr.
+  METHOD create_sotr.
     DATA: lt_sotr    TYPE zif_abapgit_definitions=>ty_sotr_tt,
           lt_objects TYPE sotr_objects,
           ls_paket   TYPE sotr_pack,
@@ -104,13 +104,13 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  method get_sotr_4_concept.
-    DATA: ls_header     TYPE sotr_head,
-          lt_entries    TYPE sotr_text_tt,
-          lv_obj_name   type TROBJ_NAME.
+  METHOD get_sotr_4_concept.
+    DATA: ls_header   TYPE sotr_head,
+          lt_entries  TYPE sotr_text_tt,
+          lv_obj_name TYPE trobj_name.
 
-    FIELD-SYMBOLS: <ls_sotr>       LIKE LINE OF rt_sotr,
-                   <ls_entry>      LIKE LINE OF lt_entries.
+    FIELD-SYMBOLS: <ls_sotr>  LIKE LINE OF rt_sotr,
+                   <ls_entry> LIKE LINE OF lt_entries.
 
     CALL FUNCTION 'SOTR_GET_CONCEPT'
       EXPORTING
@@ -123,7 +123,7 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
         no_entry_found = 1
         OTHERS         = 2.
     IF sy-subrc <> 0.
-      exit.
+      RETURN.
     ENDIF.
 
     CLEAR: ls_header-paket,
@@ -144,12 +144,12 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
     <ls_sotr>-header = ls_header.
     <ls_sotr>-entries = lt_entries.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method read_sotr_seocomp.
+  METHOD read_sotr_seocomp.
     DATA: lv_concept    TYPE sotr_head-concept.
-    DATA: lt_seocompodf type yt_seocompodf.
+    DATA: lt_seocompodf TYPE yt_seocompodf.
 
     SELECT * FROM seocompodf
       INTO TABLE lt_seocompodf
@@ -160,40 +160,41 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
       AND type = 'SOTR_CONC'
       ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
 
-    if sy-subrc eq 0.
-      LOOP AT lt_seocompodf ASSIGNING field-symbol(<ls_seocompodf>).
+    IF sy-subrc EQ 0.
+      FIELD-SYMBOLS <ls_seocompodf> TYPE seocompodf.
+      LOOP AT lt_seocompodf ASSIGNING <ls_seocompodf>.
         lv_concept = translate( val = <ls_seocompodf>-attvalue from = '''' to = '' ).
         rt_sotr = get_sotr_4_concept( lv_concept ).
-      endloop.
-    endif.
+      ENDLOOP.
+    ENDIF.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method read_sotr_wda.
+  METHOD read_sotr_wda.
     DATA: lv_concept    TYPE sotr_head-concept.
-    DATA: lt_SOTR_USE type yt_sotr_use.
-    DATA: lv_obj_name   type TROBJ_NAME.
+    DATA: lt_SOTR_USE TYPE yt_sotr_use.
+    DATA: lv_obj_name   TYPE trobj_name.
 
     lv_obj_name = |{ iv_object_name }%|.
-    call function 'SOTR_USAGE_READ'
-      exporting
+    CALL FUNCTION 'SOTR_USAGE_READ'
+      EXPORTING
         pgmid          = 'LIMU'                 " Program ID in requests and tasks
         object         = 'WDYV'                 " Object Type
         obj_name       = lv_obj_name
-      importing
+      IMPORTING
         sotr_usage     = lt_sotr_use
-      exceptions
+      EXCEPTIONS
         no_entry_found = 1
         error_in_pgmid = 2
-        others         = 3
-      .
-    if sy-subrc eq 0.
-      LOOP AT lt_sotr_use assigning FIELD-SYMBOL(<s_sotr_use>).
+        OTHERS         = 3.
+    IF sy-subrc EQ 0.
+      FIELD-SYMBOLS <s_sotr_use> TYPE sotr_use.
+      LOOP AT lt_sotr_use ASSIGNING <s_sotr_use>.
         lv_concept = translate( val = <s_sotr_use>-concept from = '''' to = '' ).
         rt_sotr = get_sotr_4_concept( lv_concept ).
-      endloop.
-    endif.
+      ENDLOOP.
+    ENDIF.
 
-  endmethod.
+  ENDMETHOD.
 ENDCLASS.
