@@ -10,12 +10,20 @@ ENDCLASS.
 CLASS LTCL IMPLEMENTATION.
   METHOD sotr_wda_0001.
     DATA lt_sotr TYPE zif_abapgit_definitions=>ty_sotr_tt.
-    lt_sotr = zcl_abapgit_sotr_handler=>read_sotr_wda( iv_object_name = 'ZWD_ABAPGIT_TEST_SOTR' ).
-    cl_aunit_assert=>assert_not_initial( lt_sotr ).
+    TRY.
+        lt_sotr = zcl_abapgit_sotr_handler=>read_sotr_wda( iv_object_name = 'ZWD_ABAPGIT_TEST_SOTR' ).
+        cl_aunit_assert=>assert_not_initial( lt_sotr ).
+      CATCH zcx_abapgit_exception.
+        cl_aunit_assert=>fail( quit = if_aunit_constants=>method ).
+    ENDTRY.
   ENDMETHOD.
   METHOD sotr_cx_0002.
     DATA lt_sotr TYPE zif_abapgit_definitions=>ty_sotr_tt.
-    lt_sotr = zcl_abapgit_sotr_handler=>read_sotr_seocomp( iv_object_name = 'CX_ABAP_INVALID_NAME' ).
-    cl_aunit_assert=>assert_not_initial( lt_sotr ).
+    TRY.
+        lt_sotr = zcl_abapgit_sotr_handler=>read_sotr_seocomp( iv_object_name = 'CX_ABAP_INVALID_NAME' ).
+        cl_aunit_assert=>assert_not_initial( lt_sotr ).
+      CATCH zcx_abapgit_exception.
+        cl_aunit_assert=>fail( quit = if_aunit_constants=>method ).
+    ENDTRY.
   ENDMETHOD.
 ENDCLASS.
