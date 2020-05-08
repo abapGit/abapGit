@@ -1,5 +1,5 @@
 *"* use this source file for your ABAP unit test classes
-CLASS ltcl DEFINITION FOR TESTING
+CLASS ltcl_sotr_handler DEFINITION FOR TESTING
   DURATION SHORT
   RISK LEVEL HARMLESS.
   PRIVATE SECTION.
@@ -7,7 +7,7 @@ CLASS ltcl DEFINITION FOR TESTING
     METHODS sotr_cx_0002 FOR TESTING.
 ENDCLASS.
 
-CLASS ltcl IMPLEMENTATION.
+CLASS ltcl_sotr_handler IMPLEMENTATION.
   METHOD sotr_wda_0001.
     DATA lt_sotr TYPE zif_abapgit_definitions=>ty_sotr_tt.
     TRY.
