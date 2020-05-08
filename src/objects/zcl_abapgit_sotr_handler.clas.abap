@@ -172,9 +172,9 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
 
 
   METHOD read_sotr_wda.
-    DATA: lv_concept    TYPE sotr_head-concept.
-    DATA: lt_SOTR_USE TYPE yt_sotr_use.
-    DATA: lv_obj_name   TYPE trobj_name.
+    DATA: lv_concept  TYPE sotr_head-concept.
+    DATA: lt_sotr_use TYPE yt_sotr_use.
+    DATA: lv_obj_name TYPE trobj_name.
     FIELD-SYMBOLS <ls_sotr_use> TYPE sotr_use.
 
     lv_obj_name = |{ iv_object_name }%|.

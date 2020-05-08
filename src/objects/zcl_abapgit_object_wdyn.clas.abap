@@ -842,7 +842,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     DATA: ls_component TYPE wdy_component_metadata.
-
+    DATA: lt_sotr      TYPE zif_abapgit_definitions=>ty_sotr_tt.
 
     ls_component = read( ).
 
@@ -855,7 +855,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
 
     read table ls_component-comp_metadata-descriptions into data(ls_description) index 1.
     if sy-subrc eq 0.
-      data(lt_sotr) =  zcl_abapgit_sotr_handler=>read_sotr_wda( conv #( ls_description-component_name ) ).
+      lt_sotr = zcl_abapgit_sotr_handler=>read_sotr_wda( conv #( ls_description-component_name ) ).
       IF lines( lt_sotr ) > 0.
         io_xml->add( iv_name = 'SOTR'
                      ig_data = lt_sotr ).
