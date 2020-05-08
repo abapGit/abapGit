@@ -69,7 +69,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
 
 
   METHOD add_fm_exception.
@@ -772,6 +772,17 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
       recover_view( <ls_view> ).
     ENDLOOP.
 
+    "OTR stands for Online Text Repository
+    DATA: lt_sotr    TYPE zif_abapgit_definitions=>ty_sotr_tt.
+
+    io_xml->read( EXPORTING iv_name = 'SOTR'
+                  CHANGING cg_data = lt_sotr ).
+
+    IF lines( lt_sotr ) > 0.
+      zcl_abapgit_sotr_handler=>create_sotr( it_sotr    = lt_sotr
+                                             iv_package = iv_package ).
+    ENDIF.
+
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.
@@ -841,6 +852,15 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
                  iv_name = 'COMPONENTS' ).
     io_xml->add( ig_data = mt_sources
                  iv_name = 'SOURCES' ).
+
+    read table ls_component-comp_metadata-descriptions into data(ls_description) index 1.
+    if sy-subrc eq 0.
+      data(lt_sotr) =  zcl_abapgit_sotr_handler=>read_sotr_wda( conv #( ls_description-component_name ) ).
+      IF lines( lt_sotr ) > 0.
+        io_xml->add( iv_name = 'SOTR'
+                     ig_data = lt_sotr ).
+      ENDIF.
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
