@@ -773,9 +773,8 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       recover_view( <ls_view> ).
     ENDLOOP.
 
-    "OTR stands for Online Text Repository
     io_xml->read( EXPORTING iv_name = 'SOTR'
-                  CHANGING cg_data = lt_sotr ).
+                  CHANGING cg_data = lt_sotr ).  "OTR stands for Online Text Repository
 
     IF lines( lt_sotr ) > 0.
       zcl_abapgit_sotr_handler=>create_sotr( it_sotr    = lt_sotr
