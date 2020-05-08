@@ -5,7 +5,6 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     METHODS constructor
       RAISING zcx_abapgit_exception.
@@ -198,11 +197,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
         delete( ls_db ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 ENDCLASS.

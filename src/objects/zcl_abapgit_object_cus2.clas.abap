@@ -163,6 +163,10 @@ CLASS ZCL_ABAPGIT_OBJECT_CUS2 IMPLEMENTATION.
            ls_customizing_attribute-header-ldatetime,
            ls_customizing_attribute-header-luser.
 
+    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+      DELETE ls_customizing_attribute-titles WHERE spras <> sy-langu.
+    ENDIF.
+
     io_xml->add( iv_name = 'CUS2'
                  ig_data = ls_customizing_attribute ).
 

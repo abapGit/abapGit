@@ -55,6 +55,7 @@ CLASS zcl_abapgit_gui DEFINITION
       IMPORTING
         io_component      TYPE REF TO object OPTIONAL
         ii_asset_man      TYPE REF TO zif_abapgit_gui_asset_manager OPTIONAL
+        ii_hotkey_ctl     TYPE REF TO zif_abapgit_gui_hotkey_ctl OPTIONAL
         ii_html_processor TYPE REF TO zif_abapgit_gui_html_processor OPTIONAL
       RAISING
         zcx_abapgit_exception.
@@ -75,6 +76,7 @@ CLASS zcl_abapgit_gui DEFINITION
           mt_event_handlers TYPE STANDARD TABLE OF REF TO zif_abapgit_gui_event_handler,
           mi_router         TYPE REF TO zif_abapgit_gui_event_handler,
           mi_asset_man      TYPE REF TO zif_abapgit_gui_asset_manager,
+          mi_hotkey_ctl     TYPE REF TO zif_abapgit_gui_hotkey_ctl,
           mi_html_processor TYPE REF TO zif_abapgit_gui_html_processor,
           mo_html_viewer    TYPE REF TO cl_gui_html_viewer.
 
@@ -226,7 +228,8 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    mi_asset_man = ii_asset_man.
+    mi_asset_man      = ii_asset_man.
+    mi_hotkey_ctl     = ii_hotkey_ctl.
     mi_html_processor = ii_html_processor. " Maybe improve to middlewares stack ??
     startup( ).
 
@@ -377,6 +380,10 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       APPEND mi_router TO mt_event_handlers.
     ENDIF.
 
+    IF mi_hotkey_ctl IS BOUND.
+      mi_hotkey_ctl->reset( ).
+    ENDIF.
+
     li_html = mi_cur_page->render( ).
     lv_html = li_html->render( iv_no_indent_jscss = abap_true ).
 
@@ -431,6 +438,11 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       rv_page_name = cl_abap_classdescr=>describe_by_object_ref( mi_cur_page )->get_relative_name( ).
     ENDIF." ELSE - return is empty => initial page
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_services~get_hotkeys_ctl.
+    ri_hotkey_ctl = mi_hotkey_ctl.
   ENDMETHOD.
 
 
