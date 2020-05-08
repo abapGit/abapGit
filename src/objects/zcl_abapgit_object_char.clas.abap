@@ -161,7 +161,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
         IF sy-subrc = 0.
           CALL METHOD lo_char->('IF_CLS_ATTRIBUTE~SET_HIDE_ICON')
             EXPORTING
-              icon = <lg_any>.
+              im_hide_icon = <lg_any>.
         ENDIF.
 
         lo_char->if_cls_attribute~set_hide_remark( ls_char-cls_attribute-hide_remark ).
