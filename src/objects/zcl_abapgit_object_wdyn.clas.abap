@@ -743,7 +743,8 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: ls_component TYPE wdy_component_metadata.
+    DATA: lt_sotr      TYPE zif_abapgit_definitions=>ty_sotr_tt,
+          ls_component TYPE wdy_component_metadata.
 
     FIELD-SYMBOLS: <ls_view>       LIKE LINE OF ls_component-view_metadata,
                    <ls_controller> LIKE LINE OF ls_component-ctlr_metadata.
@@ -773,8 +774,6 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
     ENDLOOP.
 
     "OTR stands for Online Text Repository
-    DATA: lt_sotr    TYPE zif_abapgit_definitions=>ty_sotr_tt.
-
     io_xml->read( EXPORTING iv_name = 'SOTR'
                   CHANGING cg_data = lt_sotr ).
 
@@ -841,9 +840,9 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: ls_component   TYPE wdy_component_metadata.
-    DATA: lt_sotr        TYPE zif_abapgit_definitions=>ty_sotr_tt.
-    DATA: ls_description TYPE wdy_ext_ctx_map.
+    DATA: ls_component   TYPE wdy_component_metadata,
+          lt_sotr        TYPE zif_abapgit_definitions=>ty_sotr_tt,
+          ls_description TYPE wdy_ext_ctx_map.
 
     ls_component = read( ).
 
