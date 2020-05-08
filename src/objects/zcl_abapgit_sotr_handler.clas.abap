@@ -4,7 +4,7 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    TYPES: yt_SOTR_USE   TYPE STANDARD TABLE OF sotr_use WITH DEFAULT KEY,
+    TYPES: yt_sotr_use   TYPE STANDARD TABLE OF sotr_use WITH DEFAULT KEY,
            yt_seocompodf TYPE STANDARD TABLE OF seocompodf WITH DEFAULT KEY.
 
     CLASS-METHODS read_sotr_wda
@@ -31,7 +31,7 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
   PROTECTED SECTION.
     CLASS-METHODS get_sotr_4_concept
       IMPORTING
-        concept        TYPE sotr_conc
+        iv_concept     TYPE sotr_conc
       RETURNING
         VALUE(rt_sotr) TYPE zif_abapgit_definitions=>ty_sotr_tt.
 
@@ -114,7 +114,7 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
 
     CALL FUNCTION 'SOTR_GET_CONCEPT'
       EXPORTING
-        concept        = concept
+        concept        = iv_concept
       IMPORTING
         header         = ls_header
       TABLES
@@ -150,6 +150,7 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
   METHOD read_sotr_seocomp.
     DATA: lv_concept    TYPE sotr_head-concept.
     DATA: lt_seocompodf TYPE yt_seocompodf.
+    FIELD-SYMBOLS <ls_seocompodf> TYPE seocompodf.
 
     SELECT * FROM seocompodf
       INTO TABLE lt_seocompodf
@@ -160,8 +161,7 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
       AND type = 'SOTR_CONC'
       ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
 
-    IF sy-subrc EQ 0.
-      FIELD-SYMBOLS <ls_seocompodf> TYPE seocompodf.
+    IF sy-subrc = 0.
       LOOP AT lt_seocompodf ASSIGNING <ls_seocompodf>.
         lv_concept = translate( val = <ls_seocompodf>-attvalue from = '''' to = '' ).
         rt_sotr = get_sotr_4_concept( lv_concept ).
@@ -175,6 +175,7 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
     DATA: lv_concept    TYPE sotr_head-concept.
     DATA: lt_SOTR_USE TYPE yt_sotr_use.
     DATA: lv_obj_name   TYPE trobj_name.
+    FIELD-SYMBOLS <ls_sotr_use> TYPE sotr_use.
 
     lv_obj_name = |{ iv_object_name }%|.
     CALL FUNCTION 'SOTR_USAGE_READ'
@@ -188,10 +189,9 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
         no_entry_found = 1
         error_in_pgmid = 2
         OTHERS         = 3.
-    IF sy-subrc EQ 0.
-      FIELD-SYMBOLS <s_sotr_use> TYPE sotr_use.
-      LOOP AT lt_sotr_use ASSIGNING <s_sotr_use>.
-        lv_concept = translate( val = <s_sotr_use>-concept from = '''' to = '' ).
+    IF sy-subrc = 0.
+      LOOP AT lt_sotr_use ASSIGNING <ls_sotr_use>.
+        lv_concept = translate( val = <ls_sotr_use>-concept from = '''' to = '' ).
         rt_sotr = get_sotr_4_concept( lv_concept ).
       ENDLOOP.
     ENDIF.
