@@ -411,3 +411,24 @@ div.corner-hint {
   background-color: #79a0d2;
   /* todo merge with stage search */
 }
+
+/* SETTINGS */
+
+table.settings_tab {
+  background-color: #fff;
+  border-color: #ddd;
+}
+table.settings_tab th {
+  color: #888888;
+  border-bottom-color: #ddd;
+}
+table.settings_tab td {
+  color: #333;
+  border-top-color: #eee;
+}
+table.settings_tab input {
+  background-color: #f8f8f8;
+}
+table.settings_tab input:focus {
+  background-color: #fff;
+}

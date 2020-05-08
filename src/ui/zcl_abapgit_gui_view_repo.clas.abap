@@ -8,7 +8,6 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
 
     INTERFACES zif_abapgit_gui_renderable .
     INTERFACES zif_abapgit_gui_event_handler .
-    INTERFACES zif_abapgit_gui_page_hotkey.
 
     CONSTANTS:
       BEGIN OF c_actions,
@@ -903,11 +902,6 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
         open_in_master_language( ).
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 

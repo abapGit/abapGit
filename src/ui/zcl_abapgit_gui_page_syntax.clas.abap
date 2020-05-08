@@ -2,7 +2,6 @@ CLASS zcl_abapgit_gui_page_syntax DEFINITION PUBLIC FINAL CREATE PUBLIC
     INHERITING FROM zcl_abapgit_gui_page_codi_base.
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     METHODS:
       constructor
@@ -114,11 +113,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
             ei_page               = ei_page
             ev_state              = ev_state ).
     ENDCASE.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 

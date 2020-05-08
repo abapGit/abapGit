@@ -4,8 +4,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES:
-      zif_abapgit_gui_page_hotkey.
+    INTERFACES zif_abapgit_gui_hotkeys.
 
     METHODS:
       constructor
@@ -576,6 +575,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
       CLEAR: mv_pushed.
     ENDIF.
 
+    mi_gui_services->get_hotkeys_ctl( )->register_hotkeys( me ).
     ro_html = super->render_content( ).
 
   ENDMETHOD.
@@ -778,18 +778,20 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+  METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
 
     DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |Stage changes|.
-    ls_hotkey_action-action = |stagePatch|.
-    ls_hotkey_action-hotkey = |s|.
+    ls_hotkey_action-ui_component = 'Patch'.
+
+    ls_hotkey_action-description = |Stage changes|.
+    ls_hotkey_action-action      = |stagePatch|.
+    ls_hotkey_action-hotkey      = |s|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |Refresh local|.
-    ls_hotkey_action-action = |refreshLocal|.
-    ls_hotkey_action-hotkey = |r|.
+    ls_hotkey_action-description = |Refresh local|.
+    ls_hotkey_action-action      = |refreshLocal|.
+    ls_hotkey_action-hotkey      = |r|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.

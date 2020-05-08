@@ -6,8 +6,6 @@ CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_gui_page_hotkey .
-
     METHODS constructor
       IMPORTING
         !io_repo TYPE REF TO zcl_abapgit_repo
@@ -390,11 +388,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
         save( it_postdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 ENDCLASS.
