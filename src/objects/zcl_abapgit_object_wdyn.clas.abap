@@ -774,7 +774,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
     ENDLOOP.
 
     io_xml->read( EXPORTING iv_name = 'SOTR'
-                  CHANGING cg_data = lt_sotr ).  "OTR stands for Online Text Repository
+                  CHANGING cg_data = lt_sotr ).
 
     IF lines( lt_sotr ) > 0.
       zcl_abapgit_sotr_handler=>create_sotr( it_sotr    = lt_sotr
