@@ -33,19 +33,19 @@ CLASS zcl_abapgit_zip DEFINITION
       IMPORTING iv_filename  TYPE string
                 iv_binstring TYPE xstring
       RAISING   zcx_abapgit_exception.
-
-  PROTECTED SECTION.
-
-    CLASS-DATA gv_prev TYPE string .
-  PRIVATE SECTION.
-
     CLASS-METHODS encode_files
       IMPORTING
         !it_files      TYPE zif_abapgit_definitions=>ty_files_item_tt
       RETURNING
         VALUE(rv_xstr) TYPE xstring
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception .	  
+
+  PROTECTED SECTION.
+
+    CLASS-DATA gv_prev TYPE string .
+  PRIVATE SECTION.
+
     CLASS-METHODS filename
       IMPORTING
         !iv_str      TYPE string
