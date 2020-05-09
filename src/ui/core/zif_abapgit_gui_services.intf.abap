@@ -23,4 +23,8 @@ INTERFACE zif_abapgit_gui_services
     RETURNING
       VALUE(ri_hotkey_ctl) TYPE REF TO zif_abapgit_gui_hotkey_ctl.
 
+  METHODS get_html_parts
+    RETURNING
+      VALUE(ro_parts) TYPE REF TO zcl_abapgit_html_parts.
+
 ENDINTERFACE.
