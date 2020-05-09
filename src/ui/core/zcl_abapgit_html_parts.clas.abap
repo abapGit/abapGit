@@ -13,7 +13,7 @@ CLASS zcl_abapgit_html_parts DEFINITION
       IMPORTING
         !iv_collection TYPE string
       RETURNING
-        VALUE(rt_parts) TYPE zif_abapgit_html=>tty_collection .
+        VALUE(rt_parts) TYPE zif_abapgit_html=>tty_table_of .
     METHODS get_collection_names
       RETURNING
         VALUE(rt_list) TYPE string_table .
@@ -22,12 +22,13 @@ CLASS zcl_abapgit_html_parts DEFINITION
         !iv_collection TYPE string
       RETURNING
         VALUE(rv_size) TYPE i .
+    METHODS clear.
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_named_collection,
         name TYPE string,
-        pile TYPE zif_abapgit_html=>tty_collection,
+        pile TYPE zif_abapgit_html=>tty_table_of,
       END OF ty_named_collection.
     TYPES:
       tty_named_collection TYPE STANDARD TABLE OF ty_named_collection WITH KEY name.
@@ -56,6 +57,11 @@ CLASS ZCL_ABAPGIT_HTML_PARTS IMPLEMENTATION.
       iv_create_if_missing = abap_true ).
     APPEND ii_part TO lr_collection->pile.
 
+  ENDMETHOD.
+
+
+  METHOD clear.
+    clear mt_part_collections.
   ENDMETHOD.
 
 

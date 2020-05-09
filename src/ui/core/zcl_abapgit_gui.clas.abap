@@ -339,6 +339,8 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     ENDIF.
 
     CLEAR mt_event_handlers.
+    mo_html_parts->clear( ).
+
     IF mi_router IS BOUND.
       APPEND mi_router TO mt_event_handlers.
     ENDIF.
