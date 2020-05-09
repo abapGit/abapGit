@@ -61,7 +61,7 @@ CLASS ZCL_ABAPGIT_HTML_PARTS IMPLEMENTATION.
 
 
   METHOD clear.
-    clear mt_part_collections.
+    CLEAR mt_part_collections.
   ENDMETHOD.
 
 
