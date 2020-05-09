@@ -841,7 +841,8 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
 
     DATA: ls_component   TYPE wdy_component_metadata,
           lt_sotr        TYPE zif_abapgit_definitions=>ty_sotr_tt,
-          ls_description TYPE wdy_ext_ctx_map.
+          ls_description TYPE wdy_ext_ctx_map,
+          lv_object_name TYPE sobj_name.
 
     ls_component = read( ).
 
@@ -852,9 +853,10 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
     io_xml->add( ig_data = mt_sources
                  iv_name = 'SOURCES' ).
 
-    read table ls_component-comp_metadata-descriptions into ls_description index 1.
-    if sy-subrc = 0.
-      lt_sotr = zcl_abapgit_sotr_handler=>read_sotr_wda( conv #( ls_description-component_name ) ).
+    READ TABLE ls_component-comp_metadata-descriptions INTO ls_description INDEX 1.
+    IF sy-subrc = 0.
+      lv_object_name = ls_description-component_name.
+      lt_sotr = zcl_abapgit_sotr_handler=>read_sotr_wda( lv_object_name ).
       IF lines( lt_sotr ) > 0.
         io_xml->add( iv_name = 'SOTR'
                      ig_data = lt_sotr ).
