@@ -39,7 +39,7 @@ CLASS zcl_abapgit_zip DEFINITION
       RETURNING
         VALUE(rv_xstr) TYPE xstring
       RAISING
-        zcx_abapgit_exception .	  
+        zcx_abapgit_exception .
 
   PROTECTED SECTION.
 

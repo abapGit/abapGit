@@ -6,13 +6,13 @@ CLASS zcl_abapgit_gui_router DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_gui_event_handler.
-	
+
     CLASS-METHODS file_download
       IMPORTING
         !iv_package TYPE devclass
         !iv_xstr    TYPE xstring
       RAISING
-        zcx_abapgit_exception .	
+        zcx_abapgit_exception .
 
   PROTECTED SECTION.
   PRIVATE SECTION.
