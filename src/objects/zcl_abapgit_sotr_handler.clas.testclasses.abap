@@ -4,8 +4,8 @@ CLASS ltcl_sotr_handler DEFINITION FOR TESTING
   RISK LEVEL HARMLESS.
   PRIVATE SECTION.
     METHODS is_wd_component_existing
-      IMPORTING iv_component_name                 TYPE sobj_name
-      RETURNING VALUE(r_is_wd_component_existing) TYPE abap_bool.
+      IMPORTING iv_component_name                  TYPE sobj_name
+      RETURNING VALUE(rv_is_wd_component_existing) TYPE abap_bool.
     METHODS sotr_wda_0001 FOR TESTING.
     METHODS sotr_wda_0003_not_exist FOR TESTING.
     METHODS sotr_cx_0002 FOR TESTING.
@@ -23,7 +23,7 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
       IMPORTING
         repository     = ls_repository.
     IF ls_repository IS NOT INITIAL.
-      r_is_wd_component_existing = abap_true.
+      rv_is_wd_component_existing = abap_true.
     ENDIF.
   ENDMETHOD.
   METHOD sotr_wda_0001.
