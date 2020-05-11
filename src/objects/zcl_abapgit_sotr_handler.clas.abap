@@ -177,7 +177,7 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
     DATA: lv_obj_name TYPE trobj_name.
     FIELD-SYMBOLS <ls_sotr_use> TYPE sotr_use.
 
-    lv_obj_name = |{ iv_object_name }%|.
+    lv_obj_name = |{ iv_object_name }%|.  "Existence could be checked via function_module WDR_REPOSITORY_INFO, but might have been done earlier...
     CALL FUNCTION 'SOTR_USAGE_READ'
       EXPORTING
         pgmid          = 'LIMU'                 " Program ID in requests and tasks
