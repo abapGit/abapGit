@@ -4,6 +4,7 @@ CLASS ltcl_sotr_handler DEFINITION FOR TESTING
   RISK LEVEL HARMLESS.
   PRIVATE SECTION.
     METHODS _is_wd_component_existing
+      IMPORTING component_name                  TYPE sobj_name
       RETURNING VALUE(is_wd_component_existing) TYPE abap_bool.
     METHODS sotr_wda_0001 FOR TESTING.
     METHODS sotr_wda_0003_not_exist FOR TESTING.
@@ -12,11 +13,13 @@ ENDCLASS.
 
 CLASS ltcl_sotr_handler IMPLEMENTATION.
   METHOD _is_wd_component_existing.
-    CONSTANTS cv_wd_component_name TYPE string VALUE 'SALV_WD_TEST_TABLE_SIMPLE'.
     DATA ls_repository TYPE wdy_rr_cluster.
+    DATA lv_component_name TYPE string.
+
+    lv_component_name = component_name.
     CALL FUNCTION 'WDR_REPOSITORY_INFO'
       EXPORTING
-        component_name = cv_wd_component_name
+        component_name = lv_component_name
       IMPORTING
         repository     = ls_repository.
     IF ls_repository IS NOT INITIAL.
@@ -24,10 +27,11 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
   METHOD sotr_wda_0001.
+    CONSTANTS cv_wd_component_name TYPE sobj_name VALUE 'SALV_WD_TEST_TABLE_SIMPLE'.
     DATA lt_sotr TYPE zif_abapgit_definitions=>ty_sotr_tt.
-    IF _is_wd_component_existing( ) EQ abap_true.
+    IF _is_wd_component_existing( cv_wd_component_name ) EQ abap_true.
       TRY.
-          lt_sotr = zcl_abapgit_sotr_handler=>read_sotr_wda( iv_object_name = 'SALV_WD_TEST_TABLE_SIMPLE' ).
+          lt_sotr = zcl_abapgit_sotr_handler=>read_sotr_wda( iv_object_name = cv_wd_component_name ).
           cl_aunit_assert=>assert_not_initial( lt_sotr ).
         CATCH zcx_abapgit_exception.
           cl_aunit_assert=>fail( quit = if_aunit_constants=>method ).
@@ -35,10 +39,11 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
   METHOD sotr_wda_0003_not_exist.
+    CONSTANTS cv_wd_not_exist_component_name TYPE sobj_name VALUE '_NOT_EXISTING'.
     DATA lt_sotr TYPE zif_abapgit_definitions=>ty_sotr_tt.
-    IF _is_wd_component_existing( ) NE abap_true.
+    IF _is_wd_component_existing( cv_wd_not_exist_component_name ) NE abap_true.
       TRY.
-          lt_sotr = zcl_abapgit_sotr_handler=>read_sotr_wda( iv_object_name = '_NOT_EXISTING_' ).
+          lt_sotr = zcl_abapgit_sotr_handler=>read_sotr_wda( iv_object_name = cv_wd_not_exist_component_name ).
           cl_aunit_assert=>assert_initial( lt_sotr ).
         CATCH zcx_abapgit_exception.
           cl_aunit_assert=>fail( quit = if_aunit_constants=>method ).
