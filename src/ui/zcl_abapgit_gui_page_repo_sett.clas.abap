@@ -205,12 +205,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     io_html->add( '<h2>Local settings</h2>' ).
     io_html->add( '<table class="settings">' ).
 
-    IF mo_repo->is_offline( ) = abap_false.
-      io_html->add( render_table_row(
-        iv_name  = 'Display name'
-        iv_value = |<input name="display_name" type="text" size="30" value="{ ls_settings-display_name }">|
-      ) ).
-    ENDIF.
+    io_html->add( render_table_row(
+      iv_name  = 'Display name'
+      iv_value = |<input name="display_name" type="text" size="30" value="{ ls_settings-display_name }">|
+    ) ).
 
     CLEAR lv_checked.
     IF ls_settings-write_protected = abap_true.
@@ -342,11 +340,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
     ls_settings = mo_repo->get_local_settings( ).
 
-    IF mo_repo->is_offline( ) = abap_false.
-      READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'display_name'.
-      ASSERT sy-subrc = 0.
-      ls_settings-display_name = ls_post_field-value.
-    ENDIF.
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'display_name'.
+    ASSERT sy-subrc = 0.
+    ls_settings-display_name = ls_post_field-value.
 
     READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'write_protected' value = 'on'.
     ls_settings-write_protected = boolc( sy-subrc = 0 ).
