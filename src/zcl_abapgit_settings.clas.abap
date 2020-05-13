@@ -164,7 +164,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_settings IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
 
   METHOD get_adt_jump_enabled.
@@ -222,6 +222,11 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_proxy_bypass.
+    rt_bypass = ms_settings-proxy_bypass.
+  ENDMETHOD.
+
+
   METHOD get_proxy_port.
     rv_port = ms_settings-proxy_port.
   ENDMETHOD.
@@ -229,11 +234,6 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
 
   METHOD get_proxy_url.
     rv_proxy_url = ms_settings-proxy_url.
-  ENDMETHOD.
-
-
-  METHOD get_proxy_bypass.
-    rt_bypass = ms_settings-proxy_bypass.
   ENDMETHOD.
 
 
@@ -353,6 +353,11 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_proxy_bypass.
+    ms_settings-proxy_bypass = it_bypass.
+  ENDMETHOD.
+
+
   METHOD set_proxy_port.
     ms_settings-proxy_port = iv_port.
   ENDMETHOD.
@@ -362,10 +367,6 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
     ms_settings-proxy_url = iv_url.
   ENDMETHOD.
 
-
-  METHOD set_proxy_bypass.
-    ms_settings-proxy_bypass = it_bypass.
-  ENDMETHOD.
 
   METHOD set_run_critical_tests.
     ms_settings-run_critical_tests = iv_run.
@@ -413,5 +414,4 @@ CLASS zcl_abapgit_settings IMPLEMENTATION.
         cg_data = ms_settings ).
 
   ENDMETHOD.
-
 ENDCLASS.

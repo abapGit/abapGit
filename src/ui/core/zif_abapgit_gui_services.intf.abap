@@ -19,8 +19,8 @@ INTERFACE zif_abapgit_gui_services
     RETURNING
       VALUE(rv_page_name) TYPE string.
 
-
-  " For future refactoring
-  " Potentially also: back, go_home, go_page, +some access to page stack
+  METHODS get_hotkeys_ctl
+    RETURNING
+      VALUE(ri_hotkey_ctl) TYPE REF TO zif_abapgit_gui_hotkey_ctl.
 
 ENDINTERFACE.

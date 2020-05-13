@@ -16,4 +16,6 @@ CLASS lcl_gui_services_dummy IMPLEMENTATION.
   ENDMETHOD.
   METHOD zif_abapgit_gui_services~get_current_page_name.
   ENDMETHOD.
+  METHOD zif_abapgit_gui_services~get_hotkeys_ctl.
+  ENDMETHOD.
 ENDCLASS.

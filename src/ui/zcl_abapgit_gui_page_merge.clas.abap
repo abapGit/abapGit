@@ -5,7 +5,6 @@ CLASS zcl_abapgit_gui_page_merge DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     METHODS constructor
       IMPORTING
@@ -245,11 +244,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE IMPLEMENTATION.
             ev_state     = ev_state ).
 
     ENDCASE.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 ENDCLASS.

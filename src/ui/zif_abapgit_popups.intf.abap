@@ -112,9 +112,17 @@ INTERFACE zif_abapgit_popups
   METHODS popup_to_select_from_list
     IMPORTING
       !it_list               TYPE STANDARD TABLE
-      !iv_header_text        TYPE csequence
-      !iv_select_column_text TYPE csequence
-      !it_columns_to_display TYPE string_table
+      !iv_title              TYPE lvc_title        DEFAULT space
+      !iv_header_text        TYPE csequence        DEFAULT space
+      !iv_start_column       TYPE i                DEFAULT 2
+      !iv_end_column         TYPE i                DEFAULT 65
+      !iv_start_line         TYPE i                DEFAULT 8
+      !iv_end_line           TYPE i                DEFAULT 20
+      !iv_striped_pattern    TYPE abap_bool        DEFAULT abap_false
+      !iv_optimize_col_width TYPE abap_bool        DEFAULT abap_true
+      !iv_selection_mode     TYPE salv_de_constant DEFAULT if_salv_c_selection_mode=>multiple
+      !iv_select_column_text TYPE csequence        DEFAULT space
+      !it_columns_to_display TYPE zif_abapgit_definitions=>ty_alv_column_tt
     EXPORTING
       VALUE(et_list)         TYPE STANDARD TABLE
     RAISING
