@@ -2,7 +2,6 @@ CLASS zcl_abapgit_gui_page_tag DEFINITION PUBLIC FINAL
     CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     CONSTANTS: BEGIN OF c_action,
                  commit_post     TYPE string VALUE 'commit_post',
@@ -384,11 +383,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
       WHEN c_action-commit_cancel.
         ev_state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 ENDCLASS.

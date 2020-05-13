@@ -966,3 +966,26 @@ table.commit tr .title {
 .cmd-palette li .icon {
   margin-right: 10px;
 }
+
+/* SETTINGS */
+
+table.settings_tab {
+  border: 1px solid;
+  max-width: 600px;
+  line-height: 1.5;
+}
+table.settings_tab th {
+  text-align: left;
+  padding: 0.5em;
+  border-bottom: 1px solid;
+}
+table.settings_tab td {
+  text-align: left;
+  padding: 0.3em 0.5em;
+  border-top: 1px solid;
+}
+table.settings_tab input {
+  border: none;
+  text-align: center;
+}
+settings_tab tr:first-child td { border-top: 0px; }
