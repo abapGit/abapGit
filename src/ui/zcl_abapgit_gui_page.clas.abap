@@ -41,8 +41,10 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
       RAISING   zcx_abapgit_exception.
 
     METHODS scripts
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-      RAISING   zcx_abapgit_exception.
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
 
   PRIVATE SECTION.
     DATA: mo_settings         TYPE REF TO zcl_abapgit_settings,
@@ -61,12 +63,6 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
     METHODS link_hints
-      IMPORTING
-        io_html TYPE REF TO zcl_abapgit_html
-      RAISING
-        zcx_abapgit_exception.
-
-    METHODS insert_hotkeys_to_page
       IMPORTING
         io_html TYPE REF TO zcl_abapgit_html
       RAISING
@@ -193,34 +189,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD insert_hotkeys_to_page.
-
-    DATA lv_json TYPE string.
-    DATA lt_hotkeys TYPE zif_abapgit_gui_hotkeys=>tty_hotkey_with_descr.
-
-    FIELD-SYMBOLS: <ls_hotkey> LIKE LINE OF lt_hotkeys.
-
-    lt_hotkeys = mi_gui_services->get_hotkeys_ctl( )->get_registered_hotkeys( ).
-
-    lv_json = `{`.
-
-    LOOP AT lt_hotkeys ASSIGNING <ls_hotkey>.
-
-      IF sy-tabix > 1.
-        lv_json = lv_json && |,|.
-      ENDIF.
-
-      lv_json = lv_json && |  "{ <ls_hotkey>-hotkey }" : "{ <ls_hotkey>-action }" |.
-
-    ENDLOOP.
-
-    lv_json = lv_json && `}`.
-
-    io_html->add( |setKeyBindings({ lv_json });| ).
-
-  ENDMETHOD.
-
-
   METHOD link_hints.
 
     DATA: lv_link_hint_key TYPE char01.
@@ -302,10 +270,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD scripts.
 
+    DATA lt_script_parts TYPE zif_abapgit_html=>tty_table_of.
+    DATA li_part LIKE LINE OF lt_script_parts.
+
     CREATE OBJECT ro_html.
 
+    lt_script_parts = mi_gui_services->get_html_parts( )->get_parts( c_html_parts-scripts ).
+    LOOP AT lt_script_parts INTO li_part.
+      ro_html->add( li_part ).
+    ENDLOOP.
+
     link_hints( ro_html ).
-    insert_hotkeys_to_page( ro_html ).
 
     ro_html->add( 'var gGoRepoPalette = new CommandPalette(enumerateTocAllRepos, {' ).
     ro_html->add( '  toggleKey: "F2",' ).
