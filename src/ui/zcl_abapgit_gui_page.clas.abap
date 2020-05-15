@@ -30,16 +30,16 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
       RAISING
         zcx_abapgit_exception.
 
-    METHODs render_deferred_parts
-      IMPORTING
-        ii_html TYPE REF TO zif_abapgit_html
-        iv_part_category TYPE string.
-
   PRIVATE SECTION.
     DATA:
       mo_settings         TYPE REF TO zcl_abapgit_settings,
       mx_error            TYPE REF TO zcx_abapgit_exception,
       mo_exception_viewer TYPE REF TO zcl_abapgit_exception_viewer.
+
+    METHODs render_deferred_parts
+      IMPORTING
+        ii_html TYPE REF TO zif_abapgit_html
+        iv_part_category TYPE string.
 
     METHODS html_head
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
