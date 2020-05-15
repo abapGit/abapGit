@@ -18,25 +18,9 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
              page_menu    TYPE REF TO zcl_abapgit_html_toolbar,
            END OF  ty_control.
 
-    TYPES: BEGIN OF ty_event,
-             method TYPE string,
-             name   TYPE string,
-           END OF  ty_event.
-
-    TYPES: tt_events TYPE STANDARD TABLE OF ty_event WITH DEFAULT KEY.
-
     DATA: ms_control TYPE ty_control.
 
     METHODS render_content ABSTRACT
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-      RAISING   zcx_abapgit_exception.
-
-    METHODS get_events
-      RETURNING VALUE(rt_events) TYPE tt_events
-      RAISING   zcx_abapgit_exception.
-
-    METHODS render_event_as_form
-      IMPORTING is_event       TYPE ty_event
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING   zcx_abapgit_exception.
 
@@ -46,10 +30,17 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
       RAISING
         zcx_abapgit_exception.
 
+    METHODs render_deferred_parts
+      IMPORTING
+        ii_html TYPE REF TO zif_abapgit_html
+        iv_part_category TYPE string.
+
   PRIVATE SECTION.
-    DATA: mo_settings         TYPE REF TO zcl_abapgit_settings,
-          mx_error            TYPE REF TO zcx_abapgit_exception,
-          mo_exception_viewer TYPE REF TO zcl_abapgit_exception_viewer.
+    DATA:
+      mo_settings         TYPE REF TO zcl_abapgit_settings,
+      mx_error            TYPE REF TO zcx_abapgit_exception,
+      mo_exception_viewer TYPE REF TO zcl_abapgit_exception_viewer.
+
     METHODS html_head
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
@@ -146,13 +137,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_events.
-
-    " Return actions you need on your page.
-
-  ENDMETHOD.
-
-
   METHOD html_head.
 
     CREATE OBJECT ro_html.
@@ -220,6 +204,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_deferred_parts.
+
+    DATA lt_parts TYPE zif_abapgit_html=>tty_table_of.
+    DATA li_part LIKE LINE OF lt_parts.
+
+    lt_parts = mi_gui_services->get_html_parts( )->get_parts( iv_part_category ).
+    LOOP AT lt_parts INTO li_part.
+      ii_html->add( li_part ).
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD render_error_message_box.
 
     " You should remember that the we have to instantiate ro_html even
@@ -249,15 +246,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_event_as_form.
-
-    CREATE OBJECT ro_html.
-    ro_html->add(
-      |<form id='form_{ is_event-name }' method={ is_event-method } action='sapevent:{ is_event-name }'></from>| ).
-
-  ENDMETHOD.
-
-
   METHOD render_hotkey_overview.
 
     DATA lo_hotkeys_component TYPE REF TO zif_abapgit_gui_renderable.
@@ -275,10 +263,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    lt_script_parts = mi_gui_services->get_html_parts( )->get_parts( c_html_parts-scripts ).
-    LOOP AT lt_script_parts INTO li_part.
-      ro_html->add( li_part ).
-    ENDLOOP.
+    render_deferred_parts(
+      ii_html          = ro_html
+      iv_part_category = c_html_parts-scripts ).
 
     link_hints( ro_html ).
 
@@ -366,11 +353,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA: lo_script TYPE REF TO zcl_abapgit_html,
-          lt_events TYPE tt_events.
-
-    FIELD-SYMBOLS:
-          <ls_event> LIKE LINE OF lt_events.
+    DATA: lo_script TYPE REF TO zcl_abapgit_html.
 
     mi_gui_services->register_event_handler( me ).
 
@@ -394,15 +377,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ri_html->add( render_hotkey_overview( ) ).
     ri_html->add( render_error_message_box( ) ).
 
-    lt_events = me->get_events( ). " TODO refactor ???
-    LOOP AT lt_events ASSIGNING <ls_event>.
-      ri_html->add( render_event_as_form( <ls_event> ) ).
-    ENDLOOP.
+    render_deferred_parts(
+      ii_html          = ri_html
+      iv_part_category = c_html_parts-hidden_forms ).
 
     ri_html->add( footer( ) ).
     ri_html->add( '</body>' ).                              "#EC NOTEXT
 
-    lo_script = scripts( ). " TODO refactor
+    lo_script = scripts( ).
 
     IF lo_script IS BOUND AND lo_script->is_empty( ) = abap_false.
       ri_html->add( '<script type="text/javascript">' ).

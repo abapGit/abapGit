@@ -7,7 +7,8 @@ CLASS zcl_abapgit_gui_component DEFINITION
 
     CONSTANTS:
       BEGIN OF c_html_parts,
-        scripts TYPE string VALUE 'scripts',
+        scripts      TYPE string VALUE 'scripts',
+        hidden_forms TYPE string VALUE 'hidden_forms',
       END OF c_html_parts.
 
     METHODS constructor RAISING zcx_abapgit_exception.
