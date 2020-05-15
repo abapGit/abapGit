@@ -22,8 +22,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
 
   PROTECTED SECTION.
     METHODS:
-      render_content REDEFINITION,
-      scripts        REDEFINITION.
+      render_content REDEFINITION.
 
   PRIVATE SECTION.
 
@@ -97,6 +96,9 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
       RETURNING
         VALUE(rv_count) TYPE i.
     METHODS render_deferred_hidden_events
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+    METHODS render_scripts
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
@@ -317,6 +319,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     mi_gui_services->get_html_parts( )->add_part(
       iv_collection = zcl_abapgit_gui_component=>c_html_parts-hidden_forms
       ii_part       = render_deferred_hidden_events( ) ).
+    register_deferred_script( render_scripts( ) ).
 
   ENDMETHOD.
 
@@ -499,9 +502,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD scripts.
+  METHOD render_scripts.
 
-    ro_html = super->scripts( ).
+    CREATE OBJECT ro_html.
 
     ro_html->add( 'var gStageParams = {' ).
     ro_html->add( |  seed:            "{ mv_seed }",| ). " Unique page id
