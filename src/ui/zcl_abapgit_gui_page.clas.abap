@@ -38,7 +38,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
       mx_error            TYPE REF TO zcx_abapgit_exception,
       mo_exception_viewer TYPE REF TO zcl_abapgit_exception_viewer.
 
-    METHODs render_deferred_parts
+    METHODS render_deferred_parts
       IMPORTING
         ii_html TYPE REF TO zif_abapgit_html
         iv_part_category TYPE string.
