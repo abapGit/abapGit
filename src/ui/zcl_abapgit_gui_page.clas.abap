@@ -53,7 +53,13 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
     METHODS redirect
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
-    METHODS link_hints
+    METHODS render_link_hints
+      IMPORTING
+        io_html TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS render_command_palettes
       IMPORTING
         io_html TYPE REF TO zcl_abapgit_html
       RAISING
@@ -173,23 +179,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD link_hints.
-
-    DATA: lv_link_hint_key TYPE char01.
-
-    lv_link_hint_key = mo_settings->get_link_hint_key( ).
-
-    IF mo_settings->get_link_hints_enabled( ) = abap_true AND lv_link_hint_key IS NOT INITIAL.
-
-      io_html->add( |activateLinkHints("{ lv_link_hint_key }");| ).
-      io_html->add( |setInitialFocusWithQuerySelector('a span', true);| ).
-      io_html->add( |enableArrowListNavigation();| ).
-
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD redirect.
 
     CREATE OBJECT ro_html.
@@ -200,6 +189,21 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( |<meta http-equiv="refresh" content="0; url={ ms_control-redirect_url }">| ). "#EC NOTEXT
     ro_html->add( '</head>' ).                              "#EC NOTEXT
     ro_html->add( '</html>' ).                              "#EC NOTEXT
+
+  ENDMETHOD.
+
+
+  METHOD render_command_palettes.
+
+    io_html->add( 'var gGoRepoPalette = new CommandPalette(enumerateTocAllRepos, {' ).
+    io_html->add( '  toggleKey: "F2",' ).
+    io_html->add( '  hotkeyDescription: "Go to repo ..."' ).
+    io_html->add( '});' ).
+
+    io_html->add( 'var gCommandPalette = new CommandPalette(enumerateToolbarActions, {' ).
+    io_html->add( '  toggleKey: "F1",' ).
+    io_html->add( '  hotkeyDescription: "Command ..."' ).
+    io_html->add( '});' ).
 
   ENDMETHOD.
 
@@ -256,10 +260,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD scripts.
+  METHOD render_link_hints.
 
-    DATA lt_script_parts TYPE zif_abapgit_html=>tty_table_of.
-    DATA li_part LIKE LINE OF lt_script_parts.
+    DATA: lv_link_hint_key TYPE char01.
+
+    lv_link_hint_key = mo_settings->get_link_hint_key( ).
+
+    IF mo_settings->get_link_hints_enabled( ) = abap_true AND lv_link_hint_key IS NOT INITIAL.
+
+      io_html->add( |activateLinkHints("{ lv_link_hint_key }");| ).
+      io_html->add( |setInitialFocusWithQuerySelector('a span', true);| ).
+      io_html->add( |enableArrowListNavigation();| ).
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD scripts.
 
     CREATE OBJECT ro_html.
 
@@ -267,17 +285,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
       ii_html          = ro_html
       iv_part_category = c_html_parts-scripts ).
 
-    link_hints( ro_html ).
-
-    ro_html->add( 'var gGoRepoPalette = new CommandPalette(enumerateTocAllRepos, {' ).
-    ro_html->add( '  toggleKey: "F2",' ).
-    ro_html->add( '  hotkeyDescription: "Go to repo ..."' ).
-    ro_html->add( '});' ).
-
-    ro_html->add( 'var gCommandPalette = new CommandPalette(enumerateToolbarActions, {' ).
-    ro_html->add( '  toggleKey: "F1",' ).
-    ro_html->add( '  hotkeyDescription: "Command ..."' ).
-    ro_html->add( '});' ).
+    render_link_hints( ro_html ).
+    render_command_palettes( ro_html ).
 
   ENDMETHOD.
 
