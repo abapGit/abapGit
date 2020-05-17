@@ -99,11 +99,6 @@ div.diff_content { background-color: var(--theme-background-color); }
 table.diff_tab td,th { color: #fff; }
 table.diff_tab thead.nav_line { background-color: var(--theme-container-background-color); }
 
-div.diff_content tbody tr:hover{
-  border-top: 1px solid white;
-  border-bottom: 1px solid white;
-}
-
 /* STYLES for Syntax Highlighting */
 .syntax-hl span.keyword  { color: #4af; }
 .syntax-hl span.text     { color: #8f8; }

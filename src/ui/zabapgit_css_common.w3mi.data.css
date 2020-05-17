@@ -381,11 +381,6 @@ div.diff_content tbody tr td{
   vertical-align: top
 }
 
-div.diff_content tbody tr:hover{
-  border-top: 1px solid orange;
-  border-bottom: 1px solid orange;
-}
-
 div.diff_head span.state-block {
   margin-left: 0.5em;
   font-size: inherit;
