@@ -55,6 +55,9 @@
     "globalMacros": []
   },
   "rules": {
+    "unknown_types": false,
+    "forbidden_identifier": true,
+    "try_without_catch": false,
     "unused_variables": false,
     "prefix_is_current_class": {
       "omitMeInstanceCalls": false
@@ -111,6 +114,8 @@
     "class_attribute_names": {
       "ignoreExceptions": true,
       "statics": "^G._.*$",
+      "ignoreLocal": false,
+      "constants": "",
       "instance": "^M._.*$"
     },
     "cloud_types": true,
@@ -159,6 +164,7 @@
       "ignoreLowerClassImplmentationStatement": true,
       "ignoreGlobalClassDefinition": false,
       "ignoreGlobalInterface": false,
+      "ignoreKeywords": [],
       "ignoreFunctionModuleName": false
     },
     "line_length": {
@@ -217,6 +223,8 @@
       "auth": "^Z",
       "pinf": "^Z",
       "idoc": "^Z",
+      "ssfo": "^Z",
+      "ssst": "^Z",
       "xslt": "^Z"
     },
     "obsolete_statement": {

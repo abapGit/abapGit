@@ -5,7 +5,6 @@ CLASS zcl_abapgit_gui_page_bkg_run DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     METHODS constructor
       RAISING zcx_abapgit_exception.
@@ -77,10 +76,5 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG_RUN IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
     RETURN.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
   ENDMETHOD.
 ENDCLASS.

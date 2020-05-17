@@ -4,7 +4,6 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
   CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     CONSTANTS:
       BEGIN OF c_action,
@@ -25,6 +24,7 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
     DATA mv_error TYPE abap_bool .
     DATA mt_post_fields TYPE tihttpnvp .
     DATA mt_proxy_bypass TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url.
+    DATA mt_default_hotkeys TYPE zif_abapgit_gui_hotkeys=>tty_hotkey_with_descr.
 
     METHODS post_commit_msg .
     METHODS post_development_internals .
@@ -91,16 +91,6 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
         zcx_abapgit_exception .
-    METHODS get_possible_hotkey_actions
-      RETURNING
-        VALUE(rt_hotkey_actions) TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_default_hotkeys
-      RETURNING
-        VALUE(rt_default_hotkeys) TYPE zif_abapgit_definitions=>tty_hotkey
-      RAISING
-        zcx_abapgit_exception .
     METHODS is_post_field_checked
       IMPORTING
         iv_name          TYPE string
@@ -120,36 +110,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     ms_control-page_title = 'SETTINGS'.
-  ENDMETHOD.
-
-
-  METHOD get_default_hotkeys.
-
-    DATA: lt_actions TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name,
-          ls_hotkey  LIKE LINE OF rt_default_hotkeys.
-
-    FIELD-SYMBOLS: <ls_action> LIKE LINE OF lt_actions.
-
-    lt_actions = zcl_abapgit_hotkeys=>get_all_default_hotkeys( ).
-
-    LOOP AT lt_actions ASSIGNING <ls_action>.
-      ls_hotkey-action   = <ls_action>-action.
-      ls_hotkey-hotkey = <ls_action>-hotkey.
-      INSERT ls_hotkey INTO TABLE rt_default_hotkeys.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD get_possible_hotkey_actions.
-
-    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
-
-    rt_hotkey_actions = zcl_abapgit_hotkeys=>get_all_default_hotkeys( ).
-
-    " insert empty row at the beginning, so that we can unset a hotkey
-    INSERT ls_hotkey_action INTO rt_hotkey_actions INDEX 1.
-
   ENDMETHOD.
 
 
@@ -310,29 +270,33 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
   METHOD post_hotkeys.
 
-    DATA: lv_column       TYPE string,
-          lt_key_bindings TYPE zif_abapgit_definitions=>tty_hotkey.
+    DATA:
+      lt_key_bindings TYPE zif_abapgit_definitions=>tty_hotkey,
+      ls_key_binding LIKE LINE OF lt_key_bindings.
 
-    FIELD-SYMBOLS: <ls_post_field>  TYPE ihttpnvp,
-                   <ls_key_binding> TYPE zif_abapgit_definitions=>ty_hotkey.
+    FIELD-SYMBOLS:
+      <ls_default_hotkey> LIKE LINE OF mt_default_hotkeys,
+      <ls_post_field>  TYPE ihttpnvp.
 
+    LOOP AT mt_post_fields ASSIGNING <ls_post_field> WHERE name CP 'hk~*'.
 
-    LOOP AT mt_post_fields ASSIGNING <ls_post_field> WHERE name CP 'key*'.
+      FIND FIRST OCCURRENCE OF REGEX `hk~(.+)~(.+)`
+        IN <ls_post_field>-name
+        SUBMATCHES ls_key_binding-ui_component ls_key_binding-action.
+      CHECK sy-subrc = 0.
 
-      FIND FIRST OCCURRENCE OF REGEX `key_(.*)_`
-           IN <ls_post_field>-name
-           SUBMATCHES lv_column.
+      READ TABLE mt_default_hotkeys
+        ASSIGNING <ls_default_hotkey>
+        WITH TABLE KEY action
+        COMPONENTS
+          ui_component = ls_key_binding-ui_component
+          action       = ls_key_binding-action.
+      IF sy-subrc = 0 AND <ls_post_field>-value IS NOT INITIAL AND <ls_post_field>-value <> <ls_default_hotkey>-hotkey.
+        ls_key_binding-hotkey = <ls_post_field>-value.
+        APPEND ls_key_binding TO lt_key_bindings.
+      ENDIF.
 
-      CASE lv_column.
-        WHEN 'sequence'.
-          INSERT INITIAL LINE INTO TABLE lt_key_bindings ASSIGNING <ls_key_binding>.
-          <ls_key_binding>-hotkey = <ls_post_field>-value.
-        WHEN 'action'.
-          <ls_key_binding>-action = <ls_post_field>-value.
-      ENDCASE.
     ENDLOOP.
-
-    DELETE lt_key_bindings WHERE hotkey IS INITIAL OR action IS INITIAL.
 
     mo_settings->set_hotkeys( lt_key_bindings ).
 
@@ -492,72 +456,32 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
   METHOD render_hotkeys.
 
-    DATA: lv_index    TYPE i,
-          lt_hotkeys  TYPE zif_abapgit_definitions=>tty_hotkey,
-          lv_selected TYPE string,
-          lt_actions  TYPE zif_abapgit_gui_page_hotkey=>tty_hotkey_with_name.
+    DATA lv_hk_id TYPE string.
+    DATA lt_hotkeys LIKE mt_default_hotkeys.
+    FIELD-SYMBOLS <ls_key> LIKE LINE OF mt_default_hotkeys.
 
-    FIELD-SYMBOLS: <ls_key_binding> LIKE LINE OF lt_hotkeys,
-                   <ls_action>      LIKE LINE OF lt_actions.
-
-    lt_hotkeys = mo_settings->get_hotkeys( ).
-
-    IF lines( lt_hotkeys ) = 0.
-      lt_hotkeys = get_default_hotkeys( ).
-    ENDIF.
-
-    DO 3 TIMES.
-      APPEND INITIAL LINE TO lt_hotkeys.
-    ENDDO.
+    mt_default_hotkeys = zcl_abapgit_hotkeys=>get_all_default_hotkeys( ). " Cache for save processing
+    lt_hotkeys = mt_default_hotkeys.
+    zcl_abapgit_hotkeys=>merge_hotkeys_with_settings( CHANGING ct_hotkey_actions = lt_hotkeys ).
 
     CREATE OBJECT ro_html.
     ro_html->add( |<h2>Hotkeys</h2>| ).
-    ro_html->add( |(Only available with installed abapGit repo)| ).
-    ro_html->add( |<br/>| ).
-    ro_html->add( |<br/>| ).
 
-    ro_html->add( '<table class="repo_tab" id="key_bindings" style="max-width: 300px;">' ).
-    ro_html->add( '<tr><th>key</th><th>action</th></tr>' ).
+    ro_html->add( '<table class="settings_tab">' ).
+    ro_html->add( '<thead><tr><th>Component</th><th>Action</th><th>Key</th></tr></thead>' ).
 
-    lt_actions = get_possible_hotkey_actions( ).
-
-    LOOP AT lt_hotkeys ASSIGNING <ls_key_binding>.
-
-      lv_index = sy-tabix.
+    LOOP AT lt_hotkeys ASSIGNING <ls_key>.
 
       ro_html->add( '<tr>' ).
-      ro_html->add( |<td><input name="key_sequence_{ lv_index }" maxlength=1 type="text" | &&
-                    |value="{ <ls_key_binding>-hotkey }"></td>| ).
-
-      ro_html->add( |<td><select name="key_action_{ lv_index }">| ).
-
-      LOOP AT lt_actions ASSIGNING <ls_action>.
-
-        IF <ls_key_binding>-action = <ls_action>-action.
-          lv_selected = 'selected'.
-        ELSE.
-          CLEAR: lv_selected.
-        ENDIF.
-
-        ro_html->add( |<option value="{ <ls_action>-action }" |
-                   && |{ lv_selected }>|
-                   && |{ <ls_action>-name }</option>| ).
-
-      ENDLOOP.
-
-      ro_html->add( '</select></td>' ).
+      ro_html->add( |<td>{ <ls_key>-ui_component }</td>| ).
+      ro_html->add( |<td>{ <ls_key>-description }</td>| ).
+      lv_hk_id = |hk~{ <ls_key>-ui_component }~{ <ls_key>-action }|.
+      ro_html->add( |<td><input name="{ lv_hk_id }" maxlength=1 type="text" value="{ <ls_key>-hotkey }"></td>| ).
       ro_html->add( '</tr>' ).
 
     ENDLOOP.
 
-
-    ro_html->add( '</select></td>' ).
-    ro_html->add( '</tr>' ).
-
     ro_html->add( '</table>' ).
-
-    ro_html->add( |<br>| ).
-    ro_html->add( |<br>| ).
 
   ENDMETHOD.
 
@@ -798,10 +722,5 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
     ENDCASE.
 
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-    RETURN.
   ENDMETHOD.
 ENDCLASS.
