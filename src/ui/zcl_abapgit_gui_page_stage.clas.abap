@@ -110,7 +110,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     CREATE OBJECT ro_menu.
 
     IF lines( ms_files-local ) > 0.
-      ro_menu->add( iv_txt = |All diffs|
+      ro_menu->add( iv_txt = |Diff|
                     iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ mo_repo->get_key( ) }| ).
 
       ro_menu->add( iv_txt = |Patch|
@@ -693,6 +693,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     ls_hotkey_action-description  = |Patch|.
     ls_hotkey_action-action       = zif_abapgit_definitions=>c_action-go_patch.
     ls_hotkey_action-hotkey       = |p|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description  = |Diff|.
+    ls_hotkey_action-action       = zif_abapgit_definitions=>c_action-go_diff.
+    ls_hotkey_action-hotkey       = |d|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
