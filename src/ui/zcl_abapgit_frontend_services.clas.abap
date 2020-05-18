@@ -112,13 +112,19 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
     DATA:
       lt_file_table TYPE filetable,
       ls_file_table LIKE LINE OF lt_file_table,
+      lv_filter     TYPE string,
       lv_action     TYPE i,
       lv_rc         TYPE i.
+
+    IF iv_extension = 'zip'.
+      lv_filter = 'ZIP Files (*.ZIP)|*.ZIP|' && cl_gui_frontend_services=>filetype_all.
+    ENDIF.
 
     cl_gui_frontend_services=>file_open_dialog(
       EXPORTING
         window_title            = iv_title
         default_filename        = iv_default_filename
+        file_filter             = lv_filter
       CHANGING
         file_table              = lt_file_table
         rc                      = lv_rc
@@ -147,14 +153,20 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
 
     DATA:
       lv_action   TYPE i,
+      lv_filter   TYPE string,
       lv_filename TYPE string,
       lv_path     TYPE string.
+
+    IF iv_extension = 'zip'.
+      lv_filter = 'ZIP Files (*.ZIP)|*.ZIP|' && cl_gui_frontend_services=>filetype_all.
+    ENDIF.
 
     cl_gui_frontend_services=>file_save_dialog(
       EXPORTING
         window_title         = iv_title
         default_extension    = iv_extension
         default_file_name    = iv_default_filename
+        file_filter          = lv_filter
       CHANGING
         filename             = lv_filename
         path                 = lv_path
