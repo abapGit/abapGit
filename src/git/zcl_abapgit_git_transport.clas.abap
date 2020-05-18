@@ -6,16 +6,16 @@ CLASS zcl_abapgit_git_transport DEFINITION
   PUBLIC SECTION.
 
 * remote to local
-    CLASS-METHODS upload_pack
+    CLASS-METHODS upload_pack_by_branch
       IMPORTING
-        !iv_url         TYPE string
-        !iv_branch_name TYPE string
-        !iv_deepen      TYPE abap_bool DEFAULT abap_true
-        !it_branches    TYPE zif_abapgit_definitions=>ty_git_branch_list_tt OPTIONAL
+        !iv_url          TYPE string
+        !iv_branch_name  TYPE string
+        !iv_deepen_level TYPE numc2 DEFAULT 0
+        !it_branches     TYPE zif_abapgit_definitions=>ty_git_branch_list_tt OPTIONAL
       EXPORTING
-        !et_objects     TYPE zif_abapgit_definitions=>ty_objects_tt
-        !ev_branch      TYPE zif_abapgit_definitions=>ty_sha1
-        !eo_branch_list TYPE REF TO zcl_abapgit_git_branch_list
+        !et_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
+        !ev_branch       TYPE zif_abapgit_definitions=>ty_sha1
+        !eo_branch_list  TYPE REF TO zcl_abapgit_git_branch_list
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS upload_pack_by_hash
@@ -23,7 +23,7 @@ CLASS zcl_abapgit_git_transport DEFINITION
         !iv_url          TYPE string
         !iv_branch_name  TYPE string
         !iv_hash         TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
-        !iv_deepen_level TYPE numc2 DEFAULT '0'
+        !iv_deepen_level TYPE numc2 DEFAULT 0
       EXPORTING
         !et_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
         !ev_hash         TYPE zif_abapgit_definitions=>ty_sha1
@@ -87,6 +87,16 @@ CLASS zcl_abapgit_git_transport DEFINITION
         !ev_pack TYPE xstring
       CHANGING
         !cv_data TYPE xstring
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS upload_pack
+      IMPORTING
+        !io_client       TYPE REF TO zcl_abapgit_http_client
+        !it_hashes       TYPE zif_abapgit_definitions=>ty_sha1_tt
+        !iv_url          TYPE string
+        !iv_deepen_level TYPE numc2 DEFAULT 0
+      EXPORTING
+        !et_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
@@ -263,17 +273,17 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD upload_pack.
+  METHOD upload_pack_by_branch.
 
-    DATA: lo_client   TYPE REF TO zcl_abapgit_http_client,
-          lv_buffer   TYPE string,
-          lv_xstring  TYPE xstring,
-          lv_line     TYPE string,
-          lv_pack     TYPE xstring,
-          lt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
-          lv_capa     TYPE string.
+    DATA: lo_client  TYPE REF TO zcl_abapgit_http_client,
+          lv_buffer  TYPE string,
+          lv_xstring TYPE xstring,
+          lv_line    TYPE string,
+          lv_pack    TYPE xstring,
+          lt_hashes  TYPE zif_abapgit_definitions=>ty_sha1_tt,
+          lv_capa    TYPE string.
 
-    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF lt_branches.
+    FIELD-SYMBOLS: <ls_branch> LIKE LINE OF it_branches.
 
 
     CLEAR: et_objects,
@@ -291,72 +301,38 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
         ev_branch      = ev_branch ).
 
     IF it_branches IS INITIAL.
-      APPEND INITIAL LINE TO lt_branches ASSIGNING <ls_branch>.
-      <ls_branch>-sha1 = ev_branch.
+      APPEND ev_branch TO lt_hashes.
     ELSE.
-      lt_branches = it_branches.
+      LOOP AT it_branches ASSIGNING <ls_branch>.
+        APPEND <ls_branch>-sha1 TO lt_hashes.
+      ENDLOOP.
     ENDIF.
 
-    lo_client->set_headers( iv_url     = iv_url
-                            iv_service = c_service-upload ).
-
-    LOOP AT lt_branches FROM 1 ASSIGNING <ls_branch>.
-      IF sy-tabix = 1.
-        lv_capa = 'side-band-64k no-progress multi_ack' ##NO_TEXT.
-        lv_line = 'want' && ` ` && <ls_branch>-sha1
-          && ` ` && lv_capa && zif_abapgit_definitions=>c_newline. "#EC NOTEXT
-      ELSE.
-        lv_line = 'want' && ` ` && <ls_branch>-sha1
-          && zif_abapgit_definitions=>c_newline.            "#EC NOTEXT
-      ENDIF.
-      lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( lv_line ).
-    ENDLOOP.
-
-    IF iv_deepen = abap_true.
-      lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( 'deepen 1'
-        && zif_abapgit_definitions=>c_newline ).            "#EC NOTEXT
-    ENDIF.
-
-    lv_buffer = lv_buffer
-             && '0000'
-             && '0009done' && zif_abapgit_definitions=>c_newline.
-
-    lv_xstring = lo_client->send_receive_close( zcl_abapgit_convert=>string_to_xstring_utf8( lv_buffer ) ).
-
-    parse( IMPORTING ev_pack = lv_pack
-           CHANGING cv_data = lv_xstring ).
-
-    IF lv_pack IS INITIAL.
-      zcx_abapgit_exception=>raise( 'empty pack' ).
-    ENDIF.
-
-    et_objects = zcl_abapgit_git_pack=>decode( lv_pack ).
+    upload_pack(
+      EXPORTING
+        io_client       = lo_client
+        it_hashes       = lt_hashes
+        iv_url          = iv_url
+        iv_deepen_level = iv_deepen_level
+      IMPORTING
+        et_objects      = et_objects ).
 
   ENDMETHOD.
 
 
   METHOD upload_pack_by_hash.
 
-    DATA: lo_client    TYPE REF TO zcl_abapgit_http_client,
-          lv_buffer    TYPE string,
-          lv_xstring   TYPE xstring,
-          lv_line      TYPE string,
-          lv_pack      TYPE xstring,
-          lt_commits   TYPE zif_abapgit_definitions=>ty_git_commit_list_tt,
-          lt_wanteds   TYPE zif_abapgit_definitions=>ty_git_branch_list_tt,
-          lv_capa      TYPE string.
-
-    FIELD-SYMBOLS: <ls_wanted> LIKE LINE OF lt_wanteds,
-                   <ls_commit> LIKE LINE OF lt_commits.
+    DATA: lo_client  TYPE REF TO zcl_abapgit_http_client,
+          lv_buffer  TYPE string,
+          lv_xstring TYPE xstring,
+          lv_line    TYPE string,
+          lv_pack    TYPE xstring,
+          lv_capa    TYPE string,
+          lt_hashes  TYPE zif_abapgit_definitions=>ty_sha1_tt.
 
 
-    CLEAR: et_objects.
-
-    APPEND INITIAL LINE TO lt_commits ASSIGNING <ls_commit>.
-    <ls_commit>-sha1 = iv_hash.
-    ev_hash = iv_hash.
-
-    MOVE-CORRESPONDING lt_commits TO lt_wanteds.
+    CLEAR: et_objects,
+           ev_hash.
 
     find_branch(
       EXPORTING
@@ -366,18 +342,42 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
       IMPORTING
         eo_client      = lo_client ).
 
-    lo_client->set_headers( iv_url     = iv_url
+    APPEND iv_hash TO lt_hashes.
+    ev_hash = iv_hash.
+
+    upload_pack(
+      EXPORTING
+        io_client       = lo_client
+        it_hashes       = lt_hashes
+        iv_url          = iv_url
+        iv_deepen_level = iv_deepen_level
+      IMPORTING
+        et_objects      = et_objects ).
+
+  ENDMETHOD.
+
+
+  METHOD upload_pack.
+
+    DATA: lv_capa    TYPE string,
+          lv_line    TYPE string,
+          lv_buffer  TYPE string,
+          lv_pack    TYPE xstring,
+          lv_xstring TYPE xstring.
+
+    FIELD-SYMBOLS: <lv_hash> LIKE LINE OF it_hashes.
+
+
+    io_client->set_headers( iv_url     = iv_url
                             iv_service = c_service-upload ).
 
-
-
-    LOOP AT lt_wanteds FROM 1 ASSIGNING <ls_wanted>.
+    LOOP AT it_hashes FROM 1 ASSIGNING <lv_hash>.
       IF sy-tabix = 1.
         lv_capa = 'side-band-64k no-progress multi_ack' ##NO_TEXT.
-        lv_line = 'want' && ` ` && <ls_wanted>-sha1
+        lv_line = 'want' && ` ` && <lv_hash>
           && ` ` && lv_capa && zif_abapgit_definitions=>c_newline. "#EC NOTEXT
       ELSE.
-        lv_line = 'want' && ` ` && <ls_wanted>-sha1
+        lv_line = 'want' && ` ` && <lv_hash>
           && zif_abapgit_definitions=>c_newline.            "#EC NOTEXT
       ENDIF.
       lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( lv_line ).
@@ -392,13 +392,13 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
              && '0000'
              && '0009done' && zif_abapgit_definitions=>c_newline.
 
-    lv_xstring = lo_client->send_receive_close( zcl_abapgit_convert=>string_to_xstring_utf8( lv_buffer ) ).
+    lv_xstring = io_client->send_receive_close( zcl_abapgit_convert=>string_to_xstring_utf8( lv_buffer ) ).
 
     parse( IMPORTING ev_pack = lv_pack
-           CHANGING cv_data = lv_xstring ).
+           CHANGING  cv_data = lv_xstring ).
 
     IF lv_pack IS INITIAL.
-      zcx_abapgit_exception=>raise( 'empty pack' ).
+      zcx_abapgit_exception=>raise( 'Response could not be parsed - empty pack returned.' ).
     ENDIF.
 
     et_objects = zcl_abapgit_git_pack=>decode( lv_pack ).

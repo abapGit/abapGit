@@ -9,6 +9,8 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     ty_sha1    TYPE c LENGTH 40 .
   TYPES:
+    ty_sha1_tt TYPE STANDARD TABLE OF ty_sha1 WITH DEFAULT KEY .
+  TYPES:
     ty_adler32 TYPE x LENGTH 4 .
   TYPES:
     BEGIN OF ty_file_signature,
@@ -44,13 +46,6 @@ INTERFACE zif_abapgit_definitions
     END OF ty_git_branch .
   TYPES:
     ty_git_branch_list_tt TYPE STANDARD TABLE OF ty_git_branch WITH DEFAULT KEY .
-  TYPES:
-    BEGIN OF ty_git_commit,
-      sha1 TYPE ty_sha1,
-      name TYPE string,
-    END OF ty_git_commit .
-  TYPES:
-    ty_git_commit_list_tt TYPE STANDARD TABLE OF ty_git_commit WITH DEFAULT KEY .
   TYPES:
     BEGIN OF ty_git_tag,
       sha1         TYPE zif_abapgit_definitions=>ty_sha1,

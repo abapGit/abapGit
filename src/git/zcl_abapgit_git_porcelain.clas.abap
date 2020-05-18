@@ -161,7 +161,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
+CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
 
   METHOD build_trees.
@@ -409,13 +409,14 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
           ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
 
 
-    zcl_abapgit_git_transport=>upload_pack(
+    zcl_abapgit_git_transport=>upload_pack_by_branch(
       EXPORTING
-        iv_url         = iv_url
-        iv_branch_name = iv_branch_name
+        iv_url          = iv_url
+        iv_branch_name  = iv_branch_name
+        iv_deepen_level = 1
       IMPORTING
-        et_objects     = rs_result-objects
-        ev_branch      = rs_result-branch ).
+        et_objects      = rs_result-objects
+        ev_branch       = rs_result-branch ).
 
     READ TABLE rs_result-objects INTO ls_object
       WITH KEY type COMPONENTS
