@@ -353,12 +353,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
-    IF lines( lt_tadir ) = 1.
-      READ TABLE lt_tadir INDEX 1 ASSIGNING <ls_tadir>.
-      ASSERT sy-subrc = 0.
-      rs_tadir = <ls_tadir>.
-    ENDIF.
-
   ENDMETHOD.
 
 
