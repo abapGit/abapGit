@@ -91,12 +91,12 @@ CLASS zcl_abapgit_git_transport DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS upload_pack
       IMPORTING
-        !io_client       TYPE REF TO zcl_abapgit_http_client
-        !it_hashes       TYPE zif_abapgit_definitions=>ty_sha1_tt
-        !iv_url          TYPE string
-        !iv_deepen_level TYPE numc2 DEFAULT 0
-      EXPORTING
-        !et_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
+        !io_client        TYPE REF TO zcl_abapgit_http_client
+        !it_hashes        TYPE zif_abapgit_definitions=>ty_sha1_tt
+        !iv_url           TYPE string
+        !iv_deepen_level  TYPE numc2 DEFAULT 0
+      RETURNING
+        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
@@ -314,8 +314,8 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
         it_hashes       = lt_hashes
         iv_url          = iv_url
         iv_deepen_level = iv_deepen_level
-      IMPORTING
-        et_objects      = et_objects ).
+      RECEIVING
+        rt_objects      = et_objects ).
 
   ENDMETHOD.
 
@@ -351,8 +351,8 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
         it_hashes       = lt_hashes
         iv_url          = iv_url
         iv_deepen_level = iv_deepen_level
-      IMPORTING
-        et_objects      = et_objects ).
+      RECEIVING
+        rt_objects      = et_objects ).
 
   ENDMETHOD.
 
@@ -401,7 +401,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Response could not be parsed - empty pack returned.' ).
     ENDIF.
 
-    et_objects = zcl_abapgit_git_pack=>decode( lv_pack ).
+    rt_objects = zcl_abapgit_git_pack=>decode( lv_pack ).
 
   ENDMETHOD.
 ENDCLASS.
