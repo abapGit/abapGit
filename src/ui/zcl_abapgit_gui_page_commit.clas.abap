@@ -99,7 +99,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
     rv_text = lo_settings->get_commitmsg_comment_default( ).
 
-    CHECK NOT rv_text IS INITIAL.
+    IF rv_text IS INITIAL.
+      RETURN.
+    ENDIF.
 
     " Determine scope of commit
     lt_stage = mo_stage->get_all( ).
