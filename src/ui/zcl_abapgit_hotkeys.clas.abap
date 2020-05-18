@@ -81,7 +81,13 @@ CLASS zcl_abapgit_hotkeys DEFINITION
         RETURNING
           VALUE(rt_interface_implementations) TYPE saboo_iimpt
         RAISING
-          zcx_abapgit_exception.
+          zcx_abapgit_exception,
+
+      render_js_part
+        IMPORTING
+          it_hotkeys TYPE zif_abapgit_gui_hotkeys=>tty_hotkey_with_descr
+        RETURNING
+          VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
 ENDCLASS.
 
@@ -253,6 +259,33 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_js_part.
+
+    DATA lv_json TYPE string.
+    DATA lt_hotkeys TYPE zif_abapgit_gui_hotkeys=>tty_hotkey_with_descr.
+
+    FIELD-SYMBOLS: <ls_hotkey> LIKE LINE OF lt_hotkeys.
+
+    lv_json = `{`.
+
+    LOOP AT it_hotkeys ASSIGNING <ls_hotkey>.
+
+      IF sy-tabix > 1.
+        lv_json = lv_json && |,|.
+      ENDIF.
+
+      lv_json = lv_json && |  "{ <ls_hotkey>-hotkey }" : "{ <ls_hotkey>-action }" |.
+
+    ENDLOOP.
+
+    lv_json = lv_json && `}`.
+
+    CREATE OBJECT ro_html.
+    ro_html->add( |setKeyBindings({ lv_json });| ).
+
+  ENDMETHOD.
+
+
   METHOD should_show_hint.
     IF gv_hint_was_shown = abap_false.
       rv_yes = abap_true.
@@ -325,6 +358,19 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
 
     lt_registered_hotkeys = zif_abapgit_gui_hotkey_ctl~get_registered_hotkeys( ).
     SORT lt_registered_hotkeys BY ui_component description.
+
+    " Note
+    " normally render method should be able to call mi_gui_services->get_html_parts( )
+    " thus the class must inherit from zcl_abapgit_gui_component
+    " but problem is that component constructor calls get_gui which creates gui if it is missing
+    " and the hotkeys class itself is created during get_gui so it is infinite loop
+    " solutions:
+    " A) separate hotkeys into logic and render (which is actually a good way, but it so nicely fit together ...)
+    " B) convert mi_gui_services to a getter - which I will do but later
+
+    zcl_abapgit_ui_factory=>get_gui_services( )->get_html_parts( )->add_part(
+      iv_collection = zcl_abapgit_gui_component=>c_html_parts-scripts
+      ii_part       = render_js_part( lt_registered_hotkeys ) ).
 
     " Render hotkeys
     ri_html->add( '<ul class="hotkeys">' ).

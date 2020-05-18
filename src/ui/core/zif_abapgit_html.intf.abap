@@ -15,6 +15,9 @@ INTERFACE zif_abapgit_html PUBLIC.
       crossout TYPE c VALUE 'X',
     END OF c_html_opt .
 
+  TYPES:
+    tty_table_of TYPE STANDARD TABLE OF REF TO zif_abapgit_html WITH DEFAULT KEY.
+
   METHODS add
     IMPORTING
       !ig_chunk TYPE any .

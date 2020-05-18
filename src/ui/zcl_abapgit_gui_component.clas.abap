@@ -4,6 +4,12 @@ CLASS zcl_abapgit_gui_component DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+
+    CONSTANTS:
+      BEGIN OF c_html_parts,
+        scripts TYPE string VALUE 'scripts',
+      END OF c_html_parts.
+
     METHODS constructor RAISING zcx_abapgit_exception.
   PROTECTED SECTION.
     DATA mi_gui_services TYPE REF TO zif_abapgit_gui_services.
