@@ -33,36 +33,46 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
         REDEFINITION .
     METHODS scripts
         REDEFINITION .
-  PRIVATE SECTION.
+private section.
 
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
-    DATA mo_stage TYPE REF TO zcl_abapgit_stage .
-    DATA ms_commit TYPE zif_abapgit_services_git=>ty_commit_fields .
+  data MO_REPO type ref to ZCL_ABAPGIT_REPO_ONLINE .
+  data MO_STAGE type ref to ZCL_ABAPGIT_STAGE .
+  data MS_COMMIT type ZIF_ABAPGIT_SERVICES_GIT=>TY_COMMIT_FIELDS .
 
-    METHODS render_menu
-      RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
-    METHODS render_stage
-      RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-      RAISING
-        zcx_abapgit_exception .
-    METHODS render_form
-      RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-      RAISING
-        zcx_abapgit_exception .
-    METHODS render_text_input
-      IMPORTING
-        !iv_name       TYPE string
-        !iv_label      TYPE string
-        !iv_value      TYPE string OPTIONAL
-        !iv_max_length TYPE string OPTIONAL
-      RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
-    METHODS get_comment_default
-      RETURNING
-        VALUE(rv_text) TYPE string.
+  methods RENDER_MENU
+    returning
+      value(RO_HTML) type ref to ZCL_ABAPGIT_HTML .
+  methods RENDER_STAGE
+    returning
+      value(RO_HTML) type ref to ZCL_ABAPGIT_HTML
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods RENDER_FORM
+    returning
+      value(RO_HTML) type ref to ZCL_ABAPGIT_HTML
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods RENDER_TEXT_INPUT
+    importing
+      !IV_NAME type STRING
+      !IV_LABEL type STRING
+      !IV_VALUE type STRING optional
+      !IV_MAX_LENGTH type STRING optional
+    returning
+      value(RO_HTML) type ref to ZCL_ABAPGIT_HTML .
+  methods GET_COMMENT_DEFAULT
+    returning
+      value(RV_TEXT) type STRING .
+  methods GET_COMMENT_OBJECT
+    importing
+      !IT_STAGE type ZCL_ABAPGIT_STAGE=>TY_STAGE_TT
+    returning
+      value(RV_TEXT) type STRING .
+  methods GET_COMMENT_FILE
+    importing
+      !IT_STAGE type ZCL_ABAPGIT_STAGE=>TY_STAGE_TT
+    returning
+      value(RV_TEXT) type STRING .
 ENDCLASS.
 
 
@@ -83,16 +93,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
   METHOD get_comment_default.
 
     DATA: lo_settings TYPE REF TO zcl_abapgit_settings,
-          lt_stage    TYPE zcl_abapgit_stage=>ty_stage_tt,
-          lv_count    TYPE i,
-          lv_value    TYPE c LENGTH 10,
-          lv_file     TYPE string,
-          lv_name     TYPE tadir-obj_name,
-          lv_type     TYPE string,
-          lv_ext      TYPE string,
-          lv_object   TYPE string.
-
-    FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
+          lt_stage    TYPE zcl_abapgit_stage=>ty_stage_tt.
 
     " Get setting for default comment text
     lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
@@ -103,42 +104,70 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    " Determine scope of commit
+    " Determine texts for scope of commit
     lt_stage = mo_stage->get_all( ).
-    lv_count = lines( lt_stage ).
+
+    REPLACE '$FILE'   IN rv_text WITH get_comment_file( lt_stage ).
+
+    REPLACE '$OBJECT' IN rv_text WITH get_comment_object( lt_stage ).
+
+  ENDMETHOD.
+
+
+  METHOD get_comment_file.
+
+    DATA: lv_count TYPE i,
+          lv_value TYPE c LENGTH 10.
+
+    FIELD-SYMBOLS: <ls_stage> LIKE LINE OF it_stage.
+
+    lv_count = lines( it_stage ).
 
     IF lv_count = 1.
-      " Just one object so we can use the object/file name
-      READ TABLE lt_stage ASSIGNING <ls_stage> INDEX 1.
+      " Just one file so we use the file name
+      READ TABLE it_stage ASSIGNING <ls_stage> INDEX 1.
       ASSERT sy-subrc = 0.
 
-      lv_file = <ls_stage>-file-filename.
+      rv_text = <ls_stage>-file-filename.
+    ELSE.
+      " For multiple file we use the count instead
+      WRITE lv_count TO lv_value LEFT-JUSTIFIED.
+      CONCATENATE lv_value 'files' INTO rv_text SEPARATED BY space.
+    ENDIF.
 
-      " Guess object type and name
-      SPLIT to_upper( lv_file ) AT '.' INTO lv_name lv_type lv_ext.
+  ENDMETHOD.
 
-      " Handle namespaces
-      REPLACE ALL OCCURRENCES OF '#' IN lv_name WITH '/'.
-      REPLACE ALL OCCURRENCES OF '#' IN lv_type WITH '/'.
-      REPLACE ALL OCCURRENCES OF '#' IN lv_ext WITH '/'.
 
-      CASE lv_ext.
-        WHEN 'ABAP'.
-          CONCATENATE lv_type lv_name INTO lv_object SEPARATED BY space.
-        WHEN 'XML'.
-          lv_object = 'XML metadata'.
-        WHEN OTHERS.
-          lv_object = ''.
-      ENDCASE.
+  METHOD get_comment_object.
+
+    DATA: lv_count  TYPE i,
+          lv_value  TYPE c LENGTH 10,
+          ls_item   TYPE zif_abapgit_definitions=>ty_item,
+          lt_items  TYPE zif_abapgit_definitions=>ty_items_tt.
+
+    FIELD-SYMBOLS: <ls_stage> LIKE LINE OF it_stage.
+
+    " Get objects
+    LOOP AT it_stage ASSIGNING <ls_stage>.
+      CLEAR ls_item.
+      ls_item-obj_type = <ls_stage>-status-obj_type.
+      ls_item-obj_name = <ls_stage>-status-obj_name.
+      COLLECT ls_item INTO lt_items.
+    ENDLOOP.
+
+    lv_count = lines( lt_items ).
+
+    IF lv_count = 1.
+      " Just one object so we use the object name
+      READ TABLE lt_items INTO ls_item INDEX 1.
+      ASSERT sy-subrc = 0.
+
+      CONCATENATE ls_item-obj_type ls_item-obj_name INTO rv_text SEPARATED BY space.
     ELSE.
       " For multiple objects we use the count instead
       WRITE lv_count TO lv_value LEFT-JUSTIFIED.
-      CONCATENATE lv_value 'objects' INTO lv_object SEPARATED BY space.
-      CONCATENATE lv_value 'files'   INTO lv_file   SEPARATED BY space.
+      CONCATENATE lv_value 'objects' INTO rv_text SEPARATED BY space.
     ENDIF.
-
-    REPLACE '$FILE'   IN rv_text WITH lv_file.
-    REPLACE '$OBJECT' IN rv_text WITH lv_object.
 
   ENDMETHOD.
 
