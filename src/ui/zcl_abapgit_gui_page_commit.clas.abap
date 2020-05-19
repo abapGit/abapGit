@@ -33,46 +33,46 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
         REDEFINITION .
     METHODS scripts
         REDEFINITION .
-private section.
+  PRIVATE SECTION.
 
-  data MO_REPO type ref to ZCL_ABAPGIT_REPO_ONLINE .
-  data MO_STAGE type ref to ZCL_ABAPGIT_STAGE .
-  data MS_COMMIT type ZIF_ABAPGIT_SERVICES_GIT=>TY_COMMIT_FIELDS .
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
+    DATA mo_stage TYPE REF TO zcl_abapgit_stage .
+    DATA ms_commit TYPE zif_abapgit_services_git=>ty_commit_fields .
 
-  methods RENDER_MENU
-    returning
-      value(RO_HTML) type ref to ZCL_ABAPGIT_HTML .
-  methods RENDER_STAGE
-    returning
-      value(RO_HTML) type ref to ZCL_ABAPGIT_HTML
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods RENDER_FORM
-    returning
-      value(RO_HTML) type ref to ZCL_ABAPGIT_HTML
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods RENDER_TEXT_INPUT
-    importing
-      !IV_NAME type STRING
-      !IV_LABEL type STRING
-      !IV_VALUE type STRING optional
-      !IV_MAX_LENGTH type STRING optional
-    returning
-      value(RO_HTML) type ref to ZCL_ABAPGIT_HTML .
-  methods GET_COMMENT_DEFAULT
-    returning
-      value(RV_TEXT) type STRING .
-  methods GET_COMMENT_OBJECT
-    importing
-      !IT_STAGE type ZCL_ABAPGIT_STAGE=>TY_STAGE_TT
-    returning
-      value(RV_TEXT) type STRING .
-  methods GET_COMMENT_FILE
-    importing
-      !IT_STAGE type ZCL_ABAPGIT_STAGE=>TY_STAGE_TT
-    returning
-      value(RV_TEXT) type STRING .
+    METHODS render_menu
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    METHODS render_stage
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_form
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_text_input
+      IMPORTING
+        !iv_name       TYPE string
+        !iv_label      TYPE string
+        !iv_value      TYPE string OPTIONAL
+        !iv_max_length TYPE string OPTIONAL
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    METHODS get_comment_default
+      RETURNING
+        VALUE(rv_text) TYPE string .
+    METHODS get_comment_object
+      IMPORTING
+        !it_stage      TYPE zcl_abapgit_stage=>ty_stage_tt
+      RETURNING
+        VALUE(rv_text) TYPE string .
+    METHODS get_comment_file
+      IMPORTING
+        !it_stage      TYPE zcl_abapgit_stage=>ty_stage_tt
+      RETURNING
+        VALUE(rv_text) TYPE string .
 ENDCLASS.
 
 
@@ -140,10 +140,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
   METHOD get_comment_object.
 
-    DATA: lv_count  TYPE i,
-          lv_value  TYPE c LENGTH 10,
-          ls_item   TYPE zif_abapgit_definitions=>ty_item,
-          lt_items  TYPE zif_abapgit_definitions=>ty_items_tt.
+    DATA: lv_count TYPE i,
+          lv_value TYPE c LENGTH 10,
+          ls_item  TYPE zif_abapgit_definitions=>ty_item,
+          lt_items TYPE zif_abapgit_definitions=>ty_items_tt.
 
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF it_stage.
 
