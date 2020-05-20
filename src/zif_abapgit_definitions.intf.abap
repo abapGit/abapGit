@@ -476,7 +476,6 @@ INTERFACE zif_abapgit_definitions
       go_commit                     TYPE string VALUE 'go_commit',
       go_branch_overview            TYPE string VALUE 'go_branch_overview',
       go_tag_overview               TYPE string VALUE 'go_tag_overview',
-      go_playground                 TYPE string VALUE 'go_playground',
       go_debuginfo                  TYPE string VALUE 'go_debuginfo',
       go_settings                   TYPE string VALUE 'go_settings',
       go_tutorial                   TYPE string VALUE 'go_tutorial',
