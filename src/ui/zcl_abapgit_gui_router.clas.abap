@@ -659,6 +659,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         lv_path = zcl_abapgit_ui_factory=>get_frontend_services( )->show_file_open_dialog(
           iv_title            = 'Import ZIP'
+          iv_extension        = 'zip'
           iv_default_filename = '*.zip' ).
         lv_xstr = zcl_abapgit_ui_factory=>get_frontend_services( )->file_upload( lv_path ).
         lo_repo->set_files_remote( zcl_abapgit_zip=>load( lv_xstr ) ).
