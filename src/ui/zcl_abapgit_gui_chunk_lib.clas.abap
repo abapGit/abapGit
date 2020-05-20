@@ -5,6 +5,12 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
 
   PUBLIC SECTION.
 
+    TYPES:
+      BEGIN OF ty_event_signature,
+        method TYPE string,
+        name   TYPE string,
+      END OF  ty_event_signature.
+
     CLASS-METHODS class_constructor.
     CLASS-METHODS render_error
       IMPORTING
@@ -89,6 +95,11 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS render_event_as_form
+      IMPORTING
+        is_event       TYPE ty_event_signature
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -328,6 +339,15 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ro_html->add( |{ lv_longtext }| ).
     ro_html->add( |</div>| ).
     ro_html->add( |</div>| ).
+
+  ENDMETHOD.
+
+
+  METHOD render_event_as_form.
+
+    CREATE OBJECT ro_html.
+    ro_html->add(
+      |<form id='form_{ is_event-name }' method={ is_event-method } action='sapevent:{ is_event-name }'></form>| ).
 
   ENDMETHOD.
 

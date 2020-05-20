@@ -18,8 +18,7 @@ CLASS zcl_abapgit_gui_page_tag DEFINITION PUBLIC FINAL
 
   PROTECTED SECTION.
     METHODS:
-      render_content REDEFINITION,
-      scripts        REDEFINITION.
+      render_content REDEFINITION.
 
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_tag_type,
@@ -55,6 +54,12 @@ CLASS zcl_abapgit_gui_page_tag DEFINITION PUBLIC FINAL
       parse_change_tag_type_request
         IMPORTING
           it_postdata TYPE cnht_post_data_tab.
+
+    METHODS render_scripts
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -193,6 +198,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
     ro_html->add( render_menu( ) ).
     ro_html->add( render_form( ) ).
     ro_html->add( '</div>' ).
+
+    register_deferred_script( render_scripts( ) ).
 
   ENDMETHOD.
 
@@ -334,6 +341,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_scripts.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( 'setInitialFocus("name");' ).
+
+  ENDMETHOD.
+
+
   METHOD render_text_input.
 
     DATA lv_attrs TYPE string.
@@ -352,15 +368,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
     ro_html->add( |<label for="{ iv_name }">{ iv_label }</label>| ).
     ro_html->add( |<input id="{ iv_name }" name="{ iv_name }" type="text"{ lv_attrs }>| ).
     ro_html->add( '</div>' ).
-
-  ENDMETHOD.
-
-
-  METHOD scripts.
-
-    ro_html = super->scripts( ).
-
-    ro_html->add( 'setInitialFocus("name");' ).
 
   ENDMETHOD.
 

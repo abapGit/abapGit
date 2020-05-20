@@ -69,8 +69,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
                     iv_act = zif_abapgit_definitions=>c_action-zip_object ) ##NO_TEXT.
     lo_advsub->add( iv_txt = 'Test changed by'
                     iv_act = c_actions-changed_by ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Page playground'
-                    iv_act = zif_abapgit_definitions=>c_action-go_playground ) ##NO_TEXT.
     lo_advsub->add( iv_txt = 'Debug info'
                     iv_act = zif_abapgit_definitions=>c_action-go_debuginfo ) ##NO_TEXT.
     lo_advsub->add( iv_txt = 'Settings'
@@ -420,7 +418,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     ls_hotkey_action-hotkey = |u|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description   = |Show diffs|.
+    ls_hotkey_action-description   = |Diff|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_diff.
     ls_hotkey_action-hotkey = |d|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.

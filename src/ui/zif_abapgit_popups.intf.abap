@@ -38,12 +38,6 @@ INTERFACE zif_abapgit_popups
       !ev_cancel TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
-  METHODS run_page_class_popup
-    EXPORTING
-      !ev_name   TYPE string
-      !ev_cancel TYPE abap_bool
-    RAISING
-      zcx_abapgit_exception .
   METHODS repo_new_offline
     RETURNING
       VALUE(rs_popup) TYPE zif_abapgit_popups=>ty_popup

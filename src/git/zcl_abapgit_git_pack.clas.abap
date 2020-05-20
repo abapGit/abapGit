@@ -18,6 +18,7 @@ CLASS zcl_abapgit_git_pack DEFINITION
         parent2   TYPE zif_abapgit_definitions=>ty_sha1,
         author    TYPE string,
         committer TYPE string,
+        gpgsig    TYPE string,
         body      TYPE string,
       END OF ty_commit .
     TYPES:
@@ -284,11 +285,13 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
   METHOD decode_commit.
 
-    DATA: lv_string TYPE string,
-          lv_word   TYPE string,
-          lv_length TYPE i,
-          lv_trash  TYPE string ##NEEDED,
-          lt_string TYPE TABLE OF string.
+    DATA: lv_string        TYPE string,
+          lv_word          TYPE string,
+          lv_offset        TYPE i,
+          lv_length        TYPE i,
+          lv_length_gpgsig TYPE i,
+          lv_trash         TYPE string ##NEEDED,
+          lt_string        TYPE TABLE OF string.
 
     FIELD-SYMBOLS: <lv_string> LIKE LINE OF lt_string.
 
@@ -317,9 +320,22 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
           rs_commit-committer = <lv_string>+10.
           EXIT. " current loop
         WHEN OTHERS.
-          ASSERT 0 = 1.
+          ASSERT 1 = 0.
       ENDCASE.
+
     ENDLOOP.
+
+    IF lv_string+0(6) = 'gpgsig'.
+      FIND REGEX |-----END PGP SIGNATURE-----[[:space:]]+|
+        IN lv_string
+        MATCH OFFSET lv_offset
+        MATCH LENGTH lv_length.
+      lv_length = lv_length - 1.
+      lv_length_gpgsig = lv_offset + lv_length - 7.
+      lv_length = lv_offset + lv_length.
+      rs_commit-gpgsig = lv_string+7(lv_length_gpgsig).
+      lv_string = lv_string+lv_length.
+    ENDIF.
 
     rs_commit-body = lv_string+1.
 
@@ -697,6 +713,12 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
     CONCATENATE 'committer' is_commit-committer
       INTO lv_tmp SEPARATED BY space.                       "#EC NOTEXT
     CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>c_newline INTO lv_string.
+
+    IF NOT is_commit-gpgsig IS INITIAL.
+      CONCATENATE 'gpgsig' is_commit-gpgsig
+        INTO lv_tmp SEPARATED BY space.
+      CONCATENATE lv_string lv_tmp INTO lv_string.
+    ENDIF.
 
     CONCATENATE lv_string zif_abapgit_definitions=>c_newline is_commit-body INTO lv_string.
 
