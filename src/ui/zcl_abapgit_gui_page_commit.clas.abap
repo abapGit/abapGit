@@ -60,6 +60,19 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
         !iv_max_length TYPE string OPTIONAL
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    METHODS get_comment_default
+      RETURNING
+        VALUE(rv_text) TYPE string .
+    METHODS get_comment_object
+      IMPORTING
+        !it_stage      TYPE zcl_abapgit_stage=>ty_stage_tt
+      RETURNING
+        VALUE(rv_text) TYPE string .
+    METHODS get_comment_file
+      IMPORTING
+        !it_stage      TYPE zcl_abapgit_stage=>ty_stage_tt
+      RETURNING
+        VALUE(rv_text) TYPE string .
 ENDCLASS.
 
 
@@ -74,6 +87,88 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
     mo_stage  = io_stage.
 
     ms_control-page_title = 'COMMIT'.
+  ENDMETHOD.
+
+
+  METHOD get_comment_default.
+
+    DATA: lo_settings TYPE REF TO zcl_abapgit_settings,
+          lt_stage    TYPE zcl_abapgit_stage=>ty_stage_tt.
+
+    " Get setting for default comment text
+    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+
+    rv_text = lo_settings->get_commitmsg_comment_default( ).
+
+    IF rv_text IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    " Determine texts for scope of commit
+    lt_stage = mo_stage->get_all( ).
+
+    REPLACE '$FILE'   IN rv_text WITH get_comment_file( lt_stage ).
+
+    REPLACE '$OBJECT' IN rv_text WITH get_comment_object( lt_stage ).
+
+  ENDMETHOD.
+
+
+  METHOD get_comment_file.
+
+    DATA: lv_count TYPE i,
+          lv_value TYPE c LENGTH 10.
+
+    FIELD-SYMBOLS: <ls_stage> LIKE LINE OF it_stage.
+
+    lv_count = lines( it_stage ).
+
+    IF lv_count = 1.
+      " Just one file so we use the file name
+      READ TABLE it_stage ASSIGNING <ls_stage> INDEX 1.
+      ASSERT sy-subrc = 0.
+
+      rv_text = <ls_stage>-file-filename.
+    ELSE.
+      " For multiple file we use the count instead
+      WRITE lv_count TO lv_value LEFT-JUSTIFIED.
+      CONCATENATE lv_value 'files' INTO rv_text SEPARATED BY space.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_comment_object.
+
+    DATA: lv_count TYPE i,
+          lv_value TYPE c LENGTH 10,
+          ls_item  TYPE zif_abapgit_definitions=>ty_item,
+          lt_items TYPE zif_abapgit_definitions=>ty_items_tt.
+
+    FIELD-SYMBOLS: <ls_stage> LIKE LINE OF it_stage.
+
+    " Get objects
+    LOOP AT it_stage ASSIGNING <ls_stage>.
+      CLEAR ls_item.
+      ls_item-obj_type = <ls_stage>-status-obj_type.
+      ls_item-obj_name = <ls_stage>-status-obj_name.
+      COLLECT ls_item INTO lt_items.
+    ENDLOOP.
+
+    lv_count = lines( lt_items ).
+
+    IF lv_count = 1.
+      " Just one object so we use the object name
+      READ TABLE lt_items INTO ls_item INDEX 1.
+      ASSERT sy-subrc = 0.
+
+      CONCATENATE ls_item-obj_type ls_item-obj_name INTO rv_text SEPARATED BY space.
+    ELSE.
+      " For multiple objects we use the count instead
+      WRITE lv_count TO lv_value LEFT-JUSTIFIED.
+      CONCATENATE lv_value 'objects' INTO rv_text SEPARATED BY space.
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -201,6 +296,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
       lv_body = ms_commit-body.
       lv_author_name = ms_commit-author_name.
       lv_author_email = ms_commit-author_email.
+    ENDIF.
+
+    IF lv_comment IS INITIAL.
+      lv_comment = get_comment_default( ).
     ENDIF.
 
     CREATE OBJECT ro_html.

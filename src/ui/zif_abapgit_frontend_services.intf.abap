@@ -24,6 +24,7 @@ INTERFACE zif_abapgit_frontend_services PUBLIC.
   METHODS show_file_open_dialog
     IMPORTING
       !iv_title            TYPE string
+      !iv_extension        TYPE string
       !iv_default_filename TYPE string
     RETURNING
       VALUE(rv_path)       TYPE string
