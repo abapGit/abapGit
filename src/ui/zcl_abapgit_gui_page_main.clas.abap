@@ -417,7 +417,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
     ls_hotkey_action-hotkey = |u|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description   = |Show diffs|.
+    ls_hotkey_action-description   = |Diff|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_diff.
     ls_hotkey_action-hotkey = |d|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
