@@ -22,9 +22,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
 
   PROTECTED SECTION.
     METHODS:
-      render_content REDEFINITION,
-      get_events     REDEFINITION,
-      scripts        REDEFINITION.
+      render_content REDEFINITION.
 
   PRIVATE SECTION.
 
@@ -97,6 +95,14 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
     METHODS count_default_files_to_commit
       RETURNING
         VALUE(rv_count) TYPE i.
+    METHODS render_deferred_hidden_events
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+    METHODS render_scripts
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -226,17 +232,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_events.
-
-    FIELD-SYMBOLS: <ls_event> TYPE zcl_abapgit_gui_page=>ty_event.
-
-    APPEND INITIAL LINE TO rt_events ASSIGNING <ls_event>.
-    <ls_event>-method = 'post'.
-    <ls_event>-name = 'stage_commit'.
-
-  ENDMETHOD.
-
-
   METHOD get_page_patch.
 
     DATA: lo_page TYPE REF TO zcl_abapgit_gui_page_patch,
@@ -321,6 +316,21 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     ro_html->add( '</div>' ).
 
     mi_gui_services->get_hotkeys_ctl( )->register_hotkeys( me ).
+    mi_gui_services->get_html_parts( )->add_part(
+      iv_collection = zcl_abapgit_gui_component=>c_html_parts-hidden_forms
+      ii_part       = render_deferred_hidden_events( ) ).
+    register_deferred_script( render_scripts( ) ).
+
+  ENDMETHOD.
+
+
+  METHOD render_deferred_hidden_events.
+
+    DATA ls_event TYPE zcl_abapgit_gui_chunk_lib=>ty_event_signature.
+
+    ls_event-method = 'post'.
+    ls_event-name   = 'stage_commit'.
+    ro_html = zcl_abapgit_gui_chunk_lib=>render_event_as_form( ls_event ).
 
   ENDMETHOD.
 
@@ -492,9 +502,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD scripts.
+  METHOD render_scripts.
 
-    ro_html = super->scripts( ).
+    CREATE OBJECT ro_html.
 
     ro_html->add( 'var gStageParams = {' ).
     ro_html->add( |  seed:            "{ mv_seed }",| ). " Unique page id
