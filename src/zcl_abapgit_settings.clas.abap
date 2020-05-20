@@ -2,6 +2,7 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
 
   PUBLIC SECTION.
     CONSTANTS: c_commitmsg_comment_length_dft TYPE i VALUE 50.
+    CONSTANTS: c_commitmsg_comment_default    TYPE string VALUE 'Update $OBJECT'.
     CONSTANTS: c_commitmsg_body_size_dft      TYPE i VALUE 72.
 
     CONSTANTS:
@@ -70,6 +71,12 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
       get_commitmsg_comment_length
         RETURNING
           VALUE(rv_length) TYPE i,
+      set_commitmsg_comment_default
+        IMPORTING
+          iv_default TYPE string,
+      get_commitmsg_comment_default
+        RETURNING
+          VALUE(rv_default) TYPE string,
       set_commitmsg_body_size
         IMPORTING
           iv_length TYPE i,
@@ -151,6 +158,7 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
              run_critical_tests       TYPE abap_bool,
              experimental_features    TYPE abap_bool,
              commitmsg_comment_length TYPE i,
+             commitmsg_comment_deflt  TYPE string,
              commitmsg_body_size      TYPE i,
            END OF ty_s_settings.
 
@@ -174,6 +182,11 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
   METHOD get_commitmsg_body_size.
     rv_length = ms_settings-commitmsg_body_size.
+  ENDMETHOD.
+
+
+  METHOD get_commitmsg_comment_default.
+    rv_default = ms_settings-commitmsg_comment_deflt.
   ENDMETHOD.
 
 
@@ -282,6 +295,11 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_commitmsg_comment_default.
+    ms_settings-commitmsg_comment_deflt = iv_default.
+  ENDMETHOD.
+
+
   METHOD set_commitmsg_comment_length.
     ms_settings-commitmsg_comment_length = iv_length.
   ENDMETHOD.
@@ -298,6 +316,7 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
     set_adt_jump_enanbled( abap_true ).
     set_show_default_repo( abap_false ).
     set_commitmsg_comment_length( c_commitmsg_comment_length_dft ).
+    set_commitmsg_comment_default( c_commitmsg_comment_default ).
     set_commitmsg_body_size( c_commitmsg_body_size_dft ).
     set_default_link_hint_key( ).
     set_icon_scaling( '' ).
