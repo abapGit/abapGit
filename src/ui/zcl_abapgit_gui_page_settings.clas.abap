@@ -237,6 +237,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
       mo_settings->set_commitmsg_comment_length( zcl_abapgit_settings=>c_commitmsg_comment_length_dft ).
     ENDIF.
 
+    READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'comment_default'.
+    IF sy-subrc = 0.
+      mo_settings->set_commitmsg_comment_default( <ls_post_field>-value ).
+    ELSE.
+      mo_settings->set_commitmsg_comment_default( zcl_abapgit_settings=>c_commitmsg_comment_default ).
+    ENDIF.
+
     READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'body_size'.
     IF sy-subrc = 0.
       lv_i_param_value = <ls_post_field>-value.
@@ -366,6 +373,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ro_html->add( |<br>| ).
     ro_html->add( |<input name="comment_length" type="number" step="10" size="3" maxlength="3" min="50"| &&
                   | value="{ mo_settings->get_commitmsg_comment_length( ) }">| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<label for="comment_default">Default for comment (possible variables: $OBJECT, $FILE)</label>| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<input name="comment_default" type="text" size="80" maxlength="255"| &&
+                  | value="{ mo_settings->get_commitmsg_comment_default( ) }">| ).
     ro_html->add( |<br>| ).
     ro_html->add( |<label for="body_size">Max. line size of body (recommendation 72)</label>| ).
     ro_html->add( |<br>| ).
