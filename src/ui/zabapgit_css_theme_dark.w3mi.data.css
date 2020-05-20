@@ -43,7 +43,7 @@ div#toc .favorites a { opacity: 1; }
 .nav-container ul ul { background-color: #555555; }
 .nav-container ul ul li:hover { background-color: var(--theme-list-hover-background-color); }
 table.repo_tab {
-    border-color: #var(--theme-container-background-color);
+    border-color: var(--theme-container-background-color);
     background-color: var(--theme-background-color);
 }
 
@@ -116,6 +116,6 @@ table.db_tab td      { color: var(--theme-primary-font-color); }
 table.db_tab td.data { opacity: 0.5; }
 table.db_tab tbody tr:hover, tr:active { background-color: var(--theme-list-hover-background-color); }
 table.db_tab th {
-  color: var(--theme-primary-font-color); }
+  color: var(--theme-primary-font-color);
   border-bottom-color: #333;
 }
