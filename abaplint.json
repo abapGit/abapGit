@@ -16,6 +16,19 @@
     "version": "v702",
     "errorNamespace": "^(Z|Y)",
     "globalConstants": [
+      "icon_led_red",
+      "icon_led_yellow",
+      "icon_led_green",
+      "icon_led_inactive",
+      "icon_message_information",
+      "icon_system_help",
+      "icon_stack",
+      "icon_abap",
+      "icon_display_text",
+      "icon_set_state",
+      "icon_workflow_fork",
+      "icon_okay",
+      "icon_folder",
       "abap_func_exporting",
       "abap_func_tables",
       "cssf_formtype_text",
@@ -55,6 +68,9 @@
     "globalMacros": []
   },
   "rules": {
+    "unknown_types": false,
+    "forbidden_identifier": true,
+    "try_without_catch": false,
     "unused_variables": false,
     "prefix_is_current_class": {
       "omitMeInstanceCalls": false
@@ -111,6 +127,8 @@
     "class_attribute_names": {
       "ignoreExceptions": true,
       "statics": "^G._.*$",
+      "ignoreLocal": false,
+      "constants": "",
       "instance": "^M._.*$"
     },
     "cloud_types": true,
@@ -159,6 +177,7 @@
       "ignoreLowerClassImplmentationStatement": true,
       "ignoreGlobalClassDefinition": false,
       "ignoreGlobalInterface": false,
+      "ignoreKeywords": [],
       "ignoreFunctionModuleName": false
     },
     "line_length": {
@@ -217,6 +236,8 @@
       "auth": "^Z",
       "pinf": "^Z",
       "idoc": "^Z",
+      "ssfo": "^Z",
+      "ssst": "^Z",
       "xslt": "^Z"
     },
     "obsolete_statement": {

@@ -396,7 +396,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ENDIF.
       IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " Any changes
-        ro_toolbar->add( iv_txt = 'Show diff'
+        ro_toolbar->add( iv_txt = 'Diff'
                          iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ENDIF.
@@ -414,7 +414,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
         ro_toolbar->add( iv_txt = 'Pull <sup>zip</sup>'
                          iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?{ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
-        ro_toolbar->add( iv_txt = 'Show diff'
+        ro_toolbar->add( iv_txt = 'Diff'
                          iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ mv_key }|
                          iv_opt = zif_abapgit_html=>c_html_opt-strong ).
       ENDIF.
@@ -723,7 +723,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
           ig_object = is_item ).
 
         ro_html->add( '<div>' ).
-        ro_html->add_a( iv_txt = |view diff ({ is_item-changes })|
+        ro_html->add_a( iv_txt = |diff ({ is_item-changes })|
                         iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?{ lv_difflink }| ).
         ro_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_item-lstate
                                                             iv_rstate = is_item-rstate ) ).
@@ -737,7 +737,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
             lv_difflink = zcl_abapgit_html_action_utils=>file_encode(
               iv_key  = mo_repo->get_key( )
               ig_file = ls_file ).
-            ro_html->add_a( iv_txt = 'view diff'
+            ro_html->add_a( iv_txt = 'diff'
                             iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?{ lv_difflink }| ).
             ro_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = ls_file-lstate
                                                                 iv_rstate = ls_file-rstate ) ).

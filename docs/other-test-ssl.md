@@ -4,7 +4,7 @@ category: other
 order: 60
 ---
 
-Following report can be used to test SSL connection to github. Copy paste the report into the ABAP system use package $TMP
+Following report can be used to test SSL connection to github. Copy paste the report into the ABAP system use package `$TMP`
 
 ```abap
 REPORT zabapgit_test_ssl.
