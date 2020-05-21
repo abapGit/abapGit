@@ -337,7 +337,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     IF <ls_diff>-changed_by IS INITIAL.
       <ls_diff>-changed_by = to_lower( zcl_abapgit_objects_super=>c_user_unknown ).
     ENDIF.
-    
+
     " Extension
     IF <ls_local>-file-filename IS NOT INITIAL.
       <ls_diff>-type = reverse( <ls_local>-file-filename ).
