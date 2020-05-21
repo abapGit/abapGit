@@ -403,15 +403,15 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD then_file_should_be_added.
-    DATA: lt_staged_objects TYPE zcl_abapgit_stage=>ty_stage_tt.
+    DATA: lt_staged_objects TYPE zif_abapgit_definitions=>ty_stage_tt.
     lt_staged_objects = mo_stage->get_all( ).
 
     READ TABLE lt_staged_objects TRANSPORTING NO FIELDS
       WITH KEY
       file-filename = is_local_file-file-filename
-      file-path      = is_local_file-file-path
-      file-data      = is_local_file-file-data
-      method         = zcl_abapgit_stage=>c_method-add.
+      file-path     = is_local_file-file-path
+      file-data     = is_local_file-file-data
+      method        = zif_abapgit_definitions=>c_method-add.
     IF sy-subrc <> 0.
       cl_abap_unit_assert=>fail( |Object { is_local_file-file-filename } not added to stage| ).
     ENDIF.
@@ -432,7 +432,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
 
   METHOD then_it_should_remove_at_stage.
 
-    DATA: lt_staged_objects TYPE zcl_abapgit_stage=>ty_stage_tt.
+    DATA: lt_staged_objects TYPE zif_abapgit_definitions=>ty_stage_tt.
 
     lt_staged_objects = mo_stage->get_all( ).
 

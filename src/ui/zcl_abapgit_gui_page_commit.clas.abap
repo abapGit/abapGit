@@ -63,12 +63,12 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
         VALUE(rv_text) TYPE string .
     METHODS get_comment_object
       IMPORTING
-        !it_stage      TYPE zcl_abapgit_stage=>ty_stage_tt
+        !it_stage      TYPE zif_abapgit_definitions=>ty_stage_tt
       RETURNING
         VALUE(rv_text) TYPE string .
     METHODS get_comment_file
       IMPORTING
-        !it_stage      TYPE zcl_abapgit_stage=>ty_stage_tt
+        !it_stage      TYPE zif_abapgit_definitions=>ty_stage_tt
       RETURNING
         VALUE(rv_text) TYPE string .
 
@@ -98,7 +98,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
   METHOD get_comment_default.
 
     DATA: lo_settings TYPE REF TO zcl_abapgit_settings,
-          lt_stage    TYPE zcl_abapgit_stage=>ty_stage_tt.
+          lt_stage    TYPE zif_abapgit_definitions=>ty_stage_tt.
 
     " Get setting for default comment text
     lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
@@ -399,7 +399,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
   METHOD render_stage.
 
-    DATA: lt_stage TYPE zcl_abapgit_stage=>ty_stage_tt.
+    DATA: lt_stage TYPE zif_abapgit_definitions=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
 
