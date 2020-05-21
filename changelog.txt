@@ -8,6 +8,26 @@ Legend
 + : added
 - : removed
 
+2020-05-21 v1.95.0
+------------------
+* apack interface serialization changes
+* gui refactoring
++ SCVI screen variants support
++ STVI transaction variant support
++ OA2P support
++ SRVB support
++ BDEF support
++ ASMD support
++ SRVD support
++ DRUL support
++ DTDC support
+! CUS0, CUS1, CUS2 only serialize master language
+! DTEL, DOCT, only serialize master language
+* CHAR serialization fixes
++ Allow setting of display name for offline repos
+- Remove page playground
+- Remove explore link, link to dotabap.org instead
+
 2020-03-29 v1.94.0
 ------------------
 * refactoring, remove macros
