@@ -97,12 +97,25 @@ table.diff_tab td,th { color: #fff; }
 table.diff_tab thead.nav_line { background-color: var(--theme-container-background-color); }
 
 /* STYLES for Syntax Highlighting */
+/* abap */
 .syntax-hl span.keyword  { color: #4af; }
 .syntax-hl span.text     { color: #8f8; }
 .syntax-hl span.comment  { color: #999; }
+/* xml+html */
 .syntax-hl span.xml_tag  { color: #659cff; }
 .syntax-hl span.attr     { color: #bab2f9; }
 .syntax-hl span.attr_val { color: #b777fb; }
+/* css */
+.syntax-hl span.operators    { color:red; }
+.syntax-hl span.properties   { color:#0a69ce; }
+.syntax-hl span.values       { color:blue; }
+.syntax-hl span.units        { color:maroon; }
+.syntax-hl span.selectors    { color:#32a852; }
+.syntax-hl span.functions    { color:purple; }
+.syntax-hl span.colors       { color:magenta; }
+.syntax-hl span.extensions   { color:blue; }
+.syntax-hl span.at_rules     { color:orange; }
+.syntax-hl span.html         { color:green; }
 
 /* DEBUG INFO STYLES */
 div.debug_container#debug_info { color: var(--theme-primary-font-color); }

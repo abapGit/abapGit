@@ -39,7 +39,7 @@ input:focus, textarea:focus { border-color: #8cadd9; }
 .attention    { color: red        !important; }
 .error        { color: #d41919    !important; }
 .warning      { color: #efb301    !important; }
-.success      { color: green   	  !important; }
+.success      { color: green      !important; }
 .blue         { color: #5e8dc9    !important; }
 .red          { color: red        !important; }
 .white        { color: white      !important; }
@@ -121,7 +121,7 @@ table.repo_tab {
 .repo_tab tr.modified    { background-color: #fbf7e9; }
 .repo_tab td.current_dir { color: var(--theme-primary-font-color-reduced); }
 
-/*.repo_tab td.cmd span.state-block span { border-color: #000; }*/
+/*.repo_tab td.cmd span.state-block span { border-color: #000; }*/{ border-color: #000; }*/
 /*.repo_tab td.cmd span.state-block span.added {
   background-color: #69ad74;
   border-color: #579e64;
@@ -298,12 +298,25 @@ table.diff_tab td.patch, th.patch {
 }
 
 /* STYLES for Syntax Highlighting */
+/* abap */
 .syntax-hl span.keyword  { color: #0a69ce; }
 .syntax-hl span.text     { color: #48ce4f; }
 .syntax-hl span.comment  { color: var(--theme-greyscale-dark); font-style: italic; }
+/* xml+html */
 .syntax-hl span.xml_tag  { color: #457ce3; }
 .syntax-hl span.attr     { color: #b777fb; }
 .syntax-hl span.attr_val { color: #7a02f9; }
+/* css */
+.syntax-hl span.operators    { color:red; }
+.syntax-hl span.properties   { color:#0a69ce; }
+.syntax-hl span.values       { color:blue; }
+.syntax-hl span.units        { color:maroon; }
+.syntax-hl span.selectors    { color:#32a852; }
+.syntax-hl span.functions    { color:purple; }
+.syntax-hl span.colors       { color:magenta; }
+.syntax-hl span.extensions   { color:blue; }
+.syntax-hl span.at_rules     { color:orange; }
+.syntax-hl span.html         { color:green; }
 
 /* DEBUG INFO STYLES */
 div.debug_container { color: #444; }
@@ -432,3 +445,4 @@ table.settings_tab input {
 table.settings_tab input:focus {
   background-color: #fff;
 }
+
