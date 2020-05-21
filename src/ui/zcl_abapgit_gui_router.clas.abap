@@ -204,9 +204,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
       WHEN zcl_abapgit_gui=>c_action-go_home.                          " Go Main page
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
-      WHEN zif_abapgit_definitions=>c_action-go_explore.                     " Go Explore page
-        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_explore.
-        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_repo_overview.               " Go Repository overview
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_repo_over.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
