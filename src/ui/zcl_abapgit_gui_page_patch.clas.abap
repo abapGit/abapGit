@@ -31,7 +31,6 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
   PROTECTED SECTION.
     METHODS:
       render_content REDEFINITION,
-      scripts REDEFINITION,
       add_menu_end REDEFINITION,
       add_menu_begin REDEFINITION,
       render_table_head_non_unified REDEFINITION,
@@ -170,6 +169,12 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
           iv_fstate                        TYPE char1
         RETURNING
           VALUE(rv_is_patch_line_possible) TYPE abap_bool.
+
+    METHODS render_scripts
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -578,6 +583,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
     mi_gui_services->get_hotkeys_ctl( )->register_hotkeys( me ).
     ro_html = super->render_content( ).
 
+    register_deferred_script( render_scripts( ) ).
+
   ENDMETHOD.
 
 
@@ -672,6 +679,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_scripts.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( 'preparePatch();' ).
+    ro_html->add( 'registerStagePatch();' ).
+
+  ENDMETHOD.
+
+
   METHOD render_table_head_non_unified.
 
     render_patch_head( io_html = io_html
@@ -716,16 +733,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
       ENDLOOP.
 
     ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD scripts.
-
-    ro_html = super->scripts( ).
-
-    ro_html->add( 'preparePatch();' ).
-    ro_html->add( 'registerStagePatch();' ).
 
   ENDMETHOD.
 
