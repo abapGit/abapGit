@@ -603,7 +603,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
       ASSERT sy-subrc = 0.
 
       CASE <ls_item>-value.
-        WHEN zcl_abapgit_stage=>c_method-add.
+        WHEN zif_abapgit_definitions=>c_method-add.
           READ TABLE ms_files-local ASSIGNING <ls_file>
             WITH KEY file-path     = ls_file-path
                      file-filename = ls_file-filename.
@@ -616,14 +616,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
                          iv_filename = <ls_file>-file-filename
                          is_status   = <ls_status>
                          iv_data     = <ls_file>-file-data ).
-        WHEN zcl_abapgit_stage=>c_method-ignore.
+        WHEN zif_abapgit_definitions=>c_method-ignore.
           ro_stage->ignore( iv_path     = ls_file-path
                             iv_filename = ls_file-filename ).
-        WHEN zcl_abapgit_stage=>c_method-rm.
+        WHEN zif_abapgit_definitions=>c_method-rm.
           ro_stage->rm( iv_path     = ls_file-path
                         is_status   = <ls_status>
                         iv_filename = ls_file-filename ).
-        WHEN zcl_abapgit_stage=>c_method-skip.
+        WHEN zif_abapgit_definitions=>c_method-skip.
           " Do nothing
         WHEN OTHERS.
           zcx_abapgit_exception=>raise( |process_stage_list: unknown method { <ls_item>-value }| ).
