@@ -63,7 +63,8 @@ CLASS zcl_abapgit_syntax_css DEFINITION
         " selectors begin with :
         selectors TYPE string VALUE ':[:a-z]+\b',           "#EC NOTEXT
         " units
-        units     TYPE string VALUE '\b[0-9\. ]+(ch|cm|em|ex|in|mm|pc|pt|px|vh|vmax|vmin|vw)\b|\b[0-9\. ]+%', "#EC NOTEXT
+        units     TYPE string
+        VALUE '\b[0-9\. ]+(ch|cm|em|ex|in|mm|pc|pt|px|vh|vmax|vmin|vw)\b|\b[0-9\. ]+%', "#EC NOTEXT
       END OF c_regex .
 
     CLASS-METHODS class_constructor .
