@@ -6,8 +6,9 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
   PUBLIC SECTION.
 
     CONSTANTS: c_abapgit_repo     TYPE string   VALUE 'https://github.com/larshp/abapGit'     ##NO_TEXT,
-               c_abapgit_homepage TYPE string   VALUE 'http://www.abapgit.org'                ##NO_TEXT,
-               c_abapgit_wikipage TYPE string   VALUE 'http://docs.abapgit.org'               ##NO_TEXT,
+               c_abapgit_homepage TYPE string   VALUE 'https://www.abapgit.org'                ##NO_TEXT,
+               c_abapgit_wikipage TYPE string   VALUE 'https://docs.abapgit.org'               ##NO_TEXT,
+               c_dotabap_homepage TYPE string   VALUE 'https://dotabap.org'               ##NO_TEXT,
                c_abapgit_package  TYPE devclass VALUE '$ABAPGIT'                              ##NO_TEXT,
                c_abapgit_url      TYPE string   VALUE 'https://github.com/larshp/abapGit.git' ##NO_TEXT,
                c_abapgit_tcode    TYPE tcode    VALUE `ZABAPGIT`                              ##NO_TEXT.
@@ -16,6 +17,9 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS open_abapgit_wikipage
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS open_dotabap_homepage
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS open_abapgit_changelog
@@ -254,6 +258,17 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
     cl_gui_frontend_services=>execute(
       EXPORTING document = c_abapgit_wikipage
+      EXCEPTIONS OTHERS = 1 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Opening page in external browser failed.' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+  METHOD open_dotabap_homepage.
+
+    cl_gui_frontend_services=>execute(
+      EXPORTING document = c_dotabap_homepage
       EXCEPTIONS OTHERS = 1 ).
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Opening page in external browser failed.' ).

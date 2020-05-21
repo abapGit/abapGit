@@ -141,14 +141,14 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     DATA: lv_add         TYPE abap_bool,
           lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
-          lt_stage       TYPE zcl_abapgit_stage=>ty_stage_tt.
+          lt_stage       TYPE zif_abapgit_definitions=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
 
 
     lo_dot_abapgit = get_dot_abapgit( ).
     lt_stage = io_stage->get_all( ).
-    LOOP AT lt_stage ASSIGNING <ls_stage> WHERE method = zcl_abapgit_stage=>c_method-ignore.
+    LOOP AT lt_stage ASSIGNING <ls_stage> WHERE method = zif_abapgit_definitions=>c_method-ignore.
 
       lo_dot_abapgit->add_ignore(
         iv_path     = <ls_stage>-file-path

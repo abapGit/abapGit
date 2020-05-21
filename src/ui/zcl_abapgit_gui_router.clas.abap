@@ -116,11 +116,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
-    METHODS get_page_playground
-      RETURNING
-        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
-      RAISING
-        zcx_abapgit_exception.
+
     CLASS-METHODS jump_display_transport
       IMPORTING
         !iv_getdata TYPE clike
@@ -130,7 +126,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -208,9 +204,6 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       WHEN zcl_abapgit_gui=>c_action-go_home.                          " Go Main page
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
-      WHEN zif_abapgit_definitions=>c_action-go_explore.                     " Go Explore page
-        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_explore.
-        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_repo_overview.               " Go Repository overview
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_repo_over.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
@@ -241,9 +234,6 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         ENDIF.
       WHEN zif_abapgit_definitions=>c_action-go_branch_overview.              " Go repo branch overview
         ei_page  = get_page_branch_overview( is_event_data-getdata ).
-        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
-      WHEN zif_abapgit_definitions=>c_action-go_playground.                   " Create playground page
-        ei_page  = get_page_playground( ).
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_tutorial.                     " Go to tutorial
         zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( '' ).        " Clear show_id
@@ -305,30 +295,6 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         is_object = ls_object.
 
     ri_page = lo_page.
-
-  ENDMETHOD.
-
-
-  METHOD get_page_playground.
-    DATA: lv_class_name TYPE string,
-          lv_cancel     TYPE abap_bool,
-          li_popups     TYPE REF TO zif_abapgit_popups.
-
-    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
-    li_popups->run_page_class_popup(
-      IMPORTING
-        ev_name   = lv_class_name
-        ev_cancel = lv_cancel ).
-
-    IF lv_cancel = abap_true.
-      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
-    ENDIF.
-
-    TRY.
-        CREATE OBJECT ri_page TYPE (lv_class_name).
-      CATCH cx_sy_create_object_error.
-        zcx_abapgit_exception=>raise( |Cannot create page class { lv_class_name }| ).
-    ENDTRY.
 
   ENDMETHOD.
 
@@ -520,9 +486,6 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         zcl_abapgit_services_repo=>remove( lv_key ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_newonline.
-        zcl_abapgit_services_repo=>new_online( lv_url ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN 'install'.    " 'install' is for explore page
         zcl_abapgit_services_repo=>new_online( lv_url ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_refresh_checksums.          " Rebuild local checksums
