@@ -89,19 +89,17 @@ CLASS ZCL_ABAPGIT_SYNTAX_JSON IMPLEMENTATION.
                             off = <ls_match>-offset
                             len = <ls_match>-length ).
 
-      CASE <ls_match>-token.
-        WHEN c_token-text.
-          <ls_match>-text_tag = lv_match.
-          IF lv_prev_token = c_token-text.
-            IF <ls_match>-text_tag = <ls_prev>-text_tag.
-              <ls_prev>-length = <ls_match>-offset + <ls_match>-length - <ls_prev>-offset.
-              CLEAR lv_prev_token.
-            ENDIF.
-            CLEAR <ls_match>-token.
-            CONTINUE.
+      IF <ls_match>-token = c_token-text.
+        <ls_match>-text_tag = lv_match.
+        IF lv_prev_token = c_token-text.
+          IF <ls_match>-text_tag = <ls_prev>-text_tag.
+            <ls_prev>-length = <ls_match>-offset + <ls_match>-length - <ls_prev>-offset.
+            CLEAR lv_prev_token.
           ENDIF.
-
-      ENDCASE.
+          CLEAR <ls_match>-token.
+          CONTINUE.
+        ENDIF.
+      ENDIF.
 
       lv_prev_token = <ls_match>-token.
       ASSIGN <ls_match> TO <ls_prev>.
