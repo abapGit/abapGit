@@ -409,11 +409,10 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
           ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
 
 
-    zcl_abapgit_git_transport=>upload_pack_by_branch(
+    zcl_abapgit_git_transport=>upload_pack(
       EXPORTING
         iv_url          = iv_url
         iv_branch_name  = iv_branch_name
-        iv_deepen_level = 1
       IMPORTING
         et_objects      = rs_result-objects
         ev_branch       = rs_result-branch ).

@@ -80,7 +80,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
+CLASS zcl_abapgit_merge IMPLEMENTATION.
 
 
   METHOD all_files.
@@ -279,13 +279,14 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
     APPEND ms_merge-source TO lt_upload.
     APPEND ms_merge-target TO lt_upload.
 
-    zcl_abapgit_git_transport=>upload_pack_by_branch(
+    zcl_abapgit_git_transport=>upload_pack(
       EXPORTING
-        iv_url         = ms_merge-repo->get_url( )
-        iv_branch_name = ms_merge-repo->get_branch_name( )
-        it_branches    = lt_upload
+        iv_url          = ms_merge-repo->get_url( )
+        iv_branch_name  = ms_merge-repo->get_branch_name( )
+        iv_deepen_level = 0
+        it_branches     = lt_upload
       IMPORTING
-        et_objects     = rt_objects ).
+        et_objects      = rt_objects ).
 
   ENDMETHOD.
 
