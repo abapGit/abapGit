@@ -121,7 +121,7 @@ table.repo_tab {
 .repo_tab tr.modified    { background-color: #fbf7e9; }
 .repo_tab td.current_dir { color: var(--theme-primary-font-color-reduced); }
 
-/*.repo_tab td.cmd span.state-block span { border-color: #000; }*/{ border-color: #000; }*/
+/*.repo_tab td.cmd span.state-block span { border-color: #000; }*/
 /*.repo_tab td.cmd span.state-block span.added {
   background-color: #69ad74;
   border-color: #579e64;
