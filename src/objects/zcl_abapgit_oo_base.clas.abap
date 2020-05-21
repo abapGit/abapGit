@@ -238,10 +238,19 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~read_descriptions.
-    SELECT * FROM seocompotx INTO TABLE rt_descriptions
-      WHERE clsname   = iv_obejct_name
-        AND descript <> ''
-      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
+    CASE iv_master_lang_only.
+      WHEN abap_true.
+        SELECT * FROM seocompotx INTO TABLE rt_descriptions
+          WHERE clsname   = iv_obejct_name
+            AND langu = sy-langu
+            AND descript <> ''
+          ORDER BY PRIMARY KEY.                           "#EC CI_SUBRC
+      WHEN abap_false.
+        SELECT * FROM seocompotx INTO TABLE rt_descriptions
+           WHERE clsname   = iv_obejct_name
+             AND descript <> ''
+           ORDER BY PRIMARY KEY.                          "#EC CI_SUBRC
+    ENDCASE.
   ENDMETHOD.
 
 

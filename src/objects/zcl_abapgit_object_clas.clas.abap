@@ -357,9 +357,14 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
   METHOD serialize_descr.
 
-    DATA: lt_descriptions TYPE zif_abapgit_definitions=>ty_seocompotx_tt.
+    DATA: lt_descriptions TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
+          lv_master_lang_only TYPE abap_bool.
 
-    lt_descriptions = mi_object_oriented_object_fct->read_descriptions( iv_clsname ).
+    lv_master_lang_only = io_xml->i18n_params( )-serialize_master_lang_only.
+    lt_descriptions = mi_object_oriented_object_fct->read_descriptions(
+      iv_obejct_name = iv_clsname
+      iv_master_lang_only = lv_master_lang_only ).
+
     IF lines( lt_descriptions ) = 0.
       RETURN.
     ENDIF.

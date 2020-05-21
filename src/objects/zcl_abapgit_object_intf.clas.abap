@@ -33,7 +33,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
+CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -137,10 +137,11 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
   METHOD serialize_xml.
     DATA:
-      lt_descriptions TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
-      ls_vseointerf   TYPE vseointerf,
-      ls_clskey       TYPE seoclskey,
-      lt_lines        TYPE tlinetab.
+      lt_descriptions     TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
+      ls_vseointerf       TYPE vseointerf,
+      ls_clskey           TYPE seoclskey,
+      lt_lines            TYPE tlinetab,
+      lv_master_lang_only TYPE abap_bool.
 
 
     ls_clskey-clsname = ms_item-obj_name.
@@ -168,7 +169,11 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
                    ig_data = lt_lines ).
     ENDIF.
 
-    lt_descriptions = mi_object_oriented_object_fct->read_descriptions( ls_clskey-clsname ).
+    lv_master_lang_only = io_xml->i18n_params( )-serialize_master_lang_only.
+    lt_descriptions = mi_object_oriented_object_fct->read_descriptions(
+      iv_obejct_name = ls_clskey-clsname
+      iv_master_lang_only = lv_master_lang_only ).
+
     IF lines( lt_descriptions ) > 0.
       io_xml->add( iv_name = 'DESCRIPTIONS'
                    ig_data = lt_descriptions ).
