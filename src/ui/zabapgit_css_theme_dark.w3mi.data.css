@@ -39,7 +39,10 @@ a:hover { color: var(--theme-link-color-hover); }
 
 /* MENU */
 div#toc .favorites a { opacity: 1; }
-.nav-container ul a:hover { text-decoration: underline; }
+.nav-container ul li:hover { 
+  background-color: #555555;
+  box-shadow: 1px 1px 3px 0px #bbb;
+}
 .nav-container ul ul { background-color: #555555; }
 .nav-container ul ul li:hover { background-color: var(--theme-list-hover-background-color); }
 table.repo_tab {
@@ -56,6 +59,9 @@ div.tutorial h1, h2 { color: var(--theme-primary-font-color); }
 
 /* REPOSITORY */
 div.repo { background-color: var(--theme-container-background-color); }
+.repo_name span.name { color: var(--theme-primary-font-color-reduced); }
+.repo_name span.url  { color: #333; }
+.repo_name a.url { color: #333; }
 .repo_attr { color: var(--theme-primary-font-color); }
 .repo_attr span.branch_branch {
   border-color: #ffffff;
