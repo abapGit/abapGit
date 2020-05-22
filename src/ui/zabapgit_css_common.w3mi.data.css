@@ -251,6 +251,11 @@ table.repo_tab {
 }
 .repo_tab tr:first-child td { border-top: 0px; }
 
+.repo_tab tr:hover {
+  background-color: rgb(245, 245, 245) !important;
+}
+
+
 /* STAGE */
 
 th.stage-status { width: 30px; }
@@ -278,6 +283,10 @@ input.stage-filter { width: 18em; }
 }
 .stage_tab td.highlight {
   font-weight: bold;
+}
+
+.stage_tab tr:hover {
+  background-color: rgb(245, 245, 245) !important;
 }
 
 .stage_tab td.cmd {  cursor: pointer; }
@@ -361,6 +370,7 @@ span.diff_banner {
   padding-left: 0.3em;
   padding-right: 0.3em;
 }
+
 div.diff_content {
   border-top: 1px solid;
   border-bottom: 1px solid;
