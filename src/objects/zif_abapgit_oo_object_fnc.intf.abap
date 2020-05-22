@@ -123,7 +123,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
     read_descriptions
       IMPORTING
         iv_obejct_name         TYPE seoclsname
-        iv_master_lang_only    TYPE abap_bool DEFAULT abap_false
+        iv_language            TYPE spras OPTIONAL
       RETURNING
         VALUE(rt_descriptions) TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
     delete

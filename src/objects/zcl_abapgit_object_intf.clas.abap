@@ -137,11 +137,11 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
 
   METHOD serialize_xml.
     DATA:
-      lt_descriptions     TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
-      ls_vseointerf       TYPE vseointerf,
-      ls_clskey           TYPE seoclskey,
-      lt_lines            TYPE tlinetab,
-      lv_master_lang_only TYPE abap_bool.
+      lt_descriptions TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
+      ls_vseointerf   TYPE vseointerf,
+      ls_clskey       TYPE seoclskey,
+      lt_lines        TYPE tlinetab,
+      lv_language     TYPE spras.
 
 
     ls_clskey-clsname = ms_item-obj_name.
@@ -169,10 +169,13 @@ CLASS zcl_abapgit_object_intf IMPLEMENTATION.
                    ig_data = lt_lines ).
     ENDIF.
 
-    lv_master_lang_only = io_xml->i18n_params( )-serialize_master_lang_only.
+    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+      lv_language = mv_language.
+    ENDIF.
+
     lt_descriptions = mi_object_oriented_object_fct->read_descriptions(
       iv_obejct_name = ls_clskey-clsname
-      iv_master_lang_only = lv_master_lang_only ).
+      iv_language = lv_language ).
 
     IF lines( lt_descriptions ) > 0.
       io_xml->add( iv_name = 'DESCRIPTIONS'
