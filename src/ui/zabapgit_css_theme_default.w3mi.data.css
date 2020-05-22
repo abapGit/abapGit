@@ -306,17 +306,17 @@ table.diff_tab td.patch, th.patch {
 .syntax-hl span.xml_tag  { color: #457ce3; }
 .syntax-hl span.attr     { color: #b777fb; }
 .syntax-hl span.attr_val { color: #7a02f9; }
-/* css */
-.syntax-hl span.operators    { color:red; }
+/* css+js */
 .syntax-hl span.properties   { color:#0a69ce; }
 .syntax-hl span.values       { color:blue; }
 .syntax-hl span.units        { color:maroon; }
-.syntax-hl span.selectors    { color:#32a852; }
+.syntax-hl span.selectors    { color:purple; }
 .syntax-hl span.functions    { color:purple; }
-.syntax-hl span.colors       { color:magenta; }
-.syntax-hl span.extensions   { color:blue; }
-.syntax-hl span.at_rules     { color:orange; }
+.syntax-hl span.colors       { color:purple; }
+.syntax-hl span.extensions   { color:darkblue; }
+.syntax-hl span.at_rules     { color:darkblue; }
 .syntax-hl span.html         { color:green; }
+.syntax-hl span.variables    { color:purple; }
 
 /* DEBUG INFO STYLES */
 div.debug_container { color: #444; }
@@ -445,4 +445,3 @@ table.settings_tab input {
 table.settings_tab input:focus {
   background-color: #fff;
 }
-

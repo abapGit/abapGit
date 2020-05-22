@@ -8,24 +8,20 @@ CLASS zcl_abapgit_syntax_json DEFINITION
     CONSTANTS:
       " JSON... This was easy :-)
       BEGIN OF c_css,
-        keyword   TYPE string VALUE 'keyword',              "#EC NOTEXT
-        text      TYPE string VALUE 'attr_val',             "#EC NOTEXT
-        operators TYPE string VALUE 'operators',            "#EC NOTEXT
+        keyword TYPE string VALUE 'keyword',                "#EC NOTEXT
+        text    TYPE string VALUE 'text',                   "#EC NOTEXT
       END OF c_css .
     CONSTANTS:
       BEGIN OF c_token,
-        keyword   TYPE c VALUE 'K',                         "#EC NOTEXT
-        text      TYPE c VALUE 'T',                         "#EC NOTEXT
-        operators TYPE c VALUE 'O',                         "#EC NOTEXT
+        keyword TYPE c VALUE 'K',                           "#EC NOTEXT
+        text    TYPE c VALUE 'T',                           "#EC NOTEXT
       END OF c_token .
     CONSTANTS:
       BEGIN OF c_regex,
         " not much here
-        keyword   TYPE string VALUE 'true|false|null',      "#EC NOTEXT
+        keyword TYPE string VALUE 'true|false|null',        "#EC NOTEXT
         " double quoted strings
-        text      TYPE string VALUE '"',                    "#EC NOTEXT
-        " special meaning characters
-        operators TYPE string VALUE '\{|\[|\(|\)|\]|\}|,|:', "#EC NOTEXT
+        text    TYPE string VALUE '"',                      "#EC NOTEXT
       END OF c_regex .
 
     METHODS constructor .
@@ -54,10 +50,6 @@ CLASS ZCL_ABAPGIT_SYNTAX_JSON IMPLEMENTATION.
     add_rule( iv_regex = c_regex-text
               iv_token = c_token-text
               iv_style = c_css-text ).
-
-    add_rule( iv_regex = c_regex-operators
-              iv_token = c_token-operators
-              iv_style = c_css-operators ).
 
   ENDMETHOD.
 

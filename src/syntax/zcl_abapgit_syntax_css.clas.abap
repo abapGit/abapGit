@@ -21,9 +21,8 @@ CLASS zcl_abapgit_syntax_css DEFINITION
     CONSTANTS:
       BEGIN OF c_css,
         keyword    TYPE string VALUE 'keyword',             "#EC NOTEXT
-        text       TYPE string VALUE 'attr_val',            "#EC NOTEXT
+        text       TYPE string VALUE 'text',                "#EC NOTEXT
         comment    TYPE string VALUE 'comment',             "#EC NOTEXT
-        operators  TYPE string VALUE 'operators',           "#EC NOTEXT
         selectors  TYPE string VALUE 'selectors',           "#EC NOTEXT
         units      TYPE string VALUE 'units',               "#EC NOTEXT
         properties TYPE string VALUE 'properties',          "#EC NOTEXT
@@ -39,7 +38,6 @@ CLASS zcl_abapgit_syntax_css DEFINITION
         keyword    TYPE c VALUE 'K',                        "#EC NOTEXT
         text       TYPE c VALUE 'T',                        "#EC NOTEXT
         comment    TYPE c VALUE 'C',                        "#EC NOTEXT
-        operators  TYPE c VALUE 'O',                        "#EC NOTEXT
         selectors  TYPE c VALUE 'S',                        "#EC NOTEXT
         units      TYPE c VALUE 'U',                        "#EC NOTEXT
         properties TYPE c VALUE 'P',                        "#EC NOTEXT
@@ -58,8 +56,6 @@ CLASS zcl_abapgit_syntax_css DEFINITION
         text      TYPE string VALUE '("[^"]*")|(''[^'']*'')', "#EC NOTEXT
         " in general keywords don't contain numbers (except -ms-scrollbar-3dlight-color)
         keyword   TYPE string VALUE '\b[a-z3@\-]+\b',       "#EC NOTEXT
-        " special meaning characters
-        operators TYPE string VALUE '[#!\[\]\(\)<>{}]',     "#EC NOTEXT
         " selectors begin with :
         selectors TYPE string VALUE ':[:a-z]+\b',           "#EC NOTEXT
         " units
@@ -124,10 +120,6 @@ CLASS ZCL_ABAPGIT_SYNTAX_CSS IMPLEMENTATION.
               iv_token = c_token-text
               iv_style = c_css-text ).
 
-    add_rule( iv_regex = c_regex-operators
-              iv_token = c_token-operators
-              iv_style = c_css-operators ).
-
     add_rule( iv_regex = c_regex-selectors
               iv_token = c_token-selectors
               iv_style = c_css-selectors ).
@@ -186,14 +178,14 @@ CLASS ZCL_ABAPGIT_SYNTAX_CSS IMPLEMENTATION.
     'border-left-width|border-radius|border-right|border-right-color|border-right-style|border-right-width|' &&
     'border-spacing|border-style|border-top|border-top-color|border-top-left-radius|border-top-right-radius|' &&
     'border-top-style|border-top-width|border-width|box-decoration-break|box-shadow|box-sizing|caption-side|' &&
-    'caret-color|charset|clear|clip|color|column-count|column-fill|column-gap|column-rule|column-rule-color|' &&
+    'caret-color|clear|clip|color|column-count|column-fill|column-gap|column-rule|column-rule-color|' &&
     'column-rule-style|column-rule-width|column-span|column-width|columns|content|counter-increment|' &&
     'counter-reset|cursor|direction|display|empty-cells|filter|flex|flex-basis|flex-direction|flex-flow|' &&
-    'flex-grow|flex-shrink|flex-wrap|float|font|font-face|font-family|font-kerning|font-size|font-size-adjust|' &&
+    'flex-grow|flex-shrink|flex-wrap|float|font|font-family|font-kerning|font-size|font-size-adjust|' &&
     'font-stretch|font-style|font-variant|font-weight|grid|grid-area|grid-auto-columns|grid-auto-flow|' &&
     'grid-auto-rows|grid-column|grid-column-end|grid-column-gap|grid-column-start|grid-gap|grid-row|' &&
     'grid-row-end|grid-row-gap|grid-row-start|grid-template|grid-template-areas|grid-template-columns|' &&
-    'grid-template-rows|hanging-punctuation|height|hyphens|import|isolation|justify-content|keyframes|' &&
+    'grid-template-rows|hanging-punctuation|height|hyphens|isolation|justify-content|' &&
     'letter-spacing|line-height|list-style|list-style-image|list-style-position|list-style-type|margin|' &&
     'margin-bottom|margin-left|margin-right|margin-top|max-height|max-width|media|min-height|min-width|' &&
     'mix-blend-mode|object-fit|object-position|opacity|order|outline|outline-color|outline-offset|' &&
@@ -248,67 +240,67 @@ CLASS ZCL_ABAPGIT_SYNTAX_CSS IMPLEMENTATION.
 
     " 6) CSS Extensions
     lv_keywords =
-    '-moz|-moz-binding|-moz-border-bottom-colors|-moz-border-left-colors|-moz-border-right-colors|' &&
-    '-moz-border-top-colors|-moz-box-align|-moz-box-direction|-moz-box-flex|-moz-box-ordinal-group|' &&
-    '-moz-box-orient|-moz-box-pack|-moz-box-shadow|-moz-context-properties|-moz-float-edge|' &&
-    '-moz-force-broken-image-icon|-moz-image-region|-moz-orient|-moz-osx-font-smoothing|' &&
-    '-moz-outline-radius|-moz-outline-radius-bottomleft|-moz-outline-radius-bottomright|' &&
-    '-moz-outline-radius-topleft|-moz-outline-radius-topright|-moz-stack-sizing|-moz-system-metric|' &&
-    '-moz-transform|-moz-transform-origin|-moz-transition|-moz-transition-delay|-moz-user-focus|' &&
-    '-moz-user-input|-moz-user-modify|-moz-window-dragging|-moz-window-shadow|-ms|-ms-accelerator|' &&
-    '-ms-block-progression|-ms-content-zoom-chaining|-ms-content-zoom-limit|' &&
-    '-ms-content-zoom-limit-max|-ms-content-zoom-limit-min|-ms-content-zoom-snap|' &&
-    '-ms-content-zoom-snap-points|-ms-content-zoom-snap-type|-ms-content-zooming|-ms-filter|' &&
-    '-ms-flow-from|-ms-flow-into|-ms-high-contrast-adjust|-ms-hyphenate-limit-chars|' &&
-    '-ms-hyphenate-limit-lines|-ms-hyphenate-limit-zone|-ms-ime-align|-ms-overflow-style|' &&
-    '-ms-scroll-chaining|-ms-scroll-limit|-ms-scroll-limit-x-max|-ms-scroll-limit-x-min|' &&
-    '-ms-scroll-limit-y-max|-ms-scroll-limit-y-min|-ms-scroll-rails|-ms-scroll-snap-points-x|' &&
-    '-ms-scroll-snap-points-y|-ms-scroll-snap-x|-ms-scroll-snap-y|-ms-scroll-translation|' &&
-    '-ms-scrollbar-3dlight-color|-ms-scrollbar-arrow-color|-ms-scrollbar-base-color|' &&
-    '-ms-scrollbar-darkshadow-color|-ms-scrollbar-face-color|-ms-scrollbar-highlight-color|' &&
-    '-ms-scrollbar-shadow-color|-ms-scrollbar-track-color|-ms-transform|-ms-text-autospace|' &&
-    '-ms-touch-select|-ms-wrap-flow|-ms-wrap-margin|-ms-wrap-through|-o|-o-transform|-webkit|' &&
-    '-webkit-animation-trigger|-webkit-app-region|-webkit-appearance|-webkit-aspect-ratio|' &&
-    '-webkit-backdrop-filter|-webkit-background-composite|-webkit-border-after|' &&
-    '-webkit-border-after-color|-webkit-border-after-style|-webkit-border-after-width|' &&
-    '-webkit-border-before|-webkit-border-before-color|-webkit-border-before-style|' &&
-    '-webkit-border-before-width|-webkit-border-end|-webkit-border-end-color|' &&
-    '-webkit-border-end-style|-webkit-border-end-width|-webkit-border-fit|' &&
-    '-webkit-border-horizontal-spacing|-webkit-border-radius|-webkit-border-start|' &&
-    '-webkit-border-start-color|-webkit-border-start-style|-webkit-border-start-width|' &&
-    '-webkit-border-vertical-spacing|-webkit-box-align|-webkit-box-direction|-webkit-box-flex|' &&
-    '-webkit-box-flex-group|-webkit-box-lines|-webkit-box-ordinal-group|-webkit-box-orient|' &&
-    '-webkit-box-pack|-webkit-box-reflect|-webkit-box-shadow|-webkit-column-axis|' &&
-    '-webkit-column-break-after|-webkit-column-break-before|-webkit-column-break-inside|' &&
-    '-webkit-column-progression|-webkit-cursor-visibility|-webkit-dashboard-region|' &&
-    '-webkit-font-size-delta|-webkit-font-smoothing|-webkit-highlight|-webkit-hyphenate-character|' &&
-    '-webkit-hyphenate-limit-after|-webkit-hyphenate-limit-before|-webkit-hyphenate-limit-lines|' &&
-    '-webkit-initial-letter|-webkit-line-align|-webkit-line-box-contain|-webkit-line-clamp|' &&
-    '-webkit-line-grid|-webkit-line-snap|-webkit-locale|-webkit-logical-height|' &&
-    '-webkit-logical-width|-webkit-margin-after|-webkit-margin-after-collapse|' &&
-    '-webkit-margin-before|-webkit-margin-before-collapse|-webkit-margin-bottom-collapse|' &&
-    '-webkit-margin-collapse|-webkit-margin-end|-webkit-margin-start|-webkit-margin-top-collapse|' &&
-    '-webkit-marquee|-webkit-marquee-direction|-webkit-marquee-increment|' &&
-    '-webkit-marquee-repetition|-webkit-marquee-speed|-webkit-marquee-style|-webkit-mask-box-image|' &&
-    '-webkit-mask-box-image-outset|-webkit-mask-box-image-repeat|-webkit-mask-box-image-slice|' &&
-    '-webkit-mask-box-image-source|-webkit-mask-box-image-width|-webkit-mask-repeat-x|' &&
-    '-webkit-mask-repeat-y|-webkit-mask-source-type|-webkit-max-logical-height|' &&
-    '-webkit-max-logical-width|-webkit-min-logical-height|-webkit-min-logical-width|' &&
-    '-webkit-nbsp-mode|-webkit-padding-after|-webkit-padding-before|-webkit-padding-end|' &&
-    '-webkit-padding-start|-webkit-perspective-origin-x|-webkit-perspective-origin-y|' &&
-    '-webkit-print-color-adjust|-webkit-rtl-ordering|-webkit-svg-shadow|' &&
-    '-webkit-tap-highlight-color|-webkit-text-combine|-webkit-text-decoration-skip|' &&
-    '-webkit-text-decorations-in-effect|-webkit-text-fill-color|-webkit-text-security|' &&
-    '-webkit-text-stroke|-webkit-text-stroke-color|-webkit-text-stroke-width|-webkit-text-zoom|' &&
-    '-webkit-transform|-webkit-transform-origin|-webkit-transform-origin-x|' &&
-    '-webkit-transform-origin-y|-webkit-transform-origin-z|-webkit-transition|' &&
-    '-webkit-transition-delay|-webkit-user-drag|-webkit-user-modify|overflow-clip-box|' &&
+    'moz|moz-binding|moz-border-bottom-colors|moz-border-left-colors|moz-border-right-colors|' &&
+    'moz-border-top-colors|moz-box-align|moz-box-direction|moz-box-flex|moz-box-ordinal-group|' &&
+    'moz-box-orient|moz-box-pack|moz-box-shadow|moz-context-properties|moz-float-edge|' &&
+    'moz-force-broken-image-icon|moz-image-region|moz-orient|moz-osx-font-smoothing|' &&
+    'moz-outline-radius|moz-outline-radius-bottomleft|moz-outline-radius-bottomright|' &&
+    'moz-outline-radius-topleft|moz-outline-radius-topright|moz-stack-sizing|moz-system-metric|' &&
+    'moz-transform|moz-transform-origin|moz-transition|moz-transition-delay|moz-user-focus|' &&
+    'moz-user-input|moz-user-modify|moz-window-dragging|moz-window-shadow|ms|ms-accelerator|' &&
+    'ms-block-progression|ms-content-zoom-chaining|ms-content-zoom-limit|' &&
+    'ms-content-zoom-limit-max|ms-content-zoom-limit-min|ms-content-zoom-snap|' &&
+    'ms-content-zoom-snap-points|ms-content-zoom-snap-type|ms-content-zooming|ms-filter|' &&
+    'ms-flow-from|ms-flow-into|ms-high-contrast-adjust|ms-hyphenate-limit-chars|' &&
+    'ms-hyphenate-limit-lines|ms-hyphenate-limit-zone|ms-ime-align|ms-overflow-style|' &&
+    'ms-scroll-chaining|ms-scroll-limit|ms-scroll-limit-x-max|ms-scroll-limit-x-min|' &&
+    'ms-scroll-limit-y-max|ms-scroll-limit-y-min|ms-scroll-rails|ms-scroll-snap-points-x|' &&
+    'ms-scroll-snap-points-y|ms-scroll-snap-x|ms-scroll-snap-y|ms-scroll-translation|' &&
+    'ms-scrollbar-3dlight-color|ms-scrollbar-arrow-color|ms-scrollbar-base-color|' &&
+    'ms-scrollbar-darkshadow-color|ms-scrollbar-face-color|ms-scrollbar-highlight-color|' &&
+    'ms-scrollbar-shadow-color|ms-scrollbar-track-color|ms-transform|ms-text-autospace|' &&
+    'ms-touch-select|ms-wrap-flow|ms-wrap-margin|ms-wrap-through|o|o-transform|webkit|' &&
+    'webkit-animation-trigger|webkit-app-region|webkit-appearance|webkit-aspect-ratio|' &&
+    'webkit-backdrop-filter|webkit-background-composite|webkit-border-after|' &&
+    'webkit-border-after-color|webkit-border-after-style|webkit-border-after-width|' &&
+    'webkit-border-before|webkit-border-before-color|webkit-border-before-style|' &&
+    'webkit-border-before-width|webkit-border-end|webkit-border-end-color|' &&
+    'webkit-border-end-style|webkit-border-end-width|webkit-border-fit|' &&
+    'webkit-border-horizontal-spacing|webkit-border-radius|webkit-border-start|' &&
+    'webkit-border-start-color|webkit-border-start-style|webkit-border-start-width|' &&
+    'webkit-border-vertical-spacing|webkit-box-align|webkit-box-direction|webkit-box-flex|' &&
+    'webkit-box-flex-group|webkit-box-lines|webkit-box-ordinal-group|webkit-box-orient|' &&
+    'webkit-box-pack|webkit-box-reflect|webkit-box-shadow|webkit-column-axis|' &&
+    'webkit-column-break-after|webkit-column-break-before|webkit-column-break-inside|' &&
+    'webkit-column-progression|webkit-cursor-visibility|webkit-dashboard-region|' &&
+    'webkit-font-size-delta|webkit-font-smoothing|webkit-highlight|webkit-hyphenate-character|' &&
+    'webkit-hyphenate-limit-after|webkit-hyphenate-limit-before|webkit-hyphenate-limit-lines|' &&
+    'webkit-initial-letter|webkit-line-align|webkit-line-box-contain|webkit-line-clamp|' &&
+    'webkit-line-grid|webkit-line-snap|webkit-locale|webkit-logical-height|' &&
+    'webkit-logical-width|webkit-margin-after|webkit-margin-after-collapse|' &&
+    'webkit-margin-before|webkit-margin-before-collapse|webkit-margin-bottom-collapse|' &&
+    'webkit-margin-collapse|webkit-margin-end|webkit-margin-start|webkit-margin-top-collapse|' &&
+    'webkit-marquee|webkit-marquee-direction|webkit-marquee-increment|' &&
+    'webkit-marquee-repetition|webkit-marquee-speed|webkit-marquee-style|webkit-mask-box-image|' &&
+    'webkit-mask-box-image-outset|webkit-mask-box-image-repeat|webkit-mask-box-image-slice|' &&
+    'webkit-mask-box-image-source|webkit-mask-box-image-width|webkit-mask-repeat-x|' &&
+    'webkit-mask-repeat-y|webkit-mask-source-type|webkit-max-logical-height|' &&
+    'webkit-max-logical-width|webkit-min-logical-height|webkit-min-logical-width|' &&
+    'webkit-nbsp-mode|webkit-padding-after|webkit-padding-before|webkit-padding-end|' &&
+    'webkit-padding-start|webkit-perspective-origin-x|webkit-perspective-origin-y|' &&
+    'webkit-print-color-adjust|webkit-rtl-ordering|webkit-svg-shadow|' &&
+    'webkit-tap-highlight-color|webkit-text-combine|webkit-text-decoration-skip|' &&
+    'webkit-text-decorations-in-effect|webkit-text-fill-color|webkit-text-security|' &&
+    'webkit-text-stroke|webkit-text-stroke-color|webkit-text-stroke-width|webkit-text-zoom|' &&
+    'webkit-transform|webkit-transform-origin|webkit-transform-origin-x|' &&
+    'webkit-transform-origin-y|webkit-transform-origin-z|webkit-transition|' &&
+    'webkit-transition-delay|webkit-user-drag|webkit-user-modify|overflow-clip-box|' &&
     'overflow-clip-box-block|overflow-clip-box-inline|zoom'.
     insert_keywords( iv_keywords = lv_keywords iv_token = c_token-extensions ).
 
     " 6) CSS At-Rules
     lv_keywords =
-    '@charset|@counter-style|@font-face|@import|@keyframes'.
+    '@|charset|counter-style|font-face|import|keyframes'.
     insert_keywords( iv_keywords = lv_keywords iv_token = c_token-at_rules ).
 
     " 7) HTML tage
@@ -419,6 +411,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_CSS IMPLEMENTATION.
           ENDIF.
 
           " Map generic keyword to specific CSS token
+          lv_match = to_lower( lv_match ).
           READ TABLE gt_keywords ASSIGNING <ls_keyword> WITH TABLE KEY keyword = lv_match.
           IF sy-subrc = 0.
             <ls_match>-token = <ls_keyword>-token.

@@ -12,9 +12,8 @@ CLASS zcl_abapgit_syntax_js DEFINITION
       " 3) HTML Tags
       BEGIN OF c_css,
         keyword   TYPE string VALUE 'keyword',              "#EC NOTEXT
-        text      TYPE string VALUE 'attr_val',             "#EC NOTEXT
+        text      TYPE string VALUE 'text',                 "#EC NOTEXT
         comment   TYPE string VALUE 'comment',              "#EC NOTEXT
-        operators TYPE string VALUE 'operators',            "#EC NOTEXT
         variables TYPE string VALUE 'variables',            "#EC NOTEXT
       END OF c_css .
     CONSTANTS:
@@ -22,19 +21,16 @@ CLASS zcl_abapgit_syntax_js DEFINITION
         keyword   TYPE c VALUE 'K',                         "#EC NOTEXT
         text      TYPE c VALUE 'T',                         "#EC NOTEXT
         comment   TYPE c VALUE 'C',                         "#EC NOTEXT
-        operators TYPE c VALUE 'O',                         "#EC NOTEXT
         variables TYPE c VALUE 'V',                         "#EC NOTEXT
       END OF c_token .
     CONSTANTS:
       BEGIN OF c_regex,
         " comments /* ... */ or //
-        comment   TYPE string VALUE '\/\*.*\*\/|\/\*|\*\/|\/\/', "#EC NOTEXT
+        comment TYPE string VALUE '\/\*.*\*\/|\/\*|\*\/|\/\/', "#EC NOTEXT
         " single or double quoted strings
-        text      TYPE string VALUE '"|''',                 "#EC NOTEXT
+        text    TYPE string VALUE '"|''',                   "#EC NOTEXT
         " in general keywords don't contain numbers (except -ms-scrollbar-3dlight-color)
-        keyword   TYPE string VALUE '\b[a-z-]+\b',          "#EC NOTEXT
-        " special meaning characters
-        operators TYPE string VALUE '\{|\[|\(|\)|\]|\}',    "#EC NOTEXT
+        keyword TYPE string VALUE '\b[a-z-]+\b',            "#EC NOTEXT
       END OF c_regex .
 
     CLASS-METHODS class_constructor .
@@ -93,10 +89,6 @@ CLASS ZCL_ABAPGIT_SYNTAX_JS IMPLEMENTATION.
     add_rule( iv_regex = c_regex-text
               iv_token = c_token-text
               iv_style = c_css-text ).
-
-    add_rule( iv_regex = c_regex-operators
-              iv_token = c_token-operators
-              iv_style = c_css-operators ).
 
     " Styles for keywords
     add_rule( iv_regex = ''
@@ -234,6 +226,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_JS IMPLEMENTATION.
           ENDIF.
 
           " Map generic keyword to specific token
+          lv_match = to_lower( lv_match ).
           READ TABLE gt_keywords ASSIGNING <ls_keyword> WITH TABLE KEY keyword = lv_match.
           IF sy-subrc = 0.
             <ls_match>-token = <ls_keyword>-token.
