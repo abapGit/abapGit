@@ -600,7 +600,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
         WITH TABLE KEY
           path     = ls_file-path
           filename = ls_file-filename.
-      ASSERT sy-subrc = 0.
+      CHECK sy-subrc = 0.
 
       CASE <ls_item>-value.
         WHEN zif_abapgit_definitions=>c_method-add.
