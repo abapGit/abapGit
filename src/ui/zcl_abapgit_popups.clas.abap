@@ -12,7 +12,6 @@ CLASS zcl_abapgit_popups DEFINITION
       popup_folder_logic            FOR zif_abapgit_popups~popup_folder_logic,
       popup_object                  FOR zif_abapgit_popups~popup_object,
       create_branch_popup           FOR zif_abapgit_popups~create_branch_popup,
-      run_page_class_popup          FOR zif_abapgit_popups~run_page_class_popup,
       repo_new_offline              FOR zif_abapgit_popups~repo_new_offline,
       branch_list_popup             FOR zif_abapgit_popups~branch_list_popup,
       repo_popup                    FOR zif_abapgit_popups~repo_popup,
@@ -1170,8 +1169,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
                            iv_value      = lv_display_name
                  CHANGING ct_fields      = lt_fields ).
 
-      add_field( EXPORTING iv_tabname    = 'ZABAPGIT'
-                           iv_fieldname  = 'VALUE'
+      add_field( EXPORTING iv_tabname    = 'TADIR'
+                           iv_fieldname  = 'AUTHOR'
                            iv_fieldtext  = 'Folder logic'
                            iv_obligatory = abap_true
                            iv_value      = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
@@ -1248,34 +1247,6 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     rs_popup-display_name = lv_display_name.
     rs_popup-folder_logic = lv_folder_logic.
     rs_popup-ign_subpkg   = lv_ign_subpkg.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_popups~run_page_class_popup.
-
-    DATA: lt_fields TYPE TABLE OF sval.
-    DATA: lv_name   TYPE spo_value.
-
-    CLEAR: ev_name, ev_cancel.
-
-    add_field( EXPORTING iv_tabname   = 'TEXTL'
-                         iv_fieldname = 'LINE'
-                         iv_fieldtext = 'Name'
-                         iv_value     = 'zcl_abapgit_gui_page_'
-               CHANGING  ct_fields    = lt_fields ).
-
-    TRY.
-
-        _popup_3_get_values( EXPORTING iv_popup_title = 'Run page manually' "#EC NOTEXT
-                             IMPORTING ev_value_1     = lv_name
-                             CHANGING ct_fields       = lt_fields ).
-
-        ev_name = to_upper( lv_name ).
-
-      CATCH zcx_abapgit_cancel.
-        ev_cancel = abap_true.
-    ENDTRY.
 
   ENDMETHOD.
 

@@ -61,7 +61,6 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         RETURNING
           VALUE(rv_normalized) TYPE string,
       render_content REDEFINITION,
-      scripts REDEFINITION,
       add_menu_end
         IMPORTING
           io_menu TYPE REF TO zcl_abapgit_html_toolbar ,
@@ -181,6 +180,11 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
     METHODS render_table_head_unified
       IMPORTING
         io_html TYPE REF TO zcl_abapgit_html.
+    METHODS render_scripts
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -329,6 +333,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     " Changed by
     IF <ls_local>-item-obj_type IS NOT INITIAL.
       <ls_diff>-changed_by = to_lower( zcl_abapgit_objects=>changed_by( <ls_local>-item ) ).
+    ENDIF.
+    IF <ls_diff>-changed_by IS INITIAL.
+      <ls_diff>-changed_by = to_lower( zcl_abapgit_objects_super=>c_user_unknown ).
     ENDIF.
 
     " Extension
@@ -571,6 +578,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       ro_html->add( |No more diffs| ).
     ENDIF.
     ro_html->add( '</div>' ).
+
+    register_deferred_script( render_scripts( ) ).
 
   ENDMETHOD.
 
@@ -851,6 +860,33 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_scripts.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( 'restoreScrollPosition();' ).
+    ro_html->add( 'var gHelper = new DiffHelper({' ).
+    ro_html->add( |  seed:        "{ mv_seed }",| ).
+    ro_html->add( '  ids: {' ).
+    ro_html->add( '    jump:        "jump",' ).
+    ro_html->add( '    diffList:    "diff-list",' ).
+    ro_html->add( '    filterMenu:  "diff-filter",' ).
+    ro_html->add( '  }' ).
+    ro_html->add( '});' ).
+
+    ro_html->add( 'addMarginBottom();' ).
+
+    ro_html->add( 'var gGoJumpPalette = new CommandPalette(enumerateJumpAllFiles, {' ).
+    ro_html->add( '  toggleKey: "F2",' ).
+    ro_html->add( '  hotkeyDescription: "Jump to file ..."' ).
+    ro_html->add( '});' ).
+
+    " Feature for selecting ABAP code by column and copy to clipboard
+    ro_html->add( 'var columnSelection = new DiffColumnSelection();' ).
+
+  ENDMETHOD.
+
+
   METHOD render_table_head.
 
     CREATE OBJECT ro_html.
@@ -894,33 +930,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     io_html->add( '<th class="num">new</th>' ).             "#EC NOTEXT
     io_html->add( '<th class="mark"></th>' ).               "#EC NOTEXT
     io_html->add( '<th>code</th>' ).                        "#EC NOTEXT
-
-  ENDMETHOD.
-
-
-  METHOD scripts.
-
-    ro_html = super->scripts( ).
-
-    ro_html->add( 'restoreScrollPosition();' ).
-    ro_html->add( 'var gHelper = new DiffHelper({' ).
-    ro_html->add( |  seed:        "{ mv_seed }",| ).
-    ro_html->add( '  ids: {' ).
-    ro_html->add( '    jump:        "jump",' ).
-    ro_html->add( '    diffList:    "diff-list",' ).
-    ro_html->add( '    filterMenu:  "diff-filter",' ).
-    ro_html->add( '  }' ).
-    ro_html->add( '});' ).
-
-    ro_html->add( 'addMarginBottom();' ).
-
-    ro_html->add( 'var gGoJumpPalette = new CommandPalette(enumerateJumpAllFiles, {' ).
-    ro_html->add( '  toggleKey: "F2",' ).
-    ro_html->add( '  hotkeyDescription: "Jump to file ..."' ).
-    ro_html->add( '});' ).
-
-    " Feature for selecting ABAP code by column and copy to clipboard
-    ro_html->add( 'var columnSelection = new DiffColumnSelection();' ).
 
   ENDMETHOD.
 

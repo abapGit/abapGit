@@ -11,8 +11,7 @@ CLASS zcl_abapgit_gui_page_debuginfo DEFINITION
 
   PROTECTED SECTION.
     METHODS:
-      render_content REDEFINITION,
-      scripts        REDEFINITION.
+      render_content REDEFINITION.
 
   PRIVATE SECTION.
     METHODS render_debug_info
@@ -20,6 +19,11 @@ CLASS zcl_abapgit_gui_page_debuginfo DEFINITION
       RAISING   zcx_abapgit_exception.
     METHODS render_supported_object_types
       RETURNING VALUE(rv_html) TYPE string.
+    METHODS render_scripts
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -42,6 +46,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
     ro_html->add( render_debug_info( ) ).
     ro_html->add( render_supported_object_types( ) ).
     ro_html->add( '</div>' ).
+
+    register_deferred_script( render_scripts( ) ).
 
   ENDMETHOD.
 
@@ -75,6 +81,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_scripts.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( 'debugOutput("Browser: " + navigator.userAgent + ' &&
+      '"<br>Frontend time: " + new Date(), "debug_info");' ).
+
+  ENDMETHOD.
+
+
   METHOD render_supported_object_types.
 
     DATA: lv_list  TYPE string,
@@ -93,16 +109,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
     ENDLOOP.
 
     rv_html = |<p>Supported objects: { lv_list }</p>|.
-
-  ENDMETHOD.
-
-
-  METHOD scripts.
-
-    ro_html = super->scripts( ).
-
-    ro_html->add( 'debugOutput("Browser: " + navigator.userAgent + ' &&
-      '"<br>Frontend time: " + new Date(), "debug_info");' ).
 
   ENDMETHOD.
 ENDCLASS.

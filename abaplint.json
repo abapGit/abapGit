@@ -14,7 +14,7 @@
   ],
   "syntax": {
     "version": "v702",
-    "errorNamespace": "^(Z|Y)",
+    "errorNamespace": "^(Z|Y|LT?CL_|TY_|LIF_)",
     "globalConstants": [
       "icon_led_red",
       "icon_led_yellow",

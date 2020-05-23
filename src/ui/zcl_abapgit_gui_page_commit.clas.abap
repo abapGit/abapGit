@@ -29,10 +29,8 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
       EXPORTING
         !eg_fields   TYPE any .
 
-    METHODS render_content
-        REDEFINITION .
-    METHODS scripts
-        REDEFINITION .
+    METHODS render_content REDEFINITION .
+
   PRIVATE SECTION.
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
@@ -65,14 +63,21 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
         VALUE(rv_text) TYPE string .
     METHODS get_comment_object
       IMPORTING
-        !it_stage      TYPE zcl_abapgit_stage=>ty_stage_tt
+        !it_stage      TYPE zif_abapgit_definitions=>ty_stage_tt
       RETURNING
         VALUE(rv_text) TYPE string .
     METHODS get_comment_file
       IMPORTING
-        !it_stage      TYPE zcl_abapgit_stage=>ty_stage_tt
+        !it_stage      TYPE zif_abapgit_definitions=>ty_stage_tt
       RETURNING
         VALUE(rv_text) TYPE string .
+
+    METHODS render_scripts
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -93,7 +98,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
   METHOD get_comment_default.
 
     DATA: lo_settings TYPE REF TO zcl_abapgit_settings,
-          lt_stage    TYPE zcl_abapgit_stage=>ty_stage_tt.
+          lt_stage    TYPE zif_abapgit_definitions=>ty_stage_tt.
 
     " Get setting for default comment text
     lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
@@ -247,6 +252,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
     ro_html->add( render_stage( ) ).
     ro_html->add( '</div>' ).
 
+    register_deferred_script( render_scripts( ) ).
+
   ENDMETHOD.
 
 
@@ -381,9 +388,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_scripts.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( 'setInitialFocus("comment");' ).
+
+  ENDMETHOD.
+
+
   METHOD render_stage.
 
-    DATA: lt_stage TYPE zcl_abapgit_stage=>ty_stage_tt.
+    DATA: lt_stage TYPE zif_abapgit_definitions=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
 
@@ -442,15 +458,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
     ro_html->add( |<label for="{ iv_name }">{ iv_label }</label>| ).
     ro_html->add( |<input id="{ iv_name }" name="{ iv_name }" type="text"{ lv_attrs }>| ).
     ro_html->add( '</div>' ).
-
-  ENDMETHOD.
-
-
-  METHOD scripts.
-
-    ro_html = super->scripts( ).
-
-    ro_html->add( 'setInitialFocus("comment");' ).
 
   ENDMETHOD.
 

@@ -12,8 +12,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
 
   PROTECTED SECTION.
     METHODS:
-      render_content REDEFINITION,
-      scripts REDEFINITION.
+      render_content REDEFINITION.
 
   PRIVATE SECTION.
     TYPES:
@@ -93,6 +92,12 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       _add_col
         IMPORTING
           iv_descriptor TYPE string.
+
+    METHODS render_scripts
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -241,6 +246,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     render_table( io_html     = ro_html
                   it_overview = lt_overview ).
 
+    register_deferred_script( render_scripts( ) ).
+
   ENDMETHOD.
 
 
@@ -263,6 +270,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
 
     io_html->add( |</div>| ).
+
+  ENDMETHOD.
+
+
+  METHOD render_scripts.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->add( 'setInitialFocus("filter");' ).
+    ro_html->add( 'var gHelper = new RepoOverViewHelper();' ).
 
   ENDMETHOD.
 
@@ -388,16 +405,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     ro_html->add( |<label for="{ iv_name }">{ iv_label }</label>| ).
     ro_html->add( |<input id="{ iv_name }" name="{ iv_name }" type="text"{ lv_attrs }>| ).
-
-  ENDMETHOD.
-
-
-  METHOD scripts.
-
-    ro_html = super->scripts( ).
-
-    ro_html->add( 'setInitialFocus("filter");' ).
-    ro_html->add( 'var gHelper = new RepoOverViewHelper();' ).
 
   ENDMETHOD.
 

@@ -12,18 +12,13 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
       constructor RAISING zcx_abapgit_exception.
 
   PROTECTED SECTION.
-    TYPES: BEGIN OF ty_control,
-             redirect_url TYPE string,
-             page_title   TYPE string,
-             page_menu    TYPE REF TO zcl_abapgit_html_toolbar,
-           END OF  ty_control.
 
-    TYPES: BEGIN OF ty_event,
-             method TYPE string,
-             name   TYPE string,
-           END OF  ty_event.
-
-    TYPES: tt_events TYPE STANDARD TABLE OF ty_event WITH DEFAULT KEY.
+    TYPES:
+      BEGIN OF ty_control,
+        redirect_url TYPE string,
+        page_title   TYPE string,
+        page_menu    TYPE REF TO zcl_abapgit_html_toolbar,
+      END OF  ty_control.
 
     DATA: ms_control TYPE ty_control.
 
@@ -31,25 +26,17 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING   zcx_abapgit_exception.
 
-    METHODS get_events
-      RETURNING VALUE(rt_events) TYPE tt_events
-      RAISING   zcx_abapgit_exception.
-
-    METHODS render_event_as_form
-      IMPORTING is_event       TYPE ty_event
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-      RAISING   zcx_abapgit_exception.
-
-    METHODS scripts
-      RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-      RAISING
-        zcx_abapgit_exception.
-
   PRIVATE SECTION.
-    DATA: mo_settings         TYPE REF TO zcl_abapgit_settings,
-          mx_error            TYPE REF TO zcx_abapgit_exception,
-          mo_exception_viewer TYPE REF TO zcl_abapgit_exception_viewer.
+    DATA:
+      mo_settings         TYPE REF TO zcl_abapgit_settings,
+      mx_error            TYPE REF TO zcx_abapgit_exception,
+      mo_exception_viewer TYPE REF TO zcl_abapgit_exception_viewer.
+
+    METHODS render_deferred_parts
+      IMPORTING
+        ii_html TYPE REF TO zif_abapgit_html
+        iv_part_category TYPE string.
+
     METHODS html_head
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
@@ -62,7 +49,13 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
     METHODS redirect
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
-    METHODS link_hints
+    METHODS render_link_hints
+      IMPORTING
+        io_html TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS render_command_palettes
       IMPORTING
         io_html TYPE REF TO zcl_abapgit_html
       RAISING
@@ -81,6 +74,12 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
         zcx_abapgit_exception.
 
     METHODS render_error_message_box
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS scripts
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
@@ -146,13 +145,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_events.
-
-    " Return actions you need on your page.
-
-  ENDMETHOD.
-
-
   METHOD html_head.
 
     CREATE OBJECT ro_html.
@@ -189,23 +181,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD link_hints.
-
-    DATA: lv_link_hint_key TYPE char01.
-
-    lv_link_hint_key = mo_settings->get_link_hint_key( ).
-
-    IF mo_settings->get_link_hints_enabled( ) = abap_true AND lv_link_hint_key IS NOT INITIAL.
-
-      io_html->add( |activateLinkHints("{ lv_link_hint_key }");| ).
-      io_html->add( |setInitialFocusWithQuerySelector('a span', true);| ).
-      io_html->add( |enableArrowListNavigation();| ).
-
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD redirect.
 
     CREATE OBJECT ro_html.
@@ -216,6 +191,34 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ro_html->add( |<meta http-equiv="refresh" content="0; url={ ms_control-redirect_url }">| ). "#EC NOTEXT
     ro_html->add( '</head>' ).                              "#EC NOTEXT
     ro_html->add( '</html>' ).                              "#EC NOTEXT
+
+  ENDMETHOD.
+
+
+  METHOD render_command_palettes.
+
+    io_html->add( 'var gGoRepoPalette = new CommandPalette(enumerateTocAllRepos, {' ).
+    io_html->add( '  toggleKey: "F2",' ).
+    io_html->add( '  hotkeyDescription: "Go to repo ..."' ).
+    io_html->add( '});' ).
+
+    io_html->add( 'var gCommandPalette = new CommandPalette(enumerateToolbarActions, {' ).
+    io_html->add( '  toggleKey: "F1",' ).
+    io_html->add( '  hotkeyDescription: "Command ..."' ).
+    io_html->add( '});' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_deferred_parts.
+
+    DATA lt_parts TYPE zif_abapgit_html=>tty_table_of.
+    DATA li_part LIKE LINE OF lt_parts.
+
+    lt_parts = mi_gui_services->get_html_parts( )->get_parts( iv_part_category ).
+    LOOP AT lt_parts INTO li_part.
+      ii_html->add( li_part ).
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -249,15 +252,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_event_as_form.
-
-    CREATE OBJECT ro_html.
-    ro_html->add(
-      |<form id='form_{ is_event-name }' method={ is_event-method } action='sapevent:{ is_event-name }'></from>| ).
-
-  ENDMETHOD.
-
-
   METHOD render_hotkey_overview.
 
     DATA lo_hotkeys_component TYPE REF TO zif_abapgit_gui_renderable.
@@ -268,29 +262,33 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD scripts.
+  METHOD render_link_hints.
 
-    DATA lt_script_parts TYPE zif_abapgit_html=>tty_table_of.
-    DATA li_part LIKE LINE OF lt_script_parts.
+    DATA: lv_link_hint_key TYPE char01.
+
+    lv_link_hint_key = mo_settings->get_link_hint_key( ).
+
+    IF mo_settings->get_link_hints_enabled( ) = abap_true AND lv_link_hint_key IS NOT INITIAL.
+
+      io_html->add( |activateLinkHints("{ lv_link_hint_key }");| ).
+      io_html->add( |setInitialFocusWithQuerySelector('a span', true);| ).
+      io_html->add( |enableArrowListNavigation();| ).
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD scripts.
 
     CREATE OBJECT ro_html.
 
-    lt_script_parts = mi_gui_services->get_html_parts( )->get_parts( c_html_parts-scripts ).
-    LOOP AT lt_script_parts INTO li_part.
-      ro_html->add( li_part ).
-    ENDLOOP.
+    render_deferred_parts(
+      ii_html          = ro_html
+      iv_part_category = c_html_parts-scripts ).
 
-    link_hints( ro_html ).
-
-    ro_html->add( 'var gGoRepoPalette = new CommandPalette(enumerateTocAllRepos, {' ).
-    ro_html->add( '  toggleKey: "F2",' ).
-    ro_html->add( '  hotkeyDescription: "Go to repo ..."' ).
-    ro_html->add( '});' ).
-
-    ro_html->add( 'var gCommandPalette = new CommandPalette(enumerateToolbarActions, {' ).
-    ro_html->add( '  toggleKey: "F1",' ).
-    ro_html->add( '  hotkeyDescription: "Command ..."' ).
-    ro_html->add( '});' ).
+    render_link_hints( ro_html ).
+    render_command_palettes( ro_html ).
 
   ENDMETHOD.
 
@@ -366,11 +364,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA: lo_script TYPE REF TO zcl_abapgit_html,
-          lt_events TYPE tt_events.
-
-    FIELD-SYMBOLS:
-          <ls_event> LIKE LINE OF lt_events.
+    DATA: lo_script TYPE REF TO zcl_abapgit_html.
 
     mi_gui_services->register_event_handler( me ).
 
@@ -394,15 +388,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ri_html->add( render_hotkey_overview( ) ).
     ri_html->add( render_error_message_box( ) ).
 
-    lt_events = me->get_events( ). " TODO refactor ???
-    LOOP AT lt_events ASSIGNING <ls_event>.
-      ri_html->add( render_event_as_form( <ls_event> ) ).
-    ENDLOOP.
+    render_deferred_parts(
+      ii_html          = ri_html
+      iv_part_category = c_html_parts-hidden_forms ).
 
     ri_html->add( footer( ) ).
     ri_html->add( '</body>' ).                              "#EC NOTEXT
 
-    lo_script = scripts( ). " TODO refactor
+    lo_script = scripts( ).
 
     IF lo_script IS BOUND AND lo_script->is_empty( ) = abap_false.
       ri_html->add( '<script type="text/javascript">' ).

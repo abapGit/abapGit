@@ -61,8 +61,8 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     BEGIN OF ty_hotkey,
       ui_component TYPE string,
-      action TYPE string,
-      hotkey TYPE string,
+      action       TYPE string,
+      hotkey       TYPE string,
     END OF ty_hotkey .
   TYPES:
     tty_hotkey TYPE STANDARD TABLE OF ty_hotkey
@@ -476,7 +476,6 @@ INTERFACE zif_abapgit_definitions
       go_commit                     TYPE string VALUE 'go_commit',
       go_branch_overview            TYPE string VALUE 'go_branch_overview',
       go_tag_overview               TYPE string VALUE 'go_tag_overview',
-      go_playground                 TYPE string VALUE 'go_playground',
       go_debuginfo                  TYPE string VALUE 'go_debuginfo',
       go_settings                   TYPE string VALUE 'go_settings',
       go_tutorial                   TYPE string VALUE 'go_tutorial',
@@ -497,5 +496,25 @@ INTERFACE zif_abapgit_definitions
   CONSTANTS gc_yes TYPE ty_yes_no VALUE 'Y'.
   CONSTANTS gc_no TYPE ty_yes_no VALUE 'N'.
   CONSTANTS gc_partial TYPE ty_yes_no_partial VALUE 'P'.
+
+  TYPES:
+    ty_method TYPE c LENGTH 1 .
+  TYPES:
+    BEGIN OF ty_stage,
+      file   TYPE ty_file,
+      method TYPE ty_method,
+      status TYPE ty_result,
+    END OF ty_stage .
+  TYPES:
+    ty_stage_tt TYPE SORTED TABLE OF ty_stage
+          WITH UNIQUE KEY file-path file-filename .
+
+  CONSTANTS:
+    BEGIN OF c_method,
+      add    TYPE ty_method VALUE 'A',
+      rm     TYPE ty_method VALUE 'R',
+      ignore TYPE ty_method VALUE 'I',
+      skip   TYPE ty_method VALUE '?',
+    END OF c_method .
 
 ENDINTERFACE.
