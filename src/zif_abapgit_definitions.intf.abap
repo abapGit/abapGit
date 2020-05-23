@@ -8,6 +8,12 @@ INTERFACE zif_abapgit_definitions
     ty_bitbyte TYPE c LENGTH 8 .
   TYPES:
     ty_sha1    TYPE c LENGTH 40 .
+  TYPES: BEGIN OF ty_commit_value_tab,
+           hash     TYPE ty_sha1,
+           message  TYPE c LENGTH 50,
+           datetime TYPE c LENGTH 20,
+         END OF ty_commit_value_tab.
+  TYPES: ty_commit_value_tab_tt TYPE STANDARD TABLE OF ty_commit_value_tab WITH DEFAULT KEY .
   TYPES:
     ty_adler32 TYPE x LENGTH 4 .
   TYPES:
