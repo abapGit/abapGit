@@ -464,7 +464,6 @@ INTERFACE zif_abapgit_definitions
       git_tag_switch                TYPE string VALUE 'git_tag_switch',
       git_commit                    TYPE string VALUE 'git_commit',
       git_checkout_commit           TYPE string VALUE 'git_checkout_commit',
-      git_commit_switch             TYPE string VALUE 'git_commit_switch',
       db_display                    TYPE string VALUE 'db_display',
       db_edit                       TYPE string VALUE 'db_edit',
       bg_update                     TYPE string VALUE 'bg_update',
