@@ -66,7 +66,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_file_status IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -291,6 +291,24 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_object_package.
+    DATA: lv_name    TYPE devclass,
+          li_package TYPE REF TO zif_abapgit_sap_package.
+
+    rv_devclass = zcl_abapgit_factory=>get_tadir( )->get_object_package(
+      iv_object   = iv_object
+      iv_obj_name = iv_obj_name ).
+    IF rv_devclass IS INITIAL AND iv_object = 'DEVC' AND iv_obj_name(1) = '$'.
+      " local packages usually have no tadir entry
+      lv_name = iv_obj_name.
+      li_package = zcl_abapgit_factory=>get_sap_package( lv_name ).
+      IF li_package->exists(  ) = abap_true.
+        rv_devclass = lv_name.
+      ENDIF.
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD identify_object.
 
     DATA: lv_name TYPE tadir-obj_name,
@@ -305,14 +323,19 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
     REPLACE ALL OCCURRENCES OF '#' IN lv_type WITH '/'.
     REPLACE ALL OCCURRENCES OF '#' IN lv_ext WITH '/'.
 
-    " Try to get a unique package name for DEVC by using the path
+    " The counter part to this logic for certain object types must be maintained in
+    " ZCL_ABAPGIT_OBJECTS_FILES->FILENAME
     IF lv_type = 'DEVC'.
+      " Try to get a unique package name for DEVC by using the path
       ASSERT lv_name = 'PACKAGE'.
       lv_name = zcl_abapgit_folder_logic=>get_instance( )->path_to_package(
         iv_top                  = iv_devclass
         io_dot                  = io_dot
         iv_create_if_not_exists = abap_false
         iv_path                 = iv_path ).
+    ELSEIF lv_type = 'W3MI' OR lv_type = 'W3HT'.
+      " Get original object name
+      REPLACE ALL OCCURRENCES OF '!' IN lv_name WITH '.'.
     ENDIF.
 
     CLEAR es_item.
@@ -453,22 +476,5 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
       io_dot     = lo_dot_abapgit
       iv_top     = io_repo->get_package( ) ).
 
-  ENDMETHOD.
-
-  METHOD get_object_package.
-    DATA: lv_name    TYPE devclass,
-          li_package TYPE REF TO zif_abapgit_sap_package.
-
-    rv_devclass = zcl_abapgit_factory=>get_tadir( )->get_object_package(
-      iv_object   = iv_object
-      iv_obj_name = iv_obj_name ).
-    IF rv_devclass IS INITIAL AND iv_object = 'DEVC' AND iv_obj_name(1) = '$'.
-      " local packages usually have no tadir entry
-      lv_name = iv_obj_name.
-      li_package = zcl_abapgit_factory=>get_sap_package( lv_name ).
-      IF li_package->exists(  ) = abap_true.
-        rv_devclass = lv_name.
-      ENDIF.
-    ENDIF.
   ENDMETHOD.
 ENDCLASS.

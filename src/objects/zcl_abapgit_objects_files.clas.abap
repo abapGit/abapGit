@@ -81,8 +81,8 @@ CLASS zcl_abapgit_objects_files DEFINITION
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_file_signatures_tt .
     METHODS contains
       IMPORTING
-        !iv_extra TYPE clike OPTIONAL
-        !iv_ext   TYPE string
+        !iv_extra         TYPE clike OPTIONAL
+        !iv_ext           TYPE string
       RETURNING
         VALUE(rv_present) TYPE abap_bool.
   PROTECTED SECTION.
@@ -191,6 +191,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
     APPEND ls_file TO mt_files.
   ENDMETHOD.
 
+
   METHOD constructor.
     ms_item = is_item.
     mv_path = iv_path.
@@ -223,10 +224,22 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     lv_obj_name = ms_item-obj_name.
 
+    " The counter part to this logic for certain object types must be maintained in
+    " ZCL_ABAPGIT_FILE_STATUS->IDENTIFY_OBJECT
     IF ms_item-obj_type = 'DEVC'.
       " Packages have a fixed filename so that the repository can be installed to a different
       " package(-hierarchy) on the client and not show up as a different package in the repo.
       lv_obj_name = 'package'.
+    ELSEIF ms_item-obj_type = 'W3MI' OR ms_item-obj_type = 'W3HT'.
+      " Web repository objects can have dots in their names, which causes problems in
+      " identifying the object later. Therefore, we replace dots with !
+      IF lv_obj_name CA '.'.
+        IF lv_obj_name CA '!'.
+          " TODO: name contains . and !
+        ELSE.
+          REPLACE ALL OCCURRENCES OF '.' IN lv_obj_name WITH '!'.
+        ENDIF.
+      ENDIF.
     ENDIF.
 
     IF iv_extra IS INITIAL.
