@@ -840,7 +840,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
       zcl_abapgit_html=>icon( lv_icon ) &&
       zcl_abapgit_html=>a(
         iv_txt = |diffs first|
-        iv_act = c_actions-toggle_diff_first ).
+        iv_act = c_actions-toggle_diff_first ) && |</th>|.
     ro_html->add( lv_html ).
 
     ro_html->add( '</tr>' ).
