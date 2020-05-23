@@ -159,6 +159,7 @@ CLASS zcl_abapgit_repo DEFINITION
         !it_checksums       TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
         !iv_url             TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
         !iv_branch_name     TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
+        !iv_commit_sha1     TYPE zif_abapgit_persistence=>ty_repo-commit_sha1 OPTIONAL
         !iv_head_branch     TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
         !iv_offline         TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
         !is_dot_abapgit     TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL

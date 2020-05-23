@@ -34,6 +34,14 @@ CLASS zcl_abapgit_repo_online DEFINITION
         VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
+    METHODS get_commit_sha1
+      RETURNING
+        VALUE(rv_sha1) TYPE zif_abapgit_persistence=>ty_repo-commit_sha1 .
+    METHODS set_commit_sha1
+      IMPORTING
+        !iv_sha1 TYPE zif_abapgit_definitions=>ty_sha1
+      RAISING
+        zcx_abapgit_exception .
     METHODS get_objects
       RETURNING
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
@@ -71,7 +79,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
+CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
 
   METHOD fetch_remote.
@@ -129,6 +137,19 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   METHOD get_sha1_remote.
     fetch_remote( ).
     rv_sha1 = mv_branch.
+  ENDMETHOD.
+
+
+  METHOD get_commit_sha1.
+    rv_sha1 = ms_data-commit_sha1.
+  ENDMETHOD.
+
+
+  METHOD set_commit_sha1.
+
+    reset_remote( ).
+    set( iv_commit_sha1 = iv_sha1 ).
+
   ENDMETHOD.
 
 
