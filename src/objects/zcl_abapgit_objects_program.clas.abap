@@ -598,7 +598,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
     IF it_tpool IS INITIAL.
       IF iv_is_include = abap_false OR lv_state = 'A'.
         DELETE TEXTPOOL iv_program "Remove initial description from textpool if
-          LANGUAGE iv_program      "original program does not have a textpool
+          LANGUAGE lv_language     "original program does not have a textpool
           STATE lv_state.
 
         lv_delete = abap_true.
