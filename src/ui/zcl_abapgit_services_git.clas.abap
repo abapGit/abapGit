@@ -80,7 +80,7 @@ ENDCLASS.
 CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
 
-    METHOD checkout_commit_build_popup.
+  METHOD checkout_commit_build_popup.
 
     DATA: lt_columns         TYPE zif_abapgit_definitions=>ty_alv_column_tt,
           li_popups          TYPE REF TO zif_abapgit_popups,
