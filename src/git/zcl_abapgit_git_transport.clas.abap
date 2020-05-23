@@ -333,33 +333,16 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
              && '0000'
              && '0009done' && zif_abapgit_definitions=>c_newline.
 
-    TRY.
-        lv_xstring = lo_client->send_receive_close(
-          zcl_abapgit_convert=>string_to_xstring_utf8( lv_buffer ) ).
+    lv_xstring = lo_client->send_receive_close( zcl_abapgit_convert=>string_to_xstring_utf8( lv_buffer ) ).
 
-        parse( IMPORTING ev_pack = lv_pack
-               CHANGING cv_data  = lv_xstring ).
+    parse( IMPORTING ev_pack = lv_pack
+           CHANGING cv_data = lv_xstring ).
 
-        IF lv_pack IS INITIAL.
-          zcx_abapgit_exception=>raise( 'Response could not be parsed - empty pack returned.' ).
-        ENDIF.
+    IF lv_pack IS INITIAL.
+      zcx_abapgit_exception=>raise( 'empty pack' ).
+    ENDIF.
 
-        et_objects = zcl_abapgit_git_pack=>decode( lv_pack ).
-
-      CATCH zcx_abapgit_exception INTO DATA(lx_exception).
-        IF   io_repo IS BOUND
-         AND io_repo->is_offline( ) = abap_false.
-          lo_repo ?= io_repo.
-          lo_repo->set_commit_sha1( space ).
-        ENDIF.
-
-        IF iv_commit_sha1 IS SUPPLIED.
-          zcx_abapgit_exception=>raise( |Invalid commit was given.| ).
-        ELSE.
-          RAISE EXCEPTION lx_exception.
-        ENDIF.
-
-    ENDTRY.
+    et_objects = zcl_abapgit_git_pack=>decode( lv_pack ).
 
   ENDMETHOD.
 ENDCLASS.
