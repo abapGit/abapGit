@@ -15,7 +15,6 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
 
     TYPES:
       BEGIN OF ty_control,
-        redirect_url TYPE string,
         page_title   TYPE string,
         page_menu    TYPE REF TO zcl_abapgit_html_toolbar,
       END OF  ty_control.
@@ -46,9 +45,6 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
     METHODS footer
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
-
-    METHODS redirect
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
     METHODS render_link_hints
@@ -179,20 +175,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ENDCASE.
 
     ro_html->add( '</head>' ).                              "#EC NOTEXT
-
-  ENDMETHOD.
-
-
-  METHOD redirect.
-
-    CREATE OBJECT ro_html.
-
-    ro_html->add( '<!DOCTYPE html>' ).                      "#EC NOTEXT
-    ro_html->add( '<html>' ).                               "#EC NOTEXT
-    ro_html->add( '<head>' ).                               "#EC NOTEXT
-    ro_html->add( |<meta http-equiv="refresh" content="0; url={ ms_control-redirect_url }">| ). "#EC NOTEXT
-    ro_html->add( '</head>' ).                              "#EC NOTEXT
-    ro_html->add( '</html>' ).                              "#EC NOTEXT
 
   ENDMETHOD.
 
@@ -369,12 +351,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     DATA: lo_script TYPE REF TO zcl_abapgit_html.
 
     gui_services( )->register_event_handler( me ).
-
-    " Redirect
-    IF ms_control-redirect_url IS NOT INITIAL.
-      ri_html = redirect( ).
-      RETURN.
-    ENDIF.
 
     " Real page
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
