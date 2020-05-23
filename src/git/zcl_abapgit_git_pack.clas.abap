@@ -325,7 +325,8 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     ENDLOOP.
 
-    IF lv_string+0(6) = 'gpgsig'.
+    lv_length = strlen( lv_string ).
+    IF lv_length >= 6 AND lv_string+0(6) = 'gpgsig'.
       FIND REGEX |-----END PGP SIGNATURE-----[[:space:]]+|
         IN lv_string
         MATCH OFFSET lv_offset
