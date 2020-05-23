@@ -42,8 +42,7 @@ CLASS ZCL_ABAPGIT_GUI_COMPONENT IMPLEMENTATION.
 
 
   METHOD register_deferred_script.
-    " TODO refactor to mi_gui_services getter !
-    zcl_abapgit_ui_factory=>get_gui_services( )->get_html_parts( )->add_part(
+    gui_services( )->get_html_parts( )->add_part(
       iv_collection = c_html_parts-scripts
       ii_part       = ii_part ).
   ENDMETHOD.
