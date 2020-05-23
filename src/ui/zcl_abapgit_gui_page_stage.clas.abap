@@ -315,8 +315,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     ro_html->add( '</div>' ).
 
-    mi_gui_services->get_hotkeys_ctl( )->register_hotkeys( me ).
-    mi_gui_services->get_html_parts( )->add_part(
+    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
+    gui_services( )->get_html_parts( )->add_part(
       iv_collection = zcl_abapgit_gui_component=>c_html_parts-hidden_forms
       ii_part       = render_deferred_hidden_events( ) ).
     register_deferred_script( render_scripts( ) ).

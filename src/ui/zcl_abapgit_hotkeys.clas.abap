@@ -1,6 +1,7 @@
 CLASS zcl_abapgit_hotkeys DEFINITION
   PUBLIC
   FINAL
+  INHERITING FROM zcl_abapgit_gui_component
   CREATE PUBLIC .
 
   PUBLIC SECTION.
@@ -359,16 +360,7 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
     lt_registered_hotkeys = zif_abapgit_gui_hotkey_ctl~get_registered_hotkeys( ).
     SORT lt_registered_hotkeys BY ui_component description.
 
-    " Note
-    " normally render method should be able to call mi_gui_services->get_html_parts( )
-    " thus the class must inherit from zcl_abapgit_gui_component
-    " but problem is that component constructor calls get_gui which creates gui if it is missing
-    " and the hotkeys class itself is created during get_gui so it is infinite loop
-    " solutions:
-    " A) separate hotkeys into logic and render (which is actually a good way, but it so nicely fit together ...)
-    " B) convert mi_gui_services to a getter - which I will do but later
-
-    zcl_abapgit_ui_factory=>get_gui_services( )->get_html_parts( )->add_part(
+    gui_services( )->get_html_parts( )->add_part(
       iv_collection = zcl_abapgit_gui_component=>c_html_parts-scripts
       ii_part       = render_js_part( lt_registered_hotkeys ) ).
 

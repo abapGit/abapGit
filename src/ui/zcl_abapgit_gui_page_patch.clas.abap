@@ -580,7 +580,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
       CLEAR: mv_pushed.
     ENDIF.
 
-    mi_gui_services->get_hotkeys_ctl( )->register_hotkeys( me ).
+    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
     ro_html = super->render_content( ).
 
     register_deferred_script( render_scripts( ) ).

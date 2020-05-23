@@ -35,7 +35,9 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
     METHODS render_deferred_parts
       IMPORTING
         ii_html TYPE REF TO zif_abapgit_html
-        iv_part_category TYPE string.
+        iv_part_category TYPE string
+      RAISING
+        zcx_abapgit_exception.
 
     METHODS html_head
       RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
@@ -215,7 +217,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     DATA lt_parts TYPE zif_abapgit_html=>tty_table_of.
     DATA li_part LIKE LINE OF lt_parts.
 
-    lt_parts = mi_gui_services->get_html_parts( )->get_parts( iv_part_category ).
+    lt_parts = gui_services( )->get_html_parts( )->get_parts( iv_part_category ).
     LOOP AT lt_parts INTO li_part.
       ii_html->add( li_part ).
     ENDLOOP.
@@ -256,7 +258,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     DATA lo_hotkeys_component TYPE REF TO zif_abapgit_gui_renderable.
 
-    lo_hotkeys_component ?= mi_gui_services->get_hotkeys_ctl( ). " Mmmm ...
+    lo_hotkeys_component ?= gui_services( )->get_hotkeys_ctl( ). " Mmmm ...
     ro_html = lo_hotkeys_component->render( ).
 
   ENDMETHOD.
@@ -366,7 +368,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     DATA: lo_script TYPE REF TO zcl_abapgit_html.
 
-    mi_gui_services->register_event_handler( me ).
+    gui_services( )->register_event_handler( me ).
 
     " Redirect
     IF ms_control-redirect_url IS NOT INITIAL.
