@@ -128,3 +128,5 @@ Michael Pang
 [The journey to Git-based ABAP development: Part 1](https://blogs.sap.com/2020/02/26/the-journey-to-git-based-abap-development-part-1/), Marcello Urbani
 
 [The journey to Git-based ABAP development: Part 2](https://blogs.sap.com/2020/03/31/the-journey-to-git-based-abap-development-part-2/), Marcello Urbani
+
+[The journey to Git-based ABAP development: Part 3](https://blogs.sap.com/2020/05/21/the-journey-to-git-based-abap-development-part-3/), Marcello Urbani

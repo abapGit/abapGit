@@ -1169,8 +1169,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
                            iv_value      = lv_display_name
                  CHANGING ct_fields      = lt_fields ).
 
-      add_field( EXPORTING iv_tabname    = 'ZABAPGIT'
-                           iv_fieldname  = 'VALUE'
+      add_field( EXPORTING iv_tabname    = 'TADIR'
+                           iv_fieldname  = 'AUTHOR'
                            iv_fieldtext  = 'Folder logic'
                            iv_obligatory = abap_true
                            iv_value      = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
