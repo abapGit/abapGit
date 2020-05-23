@@ -323,19 +323,14 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     REPLACE ALL OCCURRENCES OF '#' IN lv_type WITH '/'.
     REPLACE ALL OCCURRENCES OF '#' IN lv_ext WITH '/'.
 
-    " The counter part to this logic for certain object types must be maintained in
-    " ZCL_ABAPGIT_OBJECTS_FILES->FILENAME
+    " Try to get a unique package name for DEVC by using the path
     IF lv_type = 'DEVC'.
-      " Try to get a unique package name for DEVC by using the path
       ASSERT lv_name = 'PACKAGE'.
       lv_name = zcl_abapgit_folder_logic=>get_instance( )->path_to_package(
         iv_top                  = iv_devclass
         io_dot                  = io_dot
         iv_create_if_not_exists = abap_false
         iv_path                 = iv_path ).
-    ELSEIF lv_type = 'W3MI' OR lv_type = 'W3HT'.
-      " Get original object name
-      REPLACE ALL OCCURRENCES OF '!' IN lv_name WITH '.'.
     ENDIF.
 
     CLEAR es_item.
