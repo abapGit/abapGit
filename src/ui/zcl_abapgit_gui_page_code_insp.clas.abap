@@ -192,7 +192,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    mi_gui_services->get_hotkeys_ctl( )->register_hotkeys( me ).
+    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
 
     ro_html->add( '<div class="ci-head">' ).
     ro_html->add( |Code inspector check variant: <span class="ci-variant">{ mv_check_variant }</span>| ).

@@ -580,7 +580,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
       CLEAR: mv_pushed.
     ENDIF.
 
-    mi_gui_services->get_hotkeys_ctl( )->register_hotkeys( me ).
+    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
     ro_html = super->render_content( ).
 
     register_deferred_script( render_scripts( ) ).
@@ -683,6 +683,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
+    ro_html->zif_abapgit_html~set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
     ro_html->add( 'preparePatch();' ).
     ro_html->add( 'registerStagePatch();' ).
 
