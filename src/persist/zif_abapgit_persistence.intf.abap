@@ -63,7 +63,7 @@ INTERFACE zif_abapgit_persistence PUBLIC.
     END OF ty_repo_meta_mask.
 
   TYPES: BEGIN OF ty_repo,
-           key TYPE zif_abapgit_persistence=>ty_value.
+           key TYPE ty_value.
       INCLUDE TYPE ty_repo_xml.
   TYPES: END OF ty_repo.
   TYPES: tt_repo TYPE STANDARD TABLE OF ty_repo WITH DEFAULT KEY.
