@@ -302,7 +302,7 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
   METHOD parse_fields.
 
-    DATA: lt_substrings TYPE stringtab,
+    DATA: lt_substrings TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
           ls_field      LIKE LINE OF rt_fields.
 
     FIELD-SYMBOLS: <lv_substring> LIKE LINE OF lt_substrings.
