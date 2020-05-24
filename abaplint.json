@@ -68,7 +68,8 @@
     "globalMacros": []
   },
   "rules": {
-    "unknown_types": false,
+    "unknown_types": true,
+    "forbidden_void_type": true,
     "forbidden_identifier": true,
     "try_without_catch": false,
     "unused_variables": false,
