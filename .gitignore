@@ -4,3 +4,4 @@ package-lock.json
 zabapgit.abap
 .vscode
 deps
+ci/*.abap
