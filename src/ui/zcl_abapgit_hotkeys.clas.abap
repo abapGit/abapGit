@@ -82,9 +82,10 @@ CLASS zcl_abapgit_hotkeys DEFINITION
         RETURNING
           VALUE(rt_interface_implementations) TYPE saboo_iimpt
         RAISING
-          zcx_abapgit_exception,
+          zcx_abapgit_exception.
 
-      render_js_part
+    METHODS
+      render_scripts
         IMPORTING
           it_hotkeys TYPE zif_abapgit_gui_hotkeys=>tty_hotkey_with_descr
         RETURNING
@@ -260,7 +261,7 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_js_part.
+  METHOD render_scripts.
 
     DATA lv_json TYPE string.
     DATA lt_hotkeys TYPE zif_abapgit_gui_hotkeys=>tty_hotkey_with_descr.
@@ -282,6 +283,7 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
     lv_json = lv_json && `}`.
 
     CREATE OBJECT ro_html.
+    ro_html->zif_abapgit_html~set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
     ro_html->add( |setKeyBindings({ lv_json });| ).
 
   ENDMETHOD.
@@ -360,9 +362,7 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
     lt_registered_hotkeys = zif_abapgit_gui_hotkey_ctl~get_registered_hotkeys( ).
     SORT lt_registered_hotkeys BY ui_component description.
 
-    gui_services( )->get_html_parts( )->add_part(
-      iv_collection = zcl_abapgit_gui_component=>c_html_parts-scripts
-      ii_part       = render_js_part( lt_registered_hotkeys ) ).
+    register_deferred_script( render_scripts( lt_registered_hotkeys ) ).
 
     " Render hotkeys
     ri_html->add( '<ul class="hotkeys">' ).
