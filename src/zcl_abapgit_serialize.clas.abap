@@ -22,6 +22,7 @@ CLASS zcl_abapgit_serialize DEFINITION
         zcx_abapgit_exception .
 
   PROTECTED SECTION.
+    TYPES: ty_char32 TYPE c LENGTH 32.
 
     CLASS-DATA gv_max_threads TYPE i .
     DATA mt_files TYPE zif_abapgit_definitions=>ty_files_item_tt .
@@ -38,7 +39,7 @@ CLASS zcl_abapgit_serialize DEFINITION
       IMPORTING
         !is_tadir    TYPE zif_abapgit_definitions=>ty_tadir
         !iv_language TYPE langu
-        !iv_task     TYPE sychar32
+        !iv_task     TYPE ty_char32
       RAISING
         zcx_abapgit_exception .
     METHODS run_sequential
