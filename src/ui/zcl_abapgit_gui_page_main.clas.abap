@@ -45,7 +45,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
 
   METHOD build_main_menu.
@@ -113,7 +113,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     retrieve_active_repo( ). " Get and validate key of user default repo
 
     CREATE OBJECT ro_html.
-    mi_gui_services->get_hotkeys_ctl( )->register_hotkeys( me ).
+    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
 
     TRY.
         lt_repos = zcl_abapgit_repo_srv=>get_instance( )->list( ).
