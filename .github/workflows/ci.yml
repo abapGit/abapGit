@@ -19,6 +19,7 @@ jobs:
         npm run eslint
         npm run abaplint
         npm run merge
+        npm run merge.ci
     - name: deploy-merged-build
       if: github.ref == 'refs/heads/master' && github.repository == 'larshp/abapGit'
       env:
