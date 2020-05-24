@@ -77,8 +77,8 @@ CLASS zcl_abapgit_oo_class DEFINITION
       IMPORTING
         !iv_program      TYPE programm
         !it_source       TYPE string_table
-        !iv_extension    TYPE sychar02
-        !iv_program_type TYPE sychar01
+        !iv_extension    TYPE char2
+        !iv_program_type TYPE char1
         !iv_version      TYPE r3state .
     CLASS-METHODS update_cs_number_of_methods
       IMPORTING
@@ -88,7 +88,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
+CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
 
   METHOD create_report.
@@ -236,8 +236,8 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
 
   METHOD update_full_class_include.
 
-    CONSTANTS: lc_class_source_extension TYPE sychar02 VALUE 'CS',
-               lc_include_program_type   TYPE sychar01 VALUE 'I',
+    CONSTANTS: lc_class_source_extension TYPE c LENGTH 2 VALUE 'CS',
+               lc_include_program_type   TYPE c LENGTH 1 VALUE 'I',
                lc_active_version         TYPE r3state VALUE 'A'.
 
 

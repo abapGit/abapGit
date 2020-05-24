@@ -38,7 +38,7 @@ CLASS zcl_abapgit_serialize DEFINITION
       IMPORTING
         !is_tadir    TYPE zif_abapgit_definitions=>ty_tadir
         !iv_language TYPE langu
-        !iv_task     TYPE sychar32
+        !iv_task     TYPE char32
       RAISING
         zcx_abapgit_exception .
     METHODS run_sequential
