@@ -9,7 +9,7 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     ty_sha1    TYPE c LENGTH 40 .
   TYPES: BEGIN OF ty_commit_value_tab,
-           hash     TYPE ty_sha1,
+           sha1     TYPE ty_sha1,
            message  TYPE c LENGTH 50,
            datetime TYPE c LENGTH 20,
          END OF ty_commit_value_tab.

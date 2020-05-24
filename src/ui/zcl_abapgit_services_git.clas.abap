@@ -129,7 +129,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     READ TABLE it_commits
       INTO es_selected_commit
-      WITH KEY message = <ls_value_tab>-message.
+      WITH KEY sha1 = <ls_value_tab>-sha1.
 
   ENDMETHOD.
 
