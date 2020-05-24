@@ -355,10 +355,6 @@ div.tutorial h1, h2 { color: #404040; }
 .nav-container > ul > li:hover > a { background-color: #ffffff80; }
 .nav-container ul ul { background-color: #fff; }
 .nav-container.corner > ul > li:hover > a { background-color: inherit; }
-.nav-container ul li:hover { 
-  background-color: #fff; 
-  box-shadow: 1px 1px 3px 0px #bbb;
-}
 
 /* Toolbar separator style */
 .nav-container ul ul li.separator {
