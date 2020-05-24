@@ -85,6 +85,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
+    ro_html->zif_abapgit_html~set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
     ro_html->add( 'debugOutput("Browser: " + navigator.userAgent + ' &&
       '"<br>Frontend time: " + new Date(), "debug_info");' ).
 
