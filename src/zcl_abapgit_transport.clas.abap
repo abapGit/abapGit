@@ -38,7 +38,9 @@ CLASS zcl_abapgit_transport DEFINITION
       IMPORTING
         !it_tadir         TYPE zif_abapgit_definitions=>ty_tadir_tt
       RETURNING
-        VALUE(rv_package) TYPE devclass .
+        VALUE(rv_package) TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS resolve
       IMPORTING
         !it_requests    TYPE trwbo_requests
