@@ -84,10 +84,12 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
 
     DATA ls_rule LIKE LINE OF mt_rules.
 
-    CREATE OBJECT ls_rule-regex
-      EXPORTING
-        pattern     = iv_regex
-        ignore_case = abap_true.
+    IF NOT iv_regex IS INITIAL.
+      CREATE OBJECT ls_rule-regex
+        EXPORTING
+          pattern     = iv_regex
+          ignore_case = abap_true.
+    ENDIF.
 
     ls_rule-token         = iv_token.
     ls_rule-style         = iv_style.
@@ -118,6 +120,12 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
       CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_abap.
     ELSEIF iv_filename CP '*.xml' OR iv_filename CP '*.html'.
       CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_xml.
+    ELSEIF iv_filename CP '*.css'.
+      CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_css.
+    ELSEIF iv_filename CP '*.js'.
+      CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_js.
+    ELSEIF iv_filename CP '*.json'.
+      CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_json.
     ELSE.
       CLEAR ro_instance.
     ENDIF.
@@ -200,7 +208,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
 
 
     " Process syntax-dependent regex table and find all matches
-    LOOP AT mt_rules ASSIGNING <ls_regex>.
+    LOOP AT mt_rules ASSIGNING <ls_regex> WHERE regex IS BOUND.
       lo_regex   = <ls_regex>-regex.
       lo_matcher = lo_regex->create_matcher( text = iv_line ).
       lt_result  = lo_matcher->find_all( ).
