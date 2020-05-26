@@ -3,9 +3,9 @@ CLASS zcl_abapgit_git_utils DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-
+    TYPES ty_null TYPE C LENGTH 1.
     CLASS-METHODS get_null
-      RETURNING VALUE(rv_c) TYPE char1.
+      RETURNING VALUE(rv_c) TYPE ty_null.
 
     CLASS-METHODS pkt_string
       IMPORTING iv_string     TYPE string
@@ -46,7 +46,7 @@ CLASS ZCL_ABAPGIT_GIT_UTILS IMPLEMENTATION.
           lv_char4   TYPE c LENGTH 4,
           lv_x       TYPE x LENGTH 2,
           lo_obj     TYPE REF TO cl_abap_conv_in_ce,
-          lv_len     TYPE int4.
+          lv_len     TYPE i.
 
 * hmm, can this be done easier?
 
