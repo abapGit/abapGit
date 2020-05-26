@@ -180,7 +180,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
     DATA: li_artmp_node   TYPE REF TO if_ixml_element,
           lv_rc           TYPE sy-subrc,
           lv_text         TYPE string,
-          lv_rc_args_tmpl TYPE int4,
+          lv_rc_args_tmpl TYPE i,
           lv_errmsg       TYPE string.
 
     li_artmp_node = template_over_all->create_simple_element(

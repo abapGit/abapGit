@@ -56,6 +56,9 @@ div.tutorial h1, h2 { color: var(--theme-primary-font-color); }
 
 /* REPOSITORY */
 div.repo { background-color: var(--theme-container-background-color); }
+.repo_name span.name { color: var(--theme-primary-font-color-reduced); }
+.repo_name span.url  { color: #333; }
+.repo_name a.url { color: #333; }
 .repo_attr { color: var(--theme-primary-font-color); }
 .repo_attr span.branch_branch {
   border-color: #ffffff;
@@ -100,12 +103,25 @@ table.diff_tab td,th { color: #fff; }
 table.diff_tab thead.nav_line { background-color: var(--theme-container-background-color); }
 
 /* STYLES for Syntax Highlighting */
+/* abap */
 .syntax-hl span.keyword  { color: #4af; }
 .syntax-hl span.text     { color: #8f8; }
 .syntax-hl span.comment  { color: #999; }
+/* xml+html */
 .syntax-hl span.xml_tag  { color: #659cff; }
 .syntax-hl span.attr     { color: #bab2f9; }
 .syntax-hl span.attr_val { color: #b777fb; }
+/* css+js */
+.syntax-hl span.properties   { color:#0a69ce; }
+.syntax-hl span.values       { color:blue; }
+.syntax-hl span.units        { color:maroon; }
+.syntax-hl span.selectors    { color:purple; }
+.syntax-hl span.functions    { color:purple; }
+.syntax-hl span.colors       { color:purple; }
+.syntax-hl span.extensions   { color:lightblue; }
+.syntax-hl span.at_rules     { color:lightblue; }
+.syntax-hl span.html         { color:green; }
+.syntax-hl span.variables    { color:purple; }
 
 /* DEBUG INFO STYLES */
 div.debug_container#debug_info { color: var(--theme-primary-font-color); }
