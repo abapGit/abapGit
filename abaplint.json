@@ -69,7 +69,9 @@
   },
   "rules": {
     "unknown_types": true,
-    "forbidden_void_type": true,
+    "forbidden_void_type": {
+      "check": ["^stringtab$", "^SYCHAR01$", "^char2$", "^char20$", "^int4$", "^flag$"]
+    },
     "forbidden_identifier": true,
     "try_without_catch": false,
     "unused_variables": false,

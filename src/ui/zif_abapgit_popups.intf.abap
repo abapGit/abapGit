@@ -4,13 +4,14 @@ INTERFACE zif_abapgit_popups
 
   TYPES:
     BEGIN OF ty_popup,
-      url          TYPE string,
-      package      TYPE devclass,
-      branch_name  TYPE string,
-      display_name TYPE string,
-      folder_logic TYPE string,
-      ign_subpkg   TYPE abap_bool,
-      cancel       TYPE abap_bool,
+      url              TYPE string,
+      package          TYPE devclass,
+      branch_name      TYPE string,
+      display_name     TYPE string,
+      folder_logic     TYPE string,
+      ign_subpkg       TYPE abap_bool,
+      master_lang_only TYPE abap_bool,
+      cancel           TYPE abap_bool,
     END OF ty_popup .
 
   CONSTANTS c_new_branch_label TYPE string VALUE '+ create new ...' ##NO_TEXT.
