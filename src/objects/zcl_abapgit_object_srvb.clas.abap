@@ -128,9 +128,10 @@ CLASS zcl_abapgit_object_srvb IMPLEMENTATION.
         CREATE OBJECT li_object_data_model TYPE ('CL_SRVB_OBJECT_DATA').
         li_object_data_model->set_data( <ls_service_binding> ).
 
-        mi_persistence->save(
+        CALL METHOD mi_persistence->('SAVE')
+          EXPORTING
             p_object_data = li_object_data_model
-            p_access_mode = lv_access_mode ).
+            p_access_mode = lv_access_mode. " does not exist in 702
 
         corr_insert( iv_package ).
 
