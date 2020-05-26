@@ -33,7 +33,7 @@ INTERFACE zif_abapgit_definitions
     ty_string_tt TYPE STANDARD TABLE OF string WITH DEFAULT KEY .
   TYPES:
     ty_repo_ref_tt TYPE STANDARD TABLE OF REF TO zcl_abapgit_repo WITH DEFAULT KEY .
-  TYPES ty_git_branch_type TYPE char2 .
+  TYPES ty_git_branch_type TYPE c LENGTH 2 .
   TYPES:
     BEGIN OF ty_git_branch,
       sha1         TYPE ty_sha1,
@@ -155,8 +155,8 @@ INTERFACE zif_abapgit_definitions
       path       TYPE string,
       filename   TYPE string,
       is_changed TYPE abap_bool,
-      rstate     TYPE char1,
-      lstate     TYPE char1,
+      rstate     TYPE c LENGTH 1,
+      lstate     TYPE c LENGTH 1,
     END OF ty_repo_file .
   TYPES:
     tt_repo_files TYPE STANDARD TABLE OF ty_repo_file WITH DEFAULT KEY .
@@ -196,8 +196,8 @@ INTERFACE zif_abapgit_definitions
       filename TYPE string,
       package  TYPE devclass,
       match    TYPE abap_bool,
-      lstate   TYPE char1,
-      rstate   TYPE char1,
+      lstate   TYPE c LENGTH 1,
+      rstate   TYPE c LENGTH 1,
     END OF ty_result .
   TYPES:
     ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY .
@@ -255,10 +255,10 @@ INTERFACE zif_abapgit_definitions
       email      TYPE string,
       time       TYPE string,
       message    TYPE string,
-      body       TYPE string_table,
+      body       TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
       branch     TYPE string,
       merge      TYPE string,
-      tags       TYPE stringtab,
+      tags       TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
       create     TYPE STANDARD TABLE OF ty_create WITH DEFAULT KEY,
       compressed TYPE abap_bool,
     END OF ty_commit .
@@ -334,8 +334,8 @@ INTERFACE zif_abapgit_definitions
       path     TYPE string,
       is_dir   TYPE abap_bool,
       changes  TYPE i,
-      lstate   TYPE char1,
-      rstate   TYPE char1,
+      lstate   TYPE c LENGTH 1,
+      rstate   TYPE c LENGTH 1,
       files    TYPE tt_repo_files,
     END OF ty_repo_item .
   TYPES:
@@ -410,11 +410,11 @@ INTERFACE zif_abapgit_definitions
     END OF c_type .
   CONSTANTS:
     BEGIN OF c_state, " https://git-scm.com/docs/git-status
-      unchanged TYPE char1 VALUE '',
-      added     TYPE char1 VALUE 'A',
-      modified  TYPE char1 VALUE 'M',
-      deleted   TYPE char1 VALUE 'D', "For future use
-      mixed     TYPE char1 VALUE '*',
+      unchanged TYPE c LENGTH 1 VALUE '',
+      added     TYPE c LENGTH 1 VALUE 'A',
+      modified  TYPE c LENGTH 1 VALUE 'M',
+      deleted   TYPE c LENGTH 1 VALUE 'D', "For future use
+      mixed     TYPE c LENGTH 1 VALUE '*',
     END OF c_state .
   CONSTANTS:
     BEGIN OF c_chmod,
@@ -490,8 +490,8 @@ INTERFACE zif_abapgit_definitions
       direction                     TYPE string VALUE 'direction',
     END OF c_action .
   CONSTANTS c_tag_prefix TYPE string VALUE 'refs/tags/' ##NO_TEXT.
-  CONSTANTS c_spagpa_param_repo_key TYPE char20 VALUE 'REPO_KEY' ##NO_TEXT.
-  CONSTANTS c_spagpa_param_package TYPE char20 VALUE 'PACKAGE' ##NO_TEXT.
+  CONSTANTS c_spagpa_param_repo_key TYPE c LENGTH 20 VALUE 'REPO_KEY' ##NO_TEXT.
+  CONSTANTS c_spagpa_param_package TYPE c LENGTH 20 VALUE 'PACKAGE' ##NO_TEXT.
 
   CONSTANTS gc_yes TYPE ty_yes_no VALUE 'Y'.
   CONSTANTS gc_no TYPE ty_yes_no VALUE 'N'.

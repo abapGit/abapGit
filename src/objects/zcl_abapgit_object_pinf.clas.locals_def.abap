@@ -10,7 +10,7 @@ INTERFACE lif_package_interface_facade.
 
     set_elements_changeable
       IMPORTING
-        VALUE(iv_changeable) TYPE flag
+        VALUE(iv_changeable) TYPE abap_bool
       RAISING
         zcx_abapgit_exception,
 
@@ -26,7 +26,7 @@ INTERFACE lif_package_interface_facade.
 
     set_changeable
       IMPORTING
-        VALUE(iv_changeable) TYPE flag
+        VALUE(iv_changeable) TYPE abap_bool
       RAISING
         zcx_abapgit_exception,
 
@@ -59,7 +59,7 @@ INTERFACE lif_package_interface_facade.
 
     get_changeable
       RETURNING
-        VALUE(rv_changeable) TYPE flag
+        VALUE(rv_changeable) TYPE abap_bool
       RAISING
         zcx_abapgit_exception.
 

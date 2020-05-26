@@ -33,7 +33,7 @@ CLASS zcl_abapgit_popups DEFINITION
       ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
 
     CONSTANTS c_fieldname_selected TYPE lvc_fname VALUE `SELECTED` ##NO_TEXT.
-    CONSTANTS c_answer_cancel      TYPE char1 VALUE 'A' ##NO_TEXT.
+    CONSTANTS c_answer_cancel      TYPE c LENGTH 1 VALUE 'A' ##NO_TEXT.
 
     DATA mo_select_list_popup TYPE REF TO cl_salv_table .
     DATA mr_table TYPE REF TO data .
