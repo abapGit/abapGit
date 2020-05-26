@@ -183,7 +183,7 @@ CLASS ZCL_ABAPGIT_OBJECT_W3SUPER IMPLEMENTATION.
     DATA lv_xstring   TYPE xstring.
     DATA lt_w3mime    TYPE STANDARD TABLE OF w3mime.
     DATA lt_w3html    TYPE STANDARD TABLE OF w3html.
-    DATA lv_size      TYPE int4.
+    DATA lv_size      TYPE i.
     DATA lv_tadir_obj TYPE tadir-object.
 
 
@@ -424,7 +424,7 @@ CLASS ZCL_ABAPGIT_OBJECT_W3SUPER IMPLEMENTATION.
     DATA lt_w3html    TYPE STANDARD TABLE OF w3html.
     DATA lt_w3params  TYPE STANDARD TABLE OF wwwparams.
     DATA lv_xstring   TYPE xstring.
-    DATA lv_size      TYPE int4.
+    DATA lv_size      TYPE i.
 
     SELECT SINGLE * INTO CORRESPONDING FIELDS OF ms_key
       FROM wwwdata

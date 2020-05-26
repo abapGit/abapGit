@@ -407,7 +407,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     DATA: lv_xstr  TYPE xstring,
           lt_xdata TYPE lvc_t_mime,
-          lv_size  TYPE int4.
+          lv_size  TYPE i.
 
     ASSERT iv_text IS SUPPLIED OR iv_xdata IS SUPPLIED.
 

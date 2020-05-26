@@ -5,7 +5,7 @@ CLASS zcl_abapgit_object_susc DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
   PROTECTED SECTION.
 
-    CONSTANTS transobjecttype_class TYPE char1 VALUE 'C' ##NO_TEXT.
+    CONSTANTS transobjecttype_class TYPE c LENGTH 1 VALUE 'C' ##NO_TEXT.
 
     METHODS has_authorization
       IMPORTING
