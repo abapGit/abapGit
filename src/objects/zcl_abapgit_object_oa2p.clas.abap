@@ -220,8 +220,8 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
   METHOD zif_abapgit_object~is_locked.
 
     DATA: lv_profile_name TYPE eqegraarg,
-          lv_lock_number  TYPE int4,
-          lt_locks        TYPE  STANDARD TABLE OF seqg3.
+          lv_lock_number  TYPE i,
+          lt_locks        TYPE STANDARD TABLE OF seqg3.
 
     lv_profile_name = mv_profile.
 
