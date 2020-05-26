@@ -185,8 +185,8 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
   METHOD init_scanner.
 
-    DATA: lx_clif_scan_error_detail TYPE REF TO cx_oo_clif_scan_error_detail,
-          lv_message                TYPE string.
+    DATA: lx_exc     TYPE REF TO cx_root,
+          lv_message TYPE string.
 
     TRY.
         ro_scanner = cl_oo_source_scanner_class=>create_class_scanner(
@@ -195,8 +195,8 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
         ro_scanner->scan( ).
       CATCH cx_clif_scan_error.
         zcx_abapgit_exception=>raise( 'error initializing CLAS scanner' ).
-      CATCH cx_oo_clif_scan_error_detail INTO lx_clif_scan_error_detail.
-        lv_message = lx_clif_scan_error_detail->get_text( ).
+      CATCH cx_root INTO lx_exc.
+        lv_message = lx_exc->get_text( ).
         zcx_abapgit_exception=>raise( lv_message ).
     ENDTRY.
 
