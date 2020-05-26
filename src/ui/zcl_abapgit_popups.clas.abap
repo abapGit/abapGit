@@ -33,7 +33,7 @@ CLASS zcl_abapgit_popups DEFINITION
       ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
 
     CONSTANTS c_fieldname_selected TYPE lvc_fname VALUE `SELECTED` ##NO_TEXT.
-    CONSTANTS c_answer_cancel      TYPE char1 VALUE 'A' ##NO_TEXT.
+    CONSTANTS c_answer_cancel      TYPE c LENGTH 1 VALUE 'A' ##NO_TEXT.
 
     DATA mo_select_list_popup TYPE REF TO cl_salv_table .
     DATA mr_table TYPE REF TO data .
@@ -57,29 +57,30 @@ CLASS zcl_abapgit_popups DEFINITION
       EXPORTING
         !et_list TYPE INDEX TABLE .
     METHODS on_select_list_link_click
-          FOR EVENT link_click OF cl_salv_events_table
+      FOR EVENT link_click OF cl_salv_events_table
       IMPORTING
-          !row
-          !column .
+        !row
+        !column .
     METHODS on_select_list_function_click
-          FOR EVENT added_function OF cl_salv_events_table
+      FOR EVENT added_function OF cl_salv_events_table
       IMPORTING
-          !e_salv_function .
+        !e_salv_function .
     METHODS on_double_click
-          FOR EVENT double_click OF cl_salv_events_table
+      FOR EVENT double_click OF cl_salv_events_table
       IMPORTING
-          !row
-          !column .
+        !row
+        !column .
     METHODS extract_field_values
       IMPORTING
-        it_fields       TYPE ty_sval_tt
+        it_fields           TYPE ty_sval_tt
       EXPORTING
-        ev_url          TYPE abaptxt255-line
-        ev_package      TYPE tdevc-devclass
-        ev_branch       TYPE textl-line
-        ev_display_name TYPE trm255-text
-        ev_folder_logic TYPE string
-        ev_ign_subpkg   TYPE abap_bool.
+        ev_url              TYPE abaptxt255-line
+        ev_package          TYPE tdevc-devclass
+        ev_branch           TYPE textl-line
+        ev_display_name     TYPE trm255-text
+        ev_folder_logic     TYPE string
+        ev_ign_subpkg       TYPE abap_bool
+        ev_master_lang_only TYPE abap_bool.
     TYPES:
       ty_lt_fields TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
     METHODS _popup_3_get_values
@@ -199,6 +200,10 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ASSERT sy-subrc = 0.
     ev_ign_subpkg = <ls_field>-value.
     TRANSLATE ev_ign_subpkg TO UPPER CASE.
+
+    READ TABLE it_fields INDEX 7 ASSIGNING <ls_field>.
+    ASSERT sy-subrc = 0.
+    ev_master_lang_only = <ls_field>-value.
 
   ENDMETHOD.
 
@@ -1037,6 +1042,12 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
                          iv_value      = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
                CHANGING  ct_fields     = lt_fields ).
 
+    add_field( EXPORTING iv_tabname    = 'DOKIL'
+                         iv_fieldname  = 'MASTERLANG'
+                         iv_fieldtext  = 'Master language only'
+                         iv_value      = abap_true
+               CHANGING ct_fields      = lt_fields ).
+
     WHILE lv_finished = abap_false.
 
       lv_icon_ok  = icon_okay.
@@ -1084,6 +1095,10 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       TRANSLATE <ls_field>-value TO UPPER CASE.
       rs_popup-folder_logic = <ls_field>-value.
 
+      READ TABLE lt_fields INDEX 4 ASSIGNING <ls_field>.
+      ASSERT sy-subrc = 0.
+      rs_popup-master_lang_only = <ls_field>-value.
+
       lv_finished = abap_true.
 
       TRY.
@@ -1103,22 +1118,23 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
   METHOD zif_abapgit_popups~repo_popup.
 
-    DATA: lv_returncode   TYPE c,
-          lv_icon_ok      TYPE icon-name,
-          lv_icon_br      TYPE icon-name,
-          lt_fields       TYPE TABLE OF sval,
-          lv_uattr        TYPE spo_fattr,
-          lv_pattr        TYPE spo_fattr,
-          lv_button2      TYPE svalbutton-buttontext,
-          lv_icon2        TYPE icon-name,
-          lv_package      TYPE tdevc-devclass,
-          lv_url          TYPE abaptxt255-line,
-          lv_branch       TYPE textl-line,
-          lv_display_name TYPE trm255-text,
-          lv_folder_logic TYPE string,
-          lv_ign_subpkg   TYPE abap_bool,
-          lv_finished     TYPE abap_bool,
-          lx_error        TYPE REF TO zcx_abapgit_exception.
+    DATA: lv_returncode       TYPE c,
+          lv_icon_ok          TYPE icon-name,
+          lv_icon_br          TYPE icon-name,
+          lt_fields           TYPE TABLE OF sval,
+          lv_uattr            TYPE spo_fattr,
+          lv_pattr            TYPE spo_fattr,
+          lv_button2          TYPE svalbutton-buttontext,
+          lv_icon2            TYPE icon-name,
+          lv_package          TYPE tdevc-devclass,
+          lv_url              TYPE abaptxt255-line,
+          lv_branch           TYPE textl-line,
+          lv_display_name     TYPE trm255-text,
+          lv_folder_logic     TYPE string,
+          lv_ign_subpkg       TYPE abap_bool,
+          lv_finished         TYPE abap_bool,
+          lv_master_lang_only TYPE abap_bool,
+          lx_error            TYPE REF TO zcx_abapgit_exception.
 
     IF iv_freeze_url = abap_true.
       lv_uattr = '05'.
@@ -1182,6 +1198,12 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
                            iv_value      = abap_false
                  CHANGING ct_fields      = lt_fields ).
 
+      add_field( EXPORTING iv_tabname    = 'DOKIL'
+                           iv_fieldname  = 'MASTERLANG'
+                           iv_fieldtext  = 'Master language only'
+                           iv_value      = abap_true
+                  CHANGING ct_fields     = lt_fields ).
+
       lv_icon_ok  = icon_okay.
       lv_icon_br  = icon_workflow_fork.
 
@@ -1222,7 +1244,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
           ev_branch       = lv_branch
           ev_display_name = lv_display_name
           ev_folder_logic = lv_folder_logic
-          ev_ign_subpkg   = lv_ign_subpkg ).
+          ev_ign_subpkg   = lv_ign_subpkg
+          ev_master_lang_only = lv_master_lang_only ).
 
       lv_finished = abap_true.
 
@@ -1241,12 +1264,13 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     ENDWHILE.
 
-    rs_popup-url          = lv_url.
-    rs_popup-package      = lv_package.
-    rs_popup-branch_name  = lv_branch.
-    rs_popup-display_name = lv_display_name.
-    rs_popup-folder_logic = lv_folder_logic.
-    rs_popup-ign_subpkg   = lv_ign_subpkg.
+    rs_popup-url                = lv_url.
+    rs_popup-package            = lv_package.
+    rs_popup-branch_name        = lv_branch.
+    rs_popup-display_name       = lv_display_name.
+    rs_popup-folder_logic       = lv_folder_logic.
+    rs_popup-ign_subpkg         = lv_ign_subpkg.
+    rs_popup-master_lang_only   = lv_master_lang_only.
 
   ENDMETHOD.
 
