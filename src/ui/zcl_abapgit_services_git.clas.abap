@@ -54,6 +54,12 @@ CLASS zcl_abapgit_services_git DEFINITION
       RAISING
         zcx_abapgit_exception.
   PROTECTED SECTION.
+    TYPES: BEGIN OF ty_commit_value_tab,
+             sha1     TYPE zif_abapgit_definitions=>ty_sha1,
+             message  TYPE c LENGTH 50,
+             datetime TYPE c LENGTH 20,
+           END OF ty_commit_value_tab.
+    TYPES: ty_commit_value_tab_tt TYPE STANDARD TABLE OF ty_commit_value_tab WITH DEFAULT KEY .
 
     CLASS-METHODS get_unnecessary_local_objs
       IMPORTING
@@ -69,7 +75,7 @@ CLASS zcl_abapgit_services_git DEFINITION
       EXPORTING
         !es_selected_commit TYPE zif_abapgit_definitions=>ty_commit
       CHANGING
-        !ct_value_tab       TYPE zif_abapgit_definitions=>ty_commit_value_tab_tt
+        !ct_value_tab       TYPE ty_commit_value_tab_tt
       RAISING
         zcx_abapgit_exception .
 
@@ -84,9 +90,9 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     DATA: lt_columns         TYPE zif_abapgit_definitions=>ty_alv_column_tt,
           li_popups          TYPE REF TO zif_abapgit_popups,
-          lt_selected_values TYPE zif_abapgit_definitions=>ty_commit_value_tab_tt.
+          lt_selected_values TYPE ty_commit_value_tab_tt.
 
-    FIELD-SYMBOLS: <ls_value_tab> TYPE zif_abapgit_definitions=>ty_commit_value_tab,
+    FIELD-SYMBOLS: <ls_value_tab> TYPE ty_commit_value_tab,
                    <ls_column>    TYPE zif_abapgit_definitions=>ty_alv_column.
 
     CLEAR: es_selected_commit.
