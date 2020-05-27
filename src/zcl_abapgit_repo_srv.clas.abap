@@ -242,12 +242,18 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       refresh( ).
     ENDIF.
 
-    LOOP AT mt_list ASSIGNING <lo_list>.
-      IF <lo_list>->get_key( ) = iv_key.
-        ro_repo = <lo_list>.
-        RETURN.
+    DO 2 TIMES.
+      " Repo might have been created in another session. Try again after refresh
+      IF sy-index = 2.
+        refresh( ).
       ENDIF.
-    ENDLOOP.
+      LOOP AT mt_list ASSIGNING <lo_list>.
+        IF <lo_list>->get_key( ) = iv_key.
+          ro_repo = <lo_list>.
+          RETURN.
+        ENDIF.
+      ENDLOOP.
+    ENDDO.
 
     zcx_abapgit_exception=>raise( 'repo not found, get' ).
 
