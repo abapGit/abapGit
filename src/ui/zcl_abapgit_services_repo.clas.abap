@@ -145,7 +145,9 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_offline(
       iv_url          = ls_popup-url
       iv_package      = ls_popup-package
-      iv_folder_logic = ls_popup-folder_logic ).
+      iv_folder_logic = ls_popup-folder_logic
+      iv_master_lang_only = ls_popup-master_lang_only ).
+
     lo_repo->rebuild_local_checksums( ).
 
     zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lo_repo->get_key( ) ). " Set default repo for user
@@ -166,12 +168,13 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     ENDIF.
 
     ro_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
-      iv_url          = ls_popup-url
-      iv_branch_name  = ls_popup-branch_name
-      iv_package      = ls_popup-package
-      iv_display_name = ls_popup-display_name
-      iv_folder_logic = ls_popup-folder_logic
-      iv_ign_subpkg   = ls_popup-ign_subpkg ).
+      iv_url              = ls_popup-url
+      iv_branch_name      = ls_popup-branch_name
+      iv_package          = ls_popup-package
+      iv_display_name     = ls_popup-display_name
+      iv_folder_logic     = ls_popup-folder_logic
+      iv_ign_subpkg       = ls_popup-ign_subpkg
+      iv_master_lang_only = ls_popup-master_lang_only ).
 
     toggle_favorite( ro_repo->get_key( ) ).
 
