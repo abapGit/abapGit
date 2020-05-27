@@ -31,21 +31,23 @@ INTERFACE zif_abapgit_repo_srv
     IMPORTING
       !iv_url         TYPE string
       !iv_package     TYPE devclass
-      iv_folder_logic TYPE string DEFAULT zif_abapgit_dot_abapgit=>c_folder_logic-full
+      !iv_folder_logic TYPE string DEFAULT zif_abapgit_dot_abapgit=>c_folder_logic-full
+      !iv_master_lang_only TYPE abap_bool DEFAULT abap_false
     RETURNING
       VALUE(ro_repo)  TYPE REF TO zcl_abapgit_repo_offline
     RAISING
       zcx_abapgit_exception .
   METHODS new_online
     IMPORTING
-      !iv_url          TYPE string
-      !iv_branch_name  TYPE string
-      iv_display_name  TYPE string OPTIONAL
-      !iv_package      TYPE devclass
-      !iv_folder_logic TYPE string DEFAULT 'PREFIX'
-      !iv_ign_subpkg   TYPE abap_bool DEFAULT abap_false
+      !iv_url              TYPE string
+      !iv_branch_name      TYPE string
+      iv_display_name      TYPE string OPTIONAL
+      !iv_package          TYPE devclass
+      !iv_folder_logic     TYPE string DEFAULT 'PREFIX'
+      !iv_ign_subpkg       TYPE abap_bool DEFAULT abap_false
+      !iv_master_lang_only TYPE abap_bool DEFAULT abap_false
     RETURNING
-      VALUE(ro_repo)   TYPE REF TO zcl_abapgit_repo_online
+      VALUE(ro_repo)       TYPE REF TO zcl_abapgit_repo_online
     RAISING
       zcx_abapgit_exception .
   METHODS purge
