@@ -27,11 +27,14 @@ CLASS zcl_abapgit_folder_logic DEFINITION
       RETURNING
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_folder_logic .
   PROTECTED SECTION.
+
     METHODS get_parent
       IMPORTING
         !iv_package      TYPE devclass
       RETURNING
-        VALUE(rv_parent) TYPE devclass.
+        VALUE(rv_parent) TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_devclass_info,
