@@ -70,7 +70,7 @@
   "rules": {
     "unknown_types": true,
     "forbidden_void_type": {
-      "check": ["^stringtab$", "^SYCHAR01$", "^char2$", "^char20$", "^int4$", "^flag$"]
+      "check": ["^stringtab$", "^SYCHAR01$", "^char2$", "^char20$", "^int4$", "^flag$", "^char12$", "^char10$", "^char70$", "^char4$"]
     },
     "forbidden_identifier": true,
     "try_without_catch": false,
