@@ -304,7 +304,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
 
   METHOD render_commit_popups.
 
-    DATA: lv_time    TYPE char10,
+    DATA: lv_time    TYPE c LENGTH 10,
           lv_date    TYPE sy-datum,
           lv_content TYPE string.
 
