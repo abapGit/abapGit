@@ -27,7 +27,7 @@ CLASS lcl_password_dialog DEFINITION FINAL.
 **************
 
   PUBLIC SECTION.
-    CONSTANTS c_dynnr TYPE char4 VALUE '1002'.
+    CONSTANTS c_dynnr TYPE c LENGTH 4 VALUE '1002'.
 
     CLASS-METHODS popup
       IMPORTING
