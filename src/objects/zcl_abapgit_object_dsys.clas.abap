@@ -36,8 +36,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DSYS IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA: lv_namespace TYPE NAMESPACE,
-          lv_without_namespace TYPE PROGNAME.
+    DATA: lv_namespace         TYPE namespace,
+          lv_without_namespace TYPE progname.
 
     super->constructor( is_item = is_item
                         iv_language = iv_language ).
