@@ -36,11 +36,39 @@ CLASS ZCL_ABAPGIT_OBJECT_DSYS IMPLEMENTATION.
 
   METHOD constructor.
 
+    DATA: lv_namespace TYPE NAMESPACE,
+          lv_without_namespace TYPE PROGNAME.
+
     super->constructor( is_item = is_item
                         iv_language = iv_language ).
 
-    mv_object  = ms_item-obj_name.
-    mv_dokname = mv_object+4(*).
+*   Split document name for namespace
+    CALL FUNCTION 'RS_NAME_SPLIT_NAMESPACE'
+      EXPORTING
+        name_with_namespace    = ms_item-obj_name
+      IMPORTING
+        namespace              = lv_namespace
+        name_without_namespace = lv_without_namespace
+      EXCEPTIONS
+        delimiter_error        = 1
+        OTHERS                 = 2.
+    IF sy-subrc = 0 AND lv_namespace IS NOT INITIAL.
+
+      CONCATENATE lv_without_namespace+0(4)
+                  lv_namespace
+                  lv_without_namespace+4(*)
+      INTO mv_object.
+
+      CONCATENATE lv_namespace
+                  lv_without_namespace+4(*)
+      INTO mv_dokname.
+
+    ELSE.
+
+      mv_object  = ms_item-obj_name.
+      mv_dokname = lv_without_namespace+4(*).
+
+    ENDIF.
 
   ENDMETHOD.
 
