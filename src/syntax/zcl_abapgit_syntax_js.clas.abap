@@ -134,12 +134,14 @@ CLASS ZCL_ABAPGIT_SYNTAX_JS IMPLEMENTATION.
     'scrollbars|search|selected|selectedindex|self|siblingabove|siblingbelow|src|srcelement|status|statusbar|style|' &&
     'suffixes|tags|target|text|this|title|toolbar|top|true|type|useragent|value|visibility|vlinkcolor|vspace|width|' &&
     'window|zindex'.
-    insert_keywords( iv_keywords = lv_keywords iv_token = c_token-keyword ).
+    insert_keywords( iv_keywords = lv_keywords
+                     iv_token = c_token-keyword ).
 
     " 2) Variable types
     lv_keywords =
     'array|boolean|date|function|image|layer|math|number|object|option|regexp|string'.
-    insert_keywords( iv_keywords = lv_keywords iv_token = c_token-variables ).
+    insert_keywords( iv_keywords = lv_keywords
+                     iv_token = c_token-variables ).
 
   ENDMETHOD.
 

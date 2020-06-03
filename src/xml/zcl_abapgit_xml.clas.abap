@@ -153,7 +153,8 @@ CLASS zcl_abapgit_xml IMPLEMENTATION.
     li_istream->close( ).
 
 
-    li_element = mi_xml_doc->find_from_name_ns( depth = 0 name = c_abapgit_tag ).
+    li_element = mi_xml_doc->find_from_name_ns( depth = 0
+                                                name = c_abapgit_tag ).
     li_version = li_element->if_ixml_node~get_attributes(
       )->get_named_item_ns( c_attr_version ) ##no_text.
     IF li_version->get_value( ) <> zif_abapgit_version=>gc_xml_version.

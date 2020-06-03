@@ -271,7 +271,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
         ENDIF.
 
       CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise( iv_text = 'ADT Jump Error' ix_previous = lx_error ).
+        zcx_abapgit_exception=>raise( iv_text = 'ADT Jump Error'
+                                      ix_previous = lx_error ).
     ENDTRY.
 
   ENDMETHOD.

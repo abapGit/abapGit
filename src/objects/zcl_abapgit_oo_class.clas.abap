@@ -750,7 +750,9 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
     LOOP AT lt_seocompodf ASSIGNING <ls_seocompodf>.
 
-      lv_concept = translate( val = <ls_seocompodf>-attvalue from = '''' to = '' ).
+      lv_concept = translate( val = <ls_seocompodf>-attvalue
+                              from = ''''
+                              to = '' ).
 
       CALL FUNCTION 'SOTR_GET_CONCEPT'
         EXPORTING

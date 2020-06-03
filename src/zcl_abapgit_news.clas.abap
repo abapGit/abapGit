@@ -132,7 +132,8 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
 
     lv_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_rawdata ).
     lt_lines  = zcl_abapgit_convert=>split_string( lv_string ).
-    mt_log    = parse( it_lines = lt_lines iv_current_version = mv_current_version ).
+    mt_log    = parse( it_lines = lt_lines
+                       iv_current_version = mv_current_version ).
 
     READ TABLE mt_log INTO ls_log_line INDEX 1.
     mv_latest_version = ls_log_line-version. " Empty if not found
@@ -261,7 +262,8 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
 
 
     LOOP AT it_lines ASSIGNING <lv_line>.
-      ls_log = parse_line( iv_line = <lv_line> iv_current_version = iv_current_version ).
+      ls_log = parse_line( iv_line = <lv_line>
+                           iv_current_version = iv_current_version ).
 
       " Skip until first version head and Skip empty lines
       CHECK ls_log IS NOT INITIAL AND
@@ -269,14 +271,16 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
 
       IF lv_first_version_found = abap_false.
         lv_first_version_found = abap_true.
-        IF compare_versions( iv_a = ls_log-version iv_b = iv_current_version ) <= 0.
+        IF compare_versions( iv_a = ls_log-version
+                             iv_b = iv_current_version ) <= 0.
           lv_tail = c_tail_length. " Display some last versions if no updates
         ENDIF.
       ENDIF.
 
       IF ls_log-is_header = abap_true.
         "Skip everything below current version or show tail news
-        IF compare_versions( iv_a = ls_log-version iv_b = iv_current_version ) <= 0.
+        IF compare_versions( iv_a = ls_log-version
+                             iv_b = iv_current_version ) <= 0.
           IF lv_tail > 0.
             lv_tail = lv_tail - 1.
           ELSE.
@@ -311,7 +315,8 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
       lv_version        = normalize_version( lv_version ).
       rs_log-version    = lv_version.
       rs_log-is_header  = abap_true.
-      rs_log-pos_to_cur = compare_versions( iv_a = lv_version iv_b = iv_current_version ).
+      rs_log-pos_to_cur = compare_versions( iv_a = lv_version
+                                            iv_b = iv_current_version ).
     ELSE.
       FIND FIRST OCCURRENCE OF REGEX '^\s*!' IN iv_line.
       rs_log-is_important = boolc( sy-subrc IS INITIAL ). " Change is important

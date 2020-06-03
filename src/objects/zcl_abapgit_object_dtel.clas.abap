@@ -190,7 +190,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'DD04V'
                   CHANGING cg_data = ls_dd04v ).
 
-    corr_insert( iv_package = iv_package ig_object_class = 'DICT' ).
+    corr_insert( iv_package = iv_package
+                 ig_object_class = 'DICT' ).
 
     lv_name = ms_item-obj_name. " type conversion
 

@@ -169,7 +169,8 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( is_item  =  is_item  iv_language = iv_language ).
+    super->constructor( is_item  =  is_item
+                        iv_language = iv_language ).
 
 
     " Conversion to Data model

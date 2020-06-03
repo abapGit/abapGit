@@ -148,7 +148,8 @@ CLASS ltcl_news IMPLEMENTATION.
     DATA lv_result TYPE i.
 
     " Case 1: version A > version B
-    lv_result = zcl_abapgit_news=>compare_versions( iv_a = '1.28.10' iv_b = '1.23.10' ).
+    lv_result = zcl_abapgit_news=>compare_versions( iv_a = '1.28.10'
+                                                    iv_b = '1.23.10' ).
 
     cl_abap_unit_assert=>assert_equals( exp = 1
                                         act = lv_result
@@ -157,7 +158,8 @@ CLASS ltcl_news IMPLEMENTATION.
     CLEAR: lv_result.
 
     " Case 2: version A < version B
-    lv_result = zcl_abapgit_news=>compare_versions( iv_a = '1.28.10' iv_b = '2.23.10' ).
+    lv_result = zcl_abapgit_news=>compare_versions( iv_a = '1.28.10'
+                                                    iv_b = '2.23.10' ).
 
     cl_abap_unit_assert=>assert_equals( exp = -1
                                         act = lv_result
@@ -166,7 +168,8 @@ CLASS ltcl_news IMPLEMENTATION.
     CLEAR: lv_result.
 
     " Case 3: version A = version B
-    lv_result = zcl_abapgit_news=>compare_versions( iv_a = '1.28.10' iv_b = '1.28.10' ).
+    lv_result = zcl_abapgit_news=>compare_versions( iv_a = '1.28.10'
+                                                    iv_b = '1.28.10' ).
 
     cl_abap_unit_assert=>assert_equals( exp = 0
                                         act = lv_result
@@ -217,37 +220,53 @@ CLASS ltcl_news IMPLEMENTATION.
     ls_log = zcl_abapgit_news=>parse_line(
       iv_line            = '2017-02-13 v1.28.0'
       iv_current_version = '1.26.01' ).
-    cl_abap_unit_assert=>assert_equals( act = ls_log-version    exp = '1.28.0' ).
-    cl_abap_unit_assert=>assert_equals( act = ls_log-is_header  exp = abap_true ).
-    cl_abap_unit_assert=>assert_equals( act = ls_log-pos_to_cur exp = 1 ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-version
+                                        exp = '1.28.0' ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-is_header
+                                        exp = abap_true ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-pos_to_cur
+                                        exp = 1 ).
 
     CLEAR ls_log.
     ls_log = zcl_abapgit_news=>parse_line(
       iv_line            = '2017-02-13 v1.26.0'
       iv_current_version = '1.26.01' ).
-    cl_abap_unit_assert=>assert_equals( act = ls_log-version    exp = '1.26.0' ).
-    cl_abap_unit_assert=>assert_equals( act = ls_log-is_header  exp = abap_true ).
-    cl_abap_unit_assert=>assert_equals( act = ls_log-pos_to_cur exp = -1 ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-version
+                                        exp = '1.26.0' ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-is_header
+                                        exp = abap_true ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-pos_to_cur
+                                        exp = -1 ).
 
     CLEAR ls_log.
     ls_log = zcl_abapgit_news=>parse_line(
       iv_line            = 'news'
       iv_current_version = '1.26.01' ).
-    cl_abap_unit_assert=>assert_equals( act = ls_log-version      exp = '' ).
-    cl_abap_unit_assert=>assert_equals( act = ls_log-is_header    exp = abap_false ).
-    cl_abap_unit_assert=>assert_equals( act = ls_log-pos_to_cur   exp = 0 ).
-    cl_abap_unit_assert=>assert_equals( act = ls_log-is_important exp = abap_false ).
-    cl_abap_unit_assert=>assert_equals( act = ls_log-text         exp = 'news' ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-version
+                                        exp = '' ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-is_header
+                                        exp = abap_false ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-pos_to_cur
+                                        exp = 0 ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-is_important
+                                        exp = abap_false ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-text
+                                        exp = 'news' ).
 
     CLEAR ls_log.
     ls_log = zcl_abapgit_news=>parse_line(
       iv_line            = ' ! important news'
       iv_current_version = '1.26.01' ).
-    cl_abap_unit_assert=>assert_equals( act = ls_log-version      exp = '' ).
-    cl_abap_unit_assert=>assert_equals( act = ls_log-is_header    exp = abap_false ).
-    cl_abap_unit_assert=>assert_equals( act = ls_log-pos_to_cur   exp = 0 ).
-    cl_abap_unit_assert=>assert_equals( act = ls_log-is_important exp = abap_true ).
-    cl_abap_unit_assert=>assert_equals( act = ls_log-text         exp = ' ! important news' ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-version
+                                        exp = '' ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-is_header
+                                        exp = abap_false ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-pos_to_cur
+                                        exp = 0 ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-is_important
+                                        exp = abap_true ).
+    cl_abap_unit_assert=>assert_equals( act = ls_log-text
+                                        exp = ' ! important news' ).
 
   ENDMETHOD.
 
