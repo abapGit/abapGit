@@ -6,7 +6,7 @@ order: 20
 
 
 ### Manually
-Copy the code from [zabapgit.abap](https://raw.githubusercontent.com/abapGit/build/master/zabapgit.abap) into the ZABAPGIT report
+Upload the code from [zabapgit.abap](https://raw.githubusercontent.com/abapGit/build/master/zabapgit.abap) into the ZABAPGIT_FULL report.
 
 ### Online project
 If the abapGit report is installed in a separate package(eg. $ABAPGIT), a online project can be created. Which will help updating the abapGit code, a "pull" link will appear under the project when there are updates to abapGit.
