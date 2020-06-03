@@ -43,11 +43,11 @@ CLASS zcl_abapgit_object_dsys IMPLEMENTATION.
 
   METHOD constructor.
 
-    super->constructor( is_item = is_item
-                        iv_language = iv_language ).
-
     DATA: lv_prefix    TYPE namespace,
           lv_bare_name TYPE progname.
+
+    super->constructor( is_item = is_item
+                        iv_language = iv_language ).
 
     CALL FUNCTION 'RS_NAME_SPLIT_NAMESPACE'
       EXPORTING
