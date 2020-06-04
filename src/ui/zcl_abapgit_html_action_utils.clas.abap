@@ -140,8 +140,10 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
     lt_fields = parse_fields_upper_case_name( cl_http_utility=>unescape_url( |{ iv_string }| ) ).
 
-    get_field( EXPORTING iv_name = 'TYPE'  it_field = lt_fields CHANGING cg_field = rs_key-type ).
-    get_field( EXPORTING iv_name = 'VALUE' it_field = lt_fields CHANGING cg_field = rs_key-value ).
+    get_field( EXPORTING iv_name = 'TYPE'
+                         it_field = lt_fields CHANGING cg_field = rs_key-type ).
+    get_field( EXPORTING iv_name = 'VALUE'
+                         it_field = lt_fields CHANGING cg_field = rs_key-value ).
 
   ENDMETHOD.
 
@@ -150,8 +152,10 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
     DATA: lt_fields TYPE tihttpnvp.
 
-    add_field( EXPORTING iv_name = 'TYPE'  ig_field = is_key-type CHANGING ct_field = lt_fields ).
-    add_field( EXPORTING iv_name = 'VALUE' ig_field = is_key-value CHANGING ct_field = lt_fields ).
+    add_field( EXPORTING iv_name = 'TYPE'
+                         ig_field = is_key-type CHANGING ct_field = lt_fields ).
+    add_field( EXPORTING iv_name = 'VALUE'
+                         ig_field = is_key-value CHANGING ct_field = lt_fields ).
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
@@ -163,7 +167,8 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
     DATA: lt_fields TYPE tihttpnvp.
 
     lt_fields = parse_fields( iv_string ).
-    get_field( EXPORTING iv_name = 'PATH' it_field = lt_fields CHANGING cg_field = rv_path ).
+    get_field( EXPORTING iv_name = 'PATH'
+                         it_field = lt_fields CHANGING cg_field = rv_path ).
 
   ENDMETHOD.
 
@@ -171,7 +176,8 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
   METHOD dir_encode.
 
     DATA: lt_fields TYPE tihttpnvp.
-    add_field( EXPORTING iv_name = 'PATH' ig_field = iv_path CHANGING ct_field = lt_fields ).
+    add_field( EXPORTING iv_name = 'PATH'
+                         ig_field = iv_path CHANGING ct_field = lt_fields ).
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
   ENDMETHOD.
@@ -193,9 +199,12 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
     DATA: lt_fields TYPE tihttpnvp.
 
 
-    add_field( EXPORTING iv_name = 'KEY'      ig_field = iv_key CHANGING ct_field = lt_fields ).
-    add_field( EXPORTING iv_name = 'PATH'     ig_field = ig_file CHANGING ct_field = lt_fields ).
-    add_field( EXPORTING iv_name = 'FILENAME' ig_field = ig_file CHANGING ct_field = lt_fields ).
+    add_field( EXPORTING iv_name = 'KEY'
+                         ig_field = iv_key CHANGING ct_field = lt_fields ).
+    add_field( EXPORTING iv_name = 'PATH'
+                         ig_field = ig_file CHANGING ct_field = lt_fields ).
+    add_field( EXPORTING iv_name = 'FILENAME'
+                         ig_field = ig_file CHANGING ct_field = lt_fields ).
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
@@ -211,17 +220,24 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
     CLEAR: ev_key, eg_file, eg_object.
     lt_fields = parse_fields_upper_case_name( iv_string ).
 
-    get_field( EXPORTING iv_name = 'KEY'      it_field = lt_fields CHANGING cg_field = ev_key ).
+    get_field( EXPORTING iv_name = 'KEY'
+                         it_field = lt_fields CHANGING cg_field = ev_key ).
 
     IF eg_file IS SUPPLIED.
-      get_field( EXPORTING iv_name = 'PATH'     it_field = lt_fields CHANGING cg_field = eg_file ).
-      get_field( EXPORTING iv_name = 'FILENAME' it_field = lt_fields iv_decode = abap_true
+      get_field( EXPORTING iv_name = 'PATH'
+                           it_field = lt_fields CHANGING cg_field = eg_file ).
+      get_field( EXPORTING iv_name = 'FILENAME'
+                           it_field = lt_fields
+                           iv_decode = abap_true
                  CHANGING cg_field = eg_file  ).
     ENDIF.
 
     IF eg_object IS SUPPLIED.
-      get_field( EXPORTING iv_name = 'OBJ_TYPE' it_field = lt_fields CHANGING cg_field = eg_object ).
-      get_field( EXPORTING iv_name = 'OBJ_NAME' it_field = lt_fields iv_decode = abap_true
+      get_field( EXPORTING iv_name = 'OBJ_TYPE'
+                           it_field = lt_fields CHANGING cg_field = eg_object ).
+      get_field( EXPORTING iv_name = 'OBJ_NAME'
+                           it_field = lt_fields
+                           iv_decode = abap_true
                  CHANGING cg_field = eg_object ).
     ENDIF.
 
@@ -267,8 +283,10 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
     lt_fields = parse_fields( iv_string ).
 
-    get_field( EXPORTING iv_name = 'TYPE' it_field = lt_fields CHANGING cg_field = ev_obj_type ).
-    get_field( EXPORTING iv_name = 'NAME' it_field = lt_fields CHANGING cg_field = ev_obj_name ).
+    get_field( EXPORTING iv_name = 'TYPE'
+                         it_field = lt_fields CHANGING cg_field = ev_obj_type ).
+    get_field( EXPORTING iv_name = 'NAME'
+                         it_field = lt_fields CHANGING cg_field = ev_obj_name ).
 
   ENDMETHOD.
 
@@ -278,8 +296,10 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
     DATA: lt_fields TYPE tihttpnvp.
 
 
-    add_field( EXPORTING iv_name = 'TYPE' ig_field = iv_obj_type CHANGING ct_field = lt_fields ).
-    add_field( EXPORTING iv_name = 'NAME' ig_field = iv_obj_name CHANGING ct_field = lt_fields ).
+    add_field( EXPORTING iv_name = 'TYPE'
+                         ig_field = iv_obj_type CHANGING ct_field = lt_fields ).
+    add_field( EXPORTING iv_name = 'NAME'
+                         ig_field = iv_obj_name CHANGING ct_field = lt_fields ).
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
@@ -291,9 +311,12 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
     DATA: lt_fields TYPE tihttpnvp.
 
 
-    add_field( EXPORTING iv_name = 'KEY'      ig_field = iv_key CHANGING ct_field = lt_fields ).
-    add_field( EXPORTING iv_name = 'OBJ_TYPE' ig_field = ig_object CHANGING ct_field = lt_fields ).
-    add_field( EXPORTING iv_name = 'OBJ_NAME' ig_field = ig_object CHANGING ct_field = lt_fields ).
+    add_field( EXPORTING iv_name = 'KEY'
+                         ig_field = iv_key CHANGING ct_field = lt_fields ).
+    add_field( EXPORTING iv_name = 'OBJ_TYPE'
+                         ig_field = ig_object CHANGING ct_field = lt_fields ).
+    add_field( EXPORTING iv_name = 'OBJ_NAME'
+                         ig_field = ig_object CHANGING ct_field = lt_fields ).
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
 
@@ -343,8 +366,10 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
     lt_fields = parse_fields_upper_case_name( iv_getdata ).
 
-    get_field( EXPORTING iv_name = 'KEY'  it_field = lt_fields CHANGING cg_field = ev_key ).
-    get_field( EXPORTING iv_name = 'SEED' it_field = lt_fields CHANGING cg_field = ev_seed ).
+    get_field( EXPORTING iv_name = 'KEY'
+                         it_field = lt_fields CHANGING cg_field = ev_key ).
+    get_field( EXPORTING iv_name = 'SEED'
+                         it_field = lt_fields CHANGING cg_field = ev_seed ).
 
     ASSERT NOT ev_key IS INITIAL.
 

@@ -207,7 +207,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_COMPAR IMPLEMENTATION.
           lv_inconsistent = abap_true.
         ENDIF.
       ELSE.
-        ii_log->add_info( iv_msg = |Field { ls_previous_table_field-fieldname } removed| is_item = ls_item ).
+        ii_log->add_info( iv_msg = |Field { ls_previous_table_field-fieldname } removed|
+                          is_item = ls_item ).
         lv_inconsistent = abap_true.
       ENDIF.
     ENDLOOP.

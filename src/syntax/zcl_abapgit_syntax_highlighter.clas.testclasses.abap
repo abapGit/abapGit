@@ -159,7 +159,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 39
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line iv_filename = '*.abap' ).
+    do_test( iv_line = lv_line
+             iv_filename = '*.abap' ).
 
   ENDMETHOD.
 
@@ -208,7 +209,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 8
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line iv_filename = '*.abap' ).
+    do_test( iv_line = lv_line
+             iv_filename = '*.abap' ).
 
   ENDMETHOD.
 
@@ -287,7 +289,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 11
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line iv_filename = '*.abap' ).
+    do_test( iv_line = lv_line
+             iv_filename = '*.abap' ).
 
   ENDMETHOD.
 
@@ -372,7 +375,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 1
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line iv_filename = '*.abap' ).
+    do_test( iv_line = lv_line
+             iv_filename = '*.abap' ).
 
   ENDMETHOD.
 
@@ -464,7 +468,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 1
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line iv_filename = '*.abap' ).
+    do_test( iv_line = lv_line
+             iv_filename = '*.abap' ).
 
   ENDMETHOD.
 
@@ -621,7 +626,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 1
                      iv_text_tag = '}' ).
 
-    do_test( iv_line = lv_line iv_filename = '*.abap' ).
+    do_test( iv_line = lv_line
+             iv_filename = '*.abap' ).
 
   ENDMETHOD.
 
@@ -671,7 +677,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 4
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line iv_filename = '*.abap' ).
+    do_test( iv_line = lv_line
+             iv_filename = '*.abap' ).
 
   ENDMETHOD.
 
@@ -698,7 +705,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 27
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line iv_filename = '*.abap' ).
+    do_test( iv_line = lv_line
+             iv_filename = '*.abap' ).
 
   ENDMETHOD.
 
@@ -750,7 +758,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 6
                      iv_text_tag = '<' ).
 
-    do_test( iv_line = lv_line iv_filename = '*.xml' ).
+    do_test( iv_line = lv_line
+             iv_filename = '*.xml' ).
 
   ENDMETHOD.
 
@@ -779,7 +788,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 6
                      iv_text_tag = '<' ).
 
-    do_test( iv_line = lv_line iv_filename = '*.xml' ).
+    do_test( iv_line = lv_line
+             iv_filename = '*.xml' ).
 
   ENDMETHOD.
 
@@ -843,7 +853,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 2
                      iv_text_tag = '>' ).
 
-    do_test( iv_line = lv_line iv_filename = '*.xml' ).
+    do_test( iv_line = lv_line
+             iv_filename = '*.xml' ).
 
   ENDMETHOD.
 
@@ -907,7 +918,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 2
                      iv_text_tag = '>' ).
 
-    do_test( iv_line = lv_line iv_filename = '*.xml' ).
+    do_test( iv_line = lv_line
+             iv_filename = '*.xml' ).
 
   ENDMETHOD.
 
@@ -1018,7 +1030,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 9
                      iv_text_tag = '<' ).
 
-    do_test( iv_line = lv_line iv_filename = '*.xml' ).
+    do_test( iv_line = lv_line
+             iv_filename = '*.xml' ).
 
   ENDMETHOD.
 
@@ -1071,7 +1084,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 4
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line iv_filename = '*.xml' ).
+    do_test( iv_line = lv_line
+             iv_filename = '*.xml' ).
   ENDMETHOD.
 
   METHOD test_xml_07.
@@ -1135,7 +1149,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 2
                      iv_text_tag = '>' ).
 
-    do_test( iv_line = lv_line iv_filename = '*.xml' ).
+    do_test( iv_line = lv_line
+             iv_filename = '*.xml' ).
 
 
   ENDMETHOD.
@@ -1180,7 +1195,8 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
                      iv_length   = 5
                      iv_text_tag = '' ).
 
-    do_test( iv_line = lv_line iv_filename = '*.xml' ).
+    do_test( iv_line = lv_line
+             iv_filename = '*.xml' ).
 
   ENDMETHOD.
 

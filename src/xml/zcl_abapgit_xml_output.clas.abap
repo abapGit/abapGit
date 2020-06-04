@@ -150,7 +150,8 @@ CLASS ZCL_ABAPGIT_XML_OUTPUT IMPLEMENTATION.
     ENDIF.
 
     li_git = mi_xml_doc->create_element( c_abapgit_tag ).
-    li_git->set_attribute( name = c_attr_version value = zif_abapgit_version=>gc_xml_version ).
+    li_git->set_attribute( name = c_attr_version
+                           value = zif_abapgit_version=>gc_xml_version ).
     IF NOT is_metadata IS INITIAL.
       li_git->set_attribute( name  = c_attr_serializer
                              value = is_metadata-class ).

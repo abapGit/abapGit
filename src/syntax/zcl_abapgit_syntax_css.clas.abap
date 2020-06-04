@@ -197,27 +197,31 @@ CLASS ZCL_ABAPGIT_SYNTAX_CSS IMPLEMENTATION.
     'transform|transform-origin|transform-style|transition|transition-delay|transition-duration|' &&
     'transition-property|transition-timing-function|unicode-bidi|user-select|vertical-align|visibility|' &&
     'white-space|width|word-break|word-spacing|word-wrap|writing-mode|z-index'.
-    insert_keywords( iv_keywords = lv_keywords iv_token = c_token-properties ).
+    insert_keywords( iv_keywords = lv_keywords
+                     iv_token = c_token-properties ).
 
     " 2) CSS Values
     lv_keywords =
     'absolute|all|auto|block|bold|border-box|both|bottom|center|counter|cover|dashed|fixed|hidden|important|' &&
     'inherit|initial|inline-block|italic|left|max-content|middle|min-content|no-repeat|none|normal|pointer|' &&
     'relative|rem|right|solid|table-cell|text|top|transparent|underline|url'.
-    insert_keywords( iv_keywords = lv_keywords iv_token = c_token-values ).
+    insert_keywords( iv_keywords = lv_keywords
+                     iv_token = c_token-values ).
 
     " 3) CSS Selectors
     lv_keywords =
     ':active|::after|::before|:checked|:disabled|:empty|:enabled|:first-child|::first-letter|::first-line|' &&
     ':first-of-type|:focus|:hover|:lang|:last-child|:last-of-type|:link|:not|:nth-child|:nth-last-child|' &&
     ':nth-last-of-type|:nth-of-type|:only-child|:only-of-type|:root|:target|:visited'.
-    insert_keywords( iv_keywords = lv_keywords iv_token = c_token-selectors ).
+    insert_keywords( iv_keywords = lv_keywords
+                     iv_token = c_token-selectors ).
 
     " 4) CSS Functions
     lv_keywords =
     'attr|calc|cubic-bezier|hsl|hsla|linear-gradient|radial-gradient|repeating-linear-gradient|' &&
     'repeating-radial-gradient|rgb|rgba|rotate|scale|translateX|translateY|var'.
-    insert_keywords( iv_keywords = lv_keywords iv_token = c_token-functions ).
+    insert_keywords( iv_keywords = lv_keywords
+                     iv_token = c_token-functions ).
 
     " 5) CSS Colors
     lv_keywords =
@@ -236,7 +240,8 @@ CLASS ZCL_ABAPGIT_SYNTAX_CSS IMPLEMENTATION.
     'peru|pink|plum|powderblue|purple|rebeccapurple|red|rosybrown|royalblue|saddlebrown|salmon|sandybrown|' &&
     'seagreen|seashell|sienna|silver|skyblue|slateblue|slategray|slategrey|snow|springgreen|steelblue|' &&
     'tan|teal|thistle|tomato|turquoise|violet|wheat|white|whitesmoke|yellow|yellowgreen'.
-    insert_keywords( iv_keywords = lv_keywords iv_token = c_token-colors ).
+    insert_keywords( iv_keywords = lv_keywords
+                     iv_token = c_token-colors ).
 
     " 6) CSS Extensions
     lv_keywords =
@@ -296,12 +301,14 @@ CLASS ZCL_ABAPGIT_SYNTAX_CSS IMPLEMENTATION.
     'webkit-transform-origin-y|webkit-transform-origin-z|webkit-transition|' &&
     'webkit-transition-delay|webkit-user-drag|webkit-user-modify|overflow-clip-box|' &&
     'overflow-clip-box-block|overflow-clip-box-inline|zoom'.
-    insert_keywords( iv_keywords = lv_keywords iv_token = c_token-extensions ).
+    insert_keywords( iv_keywords = lv_keywords
+                     iv_token = c_token-extensions ).
 
     " 6) CSS At-Rules
     lv_keywords =
     '@|charset|counter-style|font-face|import|keyframes'.
-    insert_keywords( iv_keywords = lv_keywords iv_token = c_token-at_rules ).
+    insert_keywords( iv_keywords = lv_keywords
+                     iv_token = c_token-at_rules ).
 
     " 7) HTML tage
     lv_keywords =
@@ -324,7 +331,8 @@ CLASS ZCL_ABAPGIT_SYNTAX_CSS IMPLEMENTATION.
     'entity-ref|eval|expr|for-each|if|match|no-entities|node-name|order-by|otherwise|select|' &&
     'stylesheet|template|test|value-of|version|when|xmlns|xsl|cellpadding|cellspacing|table|td|' &&
     'tfoot|th|thead|tr'.
-    insert_keywords( iv_keywords = lv_keywords iv_token = c_token-html ).
+    insert_keywords( iv_keywords = lv_keywords
+                     iv_token = c_token-html ).
 
   ENDMETHOD.
 
