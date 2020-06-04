@@ -495,7 +495,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
       io_xml->read( EXPORTING iv_name = 'DD36M'
                     CHANGING cg_data = lt_dd36m ).
 
-      corr_insert( iv_package = iv_package ig_object_class = 'DICT' ).
+      corr_insert( iv_package = iv_package
+                   ig_object_class = 'DICT' ).
 
       lv_name = ms_item-obj_name. " type conversion
 

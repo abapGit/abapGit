@@ -517,7 +517,8 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     ENDIF.
 
     IF lines( lt_class ) > 0.
-      rv_html = | class="{ concat_lines_of( table = lt_class sep = ` ` ) }"|.
+      rv_html = | class="{ concat_lines_of( table = lt_class
+                                            sep = ` ` ) }"|.
     ENDIF.
 
   ENDMETHOD.
@@ -627,7 +628,8 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     DATA lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
 
     CREATE OBJECT ro_html.
-    lo_toolbar = build_head_menu( iv_lstate = iv_lstate iv_rstate = iv_rstate ).
+    lo_toolbar = build_head_menu( iv_lstate = iv_lstate
+                                  iv_rstate = iv_rstate ).
 
     ro_html->add( '<div class="paddings">' ).
     ro_html->add( '<table class="w100"><tr>' ).
@@ -874,7 +876,8 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-change_dir.        " Change dir
         lv_path         = zcl_abapgit_html_action_utils=>dir_decode( iv_getdata ).
-        mv_cur_dir      = zcl_abapgit_path=>change_dir( iv_cur_dir = mv_cur_dir iv_cd = lv_path ).
+        mv_cur_dir      = zcl_abapgit_path=>change_dir( iv_cur_dir = mv_cur_dir
+                                                        iv_cd = lv_path ).
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-toggle_folders.    " Toggle folder view
         mv_show_folders = boolc( mv_show_folders <> abap_true ).
@@ -994,7 +997,8 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
               lv_max = abap_true.
               EXIT. " current loop
             ENDIF.
-            ri_html->add( render_item( is_item = <ls_item> iv_render_transports = lv_render_transports ) ).
+            ri_html->add( render_item( is_item = <ls_item>
+                                       iv_render_transports = lv_render_transports ) ).
           ENDLOOP.
         ENDIF.
 
@@ -1009,9 +1013,11 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
           ENDIF.
           lv_add_str = |+{ mv_max_setting }|.
           ri_html->add( |Only { lv_max_str } shown in list. Display {
-            zcl_abapgit_html=>a( iv_txt = lv_add_str iv_act = c_actions-display_more )
+            zcl_abapgit_html=>a( iv_txt = lv_add_str
+                                 iv_act = c_actions-display_more )
             } more. (Set in Advanced > {
-            zcl_abapgit_html=>a( iv_txt = 'Settings' iv_act = zif_abapgit_definitions=>c_action-go_settings )
+            zcl_abapgit_html=>a( iv_txt = 'Settings'
+                                 iv_act = zif_abapgit_definitions=>c_action-go_settings )
             } )| ).
           ri_html->add( '</div>' ).
         ENDIF.
@@ -1019,7 +1025,8 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
         ri_html->add( '</div>' ).
 
       CATCH zcx_abapgit_exception INTO lx_error.
-        ri_html->add( render_head_line( iv_lstate = lv_lstate iv_rstate = lv_rstate ) ).
+        ri_html->add( render_head_line( iv_lstate = lv_lstate
+                                        iv_rstate = lv_rstate ) ).
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
     ENDTRY.
 

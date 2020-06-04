@@ -163,7 +163,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
         lv_class = 'ci-info'.
     ENDCASE.
 
-    lv_msg = escape( val = is_result-text format = cl_abap_format=>e_html_attr ).
+    lv_msg = escape( val = is_result-text
+                     format = cl_abap_format=>e_html_attr ).
 
     IF is_result-sobjname IS INITIAL OR
        ( is_result-sobjname = is_result-objname AND

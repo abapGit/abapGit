@@ -107,7 +107,8 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'DD28V_TABLE'
                   CHANGING cg_data = lt_dd28v ).
 
-    corr_insert( iv_package = iv_package ig_object_class = 'DICT' ).
+    corr_insert( iv_package = iv_package
+                 ig_object_class = 'DICT' ).
 
     lv_name = ms_item-obj_name. " type conversion
 

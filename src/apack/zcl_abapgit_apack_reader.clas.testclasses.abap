@@ -30,9 +30,12 @@ CLASS ltcl_apack_manifest_reader IMPLEMENTATION.
 
   METHOD verify_own_descriptor.
     cl_abap_unit_assert=>assert_not_initial( is_manifest_descriptor ).
-    cl_abap_unit_assert=>assert_equals( exp = 'github.com/larshp' act = is_manifest_descriptor-group_id ).
-    cl_abap_unit_assert=>assert_equals( exp = 'abapGit' act = is_manifest_descriptor-artifact_id ).
-    cl_abap_unit_assert=>assert_equals( exp = '1.42' act = is_manifest_descriptor-version ).
+    cl_abap_unit_assert=>assert_equals( exp = 'github.com/larshp'
+                                        act = is_manifest_descriptor-group_id ).
+    cl_abap_unit_assert=>assert_equals( exp = 'abapGit'
+                                        act = is_manifest_descriptor-artifact_id ).
+    cl_abap_unit_assert=>assert_equals( exp = '1.42'
+                                        act = is_manifest_descriptor-version ).
     " Repository type is added automatically by serializer later
     cl_abap_unit_assert=>assert_initial( is_manifest_descriptor-repository_type ).
     cl_abap_unit_assert=>assert_equals( exp = 'https://github.com/larshp/abapGit.git'

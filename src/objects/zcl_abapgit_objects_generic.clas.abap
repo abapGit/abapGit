@@ -331,7 +331,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
 
 *      Some datatype used in the key might exceed the total remaining characters length (e. g. SICF)
       TRY.
-          lv_remaining_length = strlen( |{ substring( val = cs_objkey-value off = lv_objkey_sub_pos ) }| ).
+          lv_remaining_length = strlen( |{ substring( val = cs_objkey-value
+                                                      off = lv_objkey_sub_pos ) }| ).
         CATCH cx_sy_range_out_of_bounds.
           lv_remaining_length = 0.
           RETURN. ">>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -342,7 +343,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
         lv_len = lv_remaining_length.
       ENDIF.
 
-      ls_objkey_sub-value = |{ substring( val = cs_objkey-value off = lv_objkey_sub_pos len = lv_len ) }|.
+      ls_objkey_sub-value = |{ substring( val = cs_objkey-value
+                                          off = lv_objkey_sub_pos
+                                          len = lv_len ) }|.
       ls_objkey_sub-num = cv_non_value_pos.
 
       INSERT ls_objkey_sub INTO TABLE ct_objkey.

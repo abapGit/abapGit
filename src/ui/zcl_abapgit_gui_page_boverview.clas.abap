@@ -211,7 +211,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
         iv_act = c_actions-compress ) ##NO_TEXT.
     ENDIF.
 
-    ro_menu->add( iv_txt = 'Refresh' iv_act = c_actions-refresh ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'Refresh'
+                  iv_act = c_actions-refresh ) ##NO_TEXT.
 
   ENDMETHOD.
 
@@ -304,7 +305,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
 
   METHOD render_commit_popups.
 
-    DATA: lv_time    TYPE char10,
+    DATA: lv_time    TYPE c LENGTH 10,
           lv_date    TYPE sy-datum,
           lv_content TYPE string.
 
