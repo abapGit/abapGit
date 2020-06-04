@@ -163,7 +163,9 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
 
     IF sy-subrc = 0.
       LOOP AT lt_seocompodf ASSIGNING <ls_seocompodf>.
-        lv_concept = translate( val = <ls_seocompodf>-attvalue from = '''' to = '' ).
+        lv_concept = translate( val = <ls_seocompodf>-attvalue
+                                from = ''''
+                                to = '' ).
         rt_sotr = get_sotr_4_concept( lv_concept ).
       ENDLOOP.
     ENDIF.
@@ -191,7 +193,9 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
         OTHERS         = 3.
     IF sy-subrc = 0.
       LOOP AT lt_sotr_use ASSIGNING <ls_sotr_use>.
-        lv_concept = translate( val = <ls_sotr_use>-concept from = '''' to = '' ).
+        lv_concept = translate( val = <ls_sotr_use>-concept
+                                from = ''''
+                                to = '' ).
         rt_sotr = get_sotr_4_concept( lv_concept ).
       ENDLOOP.
     ENDIF.
