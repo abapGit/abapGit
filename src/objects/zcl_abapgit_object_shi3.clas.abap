@@ -62,7 +62,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
 
 
   METHOD constructor.
-    super->constructor( is_item = is_item iv_language = iv_language ).
+    super->constructor( is_item = is_item
+                        iv_language = iv_language ).
     mv_tree_id = ms_item-obj_name.
   ENDMETHOD.
 

@@ -129,7 +129,8 @@ CLASS ZCL_ABAPGIT_GUI_CSS_PROCESSOR IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
 
-    rv_result = concat_lines_of( table = lt_contents sep = cl_abap_char_utilities=>newline ).
+    rv_result = concat_lines_of( table = lt_contents
+                                 sep = cl_abap_char_utilities=>newline ).
   ENDMETHOD.
 
 

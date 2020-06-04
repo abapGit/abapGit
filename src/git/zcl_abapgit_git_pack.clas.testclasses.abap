@@ -326,7 +326,8 @@ CLASS ltcl_pack IMPLEMENTATION.
 * blob
     lv_data = lc_data.
     CLEAR ls_object.
-    ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob iv_data = lv_data ).
+    ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
+                                             iv_data = lv_data ).
     ls_object-type = zif_abapgit_definitions=>c_type-blob.
     ls_object-data = lv_data.
     ls_object-index = 1.
@@ -342,7 +343,8 @@ CLASS ltcl_pack IMPLEMENTATION.
     ls_commit-body      = 'body'.
     lv_data = zcl_abapgit_git_pack=>encode_commit( ls_commit ).
     CLEAR ls_object.
-    ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-commit iv_data = lv_data ).
+    ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-commit
+                                             iv_data = lv_data ).
     ls_object-type = zif_abapgit_definitions=>c_type-commit.
     ls_object-data = lv_data.
     ls_object-index = 2.
@@ -357,7 +359,8 @@ CLASS ltcl_pack IMPLEMENTATION.
     APPEND ls_node TO lt_nodes.
     lv_data = zcl_abapgit_git_pack=>encode_tree( lt_nodes ).
     CLEAR ls_object.
-    ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-tree iv_data = lv_data ).
+    ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-tree
+                                             iv_data = lv_data ).
     ls_object-type = zif_abapgit_definitions=>c_type-tree.
     ls_object-data = lv_data.
     ls_object-index = 3.
