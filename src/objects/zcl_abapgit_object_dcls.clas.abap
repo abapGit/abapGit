@@ -213,7 +213,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DCLS IMPLEMENTATION.
         ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <lg_data> TO <lg_field>.
         ASSERT sy-subrc = 0.
 
-        mo_files->add_string( iv_ext = 'asdcls'  iv_string = <lg_field> ).
+        mo_files->add_string( iv_ext = 'asdcls'
+                              iv_string = <lg_field> ).
 
         CLEAR <lg_field>.
 

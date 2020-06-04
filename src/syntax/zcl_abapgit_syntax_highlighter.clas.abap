@@ -103,7 +103,8 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
 
     DATA lv_escaped TYPE string.
 
-    lv_escaped = escape( val = iv_line  format = cl_abap_format=>e_html_attr ).
+    lv_escaped = escape( val = iv_line
+                         format = cl_abap_format=>e_html_attr ).
     IF iv_class IS NOT INITIAL.
       rv_line = |<span class="{ iv_class }">{ lv_escaped }</span>|.
     ELSE.
@@ -179,7 +180,9 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
     FIELD-SYMBOLS <ls_match> TYPE ty_match.
 
     LOOP AT it_matches ASSIGNING <ls_match>.
-      lv_chunk = substring( val = iv_line off = <ls_match>-offset len = <ls_match>-length ).
+      lv_chunk = substring( val = iv_line
+                            off = <ls_match>-offset
+                            len = <ls_match>-length ).
 
       CLEAR ls_rule. " Failed read equals no style
       READ TABLE mt_rules INTO ls_rule WITH KEY token = <ls_match>-token.

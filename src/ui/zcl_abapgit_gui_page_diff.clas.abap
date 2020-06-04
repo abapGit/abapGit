@@ -219,7 +219,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
       " File types
       IF lines( lt_types ) > 1.
-        lo_sub_filter->add( iv_txt = 'TYPE' iv_typ = zif_abapgit_html=>c_action_type-separator ).
+        lo_sub_filter->add( iv_txt = 'TYPE'
+                            iv_typ = zif_abapgit_html=>c_action_type-separator ).
         LOOP AT lt_types ASSIGNING <lv_i>.
           lo_sub_filter->add( iv_txt = <lv_i>
                        iv_typ = zif_abapgit_html=>c_action_type-onclick
@@ -230,7 +231,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
       " Changed by
       IF lines( lt_users ) > 1.
-        lo_sub_filter->add( iv_txt = 'CHANGED BY' iv_typ = zif_abapgit_html=>c_action_type-separator ).
+        lo_sub_filter->add( iv_txt = 'CHANGED BY'
+                            iv_typ = zif_abapgit_html=>c_action_type-separator ).
         LOOP AT lt_users ASSIGNING <lv_i>.
           lo_sub_filter->add( iv_txt = <lv_i>
                        iv_typ = zif_abapgit_html=>c_action_type-onclick
@@ -346,13 +348,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ENDIF.
 
     FIND FIRST OCCURRENCE OF '.' IN <ls_diff>-type MATCH OFFSET lv_offs.
-    <ls_diff>-type = reverse( substring( val = <ls_diff>-type len = lv_offs ) ).
+    <ls_diff>-type = reverse( substring( val = <ls_diff>-type
+                                         len = lv_offs ) ).
     IF <ls_diff>-type <> 'xml' AND <ls_diff>-type <> 'abap'.
       <ls_diff>-type = 'other'.
     ENDIF.
 
     IF <ls_diff>-type = 'other'
-       AND is_binary( iv_d1 = <ls_remote>-data iv_d2 = <ls_local>-file-data ) = abap_true.
+       AND is_binary( iv_d1 = <ls_remote>-data
+                      iv_d2 = <ls_local>-file-data ) = abap_true.
       <ls_diff>-type = 'binary'.
     ENDIF.
 
@@ -705,7 +709,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       ENDIF.
 
       IF lv_insert_nav = abap_true. " Insert separator line with navigation
-        ro_html->add( render_beacon( is_diff_line = <ls_diff> is_diff = is_diff ) ).
+        ro_html->add( render_beacon( is_diff_line = <ls_diff>
+                                     is_diff = is_diff ) ).
         lv_insert_nav = abap_false.
       ENDIF.
 
@@ -713,8 +718,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
         <ls_diff>-new = lo_highlighter->process_line( <ls_diff>-new ).
         <ls_diff>-old = lo_highlighter->process_line( <ls_diff>-old ).
       ELSE.
-        <ls_diff>-new = escape( val = <ls_diff>-new format = cl_abap_format=>e_html_attr ).
-        <ls_diff>-old = escape( val = <ls_diff>-old format = cl_abap_format=>e_html_attr ).
+        <ls_diff>-new = escape( val = <ls_diff>-new
+                                format = cl_abap_format=>e_html_attr ).
+        <ls_diff>-old = escape( val = <ls_diff>-old
+                                format = cl_abap_format=>e_html_attr ).
       ENDIF.
 
       CONDENSE <ls_diff>-new_num. "get rid of leading spaces

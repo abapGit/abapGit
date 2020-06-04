@@ -65,9 +65,11 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
     ls_answer-value = 'TEST'.
     APPEND ls_answer TO lt_fields.
 
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'NAME' it_field = lt_fields
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'NAME'
+                                                        it_field = lt_fields
                                       CHANGING  cg_field   = ls_field-value ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'NAME' it_field = lt_fields
+    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'NAME'
+                                                        it_field = lt_fields
                                       CHANGING  cg_field   = ls_field ).
 
     ls_answer-name  = 'TEST'.
@@ -85,7 +87,9 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
     _when_fields_are_parsed( ).
 
-    _then_fields_should_be( iv_index = 1 iv_name = `COMMITTER_NAME` iv_value = `Gustav Gans` ).
+    _then_fields_should_be( iv_index = 1
+                            iv_name = `COMMITTER_NAME`
+                            iv_value = `Gustav Gans` ).
 
   ENDMETHOD.
 

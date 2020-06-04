@@ -28,8 +28,10 @@ CLASS ltcl_abapgit_gui_asset_manager IMPLEMENTATION.
 
     ls_asset = lo_assetman->zif_abapgit_gui_asset_manager~get_asset( 'css/common.css' ).
 
-    cl_abap_unit_assert=>assert_equals( act = ls_asset-type    exp = 'text' ).
-    cl_abap_unit_assert=>assert_equals( act = ls_asset-subtype exp = 'css' ).
+    cl_abap_unit_assert=>assert_equals( act = ls_asset-type
+                                        exp = 'text' ).
+    cl_abap_unit_assert=>assert_equals( act = ls_asset-subtype
+                                        exp = 'css' ).
     cl_abap_unit_assert=>assert_equals(
       act = zcl_abapgit_convert=>xstring_to_string_utf8( ls_asset-content )
       exp = 'ABC' ).
