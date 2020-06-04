@@ -1,0 +1,78 @@
+{
+  "global": {
+    "files": "./ci/*.abap",
+    "skipGeneratedGatewayClasses": true,
+    "skipGeneratedPersistentClasses": true,
+    "skipGeneratedFunctionGroups": true
+  },
+  "dependencies": [
+    {
+      "url": "https://github.com/abaplint/deps",
+      "folder": "/deps",
+      "files": "/src/**/*.*"
+    }
+  ],
+  "syntax": {
+    "version": "v702",
+    "errorNamespace": "^(Z|Y|LT?CL_|TY_|LIF_)",
+    "globalConstants": [
+      "icon_led_red",
+      "icon_led_yellow",
+      "icon_led_green",
+      "icon_led_inactive",
+      "icon_message_information",
+      "icon_system_help",
+      "icon_stack",
+      "icon_abap",
+      "icon_display_text",
+      "icon_set_state",
+      "icon_workflow_fork",
+      "icon_okay",
+      "icon_folder",
+      "abap_func_exporting",
+      "abap_func_tables",
+      "cssf_formtype_text",
+      "seoc_category_exception",
+      "seoc_category_webdynpro_class",
+      "seoc_exposure_private",
+      "seoc_exposure_protected",
+      "seoc_exposure_public",
+      "seoc_exposure_public",
+      "seoc_version_active",
+      "seoc_version_inactive",
+      "seok_access_free",
+      "seok_access_modify",
+      "seok_pgmid_r3tr",
+      "seop_ext_class_locals_def",
+      "seop_ext_class_locals_imp",
+      "seop_ext_class_macros",
+      "seop_ext_class_testclasses",
+      "sews_c_vif_version",
+      "skwfc_obtype_folder",
+      "skwfc_obtype_loio",
+      "so2_controller",
+      "ststc_c_type_dialog",
+      "ststc_c_type_object",
+      "ststc_c_type_parameters",
+      "ststc_c_type_report",
+      "swbm_c_op_delete_no_dialog",
+      "swbm_c_type_ddic_db_tabxinx",
+      "swbm_c_type_wdy_application",
+      "swbm_version_active",
+      "swbm_version_inactive",
+      "wbmr_c_skwf_folder_class",
+      "wdyn_limu_component_controller",
+      "wdyn_limu_component_definition",
+      "wdyn_limu_component_view"
+    ],
+    "globalMacros": []
+  },
+  "rules": {
+    "unknown_types": true,
+    "allowed_object_naming": true,
+    "check_syntax": true,
+    "implement_methods": true,
+    "superclass_final": true,
+    "parser_error": true
+  }
+}

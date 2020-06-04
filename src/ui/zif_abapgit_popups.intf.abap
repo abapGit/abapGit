@@ -4,13 +4,14 @@ INTERFACE zif_abapgit_popups
 
   TYPES:
     BEGIN OF ty_popup,
-      url          TYPE string,
-      package      TYPE devclass,
-      branch_name  TYPE string,
-      display_name TYPE string,
-      folder_logic TYPE string,
-      ign_subpkg   TYPE abap_bool,
-      cancel       TYPE abap_bool,
+      url              TYPE string,
+      package          TYPE devclass,
+      branch_name      TYPE string,
+      display_name     TYPE string,
+      folder_logic     TYPE string,
+      ign_subpkg       TYPE abap_bool,
+      master_lang_only TYPE abap_bool,
+      cancel           TYPE abap_bool,
     END OF ty_popup .
 
   CONSTANTS c_new_branch_label TYPE string VALUE '+ create new ...' ##NO_TEXT.
@@ -40,7 +41,7 @@ INTERFACE zif_abapgit_popups
       zcx_abapgit_exception .
   METHODS repo_new_offline
     RETURNING
-      VALUE(rs_popup) TYPE zif_abapgit_popups=>ty_popup
+      VALUE(rs_popup) TYPE ty_popup
     RAISING
       zcx_abapgit_exception .
   METHODS branch_list_popup
@@ -64,7 +65,7 @@ INTERFACE zif_abapgit_popups
       !iv_title          TYPE clike DEFAULT 'New Online Project'
       !iv_display_name   TYPE string OPTIONAL
     RETURNING
-      VALUE(rs_popup)    TYPE zif_abapgit_popups=>ty_popup
+      VALUE(rs_popup)    TYPE ty_popup
     RAISING
       zcx_abapgit_exception ##NO_TEXT.
   METHODS popup_to_confirm

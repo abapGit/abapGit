@@ -175,7 +175,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CUS0 IMPLEMENTATION.
            ls_img_activity-header-ltime.
 
     IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
-      DELETE ls_img_activity-texts WHERE spras <> sy-langu.
+      DELETE ls_img_activity-texts WHERE spras <> mv_language.
     ENDIF.
 
     io_xml->add( iv_name = 'CUS0'

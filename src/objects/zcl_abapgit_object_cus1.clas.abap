@@ -188,7 +188,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CUS1 IMPLEMENTATION.
            ls_customzing_activity-activity_header-luser.
 
     IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
-      DELETE ls_customzing_activity-activity_title WHERE spras <> sy-langu.
+      DELETE ls_customzing_activity-activity_title WHERE spras <> mv_language.
     ENDIF.
 
     io_xml->add( iv_name = 'CUS1'

@@ -55,6 +55,7 @@ CLASS zcl_abapgit_gui DEFINITION
         ii_asset_man      TYPE REF TO zif_abapgit_gui_asset_manager OPTIONAL
         ii_hotkey_ctl     TYPE REF TO zif_abapgit_gui_hotkey_ctl OPTIONAL
         ii_html_processor TYPE REF TO zif_abapgit_gui_html_processor OPTIONAL
+        iv_rollback_on_error TYPE abap_bool DEFAULT abap_true
       RAISING
         zcx_abapgit_exception.
 
@@ -70,6 +71,7 @@ CLASS zcl_abapgit_gui DEFINITION
       END OF ty_page_stack.
 
     DATA:
+      mv_rollback_on_error TYPE abap_bool,
       mi_cur_page       TYPE REF TO zif_abapgit_gui_renderable,
       mt_stack          TYPE STANDARD TABLE OF ty_page_stack,
       mt_event_handlers TYPE STANDARD TABLE OF REF TO zif_abapgit_gui_event_handler,
@@ -191,6 +193,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     CREATE OBJECT mo_html_parts.
 
+    mv_rollback_on_error = iv_rollback_on_error.
     mi_asset_man      = ii_asset_man.
     mi_hotkey_ctl     = ii_hotkey_ctl.
     mi_html_processor = ii_html_processor. " Maybe improve to middlewares stack ??
@@ -288,7 +291,6 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       CATCH zcx_abapgit_cancel ##NO_HANDLER.
         " Do nothing = gc_event_state-no_more_act
       CATCH zcx_abapgit_exception INTO lx_exception.
-        ROLLBACK WORK.
         handle_error( lx_exception ).
     ENDTRY.
 
@@ -299,6 +301,10 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     DATA: li_gui_error_handler TYPE REF TO zif_abapgit_gui_error_handler,
           lx_exception         TYPE REF TO cx_root.
+
+    IF mv_rollback_on_error = abap_true.
+      ROLLBACK WORK.
+    ENDIF.
 
     TRY.
         li_gui_error_handler ?= mi_cur_page.
@@ -401,7 +407,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     DATA: lv_xstr  TYPE xstring,
           lt_xdata TYPE lvc_t_mime,
-          lv_size  TYPE int4.
+          lv_size  TYPE i.
 
     ASSERT iv_text IS SUPPLIED OR iv_xdata IS SUPPLIED.
 

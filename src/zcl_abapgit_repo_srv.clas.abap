@@ -242,12 +242,18 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       refresh( ).
     ENDIF.
 
-    LOOP AT mt_list ASSIGNING <lo_list>.
-      IF <lo_list>->get_key( ) = iv_key.
-        ro_repo = <lo_list>.
-        RETURN.
+    DO 2 TIMES.
+      " Repo might have been created in another session. Try again after refresh
+      IF sy-index = 2.
+        refresh( ).
       ENDIF.
-    ENDLOOP.
+      LOOP AT mt_list ASSIGNING <lo_list>.
+        IF <lo_list>->get_key( ) = iv_key.
+          ro_repo = <lo_list>.
+          RETURN.
+        ENDIF.
+      ENDLOOP.
+    ENDDO.
 
     zcx_abapgit_exception=>raise( 'repo not found, get' ).
 
@@ -330,6 +336,9 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     ro_repo ?= instantiate_and_add( ls_repo ).
 
+    ls_repo-local_settings-serialize_master_lang_only = iv_master_lang_only.
+    ro_repo->set_local_settings( ls_repo-local_settings ).
+
   ENDMETHOD.
 
 
@@ -369,13 +378,13 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
         zcx_abapgit_exception=>raise( 'new_online not found' ).
     ENDTRY.
 
-
     ro_repo ?= instantiate_and_add( ls_repo ).
 
     IF ls_repo-local_settings-ignore_subpackages <> iv_ign_subpkg.
       ls_repo-local_settings-ignore_subpackages = iv_ign_subpkg.
-      ro_repo->set_local_settings( ls_repo-local_settings ).
     ENDIF.
+    ls_repo-local_settings-serialize_master_lang_only = iv_master_lang_only.
+    ro_repo->set_local_settings( ls_repo-local_settings ).
 
     ro_repo->refresh( ).
     ro_repo->find_remote_dot_abapgit( ).

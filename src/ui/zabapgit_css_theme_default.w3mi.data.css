@@ -39,7 +39,7 @@ input:focus, textarea:focus { border-color: #8cadd9; }
 .attention    { color: red        !important; }
 .error        { color: #d41919    !important; }
 .warning      { color: #efb301    !important; }
-.success      { color: green   	  !important; }
+.success      { color: green      !important; }
 .blue         { color: #5e8dc9    !important; }
 .red          { color: red        !important; }
 .white        { color: white      !important; }
@@ -298,12 +298,25 @@ table.diff_tab td.patch, th.patch {
 }
 
 /* STYLES for Syntax Highlighting */
+/* abap */
 .syntax-hl span.keyword  { color: #0a69ce; }
 .syntax-hl span.text     { color: #48ce4f; }
 .syntax-hl span.comment  { color: var(--theme-greyscale-dark); font-style: italic; }
+/* xml+html */
 .syntax-hl span.xml_tag  { color: #457ce3; }
 .syntax-hl span.attr     { color: #b777fb; }
 .syntax-hl span.attr_val { color: #7a02f9; }
+/* css+js */
+.syntax-hl span.properties   { color:#0a69ce; }
+.syntax-hl span.values       { color:blue; }
+.syntax-hl span.units        { color:maroon; }
+.syntax-hl span.selectors    { color:purple; }
+.syntax-hl span.functions    { color:purple; }
+.syntax-hl span.colors       { color:purple; }
+.syntax-hl span.extensions   { color:darkblue; }
+.syntax-hl span.at_rules     { color:darkblue; }
+.syntax-hl span.html         { color:green; }
+.syntax-hl span.variables    { color:purple; }
 
 /* DEBUG INFO STYLES */
 div.debug_container { color: #444; }
