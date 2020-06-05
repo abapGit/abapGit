@@ -340,7 +340,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
     READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'ignore_files'.
     ASSERT sy-subrc = 0.
-    
+
     " Remove everything
     lt_ignore = lo_dot->get_data( )-ignore.
     LOOP AT lt_ignore INTO lv_ignore.
