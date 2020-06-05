@@ -81,8 +81,8 @@ CLASS zcl_abapgit_objects_files DEFINITION
         VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_file_signatures_tt .
     METHODS contains
       IMPORTING
-        !iv_extra TYPE clike OPTIONAL
-        !iv_ext   TYPE string
+        !iv_extra         TYPE clike OPTIONAL
+        !iv_ext           TYPE string
       RETURNING
         VALUE(rv_present) TYPE abap_bool.
   PROTECTED SECTION.
@@ -190,6 +190,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     APPEND ls_file TO mt_files.
   ENDMETHOD.
+
 
   METHOD constructor.
     ms_item = is_item.

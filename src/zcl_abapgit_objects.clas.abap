@@ -302,7 +302,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     DATA: lt_files          TYPE zif_abapgit_definitions=>ty_files_tt,
           lv_path           TYPE string,
           lv_filename       TYPE string,
-          lt_duplicates     TYPE stringtab,
+          lt_duplicates     TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
           lv_duplicates     LIKE LINE OF lt_duplicates,
           lv_all_duplicates TYPE string.
 
@@ -398,7 +398,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           iv_xml      = zcl_abapgit_convert=>xstring_to_string_utf8( ls_remote_file-data )
           iv_filename = ls_remote_file-filename.
 
-      ls_result = li_comparator->compare( io_remote = lo_remote_version ii_log = ii_log ).
+      ls_result = li_comparator->compare( io_remote = lo_remote_version
+                                          ii_log = ii_log ).
       IF ls_result-text IS INITIAL.
         RETURN.
       ENDIF.
@@ -406,7 +407,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       "log comparison result
       ls_item-obj_type = is_result-obj_type.
       ls_item-obj_name = is_result-obj_name.
-      ii_log->add_warning( iv_msg = ls_result-text is_item = ls_item ).
+      ii_log->add_warning( iv_msg = ls_result-text
+                           is_item = ls_item ).
 
       "continue or abort?
       lv_gui_is_available = zcl_abapgit_ui_factory=>get_gui_functions( )->gui_is_available( ).
@@ -610,7 +612,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     lt_remote = io_repo->get_files_remote( ).
 
-    lt_results = files_to_deserialize( io_repo = io_repo ii_log = ii_log ).
+    lt_results = files_to_deserialize( io_repo = io_repo
+                                       ii_log = ii_log ).
 
     checks_adjust(
       EXPORTING
@@ -690,8 +693,10 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           CLEAR: lv_path, lv_package.
 
         CATCH zcx_abapgit_exception INTO lx_exc.
-          ii_log->add_exception( ix_exc = lx_exc is_item = ls_item ).
-          ii_log->add_error( iv_msg = |Import of object { ls_item-obj_name } failed| is_item = ls_item ).
+          ii_log->add_exception( ix_exc = lx_exc
+                                 is_item = ls_item ).
+          ii_log->add_error( iv_msg = |Import of object { ls_item-obj_name } failed|
+                             is_item = ls_item ).
           "object should not be part of any deserialization step
           CONTINUE.
       ENDTRY.
@@ -765,11 +770,14 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
                                      ii_log     = ii_log ).
           APPEND LINES OF <ls_obj>-obj->mo_files->get_accessed_files( ) TO ct_files.
 
-          ii_log->add_success( iv_msg = |Object { <ls_obj>-item-obj_name } imported| is_item = <ls_obj>-item ).
+          ii_log->add_success( iv_msg = |Object { <ls_obj>-item-obj_name } imported|
+                               is_item = <ls_obj>-item ).
 
         CATCH zcx_abapgit_exception INTO lx_exc.
-          ii_log->add_exception( ix_exc = lx_exc is_item = <ls_obj>-item ).
-          ii_log->add_error( iv_msg = |Import of object { <ls_obj>-item-obj_name } failed| is_item = <ls_obj>-item ).
+          ii_log->add_exception( ix_exc = lx_exc
+                                 is_item = <ls_obj>-item ).
+          ii_log->add_error( iv_msg = |Import of object { <ls_obj>-item-obj_name } failed|
+                             is_item = <ls_obj>-item ).
       ENDTRY.
 
     ENDLOOP.

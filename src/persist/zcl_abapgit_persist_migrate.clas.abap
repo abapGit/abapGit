@@ -3,6 +3,7 @@ CLASS zcl_abapgit_persist_migrate DEFINITION PUBLIC CREATE PUBLIC.
   PUBLIC SECTION.
     CLASS-METHODS: run RAISING zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_settings_to_migrate,
              name  TYPE string,
@@ -64,13 +65,15 @@ CLASS ZCL_ABAPGIT_PERSIST_MIGRATE IMPLEMENTATION.
 
   METHOD distribute_settings_to_users.
 
-    DATA: lt_abapgit_users    TYPE STANDARD TABLE OF char12
+    TYPES: ty_char12 TYPE c LENGTH 12.
+
+    DATA: lt_abapgit_users    TYPE STANDARD TABLE OF ty_char12
                                    WITH NON-UNIQUE DEFAULT KEY,
           ls_user_settings    TYPE zif_abapgit_definitions=>ty_s_user_settings,
           li_user_persistence TYPE REF TO zif_abapgit_persist_user.
 
-    FIELD-SYMBOLS: <lv_user>                     LIKE LINE OF lt_abapgit_users,
-                   <ls_setting_to_migrate>       TYPE ty_settings_to_migrate,
+    FIELD-SYMBOLS: <lv_user>                      LIKE LINE OF lt_abapgit_users,
+                   <ls_setting_to_migrate>        TYPE ty_settings_to_migrate,
                    <lg_user_specific_setting_val> TYPE data.
 
     " distribute settings to all abapGit users

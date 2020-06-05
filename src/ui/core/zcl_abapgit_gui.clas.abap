@@ -21,8 +21,6 @@ CLASS zcl_abapgit_gui DEFINITION
       END OF c_action.
 
     INTERFACES zif_abapgit_gui_services.
-    ALIASES:
-      cache_asset FOR zif_abapgit_gui_services~cache_asset.
 
     METHODS go_home
       RAISING
@@ -55,7 +53,9 @@ CLASS zcl_abapgit_gui DEFINITION
       IMPORTING
         io_component      TYPE REF TO object OPTIONAL
         ii_asset_man      TYPE REF TO zif_abapgit_gui_asset_manager OPTIONAL
+        ii_hotkey_ctl     TYPE REF TO zif_abapgit_gui_hotkey_ctl OPTIONAL
         ii_html_processor TYPE REF TO zif_abapgit_gui_html_processor OPTIONAL
+        iv_rollback_on_error TYPE abap_bool DEFAULT abap_true
       RAISING
         zcx_abapgit_exception.
 
@@ -70,13 +70,17 @@ CLASS zcl_abapgit_gui DEFINITION
         bookmark TYPE abap_bool,
       END OF ty_page_stack.
 
-    DATA: mi_cur_page       TYPE REF TO zif_abapgit_gui_renderable,
-          mt_stack          TYPE STANDARD TABLE OF ty_page_stack,
-          mt_event_handlers TYPE STANDARD TABLE OF REF TO zif_abapgit_gui_event_handler,
-          mi_router         TYPE REF TO zif_abapgit_gui_event_handler,
-          mi_asset_man      TYPE REF TO zif_abapgit_gui_asset_manager,
-          mi_html_processor TYPE REF TO zif_abapgit_gui_html_processor,
-          mo_html_viewer    TYPE REF TO cl_gui_html_viewer.
+    DATA:
+      mv_rollback_on_error TYPE abap_bool,
+      mi_cur_page       TYPE REF TO zif_abapgit_gui_renderable,
+      mt_stack          TYPE STANDARD TABLE OF ty_page_stack,
+      mt_event_handlers TYPE STANDARD TABLE OF REF TO zif_abapgit_gui_event_handler,
+      mi_router         TYPE REF TO zif_abapgit_gui_event_handler,
+      mi_asset_man      TYPE REF TO zif_abapgit_gui_asset_manager,
+      mi_hotkey_ctl     TYPE REF TO zif_abapgit_gui_hotkey_ctl,
+      mi_html_processor TYPE REF TO zif_abapgit_gui_html_processor,
+      mo_html_viewer    TYPE REF TO cl_gui_html_viewer,
+      mo_html_parts     TYPE REF TO zcl_abapgit_html_parts.
 
     METHODS startup
       RAISING
@@ -148,48 +152,9 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD cache_asset.
-
-    DATA: lv_xstr  TYPE xstring,
-          lt_xdata TYPE lvc_t_mime,
-          lv_size  TYPE int4.
-
-    ASSERT iv_text IS SUPPLIED OR iv_xdata IS SUPPLIED.
-
-    IF iv_text IS SUPPLIED. " String input
-      lv_xstr = zcl_abapgit_convert=>string_to_xstring( iv_text ).
-    ELSE. " Raw input
-      lv_xstr = iv_xdata.
-    ENDIF.
-
-    zcl_abapgit_convert=>xstring_to_bintab(
-      EXPORTING
-        iv_xstr   = lv_xstr
-      IMPORTING
-        ev_size   = lv_size
-        et_bintab = lt_xdata ).
-
-    mo_html_viewer->load_data(
-      EXPORTING
-        type         = iv_type
-        subtype      = iv_subtype
-        size         = lv_size
-        url          = iv_url
-      IMPORTING
-        assigned_url = rv_url
-      CHANGING
-        data_table   = lt_xdata
-      EXCEPTIONS
-        OTHERS       = 1 ) ##NO_TEXT.
-
-    ASSERT sy-subrc = 0. " Image data error
-
-  ENDMETHOD.
-
-
   METHOD cache_html.
 
-    rv_url = cache_asset(
+    rv_url = zif_abapgit_gui_services~cache_asset(
       iv_text    = iv_text
       iv_type    = 'text'
       iv_subtype = 'html' ).
@@ -226,7 +191,11 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    mi_asset_man = ii_asset_man.
+    CREATE OBJECT mo_html_parts.
+
+    mv_rollback_on_error = iv_rollback_on_error.
+    mi_asset_man      = ii_asset_man.
+    mi_hotkey_ctl     = ii_hotkey_ctl.
     mi_html_processor = ii_html_processor. " Maybe improve to middlewares stack ??
     startup( ).
 
@@ -322,7 +291,6 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       CATCH zcx_abapgit_cancel ##NO_HANDLER.
         " Do nothing = gc_event_state-no_more_act
       CATCH zcx_abapgit_exception INTO lx_exception.
-        ROLLBACK WORK.
         handle_error( lx_exception ).
     ENDTRY.
 
@@ -333,6 +301,10 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     DATA: li_gui_error_handler TYPE REF TO zif_abapgit_gui_error_handler,
           lx_exception         TYPE REF TO cx_root.
+
+    IF mv_rollback_on_error = abap_true.
+      ROLLBACK WORK.
+    ENDIF.
 
     TRY.
         li_gui_error_handler ?= mi_cur_page.
@@ -373,8 +345,14 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     ENDIF.
 
     CLEAR mt_event_handlers.
+    mo_html_parts->clear( ).
+
     IF mi_router IS BOUND.
       APPEND mi_router TO mt_event_handlers.
+    ENDIF.
+
+    IF mi_hotkey_ctl IS BOUND.
+      mi_hotkey_ctl->reset( ).
     ENDIF.
 
     li_html = mi_cur_page->render( ).
@@ -408,7 +386,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     IF mi_asset_man IS BOUND.
       lt_assets = mi_asset_man->get_all_assets( ).
       LOOP AT lt_assets ASSIGNING <ls_asset> WHERE is_cacheable = abap_true.
-        cache_asset( iv_xdata   = <ls_asset>-content
+        zif_abapgit_gui_services~cache_asset( iv_xdata   = <ls_asset>-content
                      iv_url     = <ls_asset>-url
                      iv_type    = <ls_asset>-type
                      iv_subtype = <ls_asset>-subtype ).
@@ -425,12 +403,61 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_gui_services~cache_asset.
+
+    DATA: lv_xstr  TYPE xstring,
+          lt_xdata TYPE lvc_t_mime,
+          lv_size  TYPE i.
+
+    ASSERT iv_text IS SUPPLIED OR iv_xdata IS SUPPLIED.
+
+    IF iv_text IS SUPPLIED. " String input
+      lv_xstr = zcl_abapgit_convert=>string_to_xstring( iv_text ).
+    ELSE. " Raw input
+      lv_xstr = iv_xdata.
+    ENDIF.
+
+    zcl_abapgit_convert=>xstring_to_bintab(
+      EXPORTING
+        iv_xstr   = lv_xstr
+      IMPORTING
+        ev_size   = lv_size
+        et_bintab = lt_xdata ).
+
+    mo_html_viewer->load_data(
+      EXPORTING
+        type         = iv_type
+        subtype      = iv_subtype
+        size         = lv_size
+        url          = iv_url
+      IMPORTING
+        assigned_url = rv_url
+      CHANGING
+        data_table   = lt_xdata
+      EXCEPTIONS
+        OTHERS       = 1 ) ##NO_TEXT.
+
+    ASSERT sy-subrc = 0. " Image data error
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_services~get_current_page_name.
 
     IF mi_cur_page IS BOUND.
       rv_page_name = cl_abap_classdescr=>describe_by_object_ref( mi_cur_page )->get_relative_name( ).
     ENDIF." ELSE - return is empty => initial page
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_services~get_hotkeys_ctl.
+    ri_hotkey_ctl = mi_hotkey_ctl.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_services~get_html_parts.
+    ro_parts = mo_html_parts.
   ENDMETHOD.
 
 

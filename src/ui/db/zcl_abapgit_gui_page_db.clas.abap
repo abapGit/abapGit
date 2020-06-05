@@ -5,7 +5,6 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     METHODS constructor
       RAISING zcx_abapgit_exception.
@@ -167,9 +166,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
       lv_action  = zcl_abapgit_html_action_utils=>dbkey_encode( <ls_data> ).
 
       CREATE OBJECT lo_toolbar.
-      lo_toolbar->add( iv_txt = 'Display' iv_act = |{ zif_abapgit_definitions=>c_action-db_display }?{ lv_action }| ).
-      lo_toolbar->add( iv_txt = 'Edit'    iv_act = |{ zif_abapgit_definitions=>c_action-db_edit }?{ lv_action }| ).
-      lo_toolbar->add( iv_txt = 'Delete'  iv_act = |{ c_action-delete }?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Display'
+                       iv_act = |{ zif_abapgit_definitions=>c_action-db_display }?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Edit'
+                       iv_act = |{ zif_abapgit_definitions=>c_action-db_edit }?{ lv_action }| ).
+      lo_toolbar->add( iv_txt = 'Delete'
+                       iv_act = |{ c_action-delete }?{ lv_action }| ).
 
       ro_html->add( |<tr{ lv_trclass }>| ).
       ro_html->add( |<td>{ <ls_data>-type }</td>| ).
@@ -198,11 +200,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
         delete( ls_db ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 ENDCLASS.

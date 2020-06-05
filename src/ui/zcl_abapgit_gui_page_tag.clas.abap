@@ -2,7 +2,6 @@ CLASS zcl_abapgit_gui_page_tag DEFINITION PUBLIC FINAL
     CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     CONSTANTS: BEGIN OF c_action,
                  commit_post     TYPE string VALUE 'commit_post',
@@ -19,8 +18,7 @@ CLASS zcl_abapgit_gui_page_tag DEFINITION PUBLIC FINAL
 
   PROTECTED SECTION.
     METHODS:
-      render_content REDEFINITION,
-      scripts        REDEFINITION.
+      render_content REDEFINITION.
 
   PRIVATE SECTION.
     CONSTANTS: BEGIN OF c_tag_type,
@@ -56,6 +54,12 @@ CLASS zcl_abapgit_gui_page_tag DEFINITION PUBLIC FINAL
       parse_change_tag_type_request
         IMPORTING
           it_postdata TYPE cnht_post_data_tab.
+
+    METHODS render_scripts
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -194,6 +198,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
     ro_html->add( render_menu( ) ).
     ro_html->add( render_form( ) ).
     ro_html->add( '</div>' ).
+
+    register_deferred_script( render_scripts( ) ).
 
   ENDMETHOD.
 
@@ -335,6 +341,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_scripts.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->zif_abapgit_html~set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
+    ro_html->add( 'setInitialFocus("name");' ).
+
+  ENDMETHOD.
+
+
   METHOD render_text_input.
 
     DATA lv_attrs TYPE string.
@@ -357,15 +373,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD scripts.
-
-    ro_html = super->scripts( ).
-
-    ro_html->add( 'setInitialFocus("name");' ).
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     CASE iv_action.
@@ -384,11 +391,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
       WHEN c_action-commit_cancel.
         ev_state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 ENDCLASS.

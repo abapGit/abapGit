@@ -205,7 +205,8 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
               methname   = lv_methname
               methsource = lt_abap ).
         CATCH cx_enh_mod_not_allowed cx_enh_is_not_enhanceable INTO lx_enh.
-          zcx_abapgit_exception=>raise( iv_text = 'Error deserializing ENHO method include' ix_previous = lx_enh ).
+          zcx_abapgit_exception=>raise( iv_text = 'Error deserializing ENHO method include'
+                                        ix_previous = lx_enh ).
       ENDTRY.
 
     ENDLOOP.

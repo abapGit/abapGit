@@ -4,7 +4,7 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
   CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_gui_page_hotkey.
+    INTERFACES: zif_abapgit_gui_hotkeys.
     METHODS:
       constructor
         RAISING zcx_abapgit_exception,
@@ -69,8 +69,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
                     iv_act = zif_abapgit_definitions=>c_action-zip_object ) ##NO_TEXT.
     lo_advsub->add( iv_txt = 'Test changed by'
                     iv_act = c_actions-changed_by ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Page playground'
-                    iv_act = zif_abapgit_definitions=>c_action-go_playground ) ##NO_TEXT.
     lo_advsub->add( iv_txt = 'Debug info'
                     iv_act = zif_abapgit_definitions=>c_action-go_debuginfo ) ##NO_TEXT.
     lo_advsub->add( iv_txt = 'Settings'
@@ -80,6 +78,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
                      iv_act = zif_abapgit_definitions=>c_action-go_tutorial ) ##NO_TEXT.
     lo_helpsub->add( iv_txt = 'Documentation'
                      iv_act = c_actions-documentation ) ##NO_TEXT.
+    lo_helpsub->add( iv_txt = 'Explore'
+                     iv_act = zif_abapgit_definitions=>c_action-go_explore ) ##NO_TEXT.
     lo_helpsub->add( iv_txt = 'Changelog'
                      iv_act = c_actions-changelog ) ##NO_TEXT.
 
@@ -87,8 +87,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
                   iv_act = zif_abapgit_definitions=>c_action-repo_newonline ) ##NO_TEXT.
     ro_menu->add( iv_txt = '+ Offline'
                   iv_act = zif_abapgit_definitions=>c_action-repo_newoffline ) ##NO_TEXT.
-    ro_menu->add( iv_txt = 'Explore'
-                  iv_act = zif_abapgit_definitions=>c_action-go_explore ) ##NO_TEXT.
 
     ro_menu->add( iv_txt = 'Advanced'
                   io_sub = lo_advsub ) ##NO_TEXT.
@@ -115,6 +113,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
     retrieve_active_repo( ). " Get and validate key of user default repo
 
     CREATE OBJECT ro_html.
+    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
 
     TRY.
         lt_repos = zcl_abapgit_repo_srv=>get_instance( )->list( ).
@@ -228,7 +227,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
     ro_html->add( '<table class="w100"><tr>' ).
     ro_html->add( |<td class="pad-sides">{
-                  zcl_abapgit_html=>icon( iv_name = 'star/blue' iv_hint = 'Favorites' )
+                  zcl_abapgit_html=>icon( iv_name = 'star/blue'
+                                          iv_hint = 'Favorites' )
                   }</td>| ).
 
     ro_html->add( '<td class="pad-sides w100 favorites">' ). " Maximize width
@@ -236,7 +236,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
       ro_html->add( lo_favbar->render( iv_sort = abap_true ) ).
     ELSE.
       ro_html->add( |<span class="grey">No favorites so far. For more info please check {
-                    zcl_abapgit_html=>a( iv_txt = 'tutorial' iv_act = zif_abapgit_definitions=>c_action-go_tutorial )
+                    zcl_abapgit_html=>a( iv_txt = 'tutorial'
+                                         iv_act = zif_abapgit_definitions=>c_action-go_tutorial )
                     }</span>| ).
     ENDIF.
     ro_html->add( '</td>' ).
@@ -349,6 +350,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
       WHEN c_actions-documentation.
         zcl_abapgit_services_abapgit=>open_abapgit_wikipage( ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+      WHEN zif_abapgit_definitions=>c_action-go_explore.
+        zcl_abapgit_services_abapgit=>open_dotabap_homepage( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
       WHEN c_actions-changelog.
         zcl_abapgit_services_abapgit=>open_abapgit_changelog( ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
@@ -370,61 +374,63 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+  METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
 
-    DATA: ls_hotkey_action TYPE zif_abapgit_gui_page_hotkey=>ty_hotkey_with_name.
+    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |abapGit settings|.
+    ls_hotkey_action-ui_component = 'Main'.
+
+    ls_hotkey_action-description   = |abapGit settings|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_settings.
     ls_hotkey_action-hotkey = |x|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |Stage changes|.
+    ls_hotkey_action-description   = |Stage changes|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_stage.
     ls_hotkey_action-hotkey = |s|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |Switch branch|.
+    ls_hotkey_action-description   = |Switch branch|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-git_branch_switch.
     ls_hotkey_action-hotkey = |b|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |Installed repo list|.
+    ls_hotkey_action-description   = |Installed repo list|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_repo_overview.
     ls_hotkey_action-hotkey = |o|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |Refresh repository|.
+    ls_hotkey_action-description   = |Refresh repository|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_refresh.
     ls_hotkey_action-hotkey = |r|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |Pull|.
+    ls_hotkey_action-description   = |Pull|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-git_pull.
     ls_hotkey_action-hotkey = |p|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |Add online repository|.
+    ls_hotkey_action-description   = |Add online repository|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_newonline.
     ls_hotkey_action-hotkey = |n|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |Uninstall repository|.
+    ls_hotkey_action-description   = |Uninstall repository|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_purge.
     ls_hotkey_action-hotkey = |u|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |Show diffs|.
+    ls_hotkey_action-description   = |Diff|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_diff.
     ls_hotkey_action-hotkey = |d|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |Run code inspector|.
+    ls_hotkey_action-description   = |Run code inspector|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_code_inspector.
     ls_hotkey_action-hotkey = |i|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |Show log|.
+    ls_hotkey_action-description   = |Show log|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_log.
     ls_hotkey_action-hotkey = |l|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.

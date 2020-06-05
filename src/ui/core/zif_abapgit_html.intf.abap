@@ -15,6 +15,14 @@ INTERFACE zif_abapgit_html PUBLIC.
       crossout TYPE c VALUE 'X',
     END OF c_html_opt .
 
+  TYPES:
+    tty_table_of TYPE STANDARD TABLE OF REF TO zif_abapgit_html WITH DEFAULT KEY.
+
+  DATA mv_chunk_title TYPE string READ-ONLY. " Primarily for debug of posponed html parts
+
+  METHODS set_title
+    IMPORTING
+      iv_title TYPE string.
   METHODS add
     IMPORTING
       !ig_chunk TYPE any .

@@ -231,6 +231,8 @@ CLASS ltcl_pack DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS FINAL.
         RAISING zcx_abapgit_exception,
       commit_newline FOR TESTING
         RAISING zcx_abapgit_exception,
+      signed_commit FOR TESTING
+        RAISING zcx_abapgit_exception,
       pack_short FOR TESTING
         RAISING zcx_abapgit_exception,
       pack_long FOR TESTING
@@ -324,7 +326,8 @@ CLASS ltcl_pack IMPLEMENTATION.
 * blob
     lv_data = lc_data.
     CLEAR ls_object.
-    ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob iv_data = lv_data ).
+    ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
+                                             iv_data = lv_data ).
     ls_object-type = zif_abapgit_definitions=>c_type-blob.
     ls_object-data = lv_data.
     ls_object-index = 1.
@@ -340,7 +343,8 @@ CLASS ltcl_pack IMPLEMENTATION.
     ls_commit-body      = 'body'.
     lv_data = zcl_abapgit_git_pack=>encode_commit( ls_commit ).
     CLEAR ls_object.
-    ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-commit iv_data = lv_data ).
+    ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-commit
+                                             iv_data = lv_data ).
     ls_object-type = zif_abapgit_definitions=>c_type-commit.
     ls_object-data = lv_data.
     ls_object-index = 2.
@@ -355,7 +359,8 @@ CLASS ltcl_pack IMPLEMENTATION.
     APPEND ls_node TO lt_nodes.
     lv_data = zcl_abapgit_git_pack=>encode_tree( lt_nodes ).
     CLEAR ls_object.
-    ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-tree iv_data = lv_data ).
+    ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-tree
+                                             iv_data = lv_data ).
     ls_object-type = zif_abapgit_definitions=>c_type-tree.
     ls_object-data = lv_data.
     ls_object-index = 3.
@@ -474,6 +479,29 @@ CLASS ltcl_pack IMPLEMENTATION.
     ls_commit-body      = 'very informative'
                         && zif_abapgit_definitions=>c_newline
                         && zif_abapgit_definitions=>c_newline.
+
+    lv_data = zcl_abapgit_git_pack=>encode_commit( ls_commit ).
+    ls_result = zcl_abapgit_git_pack=>decode_commit( lv_data ).
+
+    cl_abap_unit_assert=>assert_equals(
+        exp = ls_commit
+        act = ls_result ).
+
+  ENDMETHOD.
+
+  METHOD signed_commit.
+
+    DATA: ls_commit TYPE zcl_abapgit_git_pack=>ty_commit,
+          ls_result TYPE zcl_abapgit_git_pack=>ty_commit,
+          lv_data   TYPE xstring.
+
+    ls_commit-tree      = c_sha.
+    ls_commit-parent    = c_sha.
+    ls_commit-author    = 'larshp <larshp@hotmail.com> 1387823471 +0100'.
+    ls_commit-committer = 'larshp <larshp@hotmail.com> 1387823471 +0100'.
+    ls_commit-body      = 'very informative'.
+    ls_commit-gpgsig    = '-----END PGP SIGNATURE-----'
+                          && |{ zif_abapgit_definitions=>c_newline } { zif_abapgit_definitions=>c_newline }|.
 
     lv_data = zcl_abapgit_git_pack=>encode_commit( ls_commit ).
     ls_result = zcl_abapgit_git_pack=>decode_commit( lv_data ).
