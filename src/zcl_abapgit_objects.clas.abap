@@ -749,7 +749,10 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
   METHOD deserialize_objects.
 
     DATA: li_progress TYPE REF TO zif_abapgit_progress,
+          li_exit     TYPE REF TO zif_abapgit_exit,
           lx_exc      TYPE REF TO zcx_abapgit_exception.
+
+    DATA: lt_postprocess_items TYPE zif_abapgit_definitions=>ty_items_ts.
 
     FIELD-SYMBOLS: <ls_obj> LIKE LINE OF is_step-objects.
 
@@ -773,6 +776,12 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           ii_log->add_success( iv_msg = |Object { <ls_obj>-item-obj_name } imported|
                                is_item = <ls_obj>-item ).
 
+*         No DDIC objects should have postprocessing
+          CHECK is_step-is_ddic = abap_false.
+
+*         Only successfully deserialized objects will be sent for postprocessing
+          INSERT <ls_obj>-item INTO TABLE lt_postprocess_items[].
+
         CATCH zcx_abapgit_exception INTO lx_exc.
           ii_log->add_exception( ix_exc = lx_exc
                                  is_item = <ls_obj>-item ).
@@ -783,6 +792,16 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     ENDLOOP.
 
     zcl_abapgit_objects_activation=>activate( is_step-is_ddic ).
+
+    IF lt_postprocess_items[] IS NOT INITIAL.
+
+*     Call postprocessing
+      li_exit = zcl_abapgit_exit=>get_instance( ).
+
+      li_exit->deserialize_postprocess( it_items = lt_postprocess_items[]
+                                        ii_log   = ii_log ).
+
+    ENDIF.
 
   ENDMETHOD.
 

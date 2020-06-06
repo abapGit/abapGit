@@ -15,7 +15,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_exit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
 
 
   METHOD get_instance.
@@ -119,6 +119,25 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_exit~custom_serialize_abap_clif.
+    TRY.
+        rt_source = gi_exit->custom_serialize_abap_clif( is_class_key ).
+      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+    ENDTRY.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_exit~deserialize_postprocess.
+
+    TRY.
+        gi_exit->deserialize_postprocess( it_items = it_items
+                                          ii_log   = ii_log ).
+      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_exit~get_ssl_id.
 
     TRY.
@@ -142,12 +161,5 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
       CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
     ENDTRY.
 
-  ENDMETHOD.
-
-  METHOD zif_abapgit_exit~custom_serialize_abap_clif.
-    TRY.
-        rt_source = gi_exit->custom_serialize_abap_clif( is_class_key ).
-      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
-    ENDTRY.
   ENDMETHOD.
 ENDCLASS.
