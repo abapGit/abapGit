@@ -206,7 +206,8 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
     ro_html->add( |<span class="{ lv_class }">| ).
-    ro_html->add_icon( iv_name = 'code-branch/grey70' iv_hint = 'Current branch' ).
+    ro_html->add_icon( iv_name = 'code-branch/grey70'
+                       iv_hint = 'Current branch' ).
     IF iv_interactive = abap_true.
       ro_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ io_repo->get_key( ) }|
                       iv_txt = lv_text ).
@@ -381,7 +382,8 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     IF iv_hint IS NOT INITIAL.
       ro_html->add( '<div class="info-hint">'
-        && zcl_abapgit_html=>icon( iv_name = 'exclamation-triangle' iv_class = 'pad-right' )
+        && zcl_abapgit_html=>icon( iv_name = 'exclamation-triangle'
+                                   iv_class = 'pad-right' )
         && iv_hint
         && '</div>' ).
     ENDIF.
@@ -576,7 +578,8 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ro_html->add( '<td class="repo_name">' ).
 
     " Repo type and name
-    ro_html->add_icon( iv_name = lv_icon  iv_hint = lv_hint ).
+    ro_html->add_icon( iv_name = lv_icon
+                       iv_hint = lv_hint ).
     ro_html->add( |<span class="name">{ io_repo->get_name( ) }</span>| ).
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
@@ -623,7 +626,8 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     " Write protect
     IF io_repo->get_local_settings( )-write_protected = abap_true.
-      ro_html->add_icon( iv_name = 'lock/grey70' iv_hint = 'Locked from pulls' ).
+      ro_html->add_icon( iv_name = 'lock/grey70'
+                         iv_hint = 'Locked from pulls' ).
     ENDIF.
 
     " Branch
@@ -644,7 +648,8 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     " Package
     IF iv_show_package = abap_true.
-      ro_html->add_icon( iv_name = 'box/grey70' iv_hint = 'SAP package' ).
+      ro_html->add_icon( iv_name = 'box/grey70'
+                         iv_hint = 'SAP package' ).
       ro_html->add( '<span>' ).
 
       lv_package_jump_data = zcl_abapgit_html_action_utils=>jump_encode(

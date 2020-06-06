@@ -504,7 +504,8 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-repo_log.
         li_log = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->get_log( ).
-        zcl_abapgit_log_viewer=>show_log( ii_log = li_log iv_header_text = li_log->get_title( ) ).
+        zcl_abapgit_log_viewer=>show_log( ii_log = li_log
+                                          iv_header_text = li_log->get_title( ) ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
     ENDCASE.
 

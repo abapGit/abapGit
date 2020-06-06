@@ -8,8 +8,8 @@ CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
 
     METHODS constructor
       IMPORTING
-        !io_repo TYPE REF TO zcl_abapgit_repo
-      RAISING zcx_abapgit_exception.
+                !io_repo TYPE REF TO zcl_abapgit_repo
+      RAISING   zcx_abapgit_exception.
 
     METHODS zif_abapgit_gui_event_handler~on_event
         REDEFINITION .
@@ -51,12 +51,12 @@ CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
         VALUE(rt_post_fields) TYPE tihttpnvp .
     METHODS render_dot_abapgit_reqs
       IMPORTING
-        io_html TYPE REF TO zcl_abapgit_html
+        io_html         TYPE REF TO zcl_abapgit_html
         it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
     METHODS render_table_row
       IMPORTING
-        iv_name TYPE string
-        iv_value TYPE string
+        iv_name        TYPE string
+        iv_value       TYPE string
       RETURNING
         VALUE(rv_html) TYPE string.
 
@@ -108,12 +108,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
   METHOD render_dot_abapgit.
 
-    DATA: ls_dot               TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
-          lv_select_html       TYPE string,
-          lv_selected          TYPE string,
-          lt_folder_logic      TYPE string_table.
+    DATA: ls_dot          TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
+          lv_select_html  TYPE string,
+          lv_selected     TYPE string,
+          lv_language     TYPE t002t-sptxt,
+          lv_ignore       TYPE string,
+          lt_folder_logic TYPE string_table.
 
-    FIELD-SYMBOLS: <lv_folder_logic> TYPE LINE OF string_table.
+    FIELD-SYMBOLS: <lv_folder_logic> TYPE LINE OF string_table,
+                   <lv_ignore>       TYPE string.
 
     ls_dot = mo_repo->get_dot_abapgit( )->get_data( ).
 
@@ -122,6 +125,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
     io_html->add( '<h2>.abapgit.xml</h2>' ).
     io_html->add( '<table class="settings">' ).
+
+    SELECT SINGLE sptxt INTO lv_language FROM t002t
+      WHERE spras = sy-langu AND sprsl = ls_dot-master_language.
+    IF sy-subrc <> 0.
+      lv_language = 'Unknown language. Check your settings.'.
+    ENDIF.
+
+    io_html->add( render_table_row(
+      iv_name  = 'Master language'
+      iv_value = |{ ls_dot-master_language } ({ lv_language })|
+    ) ).
 
     lv_select_html = '<select name="folder_logic">'.
     LOOP AT lt_folder_logic ASSIGNING <lv_folder_logic>.
@@ -148,11 +162,22 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
       iv_value = |<input name="starting_folder" type="text" size="10" value="{ ls_dot-starting_folder }">|
     ) ).
 
+    LOOP AT ls_dot-ignore ASSIGNING <lv_ignore>.
+      lv_ignore = lv_ignore && <lv_ignore> && zif_abapgit_definitions=>c_newline.
+    ENDLOOP.
+
+    io_html->add( render_table_row(
+      iv_name  = 'Ignore files'
+      iv_value = |<textarea name="ignore_files" rows="{ lines( ls_dot-ignore )
+                 }" cols="50">{ lv_ignore }</textarea>|
+    ) ).
+
     io_html->add( '</table>' ).
 
     render_dot_abapgit_reqs(
       it_requirements = ls_dot-requirements
       io_html         = io_html ).
+
 
   ENDMETHOD.
 
@@ -299,8 +324,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
     DATA: lo_dot          TYPE REF TO zcl_abapgit_dot_abapgit,
           ls_post_field   LIKE LINE OF it_post_fields,
+          lv_ignore       TYPE string,
+          lt_ignore       TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
           lo_requirements TYPE REF TO lcl_requirements.
-
 
     lo_dot = mo_repo->get_dot_abapgit( ).
 
@@ -311,6 +337,25 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'starting_folder'.
     ASSERT sy-subrc = 0.
     lo_dot->set_starting_folder( ls_post_field-value ).
+
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'ignore_files'.
+    ASSERT sy-subrc = 0.
+
+    " Remove everything
+    lt_ignore = lo_dot->get_data( )-ignore.
+    LOOP AT lt_ignore INTO lv_ignore.
+      lo_dot->remove_ignore( iv_path = ''
+                             iv_filename = lv_ignore ).
+    ENDLOOP.
+
+    " Add newly entered files
+    CLEAR lt_ignore.
+    SPLIT ls_post_field-value AT zif_abapgit_definitions=>c_newline INTO TABLE lt_ignore.
+    DELETE lt_ignore WHERE table_line IS INITIAL.
+    LOOP AT lt_ignore INTO lv_ignore.
+      lo_dot->add_ignore( iv_path = ''
+                          iv_filename = lv_ignore ).
+    ENDLOOP.
 
     lo_requirements = lcl_requirements=>new( ).
     LOOP AT it_post_fields INTO ls_post_field WHERE name CP 'req_*'.
