@@ -104,7 +104,7 @@ The repository objects can be checked with the Code inspector or the ABAP Test C
 
 #### Code inspector check variant
 
-By entering a Code inspector or ABAP Test Cockpit (ATC) check variant, the check is activated. Local and remote check variants are supported. 
+By entering a Code inspector or ABAP Test Cockpit (ATC) check variant, the check is activated. Only global check variants are supported. 
 
 #### Block commit commit/push if code inspection has erros
 
