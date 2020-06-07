@@ -396,8 +396,13 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     ty_deserialization_tt TYPE STANDARD TABLE OF ty_deserialization WITH DEFAULT KEY .
   TYPES:
+    ty_deserialization_step TYPE string.
+  TYPES:
+    ty_deserialization_step_tt TYPE STANDARD TABLE OF ty_deserialization_step
+                                          WITH DEFAULT KEY .
+  TYPES:
     BEGIN OF ty_step_data,
-      step_id      TYPE zif_abapgit_object=>ty_deserialization_step,
+      step_id      TYPE ty_deserialization_step,
       order        TYPE i,
       descr        TYPE string,
       is_ddic      TYPE abap_bool,

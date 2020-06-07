@@ -233,7 +233,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD adjust_namespaces.
@@ -578,13 +578,13 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           li_progress TYPE REF TO zif_abapgit_progress,
           lv_path     TYPE string,
           lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
-          lt_steps_id TYPE zif_abapgit_object=>ty_deserialization_step_tt,
+          lt_steps_id TYPE zif_abapgit_definitions=>ty_deserialization_step_tt,
           lt_steps    TYPE zif_abapgit_definitions=>ty_step_data_tt,
           lx_exc      TYPE REF TO zcx_abapgit_exception.
     DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_result>  TYPE zif_abapgit_definitions=>ty_result,
-                   <lv_step_id> TYPE LINE OF zif_abapgit_object=>ty_deserialization_step_tt,
+                   <lv_step_id> TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_step_tt,
                    <ls_step>    TYPE LINE OF zif_abapgit_definitions=>ty_step_data_tt,
                    <ls_deser>   TYPE LINE OF ty_deserialization_tt.
 
