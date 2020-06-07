@@ -44,21 +44,26 @@ CLASS ltcl_dot_abapgit IMPLEMENTATION.
 
     lo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
 
-    lv_ignored = lo_dot->is_ignored( iv_path = lc_path iv_filename = lc_filename ).
+    lv_ignored = lo_dot->is_ignored( iv_path = lc_path
+                                     iv_filename = lc_filename ).
     cl_abap_unit_assert=>assert_equals(
       act = lv_ignored
       exp = abap_false ).
 
-    lo_dot->add_ignore( iv_path = lc_path iv_filename = lc_filename ).
+    lo_dot->add_ignore( iv_path = lc_path
+                        iv_filename = lc_filename ).
 
-    lv_ignored = lo_dot->is_ignored( iv_path = lc_path iv_filename = lc_filename ).
+    lv_ignored = lo_dot->is_ignored( iv_path = lc_path
+                                     iv_filename = lc_filename ).
     cl_abap_unit_assert=>assert_equals(
       act = lv_ignored
       exp = abap_true ).
 
-    lo_dot->remove_ignore( iv_path = lc_path iv_filename = lc_filename ).
+    lo_dot->remove_ignore( iv_path = lc_path
+                           iv_filename = lc_filename ).
 
-    lv_ignored = lo_dot->is_ignored( iv_path = lc_path iv_filename = lc_filename ).
+    lv_ignored = lo_dot->is_ignored( iv_path = lc_path
+                                     iv_filename = lc_filename ).
     cl_abap_unit_assert=>assert_equals(
       act = lv_ignored
       exp = abap_false ).

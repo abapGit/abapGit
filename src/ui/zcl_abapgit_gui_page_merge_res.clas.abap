@@ -152,8 +152,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
   METHOD build_menu.
 
     CREATE OBJECT ro_menu.
-    ro_menu->add( iv_txt = 'Toggle merge mode' iv_act = c_actions-toggle_mode ) ##NO_TEXT.
-    ro_menu->add( iv_txt = 'Cancel' iv_act = c_actions-cancel ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'Toggle merge mode'
+                  iv_act = c_actions-toggle_mode ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'Cancel'
+                  iv_act = c_actions-cancel ) ##NO_TEXT.
 
   ENDMETHOD.
 
@@ -305,7 +307,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
         READ TABLE mt_conflicts ASSIGNING <ls_conflict> INDEX mv_current_conflict_index.
         IF sy-subrc = 0.
           lv_target_content = zcl_abapgit_convert=>xstring_to_string_utf8( <ls_conflict>-target_data ).
-          lv_target_content = escape( val = lv_target_content format = cl_abap_format=>e_html_text ).
+          lv_target_content = escape( val = lv_target_content
+                                      format = cl_abap_format=>e_html_text ).
         ENDIF.
 
         ro_html->add( '</td>' ).                            "#EC NOTEXT
@@ -375,7 +378,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
       ENDIF.
 
       IF lv_insert_nav = abap_true. " Insert separator line with navigation
-        ro_html->add( render_beacon( is_diff_line = <ls_diff> is_diff = is_diff ) ).
+        ro_html->add( render_beacon( is_diff_line = <ls_diff>
+                                     is_diff = is_diff ) ).
         lv_insert_nav = abap_false.
       ENDIF.
 
@@ -383,8 +387,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
         <ls_diff>-new = lo_highlighter->process_line( <ls_diff>-new ).
         <ls_diff>-old = lo_highlighter->process_line( <ls_diff>-old ).
       ELSE.
-        <ls_diff>-new = escape( val = <ls_diff>-new format = cl_abap_format=>e_html_attr ).
-        <ls_diff>-old = escape( val = <ls_diff>-old format = cl_abap_format=>e_html_attr ).
+        <ls_diff>-new = escape( val = <ls_diff>-new
+                                format = cl_abap_format=>e_html_attr ).
+        <ls_diff>-old = escape( val = <ls_diff>-old
+                                format = cl_abap_format=>e_html_attr ).
       ENDIF.
 
       CONDENSE <ls_diff>-new_num. "get rid of leading spaces
@@ -495,13 +501,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
     ms_diff_file-type = reverse( <ls_conflict>-filename ).
 
     FIND FIRST OCCURRENCE OF '.' IN ms_diff_file-type MATCH OFFSET lv_offs.
-    ms_diff_file-type = reverse( substring( val = ms_diff_file-type len = lv_offs ) ).
+    ms_diff_file-type = reverse( substring( val = ms_diff_file-type
+                                            len = lv_offs ) ).
     IF ms_diff_file-type <> 'xml' AND ms_diff_file-type <> 'abap'.
       ms_diff_file-type = 'other'.
     ENDIF.
 
     IF ms_diff_file-type = 'other'
-    AND is_binary( iv_d1 = <ls_conflict>-source_data iv_d2 = <ls_conflict>-target_data ) = abap_true.
+    AND is_binary( iv_d1 = <ls_conflict>-source_data
+                   iv_d2 = <ls_conflict>-target_data ) = abap_true.
       ms_diff_file-type = 'binary'.
     ENDIF.
 

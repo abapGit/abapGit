@@ -253,7 +253,8 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
       IF sy-subrc <> 0.
         MESSAGE ID sy-msgid TYPE 'S' NUMBER sy-msgno WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO lv_msg.
-        ii_log->add_error( iv_msg  = |Function module { <ls_func>-funcname }: { lv_msg }| is_item = ms_item ).
+        ii_log->add_error( iv_msg  = |Function module { <ls_func>-funcname }: { lv_msg }|
+                           is_item = ms_item ).
         CONTINUE. "with next function module
       ENDIF.
 
@@ -276,7 +277,8 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
             OTHERS                   = 2.
         IF sy-subrc <> 0.
           MESSAGE ID sy-msgid TYPE 'S' NUMBER sy-msgno WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO lv_msg.
-          ii_log->add_error( iv_msg = |Function module { <ls_func>-funcname }: { lv_msg }| is_item = ms_item ).
+          ii_log->add_error( iv_msg = |Function module { <ls_func>-funcname }: { lv_msg }|
+                             is_item = ms_item ).
           CONTINUE. "with next function module
         ENDIF.
       ENDIF.
@@ -325,12 +327,14 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
           OTHERS                  = 11.
       IF sy-subrc <> 0.
         MESSAGE ID sy-msgid TYPE 'S' NUMBER sy-msgno WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4 INTO lv_msg.
-        ii_log->add_error( iv_msg = |Function module { <ls_func>-funcname }: { lv_msg }| is_item = ms_item ).
+        ii_log->add_error( iv_msg = |Function module { <ls_func>-funcname }: { lv_msg }|
+                           is_item = ms_item ).
         CONTINUE.  "with next function module
       ENDIF.
 
       INSERT REPORT lv_include FROM lt_source.
-      ii_log->add_success( iv_msg = |Function module { <ls_func>-funcname } imported| is_item = ms_item ).
+      ii_log->add_success( iv_msg = |Function module { <ls_func>-funcname } imported|
+                           is_item = ms_item ).
     ENDLOOP.
 
   ENDMETHOD.
@@ -358,7 +362,8 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
       "ignore simple transformation includes (as long as they remain in existing repositories)
       IF strlen( <lv_include> ) = 33 AND <lv_include>+30(3) = 'XTI'.
-        ii_log->add_warning( iv_msg = |Simple Transformation include { <lv_include> } ignored| is_item = ms_item ).
+        ii_log->add_warning( iv_msg = |Simple Transformation include { <lv_include> } ignored|
+                             is_item = ms_item ).
         CONTINUE.
       ENDIF.
 
@@ -383,10 +388,12 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
                                 it_tpool      = lt_tpool
                                 iv_is_include = abap_true ).
 
-          ii_log->add_success( iv_msg = |Include { ls_progdir-name } imported| is_item = ms_item ).
+          ii_log->add_success( iv_msg = |Include { ls_progdir-name } imported|
+                               is_item = ms_item ).
 
         CATCH zcx_abapgit_exception INTO lx_exc.
-          ii_log->add_exception( ix_exc = lx_exc is_item = ms_item ).
+          ii_log->add_exception( ix_exc = lx_exc
+                                 is_item = ms_item ).
           CONTINUE.
       ENDTRY.
 
@@ -599,7 +606,8 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       lv_maintviewname = |L{ ms_item-obj_name }T00|.
     ELSE.
       "FGroup name contains a namespace
-      lv_offset_ns = find( val = ms_item-obj_name+1 sub = '/' ).
+      lv_offset_ns = find( val = ms_item-obj_name+1
+                           sub = '/' ).
       lv_offset_ns = lv_offset_ns + 2.
       lv_maintviewname = |{ ms_item-obj_name(lv_offset_ns) }L{ ms_item-obj_name+lv_offset_ns }T00|.
     ENDIF.
