@@ -91,7 +91,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
     ro_html->add( |<tr><td>abapGit version:</td><td>{ zif_abapgit_version=>gc_abap_version }</td></tr>| ).
     ro_html->add( |<tr><td>XML version:    </td><td>{ zif_abapgit_version=>gc_xml_version }</td></tr>| ).
     ro_html->add( |<tr><td>GUI version:    </td><td>{ lv_gui_version }</td></tr>| ).
-    ro_html->add( |<tr><td>APACK version:  </td><td>{ zcl_abapgit_apack_migration=>c_apack_interface_version }</td></tr>| ).
+    ro_html->add( |<tr><td>APACK version:  </td><td>{ 
+                  zcl_abapgit_apack_migration=>c_apack_interface_version }</td></tr>| ).
     ro_html->add( |<tr><td>LCL_TIME:       </td><td>{ zcl_abapgit_time=>get_unix( ) }</td></tr>| ).
     ro_html->add( |<tr><td>SY time:        </td><td>{ sy-datum } { sy-uzeit } { sy-tzone }</td></tr>| ).
     ro_html->add( |</table>| ).
