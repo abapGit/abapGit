@@ -21,9 +21,9 @@ CLASS zcl_abapgit_git_transport DEFINITION
     CLASS-METHODS upload_pack_by_commit
       IMPORTING
         !iv_url          TYPE string
-        !iv_commit_hash  TYPE zif_abapgit_definitions=>ty_sha1
         !iv_branch_name  TYPE string
         !iv_deepen_level TYPE numc2 DEFAULT 0
+        !iv_commit_hash  TYPE zif_abapgit_definitions=>ty_sha1
       EXPORTING
         !et_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
         !ev_branch       TYPE zif_abapgit_definitions=>ty_sha1
