@@ -6,10 +6,9 @@ CLASS zcl_abapgit_git_transport DEFINITION
   PUBLIC SECTION.
 
 * remote to local
-    CLASS-METHODS upload_pack
+    CLASS-METHODS upload_pack_by_branch
       IMPORTING
         !iv_url          TYPE string
-        !iv_hash         TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
         !iv_branch_name  TYPE string
         !iv_deepen_level TYPE numc2 DEFAULT 0
         !it_branches     TYPE zif_abapgit_definitions=>ty_git_branch_list_tt OPTIONAL
@@ -17,6 +16,17 @@ CLASS zcl_abapgit_git_transport DEFINITION
         !et_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
         !ev_branch       TYPE zif_abapgit_definitions=>ty_sha1
         !eo_branch_list  TYPE REF TO zcl_abapgit_git_branch_list
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS upload_pack_by_commit
+      IMPORTING
+        !iv_url          TYPE string
+        !iv_commit_hash  TYPE zif_abapgit_definitions=>ty_sha1
+        !iv_branch_name  TYPE string
+        !iv_deepen_level TYPE numc2 DEFAULT 0
+      EXPORTING
+        !et_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
+        !ev_branch       TYPE zif_abapgit_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
 * local to remote
@@ -254,7 +264,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD upload_pack.
+  METHOD upload_pack_by_branch.
 
     DATA: lo_client  TYPE REF TO zcl_abapgit_http_client,
           lv_buffer  TYPE string,
@@ -281,15 +291,77 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
         eo_branch_list = eo_branch_list
         ev_branch      = ev_branch ).
 
-    IF iv_hash IS NOT INITIAL.
-      APPEND iv_hash TO lt_hashes.
-    ELSEIF it_branches IS INITIAL.
+    IF it_branches IS INITIAL.
       APPEND ev_branch TO lt_hashes.
     ELSE.
       LOOP AT it_branches ASSIGNING <ls_branch>.
         APPEND <ls_branch>-sha1 TO lt_hashes.
       ENDLOOP.
     ENDIF.
+
+    lo_client->set_headers( iv_url     = iv_url
+                            iv_service = c_service-upload ).
+
+    LOOP AT lt_hashes FROM 1 ASSIGNING <lv_hash>.
+      IF sy-tabix = 1.
+        lv_capa = 'side-band-64k no-progress multi_ack' ##NO_TEXT.
+        lv_line = 'want' && ` ` && <lv_hash>
+          && ` ` && lv_capa && zif_abapgit_definitions=>c_newline. "#EC NOTEXT
+      ELSE.
+        lv_line = 'want' && ` ` && <lv_hash>
+          && zif_abapgit_definitions=>c_newline.            "#EC NOTEXT
+      ENDIF.
+      lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( lv_line ).
+    ENDLOOP.
+
+    IF iv_deepen_level > 0.
+      lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( |deepen { iv_deepen_level }| &&
+        |{ zif_abapgit_definitions=>c_newline }| ).         "#EC NOTEXT
+    ENDIF.
+
+    lv_buffer = lv_buffer
+             && '0000'
+             && '0009done' && zif_abapgit_definitions=>c_newline.
+
+    lv_xstring = lo_client->send_receive_close( zcl_abapgit_convert=>string_to_xstring_utf8( lv_buffer ) ).
+
+    parse( IMPORTING ev_pack = lv_pack
+           CHANGING  cv_data = lv_xstring ).
+
+    IF lv_pack IS INITIAL.
+      zcx_abapgit_exception=>raise( 'Response could not be parsed - empty pack returned.' ).
+    ENDIF.
+
+    et_objects = zcl_abapgit_git_pack=>decode( lv_pack ).
+
+  ENDMETHOD.
+
+
+  METHOD upload_pack_by_commit.
+
+    DATA: lo_client  TYPE REF TO zcl_abapgit_http_client,
+          lv_buffer  TYPE string,
+          lv_xstring TYPE xstring,
+          lv_line    TYPE string,
+          lv_pack    TYPE xstring,
+          lt_hashes  TYPE zif_abapgit_definitions=>ty_sha1_tt,
+          lv_capa    TYPE string.
+
+    FIELD-SYMBOLS: <lv_hash> LIKE LINE OF lt_hashes.
+
+    CLEAR: et_objects,
+           ev_branch.
+
+    find_branch(
+      EXPORTING
+        iv_url         = iv_url
+        iv_service     = c_service-upload
+        iv_branch_name = iv_branch_name
+      IMPORTING
+        eo_client      = lo_client
+        ev_branch      = ev_branch ).
+
+    APPEND iv_commit_hash TO lt_hashes.
 
     lo_client->set_headers( iv_url     = iv_url
                             iv_service = c_service-upload ).
