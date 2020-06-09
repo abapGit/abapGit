@@ -68,10 +68,12 @@
     "globalMacros": []
   },
   "rules": {
+    "downport": false,
     "line_break_multiple_parameters": true,
     "unknown_types": true,
     "forbidden_void_type": {
-      "check": ["^stringtab$", "^SYCHAR01$", "^char2$", "^char20$", "^int4$", "^flag$", "^char12$", "^char10$", "^char70$", "^char4$"]
+      "check": ["^stringtab$", "^SYCHAR01$", "^char2$", "^char20$", "^int4$",
+        "^flag$", "^char12$", "^char10$", "^char70$", "^char4$", "^sydatum$", "^syuzeit$"]
     },
     "forbidden_identifier": true,
     "try_without_catch": false,
@@ -130,6 +132,7 @@
     "check_syntax": true,
     "class_attribute_names": {
       "ignoreExceptions": true,
+      "ignoreInterfaces": false,
       "statics": "^G._.*$",
       "ignoreLocal": false,
       "constants": "",
