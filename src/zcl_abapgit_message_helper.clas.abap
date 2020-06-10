@@ -363,7 +363,8 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
           line   = lv_msg_var
           rest   = lv_rest.
 
-      IF lv_msg_var+lc_offset_of_last_character = space.
+      IF lv_msg_var+lc_offset_of_last_character(1) = space OR
+         lv_text+lc_length_of_msgv(1) = space.
         " keep the space at the beginning of the rest
         " because otherwise it's lost
         lv_rest = | { lv_rest }|.
