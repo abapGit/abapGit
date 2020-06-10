@@ -234,7 +234,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       lv_color = | { lv_color }|.
     ENDIF.
 
-    lv_xpixel = cl_gui_cfw=>compute_pixel_from_metric( x_or_y = 'X' in = 1 ).
+    lv_xpixel = cl_gui_cfw=>compute_pixel_from_metric( x_or_y = 'X'
+                                                       in = 1 ).
     IF lv_xpixel >= 2.
       lv_large_icon = ' large'.
     ENDIF.
@@ -260,7 +261,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
         OR ls_study-curly_close = abap_true
         OR ls_study-tag_close = abap_true )
         AND cs_context-indent > 0.
-      lv_x_str = repeat( val = ` ` occ = ( cs_context-indent - 1 ) * c_indent_size ).
+      lv_x_str = repeat( val = ` `
+                         occ = ( cs_context-indent - 1 ) * c_indent_size ).
       cv_line  = lv_x_str && cv_line.
     ELSE.
       cv_line = cs_context-indent_str && cv_line.
@@ -287,7 +289,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       ELSEIF cs_context-indent > 0. " AND ls_study-openings < ls_study-closings
         cs_context-indent = cs_context-indent - 1.
       ENDIF.
-      cs_context-indent_str = repeat( val = ` ` occ = cs_context-indent * c_indent_size ).
+      cs_context-indent_str = repeat( val = ` `
+                                      occ = cs_context-indent * c_indent_size ).
     ENDIF.
 
   ENDMETHOD.
@@ -323,7 +326,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     DATA: lv_line TYPE string,
           lv_len  TYPE i.
 
-    lv_line = to_upper( shift_left( val = iv_line sub = ` ` ) ).
+    lv_line = to_upper( shift_left( val = iv_line
+                                    sub = ` ` ) ).
     lv_len  = strlen( lv_line ).
 
     " Some assumptions for simplification and speed

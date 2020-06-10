@@ -20,18 +20,6 @@ CLASS zcl_abapgit_objects DEFINITION
         files TYPE zif_abapgit_definitions=>ty_files_tt,
         item  TYPE zif_abapgit_definitions=>ty_item,
       END OF ty_serialization .
-    TYPES:
-      BEGIN OF ty_step_data,
-        step_id      TYPE zif_abapgit_object=>ty_deserialization_step,
-        order        TYPE i,
-        descr        TYPE string,
-        is_ddic      TYPE abap_bool,
-        syntax_check TYPE abap_bool,
-        objects      TYPE ty_deserialization_tt,
-      END OF ty_step_data .
-    TYPES:
-      ty_step_data_tt TYPE STANDARD TABLE OF ty_step_data
-                                  WITH DEFAULT KEY .
 
     CLASS-METHODS serialize
       IMPORTING
@@ -195,7 +183,7 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_objects
       IMPORTING
-        !is_step  TYPE ty_step_data
+        !is_step  TYPE zif_abapgit_definitions=>ty_step_data
         !ii_log   TYPE REF TO zif_abapgit_log
       CHANGING
         !ct_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt
@@ -240,7 +228,7 @@ CLASS zcl_abapgit_objects DEFINITION
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt .
     CLASS-METHODS get_deserialize_steps
       RETURNING
-        VALUE(rt_steps) TYPE ty_step_data_tt .
+        VALUE(rt_steps) TYPE zif_abapgit_definitions=>ty_step_data_tt .
 ENDCLASS.
 
 
@@ -398,7 +386,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           iv_xml      = zcl_abapgit_convert=>xstring_to_string_utf8( ls_remote_file-data )
           iv_filename = ls_remote_file-filename.
 
-      ls_result = li_comparator->compare( io_remote = lo_remote_version ii_log = ii_log ).
+      ls_result = li_comparator->compare( io_remote = lo_remote_version
+                                          ii_log = ii_log ).
       IF ls_result-text IS INITIAL.
         RETURN.
       ENDIF.
@@ -406,7 +395,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       "log comparison result
       ls_item-obj_type = is_result-obj_type.
       ls_item-obj_name = is_result-obj_name.
-      ii_log->add_warning( iv_msg = ls_result-text is_item = ls_item ).
+      ii_log->add_warning( iv_msg = ls_result-text
+                           is_item = ls_item ).
 
       "continue or abort?
       lv_gui_is_available = zcl_abapgit_ui_factory=>get_gui_functions( )->gui_is_available( ).
@@ -588,14 +578,14 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           li_progress TYPE REF TO zif_abapgit_progress,
           lv_path     TYPE string,
           lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
-          lt_steps_id TYPE zif_abapgit_object=>ty_deserialization_step_tt,
-          lt_steps    TYPE ty_step_data_tt,
+          lt_steps_id TYPE zif_abapgit_definitions=>ty_deserialization_step_tt,
+          lt_steps    TYPE zif_abapgit_definitions=>ty_step_data_tt,
           lx_exc      TYPE REF TO zcx_abapgit_exception.
     DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_result>  TYPE zif_abapgit_definitions=>ty_result,
-                   <lv_step_id> TYPE LINE OF zif_abapgit_object=>ty_deserialization_step_tt,
-                   <ls_step>    TYPE LINE OF ty_step_data_tt,
+                   <lv_step_id> TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_step_tt,
+                   <ls_step>    TYPE LINE OF zif_abapgit_definitions=>ty_step_data_tt,
                    <ls_deser>   TYPE LINE OF ty_deserialization_tt.
 
     lt_steps = get_deserialize_steps( ).
@@ -610,7 +600,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     lt_remote = io_repo->get_files_remote( ).
 
-    lt_results = files_to_deserialize( io_repo = io_repo ii_log = ii_log ).
+    lt_results = files_to_deserialize( io_repo = io_repo
+                                       ii_log = ii_log ).
 
     checks_adjust(
       EXPORTING
@@ -690,8 +681,10 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           CLEAR: lv_path, lv_package.
 
         CATCH zcx_abapgit_exception INTO lx_exc.
-          ii_log->add_exception( ix_exc = lx_exc is_item = ls_item ).
-          ii_log->add_error( iv_msg = |Import of object { ls_item-obj_name } failed| is_item = ls_item ).
+          ii_log->add_exception( ix_exc = lx_exc
+                                 is_item = ls_item ).
+          ii_log->add_error( iv_msg = |Import of object { ls_item-obj_name } failed|
+                             is_item = ls_item ).
           "object should not be part of any deserialization step
           CONTINUE.
       ENDTRY.
@@ -744,6 +737,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
   METHOD deserialize_objects.
 
     DATA: li_progress TYPE REF TO zif_abapgit_progress,
+          li_exit     TYPE REF TO zif_abapgit_exit,
           lx_exc      TYPE REF TO zcx_abapgit_exception.
 
     FIELD-SYMBOLS: <ls_obj> LIKE LINE OF is_step-objects.
@@ -765,16 +759,25 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
                                      ii_log     = ii_log ).
           APPEND LINES OF <ls_obj>-obj->mo_files->get_accessed_files( ) TO ct_files.
 
-          ii_log->add_success( iv_msg = |Object { <ls_obj>-item-obj_name } imported| is_item = <ls_obj>-item ).
+          ii_log->add_success( iv_msg = |Object { <ls_obj>-item-obj_name } imported|
+                               is_item = <ls_obj>-item ).
 
         CATCH zcx_abapgit_exception INTO lx_exc.
-          ii_log->add_exception( ix_exc = lx_exc is_item = <ls_obj>-item ).
-          ii_log->add_error( iv_msg = |Import of object { <ls_obj>-item-obj_name } failed| is_item = <ls_obj>-item ).
+          ii_log->add_exception( ix_exc = lx_exc
+                                 is_item = <ls_obj>-item ).
+          ii_log->add_error( iv_msg = |Import of object { <ls_obj>-item-obj_name } failed|
+                             is_item = <ls_obj>-item ).
       ENDTRY.
 
     ENDLOOP.
 
     zcl_abapgit_objects_activation=>activate( is_step-is_ddic ).
+
+*   Call postprocessing
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+
+    li_exit->deserialize_postprocess( is_step = is_step
+                                      ii_log  = ii_log ).
 
   ENDMETHOD.
 
@@ -894,7 +897,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD get_deserialize_steps.
-    FIELD-SYMBOLS: <ls_step>    TYPE LINE OF ty_step_data_tt.
+    FIELD-SYMBOLS: <ls_step>    TYPE LINE OF zif_abapgit_definitions=>ty_step_data_tt.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-ddic.

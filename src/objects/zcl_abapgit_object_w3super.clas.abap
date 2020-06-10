@@ -60,7 +60,8 @@ CLASS ZCL_ABAPGIT_OBJECT_W3SUPER IMPLEMENTATION.
 
 
   METHOD constructor.
-    super->constructor( is_item = is_item iv_language = iv_language ).
+    super->constructor( is_item = is_item
+                        iv_language = iv_language ).
     ms_key-relid = ms_item-obj_type+2(2).
     ms_key-objid = ms_item-obj_name.
   ENDMETHOD.
@@ -83,7 +84,8 @@ CLASS ZCL_ABAPGIT_OBJECT_W3SUPER IMPLEMENTATION.
 
   METHOD get_ext.
 
-    rv_ext = find_param( it_params = it_params iv_name = c_param_names-fileext ).
+    rv_ext = find_param( it_params = it_params
+                         iv_name = c_param_names-fileext ).
     SHIFT rv_ext LEFT DELETING LEADING '.'.
 
   ENDMETHOD.
@@ -124,7 +126,8 @@ CLASS ZCL_ABAPGIT_OBJECT_W3SUPER IMPLEMENTATION.
     FIELD-SYMBOLS <ls_param> LIKE LINE OF ct_params.
 
     " Remove path from filename
-    find_param( it_params = ct_params iv_name = c_param_names-filename ). " Check exists
+    find_param( it_params = ct_params
+                iv_name = c_param_names-filename ). " Check exists
     READ TABLE ct_params ASSIGNING <ls_param> WITH KEY name = c_param_names-filename.
     <ls_param>-value = zcl_abapgit_path=>get_filename_from_syspath( |{ <ls_param>-value }| ).
 
@@ -463,7 +466,8 @@ CLASS ZCL_ABAPGIT_OBJECT_W3SUPER IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Cannot read W3xx data' ).
     ENDIF.
 
-    lv_size = find_param( it_params = lt_w3params iv_name = c_param_names-filesize ).
+    lv_size = find_param( it_params = lt_w3params
+                          iv_name = c_param_names-filesize ).
     " Clean params (remove version, filesize & clear filename from path)
     strip_params( CHANGING  ct_params = lt_w3params ).
 

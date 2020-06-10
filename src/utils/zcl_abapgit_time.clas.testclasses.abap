@@ -29,8 +29,8 @@ CLASS ltcl_time_test IMPLEMENTATION.
 
   METHOD get_utc.
 
-    DATA: lv_date TYPE sydatum,
-          lv_time TYPE syuzeit.
+    DATA: lv_date TYPE sy-datum,
+          lv_time TYPE sy-uzeit.
 
     zcl_abapgit_time=>get_utc(
       EXPORTING

@@ -729,62 +729,7 @@ CLASS zcl_abapgit_oo_class IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~read_sotr.
-    DATA: lv_concept    TYPE sotr_head-concept,
-          lt_seocompodf TYPE STANDARD TABLE OF seocompodf WITH DEFAULT KEY,
-          ls_header     TYPE sotr_head,
-          lt_entries    TYPE sotr_text_tt.
-
-    FIELD-SYMBOLS: <ls_sotr>       LIKE LINE OF rt_sotr,
-                   <ls_seocompodf> LIKE LINE OF lt_seocompodf,
-                   <ls_entry>      LIKE LINE OF lt_entries.
-
-
-    SELECT * FROM seocompodf
-      INTO TABLE lt_seocompodf
-      WHERE clsname = iv_object_name
-      AND version = '1'
-      AND exposure = '2'
-      AND attdecltyp = '2'
-      AND type = 'SOTR_CONC'
-      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
-
-    LOOP AT lt_seocompodf ASSIGNING <ls_seocompodf>.
-
-      lv_concept = translate( val = <ls_seocompodf>-attvalue from = '''' to = '' ).
-
-      CALL FUNCTION 'SOTR_GET_CONCEPT'
-        EXPORTING
-          concept        = lv_concept
-        IMPORTING
-          header         = ls_header
-        TABLES
-          entries        = lt_entries
-        EXCEPTIONS
-          no_entry_found = 1
-          OTHERS         = 2.
-      IF sy-subrc <> 0.
-        CONTINUE.
-      ENDIF.
-
-      CLEAR: ls_header-paket,
-             ls_header-crea_name,
-             ls_header-crea_tstut,
-             ls_header-chan_name,
-             ls_header-chan_tstut.
-
-      LOOP AT lt_entries ASSIGNING <ls_entry>.
-        CLEAR: <ls_entry>-version,
-               <ls_entry>-crea_name,
-               <ls_entry>-crea_tstut,
-               <ls_entry>-chan_name,
-               <ls_entry>-chan_tstut.
-      ENDLOOP.
-
-      APPEND INITIAL LINE TO rt_sotr ASSIGNING <ls_sotr>.
-      <ls_sotr>-header = ls_header.
-      <ls_sotr>-entries = lt_entries.
-
-    ENDLOOP.
+    rt_sotr = zcl_abapgit_sotr_handler=>read_sotr_seocomp( iv_object_name ).
   ENDMETHOD.
 
 

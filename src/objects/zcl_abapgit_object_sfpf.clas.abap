@@ -91,7 +91,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
         lv_count = lv_count + 1.
         lv_new = |o{ lv_count }|.
 *       Rewrite id
-        IF li_elem->set_attribute( name = 'id' value = lv_new ) IS NOT INITIAL.
+        IF li_elem->set_attribute( name = 'id'
+                                   value = lv_new ) IS NOT INITIAL.
           zcx_abapgit_exception=>raise( 'SFPF error, FIX_OREF' ).
         ENDIF.
 *       Update references

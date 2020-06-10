@@ -48,9 +48,13 @@ INTERFACE zif_abapgit_exit
       VALUE(rv_ssl_id) TYPE ssfapplssl .
   METHODS custom_serialize_abap_clif
     IMPORTING
-      is_class_key     TYPE seoclskey
+      !is_class_key    TYPE seoclskey
     RETURNING
       VALUE(rt_source) TYPE zif_abapgit_definitions=>ty_string_tt
     RAISING
-      zcx_abapgit_exception.
+      zcx_abapgit_exception .
+  METHODS deserialize_postprocess
+    IMPORTING
+      !is_step TYPE zif_abapgit_definitions=>ty_step_data
+      !ii_log  TYPE REF TO zif_abapgit_log .
 ENDINTERFACE.
