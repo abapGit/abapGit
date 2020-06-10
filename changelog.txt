@@ -8,6 +8,23 @@ Legend
 + : added
 - : removed
 
+2020-06-10 v1.96.0
+------------------
+* "last changed by" will show unknown instead of blank
++ hover line highlighting
+! staging will show error instead of dump in special cases
+* fix related to textpools of includes
+* various changes regarding only serializing master language
+! GUI refactoring
++ New syntax highlighters CSS + JS + JSON
+* downports
+* proxy bypass settings maintenance fix
+! WDA SORT text fixes
++ User exit for deserialize postprocess
+* Fix dumps regarding PINF deserialization
+* Enahnced object list for debug info
+! TADIR serialization logic changes
+
 2020-05-21 v1.95.0
 ------------------
 * apack interface serialization changes

@@ -386,6 +386,32 @@ INTERFACE zif_abapgit_definitions
            length TYPE lvc_outlen,
          END OF ty_alv_column,
          ty_alv_column_tt TYPE TABLE OF ty_alv_column WITH DEFAULT KEY.
+  TYPES:
+    BEGIN OF ty_deserialization,
+      obj     TYPE REF TO zif_abapgit_object,
+      xml     TYPE REF TO zcl_abapgit_xml_input,
+      package TYPE devclass,
+      item    TYPE ty_item,
+    END OF ty_deserialization .
+  TYPES:
+    ty_deserialization_tt TYPE STANDARD TABLE OF ty_deserialization WITH DEFAULT KEY .
+  TYPES:
+    ty_deserialization_step TYPE string.
+  TYPES:
+    ty_deserialization_step_tt TYPE STANDARD TABLE OF ty_deserialization_step
+                                          WITH DEFAULT KEY .
+  TYPES:
+    BEGIN OF ty_step_data,
+      step_id      TYPE ty_deserialization_step,
+      order        TYPE i,
+      descr        TYPE string,
+      is_ddic      TYPE abap_bool,
+      syntax_check TYPE abap_bool,
+      objects      TYPE ty_deserialization_tt,
+    END OF ty_step_data .
+  TYPES:
+    ty_step_data_tt TYPE STANDARD TABLE OF ty_step_data
+                                WITH DEFAULT KEY .
   CONSTANTS:
     BEGIN OF c_git_branch_type,
       branch          TYPE ty_git_branch_type VALUE 'HD',
@@ -492,7 +518,6 @@ INTERFACE zif_abapgit_definitions
   CONSTANTS c_tag_prefix TYPE string VALUE 'refs/tags/' ##NO_TEXT.
   CONSTANTS c_spagpa_param_repo_key TYPE c LENGTH 20 VALUE 'REPO_KEY' ##NO_TEXT.
   CONSTANTS c_spagpa_param_package TYPE c LENGTH 20 VALUE 'PACKAGE' ##NO_TEXT.
-
   CONSTANTS gc_yes TYPE ty_yes_no VALUE 'Y'.
   CONSTANTS gc_no TYPE ty_yes_no VALUE 'N'.
   CONSTANTS gc_partial TYPE ty_yes_no_partial VALUE 'P'.
