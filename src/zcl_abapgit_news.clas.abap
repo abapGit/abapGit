@@ -53,6 +53,11 @@ CLASS zcl_abapgit_news DEFINITION
     DATA mv_lastseen_version TYPE string .
     DATA mv_latest_version TYPE string .
 
+    CLASS-METHODS is_abapgit
+      IMPORTING
+        !iv_url           TYPE string
+      RETURNING
+        VALUE(rv_abapgit) TYPE abap_bool .
     METHODS latest_version
       RETURNING
         VALUE(rv_version) TYPE string .
@@ -152,8 +157,8 @@ CLASS zcl_abapgit_news IMPLEMENTATION.
       lc_log_filename_up TYPE string VALUE 'CHANGELOG*'.
 
     DATA: lo_apack       TYPE REF TO zcl_abapgit_apack_reader,
-          ls_apack       TYPE zif_abapgit_apack_definitions=>ty_descriptor,
           lt_remote      TYPE zif_abapgit_definitions=>ty_files_tt,
+          lv_version     TYPE string,
           lv_last_seen   TYPE string,
           lv_url         TYPE string,
           lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
@@ -168,13 +173,20 @@ CLASS zcl_abapgit_news IMPLEMENTATION.
     lo_repo_online ?= io_repo.
     lv_url          = lo_repo_online->get_url( ).
 
-    lo_apack = io_repo->get_dot_apack( ).
-    IF lo_apack IS NOT BOUND.
-      RETURN.
+    IF is_abapgit( lv_url ) = abap_true.
+      lv_version = zif_abapgit_version=>gc_abap_version.
+    ELSE.
+
+      lo_apack = io_repo->get_dot_apack( ).
+      IF lo_apack IS NOT BOUND.
+        RETURN.
+      ENDIF.
+
+      lv_version = lo_apack->get_manifest_descriptor( )-version.
+
     ENDIF.
 
-    ls_apack = lo_apack->get_manifest_descriptor( ).
-    IF ls_apack-version IS INITIAL.
+    IF lv_version IS INITIAL.
       RETURN.
     ENDIF.
 
@@ -192,7 +204,7 @@ CLASS zcl_abapgit_news IMPLEMENTATION.
       CREATE OBJECT ro_instance
         EXPORTING
           iv_rawdata          = <ls_file>-data
-          iv_current_version  = ls_apack-version
+          iv_current_version  = lv_version
           iv_lastseen_version = normalize_version( lv_last_seen ).
 
       EXIT.
@@ -235,6 +247,15 @@ CLASS zcl_abapgit_news IMPLEMENTATION.
     rv_boolean = boolc( compare_versions(
       iv_a = mv_latest_version
       iv_b = mv_current_version ) > 0 ).
+  ENDMETHOD.
+
+
+  METHOD is_abapgit.
+
+    IF iv_url CS '/abapGit' OR iv_url CS '/abapGit.git'.
+      rv_abapgit = abap_true.
+    ENDIF.
+
   ENDMETHOD.
 
 
