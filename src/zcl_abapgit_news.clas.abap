@@ -53,11 +53,6 @@ CLASS zcl_abapgit_news DEFINITION
     DATA mv_lastseen_version TYPE string .
     DATA mv_latest_version TYPE string .
 
-    CLASS-METHODS is_abapgit
-      IMPORTING
-        !iv_url           TYPE string
-      RETURNING
-        VALUE(rv_abapgit) TYPE abap_bool .
     METHODS latest_version
       RETURNING
         VALUE(rv_version) TYPE string .
@@ -173,7 +168,7 @@ CLASS zcl_abapgit_news IMPLEMENTATION.
     lo_repo_online ?= io_repo.
     lv_url          = lo_repo_online->get_url( ).
 
-    IF is_abapgit( lv_url ) = abap_true.
+    IF zcl_abapgit_url=>is_abapgit_repo( lv_url ) = abap_true.
       lv_version = zif_abapgit_version=>gc_abap_version. " TODO refactor
     ELSE.
 
@@ -247,15 +242,6 @@ CLASS zcl_abapgit_news IMPLEMENTATION.
     rv_boolean = boolc( compare_versions(
       iv_a = mv_latest_version
       iv_b = mv_current_version ) > 0 ).
-  ENDMETHOD.
-
-
-  METHOD is_abapgit.
-
-    IF iv_url CS '/abapGit' OR iv_url CS '/abapGit.git'.
-      rv_abapgit = abap_true.
-    ENDIF.
-
   ENDMETHOD.
 
 
