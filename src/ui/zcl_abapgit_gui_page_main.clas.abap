@@ -235,10 +235,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
     IF lo_favbar->count( ) > 0.
       ro_html->add( lo_favbar->render( iv_sort = abap_true ) ).
     ELSE.
-      ro_html->add( |<span class="grey">No favorites so far. For more info please check {
-                    zcl_abapgit_html=>a( iv_txt = 'tutorial'
-                                         iv_act = zif_abapgit_definitions=>c_action-go_tutorial )
-                    }</span>| ).
+      IF mv_show IS INITIAL.
+        ro_html->add( |<span class="grey">No favorites so far.</span>| ).
+      ELSE.
+        ro_html->add( |<span class="grey">No favorites so far. For more info please check {
+                      zcl_abapgit_html=>a( iv_txt = 'tutorial'
+                                           iv_act = zif_abapgit_definitions=>c_action-go_tutorial )
+                      }</span>| ).
+      ENDIF.
     ENDIF.
     ro_html->add( '</td>' ).
 
