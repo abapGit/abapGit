@@ -265,7 +265,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
 
     DATA: lt_matches TYPE ty_match_tt.
 
-    IF is_whitespace( iv_line ) = abap_true.
+    IF iv_line IS INITIAL OR is_whitespace( iv_line ) = abap_true.
       rv_line = iv_line.
       RETURN.
     ENDIF.
