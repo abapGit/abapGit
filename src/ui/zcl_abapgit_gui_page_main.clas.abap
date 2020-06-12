@@ -87,6 +87,8 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
                   iv_act = zif_abapgit_definitions=>c_action-repo_newonline ) ##NO_TEXT.
     ro_menu->add( iv_txt = '+ Offline'
                   iv_act = zif_abapgit_definitions=>c_action-repo_newoffline ) ##NO_TEXT.
+    ro_menu->add( iv_txt = 'test add'
+                  iv_act = 'test_add' ) ##NO_TEXT.
 
     ro_menu->add( iv_txt = 'Advanced'
                   io_sub = lo_advsub ) ##NO_TEXT.
