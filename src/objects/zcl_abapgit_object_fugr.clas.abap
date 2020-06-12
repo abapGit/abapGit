@@ -634,11 +634,40 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
     LOOP AT rt_includes ASSIGNING <lv_include>.
       lv_tabix = sy-tabix.
 
-* make sure the include exists
+      "Skip SAP standard includes and also make sure the include exists
       READ TABLE lt_reposrc INTO ls_reposrc
         WITH KEY progname = <lv_include> BINARY SEARCH.
       IF sy-subrc <> 0.
+
+        "Include does not exist
         DELETE rt_includes INDEX lv_tabix.
+
+      ELSE.
+
+        "Include exists
+        DATA(namespace) = zcl_abapgit_sap=>get_namespace( <lv_include> ).
+
+        IF namespace IS INITIAL.
+          "Include w/o Namespace: Check Creator
+          IF ls_reposrc-cnam = 'SAP'.
+            DELETE rt_includes INDEX lv_tabix.
+          ENDIF.
+        ELSE.
+          "Include w/ Namespace: Check Association and Package
+
+          "Association: Verify that this is an Include belonging to the Function Group
+          DATA(lv_offset_fns) = lv_offset_ns + 1.
+          IF <lv_include>(lv_offset_fns) <> |{ <lv_include>(lv_offset_ns) }L|.
+            "Include is not a function group include and will be evaluated on package level
+            DELETE rt_includes INDEX lv_tabix.
+          ELSE.
+            "Function Group Include: Check Namespace
+            IF zcl_abapgit_sap=>is_sap_namespace( <lv_include> ).
+              "SAP Include: Skip
+              DELETE rt_includes INDEX lv_tabix.
+            ENDIF.
+          ENDIF.
+
       ENDIF.
 
     ENDLOOP.
