@@ -111,11 +111,14 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
 
   METHOD get_name.
-    rv_name = zcl_abapgit_url=>name( ms_data-url ).
     rv_name = super->get_name( ).
     IF rv_name IS INITIAL.
-      rv_name = zcl_abapgit_url=>name( ms_data-url ).
-      rv_name = cl_http_utility=>if_http_utility~unescape_url( rv_name ).
+      TRY.
+          rv_name = zcl_abapgit_url=>name( ms_data-url ).
+          rv_name = cl_http_utility=>if_http_utility~unescape_url( rv_name ).
+        CATCH zcx_abapgit_exception.
+          rv_name = '(Fix URL with "Advanced > Change Remote")'.
+      ENDTRY.
     ENDIF.
   ENDMETHOD.
 
