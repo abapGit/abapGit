@@ -124,7 +124,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
   METHOD render_icon.
 
-    data: lv_icon TYPE string.
+    DATA: lv_icon TYPE string.
 
     lv_icon = zcl_abapgit_html=>icon( iv_name  = iv_icon && '/darkgrey'
                                       iv_class = 'large' ).
