@@ -244,7 +244,8 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
 
     DATA: lt_matches TYPE ty_match_tt.
 
-    IF strlen( iv_line ) = 0.
+    IF iv_line is initial OR iv_line = cl_abap_char_utilities=>c_newline.
+      rv_line = iv_line.
       RETURN.
     ENDIF.
 
