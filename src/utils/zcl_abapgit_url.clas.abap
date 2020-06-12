@@ -88,7 +88,7 @@ CLASS zcl_abapgit_url IMPLEMENTATION.
 
   METHOD regex.
 
-    FIND REGEX '(.*://[^/]*)(.*/)([^\.]*)[\.git]?' IN iv_url
+    FIND REGEX '(https?://[^/]*)(.*/)([^\.]*)[\.git]?' IN iv_url
       SUBMATCHES ev_host ev_path ev_name.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Malformed URL' ).
