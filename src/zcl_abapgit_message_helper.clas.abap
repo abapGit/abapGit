@@ -4,34 +4,31 @@ CLASS zcl_abapgit_message_helper DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+
     CONSTANTS:
       BEGIN OF gc_section_text,
         cause           TYPE string VALUE `Cause`,
         system_response TYPE string VALUE `System response`,
         what_to_do      TYPE string VALUE `Procedure`,
         sys_admin       TYPE string VALUE `System administration`,
-      END OF gc_section_text,
+      END OF gc_section_text .
+    CONSTANTS:
       BEGIN OF gc_section_token,
         cause           TYPE string VALUE `&CAUSE&`,
         system_response TYPE string VALUE `&SYSTEM_RESPONSE&`,
         what_to_do      TYPE string VALUE `&WHAT_TO_DO&`,
         sys_admin       TYPE string VALUE `&SYS_ADMIN&`,
-      END OF gc_section_token.
+      END OF gc_section_token .
 
-    CLASS-METHODS:
-      set_msg_vars_for_clike
-        IMPORTING
-          iv_text TYPE string.
-
-    METHODS:
-      constructor
-        IMPORTING
-          ii_t100_message TYPE REF TO if_t100_message,
-
-      get_t100_longtext
-        RETURNING
-          VALUE(rv_longtext) TYPE string.
-
+    CLASS-METHODS set_msg_vars_for_clike
+      IMPORTING
+        !iv_text TYPE string .
+    METHODS constructor
+      IMPORTING
+        !ii_t100_message TYPE REF TO if_t100_message .
+    METHODS get_t100_longtext
+      RETURNING
+        VALUE(rv_longtext) TYPE string .
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
@@ -363,7 +360,8 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
           line   = lv_msg_var
           rest   = lv_rest.
 
-      IF lv_msg_var+lc_offset_of_last_character = space.
+      IF lv_msg_var+lc_offset_of_last_character(1) = space OR
+         lv_text+lc_length_of_msgv(1) = space.
         " keep the space at the beginning of the rest
         " because otherwise it's lost
         lv_rest = | { lv_rest }|.
