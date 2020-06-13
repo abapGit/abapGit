@@ -66,19 +66,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
 
   METHOD render_content.
 
-    CREATE OBJECT ro_html.
-    ro_html->add( '<div class="toc">' ).
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( '<div class="toc">' ).
 
     IF lines( mt_result ) = 0.
-      ro_html->add( '<div class="dummydiv success">' ).
-      ro_html->add( zcl_abapgit_html=>icon( 'check' ) ).
-      ro_html->add( 'No syntax errors' ).
+      ri_html->add( '<div class="dummydiv success">' ).
+      ri_html->add( zcl_abapgit_html=>icon( 'check' ) ).
+      ri_html->add( 'No syntax errors' ).
     ELSE.
-      render_result( io_html   = ro_html
+      render_result( ii_html   = ri_html
                      it_result = mt_result ).
     ENDIF.
 
-    ro_html->add( '</div>' ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
