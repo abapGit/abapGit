@@ -250,10 +250,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'no conflict found' ).
     ENDIF.
 
-    CREATE OBJECT ro_html.
-    ro_html->add( |<div id="diff-list" data-repo-key="{ mo_repo->get_key( ) }">| ).
-    ro_html->add( render_diff( ms_diff_file ) ).
-    ro_html->add( '</div>' ).
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( |<div id="diff-list" data-repo-key="{ mo_repo->get_key( ) }">| ).
+    ri_html->add( render_diff( ms_diff_file ) ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 

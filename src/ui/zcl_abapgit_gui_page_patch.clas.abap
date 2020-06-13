@@ -581,7 +581,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
     ENDIF.
 
     gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
-    ro_html = super->render_content( ).
+    ri_html = super->render_content( ).
 
     register_deferred_script( render_scripts( ) ).
 
