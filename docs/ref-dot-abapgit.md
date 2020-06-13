@@ -128,7 +128,7 @@ The repository objects can be checked with the [Code inspector](https://help.sap
 
 ### Code inspector check variant
 
-By entering a Code inspector or the ABAP Test Cockpit check variant, the check is activated. Only global check variants are supported. Thus the check variant has to be available to all developers. A check variant can either make use of local checks of the developer system or a reference to a check variant on a remote ABAP Test Cockpit system. The available checks in a check variant on a remote ATC system may differ from the available checks of a check variant of the developer system due to the ATC system being on a newer release. For more details about release-specific availability of ABAP Test Cockpit security-related checks delivered by SAP Code Vulnerability Analyzer (CVA) see SAP Note `[1921820](https://launchpad.support.sap.com/#/notes/1921820)`.
+By entering a Code inspector or the ABAP Test Cockpit check variant, the check is activated. Only global check variants are supported. Thus the check variant has to be available to all developers. A check variant can either make use of local checks of the developer system or a reference to a check variant on a remote ABAP Test Cockpit system. The available checks in a check variant on a remote ATC system may differ from the available checks of a check variant of the developer system due to the ATC system being on a newer release. For more details about release-specific availability of ABAP Test Cockpit security-related checks delivered by SAP Code Vulnerability Analyzer (CVA) see SAP Note [1921820](https://launchpad.support.sap.com/#/notes/1921820).
 
 ### Block commit/push if code inspection has erros
 
