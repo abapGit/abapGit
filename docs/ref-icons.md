@@ -6,9 +6,11 @@ order: 25
 
 The following list provides a quick reference to icons used in abapGit.
 
+See also [abapGit Icon Font](https://github.com/abapGit/icon-font).
+
 Icon   | Description   | Code
 :------------ | :------------ | ------------:
-![](https://github.com/abapGit/icon-font/blob/master/svg/chevron-down.svg) | Arrow Down.svg (chevron-down)
+![](https://github.com/abapGit/icon-font/blob/master/svg/chevron-down.svg) | Arrow Down | (chevron-down)
 ![](https://github.com/abapGit/icon-font/blob/master/svg/chevron-left.svg) | Arrow Left | (chevron-left)
 ![](https://github.com/abapGit/icon-font/blob/master/svg/chevron-right.svg) | Arrow Right | (chevron-right)
 ![](https://github.com/abapGit/icon-font/blob/master/svg/chevron-up.svg) | Arrow Up | (chevron-up)
