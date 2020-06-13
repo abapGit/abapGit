@@ -72,6 +72,11 @@ CLASS zcl_abapgit_syntax_highlighter DEFINITION
         !iv_class      TYPE string
       RETURNING
         VALUE(rv_line) TYPE string .
+    METHODS is_whitespace
+      IMPORTING
+        !iv_string       TYPE string
+      RETURNING
+        VALUE(rv_result) TYPE abap_bool .
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -196,6 +201,22 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_whitespace.
+
+    DATA: lv_whitespace TYPE string.
+
+    "/^\s+$/
+    lv_whitespace = ` ` && cl_abap_char_utilities=>horizontal_tab && cl_abap_char_utilities=>cr_lf.
+
+    IF iv_string CO lv_whitespace.
+      rv_result = abap_true.
+    ELSE.
+      rv_result = abap_false.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD parse_line.
 
     DATA:
@@ -244,7 +265,8 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
 
     DATA: lt_matches TYPE ty_match_tt.
 
-    IF strlen( iv_line ) = 0.
+    IF iv_line IS INITIAL OR is_whitespace( iv_line ) = abap_true.
+      rv_line = iv_line.
       RETURN.
     ENDIF.
 
