@@ -106,7 +106,11 @@ This setting overwrites the default name of the repository (which is derived fro
 
 ## Write protected
 
-Write protected is described here: [Write protected](http://docs.abapgit.org/ref-write-protect.html)
+If you write protect a repository, it will make sure that users cannot overwrite objects in the SAP system with objects from the  repository. It helps enforcing that data can only go from the SAP system to the repository.
+
+Turning on this option disables pulls, uninstall of all objects, switching branches, etc.
+
+Caution: The option influences only processes within abapGit. It does **not** protect against changes to objects using other means like ABAP Workbench or ABAP Development Tools. 
 
 ## Ignore subpackages
 
