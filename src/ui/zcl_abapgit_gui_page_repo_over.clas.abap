@@ -270,6 +270,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       iv_act = |gHelper.toggleRepoListDetail()|
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
 
+    io_html->add( ` | ` ).
+
     io_html->add( zcl_abapgit_html=>a(
       iv_txt = 'Toggle only favorites'
       iv_act = |gHelper.toggleRepoListFavorites()|
