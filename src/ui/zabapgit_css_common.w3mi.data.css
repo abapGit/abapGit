@@ -34,6 +34,16 @@
   text-align: right;
   margin-top: 12px;
 }
+.dialog li.dialog-commands a {
+  /*background-color: #eaeaea;*/
+  border: 1px solid #ccc;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 3px;
+  font-size: smaller;
+}
+
 .dialog label {
   display: block;
   font-size: 90%;
@@ -63,7 +73,9 @@
 }
 .dialog input[type="submit"] {
   background-color: #64a8ff;
+  border: 1px solid transparent;
   color: #fff;
+  cursor: pointer;
 }
 .dialog .radio-container {
   display: inline-block;

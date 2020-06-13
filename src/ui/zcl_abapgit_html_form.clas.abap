@@ -12,9 +12,18 @@ CLASS zcl_abapgit_html_form DEFINITION
     METHODS render
       IMPORTING
         iv_form_class TYPE string
-        iv_action TYPE string
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html.
+
+    METHODS set_submit_params
+      IMPORTING
+        iv_label TYPE string
+        iv_action TYPE string.
+
+    METHODS command
+      IMPORTING
+        iv_label TYPE string
+        iv_action TYPE string.
 
     METHODS text
       IMPORTING
@@ -71,6 +80,13 @@ CLASS zcl_abapgit_html_form DEFINITION
         subitems TYPE tty_subitems,
       END OF ty_field.
 
+    TYPES:
+      BEGIN OF ty_command,
+        label TYPE string,
+        action TYPE string,
+*        onclick ???
+      END OF ty_command.
+
     CONSTANTS:
       BEGIN OF c_field_type,
         text TYPE i VALUE 1,
@@ -79,6 +95,8 @@ CLASS zcl_abapgit_html_form DEFINITION
       END OF c_field_type.
 
     DATA mt_fields TYPE STANDARD TABLE OF ty_field.
+    DATA ms_submit TYPE ty_command.
+    DATA mt_commands TYPE STANDARD TABLE OF ty_command.
 
     METHODS render_field
       IMPORTING
@@ -107,6 +125,18 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     ENDIF.
 
     APPEND ls_field TO mt_fields.
+
+  ENDMETHOD.
+
+
+  METHOD command.
+
+    DATA ls_cmd LIKE LINE OF mt_commands.
+
+    ls_cmd-label = iv_label.
+    ls_cmd-action = iv_action.
+
+    APPEND ls_cmd TO mt_commands.
 
   ENDMETHOD.
 
@@ -161,11 +191,14 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
   METHOD render.
 
     FIELD-SYMBOLS <ls_field> LIKE LINE OF mt_fields.
+    FIELD-SYMBOLS <ls_cmd> LIKE LINE OF mt_commands.
+
+    ASSERT ms_submit-action IS NOT INITIAL AND ms_submit-label IS NOT INITIAL.
 
     ri_html = zcl_abapgit_html=>create( ).
 
     ri_html->add( |<ul class="{ iv_form_class }">| ).
-    ri_html->add( |<form action="sapevent:{ iv_action }" method="post">| ).
+    ri_html->add( |<form action="sapevent:{ ms_submit-action }" method="post">| ).
 
     LOOP AT mt_fields ASSIGNING <ls_field>.
       render_field(
@@ -173,9 +206,18 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
         is_field = <ls_field> ).
     ENDLOOP.
 
-*    ri_html->add( |<li>| ).
-*    ri_html->add( mo_commands ).
-*    ri_html->add( |</li>| ).
+    ri_html->add( |<li class="dialog-commands">| ).
+    ri_html->add( |<input type="submit" value="{ ms_submit-label }">| ).
+
+    LOOP AT mt_commands ASSIGNING <ls_cmd>.
+      ri_html->add_a(
+        iv_txt = <ls_cmd>-label
+        iv_act = <ls_cmd>-action
+        iv_class = 'dialog-button' ).
+    ENDLOOP.
+
+    ri_html->add( |</li>| ).
+
     ri_html->add( |</form>| ).
     ri_html->add( |</ul>| ).
 
@@ -233,6 +275,12 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
         ASSERT 1 = 0.
     ENDCASE.
 
+  ENDMETHOD.
+
+
+  METHOD set_submit_params.
+    ms_submit-label = iv_label.
+    ms_submit-action = iv_action.
   ENDMETHOD.
 
 

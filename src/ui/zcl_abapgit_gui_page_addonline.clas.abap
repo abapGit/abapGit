@@ -23,6 +23,17 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
     METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
+
+    CONSTANTS:
+      BEGIN OF c_event,
+        go_back TYPE string VALUE 'go-back',
+        choose_package TYPE string VALUE 'choose-package',
+        create_package TYPE string VALUE 'create-package',
+        choose_branch TYPE string VALUE 'choose-branch',
+        add_online_repo TYPE string VALUE 'add-repo-online',
+      END OF c_event.
+
+
 ENDCLASS.
 
 
@@ -57,13 +68,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
     lo_form->text(
       iv_name        = 'package'
       iv_required    = abap_true
-      iv_side_action = 'choose-package'
+      iv_side_action = c_event-choose_package
       iv_label       = 'Package'
       iv_hint        = 'SAP package for the code (should be a dedicated one)'
       iv_placeholder = 'Z... / $...' ).
     lo_form->text(
       iv_name        = 'branch'
-      iv_side_action = 'choose-branch'
+      iv_side_action = c_event-choose_branch
       iv_label       = 'Branch'
       iv_hint        = 'Switch to a specific branch on clone (default: master)'
       iv_value       = 'master' ).
@@ -82,7 +93,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
     lo_form->option(
       iv_label       = 'Full'
       iv_value       = 'full' ).
-
     lo_form->checkbox(
       iv_name        = 'ignore-subpackages'
       iv_label       = 'Ignore subpackages'
@@ -91,10 +101,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
       iv_name        = 'master-lang-only'
       iv_label       = 'Master language only'
       iv_hint        = 'Ignore translations, serialize just master language' ).
+    lo_form->set_submit_params(
+      iv_label       = 'Clone online repo'
+      iv_action      = c_event-add_online_repo ).
+    lo_form->command(
+      iv_label       = 'Create package'
+      iv_action      = c_event-create_package ).
+    lo_form->command(
+      iv_label       = 'Back'
+      iv_action      = c_event-go_back ).
 
-    ri_html->add( lo_form->render(
-      iv_form_class = 'dialog w500px'
-      iv_action = 'add-repo-online' ) ).
+    ri_html->add( lo_form->render( iv_form_class = 'dialog w500px' ) ).
 
   ENDMETHOD.
 
