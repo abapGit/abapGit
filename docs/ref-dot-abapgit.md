@@ -6,7 +6,8 @@ order: 10
 
 **.abapgit.xml** is a special abapGit file. It contains meta information of the abapGit project.
 
-It is recommended to edit .abapgit.xml via "Repo menu > Advanced > Repo settings". (In exceptional cases, you can edit the xml via "abapGit menu > Advanced > Database util".)
+It is recommended to edit .abapgit.xml via "Repo menu > Advanced > Repo settings". 
+(In exceptional cases, you could edit the xml directly via "abapGit menu > Advanced > Database util".)
 
 ![](img/repo_settings_menu.png)
 
@@ -56,7 +57,7 @@ The Git repository folder that defines the root folder where deserialization sta
 
 ## Folder Logic
 
-abapGit follows two folder logics: PREFIX and FULL
+abapGit follows two folder logics: PREFIX and FULL.
 
 ### PREFIX
 
@@ -67,28 +68,29 @@ Valid prefix:
   * **ZFOO**_BAR
     * **ZFOO_BAR**_QUX
 
-will give folder structure /bar/qux/
+will produce folder structure /bar/qux/
 
 Invalid prefix:
 * ZFOO
   * ZBAR
 
-The folder logic PREFIX allows to install the repository into a different parent package. This can even be local packages(`$*`), in that case no transport order is required.
+The folder logic PREFIX allows to install a repository into a different parent package (in different systems). This can even be local packages (`$*`), in which case no transport order is required.
 
 ### FULL
 
-Any package name is accepted
+Any package name is accepted.
 
 * ZSOMETHING
   * ZHELLO
 
-will give folder structure /zsomething/zhello/
+will produce folder structure /zsomething/zhello/
 
-The folder logic FULL forces the installation of the repository into packages with exactly the same name. This can be problematic for contributors who use a system where specific prefixes for the package names are to be used.
+The folder logic FULL forces the installation of a repository into packages with exactly the same name. Note that this can be problematic for contributors who use a system where specific prefixes for the package names are to be used.
 
 ## Ignore files
 
-Files which abapGit will not download to your ABAP system.
+Files which abapGit will not download to your ABAP system. Typically, this includes references to readme, changelog, and license 
+files as well as repository configuration related to workflows like build or linting jobs.
 
 ## Requirements
 
