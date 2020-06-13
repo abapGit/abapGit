@@ -8,7 +8,7 @@ order: 10
 
 It is recommended to edit .abapgit.xml via "Repo menu > Advanced > Repo settings". (In exceptional cases, you can edit the xml via "abapGit menu > Advanced > Database util".)
 
-![](img/repo_settings_click.png)
+![](img/repo_settings_menu.png)
 
 Example: abapGit's own .abapgit.xml
 
