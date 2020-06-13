@@ -98,7 +98,7 @@ In this section, you can specify the minimum requirements that must be fulfilled
 
 The following settings are stored in and valid for the current system only. 
 
-![](img/repo_settings_local.png)
+![](img/repo_settings_locals.png)
 
 ## Display name
 
