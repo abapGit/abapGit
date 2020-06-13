@@ -227,13 +227,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     lv_key = iv_getdata.
 
     CASE iv_action.
-      WHEN c_actions-show.
-        zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
-        TRY.
-            zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->refresh( ).
-          CATCH zcx_abapgit_exception ##NO_HANDLER.
-        ENDTRY.
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-changed_by.
         test_changed_by( ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
