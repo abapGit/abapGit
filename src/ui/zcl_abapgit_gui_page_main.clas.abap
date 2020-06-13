@@ -56,8 +56,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     CREATE OBJECT lo_advsub.
     CREATE OBJECT lo_helpsub.
 
-    lo_advsub->add( iv_txt = 'Repository overview'
-                    iv_act = zif_abapgit_definitions=>c_action-go_repo_overview ) ##NO_TEXT.
     lo_advsub->add( iv_txt = 'Database util'
                     iv_act = zif_abapgit_definitions=>c_action-go_db ) ##NO_TEXT.
     lo_advsub->add( iv_txt = 'Package to zip'

@@ -130,12 +130,14 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
-
+    DATA: li_repo_overview TYPE REF TO zcl_abapgit_gui_page_repo_over.
     CASE is_event_data-action.
         " ABAPGIT services actions
-      WHEN zif_abapgit_definitions=>c_action-abapgit_home.                    " Go abapGit homepage
-        zcl_abapgit_services_abapgit=>open_abapgit_homepage( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+      WHEN zif_abapgit_definitions=>c_action-abapgit_home.
+        " Go abapGit homepage
+        CREATE OBJECT li_repo_overview.
+        ei_page = li_repo_overview.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-abapgit_install.                 " Install abapGit
         zcl_abapgit_services_abapgit=>install_abapgit( ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
