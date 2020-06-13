@@ -33,13 +33,13 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
         RAISING zcx_abapgit_exception,
       render_toc
         IMPORTING it_repo_list   TYPE zif_abapgit_definitions=>ty_repo_ref_tt
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html
         RAISING   zcx_abapgit_exception,
       build_main_menu
         RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar,
       render_repo
         IMPORTING io_repo        TYPE REF TO zcl_abapgit_repo
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html
         RAISING   zcx_abapgit_exception.
 ENDCLASS.
 
@@ -112,24 +112,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
     retrieve_active_repo( ). " Get and validate key of user default repo
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
 
     TRY.
         lt_repos = zcl_abapgit_repo_srv=>get_instance( )->list( ).
       CATCH zcx_abapgit_exception INTO lx_error.
-        ro_html->add( zcl_abapgit_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
+        ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
         RETURN.
     ENDTRY.
 
-    ro_html->add( render_toc( lt_repos ) ).
+    ri_html->add( render_toc( lt_repos ) ).
 
     IF mv_show IS INITIAL OR lines( lt_repos ) = 0.
       CREATE OBJECT li_tutorial TYPE zcl_abapgit_gui_view_tutorial.
-      ro_html->add( li_tutorial->render( ) ).
+      ri_html->add( li_tutorial->render( ) ).
     ELSE.
       lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mv_show ).
-      ro_html->add( render_repo( lo_repo ) ).
+      ri_html->add( render_repo( lo_repo ) ).
     ENDIF.
 
   ENDMETHOD.
@@ -139,22 +139,22 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
     DATA lo_news TYPE REF TO zcl_abapgit_news.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     lo_news = zcl_abapgit_news=>create( io_repo ).
 
-    ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
-    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
+    ri_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
       io_repo               = io_repo
       io_news               = lo_news
       iv_interactive_branch = abap_true ) ).
 
-    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).
 
     IF mo_repo_content IS BOUND.
-      ro_html->add( mo_repo_content->zif_abapgit_gui_renderable~render( ) ).
+      ri_html->add( mo_repo_content->zif_abapgit_gui_renderable~render( ) ).
     ENDIF.
-    ro_html->add( '</div>' ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -172,7 +172,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
           lv_repo_title TYPE string.
 
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     CREATE OBJECT lo_favbar.
     CREATE OBJECT lo_allbar EXPORTING iv_id = 'toc-all-repos'.
     CREATE OBJECT lo_pback.
@@ -219,43 +219,43 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
     ENDLOOP.
 
     " Render HTML
-    ro_html->add( '<div id="toc">' )          ##NO_TEXT. " TODO refactor html & css
-    ro_html->add( '<div class="toc_grid">' )  ##NO_TEXT.
-    ro_html->add( '<div class="toc_row">' )   ##NO_TEXT.
+    ri_html->add( '<div id="toc">' )          ##NO_TEXT. " TODO refactor html & css
+    ri_html->add( '<div class="toc_grid">' )  ##NO_TEXT.
+    ri_html->add( '<div class="toc_row">' )   ##NO_TEXT.
 
 **********************************************************************
 
-    ro_html->add( '<table class="w100"><tr>' ).
-    ro_html->add( |<td class="pad-sides">{
+    ri_html->add( '<table class="w100"><tr>' ).
+    ri_html->add( |<td class="pad-sides">{
                   zcl_abapgit_html=>icon( iv_name = 'star/blue'
                                           iv_hint = 'Favorites' )
                   }</td>| ).
 
-    ro_html->add( '<td class="pad-sides w100 favorites">' ). " Maximize width
+    ri_html->add( '<td class="pad-sides w100 favorites">' ). " Maximize width
     IF lo_favbar->count( ) > 0.
-      ro_html->add( lo_favbar->render( iv_sort = abap_true ) ).
+      ri_html->add( lo_favbar->render( iv_sort = abap_true ) ).
     ELSE.
-      ro_html->add( |<span class="grey">No favorites so far. For more info please check {
+      ri_html->add( |<span class="grey">No favorites so far. For more info please check {
                     zcl_abapgit_html=>a( iv_txt = 'tutorial'
                                          iv_act = zif_abapgit_definitions=>c_action-go_tutorial )
                     }</span>| ).
     ENDIF.
-    ro_html->add( '</td>' ).
+    ri_html->add( '</td>' ).
 
-    ro_html->add( '<td>' ).
-    ro_html->add( lo_allbar->render_as_droplist(
+    ri_html->add( '<td>' ).
+    ri_html->add( lo_allbar->render_as_droplist(
       iv_label  = zcl_abapgit_html=>icon( iv_name = 'bars/blue' )
       iv_action = c_actions-overview
       iv_right  = abap_true
       iv_sort   = abap_true ) ).
-    ro_html->add( '</td>' ).
-    ro_html->add( '</tr></table>' ).
+    ri_html->add( '</td>' ).
+    ri_html->add( '</tr></table>' ).
 
 **********************************************************************
 
-    ro_html->add( '</div>' ).
-    ro_html->add( '</div>' ).
-    ro_html->add( '</div>' ).
+    ri_html->add( '</div>' ).
+    ri_html->add( '</div>' ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 

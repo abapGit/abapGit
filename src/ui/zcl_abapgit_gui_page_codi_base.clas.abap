@@ -11,11 +11,11 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM 
 
     METHODS render_result
       IMPORTING
-        !io_html   TYPE REF TO zcl_abapgit_html
+        !ii_html   TYPE REF TO zif_abapgit_html
         !it_result TYPE scit_alvlist .
     METHODS render_result_line
       IMPORTING
-        !io_html   TYPE REF TO zcl_abapgit_html
+        !ii_html   TYPE REF TO zif_abapgit_html
         !is_result TYPE scir_alvlist .
     METHODS build_nav_link
       IMPORTING
@@ -128,21 +128,21 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     CONSTANTS: lc_limit TYPE i VALUE 500.
     FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
 
-    io_html->add( '<div class="ci-result">' ).
+    ii_html->add( '<div class="ci-result">' ).
 
     LOOP AT it_result ASSIGNING <ls_result> TO lc_limit.
       render_result_line(
-        io_html = io_html
+        ii_html = ii_html
         is_result = <ls_result> ).
     ENDLOOP.
 
-    io_html->add( '</div>' ).
+    ii_html->add( '</div>' ).
 
     IF lines( it_result ) > lc_limit.
-      io_html->add( '<div class="dummydiv warning">' ).
-      io_html->add( zcl_abapgit_html=>icon( 'exclamation-triangle' ) ).
-      io_html->add( |Only first { lc_limit } findings shown in list!| ).
-      io_html->add( '</div>' ).
+      ii_html->add( '<div class="dummydiv warning">' ).
+      ii_html->add( zcl_abapgit_html=>icon( 'exclamation-triangle' ) ).
+      ii_html->add( |Only first { lc_limit } findings shown in list!| ).
+      ii_html->add( '</div>' ).
     ENDIF.
 
   ENDMETHOD.
@@ -175,13 +175,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     ENDIF.
     lv_obj_txt = |{ lv_obj_txt } [ @{ zcl_abapgit_convert=>alpha_output( is_result-line ) } ]|.
 
-    io_html->add( |<li class="{ lv_class }">| ).
-    io_html->add_a(
+    ii_html->add( |<li class="{ lv_class }">| ).
+    ii_html->add_a(
       iv_txt = lv_obj_txt
       iv_act = build_nav_link( is_result )
       iv_typ = zif_abapgit_html=>c_action_type-sapevent ).
-    io_html->add( |<span>{ lv_msg }</span>| ).
-    io_html->add( '</li>' ).
+    ii_html->add( |<span>{ lv_msg }</span>| ).
+    ii_html->add( '</li>' ).
 
   ENDMETHOD.
 
