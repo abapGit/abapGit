@@ -3,6 +3,108 @@
  */
 
 /* GLOBALS */
+.w500px { width: 500px }
+.dialog input::placeholder { color: #ccc }
+.dialog input:-ms-input-placeholder { color: #ccc }
+
+.dialog {
+  margin: 1em 1em;
+  padding: 1em 1em;
+  /*border: 1px solid #00000015;*/
+  border: 1px solid #cbcbcb;
+  border-radius: 4px;
+  /*background-color: #ffffff60;*/
+  background-color: #f4f4f4;
+  text-align: left;
+}
+.dialog li {
+  padding: 5px 10px;
+  display: block;
+  list-style: none;
+  position: relative;
+}
+.dialog button.field-cmd {
+  float: right;
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  cursor: pointer;
+}
+.dialog li.dialog-commands {
+  text-align: right;
+  margin-top: 12px;
+}
+.dialog label {
+  display: block;
+  font-size: 90%;
+  color: #444;
+  margin-bottom: 4px;
+  padding-left: 0.5em;
+}
+.dialog label span{
+  color: #888;
+}
+.dialog small {
+  color: #999;
+  display: block;
+  font-size: 75%;
+  margin-top: 4px;
+}
+.dialog input {
+  line-height: 1.5em;
+}
+.dialog input[type="button"], .dialog input[type="submit"] {
+  padding: 6px 12px;
+  border-radius: 3px
+}
+.dialog input[type="submit"] {
+  background-color: #64a8ff;
+  color: #fff;
+}
+.dialog .radio-container {
+  display: inline-block;
+  padding: 4px;
+  border: 1px solid #ddd;
+  border-radius: 3px;
+  background-color: #FFF;  
+}
+.dialog input[type="checkbox"] + label {
+  display: inline-block;
+}
+.dialog input[type="text"] {
+  width: 100%;
+  box-sizing : border-box;
+}
+
+.dialog .radio-container input[type="radio"] {
+  visibility: hidden;
+  display: none;
+  height: 0px;
+  width: 0px;
+}
+.dialog .radio-container input[type="radio"] + label {
+  cursor: pointer;
+  width: auto;
+  margin: 0px;
+  padding: 3px 8px;
+  border-radius: 2px;
+  color: #808080;
+  border: 1px solid transparent;
+  display: inline-block;
+}
+.dialog .radio-container input[type="radio"]:checked + label {
+  border: 1px solid transparent;
+  background-color: #64a8ff;
+  color: #fff;
+}
+.dialog li.with-command input {
+  padding-right: 2em;
+}
+.dialog li.with-command a {
+  width: 2em;
+  margin-left: -2em;
+}
+
 
 body {
   overflow-x: hidden;

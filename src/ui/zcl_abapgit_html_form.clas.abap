@@ -27,8 +27,37 @@ CLASS zcl_abapgit_html_form DEFINITION
         iv_placeholder TYPE string OPTIONAL
         iv_side_action TYPE string OPTIONAL.
 
+    METHODS checkbox
+      IMPORTING
+        iv_label TYPE string
+        iv_name TYPE string
+        iv_hint TYPE string OPTIONAL.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    TYPES:
+      BEGIN OF ty_subitem,
+        descr TYPE string,
+        value TYPE string,
+      END OF ty_subitem.
+    TYPES:
+      tty_subitems TYPE STANDARD TABLE OF ty_subitem WITH DEFAULT KEY.
+
+    TYPES:
+      BEGIN OF ty_field,
+        type TYPE i,
+        name TYPE string,
+        label TYPE string,
+        hint TYPE string,
+        dblclick TYPE string,
+        placeholder TYPE string,
+        required TYPE string,
+        item_class TYPE string,
+        value TYPE string,
+        side_action TYPE string,
+        subitems TYPE tty_subitems,
+      END OF ty_field.
 
     CONSTANTS:
       BEGIN OF c_field_type,
@@ -37,9 +66,13 @@ CLASS zcl_abapgit_html_form DEFINITION
         checkbox TYPE i VALUE 3,
       END OF c_field_type.
 
-    DATA mo_fields TYPE REF TO zcl_abapgit_html.
-    DATA mo_commands TYPE REF TO zcl_abapgit_html.
-    DATA mv_last_field_type TYPE i.
+    DATA mt_fields TYPE STANDARD TABLE OF ty_field.
+
+    METHODS render_field
+      IMPORTING
+        ii_html TYPE REF TO zif_abapgit_html
+        is_field TYPE ty_field.
+
 ENDCLASS.
 
 
@@ -47,72 +80,123 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
 
+  METHOD checkbox.
+
+    DATA ls_field LIKE LINE OF mt_fields.
+
+    ls_field-type = c_field_type-checkbox.
+    ls_field-name = iv_name.
+    ls_field-label = iv_label.
+
+    " TODO "checked" ?
+
+    IF iv_hint IS NOT INITIAL.
+      ls_field-hint    = | title="{ iv_hint }"|.
+    ENDIF.
+
+    APPEND ls_field TO mt_fields.
+
+  ENDMETHOD.
+
+
   METHOD create.
 
     CREATE OBJECT ro_form.
-    CREATE OBJECT ro_form->mo_fields.
-    CREATE OBJECT ro_form->mo_commands.
 
   ENDMETHOD.
 
 
   METHOD render.
 
+    FIELD-SYMBOLS <ls_field> LIKE LINE OF mt_fields.
+
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( |<ul class="{ iv_form_class }">| ).
     ri_html->add( |<form action="sapevent:{ iv_action }" method="post">| ).
-    ri_html->add( mo_fields ).
-    ri_html->add( |<li>| ).
-    ri_html->add( mo_commands ).
-    ri_html->add( |</li>| ).
+
+    LOOP AT mt_fields ASSIGNING <ls_field>.
+      render_field(
+        ii_html = ri_html
+        is_field = <ls_field> ).
+    ENDLOOP.
+
+*    ri_html->add( |<li>| ).
+*    ri_html->add( mo_commands ).
+*    ri_html->add( |</li>| ).
     ri_html->add( |</form>| ).
     ri_html->add( |</ul>| ).
 
   ENDMETHOD.
 
 
+  METHOD render_field.
+
+    DATA lv_infomark TYPE string.
+
+    IF is_field-hint IS NOT INITIAL.
+      lv_infomark = ' <span>&#x1f6c8;</span>'. " (i)
+    ENDIF.
+
+    CASE is_field-type.
+      WHEN c_field_type-text.
+
+        ii_html->add( |<li{ is_field-item_class }>| ).
+        ii_html->add( |<label for="{ is_field-name }"{ is_field-hint }>{ is_field-label }{ lv_infomark }</label>| ).
+        ii_html->add( |<input type="text" name="{ is_field-name }" id="{
+          is_field-name }"{ is_field-required }{ is_field-placeholder }{ is_field-value }{ is_field-dblclick }>| ).
+        IF is_field-side_action IS NOT INITIAL.
+          ii_html->add_a(
+            iv_txt = '&#x2026;'
+            iv_act = is_field-side_action ).
+        ENDIF.
+        ii_html->add( '</li>' ).
+
+      WHEN c_field_type-checkbox.
+
+        ii_html->add( |<li{ is_field-item_class }>| ).
+        ii_html->add( |<input type="checkbox" name="{ is_field-name }" id="{ is_field-name }">| ).
+        ii_html->add( |<label for="{ is_field-name }"{ is_field-hint }>{ is_field-label }{ lv_infomark }</label>| ).
+        ii_html->add( '</li>' ).
+
+      WHEN OTHERS.
+        ASSERT 1 = 0.
+    ENDCASE.
+
+  ENDMETHOD.
+
+
   METHOD text.
 
-    DATA lv_title TYPE string.
-    DATA lv_infomark TYPE string.
-    DATA lv_placeholder TYPE string.
-    DATA lv_required TYPE string.
-    DATA lv_with_command TYPE string.
-    DATA lv_value TYPE string.
+    DATA ls_field LIKE LINE OF mt_fields.
 
-    mv_last_field_type = c_field_type-text.
+    ls_field-type = c_field_type-text.
+    ls_field-name = iv_name.
+    ls_field-label = iv_label.
 
     IF iv_hint IS NOT INITIAL.
-      lv_title = | title="{ iv_hint }"|.
-      lv_infomark = ' <span>&#x1f6c8;</span>'.
+      ls_field-hint    = | title="{ iv_hint }"|.
     ENDIF.
 
     IF iv_side_action IS NOT INITIAL.
-      lv_with_command = ' class="with-command"'.
+      ls_field-item_class = ' class="with-command"'.
+      ls_field-side_action = iv_side_action.
+      ls_field-dblclick = | ondblclick="submitSapeventForm(null, '{ iv_side_action }')"|.
     ENDIF.
 
     IF iv_required = abap_true.
-      lv_required = ' required'.
+      ls_field-required = ' required'.
     ENDIF.
 
     IF iv_placeholder IS NOT INITIAL.
-      lv_placeholder = | placeholder="{ iv_placeholder }"|.
+      ls_field-placeholder = | placeholder="{ iv_placeholder }"|.
     ENDIF.
 
     IF iv_value IS NOT INITIAL.
-      lv_value = | value="{ iv_value }"|.
+      ls_field-value = | value="{ iv_value }"|.
     ENDIF.
 
-    mo_fields->add( |<li>{ lv_with_command }| ).
-    mo_fields->add( |<label for="{ iv_name }"{ lv_title }>{ iv_label }{ lv_infomark }</label>| ).
-    mo_fields->add( |<input type="text" name="{ iv_name }" id="{ iv_name }"{ lv_required }{ lv_placeholder }{ lv_value }>| ).
-    IF iv_side_action IS NOT INITIAL.
-      mo_fields->add_a(
-        iv_txt = '&#x2026;'
-        iv_act = iv_side_action ).
-    ENDIF.
-    mo_fields->add( '</li>' ).
+    APPEND ls_field TO mt_fields.
 
   ENDMETHOD.
 ENDCLASS.
