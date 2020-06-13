@@ -275,7 +275,7 @@ RepoOverViewHelper.prototype.onPageLoad = function () {
   var data = window.sessionStorage && JSON.parse(window.sessionStorage.getItem(this.pageId));
   if (data) {
     if (data.isDetailsDisplayed) this.toggleRepoListDetail(true);
-    if (data.isFavoritesDisplayed) this.toggleRepoListFavorites(true);
+    if (data.isOnlyFavoritesDisplayed) this.toggleRepoListFavorites(true);
   }
   debugOutput("RepoOverViewHelper.onPageLoad: " + ((data) ? "from Storage" : "initial state"));
 };
