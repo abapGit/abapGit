@@ -32,10 +32,6 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
       RAISING zcx_abapgit_exception,
       retrieve_active_repo
         RAISING zcx_abapgit_exception,
-      render_toc
-        IMPORTING it_repo_list   TYPE zif_abapgit_definitions=>ty_repo_ref_tt
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-        RAISING   zcx_abapgit_exception,
       render_repo
         IMPORTING io_repo        TYPE REF TO zcl_abapgit_repo
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
@@ -119,8 +115,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
         RETURN.
     ENDTRY.
 
-    ro_html->add( render_toc( lt_repos ) ).
-
     IF mv_show IS INITIAL OR lines( lt_repos ) = 0.
       CREATE OBJECT li_tutorial TYPE zcl_abapgit_gui_view_tutorial.
       ro_html->add( li_tutorial->render( ) ).
@@ -151,107 +145,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     IF mo_repo_content IS BOUND.
       ro_html->add( mo_repo_content->zif_abapgit_gui_renderable~render( ) ).
     ENDIF.
-    ro_html->add( '</div>' ).
-
-  ENDMETHOD.
-
-
-  METHOD render_toc.
-
-    DATA: lo_pback      TYPE REF TO zcl_abapgit_persist_background,
-          lv_current    TYPE abap_bool,
-          lv_key        TYPE zif_abapgit_persistence=>ty_repo-key,
-          lv_icon       TYPE string,
-          lo_repo       LIKE LINE OF it_repo_list,
-          lo_favbar     TYPE REF TO zcl_abapgit_html_toolbar,
-          lo_allbar     TYPE REF TO zcl_abapgit_html_toolbar,
-          lt_favorites  TYPE zcl_abapgit_persistence_user=>tt_favorites,
-          lv_repo_title TYPE string.
-
-
-    CREATE OBJECT ro_html.
-    CREATE OBJECT lo_favbar.
-    CREATE OBJECT lo_allbar EXPORTING iv_id = 'toc-all-repos'.
-    CREATE OBJECT lo_pback.
-
-    lt_favorites = zcl_abapgit_persistence_user=>get_instance( )->get_favorites( ).
-
-    LOOP AT it_repo_list INTO lo_repo.
-      lv_key     = lo_repo->get_key( ).
-      lv_current = abap_false.
-      IF lv_key = mv_show.
-        lv_current = abap_true.
-      ENDIF.
-
-      lv_repo_title = lo_repo->get_name( ).
-      IF lo_pback->exists( lv_key ) = abap_true.
-        lv_repo_title = lv_repo_title && '<sup>bg</sup>'. " Background marker
-      ENDIF.
-
-      READ TABLE lt_favorites TRANSPORTING NO FIELDS
-        WITH KEY table_line = lv_key.
-
-      IF sy-subrc = 0.
-        DELETE lt_favorites INDEX sy-tabix. " for later cleanup
-        lo_favbar->add( iv_txt = lv_repo_title
-                        iv_act = |{ c_actions-show }?{ lv_key }|
-                        iv_cur = lv_current ).
-      ENDIF.
-
-      IF lo_repo->is_offline( ) = abap_true.
-        lv_icon = 'plug/darkgrey'.
-      ELSE.
-        lv_icon = 'cloud-upload-alt/blue'.
-      ENDIF.
-
-      lo_allbar->add( iv_txt = lv_repo_title
-                      iv_act = |{ c_actions-show }?{ lv_key }|
-                      iv_ico = lv_icon
-                      iv_cur = lv_current ).
-    ENDLOOP.
-
-    " Cleanup orphan favorites (for removed repos)
-    LOOP AT lt_favorites INTO lv_key.
-      zcl_abapgit_persistence_user=>get_instance( )->toggle_favorite( lv_key ).
-    ENDLOOP.
-
-    " Render HTML
-    ro_html->add( '<div id="toc">' )          ##NO_TEXT. " TODO refactor html & css
-    ro_html->add( '<div class="toc_grid">' )  ##NO_TEXT.
-    ro_html->add( '<div class="toc_row">' )   ##NO_TEXT.
-
-**********************************************************************
-
-    ro_html->add( '<table class="w100"><tr>' ).
-    ro_html->add( |<td class="pad-sides">{
-                  zcl_abapgit_html=>icon( iv_name = 'star/blue'
-                                          iv_hint = 'Favorites' )
-                  }</td>| ).
-
-    ro_html->add( '<td class="pad-sides w100 favorites">' ). " Maximize width
-    IF lo_favbar->count( ) > 0.
-      ro_html->add( lo_favbar->render( iv_sort = abap_true ) ).
-    ELSE.
-      ro_html->add( |<span class="grey">No favorites so far. For more info please check {
-                    zcl_abapgit_html=>a( iv_txt = 'tutorial'
-                                         iv_act = zif_abapgit_definitions=>c_action-go_tutorial )
-                    }</span>| ).
-    ENDIF.
-    ro_html->add( '</td>' ).
-
-    ro_html->add( '<td>' ).
-    ro_html->add( lo_allbar->render_as_droplist(
-      iv_label  = zcl_abapgit_html=>icon( iv_name = 'bars/blue' )
-      iv_action = c_actions-overview
-      iv_right  = abap_true
-      iv_sort   = abap_true ) ).
-    ro_html->add( '</td>' ).
-    ro_html->add( '</tr></table>' ).
-
-**********************************************************************
-
-    ro_html->add( '</div>' ).
-    ro_html->add( '</div>' ).
     ro_html->add( '</div>' ).
 
   ENDMETHOD.
