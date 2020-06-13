@@ -5,7 +5,6 @@ CLASS zcl_abapgit_html_form DEFINITION
 
   PUBLIC SECTION.
 
-
     CLASS-METHODS create
       RETURNING
         VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form.
@@ -33,13 +32,26 @@ CLASS zcl_abapgit_html_form DEFINITION
         iv_name TYPE string
         iv_hint TYPE string OPTIONAL.
 
+    METHODS radio
+      IMPORTING
+        iv_label TYPE string
+        iv_name TYPE string
+        iv_hint TYPE string OPTIONAL.
+
+    METHODS option
+      IMPORTING
+        iv_label TYPE string
+        iv_value TYPE string
+        iv_selected TYPE abap_bool DEFAULT abap_false.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
     TYPES:
       BEGIN OF ty_subitem,
-        descr TYPE string,
+        label TYPE string,
         value TYPE string,
+        selected TYPE string,
       END OF ty_subitem.
     TYPES:
       tty_subitems TYPE STANDARD TABLE OF ty_subitem WITH DEFAULT KEY.
@@ -100,8 +112,48 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
 
   METHOD create.
-
     CREATE OBJECT ro_form.
+  ENDMETHOD.
+
+
+  METHOD option.
+
+    FIELD-SYMBOLS <ls_last> LIKE LINE OF mt_fields.
+    DATA ls_option LIKE LINE OF <ls_last>-subitems.
+    DATA lv_size TYPE i.
+
+    lv_size = lines( mt_fields ).
+    ASSERT lv_size > 0. " Exception ? Maybe add zcx_no_check ?
+
+    READ TABLE mt_fields INDEX lv_size ASSIGNING <ls_last>.
+    ASSERT sy-subrc = 0.
+    ASSERT <ls_last>-type = c_field_type-radio. " Or dropdown - TODO in future
+
+    ls_option-label = iv_label.
+    ls_option-value = iv_value.
+
+    IF iv_selected = abap_true.
+      ls_option-selected = ' checked'.
+    ENDIF.
+
+    APPEND ls_option TO <ls_last>-subitems.
+
+  ENDMETHOD.
+
+
+  METHOD radio.
+
+    DATA ls_field LIKE LINE OF mt_fields.
+
+    ls_field-type = c_field_type-radio.
+    ls_field-name = iv_name.
+    ls_field-label = iv_label.
+
+    IF iv_hint IS NOT INITIAL.
+      ls_field-hint    = | title="{ iv_hint }"|.
+    ENDIF.
+
+    APPEND ls_field TO mt_fields.
 
   ENDMETHOD.
 
@@ -110,7 +162,7 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_field> LIKE LINE OF mt_fields.
 
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html = zcl_abapgit_html=>create( ).
 
     ri_html->add( |<ul class="{ iv_form_class }">| ).
     ri_html->add( |<form action="sapevent:{ iv_action }" method="post">| ).
@@ -133,6 +185,8 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
   METHOD render_field.
 
     DATA lv_infomark TYPE string.
+    DATA lv_opt_id TYPE string.
+    FIELD-SYMBOLS <ls_opt> LIKE LINE OF is_field-subitems.
 
     IF is_field-hint IS NOT INITIAL.
       lv_infomark = ' <span>&#x1f6c8;</span>'. " (i)
@@ -156,7 +210,23 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
         ii_html->add( |<li{ is_field-item_class }>| ).
         ii_html->add( |<input type="checkbox" name="{ is_field-name }" id="{ is_field-name }">| ).
-        ii_html->add( |<label for="{ is_field-name }"{ is_field-hint }>{ is_field-label }{ lv_infomark }</label>| ).
+        ii_html->add( |<label for="{ is_field-name }"{ is_field-hint }>{ is_field-label }</label>| ).
+        ii_html->add( '</li>' ).
+
+      WHEN c_field_type-radio.
+
+        ii_html->add( |<li{ is_field-item_class }>| ).
+        ii_html->add( |<label{ is_field-hint }>{ is_field-label }{ lv_infomark }</label>| ).
+        ii_html->add( |<div class="radio-container">| ).
+
+        LOOP AT is_field-subitems ASSIGNING <ls_opt>.
+          lv_opt_id = |{ is_field-name }{ sy-tabix }|.
+          ii_html->add( |<input type="radio" name="{ is_field-name }" id="{
+            lv_opt_id }" value="{ <ls_opt>-value }"{ <ls_opt>-selected }>| ).
+          ii_html->add( |<label for="{ lv_opt_id }">{ <ls_opt>-label }</label>| ).
+        ENDLOOP.
+
+        ii_html->add( '</div>' ).
         ii_html->add( '</li>' ).
 
       WHEN OTHERS.

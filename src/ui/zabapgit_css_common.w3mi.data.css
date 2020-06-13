@@ -38,11 +38,14 @@
   display: block;
   font-size: 90%;
   color: #444;
-  margin-bottom: 4px;
+  margin-top: 6px;
+  margin-bottom: 6px;
   padding-left: 0.5em;
 }
 .dialog label span{
-  color: #888;
+  color: #ccc;
+  float: right;
+  padding-right: 0.5em;
 }
 .dialog small {
   color: #999;
@@ -50,8 +53,9 @@
   font-size: 75%;
   margin-top: 4px;
 }
-.dialog input {
-  line-height: 1.5em;
+.dialog input[type="text"] {
+  /*line-height: 1.5em;*/
+  height: 2.5em; /* IE is strange ... */
 }
 .dialog input[type="button"], .dialog input[type="submit"] {
   padding: 6px 12px;
@@ -98,11 +102,11 @@
   color: #fff;
 }
 .dialog li.with-command input {
-  padding-right: 2em;
+  padding-right: 1.8em;
 }
 .dialog li.with-command a {
   width: 2em;
-  margin-left: -2em;
+  margin-left: -1.8em;
 }
 
 
@@ -131,7 +135,7 @@ sup {
 }
 
 input, textarea, select {
-  padding: 3px 6px;
+  padding: 3px 0.5em;
   border: 1px solid;
 }
 input:focus, textarea:focus {
