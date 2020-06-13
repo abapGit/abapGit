@@ -103,7 +103,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -148,6 +148,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     super->constructor( ).
     ms_control-page_title = |Repository Overview|.
+    ms_control-page_menu = zcl_abapgit_gui_page_main=>build_main_menu( ).
     mv_order_by = |NAME|.
 
     CALL FUNCTION 'GET_SYSTEM_TIMEZONE'
@@ -269,6 +270,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       iv_act = |gHelper.toggleRepoListDetail()|
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
 
+    io_html->add( zcl_abapgit_html=>a(
+      iv_txt = 'Toggle only favorites'
+      iv_act = |gHelper.toggleRepoListFavorites()|
+      iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
+
     io_html->add( |</div>| ).
 
   ENDMETHOD.
@@ -303,8 +309,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
   METHOD render_table_body.
 
     DATA:
-      lv_type_icon     TYPE string,
-      lv_favorite_icon TYPE string.
+      lv_type_icon      TYPE string,
+      lv_favorite_icon  TYPE string,
+      lv_favorite_class TYPE string.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
@@ -320,11 +327,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
       IF <ls_overview>-favorite = abap_true.
         lv_favorite_icon = 'star/blue'.
+        lv_favorite_class = 'favorite'.
       ELSE.
         lv_favorite_icon = 'star/grey'.
+        lv_favorite_class = ''.
       ENDIF.
 
-      io_html->add( |<tr>| ).
+      io_html->add( |<tr class="repo { lv_favorite_class }">| ).
       io_html->add( |<td class="wmin">| ).
       io_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?{ <ls_overview>-key }|
                       iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_favorite_icon

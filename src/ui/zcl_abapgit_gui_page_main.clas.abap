@@ -9,6 +9,8 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
       constructor
         RAISING zcx_abapgit_exception,
       zif_abapgit_gui_event_handler~on_event REDEFINITION.
+    CLASS-METHODS build_main_menu
+      RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
 
   PROTECTED SECTION.
     METHODS:
@@ -26,17 +28,14 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
     DATA: mv_show         TYPE zif_abapgit_persistence=>ty_value,
           mo_repo_content TYPE REF TO zcl_abapgit_gui_view_repo.
 
-    METHODS:
-      test_changed_by
-        RAISING zcx_abapgit_exception,
+    METHODS: test_changed_by
+      RAISING zcx_abapgit_exception,
       retrieve_active_repo
         RAISING zcx_abapgit_exception,
       render_toc
         IMPORTING it_repo_list   TYPE zif_abapgit_definitions=>ty_repo_ref_tt
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception,
-      build_main_menu
-        RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar,
       render_repo
         IMPORTING io_repo        TYPE REF TO zcl_abapgit_repo
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
@@ -45,7 +44,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
 
   METHOD build_main_menu.
