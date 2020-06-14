@@ -70,15 +70,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
   METHOD render_content.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( '<div id="debug_info" class="debug_container">' ).
-    ro_html->add( render_debug_info( ) ).
-    ro_html->add( '</div>' ).
+    ri_html->add( '<div id="debug_info" class="debug_container">' ).
+    ri_html->add( render_debug_info( ) ).
+    ri_html->add( '</div>' ).
 
-    ro_html->add( '<div id="supported_objects" class="debug_container">' ).
-    ro_html->add( render_supported_object_types( ) ).
-    ro_html->add( '</div>' ).
+    ri_html->add( '<div id="supported_objects" class="debug_container">' ).
+    ri_html->add( render_supported_object_types( ) ).
+    ri_html->add( '</div>' ).
 
     ro_html->add( '<div id="included_icons" class="debug_container">' ).
     ro_html->add( render_icons( ) ).
