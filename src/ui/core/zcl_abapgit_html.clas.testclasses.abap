@@ -2,7 +2,7 @@
 CLASS ltcl_html DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
-    DATA: mo_html TYPE REF TO zcl_abapgit_html.
+    DATA: mo_html TYPE REF TO zif_abapgit_html.
 
     METHODS:
       indent1 FOR TESTING RAISING zcx_abapgit_exception,
@@ -20,7 +20,7 @@ ENDCLASS.
 CLASS ltcl_html IMPLEMENTATION.
 
   METHOD setup.
-    CREATE OBJECT mo_html.
+    CREATE OBJECT mo_html TYPE zcl_abapgit_html.
   ENDMETHOD.
 
   METHOD indent1.

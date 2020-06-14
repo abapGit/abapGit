@@ -57,20 +57,20 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_DIS IMPLEMENTATION.
     lv_action       = zcl_abapgit_html_action_utils=>dbkey_encode( ls_action ).
     lv_data         = lo_highlighter->process_line( zcl_abapgit_xml_pretty=>print( lv_data ) ).
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     CREATE OBJECT lo_toolbar.
     lo_toolbar->add( iv_act = |{ zif_abapgit_definitions=>c_action-db_edit }?{ lv_action }|
                      iv_txt = 'Edit' ) ##NO_TEXT.
 
-    ro_html->add( '<div class="db_entry">' ).
-    ro_html->add( '<table class="toolbar"><tr><td>' ).
-    ro_html->add( render_record_banner( ms_key ) ).
-    ro_html->add( '</td><td>' ).
-    ro_html->add( lo_toolbar->render( iv_right = abap_true ) ).
-    ro_html->add( '</td></tr></table>' ).
+    ri_html->add( '<div class="db_entry">' ).
+    ri_html->add( '<table class="toolbar"><tr><td>' ).
+    ri_html->add( render_record_banner( ms_key ) ).
+    ri_html->add( '</td><td>' ).
+    ri_html->add( lo_toolbar->render( iv_right = abap_true ) ).
+    ri_html->add( '</td></tr></table>' ).
 
-    ro_html->add( |<pre class="syntax-hl">{ lv_data }</pre>| ).
-    ro_html->add( '</div>' ).
+    ri_html->add( |<pre class="syntax-hl">{ lv_data }</pre>| ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
