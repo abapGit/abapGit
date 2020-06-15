@@ -38,13 +38,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG_RUN IMPLEMENTATION.
 
     run( ).
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( '<div id="toc">' ).
+    ri_html->add( '<div id="toc">' ).
     LOOP AT mt_text INTO lv_text.
-      ro_html->add( '<pre>' && lv_text && '</pre><br>' ).
+      ri_html->add( '<pre>' && lv_text && '</pre><br>' ).
     ENDLOOP.
-    ro_html->add( '</div>' ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 

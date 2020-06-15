@@ -52,7 +52,7 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
         RAISING zcx_abapgit_exception,
       render_repo
         IMPORTING io_repo        TYPE REF TO zcl_abapgit_repo
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html
         RAISING   zcx_abapgit_exception.
 
     METHODS render_scripts
@@ -160,7 +160,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
     retrieve_active_repo( ). " Get and validate key of user default repo
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
 
     IF mv_show IS INITIAL.
@@ -185,22 +185,22 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
     DATA lo_news TYPE REF TO zcl_abapgit_news.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     lo_news = zcl_abapgit_news=>create( io_repo ).
 
-    ro_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
-    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
+    ri_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
       io_repo               = io_repo
       io_news               = lo_news
       iv_interactive_branch = abap_true ) ).
 
-    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).
 
     IF mo_repo_content IS BOUND.
-      ro_html->add( mo_repo_content->zif_abapgit_gui_renderable~render( ) ).
+      ri_html->add( mo_repo_content->zif_abapgit_gui_renderable~render( ) ).
     ENDIF.
-    ro_html->add( '</div>' ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
