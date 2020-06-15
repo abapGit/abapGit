@@ -13,10 +13,10 @@ CLASS zcl_abapgit_gui_repo_over DEFINITION
       RAISING zcx_abapgit_exception.
     METHODS set_order_by
       IMPORTING
-        order_by TYPE string.
+        iv_order_by TYPE string.
     METHODS set_order_direction
       IMPORTING
-        direction TYPE abap_bool.
+        iv_order_descending TYPE abap_bool.
     METHODS: set_filter
         IMPORTING
           it_postdata TYPE cnht_post_data_tab.
@@ -439,12 +439,12 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
 
   METHOD set_order_by.
-    mv_order_by = order_by.
+    mv_order_by = iv_order_by.
   ENDMETHOD.
 
 
   METHOD set_order_direction.
-    mv_order_descending = direction.
+    mv_order_descending = iv_order_descending.
   ENDMETHOD.
 
 ENDCLASS.
