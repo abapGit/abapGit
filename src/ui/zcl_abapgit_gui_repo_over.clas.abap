@@ -271,6 +271,8 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
       iv_act = |gHelper.toggleRepoListFavorites()|
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
 
+    ii_html->add( `<span class="separator">|</span>` ).
+
     ii_html->add( zcl_abapgit_html=>a(
       iv_txt = 'Toggle detail'
       iv_act = |gHelper.toggleRepoListDetail()|
