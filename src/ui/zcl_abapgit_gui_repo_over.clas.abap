@@ -234,7 +234,6 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA: ro_html TYPE REF TO zcl_abapgit_html.
     DATA: lt_overview TYPE tty_overview.
 
     lt_overview = map_repo_list_to_overview( zcl_abapgit_persist_factory=>get_repo( )->list( ) ).
@@ -250,8 +249,6 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
                   it_overview = lt_overview ).
 
     register_deferred_script( render_scripts( ) ).
-
-    ri_html = ro_html.
 
   ENDMETHOD.
 
@@ -269,12 +266,12 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
     ii_html->add( |<input type="submit" class="hidden-submit">| ).
     ii_html->add( |</form>| ).
 
-    io_html->add( zcl_abapgit_html=>a(
+    ii_html->add( zcl_abapgit_html=>a(
       iv_txt = 'Toggle only favorites'
       iv_act = |gHelper.toggleRepoListFavorites()|
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
 
-    io_html->add( zcl_abapgit_html=>a(
+    ii_html->add( zcl_abapgit_html=>a(
       iv_txt = 'Toggle detail'
       iv_act = |gHelper.toggleRepoListDetail()|
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
@@ -337,9 +334,9 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
         lv_favorite_class = ''.
       ENDIF.
 
-      io_html->add( |<tr class="repo { lv_favorite_class }">| ).
-      io_html->add( |<td class="wmin">| ).
-      io_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?{ <ls_overview>-key }|
+      ii_html->add( |<tr class="repo { lv_favorite_class }">| ).
+      ii_html->add( |<td class="wmin">| ).
+      ii_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?{ <ls_overview>-key }|
                       iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_favorite_icon
                                                        iv_class = 'pad-sides'
                                                        iv_hint  = 'Click to toggle favorite' ) ).

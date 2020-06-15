@@ -165,17 +165,17 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
     IF mv_show IS INITIAL.
       CREATE OBJECT li_overview TYPE zcl_abapgit_gui_repo_over.
-      ro_html->add( li_overview->render( ) ).
+      ri_html->add( li_overview->render( ) ).
       CREATE OBJECT li_tutorial TYPE zcl_abapgit_gui_view_tutorial.
-      ro_html->add( li_tutorial->render( ) ).
+      ri_html->add( li_tutorial->render( ) ).
     ELSEIF mv_repo_key IS NOT INITIAL.
       lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
-      ro_html->add( render_repo( lo_repo ) ).
+      ri_html->add( render_repo( lo_repo ) ).
     ELSE.
       CREATE OBJECT li_overview TYPE zcl_abapgit_gui_repo_over.
-      ro_html->add( li_overview->render( ) ).
+      ri_html->add( li_overview->render( ) ).
       CREATE OBJECT li_tutorial TYPE zcl_abapgit_gui_view_tutorial.
-      ro_html->add( li_tutorial->render( ) ).
+      ri_html->add( li_tutorial->render( ) ).
     ENDIF.
 
   ENDMETHOD.
