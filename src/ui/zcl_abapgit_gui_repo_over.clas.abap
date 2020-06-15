@@ -1,18 +1,28 @@
-CLASS zcl_abapgit_gui_page_repo_over DEFINITION
+CLASS zcl_abapgit_gui_repo_over DEFINITION
   PUBLIC
-  INHERITING FROM zcl_abapgit_gui_page
+  INHERITING FROM zcl_abapgit_gui_component
   FINAL
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+
+    INTERFACES zif_abapgit_gui_renderable .
+    DATA: mv_order_by         TYPE string READ-ONLY.
+
     METHODS constructor
       RAISING zcx_abapgit_exception.
-    METHODS zif_abapgit_gui_event_handler~on_event
-        REDEFINITION .
+    METHODS set_order_by
+      IMPORTING
+        order_by TYPE string.
+    METHODS set_order_direction
+      IMPORTING
+        direction TYPE abap_bool.
+    METHODS: set_filter
+        IMPORTING
+          it_postdata TYPE cnht_post_data_tab.
 
   PROTECTED SECTION.
-    METHODS:
-      render_content REDEFINITION.
+
 
   PRIVATE SECTION.
     TYPES:
@@ -37,24 +47,17 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         apply_filter TYPE string VALUE 'apply_filter',
       END OF c_action .
 
-    DATA:
-      mv_order_by         TYPE string,
-      mv_order_descending TYPE abap_bool,
+    DATA: mv_order_descending TYPE abap_bool,
       mv_filter           TYPE string,
       mv_time_zone        TYPE timezone,
       mt_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec.
 
-    METHODS:
-      render_text_input
+    METHODS: render_text_input
         IMPORTING iv_name        TYPE string
                   iv_label       TYPE string
                   iv_value       TYPE string OPTIONAL
                   iv_max_length  TYPE string OPTIONAL
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
-
-      parse_filter
-        IMPORTING
-          it_postdata TYPE cnht_post_data_tab,
 
       apply_filter
         CHANGING
@@ -103,7 +106,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
+CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -147,8 +150,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
   METHOD constructor.
 
     super->constructor( ).
-    ms_control-page_title = |Repository Overview|.
-    ms_control-page_menu = zcl_abapgit_gui_page_main=>build_main_menu( ).
     mv_order_by = |NAME|.
 
     CALL FUNCTION 'GET_SYSTEM_TIMEZONE'
@@ -214,7 +215,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD parse_filter.
+  METHOD set_filter.
 
     FIELD-SYMBOLS: <lv_postdata> LIKE LINE OF it_postdata.
 
@@ -231,8 +232,9 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_content.
+  METHOD zif_abapgit_gui_renderable~render.
 
+    DATA: ro_html TYPE REF TO zcl_abapgit_html.
     DATA: lt_overview TYPE tty_overview.
 
     lt_overview = map_repo_list_to_overview( zcl_abapgit_persist_factory=>get_repo( )->list( ) ).
@@ -248,6 +250,8 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
                   it_overview = lt_overview ).
 
     register_deferred_script( render_scripts( ) ).
+
+    ri_html = ro_html.
 
   ENDMETHOD.
 
@@ -266,15 +270,13 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     io_html->add( |</form>| ).
 
     io_html->add( zcl_abapgit_html=>a(
-      iv_txt = 'Toggle detail'
-      iv_act = |gHelper.toggleRepoListDetail()|
-      iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
-
-    io_html->add( ` | ` ).
-
-    io_html->add( zcl_abapgit_html=>a(
       iv_txt = 'Toggle only favorites'
       iv_act = |gHelper.toggleRepoListFavorites()|
+      iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
+
+    io_html->add( zcl_abapgit_html=>a(
+      iv_txt = 'Toggle detail'
+      iv_act = |gHelper.toggleRepoListDetail()|
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
 
     io_html->add( |</div>| ).
@@ -421,55 +423,6 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_event_handler~on_event.
-
-    DATA: lv_key  TYPE zif_abapgit_persistence=>ty_value.
-
-    CASE iv_action.
-      WHEN c_action-select.
-
-        lv_key = iv_getdata.
-
-        zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
-
-        TRY.
-            zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->refresh( ).
-          CATCH zcx_abapgit_exception ##NO_HANDLER.
-        ENDTRY.
-
-        ev_state = zcl_abapgit_gui=>c_event_state-go_back.
-
-      WHEN zif_abapgit_definitions=>c_action-change_order_by.
-
-        mv_order_by = zcl_abapgit_gui_chunk_lib=>parse_change_order_by( iv_getdata ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
-
-      WHEN zif_abapgit_definitions=>c_action-direction.
-
-        mv_order_descending = zcl_abapgit_gui_chunk_lib=>parse_direction( iv_getdata ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
-
-      WHEN c_action-apply_filter.
-
-        parse_filter( it_postdata ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
-
-      WHEN OTHERS.
-
-        super->zif_abapgit_gui_event_handler~on_event(
-          EXPORTING
-            iv_action    = iv_action
-            iv_getdata   = iv_getdata
-            it_postdata  = it_postdata
-          IMPORTING
-            ei_page      = ei_page
-            ev_state     = ev_state ).
-
-    ENDCASE.
-
-  ENDMETHOD.
-
-
   METHOD _add_col.
 
     FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_col_spec.
@@ -485,4 +438,16 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
     CONDENSE <ls_col>-add_tz.
 
   ENDMETHOD.
+
+
+
+  METHOD set_order_by.
+    mv_order_by = order_by.
+  ENDMETHOD.
+
+
+  METHOD set_order_direction.
+    mv_order_descending = direction.
+  ENDMETHOD.
+
 ENDCLASS.

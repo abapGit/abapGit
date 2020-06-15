@@ -16,7 +16,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_VIEW_TUTORIAL IMPLEMENTATION.
+CLASS zcl_abapgit_gui_view_tutorial IMPLEMENTATION.
 
 
   METHOD render_content.
@@ -52,10 +52,10 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_TUTORIAL IMPLEMENTATION.
 
     ro_html->add( '<h2>Repository list and favorites</h2>' ).
     ro_html->add( '<p><ul>' ).
-    ro_html->add( |<li>To choose a repo press {
-                  zcl_abapgit_html=>icon( 'bars/blue' ) } at the favorite bar.</li>| ).
-    ro_html->add( |<li>To favorite a repo click {
+    ro_html->add( |<li>To favorite a repository, click {
                   zcl_abapgit_html=>icon( 'star/darkgrey' ) } icon at repo toolbar.</li>| ).
+    ro_html->add( |<li>To go to a repository, click on the repository name.</li>| ).
+    ro_html->add( |<li>To go back to your favorites, click the abapgit logo.</li>| ).
     ro_html->add( '</ul></p>' ).
 
     ro_html->add( '<h2>abapGit repository</h2>' ).

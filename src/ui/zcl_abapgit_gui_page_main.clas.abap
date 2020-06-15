@@ -17,16 +17,34 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
       render_content REDEFINITION.
 
   PRIVATE SECTION.
-    CONSTANTS: BEGIN OF c_actions,
-                 show          TYPE string VALUE 'show' ##NO_TEXT,
-                 changed_by    TYPE string VALUE 'changed_by',
-                 overview      TYPE string VALUE 'overview',
-                 documentation TYPE string VALUE 'documentation',
-                 changelog     TYPE string VALUE 'changelog',
-               END OF c_actions.
+    CONSTANTS:
+      BEGIN OF c_actions,
+        show          TYPE string VALUE 'show' ##NO_TEXT,
+        changed_by    TYPE string VALUE 'changed_by',
+        overview      TYPE string VALUE 'overview',
+        documentation TYPE string VALUE 'documentation',
+        changelog     TYPE string VALUE 'changelog',
+        select        TYPE string VALUE 'select',
+        apply_filter  TYPE string VALUE 'apply_filter',
+        abapgit_home  TYPE string VALUE 'abapgit_home',
+      END OF c_actions.
 
-    DATA: mv_show         TYPE zif_abapgit_persistence=>ty_value,
-          mo_repo_content TYPE REF TO zcl_abapgit_gui_view_repo.
+    DATA: mv_show          TYPE zif_abapgit_persistence=>ty_value,
+          mo_repo_content  TYPE REF TO zcl_abapgit_gui_view_repo,
+          mo_repo_overview TYPE REF TO zcl_abapgit_gui_repo_over,
+          mv_time_zone     TYPE timezone,
+          mt_col_spec      TYPE zif_abapgit_definitions=>tty_col_spec,
+          mv_repo_key      TYPE zif_abapgit_persistence=>ty_value.
+    METHODS: render_text_input
+      IMPORTING iv_name        TYPE string
+                iv_label       TYPE string
+                iv_value       TYPE string OPTIONAL
+                iv_max_length  TYPE string OPTIONAL
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
+
+      _add_col
+        IMPORTING
+          iv_descriptor TYPE string.
 
     METHODS: test_changed_by
       RAISING zcx_abapgit_exception,
@@ -36,12 +54,18 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
         IMPORTING io_repo        TYPE REF TO zcl_abapgit_repo
         RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
         RAISING   zcx_abapgit_exception.
+
+    METHODS render_scripts
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
-
 
   METHOD build_main_menu.
 
@@ -95,12 +119,43 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     ms_control-page_menu  = build_main_menu( ).
   ENDMETHOD.
 
+  METHOD render_scripts.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->zif_abapgit_html~set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
+    ro_html->add( 'setInitialFocus("filter");' ).
+    ro_html->add( 'var gHelper = new RepoOverViewHelper();' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_text_input.
+
+    DATA lv_attrs TYPE string.
+
+    CREATE OBJECT ro_html.
+
+    IF iv_value IS NOT INITIAL.
+      lv_attrs = | value="{ iv_value }"|.
+    ENDIF.
+
+    IF iv_max_length IS NOT INITIAL.
+      lv_attrs = | maxlength="{ iv_max_length }"|.
+    ENDIF.
+
+    ro_html->add( |<label for="{ iv_name }">{ iv_label }</label>| ).
+    ro_html->add( |<input id="{ iv_name }" name="{ iv_name }" type="text"{ lv_attrs }>| ).
+
+  ENDMETHOD.
+
 
   METHOD render_content.
 
     DATA: lt_repos    TYPE zif_abapgit_definitions=>ty_repo_ref_tt,
           lx_error    TYPE REF TO zcx_abapgit_exception,
           li_tutorial TYPE REF TO zif_abapgit_gui_renderable,
+          li_overview TYPE REF TO zif_abapgit_gui_renderable,
           lo_repo     LIKE LINE OF lt_repos.
 
     retrieve_active_repo( ). " Get and validate key of user default repo
@@ -108,19 +163,19 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     CREATE OBJECT ro_html.
     gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
 
-    TRY.
-        lt_repos = zcl_abapgit_repo_srv=>get_instance( )->list( ).
-      CATCH zcx_abapgit_exception INTO lx_error.
-        ro_html->add( zcl_abapgit_gui_chunk_lib=>render_error( ix_error = lx_error ) ).
-        RETURN.
-    ENDTRY.
-
-    IF mv_show IS INITIAL OR lines( lt_repos ) = 0.
+    IF mv_show IS INITIAL.
+      CREATE OBJECT li_overview TYPE zcl_abapgit_gui_repo_over.
+      ro_html->add( li_overview->render( ) ).
       CREATE OBJECT li_tutorial TYPE zcl_abapgit_gui_view_tutorial.
       ro_html->add( li_tutorial->render( ) ).
-    ELSE.
-      lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mv_show ).
+    ELSEIF mv_repo_key IS NOT INITIAL.
+      lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
       ro_html->add( render_repo( lo_repo ) ).
+    ELSE.
+      CREATE OBJECT li_overview TYPE zcl_abapgit_gui_repo_over.
+      ro_html->add( li_overview->render( ) ).
+      CREATE OBJECT li_tutorial TYPE zcl_abapgit_gui_view_tutorial.
+      ro_html->add( li_tutorial->render( ) ).
     ENDIF.
 
   ENDMETHOD.
@@ -205,9 +260,56 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA: lv_key           TYPE zif_abapgit_persistence=>ty_repo-key,
-          li_repo_overview TYPE REF TO zif_abapgit_gui_renderable.
+    DATA: lv_key           TYPE zif_abapgit_persistence=>ty_value,
+          li_repo_overview TYPE REF TO zif_abapgit_gui_renderable,
+          li_main_page     TYPE REF TO zcl_abapgit_gui_page_main.
 
+    CASE iv_action.
+      WHEN c_actions-abapgit_home.
+        CLEAR mv_repo_key.
+        CLEAR mv_show.
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_actions-select.
+
+        lv_key = iv_getdata.
+
+        zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
+
+        TRY.
+            zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->refresh( ).
+          CATCH zcx_abapgit_exception ##NO_HANDLER.
+        ENDTRY.
+
+        mv_repo_key = lv_key.
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN zif_abapgit_definitions=>c_action-change_order_by.
+
+        mo_repo_overview->set_order_by( zcl_abapgit_gui_chunk_lib=>parse_change_order_by( iv_getdata ) ).
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN zif_abapgit_definitions=>c_action-direction.
+
+        mo_repo_overview->set_order_direction( zcl_abapgit_gui_chunk_lib=>parse_direction( iv_getdata ) ).
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN c_actions-apply_filter.
+
+        mo_repo_overview->set_filter( it_postdata ).
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN OTHERS.
+
+        super->zif_abapgit_gui_event_handler~on_event(
+          EXPORTING
+            iv_action    = iv_action
+            iv_getdata   = iv_getdata
+            it_postdata  = it_postdata
+          IMPORTING
+            ei_page      = ei_page
+            ev_state     = ev_state ).
+
+    ENDCASE.
 
     IF NOT mo_repo_content IS INITIAL.
       mo_repo_content->zif_abapgit_gui_event_handler~on_event(
@@ -227,6 +329,8 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     lv_key = iv_getdata.
 
     CASE iv_action.
+      WHEN c_actions-abapgit_home.
+        zcl_abapgit_ui_factory=>get_gui( )->go_home( ).
       WHEN c_actions-changed_by.
         test_changed_by( ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
@@ -239,10 +343,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
       WHEN c_actions-changelog.
         zcl_abapgit_services_abapgit=>open_abapgit_changelog( ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-      WHEN c_actions-overview.
-        CREATE OBJECT li_repo_overview TYPE zcl_abapgit_gui_page_repo_over.
-        ei_page = li_repo_overview.
-        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN OTHERS.
         super->zif_abapgit_gui_event_handler~on_event(
           EXPORTING
@@ -319,4 +419,22 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
+
+  METHOD _add_col.
+
+    FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_col_spec.
+    APPEND INITIAL LINE TO mt_col_spec ASSIGNING <ls_col>.
+    SPLIT iv_descriptor AT '/' INTO
+      <ls_col>-tech_name
+      <ls_col>-display_name
+      <ls_col>-css_class
+      <ls_col>-add_tz.
+    CONDENSE <ls_col>-tech_name.
+    CONDENSE <ls_col>-display_name.
+    CONDENSE <ls_col>-css_class.
+    CONDENSE <ls_col>-add_tz.
+
+  ENDMETHOD.
+
+
 ENDCLASS.

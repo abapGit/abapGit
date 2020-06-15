@@ -130,13 +130,12 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
-    DATA: li_repo_overview TYPE REF TO zcl_abapgit_gui_page_repo_over.
+    DATA: li_main_page TYPE REF TO zcl_abapgit_gui_page_main.
     CASE is_event_data-action.
         " ABAPGIT services actions
       WHEN zif_abapgit_definitions=>c_action-abapgit_home.
-        " Go abapGit homepage
-        CREATE OBJECT li_repo_overview.
-        ei_page = li_repo_overview.
+        CREATE OBJECT li_main_page.
+        ei_page = li_main_page.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-abapgit_install.                 " Install abapGit
         zcl_abapgit_services_abapgit=>install_abapgit( ).
@@ -207,7 +206,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_repo_overview.               " Go Repository overview
-        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_repo_over.
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_repo_over.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_db.                          " Go DB util page
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_db.
