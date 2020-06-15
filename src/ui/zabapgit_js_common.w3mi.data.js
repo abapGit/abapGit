@@ -243,9 +243,9 @@ RepoOverViewHelper.prototype.toggleRepoListDetail = function (forceDisplay) {
 
 RepoOverViewHelper.prototype.toggleRepoListFavorites = function (forceDisplay) {
   this.isOnlyFavoritesDisplayed = forceDisplay || !this.isOnlyFavoritesDisplayed;
-  const repositories = document.getElementsByClassName("repo");
+  var repositories = document.getElementsByClassName("repo");
   for (var i = 0; i < repositories.length; i++) {
-    const repo = repositories[i];
+    var repo = repositories[i];
     if (this.isOnlyFavoritesDisplayed) {
       if (!repo.classList.contains("favorite")) {
         repo.style.display = "none";
