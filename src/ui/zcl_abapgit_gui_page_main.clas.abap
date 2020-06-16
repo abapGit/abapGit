@@ -155,7 +155,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     DATA: lt_repos    TYPE zif_abapgit_definitions=>ty_repo_ref_tt,
           lx_error    TYPE REF TO zcx_abapgit_exception,
           li_tutorial TYPE REF TO zif_abapgit_gui_renderable,
-          li_overview TYPE REF TO zif_abapgit_gui_renderable,
           lo_repo     LIKE LINE OF lt_repos.
 
     retrieve_active_repo( ). " Get and validate key of user default repo
@@ -163,17 +162,20 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
 
+    IF mo_repo_overview IS INITIAL.
+      CREATE OBJECT mo_repo_overview TYPE zcl_abapgit_gui_repo_over.
+    ENDIF.
+
     IF mv_show IS INITIAL.
-      CREATE OBJECT li_overview TYPE zcl_abapgit_gui_repo_over.
-      ri_html->add( li_overview->render( ) ).
+      ri_html->add( mo_repo_overview->zif_abapgit_gui_renderable~render( ) ).
       CREATE OBJECT li_tutorial TYPE zcl_abapgit_gui_view_tutorial.
       ri_html->add( li_tutorial->render( ) ).
     ELSEIF mv_repo_key IS NOT INITIAL.
       lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
       ri_html->add( render_repo( lo_repo ) ).
     ELSE.
-      CREATE OBJECT li_overview TYPE zcl_abapgit_gui_repo_over.
-      ri_html->add( li_overview->render( ) ).
+      CREATE OBJECT mo_repo_overview TYPE zcl_abapgit_gui_repo_over.
+      ri_html->add( mo_repo_overview->zif_abapgit_gui_renderable~render( ) ).
       CREATE OBJECT li_tutorial TYPE zcl_abapgit_gui_view_tutorial.
       ri_html->add( li_tutorial->render( ) ).
     ENDIF.
