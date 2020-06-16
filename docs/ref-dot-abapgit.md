@@ -94,7 +94,7 @@ files as well as repository configuration related to workflows like build or lin
 
 ## Requirements
 
-In this section, you can specify the minimum requirements that must be fulfilled to allow installation of the repository. Listed software components must exist in the target system and be at the given release or higher. If the target system matches the minimum release, then it must also be at the given patch level or higher.
+In this section, you can specify the minimum requirements that should be fulfilled to allow installation of the repository. Listed software components should exist in the target system and be at the given release or higher. If the target system matches the minimum release, then it must also be at the given patch level or higher.
 
 # Local Settings
 
