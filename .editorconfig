@@ -1,0 +1,9 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# 1 space indentation for xml files
+[*.xml]
+indent_style = space
+indent_size = 1
