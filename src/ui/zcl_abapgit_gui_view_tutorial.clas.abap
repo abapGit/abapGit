@@ -36,7 +36,8 @@ CLASS zcl_abapgit_gui_view_tutorial IMPLEMENTATION.
                     iv_act = zif_abapgit_definitions=>c_action-repo_newonline ).
     ro_html->add( ' from the top menu. This will link a remote repository with a package on your system.</li>' ).
     ro_html->add( '<li>Use the pull button to retrieve and activate the remote objects.</li>' ).
-    ro_html->add( '<li>If the remote repository is updated, you will see the changes and can pull to apply the updates.</li>' ).
+    ro_html->add( '<li>If the remote repository is updated,' ).
+    ro_html->add( ' you will see the changes and can pull to apply the updates.</li>' ).
 
     ro_html->add( '</ul></p>' ).
 
