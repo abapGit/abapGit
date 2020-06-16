@@ -29,12 +29,13 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
         abapgit_home  TYPE string VALUE 'abapgit_home',
       END OF c_actions.
 
-    DATA: mv_show          TYPE zif_abapgit_persistence=>ty_value,
-          mo_repo_content  TYPE REF TO zcl_abapgit_gui_view_repo,
-          mo_repo_overview TYPE REF TO zcl_abapgit_gui_repo_over,
-          mv_time_zone     TYPE timezone,
-          mt_col_spec      TYPE zif_abapgit_definitions=>tty_col_spec,
-          mv_repo_key      TYPE zif_abapgit_persistence=>ty_value.
+    DATA: mv_show             TYPE zif_abapgit_persistence=>ty_value,
+          mo_repo_content     TYPE REF TO zcl_abapgit_gui_view_repo,
+          mo_repo_overview    TYPE REF TO zcl_abapgit_gui_repo_over,
+          mo_tutorial_content TYPE REF TO zif_abapgit_html,
+          mv_time_zone        TYPE timezone,
+          mt_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec,
+          mv_repo_key         TYPE zif_abapgit_persistence=>ty_value.
     METHODS: render_text_input
       IMPORTING iv_name        TYPE string
                 iv_label       TYPE string
@@ -166,18 +167,26 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
       CREATE OBJECT mo_repo_overview TYPE zcl_abapgit_gui_repo_over.
     ENDIF.
 
+    IF mo_tutorial_content IS INITIAL.
+      " tutorial is static content
+      CREATE OBJECT li_tutorial TYPE zcl_abapgit_gui_view_tutorial.
+      mo_tutorial_content = li_tutorial->render( ).
+    ENDIF.
+
     IF mv_show IS INITIAL.
       ri_html->add( mo_repo_overview->zif_abapgit_gui_renderable~render( ) ).
-      CREATE OBJECT li_tutorial TYPE zcl_abapgit_gui_view_tutorial.
-      ri_html->add( li_tutorial->render( ) ).
+      IF mo_repo_overview->has_favorites( ) = abap_false.
+        ri_html->add( mo_tutorial_content ).
+      ENDIF.
     ELSEIF mv_repo_key IS NOT INITIAL.
       lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
       ri_html->add( render_repo( lo_repo ) ).
     ELSE.
       CREATE OBJECT mo_repo_overview TYPE zcl_abapgit_gui_repo_over.
       ri_html->add( mo_repo_overview->zif_abapgit_gui_renderable~render( ) ).
-      CREATE OBJECT li_tutorial TYPE zcl_abapgit_gui_view_tutorial.
-      ri_html->add( li_tutorial->render( ) ).
+      IF mo_repo_overview->has_favorites( ) = abap_false.
+        ri_html->add( mo_tutorial_content ).
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.

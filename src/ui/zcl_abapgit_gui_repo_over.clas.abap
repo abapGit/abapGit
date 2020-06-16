@@ -17,9 +17,13 @@ CLASS zcl_abapgit_gui_repo_over DEFINITION
     METHODS set_order_direction
       IMPORTING
         iv_order_descending TYPE abap_bool.
-    METHODS: set_filter
+
+    METHODS set_filter
       IMPORTING
         it_postdata TYPE cnht_post_data_tab.
+
+    METHODS has_favorites
+      RETURNING VALUE(rv_has_favorites) TYPE abap_bool.
 
   PROTECTED SECTION.
 
@@ -50,7 +54,8 @@ CLASS zcl_abapgit_gui_repo_over DEFINITION
     DATA: mv_order_descending TYPE abap_bool,
           mv_filter           TYPE string,
           mv_time_zone        TYPE timezone,
-          mt_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec.
+          mt_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec,
+          mt_overview         TYPE tty_overview.
 
     METHODS: render_text_input
       IMPORTING iv_name        TYPE string
@@ -234,19 +239,15 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA: lt_overview TYPE tty_overview.
-
-    lt_overview = map_repo_list_to_overview( zcl_abapgit_persist_factory=>get_repo( )->list( ) ).
-
-    apply_order_by( CHANGING ct_overview = lt_overview ).
-
-    apply_filter( CHANGING ct_overview = lt_overview ).
+    mt_overview = map_repo_list_to_overview( zcl_abapgit_persist_factory=>get_repo( )->list( ) ).
+    apply_order_by( CHANGING ct_overview = mt_overview ).
+    apply_filter( CHANGING ct_overview = mt_overview ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     render_header_bar( ri_html ).
     render_table( ii_html     = ri_html
-                  it_overview = lt_overview ).
+                  it_overview = mt_overview ).
 
     register_deferred_script( render_scripts( ) ).
 
@@ -457,6 +458,13 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
   METHOD set_order_direction.
     mv_order_descending = iv_order_descending.
+  ENDMETHOD.
+
+  METHOD has_favorites.
+    READ TABLE mt_overview WITH KEY favorite = abap_true TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      rv_has_favorites = abap_true.
+    ENDIF.
   ENDMETHOD.
 
 ENDCLASS.
