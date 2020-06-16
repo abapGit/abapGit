@@ -364,11 +364,14 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
         iv_obj_type = 'DEVC'
         iv_obj_name = lv_package_obj_name ).
 
-      ii_html->add( |<td>{
-        ii_html->a(
+      ii_html->add( |<td>{ ii_html->a(
           iv_txt = <ls_overview>-package
           iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_package_jump_data }| ) }</td>| ).
-      ii_html->add( |<td>{ <ls_overview>-branch }</td>| ).
+
+      ii_html->add( |<td>{ ii_html->a(
+        iv_txt = <ls_overview>-branch
+        iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ <ls_overview>-key }| ) }</td>| ).
+
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_by }</td>| ).
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_at }</td>| ).
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-created_by }</td>| ).
