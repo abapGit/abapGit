@@ -1,4 +1,4 @@
-INTERFACE if_abapgit_xml_output
+INTERFACE zif_abapgit_xml_output
   PUBLIC .
   TYPES:
     BEGIN OF ty_i18n_params,

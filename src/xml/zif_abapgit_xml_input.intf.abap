@@ -1,4 +1,4 @@
-INTERFACE if_abapgit_xml_input
+INTERFACE zif_abapgit_xml_input
   PUBLIC .
   METHODS read
     IMPORTING
