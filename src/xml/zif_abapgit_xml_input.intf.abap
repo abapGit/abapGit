@@ -6,7 +6,7 @@ INTERFACE if_abapgit_xml_input
     CHANGING
       !cg_data TYPE any
     RAISING
-      cx_abapgit_exception .
+      zcx_abapgit_exception .
   METHODS get_raw
     RETURNING
       VALUE(ri_raw) TYPE REF TO if_ixml_document .

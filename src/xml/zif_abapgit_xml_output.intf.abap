@@ -10,7 +10,7 @@ INTERFACE if_abapgit_xml_output
       !iv_name TYPE clike
       !ig_data TYPE any
     RAISING
-      cx_abapgit_exception .
+      zcx_abapgit_exception .
   METHODS set_raw
     IMPORTING
       !ii_raw TYPE REF TO if_ixml_element .
