@@ -58,24 +58,6 @@ CLASS zcl_abapgit_gui_view_tutorial IMPLEMENTATION.
     ro_html->add( |<li>To go back to your favorites, click the abapgit logo.</li>| ).
     ro_html->add( '</ul></p>' ).
 
-    ro_html->add( '<h2>abapGit repository</h2>' ).
-    ro_html->add( '<p><ul>' ).
-    ro_html->add( '<li>' ).
-
-    lv_devclass = zcl_abapgit_services_abapgit=>is_installed( ).
-    IF NOT lv_devclass IS INITIAL.
-      ro_html->add( 'abapGit installed in package&nbsp;' ).
-      ro_html->add( lv_devclass ).
-    ELSE.
-      ro_html->add_a( iv_txt = 'install abapGit repo'
-                      iv_act = zif_abapgit_definitions=>c_action-abapgit_install ).
-      ro_html->add( ' - To keep abapGit up-to-date (or also to contribute) you need to' ).
-      ro_html->add( 'install it as a repository.' ).
-    ENDIF.
-
-    ro_html->add( '</li>' ).
-    ro_html->add( '</ul></p>' ).
-
   ENDMETHOD.
 
 
