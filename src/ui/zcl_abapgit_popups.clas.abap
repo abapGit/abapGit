@@ -1128,7 +1128,6 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       lv_finished = abap_true.
 
       TRY.
-          zcl_abapgit_url=>validate( rs_popup-url ).
           zcl_abapgit_repo_srv=>get_instance( )->validate_package( rs_popup-package ).
           validate_folder_logic( rs_popup-folder_logic ).
 
