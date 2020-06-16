@@ -1,11 +1,6 @@
 INTERFACE zif_abapgit_repo_srv
   PUBLIC .
 
-  CONSTANTS:
-    BEGIN OF validation_error,
-      already_linked TYPE string VALUE 'already_linked',
-    END OF validation_error.
-
   METHODS delete
     IMPORTING
       !io_repo TYPE REF TO zcl_abapgit_repo
@@ -33,12 +28,12 @@ INTERFACE zif_abapgit_repo_srv
       zcx_abapgit_exception .
   METHODS new_offline
     IMPORTING
-      !iv_url              TYPE string
-      !iv_package          TYPE devclass
-      !iv_folder_logic     TYPE string DEFAULT zif_abapgit_dot_abapgit=>c_folder_logic-full
+      !iv_url         TYPE string
+      !iv_package     TYPE devclass
+      !iv_folder_logic TYPE string DEFAULT zif_abapgit_dot_abapgit=>c_folder_logic-full
       !iv_master_lang_only TYPE abap_bool DEFAULT abap_false
     RETURNING
-      VALUE(ro_repo)       TYPE REF TO zcl_abapgit_repo_offline
+      VALUE(ro_repo)  TYPE REF TO zcl_abapgit_repo_offline
     RAISING
       zcx_abapgit_exception .
   METHODS new_online
