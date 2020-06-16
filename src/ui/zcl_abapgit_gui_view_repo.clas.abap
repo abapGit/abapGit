@@ -527,10 +527,12 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
   METHOD get_item_icon.
 
     CASE is_item-obj_type.
-      WHEN 'PROG' OR 'CLAS' OR 'FUGR'.
+      WHEN 'PROG' OR 'CLAS' OR 'FUGR' OR 'INTF' OR 'TYPE'.
         rv_html = zcl_abapgit_html=>icon( 'file-code/darkgrey' ).
-      WHEN 'W3MI' OR 'W3HT'.
+      WHEN 'W3MI' OR 'W3HT' OR 'SFPF'.
         rv_html = zcl_abapgit_html=>icon( 'file-image/darkgrey' ).
+      WHEN 'DEVC'.
+        rv_html = zcl_abapgit_html=>icon( 'box/darkgrey' ).
       WHEN ''.
         rv_html = space. " no icon
       WHEN OTHERS.
