@@ -18,8 +18,8 @@ CLASS zcl_abapgit_gui_repo_over DEFINITION
       IMPORTING
         iv_order_descending TYPE abap_bool.
     METHODS: set_filter
-        IMPORTING
-          it_postdata TYPE cnht_post_data_tab.
+      IMPORTING
+        it_postdata TYPE cnht_post_data_tab.
 
   PROTECTED SECTION.
 
@@ -48,16 +48,16 @@ CLASS zcl_abapgit_gui_repo_over DEFINITION
       END OF c_action .
 
     DATA: mv_order_descending TYPE abap_bool,
-      mv_filter           TYPE string,
-      mv_time_zone        TYPE timezone,
-      mt_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec.
+          mv_filter           TYPE string,
+          mv_time_zone        TYPE timezone,
+          mt_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec.
 
     METHODS: render_text_input
-        IMPORTING iv_name        TYPE string
-                  iv_label       TYPE string
-                  iv_value       TYPE string OPTIONAL
-                  iv_max_length  TYPE string OPTIONAL
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
+      IMPORTING iv_name        TYPE string
+                iv_label       TYPE string
+                iv_value       TYPE string OPTIONAL
+                iv_max_length  TYPE string OPTIONAL
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
 
       apply_filter
         CHANGING
@@ -312,9 +312,11 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
   METHOD render_table_body.
 
     DATA:
-      lv_type_icon      TYPE string,
-      lv_favorite_icon  TYPE string,
-      lv_favorite_class TYPE string.
+      lv_type_icon         TYPE string,
+      lv_favorite_icon     TYPE string,
+      lv_favorite_class    TYPE string,
+      lv_package_jump_data TYPE string,
+      lv_package_obj_name  TYPE sobj_name.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
@@ -356,7 +358,15 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
         ii_html->add( |<td></td>| ).
       ENDIF.
 
-      ii_html->add( |<td>{ <ls_overview>-package }</td>| ).
+      lv_package_obj_name = <ls_overview>-package.
+      lv_package_jump_data = zcl_abapgit_html_action_utils=>jump_encode(
+        iv_obj_type = 'DEVC'
+        iv_obj_name = lv_package_obj_name ).
+
+      ii_html->add( |<td>{
+        ii_html->a(
+          iv_txt = <ls_overview>-package
+          iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_package_jump_data }| ) }</td>| ).
       ii_html->add( |<td>{ <ls_overview>-branch }</td>| ).
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_by }</td>| ).
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_at }</td>| ).
