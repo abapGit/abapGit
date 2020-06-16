@@ -253,7 +253,7 @@ RepoOverViewHelper.prototype.toggleRepoListFavorites = function (forceDisplay) {
     } else {
       repo.style.display = "";
     }
-}
+  }
 
 };
 
