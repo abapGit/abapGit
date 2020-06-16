@@ -14,34 +14,20 @@ CLASS zcl_abapgit_gui_page_debuginfo DEFINITION
       render_content REDEFINITION.
 
   PRIVATE SECTION.
-
     METHODS get_jump_class
-      IMPORTING
-        !iv_class      TYPE seoclsname
-      RETURNING
-        VALUE(rv_html) TYPE string .
+      IMPORTING iv_class       TYPE seoclsname
+      RETURNING VALUE(rv_html) TYPE string.
     METHODS render_debug_info
-      RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-      RAISING
-        zcx_abapgit_exception .
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING   zcx_abapgit_exception.
     METHODS render_supported_object_types
-      RETURNING
-        VALUE(rv_html) TYPE string .
+      RETURNING VALUE(rv_html) TYPE string.
     METHODS render_scripts
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
-        zcx_abapgit_exception .
-    METHODS render_icons
-      RETURNING
-        VALUE(rv_html) TYPE string .
-    METHODS render_icon
-      IMPORTING
-        iv_icon        TYPE string
-        iv_text        TYPE string
-      RETURNING
-        VALUE(rv_html) TYPE string .
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -80,10 +66,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
     ri_html->add( render_supported_object_types( ) ).
     ri_html->add( '</div>' ).
 
-    ro_html->add( '<div id="included_icons" class="debug_container">' ).
-    ro_html->add( render_icons( ) ).
-    ro_html->add( '</div>' ).
-
     register_deferred_script( render_scripts( ) ).
 
   ENDMETHOD.
@@ -118,84 +100,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
     ro_html->add( |<tr><td>SY time:        </td><td>{ sy-datum } { sy-uzeit } { sy-tzone }</td></tr>| ).
     ro_html->add( |</table>| ).
     ro_html->add( |<br>| ).
-
-  ENDMETHOD.
-
-
-  METHOD render_icon.
-
-    DATA: lv_icon TYPE string.
-
-    lv_icon = zcl_abapgit_html=>icon( iv_name  = iv_icon && '/darkgrey'
-                                      iv_class = 'large' ).
-
-    rv_html = |<tr><td align="middle">{ lv_icon }</td><td>{ iv_text }</td><td>({ iv_icon })</td></tr>|.
-
-  ENDMETHOD.
-
-
-  METHOD render_icons.
-
-    rv_html = |<p>Icon Legend:</p>|.
-
-    rv_html = rv_html && |<table border="1px"><thead><tr>|.
-    rv_html = rv_html && |<td width="50px" align="middle">Icon</td><td>Description</td><td>Code</td>|.
-    rv_html = rv_html && |</tr></thead><tbody>|.
-    rv_html = rv_html && render_icon( iv_text = 'Arrow Down'
-                                      iv_icon = 'chevron-down' ).
-    rv_html = rv_html && render_icon( iv_text = 'Arrow Left'
-                                      iv_icon = 'chevron-left' ).
-    rv_html = rv_html && render_icon( iv_text = 'Arrow Right'
-                                      iv_icon = 'chevron-right' ).
-    rv_html = rv_html && render_icon( iv_text = 'Arrow Up'
-                                      iv_icon = 'chevron-up' ).
-    rv_html = rv_html && render_icon( iv_text = 'Favorite'
-                                      iv_icon = 'star' ).
-    rv_html = rv_html && render_icon( iv_text = 'File - Binary'
-                                      iv_icon = 'file-image' ).
-    rv_html = rv_html && render_icon( iv_text = 'File - Code'
-                                      iv_icon = 'file-code' ).
-    rv_html = rv_html && render_icon( iv_text = 'File - General'
-                                      iv_icon = 'file' ).
-    rv_html = rv_html && render_icon( iv_text = 'File - Object'
-                                      iv_icon = 'file-alt' ).
-    rv_html = rv_html && render_icon( iv_text = 'Folder'
-                                      iv_icon = 'folder' ).
-    rv_html = rv_html && render_icon( iv_text = 'Message - Error'
-                                      iv_icon = 'exclamation-circle' ).
-    rv_html = rv_html && render_icon( iv_text = 'Message - Warning'
-                                      iv_icon = 'exclamation-triangle' ).
-    rv_html = rv_html && render_icon( iv_text = 'News/Changelog'
-                                      iv_icon = 'arrow-circle-up' ).
-    rv_html = rv_html && render_icon( iv_text = 'Object - Inactive'
-                                      iv_icon = 'bolt' ).
-    rv_html = rv_html && render_icon( iv_text = 'Object - Locked'
-                                      iv_icon = 'lock' ).
-    rv_html = rv_html && render_icon( iv_text = 'OK'
-                                      iv_icon = 'check' ).
-    rv_html = rv_html && render_icon( iv_text = 'Repository - Branch'
-                                      iv_icon = 'code-branch' ).
-    rv_html = rv_html && render_icon( iv_text = 'Repository - Merge'
-                                      iv_icon = 'code-commit' ).
-    rv_html = rv_html && render_icon( iv_text = 'Repository - Offline'
-                                      iv_icon = 'plug' ).
-    rv_html = rv_html && render_icon( iv_text = 'Repository - Online'
-                                      iv_icon = 'cloud-upload-alt' ).
-    rv_html = rv_html && render_icon( iv_text = 'Repository Picker'
-                                      iv_icon = 'bars' ).
-    rv_html = rv_html && render_icon( iv_text = 'SAP Package'
-                                      iv_icon = 'box' ).
-    rv_html = rv_html && render_icon( iv_text = 'SAP Transport'
-                                      iv_icon = 'briefcase' ).
-    rv_html = rv_html && render_icon( iv_text = 'Settings'
-                                      iv_icon = 'cog' ).
-    rv_html = rv_html && render_icon( iv_text = '(currently not used)'
-                                      iv_icon = 'fire-alt' ).
-    rv_html = rv_html && render_icon( iv_text = '(currently not used)'
-                                      iv_icon = 'sliders-h' ).
-    rv_html = rv_html && render_icon( iv_text = '(currently not used)'
-                                      iv_icon = 'snowflake' ).
-    rv_html = rv_html && |</tbody></table>|.
 
   ENDMETHOD.
 
