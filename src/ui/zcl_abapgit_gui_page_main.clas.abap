@@ -9,8 +9,7 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
       constructor
         RAISING zcx_abapgit_exception,
       zif_abapgit_gui_event_handler~on_event REDEFINITION.
-    CLASS-METHODS build_main_menu
-      RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
+
 
   PROTECTED SECTION.
     METHODS:
@@ -61,6 +60,10 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
         zcx_abapgit_exception.
+
+    METHODS build_main_menu
+      RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
+
 
 ENDCLASS.
 
