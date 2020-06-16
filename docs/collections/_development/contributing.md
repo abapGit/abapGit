@@ -26,4 +26,4 @@ Alternatively, use the GitHub webinterface to change the files and submit a pull
 
 If you already have an old fork and would like to create a new pull request, 
 you can sync your old fork to current state following this guide: 
-https://github.com/KirstieJane/STEMMRoleModels/wiki/Syncing-your-fork-to-the-original-repository-via-the-browser
+[Sync your fork to original repository](https://github.com/KirstieJane/STEMMRoleModels/wiki/Syncing-your-fork-to-the-original-repository-via-the-browser)

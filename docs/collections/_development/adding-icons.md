@@ -11,7 +11,7 @@ abapGit uses SIL and MIT licensed fonts, they are included in the distribution a
 To add an icon to the icon set follow the next procedure:
 
 1. You need `nodejs` installed (version 10 at the time of this doc creation)
-2. Fork/clone this repo https://github.com/abapGit/icon-font
+2. Fork/clone this repo [abapGit/icon-font](https://github.com/abapGit/icon-font)
 3. Run `npm install` inside
 4. Download [Font Awesome free version](https://fontawesome.com/download)
 5. Copy new SVGs to `svg` folder of the repo
