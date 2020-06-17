@@ -28,17 +28,12 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
         abapgit_home  TYPE string VALUE 'abapgit_home',
       END OF c_actions.
 
-    DATA: mv_show             TYPE zif_abapgit_persistence=>ty_value,
-          mo_repo_content     TYPE REF TO zcl_abapgit_gui_view_repo,
-          mo_repo_overview    TYPE REF TO zcl_abapgit_gui_repo_over,
-          mv_repo_key         TYPE zif_abapgit_persistence=>ty_value.
+    DATA: mv_show          TYPE zif_abapgit_persistence=>ty_value,
+          mo_repo_content  TYPE REF TO zcl_abapgit_gui_view_repo,
+          mo_repo_overview TYPE REF TO zcl_abapgit_gui_repo_over,
+          mv_repo_key      TYPE zif_abapgit_persistence=>ty_value.
 
-    METHODS: render_text_input
-      IMPORTING iv_name        TYPE string
-                iv_label       TYPE string
-                iv_value       TYPE string OPTIONAL
-                iv_max_length  TYPE string OPTIONAL
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+
 
     METHODS: test_changed_by
       RAISING zcx_abapgit_exception,
@@ -123,26 +118,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     ro_html->zif_abapgit_html~set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
     ro_html->add( 'setInitialFocus("filter");' ).
     ro_html->add( 'var gHelper = new RepoOverViewHelper();' ).
-
-  ENDMETHOD.
-
-
-  METHOD render_text_input.
-
-    DATA lv_attrs TYPE string.
-
-    CREATE OBJECT ro_html.
-
-    IF iv_value IS NOT INITIAL.
-      lv_attrs = | value="{ iv_value }"|.
-    ENDIF.
-
-    IF iv_max_length IS NOT INITIAL.
-      lv_attrs = | maxlength="{ iv_max_length }"|.
-    ENDIF.
-
-    ro_html->add( |<label for="{ iv_name }">{ iv_label }</label>| ).
-    ro_html->add( |<input id="{ iv_name }" name="{ iv_name }" type="text"{ lv_attrs }>| ).
 
   ENDMETHOD.
 
@@ -292,6 +267,25 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
         mo_repo_overview->set_filter( it_postdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
 
+      WHEN c_actions-abapgit_home.
+        zcl_abapgit_ui_factory=>get_gui( )->go_home( ).
+
+      WHEN c_actions-changed_by.
+        test_changed_by( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
+      WHEN c_actions-documentation.
+        zcl_abapgit_services_abapgit=>open_abapgit_wikipage( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
+      WHEN zif_abapgit_definitions=>c_action-go_explore.
+        zcl_abapgit_services_abapgit=>open_dotabap_homepage( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
+      WHEN c_actions-changelog.
+        zcl_abapgit_services_abapgit=>open_abapgit_changelog( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
       WHEN OTHERS.
 
         super->zif_abapgit_gui_event_handler~on_event(
@@ -319,34 +313,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
         RETURN.
       ENDIF.
     ENDIF.
-
-    lv_key = iv_getdata.
-
-    CASE iv_action.
-      WHEN c_actions-abapgit_home.
-        zcl_abapgit_ui_factory=>get_gui( )->go_home( ).
-      WHEN c_actions-changed_by.
-        test_changed_by( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-      WHEN c_actions-documentation.
-        zcl_abapgit_services_abapgit=>open_abapgit_wikipage( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-      WHEN zif_abapgit_definitions=>c_action-go_explore.
-        zcl_abapgit_services_abapgit=>open_dotabap_homepage( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-      WHEN c_actions-changelog.
-        zcl_abapgit_services_abapgit=>open_abapgit_changelog( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-      WHEN OTHERS.
-        super->zif_abapgit_gui_event_handler~on_event(
-          EXPORTING
-            iv_action    = iv_action
-            iv_getdata   = iv_getdata
-            it_postdata  = it_postdata
-          IMPORTING
-            ei_page      = ei_page
-            ev_state     = ev_state ).
-    ENDCASE.
 
   ENDMETHOD.
 

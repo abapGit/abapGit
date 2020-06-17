@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_gui_view_tutorial DEFINITION
+CLASS zcl_abapgit_gui_page_tutorial DEFINITION
   PUBLIC
   FINAL
   INHERITING FROM zcl_abapgit_gui_page
@@ -15,7 +15,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_view_tutorial IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_tutorial IMPLEMENTATION.
 
 
   METHOD render_content.
