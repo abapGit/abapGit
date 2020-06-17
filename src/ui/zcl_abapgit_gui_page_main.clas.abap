@@ -31,19 +31,14 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
     DATA: mv_show             TYPE zif_abapgit_persistence=>ty_value,
           mo_repo_content     TYPE REF TO zcl_abapgit_gui_view_repo,
           mo_repo_overview    TYPE REF TO zcl_abapgit_gui_repo_over,
-          mv_time_zone        TYPE timezone,
-          mt_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec,
           mv_repo_key         TYPE zif_abapgit_persistence=>ty_value.
+
     METHODS: render_text_input
       IMPORTING iv_name        TYPE string
                 iv_label       TYPE string
                 iv_value       TYPE string OPTIONAL
                 iv_max_length  TYPE string OPTIONAL
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
-
-      _add_col
-        IMPORTING
-          iv_descriptor TYPE string.
+      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
     METHODS: test_changed_by
       RAISING zcx_abapgit_exception,
@@ -418,22 +413,5 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
-
-  METHOD _add_col.
-
-    FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_col_spec.
-    APPEND INITIAL LINE TO mt_col_spec ASSIGNING <ls_col>.
-    SPLIT iv_descriptor AT '/' INTO
-      <ls_col>-tech_name
-      <ls_col>-display_name
-      <ls_col>-css_class
-      <ls_col>-add_tz.
-    CONDENSE <ls_col>-tech_name.
-    CONDENSE <ls_col>-display_name.
-    CONDENSE <ls_col>-css_class.
-    CONDENSE <ls_col>-add_tz.
-
-  ENDMETHOD.
-
 
 ENDCLASS.
