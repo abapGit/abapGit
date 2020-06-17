@@ -119,7 +119,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
-    ms_control-page_title = 'HOME'.
     ms_control-page_menu  = build_main_menu( ).
   ENDMETHOD.
 

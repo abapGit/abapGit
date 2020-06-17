@@ -286,13 +286,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ri_html->add( '<div id="header">' ).                    "#EC NOTEXT
     ri_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
 
-    ri_html->add( |<td class="logo">{
-                  zcl_abapgit_html=>a( iv_txt = '<img src="img/logo" alt="logo">'
-                                       iv_id  = 'abapGitLogo'
+    ri_html->add( |<td>{
+                  zcl_abapgit_html=>a( iv_txt = 'Repositories'
                                        iv_act = zif_abapgit_definitions=>c_action-abapgit_home )
-                  }</td>| ).                                "#EC NOTEXT
 
-    ri_html->add( |<td><span class="page_title"> &#x25BA; { ms_control-page_title }</span></td>| ). "#EC NOTEXT
+                  }<span class="page_title">{ ms_control-page_title }</span></td>| ).                                "#EC NOTEXT
+
 
     IF ms_control-page_menu IS BOUND.
       ri_html->add( '<td class="right">' ).                 "#EC NOTEXT
