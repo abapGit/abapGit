@@ -237,7 +237,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         ei_page  = get_page_branch_overview( is_event_data-getdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_tutorial.                     " Go to tutorial
-        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_view_tutorial.
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_tutorial.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
     ENDCASE.
 
