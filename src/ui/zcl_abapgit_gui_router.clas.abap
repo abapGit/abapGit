@@ -237,8 +237,8 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         ei_page  = get_page_branch_overview( is_event_data-getdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_tutorial.                     " Go to tutorial
-        zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( '' ).        " Clear show_id
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.          " Assume we are on main page
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_view_tutorial.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
     ENDCASE.
 
   ENDMETHOD.
