@@ -15,15 +15,12 @@ CLASS zcl_abapgit_html_form DEFINITION
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html.
 
-    METHODS set_submit_params
-      IMPORTING
-        iv_label TYPE string
-        iv_action TYPE string.
-
     METHODS command
       IMPORTING
         iv_label TYPE string
-        iv_action TYPE string.
+        iv_action TYPE string
+        iv_is_main TYPE abap_bool DEFAULT abap_false
+        iv_as_a TYPE abap_bool DEFAULT abap_false.
 
     METHODS text
       IMPORTING
@@ -39,6 +36,7 @@ CLASS zcl_abapgit_html_form DEFINITION
       IMPORTING
         iv_label TYPE string
         iv_name TYPE string
+        iv_checked TYPE abap_bool DEFAULT abap_false
         iv_hint TYPE string OPTIONAL.
 
     METHODS radio
@@ -77,6 +75,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         item_class TYPE string,
         value TYPE string,
         side_action TYPE string,
+        checked TYPE string,
         subitems TYPE tty_subitems,
       END OF ty_field.
 
@@ -84,6 +83,8 @@ CLASS zcl_abapgit_html_form DEFINITION
       BEGIN OF ty_command,
         label TYPE string,
         action TYPE string,
+        is_main TYPE abap_bool,
+        as_a TYPE abap_bool,
 *        onclick ???
       END OF ty_command.
 
@@ -95,13 +96,17 @@ CLASS zcl_abapgit_html_form DEFINITION
       END OF c_field_type.
 
     DATA mt_fields TYPE STANDARD TABLE OF ty_field.
-    DATA ms_submit TYPE ty_command.
     DATA mt_commands TYPE STANDARD TABLE OF ty_command.
 
-    METHODS render_field
+    CLASS-METHODS render_field
       IMPORTING
         ii_html TYPE REF TO zif_abapgit_html
         is_field TYPE ty_field.
+
+    CLASS-METHODS render_command
+      IMPORTING
+        ii_html TYPE REF TO zif_abapgit_html
+        is_cmd TYPE ty_command.
 
 ENDCLASS.
 
@@ -118,7 +123,9 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     ls_field-name = iv_name.
     ls_field-label = iv_label.
 
-    " TODO "checked" ?
+    IF iv_checked = abap_true.
+      ls_field-checked = ' checked'.
+    ENDIF.
 
     IF iv_hint IS NOT INITIAL.
       ls_field-hint    = | title="{ iv_hint }"|.
@@ -133,8 +140,12 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
     DATA ls_cmd LIKE LINE OF mt_commands.
 
+    ASSERT iv_as_a IS INITIAL OR iv_is_main IS INITIAL.
+
     ls_cmd-label = iv_label.
     ls_cmd-action = iv_action.
+    ls_cmd-is_main = iv_is_main.
+    ls_cmd-as_a = iv_as_a.
 
     APPEND ls_cmd TO mt_commands.
 
@@ -193,33 +204,50 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     FIELD-SYMBOLS <ls_field> LIKE LINE OF mt_fields.
     FIELD-SYMBOLS <ls_cmd> LIKE LINE OF mt_commands.
 
-    ASSERT ms_submit-action IS NOT INITIAL AND ms_submit-label IS NOT INITIAL.
-
     ri_html = zcl_abapgit_html=>create( ).
 
     ri_html->add( |<ul class="{ iv_form_class }">| ).
-    ri_html->add( |<form action="sapevent:{ ms_submit-action }" method="post">| ).
+    ri_html->add( |<form method="post">| ).
 
     LOOP AT mt_fields ASSIGNING <ls_field>.
       render_field(
-        ii_html = ri_html
+        ii_html  = ri_html
         is_field = <ls_field> ).
     ENDLOOP.
 
     ri_html->add( |<li class="dialog-commands">| ).
-    ri_html->add( |<input type="submit" value="{ ms_submit-label }">| ).
 
     LOOP AT mt_commands ASSIGNING <ls_cmd>.
-      ri_html->add_a(
-        iv_txt = <ls_cmd>-label
-        iv_act = <ls_cmd>-action
-        iv_class = 'dialog-button' ).
+      render_command(
+        ii_html = ri_html
+        is_cmd  = <ls_cmd> ).
     ENDLOOP.
 
     ri_html->add( |</li>| ).
 
     ri_html->add( |</form>| ).
     ri_html->add( |</ul>| ).
+
+  ENDMETHOD.
+
+
+  METHOD render_command.
+
+    DATA lv_main_submit TYPE string.
+
+    IF is_cmd-as_a = abap_true.
+      ii_html->add_a(
+        iv_txt = is_cmd-label
+        iv_act = is_cmd-action
+        iv_class = 'dialog-commands' ).
+    ELSE.
+      IF is_cmd-is_main = abap_true.
+        lv_main_submit = ' class="main"'.
+      ELSE.
+        clear lv_main_submit.
+      ENDIF.
+      ii_html->add( |<input type="submit" value="{ is_cmd-label }"{ lv_main_submit } formaction="sapevent:{ is_cmd-action }">| ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -251,7 +279,7 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
       WHEN c_field_type-checkbox.
 
         ii_html->add( |<li{ is_field-item_class }>| ).
-        ii_html->add( |<input type="checkbox" name="{ is_field-name }" id="{ is_field-name }">| ).
+        ii_html->add( |<input type="checkbox" name="{ is_field-name }" id="{ is_field-name }{ is_field-checked }">| ).
         ii_html->add( |<label for="{ is_field-name }"{ is_field-hint }>{ is_field-label }</label>| ).
         ii_html->add( '</li>' ).
 
@@ -275,12 +303,6 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
         ASSERT 1 = 0.
     ENDCASE.
 
-  ENDMETHOD.
-
-
-  METHOD set_submit_params.
-    ms_submit-label = iv_label.
-    ms_submit-action = iv_action.
   ENDMETHOD.
 
 
