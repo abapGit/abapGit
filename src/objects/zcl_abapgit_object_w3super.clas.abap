@@ -313,10 +313,11 @@ CLASS ZCL_ABAPGIT_OBJECT_W3SUPER IMPLEMENTATION.
         change_of_class_not_allowed    = 23
         no_change_from_sap_to_tmp      = 24
         OTHERS                         = 99.
-
     IF sy-subrc IS NOT INITIAL.
       zcx_abapgit_exception=>raise( 'Cannot update TADIR for W3xx' ).
     ENDIF.
+
+    corr_insert( iv_package ).
 
   ENDMETHOD.
 
