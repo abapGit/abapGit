@@ -5,9 +5,10 @@ INTERFACE zif_abapgit_object
 
   CONSTANTS:
     BEGIN OF gc_step_id,
-      abap TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `ABAP`,
-      ddic TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `DDIC`,
-      late TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `LATE`,
+      abap  TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `ABAP`,
+      ddic  TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `DDIC`,
+      late  TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `LATE`,
+      final TYPE zif_abapgit_definitions=>ty_deserialization_step VALUE `FINAL`,
     END OF gc_step_id.
 
   CONSTANTS c_abap_version_sap_cp TYPE progdir-uccheck VALUE '5' ##NO_TEXT.

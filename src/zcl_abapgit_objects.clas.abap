@@ -919,6 +919,13 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     <ls_step>-is_ddic      = abap_false.
     <ls_step>-syntax_check = abap_true.
     <ls_step>-order        = 3.
+
+    APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
+    <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-final.
+    <ls_step>-descr        = 'Import final objects'.
+    <ls_step>-is_ddic      = abap_false.
+    <ls_step>-syntax_check = abap_true.
+    <ls_step>-order        = 4.
   ENDMETHOD.
 
 
