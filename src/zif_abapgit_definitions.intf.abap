@@ -198,6 +198,7 @@ INTERFACE zif_abapgit_definitions
       match    TYPE abap_bool,
       lstate   TYPE c LENGTH 1,
       rstate   TYPE c LENGTH 1,
+      packmove TYPE abap_bool,
     END OF ty_result .
   TYPES:
     ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY .
