@@ -32,6 +32,11 @@ CLASS zcl_abapgit_url DEFINITION
         VALUE(rv_path_name) TYPE string
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS is_abapgit_repo
+      IMPORTING
+        !iv_url           TYPE string
+      RETURNING
+        VALUE(rv_abapgit) TYPE abap_bool .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -113,4 +118,15 @@ CLASS ZCL_ABAPGIT_URL IMPLEMENTATION.
           iv_validate = abap_true ).
 
   ENDMETHOD.
+
+
+  METHOD is_abapgit_repo.
+
+    IF iv_url CS '/abapGit' OR iv_url CS '/abapGit.git'.
+      rv_abapgit = abap_true.
+    ENDIF.
+
+  ENDMETHOD.
+
+
 ENDCLASS.
