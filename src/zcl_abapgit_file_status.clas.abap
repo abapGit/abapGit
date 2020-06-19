@@ -379,8 +379,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
         WITH KEY obj_type = <ls_res1>-obj_type obj_name = <ls_res1>-obj_name
         BINARY SEARCH. " Sorted since it_result is sorted
       IF sy-subrc <> 0.
-        ii_log->add( iv_msg = |Object { <ls_res1>-obj_type } { <ls_res1>-obj_name
-                       } has been assigned to a different package|
+        ii_log->add( iv_msg  = |Changed package assignment for object { <ls_res1>-obj_type } { <ls_res1>-obj_name }|
                      iv_type = 'W'
                      iv_rc   = '5' ) ##no_text.
         APPEND INITIAL LINE TO lt_move_idx ASSIGNING <ls_res2>.
