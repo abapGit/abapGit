@@ -13,5 +13,5 @@ INTERFACE zif_abapgit_xml_input
 * todo, add read_xml to match add_xml in lcl_xml_output
   METHODS get_metadata
     RETURNING
-      VALUE(rs_metadata) TYPE if_abapgit_definitions=>ty_metadata .
+      VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata .
 ENDINTERFACE.
