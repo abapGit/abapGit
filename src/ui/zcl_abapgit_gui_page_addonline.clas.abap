@@ -15,15 +15,15 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
 
     METHODS zif_abapgit_gui_event_handler~on_event REDEFINITION .
 
+    METHODS constructor
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
 
     METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
-
-    METHODS constructor
-      RAISING
-        zcx_abapgit_exception.
 
     CONSTANTS:
       BEGIN OF c_event,
@@ -236,11 +236,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
     IF ev_state IS INITIAL. " TODO !!! Refactor this disaster !!!
       super->zif_abapgit_gui_event_handler~on_event(
-        exporting
+        EXPORTING
           iv_action = iv_action
           iv_getdata = iv_getdata
           it_postdata = it_postdata
-        importing
+        IMPORTING
           ei_page = ei_page
           ev_state = ev_state ).
     ENDIF.

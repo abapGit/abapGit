@@ -244,9 +244,10 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
       IF is_cmd-is_main = abap_true.
         lv_main_submit = ' class="main"'.
       ELSE.
-        clear lv_main_submit.
+        CLEAR lv_main_submit.
       ENDIF.
-      ii_html->add( |<input type="submit" value="{ is_cmd-label }"{ lv_main_submit } formaction="sapevent:{ is_cmd-action }">| ).
+      ii_html->add( |<input type="submit" value="{
+        is_cmd-label }"{ lv_main_submit } formaction="sapevent:{ is_cmd-action }">| ).
     ENDIF.
 
   ENDMETHOD.

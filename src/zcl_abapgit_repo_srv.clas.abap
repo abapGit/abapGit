@@ -399,7 +399,9 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
     IF lv_branch_name IS INITIAL.
       lv_branch_name = 'refs/heads/master'.
     ENDIF.
-    IF find( val = lv_branch_name sub = 'refs/heads/' ) = -1.
+    IF -1 = find(
+        val = lv_branch_name
+        sub = 'refs/heads/' ).
       lv_branch_name = 'refs/heads/' && lv_branch_name. " Assume short branch name was received
     ENDIF.
 
