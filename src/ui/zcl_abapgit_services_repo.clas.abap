@@ -7,7 +7,7 @@ CLASS zcl_abapgit_services_repo DEFINITION
 
     CLASS-METHODS new_online
       IMPORTING
-        !iv_url        TYPE string
+        !is_repo_params TYPE zif_abapgit_services_repo=>ty_repo_params
       RETURNING
         VALUE(ro_repo) TYPE REF TO zcl_abapgit_repo_online
       RAISING

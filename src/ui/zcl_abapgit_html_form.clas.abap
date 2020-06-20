@@ -279,7 +279,7 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
       WHEN c_field_type-checkbox.
 
         ii_html->add( |<li{ is_field-item_class }>| ).
-        ii_html->add( |<input type="checkbox" name="{ is_field-name }" id="{ is_field-name }{ is_field-checked }">| ).
+        ii_html->add( |<input type="checkbox" name="{ is_field-name }" id="{ is_field-name }"{ is_field-checked }>| ).
         ii_html->add( |<label for="{ is_field-name }"{ is_field-hint }>{ is_field-label }</label>| ).
         ii_html->add( '</li>' ).
 

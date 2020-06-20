@@ -7,6 +7,7 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
   PUBLIC SECTION.
 
     CLASS-METHODS create
+      " TODO importing prefilled form data
       RETURNING
         VALUE(ro_page) TYPE REF TO zcl_abapgit_gui_page_addonline
       RAISING
@@ -24,17 +25,6 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-    TYPES:
-      BEGIN OF ty_form_data,
-        url              TYPE string,
-        package          TYPE devclass,
-        branch_name      TYPE string,
-        display_name     TYPE string,
-        folder_logic     TYPE string,
-        ignore_subpackages TYPE abap_bool,
-        master_lang_only TYPE abap_bool,
-      END OF ty_form_data .
-
     CONSTANTS:
       BEGIN OF c_event,
         go_back         TYPE string VALUE 'go-back',
@@ -44,19 +34,19 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
         add_online_repo TYPE string VALUE 'add-repo-online',
       END OF c_event.
 
-    DATA ms_form_data TYPE ty_form_data.
+    DATA ms_form_data TYPE zif_abapgit_services_repo=>ty_repo_params.
 
     METHODS parse_form
       IMPORTING
         it_post_data TYPE cnht_post_data_tab
       RETURNING
-        VALUE(rs_form_data) TYPE ty_form_data
+        VALUE(rs_form_data) TYPE zif_abapgit_services_repo=>ty_repo_params
       RAISING
         zcx_abapgit_exception.
 
     METHODS validate_form
       IMPORTING
-        is_form_data TYPE ty_form_data
+        is_form_data TYPE zif_abapgit_services_repo=>ty_repo_params
       RAISING
         zcx_abapgit_exception.
 
@@ -151,11 +141,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
     lo_form->option(
       iv_selected    = boolc( ms_form_data-folder_logic = 'prefix' OR ms_form_data-folder_logic IS INITIAL  )
       iv_label       = 'Prefix'
-      iv_value       = 'prefix' ).
+      iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-prefix ).
     lo_form->option(
       iv_selected    = boolc( ms_form_data-folder_logic = 'full' )
       iv_label       = 'Full'
-      iv_value       = 'full' ).
+      iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-full ).
     lo_form->checkbox(
       iv_name        = 'ignore-subpackages'
       iv_label       = 'Ignore subpackages'
@@ -219,6 +209,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
         " Move this to services ?
 
+        ms_form_data = parse_form( it_postdata ). " import data from html before re-render
+
         DATA ls_package_data TYPE scompkdtln.
         DATA lv_create       TYPE abap_bool.
         DATA li_popups       TYPE REF TO zif_abapgit_popups.
@@ -241,7 +233,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
       WHEN c_event-choose_package.
 
-        " Is it already implemented somewhere in AG ?
+        " TODO Implement as an util
 
         DATA lt_ret TYPE TABLE OF ddshretval.
         DATA ls_ret LIKE LINE OF lt_ret.
@@ -262,6 +254,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
         IF lines( lt_ret ) = 0.
           ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
         ELSE.
+
+          ms_form_data = parse_form( it_postdata ). " import data from html before re-render
+
           READ TABLE lt_ret INDEX 1 INTO ls_ret.
           ASSERT sy-subrc = 0.
           ms_form_data-package = ls_ret-fieldval.
@@ -270,16 +265,23 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
       WHEN c_event-add_online_repo.
 
-        DATA ls_form_data TYPE ty_form_data.
-
-        ls_form_data = parse_form( it_postdata ).
-        validate_form( ls_form_data ).
-
-        " ZCL_ABAPGIT_SERVICES_REPO=>NEW_ONLINE
-
+        ms_form_data = parse_form( it_postdata ).
+        validate_form( ms_form_data ).
+        zcl_abapgit_services_repo=>new_online( ms_form_data ).
         ev_state = zcl_abapgit_gui=>c_event_state-go_back.
 
     ENDCASE.
+
+    IF ev_state IS INITIAL. " TODO !!! Refactor this disaster !!!
+      super->zif_abapgit_gui_event_handler~on_event(
+        exporting
+          iv_action = iv_action
+          iv_getdata = iv_getdata
+          it_postdata = it_postdata
+        importing
+          ei_page = ei_page
+          ev_state = ev_state ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
