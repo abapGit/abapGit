@@ -14,7 +14,7 @@
   ],
   "syntax": {
     "version": "v702",
-    "errorNamespace": "^(Z|Y|LT?CL_|TY_|LIF_)",
+    "errorNamespace": "^(Z|Y|LT?CL_|TY_|LIF_|.*ABAPGIT)",
     "globalConstants": [
       "icon_led_red",
       "icon_led_yellow",
