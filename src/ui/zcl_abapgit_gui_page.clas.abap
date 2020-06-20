@@ -289,9 +289,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ri_html->add( |<td>{
                   zcl_abapgit_html=>a( iv_txt = 'Repositories'
                                        iv_act = zif_abapgit_definitions=>c_action-abapgit_home )
-
-                  }<span class="page_title">{ ms_control-page_title }</span></td>| ).                                "#EC NOTEXT
-
+                  }<span class="page_title">{ ms_control-page_title }</span></td>| ). "#EC NOTEXT
 
     IF ms_control-page_menu IS BOUND.
       ri_html->add( '<td class="right">' ).                 "#EC NOTEXT
