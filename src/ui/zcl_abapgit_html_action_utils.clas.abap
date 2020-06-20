@@ -370,7 +370,7 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
     DATA lv_serialized_post_data TYPE string.
 
     CONCATENATE LINES OF it_post_data INTO lv_serialized_post_data.
-    rt_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_serialized_post_data ).
+    rt_fields = parse_fields( lv_serialized_post_data ).
 
   ENDMETHOD.
 
