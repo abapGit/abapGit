@@ -207,28 +207,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
       WHEN c_event-create_package.
 
-        " Move this to services ?
-
         ms_form_data = parse_form( it_postdata ). " import data from html before re-render
-
-        DATA ls_package_data TYPE scompkdtln.
-        DATA lv_create       TYPE abap_bool.
-        DATA li_popups       TYPE REF TO zif_abapgit_popups.
-
-        li_popups = zcl_abapgit_ui_factory=>get_popups( ).
-
-        li_popups->popup_to_create_package(
-          IMPORTING
-            es_package_data = ls_package_data
-            ev_create       = lv_create ).
-        IF lv_create = abap_false.
-          ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-        ELSE.
-          zcl_abapgit_factory=>get_sap_package( ls_package_data-devclass )->create( ls_package_data ).
-          COMMIT WORK. " Hmmm ?
-
-          ms_form_data-package = ls_package_data-devclass.
+        ms_form_data-package = zcl_abapgit_services_basis=>create_package( ).
+        IF ms_form_data-package IS NOT INITIAL.
           ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        ELSE.
+          ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
         ENDIF.
 
       WHEN c_event-choose_package.
