@@ -274,14 +274,14 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
     ii_html->add( |</form>| ).
 
     ii_html->add( zcl_abapgit_html=>a(
-      iv_txt = 'Toggle only favorites'
+      iv_txt = '<i id="icon-filter-favorite" class="icon icon-check"></i> Only favorites'
       iv_act = |gHelper.toggleRepoListFavorites()|
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
 
     ii_html->add( `<span class="separator">|</span>` ).
 
     ii_html->add( zcl_abapgit_html=>a(
-      iv_txt = 'Toggle detail'
+      iv_txt = '<i id="icon-filter-detail" class="icon icon-check"></i> Detail'
       iv_act = |gHelper.toggleRepoListDetail()|
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
 

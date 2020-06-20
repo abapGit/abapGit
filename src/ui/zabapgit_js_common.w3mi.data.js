@@ -232,18 +232,36 @@ function RepoOverViewHelper() {
   this.isDetailsDisplayed = false;
   this.isOnlyFavoritesDisplayed = false;
   this.detailCssClass = findStyleSheetByName(".ro-detail");
+  var icon = document.getElementById("icon-filter-detail");
+  this.toggleFilterIcon(icon, this.isDetailsDisplayed);
+  var icon = document.getElementById("icon-filter-favorite");
+  this.toggleFilterIcon(icon, this.isOnlyFavoritesDisplayed);
 }
 
 RepoOverViewHelper.prototype.toggleRepoListDetail = function (forceDisplay) {
   if (this.detailCssClass) {
     this.isDetailsDisplayed = forceDisplay || !this.isDetailsDisplayed;
     this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
+    var icon = document.getElementById("icon-filter-detail");
+    this.toggleFilterIcon(icon, this.isDetailsDisplayed);
   }
 };
+
+RepoOverViewHelper.prototype.toggleFilterIcon = function(icon, isEnabled){
+  if (isEnabled) {
+    icon.classList.remove("grey");
+    icon.classList.add("blue")
+  } else {
+    icon.classList.remove("blue");
+    icon.classList.add("grey");
+  }
+}
 
 RepoOverViewHelper.prototype.toggleRepoListFavorites = function (forceDisplay) {
   this.isOnlyFavoritesDisplayed = forceDisplay || !this.isOnlyFavoritesDisplayed;
   var repositories = document.getElementsByClassName("repo");
+  var icon = document.getElementById("icon-filter-favorite");
+  this.toggleFilterIcon(icon, this.isOnlyFavoritesDisplayed);
   for (var i = 0; i < repositories.length; i++) {
     var repo = repositories[i];
     if (this.isOnlyFavoritesDisplayed) {
@@ -274,8 +292,12 @@ RepoOverViewHelper.prototype.onPageUnload = function () {
 RepoOverViewHelper.prototype.onPageLoad = function () {
   var data = window.sessionStorage && JSON.parse(window.sessionStorage.getItem(this.pageId));
   if (data) {
-    if (data.isDetailsDisplayed) this.toggleRepoListDetail(true);
-    if (data.isOnlyFavoritesDisplayed) this.toggleRepoListFavorites(true);
+    if (data.isDetailsDisplayed) {
+      this.toggleRepoListDetail(true);
+    }
+    if (data.isOnlyFavoritesDisplayed) {
+      this.toggleRepoListFavorites(true);
+    }
   }
   debugOutput("RepoOverViewHelper.onPageLoad: " + ((data) ? "from Storage" : "initial state"));
 };
