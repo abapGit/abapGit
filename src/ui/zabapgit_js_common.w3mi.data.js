@@ -234,7 +234,7 @@ function RepoOverViewHelper() {
   this.detailCssClass = findStyleSheetByName(".ro-detail");
   var icon = document.getElementById("icon-filter-detail");
   this.toggleFilterIcon(icon, this.isDetailsDisplayed);
-  var icon = document.getElementById("icon-filter-favorite");
+  icon = document.getElementById("icon-filter-favorite");
   this.toggleFilterIcon(icon, this.isOnlyFavoritesDisplayed);
 }
 
@@ -247,15 +247,15 @@ RepoOverViewHelper.prototype.toggleRepoListDetail = function (forceDisplay) {
   }
 };
 
-RepoOverViewHelper.prototype.toggleFilterIcon = function(icon, isEnabled){
+RepoOverViewHelper.prototype.toggleFilterIcon = function (icon, isEnabled) {
   if (isEnabled) {
     icon.classList.remove("grey");
-    icon.classList.add("blue")
+    icon.classList.add("blue");
   } else {
     icon.classList.remove("blue");
     icon.classList.add("grey");
   }
-}
+};
 
 RepoOverViewHelper.prototype.toggleRepoListFavorites = function (forceDisplay) {
   this.isOnlyFavoritesDisplayed = forceDisplay || !this.isOnlyFavoritesDisplayed;
