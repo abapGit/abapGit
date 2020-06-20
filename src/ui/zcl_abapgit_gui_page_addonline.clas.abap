@@ -233,34 +233,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
       WHEN c_event-choose_package.
 
-        " TODO Implement as an util
-
-        DATA lt_ret TYPE TABLE OF ddshretval.
-        DATA ls_ret LIKE LINE OF lt_ret.
-
-        CALL FUNCTION 'F4IF_FIELD_VALUE_REQUEST'
-          EXPORTING
-            tabname   = 'TDEVC'
-            fieldname = 'DEVCLASS'
-          TABLES
-            return_tab = lt_ret
-          EXCEPTIONS
-            OTHERS = 5.
-
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( 'Unexpected error in F4IF_FIELD_VALUE_REQUEST' ).
-        ENDIF.
-
-        IF lines( lt_ret ) = 0.
-          ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-        ELSE.
-
-          ms_form_data = parse_form( it_postdata ). " import data from html before re-render
-
-          READ TABLE lt_ret INDEX 1 INTO ls_ret.
-          ASSERT sy-subrc = 0.
-          ms_form_data-package = ls_ret-fieldval.
+        ms_form_data = parse_form( it_postdata ). " import data from html before re-render
+        ms_form_data-package = zcl_abapgit_ui_factory=>get_popups( )->popup_search_help( 'TDEVC-DEVCLASS' ).
+        IF ms_form_data-package IS NOT INITIAL.
           ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        ELSE.
+          ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
         ENDIF.
 
       WHEN c_event-add_online_repo.
