@@ -1,0 +1,32 @@
+#
+# Pull from GitHub source repository
+#
+stages:
+  - github-pull
+
+before_script:
+  - git remote set-url --push origin "${TOKEN_URL_PUSH}"
+  - git remote add source "${URL_SOURCE}"
+  # - git remote -v
+  - git config user.email "github@redwood.com"
+  - git config user.name "github"
+  - git config http.sslverify false
+
+after_script:
+  - git log -5 --oneline
+  - git remote rm source
+
+do-pull:
+  stage: github-pull
+  image: 
+    name: alpine/git
+    entrypoint: [""]
+  tags:
+  - docker
+  # when: manual
+  only:
+  - schedules
+  - manual
+  script:
+  - git pull source master
+  - git push origin HEAD:master
