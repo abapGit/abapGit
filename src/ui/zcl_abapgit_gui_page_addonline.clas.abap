@@ -151,9 +151,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
       iv_selected    = boolc( ms_form_data-folder_logic = zif_abapgit_dot_abapgit=>c_folder_logic-full )
       iv_label       = 'Full'
       iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-full ).
-    lo_form->option(
-      iv_label       = 'WTF?'
-      iv_value       = 'wtf' ).
     lo_form->checkbox(
       iv_name        = 'ignore-subpackages'
       iv_label       = 'Ignore subpackages'
@@ -173,7 +170,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
       iv_action      = c_event-create_package ).
     lo_form->command(
       iv_label       = 'Back'
-      iv_as_a        = abap_true " ignore required fields
       iv_action      = c_event-go_back ).
 
     ri_html->add( lo_form->render(
@@ -249,12 +245,30 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
       WHEN c_event-choose_package.
 
-        ms_form_data = parse_form( it_postdata ). " import data from html before re-render
+        ms_form_data = parse_form( it_postdata ).
         ms_form_data-package = zcl_abapgit_ui_factory=>get_popups( )->popup_search_help( 'TDEVC-DEVCLASS' ).
         IF ms_form_data-package IS NOT INITIAL.
           ev_state = zcl_abapgit_gui=>c_event_state-re_render.
         ELSE.
           ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+        ENDIF.
+
+      WHEN c_event-choose_branch.
+
+        ms_form_data = parse_form( it_postdata ).
+        mo_validation_log = validate_form( ms_form_data ).
+        IF mo_validation_log->has( 'repo-url' ) = abap_true.
+          ev_state = zcl_abapgit_gui=>c_event_state-re_render. " Display errors
+        ENDIF.
+        ms_form_data-branch_name = zcl_abapgit_ui_factory=>get_popups( )->branch_list_popup( ms_form_data-url )-name.
+        IF ms_form_data-branch_name IS INITIAL.
+          ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+        ELSE.
+          ms_form_data-branch_name = replace( " strip technical
+            val = ms_form_data-branch_name
+            sub = 'refs/heads/'
+            with = '' ).
+          ev_state = zcl_abapgit_gui=>c_event_state-re_render.
         ENDIF.
 
       WHEN c_event-add_online_repo.

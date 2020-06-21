@@ -1026,13 +1026,6 @@ settings_tab tr:first-child td { border-top: 0px; }
   list-style: none;
   position: relative;
 }
-.dialog button.field-cmd {
-  float: right;
-  position: absolute;
-  top: 0px;
-  right: 0px;
-  cursor: pointer;
-}
 .dialog li.dialog-commands {
   text-align: right;
   margin-top: 12px;
@@ -1077,10 +1070,6 @@ settings_tab tr:first-child td { border-top: 0px; }
 .dialog li.error input[type="text"] {
   border-color: #ff5959;
 }
-.dialog input[type="text"] {
-  /*line-height: 1.5em;*/
-  height: 2.5em; /* IE is strange ... */
-}
 .dialog .radio-container {
   display: inline-block;
   padding: 4px;
@@ -1094,6 +1083,7 @@ settings_tab tr:first-child td { border-top: 0px; }
 .dialog input[type="text"] {
   width: 100%;
   box-sizing : border-box;
+  height: 2.5em;
 }
 .dialog .radio-container input[type="radio"] {
   visibility: hidden;
@@ -1116,10 +1106,25 @@ settings_tab tr:first-child td { border-top: 0px; }
   background-color: #64a8ff;
   color: #fff;
 }
-.dialog li.with-command input {
-  padding-right: 1.8em;
+.dialog li.with-command input[type="text"] {
+  /* for a, not submit */
+  /*padding-right: 2em;*/
 }
 .dialog li.with-command a {
+  /* for a, not submit */
   width: 2em;
   margin-left: -1.8em;
+}
+.dialog li.with-command div.input-frame {
+  /*overflow: hidden;*/
+  padding-right: 1.8em;
+}
+.dialog li.with-command input[type="submit"] {
+  /*width: 2em;*/
+  float: right;
+  height: 2.5em;
+}
+.dialog li.with-command input[type="submit"]:hover {
+  background-color: #64a8ff;
+  color: #fff;
 }

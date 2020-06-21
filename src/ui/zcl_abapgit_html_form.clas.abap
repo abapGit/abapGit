@@ -291,12 +291,14 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
         IF lv_error IS NOT INITIAL.
           ii_html->add( |<small>{ lv_error }</small>| ).
         ENDIF.
+        IF is_field-side_action IS NOT INITIAL.
+          ii_html->add( |<input type="submit" value="&#x2026;" formaction="sapevent:{ is_field-side_action }">| ).
+          ii_html->add( '<div class="input-frame">' ). " Ugly :(
+        ENDIF.
         ii_html->add( |<input type="text" name="{ is_field-name }" id="{
           is_field-name }"{ is_field-placeholder }{ is_field-value }{ is_field-dblclick }>| ).
         IF is_field-side_action IS NOT INITIAL.
-          ii_html->add_a(
-            iv_txt = '&#x2026;'
-            iv_act = is_field-side_action ).
+          ii_html->add( '</div>' ).
         ENDIF.
         ii_html->add( '</li>' ).
 
