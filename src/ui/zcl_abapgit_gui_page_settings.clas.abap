@@ -240,8 +240,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'comment_default'.
     IF sy-subrc = 0.
       mo_settings->set_commitmsg_comment_default( <ls_post_field>-value ).
-    ELSE.
-      mo_settings->set_commitmsg_comment_default( zcl_abapgit_settings=>c_commitmsg_comment_default ).
     ENDIF.
 
     READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'body_size'.
