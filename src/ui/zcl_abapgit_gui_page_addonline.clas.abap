@@ -35,6 +35,7 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
       END OF c_event.
 
     DATA ms_form_data TYPE zif_abapgit_services_repo=>ty_repo_params.
+    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
 
     METHODS parse_form
       IMPORTING
@@ -47,6 +48,8 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
     METHODS validate_form
       IMPORTING
         is_form_data TYPE zif_abapgit_services_repo=>ty_repo_params
+      RETURNING
+        VALUE(ro_validation_log) TYPE REF TO zcl_abapgit_string_map
       RAISING
         zcx_abapgit_exception.
 
@@ -60,6 +63,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     ms_control-page_title = 'Clone online repository'. " TODO refactor
+    CREATE OBJECT mo_validation_log.
   ENDMETHOD.
 
 
@@ -139,13 +143,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
       iv_label       = 'Folder logic'
       iv_hint        = 'Define how package folders are named in the repo (see https://docs.abapgit.org)' ).
     lo_form->option(
-      iv_selected    = boolc( ms_form_data-folder_logic = 'prefix' OR ms_form_data-folder_logic IS INITIAL  )
+      iv_selected    = boolc( ms_form_data-folder_logic = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
+                           OR ms_form_data-folder_logic IS INITIAL  )
       iv_label       = 'Prefix'
       iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-prefix ).
     lo_form->option(
-      iv_selected    = boolc( ms_form_data-folder_logic = 'full' )
+      iv_selected    = boolc( ms_form_data-folder_logic = zif_abapgit_dot_abapgit=>c_folder_logic-full )
       iv_label       = 'Full'
       iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-full ).
+    lo_form->option(
+      iv_label       = 'WTF?'
+      iv_value       = 'wtf' ).
     lo_form->checkbox(
       iv_name        = 'ignore-subpackages'
       iv_label       = 'Ignore subpackages'
@@ -168,32 +176,56 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
       iv_as_a        = abap_true " ignore required fields
       iv_action      = c_event-go_back ).
 
-    ri_html->add( lo_form->render( iv_form_class = 'dialog w500px' ) ).
+    ri_html->add( lo_form->render(
+      iv_form_class     = 'dialog w500px'
+      io_validation_log = mo_validation_log ) ).
 
   ENDMETHOD.
 
 
   METHOD validate_form.
 
-    IF is_form_data-url IS INITIAL.
-      zcx_abapgit_exception=>raise( 'Url cannot be empty' ).
-    ENDIF.
+    DATA lx TYPE REF TO zcx_abapgit_exception.
 
-    zcl_abapgit_url=>validate( |{ is_form_data-url }| ).
+    CREATE OBJECT ro_validation_log.
+
+    IF is_form_data-url IS INITIAL.
+      ro_validation_log->set(
+        iv_key = 'repo-url'
+        iv_val = 'Url cannot be empty' ).
+    ELSE.
+      TRY .
+          zcl_abapgit_url=>validate( |{ is_form_data-url }| ).
+        CATCH zcx_abapgit_exception INTO lx.
+          ro_validation_log->set(
+            iv_key = 'repo-url'
+            iv_val = lx->get_text( ) ).
+      ENDTRY.
+    ENDIF.
 
     IF is_form_data-package IS INITIAL.
-      zcx_abapgit_exception=>raise( 'Package cannot be empty' ).
+      ro_validation_log->set(
+        iv_key = 'package'
+        iv_val = 'Package cannot be empty' ).
+    ELSE.
+      TRY .
+          zcl_abapgit_repo_srv=>get_instance( )->validate_package(
+            iv_package    = is_form_data-package
+            iv_ign_subpkg = is_form_data-ignore_subpackages ).
+        CATCH zcx_abapgit_exception INTO lx.
+          ro_validation_log->set(
+            iv_key = 'package'
+            iv_val = lx->get_text( ) ).
+      ENDTRY.
     ENDIF.
-
-    zcl_abapgit_repo_srv=>get_instance( )->validate_package(
-      iv_package    = is_form_data-package
-      iv_ign_subpkg = is_form_data-ignore_subpackages ).
 
     IF is_form_data-folder_logic <> zif_abapgit_dot_abapgit=>c_folder_logic-prefix
         AND is_form_data-folder_logic <> zif_abapgit_dot_abapgit=>c_folder_logic-full.
-      zcx_abapgit_exception=>raise( |Invalid folder logic { is_form_data-folder_logic }. | &&
-        |Choose either { zif_abapgit_dot_abapgit=>c_folder_logic-prefix } | &&
-        |or { zif_abapgit_dot_abapgit=>c_folder_logic-full } | ).
+      ro_validation_log->set(
+        iv_key = 'folder-logic'
+        iv_val = |Invalid folder logic { is_form_data-folder_logic
+        }. Must be { zif_abapgit_dot_abapgit=>c_folder_logic-prefix
+        } or { zif_abapgit_dot_abapgit=>c_folder_logic-full } | ).
     ENDIF.
 
   ENDMETHOD.
@@ -228,9 +260,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
       WHEN c_event-add_online_repo.
 
         ms_form_data = parse_form( it_postdata ).
-        validate_form( ms_form_data ).
-        zcl_abapgit_services_repo=>new_online( ms_form_data ).
-        ev_state = zcl_abapgit_gui=>c_event_state-go_back.
+        mo_validation_log = validate_form( ms_form_data ).
+
+        IF mo_validation_log->is_empty( ) = abap_true.
+          zcl_abapgit_services_repo=>new_online( ms_form_data ).
+          ev_state = zcl_abapgit_gui=>c_event_state-go_back.
+        ELSE.
+          ev_state = zcl_abapgit_gui=>c_event_state-re_render. " Display errors
+        ENDIF.
 
     ENDCASE.
 

@@ -38,9 +38,15 @@ CLASS zcl_abapgit_string_map DEFINITION
       RETURNING
         VALUE(rv_size) TYPE i.
 
+    METHODS is_empty
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool.
+
     METHODS delete
       IMPORTING
         iv_key TYPE string.
+
+    METHODS clear.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -51,6 +57,11 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_STRING_MAP IMPLEMENTATION.
+
+
+  METHOD clear.
+    clear mt_entries.
+  ENDMETHOD.
 
 
   METHOD create.
@@ -81,6 +92,11 @@ CLASS ZCL_ABAPGIT_STRING_MAP IMPLEMENTATION.
     READ TABLE mt_entries TRANSPORTING NO FIELDS WITH KEY k = iv_key.
     rv_has = boolc( sy-subrc IS INITIAL ).
 
+  ENDMETHOD.
+
+
+  METHOD is_empty.
+    rv_yes = boolc( lines( mt_entries ) = 0 ).
   ENDMETHOD.
 
 

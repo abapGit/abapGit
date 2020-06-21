@@ -1064,16 +1064,18 @@ settings_tab tr:first-child td { border-top: 0px; }
   margin-bottom: 6px;
   padding-left: 0.5em;
 }
-.dialog label span{
-  color: #ccc;
-  float: right;
-  padding-right: 0.5em;
+.dialog label em {
+  color: #64a8ff;
 }
-.dialog small {
-  color: #999;
+.dialog li.error small {
+  color: #ff5959;
   display: block;
   font-size: 75%;
-  margin-top: 4px;
+  margin: 4px 0px;
+  padding-left: 0.5em;
+}
+.dialog li.error input[type="text"] {
+  border-color: #ff5959;
 }
 .dialog input[type="text"] {
   /*line-height: 1.5em;*/

@@ -12,6 +12,7 @@ CLASS zcl_abapgit_html_form DEFINITION
     METHODS render
       IMPORTING
         iv_form_class TYPE string
+        io_validation_log TYPE REF TO zcl_abapgit_string_map OPTIONAL
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html.
 
@@ -28,6 +29,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         iv_name TYPE string
         iv_value TYPE string OPTIONAL
         iv_hint TYPE string OPTIONAL
+        iv_error TYPE string OPTIONAL
         iv_required TYPE abap_bool DEFAULT abap_false
         iv_placeholder TYPE string OPTIONAL
         iv_side_action TYPE string OPTIONAL.
@@ -37,12 +39,14 @@ CLASS zcl_abapgit_html_form DEFINITION
         iv_label TYPE string
         iv_name TYPE string
         iv_checked TYPE abap_bool DEFAULT abap_false
+        iv_error TYPE string OPTIONAL
         iv_hint TYPE string OPTIONAL.
 
     METHODS radio
       IMPORTING
         iv_label TYPE string
         iv_name TYPE string
+        iv_error TYPE string OPTIONAL
         iv_hint TYPE string OPTIONAL.
 
     METHODS option
@@ -73,10 +77,12 @@ CLASS zcl_abapgit_html_form DEFINITION
         placeholder TYPE string,
         required TYPE string,
         item_class TYPE string,
+        error TYPE string,
         value TYPE string,
         side_action TYPE string,
         checked TYPE string,
         subitems TYPE tty_subitems,
+*        onclick ???
       END OF ty_field.
 
     TYPES:
@@ -101,6 +107,7 @@ CLASS zcl_abapgit_html_form DEFINITION
     CLASS-METHODS render_field
       IMPORTING
         ii_html TYPE REF TO zif_abapgit_html
+        io_validation_log TYPE REF TO zcl_abapgit_string_map
         is_field TYPE ty_field.
 
     CLASS-METHODS render_command
@@ -119,9 +126,10 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
     DATA ls_field LIKE LINE OF mt_fields.
 
-    ls_field-type = c_field_type-checkbox.
-    ls_field-name = iv_name.
+    ls_field-type  = c_field_type-checkbox.
+    ls_field-name  = iv_name.
     ls_field-label = iv_label.
+    ls_field-error = iv_error.
 
     IF iv_checked = abap_true.
       ls_field-checked = ' checked'.
@@ -186,9 +194,10 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
     DATA ls_field LIKE LINE OF mt_fields.
 
-    ls_field-type = c_field_type-radio.
-    ls_field-name = iv_name.
+    ls_field-type  = c_field_type-radio.
+    ls_field-name  = iv_name.
     ls_field-label = iv_label.
+    ls_field-error = iv_error.
 
     IF iv_hint IS NOT INITIAL.
       ls_field-hint    = | title="{ iv_hint }"|.
@@ -212,6 +221,7 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     LOOP AT mt_fields ASSIGNING <ls_field>.
       render_field(
         ii_html  = ri_html
+        io_validation_log = io_validation_log
         is_field = <ls_field> ).
     ENDLOOP.
 
@@ -255,21 +265,34 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
   METHOD render_field.
 
-    DATA lv_infomark TYPE string.
     DATA lv_opt_id TYPE string.
+    DATA lv_error TYPE string.
+    DATA lv_item_class TYPE string.
     FIELD-SYMBOLS <ls_opt> LIKE LINE OF is_field-subitems.
 
-    IF is_field-hint IS NOT INITIAL.
-      lv_infomark = ' <span>&#x1f6c8;</span>'. " (i)
+    lv_error      = is_field-error. " direct error has a priority, but maybe remove it of not used ...
+    lv_item_class = is_field-item_class.
+
+    IF lv_error IS INITIAL and io_validation_log IS BOUND.
+      lv_error = io_validation_log->get( is_field-name ).
+    ENDIF.
+    IF lv_error IS NOT INITIAL.
+      lv_item_class = condense( lv_item_class && ' error' ).
+    ENDIF.
+    IF lv_item_class IS NOT INITIAL.
+      lv_item_class = | class="{ lv_item_class }"|.
     ENDIF.
 
     CASE is_field-type.
       WHEN c_field_type-text.
 
-        ii_html->add( |<li{ is_field-item_class }>| ).
-        ii_html->add( |<label for="{ is_field-name }"{ is_field-hint }>{ is_field-label }{ lv_infomark }</label>| ).
+        ii_html->add( |<li{ lv_item_class }>| ).
+        ii_html->add( |<label for="{ is_field-name }"{ is_field-hint }>{ is_field-label }{ is_field-required }</label>| ).
+        IF lv_error IS NOT INITIAL.
+          ii_html->add( |<small>{ lv_error }</small>| ).
+        ENDIF.
         ii_html->add( |<input type="text" name="{ is_field-name }" id="{
-          is_field-name }"{ is_field-required }{ is_field-placeholder }{ is_field-value }{ is_field-dblclick }>| ).
+          is_field-name }"{ is_field-placeholder }{ is_field-value }{ is_field-dblclick }>| ).
         IF is_field-side_action IS NOT INITIAL.
           ii_html->add_a(
             iv_txt = '&#x2026;'
@@ -279,15 +302,21 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
       WHEN c_field_type-checkbox.
 
-        ii_html->add( |<li{ is_field-item_class }>| ).
+        ii_html->add( |<li{ lv_item_class }>| ).
+        IF lv_error IS NOT INITIAL.
+          ii_html->add( |<small>{ lv_error }</small>| ).
+        ENDIF.
         ii_html->add( |<input type="checkbox" name="{ is_field-name }" id="{ is_field-name }"{ is_field-checked }>| ).
-        ii_html->add( |<label for="{ is_field-name }"{ is_field-hint }>{ is_field-label }</label>| ).
+        ii_html->add( |<label for="{ is_field-name }"{ is_field-hint }>{ is_field-label }{ is_field-required }</label>| ).
         ii_html->add( '</li>' ).
 
       WHEN c_field_type-radio.
 
-        ii_html->add( |<li{ is_field-item_class }>| ).
-        ii_html->add( |<label{ is_field-hint }>{ is_field-label }{ lv_infomark }</label>| ).
+        ii_html->add( |<li{ lv_item_class }>| ).
+        ii_html->add( |<label{ is_field-hint }>{ is_field-label }{ is_field-required }</label>| ).
+        IF lv_error IS NOT INITIAL.
+          ii_html->add( |<small>{ lv_error }</small>| ).
+        ENDIF.
         ii_html->add( |<div class="radio-container">| ).
 
         LOOP AT is_field-subitems ASSIGNING <ls_opt>.
@@ -311,22 +340,23 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
     DATA ls_field LIKE LINE OF mt_fields.
 
-    ls_field-type = c_field_type-text.
-    ls_field-name = iv_name.
+    ls_field-type  = c_field_type-text.
+    ls_field-name  = iv_name.
     ls_field-label = iv_label.
+    ls_field-error = iv_error.
 
     IF iv_hint IS NOT INITIAL.
       ls_field-hint    = | title="{ iv_hint }"|.
     ENDIF.
 
     IF iv_side_action IS NOT INITIAL.
-      ls_field-item_class = ' class="with-command"'.
+      ls_field-item_class = 'with-command'.
       ls_field-side_action = iv_side_action.
       ls_field-dblclick = | ondblclick="submitSapeventForm(null, '{ iv_side_action }')"|.
     ENDIF.
 
     IF iv_required = abap_true.
-      ls_field-required = ' required'.
+      ls_field-required = ' <em>*</em>'.
     ENDIF.
 
     IF iv_placeholder IS NOT INITIAL.
