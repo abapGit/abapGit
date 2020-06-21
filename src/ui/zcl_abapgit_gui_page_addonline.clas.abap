@@ -26,6 +26,17 @@ CLASS zcl_abapgit_gui_page_addonline DEFINITION
   PRIVATE SECTION.
 
     CONSTANTS:
+      BEGIN OF c_id,
+        url TYPE string VALUE 'url',
+        package TYPE string VALUE 'package',
+        branch_name TYPE string VALUE 'branch_name',
+        display_name TYPE string VALUE 'display_name',
+        folder_logic TYPE string VALUE 'folder_logic',
+        ignore_subpackages TYPE string VALUE 'ignore_subpackages',
+        master_lang_only TYPE string VALUE 'master_lang_only',
+      END OF c_id.
+
+    CONSTANTS:
       BEGIN OF c_event,
         go_back         TYPE string VALUE 'go-back',
         choose_package  TYPE string VALUE 'choose-package',
@@ -81,19 +92,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
     LOOP AT lt_form INTO ls_field.
       CASE ls_field-name.
-        WHEN 'repo-url'.
+        WHEN c_id-url.
           rs_form_data-url = ls_field-value.
-        WHEN 'package'.
+        WHEN c_id-package.
           rs_form_data-package = ls_field-value.
-        WHEN 'branch'.
+        WHEN c_id-branch_name.
           rs_form_data-branch_name = ls_field-value.
-        WHEN 'display-name'.
+        WHEN c_id-display_name.
           rs_form_data-display_name = ls_field-value.
-        WHEN 'folder-logic'.
+        WHEN c_id-folder_logic.
           rs_form_data-folder_logic = ls_field-value.
-        WHEN 'ignore-subpackages'.
+        WHEN c_id-ignore_subpackages.
           rs_form_data-ignore_subpackages = boolc( ls_field-value = 'on' ).
-        WHEN 'master-lang-only'.
+        WHEN c_id-master_lang_only.
           rs_form_data-master_lang_only = boolc( ls_field-value = 'on' ).
         WHEN OTHERS.
           zcx_abapgit_exception=>raise( |Unexpected form field [{ ls_field-name }]| ).
@@ -112,34 +123,34 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
     lo_form = zcl_abapgit_html_form=>create( ).
     lo_form->text(
-      iv_name        = 'repo-url'
+      iv_name        = c_id-url
+      iv_value       = ms_form_data-url
       iv_required    = abap_true
       iv_label       = 'Git repository URL'
       iv_hint        = 'HTTPS address of the repository to clone'
-      iv_value       = |{ ms_form_data-url }|
       iv_placeholder = 'https://github.com/...git' ).
     lo_form->text(
-      iv_name        = 'package'
-      iv_required    = abap_true
+      iv_name        = c_id-package
+      iv_value       = |{ ms_form_data-package }|
       iv_side_action = c_event-choose_package
+      iv_required    = abap_true
       iv_label       = 'Package'
       iv_hint        = 'SAP package for the code (should be a dedicated one)'
-      iv_value       = |{ ms_form_data-package }|
       iv_placeholder = 'Z... / $...' ).
     lo_form->text(
-      iv_name        = 'branch'
+      iv_name        = c_id-branch_name
+      iv_value       = ms_form_data-branch_name
       iv_side_action = c_event-choose_branch
       iv_label       = 'Branch'
       iv_hint        = 'Switch to a specific branch on clone (default: master)'
-      iv_value       = |{ ms_form_data-branch_name }|
       iv_placeholder = 'master' ).
     lo_form->text(
-      iv_name        = 'display-name'
+      iv_name        = c_id-display_name
+      iv_value       = ms_form_data-display_name
       iv_label       = 'Display name'
-      iv_value       = |{ ms_form_data-display_name }|
       iv_hint        = 'Name to show instead of original repo name (optional)' ).
     lo_form->radio(
-      iv_name        = 'folder-logic'
+      iv_name        = c_id-folder_logic
       iv_label       = 'Folder logic'
       iv_hint        = 'Define how package folders are named in the repo (see https://docs.abapgit.org)' ).
     lo_form->option(
@@ -152,18 +163,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
       iv_label       = 'Full'
       iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-full ).
     lo_form->checkbox(
-      iv_name        = 'ignore-subpackages'
-      iv_label       = 'Ignore subpackages'
+      iv_name        = c_id-ignore_subpackages
       iv_checked     = ms_form_data-ignore_subpackages
+      iv_label       = 'Ignore subpackages'
       iv_hint        = 'Syncronize root package only (see https://docs.abapgit.org)' ).
     lo_form->checkbox(
-      iv_name        = 'master-lang-only'
-      iv_label       = 'Master language only'
+      iv_name        = c_id-master_lang_only
       iv_checked     = ms_form_data-master_lang_only
+      iv_label       = 'Master language only'
       iv_hint        = 'Ignore translations, serialize just master language' ).
     lo_form->command(
-      iv_is_main     = abap_true
       iv_label       = 'Clone online repo'
+      iv_is_main     = abap_true
       iv_action      = c_event-add_online_repo ).
     lo_form->command(
       iv_label       = 'Create package'
@@ -187,21 +198,21 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
     IF is_form_data-url IS INITIAL.
       ro_validation_log->set(
-        iv_key = 'repo-url'
+        iv_key = c_id-url
         iv_val = 'Url cannot be empty' ).
     ELSE.
       TRY .
-          zcl_abapgit_url=>validate( |{ is_form_data-url }| ).
+          zcl_abapgit_url=>validate( is_form_data-url ).
         CATCH zcx_abapgit_exception INTO lx.
           ro_validation_log->set(
-            iv_key = 'repo-url'
+            iv_key = c_id-url
             iv_val = lx->get_text( ) ).
       ENDTRY.
     ENDIF.
 
     IF is_form_data-package IS INITIAL.
       ro_validation_log->set(
-        iv_key = 'package'
+        iv_key = c_id-package
         iv_val = 'Package cannot be empty' ).
     ELSE.
       TRY .
@@ -210,7 +221,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
             iv_ign_subpkg = is_form_data-ignore_subpackages ).
         CATCH zcx_abapgit_exception INTO lx.
           ro_validation_log->set(
-            iv_key = 'package'
+            iv_key = c_id-package
             iv_val = lx->get_text( ) ).
       ENDTRY.
     ENDIF.
@@ -218,7 +229,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
     IF is_form_data-folder_logic <> zif_abapgit_dot_abapgit=>c_folder_logic-prefix
         AND is_form_data-folder_logic <> zif_abapgit_dot_abapgit=>c_folder_logic-full.
       ro_validation_log->set(
-        iv_key = 'folder-logic'
+        iv_key = c_id-folder_logic
         iv_val = |Invalid folder logic { is_form_data-folder_logic
         }. Must be { zif_abapgit_dot_abapgit=>c_folder_logic-prefix
         } or { zif_abapgit_dot_abapgit=>c_folder_logic-full } | ).
@@ -257,7 +268,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
         ms_form_data = parse_form( it_postdata ).
         mo_validation_log = validate_form( ms_form_data ).
-        IF mo_validation_log->has( 'repo-url' ) = abap_true.
+        IF mo_validation_log->has( c_id-url ) = abap_true.
           ev_state = zcl_abapgit_gui=>c_event_state-re_render. " Display errors
         ENDIF.
         ms_form_data-branch_name = zcl_abapgit_ui_factory=>get_popups( )->branch_list_popup( ms_form_data-url )-name.

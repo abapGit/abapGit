@@ -32,7 +32,7 @@ CLASS zcl_abapgit_string_map DEFINITION
     METHODS set
       IMPORTING
         iv_key TYPE string
-        iv_val TYPE string.
+        iv_val TYPE string OPTIONAL.
 
     METHODS size
       RETURNING
