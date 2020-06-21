@@ -192,7 +192,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
   METHOD validate_form.
 
-    DATA lx TYPE REF TO zcx_abapgit_exception.
+    DATA lx_err TYPE REF TO zcx_abapgit_exception.
 
     CREATE OBJECT ro_validation_log.
 
@@ -201,12 +201,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
         iv_key = c_id-url
         iv_val = 'Url cannot be empty' ).
     ELSE.
-      TRY .
+      TRY.
           zcl_abapgit_url=>validate( is_form_data-url ).
-        CATCH zcx_abapgit_exception INTO lx.
+        CATCH zcx_abapgit_exception INTO lx_err.
           ro_validation_log->set(
             iv_key = c_id-url
-            iv_val = lx->get_text( ) ).
+            iv_val = lx_err->get_text( ) ).
       ENDTRY.
     ENDIF.
 
@@ -215,14 +215,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
         iv_key = c_id-package
         iv_val = 'Package cannot be empty' ).
     ELSE.
-      TRY .
+      TRY.
           zcl_abapgit_repo_srv=>get_instance( )->validate_package(
             iv_package    = is_form_data-package
             iv_ign_subpkg = is_form_data-ignore_subpackages ).
-        CATCH zcx_abapgit_exception INTO lx.
+        CATCH zcx_abapgit_exception INTO lx_err.
           ro_validation_log->set(
             iv_key = c_id-package
-            iv_val = lx->get_text( ) ).
+            iv_val = lx_err->get_text( ) ).
       ENDTRY.
     ENDIF.
 

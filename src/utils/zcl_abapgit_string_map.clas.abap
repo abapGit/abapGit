@@ -60,7 +60,7 @@ CLASS ZCL_ABAPGIT_STRING_MAP IMPLEMENTATION.
 
 
   METHOD clear.
-    clear mt_entries.
+    CLEAR mt_entries.
   ENDMETHOD.
 
 

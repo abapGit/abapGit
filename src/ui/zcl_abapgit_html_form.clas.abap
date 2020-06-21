@@ -273,7 +273,7 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     lv_error      = is_field-error. " direct error has a priority, but maybe remove it of not used ...
     lv_item_class = is_field-item_class.
 
-    IF lv_error IS INITIAL and io_validation_log IS BOUND.
+    IF lv_error IS INITIAL AND io_validation_log IS BOUND.
       lv_error = io_validation_log->get( is_field-name ).
     ENDIF.
     IF lv_error IS NOT INITIAL.
@@ -287,7 +287,8 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
       WHEN c_field_type-text.
 
         ii_html->add( |<li{ lv_item_class }>| ).
-        ii_html->add( |<label for="{ is_field-name }"{ is_field-hint }>{ is_field-label }{ is_field-required }</label>| ).
+        ii_html->add( |<label for="{ is_field-name }"{ is_field-hint }>{
+          is_field-label }{ is_field-required }</label>| ).
         IF lv_error IS NOT INITIAL.
           ii_html->add( |<small>{ lv_error }</small>| ).
         ENDIF.
@@ -309,7 +310,8 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
           ii_html->add( |<small>{ lv_error }</small>| ).
         ENDIF.
         ii_html->add( |<input type="checkbox" name="{ is_field-name }" id="{ is_field-name }"{ is_field-checked }>| ).
-        ii_html->add( |<label for="{ is_field-name }"{ is_field-hint }>{ is_field-label }{ is_field-required }</label>| ).
+        ii_html->add( |<label for="{ is_field-name }"{ is_field-hint }>{
+          is_field-label }{ is_field-required }</label>| ).
         ii_html->add( '</li>' ).
 
       WHEN c_field_type-radio.
