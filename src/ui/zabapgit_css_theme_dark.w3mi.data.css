@@ -47,9 +47,12 @@ table.repo_tab {
     background-color: var(--theme-background-color);
 }
 
+/* PANELS */
+#debug-output { color: var(--theme-greyscale-dark); }
+
 /* abapGit logo in header and footer */
-#abapGitLogo>img { background-color: #bfbfbf; }
-#footer>img { background-color: #bfbfbf; }
+#abapGitLogo>img { background-color: var(--theme-background-color); }
+#footer>img { background-color: var(--theme-background-color); }
 
 /* TUTORIAL */
 div.tutorial h1, h2 { color: var(--theme-primary-font-color); }
@@ -135,3 +138,8 @@ table.db_tab th {
   color: var(--theme-primary-font-color);
   border-bottom-color: #333;
 }
+
+/* ERROR LOGS */
+div.log { color: var(--theme-greyscale-dark); }
+.close-btn, .message-panel, .message-panel-commands a { color: var(--theme-greyscale-dark); }
+.message-panel-commands a:hover { color: var(--theme-greyscale-dark); }
