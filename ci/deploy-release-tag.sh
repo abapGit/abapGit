@@ -6,7 +6,7 @@ VERSION_CONSTANT=gc_abap_version
 
 git diff-tree --no-commit-id --name-only -r HEAD | grep $VERSION_FILE > /dev/null 2>&1
 if [ $? -ne 0 ]; then
-    echo "no version change detected, skipping tag creation"
+    echo "no version change detected, skipping tag creation ($VERSION_FILE unchaged)"
     exit 0
 fi
 
@@ -14,7 +14,7 @@ VERSION_DIFF=$(git diff HEAD^:$VERSION_FILE HEAD:$VERSION_FILE)
 
 echo "$VERSION_DIFF" | grep $VERSION_CONSTANT > /dev/null 2>&1
 if [ $? -ne 0 ]; then
-    echo "no version change detected, skipping tag creation"
+    echo "no version change detected, skipping tag creation ($VERSION_CONSTANT unchanged)"
     exit 0
 fi
 
@@ -28,7 +28,7 @@ if [ -z $VERSION_BEFORE ] || [ -z $VERSION_AFTER ]; then
 fi
 
 if [ $VERSION_BEFORE = $VERSION_AFTER ]; then
-    echo "no version change detected, skipping tag creation"
+    echo "no version change detected, skipping tag creation ($VERSION_BEFORE = $VERSION_AFTER)"
     exit 0
 fi
 
