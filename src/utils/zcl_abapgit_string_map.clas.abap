@@ -135,8 +135,8 @@ CLASS ZCL_ABAPGIT_STRING_MAP IMPLEMENTATION.
     DATA lo_type TYPE REF TO cl_abap_typedescr.
     DATA lo_struc TYPE REF TO cl_abap_structdescr.
     DATA lv_field TYPE string.
-    FIELD-SYMBOLS <entry> LIKE LINE OF mt_entries.
-    FIELD-SYMBOLS <val> TYPE any.
+    FIELD-SYMBOLS <ls_entry> LIKE LINE OF mt_entries.
+    FIELD-SYMBOLS <lv_val> TYPE any.
 
     lo_type = cl_abap_typedescr=>describe_by_data( cs_container ).
     IF lo_type->type_kind <> cl_abap_typedescr=>typekind_struct1
@@ -145,12 +145,12 @@ CLASS ZCL_ABAPGIT_STRING_MAP IMPLEMENTATION.
     ENDIF.
 
     lo_struc ?= lo_type.
-    LOOP AT mt_entries ASSIGNING <entry>.
-      lv_field = to_upper( <entry>-k ).
-      ASSIGN COMPONENT lv_field OF STRUCTURE cs_container TO <val>.
+    LOOP AT mt_entries ASSIGNING <ls_entry>.
+      lv_field = to_upper( <ls_entry>-k ).
+      ASSIGN COMPONENT lv_field OF STRUCTURE cs_container TO <lv_val>.
       IF sy-subrc = 0.
         " TODO check target type ?
-        <val> = <entry>-v.
+        <lv_val> = <ls_entry>-v.
       ELSE.
         zcx_abapgit_exception=>raise( |Component { lv_field } not found in target| ).
       ENDIF.
