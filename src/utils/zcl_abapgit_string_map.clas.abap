@@ -19,13 +19,13 @@ CLASS zcl_abapgit_string_map DEFINITION
 
     METHODS get
       IMPORTING
-        iv_key TYPE string
+        iv_key        TYPE string
       RETURNING
         VALUE(rv_val) TYPE string.
 
     METHODS has
       IMPORTING
-        iv_key TYPE string
+        iv_key        TYPE string
       RETURNING
         VALUE(rv_has) TYPE abap_bool.
 
@@ -47,6 +47,12 @@ CLASS zcl_abapgit_string_map DEFINITION
         iv_key TYPE string.
 
     METHODS clear.
+
+    METHODS to_abap
+      CHANGING
+        !cs_container TYPE any
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -120,6 +126,35 @@ CLASS ZCL_ABAPGIT_STRING_MAP IMPLEMENTATION.
   METHOD size.
 
     rv_size = lines( mt_entries ).
+
+  ENDMETHOD.
+
+
+  METHOD to_abap.
+
+    DATA lo_type TYPE REF TO cl_abap_typedescr.
+    DATA lo_struc TYPE REF TO cl_abap_structdescr.
+    DATA lv_field TYPE string.
+    FIELD-SYMBOLS <entry> LIKE LINE OF mt_entries.
+    FIELD-SYMBOLS <val> TYPE any.
+
+    lo_type = cl_abap_typedescr=>describe_by_data( cs_container ).
+    IF lo_type->type_kind <> cl_abap_typedescr=>typekind_struct1
+      AND lo_type->type_kind <> cl_abap_typedescr=>typekind_struct2.
+      zcx_abapgit_exception=>raise( 'Only structures supported' ).
+    ENDIF.
+
+    lo_struc ?= lo_type.
+    LOOP AT mt_entries ASSIGNING <entry>.
+      lv_field = to_upper( <entry>-k ).
+      ASSIGN COMPONENT lv_field OF STRUCTURE cs_container TO <val>.
+      IF sy-subrc = 0.
+        " TODO check target type ?
+        <val> = <entry>-v.
+      ELSE.
+        zcx_abapgit_exception=>raise( |Component { lv_field } not found in target| ).
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 ENDCLASS.
