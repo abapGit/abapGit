@@ -1091,6 +1091,11 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
+* TOBJ has to be handled before ODSO
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'TOBJ'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
     LOOP AT it_results ASSIGNING <ls_result>
         WHERE obj_type <> 'IASP'
         AND obj_type <> 'PROG'
@@ -1101,7 +1106,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         AND obj_type <> 'DDLS'
         AND obj_type <> 'SPRX'
         AND obj_type <> 'WEBI'
-        AND obj_type <> 'IOBJ'.
+        AND obj_type <> 'IOBJ'
+        AND obj_type <> 'TOBJ'.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
