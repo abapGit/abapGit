@@ -771,7 +771,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     ENDLOOP.
 
-   CASE is_step-step_id.
+    CASE is_step-step_id.
       WHEN zif_abapgit_object=>gc_step_id-ddic.
         zcl_abapgit_objects_activation=>activate( is_step-is_ddic ).
       WHEN zif_abapgit_object=>gc_step_id-abap.
