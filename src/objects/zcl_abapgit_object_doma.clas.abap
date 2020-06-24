@@ -219,7 +219,9 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
             not_executed         = 1
             object_not_found     = 2
             object_not_specified = 3
-            permission_failure   = 4.
+            permission_failure   = 4
+            dialog_needed        = 5
+            OTHERS               = 6.
         IF sy-subrc <> 0.
           zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, DOMA' ).
         ENDIF.
@@ -236,7 +238,9 @@ CLASS zcl_abapgit_object_doma IMPLEMENTATION.
             not_executed         = 1
             object_not_found     = 2
             object_not_specified = 3
-            permission_failure   = 4.
+            permission_failure   = 4
+            dialog_needed        = 5
+            OTHERS               = 6.
         IF sy-subrc <> 0.
           zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, DOMA' ).
         ENDIF.
