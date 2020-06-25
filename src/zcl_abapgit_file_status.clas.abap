@@ -347,8 +347,8 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
         iv_path                 = iv_path ).
     ELSE.
       " Get original object name
-      REPLACE ALL OCCURRENCES OF '%20' IN lv_name WITH ' '.
-      REPLACE ALL OCCURRENCES OF '%3e' IN lv_name WITH '.'.
+      REPLACE ALL OCCURRENCES OF '%20' IN lv_name WITH ` `.
+      REPLACE ALL OCCURRENCES OF '%3e' IN lv_name WITH `.`.
     ENDIF.
 
     CLEAR es_item.
