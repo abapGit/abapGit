@@ -224,10 +224,17 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     lv_obj_name = ms_item-obj_name.
 
+    " The counter part to this logic for certain object types must be maintained in
+    " ZCL_ABAPGIT_FILE_STATUS->IDENTIFY_OBJECT
     IF ms_item-obj_type = 'DEVC'.
       " Packages have a fixed filename so that the repository can be installed to a different
       " package(-hierarchy) on the client and not show up as a different package in the repo.
       lv_obj_name = 'package'.
+    ELSE.
+      " Some objects have spaces on dots in their names, which causes problems in
+      " identifying the object later. Therefore, we escape these characters here
+      REPLACE ALL OCCURRENCES OF ` ` IN lv_obj_name WITH '%20'.
+      REPLACE ALL OCCURRENCES OF `.` IN lv_obj_name WITH '%3e'.
     ENDIF.
 
     IF iv_extra IS INITIAL.
