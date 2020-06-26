@@ -136,10 +136,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
       iv_label       = 'Branch'
       iv_hint        = 'Switch to a specific branch on clone (default: master)'
       iv_placeholder = 'master' ).
-    lo_form->text(
-      iv_name        = c_id-display_name
-      iv_label       = 'Display name'
-      iv_hint        = 'Name to show instead of original repo name (optional)' ).
     lo_form->radio(
       iv_name        = c_id-folder_logic
       iv_default_value = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
@@ -151,13 +147,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
     lo_form->option(
       iv_label       = 'Full'
       iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-full ).
+    lo_form->text(
+      iv_name        = c_id-display_name
+      iv_label       = 'Display name'
+      iv_hint        = 'Name to show instead of original repo name (optional)' ).
     lo_form->checkbox(
       iv_name        = c_id-ignore_subpackages
       iv_label       = 'Ignore subpackages'
       iv_hint        = 'Syncronize root package only (see https://docs.abapgit.org)' ).
     lo_form->checkbox(
       iv_name        = c_id-master_lang_only
-      iv_label       = 'Master language only'
+      iv_label       = 'Serialize master language only'
       iv_hint        = 'Ignore translations, serialize just master language' ).
     lo_form->command(
       iv_label       = 'Clone online repo'
@@ -242,6 +242,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
           iv_key = c_id-package
           iv_val = zcl_abapgit_services_basis=>create_package( ) ).
         IF mo_form_data->get( c_id-package ) IS NOT INITIAL.
+          mo_validation_log = validate_form( mo_form_data ).
           ev_state = zcl_abapgit_gui=>c_event_state-re_render.
         ELSE.
           ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
@@ -253,6 +254,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
           iv_key = c_id-package
           iv_val = zcl_abapgit_ui_factory=>get_popups( )->popup_search_help( 'TDEVC-DEVCLASS' ) ).
         IF mo_form_data->get( c_id-package ) IS NOT INITIAL.
+          mo_validation_log = validate_form( mo_form_data ).
           ev_state = zcl_abapgit_gui=>c_event_state-re_render.
         ELSE.
           ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
@@ -263,6 +265,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
         mo_validation_log = validate_form( mo_form_data ).
         IF mo_validation_log->has( c_id-url ) = abap_true.
           ev_state = zcl_abapgit_gui=>c_event_state-re_render. " Display errors
+          RETURN.
         ENDIF.
         mo_form_data->set(
           iv_key = c_id-branch_name

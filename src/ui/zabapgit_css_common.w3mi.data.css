@@ -1117,7 +1117,7 @@ settings_tab tr:first-child td { border-top: 0px; }
 }
 .dialog li.with-command div.input-frame {
   /*overflow: hidden;*/
-  padding-right: 1.8em;
+  padding-right: 1.9em;
 }
 .dialog li.with-command input[type="submit"] {
   /*width: 2em;*/
