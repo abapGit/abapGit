@@ -177,7 +177,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD new_online.
 
-    DATA: ls_popup    TYPE zif_abapgit_popups=>ty_popup,
+    DATA:
           lo_repo     TYPE REF TO zcl_abapgit_repo,
           li_repo_srv TYPE REF TO zif_abapgit_repo_srv,
           lv_reason   TYPE string.
