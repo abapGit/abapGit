@@ -372,7 +372,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
       INTO CORRESPONDING FIELDS OF TABLE lt_tpool_i18n
       FROM tstct
       WHERE sprsl <> mv_language
-      AND   tcode = ms_item-obj_name.                   "#EC CI_GENBUFF
+      AND   tcode = ms_item-obj_name ##TOO_MANY_ITAB_FIELDS. "#EC CI_GENBUFF
 
     IF lines( lt_tpool_i18n ) > 0.
       SORT lt_tpool_i18n BY sprsl ASCENDING.
