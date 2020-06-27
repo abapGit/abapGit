@@ -137,6 +137,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     DATA: ls_popup        TYPE zif_abapgit_popups=>ty_popup,
           lo_repo         TYPE REF TO zcl_abapgit_repo,
           lo_repo_offline TYPE REF TO zcl_abapgit_repo_offline,
+          li_repo_srv     TYPE REF TO zif_abapgit_repo_srv,
           lv_reason       TYPE string.
 
     ls_popup  = zcl_abapgit_ui_factory=>get_popups( )->repo_new_offline( ).
@@ -145,7 +146,9 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     ENDIF.
 
     " make sure package is not already in use for a different repository
-    zcl_abapgit_repo_srv=>get_instance( )->get_repo_from_package(
+    " 702: chaining calls with exp&imp parameters causes syntax error
+    li_repo_srv = zcl_abapgit_repo_srv=>get_instance( ).
+    li_repo_srv->get_repo_from_package(
       EXPORTING
         iv_package = ls_popup-package
       IMPORTING
@@ -179,9 +182,10 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
   METHOD new_online.
 
-    DATA: ls_popup  TYPE zif_abapgit_popups=>ty_popup,
-          lo_repo   TYPE REF TO zcl_abapgit_repo,
-          lv_reason TYPE string.
+    DATA: ls_popup    TYPE zif_abapgit_popups=>ty_popup,
+          lo_repo     TYPE REF TO zcl_abapgit_repo,
+          li_repo_srv TYPE REF TO zif_abapgit_repo_srv,
+          lv_reason   TYPE string.
 
     ls_popup = zcl_abapgit_ui_factory=>get_popups( )->repo_popup( iv_url ).
     IF ls_popup-cancel = abap_true.
@@ -189,7 +193,9 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     ENDIF.
 
     " make sure package is not already in use for a different repository
-    zcl_abapgit_repo_srv=>get_instance( )->get_repo_from_package(
+    " 702: chaining calls with exp&imp parameters causes syntax error
+    li_repo_srv = zcl_abapgit_repo_srv=>get_instance( ).
+    li_repo_srv->get_repo_from_package(
       EXPORTING
         iv_package = ls_popup-package
       IMPORTING
