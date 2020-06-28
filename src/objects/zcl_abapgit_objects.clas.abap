@@ -771,7 +771,16 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     ENDLOOP.
 
-    zcl_abapgit_objects_activation=>activate( is_step-is_ddic ).
+    CASE is_step-step_id.
+      WHEN zif_abapgit_object=>gc_step_id-ddic.
+        zcl_abapgit_objects_activation=>activate( is_step-is_ddic ).
+      WHEN zif_abapgit_object=>gc_step_id-abap.
+        zcl_abapgit_objects_activation=>activate( is_step-is_ddic ).
+      WHEN zif_abapgit_object=>gc_step_id-late.
+        " late can have both DDIC (like TABL with REF TO) and non-DDIC objects
+        zcl_abapgit_objects_activation=>activate( abap_true ).
+        zcl_abapgit_objects_activation=>activate( abap_false ).
+    ENDCASE.
 
 *   Call postprocessing
     li_exit = zcl_abapgit_exit=>get_instance( ).
