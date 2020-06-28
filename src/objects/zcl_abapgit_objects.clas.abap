@@ -1099,7 +1099,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
-* TOBJ has to be handled before SCP1
+* TOBJ has to be handled before ODSO
     LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'TOBJ'.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
