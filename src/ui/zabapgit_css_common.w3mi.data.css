@@ -93,6 +93,9 @@ div#header {
   padding:          0.5em 0.5em;
   border-bottom:    3px double;
 }
+div#header td:not(.logo) { padding-top: 11px; } /* align with logo H */
+div#header td.logo       { width: 164px; }
+div#header td:not(.logo) { padding-top: 11px; } /* align with logo H */
 
 div#header span.page_title {
   font-weight: normal;
