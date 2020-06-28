@@ -82,7 +82,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
 
   METHOD gui_deserialize.
@@ -221,7 +221,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
   ENDMETHOD.
 
-  
+
   METHOD popup_overwrite.
 
     DATA: lt_columns  TYPE zif_abapgit_definitions=>ty_alv_column_tt,
