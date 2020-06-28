@@ -190,6 +190,13 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'DD04V'
                   CHANGING cg_data = ls_dd04v ).
 
+    " DDIC Step: Replace REF TO class/interface with generic reference to avoid cyclic dependency
+    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND ls_dd04v-datatype = 'REF'.
+      ls_dd04v-rollname = 'OBJECT'.
+    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND ls_dd04v-datatype <> 'REF'.
+      RETURN. " already active
+    ENDIF.
+
     corr_insert( iv_package = iv_package
                  ig_object_class = 'DICT' ).
 
@@ -241,6 +248,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 
