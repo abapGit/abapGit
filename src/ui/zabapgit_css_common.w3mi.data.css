@@ -1106,23 +1106,16 @@ settings_tab tr:first-child td { border-top: 0px; }
   color: #fff;
   border: 1px solid transparent;
 }
-.dialog li.with-command input[type="text"] {
-  /* for a, not submit */
-  /*padding-right: 2em;*/
+.dialog li.with-command div.input-container {
+  display: table-cell;
+  width: 100%;
 }
-.dialog li.with-command a {
-  /* for a, not submit */
-  width: 2em;
-  margin-left: -1.8em;
-}
-.dialog li.with-command div.input-frame {
-  /*overflow: hidden;*/
-  padding-right: 1.9em;
+.dialog li.with-command div.command-container {
+  display: table-cell;
 }
 .dialog li.with-command input[type="submit"] {
-  /*width: 2em;*/
-  float: right;
   height: 2.5em;
+  border-left: none;
 }
 .dialog li.with-command input[type="submit"]:hover {
   background-color: #64a8ff;

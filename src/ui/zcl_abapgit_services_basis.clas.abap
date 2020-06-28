@@ -5,6 +5,8 @@ CLASS zcl_abapgit_services_basis DEFINITION
 
   PUBLIC SECTION.
     CLASS-METHODS create_package
+      IMPORTING
+        iv_prefill_package TYPE devclass OPTIONAL
       RETURNING
         VALUE(rv_package) TYPE devclass
       RAISING
@@ -23,6 +25,8 @@ CLASS ZCL_ABAPGIT_SERVICES_BASIS IMPLEMENTATION.
 
     DATA ls_package_data TYPE scompkdtln.
     DATA lv_create       TYPE abap_bool.
+
+    ls_package_data-devclass = to_upper( iv_prefill_package ).
 
     zcl_abapgit_ui_factory=>get_popups( )->popup_to_create_package(
       IMPORTING
