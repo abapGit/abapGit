@@ -28,19 +28,11 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
         abapgit_home  TYPE string VALUE 'abapgit_home',
       END OF c_actions.
 
-    DATA: mv_show          TYPE zif_abapgit_persistence=>ty_value,
-          mo_repo_content  TYPE REF TO zcl_abapgit_gui_page_view_repo,
-          mo_repo_overview TYPE REF TO zcl_abapgit_gui_repo_over,
+    DATA: mo_repo_overview TYPE REF TO zcl_abapgit_gui_repo_over,
           mv_repo_key      TYPE zif_abapgit_persistence=>ty_value.
 
-    METHODS: test_changed_by
-      RAISING zcx_abapgit_exception,
-      retrieve_active_repo
-        RAISING zcx_abapgit_exception,
-      render_repo
-        IMPORTING io_repo        TYPE REF TO zcl_abapgit_repo
-        RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html
-        RAISING   zcx_abapgit_exception.
+    METHODS test_changed_by
+      RAISING zcx_abapgit_exception.
 
     METHODS render_scripts
       RETURNING
@@ -128,8 +120,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
           li_tutorial TYPE REF TO zif_abapgit_gui_renderable,
           lo_repo     LIKE LINE OF lt_repos.
 
-    retrieve_active_repo( ). " Get and validate key of user default repo
-
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
 
@@ -137,69 +127,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
       CREATE OBJECT mo_repo_overview TYPE zcl_abapgit_gui_repo_over.
     ENDIF.
 
-    IF mv_show IS INITIAL.
-      ri_html->add( mo_repo_overview->zif_abapgit_gui_renderable~render( ) ).
-    ELSEIF mv_repo_key IS NOT INITIAL.
-      lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mv_repo_key ).
-      ri_html->add( render_repo( lo_repo ) ).
-    ELSE.
-      ri_html->add( mo_repo_overview->zif_abapgit_gui_renderable~render( ) ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD render_repo.
-
-    DATA lo_news TYPE REF TO zcl_abapgit_news.
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    lo_news = zcl_abapgit_news=>create( io_repo ).
-
-    ri_html->add( |<div class="repo" id="repo{ io_repo->get_key( ) }">| ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
-      io_repo               = io_repo
-      io_news               = lo_news
-      iv_interactive_branch = abap_true ) ).
-
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).
-
-    IF mo_repo_content IS BOUND.
-      ri_html->add( mo_repo_content->zif_abapgit_gui_renderable~render( ) ).
-    ENDIF.
-    ri_html->add( '</div>' ).
-
-  ENDMETHOD.
-
-
-  METHOD retrieve_active_repo.
-
-    DATA: lv_show_old LIKE mv_show.
-
-    TRY.
-        zcl_abapgit_repo_srv=>get_instance( )->list( ).
-      CATCH zcx_abapgit_exception.
-        RETURN.
-    ENDTRY.
-
-    lv_show_old = mv_show.
-    mv_show     = zcl_abapgit_persistence_user=>get_instance( )->get_repo_show( ). " Get default repo from user cfg
-
-    IF mv_show IS NOT INITIAL.
-      TRY. " verify the key exists
-          zcl_abapgit_repo_srv=>get_instance( )->get( mv_show ).
-        CATCH zcx_abapgit_exception.
-          CLEAR mv_show.
-          zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( mv_show ).
-      ENDTRY.
-    ENDIF.
-
-    IF lv_show_old <> mv_show AND NOT mv_show IS INITIAL.
-      CREATE OBJECT mo_repo_content
-        EXPORTING
-          iv_key = mv_show. " Reinit content state
-    ENDIF.
+    ri_html->add( mo_repo_overview->zif_abapgit_gui_renderable~render( ) ).
 
   ENDMETHOD.
 
@@ -235,7 +163,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     CASE iv_action.
       WHEN c_actions-abapgit_home.
         CLEAR mv_repo_key.
-        CLEAR mv_show.
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-select.
 
@@ -296,21 +223,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
             ev_state     = ev_state ).
 
     ENDCASE.
-
-    IF NOT mo_repo_content IS INITIAL.
-      mo_repo_content->zif_abapgit_gui_event_handler~on_event(
-        EXPORTING
-          iv_action    = iv_action
-          iv_getdata   = iv_getdata
-          it_postdata  = it_postdata
-        IMPORTING
-          ei_page      = ei_page
-          ev_state     = ev_state ).
-
-      IF ev_state <> zcl_abapgit_gui=>c_event_state-not_handled.
-        RETURN.
-      ENDIF.
-    ENDIF.
 
   ENDMETHOD.
 
