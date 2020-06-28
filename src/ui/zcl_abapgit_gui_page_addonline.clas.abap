@@ -240,7 +240,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
         mo_form_data->set(
           iv_key = c_id-package
-          iv_val = zcl_abapgit_services_basis=>create_package( iv_prefill_package = |{ mo_form_data->get( 'package' ) }| ) ).
+          iv_val = zcl_abapgit_services_basis=>create_package(
+            iv_prefill_package = |{ mo_form_data->get( 'package' ) }| ) ).
         IF mo_form_data->get( c_id-package ) IS NOT INITIAL.
           mo_validation_log = validate_form( mo_form_data ).
           ev_state = zcl_abapgit_gui=>c_event_state-re_render.
