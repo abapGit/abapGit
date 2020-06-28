@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_gui_view_repo DEFINITION
+CLASS zcl_abapgit_gui_page_view_repo DEFINITION
   PUBLIC
   FINAL
   INHERITING FROM zcl_abapgit_gui_page
@@ -141,7 +141,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_view_repo IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -940,6 +940,7 @@ CLASS zcl_abapgit_gui_view_repo IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
+    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
     gui_services( )->register_event_handler( me ).
 
     " Reinit, for the case of type change

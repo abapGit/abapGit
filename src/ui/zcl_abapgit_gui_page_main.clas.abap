@@ -29,7 +29,7 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
       END OF c_actions.
 
     DATA: mv_show          TYPE zif_abapgit_persistence=>ty_value,
-          mo_repo_content  TYPE REF TO zcl_abapgit_gui_view_repo,
+          mo_repo_content  TYPE REF TO zcl_abapgit_gui_page_view_repo,
           mo_repo_overview TYPE REF TO zcl_abapgit_gui_repo_over,
           mv_repo_key      TYPE zif_abapgit_persistence=>ty_value.
 
@@ -249,7 +249,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
         ENDTRY.
 
         mv_repo_key = lv_key.
-        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_view_repo
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_view_repo
         EXPORTING iv_key = lv_key.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
