@@ -1,32 +1,28 @@
 #
-# Pull from GitHub source repository
+# CI for repository
 #
 stages:
-  - github-pull
+#   - init
+  - pull
+  - test
 
-before_script:
-  - git remote set-url --push origin "${TOKEN_URL_PUSH}"
-  - git remote add source "${URL_SOURCE}"
-  # - git remote -v
-  - git config user.email "github@redwood.com"
-  - git config user.name "github"
-  - git config http.sslverify false
+default:
+  tags:
+    - docker
 
-after_script:
-  - git log -5 --oneline
-  - git remote rm source
+include:
+  - project: 'tools/abapgit-extensions'
+    ref: master
+    file: '/ci-include.yml'
+
+# init:
+#   extends: .info_pipeline
+#   stage: init
+
+abaplint:
+  stage: test
+  extends: .abaplint
 
 do-pull:
-  stage: github-pull
-  image: 
-    name: alpine/git
-    entrypoint: [""]
-  tags:
-  - docker
-  # when: manual
-  only:
-  - schedules
-  - manual
-  script:
-  - git pull source master
-  - git push origin HEAD:master
+  stage: pull
+  extends: .do-pull
