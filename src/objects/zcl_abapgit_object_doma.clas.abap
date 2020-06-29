@@ -202,6 +202,10 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
+    IF zif_abapgit_object~exists( ) = abap_false.
+      RETURN.
+    ENDIF.
+
     delete_ddic( 'D' ).
 
     delete_longtexts( c_longtext_id_doma ).

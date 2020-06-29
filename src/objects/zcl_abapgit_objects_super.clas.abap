@@ -19,76 +19,77 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
 
     CONSTANTS: c_user_unknown TYPE xubname VALUE 'UNKNOWN'.
 
-  PROTECTED SECTION.
+protected section.
 
-    DATA ms_item TYPE zif_abapgit_definitions=>ty_item .
-    DATA mv_language TYPE spras .
+  data MS_ITEM type ZIF_ABAPGIT_DEFINITIONS=>TY_ITEM .
+  data MV_LANGUAGE type SPRAS .
 
-    METHODS check_timestamp
-      IMPORTING
-        !iv_timestamp     TYPE timestamp
-        !iv_date          TYPE d
-        !iv_time          TYPE t
-      RETURNING
-        VALUE(rv_changed) TYPE abap_bool .
-    METHODS get_metadata
-      RETURNING
-        VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata .
-    METHODS corr_insert
-      IMPORTING
-        !iv_package      TYPE devclass
-        !ig_object_class TYPE any OPTIONAL
-      RAISING
-        zcx_abapgit_exception .
-    METHODS tadir_insert
-      IMPORTING
-        !iv_package TYPE devclass
-      RAISING
-        zcx_abapgit_exception .
-    METHODS jump_se11
-      IMPORTING
-        !iv_radio TYPE string
-        !iv_field TYPE string
-      RAISING
-        zcx_abapgit_exception .
-    METHODS exists_a_lock_entry_for
-      IMPORTING
-        !iv_lock_object               TYPE string
-        !iv_argument                  TYPE seqg3-garg OPTIONAL
-      RETURNING
-        VALUE(rv_exists_a_lock_entry) TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception .
-    METHODS set_default_package
-      IMPORTING
-        !iv_package TYPE devclass .
-    METHODS serialize_longtexts
-      IMPORTING
-        !io_xml         TYPE REF TO zcl_abapgit_xml_output
-        !iv_longtext_id TYPE dokil-id OPTIONAL
-        !it_dokil       TYPE zif_abapgit_definitions=>tty_dokil OPTIONAL
-      RAISING
-        zcx_abapgit_exception .
-    METHODS deserialize_longtexts
-      IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_input
-      RAISING
-        zcx_abapgit_exception .
-    METHODS delete_longtexts
-      IMPORTING
-        !iv_longtext_id TYPE dokil-id
-      RAISING
-        zcx_abapgit_exception .
-    METHODS is_active
-      RETURNING
-        VALUE(rv_active) TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception .
-    METHODS delete_ddic
-      IMPORTING
-        VALUE(iv_objtype) TYPE string
-      RAISING
-        zcx_abapgit_exception .
+  methods CHECK_TIMESTAMP
+    importing
+      !IV_TIMESTAMP type TIMESTAMP
+      !IV_DATE type D
+      !IV_TIME type T
+    returning
+      value(RV_CHANGED) type ABAP_BOOL .
+  methods GET_METADATA
+    returning
+      value(RS_METADATA) type ZIF_ABAPGIT_DEFINITIONS=>TY_METADATA .
+  methods CORR_INSERT
+    importing
+      !IV_PACKAGE type DEVCLASS
+      !IG_OBJECT_CLASS type ANY optional
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods TADIR_INSERT
+    importing
+      !IV_PACKAGE type DEVCLASS
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods JUMP_SE11
+    importing
+      !IV_RADIO type STRING
+      !IV_FIELD type STRING
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods EXISTS_A_LOCK_ENTRY_FOR
+    importing
+      !IV_LOCK_OBJECT type STRING
+      !IV_ARGUMENT type SEQG3-GARG optional
+    returning
+      value(RV_EXISTS_A_LOCK_ENTRY) type ABAP_BOOL
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods SET_DEFAULT_PACKAGE
+    importing
+      !IV_PACKAGE type DEVCLASS .
+  methods SERIALIZE_LONGTEXTS
+    importing
+      !IO_XML type ref to ZCL_ABAPGIT_XML_OUTPUT
+      !IV_LONGTEXT_ID type DOKIL-ID optional
+      !IT_DOKIL type ZIF_ABAPGIT_DEFINITIONS=>TTY_DOKIL optional
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods DESERIALIZE_LONGTEXTS
+    importing
+      !IO_XML type ref to ZCL_ABAPGIT_XML_INPUT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods DELETE_LONGTEXTS
+    importing
+      !IV_LONGTEXT_ID type DOKIL-ID
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods IS_ACTIVE
+    returning
+      value(RV_ACTIVE) type ABAP_BOOL
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods DELETE_DDIC
+    importing
+      value(IV_OBJTYPE) type STRING
+      value(IV_NO_ASK) type ABAP_BOOL default ABAP_TRUE
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -175,7 +176,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
     TRY.
         CALL FUNCTION 'RS_DD_DELETE_OBJ'
           EXPORTING
-            no_ask               = abap_true
+            no_ask               = iv_no_ask
             objname              = lv_objname
             objtype              = lv_objtype
             no_ask_delete_append = abap_true
@@ -190,7 +191,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
         " no_ask_delete_append not available in lower releases
         CALL FUNCTION 'RS_DD_DELETE_OBJ'
           EXPORTING
-            no_ask               = abap_true
+            no_ask               = iv_no_ask
             objname              = lv_objname
             objtype              = lv_objtype
           EXCEPTIONS
