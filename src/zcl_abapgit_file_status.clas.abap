@@ -323,7 +323,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
   METHOD identify_object.
 
-    DATA: lv_name TYPE tadir-obj_name,
+    DATA: lv_name TYPE string,
           lv_type TYPE string,
           lv_ext  TYPE string.
 
@@ -335,8 +335,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     REPLACE ALL OCCURRENCES OF '#' IN lv_type WITH '/'.
     REPLACE ALL OCCURRENCES OF '#' IN lv_ext WITH '/'.
 
-    " The counter part to this logic for certain object types must be maintained in
-    " ZCL_ABAPGIT_OBJECTS_FILES->FILENAME
+    " The counter part to this logic must be maintained in ZCL_ABAPGIT_OBJECTS_FILES->FILENAME
     IF lv_type = 'DEVC'.
       " Try to get a unique package name for DEVC by using the path
       ASSERT lv_name = 'PACKAGE'.
@@ -347,8 +346,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
         iv_path                 = iv_path ).
     ELSE.
       " Get original object name
-      REPLACE ALL OCCURRENCES OF '%20' IN lv_name WITH ` `.
-      REPLACE ALL OCCURRENCES OF '%3e' IN lv_name WITH `.`.
+      lv_name = cl_http_utility=>unescape_url( lv_name ).
     ENDIF.
 
     CLEAR es_item.
