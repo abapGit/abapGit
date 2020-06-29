@@ -206,7 +206,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    delete_ddic( 'D' ).
+    delete_ddic( iv_objtype              = 'D'
+                 iv_no_ask_delete_append = abap_true ).
 
     delete_longtexts( c_longtext_id_doma ).
 

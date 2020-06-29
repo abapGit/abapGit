@@ -86,8 +86,9 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
         zcx_abapgit_exception .
     METHODS delete_ddic
       IMPORTING
-        VALUE(iv_objtype) TYPE string
-        VALUE(iv_no_ask)  TYPE abap_bool DEFAULT abap_true
+        VALUE(iv_objtype)              TYPE string
+        VALUE(iv_no_ask)               TYPE abap_bool DEFAULT abap_true
+        VALUE(iv_no_ask_delete_append) TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
@@ -179,7 +180,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
             no_ask               = iv_no_ask
             objname              = lv_objname
             objtype              = lv_objtype
-            no_ask_delete_append = abap_true
+            no_ask_delete_append = iv_no_ask_delete_append
           EXCEPTIONS
             not_executed         = 1
             object_not_found     = 2
