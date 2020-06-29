@@ -1,7 +1,6 @@
 INTERFACE zif_abapgit_repo_srv
   PUBLIC .
 
-
   METHODS delete
     IMPORTING
       !io_repo TYPE REF TO zcl_abapgit_repo
