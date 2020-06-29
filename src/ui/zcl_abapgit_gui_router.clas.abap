@@ -214,15 +214,16 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
         IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_show_default_repo( ) = abap_true.
           lv_last_repo_key = zcl_abapgit_persistence_user=>get_instance( )->get_repo_show( ).
+          CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_view_repo
+          EXPORTING iv_key = lv_last_repo_key.
+          ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+        ELSE.
+          CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
+          ev_state = zcl_abapgit_gui=>c_event_state-new_page.
         ENDIF.
 
-        IF lv_last_repo_key IS INITIAL.
-          CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
-        ELSE.
-          CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_view_repo
-            EXPORTING
-              iv_key = lv_last_repo_key.
-        ENDIF.
+      WHEN zif_abapgit_definitions=>c_action-go_repo_overview.               " Go Repository overview
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_repo_over.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN zif_abapgit_definitions=>c_action-go_db.                          " Go DB util page

@@ -111,7 +111,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_REPO_OVER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -139,7 +139,7 @@ CLASS ZCL_ABAPGIT_GUI_REPO_OVER IMPLEMENTATION.
       lt_sort TYPE abap_sortorder_tab,
       ls_sort LIKE LINE OF lt_sort.
 
-    ls_sort-name = 'FAVORITE'.
+    ls_sort-name = 'favorite'.
     ls_sort-descending = abap_true.
     ls_sort-astext = abap_true.
     INSERT ls_sort INTO TABLE lt_sort.
@@ -230,6 +230,40 @@ CLASS ZCL_ABAPGIT_GUI_REPO_OVER IMPLEMENTATION.
       INSERT ls_overview INTO TABLE rt_overview.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD set_filter.
+
+    FIELD-SYMBOLS: <lv_postdata> LIKE LINE OF it_postdata.
+
+    READ TABLE it_postdata ASSIGNING <lv_postdata>
+                           INDEX 1.
+    IF sy-subrc = 0.
+      FIND FIRST OCCURRENCE OF REGEX `filter=(.*)`
+           IN <lv_postdata>
+           SUBMATCHES mv_filter.
+    ENDIF.
+
+    mv_filter = condense( mv_filter ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_renderable~render.
+
+    mt_overview = map_repo_list_to_overview( zcl_abapgit_persist_factory=>get_repo( )->list( ) ).
+    apply_order_by( CHANGING ct_overview = mt_overview ).
+    apply_filter( CHANGING ct_overview = mt_overview ).
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    render_header_bar( ri_html ).
+    render_table( ii_html     = ri_html
+                  it_overview = mt_overview ).
+
+    register_deferred_script( render_scripts( ) ).
 
   ENDMETHOD.
 
@@ -416,50 +450,6 @@ CLASS ZCL_ABAPGIT_GUI_REPO_OVER IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_filter.
-
-    FIELD-SYMBOLS: <lv_postdata> LIKE LINE OF it_postdata.
-
-    READ TABLE it_postdata ASSIGNING <lv_postdata>
-                           INDEX 1.
-    IF sy-subrc = 0.
-      FIND FIRST OCCURRENCE OF REGEX `filter=(.*)`
-           IN <lv_postdata>
-           SUBMATCHES mv_filter.
-    ENDIF.
-
-    mv_filter = condense( mv_filter ).
-
-  ENDMETHOD.
-
-
-  METHOD set_order_by.
-    mv_order_by = iv_order_by.
-  ENDMETHOD.
-
-
-  METHOD set_order_direction.
-    mv_order_descending = iv_order_descending.
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_renderable~render.
-
-    mt_overview = map_repo_list_to_overview( zcl_abapgit_persist_factory=>get_repo( )->list( ) ).
-    apply_order_by( CHANGING ct_overview = mt_overview ).
-    apply_filter( CHANGING ct_overview = mt_overview ).
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    render_header_bar( ri_html ).
-    render_table( ii_html     = ri_html
-                  it_overview = mt_overview ).
-
-    register_deferred_script( render_scripts( ) ).
-
-  ENDMETHOD.
-
-
   METHOD _add_col.
 
     FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_col_spec.
@@ -475,4 +465,23 @@ CLASS ZCL_ABAPGIT_GUI_REPO_OVER IMPLEMENTATION.
     CONDENSE <ls_col>-add_tz.
 
   ENDMETHOD.
+
+
+
+  METHOD set_order_by.
+    mv_order_by = iv_order_by.
+  ENDMETHOD.
+
+
+  METHOD set_order_direction.
+    mv_order_descending = iv_order_descending.
+  ENDMETHOD.
+
+  METHOD has_favorites.
+    READ TABLE mt_overview WITH KEY favorite = abap_true TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      rv_has_favorites = abap_true.
+    ENDIF.
+  ENDMETHOD.
+
 ENDCLASS.
