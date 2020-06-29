@@ -1099,7 +1099,7 @@ CLASS zcl_abapgit_gui_page_view_repo IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
     ls_hotkey_action-description   = |Installed repo list|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_repo_overview.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-abapgit_home.
     ls_hotkey_action-hotkey = |o|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
@@ -1116,6 +1116,21 @@ CLASS zcl_abapgit_gui_page_view_repo IMPLEMENTATION.
     ls_hotkey_action-description   = |Diff|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_diff.
     ls_hotkey_action-hotkey = |d|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description   = |Uninstall repository|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_purge.
+    ls_hotkey_action-hotkey = |u|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description   = |Run code inspector|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_code_inspector.
+    ls_hotkey_action-hotkey = |i|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description   = |Show log|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_log.
+    ls_hotkey_action-hotkey = |l|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.

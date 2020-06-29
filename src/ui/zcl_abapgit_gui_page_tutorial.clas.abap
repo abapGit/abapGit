@@ -5,6 +5,8 @@ CLASS zcl_abapgit_gui_page_tutorial DEFINITION
   CREATE PUBLIC.
 
   PUBLIC SECTION.
+    METHODS constructor
+      RAISING zcx_abapgit_exception.
 
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
@@ -16,6 +18,11 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_gui_page_tutorial IMPLEMENTATION.
+
+  METHOD constructor.
+    super->constructor( ).
+    ms_control-page_title = 'Tutorial'.
+  ENDMETHOD.
 
 
   METHOD render_content.
