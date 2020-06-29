@@ -22,7 +22,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
     DATA ms_control TYPE ty_control .
 
     METHODS render_content
-          ABSTRACT
+      ABSTRACT
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
@@ -92,7 +92,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
 
   METHOD call_browser.

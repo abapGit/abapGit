@@ -230,30 +230,75 @@ function RepoOverViewHelper() {
   this.setHooks();
   this.pageId = "RepoOverViewHelperState"; // constant is OK for this case
   this.isDetailsDisplayed = false;
+  this.isOnlyFavoritesDisplayed = false;
   this.detailCssClass = findStyleSheetByName(".ro-detail");
+  var icon = document.getElementById("icon-filter-detail");
+  this.toggleFilterIcon(icon, this.isDetailsDisplayed);
+  icon = document.getElementById("icon-filter-favorite");
+  this.toggleFilterIcon(icon, this.isOnlyFavoritesDisplayed);
 }
 
-RepoOverViewHelper.prototype.toggleRepoListDetail = function(forceDisplay) {
+RepoOverViewHelper.prototype.toggleRepoListDetail = function (forceDisplay) {
   if (this.detailCssClass) {
     this.isDetailsDisplayed = forceDisplay || !this.isDetailsDisplayed;
     this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
+    var icon = document.getElementById("icon-filter-detail");
+    this.toggleFilterIcon(icon, this.isDetailsDisplayed);
   }
 };
 
-RepoOverViewHelper.prototype.setHooks = function() {
-  window.onbeforeunload = this.onPageUnload.bind(this);
-  window.onload         = this.onPageLoad.bind(this);
+RepoOverViewHelper.prototype.toggleFilterIcon = function (icon, isEnabled) {
+  if (isEnabled) {
+    icon.classList.remove("grey");
+    icon.classList.add("blue");
+  } else {
+    icon.classList.remove("blue");
+    icon.classList.add("grey");
+  }
 };
 
-RepoOverViewHelper.prototype.onPageUnload = function() {
+RepoOverViewHelper.prototype.toggleRepoListFavorites = function (forceDisplay) {
+  this.isOnlyFavoritesDisplayed = forceDisplay || !this.isOnlyFavoritesDisplayed;
+  var repositories = document.getElementsByClassName("repo");
+  var icon = document.getElementById("icon-filter-favorite");
+  this.toggleFilterIcon(icon, this.isOnlyFavoritesDisplayed);
+  for (var i = 0; i < repositories.length; i++) {
+    var repo = repositories[i];
+    if (this.isOnlyFavoritesDisplayed) {
+      if (!repo.classList.contains("favorite")) {
+        repo.style.display = "none";
+      }
+    } else {
+      repo.style.display = "";
+    }
+  }
+
+};
+
+RepoOverViewHelper.prototype.setHooks = function () {
+  window.onbeforeunload = this.onPageUnload.bind(this);
+  window.onload = this.onPageLoad.bind(this);
+};
+
+RepoOverViewHelper.prototype.onPageUnload = function () {
   if (!window.sessionStorage) return;
-  var data = { isDetailsDisplayed: this.isDetailsDisplayed };
+  var data = {
+    isDetailsDisplayed: this.isDetailsDisplayed,
+    isOnlyFavoritesDisplayed: this.isOnlyFavoritesDisplayed
+  };
   window.sessionStorage.setItem(this.pageId, JSON.stringify(data));
 };
 
-RepoOverViewHelper.prototype.onPageLoad = function() {
+RepoOverViewHelper.prototype.onPageLoad = function () {
   var data = window.sessionStorage && JSON.parse(window.sessionStorage.getItem(this.pageId));
-  if (data && data.isDetailsDisplayed) this.toggleRepoListDetail(true);
+  if (data) {
+    if (data.isDetailsDisplayed) {
+      this.toggleRepoListDetail(true);
+    }
+    if (data.isOnlyFavoritesDisplayed) {
+      this.toggleRepoListFavorites(true);
+    }
+  }
   debugOutput("RepoOverViewHelper.onPageLoad: " + ((data) ? "from Storage" : "initial state"));
 };
 
