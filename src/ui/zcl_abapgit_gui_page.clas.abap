@@ -28,56 +28,63 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
-
-    DATA mo_settings TYPE REF TO zcl_abapgit_settings .
-    DATA mx_error TYPE REF TO zcx_abapgit_exception .
-    DATA mo_exception_viewer TYPE REF TO zcl_abapgit_exception_viewer .
+    DATA:
+      mo_settings         TYPE REF TO zcl_abapgit_settings,
+      mx_error            TYPE REF TO zcx_abapgit_exception,
+      mo_exception_viewer TYPE REF TO zcl_abapgit_exception_viewer.
 
     METHODS render_deferred_parts
       IMPORTING
-        !ii_html          TYPE REF TO zif_abapgit_html
-        !iv_part_category TYPE string
+        ii_html          TYPE REF TO zif_abapgit_html
+        iv_part_category TYPE string
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     METHODS html_head
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+      RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html.
+
     METHODS title
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+      RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html.
+
     METHODS footer
-      RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+      RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html.
+
     METHODS render_link_hints
       IMPORTING
-        !ii_html TYPE REF TO zif_abapgit_html
+        ii_html TYPE REF TO zif_abapgit_html
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     METHODS render_command_palettes
       IMPORTING
-        !ii_html TYPE REF TO zif_abapgit_html
+        ii_html TYPE REF TO zif_abapgit_html
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     METHODS render_hotkey_overview
       RETURNING
         VALUE(ro_html) TYPE REF TO zif_abapgit_html
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     METHODS call_browser
       IMPORTING
-        !iv_url TYPE csequence
+        iv_url TYPE csequence
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     METHODS render_error_message_box
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     METHODS scripts
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
     METHODS get_logo
       RETURNING
         VALUE(rv_logo) TYPE string .
@@ -144,12 +151,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   METHOD get_logo.
 
     CASE mo_settings->get_ui_theme( ).
-      WHEN zcl_abapgit_settings=>c_ui_theme-default.
+      WHEN zcl_abapgit_settings=>c_ui_theme-default OR zcl_abapgit_settings=>c_ui_theme-belize.
         rv_logo = 'logo.png'.
       WHEN zcl_abapgit_settings=>c_ui_theme-dark.
         rv_logo = 'logo_dark.png'.
-      WHEN zcl_abapgit_settings=>c_ui_theme-belize.
-        rv_logo = 'logo.png'.
       WHEN OTHERS.
         rv_logo = 'logo.png'.
     ENDCASE.
@@ -298,11 +303,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ri_html->add( '<div id="header">' ).                    "#EC NOTEXT
     ri_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
 
-    ri_html->add( |<td class="logo">{
-                  zcl_abapgit_html=>a( iv_txt = |<img src="img/{ get_logo( ) }" alt="logo">|
-                                       iv_id  = 'abapGitLogo'
-                                       iv_act = zif_abapgit_definitions=>c_action-abapgit_home )
-                  }</td>| ).                                "#EC NOTEXT
+    ri_html->add( |<td class="logo"><img src="img/{ get_logo( ) }" alt="logo"></td>| ). "#EC NOTEXT
 
     ri_html->add( |<td><span class="page_title"> &#x25BA; { ms_control-page_title }</span></td>| ). "#EC NOTEXT
 
