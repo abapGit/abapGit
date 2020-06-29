@@ -22,7 +22,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
     DATA ms_control TYPE ty_control .
 
     METHODS render_content
-          ABSTRACT
+      ABSTRACT
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
@@ -89,7 +89,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
 
   METHOD call_browser.
@@ -286,11 +286,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ri_html->add( '<div id="header">' ).                    "#EC NOTEXT
     ri_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
 
-    ri_html->add( |<td class="logo">{
-                  zcl_abapgit_html=>a( iv_txt = '<img src="img/logo" alt="logo">'
-                                       iv_id  = 'abapGitLogo'
-                                       iv_act = zif_abapgit_definitions=>c_action-abapgit_home )
-                  }</td>| ).                                "#EC NOTEXT
+    ri_html->add( |<td class="logo"><img src="img/logo" alt="logo"></td>| ). "#EC NOTEXT
 
     ri_html->add( |<td><span class="page_title"> &#x25BA; { ms_control-page_title }</span></td>| ). "#EC NOTEXT
 
