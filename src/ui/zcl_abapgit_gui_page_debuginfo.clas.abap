@@ -32,7 +32,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -76,7 +76,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
     DATA: lt_ver_tab     TYPE filetable,
           lv_rc          TYPE i,
           lv_gui_version TYPE string,
-          ls_version     LIKE LINE OF lt_ver_tab.
+          ls_version     LIKE LINE OF lt_ver_tab,
+          lv_devclass    TYPE devclass.
 
     cl_gui_frontend_services=>get_gui_version(
       CHANGING version_table = lt_ver_tab rc = lv_rc
@@ -99,6 +100,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
     ro_html->add( |<tr><td>LCL_TIME:       </td><td>{ zcl_abapgit_time=>get_unix( ) }</td></tr>| ).
     ro_html->add( |<tr><td>SY time:        </td><td>{ sy-datum } { sy-uzeit } { sy-tzone }</td></tr>| ).
     ro_html->add( |</table>| ).
+    ro_html->add( |<br>| ).
+
+    lv_devclass = zcl_abapgit_services_abapgit=>is_installed( ).
+    IF NOT lv_devclass IS INITIAL.
+      ro_html->add( 'abapGit installed in package&nbsp;' ).
+      ro_html->add( lv_devclass ).
+    ELSE.
+      ro_html->add_a( iv_txt = 'install abapGit repo'
+                      iv_act = zif_abapgit_definitions=>c_action-abapgit_install ).
+      ro_html->add( ' - To keep abapGit up-to-date (or also to contribute) you need to' ).
+      ro_html->add( 'install it as a repository.' ).
+    ENDIF.
+
     ro_html->add( |<br>| ).
 
   ENDMETHOD.

@@ -40,6 +40,12 @@ input:focus, textarea:focus {
   cursor: pointer;
 }
 
+span.separator {
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  opacity: 0.25;
+}
+
 /* MODIFIERS */
 .emphasis     { font-weight: bold !important; }
 .crossout     { text-decoration: line-through !important; }
@@ -90,6 +96,7 @@ div#header {
 div#header td:not(.logo) { padding-top: 11px; } /* align with logo H */
 div#header td.logo       { width: 164px; }
 div#header td:not(.logo) { padding-top: 11px; } /* align with logo H */
+
 div#header span.page_title {
   font-weight: normal;
   font-size: 18pt;
