@@ -8,6 +8,805 @@ Legend
 + : added
 - : removed
 
+2020-06-29 v1.97.0
+------------------
++ repository overview as main page
++ Generic possibility for changelog news
++ handling import of cyclic DDIC objects
+! removed default for commit comment
+! raise exception when no .abapgit.xml is found
+* fix incorrect status of ignored files in repo view
+* url validation fixes
+* WDYN UI sort
+* DSYS downport and changes
+* SCP1 import order
+* downport
+* clear ICFSERVICE-ICFBITMAP
+* W3MI record to transport
+* general refactoring
+
+2020-06-10 v1.96.0
+------------------
+* "last changed by" will show unknown instead of blank
++ hover line highlighting
+! staging will show error instead of dump in special cases
+* fix related to textpools of includes
+* various changes regarding only serializing master language
+! GUI refactoring
++ New syntax highlighters CSS + JS + JSON
+* downports
+* proxy bypass settings maintenance fix
+! WDA SORT text fixes
++ User exit for deserialize postprocess
+* Fix dumps regarding PINF deserialization
+* Enahnced object list for debug info
+! TADIR serialization logic changes
+
+2020-05-21 v1.95.0
+------------------
+* apack interface serialization changes
+* gui refactoring
++ SCVI screen variants support
++ STVI transaction variant support
++ OA2P support
++ SRVB support
++ BDEF support
++ ASMD support
++ SRVD support
++ DRUL support
++ DTDC support
+! CUS0, CUS1, CUS2 only serialize master language
+! DTEL, DOCT, only serialize master language
+* CHAR serialization fixes
++ Allow setting of display name for offline repos
+- Remove page playground
+- Remove explore link, link to dotabap.org instead
+
+2020-03-29 v1.94.0
+------------------
+* refactoring, remove macros
+* fix stage of IWMO, IWSG, IWSV3
+* SHI5 fixes
+! Patch UI enhancements
+* DOCU master language fixes
++ New option to bypass proxy
+* Fix dump for non-existing package
+* FUGR proper error messages for RFC parameters
++ CHDO support
+* SRFC clear fields
+* TRAN fix cinfo and authorization objects
++ AREA support
++ highlight XML code
+* DOMA skip domain appends
+
+2020-02-01 v1.93.0
+------------------
+! byte order mark added in serialized XML files on non-unicode systems
+* macro refactorings
+* ignore not supported objects during lock check
+* FUGR do not unconditionally add T00 include
++ ODSO support
+* DOCT consider all versions
+* handle spaces in stage filter
+* IOBJ refactoring/cleanup
+* IOBJ support enhancement
+* MSAG order by primary key
++ Class text element translations
+* IOBJ downport
+* Fix activation error IARP/IASP
+* Jump for IWMO, IWPR, IWSV IWVB
+* Skip application variants, VARX in transport handling
+
+2019-12-05 v1.92.0
+------------------
+! handling of redefined protected methods
+* downport
+* show duplicate object names
+* ITAU exception handling
++ IWVB support
++ IOBJ support
+* additional checking of URLs when creating online repo
+* author regex
+* TABL popup being closed fixed
+* Preparations for DOMA clearing value
++ Code selection by colum on diff screen
++ add adt links on diff page
+
+2019-10-31 v1.91.0
+------------------
+! FUGR serialization changed, RSFDO-INDEX cleared
+* FORM serialization fixes
++ SCP1, add support for sets of sets
++ Support for baseinfo string, DDLS
++ Possibility to export with only master language
+* Better error messages
++ SMTG support
++ IAXU support
++ FTGL support
+* Fix for program names containing "="
++ Tooltips with hotkeys
+* User interface enhancements
+
+2019-10-07 v1.90.0
+------------------
+* FUGR, fix transport request recording
+* AUTH jump fix
+* Cancel branch creation if already exists
+* Progress indicator fixes for belize theme
+* ecatt, show error instead of dumping
+* optimize skip logic
+! increase parallel serialization timeout
+* Workaround for JavaGUI
++ Column sorting in repo overview
+* APACK fixes
++ PERS serialization
++ Command palette, shortcut F1
++ Syntax check, rerun button added
+* Footer redesign
++ UENO serialization
+* PERS downport
+* DDLS write transport entry
+* NROB write transport entry
++ Order by on repo page
+* Warning when languages does not match
+* CLAS serialization, fix redefinition shortdump
+
+2019-08-05 v1.89.0
+------------------
++ belize and dark themes
+* ADT jump for package link and transports
++ additional gateway support
+* consistent sort ordering of files
+* misc fixes for dynpros
+* show error when pushing to protected branch
+* show log for offline install
++ FUGR serialization of text pool
++ new error GUI
+
+2019-06-22 v1.88.0
+------------------
+* parallel serialization, show errors
+* fix diff filter
+* downport
+! allow abapGit to run in production/qa
+* fix jump for VIEW and TOBJ
+* fix author regex
+! improved logging
++ odata v4 supported
+* WEBI overwrite
++ ui themes support
+! transport to zip, umutiple transport requests
+* fixes for TADIR handling
+
+2019-04-28 v1.87.0
+------------------
++ HIDPI icon scaling, enable in settings
++ Add exit for CLAS CLIF source deserialization
+! Floating save buttons
+* SFPI deserialization fix
+* Ignore XTI includes in FUGR
+* Downports
+* Hotkeys now works in single file distribution
+* Leading spaces
+* XINX remove UI call
+* RS_CUA_INTERNAL_WRITE fix
+
+2019-03-31 v1.86.2
+------------------
+! CLAS field VSEOCLASS-VERSION
+! INTF field VSEOINTERF-VERSION cleared
+! PROG fields PROGDIR-STATE & PROGDIR-VARCL cleared
+! DCLS fields AS4LOCAL & ABAP_LANGUAGE_VERSION cleared
+! DDLS field ABAP_LANGUAGE_VERSION cleared
+! DDLX fields VERSION & RESPONSIBLE & MASTER_SYSTEM cleared
+! MSAG field DOKIL-DOKSTATE cleared
+! ENQU fields DD25V-AS4LOCAL and DD25V-AS4VERS cleared
+* ENHO diff fix
+* zlib decompress uncompressed data
+* azure-pipelines.yml added to default ignore
+* Fix error determining default main package
+
+2019-03-29 v1.86.1
+------------------
+! Sort branches in branch overview by time
+* ENHO clif handle types
+* SFPF save layout in solo XDP file
+! Option to ignore subpackages for new online repo
+* Escape slashes in branch overview
+* SCI page redesign
+* Logging refactorings
+* GUI refactorings
+
+2019-03-15 v1.86.0
+------------------
++ IWPR support
+* SPRX downport
++ Offline icons
+* Deserialize steps refactored
+* Tutorial, show correct installed package
+* Fix for "undecided" error
++ Possibility for repo creation authorization check
+* Branch overview, horizontal scrollbar
+* DTEL, TPARA removed from XML
++ Allow injection of progress indicator
+* GUI refactorings
+
+2019-02-26 v1.85.0
+------------------
+* ENHO, check esistence before deletion
++ New global user setting "Disable octicons", for offline
++ New user setting, disable parallel processing
+! SPRX serialization logic changed
+* SOTR skip creation if already exists
+! Parallel DDIC activation
+* Deserialization performance
+* VCLS data sorted
+* SICF fixes for altnames
++ Online repo display name setting
++ Patch / git add -p: Add and remove sections
+* Refactoring
+
+2019-02-15 v1.84.0
+------------------
+* PINF fix deserialization sequence
+* DOMA do not serialize translations without language
+* Downport
+! SFPF + SFPI format changed, downwards compatible
+* Background mode, auto push, deletion commit message changed
+* ACID deletion sequence fixed
+* FUGR, exlcude reuseable includes
+* MSAG, fix transport entry
+! Limit max threads in serialization to 32
+! Remove HAS_CHANGED_SINCE feature
+! Transport to branch, ignore fiels not in local repo
+
+2019-02-12 v1.83.0
+------------------
++ SPRX support
+* SCP1 bugfix
+* Fix SSL ID user exit
+* PINF downport
+* SFPF fix overwriting object
+* Dynpros fix SET/GET_PARAM bug
+* SOTS fixes
+* Fix for inactive view cluster
+
+2019-01-24 v1.82.0
+------------------
+* Fix icons for HiDPI screens
+* Better error handling for TTYP
+! Overwrite popup, selection list
+! Code inspection, ask for variant
+* TOBJ, delete missing TVIMF
++ SQSC support
+! Limit list of shown code inspector findings
+* PINF fix package popup and locking
++ SOTS support
+
+2019-01-05 v1.81.1
+------------------
+! GUI tweaks, removing toolbar, disabling save button
+* Refactoring
+! VCLS, clear CHANGEDATE
+! Repo overview page redesign
+! IDOC segments part of TABL
+* Branch overview, skip orphaned commits
+
+2018-12-12 v1.81.0
+------------------
+! CLAS XML changed, redundant fields cleared
++ SUCU support
++ Hotkey improvements
+* patch feature bugfixes
+* SAP script window sequence
+* backport
+
+2018-11-23 v1.80.0
+------------------
++ Parallel serialization
++ 2 step zip import
++ possibility to open repo in master language
++ Set SSL_ID via user exit
+* SUSC tadir handling
+
+2018-11-17 v1.79.1
+------------------
+* SICF error handling + is_locked
+* fix duplicate deserialization
+* Better TADIR handling
+* Less GUI popups
+* Fix branch overview not refreshed
+* Refactoring
+* Code cleanup
+
+2018-11-09 v1.79.0
+------------------
++ CTS integration, show corresponding transports
++ Mark inactive objects in repo list
+* SSFO handle leading spaces
+* PARA error handling
+* ENHO do not show gui
+* SCP1 do not show gui
+* DDLX fix tadir handling
+
+2018-10-19 v1.78.1
+------------------
+* Diff fixes
+* Jump only if object exists
+* IEXT: clear additional fields
+* TRAN: support OO transactions
+* SSFO: fix id renumbering
+
+2018-10-07 v1.78.0
+------------------
++ UDMO support
+* PROG fix dynpro ordering
+* SUSO downport
++ Run code inspector in parallel
+* WEBI fixes
+* Syntax check results page clean up
+! DDLX source in separate file
+! smart response checks for verifying git endpoint
+
+2018-09-21 v1.77.0
+------------------
++ ENHC support
++ Code inspector respect jump to ADT
+* Downport
+* FORM record transport request
+* AUTH popups
+* MSAG popups
+* Staging page preserve filter value
+* XML syntax highlighting fixes
+* Branch overview fixes
+
+2018-09-08 v1.76.0
+------------------
++ git patch, added to staging page
++ serialize all longtexts
++ ENQU clear redundant fields
+* suppress SHMA package popup
+* branch overview sorted by parent instead of time
+* handle error from RS_CUA_INTERNAL_FETCH
+* fix problem with branch list from bitbucket.org
+* allow empty blobs
+
+2018-08-12 v1.75.0
+------------------
++ User exit CREATE_HTTP_CLIENT
++ Hotkeys, press "?" for overview
+* fix layout in merge mode
+* DTEL, DOMA, TABL longtext serialization
+* SAP GUI Java fix settings page
+* MSAG logntexts and is_locked
+* Saving variant for background program
+* Downport
+* PROG, add guard for bad TADIR entries
+* gitgraph.js updated to latest
+* Refactoring
+
+2018-08-12 v1.74.1
+------------------
+* Refactoring
+* Downport
+* Descriptions in new online popup
+* Optimized git object handling
+* SSST package popup fixed
+* PARA popup fixed
+* Package validations
+* Diff still shows after pushing
+* TABL field ROWORCOLST cleared
+* Staging page optimizations
+* Correct CUA if needed during pull
+
+2018-08-04 v1.74.0
+------------------
+- Stage button in diff screen removed
++ Vimium like link hint navigation, enable in settings
+* ecatt downport
+* Performance optimizations
+* SSFO fix jump to text module
+
+2018-07-29 v1.73.0
+------------------
+! Background mode must be reconfigured after installing this version
++ New interface ZIF_ABAPGIT_BACKGROUND for implementing custom handlers
+! Background mode will now push deletions
+
+2018-07-27 v1.72.2
+------------------
+* Additional unit tests
+* Optimize STATUS performance
+* FUGR fixes
+* AVAS fixes
+* SHA1 removed from persistence
+* News, less database updates
+* Refresh performance, only call BRANCH_LIST once
+* Code inspector for offline repositories
+* Store user and time for last deserialize
+* CHAR fixes
+
+2018-07-20 v1.72.1
+------------------
+* FUGR: handle different ABAP language versions
+* VCLS: handle TADIR, transports, jump
+* CUS0: handle TADIR
+* SICF: fix deletion
+* CHAR: fix dump during pull
+* CUS1: handle transports
+* Show path in diff page
+* Fix potential SQL injection
+* More is_locked implementations
+* CMPT downport
+* AVAS: better error handling
+
+2018-07-13 v1.72.0
+------------------
++ Partial AVAS support
+* Set transport request during uninstall or reset
++ New repository overview page(via burger icon)
+* Performance optimizations
+! New default setting: jump to ABAP in Eclipse
++ Basic SCP1 support
+* Downport
+
+2018-07-06 v1.71.0
+------------------
+* validate sub and super packages when installing
+! delete empty packages
++ UI for editing requirements
+! track user which created repo
++ new repository overview page
+* delete PARA after DTEL
+* TABL, check existence before SELECTing
+
+2018-06-28 v1.70.0
+------------------
++ possibility to run code inspector before staging
+* WAPA better delta handling
++ Block pull if any of deserialized object is locked
++ CHAR support
+
+2018-06-17 v1.69.1
+------------------
++ new exit: change_tadir
+* fix objects outside of repo
+* started dependency injection for unit testing
+* DDLS fix dump
+* handle repair transports
+* SSFO catch exception
+* SEO_CS_CACHE downport
+* TABL consider DD12L in changed_by
+
+2018-06-09 v1.69.0
+------------------
+! FORM serialization, filenames changed
+* fix gui show changes only
+* fix checkout annotated tags
+* set new remote: supply remote SHA1
+
+2018-06-06 v1.68.3
+------------------
+* fix dump when objects are moved
+* abapGit news feature now works in more cases
+* FUGR force update of where-used
+* tag page redesigned
+* TABL, clear field RESERVEDTE
+* http agent changed
+
+2018-06-04 v1.68.2
+------------------
+* CLAS ignore deltion of non-existent objects
+* ENHO implement changed by
+* fix TOBJ diffs
+* fix error in XML syntax highlighter
+* ECATT remove empty attributes
+* evaluate 2FA implementations alphabetically
+
+2018-06-03 v1.68.1
+------------------
+* XSLT fix changed_by
+* Fix dump in XML syntax highlighter
+* Delivery class of database table changed
+
+2018-05-27 v1.68.0
+------------------
++ Resolve conflicts functionallity/UI (beta)
++ Annotated tags
+* Locking problems fixed(?)
+
+2018-05-19 v1.67.0
+------------------
++ IDOC support
++ IEXT support
+* DOMA deletion downport
+* ALV popup
+* DDLS downport
+! default starting folder changed to "/src/"
+* Author regex fixed in branch overview
+! DDLS clear additional fields
+! Moving an object outside main package shows up as deletion
+
+2018-05-11 v1.66.0
+------------------
+! Clone without pull, user has to choose pull after creating online repo
+! old migrations removed from code
+* downports
+* seperation of UI and logic
+* SICF: clear ICFSERVICE-ICF_MANDT
+* TOBJ: Clear TVDIR-GENDATE and TVDIR-GENTIME
+* fixes for object status
+* DOMA fix delete fix value appends
+* TABL exclude structures in warning
+
+2018-05-07 v1.65.0
+------------------
++ ECSD support
++ ECSP support
+! User specific global settings
+* downport
+* package, inherit parent appl component
+* skip more generated selection screens
+* match files if they are identical
+
+2018-04-15 v1.64.0
+------------------
++ ECTD support
++ ECVO support
++ XINX support
+* CLAS_NEW workaround
+* 2FA behind proxy
+
+2018-04-03 v1.63.0
+------------------
++ ECTD support
+! Seperation of UI and logic
++ Transport to zip, choose folder logic
+* TRAN fix
+* Additional unit tests
+
+2018-03-26 v1.62.0
+------------------
+* downport
+! add hostname to password popup dialog
+* git fix for AWS CodeCommit
++ additional authorization checks possible
++ repo settings page updated
++ possibility to only select local objects
+
+2018-03-18 v1.61.0
+------------------
+* ignore deleted objects in syntax check
+* fix transport layer invalid
+* fix error messages
+* more downport
+* INTF clear more fields
++ user exit to modify http client, eg SSO between SAP systems 
+
+2018-03-14 v1.60.1
+------------------
+* show error messages instead of "Exception was raised"
+
+2018-03-10 v1.60.0
+------------------
++ 2FA inheritance
++ improved error handling
+* fix deserialization dependency ENHO -> ENHS
+* DOCT fix tadir handling
+
+2018-02-24 v1.59.0
+------------------
++ background mode: possibility to use user info from SU01
+! git internals, better performance
+* fix ADT jump dump
+! all classes now global in abapGit development version
+
+2018-02-15 v1.58.0
+------------------
+! more classes moved to global
+* SHMA bugfix
+
+2018-02-11 v1.57.0
+------------------
+! more classes moved to global
+* where-used lists for CLASses
+
+2018-02-03 v1.56.0
+------------------
++ background mode: remove old files when moving
++ checkout tags
+! progress indicator changes
+* downport
+* no package transport during serialization
+* fix dump in new CLAS serialization
+
+2018-01-21 v1.55.0
+------------------
+! CLAS deserialization changed
+! Progress indicators changed
++ Tag a specific commit
+
+2018-01-19 v1.54.0
+------------------
++ SHI8 support
++ experimental feature: parallel DDIC activation
+* downport
+* SAMC / SAPC fix changed_by
+* more classes to global
+
+2018-01-14 v1.53.0
+------------------
++ SHI5 support
++ DSYS support
+* dropdown for selecting folder logic
+* more classes to global
+
+2018-01-11 v1.52.0
+------------------
++ CUS0 + CUS1 + CUS2 support
+* WAPA fix subfolders
+* WAPA fix overwriting
+* more classes to global
+
+2018-01-08 v1.51.2
+------------------
+* some local classes moved to global in abapGit dev version
+* fix finding superpackages
+* SAP systems recognized as SAP
+
+2018-01-05 v1.51.1
+------------------
+* minor fixes for tags
+* downport
+* fix serilization of SXCI in background mode
+
+2018-01-03 v1.51.0
+------------------
++ support for lightweight tags
+! background mode push performance
+
+2017-12-19 v1.50.2
+------------------
+* downport
+* better package error handling for offline project popup
+
+2017-12-11 v1.50.1
+------------------
+* bugfix, identical git trees
+* bugfix, changed_by DOCV
+* bugfix, folder logic, shows error instead of dump
+
+2017-11-18 v1.50.0
+------------------
++ Fewer transport popups
+* Downport
+* bugfix, change remote
+* URL to global class
+
+2017-11-11 v1.49.0
+------------------
++ DDLX support
+* ENHS fix
+* Fix changing remote
+
+2017-10-29 v1.48.0
+------------------
+* WEBI fixes
+* IMAU fix
+! Better http errors errors
+* downport
+* Improve usability of repository popup
+! More global exception classes
++ proxy configuration user exit
+* Buffer settings
+
+2017-10-22 v1.47.0
+------------------
+* fix FUGR include diffs
++ filter by username on staging page
+
+2017-10-15 v1.46.0
+------------------
++ IAMU supported
++ SXCI supported
+* fix unambiguous error message
+
+2017-10-14 v1.45.0
+------------------
++ SRFC supported
++ USCA supported
+* fix dump when serializing local test classes
+* CLAS fix reordering of methods
+* Fix dump when installing abapGit dev version
+* Fix error with textpools
+
+2017-10-10 v1.44.0
+------------------
+* WAPA: fixes for so2_controller
+* PROG: fix textpool translation activation
+* Some refactoring
++ Select unnessesary objects when resetting local
+* PROG: force delete of used includes
+* new url for explore page
+* remove old persistency layer
+* downport
+* fix for foreign customer namespaces
+* definitions refactored to global class
+
+2017-10-06 v1.43.1
+------------------
+* Clear some DEVC fields
+* Downport
+
+2017-10-05 v1.43.0
+------------------
++ DEVC support
+* Textpool language when serializing
+* Jump to W3HT and W3MI
+* More moved to global classes
+* Downport
+
+2017-10-01 v1.42.0
+------------------
+* fix dump in "reset local objects"
+* Fix DDLS deletion/uninstall sequence
+* Skip DDLS auto generated objects
+! New dialog box for overwriting local objects
+
+2017-09-11 v1.41.2
+------------------
+* FUGR table maintenance, namespaces
+* SICF show error message when deleting root node
+* DDLS better error messages
+* ENHS allow transport popup
++ experimental, optional opt-in: CLAS deserialization performance
+
+2017-09-03 v1.41.1
+------------------
+* DDLS changed_by
+* Deletion of objects when performing "reset local"
+* Moved first class to global in the abapGit development version
+
+2017-08-23 v1.41.0
+------------------
++ SHMA supported
++ ENHO for function groups + web dynpro supported
+
+2017-08-11 v1.40.0
+------------------
++ JOBD supported
++ CMPT supported
+* downport fix
+
+2017-08-07 v1.39.0
+------------------
++ DIAL supported
+* fix XML dump
+
+2017-08-05 v1.38.0
+------------------
+! SICF serialization changed
+* TOBJ serialization added TDDAT, TVDIR, and TVIMF tables
+* TYPE fix overwriting/pull
+
+2017-08-03 v1.37.8
+------------------
+* Fix TABL changed_by
+* Downport to 702
+
+2017-07-28 v1.37.7
+------------------
+* Fix dump when parsing commit author, regex
+* Fix decoding of commit body, newlines
+* SAMC SAPC refactoring
+* DOMA diff fix, sorting
+
+2017-07-23 v1.37.6
+------------------
+* SMIM exists() performance
+* Background mode performance improvements
+* DOCT fix changed_by() dump
+
 2017-07-17 v1.37.5
 ------------------
 * fix FUGR namespaces
