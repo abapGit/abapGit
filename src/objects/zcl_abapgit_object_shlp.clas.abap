@@ -60,6 +60,13 @@ CLASS ZCL_ABAPGIT_OBJECT_SHLP IMPLEMENTATION.
 
     io_xml->read( EXPORTING iv_name = 'DD30V'
                   CHANGING cg_data = ls_dd30v ).
+
+    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND NOT ls_dd30v-selmexit IS INITIAL.
+      ls_dd30v-selmexit = 'RS_DD_SELMEXIT'.
+    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND ls_dd30v-selmexit IS INITIAL.
+      RETURN. " already active
+    ENDIF.
+
     io_xml->read( EXPORTING iv_name = 'DD31V_TABLE'
                   CHANGING cg_data = lt_dd31v ).
     io_xml->read( EXPORTING iv_name = 'DD32P_TABLE'
@@ -116,6 +123,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SHLP IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 

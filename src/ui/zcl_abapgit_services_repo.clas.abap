@@ -55,11 +55,6 @@ CLASS zcl_abapgit_services_repo DEFINITION
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS open_se80
-      IMPORTING
-        !iv_package TYPE devclass
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS transport_to_branch
       IMPORTING
         !iv_repository_key TYPE zif_abapgit_persistence=>ty_value
@@ -87,7 +82,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
 
   METHOD gui_deserialize.
@@ -137,6 +132,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     DATA: ls_popup        TYPE zif_abapgit_popups=>ty_popup,
           lo_repo         TYPE REF TO zcl_abapgit_repo,
           lo_repo_offline TYPE REF TO zcl_abapgit_repo_offline,
+          li_repo_srv     TYPE REF TO zif_abapgit_repo_srv,
           lv_reason       TYPE string.
 
     ls_popup  = zcl_abapgit_ui_factory=>get_popups( )->repo_new_offline( ).
@@ -145,7 +141,9 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     ENDIF.
 
     " make sure package is not already in use for a different repository
-    zcl_abapgit_repo_srv=>get_instance( )->get_repo_from_package(
+    " 702: chaining calls with exp&imp parameters causes syntax error
+    li_repo_srv = zcl_abapgit_repo_srv=>get_instance( ).
+    li_repo_srv->get_repo_from_package(
       EXPORTING
         iv_package = ls_popup-package
       IMPORTING
@@ -179,9 +177,10 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
   METHOD new_online.
 
-    DATA: ls_popup  TYPE zif_abapgit_popups=>ty_popup,
-          lo_repo   TYPE REF TO zcl_abapgit_repo,
-          lv_reason TYPE string.
+    DATA: ls_popup    TYPE zif_abapgit_popups=>ty_popup,
+          lo_repo     TYPE REF TO zcl_abapgit_repo,
+          li_repo_srv TYPE REF TO zif_abapgit_repo_srv,
+          lv_reason   TYPE string.
 
     ls_popup = zcl_abapgit_ui_factory=>get_popups( )->repo_popup( iv_url ).
     IF ls_popup-cancel = abap_true.
@@ -189,7 +188,9 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     ENDIF.
 
     " make sure package is not already in use for a different repository
-    zcl_abapgit_repo_srv=>get_instance( )->get_repo_from_package(
+    " 702: chaining calls with exp&imp parameters causes syntax error
+    li_repo_srv = zcl_abapgit_repo_srv=>get_instance( ).
+    li_repo_srv->get_repo_from_package(
       EXPORTING
         iv_package = ls_popup-package
       IMPORTING
@@ -217,19 +218,6 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lo_repo->get_key( ) ).
 
     COMMIT WORK.
-
-  ENDMETHOD.
-
-
-  METHOD open_se80.
-
-    CALL FUNCTION 'RS_TOOL_ACCESS'
-      EXPORTING
-        operation       = 'SHOW'
-        in_new_window   = abap_true
-        object_name     = iv_package
-        object_type     = 'DEVC'
-        with_objectlist = abap_true.
 
   ENDMETHOD.
 
