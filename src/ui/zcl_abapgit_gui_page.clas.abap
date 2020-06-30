@@ -15,16 +15,18 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
 
     TYPES:
       BEGIN OF ty_control,
-        page_title   TYPE string,
-        page_menu    TYPE REF TO zcl_abapgit_html_toolbar,
-      END OF  ty_control.
+        page_title TYPE string,
+        page_menu  TYPE REF TO zcl_abapgit_html_toolbar,
+      END OF  ty_control .
 
-    DATA: ms_control TYPE ty_control.
+    DATA ms_control TYPE ty_control .
 
-    METHODS render_content ABSTRACT
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-      RAISING   zcx_abapgit_exception.
-
+    METHODS render_content
+      ABSTRACT
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
   PRIVATE SECTION.
     DATA:
       mo_settings         TYPE REF TO zcl_abapgit_settings,
@@ -33,29 +35,29 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
 
     METHODS render_deferred_parts
       IMPORTING
-        ii_html TYPE REF TO zif_abapgit_html
+        ii_html          TYPE REF TO zif_abapgit_html
         iv_part_category TYPE string
       RAISING
         zcx_abapgit_exception.
 
     METHODS html_head
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+      RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html.
 
     METHODS title
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+      RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html.
 
     METHODS footer
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+      RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html.
 
     METHODS render_link_hints
       IMPORTING
-        io_html TYPE REF TO zcl_abapgit_html
+        ii_html TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception.
 
     METHODS render_command_palettes
       IMPORTING
-        io_html TYPE REF TO zcl_abapgit_html
+        ii_html TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception.
 
@@ -87,7 +89,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
 
   METHOD call_browser.
@@ -124,72 +126,72 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD footer.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( '<div id="footer">' ).                    "#EC NOTEXT
+    ri_html->add( '<div id="footer">' ).                    "#EC NOTEXT
 
-    ro_html->add( zcl_abapgit_html=>a( iv_txt = '<img src="img/logo" alt="logo">'
+    ri_html->add( zcl_abapgit_html=>a( iv_txt = '<img src="img/logo" alt="logo">'
                                        iv_id  = 'abapGitLogo'
                                        iv_act = zif_abapgit_definitions=>c_action-abapgit_home ) ).
-    ro_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
+    ri_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
 
-    ro_html->add( '<td class="w40"></td>' ).                "#EC NOTEXT
-    ro_html->add( |<td><span class="version">{ zif_abapgit_version=>gc_abap_version }</span></td>| ). "#EC NOTEXT
-    ro_html->add( '<td id="debug-output" class="w40"></td>' ). "#EC NOTEXT
+    ri_html->add( '<td class="w40"></td>' ).                "#EC NOTEXT
+    ri_html->add( |<td><span class="version">{ zif_abapgit_version=>gc_abap_version }</span></td>| ). "#EC NOTEXT
+    ri_html->add( '<td id="debug-output" class="w40"></td>' ). "#EC NOTEXT
 
-    ro_html->add( '</tr></table>' ).                        "#EC NOTEXT
-    ro_html->add( '</div>' ).                               "#EC NOTEXT
+    ri_html->add( '</tr></table>' ).                        "#EC NOTEXT
+    ri_html->add( '</div>' ).                               "#EC NOTEXT
 
   ENDMETHOD.
 
 
   METHOD html_head.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( '<head>' ).                               "#EC NOTEXT
+    ri_html->add( '<head>' ).                               "#EC NOTEXT
 
-    ro_html->add( '<meta http-equiv="content-type" content="text/html; charset=utf-8">' ). "#EC NOTEXT
-    ro_html->add( '<meta http-equiv="X-UA-Compatible" content="IE=11,10,9,8" />' ). "#EC NOTEXT
+    ri_html->add( '<meta http-equiv="content-type" content="text/html; charset=utf-8">' ). "#EC NOTEXT
+    ri_html->add( '<meta http-equiv="X-UA-Compatible" content="IE=11,10,9,8" />' ). "#EC NOTEXT
 
-    ro_html->add( '<title>abapGit</title>' ).               "#EC NOTEXT
-    ro_html->add( '<link rel="stylesheet" type="text/css" href="css/common.css">' ).
-    ro_html->add( '<link rel="stylesheet" type="text/css" href="css/ag-icons.css">' ).
+    ri_html->add( '<title>abapGit</title>' ).               "#EC NOTEXT
+    ri_html->add( '<link rel="stylesheet" type="text/css" href="css/common.css">' ).
+    ri_html->add( '<link rel="stylesheet" type="text/css" href="css/ag-icons.css">' ).
 
     " Themes
-    ro_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-default.css">' ). " Theme basis
+    ri_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-default.css">' ). " Theme basis
     CASE mo_settings->get_ui_theme( ).
       WHEN zcl_abapgit_settings=>c_ui_theme-dark.
-        ro_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-dark.css">' ).
+        ri_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-dark.css">' ).
       WHEN zcl_abapgit_settings=>c_ui_theme-belize.
-        ro_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-belize-blue.css">' ).
+        ri_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-belize-blue.css">' ).
     ENDCASE.
 
-    ro_html->add( '<script type="text/javascript" src="js/common.js"></script>' ). "#EC NOTEXT
+    ri_html->add( '<script type="text/javascript" src="js/common.js"></script>' ). "#EC NOTEXT
 
     CASE mo_settings->get_icon_scaling( ). " Enforce icon scaling
       WHEN mo_settings->c_icon_scaling-large.
-        ro_html->add( '<style>.icon { font-size: 200% }</style>' ).
+        ri_html->add( '<style>.icon { font-size: 200% }</style>' ).
       WHEN mo_settings->c_icon_scaling-small.
-        ro_html->add( '<style>.icon.large { font-size: inherit }</style>' ).
+        ri_html->add( '<style>.icon.large { font-size: inherit }</style>' ).
     ENDCASE.
 
-    ro_html->add( '</head>' ).                              "#EC NOTEXT
+    ri_html->add( '</head>' ).                              "#EC NOTEXT
 
   ENDMETHOD.
 
 
   METHOD render_command_palettes.
 
-    io_html->add( 'var gGoRepoPalette = new CommandPalette(enumerateTocAllRepos, {' ).
-    io_html->add( '  toggleKey: "F2",' ).
-    io_html->add( '  hotkeyDescription: "Go to repo ..."' ).
-    io_html->add( '});' ).
+    ii_html->add( 'var gGoRepoPalette = new CommandPalette(enumerateTocAllRepos, {' ).
+    ii_html->add( '  toggleKey: "F2",' ).
+    ii_html->add( '  hotkeyDescription: "Go to repo ..."' ).
+    ii_html->add( '});' ).
 
-    io_html->add( 'var gCommandPalette = new CommandPalette(enumerateToolbarActions, {' ).
-    io_html->add( '  toggleKey: "F1",' ).
-    io_html->add( '  hotkeyDescription: "Command ..."' ).
-    io_html->add( '});' ).
+    ii_html->add( 'var gCommandPalette = new CommandPalette(enumerateToolbarActions, {' ).
+    ii_html->add( '  toggleKey: "F1",' ).
+    ii_html->add( '  hotkeyDescription: "Command ..."' ).
+    ii_html->add( '});' ).
 
   ENDMETHOD.
 
@@ -254,9 +256,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     IF mo_settings->get_link_hints_enabled( ) = abap_true AND lv_link_hint_key IS NOT INITIAL.
 
-      io_html->add( |activateLinkHints("{ lv_link_hint_key }");| ).
-      io_html->add( |setInitialFocusWithQuerySelector('a span', true);| ).
-      io_html->add( |enableArrowListNavigation();| ).
+      ii_html->add( |activateLinkHints("{ lv_link_hint_key }");| ).
+      ii_html->add( |setInitialFocusWithQuerySelector('a span', true);| ).
+      ii_html->add( |enableArrowListNavigation();| ).
 
     ENDIF.
 
@@ -279,27 +281,23 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD title.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( '<div id="header">' ).                    "#EC NOTEXT
-    ro_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
+    ri_html->add( '<div id="header">' ).                    "#EC NOTEXT
+    ri_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
 
-    ro_html->add( |<td class="logo">{
-                  zcl_abapgit_html=>a( iv_txt = '<img src="img/logo" alt="logo">'
-                                       iv_id  = 'abapGitLogo'
-                                       iv_act = zif_abapgit_definitions=>c_action-abapgit_home )
-                  }</td>| ).                                "#EC NOTEXT
+    ri_html->add( |<td class="logo"><img src="img/logo" alt="logo"></td>| ). "#EC NOTEXT
 
-    ro_html->add( |<td><span class="page_title"> &#x25BA; { ms_control-page_title }</span></td>| ). "#EC NOTEXT
+    ri_html->add( |<td><span class="page_title"> &#x25BA; { ms_control-page_title }</span></td>| ). "#EC NOTEXT
 
     IF ms_control-page_menu IS BOUND.
-      ro_html->add( '<td class="right">' ).                 "#EC NOTEXT
-      ro_html->add( ms_control-page_menu->render( iv_right = abap_true ) ).
-      ro_html->add( '</td>' ).                              "#EC NOTEXT
+      ri_html->add( '<td class="right">' ).                 "#EC NOTEXT
+      ri_html->add( ms_control-page_menu->render( iv_right = abap_true ) ).
+      ri_html->add( '</td>' ).                              "#EC NOTEXT
     ENDIF.
 
-    ro_html->add( '</tr></table>' ).                        "#EC NOTEXT
-    ro_html->add( '</div>' ).                               "#EC NOTEXT
+    ri_html->add( '</tr></table>' ).                        "#EC NOTEXT
+    ri_html->add( '</div>' ).                               "#EC NOTEXT
 
   ENDMETHOD.
 
@@ -348,7 +346,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_renderable~render.
 
-    DATA: lo_script TYPE REF TO zcl_abapgit_html.
+    DATA: li_script TYPE REF TO zif_abapgit_html.
 
     gui_services( )->register_event_handler( me ).
 
@@ -373,11 +371,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ri_html->add( footer( ) ).
     ri_html->add( '</body>' ).                              "#EC NOTEXT
 
-    lo_script = scripts( ).
+    li_script = scripts( ).
 
-    IF lo_script IS BOUND AND lo_script->is_empty( ) = abap_false.
+    IF li_script IS BOUND AND li_script->is_empty( ) = abap_false.
       ri_html->add( '<script type="text/javascript">' ).
-      ri_html->add( lo_script ).
+      ri_html->add( li_script ).
       ri_html->add( 'confirmInitialized();' ).
       ri_html->add( '</script>' ).
     ENDIF.

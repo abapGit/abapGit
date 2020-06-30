@@ -364,11 +364,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
 
   METHOD render_content.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( '<div id="toc">' ).
-    ro_html->add( body( ) ).
-    ro_html->add( '</div>' ).
+    ri_html->add( '<div id="toc">' ).
+    ri_html->add( body( ) ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 

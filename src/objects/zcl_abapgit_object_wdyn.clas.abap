@@ -360,6 +360,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_object>               LIKE LINE OF lt_objects,
                    <ls_meta>                 LIKE LINE OF rs_component-ctlr_metadata,
+                   <ls_view>                 LIKE LINE OF rs_component-view_metadata,
                    <lt_ctrl_exceptions>      TYPE ANY TABLE,
                    <lt_ctrl_exception_texts> TYPE ANY TABLE.
 
@@ -409,6 +410,10 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
       IF sy-subrc = 0.
         SORT <lt_ctrl_exception_texts>.
       ENDIF.
+    ENDLOOP.
+
+    LOOP AT rs_component-view_metadata ASSIGNING <ls_view>.
+      SORT <ls_view>-ui_elements.
     ENDLOOP.
 
     SORT mt_components BY

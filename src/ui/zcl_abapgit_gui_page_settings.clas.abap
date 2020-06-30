@@ -240,8 +240,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'comment_default'.
     IF sy-subrc = 0.
       mo_settings->set_commitmsg_comment_default( <ls_post_field>-value ).
-    ELSE.
-      mo_settings->set_commitmsg_comment_default( zcl_abapgit_settings=>c_commitmsg_comment_default ).
     ENDIF.
 
     READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'body_size'.
@@ -392,33 +390,33 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
   METHOD render_content.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     read_settings( ).
 
-    ro_html->add( render_form_begin( ) ).
-    ro_html->add( render_section_begin( |Global settings| ) ).
-    ro_html->add( render_proxy( ) ).
-    ro_html->add( |<hr>| ).
-    ro_html->add( render_commit_msg( ) ).
-    ro_html->add( |<hr>| ).
-    ro_html->add( render_development_internals( ) ).
-    ro_html->add( render_section_end( ) ).
-    ro_html->add( render_section_begin( |User specific settings| ) ).
-    ro_html->add( render_start_up( ) ).
-    ro_html->add( render_max_lines( ) ).
-    ro_html->add( render_icon_scaling( ) ).
-    ro_html->add( render_ui_theme( ) ).
-    ro_html->add( |<hr>| ).
-    ro_html->add( render_adt_jump_enabled( ) ).
-    ro_html->add( |<hr>| ).
-    ro_html->add( render_parallel_proc( ) ).
-    ro_html->add( |<hr>| ).
-    ro_html->add( render_link_hints( ) ).
-    ro_html->add( |<hr>| ).
-    ro_html->add( render_hotkeys( ) ).
-    ro_html->add( render_section_end( ) ).
-    ro_html->add( render_form_end( ) ).
+    ri_html->add( render_form_begin( ) ).
+    ri_html->add( render_section_begin( |Global settings| ) ).
+    ri_html->add( render_proxy( ) ).
+    ri_html->add( |<hr>| ).
+    ri_html->add( render_commit_msg( ) ).
+    ri_html->add( |<hr>| ).
+    ri_html->add( render_development_internals( ) ).
+    ri_html->add( render_section_end( ) ).
+    ri_html->add( render_section_begin( |User specific settings| ) ).
+    ri_html->add( render_start_up( ) ).
+    ri_html->add( render_max_lines( ) ).
+    ri_html->add( render_icon_scaling( ) ).
+    ri_html->add( render_ui_theme( ) ).
+    ri_html->add( |<hr>| ).
+    ri_html->add( render_adt_jump_enabled( ) ).
+    ri_html->add( |<hr>| ).
+    ri_html->add( render_parallel_proc( ) ).
+    ri_html->add( |<hr>| ).
+    ri_html->add( render_link_hints( ) ).
+    ri_html->add( |<hr>| ).
+    ri_html->add( render_hotkeys( ) ).
+    ri_html->add( render_section_end( ) ).
+    ri_html->add( render_form_end( ) ).
 
   ENDMETHOD.
 

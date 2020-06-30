@@ -25,6 +25,7 @@ CLASS zcl_abapgit_user_master_record DEFINITION
         RETURNING
           VALUE(rv_email) TYPE zif_abapgit_definitions=>ty_git_user-email.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_user,
@@ -42,7 +43,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_USER_MASTER_RECORD IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -51,7 +52,7 @@ CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
           ls_address     TYPE bapiaddr3,
           lt_smtp        TYPE TABLE OF bapiadsmtp,
           ls_smtp        TYPE bapiadsmtp,
-          lt_dev_clients TYPE SORTED TABLE OF mandt WITH UNIQUE KEY table_line,
+          lt_dev_clients TYPE SORTED TABLE OF sy-mandt WITH UNIQUE KEY table_line,
           lv_not_found   TYPE abap_bool.
     FIELD-SYMBOLS: <lv_dev_client> LIKE LINE OF lt_dev_clients.
 

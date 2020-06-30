@@ -55,11 +55,6 @@ CLASS zcl_abapgit_services_repo DEFINITION
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS open_se80
-      IMPORTING
-        !iv_package TYPE devclass
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS transport_to_branch
       IMPORTING
         !iv_repository_key TYPE zif_abapgit_persistence=>ty_value
@@ -134,24 +129,46 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD new_offline.
 
-    DATA: lo_repo  TYPE REF TO zcl_abapgit_repo,
-          ls_popup TYPE zif_abapgit_popups=>ty_popup.
+    DATA: ls_popup        TYPE zif_abapgit_popups=>ty_popup,
+          lo_repo         TYPE REF TO zcl_abapgit_repo,
+          lo_repo_offline TYPE REF TO zcl_abapgit_repo_offline,
+          li_repo_srv     TYPE REF TO zif_abapgit_repo_srv,
+          lv_reason       TYPE string.
 
     ls_popup  = zcl_abapgit_ui_factory=>get_popups( )->repo_new_offline( ).
     IF ls_popup-cancel = abap_true.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_offline(
-      iv_url          = ls_popup-url
-      iv_package      = ls_popup-package
-      iv_folder_logic = ls_popup-folder_logic
-      iv_master_lang_only = ls_popup-master_lang_only ).
+    " make sure package is not already in use for a different repository
+    " 702: chaining calls with exp&imp parameters causes syntax error
+    li_repo_srv = zcl_abapgit_repo_srv=>get_instance( ).
+    li_repo_srv->get_repo_from_package(
+      EXPORTING
+        iv_package = ls_popup-package
+      IMPORTING
+        eo_repo    = lo_repo
+        ev_reason  = lv_reason ).
 
-    lo_repo->rebuild_local_checksums( ).
+    IF lo_repo IS BOUND.
+      MESSAGE lv_reason TYPE 'S'.
+    ELSE.
+      " create new repo and add to favorites
+      lo_repo_offline = zcl_abapgit_repo_srv=>get_instance( )->new_offline(
+        iv_url          = ls_popup-url
+        iv_package      = ls_popup-package
+        iv_folder_logic = ls_popup-folder_logic
+        iv_master_lang_only = ls_popup-master_lang_only ).
 
-    zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lo_repo->get_key( ) ). " Set default repo for user
-    toggle_favorite( lo_repo->get_key( ) ).
+      lo_repo_offline->rebuild_local_checksums( ).
+
+      lo_repo ?= lo_repo_offline.
+
+      toggle_favorite( lo_repo->get_key( ) ).
+    ENDIF.
+
+    " Set default repo for user
+    zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lo_repo->get_key( ) ).
 
     COMMIT WORK AND WAIT.
 
@@ -160,41 +177,47 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
   METHOD new_online.
 
-    DATA: ls_popup TYPE zif_abapgit_popups=>ty_popup.
+    DATA: ls_popup    TYPE zif_abapgit_popups=>ty_popup,
+          lo_repo     TYPE REF TO zcl_abapgit_repo,
+          li_repo_srv TYPE REF TO zif_abapgit_repo_srv,
+          lv_reason   TYPE string.
 
     ls_popup = zcl_abapgit_ui_factory=>get_popups( )->repo_popup( iv_url ).
     IF ls_popup-cancel = abap_true.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    ro_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
-      iv_url              = ls_popup-url
-      iv_branch_name      = ls_popup-branch_name
-      iv_package          = ls_popup-package
-      iv_display_name     = ls_popup-display_name
-      iv_folder_logic     = ls_popup-folder_logic
-      iv_ign_subpkg       = ls_popup-ign_subpkg
-      iv_master_lang_only = ls_popup-master_lang_only ).
+    " make sure package is not already in use for a different repository
+    " 702: chaining calls with exp&imp parameters causes syntax error
+    li_repo_srv = zcl_abapgit_repo_srv=>get_instance( ).
+    li_repo_srv->get_repo_from_package(
+      EXPORTING
+        iv_package = ls_popup-package
+      IMPORTING
+        eo_repo    = lo_repo
+        ev_reason  = lv_reason ).
 
-    toggle_favorite( ro_repo->get_key( ) ).
+    IF lo_repo IS BOUND.
+      MESSAGE lv_reason TYPE 'S'.
+    ELSE.
+      ro_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
+        iv_url              = ls_popup-url
+        iv_branch_name      = ls_popup-branch_name
+        iv_package          = ls_popup-package
+        iv_display_name     = ls_popup-display_name
+        iv_folder_logic     = ls_popup-folder_logic
+        iv_ign_subpkg       = ls_popup-ign_subpkg
+        iv_master_lang_only = ls_popup-master_lang_only ).
 
-* Set default repo for user
-    zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( ro_repo->get_key( ) ).
+      toggle_favorite( ro_repo->get_key( ) ).
+
+      lo_repo ?= ro_repo.
+    ENDIF.
+
+    " Set default repo for user
+    zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lo_repo->get_key( ) ).
 
     COMMIT WORK.
-
-  ENDMETHOD.
-
-
-  METHOD open_se80.
-
-    CALL FUNCTION 'RS_TOOL_ACCESS'
-      EXPORTING
-        operation       = 'SHOW'
-        in_new_window   = abap_true
-        object_name     = iv_package
-        object_type     = 'DEVC'
-        with_objectlist = abap_true.
 
   ENDMETHOD.
 

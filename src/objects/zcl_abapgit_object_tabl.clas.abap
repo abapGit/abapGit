@@ -471,7 +471,10 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
           lt_secondary LIKE lt_dd17v,
           lt_dd35v     TYPE TABLE OF dd35v,
           lt_dd36m     TYPE dd36mttyp,
-          ls_dd12v     LIKE LINE OF lt_dd12v.
+          ls_dd12v     LIKE LINE OF lt_dd12v,
+          lv_refs      TYPE abap_bool.
+
+    FIELD-SYMBOLS: <ls_dd03p> TYPE dd03p.
 
     IF deserialize_idoc_segment( io_xml     = io_xml
                                  iv_package = iv_package ) = abap_false.
@@ -482,6 +485,16 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
                     CHANGING cg_data = ls_dd09l ).
       io_xml->read( EXPORTING iv_name  = 'DD03P_TABLE'
                     CHANGING cg_data = lt_dd03p ).
+
+      " DDIC Step: Replace REF TO class/interface with generic reference to avoid cyclic dependency
+      LOOP AT lt_dd03p ASSIGNING <ls_dd03p> WHERE datatype = 'REF'.
+        IF iv_step = zif_abapgit_object=>gc_step_id-ddic.
+          <ls_dd03p>-rollname = 'OBJECT'.
+        ELSE.
+          lv_refs = abap_true.
+        ENDIF.
+      ENDLOOP.
+
       io_xml->read( EXPORTING iv_name = 'DD05M_TABLE'
                     CHANGING cg_data = lt_dd05m ).
       io_xml->read( EXPORTING iv_name = 'DD08V_TABLE'
@@ -494,6 +507,15 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
                     CHANGING cg_data = lt_dd35v ).
       io_xml->read( EXPORTING iv_name = 'DD36M'
                     CHANGING cg_data = lt_dd36m ).
+
+      " DDIC Step: Remove referenced to search helps
+      IF iv_step = zif_abapgit_object=>gc_step_id-ddic.
+        CLEAR: lt_dd35v, lt_dd36m.
+      ENDIF.
+
+      IF iv_step = zif_abapgit_object=>gc_step_id-late AND lv_refs = abap_false AND lines( lt_dd35v ) = 0.
+        RETURN. " already active
+      ENDIF.
 
       corr_insert( iv_package = iv_package
                    ig_object_class = 'DICT' ).
@@ -608,6 +630,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 
