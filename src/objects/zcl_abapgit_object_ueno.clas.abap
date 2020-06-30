@@ -440,7 +440,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
       FROM dokvl
       INTO CORRESPONDING FIELDS OF TABLE lt_dokvl
       WHERE id = c_text_object_type
-      AND   object LIKE ls_dokvl-object.
+      AND   object LIKE ls_dokvl-object ##TOO_MANY_ITAB_FIELDS.
 
     LOOP AT lt_dokvl INTO ls_dokvl.
 

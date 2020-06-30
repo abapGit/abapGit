@@ -8,6 +8,40 @@ Legend
 + : added
 - : removed
 
+2020-06-29 v1.97.0
+------------------
++ repository overview as main page
++ Generic possibility for changelog news
++ handling import of cyclic DDIC objects
+! removed default for commit comment
+! raise exception when no .abapgit.xml is found
+* fix incorrect status of ignored files in repo view
+* url validation fixes
+* WDYN UI sort
+* DSYS downport and changes
+* SCP1 import order
+* downport
+* clear ICFSERVICE-ICFBITMAP
+* W3MI record to transport
+* general refactoring
+
+2020-06-10 v1.96.0
+------------------
+* "last changed by" will show unknown instead of blank
++ hover line highlighting
+! staging will show error instead of dump in special cases
+* fix related to textpools of includes
+* various changes regarding only serializing master language
+! GUI refactoring
++ New syntax highlighters CSS + JS + JSON
+* downports
+* proxy bypass settings maintenance fix
+! WDA SORT text fixes
++ User exit for deserialize postprocess
+* Fix dumps regarding PINF deserialization
+* Enahnced object list for debug info
+! TADIR serialization logic changes
+
 2020-05-21 v1.95.0
 ------------------
 * apack interface serialization changes

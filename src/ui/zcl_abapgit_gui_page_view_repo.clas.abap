@@ -1,16 +1,14 @@
-CLASS zcl_abapgit_gui_view_repo DEFINITION
+CLASS zcl_abapgit_gui_page_view_repo DEFINITION
   PUBLIC
   FINAL
-  INHERITING FROM zcl_abapgit_gui_component
-  CREATE PUBLIC .
+  INHERITING FROM zcl_abapgit_gui_page
+  CREATE PUBLIC.
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_gui_renderable .
-    INTERFACES zif_abapgit_gui_event_handler .
-
     CONSTANTS:
       BEGIN OF c_actions,
+        repo_list         TYPE string VALUE 'abapgit_home' ##NO_TEXT,
         change_dir        TYPE string VALUE 'change_dir' ##NO_TEXT,
         toggle_hide_files TYPE string VALUE 'toggle_hide_files' ##NO_TEXT,
         toggle_folders    TYPE string VALUE 'toggle_folders' ##NO_TEXT,
@@ -18,14 +16,24 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
         toggle_order_by   TYPE string VALUE 'toggle_order_by' ##NO_TEXT,
         toggle_diff_first TYPE string VALUE 'toggle_diff_first ' ##NO_TEXT,
         display_more      TYPE string VALUE 'display_more' ##NO_TEXT,
-      END OF c_actions .
+        documentation     TYPE string VALUE 'documentation' ##NO_TEXT,
+        changelog         TYPE string VALUE 'changelog' ##NO_TEXT,
+        changed_by        TYPE string VALUE 'changed_by' ##NO_TEXT,
+      END OF c_actions.
+
+
+    INTERFACES: zif_abapgit_gui_hotkeys.
+
     METHODS constructor
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
         zcx_abapgit_exception .
 
+    METHODS zif_abapgit_gui_event_handler~on_event REDEFINITION.
+
   PROTECTED SECTION.
+    METHODS render_content REDEFINITION.
   PRIVATE SECTION.
 
     DATA  mt_col_spec TYPE zif_abapgit_definitions=>tty_col_spec.
@@ -127,11 +135,13 @@ CLASS zcl_abapgit_gui_view_repo DEFINITION
       IMPORTING
         iv_str TYPE string.
 
+    METHODS build_main_menu
+      RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_view_repo IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -491,6 +501,9 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     mv_show_order_by = zcl_abapgit_persistence_user=>get_instance( )->get_show_order_by( ).
     mv_diff_first    = abap_true.
 
+    ms_control-page_title = 'REPOSITORY'.
+    ms_control-page_menu = build_main_menu( ).
+
     " Read global settings to get max # of objects to be listed
     lo_settings     = zcl_abapgit_persist_settings=>get_instance( )->read( ).
     mv_max_lines    = lo_settings->get_max_lines( ).
@@ -527,10 +540,12 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
   METHOD get_item_icon.
 
     CASE is_item-obj_type.
-      WHEN 'PROG' OR 'CLAS' OR 'FUGR'.
+      WHEN 'PROG' OR 'CLAS' OR 'FUGR' OR 'INTF' OR 'TYPE'.
         rv_html = zcl_abapgit_html=>icon( 'file-code/darkgrey' ).
-      WHEN 'W3MI' OR 'W3HT'.
+      WHEN 'W3MI' OR 'W3HT' OR 'SFPF'.
         rv_html = zcl_abapgit_html=>icon( 'file-image/darkgrey' ).
+      WHEN 'DEVC'.
+        rv_html = zcl_abapgit_html=>icon( 'box/darkgrey' ).
       WHEN ''.
         rv_html = space. " no icon
       WHEN OTHERS.
@@ -809,8 +824,8 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
   METHOD render_order_by.
 
     DATA:
-      lv_icon     TYPE string,
-      lv_html     TYPE string.
+      lv_icon TYPE string,
+      lv_html TYPE string.
 
     CREATE OBJECT ro_html.
 
@@ -909,7 +924,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_renderable~render.
+  METHOD render_content.
 
     DATA: lt_repo_items        TYPE zif_abapgit_definitions=>tt_repo_items,
           lo_browser           TYPE REF TO zcl_abapgit_repo_content_list,
@@ -920,20 +935,27 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
           lv_max_str           TYPE string,
           lv_add_str           TYPE string,
           li_log               TYPE REF TO zif_abapgit_log,
-          lv_render_transports TYPE abap_bool.
-
+          lv_render_transports TYPE abap_bool,
+          lo_news              TYPE REF TO zcl_abapgit_news.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
 
+    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
     gui_services( )->register_event_handler( me ).
 
     " Reinit, for the case of type change
     mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( |<div class="repo" id="repo{ mv_key }">| ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
+      io_repo               = mo_repo
+      io_news               = lo_news
+      iv_interactive_branch = abap_true ) ).
+
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).
 
     TRY.
-
         lv_render_transports = zcl_abapgit_factory=>get_cts_api(
           )->is_chrec_possible_for_package( mo_repo->get_package( ) ).
 
@@ -1023,7 +1045,7 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
         ENDIF.
 
         ri_html->add( '</div>' ).
-
+        ri_html->add( '</div>' ).
       CATCH zcx_abapgit_exception INTO lx_error.
         ri_html->add( render_head_line( iv_lstate = lv_lstate
                                         iv_rstate = lv_rstate ) ).
@@ -1048,4 +1070,69 @@ CLASS ZCL_ABAPGIT_GUI_VIEW_REPO IMPLEMENTATION.
     CONDENSE <ls_col>-add_tz.
     CONDENSE <ls_col>-title.
   ENDMETHOD.
+
+  METHOD build_main_menu.
+
+    DATA: lo_advsub  TYPE REF TO zcl_abapgit_html_toolbar,
+          lo_helpsub TYPE REF TO zcl_abapgit_html_toolbar.
+
+    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-main'.
+
+    ro_menu->add( iv_txt = 'Repository list'
+                  iv_act = zif_abapgit_definitions=>c_action-abapgit_home ).
+
+  ENDMETHOD.
+
+  METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
+
+    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+    ls_hotkey_action-ui_component = 'Repo'.
+
+    ls_hotkey_action-description   = |Stage changes|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_stage.
+    ls_hotkey_action-hotkey = |s|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description   = |Switch branch|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-git_branch_switch.
+    ls_hotkey_action-hotkey = |b|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description   = |Installed repo list|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-abapgit_home.
+    ls_hotkey_action-hotkey = |o|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description   = |Refresh repository|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_refresh.
+    ls_hotkey_action-hotkey = |r|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description   = |Pull|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-git_pull.
+    ls_hotkey_action-hotkey = |p|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description   = |Diff|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_diff.
+    ls_hotkey_action-hotkey = |d|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description   = |Uninstall repository|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_purge.
+    ls_hotkey_action-hotkey = |u|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description   = |Run code inspector|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_code_inspector.
+    ls_hotkey_action-hotkey = |i|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description   = |Show log|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_log.
+    ls_hotkey_action-hotkey = |l|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+  ENDMETHOD.
+
 ENDCLASS.

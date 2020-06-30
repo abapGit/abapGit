@@ -122,10 +122,9 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(rv_text) TYPE string.
     CLASS-METHODS normalize_program_name
       IMPORTING
-        iv_program_name                   TYPE syrepid
+        iv_program_name                   TYPE sy-repid
       RETURNING
         VALUE(rv_normalized_program_name) TYPE string.
-
 ENDCLASS.
 
 
@@ -261,7 +260,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     DATA:
       lv_error_text   TYPE string,
       lv_longtext     TYPE string,
-      lv_program_name TYPE syrepid,
+      lv_program_name TYPE sy-repid,
       lv_title        TYPE string,
       lv_text         TYPE string.
 

@@ -20,18 +20,6 @@ CLASS zcl_abapgit_objects DEFINITION
         files TYPE zif_abapgit_definitions=>ty_files_tt,
         item  TYPE zif_abapgit_definitions=>ty_item,
       END OF ty_serialization .
-    TYPES:
-      BEGIN OF ty_step_data,
-        step_id      TYPE zif_abapgit_object=>ty_deserialization_step,
-        order        TYPE i,
-        descr        TYPE string,
-        is_ddic      TYPE abap_bool,
-        syntax_check TYPE abap_bool,
-        objects      TYPE ty_deserialization_tt,
-      END OF ty_step_data .
-    TYPES:
-      ty_step_data_tt TYPE STANDARD TABLE OF ty_step_data
-                                  WITH DEFAULT KEY .
 
     CLASS-METHODS serialize
       IMPORTING
@@ -195,7 +183,7 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_objects
       IMPORTING
-        !is_step  TYPE ty_step_data
+        !is_step  TYPE zif_abapgit_definitions=>ty_step_data
         !ii_log   TYPE REF TO zif_abapgit_log
       CHANGING
         !ct_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt
@@ -240,7 +228,7 @@ CLASS zcl_abapgit_objects DEFINITION
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt .
     CLASS-METHODS get_deserialize_steps
       RETURNING
-        VALUE(rt_steps) TYPE ty_step_data_tt .
+        VALUE(rt_steps) TYPE zif_abapgit_definitions=>ty_step_data_tt .
 ENDCLASS.
 
 
@@ -590,14 +578,14 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           li_progress TYPE REF TO zif_abapgit_progress,
           lv_path     TYPE string,
           lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
-          lt_steps_id TYPE zif_abapgit_object=>ty_deserialization_step_tt,
-          lt_steps    TYPE ty_step_data_tt,
+          lt_steps_id TYPE zif_abapgit_definitions=>ty_deserialization_step_tt,
+          lt_steps    TYPE zif_abapgit_definitions=>ty_step_data_tt,
           lx_exc      TYPE REF TO zcx_abapgit_exception.
     DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_result>  TYPE zif_abapgit_definitions=>ty_result,
-                   <lv_step_id> TYPE LINE OF zif_abapgit_object=>ty_deserialization_step_tt,
-                   <ls_step>    TYPE LINE OF ty_step_data_tt,
+                   <lv_step_id> TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_step_tt,
+                   <ls_step>    TYPE LINE OF zif_abapgit_definitions=>ty_step_data_tt,
                    <ls_deser>   TYPE LINE OF ty_deserialization_tt.
 
     lt_steps = get_deserialize_steps( ).
@@ -749,6 +737,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
   METHOD deserialize_objects.
 
     DATA: li_progress TYPE REF TO zif_abapgit_progress,
+          li_exit     TYPE REF TO zif_abapgit_exit,
           lx_exc      TYPE REF TO zcx_abapgit_exception.
 
     FIELD-SYMBOLS: <ls_obj> LIKE LINE OF is_step-objects.
@@ -782,7 +771,22 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     ENDLOOP.
 
-    zcl_abapgit_objects_activation=>activate( is_step-is_ddic ).
+    CASE is_step-step_id.
+      WHEN zif_abapgit_object=>gc_step_id-ddic.
+        zcl_abapgit_objects_activation=>activate( is_step-is_ddic ).
+      WHEN zif_abapgit_object=>gc_step_id-abap.
+        zcl_abapgit_objects_activation=>activate( is_step-is_ddic ).
+      WHEN zif_abapgit_object=>gc_step_id-late.
+        " late can have both DDIC (like TABL with REF TO) and non-DDIC objects
+        zcl_abapgit_objects_activation=>activate( abap_true ).
+        zcl_abapgit_objects_activation=>activate( abap_false ).
+    ENDCASE.
+
+*   Call postprocessing
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+
+    li_exit->deserialize_postprocess( is_step = is_step
+                                      ii_log  = ii_log ).
 
   ENDMETHOD.
 
@@ -902,7 +906,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD get_deserialize_steps.
-    FIELD-SYMBOLS: <ls_step>    TYPE LINE OF ty_step_data_tt.
+    FIELD-SYMBOLS: <ls_step>    TYPE LINE OF zif_abapgit_definitions=>ty_step_data_tt.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-ddic.
@@ -1096,6 +1100,11 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
+* TOBJ has to be handled before ODSO
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'TOBJ'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
     LOOP AT it_results ASSIGNING <ls_result>
         WHERE obj_type <> 'IASP'
         AND obj_type <> 'PROG'
@@ -1106,7 +1115,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         AND obj_type <> 'DDLS'
         AND obj_type <> 'SPRX'
         AND obj_type <> 'WEBI'
-        AND obj_type <> 'IOBJ'.
+        AND obj_type <> 'IOBJ'
+        AND obj_type <> 'TOBJ'.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
