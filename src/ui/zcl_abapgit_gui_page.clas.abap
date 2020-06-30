@@ -89,7 +89,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
 
   METHOD call_browser.
@@ -130,9 +130,9 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
     ri_html->add( '<div id="footer">' ).                    "#EC NOTEXT
 
-    ri_html->add( zcl_abapgit_html=>a( iv_txt = '<img src="img/logo" alt="logo">'
-                                       iv_id  = 'abapGitLogo'
-                                       iv_act = zif_abapgit_definitions=>c_action-abapgit_home ) ).
+    ri_html->add( zcl_abapgit_html=>a(
+      iv_txt = '<img src="img/logo" alt="logo">'
+      iv_act = zif_abapgit_definitions=>c_action-abapgit_home ) ).
     ri_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
 
     ri_html->add( '<td class="w40"></td>' ).                "#EC NOTEXT
