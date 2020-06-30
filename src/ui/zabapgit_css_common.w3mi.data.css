@@ -95,19 +95,18 @@ a.close-btn {
 }
 
 /* STRUCTURE DIVS, HEADER & FOOTER */
-#abapGitLogo { outline: none; }
-
 div#header {
   padding:          0.5em 0.5em;
   border-bottom:    3px double;
 }
-div#header td:not(.logo) { padding-top: 11px; } /* align with logo H */
-div#header td.logo       { width: 164px; }
-div#header td:not(.logo) { padding-top: 11px; } /* align with logo H */
+div#header td.logo { 
+  width: 1px; /* autosize */
+  padding-bottom: 4px;
+}
 
 div#header span.page_title {
   font-weight: normal;
-  font-size: 18pt;
+  font-size: x-large;
   padding-left: 0.4em;
 }
 
