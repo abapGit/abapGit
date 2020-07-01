@@ -495,10 +495,12 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-repo_purge.                      " Repo remove & purge all objects
         zcl_abapgit_services_repo=>purge( lv_key ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
       WHEN zif_abapgit_definitions=>c_action-repo_remove.                     " Repo remove
         zcl_abapgit_services_repo=>remove( lv_key ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
       WHEN zif_abapgit_definitions=>c_action-repo_newonline.
         ei_page  = zcl_abapgit_gui_page_addonline=>create( ).
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
