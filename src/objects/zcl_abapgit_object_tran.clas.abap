@@ -92,6 +92,8 @@ CLASS zcl_abapgit_object_tran DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       RAISING
         zcx_abapgit_exception.
     METHODS clear_functiongroup_globals.
+    METHODS is_variant_transaction IMPORTING ls_tstcp TYPE tstcp
+                                   RETURNING value(e_variant_transaction) TYPE abap_bool.
 ENDCLASS.
 
 
@@ -621,9 +623,8 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
       lv_type = ststc_c_type_report.
     ELSEIF ls_tstc-cinfo O lc_hex_obj.
       lv_type = ststc_c_type_object.
-      " todo, or ststc_c_type_variant?
     ELSEIF ls_tstc-cinfo O lc_hex_par.
-      IF ls_tstcp-param(1) = '@'.
+      IF is_variant_transaction( ls_tstcp ) = abap_true.
         lv_type = ststc_c_type_variant.
       ELSE.
         lv_type = ststc_c_type_parameters.
@@ -635,12 +636,10 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     ENDIF.
 
     IF ls_tstcp IS NOT INITIAL.
-      split_parameters(
-        CHANGING
-          ct_rsparam = lt_param_values
-          cs_rsstcd  = ls_rsstcd
-          cs_tstcp   = ls_tstcp
-          cs_tstc    = ls_tstc ).
+      split_parameters( CHANGING ct_rsparam = lt_param_values
+                                 cs_rsstcd  = ls_rsstcd
+                                 cs_tstcp   = ls_tstcp
+                                 cs_tstc    = ls_tstc ).
     ENDIF.
 
     CASE lv_type.
@@ -697,6 +696,12 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
     " Texts deserializing (translations)
     deserialize_texts( io_xml ).
+
+  ENDMETHOD.
+
+  METHOD is_variant_transaction.
+
+    e_variant_transaction = boolc( ls_tstcp-param(1) = '@' ).
 
   ENDMETHOD.
 
