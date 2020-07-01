@@ -91,6 +91,7 @@ CLASS zcl_abapgit_object_tran DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         it_authorizations TYPE tty_tstca
       RAISING
         zcx_abapgit_exception.
+    METHODS clear_functiongroup_globals.
 ENDCLASS.
 
 
@@ -622,7 +623,11 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
       lv_type = ststc_c_type_object.
       " todo, or ststc_c_type_variant?
     ELSEIF ls_tstc-cinfo O lc_hex_par.
-      lv_type = ststc_c_type_parameters.
+      IF ls_tstcp-param(1) = '@'.
+        lv_type = ststc_c_type_variant.
+      ELSE.
+        lv_type = ststc_c_type_parameters.
+      ENDIF.
     ELSEIF ls_tstc-cinfo O lc_hex_tra.
       lv_type = ststc_c_type_dialog.
     ELSE.
@@ -648,6 +653,8 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
                                     is_rsstcd       = ls_rsstcd ).
 
       WHEN OTHERS.
+
+        me->clear_functiongroup_globals( ).
 
         CALL FUNCTION 'RPY_TRANSACTION_INSERT'
           EXPORTING
@@ -690,6 +697,33 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
     " Texts deserializing (translations)
     deserialize_texts( io_xml ).
+
+  ENDMETHOD.
+
+  METHOD clear_functiongroup_globals.
+
+    DATA lt_error_list TYPE STANDARD TABLE OF rsmp_check WITH DEFAULT KEY.
+    FIELD-SYMBOLS <lv_param_vari> TYPE flag.
+
+    " only way to clear global fields in function group
+    CALL FUNCTION 'RS_TRANSACTION_INCONSISTENCIES'
+      EXPORTING
+        transaction_code = 'ZTHISTCODENEVEREXIST'
+      TABLES
+        error_list       = lt_error_list
+      EXCEPTIONS
+        object_not_found = 1
+        OTHERS           = 2.
+    IF sy-subrc <> 0.
+      "Expected - fine
+
+      " but there is no other way to clear this field
+      ASSIGN ('(SAPLSEUK)PARAM_VARI') TO <lv_param_vari>.
+      IF sy-subrc = 0.
+        CLEAR <lv_param_vari>.
+      ENDIF.
+
+    ENDIF.
 
   ENDMETHOD.
 
