@@ -4,6 +4,11 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
 
   PUBLIC SECTION.
 
+    CLASS-METHODS parse_post_data
+      IMPORTING
+        !it_post_data TYPE cnht_post_data_tab
+      RETURNING
+        VALUE(rt_fields) TYPE tihttpnvp .
     CLASS-METHODS parse_fields
       IMPORTING
         !iv_string       TYPE clike
@@ -356,6 +361,16 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
     rt_fields = parse_fields( iv_string ).
     field_keys_to_upper( CHANGING ct_fields = rt_fields ).
+
+  ENDMETHOD.
+
+
+  METHOD parse_post_data.
+
+    DATA lv_serialized_post_data TYPE string.
+
+    CONCATENATE LINES OF it_post_data INTO lv_serialized_post_data.
+    rt_fields = parse_fields( lv_serialized_post_data ).
 
   ENDMETHOD.
 
