@@ -500,8 +500,8 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         zcl_abapgit_services_repo=>remove( lv_key ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_newonline.
-        zcl_abapgit_services_repo=>new_online( lv_url ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        ei_page  = zcl_abapgit_gui_page_addonline=>create( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-repo_refresh_checksums.          " Rebuild local checksums
         zcl_abapgit_services_repo=>refresh_local_checksums( lv_key ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
