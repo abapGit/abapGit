@@ -92,8 +92,8 @@ CLASS zcl_abapgit_object_tran DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       RAISING
         zcx_abapgit_exception.
     METHODS clear_functiongroup_globals.
-    METHODS is_variant_transaction IMPORTING ls_tstcp TYPE tstcp
-                                   RETURNING value(e_variant_transaction) TYPE abap_bool.
+    METHODS is_variant_transaction IMPORTING i_tstcp                      TYPE tstcp
+                                   RETURNING VALUE(r_variant_transaction) TYPE abap_bool.
 ENDCLASS.
 
 
@@ -701,7 +701,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
   METHOD is_variant_transaction.
 
-    e_variant_transaction = boolc( ls_tstcp-param(1) = '@' ).
+    r_variant_transaction = boolc( i_tstcp-param(1) = '@' ).
 
   ENDMETHOD.
 
