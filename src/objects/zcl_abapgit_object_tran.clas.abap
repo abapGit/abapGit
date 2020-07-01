@@ -31,11 +31,11 @@ CLASS zcl_abapgit_object_tran DEFINITION
       c_true         TYPE c VALUE 'X' ##NO_TEXT,
       c_false        TYPE c VALUE space ##NO_TEXT,
       BEGIN OF c_variant_type,
-        dialog     TYPE sychar01 VALUE 'D' ##NO_TEXT,
-        report     TYPE sychar01 VALUE 'R' ##NO_TEXT,
-        variant    TYPE sychar01 VALUE 'V' ##NO_TEXT,
-        parameters TYPE sychar01 VALUE 'P' ##NO_TEXT,
-        object     TYPE sychar01 VALUE 'O' ##NO_TEXT,
+        dialog     TYPE rglif-docutype VALUE 'D' ##NO_TEXT,
+        report     TYPE rglif-docutype VALUE 'R' ##NO_TEXT,
+        variant    TYPE rglif-docutype VALUE 'V' ##NO_TEXT,
+        parameters TYPE rglif-docutype VALUE 'P' ##NO_TEXT,
+        object     TYPE rglif-docutype VALUE 'O' ##NO_TEXT,
       END OF c_variant_type.
 
     DATA:
