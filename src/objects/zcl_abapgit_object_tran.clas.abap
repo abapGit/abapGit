@@ -1,9 +1,16 @@
-CLASS zcl_abapgit_object_tran DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_super FINAL.
+CLASS zcl_abapgit_object_tran DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
+    TYPE-POOLS ststc .
 
+    INTERFACES zif_abapgit_object .
+
+    ALIASES mo_files
+      FOR zif_abapgit_object~mo_files .
   PROTECTED SECTION.
 
   PRIVATE SECTION.
@@ -92,46 +99,13 @@ CLASS zcl_abapgit_object_tran DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       RAISING
         zcx_abapgit_exception.
     METHODS clear_functiongroup_globals.
-    METHODS is_variant_transaction IMPORTING i_tstcp                      TYPE tstcp
-                                   RETURNING VALUE(r_variant_transaction) TYPE abap_bool.
+    METHODS is_variant_transaction IMPORTING is_tstcp                      TYPE tstcp
+                                   RETURNING VALUE(rv_variant_transaction) TYPE abap_bool.
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_object_tran IMPLEMENTATION.
-
-
-  METHOD transaction_read.
-
-    DATA: lt_tcodes   TYPE TABLE OF tstc,
-          lt_gui_attr TYPE TABLE OF tstcc.
-
-    CLEAR: es_transaction, es_gui_attr.
-
-    CALL FUNCTION 'RPY_TRANSACTION_READ'
-      EXPORTING
-        transaction      = iv_transaction
-      TABLES
-        tcodes           = lt_tcodes
-        gui_attributes   = lt_gui_attr
-      EXCEPTIONS
-        permission_error = 1
-        cancelled        = 2
-        not_found        = 3
-        object_not_found = 4
-        OTHERS           = 5.
-    IF sy-subrc = 4 OR sy-subrc = 3.
-      RETURN.
-    ELSEIF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from RPY_TRANSACTION_READ' ).
-    ENDIF.
-
-    READ TABLE lt_tcodes INDEX 1 INTO es_transaction.
-    ASSERT sy-subrc = 0.
-    READ TABLE lt_gui_attr INDEX 1 INTO es_gui_attr.
-    ASSERT sy-subrc = 0.
-
-  ENDMETHOD.
 
 
   METHOD add_data.
@@ -174,6 +148,35 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
         INTO sy-msgli.
       zcx_abapgit_exception=>raise_t100( ).
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD clear_functiongroup_globals.
+    TYPES ty_param_vari TYPE abap_bool.
+
+    DATA lt_error_list TYPE STANDARD TABLE OF rsmp_check WITH DEFAULT KEY.
+    FIELD-SYMBOLS <lv_param_vari> TYPE ty_param_vari.
+
+    " only way to clear global fields in function group
+    CALL FUNCTION 'RS_TRANSACTION_INCONSISTENCIES'
+      EXPORTING
+        transaction_code = 'ZTHISTCODENEVEREXIST'
+      TABLES
+        error_list       = lt_error_list
+      EXCEPTIONS
+        object_not_found = 1
+        OTHERS           = 2.
+    IF sy-subrc <> 0.
+      "Expected - fine
+
+      " but there is no other way to clear this field
+      ASSIGN ('(SAPLSEUK)PARAM_VARI') TO <lv_param_vari>.
+      IF sy-subrc = 0.
+        CLEAR <lv_param_vari>.
+      ENDIF.
+
+    ENDIF.
 
   ENDMETHOD.
 
@@ -356,6 +359,32 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'Update of t-code translations failed' ).
       ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD is_variant_transaction.
+
+    rv_variant_transaction = boolc( is_tstcp-param(1) = '@' ).
+
+  ENDMETHOD.
+
+
+  METHOD save_authorizations.
+
+    CONSTANTS: lc_hex_chk TYPE x VALUE '04'.
+    DATA: ls_transaction TYPE tstc.
+
+    transaction_read( EXPORTING iv_transaction = iv_transaction
+                      IMPORTING es_transaction = ls_transaction ).
+
+    DELETE FROM tstca WHERE tcode = iv_transaction.
+
+    IF ls_transaction IS NOT INITIAL.
+      INSERT tstca FROM TABLE it_authorizations.
+      ls_transaction-cinfo = ls_transaction-cinfo + lc_hex_chk.
+      UPDATE tstc SET cinfo = ls_transaction-cinfo WHERE tcode = ls_transaction-tcode.
     ENDIF.
 
   ENDMETHOD.
@@ -556,6 +585,39 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD transaction_read.
+
+    DATA: lt_tcodes   TYPE TABLE OF tstc,
+          lt_gui_attr TYPE TABLE OF tstcc.
+
+    CLEAR: es_transaction, es_gui_attr.
+
+    CALL FUNCTION 'RPY_TRANSACTION_READ'
+      EXPORTING
+        transaction      = iv_transaction
+      TABLES
+        tcodes           = lt_tcodes
+        gui_attributes   = lt_gui_attr
+      EXCEPTIONS
+        permission_error = 1
+        cancelled        = 2
+        not_found        = 3
+        object_not_found = 4
+        OTHERS           = 5.
+    IF sy-subrc = 4 OR sy-subrc = 3.
+      RETURN.
+    ELSEIF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error from RPY_TRANSACTION_READ' ).
+    ENDIF.
+
+    READ TABLE lt_tcodes INDEX 1 INTO es_transaction.
+    ASSERT sy-subrc = 0.
+    READ TABLE lt_gui_attr INDEX 1 INTO es_gui_attr.
+    ASSERT sy-subrc = 0.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~changed_by.
     rv_user = c_user_unknown. " todo
   ENDMETHOD.
@@ -699,39 +761,6 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD is_variant_transaction.
-
-    r_variant_transaction = boolc( i_tstcp-param(1) = '@' ).
-
-  ENDMETHOD.
-
-  METHOD clear_functiongroup_globals.
-
-    DATA lt_error_list TYPE STANDARD TABLE OF rsmp_check WITH DEFAULT KEY.
-    FIELD-SYMBOLS <lv_param_vari> TYPE flag.
-
-    " only way to clear global fields in function group
-    CALL FUNCTION 'RS_TRANSACTION_INCONSISTENCIES'
-      EXPORTING
-        transaction_code = 'ZTHISTCODENEVEREXIST'
-      TABLES
-        error_list       = lt_error_list
-      EXCEPTIONS
-        object_not_found = 1
-        OTHERS           = 2.
-    IF sy-subrc <> 0.
-      "Expected - fine
-
-      " but there is no other way to clear this field
-      ASSIGN ('(SAPLSEUK)PARAM_VARI') TO <lv_param_vari>.
-      IF sy-subrc = 0.
-        CLEAR <lv_param_vari>.
-      ENDIF.
-
-    ENDIF.
-
-  ENDMETHOD.
-
 
   METHOD zif_abapgit_object~exists.
 
@@ -866,25 +895,4 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     serialize_texts( io_xml ).
 
   ENDMETHOD.
-
-
-  METHOD save_authorizations.
-
-    CONSTANTS: lc_hex_chk TYPE x VALUE '04'.
-    DATA: ls_transaction TYPE tstc.
-
-    transaction_read( EXPORTING iv_transaction = iv_transaction
-                      IMPORTING es_transaction = ls_transaction ).
-
-    DELETE FROM tstca WHERE tcode = iv_transaction.
-
-    IF ls_transaction IS NOT INITIAL.
-      INSERT tstca FROM TABLE it_authorizations.
-      ls_transaction-cinfo = ls_transaction-cinfo + lc_hex_chk.
-      UPDATE tstc SET cinfo = ls_transaction-cinfo WHERE tcode = ls_transaction-tcode.
-    ENDIF.
-
-  ENDMETHOD.
-
-
 ENDCLASS.
