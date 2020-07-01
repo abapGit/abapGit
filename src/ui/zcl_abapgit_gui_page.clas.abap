@@ -85,9 +85,6 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
       RAISING
         zcx_abapgit_exception.
 
-    METHODS get_logo
-      RETURNING
-        VALUE(rv_logo) TYPE string .
 ENDCLASS.
 
 
@@ -133,7 +130,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
     ri_html->add( '<div id="footer">' ).                    "#EC NOTEXT
 
-    ri_html->add( zcl_abapgit_html=>a( iv_txt = |<img src="img/{ get_logo( ) }" alt="logo">|
+    ri_html->add( zcl_abapgit_html=>a( iv_txt = '<img src="img/logo" alt="logo">'
                                        iv_id  = 'abapGitLogo'
                                        iv_act = zif_abapgit_definitions=>c_action-abapgit_home ) ).
     ri_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
@@ -144,20 +141,6 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
     ri_html->add( '</tr></table>' ).                        "#EC NOTEXT
     ri_html->add( '</div>' ).                               "#EC NOTEXT
-
-  ENDMETHOD.
-
-
-  METHOD get_logo.
-
-    CASE mo_settings->get_ui_theme( ).
-      WHEN zcl_abapgit_settings=>c_ui_theme-default OR zcl_abapgit_settings=>c_ui_theme-belize.
-        rv_logo = 'logo.png'.
-      WHEN zcl_abapgit_settings=>c_ui_theme-dark.
-        rv_logo = 'logo_dark.png'.
-      WHEN OTHERS.
-        rv_logo = 'logo.png'.
-    ENDCASE.
 
   ENDMETHOD.
 
@@ -303,7 +286,7 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
     ri_html->add( '<div id="header">' ).                    "#EC NOTEXT
     ri_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
 
-    ri_html->add( |<td class="logo"><img src="img/{ get_logo( ) }" alt="logo"></td>| ). "#EC NOTEXT
+    ri_html->add( |<td class="logo"><img src="img/logo" alt="logo"></td>| ). "#EC NOTEXT
 
     ri_html->add( |<td><span class="page_title"> &#x25BA; { ms_control-page_title }</span></td>| ). "#EC NOTEXT
 

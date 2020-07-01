@@ -29,19 +29,19 @@ CLASS zcl_abapgit_ui_factory DEFINITION
         VALUE(ri_fe_serv) TYPE REF TO zif_abapgit_frontend_services .
   PROTECTED SECTION.
   PRIVATE SECTION.
-
     CLASS-DATA gi_popups TYPE REF TO zif_abapgit_popups .
     CLASS-DATA gi_tag_popups TYPE REF TO zif_abapgit_tag_popups .
     CLASS-DATA gi_gui_functions TYPE REF TO zif_abapgit_gui_functions .
     CLASS-DATA go_gui TYPE REF TO zcl_abapgit_gui .
     CLASS-DATA gi_fe_services TYPE REF TO zif_abapgit_frontend_services .
-    CLASS-DATA gi_gui_services TYPE REF TO zif_abapgit_gui_services .
+    CLASS-DATA gi_gui_services TYPE REF TO zif_abapgit_gui_services.
 
     CLASS-METHODS init_asset_manager
       RETURNING
         VALUE(ro_asset_man) TYPE REF TO zcl_abapgit_gui_asset_manager
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -64,8 +64,8 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
 
     DATA:
       li_hotkey_ctl TYPE REF TO zif_abapgit_gui_hotkey_ctl,
-      li_router     TYPE REF TO zif_abapgit_gui_event_handler,
-      li_asset_man  TYPE REF TO zif_abapgit_gui_asset_manager.
+      li_router    TYPE REF TO zif_abapgit_gui_event_handler,
+      li_asset_man TYPE REF TO zif_abapgit_gui_asset_manager.
 
     DATA lo_html_preprocessor TYPE REF TO zcl_abapgit_gui_html_processor.
 
@@ -193,7 +193,7 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
 
     " see https://github.com/larshp/abapGit/issues/201 for source SVG
     ro_asset_man->register_asset(
-      iv_url       = 'img/logo.png'
+      iv_url       = 'img/logo'
       iv_type      = 'image/png'
       iv_base64    =
            'iVBORw0KGgoAAAANSUhEUgAAAKMAAAAoCAYAAACSG0qbAAAABHNCSVQICAgIfAhkiAAA'
@@ -275,98 +275,5 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
         && 'X9K+ygQTFGDcHhaaoGJyouDNV7JH+eGj4mF6gspoC+tzJt1ObsT4MDsF2zxs886+Ml5v'
         && '/PogUvEwPUGFiE+SX4gAtQa1gkhV7onQR4oJMR5oxC6stDeghd7Dh6E+CPw/HL4vVO2f'
         && 'cpUAAAAASUVORK5CYII=' ).
-
-   " logo for dark theme
-    ro_asset_man->register_asset(
-      iv_url       = 'img/logo_dark.png'
-      iv_type      = 'image/png'
-      iv_base64    =
-           'iVBORw0KGgoAAAANSUhEUgAAAKMAAAAoCAYAAACSG0qbAAAAB3RJTUUH5AUMDiEumeD'
-        && '22gAAAAlwSFlzAAALEgAACxIB0t1+/AAAAARnQU1BAACxjwv8YQUAABBeSURBVHja7V'
-        && 'wLcFzVef7PuXdXWsmW1qvHSjY2T1u7slaS7eAYv4ixE8iEABOgLZlm8qB5lGZoOkNm2'
-        && 'lAmbWlpIWnSTiHTtGCapEyAJhMabCBgkwBOMWZsS1rJu2tZ2PgBWj139dj3Paf/2dXK'
-        && 'ex/7XlsY9M2s7t5zz/nvf875zn/+/5yzIlAGeHu7OWiTbudANhNCfmZ9o/dQOfIW8dE'
-        && 'GKbXguQ0bamqrY88DITek0zjnf7Hs9+5/WehKLeLSRElkNCJiGouEXESpKJqMuYiYxi'
-        && 'IhF1EKaLEFqiRJ5gC1ufKg//jDyS2uby105RZxaaFgMgqLGNzauabx0KEpbjHfiNbvr'
-        && 'Vz5Fwm5iGJREBnTUzPj/MD4dpfLtu9wcJGQi6g08vqMWh8RCTjKJNjZ8LrbPbFrQz0J'
-        && 'x/ailNXAwYbkk41kLPqQHz5gn9Kjx0Y2mSQacjmaeiohMycZswUrmYRMp01tX+tkivQ'
-        && '0SuzMovyCEvLIgH+zSWLfNNQNpJ92OppfWijdLjX0+vx3ymz6KQpxk7jnpCqkSEtvcK'
-        && '1ueqscuXK2B7miZrSATZTxfRjItBDRl4i61wc86FN+DW8OGsmbm7JhoQgpU+UemQfvM'
-        && 'noWg/owXj70ZBTWrO/4yO2UK18mkHASYEuBKzXYOzEckOOcSO8BSL44p4+td9qPZpMj'
-        && '89ATaSIKEB6tIYr8FH69phz9DMlYyPINUpCmiZjGTNjkrrXEsxZZSEISwtrU2n50MDQ'
-        && '0WReKh//D4xu63czjRn1uwU89ts9VeN2KGe7u95wMKmB5uMvZ8o/azEjEpfq0xGXl6q'
-        && 'kLYAoiogAhDZObu7ozk1qbUH/Oj+YutjBBDQfTowmo9QKRPlKUREv42UhsfAxnhT8kx'
-        && 'kQ0hASRejNMPuQeHP249hnjVGdx0DbNZJPV4xvZMOA9OZn6nJrIlk9FxoKJCElnkxDK'
-        && 'ngxsap83zfSlE1FQlF0fREJ2Ouw/cTlXOeO89oWL+d6FhNvn/4asTP5v5pSqAw5O7Mi'
-        && 'i5Ca45RltmgLVP8iWn3J2B+URa+oTXpY1X/pLMUTMqEk3SPId4tvkls7PiWUf68FjEx'
-        && '9UQs69N3qx37kQcPtG18h86lH0C3VBKiM1/gSx/msUGrY5HWuow9GGTqPtOkz7aSGyu'
-        && '9pXfCFGbH+WIHW/i0Pdy1Gw3d7paHkoW36cwncWIjdptksjohqEQzNV4N+RkDutGGWj'
-        && 'xdwFkrQPh11yKicGkftCBzUfZhAWegVtmKRNT5D6F1yO5Z/Rpne120XgeXDAc+KunJY'
-        && '0nd9h/xFefpQv39t9w1dSHvxYITpTcQysXCLON4CIshXYn7aQ9bJto7W1zYRDcX02Sy'
-        && 'kIiVH4vcW+CyND+ciA/2q3b+R6t3e0++jR4Zpy9U/D4xlb0nt89FoRfRZbVujRMzja3'
-        && 'n98dEevZ2S10LNSeiVlo/+VT6+eY/5PShBapU3PRkRVu4I8WSl9ha41plCPkXU2ghy0'
-        && '0jsrQcQ0UoTk+8c2bryGvPbaVFqvya2ub6NG+4zKMA6PTG3t/nndgZ7RXLIPTk2ZLWe'
-        && 'nn5BI/Cav19dooRiLsLmKVAMc8/g4g+qTjFq+09nW/AwUAUEciUT/h0LMSWDcbFYYeH'
-        && '2TgE73NPpI38Wo8ofZyg4MjjmYEn1MgugmwidrIJFKF2bJ6x1HvQYVhVgOKsx8T3d7c'
-        && '19m2T7f8N/IfPavtDLjrPpZMR0e8fjXmSD2E9TrGokELZwJvQIc9ZrBaPfvcHr8vq5T'
-        && 'afwR7coBB4klwvSL+doByehFH7KZc2ZcV89QiBDQWVyFy36X8/LkAOjz+r9OeeghiU3'
-        && 'YwGAJ45h3KAYZDxiXAh3OK+wUp9GPQxnggkoaCELabBMq38x6wP0qmrOgkQysXJVC2P'
-        && 'Zc7+nvH21ecm7ijJlM/bEE4UajSooRiBbhKhMbf9rtff/RQusgk9itZhLwSXymi/CYe'
-        && 'b4juIJTR2QpRpU/cHvPvWpUttfj/xQkAn3on90g1tsM64fTpcynt1TRQI+w5KpnnG0U'
-        && '79R+ZJrYhe/cbyHBIzLMuJCMlgy9iNDLxCe/5/acfU33Ph51atMUsuSldetaxvK1hct'
-        && '52fXCh1SURntCbtwUGI70pp8JP1ToYaQvBWU+MCGg7MBo3JCIKf1iJlV5UOpFOiVM+l'
-        && 'mhnWbc0NTQBE9PW9Zl3mOAswVZV2+UF1WeCIVML+Z8kRz5HZKwuVC9ZJi+R0zfheTFC'
-        && 'K9BdHBOeXxqhxjxBu/ZW4iPlaookojN/FqVxJlhdImWpUUQXAyIPPXc3usZ/mr6Xlh4'
-        && 'JEyVNh8DaW+hbSfQ0dE0InZUtm1bGTkvg68uNvIuBtT6Zs/bYquu0oI5gf8MbnF9Gol'
-        && 'GJza7thHg38+SM4yMvnPF4cOhXPJwtKtW98W0E+XWv4zyhq4YWP+ZkapZtVhBrsTXoQ'
-        && 'jgFKXg1DcGRDaco9Dq/lPmvbBySESVT6hA9UQMbF+N0oaPYaT5K60sCtG6I/3+jvR9p'
-        && '/Oy62Kk4U5GqrOu04m6MmKZZGBKGD2XSWR+YZpKxDBYwBmwrK06ga625r0JuWEV+p6/'
-        && 'ydOO/4WR+RPiw4HqzGP6WfqjkNqkC5RsSBHNiqhWBBPlKnwepAMJ+UJwq2uKAqnLonY'
-        && 'YG+nmZW/0vZpLkhjtAFMkuWA9Z8Gwc7zdztaH57Lc1+t5P2KG6P3qkqytEE0ZVM0kaO'
-        && '2fd7XZdye1wgCh33v6hAyhKzPziXWyPo//tk6n/bmU+myXIDBOM1J6SkIy7u5y2h+fK'
-        && '/K5fu+ZHglmujLlSBK/Di/9853saP5Fn+fsvRQi21R6kerpBKn5VqZeA76zHnQn1qj1'
-        && 'Cjf0eEa2djubD6BOK3U9gdasa01TL1QAHdc0nsHBdJ8swY3Z8szt8ye3V9Ff/hLWROV'
-        && 'juhytf2JUbn5UXxhCJpsiOxEBPpuPiAJdzuZBvCSnwsNDY1Yz422RsDKSmYdS6RVklY'
-        && 'qMSJKCtqiw0/ekOzxZjhCGPuomkKN+3TRJ+Eb8+1yqUVsewIv4AEbfK7DF15gV8nZmd'
-        && 'oVRt0SgSy2EGx4m0SLBqx/vcqj18pyc+BREQ6dAE2Cgv7UJL0hGrtuqQ68exzwxtKpH'
-        && 'PCOtMmF359MFBbyX2UYXAqopplhC4kg9jvPHHvFd4XCAcv4+lm0toGSKiAfc+4tVeMP'
-        && 'VjQG86KccToyCI3OpDSN8Jrfn3bNoHdWE5orDKD9annN4OadNJxINgW7S5yUvQzmvtL'
-        && '3b7zk1iv5zk0ZmcurnQAI6HXC4Heoftm/saPFrnwkiYiD0YL73MqiexsvFI6NAMYTEi'
-        && 't/X8GZfcroR18BW19/j18fylCqZiGmIwISDsosQtDCcN2AQYCM8VHBwUzioIJeKjNix'
-        && 'lxvWinO555j/ekr5Dko4+re8AT9WqvF1KwJCA9j4ajJy5aq5byNGRapMVPiSuiAG67M'
-        && 'OPiAwXJAtiJCcB5ctd7wAcH7ZjFWbnyKR+L+RrCfIuTiqdUspROw7NWGDcPhxtFS3ED'
-        && '6W8kEu9JEHQmf07+Cq3/+IdUAzie/2+ga7q+nclH7Bj2LQWW0KmdMrkuAvmySDEpytB'
-        && 'wMy4vR7ToHaofS9xGev1ubBQGwvY/SNC12rrLsDeQlJSH3A7xO+z/mdlXB8OyG5iWg9'
-        && '4N4HRUJYnWO+d09QyL7JfkGAFteg4vNEEDsMZhY4RLhy4dY7DNtD0S+REZrcYBBT8YB'
-        && 'nKEIhVp35GKN4sbKgm44721rF7te9Kblc9nq96hM5ROadjhU3X4x65WxEQcicyz4M/i'
-        && 'GweW1yJE1s7ejEafMB48aDCP65tRQiCri97z2rPe3BiSmRIEsPiOWdGG24OUZtf1Dxx'
-        && 'iGsSZvGgY6nv5t4eC8GSao2TEXA9b+OE9s3ImzZrjipf/YC6KUblJyTk+d1qDqiK8ND'
-        && 'K8RKQKV1qWi98mXIRUicjj/NqTSIFvQ4BdpLgFyrbySIoF9yi/X3/a+UrmR8kzYtQWp'
-        && '3uxyXbetub31YrH9RTgcr2TBHjw43ojVZYaDNm6l6cYrPdX5qgi7Z6XIsv7XTYf/xur'
-        && 'Ut+3EGCeR/W+HAaPpyCWJWbToDac/8DTF/x6isRMK7RfRcSX1KgdjJMUovaHrJQ0icy'
-        && 'clqo2eVIGLqHYkGvXB6XH3LVxYoTueaEB67XizNqDJVx/cY7cpIsunn4to3OLZB95xI'
-        && 'wGaVk2rZvLHUeuMg/IxYyspMU6Kh53T7xkRmkRWWeTK62ppfU6BmSCcPZ5cqmDrZ5x2'
-        && '5qVSdigUGubotJHQzvmSUt+ATJcUv+yARObnV+n/lETEJQuNYK9UyDU4797t9/lnG0B'
-        && 'iRxOclZfITumLAda680fabBOFWicVPuz2nT2DHnkQSdFM+Y9fmU8Ay2rG60ZssQ8kwa'
-        && 'JuZK2CyJF7p8fgfxIi6HUn+BZkHdVYAGazbrjOCDLNrpHhsVOjFQTotkfgGyqd1AzMB'
-        && 'ljc31dXFMtPC8apPLjHHBoGrj5Fh3aoon3hxwPPOFAPTu4zTXkppFJVvGvCdWSvlU0r'
-        && 'IMJEq7XJV1liByNPA4yqdJT5zH7pe69Hl2Yd+eTsam+s6HCvXFv3vTcSB2HyEPE/E3p'
-        && 'eLlW8E7Aw3dkxHseXEzoPCTVPox/0Wp87bUrLO9ImDB6XokaANX0Gr82T6/ph3KCo2+'
-        && 'ouVI7bIGFSNc2r5nqvN/ohI6/Ocfd0E09uKlyWxiFLftb7D3q99Jn5yYGLBX2kJWVwj'
-        && 'ytzpWJ0k2tGB4Z0yjT6JhLbjR1dvBaqmOMjvu5yr5tdisb0PY3uvz/casYVadBSYL6h'
-        && 'JEpHCbZUiYlImqf52vp94I+ECCqlV+Y1iOhN7wUiYzfNtC0qLKg8SA8udyiVbkDrG6/'
-        && '47k4gCOBU+nU93hSzpFT/lVMlLni4KN6Il3ZyrrNG+rlavBKl7wIiIAp1rmp+PQf0Ny'
-        && 'f320jFvAyUKa2UIrTQiYvI5tjU+V23BKrzqy4X87ohA/O6SliSyEXKeiG/0/aYUudkg'
-        && '9jpjYP0ajlL9ERYcuWIdrL3tiiYG5l/mk0WJovLBODHPdDhWXYmdtltE6Lo6EXMsTpZ'
-        && '9RZwt1D5zOVq/iJHzM0YnWebK3Y/TT7fC5XdKqXec1v/t3GELXWeiZZ2NkWV/lOu4v0'
-        && 'CXo/n1DucVTQlq+9ME1Ppwao5DPqAPykjN2Tix/lhJWJeXonsa4vwmtu03sW/CRs/F3'
-        && 'n4ClrxFqPnBkv8/o4A4oS0OxorziEjESeyTuypNRJXi4gDD8dFtaPFuTPko1DfbWv2U'
-        && '1l8qB+JEjWzid6BRDaL8PXP74jkhTobHCLsJLd4WHOJBVO0QWtGifvhlNE2LZSuxWpC'
-        && '5u4PtPI026EXtId1ikNrBYi70qa/AVrVjHwbQbzyLLDyN13fWzvnFlYSoA0bRc7tmbD'
-        && 'nGAV6MOg9m/jeKssgoELzW0aCYzZtnlJp9qw4eDJcr76OKXGRcaN0uFsr+fUb9216xC'
-        && 'Pz8QldkEZc+Luo21iKyA92OOoM0eymyLlWUPU0vojz0+oa/K7OZv9aeGE9DRNQcpDgG'
-        && 'FSEGtTsq9R+/Poio2M8oF1EaCGOXZyNi8jkwNJDMDDxujnNLUzGyLzUsknGBwYGMi2W'
-        && 'gQvIyBrOF5LtU8f+/s5bKAnfqhQAAAABJRU5ErkJggg==' ).
-
   ENDMETHOD.
 ENDCLASS.
