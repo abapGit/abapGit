@@ -5,8 +5,6 @@ CLASS zcl_abapgit_object_tran DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    TYPE-POOLS ststc .
-
     INTERFACES zif_abapgit_object .
 
     ALIASES mo_files
@@ -14,7 +12,6 @@ CLASS zcl_abapgit_object_tran DEFINITION
   PROTECTED SECTION.
 
   PRIVATE SECTION.
-
     TYPES:
       tty_param_values TYPE STANDARD TABLE OF rsparam
                                      WITH NON-UNIQUE DEFAULT KEY ,
@@ -32,7 +29,14 @@ CLASS zcl_abapgit_object_tran DEFINITION
       c_oo_synchron  TYPE c VALUE 'S' ##NO_TEXT,
       c_oo_asynchron TYPE c VALUE 'U' ##NO_TEXT,
       c_true         TYPE c VALUE 'X' ##NO_TEXT,
-      c_false        TYPE c VALUE space ##NO_TEXT.
+      c_false        TYPE c VALUE space ##NO_TEXT,
+      BEGIN OF c_variant_type,
+        dialog     TYPE sychar01 VALUE 'D' ##NO_TEXT,
+        report     TYPE sychar01 VALUE 'R' ##NO_TEXT,
+        variant    TYPE sychar01 VALUE 'V' ##NO_TEXT,
+        parameters TYPE sychar01 VALUE 'P' ##NO_TEXT,
+        object     TYPE sychar01 VALUE 'O' ##NO_TEXT,
+      END OF c_variant_type.
 
     DATA:
       mt_bcdata TYPE STANDARD TABLE OF bdcdata .
@@ -682,17 +686,17 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     lv_dynpro = ls_tstc-dypno.
 
     IF     ls_tstc-cinfo O lc_hex_rep.
-      lv_type = ststc_c_type_report.
+      lv_type = c_variant_type-report.
     ELSEIF ls_tstc-cinfo O lc_hex_obj.
-      lv_type = ststc_c_type_object.
+      lv_type = c_variant_type-object.
     ELSEIF ls_tstc-cinfo O lc_hex_par.
       IF is_variant_transaction( ls_tstcp ) = abap_true.
-        lv_type = ststc_c_type_variant.
+        lv_type = c_variant_type-variant.
       ELSE.
-        lv_type = ststc_c_type_parameters.
+        lv_type = c_variant_type-parameters.
       ENDIF.
     ELSEIF ls_tstc-cinfo O lc_hex_tra.
-      lv_type = ststc_c_type_dialog.
+      lv_type = c_variant_type-dialog.
     ELSE.
       zcx_abapgit_exception=>raise( 'Transaction, unknown CINFO' ).
     ENDIF.
@@ -705,7 +709,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
     ENDIF.
 
     CASE lv_type.
-      WHEN ststc_c_type_object.
+      WHEN c_variant_type-object.
 
         deserialize_oo_transaction( iv_package      = iv_package
                                     is_tstc         = ls_tstc
