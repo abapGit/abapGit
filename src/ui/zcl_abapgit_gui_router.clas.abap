@@ -126,7 +126,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_router IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -207,13 +207,16 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
         IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_show_default_repo( ) = abap_true.
           lv_last_repo_key = zcl_abapgit_persistence_user=>get_instance( )->get_repo_show( ).
-          CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_view_repo
-          EXPORTING iv_key = lv_last_repo_key.
-          ev_state = zcl_abapgit_gui=>c_event_state-new_page.
-        ELSE.
-          CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
-          ev_state = zcl_abapgit_gui=>c_event_state-new_page.
         ENDIF.
+
+        IF lv_last_repo_key IS INITIAL.
+          CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
+        ELSE.
+          CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_view_repo
+            EXPORTING
+              iv_key = lv_last_repo_key.
+        ENDIF.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN zif_abapgit_definitions=>c_action-go_repo_overview.               " Go Repository overview
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_repo_over.
@@ -492,13 +495,15 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-repo_purge.                      " Repo remove & purge all objects
         zcl_abapgit_services_repo=>purge( lv_key ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
       WHEN zif_abapgit_definitions=>c_action-repo_remove.                     " Repo remove
         zcl_abapgit_services_repo=>remove( lv_key ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
       WHEN zif_abapgit_definitions=>c_action-repo_newonline.
-        zcl_abapgit_services_repo=>new_online( lv_url ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        ei_page  = zcl_abapgit_gui_page_addonline=>create( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-repo_refresh_checksums.          " Rebuild local checksums
         zcl_abapgit_services_repo=>refresh_local_checksums( lv_key ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
