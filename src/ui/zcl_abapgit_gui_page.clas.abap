@@ -83,7 +83,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
 ENDCLASS.
 
@@ -255,7 +255,10 @@ ENDCLASS.
 
     ri_html->add( '<div id="header">' ).
 
-    ri_html->add( |<td class="logo"><img src="img/logo" alt="logo"></td>| ). "#EC NOTEXT
+    ri_html->add( '<div class="logo">' ).
+    ri_html->add( ri_html->icon( 'git-alt' ) ).
+    ri_html->add( ri_html->icon( 'abapgit' ) ).
+    ri_html->add( '</div>' ).
 
     ri_html->add( |<div class="page-title"><span class="spacer">&#x25BA;</span>{ ms_control-page_title }</div>| ).
 
