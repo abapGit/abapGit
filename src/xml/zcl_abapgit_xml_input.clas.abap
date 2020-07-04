@@ -5,26 +5,19 @@ CLASS zcl_abapgit_xml_input DEFINITION
 
   PUBLIC SECTION.
 
+    INTERFACES zif_abapgit_xml_input.
+
+    ALIASES:
+      read FOR zif_abapgit_xml_input~read,
+      get_raw FOR zif_abapgit_xml_input~get_raw,
+      get_metadata FOR zif_abapgit_xml_input~get_metadata.
+
     METHODS constructor
       IMPORTING
         !iv_xml      TYPE clike
         !iv_filename TYPE string OPTIONAL
       RAISING
         zcx_abapgit_exception .
-    METHODS read
-      IMPORTING
-        !iv_name TYPE clike
-      CHANGING
-        !cg_data TYPE any
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_raw
-      RETURNING
-        VALUE(ri_raw) TYPE REF TO if_ixml_document .
-* todo, add read_xml to match add_xml in lcl_xml_output
-    METHODS get_metadata
-      RETURNING
-        VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata .
 
   PRIVATE SECTION.
     METHODS: fix_xml.
@@ -33,7 +26,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_XML_INPUT IMPLEMENTATION.
+CLASS zcl_abapgit_xml_input IMPLEMENTATION.
 
 
   METHOD constructor.

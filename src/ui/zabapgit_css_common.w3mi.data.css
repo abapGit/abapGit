@@ -29,7 +29,7 @@ sup {
 }
 
 input, textarea, select {
-  padding: 3px 6px;
+  padding: 3px 0.5em;
   border: 1px solid;
 }
 input:focus, textarea:focus {
@@ -38,6 +38,12 @@ input:focus, textarea:focus {
 
 .cursor-pointer {
   cursor: pointer;
+}
+
+span.separator {
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  opacity: 0.25;
 }
 
 /* MODIFIERS */
@@ -58,6 +64,14 @@ input:focus, textarea:focus {
 .inline       { display: inline; }
 .hidden       { visibility: hidden; }
 .nodisplay    { display: none }
+.m-em5-sides  { margin-left: 0.5em; margin-right: 0.5em }
+.w600px       { width: 600px }
+.wmax600px    { max-width: 600px }
+.auto-center  { /* use with max-width */
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
 
 /* PANELS */
 div.panel {
@@ -90,6 +104,7 @@ div#header {
 div#header td:not(.logo) { padding-top: 11px; } /* align with logo H */
 div#header td.logo       { width: 164px; }
 div#header td:not(.logo) { padding-top: 11px; } /* align with logo H */
+
 div#header span.page_title {
   font-weight: normal;
   font-size: 18pt;
@@ -999,3 +1014,115 @@ table.settings_tab input {
   text-align: center;
 }
 settings_tab tr:first-child td { border-top: 0px; }
+
+/* DIALOGS */
+
+.dialog input::placeholder { color: #ccc }
+.dialog input:-ms-input-placeholder { color: #ccc }
+.dialog {
+  border: 1px solid #cbcbcb;
+  background-color: #f4f4f4;
+  padding: 1em 1em;
+  border-radius: 4px;
+  text-align: left;
+}
+.dialog li {
+  padding: 5px 10px;
+  display: block;
+  list-style: none;
+  position: relative;
+}
+.dialog li.dialog-commands {
+  text-align: right;
+  margin-top: 12px;
+}
+.dialog li.dialog-commands a {
+  border: 1px solid #ccc;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 3px;
+  font-size: smaller;
+}
+.dialog li.dialog-commands input[type="submit"] {
+  border: 1px solid #ccc;
+  padding: 6px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.dialog li.dialog-commands input[type="submit"].main {
+  background-color: #64a8ff;
+  color: #fff;
+  border: 1px solid transparent;
+}
+.dialog label {
+  color: #444;
+  display: block;
+  font-size: 90%;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  padding-left: 0.5em;
+}
+.dialog label em {
+  color: #64a8ff;
+}
+.dialog li.error small {
+  color: #ff5959;
+  display: block;
+  font-size: 75%;
+  margin: 4px 0px;
+  padding-left: 0.5em;
+}
+.dialog li.error input[type="text"] {
+  border-color: #ff5959;
+}
+.dialog .radio-container {
+  border: 1px solid #ddd;
+  background-color: white;
+  display: inline-block;
+  padding: 4px;
+  border-radius: 3px;
+}
+.dialog input[type="checkbox"] + label {
+  display: inline-block;
+}
+.dialog input[type="text"] {
+  width: 100%;
+  box-sizing : border-box;
+  height: 2.5em;
+}
+.dialog .radio-container input[type="radio"] {
+  visibility: hidden;
+  display: none;
+  height: 0px;
+  width: 0px;
+}
+.dialog .radio-container input[type="radio"] + label {
+  color: #808080;
+  border: 1px solid transparent;
+  cursor: pointer;
+  width: auto;
+  margin: 0px;
+  padding: 3px 8px;
+  border-radius: 2px;
+  display: inline-block;
+}
+.dialog .radio-container input[type="radio"]:checked + label {
+  background-color: #64a8ff;
+  color: #fff;
+  border: 1px solid transparent;
+}
+.dialog li.with-command div.input-container {
+  display: table-cell;
+  width: 100%;
+}
+.dialog li.with-command div.command-container {
+  display: table-cell;
+}
+.dialog li.with-command input[type="submit"] {
+  height: 2.5em;
+}
+.dialog li.with-command input[type="submit"]:hover {
+  background-color: #64a8ff;
+  color: #fff;
+}

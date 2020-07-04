@@ -14,7 +14,7 @@
   ],
   "syntax": {
     "version": "v702",
-    "errorNamespace": "^(Z|Y|LT?CL_|TY_|LIF_)",
+    "errorNamespace": "^(Z|Y|LT?CL_|TY_|LIF_|.*ABAPGIT)",
     "globalConstants": [
       "icon_led_red",
       "icon_led_yellow",
@@ -72,7 +72,7 @@
     "line_break_multiple_parameters": true,
     "unknown_types": true,
     "forbidden_void_type": {
-      "check": ["^stringtab$", "^SYCHAR01$", "^char2$", "^char20$", "^int4$",
+      "check": ["^stringtab$", "^SYCHAR01$", "^char2$", "^char20$", "^int4$", "^SYREPID$",
         "^flag$", "^char12$", "^char10$", "^char70$", "^char4$", "^sydatum$", "^syuzeit$"]
     },
     "forbidden_identifier": true,

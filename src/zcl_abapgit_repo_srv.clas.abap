@@ -8,10 +8,12 @@ CLASS zcl_abapgit_repo_srv DEFINITION
     INTERFACES zif_abapgit_repo_srv .
     INTERFACES zif_abapgit_repo_listener .
 
+    ALIASES get_repo_from_package
+      FOR zif_abapgit_repo_srv~get_repo_from_package .
+
     CLASS-METHODS get_instance
       RETURNING
         VALUE(ri_srv) TYPE REF TO zif_abapgit_repo_srv .
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -57,14 +59,16 @@ CLASS zcl_abapgit_repo_srv DEFINITION
         !iv_package    TYPE devclass
         !it_repos      TYPE zif_abapgit_persistence=>tt_repo
         !iv_ign_subpkg TYPE abap_bool DEFAULT abap_false
+      EXPORTING
+        VALUE(eo_repo) TYPE REF TO zcl_abapgit_repo
+        !ev_reason     TYPE string
       RAISING
         zcx_abapgit_exception .
-
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
 
   METHOD add.
@@ -160,6 +164,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
 
   METHOD validate_sub_super_packages.
+
     DATA:
       ls_repo     LIKE LINE OF it_repos,
       li_package  TYPE REF TO zif_abapgit_sap_package,
@@ -181,7 +186,9 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
         READ TABLE lt_packages TRANSPORTING NO FIELDS
           WITH KEY table_line = iv_package.
         IF sy-subrc = 0.
-          zcx_abapgit_exception=>raise( |Repository { lo_repo->get_name( ) } already contains { iv_package } | ).
+          eo_repo = lo_repo.
+          ev_reason = |Repository { lo_repo->get_name( ) } already contains { iv_package } |.
+          RETURN.
         ENDIF.
       ENDIF.
 
@@ -190,12 +197,14 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
         READ TABLE lt_packages TRANSPORTING NO FIELDS
           WITH KEY table_line = iv_package.
         IF sy-subrc = 0.
-          zcx_abapgit_exception=>raise( |Repository { lo_repo->get_name( ) } |
-                                    &&  |already contains subpackage of { iv_package } | ).
+          eo_repo = lo_repo.
+          ev_reason = |Repository { lo_repo->get_name( ) } already contains subpackage of { iv_package } |.
+          RETURN.
         ENDIF.
       ENDIF.
 
     ENDLOOP.
+
   ENDMETHOD.
 
 
@@ -256,6 +265,39 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     ENDDO.
 
     zcx_abapgit_exception=>raise( 'repo not found, get' ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_srv~get_repo_from_package.
+
+    DATA:
+      lt_repos TYPE zif_abapgit_persistence=>tt_repo,
+      lv_name  TYPE zif_abapgit_persistence=>ty_local_settings-display_name,
+      lv_owner TYPE zif_abapgit_persistence=>ty_local_settings-display_name.
+
+    FIELD-SYMBOLS:
+      <ls_repo> LIKE LINE OF lt_repos.
+
+    " check if package is already in use for a different repository
+    lt_repos = zcl_abapgit_persist_factory=>get_repo( )->list( ).
+    READ TABLE lt_repos WITH KEY package = iv_package ASSIGNING <ls_repo>.
+    IF sy-subrc = 0.
+      eo_repo = get_instance( )->get( <ls_repo>-key ).
+      lv_name = eo_repo->get_name( ).
+      lv_owner = <ls_repo>-created_by.
+      ev_reason =  |Package { iv_package } already versioned as { lv_name } by { lv_owner }|.
+    ELSE.
+      " check if package is include as sub-package in a different repo
+      validate_sub_super_packages(
+        EXPORTING
+          iv_package    = iv_package
+          it_repos      = lt_repos
+          iv_ign_subpkg = iv_ign_subpkg
+        IMPORTING
+          eo_repo       = eo_repo
+          ev_reason     = ev_reason ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -345,13 +387,23 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
   METHOD zif_abapgit_repo_srv~new_online.
 
     DATA: ls_repo        TYPE zif_abapgit_persistence=>ty_repo,
+          lv_branch_name LIKE iv_branch_name,
           lv_key         TYPE zif_abapgit_persistence=>ty_repo-key,
           ls_dot_abapgit TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
 
     ASSERT NOT iv_url IS INITIAL
-      AND NOT iv_branch_name IS INITIAL
       AND NOT iv_package IS INITIAL.
+
+    lv_branch_name = iv_branch_name.
+    IF lv_branch_name IS INITIAL.
+      lv_branch_name = 'refs/heads/master'.
+    ENDIF.
+    IF -1 = find(
+        val = lv_branch_name
+        sub = 'refs/heads/' ).
+      lv_branch_name = 'refs/heads/' && lv_branch_name. " Assume short branch name was received
+    ENDIF.
 
     IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-create_repo ) = abap_false.
       zcx_abapgit_exception=>raise( 'Not authorized' ).
@@ -367,7 +419,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
     lv_key = zcl_abapgit_persist_factory=>get_repo( )->add(
       iv_url          = iv_url
-      iv_branch_name  = iv_branch_name
+      iv_branch_name  = lv_branch_name " local !
       iv_display_name = iv_display_name
       iv_package      = iv_package
       iv_offline      = abap_false
@@ -418,12 +470,8 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
   METHOD zif_abapgit_repo_srv~validate_package.
 
     DATA: lv_as4user TYPE tdevc-as4user,
-          lt_repos   TYPE zif_abapgit_persistence=>tt_repo,
-          lv_name    TYPE zif_abapgit_persistence=>ty_local_settings-display_name,
-          lv_owner   TYPE zif_abapgit_persistence=>ty_local_settings-display_name.
-
-    FIELD-SYMBOLS:
-          <ls_repo>  LIKE LINE OF lt_repos.
+          lo_repo    TYPE REF TO zcl_abapgit_repo,
+          lv_reason  TYPE string.
 
     IF iv_package IS INITIAL.
       zcx_abapgit_exception=>raise( 'add, package empty' ).
@@ -444,18 +492,18 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Package { iv_package } not allowed, responsible user = 'SAP'| ).
     ENDIF.
 
-    " make sure its not already in use for a different repository
-    lt_repos = zcl_abapgit_persist_factory=>get_repo( )->list( ).
-    READ TABLE lt_repos WITH KEY package = iv_package ASSIGNING <ls_repo>.
-    IF sy-subrc = 0.
-      lv_name = get_instance( )->get( <ls_repo>-key )->get_name( ).
-      lv_owner = <ls_repo>-created_by.
-      zcx_abapgit_exception=>raise( |Package { iv_package } already versioned as { lv_name } by { lv_owner }| ).
+    IF iv_chk_exists = abap_true.
+      get_repo_from_package(
+        EXPORTING
+          iv_package = iv_package
+        IMPORTING
+          eo_repo    = lo_repo
+          ev_reason  = lv_reason ).
+
+      IF lo_repo IS BOUND.
+        zcx_abapgit_exception=>raise( lv_reason ).
+      ENDIF.
     ENDIF.
 
-    validate_sub_super_packages(
-      iv_package    = iv_package
-      it_repos      = lt_repos
-      iv_ign_subpkg = iv_ign_subpkg ).
   ENDMETHOD.
 ENDCLASS.

@@ -771,7 +771,16 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
     ENDLOOP.
 
-    zcl_abapgit_objects_activation=>activate( is_step-is_ddic ).
+    CASE is_step-step_id.
+      WHEN zif_abapgit_object=>gc_step_id-ddic.
+        zcl_abapgit_objects_activation=>activate( is_step-is_ddic ).
+      WHEN zif_abapgit_object=>gc_step_id-abap.
+        zcl_abapgit_objects_activation=>activate( is_step-is_ddic ).
+      WHEN zif_abapgit_object=>gc_step_id-late.
+        " late can have both DDIC (like TABL with REF TO) and non-DDIC objects
+        zcl_abapgit_objects_activation=>activate( abap_true ).
+        zcl_abapgit_objects_activation=>activate( abap_false ).
+    ENDCASE.
 
 *   Call postprocessing
     li_exit = zcl_abapgit_exit=>get_instance( ).
@@ -890,7 +899,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     SORT rt_results
       BY obj_type ASCENDING
          obj_name ASCENDING
-         rstate   DESCENDING. " ensures that non-empty rstate is kept
+         rstate   DESCENDING  " ensures that non-empty rstate is kept
+         lstate   DESCENDING. " ensures that non-empty lstate is kept
     DELETE ADJACENT DUPLICATES FROM rt_results COMPARING obj_type obj_name.
 
   ENDMETHOD.
@@ -1091,6 +1101,11 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
+* TOBJ has to be handled before SCP1
+    LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'TOBJ'.
+      APPEND <ls_result> TO rt_results.
+    ENDLOOP.
+
     LOOP AT it_results ASSIGNING <ls_result>
         WHERE obj_type <> 'IASP'
         AND obj_type <> 'PROG'
@@ -1101,7 +1116,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         AND obj_type <> 'DDLS'
         AND obj_type <> 'SPRX'
         AND obj_type <> 'WEBI'
-        AND obj_type <> 'IOBJ'.
+        AND obj_type <> 'IOBJ'
+        AND obj_type <> 'TOBJ'.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 

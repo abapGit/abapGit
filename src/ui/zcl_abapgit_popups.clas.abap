@@ -742,6 +742,39 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_popups~popup_search_help.
+
+    DATA lt_ret TYPE TABLE OF ddshretval.
+    DATA ls_ret LIKE LINE OF lt_ret.
+    DATA lv_tabname TYPE dfies-tabname.
+    DATA lv_fieldname TYPE dfies-fieldname.
+
+    SPLIT iv_tab_field AT '-' INTO lv_tabname lv_fieldname.
+    lv_tabname = to_upper( lv_tabname ).
+    lv_fieldname = to_upper( lv_fieldname ).
+
+    CALL FUNCTION 'F4IF_FIELD_VALUE_REQUEST'
+      EXPORTING
+        tabname   = lv_tabname
+        fieldname = lv_fieldname
+      TABLES
+        return_tab = lt_ret
+      EXCEPTIONS
+        OTHERS = 5.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |F4IF_FIELD_VALUE_REQUEST error [{ iv_tab_field }]| ).
+    ENDIF.
+
+    IF lines( lt_ret ) > 0.
+      READ TABLE lt_ret INDEX 1 INTO ls_ret.
+      ASSERT sy-subrc = 0.
+      rv_value = ls_ret-fieldval.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_popups~popup_to_confirm.
 
     CALL FUNCTION 'POPUP_TO_CONFIRM'
@@ -1128,7 +1161,8 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       lv_finished = abap_true.
 
       TRY.
-          zcl_abapgit_repo_srv=>get_instance( )->validate_package( rs_popup-package ).
+          zcl_abapgit_repo_srv=>get_instance( )->validate_package( iv_package    = rs_popup-package
+                                                                   iv_chk_exists = abap_false ).
           validate_folder_logic( rs_popup-folder_logic ).
 
         CATCH zcx_abapgit_exception INTO lx_error.
@@ -1276,10 +1310,13 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       lv_finished = abap_true.
 
       TRY.
-          zcl_abapgit_url=>validate( |{ lv_url }| ).
+          IF iv_freeze_url = abap_false.
+            zcl_abapgit_url=>validate( |{ lv_url }| ).
+          ENDIF.
           IF iv_freeze_package = abap_false.
             zcl_abapgit_repo_srv=>get_instance( )->validate_package( iv_package    = lv_package
-                                                                     iv_ign_subpkg = lv_ign_subpkg ).
+                                                                     iv_ign_subpkg = lv_ign_subpkg
+                                                                     iv_chk_exists = abap_false ).
           ENDIF.
           validate_folder_logic( lv_folder_logic ).
         CATCH zcx_abapgit_exception INTO lx_error.

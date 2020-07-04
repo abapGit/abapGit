@@ -13,6 +13,7 @@
     <item>/package.json</item>
     <item>/changelog.txt</item>
     <item>/.gitignore</item>
+    <item>/.editorconfig</item>
     <item>/CODE_OF_CONDUCT.md</item>
     <item>/abaplint.json</item>
     <item>/.eslintrc.yaml</item>

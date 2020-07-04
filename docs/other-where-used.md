@@ -33,6 +33,7 @@ order: 50
 * SE38 IT-Engineering, Neuss, Germany
 * [Tricktresor](https://www.tricktresor.de)
 * [Yelcho Systems Consulting](http://www.yelcho.com.au/)
+* [Resulto Consultoria](https://www.resultoconsultoria.com/)
 
 [Projects using abapGit listed on dotabap.org](http://dotabap.org)
 
