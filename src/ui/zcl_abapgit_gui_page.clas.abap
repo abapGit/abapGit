@@ -87,9 +87,6 @@ ENDCLASS.
 CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
 
-CLASS zcl_abapgit_gui_page IMPLEMENTATION.
-
-
   METHOD constructor.
 
     super->constructor( ).
