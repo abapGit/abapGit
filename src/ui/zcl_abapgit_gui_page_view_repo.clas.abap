@@ -137,6 +137,7 @@ CLASS zcl_abapgit_gui_page_view_repo DEFINITION
 
     METHODS build_main_menu
       RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
+
 ENDCLASS.
 
 
@@ -1089,6 +1090,7 @@ CLASS zcl_abapgit_gui_page_view_repo IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-repo_open_in_master_lang.
         open_in_master_language( ).
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+
     ENDCASE.
 
   ENDMETHOD.
@@ -1273,5 +1275,6 @@ CLASS zcl_abapgit_gui_page_view_repo IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
+
 
 ENDCLASS.
