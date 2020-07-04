@@ -219,8 +219,9 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
     ri_html = zcl_abapgit_html=>create( ).
 
-    ri_html->add( |<ul class="{ iv_form_class }">| ).
+    ri_html->add( |<div class="{ iv_form_class }">| ).
     ri_html->add( |<form method="post"{ ls_form_id }>| ).
+    ri_html->add( |<ul>| ).
 
     LOOP AT mt_fields ASSIGNING <ls_field>.
       render_field(
@@ -240,8 +241,9 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
     ri_html->add( |</li>| ).
 
-    ri_html->add( |</form>| ).
     ri_html->add( |</ul>| ).
+    ri_html->add( |</form>| ).
+    ri_html->add( |</div>| ).
 
   ENDMETHOD.
 
