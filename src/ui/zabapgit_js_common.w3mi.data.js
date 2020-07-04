@@ -22,8 +22,8 @@
 /* exported onTagTypeChange */
 /* exported getIndocStyleSheet */
 /* exported addMarginBottom */
-/* exported enumerateTocAllRepos */
 /* exported enumerateJumpAllFiles */
+/* exported createRepoCatalogEnumerator */
 /* exported enumerateToolbarActions */
 /* exported onDiffCollapse */
 /* exported restoreScrollPosition */
@@ -1971,25 +1971,19 @@ CommandPalette.prototype.exec = function(cmd) {
 
 /* COMMAND ENUMERATORS */
 
-function enumerateTocAllRepos() {
-  var root = document.getElementById("toc-all-repos");
-  if (!root || root.nodeName !== "UL") return null;
-
-  var items = [];
-  for (var i = 0; i < root.children.length; i++) {
-    if (root.children[i].nodeName === "LI") items.push(root.children[i]);
-  }
-
-  items = items.map(function(listItem) {
-    var anchor = listItem.children[0];
-    return {
-      action:    anchor.href.replace("sapevent:", ""),  // a
-      iconClass: anchor.childNodes[0].className,        // i with icon
-      title:     anchor.childNodes[1].textContent       // text with repo name
-    };
-  });
-
-  return items;
+function createRepoCatalogEnumerator(catalog, action) {
+  // expecting [{ key, isOffline, displayName }]
+  return function() {
+    return catalog.map(function(i) {
+      return {
+        action:    action + "?" + i.key,
+        iconClass: i.isOffline
+          ? "icon icon-plug darkgrey"
+          : "icon icon-cloud-upload-alt blue",
+        title: i.displayName
+      };
+    });
+  };
 }
 
 function enumerateToolbarActions() {
