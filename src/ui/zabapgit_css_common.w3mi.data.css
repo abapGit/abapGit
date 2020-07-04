@@ -1024,7 +1024,7 @@ settings_tab tr:first-child td { border-top: 0px; }
   border: 1px solid #cbcbcb;
   background-color: #f4f4f4;
   padding: 1em 1em;
-  border-radius: 4px;
+  border-radius: 6px;
   text-align: left;
 }
 .dialog ul {
@@ -1130,4 +1130,20 @@ settings_tab tr:first-child td { border-top: 0px; }
 .dialog li.with-command input[type="submit"]:hover {
   background-color: #64a8ff;
   color: #fff;
+}
+.dialog fieldset {
+  margin-top: 1em;
+  border: 1px solid #dfdfdf;
+  border-radius: 6px; /* doesn't work in IE ? */
+  padding-bottom: 1em;
+}
+.dialog fieldset:first-child {
+  margin-top: 0;
+}
+.dialog fieldset legend {
+  color: #ccc;
+  font-size: small;
+  text-transform: uppercase;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
 }
