@@ -53,6 +53,12 @@ CLASS zcl_abapgit_html_form DEFINITION
         iv_label TYPE string
         iv_value TYPE string.
 
+    METHODS start_group
+      IMPORTING
+        iv_label TYPE string
+        iv_name TYPE string
+        iv_hint TYPE string OPTIONAL.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -95,6 +101,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         text TYPE i VALUE 1,
         radio TYPE i VALUE 2,
         checkbox TYPE i VALUE 3,
+        field_group TYPE i VALUE 4,
       END OF c_field_type.
 
     DATA mt_fields TYPE STANDARD TABLE OF ty_field.
@@ -154,8 +161,17 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
 
   METHOD create.
+
+    DATA lv_ts TYPE timestampl.
+
     CREATE OBJECT ro_form.
     ro_form->mv_form_id = iv_form_id.
+
+    IF ro_form->mv_form_id IS INITIAL.
+      GET TIME STAMP FIELD lv_ts.
+      ro_form->mv_form_id = |form_{ lv_ts }|.
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -203,6 +219,7 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     FIELD-SYMBOLS <ls_field> LIKE LINE OF mt_fields.
     FIELD-SYMBOLS <ls_cmd> LIKE LINE OF mt_commands.
     DATA ls_form_id TYPE string.
+    DATA lv_cur_group TYPE string.
 
     IF mv_form_id IS NOT INITIAL.
       ls_form_id = | id="{ mv_form_id }"|.
@@ -210,15 +227,33 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
     ri_html = zcl_abapgit_html=>create( ).
 
-    ri_html->add( |<ul class="{ iv_form_class }">| ).
+    ri_html->add( |<div class="{ iv_form_class }">| ).
     ri_html->add( |<form method="post"{ ls_form_id }>| ).
+    ri_html->add( |<ul>| ).
 
     LOOP AT mt_fields ASSIGNING <ls_field>.
+
+      IF <ls_field>-type = c_field_type-field_group.
+        IF lv_cur_group IS NOT INITIAL AND lv_cur_group <> <ls_field>-name.
+          ri_html->add( '</fieldset>' ).
+        ENDIF.
+        lv_cur_group = <ls_field>-name.
+        ri_html->add( |<fieldset name="{ <ls_field>-name }">| ).
+        ri_html->add( |<legend{ <ls_field>-hint }>{ <ls_field>-label }</legend>| ).
+        CONTINUE.
+      ENDIF.
+
       render_field(
-        ii_html  = ri_html
-        io_values = io_values
+        ii_html           = ri_html
+        io_values         = io_values
         io_validation_log = io_validation_log
-        is_field = <ls_field> ).
+        is_field          = <ls_field> ).
+
+      AT LAST.
+        IF lv_cur_group IS NOT INITIAL.
+          ri_html->add( '</fieldset>' ).
+        ENDIF.
+      ENDAT.
     ENDLOOP.
 
     ri_html->add( |<li class="dialog-commands">| ).
@@ -231,8 +266,9 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
     ri_html->add( |</li>| ).
 
-    ri_html->add( |</form>| ).
     ri_html->add( |</ul>| ).
+    ri_html->add( |</form>| ).
+    ri_html->add( |</div>| ).
 
   ENDMETHOD.
 
@@ -347,6 +383,23 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     ENDCASE.
 
     ii_html->add( '</li>' ).
+
+  ENDMETHOD.
+
+
+  METHOD start_group.
+
+    DATA ls_field LIKE LINE OF mt_fields.
+
+    ls_field-type  = c_field_type-field_group.
+    ls_field-label = iv_label.
+    ls_field-name  = iv_name.
+
+    IF iv_hint IS NOT INITIAL.
+      ls_field-hint    = | title="{ iv_hint }"|.
+    ENDIF.
+
+    APPEND ls_field TO mt_fields.
 
   ENDMETHOD.
 
