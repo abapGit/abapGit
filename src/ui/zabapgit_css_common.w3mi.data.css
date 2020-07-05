@@ -54,6 +54,7 @@ span.separator {
 .paddings     { padding: 0.5em 0.5em; }
 .pad-sides    { padding-left: 0.3em; padding-right: 0.3em; }
 .margin-v5    { margin-top: 0.5em; margin-bottom: 0.5em; }
+.margin-v1    { margin-top: 1em; margin-bottom: 1em; }
 .indent5em    { padding-left: 0.5em; }
 .pad4px       { padding: 4px; }
 .w100         { width: 100%; }
@@ -1025,14 +1026,15 @@ settings_tab tr:first-child td { border-top: 0px; }
 
 /* DIALOGS */
 
-.dialog input::placeholder { color: #ccc }
-.dialog input:-ms-input-placeholder { color: #ccc }
 .dialog {
-  border: 1px solid #cbcbcb;
-  background-color: #f4f4f4;
+  border: 1px solid;
   padding: 1em 1em;
-  border-radius: 4px;
+  border-radius: 6px;
   text-align: left;
+}
+.dialog ul {
+  padding: 0;
+  margin: 0;
 }
 .dialog li {
   padding: 5px 10px;
@@ -1045,7 +1047,7 @@ settings_tab tr:first-child td { border-top: 0px; }
   margin-top: 12px;
 }
 .dialog li.dialog-commands a {
-  border: 1px solid #ccc;
+  border: 1px solid;
   cursor: pointer;
   text-decoration: none;
   padding: 6px 12px;
@@ -1053,40 +1055,29 @@ settings_tab tr:first-child td { border-top: 0px; }
   font-size: smaller;
 }
 .dialog li.dialog-commands input[type="submit"] {
-  border: 1px solid #ccc;
+  border: 1px solid;
   padding: 6px 12px;
   border-radius: 3px;
   cursor: pointer;
 }
 .dialog li.dialog-commands input[type="submit"].main {
-  background-color: #64a8ff;
-  color: #fff;
   border: 1px solid transparent;
 }
 .dialog label {
-  color: #444;
   display: block;
   font-size: 90%;
   margin-top: 6px;
   margin-bottom: 6px;
   padding-left: 0.5em;
 }
-.dialog label em {
-  color: #64a8ff;
-}
 .dialog li.error small {
-  color: #ff5959;
   display: block;
   font-size: 75%;
   margin: 4px 0px;
   padding-left: 0.5em;
 }
-.dialog li.error input[type="text"] {
-  border-color: #ff5959;
-}
 .dialog .radio-container {
-  border: 1px solid #ddd;
-  background-color: white;
+  border: 1px solid;
   display: inline-block;
   padding: 4px;
   border-radius: 3px;
@@ -1106,7 +1097,6 @@ settings_tab tr:first-child td { border-top: 0px; }
   width: 0px;
 }
 .dialog .radio-container input[type="radio"] + label {
-  color: #808080;
   border: 1px solid transparent;
   cursor: pointer;
   width: auto;
@@ -1116,8 +1106,6 @@ settings_tab tr:first-child td { border-top: 0px; }
   display: inline-block;
 }
 .dialog .radio-container input[type="radio"]:checked + label {
-  background-color: #64a8ff;
-  color: #fff;
   border: 1px solid transparent;
 }
 .dialog li.with-command div.input-container {
@@ -1130,7 +1118,18 @@ settings_tab tr:first-child td { border-top: 0px; }
 .dialog li.with-command input[type="submit"] {
   height: 2.5em;
 }
-.dialog li.with-command input[type="submit"]:hover {
-  background-color: #64a8ff;
-  color: #fff;
+.dialog fieldset {
+  margin-top: 1em;
+  border: 1px solid;
+  border-radius: 6px; /* doesn't work in IE ? */
+  padding-bottom: 1em;
+}
+.dialog fieldset:first-child {
+  margin-top: 0;
+}
+.dialog fieldset legend {
+  font-size: small;
+  text-transform: uppercase;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
 }
