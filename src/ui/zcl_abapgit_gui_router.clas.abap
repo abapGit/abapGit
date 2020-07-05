@@ -122,6 +122,13 @@ CLASS zcl_abapgit_gui_router DEFINITION
         !iv_getdata TYPE clike
       RAISING
         zcx_abapgit_exception.
+
+    METHODS call_browser
+      IMPORTING
+        iv_url TYPE csequence
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -207,13 +214,16 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
         IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_show_default_repo( ) = abap_true.
           lv_last_repo_key = zcl_abapgit_persistence_user=>get_instance( )->get_repo_show( ).
-          CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_view_repo
-          EXPORTING iv_key = lv_last_repo_key.
-          ev_state = zcl_abapgit_gui=>c_event_state-new_page.
-        ELSE.
-          CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
-          ev_state = zcl_abapgit_gui=>c_event_state-new_page.
         ENDIF.
+
+        IF lv_last_repo_key IS INITIAL.
+          CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
+        ELSE.
+          CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_view_repo
+            EXPORTING
+              iv_key = lv_last_repo_key.
+        ENDIF.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN zif_abapgit_definitions=>c_action-go_repo_overview.               " Go Repository overview
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_repo_over.
@@ -492,13 +502,15 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-repo_purge.                      " Repo remove & purge all objects
         zcl_abapgit_services_repo=>purge( lv_key ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
       WHEN zif_abapgit_definitions=>c_action-repo_remove.                     " Repo remove
         zcl_abapgit_services_repo=>remove( lv_key ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
       WHEN zif_abapgit_definitions=>c_action-repo_newonline.
-        zcl_abapgit_services_repo=>new_online( lv_url ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        ei_page  = zcl_abapgit_gui_page_addonline=>create( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-repo_refresh_checksums.          " Rebuild local checksums
         zcl_abapgit_services_repo=>refresh_local_checksums( lv_key ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
@@ -536,9 +548,15 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
                     ev_obj_name = ls_item-obj_name ).
         zcl_abapgit_objects=>jump( ls_item ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
       WHEN zif_abapgit_definitions=>c_action-jump_transport.
         jump_display_transport( is_event_data-getdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
+      WHEN zif_abapgit_definitions=>c_action-url.
+        call_browser( is_event_data-getdata ).
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
     ENDCASE.
 
   ENDMETHOD.
@@ -661,4 +679,30 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
+
+
+  METHOD call_browser.
+
+    cl_gui_frontend_services=>execute(
+      EXPORTING
+        document               = |{ iv_url }|
+      EXCEPTIONS
+        cntl_error             = 1
+        error_no_gui           = 2
+        bad_parameter          = 3
+        file_not_found         = 4
+        path_not_found         = 5
+        file_extension_unknown = 6
+        error_execute_failed   = 7
+        synchronous_failed     = 8
+        not_supported_by_gui   = 9
+        OTHERS                 = 10 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
 ENDCLASS.
