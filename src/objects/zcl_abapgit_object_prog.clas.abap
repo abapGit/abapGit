@@ -81,7 +81,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
       FROM d010tinf
       WHERE r3state = 'A'
       AND prog = ms_item-obj_name
-      AND language <> mv_language.
+      AND language <> mv_language ##TOO_MANY_ITAB_FIELDS.
 
     SORT lt_tpool_i18n BY language ASCENDING.
     LOOP AT lt_tpool_i18n ASSIGNING <ls_tpool>.
