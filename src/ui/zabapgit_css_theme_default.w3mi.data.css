@@ -17,6 +17,7 @@
   --theme-greyscale-light: #ccc;
   --theme-greyscale-lighter: lightgrey;
   --theme-linkhint-background: lightgreen;
+  --theme-debug-color: #aaa;
 }
 
 /* GLOBALS */
@@ -62,7 +63,7 @@ div.panel.success {
   color: #589a58 !important;
   background-color: #c5eac5;
 }
-#debug-output { color: var(--theme-primary-font-color-reduced); }
+#debug-output { color: var(--theme-debug-color); }
 div.dummydiv { background-color: var(--theme-container-background-color); }
 
 /* STRUCTURE DIVS, HEADER & FOOTER */

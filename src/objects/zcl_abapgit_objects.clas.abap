@@ -899,7 +899,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     SORT rt_results
       BY obj_type ASCENDING
          obj_name ASCENDING
-         rstate   DESCENDING. " ensures that non-empty rstate is kept
+         rstate   DESCENDING  " ensures that non-empty rstate is kept
+         lstate   DESCENDING. " ensures that non-empty lstate is kept
     DELETE ADJACENT DUPLICATES FROM rt_results COMPARING obj_type obj_name.
 
   ENDMETHOD.
@@ -1100,7 +1101,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.
 
-* TOBJ has to be handled before ODSO
+* TOBJ has to be handled before SCP1
     LOOP AT it_results ASSIGNING <ls_result> WHERE obj_type = 'TOBJ'.
       APPEND <ls_result> TO rt_results.
     ENDLOOP.

@@ -78,13 +78,6 @@ div.panel {
   border-radius: 3px;
 }
 
-#debug-output {
-  text-align: right;
-  padding-right: 0.5em;
-  font-style: italic;
-  font-size: small;
-}
-
 div.dummydiv {
   padding:          0.5em 1em;
   text-align:       center;
@@ -95,34 +88,49 @@ a.close-btn {
 }
 
 /* STRUCTURE DIVS, HEADER & FOOTER */
-#abapGitLogo { outline: none; }
-
 div#header {
   padding:          0.5em 0.5em;
   border-bottom:    3px double;
 }
-div#header td:not(.logo) { padding-top: 11px; } /* align with logo H */
-div#header td.logo       { width: 164px; }
-div#header td:not(.logo) { padding-top: 11px; } /* align with logo H */
+div#header > div { display: inline-block }
 
-div#header span.page_title {
-  font-weight: normal;
-  font-size: 18pt;
-  padding-left: 0.4em;
+.logo .icon { display: inline-block }
+.logo .icon:before { width: auto }
+
+/* official logo colors, not vars, redefine in themes directly*/
+.logo .icon.icon-git-alt { color: #f03c2e }
+.logo .icon.icon-abapgit { 
+  color: #362701; 
+  vertical-align: bottom;
 }
 
-div#toc { padding: 0.5em 1em; }
-div#toc .favorites a { opacity: 0.5; }
-div#toc .favorites:hover a { opacity: 1; }
+div#header .logo { font-size: x-large }
+div#header .page-title { font-size: x-large }
+div#header span.spacer {
+  display: inline-block;
+  padding-right: 0.25em;
+  padding-left: 0.25em;
+}
 
+div#footer .logo { font-size: large }
 div#footer {
   padding:          0.5em 1em;
   border-top:       3px double;
-  text-align:       center;
 }
-div#footer span.version {
-  display: block;
-  margin-top: 0.3em;
+div#footer .version {
+  margin-top: 0.5em;
+  font-size: small;
+}
+
+#debug-output {
+  text-align: right;
+  padding-right: 0.5em;
+  font-size: smaller;
+  font-family: monospace;
+}
+#debug-output p {
+  margin-top: 0em;
+  margin-bottom: 0em;
 }
 
 /* ERROR LOG */
