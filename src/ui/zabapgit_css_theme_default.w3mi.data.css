@@ -68,9 +68,8 @@ div.dummydiv { background-color: var(--theme-container-background-color); }
 
 /* STRUCTURE DIVS, HEADER & FOOTER */
 div#header { border-bottom-color: var(--theme-container-border-color); }
-div#header span.page_title { color: var(--theme-greyscale-medium); }
-div#toc    { background-color: var(--theme-container-background-color); }
-div#footer span.version { color: grey; }
+div#header .page-title { color: var(--theme-greyscale-medium); }
+div#footer .version { color: var(--theme-greyscale-medium); }
 div#footer { border-top-color: var(--theme-container-border-color); }
 
 /* ERROR LOG */
