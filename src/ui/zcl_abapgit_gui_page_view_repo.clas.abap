@@ -927,7 +927,7 @@ CLASS zcl_abapgit_gui_page_view_repo IMPLEMENTATION.
         open_in_master_language( ).
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
 
-     WHEN OTHERS.
+      WHEN OTHERS.
 
         super->zif_abapgit_gui_event_handler~on_event(
           EXPORTING
