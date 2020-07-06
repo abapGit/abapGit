@@ -1091,8 +1091,15 @@ CLASS zcl_abapgit_gui_page_view_repo IMPLEMENTATION.
 
     CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-main'.
 
-    ro_menu->add( iv_txt = 'Repository list'
-                  iv_act = zif_abapgit_definitions=>c_action-abapgit_home ).
+    ro_menu->add(
+      iv_txt = 'Repository list'
+      iv_act = zif_abapgit_definitions=>c_action-abapgit_home
+    )->add(
+      iv_txt = '<i class="icon icon-tools-solid"></i>'
+      io_sub = zcl_abapgit_gui_chunk_lib=>render_advanced_menu( )
+    )->add(
+      iv_txt = '<i class="icon icon-question-circle-solid"></i>'
+      io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
 
   ENDMETHOD.
 
