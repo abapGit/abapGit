@@ -28,9 +28,6 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
     DATA: mo_repo_overview TYPE REF TO zcl_abapgit_gui_repo_over,
           mv_repo_key      TYPE zif_abapgit_persistence=>ty_value.
 
-    METHODS test_changed_by
-      RAISING zcx_abapgit_exception.
-
     METHODS render_scripts
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
@@ -103,26 +100,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD test_changed_by.
 
-    DATA: ls_tadir TYPE zif_abapgit_definitions=>ty_tadir,
-          lv_user  TYPE xubname,
-          ls_item  TYPE zif_abapgit_definitions=>ty_item.
-
-
-    ls_tadir = zcl_abapgit_ui_factory=>get_popups( )->popup_object( ).
-    IF ls_tadir IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    ls_item-obj_type = ls_tadir-object.
-    ls_item-obj_name = ls_tadir-obj_name.
-
-    lv_user = zcl_abapgit_objects=>changed_by( ls_item ).
-
-    MESSAGE lv_user TYPE 'S'.
-
-  ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
@@ -138,7 +116,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
       WHEN c_actions-select.
 
         lv_key = iv_getdata.
-
         zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
 
         TRY.
@@ -165,22 +142,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
         mo_repo_overview->set_filter( it_postdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
-
-      WHEN zif_abapgit_definitions=>c_action-changed_by.
-        test_changed_by( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-
-      WHEN zif_abapgit_definitions=>c_action-documentation.
-        zcl_abapgit_services_abapgit=>open_abapgit_wikipage( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-
-      WHEN zif_abapgit_definitions=>c_action-go_explore.
-        zcl_abapgit_services_abapgit=>open_dotabap_homepage( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-
-      WHEN zif_abapgit_definitions=>c_action-changelog.
-        zcl_abapgit_services_abapgit=>open_abapgit_changelog( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
       WHEN OTHERS.
 
