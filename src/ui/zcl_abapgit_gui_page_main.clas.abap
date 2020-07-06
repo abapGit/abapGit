@@ -49,14 +49,14 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-main'.
 
     ro_menu->add(
-      iv_txt = '+ Online'
+      iv_txt = '<i class="icon icon-cloud-upload-alt"></i> New Online'
       iv_act = zif_abapgit_definitions=>c_action-repo_newonline
     )->add(
-      iv_txt = '+ Offline'
+      iv_txt = '<i class="icon icon-plug"></i> New Offline'
       iv_act = zif_abapgit_definitions=>c_action-repo_newoffline
     )->add(
       iv_txt = '<i class="icon icon-tools-solid"></i>'
-      io_sub = zcl_abapgit_gui_chunk_lib=>render_advanced_menu( )
+      io_sub = zcl_abapgit_gui_chunk_lib=>advanced_submenu( )
     )->add(
       iv_txt = '<i class="icon icon-question-circle-solid"></i>'
       io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).

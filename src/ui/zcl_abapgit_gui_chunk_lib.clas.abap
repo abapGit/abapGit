@@ -101,7 +101,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
-    CLASS-METHODS render_advanced_menu
+    CLASS-METHODS advanced_submenu
       RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
 
     CLASS-METHODS help_submenu
@@ -681,7 +681,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD render_advanced_menu.
+  METHOD advanced_submenu.
 
     CREATE OBJECT ro_menu.
 
