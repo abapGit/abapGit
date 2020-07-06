@@ -46,20 +46,20 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
   METHOD build_main_menu.
 
-    DATA: lo_advsub  TYPE REF TO zcl_abapgit_html_toolbar,
-          lo_helpsub TYPE REF TO zcl_abapgit_html_toolbar.
-
     CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-main'.
 
-    ro_menu->add( iv_txt = '+ Online'
-                  iv_act = zif_abapgit_definitions=>c_action-repo_newonline ).
-    ro_menu->add( iv_txt = '+ Offline'
-                  iv_act = zif_abapgit_definitions=>c_action-repo_newoffline ).
-
-    ro_menu->add( iv_txt = '<i class="icon icon-tools-solid"></i>'
-                  io_sub = zcl_abapgit_gui_chunk_lib=>render_advanced_menu( ) ).
-    ro_menu->add( iv_txt = '<i class="icon icon-question-circle-solid"></i>'
-                  io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
+    ro_menu->add(
+      iv_txt = '+ Online'
+      iv_act = zif_abapgit_definitions=>c_action-repo_newonline
+    )->add(
+      iv_txt = '+ Offline'
+      iv_act = zif_abapgit_definitions=>c_action-repo_newoffline
+    )->add(
+      iv_txt = '<i class="icon icon-tools-solid"></i>'
+      io_sub = zcl_abapgit_gui_chunk_lib=>render_advanced_menu( )
+    )->add(
+      iv_txt = '<i class="icon icon-question-circle-solid"></i>'
+      io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
 
   ENDMETHOD.
 

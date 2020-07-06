@@ -13,6 +13,9 @@ CLASS zcl_abapgit_gui_page_tutorial DEFINITION
 
   PRIVATE SECTION.
 
+    METHODS build_main_menu
+      RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
+
 ENDCLASS.
 
 
@@ -22,6 +25,7 @@ CLASS zcl_abapgit_gui_page_tutorial IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     ms_control-page_title = 'Tutorial'.
+    ms_control-page_menu = build_main_menu( ).
   ENDMETHOD.
 
 
@@ -80,6 +84,25 @@ CLASS zcl_abapgit_gui_page_tutorial IMPLEMENTATION.
     ri_html->add( '</ul></p>' ).
     ri_html->add( '</div>' ).
 
+
+  ENDMETHOD.
+
+  METHOD build_main_menu.
+
+    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-main'.
+
+    ro_menu->add(
+      iv_txt = '+ Online'
+      iv_act = zif_abapgit_definitions=>c_action-repo_newonline
+    )->add(
+      iv_txt = '+ Offline'
+      iv_act = zif_abapgit_definitions=>c_action-repo_newoffline
+    )->add(
+      iv_txt = '<i class="icon icon-tools-solid"></i>'
+      io_sub = zcl_abapgit_gui_chunk_lib=>render_advanced_menu( )
+    )->add(
+      iv_txt = '<i class="icon icon-question-circle-solid"></i>'
+      io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
 
   ENDMETHOD.
 
