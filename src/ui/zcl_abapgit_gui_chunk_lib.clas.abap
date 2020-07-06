@@ -711,7 +711,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
   METHOD help_submenu.
 
-    CREATE object ro_menu.
+    CREATE OBJECT ro_menu.
 
     ro_menu->add(
       iv_txt = 'Tutorial'
