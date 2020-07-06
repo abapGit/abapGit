@@ -44,7 +44,7 @@ CLASS zcl_abapgit_gui_page_tutorial IMPLEMENTATION.
     ri_html->add( '<p><ul>' ).
 
     ri_html->add( `<li>To clone a remote repository (e.g. from github) click ` ).
-    ri_html->add_a( iv_txt = '+ Online'
+    ri_html->add_a( iv_txt = zcl_abapgit_gui_buttons=>new_online( )
                     iv_act = zif_abapgit_definitions=>c_action-repo_newonline ).
     ri_html->add( ' from the top menu. This will link a remote repository with a package on your system.</li>' ).
     ri_html->add( '<li>Use the pull button to retrieve and activate the remote objects.</li>' ).
@@ -57,7 +57,7 @@ CLASS zcl_abapgit_gui_page_tutorial IMPLEMENTATION.
     ri_html->add( '<p><ul>' ).
 
     ri_html->add( `<li>To add a package as an offline repository, click ` ).
-    ri_html->add_a( iv_txt = '+ Offline'
+    ri_html->add_a( iv_txt = zcl_abapgit_gui_buttons=>new_offline( )
                     iv_act = zif_abapgit_definitions=>c_action-repo_newoffline ).
     ri_html->add( ' from the top menu.' ).
     ri_html->add( '<li>abapGit will start tracking changes for the package ' ).
@@ -73,7 +73,11 @@ CLASS zcl_abapgit_gui_page_tutorial IMPLEMENTATION.
     ri_html->add( |<li>To favorite a repository, use the {
                   zcl_abapgit_html=>icon( 'star/darkgrey' ) } icon in the repository list.</li>| ).
     ri_html->add( |<li>To go to a repository, click on the repository name.</li>| ).
-    ri_html->add( |<li>To go back to your favorites, click the abapgit logo.</li>| ).
+    ri_html->add( |<li>To go back to your favorites, use the| ).
+    ri_html->add_a(
+      iv_txt = zcl_abapgit_gui_buttons=>repo_list( )
+      iv_act = zif_abapgit_definitions=>c_action-abapgit_home ).
+    ri_html->add( |</li>| ).
 
     ri_html->add( `<li>` ).
     ri_html->add_a( iv_txt = 'Explore'
@@ -92,16 +96,16 @@ CLASS zcl_abapgit_gui_page_tutorial IMPLEMENTATION.
     CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-main'.
 
     ro_menu->add(
-      iv_txt = '<i class="icon icon-cloud-upload-alt"></i> New Online'
+      iv_txt = zcl_abapgit_gui_buttons=>new_online( )
       iv_act = zif_abapgit_definitions=>c_action-repo_newonline
     )->add(
-      iv_txt = '<i class="icon icon-plug"></i> New Offline'
+      iv_txt = zcl_abapgit_gui_buttons=>new_offline( )
       iv_act = zif_abapgit_definitions=>c_action-repo_newoffline
     )->add(
-      iv_txt = '<i class="icon icon-tools-solid"></i>'
+      iv_txt = zcl_abapgit_gui_buttons=>advanced( )
       io_sub = zcl_abapgit_gui_chunk_lib=>advanced_submenu( )
     )->add(
-      iv_txt = '<i class="icon icon-question-circle-solid"></i>'
+      iv_txt = zcl_abapgit_gui_buttons=>help( )
       io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
 
   ENDMETHOD.
