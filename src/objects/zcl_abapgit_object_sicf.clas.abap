@@ -320,7 +320,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
         no_authority      = 4
         OTHERS            = 5 ).
     IF sy-subrc = 0.
-      rv_hash = zcl_abapgit_hash=>sha1_raw( zcl_abapgit_convert=>string_to_xstring_utf8( lv_url ) ).
+      rv_hash = to_upper( zcl_abapgit_hash=>sha1_raw( zcl_abapgit_convert=>string_to_xstring_utf8( lv_url ) ) ).
     ENDIF.
 
   ENDMETHOD.
