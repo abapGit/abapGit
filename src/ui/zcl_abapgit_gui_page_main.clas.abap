@@ -28,12 +28,6 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
     DATA: mo_repo_overview TYPE REF TO zcl_abapgit_gui_repo_over,
           mv_repo_key      TYPE zif_abapgit_persistence=>ty_value.
 
-    METHODS render_scripts
-      RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-      RAISING
-        zcx_abapgit_exception.
-        
     METHODS build_main_menu
       RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
 
