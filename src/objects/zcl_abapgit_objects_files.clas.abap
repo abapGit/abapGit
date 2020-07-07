@@ -235,7 +235,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
       " cl_http_utility=>escape_url doesn't do dots but escapes slash which we use for namespaces
       " -> we escape just some selected characters
       REPLACE ALL OCCURRENCES OF `%` IN lv_obj_name WITH '%25'.
-      REPLACE ALL OCCURRENCES OF ` ` IN lv_obj_name WITH '%20'.
       REPLACE ALL OCCURRENCES OF `#` IN lv_obj_name WITH '%23'.
       REPLACE ALL OCCURRENCES OF `.` IN lv_obj_name WITH '%2e'.
       REPLACE ALL OCCURRENCES OF `=` IN lv_obj_name WITH '%3d'.
