@@ -51,8 +51,9 @@ table.repo_tab {
 #debug-output { color: var(--theme-greyscale-dark); }
 
 /* abapGit logo in header and footer */
-#abapGitLogo>img { background-color: var(--theme-background-color); }
-#footer>img { background-color: var(--theme-background-color); }
+.logo .icon.icon-abapgit { 
+  color: var(--theme-primary-font-color); 
+}
 
 /* TUTORIAL */
 div.tutorial h1, h2 { color: var(--theme-primary-font-color); }
