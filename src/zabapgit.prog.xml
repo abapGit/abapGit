@@ -4,10 +4,10 @@
   <asx:values>
    <PROGDIR>
     <NAME>ZABAPGIT</NAME>
-    <DBAPL>S</DBAPL>
     <SUBC>1</SUBC>
+    <RSTAT>K</RSTAT>
+    <RLOAD>E</RLOAD>
     <FIXPT>X</FIXPT>
-    <LDBNAME>D$S</LDBNAME>
     <UCCHECK>X</UCCHECK>
    </PROGDIR>
    <TPOOL>
