@@ -160,11 +160,6 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
   METHOD render_command_palettes.
 
-    ii_html->add( 'var gGoRepoPalette = new CommandPalette(enumerateTocAllRepos, {' ).
-    ii_html->add( '  toggleKey: "F2",' ).
-    ii_html->add( '  hotkeyDescription: "Go to repo ..."' ).
-    ii_html->add( '});' ).
-
     ii_html->add( 'var gCommandPalette = new CommandPalette(enumerateToolbarActions, {' ).
     ii_html->add( '  toggleKey: "F1",' ).
     ii_html->add( '  hotkeyDescription: "Command ..."' ).
