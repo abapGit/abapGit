@@ -408,18 +408,17 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     DATA: lv_xstr  TYPE xstring,
           lt_xdata TYPE lvc_t_mime,
           lv_size  TYPE i.
+    DATA lt_html TYPE w3htmltab.
 
     ASSERT iv_text IS SUPPLIED OR iv_xdata IS SUPPLIED.
 
     IF iv_text IS SUPPLIED. " String input
-      DATA lt_html TYPE w3htmltab.
 
       zcl_abapgit_convert=>string_to_tab( " FM SCMS_STRING_TO_FTEXT
          EXPORTING
            iv_str = iv_text
          IMPORTING
-           et_tab = lt_html
-      ).
+           et_tab = lt_html ).
 
       mo_html_viewer->load_data(
         EXPORTING
