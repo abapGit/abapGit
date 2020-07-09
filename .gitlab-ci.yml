@@ -4,8 +4,8 @@
 stages:
   - init
   - pull
-  - push
   - test
+  - push
 
 include:
   - project: 'tools/abapgit-extensions'
