@@ -23,7 +23,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_type IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TYPE IMPLEMENTATION.
 
 
   METHOD create.
@@ -103,26 +103,11 @@ CLASS zcl_abapgit_object_type IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_objname TYPE rsedd0-ddobjname.
-
-
-    lv_objname = ms_item-obj_name.
-
-    CALL FUNCTION 'RS_DD_DELETE_OBJ'
-      EXPORTING
-        no_ask               = abap_true
-        objname              = lv_objname
-        objtype              = 'G'
-      EXCEPTIONS
-        not_executed         = 1
-        object_not_found     = 2
-        object_not_specified = 3
-        permission_failure   = 4
-        dialog_needed        = 5
-        OTHERS               = 6.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error deleting TYPE' ).
+    IF zif_abapgit_object~exists( ) = abap_false.
+      RETURN.
     ENDIF.
+
+    delete_ddic( 'G' ).
 
   ENDMETHOD.
 

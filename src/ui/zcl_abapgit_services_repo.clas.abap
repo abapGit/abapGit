@@ -82,7 +82,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
 
   METHOD gui_deserialize.
@@ -238,8 +238,8 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     li_popups->popup_to_select_from_list(
       EXPORTING
         it_list               = ct_overwrite
-        iv_header_text        = |The following objects have been modified locally.|
-                             && | Select the objects which should be overwritten.|
+        iv_header_text        = |The following objects have been modified (or deleted) locally.|
+                             && | Select the objects which should be overwritten (or recreated).|
         iv_select_column_text = 'Overwrite?'
         it_columns_to_display = lt_columns
       IMPORTING
