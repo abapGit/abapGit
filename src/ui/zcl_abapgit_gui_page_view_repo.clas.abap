@@ -16,9 +16,6 @@ CLASS zcl_abapgit_gui_page_view_repo DEFINITION
         toggle_order_by   TYPE string VALUE 'toggle_order_by' ##NO_TEXT,
         toggle_diff_first TYPE string VALUE 'toggle_diff_first ' ##NO_TEXT,
         display_more      TYPE string VALUE 'display_more' ##NO_TEXT,
-        documentation     TYPE string VALUE 'documentation' ##NO_TEXT,
-        changelog         TYPE string VALUE 'changelog' ##NO_TEXT,
-        changed_by        TYPE string VALUE 'changed_by' ##NO_TEXT,
       END OF c_actions.
 
 
@@ -142,7 +139,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_view_repo IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -395,8 +392,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
 
     CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-main'.
 
-    ro_menu->add( iv_txt = 'Repository list'
-                  iv_act = zif_abapgit_definitions=>c_action-abapgit_home ).
+    ro_menu->add(
+      iv_txt = zcl_abapgit_gui_buttons=>repo_list( )
+      iv_act = zif_abapgit_definitions=>c_action-abapgit_home
+    )->add(
+      iv_txt = zcl_abapgit_gui_buttons=>advanced( )
+      io_sub = zcl_abapgit_gui_chunk_lib=>advanced_submenu( )
+    )->add(
+      iv_txt = zcl_abapgit_gui_buttons=>help( )
+      io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
 
   ENDMETHOD.
 
@@ -1083,6 +1087,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-repo_open_in_master_lang.
         open_in_master_language( ).
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN OTHERS.
+
+        super->zif_abapgit_gui_event_handler~on_event(
+          EXPORTING
+            iv_action    = iv_action
+            iv_getdata   = iv_getdata
+            it_postdata  = it_postdata
+          IMPORTING
+            ei_page      = ei_page
+            ev_state     = ev_state ).
 
     ENDCASE.
 

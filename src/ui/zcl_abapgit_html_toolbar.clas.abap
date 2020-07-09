@@ -9,17 +9,19 @@ CLASS zcl_abapgit_html_toolbar DEFINITION
           iv_id TYPE string OPTIONAL,
       add
         IMPORTING
-          iv_txt   TYPE string
-          io_sub   TYPE REF TO zcl_abapgit_html_toolbar OPTIONAL
-          iv_typ   TYPE c         DEFAULT zif_abapgit_html=>c_action_type-sapevent
-          iv_act   TYPE string    OPTIONAL
-          iv_ico   TYPE string    OPTIONAL
-          iv_cur   TYPE abap_bool OPTIONAL
-          iv_opt   TYPE c         OPTIONAL
-          iv_chk   TYPE abap_bool DEFAULT abap_undefined
-          iv_aux   TYPE string    OPTIONAL
-          iv_id    TYPE string    OPTIONAL
-          iv_title TYPE string    OPTIONAL,
+          iv_txt         TYPE string
+          io_sub         TYPE REF TO zcl_abapgit_html_toolbar OPTIONAL
+          iv_typ         TYPE c         DEFAULT zif_abapgit_html=>c_action_type-sapevent
+          iv_act         TYPE string    OPTIONAL
+          iv_ico         TYPE string    OPTIONAL
+          iv_cur         TYPE abap_bool OPTIONAL
+          iv_opt         TYPE c         OPTIONAL
+          iv_chk         TYPE abap_bool DEFAULT abap_undefined
+          iv_aux         TYPE string    OPTIONAL
+          iv_id          TYPE string    OPTIONAL
+          iv_title       TYPE string    OPTIONAL
+        RETURNING VALUE(ro_self) TYPE REF TO zcl_abapgit_html_toolbar,
+
       count
         RETURNING VALUE(rv_count) TYPE i,
       render
@@ -71,7 +73,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
+CLASS zcl_abapgit_html_toolbar IMPLEMENTATION.
 
 
   METHOD add.
@@ -98,6 +100,8 @@ CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
     ls_item-title = iv_title.
 
     APPEND ls_item TO mt_items.
+
+    ro_self = me.
 
   ENDMETHOD.
 
