@@ -494,7 +494,6 @@ INTERFACE zif_abapgit_definitions
       db_edit                       TYPE string VALUE 'db_edit',
       bg_update                     TYPE string VALUE 'bg_update',
       go_explore                    TYPE string VALUE 'go_explore',
-      go_repo_overview              TYPE string VALUE 'go_repo_overview',
       go_repo                       TYPE string VALUE 'go_repo',
       go_db                         TYPE string VALUE 'go_db',
       go_background                 TYPE string VALUE 'go_background',

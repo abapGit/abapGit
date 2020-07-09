@@ -108,6 +108,12 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
       RAISING
         zcx_abapgit_exception .
 
+    CLASS-METHODS advanced_submenu
+      RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
+
+    CLASS-METHODS help_submenu
+      RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-DATA gv_time_zone TYPE timezone.

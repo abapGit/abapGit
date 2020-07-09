@@ -225,10 +225,6 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         ENDIF.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
-      WHEN zif_abapgit_definitions=>c_action-go_repo_overview.               " Go Repository overview
-        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_repo_over.
-        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
-
       WHEN zif_abapgit_definitions=>c_action-go_db.                          " Go DB util page
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_db.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
