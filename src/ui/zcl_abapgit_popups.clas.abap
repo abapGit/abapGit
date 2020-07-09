@@ -409,7 +409,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       IF iv_hide_head IS NOT INITIAL.
         lv_text = 'master'.
       ENDIF.
-      IF iv_hide_branch IS NOT INITIAL AND iv_hide_branch NE 'refs/heads/master'.
+      IF iv_hide_branch IS NOT INITIAL AND iv_hide_branch <> 'refs/heads/master'.
         IF lv_text IS INITIAL.
           lv_text = iv_hide_branch && ' is'.
         ELSE.
