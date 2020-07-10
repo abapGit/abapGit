@@ -79,13 +79,15 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
       RAISING
         zcx_abapgit_exception.
 
-ENDCLASS.
-
-
-
-CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
+    METHODS test_changed_by
+      RAISING zcx_abapgit_exception.
 
 ENDCLASS.
+
+
+
+CLASS zcl_abapgit_gui_page IMPLEMENTATION.
+
 
   METHOD constructor.
 
