@@ -85,7 +85,6 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
 ENDCLASS.
 
 
-ENDCLASS.
 
 CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
