@@ -648,11 +648,13 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
         ENDIF.
       ENDLOOP.
 
-      SELECT progname cnam FROM reposrc
-        INTO TABLE lt_reposrc
-        FOR ALL ENTRIES IN rt_includes
-        WHERE progname = rt_includes-table_line
-        AND r3state = 'A'.
+      IF lines( rt_includes ) > 0.
+        SELECT progname cnam FROM reposrc
+          INTO TABLE lt_reposrc
+          FOR ALL ENTRIES IN rt_includes
+          WHERE progname = rt_includes-table_line
+          AND r3state = 'A'.
+      ENDIF.
       SORT lt_reposrc BY progname ASCENDING.
     ENDIF.
 
