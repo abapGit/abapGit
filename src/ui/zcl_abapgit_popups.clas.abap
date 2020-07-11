@@ -384,6 +384,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
           lv_default     TYPE i,
           lv_head_suffix TYPE string,
           lv_head_symref TYPE string,
+          lv_text        TYPE string,
           lt_selection   TYPE TABLE OF spopli.
 
     FIELD-SYMBOLS: <ls_sel>    LIKE LINE OF lt_selection,
@@ -405,7 +406,23 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     ENDIF.
 
     IF lt_branches IS INITIAL.
-      zcx_abapgit_exception=>raise( 'No branch to select' ).
+      IF iv_hide_head IS NOT INITIAL.
+        lv_text = 'master'.
+      ENDIF.
+      IF iv_hide_branch IS NOT INITIAL AND iv_hide_branch <> 'refs/heads/master'.
+        IF lv_text IS INITIAL.
+          lv_text = iv_hide_branch && ' is'.
+        ELSE.
+          CONCATENATE lv_text 'and' iv_hide_branch 'are' INTO lv_text SEPARATED BY space.
+        ENDIF.
+      ELSE.
+        lv_text = lv_text && ' is'.
+      ENDIF.
+      IF lv_text IS NOT INITIAL.
+        zcx_abapgit_exception=>raise( 'No branches available to select (' && lv_text && ' hidden)' ).
+      ELSE.
+        zcx_abapgit_exception=>raise( 'No branches are available to select' ).
+      ENDIF.
     ENDIF.
 
     LOOP AT lt_branches ASSIGNING <ls_branch>.

@@ -418,14 +418,14 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
         AND as4vers = '0000'.
       IF sy-subrc = 0 AND lv_tabclass = 'TRANSP'.
 
-* Avoid dump in dynamic SELECT in case the table does not exist on database
+        " Avoid dump in dynamic SELECT in case the table does not exist on database
         CALL FUNCTION 'DB_EXISTS_TABLE'
           EXPORTING
             tabname = lv_objname
           IMPORTING
             subrc   = lv_subrc.
         IF lv_subrc = 0.
-* it cannot delete table with table without asking
+          " it cannot delete table with data without asking
           CREATE DATA lr_data TYPE (lv_objname).
           ASSIGN lr_data->* TO <lg_data>.
           SELECT SINGLE * FROM (lv_objname) INTO <lg_data>.
@@ -435,19 +435,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      CALL FUNCTION 'RS_DD_DELETE_OBJ'
-        EXPORTING
-          no_ask               = lv_no_ask
-          objname              = lv_objname
-          objtype              = 'T'
-        EXCEPTIONS
-          not_executed         = 1
-          object_not_found     = 2
-          object_not_specified = 3
-          permission_failure   = 4.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, TABL,' && sy-subrc ).
-      ENDIF.
+      delete_ddic( iv_objtype = 'T'
+                   iv_no_ask  = lv_no_ask ).
 
       delete_longtexts( c_longtext_id_tabl ).
 
