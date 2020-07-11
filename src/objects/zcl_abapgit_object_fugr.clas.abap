@@ -37,6 +37,8 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     TYPES:
       tt_tpool_i18n TYPE STANDARD TABLE OF ty_tpool_i18n .
 
+    DATA: mt_includes_cache TYPE ty_sobj_name_tt.
+
     METHODS check_rfc_parameters
       IMPORTING
         !is_function TYPE ty_function
@@ -578,6 +580,11 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
                    <ls_func>    LIKE LINE OF lt_functab.
 
 
+    IF lines( mt_includes_cache ) > 0.
+      rt_includes = mt_includes_cache.
+      RETURN.
+    ENDIF.
+
     lv_program = main_name( ).
     lt_functab = functions( ).
 
@@ -671,6 +678,8 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     ENDLOOP.
 
     APPEND lv_program TO rt_includes.
+
+    mt_includes_cache = rt_includes.
 
   ENDMETHOD.
 
