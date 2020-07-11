@@ -100,8 +100,8 @@ div#header > div { display: inline-block }
 
 /* official logo colors, not vars, redefine in themes directly*/
 .logo .icon.icon-git-alt { color: #f03c2e }
-.logo .icon.icon-abapgit { 
-  color: #362701; 
+.logo .icon.icon-abapgit {
+  color: #362701;
   vertical-align: bottom;
 }
 
@@ -1132,4 +1132,9 @@ settings_tab tr:first-child td { border-top: 0px; }
   text-transform: uppercase;
   padding-left: 0.5em;
   padding-right: 0.5em;
+}
+
+/* This icon is slightly wider than other icons */
+.icon-cloud-upload-alt {
+    padding-right: 5px;
 }

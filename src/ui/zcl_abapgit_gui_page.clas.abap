@@ -79,11 +79,14 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
       RAISING
         zcx_abapgit_exception.
 
+    METHODS test_changed_by
+      RAISING zcx_abapgit_exception.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -304,6 +307,22 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
         ENDIF.
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
+      WHEN zif_abapgit_definitions=>c_action-changed_by.
+        test_changed_by( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
+      WHEN zif_abapgit_definitions=>c_action-documentation.
+        zcl_abapgit_services_abapgit=>open_abapgit_wikipage( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
+      WHEN zif_abapgit_definitions=>c_action-go_explore.
+        zcl_abapgit_services_abapgit=>open_dotabap_homepage( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
+      WHEN zif_abapgit_definitions=>c_action-changelog.
+        zcl_abapgit_services_abapgit=>open_abapgit_changelog( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
     ENDCASE.
 
   ENDMETHOD.
@@ -346,6 +365,27 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ENDIF.
 
     ri_html->add( '</html>' ).                              "#EC NOTEXT
+
+  ENDMETHOD.
+
+  METHOD test_changed_by.
+
+    DATA: ls_tadir TYPE zif_abapgit_definitions=>ty_tadir,
+          lv_user  TYPE xubname,
+          ls_item  TYPE zif_abapgit_definitions=>ty_item.
+
+
+    ls_tadir = zcl_abapgit_ui_factory=>get_popups( )->popup_object( ).
+    IF ls_tadir IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    ls_item-obj_type = ls_tadir-object.
+    ls_item-obj_name = ls_tadir-obj_name.
+
+    lv_user = zcl_abapgit_objects=>changed_by( ls_item ).
+
+    MESSAGE lv_user TYPE 'S'.
 
   ENDMETHOD.
 ENDCLASS.
