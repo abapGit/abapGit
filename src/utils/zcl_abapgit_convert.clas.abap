@@ -48,41 +48,41 @@ CLASS zcl_abapgit_convert DEFINITION
         VALUE(rt_lines) TYPE string_table .
     CLASS-METHODS conversion_exit_isola_output
       IMPORTING
-        iv_spras        TYPE spras
+        !iv_spras       TYPE spras
       RETURNING
-        VALUE(rv_spras) TYPE laiso.
+        VALUE(rv_spras) TYPE laiso .
     CLASS-METHODS alpha_output
       IMPORTING
-        iv_val        TYPE clike
+        !iv_val       TYPE clike
       RETURNING
-        VALUE(rv_str) TYPE string.
-
+        VALUE(rv_str) TYPE string .
     CLASS-METHODS string_to_xstring
       IMPORTING
-        iv_str         TYPE string
+        !iv_str        TYPE string
       RETURNING
-        VALUE(rv_xstr) TYPE xstring.
-
+        VALUE(rv_xstr) TYPE xstring .
+    CLASS-METHODS string_to_tab
+      IMPORTING
+        !iv_str       TYPE string
+      EXPORTING
+        VALUE(et_tab) TYPE STANDARD TABLE .
     CLASS-METHODS base64_to_xstring
       IMPORTING
-        iv_base64      TYPE string
+        !iv_base64     TYPE string
       RETURNING
-        VALUE(rv_xstr) TYPE xstring.
-
+        VALUE(rv_xstr) TYPE xstring .
     CLASS-METHODS bintab_to_xstring
       IMPORTING
-        it_bintab      TYPE lvc_t_mime
-        iv_size        TYPE i
+        !it_bintab     TYPE lvc_t_mime
+        !iv_size       TYPE i
       RETURNING
-        VALUE(rv_xstr) TYPE xstring.
-
+        VALUE(rv_xstr) TYPE xstring .
     CLASS-METHODS xstring_to_bintab
       IMPORTING
-        iv_xstr   TYPE xstring
+        !iv_xstr   TYPE xstring
       EXPORTING
-        ev_size   TYPE i
-        et_bintab TYPE lvc_t_mime.
-
+        !ev_size   TYPE i
+        !et_bintab TYPE lvc_t_mime .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -198,6 +198,21 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
     ELSE.
       SPLIT iv_string AT cl_abap_char_utilities=>newline INTO TABLE rt_lines.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD string_to_tab.
+
+    CLEAR et_tab[].
+    CALL FUNCTION 'SCMS_STRING_TO_FTEXT'
+      EXPORTING
+        text      = iv_str
+*     IMPORTING
+*         LENGTH    = LENGTH
+      TABLES
+        ftext_tab = et_tab.
+    ASSERT sy-subrc = 0.
 
   ENDMETHOD.
 
