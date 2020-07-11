@@ -408,34 +408,50 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     DATA: lv_xstr  TYPE xstring,
           lt_xdata TYPE lvc_t_mime,
           lv_size  TYPE i.
+    DATA lt_html TYPE w3htmltab.
 
     ASSERT iv_text IS SUPPLIED OR iv_xdata IS SUPPLIED.
 
     IF iv_text IS SUPPLIED. " String input
-      lv_xstr = zcl_abapgit_convert=>string_to_xstring( iv_text ).
+
+      zcl_abapgit_convert=>string_to_tab( " FM SCMS_STRING_TO_FTEXT
+         EXPORTING
+           iv_str = iv_text
+         IMPORTING
+           et_tab = lt_html ).
+
+      mo_html_viewer->load_data(
+        EXPORTING
+          type         = iv_type
+          subtype      = iv_subtype
+          url          = iv_url
+        IMPORTING
+          assigned_url = rv_url
+        CHANGING
+          data_table   = lt_html
+        EXCEPTIONS
+          OTHERS       = 1 ) ##NO_TEXT.
     ELSE. " Raw input
-      lv_xstr = iv_xdata.
+      zcl_abapgit_convert=>xstring_to_bintab(
+        EXPORTING
+          iv_xstr   = iv_xdata
+        IMPORTING
+          ev_size   = lv_size
+          et_bintab = lt_xdata ).
+
+      mo_html_viewer->load_data(
+        EXPORTING
+          type         = iv_type
+          subtype      = iv_subtype
+          size         = lv_size
+          url          = iv_url
+        IMPORTING
+          assigned_url = rv_url
+        CHANGING
+          data_table   = lt_xdata
+        EXCEPTIONS
+          OTHERS       = 1 ) ##NO_TEXT.
     ENDIF.
-
-    zcl_abapgit_convert=>xstring_to_bintab(
-      EXPORTING
-        iv_xstr   = lv_xstr
-      IMPORTING
-        ev_size   = lv_size
-        et_bintab = lt_xdata ).
-
-    mo_html_viewer->load_data(
-      EXPORTING
-        type         = iv_type
-        subtype      = iv_subtype
-        size         = lv_size
-        url          = iv_url
-      IMPORTING
-        assigned_url = rv_url
-      CHANGING
-        data_table   = lt_xdata
-      EXCEPTIONS
-        OTHERS       = 1 ) ##NO_TEXT.
 
     ASSERT sy-subrc = 0. " Image data error
 
