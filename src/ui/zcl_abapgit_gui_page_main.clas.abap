@@ -19,10 +19,7 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
     CONSTANTS:
       BEGIN OF c_actions,
         show          TYPE string VALUE 'show' ##NO_TEXT,
-        changed_by    TYPE string VALUE 'changed_by',
         overview      TYPE string VALUE 'overview',
-        documentation TYPE string VALUE 'documentation',
-        changelog     TYPE string VALUE 'changelog',
         select        TYPE string VALUE 'select',
         apply_filter  TYPE string VALUE 'apply_filter',
         abapgit_home  TYPE string VALUE 'abapgit_home',
@@ -31,9 +28,6 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
     DATA: mo_repo_overview TYPE REF TO zcl_abapgit_gui_repo_over,
           mv_repo_key      TYPE zif_abapgit_persistence=>ty_value.
 
-    METHODS test_changed_by
-      RAISING zcx_abapgit_exception.
-
     METHODS build_main_menu
       RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
 
@@ -41,51 +35,25 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
 
   METHOD build_main_menu.
 
-    DATA: lo_advsub  TYPE REF TO zcl_abapgit_html_toolbar,
-          lo_helpsub TYPE REF TO zcl_abapgit_html_toolbar.
-
     CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-main'.
-    CREATE OBJECT lo_advsub.
-    CREATE OBJECT lo_helpsub.
 
-    lo_advsub->add( iv_txt = 'Database util'
-                    iv_act = zif_abapgit_definitions=>c_action-go_db ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Package to zip'
-                    iv_act = zif_abapgit_definitions=>c_action-zip_package ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Transport to zip'
-                    iv_act = zif_abapgit_definitions=>c_action-zip_transport ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Object to files'
-                    iv_act = zif_abapgit_definitions=>c_action-zip_object ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Test changed by'
-                    iv_act = c_actions-changed_by ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Debug info'
-                    iv_act = zif_abapgit_definitions=>c_action-go_debuginfo ) ##NO_TEXT.
-    lo_advsub->add( iv_txt = 'Settings'
-                    iv_act = zif_abapgit_definitions=>c_action-go_settings ) ##NO_TEXT.
-
-    lo_helpsub->add( iv_txt = 'Tutorial'
-                     iv_act = zif_abapgit_definitions=>c_action-go_tutorial ) ##NO_TEXT.
-    lo_helpsub->add( iv_txt = 'Documentation'
-                     iv_act = c_actions-documentation ) ##NO_TEXT.
-    lo_helpsub->add( iv_txt = 'Explore'
-                     iv_act = zif_abapgit_definitions=>c_action-go_explore ) ##NO_TEXT.
-    lo_helpsub->add( iv_txt = 'Changelog'
-                     iv_act = c_actions-changelog ) ##NO_TEXT.
-
-    ro_menu->add( iv_txt = '+ Online'
-                  iv_act = zif_abapgit_definitions=>c_action-repo_newonline ) ##NO_TEXT.
-    ro_menu->add( iv_txt = '+ Offline'
-                  iv_act = zif_abapgit_definitions=>c_action-repo_newoffline ) ##NO_TEXT.
-
-    ro_menu->add( iv_txt = 'Advanced'
-                  io_sub = lo_advsub ) ##NO_TEXT.
-    ro_menu->add( iv_txt = 'Help'
-                  io_sub = lo_helpsub ) ##NO_TEXT.
+    ro_menu->add(
+      iv_txt = zcl_abapgit_gui_buttons=>new_online( )
+      iv_act = zif_abapgit_definitions=>c_action-repo_newonline
+    )->add(
+      iv_txt = zcl_abapgit_gui_buttons=>new_offline( )
+      iv_act = zif_abapgit_definitions=>c_action-repo_newoffline
+    )->add(
+      iv_txt = '<i class="icon icon-tools-solid"></i>'
+      io_sub = zcl_abapgit_gui_chunk_lib=>advanced_submenu( )
+    )->add(
+      iv_txt = '<i class="icon icon-question-circle-solid"></i>'
+      io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
 
   ENDMETHOD.
 
@@ -118,28 +86,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD test_changed_by.
-
-    DATA: ls_tadir TYPE zif_abapgit_definitions=>ty_tadir,
-          lv_user  TYPE xubname,
-          ls_item  TYPE zif_abapgit_definitions=>ty_item.
-
-
-    ls_tadir = zcl_abapgit_ui_factory=>get_popups( )->popup_object( ).
-    IF ls_tadir IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    ls_item-obj_type = ls_tadir-object.
-    ls_item-obj_name = ls_tadir-obj_name.
-
-    lv_user = zcl_abapgit_objects=>changed_by( ls_item ).
-
-    MESSAGE lv_user TYPE 'S'.
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: lv_key           TYPE zif_abapgit_persistence=>ty_value,
@@ -153,7 +99,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
       WHEN c_actions-select.
 
         lv_key = iv_getdata.
-
         zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
 
         TRY.
@@ -180,22 +125,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
         mo_repo_overview->set_filter( it_postdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
-
-      WHEN c_actions-changed_by.
-        test_changed_by( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-
-      WHEN c_actions-documentation.
-        zcl_abapgit_services_abapgit=>open_abapgit_wikipage( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-
-      WHEN zif_abapgit_definitions=>c_action-go_explore.
-        zcl_abapgit_services_abapgit=>open_dotabap_homepage( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-
-      WHEN c_actions-changelog.
-        zcl_abapgit_services_abapgit=>open_abapgit_changelog( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
       WHEN OTHERS.
 
