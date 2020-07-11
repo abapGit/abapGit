@@ -17,6 +17,7 @@
     <item>/CODE_OF_CONDUCT.md</item>
     <item>/abaplint.json</item>
     <item>/.eslintrc.yaml</item>
+    <item>/.gitlab-ci.yml</item>
    </IGNORE>
   </DATA>
  </asx:values>

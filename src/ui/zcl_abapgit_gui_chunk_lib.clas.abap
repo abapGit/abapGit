@@ -108,6 +108,12 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
       RAISING
         zcx_abapgit_exception .
 
+    CLASS-METHODS advanced_submenu
+      RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
+
+    CLASS-METHODS help_submenu
+      RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     CLASS-DATA gv_time_zone TYPE timezone.
@@ -136,7 +142,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
+CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
 
   METHOD class_constructor.
@@ -718,4 +724,52 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ro_html->add( '</div>' ).
 
   ENDMETHOD.
+
+  METHOD advanced_submenu.
+
+    CREATE OBJECT ro_menu.
+
+    ro_menu->add(
+      iv_txt = 'Database util'
+      iv_act = zif_abapgit_definitions=>c_action-go_db
+    )->add(
+      iv_txt = 'Package to zip'
+      iv_act = zif_abapgit_definitions=>c_action-zip_package
+    )->add(
+      iv_txt = 'Transport to zip'
+      iv_act = zif_abapgit_definitions=>c_action-zip_transport
+    )->add(
+      iv_txt = 'Object to files'
+      iv_act = zif_abapgit_definitions=>c_action-zip_object
+    )->add(
+      iv_txt = 'Test changed by'
+      iv_act = zif_abapgit_definitions=>c_action-changed_by
+    )->add(
+      iv_txt = 'Debug info'
+      iv_act = zif_abapgit_definitions=>c_action-go_debuginfo
+    )->add(
+      iv_txt = 'Settings'
+      iv_act = zif_abapgit_definitions=>c_action-go_settings ).
+
+  ENDMETHOD.
+
+  METHOD help_submenu.
+
+    CREATE OBJECT ro_menu.
+
+    ro_menu->add(
+      iv_txt = 'Tutorial'
+      iv_act = zif_abapgit_definitions=>c_action-go_tutorial
+    )->add(
+      iv_txt = 'Documentation'
+      iv_act = zif_abapgit_definitions=>c_action-documentation
+    )->add(
+      iv_txt = 'Explore'
+      iv_act = zif_abapgit_definitions=>c_action-go_explore
+    )->add(
+      iv_txt = 'Changelog'
+      iv_act = zif_abapgit_definitions=>c_action-changelog ).
+
+  ENDMETHOD.
+
 ENDCLASS.
