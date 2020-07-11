@@ -1,8 +1,10 @@
 CLASS zcl_abapgit_factory DEFINITION
   PUBLIC
   CREATE PRIVATE
-  GLOBAL FRIENDS zcl_abapgit_injector.
+  GLOBAL FRIENDS zcl_abapgit_injector .
+
   PUBLIC SECTION.
+
     CLASS-METHODS get_tadir
       RETURNING
         VALUE(ri_tadir) TYPE REF TO zif_abapgit_tadir .
@@ -36,10 +38,9 @@ CLASS zcl_abapgit_factory DEFINITION
         VALUE(ri_environment) TYPE REF TO zif_abapgit_environment .
     CLASS-METHODS get_longtexts
       IMPORTING
-        iv_longtexts_name   TYPE string OPTIONAL
+        !iv_longtexts_name  TYPE string OPTIONAL
       RETURNING
-        VALUE(ro_longtexts) TYPE REF TO zcl_abapgit_longtexts.
-
+        VALUE(ri_longtexts) TYPE REF TO zif_abapgit_longtexts .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -79,7 +80,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_factory IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
 
 
   METHOD get_branch_overview.
@@ -134,6 +135,31 @@ CLASS zcl_abapgit_factory IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_longtexts.
+
+    DATA: ls_longtext TYPE ty_longtexts.
+    FIELD-SYMBOLS: <ls_longtext> TYPE ty_longtexts.
+
+    READ TABLE gt_longtexts ASSIGNING <ls_longtext>
+                            WITH TABLE KEY longtexts_name = iv_longtexts_name.
+    IF sy-subrc <> 0.
+
+      ls_longtext-longtexts_name = iv_longtexts_name.
+      CREATE OBJECT ls_longtext-instance
+        EXPORTING
+          iv_longtexts_name = iv_longtexts_name.
+
+      INSERT ls_longtext
+        INTO TABLE gt_longtexts
+        ASSIGNING <ls_longtext>.
+
+    ENDIF.
+
+    ri_longtexts = <ls_longtext>-instance.
+
+  ENDMETHOD.
+
+
   METHOD get_sap_package.
 
     DATA: ls_sap_package TYPE ty_sap_package.
@@ -180,30 +206,4 @@ CLASS zcl_abapgit_factory IMPLEMENTATION.
     ri_tadir = gi_tadir.
 
   ENDMETHOD.
-
-
-  METHOD get_longtexts.
-
-    DATA: ls_longtext TYPE ty_longtexts.
-    FIELD-SYMBOLS: <ls_longtext> TYPE ty_longtexts.
-
-    READ TABLE gt_longtexts ASSIGNING <ls_longtext>
-                            WITH TABLE KEY longtexts_name = iv_longtexts_name.
-    IF sy-subrc <> 0.
-
-      ls_longtext-longtexts_name = iv_longtexts_name.
-      CREATE OBJECT ls_longtext-instance
-        EXPORTING
-          iv_longtexts_name = iv_longtexts_name.
-
-      INSERT ls_longtext
-        INTO TABLE gt_longtexts
-        ASSIGNING <ls_longtext>.
-
-    ENDIF.
-
-    ro_longtexts = <ls_longtext>-instance.
-
-  ENDMETHOD.
-
 ENDCLASS.
