@@ -35,7 +35,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DOCT IMPLEMENTATION.
         is_item     = is_item
         iv_language = iv_language ).
 
-    mi_longtexts = zcl_abapgit_factory=>get_longtexts( c_name ).
+    mi_longtexts = zcl_abapgit_factory=>get_longtexts( ).
 
   ENDMETHOD.
 
@@ -65,6 +65,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DOCT IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     mi_longtexts->deserialize(
+        iv_longtext_name   = c_name
         io_xml             = io_xml
         iv_master_language = mv_language ).
 
@@ -166,6 +167,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DOCT IMPLEMENTATION.
   METHOD zif_abapgit_object~serialize.
 
     mi_longtexts->serialize(
+        iv_longtext_name = c_name
         iv_object_name = ms_item-obj_name
         iv_longtext_id = c_id
         io_xml         = io_xml ).

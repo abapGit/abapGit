@@ -6,10 +6,6 @@ CLASS zcl_abapgit_longtexts DEFINITION
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_longtexts .
-
-    METHODS constructor
-      IMPORTING
-        !iv_longtexts_name TYPE string OPTIONAL .
   PROTECTED SECTION.
 
     TYPES:
@@ -34,25 +30,12 @@ CLASS zcl_abapgit_longtexts DEFINITION
         zcx_abapgit_exception .
   PRIVATE SECTION.
 
-    CONSTANTS c_longtexts_name TYPE string VALUE 'LONGTEXTS' ##NO_TEXT.
     CONSTANTS c_docu_state_active TYPE dokstate VALUE 'A' ##NO_TEXT.
-    DATA mv_longtexts_name TYPE string .
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_LONGTEXTS IMPLEMENTATION.
-
-
-  METHOD constructor.
-
-    IF iv_longtexts_name IS NOT INITIAL.
-      mv_longtexts_name = iv_longtexts_name.
-    ELSE.
-      mv_longtexts_name = c_longtexts_name.
-    ENDIF.
-
-  ENDMETHOD.
 
 
   METHOD read.
@@ -178,7 +161,7 @@ CLASS ZCL_ABAPGIT_LONGTEXTS IMPLEMENTATION.
 
     io_xml->read(
       EXPORTING
-        iv_name = mv_longtexts_name
+        iv_name = iv_longtext_name
       CHANGING
         cg_data = lt_longtexts ).
 
@@ -218,7 +201,7 @@ CLASS ZCL_ABAPGIT_LONGTEXTS IMPLEMENTATION.
                          it_dokil       = lt_dokil
                          iv_master_lang_only = lv_master_lang_only ).
 
-    io_xml->add( iv_name = mv_longtexts_name
+    io_xml->add( iv_name = iv_longtext_name
                  ig_data = lt_longtexts ).
 
   ENDMETHOD.
