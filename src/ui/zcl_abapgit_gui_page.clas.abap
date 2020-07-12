@@ -304,18 +304,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
         ENDIF.
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
-      WHEN zif_abapgit_definitions=>c_action-documentation.
-        zcl_abapgit_services_abapgit=>open_abapgit_wikipage( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-
-      WHEN zif_abapgit_definitions=>c_action-go_explore.
-        zcl_abapgit_services_abapgit=>open_dotabap_homepage( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-
-      WHEN zif_abapgit_definitions=>c_action-changelog.
-        zcl_abapgit_services_abapgit=>open_abapgit_changelog( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-
     ENDCASE.
 
   ENDMETHOD.
