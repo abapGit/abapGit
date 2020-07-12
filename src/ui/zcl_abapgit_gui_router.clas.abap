@@ -482,6 +482,8 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-changed_by.
         zcl_abapgit_services_basis=>test_changed_by( ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+      WHEN OTHERS.
+        " To pass abaplint, keep the place for future commands
     ENDCASE.
 
   ENDMETHOD.
