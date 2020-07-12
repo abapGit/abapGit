@@ -37,6 +37,8 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     TYPES:
       tt_tpool_i18n TYPE STANDARD TABLE OF ty_tpool_i18n .
 
+    DATA: mt_includes_cache TYPE ty_sobj_name_tt.
+
     METHODS check_rfc_parameters
       IMPORTING
         !is_function TYPE ty_function
@@ -562,7 +564,6 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
     TYPES: BEGIN OF ty_reposrc,
              progname TYPE reposrc-progname,
-             cnam     TYPE reposrc-cnam,
            END OF ty_reposrc.
 
     DATA: lt_reposrc        TYPE STANDARD TABLE OF ty_reposrc WITH DEFAULT KEY,
@@ -577,6 +578,11 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     FIELD-SYMBOLS: <lv_include> LIKE LINE OF rt_includes,
                    <ls_func>    LIKE LINE OF lt_functab.
 
+
+    IF lines( mt_includes_cache ) > 0.
+      rt_includes = mt_includes_cache.
+      RETURN.
+    ENDIF.
 
     lv_program = main_name( ).
     lt_functab = functions( ).
@@ -648,11 +654,13 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
         ENDIF.
       ENDLOOP.
 
-      SELECT progname cnam FROM reposrc
-        INTO TABLE lt_reposrc
-        FOR ALL ENTRIES IN rt_includes
-        WHERE progname = rt_includes-table_line
-        AND r3state = 'A'.
+      IF lines( rt_includes ) > 0.
+        SELECT progname FROM reposrc
+          INTO TABLE lt_reposrc
+          FOR ALL ENTRIES IN rt_includes
+          WHERE progname = rt_includes-table_line
+          AND r3state = 'A'.
+      ENDIF.
       SORT lt_reposrc BY progname ASCENDING.
     ENDIF.
 
@@ -669,6 +677,8 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     ENDLOOP.
 
     APPEND lv_program TO rt_includes.
+
+    mt_includes_cache = rt_includes.
 
   ENDMETHOD.
 
