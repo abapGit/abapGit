@@ -8,6 +8,7 @@ CLASS ltcl_sotr_handler DEFINITION FOR TESTING
       RETURNING VALUE(rv_is_wd_component_existing) TYPE abap_bool.
     METHODS sotr_wda_0001 FOR TESTING.
     METHODS sotr_wda_0003_not_exist FOR TESTING.
+    METHODS sotr_wda_0004 FOR TESTING.
     METHODS sotr_cx_0002 FOR TESTING.
 ENDCLASS.
 
@@ -17,14 +18,20 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
     DATA lv_component_name TYPE string.
 
     lv_component_name = iv_component_name.
-    CALL FUNCTION 'WDR_REPOSITORY_INFO'
-      EXPORTING
-        component_name = lv_component_name
-      IMPORTING
-        repository     = ls_repository.
-    IF ls_repository IS NOT INITIAL.
-      rv_is_wd_component_existing = abap_true.
-    ENDIF.
+    TRY.
+        "need to regenerate for unit test to work
+        CALL FUNCTION 'WDR_REPOSITORY_INFO'
+          EXPORTING
+            component_name = lv_component_name
+            extended_read  = abap_true
+          IMPORTING
+            repository     = ls_repository.
+        IF ls_repository IS NOT INITIAL.
+          rv_is_wd_component_existing = abap_true.
+        ENDIF.
+      CATCH cx_wdr_rr_exception.
+        "ignore and return false
+    ENDTRY.
   ENDMETHOD.
   METHOD sotr_wda_0001.
     CONSTANTS lc_wd_component_name TYPE sobj_name VALUE 'SALV_WD_TEST_TABLE_SIMPLE'.
@@ -45,6 +52,20 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
       TRY.
           lt_sotr = zcl_abapgit_sotr_handler=>read_sotr_wda( iv_object_name = lc_wd_not_exist_component_name ).
           cl_aunit_assert=>assert_initial( lt_sotr ).
+        CATCH zcx_abapgit_exception.
+          cl_aunit_assert=>fail( quit = if_aunit_constants=>method ).
+      ENDTRY.
+    ENDIF.
+  ENDMETHOD.
+  METHOD sotr_wda_0004.
+    CONSTANTS lc_wd_component_name TYPE sobj_name VALUE 'SALV_WD_TEST_TABLE_SELECT'.
+    DATA lt_sotr TYPE zif_abapgit_definitions=>ty_sotr_tt.
+    IF is_wd_component_existing( lc_wd_component_name ) = abap_true.
+      TRY.
+          lt_sotr = zcl_abapgit_sotr_handler=>read_sotr_wda( iv_object_name = lc_wd_component_name ).
+          IF lines( lt_sotr ) < 50.
+            cl_aunit_assert=>fail( quit = if_aunit_constants=>method ).
+          ENDIF.
         CATCH zcx_abapgit_exception.
           cl_aunit_assert=>fail( quit = if_aunit_constants=>method ).
       ENDTRY.

@@ -28,13 +28,14 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-  PROTECTED SECTION.
-    CLASS-METHODS get_sotr_4_concept
-      IMPORTING
-        iv_concept     TYPE sotr_conc
-      RETURNING
-        VALUE(rt_sotr) TYPE zif_abapgit_definitions=>ty_sotr_tt.
+protected section.
 
+  class-methods GET_SOTR_4_CONCEPT
+    importing
+      !IV_CONCEPT type SOTR_CONC
+    returning
+      value(RS_SOTR) type ZIF_ABAPGIT_DEFINITIONS=>TY_SOTR .
+private section.
 ENDCLASS.
 
 
@@ -105,12 +106,12 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
 
 
   METHOD get_sotr_4_concept.
+
     DATA: ls_header   TYPE sotr_head,
           lt_entries  TYPE sotr_text_tt,
           lv_obj_name TYPE trobj_name.
 
-    FIELD-SYMBOLS: <ls_sotr>  LIKE LINE OF rt_sotr,
-                   <ls_entry> LIKE LINE OF lt_entries.
+    FIELD-SYMBOLS: <ls_entry> LIKE LINE OF lt_entries.
 
     CALL FUNCTION 'SOTR_GET_CONCEPT'
       EXPORTING
@@ -140,16 +141,17 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
              <ls_entry>-chan_tstut.
     ENDLOOP.
 
-    APPEND INITIAL LINE TO rt_sotr ASSIGNING <ls_sotr>.
-    <ls_sotr>-header = ls_header.
-    <ls_sotr>-entries = lt_entries.
+    rs_sotr-header  = ls_header.
+    rs_sotr-entries = lt_entries.
 
   ENDMETHOD.
 
 
   METHOD read_sotr_seocomp.
+
     DATA: lv_concept    TYPE sotr_head-concept.
     DATA: lt_seocompodf TYPE yt_seocompodf.
+
     FIELD-SYMBOLS <ls_seocompodf> TYPE seocompodf.
 
     SELECT * FROM seocompodf
@@ -166,7 +168,7 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
         lv_concept = translate( val = <ls_seocompodf>-attvalue
                                 from = ''''
                                 to = '' ).
-        rt_sotr = get_sotr_4_concept( lv_concept ).
+        INSERT get_sotr_4_concept( lv_concept ) INTO TABLE rt_sotr.
       ENDLOOP.
     ENDIF.
 
@@ -174,12 +176,15 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
 
 
   METHOD read_sotr_wda.
+
     DATA: lv_concept  TYPE sotr_head-concept.
     DATA: lt_sotr_use TYPE yt_sotr_use.
     DATA: lv_obj_name TYPE trobj_name.
+
     FIELD-SYMBOLS <ls_sotr_use> TYPE sotr_use.
 
     lv_obj_name = |{ iv_object_name }%|. "Existence check via WDR_REPOSITORY_INFO should have been done earlier
+
     CALL FUNCTION 'SOTR_USAGE_READ'
       EXPORTING
         pgmid          = 'LIMU'                 " Program ID in requests and tasks
@@ -196,7 +201,7 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
         lv_concept = translate( val = <ls_sotr_use>-concept
                                 from = ''''
                                 to = '' ).
-        rt_sotr = get_sotr_4_concept( lv_concept ).
+        INSERT get_sotr_4_concept( lv_concept ) INTO TABLE rt_sotr.
       ENDLOOP.
     ENDIF.
 
