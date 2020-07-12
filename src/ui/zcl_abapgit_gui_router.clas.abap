@@ -72,6 +72,14 @@ CLASS zcl_abapgit_gui_router DEFINITION
         !ev_state      TYPE i
       RAISING
         zcx_abapgit_exception.
+    METHODS other_utilities
+      IMPORTING
+        !is_event_data TYPE ty_event_data
+      EXPORTING
+        !ei_page       TYPE REF TO zif_abapgit_gui_renderable
+        !ev_state      TYPE i
+      RAISING
+        zcx_abapgit_exception.
     METHODS zip_services
       IMPORTING
         !is_event_data TYPE ty_event_data
@@ -133,7 +141,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_router IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -148,6 +156,30 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         zcl_abapgit_services_abapgit=>install_abapgit( ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD call_browser.
+
+    cl_gui_frontend_services=>execute(
+      EXPORTING
+        document               = |{ iv_url }|
+      EXCEPTIONS
+        cntl_error             = 1
+        error_no_gui           = 2
+        bad_parameter          = 3
+        file_not_found         = 4
+        path_not_found         = 5
+        file_extension_unknown = 6
+        error_execute_failed   = 7
+        synchronous_failed     = 8
+        not_supported_by_gui   = 9
+        OTHERS                 = 10 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -444,6 +476,17 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD other_utilities.
+
+    CASE is_event_data-action.
+      WHEN zif_abapgit_definitions=>c_action-changed_by.
+        zcl_abapgit_services_basis=>test_changed_by( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+    ENDCASE.
+
+  ENDMETHOD.
+
+
   METHOD remote_origin_manipulations.
 
     DATA: lv_key TYPE zif_abapgit_persistence=>ty_repo-key.
@@ -624,6 +667,13 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         ei_page      = ei_page
         ev_state     = ev_state ).
 
+    other_utilities(
+      EXPORTING
+        is_event_data = ls_event_data
+      IMPORTING
+        ei_page      = ei_page
+        ev_state     = ev_state ).
+
     IF ev_state IS INITIAL.
       ev_state = zcl_abapgit_gui=>c_event_state-not_handled.
     ENDIF.
@@ -676,30 +726,4 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
-
-
-  METHOD call_browser.
-
-    cl_gui_frontend_services=>execute(
-      EXPORTING
-        document               = |{ iv_url }|
-      EXCEPTIONS
-        cntl_error             = 1
-        error_no_gui           = 2
-        bad_parameter          = 3
-        file_not_found         = 4
-        path_not_found         = 5
-        file_extension_unknown = 6
-        error_execute_failed   = 7
-        synchronous_failed     = 8
-        not_supported_by_gui   = 9
-        OTHERS                 = 10 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
 ENDCLASS.
