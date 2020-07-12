@@ -28,14 +28,14 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
       RAISING
         zcx_abapgit_exception.
 
-protected section.
+  PROTECTED SECTION.
 
-  class-methods GET_SOTR_4_CONCEPT
-    importing
-      !IV_CONCEPT type SOTR_CONC
-    returning
-      value(RS_SOTR) type ZIF_ABAPGIT_DEFINITIONS=>TY_SOTR .
-private section.
+    CLASS-METHODS get_sotr_4_concept
+      IMPORTING
+        !iv_concept    TYPE sotr_conc
+      RETURNING
+        VALUE(rs_sotr) TYPE zif_abapgit_definitions=>ty_sotr .
+  PRIVATE SECTION.
 ENDCLASS.
 
 
