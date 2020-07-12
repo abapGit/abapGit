@@ -486,7 +486,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
           lt_dd36m     TYPE dd36mttyp,
           ls_dd12v     LIKE LINE OF lt_dd12v,
           lv_refs      TYPE abap_bool,
-          ls_extras    TYPE zcl_abapgit_object_tabl=>ty_tabl_extras.
+          ls_extras    TYPE ty_tabl_extras.
 
     FIELD-SYMBOLS: <ls_dd03p> TYPE dd03p.
 
@@ -693,7 +693,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
           lt_dd35v  TYPE TABLE OF dd35v,
           lv_index  LIKE sy-index,
           lt_dd36m  TYPE dd36mttyp,
-          ls_extras TYPE zcl_abapgit_object_tabl=>ty_tabl_extras.
+          ls_extras TYPE ty_tabl_extras.
 
     FIELD-SYMBOLS: <ls_dd12v>      LIKE LINE OF lt_dd12v,
                    <ls_dd05m>      LIKE LINE OF lt_dd05m,
