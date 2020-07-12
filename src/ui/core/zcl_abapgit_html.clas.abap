@@ -14,27 +14,19 @@ CLASS zcl_abapgit_html DEFINITION
       FOR zif_abapgit_html~add_a .
     ALIASES add_checkbox
       FOR zif_abapgit_html~add_checkbox .
+    ALIASES add_icon
+      FOR zif_abapgit_html~add_icon .
     ALIASES icon
       FOR zif_abapgit_html~icon .
     ALIASES is_empty
       FOR zif_abapgit_html~is_empty .
-    ALIASES render
-      FOR zif_abapgit_html~render .
 
     CONSTANTS c_indent_size TYPE i VALUE 2 ##NO_TEXT.
 
     CLASS-METHODS class_constructor .
-    METHODS add_icon
-      IMPORTING
-        !iv_name    TYPE string
-        !iv_hint    TYPE string OPTIONAL
-        !iv_class   TYPE string OPTIONAL
-        !iv_onclick TYPE string OPTIONAL .
-
     CLASS-METHODS create
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
-
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -188,16 +180,6 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD add_icon.
-
-    add( icon( iv_name    = iv_name
-               iv_class   = iv_class
-               iv_hint    = iv_hint
-               iv_onclick = iv_onclick  ) ).
-
-  ENDMETHOD.
-
-
   METHOD checkbox.
 
     DATA: lv_checked TYPE string.
@@ -316,26 +298,6 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render.
-
-    DATA: ls_context TYPE ty_indent_context,
-          lt_temp    TYPE string_table.
-
-    FIELD-SYMBOLS: <lv_line>   LIKE LINE OF lt_temp,
-                   <lv_line_c> LIKE LINE OF lt_temp.
-
-    ls_context-no_indent_jscss = iv_no_indent_jscss.
-
-    LOOP AT mt_buffer ASSIGNING <lv_line>.
-      APPEND <lv_line> TO lt_temp ASSIGNING <lv_line_c>.
-      indent_line( CHANGING cs_context = ls_context cv_line = <lv_line_c> ).
-    ENDLOOP.
-
-    CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY cl_abap_char_utilities=>newline.
-
-  ENDMETHOD.
-
-
   METHOD study_line.
 
     DATA: lv_line TYPE string,
@@ -400,6 +362,36 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
     add( checkbox( iv_id      = iv_id
                    iv_checked = iv_checked ) ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_html~add_icon.
+
+    add( icon( iv_name    = iv_name
+               iv_class   = iv_class
+               iv_hint    = iv_hint
+               iv_onclick = iv_onclick  ) ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_html~render.
+
+    DATA: ls_context TYPE ty_indent_context,
+          lt_temp    TYPE string_table.
+
+    FIELD-SYMBOLS: <lv_line>   LIKE LINE OF lt_temp,
+                   <lv_line_c> LIKE LINE OF lt_temp.
+
+    ls_context-no_indent_jscss = iv_no_indent_jscss.
+
+    LOOP AT mt_buffer ASSIGNING <lv_line>.
+      APPEND <lv_line> TO lt_temp ASSIGNING <lv_line_c>.
+      indent_line( CHANGING cs_context = ls_context cv_line = <lv_line_c> ).
+    ENDLOOP.
+
+    CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY cl_abap_char_utilities=>newline.
 
   ENDMETHOD.
 
