@@ -590,7 +590,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     CREATE OBJECT ro_stage.
 
-    LOOP AT lt_fields ASSIGNING <ls_item>.
+    LOOP AT lt_fields ASSIGNING <ls_item>
+      WHERE value <> zif_abapgit_definitions=>c_method-skip. "Ignore Files that we don't want to stage, so any errors don't stop the staging process
 
       zcl_abapgit_path=>split_file_location(
         EXPORTING
