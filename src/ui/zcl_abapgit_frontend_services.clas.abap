@@ -1,12 +1,11 @@
 CLASS zcl_abapgit_frontend_services DEFINITION
   PUBLIC
-  FINAL
-  CREATE PUBLIC .
+  CREATE PRIVATE
+  GLOBAL FRIENDS zcl_abapgit_ui_factory .
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_frontend_services.
-
+    INTERFACES zif_abapgit_frontend_services .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -139,7 +138,7 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from file_open_dialog' ). "#EC NOTEXT
     ENDIF.
     IF lv_action = cl_gui_frontend_services=>action_cancel.
-      zcx_abapgit_exception=>raise( 'cancelled' ). "#EC NOTEXT
+      zcx_abapgit_exception=>raise( 'cancelled' ).          "#EC NOTEXT
     ENDIF.
 
     READ TABLE lt_file_table INDEX 1 INTO ls_file_table.
