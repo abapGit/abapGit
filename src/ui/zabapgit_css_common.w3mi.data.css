@@ -77,6 +77,8 @@ span.separator {
 /* PANELS */
 div.panel {
   border-radius: 3px;
+  padding: 0.5em 0.5em;
+  margin: 0.5em 0.5em;
 }
 
 div.dummydiv {
@@ -220,7 +222,7 @@ div.repo_container {
 }
 
 div.repo_banner {
-  margin: 0em 1.2em 1em;
+  margin: 0em 1em 1em;
   padding: 0.5em 0.5em;
   text-align: center;
   font-size: 85%;
