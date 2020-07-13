@@ -54,9 +54,14 @@ INITIALIZATION.
   lcl_password_dialog=>on_screen_init( ).
 
 START-OF-SELECTION.
+* Check if we are called as a modal popup substitute
+  IF lcl_password_dialog=>popup_modal( ) = abap_true.
+    LEAVE PROGRAM.
+  ENDIF.
+
   PERFORM run.
 
-* Hide Execute button from screen
+* Hide Execute Button from Screen
 AT SELECTION-SCREEN OUTPUT.
   IF sy-dynnr = lcl_password_dialog=>c_dynnr.
     lcl_password_dialog=>on_screen_output( ).
