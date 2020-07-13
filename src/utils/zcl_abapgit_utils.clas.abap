@@ -23,7 +23,7 @@ CLASS zcl_abapgit_utils DEFINITION
       IMPORTING
         !it_postdata TYPE cnht_post_data_tab
       RETURNING
-        value(rv_string) TYPE string .
+        VALUE(rv_string) TYPE string .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
