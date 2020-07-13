@@ -11,25 +11,23 @@ CLASS zcl_abapgit_object_doct DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CONSTANTS:
-      c_id      TYPE dokhl-id VALUE 'TX',
-      c_name    TYPE string VALUE 'DOC'.
-
-    DATA:
-      mo_longtexts TYPE REF TO zcl_abapgit_longtexts.
 
     TYPES:
       BEGIN OF ty_data,
         doctitle TYPE dsyst-doktitle,
         head     TYPE thead,
         lines    TYPE tline_tab,
-      END OF ty_data.
+      END OF ty_data .
 
+    CONSTANTS c_id TYPE dokhl-id VALUE 'TX' ##NO_TEXT.
+    CONSTANTS c_name TYPE string VALUE 'DOC' ##NO_TEXT.
+    DATA mi_longtexts TYPE REF TO zif_abapgit_longtexts .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_doct IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_DOCT IMPLEMENTATION.
+
 
   METHOD constructor.
 
@@ -37,14 +35,14 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
         is_item     = is_item
         iv_language = iv_language ).
 
-    mo_longtexts = zcl_abapgit_factory=>get_longtexts( c_name ).
+    mi_longtexts = zcl_abapgit_factory=>get_longtexts( ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
 
-    rv_user = mo_longtexts->changed_by(
+    rv_user = mi_longtexts->changed_by(
                   iv_object_name = ms_item-obj_name
                   iv_longtext_id = c_id ).
 
@@ -57,7 +55,7 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    mo_longtexts->delete(
+    mi_longtexts->delete(
         iv_object_name = ms_item-obj_name
         iv_longtext_id = c_id ).
 
@@ -66,7 +64,8 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    mo_longtexts->deserialize(
+    mi_longtexts->deserialize(
+        iv_longtext_name   = c_name
         io_xml             = io_xml
         iv_master_language = mv_language ).
 
@@ -167,7 +166,8 @@ CLASS zcl_abapgit_object_doct IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    mo_longtexts->serialize(
+    mi_longtexts->serialize(
+        iv_longtext_name = c_name
         iv_object_name = ms_item-obj_name
         iv_longtext_id = c_id
         io_xml         = io_xml ).

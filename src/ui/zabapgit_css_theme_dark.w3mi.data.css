@@ -16,7 +16,7 @@
   --theme-container-border-color: #D1E0EE;
   --theme-table-border-color: #E5E5E5; /* ALV border color */
   --theme-greyscale-dark: #666666;
-  --theme-greyscale-medium: #bfbfbf;
+  --theme-greyscale-medium: #999999;
   --theme-greyscale-light: #CCCCCC;
   --theme-greyscale-lighter: #E5E5E5;
   --theme-list-hover-background-color: black;
@@ -47,9 +47,13 @@ table.repo_tab {
     background-color: var(--theme-background-color);
 }
 
+/* PANELS */
+#debug-output { color: var(--theme-greyscale-dark); }
+
 /* abapGit logo in header and footer */
-#abapGitLogo>img { background-color: #bfbfbf; }
-#footer>img { background-color: #bfbfbf; }
+.logo .icon.icon-abapgit { 
+  color: var(--theme-primary-font-color); 
+}
 
 /* TUTORIAL */
 div.tutorial h1, h2 { color: var(--theme-primary-font-color); }
@@ -57,11 +61,11 @@ div.tutorial h1, h2 { color: var(--theme-primary-font-color); }
 /* REPOSITORY */
 div.repo { background-color: var(--theme-container-background-color); }
 .repo_name span.name { color: var(--theme-primary-font-color-reduced); }
-.repo_name span.url  { color: #333; }
-.repo_name a.url { color: #333; }
+.repo_name span.url  { color: var(--theme-greyscale-medium); }
+.repo_name a.url { color: var(--theme-greyscale-medium); }
 .repo_attr { color: var(--theme-primary-font-color); }
 .repo_attr span.branch_branch {
-  border-color: #ffffff;
+  border-color: var(--theme-greyscale-medium);
   background-color: #777777;
 }
 
@@ -71,9 +75,22 @@ div.repo { background-color: var(--theme-container-background-color); }
 .repo_tab tr.modified { background-color: #555; }
 .repo_tab tr:hover {background-color: var(--theme-list-hover-background-color) !important;}
 
+.repo_tab th {
+  border-top-color: var(--theme-greyscale-dark);
+}
+.repo_tab td {
+  border-top-color: var(--theme-greyscale-dark);
+}
+
 /* STAGE */
-.stage_tab { background-color: var(--theme-background-color); }
-.stage_tab td { color: var(--theme-primary-font-color); }
+.stage_tab { 
+  border-color: var(--theme-greyscale-dark);
+  background-color: var(--theme-background-color); 
+}
+.stage_tab td { 
+  color: var(--theme-primary-font-color); 
+  border-top-color:  var(--theme-greyscale-dark);
+}
 .stage_tab td.status.highlight { 
   color: var(--theme-primary-font-color) !important;
   background-color: var(--theme-background-color);
@@ -135,3 +152,8 @@ table.db_tab th {
   color: var(--theme-primary-font-color);
   border-bottom-color: #333;
 }
+
+/* ERROR LOGS */
+div.log { color: var(--theme-greyscale-dark); }
+.close-btn, .message-panel, .message-panel-commands a { color: var(--theme-greyscale-dark); }
+.message-panel-commands a:hover { color: var(--theme-greyscale-dark); }

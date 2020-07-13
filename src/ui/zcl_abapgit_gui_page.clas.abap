@@ -67,12 +67,6 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
       RAISING
         zcx_abapgit_exception.
 
-    METHODS call_browser
-      IMPORTING
-        iv_url TYPE csequence
-      RAISING
-        zcx_abapgit_exception.
-
     METHODS render_error_message_box
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
@@ -89,31 +83,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page IMPLEMENTATION.
-
-
-  METHOD call_browser.
-
-    cl_gui_frontend_services=>execute(
-      EXPORTING
-        document               = |{ iv_url }|
-      EXCEPTIONS
-        cntl_error             = 1
-        error_no_gui           = 2
-        bad_parameter          = 3
-        file_not_found         = 4
-        path_not_found         = 5
-        file_extension_unknown = 6
-        error_execute_failed   = 7
-        synchronous_failed     = 8
-        not_supported_by_gui   = 9
-        OTHERS                 = 10 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-  ENDMETHOD.
+CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -128,19 +98,23 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( '<div id="footer">' ).                    "#EC NOTEXT
+    ri_html->add( '<div id="footer">' ).
+    ri_html->add( '<table class="w100"><tr>' ).
 
-    ri_html->add( zcl_abapgit_html=>a( iv_txt = '<img src="img/logo" alt="logo">'
-                                       iv_id  = 'abapGitLogo'
-                                       iv_act = zif_abapgit_definitions=>c_action-abapgit_home ) ).
-    ri_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
+    ri_html->add( '<td class="w40"></td>' ).  " spacer
 
-    ri_html->add( '<td class="w40"></td>' ).                "#EC NOTEXT
-    ri_html->add( |<td><span class="version">{ zif_abapgit_version=>gc_abap_version }</span></td>| ). "#EC NOTEXT
-    ri_html->add( '<td id="debug-output" class="w40"></td>' ). "#EC NOTEXT
+    ri_html->add( '<td class="center">' ).
+    ri_html->add( '<div class="logo">' ).
+    ri_html->add( ri_html->icon( 'git-alt' ) ).
+    ri_html->add( ri_html->icon( 'abapgit' ) ).
+    ri_html->add( '</div>' ).
+    ri_html->add( |<div class="version">{ zif_abapgit_version=>gc_abap_version }</div>| ).
+    ri_html->add( '</td>' ).
 
-    ri_html->add( '</tr></table>' ).                        "#EC NOTEXT
-    ri_html->add( '</div>' ).                               "#EC NOTEXT
+    ri_html->add( '<td id="debug-output" class="w40"></td>' ).
+
+    ri_html->add( '</tr></table>' ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -182,11 +156,6 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
 
   METHOD render_command_palettes.
-
-    ii_html->add( 'var gGoRepoPalette = new CommandPalette(enumerateTocAllRepos, {' ).
-    ii_html->add( '  toggleKey: "F2",' ).
-    ii_html->add( '  hotkeyDescription: "Go to repo ..."' ).
-    ii_html->add( '});' ).
 
     ii_html->add( 'var gCommandPalette = new CommandPalette(enumerateToolbarActions, {' ).
     ii_html->add( '  toggleKey: "F1",' ).
@@ -283,21 +252,22 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( '<div id="header">' ).                    "#EC NOTEXT
-    ri_html->add( '<table class="w100"><tr>' ).             "#EC NOTEXT
+    ri_html->add( '<div id="header">' ).
 
-    ri_html->add( |<td class="logo"><img src="img/logo" alt="logo"></td>| ). "#EC NOTEXT
+    ri_html->add( '<div class="logo">' ).
+    ri_html->add( ri_html->icon( 'git-alt' ) ).
+    ri_html->add( ri_html->icon( 'abapgit' ) ).
+    ri_html->add( '</div>' ).
 
-    ri_html->add( |<td><span class="page_title"> &#x25BA; { ms_control-page_title }</span></td>| ). "#EC NOTEXT
+    ri_html->add( |<div class="page-title"><span class="spacer">&#x25BA;</span>{ ms_control-page_title }</div>| ).
 
     IF ms_control-page_menu IS BOUND.
-      ri_html->add( '<td class="right">' ).                 "#EC NOTEXT
+      ri_html->add( '<div class="float-right">' ).
       ri_html->add( ms_control-page_menu->render( iv_right = abap_true ) ).
-      ri_html->add( '</td>' ).                              "#EC NOTEXT
+      ri_html->add( '</div>' ).
     ENDIF.
 
-    ri_html->add( '</tr></table>' ).                        "#EC NOTEXT
-    ri_html->add( '</div>' ).                               "#EC NOTEXT
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -313,11 +283,6 @@ CLASS zcl_abapgit_gui_page IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     CASE iv_action.
-      WHEN zif_abapgit_definitions=>c_action-url.
-
-        call_browser( iv_getdata ).
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-
       WHEN zif_abapgit_definitions=>c_action-goto_source.
 
         IF mo_exception_viewer IS BOUND.

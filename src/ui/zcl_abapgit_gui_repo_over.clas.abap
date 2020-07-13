@@ -62,7 +62,7 @@ CLASS zcl_abapgit_gui_repo_over DEFINITION
                 iv_label       TYPE string
                 iv_value       TYPE string OPTIONAL
                 iv_max_length  TYPE string OPTIONAL
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
+      RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html,
 
       apply_filter
         CHANGING
@@ -103,15 +103,14 @@ CLASS zcl_abapgit_gui_repo_over DEFINITION
 
     METHODS render_scripts
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception.
-
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_REPO_OVER IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -174,6 +173,14 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD has_favorites.
+    READ TABLE mt_overview WITH KEY favorite = abap_true TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      rv_has_favorites = abap_true.
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD map_repo_list_to_overview.
 
     DATA: ls_overview LIKE LINE OF rt_overview,
@@ -226,40 +233,6 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_filter.
-
-    FIELD-SYMBOLS: <lv_postdata> LIKE LINE OF it_postdata.
-
-    READ TABLE it_postdata ASSIGNING <lv_postdata>
-                           INDEX 1.
-    IF sy-subrc = 0.
-      FIND FIRST OCCURRENCE OF REGEX `filter=(.*)`
-           IN <lv_postdata>
-           SUBMATCHES mv_filter.
-    ENDIF.
-
-    mv_filter = condense( mv_filter ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_renderable~render.
-
-    mt_overview = map_repo_list_to_overview( zcl_abapgit_persist_factory=>get_repo( )->list( ) ).
-    apply_order_by( CHANGING ct_overview = mt_overview ).
-    apply_filter( CHANGING ct_overview = mt_overview ).
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    render_header_bar( ri_html ).
-    render_table( ii_html     = ri_html
-                  it_overview = mt_overview ).
-
-    register_deferred_script( render_scripts( ) ).
-
-  ENDMETHOD.
-
-
   METHOD render_header_bar.
 
     ii_html->add( |<div class="form-container">| ).
@@ -292,11 +265,11 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
   METHOD render_scripts.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->zif_abapgit_html~set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
-    ro_html->add( 'setInitialFocus("filter");' ).
-    ro_html->add( 'var gHelper = new RepoOverViewHelper();' ).
+    ri_html->set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
+    ri_html->add( 'setInitialFocus("filter");' ).
+    ri_html->add( 'var gHelper = new RepoOverViewHelper();' ).
 
   ENDMETHOD.
 
@@ -426,7 +399,7 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
     DATA lv_attrs TYPE string.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     IF iv_value IS NOT INITIAL.
       lv_attrs = | value="{ iv_value }"|.
@@ -436,8 +409,52 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
       lv_attrs = | maxlength="{ iv_max_length }"|.
     ENDIF.
 
-    ro_html->add( |<label for="{ iv_name }">{ iv_label }</label>| ).
-    ro_html->add( |<input id="{ iv_name }" name="{ iv_name }" type="text"{ lv_attrs }>| ).
+    ri_html->add( |<label for="{ iv_name }">{ iv_label }</label>| ).
+    ri_html->add( |<input id="{ iv_name }" name="{ iv_name }" type="text"{ lv_attrs }>| ).
+
+  ENDMETHOD.
+
+
+  METHOD set_filter.
+
+    FIELD-SYMBOLS: <lv_postdata> LIKE LINE OF it_postdata.
+
+    READ TABLE it_postdata ASSIGNING <lv_postdata>
+                           INDEX 1.
+    IF sy-subrc = 0.
+      FIND FIRST OCCURRENCE OF REGEX `filter=(.*)`
+           IN <lv_postdata>
+           SUBMATCHES mv_filter.
+    ENDIF.
+
+    mv_filter = condense( mv_filter ).
+
+  ENDMETHOD.
+
+
+  METHOD set_order_by.
+    mv_order_by = iv_order_by.
+  ENDMETHOD.
+
+
+  METHOD set_order_direction.
+    mv_order_descending = iv_order_descending.
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_renderable~render.
+
+    mt_overview = map_repo_list_to_overview( zcl_abapgit_persist_factory=>get_repo( )->list( ) ).
+    apply_order_by( CHANGING ct_overview = mt_overview ).
+    apply_filter( CHANGING ct_overview = mt_overview ).
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    render_header_bar( ri_html ).
+    render_table( ii_html     = ri_html
+                  it_overview = mt_overview ).
+
+    register_deferred_script( render_scripts( ) ).
 
   ENDMETHOD.
 
@@ -457,23 +474,4 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
     CONDENSE <ls_col>-add_tz.
 
   ENDMETHOD.
-
-
-
-  METHOD set_order_by.
-    mv_order_by = iv_order_by.
-  ENDMETHOD.
-
-
-  METHOD set_order_direction.
-    mv_order_descending = iv_order_descending.
-  ENDMETHOD.
-
-  METHOD has_favorites.
-    READ TABLE mt_overview WITH KEY favorite = abap_true TRANSPORTING NO FIELDS.
-    IF sy-subrc = 0.
-      rv_has_favorites = abap_true.
-    ENDIF.
-  ENDMETHOD.
-
 ENDCLASS.

@@ -3,14 +3,13 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_ABAPGIT_INJECTOR</CLSNAME>
+    <CLSNAME>ZCL_ABAPGIT_GUI_BUTTONS</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapGit injector</DESCRIPT>
+    <DESCRIPT>GUI Buttons</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
-    <WITH_UNIT_TESTS>X</WITH_UNIT_TESTS>
    </VSEOCLASS>
   </asx:values>
  </asx:abap>
