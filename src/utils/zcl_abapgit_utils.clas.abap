@@ -19,11 +19,11 @@ CLASS zcl_abapgit_utils DEFINITION
         !ev_time    TYPE zif_abapgit_definitions=>ty_commit-time
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS TRANSLATE_POSTDATA
+    CLASS-METHODS translate_postdata
       IMPORTING
-        !IT_POSTDATA TYPE CNHT_POST_DATA_TAB
+        !it_postdata TYPE cnht_post_data_tab
       RETURNING
-        value(R_STRING) TYPE STRING .
+        value(rv_string) TYPE string .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -94,13 +94,12 @@ CLASS zcl_abapgit_utils IMPLEMENTATION.
     lv_last_line_index = lines( lt_post_data ).
 
     "Save the last line for separate merge, because we don't need its trailing spaces
-    
     READ TABLE it_postdata INTO ls_last_line INDEX lv_last_line_index.
     DELETE lt_post_data INDEX lv_last_line_index.
 
-    CONCATENATE LINES OF lt_post_data INTO r_string
+    CONCATENATE LINES OF lt_post_data INTO rv_string
       IN CHARACTER MODE RESPECTING BLANKS.
-    CONCATENATE r_string ls_last_line INTO r_string
+    CONCATENATE rv_string ls_last_line INTO rv_string
       IN CHARACTER MODE.
 
   ENDMETHOD.
