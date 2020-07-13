@@ -19,6 +19,11 @@ CLASS zcl_abapgit_utils DEFINITION
         !ev_time    TYPE zif_abapgit_definitions=>ty_commit-time
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS TRANSLATE_POSTDATA
+      IMPORTING
+        !IT_POSTDATA TYPE CNHT_POST_DATA_TAB
+      RETURNING
+        value(R_STRING) TYPE STRING .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -70,6 +75,32 @@ CLASS zcl_abapgit_utils IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error author regex value='{ iv_author }'| ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD translate_postdata.
+
+    DATA: lt_post_data       TYPE cnht_post_data_tab,
+          ls_last_line       TYPE cnht_post_data_line,
+          lv_last_line_index TYPE i.
+
+    IF it_postdata IS INITIAL.
+      "Nothing to do
+      RETURN.
+    ENDIF.
+
+    lt_post_data = it_postdata.
+    lv_last_line_index = lines( lt_post_data ).
+
+    "Save the last line for separate merge, because we don't need its trailing spaces
+    ls_last_line = it_postdata[ lv_last_line_index ].
+    DELETE lt_post_data INDEX lv_last_line_index.
+
+    CONCATENATE LINES OF lt_post_data INTO r_string
+      IN CHARACTER MODE RESPECTING BLANKS.
+    CONCATENATE r_string ls_last_line INTO r_string
+      IN CHARACTER MODE.
 
   ENDMETHOD.
 ENDCLASS.
