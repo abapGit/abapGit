@@ -592,7 +592,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     LOOP AT lt_fields ASSIGNING <ls_item>
       "Ignore Files that we don't want to stage, so any errors don't stop the staging process
-      WHERE value <> zif_abapgit_definitions=>c_method-skip. 
+      WHERE value <> zif_abapgit_definitions=>c_method-skip.
 
       zcl_abapgit_path=>split_file_location(
         EXPORTING
