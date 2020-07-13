@@ -94,7 +94,8 @@ CLASS zcl_abapgit_utils IMPLEMENTATION.
     lv_last_line_index = lines( lt_post_data ).
 
     "Save the last line for separate merge, because we don't need its trailing spaces
-    ls_last_line = it_postdata[ lv_last_line_index ].
+    
+    READ TABLE it_postdata INTO ls_last_line INDEX lv_last_line_index.
     DELETE lt_post_data INDEX lv_last_line_index.
 
     CONCATENATE LINES OF lt_post_data INTO r_string
