@@ -38,7 +38,13 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
     DATA lt_sotr TYPE zif_abapgit_definitions=>ty_sotr_tt.
     IF is_wd_component_existing( lc_wd_component_name ) = abap_true.
       TRY.
-          lt_sotr = zcl_abapgit_sotr_handler=>read_sotr_wda( iv_object_name = lc_wd_component_name ).
+          zcl_abapgit_sotr_handler=>read_sotr(
+            EXPORTING
+              iv_pgmid    = 'LIMU'
+              iv_object   = 'WDYV'
+              iv_obj_name = lc_wd_component_name
+            IMPORTING
+              et_sotr     = lt_sotr ).
           cl_aunit_assert=>assert_not_initial( lt_sotr ).
         CATCH zcx_abapgit_exception.
           cl_aunit_assert=>fail( quit = if_aunit_constants=>method ).
@@ -50,7 +56,13 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
     DATA lt_sotr TYPE zif_abapgit_definitions=>ty_sotr_tt.
     IF is_wd_component_existing( lc_wd_not_exist_component_name ) <> abap_true.
       TRY.
-          lt_sotr = zcl_abapgit_sotr_handler=>read_sotr_wda( iv_object_name = lc_wd_not_exist_component_name ).
+          zcl_abapgit_sotr_handler=>read_sotr(
+            EXPORTING
+              iv_pgmid    = 'LIMU'
+              iv_object   = 'WDYV'
+              iv_obj_name = lc_wd_not_exist_component_name
+            IMPORTING
+              et_sotr     = lt_sotr ).
           cl_aunit_assert=>assert_initial( lt_sotr ).
         CATCH zcx_abapgit_exception.
           cl_aunit_assert=>fail( quit = if_aunit_constants=>method ).
@@ -62,7 +74,13 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
     DATA lt_sotr TYPE zif_abapgit_definitions=>ty_sotr_tt.
     IF is_wd_component_existing( lc_wd_component_name ) = abap_true.
       TRY.
-          lt_sotr = zcl_abapgit_sotr_handler=>read_sotr_wda( iv_object_name = lc_wd_component_name ).
+          zcl_abapgit_sotr_handler=>read_sotr(
+            EXPORTING
+              iv_pgmid    = 'LIMU'
+              iv_object   = 'WDYV'
+              iv_obj_name = lc_wd_component_name
+            IMPORTING
+              et_sotr     = lt_sotr ).
           IF lines( lt_sotr ) < 50.
             cl_aunit_assert=>fail( quit = if_aunit_constants=>method ).
           ENDIF.
@@ -74,7 +92,13 @@ CLASS ltcl_sotr_handler IMPLEMENTATION.
   METHOD sotr_cx_0002.
     DATA lt_sotr TYPE zif_abapgit_definitions=>ty_sotr_tt.
     TRY.
-        lt_sotr = zcl_abapgit_sotr_handler=>read_sotr_seocomp( iv_object_name = 'CX_ABAP_INVALID_NAME' ).
+        zcl_abapgit_sotr_handler=>read_sotr(
+          EXPORTING
+            iv_pgmid    = 'LIMU'
+            iv_object   = 'CPUB'
+            iv_obj_name = 'CX_ABAP_INVALID_NAME'
+          IMPORTING
+            et_sotr     = lt_sotr ).
         cl_aunit_assert=>assert_not_initial( lt_sotr ).
       CATCH zcx_abapgit_exception.
         cl_aunit_assert=>fail( quit = if_aunit_constants=>method ).
