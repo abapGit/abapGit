@@ -58,6 +58,13 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHS IMPLEMENTATION.
 
     DATA: lv_spot_name  TYPE enhspotname,
           li_enh_object TYPE REF TO if_enh_object.
+    DATA lx_io_error TYPE REF TO cx_enh_io_error.
+    DATA lx_permission TYPE REF TO cx_enh_permission_denied.
+    DATA lx_canceled TYPE REF TO cx_enh_canceled.
+    DATA lx_internal TYPE REF TO cx_enh_internal_error.
+    DATA lx_locked TYPE REF TO cx_enh_is_locked.
+    DATA lx_composit TYPE REF TO cx_enh_composite_not_empty.
+    DATA lx_not_allowed TYPE REF TO cx_enh_mod_not_allowed.
 
     lv_spot_name  = ms_item-obj_name.
 
@@ -70,31 +77,31 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHS IMPLEMENTATION.
 
         li_enh_object->unlock( ).
 
-      CATCH cx_enh_io_error INTO DATA(lx_io_error).
+      CATCH cx_enh_io_error INTO lx_io_error.
         zcx_abapgit_exception=>raise(
           iv_text = |Delete: I/O error from CL_ENH_FACTORY for { lv_spot_name }|
           ix_previous = lx_io_error ).
-      CATCH cx_enh_permission_denied INTO DATA(lx_permission).
+      CATCH cx_enh_permission_denied INTO lx_permission.
         zcx_abapgit_exception=>raise(
           iv_text = |Delete: No permission error from CL_ENH_FACTORY for { lv_spot_name }|
           ix_previous = lx_permission ).
-      CATCH cx_enh_canceled INTO DATA(lx_canceled).
+      CATCH cx_enh_canceled INTO lx_canceled.
         zcx_abapgit_exception=>raise(
           iv_text = |Delete: Canceled error from CL_ENH_FACTORY for { lv_spot_name }|
           ix_previous = lx_canceled ).
-      CATCH cx_enh_internal_error INTO DATA(lx_internal).
+      CATCH cx_enh_internal_error INTO lx_internal.
         zcx_abapgit_exception=>raise(
           iv_text = |Delete: Internal error from CL_ENH_FACTORY for { lv_spot_name }|
           ix_previous = lx_internal ).
-      CATCH cx_enh_is_locked INTO DATA(lx_locked).
+      CATCH cx_enh_is_locked INTO lx_locked.
         zcx_abapgit_exception=>raise(
           iv_text = |Delete: Is locked error from CL_ENH_FACTORY for { lv_spot_name }|
           ix_previous = lx_locked ).
-      CATCH cx_enh_composite_not_empty INTO DATA(lx_composit).
+      CATCH cx_enh_composite_not_empty INTO lx_composit.
         zcx_abapgit_exception=>raise(
           iv_text = |Delete: Composite is not empty error from CL_ENH_FACTORY for { lv_spot_name }|
           ix_previous = lx_composit ).
-      CATCH cx_enh_mod_not_allowed INTO DATA(lx_not_allowed).
+      CATCH cx_enh_mod_not_allowed INTO lx_not_allowed.
         zcx_abapgit_exception=>raise(
           iv_text = |Delete: Modification not allowed error from CL_ENH_FACTORY for { lv_spot_name }|
           ix_previous = lx_not_allowed ).
@@ -111,6 +118,12 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHS IMPLEMENTATION.
           lv_package   LIKE iv_package,
           li_spot_ref  TYPE REF TO if_enh_spot_tool,
           li_enhs      TYPE REF TO zif_abapgit_object_enhs.
+    DATA lx_io_error TYPE REF TO cx_enh_io_error.
+    DATA lx_permission TYPE REF TO cx_enh_permission_denied.
+    DATA lx_canceled TYPE REF TO cx_enh_canceled.
+    DATA lx_internal TYPE REF TO cx_enh_internal_error.
+    DATA lx_locked TYPE REF TO cx_enh_is_locked.
+    DATA lx_create TYPE REF TO cx_enh_create_error.
 
     IF zif_abapgit_object~exists( ) = abap_true.
       zif_abapgit_object~delete( iv_package ).
@@ -134,27 +147,27 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHS IMPLEMENTATION.
           CHANGING
             devclass       = lv_package ).
 
-      CATCH cx_enh_io_error INTO DATA(lx_io_error).
+      CATCH cx_enh_io_error INTO lx_io_error.
         zcx_abapgit_exception=>raise(
           iv_text = |Deserialize: I/O error from CL_ENH_FACTORY for { lv_spot_name }|
           ix_previous = lx_io_error ).
-      CATCH cx_enh_permission_denied INTO DATA(lx_permission).
+      CATCH cx_enh_permission_denied INTO lx_permission.
         zcx_abapgit_exception=>raise(
           iv_text = |Deserialize: No permission error from CL_ENH_FACTORY for { lv_spot_name }|
           ix_previous = lx_permission ).
-      CATCH cx_enh_canceled INTO DATA(lx_canceled).
+      CATCH cx_enh_canceled INTO lx_canceled.
         zcx_abapgit_exception=>raise(
           iv_text = |Deserialize: Canceled error from CL_ENH_FACTORY for { lv_spot_name }|
           ix_previous = lx_canceled ).
-      CATCH cx_enh_internal_error INTO DATA(lx_internal).
+      CATCH cx_enh_internal_error INTO lx_internal.
         zcx_abapgit_exception=>raise(
           iv_text = |Deserialize: Internal error from CL_ENH_FACTORY for { lv_spot_name }|
           ix_previous = lx_internal ).
-      CATCH cx_enh_is_locked INTO DATA(lx_locked).
+      CATCH cx_enh_is_locked INTO lx_locked.
         zcx_abapgit_exception=>raise(
           iv_text = |Deserialize: Is locked error from CL_ENH_FACTORY for { lv_spot_name }|
           ix_previous = lx_locked ).
-      CATCH cx_enh_create_error INTO DATA(lx_create).
+      CATCH cx_enh_create_error INTO lx_create.
         zcx_abapgit_exception=>raise(
           iv_text = |Deserialize: Create error from CL_ENH_FACTORY for { lv_spot_name }|
           ix_previous = lx_create ).
@@ -233,29 +246,34 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHS IMPLEMENTATION.
           li_spot_ref  TYPE REF TO if_enh_spot_tool,
           li_enhs      TYPE REF TO zif_abapgit_object_enhs,
           lx_root      TYPE REF TO cx_root.
+    DATA lx_io_error TYPE REF TO cx_enh_io_error.
+    DATA lx_permission TYPE REF TO cx_enh_permission_denied.
+    DATA lx_canceled TYPE REF TO cx_enh_canceled.
+    DATA lx_internal TYPE REF TO cx_enh_internal_error.
+    DATA lx_locked TYPE REF TO cx_enh_is_locked.
 
     lv_spot_name = ms_item-obj_name.
 
     TRY.
         li_spot_ref = cl_enh_factory=>get_enhancement_spot( lv_spot_name ).
 
-      CATCH cx_enh_io_error INTO DATA(lx_io_error).
+      CATCH cx_enh_io_error INTO lx_io_error.
         zcx_abapgit_exception=>raise(
           iv_text = |Serialize: I/O error from CL_ENH_FACTORY for { lv_spot_name }|
           ix_previous = lx_io_error ).
-      CATCH cx_enh_permission_denied INTO DATA(lx_permission).
+      CATCH cx_enh_permission_denied INTO lx_permission.
         zcx_abapgit_exception=>raise(
           iv_text = |Serialize: No permission error from CL_ENH_FACTORY for { lv_spot_name }|
           ix_previous = lx_permission ).
-      CATCH cx_enh_canceled INTO DATA(lx_canceled).
+      CATCH cx_enh_canceled INTO lx_canceled.
         zcx_abapgit_exception=>raise(
           iv_text = |Serialize: Canceled error from CL_ENH_FACTORY for { lv_spot_name }|
           ix_previous = lx_canceled ).
-      CATCH cx_enh_internal_error INTO DATA(lx_internal).
+      CATCH cx_enh_internal_error INTO lx_internal.
         zcx_abapgit_exception=>raise(
           iv_text = |Serialize: Internal error from CL_ENH_FACTORY for { lv_spot_name }|
           ix_previous = lx_internal ).
-      CATCH cx_enh_is_locked INTO DATA(lx_locked).
+      CATCH cx_enh_is_locked INTO lx_locked.
         zcx_abapgit_exception=>raise(
           iv_text = |Serialize: Is locked error from CL_ENH_FACTORY for { lv_spot_name }|
           ix_previous = lx_locked ).
