@@ -502,7 +502,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
   METHOD functions.
 
     DATA: lv_area TYPE rs38l-area.
-
+    DATA: ls_functab LIKE LINE OF rt_functab.
 
     lv_area = ms_item-obj_name.
 
@@ -517,6 +517,12 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Error from RS_FUNCTION_POOL_CONTENTS' ).
     ENDIF.
+
+* The result can also contain function which are lowercase.
+    LOOP AT rt_functab INTO ls_functab.
+      TRANSLATE ls_functab TO UPPER CASE.
+      MODIFY rt_functab FROM ls_functab.
+    ENDLOOP.
 
     SORT rt_functab BY funcname ASCENDING.
     DELETE ADJACENT DUPLICATES FROM rt_functab COMPARING funcname.
