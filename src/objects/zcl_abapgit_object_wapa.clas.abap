@@ -656,11 +656,10 @@ CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
                  ig_data = lt_pages_info ).
 
     zcl_abapgit_sotr_handler=>read_sotr(
-      EXPORTING
-        iv_pgmid    = 'LIMU'
-        iv_object   = 'WAPP'
-        iv_obj_name = ms_item-obj_name
-        io_xml      = io_xml ).
+      iv_pgmid    = 'LIMU'
+      iv_object   = 'WAPP'
+      iv_obj_name = ms_item-obj_name
+      io_xml      = io_xml ).
 
   ENDMETHOD.
 ENDCLASS.
