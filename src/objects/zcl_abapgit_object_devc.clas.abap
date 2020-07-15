@@ -517,6 +517,9 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
+    " Make sure component is also saved for local packages (#1880)
+    UPDATE tdevc SET component = ls_package_data-component WHERE devclass = ls_package_data-devclass.
+
     set_lock( ii_package = li_package
               iv_lock = abap_false ).
   ENDMETHOD.
