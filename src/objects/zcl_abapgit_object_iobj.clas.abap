@@ -322,7 +322,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-    zcx_abapgit_exception=>raise( |Jump to infoObjects is not yet supported| ).
+    zcx_abapgit_exception=>raise( |Jump to InfoObjects is not yet supported| ).
   ENDMETHOD.
 
 
@@ -395,7 +395,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
         xxlattributes            = <lt_xxlattributes>.
 
     IF ls_return-type = 'E'.
-      zcx_abapgit_exception=>raise( |Error geting details of InfoObject: { ls_return-message }| ).
+      zcx_abapgit_exception=>raise( |Error getting details of InfoObject: { ls_return-message }| ).
     ENDIF.
 
     clear_field( EXPORTING iv_fieldname = 'TSTPNM'
