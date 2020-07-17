@@ -291,7 +291,7 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
   METHOD render_table_body.
 
-    CONSTANTS: c_separator TYPE string VALUE `<span class="separator">|</span>`.
+    CONSTANTS: lc_separator TYPE string VALUE `<span class="separator">|</span>`.
 
     DATA:
       lv_type_icon         TYPE string,
@@ -380,10 +380,10 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
         iv_txt = |Code inspector|
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?{ <ls_overview>-key } | ).
 
-      ii_html->add( lv_pull_link && c_separator
-                 && lv_stage_link && c_separator
-                 && lv_patch_link && c_separator
-                 && lv_syntax_check_link && c_separator
+      ii_html->add( lv_pull_link && lc_separator
+                 && lv_stage_link && lc_separator
+                 && lv_patch_link && lc_separator
+                 && lv_syntax_check_link && lc_separator
                  && lv_code_inspector_link ).
 
       ii_html->add( |</td>| ).
