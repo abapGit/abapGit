@@ -345,7 +345,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
           lv_add    TYPE string,
           lv_remove TYPE string.
 
-    CONCATENATE LINES OF it_postdata INTO lv_string.
+    lv_string = zcl_abapgit_utils=>translate_postdata( it_postdata ).
     lt_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_string ).
 
     zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name  = c_patch_action-add
