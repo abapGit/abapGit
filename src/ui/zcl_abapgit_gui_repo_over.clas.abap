@@ -297,8 +297,8 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
       lv_favorite_class    TYPE string,
       lv_package_jump_data TYPE string,
       lv_package_obj_name  TYPE sobj_name,
-      stage_link           TYPE string,
-      patch_link           TYPE string.
+      lv_stage_link           TYPE string,
+      lv_patch_link           TYPE string.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
@@ -355,15 +355,14 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
       ii_html->add( |<td> | ).
 
-      stage_link = ii_html->a(
+      lv_stage_link = ii_html->a(
         iv_txt = |Stage|
         iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ <ls_overview>-key } | ).
-      patch_link = ii_html->a(
+      lv_patch_link = ii_html->a(
         iv_txt = |Patch|
         iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?{ <ls_overview>-key } | ).
 
-      CONSTANTS: separator TYPE string VALUE '<span class="separator">|</span>'.
-      ii_html->add( |{ stage_link }{ separator }{ patch_link }| ).
+      ii_html->add( lv_stage_link && `<span class="separator">|</span>` && lv_patch_link ).
 
       ii_html->add( |</td>| ).
 
