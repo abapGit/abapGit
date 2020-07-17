@@ -300,7 +300,10 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
       lv_package_jump_data TYPE string,
       lv_package_obj_name  TYPE sobj_name,
       lv_stage_link        TYPE string,
-      lv_patch_link        TYPE string.
+      lv_patch_link        TYPE string,
+      lv_syntax_check_link TYPE string,
+      lv_code_inspector_link TYPE string,
+      lv_pull_link TYPE string.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
@@ -357,22 +360,28 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
       ii_html->add( |<td> | ).
 
+      lv_pull_link = ii_html->a(
+        iv_txt = |Pull|
+        iv_act = |{ zif_abapgit_definitions=>c_action-git_pull }?{ <ls_overview>-key } | ).
+
       lv_stage_link = ii_html->a(
         iv_txt = |Stage|
         iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ <ls_overview>-key } | ).
+
       lv_patch_link = ii_html->a(
         iv_txt = |Patch|
         iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?{ <ls_overview>-key } | ).
 
-      DATA(lv_syntax_check_link) = ii_html->a(
+      lv_syntax_check_link = ii_html->a(
         iv_txt = |Syntax check|
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_syntax_check }?{ <ls_overview>-key } | ).
 
-      DATA(lv_code_inspector_link) = ii_html->a(
+      lv_code_inspector_link = ii_html->a(
         iv_txt = |Code inspector|
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?{ <ls_overview>-key } | ).
 
-      ii_html->add( lv_stage_link && c_separator
+      ii_html->add( lv_pull_link && c_separator
+                 && lv_stage_link && c_separator
                  && lv_patch_link && c_separator
                  && lv_syntax_check_link && c_separator
                  && lv_code_inspector_link ).
