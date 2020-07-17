@@ -291,14 +291,16 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
   METHOD render_table_body.
 
+    CONSTANTS: c_separator TYPE string VALUE `<span class="separator">|</span>`.
+
     DATA:
       lv_type_icon         TYPE string,
       lv_favorite_icon     TYPE string,
       lv_favorite_class    TYPE string,
       lv_package_jump_data TYPE string,
       lv_package_obj_name  TYPE sobj_name,
-      lv_stage_link           TYPE string,
-      lv_patch_link           TYPE string.
+      lv_stage_link        TYPE string,
+      lv_patch_link        TYPE string.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
@@ -362,7 +364,18 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
         iv_txt = |Patch|
         iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?{ <ls_overview>-key } | ).
 
-      ii_html->add( lv_stage_link && `<span class="separator">|</span>` && lv_patch_link ).
+      DATA(lv_syntax_check_link) = ii_html->a(
+        iv_txt = |Syntax check|
+        iv_act = |{ zif_abapgit_definitions=>c_action-repo_syntax_check }?{ <ls_overview>-key } | ).
+
+      DATA(lv_code_inspector_link) = ii_html->a(
+        iv_txt = |Code inspector|
+        iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?{ <ls_overview>-key } | ).
+
+      ii_html->add( lv_stage_link && c_separator
+                 && lv_patch_link && c_separator
+                 && lv_syntax_check_link && c_separator
+                 && lv_code_inspector_link ).
 
       ii_html->add( |</td>| ).
 
