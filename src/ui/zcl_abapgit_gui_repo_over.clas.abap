@@ -110,7 +110,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_REPO_OVER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -296,7 +296,9 @@ CLASS ZCL_ABAPGIT_GUI_REPO_OVER IMPLEMENTATION.
       lv_favorite_icon     TYPE string,
       lv_favorite_class    TYPE string,
       lv_package_jump_data TYPE string,
-      lv_package_obj_name  TYPE sobj_name.
+      lv_package_obj_name  TYPE sobj_name,
+      stage_link           TYPE string,
+      patch_link           TYPE string.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
@@ -351,6 +353,20 @@ CLASS ZCL_ABAPGIT_GUI_REPO_OVER IMPLEMENTATION.
         iv_txt = <ls_overview>-branch
         iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ <ls_overview>-key }| ) }</td>| ).
 
+      ii_html->add( |<td> | ).
+
+      stage_link = ii_html->a(
+        iv_txt = |Stage|
+        iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ <ls_overview>-key } | ).
+      patch_link = ii_html->a(
+        iv_txt = |Patch|
+        iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?{ <ls_overview>-key } | ).
+
+      CONSTANTS: separator TYPE string VALUE '<span class="separator">|</span>'.
+      ii_html->add( |{ stage_link }{ separator }{ patch_link }| ).
+
+      ii_html->add( |</td>| ).
+
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_by }</td>| ).
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_at }</td>| ).
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-created_by }</td>| ).
@@ -375,6 +391,7 @@ CLASS ZCL_ABAPGIT_GUI_REPO_OVER IMPLEMENTATION.
     _add_col( 'URL             /Url             /          / ' ).
     _add_col( 'PACKAGE         /Package         /          / ' ).
     _add_col( 'BRANCH          /Branch          /          / ' ).
+    _add_col( 'ACTION          /Action           /          / ' ).
     _add_col( 'DESERIALIZED_BY /Deserialized by /ro-detail / ' ).
     _add_col( 'DESERIALIZED_AT /Deserialized at /ro-detail /X' ).
     _add_col( 'CREATED_BY      /Created by      /ro-detail / ' ).
