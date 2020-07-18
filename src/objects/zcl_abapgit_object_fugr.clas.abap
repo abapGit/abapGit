@@ -522,7 +522,6 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 * The result can also contain function which are lowercase.
     LOOP AT rt_functab ASSIGNING <ls_functab>.
       TRANSLATE <ls_functab> TO UPPER CASE.
-      MODIFY rt_functab FROM <ls_functab>.
     ENDLOOP.
 
     SORT rt_functab BY funcname ASCENDING.
