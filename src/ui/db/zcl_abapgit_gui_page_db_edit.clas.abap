@@ -56,7 +56,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
           lv_string TYPE string.
 
 
-    CONCATENATE LINES OF it_postdata INTO lv_string.
+    lv_string = zcl_abapgit_utils=>translate_postdata( it_postdata ).
 
     lv_string = cl_http_utility=>unescape_url( lv_string ).
 
