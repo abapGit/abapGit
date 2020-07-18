@@ -58,7 +58,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHS IMPLEMENTATION.
 
     DATA: lv_spot_name  TYPE enhspotname,
           lx_root       TYPE REF TO cx_enh_root,
-          lv_class     TYPE abap_abstypename,
+          lv_class      TYPE abap_abstypename,
           li_enh_object TYPE REF TO if_enh_object.
 
     lv_spot_name  = ms_item-obj_name.
@@ -72,7 +72,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHS IMPLEMENTATION.
 
         li_enh_object->unlock( ).
 
-      CATCH cx_enh_root into lx_root.
+      CATCH cx_enh_root INTO lx_root.
         lv_class = cl_abap_classdescr=>get_class_name( lx_root ).
         zcx_abapgit_exception=>raise(
         iv_text = |Delete: Error { lv_class+7 } raised by CL_ENH_FACTORY for { lv_spot_name }|
