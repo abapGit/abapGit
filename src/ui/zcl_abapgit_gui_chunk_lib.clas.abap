@@ -441,16 +441,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     ro_html->add( |<div class="float-right message-panel-commands">| ).
 
-*    IF is_log_entry-obj_type = 'SHA1'.
-*      ro_html->add_a(
-*          iv_txt   = `Goto Repository`
-*          iv_act   = zif_abapgit_definitions=>c_action-goto_repo && |?SHA1={ is_log_entry-obj_name }|
-*          iv_typ   = zif_abapgit_html=>c_action_type-sapevent
-*          iv_title = lv_title
-*          iv_id    = `a_goto_repo`
-*           ).
-*    ENDIF.
-
     ro_html->add( |</div>| ).
     ro_html->add( |</div>| ).
 

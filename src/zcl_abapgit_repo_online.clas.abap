@@ -284,7 +284,8 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     DATA: ls_push     TYPE zcl_abapgit_git_porcelain=>ty_push_result,
           lv_text     TYPE string,
-          lv_repo_log TYPE REF TO zif_abapgit_log.
+          lv_repo_log TYPE REF TO zif_abapgit_log,
+          ls_item     TYPE zif_abapgit_definitions=>ty_item.
 
 
     IF ms_data-branch_name CP 'refs/tags*'.
@@ -319,10 +320,10 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     reset_status( ).
 
     lv_repo_log = me->get_or_create_log( |Push| ).
-    DATA: ls_item TYPE zif_abapgit_definitions=>ty_item.
     ls_item-obj_name = ls_push-branch.
     ls_item-obj_type = 'SHA1'.
-    lv_repo_log->add_success( iv_msg = |Commit { ls_push-branch } pushed to { get_url( ) }| is_item = ls_item ).
+    lv_repo_log->add_success( iv_msg  = |Commit { ls_push-branch } pushed to { get_url( ) }|
+                              is_item = ls_item ).
 
   ENDMETHOD.
 ENDCLASS.

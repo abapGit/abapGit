@@ -487,7 +487,7 @@ CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
         lt_log_messages = lv_repo_log->get_messages( ).
         READ TABLE lt_log_messages WITH KEY obj_type = 'SHA1' ASSIGNING <ls_message>.
         IF sy-subrc = 0.
-          me->ms_success_log_entry = <ls_message>.
+          gs_success_log_entry = <ls_message>.
         ELSE.
           MESSAGE 'Commit was successful' TYPE 'S' ##NO_TEXT.
         ENDIF.
