@@ -836,6 +836,12 @@ div.message-panel:hover .message-panel-commands {
   display: block
 }
 
+/* Success message Panel */
+div.success-panel {
+  border-color: hsl(148, 87%, 33%);
+  background-color: hsla(148, 67%, 92%, 1);
+}
+
 /* Tooltip text */
 .link-hint {
     line-height: 1em;

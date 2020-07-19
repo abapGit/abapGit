@@ -128,6 +128,11 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS get_log
       RETURNING
         VALUE(ri_log) TYPE REF TO zif_abapgit_log .
+    METHODS get_or_create_log
+      IMPORTING
+        !iv_title     TYPE string OPTIONAL
+      RETURNING
+        VALUE(ri_log) TYPE REF TO zif_abapgit_log .
     METHODS reset_log .
     METHODS refresh_local_object
       IMPORTING
@@ -198,7 +203,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -497,6 +502,16 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD get_log.
     ri_log = mi_log.
+  ENDMETHOD.
+
+
+  METHOD get_or_create_log.
+
+    ri_log = me->get_log( ).
+    IF ri_log IS NOT BOUND.
+      ri_log = me->create_new_log( iv_title ).
+    ENDIF.
+
   ENDMETHOD.
 
 

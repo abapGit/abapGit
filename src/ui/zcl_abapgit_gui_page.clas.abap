@@ -19,10 +19,12 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
         page_menu  TYPE REF TO zcl_abapgit_html_toolbar,
       END OF  ty_control .
 
-    DATA ms_control TYPE ty_control .
+    CLASS-DATA ms_success_log_entry TYPE zif_abapgit_log=>ty_log_out.
+
+    DATA ms_control TYPE ty_control.
 
     METHODS render_content
-      ABSTRACT
+          ABSTRACT
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
@@ -73,6 +75,12 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
       RAISING
         zcx_abapgit_exception.
 
+    METHODS render_commit_success_msg_box
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
+
     METHODS scripts
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
@@ -83,7 +91,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -207,6 +215,21 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_commit_success_msg_box.
+
+    CREATE OBJECT ro_html.
+
+    IF ms_success_log_entry IS NOT INITIAL.
+
+      ro_html = zcl_abapgit_gui_chunk_lib=>render_success_message_box( is_log_entry = ms_success_log_entry ).
+
+      CLEAR ms_success_log_entry.
+
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD render_hotkey_overview.
 
     DATA lo_hotkeys_component TYPE REF TO zif_abapgit_gui_renderable.
@@ -304,6 +327,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
         ENDIF.
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
+*      WHEN zif_abapgit_definitions=>c_action-goto_repo.
+*        DATA: lt_fields TYPE tihttpnvp.
+*        lt_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( iv_getdata ).
+*        DATA: lv_sha1 TYPE zif_abapgit_definitions=>ty_sha1.
+*
+*        zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name  = 'SHA1'
+*                                                            it_field = lt_fields
+*                                                  CHANGING  cg_field = lv_sha1 ).
+*
+*        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
     ENDCASE.
 
   ENDMETHOD.
@@ -328,6 +362,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     ri_html->add( render_hotkey_overview( ) ).
     ri_html->add( render_error_message_box( ) ).
+    ri_html->add( render_commit_success_msg_box( ) ).
 
     render_deferred_parts(
       ii_html          = ri_html

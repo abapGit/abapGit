@@ -20,7 +20,7 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
         zcx_abapgit_exception.
 
     METHODS zif_abapgit_gui_event_handler~on_event
-        REDEFINITION .
+         REDEFINITION .
   PROTECTED SECTION.
 
     CLASS-METHODS parse_commit_request
@@ -82,7 +82,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_commit IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -465,6 +465,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
+    DATA lv_repo_log     TYPE REF TO zif_abapgit_log.
+    DATA lt_log_messages TYPE zif_abapgit_log=>tty_log_out.
+    FIELD-SYMBOLS <ls_message> TYPE zif_abapgit_log=>ty_log_out.
+
     CASE iv_action.
       WHEN c_action-commit_post.
 
@@ -479,7 +483,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
           io_repo   = mo_repo
           io_stage  = mo_stage ).
 
-        MESSAGE 'Commit was successful' TYPE 'S' ##NO_TEXT.
+        lv_repo_log = mo_repo->get_log( ).
+        lt_log_messages = lv_repo_log->get_messages( ).
+        READ TABLE lt_log_messages WITH KEY obj_type = 'SHA1' ASSIGNING <ls_message>.
+        IF sy-subrc = 0.
+          me->ms_success_log_entry = <ls_message>.
+        ELSE.
+          MESSAGE 'Commit was successful' TYPE 'S' ##NO_TEXT.
+        ENDIF.
 
         ev_state = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark.
 

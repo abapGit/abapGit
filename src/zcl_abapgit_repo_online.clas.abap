@@ -41,13 +41,13 @@ CLASS zcl_abapgit_repo_online DEFINITION
         zcx_abapgit_exception .
 
     METHODS get_files_remote
-        REDEFINITION .
+         REDEFINITION .
     METHODS get_name
-        REDEFINITION .
+         REDEFINITION .
     METHODS has_remote_source
-        REDEFINITION .
+         REDEFINITION .
     METHODS rebuild_local_checksums
-        REDEFINITION .
+         REDEFINITION .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -71,7 +71,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
+CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
 
   METHOD fetch_remote.
@@ -282,8 +282,9 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
 * assumption: PUSH is done on top of the currently selected branch
 
-    DATA: ls_push TYPE zcl_abapgit_git_porcelain=>ty_push_result,
-          lv_text TYPE string.
+    DATA: ls_push     TYPE zcl_abapgit_git_porcelain=>ty_push_result,
+          lv_text     TYPE string,
+          lv_repo_log TYPE REF TO zif_abapgit_log.
 
 
     IF ms_data-branch_name CP 'refs/tags*'.
@@ -316,6 +317,12 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     update_local_checksums( ls_push-updated_files ).
 
     reset_status( ).
+
+    lv_repo_log = me->get_or_create_log( |Push| ).
+    DATA: ls_item TYPE zif_abapgit_definitions=>ty_item.
+    ls_item-obj_name = ls_push-branch.
+    ls_item-obj_type = 'SHA1'.
+    lv_repo_log->add_success( iv_msg = |Commit { ls_push-branch } pushed to { get_url( ) }| is_item = ls_item ).
 
   ENDMETHOD.
 ENDCLASS.
