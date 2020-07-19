@@ -60,6 +60,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
     TYPES END OF t_iobj.
 
     DATA: lt_iobjname     TYPE STANDARD TABLE OF t_iobj,
+          lv_subrc        TYPE sy-subrc,
           lv_object       TYPE string,
           lv_object_class TYPE string,
           lv_transp_pkg   TYPE abap_bool.
@@ -70,10 +71,12 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
     CALL FUNCTION 'RSDG_IOBJ_MULTI_DELETE'
       EXPORTING
-        i_t_iobjnm = lt_iobjname.
+        i_t_iobjnm = lt_iobjname
+      IMPORTING
+        e_subrc    = lv_subrc.
 
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error when deleting infoObject | ).
+    IF lv_subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error when deleting InfoObject { ms_item-obj_name }| ).
     ENDIF.
 
     IF lv_transp_pkg = abap_true.
@@ -184,6 +187,10 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
     io_xml->read( EXPORTING iv_name = 'XXL_ATTRIBUTES'
                   CHANGING  cg_data = <lt_xxlattributes> ).
+
+    " Number ranges are local (should not have been serialized)
+    clear_field( EXPORTING iv_fieldname = 'NUMBRANR'
+                 CHANGING  cg_metadata  = <lg_details> ).
 
     TRY.
 
@@ -315,7 +322,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-    zcx_abapgit_exception=>raise( |Jump to infoObjects is not yet supported| ).
+    zcx_abapgit_exception=>raise( |Jump to InfoObjects is not yet supported| ).
   ENDMETHOD.
 
 
@@ -388,7 +395,7 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
         xxlattributes            = <lt_xxlattributes>.
 
     IF ls_return-type = 'E'.
-      zcx_abapgit_exception=>raise( |Error when geting getails of iobj: { ls_return-message }| ).
+      zcx_abapgit_exception=>raise( |Error getting details of InfoObject: { ls_return-message }| ).
     ENDIF.
 
     clear_field( EXPORTING iv_fieldname = 'TSTPNM'
@@ -398,6 +405,10 @@ CLASS zcl_abapgit_object_iobj IMPLEMENTATION.
                  CHANGING  cg_metadata  = <lg_details> ).
 
     clear_field( EXPORTING iv_fieldname = 'DBROUTID'
+                 CHANGING  cg_metadata  = <lg_details> ).
+
+    " Number ranges are local
+    clear_field( EXPORTING iv_fieldname = 'NUMBRANR'
                  CHANGING  cg_metadata  = <lg_details> ).
 
     io_xml->add( iv_name = 'IOBJ'
