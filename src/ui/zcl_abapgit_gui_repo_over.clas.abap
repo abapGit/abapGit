@@ -400,12 +400,15 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
   METHOD render_table_header.
 
-    DATA: wa_col LIKE LINE OF mt_col_spec.
-
     CLEAR mt_col_spec.
 
-    _add_column( iv_tech_name = 'FAVORITE' iv_css_class = 'wmin' ).
-    _add_column( iv_tech_name = 'TYPE' iv_css_class = 'wmin' ).
+    _add_column(
+      iv_tech_name = 'FAVORITE'
+      iv_css_class = 'wmin' ).
+
+    _add_column(
+      iv_tech_name = 'TYPE'
+      iv_css_class = 'wmin' ).
 
     _add_column(
       iv_tech_name = 'NAME'
