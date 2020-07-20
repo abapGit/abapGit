@@ -99,11 +99,11 @@ CLASS zcl_abapgit_gui_repo_over DEFINITION
 
       _add_column
         IMPORTING
-          tech_name    TYPE string OPTIONAL
-          display_name TYPE string OPTIONAL
-          css_class    TYPE string OPTIONAL
-          add_tz       TYPE abap_bool OPTIONAL
-          title        TYPE string OPTIONAL.
+          iv_tech_name    TYPE string OPTIONAL
+          iv_display_name TYPE string OPTIONAL
+          iv_css_class    TYPE string OPTIONAL
+          iv_add_tz       TYPE abap_bool OPTIONAL
+          iv_title        TYPE string OPTIONAL.
 
     METHODS render_scripts
       RETURNING
@@ -380,10 +380,7 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
         iv_txt = |Code inspector|
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?{ <ls_overview>-key } | ).
 
-      ii_html->add(
-                 lv_code_inspector_link && lc_separator
-              && lv_stage_link && lc_separator
-              && lv_patch_link ).
+      ii_html->add( lv_code_inspector_link && lc_separator && lv_stage_link && lc_separator && lv_patch_link ).
 
       ii_html->add( |</td>| ).
 
@@ -403,54 +400,65 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
   METHOD render_table_header.
 
-    CLEAR mt_col_spec.
-
     DATA: wa_col LIKE LINE OF mt_col_spec.
 
-    _add_column( tech_name = 'FAVORITE' css_class = 'wmin' ).
-    _add_column( tech_name = 'TYPE' css_class = 'wmin' ).
+    CLEAR mt_col_spec.
 
-    _add_column( tech_name = 'NAME' display_name = 'Name' ).
-    _add_column( tech_name = 'URL' display_name = 'Url' ).
-    _add_column( tech_name = 'PACKAGE' display_name = 'Package' ).
-    _add_column( tech_name = 'BRANCH' display_name = 'Branch' ).
+    _add_column( iv_tech_name = 'FAVORITE' iv_css_class = 'wmin' ).
+    _add_column( iv_tech_name = 'TYPE' iv_css_class = 'wmin' ).
 
     _add_column(
-      tech_name = 'DESERIALIZED_BY'
-      display_name = 'Deserialized by'
-      css_class = 'ro-detail' ).
+      iv_tech_name = 'NAME'
+      iv_display_name = 'Name' ).
 
     _add_column(
-      tech_name = 'DESERIALIZED_AT'
-      display_name = 'Deserialized at'
-      css_class = 'ro-detail'
-      add_tz = abap_true ).
+      iv_tech_name = 'URL'
+      iv_display_name = 'Url' ).
 
     _add_column(
-      tech_name = 'CREATED_BY'
-      display_name = 'Created by'
-      css_class = 'ro-detail' ).
+      iv_tech_name = 'PACKAGE'
+      iv_display_name = 'Package' ).
+
+    _add_column(
+      iv_tech_name = 'BRANCH'
+      iv_display_name = 'Branch' ).
+
+    _add_column(
+      iv_tech_name = 'DESERIALIZED_BY'
+      iv_display_name = 'Deserialized by'
+      iv_css_class = 'ro-detail' ).
+
+    _add_column(
+      iv_tech_name = 'DESERIALIZED_AT'
+      iv_display_name = 'Deserialized at'
+      iv_css_class = 'ro-detail'
+      iv_add_tz = abap_true ).
+
+    _add_column(
+      iv_tech_name = 'CREATED_BY'
+      iv_display_name = 'Created by'
+      iv_css_class = 'ro-detail' ).
 
 
     _add_column(
-      tech_name = 'CREATED_TAT'
-      display_name = 'Created at'
-      css_class = 'ro-detail'
-      add_tz = abap_true ).
+      iv_tech_name = 'CREATED_TAT'
+      iv_display_name = 'Created at'
+      iv_css_class = 'ro-detail'
+      iv_add_tz = abap_true ).
 
     _add_column(
-      tech_name = 'KEY'
-      display_name = 'Key'
-      css_class = 'ro-detail' ).
+      iv_tech_name = 'KEY'
+      iv_display_name = 'Key'
+      iv_css_class = 'ro-detail' ).
 
     _add_column(
-      tech_name = 'ACTION'
-      display_name = 'Action'
-      css_class = 'ro-action' ).
+      iv_tech_name = 'ACTION'
+      iv_display_name = 'Action'
+      iv_css_class = 'ro-action' ).
 
     _add_column(
-      tech_name = 'GO'
-      css_class = 'ro-go' ).
+      iv_tech_name = 'GO'
+      iv_css_class = 'ro-go' ).
 
     ii_html->add( |<thead>| ).
     ii_html->add( |<tr>| ).
@@ -534,11 +542,11 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_col_spec.
     APPEND INITIAL LINE TO mt_col_spec ASSIGNING <ls_col>.
-    <ls_col>-display_name = display_name.
-    <ls_col>-tech_name = tech_name.
-    <ls_col>-title = title.
-    <ls_col>-css_class = css_class.
-    <ls_col>-add_tz = add_tz.
+    <ls_col>-display_name = iv_display_name.
+    <ls_col>-tech_name = iv_tech_name.
+    <ls_col>-title = iv_title.
+    <ls_col>-css_class = iv_css_class.
+    <ls_col>-add_tz = iv_add_tz.
   ENDMETHOD.
 
 ENDCLASS.
