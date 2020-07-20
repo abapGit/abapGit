@@ -136,7 +136,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSO IMPLEMENTATION.
           ed_mode_head  = lv_act_head.
 
       IF lv_act_head <> lc_act_delete.
-        zcx_abapgit_exception=>raise( |SUSO { mv_objectname }: Delete not allowed| ).
+        zcx_abapgit_exception=>raise( |SUSO { mv_objectname }: Delete not allowed. Check where-used in SU21| ).
       ENDIF.
 
       CALL METHOD lo_suso->('SUSO_COLLECT_IN_CTS')
