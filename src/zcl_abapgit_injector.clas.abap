@@ -1,7 +1,6 @@
 CLASS zcl_abapgit_injector DEFINITION
   PUBLIC
-  CREATE PRIVATE
-  FOR TESTING .
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
 
@@ -25,6 +24,9 @@ CLASS zcl_abapgit_injector DEFINITION
     CLASS-METHODS set_environment
       IMPORTING
         !ii_environment TYPE REF TO zif_abapgit_environment .
+    CLASS-METHODS set_longtexts
+      IMPORTING
+        !ii_longtexts TYPE REF TO zif_abapgit_longtexts .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -64,6 +66,11 @@ CLASS ZCL_ABAPGIT_INJECTOR IMPLEMENTATION.
 
   METHOD set_environment.
     zcl_abapgit_factory=>gi_environment = ii_environment.
+  ENDMETHOD.
+
+
+  METHOD set_longtexts.
+    zcl_abapgit_factory=>gi_longtext = ii_longtexts.
   ENDMETHOD.
 
 
