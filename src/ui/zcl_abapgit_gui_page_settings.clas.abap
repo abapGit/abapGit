@@ -128,7 +128,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
     DATA lv_serialized_post_data TYPE string.
 
-    CONCATENATE LINES OF it_postdata INTO lv_serialized_post_data.
+    lv_serialized_post_data = zcl_abapgit_utils=>translate_postdata( it_postdata ).
     rt_post_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_serialized_post_data ).
 
   ENDMETHOD.
