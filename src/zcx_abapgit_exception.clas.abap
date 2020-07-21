@@ -209,7 +209,7 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
 
 
   METHOD raise_with_text.
-    zcx_abapgit_exception=>raise(
+    raise(
       iv_text = ix_previous->get_text( )
       ix_previous = ix_previous ).
   ENDMETHOD.
