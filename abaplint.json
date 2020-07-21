@@ -1,5 +1,4 @@
 {
-  
   "global": {
     "files": "/src/**/*.*",
     "skipGeneratedGatewayClasses": true,
