@@ -52,7 +52,7 @@ CLASS zcx_abapgit_exception DEFINITION
         !msgv2    TYPE symsgv OPTIONAL
         !msgv3    TYPE symsgv OPTIONAL
         !msgv4    TYPE symsgv OPTIONAL.
-    METHODS get_longtext REDEFINITION.
+    METHODS IF_MESSAGE~GET_LONGTEXT REDEFINITION.
     METHODS get_source_position REDEFINITION.
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -89,7 +89,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_longtext.
+  METHOD IF_MESSAGE~GET_LONGTEXT.
 
     " You should remember that we have to call ZCL_ABAPGIT_MESSAGE_HELPER
     " dynamically, because the compiled abapGit report puts the definition
