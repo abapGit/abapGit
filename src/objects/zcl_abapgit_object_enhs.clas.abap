@@ -57,6 +57,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHS IMPLEMENTATION.
   METHOD zif_abapgit_object~delete.
 
     DATA: lv_spot_name  TYPE enhspotname,
+          lx_enh_root   TYPE REF TO cx_enh_root,
           li_enh_object TYPE REF TO if_enh_object.
 
     lv_spot_name  = ms_item-obj_name.
@@ -70,8 +71,10 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHS IMPLEMENTATION.
 
         li_enh_object->unlock( ).
 
-      CATCH cx_enh_root.
-        zcx_abapgit_exception=>raise( 'Error from CL_ENH_FACTORY' ).
+      CATCH cx_enh_root INTO lx_enh_root.
+        zcx_abapgit_exception=>raise(
+        iv_text = lx_enh_root->get_text( )
+        ix_previous = lx_enh_root ).
     ENDTRY.
 
   ENDMETHOD.
@@ -83,6 +86,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHS IMPLEMENTATION.
           lv_spot_name TYPE enhspotname,
           lv_tool      TYPE enhspottooltype,
           lv_package   LIKE iv_package,
+          lx_enh_root  TYPE REF TO cx_enh_root,
           li_spot_ref  TYPE REF TO if_enh_spot_tool,
           li_enhs      TYPE REF TO zif_abapgit_object_enhs.
 
@@ -108,8 +112,10 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHS IMPLEMENTATION.
           CHANGING
             devclass       = lv_package ).
 
-      CATCH cx_enh_root.
-        zcx_abapgit_exception=>raise( 'Error from CL_ENH_FACTORY' ).
+      CATCH cx_enh_root INTO lx_enh_root.
+        zcx_abapgit_exception=>raise(
+        iv_text = lx_enh_root->get_text( )
+        ix_previous = lx_enh_root ).
     ENDTRY.
 
     li_enhs = factory( lv_tool ).
@@ -184,15 +190,17 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHS IMPLEMENTATION.
     DATA: lv_spot_name TYPE enhspotname,
           li_spot_ref  TYPE REF TO if_enh_spot_tool,
           li_enhs      TYPE REF TO zif_abapgit_object_enhs,
-          lx_root      TYPE REF TO cx_root.
+          lx_enh_root  TYPE REF TO cx_enh_root.
 
     lv_spot_name = ms_item-obj_name.
 
     TRY.
         li_spot_ref = cl_enh_factory=>get_enhancement_spot( lv_spot_name ).
 
-      CATCH cx_enh_root INTO lx_root.
-        zcx_abapgit_exception=>raise( 'Error from CL_ENH_FACTORY' ).
+      CATCH cx_enh_root INTO lx_enh_root.
+        zcx_abapgit_exception=>raise(
+        iv_text = lx_enh_root->get_text( )
+        ix_previous = lx_enh_root ).
     ENDTRY.
 
     li_enhs = factory( li_spot_ref->get_tool( ) ).
