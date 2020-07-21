@@ -8,6 +8,26 @@ Legend
 + : added
 - : removed
 
+2020-07-21 v1.98.0
+------------------
++ repository creation form as HTML
++ add action column to repo overview
+! general support for changelogs
+* fixes faulty handling of post data
+* fix user setting containing invalid repo key
+* fix after removing/uninstall repo
+* fixes for dark theme
+* missing objects in overwrite confirmation popup
+* TRAN add variant tranaction
+* dark theme fixes
+* improved error message when uninstalling DDIC objects
+* HTML GUI fixes
+* fixes for special characters in file names
+* IOBJ remove number ranges during delete
+* Uninstall resolve DDIC dependencies of VIEW
+* PARA dequeue after deletion
+* TOBJ format changes, package cleared
+
 2020-06-29 v1.97.0
 ------------------
 + repository overview as main page
