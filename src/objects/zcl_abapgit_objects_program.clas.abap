@@ -483,6 +483,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
         IF sy-msgid = 'EU' AND sy-msgno = '510'.
           zcx_abapgit_exception=>raise( 'User is currently editing program' ).
         ELSEIF sy-msgid = 'EU' AND sy-msgno = '522'.
+* for generated table maintenance function groups, the author is set to SAP* instead of the user which
+* generates the function group. This hits some standard checks, pulling new code again sets the author
+* to the current user which avoids the check
           zcx_abapgit_exception=>raise( |Delete function group and pull again, { is_progdir-name } (EU522)| ).
         ELSE.
           zcx_abapgit_exception=>raise( |PROG { is_progdir-name }, updating error: { sy-msgid } { sy-msgno }| ).
