@@ -547,6 +547,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
     ls_progdir_new-varcl   = is_progdir-varcl.
     ls_progdir_new-appl    = is_progdir-appl.
     ls_progdir_new-rstat   = is_progdir-rstat.
+    ls_progdir_new-sqlx    = is_progdir-sqlx.
 
     CALL FUNCTION 'UPDATE_PROGDIR'
       EXPORTING
