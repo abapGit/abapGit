@@ -59,19 +59,19 @@ ENDCLASS.
 CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
   METHOD zif_abapgit_object~changed_by.
 
-    DATA: ldref_outline_struct    TYPE REF TO data,
-          ldref_config_key_struct TYPE REF TO data.
+    DATA: lr_outline_struct    TYPE REF TO data,
+          lr_config_key_struct TYPE REF TO data.
 
     FIELD-SYMBOLS: <ls_outline>    TYPE any,
                    <ls_config_key> TYPE any,
                    <lv_component>  TYPE any.
 
-    CREATE DATA ldref_outline_struct TYPE ('WDY_CFG_OUTLINE_DATA').
-    CREATE DATA ldref_config_key_struct TYPE ('WDY_CONFIG_KEY').
+    CREATE DATA lr_outline_struct TYPE ('WDY_CFG_OUTLINE_DATA').
+    CREATE DATA lr_config_key_struct TYPE ('WDY_CONFIG_KEY').
 
 
-    ASSIGN ldref_outline_struct->* TO <ls_outline>.
-    ASSIGN ldref_config_key_struct->* TO <ls_config_key>.
+    ASSIGN lr_outline_struct->* TO <ls_outline>.
+    ASSIGN lr_config_key_struct->* TO <ls_config_key>.
 
     TRY.
         ASSIGN COMPONENT 'CONFIG_ID' OF STRUCTURE <ls_config_key> TO <lv_component>.
@@ -94,15 +94,16 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
-    DATA: ldref_config_key_struct TYPE REF TO data,
-          lv_subrc                TYPE sysubrc,
-          lv_obj_name             TYPE sobj_name.
+    DATA: lr_config_key_struct TYPE REF TO data,
+          lv_subrc             TYPE sysubrc,
+          lv_obj_name          TYPE sobj_name,
+          ls_tadir             TYPE tadir.
 
     FIELD-SYMBOLS: <ls_config_key> TYPE any,
                    <lv_component>  TYPE any.
 
-    CREATE DATA ldref_config_key_struct TYPE ('WDY_CONFIG_KEY').
-    ASSIGN ldref_config_key_struct->* TO <ls_config_key>.
+    CREATE DATA lr_config_key_struct TYPE ('WDY_CONFIG_KEY').
+    ASSIGN lr_config_key_struct->* TO <ls_config_key>.
 
     ASSIGN COMPONENT 'CONFIG_ID' OF STRUCTURE <ls_config_key> TO <lv_component>.
     <lv_component> = ms_item-obj_name.
@@ -122,17 +123,15 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
 
     "**[HJA]->Check TADIR
     lv_obj_name = ms_item-obj_name && '00'.
-    DATA(ls_tadir) = me->get_tadir_entry( iv_devclass = iv_package
-                                          iv_obj_name = lv_obj_name ).
+    ls_tadir = me->get_tadir_entry( iv_devclass = iv_package
+                                    iv_obj_name = lv_obj_name ).
 
     IF ls_tadir IS NOT INITIAL.
       IF ls_tadir-delflag <> abap_true.
 
-        me->modify_tadir_entry(
-          EXPORTING
-            iv_delete_flag        = abap_true
-            iv_obj_name           = lv_obj_name
-            iv_devclass           = iv_package ).
+        me->modify_tadir_entry( iv_delete_flag = abap_true
+                                iv_obj_name    = lv_obj_name
+                                iv_devclass    = iv_package ).
 
       ENDIF.
     ELSE.
@@ -144,19 +143,19 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: ldref_outline_struct    TYPE REF TO data,
-          ldref_config_key_struct TYPE REF TO data.
+    DATA: lr_outline_struct    TYPE REF TO data,
+          lr_config_key_struct TYPE REF TO data.
 
     FIELD-SYMBOLS: <ls_outline>    TYPE any,
                    <ls_config_key> TYPE any,
                    <lv_component>  TYPE any.
 
-    CREATE DATA ldref_outline_struct TYPE ('WDY_CFG_OUTLINE_DATA').
-    CREATE DATA ldref_config_key_struct TYPE ('WDY_CONFIG_KEY').
+    CREATE DATA lr_outline_struct TYPE ('WDY_CFG_OUTLINE_DATA').
+    CREATE DATA lr_config_key_struct TYPE ('WDY_CONFIG_KEY').
 
 
-    ASSIGN ldref_outline_struct->* TO <ls_outline>.
-    ASSIGN ldref_config_key_struct->* TO <ls_config_key>.
+    ASSIGN lr_outline_struct->* TO <ls_outline>.
+    ASSIGN lr_config_key_struct->* TO <ls_config_key>.
 
     TRY.
         ASSIGN COMPONENT 'CONFIG_ID' OF STRUCTURE <ls_config_key> TO <lv_component>.
@@ -199,7 +198,8 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
 
     DATA: lt_enq   TYPE STANDARD TABLE OF seqg3,
           lv_subrc TYPE sysubrc,
-          lv_garg  TYPE eqegraarg.
+          lv_garg  TYPE eqegraarg,
+          lv_lines TYPE i.
 
     lv_garg = ms_item-obj_name && '00'.
 
@@ -219,7 +219,7 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error check object lock WDCC: { ms_item-obj_name }| ).
     ENDIF.
 
-    DESCRIBE TABLE lt_enq LINES DATA(lv_lines).
+    DESCRIBE TABLE lt_enq LINES lv_lines.
     IF lv_lines > 0.
       rv_is_locked = abap_true.
     ELSE.
@@ -241,15 +241,15 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lv_xml_xstring           TYPE xstring,
-          lv_xml_string            TYPE string,
-          lo_document              TYPE REF TO if_ixml_document,
-          lv_xml_as_string         TYPE string,
-          ldref_otr_texts_tab      TYPE REF TO data,
-          ldref_cc_text_tab        TYPE REF TO data,
-          ldref_orig_config_struct TYPE REF TO data,
-          ldref_outline_struct     TYPE REF TO data,
-          ldref_config_key_struct  TYPE REF TO data.
+    DATA: lv_xml_xstring        TYPE xstring,
+          lv_xml_string         TYPE string,
+          lo_document           TYPE REF TO if_ixml_document,
+          lv_xml_as_string      TYPE string,
+          lr_otr_texts_tab      TYPE REF TO data,
+          lr_cc_text_tab        TYPE REF TO data,
+          lr_orig_config_struct TYPE REF TO data,
+          lr_outline_struct     TYPE REF TO data,
+          lr_config_key_struct  TYPE REF TO data.
 
     FIELD-SYMBOLS: <lt_otr_texts>      TYPE ANY TABLE,
                    <lt_cc_text>        TYPE ANY TABLE,
@@ -261,17 +261,17 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
                    <lv_component_type> TYPE any,
                    <lv_component_var>  TYPE any.
 
-    CREATE DATA ldref_otr_texts_tab TYPE TABLE OF ('WDY_CONFIG_COMPT').
-    CREATE DATA ldref_cc_text_tab TYPE TABLE OF ('WDY_CONFIG_DATT').
-    CREATE DATA ldref_orig_config_struct TYPE ('WDY_CONFIG_DATA').
-    CREATE DATA ldref_outline_struct TYPE ('WDY_CFG_OUTLINE_DATA').
-    CREATE DATA ldref_config_key_struct TYPE ('WDY_CONFIG_KEY').
+    CREATE DATA lr_otr_texts_tab TYPE TABLE OF ('WDY_CONFIG_COMPT').
+    CREATE DATA lr_cc_text_tab TYPE TABLE OF ('WDY_CONFIG_DATT').
+    CREATE DATA lr_orig_config_struct TYPE ('WDY_CONFIG_DATA').
+    CREATE DATA lr_outline_struct TYPE ('WDY_CFG_OUTLINE_DATA').
+    CREATE DATA lr_config_key_struct TYPE ('WDY_CONFIG_KEY').
 
-    ASSIGN ldref_otr_texts_tab->* TO <lt_otr_texts>.
-    ASSIGN ldref_cc_text_tab->* TO <lt_cc_text>.
-    ASSIGN ldref_orig_config_struct->* TO <ls_orig_config>.
-    ASSIGN ldref_outline_struct->* TO <ls_outline>.
-    ASSIGN ldref_config_key_struct->* TO <ls_config_key>.
+    ASSIGN lr_otr_texts_tab->* TO <lt_otr_texts>.
+    ASSIGN lr_cc_text_tab->* TO <lt_cc_text>.
+    ASSIGN lr_orig_config_struct->* TO <ls_orig_config>.
+    ASSIGN lr_outline_struct->* TO <ls_outline>.
+    ASSIGN lr_config_key_struct->* TO <ls_config_key>.
 
 
     io_xml->add( iv_name = 'OBJECT_NAME'
@@ -338,7 +338,7 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
     "**[HJA]->Transform for readable part of xml
     CALL TRANSFORMATION id
            SOURCE XML lv_xml_xstring
-           RESULT XML lv_xml_string .
+           RESULT XML lv_xml_string.
 
     lo_document  = cl_ixml_80_20=>parse_to_document( stream_xstring = lv_xml_xstring ).
     lv_xml_as_string  = cl_ixml_80_20=>render_to_string( document      = lo_document
@@ -371,34 +371,34 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lv_xml_payload_xstring   TYPE xstring,
-          lo_translator            TYPE REF TO if_wdr_config_otr,
-          lv_config_id             TYPE c LENGTH 32,
-          lv_config_type           TYPE n LENGTH 2,
-          lv_config_var            TYPE c LENGTH 6,
-          ldref_otr_texts_tab      TYPE REF TO data,
-          ldref_orig_config_struct TYPE REF TO data,
-          ldref_pers_key_struct    TYPE REF TO data,
-          ldref_config_datt        TYPE REF TO data,
-          lv_obj_name              TYPE sobj_name,
-          ls_tadir                 TYPE tadir,
-          ls_tadir_backup          type tadir.
+    DATA: lv_xml_payload_xstring TYPE xstring,
+          lo_translator          TYPE REF TO if_wdr_config_otr,
+          lv_config_id           TYPE c LENGTH 32,
+          lv_config_type         TYPE n LENGTH 2,
+          lv_config_var          TYPE c LENGTH 6,
+          lr_otr_texts_tab       TYPE REF TO data,
+          lr_orig_config_struct  TYPE REF TO data,
+          lr_pers_key_struct     TYPE REF TO data,
+          lr_config_datt         TYPE REF TO data,
+          lv_obj_name            TYPE sobj_name,
+          ls_tadir               TYPE tadir,
+          ls_tadir_backup        TYPE tadir.
 
-    FIELD-SYMBOLS: <lt_otr_texts>      TYPE ANY TABLE,
-                   <ls_orig_config>    TYPE any,
-                   <ls_pers_key>       TYPE any,
-                   <lv_component>      TYPE any,
-                   <lt_config_datt>    TYPE ANY TABLE.
+    FIELD-SYMBOLS: <lt_otr_texts>   TYPE ANY TABLE,
+                   <ls_orig_config> TYPE any,
+                   <ls_pers_key>    TYPE any,
+                   <lv_component>   TYPE any,
+                   <lt_config_datt> TYPE ANY TABLE.
 
-    CREATE DATA ldref_otr_texts_tab TYPE TABLE OF ('WDY_CONFIG_COMPT').
-    CREATE DATA ldref_orig_config_struct TYPE ('WDY_CONFIG_DATA').
-    CREATE DATA ldref_pers_key_struct TYPE ('WDY_PERS_KEY').
-    CREATE DATA ldref_config_datt TYPE TABLE OF ('WDY_CONFIG_DATT').
+    CREATE DATA lr_otr_texts_tab TYPE TABLE OF ('WDY_CONFIG_COMPT').
+    CREATE DATA lr_orig_config_struct TYPE ('WDY_CONFIG_DATA').
+    CREATE DATA lr_pers_key_struct TYPE ('WDY_PERS_KEY').
+    CREATE DATA lr_config_datt TYPE TABLE OF ('WDY_CONFIG_DATT').
 
-    ASSIGN ldref_otr_texts_tab->* TO <lt_otr_texts>.
-    ASSIGN ldref_orig_config_struct->* TO <ls_orig_config>.
-    ASSIGN ldref_pers_key_struct->* TO <ls_pers_key>.
-    ASSIGN ldref_config_datt->* TO <lt_config_datt>.
+    ASSIGN lr_otr_texts_tab->* TO <lt_otr_texts>.
+    ASSIGN lr_orig_config_struct->* TO <ls_orig_config>.
+    ASSIGN lr_pers_key_struct->* TO <ls_pers_key>.
+    ASSIGN lr_config_datt->* TO <lt_config_datt>.
 
     ASSIGN COMPONENT 'CONFIG_ID' OF STRUCTURE <ls_orig_config> TO <lv_component>.
     io_xml->read( EXPORTING iv_name = 'CONFIG_ID'
@@ -503,7 +503,7 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
     CALL METHOD ('CL_WDR_CFG_PERSISTENCE_UTILS')=>('SAVE_COMP_CONFIG_TO_DB')
       EXPORTING
         config_data = <ls_orig_config>
-        translator  = lo_translator. "**[HJA]->lo_translator not initialized as the tables have already been updated explicitly
+        translator  = lo_translator.
 
     COMMIT WORK.
 
@@ -529,11 +529,9 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
     IF ls_tadir IS NOT INITIAL.
 
       IF ls_tadir-delflag = abap_true.
-        me->modify_tadir_entry(
-          EXPORTING
-            iv_delete_flag        = abap_false
-            iv_obj_name           = lv_obj_name
-            iv_devclass           = iv_package ).
+        me->modify_tadir_entry( iv_delete_flag = abap_false
+                                iv_obj_name    = lv_obj_name
+                                iv_devclass    = iv_package ).
       ENDIF.
 
     ELSE.
