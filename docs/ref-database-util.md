@@ -4,7 +4,7 @@ category: reference
 order: 99
 ---
 
-The so-called `Database util` is a tool for managing database entries created by abapGit. You can access the tool via the tools icon in the top right corner of the home page of the abapGit report > choose first menu item `Database util`.
+`Database util` is a tool for managing database entries created by abapGit. You can access the tool via the tools icon in the top right corner of the abapGit home page > choose first menu item `Database util`.
 
 It's possible to edit database entries of type
 
