@@ -57,9 +57,10 @@ CLASS zcl_abapgit_string_map DEFINITION
         zcx_abapgit_exception.
     METHODS freeze.
 
+    DATA mt_entries TYPE tts_entries READ-ONLY.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
-    DATA mt_entries TYPE tts_entries.
     DATA mv_read_only TYPE abap_bool.
 
 ENDCLASS.
