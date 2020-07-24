@@ -17,7 +17,7 @@ First download latest version of the projet you want to import.
 ## Import zip archive ##
 1. Connect to SAP in language **EN**
 2. Run abapGit:
-  * You have installed standalone version : in transaction `SA38`, run the program you created  (`ZABAPGIT_STANDALONE` or `ZABAPGIT_FULL` or other)
+  * If you have installed the standalone version : in transaction `SE38`, run the program you created  (`ZABAPGIT_STANDALONE` or `ZABAPGIT_FULL` or other)
   * You have installed developper version : call transaction `ZABAPGIT`
 3. Select **+ Offline**
 4. Enter projet name and select existing package or create new package
