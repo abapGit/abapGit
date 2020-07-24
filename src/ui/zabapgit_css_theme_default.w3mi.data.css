@@ -63,6 +63,10 @@ div.panel.success {
   color: #589a58 !important;
   background-color: #c5eac5;
 }
+div.panel.error {
+  color: #d41919;
+  background-color: #fad6d6;
+}
 #debug-output { color: var(--theme-debug-color); }
 div.dummydiv { background-color: var(--theme-container-background-color); }
 

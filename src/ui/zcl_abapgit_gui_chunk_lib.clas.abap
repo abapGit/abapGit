@@ -16,6 +16,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
       IMPORTING
         !ix_error      TYPE REF TO zcx_abapgit_exception OPTIONAL
         !iv_error      TYPE string OPTIONAL
+        !iv_extra_style TYPE string OPTIONAL
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
     CLASS-METHODS render_repo_top
@@ -100,6 +101,19 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         is_event       TYPE ty_event_signature
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+    CLASS-METHODS render_repo_palette
+      IMPORTING
+        iv_action TYPE string
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+
+    CLASS-METHODS advanced_submenu
+      RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
+
+    CLASS-METHODS help_submenu
+      RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -132,6 +146,35 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
 
+  METHOD advanced_submenu.
+
+    CREATE OBJECT ro_menu.
+
+    ro_menu->add(
+      iv_txt = 'Database util'
+      iv_act = zif_abapgit_definitions=>c_action-go_db
+    )->add(
+      iv_txt = 'Package to zip'
+      iv_act = zif_abapgit_definitions=>c_action-zip_package
+    )->add(
+      iv_txt = 'Transport to zip'
+      iv_act = zif_abapgit_definitions=>c_action-zip_transport
+    )->add(
+      iv_txt = 'Object to files'
+      iv_act = zif_abapgit_definitions=>c_action-zip_object
+    )->add(
+      iv_txt = 'Test changed by'
+      iv_act = zif_abapgit_definitions=>c_action-changed_by
+    )->add(
+      iv_txt = 'Debug info'
+      iv_act = zif_abapgit_definitions=>c_action-go_debuginfo
+    )->add(
+      iv_txt = 'Settings'
+      iv_act = zif_abapgit_definitions=>c_action-go_settings ).
+
+  ENDMETHOD.
+
+
   METHOD class_constructor.
 
     CALL FUNCTION 'GET_SYSTEM_TIMEZONE'
@@ -153,6 +196,26 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
            WHERE arbgb = iv_msgid
            AND msgnr = iv_msgno
            AND sprsl = sy-langu.
+
+  ENDMETHOD.
+
+
+  METHOD help_submenu.
+
+    CREATE OBJECT ro_menu.
+
+    ro_menu->add(
+      iv_txt = 'Tutorial'
+      iv_act = zif_abapgit_definitions=>c_action-go_tutorial
+    )->add(
+      iv_txt = 'Documentation'
+      iv_act = zif_abapgit_definitions=>c_action-documentation
+    )->add(
+      iv_txt = 'Explore'
+      iv_act = zif_abapgit_definitions=>c_action-go_explore
+    )->add(
+      iv_txt = 'Changelog'
+      iv_act = zif_abapgit_definitions=>c_action-changelog ).
 
   ENDMETHOD.
 
@@ -239,6 +302,11 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
   METHOD render_error.
 
     DATA lv_error TYPE string.
+    DATA lv_class TYPE string VALUE 'panel error center'.
+
+    IF iv_extra_style IS NOT INITIAL.
+      lv_class = lv_class && ` ` && iv_extra_style.
+    ENDIF.
 
     CREATE OBJECT ro_html.
 
@@ -248,7 +316,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       lv_error = iv_error.
     ENDIF.
 
-    ro_html->add( '<div class="dummydiv error">' ).
+    ro_html->add( |<div class="{ lv_class }">| ).
     ro_html->add( |{ zcl_abapgit_html=>icon( 'exclamation-circle/red' ) } Error: { lv_error }| ).
     ro_html->add( '</div>' ).
 
@@ -549,6 +617,43 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       lv_tmp = lv_tmp && '</th>'.
       ro_html->add( lv_tmp ).
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD render_repo_palette.
+
+    DATA li_repo_srv TYPE REF TO zif_abapgit_repo_srv.
+    DATA lt_repo_list TYPE zif_abapgit_persistence=>tt_repo.
+    DATA lv_repo_json TYPE string.
+    DATA lv_size TYPE i.
+    DATA lo_repo TYPE REF TO zcl_abapgit_repo.
+    FIELD-SYMBOLS <ls_repo> LIKE LINE OF lt_repo_list.
+
+    li_repo_srv = zcl_abapgit_repo_srv=>get_instance( ).
+    lt_repo_list = zcl_abapgit_persist_factory=>get_repo( )->list( ).
+    lv_size = lines( lt_repo_list ).
+
+    ri_html = zcl_abapgit_html=>create( ).
+
+    ri_html->add( 'var repoCatalog = [' ). " Maybe separate this into another method if needed in more places
+    LOOP AT lt_repo_list ASSIGNING <ls_repo>.
+      lo_repo = li_repo_srv->get( <ls_repo>-key ). " inefficient
+      lv_repo_json = |\{ key: "{ <ls_repo>-key
+        }", isOffline: "{ <ls_repo>-offline
+        }", displayName: "{ lo_repo->get_name( ) }"  \}|.
+      IF sy-tabix < lv_size.
+        lv_repo_json = lv_repo_json && ','.
+      ENDIF.
+      ri_html->add( lv_repo_json ).
+    ENDLOOP.
+    ri_html->add( '];' ).
+
+    ri_html->add( |var gGoRepoPalette = new CommandPalette(createRepoCatalogEnumerator(repoCatalog, "{
+      iv_action }"), \{| ).
+    ri_html->add( '  toggleKey: "F2",' ).
+    ri_html->add( '  hotkeyDescription: "Go to repo ..."' ).
+    ri_html->add( '});' ).
 
   ENDMETHOD.
 

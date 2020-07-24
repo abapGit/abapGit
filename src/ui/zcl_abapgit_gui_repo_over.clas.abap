@@ -62,7 +62,7 @@ CLASS zcl_abapgit_gui_repo_over DEFINITION
                 iv_label       TYPE string
                 iv_value       TYPE string OPTIONAL
                 iv_max_length  TYPE string OPTIONAL
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
+      RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html,
 
       apply_filter
         CHANGING
@@ -97,16 +97,19 @@ CLASS zcl_abapgit_gui_repo_over DEFINITION
       apply_order_by
         CHANGING ct_overview TYPE tty_overview,
 
-      _add_col
+      _add_column
         IMPORTING
-          iv_descriptor TYPE string.
+          iv_tech_name    TYPE string OPTIONAL
+          iv_display_name TYPE string OPTIONAL
+          iv_css_class    TYPE string OPTIONAL
+          iv_add_tz       TYPE abap_bool OPTIONAL
+          iv_title        TYPE string OPTIONAL.
 
     METHODS render_scripts
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception.
-
 ENDCLASS.
 
 
@@ -174,6 +177,14 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD has_favorites.
+    READ TABLE mt_overview WITH KEY favorite = abap_true TRANSPORTING NO FIELDS.
+    IF sy-subrc = 0.
+      rv_has_favorites = abap_true.
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD map_repo_list_to_overview.
 
     DATA: ls_overview LIKE LINE OF rt_overview,
@@ -226,40 +237,6 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_filter.
-
-    FIELD-SYMBOLS: <lv_postdata> LIKE LINE OF it_postdata.
-
-    READ TABLE it_postdata ASSIGNING <lv_postdata>
-                           INDEX 1.
-    IF sy-subrc = 0.
-      FIND FIRST OCCURRENCE OF REGEX `filter=(.*)`
-           IN <lv_postdata>
-           SUBMATCHES mv_filter.
-    ENDIF.
-
-    mv_filter = condense( mv_filter ).
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_renderable~render.
-
-    mt_overview = map_repo_list_to_overview( zcl_abapgit_persist_factory=>get_repo( )->list( ) ).
-    apply_order_by( CHANGING ct_overview = mt_overview ).
-    apply_filter( CHANGING ct_overview = mt_overview ).
-
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-
-    render_header_bar( ri_html ).
-    render_table( ii_html     = ri_html
-                  it_overview = mt_overview ).
-
-    register_deferred_script( render_scripts( ) ).
-
-  ENDMETHOD.
-
-
   METHOD render_header_bar.
 
     ii_html->add( |<div class="form-container">| ).
@@ -292,11 +269,11 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
   METHOD render_scripts.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->zif_abapgit_html~set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
-    ro_html->add( 'setInitialFocus("filter");' ).
-    ro_html->add( 'var gHelper = new RepoOverViewHelper();' ).
+    ri_html->set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
+    ri_html->add( 'setInitialFocus("filter");' ).
+    ri_html->add( 'var gHelper = new RepoOverViewHelper();' ).
 
   ENDMETHOD.
 
@@ -318,12 +295,17 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
   METHOD render_table_body.
 
+    CONSTANTS: lc_separator TYPE string VALUE `<span class="separator">|</span>`.
+
     DATA:
-      lv_type_icon         TYPE string,
-      lv_favorite_icon     TYPE string,
-      lv_favorite_class    TYPE string,
-      lv_package_jump_data TYPE string,
-      lv_package_obj_name  TYPE sobj_name.
+      lv_type_icon           TYPE string,
+      lv_favorite_icon       TYPE string,
+      lv_favorite_class      TYPE string,
+      lv_package_jump_data   TYPE string,
+      lv_package_obj_name    TYPE sobj_name,
+      lv_stage_link          TYPE string,
+      lv_patch_link          TYPE string,
+      lv_code_inspector_link TYPE string.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
@@ -383,6 +365,30 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-created_by }</td>| ).
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-created_at }</td>| ).
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-key }</td>| ).
+
+      ii_html->add( |<td class='ro-action'> | ).
+
+      lv_stage_link = ii_html->a(
+        iv_txt = |Stage|
+        iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ <ls_overview>-key } | ).
+
+      lv_patch_link = ii_html->a(
+        iv_txt = |Patch|
+        iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?{ <ls_overview>-key } | ).
+
+      lv_code_inspector_link = ii_html->a(
+        iv_txt = |Code inspector|
+        iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?{ <ls_overview>-key } | ).
+
+      ii_html->add( lv_code_inspector_link && lc_separator && lv_stage_link && lc_separator && lv_patch_link ).
+
+      ii_html->add( |</td>| ).
+
+      ii_html->add( |<td class='ro-go'><span>{
+                zcl_abapgit_html=>a(
+                  iv_txt = `&rsaquo;`
+                  iv_act = |{ c_action-select }?{ <ls_overview>-key }| ) }</span></td>| ).
+
       ii_html->add( |</tr>| ).
 
     ENDLOOP.
@@ -395,18 +401,67 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
   METHOD render_table_header.
 
     CLEAR mt_col_spec.
-    "          technical name  /display name    /css class /add timezone
-    _add_col( 'FAVORITE        /                /wmin      / ' ).
-    _add_col( 'TYPE            /                /wmin      / ' ).
-    _add_col( 'NAME            /Name            /          / ' ).
-    _add_col( 'URL             /Url             /          / ' ).
-    _add_col( 'PACKAGE         /Package         /          / ' ).
-    _add_col( 'BRANCH          /Branch          /          / ' ).
-    _add_col( 'DESERIALIZED_BY /Deserialized by /ro-detail / ' ).
-    _add_col( 'DESERIALIZED_AT /Deserialized at /ro-detail /X' ).
-    _add_col( 'CREATED_BY      /Created by      /ro-detail / ' ).
-    _add_col( 'CREATED_AT      /Created at      /ro-detail /X' ).
-    _add_col( 'KEY             /Key             /ro-detail / ' ).
+
+    _add_column(
+      iv_tech_name = 'FAVORITE'
+      iv_css_class = 'wmin' ).
+
+    _add_column(
+      iv_tech_name = 'TYPE'
+      iv_css_class = 'wmin' ).
+
+    _add_column(
+      iv_tech_name = 'NAME'
+      iv_display_name = 'Name' ).
+
+    _add_column(
+      iv_tech_name = 'URL'
+      iv_display_name = 'Url' ).
+
+    _add_column(
+      iv_tech_name = 'PACKAGE'
+      iv_display_name = 'Package' ).
+
+    _add_column(
+      iv_tech_name = 'BRANCH'
+      iv_display_name = 'Branch' ).
+
+    _add_column(
+      iv_tech_name = 'DESERIALIZED_BY'
+      iv_display_name = 'Deserialized by'
+      iv_css_class = 'ro-detail' ).
+
+    _add_column(
+      iv_tech_name = 'DESERIALIZED_AT'
+      iv_display_name = 'Deserialized at'
+      iv_css_class = 'ro-detail'
+      iv_add_tz = abap_true ).
+
+    _add_column(
+      iv_tech_name = 'CREATED_BY'
+      iv_display_name = 'Created by'
+      iv_css_class = 'ro-detail' ).
+
+
+    _add_column(
+      iv_tech_name = 'CREATED_TAT'
+      iv_display_name = 'Created at'
+      iv_css_class = 'ro-detail'
+      iv_add_tz = abap_true ).
+
+    _add_column(
+      iv_tech_name = 'KEY'
+      iv_display_name = 'Key'
+      iv_css_class = 'ro-detail' ).
+
+    _add_column(
+      iv_tech_name = 'ACTION'
+      iv_display_name = 'Action'
+      iv_css_class = 'ro-action' ).
+
+    _add_column(
+      iv_tech_name = 'GO'
+      iv_css_class = 'ro-go' ).
 
     ii_html->add( |<thead>| ).
     ii_html->add( |<tr>| ).
@@ -426,7 +481,7 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
     DATA lv_attrs TYPE string.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     IF iv_value IS NOT INITIAL.
       lv_attrs = | value="{ iv_value }"|.
@@ -436,28 +491,27 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
       lv_attrs = | maxlength="{ iv_max_length }"|.
     ENDIF.
 
-    ro_html->add( |<label for="{ iv_name }">{ iv_label }</label>| ).
-    ro_html->add( |<input id="{ iv_name }" name="{ iv_name }" type="text"{ lv_attrs }>| ).
+    ri_html->add( |<label for="{ iv_name }">{ iv_label }</label>| ).
+    ri_html->add( |<input id="{ iv_name }" name="{ iv_name }" type="text"{ lv_attrs }>| ).
 
   ENDMETHOD.
 
 
-  METHOD _add_col.
+  METHOD set_filter.
 
-    FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_col_spec.
-    APPEND INITIAL LINE TO mt_col_spec ASSIGNING <ls_col>.
-    SPLIT iv_descriptor AT '/' INTO
-      <ls_col>-tech_name
-      <ls_col>-display_name
-      <ls_col>-css_class
-      <ls_col>-add_tz.
-    CONDENSE <ls_col>-tech_name.
-    CONDENSE <ls_col>-display_name.
-    CONDENSE <ls_col>-css_class.
-    CONDENSE <ls_col>-add_tz.
+    FIELD-SYMBOLS: <lv_postdata> LIKE LINE OF it_postdata.
+
+    READ TABLE it_postdata ASSIGNING <lv_postdata>
+                           INDEX 1.
+    IF sy-subrc = 0.
+      FIND FIRST OCCURRENCE OF REGEX `filter=(.*)`
+           IN <lv_postdata>
+           SUBMATCHES mv_filter.
+    ENDIF.
+
+    mv_filter = condense( mv_filter ).
 
   ENDMETHOD.
-
 
 
   METHOD set_order_by.
@@ -469,11 +523,33 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
     mv_order_descending = iv_order_descending.
   ENDMETHOD.
 
-  METHOD has_favorites.
-    READ TABLE mt_overview WITH KEY favorite = abap_true TRANSPORTING NO FIELDS.
-    IF sy-subrc = 0.
-      rv_has_favorites = abap_true.
-    ENDIF.
+
+  METHOD zif_abapgit_gui_renderable~render.
+
+    mt_overview = map_repo_list_to_overview( zcl_abapgit_persist_factory=>get_repo( )->list( ) ).
+    apply_order_by( CHANGING ct_overview = mt_overview ).
+    apply_filter( CHANGING ct_overview = mt_overview ).
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    render_header_bar( ri_html ).
+    render_table( ii_html     = ri_html
+                  it_overview = mt_overview ).
+
+    register_deferred_script( render_scripts( ) ).
+
+  ENDMETHOD.
+
+
+  METHOD _add_column.
+
+    FIELD-SYMBOLS <ls_col> LIKE LINE OF mt_col_spec.
+    APPEND INITIAL LINE TO mt_col_spec ASSIGNING <ls_col>.
+    <ls_col>-display_name = iv_display_name.
+    <ls_col>-tech_name = iv_tech_name.
+    <ls_col>-title = iv_title.
+    <ls_col>-css_class = iv_css_class.
+    <ls_col>-add_tz = iv_add_tz.
   ENDMETHOD.
 
 ENDCLASS.

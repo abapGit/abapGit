@@ -77,6 +77,8 @@ span.separator {
 /* PANELS */
 div.panel {
   border-radius: 3px;
+  padding: 0.5em 0.5em;
+  margin: 0.5em 0.5em;
 }
 
 div.dummydiv {
@@ -100,8 +102,8 @@ div#header > div { display: inline-block }
 
 /* official logo colors, not vars, redefine in themes directly*/
 .logo .icon.icon-git-alt { color: #f03c2e }
-.logo .icon.icon-abapgit { 
-  color: #362701; 
+.logo .icon.icon-abapgit {
+  color: #362701;
   vertical-align: bottom;
 }
 
@@ -220,7 +222,7 @@ div.repo_container {
 }
 
 div.repo_banner {
-  margin: 0em 1.2em 1em;
+  margin: 0em 1em 1em;
   padding: 0.5em 0.5em;
   text-align: center;
   font-size: 85%;
@@ -913,6 +915,8 @@ table.commit tr .title {
 .repo-overview { font-size: smaller; }
 .repo-overview tbody td { height: 2em; }
 .ro-detail { display: none; }
+.ro-action { width: 190px; }
+.ro-go { font-size: 150%; }
 
 /* Branch Overview Page */
 .gitGraph-scrollWrapper, .gitGraph-Wrapper{
@@ -1132,4 +1136,9 @@ settings_tab tr:first-child td { border-top: 0px; }
   text-transform: uppercase;
   padding-left: 0.5em;
   padding-right: 0.5em;
+}
+
+/* This icon is slightly wider than other icons */
+.icon-cloud-upload-alt {
+    padding-right: 5px;
 }

@@ -3,43 +3,46 @@ CLASS zcl_abapgit_html_toolbar DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    METHODS:
-      constructor
-        IMPORTING
-          iv_id TYPE string OPTIONAL,
-      add
-        IMPORTING
-          iv_txt   TYPE string
-          io_sub   TYPE REF TO zcl_abapgit_html_toolbar OPTIONAL
-          iv_typ   TYPE c         DEFAULT zif_abapgit_html=>c_action_type-sapevent
-          iv_act   TYPE string    OPTIONAL
-          iv_ico   TYPE string    OPTIONAL
-          iv_cur   TYPE abap_bool OPTIONAL
-          iv_opt   TYPE c         OPTIONAL
-          iv_chk   TYPE abap_bool DEFAULT abap_undefined
-          iv_aux   TYPE string    OPTIONAL
-          iv_id    TYPE string    OPTIONAL
-          iv_title TYPE string    OPTIONAL,
-      count
-        RETURNING VALUE(rv_count) TYPE i,
-      render
-        IMPORTING
-          iv_right       TYPE abap_bool OPTIONAL
-          iv_sort        TYPE abap_bool OPTIONAL
-        RETURNING
-          VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
-      render_as_droplist
-        IMPORTING
-          iv_label       TYPE string
-          iv_right       TYPE abap_bool OPTIONAL
-          iv_sort        TYPE abap_bool OPTIONAL
-          iv_corner      TYPE abap_bool OPTIONAL
-          iv_action      TYPE string OPTIONAL
-        RETURNING
-          VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
 
+    METHODS constructor
+      IMPORTING
+        !iv_id TYPE string OPTIONAL .
+    METHODS add
+      IMPORTING
+        !iv_txt        TYPE string
+        !io_sub        TYPE REF TO zcl_abapgit_html_toolbar OPTIONAL
+        !iv_typ        TYPE c DEFAULT zif_abapgit_html=>c_action_type-sapevent
+        !iv_act        TYPE string OPTIONAL
+        !iv_ico        TYPE string OPTIONAL
+        !iv_cur        TYPE abap_bool OPTIONAL
+        !iv_opt        TYPE c OPTIONAL
+        !iv_chk        TYPE abap_bool DEFAULT abap_undefined
+        !iv_aux        TYPE string OPTIONAL
+        !iv_id         TYPE string OPTIONAL
+        !iv_title      TYPE string OPTIONAL
+      RETURNING
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_toolbar .
+    METHODS count
+      RETURNING
+        VALUE(rv_count) TYPE i .
+    METHODS render
+      IMPORTING
+        !iv_right      TYPE abap_bool OPTIONAL
+        !iv_sort       TYPE abap_bool OPTIONAL
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+    METHODS render_as_droplist
+      IMPORTING
+        !iv_label      TYPE string
+        !iv_right      TYPE abap_bool OPTIONAL
+        !iv_sort       TYPE abap_bool OPTIONAL
+        !iv_corner     TYPE abap_bool OPTIONAL
+        !iv_action     TYPE string OPTIONAL
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
   PROTECTED SECTION.
   PRIVATE SECTION.
+
     TYPES:
       BEGIN OF ty_item,
         txt   TYPE string,
@@ -53,20 +56,18 @@ CLASS zcl_abapgit_html_toolbar DEFINITION
         aux   TYPE string,
         id    TYPE string,
         title TYPE string,
-      END OF ty_item.
+      END OF ty_item .
+    TYPES:
+      tt_items TYPE STANDARD TABLE OF ty_item .
 
-    TYPES tt_items TYPE STANDARD TABLE OF ty_item.
+    DATA mt_items TYPE tt_items .
+    DATA mv_id TYPE string .
 
-    DATA: mt_items TYPE tt_items,
-          mv_id    TYPE string.
-
-    METHODS:
-      render_items
-        IMPORTING
-          iv_sort        TYPE abap_bool OPTIONAL
-        RETURNING
-          VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
-
+    METHODS render_items
+      IMPORTING
+        !iv_sort       TYPE abap_bool OPTIONAL
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
 ENDCLASS.
 
 
@@ -99,6 +100,8 @@ CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
 
     APPEND ls_item TO mt_items.
 
+    ro_self = me.
+
   ENDMETHOD.
 
 
@@ -116,16 +119,16 @@ CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
 
     DATA: lv_class TYPE string.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     lv_class = 'nav-container' ##NO_TEXT.
     IF iv_right = abap_true.
       lv_class = lv_class && ' float-right'.
     ENDIF.
 
-    ro_html->add( |<div class="{ lv_class }">| ).
-    ro_html->add( render_items( iv_sort = iv_sort ) ).
-    ro_html->add( '</div>' ).
+    ri_html->add( |<div class="{ lv_class }">| ).
+    ri_html->add( render_items( iv_sort = iv_sort ) ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -134,7 +137,7 @@ CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
 
     DATA: lv_class TYPE string.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     lv_class = 'nav-container' ##NO_TEXT.
     IF iv_right = abap_true.
@@ -144,15 +147,15 @@ CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
       lv_class = lv_class && ' corner'.
     ENDIF.
 
-    ro_html->add( |<div class="{ lv_class }">| ).
-    ro_html->add( '<ul><li>' ).
-    ro_html->add_a( iv_txt = iv_label
+    ri_html->add( |<div class="{ lv_class }">| ).
+    ri_html->add( '<ul><li>' ).
+    ri_html->add_a( iv_txt = iv_label
                     iv_typ = zif_abapgit_html=>c_action_type-sapevent
                     iv_act = iv_action ).
-    ro_html->add( '<div class="minizone"></div>' ).
-    ro_html->add( render_items( iv_sort = iv_sort ) ).
-    ro_html->add( '</li></ul>' ).
-    ro_html->add( '</div>' ).
+    ri_html->add( '<div class="minizone"></div>' ).
+    ri_html->add( render_items( iv_sort = iv_sort ) ).
+    ri_html->add( '</li></ul>' ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -168,7 +171,8 @@ CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF mt_items.
 
-    CREATE OBJECT ro_html.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     IF iv_sort = abap_true.
       SORT mt_items BY txt ASCENDING AS TEXT.
@@ -185,14 +189,14 @@ CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
       lv_id = | id="{ mv_id }"|.
     ENDIF.
 
-    ro_html->add( |<ul{ lv_id }{ lv_class }>| ).
+    ri_html->add( |<ul{ lv_id }{ lv_class }>| ).
 
     " Render items
     LOOP AT mt_items ASSIGNING <ls_item>.
       CLEAR: lv_class, lv_icon.
 
       IF <ls_item>-typ = zif_abapgit_html=>c_action_type-separator.
-        ro_html->add( |<li class="separator">{ <ls_item>-txt }</li>| ).
+        ri_html->add( |<li class="separator">{ <ls_item>-txt }</li>| ).
         CONTINUE.
       ENDIF.
 
@@ -216,28 +220,28 @@ CLASS ZCL_ABAPGIT_HTML_TOOLBAR IMPLEMENTATION.
         lv_aux = | data-aux="{ <ls_item>-aux }"|.
       ENDIF.
 
-      ro_html->add( |<li{ lv_class }{ lv_check }{ lv_aux }>| ).
+      ri_html->add( |<li{ lv_class }{ lv_check }{ lv_aux }>| ).
       IF <ls_item>-sub IS INITIAL.
-        ro_html->add_a( iv_txt   = lv_icon && <ls_item>-txt
+        ri_html->add_a( iv_txt   = lv_icon && <ls_item>-txt
                         iv_typ   = <ls_item>-typ
                         iv_act   = <ls_item>-act
                         iv_id    = <ls_item>-id
                         iv_opt   = <ls_item>-opt
                         iv_title = <ls_item>-title ).
       ELSE.
-        ro_html->add_a( iv_txt   = lv_icon && <ls_item>-txt
+        ri_html->add_a( iv_txt   = lv_icon && <ls_item>-txt
                         iv_typ   = zif_abapgit_html=>c_action_type-dummy
                         iv_act   = ''
                         iv_id    = <ls_item>-id
                         iv_opt   = <ls_item>-opt
                         iv_title = <ls_item>-title ).
-        ro_html->add( <ls_item>-sub->render_items( iv_sort ) ).
+        ri_html->add( <ls_item>-sub->render_items( iv_sort ) ).
       ENDIF.
-      ro_html->add( '</li>' ).
+      ri_html->add( '</li>' ).
 
     ENDLOOP.
 
-    ro_html->add( '</ul>' ).
+    ri_html->add( '</ul>' ).
 
   ENDMETHOD.
 ENDCLASS.
