@@ -183,6 +183,6 @@ The `REPO` entries contain meta data like Git repository URL, branch and package
 </asx:abap>
 ```
 
-If you remove a repository entry from the database util, the repository is not shown in abapGit anymore. This is useful if you want to remove a repository which has a non-existing package assigned and thus can't be clicked on to be select it and delete it. This is like a workaround for such a case.
+If you remove a repository entry from the database util, the repository is not shown in abapGit anymore. This is useful for example if you want to remove a repository which has a non-existing package assigned and thus can't be opened and deleted normally.
 
 Be careful when you edit these entries from within abapGit. Setting invalid options there might break your abapGit.
