@@ -5,7 +5,7 @@ order: 10
 ---
 
 ## Download zip archive ## 
-Offline projet is based on a zip archive that contains all the git files.
+An offline project is based on a zip archive that contains all the git files.
 
 First download latest version of the projet you want to import. 
 
