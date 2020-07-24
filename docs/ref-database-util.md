@@ -11,7 +11,7 @@ It's possible to edit database entries of type
 - `USER` and
 - `REPO`.
 
-An `USER` entry does contain meta information like the favorites of an user and its repository configuration e. g. name and email address for Git. This is an example of an `USER` entry:
+A `USER` entry contains meta information like the favorites of a user and their repository configurations e. g. name and email address for Git. This is an example of a `USER` entry:
 
 ```xml
 <?xml version="1.0" encoding="utf-16"?>
