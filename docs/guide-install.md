@@ -8,7 +8,7 @@ order: 10
 abapGit exists in 2 flavours: _standalone_ version or _developper_ version. 
 
   * The standalone version is targeted at users. It consist of one (huge) program which contains all the needed code. You run the standalone version in transaction `SE38`, executing the program you created.
-  * Developper version is targeted at developpers contributing to abapGit codebase. It consist of all the ABAP programs/classes/interfaces/etc. of the abapGit project. You run developer version with transaction `ZABAPGIT`.
+  * The developer version is targeted at developers contributing to the abapGit codebase. It consists of all the ABAP programs/classes/interfaces/etc. of the abapGit project. You run the developer version with transaction `ZABAPGIT`.
 
 ## Prerequisites ##
 abapGit requires SAP BASIS version 702 or higher.
