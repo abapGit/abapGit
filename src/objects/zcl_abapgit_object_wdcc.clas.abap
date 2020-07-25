@@ -122,7 +122,7 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
     ENDIF.
 
     "**[HJA]->Check TADIR
-    lv_obj_name = ms_item-obj_name && '00'.
+    lv_obj_name = ms_item-obj_name.
     ls_tadir = me->get_tadir_entry( iv_devclass = iv_package
                                     iv_obj_name = lv_obj_name ).
 
@@ -201,7 +201,7 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
           lv_garg  TYPE eqegraarg,
           lv_lines TYPE i.
 
-    lv_garg = ms_item-obj_name && '00'.
+    lv_garg = ms_item-obj_name.
 
     CALL FUNCTION 'ENQUEUE_READ'
       EXPORTING
@@ -522,7 +522,7 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
 
 
     "**[HJA]->Check TADIR
-    lv_obj_name = lv_config_id && lv_config_type.
+    lv_obj_name = ms_item-obj_name.
     ls_tadir = me->get_tadir_entry( iv_devclass = iv_package
                                     iv_obj_name = lv_obj_name ).
 
