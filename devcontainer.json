@@ -1,0 +1,6 @@
+{
+  "name": "abapGit",
+  "image": "mcr.microsoft.com/vscode/devcontainers/javascript-node:0-12",
+  "extensions": ["larshp.vscode-abaplint"],
+  "postCreateCommand": "npm install"
+}
