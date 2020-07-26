@@ -7,7 +7,7 @@ order: 10
 ## Download zip archive ## 
 An offline project is based on a zip archive that contains all the git files.
 
-First download latest version of the projet you want to import. 
+First, download the latest version of the project you want to import. 
 
 * For GitHub :
    1. Go to the projet main page (eg. https://github.com/larshp/abapOpenChecks)
