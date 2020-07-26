@@ -19,7 +19,7 @@ abapGit requires SAP BASIS version 702 or higher.
 3. In source code change mode, upload the code from the file using Utilities -> More Utilities -> Upload/Download -> Upload
 4. Activate
 
-Typically abapGit will only be used in the development system, so it can be installed in a local `$` package (eg: `$TMP` or `$ZABAPGIT`).
+Typically, abapGit will only be used in the development system, so it can be installed in a local `$` package (e.g.  `$ZABAPGIT`).
 
 Now you can use abapGit by executing the report in transaction `SE38`.
 
