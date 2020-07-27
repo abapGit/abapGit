@@ -206,7 +206,6 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
     io_xml->add( iv_name = 'RELID'
                  ig_data =  ls_orig_config-relid ).
 
-    "**[HJA]->Transform for readable part of xml
     CALL TRANSFORMATION id
            SOURCE XML lv_xml_xstring
            RESULT XML lv_xml_string.
@@ -242,13 +241,13 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lo_translator          TYPE REF TO if_wdr_config_otr,
-          lv_config_id           TYPE c LENGTH 32,
-          lv_config_type         TYPE n LENGTH 2,
-          lv_config_var          TYPE c LENGTH 6,
-          lt_otr_texts           TYPE TABLE OF wdy_config_compt,
-          ls_orig_config         TYPE wdy_config_data,
-          lt_config_datt         TYPE TABLE OF wdy_config_datt.
+    DATA: lo_translator  TYPE REF TO if_wdr_config_otr,
+          lv_config_id   TYPE c LENGTH 32,
+          lv_config_type TYPE n LENGTH 2,
+          lv_config_var  TYPE c LENGTH 6,
+          lt_otr_texts   TYPE TABLE OF wdy_config_compt,
+          ls_orig_config TYPE wdy_config_data,
+          lt_config_datt TYPE TABLE OF wdy_config_datt.
 
     io_xml->read( EXPORTING iv_name = 'CONFIG_ID'
                   CHANGING  cg_data = ls_orig_config-config_id  ).
@@ -302,7 +301,6 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Error Enqueueing Component Config: ' && ms_item-obj_name ).
     ENDIF.
 
-    "**[HJA]->Save Component Configuration OTR text  + Plus Object Description in Various Languages
     io_xml->read( EXPORTING iv_name = 'OTR_TEXT'
                   CHANGING  cg_data = lt_otr_texts ).
 
@@ -336,7 +334,7 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
         x_config_type        = 'X'
         x_config_var         = 'X'.
 
-    me->tadir_insert( iv_package = iv_package ).
+    tadir_insert( iv_package = iv_package ).
 
   ENDMETHOD.
 
