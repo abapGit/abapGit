@@ -323,10 +323,8 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    cl_wdr_cfg_persistence_utils=>save_comp_config_to_db(
-       EXPORTING
-         config_data = ls_orig_config
-         translator  = lo_translator ).
+    cl_wdr_cfg_persistence_utils=>save_comp_config_to_db( config_data = ls_orig_config
+                                                          translator  = lo_translator ).
 
     CALL FUNCTION 'DEQUEUE_E_WDY_CONFCOMP'
       EXPORTING
