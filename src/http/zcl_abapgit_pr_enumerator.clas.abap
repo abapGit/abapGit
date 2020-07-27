@@ -54,10 +54,13 @@ CLASS ZCL_ABAPGIT_PR_ENUMERATOR IMPLEMENTATION.
       iv_key = 'Accept'
       iv_val = 'application/vnd.github.v3+json' ).
 
-
     data li_response type ref to zif_abapgit_http_response.
+    data lv_url type string.
+
+    lv_url = |https://api.github.com/repos/{ lv_user }/{ lv_repo }|.
+
     li_response = li_agent->request(
-      iv_url     = |https://api.github.com/repos/{ lv_user }/{ lv_repo }|
+      iv_url     = lv_url
       io_headers = lo_headers ).
 
     data lv_resp type string.

@@ -14,6 +14,7 @@ class ltcl_pr_test implementation.
 
   method test1.
 
+
     data lo_pr type ref to zcl_abapgit_pr_enumerator.
     create object lo_pr exporting iv_repo_url = 'https://github.com/sbcgua/abapgit'.
 

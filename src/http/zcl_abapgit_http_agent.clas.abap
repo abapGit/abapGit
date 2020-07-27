@@ -59,7 +59,8 @@ CLASS ZCL_ABAPGIT_HTTP_AGENT IMPLEMENTATION.
 
     cl_http_client=>create_by_url(
       EXPORTING
-        url = iv_url
+        url    = iv_url
+        ssl_id = zcl_abapgit_exit=>get_instance( )->get_ssl_id( )
       IMPORTING
         client = li_client ).
 
@@ -82,9 +83,9 @@ CLASS ZCL_ABAPGIT_HTTP_AGENT IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-    IF iv_method = zif_aha_http_agent=>c_methods-post
-      OR iv_method = zif_aha_http_agent=>c_methods-put
-      OR iv_method = zif_aha_http_agent=>c_methods-patch.
+    IF iv_method = zif_abapgit_http_agent=>c_methods-post
+      OR iv_method = zif_abapgit_http_agent=>c_methods-put
+      OR iv_method = zif_abapgit_http_agent=>c_methods-patch.
       attach_payload(
         ii_request = li_client->request
         iv_payload = iv_payload ).
