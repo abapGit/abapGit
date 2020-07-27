@@ -50,6 +50,12 @@ CLASS lcl_http_response IMPLEMENTATION.
         code   = rv_code ).
   ENDMETHOD.
 
+  METHOD zif_abapgit_http_response~json.
+
+    ri_json = zcl_abapgit_ajson=>parse( zif_abapgit_http_response~cdata( ) ).
+
+  ENDMETHOD.
+
   METHOD zif_abapgit_http_response~error.
     rv_message = mi_response->get_cdata( ).
   ENDMETHOD.

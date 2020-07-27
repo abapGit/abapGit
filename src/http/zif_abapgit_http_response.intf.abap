@@ -7,11 +7,11 @@ INTERFACE zif_abapgit_http_response
   METHODS cdata
     RETURNING
       VALUE(rv_data) TYPE string .
-
-*  methods json
-*    changing
-*      !cv_container type any .
-
+  METHODS json
+    RETURNING
+      VALUE(ri_json) TYPE REF TO zif_abapgit_ajson_reader
+    RAISING
+      zcx_abapgit_ajson_error.
   METHODS is_ok
     RETURNING
       VALUE(rv_yes) TYPE abap_bool .
