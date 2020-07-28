@@ -10,6 +10,10 @@ INTERFACE zif_abapgit_http_agent
       patch  TYPE string VALUE 'PATCH',
     END OF c_methods.
 
+  METHODS global_headers
+    RETURNING
+      VALUE(ro_global_headers) TYPE REF TO zcl_abapgit_string_map.
+
   METHODS request
     IMPORTING
       !iv_url            TYPE string

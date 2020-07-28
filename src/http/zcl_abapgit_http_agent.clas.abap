@@ -10,8 +10,12 @@ CLASS zcl_abapgit_http_agent DEFINITION
       RETURNING
         VALUE(ri_instance) TYPE REF TO zif_abapgit_http_agent .
 
+    METHODS constructor.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    DATA mo_global_headers TYPE REF TO zcl_abapgit_string_map.
 
     CLASS-METHODS attach_payload
       IMPORTING
@@ -45,9 +49,23 @@ CLASS ZCL_ABAPGIT_HTTP_AGENT IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD constructor.
+
+    CREATE OBJECT mo_global_headers.
+
+  ENDMETHOD.
+
+
   METHOD create.
 
     CREATE OBJECT ri_instance TYPE zcl_abapgit_http_agent.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_http_agent~global_headers.
+
+    ro_global_headers = mo_global_headers.
 
   ENDMETHOD.
 
@@ -74,6 +92,12 @@ CLASS ZCL_ABAPGIT_HTTP_AGENT IMPLEMENTATION.
           value = <ls_entry>-v ).
       ENDLOOP.
     ENDIF.
+
+    LOOP AT mo_global_headers->mt_entries ASSIGNING <ls_entry>.
+      li_client->request->set_header_field(
+        name  = to_lower( <ls_entry>-k )
+        value = <ls_entry>-v ).
+    ENDLOOP.
 
     IF io_headers IS BOUND.
       LOOP AT io_headers->mt_entries ASSIGNING <ls_entry>.
