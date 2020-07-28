@@ -1,28 +1,28 @@
-class ZCL_ABAPGIT_PR_ENUMERATOR definition
-  public
-  final
-  create public .
+CLASS zcl_abapgit_pr_enumerator DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
-  public section.
+  PUBLIC SECTION.
 
-    class-methods IS_PLATFORM_SUPPORTED
-      importing
-        !IV_URL type STRING
-      returning
-        value(RV_YES) type ABAP_BOOL .
+    CLASS-METHODS is_platform_supported
+      IMPORTING
+        !iv_url       TYPE string
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool .
 
-    methods constructor
-      importing
-        iv_repo_url type string.
+    METHODS constructor
+      IMPORTING
+        iv_repo_url TYPE string.
 
-    methods get_repo_info
-      raising
+    METHODS get_repo_info
+      RAISING
         zcx_abapgit_exception.
 
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-    data mv_repo_url type string.
+    DATA mv_repo_url TYPE string.
 ENDCLASS.
 
 
@@ -30,45 +30,26 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_PR_ENUMERATOR IMPLEMENTATION.
 
 
-  method constructor.
+  METHOD constructor.
     mv_repo_url = to_lower( iv_repo_url ).
-  endmethod.
+  ENDMETHOD.
 
 
-  method get_repo_info.
+  METHOD get_repo_info.
 
-    data li_agent type ref to zif_abapgit_http_agent.
+    DATA li_agent TYPE REF TO zif_abapgit_http_agent.
 
     li_agent = zcl_abapgit_http_agent=>create( ).
 
     " get repo name
-    data lv_user type string.
-    data lv_repo type string.
-    FIND ALL OCCURRENCES OF regex 'github\.com\/([^\/]+)\/([^\/]+)' IN mv_repo_url
-      submatches lv_user lv_repo.
+    DATA lv_user TYPE string.
+    DATA lv_repo TYPE string.
+    FIND ALL OCCURRENCES OF REGEX 'github\.com\/([^\/]+)\/([^\/]+)' IN mv_repo_url
+      SUBMATCHES lv_user lv_repo.
 
-    " request
-    data lo_headers type ref to zcl_abapgit_string_map.
-    create object lo_headers.
-    lo_headers->set(
-      iv_key = 'Accept'
-      iv_val = 'application/vnd.github.v3+json' ).
-
-    data li_response type ref to zif_abapgit_http_response.
-    data lv_url type string.
-
-    lv_url = |https://api.github.com/repos/{ lv_user }/{ lv_repo }|.
-
-    li_response = li_agent->request(
-      iv_url     = lv_url
-      io_headers = lo_headers ).
-
-    data lv_resp type string.
-    lv_resp = li_response->cdata( ).
-
-  endmethod.
+  ENDMETHOD.
 
 
-  method is_platform_supported.
-  endmethod.
+  METHOD is_platform_supported.
+  ENDMETHOD.
 ENDCLASS.
