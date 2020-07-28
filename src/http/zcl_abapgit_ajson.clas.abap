@@ -176,6 +176,25 @@ CLASS ZCL_ABAPGIT_AJSON IMPLEMENTATION.
   endmethod.
 
 
+  method zif_abapgit_ajson_reader~get_date.
+
+    data lv_item type ref to ty_node.
+    data lv_y type c length 4.
+    data lv_m type c length 2.
+    data lv_d type c length 2.
+
+    lv_item = get_item( iv_path ).
+
+    if lv_item is not initial and lv_item->type = 'str'.
+      find first occurrence of regex '^(\d{4})-(\d{2})-(\d{2})(T|$)'
+        in lv_item->value
+        submatches lv_y lv_m lv_d.
+      concatenate lv_y lv_m lv_d into rv_value.
+    endif.
+
+  endmethod.
+
+
   method zif_abapgit_ajson_reader~get_integer.
 
     data lv_item type ref to ty_node.

@@ -31,6 +31,11 @@ INTERFACE zif_abapgit_ajson_reader
       iv_path         TYPE string
     RETURNING
       VALUE(rv_value) TYPE f.
+  METHODS get_date
+    IMPORTING
+      iv_path         TYPE string
+    RETURNING
+      VALUE(rv_value) TYPE d.
   METHODS get_string
     IMPORTING
       iv_path         TYPE string

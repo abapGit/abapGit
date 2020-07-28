@@ -286,6 +286,7 @@ class ltcl_reader_test definition final
     methods members for testing raising zcx_abapgit_ajson_error.
     methods slice for testing raising zcx_abapgit_ajson_error.
     methods array_to_string_table for testing raising zcx_abapgit_ajson_error.
+    methods get_date for testing raising zcx_ajson_error.
 
 endclass.
 
@@ -617,6 +618,44 @@ class ltcl_reader_test implementation.
 
   endmethod.
 
+  method get_date.
+
+    data lo_cut type ref to zcl_abapgit_ajson.
+    data nodes type ref to lcl_nodes_helper.
+    data lv_exp type d.
+
+    create object lo_cut.
+    lv_exp = '20200728'.
+
+    create object nodes.
+    nodes->add( '  |         |object |                        | |1' ).
+    nodes->add( '/ |date1    |str    |2020-07-28              | |0' ).
+    lo_cut->mt_json_tree = nodes->mt_nodes.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->zif_abapgit_ajson_reader~get_date( '/date1' )
+      exp = lv_exp ).
+
+    create object nodes.
+    nodes->add( '  |         |object |                        | |1' ).
+    nodes->add( '/ |date1    |str    |2020-07-28T01:00:00Z    | |0' ).
+    lo_cut->mt_json_tree = nodes->mt_nodes.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->zif_abapgit_ajson_reader~get_date( '/date1' )
+      exp = lv_exp ).
+
+    create object nodes.
+    nodes->add( '  |         |object |                        | |1' ).
+    nodes->add( '/ |date1    |str    |20200728                | |0' ).
+    lo_cut->mt_json_tree = nodes->mt_nodes.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lo_cut->zif_abapgit_ajson_reader~get_date( '/date1' )
+      exp = '' ).
+
+  endmethod.
+
 endclass.
 
 
@@ -646,6 +685,8 @@ class ltcl_json_to_abap definition
         obj type ty_struc,
         tab type tty_struc,
         oref type ref to object,
+        date1 type d,
+        date2 type d,
       end of ty_complex.
 
     methods find_loc for testing raising zcx_abapgit_ajson_error.
@@ -862,6 +903,7 @@ class ltcl_json_to_abap implementation.
 
     data lo_cut type ref to lcl_json_to_abap.
     data mock type ty_complex.
+    data lv_exp_date type d value '20200728'.
     lcl_json_to_abap=>bind(
       changing
         c_obj = mock
@@ -881,6 +923,8 @@ class ltcl_json_to_abap implementation.
     nodes->add( '/tab/1 |a     |str    | One   | ' ).
     nodes->add( '/tab   |2     |object |       |2' ).
     nodes->add( '/tab/2 |a     |str    | Two   | ' ).
+    nodes->add( '/      |date1 |str    |2020-07-28 | ' ).
+    nodes->add( '/      |date2 |str    |2020-07-28T00:00:00Z | ' ).
 
     lo_cut->to_abap( nodes->sorted( ) ).
 
@@ -899,6 +943,12 @@ class ltcl_json_to_abap implementation.
     cl_abap_unit_assert=>assert_equals(
       act = mock-obj-a
       exp = 'world' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mock-date1
+      exp = lv_exp_date ).
+    cl_abap_unit_assert=>assert_equals(
+      act = mock-date2
+      exp = lv_exp_date ).
 
     data elem like line of mock-tab.
     cl_abap_unit_assert=>assert_equals(
@@ -967,6 +1017,18 @@ class ltcl_json_to_abap implementation.
         exp = 'Source is not a number' ).
     endtry.
 
+    try.
+      create object nodes.
+      nodes->add( '/    |      |object |        ' ).
+      nodes->add( '/    |date1 |str    |baddate ' ).
+
+      lo_cut->to_abap( nodes->sorted( ) ).
+      cl_abap_unit_assert=>fail( ).
+    catch zcx_abapgit_ajson_error into lx.
+      cl_abap_unit_assert=>assert_equals(
+        act = lx->message
+        exp = 'Unexpected date format' ).
+    endtry.
 
   endmethod.
 
