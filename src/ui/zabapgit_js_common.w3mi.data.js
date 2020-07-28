@@ -244,6 +244,7 @@ RepoOverViewHelper.prototype.toggleRepoListDetail = function (forceDisplay) {
     this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
     var icon = document.getElementById("icon-filter-detail");
     this.toggleFilterIcon(icon, this.isDetailsDisplayed);
+    this.saveFilter();
   }
 };
 
@@ -272,25 +273,24 @@ RepoOverViewHelper.prototype.toggleRepoListFavorites = function (forceDisplay) {
       repo.style.display = "";
     }
   }
-
+  this.saveFilter();
 };
 
 RepoOverViewHelper.prototype.setHooks = function () {
-  window.onbeforeunload = this.onPageUnload.bind(this);
   window.onload = this.onPageLoad.bind(this);
 };
 
-RepoOverViewHelper.prototype.onPageUnload = function () {
-  if (!window.sessionStorage) return;
+RepoOverViewHelper.prototype.saveFilter = function () {
+  if (!window.localStorage) return;
   var data = {
     isDetailsDisplayed: this.isDetailsDisplayed,
     isOnlyFavoritesDisplayed: this.isOnlyFavoritesDisplayed
   };
-  window.sessionStorage.setItem(this.pageId, JSON.stringify(data));
+  window.localStorage.setItem(this.pageId, JSON.stringify(data));
 };
 
 RepoOverViewHelper.prototype.onPageLoad = function () {
-  var data = window.sessionStorage && JSON.parse(window.sessionStorage.getItem(this.pageId));
+  var data = window.localStorage && JSON.parse(window.localStorage.getItem(this.pageId));
   if (data) {
     if (data.isDetailsDisplayed) {
       this.toggleRepoListDetail(true);
@@ -299,7 +299,6 @@ RepoOverViewHelper.prototype.onPageLoad = function () {
       this.toggleRepoListFavorites(true);
     }
   }
-  debugOutput("RepoOverViewHelper.onPageLoad: " + ((data) ? "from Storage" : "initial state"));
 };
 
 /**********************************************************
