@@ -73,12 +73,17 @@ CLASS ZCL_ABAPGIT_HTTP_AGENT IMPLEMENTATION.
   METHOD zif_abapgit_http_agent~request.
 
     DATA li_client TYPE REF TO if_http_client.
+    DATA lo_proxy_configuration TYPE REF TO zcl_abapgit_proxy_config.
     FIELD-SYMBOLS <ls_entry> LIKE LINE OF io_query->mt_entries.
+
+    CREATE OBJECT lo_proxy_configuration.
 
     cl_http_client=>create_by_url(
       EXPORTING
-        url    = iv_url
-        ssl_id = zcl_abapgit_exit=>get_instance( )->get_ssl_id( )
+        url           = iv_url
+        ssl_id        = zcl_abapgit_exit=>get_instance( )->get_ssl_id( )
+        proxy_host    = lo_proxy_configuration->get_proxy_url( iv_url )
+        proxy_service = lo_proxy_configuration->get_proxy_port( iv_url )
       IMPORTING
         client = li_client ).
 
