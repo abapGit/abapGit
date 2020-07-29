@@ -14,13 +14,13 @@ class ltcl_github_test implementation.
 
   method test1.
 
-*    data lo_pr type ref to zcl_abapgit_pr_enum_github.
-*    create object lo_pr
-*      exporting
-*        iv_user_repo = 'sbcgua/abapgit'
-*        ii_http_agent = zcl_abapgit_http_agent=>create( ).
-*
-*    lo_pr->zif_abapgit_pr_enum_provider~list_pull_requests( ).
+    data lo_pr type ref to zcl_abapgit_pr_enum_github.
+    create object lo_pr
+      exporting
+        iv_user_repo = 'sbcgua/abapgit'
+        ii_http_agent = zcl_abapgit_http_agent=>create( ).
+
+    lo_pr->zif_abapgit_pr_enum_provider~list_pull_requests( ).
 
   endmethod.
 
