@@ -473,17 +473,11 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_active.
-<<<<<<< HEAD
     rv_active = abap_true.
-=======
-    "Todo: WIP, remove when stable
-    SELECT SINGLE low FROM tvarvc INTO @rv_active WHERE name = 'PDTS'. "#EC CI_NOORDER
->>>>>>> Adapt trial code from christianguenter2
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
-<<<<<<< HEAD
 
     SELECT SINGLE uname
       FROM hrs1201
@@ -495,9 +489,6 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
       rv_user = c_user_unknown.
     ENDIF.
 
-=======
-    rv_user = c_user_unknown.
->>>>>>> Adapt trial code from christianguenter2
   ENDMETHOD.
 
 
