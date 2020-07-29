@@ -16,6 +16,8 @@ CLASS zcl_abapgit_gui_page_view_repo DEFINITION
         toggle_order_by   TYPE string VALUE 'toggle_order_by' ##NO_TEXT,
         toggle_diff_first TYPE string VALUE 'toggle_diff_first ' ##NO_TEXT,
         display_more      TYPE string VALUE 'display_more' ##NO_TEXT,
+        repo_switch_origin TYPE string VALUE 'repo_switch_origin',
+        repo_reset_origin  TYPE string VALUE 'repo_reset_origin',
       END OF c_actions.
 
 
@@ -35,6 +37,7 @@ CLASS zcl_abapgit_gui_page_view_repo DEFINITION
 
     DATA  mt_col_spec TYPE zif_abapgit_definitions=>tty_col_spec.
     DATA: mo_repo                       TYPE REF TO zcl_abapgit_repo,
+          mo_pulls                      TYPE REF TO zcl_abapgit_pr_enumerator,
           mv_cur_dir                    TYPE string,
           mv_hide_files                 TYPE abap_bool,
           mv_max_lines                  TYPE i,
@@ -198,6 +201,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
   METHOD build_advanced_dropdown.
 
     DATA:
+      lo_repo_online TYPE REF TO zcl_abapgit_repo_online,
       lv_crossout LIKE zif_abapgit_html=>c_html_opt-crossout.
 
     CREATE OBJECT ro_advanced_dropdown.
@@ -217,6 +221,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
                                  iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_detach }?{ mv_key }| ).
       ro_advanced_dropdown->add( iv_txt = 'Force Stage'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ mv_key }| ).
+
+      lo_repo_online ?= mo_repo. " TODO refactor this disaster
+      IF lo_repo_online->get_switched_origin( ) IS NOT INITIAL.
+        ro_advanced_dropdown->add(
+          iv_txt = 'Revert switched origin'
+          iv_act = |{ c_actions-repo_reset_origin }| ).
+      ELSEIF mo_pulls IS BOUND AND mo_pulls->has_pulls( ) = abap_true.
+        ro_advanced_dropdown->add(
+          iv_txt = 'Switched origin to PR'
+          iv_act = |{ c_actions-repo_switch_origin }| ).
+      ENDIF.
 
       CLEAR lv_crossout.
       IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-transport_to_branch ) = abap_false.
@@ -504,6 +519,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
   METHOD constructor.
 
     DATA: lo_settings TYPE REF TO zcl_abapgit_settings,
+          lo_repo_online TYPE REF TO zcl_abapgit_repo_online,
           lv_package  TYPE devclass.
 
     super->constructor( ).
@@ -527,7 +543,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
     lv_package = mo_repo->get_package( ).
 
     mv_are_changes_recorded_in_tr = zcl_abapgit_factory=>get_sap_package( lv_package
-                                                      )->are_changes_recorded_in_tr_req( ).
+      )->are_changes_recorded_in_tr_req( ).
+
+    IF mo_repo->is_offline( ) = abap_false.
+      lo_repo_online ?= mo_repo.
+      CREATE OBJECT mo_pulls EXPORTING io_repo = lo_repo_online.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -1099,6 +1120,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-repo_open_in_master_lang.
         open_in_master_language( ).
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN c_actions-repo_switch_origin.
+        MESSAGE 'hello' TYPE 'S'.
+        ev_state        = zcl_abapgit_gui=>c_event_state-no_more_act.
+
+      WHEN c_actions-repo_reset_origin.
+        MESSAGE 'hello reset' TYPE 'S'.
+        ev_state        = zcl_abapgit_gui=>c_event_state-no_more_act.
 
       WHEN OTHERS.
 

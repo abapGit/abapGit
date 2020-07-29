@@ -5,19 +5,21 @@ CLASS zcl_abapgit_pr_enumerator DEFINITION
 
   PUBLIC SECTION.
 
-    CLASS-METHODS is_platform_supported
-      IMPORTING
-        !iv_url       TYPE string
-      RETURNING
-        VALUE(rv_yes) TYPE abap_bool .
-
     METHODS constructor
       IMPORTING
-        iv_repo_url TYPE string
+        io_repo TYPE REF TO zcl_abapgit_repo_online
       RAISING
         zcx_abapgit_exception.
 
-    METHODS get_repo_info
+    METHODS has_pulls
+      RETURNING
+        VALUE(rv_yes) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS get_pulls
+      RETURNING
+        VALUE(rt_pulls) TYPE zif_abapgit_pr_enum_provider=>tty_pulls
       RAISING
         zcx_abapgit_exception.
 
@@ -43,8 +45,11 @@ CLASS ZCL_ABAPGIT_PR_ENUMERATOR IMPLEMENTATION.
 
   METHOD constructor.
 
-    mv_repo_url = to_lower( iv_repo_url ).
-    mi_enum_provider = create_provider( mv_repo_url ).
+    mv_repo_url = to_lower( io_repo->get_url( ) ).
+    TRY .
+      mi_enum_provider = create_provider( mv_repo_url ).
+    CATCH zcx_abapgit_exception.
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -74,12 +79,28 @@ CLASS ZCL_ABAPGIT_PR_ENUMERATOR IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_repo_info.
+  METHOD get_pulls.
 
+    IF mi_enum_provider IS NOT BOUND.
+      RETURN.
+    ENDIF.
+
+    rt_pulls = mi_enum_provider->list_pull_requests( ).
+
+    " TODO caching ?
 
   ENDMETHOD.
 
 
-  METHOD is_platform_supported.
+  METHOD has_pulls.
+
+    IF mi_enum_provider IS NOT BOUND.
+      RETURN. " false
+    ENDIF.
+
+    IF get_pulls( ) IS NOT INITIAL.
+      rv_yes = abap_true.
+    ENDIF.
+
   ENDMETHOD.
 ENDCLASS.
