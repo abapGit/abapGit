@@ -26,7 +26,7 @@ Now you can use abapGit by executing the report in transaction `SE38`.
 ## Setup SSL ##
 To use the online feature, [SSL must be setup](guide-ssl-setup.html). Offline projects will work behind firewalls and without SSL.
 
-## Install developper version ##
+## Install developer version ##
 1. Download latest version
    1. Go to https://github.com/larshp/abapGit/
    2. Select **Code** > **Download ZIP**

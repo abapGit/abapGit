@@ -39,7 +39,7 @@ Navigates to the corresponding object maintenance screen
 ``ZIF_ABAPGIT_OBJECT~GET_METADATA`` 
 Returns object specific metadata 
 
-``ZIF_ABAPGIT_OBJECT~GET_COMARATOR`` 
+``ZIF_ABAPGIT_OBJECT~GET_COMPARATOR`` 
 Triggered before deserialization to perform checks, eg warn the user that database tables are changed.
 
 ``ZIF_ABAPGIT_OBJECT~GET_DESERIALIZE_STEPS`` 
