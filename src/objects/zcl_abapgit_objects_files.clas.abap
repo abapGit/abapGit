@@ -84,7 +84,7 @@ CLASS zcl_abapgit_objects_files DEFINITION
         !iv_extra         TYPE clike OPTIONAL
         !iv_ext           TYPE string
       RETURNING
-        VALUE(rv_present) TYPE abap_bool.
+        VALUE(rv_present) TYPE abap_bool .
   PROTECTED SECTION.
 
     METHODS read_file
@@ -275,8 +275,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     DATA: lv_filename TYPE string,
           lv_data     TYPE xstring,
-          lv_abap     TYPE string.
-
+          lv_abap     TYPE string,
+          lv_offset   TYPE i.
+    FIELD-SYMBOLS: <lv_abap> TYPE abaptxt255.
 
     lv_filename = filename( iv_extra = iv_extra
                             iv_ext   = 'abap' ).            "#EC NOTEXT
@@ -291,6 +292,17 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
     lv_abap = zcl_abapgit_convert=>xstring_to_string_utf8( lv_data ).
 
     SPLIT lv_abap AT zif_abapgit_definitions=>c_newline INTO TABLE rt_abap.
+    " remove leading CR, if present
+    LOOP AT rt_abap ASSIGNING <lv_abap>.
+      lv_offset = strlen( <lv_abap> ) - 1.
+      IF lv_offset >= 0 AND <lv_abap>+lv_offset(1) = cl_abap_char_utilities=>cr_lf+0(1).
+        IF lv_offset = 0.
+          <lv_abap> = space.
+        ELSE.
+          <lv_abap> = <lv_abap>+0(lv_offset).
+        ENDIF.
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 
