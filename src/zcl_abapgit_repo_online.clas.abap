@@ -346,7 +346,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
         IF lv_offs = -1.
           zcx_abapgit_exception=>raise( 'Incorrect format of switched origin' ).
         ENDIF.
-        lv_offs = strlen( ms_data-switched_origin ) - lv_offs.
+        lv_offs = strlen( ms_data-switched_origin ) - lv_offs - 1.
         set_url( substring( val = ms_data-switched_origin len = lv_offs ) ).
         set_branch_name( substring( val = ms_data-switched_origin off = lv_offs + 1 ) ).
         set( iv_switched_origin = '' ).

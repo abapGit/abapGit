@@ -37,7 +37,7 @@ CLASS zcl_abapgit_gui_page_view_repo DEFINITION
 
     DATA  mt_col_spec TYPE zif_abapgit_definitions=>tty_col_spec.
     DATA: mo_repo                       TYPE REF TO zcl_abapgit_repo,
-          mo_pulls                      TYPE REF TO zcl_abapgit_pr_enumerator,
+          mt_pulls                      TYPE zif_abapgit_pr_enum_provider=>tty_pulls,
           mv_cur_dir                    TYPE string,
           mv_hide_files                 TYPE abap_bool,
           mv_max_lines                  TYPE i,
@@ -232,10 +232,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
         ro_advanced_dropdown->add(
           iv_txt = 'Revert switched origin'
           iv_act = |{ c_actions-repo_reset_origin }| ).
-      ELSEIF mo_pulls IS BOUND AND mo_pulls->has_pulls( ) = abap_true.
+      ELSEIF lines( mt_pulls ) > 0.
         ro_advanced_dropdown->add(
-          iv_txt = 'Switched origin to PR'
-          iv_act = |{ c_actions-repo_switch_origin_to_pr }| ).
+          iv_txt = 'Switched origin to PR [press t]'
+          iv_typ = zif_abapgit_html=>c_action_type-onclick
+          iv_act = |gGoRepoPalette.toggleDisplay(true)| ).
       ENDIF.
 
       CLEAR lv_crossout.
@@ -524,7 +525,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
   METHOD constructor.
 
     DATA: lo_settings TYPE REF TO zcl_abapgit_settings,
-          lo_repo_online TYPE REF TO zcl_abapgit_repo_online,
           lv_package  TYPE devclass.
 
     super->constructor( ).
@@ -549,11 +549,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
 
     mv_are_changes_recorded_in_tr = zcl_abapgit_factory=>get_sap_package( lv_package
       )->are_changes_recorded_in_tr_req( ).
-
-    IF mo_repo->is_offline( ) = abap_false.
-      lo_repo_online ?= mo_repo.
-      CREATE OBJECT mo_pulls EXPORTING io_repo = lo_repo_online.
-    ENDIF.
 
   ENDMETHOD.
 
@@ -681,13 +676,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
 
     gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
     gui_services( )->register_event_handler( me ).
-    register_deferred_script(
-      zcl_abapgit_gui_chunk_lib=>render_repo_palette( zif_abapgit_definitions=>c_action-go_repo ) ).
-    register_deferred_script( render_scripts( ) ).
-
 
     " Reinit, for the case of type change
     mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
+    mt_pulls = zcl_abapgit_pr_enumerator=>new( mo_repo )->get_pulls( ).
 
     " Check if repo is still valid and reset if necessary to consistent state
     TRY.
@@ -810,6 +802,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
           iv_extra_style = 'repo_banner'
           ix_error = lx_error ) ).
     ENDTRY.
+
+    register_deferred_script( render_scripts( ) ).
 
   ENDMETHOD.
 
@@ -1076,48 +1070,44 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
 
   METHOD render_scripts.
 
-    DATA lt_pulls TYPE zif_abapgit_pr_enum_provider=>tty_pulls.
     DATA lv_json TYPE string.
-    FIELD-SYMBOLS <ls_pull> LIKE LINE OF lt_pulls.
+    FIELD-SYMBOLS <ls_pull> LIKE LINE OF mt_pulls.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_palette( zif_abapgit_definitions=>c_action-go_repo ) ).
 
-    IF mo_pulls IS NOT BOUND.
-      RETURN.
+    IF mt_pulls IS NOT INITIAL.
+
+      ri_html->add( 'var prList = [' ).
+      LOOP AT mt_pulls ASSIGNING <ls_pull>.
+        lv_json = |  \{ number: "{ <ls_pull>-number
+          }", title: "{ <ls_pull>-title
+          }", user: "{ <ls_pull>-user
+          }", head_branch: "{ <ls_pull>-head_branch }" \}|.
+        IF sy-tabix < lines( mt_pulls ).
+          lv_json = lv_json && ','.
+        ENDIF.
+        ri_html->add( lv_json ).
+      ENDLOOP.
+      ri_html->add( '];' ).
+
+      ri_html->add( |var gGoRepoPalette = new CommandPalette(createPREnumerator(prList, "{
+        c_actions-repo_switch_origin_to_pr }"), \{| ).
+      ri_html->add( '  toggleKey: "t",' ).
+      ri_html->add( '  hotkeyDescription: "Switch to PR ..."' ).
+      ri_html->add( '});' ).
+
     ENDIF.
-
-    lt_pulls = mo_pulls->get_pulls( ).
-    IF lt_pulls IS INITIAL.
-      RETURN.
-    ENDIF.
-
-    ri_html->add( 'var prList = [' ).
-    LOOP AT lt_pulls ASSIGNING <ls_pull>.
-      lv_json = |  \{ pr_id: "{ <ls_pull>-number
-        }", title: "{ <ls_pull>-title
-        }", user: "{ <ls_pull>-user
-        }", branch: "{ <ls_pull>-head_branch }" \}|.
-      IF sy-tabix < lines( lt_pulls ).
-        lv_json = lv_json && ','.
-      ENDIF.
-      ri_html->add( lv_json ).
-    ENDLOOP.
-    ri_html->add( '];' ).
-
-    ri_html->add( |var gGoRepoPalette = new CommandPalette(createPREnumerator(prList, "{
-      c_actions-repo_switch_origin_to_pr }"), \{| ).
-    ri_html->add( '  toggleKey: "x",' ).
-    ri_html->add( '  hotkeyDescription: "Switch to PR ..."' ).
-    ri_html->add( '});' ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA: lv_path TYPE string.
+    DATA lv_path TYPE string.
+    DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
 
     CASE iv_action.
       WHEN zif_abapgit_definitions=>c_action-go_repo. " Switch to another repo
@@ -1170,12 +1160,29 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-repo_switch_origin_to_pr.
-        MESSAGE 'hello' TYPE 'S'.
-        ev_state        = zcl_abapgit_gui=>c_event_state-no_more_act.
+        DATA lt_fields TYPE tihttpnvp.
+        DATA ls_field LIKE LINE OF lt_fields.
+        lt_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( iv_getdata ).
+        READ TABLE lt_fields INTO ls_field WITH KEY name = 'NUMBER'.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( 'PR number not found in query' ).
+        ENDIF.
+
+        DATA ls_pull LIKE LINE OF mt_pulls.
+        READ TABLE mt_pulls INTO ls_pull WITH KEY number = ls_field-value.
+        IF sy-subrc <> 0.
+          zcx_abapgit_exception=>raise( 'PR number not found in PR list' ).
+        ENDIF.
+
+        lo_repo_online ?= mo_repo.
+        lo_repo_online->switch_origin( ls_pull-head_url ).
+        lo_repo_online->set_branch_name( |refs/heads/{ ls_pull-head_branch }| ). " TODO refactor
+        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-repo_reset_origin.
-        MESSAGE 'hello reset' TYPE 'S'.
-        ev_state        = zcl_abapgit_gui=>c_event_state-no_more_act.
+        lo_repo_online ?= mo_repo.
+        lo_repo_online->switch_origin( '' ).
+        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN OTHERS.
 

@@ -7,7 +7,7 @@ CLASS zcl_abapgit_pr_enumerator DEFINITION
 
     METHODS constructor
       IMPORTING
-        io_repo TYPE REF TO zcl_abapgit_repo_online
+        io_repo TYPE REF TO zcl_abapgit_repo
       RAISING
         zcx_abapgit_exception.
 
@@ -20,6 +20,14 @@ CLASS zcl_abapgit_pr_enumerator DEFINITION
     METHODS get_pulls
       RETURNING
         VALUE(rt_pulls) TYPE zif_abapgit_pr_enum_provider=>tty_pulls
+      RAISING
+        zcx_abapgit_exception.
+
+    CLASS-METHODS new
+      IMPORTING
+        io_repo TYPE REF TO zcl_abapgit_repo
+      RETURNING
+        VALUE(ro_instance) TYPE REF TO zcl_abapgit_pr_enumerator
       RAISING
         zcx_abapgit_exception.
 
@@ -45,7 +53,14 @@ CLASS ZCL_ABAPGIT_PR_ENUMERATOR IMPLEMENTATION.
 
   METHOD constructor.
 
-    mv_repo_url = to_lower( io_repo->get_url( ) ).
+    DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
+
+    IF io_repo IS NOT BOUND OR io_repo->is_offline( ) = abap_true.
+      RETURN.
+    ENDIF.
+
+    lo_repo_online ?= io_repo.
+    mv_repo_url     = to_lower( lo_repo_online->get_url( ) ).
     TRY .
       mi_enum_provider = create_provider( mv_repo_url ).
     CATCH zcx_abapgit_exception.
@@ -103,5 +118,10 @@ CLASS ZCL_ABAPGIT_PR_ENUMERATOR IMPLEMENTATION.
       rv_yes = abap_true.
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD new.
+    CREATE OBJECT ro_instance EXPORTING io_repo = io_repo.
   ENDMETHOD.
 ENDCLASS.
