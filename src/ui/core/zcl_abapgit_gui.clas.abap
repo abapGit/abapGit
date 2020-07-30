@@ -1,8 +1,12 @@
 CLASS zcl_abapgit_gui DEFINITION
   PUBLIC
-  FINAL .
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
+
+    INTERFACES zif_abapgit_gui_services .
+
     CONSTANTS:
       BEGIN OF c_event_state,
         not_handled         TYPE i VALUE 0,
@@ -18,48 +22,55 @@ CLASS zcl_abapgit_gui DEFINITION
     CONSTANTS:
       BEGIN OF c_action,
         go_home TYPE string VALUE 'go_home',
-      END OF c_action.
-
-    INTERFACES zif_abapgit_gui_services.
+      END OF c_action .
 
     METHODS go_home
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
 
     METHODS go_page
       IMPORTING
-        ii_page        TYPE REF TO zif_abapgit_gui_renderable
-        iv_clear_stack TYPE abap_bool DEFAULT abap_true
+        !ii_page        TYPE REF TO zif_abapgit_gui_renderable
+        !iv_clear_stack TYPE abap_bool DEFAULT abap_true
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
 
     METHODS back
       IMPORTING
-        iv_to_bookmark TYPE abap_bool DEFAULT abap_false
+        !iv_to_bookmark TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rv_exit) TYPE abap_bool
+        VALUE(rv_exit)  TYPE abap_bool
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
 
     METHODS on_event FOR EVENT sapevent OF cl_gui_html_viewer
       IMPORTING
-          action
-          frame
-          getdata
-          postdata
-          query_table.
+        !action
+        !frame
+        !getdata
+        !postdata
+        !query_table .
 
     METHODS constructor
       IMPORTING
-        io_component      TYPE REF TO object OPTIONAL
-        ii_asset_man      TYPE REF TO zif_abapgit_gui_asset_manager OPTIONAL
-        ii_hotkey_ctl     TYPE REF TO zif_abapgit_gui_hotkey_ctl OPTIONAL
-        ii_html_processor TYPE REF TO zif_abapgit_gui_html_processor OPTIONAL
-        iv_rollback_on_error TYPE abap_bool DEFAULT abap_true
+        !io_component         TYPE REF TO object OPTIONAL
+        !ii_asset_man         TYPE REF TO zif_abapgit_gui_asset_manager OPTIONAL
+        !ii_hotkey_ctl        TYPE REF TO zif_abapgit_gui_hotkey_ctl OPTIONAL
+        !ii_html_processor    TYPE REF TO zif_abapgit_gui_html_processor OPTIONAL
+        !iv_rollback_on_error TYPE abap_bool DEFAULT abap_true
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
 
-    METHODS free.
+    METHODS free .
+
+    METHODS parse_data
+      IMPORTING
+        !iv_getdata          TYPE c
+        !it_postdata         TYPE cnht_post_data_tab
+      RETURNING
+        VALUE(ro_parameters) TYPE REF TO zcl_abapgit_string_map
+      RAISING
+        zcx_abapgit_exception .
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -72,15 +83,15 @@ CLASS zcl_abapgit_gui DEFINITION
 
     DATA:
       mv_rollback_on_error TYPE abap_bool,
-      mi_cur_page       TYPE REF TO zif_abapgit_gui_renderable,
-      mt_stack          TYPE STANDARD TABLE OF ty_page_stack,
-      mt_event_handlers TYPE STANDARD TABLE OF REF TO zif_abapgit_gui_event_handler,
-      mi_router         TYPE REF TO zif_abapgit_gui_event_handler,
-      mi_asset_man      TYPE REF TO zif_abapgit_gui_asset_manager,
-      mi_hotkey_ctl     TYPE REF TO zif_abapgit_gui_hotkey_ctl,
-      mi_html_processor TYPE REF TO zif_abapgit_gui_html_processor,
-      mo_html_viewer    TYPE REF TO cl_gui_html_viewer,
-      mo_html_parts     TYPE REF TO zcl_abapgit_html_parts.
+      mi_cur_page          TYPE REF TO zif_abapgit_gui_renderable,
+      mt_stack             TYPE STANDARD TABLE OF ty_page_stack,
+      mt_event_handlers    TYPE STANDARD TABLE OF REF TO zif_abapgit_gui_event_handler,
+      mi_router            TYPE REF TO zif_abapgit_gui_event_handler,
+      mi_asset_man         TYPE REF TO zif_abapgit_gui_asset_manager,
+      mi_hotkey_ctl        TYPE REF TO zif_abapgit_gui_hotkey_ctl,
+      mi_html_processor    TYPE REF TO zif_abapgit_gui_html_processor,
+      mo_html_viewer       TYPE REF TO cl_gui_html_viewer,
+      mo_html_parts        TYPE REF TO zcl_abapgit_html_parts.
 
     METHODS startup
       RAISING
@@ -106,9 +117,9 @@ CLASS zcl_abapgit_gui DEFINITION
 
     METHODS handle_action
       IMPORTING
-        iv_action      TYPE c
-        iv_getdata     TYPE c OPTIONAL
-        it_postdata    TYPE cnht_post_data_tab OPTIONAL.
+        iv_action   TYPE c
+        iv_getdata  TYPE c OPTIONAL
+        it_postdata TYPE cnht_post_data_tab OPTIONAL.
 
     METHODS handle_error
       IMPORTING
@@ -245,21 +256,27 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD handle_action.
 
-    DATA: lx_exception TYPE REF TO zcx_abapgit_exception,
-          li_handler   TYPE REF TO zif_abapgit_gui_event_handler,
-          li_page      TYPE REF TO zif_abapgit_gui_renderable,
-          lv_state     TYPE i.
+    DATA: lx_exception  TYPE REF TO zcx_abapgit_exception,
+          li_handler    TYPE REF TO zif_abapgit_gui_event_handler,
+          li_page       TYPE REF TO zif_abapgit_gui_renderable,
+          lv_state      TYPE i,
+          lo_parameters TYPE REF TO zcl_abapgit_string_map.
 
     TRY.
+        lo_parameters = parse_data(
+          iv_getdata  = iv_getdata
+          it_postdata = it_postdata ).
+
         LOOP AT mt_event_handlers INTO li_handler.
           li_handler->on_event(
             EXPORTING
-              iv_action    = iv_action
-              iv_getdata   = iv_getdata
-              it_postdata  = it_postdata
+              iv_action     = iv_action
+              iv_getdata    = iv_getdata
+              it_postdata   = it_postdata
+              io_parameters = lo_parameters
             IMPORTING
-              ei_page      = li_page
-              ev_state     = lv_state ).
+              ei_page       = li_page
+              ev_state      = lv_state ).
           IF lv_state IS NOT INITIAL AND lv_state <> c_event_state-not_handled. " is handled
             EXIT.
           ENDIF.
@@ -272,11 +289,11 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
             call_page( li_page ).
           WHEN c_event_state-new_page_w_bookmark.
             call_page(
-              ii_page = li_page
+              ii_page          = li_page
               iv_with_bookmark = abap_true ).
           WHEN c_event_state-new_page_replacing.
             call_page(
-              ii_page = li_page
+              ii_page      = li_page
               iv_replacing = abap_true ).
           WHEN c_event_state-go_back.
             back( ).
@@ -334,11 +351,75 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD parse_data.
+
+    DATA:
+      lv_buffer TYPE string,
+      lo_data   TYPE REF TO cnht_post_data_line,
+      lv_count  TYPE n LENGTH 4,
+      ls_entry  TYPE zcl_abapgit_string_map=>ty_entry,
+      lv_param  TYPE string,
+      lt_params TYPE TABLE OF string.
+
+    " Combine get and post data
+    lv_buffer = iv_getdata.
+    IF NOT iv_getdata IS INITIAL AND NOT it_postdata IS INITIAL.
+      CONCATENATE lv_buffer '&' INTO lv_buffer.
+    ENDIF.
+    LOOP AT it_postdata REFERENCE INTO lo_data.
+      IF sy-tabix < lines( it_postdata ).
+        " Preserve trailing spaces...
+        CONCATENATE lv_buffer '' INTO lv_buffer SEPARATED BY lo_data->*
+          IN CHARACTER MODE.
+      ELSE.
+        " ...but not on last line
+        CONCATENATE lv_buffer lo_data->* INTO lv_buffer
+          IN CHARACTER MODE.
+      ENDIF.
+    ENDLOOP.
+
+    CREATE OBJECT ro_parameters.
+
+    IF lv_buffer CS '&'.
+      SPLIT lv_buffer AT '&' INTO TABLE lt_params.
+    ELSE.
+      APPEND lv_buffer TO lt_params.
+    ENDIF.
+
+    LOOP AT lt_params INTO lv_param WHERE NOT table_line IS INITIAL.
+      lv_count = lv_count + 1.
+
+      CLEAR ls_entry.
+
+      " Split parameter into key and value
+      IF lv_param CS '='.
+        SPLIT lv_param AT '=' INTO ls_entry-k ls_entry-v.
+      ELSE.
+        " Unnamed parameters get a running number as key i.e. "param_0001"
+        ls_entry-k = 'param_' && lv_count.
+        ls_entry-v = lv_param.
+      ENDIF.
+
+      " Unescape entry and convert key to lower case without leading/trailing spaces
+      ls_entry-k = condense( to_lower( cl_http_utility=>unescape_url( ls_entry-k ) ) ).
+      ls_entry-v = cl_http_utility=>unescape_url( ls_entry-v ).
+
+      IF ro_parameters->has( ls_entry-k ).
+        zcx_abapgit_exception=>raise( |Duplicate parameter { ls_entry-k }| ).
+      ELSE.
+        ro_parameters->set( iv_key = ls_entry-k
+                            iv_val = ls_entry-v ).
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD render.
 
-    DATA: lv_url           TYPE w3url,
-          lv_html          TYPE string,
-          li_html          TYPE REF TO zif_abapgit_html.
+    DATA: lv_url  TYPE w3url,
+          lv_html TYPE string,
+          li_html TYPE REF TO zif_abapgit_html.
 
     IF mi_cur_page IS NOT BOUND.
       zcx_abapgit_exception=>raise( 'GUI error: no current page' ).
