@@ -195,7 +195,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
     li_popups->create_branch_popup(
-      EXPORTING 
+      EXPORTING
         iv_source_branch_name = lv_source_branch_name
       IMPORTING
         ev_name   = lv_name
@@ -207,7 +207,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     lo_repo->create_branch( lv_name ).
 
-    lv_msg = |Branch switched from { lv_source_branch_name
+    lv_msg = |Branch switched from { zcl_abapgit_git_branch_list=>get_display_name( lv_source_branch_name )
       } to new branch { zcl_abapgit_git_branch_list=>get_display_name( lv_name ) }|.
     MESSAGE lv_msg TYPE 'S'.
 
