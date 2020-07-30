@@ -12,8 +12,8 @@
     "url": "git+https://github.com/larshp/abapGit.git"
   },
   "devDependencies": {
-    "@abaplint/cli": "^2.37.9",
+    "@abaplint/cli": "^2.38.6",
     "abapmerge": "^0.14.1",
-    "eslint": "^7.4.0"
+    "eslint": "^7.5.0"
   }
 }

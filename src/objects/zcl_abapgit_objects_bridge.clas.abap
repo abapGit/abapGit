@@ -39,11 +39,11 @@ CLASS ZCL_ABAPGIT_OBJECTS_BRIDGE IMPLEMENTATION.
     DATA ls_objtype_map     LIKE LINE OF gt_objtype_map.
 
 
-    SELECT ext~clsname
-      FROM vseoextend AS ext
+    SELECT clsname
+      FROM seometarel
       INTO TABLE lt_plugin_class
-      WHERE ext~refclsname LIKE 'ZCL_ABAPGITP_OBJECT%'
-      AND ext~version = '1'.                              "#EC CI_SUBRC
+      WHERE refclsname LIKE 'ZCL_ABAPGITP_OBJECT%'
+      AND version = '1'.                                  "#EC CI_SUBRC
 
     CLEAR gt_objtype_map.
     LOOP AT lt_plugin_class INTO lv_plugin_class
