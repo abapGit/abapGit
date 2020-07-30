@@ -18,6 +18,7 @@
     <item>/abaplint.json</item>
     <item>/.eslintrc.yaml</item>
     <item>/.gitlab-ci.yml</item>
+    <item>/.devcontainer.json</item>
    </IGNORE>
   </DATA>
  </asx:values>
