@@ -41,6 +41,8 @@ INTERFACE zif_abapgit_popups
     RAISING
       zcx_abapgit_exception .
   METHODS create_branch_popup
+    IMPORTING
+      iv_source_branch_name TYPE string
     EXPORTING
       !ev_name   TYPE string
       !ev_cancel TYPE abap_bool
