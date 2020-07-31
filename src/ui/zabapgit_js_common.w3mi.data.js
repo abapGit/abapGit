@@ -240,13 +240,19 @@ function RepoOverViewHelper() {
 
 RepoOverViewHelper.prototype.toggleRepoListDetail = function (forceDisplay) {
   if (this.detailCssClass) {
+    this.toggleItemsDetail(forceDisplay);
+    this.saveFilter();
+  }
+};
+
+RepoOverViewHelper.prototype.toggleItemsDetail = function(forceDisplay){
+  if (this.detailCssClass) {
     this.isDetailsDisplayed = forceDisplay || !this.isDetailsDisplayed;
     this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
     var icon = document.getElementById("icon-filter-detail");
     this.toggleFilterIcon(icon, this.isDetailsDisplayed);
-    this.saveFilter();
   }
-};
+}
 
 RepoOverViewHelper.prototype.toggleFilterIcon = function (icon, isEnabled) {
   if (isEnabled) {
@@ -259,6 +265,11 @@ RepoOverViewHelper.prototype.toggleFilterIcon = function (icon, isEnabled) {
 };
 
 RepoOverViewHelper.prototype.toggleRepoListFavorites = function (forceDisplay) {
+  this.toggleItemsFavorites(forceDisplay);
+  this.saveFilter();
+};
+
+RepoOverViewHelper.prototype.toggleItemsFavorites = function(forceDisplay){
   this.isOnlyFavoritesDisplayed = forceDisplay || !this.isOnlyFavoritesDisplayed;
   var repositories = document.getElementsByClassName("repo");
   var icon = document.getElementById("icon-filter-favorite");
@@ -273,8 +284,7 @@ RepoOverViewHelper.prototype.toggleRepoListFavorites = function (forceDisplay) {
       repo.style.display = "";
     }
   }
-  this.saveFilter();
-};
+}
 
 RepoOverViewHelper.prototype.setHooks = function () {
   window.onload = this.onPageLoad.bind(this);
@@ -293,10 +303,10 @@ RepoOverViewHelper.prototype.onPageLoad = function () {
   var data = window.localStorage && JSON.parse(window.localStorage.getItem(this.pageId));
   if (data) {
     if (data.isDetailsDisplayed) {
-      this.toggleRepoListDetail(true);
+      this.toggleItemsDetail(true);
     }
     if (data.isOnlyFavoritesDisplayed) {
-      this.toggleRepoListFavorites(true);
+      this.toggleItemsFavorites(true);
     }
   }
 };
