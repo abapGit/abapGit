@@ -252,7 +252,7 @@ RepoOverViewHelper.prototype.toggleItemsDetail = function(forceDisplay){
     var icon = document.getElementById("icon-filter-detail");
     this.toggleFilterIcon(icon, this.isDetailsDisplayed);
   }
-}
+};
 
 RepoOverViewHelper.prototype.toggleFilterIcon = function (icon, isEnabled) {
   if (isEnabled) {
@@ -284,7 +284,7 @@ RepoOverViewHelper.prototype.toggleItemsFavorites = function(forceDisplay){
       repo.style.display = "";
     }
   }
-}
+};
 
 RepoOverViewHelper.prototype.setHooks = function () {
   window.onload = this.onPageLoad.bind(this);
