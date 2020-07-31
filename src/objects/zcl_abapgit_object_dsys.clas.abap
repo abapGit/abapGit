@@ -65,8 +65,10 @@ CLASS ZCL_ABAPGIT_OBJECT_DSYS IMPLEMENTATION.
 
     DATA: ls_data      TYPE ty_data,
           ls_docu_info TYPE dokil,
-          lv_version   TYPE dokvers.
+          lv_version   TYPE dokvers,
+          lv_doku_obj  TYPE doku_obj.
 
+    lv_doku_obj = mv_doc_object.
     io_xml->read( EXPORTING iv_name = 'DSYS'
                   CHANGING cg_data = ls_data ).
 
@@ -74,7 +76,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DSYS IMPLEMENTATION.
       EXPORTING
         id     = c_id
         langu  = mv_language
-        object = mv_doc_object
+        object = lv_doku_obj
         typ    = c_typ
       IMPORTING
         xdokil = ls_docu_info.
