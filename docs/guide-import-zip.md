@@ -25,3 +25,10 @@ First, download the latest version of the project you want to import.
 6. Select the zip archive file (eg. *abapGit-master.zip*)
 7. Select **Pull <sup>zip</sup>**
 8. Activate
+
+## Hints ##
+abapGit can only import files with [`LF`](https://en.wikipedia.org/wiki/Newline) as line-terminator.
+If you clone a project on windows with git cli to pack into a zip-archive later on, configure git not replace `LF` by `CRLF`:
+```
+git config [--global, --local, --system] core.autocrlf false
+```
