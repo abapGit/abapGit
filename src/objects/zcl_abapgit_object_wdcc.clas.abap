@@ -4,6 +4,7 @@ CLASS zcl_abapgit_object_wdcc DEFINITION
   CREATE PUBLIC .
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
+    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
     METHODS constructor
       IMPORTING
@@ -150,15 +151,12 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lv_xml_xstring   TYPE xstring,
-          lv_xml_string    TYPE string,
-          lo_document      TYPE REF TO if_ixml_document,
-          lv_xml_as_string TYPE string,
-          lt_otr_texts     TYPE TABLE OF wdy_config_compt,
-          lt_cc_text       TYPE TABLE OF wdy_config_datt,
-          ls_orig_config   TYPE wdy_config_data,
-          ls_outline       TYPE wdy_cfg_outline_data,
-          ls_config_key    TYPE wdy_config_key.
+    DATA: lv_xml_xstring TYPE xstring,
+          lt_otr_texts   TYPE TABLE OF wdy_config_compt,
+          lt_cc_text     TYPE TABLE OF wdy_config_datt,
+          ls_orig_config TYPE wdy_config_data,
+          ls_outline     TYPE wdy_cfg_outline_data,
+          ls_config_key  TYPE wdy_config_key.
 
     io_xml->add( iv_name = 'OBJECT_NAME'
                  ig_data =  ms_item-obj_name ).
@@ -206,19 +204,9 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
     io_xml->add( iv_name = 'RELID'
                  ig_data =  ls_orig_config-relid ).
 
-    CALL TRANSFORMATION id
-           SOURCE XML lv_xml_xstring
-           RESULT XML lv_xml_string.
-
-    lo_document  = cl_ixml_80_20=>parse_to_document( stream_xstring = lv_xml_xstring ).
-    lv_xml_as_string  = cl_ixml_80_20=>render_to_string( document      = lo_document
-                                                         pretty_print  = 1 ).
-
-    io_xml->add( iv_name = 'COMPONENT_CONFIGURATION_READABLE'
-                 ig_data = lv_xml_as_string ).
-
-    io_xml->add( iv_name = 'COMPONENT_CONFIGURATION_RAW'
-                 ig_data = lv_xml_xstring ).
+    mo_files->add_raw( iv_extra  = 'comp_config'
+                       iv_ext    = 'xml'
+                       iv_data = lv_xml_xstring ) ##NO_TEXT.
 
     SELECT * FROM wdy_config_compt INTO TABLE lt_otr_texts WHERE config_id   = ls_orig_config-config_id
                                                              AND config_type = ls_orig_config-config_type
@@ -270,8 +258,8 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'WDA_COMPONENT'
                   CHANGING  cg_data = ls_orig_config-component ).
 
-    io_xml->read( EXPORTING iv_name = 'COMPONENT_CONFIGURATION_RAW'
-                  CHANGING  cg_data = ls_orig_config-xcontent  ).
+    ls_orig_config-xcontent = mo_files->read_raw( iv_extra = 'comp_config'
+                                                  iv_ext   = 'xml' ) ##NO_TEXT.
 
     io_xml->read( EXPORTING iv_name = 'PARENT'
                   CHANGING  cg_data = ls_orig_config-parent ).
@@ -305,6 +293,7 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
                   CHANGING  cg_data = lt_otr_texts ).
 
     IF lt_otr_texts IS NOT INITIAL.
+      DELETE FROM wdy_config_compt WHERE config_id = ls_orig_config-config_id.
       MODIFY wdy_config_compt FROM TABLE lt_otr_texts.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'Error Updating WDY_CONFIG_COMPT for Component Config ' && ms_item-obj_name ).
@@ -315,6 +304,7 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
                   CHANGING  cg_data = lt_config_datt ).
 
     IF lt_config_datt IS NOT INITIAL.
+      DELETE FROM wdy_config_datt WHERE config_id = ls_orig_config-config_id.
       MODIFY wdy_config_datt FROM TABLE lt_config_datt.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'Error Updating WDY_CONFIG_DATT for Component Config ' && ms_item-obj_name ).
