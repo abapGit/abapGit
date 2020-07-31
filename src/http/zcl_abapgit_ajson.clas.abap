@@ -105,6 +105,7 @@ CLASS ZCL_ABAPGIT_AJSON IMPLEMENTATION.
 
     DATA lv_normalized_path TYPE string.
     DATA lr_node TYPE REF TO ty_node.
+    DATA lv_tmp TYPE string.
     FIELD-SYMBOLS <ls_item> LIKE LINE OF mt_json_tree.
 
     lv_normalized_path = lcl_utils=>normalize_path( iv_path ).
@@ -124,7 +125,6 @@ CLASS ZCL_ABAPGIT_AJSON IMPLEMENTATION.
         WHEN 'null'.
           APPEND '' TO rt_string_table.
         WHEN 'bool'.
-          DATA lv_tmp TYPE string.
           IF <ls_item>-value = 'true'.
             lv_tmp = abap_true.
           ELSE.
@@ -132,7 +132,8 @@ CLASS ZCL_ABAPGIT_AJSON IMPLEMENTATION.
           ENDIF.
           APPEND lv_tmp TO rt_string_table.
         WHEN OTHERS.
-          zcx_abapgit_ajson_error=>raise_json( |Cannot convert [{ <ls_item>-type }] to string at [{ <ls_item>-path }{ <ls_item>-name }]| ).
+          zcx_abapgit_ajson_error=>raise_json(
+            |Cannot convert [{ <ls_item>-type }] to string at [{ <ls_item>-path }{ <ls_item>-name }]| ).
       ENDCASE.
     ENDLOOP.
 
