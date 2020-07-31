@@ -228,12 +228,26 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
   METHOD render_local_settings.
 
     DATA: lv_checked  TYPE string,
+          lo_repo_online TYPE REF TO zcl_abapgit_repo_online,
           ls_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings.
 
     ls_settings = mo_repo->get_local_settings( ).
 
     ii_html->add( '<h2>Local Settings</h2>' ).
     ii_html->add( '<table class="settings">' ).
+
+    IF mo_repo->is_offline( ) = abap_false.
+      lo_repo_online ?= mo_repo.
+      ii_html->add( render_table_row(
+        iv_name  = 'Current remote'
+        iv_value = |{ lo_repo_online->get_url( ) } <span class="grey">@{ lo_repo_online->get_branch_name( ) }</span>|
+      ) ). " TODO maybe make it editable ?
+      ii_html->add( render_table_row(
+        iv_name  = 'Switched origin'
+        iv_value = |{ lo_repo_online->get_switched_origin( ) }|
+*        iv_value = |<input name="switched_origin" type="text" size="60" value="{ lo_repo_online->get_switched_origin( ) }">|
+      ) ).
+    ENDIF.
 
     ii_html->add( render_table_row(
       iv_name  = 'Display Name'
