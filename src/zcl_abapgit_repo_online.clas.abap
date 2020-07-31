@@ -52,6 +52,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
     METHODS switch_origin
       IMPORTING
         !iv_url TYPE zif_abapgit_persistence=>ty_repo-url
+        !iv_overwrite TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
 
@@ -335,6 +336,11 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   METHOD switch_origin.
 
     DATA lv_offs TYPE i.
+
+    IF iv_overwrite = abap_true. " For repo settings page
+      set( iv_switched_origin = iv_url ).
+      RETURN.
+    ENDIF.
 
     IF iv_url IS INITIAL.
       IF ms_data-switched_origin IS INITIAL.
