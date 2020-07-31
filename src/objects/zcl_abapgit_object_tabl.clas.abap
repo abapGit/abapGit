@@ -56,6 +56,13 @@ CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     TYPES:
       ty_dd03p_tt TYPE STANDARD TABLE OF dd03p .
 
+    TYPES:
+      BEGIN OF ty_dd02_texts,
+        ddlanguage TYPE dd02t-ddlanguage,
+        ddtext     TYPE dd02t-ddtext,
+      END OF ty_dd02_texts,
+      tt_dd02_texts TYPE STANDARD TABLE OF ty_dd02_texts.
+
     CONSTANTS c_longtext_id_tabl TYPE dokil-id VALUE 'TB' ##NO_TEXT.
     CONSTANTS:
       BEGIN OF c_s_dataname,
