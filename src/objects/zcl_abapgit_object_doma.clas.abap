@@ -95,7 +95,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
         " it_dd07v was potentially renumbered so lookup by value
         READ TABLE lt_dd07_texts ASSIGNING <ls_dd07_text>
           WITH KEY ddlanguage = <lv_lang> domvalue_l = <ls_dd07v>-domvalue_l domvalue_h = <ls_dd07v>-domvalue_h.
-        IF sy-subrc = 0..
+        IF sy-subrc = 0.
           MOVE-CORRESPONDING <ls_dd07_text> TO <ls_dd07v>.
           <ls_dd07v>-valpos = lv_valpos.
           DELETE lt_dd07_texts INDEX sy-tabix. " Optimization
