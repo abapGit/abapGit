@@ -220,8 +220,6 @@ CLASS ZCL_ABAPGIT_OBJECT_DSYS IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    io_xml->i18n_params( abap_false ).
-
     zcl_abapgit_factory=>get_longtexts( )->serialize(
       iv_object_name = mv_doc_object
       iv_longtext_id = c_id
