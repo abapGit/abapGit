@@ -61,9 +61,9 @@ CLASS ZCL_ABAPGIT_PR_ENUMERATOR IMPLEMENTATION.
 
     lo_repo_online ?= io_repo.
     mv_repo_url     = to_lower( lo_repo_online->get_url( ) ).
-    TRY .
-      mi_enum_provider = create_provider( mv_repo_url ).
-    CATCH zcx_abapgit_exception.
+    TRY.
+        mi_enum_provider = create_provider( mv_repo_url ).
+      CATCH zcx_abapgit_exception.
     ENDTRY.
 
   ENDMETHOD.
@@ -81,7 +81,10 @@ CLASS ZCL_ABAPGIT_PR_ENUMERATOR IMPLEMENTATION.
       IN iv_repo_url
       SUBMATCHES lv_user lv_repo.
     IF sy-subrc = 0.
-      lv_repo = replace( val = lv_repo regex = '\.git$' with = '' ).
+      lv_repo = replace( 
+        val = lv_repo 
+        regex = '\.git$' 
+        with = '' ).
       CREATE OBJECT ri_provider TYPE zcl_abapgit_pr_enum_github
         EXPORTING
           iv_user_repo  = |{ lv_user }/{ lv_repo }|

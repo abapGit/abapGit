@@ -74,6 +74,8 @@ CLASS ZCL_ABAPGIT_HTTP_AGENT IMPLEMENTATION.
 
     DATA li_client TYPE REF TO if_http_client.
     DATA lo_proxy_configuration TYPE REF TO zcl_abapgit_proxy_config.
+    DATA lv_code TYPE i.
+    DATA lv_message TYPE string.
     FIELD-SYMBOLS <ls_entry> LIKE LINE OF io_query->mt_entries.
 
     CREATE OBJECT lo_proxy_configuration.
@@ -137,8 +139,6 @@ CLASS ZCL_ABAPGIT_HTTP_AGENT IMPLEMENTATION.
     ENDIF.
 
     IF sy-subrc <> 0.
-      DATA lv_code TYPE i.
-      DATA lv_message TYPE string.
       li_client->get_last_error(
         IMPORTING
           code    = lv_code

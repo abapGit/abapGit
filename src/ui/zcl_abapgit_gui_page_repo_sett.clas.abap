@@ -245,7 +245,8 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
       ii_html->add( render_table_row(
         iv_name  = 'Switched origin'
         iv_value = |{ lo_repo_online->get_switched_origin( ) }|
-*        iv_value = |<input name="switched_origin" type="text" size="60" value="{ lo_repo_online->get_switched_origin( ) }">|
+*        iv_value = |<input name="switched_origin" type="text" size="60" value="{ 
+*          lo_repo_online->get_switched_origin( ) }">|
       ) ).
     ENDIF.
 

@@ -51,7 +51,10 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
 
 
   METHOD clean_url.
-    rv_url = replace( val = iv_url regex = '\{.*\}$' with = '' ).
+    rv_url = replace( 
+      val = iv_url 
+      regex = '\{.*\}$'
+      with = '' ).
   ENDMETHOD.
 
 
