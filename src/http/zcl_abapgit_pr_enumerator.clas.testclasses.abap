@@ -1,21 +1,21 @@
-class ltcl_pr_test definition
-  for testing
-  risk level harmless
-  duration short
-  final.
+CLASS ltcl_pr_test DEFINITION
+  FOR TESTING
+  RISK LEVEL HARMLESS
+  DURATION SHORT
+  FINAL.
 
-  private section.
+  PRIVATE SECTION.
 
-    methods simple_test for testing raising zcx_abapgit_exception.
+    METHODS simple_test FOR TESTING RAISING zcx_abapgit_exception.
 
-endclass.
+ENDCLASS.
 
-class ltcl_pr_test implementation.
+CLASS ltcl_pr_test IMPLEMENTATION.
 
-  method simple_test.
+  METHOD simple_test.
 
 
 
-  endmethod.
+  ENDMETHOD.
 
-endclass.
+ENDCLASS.

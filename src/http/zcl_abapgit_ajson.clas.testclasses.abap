@@ -763,8 +763,8 @@ CLASS ltcl_json_to_abap IMPLEMENTATION.
       act = <lv_val>
       exp = 'World' ).
 
-    lv_ref = lo_cut->find_loc( 
-      iv_path = '/obj' 
+    lv_ref = lo_cut->find_loc(
+      iv_path = '/obj'
       iv_name = 'a' ).
     ASSIGN lv_ref->* TO <lv_val>.
     cl_abap_unit_assert=>assert_equals(
@@ -832,7 +832,7 @@ CLASS ltcl_json_to_abap IMPLEMENTATION.
           exp = 'Index not found in table' ).
     ENDTRY.
 
-    lv_ref = lo_cut->find_loc( 
+    lv_ref = lo_cut->find_loc(
       iv_path = '/tab/3/a'
       iv_append_tables = abap_true ).
     ASSIGN lv_ref->* TO <lv_val>.
@@ -900,11 +900,11 @@ CLASS ltcl_json_to_abap IMPLEMENTATION.
           act = lo_err->message
           exp = 'Index not found in table' ).
     ENDTRY.
-    
+
   ENDMETHOD.
-      
+
   METHOD to_abap.
-    
+
     DATA lo_cut TYPE REF TO lcl_json_to_abap.
     DATA ls_mock TYPE ty_complex.
     DATA lv_exp_date TYPE d VALUE '20200728'.
@@ -1107,7 +1107,7 @@ CLASS ltcl_integrated IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_act
-      lv_exp = lt_exp ).
+      exp = lt_exp ).
 
   ENDMETHOD.
 
@@ -1135,7 +1135,7 @@ CLASS ltcl_integrated IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals(
       act = lt_act
-      ls_exp = lt_exp ).
+      exp = lt_exp ).
 
   ENDMETHOD.
 

@@ -1,27 +1,27 @@
-class ltcl_github_test definition
-  for testing
-  risk level harmless
-  duration short
-  final.
+CLASS ltcl_github_test DEFINITION
+  FOR TESTING
+  RISK LEVEL HARMLESS
+  DURATION SHORT
+  FINAL.
 
-  private section.
+  PRIVATE SECTION.
 
-    methods test1 for testing raising zcx_abapgit_exception.
+    METHODS test1 FOR TESTING RAISING zcx_abapgit_exception.
 
-endclass.
+ENDCLASS.
 
-class ltcl_github_test implementation.
+CLASS ltcl_github_test IMPLEMENTATION.
 
-  method test1.
+  METHOD test1.
 
-    data lo_pr type ref to zcl_abapgit_pr_enum_github.
-    create object lo_pr
-      exporting
-        iv_user_repo = 'sbcgua/abapgit'
+    DATA lo_pr TYPE REF TO zcl_abapgit_pr_enum_github.
+    CREATE OBJECT lo_pr
+      EXPORTING
+        iv_user_repo  = 'sbcgua/abapgit'
         ii_http_agent = zcl_abapgit_http_agent=>create( ).
 
     lo_pr->zif_abapgit_pr_enum_provider~list_pull_requests( ).
 
-  endmethod.
+  ENDMETHOD.
 
-endclass.
+ENDCLASS.

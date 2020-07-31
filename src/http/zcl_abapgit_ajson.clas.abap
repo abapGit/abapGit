@@ -259,11 +259,11 @@ CLASS ZCL_ABAPGIT_AJSON IMPLEMENTATION.
     LOOP AT mt_json_tree INTO ls_item.
       " TODO potentially improve performance due to sorted tree (all path started from same prefix go in a row)
       IF strlen( ls_item-path ) >= lv_path_len
-          AND substring( 
-            val = ls_item-path 
+          AND substring(
+            val = ls_item-path
             len = lv_path_len ) = lv_normalized_path.
-        ls_item-path = substring( 
-          val = ls_item-path 
+        ls_item-path = substring(
+          val = ls_item-path
           off = lv_path_len - 1 ). " less closing '/'
         INSERT ls_item INTO TABLE lo_section->mt_json_tree.
       ELSEIF ls_item-path = ls_path_parts-path AND ls_item-name = ls_path_parts-name.
