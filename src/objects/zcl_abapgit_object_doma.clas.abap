@@ -24,15 +24,19 @@ CLASS zcl_abapgit_object_doma DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
            tt_dd07_texts TYPE STANDARD TABLE OF ty_dd07_texts.
     CONSTANTS: c_longtext_id_doma TYPE dokil-id VALUE 'DO'.
 
-    METHODS:
-      serialize_texts
-        IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
-        RAISING   zcx_abapgit_exception,
-      deserialize_texts
-        IMPORTING io_xml   TYPE REF TO zcl_abapgit_xml_input
-                  is_dd01v TYPE dd01v
-                  it_dd07v TYPE dd07v_tab
-        RAISING   zcx_abapgit_exception.
+    METHODS serialize_texts
+      IMPORTING
+        !io_xml   TYPE REF TO zcl_abapgit_xml_output
+        !it_dd07v TYPE dd07v_tab
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_texts
+      IMPORTING
+        !io_xml   TYPE REF TO zcl_abapgit_xml_input
+        !is_dd01v TYPE dd01v
+        !it_dd07v TYPE dd07v_tab
+      RAISING
+        zcx_abapgit_exception .
 
 ENDCLASS.
 
@@ -371,7 +375,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
     io_xml->add( iv_name = 'DD07V_TAB'
                  ig_data = lt_dd07v ).
 
-    serialize_texts( io_xml ).
+    serialize_texts( io_xml   = io_xml
+                     it_dd07v = lt_dd07v ).
 
     serialize_longtexts( io_xml         = io_xml
                          iv_longtext_id = c_longtext_id_doma ).
