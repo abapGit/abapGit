@@ -85,11 +85,21 @@ CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS clear_dd03p_fields_dataelement
       CHANGING
         !cs_dd03p TYPE dd03p .
+
+    METHODS:
+      serialize_texts
+        IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
+        RAISING   zcx_abapgit_exception,
+      deserialize_texts
+        IMPORTING io_xml   TYPE REF TO zcl_abapgit_xml_input
+                  is_dd02v TYPE dd02v
+        RAISING   zcx_abapgit_exception.
+
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -173,6 +183,13 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
            cs_dd03p-decimals,
            cs_dd03p-lowercase,
            cs_dd03p-signflag.
+
+  ENDMETHOD.
+
+
+  METHOD delete_extras.
+
+    DELETE FROM tddat WHERE tabname = iv_tabname.
 
   ENDMETHOD.
 
@@ -298,6 +315,55 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD deserialize_texts.
+
+    DATA: lv_name       TYPE ddobjname,
+          ls_dd02v_tmp  TYPE dd02v,
+          lt_i18n_langs TYPE TABLE OF langu,
+          lt_dd02_texts TYPE tt_dd02_texts.
+
+    FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
+                   <ls_dd02_text> LIKE LINE OF lt_dd02_texts.
+
+    lv_name = ms_item-obj_name.
+
+    io_xml->read( EXPORTING iv_name = 'I18N_LANGS'
+                  CHANGING  cg_data = lt_i18n_langs ).
+
+    io_xml->read( EXPORTING iv_name = 'DD02_TEXTS'
+                  CHANGING  cg_data = lt_dd02_texts ).
+
+    SORT lt_i18n_langs.
+    SORT lt_dd02_texts BY ddlanguage. " Optimization
+
+    LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
+
+      " Table description
+      ls_dd02v_tmp = is_dd02v.
+      READ TABLE lt_dd02_texts ASSIGNING <ls_dd02_text> WITH KEY ddlanguage = <lv_lang>.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |DD02_TEXTS cannot find lang { <lv_lang> } in XML| ).
+      ENDIF.
+      MOVE-CORRESPONDING <ls_dd02_text> TO ls_dd02v_tmp.
+      CALL FUNCTION 'DDIF_TABL_PUT'
+        EXPORTING
+          name              = lv_name
+          dd02v_wa          = ls_dd02v_tmp
+        EXCEPTIONS
+          tabl_not_found    = 1
+          name_inconsistent = 2
+          tabl_inconsistent = 3
+          put_failure       = 4
+          put_refused       = 5
+          OTHERS            = 6.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |error from DDIF_TABL_PUT @TEXTS, { sy-subrc }| ).
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD is_idoc_segment.
 
     DATA lv_segment_type TYPE edilsegtyp.
@@ -309,6 +375,13 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
            INTO lv_segment_type
            WHERE segtyp = lv_segment_type.
     rv_is_idoc_segment = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
+
+
+  METHOD read_extras.
+
+    SELECT SINGLE * FROM tddat INTO rs_tabl_extras-tddat WHERE tabname = iv_tabname.
 
   ENDMETHOD.
 
@@ -373,6 +446,75 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
     io_xml->add( iv_name = c_s_dataname-segment_definition
                  ig_data = lt_segment_definitions ).
+
+  ENDMETHOD.
+
+
+  METHOD serialize_texts.
+
+    DATA: lv_name       TYPE ddobjname,
+          lv_index      TYPE i,
+          ls_dd02v      TYPE dd02v,
+          lt_dd02_texts TYPE tt_dd02_texts,
+          lt_i18n_langs TYPE TABLE OF langu.
+
+    FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
+                   <ls_dd02_text> LIKE LINE OF lt_dd02_texts.
+
+    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+      RETURN.
+    ENDIF.
+
+    lv_name = ms_item-obj_name.
+
+    " Collect additional languages, skip master lang - it was serialized already
+    SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
+      FROM dd02v
+      WHERE tabname = lv_name
+      AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
+
+    LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
+      lv_index = sy-tabix.
+      CALL FUNCTION 'DDIF_TABL_GET'
+        EXPORTING
+          name          = lv_name
+          langu         = <lv_lang>
+        IMPORTING
+          dd02v_wa      = ls_dd02v
+        EXCEPTIONS
+          illegal_input = 1
+          OTHERS        = 2.
+      IF sy-subrc <> 0 OR ls_dd02v-ddlanguage IS INITIAL.
+        DELETE lt_i18n_langs INDEX lv_index. " Don't save this lang
+        CONTINUE.
+      ENDIF.
+
+      APPEND INITIAL LINE TO lt_dd02_texts ASSIGNING <ls_dd02_text>.
+      MOVE-CORRESPONDING ls_dd02v TO <ls_dd02_text>.
+
+    ENDLOOP.
+
+    SORT lt_i18n_langs ASCENDING.
+    SORT lt_dd02_texts BY ddlanguage ASCENDING.
+
+    IF lines( lt_i18n_langs ) > 0.
+      io_xml->add( iv_name = 'I18N_LANGS'
+                   ig_data = lt_i18n_langs ).
+
+      io_xml->add( iv_name = 'DD02_TEXTS'
+                   ig_data = lt_dd02_texts ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD update_extras.
+
+    IF is_tabl_extras-tddat IS INITIAL.
+      delete_extras( iv_tabname = iv_tabname ).
+    ELSE.
+      MODIFY tddat FROM is_tabl_extras-tddat.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -609,6 +751,9 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
       ENDLOOP.
 
+      deserialize_texts( io_xml   = io_xml
+                         is_dd02v = ls_dd02v ).
+
       deserialize_longtexts( io_xml ).
 
       io_xml->read( EXPORTING iv_name = c_s_dataname-tabl_extras
@@ -797,20 +942,22 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       io_xml->add( iv_name = 'DD09L'
                    ig_data = ls_dd09l ).
     ENDIF.
-    io_xml->add( ig_data = lt_dd03p
-                 iv_name = 'DD03P_TABLE' ).
-    io_xml->add( ig_data = lt_dd05m
-                 iv_name = 'DD05M_TABLE' ).
-    io_xml->add( ig_data = lt_dd08v
-                 iv_name = 'DD08V_TABLE' ).
+    io_xml->add( iv_name = 'DD03P_TABLE'
+                 ig_data = lt_dd03p ).
+    io_xml->add( iv_name = 'DD05M_TABLE'
+                 ig_data = lt_dd05m ).
+    io_xml->add( iv_name = 'DD08V_TABLE'
+                 ig_data = lt_dd08v ).
     io_xml->add( iv_name = 'DD12V'
                  ig_data = lt_dd12v ).
     io_xml->add( iv_name = 'DD17V'
                  ig_data = lt_dd17v ).
-    io_xml->add( ig_data = lt_dd35v
-                 iv_name = 'DD35V_TALE' ).
+    io_xml->add( iv_name = 'DD35V_TALE'
+                 ig_data = lt_dd35v ).
     io_xml->add( iv_name = 'DD36M'
                  ig_data = lt_dd36m ).
+
+    serialize_texts( io_xml ).
 
     serialize_longtexts( io_xml         = io_xml
                          iv_longtext_id = c_longtext_id_tabl ).
@@ -822,29 +969,4 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
                  ig_data = ls_extras ).
 
   ENDMETHOD.
-
-  METHOD delete_extras.
-
-    DELETE FROM tddat WHERE tabname = iv_tabname.
-
-  ENDMETHOD.
-
-
-  METHOD read_extras.
-
-    SELECT SINGLE * FROM tddat INTO rs_tabl_extras-tddat WHERE tabname = iv_tabname.
-
-  ENDMETHOD.
-
-
-  METHOD update_extras.
-
-    IF is_tabl_extras-tddat IS INITIAL.
-      delete_extras( iv_tabname = iv_tabname ).
-    ELSE.
-      MODIFY tddat FROM is_tabl_extras-tddat.
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.
