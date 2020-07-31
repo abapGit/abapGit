@@ -70,17 +70,17 @@ CLASS ZCL_ABAPGIT_AJSON IMPLEMENTATION.
 
   METHOD get_item.
 
-    FIELD-SYMBOLS <item> LIKE LINE OF mt_json_tree.
+    FIELD-SYMBOLS <ls_item> LIKE LINE OF mt_json_tree.
     DATA ls_path_name TYPE ty_path_name.
     ls_path_name = lcl_utils=>split_path( iv_path ).
 
     READ TABLE mt_json_tree
-      ASSIGNING <item>
+      ASSIGNING <ls_item>
       WITH KEY
         path = ls_path_name-path
         name = ls_path_name-name.
     IF sy-subrc = 0.
-      GET REFERENCE OF <item> INTO rv_item.
+      GET REFERENCE OF <ls_item> INTO rv_item.
     ENDIF.
 
   ENDMETHOD.
@@ -105,7 +105,7 @@ CLASS ZCL_ABAPGIT_AJSON IMPLEMENTATION.
 
     DATA lv_normalized_path TYPE string.
     DATA lr_node TYPE REF TO ty_node.
-    FIELD-SYMBOLS <item> LIKE LINE OF mt_json_tree.
+    FIELD-SYMBOLS <ls_item> LIKE LINE OF mt_json_tree.
 
     lv_normalized_path = lcl_utils=>normalize_path( iv_path ).
     lr_node = get_item( iv_path ).
@@ -117,22 +117,22 @@ CLASS ZCL_ABAPGIT_AJSON IMPLEMENTATION.
       zcx_abapgit_ajson_error=>raise_json( |Array expected at: { iv_path }| ).
     ENDIF.
 
-    LOOP AT mt_json_tree ASSIGNING <item> WHERE path = lv_normalized_path.
-      CASE <item>-type.
+    LOOP AT mt_json_tree ASSIGNING <ls_item> WHERE path = lv_normalized_path.
+      CASE <ls_item>-type.
         WHEN 'num' OR 'str'.
-          APPEND <item>-value TO rt_string_table.
+          APPEND <ls_item>-value TO rt_string_table.
         WHEN 'null'.
           APPEND '' TO rt_string_table.
         WHEN 'bool'.
           DATA lv_tmp TYPE string.
-          IF <item>-value = 'true'.
+          IF <ls_item>-value = 'true'.
             lv_tmp = abap_true.
           ELSE.
             CLEAR lv_tmp.
           ENDIF.
           APPEND lv_tmp TO rt_string_table.
         WHEN OTHERS.
-          zcx_abapgit_ajson_error=>raise_json( |Cannot convert [{ <item>-type }] to string at [{ <item>-path }{ <item>-name }]| ).
+          zcx_abapgit_ajson_error=>raise_json( |Cannot convert [{ <ls_item>-type }] to string at [{ <ls_item>-path }{ <ls_item>-name }]| ).
       ENDCASE.
     ENDLOOP.
 
@@ -231,12 +231,12 @@ CLASS ZCL_ABAPGIT_AJSON IMPLEMENTATION.
   METHOD zif_abapgit_ajson_reader~members.
 
     DATA lv_normalized_path TYPE string.
-    FIELD-SYMBOLS <item> LIKE LINE OF mt_json_tree.
+    FIELD-SYMBOLS <ls_item> LIKE LINE OF mt_json_tree.
 
     lv_normalized_path = lcl_utils=>normalize_path( iv_path ).
 
-    LOOP AT mt_json_tree ASSIGNING <item> WHERE path = lv_normalized_path.
-      APPEND <item>-name TO rt_members.
+    LOOP AT mt_json_tree ASSIGNING <ls_item> WHERE path = lv_normalized_path.
+      APPEND <ls_item>-name TO rt_members.
     ENDLOOP.
 
   ENDMETHOD.
