@@ -5,56 +5,56 @@ CLASS zcl_abapgit_ajson DEFINITION
 
   PUBLIC SECTION.
 
-    constants ported_from_url type string value 'https://github.com/sbcgua/ajson'.
+    CONSTANTS ported_from_url TYPE string VALUE 'https://github.com/sbcgua/ajson'.
 
-    interfaces zif_abapgit_ajson_reader .
+    INTERFACES zif_abapgit_ajson_reader .
 
-    types:
-      begin of ty_node,
-        path type string,
-        name type string,
-        type type string,
-        value type string,
-        index type i,
-        children type i,
-      end of ty_node .
-    types:
-      ty_nodes_tt type standard table of ty_node with key path name .
-    types:
-      ty_nodes_ts type sorted table of ty_node
-        with unique key path name
-        with non-unique sorted key array_index components path index .
-    types:
-      begin of ty_path_name,
-        path type string,
-        name type string,
-      end of ty_path_name.
+    TYPES:
+      BEGIN OF ty_node,
+        path     TYPE string,
+        name     TYPE string,
+        type     TYPE string,
+        value    TYPE string,
+        index    TYPE i,
+        children TYPE i,
+      END OF ty_node .
+    TYPES:
+      ty_nodes_tt TYPE STANDARD TABLE OF ty_node WITH KEY path name .
+    TYPES:
+      ty_nodes_ts TYPE SORTED TABLE OF ty_node
+        WITH UNIQUE KEY path name
+        WITH NON-UNIQUE SORTED KEY array_index COMPONENTS path index .
+    TYPES:
+      BEGIN OF ty_path_name,
+        path TYPE string,
+        name TYPE string,
+      END OF ty_path_name.
 
-    class-methods parse
-      importing
-        !iv_json type string
-        !iv_freeze type abap_bool default abap_false
-      returning
-        value(ro_instance) type ref to zcl_abapgit_ajson
-      raising
+    CLASS-METHODS parse
+      IMPORTING
+        !iv_json           TYPE string
+        !iv_freeze         TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(ro_instance) TYPE REF TO zcl_abapgit_ajson
+      RAISING
         zcx_abapgit_ajson_error .
 
-    methods freeze.
+    METHODS freeze.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    types:
-      tty_node_stack type standard table of ref to ty_node with default key.
+    TYPES:
+      tty_node_stack TYPE STANDARD TABLE OF REF TO ty_node WITH DEFAULT KEY.
 
-    data mt_json_tree type ty_nodes_ts.
-    data mv_read_only type abap_bool.
+    DATA mt_json_tree TYPE ty_nodes_ts.
+    DATA mv_read_only TYPE abap_bool.
 
-    methods get_item
-      importing
-        iv_path type string
-      returning
-        value(rv_item) type ref to ty_node.
+    METHODS get_item
+      IMPORTING
+        iv_path        TYPE string
+      RETURNING
+        VALUE(rv_item) TYPE REF TO ty_node.
 
 ENDCLASS.
 
@@ -63,225 +63,225 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_AJSON IMPLEMENTATION.
 
 
-  method freeze.
+  METHOD freeze.
     mv_read_only = abap_true.
-  endmethod.
+  ENDMETHOD.
 
 
-  method get_item.
+  METHOD get_item.
 
-    field-symbols <item> like line of mt_json_tree.
-    data ls_path_name type ty_path_name.
+    FIELD-SYMBOLS <item> LIKE LINE OF mt_json_tree.
+    DATA ls_path_name TYPE ty_path_name.
     ls_path_name = lcl_utils=>split_path( iv_path ).
 
-    read table mt_json_tree
-      assigning <item>
-      with key
+    READ TABLE mt_json_tree
+      ASSIGNING <item>
+      WITH KEY
         path = ls_path_name-path
         name = ls_path_name-name.
-    if sy-subrc = 0.
-      get reference of <item> into rv_item.
-    endif.
+    IF sy-subrc = 0.
+      GET REFERENCE OF <item> INTO rv_item.
+    ENDIF.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method parse.
+  METHOD parse.
 
-    data lo_parser type ref to lcl_json_parser.
+    DATA lo_parser TYPE REF TO lcl_json_parser.
 
-    create object ro_instance.
-    create object lo_parser.
+    CREATE OBJECT ro_instance.
+    CREATE OBJECT lo_parser.
     ro_instance->mt_json_tree = lo_parser->parse( iv_json ).
 
-    if iv_freeze = abap_true.
+    IF iv_freeze = abap_true.
       ro_instance->freeze( ).
-    endif.
+    ENDIF.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method zif_abapgit_ajson_reader~array_to_string_table.
+  METHOD zif_abapgit_ajson_reader~array_to_string_table.
 
-    data lv_normalized_path type string.
-    data lr_node type ref to ty_node.
-    field-symbols <item> like line of mt_json_tree.
+    DATA lv_normalized_path TYPE string.
+    DATA lr_node TYPE REF TO ty_node.
+    FIELD-SYMBOLS <item> LIKE LINE OF mt_json_tree.
 
     lv_normalized_path = lcl_utils=>normalize_path( iv_path ).
     lr_node = get_item( iv_path ).
 
-    if lr_node is initial.
+    IF lr_node IS INITIAL.
       zcx_abapgit_ajson_error=>raise_json( |Path not found: { iv_path }| ).
-    endif.
-    if lr_node->type <> 'array'.
+    ENDIF.
+    IF lr_node->type <> 'array'.
       zcx_abapgit_ajson_error=>raise_json( |Array expected at: { iv_path }| ).
-    endif.
+    ENDIF.
 
-    loop at mt_json_tree assigning <item> where path = lv_normalized_path.
-      case <item>-type.
-        when 'num' or 'str'.
-          append <item>-value to rt_string_table.
-        when 'null'.
-          append '' to rt_string_table.
-        when 'bool'.
-          data lv_tmp type string.
-          if <item>-value = 'true'.
+    LOOP AT mt_json_tree ASSIGNING <item> WHERE path = lv_normalized_path.
+      CASE <item>-type.
+        WHEN 'num' OR 'str'.
+          APPEND <item>-value TO rt_string_table.
+        WHEN 'null'.
+          APPEND '' TO rt_string_table.
+        WHEN 'bool'.
+          DATA lv_tmp TYPE string.
+          IF <item>-value = 'true'.
             lv_tmp = abap_true.
-          else.
-            clear lv_tmp.
-          endif.
-          append lv_tmp to rt_string_table.
-        when others.
+          ELSE.
+            CLEAR lv_tmp.
+          ENDIF.
+          APPEND lv_tmp TO rt_string_table.
+        WHEN OTHERS.
           zcx_abapgit_ajson_error=>raise_json( |Cannot convert [{ <item>-type }] to string at [{ <item>-path }{ <item>-name }]| ).
-      endcase.
-    endloop.
+      ENDCASE.
+    ENDLOOP.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method zif_abapgit_ajson_reader~exists.
+  METHOD zif_abapgit_ajson_reader~exists.
 
-    data lv_item type ref to ty_node.
+    DATA lv_item TYPE REF TO ty_node.
     lv_item = get_item( iv_path ).
-    if lv_item is not initial.
+    IF lv_item IS NOT INITIAL.
       rv_exists = abap_true.
-    endif.
+    ENDIF.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method zif_abapgit_ajson_reader~get.
+  METHOD zif_abapgit_ajson_reader~get.
 
-    data lv_item type ref to ty_node.
+    DATA lv_item TYPE REF TO ty_node.
     lv_item = get_item( iv_path ).
-    if lv_item is not initial.
+    IF lv_item IS NOT INITIAL.
       rv_value = lv_item->value.
-    endif.
+    ENDIF.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method zif_abapgit_ajson_reader~get_boolean.
+  METHOD zif_abapgit_ajson_reader~get_boolean.
 
-    data lv_item type ref to ty_node.
+    DATA lv_item TYPE REF TO ty_node.
     lv_item = get_item( iv_path ).
-    if lv_item is initial or lv_item->type = 'null'.
-      return.
-    elseif lv_item->type = 'bool'.
+    IF lv_item IS INITIAL OR lv_item->type = 'null'.
+      RETURN.
+    ELSEIF lv_item->type = 'bool'.
       rv_value = boolc( lv_item->value = 'true' ).
-    elseif lv_item->value is not initial.
+    ELSEIF lv_item->value IS NOT INITIAL.
       rv_value = abap_true.
-    endif.
+    ENDIF.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method zif_abapgit_ajson_reader~get_date.
+  METHOD zif_abapgit_ajson_reader~get_date.
 
-    data lv_item type ref to ty_node.
-    data lv_y type c length 4.
-    data lv_m type c length 2.
-    data lv_d type c length 2.
+    DATA lv_item TYPE REF TO ty_node.
+    DATA lv_y TYPE c LENGTH 4.
+    DATA lv_m TYPE c LENGTH 2.
+    DATA lv_d TYPE c LENGTH 2.
 
     lv_item = get_item( iv_path ).
 
-    if lv_item is not initial and lv_item->type = 'str'.
-      find first occurrence of regex '^(\d{4})-(\d{2})-(\d{2})(T|$)'
-        in lv_item->value
-        submatches lv_y lv_m lv_d.
-      concatenate lv_y lv_m lv_d into rv_value.
-    endif.
+    IF lv_item IS NOT INITIAL AND lv_item->type = 'str'.
+      FIND FIRST OCCURRENCE OF REGEX '^(\d{4})-(\d{2})-(\d{2})(T|$)'
+        IN lv_item->value
+        SUBMATCHES lv_y lv_m lv_d.
+      CONCATENATE lv_y lv_m lv_d INTO rv_value.
+    ENDIF.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method zif_abapgit_ajson_reader~get_integer.
+  METHOD zif_abapgit_ajson_reader~get_integer.
 
-    data lv_item type ref to ty_node.
+    DATA lv_item TYPE REF TO ty_node.
     lv_item = get_item( iv_path ).
-    if lv_item is not initial and lv_item->type = 'num'.
+    IF lv_item IS NOT INITIAL AND lv_item->type = 'num'.
       rv_value = lv_item->value.
-    endif.
+    ENDIF.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method zif_abapgit_ajson_reader~get_number.
+  METHOD zif_abapgit_ajson_reader~get_number.
 
-    data lv_item type ref to ty_node.
+    DATA lv_item TYPE REF TO ty_node.
     lv_item = get_item( iv_path ).
-    if lv_item is not initial and lv_item->type = 'num'.
+    IF lv_item IS NOT INITIAL AND lv_item->type = 'num'.
       rv_value = lv_item->value.
-    endif.
+    ENDIF.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method zif_abapgit_ajson_reader~get_string.
+  METHOD zif_abapgit_ajson_reader~get_string.
 
-    data lv_item type ref to ty_node.
+    DATA lv_item TYPE REF TO ty_node.
     lv_item = get_item( iv_path ).
-    if lv_item is not initial and lv_item->type <> 'null'.
+    IF lv_item IS NOT INITIAL AND lv_item->type <> 'null'.
       rv_value = lv_item->value.
-    endif.
+    ENDIF.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method zif_abapgit_ajson_reader~members.
+  METHOD zif_abapgit_ajson_reader~members.
 
-    data lv_normalized_path type string.
-    field-symbols <item> like line of mt_json_tree.
+    DATA lv_normalized_path TYPE string.
+    FIELD-SYMBOLS <item> LIKE LINE OF mt_json_tree.
 
     lv_normalized_path = lcl_utils=>normalize_path( iv_path ).
 
-    loop at mt_json_tree assigning <item> where path = lv_normalized_path.
-      append <item>-name to rt_members.
-    endloop.
+    LOOP AT mt_json_tree ASSIGNING <item> WHERE path = lv_normalized_path.
+      APPEND <item>-name TO rt_members.
+    ENDLOOP.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method zif_abapgit_ajson_reader~slice.
+  METHOD zif_abapgit_ajson_reader~slice.
 
-    data lo_section         type ref to zcl_abapgit_ajson.
-    data ls_item            like line of mt_json_tree.
-    data lv_normalized_path type string.
-    data ls_path_parts      type ty_path_name.
-    data lv_path_len        type i.
+    DATA lo_section         TYPE REF TO zcl_abapgit_ajson.
+    DATA ls_item            LIKE LINE OF mt_json_tree.
+    DATA lv_normalized_path TYPE string.
+    DATA ls_path_parts      TYPE ty_path_name.
+    DATA lv_path_len        TYPE i.
 
-    create object lo_section.
+    CREATE OBJECT lo_section.
     lv_normalized_path = lcl_utils=>normalize_path( iv_path ).
     lv_path_len        = strlen( lv_normalized_path ).
     ls_path_parts      = lcl_utils=>split_path( lv_normalized_path ).
 
-    loop at mt_json_tree into ls_item.
+    LOOP AT mt_json_tree INTO ls_item.
       " TODO potentially improve performance due to sorted tree (all path started from same prefix go in a row)
-      if strlen( ls_item-path ) >= lv_path_len
-          and substring( val = ls_item-path len = lv_path_len ) = lv_normalized_path.
+      IF strlen( ls_item-path ) >= lv_path_len
+          AND substring( val = ls_item-path len = lv_path_len ) = lv_normalized_path.
         ls_item-path = substring( val = ls_item-path off = lv_path_len - 1 ). " less closing '/'
-        insert ls_item into table lo_section->mt_json_tree.
-      elseif ls_item-path = ls_path_parts-path and ls_item-name = ls_path_parts-name.
-        clear: ls_item-path, ls_item-name. " this becomes a new root
-        insert ls_item into table lo_section->mt_json_tree.
-      endif.
-    endloop.
+        INSERT ls_item INTO TABLE lo_section->mt_json_tree.
+      ELSEIF ls_item-path = ls_path_parts-path AND ls_item-name = ls_path_parts-name.
+        CLEAR: ls_item-path, ls_item-name. " this becomes a new root
+        INSERT ls_item INTO TABLE lo_section->mt_json_tree.
+      ENDIF.
+    ENDLOOP.
 
     ri_json = lo_section.
 
-  endmethod.
+  ENDMETHOD.
 
 
-  method zif_abapgit_ajson_reader~to_abap.
+  METHOD zif_abapgit_ajson_reader~to_abap.
 
-    data lo_to_abap type ref to lcl_json_to_abap.
+    DATA lo_to_abap TYPE REF TO lcl_json_to_abap.
 
-    clear ev_container.
+    CLEAR ev_container.
     lcl_json_to_abap=>bind(
-      changing
+      CHANGING
         c_obj = ev_container
         co_instance = lo_to_abap ).
     lo_to_abap->to_abap( mt_json_tree ).
 
-  endmethod.
+  ENDMETHOD.
 ENDCLASS.
