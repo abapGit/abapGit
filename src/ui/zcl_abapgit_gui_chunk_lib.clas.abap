@@ -62,11 +62,6 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         ix_error       TYPE REF TO zcx_abapgit_exception
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
-    CLASS-METHODS render_success_message_box
-      IMPORTING
-        is_log_entry   TYPE zif_abapgit_log=>ty_log_out
-      RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     CLASS-METHODS parse_change_order_by
       IMPORTING
         iv_query_str       TYPE clike
@@ -414,38 +409,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ro_html->add( |</div>| ).
 
   ENDMETHOD.
-
-  METHOD render_success_message_box.
-
-    DATA:
-      lv_error_text   TYPE string,
-      lv_longtext     TYPE string,
-      lv_program_name TYPE sy-repid,
-      lv_title        TYPE string,
-      lv_text         TYPE string.
-
-
-    CREATE OBJECT ro_html.
-
-    ro_html->add( |<div id="message" class="message-panel success-panel">| ).
-    ro_html->add( |{ is_log_entry-text }| ).
-    ro_html->add( |<div class="float-right">| ).
-
-    ro_html->add_a(
-        iv_txt   = `&#x274c;`
-        iv_act   = `toggleDisplay('message')`
-        iv_class = `close-btn`
-        iv_typ   = zif_abapgit_html=>c_action_type-onclick ).
-
-    ro_html->add( |</div>| ).
-
-    ro_html->add( |<div class="float-right message-panel-commands">| ).
-
-    ro_html->add( |</div>| ).
-    ro_html->add( |</div>| ).
-
-  ENDMETHOD.
-
 
 
   METHOD render_event_as_form.

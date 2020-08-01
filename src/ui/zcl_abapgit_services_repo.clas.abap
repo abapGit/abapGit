@@ -122,7 +122,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
 * and pass decisions to deserialize
     io_repo->deserialize( is_checks = ls_checks
-                          ii_log    = io_repo->create_new_log( 'Pull Log' ) ).
+                          ii_log    = io_repo->get_log( 'Pull Log' ) ).
 
   ENDMETHOD.
 

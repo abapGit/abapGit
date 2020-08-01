@@ -49,7 +49,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
+CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
 
 
   METHOD build_folders.
@@ -192,7 +192,7 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
 
   METHOD constructor.
     mo_repo = io_repo.
-    CREATE OBJECT mi_log TYPE zcl_abapgit_log.
+    mi_log = zcl_abapgit_log=>get_repo_log( io_repo->get_key( ) ).
   ENDMETHOD.
 
 

@@ -120,20 +120,11 @@ CLASS zcl_abapgit_repo DEFINITION
         !iv_offline TYPE abap_bool
       RAISING
         zcx_abapgit_exception .
-    METHODS create_new_log
-      IMPORTING
-        !iv_title     TYPE string OPTIONAL
-      RETURNING
-        VALUE(ri_log) TYPE REF TO zif_abapgit_log .
     METHODS get_log
-      RETURNING
-        VALUE(ri_log) TYPE REF TO zif_abapgit_log .
-    METHODS get_or_create_log
       IMPORTING
         !iv_title     TYPE string OPTIONAL
       RETURNING
         VALUE(ri_log) TYPE REF TO zif_abapgit_log .
-    METHODS reset_log .
     METHODS refresh_local_object
       IMPORTING
         !iv_obj_type TYPE tadir-object
@@ -246,16 +237,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
     ms_data = is_data.
     mv_request_remote_refresh = abap_true.
-
-  ENDMETHOD.
-
-
-  METHOD create_new_log.
-
-    CREATE OBJECT mi_log TYPE zcl_abapgit_log.
-    mi_log->set_title( iv_title ).
-
-    ri_log = mi_log.
 
   ENDMETHOD.
 
@@ -501,16 +482,16 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD get_log.
-    ri_log = mi_log.
-  ENDMETHOD.
 
-
-  METHOD get_or_create_log.
-
-    ri_log = me->get_log( ).
-    IF ri_log IS NOT BOUND.
-      ri_log = me->create_new_log( iv_title ).
+    IF mi_log IS NOT BOUND.
+      mi_log = zcl_abapgit_log=>get_repo_log( me->get_key( ) ).
     ENDIF.
+
+    IF iv_title IS SUPPLIED.
+      mi_log->set_title( iv_title ).
+    ENDIF.
+
+    ri_log = mi_log.
 
   ENDMETHOD.
 
@@ -590,7 +571,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     mv_request_local_refresh = abap_true.
     reset_remote( ).
 
-    CLEAR mi_log.
+    me->get_log( )->clear( ).
 
     IF iv_drop_cache = abap_true.
       CLEAR: mt_local.
@@ -638,11 +619,6 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     mv_request_local_refresh = abap_true.
     get_files_local( ).
 
-  ENDMETHOD.
-
-
-  METHOD reset_log.
-    CLEAR mi_log.
   ENDMETHOD.
 
 

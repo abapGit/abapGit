@@ -51,8 +51,6 @@ CLASS ltcl_dangerous IMPLEMENTATION.
                    <ls_tadir>  LIKE LINE OF lt_tadir,
                    <lv_type>   LIKE LINE OF lt_types.
 
-    CREATE OBJECT li_log TYPE zcl_abapgit_log.
-
     zcl_abapgit_factory=>get_sap_package( c_package )->create_local( ).
 
     lt_types = zcl_abapgit_objects=>supported_list( ).
@@ -61,9 +59,10 @@ CLASS ltcl_dangerous IMPLEMENTATION.
       iv_url         = 'https://github.com/abapGit/Test-Objects.git'
       iv_branch_name = 'refs/heads/master'
       iv_package     = c_package ).
+
     lo_repo->status( ).
     lo_repo->deserialize( is_checks = ls_checks
-                          ii_log    = li_log ).
+                          ii_log    = lo_repo->get_log( ) ).
 
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( c_package ).
     LOOP AT lt_types ASSIGNING <lv_type>.

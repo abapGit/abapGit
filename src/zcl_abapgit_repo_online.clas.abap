@@ -319,7 +319,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     reset_status( ).
 
-    lv_repo_log = me->get_or_create_log( |Push| ).
+    lv_repo_log = me->get_log( |Push| ).
     ls_item-obj_name = ls_push-branch.
     ls_item-obj_type = 'SHA1'.
     lv_repo_log->add_success( iv_msg  = |Commit { ls_push-branch } pushed to { get_url( ) }|

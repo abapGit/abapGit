@@ -280,7 +280,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
     DELETE lt_lines WHERE severity <> 'E'.
 
-    CREATE OBJECT li_log TYPE zcl_abapgit_log.
+    li_log = zcl_abapgit_log=>get_log( ).
 
     LOOP AT lt_lines ASSIGNING <ls_line>.
       li_log->add( <ls_line>-line ).

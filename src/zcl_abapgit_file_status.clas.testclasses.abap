@@ -53,7 +53,7 @@ CLASS ltcl_run_checks IMPLEMENTATION.
 
   METHOD setup.
 
-    CREATE OBJECT mi_log TYPE zcl_abapgit_log.
+    mi_log = zcl_abapgit_log=>get_log( 'File State' ).
 
     mo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
     mo_dot->set_starting_folder( '/' ).

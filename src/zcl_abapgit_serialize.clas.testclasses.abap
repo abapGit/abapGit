@@ -109,13 +109,14 @@ CLASS ltcl_serialize IMPLEMENTATION.
     <ls_tadir>-object   = 'ABCD'.
     <ls_tadir>-obj_name = 'OBJECT'.
 
-    CREATE OBJECT li_log1 TYPE zcl_abapgit_log.
+    li_log1 = zcl_abapgit_log=>get_log( 'LOG1' ).
+
     mo_cut->serialize(
       it_tadir            = lt_tadir
       ii_log              = li_log1
       iv_force_sequential = abap_true ).
 
-    CREATE OBJECT li_log2 TYPE zcl_abapgit_log.
+    li_log2  = zcl_abapgit_log=>get_log( 'LOG2' ).
     mo_cut->serialize(
       it_tadir            = lt_tadir
       ii_log              = li_log2

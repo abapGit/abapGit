@@ -70,7 +70,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
+CLASS zcl_abapgit_zip IMPLEMENTATION.
 
 
   METHOD encode_files.
@@ -101,7 +101,7 @@ CLASS ZCL_ABAPGIT_ZIP IMPLEMENTATION.
           lv_package TYPE devclass.
 
 
-    CREATE OBJECT li_log TYPE zcl_abapgit_log.
+    li_log = zcl_abapgit_log=>get_log( ).
 
     lv_package = io_repo->get_package( ).
 

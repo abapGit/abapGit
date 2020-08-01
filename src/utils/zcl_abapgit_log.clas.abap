@@ -1,10 +1,16 @@
 CLASS zcl_abapgit_log DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PROTECTED.
 
   PUBLIC SECTION.
 
     INTERFACES zif_abapgit_log .
+    CLASS-METHODS get_repo_log IMPORTING iv_repo_key      TYPE zif_abapgit_persistence=>ty_value
+                                         iv_log_title     TYPE string OPTIONAL
+                               RETURNING VALUE(rv_result) TYPE REF TO zif_abapgit_log.
+    CLASS-METHODS get_log IMPORTING iv_log_title     TYPE string OPTIONAL
+                          RETURNING VALUE(rv_result) TYPE REF TO zif_abapgit_log.
+    METHODS constructor IMPORTING iv_title TYPE string.
 
   PROTECTED SECTION.
 
@@ -20,11 +26,15 @@ CLASS zcl_abapgit_log DEFINITION
         item      TYPE zif_abapgit_definitions=>ty_item,
         exception TYPE REF TO cx_root,
       END OF ty_log .
+    TYPES: BEGIN OF ty_repo_log_instance,
+             repo_key TYPE zif_abapgit_persistence=>ty_value,
+             instance TYPE REF TO zif_abapgit_log,
+           END OF ty_repo_log_instance,
+           ty_repo_log_instances TYPE STANDARD TABLE OF ty_repo_log_instance.
 
-    DATA:
-      mt_log TYPE STANDARD TABLE OF ty_log WITH DEFAULT KEY .
+    DATA mt_log TYPE STANDARD TABLE OF ty_log WITH DEFAULT KEY .
     DATA mv_title TYPE string .
-
+    CLASS-DATA mt_repo_logs TYPE ty_repo_log_instances.
     METHODS get_messages_status
       IMPORTING
         !it_msg          TYPE zif_abapgit_log=>tty_msg
@@ -37,6 +47,38 @@ ENDCLASS.
 
 CLASS zcl_abapgit_log IMPLEMENTATION.
 
+  METHOD constructor.
+
+    me->zif_abapgit_log~set_title( iv_title = iv_title ).
+
+  ENDMETHOD.
+
+  METHOD get_log.
+
+    CREATE OBJECT rv_result TYPE zcl_abapgit_log EXPORTING iv_title = iv_log_title.
+
+  ENDMETHOD.
+
+  METHOD get_repo_log.
+
+    DATA: ls_repo_log TYPE zcl_abapgit_log=>ty_repo_log_instance.
+    FIELD-SYMBOLS: <ls_repo_log> TYPE zcl_abapgit_log=>ty_repo_log_instance.
+
+    READ TABLE mt_repo_logs ASSIGNING <ls_repo_log> WITH KEY repo_key = iv_repo_key.
+    IF sy-subrc <> 0.
+      ls_repo_log-repo_key = iv_repo_key.
+      CREATE OBJECT ls_repo_log-instance TYPE zcl_abapgit_log EXPORTING iv_title = iv_log_title.
+      INSERT ls_repo_log INTO TABLE mt_repo_logs ASSIGNING <ls_repo_log>.
+    ELSE.
+      IF iv_log_title IS SUPPLIED.
+        rv_result->set_title( iv_log_title ).
+      ENDIF.
+    ENDIF.
+
+    rv_result = <ls_repo_log>-instance.
+
+  ENDMETHOD.
+
 
   METHOD get_messages_status.
 
@@ -46,17 +88,13 @@ CLASS zcl_abapgit_log IMPLEMENTATION.
       CASE lr_msg->type.
         WHEN 'E' OR 'A' OR 'X'.
           rv_status = 'E'. "not okay
-          EXIT.
+          RETURN.
         WHEN 'W'.
           rv_status = 'W'. "maybe
-          CONTINUE.
         WHEN 'S' OR 'I'.
           IF rv_status <> 'W'.
             rv_status = 'S'. "okay
           ENDIF.
-          CONTINUE.
-        WHEN OTHERS. "unknown
-          CONTINUE.
       ENDCASE.
     ENDLOOP.
 
@@ -201,26 +239,13 @@ CLASS zcl_abapgit_log IMPLEMENTATION.
 
 
   METHOD zif_abapgit_log~get_status.
+    DATA lt_msg TYPE zif_abapgit_log=>tty_msg.
 
-    DATA lr_log TYPE REF TO ty_log.
-    rv_status = 'S'.
-    LOOP AT mt_log REFERENCE INTO lr_log.
-      CASE lr_log->msg-type.
-        WHEN 'E' OR 'A' OR 'X'.
-          rv_status = 'E'. "not okay
-          EXIT.
-        WHEN 'W'.
-          rv_status = 'W'. "maybe
-          CONTINUE.
-        WHEN 'S' OR 'I'.
-          IF rv_status <> 'W'.
-            rv_status = 'S'. "okay
-          ENDIF.
-          CONTINUE.
-        WHEN OTHERS. "unknown
-          CONTINUE.
-      ENDCASE.
+    LOOP AT me->mt_log ASSIGNING FIELD-SYMBOL(<ls_log>).
+      APPEND <ls_log>-msg TO lt_msg.
     ENDLOOP.
+
+    rv_status = me->get_messages_status( it_msg = lt_msg ).
 
   ENDMETHOD.
 
@@ -242,6 +267,6 @@ CLASS zcl_abapgit_log IMPLEMENTATION.
 
 
   METHOD zif_abapgit_log~set_title.
-    mv_title = iv_title.
+    me->mv_title = iv_title.
   ENDMETHOD.
 ENDCLASS.
