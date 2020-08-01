@@ -17,7 +17,6 @@ CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     "! get additional data like table authorization group
     "! @parameter iv_tabname | name of the table
-    "! @parameter is_tabl_extras | additional table data
     METHODS read_extras IMPORTING iv_tabname            TYPE ddobjname
                         RETURNING VALUE(rs_tabl_extras) TYPE ty_tabl_extras.
 
