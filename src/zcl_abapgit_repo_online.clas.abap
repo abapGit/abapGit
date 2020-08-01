@@ -361,13 +361,11 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
           off = lv_offs + 1 ) ).
         set( iv_switched_origin = '' ).
       ENDIF.
+    ELSEIF ms_data-switched_origin IS INITIAL.
+      set( iv_switched_origin = ms_data-url && '@' && ms_data-branch_name ).
+      set_url( iv_url ).
     ELSE.
-      IF ms_data-switched_origin IS INITIAL.
-        set( iv_switched_origin = ms_data-url && '@' && ms_data-branch_name ).
-        set_url( iv_url ).
-      ELSE.
-        zcx_abapgit_exception=>raise( 'Cannot switch origin twice' ).
-      ENDIF.
+      zcx_abapgit_exception=>raise( 'Cannot switch origin twice' ).
     ENDIF.
 
   ENDMETHOD.
