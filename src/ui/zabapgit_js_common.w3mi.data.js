@@ -240,6 +240,13 @@ function RepoOverViewHelper() {
 
 RepoOverViewHelper.prototype.toggleRepoListDetail = function (forceDisplay) {
   if (this.detailCssClass) {
+    this.toggleItemsDetail(forceDisplay);
+    this.saveFilter();
+  }
+};
+
+RepoOverViewHelper.prototype.toggleItemsDetail = function(forceDisplay){
+  if (this.detailCssClass) {
     this.isDetailsDisplayed = forceDisplay || !this.isDetailsDisplayed;
     this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
     var icon = document.getElementById("icon-filter-detail");
@@ -258,6 +265,11 @@ RepoOverViewHelper.prototype.toggleFilterIcon = function (icon, isEnabled) {
 };
 
 RepoOverViewHelper.prototype.toggleRepoListFavorites = function (forceDisplay) {
+  this.toggleItemsFavorites(forceDisplay);
+  this.saveFilter();
+};
+
+RepoOverViewHelper.prototype.toggleItemsFavorites = function(forceDisplay){
   this.isOnlyFavoritesDisplayed = forceDisplay || !this.isOnlyFavoritesDisplayed;
   var repositories = document.getElementsByClassName("repo");
   var icon = document.getElementById("icon-filter-favorite");
@@ -272,34 +284,31 @@ RepoOverViewHelper.prototype.toggleRepoListFavorites = function (forceDisplay) {
       repo.style.display = "";
     }
   }
-
 };
 
 RepoOverViewHelper.prototype.setHooks = function () {
-  window.onbeforeunload = this.onPageUnload.bind(this);
   window.onload = this.onPageLoad.bind(this);
 };
 
-RepoOverViewHelper.prototype.onPageUnload = function () {
-  if (!window.sessionStorage) return;
+RepoOverViewHelper.prototype.saveFilter = function () {
+  if (!window.localStorage) return;
   var data = {
     isDetailsDisplayed: this.isDetailsDisplayed,
     isOnlyFavoritesDisplayed: this.isOnlyFavoritesDisplayed
   };
-  window.sessionStorage.setItem(this.pageId, JSON.stringify(data));
+  window.localStorage.setItem(this.pageId, JSON.stringify(data));
 };
 
 RepoOverViewHelper.prototype.onPageLoad = function () {
-  var data = window.sessionStorage && JSON.parse(window.sessionStorage.getItem(this.pageId));
+  var data = window.localStorage && JSON.parse(window.localStorage.getItem(this.pageId));
   if (data) {
     if (data.isDetailsDisplayed) {
-      this.toggleRepoListDetail(true);
+      this.toggleItemsDetail(true);
     }
     if (data.isOnlyFavoritesDisplayed) {
-      this.toggleRepoListFavorites(true);
+      this.toggleItemsFavorites(true);
     }
   }
-  debugOutput("RepoOverViewHelper.onPageLoad: " + ((data) ? "from Storage" : "initial state"));
 };
 
 /**********************************************************
