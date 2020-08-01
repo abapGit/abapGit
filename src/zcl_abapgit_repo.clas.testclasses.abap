@@ -56,7 +56,7 @@ CLASS ltcl_find_remote_dot_abapgit IMPLEMENTATION.
   METHOD given_any_repo.
 
     DATA: ls_data TYPE zif_abapgit_persistence=>ty_repo.
-break-POINT.
+
     ls_data-key = c_dummy_repo_key.
 
     " online/offline doesn't matter...

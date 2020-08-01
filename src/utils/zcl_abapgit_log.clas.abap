@@ -1,4 +1,4 @@
-CLASS zcl_abapgit_log DEFINITION
+CLASS zcl_ABAPGIT_LOG DEFINITION
   PUBLIC
   CREATE PROTECTED.
 
@@ -240,8 +240,9 @@ CLASS zcl_abapgit_log IMPLEMENTATION.
 
   METHOD zif_abapgit_log~get_status.
     DATA lt_msg TYPE zif_abapgit_log=>tty_msg.
+    FIELD-SYMBOLS <ls_log> TYPE zcl_abapgit_log=>ty_log.
 
-    LOOP AT me->mt_log ASSIGNING FIELD-SYMBOL(<ls_log>).
+    LOOP AT me->mt_log ASSIGNING <ls_log>.
       APPEND <ls_log>-msg TO lt_msg.
     ENDLOOP.
 
