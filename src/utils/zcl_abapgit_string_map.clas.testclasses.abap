@@ -1,4 +1,4 @@
-CLASS lcl_sm_test DEFINITION
+CLASS ltcl_sm_test DEFINITION
   FINAL
   FOR TESTING
   DURATION SHORT
@@ -8,7 +8,7 @@ CLASS lcl_sm_test DEFINITION
     METHODS freeze FOR TESTING RAISING zcx_abapgit_exception.
 ENDCLASS.
 
-CLASS lcl_sm_test IMPLEMENTATION.
+CLASS ltcl_sm_test IMPLEMENTATION.
 
   METHOD simple.
 

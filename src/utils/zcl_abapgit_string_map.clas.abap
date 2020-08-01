@@ -9,53 +9,54 @@ CLASS zcl_abapgit_string_map DEFINITION
       BEGIN OF ty_entry,
         k TYPE string,
         v TYPE string,
-      END OF ty_entry .
+      END OF ty_entry.
     TYPES:
-      tty_entries TYPE STANDARD TABLE OF ty_entry WITH KEY k .
+      tty_entries TYPE STANDARD TABLE OF ty_entry WITH KEY k.
     TYPES:
-      tts_entries TYPE SORTED TABLE OF ty_entry WITH UNIQUE KEY k .
+      tts_entries TYPE SORTED TABLE OF ty_entry WITH UNIQUE KEY k.
 
     CLASS-METHODS create
       RETURNING
-        VALUE(ro_instance) TYPE REF TO zcl_abapgit_string_map .
+        VALUE(ro_instance) TYPE REF TO zcl_abapgit_string_map.
     METHODS get
       IMPORTING
-        !iv_key       TYPE string
+        iv_key       TYPE string
       RETURNING
-        VALUE(rv_val) TYPE string .
+        VALUE(rv_val) TYPE string.
     METHODS has
       IMPORTING
-        !iv_key       TYPE string
+        iv_key       TYPE string
       RETURNING
-        VALUE(rv_has) TYPE abap_bool .
+        VALUE(rv_has) TYPE abap_bool.
     METHODS set
       IMPORTING
-        !iv_key TYPE string
-        !iv_val TYPE string OPTIONAL
+        iv_key TYPE string
+        iv_val TYPE string OPTIONAL
       RETURNING
         VALUE(ro_map) TYPE REF TO zcl_abapgit_string_map
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS size
       RETURNING
-        VALUE(rv_size) TYPE i .
+        VALUE(rv_size) TYPE i.
     METHODS is_empty
       RETURNING
-        VALUE(rv_yes) TYPE abap_bool .
+        VALUE(rv_yes) TYPE abap_bool.
     METHODS delete
       IMPORTING
-        !iv_key TYPE string
+        iv_key TYPE string
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS clear
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS to_abap
       CHANGING
         !cs_container TYPE any
       RAISING
-        zcx_abapgit_exception .
-    METHODS freeze .
+        zcx_abapgit_exception.
+    METHODS freeze.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA mt_entries TYPE tts_entries.
