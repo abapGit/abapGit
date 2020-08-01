@@ -129,7 +129,13 @@ CLASS zcl_abapgit_gui_page_view_repo DEFINITION
                   io_tb_tag         TYPE REF TO zcl_abapgit_html_toolbar
                   io_tb_advanced    TYPE REF TO zcl_abapgit_html_toolbar
         RETURNING VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
-        RAISING   zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception,
+      switch_to_pr
+        IMPORTING
+          it_fields TYPE tihttpnvp OPTIONAL
+          iv_revert TYPE abap_bool OPTIONAL
+        RAISING
+          zcx_abapgit_exception.
 
     METHODS _add_col
       IMPORTING
@@ -1104,10 +1110,41 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD switch_to_pr.
+
+    DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
+    DATA ls_field LIKE LINE OF it_fields.
+    DATA ls_pull LIKE LINE OF mt_pulls.
+
+    IF mo_repo->is_offline( ) = abap_true.
+      zcx_abapgit_exception=>raise( 'Unexpected PR switch for offline repo' ).
+    ENDIF.
+
+    lo_repo_online ?= mo_repo.
+
+    IF iv_revert = abap_true.
+      lo_repo_online->switch_origin( '' ).
+    ELSE.
+      READ TABLE it_fields INTO ls_field WITH KEY name = 'NUMBER'.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'PR number not found in query' ).
+      ENDIF.
+
+      READ TABLE mt_pulls INTO ls_pull WITH KEY number = ls_field-value.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( 'PR number not found in PR list' ).
+      ENDIF.
+
+      lo_repo_online->switch_origin( ls_pull-head_url ).
+      lo_repo_online->set_branch_name( |refs/heads/{ ls_pull-head_branch }| ). " TODO refactor
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA lv_path TYPE string.
-    DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
 
     CASE iv_action.
       WHEN zif_abapgit_definitions=>c_action-go_repo. " Switch to another repo
@@ -1160,29 +1197,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-repo_switch_origin_to_pr.
-        DATA lt_fields TYPE tihttpnvp.
-        DATA ls_field LIKE LINE OF lt_fields.
-        lt_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( iv_getdata ).
-        READ TABLE lt_fields INTO ls_field WITH KEY name = 'NUMBER'.
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( 'PR number not found in query' ).
-        ENDIF.
-
-        DATA ls_pull LIKE LINE OF mt_pulls.
-        READ TABLE mt_pulls INTO ls_pull WITH KEY number = ls_field-value.
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( 'PR number not found in PR list' ).
-        ENDIF.
-
-        lo_repo_online ?= mo_repo.
-        lo_repo_online->switch_origin( ls_pull-head_url ).
-        lo_repo_online->set_branch_name( |refs/heads/{ ls_pull-head_branch }| ). " TODO refactor
-        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+        switch_to_pr( it_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( iv_getdata ) ).
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-repo_reset_origin.
-        lo_repo_online ?= mo_repo.
-        lo_repo_online->switch_origin( '' ).
-        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+        switch_to_pr( iv_revert = abap_true ).
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN OTHERS.
 
