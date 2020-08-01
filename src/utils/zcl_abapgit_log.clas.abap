@@ -1,4 +1,4 @@
-CLASS zcl_ABAPGIT_LOG DEFINITION
+CLASS zcl_abapgit_log DEFINITION
   PUBLIC
   CREATE PROTECTED.
 
@@ -34,7 +34,7 @@ CLASS zcl_ABAPGIT_LOG DEFINITION
 
     DATA mt_log TYPE STANDARD TABLE OF ty_log WITH DEFAULT KEY .
     DATA mv_title TYPE string .
-    CLASS-DATA mt_repo_logs TYPE ty_repo_log_instances.
+    CLASS-DATA gt_repo_logs TYPE ty_repo_log_instances.
     METHODS get_messages_status
       IMPORTING
         !it_msg          TYPE zif_abapgit_log=>tty_msg
@@ -61,14 +61,14 @@ CLASS zcl_abapgit_log IMPLEMENTATION.
 
   METHOD get_repo_log.
 
-    DATA: ls_repo_log TYPE zcl_abapgit_log=>ty_repo_log_instance.
-    FIELD-SYMBOLS: <ls_repo_log> TYPE zcl_abapgit_log=>ty_repo_log_instance.
+    DATA: ls_repo_log TYPE ty_repo_log_instance.
+    FIELD-SYMBOLS: <ls_repo_log> TYPE ty_repo_log_instance.
 
-    READ TABLE mt_repo_logs ASSIGNING <ls_repo_log> WITH KEY repo_key = iv_repo_key.
+    READ TABLE gt_repo_logs ASSIGNING <ls_repo_log> WITH KEY repo_key = iv_repo_key.
     IF sy-subrc <> 0.
       ls_repo_log-repo_key = iv_repo_key.
       CREATE OBJECT ls_repo_log-instance TYPE zcl_abapgit_log EXPORTING iv_title = iv_log_title.
-      INSERT ls_repo_log INTO TABLE mt_repo_logs ASSIGNING <ls_repo_log>.
+      INSERT ls_repo_log INTO TABLE gt_repo_logs ASSIGNING <ls_repo_log>.
     ELSE.
       IF iv_log_title IS SUPPLIED.
         rv_result->set_title( iv_log_title ).
@@ -240,7 +240,7 @@ CLASS zcl_abapgit_log IMPLEMENTATION.
 
   METHOD zif_abapgit_log~get_status.
     DATA lt_msg TYPE zif_abapgit_log=>tty_msg.
-    FIELD-SYMBOLS <ls_log> TYPE zcl_abapgit_log=>ty_log.
+    FIELD-SYMBOLS <ls_log> TYPE ty_log.
 
     LOOP AT me->mt_log ASSIGNING <ls_log>.
       APPEND <ls_log>-msg TO lt_msg.
