@@ -69,8 +69,8 @@ CLASS zcl_abapgit_log IMPLEMENTATION.
       ls_repo_log-repo_key = iv_repo_key.
       CREATE OBJECT ls_repo_log-instance TYPE zcl_abapgit_log EXPORTING iv_title = iv_log_title.
       INSERT ls_repo_log INTO TABLE gt_repo_logs ASSIGNING <ls_repo_log>.
-    ELSEif iv_log_title IS SUPPLIED.
-        <ls_repo_log>-instance->set_title( iv_log_title ).
+    ELSEIF iv_log_title IS SUPPLIED.
+      <ls_repo_log>-instance->set_title( iv_log_title ).
     ENDIF.
 
     rv_result = <ls_repo_log>-instance.
