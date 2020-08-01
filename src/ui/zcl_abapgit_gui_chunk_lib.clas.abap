@@ -116,6 +116,18 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
       RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
 
   PROTECTED SECTION.
+    CLASS-METHODS render_repo_top_commit_hash
+      IMPORTING
+        iv_html        TYPE REF TO zcl_abapgit_html
+        iv_repo_online TYPE REF TO zcl_abapgit_repo_online
+        iv_repo_url    TYPE zif_abapgit_persistence=>ty_repo-url
+      RAISING
+        zcx_abapgit_exception.
+    CLASS-METHODS get_commit_display_url
+      IMPORTING iv_url        TYPE zif_abapgit_persistence=>ty_repo-url
+                iv_hash       TYPE zif_abapgit_definitions=>ty_sha1
+      RETURNING VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url
+      RAISING   zcx_abapgit_exception.
   PRIVATE SECTION.
     CLASS-DATA gv_time_zone TYPE timezone.
 
@@ -139,6 +151,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         iv_program_name                   TYPE sy-repid
       RETURNING
         VALUE(rv_normalized_program_name) TYPE string.
+
 ENDCLASS.
 
 
@@ -664,7 +677,10 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
           lo_pback             TYPE REF TO zcl_abapgit_persist_background,
           lv_hint              TYPE string,
           lv_icon              TYPE string,
-          lv_package_jump_data TYPE string.
+          lv_package_jump_data TYPE string,
+          lv_repo_url          TYPE zif_abapgit_persistence=>ty_repo-url,
+          lv_commit_hash       TYPE zif_abapgit_definitions=>ty_sha1,
+          lv_commit_short_hash TYPE zif_abapgit_definitions=>ty_sha1.
 
     CREATE OBJECT ro_html.
     CREATE OBJECT lo_pback.
@@ -688,11 +704,15 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
 
-      ro_html->add_a( iv_txt   = lo_repo_online->get_url( )
+      lv_repo_url = lo_repo_online->get_url( ).
+      ro_html->add_a( iv_txt   = lv_repo_url
                       iv_act   = |{ zif_abapgit_definitions=>c_action-url }?|
-                              && |{ lo_repo_online->get_url( ) }|
+                              && lv_repo_url
                       iv_class = |url| ).
 
+      render_repo_top_commit_hash( iv_html        = ro_html
+                                   iv_repo_online = lo_repo_online
+                                   iv_repo_url    = lv_repo_url ).
     ENDIF.
 
     " News
@@ -767,6 +787,44 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     ro_html->add( '</td>' ).
     ro_html->add( '</tr></table>' ).
+
+  ENDMETHOD.
+
+  METHOD render_repo_top_commit_hash.
+
+    DATA: lv_commit_hash       TYPE zif_abapgit_definitions=>ty_sha1,
+          lv_commit_short_hash TYPE zif_abapgit_definitions=>ty_sha1,
+          lv_repo_url          TYPE zif_abapgit_persistence=>ty_repo-url,
+          lv_display_url       TYPE zif_abapgit_persistence=>ty_repo-url.
+
+    lv_repo_url = iv_repo_url.
+
+    lv_commit_hash = iv_repo_online->get_sha1_remote( ).
+    lv_commit_short_hash = lv_commit_hash(10).
+
+    TRY.
+        lv_display_url = get_commit_display_url( iv_url  = lv_repo_url
+                                                 iv_hash = lv_commit_hash ).
+
+        iv_html->add_a( iv_txt   = |{ lv_commit_short_hash }|
+                        iv_act   = |{ zif_abapgit_definitions=>c_action-url }?|
+                                && lv_display_url
+                        iv_class = |url| ).
+      CATCH zcx_abapgit_exception.
+        iv_html->add( |<span class="url">{ lv_commit_short_hash }</span>|  ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD get_commit_display_url.
+
+    rv_url = iv_url.
+    FIND REGEX '^https:\/\/(www\.)?github.com\/' IN rv_url.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |provider not yet supported| ).
+    ENDIF.
+    REPLACE REGEX '\.git$' IN rv_url WITH space.
+    rv_url = rv_url && |/commit/| && iv_hash.
 
   ENDMETHOD.
 
