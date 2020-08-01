@@ -286,7 +286,7 @@ CLASS ltcl_reader_test DEFINITION FINAL
     METHODS members FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS slice FOR TESTING RAISING zcx_abapgit_ajson_error.
     METHODS array_to_string_table FOR TESTING RAISING zcx_abapgit_ajson_error.
-    METHODS get_date FOR TESTING RAISING zcx_ajson_error.
+    METHODS get_date FOR TESTING RAISING zcx_abapgit_ajson_error.
 
 ENDCLASS.
 
