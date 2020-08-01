@@ -240,7 +240,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
           iv_act = |{ c_actions-repo_reset_origin }| ).
       ELSEIF lines( mt_pulls ) > 0.
         ro_advanced_dropdown->add(
-          iv_txt = 'Switched origin to PR [press t]'
+          iv_txt = 'Switched origin to PR [press F4]'
           iv_typ = zif_abapgit_html=>c_action_type-onclick
           iv_act = |gGoRepoPalette.toggleDisplay(true)| ).
       ENDIF.
@@ -1101,7 +1101,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
 
       ri_html->add( |var gGoRepoPalette = new CommandPalette(createPREnumerator(prList, "{
         c_actions-repo_switch_origin_to_pr }"), \{| ).
-      ri_html->add( '  toggleKey: "t",' ).
+      ri_html->add( '  toggleKey: "F4",' ).
       ri_html->add( '  hotkeyDescription: "Switch to PR ..."' ).
       ri_html->add( '});' ).
 
