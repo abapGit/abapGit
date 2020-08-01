@@ -20,12 +20,12 @@ CLASS zcl_abapgit_string_map DEFINITION
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_string_map.
     METHODS get
       IMPORTING
-        iv_key       TYPE string
+        iv_key        TYPE string
       RETURNING
         VALUE(rv_val) TYPE string.
     METHODS has
       IMPORTING
-        iv_key       TYPE string
+        iv_key        TYPE string
       RETURNING
         VALUE(rv_has) TYPE abap_bool.
     METHODS set
