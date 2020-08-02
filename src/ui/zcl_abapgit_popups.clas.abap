@@ -100,7 +100,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
+CLASS zcl_abapgit_popups IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -504,6 +504,8 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       ENDIF.
       ASSERT <ls_branch> IS ASSIGNED.
       rs_branch = lo_branches->find_by_name( <ls_branch>-name ).
+      MESSAGE |Branch switched from { zcl_abapgit_git_branch_list=>get_display_name( iv_default_branch ) } to {
+        zcl_abapgit_git_branch_list=>get_display_name( rs_branch-name ) } | TYPE 'S'.
     ENDIF.
 
   ENDMETHOD.
@@ -587,9 +589,11 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     TRY.
 
-        _popup_3_get_values( EXPORTING iv_popup_title = 'Create branch' "#EC NOTEXT
-                             IMPORTING ev_value_1     = lv_name
-                             CHANGING  ct_fields      = lt_fields ).
+        _popup_3_get_values(
+          EXPORTING iv_popup_title = |Create branch from {
+            zcl_abapgit_git_branch_list=>get_display_name( iv_source_branch_name ) }|
+          IMPORTING ev_value_1     = lv_name
+          CHANGING  ct_fields      = lt_fields ).
 
         ev_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name(
               zcl_abapgit_git_branch_list=>normalize_branch_name( lv_name ) ).
