@@ -192,7 +192,7 @@ CLASS zcl_abapgit_repo_content_list IMPLEMENTATION.
 
   METHOD constructor.
     mo_repo = io_repo.
-    mi_log = zcl_abapgit_log=>get_repo_log( io_repo->get_key( ) ).
+    mi_log = zcl_abapgit_log=>get_log( ).
   ENDMETHOD.
 
 
