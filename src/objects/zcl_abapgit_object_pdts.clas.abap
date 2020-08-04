@@ -7,11 +7,9 @@ CLASS zcl_abapgit_object_pdts DEFINITION
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
-    METHODS:
-      constructor
-        IMPORTING
-          !is_item     TYPE zif_abapgit_definitions=>ty_item
-          !iv_language TYPE spras.
+
+    METHODS constructor IMPORTING is_item     TYPE zif_abapgit_definitions=>ty_item
+                                  iv_language TYPE spras.
 
     TYPES:
       BEGIN OF ty_task,
@@ -27,14 +25,13 @@ CLASS zcl_abapgit_object_pdts DEFINITION
         descriptions               TYPE wstexts,
       END OF ty_task .
 
+  PRIVATE SECTION.
+
     CONSTANTS:
       c_subty_task_description TYPE hr_s_subty VALUE '0120',
       c_object_type_task       TYPE hr_sotype VALUE 'TS'.
 
-    DATA:
-      mv_objid TYPE hrobject-objid.
-
-  PRIVATE SECTION.
+    DATA mv_objid TYPE hrobjid. "hrobject-objid.
 
     METHODS check_subrc_for IMPORTING iv_call TYPE clike OPTIONAL
                             RAISING   zcx_abapgit_exception.
@@ -76,45 +73,9 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
                    <ls_starting_events_binding> TYPE hrs1212,
                    <ls_term_events_binding>     TYPE hrs1212.
 
-* https://app.assembla.com/spaces/saplink-plugins/subversion/source/HEAD/trunk/Workflow
-*    call function 'RH_TASK_ATTRIBUTES_RUNTIME'
-*      EXPORTING
-*        act_object_ext          =
-**        act_langu               = SY-LANGU
-**        update_buffer           =
-**      IMPORTING
-**        task_attributes         =
-**        container               =     " Container - Implementation of a 'Collection'
-**        task_init_bind          =     " Table with Binding Definitions, Persistent Form
-**        task_om_bind            =     " Table with Binding Definitions, Persistent Form
-**        task_def_role_bind      =     " Table with Binding Definitions, Persistent Form
-**        task_not_role_bind      =     " Table with Binding Definitions, Persistent Form
-**        task_dea_role_bind      =     " Table with Binding Definitions, Persistent Form
-**        task_end_role_bind      =     " Table with Binding Definitions, Persistent Form
-**        task_lat_role_bind      =     " Table with Binding Definitions, Persistent Form
-**        task_xml_container      =
-**      TABLES
-**        act_cont_def            =
-**        act_methods             =
-**        start_events            =
-**        term_events             =
-**        task_init_binding       =
-**        task_om_binding         =
-**        def_role_binding        =
-**        not_role_binding        =
-**        dea_role_binding        =
-**        end_role_binding        =
-**        lat_role_binding        =
-**        event_binding           =     " Standard Infotype 1212 (SAP) Events with Binding Definition
-**      EXCEPTIONS
-**        nothing_found           = 1
-**        activation_not_possible = 2
-**        others                  = 3
-*      .
-*    IF sy-subrc <> 0.
-**     MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
-**                WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
-*    ENDIF.
+    "Todo: Delete info note once it all works
+    "Original code from https://app.assembla.com/spaces/saplink-plugins/subversion/source/HEAD/trunk/Workflow
+    "called function 'RH_TASK_ATTRIBUTES_RUNTIME'
 
     cl_workflow_factory=>create_ts(
       EXPORTING
@@ -421,23 +382,8 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
     check_subrc_for( `RH_HRSOBJECT_DELETE` ).
 
-*    CALL FUNCTION 'RH_TASK_DELETE'
-*      EXPORTING
-*        act_otype           = co_object_type_task
-*        act_objid           = mv_objid
-*        act_plvar           = '01'
-*        act_istat           = '1'
-*      EXCEPTIONS
-*        no_active_plvar     = 1
-*        task_not_found      = 2
-*        task_not_deleted    = 3
-*        task_not_enqueued   = 4
-*        task_type_not_valid = 5
-*        OTHERS              = 6.
-
-*    IF sy-subrc <> 0.
-*      zcx_abapgit_exception=>raise( |error from RH_TASK_DELETE { sy-subrc }| ).
-*    ENDIF.
+    "Todo: delete this comment when stable
+    "Previous code used FUNCTION 'RH_TASK_DELETE'
 
   ENDMETHOD.
 
@@ -468,6 +414,19 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_locked.
+*    DATA(lv_objid) = CONV hr_sobjid( mv_objid ).
+
+    CALL FUNCTION 'ENQUEUE_HRSOBJECT'
+      EXPORTING
+        objid          = mv_objid
+        otype          = c_object_type_task
+        x_objid        = ' '
+        x_otype        = ' '
+        _scope         = '2'
+        _wait          = ' '
+      EXCEPTIONS
+        foreign_lock   = 01
+        system_failure = 02.
     rv_is_locked = abap_false.
   ENDMETHOD.
 
