@@ -38,12 +38,10 @@ CLASS zcl_abapgit_user_master_record DEFINITION
       ty_lt_return TYPE STANDARD TABLE OF bapiret2 WITH DEFAULT KEY,
       ty_lt_smtp   TYPE STANDARD TABLE OF bapiadsmtp WITH DEFAULT KEY.
     METHODS check_user_exists
-      IMPORTING
-                iv_user           TYPE uname
-      EXPORTING
-                VALUE(es_address) TYPE bapiaddr3
+      IMPORTING VALUE(iv_user)    TYPE uname
+      EXPORTING VALUE(es_address) TYPE bapiaddr3
                 VALUE(et_smtp)    TYPE ty_lt_smtp
-      RAISING   lcx_user_not_found.
+      RAISING   zcx_abapgit_exception.
     TYPES:
       ty_lt_dev_clients TYPE SORTED TABLE OF sy-mandt WITH UNIQUE KEY table_line.
 
@@ -67,7 +65,8 @@ CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
           lt_smtp        TYPE TABLE OF bapiadsmtp,
           ls_smtp        TYPE bapiadsmtp,
           lt_dev_clients TYPE SORTED TABLE OF sy-mandt WITH UNIQUE KEY table_line,
-          ls_user        TYPE ty_user.
+          ls_user        TYPE ty_user,
+          lo_exception TYPE REF TO zcx_abapgit_exception.
 
     "Get user details
     TRY.
@@ -95,7 +94,7 @@ CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
         "insert the user
         insert_user( is_user = ls_user ).
 
-      CATCH lcx_user_not_found.
+      CATCH zcx_abapgit_exception INTO lo_exception.
         "handle exception
         "Could not find user,try to get from other clients
         get_user_dtls_from_other( iv_user ).
@@ -160,8 +159,9 @@ METHOD check_user_exists.
     TABLES
       return   = lt_return
       addsmtp  = et_smtp.
+
   LOOP AT lt_return TRANSPORTING NO FIELDS WHERE type CA 'EA'.
-    RAISE EXCEPTION NEW lcx_user_not_found( ).
+    zcx_abapgit_exception=>raise( |User: { iv_user } is invalid!| ).
   ENDLOOP.
 
 ENDMETHOD.
