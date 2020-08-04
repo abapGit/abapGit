@@ -22,7 +22,9 @@ CLASS ltcl_user_master_record IMPLEMENTATION.
 *Given When invalid user is entered
     lo_user_master_record = zcl_abapgit_user_master_record=>get_instance( gc_wrong_user ).
 *    Then the list should be empty
-    cl_abap_unit_assert=>assert_true( xsdbool( lines( lo_user_master_record->gt_user ) = 0 ) ).
+    cl_abap_unit_assert=>assert_true(
+              act = xsdbool( lines( lo_user_master_record->gt_user ) = 0 )
+              ).
 
 
 
@@ -33,8 +35,9 @@ CLASS ltcl_user_master_record IMPLEMENTATION.
 *Given When invalid user is entered
     lo_user_master_record = zcl_abapgit_user_master_record=>get_instance( 'DEVELOPER' ).
 *    Then the list should be empty
-    cl_abap_unit_assert=>assert_true( xsdbool( lines( lo_user_master_record->gt_user ) = 1 ) ).
-
+    cl_abap_unit_assert=>assert_true(
+              act = xsdbool( lines( lo_user_master_record->gt_user ) = 1 )
+              ).
 
 
   ENDMETHOD.
