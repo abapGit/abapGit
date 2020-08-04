@@ -9,9 +9,7 @@ CLASS ltcl_user_master_record DEFINITION FINAL FOR TESTING
   PRIVATE SECTION.
     CONSTANTS gc_wrong_user TYPE uname VALUE 'NONE' ##NO_TEXT.
     METHODS:
-      test_invalid_user FOR TESTING RAISING cx_static_check,
-      test_valid_user FOR TESTING RAISING cx_static_check
-      .
+      test_invalid_user FOR TESTING RAISING cx_static_check.
 ENDCLASS.
 
 
@@ -25,21 +23,8 @@ CLASS ltcl_user_master_record IMPLEMENTATION.
     cl_abap_unit_assert=>assert_true(
               act = xsdbool( lines( lo_user_master_record->gt_user ) = 0 )
               ).
-
-
-
   ENDMETHOD.
 
-  METHOD test_valid_user.
-    DATA: lo_user_master_record TYPE REF TO zcl_abapgit_user_master_record.
-*Given When invalid user is entered
-    lo_user_master_record = zcl_abapgit_user_master_record=>get_instance( 'DEVELOPER' ).
-*    Then the list should be empty
-    cl_abap_unit_assert=>assert_true(
-              act = xsdbool( lines( lo_user_master_record->gt_user ) = 1 )
-              ).
 
-
-  ENDMETHOD.
 
 ENDCLASS.

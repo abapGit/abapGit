@@ -45,13 +45,12 @@ CLASS zcl_abapgit_user_master_record DEFINITION
     TYPES:
       ty_lt_dev_clients TYPE SORTED TABLE OF sy-mandt WITH UNIQUE KEY table_line.
 
-    METHODS get_user_dtls_from_other
+    METHODS get_user_dtls_from_other_clnt
       IMPORTING
         iv_user TYPE uname.
 
-    METHODS insert_user IMPORTING is_user        TYPE ty_user
-                        RETURNING VALUE(rs_user) TYPE ty_user
-                        .
+    METHODS insert_user IMPORTING is_user        TYPE ty_user.
+
 ENDCLASS.
 
 
@@ -66,7 +65,7 @@ CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
           ls_smtp        TYPE bapiadsmtp,
           lt_dev_clients TYPE SORTED TABLE OF sy-mandt WITH UNIQUE KEY table_line,
           ls_user        TYPE ty_user,
-          lo_exception TYPE REF TO zcx_abapgit_exception.
+          lo_exception   TYPE REF TO zcx_abapgit_exception.
 
     "Get user details
     TRY.
@@ -85,20 +84,19 @@ CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
           ms_user-email = ls_smtp-e_mail.
           EXIT.
         ENDLOOP.
-
         " Attempt to use the full name from SU01
         ms_user-name = ls_address-fullname.
-
-        ls_user-user = iv_user.
-        ls_user-o_user = me.
-        "insert the user
-        insert_user( is_user = ls_user ).
-
       CATCH zcx_abapgit_exception INTO lo_exception.
-        "handle exception
         "Could not find user,try to get from other clients
-        get_user_dtls_from_other( iv_user ).
+        get_user_dtls_from_other_clnt( iv_user ).
     ENDTRY.
+    "if the user has been found successfully ad it to the list
+    IF ( ms_user-name is not INITIAL AND ms_user-email IS NOT INITIAL ).
+      ls_user-user = iv_user.
+      ls_user-o_user = me.
+      "insert the user
+      insert_user( is_user = ls_user ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -121,65 +119,63 @@ CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
       ro_user = <ls_user>-o_user.
       RETURN.
     ENDIF.
-
+    " Does not exist in the list-so create!
     CREATE OBJECT ro_user
       EXPORTING
         iv_user = iv_user.
 
-ENDMETHOD.
+  ENDMETHOD.
 
 
-METHOD get_name.
+  METHOD get_name.
 
-  rv_name = ms_user-name.
+    rv_name = ms_user-name.
 
-ENDMETHOD.
-
-
-METHOD insert_user.
-  FIELD-SYMBOLS: <ls_user> TYPE ty_user.
-
-  INSERT  is_user
-          INTO TABLE gt_user
-          ASSIGNING <ls_user>.
-  IF <ls_user> IS ASSIGNED.
-    rs_user = <ls_user>.
-  ENDIF.
-ENDMETHOD.
-
-METHOD check_user_exists.
-  DATA lt_return TYPE ty_lt_return.
+  ENDMETHOD.
 
 
-  CALL FUNCTION 'BAPI_USER_GET_DETAIL'
-    EXPORTING
-      username = iv_user
-    IMPORTING
-      address  = es_address
-    TABLES
-      return   = lt_return
-      addsmtp  = et_smtp.
+  METHOD insert_user.
+    IF is_user IS INITIAL.
+      RETURN.
+    ENDIF.
+"Insert the user to the list!
+    INSERT  is_user
+            INTO TABLE gt_user.
+  ENDMETHOD.
 
-  LOOP AT lt_return TRANSPORTING NO FIELDS WHERE type CA 'EA'.
-    zcx_abapgit_exception=>raise( |User: { iv_user } is invalid!| ).
-  ENDLOOP.
-
-ENDMETHOD.
+  METHOD check_user_exists.
+    DATA lt_return TYPE ty_lt_return.
 
 
-METHOD get_user_dtls_from_other.
+    CALL FUNCTION 'BAPI_USER_GET_DETAIL'
+      EXPORTING
+        username = iv_user
+      IMPORTING
+        address  = es_address
+      TABLES
+        return   = lt_return
+        addsmtp  = et_smtp.
 
-  DATA lt_dev_clients TYPE ty_lt_dev_clients.
+    LOOP AT lt_return TRANSPORTING NO FIELDS WHERE type CA 'EA'.
+      zcx_abapgit_exception=>raise( |User: { iv_user } is invalid!| ).
+    ENDLOOP.
+
+  ENDMETHOD.
 
 
-  FIELD-SYMBOLS: <lv_dev_client> LIKE LINE OF lt_dev_clients.
+  METHOD get_user_dtls_from_other_clnt.
 
-  " Could not find the user Try other development clients
-  SELECT mandt INTO TABLE lt_dev_clients
-    FROM t000
-    WHERE cccategory  = gc_cc_category
-      AND mandt      <> sy-mandt
-    ORDER BY PRIMARY KEY.
+    DATA lt_dev_clients TYPE ty_lt_dev_clients.
+
+
+    FIELD-SYMBOLS: <lv_dev_client> LIKE LINE OF lt_dev_clients.
+
+    " Could not find the user Try other development clients
+    SELECT mandt INTO TABLE lt_dev_clients
+      FROM t000
+      WHERE cccategory  = gc_cc_category
+        AND mandt      <> sy-mandt
+      ORDER BY PRIMARY KEY.
 
     LOOP AT lt_dev_clients ASSIGNING <lv_dev_client>.
       SELECT SINGLE p~name_text a~smtp_addr INTO (ms_user-name,ms_user-email)
@@ -196,11 +192,11 @@ METHOD get_user_dtls_from_other.
           AND p~date_to   >= sy-datum
           AND a~date_from <= sy-datum.
 
-        IF sy-subrc = 0.
-          EXIT.
-        ENDIF.
-      ENDLOOP.
+      IF sy-subrc = 0.
+        EXIT.
+      ENDIF.
+    ENDLOOP.
 
-    ENDMETHOD.
+  ENDMETHOD.
 
 ENDCLASS.
