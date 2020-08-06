@@ -244,9 +244,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         " General PAGE routing
       WHEN zcl_abapgit_gui=>c_action-go_home.
 
-        IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_show_default_repo( ) = abap_true.
-          lv_last_repo_key = zcl_abapgit_persistence_user=>get_instance( )->get_repo_show( ).
-        ENDIF.
+        lv_last_repo_key = zcl_abapgit_persistence_user=>get_instance( )->get_repo_show( ).
 
         IF lv_last_repo_key IS INITIAL.
           CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
