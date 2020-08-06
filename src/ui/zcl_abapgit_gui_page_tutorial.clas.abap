@@ -1,35 +1,68 @@
 CLASS zcl_abapgit_gui_page_tutorial DEFINITION
   PUBLIC
   FINAL
-  INHERITING FROM zcl_abapgit_gui_page
+  INHERITING FROM zcl_abapgit_gui_component
   CREATE PUBLIC.
 
   PUBLIC SECTION.
-    METHODS constructor
-      RAISING zcx_abapgit_exception.
+    INTERFACES zif_abapgit_gui_renderable.
+
+    CLASS-METHODS create
+      RETURNING
+        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
-    METHODS render_content REDEFINITION.
 
   PRIVATE SECTION.
 
-    METHODS build_main_menu
-      RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
+    CLASS-METHODS build_main_menu
+      RETURNING
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
 
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_tutorial IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_TUTORIAL IMPLEMENTATION.
 
-  METHOD constructor.
-    super->constructor( ).
-    ms_control-page_title = 'Tutorial'.
-    ms_control-page_menu = build_main_menu( ).
+
+  METHOD build_main_menu.
+
+    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-main'.
+
+    ro_menu->add(
+      iv_txt = zcl_abapgit_gui_buttons=>new_online( )
+      iv_act = zif_abapgit_definitions=>c_action-repo_newonline
+    )->add(
+      iv_txt = zcl_abapgit_gui_buttons=>new_offline( )
+      iv_act = zif_abapgit_definitions=>c_action-repo_newoffline
+    )->add(
+      iv_txt = zcl_abapgit_gui_buttons=>advanced( )
+      io_sub = zcl_abapgit_gui_chunk_lib=>advanced_submenu( )
+    )->add(
+      iv_txt = zcl_abapgit_gui_buttons=>help( )
+      io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
+
   ENDMETHOD.
 
 
-  METHOD render_content.
+  METHOD create.
+
+    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_tutorial.
+
+    CREATE OBJECT lo_component.
+
+    ri_page = zcl_abapgit_gui_page_hoc=>create(
+      iv_page_title      = 'Tutorial'
+      io_page_menu       = build_main_menu( )
+      ii_child_component = lo_component ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_renderable~render.
 
     DATA: lv_devclass TYPE tadir-devclass.
 
@@ -90,24 +123,4 @@ CLASS zcl_abapgit_gui_page_tutorial IMPLEMENTATION.
 
 
   ENDMETHOD.
-
-  METHOD build_main_menu.
-
-    CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-main'.
-
-    ro_menu->add(
-      iv_txt = zcl_abapgit_gui_buttons=>new_online( )
-      iv_act = zif_abapgit_definitions=>c_action-repo_newonline
-    )->add(
-      iv_txt = zcl_abapgit_gui_buttons=>new_offline( )
-      iv_act = zif_abapgit_definitions=>c_action-repo_newoffline
-    )->add(
-      iv_txt = zcl_abapgit_gui_buttons=>advanced( )
-      io_sub = zcl_abapgit_gui_chunk_lib=>advanced_submenu( )
-    )->add(
-      iv_txt = zcl_abapgit_gui_buttons=>help( )
-      io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
-
-  ENDMETHOD.
-
 ENDCLASS.
