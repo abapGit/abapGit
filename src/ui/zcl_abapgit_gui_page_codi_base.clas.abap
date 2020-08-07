@@ -6,6 +6,16 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM 
 
   PROTECTED SECTION.
 
+    CONSTANTS:
+      BEGIN OF c_actions,
+        rerun  TYPE string VALUE 'rerun' ##NO_TEXT,
+        sort_1 TYPE string VALUE 'sort_1'  ##NO_TEXT,
+        sort_2 TYPE string VALUE 'sort_2'  ##NO_TEXT,
+        sort_3 TYPE string VALUE 'sort_3'  ##NO_TEXT,
+        stage  TYPE string VALUE 'stage' ##NO_TEXT,
+        commit TYPE string VALUE 'commit' ##NO_TEXT,
+      END OF c_actions.
+
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
     DATA mt_result TYPE scit_alvlist .
 
@@ -19,9 +29,9 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM 
         !is_result TYPE scir_alvlist .
     METHODS build_nav_link
       IMPORTING
-        !is_result TYPE scir_alvlist
+        !is_result     TYPE scir_alvlist
       RETURNING
-        VALUE(rv_link) TYPE string.
+        VALUE(rv_link) TYPE string .
     METHODS jump
       IMPORTING
         !is_item        TYPE zif_abapgit_definitions=>ty_item
@@ -29,15 +39,46 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM 
         !iv_line_number TYPE i
       RAISING
         zcx_abapgit_exception .
+    METHODS build_base_menu
+      RETURNING
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
   PRIVATE SECTION.
     CONSTANTS c_object_separator TYPE char1 VALUE '|'.
     CONSTANTS c_ci_sig TYPE string VALUE 'cinav:'.
-
 ENDCLASS.
 
 
 
 CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
+
+
+  METHOD build_base_menu.
+
+    DATA:
+      lo_sort_menu TYPE REF TO zcl_abapgit_html_toolbar.
+
+    CREATE OBJECT lo_sort_menu.
+
+    lo_sort_menu->add(
+      iv_txt = 'By Object, Check, Sub-object'
+      iv_act = c_actions-sort_1
+    )->add(
+      iv_txt = 'By Object, Sub-object, Line'
+      iv_act = c_actions-sort_2
+    )->add(
+      iv_txt = 'By Check, Object, Sub-object'
+      iv_act = c_actions-sort_3 ).
+
+    CREATE OBJECT ro_menu.
+
+    ro_menu->add( iv_txt = 'Sort'
+                  io_sub = lo_sort_menu ) ##NO_TEXT.
+
+    ro_menu->add( iv_txt = 'Re-Run'
+                  iv_act = c_actions-rerun
+                  iv_cur = abap_false ) ##NO_TEXT.
+
+  ENDMETHOD.
 
 
   METHOD build_nav_link.
@@ -52,13 +93,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
   METHOD jump.
 
-    DATA: lo_test               TYPE REF TO cl_ci_test_root,
-          ls_info               TYPE scir_rest,
-          lo_result             TYPE REF TO cl_ci_result_root,
-          lv_adt_jump_enabled   TYPE abap_bool,
-          lv_line_number        TYPE i,
-          ls_item               TYPE zif_abapgit_definitions=>ty_item,
-          ls_sub_item           TYPE zif_abapgit_definitions=>ty_item.
+    DATA: lo_test             TYPE REF TO cl_ci_test_root,
+          ls_info             TYPE scir_rest,
+          lo_result           TYPE REF TO cl_ci_result_root,
+          lv_adt_jump_enabled TYPE abap_bool,
+          lv_line_number      TYPE i,
+          ls_item             TYPE zif_abapgit_definitions=>ty_item,
+          ls_sub_item         TYPE zif_abapgit_definitions=>ty_item.
 
     FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
 
@@ -152,7 +193,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
     DATA: lv_class   TYPE string,
           lv_obj_txt TYPE string,
-          lv_msg     TYPE string.
+          lv_msg     TYPE string,
+          ls_mtdkey  TYPE seocpdkey.
 
     CASE is_result-kind.
       WHEN 'E'.
@@ -170,7 +212,26 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
        ( is_result-sobjname = is_result-objname AND
          is_result-sobjtype = is_result-sobjtype ).
       lv_obj_txt = |{ is_result-objtype } { is_result-objname }|.
-    ELSE.
+    ELSEIF is_result-objtype = 'CLAS'.
+      TRY.
+          CASE is_result-sobjname+30(*).
+            WHEN seop_incextapp_definition.
+              lv_obj_txt = |{ is_result-objname } : Local Definitions|.
+            WHEN seop_incextapp_implementation.
+              lv_obj_txt = |{ is_result-objname } : Local Implementations|.
+            WHEN seop_incextapp_macros.
+              lv_obj_txt = |{ is_result-objname } : Macros|.
+            WHEN seop_incextapp_testclasses.
+              lv_obj_txt = |{ is_result-objname } : Test Classes|.
+            WHEN OTHERS.
+              ls_mtdkey = cl_oo_classname_service=>get_method_by_include( is_result-sobjname ).
+              lv_obj_txt = |{ ls_mtdkey-clsname }->{ ls_mtdkey-cpdname }|.
+          ENDCASE.
+        CATCH cx_root.
+          lv_obj_txt = ''. "use default below
+      ENDTRY.
+    ENDIF.
+    IF lv_obj_txt IS INITIAL.
       lv_obj_txt = |{ is_result-objtype } { is_result-objname } &gt; { is_result-sobjtype } { is_result-sobjname }|.
     ENDIF.
     lv_obj_txt = |{ lv_obj_txt } [ @{ zcl_abapgit_convert=>alpha_output( is_result-line ) } ]|.
@@ -219,6 +280,23 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
       ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
     ENDIF.
+
+    CASE iv_action.
+
+      WHEN c_actions-sort_1.
+        SORT mt_result BY objtype objname test code sobjtype sobjname line col.
+        ei_page = me.
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_actions-sort_2.
+        SORT mt_result BY objtype objname sobjtype sobjname line col test code.
+        ei_page = me.
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_actions-sort_3.
+        SORT mt_result BY test code objtype objname sobjtype sobjname line col.
+        ei_page = me.
+        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+
+    ENDCASE.
 
   ENDMETHOD.
 ENDCLASS.
