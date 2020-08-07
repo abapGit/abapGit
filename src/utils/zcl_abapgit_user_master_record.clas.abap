@@ -166,8 +166,6 @@ CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
   METHOD get_user_dtls_from_other_clnt.
 
     DATA lt_dev_clients TYPE ty_lt_dev_clients.
-
-
     FIELD-SYMBOLS: <lv_dev_client> LIKE LINE OF lt_dev_clients.
 
     " Could not find the user Try other development clients
