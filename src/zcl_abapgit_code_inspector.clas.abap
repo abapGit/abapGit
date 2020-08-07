@@ -82,7 +82,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
 
 
   METHOD cleanup.
@@ -177,6 +177,7 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
     DATA: lt_objs       TYPE scit_objs,
           ls_obj        TYPE scir_objs,
           lt_objs_check TYPE scit_objs,
+          ls_item       TYPE zif_abapgit_definitions=>ty_item,
           lt_packages   TYPE zif_abapgit_sap_package=>ty_devclass_tt.
 
     lt_packages = zcl_abapgit_factory=>get_sap_package( mv_package )->list_subpackages( ).
@@ -196,6 +197,13 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
         CONTINUE.
       ENDIF.
 
+      ls_item-obj_type = ls_obj-objtype.
+      ls_item-obj_name = ls_obj-objname.
+
+      IF zcl_abapgit_objects=>exists( ls_item ) = abap_false.
+        CONTINUE.
+      ENDIF.
+
       INSERT ls_obj INTO TABLE lt_objs_check.
 
     ENDLOOP.
@@ -203,28 +211,6 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
     ro_set = cl_ci_objectset=>save_from_list(
       p_name    = mv_name
       p_objects = lt_objs_check ).
-
-  ENDMETHOD.
-
-
-  METHOD skip_object.
-
-    DATA: ls_trdir TYPE trdir.
-
-    CASE is_obj-objtype.
-      WHEN 'PROG'.
-
-        SELECT SINGLE *
-          INTO ls_trdir
-          FROM trdir
-          WHERE name = is_obj-objname.
-
-        rv_skip = boolc( ls_trdir-subc = 'I' ). " Include program.
-
-      WHEN OTHERS.
-        rv_skip = abap_false.
-
-    ENDCASE.
 
   ENDMETHOD.
 
@@ -256,6 +242,23 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD decide_run_mode.
+
+    DATA: lo_settings TYPE REF TO zcl_abapgit_settings.
+    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+
+    IF sy-batch = abap_true.
+      " We have to disable parallelization in batch because of lock errors.
+      rv_run_mode = co_run_mode-run_via_rfc.
+    ELSEIF lo_settings->get_parallel_proc_disabled( ) = abap_false.
+      rv_run_mode = co_run_mode-run_loc_parallel.
+    ELSE.
+      rv_run_mode = co_run_mode-run_via_rfc.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD run_inspection.
 
     io_inspection->run(
@@ -270,6 +273,32 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
     ENDIF.
 
     io_inspection->plain_list( IMPORTING p_list = rt_list ).
+
+    SORT rt_list BY objtype objname test code sobjtype sobjname line col.
+
+    DELETE ADJACENT DUPLICATES FROM rt_list.
+
+  ENDMETHOD.
+
+
+  METHOD skip_object.
+
+    DATA: ls_trdir TYPE trdir.
+
+    CASE is_obj-objtype.
+      WHEN 'PROG'.
+
+        SELECT SINGLE *
+          INTO ls_trdir
+          FROM trdir
+          WHERE name = is_obj-objname.
+
+        rv_skip = boolc( ls_trdir-subc = 'I' ). " Include program.
+
+      WHEN OTHERS.
+        rv_skip = abap_false.
+
+    ENDCASE.
 
   ENDMETHOD.
 
@@ -339,21 +368,4 @@ CLASS zcl_abapgit_code_inspector IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
-
-  METHOD decide_run_mode.
-
-    DATA: lo_settings TYPE REF TO zcl_abapgit_settings.
-    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
-
-    IF sy-batch = abap_true.
-      " We have to disable parallelization in batch because of lock errors.
-      rv_run_mode = co_run_mode-run_via_rfc.
-    ELSEIF lo_settings->get_parallel_proc_disabled( ) = abap_false.
-      rv_run_mode = co_run_mode-run_loc_parallel.
-    ELSE.
-      rv_run_mode = co_run_mode-run_via_rfc.
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.

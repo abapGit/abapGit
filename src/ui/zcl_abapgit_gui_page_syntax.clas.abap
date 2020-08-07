@@ -22,11 +22,6 @@ CLASS zcl_abapgit_gui_page_syntax DEFINITION PUBLIC FINAL CREATE PUBLIC
       render_content REDEFINITION.
 
   PRIVATE SECTION.
-    CONSTANTS:
-      BEGIN OF c_actions,
-        rerun TYPE string VALUE 'rerun' ##NO_TEXT,
-      END OF c_actions.
-
     METHODS:
       build_menu
         RETURNING
@@ -37,7 +32,6 @@ CLASS zcl_abapgit_gui_page_syntax DEFINITION PUBLIC FINAL CREATE PUBLIC
       run_syntax_check
         RAISING
           zcx_abapgit_exception.
-
 ENDCLASS.
 
 
@@ -47,11 +41,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
 
   METHOD build_menu.
 
-    CREATE OBJECT ro_menu.
-
-    ro_menu->add( iv_txt = 'Re-Run'
-                  iv_act = c_actions-rerun
-                  iv_cur = abap_false ) ##NO_TEXT.
+    ro_menu = build_base_menu( ).
 
   ENDMETHOD.
 
