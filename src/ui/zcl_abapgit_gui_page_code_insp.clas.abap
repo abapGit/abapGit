@@ -24,7 +24,6 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
       render_content   REDEFINITION.
 
   PRIVATE SECTION.
-
     DATA:
       mo_stage         TYPE REF TO zcl_abapgit_stage,
       mv_check_variant TYPE sci_chkv.
@@ -57,7 +56,6 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
       determine_check_variant
         RAISING
           zcx_abapgit_exception.
-
 ENDCLASS.
 
 
