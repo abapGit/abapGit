@@ -276,6 +276,8 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
 
     SORT rt_list BY objtype objname test code sobjtype sobjname line col.
 
+    DELETE ADJACENT DUPLICATES FROM rt_list.
+
   ENDMETHOD.
 
 
