@@ -4,44 +4,44 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM 
       zif_abapgit_gui_event_handler~on_event
         REDEFINITION.
 
-PROTECTED SECTION.
+  PROTECTED SECTION.
 
-  CONSTANTS:
-    BEGIN OF c_actions,
-      rerun  TYPE string VALUE 'rerun' ##NO_TEXT,
-      sort_1 TYPE string VALUE 'sort_1'  ##NO_TEXT,
-      sort_2 TYPE string VALUE 'sort_2'  ##NO_TEXT,
-      sort_3 TYPE string VALUE 'sort_3'  ##NO_TEXT,
-      stage  TYPE string VALUE 'stage' ##NO_TEXT,
-      commit TYPE string VALUE 'commit' ##NO_TEXT,
-    END OF c_actions.
+    CONSTANTS:
+      BEGIN OF c_actions,
+        rerun  TYPE string VALUE 'rerun' ##NO_TEXT,
+        sort_1 TYPE string VALUE 'sort_1'  ##NO_TEXT,
+        sort_2 TYPE string VALUE 'sort_2'  ##NO_TEXT,
+        sort_3 TYPE string VALUE 'sort_3'  ##NO_TEXT,
+        stage  TYPE string VALUE 'stage' ##NO_TEXT,
+        commit TYPE string VALUE 'commit' ##NO_TEXT,
+      END OF c_actions.
 
-  DATA mo_repo TYPE REF TO zcl_abapgit_repo .
-  DATA mt_result TYPE scit_alvlist .
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo .
+    DATA mt_result TYPE scit_alvlist .
 
-  METHODS render_result
-    IMPORTING
-      !ii_html   TYPE REF TO zif_abapgit_html
-      !it_result TYPE scit_alvlist .
-  METHODS render_result_line
-    IMPORTING
-      !ii_html   TYPE REF TO zif_abapgit_html
-      !is_result TYPE scir_alvlist .
-  METHODS build_nav_link
-    IMPORTING
-      !is_result     TYPE scir_alvlist
-    RETURNING
-      VALUE(rv_link) TYPE string .
-  METHODS jump
-    IMPORTING
-      !is_item        TYPE zif_abapgit_definitions=>ty_item
-      !is_sub_item    TYPE zif_abapgit_definitions=>ty_item
-      !iv_line_number TYPE i
-    RAISING
-      zcx_abapgit_exception .
-  METHODS build_base_menu
-    RETURNING
-      VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
+    METHODS render_result
+      IMPORTING
+        !ii_html   TYPE REF TO zif_abapgit_html
+        !it_result TYPE scit_alvlist .
+    METHODS render_result_line
+      IMPORTING
+        !ii_html   TYPE REF TO zif_abapgit_html
+        !is_result TYPE scir_alvlist .
+    METHODS build_nav_link
+      IMPORTING
+        !is_result     TYPE scir_alvlist
+      RETURNING
+        VALUE(rv_link) TYPE string .
+    METHODS jump
+      IMPORTING
+        !is_item        TYPE zif_abapgit_definitions=>ty_item
+        !is_sub_item    TYPE zif_abapgit_definitions=>ty_item
+        !iv_line_number TYPE i
+      RAISING
+        zcx_abapgit_exception .
+    METHODS build_base_menu
+      RETURNING
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
   PRIVATE SECTION.
     CONSTANTS c_object_separator TYPE char1 VALUE '|'.
     CONSTANTS c_ci_sig TYPE string VALUE 'cinav:'.
@@ -93,13 +93,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
   METHOD jump.
 
-    DATA: lo_test               TYPE REF TO cl_ci_test_root,
-          ls_info               TYPE scir_rest,
-          lo_result             TYPE REF TO cl_ci_result_root,
-          lv_adt_jump_enabled   TYPE abap_bool,
-          lv_line_number        TYPE i,
-          ls_item               TYPE zif_abapgit_definitions=>ty_item,
-          ls_sub_item           TYPE zif_abapgit_definitions=>ty_item.
+    DATA: lo_test             TYPE REF TO cl_ci_test_root,
+          ls_info             TYPE scir_rest,
+          lo_result           TYPE REF TO cl_ci_result_root,
+          lv_adt_jump_enabled TYPE abap_bool,
+          lv_line_number      TYPE i,
+          ls_item             TYPE zif_abapgit_definitions=>ty_item,
+          ls_sub_item         TYPE zif_abapgit_definitions=>ty_item.
 
     FIELD-SYMBOLS: <ls_result> TYPE scir_alvlist.
 
@@ -228,9 +228,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
               lv_obj_txt = |{ ls_mtdkey-clsname }->{ ls_mtdkey-cpdname }|.
           ENDCASE.
         CATCH cx_root.
-          lv_obj_txt = |{ is_result-objtype } { is_result-objname } -&gt; { is_result-sobjtype } { is_result-sobjname }|.
+          lv_obj_txt = ''. "use default below
       ENDTRY.
-    ELSE.
+    ENDIF.
+    IF lv_obj_txt IS INITIAL.
       lv_obj_txt = |{ is_result-objtype } { is_result-objname } &gt; { is_result-sobjtype } { is_result-sobjname }|.
     ENDIF.
     lv_obj_txt = |{ lv_obj_txt } [ @{ zcl_abapgit_convert=>alpha_output( is_result-line ) } ]|.
