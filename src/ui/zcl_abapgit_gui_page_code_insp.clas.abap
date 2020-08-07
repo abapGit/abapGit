@@ -215,6 +215,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
     DELETE mt_result WHERE kind = 'N'.
 
+    SORT mt_result BY objtype objname test code sobjtype sobjname line col.
+
+    DELETE ADJACENT DUPLICATES FROM mt_result.
+
   ENDMETHOD.
 
 

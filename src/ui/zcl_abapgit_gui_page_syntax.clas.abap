@@ -80,6 +80,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
     li_syntax_check = zcl_abapgit_factory=>get_code_inspector( mo_repo->get_package( ) ).
     mt_result = li_syntax_check->run( 'SYNTAX_CHECK' ).
 
+    SORT mt_result BY objtype objname test code sobjtype sobjname line col.
+
+    DELETE ADJACENT DUPLICATES FROM mt_result.
+
   ENDMETHOD.
 
 
