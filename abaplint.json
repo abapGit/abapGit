@@ -187,6 +187,7 @@
       "ignoreGlobalClassDefinition": false,
       "ignoreGlobalInterface": false,
       "ignoreKeywords": [],
+      "ignoreGlobalClassBoundaries": false,
       "ignoreFunctionModuleName": false
     },
     "line_length": {
@@ -260,6 +261,7 @@
       "divide": true,
       "requested": true,
       "setExtended": true,
+      "withHeaderLine": true,
       "occurs": true
     },
     "parser_error": {},
