@@ -501,6 +501,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
       get_repo_from_package(
         EXPORTING
           iv_package = iv_package
+          iv_ign_subpkg = iv_ign_subpkg
         IMPORTING
           eo_repo    = lo_repo
           ev_reason  = lv_reason ).
