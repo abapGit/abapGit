@@ -368,6 +368,11 @@ CLASS ltcl_object_ddls_mock IMPLEMENTATION.
 
     ms_item = is_item.
 
+* dummy use of variable
+    IF iv_language = 'E'.
+      RETURN.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD zif_abapgit_object~is_locked.
