@@ -83,7 +83,7 @@
     },
     "forbidden_identifier": true,
     "try_without_catch": false,
-    "unused_variables": false,
+    "unused_variables": true,
     "prefix_is_current_class": {
       "omitMeInstanceCalls": false
     },
