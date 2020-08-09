@@ -100,6 +100,13 @@ CLASS ZCL_ABAPGIT_OBJECT_ENSC IMPLEMENTATION.
         lo_spot_ref->if_enh_object~activate( ).
         lo_spot_ref->if_enh_object~unlock( ).
 
+        zcl_abapgit_sotr_handler=>create_sotr(
+          iv_pgmid    = 'R3TR'
+          iv_object   = ms_item-obj_type
+          iv_obj_name = ms_item-obj_name
+          iv_package  = iv_package
+          io_xml      = io_xml ).
+
       CATCH cx_enh_root INTO lx_root.
         lv_message = `Error occured while deserializing ENSC: `
           && lx_root->get_text( ) ##NO_TEXT.
@@ -200,6 +207,12 @@ CLASS ZCL_ABAPGIT_OBJECT_ENSC IMPLEMENTATION.
                      iv_name = 'ENH_SPOTS' ).         "Enhancement spots
         io_xml->add( ig_data = lt_comp_spots
                      iv_name = 'COMP_ENH_SPOTS' ).    "Composite enhancement spots
+
+        zcl_abapgit_sotr_handler=>read_sotr(
+          iv_pgmid    = 'R3TR'
+          iv_object   = ms_item-obj_type
+          iv_obj_name = ms_item-obj_name
+          io_xml      = io_xml ).
 
       CATCH cx_enh_root INTO lx_root.
         lv_message = `Error occured while serializing ENSC: `
