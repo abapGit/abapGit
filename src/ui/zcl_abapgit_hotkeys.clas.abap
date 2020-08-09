@@ -253,9 +253,8 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
   METHOD render_scripts.
 
     DATA lv_json TYPE string.
-    DATA lt_hotkeys TYPE zif_abapgit_gui_hotkeys=>tty_hotkey_with_descr.
 
-    FIELD-SYMBOLS: <ls_hotkey> LIKE LINE OF lt_hotkeys.
+    FIELD-SYMBOLS: <ls_hotkey> LIKE LINE OF it_hotkeys.
 
     lv_json = `{`.
 

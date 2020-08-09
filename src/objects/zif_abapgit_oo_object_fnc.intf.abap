@@ -51,8 +51,9 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
         zcx_abapgit_exception,
     create_sotr
       IMPORTING
-        iv_package TYPE devclass
-        it_sotr    TYPE zif_abapgit_definitions=>ty_sotr_tt
+        iv_object_name TYPE sobj_name
+        iv_package     TYPE devclass
+        io_xml         TYPE REF TO zcl_abapgit_xml_input
       RAISING
         zcx_abapgit_exception,
     create_documentation
@@ -116,8 +117,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
     read_sotr
       IMPORTING
         iv_object_name TYPE sobj_name
-      RETURNING
-        VALUE(rt_sotr) TYPE zif_abapgit_definitions=>ty_sotr_tt
+        io_xml         TYPE REF TO zcl_abapgit_xml_output
       RAISING
         zcx_abapgit_exception,
     read_descriptions

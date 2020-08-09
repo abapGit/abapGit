@@ -405,10 +405,9 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_services~cache_asset.
 
-    DATA: lv_xstr  TYPE xstring,
-          lt_xdata TYPE lvc_t_mime,
-          lv_size  TYPE i.
-    DATA lt_html TYPE w3htmltab.
+    DATA: lt_xdata TYPE lvc_t_mime,
+          lv_size  TYPE i,
+          lt_html  TYPE w3htmltab.
 
     ASSERT iv_text IS SUPPLIED OR iv_xdata IS SUPPLIED.
 
