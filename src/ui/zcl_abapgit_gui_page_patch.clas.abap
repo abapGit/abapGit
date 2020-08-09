@@ -68,7 +68,6 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
           io_html      TYPE REF TO zcl_abapgit_html
           iv_filename  TYPE string
           is_diff_line TYPE zif_abapgit_definitions=>ty_diff
-          iv_fstate    TYPE char1
           iv_index     TYPE sy-tabix
         RAISING
           zcx_abapgit_exception,
@@ -616,7 +615,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
     render_patch( io_html      = io_html
                   iv_filename  = iv_filename
                   is_diff_line = is_diff_line
-                  iv_fstate    = iv_fstate
                   iv_index     = iv_index ).
 
     super->render_line_split_row(
