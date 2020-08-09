@@ -26,9 +26,6 @@ CLASS zcl_abapgit_object_avas DEFINITION
         !is_avas TYPE ty_avas
       RAISING
         zcx_abapgit_exception .
-    METHODS insert_links
-      IMPORTING
-        !is_avas TYPE ty_avas .
     METHODS instantiate
       RETURNING
         VALUE(ro_avas) TYPE REF TO cl_cls_attr_value_assignment
@@ -70,14 +67,6 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error inserting into CLS_ASSIGNMENT| ).
     ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD insert_links.
-
-* todo, how does links work?
-    RETURN.
 
   ENDMETHOD.
 
@@ -162,7 +151,7 @@ CLASS ZCL_ABAPGIT_OBJECT_AVAS IMPLEMENTATION.
     tadir_insert( iv_package ).
 
     insert_assignments( ls_avas ).
-    insert_links( ls_avas ).
+* todo, how does links work?
 
 * corr_insert?
 
