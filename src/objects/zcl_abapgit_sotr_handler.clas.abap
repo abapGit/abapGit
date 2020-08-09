@@ -4,37 +4,48 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    TYPES: yt_sotr_use   TYPE STANDARD TABLE OF sotr_use WITH DEFAULT KEY,
-           yt_seocompodf TYPE STANDARD TABLE OF seocompodf WITH DEFAULT KEY.
 
-    CLASS-METHODS read_sotr_wda
+    TYPES:
+      ty_sotr_use_tt TYPE STANDARD TABLE OF sotr_use WITH DEFAULT KEY .
+    TYPES:
+      yt_seocompodf TYPE STANDARD TABLE OF seocompodf WITH DEFAULT KEY .
+
+    CLASS-METHODS read_sotr
       IMPORTING
-        iv_object_name TYPE sobj_name
-      RETURNING
-        VALUE(rt_sotr) TYPE zif_abapgit_definitions=>ty_sotr_tt
+        !iv_pgmid    TYPE pgmid
+        !iv_object   TYPE trobjtype
+        !iv_obj_name TYPE csequence
+        io_xml       TYPE REF TO zcl_abapgit_xml_output OPTIONAL
+      EXPORTING
+        et_sotr      TYPE zif_abapgit_definitions=>ty_sotr_tt
+        et_sotr_use  TYPE zif_abapgit_definitions=>ty_sotr_use_tt
       RAISING
-        zcx_abapgit_exception.
-    CLASS-METHODS read_sotr_seocomp
-      IMPORTING
-        iv_object_name TYPE sobj_name
-      RETURNING
-        VALUE(rt_sotr) TYPE zif_abapgit_definitions=>ty_sotr_tt
-      RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
+
     CLASS-METHODS create_sotr
       IMPORTING
-        iv_package TYPE devclass
-        it_sotr    TYPE zif_abapgit_definitions=>ty_sotr_tt
+        !iv_pgmid    TYPE pgmid
+        !iv_object   TYPE trobjtype
+        !iv_obj_name TYPE csequence
+        !iv_package  TYPE devclass
+        io_xml       TYPE REF TO zcl_abapgit_xml_input
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
   PROTECTED SECTION.
+    CLASS-METHODS get_sotr_usage
+      IMPORTING
+        !iv_pgmid          TYPE pgmid
+        !iv_object         TYPE trobjtype
+        !iv_obj_name       TYPE csequence
+      RETURNING
+        VALUE(rt_sotr_use) TYPE ty_sotr_use_tt.
+
     CLASS-METHODS get_sotr_4_concept
       IMPORTING
-        iv_concept     TYPE sotr_conc
+        !iv_concept    TYPE sotr_conc
       RETURNING
-        VALUE(rt_sotr) TYPE zif_abapgit_definitions=>ty_sotr_tt.
-
+        VALUE(rs_sotr) TYPE zif_abapgit_definitions=>ty_sotr .
+  PRIVATE SECTION.
 ENDCLASS.
 
 
@@ -43,14 +54,22 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
 
 
   METHOD create_sotr.
-    DATA: lt_sotr    TYPE zif_abapgit_definitions=>ty_sotr_tt,
-          lt_objects TYPE sotr_objects,
-          ls_paket   TYPE sotr_pack,
-          lv_object  LIKE LINE OF lt_objects.
+
+    DATA:
+      lt_objects  TYPE sotr_objects,
+      ls_paket    TYPE sotr_pack,
+      lv_object   LIKE LINE OF lt_objects,
+      lt_sotr     TYPE zif_abapgit_definitions=>ty_sotr_tt,
+      lt_sotr_use TYPE zif_abapgit_definitions=>ty_sotr_use_tt.
 
     FIELD-SYMBOLS: <ls_sotr> LIKE LINE OF lt_sotr.
 
-    LOOP AT it_sotr ASSIGNING <ls_sotr>.
+    io_xml->read( EXPORTING iv_name = 'SOTR'
+                  CHANGING cg_data = lt_sotr ).
+    io_xml->read( EXPORTING iv_name = 'SOTR_USE'
+                  CHANGING cg_data = lt_sotr_use ).
+
+    LOOP AT lt_sotr ASSIGNING <ls_sotr>.
       CALL FUNCTION 'SOTR_OBJECT_GET_OBJECTS'
         EXPORTING
           object_vector    = <ls_sotr>-header-objid_vec
@@ -101,16 +120,20 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
       ENDIF.
     ENDLOOP.
 
+    CALL FUNCTION 'SOTR_USAGE_MODIFY'
+      EXPORTING
+        sotr_usage = lt_sotr_use.
+
   ENDMETHOD.
 
 
   METHOD get_sotr_4_concept.
+
     DATA: ls_header   TYPE sotr_head,
           lt_entries  TYPE sotr_text_tt,
           lv_obj_name TYPE trobj_name.
 
-    FIELD-SYMBOLS: <ls_sotr>  LIKE LINE OF rt_sotr,
-                   <ls_entry> LIKE LINE OF lt_entries.
+    FIELD-SYMBOLS: <ls_entry> LIKE LINE OF lt_entries.
 
     CALL FUNCTION 'SOTR_GET_CONCEPT'
       EXPORTING
@@ -140,64 +163,65 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
              <ls_entry>-chan_tstut.
     ENDLOOP.
 
-    APPEND INITIAL LINE TO rt_sotr ASSIGNING <ls_sotr>.
-    <ls_sotr>-header = ls_header.
-    <ls_sotr>-entries = lt_entries.
+    rs_sotr-header  = ls_header.
+    rs_sotr-entries = lt_entries.
 
   ENDMETHOD.
 
 
-  METHOD read_sotr_seocomp.
-    DATA: lv_concept    TYPE sotr_head-concept.
-    DATA: lt_seocompodf TYPE yt_seocompodf.
-    FIELD-SYMBOLS <ls_seocompodf> TYPE seocompodf.
+  METHOD get_sotr_usage.
 
-    SELECT * FROM seocompodf
-      INTO TABLE lt_seocompodf
-      WHERE clsname = iv_object_name
-      AND version = '1'
-      AND exposure = '2'
-      AND attdecltyp = '2'
-      AND type = 'SOTR_CONC'
-      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
+    DATA: lv_obj_name TYPE trobj_name.
 
-    IF sy-subrc = 0.
-      LOOP AT lt_seocompodf ASSIGNING <ls_seocompodf>.
-        lv_concept = translate( val = <ls_seocompodf>-attvalue
-                                from = ''''
-                                to = '' ).
-        rt_sotr = get_sotr_4_concept( lv_concept ).
-      ENDLOOP.
+    lv_obj_name = iv_obj_name.
+
+    " Objects with multiple components
+    IF iv_pgmid = 'LIMU' AND ( iv_object = 'WDYV' OR iv_object = 'WAPP' ).
+      lv_obj_name+30 = '%'.
     ENDIF.
 
-  ENDMETHOD.
-
-
-  METHOD read_sotr_wda.
-    DATA: lv_concept  TYPE sotr_head-concept.
-    DATA: lt_sotr_use TYPE yt_sotr_use.
-    DATA: lv_obj_name TYPE trobj_name.
-    FIELD-SYMBOLS <ls_sotr_use> TYPE sotr_use.
-
-    lv_obj_name = |{ iv_object_name }%|. "Existence check via WDR_REPOSITORY_INFO should have been done earlier
     CALL FUNCTION 'SOTR_USAGE_READ'
       EXPORTING
-        pgmid          = 'LIMU'                 " Program ID in requests and tasks
-        object         = 'WDYV'                 " Object Type
+        pgmid          = iv_pgmid
+        object         = iv_object
         obj_name       = lv_obj_name
       IMPORTING
-        sotr_usage     = lt_sotr_use
+        sotr_usage     = rt_sotr_use
       EXCEPTIONS
         no_entry_found = 1
         error_in_pgmid = 2
         OTHERS         = 3.
     IF sy-subrc = 0.
-      LOOP AT lt_sotr_use ASSIGNING <ls_sotr_use>.
-        lv_concept = translate( val = <ls_sotr_use>-concept
-                                from = ''''
-                                to = '' ).
-        rt_sotr = get_sotr_4_concept( lv_concept ).
-      ENDLOOP.
+      SORT rt_sotr_use.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD read_sotr.
+
+    DATA:
+      lv_concept TYPE sotr_head-concept.
+
+    FIELD-SYMBOLS <ls_sotr_use> TYPE sotr_use.
+
+    " Known SOTR usage...
+    " LIMU: CPUB, WAPP, WDYV
+    " R3TR: ENHC, ENHO, ENHS, ENSC, SCGR, SMIF, WDYA, WEBI, WEBS
+
+    et_sotr_use = get_sotr_usage( iv_pgmid    = iv_pgmid
+                                  iv_object   = iv_object
+                                  iv_obj_name = iv_obj_name ).
+
+    LOOP AT et_sotr_use ASSIGNING <ls_sotr_use> WHERE NOT concept IS INITIAL.
+      INSERT get_sotr_4_concept( <ls_sotr_use>-concept ) INTO TABLE et_sotr.
+    ENDLOOP.
+
+    IF io_xml IS BOUND.
+      io_xml->add( iv_name = 'SOTR'
+                   ig_data = et_sotr ).
+      io_xml->add( iv_name = 'SOTR_USE'
+                   ig_data = et_sotr_use ).
     ENDIF.
 
   ENDMETHOD.

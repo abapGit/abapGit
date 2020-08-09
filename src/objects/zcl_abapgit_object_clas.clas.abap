@@ -81,7 +81,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_clas IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -198,18 +198,10 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
   METHOD deserialize_sotr.
     "OTR stands for Online Text Repository
-    DATA: lt_sotr    TYPE zif_abapgit_definitions=>ty_sotr_tt.
-
-    io_xml->read( EXPORTING iv_name = 'SOTR'
-                  CHANGING cg_data = lt_sotr ).
-
-    IF lines( lt_sotr ) = 0.
-      RETURN.
-    ENDIF.
-
     mi_object_oriented_object_fct->create_sotr(
-      iv_package    = iv_package
-      it_sotr       = lt_sotr ).
+      iv_object_name = ms_item-obj_name
+      iv_package     = iv_package
+      io_xml         = io_xml ).
   ENDMETHOD.
 
 
@@ -266,76 +258,28 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD serialize_xml.
+  METHOD repo_apack_replacement.
 
-    DATA: ls_vseoclass        TYPE vseoclass,
-          ls_clskey           TYPE seoclskey,
-          lt_langu_additional TYPE zif_abapgit_lang_definitions=>tt_langu.
+    FIELD-SYMBOLS: <lv_source> LIKE LINE OF ct_source.
 
-    ls_clskey-clsname = ms_item-obj_name.
+    LOOP AT ct_source ASSIGNING <lv_source>.
 
-    "If class was deserialized with a previous versions of abapGit and current language was different
-    "from master language at this time, this call would return SY-LANGU as master language. To fix
-    "these objects, set SY-LANGU to master language temporarily.
-    zcl_abapgit_language=>set_current_language( mv_language ).
+      FIND FIRST OCCURRENCE OF REGEX '^\s*INTERFACES(:| )\s*if_apack_manifest\s*.' IN <lv_source>.
+      IF sy-subrc = 0.
+        REPLACE FIRST OCCURRENCE OF 'if_apack_manifest' IN <lv_source> WITH 'zif_apack_manifest' IGNORING CASE.
 
-    TRY.
-        ls_vseoclass = mi_object_oriented_object_fct->get_class_properties( ls_clskey ).
+        REPLACE ALL OCCURRENCES OF 'if_apack_manifest~descriptor' IN TABLE ct_source
+                              WITH 'zif_apack_manifest~descriptor' IGNORING CASE.
 
-      CLEANUP.
-        zcl_abapgit_language=>restore_login_language( ).
+        EXIT.
+      ENDIF.
 
-    ENDTRY.
+      FIND FIRST OCCURRENCE OF REGEX '^\s*PROTECTED\s*SECTION\s*.' IN <lv_source>.
+      IF sy-subrc = 0.
+        EXIT.
+      ENDIF.
 
-    zcl_abapgit_language=>restore_login_language( ).
-
-    CLEAR: ls_vseoclass-uuid,
-           ls_vseoclass-author,
-           ls_vseoclass-createdon,
-           ls_vseoclass-changedby,
-           ls_vseoclass-changedon,
-           ls_vseoclass-r3release,
-           ls_vseoclass-chgdanyby,
-           ls_vseoclass-chgdanyon,
-           ls_vseoclass-clsfinal,
-           ls_vseoclass-clsabstrct,
-           ls_vseoclass-exposure,
-           ls_vseoclass-version.
-
-    IF mv_skip_testclass = abap_true.
-      CLEAR ls_vseoclass-with_unit_tests.
-    ENDIF.
-
-    " Table d010tinf stores info. on languages in which program is maintained
-    " Select all active translations of program texts
-    " Skip master language - it was already serialized
-    SELECT DISTINCT language
-      INTO TABLE lt_langu_additional
-      FROM d010tinf
-      WHERE r3state  = 'A'
-        AND prog     = mv_classpool_name
-        AND language <> mv_language.
-
-    io_xml->add( iv_name = 'VSEOCLASS'
-                 ig_data = ls_vseoclass ).
-
-    serialize_tpool( io_xml              = io_xml
-                     iv_clsname          = ls_clskey-clsname
-                     it_langu_additional = lt_langu_additional ).
-
-    IF ls_vseoclass-category = seoc_category_exception.
-      serialize_sotr( io_xml ).
-    ENDIF.
-
-    serialize_docu( io_xml              = io_xml
-                    iv_clsname          = ls_clskey-clsname
-                    it_langu_additional = lt_langu_additional ).
-
-    serialize_descr( io_xml     = io_xml
-                     iv_clsname = ls_clskey-clsname ).
-
-    serialize_attr( io_xml     = io_xml
-                    iv_clsname = ls_clskey-clsname ).
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -418,6 +362,13 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD serialize_sotr.
+    mi_object_oriented_object_fct->read_sotr(
+      iv_object_name = ms_item-obj_name
+      io_xml         = io_xml ).
+  ENDMETHOD.
+
+
   METHOD serialize_tpool.
 
     DATA: lt_tpool      TYPE textpool_table,
@@ -456,17 +407,76 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD serialize_sotr.
+  METHOD serialize_xml.
 
-    DATA: lt_sotr TYPE zif_abapgit_definitions=>ty_sotr_tt.
+    DATA: ls_vseoclass        TYPE vseoclass,
+          ls_clskey           TYPE seoclskey,
+          lt_langu_additional TYPE zif_abapgit_lang_definitions=>tt_langu.
 
-    lt_sotr = mi_object_oriented_object_fct->read_sotr( ms_item-obj_name ).
-    IF lines( lt_sotr ) = 0.
-      RETURN.
+    ls_clskey-clsname = ms_item-obj_name.
+
+    "If class was deserialized with a previous versions of abapGit and current language was different
+    "from master language at this time, this call would return SY-LANGU as master language. To fix
+    "these objects, set SY-LANGU to master language temporarily.
+    zcl_abapgit_language=>set_current_language( mv_language ).
+
+    TRY.
+        ls_vseoclass = mi_object_oriented_object_fct->get_class_properties( ls_clskey ).
+
+      CLEANUP.
+        zcl_abapgit_language=>restore_login_language( ).
+
+    ENDTRY.
+
+    zcl_abapgit_language=>restore_login_language( ).
+
+    CLEAR: ls_vseoclass-uuid,
+           ls_vseoclass-author,
+           ls_vseoclass-createdon,
+           ls_vseoclass-changedby,
+           ls_vseoclass-changedon,
+           ls_vseoclass-r3release,
+           ls_vseoclass-chgdanyby,
+           ls_vseoclass-chgdanyon,
+           ls_vseoclass-clsfinal,
+           ls_vseoclass-clsabstrct,
+           ls_vseoclass-exposure,
+           ls_vseoclass-version.
+
+    IF mv_skip_testclass = abap_true.
+      CLEAR ls_vseoclass-with_unit_tests.
     ENDIF.
 
-    io_xml->add( iv_name = 'SOTR'
-                 ig_data = lt_sotr ).
+    " Table d010tinf stores info. on languages in which program is maintained
+    " Select all active translations of program texts
+    " Skip master language - it was already serialized
+    SELECT DISTINCT language
+      INTO TABLE lt_langu_additional
+      FROM d010tinf
+      WHERE r3state  = 'A'
+        AND prog     = mv_classpool_name
+        AND language <> mv_language.
+
+    io_xml->add( iv_name = 'VSEOCLASS'
+                 ig_data = ls_vseoclass ).
+
+    serialize_tpool( io_xml              = io_xml
+                     iv_clsname          = ls_clskey-clsname
+                     it_langu_additional = lt_langu_additional ).
+
+    IF ls_vseoclass-category = seoc_category_exception.
+      serialize_sotr( io_xml ).
+    ENDIF.
+
+    serialize_docu( io_xml              = io_xml
+                    iv_clsname          = ls_clskey-clsname
+                    it_langu_additional = lt_langu_additional ).
+
+    serialize_descr( io_xml     = io_xml
+                     iv_clsname = ls_clskey-clsname ).
+
+    serialize_attr( io_xml     = io_xml
+                    iv_clsname = ls_clskey-clsname ).
 
   ENDMETHOD.
 
@@ -494,32 +504,6 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
 
         REPLACE ALL OCCURRENCES OF 'zif_apack_manifest~descriptor' IN TABLE ct_source
                               WITH 'if_apack_manifest~descriptor' IGNORING CASE.
-
-        EXIT.
-      ENDIF.
-
-      FIND FIRST OCCURRENCE OF REGEX '^\s*PROTECTED\s*SECTION\s*.' IN <lv_source>.
-      IF sy-subrc = 0.
-        EXIT.
-      ENDIF.
-
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD repo_apack_replacement.
-
-    FIELD-SYMBOLS: <lv_source> LIKE LINE OF ct_source.
-
-    LOOP AT ct_source ASSIGNING <lv_source>.
-
-      FIND FIRST OCCURRENCE OF REGEX '^\s*INTERFACES(:| )\s*if_apack_manifest\s*.' IN <lv_source>.
-      IF sy-subrc = 0.
-        REPLACE FIRST OCCURRENCE OF 'if_apack_manifest' IN <lv_source> WITH 'zif_apack_manifest' IGNORING CASE.
-
-        REPLACE ALL OCCURRENCES OF 'if_apack_manifest~descriptor' IN TABLE ct_source
-                              WITH 'zif_apack_manifest~descriptor' IGNORING CASE.
 
         EXIT.
       ENDIF.
@@ -701,6 +685,4 @@ CLASS zcl_abapgit_object_clas IMPLEMENTATION.
     serialize_xml( io_xml ).
 
   ENDMETHOD.
-
-
 ENDCLASS.
