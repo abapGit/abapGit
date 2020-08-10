@@ -229,6 +229,8 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     ty_sotr_tt TYPE STANDARD TABLE OF ty_sotr WITH DEFAULT KEY .
   TYPES:
+    ty_sotr_use_tt TYPE STANDARD TABLE OF sotr_use WITH DEFAULT KEY .
+  TYPES:
     BEGIN OF ty_obj_attribute,
       cmpname   TYPE seocmpname,
       attkeyfld TYPE seokeyfld,
