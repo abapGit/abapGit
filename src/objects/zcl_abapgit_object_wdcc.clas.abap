@@ -156,7 +156,8 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
           lt_cc_text     TYPE TABLE OF wdy_config_datt,
           ls_orig_config TYPE wdy_config_data,
           ls_outline     TYPE wdy_cfg_outline_data,
-          ls_config_key  TYPE wdy_config_key.
+          ls_config_key  TYPE wdy_config_key,
+          lv_xml_string  TYPE string.
 
     io_xml->add( iv_name = 'OBJECT_NAME'
                  ig_data =  ms_item-obj_name ).
@@ -204,9 +205,23 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
     io_xml->add( iv_name = 'RELID'
                  ig_data =  ls_orig_config-relid ).
 
-    mo_files->add_raw( iv_extra  = 'comp_config'
-                       iv_ext    = 'xml'
-                       iv_data = lv_xml_xstring ) ##NO_TEXT.
+    lv_xml_string = zcl_abapgit_convert=>xstring_to_string_utf8( iv_data = lv_xml_xstring ).
+    TRY.
+        lv_xml_string = zcl_abapgit_xml_pretty=>print( iv_xml           = lv_xml_string
+                                                       iv_ignore_errors = abap_false ).
+      CATCH zcx_abapgit_exception.    "
+        zcx_abapgit_exception=>raise( 'Error Pretty Printing WDCC XML Content: ' && ms_item-obj_name ).
+    ENDTRY.
+
+    REPLACE FIRST OCCURRENCE
+      OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
+      IN lv_xml_string
+      WITH '<?xml version="1.0" encoding="utf-8"?>'.
+    ASSERT sy-subrc = 0.
+
+    mo_files->add_string( iv_extra  = 'comp_config'
+                          iv_ext    = 'xml'
+                          iv_string = lv_xml_string ).
 
     SELECT * FROM wdy_config_compt INTO TABLE lt_otr_texts WHERE config_id   = ls_orig_config-config_id
                                                              AND config_type = ls_orig_config-config_type
@@ -235,7 +250,9 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
           lv_config_var  TYPE c LENGTH 6,
           lt_otr_texts   TYPE TABLE OF wdy_config_compt,
           ls_orig_config TYPE wdy_config_data,
-          lt_config_datt TYPE TABLE OF wdy_config_datt.
+          lt_config_datt TYPE TABLE OF wdy_config_datt,
+          lv_xml_string  TYPE string,
+          lv_xml_xstring TYPE xstring.
 
     io_xml->read( EXPORTING iv_name = 'CONFIG_ID'
                   CHANGING  cg_data = ls_orig_config-config_id  ).
@@ -258,8 +275,24 @@ CLASS zcl_abapgit_object_wdcc IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'WDA_COMPONENT'
                   CHANGING  cg_data = ls_orig_config-component ).
 
-    ls_orig_config-xcontent = mo_files->read_raw( iv_extra = 'comp_config'
-                                                  iv_ext   = 'xml' ) ##NO_TEXT.
+    lv_xml_string = mo_files->read_string( iv_extra = 'comp_config'
+                                           iv_ext   = 'xml' ).
+    TRY.
+        lv_xml_string = zcl_abapgit_xml_pretty=>print( iv_xml           = lv_xml_string
+                                                       iv_ignore_errors = abap_false
+                                                       iv_unpretty      = abap_true ).
+      CATCH zcx_abapgit_exception.
+        zcx_abapgit_exception=>raise( 'Error Un-Pretty Printing WDCC XML Content: ' && ms_item-obj_name ).
+    ENDTRY.
+
+    REPLACE FIRST OCCURRENCE
+      OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
+      IN lv_xml_string
+      WITH '<?xml version="1.0"?>'.
+    ASSERT sy-subrc = 0.
+
+    lv_xml_xstring = zcl_abapgit_convert=>string_to_xstring( iv_str = lv_xml_string ).
+    ls_orig_config-xcontent = lv_xml_xstring.
 
     io_xml->read( EXPORTING iv_name = 'PARENT'
                   CHANGING  cg_data = ls_orig_config-parent ).
