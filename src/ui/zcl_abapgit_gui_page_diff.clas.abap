@@ -191,7 +191,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
       IMPORTING
         it_files      TYPE zif_abapgit_definitions=>ty_stage_tt
       CHANGING
-        ct_diff_files TYPE zcl_abapgit_gui_page_diff=>tt_file_diff.
+        ct_diff_files TYPE tt_file_diff.
 
 ENDCLASS.
 
@@ -983,7 +983,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
   METHOD filter_diff_by_files.
 
-    FIELD-SYMBOLS: <ls_diff_file> TYPE zcl_abapgit_gui_page_diff=>ty_file_diff.
+    FIELD-SYMBOLS: <ls_diff_file> TYPE ty_file_diff.
 
     IF lines( it_files ) = 0.
       RETURN.
