@@ -334,11 +334,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     ls_event-method = 'post'.
     ls_event-name   = 'stage_commit'.
     ro_html = zcl_abapgit_gui_chunk_lib=>render_event_as_form( ls_event ).
-
-    ls_event-method = 'post'.
-    ls_event-name   = 'go_patch'.
-    ro_html = zcl_abapgit_gui_chunk_lib=>render_event_as_form( ls_event ).
-
     ro_html->zif_abapgit_html~set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
 
   ENDMETHOD.
@@ -722,7 +717,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     ls_hotkey_action-ui_component = 'Stage'.
     ls_hotkey_action-description  = |Patch|.
-    ls_hotkey_action-action       = 'submitPatch'.
+    ls_hotkey_action-action       = 'submitPatch'. " JS function in StageHelper
     ls_hotkey_action-hotkey       = |p|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 

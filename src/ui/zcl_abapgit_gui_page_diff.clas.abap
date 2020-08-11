@@ -187,12 +187,17 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
         zcx_abapgit_exception.
+    METHODS filter_diff_by_files
+      IMPORTING
+        it_files      TYPE zif_abapgit_definitions=>ty_stage_tt
+      CHANGING
+        ct_diff_files TYPE zcl_abapgit_gui_page_diff=>tt_file_diff.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
 
   METHOD add_filter_sub_menu.
@@ -440,19 +445,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     ENDIF.
 
-    IF lines( it_files ) > 0. " Diff only for specified files
-
-      LOOP AT mt_diff_files ASSIGNING FIELD-SYMBOL(<ls_diff_file>).
-
-        READ TABLE it_files TRANSPORTING NO FIELDS
-                            WITH KEY file-filename = <ls_diff_file>-filename.
-        IF sy-subrc <> 0.
-          DELETE TABLE mt_diff_files FROM <ls_diff_file>.
-        ENDIF.
-
-      ENDLOOP.
-
-    ENDIF.
+    filter_diff_by_files(
+      EXPORTING
+        it_files      = it_files
+      CHANGING
+        ct_diff_files = mt_diff_files ).
 
   ENDMETHOD.
 
@@ -983,4 +980,26 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
+
+  METHOD filter_diff_by_files.
+
+    FIELD-SYMBOLS: <ls_diff_file> TYPE zcl_abapgit_gui_page_diff=>ty_file_diff.
+
+    IF lines( it_files ) = 0.
+      RETURN.
+    ENDIF.
+
+    " Diff only for specified files
+    LOOP AT ct_diff_files ASSIGNING <ls_diff_file>.
+
+      READ TABLE it_files TRANSPORTING NO FIELDS
+                          WITH KEY file-filename = <ls_diff_file>-filename.
+      IF sy-subrc <> 0.
+        DELETE TABLE ct_diff_files FROM <ls_diff_file>.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.
