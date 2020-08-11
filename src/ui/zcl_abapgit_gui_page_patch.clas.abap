@@ -12,6 +12,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
           iv_key        TYPE zif_abapgit_persistence=>ty_repo-key
           is_file       TYPE zif_abapgit_definitions=>ty_file OPTIONAL
           is_object     TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+          it_files      TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
           iv_patch_mode TYPE abap_bool OPTIONAL
         RAISING
           zcx_abapgit_exception,
@@ -386,7 +387,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
     super->constructor(
       iv_key    = iv_key
       is_file   = is_file
-      is_object = is_object ).
+      is_object = is_object
+      it_files  = it_files ).
 
     IF mo_repo->is_offline( ) = abap_true.
       zcx_abapgit_exception=>raise( |Can't patch offline repos| ).
