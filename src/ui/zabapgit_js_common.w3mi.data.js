@@ -1288,9 +1288,17 @@ function Hotkeys(oKeyMap){
     // the hotkey execution
     this.oKeyMap[sKey] = function(oEvent) {
 
+      var helper = (window.gHelper || {});
+
       // We have either a js function on this
       if (this[action]) {
         this[action].call(this);
+        return;
+      }
+
+      // Or a method of the helper object
+      if (helper[action]){
+        helper[action].call(helper);
         return;
       }
 
