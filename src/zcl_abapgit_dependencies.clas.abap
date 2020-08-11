@@ -87,11 +87,17 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
         WHEN 'DTEL'.
           <ls_tadir>-korrnum = '8000'.
         WHEN 'DCLS'.
-          " AUTH after DCLS
+          " AUTH and SUSO after DCLS
+          <ls_tadir>-korrnum = '7050'.
+        WHEN 'SUSO'.
+          " SUSO after DCLS
           <ls_tadir>-korrnum = '7100'.
         WHEN 'AUTH'.
           " AUTH after DCLS
-          <ls_tadir>-korrnum = '7050'.
+          <ls_tadir>-korrnum = '7150'.
+        WHEN 'DDLS'.
+          " DDLS after DCLS
+          <ls_tadir>-korrnum = '7200'.
         WHEN 'TTYP' OR 'TABL' OR 'VIEW'.
           SELECT SINGLE tabclass FROM dd02l
             INTO lv_tabclass
