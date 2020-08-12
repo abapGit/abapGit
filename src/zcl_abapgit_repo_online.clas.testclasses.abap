@@ -24,6 +24,7 @@ CLASS ltcl_repo_online IMPLEMENTATION.
           ls_online_repo   TYPE zif_abapgit_persistence=>ty_repo,
           lr_test_repo     TYPE REF TO zcl_abapgit_repo_online,
           lv_show_url      TYPE zif_abapgit_persistence=>ty_repo-url.
+    FIELD-SYMBOLS <ls_provider_urls> TYPE ty_show_url_test.
 
     ls_provider_urls-repo_url = |https://github.com/larshp/abapGit.git|.
     ls_provider_urls-show_url = |https://github.com/larshp/abapGit/commit/{ lv_testhash }|.
@@ -35,7 +36,7 @@ CLASS ltcl_repo_online IMPLEMENTATION.
     ls_provider_urls-show_url = |https://gitlab.com/larshp/abapGit/-/commit/{ lv_testhash }|.
     APPEND ls_provider_urls TO lt_test_urls.
 
-    LOOP AT lt_test_urls ASSIGNING FIELD-SYMBOL(<ls_provider_urls>).
+    LOOP AT lt_test_urls ASSIGNING <ls_provider_urls>.
       ls_online_repo-key = 'TEST'.
       ls_online_repo-url = <ls_provider_urls>-repo_url.
       ls_online_repo-branch_name = |master|.
