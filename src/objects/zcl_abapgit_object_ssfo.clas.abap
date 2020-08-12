@@ -410,8 +410,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
           li_iterator            TYPE REF TO if_ixml_node_iterator,
           lv_formname            TYPE tdsfname,
           li_ixml                TYPE REF TO if_ixml,
-          li_xml_doc             TYPE REF TO if_ixml_document,
-          lv_within_code_section TYPE abap_bool.
+          li_xml_doc             TYPE REF TO if_ixml_document.
 
     li_ixml = cl_ixml=>create( ).
     li_xml_doc = li_ixml->create_document( ).
