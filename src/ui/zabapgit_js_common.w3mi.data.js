@@ -1295,7 +1295,8 @@ function Hotkeys(oKeyMap){
     // the hotkey execution
     this.oKeyMap[sKey] = function(oEvent) {
 
-      var helper = (window.gHelper || {});
+      // gHelper is only valid for diff page
+      var diffHelper = (window.gHelper || {});
 
       // We have either a js function on this
       if (this[action]) {
@@ -1303,9 +1304,9 @@ function Hotkeys(oKeyMap){
         return;
       }
 
-      // Or a method of the helper object
-      if (helper[action]){
-        helper[action].call(helper);
+      // Or a method of the helper object for the diff page
+      if (diffHelper[action]){
+        diffHelper[action].call(diffHelper);
         return;
       }
 
