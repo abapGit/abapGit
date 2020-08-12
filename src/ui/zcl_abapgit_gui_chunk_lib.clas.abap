@@ -794,7 +794,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     DATA: lv_commit_hash       TYPE zif_abapgit_definitions=>ty_sha1,
           lv_commit_short_hash TYPE zif_abapgit_definitions=>ty_sha1,
           lv_repo_url          TYPE zif_abapgit_persistence=>ty_repo-url,
-          lv_display_url       TYPE zif_abapgit_persistence=>ty_repo-url.
+          lv_display_url       TYPE zif_abapgit_persistence=>ty_repo-url,
+          lv_icon_commit       TYPE string.
 
     lv_commit_hash = iv_repo_online->get_sha1_remote( ).
     lv_commit_short_hash = lv_commit_hash(7).
@@ -802,10 +803,10 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     TRY.
         lv_display_url = iv_repo_online->get_commit_display_url( lv_commit_hash ).
 
-        DATA(icon_commit) = zcl_abapgit_html=>icon( iv_name  = 'code-commit'
-                                                    iv_class = 'pad-sides'
-                                                    iv_hint  = 'Commit' ).
-        iv_html->add_a( iv_txt   = |{ icon_commit }{ lv_commit_short_hash }|
+        lv_icon_commit = zcl_abapgit_html=>icon( iv_name  = 'code-commit'
+                                                 iv_class = 'pad-sides'
+                                                 iv_hint  = 'Commit' ).
+        iv_html->add_a( iv_txt   = |{ lv_icon_commit }{ lv_commit_short_hash }|
                         iv_act   = |{ zif_abapgit_definitions=>c_action-url }?|
                                 && lv_display_url
                         iv_class = |url| ).
