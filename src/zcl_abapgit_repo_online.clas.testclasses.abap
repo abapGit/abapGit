@@ -42,7 +42,9 @@ CLASS ltcl_repo_online IMPLEMENTATION.
       ls_online_repo-branch_name = |master|.
       ls_online_repo-offline = abap_false.
 
-      lr_test_repo = NEW zcl_abapgit_repo_online( ls_online_repo ).
+      CREATE OBJECT lr_test_repo
+        EXPORTING
+          is_data = ls_online_repo.
 
       lv_show_url = lr_test_repo->get_commit_display_url( iv_hash = lv_testhash ).
 
