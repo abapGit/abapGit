@@ -572,10 +572,11 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
   METHOD render_order_by_header_cells.
 
     DATA:
+      lt_colspec   TYPE zif_abapgit_definitions=>tty_col_spec,
       lv_tmp       TYPE string,
       lv_disp_name TYPE string.
 
-    FIELD-SYMBOLS <ls_col> LIKE LINE OF it_col_spec.
+    FIELD-SYMBOLS <ls_col> LIKE LINE OF lt_colspec.
 
     CREATE OBJECT ro_html.
 
@@ -799,18 +800,20 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     lv_commit_hash = iv_repo_online->get_sha1_remote( ).
     lv_commit_short_hash = lv_commit_hash(7).
 
+
+    lv_icon_commit = zcl_abapgit_html=>icon( iv_name  = 'code-commit'
+                                             iv_class = 'pad-sides'
+                                             iv_hint  = 'Commit' ).
+
     TRY.
         lv_display_url = iv_repo_online->get_commit_display_url( lv_commit_hash ).
 
-        lv_icon_commit = zcl_abapgit_html=>icon( iv_name  = 'code-commit'
-                                                 iv_class = 'pad-sides'
-                                                 iv_hint  = 'Commit' ).
         iv_html->add_a( iv_txt   = |{ lv_icon_commit }{ lv_commit_short_hash }|
                         iv_act   = |{ zif_abapgit_definitions=>c_action-url }?|
                                 && lv_display_url
                         iv_class = |url| ).
       CATCH zcx_abapgit_exception.
-        iv_html->add( |<span class="url">{ lv_commit_short_hash }</span>|  ).
+        iv_html->add( |<span class="url">{ lv_icon_commit }{ lv_commit_short_hash }</span>|  ).
     ENDTRY.
 
   ENDMETHOD.
