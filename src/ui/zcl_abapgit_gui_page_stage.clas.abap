@@ -115,7 +115,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     CREATE OBJECT ro_menu.
 
-    IF lines( ms_files-local ) > 0.
+    IF lines( ms_files-local ) > 0
+    OR lines( ms_files-remote ) > 0.
       ro_menu->add( iv_txt = |Diff|
                     iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ mo_repo->get_key( ) }| ).
 
