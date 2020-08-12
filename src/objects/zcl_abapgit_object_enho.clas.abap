@@ -133,9 +133,8 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lv_tool TYPE enhtooltype,
-          li_enho TYPE REF TO zif_abapgit_object_enho.
-
+    DATA: lv_tool     TYPE enhtooltype,
+          li_enho     TYPE REF TO zif_abapgit_object_enho.
 
     IF zif_abapgit_object~exists( ) = abap_true.
       zif_abapgit_object~delete( iv_package ).
@@ -148,6 +147,13 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO IMPLEMENTATION.
 
     li_enho->deserialize( io_xml     = io_xml
                           iv_package = iv_package ).
+
+    zcl_abapgit_sotr_handler=>create_sotr(
+      iv_pgmid    = 'R3TR'
+      iv_object   = ms_item-obj_type
+      iv_obj_name = ms_item-obj_name
+      iv_package  = iv_package
+      io_xml      = io_xml ).
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
@@ -224,7 +230,6 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO IMPLEMENTATION.
           li_enho     TYPE REF TO zif_abapgit_object_enho,
           li_enh_tool TYPE REF TO if_enh_tool.
 
-
     IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
@@ -242,6 +247,12 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO IMPLEMENTATION.
 
     li_enho->serialize( io_xml      = io_xml
                         ii_enh_tool = li_enh_tool ).
+
+    zcl_abapgit_sotr_handler=>read_sotr(
+      iv_pgmid    = 'R3TR'
+      iv_object   = ms_item-obj_type
+      iv_obj_name = ms_item-obj_name
+      io_xml      = io_xml ).
 
   ENDMETHOD.
 ENDCLASS.
