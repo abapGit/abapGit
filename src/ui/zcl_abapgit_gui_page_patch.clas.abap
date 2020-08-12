@@ -510,6 +510,8 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
       lt_files          TYPE zif_abapgit_definitions=>ty_stage_tt,
       ls_file           LIKE LINE OF lt_files.
 
+    FIELD-SYMBOLS: <ls_diff_file_old> TYPE zcl_abapgit_gui_page_diff=>ty_file_diff.
+
 
     lt_diff_files_old = mt_diff_files.
 
@@ -526,7 +528,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
     " we only want to refresh the visible files. Otherwise all
     " diff files would appear.
     " Which is not wanted when we previously only selected particular files.
-    LOOP AT lt_diff_files_old ASSIGNING FIELD-SYMBOL(<ls_diff_file_old>).
+    LOOP AT lt_diff_files_old ASSIGNING <ls_diff_file_old>.
       CLEAR: ls_file.
       MOVE-CORRESPONDING <ls_diff_file_old> TO ls_file-file.
       INSERT ls_file INTO TABLE lt_files.
