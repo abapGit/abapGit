@@ -355,6 +355,7 @@ INTERFACE zif_abapgit_definitions
       icon_scaling           TYPE c LENGTH 1,
       ui_theme               TYPE string,
       hide_sapgui_hint       TYPE abap_bool,
+      activate_wo_popup      TYPE abap_bool,
     END OF ty_s_user_settings .
   TYPES:
     tty_dokil TYPE STANDARD TABLE OF dokil

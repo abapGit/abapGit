@@ -35,6 +35,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         !iv_key    TYPE zif_abapgit_persistence=>ty_repo-key
         !is_file   TYPE zif_abapgit_definitions=>ty_file OPTIONAL
         !is_object TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+        !it_files  TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
       RAISING
         zcx_abapgit_exception.
 
@@ -68,6 +69,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         IMPORTING
           is_file   TYPE zif_abapgit_definitions=>ty_file OPTIONAL
           is_object TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+          it_files  TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
         RAISING
           zcx_abapgit_exception,
       add_menu_begin
@@ -185,12 +187,17 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
         zcx_abapgit_exception.
+    METHODS filter_diff_by_files
+      IMPORTING
+        it_files      TYPE zif_abapgit_definitions=>ty_stage_tt
+      CHANGING
+        ct_diff_files TYPE tt_file_diff.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
 
   METHOD add_filter_sub_menu.
@@ -426,6 +433,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       ENDLOOP.
 
     ELSE.                             " Diff for the whole repo
+
       SORT lt_status BY
         path ASCENDING
         filename ASCENDING.
@@ -436,6 +444,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       ENDLOOP.
 
     ENDIF.
+
+    filter_diff_by_files(
+      EXPORTING
+        it_files      = it_files
+      CHANGING
+        ct_diff_files = mt_diff_files ).
 
   ENDMETHOD.
 
@@ -457,7 +471,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     calculate_diff(
         is_file   = is_file
-        is_object = is_object ).
+        is_object = is_object
+        it_files  = it_files ).
 
     IF lines( mt_diff_files ) = 0.
       zcx_abapgit_exception=>raise( 'PAGE_DIFF ERROR: No diff files found' ).
@@ -965,4 +980,26 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ENDCASE.
 
   ENDMETHOD.
+
+  METHOD filter_diff_by_files.
+
+    FIELD-SYMBOLS: <ls_diff_file> TYPE ty_file_diff.
+
+    IF lines( it_files ) = 0.
+      RETURN.
+    ENDIF.
+
+    " Diff only for specified files
+    LOOP AT ct_diff_files ASSIGNING <ls_diff_file>.
+
+      READ TABLE it_files TRANSPORTING NO FIELDS
+                          WITH KEY file-filename = <ls_diff_file>-filename.
+      IF sy-subrc <> 0.
+        DELETE TABLE ct_diff_files FROM <ls_diff_file>.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
 ENDCLASS.
