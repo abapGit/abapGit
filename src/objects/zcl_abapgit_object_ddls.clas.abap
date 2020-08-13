@@ -229,6 +229,11 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
         corr_insert( iv_package ).
 
       CATCH cx_root INTO lx_error.
+        CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~DELETE')
+          EXPORTING
+            name = ms_item-obj_name
+            prid = 0.
+
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
                                       ix_previous = lx_error ).
     ENDTRY.
