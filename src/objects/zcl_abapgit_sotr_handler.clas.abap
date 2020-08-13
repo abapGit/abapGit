@@ -130,8 +130,7 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
   METHOD get_sotr_4_concept.
 
     DATA: ls_header   TYPE sotr_head,
-          lt_entries  TYPE sotr_text_tt,
-          lv_obj_name TYPE trobj_name.
+          lt_entries  TYPE sotr_text_tt.
 
     FIELD-SYMBOLS: <ls_entry> LIKE LINE OF lt_entries.
 
@@ -199,9 +198,6 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
 
 
   METHOD read_sotr.
-
-    DATA:
-      lv_concept TYPE sotr_head-concept.
 
     FIELD-SYMBOLS <ls_sotr_use> TYPE sotr_use.
 

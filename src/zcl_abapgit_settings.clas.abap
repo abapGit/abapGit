@@ -146,7 +146,13 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
           VALUE(rv_ui_theme) TYPE zif_abapgit_definitions=>ty_s_user_settings-ui_theme,
       set_ui_theme
         IMPORTING
-          iv_ui_theme TYPE zif_abapgit_definitions=>ty_s_user_settings-ui_theme.
+          iv_ui_theme TYPE zif_abapgit_definitions=>ty_s_user_settings-ui_theme,
+      get_activate_wo_popup
+        RETURNING
+          VALUE(rv_act_wo_popup) TYPE zif_abapgit_definitions=>ty_s_user_settings-activate_wo_popup,
+      set_activate_wo_popup
+        IMPORTING
+          iv_act_wo_popup TYPE zif_abapgit_definitions=>ty_s_user_settings-activate_wo_popup.
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_s_settings,
@@ -172,6 +178,11 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
+
+
+  METHOD get_activate_wo_popup.
+    rv_act_wo_popup = ms_user_settings-activate_wo_popup.
+  ENDMETHOD.
 
 
   METHOD get_adt_jump_enabled.
@@ -281,6 +292,11 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
   METHOD get_user_settings.
     rs_settings = ms_user_settings.
+  ENDMETHOD.
+
+
+  METHOD set_activate_wo_popup.
+    ms_user_settings-activate_wo_popup = iv_act_wo_popup.
   ENDMETHOD.
 
 

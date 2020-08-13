@@ -565,11 +565,10 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
   METHOD render_order_by_header_cells.
 
     DATA:
-      lt_colspec   TYPE zif_abapgit_definitions=>tty_col_spec,
       lv_tmp       TYPE string,
       lv_disp_name TYPE string.
 
-    FIELD-SYMBOLS <ls_col> LIKE LINE OF lt_colspec.
+    FIELD-SYMBOLS <ls_col> LIKE LINE OF it_col_spec.
 
     CREATE OBJECT ro_html.
 
