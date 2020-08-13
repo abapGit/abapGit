@@ -596,9 +596,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
           lt_navgraph   TYPE o2applgrap_table,
           lt_pages      TYPE o2pagelist,
           lt_pages_info TYPE ty_pages_tt,
-          lo_bsp        TYPE REF TO cl_o2_api_application,
-          lt_sotr       TYPE zif_abapgit_definitions=>ty_sotr_tt,
-          lt_sotr_use   TYPE zif_abapgit_definitions=>ty_sotr_use_tt.
+          lo_bsp        TYPE REF TO cl_o2_api_application.
 
     FIELD-SYMBOLS: <ls_page> LIKE LINE OF lt_pages.
 

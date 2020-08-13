@@ -12,6 +12,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
           iv_key        TYPE zif_abapgit_persistence=>ty_repo-key
           is_file       TYPE zif_abapgit_definitions=>ty_file OPTIONAL
           is_object     TYPE zif_abapgit_definitions=>ty_item OPTIONAL
+          it_files      TYPE zif_abapgit_definitions=>ty_stage_tt OPTIONAL
           iv_patch_mode TYPE abap_bool OPTIONAL
         RAISING
           zcx_abapgit_exception,
@@ -68,7 +69,6 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
           io_html      TYPE REF TO zcl_abapgit_html
           iv_filename  TYPE string
           is_diff_line TYPE zif_abapgit_definitions=>ty_diff
-          iv_fstate    TYPE char1
           iv_index     TYPE sy-tabix
         RAISING
           zcx_abapgit_exception,
@@ -166,7 +166,6 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
       is_patch_line_possible
         IMPORTING
           is_diff_line                     TYPE zif_abapgit_definitions=>ty_diff
-          iv_fstate                        TYPE char1
         RETURNING
           VALUE(rv_is_patch_line_possible) TYPE abap_bool.
 
@@ -180,7 +179,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
 
   METHOD add_menu_begin.
@@ -386,7 +385,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
     super->constructor(
       iv_key    = iv_key
       is_file   = is_file
-      is_object = is_object ).
+      is_object = is_object
+      it_files  = it_files ).
 
     IF mo_repo->is_offline( ) = abap_true.
       zcx_abapgit_exception=>raise( |Can't patch offline repos| ).
@@ -506,7 +506,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
   METHOD refresh.
 
     DATA:
-      lt_diff_files_old TYPE tt_file_diff.
+      lt_diff_files_old TYPE tt_file_diff,
+      lt_files          TYPE zif_abapgit_definitions=>ty_stage_tt,
+      ls_file           LIKE LINE OF lt_files.
+
+    FIELD-SYMBOLS: <ls_diff_file_old> TYPE zcl_abapgit_gui_page_diff=>ty_file_diff.
+
 
     lt_diff_files_old = mt_diff_files.
 
@@ -519,7 +524,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
         refresh_local_object( iv_action ).
     ENDCASE.
 
-    calculate_diff( ).
+    " We need to supply files again in calculate_diff. Because
+    " we only want to refresh the visible files. Otherwise all
+    " diff files would appear.
+    " Which is not wanted when we previously only selected particular files.
+    LOOP AT lt_diff_files_old ASSIGNING <ls_diff_file_old>.
+      CLEAR: ls_file.
+      MOVE-CORRESPONDING <ls_diff_file_old> TO ls_file-file.
+      INSERT ls_file INTO TABLE lt_files.
+    ENDLOOP.
+
+    calculate_diff( it_files = lt_files ).
     restore_patch_flags( lt_diff_files_old ).
 
   ENDMETHOD.
@@ -617,7 +632,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
     render_patch( io_html      = io_html
                   iv_filename  = iv_filename
                   is_diff_line = is_diff_line
-                  iv_fstate    = iv_fstate
                   iv_index     = iv_index ).
 
     super->render_line_split_row(
@@ -646,9 +660,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
 
     lv_patched = get_diff_object( iv_filename )->is_line_patched( iv_index ).
 
-    lv_is_patch_possible = is_patch_line_possible(
-                               is_diff_line = is_diff_line
-                               iv_fstate    = iv_fstate ).
+    lv_is_patch_possible = is_patch_line_possible( is_diff_line ).
 
     IF lv_is_patch_possible = abap_true.
 
