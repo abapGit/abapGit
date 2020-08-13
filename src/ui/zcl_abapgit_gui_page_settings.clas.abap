@@ -258,17 +258,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
   METHOD post_development_internals.
 
-    IF is_post_field_checked( 'critical_tests' ) = abap_true.
-      mo_settings->set_run_critical_tests( abap_true ).
-    ELSE.
-      mo_settings->set_run_critical_tests( abap_false ).
-    ENDIF.
+    mo_settings->set_run_critical_tests( is_post_field_checked( 'critical_tests' ) ).
 
-    IF is_post_field_checked( 'experimental_features' ) = abap_true.
-      mo_settings->set_experimental_features( abap_true ).
-    ELSE.
-      mo_settings->set_experimental_features( abap_false ).
-    ENDIF.
+    mo_settings->set_experimental_features( is_post_field_checked( 'experimental_features' ) ).
+
+    mo_settings->set_activate_wo_popup( is_post_field_checked( 'activate_wo_popup' ) ).
 
   ENDMETHOD.
 
@@ -424,7 +418,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
   METHOD render_development_internals.
 
     DATA: lv_critical_tests TYPE string,
-          lv_experimental   TYPE string.
+          lv_experimental   TYPE string,
+          lv_act_wo_popup   TYPE string.
 
     IF mo_settings->get_run_critical_tests( ) = abap_true.
       lv_critical_tests = 'checked'.
@@ -434,6 +429,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
       lv_experimental = 'checked'.
     ENDIF.
 
+    IF mo_settings->get_activate_wo_popup( ) = abap_true.
+      lv_act_wo_popup = 'checked'.
+    ENDIF.
+
     CREATE OBJECT ro_html.
     ro_html->add( |<h2>abapGit Development Internals settings</h2>| ).
     ro_html->add( `<input type="checkbox" name="critical_tests" `
@@ -441,6 +440,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ro_html->add( |<br>| ).
     ro_html->add( `<input type="checkbox" name="experimental_features" `
                    && lv_experimental && ` > Enable experimental features` ).
+    ro_html->add( |<br>| ).
+    ro_html->add( `<input type="checkbox" name="activate_wo_popup" `
+                   && lv_act_wo_popup && ` > Activate objects without popup` ).
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).
 
