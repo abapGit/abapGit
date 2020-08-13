@@ -188,6 +188,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     li_repo_srv->get_repo_from_package(
       EXPORTING
         iv_package = is_repo_params-package
+        iv_ign_subpkg = is_repo_params-ignore_subpackages
       IMPORTING
         eo_repo    = lo_repo
         ev_reason  = lv_reason ).

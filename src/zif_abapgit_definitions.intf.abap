@@ -229,6 +229,8 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     ty_sotr_tt TYPE STANDARD TABLE OF ty_sotr WITH DEFAULT KEY .
   TYPES:
+    ty_sotr_use_tt TYPE STANDARD TABLE OF sotr_use WITH DEFAULT KEY .
+  TYPES:
     BEGIN OF ty_obj_attribute,
       cmpname   TYPE seocmpname,
       attkeyfld TYPE seokeyfld,
@@ -353,6 +355,7 @@ INTERFACE zif_abapgit_definitions
       icon_scaling           TYPE c LENGTH 1,
       ui_theme               TYPE string,
       hide_sapgui_hint       TYPE abap_bool,
+      activate_wo_popup      TYPE abap_bool,
     END OF ty_s_user_settings .
   TYPES:
     tty_dokil TYPE STANDARD TABLE OF dokil
