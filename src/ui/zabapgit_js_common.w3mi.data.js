@@ -319,6 +319,7 @@ RepoOverViewHelper.prototype.onPageLoad = function () {
 function StageHelper(params) {
   this.pageSeed        = params.seed;
   this.formAction      = params.formAction;
+  this.patchAction     = params.patchAction;
   this.user            = params.user;
   this.selectedCount   = 0;
   this.filteredCount   = 0;
@@ -330,6 +331,7 @@ function StageHelper(params) {
     commitAllBtn:      document.getElementById(params.ids.commitAllBtn),
     commitSelectedBtn: document.getElementById(params.ids.commitSelectedBtn),
     commitFilteredBtn: document.getElementById(params.ids.commitFilteredBtn),
+    patchBtn:          document.getElementById(params.ids.patchBtn),
     objectSearch:      document.getElementById(params.ids.objectSearch),
     selectedCounter:   null,
     filteredCounter:   null,
@@ -393,6 +395,7 @@ StageHelper.prototype.setHooks = function() {
   this.dom.stageTab.onclick          = this.onTableClick.bind(this);
   this.dom.commitSelectedBtn.onclick = this.submit.bind(this);
   this.dom.commitFilteredBtn.onclick = this.submitVisible.bind(this);
+  this.dom.patchBtn.onclick          = this.submitPatch.bind(this);
   this.dom.objectSearch.oninput      = this.onFilter.bind(this);
   this.dom.objectSearch.onkeypress   = this.onFilter.bind(this);
   window.onbeforeunload              = this.onPageUnload.bind(this);
@@ -611,6 +614,10 @@ StageHelper.prototype.submit = function () {
 StageHelper.prototype.submitVisible = function () {
   this.markVisiblesAsAdded();
   submitSapeventForm(this.collectData(), this.formAction);
+};
+
+StageHelper.prototype.submitPatch = function(){
+  submitSapeventForm(this.collectData(), this.patchAction);
 };
 
 // Extract data from the table
@@ -1288,9 +1295,18 @@ function Hotkeys(oKeyMap){
     // the hotkey execution
     this.oKeyMap[sKey] = function(oEvent) {
 
+      // gHelper is only valid for diff page
+      var diffHelper = (window.gHelper || {});
+
       // We have either a js function on this
       if (this[action]) {
         this[action].call(this);
+        return;
+      }
+
+      // Or a method of the helper object for the diff page
+      if (diffHelper[action]){
+        diffHelper[action].call(diffHelper);
         return;
       }
 
