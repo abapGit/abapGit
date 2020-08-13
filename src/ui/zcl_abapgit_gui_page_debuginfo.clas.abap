@@ -138,7 +138,6 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
           lv_class    TYPE seoclsname,
           li_object   TYPE REF TO zif_abapgit_object,
           ls_item     TYPE zif_abapgit_definitions=>ty_item,
-          lv_language TYPE spras,
           ls_metadata TYPE zif_abapgit_definitions=>ty_metadata,
           lv_step     TYPE zif_abapgit_definitions=>ty_deserialization_step,
           lt_steps    TYPE zif_abapgit_definitions=>ty_deserialization_step_tt.

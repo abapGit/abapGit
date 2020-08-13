@@ -405,8 +405,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
           lt_local_content  TYPE o2pageline_table,
           lt_local_pages    TYPE o2pagelist.
 
-    FIELD-SYMBOLS: <ls_remote_page>       LIKE LINE OF lt_pages_info.
-
+    FIELD-SYMBOLS: <ls_remote_page> LIKE LINE OF lt_pages_info.
 
     io_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
                   CHANGING cg_data = ls_attributes ).
@@ -522,6 +521,13 @@ CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
     delete_superfluous_pages( it_local_pages  = lt_local_pages
                               it_remote_pages = lt_pages_info ).
 
+    zcl_abapgit_sotr_handler=>create_sotr(
+      iv_pgmid    = 'LIMU'
+      iv_object   = 'WAPP'
+      iv_obj_name = ms_item-obj_name
+      iv_package  = iv_package
+      io_xml      = io_xml ).
+
   ENDMETHOD.
 
 
@@ -594,7 +600,6 @@ CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_page> LIKE LINE OF lt_pages.
 
-
     lv_name = ms_item-obj_name.
 
     cl_o2_api_application=>load(
@@ -647,6 +652,12 @@ CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
 
     io_xml->add( iv_name = 'PAGES'
                  ig_data = lt_pages_info ).
+
+    zcl_abapgit_sotr_handler=>read_sotr(
+      iv_pgmid    = 'LIMU'
+      iv_object   = 'WAPP'
+      iv_obj_name = ms_item-obj_name
+      io_xml      = io_xml ).
 
   ENDMETHOD.
 ENDCLASS.

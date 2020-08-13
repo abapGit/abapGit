@@ -97,8 +97,6 @@ CLASS ZCL_ABAPGIT_OBJECT_DSYS IMPLEMENTATION.
 
   METHOD get_master_lang.
 
-    DATA: lv_language TYPE spras.
-
     SELECT SINGLE langu FROM dokil INTO rv_language
       WHERE id = c_id
       AND object = mv_doc_object

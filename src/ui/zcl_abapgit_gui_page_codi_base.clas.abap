@@ -224,8 +224,21 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
             WHEN seop_incextapp_testclasses.
               lv_obj_txt = |{ is_result-objname } : Test Classes|.
             WHEN OTHERS.
-              ls_mtdkey = cl_oo_classname_service=>get_method_by_include( is_result-sobjname ).
-              lv_obj_txt = |{ ls_mtdkey-clsname }->{ ls_mtdkey-cpdname }|.
+              cl_oo_classname_service=>get_method_by_include(
+                EXPORTING
+                  incname             = is_result-sobjname
+                RECEIVING
+                  mtdkey              = ls_mtdkey
+                EXCEPTIONS
+                  class_not_existing  = 1
+                  method_not_existing = 2
+                  OTHERS              = 3 ).
+              IF sy-subrc = 0.
+                lv_obj_txt = |{ ls_mtdkey-clsname }->{ ls_mtdkey-cpdname }|.
+              ELSE.
+                lv_obj_txt = is_result-sobjname.
+              ENDIF.
+
           ENDCASE.
         CATCH cx_root.
           lv_obj_txt = ''. "use default below
