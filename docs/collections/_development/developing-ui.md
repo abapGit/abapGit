@@ -4,8 +4,9 @@ order: 91
 ---
 
 This doc covers page creation, html rendering and event handling.
-- See also [UI - CSS and assets](./developing-ui-css.html).
-- See also [UI - Java script](./developing-ui-js.html).
+- See also [UI - CSS and assets](./developing-ui-css.html)
+- See also [UI - Java script](./developing-ui-js.html)
+- See also [Html forms](./developing-ui-forms.html)
 
 ## TL;DR
 

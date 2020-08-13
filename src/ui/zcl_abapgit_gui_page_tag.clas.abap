@@ -159,7 +159,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
 
     CLEAR eg_fields.
 
-    CONCATENATE LINES OF it_postdata INTO lv_string.
+    lv_string = zcl_abapgit_utils=>translate_postdata( it_postdata ).
     REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>c_crlf    IN lv_string WITH lc_replace.
     REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>c_newline IN lv_string WITH lc_replace.
     lt_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( lv_string ).
@@ -192,12 +192,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
 
   METHOD render_content.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( '<div class="repo">' ).
-    ro_html->add( render_menu( ) ).
-    ro_html->add( render_form( ) ).
-    ro_html->add( '</div>' ).
+    ri_html->add( '<div class="repo">' ).
+    ri_html->add( render_menu( ) ).
+    ri_html->add( render_form( ) ).
+    ri_html->add( '</div>' ).
 
     register_deferred_script( render_scripts( ) ).
 

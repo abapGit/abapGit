@@ -128,7 +128,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
     DATA lv_serialized_post_data TYPE string.
 
-    CONCATENATE LINES OF it_postdata INTO lv_serialized_post_data.
+    lv_serialized_post_data = zcl_abapgit_utils=>translate_postdata( it_postdata ).
     rt_post_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_serialized_post_data ).
 
   ENDMETHOD.
@@ -240,8 +240,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'comment_default'.
     IF sy-subrc = 0.
       mo_settings->set_commitmsg_comment_default( <ls_post_field>-value ).
-    ELSE.
-      mo_settings->set_commitmsg_comment_default( zcl_abapgit_settings=>c_commitmsg_comment_default ).
     ENDIF.
 
     READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'body_size'.
@@ -260,17 +258,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
   METHOD post_development_internals.
 
-    IF is_post_field_checked( 'critical_tests' ) = abap_true.
-      mo_settings->set_run_critical_tests( abap_true ).
-    ELSE.
-      mo_settings->set_run_critical_tests( abap_false ).
-    ENDIF.
+    mo_settings->set_run_critical_tests( is_post_field_checked( 'critical_tests' ) ).
 
-    IF is_post_field_checked( 'experimental_features' ) = abap_true.
-      mo_settings->set_experimental_features( abap_true ).
-    ELSE.
-      mo_settings->set_experimental_features( abap_false ).
-    ENDIF.
+    mo_settings->set_experimental_features( is_post_field_checked( 'experimental_features' ) ).
+
+    mo_settings->set_activate_wo_popup( is_post_field_checked( 'activate_wo_popup' ) ).
 
   ENDMETHOD.
 
@@ -392,33 +384,33 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
   METHOD render_content.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     read_settings( ).
 
-    ro_html->add( render_form_begin( ) ).
-    ro_html->add( render_section_begin( |Global settings| ) ).
-    ro_html->add( render_proxy( ) ).
-    ro_html->add( |<hr>| ).
-    ro_html->add( render_commit_msg( ) ).
-    ro_html->add( |<hr>| ).
-    ro_html->add( render_development_internals( ) ).
-    ro_html->add( render_section_end( ) ).
-    ro_html->add( render_section_begin( |User specific settings| ) ).
-    ro_html->add( render_start_up( ) ).
-    ro_html->add( render_max_lines( ) ).
-    ro_html->add( render_icon_scaling( ) ).
-    ro_html->add( render_ui_theme( ) ).
-    ro_html->add( |<hr>| ).
-    ro_html->add( render_adt_jump_enabled( ) ).
-    ro_html->add( |<hr>| ).
-    ro_html->add( render_parallel_proc( ) ).
-    ro_html->add( |<hr>| ).
-    ro_html->add( render_link_hints( ) ).
-    ro_html->add( |<hr>| ).
-    ro_html->add( render_hotkeys( ) ).
-    ro_html->add( render_section_end( ) ).
-    ro_html->add( render_form_end( ) ).
+    ri_html->add( render_form_begin( ) ).
+    ri_html->add( render_section_begin( |Global settings| ) ).
+    ri_html->add( render_proxy( ) ).
+    ri_html->add( |<hr>| ).
+    ri_html->add( render_commit_msg( ) ).
+    ri_html->add( |<hr>| ).
+    ri_html->add( render_development_internals( ) ).
+    ri_html->add( render_section_end( ) ).
+    ri_html->add( render_section_begin( |User specific settings| ) ).
+    ri_html->add( render_start_up( ) ).
+    ri_html->add( render_max_lines( ) ).
+    ri_html->add( render_icon_scaling( ) ).
+    ri_html->add( render_ui_theme( ) ).
+    ri_html->add( |<hr>| ).
+    ri_html->add( render_adt_jump_enabled( ) ).
+    ri_html->add( |<hr>| ).
+    ri_html->add( render_parallel_proc( ) ).
+    ri_html->add( |<hr>| ).
+    ri_html->add( render_link_hints( ) ).
+    ri_html->add( |<hr>| ).
+    ri_html->add( render_hotkeys( ) ).
+    ri_html->add( render_section_end( ) ).
+    ri_html->add( render_form_end( ) ).
 
   ENDMETHOD.
 
@@ -426,7 +418,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
   METHOD render_development_internals.
 
     DATA: lv_critical_tests TYPE string,
-          lv_experimental   TYPE string.
+          lv_experimental   TYPE string,
+          lv_act_wo_popup   TYPE string.
 
     IF mo_settings->get_run_critical_tests( ) = abap_true.
       lv_critical_tests = 'checked'.
@@ -436,6 +429,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
       lv_experimental = 'checked'.
     ENDIF.
 
+    IF mo_settings->get_activate_wo_popup( ) = abap_true.
+      lv_act_wo_popup = 'checked'.
+    ENDIF.
+
     CREATE OBJECT ro_html.
     ro_html->add( |<h2>abapGit Development Internals settings</h2>| ).
     ro_html->add( `<input type="checkbox" name="critical_tests" `
@@ -443,6 +440,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ro_html->add( |<br>| ).
     ro_html->add( `<input type="checkbox" name="experimental_features" `
                    && lv_experimental && ` > Enable experimental features` ).
+    ro_html->add( |<br>| ).
+    ro_html->add( `<input type="checkbox" name="activate_wo_popup" `
+                   && lv_act_wo_popup && ` > Activate objects without popup` ).
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).
 

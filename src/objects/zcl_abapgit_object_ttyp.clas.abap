@@ -27,27 +27,11 @@ CLASS ZCL_ABAPGIT_OBJECT_TTYP IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_objname TYPE rsedd0-ddobjname.
-
     IF zif_abapgit_object~exists( ) = abap_false.
       RETURN.
     ENDIF.
 
-    lv_objname = ms_item-obj_name.
-
-    CALL FUNCTION 'RS_DD_DELETE_OBJ'
-      EXPORTING
-        no_ask               = abap_true
-        objname              = lv_objname
-        objtype              = 'A'
-      EXCEPTIONS
-        not_executed         = 1
-        object_not_found     = 2
-        object_not_specified = 3
-        permission_failure   = 4.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
+    delete_ddic( 'A' ).
 
   ENDMETHOD.
 
@@ -62,6 +46,14 @@ CLASS ZCL_ABAPGIT_OBJECT_TTYP IMPLEMENTATION.
 
     io_xml->read( EXPORTING iv_name = 'DD40V'
                   CHANGING cg_data = ls_dd40v ).
+
+    " DDIC Step: Replace REF TO class/interface with generic reference to avoid cyclic dependency
+    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND ls_dd40v-datatype = 'REF'.
+      ls_dd40v-rowtype = 'OBJECT'.
+    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND ls_dd40v-datatype <> 'REF'.
+      RETURN. " already active
+    ENDIF.
+
     io_xml->read( EXPORTING iv_name = 'DD42V'
                   CHANGING cg_data = lt_dd42v ).
     io_xml->read( EXPORTING iv_name = 'DD43V'
@@ -132,6 +124,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TTYP IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 

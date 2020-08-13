@@ -2,7 +2,6 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
 
   PUBLIC SECTION.
     CONSTANTS: c_commitmsg_comment_length_dft TYPE i VALUE 50.
-    CONSTANTS: c_commitmsg_comment_default    TYPE string VALUE 'Update $OBJECT'.
     CONSTANTS: c_commitmsg_body_size_dft      TYPE i VALUE 72.
 
     CONSTANTS:
@@ -147,7 +146,13 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
           VALUE(rv_ui_theme) TYPE zif_abapgit_definitions=>ty_s_user_settings-ui_theme,
       set_ui_theme
         IMPORTING
-          iv_ui_theme TYPE zif_abapgit_definitions=>ty_s_user_settings-ui_theme.
+          iv_ui_theme TYPE zif_abapgit_definitions=>ty_s_user_settings-ui_theme,
+      get_activate_wo_popup
+        RETURNING
+          VALUE(rv_act_wo_popup) TYPE zif_abapgit_definitions=>ty_s_user_settings-activate_wo_popup,
+      set_activate_wo_popup
+        IMPORTING
+          iv_act_wo_popup TYPE zif_abapgit_definitions=>ty_s_user_settings-activate_wo_popup.
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_s_settings,
@@ -173,6 +178,11 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
+
+
+  METHOD get_activate_wo_popup.
+    rv_act_wo_popup = ms_user_settings-activate_wo_popup.
+  ENDMETHOD.
 
 
   METHOD get_adt_jump_enabled.
@@ -285,6 +295,11 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD set_activate_wo_popup.
+    ms_user_settings-activate_wo_popup = iv_act_wo_popup.
+  ENDMETHOD.
+
+
   METHOD set_adt_jump_enanbled.
     ms_user_settings-adt_jump_enabled = iv_adt_jump_enabled.
   ENDMETHOD.
@@ -316,7 +331,6 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
     set_adt_jump_enanbled( abap_true ).
     set_show_default_repo( abap_false ).
     set_commitmsg_comment_length( c_commitmsg_comment_length_dft ).
-    set_commitmsg_comment_default( c_commitmsg_comment_default ).
     set_commitmsg_body_size( c_commitmsg_body_size_dft ).
     set_default_link_hint_key( ).
     set_icon_scaling( '' ).

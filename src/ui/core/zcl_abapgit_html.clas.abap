@@ -1,33 +1,34 @@
 CLASS zcl_abapgit_html DEFINITION
   PUBLIC
-  CREATE PUBLIC.
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_html.
 
-    ALIASES:
-      add          FOR zif_abapgit_html~add,
-      render       FOR zif_abapgit_html~render,
-      is_empty     FOR zif_abapgit_html~is_empty,
-      add_a        FOR zif_abapgit_html~add_a,
-      add_checkbox FOR zif_abapgit_html~add_checkbox,
-      a            FOR zif_abapgit_html~a,
-      icon         FOR zif_abapgit_html~icon.
+    INTERFACES zif_abapgit_html .
+
+    ALIASES a
+      FOR zif_abapgit_html~a .
+    ALIASES add
+      FOR zif_abapgit_html~add .
+    ALIASES add_a
+      FOR zif_abapgit_html~add_a .
+    ALIASES add_checkbox
+      FOR zif_abapgit_html~add_checkbox .
+    ALIASES add_icon
+      FOR zif_abapgit_html~add_icon .
+    ALIASES icon
+      FOR zif_abapgit_html~icon .
+    ALIASES is_empty
+      FOR zif_abapgit_html~is_empty .
 
     CONSTANTS c_indent_size TYPE i VALUE 2 ##NO_TEXT.
 
-    CLASS-METHODS class_constructor.
-    METHODS add_icon
-      IMPORTING
-        !iv_name    TYPE string
-        !iv_hint    TYPE string OPTIONAL
-        !iv_class   TYPE string OPTIONAL
-        !iv_onclick TYPE string OPTIONAL.
+    CLASS-METHODS class_constructor .
+    CLASS-METHODS create
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CLASS-DATA: go_single_tags_re TYPE REF TO cl_abap_regex.
-
-    DATA: mt_buffer TYPE string_table.
 
     TYPES:
       BEGIN OF ty_indent_context,
@@ -36,8 +37,8 @@ CLASS zcl_abapgit_html DEFINITION
         within_js       TYPE abap_bool,
         indent          TYPE i,
         indent_str      TYPE string,
-      END OF ty_indent_context,
-
+      END OF ty_indent_context .
+    TYPES:
       BEGIN OF ty_study_result,
         style_open   TYPE abap_bool,
         style_close  TYPE abap_bool,
@@ -48,26 +49,27 @@ CLASS zcl_abapgit_html DEFINITION
         openings     TYPE i,
         closings     TYPE i,
         singles      TYPE i,
-      END OF ty_study_result.
+      END OF ty_study_result .
+
+    CLASS-DATA go_single_tags_re TYPE REF TO cl_abap_regex .
+    DATA mt_buffer TYPE string_table .
 
     METHODS indent_line
       CHANGING
-        cs_context TYPE ty_indent_context
-        cv_line    TYPE string.
-
+        !cs_context TYPE ty_indent_context
+        !cv_line    TYPE string .
     METHODS study_line
       IMPORTING
-        iv_line          TYPE string
-        is_context       TYPE ty_indent_context
+        !iv_line         TYPE string
+        !is_context      TYPE ty_indent_context
       RETURNING
-        VALUE(rs_result) TYPE ty_study_result.
+        VALUE(rs_result) TYPE ty_study_result .
     METHODS checkbox
       IMPORTING
-        iv_id          TYPE string
-        iv_checked     TYPE abap_bool OPTIONAL
+        !iv_id         TYPE string
+        !iv_checked    TYPE abap_bool OPTIONAL
       RETURNING
-        VALUE(rv_html) TYPE string.
-
+        VALUE(rv_html) TYPE string .
 ENDCLASS.
 
 
@@ -178,16 +180,6 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD add_icon.
-
-    add( icon( iv_name    = iv_name
-               iv_class   = iv_class
-               iv_hint    = iv_hint
-               iv_onclick = iv_onclick  ) ).
-
-  ENDMETHOD.
-
-
   METHOD checkbox.
 
     DATA: lv_checked TYPE string.
@@ -206,6 +198,11 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       EXPORTING
         pattern     = '<(AREA|BASE|BR|COL|COMMAND|EMBED|HR|IMG|INPUT|LINK|META|PARAM|SOURCE|!)'
         ignore_case = abap_false.
+  ENDMETHOD.
+
+
+  METHOD create.
+    CREATE OBJECT ro_html.
   ENDMETHOD.
 
 
@@ -301,26 +298,6 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render.
-
-    DATA: ls_context TYPE ty_indent_context,
-          lt_temp    TYPE string_table.
-
-    FIELD-SYMBOLS: <lv_line>   LIKE LINE OF lt_temp,
-                   <lv_line_c> LIKE LINE OF lt_temp.
-
-    ls_context-no_indent_jscss = iv_no_indent_jscss.
-
-    LOOP AT mt_buffer ASSIGNING <lv_line>.
-      APPEND <lv_line> TO lt_temp ASSIGNING <lv_line_c>.
-      indent_line( CHANGING cs_context = ls_context cv_line = <lv_line_c> ).
-    ENDLOOP.
-
-    CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY cl_abap_char_utilities=>newline.
-
-  ENDMETHOD.
-
-
   METHOD study_line.
 
     DATA: lv_line TYPE string,
@@ -385,6 +362,36 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
     add( checkbox( iv_id      = iv_id
                    iv_checked = iv_checked ) ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_html~add_icon.
+
+    add( icon( iv_name    = iv_name
+               iv_class   = iv_class
+               iv_hint    = iv_hint
+               iv_onclick = iv_onclick  ) ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_html~render.
+
+    DATA: ls_context TYPE ty_indent_context,
+          lt_temp    TYPE string_table.
+
+    FIELD-SYMBOLS: <lv_line>   LIKE LINE OF lt_temp,
+                   <lv_line_c> LIKE LINE OF lt_temp.
+
+    ls_context-no_indent_jscss = iv_no_indent_jscss.
+
+    LOOP AT mt_buffer ASSIGNING <lv_line>.
+      APPEND <lv_line> TO lt_temp ASSIGNING <lv_line_c>.
+      indent_line( CHANGING cs_context = ls_context cv_line = <lv_line_c> ).
+    ENDLOOP.
+
+    CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY cl_abap_char_utilities=>newline.
 
   ENDMETHOD.
 

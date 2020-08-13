@@ -100,7 +100,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
+CLASS zcl_abapgit_popups IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -384,6 +384,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
           lv_default     TYPE i,
           lv_head_suffix TYPE string,
           lv_head_symref TYPE string,
+          lv_text        TYPE string,
           lt_selection   TYPE TABLE OF spopli.
 
     FIELD-SYMBOLS: <ls_sel>    LIKE LINE OF lt_selection,
@@ -405,7 +406,23 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     ENDIF.
 
     IF lt_branches IS INITIAL.
-      zcx_abapgit_exception=>raise( 'No branch to select' ).
+      IF iv_hide_head IS NOT INITIAL.
+        lv_text = 'master'.
+      ENDIF.
+      IF iv_hide_branch IS NOT INITIAL AND iv_hide_branch <> 'refs/heads/master'.
+        IF lv_text IS INITIAL.
+          lv_text = iv_hide_branch && ' is'.
+        ELSE.
+          CONCATENATE lv_text 'and' iv_hide_branch 'are' INTO lv_text SEPARATED BY space.
+        ENDIF.
+      ELSE.
+        lv_text = lv_text && ' is'.
+      ENDIF.
+      IF lv_text IS NOT INITIAL.
+        zcx_abapgit_exception=>raise( 'No branches available to select (' && lv_text && ' hidden)' ).
+      ELSE.
+        zcx_abapgit_exception=>raise( 'No branches are available to select' ).
+      ENDIF.
     ENDIF.
 
     LOOP AT lt_branches ASSIGNING <ls_branch>.
@@ -487,6 +504,8 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       ENDIF.
       ASSERT <ls_branch> IS ASSIGNED.
       rs_branch = lo_branches->find_by_name( <ls_branch>-name ).
+      MESSAGE |Branch switched from { zcl_abapgit_git_branch_list=>get_display_name( iv_default_branch ) } to {
+        zcl_abapgit_git_branch_list=>get_display_name( rs_branch-name ) } | TYPE 'S'.
     ENDIF.
 
   ENDMETHOD.
@@ -570,9 +589,11 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     TRY.
 
-        _popup_3_get_values( EXPORTING iv_popup_title = 'Create branch' "#EC NOTEXT
-                             IMPORTING ev_value_1     = lv_name
-                             CHANGING  ct_fields      = lt_fields ).
+        _popup_3_get_values(
+          EXPORTING iv_popup_title = |Create branch from {
+            zcl_abapgit_git_branch_list=>get_display_name( iv_source_branch_name ) }|
+          IMPORTING ev_value_1     = lv_name
+          CHANGING  ct_fields      = lt_fields ).
 
         ev_name = zcl_abapgit_git_branch_list=>complete_heads_branch_name(
               zcl_abapgit_git_branch_list=>normalize_branch_name( lv_name ) ).
@@ -742,6 +763,39 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_popups~popup_search_help.
+
+    DATA lt_ret TYPE TABLE OF ddshretval.
+    DATA ls_ret LIKE LINE OF lt_ret.
+    DATA lv_tabname TYPE dfies-tabname.
+    DATA lv_fieldname TYPE dfies-fieldname.
+
+    SPLIT iv_tab_field AT '-' INTO lv_tabname lv_fieldname.
+    lv_tabname = to_upper( lv_tabname ).
+    lv_fieldname = to_upper( lv_fieldname ).
+
+    CALL FUNCTION 'F4IF_FIELD_VALUE_REQUEST'
+      EXPORTING
+        tabname   = lv_tabname
+        fieldname = lv_fieldname
+      TABLES
+        return_tab = lt_ret
+      EXCEPTIONS
+        OTHERS = 5.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |F4IF_FIELD_VALUE_REQUEST error [{ iv_tab_field }]| ).
+    ENDIF.
+
+    IF lines( lt_ret ) > 0.
+      READ TABLE lt_ret INDEX 1 INTO ls_ret.
+      ASSERT sy-subrc = 0.
+      rv_value = ls_ret-fieldval.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_popups~popup_to_confirm.
 
     CALL FUNCTION 'POPUP_TO_CONFIRM'
@@ -865,7 +919,6 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     DATA: lv_pfstatus     TYPE sypfkey,
           lo_events       TYPE REF TO cl_salv_events_table,
-          lo_functions    TYPE REF TO cl_salv_functions_list,
           lo_columns      TYPE REF TO cl_salv_columns_table,
           lt_columns      TYPE salv_t_column_ref,
           ls_column       TYPE salv_s_column_ref,
@@ -1128,7 +1181,8 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       lv_finished = abap_true.
 
       TRY.
-          zcl_abapgit_repo_srv=>get_instance( )->validate_package( rs_popup-package ).
+          zcl_abapgit_repo_srv=>get_instance( )->validate_package( iv_package    = rs_popup-package
+                                                                   iv_chk_exists = abap_false ).
           validate_folder_logic( rs_popup-folder_logic ).
 
         CATCH zcx_abapgit_exception INTO lx_error.
@@ -1276,10 +1330,13 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       lv_finished = abap_true.
 
       TRY.
-          zcl_abapgit_url=>validate( |{ lv_url }| ).
+          IF iv_freeze_url = abap_false.
+            zcl_abapgit_url=>validate( |{ lv_url }| ).
+          ENDIF.
           IF iv_freeze_package = abap_false.
             zcl_abapgit_repo_srv=>get_instance( )->validate_package( iv_package    = lv_package
-                                                                     iv_ign_subpkg = lv_ign_subpkg ).
+                                                                     iv_ign_subpkg = lv_ign_subpkg
+                                                                     iv_chk_exists = abap_false ).
           ENDIF.
           validate_folder_logic( lv_folder_logic ).
         CATCH zcx_abapgit_exception INTO lx_error.

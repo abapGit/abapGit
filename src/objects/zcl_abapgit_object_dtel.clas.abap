@@ -157,24 +157,11 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_objname TYPE rsedd0-ddobjname.
-
-    lv_objname = ms_item-obj_name.
-
-
-    CALL FUNCTION 'RS_DD_DELETE_OBJ'
-      EXPORTING
-        no_ask               = abap_true
-        objname              = lv_objname
-        objtype              = 'E'
-      EXCEPTIONS
-        not_executed         = 1
-        object_not_found     = 2
-        object_not_specified = 3
-        permission_failure   = 4.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, DTEL,' && sy-subrc ).
+    IF zif_abapgit_object~exists( ) = abap_false.
+      RETURN.
     ENDIF.
+
+    delete_ddic( 'E' ).
 
     delete_longtexts( c_longtext_id_dtel ).
 
@@ -189,6 +176,13 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
 
     io_xml->read( EXPORTING iv_name = 'DD04V'
                   CHANGING cg_data = ls_dd04v ).
+
+    " DDIC Step: Replace REF TO class/interface with generic reference to avoid cyclic dependency
+    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND ls_dd04v-datatype = 'REF'.
+      ls_dd04v-rollname = 'OBJECT'.
+    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND ls_dd04v-datatype <> 'REF'.
+      RETURN. " already active
+    ENDIF.
 
     corr_insert( iv_package = iv_package
                  ig_object_class = 'DICT' ).
@@ -241,6 +235,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 

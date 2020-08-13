@@ -69,4 +69,11 @@ INTERFACE zif_abapgit_html PUBLIC.
     RETURNING
       VALUE(rv_str) TYPE string .
 
+  METHODS add_icon
+    IMPORTING
+      !iv_name    TYPE string
+      !iv_hint    TYPE string OPTIONAL
+      !iv_class   TYPE string OPTIONAL
+      !iv_onclick TYPE string OPTIONAL .
+
 ENDINTERFACE.

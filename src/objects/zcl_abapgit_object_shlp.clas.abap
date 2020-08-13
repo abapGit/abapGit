@@ -27,24 +27,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SHLP IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_objname TYPE rsedd0-ddobjname.
-
-
-    lv_objname = ms_item-obj_name.
-
-    CALL FUNCTION 'RS_DD_DELETE_OBJ'
-      EXPORTING
-        no_ask               = abap_true
-        objname              = lv_objname
-        objtype              = 'H'
-      EXCEPTIONS
-        not_executed         = 1
-        object_not_found     = 2
-        object_not_specified = 3
-        permission_failure   = 4.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, SHLP' ).
+    IF zif_abapgit_object~exists( ) = abap_false.
+      RETURN.
     ENDIF.
+
+    delete_ddic( 'H' ).
 
   ENDMETHOD.
 
@@ -60,6 +47,13 @@ CLASS ZCL_ABAPGIT_OBJECT_SHLP IMPLEMENTATION.
 
     io_xml->read( EXPORTING iv_name = 'DD30V'
                   CHANGING cg_data = ls_dd30v ).
+
+    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND NOT ls_dd30v-selmexit IS INITIAL.
+      ls_dd30v-selmexit = 'RS_DD_SELMEXIT'.
+    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND ls_dd30v-selmexit IS INITIAL.
+      RETURN. " already active
+    ENDIF.
+
     io_xml->read( EXPORTING iv_name = 'DD31V_TABLE'
                   CHANGING cg_data = lt_dd31v ).
     io_xml->read( EXPORTING iv_name = 'DD32P_TABLE'
@@ -116,6 +110,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SHLP IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 

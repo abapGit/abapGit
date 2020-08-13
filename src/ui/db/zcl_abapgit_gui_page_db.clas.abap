@@ -140,21 +140,21 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
     lt_data = zcl_abapgit_persistence_db=>get_instance( )->list( ).
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( '<div class="db_list">' ).
-    ro_html->add( '<table class="db_tab">' ).
+    ri_html->add( '<div class="db_list">' ).
+    ri_html->add( '<table class="db_tab">' ).
 
     " Header
-    ro_html->add( '<thead>' ).
-    ro_html->add( '<tr>' ).
-    ro_html->add( '<th>Type</th>' ).
-    ro_html->add( '<th>Key</th>' ).
-    ro_html->add( '<th>Data</th>' ).
-    ro_html->add( '<th></th>' ).
-    ro_html->add( '</tr>' ).
-    ro_html->add( '</thead>' ).
-    ro_html->add( '<tbody>' ).
+    ri_html->add( '<thead>' ).
+    ri_html->add( '<tr>' ).
+    ri_html->add( '<th>Type</th>' ).
+    ri_html->add( '<th>Key</th>' ).
+    ri_html->add( '<th>Data</th>' ).
+    ri_html->add( '<th></th>' ).
+    ri_html->add( '</tr>' ).
+    ri_html->add( '</thead>' ).
+    ri_html->add( '<tbody>' ).
 
     " Lines
     LOOP AT lt_data ASSIGNING <ls_data>.
@@ -173,19 +173,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
       lo_toolbar->add( iv_txt = 'Delete'
                        iv_act = |{ c_action-delete }?{ lv_action }| ).
 
-      ro_html->add( |<tr{ lv_trclass }>| ).
-      ro_html->add( |<td>{ <ls_data>-type }</td>| ).
-      ro_html->add( |<td>{ <ls_data>-value }</td>| ).
-      ro_html->add( |<td class="data">{ explain_content( <ls_data> ) }</td>| ).
-      ro_html->add( '<td>' ).
-      ro_html->add( lo_toolbar->render( ) ).
-      ro_html->add( '</td>' ).
-      ro_html->add( '</tr>' ).
+      ri_html->add( |<tr{ lv_trclass }>| ).
+      ri_html->add( |<td>{ <ls_data>-type }</td>| ).
+      ri_html->add( |<td>{ <ls_data>-value }</td>| ).
+      ri_html->add( |<td class="data">{ explain_content( <ls_data> ) }</td>| ).
+      ri_html->add( '<td>' ).
+      ri_html->add( lo_toolbar->render( ) ).
+      ri_html->add( '</td>' ).
+      ri_html->add( '</tr>' ).
     ENDLOOP.
 
-    ro_html->add( '</tbody>' ).
-    ro_html->add( '</table>' ).
-    ro_html->add( '</div>' ).
+    ri_html->add( '</tbody>' ).
+    ri_html->add( '</table>' ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 

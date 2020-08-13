@@ -17,6 +17,7 @@
   --theme-greyscale-light: #ccc;
   --theme-greyscale-lighter: lightgrey;
   --theme-linkhint-background: lightgreen;
+  --theme-debug-color: #aaa;
 }
 
 /* GLOBALS */
@@ -62,14 +63,17 @@ div.panel.success {
   color: #589a58 !important;
   background-color: #c5eac5;
 }
-#debug-output { color: var(--theme-primary-font-color-reduced); }
+div.panel.error {
+  color: #d41919;
+  background-color: #fad6d6;
+}
+#debug-output { color: var(--theme-debug-color); }
 div.dummydiv { background-color: var(--theme-container-background-color); }
 
 /* STRUCTURE DIVS, HEADER & FOOTER */
 div#header { border-bottom-color: var(--theme-container-border-color); }
-div#header span.page_title { color: var(--theme-greyscale-medium); }
-div#toc    { background-color: var(--theme-container-background-color); }
-div#footer span.version { color: grey; }
+div#header .page-title { color: var(--theme-greyscale-medium); }
+div#footer .version { color: var(--theme-greyscale-medium); }
 div#footer { border-top-color: var(--theme-container-border-color); }
 
 /* ERROR LOG */
@@ -444,4 +448,56 @@ table.settings_tab input {
 }
 table.settings_tab input:focus {
   background-color: #fff;
+}
+
+/* HTML FORMS */
+
+.dialog input::placeholder { color: #ccc }
+.dialog input:-ms-input-placeholder { color: #ccc }
+.dialog {
+  border-color: #cbcbcb;
+  background-color: #f4f4f4;
+}
+.dialog li.dialog-commands a {
+  border-color: #ccc;
+}
+.dialog li.dialog-commands input[type="submit"] {
+  border-color: #ccc;
+}
+.dialog li.dialog-commands input[type="submit"].main {
+  background-color: #64a8ff;
+  color: #fff;
+}
+.dialog label {
+  color: #444;
+}
+.dialog label em {
+  color: #64a8ff;
+}
+.dialog li.error small {
+  color: #ff5959;
+}
+.dialog li.error input[type="text"] {
+  border-color: #ff5959;
+}
+.dialog .radio-container {
+  border-color: #ddd;
+  background-color: #fff;
+}
+.dialog .radio-container input[type="radio"] + label {
+  color: #808080;
+}
+.dialog .radio-container input[type="radio"]:checked + label {
+  background-color: #64a8ff;
+  color: #fff;
+}
+.dialog li.with-command input[type="submit"]:hover {
+  background-color: #64a8ff;
+  color: #fff;
+}
+.dialog fieldset {
+  border-color: #dfdfdf;
+}
+.dialog fieldset legend {
+  color: #ccc;
 }

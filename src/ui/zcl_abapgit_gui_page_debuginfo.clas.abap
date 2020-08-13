@@ -32,7 +32,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -56,12 +56,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
 
   METHOD render_content.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( '<div id="debug_info" class="debug_container">' ).
-    ro_html->add( render_debug_info( ) ).
-    ro_html->add( render_supported_object_types( ) ).
-    ro_html->add( '</div>' ).
+    ri_html->add( '<div id="debug_info" class="debug_container">' ).
+    ri_html->add( render_debug_info( ) ).
+    ri_html->add( '</div>' ).
+
+    ri_html->add( '<div id="supported_objects" class="debug_container">' ).
+    ri_html->add( render_supported_object_types( ) ).
+    ri_html->add( '</div>' ).
 
     register_deferred_script( render_scripts( ) ).
 
@@ -73,7 +76,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
     DATA: lt_ver_tab     TYPE filetable,
           lv_rc          TYPE i,
           lv_gui_version TYPE string,
-          ls_version     LIKE LINE OF lt_ver_tab.
+          ls_version     LIKE LINE OF lt_ver_tab,
+          lv_devclass    TYPE devclass.
 
     cl_gui_frontend_services=>get_gui_version(
       CHANGING version_table = lt_ver_tab rc = lv_rc
@@ -98,6 +102,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
     ro_html->add( |</table>| ).
     ro_html->add( |<br>| ).
 
+    lv_devclass = zcl_abapgit_services_abapgit=>is_installed( ).
+    IF NOT lv_devclass IS INITIAL.
+      ro_html->add( 'abapGit installed in package&nbsp;' ).
+      ro_html->add( lv_devclass ).
+    ELSE.
+      ro_html->add_a( iv_txt = 'install abapGit repo'
+                      iv_act = zif_abapgit_definitions=>c_action-abapgit_install ).
+      ro_html->add( ' - To keep abapGit up-to-date (or also to contribute) you need to' ).
+      ro_html->add( 'install it as a repository.' ).
+    ENDIF.
+
+    ro_html->add( |<br>| ).
+
   ENDMETHOD.
 
 
@@ -106,8 +123,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->zif_abapgit_html~set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
-    ro_html->add( 'debugOutput("Browser: " + navigator.userAgent + ' &&
-      '"<br>Frontend time: " + new Date(), "debug_info");' ).
+    ro_html->add( 'debugOutput("<table><tr><td>Browser:</td><td>" + navigator.userAgent + ' &&
+      '"</td></tr><tr><td>Frontend time:</td><td>" + new Date() + "</td></tr></table>", "debug_info");' ).
 
   ENDMETHOD.
 
@@ -121,7 +138,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DEBUGINFO IMPLEMENTATION.
           lv_class    TYPE seoclsname,
           li_object   TYPE REF TO zif_abapgit_object,
           ls_item     TYPE zif_abapgit_definitions=>ty_item,
-          lv_language TYPE spras,
           ls_metadata TYPE zif_abapgit_definitions=>ty_metadata,
           lv_step     TYPE zif_abapgit_definitions=>ty_deserialization_step,
           lt_steps    TYPE zif_abapgit_definitions=>ty_deserialization_step_tt.

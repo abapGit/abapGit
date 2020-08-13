@@ -28,7 +28,7 @@ INTERFACE zif_abapgit_definitions
     BEGIN OF ty_file.
       INCLUDE TYPE ty_file_signature.
   TYPES: data TYPE xstring,
-         END OF ty_file .
+    END OF ty_file .
   TYPES:
     ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY .
   TYPES:
@@ -107,7 +107,7 @@ INTERFACE zif_abapgit_definitions
     BEGIN OF ty_overwrite.
       INCLUDE TYPE ty_item.
   TYPES: decision TYPE ty_yes_no,
-         END OF ty_overwrite .
+    END OF ty_overwrite .
   TYPES:
     ty_overwrite_tt TYPE STANDARD TABLE OF ty_overwrite WITH DEFAULT KEY
                               WITH UNIQUE HASHED KEY object_type_and_name
@@ -200,6 +200,7 @@ INTERFACE zif_abapgit_definitions
       match    TYPE abap_bool,
       lstate   TYPE c LENGTH 1,
       rstate   TYPE c LENGTH 1,
+      packmove TYPE abap_bool,
     END OF ty_result .
   TYPES:
     ty_results_tt TYPE STANDARD TABLE OF ty_result WITH DEFAULT KEY .
@@ -218,7 +219,7 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     BEGIN OF ty_tpool.
       INCLUDE TYPE textpool.
-  TYPES:   split TYPE c LENGTH 8.
+  TYPES: split TYPE c LENGTH 8.
   TYPES: END OF ty_tpool .
   TYPES:
     ty_tpool_tt TYPE STANDARD TABLE OF ty_tpool WITH DEFAULT KEY .
@@ -229,6 +230,8 @@ INTERFACE zif_abapgit_definitions
     END OF ty_sotr .
   TYPES:
     ty_sotr_tt TYPE STANDARD TABLE OF ty_sotr WITH DEFAULT KEY .
+  TYPES:
+    ty_sotr_use_tt TYPE STANDARD TABLE OF sotr_use WITH DEFAULT KEY .
   TYPES:
     BEGIN OF ty_obj_attribute,
       cmpname   TYPE seocmpname,
@@ -354,6 +357,7 @@ INTERFACE zif_abapgit_definitions
       icon_scaling           TYPE c LENGTH 1,
       ui_theme               TYPE string,
       hide_sapgui_hint       TYPE abap_bool,
+      activate_wo_popup      TYPE abap_bool,
     END OF ty_s_user_settings .
   TYPES:
     tty_dokil TYPE STANDARD TABLE OF dokil
@@ -430,11 +434,11 @@ INTERFACE zif_abapgit_definitions
     END OF c_diff .
   CONSTANTS:
     BEGIN OF c_type,
-      commit TYPE ty_type VALUE 'commit', "#EC NOTEXT
-      tree   TYPE ty_type VALUE 'tree', "#EC NOTEXT
-      ref_d  TYPE ty_type VALUE 'ref_d', "#EC NOTEXT
-      tag    TYPE ty_type VALUE 'tag', "#EC NOTEXT
-      blob   TYPE ty_type VALUE 'blob', "#EC NOTEXT
+      commit TYPE ty_type VALUE 'commit',                   "#EC NOTEXT
+      tree   TYPE ty_type VALUE 'tree',                     "#EC NOTEXT
+      ref_d  TYPE ty_type VALUE 'ref_d',                    "#EC NOTEXT
+      tag    TYPE ty_type VALUE 'tag',                      "#EC NOTEXT
+      blob   TYPE ty_type VALUE 'blob',                     "#EC NOTEXT
     END OF c_type .
   CONSTANTS:
     BEGIN OF c_state, " https://git-scm.com/docs/git-status
@@ -495,7 +499,7 @@ INTERFACE zif_abapgit_definitions
       db_edit                       TYPE string VALUE 'db_edit',
       bg_update                     TYPE string VALUE 'bg_update',
       go_explore                    TYPE string VALUE 'go_explore',
-      go_repo_overview              TYPE string VALUE 'go_repo_overview',
+      go_repo                       TYPE string VALUE 'go_repo',
       go_db                         TYPE string VALUE 'go_db',
       go_background                 TYPE string VALUE 'go_background',
       go_background_run             TYPE string VALUE 'go_background_run',
@@ -516,7 +520,10 @@ INTERFACE zif_abapgit_definitions
       change_order_by               TYPE string VALUE 'change_order_by',
       goto_message                  TYPE string VALUE 'goto_message',
       direction                     TYPE string VALUE 'direction',
-    END OF c_action .
+      changed_by                    TYPE string VALUE 'changed_by',
+      documentation                 TYPE string VALUE 'documentation',
+      changelog                     TYPE string VALUE 'changelog',
+    END OF c_action.
   CONSTANTS c_tag_prefix TYPE string VALUE 'refs/tags/' ##NO_TEXT.
   CONSTANTS c_spagpa_param_repo_key TYPE c LENGTH 20 VALUE 'REPO_KEY' ##NO_TEXT.
   CONSTANTS c_spagpa_param_package TYPE c LENGTH 20 VALUE 'PACKAGE' ##NO_TEXT.

@@ -3,7 +3,7 @@ INTERFACE zif_abapgit_popups
 
 
   TYPES:
-    BEGIN OF ty_popup,
+    BEGIN OF ty_popup, " TODO remove, use zif_abapgit_services_repo=>ty_repo_params instead
       url              TYPE string,
       package          TYPE devclass,
       branch_name      TYPE string,
@@ -16,6 +16,13 @@ INTERFACE zif_abapgit_popups
 
   CONSTANTS c_new_branch_label TYPE string VALUE '+ create new ...' ##NO_TEXT.
 
+  METHODS popup_search_help
+    IMPORTING
+      !iv_tab_field TYPE string
+    RETURNING
+      VALUE(rv_value) TYPE ddshretval-fieldval
+    RAISING
+      zcx_abapgit_exception .
   METHODS popup_package_export
     EXPORTING
       !ev_package                    TYPE devclass
@@ -34,6 +41,8 @@ INTERFACE zif_abapgit_popups
     RAISING
       zcx_abapgit_exception .
   METHODS create_branch_popup
+    IMPORTING
+      iv_source_branch_name TYPE string
     EXPORTING
       !ev_name   TYPE string
       !ev_cancel TYPE abap_bool

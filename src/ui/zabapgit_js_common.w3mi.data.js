@@ -22,8 +22,8 @@
 /* exported onTagTypeChange */
 /* exported getIndocStyleSheet */
 /* exported addMarginBottom */
-/* exported enumerateTocAllRepos */
 /* exported enumerateJumpAllFiles */
+/* exported createRepoCatalogEnumerator */
 /* exported enumerateToolbarActions */
 /* exported onDiffCollapse */
 /* exported restoreScrollPosition */
@@ -230,31 +230,85 @@ function RepoOverViewHelper() {
   this.setHooks();
   this.pageId = "RepoOverViewHelperState"; // constant is OK for this case
   this.isDetailsDisplayed = false;
+  this.isOnlyFavoritesDisplayed = false;
   this.detailCssClass = findStyleSheetByName(".ro-detail");
+  var icon = document.getElementById("icon-filter-detail");
+  this.toggleFilterIcon(icon, this.isDetailsDisplayed);
+  icon = document.getElementById("icon-filter-favorite");
+  this.toggleFilterIcon(icon, this.isOnlyFavoritesDisplayed);
 }
 
-RepoOverViewHelper.prototype.toggleRepoListDetail = function(forceDisplay) {
+RepoOverViewHelper.prototype.toggleRepoListDetail = function (forceDisplay) {
   if (this.detailCssClass) {
-    this.isDetailsDisplayed = forceDisplay || !this.isDetailsDisplayed;
-    this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
+    this.toggleItemsDetail(forceDisplay);
+    this.saveFilter();
   }
 };
 
-RepoOverViewHelper.prototype.setHooks = function() {
-  window.onbeforeunload = this.onPageUnload.bind(this);
-  window.onload         = this.onPageLoad.bind(this);
+RepoOverViewHelper.prototype.toggleItemsDetail = function(forceDisplay){
+  if (this.detailCssClass) {
+    this.isDetailsDisplayed = forceDisplay || !this.isDetailsDisplayed;
+    this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
+    var icon = document.getElementById("icon-filter-detail");
+    this.toggleFilterIcon(icon, this.isDetailsDisplayed);
+  }
 };
 
-RepoOverViewHelper.prototype.onPageUnload = function() {
-  if (!window.sessionStorage) return;
-  var data = { isDetailsDisplayed: this.isDetailsDisplayed };
-  window.sessionStorage.setItem(this.pageId, JSON.stringify(data));
+RepoOverViewHelper.prototype.toggleFilterIcon = function (icon, isEnabled) {
+  if (isEnabled) {
+    icon.classList.remove("grey");
+    icon.classList.add("blue");
+  } else {
+    icon.classList.remove("blue");
+    icon.classList.add("grey");
+  }
 };
 
-RepoOverViewHelper.prototype.onPageLoad = function() {
-  var data = window.sessionStorage && JSON.parse(window.sessionStorage.getItem(this.pageId));
-  if (data && data.isDetailsDisplayed) this.toggleRepoListDetail(true);
-  debugOutput("RepoOverViewHelper.onPageLoad: " + ((data) ? "from Storage" : "initial state"));
+RepoOverViewHelper.prototype.toggleRepoListFavorites = function (forceDisplay) {
+  this.toggleItemsFavorites(forceDisplay);
+  this.saveFilter();
+};
+
+RepoOverViewHelper.prototype.toggleItemsFavorites = function(forceDisplay){
+  this.isOnlyFavoritesDisplayed = forceDisplay || !this.isOnlyFavoritesDisplayed;
+  var repositories = document.getElementsByClassName("repo");
+  var icon = document.getElementById("icon-filter-favorite");
+  this.toggleFilterIcon(icon, this.isOnlyFavoritesDisplayed);
+  for (var i = 0; i < repositories.length; i++) {
+    var repo = repositories[i];
+    if (this.isOnlyFavoritesDisplayed) {
+      if (!repo.classList.contains("favorite")) {
+        repo.style.display = "none";
+      }
+    } else {
+      repo.style.display = "";
+    }
+  }
+};
+
+RepoOverViewHelper.prototype.setHooks = function () {
+  window.onload = this.onPageLoad.bind(this);
+};
+
+RepoOverViewHelper.prototype.saveFilter = function () {
+  if (!window.localStorage) return;
+  var data = {
+    isDetailsDisplayed: this.isDetailsDisplayed,
+    isOnlyFavoritesDisplayed: this.isOnlyFavoritesDisplayed
+  };
+  window.localStorage.setItem(this.pageId, JSON.stringify(data));
+};
+
+RepoOverViewHelper.prototype.onPageLoad = function () {
+  var data = window.localStorage && JSON.parse(window.localStorage.getItem(this.pageId));
+  if (data) {
+    if (data.isDetailsDisplayed) {
+      this.toggleItemsDetail(true);
+    }
+    if (data.isOnlyFavoritesDisplayed) {
+      this.toggleItemsFavorites(true);
+    }
+  }
 };
 
 /**********************************************************
@@ -265,6 +319,7 @@ RepoOverViewHelper.prototype.onPageLoad = function() {
 function StageHelper(params) {
   this.pageSeed        = params.seed;
   this.formAction      = params.formAction;
+  this.patchAction     = params.patchAction;
   this.user            = params.user;
   this.selectedCount   = 0;
   this.filteredCount   = 0;
@@ -276,6 +331,7 @@ function StageHelper(params) {
     commitAllBtn:      document.getElementById(params.ids.commitAllBtn),
     commitSelectedBtn: document.getElementById(params.ids.commitSelectedBtn),
     commitFilteredBtn: document.getElementById(params.ids.commitFilteredBtn),
+    patchBtn:          document.getElementById(params.ids.patchBtn),
     objectSearch:      document.getElementById(params.ids.objectSearch),
     selectedCounter:   null,
     filteredCounter:   null,
@@ -339,6 +395,7 @@ StageHelper.prototype.setHooks = function() {
   this.dom.stageTab.onclick          = this.onTableClick.bind(this);
   this.dom.commitSelectedBtn.onclick = this.submit.bind(this);
   this.dom.commitFilteredBtn.onclick = this.submitVisible.bind(this);
+  this.dom.patchBtn.onclick          = this.submitPatch.bind(this);
   this.dom.objectSearch.oninput      = this.onFilter.bind(this);
   this.dom.objectSearch.onkeypress   = this.onFilter.bind(this);
   window.onbeforeunload              = this.onPageUnload.bind(this);
@@ -557,6 +614,10 @@ StageHelper.prototype.submit = function () {
 StageHelper.prototype.submitVisible = function () {
   this.markVisiblesAsAdded();
   submitSapeventForm(this.collectData(), this.formAction);
+};
+
+StageHelper.prototype.submitPatch = function(){
+  submitSapeventForm(this.collectData(), this.patchAction);
 };
 
 // Extract data from the table
@@ -1234,9 +1295,18 @@ function Hotkeys(oKeyMap){
     // the hotkey execution
     this.oKeyMap[sKey] = function(oEvent) {
 
+      // gHelper is only valid for diff page
+      var diffHelper = (window.gHelper || {});
+
       // We have either a js function on this
       if (this[action]) {
         this[action].call(this);
+        return;
+      }
+
+      // Or a method of the helper object for the diff page
+      if (diffHelper[action]){
+        diffHelper[action].call(diffHelper);
         return;
       }
 
@@ -1926,25 +1996,19 @@ CommandPalette.prototype.exec = function(cmd) {
 
 /* COMMAND ENUMERATORS */
 
-function enumerateTocAllRepos() {
-  var root = document.getElementById("toc-all-repos");
-  if (!root || root.nodeName !== "UL") return null;
-
-  var items = [];
-  for (var i = 0; i < root.children.length; i++) {
-    if (root.children[i].nodeName === "LI") items.push(root.children[i]);
-  }
-
-  items = items.map(function(listItem) {
-    var anchor = listItem.children[0];
-    return {
-      action:    anchor.href.replace("sapevent:", ""),  // a
-      iconClass: anchor.childNodes[0].className,        // i with icon
-      title:     anchor.childNodes[1].textContent       // text with repo name
-    };
-  });
-
-  return items;
+function createRepoCatalogEnumerator(catalog, action) {
+  // expecting [{ key, isOffline, displayName }]
+  return function() {
+    return catalog.map(function(i) {
+      return {
+        action:    action + "?" + i.key,
+        iconClass: i.isOffline
+          ? "icon icon-plug darkgrey"
+          : "icon icon-cloud-upload-alt blue",
+        title: i.displayName
+      };
+    });
+  };
 }
 
 function enumerateToolbarActions() {

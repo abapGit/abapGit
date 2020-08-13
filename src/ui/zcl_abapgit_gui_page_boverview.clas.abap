@@ -233,7 +233,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
 
-    CONCATENATE LINES OF it_postdata INTO lv_string.
+    lv_string = zcl_abapgit_utils=>translate_postdata( it_postdata ).
 
     lt_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_string ).
 
@@ -364,11 +364,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
 
   METHOD render_content.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( '<div id="toc">' ).
-    ro_html->add( body( ) ).
-    ro_html->add( '</div>' ).
+    ri_html->add( '<div id="toc">' ).
+    ri_html->add( body( ) ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 

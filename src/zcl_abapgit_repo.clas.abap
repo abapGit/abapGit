@@ -356,6 +356,9 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       ro_dot = zcl_abapgit_dot_abapgit=>deserialize( <ls_remote>-data ).
       set_dot_abapgit( ro_dot ).
       COMMIT WORK AND WAIT. " to release lock
+    ELSEIF lines( mt_remote ) > 3.
+      " Less files means it's a new repo (with just readme and license, for example) which is ok
+      zcx_abapgit_exception=>raise( |Cannot find .abapgit.xml - Is this an abapGit repo?| ).
     ENDIF.
 
   ENDMETHOD.
@@ -479,7 +482,12 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     FIELD-SYMBOLS <ls_object> LIKE LINE OF ms_data-local_checksums.
 
     LOOP AT ms_data-local_checksums ASSIGNING <ls_object>.
-      APPEND LINES OF <ls_object>-files TO rt_checksums.
+      " Check if item exists
+      READ TABLE mt_local TRANSPORTING NO FIELDS
+        WITH KEY item = <ls_object>-item.
+      IF sy-subrc = 0.
+        APPEND LINES OF <ls_object>-files TO rt_checksums.
+      ENDIF.
     ENDLOOP.
 
   ENDMETHOD.

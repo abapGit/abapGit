@@ -22,11 +22,6 @@ CLASS zcl_abapgit_gui_page_syntax DEFINITION PUBLIC FINAL CREATE PUBLIC
       render_content REDEFINITION.
 
   PRIVATE SECTION.
-    CONSTANTS:
-      BEGIN OF c_actions,
-        rerun TYPE string VALUE 'rerun' ##NO_TEXT,
-      END OF c_actions.
-
     METHODS:
       build_menu
         RETURNING
@@ -37,7 +32,6 @@ CLASS zcl_abapgit_gui_page_syntax DEFINITION PUBLIC FINAL CREATE PUBLIC
       run_syntax_check
         RAISING
           zcx_abapgit_exception.
-
 ENDCLASS.
 
 
@@ -47,11 +41,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
 
   METHOD build_menu.
 
-    CREATE OBJECT ro_menu.
-
-    ro_menu->add( iv_txt = 'Re-Run'
-                  iv_act = c_actions-rerun
-                  iv_cur = abap_false ) ##NO_TEXT.
+    ro_menu = build_base_menu( ).
 
   ENDMETHOD.
 
@@ -66,19 +56,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
 
   METHOD render_content.
 
-    CREATE OBJECT ro_html.
-    ro_html->add( '<div class="toc">' ).
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( '<div class="toc">' ).
 
     IF lines( mt_result ) = 0.
-      ro_html->add( '<div class="dummydiv success">' ).
-      ro_html->add( zcl_abapgit_html=>icon( 'check' ) ).
-      ro_html->add( 'No syntax errors' ).
+      ri_html->add( '<div class="dummydiv success">' ).
+      ri_html->add( zcl_abapgit_html=>icon( 'check' ) ).
+      ri_html->add( 'No syntax errors' ).
     ELSE.
-      render_result( io_html   = ro_html
+      render_result( ii_html   = ri_html
                      it_result = mt_result ).
     ENDIF.
 
-    ro_html->add( '</div>' ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 

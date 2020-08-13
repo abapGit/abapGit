@@ -3,9 +3,9 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_ABAPGIT_GUI_VIEW_REPO</CLSNAME>
+    <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_TUTORIAL</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>GUI - View Repo</DESCRIPT>
+    <DESCRIPT>GUI - View Tutorial</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

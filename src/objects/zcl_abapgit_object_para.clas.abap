@@ -92,6 +92,12 @@ CLASS ZCL_ABAPGIT_OBJECT_PARA IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from RS_CORR_INSERT' ).
     ENDIF.
 
+    CALL FUNCTION 'RS_ACCESS_PERMISSION'
+      EXPORTING
+        mode         = 'FREE'
+        object       = lv_paramid
+        object_class = 'PARA'.
+
   ENDMETHOD.
 
 
