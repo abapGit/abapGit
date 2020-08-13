@@ -198,9 +198,7 @@ CLASS ltcl_is_patch_line_possible IMPLEMENTATION.
 
   METHOD when_is_patch_line_possible.
 
-    mv_is_patch_line_possible = zcl_abapgit_gui_page_patch=>is_patch_line_possible(
-            is_diff_line = ms_diff_line
-            iv_fstate    = mv_fstate ).
+    mv_is_patch_line_possible = zcl_abapgit_gui_page_patch=>is_patch_line_possible( ms_diff_line ).
 
   ENDMETHOD.
 
