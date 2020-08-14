@@ -181,7 +181,8 @@ div.repo {
   font-size: 8pt;
   padding: 4px 2px 3px 2px;
 }
-.repo_attr span.branch {
+
+span.branch {
   padding: 2px 4px;
   border: 1px solid;
   border-radius: 4px;

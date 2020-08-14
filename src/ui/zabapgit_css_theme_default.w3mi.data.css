@@ -94,15 +94,18 @@ div.repo { background-color: var(--theme-container-background-color); }
   background-color: #d8d8d8;
   color: #fff;
 }
-.repo_attr span.branch {
-  border-color: #d9d9d9;
-  background-color: #e2e2e2;
-}
+
 .repo_attr span.branch_head {
   border-color: #d8dff3;
   background-color: #eceff9;
 }
-.repo_attr span.branch_branch {
+
+span.branch {
+  border-color: #d9d9d9;
+  background-color: #e2e2e2;
+}
+
+span.branch_branch {
   border-color: #e7d9b1;
   background-color: #f8f0d8;
 }

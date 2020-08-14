@@ -306,7 +306,8 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
       lv_stage_link          TYPE string,
       lv_patch_link          TYPE string,
       lv_code_inspector_link TYPE string,
-      lv_repo_settings_link TYPE string.
+      lv_repo_settings_link  TYPE string,
+      lv_branch_html         TYPE string.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
@@ -357,8 +358,13 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
           iv_txt = <ls_overview>-package
           iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_package_jump_data }| ) }</td>| ).
 
+      lv_branch_html = `<span class="branch branch_branch">`
+        && `<i title="Current branch" class="icon icon-code-branch grey70"></i>`
+        && <ls_overview>-branch
+        && `</span>`.
+
       ii_html->add( |<td>{ ii_html->a(
-        iv_txt = <ls_overview>-branch
+        iv_txt = lv_branch_html
         iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ <ls_overview>-key }| ) }</td>| ).
 
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_by }</td>| ).
