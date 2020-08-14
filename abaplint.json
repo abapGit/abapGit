@@ -72,6 +72,9 @@
     "globalMacros": []
   },
   "rules": {
+    "begin_single_include": true,
+    "names_no_dash": true,
+    "parser_missing_space": true,
     "prefer_inline": false,
     "reduce_string_templates": true,
     "downport": false,
@@ -98,10 +101,20 @@
     "xml_consistency": true,
     "check_no_handler_pragma": true,
     "newline_between_methods": false,
-    "chain_mainly_declarations": true,
+    "chain_mainly_declarations": {
+      "definitions": true,
+      "write": true,
+      "move": true,
+      "refresh": true,
+      "unassign": true,
+      "clear": true,
+      "hide": true,
+      "free": true,
+      "include": true,
+      "check": true
+    },
     "check_abstract": true,
     "check_text_elements": true,
-    "type_begin_single_include": true,
     "types_naming": false,
     "7bit_ascii": {
       "exclude": ["zcl_abapgit_utils.clas.testclasses.abap"]
@@ -109,7 +122,6 @@
     "abapdoc": false,
     "check_ddic": true,
     "check_include": true,
-    "form_no_dash": true,
     "allowed_object_types": {
       "allowed": [
         "PROG",
@@ -159,6 +171,7 @@
     "empty_structure": {
       "loop": true,
       "if": false,
+      "try": true,
       "while": true,
       "case": true,
       "select": true,

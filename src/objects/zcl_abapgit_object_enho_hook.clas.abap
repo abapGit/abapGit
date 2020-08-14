@@ -23,11 +23,6 @@ CLASS zcl_abapgit_object_enho_hook DEFINITION PUBLIC.
       CHANGING  ct_impl   TYPE enh_hook_impl_it
       RAISING   zcx_abapgit_exception.
 
-    METHODS hook_impl_serialize
-      EXPORTING et_spaces TYPE ty_spaces_tt
-      CHANGING  ct_impl   TYPE enh_hook_impl_it
-      RAISING   zcx_abapgit_exception.
-
 ENDCLASS.
 
 CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
@@ -67,10 +62,6 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
              <ls_enhancement>-id.
     ENDLOOP.
 
-    hook_impl_serialize(
-      IMPORTING et_spaces = lt_spaces
-      CHANGING ct_impl = lt_enhancements ).
-
     io_xml->add( iv_name = 'TOOL'
                  ig_data = ii_enh_tool->get_tool( ) ).
     io_xml->add( ig_data = lv_shorttext
@@ -82,29 +73,6 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
     io_xml->add( iv_name = 'SPACES'
                  ig_data = lt_spaces ).
 
-  ENDMETHOD.
-
-  METHOD hook_impl_serialize.
-* handle normalization of XML values
-* i.e. remove leading spaces
-
-    FIELD-SYMBOLS: <ls_impl>  LIKE LINE OF ct_impl,
-                   <ls_space> LIKE LINE OF et_spaces,
-                   <lv_space> TYPE i,
-                   <lv_line>  TYPE string.
-
-
-    LOOP AT ct_impl ASSIGNING <ls_impl>.
-      APPEND INITIAL LINE TO et_spaces ASSIGNING <ls_space>.
-      <ls_space>-full_name = <ls_impl>-full_name.
-      LOOP AT <ls_impl>-source ASSIGNING <lv_line>.
-        APPEND INITIAL LINE TO <ls_space>-spaces ASSIGNING <lv_space>.
-        WHILE strlen( <lv_line> ) >= 1 AND <lv_line>(1) = ` `.
-          <lv_line> = <lv_line>+1.
-          <lv_space> = <lv_space> + 1.
-        ENDWHILE.
-      ENDLOOP.
-    ENDLOOP.
   ENDMETHOD.
 
   METHOD hook_impl_deserialize.
@@ -155,6 +123,7 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'SPACES'
                   CHANGING cg_data  = lt_spaces ).
 
+    " todo: kept for compatibility, remove after grace period #3680
     hook_impl_deserialize( EXPORTING it_spaces = lt_spaces
                            CHANGING ct_impl    = lt_enhancements ).
 
