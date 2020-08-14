@@ -24,9 +24,6 @@ CLASS zcl_abapgit_html DEFINITION
     CONSTANTS c_indent_size TYPE i VALUE 2 ##NO_TEXT.
 
     CLASS-METHODS class_constructor .
-    CLASS-METHODS create
-      RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -198,11 +195,6 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       EXPORTING
         pattern     = '<(AREA|BASE|BR|COL|COMMAND|EMBED|HR|IMG|INPUT|LINK|META|PARAM|SOURCE|!)'
         ignore_case = abap_false.
-  ENDMETHOD.
-
-
-  METHOD create.
-    CREATE OBJECT ro_html.
   ENDMETHOD.
 
 
