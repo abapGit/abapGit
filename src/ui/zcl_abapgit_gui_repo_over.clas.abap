@@ -305,7 +305,8 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
       lv_package_obj_name    TYPE sobj_name,
       lv_stage_link          TYPE string,
       lv_patch_link          TYPE string,
-      lv_code_inspector_link TYPE string.
+      lv_code_inspector_link TYPE string,
+      lv_repo_settings_link TYPE string.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
@@ -380,7 +381,15 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
         iv_txt = |Code inspector|
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?{ <ls_overview>-key } | ).
 
-      ii_html->add( lv_code_inspector_link && lc_separator && lv_stage_link && lc_separator && lv_patch_link ).
+      lv_repo_settings_link = ii_html->a(
+        iv_txt = |Settings|
+        iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?{ <ls_overview>-key } | ).
+
+      ii_html->add(
+        lv_code_inspector_link && lc_separator &&
+        lv_stage_link && lc_separator &&
+        lv_patch_link && lc_separator &&
+        lv_repo_settings_link ).
 
       ii_html->add( |</td>| ).
 
