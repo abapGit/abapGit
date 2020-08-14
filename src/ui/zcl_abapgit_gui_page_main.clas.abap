@@ -72,11 +72,6 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: lt_repos    TYPE zif_abapgit_definitions=>ty_repo_ref_tt,
-          lx_error    TYPE REF TO zcx_abapgit_exception,
-          li_tutorial TYPE REF TO zif_abapgit_gui_renderable,
-          lo_repo     LIKE LINE OF lt_repos.
-
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
 
@@ -93,9 +88,7 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA: lv_key           TYPE zif_abapgit_persistence=>ty_value,
-          li_repo_overview TYPE REF TO zif_abapgit_gui_renderable,
-          li_main_page     TYPE REF TO zcl_abapgit_gui_page_main.
+    DATA: lv_key TYPE zif_abapgit_persistence=>ty_value.
 
     CASE iv_action.
       WHEN c_actions-abapgit_home.

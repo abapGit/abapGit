@@ -240,6 +240,13 @@ function RepoOverViewHelper() {
 
 RepoOverViewHelper.prototype.toggleRepoListDetail = function (forceDisplay) {
   if (this.detailCssClass) {
+    this.toggleItemsDetail(forceDisplay);
+    this.saveFilter();
+  }
+};
+
+RepoOverViewHelper.prototype.toggleItemsDetail = function(forceDisplay){
+  if (this.detailCssClass) {
     this.isDetailsDisplayed = forceDisplay || !this.isDetailsDisplayed;
     this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
     var icon = document.getElementById("icon-filter-detail");
@@ -258,6 +265,11 @@ RepoOverViewHelper.prototype.toggleFilterIcon = function (icon, isEnabled) {
 };
 
 RepoOverViewHelper.prototype.toggleRepoListFavorites = function (forceDisplay) {
+  this.toggleItemsFavorites(forceDisplay);
+  this.saveFilter();
+};
+
+RepoOverViewHelper.prototype.toggleItemsFavorites = function(forceDisplay){
   this.isOnlyFavoritesDisplayed = forceDisplay || !this.isOnlyFavoritesDisplayed;
   var repositories = document.getElementsByClassName("repo");
   var icon = document.getElementById("icon-filter-favorite");
@@ -272,34 +284,31 @@ RepoOverViewHelper.prototype.toggleRepoListFavorites = function (forceDisplay) {
       repo.style.display = "";
     }
   }
-
 };
 
 RepoOverViewHelper.prototype.setHooks = function () {
-  window.onbeforeunload = this.onPageUnload.bind(this);
   window.onload = this.onPageLoad.bind(this);
 };
 
-RepoOverViewHelper.prototype.onPageUnload = function () {
-  if (!window.sessionStorage) return;
+RepoOverViewHelper.prototype.saveFilter = function () {
+  if (!window.localStorage) return;
   var data = {
     isDetailsDisplayed: this.isDetailsDisplayed,
     isOnlyFavoritesDisplayed: this.isOnlyFavoritesDisplayed
   };
-  window.sessionStorage.setItem(this.pageId, JSON.stringify(data));
+  window.localStorage.setItem(this.pageId, JSON.stringify(data));
 };
 
 RepoOverViewHelper.prototype.onPageLoad = function () {
-  var data = window.sessionStorage && JSON.parse(window.sessionStorage.getItem(this.pageId));
+  var data = window.localStorage && JSON.parse(window.localStorage.getItem(this.pageId));
   if (data) {
     if (data.isDetailsDisplayed) {
-      this.toggleRepoListDetail(true);
+      this.toggleItemsDetail(true);
     }
     if (data.isOnlyFavoritesDisplayed) {
-      this.toggleRepoListFavorites(true);
+      this.toggleItemsFavorites(true);
     }
   }
-  debugOutput("RepoOverViewHelper.onPageLoad: " + ((data) ? "from Storage" : "initial state"));
 };
 
 /**********************************************************
@@ -310,6 +319,7 @@ RepoOverViewHelper.prototype.onPageLoad = function () {
 function StageHelper(params) {
   this.pageSeed        = params.seed;
   this.formAction      = params.formAction;
+  this.patchAction     = params.patchAction;
   this.user            = params.user;
   this.selectedCount   = 0;
   this.filteredCount   = 0;
@@ -321,6 +331,7 @@ function StageHelper(params) {
     commitAllBtn:      document.getElementById(params.ids.commitAllBtn),
     commitSelectedBtn: document.getElementById(params.ids.commitSelectedBtn),
     commitFilteredBtn: document.getElementById(params.ids.commitFilteredBtn),
+    patchBtn:          document.getElementById(params.ids.patchBtn),
     objectSearch:      document.getElementById(params.ids.objectSearch),
     selectedCounter:   null,
     filteredCounter:   null,
@@ -384,6 +395,7 @@ StageHelper.prototype.setHooks = function() {
   this.dom.stageTab.onclick          = this.onTableClick.bind(this);
   this.dom.commitSelectedBtn.onclick = this.submit.bind(this);
   this.dom.commitFilteredBtn.onclick = this.submitVisible.bind(this);
+  this.dom.patchBtn.onclick          = this.submitPatch.bind(this);
   this.dom.objectSearch.oninput      = this.onFilter.bind(this);
   this.dom.objectSearch.onkeypress   = this.onFilter.bind(this);
   window.onbeforeunload              = this.onPageUnload.bind(this);
@@ -602,6 +614,10 @@ StageHelper.prototype.submit = function () {
 StageHelper.prototype.submitVisible = function () {
   this.markVisiblesAsAdded();
   submitSapeventForm(this.collectData(), this.formAction);
+};
+
+StageHelper.prototype.submitPatch = function(){
+  submitSapeventForm(this.collectData(), this.patchAction);
 };
 
 // Extract data from the table
@@ -1279,9 +1295,18 @@ function Hotkeys(oKeyMap){
     // the hotkey execution
     this.oKeyMap[sKey] = function(oEvent) {
 
+      // gHelper is only valid for diff page
+      var diffHelper = (window.gHelper || {});
+
       // We have either a js function on this
       if (this[action]) {
         this[action].call(this);
+        return;
+      }
+
+      // Or a method of the helper object for the diff page
+      if (diffHelper[action]){
+        diffHelper[action].call(diffHelper);
         return;
       }
 

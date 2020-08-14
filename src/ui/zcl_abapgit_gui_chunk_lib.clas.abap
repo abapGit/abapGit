@@ -14,11 +14,11 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
     CLASS-METHODS class_constructor.
     CLASS-METHODS render_error
       IMPORTING
-        !ix_error      TYPE REF TO zcx_abapgit_exception OPTIONAL
-        !iv_error      TYPE string OPTIONAL
+        !ix_error       TYPE REF TO zcx_abapgit_exception OPTIONAL
+        !iv_error       TYPE string OPTIONAL
         !iv_extra_style TYPE string OPTIONAL
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ro_html)  TYPE REF TO zcl_abapgit_html .
     CLASS-METHODS render_repo_top
       IMPORTING
         !io_repo               TYPE REF TO zcl_abapgit_repo
@@ -103,7 +103,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
     CLASS-METHODS render_repo_palette
       IMPORTING
-        iv_action TYPE string
+        iv_action      TYPE string
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
@@ -116,6 +116,13 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
       RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
 
   PROTECTED SECTION.
+    CLASS-METHODS render_repo_top_commit_hash
+      IMPORTING
+        iv_html        TYPE REF TO zcl_abapgit_html
+        iv_repo_online TYPE REF TO zcl_abapgit_repo_online
+      RAISING
+        zcx_abapgit_exception.
+
   PRIVATE SECTION.
     CLASS-DATA gv_time_zone TYPE timezone.
 
@@ -143,7 +150,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
+CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
 
   METHOD advanced_submenu.
@@ -693,6 +700,9 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
                               && |{ lo_repo_online->get_url( ) }|
                       iv_class = |url| ).
 
+      render_repo_top_commit_hash( iv_html        = ro_html
+                                   iv_repo_online = lo_repo_online ).
+
     ENDIF.
 
     " News
@@ -779,4 +789,33 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ro_html->add( '</div>' ).
 
   ENDMETHOD.
+  METHOD render_repo_top_commit_hash.
+
+    DATA: lv_commit_hash       TYPE zif_abapgit_definitions=>ty_sha1,
+          lv_commit_short_hash TYPE zif_abapgit_definitions=>ty_sha1,
+          lv_repo_url          TYPE zif_abapgit_persistence=>ty_repo-url,
+          lv_display_url       TYPE zif_abapgit_persistence=>ty_repo-url,
+          lv_icon_commit       TYPE string.
+
+    lv_commit_hash = iv_repo_online->get_sha1_remote( ).
+    lv_commit_short_hash = lv_commit_hash(7).
+
+
+    lv_icon_commit = zcl_abapgit_html=>icon( iv_name  = 'code-commit'
+                                             iv_class = 'pad-sides'
+                                             iv_hint  = 'Commit' ).
+
+    TRY.
+        lv_display_url = iv_repo_online->get_commit_display_url( lv_commit_hash ).
+
+        iv_html->add_a( iv_txt   = |{ lv_icon_commit }{ lv_commit_short_hash }|
+                        iv_act   = |{ zif_abapgit_definitions=>c_action-url }?|
+                                && lv_display_url
+                        iv_class = |url| ).
+      CATCH zcx_abapgit_exception.
+        iv_html->add( |<span class="url">{ lv_icon_commit }{ lv_commit_short_hash }</span>|  ).
+    ENDTRY.
+
+  ENDMETHOD.
+
 ENDCLASS.
