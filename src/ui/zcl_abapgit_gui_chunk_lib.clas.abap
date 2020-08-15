@@ -813,7 +813,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
                                 && lv_display_url
                         iv_class = |url| ).
       CATCH zcx_abapgit_exception.
-        iv_html->add( |<span class="url">{ lv_icon_commit }{ lv_commit_short_hash }</span>|  ).
+        iv_html->add( |<span class="url">{ lv_icon_commit }{ lv_commit_short_hash }</span>| ).
     ENDTRY.
 
   ENDMETHOD.

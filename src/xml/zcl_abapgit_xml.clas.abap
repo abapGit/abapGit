@@ -219,7 +219,7 @@ CLASS zcl_abapgit_xml IMPLEMENTATION.
   METHOD raise_exception_for.
     DATA lv_message TYPE string.
 
-    lv_message = |XML parser error: { ii_error->get_reason(  ) }, | &&
+    lv_message = |XML parser error: { ii_error->get_reason( ) }, | &&
                  |Line { ii_error->get_line( ) } | &&
                  |Col. { ii_error->get_column( ) }|. "#EC NOTEXT
 
