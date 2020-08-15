@@ -130,6 +130,14 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
         ei_page = get_patch_page( iv_getdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
+      WHEN zif_abapgit_definitions=>c_action-repo_settings.
+
+        lv_key = iv_getdata.
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_repo_sett
+          EXPORTING
+            io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+
       WHEN OTHERS.
 
         super->zif_abapgit_gui_event_handler~on_event(
