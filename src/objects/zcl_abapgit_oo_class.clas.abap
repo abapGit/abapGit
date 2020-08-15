@@ -437,11 +437,8 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
 
   METHOD zif_abapgit_oo_object_fnc~create_sotr.
     zcl_abapgit_sotr_handler=>create_sotr(
-      iv_pgmid    = 'LIMU'
-      iv_object   = 'CPUB'
-      iv_obj_name = iv_object_name
-      iv_package  = iv_package
-      io_xml      = io_xml ).
+      iv_package = iv_package
+      io_xml     = io_xml ).
   ENDMETHOD.
 
 
