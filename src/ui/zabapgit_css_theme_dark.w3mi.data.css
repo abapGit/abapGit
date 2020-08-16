@@ -64,7 +64,8 @@ div.repo { background-color: var(--theme-container-background-color); }
 .repo_name span.url  { color: var(--theme-greyscale-medium); }
 .repo_name a.url { color: var(--theme-greyscale-medium); }
 .repo_attr { color: var(--theme-primary-font-color); }
-.repo_attr span.branch_branch {
+
+span.branch_branch {
   border-color: var(--theme-greyscale-medium);
   background-color: #777777;
 }
