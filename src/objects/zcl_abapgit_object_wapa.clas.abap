@@ -522,11 +522,8 @@ CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
                               it_remote_pages = lt_pages_info ).
 
     zcl_abapgit_sotr_handler=>create_sotr(
-      iv_pgmid    = 'LIMU'
-      iv_object   = 'WAPP'
-      iv_obj_name = ms_item-obj_name
-      iv_package  = iv_package
-      io_xml      = io_xml ).
+      iv_package = iv_package
+      io_xml     = io_xml ).
 
   ENDMETHOD.
 

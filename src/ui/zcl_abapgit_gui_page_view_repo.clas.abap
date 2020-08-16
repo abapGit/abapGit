@@ -983,9 +983,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     CLEAR mt_col_spec.
-    _add_col(  ''  ). " all empty
+    _add_col( '' ). " all empty
     IF mv_are_changes_recorded_in_tr = abap_true.
-      _add_col(  ''  ). " all empty
+      _add_col( '' ). " all empty
     ENDIF.
     "         technical name     /display name      /css class   /add timezone   /title
     _add_col( 'OBJ_TYPE          /Type' ).

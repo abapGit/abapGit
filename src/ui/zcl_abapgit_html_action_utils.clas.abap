@@ -234,7 +234,7 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
       get_field( EXPORTING iv_name = 'FILENAME'
                            it_field = lt_fields
                            iv_decode = abap_true
-                 CHANGING cg_field = eg_file  ).
+                 CHANGING cg_field = eg_file ).
     ENDIF.
 
     IF eg_object IS SUPPLIED.

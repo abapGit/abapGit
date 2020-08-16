@@ -54,14 +54,14 @@ CLASS ZCL_ABAPGIT_LONGTEXTS IMPLEMENTATION.
         SELECT * FROM dokil
                  INTO TABLE lt_dokil
                  WHERE id     = iv_longtext_id
-                 AND   object = iv_object_name
+                 AND object = iv_object_name
                  AND masterlang = abap_true
                  ORDER BY PRIMARY KEY.
       ELSE.
         SELECT * FROM dokil
                  INTO TABLE lt_dokil
                  WHERE id     = iv_longtext_id
-                 AND   object = iv_object_name
+                 AND object = iv_object_name
                  ORDER BY PRIMARY KEY.
       ENDIF.
     ELSE.

@@ -32,7 +32,7 @@ CLASS ltcl_find_remote_dot_abapgit IMPLEMENTATION.
     given_any_repo( ).
     given_dot_abapgit_file( ).
 
-    when_find_remote_dot_abapgit(  ).
+    when_find_remote_dot_abapgit( ).
 
     then_dot_abapgit_is_bound( ).
     then_no_exception_is_raised( ).
@@ -45,7 +45,7 @@ CLASS ltcl_find_remote_dot_abapgit IMPLEMENTATION.
     given_any_repo( ).
     given_no_dot_abapgit_file( ).
 
-    when_find_remote_dot_abapgit(  ).
+    when_find_remote_dot_abapgit( ).
 
     then_dot_abapgit_is_not_bound( ).
     then_exception_is_raised( ).
