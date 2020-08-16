@@ -158,7 +158,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
 
   METHOD get_all.
 
-    rt_branches =  mt_branches.
+    rt_branches = mt_branches.
 
   ENDMETHOD.
 
