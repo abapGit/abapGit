@@ -15,20 +15,16 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
         !iv_pgmid    TYPE pgmid
         !iv_object   TYPE trobjtype
         !iv_obj_name TYPE csequence
-        io_xml       TYPE REF TO zcl_abapgit_xml_output OPTIONAL
+        !io_xml      TYPE REF TO zcl_abapgit_xml_output OPTIONAL
       EXPORTING
-        et_sotr      TYPE zif_abapgit_definitions=>ty_sotr_tt
-        et_sotr_use  TYPE zif_abapgit_definitions=>ty_sotr_use_tt
+        !et_sotr     TYPE zif_abapgit_definitions=>ty_sotr_tt
+        !et_sotr_use TYPE zif_abapgit_definitions=>ty_sotr_use_tt
       RAISING
         zcx_abapgit_exception .
-
     CLASS-METHODS create_sotr
       IMPORTING
-        !iv_pgmid    TYPE pgmid
-        !iv_object   TYPE trobjtype
-        !iv_obj_name TYPE csequence
-        !iv_package  TYPE devclass
-        io_xml       TYPE REF TO zcl_abapgit_xml_input
+        !iv_package TYPE devclass
+        !io_xml     TYPE REF TO zcl_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -129,8 +125,8 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
 
   METHOD get_sotr_4_concept.
 
-    DATA: ls_header   TYPE sotr_head,
-          lt_entries  TYPE sotr_text_tt.
+    DATA: ls_header  TYPE sotr_head,
+          lt_entries TYPE sotr_text_tt.
 
     FIELD-SYMBOLS: <ls_entry> LIKE LINE OF lt_entries.
 
