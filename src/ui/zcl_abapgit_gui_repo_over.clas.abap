@@ -336,7 +336,7 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
                                                        iv_class = 'pad-sides'
                                                        iv_hint  = 'Click to toggle favorite' ) ).
       ii_html->add( |</td>| ).
-      ii_html->add( |<td class="wmin">{ zcl_abapgit_html=>icon( lv_type_icon )  }</td>| ).
+      ii_html->add( |<td class="wmin">{ zcl_abapgit_html=>icon( lv_type_icon ) }</td>| ).
 
       ii_html->add( |<td>{ zcl_abapgit_html=>a( iv_txt = <ls_overview>-name
                                                 iv_act = |{ c_action-select }?{ <ls_overview>-key }| ) }</td>| ).
