@@ -181,7 +181,8 @@ div.repo {
   font-size: 8pt;
   padding: 4px 2px 3px 2px;
 }
-.repo_attr span.branch {
+
+span.branch {
   padding: 2px 4px;
   border: 1px solid;
   border-radius: 4px;
@@ -915,7 +916,7 @@ table.commit tr .title {
 .repo-overview { font-size: smaller; }
 .repo-overview tbody td { height: 2em; }
 .ro-detail { display: none; }
-.ro-action { width: 190px; }
+.ro-action { width: 260px; }
 .ro-go { font-size: 150%; }
 
 /* Branch Overview Page */

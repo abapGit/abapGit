@@ -317,6 +317,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
     mo_repo->refresh( ).
 
+    MESSAGE |{ mo_repo->get_name( ) }: settings saved successfully.| TYPE 'S'.
+
   ENDMETHOD.
 
 

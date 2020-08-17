@@ -305,7 +305,9 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
       lv_package_obj_name    TYPE sobj_name,
       lv_stage_link          TYPE string,
       lv_patch_link          TYPE string,
-      lv_code_inspector_link TYPE string.
+      lv_code_inspector_link TYPE string,
+      lv_repo_settings_link  TYPE string,
+      lv_branch_html         TYPE string.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
@@ -334,7 +336,7 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
                                                        iv_class = 'pad-sides'
                                                        iv_hint  = 'Click to toggle favorite' ) ).
       ii_html->add( |</td>| ).
-      ii_html->add( |<td class="wmin">{ zcl_abapgit_html=>icon( lv_type_icon )  }</td>| ).
+      ii_html->add( |<td class="wmin">{ zcl_abapgit_html=>icon( lv_type_icon ) }</td>| ).
 
       ii_html->add( |<td>{ zcl_abapgit_html=>a( iv_txt = <ls_overview>-name
                                                 iv_act = |{ c_action-select }?{ <ls_overview>-key }| ) }</td>| ).
@@ -356,9 +358,18 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
           iv_txt = <ls_overview>-package
           iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_package_jump_data }| ) }</td>| ).
 
-      ii_html->add( |<td>{ ii_html->a(
-        iv_txt = <ls_overview>-branch
-        iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ <ls_overview>-key }| ) }</td>| ).
+      IF <ls_overview>-branch IS INITIAL.
+        ii_html->add( |<td>&nbsp;</td>| ).
+      ELSE.
+        lv_branch_html = `<span class="branch branch_branch">`
+          && `<i title="Current branch" class="icon icon-code-branch grey70"></i>`
+          && <ls_overview>-branch
+          && `</span>`.
+
+        ii_html->add( |<td>{ ii_html->a(
+          iv_txt = lv_branch_html
+          iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ <ls_overview>-key }| ) }</td>| ).
+      ENDIF.
 
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_by }</td>| ).
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_at }</td>| ).
@@ -380,7 +391,15 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
         iv_txt = |Code inspector|
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?{ <ls_overview>-key } | ).
 
-      ii_html->add( lv_code_inspector_link && lc_separator && lv_stage_link && lc_separator && lv_patch_link ).
+      lv_repo_settings_link = ii_html->a(
+        iv_txt = |Settings|
+        iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?{ <ls_overview>-key } | ).
+
+      ii_html->add(
+        lv_code_inspector_link && lc_separator &&
+        lv_stage_link && lc_separator &&
+        lv_patch_link && lc_separator &&
+        lv_repo_settings_link ).
 
       ii_html->add( |</td>| ).
 

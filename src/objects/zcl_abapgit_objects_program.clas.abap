@@ -149,9 +149,6 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
         VALUE(rt_tpool) TYPE zif_abapgit_definitions=>ty_tpool_tt .
   PRIVATE SECTION.
     METHODS:
-      condense_flow
-        EXPORTING et_spaces TYPE ty_spaces_tt
-        CHANGING  ct_flow   TYPE swydyflow,
       uncondense_flow
         IMPORTING it_flow        TYPE swydyflow
                   it_spaces      TYPE ty_spaces_tt
@@ -224,29 +221,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
       IF <ls_pfk>-code+6(14) IS INITIAL AND <ls_pfk>-code(6) CO lc_num_only.
         cs_adm-pfkcode = <ls_pfk>-code.
       ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD condense_flow.
-
-    DATA: lv_spaces LIKE LINE OF et_spaces.
-
-    FIELD-SYMBOLS: <ls_flow> LIKE LINE OF ct_flow.
-
-
-    CLEAR et_spaces.
-
-    LOOP AT ct_flow ASSIGNING <ls_flow>.
-      lv_spaces = 0.
-
-      WHILE NOT <ls_flow>-line IS INITIAL AND <ls_flow>-line(1) = space.
-        lv_spaces = lv_spaces + 1.
-        <ls_flow>-line = <ls_flow>-line+1.
-      ENDWHILE.
-
-      APPEND lv_spaces TO et_spaces.
     ENDLOOP.
 
   ENDMETHOD.
@@ -338,6 +312,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 * the program to dump since it_dynpros cannot be changed
     LOOP AT it_dynpros INTO ls_dynpro.
 
+      " todo: kept for compatibility, remove after grace period #3680
       ls_dynpro-flow_logic = uncondense_flow(
         it_flow = ls_dynpro-flow_logic
         it_spaces = ls_dynpro-spaces ).
@@ -883,8 +858,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
       <ls_dynpro>-containers = lt_containers.
       <ls_dynpro>-fields     = lt_fields_to_containers.
 
-      condense_flow( IMPORTING et_spaces = <ls_dynpro>-spaces
-                     CHANGING ct_flow = lt_flow_logic ).
       <ls_dynpro>-flow_logic = lt_flow_logic.
 
     ENDLOOP.
