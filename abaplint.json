@@ -208,7 +208,7 @@
       "ignoreFunctionModuleName": false
     },
     "line_length": {
-      "length": 121,
+      "length": 120,
       "exclude": ["zcl_abapgit_object_pdts.clas.testclasses.abap"]
     },
     "line_only_punc": {
