@@ -306,7 +306,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
         ls_branch = lo_branches->find_by_name( ms_data-branch_name ).
       CATCH zcx_abapgit_exception.
         ms_data-branch_name = 'refs/heads/master'.
-        lv_msg = |Branch { ms_data-branch_name } does not exit. Fallback to master branch.|. 
+        lv_msg = |Branch { ms_data-branch_name } does not exit. Fallback to master branch.|.
         MESSAGE lv_msg TYPE 'S'.
     ENDTRY.
 
