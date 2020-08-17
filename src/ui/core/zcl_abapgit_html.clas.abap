@@ -363,7 +363,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     add( icon( iv_name    = iv_name
                iv_class   = iv_class
                iv_hint    = iv_hint
-               iv_onclick = iv_onclick  ) ).
+               iv_onclick = iv_onclick ) ).
 
   ENDMETHOD.
 

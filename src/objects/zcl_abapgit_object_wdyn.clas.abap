@@ -780,11 +780,8 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
     READ TABLE ls_component-comp_metadata-descriptions INTO ls_description INDEX 1.
     IF sy-subrc = 0.
       zcl_abapgit_sotr_handler=>create_sotr(
-        iv_pgmid    = 'LIMU'
-        iv_object   = 'WDYV'
-        iv_obj_name = ms_item-obj_name
-        iv_package  = iv_package
-        io_xml      = io_xml ).
+        iv_package = iv_package
+        io_xml     = io_xml ).
     ENDIF.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).

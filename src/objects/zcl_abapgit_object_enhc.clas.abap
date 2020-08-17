@@ -114,11 +114,8 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHC IMPLEMENTATION.
         li_enh_composite->if_enh_object~unlock( ).
 
         zcl_abapgit_sotr_handler=>create_sotr(
-          iv_pgmid    = 'R3TR'
-          iv_object   = ms_item-obj_type
-          iv_obj_name = ms_item-obj_name
-          iv_package  = iv_package
-          io_xml      = io_xml ).
+          iv_package = iv_package
+          io_xml     = io_xml ).
 
       CATCH cx_enh_root INTO lx_error.
         zcx_abapgit_exception=>raise( lx_error->get_text( ) ).
