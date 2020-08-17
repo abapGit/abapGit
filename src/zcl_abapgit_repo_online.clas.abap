@@ -298,15 +298,11 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
       ls_branch   TYPE zif_abapgit_definitions=>ty_git_branch.
 
     " Check if branch still exists since it might have been deleted in remote repo
-    " and fallback to master if not.
+    " and fallback to master if not
     TRY.
-        lo_branches = zcl_abapgit_git_transport=>branches( iv_url = ms_data-url ).
+        lo_branches = zcl_abapgit_git_transport=>branches( ms_data-url ).
 
-        CALL METHOD lo_branches->find_by_name
-          EXPORTING
-            iv_branch_name = ms_data-branch_name
-          RECEIVING
-            rs_branch      = ls_branch.
+        ls_branch = lo_branches->find_by_name( ms_data-branch_name ).
       CATCH zcx_abapgit_exception .
         MESSAGE |Branch { ms_data-branch_name } does not exit. Fallback to master branch.| TYPE 'S'.
         ms_data-branch_name = 'refs/heads/master'.
