@@ -7,13 +7,15 @@ CLASS zcl_abapgit_repo_offline DEFINITION
   PUBLIC SECTION.
 
     METHODS get_name
-      REDEFINITION .
+        REDEFINITION .
     METHODS has_remote_source
-      REDEFINITION .
+        REDEFINITION .
+    METHODS validate_branch
+        REDEFINITION .
   PROTECTED SECTION.
 
     METHODS reset_remote
-      REDEFINITION .
+        REDEFINITION .
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -51,5 +53,10 @@ CLASS ZCL_ABAPGIT_REPO_OFFLINE IMPLEMENTATION.
     super->reset_remote( ).
     set_files_remote( lt_backup ).
 
+  ENDMETHOD.
+
+
+  METHOD validate_branch.
+    " No branch for offline repos
   ENDMETHOD.
 ENDCLASS.
