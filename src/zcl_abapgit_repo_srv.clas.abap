@@ -291,7 +291,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
       eo_repo = get_instance( )->get( <ls_repo>-key ).
       lv_name = eo_repo->get_name( ).
       lv_owner = <ls_repo>-created_by.
-      ev_reason =  |Package { iv_package } already versioned as { lv_name } by { lv_owner }|.
+      ev_reason = |Package { iv_package } already versioned as { lv_name } by { lv_owner }|.
     ELSE.
       " check if package is include as sub-package in a different repo
       validate_sub_super_packages(

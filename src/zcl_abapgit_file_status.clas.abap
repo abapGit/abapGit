@@ -314,7 +314,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       " local packages usually have no tadir entry
       lv_name = iv_obj_name.
       li_package = zcl_abapgit_factory=>get_sap_package( lv_name ).
-      IF li_package->exists(  ) = abap_true.
+      IF li_package->exists( ) = abap_true.
         rv_devclass = lv_name.
       ENDIF.
     ENDIF.

@@ -172,11 +172,8 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYA IMPLEMENTATION.
           iv_package    = iv_package ).
 
     zcl_abapgit_sotr_handler=>create_sotr(
-      iv_pgmid    = 'R3TR'
-      iv_object   = ms_item-obj_type
-      iv_obj_name = ms_item-obj_name
-      iv_package  = iv_package
-      io_xml      = io_xml ).
+      iv_package = iv_package
+      io_xml     = io_xml ).
 
   ENDMETHOD.
 
