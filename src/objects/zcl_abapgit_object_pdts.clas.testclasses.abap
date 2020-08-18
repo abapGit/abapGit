@@ -147,7 +147,7 @@ CLASS ltc_lock DEFINITION FINAL FOR TESTING
   RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
-    CONSTANTS c_ts TYPE string VALUE 'TS' ##NO_TEXT.
+    CONSTANTS c_ts TYPE hr_sotype VALUE 'TS' ##NO_TEXT.
     METHODS:
       enqueue_is_detected FOR TESTING RAISING cx_static_check,
       get_any_customer_task
@@ -173,8 +173,7 @@ CLASS ltc_lock IMPLEMENTATION.
     lo_cut = NEW zcl_abapgit_object_pdts(
       is_item     = VALUE #( obj_type = 'PDTS'
                              obj_name = 'TS' && lv_taskid )
-      iv_language = sy-langu
-    ).
+      iv_language = sy-langu ).
 
     cl_abap_unit_assert=>assert_true( lo_cut->is_locked( ) ).
 

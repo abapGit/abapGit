@@ -31,7 +31,8 @@ CLASS zcl_abapgit_object_pdts DEFINITION
       c_subty_task_description TYPE hr_s_subty VALUE '0120',
       c_object_type_task       TYPE hr_sotype VALUE 'TS'.
 
-    DATA mv_objid TYPE hrobjid. "hrobject-objid.
+    DATA ms_objkey TYPE hrsobject.
+    DATA mv_objid TYPE hrobjid.
 
     METHODS check_subrc_for IMPORTING iv_call TYPE clike OPTIONAL
                             RAISING   zcx_abapgit_exception.
@@ -48,7 +49,10 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
 
-    mv_objid = ms_item-obj_name.
+    ms_objkey-otype = c_object_type_task.
+    ms_objkey-objid = ms_item-obj_name.
+
+    mv_objid = ms_item-obj_name.  "Todo: Obsolete
 
   ENDMETHOD.
 
@@ -414,19 +418,8 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_locked.
-
-    CALL FUNCTION 'ENQUEUE_HRSOBJECT'
-      EXPORTING
-        objid          = mv_objid
-        otype          = c_object_type_task
-        x_objid        = ' '
-        x_otype        = ' '
-        _scope         = '2'
-        _wait          = ' '
-      EXCEPTIONS
-        foreign_lock   = 01
-        system_failure = 02.
-    rv_is_locked = abap_false.
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'HRSOBJECT'
+                                            iv_argument = c_object_type_task && mv_objid ).
   ENDMETHOD.
 
 
@@ -439,11 +432,11 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
     SELECT SINGLE uname
       FROM hrs1201
-      WHERE otype = 'TS' AND
+      WHERE otype = @c_object_type_task AND
             objid = @ms_item-obj_name
       INTO @rv_user.
 
-    IF sy-subrc = 0.
+    IF sy-subrc <> 0.
       rv_user = c_user_unknown.
     ENDIF.
 
