@@ -40,13 +40,13 @@ CLASS lcl_abapgit_object_pdts_helper IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS lcx_fm DEFINITION INHERITING FROM zcx_abapgit_exception.
+CLASS lcx_function_module DEFINITION INHERITING FROM cx_static_check.
   PUBLIC SECTION.
     CLASS-METHODS check_subrc IMPORTING iv_fm TYPE string
                               RAISING   zcx_abapgit_exception.
 ENDCLASS.
 
-CLASS lcx_fm IMPLEMENTATION.
+CLASS lcx_function_module IMPLEMENTATION.
 
   METHOD check_subrc.
     IF sy-subrc <> 0.

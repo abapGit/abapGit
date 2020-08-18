@@ -1,4 +1,4 @@
-CLASS ltd_mock DEFINITION
+CLASS ltcl_mock DEFINITION
   CREATE PUBLIC
   FOR TESTING
   DURATION SHORT
@@ -21,7 +21,7 @@ CLASS ltd_mock DEFINITION
 ENDCLASS.
 
 
-CLASS ltd_mock IMPLEMENTATION.
+CLASS ltcl_mock IMPLEMENTATION.
 
   METHOD add_line.
     mv_xml = mv_xml && iv_string && cl_abap_char_utilities=>newline.
@@ -101,7 +101,7 @@ CLASS ltcl_turnaround_test DEFINITION FINAL FOR TESTING
 
   PRIVATE SECTION.
 
-    DATA mo_mock TYPE REF TO ltd_mock.
+    DATA mo_mock TYPE REF TO ltcl_mock.
 
     METHODS setup.
     "Use unofficial naming hack to run this test first
@@ -142,7 +142,7 @@ CLASS ltcl_turnaround_test IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS ltc_lock DEFINITION FINAL FOR TESTING
+CLASS ltcl_lock DEFINITION FINAL FOR TESTING
   DURATION MEDIUM
   RISK LEVEL HARMLESS.
 
@@ -159,7 +159,7 @@ CLASS ltc_lock DEFINITION FINAL FOR TESTING
 ENDCLASS.
 
 
-CLASS ltc_lock IMPLEMENTATION.
+CLASS ltcl_lock IMPLEMENTATION.
 
   METHOD enqueue_is_detected.
 
@@ -196,7 +196,8 @@ CLASS ltc_lock IMPLEMENTATION.
                  objid LIKE '9%'
            INTO @rv_taskid.
 
-    cl_abap_unit_assert=>assert_subrc( exp = 0  "A customer task must exist, else we assume WF customizing hasn't been done yet
+    "A customer task must exist, else we assume WF customizing hasn't been done yet
+    cl_abap_unit_assert=>assert_subrc( exp = 0
                                        act = sy-subrc ).
 
   ENDMETHOD.
