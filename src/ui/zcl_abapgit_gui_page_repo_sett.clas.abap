@@ -75,7 +75,7 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
-    ms_control-page_title = 'Repository settings'.
+    ms_control-page_title = 'Repository Settings'.
     mo_repo = io_repo.
   ENDMETHOD.
 
