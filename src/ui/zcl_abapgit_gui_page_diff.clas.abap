@@ -131,7 +131,9 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
       IMPORTING
         !is_diff       TYPE ty_file_diff
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     METHODS render_beacon
       IMPORTING
         !is_diff_line  TYPE zif_abapgit_definitions=>ty_diff
@@ -584,6 +586,10 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     li_progress = zcl_abapgit_progress=>get_instance( lines( mt_diff_files ) ).
 
+    ri_html->add( `<div class="repo">` ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
+    ri_html->add( `</div>` ).
+
     ri_html->add( |<div id="diff-list" data-repo-key="{ mv_repo_key }">| ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
     LOOP AT mt_diff_files INTO ls_diff_file.
@@ -914,9 +920,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   METHOD render_table_head.
 
     CREATE OBJECT ro_html.
-
-    ro_html->add( '<thead class="header">' ).               "#EC NOTEXT
-    ro_html->add( '<tr>' ).                                 "#EC NOTEXT
+    ro_html->add( '<thead class="header">' ).
+    ro_html->add( '<tr>' ).
 
     IF mv_unified = abap_true.
 
@@ -930,8 +935,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     ENDIF.
 
-    ro_html->add( '</tr>' ).                                "#EC NOTEXT
-    ro_html->add( '</thead>' ).                             "#EC NOTEXT
+    ro_html->add( '</tr>' ).
+    ro_html->add( '</thead>' ).
 
   ENDMETHOD.
 
