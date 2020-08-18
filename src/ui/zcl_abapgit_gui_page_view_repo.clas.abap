@@ -138,7 +138,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_view_repo IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -313,24 +313,25 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
     CREATE OBJECT ro_toolbar.
 
     IF mo_repo->has_remote_source( ) = abap_true.
-      ro_toolbar->add(  " Show/Hide files
-        iv_txt = 'Show files'
+
+      ro_toolbar->add(
+        iv_txt = 'Show Files'
         iv_chk = boolc( NOT mv_hide_files = abap_true )
         iv_act = c_actions-toggle_hide_files ).
 
-      ro_toolbar->add(  " Show changes only
-        iv_txt = 'Show changes only'
+      ro_toolbar->add(
+        iv_txt = 'Show Changes Only'
         iv_chk = mv_changes_only
         iv_act = c_actions-toggle_changes ).
     ENDIF.
 
-    ro_toolbar->add(  " Show/Hide folders
-      iv_txt = 'Show folders'
+    ro_toolbar->add(
+      iv_txt = 'Show Folders'
       iv_chk = mv_show_folders
       iv_act = c_actions-toggle_folders ).
 
     ro_toolbar->add(
-      iv_txt = 'Show order by'
+      iv_txt = 'Show Order By'
       iv_chk = mv_show_order_by
       iv_act = c_actions-toggle_order_by ).
 
@@ -1009,7 +1010,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
     lv_html = |<th class="cmd">| &&
       zcl_abapgit_html=>icon( lv_icon ) &&
       zcl_abapgit_html=>a(
-        iv_txt = |diffs first|
+        iv_txt = |Diffs First|
         iv_act = c_actions-toggle_diff_first ) && |</th>|.
     ro_html->add( lv_html ).
 
