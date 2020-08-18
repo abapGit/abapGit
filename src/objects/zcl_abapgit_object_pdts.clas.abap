@@ -414,7 +414,6 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~is_locked.
-*    DATA(lv_objid) = CONV hr_sobjid( mv_objid ).
 
     CALL FUNCTION 'ENQUEUE_HRSOBJECT'
       EXPORTING

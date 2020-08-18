@@ -20,12 +20,12 @@ CLASS lcl_abapgit_object_pdts_helper IMPLEMENTATION.
 
   METHOD set_container_id.
 
-    FIELD-SYMBOLS <object> TYPE REF TO if_swf_cnt_container.
+    FIELD-SYMBOLS <lv_object> TYPE REF TO if_swf_cnt_container.
 
-    ASSIGN ('IO_TASK->CONTAINER') TO <object>.
+    ASSIGN ('IO_TASK->CONTAINER') TO <lv_object>.
     ASSERT sy-subrc = 0.
 
-    CALL METHOD <object>->('SET_GUID')
+    CALL METHOD <lv_object>->('SET_GUID')
       EXPORTING
         guid_32 = iv_id.
 
@@ -43,8 +43,7 @@ ENDCLASS.
 CLASS lcx_fm DEFINITION INHERITING FROM zcx_abapgit_exception.
   PUBLIC SECTION.
     CLASS-METHODS check_subrc IMPORTING iv_fm TYPE string
-                              RAISING
-                                        zcx_abapgit_exception.
+                              RAISING   zcx_abapgit_exception.
 ENDCLASS.
 
 CLASS lcx_fm IMPLEMENTATION.

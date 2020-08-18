@@ -24,7 +24,7 @@ ENDCLASS.
 CLASS ltd_mock IMPLEMENTATION.
 
   METHOD add_line.
-    mv_xml = mv_xml && cl_abap_char_utilities=>newline.
+    mv_xml = mv_xml && iv_string && cl_abap_char_utilities=>newline.
   ENDMETHOD.
 
   METHOD generate.
@@ -90,7 +90,7 @@ CLASS ltd_mock IMPLEMENTATION.
 
   METHOD create_input_xml.
     generate( ).
-*    ri_result = NEW zcl_abapgit_xml_input( mv_xml ).
+    ri_result = NEW zcl_abapgit_xml_input( mv_xml ).
   ENDMETHOD.
 
 ENDCLASS.
@@ -104,7 +104,8 @@ CLASS ltcl_turnaround_test DEFINITION FINAL FOR TESTING
     DATA mo_mock TYPE REF TO ltd_mock.
 
     METHODS setup.
-    METHODS _task_must_not_exist FOR TESTING RAISING cx_static_check.  "Unofficial naming hack, we want this to run first
+    "Use unofficial naming hack to run this test first
+    METHODS _task_must_not_exist FOR TESTING RAISING cx_static_check.
     METHODS create_task FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
@@ -113,7 +114,7 @@ ENDCLASS.
 CLASS ltcl_turnaround_test IMPLEMENTATION.
 
   METHOD setup.
-    mo_mock = NEW ltd_mock( ).
+    CREATE OBJECT mo_mock.
   ENDMETHOD.
 
   METHOD _task_must_not_exist.
@@ -125,18 +126,99 @@ CLASS ltcl_turnaround_test IMPLEMENTATION.
         INTO @DATA(dummy).
 
     cl_abap_unit_assert=>assert_subrc(
-      EXPORTING
         exp              = 4
         act              = sy-subrc
         msg              = |Test task { mo_mock->mc_task_id } already exists|
         level            = if_aunit_constants=>fatal
-        quit             = if_aunit_constants=>class
-      ).
+        quit             = if_aunit_constants=>class ).
 
   ENDMETHOD.
 
   METHOD create_task.
-    DATA(li_xml) = mo_mock->create_input_xml( ).
+    DATA li_xml TYPE REF TO zif_abapgit_xml_input.
+    li_xml = mo_mock->create_input_xml( ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltc_lock DEFINITION FINAL FOR TESTING
+  DURATION MEDIUM
+  RISK LEVEL HARMLESS.
+
+  PRIVATE SECTION.
+    CONSTANTS c_ts TYPE string VALUE 'TS' ##NO_TEXT.
+    METHODS:
+      enqueue_is_detected FOR TESTING RAISING cx_static_check,
+      get_any_customer_task
+        RETURNING
+          VALUE(rv_taskid) TYPE hrobjid,
+      lock_task
+        IMPORTING
+          iv_taskid TYPE hrobjid.
+ENDCLASS.
+
+
+CLASS ltc_lock IMPLEMENTATION.
+
+  METHOD enqueue_is_detected.
+
+    DATA: lv_taskid TYPE hrobjid,
+          lv_task   TYPE hrsobject,
+          lo_cut    TYPE REF TO zif_abapgit_object.
+
+    lv_taskid = get_any_customer_task( ).
+    lock_task( lv_taskid ).
+
+    lo_cut = NEW zcl_abapgit_object_pdts(
+      is_item     = VALUE #( obj_type = 'PDTS'
+                             obj_name = 'TS' && lv_taskid )
+      iv_language = sy-langu
+    ).
+
+    cl_abap_unit_assert=>assert_true( lo_cut->is_locked( ) ).
+
+    CALL FUNCTION 'DEQUEUE_HRSOBJECT'
+      EXPORTING
+        objid   = lv_taskid
+        otype   = c_ts
+        x_objid = ' '
+        x_otype = ' '
+        _scope  = '2'.
+
+  ENDMETHOD.
+
+
+  METHOD get_any_customer_task.
+
+    SELECT SINGLE objid
+           FROM hrs1000
+           WHERE otype = @c_ts AND
+                 objid LIKE '9%'
+           INTO @rv_taskid.
+
+    cl_abap_unit_assert=>assert_subrc( exp = 0  "A customer task must exist, else we assume WF customizing hasn't been done yet
+                                       act = sy-subrc ).
+
+  ENDMETHOD.
+
+
+  METHOD lock_task.
+
+    CALL FUNCTION 'ENQUEUE_HRSOBJECT'
+      EXPORTING
+        objid          = iv_taskid
+        otype          = c_ts
+        x_objid        = ' '
+        x_otype        = ' '
+        _scope         = '2'
+        _wait          = ' '
+      EXCEPTIONS
+        foreign_lock   = 01
+        system_failure = 02.
+
+    cl_abap_unit_assert=>assert_subrc( exp = 0
+                                       act = sy-subrc ).
 
   ENDMETHOD.
 
