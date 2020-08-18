@@ -44,7 +44,7 @@ CLASS zcl_abapgit_gui_buttons IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD repo_list.
-    rv_html_string = `<i class="icon icon-bars"></i> Repository list`.
+    rv_html_string = `<i class="icon icon-bars"></i> Repository List`.
   ENDMETHOD.
 
 ENDCLASS.

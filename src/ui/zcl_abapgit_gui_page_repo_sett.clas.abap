@@ -70,7 +70,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
 
 
   METHOD constructor.
