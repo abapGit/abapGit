@@ -16,7 +16,7 @@ CLASS zcl_abapgit_convert DEFINITION
         VALUE(rv_bitbyte) TYPE zif_abapgit_definitions=>ty_bitbyte .
     CLASS-METHODS string_to_xstring_utf8
       IMPORTING
-        !iv_string        TYPE clike
+        !iv_string        TYPE string
       RETURNING
         VALUE(rv_xstring) TYPE xstring .
     CLASS-METHODS xstring_to_string_utf8

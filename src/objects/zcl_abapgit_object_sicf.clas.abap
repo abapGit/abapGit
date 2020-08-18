@@ -301,6 +301,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
 
     DATA: lv_name       TYPE icfservice-icf_name,
           lv_url        TYPE icfurlbuf,
+          lv_string     TYPE string,
           lv_icfnodguid TYPE icfservice-icfnodguid,
           lv_parguid    TYPE icfservice-icfparguid.
 
@@ -321,7 +322,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
         icf_inconst = 1
         OTHERS      = 2.
     IF sy-subrc = 0.
-      rv_hash = zcl_abapgit_hash=>sha1_raw( zcl_abapgit_convert=>string_to_xstring_utf8( lv_url ) ).
+      lv_string = lv_url.
+      rv_hash = zcl_abapgit_hash=>sha1_raw( zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ) ).
     ENDIF.
 
   ENDMETHOD.
