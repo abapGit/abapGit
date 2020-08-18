@@ -249,7 +249,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
     gui_services( )->register_event_handler( me ).
 
-    ri_html = zcl_abapgit_html=>create( ).
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     lo_form = zcl_abapgit_html_form=>create( iv_form_id = 'add-repo-online-form' ).
     lo_form->text(

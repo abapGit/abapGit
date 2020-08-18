@@ -307,8 +307,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
   METHOD save.
 
-    DATA: lt_post_fields TYPE tihttpnvp.
-
+    DATA: lt_post_fields TYPE tihttpnvp,
+          lv_msg         TYPE string.
 
     lt_post_fields = parse_post( it_postdata ).
 
@@ -317,7 +317,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
     mo_repo->refresh( ).
 
-    MESSAGE |{ mo_repo->get_name( ) }: settings saved successfully.| TYPE 'S'.
+    lv_msg = |{ mo_repo->get_name( ) }: settings saved successfully.|.
+    MESSAGE lv_msg TYPE 'S'.
 
   ENDMETHOD.
 
