@@ -90,7 +90,9 @@ CLASS ltcl_mock IMPLEMENTATION.
 
   METHOD create_input_xml.
     generate( ).
-    ri_result = NEW zcl_abapgit_xml_input( mv_xml ).
+    CREATE OBJECT ri_result TYPE zcl_abapgit_xml_input
+      EXPORTING
+        iv_xml = mv_xml.
   ENDMETHOD.
 
 ENDCLASS.
@@ -118,12 +120,13 @@ CLASS ltcl_turnaround_test IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD _task_must_not_exist.
+    DATA dummy TYPE abap_bool.
 
     SELECT SINGLE @abap_true
-        FROM hrs1000
-        WHERE otype = 'TS' AND
-              objid = @mo_mock->mc_task_id
-        INTO @DATA(dummy).
+           FROM hrs1000
+           WHERE otype = 'TS' AND
+                 objid = @mo_mock->mc_task_id
+           INTO @dummy.
 
     cl_abap_unit_assert=>assert_subrc(
         exp              = 4
@@ -170,10 +173,11 @@ CLASS ltcl_lock IMPLEMENTATION.
     lv_taskid = get_any_customer_task( ).
     lock_task( lv_taskid ).
 
-    lo_cut = NEW zcl_abapgit_object_pdts(
-      is_item     = VALUE #( obj_type = 'PDTS'
+    CREATE OBJECT lo_cut TYPE zcl_abapgit_object_pdts
+      EXPORTING
+        is_item     = VALUE #( obj_type = 'PDTS'
                              obj_name = 'TS' && lv_taskid )
-      iv_language = sy-langu ).
+        iv_language = sy-langu.
 
     cl_abap_unit_assert=>assert_true( lo_cut->is_locked( ) ).
 
