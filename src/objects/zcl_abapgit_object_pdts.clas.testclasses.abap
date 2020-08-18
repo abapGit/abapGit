@@ -105,9 +105,9 @@ CLASS ltcl_turnaround_test DEFINITION FINAL FOR TESTING
 
     DATA mo_mock TYPE REF TO ltcl_mock.
 
+    CLASS-METHODS class_setup.
     METHODS setup.
-    "Use unofficial naming hack to run this test first
-    METHODS _task_must_not_exist FOR TESTING RAISING cx_static_check.
+
     METHODS create_task FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
@@ -115,26 +115,27 @@ ENDCLASS.
 
 CLASS ltcl_turnaround_test IMPLEMENTATION.
 
-  METHOD setup.
-    CREATE OBJECT mo_mock.
-  ENDMETHOD.
+  METHOD class_setup.
 
-  METHOD _task_must_not_exist.
-    DATA dummy TYPE abap_bool.
+    DATA lv_dummy TYPE abap_bool.
 
     SELECT SINGLE @abap_true
            FROM hrs1000
            WHERE otype = 'TS' AND
-                 objid = @mo_mock->mc_task_id
-           INTO @dummy.
+                 objid = @ltcl_mock=>mc_task_id
+           INTO @lv_dummy.
 
     cl_abap_unit_assert=>assert_subrc(
         exp              = 4
         act              = sy-subrc
-        msg              = |Test task { mo_mock->mc_task_id } already exists|
+        msg              = |Test task { ltcl_mock=>mc_task_id } already exists|
         level            = if_aunit_constants=>fatal
         quit             = if_aunit_constants=>class ).
 
+  ENDMETHOD.
+
+  METHOD setup.
+    CREATE OBJECT mo_mock.
   ENDMETHOD.
 
   METHOD create_task.
