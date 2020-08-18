@@ -16,7 +16,7 @@ CLASS zcl_abapgit_convert DEFINITION
         VALUE(rv_bitbyte) TYPE zif_abapgit_definitions=>ty_bitbyte .
     CLASS-METHODS string_to_xstring_utf8
       IMPORTING
-        !iv_string        TYPE string
+        !iv_string        TYPE clike
       RETURNING
         VALUE(rv_xstring) TYPE xstring .
     CLASS-METHODS xstring_to_string_utf8
@@ -209,7 +209,7 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
       EXPORTING
         text      = iv_str
 *     IMPORTING
-*         LENGTH    = LENGTH
+*       LENGTH    = LENGTH
       TABLES
         ftext_tab = et_tab.
     ASSERT sy-subrc = 0.
