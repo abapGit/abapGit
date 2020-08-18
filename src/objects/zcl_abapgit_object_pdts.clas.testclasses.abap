@@ -168,15 +168,18 @@ CLASS ltcl_lock IMPLEMENTATION.
 
     DATA: lv_taskid TYPE hrobjid,
           lv_task   TYPE hrsobject,
-          lo_cut    TYPE REF TO zif_abapgit_object.
+          lo_cut    TYPE REF TO zif_abapgit_object,
+          ls_item   TYPE zif_abapgit_definitions=>ty_item.
 
     lv_taskid = get_any_customer_task( ).
     lock_task( lv_taskid ).
 
+    ls_item-obj_type = 'PDTS'.
+    ls_item-obj_name = 'TS' && lv_taskid.
+
     CREATE OBJECT lo_cut TYPE zcl_abapgit_object_pdts
       EXPORTING
-        is_item     = VALUE #( obj_type = 'PDTS'
-                             obj_name = 'TS' && lv_taskid )
+        is_item     = ls_item
         iv_language = sy-langu.
 
     cl_abap_unit_assert=>assert_true( lo_cut->is_locked( ) ).
