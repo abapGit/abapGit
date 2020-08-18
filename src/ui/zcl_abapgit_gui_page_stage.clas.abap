@@ -146,7 +146,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     ms_control-page_menu  = build_menu( ).
 
-  ENDMETHOD.
+    IF lines( ms_files-local ) = 0 AND lines( ms_files-remote ) = 0.
+      zcx_abapgit_exception=>raise( 'There are no changes that could be staged' ).
+    ENDIF.
+
+ENDMETHOD.
 
 
   METHOD count_default_files_to_commit.
