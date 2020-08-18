@@ -139,7 +139,7 @@ CLASS zcl_abapgit_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS reset_status .
-    METHODS validate_branch
+    METHODS validate
         ABSTRACT .
   PROTECTED SECTION.
 

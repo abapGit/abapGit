@@ -55,7 +55,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
         REDEFINITION .
     METHODS rebuild_local_checksums
         REDEFINITION .
-    METHODS validate_branch
+    METHODS validate
         REDEFINITION .
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -291,7 +291,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD validate_branch.
+  METHOD validate.
 
     DATA:
       lo_branches TYPE REF TO zcl_abapgit_git_branch_list,

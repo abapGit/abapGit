@@ -659,8 +659,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
     " Reinit, for the case of type change
     mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
 
-   " Check if branch still exists and fallback to master if necessary
-    mo_repo->validate_branch( ).
+    " Check if repo/branch is still valid and potentially fallback to consistent version
+    mo_repo->validate( ).
 
     lo_news = zcl_abapgit_news=>create( mo_repo ).
 

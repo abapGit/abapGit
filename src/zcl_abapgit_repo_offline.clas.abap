@@ -10,7 +10,7 @@ CLASS zcl_abapgit_repo_offline DEFINITION
         REDEFINITION .
     METHODS has_remote_source
         REDEFINITION .
-    METHODS validate_branch
+    METHODS validate
         REDEFINITION .
   PROTECTED SECTION.
 
@@ -56,7 +56,7 @@ CLASS ZCL_ABAPGIT_REPO_OFFLINE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD validate_branch.
-    " No branch for offline repos
+  METHOD validate.
+    " Nothing to do so far
   ENDMETHOD.
 ENDCLASS.
