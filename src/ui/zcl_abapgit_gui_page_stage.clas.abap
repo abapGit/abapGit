@@ -134,7 +134,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     super->constructor( ).
 
-    ms_control-page_title = 'STAGE'.
+    ms_control-page_title = 'Stage'.
     mo_repo               = io_repo.
     ms_files              = zcl_abapgit_factory=>get_stage_logic( )->get( mo_repo ).
     mv_seed               = iv_seed.

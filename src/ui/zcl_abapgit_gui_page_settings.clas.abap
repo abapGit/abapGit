@@ -109,7 +109,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
-    ms_control-page_title = 'SETTINGS'.
+    ms_control-page_title = 'Settings'.
   ENDMETHOD.
 
 

@@ -388,7 +388,7 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
         iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?{ <ls_overview>-key } | ).
 
       lv_code_inspector_link = ii_html->a(
-        iv_txt = |Code inspector|
+        iv_txt = |Check|
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?{ <ls_overview>-key } | ).
 
       lv_repo_settings_link = ii_html->a(

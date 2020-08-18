@@ -398,6 +398,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
     CLEAR: mv_unified.
     CREATE OBJECT mo_stage.
 
+    ms_control-page_title = 'Patch'.
     ms_control-page_menu = build_menu( ).
 
   ENDMETHOD.

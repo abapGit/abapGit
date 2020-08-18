@@ -515,7 +515,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
     mv_show_order_by = zcl_abapgit_persistence_user=>get_instance( )->get_show_order_by( ).
     mv_diff_first    = abap_true.
 
-    ms_control-page_title = 'REPOSITORY'.
+    ms_control-page_title = 'Repository'.
     ms_control-page_menu = build_main_menu( ).
 
     " Read global settings to get max # of objects to be listed
