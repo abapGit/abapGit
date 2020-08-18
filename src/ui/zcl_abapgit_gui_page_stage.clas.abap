@@ -150,7 +150,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'There are no changes that could be staged' ).
     ENDIF.
 
-ENDMETHOD.
+  ENDMETHOD.
 
 
   METHOD count_default_files_to_commit.
