@@ -14,6 +14,10 @@ It's possible to edit database entries of type
 
 Be careful when you edit these entries from within abapGit. Corrupting the XML or setting invalid options might break your abapGit!
 
+![](img/db_util_1.png)
+
+![](img/db_util_2.png)
+
 ## Global Settings
 
 The `SETTINGS` entries contain global (not user-specific) settings for your abapGit installation. This is an example:
@@ -235,3 +239,4 @@ How to start abapGit in "Emergency Mode":
 1. Make necessary changes and save
 1. After exiting abapGit, go back to SU3 and remove parameter DBT
 
+![](img/db_util_emergency_mode.png)
