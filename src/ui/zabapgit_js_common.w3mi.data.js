@@ -232,6 +232,7 @@ function RepoOverViewHelper() {
   this.isDetailsDisplayed = false;
   this.isOnlyFavoritesDisplayed = false;
   this.detailCssClass = findStyleSheetByName(".ro-detail");
+  this.actionCssClass = findStyleSheetByName(".ro-action");
   var icon = document.getElementById("icon-filter-detail");
   this.toggleFilterIcon(icon, this.isDetailsDisplayed);
   icon = document.getElementById("icon-filter-favorite");
@@ -249,6 +250,7 @@ RepoOverViewHelper.prototype.toggleItemsDetail = function(forceDisplay){
   if (this.detailCssClass) {
     this.isDetailsDisplayed = forceDisplay || !this.isDetailsDisplayed;
     this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
+    this.actionCssClass.style.display = this.isDetailsDisplayed ? "none" : "";
     var icon = document.getElementById("icon-filter-detail");
     this.toggleFilterIcon(icon, this.isDetailsDisplayed);
   }
