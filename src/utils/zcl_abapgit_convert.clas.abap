@@ -209,7 +209,7 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
       EXPORTING
         text      = iv_str
 *     IMPORTING
-*         LENGTH    = LENGTH
+*       LENGTH    = LENGTH
       TABLES
         ftext_tab = et_tab.
     ASSERT sy-subrc = 0.
