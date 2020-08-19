@@ -8,6 +8,7 @@ CLASS zcl_abapgit_object_enho_class DEFINITION PUBLIC.
           io_files TYPE REF TO zcl_abapgit_objects_files.
     INTERFACES: zif_abapgit_object_enho.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS:
       serialize_includes
@@ -27,56 +28,87 @@ CLASS zcl_abapgit_object_enho_class DEFINITION PUBLIC.
 
 ENDCLASS.
 
-CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
+
+
+CLASS ZCL_ABAPGIT_OBJECT_ENHO_CLASS IMPLEMENTATION.
+
 
   METHOD constructor.
     ms_item = is_item.
     mo_files = io_files.
   ENDMETHOD.
 
-  METHOD zif_abapgit_object_enho~serialize.
 
-    DATA: lo_enh_class TYPE REF TO cl_enh_tool_class,
-          lt_owr       TYPE enhmeth_tabkeys,
-          lt_pre       TYPE enhmeth_tabkeys,
-          lt_post      TYPE enhmeth_tabkeys,
-          lt_source    TYPE rswsourcet,
-          lv_class     TYPE seoclsname,
-          lv_shorttext TYPE string.
+  METHOD deserialize_includes.
 
+    DATA: lt_tab_methods TYPE enhnewmeth_tab,
+          lv_editorder   TYPE n LENGTH 3,
+          lv_methname    TYPE seocpdname,
+          lt_abap        TYPE rswsourcet,
+          lx_enh         TYPE REF TO cx_enh_root.
 
-    lo_enh_class ?= ii_enh_tool.
+    FIELD-SYMBOLS: <ls_method> LIKE LINE OF lt_tab_methods.
 
-    lv_shorttext = lo_enh_class->if_enh_object_docu~get_shorttext( ).
-    lt_owr = lo_enh_class->get_owr_methods( ).
-    lt_pre = lo_enh_class->get_pre_methods( ).
-    lt_post = lo_enh_class->get_post_methods( ).
-    lt_source = lo_enh_class->get_eimp_include( ).
-    lo_enh_class->get_class( IMPORTING class_name = lv_class ).
+    io_xml->read( EXPORTING iv_name = 'TAB_METHODS'
+                  CHANGING cg_data = lt_tab_methods ).
 
-    io_xml->add( iv_name = 'TOOL'
-                 ig_data = ii_enh_tool->get_tool( ) ).
-    io_xml->add( ig_data = lv_shorttext
-                 iv_name = 'SHORTTEXT' ).
-    io_xml->add( iv_name = 'CLASS'
-                 ig_data = lv_class ).
-    io_xml->add( iv_name = 'OWR_METHODS'
-                 ig_data = lt_owr ).
-    io_xml->add( iv_name = 'PRE_METHODS'
-                 ig_data = lt_pre ).
-    io_xml->add( iv_name = 'POST_METHODS'
-                 ig_data = lt_post ).
+    LOOP AT lt_tab_methods ASSIGNING <ls_method>.
 
-    mo_files->add_abap( lt_source ).
+      lv_editorder = <ls_method>-meth_header-editorder.
+      lv_methname = <ls_method>-methkey-cmpname.
+      lt_abap = mo_files->read_abap( iv_extra = 'em' && lv_editorder ).
 
-    zcl_abapgit_object_enho_clif=>serialize(
-      io_xml   = io_xml
-      io_files = mo_files
-      io_clif  = lo_enh_class ).
+      TRY.
+          io_class->add_change_new_method_source(
+              clsname    = <ls_method>-methkey-clsname
+              methname   = lv_methname
+              methsource = lt_abap ).
+        CATCH cx_enh_mod_not_allowed cx_enh_is_not_enhanceable INTO lx_enh.
+          zcx_abapgit_exception=>raise( iv_text = 'Error deserializing ENHO method include'
+                                        ix_previous = lx_enh ).
+      ENDTRY.
 
-    serialize_includes( lo_enh_class ).
+    ENDLOOP.
 
   ENDMETHOD.
+
+
+  METHOD serialize_includes.
+
+    DATA: lt_includes TYPE enhnewmeth_tabincl_plus_enha,
+          lt_source   TYPE TABLE OF abaptxt255,
+          lv_include  TYPE programm.
+
+    FIELD-SYMBOLS: <ls_include> LIKE LINE OF lt_includes.
+
+
+    lt_includes = io_class->get_enh_method_includes( ).
+    LOOP AT lt_includes ASSIGNING <ls_include>.
+      lv_include = io_class->if_enh_tool~get_name( ).
+      TRANSLATE lv_include USING ' ='.
+      lv_include+30 = 'EM'.
+      lv_include+32(8) = <ls_include>-includenr.
+
+      CALL FUNCTION 'RPY_PROGRAM_READ'
+        EXPORTING
+          program_name     = lv_include
+          with_includelist = abap_false
+          with_lowercase   = abap_true
+        TABLES
+          source_extended  = lt_source
+        EXCEPTIONS
+          cancelled        = 1
+          not_found        = 2
+          permission_error = 3
+          OTHERS           = 4.
+      IF sy-subrc = 0.
+        mo_files->add_abap( iv_extra = |EM{ <ls_include>-includenr }|
+                            it_abap  = lt_source ).
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
 
   METHOD zif_abapgit_object_enho~deserialize.
 
@@ -145,72 +177,48 @@ CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD serialize_includes.
 
-    DATA: lt_includes TYPE enhnewmeth_tabincl_plus_enha,
-          lt_source   TYPE TABLE OF abaptxt255,
-          lv_include  TYPE programm.
+  METHOD zif_abapgit_object_enho~serialize.
 
-    FIELD-SYMBOLS: <ls_include> LIKE LINE OF lt_includes.
+    DATA: lo_enh_class TYPE REF TO cl_enh_tool_class,
+          lt_owr       TYPE enhmeth_tabkeys,
+          lt_pre       TYPE enhmeth_tabkeys,
+          lt_post      TYPE enhmeth_tabkeys,
+          lt_source    TYPE rswsourcet,
+          lv_class     TYPE seoclsname,
+          lv_shorttext TYPE string.
 
 
-    lt_includes = io_class->get_enh_method_includes( ).
-    LOOP AT lt_includes ASSIGNING <ls_include>.
-      lv_include = io_class->if_enh_tool~get_name( ).
-      TRANSLATE lv_include USING ' ='.
-      lv_include+30 = 'EM'.
-      lv_include+32(8) = <ls_include>-includenr.
+    lo_enh_class ?= ii_enh_tool.
 
-      CALL FUNCTION 'RPY_PROGRAM_READ'
-        EXPORTING
-          program_name     = lv_include
-          with_lowercase   = abap_true
-        TABLES
-          source_extended  = lt_source
-        EXCEPTIONS
-          cancelled        = 1
-          not_found        = 2
-          permission_error = 3
-          OTHERS           = 4.
-      IF sy-subrc = 0.
-        mo_files->add_abap( iv_extra = |EM{ <ls_include>-includenr }|
-                            it_abap  = lt_source ).
-      ENDIF.
-    ENDLOOP.
+    lv_shorttext = lo_enh_class->if_enh_object_docu~get_shorttext( ).
+    lt_owr = lo_enh_class->get_owr_methods( ).
+    lt_pre = lo_enh_class->get_pre_methods( ).
+    lt_post = lo_enh_class->get_post_methods( ).
+    lt_source = lo_enh_class->get_eimp_include( ).
+    lo_enh_class->get_class( IMPORTING class_name = lv_class ).
 
-  ENDMETHOD.
+    io_xml->add( iv_name = 'TOOL'
+                 ig_data = ii_enh_tool->get_tool( ) ).
+    io_xml->add( ig_data = lv_shorttext
+                 iv_name = 'SHORTTEXT' ).
+    io_xml->add( iv_name = 'CLASS'
+                 ig_data = lv_class ).
+    io_xml->add( iv_name = 'OWR_METHODS'
+                 ig_data = lt_owr ).
+    io_xml->add( iv_name = 'PRE_METHODS'
+                 ig_data = lt_pre ).
+    io_xml->add( iv_name = 'POST_METHODS'
+                 ig_data = lt_post ).
 
-  METHOD deserialize_includes.
+    mo_files->add_abap( lt_source ).
 
-    DATA: lt_tab_methods TYPE enhnewmeth_tab,
-          lv_editorder   TYPE n LENGTH 3,
-          lv_methname    TYPE seocpdname,
-          lt_abap        TYPE rswsourcet,
-          lx_enh         TYPE REF TO cx_enh_root.
+    zcl_abapgit_object_enho_clif=>serialize(
+      io_xml   = io_xml
+      io_files = mo_files
+      io_clif  = lo_enh_class ).
 
-    FIELD-SYMBOLS: <ls_method> LIKE LINE OF lt_tab_methods.
-
-    io_xml->read( EXPORTING iv_name = 'TAB_METHODS'
-                  CHANGING cg_data = lt_tab_methods ).
-
-    LOOP AT lt_tab_methods ASSIGNING <ls_method>.
-
-      lv_editorder = <ls_method>-meth_header-editorder.
-      lv_methname = <ls_method>-methkey-cmpname.
-      lt_abap = mo_files->read_abap( iv_extra = 'em' && lv_editorder ).
-
-      TRY.
-          io_class->add_change_new_method_source(
-              clsname    = <ls_method>-methkey-clsname
-              methname   = lv_methname
-              methsource = lt_abap ).
-        CATCH cx_enh_mod_not_allowed cx_enh_is_not_enhanceable INTO lx_enh.
-          zcx_abapgit_exception=>raise( iv_text = 'Error deserializing ENHO method include'
-                                        ix_previous = lx_enh ).
-      ENDTRY.
-
-    ENDLOOP.
+    serialize_includes( lo_enh_class ).
 
   ENDMETHOD.
-
 ENDCLASS.

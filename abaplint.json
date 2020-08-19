@@ -215,9 +215,9 @@
       "ignoreExceptions": true
     },
     "local_class_naming": {
-      "exception": "^LCL_.*$",
+      "exception": "^LCX_.*$",
       "local": "^LCL_.*$",
-      "test": "^LTCL_.*$"
+      "test": "^LT.+$"
     },
     "local_testclass_location": true,
     "local_variable_names": {
