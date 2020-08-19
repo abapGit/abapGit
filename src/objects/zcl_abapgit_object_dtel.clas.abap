@@ -218,11 +218,13 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
 
     DATA: lv_rollname TYPE dd04l-rollname.
 
-
-    SELECT SINGLE rollname FROM dd04l INTO lv_rollname
-      WHERE rollname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers = '0000'.
+    lv_rollname = ms_item-obj_name.
+    CALL FUNCTION 'DD_GET_NAMETAB_HEADER'
+      EXPORTING
+        tabname   = lv_rollname
+      EXCEPTIONS
+        not_found = 1
+        OTHERS    = 2.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
