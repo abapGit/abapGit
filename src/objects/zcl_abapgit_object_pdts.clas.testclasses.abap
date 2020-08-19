@@ -1,4 +1,4 @@
-CLASS ltcl_mock DEFINITION
+CLASS ltd_mock DEFINITION
   CREATE PUBLIC
   FOR TESTING
   DURATION SHORT
@@ -21,7 +21,7 @@ CLASS ltcl_mock DEFINITION
 ENDCLASS.
 
 
-CLASS ltcl_mock IMPLEMENTATION.
+CLASS ltd_mock IMPLEMENTATION.
 
   METHOD add_line.
     mv_xml = mv_xml && iv_string && cl_abap_char_utilities=>newline.
@@ -97,13 +97,13 @@ CLASS ltcl_mock IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS ltcl_turnaround_test DEFINITION FINAL FOR TESTING
+CLASS ltc_turnaround_test DEFINITION FINAL FOR TESTING
   DURATION LONG
   RISK LEVEL CRITICAL.
 
   PRIVATE SECTION.
 
-    DATA mo_mock TYPE REF TO ltcl_mock.
+    DATA mo_mock TYPE REF TO ltd_mock.
 
     CLASS-METHODS class_setup.
     METHODS setup.
@@ -113,7 +113,7 @@ CLASS ltcl_turnaround_test DEFINITION FINAL FOR TESTING
 ENDCLASS.
 
 
-CLASS ltcl_turnaround_test IMPLEMENTATION.
+CLASS ltc_turnaround_test IMPLEMENTATION.
 
   METHOD class_setup.
 
@@ -122,13 +122,13 @@ CLASS ltcl_turnaround_test IMPLEMENTATION.
     SELECT SINGLE @abap_true
            FROM hrs1000
            WHERE otype = 'TS' AND
-                 objid = @ltcl_mock=>mc_task_id
+                 objid = @ltd_mock=>mc_task_id
            INTO @lv_dummy.
 
     cl_abap_unit_assert=>assert_subrc(
         exp              = 4
         act              = sy-subrc
-        msg              = |Test task { ltcl_mock=>mc_task_id } already exists|
+        msg              = |Test task { ltd_mock=>mc_task_id } already exists|
         level            = if_aunit_constants=>fatal
         quit             = if_aunit_constants=>class ).
 
@@ -146,7 +146,7 @@ CLASS ltcl_turnaround_test IMPLEMENTATION.
 
 ENDCLASS.
 
-CLASS ltcl_lock DEFINITION FINAL FOR TESTING
+CLASS ltc_lock DEFINITION FINAL FOR TESTING
   DURATION MEDIUM
   RISK LEVEL HARMLESS.
 
@@ -163,7 +163,7 @@ CLASS ltcl_lock DEFINITION FINAL FOR TESTING
 ENDCLASS.
 
 
-CLASS ltcl_lock IMPLEMENTATION.
+CLASS ltc_lock IMPLEMENTATION.
 
   METHOD enqueue_is_detected.
 
