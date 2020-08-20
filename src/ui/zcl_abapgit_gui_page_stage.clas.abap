@@ -108,7 +108,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -420,7 +420,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
         ro_html->add( '<thead><tr class="local">' ).
         ro_html->add( '<th class="stage-status"></th>' ). " Diff state
         ro_html->add( '<th class="stage-objtype">Type</th>' ).
-        ro_html->add( '<th>Files to Add (click to see diff)</th>' ).
+        ro_html->add( '<th>File ' ).
+        ro_html->add_a( iv_txt = '(?)' iv_act = '' iv_title = 'Click filename to see diff' ).
+        ro_html->add( '</th>' ).
         ro_html->add( '<th>Changed by</th>' ).
         ro_html->add( '<th>Transport</th>' ).
         ro_html->add( '<th></th>' ). " Status
