@@ -158,7 +158,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     CREATE OBJECT ro_menu.
 
     ro_menu->add(
-      iv_txt = 'Database Util'
+      iv_txt = 'Database Utility'
       iv_act = zif_abapgit_definitions=>c_action-go_db
     )->add(
       iv_txt = 'Package to Zip'
