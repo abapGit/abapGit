@@ -150,6 +150,7 @@ div.log .icon { padding-right: 6px; }
 /* REPOSITORY */
 div.repo {
   margin-top: 3px;
+  margin-bottom: 3px;
   padding: 0.5em 1em 0.5em 1em;
   position: relative;
 }
