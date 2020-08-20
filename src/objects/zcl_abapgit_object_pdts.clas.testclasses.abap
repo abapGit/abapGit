@@ -1,3 +1,79 @@
+
+CLASS lth_input_xml DEFINITION
+  INHERITING FROM zcl_abapgit_xml_input
+  FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
+
+  PUBLIC SECTION.
+    METHODS render IMPORTING iv_normalize  TYPE sap_bool DEFAULT abap_true
+                             is_metadata   TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
+                   RETURNING VALUE(rv_xml) TYPE string.
+
+  PRIVATE SECTION.
+    METHODS build_asx_node
+      RETURNING
+        VALUE(ri_element) TYPE REF TO if_ixml_element .
+
+ENDCLASS.
+
+
+CLASS lth_input_xml IMPLEMENTATION.
+
+  METHOD render.
+
+    DATA: li_git  TYPE REF TO if_ixml_element,
+          li_abap TYPE REF TO if_ixml_element.
+
+    DO.
+      li_abap ?= mi_xml_doc->get_root( )->get_first_child( ).
+      IF li_abap IS NOT BOUND.
+        EXIT.
+      ENDIF.
+      mi_xml_doc->get_root( )->remove_child( li_abap ).
+      IF li_abap IS INITIAL.
+        li_abap = build_asx_node( ).
+      ENDIF.
+
+      li_git = mi_xml_doc->create_element( c_abapgit_tag ).
+      li_git->set_attribute( name = c_attr_version
+                             value = zif_abapgit_version=>gc_xml_version ).
+      IF NOT is_metadata IS INITIAL.
+        li_git->set_attribute( name  = c_attr_serializer
+                               value = is_metadata-class ).
+        li_git->set_attribute( name  = c_attr_serializer_version
+                               value = is_metadata-version ).
+      ENDIF.
+      li_git->append_child( li_abap ).
+    ENDDO.
+    mi_xml_doc->get_root( )->append_child( li_git ).
+
+    rv_xml = to_xml( iv_normalize ).
+
+  ENDMETHOD.
+
+  METHOD build_asx_node.
+
+    DATA: li_attr TYPE REF TO if_ixml_attribute.
+
+
+    ri_element = mi_xml_doc->create_element_ns(
+      name   = 'abap'
+      prefix = 'asx' ).
+
+    li_attr = mi_xml_doc->create_attribute_ns( 'version' ).
+    li_attr->if_ixml_node~set_value( '1.0' ).
+    ri_element->set_attribute_node_ns( li_attr ).
+
+    li_attr = mi_xml_doc->create_attribute_ns(
+      name   = 'asx'
+      prefix = 'xmlns' ).
+    li_attr->if_ixml_node~set_value( 'http://www.sap.com/abapxml' ).
+    ri_element->set_attribute_node_ns( li_attr ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+
 CLASS ltd_mock DEFINITION
   CREATE PUBLIC
   FOR TESTING
@@ -7,7 +83,7 @@ CLASS ltd_mock DEFINITION
   PUBLIC SECTION.
     CONSTANTS mc_task_id TYPE hrobjid VALUE '99999999'.
 
-    METHODS create_input_xml RETURNING VALUE(ri_result) TYPE REF TO zif_abapgit_xml_input
+    METHODS create_input_xml RETURNING VALUE(ri_result) TYPE REF TO lth_input_xml  "zif_abapgit_xml_input
                              RAISING   zcx_abapgit_exception.
 
   PROTECTED SECTION.
@@ -29,7 +105,7 @@ CLASS ltd_mock IMPLEMENTATION.
 
   METHOD generate.
     add_line( |<?xml version="1.0" encoding="utf-8"?>| ).
-    add_line( |<abapGit version="v1.0.0" serializer="LCL_OBJECT_PDTS" serializer_version="v1.0.0">| ).
+    add_line( |<abapGit version="v1.0.0" serializer="ZCL_ABAPGIT_OBJECT_PDTS" serializer_version="v1.0.0">| ).
     add_line( | <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">| ).
     add_line( |  <asx:values>| ).
     add_line( |   <PDTS>| ).
@@ -90,7 +166,7 @@ CLASS ltd_mock IMPLEMENTATION.
 
   METHOD create_input_xml.
     generate( ).
-    CREATE OBJECT ri_result TYPE zcl_abapgit_xml_input
+    CREATE OBJECT ri_result  " TYPE zcl_abapgit_xml_input
       EXPORTING
         iv_xml = mv_xml.
   ENDMETHOD.
@@ -104,6 +180,7 @@ CLASS ltc_turnaround_test DEFINITION FINAL FOR TESTING
   PRIVATE SECTION.
 
     DATA mo_mock TYPE REF TO ltd_mock.
+    DATA li_output_xml TYPE REF TO zcl_abapgit_xml_output.
 
     CLASS-METHODS class_setup.
     METHODS setup.
@@ -111,6 +188,7 @@ CLASS ltc_turnaround_test DEFINITION FINAL FOR TESTING
     METHODS create_task FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
+
 
 
 CLASS ltc_turnaround_test IMPLEMENTATION.
@@ -135,12 +213,54 @@ CLASS ltc_turnaround_test IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD setup.
+
     CREATE OBJECT mo_mock.
+
   ENDMETHOD.
 
   METHOD create_task.
-    DATA li_xml TYPE REF TO zif_abapgit_xml_input.
-    li_xml = mo_mock->create_input_xml( ).
+
+    DATA lo_input_xml TYPE REF TO lth_input_xml.
+    lo_input_xml = mo_mock->create_input_xml( ).
+
+    DATA(metadata) = lo_input_xml->get_metadata( ).
+
+    DATA: lv_taskid TYPE hrobjid,
+          lv_task   TYPE hrsobject,
+          lo_cut    TYPE REF TO zif_abapgit_object,
+          ls_item   TYPE zif_abapgit_definitions=>ty_item,
+          lv_step   TYPE zif_abapgit_definitions=>ty_deserialization_step,
+          li_log    TYPE REF TO zif_abapgit_log.
+
+    ls_item-obj_type = 'PDTS'.
+    ls_item-obj_name = ltd_mock=>mc_task_id.
+
+    CREATE OBJECT lo_cut TYPE zcl_abapgit_object_pdts
+      EXPORTING
+        is_item     = ls_item
+        iv_language = sy-langu.
+
+    lo_cut->deserialize(
+      EXPORTING
+        iv_package = '$PDTS'
+        io_xml     = CAST #( lo_input_xml )
+        iv_step    = lv_step
+        ii_log     = li_log ).
+
+    CREATE OBJECT li_output_xml TYPE zcl_abapgit_xml_output.
+
+    DATA lo_cut2 TYPE REF TO zif_abapgit_object.
+    CREATE OBJECT lo_cut2 TYPE zcl_abapgit_object_pdts
+      EXPORTING
+        is_item     = ls_item
+        iv_language = sy-langu.
+    lo_cut2->serialize( io_xml = li_output_xml ).
+
+    DATA(input) = lo_input_xml->render( ).
+    DATA(output) = li_output_xml->render( ).
+    cl_abap_unit_assert=>assert_equals(
+                             act = input
+                             exp = output ).
 
   ENDMETHOD.
 
