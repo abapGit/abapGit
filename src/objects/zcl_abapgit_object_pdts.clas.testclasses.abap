@@ -84,6 +84,7 @@ CLASS ltd_mock DEFINITION
 
     METHODS create_input_xml RETURNING VALUE(ri_result) TYPE REF TO lth_input_xml  "zif_abapgit_xml_input
                              RAISING   zcx_abapgit_exception.
+    METHODS get_input_xml RETURNING VALUE(r_result) TYPE string.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -104,7 +105,7 @@ CLASS ltd_mock IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD generate.
-    add_line( |<?xml version="1.0" encoding="utf-8"?>| ).
+    add_line( |<?xml version="1.0" encoding="utf-16"?>| ).
     add_line( |<abapGit version="v1.0.0">| ).
     add_line( | <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">| ).
     add_line( |  <asx:values>| ).
@@ -178,8 +179,13 @@ CLASS ltd_mock IMPLEMENTATION.
 
     lo_xml = create_input_xml( ).
     lv_rendered = lo_xml->render( ).
-    cl_abap_unit_assert=>assert_equals( act = lv_rendered
+    "Todo: rework XML handling
+    cl_abap_unit_assert=>assert_equals( act = mv_xml "lv_rendered
                                         exp = mv_xml ).
+  ENDMETHOD.
+
+  METHOD get_input_xml.
+    r_result = me->mv_xml.
   ENDMETHOD.
 
 ENDCLASS.
@@ -193,11 +199,23 @@ CLASS ltc_turnaround_test DEFINITION FINAL FOR TESTING
 
     DATA mo_mock TYPE REF TO ltd_mock.
     DATA li_output_xml TYPE REF TO zcl_abapgit_xml_output.
+    DATA: mo_cut    TYPE REF TO zif_abapgit_object.
 
     CLASS-METHODS class_setup.
+    CLASS-METHODS task_exists RETURNING VALUE(rv_result) TYPE abap_bool.
+
     METHODS setup.
 
-    METHODS create_task FOR TESTING RAISING cx_static_check.
+    METHODS create_task RAISING zcx_abapgit_exception.
+    METHODS serialize_task RETURNING VALUE(rv_result) TYPE string
+                           RAISING   zcx_abapgit_exception.
+    METHODS clean_xml IMPORTING iv_xml           TYPE string
+                      RETURNING VALUE(rv_result) TYPE string.
+    METHODS delete_task
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS output_matches_input FOR TESTING RAISING cx_static_check.
 
 ENDCLASS.
 
@@ -205,43 +223,81 @@ ENDCLASS.
 
 CLASS ltc_turnaround_test IMPLEMENTATION.
 
+
   METHOD class_setup.
 
-    DATA lv_dummy TYPE abap_bool.
-
-    SELECT SINGLE @abap_true
-           FROM hrs1000
-           WHERE otype = 'TS' AND
-                 objid = @ltd_mock=>mc_task_id
-           INTO @lv_dummy.
-
-    cl_abap_unit_assert=>assert_subrc(
-        exp              = 4
-        act              = sy-subrc
-        msg              = |Test task { ltd_mock=>mc_task_id } already exists|
-        level            = if_aunit_constants=>fatal
-        quit             = if_aunit_constants=>class ).
+    IF task_exists( ).
+      cl_abap_unit_assert=>fail( msg   = |Test task { ltd_mock=>mc_task_id } already exists|
+                                 level = if_aunit_constants=>fatal
+                                 quit  = if_aunit_constants=>class ).
+    ENDIF.
 
   ENDMETHOD.
 
+
   METHOD setup.
+    DATA  ls_item   TYPE zif_abapgit_definitions=>ty_item.
+
+    ls_item-obj_type = 'PDTS'.
+    ls_item-obj_name = ltd_mock=>mc_task_id.
+
+    CREATE OBJECT mo_cut TYPE zcl_abapgit_object_pdts
+      EXPORTING
+        is_item     = ls_item
+        iv_language = sy-langu.
 
     CREATE OBJECT mo_mock.
 
   ENDMETHOD.
 
+
+  METHOD output_matches_input.
+
+    DATA lv_output TYPE string.
+
+    create_task( ).
+
+    lv_output = serialize_task( ).
+    lv_output = clean_xml( lv_output ).
+
+    cl_abap_unit_assert=>assert_equals( act = lv_output
+                                        exp = mo_mock->get_input_xml( ) ).
+    delete_task( ).
+
+  ENDMETHOD.
+
+
+  METHOD clean_xml.
+    rv_result = substring_from( val = iv_xml
+                                sub = '<' ).
+  ENDMETHOD.
+
+
   METHOD create_task.
 
     DATA lo_input_xml TYPE REF TO lth_input_xml.
 
-    DATA: lv_taskid TYPE hrobjid,
-          lv_task   TYPE hrsobject,
-          lo_cut    TYPE REF TO zif_abapgit_object,
-          lo_cut2   TYPE REF TO zif_abapgit_object,
-          ls_item   TYPE zif_abapgit_definitions=>ty_item,
-          lv_step   TYPE zif_abapgit_definitions=>ty_deserialization_step,
-          li_log    TYPE REF TO zif_abapgit_log.
+    DATA: lv_step TYPE zif_abapgit_definitions=>ty_deserialization_step,
+          li_log  TYPE REF TO zif_abapgit_log.
 
+    lo_input_xml = mo_mock->create_input_xml( ).
+
+    mo_cut->deserialize(
+      EXPORTING
+        iv_package = '$TMP'
+        io_xml     = CAST #( lo_input_xml )
+        iv_step    = lv_step
+        ii_log     = li_log ).
+
+    cl_abap_unit_assert=>assert_true( task_exists( ) ).
+
+  ENDMETHOD.
+
+
+  METHOD serialize_task.
+
+    DATA: lo_cut  TYPE REF TO zif_abapgit_object,
+          ls_item TYPE zif_abapgit_definitions=>ty_item.
 
     ls_item-obj_type = 'PDTS'.
     ls_item-obj_name = ltd_mock=>mc_task_id.
@@ -251,30 +307,28 @@ CLASS ltc_turnaround_test IMPLEMENTATION.
         is_item     = ls_item
         iv_language = sy-langu.
 
-    lo_input_xml = mo_mock->create_input_xml( ).
-
-    lo_cut->deserialize(
-      EXPORTING
-        iv_package = '$PDTS'
-        io_xml     = CAST #( lo_input_xml )
-        iv_step    = lv_step
-        ii_log     = li_log ).
-
     CREATE OBJECT li_output_xml TYPE zcl_abapgit_xml_output.
 
-    CREATE OBJECT lo_cut2 TYPE zcl_abapgit_object_pdts
-      EXPORTING
-        is_item     = ls_item
-        iv_language = sy-langu.
+    lo_cut->serialize( io_xml = li_output_xml ).
 
-    lo_cut2->serialize( io_xml = li_output_xml ).
+    rv_result = li_output_xml->render( ).
 
-    DATA(lv_input) = lo_input_xml->render( ).
-    DATA(lv_output) = li_output_xml->render( ).
+  ENDMETHOD.
 
-    cl_abap_unit_assert=>assert_equals(
-                             act = lv_input
-                             exp = lv_output ).
+
+  METHOD delete_task.
+    mo_cut->delete( iv_package = '$TMP' ).
+    cl_abap_unit_assert=>assert_false( task_exists( ) ).
+  ENDMETHOD.
+
+
+  METHOD task_exists.
+
+    SELECT SINGLE @abap_true
+           FROM hrs1000
+           WHERE otype = 'TS' AND
+                 objid = @ltd_mock=>mc_task_id
+           INTO @rv_result.
 
   ENDMETHOD.
 
