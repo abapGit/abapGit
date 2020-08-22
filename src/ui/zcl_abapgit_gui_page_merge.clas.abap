@@ -77,7 +77,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE IMPLEMENTATION.
         iv_source_branch = iv_source.
     mo_merge->run( ).
 
-    ms_control-page_title = 'MERGE'.
+    ms_control-page_title = 'Merge'.
     ms_control-page_menu  = build_menu( mo_merge->has_conflicts( ) ).
 
   ENDMETHOD.

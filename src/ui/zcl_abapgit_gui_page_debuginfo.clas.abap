@@ -37,7 +37,7 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
-    ms_control-page_title = 'DEBUG INFO'.
+    ms_control-page_title = 'Debug Info'.
   ENDMETHOD.
 
 

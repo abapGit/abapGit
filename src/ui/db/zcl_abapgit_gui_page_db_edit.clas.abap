@@ -46,7 +46,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     ms_key = is_key.
-    ms_control-page_title = 'CONFIG EDIT'.
+    ms_control-page_title = 'Config Edit'.
   ENDMETHOD.
 
 
