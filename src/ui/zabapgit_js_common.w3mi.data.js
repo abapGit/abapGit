@@ -24,7 +24,6 @@
 /* exported addMarginBottom */
 /* exported enumerateJumpAllFiles */
 /* exported createRepoCatalogEnumerator */
-/* exported createPREnumerator */
 /* exported enumerateToolbarActions */
 /* exported onDiffCollapse */
 /* exported restoreScrollPosition */
@@ -2009,22 +2008,6 @@ function createRepoCatalogEnumerator(catalog, action) {
           ? "icon icon-plug darkgrey"
           : "icon icon-cloud-upload-alt blue",
         title: i.displayName
-      };
-    });
-  };
-}
-
-function createPREnumerator(catalog, action) {
-  // expecting [{ number, title, user, head_branch }]
-  return function() {
-    return catalog.map(function(i) {
-      return {
-        action: action + "?number=" + i.number,
-        // isHtml: true,
-        // title:  "<span class='pr-id'>#" + i.number + "</span> - "
-        //   + "<span class='pr-title'>" + i.title + "</span> "
-        //   + "<span class='pr-user'>" + i.user + "</span>"
-        title:  i.number + " - " + i.title + " @" + i.user
       };
     });
   };
