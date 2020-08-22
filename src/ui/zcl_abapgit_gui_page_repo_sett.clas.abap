@@ -75,7 +75,7 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
-    ms_control-page_title = 'REPO SETTINGS'.
+    ms_control-page_title = 'Repository Settings'.
     mo_repo = io_repo.
   ENDMETHOD.
 
@@ -138,7 +138,7 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
     ENDIF.
 
     ii_html->add( render_table_row(
-      iv_name  = 'Master language'
+      iv_name  = 'Master Language'
       iv_value = |{ ls_dot-master_language } ({ lv_language })|
     ) ).
 
@@ -158,12 +158,12 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
     lv_select_html = lv_select_html && '</select>'.
 
     ii_html->add( render_table_row(
-      iv_name  = 'Folder logic'
+      iv_name  = 'Folder Logic'
       iv_value = lv_select_html
     ) ).
 
     ii_html->add( render_table_row(
-      iv_name  = 'Starting folder'
+      iv_name  = 'Starting Folder'
       iv_value = |<input name="starting_folder" type="text" size="10" value="{ ls_dot-starting_folder }">|
     ) ).
 
@@ -172,7 +172,7 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
     ENDLOOP.
 
     ii_html->add( render_table_row(
-      iv_name  = 'Ignore files'
+      iv_name  = 'Ignore Files'
       iv_value = |<textarea name="ignore_files" rows="{ lines( ls_dot-ignore )
                  }" cols="50">{ lv_ignore }</textarea>|
     ) ).
@@ -205,7 +205,7 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
 
     ii_html->add( '<h3>Requirements</h3>' ).
     ii_html->add( '<table class="settings-package-requirements" id="requirement-tab">' ).
-    ii_html->add( '<tr><th>Software Component</th><th>Min Release</th><th>Min Patch</th></tr>' ).
+    ii_html->add( '<tr><th>Software Component</th><th>Min. Release</th><th>Min. Patch</th></tr>' ).
 
     LOOP AT lt_requirements ASSIGNING <ls_requirement>.
       lv_req_index = sy-tabix.
@@ -232,11 +232,11 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
 
     ls_settings = mo_repo->get_local_settings( ).
 
-    ii_html->add( '<h2>Local settings</h2>' ).
+    ii_html->add( '<h2>Local Settings</h2>' ).
     ii_html->add( '<table class="settings">' ).
 
     ii_html->add( render_table_row(
-      iv_name  = 'Display name'
+      iv_name  = 'Display Name'
       iv_value = |<input name="display_name" type="text" size="30" value="{ ls_settings-display_name }">|
     ) ).
 
@@ -249,7 +249,7 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
       ENDIF.
     ENDIF.
     ii_html->add( render_table_row(
-      iv_name  = 'Write protected'
+      iv_name  = 'Write Protected'
       iv_value = |<input name="write_protected" type="checkbox"{ lv_checked }>|
     ) ).
 
@@ -258,7 +258,7 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
       lv_checked = | checked|.
     ENDIF.
     ii_html->add( render_table_row(
-      iv_name  = 'Ignore subpackages'
+      iv_name  = 'Ignore Subpackages'
       iv_value = |<input name="ignore_subpackages" type="checkbox"{ lv_checked }>|
     ) ).
 
@@ -267,12 +267,12 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
       lv_checked = | checked|.
     ENDIF.
     ii_html->add( render_table_row(
-      iv_name  = 'Only local objects'
+      iv_name  = 'Only Local Objects'
       iv_value = |<input name="only_local_objects" type="checkbox"{ lv_checked }>|
     ) ).
 
     ii_html->add( render_table_row(
-      iv_name  = 'Code inspector check variant'
+      iv_name  = 'Code Inspector Check Variant'
       iv_value = |<input name="check_variant" type="text" size="30" value="{
         ls_settings-code_inspector_check_variant }">|
     ) ).
@@ -282,7 +282,7 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
       lv_checked = | checked|.
     ENDIF.
     ii_html->add( render_table_row(
-      iv_name  = 'Block commit if code inspection has errors'
+      iv_name  = 'Block Commit If Code Inspection Has Errors'
       iv_value = |<input name="block_commit" type="checkbox"{ lv_checked }>|
     ) ).
 
@@ -291,7 +291,7 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
       lv_checked = | checked|.
     ENDIF.
     ii_html->add( render_table_row(
-      iv_name  = 'Serialize master language only'
+      iv_name  = 'Serialize Master Language Only'
       iv_value = |<input name="serialize_master_lang_only" type="checkbox"{ lv_checked }>|
     ) ).
 
