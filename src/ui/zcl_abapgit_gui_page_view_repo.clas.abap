@@ -13,7 +13,6 @@ CLASS zcl_abapgit_gui_page_view_repo DEFINITION
         toggle_hide_files TYPE string VALUE 'toggle_hide_files' ##NO_TEXT,
         toggle_folders    TYPE string VALUE 'toggle_folders' ##NO_TEXT,
         toggle_changes    TYPE string VALUE 'toggle_changes' ##NO_TEXT,
-        toggle_order_by   TYPE string VALUE 'toggle_order_by' ##NO_TEXT,
         toggle_diff_first TYPE string VALUE 'toggle_diff_first ' ##NO_TEXT,
         display_more      TYPE string VALUE 'display_more' ##NO_TEXT,
       END OF c_actions.
@@ -40,7 +39,6 @@ CLASS zcl_abapgit_gui_page_view_repo DEFINITION
           mv_max_setting                TYPE i,
           mv_show_folders               TYPE abap_bool,
           mv_changes_only               TYPE abap_bool,
-          mv_show_order_by              TYPE abap_bool,
           mv_order_by                   TYPE string,
           mv_order_descending           TYPE abap_bool,
           mv_diff_first                 TYPE abap_bool,
@@ -515,7 +513,6 @@ CLASS zcl_abapgit_gui_page_view_repo IMPLEMENTATION.
     mv_cur_dir       = '/'. " Root
     mv_hide_files    = zcl_abapgit_persistence_user=>get_instance( )->get_hide_files( ).
     mv_changes_only  = zcl_abapgit_persistence_user=>get_instance( )->get_changes_only( ).
-    mv_show_order_by = zcl_abapgit_persistence_user=>get_instance( )->get_show_order_by( ).
     mv_diff_first    = abap_true.
 
     ms_control-page_title = 'Repository'.
@@ -685,9 +682,7 @@ CLASS zcl_abapgit_gui_page_view_repo IMPLEMENTATION.
                                           iv_by_folders   = mv_show_folders
                                           iv_changes_only = mv_changes_only ).
 
-        IF mv_show_order_by = abap_true.
-          apply_order_by( CHANGING ct_repo_items = lt_repo_items ).
-        ENDIF.
+        apply_order_by( CHANGING ct_repo_items = lt_repo_items ).
 
         LOOP AT lt_repo_items ASSIGNING <ls_item>.
           zcl_abapgit_state=>reduce( EXPORTING iv_cur = <ls_item>-lstate
@@ -725,9 +720,7 @@ CLASS zcl_abapgit_gui_page_view_repo IMPLEMENTATION.
           ri_html->add( render_parent_dir( ) ).
         ENDIF.
 
-        IF mv_show_order_by = abap_true.
-          ri_html->add( render_order_by( ) ).
-        ENDIF.
+        ri_html->add( render_order_by( ) ).
 
         IF lines( lt_repo_items ) = 0.
           ri_html->add( render_empty_package( ) ).
@@ -1070,10 +1063,6 @@ CLASS zcl_abapgit_gui_page_view_repo IMPLEMENTATION.
       WHEN c_actions-toggle_changes.    " Toggle changes only view
         mv_changes_only = zcl_abapgit_persistence_user=>get_instance( )->toggle_changes_only( ).
         ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
-
-      WHEN c_actions-toggle_order_by.
-        mv_show_order_by = zcl_abapgit_persistence_user=>get_instance( )->toggle_show_order_by( ).
-        ev_state         = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-toggle_diff_first.
         mv_diff_first = boolc( mv_diff_first = abap_false ).
