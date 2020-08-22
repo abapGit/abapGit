@@ -424,12 +424,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         ro_html->add( '<thead><tr class="local">' ).
         ro_html->add( '<th class="stage-status"></th>' ). " Diff state
         ro_html->add( '<th class="stage-objtype">Type</th>' ).
-        ro_html->add( '<th>File ' ).
-        ro_html->add_a(
-          iv_txt = '(?)'
-          iv_act = ''
-          iv_title = 'Click filename to see diff' ).
-        ro_html->add( '</th>' ).
+        ro_html->add( '<th title="Click filename to see diff">File</th>' ).
         ro_html->add( '<th>Changed by</th>' ).
         ro_html->add( '<th>Transport</th>' ).
         ro_html->add( '<th></th>' ). " Status

@@ -363,17 +363,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     CREATE OBJECT ro_html.
 
     ro_html->add( |<h2>Commit Message</h2>| ).
-    ro_html->add( |<label for="comment_length">Max. Length of Comment (Recommendation 50)</label>| ).
+    ro_html->add( |<label for="comment_length" title="(Recommendation 50)">Max. Length of Comment</label>| ).
     ro_html->add( |<br>| ).
     ro_html->add( |<input name="comment_length" type="number" step="10" size="3" maxlength="3" min="50"| &&
                   | value="{ mo_settings->get_commitmsg_comment_length( ) }">| ).
     ro_html->add( |<br>| ).
-    ro_html->add( |<label for="comment_default">Default for Comment (Possible Variables: $OBJECT, $FILE)</label>| ).
+    ro_html->add( |<label for="comment_default" title="(Possible Variables: $OBJECT, $FILE)">Default for Comment</label>| ).
     ro_html->add( |<br>| ).
     ro_html->add( |<input name="comment_default" type="text" size="80" maxlength="255"| &&
                   | value="{ mo_settings->get_commitmsg_comment_default( ) }">| ).
     ro_html->add( |<br>| ).
-    ro_html->add( |<label for="body_size">Max. Line Size of Body (Recommendation 72)</label>| ).
+    ro_html->add( |<label for="body_size" title="(Recommendation 72)">Max. Line Size of Body</label>| ).
     ro_html->add( |<br>| ).
     ro_html->add( |<input name="body_size" type="number" size="3" maxlength="3" min="50"| &&
                   | value="{ mo_settings->get_commitmsg_body_size( ) }">| ).
