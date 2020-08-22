@@ -175,6 +175,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
+    ri_html->add( `<div class="repo">` ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
+    ri_html->add( `</div>` ).
+
     IF mv_check_variant IS INITIAL.
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error( iv_error = 'No check variant supplied.' ) ).
       RETURN.
@@ -184,10 +188,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
     ri_html->add( '<div class="ci-head">' ).
     ri_html->add( |Code inspector check variant: <span class="ci-variant">{ mv_check_variant }</span>| ).
-    ri_html->add( |<div class="float-right package-name">{
-      zcl_abapgit_html=>icon( 'box/grey70' ) }<span>{
-      mo_repo->get_package( ) }</span></div>| ).
-    ri_html->add( '</div>' ).
 
     IF lines( mt_result ) = 0.
       ri_html->add( '<div class="dummydiv success">' ).
