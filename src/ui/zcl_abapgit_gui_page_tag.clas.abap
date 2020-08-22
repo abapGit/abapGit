@@ -73,7 +73,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
 
     mo_repo_online ?= io_repo.
 
-    ms_control-page_title = 'TAG'.
+    ms_control-page_title = 'Tag'.
     mv_selected_type = c_tag_type-lightweight.
 
   ENDMETHOD.

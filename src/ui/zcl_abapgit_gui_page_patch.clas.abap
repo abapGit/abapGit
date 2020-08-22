@@ -185,7 +185,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
   METHOD add_menu_begin.
 
     io_menu->add(
-        iv_txt   = |Refresh local|
+        iv_txt   = |Refresh Local|
         iv_typ   = zif_abapgit_html=>c_action_type-dummy
         iv_act   = c_actions-refresh_local
         iv_id    = c_actions-refresh_local
@@ -398,6 +398,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
     CLEAR: mv_unified.
     CREATE OBJECT mo_stage.
 
+    ms_control-page_title = 'Patch'.
     ms_control-page_menu = build_menu( ).
 
   ENDMETHOD.

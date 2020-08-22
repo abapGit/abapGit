@@ -1,15 +1,53 @@
 ---
-title: Database util
+title: Database Util
 category: reference
 order: 99
 ---
 
-`Database util` is a tool for managing database entries created by abapGit. You can access the tool via the tools icon in the top right corner of the abapGit home page > choose first menu item `Database util`.
+`Database Util` is a tool for managing database entries created by abapGit. You can access the tool via the tools icon in the top right corner of the abapGit home page > choose first menu item `Database Util`.
 
 It's possible to edit database entries of type
 
-- `USER` and
-- `REPO`.
+- `SETTINGS`
+- `USER`
+- `REPO`
+
+Be careful when you edit these entries from within abapGit. Corrupting the XML or setting invalid options might break your abapGit!
+
+![](img/db_util_1.png)
+
+![](img/db_util_2.png)
+
+## Global Settings
+
+The `SETTINGS` entries contain global (not user-specific) settings for your abapGit installation. This is an example:
+
+```xml
+<?xml version="1.0" encoding="utf-16"?>
+<abapGit version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <SETTINGS>
+    <PROXY_URL>myproxy.com</PROXY_URL>
+    <PROXY_PORT>8080</PROXY_PORT>
+    <PROXY_AUTH>X</PROXY_AUTH>
+    <PROXY_BYPASS>
+     <item>
+      <SIGN>I</SIGN>
+      <OPTION>EQ</OPTION>
+      <LOW>dont.use.proxy.com</LOW>
+     </item>
+    </PROXY_BYPASS>
+    <COMMITMSG_COMMENT_LENGTH>50</COMMITMSG_COMMENT_LENGTH>
+    <COMMITMSG_COMMENT_DEFLT>Update $OBJECT</COMMITMSG_COMMENT_DEFLT>
+    <COMMITMSG_BODY_SIZE>72</COMMITMSG_BODY_SIZE>
+   </SETTINGS>
+  </asx:values>
+ </asx:abap>
+</abapGit>
+```
+
+## User Settings
 
 A `USER` entry contains meta information like the favorites of an user and their repository configurations e. g. name and email address for Git. This is an example of a `USER` entry:
 
@@ -69,10 +107,12 @@ A `USER` entry contains meta information like the favorites of an user and their
 </asx:abap>
 ```
 
+## Repository Meta Data
+
 The `REPO` entries contain meta data like Git repository URL, branch and package information and information about files known and to be excluded. This is an example:
 
 ```xml
-﻿<?xml version="1.0" encoding="utf-16"?>
+<?xml version="1.0" encoding="utf-16"?>
 <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
  <asx:values>
   <REPO>
@@ -185,4 +225,18 @@ The `REPO` entries contain meta data like Git repository URL, branch and package
 
 If you remove a repository entry from the database util, the repository is not shown in abapGit anymore. This is useful for example if you want to remove a repository which has a non-existing package assigned and thus can't be opened and deleted normally.
 
-Be careful when you edit these entries from within abapGit. Setting invalid options there might break your abapGit.
+## Emergency Mode
+
+On rare occasions, it is necessary to edit the abapGit settings to overcome an issue.
+
+This enhancement allows you to start abapGit in "emergency mode", which directly shows the "Database Util" for you to view or edit any setting.
+
+How to start abapGit in "Emergency Mode":
+
+1. Go to transaction SU3 to maintain your user profile
+1. Maintain parameter DBT with value "ZABAPGIT" (all-caps)
+1. Start abapGit which will launch the "Database Util"
+1. Make necessary changes and save
+1. After exiting abapGit, go back to SU3 and remove parameter DBT
+
+![](img/db_util_emergency_mode.png)

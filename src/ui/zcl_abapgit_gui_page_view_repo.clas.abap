@@ -138,7 +138,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_view_repo IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -203,19 +203,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
     CREATE OBJECT ro_advanced_dropdown.
 
     IF iv_rstate IS NOT INITIAL OR iv_lstate IS NOT INITIAL. " In case of asyncronicities
-      ro_advanced_dropdown->add( iv_txt = 'Reset local'
+      ro_advanced_dropdown->add( iv_txt = 'Reset Local (Force Pull)'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-git_reset }?{ mv_key }|
                                  iv_opt = iv_wp_opt ).
     ENDIF.
 
     IF mo_repo->is_offline( ) = abap_false. " Online ?
-      ro_advanced_dropdown->add( iv_txt = 'Background mode'
+      ro_advanced_dropdown->add( iv_txt = 'Background Mode'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-go_background }?{ mv_key }| ).
-      ro_advanced_dropdown->add( iv_txt = 'Change remote'
+      ro_advanced_dropdown->add( iv_txt = 'Change Remote'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_change }?{ mv_key }| ).
-      ro_advanced_dropdown->add( iv_txt = 'Make off-line'
+      ro_advanced_dropdown->add( iv_txt = 'Make Off-line'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_detach }?{ mv_key }| ).
-      ro_advanced_dropdown->add( iv_txt = 'Force stage'
+      ro_advanced_dropdown->add( iv_txt = 'Force Stage'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ mv_key }| ).
 
       CLEAR lv_crossout.
@@ -227,7 +227,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
                                  iv_opt = lv_crossout ).
 
     ELSE.
-      ro_advanced_dropdown->add( iv_txt = 'Make on-line'
+      ro_advanced_dropdown->add( iv_txt = 'Make On-line'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_attach }?{ mv_key }| ).
     ENDIF.
 
@@ -241,19 +241,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_syntax_check }?{ mv_key }| ).
     ro_advanced_dropdown->add( iv_txt = 'Run Code Inspector'
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?{ mv_key }| ).
-    ro_advanced_dropdown->add( iv_txt = 'Repo settings'
+    ro_advanced_dropdown->add( iv_txt = 'Repository Settings'
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?{ mv_key }| ).
 
     CLEAR lv_crossout.
     IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-update_local_checksum ) = abap_false.
       lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
     ENDIF.
-    ro_advanced_dropdown->add( iv_txt = 'Update local checksums'
+    ro_advanced_dropdown->add( iv_txt = 'Update Local Checksums'
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh_checksums }?{ mv_key }|
                                iv_opt = lv_crossout ).
 
     IF mo_repo->get_dot_abapgit( )->get_master_language( ) <> sy-langu.
-      ro_advanced_dropdown->add( iv_txt = 'Open in master language'
+      ro_advanced_dropdown->add( iv_txt = 'Open in Master Language'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-repo_open_in_master_lang }?{ mv_key }| ).
     ENDIF.
 
@@ -313,24 +313,25 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
     CREATE OBJECT ro_toolbar.
 
     IF mo_repo->has_remote_source( ) = abap_true.
-      ro_toolbar->add(  " Show/Hide files
-        iv_txt = 'Show files'
+
+      ro_toolbar->add(
+        iv_txt = 'Show Files'
         iv_chk = boolc( NOT mv_hide_files = abap_true )
         iv_act = c_actions-toggle_hide_files ).
 
-      ro_toolbar->add(  " Show changes only
-        iv_txt = 'Show changes only'
+      ro_toolbar->add(
+        iv_txt = 'Show Changes Only'
         iv_chk = mv_changes_only
         iv_act = c_actions-toggle_changes ).
     ENDIF.
 
-    ro_toolbar->add(  " Show/Hide folders
-      iv_txt = 'Show folders'
+    ro_toolbar->add(
+      iv_txt = 'Show Folders'
       iv_chk = mv_show_folders
       iv_act = c_actions-toggle_folders ).
 
     ro_toolbar->add(
-      iv_txt = 'Show order by'
+      iv_txt = 'Show Order By'
       iv_chk = mv_show_order_by
       iv_act = c_actions-toggle_order_by ).
 
@@ -515,7 +516,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
     mv_show_order_by = zcl_abapgit_persistence_user=>get_instance( )->get_show_order_by( ).
     mv_diff_first    = abap_true.
 
-    ms_control-page_title = 'REPOSITORY'.
+    ms_control-page_title = 'Repository'.
     ms_control-page_menu = build_main_menu( ).
 
     " Read global settings to get max # of objects to be listed
@@ -1012,7 +1013,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
     lv_html = |<th class="cmd">| &&
       zcl_abapgit_html=>icon( lv_icon ) &&
       zcl_abapgit_html=>a(
-        iv_txt = |diffs first|
+        iv_txt = |Diffs First|
         iv_act = c_actions-toggle_diff_first ) && |</th>|.
     ro_html->add( lv_html ).
 
