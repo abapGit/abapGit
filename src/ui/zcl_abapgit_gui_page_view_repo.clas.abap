@@ -1114,16 +1114,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
         RETURN. " false
       ENDIF.
 
-*      READ TABLE it_fields INTO ls_field WITH KEY name = 'NUMBER'.
-*      IF sy-subrc <> 0.
-*        zcx_abapgit_exception=>raise( 'PR number not found in query' ).
-*      ENDIF.
-*
-*      READ TABLE lt_pulls INTO ls_pull WITH KEY number = ls_field-value.
-*      IF sy-subrc <> 0.
-*        zcx_abapgit_exception=>raise( 'PR number not found in PR list' ).
-*      ENDIF.
-
       lo_repo_online->switch_origin( ls_pull-head_url ).
       lo_repo_online->set_branch_name( |refs/heads/{ ls_pull-head_branch }| ). " TODO refactor
       rv_switched = abap_true.
