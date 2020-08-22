@@ -57,7 +57,9 @@ CLASS zcl_abapgit_repo_online DEFINITION
         REDEFINITION .
     METHODS validate
         REDEFINITION .
-  PROTECTED SECTION.
+    METHODS reset
+        REDEFINITION .
+PROTECTED SECTION.
   PRIVATE SECTION.
 
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
@@ -270,6 +272,16 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD reset.
+
+    " Reset repo to master branch
+    set_branch_name( 'refs/heads/master' ).
+
+    COMMIT WORK AND WAIT.
+
+  ENDMETHOD.
+
+
   METHOD set_branch_name.
 
     reset_remote( ).
@@ -295,21 +307,13 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     DATA:
       lo_branches TYPE REF TO zcl_abapgit_git_branch_list,
-      ls_branch   TYPE zif_abapgit_definitions=>ty_git_branch,
-      lv_msg      TYPE string.
+      ls_branch   TYPE zif_abapgit_definitions=>ty_git_branch.
 
     " Check if branch still exists since it might have been deleted in remote repo
-    " and fallback to master if not
-    TRY.
-        lo_branches = zcl_abapgit_git_transport=>branches( ms_data-url ).
+    " This will raise exception if not
+    lo_branches = zcl_abapgit_git_transport=>branches( ms_data-url ).
 
-        ls_branch = lo_branches->find_by_name( ms_data-branch_name ).
-      CATCH zcx_abapgit_exception.
-        lv_msg = zcl_abapgit_git_branch_list=>get_display_name( ms_data-branch_name ).
-        lv_msg = |Branch { lv_msg } does not exit. Fallback to master branch.|.
-        MESSAGE lv_msg TYPE 'S'.
-        ms_data-branch_name = 'refs/heads/master'.
-    ENDTRY.
+    ls_branch = lo_branches->find_by_name( ms_data-branch_name ).
 
   ENDMETHOD.
 

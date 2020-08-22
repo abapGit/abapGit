@@ -12,10 +12,12 @@ CLASS zcl_abapgit_repo_offline DEFINITION
         REDEFINITION .
     METHODS validate
         REDEFINITION .
-  PROTECTED SECTION.
-
-    METHODS reset_remote
+    METHODS reset
         REDEFINITION .
+PROTECTED SECTION.
+
+  METHODS reset_remote
+      REDEFINITION .
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -35,6 +37,11 @@ CLASS ZCL_ABAPGIT_REPO_OFFLINE IMPLEMENTATION.
 
   METHOD has_remote_source.
     rv_yes = boolc( lines( mt_remote ) > 0 ).
+  ENDMETHOD.
+
+
+  METHOD reset.
+    " Nothing to do so far
   ENDMETHOD.
 
 

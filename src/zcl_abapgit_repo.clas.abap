@@ -140,7 +140,13 @@ CLASS zcl_abapgit_repo DEFINITION
         zcx_abapgit_exception .
     METHODS reset_status .
     METHODS validate
-        ABSTRACT .
+        ABSTRACT
+      RAISING
+        zcx_abapgit_exception .
+    METHODS reset
+        ABSTRACT
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
 
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
