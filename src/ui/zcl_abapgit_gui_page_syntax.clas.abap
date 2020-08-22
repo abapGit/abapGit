@@ -48,7 +48,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
-    ms_control-page_title = 'SYNTAX CHECK'.
+    ms_control-page_title = 'Syntax Check'.
     mo_repo = io_repo.
     run_syntax_check( ).
   ENDMETHOD.
@@ -57,6 +57,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
   METHOD render_content.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( `<div class="repo">` ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
+    ri_html->add( `</div>` ).
+
     ri_html->add( '<div class="toc">' ).
 
     IF lines( mt_result ) = 0.
