@@ -131,7 +131,9 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
       IMPORTING
         !is_diff       TYPE ty_file_diff
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     METHODS render_beacon
       IMPORTING
         !is_diff_line  TYPE zif_abapgit_definitions=>ty_diff
@@ -459,7 +461,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     DATA: lv_ts TYPE timestamp.
 
     super->constructor( ).
-    ms_control-page_title = 'DIFF'.
+    ms_control-page_title = 'Diff'.
     mv_unified            = zcl_abapgit_persistence_user=>get_instance( )->get_diff_unified( ).
     mv_repo_key           = iv_key.
     mo_repo              ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
@@ -584,6 +586,10 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     li_progress = zcl_abapgit_progress=>get_instance( lines( mt_diff_files ) ).
 
+    ri_html->add( `<div class="repo">` ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
+    ri_html->add( `</div>` ).
+
     ri_html->add( |<div id="diff-list" data-repo-key="{ mv_repo_key }">| ).
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
     LOOP AT mt_diff_files INTO ls_diff_file.
@@ -638,7 +644,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div class="diff_head">' ).              "#EC NOTEXT
+    ro_html->add( '<div class="diff_head">' ).
 
     ro_html->add_icon(
       iv_name    = 'chevron-down'
@@ -667,9 +673,9 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     ENDIF.
 
     IF lv_adt_link IS NOT INITIAL.
-      ro_html->add( |<span class="diff_name">{ lv_adt_link }</span>| ). "#EC NOTEXT
+      ro_html->add( |<span class="diff_name">{ lv_adt_link }</span>| ).
     ELSE.
-      ro_html->add( |<span class="diff_name">{ is_diff-path }{ is_diff-filename }</span>| ). "#EC NOTEXT
+      ro_html->add( |<span class="diff_name">{ is_diff-path }{ is_diff-filename }</span>| ).
     ENDIF.
 
     ro_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state(
@@ -680,10 +686,10 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
         io_html = ro_html
         is_diff = is_diff ).
 
-    ro_html->add( |<span class="diff_changed_by">last change by: <span class="user">{
+    ro_html->add( |<span class="diff_changed_by">Last Changed by: <span class="user">{
       is_diff-changed_by }</span></span>| ).
 
-    ro_html->add( '</div>' ).                               "#EC NOTEXT
+    ro_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -914,9 +920,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
   METHOD render_table_head.
 
     CREATE OBJECT ro_html.
-
-    ro_html->add( '<thead class="header">' ).               "#EC NOTEXT
-    ro_html->add( '<tr>' ).                                 "#EC NOTEXT
+    ro_html->add( '<thead class="header">' ).
+    ro_html->add( '<tr>' ).
 
     IF mv_unified = abap_true.
 
@@ -930,8 +935,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     ENDIF.
 
-    ro_html->add( '</tr>' ).                                "#EC NOTEXT
-    ro_html->add( '</thead>' ).                             "#EC NOTEXT
+    ro_html->add( '</tr>' ).
+    ro_html->add( '</thead>' ).
 
   ENDMETHOD.
 

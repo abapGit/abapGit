@@ -769,10 +769,13 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
     DATA: lv_tabname TYPE dd02l-tabname.
 
-    SELECT SINGLE tabname FROM dd02l INTO lv_tabname
-      WHERE tabname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers = '0000'.
+    lv_tabname = ms_item-obj_name.
+    CALL FUNCTION 'DD_GET_NAMETAB_HEADER'
+      EXPORTING
+        tabname   = lv_tabname
+      EXCEPTIONS
+        not_found = 1
+        OTHERS    = 2.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.

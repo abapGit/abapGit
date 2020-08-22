@@ -29,7 +29,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_DIS IMPLEMENTATION.
   METHOD constructor.
     super->constructor( ).
     ms_key = is_key.
-    ms_control-page_title = 'CONFIG DISPLAY'.
+    ms_control-page_title = 'Config Display'.
   ENDMETHOD.
 
 

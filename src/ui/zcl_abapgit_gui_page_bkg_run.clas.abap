@@ -28,7 +28,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG_RUN IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
-    ms_control-page_title = 'BACKGROUND_RUN'.
+    ms_control-page_title = 'Backgorund Run'.
   ENDMETHOD.
 
 
