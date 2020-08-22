@@ -65,7 +65,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -222,7 +222,7 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
             iv_key = c_id-branch_name
             iv_val = replace( " strip technical
               val = mo_form_data->get( c_id-branch_name )
-              sub = 'refs/heads/'
+              sub = zif_abapgit_definitions=>c_git_branch-heads_prefix
               with = '' ) ).
           ev_state = zcl_abapgit_gui=>c_event_state-re_render.
         ENDIF.
