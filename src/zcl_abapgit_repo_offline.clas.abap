@@ -14,10 +14,10 @@ CLASS zcl_abapgit_repo_offline DEFINITION
         REDEFINITION .
     METHODS reset
         REDEFINITION .
-PROTECTED SECTION.
+  PROTECTED SECTION.
 
-  METHODS reset_remote
-      REDEFINITION .
+    METHODS reset_remote
+        REDEFINITION .
   PRIVATE SECTION.
 ENDCLASS.
 

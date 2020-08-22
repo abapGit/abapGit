@@ -3,7 +3,6 @@ CLASS zcl_abapgit_git_branch_list DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-
     METHODS constructor
       IMPORTING
         !iv_data TYPE string
