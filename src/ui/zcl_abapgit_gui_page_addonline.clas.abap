@@ -237,7 +237,7 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
           CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_view_repo
             EXPORTING
               iv_key = lo_new_online_repo->get_key( ).
-          ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+          ev_state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
         ELSE.
           ev_state = zcl_abapgit_gui=>c_event_state-re_render. " Display errors
         ENDIF.
