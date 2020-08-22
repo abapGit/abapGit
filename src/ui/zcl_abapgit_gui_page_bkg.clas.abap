@@ -78,7 +78,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
     super->constructor( ).
 
     mv_key = iv_key.
-    ms_control-page_title = 'BACKGROUND'.
+    ms_control-page_title = 'Backround'.
     ms_control-page_menu  = build_menu( ).
 
   ENDMETHOD.

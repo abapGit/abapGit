@@ -208,15 +208,16 @@
       "ignoreFunctionModuleName": false
     },
     "line_length": {
-      "length": 120
+      "length": 120,
+      "exclude": ["zcl_abapgit_object_pdts.clas.testclasses.abap"]
     },
     "line_only_punc": {
       "ignoreExceptions": true
     },
     "local_class_naming": {
-      "exception": "^LCL_.*$",
+      "exception": "^LCX_.*$",
       "local": "^LCL_.*$",
-      "test": "^LTCL_.*$"
+      "test": "^LT.+$"
     },
     "local_testclass_location": true,
     "local_variable_names": {

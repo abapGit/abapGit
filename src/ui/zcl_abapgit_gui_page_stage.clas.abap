@@ -108,7 +108,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -134,7 +134,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     super->constructor( ).
 
-    ms_control-page_title = 'STAGE'.
+    ms_control-page_title = 'Stage'.
     mo_repo               = io_repo.
     ms_files              = zcl_abapgit_factory=>get_stage_logic( )->get( mo_repo ).
     mv_seed               = iv_seed.
@@ -145,6 +145,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     ENDIF.
 
     ms_control-page_menu  = build_menu( ).
+
+    IF lines( ms_files-local ) = 0 AND lines( ms_files-remote ) = 0.
+      zcx_abapgit_exception=>raise( 'There are no changes that could be staged' ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -264,7 +268,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     CREATE OBJECT ro_html.
     lv_local_count = count_default_files_to_commit( ).
     IF lv_local_count > 0.
-      lv_add_all_txt = |Add all and commit ({ lv_local_count })|.
+      lv_add_all_txt = |Add All and Commit ({ lv_local_count })|.
       " Otherwise empty, but the element (id) is preserved for JS
     ENDIF.
 
@@ -276,13 +280,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
                     iv_typ   = zif_abapgit_html=>c_action_type-onclick
                     iv_id    = 'commitSelectedButton'
                     iv_style = 'display: none'
-                    iv_txt   = 'Commit selected (<span class="counter"></span>)'
+                    iv_txt   = 'Commit Selected (<span class="counter"></span>)'
                     iv_opt   = zif_abapgit_html=>c_html_opt-strong ) ##NO_TEXT.
     ro_html->add_a( iv_act   = 'errorStub(event)' " Will be reinit by JS
                     iv_typ   = zif_abapgit_html=>c_action_type-onclick
                     iv_id    = 'commitFilteredButton'
                     iv_style = 'display: none'
-                    iv_txt   = 'Add <b>filtered</b> and commit (<span class="counter"></span>)' ) ##NO_TEXT.
+                    iv_txt   = 'Add <b>Filtered</b> and Commit (<span class="counter"></span>)' ) ##NO_TEXT.
     ro_html->add_a( iv_act = |{ c_action-stage_all }|
                     iv_id  = 'commitAllButton'
                     iv_txt = lv_add_all_txt ) ##NO_TEXT.
@@ -293,7 +297,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     " Filter bar
     ro_html->add( '<td class="right">' ).
     ro_html->add( '<input class="stage-filter" id="objectSearch"' &&
-                  ' type="search" placeholder="Filter objects"' &&
+                  ' type="search" placeholder="Filter Objects"' &&
                   | value={ mv_filter_value }>| ).
     ro_html->add( '</td>' ).
 
@@ -420,7 +424,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
         ro_html->add( '<thead><tr class="local">' ).
         ro_html->add( '<th class="stage-status"></th>' ). " Diff state
         ro_html->add( '<th class="stage-objtype">Type</th>' ).
-        ro_html->add( '<th>Files to add (click to see diff)</th>' ).
+        ro_html->add( '<th title="Click filename to see diff">File</th>' ).
         ro_html->add( '<th>Changed by</th>' ).
         ro_html->add( '<th>Transport</th>' ).
         ro_html->add( '<th></th>' ). " Status

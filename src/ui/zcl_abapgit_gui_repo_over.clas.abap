@@ -32,6 +32,7 @@ CLASS zcl_abapgit_gui_repo_over DEFINITION
     TYPES:
       BEGIN OF ty_overview,
         favorite        TYPE string,
+        "! True for offline, false for online repo
         type            TYPE string,
         key             TYPE string,
         name            TYPE string,
@@ -251,7 +252,7 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
     ii_html->add( |</form>| ).
 
     ii_html->add( zcl_abapgit_html=>a(
-      iv_txt = '<i id="icon-filter-favorite" class="icon icon-check"></i> Only favorites'
+      iv_txt = '<i id="icon-filter-favorite" class="icon icon-check"></i> Only Favorites'
       iv_act = |gHelper.toggleRepoListFavorites()|
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
 
@@ -298,16 +299,16 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
     CONSTANTS: lc_separator TYPE string VALUE `<span class="separator">|</span>`.
 
     DATA:
-      lv_type_icon           TYPE string,
-      lv_favorite_icon       TYPE string,
-      lv_favorite_class      TYPE string,
-      lv_package_jump_data   TYPE string,
-      lv_package_obj_name    TYPE sobj_name,
-      lv_stage_link          TYPE string,
-      lv_patch_link          TYPE string,
-      lv_code_inspector_link TYPE string,
-      lv_repo_settings_link  TYPE string,
-      lv_branch_html         TYPE string.
+      lv_type_icon         TYPE string,
+      lv_favorite_icon     TYPE string,
+      lv_favorite_class    TYPE string,
+      lv_package_jump_data TYPE string,
+      lv_package_obj_name  TYPE sobj_name,
+      lv_stage_link        TYPE string,
+      lv_patch_link        TYPE string,
+      lv_check_link        TYPE string,
+      lv_settings_link     TYPE string,
+      lv_branch_html       TYPE string.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
@@ -358,14 +359,18 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
           iv_txt = <ls_overview>-package
           iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_package_jump_data }| ) }</td>| ).
 
-      lv_branch_html = `<span class="branch branch_branch">`
-        && `<i title="Current branch" class="icon icon-code-branch grey70"></i>`
-        && <ls_overview>-branch
-        && `</span>`.
+      IF <ls_overview>-branch IS INITIAL.
+        ii_html->add( |<td>&nbsp;</td>| ).
+      ELSE.
+        lv_branch_html = `<span class="branch branch_branch">`
+          && `<i title="Current branch" class="icon icon-code-branch grey70"></i>`
+          && <ls_overview>-branch
+          && `</span>`.
 
-      ii_html->add( |<td>{ ii_html->a(
-        iv_txt = lv_branch_html
-        iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ <ls_overview>-key }| ) }</td>| ).
+        ii_html->add( |<td>{ ii_html->a(
+          iv_txt = lv_branch_html
+          iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ <ls_overview>-key }| ) }</td>| ).
+      ENDIF.
 
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_by }</td>| ).
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_at }</td>| ).
@@ -375,27 +380,31 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
       ii_html->add( |<td class='ro-action'> | ).
 
-      lv_stage_link = ii_html->a(
-        iv_txt = |Stage|
-        iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ <ls_overview>-key } | ).
-
-      lv_patch_link = ii_html->a(
-        iv_txt = |Patch|
-        iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?{ <ls_overview>-key } | ).
-
-      lv_code_inspector_link = ii_html->a(
-        iv_txt = |Code inspector|
+      lv_check_link = ii_html->a(
+        iv_txt = |Check|
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?{ <ls_overview>-key } | ).
 
-      lv_repo_settings_link = ii_html->a(
+      ii_html->add( lv_check_link && lc_separator ).
+
+      IF <ls_overview>-type = abap_false. " online repo
+        lv_stage_link = ii_html->a(
+          iv_txt = |Stage|
+          iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ <ls_overview>-key } | ).
+
+        ii_html->add( lv_stage_link && lc_separator ).
+
+        lv_patch_link = ii_html->a(
+          iv_txt = |Patch|
+          iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?{ <ls_overview>-key } | ).
+
+        ii_html->add( lv_patch_link && lc_separator ).
+      ENDIF.
+
+      lv_settings_link = ii_html->a(
         iv_txt = |Settings|
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?{ <ls_overview>-key } | ).
 
-      ii_html->add(
-        lv_code_inspector_link && lc_separator &&
-        lv_stage_link && lc_separator &&
-        lv_patch_link && lc_separator &&
-        lv_repo_settings_link ).
+      ii_html->add( lv_settings_link ).
 
       ii_html->add( |</td>| ).
 

@@ -887,6 +887,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
     CALL FUNCTION 'RPY_PROGRAM_READ'
       EXPORTING
         program_name     = lv_program_name
+        with_includelist = abap_false
         with_lowercase   = abap_true
       TABLES
         source_extended  = lt_source
