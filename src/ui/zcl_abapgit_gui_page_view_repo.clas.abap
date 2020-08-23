@@ -305,7 +305,7 @@ CLASS zcl_abapgit_gui_page_view_repo IMPLEMENTATION.
 
     ro_toolbar->add(
         iv_txt = 'Changes First'
-        iv_chk = boolc( NOT mv_diff_first = abap_true )
+        iv_chk = mv_diff_first
         iv_act = c_actions-toggle_diff_first ).
 
     IF mo_repo->has_remote_source( ) = abap_true.
