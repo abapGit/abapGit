@@ -39,19 +39,26 @@ CLASS zcl_abapgit_repo_online DEFINITION
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception .
+    METHODS get_commit_display_url
+      IMPORTING
+        !iv_hash      TYPE zif_abapgit_definitions=>ty_sha1
+      RETURNING
+        VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url
+      RAISING
+        zcx_abapgit_exception .
 
     METHODS get_files_remote
-         REDEFINITION .
+        REDEFINITION .
     METHODS get_name
-         REDEFINITION .
+        REDEFINITION .
     METHODS has_remote_source
-         REDEFINITION .
+        REDEFINITION .
     METHODS rebuild_local_checksums
-         REDEFINITION .
-    METHODS get_commit_display_url
-      IMPORTING iv_hash       TYPE zif_abapgit_definitions=>ty_sha1
-      RETURNING VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url
-      RAISING   zcx_abapgit_exception.
+        REDEFINITION .
+    METHODS validate
+        REDEFINITION .
+    METHODS reset
+        REDEFINITION .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -75,7 +82,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_online IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
 
   METHOD fetch_remote.
@@ -105,6 +112,33 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
   METHOD get_branch_name.
     rv_name = ms_data-branch_name.
+  ENDMETHOD.
+
+
+  METHOD get_commit_display_url.
+
+    DATA ls_result TYPE match_result.
+    FIELD-SYMBOLS <ls_provider_match> TYPE submatch_result.
+
+    rv_url = me->get_url( ).
+
+    FIND REGEX '^https:\/\/(?:www\.)?(github\.com|bitbucket\.org|gitlab\.com)\/' IN rv_url RESULTS ls_result.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |provider not yet supported| ).
+    ENDIF.
+    READ TABLE ls_result-submatches INDEX 1 ASSIGNING <ls_provider_match>.
+    CASE rv_url+<ls_provider_match>-offset(<ls_provider_match>-length).
+      WHEN 'github.com'.
+        REPLACE REGEX '\.git$' IN rv_url WITH space.
+        rv_url = rv_url && |/commit/| && iv_hash.
+      WHEN 'bitbucket.org'.
+        REPLACE REGEX '\.git$' IN rv_url WITH space.
+        rv_url = rv_url && |/commits/| && iv_hash.
+      WHEN 'gitlab.com'.
+        REPLACE REGEX '\.git$' IN rv_url WITH space.
+        rv_url = rv_url && |/-/commit/| && iv_hash.
+    ENDCASE.
+
   ENDMETHOD.
 
 
@@ -238,6 +272,16 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD reset.
+
+    " Reset repo to master branch
+    set_branch_name( 'refs/heads/master' ).
+
+    COMMIT WORK AND WAIT.
+
+  ENDMETHOD.
+
+
   METHOD set_branch_name.
 
     reset_remote( ).
@@ -259,11 +303,26 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD validate.
+
+    DATA:
+      lo_branches TYPE REF TO zcl_abapgit_git_branch_list,
+      ls_branch   TYPE zif_abapgit_definitions=>ty_git_branch.
+
+    " Check if branch still exists since it might have been deleted in remote repo
+    " This will raise exception if not
+    lo_branches = zcl_abapgit_git_transport=>branches( ms_data-url ).
+
+    ls_branch = lo_branches->find_by_name( ms_data-branch_name ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_git_operations~create_branch.
 
     DATA: lv_sha1 TYPE zif_abapgit_definitions=>ty_sha1.
 
-    ASSERT iv_name CP 'refs/heads/+*'.
+    ASSERT iv_name CP zif_abapgit_definitions=>c_git_branch-heads.
 
     IF iv_from IS INITIAL.
       lv_sha1 = get_sha1_remote( ).
@@ -290,7 +349,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
           lv_text TYPE string.
 
 
-    IF ms_data-branch_name CP 'refs/tags*'.
+    IF ms_data-branch_name CP zif_abapgit_definitions=>c_git_branch-tags.
       lv_text = |You're working on a tag. Currently it's not |
              && |possible to push on tags. Consider creating a branch instead|.
       zcx_abapgit_exception=>raise( lv_text ).
@@ -322,32 +381,4 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     reset_status( ).
 
   ENDMETHOD.
-
-
-  METHOD get_commit_display_url.
-
-    DATA ls_result TYPE match_result.
-    FIELD-SYMBOLS <ls_provider_match> TYPE submatch_result.
-
-    rv_url = me->get_url( ).
-
-    FIND REGEX '^https:\/\/(?:www\.)?(github\.com|bitbucket\.org|gitlab\.com)\/' IN rv_url RESULTS ls_result.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |provider not yet supported| ).
-    ENDIF.
-    READ TABLE ls_result-submatches INDEX 1 ASSIGNING <ls_provider_match>.
-    CASE rv_url+<ls_provider_match>-offset(<ls_provider_match>-length).
-      WHEN 'github.com'.
-        REPLACE REGEX '\.git$' IN rv_url WITH space.
-        rv_url = rv_url && |/commit/| && iv_hash.
-      WHEN 'bitbucket.org'.
-        REPLACE REGEX '\.git$' IN rv_url WITH space.
-        rv_url = rv_url && |/commits/| && iv_hash.
-      WHEN 'gitlab.com'.
-        REPLACE REGEX '\.git$' IN rv_url WITH space.
-        rv_url = rv_url && |/-/commit/| && iv_hash.
-    ENDCASE.
-
-  ENDMETHOD.
-
 ENDCLASS.

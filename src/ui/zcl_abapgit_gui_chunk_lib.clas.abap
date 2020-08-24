@@ -158,22 +158,22 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     CREATE OBJECT ro_menu.
 
     ro_menu->add(
-      iv_txt = 'Database util'
+      iv_txt = 'Database Utility'
       iv_act = zif_abapgit_definitions=>c_action-go_db
     )->add(
-      iv_txt = 'Package to zip'
+      iv_txt = 'Package to Zip'
       iv_act = zif_abapgit_definitions=>c_action-zip_package
     )->add(
-      iv_txt = 'Transport to zip'
+      iv_txt = 'Transport to Zip'
       iv_act = zif_abapgit_definitions=>c_action-zip_transport
     )->add(
-      iv_txt = 'Object to files'
+      iv_txt = 'Object to Files'
       iv_act = zif_abapgit_definitions=>c_action-zip_object
     )->add(
-      iv_txt = 'Test changed by'
+      iv_txt = 'Test Changed by'
       iv_act = zif_abapgit_definitions=>c_action-changed_by
     )->add(
-      iv_txt = 'Debug info'
+      iv_txt = 'Debug Info'
       iv_act = zif_abapgit_definitions=>c_action-go_debuginfo
     )->add(
       iv_txt = 'Settings'

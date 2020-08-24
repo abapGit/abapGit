@@ -7,13 +7,17 @@ CLASS zcl_abapgit_repo_offline DEFINITION
   PUBLIC SECTION.
 
     METHODS get_name
-      REDEFINITION .
+        REDEFINITION .
     METHODS has_remote_source
-      REDEFINITION .
+        REDEFINITION .
+    METHODS validate
+        REDEFINITION .
+    METHODS reset
+        REDEFINITION .
   PROTECTED SECTION.
 
     METHODS reset_remote
-      REDEFINITION .
+        REDEFINITION .
   PRIVATE SECTION.
 ENDCLASS.
 
@@ -36,6 +40,11 @@ CLASS ZCL_ABAPGIT_REPO_OFFLINE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD reset.
+    " Nothing to do so far
+  ENDMETHOD.
+
+
   METHOD reset_remote.
 
     DATA lt_backup LIKE mt_remote.
@@ -51,5 +60,10 @@ CLASS ZCL_ABAPGIT_REPO_OFFLINE IMPLEMENTATION.
     super->reset_remote( ).
     set_files_remote( lt_backup ).
 
+  ENDMETHOD.
+
+
+  METHOD validate.
+    " Nothing to do so far
   ENDMETHOD.
 ENDCLASS.

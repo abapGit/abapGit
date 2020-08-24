@@ -425,6 +425,15 @@ INTERFACE zif_abapgit_definitions
     END OF c_git_branch_type .
   CONSTANTS c_head_name TYPE string VALUE 'HEAD' ##NO_TEXT.
   CONSTANTS:
+    BEGIN OF c_git_branch,
+      master       TYPE string VALUE 'refs/heads/master',
+      prefix       TYPE string VALUE 'refs/',
+      heads_prefix TYPE string VALUE 'refs/heads/',
+      heads        TYPE string VALUE 'refs/heads/*',
+      tags_prefix  TYPE string VALUE 'refs/tags/',
+      tags         TYPE string VALUE 'refs/tags/*',
+    END OF c_git_branch.
+  CONSTANTS:
     BEGIN OF c_diff,
       insert TYPE c LENGTH 1 VALUE 'I',
       delete TYPE c LENGTH 1 VALUE 'D',
@@ -522,7 +531,6 @@ INTERFACE zif_abapgit_definitions
       documentation                 TYPE string VALUE 'documentation',
       changelog                     TYPE string VALUE 'changelog',
     END OF c_action.
-  CONSTANTS c_tag_prefix TYPE string VALUE 'refs/tags/' ##NO_TEXT.
   CONSTANTS c_spagpa_param_repo_key TYPE c LENGTH 20 VALUE 'REPO_KEY' ##NO_TEXT.
   CONSTANTS c_spagpa_param_package TYPE c LENGTH 20 VALUE 'PACKAGE' ##NO_TEXT.
   CONSTANTS gc_yes TYPE ty_yes_no VALUE 'Y'.

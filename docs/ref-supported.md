@@ -76,7 +76,7 @@ MSAG | Message Class | Yes
 NROB | Number Range Objects | Yes
 OA2P | OAuth2 Profile | Yes
 ODSO | DataStore Object | Yes
-OTGR | Object type group | [#1515](https://github.com/larshp/abapGit/issues/1515)
+OTGR | Object type group | Yes
 PARA | SPA/GPA Parameters | Yes
 PDTS | Standard Task | [#153](https://github.com/larshp/abapGit/issues/153)
 PDWS | Workflow templates | [#154](https://github.com/larshp/abapGit/issues/154)

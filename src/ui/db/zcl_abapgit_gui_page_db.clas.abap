@@ -43,7 +43,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
-    ms_control-page_title = 'DATABASE PERSISTENCY'.
+    ms_control-page_title = 'Database Utility'.
   ENDMETHOD.
 
 

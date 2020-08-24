@@ -42,7 +42,7 @@ CLASS ltcl_parse IMPLEMENTATION.
       act = lines( lt_list )
       exp = 2 ).
 
-    READ TABLE lt_list WITH KEY name = 'refs/heads/master' TRANSPORTING NO FIELDS.
+    READ TABLE lt_list WITH KEY name = zif_abapgit_definitions=>c_git_branch-master TRANSPORTING NO FIELDS.
     cl_abap_unit_assert=>assert_subrc( ).
 
   ENDMETHOD.
