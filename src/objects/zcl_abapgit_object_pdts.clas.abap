@@ -9,7 +9,8 @@ CLASS zcl_abapgit_object_pdts DEFINITION
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
     METHODS constructor IMPORTING is_item     TYPE zif_abapgit_definitions=>ty_item
-                                  iv_language TYPE spras.
+                                  iv_language TYPE spras
+                        RAISING   zcx_abapgit_exception.
 
     TYPES:
       BEGIN OF ty_task,
@@ -37,6 +38,8 @@ CLASS zcl_abapgit_object_pdts DEFINITION
     METHODS check_subrc_for IMPORTING iv_call TYPE clike OPTIONAL
                             RAISING   zcx_abapgit_exception.
 
+    METHODS is_experimental RETURNING VALUE(rv_result) TYPE abap_bool.
+
 ENDCLASS.
 
 
@@ -46,8 +49,16 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
   METHOD constructor.
 
+
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
+
+    IF is_experimental( ) = abap_false.
+      "Known issues:
+      "- Container not deserialized
+      "- More testing needed
+      zcx_abapgit_exception=>raise( 'PDTS not fully implemented, turn on experimental features' ).
+    ENDIF.
 
     ms_objkey-otype = c_object_type_task.
     ms_objkey-objid = ms_item-obj_name.
@@ -477,5 +488,17 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
     ENDIF.
   ENDMETHOD.
 
+
+
+  METHOD is_experimental.
+
+    DATA lo_settings TYPE REF TO zcl_abapgit_settings.
+    DATA lo_settings_persistence TYPE REF TO zcl_abapgit_persist_settings.
+
+    lo_settings_persistence = zcl_abapgit_persist_settings=>get_instance( ).
+    lo_settings = lo_settings_persistence->read( ).
+    rv_result = lo_settings->get_experimental_features( ).
+
+  ENDMETHOD.
 
 ENDCLASS.

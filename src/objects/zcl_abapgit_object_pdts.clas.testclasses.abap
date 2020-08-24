@@ -30,7 +30,18 @@ CLASS ltd_mock IMPLEMENTATION.
 
   METHOD generate.
 
-    "Note: When pasting updates from GitHub, change to UTF-16 and remove serializer attribute from abapGit tag
+    "Todo: Automate GitHub updates, sort out XML discrepancies
+    "
+    "When pasting updates from GitHub, following changes are needed:
+    "UTF-16, remove serializer attribute from abapGit tag, replace task ID with variable
+    "
+    "add_line( |<?xml version="1.0" encoding="utf-16"?>| ).
+    "add_line( |<abapGit version="v1.0.0">| ).
+    "...
+    "Then all instances of task ID (e.g. 90000005), such as:
+    "add_line( |     <OBJID>{ mc_task_id }</OBJID>| ).
+    "add_line( |       <INSTID>TS{ mc_task_id }</INSTID>| ).
+
 
     add_line( |<?xml version="1.0" encoding="utf-16"?>| ).
     add_line( |<abapGit version="v1.0.0">| ).
@@ -39,15 +50,69 @@ CLASS ltd_mock IMPLEMENTATION.
     add_line( |   <PDTS>| ).
     add_line( |    <SHORT_TEXT>abapGitTest</SHORT_TEXT>| ).
     add_line( |    <PLVAR>01</PLVAR>| ).
-    add_line( |    <WI_TEXT>abapGit Test</WI_TEXT>| ).
+    add_line( |    <WI_TEXT>abapGit Test &amp;_WI_OBJECT_ID.BUSINESSPARTNER&amp;</WI_TEXT>| ).
     add_line( |    <METHOD>| ).
     add_line( |     <OTYPE>TS</OTYPE>| ).
     add_line( |     <OBJID>{ mc_task_id }</OBJID>| ).
-    add_line( |     <SWOTP>WFTS</SWOTP>| ).
-    add_line( |     <SWMTD>EMPTYDIALOGMETHOD</SWMTD>| ).
+    add_line( |     <SWOTP>BUS1006</SWOTP>| ).
+    add_line( |     <SWMTD>DISPLAY</SWMTD>| ).
     add_line( |     <METHTYPE>BO</METHTYPE>| ).
     add_line( |     <SYNCHRON>X</SYNCHRON>| ).
     add_line( |    </METHOD>| ).
+    add_line( |    <STARTING_EVENTS>| ).
+    add_line( |     <HRSEVENTS>| ).
+    add_line( |      <SUBTY>0001</SUBTY>| ).
+    add_line( |      <CLSTYP>BO</CLSTYP>| ).
+    add_line( |      <OBJTYP>BUS1006</OBJTYP>| ).
+    add_line( |      <EVENT>CREATED</EVENT>| ).
+    add_line( |     </HRSEVENTS>| ).
+    add_line( |    </STARTING_EVENTS>| ).
+    add_line( |    <STARTING_EVENTS_BINDING>| ).
+    add_line( |     <HRS1212>| ).
+    add_line( |      <OTYPE>TS</OTYPE>| ).
+    add_line( |      <OBJID>{ mc_task_id }</OBJID>| ).
+    add_line( |      <SUBTY>0001</SUBTY>| ).
+    add_line( |      <CLSTYP>BO</CLSTYP>| ).
+    add_line( |      <OBJTYP>BUS1006</OBJTYP>| ).
+    add_line( |      <EVENT>CREATED</EVENT>| ).
+    add_line( |      <DATAFLOW>E</DATAFLOW>| ).
+    add_line( |      <TAB_INDEX>000001</TAB_INDEX>| ).
+    add_line( |      <EXPR>&amp;_EVT_OBJECT&amp;</EXPR>| ).
+    add_line( |      <SOURCETYPE>S</SOURCETYPE>| ).
+    add_line( |      <TARGETTYPE>S</TARGETTYPE>| ).
+    add_line( |      <TARGETEXPR>&amp;_WI_OBJECT_ID&amp;</TARGETEXPR>| ).
+    add_line( |      <OPERATION>ASN</OPERATION>| ).
+    add_line( |      <OPCLASS>E</OPCLASS>| ).
+    add_line( |     </HRS1212>| ).
+    add_line( |    </STARTING_EVENTS_BINDING>| ).
+    add_line( |    <TERMINATING_EVENTS>| ).
+    add_line( |     <HRSEVTERM>| ).
+    add_line( |      <SUBTY>0002</SUBTY>| ).
+    add_line( |      <CLSTYP>BO</CLSTYP>| ).
+    add_line( |      <OBJTYP>BUS1006</OBJTYP>| ).
+    add_line( |      <EVENT>CHANGED</EVENT>| ).
+    add_line( |      <EV_ELEMENT>_WI_OBJECT_ID</EV_ELEMENT>| ).
+    add_line( |     </HRSEVTERM>| ).
+    add_line( |    </TERMINATING_EVENTS>| ).
+    add_line( |    <TERMINATING_EVENTS_BINDING>| ).
+    add_line( |     <HRS1212>| ).
+    add_line( |      <OTYPE>TS</OTYPE>| ).
+    add_line( |      <OBJID>{ mc_task_id }</OBJID>| ).
+    add_line( |      <SUBTY>0002</SUBTY>| ).
+    add_line( |      <CLSTYP>BO</CLSTYP>| ).
+    add_line( |      <OBJTYP>BUS1006</OBJTYP>| ).
+    add_line( |      <EVENT>CHANGED</EVENT>| ).
+    add_line( |      <DATAFLOW>E</DATAFLOW>| ).
+    add_line( |      <TAB_INDEX>000001</TAB_INDEX>| ).
+    add_line( |      <EV_ELEMENT>_WI_OBJECT_ID</EV_ELEMENT>| ).
+    add_line( |      <EXPR>&amp;_EVT_OBJECT&amp;</EXPR>| ).
+    add_line( |      <SOURCETYPE>S</SOURCETYPE>| ).
+    add_line( |      <TARGETTYPE>S</TARGETTYPE>| ).
+    add_line( |      <TARGETEXPR>&amp;_WI_OBJECT_ID&amp;</TARGETEXPR>| ).
+    add_line( |      <OPERATION>ASN</OPERATION>| ).
+    add_line( |      <OPCLASS>E</OPCLASS>| ).
+    add_line( |     </HRS1212>| ).
+    add_line( |    </TERMINATING_EVENTS_BINDING>| ).
     add_line( |   </PDTS>| ).
     add_line( |   <CONTAINER>| ).
     add_line( |    <CONTAINER>| ).
@@ -82,14 +147,76 @@ CLASS ltd_mock IMPLEMENTATION.
     add_line( |      <J NAME="_METHOD_OBJECTS:_Method_Objects:" TYPE=":BO::h:0:0" PROPS="0C925A51" LTEXTS="EE020Second.Method ObjectSecondary Method Objects of Workflow Activity"/>| ).
     add_line( |      <K NAME="_START_EVENT_IDENTIFIER:_Start_Event_Identifier:" TYPE="CL_SWF_UTL_EVT_IDENTIFIER:CL::h:0:0" PROPS="0CC20231" LTEXTS="EE017ID of Start EventID of Start Event"/>| ).
     add_line( |      <L NAME="_WF_TYPENAME_MAPPING:_WF_Typename_Mapping:" TYPE="::SWF_CNT_MAPPING_TAB:h:0:0" PROPS="0C120271" LTEXTS="EE022Relation of Type NamesRelation of Type Names (Original and Copy)"/>| ).
-    add_line( |      <M NAME="ACTUALLYPROCBY:ActuallyProcBy:" TYPE="::WFSYST-ACT_AGENT:C:14:0" PROPS="0C003301"/>| ).
-    add_line( |      <N NAME="_WI_OBJECT_ID:_Wi_Object_ID:" TYPE="WFTS:BO:::0:0" PROPS="0C921A11"/>| ).
+    add_line( |      <M NAME="NEWINTERNALMODE:NewInternalMode:" TYPE="::BAPIBUS1006_HEAD-NEWINTERNALMODE:C:1:0" PROPS="0C003301"/>| ).
+    add_line( |      <N NAME="_WI_OBJECT_ID:_Wi_Object_ID:" TYPE="BUS1006:BO:::0:0" PROPS="0C921A11"/>| ).
+    add_line( |      <O NAME="FOO:Foo:" TYPE="::CHAR10:h:10:0" PROPS="0C005241"/>| ).
     add_line( |     </ELEMENTS>| ).
     add_line( |    </CONTAINER>| ).
     add_line( |   </CONTAINER>| ).
     add_line( |  </asx:values>| ).
     add_line( | </asx:abap>| ).
     add_line( |</abapGit>| ).
+
+
+*    add_line( |<?xml version="1.0" encoding="utf-16"?>| ).
+*    add_line( |<abapGit version="v1.0.0">| ).
+*    add_line( | <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">| ).
+*    add_line( |  <asx:values>| ).
+*    add_line( |   <PDTS>| ).
+*    add_line( |    <SHORT_TEXT>abapGitTest</SHORT_TEXT>| ).
+*    add_line( |    <PLVAR>01</PLVAR>| ).
+*    add_line( |    <WI_TEXT>abapGit Test</WI_TEXT>| ).
+*    add_line( |    <METHOD>| ).
+*    add_line( |     <OTYPE>TS</OTYPE>| ).
+*    add_line( |     <OBJID>{ mc_task_id }</OBJID>| ).
+*    add_line( |     <SWOTP>WFTS</SWOTP>| ).
+*    add_line( |     <SWMTD>EMPTYDIALOGMETHOD</SWMTD>| ).
+*    add_line( |     <METHTYPE>BO</METHTYPE>| ).
+*    add_line( |     <SYNCHRON>X</SYNCHRON>| ).
+*    add_line( |    </METHOD>| ).
+*    add_line( |   </PDTS>| ).
+*    add_line( |   <CONTAINER>| ).
+*    add_line( |    <CONTAINER>| ).
+*    add_line( |     <PROPERTIES>| ).
+*    add_line( |      <OWN_ID>| ).
+*    add_line( |       <INSTID>TS{ mc_task_id }</INSTID>| ).
+*    add_line( |       <TYPEID>CL_SWF_CNT_HRS_PERSISTENCE</TYPEID>| ).
+*    add_line( |       <CATID>CL</CATID>| ).
+*    add_line( |      </OWN_ID>| ).
+*    add_line( |      <PROPSTRING>23</PROPSTRING>| ).
+*    add_line( |      <XMLVERSION>0002</XMLVERSION>| ).
+*    add_line( |      <INTERNAL>X</INTERNAL>| ).
+*    add_line( |      <EXDEFINITN>| ).
+*    add_line( |       <NAME>_DEF_EXT</NAME>| ).
+*    add_line( |       <POR>| ).
+*    add_line( |        <INSTID>DIALOG_STEP_CONTAINER</INSTID>| ).
+*    add_line( |        <TYPEID>CL_SWF_CNT_PERSISTENCE_DEF_EXT</TYPEID>| ).
+*    add_line( |        <CATID>CL</CATID>| ).
+*    add_line( |       </POR>| ).
+*    add_line( |      </EXDEFINITN>| ).
+*    add_line( |     </PROPERTIES>| ).
+*    add_line( |     <ELEMENTS>| ).
+*    add_line( |      <A NAME="_ADHOC_OBJECTS:_Adhoc_Objects:" TYPE=":BO::h:0:0" PROPS="0C925A51" LTEXTS="EE014Ad Hoc ObjectsAd Hoc Objects of Workflow Instance"/>| ).
+*    add_line( |      <B NAME="_ATTACH_OBJECTS:_Attach_Objects:" TYPE="SOFM:BO::h:0:0" PROPS="0C925A51" LTEXTS="EE011AttachmentsAttachments of Workflow Instance"/>| ).
+*    add_line( |      <C NAME="_WI_ACTUAL_AGENT:_Wi_Actual_Agent:" TYPE="::WFSYST-AGENT:C:0:0" PROPS="0C002A11" LTEXTS="EE005AgentActual Agent of Workflow Activity"/>| ).
+*    add_line( |      <D NAME="_WI_GROUP_ID:_Wi_Group_ID:" TYPE=":BO::u:0:0" PROPS="0C921A11" LTEXTS="EE017Grouping Charact.Grouping Characteristic for Workflow Instances"/>| ).
+*    add_line( |      <E NAME="_WORKITEM:_Workitem:" TYPE="WORKINGWI:BO:::0:0" PROPS="0C921A11" LTEXTS="EE004StepStep Instance"/>| ).
+*    add_line( |      <F NAME="_WF_TICKET:_Wf_Ticket:" TYPE="::SWWTTICKET:h:0:0" PROPS="0C000271" LTEXTS="EE018Transaction TicketTransaction Ticket"/>| ).
+*    add_line( |      <G NAME="_RULE_RESULT:_Rule_Result:" TYPE="AAGENT:BO::u:0:0" PROPS="0C921A11" LTEXTS="EE006AgentsResult of Agent Determination"/>| ).
+*    add_line( |      <H NAME="_RFC_DESTINATION:_Rfc_Destination:" TYPE="::RFCDEST:C:0:0" PROPS="0C001231" LTEXTS="EE015RFC DestinationRFC Destination"/>| ).
+*    add_line( |      <I NAME="_ATTACH_COMMENT_OBJECTS:_Attach_Comment_Objects:" TYPE="SOFM:BO::h:0:0" PROPS="0C925A71" LTEXTS="EE007CommentComment"/>| ).
+*    add_line( |      <J NAME="_METHOD_OBJECTS:_Method_Objects:" TYPE=":BO::h:0:0" PROPS="0C925A51" LTEXTS="EE020Second.Method ObjectSecondary Method Objects of Workflow Activity"/>| ).
+*    add_line( |      <K NAME="_START_EVENT_IDENTIFIER:_Start_Event_Identifier:" TYPE="CL_SWF_UTL_EVT_IDENTIFIER:CL::h:0:0" PROPS="0CC20231" LTEXTS="EE017ID of Start EventID of Start Event"/>| ).
+*    add_line( |      <L NAME="_WF_TYPENAME_MAPPING:_WF_Typename_Mapping:" TYPE="::SWF_CNT_MAPPING_TAB:h:0:0" PROPS="0C120271" LTEXTS="EE022Relation of Type NamesRelation of Type Names (Original and Copy)"/>| ).
+*    add_line( |      <M NAME="ACTUALLYPROCBY:ActuallyProcBy:" TYPE="::WFSYST-ACT_AGENT:C:14:0" PROPS="0C003301"/>| ).
+*    add_line( |      <N NAME="_WI_OBJECT_ID:_Wi_Object_ID:" TYPE="WFTS:BO:::0:0" PROPS="0C921A11"/>| ).
+*    add_line( |     </ELEMENTS>| ).
+*    add_line( |    </CONTAINER>| ).
+*    add_line( |   </CONTAINER>| ).
+*    add_line( |  </asx:values>| ).
+*    add_line( | </asx:abap>| ).
+*    add_line( |</abapGit>| ).
+
   ENDMETHOD.
 
   METHOD create_input_xml.
@@ -156,10 +283,13 @@ CLASS ltc_turnaround_test IMPLEMENTATION.
     ls_item-obj_type = 'PDTS'.
     ls_item-obj_name = ltd_mock=>mc_task_id.
 
-    CREATE OBJECT mo_cut TYPE zcl_abapgit_object_pdts
-      EXPORTING
-        is_item     = ls_item
-        iv_language = sy-langu.
+    TRY.
+        CREATE OBJECT mo_cut TYPE zcl_abapgit_object_pdts
+          EXPORTING
+            is_item     = ls_item
+            iv_language = sy-langu.
+      CATCH zcx_abapgit_exception.
+    ENDTRY.
 
     CREATE OBJECT mo_mock.
 
