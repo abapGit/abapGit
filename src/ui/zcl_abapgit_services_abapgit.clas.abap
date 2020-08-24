@@ -60,7 +60,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
 
 
   METHOD check_sapgui.
@@ -128,7 +128,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
       lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
         iv_url         = iv_url
-        iv_branch_name = 'refs/heads/master'
+        iv_branch_name = zif_abapgit_definitions=>c_git_branch-master
         iv_package     = iv_package ) ##NO_TEXT.
 
       zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
@@ -266,6 +266,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
 
   METHOD open_dotabap_homepage.
 
