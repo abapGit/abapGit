@@ -322,7 +322,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     DATA: lv_sha1 TYPE zif_abapgit_definitions=>ty_sha1.
 
-    ASSERT iv_name CP 'refs/heads/+*'.
+    ASSERT iv_name CP zif_abapgit_definitions=>c_git_branch-heads.
 
     IF iv_from IS INITIAL.
       lv_sha1 = get_sha1_remote( ).
@@ -349,7 +349,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
           lv_text TYPE string.
 
 
-    IF ms_data-branch_name CP 'refs/tags*'.
+    IF ms_data-branch_name CP zif_abapgit_definitions=>c_git_branch-tags.
       lv_text = |You're working on a tag. Currently it's not |
              && |possible to push on tags. Consider creating a branch instead|.
       zcx_abapgit_exception=>raise( lv_text ).

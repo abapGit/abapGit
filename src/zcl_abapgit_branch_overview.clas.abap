@@ -388,7 +388,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
                          WITH KEY sha1 = <ls_object>-sha1.
       ASSERT sy-subrc = 0.
 
-      <ls_tag>-name         = |refs/tags/{ ls_raw-tag }|.
+      <ls_tag>-name         = zif_abapgit_definitions=>c_git_branch-tags_prefix && ls_raw-tag.
       <ls_tag>-sha1         = <ls_object>-sha1.
       <ls_tag>-object       = ls_raw-object.
       <ls_tag>-type         = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
