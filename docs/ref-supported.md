@@ -76,7 +76,7 @@ MSAG | Message Class | Yes
 NROB | Number Range Objects | Yes
 OA2P | OAuth2 Profile | Yes
 ODSO | DataStore Object | Yes
-OTGR | Object type group | [#1515](https://github.com/larshp/abapGit/issues/1515)
+OTGR | Object type group | Yes
 PARA | SPA/GPA Parameters | Yes
 PDTS | Standard Task | [#153](https://github.com/larshp/abapGit/issues/153)
 PDWS | Workflow templates | [#154](https://github.com/larshp/abapGit/issues/154)
@@ -133,7 +133,7 @@ W3HT | Web Reporting/Internet Transaction Server HTML Templates | Yes
 W3MI | Web Reporting/Internet Transaction Server MIME Types(binary | Yes
 WAPA | BSP (Business Server Pages) Application | Yes
 WDCA | Web Dynpro Application Configuration | [#79](https://github.com/larshp/abapGit/issues/79)
-WDCC | Web Dynpro Component Configuration | [#78](https://github.com/larshp/abapGit/issues/78)
+WDCC | Web Dynpro Component Configuration | Yes
 WDYA | Web Dynpro Application | Yes
 WDYN | Web Dynpro Component | Yes
 WEBI | Virtual End Point | Yes
