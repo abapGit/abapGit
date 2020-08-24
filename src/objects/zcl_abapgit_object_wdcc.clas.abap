@@ -1,6 +1,5 @@
-CLASS zcl_abapgit_object_wdcc DEFINITION
-  INHERITING FROM zcl_abapgit_objects_super
-  PUBLIC.
+CLASS zcl_abapgit_object_wdcc DEFINITION PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super.
 
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
