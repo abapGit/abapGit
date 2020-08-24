@@ -95,7 +95,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
     ENDIF.
 
     ls_tag-name = zcl_abapgit_git_tag=>add_tag_prefix( ls_tag-name ).
-    ASSERT ls_tag-name CP 'refs/tags/+*'.
+    ASSERT ls_tag-name CP zif_abapgit_definitions=>c_git_branch-tags.
 
     CASE mv_selected_type.
       WHEN c_tag_type-lightweight.

@@ -90,14 +90,14 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
 
 
   METHOD complete_heads_branch_name.
-    IF iv_branch_name CP 'refs/heads/*'.
+    IF iv_branch_name CP zif_abapgit_definitions=>c_git_branch-heads.
       rv_name = iv_branch_name.
     ELSE.
-      rv_name = 'refs/heads/' && iv_branch_name.
+      rv_name = zif_abapgit_definitions=>c_git_branch-heads_prefix && iv_branch_name.
     ENDIF.
   ENDMETHOD.
 
@@ -120,14 +120,14 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Branch name empty' ) ##NO_TEXT.
     ENDIF.
 
-    IF iv_branch_name CP |refs/tags/*|.
+    IF iv_branch_name CP zif_abapgit_definitions=>c_git_branch-tags.
       rs_branch = find_tag_by_name( iv_branch_name ).
     ELSE.
 
       READ TABLE mt_branches INTO rs_branch
         WITH KEY name = iv_branch_name.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Branch not found: { iv_branch_name }| ).
+        zcx_abapgit_exception=>raise( |Branch not found: { get_display_name( iv_branch_name ) }| ).
       ENDIF.
 
     ENDIF.
@@ -177,10 +177,10 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
   METHOD get_display_name.
     rv_display_name = iv_branch_name.
 
-    IF rv_display_name CP 'refs/heads/*'.
-      REPLACE FIRST OCCURRENCE OF 'refs/heads/' IN rv_display_name WITH ''.
-    ELSEIF rv_display_name CP 'refs/tags/*'.
-      REPLACE FIRST OCCURRENCE OF 'refs/' IN rv_display_name WITH ''.
+    IF rv_display_name CP zif_abapgit_definitions=>c_git_branch-heads.
+      REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-heads_prefix IN rv_display_name WITH ''.
+    ELSEIF rv_display_name CP zif_abapgit_definitions=>c_git_branch-tags.
+      REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-prefix IN rv_display_name WITH ''.
     ENDIF.
 
   ENDMETHOD.
@@ -211,10 +211,11 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
 
     rv_type = zif_abapgit_definitions=>c_git_branch_type-other.
 
-    IF iv_branch_name CP 'refs/heads/*' OR iv_branch_name = zif_abapgit_definitions=>c_head_name.
+    IF iv_branch_name CP zif_abapgit_definitions=>c_git_branch-heads OR
+       iv_branch_name = zif_abapgit_definitions=>c_head_name.
       rv_type = zif_abapgit_definitions=>c_git_branch_type-branch.
 
-    ELSEIF iv_branch_name CP 'refs/tags/*'.
+    ELSEIF iv_branch_name CP zif_abapgit_definitions=>c_git_branch-tags.
 
       lv_annotated_tag_with_suffix = iv_branch_name && '^{}'.
 

@@ -25,7 +25,7 @@ CLASS ZCL_ABAPGIT_GIT_TAG IMPLEMENTATION.
 
   METHOD add_tag_prefix.
 
-    rv_text = zif_abapgit_definitions=>c_tag_prefix && iv_text.
+    rv_text = zif_abapgit_definitions=>c_git_branch-tags_prefix && iv_text.
 
   ENDMETHOD.
 
@@ -34,7 +34,7 @@ CLASS ZCL_ABAPGIT_GIT_TAG IMPLEMENTATION.
 
     rv_text = iv_text.
 
-    REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_tag_prefix
+    REPLACE FIRST OCCURRENCE OF zif_abapgit_definitions=>c_git_branch-tags_prefix
             IN rv_text
             WITH ''.
 
