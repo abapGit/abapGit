@@ -138,7 +138,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_view_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -648,6 +648,7 @@ CLASS zcl_abapgit_gui_page_view_repo IMPLEMENTATION.
           lv_add_str           TYPE string,
           li_log               TYPE REF TO zif_abapgit_log,
           lv_render_transports TYPE abap_bool,
+          lv_msg               TYPE string,
           lo_news              TYPE REF TO zcl_abapgit_news.
 
     FIELD-SYMBOLS <ls_item> LIKE LINE OF lt_repo_items.
@@ -659,6 +660,16 @@ CLASS zcl_abapgit_gui_page_view_repo IMPLEMENTATION.
 
     " Reinit, for the case of type change
     mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
+
+    " Check if repo is still valid and reset if necessary to consistent state
+    TRY.
+        mo_repo->validate( ).
+      CATCH zcx_abapgit_exception INTO lx_error.
+        lv_msg = lx_error->get_text( ) && '. Fallback to master branch.'.
+        MESSAGE lv_msg TYPE 'S'.
+
+        mo_repo->reset( ).
+    ENDTRY.
 
     lo_news = zcl_abapgit_news=>create( mo_repo ).
 
