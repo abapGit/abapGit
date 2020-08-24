@@ -443,9 +443,9 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
     SELECT SINGLE uname
       FROM hrs1201
-      WHERE otype = @c_object_type_task AND
-            objid = @ms_item-obj_name
-      INTO @rv_user.
+      WHERE otype = c_object_type_task AND
+            objid = ms_item-obj_name
+      INTO rv_user.
 
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
