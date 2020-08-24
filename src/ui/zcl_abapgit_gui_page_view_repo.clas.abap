@@ -213,7 +213,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
   METHOD build_advanced_dropdown.
 
     DATA:
-      lo_repo_online TYPE REF TO zcl_abapgit_repo_online,
       lv_crossout LIKE zif_abapgit_html=>c_html_opt-crossout.
 
     CREATE OBJECT ro_advanced_dropdown.
@@ -233,17 +232,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
                                  iv_act = |{ zif_abapgit_definitions=>c_action-repo_remote_detach }?{ mv_key }| ).
       ro_advanced_dropdown->add( iv_txt = 'Force Stage'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ mv_key }| ).
-
-      lo_repo_online ?= mo_repo. " TODO refactor this disaster
-      IF lo_repo_online->get_switched_origin( ) IS NOT INITIAL.
-        ro_advanced_dropdown->add(
-          iv_txt = 'Revert switched origin <sup>beta<sup>'
-          iv_act = |{ c_actions-repo_reset_origin }| ).
-      ELSE.
-        ro_advanced_dropdown->add(
-          iv_txt = 'Switch origin to PR <sup>beta<sup>'
-          iv_act = |{ c_actions-repo_switch_origin_to_pr }| ).
-      ENDIF.
 
       CLEAR lv_crossout.
       IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-transport_to_branch ) = abap_false.
@@ -301,6 +289,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
 
   METHOD build_branch_dropdown.
 
+    DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
+
     CREATE OBJECT ro_branch_dropdown.
 
     IF mo_repo->is_offline( ) = abap_true.
@@ -316,6 +306,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
                              iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_create }?{ mv_key }| ).
     ro_branch_dropdown->add( iv_txt = 'Delete'
                              iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_delete }?{ mv_key }| ).
+
+    lo_repo_online ?= mo_repo. " TODO refactor this disaster
+    IF lo_repo_online->get_switched_origin( ) IS NOT INITIAL.
+      ro_branch_dropdown->add(
+        iv_txt = 'Switch Origin: Revert <sup>beta<sup>'
+        iv_act = |{ c_actions-repo_reset_origin }| ).
+    ELSE.
+      ro_branch_dropdown->add(
+        iv_txt = 'Switch Origin: to PR <sup>beta<sup>'
+        iv_act = |{ c_actions-repo_switch_origin_to_pr }| ).
+    ENDIF.
 
   ENDMETHOD.
 
