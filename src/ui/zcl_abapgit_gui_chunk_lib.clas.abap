@@ -78,7 +78,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !iv_order_by         TYPE string
         !iv_order_descending TYPE abap_bool
       RETURNING
-        VALUE(ro_html)       TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html)       TYPE REF TO zif_abapgit_html .
     CLASS-METHODS render_warning_banner
       IMPORTING
         !iv_text       TYPE string
@@ -446,7 +446,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     ri_html->add( |<div class="info-title">{ iv_title }|
                && '<div class="float-right">'
-               && zcl_abapgit_html=>a(
+               && ri_html->a(
                     iv_txt   = '&#x274c;'
                     iv_typ   = zif_abapgit_html=>c_action_type-onclick
                     iv_act   = |toggleDisplay('{ iv_div_id }')|
@@ -455,8 +455,8 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     IF iv_hint IS NOT INITIAL.
       ri_html->add( '<div class="info-hint">'
-        && zcl_abapgit_html=>icon( iv_name = 'exclamation-triangle'
-                                   iv_class = 'pad-right' )
+        && ri_html->icon( iv_name = 'exclamation-triangle'
+                          iv_class = 'pad-right' )
         && iv_hint
         && '</div>' ).
     ENDIF.
@@ -576,7 +576,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_col> LIKE LINE OF it_col_spec.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     LOOP AT it_col_spec ASSIGNING <ls_col>.
       " e.g. <th class="ro-detail">Created at [{ gv_time_zone }]</th>
@@ -593,18 +593,18 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
         ENDIF.
         IF <ls_col>-tech_name = iv_order_by.
           IF iv_order_descending = abap_true.
-            lv_tmp = lv_tmp && zcl_abapgit_html=>a(
+            lv_tmp = lv_tmp && ri_html->a(
               iv_txt   = lv_disp_name
               iv_act   = |{ zif_abapgit_definitions=>c_action-direction }?direction=ASCENDING|
               iv_title = <ls_col>-title ).
           ELSE.
-            lv_tmp = lv_tmp && zcl_abapgit_html=>a(
+            lv_tmp = lv_tmp && ri_html->a(
               iv_txt   = lv_disp_name
               iv_act   = |{ zif_abapgit_definitions=>c_action-direction }?direction=DESCENDING|
               iv_title = <ls_col>-title ).
           ENDIF.
         ELSE.
-          lv_tmp = lv_tmp && zcl_abapgit_html=>a(
+          lv_tmp = lv_tmp && ri_html->a(
             iv_txt   = lv_disp_name
             iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }?orderBy={ <ls_col>-tech_name }|
             iv_title = <ls_col>-title ).
@@ -620,7 +620,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       ENDIF.
 
       lv_tmp = lv_tmp && '</th>'.
-      ro_html->add( lv_tmp ).
+      ri_html->add( lv_tmp ).
     ENDLOOP.
 
   ENDMETHOD.
