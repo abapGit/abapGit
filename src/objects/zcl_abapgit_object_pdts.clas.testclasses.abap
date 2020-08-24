@@ -18,6 +18,8 @@ CLASS ltd_mock DEFINITION
 
     METHODS generate.
     METHODS add_line IMPORTING iv_string TYPE string.
+    METHODS add_pdts_segment.
+    METHODS add_container_segment.
 
 ENDCLASS.
 
@@ -47,6 +49,19 @@ CLASS ltd_mock IMPLEMENTATION.
     add_line( |<abapGit version="v1.0.0">| ).
     add_line( | <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">| ).
     add_line( |  <asx:values>| ).
+
+    add_pdts_segment( ).
+    add_container_segment( ).
+
+    add_line( |  </asx:values>| ).
+    add_line( | </asx:abap>| ).
+    add_line( |</abapGit>| ).
+
+  ENDMETHOD.
+
+
+  METHOD add_pdts_segment.
+
     add_line( |   <PDTS>| ).
     add_line( |    <SHORT_TEXT>abapGitTest</SHORT_TEXT>| ).
     add_line( |    <PLVAR>01</PLVAR>| ).
@@ -114,6 +129,12 @@ CLASS ltd_mock IMPLEMENTATION.
     add_line( |     </HRS1212>| ).
     add_line( |    </TERMINATING_EVENTS_BINDING>| ).
     add_line( |   </PDTS>| ).
+
+  ENDMETHOD.
+
+
+  METHOD add_container_segment.
+
     add_line( |   <CONTAINER>| ).
     add_line( |    <CONTAINER>| ).
     add_line( |     <PROPERTIES>| ).
@@ -153,11 +174,9 @@ CLASS ltd_mock IMPLEMENTATION.
     add_line( |     </ELEMENTS>| ).
     add_line( |    </CONTAINER>| ).
     add_line( |   </CONTAINER>| ).
-    add_line( |  </asx:values>| ).
-    add_line( | </asx:abap>| ).
-    add_line( |</abapGit>| ).
 
   ENDMETHOD.
+
 
   METHOD create_input_xml.
     generate( ).
@@ -165,6 +184,7 @@ CLASS ltd_mock IMPLEMENTATION.
       EXPORTING
         iv_xml = mv_xml.
   ENDMETHOD.
+
 
   METHOD get_input_xml.
     rv_result = me->mv_xml.
@@ -208,7 +228,7 @@ CLASS ltc_turnaround_test IMPLEMENTATION.
 
   METHOD class_setup.
 
-    IF task_exists( ).
+    IF task_exists( ) = abap_true.
       cl_abap_unit_assert=>fail( msg   = |Test task { ltd_mock=>mc_task_id } already exists|
                                  level = if_aunit_constants=>fatal
                                  quit  = if_aunit_constants=>class ).
@@ -268,12 +288,12 @@ CLASS ltc_turnaround_test IMPLEMENTATION.
 
     lo_input_xml = mo_mock->create_input_xml( ).
 
-    mo_cut->deserialize(
+    CALL METHOD mo_cut->deserialize
       EXPORTING
         iv_package = '$TMP'
         io_xml     = CAST #( lo_input_xml )
         iv_step    = lv_step
-        ii_log     = li_log ).
+        ii_log     = li_log.
 
     cl_abap_unit_assert=>assert_true( task_exists( ) ).
     cl_abap_unit_assert=>assert_true( mo_cut->exists( ) ).
@@ -301,7 +321,7 @@ CLASS ltc_turnaround_test IMPLEMENTATION.
     DATA lv_dummy TYPE hr_sobjid.
 
     SELECT SINGLE objid
-           into lv_dummy
+           INTO lv_dummy
            FROM hrs1000
            WHERE otype = 'TS' AND
                  objid = ltd_mock=>mc_task_id.
