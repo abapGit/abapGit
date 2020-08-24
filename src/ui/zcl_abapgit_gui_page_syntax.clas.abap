@@ -17,6 +17,7 @@ CLASS zcl_abapgit_gui_page_syntax DEFINITION PUBLIC FINAL CREATE PUBLIC
         REDEFINITION.
 
   PROTECTED SECTION.
+    CONSTANTS: c_variant TYPE sci_chkv VALUE 'SYNTAX_CHECK'.
 
     METHODS:
       render_content REDEFINITION.
@@ -68,11 +69,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
       ri_html->add( '<div class="dummydiv success">' ).
       ri_html->add( zcl_abapgit_html=>icon( 'check' ) ).
       ri_html->add( 'No syntax errors' ).
+      ri_html->add( '</div>' ).
     ELSE.
       render_result( ii_html   = ri_html
                      it_result = mt_result ).
     ENDIF.
 
+    ri_html->add( '<div class="dummydiv">' ).
+    ri_html->add( |Code inspector variant { c_variant } used| ).
     ri_html->add( '</div>' ).
 
   ENDMETHOD.
@@ -83,7 +87,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
     DATA: li_syntax_check TYPE REF TO zif_abapgit_code_inspector.
 
     li_syntax_check = zcl_abapgit_factory=>get_code_inspector( mo_repo->get_package( ) ).
-    mt_result = li_syntax_check->run( 'SYNTAX_CHECK' ).
+    mt_result = li_syntax_check->run( c_variant ).
 
   ENDMETHOD.
 
