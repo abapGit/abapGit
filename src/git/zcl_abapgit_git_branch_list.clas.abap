@@ -90,7 +90,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
 
 
   METHOD complete_heads_branch_name.
@@ -127,7 +127,7 @@ CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
       READ TABLE mt_branches INTO rs_branch
         WITH KEY name = iv_branch_name.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Branch not found: { iv_branch_name }| ).
+        zcx_abapgit_exception=>raise( |Branch not found: { get_display_name( iv_branch_name ) }| ).
       ENDIF.
 
     ENDIF.
