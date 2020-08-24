@@ -9,8 +9,10 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
 
     METHODS constructor
       IMPORTING
-        !iv_user_repo  TYPE string
-        !ii_http_agent TYPE REF TO zif_abapgit_http_agent .
+        !iv_user_and_repo TYPE string
+        !ii_http_agent    TYPE REF TO zif_abapgit_http_agent
+      RAISING
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -21,7 +23,7 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
       END OF ty_info.
 
     DATA mi_http_agent TYPE REF TO zif_abapgit_http_agent.
-    DATA mv_user_repo TYPE string.
+    DATA mv_repo_url TYPE string.
 
     METHODS fetch_repo_by_url
       IMPORTING
@@ -60,11 +62,17 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
 
   METHOD constructor.
 
-    mv_user_repo  = iv_user_repo.
+    mv_repo_url   = |https://api.github.com/repos/{ iv_user_and_repo }|.
     mi_http_agent = ii_http_agent.
     mi_http_agent->global_headers( )->set(
       iv_key = 'Accept'
       iv_val = 'application/vnd.github.v3+json' ).
+
+    IF zcl_abapgit_login_manager=>get( mv_repo_url ) IS NOT INITIAL.
+      mi_http_agent->global_headers( )->set(
+        iv_key = 'Authorization'
+        iv_val = zcl_abapgit_login_manager=>get( mv_repo_url ) ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -95,8 +103,12 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
 
     DATA li_pulls_json TYPE REF TO zif_abapgit_ajson_reader.
     DATA lv_pull_url TYPE string.
+    DATA li_response TYPE REF TO zif_abapgit_http_response.
 
-    rs_info-repo_json  = mi_http_agent->request( iv_repo_url )->json( ).
+    li_response        = mi_http_agent->request( iv_repo_url ).
+    rs_info-repo_json  = li_response->json( ).
+    li_response->headers( ). " for debug
+
     lv_pull_url        = clean_url( rs_info-repo_json->get( '/pulls_url' ) ).
     li_pulls_json      = mi_http_agent->request( lv_pull_url )->json( ).
     rs_info-pulls      = convert_list( li_pulls_json ).
@@ -111,8 +123,7 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
     DATA ls_repo_info TYPE ty_info.
     FIELD-SYMBOLS <ls_p> LIKE LINE OF ls_repo_info-pulls.
 
-    lv_repo_url  = |https://api.github.com/repos/{ mv_user_repo }|.
-    ls_repo_info = fetch_repo_by_url( lv_repo_url ).
+    ls_repo_info = fetch_repo_by_url( mv_repo_url ).
     APPEND LINES OF ls_repo_info-pulls TO rt_pulls.
 
     IF ls_repo_info-repo_json->get_boolean( '/fork' ) = abap_true.
