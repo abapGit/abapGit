@@ -65,6 +65,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
 
     ri_html->add( '<div class="toc">' ).
 
+    ri_html->add( render_variant( c_variant ) ).
+
     IF lines( mt_result ) = 0.
       ri_html->add( '<div class="dummydiv success">' ).
       ri_html->add( zcl_abapgit_html=>icon( 'check' ) ).
@@ -74,10 +76,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
       render_result( ii_html   = ri_html
                      it_result = mt_result ).
     ENDIF.
-
-    ri_html->add( '<div class="dummydiv">' ).
-    ri_html->add( |Code inspector variant { c_variant } used| ).
-    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
