@@ -9,7 +9,7 @@ CLASS ltd_mock DEFINITION
 
     METHODS create_input_xml RETURNING VALUE(ri_result) TYPE REF TO zif_abapgit_xml_input
                              RAISING   zcx_abapgit_exception.
-    METHODS get_input_xml RETURNING VALUE(r_result) TYPE string.
+    METHODS get_input_xml RETURNING VALUE(rv_result) TYPE string.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -35,12 +35,12 @@ CLASS ltd_mock IMPLEMENTATION.
     "When pasting updates from GitHub, following changes are needed:
     "UTF-16, remove serializer attribute from abapGit tag, replace task ID with variable
     "
-    "add_line( |<?xml version="1.0" encoding="utf-16"?>| ).
-    "add_line( |<abapGit version="v1.0.0">| ).
+    "<?xml version="1.0" encoding="utf-16"?>| ).
+    "<abapGit version="v1.0.0">| ).
     "...
-    "Then all instances of task ID (e.g. 90000005), such as:
-    "add_line( |     <OBJID>{ mc_task_id }</OBJID>| ).
-    "add_line( |       <INSTID>TS{ mc_task_id }</INSTID>| ).
+    "Then replace all instances of task ID (e.g. 90000005), such as:
+    "     <OBJID>{ mc_task_id }</OBJID>| ).
+    "       <INSTID>TS{ mc_task_id }</INSTID>| ).
 
 
     add_line( |<?xml version="1.0" encoding="utf-16"?>| ).
@@ -157,66 +157,6 @@ CLASS ltd_mock IMPLEMENTATION.
     add_line( | </asx:abap>| ).
     add_line( |</abapGit>| ).
 
-
-*    add_line( |<?xml version="1.0" encoding="utf-16"?>| ).
-*    add_line( |<abapGit version="v1.0.0">| ).
-*    add_line( | <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">| ).
-*    add_line( |  <asx:values>| ).
-*    add_line( |   <PDTS>| ).
-*    add_line( |    <SHORT_TEXT>abapGitTest</SHORT_TEXT>| ).
-*    add_line( |    <PLVAR>01</PLVAR>| ).
-*    add_line( |    <WI_TEXT>abapGit Test</WI_TEXT>| ).
-*    add_line( |    <METHOD>| ).
-*    add_line( |     <OTYPE>TS</OTYPE>| ).
-*    add_line( |     <OBJID>{ mc_task_id }</OBJID>| ).
-*    add_line( |     <SWOTP>WFTS</SWOTP>| ).
-*    add_line( |     <SWMTD>EMPTYDIALOGMETHOD</SWMTD>| ).
-*    add_line( |     <METHTYPE>BO</METHTYPE>| ).
-*    add_line( |     <SYNCHRON>X</SYNCHRON>| ).
-*    add_line( |    </METHOD>| ).
-*    add_line( |   </PDTS>| ).
-*    add_line( |   <CONTAINER>| ).
-*    add_line( |    <CONTAINER>| ).
-*    add_line( |     <PROPERTIES>| ).
-*    add_line( |      <OWN_ID>| ).
-*    add_line( |       <INSTID>TS{ mc_task_id }</INSTID>| ).
-*    add_line( |       <TYPEID>CL_SWF_CNT_HRS_PERSISTENCE</TYPEID>| ).
-*    add_line( |       <CATID>CL</CATID>| ).
-*    add_line( |      </OWN_ID>| ).
-*    add_line( |      <PROPSTRING>23</PROPSTRING>| ).
-*    add_line( |      <XMLVERSION>0002</XMLVERSION>| ).
-*    add_line( |      <INTERNAL>X</INTERNAL>| ).
-*    add_line( |      <EXDEFINITN>| ).
-*    add_line( |       <NAME>_DEF_EXT</NAME>| ).
-*    add_line( |       <POR>| ).
-*    add_line( |        <INSTID>DIALOG_STEP_CONTAINER</INSTID>| ).
-*    add_line( |        <TYPEID>CL_SWF_CNT_PERSISTENCE_DEF_EXT</TYPEID>| ).
-*    add_line( |        <CATID>CL</CATID>| ).
-*    add_line( |       </POR>| ).
-*    add_line( |      </EXDEFINITN>| ).
-*    add_line( |     </PROPERTIES>| ).
-*    add_line( |     <ELEMENTS>| ).
-*    add_line( |      <A NAME="_ADHOC_OBJECTS:_Adhoc_Objects:" TYPE=":BO::h:0:0" PROPS="0C925A51" LTEXTS="EE014Ad Hoc ObjectsAd Hoc Objects of Workflow Instance"/>| ).
-*    add_line( |      <B NAME="_ATTACH_OBJECTS:_Attach_Objects:" TYPE="SOFM:BO::h:0:0" PROPS="0C925A51" LTEXTS="EE011AttachmentsAttachments of Workflow Instance"/>| ).
-*    add_line( |      <C NAME="_WI_ACTUAL_AGENT:_Wi_Actual_Agent:" TYPE="::WFSYST-AGENT:C:0:0" PROPS="0C002A11" LTEXTS="EE005AgentActual Agent of Workflow Activity"/>| ).
-*    add_line( |      <D NAME="_WI_GROUP_ID:_Wi_Group_ID:" TYPE=":BO::u:0:0" PROPS="0C921A11" LTEXTS="EE017Grouping Charact.Grouping Characteristic for Workflow Instances"/>| ).
-*    add_line( |      <E NAME="_WORKITEM:_Workitem:" TYPE="WORKINGWI:BO:::0:0" PROPS="0C921A11" LTEXTS="EE004StepStep Instance"/>| ).
-*    add_line( |      <F NAME="_WF_TICKET:_Wf_Ticket:" TYPE="::SWWTTICKET:h:0:0" PROPS="0C000271" LTEXTS="EE018Transaction TicketTransaction Ticket"/>| ).
-*    add_line( |      <G NAME="_RULE_RESULT:_Rule_Result:" TYPE="AAGENT:BO::u:0:0" PROPS="0C921A11" LTEXTS="EE006AgentsResult of Agent Determination"/>| ).
-*    add_line( |      <H NAME="_RFC_DESTINATION:_Rfc_Destination:" TYPE="::RFCDEST:C:0:0" PROPS="0C001231" LTEXTS="EE015RFC DestinationRFC Destination"/>| ).
-*    add_line( |      <I NAME="_ATTACH_COMMENT_OBJECTS:_Attach_Comment_Objects:" TYPE="SOFM:BO::h:0:0" PROPS="0C925A71" LTEXTS="EE007CommentComment"/>| ).
-*    add_line( |      <J NAME="_METHOD_OBJECTS:_Method_Objects:" TYPE=":BO::h:0:0" PROPS="0C925A51" LTEXTS="EE020Second.Method ObjectSecondary Method Objects of Workflow Activity"/>| ).
-*    add_line( |      <K NAME="_START_EVENT_IDENTIFIER:_Start_Event_Identifier:" TYPE="CL_SWF_UTL_EVT_IDENTIFIER:CL::h:0:0" PROPS="0CC20231" LTEXTS="EE017ID of Start EventID of Start Event"/>| ).
-*    add_line( |      <L NAME="_WF_TYPENAME_MAPPING:_WF_Typename_Mapping:" TYPE="::SWF_CNT_MAPPING_TAB:h:0:0" PROPS="0C120271" LTEXTS="EE022Relation of Type NamesRelation of Type Names (Original and Copy)"/>| ).
-*    add_line( |      <M NAME="ACTUALLYPROCBY:ActuallyProcBy:" TYPE="::WFSYST-ACT_AGENT:C:14:0" PROPS="0C003301"/>| ).
-*    add_line( |      <N NAME="_WI_OBJECT_ID:_Wi_Object_ID:" TYPE="WFTS:BO:::0:0" PROPS="0C921A11"/>| ).
-*    add_line( |     </ELEMENTS>| ).
-*    add_line( |    </CONTAINER>| ).
-*    add_line( |   </CONTAINER>| ).
-*    add_line( |  </asx:values>| ).
-*    add_line( | </asx:abap>| ).
-*    add_line( |</abapGit>| ).
-
   ENDMETHOD.
 
   METHOD create_input_xml.
@@ -227,7 +167,7 @@ CLASS ltd_mock IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_input_xml.
-    r_result = me->mv_xml.
+    rv_result = me->mv_xml.
   ENDMETHOD.
 
 ENDCLASS.
@@ -240,8 +180,8 @@ CLASS ltc_turnaround_test DEFINITION FINAL FOR TESTING
   PRIVATE SECTION.
 
     DATA mo_mock TYPE REF TO ltd_mock.
-    DATA li_output_xml TYPE REF TO zcl_abapgit_xml_output.
-    DATA: mo_cut    TYPE REF TO zif_abapgit_object.
+    DATA mo_output_xml TYPE REF TO zcl_abapgit_xml_output.
+    DATA mo_cut    TYPE REF TO zif_abapgit_object.
 
     CLASS-METHODS class_setup.
     CLASS-METHODS task_exists RETURNING VALUE(rv_result) TYPE abap_bool.
@@ -268,7 +208,7 @@ CLASS ltc_turnaround_test IMPLEMENTATION.
 
   METHOD class_setup.
 
-    IF task_exists( ) = abap_true.
+    IF task_exists( ).
       cl_abap_unit_assert=>fail( msg   = |Test task { ltd_mock=>mc_task_id } already exists|
                                  level = if_aunit_constants=>fatal
                                  quit  = if_aunit_constants=>class ).
@@ -343,9 +283,9 @@ CLASS ltc_turnaround_test IMPLEMENTATION.
 
   METHOD serialize_task.
 
-    CREATE OBJECT li_output_xml TYPE zcl_abapgit_xml_output.
-    mo_cut->serialize( io_xml = li_output_xml ).
-    rv_result = li_output_xml->render( ).
+    CREATE OBJECT mo_output_xml TYPE zcl_abapgit_xml_output.
+    mo_cut->serialize( io_xml = mo_output_xml ).
+    rv_result = mo_output_xml->render( ).
 
   ENDMETHOD.
 
@@ -358,11 +298,17 @@ CLASS ltc_turnaround_test IMPLEMENTATION.
 
   METHOD task_exists.
 
-    SELECT SINGLE @abap_true
+    DATA lv_dummy TYPE hr_sobjid.
+
+    SELECT SINGLE objid
+           into lv_dummy
            FROM hrs1000
            WHERE otype = 'TS' AND
-                 objid = @ltd_mock=>mc_task_id
-           INTO @rv_result.
+                 objid = ltd_mock=>mc_task_id.
+
+    IF sy-subrc = 0.
+      rv_result = abap_true.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -422,9 +368,9 @@ CLASS ltc_lock IMPLEMENTATION.
   METHOD get_any_task.
 
     SELECT SINGLE objid
+           INTO rv_taskid
            FROM hrs1000
-           WHERE otype = @c_ts
-           INTO @rv_taskid.
+           WHERE otype = c_ts.
 
     cl_abap_unit_assert=>assert_subrc( exp = 0
                                        act = sy-subrc ).
