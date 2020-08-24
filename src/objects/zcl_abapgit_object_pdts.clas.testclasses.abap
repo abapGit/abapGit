@@ -268,7 +268,7 @@ CLASS ltc_turnaround_test IMPLEMENTATION.
 
   METHOD class_setup.
 
-    IF task_exists( ).
+    IF task_exists( ) = abap_true.
       cl_abap_unit_assert=>fail( msg   = |Test task { ltd_mock=>mc_task_id } already exists|
                                  level = if_aunit_constants=>fatal
                                  quit  = if_aunit_constants=>class ).
