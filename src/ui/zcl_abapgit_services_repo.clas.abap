@@ -9,7 +9,7 @@ CLASS zcl_abapgit_services_repo DEFINITION
       IMPORTING
         !is_repo_params TYPE zif_abapgit_services_repo=>ty_repo_params
       RETURNING
-        VALUE(ro_repo) TYPE REF TO zcl_abapgit_repo_online
+        VALUE(ro_repo)  TYPE REF TO zcl_abapgit_repo_online
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS refresh
@@ -82,7 +82,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
 
   METHOD gui_deserialize.
@@ -178,9 +178,9 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
   METHOD new_online.
 
     DATA:
-          lo_repo     TYPE REF TO zcl_abapgit_repo,
-          li_repo_srv TYPE REF TO zif_abapgit_repo_srv,
-          lv_reason   TYPE string.
+      lo_repo     TYPE REF TO zcl_abapgit_repo,
+      li_repo_srv TYPE REF TO zif_abapgit_repo_srv,
+      lv_reason   TYPE string.
 
     " make sure package is not already in use for a different repository
     " 702: chaining calls with exp&imp parameters causes syntax error
@@ -311,15 +311,18 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
   METHOD purge.
 
-    DATA: lt_tadir    TYPE zif_abapgit_definitions=>ty_tadir_tt,
-          lv_answer   TYPE c LENGTH 1,
-          lo_repo     TYPE REF TO zcl_abapgit_repo,
-          lv_package  TYPE devclass,
-          lv_question TYPE c LENGTH 100,
-          ls_checks   TYPE zif_abapgit_definitions=>ty_delete_checks.
+    DATA: lt_tadir     TYPE zif_abapgit_definitions=>ty_tadir_tt,
+          lv_answer    TYPE c LENGTH 1,
+          lo_repo      TYPE REF TO zcl_abapgit_repo,
+          lv_package   TYPE devclass,
+          lv_question  TYPE c LENGTH 100,
+          ls_checks    TYPE zif_abapgit_definitions=>ty_delete_checks,
+          lv_repo_name TYPE string,
+          lv_message   TYPE string.
 
 
     lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    lv_repo_name = lo_repo->get_name( ).
 
     lv_package = lo_repo->get_package( ).
     lt_tadir   = zcl_abapgit_factory=>get_tadir( )->read( lv_package ).
@@ -355,6 +358,9 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
                                                   is_checks = ls_checks ).
 
     COMMIT WORK.
+
+    lv_message = |Repository '{ lv_repo_name }' successfully uninstalled from Package '{ lv_package }'. |.
+    MESSAGE lv_message TYPE 'S'.
 
   ENDMETHOD.
 
@@ -501,15 +507,18 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
   METHOD remove.
 
-    DATA: lv_answer   TYPE c LENGTH 1,
-          lo_repo     TYPE REF TO zcl_abapgit_repo,
-          lv_package  TYPE devclass,
-          lv_question TYPE c LENGTH 200.
+    DATA: lv_answer    TYPE c LENGTH 1,
+          lo_repo      TYPE REF TO zcl_abapgit_repo,
+          lv_package   TYPE devclass,
+          lv_question  TYPE c LENGTH 200,
+          lv_repo_name TYPE string,
+          lv_message   TYPE string.
 
 
-    lo_repo     = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    lv_package  = lo_repo->get_package( ).
-    lv_question = |This will remove the repository reference to the package { lv_package
+    lo_repo      = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+    lv_repo_name = lo_repo->get_name( ).
+    lv_package   = lo_repo->get_package( ).
+    lv_question  = |This will remove the repository reference to the package { lv_package
       }. All objects will safely remain in the system.|.
 
     lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
@@ -529,6 +538,9 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     zcl_abapgit_repo_srv=>get_instance( )->delete( lo_repo ).
 
     COMMIT WORK.
+
+    lv_message = |Reference to repository '{ lv_repo_name }' successfully removed. |.
+    MESSAGE lv_message TYPE 'S'.
 
   ENDMETHOD.
 
