@@ -14,11 +14,15 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM 
         sort_3 TYPE string VALUE 'sort_3'  ##NO_TEXT,
         stage  TYPE string VALUE 'stage' ##NO_TEXT,
         commit TYPE string VALUE 'commit' ##NO_TEXT,
-      END OF c_actions.
-
+      END OF c_actions .
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
     DATA mt_result TYPE scit_alvlist .
 
+    METHODS render_variant
+      IMPORTING
+        !iv_variant    TYPE sci_chkv
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_result
       IMPORTING
         !ii_html   TYPE REF TO zif_abapgit_html
@@ -256,6 +260,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
       iv_typ = zif_abapgit_html=>c_action_type-sapevent ).
     ii_html->add( |<span>{ lv_msg }</span>| ).
     ii_html->add( '</li>' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_variant.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( '<div class="ci-head">' ).
+    ri_html->add( |Code inspector check variant: <span class="ci-variant">{ iv_variant }</span>| ).
+    ri_html->add( `</div>` ).
 
   ENDMETHOD.
 
