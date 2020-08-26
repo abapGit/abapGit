@@ -33,7 +33,7 @@ CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     "! Serialize IDoc Segment type/definition if exits
     "! @parameter io_xml | XML writer
     "! @raising zcx_abapgit_exception | Exceptions
-    METHODS serialize_idoc_segment IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
+    METHODS serialize_idoc_segment IMPORTING io_xml TYPE REF TO zif_abapgit_xml_output
                                    RAISING   zcx_abapgit_exception.
 
     "! Deserialize IDoc Segment type/definition if exits
@@ -41,7 +41,7 @@ CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     "! @parameter iv_package | Target package
     "! @parameter rv_deserialized | It's a segment and was desserialized
     "! @raising zcx_abapgit_exception | Exceptions
-    METHODS deserialize_idoc_segment IMPORTING io_xml                 TYPE REF TO zcl_abapgit_xml_input
+    METHODS deserialize_idoc_segment IMPORTING io_xml                 TYPE REF TO zif_abapgit_xml_input
                                                iv_package             TYPE devclass
                                      RETURNING VALUE(rv_deserialized) TYPE abap_bool
                                      RAISING   zcx_abapgit_exception.
@@ -87,10 +87,10 @@ CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     METHODS:
       serialize_texts
-        IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
+        IMPORTING io_xml TYPE REF TO zif_abapgit_xml_output
         RAISING   zcx_abapgit_exception,
       deserialize_texts
-        IMPORTING io_xml   TYPE REF TO zcl_abapgit_xml_input
+        IMPORTING io_xml   TYPE REF TO zif_abapgit_xml_input
                   is_dd02v TYPE dd02v
         RAISING   zcx_abapgit_exception.
 
