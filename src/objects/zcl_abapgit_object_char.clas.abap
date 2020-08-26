@@ -22,6 +22,7 @@ CLASS zcl_abapgit_object_char DEFINITION
     METHODS instantiate_char_and_lock
       IMPORTING
         !iv_type_group TYPE cls_object_type_group
+        !iv_activation_state TYPE pak_activation_state
       RETURNING
         VALUE(ro_char) TYPE REF TO cl_cls_attribute
       RAISING
