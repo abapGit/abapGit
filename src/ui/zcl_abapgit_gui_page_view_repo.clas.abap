@@ -724,7 +724,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
           IF mv_changes_only = abap_true.
             lv_msg = 'Local state completely <b>matches</b> the remote repository'.
           ELSE.
-            lv_msg = 'Package is empty'.
+            lv_msg = |Package is empty. Show { build_dir_jump_link( 'parent' ) } package|.
           ENDIF.
         ELSE.
           " Repo content table
