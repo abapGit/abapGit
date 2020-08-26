@@ -326,7 +326,10 @@ table.diff_tab td.patch, th.patch {
 .syntax-hl span.variables    { color:purple; }
 
 /* DEBUG INFO STYLES */
-div.debug_container { color: #444; }
+div.debug_container { 
+  color: #444; 
+  background-color: var(--theme-container-background-color);
+}
 
 /* DB ENTRIES */
 div.db_list { background-color: #fff; }
