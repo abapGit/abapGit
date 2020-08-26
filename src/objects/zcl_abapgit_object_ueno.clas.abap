@@ -54,19 +54,19 @@ CLASS zcl_abapgit_object_ueno DEFINITION
 
     METHODS deserialize_docu_uen
       IMPORTING
-        io_xml TYPE REF TO zcl_abapgit_xml_input
+        io_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception.
 
     METHODS deserialize_docu_url
       IMPORTING
-        io_xml TYPE REF TO zcl_abapgit_xml_input
+        io_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception.
 
     METHODS deserialize_docu_usp
       IMPORTING
-        io_xml TYPE REF TO zcl_abapgit_xml_input
+        io_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception.
 
@@ -74,13 +74,13 @@ CLASS zcl_abapgit_object_ueno DEFINITION
 
     METHODS serialize_docu_uen
       IMPORTING
-        io_xml TYPE REF TO zcl_abapgit_xml_output
+        io_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception.
 
     METHODS serialize_docu_url
       IMPORTING
-        io_xml TYPE REF TO zcl_abapgit_xml_output
+        io_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception.
 
@@ -90,7 +90,7 @@ CLASS zcl_abapgit_object_ueno DEFINITION
 
     METHODS serialize_docu_usp
       IMPORTING
-        io_xml TYPE REF TO zcl_abapgit_xml_output
+        io_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception.
 
@@ -105,7 +105,8 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_UENO IMPLEMENTATION.
+
 
   METHOD build_text_name.
 
@@ -134,6 +135,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     me->mv_entity_id = is_item-obj_name.
 
   ENDMETHOD.
+
 
   METHOD delete_docu_uen.
 
@@ -180,6 +182,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
+
 
   METHOD delete_docu_url.
 
@@ -231,6 +234,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD delete_docu_usp.
 
     DATA lt_dm45l TYPE STANDARD TABLE OF dm45l WITH DEFAULT KEY.
@@ -252,43 +256,6 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
           key3     = ls_dm45l-spezid
         EXCEPTIONS
           ret_code = 0.
-
-    ENDLOOP.
-
-
-  ENDMETHOD.
-
-
-  METHOD deserialize_docu_xxxx.
-
-    DATA ls_docu LIKE LINE OF it_docu.
-    DATA lv_objname TYPE lxeobjname.
-    DATA lv_change_flag TYPE char1.
-    DATA lv_error_status  TYPE lxestatprc.
-
-    LOOP AT it_docu INTO ls_docu.
-
-      ls_docu-header-tdfuser = sy-uname.
-      ls_docu-header-tdfdate = sy-datum.
-      ls_docu-header-tdftime = sy-uzeit.
-
-      ls_docu-header-tdluser = sy-uname.
-      ls_docu-header-tdldate = sy-datum.
-      ls_docu-header-tdltime = sy-uzeit.
-
-      lv_objname = ls_docu-header-tdname.
-
-      CALL FUNCTION 'LXE_OBJ_DOKU_PUT_XSTRING'
-        EXPORTING
-          slang       = me->mv_language
-          tlang       = ls_docu-language
-          objtype     = ls_docu-header-tdid
-          objname     = lv_objname
-          header      = ls_docu-header
-          content     = ls_docu-content
-        IMPORTING
-          change_flag = lv_change_flag
-          pstatus     = lv_error_status.
 
     ENDLOOP.
 
@@ -342,6 +309,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD deserialize_docu_usp.
 
     DATA lt_docu TYPE ty_docu_lines.
@@ -352,6 +320,44 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     deserialize_docu_xxxx( lt_docu ).
 
   ENDMETHOD.
+
+
+  METHOD deserialize_docu_xxxx.
+
+    DATA ls_docu LIKE LINE OF it_docu.
+    DATA lv_objname TYPE lxeobjname.
+    DATA lv_change_flag TYPE char1.
+    DATA lv_error_status  TYPE lxestatprc.
+
+    LOOP AT it_docu INTO ls_docu.
+
+      ls_docu-header-tdfuser = sy-uname.
+      ls_docu-header-tdfdate = sy-datum.
+      ls_docu-header-tdftime = sy-uzeit.
+
+      ls_docu-header-tdluser = sy-uname.
+      ls_docu-header-tdldate = sy-datum.
+      ls_docu-header-tdltime = sy-uzeit.
+
+      lv_objname = ls_docu-header-tdname.
+
+      CALL FUNCTION 'LXE_OBJ_DOKU_PUT_XSTRING'
+        EXPORTING
+          slang       = me->mv_language
+          tlang       = ls_docu-language
+          objtype     = ls_docu-header-tdid
+          objname     = lv_objname
+          header      = ls_docu-header
+          content     = ls_docu-content
+        IMPORTING
+          change_flag = lv_change_flag
+          pstatus     = lv_error_status.
+
+    ENDLOOP.
+
+
+  ENDMETHOD.
+
 
   METHOD is_name_permitted.
 
@@ -371,6 +377,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
 
   METHOD serialize_docu_uen.
 
@@ -393,6 +400,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
                  ig_data = lt_docu ).
   ENDMETHOD.
 
+
   METHOD serialize_docu_url.
 
 
@@ -413,6 +421,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
 
   ENDMETHOD.
 
+
   METHOD serialize_docu_usp.
 
     DATA lt_docu            TYPE ty_docu_lines.
@@ -424,6 +433,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
 
 
   ENDMETHOD.
+
 
   METHOD serialize_docu_xxxx.
 
@@ -476,6 +486,7 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
 
 
   ENDMETHOD.
+
 
   METHOD zif_abapgit_object~changed_by.
 
@@ -638,5 +649,4 @@ CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
     serialize_docu_usp( io_xml ).
 
   ENDMETHOD.
-
 ENDCLASS.
