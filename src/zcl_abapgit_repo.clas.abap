@@ -313,6 +313,13 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     COMMIT WORK AND WAIT.
 
+    " If abapGit was used to update itself, then restart to avoid dumps
+    " because code was changed at runtime
+    IF zcl_abapgit_url=>is_abapgit_repo( ms_data-url ) = abap_true AND sy-batch = abap_false.
+      MESSAGE 'abapGit was updated and will restart itself' TYPE 'I'.
+      SUBMIT (sy-cprog).
+    ENDIF.
+
   ENDMETHOD.
 
 
