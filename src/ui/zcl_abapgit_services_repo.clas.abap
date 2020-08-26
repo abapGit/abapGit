@@ -359,7 +359,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     COMMIT WORK.
 
-    lv_message = |Repository '{ lv_repo_name }' successfully uninstalled from Package '{ lv_package }'. |.
+    lv_message = |Repository { lv_repo_name } successfully uninstalled from Package { lv_package }. |.
     MESSAGE lv_message TYPE 'S'.
 
   ENDMETHOD.
@@ -539,7 +539,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     COMMIT WORK.
 
-    lv_message = |Reference to repository '{ lv_repo_name }' successfully removed. |.
+    lv_message = |Reference to repository { lv_repo_name } successfully removed from Package { lv_package }. |.
     MESSAGE lv_message TYPE 'S'.
 
   ENDMETHOD.
