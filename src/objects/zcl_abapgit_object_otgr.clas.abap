@@ -16,7 +16,6 @@ CLASS zcl_abapgit_object_otgr DEFINITION
         cls_type_group TYPE cls_type_group,
         texts          TYPE STANDARD TABLE OF cls_type_groupt WITH DEFAULT KEY,
         elements       TYPE STANDARD TABLE OF cls_tygr_element WITH DEFAULT KEY,
-*        parents        TYPE STANDARD TABLE OF cls_tygr_parent WITH DEFAULT KEY,
       END OF ty_otgr .
 
     METHODS instantiate_and_lock_otgr
