@@ -81,8 +81,6 @@ CLASS zcl_abapgit_gui_page_view_repo DEFINITION
       render_item_lock_column
         IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
         RETURNING VALUE(rv_html) TYPE string,
-      render_empty_package
-        RETURNING VALUE(rv_html) TYPE string,
       render_parent_dir
         RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html
         RAISING   zcx_abapgit_exception.
@@ -327,37 +325,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD build_view_menu.
-
-    CREATE OBJECT ro_toolbar.
-
-    ro_toolbar->add(
-        iv_txt = 'Changes First'
-        iv_chk = mv_diff_first
-        iv_act = c_actions-toggle_diff_first ).
-
-    IF mo_repo->has_remote_source( ) = abap_true.
-
-      ro_toolbar->add(
-        iv_txt = 'Changes Only'
-        iv_chk = mv_changes_only
-        iv_act = c_actions-toggle_changes ).
-
-      ro_toolbar->add(
-        iv_txt = 'File Paths'
-        iv_chk = boolc( NOT mv_hide_files = abap_true )
-        iv_act = c_actions-toggle_hide_files ).
-
-    ENDIF.
-
-    ro_toolbar->add(
-      iv_txt = 'Folders'
-      iv_chk = mv_show_folders
-      iv_act = c_actions-toggle_folders ).
-
-  ENDMETHOD.
-
-
   METHOD build_head_menu.
 
     DATA: lo_tb_advanced TYPE REF TO zcl_abapgit_html_toolbar,
@@ -525,6 +492,37 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
     ro_tag_dropdown->add( iv_txt = 'Delete'
                           iv_act = |{ zif_abapgit_definitions=>c_action-git_tag_delete }?{ mv_key }| ).
 
+
+  ENDMETHOD.
+
+
+  METHOD build_view_menu.
+
+    CREATE OBJECT ro_toolbar.
+
+    ro_toolbar->add(
+        iv_txt = 'Changes First'
+        iv_chk = mv_diff_first
+        iv_act = c_actions-toggle_diff_first ).
+
+    IF mo_repo->has_remote_source( ) = abap_true.
+
+      ro_toolbar->add(
+        iv_txt = 'Changes Only'
+        iv_chk = mv_changes_only
+        iv_act = c_actions-toggle_changes ).
+
+      ro_toolbar->add(
+        iv_txt = 'File Paths'
+        iv_chk = boolc( NOT mv_hide_files = abap_true )
+        iv_act = c_actions-toggle_hide_files ).
+
+    ENDIF.
+
+    ro_toolbar->add(
+      iv_txt = 'Folders'
+      iv_chk = mv_show_folders
+      iv_act = c_actions-toggle_folders ).
 
   ENDMETHOD.
 
@@ -740,28 +738,30 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
 
         ri_html->add( '<div class="repo_container">' ).
 
-        " Offline match banner
+        CLEAR lv_msg.
+
         IF mo_repo->is_offline( ) = abap_true
             AND mo_repo->has_remote_source( ) = abap_true
             AND lv_lstate IS INITIAL AND lv_rstate IS INITIAL.
-          ri_html->add(
-            |<div class="panel success repo_banner">|
-            && |ZIP source is attached and completely <b>matches</b> to the local state|
-            && |</div>| ).
-        ENDIF.
-
-        " Repo content table
-        ri_html->add( '<table class="repo_tab">' ).
-
-        IF zcl_abapgit_path=>is_root( mv_cur_dir ) = abap_false.
-          ri_html->add( render_parent_dir( ) ).
-        ENDIF.
-
-        ri_html->add( render_order_by( ) ).
-
-        IF lines( lt_repo_items ) = 0.
-          ri_html->add( render_empty_package( ) ).
+          " Offline match banner
+          lv_msg = 'ZIP source is attached and completely <b>matches</b> the local state'.
+        ELSEIF lines( lt_repo_items ) = 0.
+          " Online match banner
+          IF mv_changes_only = abap_true.
+            lv_msg = 'Local state completely <b>matches</b> the remote repository'.
+          ELSE.
+            lv_msg = |Package is empty. Show { build_dir_jump_link( 'parent' ) } package|.
+          ENDIF.
         ELSE.
+          " Repo content table
+          ri_html->add( '<table class="repo_tab">' ).
+
+          IF zcl_abapgit_path=>is_root( mv_cur_dir ) = abap_false.
+            ri_html->add( render_parent_dir( ) ).
+          ENDIF.
+
+          ri_html->add( render_order_by( ) ).
+
           LOOP AT lt_repo_items ASSIGNING <ls_item>.
             IF mv_max_lines > 0 AND sy-tabix > mv_max_lines.
               lv_max = abap_true.
@@ -770,9 +770,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
             ri_html->add( render_item( is_item = <ls_item>
                                        iv_render_transports = lv_render_transports ) ).
           ENDLOOP.
+
+          ri_html->add( '</table>' ).
         ENDIF.
 
-        ri_html->add( '</table>' ).
+        IF NOT lv_msg IS INITIAL.
+          ri_html->add( |<div class="panel success repo_banner">{ lv_msg }</div>| ).
+        ENDIF.
 
         IF lv_max = abap_true.
           ri_html->add( '<div class = "dummydiv">' ).
@@ -805,23 +809,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
     ENDTRY.
 
     register_deferred_script( render_scripts( ) ).
-
-  ENDMETHOD.
-
-
-  METHOD render_empty_package.
-
-    DATA: lv_text TYPE string.
-
-    IF mv_changes_only = abap_true.
-      lv_text = |No changes|.
-    ELSE.
-      lv_text = |Empty package|.
-    ENDIF.
-
-    rv_html = |<tr class="unsupported"><td class="paddings">|
-           && |  <center>{ lv_text }</center>|
-           && |</td></tr>|.
 
   ENDMETHOD.
 
@@ -1252,5 +1239,4 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
-
 ENDCLASS.
