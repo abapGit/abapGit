@@ -163,4 +163,11 @@ INTERFACE zif_abapgit_popups
       VALUE(rt_proxy_bypass) TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url
     RAISING
       zcx_abapgit_exception.
+  METHODS choose_pr_popup
+    IMPORTING
+      it_pulls TYPE zif_abapgit_pr_enum_provider=>tty_pulls
+    RETURNING
+      VALUE(rs_pull) TYPE zif_abapgit_pr_enum_provider=>ty_pull_request
+    RAISING
+      zcx_abapgit_exception.
 ENDINTERFACE.
