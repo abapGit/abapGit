@@ -166,7 +166,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div id="toc">' ).
+    ro_html->add( '<div id="toc" class="settings_container">' ).
 
     ro_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( lo_repo ) ).
     ro_html->add( '<br>' ).
