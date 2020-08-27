@@ -21,9 +21,10 @@ CLASS zcl_abapgit_object_char DEFINITION
 
     METHODS instantiate_char_and_lock
       IMPORTING
-        !iv_type_group TYPE cls_object_type_group
+        !iv_type_group       TYPE cls_object_type_group
+        !iv_activation_state TYPE pak_activation_state
       RETURNING
-        VALUE(ro_char) TYPE REF TO cl_cls_attribute
+        VALUE(ro_char)       TYPE REF TO cl_cls_attribute
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
@@ -46,9 +47,10 @@ CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
     TRY.
         CREATE OBJECT ro_char
           EXPORTING
-            im_name       = lv_name
-            im_type_group = iv_type_group
-            im_new        = lv_new.
+            im_name             = lv_name
+            im_type_group       = iv_type_group
+            im_new              = lv_new
+            im_activation_state = iv_activation_state.
       CATCH cx_pak_invalid_data
           cx_pak_not_authorized
           cx_pak_invalid_state
@@ -101,7 +103,8 @@ CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
       WHERE name = ms_item-obj_name
       AND activation_state = 'A'.
 
-    lo_char = instantiate_char_and_lock( lv_type_group ).
+    lo_char = instantiate_char_and_lock( iv_type_group       = lv_type_group
+                                         iv_activation_state = cl_pak_wb_domains=>co_activation_state-active ).
 
     TRY.
         lo_char->if_pak_wb_object~delete( ).
@@ -139,7 +142,8 @@ CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
 
     tadir_insert( iv_package ).
 
-    lo_char = instantiate_char_and_lock( ls_char-cls_attribute-type_group ).
+    lo_char = instantiate_char_and_lock( iv_type_group       = ls_char-cls_attribute-type_group
+                                         iv_activation_state = cl_pak_wb_domains=>co_activation_state-inactive ).
 
     TRY.
         lo_char->if_cls_attribute~set_kind( ls_char-cls_attribute-kind ).
