@@ -248,7 +248,7 @@
     "mix_returning": true,
     "msag_consistency": true,
     "nesting": {
-      "depth": 5
+      "depth": 6
     },
     "no_public_attributes": false,
     "object_naming": {

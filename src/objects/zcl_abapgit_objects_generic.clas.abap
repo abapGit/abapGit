@@ -15,7 +15,7 @@ CLASS zcl_abapgit_objects_generic DEFINITION
     METHODS deserialize
       IMPORTING
         !iv_package TYPE devclass
-        !io_xml     TYPE REF TO zcl_abapgit_xml_input
+        !io_xml     TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
     METHODS exists
@@ -25,7 +25,7 @@ CLASS zcl_abapgit_objects_generic DEFINITION
         zcx_abapgit_exception .
     METHODS serialize
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_output
+        !io_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -54,7 +54,7 @@ CLASS zcl_abapgit_objects_generic DEFINITION
         zcx_abapgit_exception .
     METHODS deserialize_data
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_input
+        !io_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
     METHODS distribute_name_to_components
@@ -85,7 +85,7 @@ CLASS zcl_abapgit_objects_generic DEFINITION
         zcx_abapgit_exception .
     METHODS serialize_data
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_output
+        !io_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
     METHODS split_value_to_keys
@@ -97,7 +97,7 @@ CLASS zcl_abapgit_objects_generic DEFINITION
         !cv_non_value_pos TYPE numc3 .
     METHODS validate
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_input
+        !io_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.

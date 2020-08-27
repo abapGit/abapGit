@@ -9,9 +9,9 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
       BEGIN OF ty_event_signature,
         method TYPE string,
         name   TYPE string,
-      END OF  ty_event_signature.
+      END OF  ty_event_signature .
 
-    CLASS-METHODS class_constructor.
+    CLASS-METHODS class_constructor .
     CLASS-METHODS render_error
       IMPORTING
         !ix_error       TYPE REF TO zcx_abapgit_exception OPTIONAL
@@ -46,75 +46,74 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
       IMPORTING
         !io_news       TYPE REF TO zcl_abapgit_news
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS render_commit_popup
       IMPORTING
-        iv_content     TYPE csequence
-        iv_id          TYPE csequence
-      RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS render_error_message_box
-      IMPORTING
-        ix_error       TYPE REF TO zcx_abapgit_exception
-      RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
-    CLASS-METHODS parse_change_order_by
-      IMPORTING
-        iv_query_str       TYPE clike
-      RETURNING
-        VALUE(rv_order_by) TYPE string.
-    CLASS-METHODS parse_direction
-      IMPORTING
-        iv_query_str               TYPE clike
-      RETURNING
-        VALUE(rv_order_descending) TYPE abap_bool.
-    CLASS-METHODS render_order_by_header_cells
-      IMPORTING
-        it_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec
-        iv_order_by         TYPE string
-        iv_order_descending TYPE abap_bool
-      RETURNING
-        VALUE(ro_html)      TYPE REF TO zcl_abapgit_html.
-    CLASS-METHODS render_warning_banner
-      IMPORTING
-        iv_text        TYPE string
-      RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
-    CLASS-METHODS render_infopanel
-      IMPORTING
-        iv_div_id      TYPE string
-        iv_title       TYPE string
-        iv_hide        TYPE abap_bool DEFAULT abap_true
-        iv_hint        TYPE string OPTIONAL
-        iv_scrollable  TYPE abap_bool DEFAULT abap_true
-        io_content     TYPE REF TO zif_abapgit_html
-      RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
-      RAISING
-        zcx_abapgit_exception .
-    CLASS-METHODS render_event_as_form
-      IMPORTING
-        is_event       TYPE ty_event_signature
-      RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
-    CLASS-METHODS render_repo_palette
-      IMPORTING
-        iv_action      TYPE string
+        !iv_content    TYPE csequence
+        !iv_id         TYPE csequence
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
-
+    CLASS-METHODS render_error_message_box
+      IMPORTING
+        !ix_error      TYPE REF TO zcx_abapgit_exception
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    CLASS-METHODS parse_change_order_by
+      IMPORTING
+        !iv_query_str      TYPE clike
+      RETURNING
+        VALUE(rv_order_by) TYPE string .
+    CLASS-METHODS parse_direction
+      IMPORTING
+        !iv_query_str              TYPE clike
+      RETURNING
+        VALUE(rv_order_descending) TYPE abap_bool .
+    CLASS-METHODS render_order_by_header_cells
+      IMPORTING
+        !it_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec
+        !iv_order_by         TYPE string
+        !iv_order_descending TYPE abap_bool
+      RETURNING
+        VALUE(ri_html)       TYPE REF TO zif_abapgit_html .
+    CLASS-METHODS render_warning_banner
+      IMPORTING
+        !iv_text       TYPE string
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    CLASS-METHODS render_infopanel
+      IMPORTING
+        !iv_div_id     TYPE string
+        !iv_title      TYPE string
+        !iv_hide       TYPE abap_bool DEFAULT abap_true
+        !iv_hint       TYPE string OPTIONAL
+        !iv_scrollable TYPE abap_bool DEFAULT abap_true
+        !io_content    TYPE REF TO zif_abapgit_html
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS render_event_as_form
+      IMPORTING
+        !is_event      TYPE ty_event_signature
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    CLASS-METHODS render_repo_palette
+      IMPORTING
+        !iv_action     TYPE string
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS advanced_submenu
-      RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
-
+      RETURNING
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
     CLASS-METHODS help_submenu
-      RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
-
+      RETURNING
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
   PROTECTED SECTION.
     CLASS-METHODS render_repo_top_commit_hash
       IMPORTING
@@ -290,18 +289,18 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
   METHOD render_commit_popup.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( '<ul class="hotkeys">' ).
-    ro_html->add( |<li>| && |<span>{ iv_content }</span>| && |</li>| ).
-    ro_html->add( '</ul>' ).
+    ri_html->add( '<ul class="hotkeys">' ).
+    ri_html->add( |<li>| && |<span>{ iv_content }</span>| && |</li>| ).
+    ri_html->add( '</ul>' ).
 
-    ro_html = render_infopanel(
+    ri_html = render_infopanel(
       iv_div_id     = |{ iv_id }|
       iv_title      = 'Commit details'
       iv_hide       = abap_true
       iv_scrollable = abap_false
-      io_content    = ro_html ).
+      io_content    = ri_html ).
 
   ENDMETHOD.
 
@@ -432,7 +431,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     DATA lv_display TYPE string.
     DATA lv_class TYPE string.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     IF iv_hide = abap_true. " Initially hide
       lv_display = 'display:none'.
@@ -443,11 +442,11 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       lv_class = lv_class && ' info-panel-fixed'.
     ENDIF.
 
-    ro_html->add( |<div id="{ iv_div_id }" class="{ lv_class }" style="{ lv_display }">| ).
+    ri_html->add( |<div id="{ iv_div_id }" class="{ lv_class }" style="{ lv_display }">| ).
 
-    ro_html->add( |<div class="info-title">{ iv_title }|
+    ri_html->add( |<div class="info-title">{ iv_title }|
                && '<div class="float-right">'
-               && zcl_abapgit_html=>a(
+               && ri_html->a(
                     iv_txt   = '&#x274c;'
                     iv_typ   = zif_abapgit_html=>c_action_type-onclick
                     iv_act   = |toggleDisplay('{ iv_div_id }')|
@@ -455,17 +454,17 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
                && '</div></div>' ).
 
     IF iv_hint IS NOT INITIAL.
-      ro_html->add( '<div class="info-hint">'
-        && zcl_abapgit_html=>icon( iv_name = 'exclamation-triangle'
-                                   iv_class = 'pad-right' )
+      ri_html->add( '<div class="info-hint">'
+        && ri_html->icon( iv_name = 'exclamation-triangle'
+                          iv_class = 'pad-right' )
         && iv_hint
         && '</div>' ).
     ENDIF.
 
-    ro_html->add( |<div class="info-list">| ).
-    ro_html->add( io_content ).
-    ro_html->add( '</div>' ).
-    ro_html->add( '</div>' ).
+    ri_html->add( |<div class="info-list">| ).
+    ri_html->add( io_content ).
+    ri_html->add( '</div>' ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -530,7 +529,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_line> LIKE LINE OF lt_log.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     IF io_news IS NOT BOUND OR io_news->has_news( ) = abap_false.
       RETURN.
@@ -548,9 +547,9 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
         ELSE. " < 0
           lv_text = <ls_line>-text.
         ENDIF.
-        ro_html->add( |<h1>{ lv_text }</h1>| ).
+        ri_html->add( |<h1>{ lv_text }</h1>| ).
       ELSE.
-        ro_html->add( |<li>{ <ls_line>-text }</li>| ).
+        ri_html->add( |<li>{ <ls_line>-text }</li>| ).
       ENDIF.
     ENDLOOP.
 
@@ -559,12 +558,12 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       lv_hint = 'Please note changes marked with "!"'.
     ENDIF.
 
-    ro_html = render_infopanel(
+    ri_html = render_infopanel(
       iv_div_id  = 'news'
       iv_title   = 'Announcement of the latest changes'
       iv_hint    = lv_hint
       iv_hide    = boolc( io_news->has_unseen( ) = abap_false )
-      io_content = ro_html ).
+      io_content = ri_html ).
 
   ENDMETHOD.
 
@@ -577,7 +576,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_col> LIKE LINE OF it_col_spec.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     LOOP AT it_col_spec ASSIGNING <ls_col>.
       " e.g. <th class="ro-detail">Created at [{ gv_time_zone }]</th>
@@ -594,18 +593,18 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
         ENDIF.
         IF <ls_col>-tech_name = iv_order_by.
           IF iv_order_descending = abap_true.
-            lv_tmp = lv_tmp && zcl_abapgit_html=>a(
+            lv_tmp = lv_tmp && ri_html->a(
               iv_txt   = lv_disp_name
               iv_act   = |{ zif_abapgit_definitions=>c_action-direction }?direction=ASCENDING|
               iv_title = <ls_col>-title ).
           ELSE.
-            lv_tmp = lv_tmp && zcl_abapgit_html=>a(
+            lv_tmp = lv_tmp && ri_html->a(
               iv_txt   = lv_disp_name
               iv_act   = |{ zif_abapgit_definitions=>c_action-direction }?direction=DESCENDING|
               iv_title = <ls_col>-title ).
           ENDIF.
         ELSE.
-          lv_tmp = lv_tmp && zcl_abapgit_html=>a(
+          lv_tmp = lv_tmp && ri_html->a(
             iv_txt   = lv_disp_name
             iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }?orderBy={ <ls_col>-tech_name }|
             iv_title = <ls_col>-title ).
@@ -621,7 +620,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       ENDIF.
 
       lv_tmp = lv_tmp && '</th>'.
-      ro_html->add( lv_tmp ).
+      ri_html->add( lv_tmp ).
     ENDLOOP.
 
   ENDMETHOD.
