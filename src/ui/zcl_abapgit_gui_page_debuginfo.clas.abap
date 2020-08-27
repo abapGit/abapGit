@@ -48,8 +48,9 @@ CLASS zcl_abapgit_gui_page_debuginfo IMPLEMENTATION.
     lv_encode = zcl_abapgit_html_action_utils=>jump_encode( iv_obj_type = 'CLAS'
                                                             iv_obj_name = |{ iv_class }| ).
 
-    rv_html = zcl_abapgit_html=>a( iv_txt = |{ iv_class }|
-                                   iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_encode }| ).
+    rv_html = zcl_abapgit_html=>zif_abapgit_html~a(
+      iv_txt = |{ iv_class }|
+      iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_encode }| ).
 
   ENDMETHOD.
 

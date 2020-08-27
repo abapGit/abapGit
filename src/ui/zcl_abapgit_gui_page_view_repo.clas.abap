@@ -319,8 +319,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
     REPLACE FIRST OCCURRENCE OF mv_cur_dir IN lv_path WITH ''.
     lv_encode = zcl_abapgit_html_action_utils=>dir_encode( lv_path ).
 
-    rv_html = zcl_abapgit_html=>a( iv_txt = lv_path
-                                   iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
+    rv_html = zcl_abapgit_html=>zif_abapgit_html~a(
+      iv_txt = lv_path
+      iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
 
   ENDMETHOD.
 
@@ -465,11 +466,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
 
     DATA: lv_encode TYPE string.
 
-    lv_encode = zcl_abapgit_html_action_utils=>jump_encode( iv_obj_type = is_item-obj_type
-                                                    iv_obj_name = is_item-obj_name ).
+    lv_encode = zcl_abapgit_html_action_utils=>jump_encode(
+      iv_obj_type = is_item-obj_type
+      iv_obj_name = is_item-obj_name ).
 
-    rv_html = zcl_abapgit_html=>a( iv_txt = |{ is_item-obj_name }|
-                                   iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_encode }| ).
+    rv_html = zcl_abapgit_html=>zif_abapgit_html~a(
+      iv_txt = |{ is_item-obj_name }|
+      iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_encode }| ).
 
   ENDMETHOD.
 
@@ -787,11 +790,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
           ENDIF.
           lv_add_str = |+{ mv_max_setting }|.
           ri_html->add( |Only { lv_max_str } shown in list. Display {
-            zcl_abapgit_html=>a( iv_txt = lv_add_str
-                                 iv_act = c_actions-display_more )
+            ri_html->a( iv_txt = lv_add_str
+                        iv_act = c_actions-display_more )
             } more. (Set in Advanced > {
-            zcl_abapgit_html=>a( iv_txt = 'Settings'
-                                 iv_act = zif_abapgit_definitions=>c_action-go_settings )
+            ri_html->a( iv_txt = 'Settings'
+                        iv_act = zif_abapgit_definitions=>c_action-go_settings )
             } )| ).
           ri_html->add( '</div>' ).
         ENDIF.
@@ -982,10 +985,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
                                                                     iv_object_name             = is_item-obj_name
                                                                     iv_resolve_task_to_request = abap_false ).
           lv_transport_string = lv_transport.
-          lv_icon_html = zcl_abapgit_html=>a( iv_txt = zcl_abapgit_html=>icon( iv_name = 'briefcase/darkgrey'
-                                                                               iv_hint = lv_transport_string )
-                                              iv_act = |{ zif_abapgit_definitions=>c_action-jump_transport }?| &&
-                                                       lv_transport ).
+          lv_icon_html = zcl_abapgit_html=>zif_abapgit_html~a(
+            iv_txt = zcl_abapgit_html=>icon( iv_name = 'briefcase/darkgrey'
+                                             iv_hint = lv_transport_string )
+            iv_act = |{ zif_abapgit_definitions=>c_action-jump_transport }?| && lv_transport ).
+
           rv_html = |<td class="icon">| &&
                     |{ lv_icon_html }| &&
                     |</td>|.
