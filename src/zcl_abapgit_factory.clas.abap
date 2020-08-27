@@ -39,6 +39,9 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-METHODS get_longtexts
       RETURNING
         VALUE(ri_longtexts) TYPE REF TO zif_abapgit_longtexts .
+    CLASS-METHODS get_http_agent
+      RETURNING
+        VALUE(ri_http_agent) TYPE REF TO zif_abapgit_http_agent .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -74,6 +77,7 @@ CLASS zcl_abapgit_factory DEFINITION
     CLASS-DATA gi_cts_api TYPE REF TO zif_abapgit_cts_api .
     CLASS-DATA gi_environment TYPE REF TO zif_abapgit_environment .
     CLASS-DATA gi_longtext TYPE REF TO zif_abapgit_longtexts .
+    CLASS-DATA gi_http_agent TYPE REF TO zif_abapgit_http_agent .
 ENDCLASS.
 
 
@@ -130,6 +134,17 @@ CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
       CREATE OBJECT gi_environment TYPE zcl_abapgit_environment.
     ENDIF.
     ri_environment = gi_environment.
+  ENDMETHOD.
+
+
+  METHOD get_http_agent.
+
+    IF gi_http_agent IS BOUND.
+      ri_http_agent = gi_http_agent.
+    ELSE.
+      ri_http_agent = zcl_abapgit_http_agent=>create( ).
+    ENDIF.
+
   ENDMETHOD.
 
 
