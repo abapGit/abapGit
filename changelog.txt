@@ -8,6 +8,27 @@ Legend
 + : added
 - : removed
 
+2020-08-27 v1.99.0
+------------------
++ New functionality for switching between PRs for github
++ WDCC support
++ OTGR support
+! PROG,FUGR,ENHO workaround for leading spaces removed
+* Improved staging robustness
+* TABL add authorization group handling
+* TABL add translations
+* Improved branch messaging
+* DSYS serialization fixes
+* SHMA fix last changed by
+* Remember repo list filter
+* DOMA fix translations
+* Downport
+* Various performance optimizations
+* DCLS/DDLS fix uninstall sequence
+* Improve display when there are no changes in repo view
+* Add success messages for repo removal/uninstall
+* background pull: always overwrite all objects
+
 2020-07-21 v1.98.0
 ------------------
 + repository creation form as HTML
