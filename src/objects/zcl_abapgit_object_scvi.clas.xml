@@ -10,7 +10,6 @@
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
     <UNICODE>X</UNICODE>
-    <RSTAT>K</RSTAT>
    </VSEOCLASS>
   </asx:values>
  </asx:abap>
