@@ -43,7 +43,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
     DATA ms_files TYPE zif_abapgit_definitions=>ty_stage_files .
-    DATA mv_seed TYPE string .     " Unique page id to bind JS sessionStorage
+    DATA mv_seed TYPE string .       " Unique page id to bind JS sessionStorage
     DATA mv_filter_value TYPE string .
 
     METHODS find_changed_by
@@ -102,7 +102,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         VALUE(rv_count) TYPE i .
     METHODS render_deferred_hidden_events
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_scripts
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
@@ -342,8 +342,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     ls_event-method = 'post'.
     ls_event-name   = 'stage_commit'.
-    ro_html = zcl_abapgit_gui_chunk_lib=>render_event_as_form( ls_event ).
-    ro_html->zif_abapgit_html~set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
+    ri_html = zcl_abapgit_gui_chunk_lib=>render_event_as_form( ls_event ).
+    ri_html->set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
 
   ENDMETHOD.
 
