@@ -131,23 +131,25 @@ CLASS ZCL_ABAPGIT_OBJECT_OTGR IMPLEMENTATION.
     TRY.
         CREATE DATA lo_parents TYPE TABLE OF ('CLS_TYGR_PARENT').
         ASSIGN lo_parents->* TO <lt_parents>.
-
-        io_xml->read( EXPORTING iv_name = 'PARENTS'
-                      CHANGING  cg_data = <lt_parents>  ).
-
-        LOOP AT <lt_parents> ASSIGNING <ls_parent>.
-          ASSIGN COMPONENT 'ACTIVATION_STATE' OF STRUCTURE <ls_parent> TO <lv_field>.
-          IF sy-subrc = 0.
-            <lv_field> = cl_pak_wb_domains=>co_activation_state-inactive.
-          ENDIF.
-          ASSIGN COMPONENT 'OBJ_TYPE_GROUP' OF STRUCTURE <ls_parent> TO <lv_field>.
-          IF sy-subrc = 0.
-            " Removed in the method serialize.
-            <lv_field> = ms_item-obj_name.
-          ENDIF.
-        ENDLOOP.
-      CATCH cx_root.
+      CATCH cx_sy_create_data_error.
     ENDTRY.
+
+    IF <lt_parents> IS ASSIGNED.
+      io_xml->read( EXPORTING iv_name = 'PARENTS'
+                    CHANGING  cg_data = <lt_parents>  ).
+
+      LOOP AT <lt_parents> ASSIGNING <ls_parent>.
+        ASSIGN COMPONENT 'ACTIVATION_STATE' OF STRUCTURE <ls_parent> TO <lv_field>.
+        IF sy-subrc = 0.
+          <lv_field> = cl_pak_wb_domains=>co_activation_state-inactive.
+        ENDIF.
+        ASSIGN COMPONENT 'OBJ_TYPE_GROUP' OF STRUCTURE <ls_parent> TO <lv_field>.
+        IF sy-subrc = 0.
+          " Removed in the method serialize.
+          <lv_field> = ms_item-obj_name.
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
 
     LOOP AT ls_otgr-elements ASSIGNING <ls_element>.
       <ls_element>-activation_state = cl_pak_wb_domains=>co_activation_state-inactive.
@@ -278,7 +280,7 @@ CLASS ZCL_ABAPGIT_OBJECT_OTGR IMPLEMENTATION.
     TRY.
         CREATE DATA lo_parents TYPE TABLE OF ('CLS_TYGR_PARENT').
         ASSIGN lo_parents->* TO <lt_parents>.
-      CATCH cx_root.
+      CATCH cx_sy_create_data_error.
     ENDTRY.
 
     TRY.
