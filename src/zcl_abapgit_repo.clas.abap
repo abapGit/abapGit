@@ -173,6 +173,7 @@ CLASS zcl_abapgit_repo DEFINITION
         !is_local_settings  TYPE zif_abapgit_persistence=>ty_repo-local_settings OPTIONAL
         !iv_deserialized_at TYPE zif_abapgit_persistence=>ty_repo-deserialized_at OPTIONAL
         !iv_deserialized_by TYPE zif_abapgit_persistence=>ty_repo-deserialized_by OPTIONAL
+        !iv_switched_origin TYPE zif_abapgit_persistence=>ty_repo-switched_origin OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS reset_remote .
@@ -665,7 +666,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD set.
 
-* TODO: refactor
+* TODO: refactor, maybe use zcl_abapgit_string_map ?
 
     DATA: ls_mask TYPE zif_abapgit_persistence=>ty_repo_meta_mask.
 
@@ -678,7 +679,8 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       OR is_dot_abapgit IS SUPPLIED
       OR is_local_settings IS SUPPLIED
       OR iv_deserialized_by IS SUPPLIED
-      OR iv_deserialized_at IS SUPPLIED.
+      OR iv_deserialized_at IS SUPPLIED
+      OR iv_switched_origin IS SUPPLIED.
 
 
     IF it_checksums IS SUPPLIED.
@@ -721,6 +723,11 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
       ms_data-deserialized_by = iv_deserialized_by.
       ls_mask-deserialized_at = abap_true.
       ls_mask-deserialized_by = abap_true.
+    ENDIF.
+
+    IF iv_switched_origin IS SUPPLIED.
+      ms_data-switched_origin = iv_switched_origin.
+      ls_mask-switched_origin = abap_true.
     ENDIF.
 
     notify_listener( ls_mask ).
