@@ -18,7 +18,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !iv_error       TYPE string OPTIONAL
         !iv_extra_style TYPE string OPTIONAL
       RETURNING
-        VALUE(ro_html)  TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html)  TYPE REF TO zif_abapgit_html .
     CLASS-METHODS render_repo_top
       IMPORTING
         !io_repo               TYPE REF TO zcl_abapgit_repo
@@ -315,7 +315,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       lv_class = lv_class && ` ` && iv_extra_style.
     ENDIF.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     IF ix_error IS BOUND.
       lv_error = ix_error->get_text( ).
@@ -323,9 +323,9 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       lv_error = iv_error.
     ENDIF.
 
-    ro_html->add( |<div class="{ lv_class }">| ).
-    ro_html->add( |{ zcl_abapgit_html=>icon( 'exclamation-circle/red' ) } Error: { lv_error }| ).
-    ro_html->add( '</div>' ).
+    ri_html->add( |<div class="{ lv_class }">| ).
+    ri_html->add( |{ zcl_abapgit_html=>icon( 'exclamation-circle/red' ) } Error: { lv_error }| ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
