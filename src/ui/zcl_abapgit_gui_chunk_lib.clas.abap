@@ -123,7 +123,8 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         zcx_abapgit_exception.
 
   PRIVATE SECTION.
-    CLASS-DATA gv_time_zone TYPE timezone.
+
+    CLASS-DATA gv_time_zone TYPE timezone .
 
     CLASS-METHODS render_branch_span
       IMPORTING
@@ -131,20 +132,20 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !io_repo        TYPE REF TO zcl_abapgit_repo_online
         !iv_interactive TYPE abap_bool
       RETURNING
-        VALUE(ro_html)  TYPE REF TO zcl_abapgit_html
+        VALUE(ri_html)  TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS get_t100_text
       IMPORTING
-        iv_msgid       TYPE scx_t100key-msgid
-        iv_msgno       TYPE scx_t100key-msgno
+        !iv_msgid      TYPE scx_t100key-msgid
+        !iv_msgno      TYPE scx_t100key-msgno
       RETURNING
-        VALUE(rv_text) TYPE string.
+        VALUE(rv_text) TYPE string .
     CLASS-METHODS normalize_program_name
       IMPORTING
-        iv_program_name                   TYPE sy-repid
+        !iv_program_name                  TYPE sy-repid
       RETURNING
-        VALUE(rv_normalized_program_name) TYPE string.
+        VALUE(rv_normalized_program_name) TYPE string .
 ENDCLASS.
 
 
@@ -272,17 +273,17 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       lv_class = 'branch'.
     ENDIF.
 
-    CREATE OBJECT ro_html.
-    ro_html->add( |<span class="{ lv_class }">| ).
-    ro_html->add_icon( iv_name = 'code-branch/grey70'
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( |<span class="{ lv_class }">| ).
+    ri_html->add_icon( iv_name = 'code-branch/grey70'
                        iv_hint = 'Current branch' ).
     IF iv_interactive = abap_true.
-      ro_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ io_repo->get_key( ) }|
+      ri_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ io_repo->get_key( ) }|
                       iv_txt = lv_text ).
     ELSE.
-      ro_html->add( lv_text ).
+      ri_html->add( lv_text ).
     ENDIF.
-    ro_html->add( '</span>' ).
+    ri_html->add( '</span>' ).
 
   ENDMETHOD.
 
