@@ -19,10 +19,8 @@ CLASS zcl_abapgit_object_otgr DEFINITION
       END OF ty_otgr .
 
     METHODS instantiate_and_lock_otgr
-      IMPORTING
-        !iv_activation_state TYPE pak_activation_state
       RETURNING
-        VALUE(ro_otgr)       TYPE REF TO cl_cls_object_type_group
+        VALUE(ro_otgr) TYPE REF TO cl_cls_object_type_group
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
@@ -43,9 +41,8 @@ CLASS ZCL_ABAPGIT_OBJECT_OTGR IMPLEMENTATION.
     TRY.
         CREATE OBJECT ro_otgr
           EXPORTING
-            im_name             = lv_name
-            im_new              = lv_new
-            im_activation_state = iv_activation_state.
+            im_name = lv_name
+            im_new  = lv_new.
       CATCH cx_pak_invalid_data
           cx_pak_not_authorized
           cx_pak_invalid_state
@@ -88,7 +85,7 @@ CLASS ZCL_ABAPGIT_OBJECT_OTGR IMPLEMENTATION.
           lx_pak_error TYPE REF TO cx_root,
           lv_text      TYPE string.
 
-    lo_otgr = instantiate_and_lock_otgr( cl_pak_wb_domains=>co_activation_state-active ).
+    lo_otgr = instantiate_and_lock_otgr( ).
 
     TRY.
         lo_otgr->if_pak_wb_object~delete( ).
@@ -159,7 +156,7 @@ CLASS ZCL_ABAPGIT_OBJECT_OTGR IMPLEMENTATION.
 
     tadir_insert( iv_package ).
 
-    lo_otgr = instantiate_and_lock_otgr( cl_pak_wb_domains=>co_activation_state-inactive ).
+    lo_otgr = instantiate_and_lock_otgr( ).
 
     TRY.
         lo_otgr->if_cls_object_type_group~set_proxy_filter( ls_otgr-cls_type_group-proxy_flag ).
@@ -261,7 +258,7 @@ CLASS ZCL_ABAPGIT_OBJECT_OTGR IMPLEMENTATION.
                    <ls_parent>  TYPE any,
                    <lt_parents> TYPE ANY TABLE.
 
-    lo_otgr = instantiate_and_lock_otgr( cl_pak_wb_domains=>co_activation_state-active ).
+    lo_otgr = instantiate_and_lock_otgr( ).
 
 *   Description part 1:
 *   Dealing with Description of OTGR objects is problematic.
