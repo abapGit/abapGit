@@ -179,7 +179,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
 
 
   METHOD add_menu_begin.
@@ -612,7 +612,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
 
       lv_act_id = |{ c_actions-refresh_local_object }_{ is_diff-obj_type }_{ is_diff-obj_name }|.
 
-      io_html->add_a(
+      ii_html->add_a(
           iv_txt   = |Refresh|
           iv_typ   = zif_abapgit_html=>c_action_type-dummy
           iv_act   = lv_act_id
@@ -622,7 +622,7 @@ CLASS zcl_abapgit_gui_page_patch IMPLEMENTATION.
     ENDIF.
 
     super->render_diff_head_after_state(
-        io_html = io_html
+        ii_html = ii_html
         is_diff = is_diff ).
 
   ENDMETHOD.

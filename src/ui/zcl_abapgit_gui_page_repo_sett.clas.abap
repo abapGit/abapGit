@@ -29,6 +29,11 @@ CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
         !ii_html TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
+    METHODS render_remotes
+      IMPORTING
+        !ii_html TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     METHODS save
       IMPORTING
         !it_postdata TYPE cnht_post_data_tab
@@ -40,6 +45,11 @@ CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS save_local_settings
+      IMPORTING
+        !it_post_fields TYPE tihttpnvp
+      RAISING
+        zcx_abapgit_exception .
+    METHODS save_remotes
       IMPORTING
         !it_post_fields TYPE tihttpnvp
       RAISING
@@ -102,6 +112,9 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
     ri_html->add( |<form id="settings_form" method="post" action="sapevent:{ c_action-save_settings }">| ).
 
     render_dot_abapgit( ri_html ).
+    IF mo_repo->is_offline( ) = abap_false.
+      render_remotes( ri_html ).
+    ENDIF.
     render_local_settings( ri_html ).
 
     ri_html->add( '<input type="submit" value="Save" class="floating-button blue-set emphasis">' ).
@@ -300,6 +313,30 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_remotes.
+
+    DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
+
+    lo_repo_online ?= mo_repo.
+
+    ii_html->add( '<h2>Remotes</h2>' ).
+    ii_html->add( '<table class="settings">' ).
+
+    " TODO maybe make it editable ?
+    ii_html->add( render_table_row(
+      iv_name  = 'Current remote'
+      iv_value = |{ lo_repo_online->get_url( )
+      } <span class="grey">@{ lo_repo_online->get_branch_name( ) }</span>| ) ).
+    ii_html->add( render_table_row(
+      iv_name  = 'Switched origin'
+      iv_value = |<input name="switched_origin" type="text" size="60" value="{
+        lo_repo_online->get_switched_origin( ) }">| ) ).
+
+    ii_html->add( '</table>' ).
+
+  ENDMETHOD.
+
+
   METHOD render_table_row.
 
     rv_html = '<tr>'
@@ -318,6 +355,7 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
     lt_post_fields = parse_post( it_postdata ).
 
     save_dot_abap( lt_post_fields ).
+    save_remotes( lt_post_fields ).
     save_local_settings( lt_post_fields ).
 
     mo_repo->refresh( ).
@@ -428,6 +466,26 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
     ls_settings-serialize_master_lang_only = boolc( sy-subrc = 0 ).
 
     mo_repo->set_local_settings( ls_settings ).
+
+  ENDMETHOD.
+
+
+  METHOD save_remotes.
+
+    DATA ls_post_field LIKE LINE OF it_post_fields.
+    DATA lo_online_repo TYPE REF TO zcl_abapgit_repo_online.
+
+    IF mo_repo->is_offline( ) = abap_true.
+      RETURN.
+    ENDIF.
+
+    lo_online_repo ?= mo_repo.
+
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'switched_origin'.
+    ASSERT sy-subrc = 0.
+    lo_online_repo->switch_origin(
+      iv_url       = ls_post_field-value
+      iv_overwrite = abap_true ).
 
   ENDMETHOD.
 

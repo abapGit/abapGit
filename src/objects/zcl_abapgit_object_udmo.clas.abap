@@ -44,32 +44,32 @@ CLASS zcl_abapgit_object_udmo DEFINITION
     METHODS update_tree .
     METHODS serialize_short_texts
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_output
+        !io_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_short_texts
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_input
+        !io_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
     METHODS serialize_long_texts
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_output
+        !io_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_long_texts
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_input
+        !io_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
     METHODS serialize_entities
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_output
+        !io_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_entities
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_input
+        !io_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
     METHODS access_modify
@@ -84,12 +84,12 @@ CLASS zcl_abapgit_object_udmo DEFINITION
         zcx_abapgit_exception .
     METHODS deserialize_model
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_input
+        !io_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
     METHODS serialize_model
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_output
+        !io_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
