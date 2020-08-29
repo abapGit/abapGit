@@ -1,6 +1,7 @@
 INTERFACE zif_abapgit_http_response
   PUBLIC .
 
+
   METHODS data
     RETURNING
       VALUE(rv_data) TYPE xstring .
@@ -11,7 +12,7 @@ INTERFACE zif_abapgit_http_response
     RETURNING
       VALUE(ri_json) TYPE REF TO zif_abapgit_ajson_reader
     RAISING
-      zcx_abapgit_ajson_error.
+      zcx_abapgit_ajson_error .
   METHODS is_ok
     RETURNING
       VALUE(rv_yes) TYPE abap_bool .
@@ -23,7 +24,8 @@ INTERFACE zif_abapgit_http_response
       VALUE(rv_message) TYPE string .
   METHODS headers
     RETURNING
-      VALUE(ro_headers) TYPE REF TO zcl_abapgit_string_map .
+      VALUE(ro_headers) TYPE REF TO zcl_abapgit_string_map
+    RAISING
+      zcx_abapgit_exception .
   METHODS close .
-
 ENDINTERFACE.
