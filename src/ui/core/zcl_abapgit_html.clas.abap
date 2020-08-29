@@ -12,8 +12,6 @@ CLASS zcl_abapgit_html DEFINITION
       FOR zif_abapgit_html~add_checkbox .
     ALIASES icon
       FOR zif_abapgit_html~icon .
-    ALIASES is_empty
-      FOR zif_abapgit_html~is_empty .
 
     CONSTANTS c_indent_size TYPE i VALUE 2 ##NO_TEXT.
 
@@ -166,11 +164,6 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
                                       occ = cs_context-indent * c_indent_size ).
     ENDIF.
 
-  ENDMETHOD.
-
-
-  METHOD is_empty.
-    rv_yes = boolc( lines( mt_buffer ) = 0 ).
   ENDMETHOD.
 
 
@@ -360,6 +353,11 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     rv_str = |<i class="icon{ lv_large_icon } icon-{ lv_name }{ lv_color }|.
     rv_str = |{ rv_str }{ lv_class }"{ lv_onclick }{ lv_hint }></i>|.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_html~is_empty.
+    rv_yes = boolc( lines( mt_buffer ) = 0 ).
   ENDMETHOD.
 
 
