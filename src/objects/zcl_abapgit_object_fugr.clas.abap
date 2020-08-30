@@ -533,6 +533,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
     TYPES: BEGIN OF ty_reposrc,
              progname TYPE reposrc-progname,
+             cnam     type reposrc-cnam,
            END OF ty_reposrc.
 
     DATA: lt_reposrc        TYPE STANDARD TABLE OF ty_reposrc WITH DEFAULT KEY,
@@ -622,7 +623,7 @@ CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
       ENDLOOP.
 
       IF lines( rt_includes ) > 0.
-        SELECT progname FROM reposrc
+        SELECT progname cnam FROM reposrc
           INTO TABLE lt_reposrc
           FOR ALL ENTRIES IN rt_includes
           WHERE progname = rt_includes-table_line
