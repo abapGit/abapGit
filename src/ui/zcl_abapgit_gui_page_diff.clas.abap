@@ -81,7 +81,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         !is_diff TYPE ty_file_diff .
     METHODS render_beacon_begin_of_row
       IMPORTING
-        !io_html TYPE REF TO zcl_abapgit_html
+        !ii_html TYPE REF TO zif_abapgit_html
         !is_diff TYPE ty_file_diff .
     METHODS render_diff_head_after_state
       IMPORTING
@@ -92,7 +92,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         VALUE(rv_insert_nav) TYPE abap_bool .
     METHODS render_line_split_row
       IMPORTING
-        !io_html      TYPE REF TO zcl_abapgit_html
+        !ii_html      TYPE REF TO zif_abapgit_html
         !iv_filename  TYPE string
         !is_diff_line TYPE zif_abapgit_definitions=>ty_diff
         !iv_index     TYPE sy-tabix
@@ -115,7 +115,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
       END OF c_actions .
     DATA mt_delayed_lines TYPE zif_abapgit_definitions=>ty_diffs_tt .
     DATA mv_repo_key TYPE zif_abapgit_persistence=>ty_repo-key .
-    DATA mv_seed TYPE string .              " Unique page id to bind JS sessionStorage
+    DATA mv_seed TYPE string .                  " Unique page id to bind JS sessionStorage
 
     METHODS render_diff
       IMPORTING
@@ -141,7 +141,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         !is_diff_line  TYPE zif_abapgit_definitions=>ty_diff
         !is_diff       TYPE ty_file_diff
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_line_split
       IMPORTING
         !is_diff_line  TYPE zif_abapgit_definitions=>ty_diff
@@ -149,7 +149,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         !iv_fstate     TYPE char1
         !iv_index      TYPE sy-tabix
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     METHODS render_line_unified
@@ -562,7 +562,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     DATA: lv_beacon  TYPE string,
           lt_beacons TYPE zif_abapgit_definitions=>ty_string_tt.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     IF is_diff_line-beacon > 0.
       lt_beacons = is_diff-o_diff->get_beacons( ).
@@ -571,30 +571,30 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       lv_beacon = '---'.
     ENDIF.
 
-    ro_html->add( '<thead class="nav_line">' ).
-    ro_html->add( '<tr>' ).
+    ri_html->add( '<thead class="nav_line">' ).
+    ri_html->add( '<tr>' ).
 
     render_beacon_begin_of_row(
-        io_html = ro_html
-        is_diff = is_diff ).
+      ii_html = ri_html
+      is_diff = is_diff ).
 
     IF mv_unified = abap_true.
-      ro_html->add( '<th class="num"></th>' ).
-      ro_html->add( '<th class="mark"></th>' ).
-      ro_html->add( |<th>@@ { is_diff_line-new_num } @@ { lv_beacon }</th>| ).
+      ri_html->add( '<th class="num"></th>' ).
+      ri_html->add( '<th class="mark"></th>' ).
+      ri_html->add( |<th>@@ { is_diff_line-new_num } @@ { lv_beacon }</th>| ).
     ELSE.
-      ro_html->add( |<th colspan="6">@@ { is_diff_line-new_num } @@ { lv_beacon }</th>| ).
+      ri_html->add( |<th colspan="6">@@ { is_diff_line-new_num } @@ { lv_beacon }</th>| ).
     ENDIF.
 
-    ro_html->add( '</tr>' ).
-    ro_html->add( '</thead>' ).
+    ri_html->add( '</tr>' ).
+    ri_html->add( '</thead>' ).
 
   ENDMETHOD.
 
 
   METHOD render_beacon_begin_of_row.
 
-    io_html->add( '<th class="num"></th>' ).
+    ii_html->add( '<th class="num"></th>' ).
 
   ENDMETHOD.
 
@@ -796,7 +796,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
           lv_mark TYPE string,
           lv_bg   TYPE string.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     " New line
     lv_mark = ` `.
@@ -830,10 +830,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
           && |<td class="code{ lv_bg } diff_right">{ is_diff_line-old }</td>|.
 
     " render line, inverse sides if remote is newer
-    ro_html->add( '<tr>' ).                                 "#EC NOTEXT
+    ri_html->add( '<tr>' ).                                 "#EC NOTEXT
 
     render_line_split_row(
-        io_html                = ro_html
+        ii_html                = ri_html
         iv_filename            = iv_filename
         is_diff_line           = is_diff_line
         iv_index               = iv_index
@@ -841,7 +841,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
         iv_old                 = lv_old
         iv_new                 = lv_new ).
 
-    ro_html->add( '</tr>' ).                                "#EC NOTEXT
+    ri_html->add( '</tr>' ).                                "#EC NOTEXT
 
   ENDMETHOD.
 
@@ -849,11 +849,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
   METHOD render_line_split_row.
 
     IF iv_fstate = c_fstate-remote. " Remote file leading changes
-      io_html->add( iv_old ). " local
-      io_html->add( iv_new ). " remote
+      ii_html->add( iv_old ). " local
+      ii_html->add( iv_new ). " remote
     ELSE.             " Local leading changes or both were modified
-      io_html->add( iv_new ). " local
-      io_html->add( iv_old ). " remote
+      ii_html->add( iv_new ). " local
+      ii_html->add( iv_old ). " remote
     ENDIF.
 
   ENDMETHOD.
