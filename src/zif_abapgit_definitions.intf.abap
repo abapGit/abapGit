@@ -8,6 +8,7 @@ INTERFACE zif_abapgit_definitions
     ty_bitbyte TYPE c LENGTH 8 .
   TYPES:
     ty_sha1    TYPE c LENGTH 40 .
+  TYPES: ty_sha1_tt TYPE STANDARD TABLE OF ty_sha1 WITH DEFAULT KEY .
   TYPES:
     ty_adler32 TYPE x LENGTH 4 .
   TYPES:
@@ -26,7 +27,7 @@ INTERFACE zif_abapgit_definitions
     BEGIN OF ty_file.
       INCLUDE TYPE ty_file_signature.
   TYPES: data TYPE xstring,
-    END OF ty_file .
+         END OF ty_file .
   TYPES:
     ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY .
   TYPES:
@@ -105,7 +106,7 @@ INTERFACE zif_abapgit_definitions
     BEGIN OF ty_overwrite.
       INCLUDE TYPE ty_item.
   TYPES: decision TYPE ty_yes_no,
-    END OF ty_overwrite .
+         END OF ty_overwrite .
   TYPES:
     ty_overwrite_tt TYPE STANDARD TABLE OF ty_overwrite WITH DEFAULT KEY
                               WITH UNIQUE HASHED KEY object_type_and_name
