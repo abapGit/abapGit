@@ -239,6 +239,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
       REPLACE ALL OCCURRENCES OF `.` IN lv_obj_name WITH '%2e'.
       REPLACE ALL OCCURRENCES OF `=` IN lv_obj_name WITH '%3d'.
       REPLACE ALL OCCURRENCES OF `?` IN lv_obj_name WITH '%3f'.
+      REPLACE ALL OCCURRENCES OF `<` IN lv_obj_name WITH '%3c'.
+      REPLACE ALL OCCURRENCES OF `>` IN lv_obj_name WITH '%3e'.
     ENDIF.
 
     IF iv_extra IS INITIAL.
