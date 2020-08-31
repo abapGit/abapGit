@@ -23,17 +23,19 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
-    DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc.
+
+    DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc .
 
     METHODS serialize_xml
-      IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !io_xml TYPE REF TO zif_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_intf IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
 
   METHOD constructor.
