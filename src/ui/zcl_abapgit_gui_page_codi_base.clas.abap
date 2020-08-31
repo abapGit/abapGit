@@ -185,7 +185,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
 
     IF lines( it_result ) > lc_limit.
       ii_html->add( '<div class="dummydiv warning">' ).
-      ii_html->add( zcl_abapgit_html=>icon( 'exclamation-triangle' ) ).
+      ii_html->add( ii_html->icon( 'exclamation-triangle' ) ).
       ii_html->add( |Only first { lc_limit } findings shown in list!| ).
       ii_html->add( '</div>' ).
     ENDIF.
