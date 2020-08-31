@@ -68,7 +68,7 @@ INTERFACE zif_abapgit_popups
     IMPORTING
       !iv_url            TYPE string
       !iv_package        TYPE devclass OPTIONAL
-      !iv_branch         TYPE string DEFAULT 'refs/heads/master'
+      !iv_branch         TYPE string DEFAULT zif_abapgit_definitions=>c_git_branch-master
       !iv_freeze_package TYPE abap_bool OPTIONAL
       !iv_freeze_url     TYPE abap_bool OPTIONAL
       !iv_title          TYPE clike DEFAULT 'New Online Project'
@@ -161,6 +161,13 @@ INTERFACE zif_abapgit_popups
       !it_proxy_bypass       TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url
     RETURNING
       VALUE(rt_proxy_bypass) TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url
+    RAISING
+      zcx_abapgit_exception.
+  METHODS choose_pr_popup
+    IMPORTING
+      it_pulls TYPE zif_abapgit_pr_enum_provider=>tty_pulls
+    RETURNING
+      VALUE(rs_pull) TYPE zif_abapgit_pr_enum_provider=>ty_pull_request
     RAISING
       zcx_abapgit_exception.
 ENDINTERFACE.

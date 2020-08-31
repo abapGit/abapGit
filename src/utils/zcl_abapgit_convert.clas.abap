@@ -85,6 +85,9 @@ CLASS zcl_abapgit_convert DEFINITION
         !et_bintab TYPE lvc_t_mime .
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    CLASS-DATA go_convert_out TYPE REF TO cl_abap_conv_out_ce .
+    CLASS-DATA go_convert_in TYPE REF TO cl_abap_conv_in_ce .
 ENDCLASS.
 
 
@@ -233,14 +236,14 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
 
   METHOD string_to_xstring_utf8.
 
-    DATA: lo_obj TYPE REF TO cl_abap_conv_out_ce.
-
-
     TRY.
-        lo_obj = cl_abap_conv_out_ce=>create( encoding = 'UTF-8' ).
+        IF go_convert_out IS INITIAL.
+          go_convert_out = cl_abap_conv_out_ce=>create( encoding = 'UTF-8' ).
+        ENDIF.
 
-        lo_obj->convert( EXPORTING data = iv_string
-                         IMPORTING buffer = rv_xstring ).
+        go_convert_out->convert(
+          EXPORTING data = iv_string
+          IMPORTING buffer = rv_xstring ).
 
       CATCH cx_parameter_invalid_range
             cx_sy_codepage_converter_init
@@ -304,18 +307,17 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
 
   METHOD xstring_to_string_utf8.
 
-    DATA: lv_len TYPE i,
-          lo_obj TYPE REF TO cl_abap_conv_in_ce.
-
-
     TRY.
-        lo_obj = cl_abap_conv_in_ce=>create(
-            input    = iv_data
-            encoding = 'UTF-8' ).
-        lv_len = xstrlen( iv_data ).
+        IF go_convert_in IS INITIAL.
+          go_convert_in = cl_abap_conv_in_ce=>create( encoding = 'UTF-8' ).
+        ENDIF.
 
-        lo_obj->read( EXPORTING n    = lv_len
-                      IMPORTING data = rv_string ).
+        go_convert_in->convert(
+          EXPORTING
+            input = iv_data
+            n     = xstrlen( iv_data )
+          IMPORTING
+            data  = rv_string ).
 
       CATCH cx_parameter_invalid_range
             cx_sy_codepage_converter_init

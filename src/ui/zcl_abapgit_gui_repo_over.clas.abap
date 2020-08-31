@@ -115,7 +115,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_REPO_OVER IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -251,14 +251,14 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
     ii_html->add( |<input type="submit" class="hidden-submit">| ).
     ii_html->add( |</form>| ).
 
-    ii_html->add( zcl_abapgit_html=>a(
+    ii_html->add( zcl_abapgit_html=>zif_abapgit_html~a(
       iv_txt = '<i id="icon-filter-favorite" class="icon icon-check"></i> Only Favorites'
       iv_act = |gHelper.toggleRepoListFavorites()|
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
 
     ii_html->add( `<span class="separator">|</span>` ).
 
-    ii_html->add( zcl_abapgit_html=>a(
+    ii_html->add( zcl_abapgit_html=>zif_abapgit_html~a(
       iv_txt = '<i id="icon-filter-detail" class="icon icon-check"></i> Detail'
       iv_act = |gHelper.toggleRepoListDetail()|
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
@@ -333,14 +333,14 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
       ii_html->add( |<tr class="repo { lv_favorite_class }">| ).
       ii_html->add( |<td class="wmin">| ).
       ii_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?{ <ls_overview>-key }|
-                      iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_favorite_icon
-                                                       iv_class = 'pad-sides'
-                                                       iv_hint  = 'Click to toggle favorite' ) ).
+                      iv_txt = ii_html->icon( iv_name  = lv_favorite_icon
+                                              iv_class = 'pad-sides'
+                                              iv_hint  = 'Click to toggle favorite' ) ).
       ii_html->add( |</td>| ).
-      ii_html->add( |<td class="wmin">{ zcl_abapgit_html=>icon( lv_type_icon ) }</td>| ).
+      ii_html->add( |<td class="wmin">{ ii_html->icon( lv_type_icon ) }</td>| ).
 
-      ii_html->add( |<td>{ zcl_abapgit_html=>a( iv_txt = <ls_overview>-name
-                                                iv_act = |{ c_action-select }?{ <ls_overview>-key }| ) }</td>| ).
+      ii_html->add( |<td>{ ii_html->a( iv_txt = <ls_overview>-name
+                                       iv_act = |{ c_action-select }?{ <ls_overview>-key }| ) }</td>| ).
 
       IF <ls_overview>-type = abap_false.
         ii_html->add( |<td>{ ii_html->a( iv_txt = <ls_overview>-url
@@ -409,7 +409,7 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
       ii_html->add( |</td>| ).
 
       ii_html->add( |<td class='ro-go'><span>{
-                zcl_abapgit_html=>a(
+                ii_html->a(
                   iv_txt = `&rsaquo;`
                   iv_act = |{ c_action-select }?{ <ls_overview>-key }| ) }</span></td>| ).
 
@@ -575,5 +575,4 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
     <ls_col>-css_class = iv_css_class.
     <ls_col>-add_tz = iv_add_tz.
   ENDMETHOD.
-
 ENDCLASS.

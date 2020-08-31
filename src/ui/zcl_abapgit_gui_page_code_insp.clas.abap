@@ -186,12 +186,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
     gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
 
-    ri_html->add( '<div class="ci-head">' ).
-    ri_html->add( |Code inspector check variant: <span class="ci-variant">{ mv_check_variant }</span>| ).
+    ri_html->add( render_variant( mv_check_variant ) ).
 
     IF lines( mt_result ) = 0.
       ri_html->add( '<div class="dummydiv success">' ).
-      ri_html->add( zcl_abapgit_html=>icon( 'check' ) ).
+      ri_html->add( ri_html->icon( 'check' ) ).
       ri_html->add( 'No code inspector findings' ).
       ri_html->add( '</div>' ).
     ELSE.
