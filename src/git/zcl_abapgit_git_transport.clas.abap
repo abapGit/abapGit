@@ -6,7 +6,7 @@ CLASS zcl_abapgit_git_transport DEFINITION
   PUBLIC SECTION.
 
 * remote to local
-    CLASS-METHODS upload_pack
+    CLASS-METHODS upload_pack_by_branch
       IMPORTING
         !iv_url         TYPE string
         !iv_branch_name TYPE string
@@ -254,7 +254,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD upload_pack.
+  METHOD upload_pack_by_branch.
 
     DATA: lo_client   TYPE REF TO zcl_abapgit_http_client,
           lv_buffer   TYPE string,
