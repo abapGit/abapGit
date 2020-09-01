@@ -159,7 +159,8 @@
     "cloud_types": true,
     "colon_missing_space": true,
     "commented_code": {
-      "exclude": ["otgr"],
+      "allowIncludeInFugr": false,
+      "exclude": ["otgr"]
     },
     "constructor_visibility_public": true,
     "contains_tab": true,
@@ -279,6 +280,7 @@
       "multiply": true,
       "move": true,
       "divide": true,
+      "fieldSymbolStructure": true,
       "requested": true,
       "setExtended": true,
       "withHeaderLine": true,
@@ -298,6 +300,7 @@
     },
     "release_idoc": true,
     "remove_descriptions": {
+      "ignoreWorkflow": false,
       "ignoreExceptions": false
     },
     "rfc_error_handling": false,
