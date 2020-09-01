@@ -118,7 +118,6 @@ CLASS ZCL_ABAPGIT_PR_ENUM_GITHUB IMPLEMENTATION.
 
   METHOD zif_abapgit_pr_enum_provider~list_pull_requests.
 
-    DATA lv_repo_url TYPE string.
     DATA lv_upstream_url TYPE string.
     DATA ls_repo_info TYPE ty_info.
     FIELD-SYMBOLS <ls_p> LIKE LINE OF ls_repo_info-pulls.
