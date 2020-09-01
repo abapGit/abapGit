@@ -11,6 +11,7 @@ It's possible to edit database entries of type
 - `SETTINGS`
 - `USER`
 - `REPO`
+- `BACKGROUND`
 
 Be careful when you edit these entries from within abapGit. Corrupting the XML or setting invalid options might break your abapGit!
 
@@ -224,6 +225,29 @@ The `REPO` entries contain meta data like Git repository URL, branch and package
 ```
 
 If you remove a repository entry from the database util, the repository is not shown in abapGit anymore. This is useful for example if you want to remove a repository which has a non-existing package assigned and thus can't be opened and deleted normally.
+
+## Background
+
+The `BACKGROUND` entries show the method and the repository key for which the background action will be executed:
+
+![](img/background_6.png)
+
+The respective XML file contains the method and optionally the credentials needed for a push:
+
+```xml
+<?xml version="1.0" encoding="utf-16"?>
+<asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+ <asx:values>
+  <DATA>
+   <METHOD>ZCL_ABAPGIT_BACKGROUND_PULL</METHOD>
+   <USERNAME/>
+   <PASSWORD/>
+   <SETTINGS/>
+  </DATA>
+ </asx:values>
+</asx:abap>
+```
+
 
 ## Emergency Mode
 
