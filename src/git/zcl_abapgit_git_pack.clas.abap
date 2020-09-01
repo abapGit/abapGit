@@ -687,7 +687,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
     lv_string = ''.
 
-    CONCATENATE 'tree' lv_tree_lower INTO lv_tmp SEPARATED BY space. 
+    CONCATENATE 'tree' lv_tree_lower INTO lv_tmp SEPARATED BY space.
     CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>c_newline INTO lv_string.
 
     IF NOT is_commit-parent IS INITIAL.
@@ -695,7 +695,7 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       TRANSLATE lv_parent_lower TO LOWER CASE.
 
       CONCATENATE 'parent' lv_parent_lower
-        INTO lv_tmp SEPARATED BY space.                     
+        INTO lv_tmp SEPARATED BY space.
       CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>c_newline INTO lv_string.
     ENDIF.
 
@@ -704,16 +704,16 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
       TRANSLATE lv_parent_lower TO LOWER CASE.
 
       CONCATENATE 'parent' lv_parent_lower
-        INTO lv_tmp SEPARATED BY space.                     
+        INTO lv_tmp SEPARATED BY space.
       CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>c_newline INTO lv_string.
     ENDIF.
 
     CONCATENATE 'author' is_commit-author
-      INTO lv_tmp SEPARATED BY space.                       
+      INTO lv_tmp SEPARATED BY space.
     CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>c_newline INTO lv_string.
 
     CONCATENATE 'committer' is_commit-committer
-      INTO lv_tmp SEPARATED BY space.                       
+      INTO lv_tmp SEPARATED BY space.
     CONCATENATE lv_string lv_tmp zif_abapgit_definitions=>c_newline INTO lv_string.
 
     IF NOT is_commit-gpgsig IS INITIAL.

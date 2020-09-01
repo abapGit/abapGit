@@ -479,7 +479,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       TABLES
         t_spopli   = lt_selection
       EXCEPTIONS
-        OTHERS     = 1.                             
+        OTHERS     = 1.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Error from POPUP_TO_DECIDE_LIST' ).
     ENDIF.
@@ -531,7 +531,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
       READ TABLE ct_fields ASSIGNING <ls_furl> WITH KEY tabname = 'ABAPTXT255'.
       IF sy-subrc <> 0 OR <ls_furl>-value IS INITIAL.
-        MESSAGE 'Fill URL' TYPE 'S' DISPLAY LIKE 'E'.       
+        MESSAGE 'Fill URL' TYPE 'S' DISPLAY LIKE 'E'.
         RETURN.
       ENDIF.
       lv_url = <ls_furl>-value.
@@ -602,7 +602,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       TABLES
         t_spopli   = lt_selection
       EXCEPTIONS
-        OTHERS     = 1.                             
+        OTHERS     = 1.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Error from POPUP_TO_DECIDE_LIST' ).
     ENDIF.
@@ -697,7 +697,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     TRY.
 
-        _popup_3_get_values( EXPORTING iv_popup_title    = 'Export package' 
+        _popup_3_get_values( EXPORTING iv_popup_title    = 'Export package'
                                        iv_no_value_check = abap_true
                              IMPORTING ev_value_1        = lv_folder_logic
                              CHANGING  ct_fields         = lt_fields ).
@@ -728,7 +728,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
                          iv_fieldtext = 'Name'
                CHANGING ct_fields     = lt_fields ).
 
-    _popup_3_get_values( EXPORTING iv_popup_title    = 'Object' 
+    _popup_3_get_values( EXPORTING iv_popup_title    = 'Object'
                                    iv_no_value_check = abap_true
                          IMPORTING ev_value_1        = lv_object_type
                                    ev_value_2        = lv_object_name
@@ -766,7 +766,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     TRY.
 
-        _popup_3_get_values( EXPORTING iv_popup_title    = 'Export package' 
+        _popup_3_get_values( EXPORTING iv_popup_title    = 'Export package'
                                        iv_no_value_check = abap_true
                              IMPORTING ev_value_1        = lv_package
                                        ev_value_2        = lv_folder_logic
@@ -858,7 +858,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
         answer                = rv_answer
       EXCEPTIONS
         text_not_found        = 1
-        OTHERS                = 2.                        
+        OTHERS                = 2.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from POPUP_TO_CONFIRM' ).
     ENDIF.
@@ -931,7 +931,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
                          iv_value     = lv_desc_as_text
                CHANGING ct_fields     = lt_fields ).
 
-    _popup_3_get_values( EXPORTING iv_popup_title    = 'Transport to new Branch' 
+    _popup_3_get_values( EXPORTING iv_popup_title    = 'Transport to new Branch'
                          IMPORTING ev_value_1        = lv_branch_name
                                    ev_value_2        = lv_commit_text
                          CHANGING  ct_fields         = lt_fields ).
@@ -1350,7 +1350,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
           fields            = lt_fields
         EXCEPTIONS
           error_in_fields   = 1
-          OTHERS            = 2.                              
+          OTHERS            = 2.
 
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( 'Error from POPUP_GET_VALUES' ).

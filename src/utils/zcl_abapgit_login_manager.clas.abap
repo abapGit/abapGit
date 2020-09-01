@@ -106,7 +106,7 @@ CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
       IF NOT ii_client IS INITIAL.
         ii_client->request->set_header_field(
           name  = 'authorization'
-          value = ls_auth-authorization ).                  
+          value = ls_auth-authorization ).
         ii_client->propertytype_logon_popup = ii_client->co_disabled.
       ENDIF.
     ENDIF.
@@ -118,7 +118,7 @@ CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
 
     DATA: lv_auth TYPE string.
 
-    lv_auth = ii_client->request->get_header_field( 'authorization' ). 
+    lv_auth = ii_client->request->get_header_field( 'authorization' ).
 
     IF NOT lv_auth IS INITIAL.
       append( iv_uri  = iv_uri

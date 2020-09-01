@@ -112,16 +112,16 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
     lt_source = mo_files->read_abap( ).
 
     lt_local_definitions = mo_files->read_abap( iv_extra = 'locals_def'
-                                                iv_error = abap_false ). 
+                                                iv_error = abap_false ).
 
     lt_local_implementations = mo_files->read_abap( iv_extra = 'locals_imp'
-                                                    iv_error = abap_false ). 
+                                                    iv_error = abap_false ).
 
     lt_local_macros = mo_files->read_abap( iv_extra = 'macros'
-                                           iv_error = abap_false ). 
+                                           iv_error = abap_false ).
 
     lt_test_classes = mo_files->read_abap( iv_extra = 'testclasses'
-                                           iv_error = abap_false ). 
+                                           iv_error = abap_false ).
 
     ls_class_key-clsname = ms_item-obj_name.
 
@@ -653,7 +653,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
       iv_type      = seop_ext_class_locals_def ).
     IF lines( lt_source ) > 0.
       mo_files->add_abap( iv_extra = 'locals_def'
-                          it_abap  = lt_source ).           
+                          it_abap  = lt_source ).
     ENDIF.
 
     lt_source = mi_object_oriented_object_fct->serialize_abap(
@@ -661,7 +661,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
       iv_type      = seop_ext_class_locals_imp ).
     IF lines( lt_source ) > 0.
       mo_files->add_abap( iv_extra = 'locals_imp'
-                          it_abap  = lt_source ).           
+                          it_abap  = lt_source ).
     ENDIF.
 
     lt_source = mi_object_oriented_object_fct->serialize_abap(
@@ -671,7 +671,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
     mv_skip_testclass = mi_object_oriented_object_fct->get_skip_test_classes( ).
     IF lines( lt_source ) > 0 AND mv_skip_testclass = abap_false.
       mo_files->add_abap( iv_extra = 'testclasses'
-                          it_abap  = lt_source ).           
+                          it_abap  = lt_source ).
     ENDIF.
 
     lt_source = mi_object_oriented_object_fct->serialize_abap(
@@ -679,7 +679,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
       iv_type      = seop_ext_class_macros ).
     IF lines( lt_source ) > 0.
       mo_files->add_abap( iv_extra = 'macros'
-                          it_abap  = lt_source ).           
+                          it_abap  = lt_source ).
     ENDIF.
 
     serialize_xml( io_xml ).

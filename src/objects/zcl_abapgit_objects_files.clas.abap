@@ -131,7 +131,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     ls_file-path = '/'.
     ls_file-filename = filename( iv_extra = iv_extra
-                                 iv_ext   = 'abap' ).       
+                                 iv_ext   = 'abap' ).
     ls_file-data = zcl_abapgit_convert=>string_to_xstring_utf8( lv_source ).
 
     APPEND ls_file TO mt_files.
@@ -160,7 +160,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     ls_file-path = '/'.
     ls_file-filename = filename( iv_extra = iv_extra
-                                 iv_ext   = iv_ext ).       
+                                 iv_ext   = iv_ext ).
     ls_file-data = zcl_abapgit_convert=>string_to_xstring_utf8( iv_string ).
 
     APPEND ls_file TO mt_files.
@@ -178,7 +178,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
     ls_file-path = '/'.
 
     ls_file-filename = filename( iv_extra = iv_extra
-                                 iv_ext   = 'xml' ).        
+                                 iv_ext   = 'xml' ).
 
     REPLACE FIRST OCCURRENCE
       OF REGEX '<\?xml version="1\.0" encoding="[\w-]+"\?>'
@@ -245,10 +245,10 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     IF iv_extra IS INITIAL.
       CONCATENATE lv_obj_name '.' ms_item-obj_type
-        INTO rv_filename.                                   
+        INTO rv_filename.
     ELSE.
       CONCATENATE lv_obj_name '.' ms_item-obj_type '.' iv_extra
-        INTO rv_filename.                                   
+        INTO rv_filename.
     ENDIF.
 
     IF iv_ext IS NOT INITIAL.
@@ -281,7 +281,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
 
     lv_filename = filename( iv_extra = iv_extra
-                            iv_ext   = 'abap' ).            
+                            iv_ext   = 'abap' ).
 
     lv_data = read_file( iv_filename = lv_filename
                          iv_error    = iv_error ).
@@ -349,7 +349,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
           lv_data     TYPE xstring.
 
     lv_filename = filename( iv_extra = iv_extra
-                            iv_ext   = iv_ext ).            
+                            iv_ext   = iv_ext ).
 
     lv_data = read_file( lv_filename ).
 
@@ -365,7 +365,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
           lv_xml      TYPE string.
 
     lv_filename = filename( iv_extra = iv_extra
-                            iv_ext   = 'xml' ).             
+                            iv_ext   = 'xml' ).
 
     lv_data = read_file( lv_filename ).
 

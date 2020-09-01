@@ -114,7 +114,7 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
       iv_text_button_1         = 'Continue'
       iv_text_button_2         = 'Cancel'
       iv_default_button        = '2'
-      iv_display_cancel_button = abap_false ).              
+      iv_display_cancel_button = abap_false ).
 
     IF lv_answer <> '1'.
       RETURN.

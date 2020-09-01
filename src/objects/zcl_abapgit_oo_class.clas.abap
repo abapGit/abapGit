@@ -350,8 +350,8 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
   METHOD update_source_index.
 
     CONSTANTS:
-      lc_version_active   TYPE r3state VALUE 'A',           
-      lc_version_inactive TYPE r3state VALUE 'I'.           
+      lc_version_active   TYPE r3state VALUE 'A',
+      lc_version_inactive TYPE r3state VALUE 'I'.
 
     "    dynamic invocation, IF_OO_SOURCE_POS_INDEX_HELPER doesn't exist in 702.
     DATA lo_index_helper TYPE REF TO object.

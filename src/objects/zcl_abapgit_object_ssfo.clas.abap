@@ -451,10 +451,10 @@ CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
     li_element->set_attribute(
       name      = 'sf'
       namespace = 'xmlns'
-      value     = 'urn:sap-com:SmartForms:2000:internal-structure' ). 
+      value     = 'urn:sap-com:SmartForms:2000:internal-structure' ).
     li_element->set_attribute(
       name  = 'xmlns'
-      value = 'urn:sap-com:sdixml-ifr:2000' ).              
+      value = 'urn:sap-com:sdixml-ifr:2000' ).
 
     io_xml->set_raw( li_xml_doc->get_root_element( ) ).
 
