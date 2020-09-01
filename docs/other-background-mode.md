@@ -35,5 +35,5 @@ abapGit can pull or push in background mode. This setting has to be activated on
 ### Defining a Job
 
 * To periodically run the background logic, you can define a job with transaction `SM36`.
-* Create a step for program `ZABAPGIT`. This will execute all defined background activities.
+* Create a step for program `ZABAPGIT` (or `ZABAPGIT_STANDALONE`, depending on which version of abapGit you are using). This will execute all defined background activities.
 * You can check the log of the job with transaction `SM37`
