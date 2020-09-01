@@ -402,13 +402,13 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
         ii_html->add( lv_patch_link && lc_separator ).
       ELSE. " offline repo
         lv_zip_import_link = ii_html->a(
-          iv_txt = |Imp. ZIP|
+          iv_txt = |Import|
           iv_act = |{ zif_abapgit_definitions=>c_action-zip_import }?{ <ls_overview>-key } | ).
 
         ii_html->add( lv_zip_import_link && lc_separator ).
 
         lv_zip_export_link = ii_html->a(
-          iv_txt = |Exp. ZIP|
+          iv_txt = |Export|
           iv_act = |{ zif_abapgit_definitions=>c_action-zip_export }?{ <ls_overview>-key } | ).
 
         ii_html->add( lv_zip_export_link && lc_separator ).
