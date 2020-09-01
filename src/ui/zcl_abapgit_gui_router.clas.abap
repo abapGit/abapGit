@@ -141,7 +141,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -713,7 +713,10 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         lv_xstr = zcl_abapgit_ui_factory=>get_frontend_services( )->file_upload( lv_path ).
         lo_repo->set_files_remote( zcl_abapgit_zip=>load( lv_xstr ) ).
         zcl_abapgit_services_repo=>refresh( lv_key ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_view_repo
+          EXPORTING
+            iv_key = lo_repo->get_key( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
       WHEN zif_abapgit_definitions=>c_action-zip_export.                      " Export repo as ZIP
         lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         lv_xstr = zcl_abapgit_zip=>export( lo_repo ).
