@@ -7,8 +7,6 @@ CLASS zcl_abapgit_sotr_handler DEFINITION
 
     TYPES:
       ty_sotr_use_tt TYPE STANDARD TABLE OF sotr_use WITH DEFAULT KEY .
-    TYPES:
-      yt_seocompodf TYPE STANDARD TABLE OF seocompodf WITH DEFAULT KEY .
 
     CLASS-METHODS read_sotr
       IMPORTING
