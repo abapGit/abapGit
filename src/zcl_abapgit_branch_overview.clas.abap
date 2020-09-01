@@ -357,7 +357,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
       INSERT ls_tag INTO TABLE mt_tags.
     ENDLOOP.
 
-    zcl_abapgit_git_transport=>upload_pack(
+    zcl_abapgit_git_transport=>upload_pack_by_branch(
       EXPORTING
         iv_url         = io_repo->get_url( )
         iv_branch_name = io_repo->get_branch_name( )

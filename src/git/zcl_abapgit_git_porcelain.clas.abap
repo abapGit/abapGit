@@ -410,7 +410,7 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
           ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
 
 
-    zcl_abapgit_git_transport=>upload_pack(
+    zcl_abapgit_git_transport=>upload_pack_by_branch(
       EXPORTING
         iv_url         = iv_url
         iv_branch_name = iv_branch_name
