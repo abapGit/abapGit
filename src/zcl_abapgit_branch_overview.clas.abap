@@ -332,7 +332,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
 
     li_progress->show(
       iv_current = 1
-      iv_text    = |Get git objects { io_repo->get_name( ) }| ) ##NO_TEXT.
+      iv_text    = |Get git objects { io_repo->get_name( ) }| ).
 
 * get objects directly from git, mo_repo only contains a shallow clone of only
 * the selected branch

@@ -156,7 +156,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
       WITH KEY
         objectname = ms_item-obj_type
         objecttype = 'L'
-        method     = 'BEFORE_EXP' ##no_text.
+        method     = 'BEFORE_EXP'.
     IF sy-subrc = 0.
       lv_client = sy-mandt.
 

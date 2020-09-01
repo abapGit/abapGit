@@ -237,7 +237,7 @@ CLASS ZCL_ABAPGIT_2FA_GITHUB_AUTH IMPLEMENTATION.
     IF rv_access_token IS INITIAL.
       RAISE EXCEPTION TYPE zcx_abapgit_2fa_gen_failed
         EXPORTING
-          mv_text = 'Token generation failed: parser error' ##NO_TEXT.
+          mv_text = 'Token generation failed: parser error'.
     ENDIF.
 
     " GitHub might need some time until the new token is ready to use, give it a second

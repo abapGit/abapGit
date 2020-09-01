@@ -330,7 +330,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     IF lines( lt_tadir ) > 0.
 
       lv_question = |This will DELETE all objects in package { lv_package
-        } ({ lines( lt_tadir ) } objects) from the system|. "#EC NOTEXT
+        } ({ lines( lt_tadir ) } objects) from the system|. 
 
       lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
         iv_titlebar              = 'Uninstall'
@@ -340,7 +340,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
         iv_text_button_2         = 'Cancel'
         iv_icon_button_2         = 'ICON_CANCEL'
         iv_default_button        = '2'
-        iv_display_cancel_button = abap_false ).            "#EC NOTEXT
+        iv_display_cancel_button = abap_false ).            
 
       IF lv_answer = '2'.
         RAISE EXCEPTION TYPE zcx_abapgit_cancel.
@@ -404,7 +404,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       iv_text_button_2         = 'Cancel'
       iv_icon_button_2         = 'ICON_CANCEL'
       iv_default_button        = '2'
-      iv_display_cancel_button = abap_false ).              "#EC NOTEXT
+      iv_display_cancel_button = abap_false ).              
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
@@ -492,7 +492,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       iv_text_button_2         = 'Cancel'
       iv_icon_button_2         = 'ICON_CANCEL'
       iv_default_button        = '2'
-      iv_display_cancel_button = abap_false ).              "#EC NOTEXT
+      iv_display_cancel_button = abap_false ).              
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
@@ -529,7 +529,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
       iv_text_button_2         = 'Cancel'
       iv_icon_button_2         = 'ICON_CANCEL'
       iv_default_button        = '2'
-      iv_display_cancel_button = abap_false ).              "#EC NOTEXT
+      iv_display_cancel_button = abap_false ).              
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.

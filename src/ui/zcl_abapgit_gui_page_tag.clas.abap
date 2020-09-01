@@ -121,9 +121,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
     ENDTRY.
 
     IF ls_tag-type = zif_abapgit_definitions=>c_git_branch_type-lightweight_tag.
-      lv_text = |Lightweight tag { zcl_abapgit_git_tag=>remove_tag_prefix( ls_tag-name ) } created| ##NO_TEXT.
+      lv_text = |Lightweight tag { zcl_abapgit_git_tag=>remove_tag_prefix( ls_tag-name ) } created|.
     ELSEIF ls_tag-type = zif_abapgit_definitions=>c_git_branch_type-annotated_tag.
-      lv_text = |Annotated tag { zcl_abapgit_git_tag=>remove_tag_prefix( ls_tag-name ) } created| ##NO_TEXT.
+      lv_text = |Annotated tag { zcl_abapgit_git_tag=>remove_tag_prefix( ls_tag-name ) } created|.
     ENDIF.
 
     MESSAGE lv_text TYPE 'S'.
@@ -328,11 +328,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
     lo_toolbar->add( iv_act = 'submitFormById(''commit_form'');'
                      iv_txt = 'Create'
                      iv_typ = zif_abapgit_html=>c_action_type-onclick
-                     iv_opt = zif_abapgit_html=>c_html_opt-strong ) ##NO_TEXT.
+                     iv_opt = zif_abapgit_html=>c_html_opt-strong ).
 
     lo_toolbar->add( iv_act = c_action-commit_cancel
                      iv_txt = 'Cancel'
-                     iv_opt = zif_abapgit_html=>c_html_opt-cancel ) ##NO_TEXT.
+                     iv_opt = zif_abapgit_html=>c_html_opt-cancel ).
 
     ro_html->add( '<div class="paddings">' ).
     ro_html->add( lo_toolbar->render( ) ).

@@ -43,8 +43,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
 
 
   METHOD code_item_section_handling.
-    CONSTANTS: lc_node_item TYPE string VALUE 'item' ##NO_TEXT.
-    CONSTANTS: lc_node_text TYPE string VALUE '#text' ##NO_TEXT.
+    CONSTANTS: lc_node_item TYPE string VALUE 'item'.
+    CONSTANTS: lc_node_text TYPE string VALUE '#text'.
 
     IF iv_name IN get_range_node_codes( ).
       cv_within_code_section = abap_true.
@@ -451,10 +451,10 @@ CLASS ZCL_ABAPGIT_OBJECT_SSFO IMPLEMENTATION.
     li_element->set_attribute(
       name      = 'sf'
       namespace = 'xmlns'
-      value     = 'urn:sap-com:SmartForms:2000:internal-structure' ). "#EC NOTEXT
+      value     = 'urn:sap-com:SmartForms:2000:internal-structure' ). 
     li_element->set_attribute(
       name  = 'xmlns'
-      value = 'urn:sap-com:sdixml-ifr:2000' ).              "#EC NOTEXT
+      value = 'urn:sap-com:sdixml-ifr:2000' ).              
 
     io_xml->set_raw( li_xml_doc->get_root_element( ) ).
 

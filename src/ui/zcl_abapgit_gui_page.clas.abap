@@ -117,12 +117,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( '<head>' ).                               "#EC NOTEXT
+    ri_html->add( '<head>' ).                               
 
-    ri_html->add( '<meta http-equiv="content-type" content="text/html; charset=utf-8">' ). "#EC NOTEXT
-    ri_html->add( '<meta http-equiv="X-UA-Compatible" content="IE=11,10,9,8" />' ). "#EC NOTEXT
+    ri_html->add( '<meta http-equiv="content-type" content="text/html; charset=utf-8">' ). 
+    ri_html->add( '<meta http-equiv="X-UA-Compatible" content="IE=11,10,9,8" />' ). 
 
-    ri_html->add( '<title>abapGit</title>' ).               "#EC NOTEXT
+    ri_html->add( '<title>abapGit</title>' ).               
     ri_html->add( '<link rel="stylesheet" type="text/css" href="css/common.css">' ).
     ri_html->add( '<link rel="stylesheet" type="text/css" href="css/ag-icons.css">' ).
 
@@ -135,7 +135,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
         ri_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-belize-blue.css">' ).
     ENDCASE.
 
-    ri_html->add( '<script type="text/javascript" src="js/common.js"></script>' ). "#EC NOTEXT
+    ri_html->add( '<script type="text/javascript" src="js/common.js"></script>' ). 
 
     CASE mo_settings->get_icon_scaling( ). " Enforce icon scaling
       WHEN mo_settings->c_icon_scaling-large.
@@ -144,7 +144,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
         ri_html->add( '<style>.icon.large { font-size: inherit }</style>' ).
     ENDCASE.
 
-    ri_html->add( '</head>' ).                              "#EC NOTEXT
+    ri_html->add( '</head>' ).                              
 
   ENDMETHOD.
 
@@ -312,10 +312,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     " Real page
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( '<!DOCTYPE html>' ).                      "#EC NOTEXT
-    ri_html->add( '<html>' ).                               "#EC NOTEXT
+    ri_html->add( '<!DOCTYPE html>' ).                      
+    ri_html->add( '<html>' ).                               
     ri_html->add( html_head( ) ).
-    ri_html->add( '<body>' ).                               "#EC NOTEXT
+    ri_html->add( '<body>' ).                               
     ri_html->add( title( ) ).
 
     ri_html->add( render_content( ) ). " TODO -> render child
@@ -328,7 +328,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
       iv_part_category = c_html_parts-hidden_forms ).
 
     ri_html->add( footer( ) ).
-    ri_html->add( '</body>' ).                              "#EC NOTEXT
+    ri_html->add( '</body>' ).                              
 
     li_script = scripts( ).
 
@@ -339,7 +339,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
       ri_html->add( '</script>' ).
     ENDIF.
 
-    ri_html->add( '</html>' ).                              "#EC NOTEXT
+    ri_html->add( '</html>' ).                              
 
   ENDMETHOD.
 ENDCLASS.

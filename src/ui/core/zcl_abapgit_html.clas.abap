@@ -239,13 +239,13 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     lv_class = iv_class.
 
     IF iv_opt CA zif_abapgit_html=>c_html_opt-strong.
-      lv_class = lv_class && ' emphasis' ##NO_TEXT.
+      lv_class = lv_class && ' emphasis'.
     ENDIF.
     IF iv_opt CA zif_abapgit_html=>c_html_opt-cancel.
-      lv_class = lv_class && ' attention' ##NO_TEXT.
+      lv_class = lv_class && ' attention'.
     ENDIF.
     IF iv_opt CA zif_abapgit_html=>c_html_opt-crossout.
-      lv_class = lv_class && ' crossout grey' ##NO_TEXT.
+      lv_class = lv_class && ' crossout grey'.
     ENDIF.
     IF lv_class IS NOT INITIAL.
       SHIFT lv_class LEFT DELETING LEADING space.

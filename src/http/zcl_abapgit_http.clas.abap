@@ -158,7 +158,7 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
             " a) SSL is setup properly in STRUST
             lv_text = 'HTTPS ARGUMENT_NOT_FOUND | STRUST/SSL Setup correct?'.
           WHEN OTHERS.
-            lv_text = 'While creating HTTP Client'.         "#EC NOTEXT
+            lv_text = 'While creating HTTP Client'.         
 
         ENDCASE.
         zcx_abapgit_exception=>raise( lv_text ).
@@ -184,7 +184,7 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
         value = 'GET' ).
     li_client->request->set_header_field(
         name  = 'user-agent'
-        value = get_agent( ) ).                             "#EC NOTEXT
+        value = get_agent( ) ).                             
     lv_uri = zcl_abapgit_url=>path_name( iv_url ) &&
              '/info/refs?service=git-' &&
              iv_service &&

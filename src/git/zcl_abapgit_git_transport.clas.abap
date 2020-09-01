@@ -206,7 +206,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
       iv_url     = iv_url
       iv_service = c_service-receive ).
 
-    lv_cap_list = 'report-status' ##NO_TEXT.
+    lv_cap_list = 'report-status'.
 
     lv_line = iv_old &&
               ` ` &&
@@ -216,7 +216,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
               zcl_abapgit_git_utils=>get_null( ) &&
               ` ` &&
               lv_cap_list &&
-              zif_abapgit_definitions=>c_newline.           "#EC NOTEXT
+              zif_abapgit_definitions=>c_newline.           
     lv_cmd_pkt = zcl_abapgit_git_utils=>pkt_string( lv_line ).
 
     lv_buffer = lv_cmd_pkt && '0000'.
@@ -293,19 +293,19 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
     LOOP AT lt_branches FROM 1 ASSIGNING <ls_branch>.
       IF sy-tabix = 1.
-        lv_capa = 'side-band-64k no-progress multi_ack' ##NO_TEXT.
+        lv_capa = 'side-band-64k no-progress multi_ack'.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
-          && ` ` && lv_capa && zif_abapgit_definitions=>c_newline. "#EC NOTEXT
+          && ` ` && lv_capa && zif_abapgit_definitions=>c_newline. 
       ELSE.
         lv_line = 'want' && ` ` && <ls_branch>-sha1
-          && zif_abapgit_definitions=>c_newline.            "#EC NOTEXT
+          && zif_abapgit_definitions=>c_newline.            
       ENDIF.
       lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( lv_line ).
     ENDLOOP.
 
     IF iv_deepen = abap_true.
       lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( 'deepen 1'
-        && zif_abapgit_definitions=>c_newline ).            "#EC NOTEXT
+        && zif_abapgit_definitions=>c_newline ).            
     ENDIF.
 
     lv_buffer = lv_buffer

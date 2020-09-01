@@ -101,8 +101,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SCP1 IMPLEMENTATION.
   METHOD call_delete_fms.
 
     CONSTANTS:
-      lc_version_new      TYPE c VALUE 'N' ##NO_TEXT, "Include SCPRINTCONST version_new
-      lc_operation_delete TYPE c VALUE 'D' ##NO_TEXT.
+      lc_version_new      TYPE c VALUE 'N', "Include SCPRINTCONST version_new
+      lc_operation_delete TYPE c VALUE 'D'.
 
     DATA:
       lv_profile_type   TYPE scprattr-type,

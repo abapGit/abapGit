@@ -168,7 +168,7 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
     CALL TRANSFORMATION id
       OPTIONS value_handling = 'accept_data_loss'
       SOURCE XML lv_xml
-      RESULT data = rs_data ##NO_TEXT.
+      RESULT data = rs_data.
 
 * downward compatibility
     IF rs_data-folder_logic IS INITIAL.
