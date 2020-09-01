@@ -7,8 +7,7 @@
 *&---------------------------------------------------------------------*
 FORM run.
 
-  DATA: lx_exception TYPE REF TO zcx_abapgit_exception,
-        lv_ind       TYPE t000-ccnocliind.
+  DATA: lx_exception TYPE REF TO zcx_abapgit_exception.
 
   TRY.
       zcl_abapgit_migrations=>run( ).

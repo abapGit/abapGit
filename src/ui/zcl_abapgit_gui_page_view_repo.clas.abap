@@ -1004,7 +1004,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
 
     DATA:
       lv_icon     TYPE string,
-      lv_html     TYPE string,
       lt_col_spec TYPE zif_abapgit_definitions=>tty_col_spec,
       ls_col_spec TYPE zif_abapgit_definitions=>ty_col_spec.
 
@@ -1066,8 +1065,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
 
   METHOD render_scripts.
 
-    DATA lv_json TYPE string.
-
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
@@ -1079,7 +1076,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
   METHOD switch_to_pr.
 
     DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
-    DATA ls_field LIKE LINE OF it_fields.
     DATA lt_pulls TYPE zif_abapgit_pr_enum_provider=>tty_pulls.
     DATA ls_pull LIKE LINE OF lt_pulls.
 
