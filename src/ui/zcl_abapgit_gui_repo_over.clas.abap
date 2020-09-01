@@ -333,11 +333,11 @@ CLASS ZCL_ABAPGIT_GUI_REPO_OVER IMPLEMENTATION.
       ii_html->add( |<tr class="repo { lv_favorite_class }">| ).
       ii_html->add( |<td class="wmin">| ).
       ii_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?{ <ls_overview>-key }|
-                      iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_favorite_icon
-                                                       iv_class = 'pad-sides'
-                                                       iv_hint  = 'Click to toggle favorite' ) ).
+                      iv_txt = ii_html->icon( iv_name  = lv_favorite_icon
+                                              iv_class = 'pad-sides'
+                                              iv_hint  = 'Click to toggle favorite' ) ).
       ii_html->add( |</td>| ).
-      ii_html->add( |<td class="wmin">{ zcl_abapgit_html=>icon( lv_type_icon ) }</td>| ).
+      ii_html->add( |<td class="wmin">{ ii_html->icon( lv_type_icon ) }</td>| ).
 
       ii_html->add( |<td>{ ii_html->a( iv_txt = <ls_overview>-name
                                        iv_act = |{ c_action-select }?{ <ls_overview>-key }| ) }</td>| ).
