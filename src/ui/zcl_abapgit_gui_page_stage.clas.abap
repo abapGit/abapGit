@@ -43,7 +43,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
     DATA ms_files TYPE zif_abapgit_definitions=>ty_stage_files .
-    DATA mv_seed TYPE string .         " Unique page id to bind JS sessionStorage
+    DATA mv_seed TYPE string .           " Unique page id to bind JS sessionStorage
     DATA mv_filter_value TYPE string .
 
     METHODS find_changed_by
@@ -96,7 +96,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         zcx_abapgit_exception .
     METHODS render_master_language_warning
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS count_default_files_to_commit
       RETURNING
         VALUE(rv_count) TYPE i .
@@ -502,12 +502,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     DATA: ls_dot_abapgit TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ls_dot_abapgit = mo_repo->get_dot_abapgit( )->get_data( ).
 
     IF ls_dot_abapgit-master_language <> sy-langu.
-      ro_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner(
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner(
                         |Caution: Master language of the repo is '{ ls_dot_abapgit-master_language }', |
                      && |but you're logged on in '{ sy-langu }'| ) ).
     ENDIF.
