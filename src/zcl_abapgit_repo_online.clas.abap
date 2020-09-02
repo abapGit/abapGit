@@ -51,11 +51,10 @@ CLASS zcl_abapgit_repo_online DEFINITION
         VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-switched_origin .
     METHODS switch_origin
       IMPORTING
-        !iv_url TYPE zif_abapgit_persistence=>ty_repo-url
+        !iv_url       TYPE zif_abapgit_persistence=>ty_repo-url
         !iv_overwrite TYPE abap_bool DEFAULT abap_false
       RAISING
         zcx_abapgit_exception .
-
 
     METHODS get_files_remote
         REDEFINITION .
@@ -64,10 +63,6 @@ CLASS zcl_abapgit_repo_online DEFINITION
     METHODS has_remote_source
         REDEFINITION .
     METHODS rebuild_local_checksums
-        REDEFINITION .
-    METHODS validate
-        REDEFINITION .
-    METHODS reset
         REDEFINITION .
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -287,16 +282,6 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD reset.
-
-    " Reset repo to master branch
-    set_branch_name( 'refs/heads/master' ).
-
-    COMMIT WORK AND WAIT.
-
-  ENDMETHOD.
-
-
   METHOD set_branch_name.
 
     reset_remote( ).
@@ -314,21 +299,6 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     reset_remote( ).
     set( iv_url = iv_url ).
-
-  ENDMETHOD.
-
-
-  METHOD validate.
-
-    DATA:
-      lo_branches TYPE REF TO zcl_abapgit_git_branch_list,
-      ls_branch   TYPE zif_abapgit_definitions=>ty_git_branch.
-
-    " Check if branch still exists since it might have been deleted in remote repo
-    " This will raise exception if not
-    lo_branches = zcl_abapgit_git_transport=>branches( ms_data-url ).
-
-    ls_branch = lo_branches->find_by_name( ms_data-branch_name ).
 
   ENDMETHOD.
 
