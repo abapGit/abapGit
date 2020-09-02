@@ -203,6 +203,7 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS update_last_deserialize
       RAISING
         zcx_abapgit_exception .
+    METHODS check_for_restart .
 ENDCLASS.
 
 
@@ -240,6 +241,26 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     rs_file-data     = get_dot_abapgit( )->serialize( ).
     rs_file-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
                                                iv_data = rs_file-data ).
+
+  ENDMETHOD.
+
+
+  METHOD check_for_restart.
+
+    CONSTANTS:
+      lc_abapgit_prog TYPE progname VALUE `ZABAPGIT` ##NO_TEXT.
+
+    " If abapGit was used to update itself, then restart to avoid LOAD_PROGRAM_&_MISMATCH dumps
+    " because abapGit code was changed at runtime
+    IF zcl_abapgit_ui_factory=>get_gui_functions( )->gui_is_available( ) = abap_true AND
+       zcl_abapgit_url=>is_abapgit_repo( ms_data-url ) = abap_true AND
+       sy-batch = abap_false AND
+       sy-cprog = lc_abapgit_prog.
+
+      MESSAGE 'abapGit was updated and will restart itself' TYPE 'I'.
+      SUBMIT (sy-cprog).
+
+    ENDIF.
 
   ENDMETHOD.
 
@@ -314,12 +335,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     COMMIT WORK AND WAIT.
 
-    " If abapGit was used to update itself, then restart to avoid dumps
-    " because code was changed at runtime
-    IF zcl_abapgit_url=>is_abapgit_repo( ms_data-url ) = abap_true AND sy-batch = abap_false.
-      MESSAGE 'abapGit was updated and will restart itself' TYPE 'I'.
-      SUBMIT (sy-cprog).
-    ENDIF.
+    check_for_restart( ).
 
   ENDMETHOD.
 
