@@ -185,7 +185,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
     io_menu->add( iv_txt = 'Stage'
                   iv_act = c_actions-stage
                   iv_id  = 'stage'
-                  iv_typ = zif_abapgit_html=>c_action_type-dummy ).
+                  iv_typ = zif_abapgit_html=>c_action_type-dummy ).
 
   ENDMETHOD.
 
