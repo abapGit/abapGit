@@ -70,7 +70,7 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
         cv_pass         = lv_pass ).
 
     IF lv_user IS INITIAL.
-      zcx_abapgit_exception=>raise( 'HTTP 401, unauthorized' ).
+      zcx_abapgit_exception=>raise( 'Unauthorized access. Check your credentials' ).
     ENDIF.
 
     IF lv_user <> lv_default_user.
