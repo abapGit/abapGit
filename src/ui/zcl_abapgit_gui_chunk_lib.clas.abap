@@ -706,8 +706,9 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
                                        iv_repo_online = lo_repo_online ).
         CATCH zcx_abapgit_exception INTO lx_error.
           " In case of missing or wrong credentials, show message in status bar
-          IF lx_error->get_text( ) CS 'credentials'.
-            MESSAGE lx_error->get_text( ) TYPE 'S'.
+          lv_hint = lx_error->get_text( ).
+          IF lv_hint CS 'credentials'.
+            MESSAGE lv_hint TYPE 'S'.
           ENDIF.
       ENDTRY.
 
