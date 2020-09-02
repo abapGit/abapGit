@@ -785,7 +785,6 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     DATA: lv_commit_hash       TYPE zif_abapgit_definitions=>ty_sha1,
           lv_commit_short_hash TYPE zif_abapgit_definitions=>ty_sha1,
-          lv_repo_url          TYPE zif_abapgit_persistence=>ty_repo-url,
           lv_display_url       TYPE zif_abapgit_persistence=>ty_repo-url,
           lv_icon_commit       TYPE string.
 
