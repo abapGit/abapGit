@@ -3,6 +3,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
   INHERITING FROM zcl_abapgit_gui_page_diff
   CREATE PUBLIC .
 
+
   PUBLIC SECTION.
     INTERFACES zif_abapgit_gui_hotkeys.
 
