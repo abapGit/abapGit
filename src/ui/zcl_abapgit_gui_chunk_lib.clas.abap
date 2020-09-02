@@ -669,6 +669,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     DATA: lo_repo_online       TYPE REF TO zcl_abapgit_repo_online,
           lo_pback             TYPE REF TO zcl_abapgit_persist_background,
+          lx_error             TYPE REF TO zcx_abapgit_exception,
           lv_hint              TYPE string,
           lv_icon              TYPE string,
           lv_package_jump_data TYPE string.
@@ -700,8 +701,15 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
                               && |{ lo_repo_online->get_url( ) }|
                       iv_class = |url| ).
 
-      render_repo_top_commit_hash( ii_html        = ri_html
-                                   iv_repo_online = lo_repo_online ).
+      TRY.
+          render_repo_top_commit_hash( ii_html        = ri_html
+                                       iv_repo_online = lo_repo_online ).
+        CATCH zcx_abapgit_exception INTO lx_error.
+          " In case of missing or wrong credentials, show message in status bar
+          IF lx_error->get_text( ) CS 'credentials'.
+            MESSAGE lx_error->get_text( ) TYPE 'S'.
+          ENDIF.
+      ENDTRY.
 
     ENDIF.
 
