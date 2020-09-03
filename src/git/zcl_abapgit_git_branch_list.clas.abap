@@ -117,7 +117,7 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
   METHOD find_by_name.
 
     IF iv_branch_name IS INITIAL.
-      zcx_abapgit_exception=>raise( 'Branch name empty' ) ##NO_TEXT.
+      zcx_abapgit_exception=>raise( 'Branch name empty' ).
     ENDIF.
 
     IF iv_branch_name CP zif_abapgit_definitions=>c_git_branch-tags.
@@ -148,7 +148,7 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
       READ TABLE mt_branches INTO rs_branch
         WITH KEY name = iv_branch_name.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'Branch not found' ) ##NO_TEXT.
+        zcx_abapgit_exception=>raise( 'Branch not found' ).
       ENDIF.
 
     ENDIF.
@@ -271,7 +271,7 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
         lv_hash = lv_data+4.
         lv_name = lv_data+45.
       ELSEIF sy-tabix = 1 AND strlen( lv_data ) = 8 AND lv_data(8) = '00000000'.
-        zcx_abapgit_exception=>raise( 'No branches, create branch manually by adding file' ) ##NO_TEXT.
+        zcx_abapgit_exception=>raise( 'No branches, create branch manually by adding file' ).
       ELSE.
         CONTINUE.
       ENDIF.

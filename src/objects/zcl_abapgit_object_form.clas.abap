@@ -195,7 +195,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
       TABLES
         selections    = rt_text_header
       EXCEPTIONS
-        OTHERS        = 1 ##fm_subrc_ok ##NO_TEXT.  "#EC CI_SUBRC
+        OTHERS        = 1 ##fm_subrc_ok.  "#EC CI_SUBRC
 
   ENDMETHOD.
 
@@ -372,16 +372,16 @@ CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_bdcdata> LIKE LINE OF lt_bdcdata.
 
     APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-program  = 'SAPMSSCF' ##NO_TEXT.
-    <ls_bdcdata>-dynpro   = '1102' ##NO_TEXT.
+    <ls_bdcdata>-program  = 'SAPMSSCF'.
+    <ls_bdcdata>-dynpro   = '1102'.
     <ls_bdcdata>-dynbegin = abap_true.
 
     APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-fnam = 'BDC_OKCODE' ##NO_TEXT.
-    <ls_bdcdata>-fval = '=SHOW' ##NO_TEXT.
+    <ls_bdcdata>-fnam = 'BDC_OKCODE'.
+    <ls_bdcdata>-fval = '=SHOW'.
 
     APPEND INITIAL LINE TO lt_bdcdata ASSIGNING <ls_bdcdata>.
-    <ls_bdcdata>-fnam = 'RSSCF-TDFORM' ##NO_TEXT.
+    <ls_bdcdata>-fnam = 'RSSCF-TDFORM'.
     <ls_bdcdata>-fval = ms_item-obj_name.
 
     CALL FUNCTION 'ABAP4_CALL_TRANSACTION'

@@ -252,7 +252,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       ENDIF.
 
       io_menu->add( iv_txt = 'Filter'
-                    io_sub = lo_sub_filter ) ##NO_TEXT.
+                    io_sub = lo_sub_filter ).
     ENDIF.
 
   ENDMETHOD.
@@ -278,7 +278,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ENDLOOP.
 
     io_menu->add( iv_txt = 'Jump'
-                  io_sub = lo_sub_jump ) ##NO_TEXT.
+                  io_sub = lo_sub_jump ).
 
   ENDMETHOD.
 
@@ -291,7 +291,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
   METHOD add_menu_end.
 
     io_menu->add( iv_txt = 'Split/Unified view'
-                  iv_act = c_actions-toggle_unified ) ##NO_TEXT.
+                  iv_act = c_actions-toggle_unified ).
 
   ENDMETHOD.
 
@@ -638,24 +638,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     ro_html->add( |<div class="diff" data-type="{ is_diff-type
       }" data-changed-by="{ is_diff-changed_by
-      }" data-file="{ is_diff-path && is_diff-filename }">| ). "#EC NOTEXT
+      }" data-file="{ is_diff-path && is_diff-filename }">| ).
     ro_html->add( render_diff_head( is_diff ) ).
 
     " Content
     IF is_diff-type <> 'binary'.
-      ro_html->add( '<div class="diff_content">' ).         "#EC NOTEXT
-      ro_html->add( |<table class="diff_tab syntax-hl" id={ is_diff-filename }>| ). "#EC NOTEXT
+      ro_html->add( '<div class="diff_content">' ).
+      ro_html->add( |<table class="diff_tab syntax-hl" id={ is_diff-filename }>| ).
       ro_html->add( render_table_head( is_diff ) ).
       ro_html->add( render_lines( is_diff ) ).
-      ro_html->add( '</table>' ).                           "#EC NOTEXT
+      ro_html->add( '</table>' ).
     ELSE.
-      ro_html->add( '<div class="diff_content paddings center grey">' ). "#EC NOTEXT
-      ro_html->add( 'The content seems to be binary.' ).    "#EC NOTEXT
-      ro_html->add( 'Cannot display as diff.' ).            "#EC NOTEXT
+      ro_html->add( '<div class="diff_content paddings center grey">' ).
+      ro_html->add( 'The content seems to be binary.' ).
+      ro_html->add( 'Cannot display as diff.' ).
     ENDIF.
-    ro_html->add( '</div>' ).                               "#EC NOTEXT
+    ro_html->add( '</div>' ).
 
-    ro_html->add( '</div>' ).                               "#EC NOTEXT
+    ro_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -721,7 +721,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     IF is_diff-fstate = c_fstate-both AND mv_unified = abap_true.
       ii_html->add( '<span class="attention pad-sides">Attention: Unified mode'
-                 && ' highlighting for MM assumes local file is newer ! </span>' ). "#EC NOTEXT
+                 && ' highlighting for MM assumes local file is newer ! </span>' ).
     ENDIF.
 
   ENDMETHOD.
@@ -830,7 +830,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
           && |<td class="code{ lv_bg } diff_right">{ is_diff_line-old }</td>|.
 
     " render line, inverse sides if remote is newer
-    ri_html->add( '<tr>' ).                                 "#EC NOTEXT
+    ri_html->add( '<tr>' ).
 
     render_line_split_row(
         ii_html                = ri_html
@@ -841,7 +841,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
         iv_old                 = lv_old
         iv_new                 = lv_new ).
 
-    ri_html->add( '</tr>' ).                                "#EC NOTEXT
+    ri_html->add( '</tr>' ).
 
   ENDMETHOD.
 
@@ -868,25 +868,25 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     " Release delayed subsequent update lines
     IF is_diff_line-result <> zif_abapgit_definitions=>c_diff-update.
       LOOP AT mt_delayed_lines ASSIGNING <ls_diff_line>.
-        ro_html->add( '<tr>' ).                             "#EC NOTEXT
+        ro_html->add( '<tr>' ).
         ro_html->add( |<td class="num diff_others" line-num="{ <ls_diff_line>-old_num }"></td>|
                    && |<td class="num diff_others" line-num=""></td>|
                    && |<td class="mark diff_others">-</td>|
                    && |<td class="code diff_del diff_unified">{ <ls_diff_line>-old }</td>| ).
-        ro_html->add( '</tr>' ).                            "#EC NOTEXT
+        ro_html->add( '</tr>' ).
       ENDLOOP.
       LOOP AT mt_delayed_lines ASSIGNING <ls_diff_line>.
-        ro_html->add( '<tr>' ).                             "#EC NOTEXT
+        ro_html->add( '<tr>' ).
         ro_html->add( |<td class="num diff_others" line-num=""></td>|
                    && |<td class="num diff_others" line-num="{ <ls_diff_line>-new_num }"></td>|
                    && |<td class="mark diff_others">+</td>|
                    && |<td class="code diff_ins diff_others">{ <ls_diff_line>-new }</td>| ).
-        ro_html->add( '</tr>' ).                            "#EC NOTEXT
+        ro_html->add( '</tr>' ).
       ENDLOOP.
       CLEAR mt_delayed_lines.
     ENDIF.
 
-    ro_html->add( '<tr>' ).                                 "#EC NOTEXT
+    ro_html->add( '<tr>' ).
     CASE is_diff_line-result.
       WHEN zif_abapgit_definitions=>c_diff-update.
         APPEND is_diff_line TO mt_delayed_lines. " Delay output of subsequent updates
@@ -906,7 +906,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
                    && |<td class="mark diff_others">&nbsp;</td>|
                    && |<td class="code diff_unified">{ is_diff_line-old }</td>| ).
     ENDCASE.
-    ro_html->add( '</tr>' ).                                "#EC NOTEXT
+    ro_html->add( '</tr>' ).
 
   ENDMETHOD.
 
@@ -966,22 +966,22 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
   METHOD render_table_head_non_unified.
 
-    io_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
-    io_html->add( '<th class="mark"></th>' ).               "#EC NOTEXT
-    io_html->add( '<th>LOCAL</th>' ).                       "#EC NOTEXT
-    io_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
-    io_html->add( '<th class="mark"></th>' ).               "#EC NOTEXT
-    io_html->add( '<th>REMOTE</th>' ).                      "#EC NOTEXT
+    io_html->add( '<th class="num"></th>' ).
+    io_html->add( '<th class="mark"></th>' ).
+    io_html->add( '<th>LOCAL</th>' ).
+    io_html->add( '<th class="num"></th>' ).
+    io_html->add( '<th class="mark"></th>' ).
+    io_html->add( '<th>REMOTE</th>' ).
 
   ENDMETHOD.
 
 
   METHOD render_table_head_unified.
 
-    io_html->add( '<th class="num">old</th>' ).             "#EC NOTEXT
-    io_html->add( '<th class="num">new</th>' ).             "#EC NOTEXT
-    io_html->add( '<th class="mark"></th>' ).               "#EC NOTEXT
-    io_html->add( '<th>code</th>' ).                        "#EC NOTEXT
+    io_html->add( '<th class="num">old</th>' ).
+    io_html->add( '<th class="num">new</th>' ).
+    io_html->add( '<th class="mark"></th>' ).
+    io_html->add( '<th>code</th>' ).
 
   ENDMETHOD.
 

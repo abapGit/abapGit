@@ -103,7 +103,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
   METHOD clear_dd03p_fields.
 
-    CONSTANTS lc_comptype_dataelement TYPE comptype VALUE 'E' ##NO_TEXT.
+    CONSTANTS lc_comptype_dataelement TYPE comptype VALUE 'E'.
 
     DATA: lv_masklen TYPE c LENGTH 4.
 

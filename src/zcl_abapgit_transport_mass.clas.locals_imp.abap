@@ -110,7 +110,7 @@ CLASS lcl_transport_zipper DEFINITION FINAL.
     TYPES ty_filename TYPE string.
 
 * File extension
-    CONSTANTS gc_zip_ext TYPE string VALUE '.zip' ##NO_TEXT.
+    CONSTANTS gc_zip_ext TYPE string VALUE '.zip'.
 
     METHODS constructor  IMPORTING iv_folder TYPE ty_folder
                          RAISING   zcx_abapgit_exception.

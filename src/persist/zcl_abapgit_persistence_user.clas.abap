@@ -103,7 +103,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
     CALL TRANSFORMATION id
       OPTIONS value_handling = 'accept_data_loss'
       SOURCE XML lv_xml
-      RESULT user = rs_user ##NO_TEXT.
+      RESULT user = rs_user.
   ENDMETHOD.
 
 

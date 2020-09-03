@@ -68,7 +68,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
     CREATE OBJECT ro_menu.
 
     ro_menu->add( iv_txt = 'Run background logic'
-                  iv_act = zif_abapgit_definitions=>c_action-go_background_run ) ##NO_TEXT.
+                  iv_act = zif_abapgit_definitions=>c_action-go_background_run ).
 
   ENDMETHOD.
 
@@ -173,8 +173,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
 
     ro_html->add( render_methods( ls_per ) ).
 
-    ro_html->add( '<u>HTTP Authentication, optional</u><br>' ) ##NO_TEXT.
-    ro_html->add( '(password will be saved in clear text)<br>' ) ##NO_TEXT.
+    ro_html->add( '<u>HTTP Authentication, optional</u><br>' ).
+    ro_html->add( '(password will be saved in clear text)<br>' ).
     ro_html->add( '<table>' ).
     ro_html->add( '<tr>' ).
     ro_html->add( '<td>Username:</td>' ).
@@ -221,25 +221,25 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
 
     lt_methods = zcl_abapgit_background=>list_methods( ).
 
-    ro_html->add( '<u>Method</u><br>' ) ##NO_TEXT.
+    ro_html->add( '<u>Method</u><br>' ).
     ro_html->add( |<form method="get" action="sapevent:{ zif_abapgit_definitions=>c_action-bg_update }">| ).
 
     IF is_per-method IS INITIAL.
-      lv_checked = ' checked' ##NO_TEXT.
+      lv_checked = ' checked'.
     ENDIF.
 
-    ro_html->add( '<input type="radio" name="method" value=""' && lv_checked && '>Do nothing<br>' ) ##NO_TEXT.
+    ro_html->add( '<input type="radio" name="method" value=""' && lv_checked && '>Do nothing<br>' ).
 
     LOOP AT lt_methods INTO ls_method.
       CLEAR lv_checked.
       IF is_per-method = ls_method-class.
-        lv_checked = ' checked' ##NO_TEXT.
+        lv_checked = ' checked'.
       ENDIF.
 
       ro_html->add( '<input type="radio" name="method" value="' &&
         ls_method-class && '"' &&
         lv_checked && '>' &&
-        ls_method-description && '<br>' ) ##NO_TEXT.
+        ls_method-description && '<br>' ).
     ENDLOOP.
 
     ro_html->add( '<br>' ).
@@ -298,7 +298,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
       lo_persistence->modify( is_bg_task ).
     ENDIF.
 
-    MESSAGE 'Saved' TYPE 'S' ##NO_TEXT.
+    MESSAGE 'Saved' TYPE 'S'.
 
     COMMIT WORK.
 
