@@ -61,14 +61,6 @@ CLASS zcl_abapgit_factory DEFINITION
     TYPES:
       tty_code_inspector TYPE HASHED TABLE OF ty_code_inspector
                                        WITH UNIQUE KEY package .
-    TYPES:
-      BEGIN OF ty_longtexts,
-        longtexts_name TYPE string,
-        instance       TYPE REF TO zcl_abapgit_longtexts,
-      END OF ty_longtexts .
-    TYPES:
-      tty_longtexts TYPE HASHED TABLE OF ty_longtexts
-                           WITH UNIQUE KEY longtexts_name .
 
     CLASS-DATA gi_tadir TYPE REF TO zif_abapgit_tadir .
     CLASS-DATA gt_sap_package TYPE tty_sap_package .

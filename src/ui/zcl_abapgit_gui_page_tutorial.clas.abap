@@ -102,7 +102,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TUTORIAL IMPLEMENTATION.
     ri_html->add( '<h2>Repository list and favorites</h2>' ).
     ri_html->add( '<p><ul>' ).
     ri_html->add( |<li>To favorite a repository, use the {
-                  zcl_abapgit_html=>icon( 'star/darkgrey' ) } icon in the repository list.</li>| ).
+                  ri_html->icon( 'star/darkgrey' ) } icon in the repository list.</li>| ).
     ri_html->add( |<li>To go to a repository, click on the repository name.</li>| ).
     ri_html->add( |<li>To go back to your favorites, use the| ).
     ri_html->add_a(
