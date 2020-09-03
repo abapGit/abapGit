@@ -34,6 +34,6 @@ MV_TEXT = MV_TEXT
 
 
   METHOD get_default_text.
-    rv_text = 'Deleting previous access tokens failed.' ##NO_TEXT.
+    rv_text = 'Deleting previous access tokens failed.' .
   ENDMETHOD.
 ENDCLASS.

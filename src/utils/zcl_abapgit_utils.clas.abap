@@ -70,7 +70,7 @@ CLASS zcl_abapgit_utils IMPLEMENTATION.
       SUBMATCHES
       ev_author
       ev_email
-      ev_time ##NO_TEXT.
+      ev_time.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error author regex value='{ iv_author }'| ).

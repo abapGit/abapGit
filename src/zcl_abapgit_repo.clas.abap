@@ -240,7 +240,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD check_for_restart.
 
     CONSTANTS:
-      lc_abapgit_prog TYPE progname VALUE `ZABAPGIT` ##NO_TEXT.
+      lc_abapgit_prog TYPE progname VALUE `ZABAPGIT`.
 
     " If abapGit was used to update itself, then restart to avoid LOAD_PROGRAM_&_MISMATCH dumps
     " because abapGit code was changed at runtime

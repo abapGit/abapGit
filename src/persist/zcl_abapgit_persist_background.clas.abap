@@ -90,7 +90,7 @@ CLASS ZCL_ABAPGIT_PERSIST_BACKGROUND IMPLEMENTATION.
     CALL TRANSFORMATION id
       OPTIONS value_handling = 'accept_data_loss'
       SOURCE XML iv_string
-      RESULT data = rs_xml ##NO_TEXT.
+      RESULT data = rs_xml.
   ENDMETHOD.
 
 

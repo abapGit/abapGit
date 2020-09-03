@@ -143,7 +143,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'ATTR'
                   CHANGING cg_data = ls_attr ).
 
-    lv_source = mo_files->read_string( 'html' ) ##NO_TEXT.
+    lv_source = mo_files->read_string( 'html' ).
 
     ls_attr-devclass = iv_package.
     save( is_attr   = ls_attr
@@ -218,7 +218,7 @@ CLASS zcl_abapgit_object_iatu IMPLEMENTATION.
                  ig_data = ls_attr ).
 
     mo_files->add_string( iv_ext    = 'html'
-                          iv_string = lv_source ) ##NO_TEXT.
+                          iv_string = lv_source ).
 
   ENDMETHOD.
 

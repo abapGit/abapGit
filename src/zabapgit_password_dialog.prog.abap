@@ -76,10 +76,10 @@ CLASS lcl_password_dialog IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD on_screen_init.
-    s_title = 'Login'     ##NO_TEXT.
-    s_url   = 'Repo URL'  ##NO_TEXT.
-    s_user  = 'User'      ##NO_TEXT.
-    s_pass  = 'Password'  ##NO_TEXT.
+    s_title = 'Login'.
+    s_url   = 'Repo URL'.
+    s_user  = 'User'.
+    s_pass  = 'Password'.
   ENDMETHOD.
 
   METHOD on_screen_output.

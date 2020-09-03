@@ -92,7 +92,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
       gv_max_threads = 1.
     ENDIF.
 
-    mv_group = 'parallel_generators' ##NO_TEXT.
+    mv_group = 'parallel_generators'.
     mv_serialize_master_lang_only = iv_serialize_master_lang_only.
 
   ENDMETHOD.
@@ -284,7 +284,7 @@ CLASS ZCL_ABAPGIT_SERIALIZE IMPLEMENTATION.
 
       li_progress->show(
         iv_current = sy-tabix
-        iv_text    = |Serialize { <ls_tadir>-obj_name }, { lv_max } threads| ) ##NO_TEXT.
+        iv_text    = |Serialize { <ls_tadir>-obj_name }, { lv_max } threads| ).
 
       IF lv_max = 1.
         run_sequential(

@@ -66,7 +66,7 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
   METHOD check_sapgui.
 
     CONSTANTS:
-      lc_hide_sapgui_hint TYPE string VALUE '2' ##NO_TEXT.
+      lc_hide_sapgui_hint TYPE string VALUE '2'.
 
     DATA:
       lv_answer           TYPE char1,
@@ -114,7 +114,7 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
       iv_text_button_1         = 'Continue'
       iv_text_button_2         = 'Cancel'
       iv_default_button        = '2'
-      iv_display_cancel_button = abap_false ).              "#EC NOTEXT
+      iv_display_cancel_button = abap_false ).
 
     IF lv_answer <> '1'.
       RETURN.
@@ -129,7 +129,7 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
       lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
         iv_url         = iv_url
         iv_branch_name = zif_abapgit_definitions=>c_git_branch-master
-        iv_package     = iv_package ) ##NO_TEXT.
+        iv_package     = iv_package ).
 
       zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
 

@@ -419,9 +419,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
                          iv_act = |{ zif_abapgit_definitions=>c_action-repo_log }?{ mv_key }| ).
       ENDIF.
       ro_toolbar->add( iv_txt = 'Branch'
-                       io_sub = io_tb_branch ) ##NO_TEXT.
+                       io_sub = io_tb_branch ).
       ro_toolbar->add( iv_txt = 'Tag'
-                       io_sub = io_tb_tag ) ##NO_TEXT.
+                       io_sub = io_tb_tag ).
     ELSE.
       IF mo_repo->has_remote_source( ) = abap_true AND iv_rstate IS NOT INITIAL.
         ro_toolbar->add( iv_txt = 'Pull <sup>zip</sup>'
@@ -445,7 +445,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
     ENDIF.
 
     ro_toolbar->add( iv_txt = 'Advanced'
-                     io_sub = io_tb_advanced ) ##NO_TEXT.
+                     io_sub = io_tb_advanced ).
 
     ro_toolbar->add( iv_txt = 'View'
                      io_sub = build_view_menu( ) ).
@@ -605,7 +605,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
   METHOD open_in_master_language.
 
     CONSTANTS:
-      lc_abapgit_tcode TYPE tcode VALUE `ZABAPGIT` ##NO_TEXT.
+      lc_abapgit_tcode TYPE tcode VALUE `ZABAPGIT`.
 
     DATA:
       lv_master_language TYPE spras,
