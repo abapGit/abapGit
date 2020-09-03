@@ -281,12 +281,12 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
 
     zcl_abapgit_git_transport=>upload_pack_by_branch(
       EXPORTING
-        iv_url         = ms_merge-repo->get_url( )
-        iv_branch_name = ms_merge-repo->get_branch_name( )
-        iv_deepen      = abap_false
-        it_branches    = lt_upload
+        iv_url          = ms_merge-repo->get_url( )
+        iv_branch_name  = ms_merge-repo->get_branch_name( )
+        iv_deepen_level = 0
+        it_branches     = lt_upload
       IMPORTING
-        et_objects     = rt_objects ).
+        et_objects      = rt_objects ).
 
   ENDMETHOD.
 
