@@ -4,13 +4,14 @@ CLASS zcl_abapgit_git_transport DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    TYPES: ty_deepen_level TYPE n LENGTH 2.
 
 * remote to local
     CLASS-METHODS upload_pack_by_branch
       IMPORTING
         !iv_url          TYPE string
         !iv_branch_name  TYPE string
-        !iv_deepen_level TYPE numc2 DEFAULT 1
+        !iv_deepen_level TYPE ty_deepen_level DEFAULT 1
         !it_branches     TYPE zif_abapgit_definitions=>ty_git_branch_list_tt OPTIONAL
       EXPORTING
         !et_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
