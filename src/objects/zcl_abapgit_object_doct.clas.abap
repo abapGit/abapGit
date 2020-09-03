@@ -12,13 +12,6 @@ CLASS zcl_abapgit_object_doct DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    TYPES:
-      BEGIN OF ty_data,
-        doctitle TYPE dsyst-doktitle,
-        head     TYPE thead,
-        lines    TYPE tline_tab,
-      END OF ty_data .
-
     CONSTANTS c_id TYPE dokhl-id VALUE 'TX' ##NO_TEXT.
     CONSTANTS c_name TYPE string VALUE 'DOC' ##NO_TEXT.
     DATA mi_longtexts TYPE REF TO zif_abapgit_longtexts .

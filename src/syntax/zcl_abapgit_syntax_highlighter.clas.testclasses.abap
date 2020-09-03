@@ -121,7 +121,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     DATA lv_line TYPE string.
 
-    lv_line = '* commented out line with key word data'.    "#EC NOTEXT
+    lv_line = '* commented out line with key word data'.
 
     " Generate table with expected values after parsing
     generate_parse( iv_token  = 'C'
@@ -171,7 +171,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     DATA lv_line TYPE string.
 
-    lv_line = 'data: lv_var_name type string.'.             "#EC NOTEXT
+    lv_line = 'data: lv_var_name type string.'.
 
     " Generate table with expected values after parsing
     generate_parse( iv_token  = 'K'
@@ -222,7 +222,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     DATA lv_line TYPE string.
 
 
-    lv_line = 'call function ''FM_NAME''. " Commented'.     "#EC NOTEXT
+    lv_line = 'call function ''FM_NAME''. " Commented'.
 
     " Generate table with expected values after parsing
     generate_parse( iv_token  = 'K'
@@ -301,7 +301,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     DATA lv_line TYPE string.
 
-    lv_line = 'constants: lc_var type string value ''simpletext data simpletext''.'. "#EC NOTEXT
+    lv_line = 'constants: lc_var type string value ''simpletext data simpletext''.'.
 
     " Generate table with expected values after parsing
     generate_parse( iv_token  = 'K'
@@ -387,7 +387,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     DATA lv_line TYPE string.
 
-    lv_line = 'a = |{ b }={ c }|.'.                         "#EC NOTEXT
+    lv_line = 'a = |{ b }={ c }|.'.
 
     " Generate table with expected values after parsing
     generate_parse( iv_token  = 'T'
@@ -480,7 +480,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     DATA lv_line TYPE string.
 
-    lv_line = 'lv_line = lc_constant && |XYZ { ''ab'' && |ac{ ''UU'' }| }|'. "#EC NOTEXT
+    lv_line = 'lv_line = lc_constant && |XYZ { ''ab'' && |ac{ ''UU'' }| }|'.
 
     " Generate table with expected values after parsing
     generate_parse( iv_token  = 'K'
@@ -638,7 +638,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     DATA lv_line TYPE string.
 
-    lv_line = 'SELECT * FROM foo'.                          "#EC NOTEXT
+    lv_line = 'SELECT * FROM foo'.
 
     " Generate table with expected values after parsing
     generate_parse( iv_token  = 'K'
@@ -689,7 +689,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     DATA lv_line TYPE string.
 
-    lv_line = 'lv_length = <match>-length.'.                "#EC NOTEXT
+    lv_line = 'lv_length = <match>-length.'.
 
     " Generate table with expected values after parsing
     generate_parse( iv_token  = 'K'
@@ -717,7 +717,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     DATA lv_line TYPE string.
 
-    lv_line = '<tag>Text</tag>'.                            "#EC NOTEXT
+    lv_line = '<tag>Text</tag>'.
 
     " Generate table with expected values after parsing
     generate_parse( iv_token  = 'X'
@@ -767,7 +767,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     DATA lv_line TYPE string.
 
-    lv_line = '<tag/>'.                                     "#EC NOTEXT
+    lv_line = '<tag/>'.
 
     " Generate table with expected values after parsing
     generate_parse( iv_token  = 'X'
@@ -797,7 +797,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     DATA lv_line TYPE string.
 
-    lv_line = '<tag attribute="value"/>'.                   "#EC NOTEXT
+    lv_line = '<tag attribute="value"/>'.
 
     " Generate table with expected values after parsing
     generate_parse( iv_token  = 'X'
@@ -862,7 +862,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     DATA lv_line TYPE string.
 
-    lv_line = '<?xml version="1.0"?>'.                      "#EC NOTEXT
+    lv_line = '<?xml version="1.0"?>'.
 
     " Generate table with expected values after parsing
     generate_parse( iv_token  = 'X'
@@ -927,7 +927,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
 
     DATA lv_line TYPE string.
 
-    lv_line = '<ns:tag ns:a1="v1" ns:a2=''v2''>"text"</ns:tag>'. "#EC NOTEXT
+    lv_line = '<ns:tag ns:a1="v1" ns:a2=''v2''>"text"</ns:tag>'.
 
     " Generate table with expected values after parsing
     generate_parse( iv_token  = 'X'
@@ -1039,7 +1039,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     DATA lv_line TYPE string.
 
     "unclosed tag
-    lv_line = '<ns:tag ns:a1="v1"'.                         "#EC NOTEXT
+    lv_line = '<ns:tag ns:a1="v1"'.
 
     " Generate table with expected values after parsing
     generate_parse( iv_token  = 'X'
@@ -1093,7 +1093,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     DATA lv_line TYPE string.
 
     "xml special characters in attribute
-    lv_line = '<tag attribute=" '' > "/>'.                  "#EC NOTEXT
+    lv_line = '<tag attribute=" '' > "/>'.
 
     " Generate table with expected values after parsing
     generate_parse( iv_token  = 'X'
@@ -1161,7 +1161,7 @@ CLASS ltcl_syntax_cases IMPLEMENTATION.
     DATA lv_line TYPE string.
 
     "attribute at beginning of line
-    lv_line = 'attribute=''>" '''.                          "#EC NOTEXT
+    lv_line = 'attribute=''>" '''.
 
     " Generate table with expected values after parsing
     generate_parse( iv_token  = 'A'
@@ -1242,13 +1242,13 @@ CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
       lv_line_act TYPE string,
       lv_line_exp TYPE string.
 
-    lv_line = 'call function ''FM_NAME''. " Commented'.     "#EC NOTEXT
+    lv_line = 'call function ''FM_NAME''. " Commented'.
 
     lv_line_exp =
-      '<span class="keyword">call</span>' &&                "#EC NOTEXT
-      ' <span class="keyword">function</span>' &&           "#EC NOTEXT
-      ' <span class="text">&#39;FM_NAME&#39;</span>.' &&    "#EC NOTEXT
-      ' <span class="comment">&quot; Commented</span>'.     "#EC NOTEXT
+      '<span class="keyword">call</span>' &&
+      ' <span class="keyword">function</span>' &&
+      ' <span class="text">&#39;FM_NAME&#39;</span>.' &&
+      ' <span class="comment">&quot; Commented</span>'.
 
     lv_line_act = mo_syntax_highlighter->process_line( lv_line ).
 
@@ -1263,13 +1263,13 @@ CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
     DATA lv_line_act TYPE string.
 
     " Call the method and compare results
-    lv_line_act = mo_syntax_highlighter->apply_style( iv_line  = 'CALL FUNCTION' "#EC NOTEXT
+    lv_line_act = mo_syntax_highlighter->apply_style( iv_line  = 'CALL FUNCTION'
                                    iv_class = zcl_abapgit_syntax_abap=>c_css-keyword ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_line_act
-      exp = '<span class="keyword">CALL FUNCTION</span>'    "#EC NOTEXT
-      msg = 'Failure during applying of style.' ).          "#EC NOTEXT
+      exp = '<span class="keyword">CALL FUNCTION</span>'
+      msg = 'Failure during applying of style.' ).
 
   ENDMETHOD.
 
@@ -1283,15 +1283,15 @@ CLASS ltcl_syntax_basic_logic IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_line_act
       exp = ''
-      msg = 'Failure in method process_line.' ).            "#EC NOTEXT
+      msg = 'Failure in method process_line.' ).
 
     " Call the method with non-empty line and compare results
-    lv_line_act = mo_syntax_highlighter->process_line( '* CALL FUNCTION' ). "#EC NOTEXT
+    lv_line_act = mo_syntax_highlighter->process_line( '* CALL FUNCTION' ).
 
     cl_abap_unit_assert=>assert_equals(
       act = lv_line_act
-      exp = '<span class="comment">* CALL FUNCTION</span>'  "#EC NOTEXT
-      msg = 'Failure in method process_line.' ).            "#EC NOTEXT
+      exp = '<span class="comment">* CALL FUNCTION</span>'
+      msg = 'Failure in method process_line.' ).
 
   ENDMETHOD.
 

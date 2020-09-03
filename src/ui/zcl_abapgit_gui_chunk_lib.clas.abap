@@ -83,7 +83,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
       IMPORTING
         !iv_text       TYPE string
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     CLASS-METHODS render_infopanel
       IMPORTING
         !iv_div_id     TYPE string
@@ -677,11 +677,11 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     CREATE OBJECT lo_pback.
 
     IF io_repo->is_offline( ) = abap_true.
-      lv_icon = 'plug/darkgrey' ##NO_TEXT.
-      lv_hint = 'Offline repository' ##NO_TEXT.
+      lv_icon = 'plug/darkgrey'.
+      lv_hint = 'Offline repository'.
     ELSE.
-      lv_icon = 'cloud-upload-alt/blue' ##NO_TEXT.
-      lv_hint = 'On-line repository' ##NO_TEXT.
+      lv_icon = 'cloud-upload-alt/blue'.
+      lv_hint = 'On-line repository'.
     ENDIF.
 
     ri_html->add( '<table class="w100"><tr>' ).
@@ -724,9 +724,9 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     " Fav
     IF abap_true = zcl_abapgit_persistence_user=>get_instance( )->is_favorite_repo( io_repo->get_key( ) ).
-      lv_icon = 'star/blue' ##NO_TEXT.
+      lv_icon = 'star/blue'.
     ELSE.
-      lv_icon = 'star/grey' ##NO_TEXT.
+      lv_icon = 'star/grey'.
     ENDIF.
     ri_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?{ io_repo->get_key( ) }|
                     iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_icon
@@ -785,7 +785,6 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     DATA: lv_commit_hash       TYPE zif_abapgit_definitions=>ty_sha1,
           lv_commit_short_hash TYPE zif_abapgit_definitions=>ty_sha1,
-          lv_repo_url          TYPE zif_abapgit_persistence=>ty_repo-url,
           lv_display_url       TYPE zif_abapgit_persistence=>ty_repo-url,
           lv_icon_commit       TYPE string.
 
@@ -813,10 +812,10 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
   METHOD render_warning_banner.
 
-    CREATE OBJECT ro_html.
-    ro_html->add( '<div class="dummydiv warning">' ).
-    ro_html->add( |{ zcl_abapgit_html=>icon( 'exclamation-triangle/yellow' ) }| && | { iv_text }| ).
-    ro_html->add( '</div>' ).
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( '<div class="dummydiv warning">' ).
+    ri_html->add( |{ ri_html->icon( 'exclamation-triangle/yellow' ) }| && | { iv_text }| ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 ENDCLASS.

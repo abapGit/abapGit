@@ -125,7 +125,7 @@ CLASS ZCL_ABAPGIT_2FA_AUTH_REGISTRY IMPLEMENTATION.
         fields          = lt_fields
       EXCEPTIONS
         error_in_fields = 1
-        OTHERS          = 2. "#EC NOTEXT
+        OTHERS          = 2.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Error from POPUP_GET_VALUES' ).
     ENDIF.

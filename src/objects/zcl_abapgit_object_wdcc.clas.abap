@@ -76,8 +76,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: lo_translator  TYPE REF TO object, "if_wdr_config_otr
-          lv_config_id   TYPE c LENGTH 32,
+    DATA: lv_config_id   TYPE c LENGTH 32,
           lv_config_type TYPE n LENGTH 2,
           lv_config_var  TYPE c LENGTH 6,
           lt_otr_texts   TYPE TABLE OF wdy_config_compt,

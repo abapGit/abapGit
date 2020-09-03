@@ -83,7 +83,7 @@ CLASS zcl_abapgit_xml_input IMPLEMENTATION.
         CALL TRANSFORMATION id
           OPTIONS value_handling = 'accept_data_loss'
           SOURCE XML mi_xml_doc
-          RESULT (lt_rtab) ##no_text.
+          RESULT (lt_rtab).
       CATCH cx_transformation_error INTO lx_error.
         IF mv_filename IS INITIAL.
           zcx_abapgit_exception=>raise( lx_error->if_message~get_text( ) ).

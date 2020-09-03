@@ -119,14 +119,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
       ro_menu->add( iv_txt = 'Commit'
                     iv_act = c_actions-commit
                     iv_cur = abap_false
-                    iv_opt = lv_opt ) ##NO_TEXT.
+                    iv_opt = lv_opt ).
 
     ELSE.
 
       ro_menu->add( iv_txt = 'Stage'
                     iv_act = c_actions-stage
                     iv_cur = abap_false
-                    iv_opt = lv_opt ) ##NO_TEXT.
+                    iv_opt = lv_opt ).
 
     ENDIF.
 
@@ -190,7 +190,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
     IF lines( mt_result ) = 0.
       ri_html->add( '<div class="dummydiv success">' ).
-      ri_html->add( zcl_abapgit_html=>icon( 'check' ) ).
+      ri_html->add( ri_html->icon( 'check' ) ).
       ri_html->add( 'No code inspector findings' ).
       ri_html->add( '</div>' ).
     ELSE.

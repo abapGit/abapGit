@@ -61,7 +61,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
       iv_text_button_2         = 'Cancel'
       iv_icon_button_2         = 'ICON_CANCEL'
       iv_default_button        = '2'
-      iv_display_cancel_button = abap_false ).                 "#EC NOTEXT
+      iv_display_cancel_button = abap_false ).
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
@@ -160,7 +160,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
     LOOP AT lt_data ASSIGNING <ls_data>.
       CLEAR lv_trclass.
       IF sy-tabix = 1.
-        lv_trclass = ' class="firstrow"' ##NO_TEXT.
+        lv_trclass = ' class="firstrow"'.
       ENDIF.
 
       lv_action  = zcl_abapgit_html_action_utils=>dbkey_encode( <ls_data> ).

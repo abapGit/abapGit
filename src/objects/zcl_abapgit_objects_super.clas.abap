@@ -269,7 +269,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
     REPLACE FIRST OCCURRENCE OF 'ZCL_ABAPGIT' IN lv_class WITH 'LCL'.
 
     rs_metadata-class = lv_class.
-    rs_metadata-version = 'v1.0.0' ##no_text.
+    rs_metadata-version = 'v1.0.0'.
 
   ENDMETHOD.
 

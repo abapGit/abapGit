@@ -24,4 +24,4 @@ tradtional enterprise products.
 ### Support
 It is a community effort to support the project, recommend [watching](https://help.github.com/articles/watching-and-unwatching-repositories/) the project to get a feeling about issue resolution. Everyone can suggest changes to abapGit via [pull requests](https://help.github.com/articles/about-pull-requests/).
 
-![](img/abapgit_1_73_0.png)
+![](img/abapgit_1_99_0.png)

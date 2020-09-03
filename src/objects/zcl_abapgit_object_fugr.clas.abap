@@ -123,13 +123,13 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS serialize_texts
       IMPORTING
         !iv_prog_name TYPE programm
-        !io_xml       TYPE REF TO zcl_abapgit_xml_output
+        !io_xml       TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_texts
       IMPORTING
         !iv_prog_name TYPE programm
-        !io_xml       TYPE REF TO zcl_abapgit_xml_input
+        !io_xml       TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
