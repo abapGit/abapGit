@@ -51,7 +51,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_2FA_AUTH_REGISTRY IMPLEMENTATION.
+CLASS zcl_abapgit_2fa_auth_registry IMPLEMENTATION.
 
 
   METHOD class_constructor.
@@ -70,10 +70,7 @@ CLASS ZCL_ABAPGIT_2FA_AUTH_REGISTRY IMPLEMENTATION.
           CREATE OBJECT li_authenticator TYPE (ls_sub-clsname).
           INSERT li_authenticator INTO TABLE gt_registered_authenticators.
         ENDLOOP.
-      CATCH cx_class_not_existent.
-* class in local report
-        CREATE OBJECT li_authenticator TYPE zcl_abapgit_2fa_github_auth.
-        INSERT li_authenticator INTO TABLE gt_registered_authenticators.
+      CATCH cx_class_not_existent  ##NO_HANDLER.
     ENDTRY.
 
   ENDMETHOD.
