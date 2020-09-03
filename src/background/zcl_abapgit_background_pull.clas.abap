@@ -16,7 +16,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PULL IMPLEMENTATION.
 
   METHOD zif_abapgit_background~get_description.
 
-    rv_description = 'Automatic pull' ##NO_TEXT.
+    rv_description = 'Automatic pull'.
 
   ENDMETHOD.
 

@@ -3,6 +3,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
   INHERITING FROM zcl_abapgit_gui_page_diff
   CREATE PUBLIC .
 
+
   PUBLIC SECTION.
     INTERFACES zif_abapgit_gui_hotkeys.
 
@@ -185,8 +186,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
     io_menu->add( iv_txt = 'Stage'
                   iv_act = c_actions-stage
                   iv_id  = 'stage'
-                  iv_typ = zif_abapgit_html=>c_action_type-dummy
-                   ) ##NO_TEXT.
+                  iv_typ = zif_abapgit_html=>c_action_type-dummy ).
 
   ENDMETHOD.
 
@@ -630,7 +630,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
 
     CONSTANTS:
       BEGIN OF lc_css_class,
-        patch TYPE string VALUE `patch` ##NO_TEXT,
+        patch TYPE string VALUE `patch`,
       END OF lc_css_class.
 
     DATA:
