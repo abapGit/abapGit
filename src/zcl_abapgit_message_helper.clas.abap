@@ -160,7 +160,7 @@ CLASS ZCL_ABAPGIT_MESSAGE_HELPER IMPLEMENTATION.
 
   METHOD itf_to_string.
 
-    CONSTANTS: lc_format_section TYPE string VALUE 'U1' ##NO_TEXT.
+    CONSTANTS: lc_format_section TYPE string VALUE 'U1'.
 
     DATA:
       lt_stream      TYPE TABLE OF tdline,

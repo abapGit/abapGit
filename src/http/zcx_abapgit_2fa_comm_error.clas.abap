@@ -34,6 +34,6 @@ MV_TEXT = MV_TEXT
 
 
   METHOD get_default_text.
-    rv_text = 'Communication error.' ##NO_TEXT.
+    rv_text = 'Communication error.' .
   ENDMETHOD.
 ENDCLASS.

@@ -8,6 +8,15 @@ Legend
 + : added
 - : removed
 
+2020-09-03 v1.99.1
+------------------
+! exception class updated, might require update via ZABAPGIT_STANDALONE
+! restart abapGit in case of self update
+* OTGR enable parentes again
+* fix filename encoding of < and >
+* class parsing, show line number causing error
+* refactoring
+
 2020-08-27 v1.99.0
 ------------------
 + New functionality for switching between PRs for github

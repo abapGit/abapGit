@@ -56,7 +56,7 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
         TRY.
             CALL METHOD lo_source->('IF_OO_CLIF_SOURCE~LOCK').
           CATCH cx_oo_access_permission.
-            zcx_abapgit_exception=>raise( 'source_new, access permission exception' ) ##NO_TEXT.
+            zcx_abapgit_exception=>raise( 'source_new, access permission exception' ).
         ENDTRY.
 
         lt_source_code = get_interface_source( ).
@@ -86,7 +86,7 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
         class_not_existing = 1
         OTHERS             = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from CL_OO_SOURCE' ) ##NO_TEXT.
+      zcx_abapgit_exception=>raise( 'error from CL_OO_SOURCE' ).
     ENDIF.
 
     TRY.
@@ -96,9 +96,9 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
         lo_source->save( ).
         lo_source->access_permission( seok_access_free ).
       CATCH cx_oo_access_permission.
-        zcx_abapgit_exception=>raise( 'permission error' ) ##NO_TEXT.
+        zcx_abapgit_exception=>raise( 'permission error' ).
       CATCH cx_oo_source_save_failure.
-        zcx_abapgit_exception=>raise( 'save failure' ) ##NO_TEXT.
+        zcx_abapgit_exception=>raise( 'save failure' ).
     ENDTRY.
   ENDMETHOD.
 
@@ -110,7 +110,7 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
     ls_interface_properties-clsname  = c_interface_name.
     ls_interface_properties-version  = '1'.
     ls_interface_properties-langu    = 'E'.
-    ls_interface_properties-descript = 'APACK: Manifest interface' ##NO_TEXT.
+    ls_interface_properties-descript = 'APACK: Manifest interface'.
     ls_interface_properties-exposure = '2'.
     ls_interface_properties-state    = '1'.
     ls_interface_properties-unicode  = abap_true.
@@ -129,7 +129,7 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
         other           = 6
         OTHERS          = 7.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Error from SEO_INTERFACE_CREATE_COMPLETE' ) ##NO_TEXT.
+      zcx_abapgit_exception=>raise( 'Error from SEO_INTERFACE_CREATE_COMPLETE' ).
     ENDIF.
 
     add_intf_source_and_activate( ).
@@ -139,34 +139,34 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
 
   METHOD get_interface_source.
 
-    INSERT `INTERFACE zif_apack_manifest PUBLIC.` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `  TYPES: BEGIN OF ty_dependency,` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `           group_id       TYPE string,` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `           artifact_id    TYPE string,` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `           version        TYPE string,` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `           git_url        TYPE string,` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `           target_package TYPE devclass,` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `         END OF ty_dependency,` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `         ty_dependencies    TYPE STANDARD TABLE OF ty_dependency` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `                            WITH NON-UNIQUE DEFAULT KEY,` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `         ty_repository_type TYPE string,` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `         BEGIN OF ty_descriptor,` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `           group_id        TYPE string,` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `           artifact_id     TYPE string,` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `           version         TYPE string,` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `           repository_type TYPE ty_repository_type,` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `           git_url         TYPE string,` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `           dependencies    TYPE ty_dependencies,` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `         END OF ty_descriptor.` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `  CONSTANTS: co_file_name         TYPE string VALUE '.apack-manifest.xml',` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `             co_abap_git          TYPE ty_repository_type VALUE 'abapGit',` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `             co_interface_version TYPE i VALUE 1.` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `  DATA: descriptor TYPE ty_descriptor READ-ONLY.` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `` INTO TABLE rt_source ##NO_TEXT.
-    INSERT `ENDINTERFACE.` INTO TABLE rt_source ##NO_TEXT.
+    INSERT `INTERFACE zif_apack_manifest PUBLIC.` INTO TABLE rt_source.
+    INSERT `` INTO TABLE rt_source.
+    INSERT `  TYPES: BEGIN OF ty_dependency,` INTO TABLE rt_source.
+    INSERT `           group_id       TYPE string,` INTO TABLE rt_source.
+    INSERT `           artifact_id    TYPE string,` INTO TABLE rt_source.
+    INSERT `           version        TYPE string,` INTO TABLE rt_source.
+    INSERT `           git_url        TYPE string,` INTO TABLE rt_source.
+    INSERT `           target_package TYPE devclass,` INTO TABLE rt_source.
+    INSERT `         END OF ty_dependency,` INTO TABLE rt_source.
+    INSERT `         ty_dependencies    TYPE STANDARD TABLE OF ty_dependency` INTO TABLE rt_source.
+    INSERT `                            WITH NON-UNIQUE DEFAULT KEY,` INTO TABLE rt_source.
+    INSERT `         ty_repository_type TYPE string,` INTO TABLE rt_source.
+    INSERT `         BEGIN OF ty_descriptor,` INTO TABLE rt_source.
+    INSERT `           group_id        TYPE string,` INTO TABLE rt_source.
+    INSERT `           artifact_id     TYPE string,` INTO TABLE rt_source.
+    INSERT `           version         TYPE string,` INTO TABLE rt_source.
+    INSERT `           repository_type TYPE ty_repository_type,` INTO TABLE rt_source.
+    INSERT `           git_url         TYPE string,` INTO TABLE rt_source.
+    INSERT `           dependencies    TYPE ty_dependencies,` INTO TABLE rt_source.
+    INSERT `         END OF ty_descriptor.` INTO TABLE rt_source.
+    INSERT `` INTO TABLE rt_source.
+    INSERT `  CONSTANTS: co_file_name         TYPE string VALUE '.apack-manifest.xml',` INTO TABLE rt_source.
+    INSERT `             co_abap_git          TYPE ty_repository_type VALUE 'abapGit',` INTO TABLE rt_source.
+    INSERT `             co_interface_version TYPE i VALUE 1.` INTO TABLE rt_source.
+    INSERT `` INTO TABLE rt_source.
+    INSERT `  DATA: descriptor TYPE ty_descriptor READ-ONLY.` INTO TABLE rt_source.
+    INSERT `` INTO TABLE rt_source.
+    INSERT `ENDINTERFACE.` INTO TABLE rt_source.
 
   ENDMETHOD.
 
@@ -239,7 +239,7 @@ CLASS zcl_abapgit_apack_migration IMPLEMENTATION.
         OTHERS                 = 4.
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_WORKING_OBJECTS_ACTIVATE' ) ##NO_TEXT.
+      zcx_abapgit_exception=>raise( 'error from RS_WORKING_OBJECTS_ACTIVATE' ).
     ENDIF.
 
   ENDMETHOD.

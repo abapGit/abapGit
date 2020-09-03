@@ -76,11 +76,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     CREATE OBJECT ro_menu.
 
     ro_menu->add( iv_txt = 'Sort'
-                  io_sub = lo_sort_menu ) ##NO_TEXT.
+                  io_sub = lo_sort_menu ).
 
     ro_menu->add( iv_txt = 'Re-Run'
                   iv_act = c_actions-rerun
-                  iv_cur = abap_false ) ##NO_TEXT.
+                  iv_cur = abap_false ).
 
   ENDMETHOD.
 

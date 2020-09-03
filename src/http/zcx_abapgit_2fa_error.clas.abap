@@ -40,7 +40,7 @@ me->MV_TEXT = MV_TEXT .
 
   METHOD get_default_text.
 
-    rv_text = 'Error in two factor authentication.' ##NO_TEXT.
+    rv_text = 'Error in two factor authentication.' .
 
   ENDMETHOD.
 

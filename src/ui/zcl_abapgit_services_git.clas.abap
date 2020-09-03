@@ -259,7 +259,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       iv_url = lo_repo->get_url( )
       is_tag = ls_tag ).
 
-    lv_text = |Tag { zcl_abapgit_git_tag=>remove_tag_prefix( ls_tag-name ) } deleted| ##NO_TEXT.
+    lv_text = |Tag { zcl_abapgit_git_tag=>remove_tag_prefix( ls_tag-name ) } deleted|.
 
     MESSAGE lv_text TYPE 'S'.
 
@@ -351,7 +351,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       iv_text_button_2         = 'Cancel'
       iv_icon_button_2         = 'ICON_CANCEL'
       iv_default_button        = '2'
-      iv_display_cancel_button = abap_false ).              "#EC NOTEXT
+      iv_display_cancel_button = abap_false ).
 
     IF lv_answer = '2'.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.

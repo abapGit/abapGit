@@ -343,7 +343,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
   METHOD class_name.
 
-    CONCATENATE 'ZCL_ABAPGIT_OBJECT_' is_item-obj_type INTO rv_class_name. "#EC NOTEXT
+    CONCATENATE 'ZCL_ABAPGIT_OBJECT_' is_item-obj_type INTO rv_class_name.
 
   ENDMETHOD.
 
@@ -413,7 +413,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
             answer                = lv_answer
           EXCEPTIONS
             text_not_found        = 1
-            OTHERS                = 2.                        "#EC NOTEXT
+            OTHERS                = 2.
         IF sy-subrc <> 0 OR lv_answer = 1.
           zcx_abapgit_exception=>raise( |Deserialization for object { is_result-obj_name } | &
                                         |(type { is_result-obj_type }) aborted by user| ).
@@ -459,7 +459,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
             is_item     = is_item
             iv_language = iv_language.
       CATCH cx_sy_create_object_error.
-        lv_message = |Object type { is_item-obj_type } not supported, serialize|. "#EC NOTEXT
+        lv_message = |Object type { is_item-obj_type } not supported, serialize|.
         IF iv_native_only = abap_false.
           TRY. " 2nd step, try looking for plugins
               CREATE OBJECT ri_obj TYPE zcl_abapgit_objects_bridge
@@ -505,7 +505,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
         LOOP AT lt_tadir ASSIGNING <ls_tadir>.
           li_progress->show( iv_current = sy-tabix
-                             iv_text    = |Delete { <ls_tadir>-obj_name }| ) ##NO_TEXT.
+                             iv_text    = |Delete { <ls_tadir>-obj_name }| ).
 
           CLEAR ls_item.
           ls_item-obj_type = <ls_tadir>-object.
@@ -618,7 +618,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
     LOOP AT lt_results ASSIGNING <ls_result>.
       li_progress->show( iv_current = sy-tabix
-                         iv_text    = |Deserialize { <ls_result>-obj_name }| ) ##NO_TEXT.
+                         iv_text    = |Deserialize { <ls_result>-obj_name }| ).
 
       CLEAR ls_item.
       ls_item-obj_type = <ls_result>-obj_type.
@@ -748,7 +748,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     LOOP AT is_step-objects ASSIGNING <ls_obj>.
       li_progress->show(
         iv_current = sy-tabix
-        iv_text    = |Deserialize { is_step-descr } - { <ls_obj>-item-obj_name }| ) ##NO_TEXT.
+        iv_text    = |Deserialize { is_step-descr } - { <ls_obj>-item-obj_name }| ).
 
       TRY.
           <ls_obj>-obj->deserialize( iv_package = <ls_obj>-package

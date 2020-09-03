@@ -247,8 +247,6 @@ CLASS ZCL_ABAPGIT_OBJECT_OTGR IMPLEMENTATION.
     DATA: lv_text      TYPE string,
           ls_otgr      TYPE ty_otgr,
           lo_otgr      TYPE REF TO cl_cls_object_type_group,
-          lt_lang_sel  TYPE RANGE OF langu,
-          ls_lang_sel  LIKE LINE OF lt_lang_sel,
           lx_pak_error TYPE REF TO cx_root,
           lo_parents   TYPE REF TO data.
 
@@ -312,6 +310,9 @@ CLASS ZCL_ABAPGIT_OBJECT_OTGR IMPLEMENTATION.
            ls_otgr-cls_type_group-changed_on.
 
 *    Description part 2:
+*
+* lt_lang_sel  TYPE RANGE OF langu,
+* ls_lang_sel  LIKE LINE OF lt_lang_sel,
 *
 *    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
 *      ls_lang_sel-low = mv_language.
