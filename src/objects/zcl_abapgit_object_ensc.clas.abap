@@ -38,7 +38,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENSC IMPLEMENTATION.
         li_spot_ref->if_enh_object~unlock( ).
       CATCH cx_enh_root INTO lx_root.
         lv_message = `Error occured while deleting ENSC: `
-          && lx_root->get_text( ) ##NO_TEXT.
+          && lx_root->get_text( ).
         zcx_abapgit_exception=>raise( lv_message ).
     ENDTRY.
 
@@ -106,7 +106,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENSC IMPLEMENTATION.
 
       CATCH cx_enh_root INTO lx_root.
         lv_message = `Error occured while deserializing ENSC: `
-          && lx_root->get_text( ) ##NO_TEXT.
+          && lx_root->get_text( ).
         zcx_abapgit_exception=>raise( lv_message ).
     ENDTRY.
 
@@ -213,7 +213,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENSC IMPLEMENTATION.
 
       CATCH cx_enh_root INTO lx_root.
         lv_message = `Error occured while serializing ENSC: `
-          && lx_root->get_text( ) ##NO_TEXT.
+          && lx_root->get_text( ).
         zcx_abapgit_exception=>raise( lv_message ).
     ENDTRY.
 

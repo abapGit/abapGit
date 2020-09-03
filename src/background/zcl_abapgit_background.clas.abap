@@ -91,14 +91,14 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
         system_failure = 2
         OTHERS         = 3.
     IF sy-subrc <> 0.
-      WRITE: / 'Another intance of the program is already running' ##NO_TEXT.
+      WRITE: / 'Another intance of the program is already running'.
       RETURN.
     ENDIF.
 
     CREATE OBJECT lo_per.
     lt_list = lo_per->list( ).
 
-    WRITE: / 'Background mode' ##NO_TEXT.
+    WRITE: / 'Background mode'.
 
     LOOP AT lt_list ASSIGNING <ls_list>.
       lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( <ls_list>-key ).
@@ -122,7 +122,7 @@ CLASS ZCL_ABAPGIT_BACKGROUND IMPLEMENTATION.
     ENDLOOP.
 
     IF lines( lt_list ) = 0.
-      WRITE: / 'Nothing configured' ##NO_TEXT.
+      WRITE: / 'Nothing configured'.
     ENDIF.
 
     CALL FUNCTION 'DEQUEUE_EZABAPGIT'

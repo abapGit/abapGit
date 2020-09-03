@@ -1,8 +1,8 @@
 CLASS ltcl_login_manager DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FINAL.
 
   PRIVATE SECTION.
-    CONSTANTS: c_username TYPE string VALUE 'Aladdin' ##NO_TEXT,
-               c_password TYPE string VALUE 'OpenSesame' ##NO_TEXT.
+    CONSTANTS: c_username TYPE string VALUE 'Aladdin' ,
+               c_password TYPE string VALUE 'OpenSesame' .
 
     METHODS:
       setup,

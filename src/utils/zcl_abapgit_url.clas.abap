@@ -64,6 +64,15 @@ CLASS ZCL_ABAPGIT_URL IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD is_abapgit_repo.
+
+    IF iv_url CS 'github.com' AND ( iv_url CP '*/abapGit' OR iv_url CP '*/abapGit.git' ).
+      rv_abapgit = abap_true.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD name.
 
     DATA: lv_path TYPE string.
@@ -118,15 +127,4 @@ CLASS ZCL_ABAPGIT_URL IMPLEMENTATION.
           iv_validate = abap_true ).
 
   ENDMETHOD.
-
-
-  METHOD is_abapgit_repo.
-
-    IF iv_url CS '/abapGit' OR iv_url CS '/abapGit.git'.
-      rv_abapgit = abap_true.
-    ENDIF.
-
-  ENDMETHOD.
-
-
 ENDCLASS.

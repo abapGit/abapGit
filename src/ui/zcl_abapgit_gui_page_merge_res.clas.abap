@@ -153,9 +153,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
     CREATE OBJECT ro_menu.
     ro_menu->add( iv_txt = 'Toggle merge mode'
-                  iv_act = c_actions-toggle_mode ) ##NO_TEXT.
+                  iv_act = c_actions-toggle_mode ).
     ro_menu->add( iv_txt = 'Cancel'
-                  iv_act = c_actions-cancel ) ##NO_TEXT.
+                  iv_act = c_actions-cancel ).
 
   ENDMETHOD.
 
@@ -267,42 +267,42 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
     ri_html->add( |<div class="diff" data-type="{ is_diff-type
       }" data-changed-by="{ is_diff-changed_by
-      }" data-file="{ is_diff-path && is_diff-filename }">| ). "#EC NOTEXT
+      }" data-file="{ is_diff-path && is_diff-filename }">| ).
     ri_html->add( render_diff_head( is_diff ) ).
 
     " Content
     IF is_diff-type <> 'binary'.
 
       IF mv_merge_mode = c_merge_mode-selection.
-        ri_html->add( '<div class="diff_content">' ).       "#EC NOTEXT
-        ri_html->add( '<table class="diff_tab syntax-hl">' ). "#EC NOTEXT
+        ri_html->add( '<div class="diff_content">' ).
+        ri_html->add( '<table class="diff_tab syntax-hl">' ).
         ri_html->add( render_table_head( ) ).
         ri_html->add( render_lines( is_diff ) ).
-        ri_html->add( '</table>' ).                         "#EC NOTEXT
-        ri_html->add( '</div>' ).                           "#EC NOTEXT
+        ri_html->add( '</table>' ).
+        ri_html->add( '</div>' ).
       ELSE.
 
         "Table for Div-Table and textarea
-        ri_html->add( '<div class="diff_content">' ).       "#EC NOTEXT
-        ri_html->add( '<table class="w100">' ).             "#EC NOTEXT
-        ri_html->add( '<thead class="header">' ).           "#EC NOTEXT
-        ri_html->add( '<tr>' ).                             "#EC NOTEXT
-        ri_html->add( '<th>Code</th>' ).                    "#EC NOTEXT
-        ri_html->add( '<th>Merge - ' ).                     "#EC NOTEXT
-        ri_html->add_a( iv_act = 'submitFormById(''merge_form'');' "#EC NOTEXT
+        ri_html->add( '<div class="diff_content">' ).
+        ri_html->add( '<table class="w100">' ).
+        ri_html->add( '<thead class="header">' ).
+        ri_html->add( '<tr>' ).
+        ri_html->add( '<th>Code</th>' ).
+        ri_html->add( '<th>Merge - ' ).
+        ri_html->add_a( iv_act = 'submitFormById(''merge_form'');'
                         iv_txt = 'Apply'
                         iv_typ = zif_abapgit_html=>c_action_type-onclick
                         iv_opt = zif_abapgit_html=>c_html_opt-strong ).
-        ri_html->add( '</th> ' ).                           "#EC NOTEXT
-        ri_html->add( '</tr>' ).                            "#EC NOTEXT
-        ri_html->add( '</thead>' ).                         "#EC NOTEXT
+        ri_html->add( '</th> ' ).
+        ri_html->add( '</tr>' ).
+        ri_html->add( '</thead>' ).
         ri_html->add( '<td>' ).
 
         "Diff-Table of source and target file
-        ri_html->add( '<table class="diff_tab syntax-hl">' ). "#EC NOTEXT
+        ri_html->add( '<table class="diff_tab syntax-hl">' ).
         ri_html->add( render_table_head( ) ).
         ri_html->add( render_lines( is_diff ) ).
-        ri_html->add( '</table>' ).                         "#EC NOTEXT
+        ri_html->add( '</table>' ).
 
         READ TABLE mt_conflicts ASSIGNING <ls_conflict> INDEX mv_current_conflict_index.
         IF sy-subrc = 0.
@@ -311,28 +311,28 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
                                       format = cl_abap_format=>e_html_text ).
         ENDIF.
 
-        ri_html->add( '</td>' ).                            "#EC NOTEXT
-        ri_html->add( '<td>' ).                             "#EC NOTEXT
+        ri_html->add( '</td>' ).
+        ri_html->add( '<td>' ).
         ri_html->add( '<div class="form-container">' ).
         ri_html->add( |<form id="merge_form" class="aligned-form w100" accept-charset="UTF-8"| ).
         ri_html->add( |method="post" action="sapevent:apply_merge">| ).
         ri_html->add( |<textarea id="merge_content" name="merge_content" class="w100" | ).
         ri_html->add( |rows="{ lines( is_diff-o_diff->get( ) ) }">{ lv_target_content }</textarea>| ).
         ri_html->add( '<input type="submit" class="hidden-submit">' ).
-        ri_html->add( '</form>' ).                          "#EC NOTEXT
-        ri_html->add( '</div>' ).                           "#EC NOTEXT
-        ri_html->add( '</td>' ).                            "#EC NOTEXT
-        ri_html->add( '</table>' ).                         "#EC NOTEXT
-        ri_html->add( '</div>' ).                           "#EC NOTEXT
+        ri_html->add( '</form>' ).
+        ri_html->add( '</div>' ).
+        ri_html->add( '</td>' ).
+        ri_html->add( '</table>' ).
+        ri_html->add( '</div>' ).
       ENDIF.
     ELSE.
-      ri_html->add( '<div class="diff_content paddings center grey">' ). "#EC NOTEXT
-      ri_html->add( 'The content seems to be binary.' ).    "#EC NOTEXT
-      ri_html->add( 'Cannot display as diff.' ).            "#EC NOTEXT
-      ri_html->add( '</div>' ).                             "#EC NOTEXT
+      ri_html->add( '<div class="diff_content paddings center grey">' ).
+      ri_html->add( 'The content seems to be binary.' ).
+      ri_html->add( 'Cannot display as diff.' ).
+      ri_html->add( '</div>' ).
     ENDIF.
 
-    ri_html->add( '</div>' ).                               "#EC NOTEXT
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -343,7 +343,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
     CREATE OBJECT ro_html.
 
-    ro_html->add( '<div class="diff_head">' ).              "#EC NOTEXT
+    ro_html->add( '<div class="diff_head">' ).
 
     IF is_diff-type <> 'binary' AND is_diff-o_diff IS NOT INITIAL.
       ls_stats = is_diff-o_diff->stats( ).
@@ -352,8 +352,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
       ro_html->add( |<span class="diff_banner diff_upd">~ { ls_stats-update }</span>| ).
     ENDIF.
 
-    ro_html->add( |<span class="diff_name">{ is_diff-filename }</span>| ). "#EC NOTEXT
-    ro_html->add( '</div>' ).                               "#EC NOTEXT
+    ro_html->add( |<span class="diff_name">{ is_diff-filename }</span>| ).
+    ro_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -438,10 +438,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
           && |<td class="code{ lv_bg }">{ lv_mark }{ is_diff_line-old }</td>|.
 
     " render line, inverse sides if remote is newer
-    ro_html->add( '<tr>' ).                                 "#EC NOTEXT
+    ro_html->add( '<tr>' ).
     ro_html->add( lv_old ). " Target
     ro_html->add( lv_new ). " Source
-    ro_html->add( '</tr>' ).                                "#EC NOTEXT
+    ro_html->add( '</tr>' ).
 
   ENDMETHOD.
 
@@ -450,36 +450,36 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ri_html->add( '<thead class="header">' ).               "#EC NOTEXT
-    ri_html->add( '<tr>' ).                                 "#EC NOTEXT
-    ri_html->add( '<th class="num"></th>' ).                "#EC NOTEXT
+    ri_html->add( '<thead class="header">' ).
+    ri_html->add( '<tr>' ).
+    ri_html->add( '<th class="num"></th>' ).
 
     IF mv_merge_mode = c_merge_mode-selection.
-      ri_html->add( '<form id="target_form" method="post" action="sapevent:apply_target">' ). "#EC NOTEXT
-      ri_html->add( '<th>Target - ' && mo_repo->get_branch_name( ) && ' - ' ). "#EC NOTEXT
-      ri_html->add_a( iv_act = 'submitFormById(''target_form'');' "#EC NOTEXT
+      ri_html->add( '<form id="target_form" method="post" action="sapevent:apply_target">' ).
+      ri_html->add( '<th>Target - ' && mo_repo->get_branch_name( ) && ' - ' ).
+      ri_html->add_a( iv_act = 'submitFormById(''target_form'');'
                       iv_txt = 'Apply'
                       iv_typ = zif_abapgit_html=>c_action_type-onclick
                       iv_opt = zif_abapgit_html=>c_html_opt-strong ).
-      ri_html->add( '</th> ' ).                             "#EC NOTEXT
-      ri_html->add( '</form>' ).                            "#EC NOTEXT
-      ri_html->add( '<th class="num"></th>' ).              "#EC NOTEXT
-      ri_html->add( '<form id="source_form" method="post" action="sapevent:apply_source">' ). "#EC NOTEXT
-      ri_html->add( '<th>Source  - ' && mo_merge->get_source_branch( ) && ' - ' ). "#EC NOTEXT
-      ri_html->add_a( iv_act = 'submitFormById(''source_form'');' "#EC NOTEXT
+      ri_html->add( '</th> ' ).
+      ri_html->add( '</form>' ).
+      ri_html->add( '<th class="num"></th>' ).
+      ri_html->add( '<form id="source_form" method="post" action="sapevent:apply_source">' ).
+      ri_html->add( '<th>Source  - ' && mo_merge->get_source_branch( ) && ' - ' ).
+      ri_html->add_a( iv_act = 'submitFormById(''source_form'');'
                       iv_txt = 'Apply'
                       iv_typ = zif_abapgit_html=>c_action_type-onclick
                       iv_opt = zif_abapgit_html=>c_html_opt-strong ).
-      ri_html->add( '</th> ' ).                             "#EC NOTEXT
-      ri_html->add( '</form>' ).                            "#EC NOTEXT
+      ri_html->add( '</th> ' ).
+      ri_html->add( '</form>' ).
     ELSE.
-      ri_html->add( '<th>Target - ' && mo_repo->get_branch_name( ) && '</th> ' ). "#EC NOTEXT
-      ri_html->add( '<th class="num"></th>' ).              "#EC NOTEXT
-      ri_html->add( '<th>Source - ' && mo_merge->get_source_branch( ) && '</th> ' ). "#EC NOTEXT
+      ri_html->add( '<th>Target - ' && mo_repo->get_branch_name( ) && '</th> ' ).
+      ri_html->add( '<th class="num"></th>' ).
+      ri_html->add( '<th>Source - ' && mo_merge->get_source_branch( ) && '</th> ' ).
     ENDIF.
 
-    ri_html->add( '</tr>' ).                                "#EC NOTEXT
-    ri_html->add( '</thead>' ).                             "#EC NOTEXT
+    ri_html->add( '</tr>' ).
+    ri_html->add( '</thead>' ).
 
   ENDMETHOD.
 

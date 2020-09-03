@@ -73,7 +73,7 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
         no_release_found = 1
         OTHERS           = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from DELIVERY_GET_INSTALLED_COMPS { sy-subrc }| ) ##no_text.
+      zcx_abapgit_exception=>raise( |Error from DELIVERY_GET_INSTALLED_COMPS { sy-subrc }| ).
     ENDIF.
 
     LOOP AT it_requirements ASSIGNING <ls_requirement>.

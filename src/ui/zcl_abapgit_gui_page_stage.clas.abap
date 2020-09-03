@@ -285,15 +285,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
                     iv_id    = 'commitSelectedButton'
                     iv_style = 'display: none'
                     iv_txt   = 'Commit Selected (<span class="counter"></span>)'
-                    iv_opt   = zif_abapgit_html=>c_html_opt-strong ) ##NO_TEXT.
+                    iv_opt   = zif_abapgit_html=>c_html_opt-strong ).
     ri_html->add_a( iv_act   = 'errorStub(event)' " Will be reinit by JS
                     iv_typ   = zif_abapgit_html=>c_action_type-onclick
                     iv_id    = 'commitFilteredButton'
                     iv_style = 'display: none'
-                    iv_txt   = 'Add <b>Filtered</b> and Commit (<span class="counter"></span>)' ) ##NO_TEXT.
+                    iv_txt   = 'Add <b>Filtered</b> and Commit (<span class="counter"></span>)' ).
     ri_html->add_a( iv_act = |{ c_action-stage_all }|
                     iv_id  = 'commitAllButton'
-                    iv_txt = lv_add_all_txt ) ##NO_TEXT.
+                    iv_txt = lv_add_all_txt ).
 
 
     ri_html->add( '</td>' ).
