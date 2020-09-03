@@ -385,7 +385,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       IF sy-subrc <> 0.
         ii_log->add( iv_msg  = |Changed package assignment for object { <ls_res1>-obj_type } { <ls_res1>-obj_name }|
                      iv_type = 'W'
-                     iv_rc   = '5' ) ##no_text.
+                     iv_rc   = '5' ).
         APPEND INITIAL LINE TO lt_move_idx ASSIGNING <ls_res2>.
         <ls_res2>-obj_type = <ls_res1>-obj_type.
         <ls_res2>-obj_name = <ls_res1>-obj_name.
@@ -419,7 +419,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
         ii_log->add( iv_msg = |Files for object { <ls_res1>-obj_type } {
                        <ls_res1>-obj_name } are not placed in the same folder|
                      iv_type = 'W'
-                     iv_rc   = '1' ) ##no_text.
+                     iv_rc   = '1' ).
       ENDIF.
     ENDLOOP.
 
@@ -435,7 +435,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
         ii_log->add( iv_msg = |Package and path does not match for object, {
                        <ls_res1>-obj_type } { <ls_res1>-obj_name }|
                      iv_type = 'W'
-                     iv_rc   = '2' ) ##no_text.
+                     iv_rc   = '2' ).
       ENDIF.
     ENDLOOP.
 
@@ -446,13 +446,13 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       IF <ls_res1>-filename IS NOT INITIAL AND <ls_res1>-filename = ls_file-filename.
         ii_log->add( iv_msg  = |Multiple files with same filename, { <ls_res1>-filename }|
                      iv_type = 'W'
-                     iv_rc   = '3' ) ##no_text.
+                     iv_rc   = '3' ).
       ENDIF.
 
       IF <ls_res1>-filename IS INITIAL.
         ii_log->add( iv_msg  = |Filename is empty for object { <ls_res1>-obj_type } { <ls_res1>-obj_name }|
                      iv_type = 'W'
-                     iv_rc   = '4' ) ##no_text.
+                     iv_rc   = '4' ).
       ENDIF.
 
       MOVE-CORRESPONDING <ls_res1> TO ls_file.

@@ -44,9 +44,6 @@ CLASS zcl_abapgit_ajson DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    TYPES:
-      tty_node_stack TYPE STANDARD TABLE OF REF TO ty_node WITH DEFAULT KEY.
-
     DATA mt_json_tree TYPE ty_nodes_ts.
     DATA mv_read_only TYPE abap_bool.
 

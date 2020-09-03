@@ -72,6 +72,14 @@
     "globalMacros": []
   },
   "rules": {
+    "line_break_style": true,
+    "forbidden_pseudo_and_pragma": {
+      "ignoreGlobalClassDefinition": true,
+      "ignoreGlobalInterface": true,
+      "pragmas": ["##NO_TEXT"],
+      "pseudo": ["#EC NOTEXT"]
+    },
+    "unused_types": true,
     "begin_single_include": true,
     "names_no_dash": true,
     "parser_missing_space": true,
@@ -159,7 +167,8 @@
     "cloud_types": true,
     "colon_missing_space": true,
     "commented_code": {
-      "exclude": ["otgr"],
+      "allowIncludeInFugr": false,
+      "exclude": ["otgr"]
     },
     "constructor_visibility_public": true,
     "contains_tab": true,
@@ -279,6 +288,7 @@
       "multiply": true,
       "move": true,
       "divide": true,
+      "fieldSymbolStructure": true,
       "requested": true,
       "setExtended": true,
       "withHeaderLine": true,
@@ -298,6 +308,7 @@
     },
     "release_idoc": true,
     "remove_descriptions": {
+      "ignoreWorkflow": false,
       "ignoreExceptions": false
     },
     "rfc_error_handling": false,

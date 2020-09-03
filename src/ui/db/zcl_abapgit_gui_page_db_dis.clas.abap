@@ -60,7 +60,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_DIS IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     CREATE OBJECT lo_toolbar.
     lo_toolbar->add( iv_act = |{ zif_abapgit_definitions=>c_action-db_edit }?{ lv_action }|
-                     iv_txt = 'Edit' ) ##NO_TEXT.
+                     iv_txt = 'Edit' ).
 
     ri_html->add( '<div class="db_entry">' ).
     ri_html->add( '<table class="toolbar"><tr><td>' ).

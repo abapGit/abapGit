@@ -107,7 +107,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     li_progress = zcl_abapgit_progress=>get_instance( 1 ).
 
     li_progress->show( iv_current = 1
-                       iv_text    = 'Fetch remote files' ) ##NO_TEXT.
+                       iv_text    = 'Fetch remote files' ).
 
     ls_pull = zcl_abapgit_git_porcelain=>pull(
       iv_url         = get_url( )

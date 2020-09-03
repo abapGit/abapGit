@@ -2,16 +2,17 @@
 CLASS zcx_abapgit_exception DEFINITION
   PUBLIC
   INHERITING FROM cx_static_check
-  CREATE PUBLIC.
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES if_t100_message.
 
-    DATA msgv1 TYPE symsgv READ-ONLY.
-    DATA msgv2 TYPE symsgv READ-ONLY.
-    DATA msgv3 TYPE symsgv READ-ONLY.
-    DATA msgv4 TYPE symsgv READ-ONLY.
-    DATA mt_callstack TYPE abap_callstack READ-ONLY.
+    INTERFACES if_t100_message .
+
+    DATA msgv1 TYPE symsgv READ-ONLY .
+    DATA msgv2 TYPE symsgv READ-ONLY .
+    DATA msgv3 TYPE symsgv READ-ONLY .
+    DATA msgv4 TYPE symsgv READ-ONLY .
+    DATA mt_callstack TYPE abap_callstack READ-ONLY .
 
     "! Raise exception with text
     "! @parameter iv_text | Text
@@ -22,7 +23,7 @@ CLASS zcx_abapgit_exception DEFINITION
         !iv_text     TYPE clike
         !ix_previous TYPE REF TO cx_root OPTIONAL
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     "! Raise exception with T100 message
     "! <p>
     "! Will default to sy-msg* variables. These need to be set right before calling this method.
@@ -43,7 +44,7 @@ CLASS zcx_abapgit_exception DEFINITION
         VALUE(iv_msgv3) TYPE symsgv DEFAULT sy-msgv3
         VALUE(iv_msgv4) TYPE symsgv DEFAULT sy-msgv4
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
     METHODS constructor
       IMPORTING
         !textid   LIKE if_t100_message=>t100key OPTIONAL
@@ -51,9 +52,17 @@ CLASS zcx_abapgit_exception DEFINITION
         !msgv1    TYPE symsgv OPTIONAL
         !msgv2    TYPE symsgv OPTIONAL
         !msgv3    TYPE symsgv OPTIONAL
-        !msgv4    TYPE symsgv OPTIONAL.
-    METHODS get_longtext REDEFINITION.
-    METHODS get_source_position REDEFINITION.
+        !msgv4    TYPE symsgv OPTIONAL .
+    CLASS-METHODS raise_with_text
+      IMPORTING
+        !ix_previous TYPE REF TO cx_root
+      RAISING
+        zcx_abapgit_exception .
+
+    METHODS get_source_position
+        REDEFINITION .
+    METHODS if_message~get_longtext
+        REDEFINITION .
   PROTECTED SECTION.
   PRIVATE SECTION.
     CONSTANTS:
@@ -61,12 +70,11 @@ CLASS zcx_abapgit_exception DEFINITION
 
     METHODS:
       save_callstack.
-
 ENDCLASS.
 
 
 
-CLASS zcx_abapgit_exception IMPLEMENTATION.
+CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
 
 
   METHOD constructor ##ADT_SUPPRESS_GENERATION.
@@ -89,7 +97,28 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_longtext.
+  METHOD get_source_position.
+
+    FIELD-SYMBOLS: <ls_callstack> TYPE abap_callstack_line.
+
+    READ TABLE mt_callstack ASSIGNING <ls_callstack>
+                            INDEX 1.
+    IF sy-subrc = 0.
+      program_name = <ls_callstack>-mainprogram.
+      include_name = <ls_callstack>-include.
+      source_line  = <ls_callstack>-line.
+    ELSE.
+      super->get_source_position(
+        IMPORTING
+          program_name = program_name
+          include_name = include_name
+          source_line  = source_line   ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD IF_MESSAGE~GET_LONGTEXT.
 
     " You should remember that we have to call ZCL_ABAPGIT_MESSAGE_HELPER
     " dynamically, because the compiled abapGit report puts the definition
@@ -179,6 +208,13 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD raise_with_text.
+    raise(
+      iv_text = ix_previous->get_text( )
+      ix_previous = ix_previous ).
+  ENDMETHOD.
+
+
   METHOD save_callstack.
 
     FIELD-SYMBOLS: <ls_callstack> TYPE abap_callstack_line.
@@ -207,26 +243,4 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
-
-  METHOD get_source_position.
-
-    FIELD-SYMBOLS: <ls_callstack> TYPE abap_callstack_line.
-
-    READ TABLE mt_callstack ASSIGNING <ls_callstack>
-                            INDEX 1.
-    IF sy-subrc = 0.
-      program_name = <ls_callstack>-mainprogram.
-      include_name = <ls_callstack>-include.
-      source_line  = <ls_callstack>-line.
-    ELSE.
-      super->get_source_position(
-        IMPORTING
-          program_name = program_name
-          include_name = include_name
-          source_line  = source_line   ).
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.
