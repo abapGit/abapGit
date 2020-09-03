@@ -372,19 +372,19 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
     LOOP AT lt_hashes FROM 1 ASSIGNING <lv_hash>.
       IF sy-tabix = 1.
-        lv_capa = 'side-band-64k no-progress multi_ack' ##NO_TEXT.
+        lv_capa = 'side-band-64k no-progress multi_ack'.
         lv_line = 'want' && ` ` && <lv_hash>
-          && ` ` && lv_capa && zif_abapgit_definitions=>c_newline. "#EC NOTEXT
+          && ` ` && lv_capa && zif_abapgit_definitions=>c_newline.
       ELSE.
         lv_line = 'want' && ` ` && <lv_hash>
-          && zif_abapgit_definitions=>c_newline.            "#EC NOTEXT
+          && zif_abapgit_definitions=>c_newline.
       ENDIF.
       lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( lv_line ).
     ENDLOOP.
 
     IF iv_deepen_level > 0.
       lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( |deepen { iv_deepen_level }| &&
-        |{ zif_abapgit_definitions=>c_newline }| ).         "#EC NOTEXT
+        |{ zif_abapgit_definitions=>c_newline }| ).
     ENDIF.
 
     lv_buffer = lv_buffer
