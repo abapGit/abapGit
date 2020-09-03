@@ -438,7 +438,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         CHANGING
           data_table   = lt_html
         EXCEPTIONS
-          OTHERS       = 1 ) ##NO_TEXT.
+          OTHERS       = 1 ).
     ELSE. " Raw input
       zcl_abapgit_convert=>xstring_to_bintab(
         EXPORTING
@@ -458,7 +458,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         CHANGING
           data_table   = lt_xdata
         EXCEPTIONS
-          OTHERS       = 1 ) ##NO_TEXT.
+          OTHERS       = 1 ).
     ENDIF.
 
     ASSERT sy-subrc = 0. " Image data error

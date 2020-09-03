@@ -139,7 +139,7 @@ CLASS ZCL_ABAPGIT_2FA_AUTH_BASE IMPLEMENTATION.
             INTO lv_error_msg.
     RAISE EXCEPTION TYPE zcx_abapgit_2fa_comm_error
       EXPORTING
-        mv_text = |Communication error: { lv_error_msg }| ##NO_TEXT.
+        mv_text = |Communication error: { lv_error_msg }|.
   ENDMETHOD.
 
 

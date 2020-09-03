@@ -119,14 +119,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
       ro_menu->add( iv_txt = 'Commit'
                     iv_act = c_actions-commit
                     iv_cur = abap_false
-                    iv_opt = lv_opt ) ##NO_TEXT.
+                    iv_opt = lv_opt ).
 
     ELSE.
 
       ro_menu->add( iv_txt = 'Stage'
                     iv_act = c_actions-stage
                     iv_cur = abap_false
-                    iv_opt = lv_opt ) ##NO_TEXT.
+                    iv_opt = lv_opt ).
 
     ENDIF.
 

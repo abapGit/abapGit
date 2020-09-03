@@ -144,7 +144,7 @@ CLASS ZCL_ABAPGIT_STAGE IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_method-rm.
         rv_description = 'rm'.
       WHEN zif_abapgit_definitions=>c_method-ignore.
-        rv_description = 'ignore' ##NO_TEXT.
+        rv_description = 'ignore'.
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( 'unknown staging method type' ).
     ENDCASE.

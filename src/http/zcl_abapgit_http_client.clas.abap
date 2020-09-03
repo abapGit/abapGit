@@ -176,16 +176,16 @@ CLASS zcl_abapgit_http_client IMPLEMENTATION.
         value = lv_value ).
 
     lv_value = 'application/x-git-'
-                  && iv_service && '-pack-request'.         "#EC NOTEXT
+                  && iv_service && '-pack-request'.
     mi_client->request->set_header_field(
         name  = 'Content-Type'
-        value = lv_value ).                                 "#EC NOTEXT
+        value = lv_value ).
 
     lv_value = 'application/x-git-'
-                  && iv_service && '-pack-result'.          "#EC NOTEXT
+                  && iv_service && '-pack-result'.
     mi_client->request->set_header_field(
         name  = 'Accept'
-        value = lv_value ).                                 "#EC NOTEXT
+        value = lv_value ).
 
     IF mo_digest IS BOUND.
       mo_digest->run( mi_client ).

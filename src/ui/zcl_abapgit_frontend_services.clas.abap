@@ -55,7 +55,7 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
         error_no_gui              = 23
         OTHERS                    = 24 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from gui_download' ). "#EC NOTEXT
+      zcx_abapgit_exception=>raise( 'error from gui_download' ).
     ENDIF.
 
   ENDMETHOD.
@@ -135,10 +135,10 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
         not_supported_by_gui    = 4
         OTHERS                  = 5 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from file_open_dialog' ). "#EC NOTEXT
+      zcx_abapgit_exception=>raise( 'error from file_open_dialog' ).
     ENDIF.
     IF lv_action = cl_gui_frontend_services=>action_cancel.
-      zcx_abapgit_exception=>raise( 'cancelled' ).          "#EC NOTEXT
+      zcx_abapgit_exception=>raise( 'cancelled' ).
     ENDIF.
 
     READ TABLE lt_file_table INDEX 1 INTO ls_file_table.
@@ -177,10 +177,10 @@ CLASS ZCL_ABAPGIT_FRONTEND_SERVICES IMPLEMENTATION.
         not_supported_by_gui = 3
         OTHERS               = 4 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from file_save_dialog' ). "#EC NOTEXT
+      zcx_abapgit_exception=>raise( 'error from file_save_dialog' ).
     ENDIF.
     IF lv_action = cl_gui_frontend_services=>action_cancel.
-      zcx_abapgit_exception=>raise( 'cancelled' ).          "#EC NOTEXT
+      zcx_abapgit_exception=>raise( 'cancelled' ).
     ENDIF.
 
   ENDMETHOD.

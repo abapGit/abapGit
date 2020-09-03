@@ -361,9 +361,6 @@ INTERFACE zif_abapgit_definitions
     tty_dokil TYPE STANDARD TABLE OF dokil
                          WITH NON-UNIQUE DEFAULT KEY .
   TYPES:
-    tty_lines TYPE STANDARD TABLE OF i
-                        WITH NON-UNIQUE DEFAULT KEY .
-  TYPES:
     BEGIN OF ty_col_spec,
       tech_name    TYPE string,
       display_name TYPE string,
