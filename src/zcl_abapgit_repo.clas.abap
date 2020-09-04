@@ -249,7 +249,10 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
        sy-batch = abap_false AND
        sy-cprog = lc_abapgit_prog.
 
-      MESSAGE 'abapGit was updated and will restart itself' TYPE 'I'.
+      IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_show_default_repo( ) EQ abap_false.
+        MESSAGE 'abapGit was updated and will restart itself' TYPE 'I'.
+      ENDIF.
+
       SUBMIT (sy-cprog).
 
     ENDIF.
