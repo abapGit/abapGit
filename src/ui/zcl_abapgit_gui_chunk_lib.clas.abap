@@ -119,7 +119,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
     CLASS-METHODS render_repo_top_commit_hash
       IMPORTING
         !ii_html        TYPE REF TO zif_abapgit_html
-        !iv_repo_online TYPE REF TO zcl_abapgit_repo_online
+        !io_repo_online TYPE REF TO zcl_abapgit_repo_online
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
@@ -669,6 +669,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     DATA: lo_repo_online       TYPE REF TO zcl_abapgit_repo_online,
           lo_pback             TYPE REF TO zcl_abapgit_persist_background,
+          lx_error             TYPE REF TO zcx_abapgit_exception,
           lv_hint              TYPE string,
           lv_icon              TYPE string,
           lv_package_jump_data TYPE string.
@@ -700,8 +701,16 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
                               && |{ lo_repo_online->get_url( ) }|
                       iv_class = |url| ).
 
-      render_repo_top_commit_hash( ii_html        = ri_html
-                                   iv_repo_online = lo_repo_online ).
+      TRY.
+          render_repo_top_commit_hash( ii_html        = ri_html
+                                       io_repo_online = lo_repo_online ).
+        CATCH zcx_abapgit_exception INTO lx_error.
+          " In case of missing or wrong credentials, show message in status bar
+          lv_hint = lx_error->get_text( ).
+          IF lv_hint CS 'credentials'.
+            MESSAGE lv_hint TYPE 'S' DISPLAY LIKE 'E'.
+          ENDIF.
+      ENDTRY.
 
     ENDIF.
 
@@ -788,7 +797,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
           lv_display_url       TYPE zif_abapgit_persistence=>ty_repo-url,
           lv_icon_commit       TYPE string.
 
-    lv_commit_hash = iv_repo_online->get_sha1_remote( ).
+    lv_commit_hash = io_repo_online->get_sha1_remote( ).
     lv_commit_short_hash = lv_commit_hash(7).
 
 
@@ -797,7 +806,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
                                              iv_hint  = 'Commit' ).
 
     TRY.
-        lv_display_url = iv_repo_online->get_commit_display_url( lv_commit_hash ).
+        lv_display_url = io_repo_online->get_commit_display_url( lv_commit_hash ).
 
         ii_html->add_a( iv_txt   = |{ lv_icon_commit }{ lv_commit_short_hash }|
                         iv_act   = |{ zif_abapgit_definitions=>c_action-url }?|
