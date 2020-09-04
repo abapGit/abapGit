@@ -454,7 +454,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
                      iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh }?{ mv_key }|
                      iv_opt = zif_abapgit_html=>c_html_opt-strong ).
 
-    ro_toolbar->add( iv_txt = zcl_abapgit_html=>icon( iv_name = 'cog/grey70' )
+    ro_toolbar->add( iv_txt = zcl_abapgit_html=>icon( iv_name = 'cog' )
                      iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?{ mv_key }|
                      iv_title = `Repository Settings` ).
 
@@ -687,28 +687,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
     " Reinit, for the case of type change
     mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
 
-    " Check if repo is still valid and reset if necessary to consistent state
-    TRY.
-        mo_repo->validate( ).
-      CATCH zcx_abapgit_exception INTO lx_error.
-        lv_msg = lx_error->get_text( ) && '. Fallback to master branch.'.
-        MESSAGE lv_msg TYPE 'S'.
-
-        mo_repo->reset( ).
-    ENDTRY.
-
     lo_news = zcl_abapgit_news=>create( mo_repo ).
 
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    ri_html->add( |<div class="repo" id="repo{ mv_key }">| ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
-      io_repo               = mo_repo
-      io_news               = lo_news
-      iv_interactive_branch = abap_true ) ).
-
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).
-
     TRY.
+        CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+        ri_html->add( |<div class="repo" id="repo{ mv_key }">| ).
+        ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
+          io_repo               = mo_repo
+          io_news               = lo_news
+          iv_interactive_branch = abap_true ) ).
+
+        ri_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).
+
         lv_render_transports = zcl_abapgit_factory=>get_cts_api(
           )->is_chrec_possible_for_package( mo_repo->get_package( ) ).
 
@@ -802,6 +792,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
         ri_html->add( '</div>' ).
         ri_html->add( '</div>' ).
       CATCH zcx_abapgit_exception INTO lx_error.
+        " Reset 'last shown repo' so next start will go to repo overview
+        " and allow troubleshooting of issue
+        zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( || ).
+
         ri_html->add(
           render_head_line(
             iv_lstate = lv_lstate
