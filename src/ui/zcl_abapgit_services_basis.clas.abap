@@ -121,6 +121,7 @@ CLASS zcl_abapgit_services_basis IMPLEMENTATION.
           CHANGING
             t_table      = lt_result ).
         lo_alv->get_functions( )->set_all( ).
+        lo_alv->get_display_settings( )->set_list_header( 'abapGit - Performance Test' ).
         lo_alv->get_columns( )->get_column( 'RUNTIME' )->set_medium_text( 'Runtime' ).
         lo_alv->get_columns( )->get_column( 'SECONDS' )->set_medium_text( 'Seconds' ).
         lo_alv->get_columns( )->set_count_column( 'COUNTER' ).
