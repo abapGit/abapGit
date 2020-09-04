@@ -578,6 +578,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
     " If a method was moved to an interface, abapGit does not remove the old
     " method include and it's necessary to repair the class (#3833)
+    " TODO: Remove 2020-11 or replace with general solution
     IF ms_item-obj_name = 'ZCX_ABAPGIT_EXCEPTION'.
       ls_clskey-clsname = ms_item-obj_name.
 
