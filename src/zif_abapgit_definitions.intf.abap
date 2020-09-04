@@ -25,7 +25,7 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     BEGIN OF ty_file.
       INCLUDE TYPE ty_file_signature.
-  TYPES: data TYPE xstring,
+      TYPES: data TYPE xstring,
     END OF ty_file .
   TYPES:
     ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY .
@@ -104,7 +104,7 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     BEGIN OF ty_overwrite.
       INCLUDE TYPE ty_item.
-  TYPES: decision TYPE ty_yes_no,
+      TYPES: decision TYPE ty_yes_no,
     END OF ty_overwrite .
   TYPES:
     ty_overwrite_tt TYPE STANDARD TABLE OF ty_overwrite WITH DEFAULT KEY
@@ -217,7 +217,7 @@ INTERFACE zif_abapgit_definitions
   TYPES:
     BEGIN OF ty_tpool.
       INCLUDE TYPE textpool.
-  TYPES: split TYPE c LENGTH 8.
+      TYPES: split TYPE c LENGTH 8.
   TYPES: END OF ty_tpool .
   TYPES:
     ty_tpool_tt TYPE STANDARD TABLE OF ty_tpool WITH DEFAULT KEY .
@@ -490,6 +490,7 @@ INTERFACE zif_abapgit_definitions
       zip_package                   TYPE string VALUE 'zip_package',
       zip_transport                 TYPE string VALUE 'zip_transport',
       zip_object                    TYPE string VALUE 'zip_object',
+      performance_test              TYPE string VALUE 'performance_test',
       git_pull                      TYPE string VALUE 'git_pull',
       git_reset                     TYPE string VALUE 'git_reset',
       git_branch_create             TYPE string VALUE 'git_branch_create',
