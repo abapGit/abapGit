@@ -86,6 +86,11 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
       RAISING
         zcx_abapgit_exception .
+    METHODS render_compat_popup_mode
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     METHODS render_hotkeys
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html
@@ -186,6 +191,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
       mo_settings->set_link_hints_enabled( abap_true ).
     ELSE.
       mo_settings->set_link_hints_enabled( abap_false ).
+    ENDIF.
+
+    IF is_post_field_checked( 'popup_compat_mode' ) = abap_true.
+      mo_settings->set_popup_compat_mode( abap_true ).
+    ELSE.
+      mo_settings->set_popup_compat_mode( abap_false ).
     ENDIF.
 
     READ TABLE mt_post_fields ASSIGNING <ls_post_field> WITH KEY name = 'link_hint_key'.
@@ -383,6 +394,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_compat_popup_mode.
+
+    DATA lv_checked TYPE string.
+
+    IF mo_settings->get_popup_compat_mode( ) = abap_true.
+      lv_checked = ' checked'.
+    ENDIF.
+
+    CREATE OBJECT ro_html.
+    ro_html->add( |<span title="Show ABAP popups instead of JS, where possible ... e.g. Create online repo dialog">| &&
+      |<input type="checkbox" name="popup_compat_mode" value="X"{ lv_checked }> | &&
+      |Enable popups compatibility mode</span>| ).
+    ro_html->add( |<br>| ).
+    ro_html->add( |<br>| ).
+
+  ENDMETHOD.
+
+
   METHOD render_content.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -407,6 +436,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ri_html->add( |<hr>| ).
     ri_html->add( render_parallel_proc( ) ).
     ri_html->add( |<hr>| ).
+    ri_html->add( |<h2>JS related UI settings</h2>| ).
+    ri_html->add( render_compat_popup_mode( ) ).
     ri_html->add( render_link_hints( ) ).
     ri_html->add( |<hr>| ).
     ri_html->add( render_hotkeys( ) ).
@@ -548,13 +579,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     lv_link_hint_key = mo_settings->get_link_hint_key( ).
 
     CREATE OBJECT ro_html.
-    ro_html->add( |<h2>Vimium-like Link Hints</h2>| ).
     ro_html->add( `<input type="checkbox" name="link_hints_enabled" value="X" `
                    && lv_checked && ` > Enable Vimium-like Link Hints` ).
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).
     ro_html->add( |<input type="text" name="link_hint_key" size="1" maxlength="1" value="{ lv_link_hint_key }" |
-               && |> Key to Activate Links| ).
+               && |> Key to Activate Vimium-like Links| ).
 
     ro_html->add( |<br>| ).
     ro_html->add( |<br>| ).

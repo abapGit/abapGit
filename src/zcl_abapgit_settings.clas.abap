@@ -152,7 +152,13 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
           VALUE(rv_act_wo_popup) TYPE zif_abapgit_definitions=>ty_s_user_settings-activate_wo_popup,
       set_activate_wo_popup
         IMPORTING
-          iv_act_wo_popup TYPE zif_abapgit_definitions=>ty_s_user_settings-activate_wo_popup.
+          iv_act_wo_popup TYPE zif_abapgit_definitions=>ty_s_user_settings-activate_wo_popup,
+      set_popup_compat_mode
+        IMPORTING
+          iv_enable TYPE zif_abapgit_definitions=>ty_s_user_settings-popup_compat_mode,
+      get_popup_compat_mode
+        RETURNING
+          VALUE(rv_enable) TYPE zif_abapgit_definitions=>ty_s_user_settings-popup_compat_mode.
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES: BEGIN OF ty_s_settings,
@@ -237,6 +243,11 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
   METHOD get_parallel_proc_disabled.
     rv_disable_parallel_proc = ms_user_settings-parallel_proc_disabled.
+  ENDMETHOD.
+
+
+  METHOD get_popup_compat_mode.
+    rv_enable = ms_user_settings-popup_compat_mode.
   ENDMETHOD.
 
 
@@ -378,6 +389,11 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
   METHOD set_parallel_proc_disabled.
     ms_user_settings-parallel_proc_disabled = iv_disable_parallel_proc.
+  ENDMETHOD.
+
+
+  METHOD set_popup_compat_mode.
+    ms_user_settings-popup_compat_mode = iv_enable.
   ENDMETHOD.
 
 

@@ -558,9 +558,16 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         zcl_abapgit_services_repo=>remove( lv_key ).
         CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_main.
         ev_state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
+
       WHEN zif_abapgit_definitions=>c_action-repo_newonline.
-        ei_page  = zcl_abapgit_gui_page_addonline=>create( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+        IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_popup_compat_mode( ) = abap_true.
+          zcl_abapgit_services_repo=>new_online_abap_popup( ).
+          ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        ELSE.
+          ei_page  = zcl_abapgit_gui_page_addonline=>create( ).
+          ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+        ENDIF.
+
       WHEN zif_abapgit_definitions=>c_action-repo_refresh_checksums.          " Rebuild local checksums
         zcl_abapgit_services_repo=>refresh_local_checksums( lv_key ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.

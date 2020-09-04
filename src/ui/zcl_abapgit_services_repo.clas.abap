@@ -12,6 +12,11 @@ CLASS zcl_abapgit_services_repo DEFINITION
         VALUE(ro_repo)  TYPE REF TO zcl_abapgit_repo_online
       RAISING
         zcx_abapgit_exception.
+    CLASS-METHODS new_online_abap_popup
+      RETURNING
+        VALUE(ro_repo)  TYPE REF TO zcl_abapgit_repo_online
+      RAISING
+        zcx_abapgit_exception.
     CLASS-METHODS refresh
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
@@ -82,7 +87,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
 
   METHOD gui_deserialize.
@@ -212,6 +217,29 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
     zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( ro_repo->get_key( ) ).
 
     COMMIT WORK.
+
+  ENDMETHOD.
+
+
+  METHOD new_online_abap_popup.
+
+    DATA ls_popup    TYPE zif_abapgit_popups=>ty_popup.
+    DATA ls_repo_params TYPE zif_abapgit_services_repo=>ty_repo_params.
+
+    ls_popup = zcl_abapgit_ui_factory=>get_popups( )->repo_popup( '' ).
+    IF ls_popup-cancel = abap_true.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
+
+    ls_repo_params-url                = ls_popup-url.
+    ls_repo_params-branch_name        = ls_popup-branch_name.
+    ls_repo_params-package            = ls_popup-package.
+    ls_repo_params-display_name       = ls_popup-display_name.
+    ls_repo_params-folder_logic       = ls_popup-folder_logic.
+    ls_repo_params-ignore_subpackages = ls_popup-ign_subpkg.
+    ls_repo_params-master_lang_only   = ls_popup-master_lang_only.
+
+    new_online( ls_repo_params ).
 
   ENDMETHOD.
 
