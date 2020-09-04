@@ -60,7 +60,7 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_title     TYPE string OPTIONAL
     RETURNING
       VALUE(rv_str) TYPE string .
-  CLASS-METHODS icon
+  METHODS icon
     IMPORTING
       !iv_name      TYPE string
       !iv_hint      TYPE string OPTIONAL
