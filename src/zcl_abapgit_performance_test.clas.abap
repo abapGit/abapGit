@@ -76,14 +76,16 @@ CLASS zcl_abapgit_performance_test IMPLEMENTATION.
           lo_serializer      TYPE REF TO zcl_abapgit_serialize,
           lv_start_runtime   TYPE i,
           lv_end_runtime     TYPE i,
-          lx_exception       TYPE REF TO zcx_abapgit_exception.
+          lx_exception       TYPE REF TO zcx_abapgit_exception,
+          lo_dummy_progress  TYPE REF TO lcl_dummy_progress.
     FIELD-SYMBOLS: <ls_tadir>  TYPE zif_abapgit_definitions=>ty_tadir,
-                   <ls_result> TYPE zcl_abapgit_performance_test=>gty_result.
+                   <ls_result> TYPE gty_result.
 
     CLEAR mt_result.
 
     li_actual_progress = zcl_abapgit_progress=>get_instance( 1 ).
-    zcl_abapgit_progress=>set_instance( NEW lcl_dummy_progress( ) ).
+    CREATE OBJECT lo_dummy_progress.
+    zcl_abapgit_progress=>set_instance( lo_dummy_progress ).
 
     TRY.
         lt_tadir = select_tadir_entries( ).
