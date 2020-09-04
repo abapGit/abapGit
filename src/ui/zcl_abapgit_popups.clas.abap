@@ -5,6 +5,18 @@ CLASS zcl_abapgit_popups DEFINITION
   GLOBAL FRIENDS zcl_abapgit_ui_factory.
 
   PUBLIC SECTION.
+    TYPES:
+      BEGIN OF ty_free_sel_field,
+        name             TYPE fieldname,
+        only_parameter   TYPE abap_bool,
+        param_obligatory TYPE abap_bool,
+        value            TYPE string,
+        value_range      TYPE rsds_selopt_t,
+        ddic_tabname     TYPE tabname,
+        ddic_fieldname   TYPE fieldname,
+        text             TYPE rsseltext,
+      END OF ty_free_sel_field,
+      ty_free_sel_field_tab TYPE STANDARD TABLE OF ty_free_sel_field WITH DEFAULT KEY.
 
     INTERFACES: zif_abapgit_popups.
     ALIASES:
@@ -31,19 +43,6 @@ CLASS zcl_abapgit_popups DEFINITION
 
     TYPES:
       ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
-
-    TYPES:
-      BEGIN OF ty_free_sel_field,
-        name             TYPE fieldname,
-        only_parameter   TYPE abap_bool,
-        param_obligatory TYPE abap_bool,
-        value            TYPE string,
-        value_range      TYPE rsds_selopt_t,
-        ddic_tabname     TYPE tabname,
-        ddic_fieldname   TYPE fieldname,
-        text             TYPE rsseltext,
-      END OF ty_free_sel_field,
-      ty_free_sel_field_tab TYPE STANDARD TABLE OF ty_free_sel_field WITH DEFAULT KEY.
 
     CONSTANTS c_fieldname_selected TYPE lvc_fname VALUE `SELECTED` ##NO_TEXT.
     CONSTANTS c_answer_cancel      TYPE c LENGTH 1 VALUE 'A' ##NO_TEXT.
@@ -1538,199 +1537,14 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD popup_get_from_free_selections.
-    CONSTANTS: lc_only_eq_optlist_name TYPE sychar10 VALUE 'ONLYEQ'.
-    DATA: lt_fields             TYPE STANDARD TABLE OF rsdsfields,
-          lv_selection_id       TYPE dynselid,
-          ls_restriction        TYPE sscr_restrict_ds,
-          lt_texts              TYPE STANDARD TABLE OF rsdstexts,
-          lt_result_ranges      TYPE rsds_trange,
-          ls_parameter_opt_list TYPE sscr_opt_list,
-          lt_default_values     TYPE rsds_trange,
-          lv_repeat_dialog      TYPE abap_bool VALUE abap_true,
-          ls_error_msg          TYPE symsg,
-          lv_ddut_fieldname     TYPE fnam_____4.
-    FIELD-SYMBOLS: <ls_input_field>            TYPE ty_free_sel_field,
-                   <ls_free_sel_field>         TYPE rsdsfields,
-                   <ls_restriction_ass>        TYPE sscr_ass_ds,
-                   <ls_text>                   TYPE rsdstexts,
-                   <ls_default_value>          TYPE rsds_range,
-                   <ls_default_value_range>    TYPE rsds_frange,
-                   <ls_default_val_range_line> TYPE rsdsselopt,
-                   <ls_result_range_for_tab>   TYPE rsds_range,
-                   <ls_result_range_line>      TYPE rsds_frange.
+    DATA: lo_free_sel_dialog TYPE REF TO lcl_free_selections_dialog.
 
-    LOOP AT ct_fields ASSIGNING <ls_input_field>.
-      APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_free_sel_field>.
-      <ls_free_sel_field>-fieldname = <ls_input_field>-ddic_fieldname.
-      <ls_free_sel_field>-tablename = <ls_input_field>-ddic_tabname.
+    CREATE OBJECT lo_free_sel_dialog
+      EXPORTING
+        iv_title      = iv_title
+        iv_frame_text = iv_frame_text.
 
-      IF <ls_input_field>-only_parameter = abap_true.
-        IF ls_restriction IS INITIAL.
-          ls_parameter_opt_list-name = lc_only_eq_optlist_name.
-          ls_parameter_opt_list-options-eq = abap_true.
-          APPEND ls_parameter_opt_list TO ls_restriction-opt_list_tab.
-        ENDIF.
-
-        APPEND INITIAL LINE TO ls_restriction-ass_tab ASSIGNING <ls_restriction_ass>.
-        <ls_restriction_ass>-kind = 'S'.
-        <ls_restriction_ass>-fieldname = <ls_input_field>-ddic_fieldname.
-        <ls_restriction_ass>-tablename = <ls_input_field>-ddic_tabname.
-        <ls_restriction_ass>-sg_main = 'I'.
-        <ls_restriction_ass>-sg_addy = 'N'.
-        <ls_restriction_ass>-op_main = lc_only_eq_optlist_name.
-      ENDIF.
-
-      IF <ls_input_field>-text IS NOT INITIAL.
-        APPEND INITIAL LINE TO lt_texts ASSIGNING <ls_text>.
-        <ls_text>-fieldname = <ls_input_field>-ddic_fieldname.
-        <ls_text>-tablename = <ls_input_field>-ddic_tabname.
-        <ls_text>-text = <ls_input_field>-text.
-      ENDIF.
-
-      IF <ls_input_field>-value IS NOT INITIAL OR <ls_input_field>-value_range IS NOT INITIAL.
-        READ TABLE lt_default_values WITH KEY tablename = <ls_input_field>-ddic_tabname
-                                     ASSIGNING <ls_default_value>.
-        IF sy-subrc <> 0.
-          APPEND INITIAL LINE TO lt_default_values ASSIGNING <ls_default_value>.
-          <ls_default_value>-tablename = <ls_input_field>-ddic_tabname.
-        ENDIF.
-
-        APPEND INITIAL LINE TO <ls_default_value>-frange_t ASSIGNING <ls_default_value_range>.
-        <ls_default_value_range>-fieldname = <ls_input_field>-ddic_fieldname.
-
-        IF <ls_input_field>-value IS NOT INITIAL.
-          APPEND INITIAL LINE TO <ls_default_value_range>-selopt_t ASSIGNING <ls_default_val_range_line>.
-          <ls_default_val_range_line>-sign = 'I'.
-          <ls_default_val_range_line>-option = 'EQ'.
-          <ls_default_val_range_line>-low = <ls_input_field>-value.
-        ELSEIF <ls_input_field>-value_range IS NOT INITIAL.
-          <ls_default_value_range>-selopt_t = <ls_input_field>-value_range.
-        ENDIF.
-      ENDIF.
-    ENDLOOP.
-
-    WHILE lv_repeat_dialog = abap_true.
-      lv_repeat_dialog = abap_false.
-
-      CALL FUNCTION 'FREE_SELECTIONS_INIT'
-        EXPORTING
-          kind                     = 'F'
-          field_ranges_int         = lt_default_values
-          restriction              = ls_restriction
-        IMPORTING
-          selection_id             = lv_selection_id
-        TABLES
-          fields_tab               = lt_fields
-          field_texts              = lt_texts
-        EXCEPTIONS
-          fields_incomplete        = 1
-          fields_no_join           = 2
-          field_not_found          = 3
-          no_tables                = 4
-          table_not_found          = 5
-          expression_not_supported = 6
-          incorrect_expression     = 7
-          illegal_kind             = 8
-          area_not_found           = 9
-          inconsistent_area        = 10
-          kind_f_no_fields_left    = 11
-          kind_f_no_fields         = 12
-          too_many_fields          = 13
-          dup_field                = 14
-          field_no_type            = 15
-          field_ill_type           = 16
-          dup_event_field          = 17
-          node_not_in_ldb          = 18
-          area_no_field            = 19
-          OTHERS                   = 20.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error from FREE_SELECTIONS_INIT: { sy-subrc }| ).
-      ENDIF.
-
-      CALL FUNCTION 'FREE_SELECTIONS_DIALOG'
-        EXPORTING
-          selection_id    = lv_selection_id
-          title           = iv_title
-          frame_text      = iv_frame_text
-          status          = 1
-          as_window       = abap_true
-          no_intervals    = abap_true
-          tree_visible    = abap_false
-        IMPORTING
-          field_ranges    = lt_result_ranges
-        TABLES
-          fields_tab      = lt_fields
-        EXCEPTIONS
-          internal_error  = 1
-          no_action       = 2
-          selid_not_found = 3
-          illegal_status  = 4
-          OTHERS          = 5.
-      CASE sy-subrc.
-        WHEN 0 ##NEEDED.
-        WHEN 2.
-          RAISE EXCEPTION TYPE zcx_abapgit_cancel.
-        WHEN OTHERS.
-          zcx_abapgit_exception=>raise( |Error from FREE_SELECTIONS_DIALOG: { sy-subrc }| ).
-      ENDCASE.
-
-      LOOP AT ct_fields ASSIGNING <ls_input_field>.
-        READ TABLE lt_result_ranges WITH KEY tablename = <ls_input_field>-ddic_tabname
-                                    ASSIGNING <ls_result_range_for_tab>.
-        IF sy-subrc = 0.
-          READ TABLE <ls_result_range_for_tab>-frange_t WITH KEY fieldname = <ls_input_field>-ddic_fieldname
-                                                        ASSIGNING <ls_result_range_line>.
-          IF sy-subrc = 0 AND <ls_result_range_line>-selopt_t IS NOT INITIAL.
-            IF <ls_input_field>-only_parameter = abap_true.
-              ASSERT lines( <ls_result_range_line>-selopt_t ) = 1 AND
-                     <ls_result_range_line>-selopt_t[ 1 ]-sign = 'I' AND
-                     <ls_result_range_line>-selopt_t[ 1 ]-option = 'EQ' AND
-                     <ls_result_range_line>-selopt_t[ 1 ]-high IS INITIAL.
-              <ls_input_field>-value = <ls_result_range_line>-selopt_t[ 1 ]-low.
-            ELSE.
-              <ls_input_field>-value_range = <ls_result_range_line>-selopt_t.
-            ENDIF.
-          ELSE.
-            CLEAR: <ls_input_field>-value, <ls_input_field>-value_range.
-          ENDIF.
-        ELSE.
-          CLEAR: <ls_input_field>-value, <ls_input_field>-value_range.
-        ENDIF.
-
-        IF <ls_input_field>-only_parameter = abap_true.
-          CLEAR ls_error_msg.
-          lv_ddut_fieldname = <ls_input_field>-ddic_fieldname.
-
-          CALL FUNCTION 'DDUT_INPUT_CHECK'
-            EXPORTING
-              tabname            = <ls_input_field>-ddic_tabname
-              fieldname          = lv_ddut_fieldname
-              value              = <ls_input_field>-value
-              accept_all_initial = abap_true
-              value_list         = 'S'
-            IMPORTING
-              msgid              = ls_error_msg-msgid
-              msgty              = ls_error_msg-msgty
-              msgno              = ls_error_msg-msgno
-              msgv1              = ls_error_msg-msgv1
-              msgv2              = ls_error_msg-msgv2
-              msgv3              = ls_error_msg-msgv3
-              msgv4              = ls_error_msg-msgv4.
-          IF ls_error_msg IS NOT INITIAL.
-            MESSAGE ID ls_error_msg-msgid TYPE 'I' NUMBER ls_error_msg-msgno
-                    WITH ls_error_msg-msgv1 ls_error_msg-msgv2 ls_error_msg-msgv3 ls_error_msg-msgv4
-                    DISPLAY LIKE ls_error_msg-msgty.
-            lv_repeat_dialog = abap_true.
-          ELSEIF <ls_input_field>-param_obligatory = abap_true AND <ls_input_field>-value IS INITIAL.
-            MESSAGE |Field '{ <ls_input_field>-name }' is obligatory| TYPE 'I' DISPLAY LIKE 'E'.
-            lv_repeat_dialog = abap_true.
-          ENDIF.
-        ENDIF.
-      ENDLOOP.
-
-      IF lv_repeat_dialog = abap_true.
-        lt_default_values = lt_result_ranges.
-      ENDIF.
-    ENDWHILE.
+    lo_free_sel_dialog->set_fields( CHANGING ct_fields = ct_fields ).
+    lo_free_sel_dialog->show( ).
   ENDMETHOD.
 ENDCLASS.
