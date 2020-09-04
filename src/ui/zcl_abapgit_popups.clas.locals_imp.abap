@@ -199,12 +199,12 @@ CLASS lcl_free_selections_dialog IMPLEMENTATION.
   METHOD validate_results.
     DATA: ls_error_msg      TYPE symsg,
           lv_ddut_fieldname TYPE fnam_____4,
-          lv_value          TYPE rsdsselop_,
-          lt_selopt         TYPE rsds_selopt_t.
+          lv_value          TYPE rsdsselop_.
     FIELD-SYMBOLS: <ls_result_range_for_tab> TYPE rsds_range,
                    <ls_result_range_line>    TYPE rsds_frange,
                    <ls_input_field>          TYPE zcl_abapgit_popups=>ty_free_sel_field,
-                   <lt_input_fields>         TYPE zcl_abapgit_popups=>ty_free_sel_field_tab.
+                   <lt_input_fields>         TYPE zcl_abapgit_popups=>ty_free_sel_field_tab,
+                   <ls_selopt_line>          TYPE rsdsselopt.
 
     ASSIGN mr_fields->* TO <lt_input_fields>.
     ASSERT sy-subrc = 0.
@@ -223,8 +223,9 @@ CLASS lcl_free_selections_dialog IMPLEMENTATION.
           WHEN 0.
             CLEAR lv_value.
           WHEN 1.
-            lt_selopt = <ls_result_range_line>-selopt_t.
-            lv_value = lt_selopt[ 1 ]-low.
+            READ TABLE <ls_result_range_line>-selopt_t INDEX 1 ASSIGNING <ls_selopt_line>.
+            ASSERT sy-subrc = 0.
+            lv_value = <ls_selopt_line>-low.
           WHEN OTHERS.
             ASSERT 1 = 2.
         ENDCASE.
@@ -263,11 +264,11 @@ CLASS lcl_free_selections_dialog IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD transfer_results_to_input.
-    DATA: ls_selopt_line TYPE rsdsselopt.
     FIELD-SYMBOLS: <ls_input_field>          TYPE zcl_abapgit_popups=>ty_free_sel_field,
                    <lt_input_fields>         TYPE zcl_abapgit_popups=>ty_free_sel_field_tab,
                    <ls_result_range_for_tab> TYPE rsds_range,
-                   <ls_result_range_line>    TYPE rsds_frange.
+                   <ls_result_range_line>    TYPE rsds_frange,
+                   <ls_selopt_line>          TYPE rsdsselopt.
 
     ASSIGN mr_fields->* TO <lt_input_fields>.
     ASSERT sy-subrc = 0.
@@ -281,11 +282,15 @@ CLASS lcl_free_selections_dialog IMPLEMENTATION.
         IF sy-subrc = 0 AND <ls_result_range_line>-selopt_t IS NOT INITIAL.
           IF <ls_input_field>-only_parameter = abap_true.
             ASSERT lines( <ls_result_range_line>-selopt_t ) = 1.
-            ls_selopt_line = <ls_result_range_line>-selopt_t[ 1 ].
-            ASSERT ls_selopt_line-sign = 'I' AND
-                   ls_selopt_line-option = 'EQ' AND
-                   ls_selopt_line-high IS INITIAL.
-            <ls_input_field>-value = ls_selopt_line-low.
+
+            READ TABLE <ls_result_range_line>-selopt_t INDEX 1 ASSIGNING <ls_selopt_line>.
+            ASSERT sy-subrc = 0.
+
+            ASSERT <ls_selopt_line>-sign = 'I' AND
+                   <ls_selopt_line>-option = 'EQ' AND
+                   <ls_selopt_line>-high IS INITIAL.
+
+            <ls_input_field>-value = <ls_selopt_line>-low.
           ELSE.
             <ls_input_field>-value_range = <ls_result_range_line>-selopt_t.
           ENDIF.
