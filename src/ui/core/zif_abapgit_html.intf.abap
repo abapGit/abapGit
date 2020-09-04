@@ -48,7 +48,7 @@ INTERFACE zif_abapgit_html PUBLIC.
     IMPORTING
       iv_id      TYPE string
       iv_checked TYPE abap_bool OPTIONAL.
-  CLASS-METHODS a
+  METHODS a
     IMPORTING
       !iv_txt       TYPE string
       !iv_act       TYPE string

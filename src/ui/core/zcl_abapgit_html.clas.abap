@@ -8,8 +8,6 @@ CLASS zcl_abapgit_html DEFINITION
 
     ALIASES add
       FOR zif_abapgit_html~add .
-    ALIASES add_checkbox
-      FOR zif_abapgit_html~add_checkbox .
     ALIASES icon
       FOR zif_abapgit_html~icon .
 

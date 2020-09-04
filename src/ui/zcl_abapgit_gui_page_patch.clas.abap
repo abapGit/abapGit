@@ -73,7 +73,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
         zcx_abapgit_exception .
     METHODS render_patch_head
       IMPORTING
-        !io_html TYPE REF TO zcl_abapgit_html
+        !ii_html TYPE REF TO zif_abapgit_html
         !is_diff TYPE ty_file_diff .
     METHODS start_staging
       IMPORTING
@@ -664,9 +664,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
 
   METHOD render_patch_head.
 
-    io_html->add( |<th class="patch">| ).
-    io_html->add_checkbox( iv_id = |patch_file_{ get_normalized_fname_with_path( is_diff ) }| ).
-    io_html->add( '</th>' ).
+    ii_html->add( |<th class="patch">| ).
+    ii_html->add_checkbox( |patch_file_{ get_normalized_fname_with_path( is_diff ) }| ).
+    ii_html->add( '</th>' ).
 
   ENDMETHOD.
 
@@ -684,7 +684,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
 
   METHOD render_table_head_non_unified.
 
-    render_patch_head( io_html = io_html
+    render_patch_head( ii_html = io_html
                        is_diff = is_diff ).
 
     super->render_table_head_non_unified(
