@@ -55,7 +55,26 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_USER_MASTER_RECORD IMPLEMENTATION.
+
+
+  METHOD check_user_exists.
+    DATA lt_return TYPE ty_lt_return.
+
+
+    CALL FUNCTION 'BAPI_USER_GET_DETAIL'
+      EXPORTING
+        username = iv_user
+      IMPORTING
+        address  = es_address
+      TABLES
+        return   = lt_return
+        addsmtp  = et_smtp.
+    LOOP AT lt_return TRANSPORTING NO FIELDS WHERE type CA 'EA'.
+      zcx_abapgit_exception=>raise( |User: { iv_user } is invalid!| ).
+    ENDLOOP.
+
+  ENDMETHOD.
 
 
   METHOD constructor.
@@ -74,8 +93,7 @@ CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
                 iv_user = iv_user
               IMPORTING
                 es_address   = ls_address
-                et_smtp      = lt_smtp
-                ).
+                et_smtp      = lt_smtp ).
 
         " Choose the first email from SU01
         SORT lt_smtp BY consnumber ASCENDING.
@@ -91,7 +109,7 @@ CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
         get_user_dtls_from_other_clnt( iv_user ).
     ENDTRY.
     "if the user has been found successfully ad it to the list
-    IF ( ms_user-name is not INITIAL AND ms_user-email IS NOT INITIAL ).
+    IF ( ms_user-name IS NOT INITIAL AND ms_user-email IS NOT INITIAL ).
       ls_user-user = iv_user.
       ls_user-o_user = me.
       "insert the user
@@ -134,35 +152,6 @@ CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD insert_user.
-    IF is_user IS INITIAL.
-      RETURN.
-    ENDIF.
-"Insert the user to the list!
-    INSERT  is_user
-            INTO TABLE gt_user.
-  ENDMETHOD.
-
-  METHOD check_user_exists.
-    DATA lt_return TYPE ty_lt_return.
-
-
-    CALL FUNCTION 'BAPI_USER_GET_DETAIL'
-      EXPORTING
-        username = iv_user
-      IMPORTING
-        address  = es_address
-      TABLES
-        return   = lt_return
-        addsmtp  = et_smtp.
-
-    LOOP AT lt_return TRANSPORTING NO FIELDS WHERE type CA 'EA'.
-      zcx_abapgit_exception=>raise( |User: { iv_user } is invalid!| ).
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
   METHOD get_user_dtls_from_other_clnt.
 
     DATA lt_dev_clients TYPE ty_lt_dev_clients.
@@ -197,4 +186,13 @@ CLASS zcl_abapgit_user_master_record IMPLEMENTATION.
 
   ENDMETHOD.
 
+
+  METHOD insert_user.
+    IF is_user IS INITIAL.
+      RETURN.
+    ENDIF.
+    "Insert the user to the list!
+    INSERT  is_user
+            INTO TABLE gt_user.
+  ENDMETHOD.
 ENDCLASS.
