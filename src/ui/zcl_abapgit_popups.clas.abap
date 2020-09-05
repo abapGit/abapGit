@@ -1515,7 +1515,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     popup_get_from_free_selections(
       EXPORTING
-        iv_title       =  'Performance Test Parameters'
+        iv_title       = 'Serialization Performance Test Parameters'
         iv_frame_text  = 'Parameters'
       CHANGING
         ct_fields      = lt_fields ).

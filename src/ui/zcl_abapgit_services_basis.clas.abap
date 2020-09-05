@@ -81,7 +81,9 @@ CLASS zcl_abapgit_services_basis IMPLEMENTATION.
           lt_result                     TYPE zcl_abapgit_performance_test=>gty_result_tab,
           lo_alv                        TYPE REF TO cl_salv_table,
           lx_salv_error                 TYPE REF TO cx_salv_error,
-          lv_current_repo               TYPE zif_abapgit_persistence=>ty_value.
+          lv_current_repo               TYPE zif_abapgit_persistence=>ty_value,
+          lo_runtime_column             TYPE REF TO cl_salv_column,
+          lo_seconds_column             TYPE REF TO cl_salv_column.
 
     TRY.
         lv_current_repo = zcl_abapgit_persistence_user=>get_instance( )->get_repo_show( ).
@@ -121,12 +123,15 @@ CLASS zcl_abapgit_services_basis IMPLEMENTATION.
           CHANGING
             t_table      = lt_result ).
         lo_alv->get_functions( )->set_all( ).
-        lo_alv->get_display_settings( )->set_list_header( 'abapGit - Performance Test' ).
-        lo_alv->get_columns( )->get_column( 'RUNTIME' )->set_medium_text( 'Runtime' ).
-        lo_alv->get_columns( )->get_column( 'SECONDS' )->set_medium_text( 'Seconds' ).
+        lo_alv->get_display_settings( )->set_list_header( 'Serialization Performance Test Results' ).
+        lo_runtime_column = lo_alv->get_columns( )->get_column( 'RUNTIME' ).
+        lo_runtime_column->set_medium_text( 'Runtime' ).
+        lo_runtime_column->set_visible( abap_false ).
+        lo_seconds_column = lo_alv->get_columns( )->get_column( 'SECONDS' ).
+        lo_seconds_column->set_medium_text( 'Seconds' ).
         lo_alv->get_columns( )->set_count_column( 'COUNTER' ).
-        lo_alv->get_aggregations( )->add_aggregation( 'RUNTIME' ).
-        lo_alv->get_aggregations( )->add_aggregation( 'SECONDS' ).
+        lo_alv->get_aggregations( )->add_aggregation( lo_runtime_column->get_columnname( ) ).
+        lo_alv->get_aggregations( )->add_aggregation( lo_seconds_column->get_columnname( ) ).
         lo_alv->set_screen_popup(
           start_column = 1
           end_column   = 180
