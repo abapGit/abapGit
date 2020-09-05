@@ -5,18 +5,6 @@ CLASS zcl_abapgit_popups DEFINITION
   GLOBAL FRIENDS zcl_abapgit_ui_factory.
 
   PUBLIC SECTION.
-    TYPES:
-      BEGIN OF ty_free_sel_field,
-        name             TYPE fieldname,
-        only_parameter   TYPE abap_bool,
-        param_obligatory TYPE abap_bool,
-        value            TYPE string,
-        value_range      TYPE rsds_selopt_t,
-        ddic_tabname     TYPE tabname,
-        ddic_fieldname   TYPE fieldname,
-        text             TYPE rsseltext,
-      END OF ty_free_sel_field,
-      ty_free_sel_field_tab TYPE STANDARD TABLE OF ty_free_sel_field WITH DEFAULT KEY.
 
     INTERFACES: zif_abapgit_popups.
     ALIASES:
@@ -108,7 +96,7 @@ CLASS zcl_abapgit_popups DEFINITION
         iv_title      TYPE syst_title OPTIONAL
         iv_frame_text TYPE syst_title OPTIONAL
       CHANGING
-        ct_fields     TYPE ty_free_sel_field_tab
+        ct_fields     TYPE zcl_abapgit_free_sel_dialog=>ty_free_sel_field_tab
       RAISING
         zcx_abapgit_cancel
         zcx_abapgit_exception.
@@ -1469,8 +1457,8 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_popups~popup_perf_test_parameters.
-    DATA: lt_fields TYPE ty_free_sel_field_tab.
-    FIELD-SYMBOLS: <ls_field> TYPE ty_free_sel_field.
+    DATA: lt_fields TYPE zcl_abapgit_free_sel_dialog=>ty_free_sel_field_tab.
+    FIELD-SYMBOLS: <ls_field> TYPE zcl_abapgit_free_sel_dialog=>ty_free_sel_field.
 
     APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
     <ls_field>-name = 'PACKAGE'.
@@ -1537,7 +1525,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD popup_get_from_free_selections.
-    DATA: lo_free_sel_dialog TYPE REF TO lcl_free_selections_dialog.
+    DATA: lo_free_sel_dialog TYPE REF TO zcl_abapgit_free_sel_dialog.
 
     CREATE OBJECT lo_free_sel_dialog
       EXPORTING

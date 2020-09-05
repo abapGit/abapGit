@@ -1,9 +1,60 @@
-*"* use this source file for the definition and implementation of
-*"* local helper classes, interface definitions and type
-*"* declarations
+"! Free Selections Dialog
+CLASS zcl_abapgit_free_sel_dialog DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC.
+
+  PUBLIC SECTION.
+    TYPES:
+      BEGIN OF ty_free_sel_field,
+        name             TYPE fieldname,
+        only_parameter   TYPE abap_bool,
+        param_obligatory TYPE abap_bool,
+        value            TYPE string,
+        value_range      TYPE rsds_selopt_t,
+        ddic_tabname     TYPE tabname,
+        ddic_fieldname   TYPE fieldname,
+        text             TYPE rsseltext,
+      END OF ty_free_sel_field,
+      ty_free_sel_field_tab TYPE STANDARD TABLE OF ty_free_sel_field WITH DEFAULT KEY.
+    METHODS:
+      constructor IMPORTING iv_title      TYPE syst_title OPTIONAL
+                            iv_frame_text TYPE syst_title OPTIONAL,
+      set_fields CHANGING ct_fields TYPE ty_free_sel_field_tab,
+      show RAISING zcx_abapgit_cancel
+                   zcx_abapgit_exception.
+  PROTECTED SECTION.
+  PRIVATE SECTION.
+    TYPES:
+      ty_field_text_tab TYPE STANDARD TABLE OF rsdstexts WITH DEFAULT KEY.
+    METHODS:
+      convert_input_fields EXPORTING et_default_values TYPE rsds_trange
+                                     es_restriction    TYPE sscr_restrict_ds
+                                     et_fields         TYPE rsdsfields_t
+                                     et_field_texts    TYPE ty_field_text_tab,
+      free_selections_init IMPORTING it_default_values TYPE rsds_trange
+                                     is_restriction    TYPE sscr_restrict_ds
+                           EXPORTING ev_selection_id   TYPE dynselid
+                           CHANGING  ct_fields         TYPE rsdsfields_t
+                                     ct_field_texts    TYPE ty_field_text_tab
+                           RAISING   zcx_abapgit_exception,
+      free_selections_dialog IMPORTING iv_selection_id  TYPE dynselid
+                             EXPORTING et_result_ranges TYPE rsds_trange
+                             CHANGING  ct_fields        TYPE rsdsfields_t
+                             RAISING   zcx_abapgit_cancel
+                                       zcx_abapgit_exception,
+      validate_results IMPORTING it_result_ranges TYPE rsds_trange
+                       RAISING   zcx_abapgit_exception,
+      transfer_results_to_input IMPORTING it_result_ranges TYPE rsds_trange.
+    DATA:
+      mr_fields     TYPE REF TO ty_free_sel_field_tab,
+      mv_title      TYPE syst_title,
+      mv_frame_text TYPE syst_title.
+ENDCLASS.
 
 
-CLASS lcl_free_selections_dialog IMPLEMENTATION.
+
+CLASS zcl_abapgit_free_sel_dialog IMPLEMENTATION.
   METHOD constructor.
     mv_title = iv_title.
     mv_frame_text = iv_frame_text.
@@ -67,8 +118,8 @@ CLASS lcl_free_selections_dialog IMPLEMENTATION.
   METHOD convert_input_fields.
     CONSTANTS: lc_only_eq_optlist_name TYPE sychar10 VALUE 'ONLYEQ'.
     DATA: ls_parameter_opt_list TYPE sscr_opt_list.
-    FIELD-SYMBOLS: <ls_input_field>            TYPE zcl_abapgit_popups=>ty_free_sel_field,
-                   <lt_input_fields>           TYPE zcl_abapgit_popups=>ty_free_sel_field_tab,
+    FIELD-SYMBOLS: <ls_input_field>            TYPE ty_free_sel_field,
+                   <lt_input_fields>           TYPE ty_free_sel_field_tab,
                    <ls_free_sel_field>         TYPE rsdsfields,
                    <ls_restriction_ass>        TYPE sscr_ass_ds,
                    <ls_text>                   TYPE rsdstexts,
@@ -202,8 +253,8 @@ CLASS lcl_free_selections_dialog IMPLEMENTATION.
           lv_value          TYPE rsdsselop_.
     FIELD-SYMBOLS: <ls_result_range_for_tab> TYPE rsds_range,
                    <ls_result_range_line>    TYPE rsds_frange,
-                   <ls_input_field>          TYPE zcl_abapgit_popups=>ty_free_sel_field,
-                   <lt_input_fields>         TYPE zcl_abapgit_popups=>ty_free_sel_field_tab,
+                   <ls_input_field>          TYPE ty_free_sel_field,
+                   <lt_input_fields>         TYPE ty_free_sel_field_tab,
                    <ls_selopt_line>          TYPE rsdsselopt.
 
     ASSIGN mr_fields->* TO <lt_input_fields>.
@@ -264,8 +315,8 @@ CLASS lcl_free_selections_dialog IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD transfer_results_to_input.
-    FIELD-SYMBOLS: <ls_input_field>          TYPE zcl_abapgit_popups=>ty_free_sel_field,
-                   <lt_input_fields>         TYPE zcl_abapgit_popups=>ty_free_sel_field_tab,
+    FIELD-SYMBOLS: <ls_input_field>          TYPE ty_free_sel_field,
+                   <lt_input_fields>         TYPE ty_free_sel_field_tab,
                    <ls_result_range_for_tab> TYPE rsds_range,
                    <ls_result_range_line>    TYPE rsds_frange,
                    <ls_selopt_line>          TYPE rsdsselopt.
