@@ -312,14 +312,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
 
   METHOD build_dir_jump_link.
 
-    DATA: lv_path   TYPE string,
-          lv_encode TYPE string.
+    DATA lv_path   TYPE string.
+    DATA lv_encode TYPE string.
+    DATA li_html TYPE REF TO zif_abapgit_html.
+
+    CREATE OBJECT li_html TYPE zcl_abapgit_html.
 
     lv_path = iv_path.
     REPLACE FIRST OCCURRENCE OF mv_cur_dir IN lv_path WITH ''.
     lv_encode = zcl_abapgit_html_action_utils=>dir_encode( lv_path ).
 
-    rv_html = zcl_abapgit_html=>zif_abapgit_html~a(
+    rv_html = li_html->a(
       iv_txt = lv_path
       iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
 
@@ -464,13 +467,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
 
   METHOD build_obj_jump_link.
 
-    DATA: lv_encode TYPE string.
+    DATA lv_encode TYPE string.
+    DATA li_html TYPE REF TO zif_abapgit_html.
+
+    CREATE OBJECT li_html TYPE zcl_abapgit_html.
 
     lv_encode = zcl_abapgit_html_action_utils=>jump_encode(
       iv_obj_type = is_item-obj_type
       iv_obj_name = is_item-obj_name ).
 
-    rv_html = zcl_abapgit_html=>zif_abapgit_html~a(
+    rv_html = li_html->a(
       iv_txt = |{ is_item-obj_name }|
       iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_encode }| ).
 
@@ -961,10 +967,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
 
 
   METHOD render_item_lock_column.
-    DATA: li_cts_api          TYPE REF TO zif_abapgit_cts_api,
-          lv_transport        TYPE trkorr,
-          lv_transport_string TYPE string,
-          lv_icon_html        TYPE string.
+
+    DATA li_cts_api          TYPE REF TO zif_abapgit_cts_api.
+    DATA lv_transport        TYPE trkorr.
+    DATA lv_transport_string TYPE string.
+    DATA lv_icon_html        TYPE string.
+    DATA li_html             TYPE REF TO zif_abapgit_html.
+
+    CREATE OBJECT li_html TYPE zcl_abapgit_html.
 
     li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
 
@@ -979,9 +989,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
                                                                     iv_object_name             = is_item-obj_name
                                                                     iv_resolve_task_to_request = abap_false ).
           lv_transport_string = lv_transport.
-          lv_icon_html = zcl_abapgit_html=>zif_abapgit_html~a(
-            iv_txt = zcl_abapgit_html=>icon( iv_name = 'briefcase/darkgrey'
-                                             iv_hint = lv_transport_string )
+          lv_icon_html = li_html->a(
+            iv_txt = li_html->icon( iv_name = 'briefcase/darkgrey'
+                                    iv_hint = lv_transport_string )
             iv_act = |{ zif_abapgit_definitions=>c_action-jump_transport }?| && lv_transport ).
 
           rv_html = |<td class="icon">| &&
