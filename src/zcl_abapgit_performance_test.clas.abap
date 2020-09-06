@@ -6,8 +6,6 @@ CLASS zcl_abapgit_performance_test DEFINITION
 
   PUBLIC SECTION.
     TYPES:
-      gty_object_type_range TYPE RANGE OF trobjtype,
-      gty_object_name_range TYPE RANGE OF sobj_name,
       BEGIN OF gty_result,
         pgmid    TYPE pgmid,
         object   TYPE trobjtype,
@@ -22,10 +20,10 @@ CLASS zcl_abapgit_performance_test DEFINITION
       constructor IMPORTING iv_package                    TYPE devclass
                             iv_include_sub_packages       TYPE abap_bool DEFAULT abap_true
                             iv_serialize_master_lang_only TYPE abap_bool DEFAULT abap_true,
-      set_object_type_filter IMPORTING it_object_type_range TYPE gty_object_type_range,
-      set_object_name_filter IMPORTING it_object_name_range TYPE gty_object_name_range,
-      get_object_type_filter RETURNING VALUE(rt_object_type_range) TYPE gty_object_type_range,
-      get_object_name_filter RETURNING VALUE(rt_object_name_range) TYPE gty_object_name_range,
+      set_object_type_filter IMPORTING it_object_type_range TYPE zif_abapgit_definitions=>ty_object_type_range,
+      set_object_name_filter IMPORTING it_object_name_range TYPE zif_abapgit_definitions=>ty_object_name_range,
+      get_object_type_filter RETURNING VALUE(rt_object_type_range) TYPE zif_abapgit_definitions=>ty_object_type_range,
+      get_object_name_filter RETURNING VALUE(rt_object_name_range) TYPE zif_abapgit_definitions=>ty_object_name_range,
       run_measurement RAISING zcx_abapgit_exception,
       get_result RETURNING VALUE(rt_result) TYPE gty_result_tab.
   PROTECTED SECTION.
@@ -38,8 +36,8 @@ CLASS zcl_abapgit_performance_test DEFINITION
       mv_include_sub_packages       TYPE abap_bool,
       mv_serialize_master_lang_only TYPE abap_bool,
       BEGIN OF ms_filter_parameters,
-        object_type_range TYPE gty_object_type_range,
-        object_name_range TYPE gty_object_name_range,
+        object_type_range TYPE zif_abapgit_definitions=>ty_object_type_range,
+        object_name_range TYPE zif_abapgit_definitions=>ty_object_name_range,
       END OF ms_filter_parameters,
       mt_result TYPE gty_result_tab.
 ENDCLASS.

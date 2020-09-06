@@ -172,8 +172,8 @@ INTERFACE zif_abapgit_popups
       zcx_abapgit_exception.
   METHODS popup_perf_test_parameters
     EXPORTING
-      et_object_type_filter         TYPE zcl_abapgit_performance_test=>gty_object_type_range
-      et_object_name_filter         TYPE zcl_abapgit_performance_test=>gty_object_name_range
+      et_object_type_filter         TYPE zif_abapgit_definitions=>ty_object_type_range
+      et_object_name_filter         TYPE zif_abapgit_definitions=>ty_object_name_range
     CHANGING
       cv_package                    TYPE devclass
       cv_include_sub_packages       TYPE abap_bool
