@@ -105,7 +105,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     TRY.
         zcl_abapgit_url=>validate( 'http://github.com/larshp/Foobar.git' ).
-      CATCH zcx_abapgit_exception.                      "#EC NO_HANDLER
+      CATCH zcx_abapgit_exception.
         cl_abap_unit_assert=>fail( ).
     ENDTRY.
 
@@ -115,7 +115,7 @@ CLASS ltcl_test IMPLEMENTATION.
 
     TRY.
         zcl_abapgit_url=>validate( 'https://github.com/larshp/Foobar.git' ).
-      CATCH zcx_abapgit_exception.                      "#EC NO_HANDLER
+      CATCH zcx_abapgit_exception.
         cl_abap_unit_assert=>fail( ).
     ENDTRY.
 
