@@ -242,6 +242,8 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     CONSTANTS:
       lc_abapgit_prog TYPE progname VALUE `ZABAPGIT`.
 
+    DATA: li_progress TYPE REF TO zif_abapgit_progress.
+
     " If abapGit was used to update itself, then restart to avoid LOAD_PROGRAM_&_MISMATCH dumps
     " because abapGit code was changed at runtime
     IF zcl_abapgit_ui_factory=>get_gui_functions( )->gui_is_available( ) = abap_true AND
@@ -249,9 +251,10 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
        sy-batch = abap_false AND
        sy-cprog = lc_abapgit_prog.
 
-      IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_show_default_repo( ) = abap_false.
-        MESSAGE 'abapGit was updated and will restart itself' TYPE 'I'.
-      ENDIF.
+      li_progress = zcl_abapgit_progress=>get_instance( 1 ).
+      li_progress->show( iv_current = 1
+                         iv_text    = |abapGit was updated and will restart itself| ).
+      WAIT UP TO 1 SECONDS.
 
       SUBMIT (sy-cprog).
 
