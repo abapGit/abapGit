@@ -700,6 +700,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
           lv_xstr              TYPE xstring,
           lv_current_page_name TYPE string.
 
+    " TODO refactor
     CONSTANTS:
       BEGIN OF lc_page,
         main_view TYPE string VALUE 'ZCL_ABAPGIT_GUI_PAGE_MAIN',
@@ -720,6 +721,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
         lo_repo->set_files_remote( zcl_abapgit_zip=>load( lv_xstr ) ).
         zcl_abapgit_services_repo=>refresh( lv_key ).
 
+        " TODO refactor how current page name is determined
         lv_current_page_name = zcl_abapgit_ui_factory=>get_gui_services( )->get_current_page_name( ).
         CASE lv_current_page_name.
           WHEN lc_page-repo_view.
