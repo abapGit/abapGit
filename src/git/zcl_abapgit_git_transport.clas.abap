@@ -9,7 +9,7 @@ CLASS zcl_abapgit_git_transport DEFINITION
       IMPORTING
         !iv_url          TYPE string
         !iv_branch_name  TYPE string
-        !iv_deepen_level TYPE n DEFAULT 1
+        !iv_deepen_level TYPE i DEFAULT 1
         !it_branches     TYPE zif_abapgit_definitions=>ty_git_branch_list_tt OPTIONAL
       EXPORTING
         !et_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
