@@ -22,7 +22,7 @@ CLASS zcl_abapgit_git_transport DEFINITION
         !iv_url          TYPE string
         !iv_branch_name  TYPE string
         !iv_hash         TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
-        !iv_deepen_level TYPE n DEFAULT 0
+        !iv_deepen_level TYPE i DEFAULT 0
       EXPORTING
         !et_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
         !ev_branch       TYPE zif_abapgit_definitions=>ty_sha1
@@ -93,7 +93,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_git_transport IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
 
 
   METHOD branches.
