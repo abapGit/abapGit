@@ -185,8 +185,9 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       CLEAR <lg_line>.
       CASE lo_data_descr->kind.
         WHEN cl_abap_elemdescr=>kind_elem.
-          ASSIGN COMPONENT c_default_column OF STRUCTURE <lg_line> TO <lg_value>.
-          <lg_value> = <lg_data>.
+          ASSIGN COMPONENT c_default_column OF STRUCTURE <lg_data> TO <lg_value>.
+          ASSERT <lg_value> IS ASSIGNED.
+          <lg_line> = <lg_value>.
 
         WHEN OTHERS.
           MOVE-CORRESPONDING <lg_data> TO <lg_line>.
@@ -251,7 +252,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     FIELD-SYMBOLS: <lg_exporting>    TYPE any,
                    <lt_table>        TYPE STANDARD TABLE,
                    <lg_line>         TYPE any,
-                   <lv_value>        TYPE any,
+                   <lg_value>        TYPE any,
                    <lv_selected>     TYPE abap_bool,
                    <lv_selected_row> TYPE LINE OF salv_t_row.
 
@@ -299,9 +300,9 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
       CASE lo_data_descr->kind.
         WHEN cl_abap_elemdescr=>kind_elem.
-          ASSIGN COMPONENT c_default_column OF STRUCTURE <lg_line> TO <lv_value>.
-          ASSERT <lv_value> IS ASSIGNED.
-          <lg_exporting> = <lv_value>.
+          ASSIGN COMPONENT c_default_column OF STRUCTURE <lg_line> TO <lg_value>.
+          ASSERT <lg_value> IS ASSIGNED.
+          <lg_exporting> = <lg_value>.
 
         WHEN OTHERS.
           MOVE-CORRESPONDING <lg_line> TO <lg_exporting>.
