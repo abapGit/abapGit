@@ -46,7 +46,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
+CLASS zcl_abapgit_object_doma IMPLEMENTATION.
 
 
   METHOD deserialize_texts.
@@ -200,6 +200,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
     LOOP AT lt_dd07_texts ASSIGNING <ls_dd07_text>.
       CLEAR: <ls_dd07_text>-valpos.
     ENDLOOP.
+
+    DELETE lt_dd07_texts WHERE ddtext IS INITIAL.
 
     IF lines( lt_i18n_langs ) > 0.
       io_xml->add( iv_name = 'I18N_LANGS'
