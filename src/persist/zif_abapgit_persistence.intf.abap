@@ -66,9 +66,10 @@ INTERFACE zif_abapgit_persistence PUBLIC.
 
   TYPES: BEGIN OF ty_repo,
            key TYPE ty_value.
-      INCLUDE TYPE ty_repo_xml.
+           INCLUDE TYPE ty_repo_xml.
   TYPES: END OF ty_repo.
   TYPES: tt_repo TYPE STANDARD TABLE OF ty_repo WITH DEFAULT KEY.
   TYPES: tt_repo_keys TYPE STANDARD TABLE OF ty_repo-key WITH DEFAULT KEY.
+  TYPES: tt_repo_urls TYPE STANDARD TABLE OF ty_repo-url WITH DEFAULT KEY.
 
 ENDINTERFACE.

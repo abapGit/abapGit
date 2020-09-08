@@ -6,7 +6,8 @@ CLASS zcl_abapgit_persistence_user DEFINITION
 
     INTERFACES zif_abapgit_persist_user.
 
-    TYPES tt_favorites TYPE zif_abapgit_persistence=>tt_repo_keys .
+    TYPES: tt_favorites TYPE zif_abapgit_persistence=>tt_repo_keys,
+           tt_urls      TYPE zif_abapgit_persistence=>tt_repo_urls.
 
     CLASS-METHODS get_instance
       IMPORTING
@@ -36,6 +37,7 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         changes_only     TYPE abap_bool,
         diff_unified     TYPE abap_bool,
         favorites        TYPE tt_favorites,
+        urls             TYPE tt_urls,
         repo_config      TYPE ty_repo_config_tt,
         settings         TYPE zif_abapgit_definitions=>ty_s_user_settings,
       END OF ty_user .
@@ -82,7 +84,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
+CLASS zcl_abapgit_persistence_user IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -228,6 +230,13 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
   METHOD zif_abapgit_persist_user~get_favorites.
 
     rt_favorites = read( )-favorites.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_persist_user~get_urls.
+
+    rt_urls = read( )-urls.
 
   ENDMETHOD.
 
@@ -453,6 +462,44 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
     update( ls_user ).
 
     COMMIT WORK AND WAIT.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_persist_user~add_url.
+
+    DATA: ls_user TYPE ty_user.
+
+    ls_user = read( ).
+
+    READ TABLE ls_user-urls TRANSPORTING NO FIELDS
+      WITH KEY table_line = iv_repo_url.
+
+    IF sy-subrc <> 0.
+      APPEND iv_repo_url TO ls_user-urls.
+
+      update( ls_user ).
+      COMMIT WORK AND WAIT.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_persist_user~remove_url.
+
+    DATA: ls_user TYPE ty_user.
+
+    ls_user = read( ).
+
+    READ TABLE ls_user-urls TRANSPORTING NO FIELDS
+      WITH KEY table_line = iv_repo_url.
+
+    IF sy-subrc = 0.
+      DELETE ls_user-urls WHERE table_line = iv_repo_url.
+
+      update( ls_user ).
+      COMMIT WORK AND WAIT.
+    ENDIF.
 
   ENDMETHOD.
 
