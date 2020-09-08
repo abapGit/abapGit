@@ -57,16 +57,16 @@ CLASS zcl_abapgit_popups DEFINITION
       EXPORTING
         !et_list TYPE INDEX TABLE .
     METHODS on_select_list_link_click
-      FOR EVENT link_click OF cl_salv_events_table
+        FOR EVENT link_click OF cl_salv_events_table
       IMPORTING
         !row
         !column .
     METHODS on_select_list_function_click
-      FOR EVENT added_function OF cl_salv_events_table
+        FOR EVENT added_function OF cl_salv_events_table
       IMPORTING
         !e_salv_function .
     METHODS on_double_click
-      FOR EVENT double_click OF cl_salv_events_table
+        FOR EVENT double_click OF cl_salv_events_table
       IMPORTING
         !row
         !column .
@@ -91,6 +91,15 @@ CLASS zcl_abapgit_popups DEFINITION
                 ev_value_3        TYPE spo_value
       CHANGING  ct_fields         TYPE ty_lt_fields
       RAISING   zcx_abapgit_exception.
+    METHODS popup_get_from_free_selections
+      IMPORTING
+        iv_title      TYPE syst_title OPTIONAL
+        iv_frame_text TYPE syst_title OPTIONAL
+      CHANGING
+        ct_fields     TYPE zcl_abapgit_free_sel_dialog=>ty_free_sel_field_tab
+      RAISING
+        zcx_abapgit_cancel
+        zcx_abapgit_exception.
     METHODS validate_folder_logic
       IMPORTING
         iv_folder_logic TYPE string
@@ -100,7 +109,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
+CLASS zcl_abapgit_popups IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -593,16 +602,16 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
       EXPORTING
-        textline1  = 'Select pull request'
-        titel      = 'Select pull request'
-        start_col  = 30
-        start_row  = 5
+        textline1 = 'Select pull request'
+        titel     = 'Select pull request'
+        start_col = 30
+        start_row = 5
       IMPORTING
-        answer     = lv_answer
+        answer    = lv_answer
       TABLES
-        t_spopli   = lt_selection
+        t_spopli  = lt_selection
       EXCEPTIONS
-        OTHERS     = 1.
+        OTHERS    = 1.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Error from POPUP_TO_DECIDE_LIST' ).
     ENDIF.
@@ -822,12 +831,12 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     CALL FUNCTION 'F4IF_FIELD_VALUE_REQUEST'
       EXPORTING
-        tabname   = lv_tabname
-        fieldname = lv_fieldname
+        tabname    = lv_tabname
+        fieldname  = lv_fieldname
       TABLES
         return_tab = lt_ret
       EXCEPTIONS
-        OTHERS = 5.
+        OTHERS     = 5.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |F4IF_FIELD_VALUE_REQUEST error [{ iv_tab_field }]| ).
@@ -1445,5 +1454,85 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       ev_value_3 = <ls_field>-value.
     ENDIF.
 
+  ENDMETHOD.
+
+  METHOD zif_abapgit_popups~popup_perf_test_parameters.
+    DATA: lt_fields TYPE zcl_abapgit_free_sel_dialog=>ty_free_sel_field_tab.
+    FIELD-SYMBOLS: <ls_field> TYPE zcl_abapgit_free_sel_dialog=>ty_free_sel_field.
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-name = 'PACKAGE'.
+    <ls_field>-only_parameter = abap_true.
+    <ls_field>-ddic_tabname = 'TADIR'.
+    <ls_field>-ddic_fieldname = 'DEVCLASS'.
+    <ls_field>-param_obligatory = abap_true.
+    <ls_field>-value = cv_package.
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-name = 'PGMID'.
+    <ls_field>-only_parameter = abap_true.
+    <ls_field>-ddic_tabname = 'TADIR'.
+    <ls_field>-ddic_fieldname = 'PGMID'.
+    <ls_field>-value = 'R3TR'.
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-name = 'OBJECT'.
+    <ls_field>-ddic_tabname = 'TADIR'.
+    <ls_field>-ddic_fieldname = 'OBJECT'.
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-name = 'OBJ_NAME'.
+    <ls_field>-ddic_tabname = 'TADIR'.
+    <ls_field>-ddic_fieldname = 'OBJ_NAME'.
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-name = 'INCLUDE_SUB_PACKAGES'.
+    <ls_field>-only_parameter = abap_true.
+    <ls_field>-ddic_tabname = 'TDEVC'.
+    <ls_field>-ddic_fieldname = 'IS_ENHANCEABLE'.
+    <ls_field>-text = 'Include subpackages'.
+    <ls_field>-value = cv_include_sub_packages.
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-name = 'MASTER_LANG_ONLY'.
+    <ls_field>-only_parameter = abap_true.
+    <ls_field>-ddic_tabname = 'TVDIR'.
+    <ls_field>-ddic_fieldname = 'FLAG'.
+    <ls_field>-text = 'Master lang only'.
+    <ls_field>-value = cv_serialize_master_lang_only.
+
+    popup_get_from_free_selections(
+      EXPORTING
+        iv_title       = 'Serialization Performance Test Parameters'
+        iv_frame_text  = 'Parameters'
+      CHANGING
+        ct_fields      = lt_fields ).
+
+    LOOP AT lt_fields ASSIGNING <ls_field>.
+      CASE <ls_field>-name.
+        WHEN 'PACKAGE'.
+          cv_package = <ls_field>-value.
+        WHEN 'OBJECT'.
+          et_object_type_filter = <ls_field>-value_range.
+        WHEN 'OBJ_NAME'.
+          et_object_name_filter = <ls_field>-value_range.
+        WHEN 'INCLUDE_SUB_PACKAGES'.
+          cv_include_sub_packages = boolc( <ls_field>-value IS NOT INITIAL ).
+        WHEN 'MASTER_LANG_ONLY'.
+          cv_serialize_master_lang_only = boolc( <ls_field>-value IS NOT INITIAL ).
+      ENDCASE.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD popup_get_from_free_selections.
+    DATA: lo_free_sel_dialog TYPE REF TO zcl_abapgit_free_sel_dialog.
+
+    CREATE OBJECT lo_free_sel_dialog
+      EXPORTING
+        iv_title      = iv_title
+        iv_frame_text = iv_frame_text.
+
+    lo_free_sel_dialog->set_fields( CHANGING ct_fields = ct_fields ).
+    lo_free_sel_dialog->show( ).
   ENDMETHOD.
 ENDCLASS.
