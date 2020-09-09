@@ -18,7 +18,7 @@ INTERFACE zif_abapgit_popups
 
   METHODS popup_search_help
     IMPORTING
-      !iv_tab_field TYPE string
+      !iv_tab_field   TYPE string
     RETURNING
       VALUE(rv_value) TYPE ddshretval-fieldval
     RAISING
@@ -44,8 +44,8 @@ INTERFACE zif_abapgit_popups
     IMPORTING
       iv_source_branch_name TYPE string
     EXPORTING
-      !ev_name   TYPE string
-      !ev_cancel TYPE abap_bool
+      !ev_name              TYPE string
+      !ev_cancel            TYPE abap_bool
     RAISING
       zcx_abapgit_exception .
   METHODS repo_new_offline
@@ -165,9 +165,19 @@ INTERFACE zif_abapgit_popups
       zcx_abapgit_exception.
   METHODS choose_pr_popup
     IMPORTING
-      it_pulls TYPE zif_abapgit_pr_enum_provider=>tty_pulls
+      it_pulls       TYPE zif_abapgit_pr_enum_provider=>tty_pulls
     RETURNING
       VALUE(rs_pull) TYPE zif_abapgit_pr_enum_provider=>ty_pull_request
+    RAISING
+      zcx_abapgit_exception.
+  METHODS popup_perf_test_parameters
+    EXPORTING
+      et_object_type_filter         TYPE zif_abapgit_definitions=>ty_object_type_range
+      et_object_name_filter         TYPE zif_abapgit_definitions=>ty_object_name_range
+    CHANGING
+      cv_package                    TYPE devclass
+      cv_include_sub_packages       TYPE abap_bool
+      cv_serialize_master_lang_only TYPE abap_bool
     RAISING
       zcx_abapgit_exception.
 ENDINTERFACE.
