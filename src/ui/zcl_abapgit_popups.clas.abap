@@ -153,8 +153,6 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
       WHEN cl_abap_elemdescr=>kind_elem.
         lo_elem_descr ?= mo_table_descr->get_table_line_type( ).
         INSERT INITIAL LINE INTO lt_components ASSIGNING <ls_component> INDEX 1.
-        ASSERT sy-subrc = 0.
-
         <ls_component>-name = c_default_column.
         <ls_component>-type = lo_elem_descr.
 
@@ -169,8 +167,6 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     ENDIF.
 
     INSERT INITIAL LINE INTO lt_components ASSIGNING <ls_component> INDEX 1.
-    ASSERT sy-subrc = 0.
-
     <ls_component>-name = c_fieldname_selected.
     <ls_component>-type ?= cl_abap_datadescr=>describe_by_name( 'FLAG' ).
 
