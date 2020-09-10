@@ -29,12 +29,12 @@ CLASS zcl_abapgit_git_transport DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS upload_pack
       IMPORTING
-        !io_client       TYPE REF TO zcl_abapgit_http_client
-        !iv_url          TYPE string
-        !iv_deepen_level TYPE i DEFAULT 0
-        !it_hashes       TYPE zif_abapgit_definitions=>ty_sha1_tt
-      EXPORTING
-        !et_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
+        !io_client        TYPE REF TO zcl_abapgit_http_client
+        !iv_url           TYPE string
+        !iv_deepen_level  TYPE i DEFAULT 0
+        !it_hashes        TYPE zif_abapgit_definitions=>ty_sha1_tt
+      RETURNING
+        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception.
 * local to remote
@@ -310,12 +310,12 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
     upload_pack(
       EXPORTING
-        io_client             = lo_client
-        iv_url                = iv_url
-        iv_deepen_level       = iv_deepen_level
-        it_hashes             = lt_hashes
-      IMPORTING
-        et_objects            = et_objects ).
+        io_client       = lo_client
+        iv_url          = iv_url
+        iv_deepen_level = iv_deepen_level
+        it_hashes       = lt_hashes
+      RECEIVING
+        rt_objects      = et_objects ).
 
   ENDMETHOD.
 
@@ -338,12 +338,12 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
     upload_pack(
       EXPORTING
-        io_client             = lo_client
-        iv_url                = iv_url
-        iv_deepen_level       = iv_deepen_level
-        it_hashes             = lt_hashes
-      IMPORTING
-        et_objects            = et_objects ).
+        io_client       = lo_client
+        iv_url          = iv_url
+        iv_deepen_level = iv_deepen_level
+        it_hashes       = lt_hashes
+      RECEIVING
+        rt_objects      = et_objects ).
 
   ENDMETHOD.
 
@@ -358,8 +358,6 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lv_hash> LIKE LINE OF it_hashes.
 
-
-    CLEAR: et_objects.
 
     io_client->set_headers( iv_url     = iv_url
                             iv_service = c_service-upload ).
@@ -394,7 +392,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Response could not be parsed - empty pack returned.' ).
     ENDIF.
 
-    et_objects = zcl_abapgit_git_pack=>decode( lv_pack ).
+    rt_objects = zcl_abapgit_git_pack=>decode( lv_pack ).
 
   ENDMETHOD.
 
