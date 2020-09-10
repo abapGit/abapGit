@@ -20,12 +20,10 @@ CLASS zcl_abapgit_git_transport DEFINITION
     CLASS-METHODS upload_pack_by_commit
       IMPORTING
         !iv_url          TYPE string
-        !iv_branch_name  TYPE string
         !iv_hash         TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
         !iv_deepen_level TYPE i DEFAULT 0
       EXPORTING
         !et_objects      TYPE zif_abapgit_definitions=>ty_objects_tt
-        !ev_branch       TYPE zif_abapgit_definitions=>ty_sha1
         !ev_commit       TYPE zif_abapgit_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
@@ -351,17 +349,7 @@ CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
 
 
     CLEAR: et_objects,
-           ev_commit,
-           ev_branch.
-
-    find_branch(
-      EXPORTING
-        iv_url         = iv_url
-        iv_service     = c_service-upload
-        iv_branch_name = iv_branch_name
-      IMPORTING
-        eo_client      = lo_client
-        ev_branch      = ev_branch ).
+           ev_commit.
 
     APPEND iv_hash TO lt_hashes.
     ev_commit = iv_hash.
