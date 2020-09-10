@@ -20,7 +20,7 @@ INTERFACE zif_abapgit_xml_output
       !ii_xml  TYPE REF TO if_ixml_element .
   METHODS render
     IMPORTING
-      !iv_normalize TYPE sap_bool DEFAULT abap_true
+      !iv_normalize TYPE abap_bool DEFAULT abap_true
       !is_metadata  TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
     RETURNING
       VALUE(rv_xml) TYPE string .
