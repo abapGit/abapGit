@@ -3,9 +3,9 @@
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
    <VSEOCLASS>
-    <CLSNAME>ZCL_ABAPGIT_2FA_GITHUB_AUTH</CLSNAME>
+    <CLSNAME>ZCL_ABAPGIT_FREE_SEL_DIALOG</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>2FA for github</DESCRIPT>
+    <DESCRIPT>Free Selections Dialog</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>

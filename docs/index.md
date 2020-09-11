@@ -8,7 +8,7 @@ Latest build: [zabapgit.abap](https://raw.githubusercontent.com/abapGit/build/ma
 For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/larshp/abapGit/issues)
 
 ### Security
-abapGit is a tool to import and export code between ABAP systems. If a developer have a developer key to the system,
+abapGit is a tool to import and export code between ABAP systems. If a developer has a developer key to the system,
 the developer can perform these actions already. abapGit enables the developer to do mass export/changes/imports but
 not more than already possible to do manually.
 

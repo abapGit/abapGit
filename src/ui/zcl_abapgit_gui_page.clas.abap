@@ -213,7 +213,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD render_link_hints.
 
-    DATA: lv_link_hint_key TYPE char01.
+    DATA: lv_link_hint_key TYPE c LENGTH 1.
 
     lv_link_hint_key = mo_settings->get_link_hint_key( ).
 

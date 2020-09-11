@@ -141,7 +141,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -490,8 +490,9 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-changed_by.
         zcl_abapgit_services_basis=>test_changed_by( ).
         ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
-      WHEN OTHERS.
-        " To pass abaplint, keep the place for future commands
+      WHEN zif_abapgit_definitions=>c_action-performance_test.
+        zcl_abapgit_services_basis=>run_performance_test( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
     ENDCASE.
 
   ENDMETHOD.
@@ -700,12 +701,19 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
   METHOD zip_services.
 
-    DATA: lv_key     TYPE zif_abapgit_persistence=>ty_repo-key,
-          lo_repo    TYPE REF TO zcl_abapgit_repo,
-          lv_package TYPE devclass,
-          lv_path    TYPE string,
-          lv_xstr    TYPE xstring.
+    DATA: lv_key               TYPE zif_abapgit_persistence=>ty_repo-key,
+          lo_repo              TYPE REF TO zcl_abapgit_repo,
+          lv_package           TYPE devclass,
+          lv_path              TYPE string,
+          lv_xstr              TYPE xstring,
+          lv_current_page_name TYPE string.
 
+    " TODO refactor
+    CONSTANTS:
+      BEGIN OF lc_page,
+        main_view TYPE string VALUE 'ZCL_ABAPGIT_GUI_PAGE_MAIN',
+        repo_view TYPE string VALUE 'ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO',
+      END OF lc_page.
 
     lv_key = is_event_data-getdata. " TODO refactor
 
@@ -720,7 +728,20 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         lv_xstr = zcl_abapgit_ui_factory=>get_frontend_services( )->file_upload( lv_path ).
         lo_repo->set_files_remote( zcl_abapgit_zip=>load( lv_xstr ) ).
         zcl_abapgit_services_repo=>refresh( lv_key ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+
+        " TODO refactor how current page name is determined
+        lv_current_page_name = zcl_abapgit_ui_factory=>get_gui_services( )->get_current_page_name( ).
+        CASE lv_current_page_name.
+          WHEN lc_page-repo_view.
+            ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+          WHEN lc_page-main_view.
+            CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_view_repo
+              EXPORTING
+                iv_key = lo_repo->get_key( ).
+            ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+          WHEN OTHERS.
+            ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+        ENDCASE.
       WHEN zif_abapgit_definitions=>c_action-zip_export.                      " Export repo as ZIP
         lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         lv_xstr = zcl_abapgit_zip=>export( lo_repo ).

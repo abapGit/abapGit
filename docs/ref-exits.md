@@ -39,7 +39,7 @@ Can be used for setting logon tickets eg. in connection with abapGitServer conne
 [https://gist.github.com/larshp/71609852a79aa1e877f8c4020d18feac](https://gist.github.com/larshp/71609852a79aa1e877f8c4020d18feac)
 
 ### CHANGE_TADIR
-Can be used to skip certian objects, or force a different object setup than currently in TADIR.
+Can be used to skip certain objects, or force a different object setup than currently in TADIR.
 
 ### GET_SSL_ID
 Possibility to change the default `ANONYM` ssl id to something system specific
