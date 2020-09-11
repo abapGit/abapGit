@@ -521,9 +521,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
   METHOD zif_abapgit_object~changed_by.
 
     TYPES: BEGIN OF ty_data,
-             as4user TYPE as4user,
-             as4date TYPE as4date,
-             as4time TYPE as4time,
+             as4user TYPE dd02l-as4user,
+             as4date TYPE dd02l-as4date,
+             as4time TYPE dd02l-as4time,
            END OF ty_data.
 
     DATA: lt_data TYPE STANDARD TABLE OF ty_data WITH DEFAULT KEY,

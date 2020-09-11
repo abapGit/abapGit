@@ -116,7 +116,7 @@ CLASS zcl_abapgit_free_sel_dialog IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD convert_input_fields.
-    CONSTANTS: lc_only_eq_optlist_name TYPE sychar10 VALUE 'ONLYEQ'.
+    CONSTANTS: lc_only_eq_optlist_name TYPE c LENGTH 10 VALUE 'ONLYEQ'.
     DATA: ls_parameter_opt_list TYPE sscr_opt_list.
     FIELD-SYMBOLS: <ls_input_field>            TYPE ty_free_sel_field,
                    <lt_input_fields>           TYPE ty_free_sel_field_tab,
