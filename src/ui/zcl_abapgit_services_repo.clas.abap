@@ -78,11 +78,41 @@ CLASS zcl_abapgit_services_repo DEFINITION
         !ct_overwrite TYPE zif_abapgit_definitions=>ty_overwrite_tt
       RAISING
         zcx_abapgit_exception.
+    CLASS-METHODS check_package
+      IMPORTING
+        !is_repo_params TYPE zif_abapgit_services_repo=>ty_repo_params
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
 
 CLASS zcl_abapgit_services_repo IMPLEMENTATION.
+
+
+  METHOD check_package.
+
+    DATA:
+      lo_repo     TYPE REF TO zcl_abapgit_repo,
+      li_repo_srv TYPE REF TO zif_abapgit_repo_srv,
+      lv_reason   TYPE string.
+
+    " make sure package is not already in use for a different repository
+    " 702: chaining calls with exp&imp parameters causes syntax error
+    li_repo_srv = zcl_abapgit_repo_srv=>get_instance( ).
+    li_repo_srv->get_repo_from_package(
+      EXPORTING
+        iv_package    = is_repo_params-package
+        iv_ign_subpkg = is_repo_params-ignore_subpackages
+      IMPORTING
+        eo_repo    = lo_repo
+        ev_reason  = lv_reason ).
+
+    IF lo_repo IS BOUND.
+      zcx_abapgit_exception=>raise( lv_reason ).
+    ENDIF.
+
+  ENDMETHOD.
 
 
   METHOD gui_deserialize.
