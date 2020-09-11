@@ -25,7 +25,6 @@ CLASS zcl_abapgit_gui_page_addofflin DEFINITION
       BEGIN OF c_id,
         url              TYPE string VALUE 'url',
         package          TYPE string VALUE 'package',
-        display_name     TYPE string VALUE 'display_name',
         folder_logic     TYPE string VALUE 'folder_logic',
         master_lang_only TYPE string VALUE 'master_lang_only',
       END OF c_id.
@@ -94,7 +93,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDOFFLIN IMPLEMENTATION.
 
     LOOP AT lt_form INTO ls_field.
       CASE ls_field-name.
-        WHEN c_id-url OR c_id-package OR c_id-display_name OR c_id-folder_logic.
+        WHEN c_id-url OR c_id-package OR c_id-folder_logic.
           IF ls_field-name = c_id-package.
             ls_field-value = to_upper( ls_field-value ).
           ENDIF.
@@ -234,10 +233,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDOFFLIN IMPLEMENTATION.
     lo_form->option(
       iv_label       = 'Full'
       iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-full ).
-    lo_form->text(
-      iv_name        = c_id-display_name
-      iv_label       = 'Display name'
-      iv_hint        = 'Name to show instead of original repo name (optional)' ).
     lo_form->checkbox(
       iv_name        = c_id-master_lang_only
       iv_label       = 'Serialize master language only'
