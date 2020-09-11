@@ -171,8 +171,8 @@ CLASS zcl_abapgit_repo DEFINITION
     METHODS reset_remote .
   PRIVATE SECTION.
 
-    DATA mi_listener TYPE REF TO zif_abapgit_repo_listener.
-    DATA mo_apack_reader TYPE REF TO zcl_abapgit_apack_reader.
+    DATA mi_listener TYPE REF TO zif_abapgit_repo_listener .
+    DATA mo_apack_reader TYPE REF TO zcl_abapgit_apack_reader .
 
     METHODS get_local_checksums
       RETURNING
@@ -196,6 +196,12 @@ CLASS zcl_abapgit_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS check_for_restart .
+    METHODS check_write_protect
+      RAISING
+        zcx_abapgit_exception .
+    METHODS check_language
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -260,6 +266,34 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD check_language.
+
+    DATA lv_master_language TYPE spras.
+
+    find_remote_dot_abapgit( ).
+
+    lv_master_language = get_dot_abapgit( )->get_master_language( ).
+
+    IF lv_master_language <> sy-langu.
+      zcx_abapgit_exception=>raise( |Current login language |
+                                 && |'{ zcl_abapgit_convert=>conversion_exit_isola_output( sy-langu ) }'|
+                                 && | does not match master language |
+                                 && |'{ zcl_abapgit_convert=>conversion_exit_isola_output( lv_master_language ) }'.|
+                                 && | Run 'Advanced' > 'Open in master language'| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD check_write_protect.
+
+    IF get_local_settings( )-write_protected = abap_true.
+      zcx_abapgit_exception=>raise( 'Cannot deserialize. Local code is write-protected by repo config' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD constructor.
 
     ASSERT NOT is_data-key IS INITIAL.
@@ -295,6 +329,8 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     DATA: lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
           lx_error         TYPE REF TO zcx_abapgit_exception.
 
+    check_write_protect( ).
+    check_language( ).
 
     IF is_checks-requirements-met = zif_abapgit_definitions=>gc_no AND is_checks-requirements-decision IS INITIAL.
       zcx_abapgit_exception=>raise( 'Requirements not met and undecided' ).
@@ -336,27 +372,15 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
   METHOD deserialize_checks.
 
-    DATA: lt_requirements    TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
-          lt_dependencies    TYPE zif_abapgit_apack_definitions=>tt_dependencies,
-          lv_master_language TYPE spras,
-          lv_logon_language  TYPE spras.
+    DATA: lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
+          lt_dependencies TYPE zif_abapgit_apack_definitions=>tt_dependencies.
 
 
     find_remote_dot_abapgit( ).
     find_remote_dot_apack( ).
 
-    lv_master_language = get_dot_abapgit( )->get_master_language( ).
-    lv_logon_language  = sy-langu.
-
-    IF get_local_settings( )-write_protected = abap_true.
-      zcx_abapgit_exception=>raise( 'Cannot deserialize. Local code is write-protected by repo config' ).
-    ELSEIF lv_master_language <> lv_logon_language.
-      zcx_abapgit_exception=>raise( |Current login language |
-                                 && |'{ zcl_abapgit_convert=>conversion_exit_isola_output( lv_logon_language ) }'|
-                                 && | does not match master language |
-                                 && |'{ zcl_abapgit_convert=>conversion_exit_isola_output( lv_master_language ) }'.|
-                                 && | Run 'Advanced' > 'Open in master language'| ).
-    ENDIF.
+    check_write_protect( ).
+    check_language( ).
 
     rs_checks = zcl_abapgit_objects=>deserialize_checks( me ).
 
