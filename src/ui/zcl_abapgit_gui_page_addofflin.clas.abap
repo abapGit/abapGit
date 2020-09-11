@@ -213,7 +213,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDOFFLIN IMPLEMENTATION.
     lo_form->text(
       iv_name        = c_id-url
       iv_required    = abap_true
-      iv_label       = 'Repository Name'
+      iv_label       = 'Repository name'
       iv_hint        = 'Unique name for repository' ).
     lo_form->text(
       iv_name        = c_id-package
