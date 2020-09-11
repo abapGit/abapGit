@@ -11,10 +11,29 @@ CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
            END OF ty_segment_definition.
     TYPES: ty_segment_definitions TYPE STANDARD TABLE OF ty_segment_definition WITH DEFAULT KEY.
 
+    TYPES: BEGIN OF ty_tabl_extras,
+             tddat TYPE tddat,
+           END OF ty_tabl_extras.
+
+    "! get additional data like table authorization group
+    "! @parameter iv_tabname | name of the table
+    METHODS read_extras IMPORTING iv_tabname            TYPE ddobjname
+                        RETURNING VALUE(rs_tabl_extras) TYPE ty_tabl_extras.
+
+    "! Update additional data
+    "! @parameter iv_tabname | name of the table
+    "! @parameter is_tabl_extras | additional table data
+    METHODS update_extras IMPORTING iv_tabname     TYPE ddobjname
+                                    is_tabl_extras TYPE ty_tabl_extras.
+
+    "! Delete additional data
+    "! @parameter iv_tabname | name of the table
+    METHODS delete_extras IMPORTING iv_tabname TYPE ddobjname.
+
     "! Serialize IDoc Segment type/definition if exits
     "! @parameter io_xml | XML writer
     "! @raising zcx_abapgit_exception | Exceptions
-    METHODS serialize_idoc_segment IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
+    METHODS serialize_idoc_segment IMPORTING io_xml TYPE REF TO zif_abapgit_xml_output
                                    RAISING   zcx_abapgit_exception.
 
     "! Deserialize IDoc Segment type/definition if exits
@@ -22,7 +41,7 @@ CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     "! @parameter iv_package | Target package
     "! @parameter rv_deserialized | It's a segment and was desserialized
     "! @raising zcx_abapgit_exception | Exceptions
-    METHODS deserialize_idoc_segment IMPORTING io_xml                 TYPE REF TO zcl_abapgit_xml_input
+    METHODS deserialize_idoc_segment IMPORTING io_xml                 TYPE REF TO zif_abapgit_xml_input
                                                iv_package             TYPE devclass
                                      RETURNING VALUE(rv_deserialized) TYPE abap_bool
                                      RAISING   zcx_abapgit_exception.
@@ -36,11 +55,20 @@ CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     TYPES:
       ty_dd03p_tt TYPE STANDARD TABLE OF dd03p .
 
+    TYPES:
+      BEGIN OF ty_dd02_texts,
+        ddlanguage TYPE dd02t-ddlanguage,
+        ddtext     TYPE dd02t-ddtext,
+      END OF ty_dd02_texts,
+      tt_dd02_texts TYPE STANDARD TABLE OF ty_dd02_texts.
+
     CONSTANTS c_longtext_id_tabl TYPE dokil-id VALUE 'TB' ##NO_TEXT.
     CONSTANTS:
       BEGIN OF c_s_dataname,
-        segment_definition TYPE string VALUE 'SEGMENT_DEFINITION' ##NO_TEXT,
-      END OF c_s_dataname .
+        segment_definition TYPE string VALUE 'SEGMENT_DEFINITION',
+        tabl_extras        TYPE string VALUE 'TABL_EXTRAS',
+      END OF c_s_dataname.
+
 
     METHODS clear_dd03p_fields
       CHANGING
@@ -56,6 +84,16 @@ CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS clear_dd03p_fields_dataelement
       CHANGING
         !cs_dd03p TYPE dd03p .
+
+    METHODS:
+      serialize_texts
+        IMPORTING io_xml TYPE REF TO zif_abapgit_xml_output
+        RAISING   zcx_abapgit_exception,
+      deserialize_texts
+        IMPORTING io_xml   TYPE REF TO zif_abapgit_xml_input
+                  is_dd02v TYPE dd02v
+        RAISING   zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -65,7 +103,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
   METHOD clear_dd03p_fields.
 
-    CONSTANTS lc_comptype_dataelement TYPE comptype VALUE 'E' ##NO_TEXT.
+    CONSTANTS lc_comptype_dataelement TYPE comptype VALUE 'E'.
 
     DATA: lv_masklen TYPE c LENGTH 4.
 
@@ -144,6 +182,13 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
            cs_dd03p-decimals,
            cs_dd03p-lowercase,
            cs_dd03p-signflag.
+
+  ENDMETHOD.
+
+
+  METHOD delete_extras.
+
+    DELETE FROM tddat WHERE tabname = iv_tabname.
 
   ENDMETHOD.
 
@@ -269,6 +314,55 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD deserialize_texts.
+
+    DATA: lv_name       TYPE ddobjname,
+          ls_dd02v_tmp  TYPE dd02v,
+          lt_i18n_langs TYPE TABLE OF langu,
+          lt_dd02_texts TYPE tt_dd02_texts.
+
+    FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
+                   <ls_dd02_text> LIKE LINE OF lt_dd02_texts.
+
+    lv_name = ms_item-obj_name.
+
+    io_xml->read( EXPORTING iv_name = 'I18N_LANGS'
+                  CHANGING  cg_data = lt_i18n_langs ).
+
+    io_xml->read( EXPORTING iv_name = 'DD02_TEXTS'
+                  CHANGING  cg_data = lt_dd02_texts ).
+
+    SORT lt_i18n_langs.
+    SORT lt_dd02_texts BY ddlanguage. " Optimization
+
+    LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
+
+      " Table description
+      ls_dd02v_tmp = is_dd02v.
+      READ TABLE lt_dd02_texts ASSIGNING <ls_dd02_text> WITH KEY ddlanguage = <lv_lang>.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |DD02_TEXTS cannot find lang { <lv_lang> } in XML| ).
+      ENDIF.
+      MOVE-CORRESPONDING <ls_dd02_text> TO ls_dd02v_tmp.
+      CALL FUNCTION 'DDIF_TABL_PUT'
+        EXPORTING
+          name              = lv_name
+          dd02v_wa          = ls_dd02v_tmp
+        EXCEPTIONS
+          tabl_not_found    = 1
+          name_inconsistent = 2
+          tabl_inconsistent = 3
+          put_failure       = 4
+          put_refused       = 5
+          OTHERS            = 6.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |error from DDIF_TABL_PUT @TEXTS, { sy-subrc }| ).
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD is_idoc_segment.
 
     DATA lv_segment_type TYPE edilsegtyp.
@@ -280,6 +374,13 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
            INTO lv_segment_type
            WHERE segtyp = lv_segment_type.
     rv_is_idoc_segment = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
+
+
+  METHOD read_extras.
+
+    SELECT SINGLE * FROM tddat INTO rs_tabl_extras-tddat WHERE tabname = iv_tabname.
 
   ENDMETHOD.
 
@@ -335,9 +436,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
       ENDIF.
 
       zcl_abapgit_object_idoc=>clear_idoc_segement_fields(
-                                 CHANGING cs_structure = ls_segment_definition-segmentdefinition ).
+                                 CHANGING cg_structure = ls_segment_definition-segmentdefinition ).
       zcl_abapgit_object_idoc=>clear_idoc_segement_fields(
-                                 CHANGING cs_structure = ls_segment_definition-segmentheader ).
+                                 CHANGING cg_structure = ls_segment_definition-segmentheader ).
 
       APPEND ls_segment_definition TO lt_segment_definitions.
     ENDLOOP.
@@ -348,12 +449,81 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD serialize_texts.
+
+    DATA: lv_name       TYPE ddobjname,
+          lv_index      TYPE i,
+          ls_dd02v      TYPE dd02v,
+          lt_dd02_texts TYPE tt_dd02_texts,
+          lt_i18n_langs TYPE TABLE OF langu.
+
+    FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
+                   <ls_dd02_text> LIKE LINE OF lt_dd02_texts.
+
+    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+      RETURN.
+    ENDIF.
+
+    lv_name = ms_item-obj_name.
+
+    " Collect additional languages, skip master lang - it was serialized already
+    SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
+      FROM dd02v
+      WHERE tabname = lv_name
+      AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
+
+    LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
+      lv_index = sy-tabix.
+      CALL FUNCTION 'DDIF_TABL_GET'
+        EXPORTING
+          name          = lv_name
+          langu         = <lv_lang>
+        IMPORTING
+          dd02v_wa      = ls_dd02v
+        EXCEPTIONS
+          illegal_input = 1
+          OTHERS        = 2.
+      IF sy-subrc <> 0 OR ls_dd02v-ddlanguage IS INITIAL.
+        DELETE lt_i18n_langs INDEX lv_index. " Don't save this lang
+        CONTINUE.
+      ENDIF.
+
+      APPEND INITIAL LINE TO lt_dd02_texts ASSIGNING <ls_dd02_text>.
+      MOVE-CORRESPONDING ls_dd02v TO <ls_dd02_text>.
+
+    ENDLOOP.
+
+    SORT lt_i18n_langs ASCENDING.
+    SORT lt_dd02_texts BY ddlanguage ASCENDING.
+
+    IF lines( lt_i18n_langs ) > 0.
+      io_xml->add( iv_name = 'I18N_LANGS'
+                   ig_data = lt_i18n_langs ).
+
+      io_xml->add( iv_name = 'DD02_TEXTS'
+                   ig_data = lt_dd02_texts ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD update_extras.
+
+    IF is_tabl_extras-tddat IS INITIAL.
+      delete_extras( iv_tabname = iv_tabname ).
+    ELSE.
+      MODIFY tddat FROM is_tabl_extras-tddat.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~changed_by.
 
     TYPES: BEGIN OF ty_data,
-             as4user TYPE as4user,
-             as4date TYPE as4date,
-             as4time TYPE as4time,
+             as4user TYPE dd02l-as4user,
+             as4date TYPE dd02l-as4date,
+             as4time TYPE dd02l-as4time,
            END OF ty_data.
 
     DATA: lt_data TYPE STANDARD TABLE OF ty_data WITH DEFAULT KEY,
@@ -418,14 +588,14 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
         AND as4vers = '0000'.
       IF sy-subrc = 0 AND lv_tabclass = 'TRANSP'.
 
-* Avoid dump in dynamic SELECT in case the table does not exist on database
+        " Avoid dump in dynamic SELECT in case the table does not exist on database
         CALL FUNCTION 'DB_EXISTS_TABLE'
           EXPORTING
             tabname = lv_objname
           IMPORTING
             subrc   = lv_subrc.
         IF lv_subrc = 0.
-* it cannot delete table with table without asking
+          " it cannot delete table with data without asking
           CREATE DATA lr_data TYPE (lv_objname).
           ASSIGN lr_data->* TO <lg_data>.
           SELECT SINGLE * FROM (lv_objname) INTO <lg_data>.
@@ -435,21 +605,12 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
         ENDIF.
       ENDIF.
 
-      CALL FUNCTION 'RS_DD_DELETE_OBJ'
-        EXPORTING
-          no_ask               = lv_no_ask
-          objname              = lv_objname
-          objtype              = 'T'
-        EXCEPTIONS
-          not_executed         = 1
-          object_not_found     = 2
-          object_not_specified = 3
-          permission_failure   = 4.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, TABL,' && sy-subrc ).
-      ENDIF.
+      delete_ddic( iv_objtype = 'T'
+                   iv_no_ask  = lv_no_ask ).
 
       delete_longtexts( c_longtext_id_tabl ).
+
+      delete_extras( iv_tabname = lv_objname ).
 
     ENDIF.
 
@@ -471,7 +632,11 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
           lt_secondary LIKE lt_dd17v,
           lt_dd35v     TYPE TABLE OF dd35v,
           lt_dd36m     TYPE dd36mttyp,
-          ls_dd12v     LIKE LINE OF lt_dd12v.
+          ls_dd12v     LIKE LINE OF lt_dd12v,
+          lv_refs      TYPE abap_bool,
+          ls_extras    TYPE ty_tabl_extras.
+
+    FIELD-SYMBOLS: <ls_dd03p> TYPE dd03p.
 
     IF deserialize_idoc_segment( io_xml     = io_xml
                                  iv_package = iv_package ) = abap_false.
@@ -482,6 +647,16 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
                     CHANGING cg_data = ls_dd09l ).
       io_xml->read( EXPORTING iv_name  = 'DD03P_TABLE'
                     CHANGING cg_data = lt_dd03p ).
+
+      " DDIC Step: Replace REF TO class/interface with generic reference to avoid cyclic dependency
+      LOOP AT lt_dd03p ASSIGNING <ls_dd03p> WHERE datatype = 'REF'.
+        IF iv_step = zif_abapgit_object=>gc_step_id-ddic.
+          <ls_dd03p>-rollname = 'OBJECT'.
+        ELSE.
+          lv_refs = abap_true.
+        ENDIF.
+      ENDLOOP.
+
       io_xml->read( EXPORTING iv_name = 'DD05M_TABLE'
                     CHANGING cg_data = lt_dd05m ).
       io_xml->read( EXPORTING iv_name = 'DD08V_TABLE'
@@ -495,7 +670,17 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
       io_xml->read( EXPORTING iv_name = 'DD36M'
                     CHANGING cg_data = lt_dd36m ).
 
-      corr_insert( iv_package = iv_package iv_object_class = 'DICT' ).
+      " DDIC Step: Remove referenced to search helps
+      IF iv_step = zif_abapgit_object=>gc_step_id-ddic.
+        CLEAR: lt_dd35v, lt_dd36m.
+      ENDIF.
+
+      IF iv_step = zif_abapgit_object=>gc_step_id-late AND lv_refs = abap_false AND lines( lt_dd35v ) = 0.
+        RETURN. " already active
+      ENDIF.
+
+      corr_insert( iv_package = iv_package
+                   ig_object_class = 'DICT' ).
 
       lv_name = ms_item-obj_name. " type conversion
 
@@ -565,7 +750,15 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
       ENDLOOP.
 
+      deserialize_texts( io_xml   = io_xml
+                         is_dd02v = ls_dd02v ).
+
       deserialize_longtexts( io_xml ).
+
+      io_xml->read( EXPORTING iv_name = c_s_dataname-tabl_extras
+                    CHANGING cg_data = ls_extras ).
+      update_extras( iv_tabname     = lv_name
+                     is_tabl_extras = ls_extras ).
 
     ENDIF.
 
@@ -576,10 +769,13 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
     DATA: lv_tabname TYPE dd02l-tabname.
 
-    SELECT SINGLE tabname FROM dd02l INTO lv_tabname
-      WHERE tabname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers = '0000'.
+    lv_tabname = ms_item-obj_name.
+    CALL FUNCTION 'DD_GET_NAMETAB_HEADER'
+      EXPORTING
+        tabname   = lv_tabname
+      EXCEPTIONS
+        not_found = 1
+        OTHERS    = 2.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -607,6 +803,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 
@@ -639,17 +836,18 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lv_name  TYPE ddobjname,
-          ls_dd02v TYPE dd02v,
-          ls_dd09l TYPE dd09l,
-          lt_dd03p TYPE ty_dd03p_tt,
-          lt_dd05m TYPE TABLE OF dd05m,
-          lt_dd08v TYPE TABLE OF dd08v,
-          lt_dd12v TYPE dd12vtab,
-          lt_dd17v TYPE dd17vtab,
-          lt_dd35v TYPE TABLE OF dd35v,
-          lv_index LIKE sy-index,
-          lt_dd36m TYPE dd36mttyp.
+    DATA: lv_name   TYPE ddobjname,
+          ls_dd02v  TYPE dd02v,
+          ls_dd09l  TYPE dd09l,
+          lt_dd03p  TYPE ty_dd03p_tt,
+          lt_dd05m  TYPE TABLE OF dd05m,
+          lt_dd08v  TYPE TABLE OF dd08v,
+          lt_dd12v  TYPE dd12vtab,
+          lt_dd17v  TYPE dd17vtab,
+          lt_dd35v  TYPE TABLE OF dd35v,
+          lv_index  LIKE sy-index,
+          lt_dd36m  TYPE dd36mttyp,
+          ls_extras TYPE ty_tabl_extras.
 
     FIELD-SYMBOLS: <ls_dd12v>      LIKE LINE OF lt_dd12v,
                    <ls_dd05m>      LIKE LINE OF lt_dd05m,
@@ -746,25 +944,31 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
       io_xml->add( iv_name = 'DD09L'
                    ig_data = ls_dd09l ).
     ENDIF.
-    io_xml->add( ig_data = lt_dd03p
-                 iv_name = 'DD03P_TABLE' ).
-    io_xml->add( ig_data = lt_dd05m
-                 iv_name = 'DD05M_TABLE' ).
-    io_xml->add( ig_data = lt_dd08v
-                 iv_name = 'DD08V_TABLE' ).
+    io_xml->add( iv_name = 'DD03P_TABLE'
+                 ig_data = lt_dd03p ).
+    io_xml->add( iv_name = 'DD05M_TABLE'
+                 ig_data = lt_dd05m ).
+    io_xml->add( iv_name = 'DD08V_TABLE'
+                 ig_data = lt_dd08v ).
     io_xml->add( iv_name = 'DD12V'
                  ig_data = lt_dd12v ).
     io_xml->add( iv_name = 'DD17V'
                  ig_data = lt_dd17v ).
-    io_xml->add( ig_data = lt_dd35v
-                 iv_name = 'DD35V_TALE' ).
+    io_xml->add( iv_name = 'DD35V_TALE'
+                 ig_data = lt_dd35v ).
     io_xml->add( iv_name = 'DD36M'
                  ig_data = lt_dd36m ).
+
+    serialize_texts( io_xml ).
 
     serialize_longtexts( io_xml         = io_xml
                          iv_longtext_id = c_longtext_id_tabl ).
 
     serialize_idoc_segment( io_xml ).
+
+    ls_extras = read_extras( iv_tabname = lv_name ).
+    io_xml->add( iv_name = c_s_dataname-tabl_extras
+                 ig_data = ls_extras ).
 
   ENDMETHOD.
 ENDCLASS.

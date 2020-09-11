@@ -2,7 +2,7 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
     INHERITING FROM zcl_abapgit_gui_page_codi_base.
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_gui_page_hotkey.
+    INTERFACES: zif_abapgit_gui_hotkeys.
 
     METHODS:
       constructor
@@ -24,13 +24,6 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
       render_content   REDEFINITION.
 
   PRIVATE SECTION.
-    CONSTANTS:
-      BEGIN OF c_actions,
-        stage  TYPE string VALUE 'stage' ##NO_TEXT,
-        commit TYPE string VALUE 'commit' ##NO_TEXT,
-        rerun  TYPE string VALUE 'rerun' ##NO_TEXT,
-      END OF c_actions.
-
     DATA:
       mo_stage         TYPE REF TO zcl_abapgit_stage,
       mv_check_variant TYPE sci_chkv.
@@ -63,7 +56,6 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
       determine_check_variant
         RAISING
           zcx_abapgit_exception.
-
 ENDCLASS.
 
 
@@ -109,11 +101,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
     DATA: lv_opt TYPE c LENGTH 1.
 
-    CREATE OBJECT ro_menu.
-
-    ro_menu->add( iv_txt = 'Re-Run'
-                  iv_act = c_actions-rerun
-                  iv_cur = abap_false ) ##NO_TEXT.
+    ro_menu = build_base_menu( ).
 
     IF is_stage_allowed( ) = abap_false.
       lv_opt = zif_abapgit_html=>c_html_opt-crossout.
@@ -131,14 +119,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
       ro_menu->add( iv_txt = 'Commit'
                     iv_act = c_actions-commit
                     iv_cur = abap_false
-                    iv_opt = lv_opt ) ##NO_TEXT.
+                    iv_opt = lv_opt ).
 
     ELSE.
 
       ro_menu->add( iv_txt = 'Stage'
                     iv_act = c_actions-stage
                     iv_cur = abap_false
-                    iv_opt = lv_opt ) ##NO_TEXT.
+                    iv_opt = lv_opt ).
 
     ENDIF.
 
@@ -185,28 +173,29 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
   METHOD render_content.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( `<div class="repo">` ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
+    ri_html->add( `</div>` ).
 
     IF mv_check_variant IS INITIAL.
-      ro_html->add( zcl_abapgit_gui_chunk_lib=>render_error( iv_error = 'No check variant supplied.' ) ).
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_error( iv_error = 'No check variant supplied.' ) ).
       RETURN.
     ENDIF.
 
-    ro_html->add( '<div class="ci-head">' ).
-    ro_html->add( |Code inspector check variant: <span class="ci-variant">{ mv_check_variant }</span>| ).
-    ro_html->add( |<div class="float-right package-name">{
-      zcl_abapgit_html=>icon( 'box/grey70' ) }<span>{
-      mo_repo->get_package( ) }</span></div>| ).
-    ro_html->add( '</div>' ).
+    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
+
+    ri_html->add( render_variant( mv_check_variant ) ).
 
     IF lines( mt_result ) = 0.
-      ro_html->add( '<div class="dummydiv success">' ).
-      ro_html->add( zcl_abapgit_html=>icon( 'check' ) ).
-      ro_html->add( 'No code inspector findings' ).
-      ro_html->add( '</div>' ).
+      ri_html->add( '<div class="dummydiv success">' ).
+      ri_html->add( ri_html->icon( 'check' ) ).
+      ri_html->add( 'No code inspector findings' ).
+      ri_html->add( '</div>' ).
     ELSE.
       render_result(
-        io_html   = ro_html
+        ii_html   = ri_html
         it_result = mt_result ).
     ENDIF.
 
@@ -224,23 +213,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
       iv_save    = abap_true ).
 
     DELETE mt_result WHERE kind = 'N'.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
-
-    ls_hotkey_action-name   = |Stage|.
-    ls_hotkey_action-action = c_actions-stage.
-    ls_hotkey_action-hotkey = |s|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
-
-    ls_hotkey_action-name   = |Re-Run|.
-    ls_hotkey_action-action = c_actions-rerun.
-    ls_hotkey_action-hotkey = |r|.
-    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
 
@@ -299,7 +271,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
         super->zif_abapgit_gui_event_handler~on_event(
           EXPORTING
             iv_action             = iv_action
-            iv_prev_page          = iv_prev_page
             iv_getdata            = iv_getdata
             it_postdata           = it_postdata
           IMPORTING
@@ -310,10 +281,29 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
+
+    DATA: ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
+
+    ls_hotkey_action-ui_component = 'Code inspector'.
+
+    ls_hotkey_action-description = |Stage|.
+    ls_hotkey_action-action = c_actions-stage.
+    ls_hotkey_action-hotkey = |s|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description = |Re-Run|.
+    ls_hotkey_action-action = c_actions-rerun.
+    ls_hotkey_action-hotkey = |r|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_renderable~render.
 
     ms_control-page_menu = build_menu( ).
-    ro_html = super->zif_abapgit_gui_renderable~render( ).
+    ri_html = super->zif_abapgit_gui_renderable~render( ).
 
   ENDMETHOD.
 ENDCLASS.

@@ -45,7 +45,7 @@ CLASS zcl_abapgit_object_wapa DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       delete_superfluous_pages
         IMPORTING
           it_local_pages  TYPE o2pagelist
-          it_remote_pages TYPE zcl_abapgit_object_wapa=>ty_pages_tt
+          it_remote_pages TYPE ty_pages_tt
         RAISING
           zcx_abapgit_exception.
 
@@ -199,9 +199,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
       IMPORTING
         p_page    = lo_page ).
 
-    lo_page->get_attrs(
-      IMPORTING
-        p_attrs = rs_page-attributes ).
+    lo_page->get_attrs( IMPORTING p_attrs = rs_page-attributes ).
 
     IF rs_page-attributes-pagetype <> so2_controller.
 
@@ -402,13 +400,12 @@ CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
           lo_page           TYPE REF TO cl_o2_api_pages,
           lt_pages_info     TYPE ty_pages_tt,
           ls_pagekey        TYPE o2pagkey,
-          ls_local_page     TYPE zcl_abapgit_object_wapa=>ty_page,
+          ls_local_page     TYPE ty_page,
           lt_remote_content TYPE o2pageline_table,
           lt_local_content  TYPE o2pageline_table,
           lt_local_pages    TYPE o2pagelist.
 
-    FIELD-SYMBOLS: <ls_remote_page>       LIKE LINE OF lt_pages_info.
-
+    FIELD-SYMBOLS: <ls_remote_page> LIKE LINE OF lt_pages_info.
 
     io_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
                   CHANGING cg_data = ls_attributes ).
@@ -524,6 +521,10 @@ CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
     delete_superfluous_pages( it_local_pages  = lt_local_pages
                               it_remote_pages = lt_pages_info ).
 
+    zcl_abapgit_sotr_handler=>create_sotr(
+      iv_package = iv_package
+      io_xml     = io_xml ).
+
   ENDMETHOD.
 
 
@@ -596,7 +597,6 @@ CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_page> LIKE LINE OF lt_pages.
 
-
     lv_name = ms_item-obj_name.
 
     cl_o2_api_application=>load(
@@ -649,6 +649,12 @@ CLASS ZCL_ABAPGIT_OBJECT_WAPA IMPLEMENTATION.
 
     io_xml->add( iv_name = 'PAGES'
                  ig_data = lt_pages_info ).
+
+    zcl_abapgit_sotr_handler=>read_sotr(
+      iv_pgmid    = 'LIMU'
+      iv_object   = 'WAPP'
+      iv_obj_name = ms_item-obj_name
+      io_xml      = io_xml ).
 
   ENDMETHOD.
 ENDCLASS.

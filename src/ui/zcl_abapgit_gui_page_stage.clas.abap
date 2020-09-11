@@ -4,7 +4,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
   CREATE PUBLIC INHERITING FROM zcl_abapgit_gui_page.
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_gui_page_hotkey.
+    INTERFACES zif_abapgit_gui_hotkeys.
 
     CONSTANTS: BEGIN OF c_action,
                  stage_all    TYPE string VALUE 'stage_all',
@@ -22,9 +22,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
 
   PROTECTED SECTION.
     METHODS:
-      render_content REDEFINITION,
-      get_events     REDEFINITION,
-      scripts        REDEFINITION.
+      render_content REDEFINITION.
 
   PRIVATE SECTION.
 
@@ -34,18 +32,19 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         name TYPE xubname,
       END OF ty_changed_by .
     TYPES:
-      ty_changed_by_tt TYPE SORTED TABLE OF ty_changed_by WITH UNIQUE KEY item.
+      ty_changed_by_tt TYPE SORTED TABLE OF ty_changed_by WITH UNIQUE KEY item .
     TYPES:
       BEGIN OF ty_transport,
         item      TYPE zif_abapgit_definitions=>ty_item,
         transport TYPE trkorr,
-      END OF ty_transport,
-      ty_transport_tt TYPE SORTED TABLE OF ty_transport WITH UNIQUE KEY item.
+      END OF ty_transport .
+    TYPES:
+      ty_transport_tt TYPE SORTED TABLE OF ty_transport WITH UNIQUE KEY item .
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
     DATA ms_files TYPE zif_abapgit_definitions=>ty_stage_files .
-    DATA mv_seed TYPE string .   " Unique page id to bind JS sessionStorage
-    DATA mv_filter_value TYPE string.
+    DATA mv_seed TYPE string .           " Unique page id to bind JS sessionStorage
+    DATA mv_filter_value TYPE string .
 
     METHODS find_changed_by
       IMPORTING
@@ -54,9 +53,9 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         VALUE(rt_changed_by) TYPE ty_changed_by_tt .
     METHODS find_transports
       IMPORTING
-        it_local             TYPE zif_abapgit_definitions=>ty_files_item_tt
+        !it_local            TYPE zif_abapgit_definitions=>ty_files_item_tt
       RETURNING
-        VALUE(rt_transports) TYPE ty_transport_tt.
+        VALUE(rt_transports) TYPE ty_transport_tt .
     METHODS render_list
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
@@ -69,36 +68,46 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         !iv_changed_by TYPE xubname OPTIONAL
         !iv_transport  TYPE trkorr OPTIONAL
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_actions
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS stage_selected
       IMPORTING
-        !it_postdata TYPE cnht_post_data_tab
+        !it_postdata    TYPE cnht_post_data_tab
       RETURNING
-        VALUE(ro_stage)    TYPE REF TO zcl_abapgit_stage
+        VALUE(ro_stage) TYPE REF TO zcl_abapgit_stage
       RAISING
         zcx_abapgit_exception .
     METHODS stage_all
       RETURNING
-        VALUE(ro_stage)    TYPE REF TO zcl_abapgit_stage
+        VALUE(ro_stage) TYPE REF TO zcl_abapgit_stage
       RAISING
         zcx_abapgit_exception .
     METHODS build_menu
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS get_page_patch
-      IMPORTING iv_getdata     TYPE clike
-                iv_prev_page   TYPE clike
-      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
-      RAISING   zcx_abapgit_exception.
+      IMPORTING
+        !io_stage      TYPE REF TO zcl_abapgit_stage
+      RETURNING
+        VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
+      RAISING
+        zcx_abapgit_exception .
     METHODS render_master_language_warning
-      RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS count_default_files_to_commit
       RETURNING
-        VALUE(rv_count) TYPE i.
-
+        VALUE(rv_count) TYPE i .
+    METHODS render_deferred_hidden_events
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+    METHODS render_scripts
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -110,9 +119,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     CREATE OBJECT ro_menu.
 
-    IF lines( ms_files-local ) > 0.
-      ro_menu->add( iv_txt = |All diffs|
+    IF lines( ms_files-local ) > 0
+    OR lines( ms_files-remote ) > 0.
+      ro_menu->add( iv_txt = |Diff|
                     iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?key={ mo_repo->get_key( ) }| ).
+
+      ro_menu->add( iv_txt = |Patch|
+                    iv_typ = zif_abapgit_html=>c_action_type-onclick
+                    iv_id  = |patchBtn| ).
     ENDIF.
 
   ENDMETHOD.
@@ -124,7 +138,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     super->constructor( ).
 
-    ms_control-page_title = 'STAGE'.
+    ms_control-page_title = 'Stage'.
     mo_repo               = io_repo.
     ms_files              = zcl_abapgit_factory=>get_stage_logic( )->get( mo_repo ).
     mv_seed               = iv_seed.
@@ -135,6 +149,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     ENDIF.
 
     ms_control-page_menu  = build_menu( ).
+
+    IF lines( ms_files-local ) = 0 AND lines( ms_files-remote ) = 0.
+      zcx_abapgit_exception=>raise( 'There are no changes that could be staged' ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -224,32 +242,22 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_events.
-
-    FIELD-SYMBOLS: <ls_event> TYPE zcl_abapgit_gui_page=>ty_event.
-
-    APPEND INITIAL LINE TO rt_events ASSIGNING <ls_event>.
-    <ls_event>-method = 'post'.
-    <ls_event>-name = 'stage_commit'.
-
-  ENDMETHOD.
-
-
   METHOD get_page_patch.
 
-    DATA: lo_page   TYPE REF TO zcl_abapgit_gui_page_diff,
-          lv_key    TYPE zif_abapgit_persistence=>ty_repo-key.
+    DATA: lo_page  TYPE REF TO zcl_abapgit_gui_page_patch,
+          lv_key   TYPE zif_abapgit_persistence=>ty_repo-key,
+          lt_files TYPE zif_abapgit_definitions=>ty_stage_tt.
 
-    zcl_abapgit_html_action_utils=>file_obj_decode(
-      EXPORTING
-        iv_string = iv_getdata
-      IMPORTING
-        ev_key    = lv_key ).
+    lv_key = mo_repo->get_key( ).
+    lt_files = io_stage->get_all( ).
+
+    DELETE lt_files WHERE method <> zif_abapgit_definitions=>c_method-add
+                    AND   method <> zif_abapgit_definitions=>c_method-rm.
 
     CREATE OBJECT lo_page
       EXPORTING
-        iv_key        = lv_key
-        iv_patch_mode = abap_true.
+        iv_key   = lv_key
+        it_files = lt_files.
 
     ri_page = lo_page.
 
@@ -259,76 +267,83 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
   METHOD render_actions.
 
     DATA: lv_local_count TYPE i,
-          lv_add_all_txt TYPE string,
-          lv_param       TYPE string,
-          ls_file        TYPE zif_abapgit_definitions=>ty_file.
+          lv_add_all_txt TYPE string.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     lv_local_count = count_default_files_to_commit( ).
     IF lv_local_count > 0.
-      lv_add_all_txt = |Add all and commit ({ lv_local_count })|.
+      lv_add_all_txt = |Add All and Commit ({ lv_local_count })|.
       " Otherwise empty, but the element (id) is preserved for JS
     ENDIF.
 
-    ro_html->add( '<table class="w100 margin-v5"><tr>' ).
+    ri_html->add( '<table class="w100 margin-v5"><tr>' ).
 
     " Action buttons
-    ro_html->add( '<td class="indent5em">' ).
-    ro_html->add_a( iv_act   = 'errorStub(event)' " Will be reinit by JS
+    ri_html->add( '<td class="indent5em">' ).
+    ri_html->add_a( iv_act   = 'errorStub(event)' " Will be reinit by JS
                     iv_typ   = zif_abapgit_html=>c_action_type-onclick
                     iv_id    = 'commitSelectedButton'
                     iv_style = 'display: none'
-                    iv_txt   = 'Commit selected (<span class="counter"></span>)'
-                    iv_opt   = zif_abapgit_html=>c_html_opt-strong ) ##NO_TEXT.
-    ro_html->add_a( iv_act   = 'errorStub(event)' " Will be reinit by JS
+                    iv_txt   = 'Commit Selected (<span class="counter"></span>)'
+                    iv_opt   = zif_abapgit_html=>c_html_opt-strong ).
+    ri_html->add_a( iv_act   = 'errorStub(event)' " Will be reinit by JS
                     iv_typ   = zif_abapgit_html=>c_action_type-onclick
                     iv_id    = 'commitFilteredButton'
                     iv_style = 'display: none'
-                    iv_txt   = 'Add <b>filtered</b> and commit (<span class="counter"></span>)' ) ##NO_TEXT.
-    ro_html->add_a( iv_act = |{ c_action-stage_all }|
+                    iv_txt   = 'Add <b>Filtered</b> and Commit (<span class="counter"></span>)' ).
+    ri_html->add_a( iv_act = |{ c_action-stage_all }|
                     iv_id  = 'commitAllButton'
-                    iv_txt = lv_add_all_txt ) ##NO_TEXT.
-
-    lv_param = zcl_abapgit_html_action_utils=>file_encode( iv_key  = mo_repo->get_key( )
-                                                           ig_file = ls_file ).
+                    iv_txt = lv_add_all_txt ).
 
 
-    ro_html->add( '</td>' ).
-
-    ro_html->add( '<td class="pad-sides">' ).
-    ro_html->add_a(
-      iv_txt = |Patch|
-      iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?{ lv_param }| ).
-    ro_html->add( '</td>' ).
+    ri_html->add( '</td>' ).
 
     " Filter bar
-    ro_html->add( '<td class="right">' ).
-    ro_html->add( '<input class="stage-filter" id="objectSearch"' &&
-                  ' type="search" placeholder="Filter objects"' &&
+    ri_html->add( '<td class="right">' ).
+    ri_html->add( '<input class="stage-filter" id="objectSearch"' &&
+                  ' type="search" placeholder="Filter Objects"' &&
                   | value={ mv_filter_value }>| ).
-    ro_html->add( '</td>' ).
+    ri_html->add( '</td>' ).
 
-    ro_html->add( '</tr>' ).
-    ro_html->add( '</table>' ).
+    ri_html->add( '</tr>' ).
+    ri_html->add( '</table>' ).
 
   ENDMETHOD.
 
 
   METHOD render_content.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( '<div class="repo">' ).
-    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
-    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
-    ro_html->add( render_master_language_warning( ) ).
+    ri_html->add( '<div class="repo">' ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_js_error_banner( ) ).
+    ri_html->add( render_master_language_warning( ) ).
 
-    ro_html->add( '<div class="stage-container">' ).
-    ro_html->add( render_actions( ) ).
-    ro_html->add( render_list( ) ).
-    ro_html->add( '</div>' ).
+    ri_html->add( '<div class="stage-container">' ).
+    ri_html->add( render_actions( ) ).
+    ri_html->add( render_list( ) ).
+    ri_html->add( '</div>' ).
 
-    ro_html->add( '</div>' ).
+    ri_html->add( '</div>' ).
+
+    gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
+    gui_services( )->get_html_parts( )->add_part(
+      iv_collection = zcl_abapgit_gui_component=>c_html_parts-hidden_forms
+      ii_part       = render_deferred_hidden_events( ) ).
+    register_deferred_script( render_scripts( ) ).
+
+  ENDMETHOD.
+
+
+  METHOD render_deferred_hidden_events.
+
+    DATA ls_event TYPE zcl_abapgit_gui_chunk_lib=>ty_event_signature.
+
+    ls_event-method = 'post'.
+    ls_event-name   = 'stage_commit'.
+    ri_html = zcl_abapgit_gui_chunk_lib=>render_event_as_form( ls_event ).
+    ri_html->set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
 
   ENDMETHOD.
 
@@ -340,7 +355,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           lv_transport_string TYPE string,
           lv_transport_html   TYPE string.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     lv_transport_string = iv_transport.
 
@@ -348,12 +363,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 * make sure whitespace is preserved in the DOM
     REPLACE ALL OCCURRENCES OF ` ` IN lv_filename WITH '&nbsp;'.
 
-    ro_html->add( |<tr class="{ iv_context }">| ).
-    ro_html->add( '<td>' ).
-    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state(
+    ri_html->add( |<tr class="{ iv_context }">| ).
+    ri_html->add( '<td>' ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state(
       iv_lstate = is_status-lstate
       iv_rstate = is_status-rstate ) ).
-    ro_html->add( '</td>' ).
+    ri_html->add( '</td>' ).
 
     CASE iv_context.
       WHEN 'local'.
@@ -361,30 +376,30 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           iv_key  = mo_repo->get_key( )
           ig_file = is_file ).
 
-        lv_filename = zcl_abapgit_html=>a(
+        lv_filename = ri_html->a(
           iv_txt = lv_filename
           iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?{ lv_param }| ).
 
         IF iv_transport IS NOT INITIAL.
-          lv_transport_html = zcl_abapgit_html=>a(
+          lv_transport_html = ri_html->a(
             iv_txt = lv_transport_string
             iv_act = |{ zif_abapgit_definitions=>c_action-jump_transport }?{ iv_transport }| ).
         ENDIF.
-        ro_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
-        ro_html->add( |<td class="name">{ lv_filename }</td>| ).
-        ro_html->add( |<td class="user">{ iv_changed_by }</td>| ).
-        ro_html->add( |<td class="transport">{ lv_transport_html }</td>| ).
+        ri_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
+        ri_html->add( |<td class="name">{ lv_filename }</td>| ).
+        ri_html->add( |<td class="user">{ iv_changed_by }</td>| ).
+        ri_html->add( |<td class="transport">{ lv_transport_html }</td>| ).
       WHEN 'remote'.
-        ro_html->add( '<td class="type">-</td>' ).  " Dummy for object type
-        ro_html->add( |<td class="name">{ lv_filename }</td>| ).
-        ro_html->add( '<td></td>' ).                " Dummy for changed-by
-        ro_html->add( '<td></td>' ).                " Dummy for transport
+        ri_html->add( '<td class="type">-</td>' ).  " Dummy for object type
+        ri_html->add( |<td class="name">{ lv_filename }</td>| ).
+        ri_html->add( '<td></td>' ).                " Dummy for changed-by
+        ri_html->add( '<td></td>' ).                " Dummy for transport
     ENDCASE.
 
-    ro_html->add( |<td class="status">?</td>| ).
-    ro_html->add( '<td class="cmd"></td>' ). " Command added in JS
+    ri_html->add( |<td class="status">?</td>| ).
+    ri_html->add( '<td class="cmd"></td>' ). " Command added in JS
 
-    ro_html->add( '</tr>' ).
+    ri_html->add( '</tr>' ).
 
   ENDMETHOD.
 
@@ -411,9 +426,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     LOOP AT ms_files-local ASSIGNING <ls_local>.
       AT FIRST.
         ro_html->add( '<thead><tr class="local">' ).
-        ro_html->add( '<th></th>' ). " Diff state
-        ro_html->add( '<th>Type</th>' ).
-        ro_html->add( '<th>Files to add (click to see diff)</th>' ).
+        ro_html->add( '<th class="stage-status"></th>' ). " Diff state
+        ro_html->add( '<th class="stage-objtype">Type</th>' ).
+        ro_html->add( '<th title="Click filename to see diff">File</th>' ).
         ro_html->add( '<th>Changed by</th>' ).
         ro_html->add( '<th>Transport</th>' ).
         ro_html->add( '<th></th>' ). " Status
@@ -487,12 +502,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     DATA: ls_dot_abapgit TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ls_dot_abapgit = mo_repo->get_dot_abapgit( )->get_data( ).
 
     IF ls_dot_abapgit-master_language <> sy-langu.
-      ro_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner(
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner(
                         |Caution: Master language of the repo is '{ ls_dot_abapgit-master_language }', |
                      && |but you're logged on in '{ sy-langu }'| ) ).
     ENDIF.
@@ -500,20 +515,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD scripts.
+  METHOD render_scripts.
 
-    ro_html = super->scripts( ).
+    CREATE OBJECT ro_html.
+
+    ro_html->zif_abapgit_html~set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
 
     ro_html->add( 'var gStageParams = {' ).
     ro_html->add( |  seed:            "{ mv_seed }",| ). " Unique page id
     ro_html->add( |  user:            "{ to_lower( sy-uname ) }",| ).
     ro_html->add( '  formAction:      "stage_commit",' ).
+    ro_html->add( |  patchAction:     "{ zif_abapgit_definitions=>c_action-go_patch }",| ).
 
     ro_html->add( '  ids: {' ).
     ro_html->add( '    stageTab:          "stageTab",' ).
     ro_html->add( '    commitAllBtn:      "commitAllButton",' ).
     ro_html->add( '    commitSelectedBtn: "commitSelectedButton",' ).
     ro_html->add( '    commitFilteredBtn: "commitFilteredButton",' ).
+    ro_html->add( '    patchBtn:          "patchBtn",' ).
     ro_html->add( '    objectSearch:      "objectSearch",' ).
     ro_html->add( '  }' ).
 
@@ -572,11 +591,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           lt_fields TYPE tihttpnvp,
           ls_file   TYPE zif_abapgit_definitions=>ty_file.
 
-    FIELD-SYMBOLS: <ls_file> LIKE LINE OF ms_files-local,
+    FIELD-SYMBOLS: <ls_file>   LIKE LINE OF ms_files-local,
                    <ls_status> LIKE LINE OF ms_files-status,
-                   <ls_item> LIKE LINE OF lt_fields.
+                   <ls_item>   LIKE LINE OF lt_fields.
 
-    CONCATENATE LINES OF it_postdata INTO lv_string.
+    lv_string = zcl_abapgit_utils=>translate_postdata( it_postdata ).
     lt_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_string ).
 
     IF lines( lt_fields ) = 0.
@@ -585,7 +604,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     CREATE OBJECT ro_stage.
 
-    LOOP AT lt_fields ASSIGNING <ls_item>.
+    LOOP AT lt_fields ASSIGNING <ls_item>
+      "Ignore Files that we don't want to stage, so any errors don't stop the staging process
+      WHERE value <> zif_abapgit_definitions=>c_method-skip.
 
       zcl_abapgit_path=>split_file_location(
         EXPORTING
@@ -598,10 +619,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
         WITH TABLE KEY
           path     = ls_file-path
           filename = ls_file-filename.
-      ASSERT sy-subrc = 0.
+      IF sy-subrc <> 0.
+* see https://github.com/larshp/abapGit/issues/3073
+        zcx_abapgit_exception=>raise( iv_text =
+          |Unable to stage { ls_file-filename }. If the filename contains spaces, this is a known issue.| &&
+          | Consider ignoring or staging the file at a later time.| ).
+      ENDIF.
 
       CASE <ls_item>-value.
-        WHEN zcl_abapgit_stage=>c_method-add.
+        WHEN zif_abapgit_definitions=>c_method-add.
           READ TABLE ms_files-local ASSIGNING <ls_file>
             WITH KEY file-path     = ls_file-path
                      file-filename = ls_file-filename.
@@ -614,14 +640,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
                          iv_filename = <ls_file>-file-filename
                          is_status   = <ls_status>
                          iv_data     = <ls_file>-file-data ).
-        WHEN zcl_abapgit_stage=>c_method-ignore.
+        WHEN zif_abapgit_definitions=>c_method-ignore.
           ro_stage->ignore( iv_path     = ls_file-path
                             iv_filename = ls_file-filename ).
-        WHEN zcl_abapgit_stage=>c_method-rm.
+        WHEN zif_abapgit_definitions=>c_method-rm.
           ro_stage->rm( iv_path     = ls_file-path
                         is_status   = <ls_status>
                         iv_filename = ls_file-filename ).
-        WHEN zcl_abapgit_stage=>c_method-skip.
+        WHEN zif_abapgit_definitions=>c_method-skip.
           " Do nothing
         WHEN OTHERS.
           zcx_abapgit_exception=>raise( |process_stage_list: unknown method { <ls_item>-value }| ).
@@ -676,16 +702,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
       WHEN zif_abapgit_definitions=>c_action-go_patch.                         " Go Patch page
 
-        ei_page  = get_page_patch(
-          iv_getdata   = iv_getdata
-          iv_prev_page = iv_prev_page ).
+        lo_stage = stage_selected( it_postdata ).
+        ei_page  = get_page_patch( lo_stage ).
         ev_state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN OTHERS.
         super->zif_abapgit_gui_event_handler~on_event(
           EXPORTING
             iv_action    = iv_action
-            iv_prev_page = iv_prev_page
             iv_getdata   = iv_getdata
             it_postdata  = it_postdata
           IMPORTING
@@ -696,13 +720,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
+  METHOD zif_abapgit_gui_hotkeys~get_hotkey_actions.
 
-    DATA: ls_hotkey_action TYPE zif_abapgit_gui_page_hotkey=>ty_hotkey_with_name.
+    DATA ls_hotkey_action LIKE LINE OF rt_hotkey_actions.
 
-    ls_hotkey_action-name   = |Patch|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_patch.
-    ls_hotkey_action-hotkey = |p|.
+    ls_hotkey_action-ui_component = 'Stage'.
+    ls_hotkey_action-description  = |Patch|.
+    ls_hotkey_action-action       = 'submitPatch'. " JS function in StageHelper
+    ls_hotkey_action-hotkey       = |p|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description  = |Diff|.
+    ls_hotkey_action-action       = zif_abapgit_definitions=>c_action-go_diff.
+    ls_hotkey_action-hotkey       = |d|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.

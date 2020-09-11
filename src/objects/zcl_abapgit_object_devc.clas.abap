@@ -419,7 +419,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
 
     IF li_package IS BOUND.
       " Package already exists, change it
-      set_lock( ii_package = li_package iv_lock = abap_true ).
+      set_lock( ii_package = li_package
+                iv_lock = abap_true ).
 
       li_package->set_all_attributes(
         EXPORTING
@@ -447,11 +448,6 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise_t100( ).
       ENDIF.
-
-*      " If the application component was cleared SET_ALL_ATTRIBUTES doesn't change it
-*      IF ls_package_data-component IS INITIAL AND li_package->application_component IS NOT INITIAL.
-*
-*      ENDIF.
 
     ELSE.
       " Package does not exist yet, create it
@@ -521,7 +517,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
       zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
-    set_lock( ii_package = li_package iv_lock = abap_false ).
+    set_lock( ii_package = li_package
+              iv_lock = abap_false ).
   ENDMETHOD.
 
 
@@ -675,7 +672,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
 
     CLEAR: ls_package_data-korrflag.
 
-    io_xml->add( iv_name = 'DEVC' ig_data = ls_package_data ).
+    io_xml->add( iv_name = 'DEVC'
+                 ig_data = ls_package_data ).
 
     " Save package interface usages
     li_package->get_permissions_to_use(
@@ -707,7 +705,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
     ENDLOOP.
 
     IF lt_usage_data IS NOT INITIAL.
-      io_xml->add( iv_name = 'PERMISSION' ig_data = lt_usage_data ).
+      io_xml->add( iv_name = 'PERMISSION'
+                   ig_data = lt_usage_data ).
     ENDIF.
   ENDMETHOD.
 ENDCLASS.

@@ -15,7 +15,7 @@ CLASS zcl_abapgit_objects_generic DEFINITION
     METHODS deserialize
       IMPORTING
         !iv_package TYPE devclass
-        !io_xml     TYPE REF TO zcl_abapgit_xml_input
+        !io_xml     TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
     METHODS exists
@@ -25,7 +25,7 @@ CLASS zcl_abapgit_objects_generic DEFINITION
         zcx_abapgit_exception .
     METHODS serialize
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_output
+        !io_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -54,7 +54,7 @@ CLASS zcl_abapgit_objects_generic DEFINITION
         zcx_abapgit_exception .
     METHODS deserialize_data
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_input
+        !io_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
     METHODS distribute_name_to_components
@@ -85,7 +85,7 @@ CLASS zcl_abapgit_objects_generic DEFINITION
         zcx_abapgit_exception .
     METHODS serialize_data
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_output
+        !io_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
     METHODS split_value_to_keys
@@ -97,7 +97,7 @@ CLASS zcl_abapgit_objects_generic DEFINITION
         !cv_non_value_pos TYPE numc3 .
     METHODS validate
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_input
+        !io_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
@@ -156,7 +156,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
       WITH KEY
         objectname = ms_item-obj_type
         objecttype = 'L'
-        method     = 'BEFORE_EXP' ##no_text.
+        method     = 'BEFORE_EXP'.
     IF sy-subrc = 0.
       lv_client = sy-mandt.
 
@@ -195,8 +195,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
       AND tobject = 'TABU'
       ORDER BY PRIMARY KEY.
     IF mt_object_table IS INITIAL.
-      zcx_abapgit_exception=>raise( |Obviously corrupted object-type {
-        is_item-obj_type }: No tables defined| ).
+      zcx_abapgit_exception=>raise( |Obviously corrupted object-type { is_item-obj_type }: No tables defined| ).
     ENDIF.
 * only unique tables
     SORT mt_object_table BY tobj_name ASCENDING.
@@ -297,8 +296,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
 
       INSERT (<ls_table>-tobj_name) FROM TABLE <lt_data>.
       IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Error inserting data, {
-          <ls_table>-tobj_name }| ).
+        zcx_abapgit_exception=>raise( |Error inserting data, { <ls_table>-tobj_name }| ).
       ENDIF.
 
     ENDLOOP.
@@ -333,7 +331,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
 
 *      Some datatype used in the key might exceed the total remaining characters length (e. g. SICF)
       TRY.
-          lv_remaining_length = strlen( |{ substring( val = cs_objkey-value off = lv_objkey_sub_pos ) }| ).
+          lv_remaining_length = strlen( |{ substring( val = cs_objkey-value
+                                                      off = lv_objkey_sub_pos ) }| ).
         CATCH cx_sy_range_out_of_bounds.
           lv_remaining_length = 0.
           RETURN. ">>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -344,7 +343,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
         lv_len = lv_remaining_length.
       ENDIF.
 
-      ls_objkey_sub-value = |{ substring( val = cs_objkey-value off = lv_objkey_sub_pos len = lv_len ) }|.
+      ls_objkey_sub-value = |{ substring( val = cs_objkey-value
+                                          off = lv_objkey_sub_pos
+                                          len = lv_len ) }|.
       ls_objkey_sub-num = cv_non_value_pos.
 
       INSERT ls_objkey_sub INTO TABLE ct_objkey.
@@ -669,11 +670,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
         cg_data = <lt_data> ).
 
     IF lines( <lt_data> ) = 0.
-      zcx_abapgit_exception=>raise( |Primary table { lv_primary
-        } not found in imported container | ).
+      zcx_abapgit_exception=>raise( |Primary table { lv_primary } not found in imported container| ).
     ELSEIF lines( <lt_data> ) <> 1.
-      zcx_abapgit_exception=>raise( |Primary table { lv_primary
-        } contains more than one instance! | ).
+      zcx_abapgit_exception=>raise( |Primary table { lv_primary } contains more than one instance!| ).
     ENDIF.
 
     lv_where = get_where_clause( lv_primary ).
@@ -681,8 +680,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_GENERIC IMPLEMENTATION.
 *  validate that max one local instance was affected by the import
     SELECT COUNT(*) FROM (lv_primary) WHERE (lv_where).
     IF sy-dbcnt > 1.
-      zcx_abapgit_exception=>raise( |More than one instance exists locally in primary table {
-        lv_primary }| ).
+      zcx_abapgit_exception=>raise( |More than one instance exists locally in primary table { lv_primary }| ).
     ENDIF.
 
   ENDMETHOD.

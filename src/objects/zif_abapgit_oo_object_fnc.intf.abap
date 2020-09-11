@@ -37,6 +37,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
         iv_class_name TYPE seoclsname
         it_text_pool  TYPE textpool_table
         iv_language   TYPE spras
+        iv_state      TYPE c DEFAULT 'I'
       RAISING
         zcx_abapgit_exception,
     update_descriptions
@@ -50,15 +51,17 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
         zcx_abapgit_exception,
     create_sotr
       IMPORTING
-        iv_package TYPE devclass
-        it_sotr    TYPE zif_abapgit_definitions=>ty_sotr_tt
+        iv_object_name TYPE sobj_name
+        iv_package     TYPE devclass
+        io_xml         TYPE REF TO zcl_abapgit_xml_input
       RAISING
         zcx_abapgit_exception,
     create_documentation
       IMPORTING
-        it_lines       TYPE tlinetab
-        iv_object_name TYPE dokhl-object
-        iv_language    TYPE spras
+        it_lines         TYPE tlinetab
+        iv_object_name   TYPE dokhl-object
+        iv_language      TYPE spras
+        iv_no_masterlang TYPE abap_bool OPTIONAL
       RAISING
         zcx_abapgit_exception,
     get_includes
@@ -114,13 +117,13 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
     read_sotr
       IMPORTING
         iv_object_name TYPE sobj_name
-      RETURNING
-        VALUE(rt_sotr) TYPE zif_abapgit_definitions=>ty_sotr_tt
+        io_xml         TYPE REF TO zcl_abapgit_xml_output
       RAISING
         zcx_abapgit_exception,
     read_descriptions
       IMPORTING
         iv_obejct_name         TYPE seoclsname
+        iv_language            TYPE spras OPTIONAL
       RETURNING
         VALUE(rt_descriptions) TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
     delete

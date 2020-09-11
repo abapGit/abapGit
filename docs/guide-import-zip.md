@@ -4,20 +4,31 @@ category: offline projects
 order: 10
 ---
 
-1: Run report ZABAPGIT via SE38 or SA38
+## Download zip archive ## 
+An offline project is based on a zip archive that contains all the git files.
 
-2: Click "+ Offline"
-![](img/offline1.png)
+First, download the latest version of the project you want to import. 
 
-3: Enter project name eg. "abapOpenChecks", and an empty package eg. "$AOC"
-![](img/offline2.png)
+* For GitHub :
+   1. Go to the project main page (e.g. https://github.com/larshp/abapOpenChecks)
+   2. Select **Code** > **Download ZIP**
+   3. Save file
 
-4: Download the zip archive containing the git files, eg. https://github.com/larshp/abapOpenChecks/archive/master.zip
+## Import zip archive ##
+1. Connect to SAP in language **EN**
+2. Run abapGit:
+  * If you have installed the standalone version : in transaction `SE38`, run the program you created  (`ZABAPGIT_STANDALONE` or `ZABAPGIT_FULL` or other)
+  * If you have installed the developer version : run transaction `ZABAPGIT`
+3. Select **+ Offline**
+4. Enter the project name and select an existing package or create a new package
+5. Select **Import <sup>zip</sup>**
+6. Select the zip archive file (eg. *abapGit-master.zip*)
+7. Select **Pull <sup>zip</sup>**
+8. Activate
 
-On github there is a link to download repository contents as zip:
-![](img/download_zip.png)
-
-5: Click "Import ZIP" in abapGit
-![](img/offline3.png)
-
-6: Choose file downloaded in step 4
+## Hints ##
+abapGit can only import files with [`LF`](https://en.wikipedia.org/wiki/Newline) as line-terminator.
+If you clone a project on windows with git cli to pack into a zip-archive later on, configure git not replace `LF` by `CRLF`:
+```
+git config [--global, --local, --system] core.autocrlf false
+```

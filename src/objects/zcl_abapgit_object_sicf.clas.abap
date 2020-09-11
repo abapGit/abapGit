@@ -299,28 +299,31 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
 
 * note: this method is called dynamically from some places
 
-    DATA: lv_name    TYPE icfname,
-          lv_url     TYPE string,
-          lv_parguid TYPE icfparguid.
+    DATA: lv_name       TYPE icfservice-icf_name,
+          lv_url        TYPE icfurlbuf,
+          lv_string     TYPE string,
+          lv_icfnodguid TYPE icfservice-icfnodguid,
+          lv_parguid    TYPE icfservice-icfparguid.
 
 
     lv_name    = iv_obj_name.
     lv_parguid = iv_obj_name+15.
 
-    cl_icf_tree=>if_icf_tree~get_info_from_serv(
+    SELECT SINGLE icfnodguid FROM icfservice INTO lv_icfnodguid
+      WHERE icf_name = lv_name
+      AND icfparguid = lv_parguid.
+
+    CALL FUNCTION 'HTTP_GET_URL_FROM_NODGUID'
       EXPORTING
-        icf_name          = lv_name
-        icfparguid        = lv_parguid
+        nodguid     = lv_icfnodguid
       IMPORTING
-        url               = lv_url
+        url         = lv_url
       EXCEPTIONS
-        wrong_name        = 1
-        wrong_parguid     = 2
-        incorrect_service = 3
-        no_authority      = 4
-        OTHERS            = 5 ).
+        icf_inconst = 1
+        OTHERS      = 2.
     IF sy-subrc = 0.
-      rv_hash = zcl_abapgit_hash=>sha1_raw( zcl_abapgit_convert=>string_to_xstring_utf8( lv_url ) ).
+      lv_string = lv_url.
+      rv_hash = zcl_abapgit_hash=>sha1_raw( zcl_abapgit_convert=>string_to_xstring_utf8( lv_string ) ).
     ENDIF.
 
   ENDMETHOD.
@@ -344,7 +347,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
       WHERE pgmid = iv_pgmid
       AND object = 'SICF'
       AND obj_name LIKE lv_obj_name
-      ORDER BY PRIMARY KEY.                             "#EC CI_GENBUFF
+      ORDER BY PRIMARY KEY ##TOO_MANY_ITAB_FIELDS. "#EC CI_GENBUFF
 
     LOOP AT lt_tadir ASSIGNING <ls_tadir>.
       IF read_sicf_url( <ls_tadir>-obj_name ) = lv_hash.
@@ -352,12 +355,6 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
         RETURN.
       ENDIF.
     ENDLOOP.
-
-    IF lines( lt_tadir ) = 1.
-      READ TABLE lt_tadir INDEX 1 ASSIGNING <ls_tadir>.
-      ASSERT sy-subrc = 0.
-      rs_tadir = <ls_tadir>.
-    ENDIF.
 
   ENDMETHOD.
 
@@ -595,6 +592,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SICF IMPLEMENTATION.
     CLEAR ls_icfservice-icf_cclnt.
     CLEAR ls_icfservice-icf_mclnt.
     CLEAR ls_icfservice-icfaltnme_orig.
+    CLEAR ls_icfservice-icfbitmap.
 
     io_xml->add( iv_name = 'URL'
                  ig_data = lv_url ).

@@ -26,6 +26,9 @@ CLASS zcl_abapgit_oo_class DEFINITION
     METHODS zif_abapgit_oo_object_fnc~deserialize_source
         REDEFINITION .
   PROTECTED SECTION.
+    TYPES: ty_char1 TYPE c LENGTH 1,
+           ty_char2 TYPE c LENGTH 2.
+
   PRIVATE SECTION.
 
     CLASS-METHODS update_source_index
@@ -77,8 +80,8 @@ CLASS zcl_abapgit_oo_class DEFINITION
       IMPORTING
         !iv_program      TYPE programm
         !it_source       TYPE string_table
-        !iv_extension    TYPE sychar02
-        !iv_program_type TYPE sychar01
+        !iv_extension    TYPE ty_char2
+        !iv_program_type TYPE ty_char1
         !iv_version      TYPE r3state .
     CLASS-METHODS update_cs_number_of_methods
       IMPORTING
@@ -182,6 +185,10 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
 
   METHOD init_scanner.
 
+    DATA: lx_exc     TYPE REF TO cx_root,
+          lx_detail  TYPE REF TO cx_oo_clif_scan_error_detail,
+          lv_message TYPE string.
+
     TRY.
         ro_scanner = cl_oo_source_scanner_class=>create_class_scanner(
           clif_name = iv_name
@@ -189,6 +196,12 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
         ro_scanner->scan( ).
       CATCH cx_clif_scan_error.
         zcx_abapgit_exception=>raise( 'error initializing CLAS scanner' ).
+      CATCH cx_oo_clif_scan_error_detail INTO lx_detail.
+        lv_message = |{ lx_detail->get_text( ) }, line { lx_detail->source_position-line }|.
+        zcx_abapgit_exception=>raise( lv_message ).
+      CATCH cx_root INTO lx_exc.
+        lv_message = lx_exc->get_text( ).
+        zcx_abapgit_exception=>raise( lv_message ).
     ENDTRY.
 
   ENDMETHOD.
@@ -230,8 +243,8 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
 
   METHOD update_full_class_include.
 
-    CONSTANTS: lc_class_source_extension TYPE sychar02 VALUE 'CS',
-               lc_include_program_type   TYPE sychar01 VALUE 'I',
+    CONSTANTS: lc_class_source_extension TYPE c LENGTH 2 VALUE 'CS',
+               lc_include_program_type   TYPE c LENGTH 1 VALUE 'I',
                lc_active_version         TYPE r3state VALUE 'A'.
 
 
@@ -258,6 +271,10 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
     ls_clskey-clsname = iv_name.
 
     TRY.
+        CALL FUNCTION 'SEO_BUFFER_REFRESH'
+          EXPORTING
+            cifkey  = ls_clskey
+            version = seoc_version_active.
         CREATE OBJECT lo_update TYPE ('CL_OO_CLASS_SECTION_SOURCE')
           EXPORTING
             clskey                        = ls_clskey
@@ -337,8 +354,8 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
   METHOD update_source_index.
 
     CONSTANTS:
-      lc_version_active   TYPE r3state VALUE 'A',           "#EC NOTEXT
-      lc_version_inactive TYPE r3state VALUE 'I'.           "#EC NOTEXT
+      lc_version_active   TYPE r3state VALUE 'A',
+      lc_version_inactive TYPE r3state VALUE 'I'.
 
     "    dynamic invocation, IF_OO_SOURCE_POS_INDEX_HELPER doesn't exist in 702.
     DATA lo_index_helper TYPE REF TO object.
@@ -379,23 +396,42 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
                       iv_clsname    = <lv_clsname>
                       it_attributes = it_attributes ).
 
-    CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
-      EXPORTING
-        devclass        = iv_package
-        overwrite       = iv_overwrite
-        version         = seoc_version_active
-        suppress_dialog = abap_true
-      CHANGING
-        class           = cg_properties
-        attributes      = lt_vseoattrib
-      EXCEPTIONS
-        existing        = 1
-        is_interface    = 2
-        db_error        = 3
-        component_error = 4
-        no_access       = 5
-        other           = 6
-        OTHERS          = 7.
+    TRY.
+        CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
+          EXPORTING
+            devclass        = iv_package
+            overwrite       = iv_overwrite
+            version         = seoc_version_active
+            suppress_dialog = abap_true " Parameter missing in 702
+          CHANGING
+            class           = cg_properties
+            attributes      = lt_vseoattrib
+          EXCEPTIONS
+            existing        = 1
+            is_interface    = 2
+            db_error        = 3
+            component_error = 4
+            no_access       = 5
+            other           = 6
+            OTHERS          = 7.
+      CATCH cx_sy_dyn_call_param_not_found.
+        CALL FUNCTION 'SEO_CLASS_CREATE_COMPLETE'
+          EXPORTING
+            devclass        = iv_package
+            overwrite       = iv_overwrite
+            version         = seoc_version_active
+          CHANGING
+            class           = cg_properties
+            attributes      = lt_vseoattrib
+          EXCEPTIONS
+            existing        = 1
+            is_interface    = 2
+            db_error        = 3
+            component_error = 4
+            no_access       = 5
+            other           = 6
+            OTHERS          = 7.
+    ENDTRY.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error from SEO_CLASS_CREATE_COMPLETE. Subrc = { sy-subrc }| ).
     ENDIF.
@@ -404,64 +440,9 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~create_sotr.
-    DATA: lt_sotr    TYPE zif_abapgit_definitions=>ty_sotr_tt,
-          lt_objects TYPE sotr_objects,
-          ls_paket   TYPE sotr_pack,
-          lv_object  LIKE LINE OF lt_objects.
-
-    FIELD-SYMBOLS: <ls_sotr> LIKE LINE OF lt_sotr.
-
-    LOOP AT it_sotr ASSIGNING <ls_sotr>.
-      CALL FUNCTION 'SOTR_OBJECT_GET_OBJECTS'
-        EXPORTING
-          object_vector    = <ls_sotr>-header-objid_vec
-        IMPORTING
-          objects          = lt_objects
-        EXCEPTIONS
-          object_not_found = 1
-          OTHERS           = 2.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |error from SOTR_OBJECT_GET_OBJECTS. Subrc = { sy-subrc }| ).
-      ENDIF.
-
-      READ TABLE lt_objects INDEX 1 INTO lv_object.
-      ASSERT sy-subrc = 0.
-
-      ls_paket-paket = iv_package.
-
-      CALL FUNCTION 'SOTR_CREATE_CONCEPT'
-        EXPORTING
-          paket                         = ls_paket
-          crea_lan                      = <ls_sotr>-header-crea_lan
-          alias_name                    = <ls_sotr>-header-alias_name
-          object                        = lv_object
-          entries                       = <ls_sotr>-entries
-          concept_default               = <ls_sotr>-header-concept
-        EXCEPTIONS
-          package_missing               = 1
-          crea_lan_missing              = 2
-          object_missing                = 3
-          paket_does_not_exist          = 4
-          alias_already_exist           = 5
-          object_type_not_found         = 6
-          langu_missing                 = 7
-          identical_context_not_allowed = 8
-          text_too_long                 = 9
-          error_in_update               = 10
-          no_master_langu               = 11
-          error_in_concept_id           = 12
-          alias_not_allowed             = 13
-          tadir_entry_creation_failed   = 14
-          internal_error                = 15
-          error_in_correction           = 16
-          user_cancelled                = 17
-          no_entry_found                = 18
-          OTHERS                        = 19.
-      IF sy-subrc <> 0 AND sy-subrc <> 5.
-        zcx_abapgit_exception=>raise( |Error from SOTR_CREATE_CONCEPT. Subrc = { sy-subrc }| ).
-      ENDIF.
-    ENDLOOP.
-
+    zcl_abapgit_sotr_handler=>create_sotr(
+      iv_package = iv_package
+      io_xml     = io_xml ).
   ENDMETHOD.
 
 
@@ -494,7 +475,6 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
           lt_methods TYPE cl_oo_source_scanner_class=>type_method_implementations,
           lv_method  LIKE LINE OF lt_methods,
           lt_public  TYPE seop_source_string,
-          lt_auxsrc  TYPE seop_source_string,
           lt_source  TYPE seop_source_string.
 
     "Buffer needs to be refreshed,
@@ -529,12 +509,9 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
       lv_updated = update_report( iv_program = lv_program
                                   it_source  = lt_source ).
       IF lv_updated = abap_true.
-        lt_auxsrc = lt_public.
-        APPEND LINES OF lt_source TO lt_auxsrc.
-
         update_meta( iv_name     = is_key-clsname
                      iv_exposure = seoc_exposure_protected
-                     it_source   = lt_auxsrc ).
+                     it_source   = lt_source ).
       ENDIF.
     ENDIF.
 
@@ -545,12 +522,9 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
       lv_updated = update_report( iv_program = lv_program
                                   it_source  = lt_source ).
       IF lv_updated = abap_true.
-        lt_auxsrc = lt_public.
-        APPEND LINES OF lt_source TO lt_auxsrc.
-
         update_meta( iv_name     = is_key-clsname
                      iv_exposure = seoc_exposure_private
-                     it_source   = lt_auxsrc ).
+                     it_source   = lt_source ).
       ENDIF.
     ENDIF.
 
@@ -665,7 +639,6 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
 
 * skip the CS include, as it is sometimes generated on the fly instead of
 * when the methods are changed
-*    APPEND cl_oo_classname_service=>get_cs_name( lv_class_name ) TO rt_includes.
 
     cl_oo_classname_service=>get_all_method_includes(
       EXPORTING
@@ -694,7 +667,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
     INSERT TEXTPOOL lv_cp
       FROM it_text_pool
       LANGUAGE iv_language
-      STATE 'I'.
+      STATE iv_state.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'error from INSERT TEXTPOOL' ).
     ENDIF.
@@ -705,62 +678,11 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~read_sotr.
-    DATA: lv_concept    TYPE sotr_head-concept,
-          lt_seocompodf TYPE STANDARD TABLE OF seocompodf WITH DEFAULT KEY,
-          ls_header     TYPE sotr_head,
-          lt_entries    TYPE sotr_text_tt.
-
-    FIELD-SYMBOLS: <ls_sotr>       LIKE LINE OF rt_sotr,
-                   <ls_seocompodf> LIKE LINE OF lt_seocompodf,
-                   <ls_entry>      LIKE LINE OF lt_entries.
-
-
-    SELECT * FROM seocompodf
-      INTO TABLE lt_seocompodf
-      WHERE clsname = iv_object_name
-      AND version = '1'
-      AND exposure = '2'
-      AND attdecltyp = '2'
-      AND type = 'SOTR_CONC'
-      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
-
-    LOOP AT lt_seocompodf ASSIGNING <ls_seocompodf>.
-
-      lv_concept = translate( val = <ls_seocompodf>-attvalue from = '''' to = '' ).
-
-      CALL FUNCTION 'SOTR_GET_CONCEPT'
-        EXPORTING
-          concept        = lv_concept
-        IMPORTING
-          header         = ls_header
-        TABLES
-          entries        = lt_entries
-        EXCEPTIONS
-          no_entry_found = 1
-          OTHERS         = 2.
-      IF sy-subrc <> 0.
-        CONTINUE.
-      ENDIF.
-
-      CLEAR: ls_header-paket,
-             ls_header-crea_name,
-             ls_header-crea_tstut,
-             ls_header-chan_name,
-             ls_header-chan_tstut.
-
-      LOOP AT lt_entries ASSIGNING <ls_entry>.
-        CLEAR: <ls_entry>-version,
-               <ls_entry>-crea_name,
-               <ls_entry>-crea_tstut,
-               <ls_entry>-chan_name,
-               <ls_entry>-chan_tstut.
-      ENDLOOP.
-
-      APPEND INITIAL LINE TO rt_sotr ASSIGNING <ls_sotr>.
-      <ls_sotr>-header = ls_header.
-      <ls_sotr>-entries = lt_entries.
-
-    ENDLOOP.
+    zcl_abapgit_sotr_handler=>read_sotr(
+      iv_pgmid    = 'LIMU'
+      iv_object   = 'CPUB'
+      iv_obj_name = iv_object_name
+      io_xml      = io_xml ).
   ENDMETHOD.
 
 

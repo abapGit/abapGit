@@ -19,11 +19,12 @@ CLASS zcl_abapgit_object_char DEFINITION
         cls_attr_valuet TYPE STANDARD TABLE OF cls_attr_valuet WITH DEFAULT KEY,
       END OF ty_char .
 
-    METHODS instantiate_char
+    METHODS instantiate_char_and_lock
       IMPORTING
-        !iv_type_group TYPE cls_object_type_group
+        !iv_type_group       TYPE cls_object_type_group
+        !iv_activation_state TYPE pak_activation_state
       RETURNING
-        VALUE(ro_char) TYPE REF TO cl_cls_attribute
+        VALUE(ro_char)       TYPE REF TO cl_cls_attribute
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
@@ -33,7 +34,7 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
 
 
-  METHOD instantiate_char.
+  METHOD instantiate_char_and_lock.
 
     DATA: lv_new  TYPE abap_bool,
           lv_name TYPE cls_attribute_name.
@@ -46,9 +47,10 @@ CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
     TRY.
         CREATE OBJECT ro_char
           EXPORTING
-            im_name       = lv_name
-            im_type_group = iv_type_group
-            im_new        = lv_new.
+            im_name             = lv_name
+            im_type_group       = iv_type_group
+            im_new              = lv_new
+            im_activation_state = iv_activation_state.
       CATCH cx_pak_invalid_data
           cx_pak_not_authorized
           cx_pak_invalid_state
@@ -101,7 +103,8 @@ CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
       WHERE name = ms_item-obj_name
       AND activation_state = 'A'.
 
-    lo_char = instantiate_char( lv_type_group ).
+    lo_char = instantiate_char_and_lock( iv_type_group       = lv_type_group
+                                         iv_activation_state = cl_pak_wb_domains=>co_activation_state-active ).
 
     TRY.
         lo_char->if_pak_wb_object~delete( ).
@@ -111,8 +114,11 @@ CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
         lo_char->if_pak_wb_object_internal~unlock( ).
 
       CATCH cx_pak_invalid_state cx_pak_invalid_data cx_pak_not_authorized INTO lx_pak_error.
+        lo_char->if_pak_wb_object_internal~unlock( ).
         lv_text = lx_pak_error->get_text( ).
         zcx_abapgit_exception=>raise( lv_text ).
+      CLEANUP.
+        lo_char->if_pak_wb_object_internal~unlock( ).
     ENDTRY.
 
   ENDMETHOD.
@@ -127,6 +133,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
           lv_text        TYPE string.
 
     FIELD-SYMBOLS: <ls_value>  LIKE LINE OF ls_char-cls_attr_value,
+                   <lg_any>    TYPE any,
                    <ls_valuet> LIKE LINE OF ls_char-cls_attr_valuet.
 
 
@@ -135,7 +142,8 @@ CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
 
     tadir_insert( iv_package ).
 
-    lo_char = instantiate_char( ls_char-cls_attribute-type_group ).
+    lo_char = instantiate_char_and_lock( iv_type_group       = ls_char-cls_attribute-type_group
+                                         iv_activation_state = cl_pak_wb_domains=>co_activation_state-inactive ).
 
     TRY.
         lo_char->if_cls_attribute~set_kind( ls_char-cls_attribute-kind ).
@@ -151,6 +159,15 @@ CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
         lo_char->if_cls_attribute~set_implicit_changes_allowed( ls_char-cls_attribute-implicit_change ).
         lo_char->if_cls_attribute~set_expl_values_dominate_links( ls_char-cls_attribute-weak_links ).
         lo_char->if_cls_attribute~set_assignment_package_rule( ls_char-cls_attribute-assignment_devc ).
+
+* Method SET_HIDE_ICON does not exist in some releases, not present in 751
+        ASSIGN COMPONENT 'HIDE_ICONS' OF STRUCTURE ls_char-cls_attribute TO <lg_any>.
+        IF sy-subrc = 0.
+          CALL METHOD lo_char->('IF_CLS_ATTRIBUTE~SET_HIDE_ICON')
+            EXPORTING
+              im_hide_icon = <lg_any>.
+        ENDIF.
+
         lo_char->if_cls_attribute~set_hide_remark( ls_char-cls_attribute-hide_remark ).
         lo_char->if_cls_attribute~set_visible_in_customer_system( ls_char-cls_attribute-visible_for_cust ).
         lo_char->if_cls_attribute~set_value_table( ls_char-cls_attribute-value_table ).
@@ -191,8 +208,11 @@ CLASS ZCL_ABAPGIT_OBJECT_CHAR IMPLEMENTATION.
         lo_char->if_pak_wb_object_internal~unlock( ).
 
       CATCH cx_pak_invalid_state cx_pak_invalid_data cx_pak_not_authorized INTO lx_pak_error.
+        lo_char->if_pak_wb_object_internal~unlock( ).
         lv_text = lx_pak_error->get_text( ).
         zcx_abapgit_exception=>raise( lv_text ).
+      CLEANUP.
+        lo_char->if_pak_wb_object_internal~unlock( ).
     ENDTRY.
 
   ENDMETHOD.

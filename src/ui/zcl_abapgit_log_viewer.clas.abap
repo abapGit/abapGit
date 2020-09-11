@@ -4,21 +4,19 @@ CLASS zcl_abapgit_log_viewer DEFINITION
   CREATE PRIVATE .
 
   PUBLIC SECTION.
+
     CLASS-METHODS show_log
       IMPORTING
-        iv_header_text TYPE csequence DEFAULT 'Log'
-        ii_log         TYPE REF TO zif_abapgit_log.
-
+        !iv_header_text TYPE csequence DEFAULT 'Log'
+        !ii_log         TYPE REF TO zif_abapgit_log .
     CLASS-METHODS to_html
       IMPORTING
-        ii_log         TYPE REF TO zif_abapgit_log
+        !ii_log        TYPE REF TO zif_abapgit_log
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html.
-
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     CLASS-METHODS write_log
       IMPORTING
-        ii_log TYPE REF TO zif_abapgit_log.
-
+        !ii_log TYPE REF TO zif_abapgit_log .
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
@@ -41,9 +39,9 @@ CLASS zcl_abapgit_log_viewer DEFINITION
     CLASS-METHODS:
       prepare_log_for_display
         IMPORTING
-          ii_log     TYPE REF TO zif_abapgit_log
-        EXPORTING
-          et_log_out TYPE tty_log_out,
+          ii_log            TYPE REF TO zif_abapgit_log
+        RETURNING
+          VALUE(rt_log_out) TYPE tty_log_out,
 
       show_longtext
         IMPORTING
@@ -65,7 +63,7 @@ CLASS zcl_abapgit_log_viewer DEFINITION
 
       goto_t100_message
         IMPORTING
-          is_log TYPE zcl_abapgit_log_viewer=>ty_log_out
+          is_log TYPE ty_log_out
         RAISING
           zcx_abapgit_exception,
 
@@ -74,7 +72,7 @@ CLASS zcl_abapgit_log_viewer DEFINITION
 
       dispatch
         IMPORTING
-          is_log    TYPE zcl_abapgit_log_viewer=>ty_log_out
+          is_log    TYPE ty_log_out
           iv_column TYPE salv_de_column
         RAISING
           zcx_abapgit_exception,
@@ -196,7 +194,7 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
   METHOD on_link_click.
 
     DATA: lx_error TYPE REF TO zcx_abapgit_exception.
-    FIELD-SYMBOLS: <ls_log> TYPE zcl_abapgit_log_viewer=>ty_log_out.
+    FIELD-SYMBOLS: <ls_log> TYPE ty_log_out.
 
     IF row IS INITIAL
     OR column IS INITIAL.
@@ -276,7 +274,7 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
       ls_log-obj_type = lr_message->obj_type.
       ls_log-obj_name = lr_message->obj_name.
 
-      INSERT ls_log INTO TABLE et_log_out.
+      INSERT ls_log INTO TABLE rt_log_out.
 
     ENDLOOP.
 
@@ -295,11 +293,7 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
           lv_add_obj_col TYPE abap_bool,
           lo_event       TYPE REF TO cl_salv_events_table.
 
-    prepare_log_for_display(
-      EXPORTING
-        ii_log     = ii_log
-      IMPORTING
-        et_log_out = gt_log ).
+    gt_log = prepare_log_for_display( ii_log = ii_log ).
 
     "check if log contains any object info
     LOOP AT gt_log REFERENCE INTO lr_log.
@@ -440,7 +434,7 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
           lv_class   TYPE string,
           lv_icon    TYPE string.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     IF ii_log->count( ) = 0.
       RETURN.
@@ -461,10 +455,10 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
           lv_class = 'error'.
       ENDCASE.
 
-      ro_html->add( |<span class="{ lv_class }">| ).
-      ro_html->add_icon( lv_icon ).
-      ro_html->add( lr_message->text ).
-      ro_html->add( '</span>' ).
+      ri_html->add( |<span class="{ lv_class }">| ).
+      ri_html->add_icon( lv_icon ).
+      ri_html->add( lr_message->text ).
+      ri_html->add( '</span>' ).
     ENDLOOP.
 
   ENDMETHOD.

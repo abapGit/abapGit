@@ -38,7 +38,9 @@ CLASS zcl_abapgit_transport DEFINITION
       IMPORTING
         !it_tadir         TYPE zif_abapgit_definitions=>ty_tadir_tt
       RETURNING
-        VALUE(rv_package) TYPE devclass .
+        VALUE(rv_package) TYPE devclass
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS resolve
       IMPORTING
         !it_requests    TYPE trwbo_requests
@@ -127,7 +129,8 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
 
     LOOP AT it_requests ASSIGNING <ls_request>.
       LOOP AT <ls_request>-objects ASSIGNING <ls_object>.
-        IF <ls_object>-pgmid = 'LIMU'.
+        " VARX, see https://github.com/larshp/abapGit/issues/3107
+        IF <ls_object>-pgmid = 'LIMU' AND <ls_object>-object <> 'VARX'.
           CALL FUNCTION 'GET_R3TR_OBJECT_FROM_LIMU_OBJ'
             EXPORTING
               p_limu_objtype = <ls_object>-object
@@ -233,7 +236,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
       ls_request      TYPE trwbo_request_header,
       lt_e071         TYPE tr_objects,
       lv_text         TYPE string,
-      lv_answer       TYPE char1,
+      lv_answer       TYPE c LENGTH 1,
       lv_lock_objects TYPE trparflag.
 
     lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
@@ -283,14 +286,13 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
     DATA:
       lt_objects     TYPE scts_tadir,
       lt_objects_all LIKE lt_objects,
-      lt_e071        TYPE tr_objects,
-      ls_e071        LIKE LINE OF lt_e071,
+      ls_e071        LIKE LINE OF rt_objects,
       lo_repo        TYPE REF TO zcl_abapgit_repo,
       lv_package     TYPE zif_abapgit_persistence=>ty_repo-package,
       lt_packages    TYPE zif_abapgit_sap_package=>ty_devclass_tt.
 
     FIELD-SYMBOLS:
-      <ls_package> TYPE devclass,
+      <lv_package> TYPE devclass,
       <ls_object>  TYPE tadir.
 
     lo_repo     = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
@@ -298,13 +300,13 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
     lt_packages = zcl_abapgit_factory=>get_sap_package( lv_package )->list_subpackages( ).
     INSERT lv_package INTO TABLE lt_packages.
 
-    LOOP AT lt_packages ASSIGNING <ls_package>.
+    LOOP AT lt_packages ASSIGNING <lv_package>.
 
       CLEAR: lt_objects.
 
       CALL FUNCTION 'TRINT_SELECT_OBJECTS'
         EXPORTING
-          iv_devclass       = <ls_package>
+          iv_devclass       = <lv_package>
           iv_via_selscreen  = abap_false
         IMPORTING
           et_objects_tadir  = lt_objects

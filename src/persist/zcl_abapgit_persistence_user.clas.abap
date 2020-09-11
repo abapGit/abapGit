@@ -4,7 +4,7 @@ CLASS zcl_abapgit_persistence_user DEFINITION
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_persist_user .
+    INTERFACES zif_abapgit_persist_user.
 
     TYPES tt_favorites TYPE zif_abapgit_persistence=>tt_repo_keys .
 
@@ -34,7 +34,6 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         repo_show        TYPE zif_abapgit_persistence=>ty_repo-key,
         hide_files       TYPE abap_bool,
         changes_only     TYPE abap_bool,
-        show_order_by    TYPE abap_bool,
         diff_unified     TYPE abap_bool,
         favorites        TYPE tt_favorites,
         repo_config      TYPE ty_repo_config_tt,
@@ -104,7 +103,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
     CALL TRANSFORMATION id
       OPTIONS value_handling = 'accept_data_loss'
       SOURCE XML lv_xml
-      RESULT user = rs_user ##NO_TEXT.
+      RESULT user = rs_user.
   ENDMETHOD.
 
 
@@ -270,7 +269,18 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
 
   METHOD zif_abapgit_persist_user~get_repo_show.
 
+    DATA lo_repo TYPE REF TO zcl_abapgit_repo.
+
     rv_key = read( )-repo_show.
+
+    " Check if repo exists
+    TRY.
+        lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( rv_key ).
+      CATCH zcx_abapgit_exception.
+        " remove invalid key
+        CLEAR rv_key.
+        zif_abapgit_persist_user~set_repo_show( rv_key ).
+    ENDTRY.
 
   ENDMETHOD.
 
@@ -332,7 +342,8 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
 
     ls_repo_config                = read_repo_config( iv_url ).
     ls_repo_config-git_user-email = iv_email.
-    update_repo_config( iv_url = iv_url is_repo_config = ls_repo_config ).
+    update_repo_config( iv_url = iv_url
+                        is_repo_config = ls_repo_config ).
 
   ENDMETHOD.
 
@@ -343,7 +354,8 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
 
     ls_repo_config               = read_repo_config( iv_url ).
     ls_repo_config-git_user-name = iv_username.
-    update_repo_config( iv_url = iv_url is_repo_config = ls_repo_config ).
+    update_repo_config( iv_url = iv_url
+                        is_repo_config = ls_repo_config ).
 
   ENDMETHOD.
 
@@ -354,7 +366,8 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
 
     ls_repo_config                  = read_repo_config( iv_url ).
     ls_repo_config-last_change_seen = iv_version.
-    update_repo_config( iv_url = iv_url is_repo_config = ls_repo_config ).
+    update_repo_config( iv_url = iv_url
+                        is_repo_config = ls_repo_config ).
 
   ENDMETHOD.
 
@@ -365,7 +378,8 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
 
     ls_repo_config       = read_repo_config( iv_url ).
     ls_repo_config-login = iv_login.
-    update_repo_config( iv_url = iv_url is_repo_config = ls_repo_config ).
+    update_repo_config( iv_url = iv_url
+                        is_repo_config = ls_repo_config ).
 
   ENDMETHOD.
 
@@ -455,24 +469,5 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-  METHOD zif_abapgit_persist_user~get_show_order_by.
-
-    rv_show_order_by = read( )-show_order_by.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_persist_user~toggle_show_order_by.
-
-    DATA ls_user TYPE ty_user.
-
-    ls_user = read( ).
-    ls_user-show_order_by = boolc( ls_user-show_order_by = abap_false ).
-    update( ls_user ).
-
-    rv_show_order_by = ls_user-show_order_by.
-
-  ENDMETHOD.
 
 ENDCLASS.

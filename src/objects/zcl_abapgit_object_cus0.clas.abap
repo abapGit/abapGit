@@ -151,11 +151,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CUS0 IMPLEMENTATION.
 
 *   doesn't work...
 *    CALL FUNCTION 'S_CUS_IMG_ACTIVITY_MAINTAIN'
-*      EXPORTING
-*        i_display        = 'X'
-*        i_no_replacement = 'X'
-*      CHANGING
-*        img_activity     = mv_img_activity.
 
   ENDMETHOD.
 
@@ -178,6 +173,10 @@ CLASS ZCL_ABAPGIT_OBJECT_CUS0 IMPLEMENTATION.
            ls_img_activity-header-luser,
            ls_img_activity-header-ldate,
            ls_img_activity-header-ltime.
+
+    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+      DELETE ls_img_activity-texts WHERE spras <> mv_language.
+    ENDIF.
 
     io_xml->add( iv_name = 'CUS0'
                  ig_data = ls_img_activity ).

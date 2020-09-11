@@ -76,7 +76,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
     CALL TRANSFORMATION id
       OPTIONS value_handling = 'accept_data_loss'
       SOURCE XML lv_xml
-      RESULT repo = rs_repo ##NO_TEXT.
+      RESULT repo = rs_repo.
 
 * automatic migration of old fields
     FIND FIRST OCCURRENCE OF '</HEAD_BRANCH><WRITE_PROTECT>X</WRITE_PROTECT>' IN lv_xml.
@@ -228,8 +228,8 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
       ls_persistent_meta TYPE zif_abapgit_persistence=>ty_repo.
 
     FIELD-SYMBOLS <lv_field>   LIKE LINE OF mt_meta_fields.
-    FIELD-SYMBOLS <lv_dst>     TYPE any.
-    FIELD-SYMBOLS <lv_src>     TYPE any.
+    FIELD-SYMBOLS <lg_dst>     TYPE any.
+    FIELD-SYMBOLS <lg_src>     TYPE any.
     FIELD-SYMBOLS <lv_changed> TYPE abap_bool.
 
     ASSERT NOT iv_key IS INITIAL.
@@ -254,11 +254,11 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
       ASSIGN COMPONENT <lv_field> OF STRUCTURE is_change_mask TO <lv_changed>.
       ASSERT sy-subrc = 0.
       CHECK <lv_changed> = abap_true.
-      ASSIGN COMPONENT <lv_field> OF STRUCTURE ls_persistent_meta TO <lv_dst>.
+      ASSIGN COMPONENT <lv_field> OF STRUCTURE ls_persistent_meta TO <lg_dst>.
       ASSERT sy-subrc = 0.
-      ASSIGN COMPONENT <lv_field> OF STRUCTURE is_meta TO <lv_src>.
+      ASSIGN COMPONENT <lv_field> OF STRUCTURE is_meta TO <lg_src>.
       ASSERT sy-subrc = 0.
-      <lv_dst> = <lv_src>.
+      <lg_dst> = <lg_src>.
     ENDLOOP.
 
     lv_blob = to_xml( ls_persistent_meta ).

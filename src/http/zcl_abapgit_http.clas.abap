@@ -70,7 +70,7 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
         cv_pass         = lv_pass ).
 
     IF lv_user IS INITIAL.
-      zcx_abapgit_exception=>raise( 'HTTP 401, unauthorized' ).
+      zcx_abapgit_exception=>raise( 'Unauthorized access. Check your credentials' ).
     ENDIF.
 
     IF lv_user <> lv_default_user.
@@ -115,9 +115,7 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
 
     DATA: lv_code TYPE i.
 
-    ii_client->response->get_status(
-      IMPORTING
-        code   = lv_code ).
+    ii_client->response->get_status( IMPORTING code = lv_code ).
     IF lv_code = 401.
       rv_auth_requested = abap_true.
     ENDIF.
@@ -160,7 +158,7 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
             " a) SSL is setup properly in STRUST
             lv_text = 'HTTPS ARGUMENT_NOT_FOUND | STRUST/SSL Setup correct?'.
           WHEN OTHERS.
-            lv_text = 'While creating HTTP Client'.         "#EC NOTEXT
+            lv_text = 'While creating HTTP Client'.
 
         ENDCASE.
         zcx_abapgit_exception=>raise( lv_text ).
@@ -186,7 +184,7 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
         value = 'GET' ).
     li_client->request->set_header_field(
         name  = 'user-agent'
-        value = get_agent( ) ).                             "#EC NOTEXT
+        value = get_agent( ) ).
     lv_uri = zcl_abapgit_url=>path_name( iv_url ) &&
              '/info/refs?service=git-' &&
              iv_service &&

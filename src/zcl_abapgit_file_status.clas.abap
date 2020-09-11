@@ -55,8 +55,8 @@ CLASS zcl_abapgit_file_status DEFINITION
         RAISING   zcx_abapgit_exception,
       get_object_package
         IMPORTING
-          iv_object       TYPE tadir-object
-          iv_obj_name     TYPE tadir-obj_name
+          iv_object          TYPE tadir-object
+          iv_obj_name        TYPE tadir-obj_name
         RETURNING
           VALUE(rv_devclass) TYPE devclass
         RAISING
@@ -232,6 +232,12 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
         CLEAR <ls_remote>-sha1. " Mark as processed
       ELSE.             " Only L exists
         <ls_result> = build_new_local( <ls_local> ).
+        " Check if same file exists in different location
+        READ TABLE lt_remote ASSIGNING <ls_remote>
+          WITH KEY filename = <ls_local>-file-filename.
+        IF sy-subrc = 0 AND <ls_local>-file-sha1 = <ls_remote>-sha1.
+          <ls_result>-packmove = abap_true.
+        ENDIF.
       ENDIF.
       <ls_result>-inactive = <ls_local>-item-inactive.
     ENDLOOP.
@@ -281,6 +287,12 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
                                       is_remote   = <ls_remote>
                                       it_items    = lt_items_idx
                                       it_state    = lt_state_idx ).
+      " Check if same file exists in different location
+      READ TABLE it_local ASSIGNING <ls_local>
+        WITH KEY file-filename = <ls_remote>-filename.
+      IF sy-subrc = 0 AND <ls_local>-file-sha1 = <ls_remote>-sha1.
+        <ls_result>-packmove = abap_true.
+      ENDIF.
     ENDLOOP.
 
     SORT rt_results BY
@@ -291,9 +303,27 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_object_package.
+    DATA: lv_name    TYPE devclass,
+          li_package TYPE REF TO zif_abapgit_sap_package.
+
+    rv_devclass = zcl_abapgit_factory=>get_tadir( )->get_object_package(
+      iv_object   = iv_object
+      iv_obj_name = iv_obj_name ).
+    IF rv_devclass IS INITIAL AND iv_object = 'DEVC' AND iv_obj_name(1) = '$'.
+      " local packages usually have no tadir entry
+      lv_name = iv_obj_name.
+      li_package = zcl_abapgit_factory=>get_sap_package( lv_name ).
+      IF li_package->exists( ) = abap_true.
+        rv_devclass = lv_name.
+      ENDIF.
+    ENDIF.
+  ENDMETHOD.
+
+
   METHOD identify_object.
 
-    DATA: lv_name TYPE tadir-obj_name,
+    DATA: lv_name TYPE string,
           lv_type TYPE string,
           lv_ext  TYPE string.
 
@@ -305,14 +335,18 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     REPLACE ALL OCCURRENCES OF '#' IN lv_type WITH '/'.
     REPLACE ALL OCCURRENCES OF '#' IN lv_ext WITH '/'.
 
-    " Try to get a unique package name for DEVC by using the path
+    " The counter part to this logic must be maintained in ZCL_ABAPGIT_OBJECTS_FILES->FILENAME
     IF lv_type = 'DEVC'.
+      " Try to get a unique package name for DEVC by using the path
       ASSERT lv_name = 'PACKAGE'.
       lv_name = zcl_abapgit_folder_logic=>get_instance( )->path_to_package(
         iv_top                  = iv_devclass
         io_dot                  = io_dot
         iv_create_if_not_exists = abap_false
         iv_path                 = iv_path ).
+    ELSE.
+      " Get original object name
+      lv_name = cl_http_utility=>unescape_url( lv_name ).
     ENDIF.
 
     CLEAR es_item.
@@ -330,6 +364,7 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
           ls_file         TYPE zif_abapgit_definitions=>ty_file_signature,
           lt_res_sort     LIKE it_results,
           lt_item_idx     LIKE it_results,
+          lt_move_idx     LIKE it_results,
           lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_res1> LIKE LINE OF it_results,
@@ -341,11 +376,28 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    " Find all objects which were assigned to a different package
+    LOOP AT it_results ASSIGNING <ls_res1>
+      WHERE lstate = zif_abapgit_definitions=>c_state-added AND packmove = abap_true.
+      READ TABLE lt_move_idx TRANSPORTING NO FIELDS
+        WITH KEY obj_type = <ls_res1>-obj_type obj_name = <ls_res1>-obj_name
+        BINARY SEARCH. " Sorted since it_result is sorted
+      IF sy-subrc <> 0.
+        ii_log->add( iv_msg  = |Changed package assignment for object { <ls_res1>-obj_type } { <ls_res1>-obj_name }|
+                     iv_type = 'W'
+                     iv_rc   = '5' ).
+        APPEND INITIAL LINE TO lt_move_idx ASSIGNING <ls_res2>.
+        <ls_res2>-obj_type = <ls_res1>-obj_type.
+        <ls_res2>-obj_name = <ls_res1>-obj_name.
+        <ls_res2>-path     = <ls_res1>-path.
+      ENDIF.
+    ENDLOOP.
+
     " Collect object indexe
     lt_res_sort = it_results.
     SORT lt_res_sort BY obj_type ASCENDING obj_name ASCENDING.
 
-    LOOP AT it_results ASSIGNING <ls_res1> WHERE NOT obj_type IS INITIAL.
+    LOOP AT it_results ASSIGNING <ls_res1> WHERE NOT obj_type IS INITIAL AND packmove = abap_false.
       IF NOT ( <ls_res1>-obj_type = ls_item-obj_type
           AND <ls_res1>-obj_name = ls_item-obj_name ).
         APPEND INITIAL LINE TO lt_item_idx ASSIGNING <ls_res2>.
@@ -357,8 +409,8 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     ENDLOOP.
 
     " Check files for one object is in the same folder
-
-    LOOP AT it_results ASSIGNING <ls_res1> WHERE NOT obj_type IS INITIAL AND obj_type <> 'DEVC'.
+    LOOP AT it_results ASSIGNING <ls_res1>
+      WHERE NOT obj_type IS INITIAL AND obj_type <> 'DEVC' AND packmove = abap_false.
       READ TABLE lt_item_idx ASSIGNING <ls_res2>
         WITH KEY obj_type = <ls_res1>-obj_type obj_name = <ls_res1>-obj_name
         BINARY SEARCH. " Sorted above
@@ -367,14 +419,14 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
         ii_log->add( iv_msg = |Files for object { <ls_res1>-obj_type } {
                        <ls_res1>-obj_name } are not placed in the same folder|
                      iv_type = 'W'
-                     iv_rc    = '1' ) ##no_text.
+                     iv_rc   = '1' ).
       ENDIF.
     ENDLOOP.
 
     " Check that objects are created in package corresponding to folder
     lo_folder_logic = zcl_abapgit_folder_logic=>get_instance( ).
     LOOP AT it_results ASSIGNING <ls_res1>
-        WHERE NOT package IS INITIAL AND NOT path IS INITIAL.
+      WHERE NOT package IS INITIAL AND NOT path IS INITIAL AND packmove = abap_false.
       lv_path = lo_folder_logic->package_to_path(
         iv_top     = iv_top
         io_dot     = io_dot
@@ -383,24 +435,24 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
         ii_log->add( iv_msg = |Package and path does not match for object, {
                        <ls_res1>-obj_type } { <ls_res1>-obj_name }|
                      iv_type = 'W'
-                     iv_rc    = '2' ) ##no_text.
+                     iv_rc   = '2' ).
       ENDIF.
     ENDLOOP.
 
     " Check for multiple files with same filename
     SORT lt_res_sort BY filename ASCENDING.
 
-    LOOP AT lt_res_sort ASSIGNING <ls_res1> WHERE obj_type <> 'DEVC'.
+    LOOP AT lt_res_sort ASSIGNING <ls_res1> WHERE obj_type <> 'DEVC' AND packmove = abap_false.
       IF <ls_res1>-filename IS NOT INITIAL AND <ls_res1>-filename = ls_file-filename.
         ii_log->add( iv_msg  = |Multiple files with same filename, { <ls_res1>-filename }|
                      iv_type = 'W'
-                     iv_rc   = '3' ) ##no_text.
+                     iv_rc   = '3' ).
       ENDIF.
 
       IF <ls_res1>-filename IS INITIAL.
         ii_log->add( iv_msg  = |Filename is empty for object { <ls_res1>-obj_type } { <ls_res1>-obj_name }|
                      iv_type = 'W'
-                     iv_rc   = '4' ) ##no_text.
+                     iv_rc   = '4' ).
       ENDIF.
 
       MOVE-CORRESPONDING <ls_res1> TO ls_file.
@@ -453,22 +505,5 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
       io_dot     = lo_dot_abapgit
       iv_top     = io_repo->get_package( ) ).
 
-  ENDMETHOD.
-
-  METHOD get_object_package.
-    DATA: lv_name TYPE devclass,
-          lo_package     TYPE REF TO zif_abapgit_sap_package.
-
-    rv_devclass = zcl_abapgit_factory=>get_tadir( )->get_object_package(
-      iv_object   = iv_object
-      iv_obj_name = iv_obj_name ).
-    IF rv_devclass IS INITIAL AND iv_object = 'DEVC' AND iv_obj_name(1) = '$'.
-      " local packages usually have no tadir entry
-      lv_name = iv_obj_name.
-      lo_package = zcl_abapgit_factory=>get_sap_package( lv_name ).
-      IF lo_package->exists(  ) = abap_true.
-        rv_devclass = lv_name.
-      ENDIF.
-    ENDIF.
   ENDMETHOD.
 ENDCLASS.

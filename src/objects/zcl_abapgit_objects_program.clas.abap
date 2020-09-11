@@ -149,9 +149,6 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
         VALUE(rt_tpool) TYPE zif_abapgit_definitions=>ty_tpool_tt .
   PRIVATE SECTION.
     METHODS:
-      condense_flow
-        EXPORTING et_spaces TYPE ty_spaces_tt
-        CHANGING  ct_flow   TYPE swydyflow,
       uncondense_flow
         IMPORTING it_flow        TYPE swydyflow
                   it_spaces      TYPE ty_spaces_tt
@@ -159,7 +156,7 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
 
     CLASS-METHODS auto_correct_cua_adm
       IMPORTING
-        is_cua TYPE zcl_abapgit_objects_program=>ty_cua
+        is_cua TYPE ty_cua
       CHANGING
         cs_adm TYPE rsmpe_adm.
 
@@ -224,29 +221,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
       IF <ls_pfk>-code+6(14) IS INITIAL AND <ls_pfk>-code(6) CO lc_num_only.
         cs_adm-pfkcode = <ls_pfk>-code.
       ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
-  METHOD condense_flow.
-
-    DATA: lv_spaces LIKE LINE OF et_spaces.
-
-    FIELD-SYMBOLS: <ls_flow> LIKE LINE OF ct_flow.
-
-
-    CLEAR et_spaces.
-
-    LOOP AT ct_flow ASSIGNING <ls_flow>.
-      lv_spaces = 0.
-
-      WHILE NOT <ls_flow>-line IS INITIAL AND <ls_flow>-line(1) = space.
-        lv_spaces = lv_spaces + 1.
-        <ls_flow>-line = <ls_flow>-line+1.
-      ENDWHILE.
-
-      APPEND lv_spaces TO et_spaces.
     ENDLOOP.
 
   ENDMETHOD.
@@ -327,7 +301,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
   METHOD deserialize_dynpros.
 
-    CONSTANTS lc_rpyty_force_off TYPE char01 VALUE '/' ##NO_TEXT.
+    CONSTANTS lc_rpyty_force_off TYPE c LENGTH 1 VALUE '/'.
 
     DATA: lv_name   TYPE dwinactiv-obj_name,
           ls_dynpro LIKE LINE OF it_dynpros.
@@ -338,6 +312,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 * the program to dump since it_dynpros cannot be changed
     LOOP AT it_dynpros INTO ls_dynpro.
 
+      " todo: kept for compatibility, remove after grace period #3680
       ls_dynpro-flow_logic = uncondense_flow(
         it_flow = ls_dynpro-flow_logic
         it_spaces = ls_dynpro-spaces ).
@@ -482,6 +457,11 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
         IF sy-msgid = 'EU' AND sy-msgno = '510'.
           zcx_abapgit_exception=>raise( 'User is currently editing program' ).
+        ELSEIF sy-msgid = 'EU' AND sy-msgno = '522'.
+* for generated table maintenance function groups, the author is set to SAP* instead of the user which
+* generates the function group. This hits some standard checks, pulling new code again sets the author
+* to the current user which avoids the check
+          zcx_abapgit_exception=>raise( |Delete function group and pull again, { is_progdir-name } (EU522)| ).
         ELSE.
           zcx_abapgit_exception=>raise( |PROG { is_progdir-name }, updating error: { sy-msgid } { sy-msgno }| ).
         ENDIF.
@@ -547,6 +527,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
     ls_progdir_new-varcl   = is_progdir-varcl.
     ls_progdir_new-appl    = is_progdir-appl.
     ls_progdir_new-rstat   = is_progdir-rstat.
+    ls_progdir_new-sqlx    = is_progdir-sqlx.
+    ls_progdir_new-uccheck = is_progdir-uccheck.
 
     CALL FUNCTION 'UPDATE_PROGDIR'
       EXPORTING
@@ -598,7 +580,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
     IF it_tpool IS INITIAL.
       IF iv_is_include = abap_false OR lv_state = 'A'.
         DELETE TEXTPOOL iv_program "Remove initial description from textpool if
-          LANGUAGE iv_program      "original program does not have a textpool
+          LANGUAGE lv_language     "original program does not have a textpool
           STATE lv_state.
 
         lv_delete = abap_true.
@@ -636,10 +618,10 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
 
   METHOD is_any_dynpro_locked.
 
-    DATA: lt_dynpros TYPE zcl_abapgit_objects_program=>ty_dynpro_tt,
+    DATA: lt_dynpros TYPE ty_dynpro_tt,
           lv_object  TYPE seqg3-garg.
 
-    FIELD-SYMBOLS: <ls_dynpro> TYPE zcl_abapgit_objects_program=>ty_dynpro.
+    FIELD-SYMBOLS: <ls_dynpro> TYPE ty_dynpro.
 
     lt_dynpros = serialize_dynpros( iv_program ).
 
@@ -876,8 +858,6 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
       <ls_dynpro>-containers = lt_containers.
       <ls_dynpro>-fields     = lt_fields_to_containers.
 
-      condense_flow( IMPORTING et_spaces = <ls_dynpro>-spaces
-                     CHANGING ct_flow = lt_flow_logic ).
       <ls_dynpro>-flow_logic = lt_flow_logic.
 
     ENDLOOP.
@@ -907,6 +887,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
     CALL FUNCTION 'RPY_PROGRAM_READ'
       EXPORTING
         program_name     = lv_program_name
+        with_includelist = abap_false
         with_lowercase   = abap_true
       TABLES
         source_extended  = lt_source

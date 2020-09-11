@@ -5,9 +5,9 @@ CLASS zcl_abapgit_gui_page_bkg_run DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_gui_page_hotkey.
 
-    METHODS constructor .
+    METHODS constructor
+      RAISING zcx_abapgit_exception.
 
     METHODS zif_abapgit_gui_event_handler~on_event
         REDEFINITION .
@@ -28,7 +28,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG_RUN IMPLEMENTATION.
 
   METHOD constructor.
     super->constructor( ).
-    ms_control-page_title = 'BACKGROUND_RUN'.
+    ms_control-page_title = 'Backgorund Run'.
   ENDMETHOD.
 
 
@@ -38,13 +38,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG_RUN IMPLEMENTATION.
 
     run( ).
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( '<div id="toc">' ).
+    ri_html->add( '<div id="toc">' ).
     LOOP AT mt_text INTO lv_text.
-      ro_html->add( '<pre>' && lv_text && '</pre><br>' ).
+      ri_html->add( '<pre>' && lv_text && '</pre><br>' ).
     ENDLOOP.
-    ro_html->add( '</div>' ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -70,11 +70,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG_RUN IMPLEMENTATION.
       CATCH zcx_abapgit_exception INTO lx_error.
         APPEND lx_error->get_text( ) TO mt_text.
     ENDTRY.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 

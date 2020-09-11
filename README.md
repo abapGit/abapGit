@@ -1,6 +1,6 @@
-[![Build Status](https://travis-ci.org/larshp/abapGit.svg?branch=master)](https://travis-ci.org/larshp/abapGit)
-[![abaplint](https://app.abaplint.org/badges/larshp/abapGit)](https://app.abaplint.org/project/larshp/abapGit)
+![CI](https://github.com/larshp/abapGit/workflows/CI/badge.svg)
 [![Slack](https://abapgit-slackinviter.herokuapp.com/badge.svg)](https://abapgit-slackinviter.herokuapp.com/)
+[![abap package version](https://img.shields.io/endpoint?url=https://shield.abap.space/version-shield-json/github/larshp/abapGit/src/zif_abapgit_version.intf.abap/gc_abap_version&label=version)](https://github.com/larshp/abapGit/blob/master/src/zif_abapgit_version.intf.abap)
 
 # abapGit
 
@@ -18,7 +18,7 @@ Works with: [GitHub](https://github.com/),
 
 ABAP Version: 702 or higher
 
-Latest build: [zabapgit.abap](https://raw.githubusercontent.com/abapGit/build/master/zabapgit.abap)  
+Latest build: [zabapgit.abap](https://raw.githubusercontent.com/abapGit/build/master/zabapgit.abap)
 *NB: Some people reported that browsers have issues displaying the file with 75k lines. The easiest solution is to "Save as" the link above and then open it with any editor/viewer (notepad included) and copy from there.*
 
 Recommend using SAP GUI for Windows, there are multiple issues related to running abapGit and Java SAP GUI. Focus is on supporting [ADT](https://github.com/abapGit/ADT_Frontend) instead of supporting Java SAP GUI.
@@ -43,7 +43,7 @@ See [dotabap.org](http://dotabap.org) or [this page](https://docs.abapgit.org/ot
 ## FAQ
 For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/larshp/abapGit/issues)
 
-![abapgit](http://docs.abapgit.org/img/abapgit_1_73_0.png)
+![abapgit](http://docs.abapgit.org/img/abapgit_1_94_0.png)
 
 ## Credits and references
 

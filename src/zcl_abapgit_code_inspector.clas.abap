@@ -18,10 +18,6 @@ CLASS zcl_abapgit_code_inspector DEFINITION
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
-
-    TYPES:
-      ty_tdevc_tt TYPE STANDARD TABLE OF tdevc WITH DEFAULT KEY .
-
     DATA mv_package TYPE devclass .
 
     METHODS create_variant
@@ -36,27 +32,30 @@ CLASS zcl_abapgit_code_inspector DEFINITION
         !io_set TYPE REF TO cl_ci_objectset
       RAISING
         zcx_abapgit_exception .
+    METHODS skip_object
+      IMPORTING
+        !is_obj        TYPE scir_objs
+      RETURNING
+        VALUE(rv_skip) TYPE abap_bool.
   PRIVATE SECTION.
 
     DATA mv_success TYPE abap_bool .
+
+    TYPES: t_run_mode TYPE c LENGTH 1.
     CONSTANTS:
       BEGIN OF co_run_mode,
-        run_with_popup   TYPE sychar01 VALUE 'P',
-        run_after_popup  TYPE sychar01 VALUE 'A',
-        run_via_rfc      TYPE sychar01 VALUE 'R',
-        run_in_batch     TYPE sychar01 VALUE 'B',
-        run_loc_parallel TYPE sychar01 VALUE 'L',
-        run_direct       TYPE sychar01 VALUE 'L',
+        run_with_popup   TYPE t_run_mode VALUE 'P',
+        run_after_popup  TYPE t_run_mode VALUE 'A',
+        run_via_rfc      TYPE t_run_mode VALUE 'R',
+        run_in_batch     TYPE t_run_mode VALUE 'B',
+        run_loc_parallel TYPE t_run_mode VALUE 'L',
+        run_direct       TYPE t_run_mode VALUE 'L',
       END OF co_run_mode .
     DATA mo_inspection TYPE REF TO cl_ci_inspection .
     DATA mv_name TYPE sci_objs .
-    DATA mv_run_mode TYPE sychar01 .
+    DATA mv_run_mode TYPE c LENGTH 1 .
 
-    METHODS find_all_subpackages
-      IMPORTING
-        !iv_package        TYPE devclass
-      RETURNING
-        VALUE(rt_packages) TYPE ty_tdevc_tt .
+
     METHODS create_objectset
       RETURNING
         VALUE(ro_set) TYPE REF TO cl_ci_objectset .
@@ -69,12 +68,16 @@ CLASS zcl_abapgit_code_inspector DEFINITION
         zcx_abapgit_exception .
     METHODS create_inspection
       IMPORTING
-        !io_set              TYPE REF TO cl_ci_objectset
-        !io_variant          TYPE REF TO cl_ci_checkvariant
+        io_set               TYPE REF TO cl_ci_objectset
+        io_variant           TYPE REF TO cl_ci_checkvariant
       RETURNING
         VALUE(ro_inspection) TYPE REF TO cl_ci_inspection
       RAISING
         zcx_abapgit_exception .
+
+    METHODS decide_run_mode
+      RETURNING
+        VALUE(rv_run_mode) TYPE t_run_mode.
 ENDCLASS.
 
 
@@ -128,13 +131,7 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
     " Because we want to persist them so we can run it in parallel.
     " Both are deleted afterwards.
     mv_name = |{ sy-uname }_{ sy-datum }_{ sy-uzeit }|.
-
-    " We have to disable parallelization in batch because of lock errors.
-    IF sy-batch = abap_true.
-      mv_run_mode = co_run_mode-run_via_rfc.
-    ELSE.
-      mv_run_mode = co_run_mode-run_loc_parallel.
-    ENDIF.
+    mv_run_mode = decide_run_mode( ).
 
   ENDMETHOD.
 
@@ -177,26 +174,43 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
 
   METHOD create_objectset.
 
-    DATA: lt_objs     TYPE scit_objs,
-          lt_packages TYPE ty_tdevc_tt.
+    DATA: lt_objs       TYPE scit_objs,
+          ls_obj        TYPE scir_objs,
+          lt_objs_check TYPE scit_objs,
+          ls_item       TYPE zif_abapgit_definitions=>ty_item,
+          lt_packages   TYPE zif_abapgit_sap_package=>ty_devclass_tt.
 
-
-    lt_packages = find_all_subpackages( mv_package ).
-    IF lines( lt_packages ) = 0.
-      RETURN.
-    ENDIF.
+    lt_packages = zcl_abapgit_factory=>get_sap_package( mv_package )->list_subpackages( ).
+    INSERT mv_package INTO TABLE lt_packages.
 
     SELECT object AS objtype obj_name AS objname
       FROM tadir
       INTO CORRESPONDING FIELDS OF TABLE lt_objs
       FOR ALL ENTRIES IN lt_packages
-      WHERE devclass = lt_packages-devclass
+      WHERE devclass = lt_packages-table_line
       AND delflag = abap_false
       AND pgmid = 'R3TR'.                               "#EC CI_GENBUFF
 
+    LOOP AT lt_objs INTO ls_obj.
+
+      IF skip_object( ls_obj ) = abap_true.
+        CONTINUE.
+      ENDIF.
+
+      ls_item-obj_type = ls_obj-objtype.
+      ls_item-obj_name = ls_obj-objname.
+
+      IF zcl_abapgit_objects=>exists( ls_item ) = abap_false.
+        CONTINUE.
+      ENDIF.
+
+      INSERT ls_obj INTO TABLE lt_objs_check.
+
+    ENDLOOP.
+
     ro_set = cl_ci_objectset=>save_from_list(
       p_name    = mv_name
-      p_objects = lt_objs ).
+      p_objects = lt_objs_check ).
 
   ENDMETHOD.
 
@@ -228,26 +242,19 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD find_all_subpackages.
+  METHOD decide_run_mode.
 
-* TODO, in the future, move this method to the ABAPGIT global package class
+    DATA: lo_settings TYPE REF TO zcl_abapgit_settings.
+    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
 
-    DATA: ls_package LIKE LINE OF rt_packages,
-          lt_found   LIKE rt_packages,
-          lt_sub     LIKE rt_packages.
-
-
-    SELECT SINGLE * FROM tdevc INTO ls_package WHERE devclass = iv_package.
-    ASSERT sy-subrc = 0.
-    APPEND ls_package TO rt_packages.
-
-    SELECT * FROM tdevc APPENDING TABLE lt_sub
-      WHERE parentcl = ls_package-devclass.
-
-    LOOP AT lt_sub INTO ls_package.
-      lt_found = find_all_subpackages( ls_package-devclass ).
-      APPEND LINES OF lt_found TO rt_packages.
-    ENDLOOP.
+    IF sy-batch = abap_true.
+      " We have to disable parallelization in batch because of lock errors.
+      rv_run_mode = co_run_mode-run_via_rfc.
+    ELSEIF lo_settings->get_parallel_proc_disabled( ) = abap_false.
+      rv_run_mode = co_run_mode-run_loc_parallel.
+    ELSE.
+      rv_run_mode = co_run_mode-run_via_rfc.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -265,9 +272,33 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Code inspector run failed. Subrc = { sy-subrc }| ).
     ENDIF.
 
-    io_inspection->plain_list(
-      IMPORTING
-        p_list = rt_list ).
+    io_inspection->plain_list( IMPORTING p_list = rt_list ).
+
+    SORT rt_list BY objtype objname test code sobjtype sobjname line col.
+
+    DELETE ADJACENT DUPLICATES FROM rt_list.
+
+  ENDMETHOD.
+
+
+  METHOD skip_object.
+
+    DATA: ls_trdir TYPE trdir.
+
+    CASE is_obj-objtype.
+      WHEN 'PROG'.
+
+        SELECT SINGLE *
+          INTO ls_trdir
+          FROM trdir
+          WHERE name = is_obj-objname.
+
+        rv_skip = boolc( ls_trdir-subc = 'I' ). " Include program.
+
+      WHEN OTHERS.
+        rv_skip = abap_false.
+
+    ENDCASE.
 
   ENDMETHOD.
 

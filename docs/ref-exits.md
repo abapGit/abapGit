@@ -39,7 +39,7 @@ Can be used for setting logon tickets eg. in connection with abapGitServer conne
 [https://gist.github.com/larshp/71609852a79aa1e877f8c4020d18feac](https://gist.github.com/larshp/71609852a79aa1e877f8c4020d18feac)
 
 ### CHANGE_TADIR
-Can be used to skip certian objects, or force a different object setup than currently in TADIR.
+Can be used to skip certain objects, or force a different object setup than currently in TADIR.
 
 ### GET_SSL_ID
 Possibility to change the default `ANONYM` ssl id to something system specific
@@ -47,3 +47,6 @@ Possibility to change the default `ANONYM` ssl id to something system specific
 ### CUSTOM_SERIALIZE_ABAP_CLIF
 Allows for a custom serializer to be used for global classes' CLIF sources. See [#2321](https://github.com/larshp/abapGit/issues/2321) and [#2491](https://github.com/larshp/abapGit/pull/2491) for use cases.  
 This [example implementation](https://gist.github.com/flaiker/999c8165b89131608b05cd371529fef5) forces the old class serializer to be used for specific packages.
+
+### DESERIALIZE_POSTPROCESS
+Can be used for any postprocessing operation for deserialized objects. Since it is a postprocessing step, only logs can be added to II_LOG and one should not terminate the process by raising exception, which may lead to inconsistencies.

@@ -7,16 +7,18 @@ order: 20
 Type   | Description   | Supported
 :------------ | :------------ | ------------:
 ACID | Checkpoint Group | Yes
+AMSD | Logical Database Schema | Yes
 AOBJ | Archiving Object | [#804](https://github.com/larshp/abapGit/issues/804)
+AREA | InfoArea | Yes
 ASFC | Field Catalog | Yes
 ASIS | Archiving Information Structure | [#1579](https://github.com/larshp/abapGit/issues/1579)
 AUTH | Authorization Check Fields | Yes
 AVAS | Classification | [#1360](https://github.com/larshp/abapGit/issues/1360)
-BDEF | Behaviour Definition | [#2021](https://github.com/larshp/abapGit/issues/2021)
+BDEF | Behaviour Definition | Yes
 BMFR | Application Component | [#2108](https://github.com/larshp/abapGit/issues/2108)
 BOBF | BOPF: Business Object Model | [#165](https://github.com/larshp/abapGit/issues/165)
 CHAR | Object characteristic | Yes
-CHDO | Change Document Object | [#802](https://github.com/larshp/abapGit/issues/802)
+CHDO | Change Document Object | Yes
 CLAS | Class (ABAP Objects) | Yes
 CMOD | Customer enhancement projects | [#151](https://github.com/larshp/abapGit/issues/151)
 CMPT | Code Composer Template | Yes
@@ -31,7 +33,9 @@ DIAL | Dialog Module | Yes
 DOCT | General Text | Yes
 DOCV | Documentation (Independent) | Yes
 DOMA | Domain | Yes
+DRUL | Dependency Rule | Yes
 DSYS | Chapter of a Book Structure | Yes
+DTDC | Dynamic Cache | Yes
 DTEL | Data Element | Yes
 ECAT | eCATT Test Script | Yes
 ECSD | eCATT System Data Container | Yes
@@ -59,6 +63,7 @@ IAXU | ITS: XML Templates for HTML Templates | Yes
 IDOC | IDoc Type | Yes
 IEXT | Enhancement | Yes
 INTF | Interface (ABAP objects) | Yes
+IOBJ | BW: InfoObject | Yes
 IWMO | Gateway Business Suite Enablement - Model | Yes
 IWOM | Gateway: Model Metadata | Yes
 IWPR | Gateway Business Suite Enablement - Service Builder Project | Yes
@@ -69,7 +74,9 @@ JOBD | Technical Job Definition | Yes
 LPDC | Launchpad short texts | [#107](https://github.com/larshp/abapGit/issues/107)
 MSAG | Message Class | Yes
 NROB | Number Range Objects | Yes
-OTGR | Object type group | [#1515](https://github.com/larshp/abapGit/issues/1515)
+OA2P | OAuth2 Profile | Yes
+ODSO | DataStore Object | Yes
+OTGR | Object type group | Yes
 PARA | SPA/GPA Parameters | Yes
 PDTS | Standard Task | [#153](https://github.com/larshp/abapGit/issues/153)
 PDWS | Workflow templates | [#154](https://github.com/larshp/abapGit/issues/154)
@@ -82,6 +89,7 @@ SAJT | Application job template | [1581](https://github.com/larshp/abapGit/issue
 SAMC | ABAP Messaging Channels | Yes
 SAPC | ABAP Push Channels | Yes
 SCP1 | BC Set or Customizing Profile | [#1004](https://github.com/larshp/abapGit/issues/1004)
+SCVI | Screen Variants | Yes
 SFBF | Business Function + Assignment | Yes
 SFBS | Business Function Set + Assignment | Yes
 SFPF | Form Object: Form | Yes
@@ -94,14 +102,17 @@ SHLP | Search Help | Yes
 SHMA | Shared Objects: Defined Area Attributes | Yes
 SICF | ICF Service | Yes
 SMIM | Info Object from the MIME Repository | Yes
-SMTG | OM: Email Template 
+SMTG | OM: Email Template | Yes
 SOTS | All Concepts (OTR) of a Package - Long Texts | Yes
 SPLO | Format Types | Yes
 SPRX | Proxy Object | Yes
 SQSC | Database Procedure Proxy | Yes
 SRFC | RFC Service | Yes
+SRVB | Service Binding | Yes
+SRVD | Service Definition | Yes
 SSFO | SAP Smart Form | Yes
 SSST | SAP Smart Style | Yes
+STVI | Transaction Variants | Yes
 STYL | SAPscript style | Yes
 SUCU | Authorization Groups (TBRG_AUTH) | Yes
 SUSC | Authorization object class | Yes
@@ -122,7 +133,7 @@ W3HT | Web Reporting/Internet Transaction Server HTML Templates | Yes
 W3MI | Web Reporting/Internet Transaction Server MIME Types(binary | Yes
 WAPA | BSP (Business Server Pages) Application | Yes
 WDCA | Web Dynpro Application Configuration | [#79](https://github.com/larshp/abapGit/issues/79)
-WDCC | Web Dynpro Component Configuration | [#78](https://github.com/larshp/abapGit/issues/78)
+WDCC | Web Dynpro Component Configuration | Yes
 WDYA | Web Dynpro Application | Yes
 WDYN | Web Dynpro Component | Yes
 WEBI | Virtual End Point | Yes

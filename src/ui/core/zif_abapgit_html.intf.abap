@@ -15,6 +15,14 @@ INTERFACE zif_abapgit_html PUBLIC.
       crossout TYPE c VALUE 'X',
     END OF c_html_opt .
 
+  TYPES:
+    tty_table_of TYPE STANDARD TABLE OF REF TO zif_abapgit_html WITH DEFAULT KEY.
+
+  DATA mv_chunk_title TYPE string READ-ONLY. " Primarily for debug of posponed html parts
+
+  METHODS set_title
+    IMPORTING
+      iv_title TYPE string.
   METHODS add
     IMPORTING
       !ig_chunk TYPE any .
@@ -38,8 +46,9 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_title TYPE string OPTIONAL.
   METHODS add_checkbox
     IMPORTING
-      iv_id TYPE string.
-  CLASS-METHODS a
+      iv_id      TYPE string
+      iv_checked TYPE abap_bool OPTIONAL.
+  METHODS a
     IMPORTING
       !iv_txt       TYPE string
       !iv_act       TYPE string
@@ -51,12 +60,20 @@ INTERFACE zif_abapgit_html PUBLIC.
       !iv_title     TYPE string OPTIONAL
     RETURNING
       VALUE(rv_str) TYPE string .
-  CLASS-METHODS icon
+  METHODS icon
     IMPORTING
       !iv_name      TYPE string
       !iv_hint      TYPE string OPTIONAL
       !iv_class     TYPE string OPTIONAL
+      !iv_onclick   TYPE string OPTIONAL
     RETURNING
       VALUE(rv_str) TYPE string .
+
+  METHODS add_icon
+    IMPORTING
+      !iv_name    TYPE string
+      !iv_hint    TYPE string OPTIONAL
+      !iv_class   TYPE string OPTIONAL
+      !iv_onclick TYPE string OPTIONAL .
 
 ENDINTERFACE.

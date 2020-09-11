@@ -21,9 +21,14 @@ CLASS zcl_abapgit_convert DEFINITION
         VALUE(rv_xstring) TYPE xstring .
     CLASS-METHODS xstring_to_string_utf8
       IMPORTING
-        !iv_data         TYPE xstring
+        !iv_data         TYPE xsequence
       RETURNING
         VALUE(rv_string) TYPE string .
+    CLASS-METHODS string_to_xstring_utf8_bom
+      IMPORTING
+        !iv_string        TYPE string
+      RETURNING
+        VALUE(rv_xstring) TYPE xstring .
     CLASS-METHODS xstring_to_int
       IMPORTING
         !iv_xstring TYPE xstring
@@ -43,43 +48,46 @@ CLASS zcl_abapgit_convert DEFINITION
         VALUE(rt_lines) TYPE string_table .
     CLASS-METHODS conversion_exit_isola_output
       IMPORTING
-        iv_spras        TYPE spras
+        !iv_spras       TYPE spras
       RETURNING
-        VALUE(rv_spras) TYPE laiso.
+        VALUE(rv_spras) TYPE laiso .
     CLASS-METHODS alpha_output
       IMPORTING
-        iv_val        TYPE clike
+        !iv_val       TYPE clike
       RETURNING
-        VALUE(rv_str) TYPE string.
-
+        VALUE(rv_str) TYPE string .
     CLASS-METHODS string_to_xstring
       IMPORTING
-        iv_str         TYPE string
+        !iv_str        TYPE string
       RETURNING
-        VALUE(rv_xstr) TYPE xstring.
-
+        VALUE(rv_xstr) TYPE xstring .
+    CLASS-METHODS string_to_tab
+      IMPORTING
+        !iv_str       TYPE string
+      EXPORTING
+        VALUE(et_tab) TYPE STANDARD TABLE .
     CLASS-METHODS base64_to_xstring
       IMPORTING
-        iv_base64      TYPE string
+        !iv_base64     TYPE string
       RETURNING
-        VALUE(rv_xstr) TYPE xstring.
-
+        VALUE(rv_xstr) TYPE xstring .
     CLASS-METHODS bintab_to_xstring
       IMPORTING
-        it_bintab      TYPE lvc_t_mime
-        iv_size        TYPE i
+        !it_bintab     TYPE lvc_t_mime
+        !iv_size       TYPE i
       RETURNING
-        VALUE(rv_xstr) TYPE xstring.
-
+        VALUE(rv_xstr) TYPE xstring .
     CLASS-METHODS xstring_to_bintab
       IMPORTING
-        iv_xstr   TYPE xstring
+        !iv_xstr   TYPE xstring
       EXPORTING
-        ev_size   TYPE i
-        et_bintab TYPE lvc_t_mime.
-
+        !ev_size   TYPE i
+        !et_bintab TYPE lvc_t_mime .
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    CLASS-DATA go_convert_out TYPE REF TO cl_abap_conv_out_ce .
+    CLASS-DATA go_convert_in TYPE REF TO cl_abap_conv_in_ce .
 ENDCLASS.
 
 
@@ -197,6 +205,21 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD string_to_tab.
+
+    CLEAR et_tab[].
+    CALL FUNCTION 'SCMS_STRING_TO_FTEXT'
+      EXPORTING
+        text      = iv_str
+*     IMPORTING
+*       LENGTH    = LENGTH
+      TABLES
+        ftext_tab = et_tab.
+    ASSERT sy-subrc = 0.
+
+  ENDMETHOD.
+
+
   METHOD string_to_xstring.
 
     CALL FUNCTION 'SCMS_STRING_TO_XSTRING'
@@ -213,20 +236,42 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
 
   METHOD string_to_xstring_utf8.
 
-    DATA: lo_obj TYPE REF TO cl_abap_conv_out_ce.
-
-
     TRY.
-        lo_obj = cl_abap_conv_out_ce=>create( encoding = 'UTF-8' ).
+        IF go_convert_out IS INITIAL.
+          go_convert_out = cl_abap_conv_out_ce=>create( encoding = 'UTF-8' ).
+        ENDIF.
 
-        lo_obj->convert( EXPORTING data = iv_string
-                         IMPORTING buffer = rv_xstring ).
+        go_convert_out->convert(
+          EXPORTING data = iv_string
+          IMPORTING buffer = rv_xstring ).
 
       CATCH cx_parameter_invalid_range
             cx_sy_codepage_converter_init
             cx_sy_conversion_codepage
             cx_parameter_invalid_type.                  "#EC NO_HANDLER
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD string_to_xstring_utf8_bom.
+
+    DATA: lv_hex     TYPE x LENGTH 1 VALUE '23',
+          lv_hex_bom TYPE x LENGTH 3 VALUE 'EFBBBF'.
+
+    rv_xstring = string_to_xstring_utf8( iv_string ).
+
+    "unicode systems always add the byte order mark to the xml, while non-unicode does not
+    "in class ZCL_ABAPGIT_XML~TO_XML byte order mark was added to XML as #
+    "In non-unicode systems zcl_abapgit_convert=>xstring_to_string_utf8( cl_abap_char_utilities=>byte_order_mark_utf8 )
+    "has result # as HEX 23 and not HEX EFBBBF.
+    "So we have to remove 23 first and add EFBBBF after to serialized string
+    IF rv_xstring(3) <> cl_abap_char_utilities=>byte_order_mark_utf8
+    AND rv_xstring(1) = lv_hex.
+      REPLACE FIRST OCCURRENCE
+        OF lv_hex IN rv_xstring WITH lv_hex_bom IN BYTE MODE.
+      ASSERT sy-subrc = 0.
+    ENDIF.
 
   ENDMETHOD.
 
@@ -262,18 +307,17 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
 
   METHOD xstring_to_string_utf8.
 
-    DATA: lv_len TYPE i,
-          lo_obj TYPE REF TO cl_abap_conv_in_ce.
-
-
     TRY.
-        lo_obj = cl_abap_conv_in_ce=>create(
-            input    = iv_data
-            encoding = 'UTF-8' ).
-        lv_len = xstrlen( iv_data ).
+        IF go_convert_in IS INITIAL.
+          go_convert_in = cl_abap_conv_in_ce=>create( encoding = 'UTF-8' ).
+        ENDIF.
 
-        lo_obj->read( EXPORTING n    = lv_len
-                      IMPORTING data = rv_string ).
+        go_convert_in->convert(
+          EXPORTING
+            input = iv_data
+            n     = xstrlen( iv_data )
+          IMPORTING
+            data  = rv_string ).
 
       CATCH cx_parameter_invalid_range
             cx_sy_codepage_converter_init

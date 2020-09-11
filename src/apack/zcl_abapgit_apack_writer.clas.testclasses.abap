@@ -10,6 +10,7 @@ CLASS ltcl_apack_manifest_writer IMPLEMENTATION.
 
     DATA: ls_apack_manifest_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor,
           lo_manifest_writer           TYPE REF TO zcl_abapgit_apack_writer,
+          lv_bool                      TYPE abap_bool,
           lv_actual_xml                TYPE string.
 
     ls_apack_manifest_descriptor-group_id = 'github.com/larshp'.
@@ -20,12 +21,19 @@ CLASS ltcl_apack_manifest_writer IMPLEMENTATION.
     lo_manifest_writer = zcl_abapgit_apack_writer=>create_instance( ls_apack_manifest_descriptor ).
     lv_actual_xml = lo_manifest_writer->serialize( ).
     cl_abap_unit_assert=>assert_not_initial( lv_actual_xml ).
-    cl_abap_unit_assert=>assert_true( boolc( contains( val = lv_actual_xml
-                                                       sub = '<ARTIFACT_ID>abapGit</ARTIFACT_ID>' ) ) ).
-    cl_abap_unit_assert=>assert_true( boolc( contains( val = lv_actual_xml
-                                                       sub = '<GROUP_ID>github.com/larshp</GROUP_ID>' ) ) ).
-    cl_abap_unit_assert=>assert_true( boolc( contains( val = lv_actual_xml
-                                                       sub = '<REPOSITORY_TYPE>abapGit</REPOSITORY_TYPE>' ) ) ).
+
+    lv_bool = boolc( contains( val = lv_actual_xml
+                               sub = '<ARTIFACT_ID>abapGit</ARTIFACT_ID>' ) ).
+    cl_abap_unit_assert=>assert_equals( act = lv_bool
+                                        exp = abap_true ).
+    lv_bool = boolc( contains( val = lv_actual_xml
+                               sub = '<GROUP_ID>github.com/larshp</GROUP_ID>' ) ).
+    cl_abap_unit_assert=>assert_equals( act = lv_bool
+                                        exp = abap_true ).
+    lv_bool = boolc( contains( val = lv_actual_xml
+                               sub = '<REPOSITORY_TYPE>abapGit</REPOSITORY_TYPE>' ) ).
+    cl_abap_unit_assert=>assert_equals( act = lv_bool
+                                        exp = abap_true ).
   ENDMETHOD.
 
 ENDCLASS.

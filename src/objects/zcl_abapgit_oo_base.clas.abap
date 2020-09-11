@@ -26,7 +26,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
+CLASS zcl_abapgit_oo_base IMPLEMENTATION.
 
 
   METHOD convert_attrib_to_vseoattrib.
@@ -143,14 +143,15 @@ CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
   METHOD zif_abapgit_oo_object_fnc~create_documentation.
     CALL FUNCTION 'DOCU_UPD'
       EXPORTING
-        id       = 'CL'
-        langu    = iv_language
-        object   = iv_object_name
+        id            = 'CL'
+        langu         = iv_language
+        object        = iv_object_name
+        no_masterlang = iv_no_masterlang
       TABLES
-        line     = it_lines
+        line          = it_lines
       EXCEPTIONS
-        ret_code = 1
-        OTHERS   = 2.
+        ret_code      = 1
+        OTHERS        = 2.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error from DOCU_UPD. Subrc = { sy-subrc }| ).
     ENDIF.
@@ -237,10 +238,20 @@ CLASS ZCL_ABAPGIT_OO_BASE IMPLEMENTATION.
 
 
   METHOD zif_abapgit_oo_object_fnc~read_descriptions.
-    SELECT * FROM seocompotx INTO TABLE rt_descriptions
-      WHERE clsname   = iv_obejct_name
-        AND descript <> ''
-      ORDER BY PRIMARY KEY.                               "#EC CI_SUBRC
+    IF iv_language IS INITIAL.
+      " load all languages
+      SELECT * FROM seocompotx INTO TABLE rt_descriptions
+             WHERE clsname   = iv_obejct_name
+               AND descript <> ''
+             ORDER BY PRIMARY KEY.                        "#EC CI_SUBRC
+    ELSE.
+      " load master language
+      SELECT * FROM seocompotx INTO TABLE rt_descriptions
+              WHERE clsname   = iv_obejct_name
+                AND langu = iv_language
+                AND descript <> ''
+              ORDER BY PRIMARY KEY.                       "#EC CI_SUBRC
+    ENDIF.
   ENDMETHOD.
 
 

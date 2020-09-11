@@ -39,6 +39,22 @@ CLASS zcl_abapgit_repo_online DEFINITION
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
         zcx_abapgit_exception .
+    METHODS get_commit_display_url
+      IMPORTING
+        !iv_hash      TYPE zif_abapgit_definitions=>ty_sha1
+      RETURNING
+        VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_switched_origin
+      RETURNING
+        VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-switched_origin .
+    METHODS switch_origin
+      IMPORTING
+        !iv_url       TYPE zif_abapgit_persistence=>ty_repo-url
+        !iv_overwrite TYPE abap_bool DEFAULT abap_false
+      RAISING
+        zcx_abapgit_exception .
 
     METHODS get_files_remote
         REDEFINITION .
@@ -86,7 +102,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     li_progress = zcl_abapgit_progress=>get_instance( 1 ).
 
     li_progress->show( iv_current = 1
-                       iv_text    = 'Fetch remote files' ) ##NO_TEXT.
+                       iv_text    = 'Fetch remote files' ).
 
     ls_pull = zcl_abapgit_git_porcelain=>pull(
       iv_url         = get_url( )
@@ -104,6 +120,33 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_commit_display_url.
+
+    DATA ls_result TYPE match_result.
+    FIELD-SYMBOLS <ls_provider_match> TYPE submatch_result.
+
+    rv_url = me->get_url( ).
+
+    FIND REGEX '^https:\/\/(?:www\.)?(github\.com|bitbucket\.org|gitlab\.com)\/' IN rv_url RESULTS ls_result.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |provider not yet supported| ).
+    ENDIF.
+    READ TABLE ls_result-submatches INDEX 1 ASSIGNING <ls_provider_match>.
+    CASE rv_url+<ls_provider_match>-offset(<ls_provider_match>-length).
+      WHEN 'github.com'.
+        REPLACE REGEX '\.git$' IN rv_url WITH space.
+        rv_url = rv_url && |/commit/| && iv_hash.
+      WHEN 'bitbucket.org'.
+        REPLACE REGEX '\.git$' IN rv_url WITH space.
+        rv_url = rv_url && |/commits/| && iv_hash.
+      WHEN 'gitlab.com'.
+        REPLACE REGEX '\.git$' IN rv_url WITH space.
+        rv_url = rv_url && |/-/commit/| && iv_hash.
+    ENDCASE.
+
+  ENDMETHOD.
+
+
   METHOD get_files_remote.
     fetch_remote( ).
     rt_files = super->get_files_remote( ).
@@ -111,7 +154,6 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
 
   METHOD get_name.
-    rv_name = zcl_abapgit_url=>name( ms_data-url ).
     rv_name = super->get_name( ).
     IF rv_name IS INITIAL.
       rv_name = zcl_abapgit_url=>name( ms_data-url ).
@@ -132,6 +174,11 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_switched_origin.
+    rv_url = ms_data-switched_origin.
+  ENDMETHOD.
+
+
   METHOD get_url.
     rv_url = ms_data-url.
   ENDMETHOD.
@@ -141,14 +188,14 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     DATA: lv_add         TYPE abap_bool,
           lo_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit,
-          lt_stage       TYPE zcl_abapgit_stage=>ty_stage_tt.
+          lt_stage       TYPE zif_abapgit_definitions=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
 
 
     lo_dot_abapgit = get_dot_abapgit( ).
     lt_stage = io_stage->get_all( ).
-    LOOP AT lt_stage ASSIGNING <ls_stage> WHERE method = zcl_abapgit_stage=>c_method-ignore.
+    LOOP AT lt_stage ASSIGNING <ls_stage> WHERE method = zif_abapgit_definitions=>c_method-ignore.
 
       lo_dot_abapgit->add_ignore(
         iv_path     = <ls_stage>-file-path
@@ -256,11 +303,49 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD switch_origin.
+
+    DATA lv_offs TYPE i.
+
+    IF iv_overwrite = abap_true. " For repo settings page
+      set( iv_switched_origin = iv_url ).
+      RETURN.
+    ENDIF.
+
+    IF iv_url IS INITIAL.
+      IF ms_data-switched_origin IS INITIAL.
+        RETURN.
+      ELSE.
+        lv_offs = find(
+          val = reverse( ms_data-switched_origin )
+          sub = '@' ).
+        IF lv_offs = -1.
+          zcx_abapgit_exception=>raise( 'Incorrect format of switched origin' ).
+        ENDIF.
+        lv_offs = strlen( ms_data-switched_origin ) - lv_offs - 1.
+        set_url( substring(
+          val = ms_data-switched_origin
+          len = lv_offs ) ).
+        set_branch_name( substring(
+          val = ms_data-switched_origin
+          off = lv_offs + 1 ) ).
+        set( iv_switched_origin = '' ).
+      ENDIF.
+    ELSEIF ms_data-switched_origin IS INITIAL.
+      set( iv_switched_origin = ms_data-url && '@' && ms_data-branch_name ).
+      set_url( iv_url ).
+    ELSE.
+      zcx_abapgit_exception=>raise( 'Cannot switch origin twice' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_git_operations~create_branch.
 
     DATA: lv_sha1 TYPE zif_abapgit_definitions=>ty_sha1.
 
-    ASSERT iv_name CP 'refs/heads/+*'.
+    ASSERT iv_name CP zif_abapgit_definitions=>c_git_branch-heads.
 
     IF iv_from IS INITIAL.
       lv_sha1 = get_sha1_remote( ).
@@ -287,7 +372,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
           lv_text TYPE string.
 
 
-    IF ms_data-branch_name CP 'refs/tags*'.
+    IF ms_data-branch_name CP zif_abapgit_definitions=>c_git_branch-tags.
       lv_text = |You're working on a tag. Currently it's not |
              && |possible to push on tags. Consider creating a branch instead|.
       zcx_abapgit_exception=>raise( lv_text ).

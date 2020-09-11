@@ -7,26 +7,31 @@ CLASS zcl_abapgit_object_dtel DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    TYPES: BEGIN OF ty_dd04_texts,
-             ddlanguage TYPE dd04t-ddlanguage,
-             ddtext     TYPE dd04t-ddtext,
-             reptext    TYPE dd04t-reptext,
-             scrtext_s  TYPE dd04t-scrtext_s,
-             scrtext_m  TYPE dd04t-scrtext_m,
-             scrtext_l  TYPE dd04t-scrtext_l,
-           END OF ty_dd04_texts,
-           tt_dd04_texts TYPE STANDARD TABLE OF ty_dd04_texts.
-    CONSTANTS: c_longtext_id_dtel TYPE dokil-id VALUE 'DE'.
+    TYPES:
+      BEGIN OF ty_dd04_texts,
+        ddlanguage TYPE dd04t-ddlanguage,
+        ddtext     TYPE dd04t-ddtext,
+        reptext    TYPE dd04t-reptext,
+        scrtext_s  TYPE dd04t-scrtext_s,
+        scrtext_m  TYPE dd04t-scrtext_m,
+        scrtext_l  TYPE dd04t-scrtext_l,
+      END OF ty_dd04_texts .
+    TYPES:
+      tt_dd04_texts TYPE STANDARD TABLE OF ty_dd04_texts .
 
-    METHODS:
-      serialize_texts
-        IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
-        RAISING   zcx_abapgit_exception,
-      deserialize_texts
-        IMPORTING io_xml   TYPE REF TO zcl_abapgit_xml_input
-                  is_dd04v TYPE dd04v
-        RAISING   zcx_abapgit_exception.
+    CONSTANTS c_longtext_id_dtel TYPE dokil-id VALUE 'DE' ##NO_TEXT.
 
+    METHODS serialize_texts
+      IMPORTING
+        !ii_xml TYPE REF TO zif_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
+    METHODS deserialize_texts
+      IMPORTING
+        !ii_xml   TYPE REF TO zif_abapgit_xml_input
+        !is_dd04v TYPE dd04v
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -47,10 +52,10 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
 
     lv_name = ms_item-obj_name.
 
-    io_xml->read( EXPORTING iv_name = 'I18N_LANGS'
+    ii_xml->read( EXPORTING iv_name = 'I18N_LANGS'
                   CHANGING  cg_data = lt_i18n_langs ).
 
-    io_xml->read( EXPORTING iv_name = 'DD04_TEXTS'
+    ii_xml->read( EXPORTING iv_name = 'DD04_TEXTS'
                   CHANGING  cg_data = lt_dd04_texts ).
 
     SORT lt_i18n_langs.
@@ -95,7 +100,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
                    <ls_dd04_text> LIKE LINE OF lt_dd04_texts.
 
-    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+    IF ii_xml->i18n_params( )-serialize_master_lang_only = abap_true.
       RETURN.
     ENDIF.
 
@@ -105,7 +110,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
     SELECT DISTINCT ddlanguage AS langu INTO TABLE lt_i18n_langs
       FROM dd04v
       WHERE rollname = lv_name
-      AND ddlanguage <> mv_language.                    "#EC CI_SUBRC
+      AND ddlanguage <> mv_language.                      "#EC CI_SUBRC
 
     LOOP AT lt_i18n_langs ASSIGNING <lv_lang>.
       lv_index = sy-tabix.
@@ -132,10 +137,10 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
     SORT lt_dd04_texts BY ddlanguage ASCENDING.
 
     IF lines( lt_i18n_langs ) > 0.
-      io_xml->add( iv_name = 'I18N_LANGS'
+      ii_xml->add( iv_name = 'I18N_LANGS'
                    ig_data = lt_i18n_langs ).
 
-      io_xml->add( iv_name = 'DD04_TEXTS'
+      ii_xml->add( iv_name = 'DD04_TEXTS'
                    ig_data = lt_dd04_texts ).
     ENDIF.
 
@@ -157,24 +162,11 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_objname TYPE rsedd0-ddobjname.
-
-    lv_objname = ms_item-obj_name.
-
-
-    CALL FUNCTION 'RS_DD_DELETE_OBJ'
-      EXPORTING
-        no_ask               = abap_true
-        objname              = lv_objname
-        objtype              = 'E'
-      EXCEPTIONS
-        not_executed         = 1
-        object_not_found     = 2
-        object_not_specified = 3
-        permission_failure   = 4.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from RS_DD_DELETE_OBJ, DTEL,' && sy-subrc ).
+    IF zif_abapgit_object~exists( ) = abap_false.
+      RETURN.
     ENDIF.
+
+    delete_ddic( 'E' ).
 
     delete_longtexts( c_longtext_id_dtel ).
 
@@ -190,7 +182,15 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'DD04V'
                   CHANGING cg_data = ls_dd04v ).
 
-    corr_insert( iv_package = iv_package iv_object_class = 'DICT' ).
+    " DDIC Step: Replace REF TO class/interface with generic reference to avoid cyclic dependency
+    IF iv_step = zif_abapgit_object=>gc_step_id-ddic AND ls_dd04v-datatype = 'REF'.
+      ls_dd04v-rollname = 'OBJECT'.
+    ELSEIF iv_step = zif_abapgit_object=>gc_step_id-late AND ls_dd04v-datatype <> 'REF'.
+      RETURN. " already active
+    ENDIF.
+
+    corr_insert( iv_package = iv_package
+                 ig_object_class = 'DICT' ).
 
     lv_name = ms_item-obj_name. " type conversion
 
@@ -209,7 +209,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |error from DDIF_DTEL_PUT, { sy-subrc }| ).
     ENDIF.
 
-    deserialize_texts( io_xml   = io_xml
+    deserialize_texts( ii_xml   = io_xml
                        is_dd04v = ls_dd04v ).
 
     deserialize_longtexts( io_xml ).
@@ -223,11 +223,13 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
 
     DATA: lv_rollname TYPE dd04l-rollname.
 
-
-    SELECT SINGLE rollname FROM dd04l INTO lv_rollname
-      WHERE rollname = ms_item-obj_name
-      AND as4local = 'A'
-      AND as4vers = '0000'.
+    lv_rollname = ms_item-obj_name.
+    CALL FUNCTION 'DD_GET_NAMETAB_HEADER'
+      EXPORTING
+        tabname   = lv_rollname
+      EXCEPTIONS
+        not_found = 1
+        OTHERS    = 2.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -240,6 +242,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-late TO rt_steps.
   ENDMETHOD.
 
 
@@ -284,7 +287,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
       AND as4local = 'A'
       AND as4vers = '0000'.
     IF sy-subrc <> 0 OR ls_dd04v IS INITIAL.
-      zcx_abapgit_exception=>raise( 'Not found in DD04L' ) ##NO_TEXT.
+      zcx_abapgit_exception=>raise( 'Not found in DD04L' ).
     ENDIF.
 
     SELECT SINGLE * FROM dd04t

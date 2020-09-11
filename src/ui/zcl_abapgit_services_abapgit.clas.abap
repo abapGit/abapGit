@@ -6,16 +6,20 @@ CLASS zcl_abapgit_services_abapgit DEFINITION
   PUBLIC SECTION.
 
     CONSTANTS: c_abapgit_repo     TYPE string   VALUE 'https://github.com/larshp/abapGit'     ##NO_TEXT,
-               c_abapgit_homepage TYPE string   VALUE 'http://www.abapgit.org'                ##NO_TEXT,
-               c_abapgit_wikipage TYPE string   VALUE 'http://docs.abapgit.org'               ##NO_TEXT,
+               c_abapgit_homepage TYPE string   VALUE 'https://www.abapgit.org'                ##NO_TEXT,
+               c_abapgit_wikipage TYPE string   VALUE 'https://docs.abapgit.org'               ##NO_TEXT,
+               c_dotabap_homepage TYPE string   VALUE 'https://dotabap.org'               ##NO_TEXT,
                c_abapgit_package  TYPE devclass VALUE '$ABAPGIT'                              ##NO_TEXT,
                c_abapgit_url      TYPE string   VALUE 'https://github.com/larshp/abapGit.git' ##NO_TEXT,
-               c_abapgit_tcode    TYPE tcode    VALUE `ZABAPGIT`                              ##NO_TEXT.
+               c_abapgit_class    TYPE tcode    VALUE `ZCL_ABAPGIT_REPO`                      ##NO_TEXT.
 
     CLASS-METHODS open_abapgit_homepage
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS open_abapgit_wikipage
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS open_dotabap_homepage
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS open_abapgit_changelog
@@ -56,22 +60,22 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
 
 
   METHOD check_sapgui.
 
     CONSTANTS:
-      lc_hide_sapgui_hint TYPE string VALUE '2' ##NO_TEXT.
+      lc_hide_sapgui_hint TYPE string VALUE '2'.
 
     DATA:
       lv_answer           TYPE char1,
       ls_settings         TYPE zif_abapgit_definitions=>ty_s_user_settings,
-      lo_user_persistence TYPE REF TO zif_abapgit_persist_user.
+      li_user_persistence TYPE REF TO zif_abapgit_persist_user.
 
-    lo_user_persistence = zcl_abapgit_persistence_user=>get_instance( ).
+    li_user_persistence = zcl_abapgit_persistence_user=>get_instance( ).
 
-    ls_settings = lo_user_persistence->get_settings( ).
+    ls_settings = li_user_persistence->get_settings( ).
 
     IF ls_settings-hide_sapgui_hint = abap_true.
       RETURN.
@@ -92,7 +96,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
     IF lv_answer = lc_hide_sapgui_hint.
       ls_settings-hide_sapgui_hint = abap_true.
-      lo_user_persistence->set_settings( ls_settings ).
+      li_user_persistence->set_settings( ls_settings ).
     ENDIF.
 
   ENDMETHOD.
@@ -110,7 +114,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
       iv_text_button_1         = 'Continue'
       iv_text_button_2         = 'Cancel'
       iv_default_button        = '2'
-      iv_display_cancel_button = abap_false ).              "#EC NOTEXT
+      iv_display_cancel_button = abap_false ).
 
     IF lv_answer <> '1'.
       RETURN.
@@ -124,8 +128,8 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
       lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
         iv_url         = iv_url
-        iv_branch_name = 'refs/heads/master'
-        iv_package     = iv_package ) ##NO_TEXT.
+        iv_branch_name = zif_abapgit_definitions=>c_git_branch-master
+        iv_package     = iv_package ).
 
       zcl_abapgit_services_repo=>gui_deserialize( lo_repo ).
 
@@ -144,7 +148,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
           lt_fields  TYPE tihttpnvp.
 
 
-    FIELD-SYMBOLS: <ls_context>    TYPE any,
+    FIELD-SYMBOLS: <lg_context>    TYPE any,
                    <lv_parameters> TYPE string,
                    <ls_field>      LIKE LINE OF lt_fields.
 
@@ -159,21 +163,19 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
     TRY.
         CREATE DATA lr_context TYPE ('CL_ADT_GUI_INTEGRATION_CONTEXT=>TY_CONTEXT_INFO').
 
-        ASSIGN lr_context->* TO <ls_context>.
+        ASSIGN lr_context->* TO <lg_context>.
         ASSERT sy-subrc = 0.
 
         CALL METHOD ('CL_ADT_GUI_INTEGRATION_CONTEXT')=>read_context
           RECEIVING
-            result = <ls_context>.
+            result = <lg_context>.
 
         ASSIGN COMPONENT 'PARAMETERS'
-               OF STRUCTURE <ls_context>
+               OF STRUCTURE <lg_context>
                TO <lv_parameters>.
         ASSERT sy-subrc = 0.
 
-        lt_fields = cl_http_utility=>string_to_fields(
-                        cl_http_utility=>unescape_url(
-                            <lv_parameters> ) ).
+        lt_fields = cl_http_utility=>string_to_fields( cl_http_utility=>unescape_url( <lv_parameters> ) ).
 
         READ TABLE lt_fields ASSIGNING <ls_field>
                              WITH KEY name = 'p_package_name'.
@@ -185,7 +187,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
           CLEAR <lv_parameters>.
           CALL METHOD ('CL_ADT_GUI_INTEGRATION_CONTEXT')=>initialize_instance
             EXPORTING
-              context_info = <ls_context>.
+              context_info = <lg_context>.
 
         ENDIF.
 
@@ -223,7 +225,9 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
   METHOD is_installed.
 
     SELECT SINGLE devclass FROM tadir INTO rv_devclass
-      WHERE object = 'TRAN' AND obj_name = c_abapgit_tcode.
+      WHERE pgmid = 'R3TR'
+      AND object = 'CLAS'
+      AND obj_name = c_abapgit_class.
 
   ENDMETHOD.
 
@@ -256,6 +260,18 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
     cl_gui_frontend_services=>execute(
       EXPORTING document = c_abapgit_wikipage
+      EXCEPTIONS OTHERS = 1 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Opening page in external browser failed.' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD open_dotabap_homepage.
+
+    cl_gui_frontend_services=>execute(
+      EXPORTING document = c_dotabap_homepage
       EXCEPTIONS OTHERS = 1 ).
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Opening page in external browser failed.' ).
@@ -312,15 +328,15 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
           lt_r_package     TYPE RANGE OF devclass,
           ls_r_package     LIKE LINE OF lt_r_package,
           lt_superpackages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
-          lo_package       TYPE REF TO zif_abapgit_sap_package,
+          li_package       TYPE REF TO zif_abapgit_sap_package,
           lt_repo_list     TYPE zif_abapgit_definitions=>ty_repo_ref_tt.
 
     FIELD-SYMBOLS: <lo_repo>         TYPE LINE OF zif_abapgit_definitions=>ty_repo_ref_tt,
                    <lv_superpackage> LIKE LINE OF lt_superpackages.
 
-    lo_package = zcl_abapgit_factory=>get_sap_package( iv_package ).
+    li_package = zcl_abapgit_factory=>get_sap_package( iv_package ).
 
-    IF lo_package->exists( ) = abap_false.
+    IF li_package->exists( ) = abap_false.
       RETURN.
     ENDIF.
 
@@ -331,7 +347,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
     " Also consider superpackages. E.g. when some open $abapgit_ui, abapGit repo
     " should be found via package $abapgit
-    lt_superpackages = lo_package->list_superpackages( ).
+    lt_superpackages = li_package->list_superpackages( ).
     LOOP AT lt_superpackages ASSIGNING <lv_superpackage>.
       ls_r_package-low = <lv_superpackage>.
       INSERT ls_r_package INTO TABLE lt_r_package.

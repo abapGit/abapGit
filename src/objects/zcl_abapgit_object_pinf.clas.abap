@@ -69,13 +69,25 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
 
   METHOD create_or_load.
 
-    DATA: li_interface TYPE REF TO if_package_interface.
+    DATA: li_interface          TYPE REF TO if_package_interface,
+          lv_pkg_interface_data TYPE scompidtln.
+
+    lv_pkg_interface_data-default_if = is_pinf-attributes-default_if.
+    lv_pkg_interface_data-tadir_devc = iv_package.
+
+    "Important if the package name comes from another package
+    IF is_pinf-attributes-pack_name IS INITIAL.
+      lv_pkg_interface_data-pack_name = iv_package.
+    ELSE.
+      lv_pkg_interface_data-pack_name = is_pinf-attributes-pack_name.
+    ENDIF.
 
     IF zif_abapgit_object~exists( ) = abap_false.
       cl_package_interface=>create_new_package_interface(
         EXPORTING
           i_pkg_interface_name    = is_pinf-attributes-intf_name
-          i_publisher_pkg_name    = iv_package
+          i_publisher_pkg_name    = lv_pkg_interface_data-pack_name
+          i_pkg_interface_data    = lv_pkg_interface_data
         IMPORTING
           e_package_interface     = li_interface
         EXCEPTIONS
@@ -108,7 +120,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
 
     ii_interface->set_elements_changeable( abap_true ).
 
-    ii_interface->get_elements( IMPORTING et_elements = lt_elements ).
+    lt_elements = ii_interface->get_elements( ).
 
     LOOP AT lt_elements ASSIGNING <li_element>.
       <li_element>->delete( ).
@@ -141,7 +153,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
           lv_changeable TYPE abap_bool.
 
 
-    ii_interface->get_changeable( IMPORTING ev_changeable = lv_changeable ).
+    lv_changeable = ii_interface->get_changeable( ).
     IF lv_changeable = abap_false.
 * at creation the object is already in change mode
       ii_interface->set_changeable( abap_true ).
@@ -183,7 +195,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
 
     ii_interface->set_elements_changeable( abap_true ).
 
-    ii_interface->get_elements( IMPORTING et_elements = lt_existing ).
+    lt_existing = ii_interface->get_elements( ).
 
     LOOP AT is_pinf-elements ASSIGNING <ls_element>.
 
@@ -252,6 +264,9 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
 
     io_xml->read( EXPORTING iv_name = 'PINF'
                   CHANGING cg_data = ls_pinf ).
+
+    "needed for update_attributes
+    ls_pinf-attributes-tadir_devc = iv_package.
 
     li_interface = create_or_load(
       is_pinf    = ls_pinf
@@ -345,11 +360,14 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
 
     li_interface = load( |{ ms_item-obj_name }| ).
 
-    li_interface->get_all_attributes(
-      IMPORTING es_package_interface_data = ls_pinf-attributes ).
+    ls_pinf-attributes = li_interface->get_all_attributes( ).
 
-    CLEAR: ls_pinf-attributes-pack_name,
-           ls_pinf-attributes-author,
+    "Delete the package name if it comes from the same package
+    IF ls_pinf-attributes-tadir_devc = ls_pinf-attributes-pack_name.
+      CLEAR ls_pinf-attributes-pack_name.
+    ENDIF.
+
+    CLEAR: ls_pinf-attributes-author,
            ls_pinf-attributes-created_by,
            ls_pinf-attributes-created_on,
            ls_pinf-attributes-changed_by,
@@ -366,7 +384,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PINF IMPLEMENTATION.
       CLEAR <lg_any>.
     ENDIF.
 
-    li_interface->get_elements( IMPORTING et_elements = lt_elements ).
+    lt_elements = li_interface->get_elements( ).
 
     LOOP AT lt_elements ASSIGNING <li_element>.
       APPEND INITIAL LINE TO ls_pinf-elements ASSIGNING <ls_element>.

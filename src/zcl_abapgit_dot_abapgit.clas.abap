@@ -128,6 +128,7 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
     APPEND '/.gitlab-ci.yml' TO ls_data-ignore.
     APPEND '/abaplint.json' TO ls_data-ignore.
     APPEND '/azure-pipelines.yml' TO ls_data-ignore.
+    APPEND '/.devcontainer.json' TO ls_data-ignore.
 
     CREATE OBJECT ro_dot_abapgit
       EXPORTING
@@ -164,14 +165,10 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
     lv_xml = iv_xml.
 
-* fix downward compatibility
-    REPLACE ALL OCCURRENCES OF '<_--28C_DATA_--29>' IN lv_xml WITH '<DATA>'.
-    REPLACE ALL OCCURRENCES OF '</_--28C_DATA_--29>' IN lv_xml WITH '</DATA>'.
-
     CALL TRANSFORMATION id
       OPTIONS value_handling = 'accept_data_loss'
       SOURCE XML lv_xml
-      RESULT data = rs_data ##NO_TEXT.
+      RESULT data = rs_data.
 
 * downward compatibility
     IF rs_data-folder_logic IS INITIAL.
@@ -260,11 +257,19 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
 
   METHOD serialize.
 
-    DATA: lv_xml TYPE string.
+    DATA: lv_xml  TYPE string,
+          lv_mark TYPE string.
 
     lv_xml = to_xml( ms_data ).
 
-    rv_xstr = zcl_abapgit_convert=>string_to_xstring_utf8( lv_xml ).
+    "unicode systems always add the byte order mark to the xml, while non-unicode does not
+    "this code will always add the byte order mark if it is not in the xml
+    lv_mark = zcl_abapgit_convert=>xstring_to_string_utf8( cl_abap_char_utilities=>byte_order_mark_utf8 ).
+    IF lv_xml(1) <> lv_mark.
+      CONCATENATE lv_mark lv_xml INTO lv_xml.
+    ENDIF.
+
+    rv_xstr = zcl_abapgit_convert=>string_to_xstring_utf8_bom( lv_xml ).
 
   ENDMETHOD.
 

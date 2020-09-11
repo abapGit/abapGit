@@ -10,7 +10,10 @@ CLASS ltcl_transport_objects DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HA
       cant_be_added_with_del_flag    FOR TESTING RAISING cx_static_check,
       cant_be_modified_with_del_flag FOR TESTING RAISING cx_static_check,
       deleted_to_removed_files       FOR TESTING RAISING cx_static_check,
+      should_remove_no_delflag_iwmo FOR TESTING RAISING cx_static_check,
       should_remove_no_delflag_iwom FOR TESTING RAISING cx_static_check,
+      should_remove_no_delflag_iwsg FOR TESTING RAISING cx_static_check,
+      should_remove_no_delflag_iwsv FOR TESTING RAISING cx_static_check,
       should_remove_no_delflag_susc FOR TESTING RAISING cx_static_check,
       shouldnt_remove_no_delflag FOR TESTING RAISING cx_static_check,
       should_add_all_local_files FOR TESTING RAISING cx_static_check,
@@ -181,8 +184,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_filename = 'CL_FOO.abap'
       iv_path     = '/path'
       iv_data     = 'data' ).
-    then_it_should_raise_exception(
-          iv_with_text = 'Object CL_FOO not found in the local repository files' ).
+    then_it_should_raise_exception( iv_with_text = 'Object CL_FOO not found in the local repository files' ).
   ENDMETHOD.
 
   METHOD cant_be_added_with_del_flag.
@@ -266,6 +268,22 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_path     = '/a_path' ).
   ENDMETHOD.
 
+  METHOD should_remove_no_delflag_iwmo.
+    given_the_transport_object(
+       iv_obj_name   = 'ZFOO'
+       iv_obj_type   = 'IWMO'
+       iv_delflag    = abap_false ).
+
+    given_the_object_status(
+      iv_obj_name   = 'ZFOO'
+      iv_obj_type   = 'IWMO'
+      iv_filename   = 'zfoo.iwmo.xml'
+      iv_path       = '/a_path'
+      iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
+
+    then_it_should_not_raise_excpt( ).
+  ENDMETHOD.
+
   METHOD should_remove_no_delflag_iwom.
     given_the_transport_object(
        iv_obj_name   = 'ZFOO'
@@ -276,6 +294,38 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
       iv_obj_name   = 'ZFOO'
       iv_obj_type   = 'IWOM'
       iv_filename   = 'zfoo.iwom.xml'
+      iv_path       = '/a_path'
+      iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
+
+    then_it_should_not_raise_excpt( ).
+  ENDMETHOD.
+
+  METHOD should_remove_no_delflag_iwsg.
+    given_the_transport_object(
+       iv_obj_name   = 'ZFOO'
+       iv_obj_type   = 'IWSG'
+       iv_delflag    = abap_false ).
+
+    given_the_object_status(
+      iv_obj_name   = 'ZFOO'
+      iv_obj_type   = 'IWSG'
+      iv_filename   = 'zfoo.iwsg.xml'
+      iv_path       = '/a_path'
+      iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
+
+    then_it_should_not_raise_excpt( ).
+  ENDMETHOD.
+
+  METHOD should_remove_no_delflag_iwsv.
+    given_the_transport_object(
+       iv_obj_name   = 'ZFOO'
+       iv_obj_type   = 'IWSV'
+       iv_delflag    = abap_false ).
+
+    given_the_object_status(
+      iv_obj_name   = 'ZFOO'
+      iv_obj_type   = 'IWSV'
+      iv_filename   = 'zfoo.iwsv.xml'
       iv_path       = '/a_path'
       iv_lstate     = zif_abapgit_definitions=>c_state-deleted ).
 
@@ -353,15 +403,15 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD then_file_should_be_added.
-    DATA: lt_staged_objects TYPE zcl_abapgit_stage=>ty_stage_tt.
+    DATA: lt_staged_objects TYPE zif_abapgit_definitions=>ty_stage_tt.
     lt_staged_objects = mo_stage->get_all( ).
 
     READ TABLE lt_staged_objects TRANSPORTING NO FIELDS
       WITH KEY
       file-filename = is_local_file-file-filename
-      file-path      = is_local_file-file-path
-      file-data      = is_local_file-file-data
-      method         = zcl_abapgit_stage=>c_method-add.
+      file-path     = is_local_file-file-path
+      file-data     = is_local_file-file-data
+      method        = zif_abapgit_definitions=>c_method-add.
     IF sy-subrc <> 0.
       cl_abap_unit_assert=>fail( |Object { is_local_file-file-filename } not added to stage| ).
     ENDIF.
@@ -382,7 +432,7 @@ CLASS ltcl_transport_objects IMPLEMENTATION.
 
   METHOD then_it_should_remove_at_stage.
 
-    DATA: lt_staged_objects TYPE zcl_abapgit_stage=>ty_stage_tt.
+    DATA: lt_staged_objects TYPE zif_abapgit_definitions=>ty_stage_tt.
 
     lt_staged_objects = mo_stage->get_all( ).
 

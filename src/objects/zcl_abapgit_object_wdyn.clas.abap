@@ -69,7 +69,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
 
 
   METHOD add_fm_exception.
@@ -360,6 +360,7 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_object>               LIKE LINE OF lt_objects,
                    <ls_meta>                 LIKE LINE OF rs_component-ctlr_metadata,
+                   <ls_view>                 LIKE LINE OF rs_component-view_metadata,
                    <lt_ctrl_exceptions>      TYPE ANY TABLE,
                    <lt_ctrl_exception_texts> TYPE ANY TABLE.
 
@@ -409,6 +410,10 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
       IF sy-subrc = 0.
         SORT <lt_ctrl_exception_texts>.
       ENDIF.
+    ENDLOOP.
+
+    LOOP AT rs_component-view_metadata ASSIGNING <ls_view>.
+      SORT <ls_view>-ui_elements.
     ENDLOOP.
 
     SORT mt_components BY
@@ -743,11 +748,11 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: ls_component TYPE wdy_component_metadata.
+    DATA: ls_component   TYPE wdy_component_metadata,
+          ls_description TYPE wdy_ext_ctx_map.
 
     FIELD-SYMBOLS: <ls_view>       LIKE LINE OF ls_component-view_metadata,
                    <ls_controller> LIKE LINE OF ls_component-ctlr_metadata.
-
 
     io_xml->read( EXPORTING iv_name = 'COMPONENT'
                   CHANGING cg_data = ls_component ).
@@ -771,6 +776,13 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
       <ls_view>-definition-createdon = sy-datum.
       recover_view( <ls_view> ).
     ENDLOOP.
+
+    READ TABLE ls_component-comp_metadata-descriptions INTO ls_description INDEX 1.
+    IF sy-subrc = 0.
+      zcl_abapgit_sotr_handler=>create_sotr(
+        iv_package = iv_package
+        io_xml     = io_xml ).
+    ENDIF.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
 
@@ -830,8 +842,8 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: ls_component TYPE wdy_component_metadata.
-
+    DATA: ls_component   TYPE wdy_component_metadata,
+          ls_description TYPE wdy_ext_ctx_map.
 
     ls_component = read( ).
 
@@ -841,6 +853,15 @@ CLASS zcl_abapgit_object_wdyn IMPLEMENTATION.
                  iv_name = 'COMPONENTS' ).
     io_xml->add( ig_data = mt_sources
                  iv_name = 'SOURCES' ).
+
+    READ TABLE ls_component-comp_metadata-descriptions INTO ls_description INDEX 1.
+    IF sy-subrc = 0.
+      zcl_abapgit_sotr_handler=>read_sotr(
+        iv_pgmid    = 'LIMU'
+        iv_object   = 'WDYV'
+        iv_obj_name = ms_item-obj_name
+        io_xml      = io_xml ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

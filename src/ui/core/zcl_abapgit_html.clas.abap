@@ -1,32 +1,27 @@
 CLASS zcl_abapgit_html DEFINITION
   PUBLIC
-  CREATE PUBLIC.
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_html.
 
-    ALIASES:
-      add          FOR zif_abapgit_html~add,
-      render       FOR zif_abapgit_html~render,
-      is_empty     FOR zif_abapgit_html~is_empty,
-      add_a        FOR zif_abapgit_html~add_a,
-      add_checkbox FOR zif_abapgit_html~add_checkbox,
-      a            FOR zif_abapgit_html~a,
-      icon         FOR zif_abapgit_html~icon.
+    INTERFACES zif_abapgit_html .
+
+    ALIASES add
+      FOR zif_abapgit_html~add .
 
     CONSTANTS c_indent_size TYPE i VALUE 2 ##NO_TEXT.
 
-    CLASS-METHODS class_constructor.
-    METHODS add_icon
+    CLASS-METHODS class_constructor .
+    CLASS-METHODS icon
       IMPORTING
-        !iv_name  TYPE string
-        !iv_hint  TYPE string OPTIONAL
-        !iv_class TYPE string OPTIONAL.
+        !iv_name      TYPE string
+        !iv_hint      TYPE string OPTIONAL
+        !iv_class     TYPE string OPTIONAL
+        !iv_onclick   TYPE string OPTIONAL
+      RETURNING
+        VALUE(rv_str) TYPE string .
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CLASS-DATA: go_single_tags_re TYPE REF TO cl_abap_regex.
-
-    DATA: mt_buffer TYPE string_table.
 
     TYPES:
       BEGIN OF ty_indent_context,
@@ -35,8 +30,8 @@ CLASS zcl_abapgit_html DEFINITION
         within_js       TYPE abap_bool,
         indent          TYPE i,
         indent_str      TYPE string,
-      END OF ty_indent_context,
-
+      END OF ty_indent_context .
+    TYPES:
       BEGIN OF ty_study_result,
         style_open   TYPE abap_bool,
         style_close  TYPE abap_bool,
@@ -47,25 +42,27 @@ CLASS zcl_abapgit_html DEFINITION
         openings     TYPE i,
         closings     TYPE i,
         singles      TYPE i,
-      END OF ty_study_result.
+      END OF ty_study_result .
+
+    CLASS-DATA go_single_tags_re TYPE REF TO cl_abap_regex .
+    DATA mt_buffer TYPE string_table .
 
     METHODS indent_line
       CHANGING
-        cs_context TYPE ty_indent_context
-        cv_line    TYPE string.
-
+        !cs_context TYPE ty_indent_context
+        !cv_line    TYPE string .
     METHODS study_line
       IMPORTING
-        iv_line          TYPE string
-        is_context       TYPE ty_indent_context
+        !iv_line         TYPE string
+        !is_context      TYPE ty_indent_context
       RETURNING
-        VALUE(rs_result) TYPE ty_study_result.
+        VALUE(rs_result) TYPE ty_study_result .
     METHODS checkbox
       IMPORTING
-        iv_id          TYPE string
+        !iv_id         TYPE string
+        !iv_checked    TYPE abap_bool OPTIONAL
       RETURNING
-        VALUE(rv_html) TYPE string.
-
+        VALUE(rv_html) TYPE string .
 ENDCLASS.
 
 
@@ -73,18 +70,45 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
 
-  METHOD add_icon.
+  METHOD add.
 
-    add( icon( iv_name  = iv_name
-               iv_class = iv_class
-               iv_hint  = iv_hint ) ).
+    DATA: lv_type TYPE c,
+          lo_html TYPE REF TO zcl_abapgit_html.
+
+    FIELD-SYMBOLS: <lt_tab> TYPE string_table.
+
+    DESCRIBE FIELD ig_chunk TYPE lv_type. " Describe is faster than RTTI classes
+
+    CASE lv_type.
+      WHEN 'C' OR 'g'.  " Char or string
+        APPEND ig_chunk TO mt_buffer.
+      WHEN 'h'.         " Table
+        ASSIGN ig_chunk TO <lt_tab>. " Assuming table of strings ! Will dump otherwise
+        APPEND LINES OF <lt_tab> TO mt_buffer.
+      WHEN 'r'.         " Object ref
+        ASSERT ig_chunk IS BOUND. " Dev mistake
+        TRY.
+            lo_html ?= ig_chunk.
+          CATCH cx_sy_move_cast_error.
+            ASSERT 1 = 0. " Dev mistake
+        ENDTRY.
+        APPEND LINES OF lo_html->mt_buffer TO mt_buffer.
+      WHEN OTHERS.
+        ASSERT 1 = 0. " Dev mistake
+    ENDCASE.
 
   ENDMETHOD.
 
 
   METHOD checkbox.
 
-    rv_html = |<input type="checkbox" id="{ iv_id }">|.
+    DATA: lv_checked TYPE string.
+
+    IF iv_checked = abap_true.
+      lv_checked = |checked|.
+    ENDIF.
+
+    rv_html = |<input type="checkbox" id="{ iv_id }" { lv_checked }>|.
 
   ENDMETHOD.
 
@@ -94,6 +118,43 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       EXPORTING
         pattern     = '<(AREA|BASE|BR|COL|COMMAND|EMBED|HR|IMG|INPUT|LINK|META|PARAM|SOURCE|!)'
         ignore_case = abap_false.
+  ENDMETHOD.
+
+
+  METHOD icon.
+
+    DATA: lv_hint       TYPE string,
+          lv_name       TYPE string,
+          lv_color      TYPE string,
+          lv_class      TYPE string,
+          lv_large_icon TYPE string,
+          lv_xpixel     TYPE i,
+          lv_onclick    TYPE string.
+
+    SPLIT iv_name AT '/' INTO lv_name lv_color.
+
+    IF iv_hint IS NOT INITIAL.
+      lv_hint  = | title="{ iv_hint }"|.
+    ENDIF.
+    IF iv_onclick IS NOT INITIAL.
+      lv_onclick = | onclick="{ iv_onclick }"|.
+    ENDIF.
+    IF iv_class IS NOT INITIAL.
+      lv_class = | { iv_class }|.
+    ENDIF.
+    IF lv_color IS NOT INITIAL.
+      lv_color = | { lv_color }|.
+    ENDIF.
+
+    lv_xpixel = cl_gui_cfw=>compute_pixel_from_metric( x_or_y = 'X'
+                                                       in = 1 ).
+    IF lv_xpixel >= 2.
+      lv_large_icon = ' large'.
+    ENDIF.
+
+    rv_str = |<i class="icon{ lv_large_icon } icon-{ lv_name }{ lv_color }|.
+    rv_str = |{ rv_str }{ lv_class }"{ lv_onclick }{ lv_hint }></i>|.
+
   ENDMETHOD.
 
 
@@ -112,7 +173,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
         OR ls_study-curly_close = abap_true
         OR ls_study-tag_close = abap_true )
         AND cs_context-indent > 0.
-      lv_x_str = repeat( val = ` ` occ = ( cs_context-indent - 1 ) * c_indent_size ).
+      lv_x_str = repeat( val = ` `
+                         occ = ( cs_context-indent - 1 ) * c_indent_size ).
       cv_line  = lv_x_str && cv_line.
     ELSE.
       cv_line = cs_context-indent_str && cv_line.
@@ -139,7 +201,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       ELSEIF cs_context-indent > 0. " AND ls_study-openings < ls_study-closings
         cs_context-indent = cs_context-indent - 1.
       ENDIF.
-      cs_context-indent_str = repeat( val = ` ` occ = cs_context-indent * c_indent_size ).
+      cs_context-indent_str = repeat( val = ` `
+                                      occ = cs_context-indent * c_indent_size ).
     ENDIF.
 
   ENDMETHOD.
@@ -150,7 +213,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     DATA: lv_line TYPE string,
           lv_len  TYPE i.
 
-    lv_line = to_upper( shift_left( val = iv_line sub = ` ` ) ).
+    lv_line = to_upper( shift_left( val = iv_line
+                                    sub = ` ` ) ).
     lv_len  = strlen( lv_line ).
 
     " Some assumptions for simplification and speed
@@ -204,7 +268,7 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD a.
+  METHOD zif_abapgit_html~a.
 
     DATA: lv_class TYPE string,
           lv_href  TYPE string,
@@ -216,13 +280,13 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     lv_class = iv_class.
 
     IF iv_opt CA zif_abapgit_html=>c_html_opt-strong.
-      lv_class = lv_class && ' emphasis' ##NO_TEXT.
+      lv_class = lv_class && ' emphasis'.
     ENDIF.
     IF iv_opt CA zif_abapgit_html=>c_html_opt-cancel.
-      lv_class = lv_class && ' attention' ##NO_TEXT.
+      lv_class = lv_class && ' attention'.
     ENDIF.
     IF iv_opt CA zif_abapgit_html=>c_html_opt-crossout.
-      lv_class = lv_class && ' crossout grey' ##NO_TEXT.
+      lv_class = lv_class && ' crossout grey'.
     ENDIF.
     IF lv_class IS NOT INITIAL.
       SHIFT lv_class LEFT DELETING LEADING space.
@@ -230,7 +294,8 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
     ENDIF.
 
     lv_href  = ' href="#"'. " Default, dummy
-    IF iv_act IS NOT INITIAL OR iv_typ = zif_abapgit_html=>c_action_type-dummy.
+    IF ( iv_act IS NOT INITIAL OR iv_typ = zif_abapgit_html=>c_action_type-dummy )
+        AND iv_opt NA zif_abapgit_html=>c_html_opt-crossout.
       CASE iv_typ.
         WHEN zif_abapgit_html=>c_action_type-url.
           lv_href  = | href="{ iv_act }"|.
@@ -262,94 +327,56 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD add.
+  METHOD zif_abapgit_html~add_a.
 
-    DATA: lv_type TYPE c,
-          lo_html TYPE REF TO zcl_abapgit_html.
-
-    FIELD-SYMBOLS: <lt_tab> TYPE string_table.
-
-    DESCRIBE FIELD ig_chunk TYPE lv_type. " Describe is faster than RTTI classes
-
-    CASE lv_type.
-      WHEN 'C' OR 'g'.  " Char or string
-        APPEND ig_chunk TO mt_buffer.
-      WHEN 'h'.         " Table
-        ASSIGN ig_chunk TO <lt_tab>. " Assuming table of strings ! Will dump otherwise
-        APPEND LINES OF <lt_tab> TO mt_buffer.
-      WHEN 'r'.         " Object ref
-        ASSERT ig_chunk IS BOUND. " Dev mistake
-        TRY.
-            lo_html ?= ig_chunk.
-          CATCH cx_sy_move_cast_error.
-            ASSERT 1 = 0. " Dev mistake
-        ENDTRY.
-        APPEND LINES OF lo_html->mt_buffer TO mt_buffer.
-      WHEN OTHERS.
-        ASSERT 1 = 0. " Dev mistake
-    ENDCASE.
-
-  ENDMETHOD.
-
-
-  METHOD add_a.
-
-    add( a( iv_txt   = iv_txt
-            iv_act   = iv_act
-            iv_typ   = iv_typ
-            iv_opt   = iv_opt
-            iv_class = iv_class
-            iv_id    = iv_id
-            iv_style = iv_style
-            iv_title = iv_title ) ).
+    add( zif_abapgit_html~a(
+      iv_txt   = iv_txt
+      iv_act   = iv_act
+      iv_typ   = iv_typ
+      iv_opt   = iv_opt
+      iv_class = iv_class
+      iv_id    = iv_id
+      iv_style = iv_style
+      iv_title = iv_title ) ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_html~add_checkbox.
 
-    add( checkbox( iv_id ) ).
+    add( checkbox( iv_id      = iv_id
+                   iv_checked = iv_checked ) ).
 
   ENDMETHOD.
 
 
-  METHOD icon.
+  METHOD zif_abapgit_html~add_icon.
 
-    DATA: lv_hint          TYPE string,
-          lv_name          TYPE string,
-          lv_color         TYPE string,
-          lv_class         TYPE string,
-          lv_large_icon    TYPE string,
-          lv_xpixel        TYPE i.
-
-    SPLIT iv_name AT '/' INTO lv_name lv_color.
-
-    IF iv_hint IS NOT INITIAL.
-      lv_hint  = | title="{ iv_hint }"|.
-    ENDIF.
-    IF iv_class IS NOT INITIAL.
-      lv_class = | { iv_class }|.
-    ENDIF.
-    IF lv_color IS NOT INITIAL.
-      lv_color = | { lv_color }|.
-    ENDIF.
-
-    lv_xpixel = cl_gui_cfw=>compute_pixel_from_metric( x_or_y = 'X' in = 1 ).
-    IF lv_xpixel >= 2.
-      lv_large_icon = ' large'.
-    ENDIF.
-
-    rv_str = |<i class="icon{ lv_large_icon } icon-{ lv_name }{ lv_color }{ lv_class }" { lv_hint }></i>|.
+    add( icon( iv_name    = iv_name
+               iv_class   = iv_class
+               iv_hint    = iv_hint
+               iv_onclick = iv_onclick ) ).
 
   ENDMETHOD.
 
 
-  METHOD is_empty.
+  METHOD zif_abapgit_html~icon.
+
+    rv_str = icon(
+      iv_name    = iv_name
+      iv_hint    = iv_hint
+      iv_class   = iv_class
+      iv_onclick = iv_onclick ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_html~is_empty.
     rv_yes = boolc( lines( mt_buffer ) = 0 ).
   ENDMETHOD.
 
 
-  METHOD render.
+  METHOD zif_abapgit_html~render.
 
     DATA: ls_context TYPE ty_indent_context,
           lt_temp    TYPE string_table.
@@ -366,5 +393,10 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
     CONCATENATE LINES OF lt_temp INTO rv_html SEPARATED BY cl_abap_char_utilities=>newline.
 
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_html~set_title.
+    zif_abapgit_html~mv_chunk_title = iv_title.
   ENDMETHOD.
 ENDCLASS.

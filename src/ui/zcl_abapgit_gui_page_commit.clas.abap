@@ -5,7 +5,6 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     CONSTANTS:
       BEGIN OF c_action,
@@ -30,10 +29,8 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
       EXPORTING
         !eg_fields   TYPE any .
 
-    METHODS render_content
-        REDEFINITION .
-    METHODS scripts
-        REDEFINITION .
+    METHODS render_content REDEFINITION .
+
   PRIVATE SECTION.
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
@@ -61,6 +58,26 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
         !iv_max_length TYPE string OPTIONAL
       RETURNING
         VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+    METHODS get_comment_default
+      RETURNING
+        VALUE(rv_text) TYPE string .
+    METHODS get_comment_object
+      IMPORTING
+        !it_stage      TYPE zif_abapgit_definitions=>ty_stage_tt
+      RETURNING
+        VALUE(rv_text) TYPE string .
+    METHODS get_comment_file
+      IMPORTING
+        !it_stage      TYPE zif_abapgit_definitions=>ty_stage_tt
+      RETURNING
+        VALUE(rv_text) TYPE string .
+
+    METHODS render_scripts
+      RETURNING
+        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+      RAISING
+        zcx_abapgit_exception.
+
 ENDCLASS.
 
 
@@ -74,7 +91,89 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
     mo_repo   = io_repo.
     mo_stage  = io_stage.
 
-    ms_control-page_title = 'COMMIT'.
+    ms_control-page_title = 'Commit'.
+  ENDMETHOD.
+
+
+  METHOD get_comment_default.
+
+    DATA: lo_settings TYPE REF TO zcl_abapgit_settings,
+          lt_stage    TYPE zif_abapgit_definitions=>ty_stage_tt.
+
+    " Get setting for default comment text
+    lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
+
+    rv_text = lo_settings->get_commitmsg_comment_default( ).
+
+    IF rv_text IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    " Determine texts for scope of commit
+    lt_stage = mo_stage->get_all( ).
+
+    REPLACE '$FILE'   IN rv_text WITH get_comment_file( lt_stage ).
+
+    REPLACE '$OBJECT' IN rv_text WITH get_comment_object( lt_stage ).
+
+  ENDMETHOD.
+
+
+  METHOD get_comment_file.
+
+    DATA: lv_count TYPE i,
+          lv_value TYPE c LENGTH 10.
+
+    FIELD-SYMBOLS: <ls_stage> LIKE LINE OF it_stage.
+
+    lv_count = lines( it_stage ).
+
+    IF lv_count = 1.
+      " Just one file so we use the file name
+      READ TABLE it_stage ASSIGNING <ls_stage> INDEX 1.
+      ASSERT sy-subrc = 0.
+
+      rv_text = <ls_stage>-file-filename.
+    ELSE.
+      " For multiple file we use the count instead
+      WRITE lv_count TO lv_value LEFT-JUSTIFIED.
+      CONCATENATE lv_value 'files' INTO rv_text SEPARATED BY space.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_comment_object.
+
+    DATA: lv_count TYPE i,
+          lv_value TYPE c LENGTH 10,
+          ls_item  TYPE zif_abapgit_definitions=>ty_item,
+          lt_items TYPE zif_abapgit_definitions=>ty_items_tt.
+
+    FIELD-SYMBOLS: <ls_stage> LIKE LINE OF it_stage.
+
+    " Get objects
+    LOOP AT it_stage ASSIGNING <ls_stage>.
+      CLEAR ls_item.
+      ls_item-obj_type = <ls_stage>-status-obj_type.
+      ls_item-obj_name = <ls_stage>-status-obj_name.
+      COLLECT ls_item INTO lt_items.
+    ENDLOOP.
+
+    lv_count = lines( lt_items ).
+
+    IF lv_count = 1.
+      " Just one object so we use the object name
+      READ TABLE lt_items INTO ls_item INDEX 1.
+      ASSERT sy-subrc = 0.
+
+      CONCATENATE ls_item-obj_type ls_item-obj_name INTO rv_text SEPARATED BY space.
+    ELSE.
+      " For multiple objects we use the count instead
+      WRITE lv_count TO lv_value LEFT-JUSTIFIED.
+      CONCATENATE lv_value 'objects' INTO rv_text SEPARATED BY space.
+    ENDIF.
+
   ENDMETHOD.
 
 
@@ -140,18 +239,20 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
   METHOD render_content.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( '<div class="repo">' ).
-    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
+    ri_html->add( '<div class="repo">' ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
       io_repo         = mo_repo
       iv_show_package = abap_false
       iv_branch       = mo_repo->get_branch_name( ) ) ).
 
-    ro_html->add( render_menu( ) ).
-    ro_html->add( render_form( ) ).
-    ro_html->add( render_stage( ) ).
-    ro_html->add( '</div>' ).
+    ri_html->add( render_menu( ) ).
+    ri_html->add( render_form( ) ).
+    ri_html->add( render_stage( ) ).
+    ri_html->add( '</div>' ).
+
+    register_deferred_script( render_scripts( ) ).
 
   ENDMETHOD.
 
@@ -204,6 +305,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
       lv_author_email = ms_commit-author_email.
     ENDIF.
 
+    IF lv_comment IS INITIAL.
+      lv_comment = get_comment_default( ).
+    ENDIF.
+
     CREATE OBJECT ro_html.
 
     ro_html->add( '<div class="form-container">' ).
@@ -211,11 +316,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
                && ' method="post" action="sapevent:commit_post">' ).
 
     ro_html->add( render_text_input( iv_name  = 'committer_name'
-                                     iv_label = 'committer name'
+                                     iv_label = 'Committer Name'
                                      iv_value = lv_user ) ).
 
     ro_html->add( render_text_input( iv_name  = 'committer_email'
-                                     iv_label = 'committer e-mail'
+                                     iv_label = 'Committer E-mail'
                                      iv_value = lv_email ) ).
 
     lo_settings = zcl_abapgit_persist_settings=>get_instance( )->read( ).
@@ -223,12 +328,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
     lv_s_param = lo_settings->get_commitmsg_comment_length( ).
 
     ro_html->add( render_text_input( iv_name       = 'comment'
-                                     iv_label      = 'comment'
+                                     iv_label      = 'Comment'
                                      iv_value      = lv_comment
                                      iv_max_length = lv_s_param ) ).
 
     ro_html->add( '<div class="row">' ).
-    ro_html->add( '<label for="c-body">body</label>' ).
+    ro_html->add( '<label for="c-body">Body</label>' ).
 
     lv_body_size = lo_settings->get_commitmsg_body_size( ).
     IF lv_body_size > lc_body_col_max.
@@ -247,11 +352,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
     ro_html->add( '</div>' ).
 
     ro_html->add( render_text_input( iv_name  = 'author_name'
-                                     iv_label = 'author name'
+                                     iv_label = 'Author Name'
                                      iv_value = lv_author_name ) ).
 
     ro_html->add( render_text_input( iv_name  = 'author_email'
-                                     iv_label = 'author e-mail'
+                                     iv_label = 'Author E-mail'
                                      iv_value = lv_author_email ) ).
 
     ro_html->add( '</form>' ).
@@ -270,11 +375,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
     lo_toolbar->add( iv_act = 'submitFormById(''commit_form'');'
                      iv_txt = 'Commit'
                      iv_typ = zif_abapgit_html=>c_action_type-onclick
-                     iv_opt = zif_abapgit_html=>c_html_opt-strong ) ##NO_TEXT.
+                     iv_opt = zif_abapgit_html=>c_html_opt-strong ).
 
     lo_toolbar->add( iv_act = c_action-commit_cancel
                      iv_txt = 'Cancel'
-                     iv_opt = zif_abapgit_html=>c_html_opt-cancel ) ##NO_TEXT.
+                     iv_opt = zif_abapgit_html=>c_html_opt-cancel ).
 
     ro_html->add( '<div class="paddings">' ).
     ro_html->add( lo_toolbar->render( ) ).
@@ -283,9 +388,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_scripts.
+
+    CREATE OBJECT ro_html.
+
+    ro_html->zif_abapgit_html~set_title( cl_abap_typedescr=>describe_by_object_ref( me )->get_relative_name( ) ).
+    ro_html->add( 'setInitialFocus("comment");' ).
+
+  ENDMETHOD.
+
+
   METHOD render_stage.
 
-    DATA: lt_stage TYPE zcl_abapgit_stage=>ty_stage_tt.
+    DATA: lt_stage TYPE zif_abapgit_definitions=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage> LIKE LINE OF lt_stage.
 
@@ -297,7 +412,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
     ro_html->add( '<table class="stage_tab">' ).
     ro_html->add( '<thead>' ).
     ro_html->add( '<tr>' ).
-    ro_html->add( '<th colspan="3">Staged files</th>' ).
+    ro_html->add( '<th colspan="3">Staged Files</th>' ).
     ro_html->add( '</tr>' ).
     ro_html->add( '</thead>' ).
 
@@ -348,15 +463,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD scripts.
-
-    ro_html = super->scripts( ).
-
-    ro_html->add( 'setInitialFocus("comment");' ).
-
-  ENDMETHOD.
-
-
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     CASE iv_action.
@@ -373,7 +479,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
           io_repo   = mo_repo
           io_stage  = mo_stage ).
 
-        MESSAGE 'Commit was successful' TYPE 'S' ##NO_TEXT.
+        MESSAGE 'Commit was successful' TYPE 'S'.
 
         ev_state = zcl_abapgit_gui=>c_event_state-go_back_to_bookmark.
 
@@ -384,18 +490,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
         super->zif_abapgit_gui_event_handler~on_event(
           EXPORTING
             iv_action    = iv_action
-            iv_prev_page = iv_prev_page
             iv_getdata   = iv_getdata
             it_postdata  = it_postdata
           IMPORTING
             ei_page      = ei_page
             ev_state     = ev_state ).
     ENDCASE.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 ENDCLASS.

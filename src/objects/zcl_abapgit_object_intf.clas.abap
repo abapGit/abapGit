@@ -23,12 +23,14 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
-    DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc.
+
+    DATA mi_object_oriented_object_fct TYPE REF TO zif_abapgit_oo_object_fnc .
 
     METHODS serialize_xml
-      IMPORTING io_xml TYPE REF TO zcl_abapgit_xml_output
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !io_xml TYPE REF TO zif_abapgit_xml_output
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -140,7 +142,8 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
       lt_descriptions TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
       ls_vseointerf   TYPE vseointerf,
       ls_clskey       TYPE seoclskey,
-      lt_lines        TYPE tlinetab.
+      lt_lines        TYPE tlinetab,
+      lv_language     TYPE spras.
 
 
     ls_clskey-clsname = ms_item-obj_name.
@@ -168,7 +171,14 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
                    ig_data = lt_lines ).
     ENDIF.
 
-    lt_descriptions = mi_object_oriented_object_fct->read_descriptions( ls_clskey-clsname ).
+    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+      lv_language = mv_language.
+    ENDIF.
+
+    lt_descriptions = mi_object_oriented_object_fct->read_descriptions(
+      iv_obejct_name = ls_clskey-clsname
+      iv_language = lv_language ).
+
     IF lines( lt_descriptions ) > 0.
       io_xml->add( iv_name = 'DESCRIPTIONS'
                    ig_data = lt_descriptions ).

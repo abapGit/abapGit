@@ -13,6 +13,9 @@ CLASS zcl_abapgit_object_ddls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS is_baseinfo_supported
       RETURNING
         VALUE(rv_supported) TYPE abap_bool .
+    METHODS read_baseinfo
+      RETURNING
+        VALUE(rv_baseinfo_string) TYPE string.
 ENDCLASS.
 
 
@@ -172,7 +175,6 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
       <lg_data>             TYPE any,
       <lg_data_baseinfo>    TYPE any,
       <lg_source>           TYPE any,
-      <lg_field_baseinfo>   TYPE any,
       <lg_baseinfo_string>  TYPE any,
       <lg_baseinfo_ddlname> TYPE any.
 
@@ -185,7 +187,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
 
         ASSIGN COMPONENT 'SOURCE' OF STRUCTURE <lg_data> TO <lg_source>.
         ASSERT sy-subrc = 0.
-        <lg_source> = mo_files->read_string( 'asddls' ) ##no_text.
+        <lg_source> = mo_files->read_string( 'asddls' ).
 
         CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
           RECEIVING
@@ -197,7 +199,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
 
           ASSIGN COMPONENT 'BASEINFO_STRING' OF STRUCTURE <lg_data_baseinfo> TO <lg_baseinfo_string>.
           ASSERT sy-subrc = 0.
-          <lg_baseinfo_string> = mo_files->read_string( 'baseinfo' ) ##no_text.
+
+          <lg_baseinfo_string> = read_baseinfo( ).
 
           ASSIGN COMPONENT 'DDLNAME' OF STRUCTURE <lg_data_baseinfo> TO <lg_baseinfo_ddlname>.
           ASSERT sy-subrc = 0.
@@ -226,6 +229,11 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
         corr_insert( iv_package ).
 
       CATCH cx_root INTO lx_error.
+        CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~DELETE')
+          EXPORTING
+            name = ms_item-obj_name
+            prid = 0.
+
         zcx_abapgit_exception=>raise( iv_text     = lx_error->get_text( )
                                       ix_previous = lx_error ).
     ENDTRY.
@@ -329,8 +337,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
     FIELD-SYMBOLS: <lg_data>          TYPE any,
                    <lg_field>         TYPE any,
                    <lv_comp>          LIKE LINE OF lt_clr_comps,
-                   <lg_data_baseinfo> TYPE ANY TABLE,
-                   <ls_data_baseinfo> TYPE any,
+                   <lt_data_baseinfo> TYPE ANY TABLE,
+                   <lg_data_baseinfo> TYPE any,
                    <lg_ddlname>       TYPE any,
                    <lg_as4local>      TYPE any.
 
@@ -345,8 +353,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
 
         IF is_baseinfo_supported( ) = abap_true.
           CREATE DATA lr_data_baseinfo TYPE ('IF_DD_DDL_TYPES=>TY_T_BASEINFO_STRING').
+          ASSIGN lr_data_baseinfo->* TO <lt_data_baseinfo>.
           ASSIGN lr_data_baseinfo->* TO <lg_data_baseinfo>.
-          ASSIGN lr_data_baseinfo->* TO <ls_data_baseinfo>.
 
           CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~READ')
             EXPORTING
@@ -354,20 +362,20 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
               get_state       = 'A'
             IMPORTING
               ddddlsrcv_wa    = <lg_data>
-              baseinfo_string = <lg_data_baseinfo>.
+              baseinfo_string = <lt_data_baseinfo>.
 
-          LOOP AT <lg_data_baseinfo> ASSIGNING <ls_data_baseinfo>.
-            ASSIGN COMPONENT 'DDLNAME' OF STRUCTURE <ls_data_baseinfo> TO <lg_ddlname>.
+          LOOP AT <lt_data_baseinfo> ASSIGNING <lg_data_baseinfo>.
+            ASSIGN COMPONENT 'DDLNAME' OF STRUCTURE <lg_data_baseinfo> TO <lg_ddlname>.
             ASSERT sy-subrc = 0.
 
-            ASSIGN COMPONENT 'AS4LOCAL' OF STRUCTURE <ls_data_baseinfo> TO <lg_as4local>.
+            ASSIGN COMPONENT 'AS4LOCAL' OF STRUCTURE <lg_data_baseinfo> TO <lg_as4local>.
             ASSERT sy-subrc = 0.
 
             IF <lg_ddlname> = ms_item-obj_name AND <lg_as4local> = 'A'.
-              ASSIGN COMPONENT 'BASEINFO_STRING' OF STRUCTURE <ls_data_baseinfo> TO <lg_field>.
+              ASSIGN COMPONENT 'BASEINFO_STRING' OF STRUCTURE <lg_data_baseinfo> TO <lg_field>.
               ASSERT sy-subrc = 0.
               mo_files->add_string( iv_ext    = 'baseinfo'
-                                    iv_string = <lg_field> ) ##no_text.
+                                    iv_string = <lg_field> ).
               EXIT.
             ENDIF.
           ENDLOOP.
@@ -403,7 +411,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
     ASSERT sy-subrc = 0.
 
     mo_files->add_string( iv_ext    = 'asddls'
-                          iv_string = <lg_field> ) ##no_text.
+                          iv_string = <lg_field> ).
 
     CLEAR <lg_field>.
 
@@ -411,4 +419,19 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
                  ig_data = <lg_data> ).
 
   ENDMETHOD.
+
+
+  METHOD read_baseinfo.
+
+    TRY.
+        rv_baseinfo_string = mo_files->read_string( 'baseinfo' ).
+
+      CATCH zcx_abapgit_exception.
+        " File not found. That's ok, as the object could have been created in a
+        " system where baseinfo wasn't supported.
+        RETURN.
+    ENDTRY.
+
+  ENDMETHOD.
+
 ENDCLASS.

@@ -7,13 +7,13 @@ CLASS zcl_abapgit_repo_offline DEFINITION
   PUBLIC SECTION.
 
     METHODS get_name
-      REDEFINITION .
+        REDEFINITION .
     METHODS has_remote_source
-      REDEFINITION .
+        REDEFINITION .
   PROTECTED SECTION.
 
     METHODS reset_remote
-      REDEFINITION .
+        REDEFINITION .
   PRIVATE SECTION.
 ENDCLASS.
 

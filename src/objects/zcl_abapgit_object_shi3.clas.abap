@@ -62,7 +62,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
 
 
   METHOD constructor.
-    super->constructor( is_item = is_item iv_language = iv_language ).
+    super->constructor( is_item = is_item
+                        iv_language = iv_language ).
     mv_tree_id = ms_item-obj_name.
   ENDMETHOD.
 
@@ -204,7 +205,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
                   CHANGING  cg_data = lt_texts ).
 
     IF zif_abapgit_object~exists( ) = abap_true.
-      zif_abapgit_object~delete( ).
+      zif_abapgit_object~delete( iv_package ).
     ENDIF.
 
     CALL FUNCTION 'STREE_HIERARCHY_SAVE'

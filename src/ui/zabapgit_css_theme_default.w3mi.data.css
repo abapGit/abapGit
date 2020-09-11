@@ -17,6 +17,7 @@
   --theme-greyscale-light: #ccc;
   --theme-greyscale-lighter: lightgrey;
   --theme-linkhint-background: lightgreen;
+  --theme-debug-color: #aaa;
 }
 
 /* GLOBALS */
@@ -39,7 +40,7 @@ input:focus, textarea:focus { border-color: #8cadd9; }
 .attention    { color: red        !important; }
 .error        { color: #d41919    !important; }
 .warning      { color: #efb301    !important; }
-.success      { color: green   	  !important; }
+.success      { color: green      !important; }
 .blue         { color: #5e8dc9    !important; }
 .red          { color: red        !important; }
 .white        { color: white      !important; }
@@ -62,14 +63,17 @@ div.panel.success {
   color: #589a58 !important;
   background-color: #c5eac5;
 }
-#debug-output { color: var(--theme-primary-font-color-reduced); }
+div.panel.error {
+  color: #d41919;
+  background-color: #fad6d6;
+}
+#debug-output { color: var(--theme-debug-color); }
 div.dummydiv { background-color: var(--theme-container-background-color); }
 
 /* STRUCTURE DIVS, HEADER & FOOTER */
 div#header { border-bottom-color: var(--theme-container-border-color); }
-div#header span.page_title { color: var(--theme-greyscale-medium); }
-div#toc    { background-color: var(--theme-container-background-color); }
-div#footer span.version { color: grey; }
+div#header .page-title { color: var(--theme-greyscale-medium); }
+div#footer .version { color: var(--theme-greyscale-medium); }
 div#footer { border-top-color: var(--theme-container-border-color); }
 
 /* ERROR LOG */
@@ -90,15 +94,18 @@ div.repo { background-color: var(--theme-container-background-color); }
   background-color: #d8d8d8;
   color: #fff;
 }
-.repo_attr span.branch {
-  border-color: #d9d9d9;
-  background-color: #e2e2e2;
-}
+
 .repo_attr span.branch_head {
   border-color: #d8dff3;
   background-color: #eceff9;
 }
-.repo_attr span.branch_branch {
+
+span.branch {
+  border-color: #d9d9d9;
+  background-color: #e2e2e2;
+}
+
+span.branch_branch {
   border-color: #e7d9b1;
   background-color: #f8f0d8;
 }
@@ -298,15 +305,31 @@ table.diff_tab td.patch, th.patch {
 }
 
 /* STYLES for Syntax Highlighting */
+/* abap */
 .syntax-hl span.keyword  { color: #0a69ce; }
 .syntax-hl span.text     { color: #48ce4f; }
 .syntax-hl span.comment  { color: var(--theme-greyscale-dark); font-style: italic; }
+/* xml+html */
 .syntax-hl span.xml_tag  { color: #457ce3; }
 .syntax-hl span.attr     { color: #b777fb; }
 .syntax-hl span.attr_val { color: #7a02f9; }
+/* css+js */
+.syntax-hl span.properties   { color:#0a69ce; }
+.syntax-hl span.values       { color:blue; }
+.syntax-hl span.units        { color:maroon; }
+.syntax-hl span.selectors    { color:purple; }
+.syntax-hl span.functions    { color:purple; }
+.syntax-hl span.colors       { color:purple; }
+.syntax-hl span.extensions   { color:darkblue; }
+.syntax-hl span.at_rules     { color:darkblue; }
+.syntax-hl span.html         { color:green; }
+.syntax-hl span.variables    { color:purple; }
 
 /* DEBUG INFO STYLES */
-div.debug_container { color: #444; }
+div.debug_container { 
+  color: #444; 
+  background-color: var(--theme-container-background-color);
+}
 
 /* DB ENTRIES */
 div.db_list { background-color: #fff; }
@@ -410,4 +433,77 @@ div.corner-hint {
   color: white;
   background-color: #79a0d2;
   /* todo merge with stage search */
+}
+
+/* SETTINGS */
+
+table.settings_tab {
+  background-color: #fff;
+  border-color: #ddd;
+}
+table.settings_tab th {
+  color: #888888;
+  border-bottom-color: #ddd;
+}
+table.settings_tab td {
+  color: #333;
+  border-top-color: #eee;
+}
+table.settings_tab input {
+  background-color: #f8f8f8;
+}
+table.settings_tab input:focus {
+  background-color: #fff;
+}
+
+/* HTML FORMS */
+
+.dialog input::placeholder { color: #ccc }
+.dialog input:-ms-input-placeholder { color: #ccc }
+.dialog {
+  border-color: #cbcbcb;
+  background-color: #f4f4f4;
+}
+.dialog li.dialog-commands a {
+  border-color: #ccc;
+}
+.dialog li.dialog-commands input[type="submit"] {
+  border-color: #ccc;
+}
+.dialog li.dialog-commands input[type="submit"].main {
+  background-color: #64a8ff;
+  color: #fff;
+}
+.dialog label {
+  color: #444;
+}
+.dialog label em {
+  color: #64a8ff;
+}
+.dialog li.error small {
+  color: #ff5959;
+}
+.dialog li.error input[type="text"] {
+  border-color: #ff5959;
+}
+.dialog .radio-container {
+  border-color: #ddd;
+  background-color: #fff;
+}
+.dialog .radio-container input[type="radio"] + label {
+  color: #808080;
+}
+.dialog .radio-container input[type="radio"]:checked + label {
+  background-color: #64a8ff;
+  color: #fff;
+}
+.dialog li.with-command input[type="submit"]:hover {
+  background-color: #64a8ff;
+  color: #fff;
+}
+.dialog fieldset {
+  border-color: #dfdfdf;
+}
+.dialog fieldset legend {
+  color: #ccc;
 }

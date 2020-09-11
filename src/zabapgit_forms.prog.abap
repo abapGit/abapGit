@@ -7,8 +7,7 @@
 *&---------------------------------------------------------------------*
 FORM run.
 
-  DATA: lx_exception TYPE REF TO zcx_abapgit_exception,
-        lv_ind       TYPE t000-ccnocliind.
+  DATA: lx_exception TYPE REF TO zcx_abapgit_exception.
 
   TRY.
       zcl_abapgit_migrations=>run( ).
@@ -128,14 +127,14 @@ ENDFORM.
 
 FORM password_popup
       USING
-        iv_repo_url TYPE string
+        pv_repo_url TYPE string
       CHANGING
         cv_user     TYPE string
         cv_pass     TYPE string.
 
   lcl_password_dialog=>popup(
     EXPORTING
-      iv_repo_url     = iv_repo_url
+      iv_repo_url     = pv_repo_url
     CHANGING
       cv_user         = cv_user
       cv_pass         = cv_pass ).

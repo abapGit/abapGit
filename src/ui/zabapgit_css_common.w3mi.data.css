@@ -29,11 +29,21 @@ sup {
 }
 
 input, textarea, select {
-  padding: 3px 6px;
+  padding: 3px 0.5em;
   border: 1px solid;
 }
 input:focus, textarea:focus {
   border: 1px solid;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+span.separator {
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+  opacity: 0.25;
 }
 
 /* MODIFIERS */
@@ -44,6 +54,7 @@ input:focus, textarea:focus {
 .paddings     { padding: 0.5em 0.5em; }
 .pad-sides    { padding-left: 0.3em; padding-right: 0.3em; }
 .margin-v5    { margin-top: 0.5em; margin-bottom: 0.5em; }
+.margin-v1    { margin-top: 1em; margin-bottom: 1em; }
 .indent5em    { padding-left: 0.5em; }
 .pad4px       { padding: 4px; }
 .w100         { width: 100%; }
@@ -54,17 +65,20 @@ input:focus, textarea:focus {
 .inline       { display: inline; }
 .hidden       { visibility: hidden; }
 .nodisplay    { display: none }
+.m-em5-sides  { margin-left: 0.5em; margin-right: 0.5em }
+.w600px       { width: 600px }
+.wmax600px    { max-width: 600px }
+.auto-center  { /* use with max-width */
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
 
 /* PANELS */
 div.panel {
   border-radius: 3px;
-}
-
-#debug-output {
-  text-align: right;
-  padding-right: 0.5em;
-  font-style: italic;
-  font-size: small;
+  padding: 0.5em 0.5em;
+  margin: 0.5em 0.5em;
 }
 
 div.dummydiv {
@@ -77,33 +91,49 @@ a.close-btn {
 }
 
 /* STRUCTURE DIVS, HEADER & FOOTER */
-#abapGitLogo { outline: none; }
-
 div#header {
   padding:          0.5em 0.5em;
   border-bottom:    3px double;
 }
-div#header td:not(.logo) { padding-top: 11px; } /* align with logo H */
-div#header td.logo       { width: 164px; }
-div#header td:not(.logo) { padding-top: 11px; } /* align with logo H */
-div#header span.page_title {
-  font-weight: normal;
-  font-size: 18pt;
-  padding-left: 0.4em;
+div#header > div { display: inline-block }
+
+.logo .icon { display: inline-block }
+.logo .icon:before { width: auto }
+
+/* official logo colors, not vars, redefine in themes directly*/
+.logo .icon.icon-git-alt { color: #f03c2e }
+.logo .icon.icon-abapgit {
+  color: #362701;
+  vertical-align: bottom;
 }
 
-div#toc { padding: 0.5em 1em; }
-div#toc .favorites a { opacity: 0.5; }
-div#toc .favorites:hover a { opacity: 1; }
+div#header .logo { font-size: x-large }
+div#header .page-title { font-size: x-large }
+div#header span.spacer {
+  display: inline-block;
+  padding-right: 0.25em;
+  padding-left: 0.25em;
+}
 
+div#footer .logo { font-size: large }
 div#footer {
   padding:          0.5em 1em;
   border-top:       3px double;
-  text-align:       center;
 }
-div#footer span.version {
-  display: block;
-  margin-top: 0.3em;
+div#footer .version {
+  margin-top: 0.5em;
+  font-size: small;
+}
+
+#debug-output {
+  text-align: right;
+  padding-right: 0.5em;
+  font-size: smaller;
+  font-family: monospace;
+}
+#debug-output p {
+  margin-top: 0em;
+  margin-bottom: 0em;
 }
 
 /* ERROR LOG */
@@ -120,6 +150,7 @@ div.log .icon { padding-right: 6px; }
 /* REPOSITORY */
 div.repo {
   margin-top: 3px;
+  margin-bottom: 3px;
   padding: 0.5em 1em 0.5em 1em;
   position: relative;
 }
@@ -151,7 +182,8 @@ div.repo {
   font-size: 8pt;
   padding: 4px 2px 3px 2px;
 }
-.repo_attr span.branch {
+
+span.branch {
   padding: 2px 4px;
   border: 1px solid;
   border-radius: 4px;
@@ -192,7 +224,7 @@ div.repo_container {
 }
 
 div.repo_banner {
-  margin: 0em 1.2em 1em;
+  margin: 0em 1em 1em;
   padding: 0.5em 0.5em;
   text-align: center;
   font-size: 85%;
@@ -202,6 +234,7 @@ table.repo_tab {
   border: 1px solid;
   border-radius: 3px;
   width: 100%;
+  line-height: 1.5;
 }
 .repo_tab th {
   text-align: left;
@@ -234,6 +267,7 @@ table.repo_tab {
 }
 .repo_tab td.files {
   padding-left: 0.5em;
+  line-height: 1.5;
 }
 .repo_tab td.cmd, .repo_tab th.cmd {
   text-align: right;
@@ -245,13 +279,21 @@ table.repo_tab {
 }
 .repo_tab tr:first-child td { border-top: 0px; }
 
+.repo_tab tr:hover {
+  background-color: rgb(245, 245, 245) !important;
+}
+
+
 /* STAGE */
-div.stage-container { width: 900px; }
+
+th.stage-status { width: 30px; }
+th.stage-objtype { width: 30px; }
 input.stage-filter { width: 18em; }
 
 .stage_tab {
   border: 1px solid;
   margin-top: 0.2em;
+  line-height: 1.5;
 }
 .stage_tab td {
   border-top: 1px solid;
@@ -269,6 +311,10 @@ input.stage-filter { width: 18em; }
 }
 .stage_tab td.highlight {
   font-weight: bold;
+}
+
+.stage_tab tr:hover {
+  background-color: rgb(245, 245, 245) !important;
 }
 
 .stage_tab td.cmd {  cursor: pointer; }
@@ -352,6 +398,7 @@ span.diff_banner {
   padding-left: 0.3em;
   padding-right: 0.3em;
 }
+
 div.diff_content {
   border-top: 1px solid;
   border-bottom: 1px solid;
@@ -431,6 +478,58 @@ table.diff_tab td.code {
 
 table.diff_tab tbody tr:first-child td { padding-top: 0.5em; }
 table.diff_tab tbody tr:last-child td { padding-bottom: 0.5em; }
+
+table.diff_tab td.mark, th.mark {
+  width: 0.1%;
+  -ms-user-select: none;
+  user-select: none;
+  cursor: default;
+}
+
+.diff_select_left td.diff_right,
+.diff_select_left td.diff_right *,
+.diff_select_left th.diff_right,
+.diff_select_left th.diff_right *,
+.diff_select_right td.diff_left,
+.diff_select_right td.diff_left *,
+.diff_select_right th.diff_left,
+.diff_select_right th.diff_left * {
+  -ms-user-select: none;
+  user-select: none;
+  cursor: text;
+}
+
+.diff_select_left td.diff_left,
+.diff_select_left td.diff_left *,
+.diff_select_left th.diff_left,
+.diff_select_left th.diff_left *,
+.diff_select_right td.diff_right,
+.diff_select_right td.diff_right *,
+.diff_select_right th.diff_right,
+.diff_select_right th.diff_right * {
+  -ms-user-select: text;
+  user-select: text;
+}
+
+td.diff_others::selection,
+td.diff_others *::selection,
+th.diff_others::selection,
+th.diff_others *::selection {
+  background-color: transparent;
+  cursor: default;
+}
+
+.diff_select_left td.diff_right::selection,
+.diff_select_left td.diff_right *::selection,
+.diff_select_left th.diff_right::selection,
+.diff_select_left th.diff_right *::selection,
+.diff_select_right td.diff_left::selection,
+.diff_select_right td.diff_left *::selection,
+.diff_select_right th.diff_left::selection,
+.diff_select_right th.diff_left *::selection {
+  background-color: transparent;
+  cursor: text;
+}
 
 /* DEBUG INFO STYLES */
 div.debug_container {
@@ -818,6 +917,8 @@ table.commit tr .title {
 .repo-overview { font-size: smaller; }
 .repo-overview tbody td { height: 2em; }
 .ro-detail { display: none; }
+.ro-action { width: 260px; }
+.ro-go { font-size: 150%; }
 
 /* Branch Overview Page */
 .gitGraph-scrollWrapper, .gitGraph-Wrapper{
@@ -859,7 +960,7 @@ table.commit tr .title {
 
 .floating-button {
   position: fixed;
-  top: 6em;
+  top: 8em;
   right: 2.8em;
   padding: 1em 1.8em;
   border-radius: 4px;
@@ -904,4 +1005,142 @@ table.commit tr .title {
 
 .cmd-palette li .icon {
   margin-right: 10px;
+}
+
+/* SETTINGS */
+
+table.settings_tab {
+  border: 1px solid;
+  max-width: 600px;
+  line-height: 1.5;
+}
+table.settings_tab th {
+  text-align: left;
+  padding: 0.5em;
+  border-bottom: 1px solid;
+}
+table.settings_tab td {
+  text-align: left;
+  padding: 0.3em 0.5em;
+  border-top: 1px solid;
+}
+table.settings_tab input {
+  border: none;
+  text-align: center;
+}
+settings_tab tr:first-child td { border-top: 0px; }
+
+/* DIALOGS */
+
+.dialog {
+  border: 1px solid;
+  padding: 1em 1em;
+  border-radius: 6px;
+  text-align: left;
+}
+.dialog ul {
+  padding: 0;
+  margin: 0;
+}
+.dialog li {
+  padding: 5px 10px;
+  display: block;
+  list-style: none;
+  position: relative;
+}
+.dialog li.dialog-commands {
+  text-align: right;
+  margin-top: 12px;
+}
+.dialog li.dialog-commands a {
+  border: 1px solid;
+  cursor: pointer;
+  text-decoration: none;
+  padding: 6px 12px;
+  border-radius: 3px;
+  font-size: smaller;
+}
+.dialog li.dialog-commands input[type="submit"] {
+  border: 1px solid;
+  padding: 6px 12px;
+  border-radius: 3px;
+  cursor: pointer;
+}
+.dialog li.dialog-commands input[type="submit"].main {
+  border: 1px solid transparent;
+}
+.dialog label {
+  display: block;
+  font-size: 90%;
+  margin-top: 6px;
+  margin-bottom: 6px;
+  padding-left: 0.5em;
+}
+.dialog li.error small {
+  display: block;
+  font-size: 75%;
+  margin: 4px 0px;
+  padding-left: 0.5em;
+}
+.dialog .radio-container {
+  border: 1px solid;
+  display: inline-block;
+  padding: 4px;
+  border-radius: 3px;
+}
+.dialog input[type="checkbox"] + label {
+  display: inline-block;
+}
+.dialog input[type="text"] {
+  width: 100%;
+  box-sizing : border-box;
+  height: 2.5em;
+}
+.dialog .radio-container input[type="radio"] {
+  visibility: hidden;
+  display: none;
+  height: 0px;
+  width: 0px;
+}
+.dialog .radio-container input[type="radio"] + label {
+  border: 1px solid transparent;
+  cursor: pointer;
+  width: auto;
+  margin: 0px;
+  padding: 3px 8px;
+  border-radius: 2px;
+  display: inline-block;
+}
+.dialog .radio-container input[type="radio"]:checked + label {
+  border: 1px solid transparent;
+}
+.dialog li.with-command div.input-container {
+  display: table-cell;
+  width: 100%;
+}
+.dialog li.with-command div.command-container {
+  display: table-cell;
+}
+.dialog li.with-command input[type="submit"] {
+  height: 2.5em;
+}
+.dialog fieldset {
+  margin-top: 1em;
+  border: 1px solid;
+  border-radius: 6px; /* doesn't work in IE ? */
+  padding-bottom: 1em;
+}
+.dialog fieldset:first-child {
+  margin-top: 0;
+}
+.dialog fieldset legend {
+  font-size: small;
+  text-transform: uppercase;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+
+/* This icon is slightly wider than other icons */
+.icon-cloud-upload-alt {
+    padding-right: 5px;
 }

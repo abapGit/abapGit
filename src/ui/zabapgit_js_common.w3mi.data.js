@@ -22,9 +22,11 @@
 /* exported onTagTypeChange */
 /* exported getIndocStyleSheet */
 /* exported addMarginBottom */
-/* exported enumerateTocAllRepos */
 /* exported enumerateJumpAllFiles */
+/* exported createRepoCatalogEnumerator */
 /* exported enumerateToolbarActions */
+/* exported onDiffCollapse */
+/* exported restoreScrollPosition */
 
 /**********************************************************
  * Polyfills
@@ -228,31 +230,87 @@ function RepoOverViewHelper() {
   this.setHooks();
   this.pageId = "RepoOverViewHelperState"; // constant is OK for this case
   this.isDetailsDisplayed = false;
+  this.isOnlyFavoritesDisplayed = false;
   this.detailCssClass = findStyleSheetByName(".ro-detail");
+  this.actionCssClass = findStyleSheetByName(".ro-action");
+  var icon = document.getElementById("icon-filter-detail");
+  this.toggleFilterIcon(icon, this.isDetailsDisplayed);
+  icon = document.getElementById("icon-filter-favorite");
+  this.toggleFilterIcon(icon, this.isOnlyFavoritesDisplayed);
 }
 
-RepoOverViewHelper.prototype.toggleRepoListDetail = function(forceDisplay) {
+RepoOverViewHelper.prototype.toggleRepoListDetail = function (forceDisplay) {
   if (this.detailCssClass) {
-    this.isDetailsDisplayed = forceDisplay || !this.isDetailsDisplayed;
-    this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
+    this.toggleItemsDetail(forceDisplay);
+    this.saveFilter();
   }
 };
 
-RepoOverViewHelper.prototype.setHooks = function() {
-  window.onbeforeunload = this.onPageUnload.bind(this);
-  window.onload         = this.onPageLoad.bind(this);
+RepoOverViewHelper.prototype.toggleItemsDetail = function(forceDisplay){
+  if (this.detailCssClass) {
+    this.isDetailsDisplayed = forceDisplay || !this.isDetailsDisplayed;
+    this.detailCssClass.style.display = this.isDetailsDisplayed ? "" : "none";
+    this.actionCssClass.style.display = this.isDetailsDisplayed ? "none" : "";
+    var icon = document.getElementById("icon-filter-detail");
+    this.toggleFilterIcon(icon, this.isDetailsDisplayed);
+  }
 };
 
-RepoOverViewHelper.prototype.onPageUnload = function() {
-  if (!window.sessionStorage) return;
-  var data = { isDetailsDisplayed: this.isDetailsDisplayed };
-  window.sessionStorage.setItem(this.pageId, JSON.stringify(data));
+RepoOverViewHelper.prototype.toggleFilterIcon = function (icon, isEnabled) {
+  if (isEnabled) {
+    icon.classList.remove("grey");
+    icon.classList.add("blue");
+  } else {
+    icon.classList.remove("blue");
+    icon.classList.add("grey");
+  }
 };
 
-RepoOverViewHelper.prototype.onPageLoad = function() {
-  var data = window.sessionStorage && JSON.parse(window.sessionStorage.getItem(this.pageId));
-  if (data && data.isDetailsDisplayed) this.toggleRepoListDetail(true);
-  debugOutput("RepoOverViewHelper.onPageLoad: " + ((data) ? "from Storage" : "initial state"));
+RepoOverViewHelper.prototype.toggleRepoListFavorites = function (forceDisplay) {
+  this.toggleItemsFavorites(forceDisplay);
+  this.saveFilter();
+};
+
+RepoOverViewHelper.prototype.toggleItemsFavorites = function(forceDisplay){
+  this.isOnlyFavoritesDisplayed = forceDisplay || !this.isOnlyFavoritesDisplayed;
+  var repositories = document.getElementsByClassName("repo");
+  var icon = document.getElementById("icon-filter-favorite");
+  this.toggleFilterIcon(icon, this.isOnlyFavoritesDisplayed);
+  for (var i = 0; i < repositories.length; i++) {
+    var repo = repositories[i];
+    if (this.isOnlyFavoritesDisplayed) {
+      if (!repo.classList.contains("favorite")) {
+        repo.style.display = "none";
+      }
+    } else {
+      repo.style.display = "";
+    }
+  }
+};
+
+RepoOverViewHelper.prototype.setHooks = function () {
+  window.onload = this.onPageLoad.bind(this);
+};
+
+RepoOverViewHelper.prototype.saveFilter = function () {
+  if (!window.localStorage) return;
+  var data = {
+    isDetailsDisplayed: this.isDetailsDisplayed,
+    isOnlyFavoritesDisplayed: this.isOnlyFavoritesDisplayed
+  };
+  window.localStorage.setItem(this.pageId, JSON.stringify(data));
+};
+
+RepoOverViewHelper.prototype.onPageLoad = function () {
+  var data = window.localStorage && JSON.parse(window.localStorage.getItem(this.pageId));
+  if (data) {
+    if (data.isDetailsDisplayed) {
+      this.toggleItemsDetail(true);
+    }
+    if (data.isOnlyFavoritesDisplayed) {
+      this.toggleItemsFavorites(true);
+    }
+  }
 };
 
 /**********************************************************
@@ -263,6 +321,7 @@ RepoOverViewHelper.prototype.onPageLoad = function() {
 function StageHelper(params) {
   this.pageSeed        = params.seed;
   this.formAction      = params.formAction;
+  this.patchAction     = params.patchAction;
   this.user            = params.user;
   this.selectedCount   = 0;
   this.filteredCount   = 0;
@@ -274,6 +333,7 @@ function StageHelper(params) {
     commitAllBtn:      document.getElementById(params.ids.commitAllBtn),
     commitSelectedBtn: document.getElementById(params.ids.commitSelectedBtn),
     commitFilteredBtn: document.getElementById(params.ids.commitFilteredBtn),
+    patchBtn:          document.getElementById(params.ids.patchBtn),
     objectSearch:      document.getElementById(params.ids.objectSearch),
     selectedCounter:   null,
     filteredCounter:   null,
@@ -312,7 +372,11 @@ StageHelper.prototype.findCounters = function() {
 };
 
 StageHelper.prototype.injectFilterMe = function() {
-  var changedByHead = this.dom.stageTab.tHead.rows[0].cells[this.colIndex.user];
+  var tabFirstHead = this.dom.stageTab.tHead.rows[0];
+  if (!tabFirstHead || tabFirstHead.className !== "local") {
+    return; // for the case only "remove part" is displayed
+  }
+  var changedByHead = tabFirstHead.cells[this.colIndex.user];
   changedByHead.innerText = changedByHead.innerText + " (";
   var a = document.createElement("A");
   a.appendChild(document.createTextNode("me"));
@@ -333,6 +397,7 @@ StageHelper.prototype.setHooks = function() {
   this.dom.stageTab.onclick          = this.onTableClick.bind(this);
   this.dom.commitSelectedBtn.onclick = this.submit.bind(this);
   this.dom.commitFilteredBtn.onclick = this.submitVisible.bind(this);
+  this.dom.patchBtn.onclick          = this.submitPatch.bind(this);
   this.dom.objectSearch.oninput      = this.onFilter.bind(this);
   this.dom.objectSearch.onkeypress   = this.onFilter.bind(this);
   window.onbeforeunload              = this.onPageUnload.bind(this);
@@ -448,7 +513,7 @@ StageHelper.prototype.applyFilterToRow = function (row, filter) {
     if (elem.firstChild && elem.firstChild.tagName === "A") elem = elem.firstChild;
     return {
       elem:      elem,
-      plainText: elem.innerText, // without tags
+      plainText: elem.innerText.replace(/ /g, "\u00a0"), // without tags, with encoded spaces
       curHtml:   elem.innerHTML
     };
   }, this);
@@ -551,6 +616,10 @@ StageHelper.prototype.submit = function () {
 StageHelper.prototype.submitVisible = function () {
   this.markVisiblesAsAdded();
   submitSapeventForm(this.collectData(), this.formAction);
+};
+
+StageHelper.prototype.submitPatch = function(){
+  submitSapeventForm(this.collectData(), this.patchAction);
 };
 
 // Extract data from the table
@@ -761,10 +830,156 @@ DiffHelper.prototype.highlightButton = function(state) {
   }
 };
 
+//Collapse/Expand diffs
+function onDiffCollapse(event) {
+  var source = event.target || event.srcElement;
+  var nextDiffContent = source.parentElement.nextElementSibling;
+  var hide;
+
+  if(source.classList.contains("icon-chevron-down")){
+    source.classList.remove("icon-chevron-down");
+    source.classList.add("icon-chevron-right");
+    hide = true;
+  } else {
+    source.classList.remove("icon-chevron-right");
+    source.classList.add("icon-chevron-down");
+    hide = false;
+  }
+
+  hide ? nextDiffContent.classList.add("nodisplay") : nextDiffContent.classList.remove("nodisplay");
+}
+
 // Add Bottom margin, so that we can scroll to the top of the last file
 function addMarginBottom(){
   document.getElementsByTagName("body")[0].style.marginBottom = screen.height + "px";
 }
+
+
+/**********************************************************
+ * Diff page logic of column selection
+ **********************************************************/
+
+function DiffColumnSelection() {
+  this.selectedColumnIdx = -1;
+  this.lineNumColumnIdx = -1;
+  //https://stackoverflow.com/questions/2749244/javascript-setinterval-and-this-solution
+  document.addEventListener("mousedown", this.mousedownEventListener.bind(this));
+  document.addEventListener("copy", this.copyEventListener.bind(this));
+}
+
+DiffColumnSelection.prototype.mousedownEventListener = function(e) {
+  // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
+  // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
+  // Process mousedown event for all TD elements -> apply CSS class at TABLE level.
+  // (https://stackoverflow.com/questions/40956717/how-to-addeventlistener-to-multiple-elements-in-a-single-line)
+  var unifiedLineNumColumnIdx = 0;
+  var unifiedCodeColumnIdx = 3;
+  var splitLineNumLeftColumnIdx = 0;
+  var splitCodeLeftColumnIdx = 2;
+  var splitLineNumRightColumnIdx = 3;
+  var splitCodeRightColumnIdx = 5;
+
+  if (e.button !== 0) return; // function is only valid for left button, not right button
+
+  var td = e.target;
+  while (td != undefined && td.tagName != "TD" && td.tagName != "TBODY") td = td.parentElement;
+  if (td == undefined) return;
+  var table = td.parentElement.parentElement;
+
+  var patchColumnCount = 0;
+  if (td.parentElement.cells[0].classList.contains("patch")) {
+    patchColumnCount = 1;
+  }
+
+  if (td.classList.contains("diff_left")) {
+    table.classList.remove("diff_select_right");
+    table.classList.add("diff_select_left");
+    if ( window.getSelection() && this.selectedColumnIdx != splitCodeLeftColumnIdx + patchColumnCount ) {
+      // De-select to avoid effect of dragging selection in case the right column was first selected
+      if (document.body.createTextRange) { // All IE but Edge
+        // document.getSelection().removeAllRanges() may trigger error
+        // so use this code which is equivalent but does not fail
+        // (https://stackoverflow.com/questions/22914075/javascript-error-800a025e-using-range-selector)
+        range = document.body.createTextRange();
+        range.collapse();
+        range.select();
+      } else {
+        document.getSelection().removeAllRanges();
+      }}
+    this.selectedColumnIdx = splitCodeLeftColumnIdx + patchColumnCount;
+    this.lineNumColumnIdx = splitLineNumLeftColumnIdx + patchColumnCount;
+
+  } else if (td.classList.contains("diff_right")) {
+    table.classList.remove("diff_select_left");
+    table.classList.add("diff_select_right");
+    if ( window.getSelection() && this.selectedColumnIdx != splitCodeRightColumnIdx + patchColumnCount ) {
+      if (document.body.createTextRange) { // All IE but Edge
+        // document.getSelection().removeAllRanges() may trigger error
+        // so use this code which is equivalent but does not fail
+        // (https://stackoverflow.com/questions/22914075/javascript-error-800a025e-using-range-selector)
+        var range = document.body.createTextRange();
+        range.collapse();
+        range.select();
+      } else {
+        document.getSelection().removeAllRanges();
+      }}
+    this.selectedColumnIdx = splitCodeRightColumnIdx + patchColumnCount;
+    this.lineNumColumnIdx = splitLineNumRightColumnIdx + patchColumnCount;
+
+  } else if (td.classList.contains("diff_unified")) {
+    this.selectedColumnIdx = unifiedCodeColumnIdx;
+    this.lineNumColumnIdx = unifiedLineNumColumnIdx;
+
+  } else {
+    this.selectedColumnIdx = -1;
+    this.lineNumColumnIdx = -1;
+  }
+};
+
+DiffColumnSelection.prototype.copyEventListener = function(e) {
+  // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
+  // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
+  var td = e.target;
+  while (td != undefined && td.tagName != "TD" && td.tagName != "TBODY") td = td.parentElement;
+  if(td != undefined){
+    // Use window.clipboardData instead of e.clipboardData
+    // (https://stackoverflow.com/questions/23470958/ie-10-copy-paste-issue)
+    var clipboardData = ( e.clipboardData == undefined ? window.clipboardData : e.clipboardData );
+    var text = this.getSelectedText();
+    clipboardData.setData("text", text);
+    e.preventDefault();
+  }
+};
+
+DiffColumnSelection.prototype.getSelectedText = function() {
+  // Select text in a column of an HTML table and copy to clipboard (in DIFF view)
+  // (https://stackoverflow.com/questions/6619805/select-text-in-a-column-of-an-html-table)
+  var sel = window.getSelection(),
+    range = sel.getRangeAt(0),
+    doc = range.cloneContents(),
+    nodes = doc.querySelectorAll("tr"),
+    text = "";
+  if (nodes.length === 0) {
+    text = doc.textContent;
+  } else {
+    var newline = "",
+      realThis = this;
+    [].forEach.call(nodes, function(tr, i) {
+      var cellIdx = ( i==0 ? 0 : realThis.selectedColumnIdx );
+      if (tr.cells.length > cellIdx) {
+        var tdSelected = tr.cells[cellIdx];
+        var tdLineNum = tr.cells[realThis.lineNumColumnIdx];
+        // copy is interesting for remote code, don't copy lines which exist only locally
+        if (i==0 || tdLineNum.getAttribute("line-num")!="") {
+          text += newline + tdSelected.textContent;
+          // special processing for TD tag which sometimes contains newline
+          // (expl: /src/ui/zabapgit_js_common.w3mi.data.js) so don't add newline again in that case.
+          var lastChar = tdSelected.textContent[ tdSelected.textContent.length - 1 ];
+          if ( lastChar == "\n" ) newline = "";
+          else newline = "\n";
+        }}});}
+  return text;
+};
 
 /**********************************************************
  * Other functions
@@ -1082,9 +1297,18 @@ function Hotkeys(oKeyMap){
     // the hotkey execution
     this.oKeyMap[sKey] = function(oEvent) {
 
+      // gHelper is only valid for diff page
+      var diffHelper = (window.gHelper || {});
+
       // We have either a js function on this
       if (this[action]) {
         this[action].call(this);
+        return;
+      }
+
+      // Or a method of the helper object for the diff page
+      if (diffHelper[action]){
+        diffHelper[action].call(diffHelper);
         return;
       }
 
@@ -1282,7 +1506,8 @@ Patch.prototype.ID = {
 };
 
 Patch.prototype.ACTION = {
-  PATCH_STAGE: "patch_stage"
+  PATCH_STAGE: "patch_stage",
+  PATCH_REFRESH_LOCAL: "patch_refresh_local"
 };
 
 Patch.prototype.escape = function(sFileName){
@@ -1411,24 +1636,31 @@ Patch.prototype.clickAllLineCheckboxesInSection = function(oSection, bChecked){
 Patch.prototype.registerStagePatch = function registerStagePatch(){
 
   var elStage = document.querySelector("#" + this.ID.STAGE);
-  elStage.addEventListener("click", this.stagePatch.bind(this));
+  elStage.addEventListener("click", this.submitPatch.bind(this, this.ACTION.PATCH_STAGE));
+
+  var aRefresh = document.querySelectorAll("[id*=patch_refresh]");
+  [].forEach.call( aRefresh, function(el) {
+    el.addEventListener("click", memoizeScrollPosition(this.submitPatch.bind(this, el.id)).bind(this));
+  }.bind(this));
 
   // for hotkeys
   window.stagePatch = function(){
-    this.stagePatch();
+    this.submitPatch(this.ACTION.PATCH_STAGE);
   }.bind(this);
+
+  window.refreshLocal = memoizeScrollPosition(function(){
+    this.submitPatch(this.ACTION.PATCH_REFRESH_LOCAL);
+  }.bind(this));
 
 };
 
-Patch.prototype.stagePatch = function() {
-
+Patch.prototype.submitPatch = function(action) {
   // Collect add and remove info and submit to backend
 
-  var aAddPatch = this.collectElementsForCheckboxId(PatchLine.prototype.ID, true);
-  var aRemovePatch = this.collectElementsForCheckboxId(PatchLine.prototype.ID, false);
+  var aAddPatch = this.collectElementsForCheckboxId( PatchLine.prototype.ID, true);
+  var aRemovePatch = this.collectElementsForCheckboxId( PatchLine.prototype.ID, false);
 
-  submitSapeventForm({"add": aAddPatch, "remove": aRemovePatch}, this.ACTION.PATCH_STAGE, "post");
-
+  submitSapeventForm({ add: aAddPatch, remove: aRemovePatch }, action, "post");
 };
 
 Patch.prototype.collectElementsForCheckboxId = function(sId, bChecked){
@@ -1766,25 +1998,19 @@ CommandPalette.prototype.exec = function(cmd) {
 
 /* COMMAND ENUMERATORS */
 
-function enumerateTocAllRepos() {
-  var root = document.getElementById("toc-all-repos");
-  if (!root || root.nodeName !== "UL") return null;
-
-  var items = [];
-  for (var i = 0; i < root.children.length; i++) {
-    if (root.children[i].nodeName === "LI") items.push(root.children[i]);
-  }
-
-  items = items.map(function(listItem) {
-    var anchor = listItem.children[0];
-    return {
-      action:    anchor.href.replace("sapevent:", ""),  // a
-      iconClass: anchor.childNodes[0].className,        // i with icon
-      title:     anchor.childNodes[1].textContent       // text with repo name
-    };
-  });
-
-  return items;
+function createRepoCatalogEnumerator(catalog, action) {
+  // expecting [{ key, isOffline, displayName }]
+  return function() {
+    return catalog.map(function(i) {
+      return {
+        action:    action + "?" + i.key,
+        iconClass: i.isOffline
+          ? "icon icon-plug darkgrey"
+          : "icon icon-cloud-upload-alt blue",
+        title: i.displayName
+      };
+    });
+  };
 }
 
 function enumerateToolbarActions() {
@@ -1836,4 +2062,26 @@ function enumerateJumpAllFiles() {
         action: root.onclick.bind(null, title),
         title:  title
       };});
+}
+
+function saveScrollPosition(){
+  if (!window.sessionStorage) { return }
+  window.sessionStorage.setItem("scrollTop", document.querySelector("html").scrollTop);
+}
+
+function restoreScrollPosition(){
+  if (!window.sessionStorage) { return }
+
+  var scrollTop = window.sessionStorage.getItem("scrollTop");
+  if (scrollTop) {
+    document.querySelector("html").scrollTop = scrollTop;
+  }
+  window.sessionStorage.setItem("scrollTop", 0);
+}
+
+function memoizeScrollPosition(fn){
+  return function(){
+    saveScrollPosition();
+    return fn.call(this, fn.args);
+  }.bind(this);
 }

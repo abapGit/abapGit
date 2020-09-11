@@ -16,10 +16,10 @@
   --theme-container-border-color: #D1E0EE;
   --theme-table-border-color: #E5E5E5; /* ALV border color */
   --theme-greyscale-dark: #666666;
-  --theme-greyscale-medium: #bfbfbf;
+  --theme-greyscale-medium: #999999;
   --theme-greyscale-light: #CCCCCC;
   --theme-greyscale-lighter: #E5E5E5;
-  --theme-list-hover-background-color: #666666;
+  --theme-list-hover-background-color: black;
 }
 
 /* GLOBALS */
@@ -43,22 +43,30 @@ div#toc .favorites a { opacity: 1; }
 .nav-container ul ul { background-color: #555555; }
 .nav-container ul ul li:hover { background-color: var(--theme-list-hover-background-color); }
 table.repo_tab {
-    border-color: #var(--theme-container-background-color);
+    border-color: var(--theme-container-background-color);
     background-color: var(--theme-background-color);
 }
 
+/* PANELS */
+#debug-output { color: var(--theme-greyscale-dark); }
+
 /* abapGit logo in header and footer */
-#abapGitLogo>img { background-color: #bfbfbf; }
-#footer>img { background-color: #bfbfbf; }
+.logo .icon.icon-abapgit { 
+  color: var(--theme-primary-font-color); 
+}
 
 /* TUTORIAL */
 div.tutorial h1, h2 { color: var(--theme-primary-font-color); }
 
 /* REPOSITORY */
 div.repo { background-color: var(--theme-container-background-color); }
+.repo_name span.name { color: var(--theme-primary-font-color-reduced); }
+.repo_name span.url  { color: var(--theme-greyscale-medium); }
+.repo_name a.url { color: var(--theme-greyscale-medium); }
 .repo_attr { color: var(--theme-primary-font-color); }
-.repo_attr span.branch_branch {
-  border-color: #ffffff;
+
+span.branch_branch {
+  border-color: var(--theme-greyscale-medium);
   background-color: #777777;
 }
 
@@ -66,10 +74,24 @@ div.repo { background-color: var(--theme-container-background-color); }
 .repo_tab td { color: var(--theme-primary-font-color); }
 .repo_tab tr.unsupported { background-color: #555; }
 .repo_tab tr.modified { background-color: #555; }
+.repo_tab tr:hover {background-color: var(--theme-list-hover-background-color) !important;}
+
+.repo_tab th {
+  border-top-color: var(--theme-greyscale-dark);
+}
+.repo_tab td {
+  border-top-color: var(--theme-greyscale-dark);
+}
 
 /* STAGE */
-.stage_tab { background-color: var(--theme-background-color); }
-.stage_tab td { color: var(--theme-primary-font-color); }
+.stage_tab { 
+  border-color: var(--theme-greyscale-dark);
+  background-color: var(--theme-background-color); 
+}
+.stage_tab td { 
+  color: var(--theme-primary-font-color); 
+  border-top-color:  var(--theme-greyscale-dark);
+}
 .stage_tab td.status.highlight { 
   color: var(--theme-primary-font-color) !important;
   background-color: var(--theme-background-color);
@@ -79,6 +101,8 @@ div.repo { background-color: var(--theme-container-background-color); }
   background-color: var(--theme-background-color); 
 }
 .stage_tab th { background-color: var(--theme-container-background-color); }
+.stage_tab tr:hover {background-color: var(--theme-list-hover-background-color) !important;}
+
 
 /* COMMIT */
 div.form-container { background-color: var(--theme-background-color); }
@@ -97,12 +121,25 @@ table.diff_tab td,th { color: #fff; }
 table.diff_tab thead.nav_line { background-color: var(--theme-container-background-color); }
 
 /* STYLES for Syntax Highlighting */
+/* abap */
 .syntax-hl span.keyword  { color: #4af; }
 .syntax-hl span.text     { color: #8f8; }
 .syntax-hl span.comment  { color: #999; }
+/* xml+html */
 .syntax-hl span.xml_tag  { color: #659cff; }
 .syntax-hl span.attr     { color: #bab2f9; }
 .syntax-hl span.attr_val { color: #b777fb; }
+/* css+js */
+.syntax-hl span.properties   { color:#0a69ce; }
+.syntax-hl span.values       { color:blue; }
+.syntax-hl span.units        { color:maroon; }
+.syntax-hl span.selectors    { color:purple; }
+.syntax-hl span.functions    { color:purple; }
+.syntax-hl span.colors       { color:purple; }
+.syntax-hl span.extensions   { color:lightblue; }
+.syntax-hl span.at_rules     { color:lightblue; }
+.syntax-hl span.html         { color:green; }
+.syntax-hl span.variables    { color:purple; }
 
 /* DEBUG INFO STYLES */
 div.debug_container#debug_info { color: var(--theme-primary-font-color); }
@@ -113,6 +150,11 @@ table.db_tab td      { color: var(--theme-primary-font-color); }
 table.db_tab td.data { opacity: 0.5; }
 table.db_tab tbody tr:hover, tr:active { background-color: var(--theme-list-hover-background-color); }
 table.db_tab th {
-  color: var(--theme-primary-font-color); }
+  color: var(--theme-primary-font-color);
   border-bottom-color: #333;
 }
+
+/* ERROR LOGS */
+div.log { color: var(--theme-greyscale-dark); }
+.close-btn, .message-panel, .message-panel-commands a { color: var(--theme-greyscale-dark); }
+.message-panel-commands a:hover { color: var(--theme-greyscale-dark); }

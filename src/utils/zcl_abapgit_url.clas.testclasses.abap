@@ -9,7 +9,10 @@ CLASS ltcl_test DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
       repo_name3 FOR TESTING RAISING zcx_abapgit_exception,
       repo_name4 FOR TESTING RAISING zcx_abapgit_exception,
       repo_name5 FOR TESTING RAISING zcx_abapgit_exception,
-      repo_error FOR TESTING.
+      repo_error FOR TESTING,
+      url_validate1 FOR TESTING,
+      url_validate2 FOR TESTING,
+      url_validate3 FOR TESTING.
 
 ENDCLASS.
 
@@ -19,7 +22,7 @@ CLASS ltcl_test IMPLEMENTATION.
   METHOD repo_error.
 
     TRY.
-        zcl_abapgit_url=>host( 'not a real url' ).          "#EC NOTEXT
+        zcl_abapgit_url=>host( 'not a real url' ).
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception.                      "#EC NO_HANDLER
     ENDTRY.
@@ -97,5 +100,36 @@ CLASS ltcl_test IMPLEMENTATION.
         act = lv_name ).
 
   ENDMETHOD.
+
+  METHOD url_validate1.
+
+    TRY.
+        zcl_abapgit_url=>validate( 'http://github.com/larshp/Foobar.git' ).
+      CATCH zcx_abapgit_exception.
+        cl_abap_unit_assert=>fail( ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD url_validate2.
+
+    TRY.
+        zcl_abapgit_url=>validate( 'https://github.com/larshp/Foobar.git' ).
+      CATCH zcx_abapgit_exception.
+        cl_abap_unit_assert=>fail( ).
+    ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD url_validate3.
+
+    TRY.
+        zcl_abapgit_url=>validate( 'XYZ://github.com/larshp/Foobar.git' ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH zcx_abapgit_exception.                      "#EC NO_HANDLER
+    ENDTRY.
+
+  ENDMETHOD.
+
 
 ENDCLASS.

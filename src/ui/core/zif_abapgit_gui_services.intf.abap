@@ -11,7 +11,20 @@ INTERFACE zif_abapgit_gui_services
     RETURNING
       VALUE(rv_url) TYPE w3url.
 
-  " For future refactoring
-  " Potentially also: back, go_home, go_page, +some access to page stack
+  METHODS register_event_handler
+    IMPORTING
+      ii_event_handler TYPE REF TO zif_abapgit_gui_event_handler.
+
+  METHODS get_current_page_name
+    RETURNING
+      VALUE(rv_page_name) TYPE string.
+
+  METHODS get_hotkeys_ctl
+    RETURNING
+      VALUE(ri_hotkey_ctl) TYPE REF TO zif_abapgit_gui_hotkey_ctl.
+
+  METHODS get_html_parts
+    RETURNING
+      VALUE(ro_parts) TYPE REF TO zcl_abapgit_html_parts.
 
 ENDINTERFACE.

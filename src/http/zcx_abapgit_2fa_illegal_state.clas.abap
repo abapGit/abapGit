@@ -34,6 +34,6 @@ MV_TEXT = MV_TEXT
 
 
   METHOD get_default_text.
-    rv_text = 'Illegal state.' ##NO_TEXT.
+    rv_text = 'Illegal state.' .
   ENDMETHOD.
 ENDCLASS.

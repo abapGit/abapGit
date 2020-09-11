@@ -43,25 +43,27 @@ CLASS zcl_abapgit_http_client IMPLEMENTATION.
     DATA: lv_code TYPE i,
           lv_text TYPE string.
 
-    mi_client->response->get_status(
-      IMPORTING
-        code   = lv_code ).
+    mi_client->response->get_status( IMPORTING code = lv_code ).
     CASE lv_code.
       WHEN 200.
-        RETURN.
+        RETURN. " Success, OK
       WHEN 302.
-        zcx_abapgit_exception=>raise( 'HTTP redirect, check URL' ).
+        zcx_abapgit_exception=>raise( 'Resource access temporarily redirected. Check the URL (HTTP 302)' ).
       WHEN 401.
-        zcx_abapgit_exception=>raise( 'HTTP 401, unauthorized' ).
+        zcx_abapgit_exception=>raise( 'Unauthorized access to resource. Check your credentials (HTTP 401)' ).
       WHEN 403.
-        zcx_abapgit_exception=>raise( 'HTTP 403, forbidden' ).
+        zcx_abapgit_exception=>raise( 'Access to resource forbidden (HTTP 403)' ).
       WHEN 404.
-        zcx_abapgit_exception=>raise( 'HTTP 404, not found' ).
+        zcx_abapgit_exception=>raise( 'Resource not found. Check the URL (HTTP 404)' ).
+      WHEN 407.
+        zcx_abapgit_exception=>raise( 'Proxy authentication required. Check your credentials (HTTP 407)' ).
+      WHEN 408.
+        zcx_abapgit_exception=>raise( 'Request timeout (HTTP 408)' ).
       WHEN 415.
-        zcx_abapgit_exception=>raise( 'HTTP 415, unsupported media type' ).
+        zcx_abapgit_exception=>raise( 'Unsupported media type (HTTP 415)' ).
       WHEN OTHERS.
         lv_text = mi_client->response->get_cdata( ).
-        zcx_abapgit_exception=>raise( |HTTP error code: { lv_code }, { lv_text }| ).
+        zcx_abapgit_exception=>raise( |{ lv_text } (HTTP { lv_code })| ).
     ENDCASE.
 
   ENDMETHOD.
@@ -174,16 +176,16 @@ CLASS zcl_abapgit_http_client IMPLEMENTATION.
         value = lv_value ).
 
     lv_value = 'application/x-git-'
-                  && iv_service && '-pack-request'.         "#EC NOTEXT
+                  && iv_service && '-pack-request'.
     mi_client->request->set_header_field(
         name  = 'Content-Type'
-        value = lv_value ).                                 "#EC NOTEXT
+        value = lv_value ).
 
     lv_value = 'application/x-git-'
-                  && iv_service && '-pack-result'.          "#EC NOTEXT
+                  && iv_service && '-pack-result'.
     mi_client->request->set_header_field(
         name  = 'Accept'
-        value = lv_value ).                                 "#EC NOTEXT
+        value = lv_value ).
 
     IF mo_digest IS BOUND.
       mo_digest->run( mi_client ).

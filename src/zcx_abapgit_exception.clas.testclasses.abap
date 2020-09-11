@@ -57,7 +57,8 @@ CLASS ltcl_test IMPLEMENTATION.
       CATCH zcx_abapgit_exception INTO lx_ex.
         cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex )
                                             exp = lx_previous->get_text( ) ).
-        cl_abap_unit_assert=>assert_equals( act = lx_ex->previous exp = lx_previous ).
+        cl_abap_unit_assert=>assert_equals( act = lx_ex->previous
+                                            exp = lx_previous ).
     ENDTRY.
 
     FREE: lx_ex, lx_previous.
@@ -66,7 +67,8 @@ CLASS ltcl_test IMPLEMENTATION.
         zcx_abapgit_exception=>raise( lc_text1 ).
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception INTO lx_ex.
-        cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex ) exp = lc_text1 ).
+        cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex )
+                                            exp = lc_text1 ).
     ENDTRY.
 
     FREE lx_ex.
@@ -114,7 +116,8 @@ CLASS ltcl_test IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception INTO lx_ex.
-        cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex ) exp = lv_text ).
+        cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex )
+                                            exp = lv_text ).
     ENDTRY.
   ENDMETHOD.
 
@@ -137,7 +140,8 @@ CLASS ltcl_test IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception INTO lx_ex.
-        cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex ) exp = lv_text ).
+        cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex )
+                                            exp = lv_text ).
     ENDTRY.
 
   ENDMETHOD.
@@ -160,7 +164,8 @@ CLASS ltcl_test IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception INTO lx_ex.
-        cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex ) exp = lv_text ).
+        cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex )
+                                            exp = lv_text ).
     ENDTRY.
 
   ENDMETHOD.
@@ -183,7 +188,8 @@ CLASS ltcl_test IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception INTO lx_ex.
-        cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex ) exp = lv_text ).
+        cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex )
+                                            exp = lv_text ).
     ENDTRY.
 
   ENDMETHOD.
@@ -206,7 +212,8 @@ CLASS ltcl_test IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception INTO lx_ex.
-        cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex ) exp = lv_text ).
+        cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex )
+                                            exp = lv_text ).
     ENDTRY.
 
   ENDMETHOD.
@@ -229,7 +236,8 @@ CLASS ltcl_test IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception INTO lx_ex.
-        cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex ) exp = lv_text ).
+        cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex )
+                                            exp = lv_text ).
     ENDTRY.
 
   ENDMETHOD.
@@ -252,7 +260,8 @@ CLASS ltcl_test IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception INTO lx_ex.
-        cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex ) exp = lv_text ).
+        cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex )
+                                            exp = lv_text ).
     ENDTRY.
 
   ENDMETHOD.
@@ -275,7 +284,8 @@ CLASS ltcl_test IMPLEMENTATION.
         zcx_abapgit_exception=>raise_t100( ).
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception INTO lx_ex.
-        cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex ) exp = lv_text ).
+        cl_abap_unit_assert=>assert_equals( act = get_exc_text( lx_ex )
+                                            exp = lv_text ).
     ENDTRY.
 
   ENDMETHOD.

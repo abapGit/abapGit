@@ -212,7 +212,8 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
       CLEAR ls_tree.
       ls_tree-path = <ls_folder>-path.
       ls_tree-data = zcl_abapgit_git_pack=>encode_tree( lt_nodes ).
-      ls_tree-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-tree iv_data = ls_tree-data ).
+      ls_tree-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-tree
+                                             iv_data = ls_tree-data ).
       APPEND ls_tree TO rt_trees.
 
       <ls_folder>-sha1 = ls_tree-sha1.
@@ -302,13 +303,11 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
 
   METHOD delete_branch.
 
-    DATA: lt_objects TYPE zif_abapgit_definitions=>ty_objects_tt,
-          lv_pack    TYPE xstring.
+    DATA: lv_pack TYPE xstring.
 
 
 * "client MUST send an empty packfile"
 * https://github.com/git/git/blob/master/Documentation/technical/pack-protocol.txt#L514
-    lv_pack = zcl_abapgit_git_pack=>encode( lt_objects ).
 
     zcl_abapgit_git_transport=>receive_pack(
       iv_url         = iv_url
@@ -409,7 +408,7 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
           ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
 
 
-    zcl_abapgit_git_transport=>upload_pack(
+    zcl_abapgit_git_transport=>upload_pack_by_branch(
       EXPORTING
         iv_url         = iv_url
         iv_branch_name = iv_branch_name
@@ -441,7 +440,7 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
           lv_sha1     TYPE zif_abapgit_definitions=>ty_sha1,
           lv_new_tree TYPE zif_abapgit_definitions=>ty_sha1,
           lt_trees    TYPE ty_trees_tt,
-          lt_stage    TYPE zcl_abapgit_stage=>ty_stage_tt.
+          lt_stage    TYPE zif_abapgit_definitions=>ty_stage_tt.
 
     FIELD-SYMBOLS: <ls_stage>   LIKE LINE OF lt_stage,
                    <ls_updated> LIKE LINE OF rs_result-updated_files,
@@ -459,7 +458,7 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
       MOVE-CORRESPONDING <ls_stage>-file TO <ls_updated>.
 
       CASE <ls_stage>-method.
-        WHEN zcl_abapgit_stage=>c_method-add.
+        WHEN zif_abapgit_definitions=>c_method-add.
 
           APPEND <ls_stage>-file TO lt_blobs.
 
@@ -481,7 +480,7 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
 
           <ls_updated>-sha1 = lv_sha1.   "New sha1
 
-        WHEN zcl_abapgit_stage=>c_method-rm.
+        WHEN zif_abapgit_definitions=>c_method-rm.
           DELETE lt_expanded
             WHERE name = <ls_stage>-file-filename
             AND path = <ls_stage>-file-path.
@@ -576,7 +575,7 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
                    <ls_blob> LIKE LINE OF it_blobs.
 
 
-    lv_time = zcl_abapgit_time=>get( ).
+    lv_time = zcl_abapgit_time=>get_unix( ).
 
     READ TABLE it_trees ASSIGNING <ls_tree> WITH KEY path = '/'.
     ASSERT sy-subrc = 0.
@@ -597,7 +596,8 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
     ls_commit-body      = is_comment-comment.
     lv_commit = zcl_abapgit_git_pack=>encode_commit( ls_commit ).
 
-    ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-commit iv_data = lv_commit ).
+    ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-commit
+                                             iv_data = lv_commit ).
     ls_object-type = zif_abapgit_definitions=>c_type-commit.
     ls_object-data = lv_commit.
     APPEND ls_object TO et_new_objects.

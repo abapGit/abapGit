@@ -155,17 +155,15 @@ CLASS zcl_abapgit_log IMPLEMENTATION.
     DATA ls_item_status TYPE zif_abapgit_log=>ty_item_status_out.
     DATA lr_item_status TYPE REF TO zif_abapgit_log=>ty_item_status_out.
 
-    CLEAR et_item_status.
-
     "collect all message for all objects
     LOOP AT mt_log REFERENCE INTO lr_log.
       CLEAR ls_item_status.
       ls_item_status-item = lr_log->item.
-      READ TABLE et_item_status REFERENCE INTO lr_item_status
+      READ TABLE rt_item_status REFERENCE INTO lr_item_status
            WITH KEY item-obj_type = ls_item_status-item-obj_type
                     item-obj_name = ls_item_status-item-obj_name.
       IF sy-subrc <> 0.
-        INSERT ls_item_status INTO TABLE et_item_status.
+        INSERT ls_item_status INTO TABLE rt_item_status.
         GET REFERENCE OF ls_item_status INTO lr_item_status.
       ENDIF.
       CLEAR ls_msg.
@@ -175,7 +173,7 @@ CLASS zcl_abapgit_log IMPLEMENTATION.
     ENDLOOP.
 
     "determine object status from object messages
-    LOOP AT et_item_status REFERENCE INTO lr_item_status.
+    LOOP AT rt_item_status REFERENCE INTO lr_item_status.
       lr_item_status->status = get_messages_status( lr_item_status->messages ).
       IF lr_item_status->messages IS INITIAL.
         CLEAR ls_msg.

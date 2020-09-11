@@ -3,23 +3,18 @@ CLASS zcl_abapgit_object_doct DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PUBLIC SECTION.
     INTERFACES zif_abapgit_object.
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
+    METHODS:
+      constructor
+        IMPORTING
+          is_item     TYPE zif_abapgit_definitions=>ty_item
+          iv_language TYPE spras.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CONSTANTS: c_id      TYPE dokhl-id VALUE 'TX',
-               c_typ     TYPE dokhl-typ VALUE 'E',
-               c_version TYPE dokhl-dokversion VALUE '0001',
-               c_name    TYPE string VALUE 'DOC'.
 
-    TYPES: BEGIN OF ty_data,
-             doctitle TYPE dsyst-doktitle,
-             head     TYPE thead,
-             lines    TYPE tline_tab,
-           END OF ty_data.
-
-    METHODS: read
-      RETURNING VALUE(rs_data) TYPE ty_data.
-
+    CONSTANTS c_id TYPE dokhl-id VALUE 'TX' ##NO_TEXT.
+    CONSTANTS c_name TYPE string VALUE 'DOC' ##NO_TEXT.
+    DATA mi_longtexts TYPE REF TO zif_abapgit_longtexts .
 ENDCLASS.
 
 
@@ -27,76 +22,45 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_OBJECT_DOCT IMPLEMENTATION.
 
 
-  METHOD read.
+  METHOD constructor.
 
-    DATA: lv_object TYPE dokhl-object.
+    super->constructor(
+        is_item     = is_item
+        iv_language = iv_language ).
 
-
-    lv_object = ms_item-obj_name.
-
-    CALL FUNCTION 'DOCU_READ'
-      EXPORTING
-        id       = c_id
-        langu    = mv_language
-        object   = lv_object
-        typ      = c_typ
-        version  = c_version
-      IMPORTING
-        doktitle = rs_data-doctitle
-        head     = rs_data-head
-      TABLES
-        line     = rs_data-lines.
+    mi_longtexts = zcl_abapgit_factory=>get_longtexts( ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~changed_by.
-    rv_user = read( )-head-tdluser.
+
+    rv_user = mi_longtexts->changed_by(
+                  iv_object_name = ms_item-obj_name
+                  iv_longtext_id = c_id ).
+
     IF rv_user IS INITIAL.
       rv_user = c_user_unknown.
     ENDIF.
+
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_object TYPE dokhl-object.
-
-
-    lv_object = ms_item-obj_name.
-
-    CALL FUNCTION 'DOCU_DEL'
-      EXPORTING
-        id       = c_id
-        langu    = mv_language
-        object   = lv_object
-        typ      = c_typ
-      EXCEPTIONS
-        ret_code = 1
-        OTHERS   = 2.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error from DOCU_DEL' ).
-    ENDIF.
+    mi_longtexts->delete(
+        iv_object_name = ms_item-obj_name
+        iv_longtext_id = c_id ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: ls_data TYPE ty_data.
-
-
-    io_xml->read( EXPORTING iv_name = c_name
-                  CHANGING cg_data = ls_data ).
-
-    CALL FUNCTION 'DOCU_UPDATE'
-      EXPORTING
-        head    = ls_data-head
-        state   = 'A'
-        typ     = c_typ
-        version = c_version
-      TABLES
-        line    = ls_data-lines.
+    mi_longtexts->deserialize(
+        iv_longtext_name   = c_name
+        io_xml             = io_xml
+        iv_master_language = mv_language ).
 
     tadir_insert( iv_package ).
 
@@ -195,22 +159,11 @@ CLASS ZCL_ABAPGIT_OBJECT_DOCT IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: ls_data TYPE ty_data.
-
-
-    ls_data = read( ).
-
-    CLEAR: ls_data-head-tdfuser,
-           ls_data-head-tdfreles,
-           ls_data-head-tdfdate,
-           ls_data-head-tdftime,
-           ls_data-head-tdluser,
-           ls_data-head-tdlreles,
-           ls_data-head-tdldate,
-           ls_data-head-tdltime.
-
-    io_xml->add( iv_name = c_name
-                 ig_data = ls_data ).
+    mi_longtexts->serialize(
+        iv_longtext_name = c_name
+        iv_object_name = ms_item-obj_name
+        iv_longtext_id = c_id
+        io_xml         = io_xml ).
 
   ENDMETHOD.
 ENDCLASS.

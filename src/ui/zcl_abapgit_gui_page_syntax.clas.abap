@@ -2,7 +2,6 @@ CLASS zcl_abapgit_gui_page_syntax DEFINITION PUBLIC FINAL CREATE PUBLIC
     INHERITING FROM zcl_abapgit_gui_page_codi_base.
 
   PUBLIC SECTION.
-    INTERFACES: zif_abapgit_gui_page_hotkey.
 
     METHODS:
       constructor
@@ -18,16 +17,12 @@ CLASS zcl_abapgit_gui_page_syntax DEFINITION PUBLIC FINAL CREATE PUBLIC
         REDEFINITION.
 
   PROTECTED SECTION.
+    CONSTANTS: c_variant TYPE sci_chkv VALUE 'SYNTAX_CHECK'.
 
     METHODS:
       render_content REDEFINITION.
 
   PRIVATE SECTION.
-    CONSTANTS:
-      BEGIN OF c_actions,
-        rerun TYPE string VALUE 'rerun' ##NO_TEXT,
-      END OF c_actions.
-
     METHODS:
       build_menu
         RETURNING
@@ -38,50 +33,49 @@ CLASS zcl_abapgit_gui_page_syntax DEFINITION PUBLIC FINAL CREATE PUBLIC
       run_syntax_check
         RAISING
           zcx_abapgit_exception.
-
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
+
+
+  METHOD build_menu.
+
+    ro_menu = build_base_menu( ).
+
+  ENDMETHOD.
 
 
   METHOD constructor.
     super->constructor( ).
-    ms_control-page_title = 'SYNTAX CHECK'.
+    ms_control-page_title = 'Syntax Check'.
     mo_repo = io_repo.
     run_syntax_check( ).
   ENDMETHOD.
 
 
-  METHOD build_menu.
-
-    DATA: lv_opt TYPE c LENGTH 1.
-
-    CREATE OBJECT ro_menu.
-
-    ro_menu->add( iv_txt = 'Re-Run'
-                  iv_act = c_actions-rerun
-                  iv_cur = abap_false ) ##NO_TEXT.
-
-  ENDMETHOD.
-
-
   METHOD render_content.
 
-    CREATE OBJECT ro_html.
-    ro_html->add( '<div class="toc">' ).
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    ri_html->add( `<div class="repo">` ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
+    ri_html->add( `</div>` ).
+
+    ri_html->add( '<div class="toc">' ).
+
+    ri_html->add( render_variant( c_variant ) ).
 
     IF lines( mt_result ) = 0.
-      ro_html->add( '<div class="dummydiv success">' ).
-      ro_html->add( zcl_abapgit_html=>icon( 'check' ) ).
-      ro_html->add( 'No syntax errors' ).
+      ri_html->add( '<div class="dummydiv success">' ).
+      ri_html->add( ri_html->icon( 'check' ) ).
+      ri_html->add( 'No syntax errors' ).
+      ri_html->add( '</div>' ).
     ELSE.
-      render_result( io_html   = ro_html
+      render_result( ii_html   = ri_html
                      it_result = mt_result ).
     ENDIF.
-
-    ro_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -91,14 +85,12 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
     DATA: li_syntax_check TYPE REF TO zif_abapgit_code_inspector.
 
     li_syntax_check = zcl_abapgit_factory=>get_code_inspector( mo_repo->get_package( ) ).
-    mt_result = li_syntax_check->run( 'SYNTAX_CHECK' ).
+    mt_result = li_syntax_check->run( c_variant ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_gui_event_handler~on_event.
-
-    DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
 
     CASE iv_action.
       WHEN c_actions-rerun.
@@ -112,7 +104,6 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
         super->zif_abapgit_gui_event_handler~on_event(
           EXPORTING
             iv_action             = iv_action
-            iv_prev_page          = iv_prev_page
             iv_getdata            = iv_getdata
             it_postdata           = it_postdata
           IMPORTING
@@ -123,15 +114,10 @@ CLASS zcl_abapgit_gui_page_syntax IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
-
-  ENDMETHOD.
-
   METHOD zif_abapgit_gui_renderable~render.
 
     ms_control-page_menu = build_menu( ).
-    ro_html = super->zif_abapgit_gui_renderable~render( ).
+    ri_html = super->zif_abapgit_gui_renderable~render( ).
 
   ENDMETHOD.
-
 ENDCLASS.

@@ -54,7 +54,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
+CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
 
 
   METHOD get_requirement_met_status.
@@ -73,7 +73,7 @@ CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
         no_release_found = 1
         OTHERS           = 2.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from DELIVERY_GET_INSTALLED_COMPS { sy-subrc }| ) ##no_text.
+      zcx_abapgit_exception=>raise( |Error from DELIVERY_GET_INSTALLED_COMPS { sy-subrc }| ).
     ENDIF.
 
     LOOP AT it_requirements ASSIGNING <ls_requirement>.
@@ -111,9 +111,9 @@ CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
 
     READ TABLE lt_met_status TRANSPORTING NO FIELDS WITH KEY met = abap_false.
     IF sy-subrc = 0.
-      rv_status = 'N'.
+      rv_status = zif_abapgit_definitions=>gc_no.
     ELSE.
-      rv_status = 'Y'.
+      rv_status = zif_abapgit_definitions=>gc_yes.
     ENDIF.
 
   ENDMETHOD.
@@ -145,7 +145,7 @@ CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
 
     TYPES: BEGIN OF lty_color_line,
              color TYPE lvc_t_scol.
-        INCLUDE TYPE ty_requirement_status.
+             INCLUDE TYPE ty_requirement_status.
     TYPES: END OF lty_color_line.
 
     TYPES: lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.

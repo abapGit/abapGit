@@ -5,12 +5,12 @@ CLASS zcl_abapgit_object_iaxu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-    DATA: mc_source_style_2006 TYPE w3style VALUE 'XML',
-          mc_generator_class   TYPE w3styleclass VALUE 'CL_ITS_GENERATE_XML3'.
+    DATA: mv_source_style_2006 TYPE w3style VALUE 'XML',
+          mv_generator_class   TYPE w3styleclass VALUE 'CL_ITS_GENERATE_XML3'.
 
     METHODS:
       read
-        EXPORTING es_attr TYPE w3tempattr
+        RETURNING VALUE(rs_attr) TYPE w3tempattr
         RAISING   zcx_abapgit_exception,
       save
         IMPORTING is_attr TYPE w3tempattr
@@ -31,15 +31,15 @@ CLASS zcl_abapgit_object_iaxu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         IMPORTING io_xml_api TYPE REF TO object
         RAISING   zcx_abapgit_exception,
       w3_api_create_new
-        IMPORTING is_attr    TYPE w3tempattr
-        EXPORTING eo_xml_api TYPE REF TO object
+        IMPORTING is_attr           TYPE w3tempattr
+        RETURNING VALUE(ro_xml_api) TYPE REF TO object
         RAISING   zcx_abapgit_exception.
 
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_IAXU IMPLEMENTATION.
 
 
   METHOD read.
@@ -50,12 +50,12 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
     ls_name = ms_item-obj_name.
 
     w3_api_load( EXPORTING is_name = ls_name
-                 IMPORTING es_attr = es_attr ).
+                 IMPORTING es_attr = rs_attr ).
 
-    CLEAR: es_attr-chname,
-           es_attr-tdate,
-           es_attr-ttime,
-           es_attr-devclass.
+    CLEAR: rs_attr-chname,
+           rs_attr-tdate,
+           rs_attr-ttime,
+           rs_attr-devclass.
 
   ENDMETHOD.
 
@@ -64,8 +64,7 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
     DATA: lo_xml_api TYPE REF TO object.
 
-    w3_api_create_new( EXPORTING is_attr    = is_attr
-                       IMPORTING eo_xml_api = lo_xml_api ).
+    lo_xml_api = w3_api_create_new( is_attr = is_attr ).
 
     w3_api_save( io_xml_api = lo_xml_api ).
 
@@ -79,20 +78,20 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
     DATA: lr_xml_api TYPE REF TO data.
 
-    FIELD-SYMBOLS: <lo_xml_api> TYPE any.
+    FIELD-SYMBOLS: <lg_xml_api> TYPE any.
 
     CREATE DATA lr_xml_api TYPE REF TO ('CL_W3_API_XML3').
-    ASSIGN lr_xml_api->* TO <lo_xml_api>.
+    ASSIGN lr_xml_api->* TO <lg_xml_api>.
     ASSERT sy-subrc = 0.
 
     CALL METHOD ('CL_W3_API_XML3')=>create_new
       EXPORTING
-        p_source_style_2006     = mc_source_style_2006
+        p_source_style_2006     = mv_source_style_2006
         p_xml_data              = is_attr
-        p_generator_class       = mc_generator_class
+        p_generator_class       = mv_generator_class
         p_program_name          = is_attr-programm
       IMPORTING
-        p_xml                   = <lo_xml_api>
+        p_xml                   = <lg_xml_api>
       EXCEPTIONS
         undefined_name          = 1
         error_occured           = 2
@@ -105,7 +104,7 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error from w3_api_xml3~create_new subrc={ sy-subrc }| ).
     ENDIF.
 
-    eo_xml_api ?= <lo_xml_api>.
+    ro_xml_api ?= <lg_xml_api>.
 
   ENDMETHOD.
 
@@ -131,10 +130,10 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
 
     DATA: lr_xml_api TYPE REF TO data.
 
-    FIELD-SYMBOLS: <lo_xml_api> TYPE any.
+    FIELD-SYMBOLS: <lg_xml_api> TYPE any.
 
     CREATE DATA lr_xml_api TYPE REF TO ('CL_W3_API_XML3').
-    ASSIGN lr_xml_api->* TO <lo_xml_api>.
+    ASSIGN lr_xml_api->* TO <lg_xml_api>.
     ASSERT sy-subrc = 0.
 
     CALL METHOD ('CL_W3_API_XML3')=>load
@@ -142,7 +141,7 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
         p_xml_name          = is_name
       IMPORTING
         p_attributes        = es_attr
-        p_xml               = <lo_xml_api>
+        p_xml               = <lg_xml_api>
       EXCEPTIONS
         object_not_existing = 1
         permission_failure  = 2
@@ -154,7 +153,7 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |Error from w3_api_xml3~load subrc={ sy-subrc }| ).
     ENDIF.
 
-    eo_xml_api ?= <lo_xml_api>.
+    eo_xml_api ?= <lg_xml_api>.
 
   ENDMETHOD.
 
@@ -241,7 +240,7 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
     ls_attr-devclass = iv_package.
 
     IF zif_abapgit_object~exists( ) = abap_true.
-      zif_abapgit_object~delete( ).
+      zif_abapgit_object~delete( iv_package ).
     ENDIF.
 
     save( is_attr = ls_attr ).
@@ -310,7 +309,7 @@ CLASS zcl_abapgit_object_iaxu IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    read( IMPORTING es_attr = ls_attr ).
+    ls_attr = read( ).
 
     io_xml->add( iv_name = 'ATTR'
                  ig_data = ls_attr ).

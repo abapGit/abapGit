@@ -61,7 +61,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_webi IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
 
 
   METHOD handle_endpoint.
@@ -179,6 +179,39 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD handle_single_parameter.
+    CONSTANTS:
+      BEGIN OF lc_parameter_type,
+        import TYPE vepparamtype VALUE 'I',
+        export TYPE vepparamtype VALUE 'O',
+      END OF lc_parameter_type.
+
+    CASE iv_parameter_type.
+      WHEN lc_parameter_type-import.
+        ri_parameter = ii_function->get_incoming_parameter( parameter_name  = iv_name
+                                                            version         = 'I' ).
+        IF ri_parameter IS BOUND.
+          ii_function->delete_incoming_parameter( ri_parameter ).
+        ENDIF.
+        ri_parameter = ii_function->create_incoming_parameter( iv_name ).
+
+      WHEN lc_parameter_type-export.
+
+        ri_parameter = ii_function->get_outgoing_parameter( parameter_name  = iv_name
+                                                            version         = 'I' ).
+        IF ri_parameter IS BOUND.
+          ii_function->delete_outgoing_parameter( parameter = ri_parameter ).
+        ENDIF.
+
+        ri_parameter = ii_function->create_outgoing_parameter( iv_name ).
+
+      WHEN OTHERS.
+        ASSERT 0 = 1.
+    ENDCASE.
+
+  ENDMETHOD.
+
+
   METHOD handle_soap.
 
     DATA: li_soap TYPE REF TO if_ws_md_soap_ext_virtinfc,
@@ -227,8 +260,7 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
       li_elem->set_signed( <ls_elem>-signed ).
       li_elem->set_abaptype( <ls_elem>-abaptype ).
 
-      IF li_elem->if_ws_md_vif_type~has_soap_extension_type(
-          sews_c_vif_version-all ) = abap_false.
+      IF li_elem->if_ws_md_vif_type~has_soap_extension_type( sews_c_vif_version-all ) = abap_false.
         READ TABLE is_webi-pveptypesoapext ASSIGNING <ls_soap>
           WITH KEY typename = <ls_elem>-typename.
         IF sy-subrc = 0.
@@ -271,8 +303,7 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
       li_table->set_line_type( mi_vi->get_type( typename = <ls_table>-typeref
                                                 version  = sews_c_vif_version-inactive ) ).
 
-      IF li_table->if_ws_md_vif_type~has_soap_extension_type(
-          sews_c_vif_version-all ) = abap_false.
+      IF li_table->if_ws_md_vif_type~has_soap_extension_type( sews_c_vif_version-all ) = abap_false.
         READ TABLE is_webi-pveptypesoapext ASSIGNING <ls_soap>
           WITH KEY typename = <ls_table>-typename.
         IF sy-subrc = 0.
@@ -317,7 +348,6 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
           lv_exists   TYPE abap_bool,
           li_root     TYPE REF TO if_ws_md_vif_root,
           ls_endpoint LIKE LINE OF ls_webi-pvependpoint.
-
 
     io_xml->read( EXPORTING iv_name = 'WEBI'
                   CHANGING  cg_data = ls_webi ).
@@ -369,6 +399,10 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
     ENDTRY.
 
     zcl_abapgit_objects_activation=>add_item( ms_item ).
+
+    zcl_abapgit_sotr_handler=>create_sotr(
+      iv_package = iv_package
+      io_xml     = io_xml ).
 
   ENDMETHOD.
 
@@ -509,38 +543,11 @@ CLASS zcl_abapgit_object_webi IMPLEMENTATION.
     io_xml->add( iv_name = 'WEBI'
                  ig_data = ls_webi ).
 
-  ENDMETHOD.
-
-  METHOD handle_single_parameter.
-    CONSTANTS:
-      BEGIN OF lc_parameter_type,
-        import TYPE vepparamtype VALUE 'I',
-        export TYPE vepparamtype VALUE 'O',
-      END OF lc_parameter_type.
-
-    CASE iv_parameter_type.
-      WHEN lc_parameter_type-import.
-        ri_parameter = ii_function->get_incoming_parameter( parameter_name  = iv_name
-                                                            version         = 'I' ).
-        IF ri_parameter IS BOUND.
-          ii_function->delete_incoming_parameter( ri_parameter ).
-        ENDIF.
-        ri_parameter = ii_function->create_incoming_parameter( iv_name ).
-
-      WHEN lc_parameter_type-export.
-
-        ri_parameter = ii_function->get_outgoing_parameter( parameter_name  = iv_name
-                                                            version         = 'I' ).
-        IF ri_parameter IS BOUND.
-          ii_function->delete_outgoing_parameter( parameter = ri_parameter ).
-        ENDIF.
-
-        ri_parameter = ii_function->create_outgoing_parameter( iv_name ).
-
-      WHEN OTHERS.
-        ASSERT 0 = 1.
-    ENDCASE.
+    zcl_abapgit_sotr_handler=>read_sotr(
+      iv_pgmid    = 'R3TR'
+      iv_object   = ms_item-obj_type
+      iv_obj_name = ms_item-obj_name
+      io_xml      = io_xml ).
 
   ENDMETHOD.
-
 ENDCLASS.

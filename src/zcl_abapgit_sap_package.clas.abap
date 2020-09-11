@@ -236,8 +236,8 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
         iv_object                  = 'DEVC'
         iv_obj_name                = lv_pkg_name
       IMPORTING
-        ev_request_type            = rv_transport_type-request
-        ev_task_type               = rv_transport_type-task
+        ev_request_type            = rs_transport_type-request
+        ev_task_type               = rs_transport_type-task
       EXCEPTIONS
         no_request_needed          = 1
         internal_error             = 2
@@ -308,8 +308,10 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
   METHOD zif_abapgit_sap_package~read_parent.
 
     SELECT SINGLE parentcl FROM tdevc INTO rv_parentcl
-      WHERE devclass = mv_package.        "#EC CI_SUBRC "#EC CI_GENBUFF
-    ASSERT sy-subrc = 0.
+      WHERE devclass = mv_package.        "#EC CI_GENBUFF
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Inconsistent package structure! Cannot find parent for { mv_package }| ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

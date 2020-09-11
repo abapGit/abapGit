@@ -80,8 +80,8 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR IMPLEMENTATION.
     DATA lv_len TYPE i.
     DATA lv_cur TYPE i.
 
-    DATA lc_css_build TYPE string VALUE '<link rel="stylesheet" type="text/css" href="$BUILD_NAME">'.
-    REPLACE FIRST OCCURRENCE OF '$BUILD_NAME' IN lc_css_build WITH c_css_build_name. " Mmmm
+    DATA lv_css_build TYPE string VALUE '<link rel="stylesheet" type="text/css" href="$BUILD_NAME">'.
+    REPLACE FIRST OCCURRENCE OF '$BUILD_NAME' IN lv_css_build WITH c_css_build_name. " Mmmm
 
     CLEAR: ev_html, et_css_urls.
 
@@ -98,23 +98,30 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR IMPLEMENTATION.
       IF abap_false = is_preserved( lv_css_path ).
         lv_off = lo_matcher->get_offset( ).
         lv_len = lo_matcher->get_length( ).
-        ev_html = ev_html && substring( val = iv_html off = lv_cur len = lv_off - lv_cur ).
-        ev_html = ev_html && c_comment_start && substring( val = iv_html off = lv_off len = lv_len ) && c_comment_end.
+        ev_html = ev_html && substring( val = iv_html
+                                        off = lv_cur
+                                        len = lv_off - lv_cur ).
+        ev_html = ev_html && c_comment_start && substring( val = iv_html
+                                                           off = lv_off
+                                                           len = lv_len ) && c_comment_end.
         lv_cur  = lv_off + lv_len.
         APPEND lv_css_path TO et_css_urls.
       ENDIF.
     ENDWHILE.
 
-    ev_html = ev_html && substring( val = iv_html off = lv_cur len = lv_head_end - lv_cur ).
+    ev_html = ev_html && substring( val = iv_html
+                                    off = lv_cur
+                                    len = lv_head_end - lv_cur ).
     IF lines( et_css_urls ) > 0.
       lv_marker = cl_abap_char_utilities=>newline
         && `    ` " Assume 4 space indent, maybe improve and detect ?
         && c_preprocess_marker
         && cl_abap_char_utilities=>newline
         && `    `.
-      ev_html = ev_html && lv_marker && lc_css_build.
+      ev_html = ev_html && lv_marker && lv_css_build.
     ENDIF.
-    ev_html = ev_html && substring( val = iv_html off = lv_head_end ).
+    ev_html = ev_html && substring( val = iv_html
+                                    off = lv_head_end ).
 
   ENDMETHOD.
 
@@ -161,9 +168,13 @@ CLASS ZCL_ABAPGIT_GUI_HTML_PROCESSOR IMPLEMENTATION.
 
   METHOD find_head_offset.
 
-    rv_head_end = find( val = iv_html regex = |{ cl_abap_char_utilities=>newline }?\\s*</head>| case = abap_false ).
+    rv_head_end = find( val = iv_html
+                        regex = |{ cl_abap_char_utilities=>newline }?\\s*</head>|
+                        case = abap_false ).
     IF rv_head_end <= 0.
-      rv_head_end = find( val = iv_html regex = |</head>| case = abap_false ).
+      rv_head_end = find( val = iv_html
+                          regex = |</head>|
+                          case = abap_false ).
       IF rv_head_end <= 0.
         zcx_abapgit_exception=>raise( 'HTML preprocessor: </head> not found' ).
       ENDIF.

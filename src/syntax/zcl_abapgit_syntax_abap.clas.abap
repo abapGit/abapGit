@@ -220,7 +220,9 @@ CLASS ZCL_ABAPGIT_SYNTAX_ABAP IMPLEMENTATION.
       CASE <ls_match>-token.
         WHEN c_token-keyword.
           IF <ls_match>-offset > 0
-              AND substring( val = iv_line off = ( <ls_match>-offset - 1 ) len = 1 ) CA '-<'.
+              AND substring( val = iv_line
+                             off = ( <ls_match>-offset - 1 )
+                             len = 1 ) CA '-<'.
             " Delete match if keyword is part of structure or field symbol
             DELETE ct_matches INDEX lv_index.
             CONTINUE.

@@ -72,8 +72,8 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHC IMPLEMENTATION.
           lv_longtext_id      TYPE enhdocuobject,
           lv_shorttext        TYPE string.
 
-    FIELD-SYMBOLS: <ls_composite_child> TYPE enhcompositename,
-                   <ls_enh_child>       LIKE LINE OF lt_enh_childs.
+    FIELD-SYMBOLS: <lv_composite_child> TYPE enhcompositename,
+                   <lv_enh_child>       LIKE LINE OF lt_enh_childs.
 
     lv_package = iv_package.
 
@@ -99,12 +99,12 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHC IMPLEMENTATION.
 
         li_enh_composite->if_enh_object_docu~set_shorttext( lv_shorttext ).
 
-        LOOP AT lt_composite_childs ASSIGNING <ls_composite_child>.
-          li_enh_composite->add_composite_child( <ls_composite_child> ).
+        LOOP AT lt_composite_childs ASSIGNING <lv_composite_child>.
+          li_enh_composite->add_composite_child( <lv_composite_child> ).
         ENDLOOP.
 
-        LOOP AT lt_enh_childs ASSIGNING <ls_enh_child>.
-          li_enh_composite->add_enh_child( <ls_enh_child> ).
+        LOOP AT lt_enh_childs ASSIGNING <lv_enh_child>.
+          li_enh_composite->add_enh_child( <lv_enh_child> ).
         ENDLOOP.
 
         li_enh_composite->set_longtext_id( lv_longtext_id ).
@@ -112,6 +112,10 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHC IMPLEMENTATION.
         li_enh_composite->if_enh_object~save( ).
         li_enh_composite->if_enh_object~activate( ).
         li_enh_composite->if_enh_object~unlock( ).
+
+        zcl_abapgit_sotr_handler=>create_sotr(
+          iv_package = iv_package
+          io_xml     = io_xml ).
 
       CATCH cx_enh_root INTO lx_error.
         zcx_abapgit_exception=>raise( lx_error->get_text( ) ).
@@ -214,6 +218,12 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHC IMPLEMENTATION.
                      ig_data = lt_enh_childs ).
         io_xml->add( iv_name = 'LONGTEXT_ID'
                      ig_data = lv_longtext_id ).
+
+        zcl_abapgit_sotr_handler=>read_sotr(
+          iv_pgmid    = 'R3TR'
+          iv_object   = ms_item-obj_type
+          iv_obj_name = ms_item-obj_name
+          io_xml      = io_xml ).
 
       CATCH cx_enh_root INTO lx_error.
         zcx_abapgit_exception=>raise( lx_error->get_text( ) ).

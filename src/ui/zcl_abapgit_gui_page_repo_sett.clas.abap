@@ -6,11 +6,10 @@ CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
 
   PUBLIC SECTION.
 
-    INTERFACES zif_abapgit_gui_page_hotkey .
-
     METHODS constructor
       IMPORTING
-        !io_repo TYPE REF TO zcl_abapgit_repo .
+                !io_repo TYPE REF TO zcl_abapgit_repo
+      RAISING   zcx_abapgit_exception.
 
     METHODS zif_abapgit_gui_event_handler~on_event
         REDEFINITION .
@@ -24,10 +23,15 @@ CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
 
     METHODS render_dot_abapgit
       IMPORTING
-        !io_html TYPE REF TO zcl_abapgit_html .
+        !ii_html TYPE REF TO zif_abapgit_html .
     METHODS render_local_settings
       IMPORTING
-        !io_html TYPE REF TO zcl_abapgit_html
+        !ii_html TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_remotes
+      IMPORTING
+        !ii_html TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     METHODS save
@@ -45,6 +49,11 @@ CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
         !it_post_fields TYPE tihttpnvp
       RAISING
         zcx_abapgit_exception .
+    METHODS save_remotes
+      IMPORTING
+        !it_post_fields TYPE tihttpnvp
+      RAISING
+        zcx_abapgit_exception .
     METHODS parse_post
       IMPORTING
         !it_postdata          TYPE cnht_post_data_tab
@@ -52,12 +61,12 @@ CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
         VALUE(rt_post_fields) TYPE tihttpnvp .
     METHODS render_dot_abapgit_reqs
       IMPORTING
-        io_html TYPE REF TO zcl_abapgit_html
+        ii_html         TYPE REF TO zif_abapgit_html
         it_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
     METHODS render_table_row
       IMPORTING
-        iv_name TYPE string
-        iv_value TYPE string
+        iv_name        TYPE string
+        iv_value       TYPE string
       RETURNING
         VALUE(rv_html) TYPE string.
 
@@ -71,12 +80,12 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
 
 
   METHOD constructor.
     super->constructor( ).
-    ms_control-page_title = 'REPO SETTINGS'.
+    ms_control-page_title = 'Repository Settings'.
     mo_repo = io_repo.
   ENDMETHOD.
 
@@ -85,7 +94,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
     DATA lv_serialized_post_data TYPE string.
 
-    CONCATENATE LINES OF it_postdata INTO lv_serialized_post_data.
+    lv_serialized_post_data = zcl_abapgit_utils=>translate_postdata( it_postdata ).
     rt_post_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_serialized_post_data ).
 
   ENDMETHOD.
@@ -93,36 +102,58 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
   METHOD render_content.
 
-    CREATE OBJECT ro_html.
-    ro_html->add( '<div class="settings_container">' ).
-    ro_html->add( |<form id="settings_form" method="post" action="sapevent:{ c_action-save_settings }">| ).
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    render_dot_abapgit( ro_html ).
-    render_local_settings( ro_html ).
+    ri_html->add( `<div class="repo">` ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( mo_repo ) ).
+    ri_html->add( `</div>` ).
 
-    ro_html->add( '<input type="submit" value="Save" class="floating-button blue-set emphasis">' ).
-    ro_html->add( '</form>' ).
-    ro_html->add( '</div>' ).
+    ri_html->add( '<div class="settings_container">' ).
+    ri_html->add( |<form id="settings_form" method="post" action="sapevent:{ c_action-save_settings }">| ).
+
+    render_dot_abapgit( ri_html ).
+    IF mo_repo->is_offline( ) = abap_false.
+      render_remotes( ri_html ).
+    ENDIF.
+    render_local_settings( ri_html ).
+
+    ri_html->add( '<input type="submit" value="Save" class="floating-button blue-set emphasis">' ).
+    ri_html->add( '</form>' ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
 
   METHOD render_dot_abapgit.
 
-    DATA: ls_dot               TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
-          lv_select_html       TYPE string,
-          lv_selected          TYPE string,
-          lt_folder_logic      TYPE string_table.
+    DATA: ls_dot          TYPE zif_abapgit_dot_abapgit=>ty_dot_abapgit,
+          lv_select_html  TYPE string,
+          lv_selected     TYPE string,
+          lv_language     TYPE t002t-sptxt,
+          lv_ignore       TYPE string,
+          lt_folder_logic TYPE string_table.
 
-    FIELD-SYMBOLS: <lv_folder_logic> TYPE LINE OF string_table.
+    FIELD-SYMBOLS: <lv_folder_logic> TYPE LINE OF string_table,
+                   <lv_ignore>       TYPE string.
 
     ls_dot = mo_repo->get_dot_abapgit( )->get_data( ).
 
     APPEND zif_abapgit_dot_abapgit=>c_folder_logic-full TO lt_folder_logic.
     APPEND zif_abapgit_dot_abapgit=>c_folder_logic-prefix TO lt_folder_logic.
 
-    io_html->add( '<h2>.abapgit.xml</h2>' ).
-    io_html->add( '<table class="settings">' ).
+    ii_html->add( '<h2>.abapgit.xml</h2>' ).
+    ii_html->add( '<table class="settings">' ).
+
+    SELECT SINGLE sptxt INTO lv_language FROM t002t
+      WHERE spras = sy-langu AND sprsl = ls_dot-master_language.
+    IF sy-subrc <> 0.
+      lv_language = 'Unknown language. Check your settings.'.
+    ENDIF.
+
+    ii_html->add( render_table_row(
+      iv_name  = 'Master Language'
+      iv_value = |{ ls_dot-master_language } ({ lv_language })|
+    ) ).
 
     lv_select_html = '<select name="folder_logic">'.
     LOOP AT lt_folder_logic ASSIGNING <lv_folder_logic>.
@@ -139,21 +170,32 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     ENDLOOP.
     lv_select_html = lv_select_html && '</select>'.
 
-    io_html->add( render_table_row(
-      iv_name  = 'Folder logic'
+    ii_html->add( render_table_row(
+      iv_name  = 'Folder Logic'
       iv_value = lv_select_html
     ) ).
 
-    io_html->add( render_table_row(
-      iv_name  = 'Starting folder'
+    ii_html->add( render_table_row(
+      iv_name  = 'Starting Folder'
       iv_value = |<input name="starting_folder" type="text" size="10" value="{ ls_dot-starting_folder }">|
     ) ).
 
-    io_html->add( '</table>' ).
+    LOOP AT ls_dot-ignore ASSIGNING <lv_ignore>.
+      lv_ignore = lv_ignore && <lv_ignore> && zif_abapgit_definitions=>c_newline.
+    ENDLOOP.
+
+    ii_html->add( render_table_row(
+      iv_name  = 'Ignore Files'
+      iv_value = |<textarea name="ignore_files" rows="{ lines( ls_dot-ignore )
+                 }" cols="50">{ lv_ignore }</textarea>|
+    ) ).
+
+    ii_html->add( '</table>' ).
 
     render_dot_abapgit_reqs(
       it_requirements = ls_dot-requirements
-      io_html         = io_html ).
+      ii_html         = ii_html ).
+
 
   ENDMETHOD.
 
@@ -174,24 +216,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
       ENDDO.
     ENDIF.
 
-    io_html->add( '<h3>Requirements</h3>' ).
-    io_html->add( '<table class="settings-package-requirements" id="requirement-tab">' ).
-    io_html->add( '<tr><th>Software Component</th><th>Min Release</th><th>Min Patch</th></tr>' ).
+    ii_html->add( '<h3>Requirements</h3>' ).
+    ii_html->add( '<table class="settings-package-requirements" id="requirement-tab">' ).
+    ii_html->add( '<tr><th>Software Component</th><th>Min. Release</th><th>Min. Patch</th></tr>' ).
 
     LOOP AT lt_requirements ASSIGNING <ls_requirement>.
       lv_req_index = sy-tabix.
 
-      io_html->add( '<tr>' ).
-      io_html->add( |<td><input name="req_com_{ lv_req_index }" maxlength=30 type="text" | &&
+      ii_html->add( '<tr>' ).
+      ii_html->add( |<td><input name="req_com_{ lv_req_index }" maxlength=30 type="text" | &&
                     |value="{ <ls_requirement>-component }"></td>| ).
-      io_html->add( |<td><input name="req_rel_{ lv_req_index }" maxlength=10 type="text" | &&
+      ii_html->add( |<td><input name="req_rel_{ lv_req_index }" maxlength=10 type="text" | &&
                     |value="{ <ls_requirement>-min_release }"></td>| ).
-      io_html->add( |<td><input name="req_pat_{ lv_req_index }" maxlength=10 type="text" | &&
+      ii_html->add( |<td><input name="req_pat_{ lv_req_index }" maxlength=10 type="text" | &&
                     |value="{ <ls_requirement>-min_patch }"></td>| ).
-      io_html->add( '</tr>' ).
+      ii_html->add( '</tr>' ).
     ENDLOOP.
 
-    io_html->add( '</table>' ).
+    ii_html->add( '</table>' ).
 
   ENDMETHOD.
 
@@ -203,15 +245,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
     ls_settings = mo_repo->get_local_settings( ).
 
-    io_html->add( '<h2>Local settings</h2>' ).
-    io_html->add( '<table class="settings">' ).
+    ii_html->add( '<h2>Local Settings</h2>' ).
+    ii_html->add( '<table class="settings">' ).
 
-    IF mo_repo->is_offline( ) = abap_false.
-      io_html->add( render_table_row(
-        iv_name  = 'Display name'
-        iv_value = |<input name="display_name" type="text" size="30" value="{ ls_settings-display_name }">|
-      ) ).
-    ENDIF.
+    ii_html->add( render_table_row(
+      iv_name  = 'Display Name'
+      iv_value = |<input name="display_name" type="text" size="30" value="{ ls_settings-display_name }">|
+    ) ).
 
     CLEAR lv_checked.
     IF ls_settings-write_protected = abap_true.
@@ -221,8 +261,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
         lv_checked = | checked disabled|.
       ENDIF.
     ENDIF.
-    io_html->add( render_table_row(
-      iv_name  = 'Write protected'
+    ii_html->add( render_table_row(
+      iv_name  = 'Write Protected'
       iv_value = |<input name="write_protected" type="checkbox"{ lv_checked }>|
     ) ).
 
@@ -230,8 +270,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     IF ls_settings-ignore_subpackages = abap_true.
       lv_checked = | checked|.
     ENDIF.
-    io_html->add( render_table_row(
-      iv_name  = 'Ignore subpackages'
+    ii_html->add( render_table_row(
+      iv_name  = 'Ignore Subpackages'
       iv_value = |<input name="ignore_subpackages" type="checkbox"{ lv_checked }>|
     ) ).
 
@@ -239,13 +279,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     IF ls_settings-only_local_objects = abap_true.
       lv_checked = | checked|.
     ENDIF.
-    io_html->add( render_table_row(
-      iv_name  = 'Only local objects'
+    ii_html->add( render_table_row(
+      iv_name  = 'Only Local Objects'
       iv_value = |<input name="only_local_objects" type="checkbox"{ lv_checked }>|
     ) ).
 
-    io_html->add( render_table_row(
-      iv_name  = 'Code inspector check variant'
+    ii_html->add( render_table_row(
+      iv_name  = 'Code Inspector Check Variant'
       iv_value = |<input name="check_variant" type="text" size="30" value="{
         ls_settings-code_inspector_check_variant }">|
     ) ).
@@ -254,8 +294,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     IF ls_settings-block_commit = abap_true.
       lv_checked = | checked|.
     ENDIF.
-    io_html->add( render_table_row(
-      iv_name  = 'Block commit if code inspection has errors'
+    ii_html->add( render_table_row(
+      iv_name  = 'Block Commit If Code Inspection Has Errors'
       iv_value = |<input name="block_commit" type="checkbox"{ lv_checked }>|
     ) ).
 
@@ -263,12 +303,36 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     IF ls_settings-serialize_master_lang_only = abap_true.
       lv_checked = | checked|.
     ENDIF.
-    io_html->add( render_table_row(
-      iv_name  = 'Serialize master language only'
+    ii_html->add( render_table_row(
+      iv_name  = 'Serialize Master Language Only'
       iv_value = |<input name="serialize_master_lang_only" type="checkbox"{ lv_checked }>|
     ) ).
 
-    io_html->add( '</table>' ).
+    ii_html->add( '</table>' ).
+
+  ENDMETHOD.
+
+
+  METHOD render_remotes.
+
+    DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
+
+    lo_repo_online ?= mo_repo.
+
+    ii_html->add( '<h2>Remotes</h2>' ).
+    ii_html->add( '<table class="settings">' ).
+
+    " TODO maybe make it editable ?
+    ii_html->add( render_table_row(
+      iv_name  = 'Current remote'
+      iv_value = |{ lo_repo_online->get_url( )
+      } <span class="grey">@{ lo_repo_online->get_branch_name( ) }</span>| ) ).
+    ii_html->add( render_table_row(
+      iv_name  = 'Switched origin'
+      iv_value = |<input name="switched_origin" type="text" size="60" value="{
+        lo_repo_online->get_switched_origin( ) }">| ) ).
+
+    ii_html->add( '</table>' ).
 
   ENDMETHOD.
 
@@ -285,15 +349,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
   METHOD save.
 
-    DATA: lt_post_fields TYPE tihttpnvp.
-
+    DATA: lt_post_fields TYPE tihttpnvp,
+          lv_msg         TYPE string.
 
     lt_post_fields = parse_post( it_postdata ).
 
     save_dot_abap( lt_post_fields ).
+    save_remotes( lt_post_fields ).
     save_local_settings( lt_post_fields ).
 
     mo_repo->refresh( ).
+
+    lv_msg = |{ mo_repo->get_name( ) }: settings saved successfully.|.
+    MESSAGE lv_msg TYPE 'S'.
 
   ENDMETHOD.
 
@@ -302,8 +370,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
     DATA: lo_dot          TYPE REF TO zcl_abapgit_dot_abapgit,
           ls_post_field   LIKE LINE OF it_post_fields,
+          lv_ignore       TYPE string,
+          lt_ignore       TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
           lo_requirements TYPE REF TO lcl_requirements.
-
 
     lo_dot = mo_repo->get_dot_abapgit( ).
 
@@ -314,6 +383,27 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
     READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'starting_folder'.
     ASSERT sy-subrc = 0.
     lo_dot->set_starting_folder( ls_post_field-value ).
+
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'ignore_files'.
+    ASSERT sy-subrc = 0.
+
+    " Remove everything
+    lt_ignore = lo_dot->get_data( )-ignore.
+    LOOP AT lt_ignore INTO lv_ignore.
+      lo_dot->remove_ignore( iv_path = ''
+                             iv_filename = lv_ignore ).
+    ENDLOOP.
+
+    " Add newly entered files
+    CLEAR lt_ignore.
+    REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>c_crlf IN ls_post_field-value
+      WITH zif_abapgit_definitions=>c_newline.
+    SPLIT ls_post_field-value AT zif_abapgit_definitions=>c_newline INTO TABLE lt_ignore.
+    DELETE lt_ignore WHERE table_line IS INITIAL.
+    LOOP AT lt_ignore INTO lv_ignore.
+      lo_dot->add_ignore( iv_path = ''
+                          iv_filename = lv_ignore ).
+    ENDLOOP.
 
     lo_requirements = lcl_requirements=>new( ).
     LOOP AT it_post_fields INTO ls_post_field WHERE name CP 'req_*'.
@@ -343,11 +433,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
     ls_settings = mo_repo->get_local_settings( ).
 
-    IF mo_repo->is_offline( ) = abap_false.
-      READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'display_name'.
-      ASSERT sy-subrc = 0.
-      ls_settings-display_name = ls_post_field-value.
-    ENDIF.
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'display_name'.
+    ASSERT sy-subrc = 0.
+    ls_settings-display_name = ls_post_field-value.
 
     READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'write_protected' value = 'on'.
     ls_settings-write_protected = boolc( sy-subrc = 0 ).
@@ -382,6 +470,26 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD save_remotes.
+
+    DATA ls_post_field LIKE LINE OF it_post_fields.
+    DATA lo_online_repo TYPE REF TO zcl_abapgit_repo_online.
+
+    IF mo_repo->is_offline( ) = abap_true.
+      RETURN.
+    ENDIF.
+
+    lo_online_repo ?= mo_repo.
+
+    READ TABLE it_post_fields INTO ls_post_field WITH KEY name = 'switched_origin'.
+    ASSERT sy-subrc = 0.
+    lo_online_repo->switch_origin(
+      iv_url       = ls_post_field-value
+      iv_overwrite = abap_true ).
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     CASE iv_action.
@@ -389,11 +497,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
         save( it_postdata ).
         ev_state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
-
-  ENDMETHOD.
-
-
-  METHOD zif_abapgit_gui_page_hotkey~get_hotkey_actions.
 
   ENDMETHOD.
 ENDCLASS.

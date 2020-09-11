@@ -103,7 +103,7 @@ CLASS ZCL_ABAPGIT_OBJECT_XSLT IMPLEMENTATION.
 
 
     IF zif_abapgit_object~exists( ) = abap_true.
-      zif_abapgit_object~delete( ).
+      zif_abapgit_object~delete( iv_package ).
     ENDIF.
 
     io_xml->read( EXPORTING iv_name = 'ATTRIBUTES'
@@ -112,7 +112,7 @@ CLASS ZCL_ABAPGIT_OBJECT_XSLT IMPLEMENTATION.
     ls_attributes-devclass = iv_package.
 
     lv_source = mo_files->read_string( iv_extra = 'source'
-                                       iv_ext   = 'xml' ) ##NO_TEXT.
+                                       iv_ext   = 'xml' ).
 
 * workaround: somewhere additional linefeeds are added
     lv_len = strlen( lv_source ) - 2.
@@ -224,7 +224,7 @@ CLASS ZCL_ABAPGIT_OBJECT_XSLT IMPLEMENTATION.
 
     mo_files->add_string( iv_extra  = 'source'
                           iv_ext    = 'xml'
-                          iv_string = lv_source ) ##NO_TEXT.
+                          iv_string = lv_source ).
 
   ENDMETHOD.
 ENDCLASS.
