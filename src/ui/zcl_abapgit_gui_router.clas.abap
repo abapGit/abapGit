@@ -141,7 +141,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_router IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -533,8 +533,8 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     CASE is_event_data-action.
         " REPOSITORY services actions
       WHEN zif_abapgit_definitions=>c_action-repo_newoffline.                 " New offline repo
-        zcl_abapgit_services_repo=>new_offline( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        ei_page  = zcl_abapgit_gui_page_addofflin=>create( ).
+        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-repo_add_all_obj_to_trans_req.
         zcl_abapgit_transport=>add_all_objects_to_trans_req( lv_key ).
         ev_state = zcl_abapgit_gui=>c_event_state-re_render.
