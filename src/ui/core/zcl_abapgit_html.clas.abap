@@ -6,9 +6,6 @@ CLASS zcl_abapgit_html DEFINITION
 
     INTERFACES zif_abapgit_html .
 
-    ALIASES add
-      FOR zif_abapgit_html~add .
-
     CONSTANTS c_indent_size TYPE i VALUE 2 ##NO_TEXT.
 
     CLASS-METHODS class_constructor .
@@ -68,36 +65,6 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
-
-
-  METHOD add.
-
-    DATA: lv_type TYPE c,
-          lo_html TYPE REF TO zcl_abapgit_html.
-
-    FIELD-SYMBOLS: <lt_tab> TYPE string_table.
-
-    DESCRIBE FIELD ig_chunk TYPE lv_type. " Describe is faster than RTTI classes
-
-    CASE lv_type.
-      WHEN 'C' OR 'g'.  " Char or string
-        APPEND ig_chunk TO mt_buffer.
-      WHEN 'h'.         " Table
-        ASSIGN ig_chunk TO <lt_tab>. " Assuming table of strings ! Will dump otherwise
-        APPEND LINES OF <lt_tab> TO mt_buffer.
-      WHEN 'r'.         " Object ref
-        ASSERT ig_chunk IS BOUND. " Dev mistake
-        TRY.
-            lo_html ?= ig_chunk.
-          CATCH cx_sy_move_cast_error.
-            ASSERT 1 = 0. " Dev mistake
-        ENDTRY.
-        APPEND LINES OF lo_html->mt_buffer TO mt_buffer.
-      WHEN OTHERS.
-        ASSERT 1 = 0. " Dev mistake
-    ENDCASE.
-
-  ENDMETHOD.
 
 
   METHOD checkbox.
@@ -327,9 +294,39 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_html~add.
+
+    DATA: lv_type TYPE c,
+          lo_html TYPE REF TO zcl_abapgit_html.
+
+    FIELD-SYMBOLS: <lt_tab> TYPE string_table.
+
+    DESCRIBE FIELD ig_chunk TYPE lv_type. " Describe is faster than RTTI classes
+
+    CASE lv_type.
+      WHEN 'C' OR 'g'.  " Char or string
+        APPEND ig_chunk TO mt_buffer.
+      WHEN 'h'.         " Table
+        ASSIGN ig_chunk TO <lt_tab>. " Assuming table of strings ! Will dump otherwise
+        APPEND LINES OF <lt_tab> TO mt_buffer.
+      WHEN 'r'.         " Object ref
+        ASSERT ig_chunk IS BOUND. " Dev mistake
+        TRY.
+            lo_html ?= ig_chunk.
+          CATCH cx_sy_move_cast_error.
+            ASSERT 1 = 0. " Dev mistake
+        ENDTRY.
+        APPEND LINES OF lo_html->mt_buffer TO mt_buffer.
+      WHEN OTHERS.
+        ASSERT 1 = 0. " Dev mistake
+    ENDCASE.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_html~add_a.
 
-    add( zif_abapgit_html~a(
+    zif_abapgit_html~add( zif_abapgit_html~a(
       iv_txt   = iv_txt
       iv_act   = iv_act
       iv_typ   = iv_typ
@@ -344,18 +341,20 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
   METHOD zif_abapgit_html~add_checkbox.
 
-    add( checkbox( iv_id      = iv_id
-                   iv_checked = iv_checked ) ).
+    zif_abapgit_html~add( checkbox(
+      iv_id      = iv_id
+      iv_checked = iv_checked ) ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_html~add_icon.
 
-    add( icon( iv_name    = iv_name
-               iv_class   = iv_class
-               iv_hint    = iv_hint
-               iv_onclick = iv_onclick ) ).
+    zif_abapgit_html~add( icon(
+      iv_name    = iv_name
+      iv_class   = iv_class
+      iv_hint    = iv_hint
+      iv_onclick = iv_onclick ) ).
 
   ENDMETHOD.
 
