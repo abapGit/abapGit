@@ -228,7 +228,8 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( |<div class="{ iv_form_class }">| ).
-    ri_html->add( |<form method="post"{ ls_form_id }>| ).
+    ri_html->add( |<form method="post"{ ls_form_id } action="sapevent:submit_form">| ).
+    ri_html->add( |<input type="hidden" id="hidden_action" name="action" value="?">| ).
     ri_html->add( |<ul>| ).
 
     LOOP AT mt_fields ASSIGNING <ls_field>.
@@ -288,8 +289,10 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
       ELSE.
         CLEAR lv_main_submit.
       ENDIF.
-      ii_html->add( |<input type="submit" value="{
-        is_cmd-label }"{ lv_main_submit } formaction="sapevent:{ is_cmd-action }">| ).
+
+      ii_html->add_a( iv_act = |document.getElementById('hidden_action').value = '{ is_cmd-label }'; document.getElementById('{ mv_form_id }').submit();|
+                      iv_txt = is_cmd-label
+                      iv_typ = zif_abapgit_html=>c_action_type-onclick ).
     ENDIF.
 
   ENDMETHOD.
