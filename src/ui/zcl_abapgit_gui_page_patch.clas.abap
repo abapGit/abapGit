@@ -684,11 +684,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
 
   METHOD render_table_head_non_unified.
 
-    render_patch_head( ii_html = io_html
+    render_patch_head( ii_html = ii_html
                        is_diff = is_diff ).
 
     super->render_table_head_non_unified(
-        io_html = io_html
+        ii_html = ii_html
         is_diff = is_diff ).
 
   ENDMETHOD.
