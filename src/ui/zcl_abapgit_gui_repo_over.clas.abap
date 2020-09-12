@@ -115,7 +115,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_REPO_OVER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -251,14 +251,14 @@ CLASS ZCL_ABAPGIT_GUI_REPO_OVER IMPLEMENTATION.
     ii_html->add( |<input type="submit" class="hidden-submit">| ).
     ii_html->add( |</form>| ).
 
-    ii_html->add( zcl_abapgit_html=>zif_abapgit_html~a(
+    ii_html->add( ii_html->a(
       iv_txt = '<i id="icon-filter-favorite" class="icon icon-check"></i> Only Favorites'
       iv_act = |gHelper.toggleRepoListFavorites()|
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
 
     ii_html->add( `<span class="separator">|</span>` ).
 
-    ii_html->add( zcl_abapgit_html=>zif_abapgit_html~a(
+    ii_html->add( ii_html->a(
       iv_txt = '<i id="icon-filter-detail" class="icon icon-check"></i> Detail'
       iv_act = |gHelper.toggleRepoListDetail()|
       iv_typ = zif_abapgit_html=>c_action_type-onclick ) ).
@@ -306,6 +306,8 @@ CLASS ZCL_ABAPGIT_GUI_REPO_OVER IMPLEMENTATION.
       lv_package_obj_name  TYPE sobj_name,
       lv_stage_link        TYPE string,
       lv_patch_link        TYPE string,
+      lv_zip_import_link   TYPE string,
+      lv_zip_export_link   TYPE string,
       lv_check_link        TYPE string,
       lv_settings_link     TYPE string,
       lv_branch_html       TYPE string.
@@ -398,6 +400,18 @@ CLASS ZCL_ABAPGIT_GUI_REPO_OVER IMPLEMENTATION.
           iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?{ <ls_overview>-key } | ).
 
         ii_html->add( lv_patch_link && lc_separator ).
+      ELSE. " offline repo
+        lv_zip_import_link = ii_html->a(
+          iv_txt = |Import|
+          iv_act = |{ zif_abapgit_definitions=>c_action-zip_import }?{ <ls_overview>-key } | ).
+
+        ii_html->add( lv_zip_import_link && lc_separator ).
+
+        lv_zip_export_link = ii_html->a(
+          iv_txt = |Export|
+          iv_act = |{ zif_abapgit_definitions=>c_action-zip_export }?{ <ls_overview>-key } | ).
+
+        ii_html->add( lv_zip_export_link && lc_separator ).
       ENDIF.
 
       lv_settings_link = ii_html->a(

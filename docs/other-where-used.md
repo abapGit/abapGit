@@ -23,6 +23,7 @@ order: 50
 * [CQSE](https://www.cqse.eu/)
 * [Discovery Consulting](https://www.discoveryconsulting.com.au)
 * [emineo](https://www.emineo.ch/)
+* [Hochfrequenz Unternehmensberatung GmbH](https://www.hochfrequenz.de/)
 * [INVIXO](http://invixo.com/)
 * [majcon](https://www.majcon.de/)
 * [Microsoft Azure](https://github.com/Microsoft/ABAP-SDK-for-Azure)

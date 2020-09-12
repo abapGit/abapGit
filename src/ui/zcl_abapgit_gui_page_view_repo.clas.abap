@@ -8,15 +8,15 @@ CLASS zcl_abapgit_gui_page_view_repo DEFINITION
 
     CONSTANTS:
       BEGIN OF c_actions,
-        repo_list         TYPE string VALUE 'abapgit_home' ##NO_TEXT,
-        change_dir        TYPE string VALUE 'change_dir' ##NO_TEXT,
-        toggle_hide_files TYPE string VALUE 'toggle_hide_files' ##NO_TEXT,
-        toggle_folders    TYPE string VALUE 'toggle_folders' ##NO_TEXT,
-        toggle_changes    TYPE string VALUE 'toggle_changes' ##NO_TEXT,
-        toggle_diff_first TYPE string VALUE 'toggle_diff_first ' ##NO_TEXT,
-        display_more      TYPE string VALUE 'display_more' ##NO_TEXT,
+        repo_list                TYPE string VALUE 'abapgit_home' ##NO_TEXT,
+        change_dir               TYPE string VALUE 'change_dir' ##NO_TEXT,
+        toggle_hide_files        TYPE string VALUE 'toggle_hide_files' ##NO_TEXT,
+        toggle_folders           TYPE string VALUE 'toggle_folders' ##NO_TEXT,
+        toggle_changes           TYPE string VALUE 'toggle_changes' ##NO_TEXT,
+        toggle_diff_first        TYPE string VALUE 'toggle_diff_first ' ##NO_TEXT,
+        display_more             TYPE string VALUE 'display_more' ##NO_TEXT,
         repo_switch_origin_to_pr TYPE string VALUE 'repo_switch_origin_to_pr',
-        repo_reset_origin  TYPE string VALUE 'repo_reset_origin',
+        repo_reset_origin        TYPE string VALUE 'repo_reset_origin',
       END OF c_actions.
 
 
@@ -34,112 +34,153 @@ CLASS zcl_abapgit_gui_page_view_repo DEFINITION
     METHODS render_content REDEFINITION.
   PRIVATE SECTION.
 
-    DATA: mo_repo                       TYPE REF TO zcl_abapgit_repo,
-          mv_cur_dir                    TYPE string,
-          mv_hide_files                 TYPE abap_bool,
-          mv_max_lines                  TYPE i,
-          mv_max_setting                TYPE i,
-          mv_show_folders               TYPE abap_bool,
-          mv_changes_only               TYPE abap_bool,
-          mv_order_by                   TYPE string,
-          mv_order_descending           TYPE abap_bool,
-          mv_diff_first                 TYPE abap_bool,
-          mv_key                        TYPE zif_abapgit_persistence=>ty_value,
-          mv_are_changes_recorded_in_tr TYPE abap_bool.
+    DATA mo_repo TYPE REF TO zcl_abapgit_repo .
+    DATA mv_cur_dir TYPE string .
+    DATA mv_hide_files TYPE abap_bool .
+    DATA mv_max_lines TYPE i .
+    DATA mv_max_setting TYPE i .
+    DATA mv_show_folders TYPE abap_bool .
+    DATA mv_changes_only TYPE abap_bool .
+    DATA mv_order_by TYPE string .
+    DATA mv_order_descending TYPE abap_bool .
+    DATA mv_diff_first TYPE abap_bool .
+    DATA mv_key TYPE zif_abapgit_persistence=>ty_value .
+    DATA mv_are_changes_recorded_in_tr TYPE abap_bool .
 
-    METHODS:
-      render_head_line
-        IMPORTING iv_lstate      TYPE char1
-                  iv_rstate      TYPE char1
-        RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html
-        RAISING   zcx_abapgit_exception,
-      build_head_menu
-        IMPORTING iv_lstate         TYPE char1
-                  iv_rstate         TYPE char1
-        RETURNING VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
-        RAISING   zcx_abapgit_exception,
-      build_view_menu
-        RETURNING VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
-        RAISING   zcx_abapgit_exception,
-      render_item
-        IMPORTING is_item              TYPE zif_abapgit_definitions=>ty_repo_item
-                  iv_render_transports TYPE abap_bool
-        RETURNING VALUE(ri_html)       TYPE REF TO zif_abapgit_html
-        RAISING   zcx_abapgit_exception,
-      render_item_files
-        IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
-        RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html,
-      render_item_command
-        IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
-        RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html,
-      get_item_class
-        IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
-        RETURNING VALUE(rv_html) TYPE string,
-      get_item_icon
-        IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
-        RETURNING VALUE(rv_html) TYPE string,
-      render_item_lock_column
-        IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
-        RETURNING VALUE(rv_html) TYPE string,
-      render_parent_dir
-        RETURNING VALUE(ri_html) TYPE REF TO zif_abapgit_html
-        RAISING   zcx_abapgit_exception.
-
-    METHODS:
-      build_obj_jump_link
-        IMPORTING is_item        TYPE zif_abapgit_definitions=>ty_repo_item
-        RETURNING VALUE(rv_html) TYPE string,
-      build_dir_jump_link
-        IMPORTING iv_path        TYPE string
-        RETURNING VALUE(rv_html) TYPE string,
-      build_inactive_object_code
-        IMPORTING is_item                      TYPE zif_abapgit_definitions=>ty_repo_item
-        RETURNING VALUE(rv_inactive_html_code) TYPE string,
-      open_in_master_language
-        RAISING zcx_abapgit_exception,
-      render_order_by
-        RETURNING VALUE(ro_html) TYPE REF TO zcl_abapgit_html,
-      apply_order_by
-        CHANGING ct_repo_items TYPE zif_abapgit_definitions=>tt_repo_items,
-      build_branch_dropdown
-        IMPORTING iv_wp_opt                 LIKE zif_abapgit_html=>c_html_opt-crossout
-        RETURNING VALUE(ro_branch_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
-        RAISING   zcx_abapgit_exception,
-      build_tag_dropdown
-        IMPORTING iv_wp_opt              LIKE zif_abapgit_html=>c_html_opt-crossout
-        RETURNING VALUE(ro_tag_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
-        RAISING   zcx_abapgit_exception,
-      build_advanced_dropdown
-        IMPORTING iv_wp_opt                   LIKE zif_abapgit_html=>c_html_opt-crossout
-                  iv_lstate                   TYPE char1
-                  iv_rstate                   TYPE char1
-        RETURNING VALUE(ro_advanced_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
-        RAISING   zcx_abapgit_exception,
-      build_main_toolbar
-        IMPORTING iv_pull_opt       LIKE zif_abapgit_html=>c_html_opt-crossout
-                  iv_lstate         TYPE char1
-                  iv_rstate         TYPE char1
-                  io_tb_branch      TYPE REF TO zcl_abapgit_html_toolbar
-                  io_tb_tag         TYPE REF TO zcl_abapgit_html_toolbar
-                  io_tb_advanced    TYPE REF TO zcl_abapgit_html_toolbar
-        RETURNING VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
-        RAISING   zcx_abapgit_exception,
-      switch_to_pr
-        IMPORTING
-          it_fields TYPE tihttpnvp OPTIONAL
-          iv_revert TYPE abap_bool OPTIONAL
-        RETURNING
-          VALUE(rv_switched) TYPE abap_bool
-        RAISING
-          zcx_abapgit_exception.
-
+    METHODS render_head_line
+      IMPORTING
+        !iv_lstate     TYPE char1
+        !iv_rstate     TYPE char1
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+    METHODS build_head_menu
+      IMPORTING
+        !iv_lstate        TYPE char1
+        !iv_rstate        TYPE char1
+      RETURNING
+        VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
+      RAISING
+        zcx_abapgit_exception .
+    METHODS build_view_menu
+      RETURNING
+        VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_item
+      IMPORTING
+        !is_item              TYPE zif_abapgit_definitions=>ty_repo_item
+        !iv_render_transports TYPE abap_bool
+      RETURNING
+        VALUE(ri_html)        TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_item_files
+      IMPORTING
+        !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+    METHODS render_item_command
+      IMPORTING
+        !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+    METHODS get_item_class
+      IMPORTING
+        !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
+      RETURNING
+        VALUE(rv_html) TYPE string .
+    METHODS get_item_icon
+      IMPORTING
+        !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
+      RETURNING
+        VALUE(rv_html) TYPE string .
+    METHODS render_item_lock_column
+      IMPORTING
+        !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
+      RETURNING
+        VALUE(rv_html) TYPE string .
+    METHODS render_parent_dir
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+    METHODS build_obj_jump_link
+      IMPORTING
+        !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
+      RETURNING
+        VALUE(rv_html) TYPE string .
+    METHODS build_dir_jump_link
+      IMPORTING
+        !iv_path       TYPE string
+      RETURNING
+        VALUE(rv_html) TYPE string .
+    METHODS build_inactive_object_code
+      IMPORTING
+        !is_item                     TYPE zif_abapgit_definitions=>ty_repo_item
+      RETURNING
+        VALUE(rv_inactive_html_code) TYPE string .
+    METHODS open_in_master_language
+      RAISING
+        zcx_abapgit_exception .
+    METHODS render_order_by
+      RETURNING
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+    METHODS apply_order_by
+      CHANGING
+        !ct_repo_items TYPE zif_abapgit_definitions=>tt_repo_items .
+    METHODS build_branch_dropdown
+      IMPORTING
+        !iv_wp_opt                LIKE zif_abapgit_html=>c_html_opt-crossout
+      RETURNING
+        VALUE(ro_branch_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
+      RAISING
+        zcx_abapgit_exception .
+    METHODS build_tag_dropdown
+      IMPORTING
+        !iv_wp_opt             LIKE zif_abapgit_html=>c_html_opt-crossout
+      RETURNING
+        VALUE(ro_tag_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
+      RAISING
+        zcx_abapgit_exception .
+    METHODS build_advanced_dropdown
+      IMPORTING
+        !iv_wp_opt                  LIKE zif_abapgit_html=>c_html_opt-crossout
+        !iv_lstate                  TYPE char1
+        !iv_rstate                  TYPE char1
+      RETURNING
+        VALUE(ro_advanced_dropdown) TYPE REF TO zcl_abapgit_html_toolbar
+      RAISING
+        zcx_abapgit_exception .
+    METHODS build_main_toolbar
+      IMPORTING
+        !iv_pull_opt      LIKE zif_abapgit_html=>c_html_opt-crossout
+        !iv_lstate        TYPE char1
+        !iv_rstate        TYPE char1
+        !io_tb_branch     TYPE REF TO zcl_abapgit_html_toolbar
+        !io_tb_tag        TYPE REF TO zcl_abapgit_html_toolbar
+        !io_tb_advanced   TYPE REF TO zcl_abapgit_html_toolbar
+      RETURNING
+        VALUE(ro_toolbar) TYPE REF TO zcl_abapgit_html_toolbar
+      RAISING
+        zcx_abapgit_exception .
+    METHODS switch_to_pr
+      IMPORTING
+        !it_fields         TYPE tihttpnvp OPTIONAL
+        !iv_revert         TYPE abap_bool OPTIONAL
+      RETURNING
+        VALUE(rv_switched) TYPE abap_bool
+      RAISING
+        zcx_abapgit_exception .
     METHODS build_main_menu
-      RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
+      RETURNING
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
     METHODS render_scripts
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -312,14 +353,17 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
 
   METHOD build_dir_jump_link.
 
-    DATA: lv_path   TYPE string,
-          lv_encode TYPE string.
+    DATA lv_path   TYPE string.
+    DATA lv_encode TYPE string.
+    DATA li_html TYPE REF TO zif_abapgit_html.
+
+    CREATE OBJECT li_html TYPE zcl_abapgit_html.
 
     lv_path = iv_path.
     REPLACE FIRST OCCURRENCE OF mv_cur_dir IN lv_path WITH ''.
     lv_encode = zcl_abapgit_html_action_utils=>dir_encode( lv_path ).
 
-    rv_html = zcl_abapgit_html=>zif_abapgit_html~a(
+    rv_html = li_html->a(
       iv_txt = lv_path
       iv_act = |{ c_actions-change_dir }?{ lv_encode }| ).
 
@@ -454,7 +498,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
                      iv_act = |{ zif_abapgit_definitions=>c_action-repo_refresh }?{ mv_key }|
                      iv_opt = zif_abapgit_html=>c_html_opt-strong ).
 
-    ro_toolbar->add( iv_txt = zcl_abapgit_html=>icon( iv_name = 'cog/grey70' )
+    ro_toolbar->add( iv_txt = zcl_abapgit_html=>icon( iv_name = 'cog' )
                      iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?{ mv_key }|
                      iv_title = `Repository Settings` ).
 
@@ -464,13 +508,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
 
   METHOD build_obj_jump_link.
 
-    DATA: lv_encode TYPE string.
+    DATA lv_encode TYPE string.
+    DATA li_html TYPE REF TO zif_abapgit_html.
+
+    CREATE OBJECT li_html TYPE zcl_abapgit_html.
 
     lv_encode = zcl_abapgit_html_action_utils=>jump_encode(
       iv_obj_type = is_item-obj_type
       iv_obj_name = is_item-obj_name ).
 
-    rv_html = zcl_abapgit_html=>zif_abapgit_html~a(
+    rv_html = li_html->a(
       iv_txt = |{ is_item-obj_name }|
       iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_encode }| ).
 
@@ -687,28 +734,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
     " Reinit, for the case of type change
     mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
 
-    " Check if repo is still valid and reset if necessary to consistent state
-    TRY.
-        mo_repo->validate( ).
-      CATCH zcx_abapgit_exception INTO lx_error.
-        lv_msg = lx_error->get_text( ) && '. Fallback to master branch.'.
-        MESSAGE lv_msg TYPE 'S'.
-
-        mo_repo->reset( ).
-    ENDTRY.
-
     lo_news = zcl_abapgit_news=>create( mo_repo ).
 
-    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    ri_html->add( |<div class="repo" id="repo{ mv_key }">| ).
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
-      io_repo               = mo_repo
-      io_news               = lo_news
-      iv_interactive_branch = abap_true ) ).
-
-    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).
-
     TRY.
+        CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+        ri_html->add( |<div class="repo" id="repo{ mv_key }">| ).
+        ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
+          io_repo               = mo_repo
+          io_news               = lo_news
+          iv_interactive_branch = abap_true ) ).
+
+        ri_html->add( zcl_abapgit_gui_chunk_lib=>render_news( io_news = lo_news ) ).
+
         lv_render_transports = zcl_abapgit_factory=>get_cts_api(
           )->is_chrec_possible_for_package( mo_repo->get_package( ) ).
 
@@ -802,6 +839,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
         ri_html->add( '</div>' ).
         ri_html->add( '</div>' ).
       CATCH zcx_abapgit_exception INTO lx_error.
+        " Reset 'last shown repo' so next start will go to repo overview
+        " and allow troubleshooting of issue
+        zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( || ).
+
         ri_html->add(
           render_head_line(
             iv_lstate = lv_lstate
@@ -967,10 +1008,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
 
 
   METHOD render_item_lock_column.
-    DATA: li_cts_api          TYPE REF TO zif_abapgit_cts_api,
-          lv_transport        TYPE trkorr,
-          lv_transport_string TYPE string,
-          lv_icon_html        TYPE string.
+
+    DATA li_cts_api          TYPE REF TO zif_abapgit_cts_api.
+    DATA lv_transport        TYPE trkorr.
+    DATA lv_transport_string TYPE string.
+    DATA lv_icon_html        TYPE string.
+    DATA li_html             TYPE REF TO zif_abapgit_html.
+
+    CREATE OBJECT li_html TYPE zcl_abapgit_html.
 
     li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
 
@@ -985,9 +1030,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
                                                                     iv_object_name             = is_item-obj_name
                                                                     iv_resolve_task_to_request = abap_false ).
           lv_transport_string = lv_transport.
-          lv_icon_html = zcl_abapgit_html=>zif_abapgit_html~a(
-            iv_txt = zcl_abapgit_html=>icon( iv_name = 'briefcase/darkgrey'
-                                             iv_hint = lv_transport_string )
+          lv_icon_html = li_html->a(
+            iv_txt = li_html->icon( iv_name = 'briefcase/darkgrey'
+                                    iv_hint = lv_transport_string )
             iv_act = |{ zif_abapgit_definitions=>c_action-jump_transport }?| && lv_transport ).
 
           rv_html = |<td class="icon">| &&
@@ -1007,7 +1052,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
       lt_col_spec TYPE zif_abapgit_definitions=>tty_col_spec,
       ls_col_spec TYPE zif_abapgit_definitions=>ty_col_spec.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     APPEND INITIAL LINE TO lt_col_spec.
     IF mv_are_changes_recorded_in_tr = abap_true.
@@ -1028,10 +1073,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
 
     APPEND INITIAL LINE TO lt_col_spec.
 
-    ro_html->add( |<thead>| ).
-    ro_html->add( |<tr>| ).
+    ri_html->add( |<thead>| ).
+    ri_html->add( |<tr>| ).
 
-    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_header_cells(
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_order_by_header_cells(
       it_col_spec         = lt_col_spec
       iv_order_by         = mv_order_by
       iv_order_descending = mv_order_descending ) ).
@@ -1042,8 +1087,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
       lv_icon = 'check/grey'.
     ENDIF.
 
-    ro_html->add( '</tr>' ).
-    ro_html->add( '</thead>' ).
+    ri_html->add( '</tr>' ).
+    ri_html->add( '</thead>' ).
 
   ENDMETHOD.
 
