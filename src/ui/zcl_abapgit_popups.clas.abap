@@ -5,6 +5,7 @@ CLASS zcl_abapgit_popups DEFINITION
   GLOBAL FRIENDS zcl_abapgit_ui_factory.
 
   PUBLIC SECTION.
+    CONSTANTS: c_default_column TYPE lvc_fname VALUE `DEFAULT_COLUMN` ##NO_TEXT.
 
     INTERFACES: zif_abapgit_popups.
     ALIASES:
@@ -57,16 +58,16 @@ CLASS zcl_abapgit_popups DEFINITION
       EXPORTING
         !et_list TYPE INDEX TABLE .
     METHODS on_select_list_link_click
-      FOR EVENT link_click OF cl_salv_events_table
+        FOR EVENT link_click OF cl_salv_events_table
       IMPORTING
         !row
         !column .
     METHODS on_select_list_function_click
-      FOR EVENT added_function OF cl_salv_events_table
+        FOR EVENT added_function OF cl_salv_events_table
       IMPORTING
         !e_salv_function .
     METHODS on_double_click
-      FOR EVENT double_click OF cl_salv_events_table
+        FOR EVENT double_click OF cl_salv_events_table
       IMPORTING
         !row
         !column .
@@ -91,6 +92,15 @@ CLASS zcl_abapgit_popups DEFINITION
                 ev_value_3        TYPE spo_value
       CHANGING  ct_fields         TYPE ty_lt_fields
       RAISING   zcx_abapgit_exception.
+    METHODS popup_get_from_free_selections
+      IMPORTING
+        iv_title      TYPE syst_title OPTIONAL
+        iv_frame_text TYPE syst_title OPTIONAL
+      CHANGING
+        ct_fields     TYPE zcl_abapgit_free_sel_dialog=>ty_free_sel_field_tab
+      RAISING
+        zcx_abapgit_cancel
+        zcx_abapgit_exception.
     METHODS validate_folder_logic
       IMPORTING
         iv_folder_logic TYPE string
@@ -100,7 +110,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
+CLASS zcl_abapgit_popups IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -125,21 +135,38 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     DATA: lr_struct        TYPE REF TO data,
           lt_components    TYPE cl_abap_structdescr=>component_table,
+          lo_data_descr    TYPE REF TO cl_abap_datadescr,
+          lo_elem_descr    TYPE REF TO cl_abap_elemdescr,
           lo_struct_descr  TYPE REF TO cl_abap_structdescr,
           lo_struct_descr2 TYPE REF TO cl_abap_structdescr.
 
     FIELD-SYMBOLS: <lt_table>     TYPE STANDARD TABLE,
                    <ls_component> TYPE abap_componentdescr,
                    <lg_line>      TYPE data,
-                   <lg_data>      TYPE any.
+                   <lg_data>      TYPE any,
+                   <lg_value>     TYPE any.
 
     mo_table_descr ?= cl_abap_tabledescr=>describe_by_data( it_list ).
-    lo_struct_descr ?= mo_table_descr->get_table_line_type( ).
-    lt_components = lo_struct_descr->get_components( ).
+    lo_data_descr = mo_table_descr->get_table_line_type( ).
+
+    CASE lo_data_descr->kind.
+      WHEN cl_abap_elemdescr=>kind_elem.
+        lo_elem_descr ?= mo_table_descr->get_table_line_type( ).
+        INSERT INITIAL LINE INTO lt_components ASSIGNING <ls_component> INDEX 1.
+        <ls_component>-name = c_default_column.
+        <ls_component>-type = lo_elem_descr.
+
+      WHEN cl_abap_elemdescr=>kind_struct.
+        lo_struct_descr ?= mo_table_descr->get_table_line_type( ).
+        lt_components = lo_struct_descr->get_components( ).
+
+    ENDCASE.
+
+    IF lt_components IS INITIAL.
+      RETURN.
+    ENDIF.
 
     INSERT INITIAL LINE INTO lt_components ASSIGNING <ls_component> INDEX 1.
-    ASSERT sy-subrc = 0.
-
     <ls_component>-name = c_fieldname_selected.
     <ls_component>-type ?= cl_abap_datadescr=>describe_by_name( 'FLAG' ).
 
@@ -156,7 +183,16 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     LOOP AT it_list ASSIGNING <lg_data>.
       CLEAR <lg_line>.
-      MOVE-CORRESPONDING <lg_data> TO <lg_line>.
+      CASE lo_data_descr->kind.
+        WHEN cl_abap_elemdescr=>kind_elem.
+          ASSIGN COMPONENT c_default_column OF STRUCTURE <lg_data> TO <lg_value>.
+          ASSERT <lg_value> IS ASSIGNED.
+          <lg_line> = <lg_value>.
+
+        WHEN OTHERS.
+          MOVE-CORRESPONDING <lg_data> TO <lg_line>.
+
+      ENDCASE.
       INSERT <lg_line> INTO TABLE <lt_table>.
     ENDLOOP.
 
@@ -216,10 +252,12 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     FIELD-SYMBOLS: <lg_exporting>    TYPE any,
                    <lt_table>        TYPE STANDARD TABLE,
                    <lg_line>         TYPE any,
+                   <lg_value>        TYPE any,
                    <lv_selected>     TYPE abap_bool,
                    <lv_selected_row> TYPE LINE OF salv_t_row.
 
-    DATA: lo_selections    TYPE REF TO cl_salv_selections,
+    DATA: lo_data_descr    TYPE REF TO cl_abap_datadescr,
+          lo_selections    TYPE REF TO cl_salv_selections,
           lt_selected_rows TYPE salv_t_row.
 
     ASSIGN mr_table->* TO <lt_table>.
@@ -236,7 +274,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
         READ TABLE <lt_table>
           ASSIGNING <lg_line>
           INDEX <lv_selected_row>.
-        CHECK <lv_selected_row> IS ASSIGNED.
+        CHECK <lg_line> IS ASSIGNED.
 
         ASSIGN COMPONENT c_fieldname_selected
            OF STRUCTURE <lg_line>
@@ -254,9 +292,22 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     CREATE DATA lr_exporting LIKE LINE OF et_list.
     ASSIGN lr_exporting->* TO <lg_exporting>.
 
+    mo_table_descr ?= cl_abap_tabledescr=>describe_by_data( et_list ).
+    lo_data_descr = mo_table_descr->get_table_line_type( ).
+
     LOOP AT <lt_table> ASSIGNING <lg_line> WHERE (lv_condition).
       CLEAR <lg_exporting>.
-      MOVE-CORRESPONDING <lg_line> TO <lg_exporting>.
+
+      CASE lo_data_descr->kind.
+        WHEN cl_abap_elemdescr=>kind_elem.
+          ASSIGN COMPONENT c_default_column OF STRUCTURE <lg_line> TO <lg_value>.
+          ASSERT <lg_value> IS ASSIGNED.
+          <lg_exporting> = <lg_value>.
+
+        WHEN OTHERS.
+          MOVE-CORRESPONDING <lg_line> TO <lg_exporting>.
+
+      ENDCASE.
       APPEND <lg_exporting> TO et_list.
     ENDLOOP.
 
@@ -593,16 +644,16 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
       EXPORTING
-        textline1  = 'Select pull request'
-        titel      = 'Select pull request'
-        start_col  = 30
-        start_row  = 5
+        textline1 = 'Select pull request'
+        titel     = 'Select pull request'
+        start_col = 30
+        start_row = 5
       IMPORTING
-        answer     = lv_answer
+        answer    = lv_answer
       TABLES
-        t_spopli   = lt_selection
+        t_spopli  = lt_selection
       EXCEPTIONS
-        OTHERS     = 1.
+        OTHERS    = 1.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Error from POPUP_TO_DECIDE_LIST' ).
     ENDIF.
@@ -822,12 +873,12 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     CALL FUNCTION 'F4IF_FIELD_VALUE_REQUEST'
       EXPORTING
-        tabname   = lv_tabname
-        fieldname = lv_fieldname
+        tabname    = lv_tabname
+        fieldname  = lv_fieldname
       TABLES
         return_tab = lt_ret
       EXCEPTIONS
-        OTHERS = 5.
+        OTHERS     = 5.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |F4IF_FIELD_VALUE_REQUEST error [{ iv_tab_field }]| ).
@@ -1445,5 +1496,85 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       ev_value_3 = <ls_field>-value.
     ENDIF.
 
+  ENDMETHOD.
+
+  METHOD zif_abapgit_popups~popup_perf_test_parameters.
+    DATA: lt_fields TYPE zcl_abapgit_free_sel_dialog=>ty_free_sel_field_tab.
+    FIELD-SYMBOLS: <ls_field> TYPE zcl_abapgit_free_sel_dialog=>ty_free_sel_field.
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-name = 'PACKAGE'.
+    <ls_field>-only_parameter = abap_true.
+    <ls_field>-ddic_tabname = 'TADIR'.
+    <ls_field>-ddic_fieldname = 'DEVCLASS'.
+    <ls_field>-param_obligatory = abap_true.
+    <ls_field>-value = cv_package.
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-name = 'PGMID'.
+    <ls_field>-only_parameter = abap_true.
+    <ls_field>-ddic_tabname = 'TADIR'.
+    <ls_field>-ddic_fieldname = 'PGMID'.
+    <ls_field>-value = 'R3TR'.
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-name = 'OBJECT'.
+    <ls_field>-ddic_tabname = 'TADIR'.
+    <ls_field>-ddic_fieldname = 'OBJECT'.
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-name = 'OBJ_NAME'.
+    <ls_field>-ddic_tabname = 'TADIR'.
+    <ls_field>-ddic_fieldname = 'OBJ_NAME'.
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-name = 'INCLUDE_SUB_PACKAGES'.
+    <ls_field>-only_parameter = abap_true.
+    <ls_field>-ddic_tabname = 'TDEVC'.
+    <ls_field>-ddic_fieldname = 'IS_ENHANCEABLE'.
+    <ls_field>-text = 'Include subpackages'.
+    <ls_field>-value = cv_include_sub_packages.
+
+    APPEND INITIAL LINE TO lt_fields ASSIGNING <ls_field>.
+    <ls_field>-name = 'MASTER_LANG_ONLY'.
+    <ls_field>-only_parameter = abap_true.
+    <ls_field>-ddic_tabname = 'TVDIR'.
+    <ls_field>-ddic_fieldname = 'FLAG'.
+    <ls_field>-text = 'Master lang only'.
+    <ls_field>-value = cv_serialize_master_lang_only.
+
+    popup_get_from_free_selections(
+      EXPORTING
+        iv_title       = 'Serialization Performance Test Parameters'
+        iv_frame_text  = 'Parameters'
+      CHANGING
+        ct_fields      = lt_fields ).
+
+    LOOP AT lt_fields ASSIGNING <ls_field>.
+      CASE <ls_field>-name.
+        WHEN 'PACKAGE'.
+          cv_package = <ls_field>-value.
+        WHEN 'OBJECT'.
+          et_object_type_filter = <ls_field>-value_range.
+        WHEN 'OBJ_NAME'.
+          et_object_name_filter = <ls_field>-value_range.
+        WHEN 'INCLUDE_SUB_PACKAGES'.
+          cv_include_sub_packages = boolc( <ls_field>-value IS NOT INITIAL ).
+        WHEN 'MASTER_LANG_ONLY'.
+          cv_serialize_master_lang_only = boolc( <ls_field>-value IS NOT INITIAL ).
+      ENDCASE.
+    ENDLOOP.
+  ENDMETHOD.
+
+  METHOD popup_get_from_free_selections.
+    DATA: lo_free_sel_dialog TYPE REF TO zcl_abapgit_free_sel_dialog.
+
+    CREATE OBJECT lo_free_sel_dialog
+      EXPORTING
+        iv_title      = iv_title
+        iv_frame_text = iv_frame_text.
+
+    lo_free_sel_dialog->set_fields( CHANGING ct_fields = ct_fields ).
+    lo_free_sel_dialog->show( ).
   ENDMETHOD.
 ENDCLASS.
