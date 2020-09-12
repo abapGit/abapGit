@@ -8,8 +8,8 @@ CLASS zcl_abapgit_gui_page_bkg DEFINITION
 
     METHODS constructor
       IMPORTING
-        iv_key TYPE zif_abapgit_persistence=>ty_repo-key
-      RAISING zcx_abapgit_exception.
+                iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+      RAISING   zcx_abapgit_exception.
 
     METHODS zif_abapgit_gui_event_handler~on_event
         REDEFINITION .
@@ -26,12 +26,12 @@ CLASS zcl_abapgit_gui_page_bkg DEFINITION
       IMPORTING
         !is_per        TYPE zcl_abapgit_persist_background=>ty_background
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_settings
       IMPORTING
         !is_per        TYPE zcl_abapgit_persist_background=>ty_background
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS build_menu
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
@@ -42,7 +42,7 @@ CLASS zcl_abapgit_gui_page_bkg DEFINITION
         zcx_abapgit_exception .
     METHODS render
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     METHODS decode
@@ -164,39 +164,39 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
     ls_per = read_persist( lo_repo ).
 
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( '<div id="toc" class="settings_container">' ).
+    ri_html->add( '<div id="toc" class="settings_container">' ).
 
-    ro_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( lo_repo ) ).
-    ro_html->add( '<br>' ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top( lo_repo ) ).
+    ri_html->add( '<br>' ).
 
-    ro_html->add( render_methods( ls_per ) ).
+    ri_html->add( render_methods( ls_per ) ).
 
-    ro_html->add( '<u>HTTP Authentication, optional</u><br>' ).
-    ro_html->add( '(password will be saved in clear text)<br>' ).
-    ro_html->add( '<table>' ).
-    ro_html->add( '<tr>' ).
-    ro_html->add( '<td>Username:</td>' ).
-    ro_html->add( '<td><input type="text" name="username" value="' && ls_per-username && '"></td>' ).
-    ro_html->add( '</tr>' ).
-    ro_html->add( '<tr>' ).
-    ro_html->add( '<td>Password:</td>' ).
-    ro_html->add( '<td><input type="text" name="password" value="' && ls_per-password && '"></td>' ).
-    ro_html->add( '</tr>' ).
-    ro_html->add( '</table>' ).
+    ri_html->add( '<u>HTTP Authentication, optional</u><br>' ).
+    ri_html->add( '(password will be saved in clear text)<br>' ).
+    ri_html->add( '<table>' ).
+    ri_html->add( '<tr>' ).
+    ri_html->add( '<td>Username:</td>' ).
+    ri_html->add( '<td><input type="text" name="username" value="' && ls_per-username && '"></td>' ).
+    ri_html->add( '</tr>' ).
+    ri_html->add( '<tr>' ).
+    ri_html->add( '<td>Password:</td>' ).
+    ri_html->add( '<td><input type="text" name="password" value="' && ls_per-password && '"></td>' ).
+    ri_html->add( '</tr>' ).
+    ri_html->add( '</table>' ).
 
-    ro_html->add( '<br>' ).
+    ri_html->add( '<br>' ).
 
-    ro_html->add( render_settings( ls_per ) ).
+    ri_html->add( render_settings( ls_per ) ).
 
-    ro_html->add( '<br>' ).
-    ro_html->add( '<input type="submit" value="Save">' ).
+    ri_html->add( '<br>' ).
+    ri_html->add( '<input type="submit" value="Save">' ).
 
-    ro_html->add( '</form>' ).
-    ro_html->add( '<br>' ).
+    ri_html->add( '</form>' ).
+    ri_html->add( '<br>' ).
 
-    ro_html->add( '</div>' ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -217,18 +217,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
           lv_checked TYPE string.
 
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     lt_methods = zcl_abapgit_background=>list_methods( ).
 
-    ro_html->add( '<u>Method</u><br>' ).
-    ro_html->add( |<form method="get" action="sapevent:{ zif_abapgit_definitions=>c_action-bg_update }">| ).
+    ri_html->add( '<u>Method</u><br>' ).
+    ri_html->add( |<form method="get" action="sapevent:{ zif_abapgit_definitions=>c_action-bg_update }">| ).
 
     IF is_per-method IS INITIAL.
       lv_checked = ' checked'.
     ENDIF.
 
-    ro_html->add( '<input type="radio" name="method" value=""' && lv_checked && '>Do nothing<br>' ).
+    ri_html->add( '<input type="radio" name="method" value=""' && lv_checked && '>Do nothing<br>' ).
 
     LOOP AT lt_methods INTO ls_method.
       CLEAR lv_checked.
@@ -236,13 +236,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
         lv_checked = ' checked'.
       ENDIF.
 
-      ro_html->add( '<input type="radio" name="method" value="' &&
+      ri_html->add( '<input type="radio" name="method" value="' &&
         ls_method-class && '"' &&
         lv_checked && '>' &&
         ls_method-description && '<br>' ).
     ENDLOOP.
 
-    ro_html->add( '<br>' ).
+    ri_html->add( '<br>' ).
 
   ENDMETHOD.
 
@@ -253,7 +253,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
           ls_setting  LIKE LINE OF lt_settings.
 
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     IF is_per-method IS INITIAL.
       RETURN.
@@ -272,16 +272,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    ro_html->add( '<table>' ).
+    ri_html->add( '<table>' ).
     LOOP AT lt_settings INTO ls_setting.
-      ro_html->add( '<tr>' ).
-      ro_html->add( '<td>' && ls_setting-key && ':</td>' ).
-      ro_html->add( '<td><input type="text" name="' &&
+      ri_html->add( '<tr>' ).
+      ri_html->add( '<td>' && ls_setting-key && ':</td>' ).
+      ri_html->add( '<td><input type="text" name="' &&
         ls_setting-key && '" value="' &&
         ls_setting-value && '"></td>' ).
-      ro_html->add( '</tr>' ).
+      ri_html->add( '</tr>' ).
     ENDLOOP.
-    ro_html->add( '</table>' ).
+    ri_html->add( '</table>' ).
 
   ENDMETHOD.
 

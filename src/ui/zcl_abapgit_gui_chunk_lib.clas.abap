@@ -176,6 +176,9 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       iv_txt = 'Debug Info'
       iv_act = zif_abapgit_definitions=>c_action-go_debuginfo
     )->add(
+      iv_txt = 'Performance Test'
+      iv_act = zif_abapgit_definitions=>c_action-performance_test
+    )->add(
       iv_txt = 'Settings'
       iv_act = zif_abapgit_definitions=>c_action-go_settings ).
 
@@ -324,7 +327,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ENDIF.
 
     ri_html->add( |<div class="{ lv_class }">| ).
-    ri_html->add( |{ zcl_abapgit_html=>icon( 'exclamation-circle/red' ) } Error: { lv_error }| ).
+    ri_html->add( |{ ri_html->icon( 'exclamation-circle/red' ) } Error: { lv_error }| ).
     ri_html->add( '</div>' ).
 
   ENDMETHOD.
@@ -516,7 +519,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
   METHOD render_js_error_banner.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     ri_html->add( '<div id="js-error-banner" class="dummydiv error">' ).
-    ri_html->add( |{ zcl_abapgit_html=>icon( 'exclamation-triangle/red' ) }| &&
+    ri_html->add( |{ ri_html->icon( 'exclamation-triangle/red' ) }| &&
                   ' If this does not disappear soon,' &&
                   ' then there is a JS init error, please log an issue' ).
     ri_html->add( '</div>' ).
@@ -723,9 +726,9 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       ENDIF.
       ri_html->add_a( iv_act = |toggleDisplay('news')|
                       iv_typ = zif_abapgit_html=>c_action_type-onclick
-                      iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_icon
-                                                       iv_class = 'pad-sides'
-                                                       iv_hint  = 'Display changelog' ) ).
+                      iv_txt = ri_html->icon( iv_name  = lv_icon
+                                              iv_class = 'pad-sides'
+                                              iv_hint  = 'Display changelog' ) ).
     ENDIF.
     ri_html->add( '</td>' ).
 
@@ -738,9 +741,9 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       lv_icon = 'star/grey'.
     ENDIF.
     ri_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?{ io_repo->get_key( ) }|
-                    iv_txt = zcl_abapgit_html=>icon( iv_name  = lv_icon
-                                                     iv_class = 'pad-sides'
-                                                     iv_hint  = 'Click to toggle favorite' ) ).
+                    iv_txt = ri_html->icon( iv_name  = lv_icon
+                                            iv_class = 'pad-sides'
+                                            iv_hint  = 'Click to toggle favorite' ) ).
 
     " BG
     IF lo_pback->exists( io_repo->get_key( ) ) = abap_true.
@@ -800,17 +803,15 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     lv_commit_hash = io_repo_online->get_sha1_remote( ).
     lv_commit_short_hash = lv_commit_hash(7).
 
-
-    lv_icon_commit = zcl_abapgit_html=>icon( iv_name  = 'code-commit'
-                                             iv_class = 'pad-sides'
-                                             iv_hint  = 'Commit' ).
+    lv_icon_commit = ii_html->icon( iv_name  = 'code-commit'
+                                    iv_class = 'pad-sides'
+                                    iv_hint  = 'Commit' ).
 
     TRY.
         lv_display_url = io_repo_online->get_commit_display_url( lv_commit_hash ).
 
         ii_html->add_a( iv_txt   = |{ lv_icon_commit }{ lv_commit_short_hash }|
-                        iv_act   = |{ zif_abapgit_definitions=>c_action-url }?|
-                                && lv_display_url
+                        iv_act   = |{ zif_abapgit_definitions=>c_action-url }?| && lv_display_url
                         iv_class = |url| ).
       CATCH zcx_abapgit_exception.
         ii_html->add( |<span class="url">{ lv_icon_commit }{ lv_commit_short_hash }</span>| ).

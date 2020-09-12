@@ -6,16 +6,17 @@ CLASS zcl_abapgit_html DEFINITION
 
     INTERFACES zif_abapgit_html .
 
-    ALIASES add
-      FOR zif_abapgit_html~add .
-    ALIASES add_checkbox
-      FOR zif_abapgit_html~add_checkbox .
-    ALIASES icon
-      FOR zif_abapgit_html~icon .
-
     CONSTANTS c_indent_size TYPE i VALUE 2 ##NO_TEXT.
 
     CLASS-METHODS class_constructor .
+    CLASS-METHODS icon
+      IMPORTING
+        !iv_name      TYPE string
+        !iv_hint      TYPE string OPTIONAL
+        !iv_class     TYPE string OPTIONAL
+        !iv_onclick   TYPE string OPTIONAL
+      RETURNING
+        VALUE(rv_str) TYPE string .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -66,36 +67,6 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
 
-  METHOD add.
-
-    DATA: lv_type TYPE c,
-          lo_html TYPE REF TO zcl_abapgit_html.
-
-    FIELD-SYMBOLS: <lt_tab> TYPE string_table.
-
-    DESCRIBE FIELD ig_chunk TYPE lv_type. " Describe is faster than RTTI classes
-
-    CASE lv_type.
-      WHEN 'C' OR 'g'.  " Char or string
-        APPEND ig_chunk TO mt_buffer.
-      WHEN 'h'.         " Table
-        ASSIGN ig_chunk TO <lt_tab>. " Assuming table of strings ! Will dump otherwise
-        APPEND LINES OF <lt_tab> TO mt_buffer.
-      WHEN 'r'.         " Object ref
-        ASSERT ig_chunk IS BOUND. " Dev mistake
-        TRY.
-            lo_html ?= ig_chunk.
-          CATCH cx_sy_move_cast_error.
-            ASSERT 1 = 0. " Dev mistake
-        ENDTRY.
-        APPEND LINES OF lo_html->mt_buffer TO mt_buffer.
-      WHEN OTHERS.
-        ASSERT 1 = 0. " Dev mistake
-    ENDCASE.
-
-  ENDMETHOD.
-
-
   METHOD checkbox.
 
     DATA: lv_checked TYPE string.
@@ -114,6 +85,43 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
       EXPORTING
         pattern     = '<(AREA|BASE|BR|COL|COMMAND|EMBED|HR|IMG|INPUT|LINK|META|PARAM|SOURCE|!)'
         ignore_case = abap_false.
+  ENDMETHOD.
+
+
+  METHOD icon.
+
+    DATA: lv_hint       TYPE string,
+          lv_name       TYPE string,
+          lv_color      TYPE string,
+          lv_class      TYPE string,
+          lv_large_icon TYPE string,
+          lv_xpixel     TYPE i,
+          lv_onclick    TYPE string.
+
+    SPLIT iv_name AT '/' INTO lv_name lv_color.
+
+    IF iv_hint IS NOT INITIAL.
+      lv_hint  = | title="{ iv_hint }"|.
+    ENDIF.
+    IF iv_onclick IS NOT INITIAL.
+      lv_onclick = | onclick="{ iv_onclick }"|.
+    ENDIF.
+    IF iv_class IS NOT INITIAL.
+      lv_class = | { iv_class }|.
+    ENDIF.
+    IF lv_color IS NOT INITIAL.
+      lv_color = | { lv_color }|.
+    ENDIF.
+
+    lv_xpixel = cl_gui_cfw=>compute_pixel_from_metric( x_or_y = 'X'
+                                                       in = 1 ).
+    IF lv_xpixel >= 2.
+      lv_large_icon = ' large'.
+    ENDIF.
+
+    rv_str = |<i class="icon{ lv_large_icon } icon-{ lv_name }{ lv_color }|.
+    rv_str = |{ rv_str }{ lv_class }"{ lv_onclick }{ lv_hint }></i>|.
+
   ENDMETHOD.
 
 
@@ -286,9 +294,39 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_html~add.
+
+    DATA: lv_type TYPE c,
+          lo_html TYPE REF TO zcl_abapgit_html.
+
+    FIELD-SYMBOLS: <lt_tab> TYPE string_table.
+
+    DESCRIBE FIELD ig_chunk TYPE lv_type. " Describe is faster than RTTI classes
+
+    CASE lv_type.
+      WHEN 'C' OR 'g'.  " Char or string
+        APPEND ig_chunk TO mt_buffer.
+      WHEN 'h'.         " Table
+        ASSIGN ig_chunk TO <lt_tab>. " Assuming table of strings ! Will dump otherwise
+        APPEND LINES OF <lt_tab> TO mt_buffer.
+      WHEN 'r'.         " Object ref
+        ASSERT ig_chunk IS BOUND. " Dev mistake
+        TRY.
+            lo_html ?= ig_chunk.
+          CATCH cx_sy_move_cast_error.
+            ASSERT 1 = 0. " Dev mistake
+        ENDTRY.
+        APPEND LINES OF lo_html->mt_buffer TO mt_buffer.
+      WHEN OTHERS.
+        ASSERT 1 = 0. " Dev mistake
+    ENDCASE.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_html~add_a.
 
-    add( zif_abapgit_html~a(
+    zif_abapgit_html~add( zif_abapgit_html~a(
       iv_txt   = iv_txt
       iv_act   = iv_act
       iv_typ   = iv_typ
@@ -303,55 +341,31 @@ CLASS ZCL_ABAPGIT_HTML IMPLEMENTATION.
 
   METHOD zif_abapgit_html~add_checkbox.
 
-    add( checkbox( iv_id      = iv_id
-                   iv_checked = iv_checked ) ).
+    zif_abapgit_html~add( checkbox(
+      iv_id      = iv_id
+      iv_checked = iv_checked ) ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_html~add_icon.
 
-    add( icon( iv_name    = iv_name
-               iv_class   = iv_class
-               iv_hint    = iv_hint
-               iv_onclick = iv_onclick ) ).
+    zif_abapgit_html~add( icon(
+      iv_name    = iv_name
+      iv_class   = iv_class
+      iv_hint    = iv_hint
+      iv_onclick = iv_onclick ) ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_html~icon.
 
-    DATA: lv_hint       TYPE string,
-          lv_name       TYPE string,
-          lv_color      TYPE string,
-          lv_class      TYPE string,
-          lv_large_icon TYPE string,
-          lv_xpixel     TYPE i,
-          lv_onclick    TYPE string.
-
-    SPLIT iv_name AT '/' INTO lv_name lv_color.
-
-    IF iv_hint IS NOT INITIAL.
-      lv_hint  = | title="{ iv_hint }"|.
-    ENDIF.
-    IF iv_onclick IS NOT INITIAL.
-      lv_onclick = | onclick="{ iv_onclick }"|.
-    ENDIF.
-    IF iv_class IS NOT INITIAL.
-      lv_class = | { iv_class }|.
-    ENDIF.
-    IF lv_color IS NOT INITIAL.
-      lv_color = | { lv_color }|.
-    ENDIF.
-
-    lv_xpixel = cl_gui_cfw=>compute_pixel_from_metric( x_or_y = 'X'
-                                                       in = 1 ).
-    IF lv_xpixel >= 2.
-      lv_large_icon = ' large'.
-    ENDIF.
-
-    rv_str = |<i class="icon{ lv_large_icon } icon-{ lv_name }{ lv_color }|.
-    rv_str = |{ rv_str }{ lv_class }"{ lv_onclick }{ lv_hint }></i>|.
+    rv_str = icon(
+      iv_name    = iv_name
+      iv_hint    = iv_hint
+      iv_class   = iv_class
+      iv_onclick = iv_onclick ).
 
   ENDMETHOD.
 

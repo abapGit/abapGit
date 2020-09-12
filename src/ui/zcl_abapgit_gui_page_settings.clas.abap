@@ -31,31 +31,31 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
     METHODS post_hotkeys .
     METHODS render_proxy
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_development_internals
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_form_begin
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_form_end
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_max_lines
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_icon_scaling
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_ui_theme
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_adt_jump_enabled
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_commit_msg
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS post_proxy .
     METHODS post
       IMPORTING
@@ -74,21 +74,21 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
       IMPORTING
         !iv_header     TYPE csequence
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_section_end
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_start_up
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS render_link_hints
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     METHODS render_hotkeys
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
     METHODS is_post_field_checked
@@ -99,7 +99,7 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
 
     METHODS render_parallel_proc
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
 ENDCLASS.
 
 
@@ -271,11 +271,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
     DATA:
       lt_key_bindings TYPE zif_abapgit_definitions=>tty_hotkey,
-      ls_key_binding LIKE LINE OF lt_key_bindings.
+      ls_key_binding  LIKE LINE OF lt_key_bindings.
 
     FIELD-SYMBOLS:
       <ls_default_hotkey> LIKE LINE OF mt_default_hotkeys,
-      <ls_post_field>  TYPE ihttpnvp.
+      <ls_post_field>     TYPE ihttpnvp.
 
     LOOP AT mt_post_fields ASSIGNING <ls_post_field> WHERE name CP 'hk~*'.
 
@@ -350,36 +350,36 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
       lv_checked = 'checked'.
     ENDIF.
 
-    CREATE OBJECT ro_html.
-    ro_html->add( |<h2>ABAP Development Tools (ADT)</h2>| ).
-    ro_html->add( `<input type="checkbox" name="adt_jump_enabled" value="X" `
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( |<h2>ABAP Development Tools (ADT)</h2>| ).
+    ri_html->add( `<input type="checkbox" name="adt_jump_enabled" value="X" `
                    && lv_checked && ` > Enable Jump to ADT First` ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
   ENDMETHOD.
 
 
   METHOD render_commit_msg.
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( |<h2>Commit Message</h2>| ).
-    ro_html->add( |<label for="comment_length" title="(Recommendation 50)">Max. Length of Comment</label>| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<input name="comment_length" type="number" step="10" size="3" maxlength="3" min="50"| &&
+    ri_html->add( |<h2>Commit Message</h2>| ).
+    ri_html->add( |<label for="comment_length" title="(Recommendation 50)">Max. Length of Comment</label>| ).
+    ri_html->add( |<br>| ).
+    ri_html->add( |<input name="comment_length" type="number" step="10" size="3" maxlength="3" min="50"| &&
                   | value="{ mo_settings->get_commitmsg_comment_length( ) }">| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<label for="comment_default"| &&
+    ri_html->add( |<br>| ).
+    ri_html->add( |<label for="comment_default"| &&
                   |title="(Possible Variables: $OBJECT, $FILE)">Default for Comment</label>| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<input name="comment_default" type="text" size="80" maxlength="255"| &&
+    ri_html->add( |<br>| ).
+    ri_html->add( |<input name="comment_default" type="text" size="80" maxlength="255"| &&
                   | value="{ mo_settings->get_commitmsg_comment_default( ) }">| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<label for="body_size" title="(Recommendation 72)">Max. Line Size of Body</label>| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<input name="body_size" type="number" size="3" maxlength="3" min="50"| &&
+    ri_html->add( |<br>| ).
+    ri_html->add( |<label for="body_size" title="(Recommendation 72)">Max. Line Size of Body</label>| ).
+    ri_html->add( |<br>| ).
+    ri_html->add( |<input name="body_size" type="number" size="3" maxlength="3" min="50"| &&
                   | value="{ mo_settings->get_commitmsg_body_size( ) }">| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
   ENDMETHOD.
 
 
@@ -434,37 +434,37 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
       lv_act_wo_popup = 'checked'.
     ENDIF.
 
-    CREATE OBJECT ro_html.
-    ro_html->add( |<h2>abapGit Development Internals</h2>| ).
-    ro_html->add( `<input type="checkbox" name="critical_tests" `
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( |<h2>abapGit Development Internals</h2>| ).
+    ri_html->add( `<input type="checkbox" name="critical_tests" `
                    && lv_critical_tests && ` > Enable Critical Unit Tests (See LTCL_DANGEROUS)` ).
-    ro_html->add( |<br>| ).
-    ro_html->add( `<input type="checkbox" name="experimental_features" `
+    ri_html->add( |<br>| ).
+    ri_html->add( `<input type="checkbox" name="experimental_features" `
                    && lv_experimental && ` > Enable Experimental Features` ).
-    ro_html->add( |<br>| ).
-    ro_html->add( `<input type="checkbox" name="activate_wo_popup" `
+    ri_html->add( |<br>| ).
+    ri_html->add( `<input type="checkbox" name="activate_wo_popup" `
                    && lv_act_wo_popup && ` > Activate Objects Without Popup` ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
 
   ENDMETHOD.
 
 
   METHOD render_form_begin.
 
-    CREATE OBJECT ro_html.
-    ro_html->add( '<div class="settings_container">' ).
-    ro_html->add( `<form id="settings_form" method="post" action="sapevent:` && c_action-save_settings && `">` ).
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( '<div class="settings_container">' ).
+    ri_html->add( `<form id="settings_form" method="post" action="sapevent:` && c_action-save_settings && `">` ).
 
   ENDMETHOD.
 
 
   METHOD render_form_end.
 
-    CREATE OBJECT ro_html.
-    ro_html->add( '<input type="submit" value="Save" class="floating-button blue-set emphasis">' ).
-    ro_html->add( '</form>' ).
-    ro_html->add( '</div>' ).
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( '<input type="submit" value="Save" class="floating-button blue-set emphasis">' ).
+    ri_html->add( '</form>' ).
+    ri_html->add( '</div>' ).
 
   ENDMETHOD.
 
@@ -479,24 +479,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     lt_hotkeys = mt_default_hotkeys.
     zcl_abapgit_hotkeys=>merge_hotkeys_with_settings( CHANGING ct_hotkey_actions = lt_hotkeys ).
 
-    CREATE OBJECT ro_html.
-    ro_html->add( |<h2>Hotkeys</h2>| ).
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( |<h2>Hotkeys</h2>| ).
 
-    ro_html->add( '<table class="settings_tab">' ).
-    ro_html->add( '<thead><tr><th>Component</th><th>Action</th><th>Key</th></tr></thead>' ).
+    ri_html->add( '<table class="settings_tab">' ).
+    ri_html->add( '<thead><tr><th>Component</th><th>Action</th><th>Key</th></tr></thead>' ).
 
     LOOP AT lt_hotkeys ASSIGNING <ls_key>.
 
-      ro_html->add( '<tr>' ).
-      ro_html->add( |<td>{ <ls_key>-ui_component }</td>| ).
-      ro_html->add( |<td>{ <ls_key>-description }</td>| ).
+      ri_html->add( '<tr>' ).
+      ri_html->add( |<td>{ <ls_key>-ui_component }</td>| ).
+      ri_html->add( |<td>{ <ls_key>-description }</td>| ).
       lv_hk_id = |hk~{ <ls_key>-ui_component }~{ <ls_key>-action }|.
-      ro_html->add( |<td><input name="{ lv_hk_id }" maxlength=1 type="text" value="{ <ls_key>-hotkey }"></td>| ).
-      ro_html->add( '</tr>' ).
+      ri_html->add( |<td><input name="{ lv_hk_id }" maxlength=1 type="text" value="{ <ls_key>-hotkey }"></td>| ).
+      ri_html->add( '</tr>' ).
 
     ENDLOOP.
 
-    ro_html->add( '</table>' ).
+    ri_html->add( '</table>' ).
 
   ENDMETHOD.
 
@@ -519,19 +519,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
         ls_sel-auto = ' selected'.
     ENDCASE.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( |<h2>UI Icon Scaling</h2>| ).
-    ro_html->add( |<label for="icon_scaling">High DPI Icon Scaling</label>| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<select name="icon_scaling" size="3">| ).
-    ro_html->add( |<option value=""{ ls_sel-auto }>Auto</option>| ).
-    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_icon_scaling-large }"{ ls_sel-large }>Large</option>| ).
-    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_icon_scaling-small }"{ ls_sel-small }>Small</option>| ).
-    ro_html->add( |</select>| ).
+    ri_html->add( |<h2>UI Icon Scaling</h2>| ).
+    ri_html->add( |<label for="icon_scaling">High DPI Icon Scaling</label>| ).
+    ri_html->add( |<br>| ).
+    ri_html->add( |<select name="icon_scaling" size="3">| ).
+    ri_html->add( |<option value=""{ ls_sel-auto }>Auto</option>| ).
+    ri_html->add( |<option value="{ zcl_abapgit_settings=>c_icon_scaling-large }"{ ls_sel-large }>Large</option>| ).
+    ri_html->add( |<option value="{ zcl_abapgit_settings=>c_icon_scaling-small }"{ ls_sel-small }>Small</option>| ).
+    ri_html->add( |</select>| ).
 
-    ro_html->add( |<br>| ).
-    ro_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
 
   ENDMETHOD.
 
@@ -539,7 +539,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
   METHOD render_link_hints.
 
     DATA: lv_checked       TYPE string,
-          lv_link_hint_key TYPE char01.
+          lv_link_hint_key TYPE c LENGTH 1.
 
     IF mo_settings->get_link_hints_enabled( ) = abap_true.
       lv_checked = 'checked'.
@@ -547,30 +547,30 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
     lv_link_hint_key = mo_settings->get_link_hint_key( ).
 
-    CREATE OBJECT ro_html.
-    ro_html->add( |<h2>Vimium-like Link Hints</h2>| ).
-    ro_html->add( `<input type="checkbox" name="link_hints_enabled" value="X" `
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( |<h2>Vimium-like Link Hints</h2>| ).
+    ri_html->add( `<input type="checkbox" name="link_hints_enabled" value="X" `
                    && lv_checked && ` > Enable Vimium-like Link Hints` ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<input type="text" name="link_hint_key" size="1" maxlength="1" value="{ lv_link_hint_key }" |
+    ri_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
+    ri_html->add( |<input type="text" name="link_hint_key" size="1" maxlength="1" value="{ lv_link_hint_key }" |
                && |> Key to Activate Links| ).
 
-    ro_html->add( |<br>| ).
-    ro_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
 
   ENDMETHOD.
 
 
   METHOD render_max_lines.
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( |<h2>List size</h2>| ).
-    ro_html->add( |<label for="max_lines">Max. # of Objects Listed (0 = All)</label>| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( `<input name="max_lines" type="text" size="5" value="` && mo_settings->get_max_lines( ) && `">` ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<br>| ).
+    ri_html->add( |<h2>List size</h2>| ).
+    ri_html->add( |<label for="max_lines">Max. # of Objects Listed (0 = All)</label>| ).
+    ri_html->add( |<br>| ).
+    ri_html->add( `<input name="max_lines" type="text" size="5" value="` && mo_settings->get_max_lines( ) && `">` ).
+    ri_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
   ENDMETHOD.
 
 
@@ -582,64 +582,64 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
       lv_checked = 'checked'.
     ENDIF.
 
-    CREATE OBJECT ro_html.
-    ro_html->add( |<h2>Parallel Processing</h2>| ).
-    ro_html->add( `<input type="checkbox" name="parallel_proc_disabled" value="X" `
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( |<h2>Parallel Processing</h2>| ).
+    ri_html->add( `<input type="checkbox" name="parallel_proc_disabled" value="X" `
                    && lv_checked && ` > Disable Parallel Processing` ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
   ENDMETHOD.
 
 
   METHOD render_proxy.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( |<h2>Proxy</h2>| ).
-    ro_html->add( |<label for="proxy_url">Proxy URL</label>| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( `<input name="proxy_url" type="text" size="50" value="` &&
+    ri_html->add( |<h2>Proxy</h2>| ).
+    ri_html->add( |<label for="proxy_url">Proxy URL</label>| ).
+    ri_html->add( |<br>| ).
+    ri_html->add( `<input name="proxy_url" type="text" size="50" value="` &&
       mo_settings->get_proxy_url( ) && `">` ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<label for="proxy_port">Proxy Port</label>| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( `<input name="proxy_port" type="text" size="5" value="` &&
+    ri_html->add( |<br>| ).
+    ri_html->add( |<label for="proxy_port">Proxy Port</label>| ).
+    ri_html->add( |<br>| ).
+    ri_html->add( `<input name="proxy_port" type="text" size="5" value="` &&
       mo_settings->get_proxy_port( ) && `">` ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<label for="proxy_auth">Proxy Authentication</label>| ).
+    ri_html->add( |<br>| ).
+    ri_html->add( |<label for="proxy_auth">Proxy Authentication</label>| ).
     IF mo_settings->get_proxy_authentication( ) = abap_true.
-      ro_html->add( `<input name="proxy_auth" type="checkbox" checked>` ).
+      ri_html->add( `<input name="proxy_auth" type="checkbox" checked>` ).
     ELSE.
-      ro_html->add( `<input name="proxy_auth" type="checkbox">` ).
+      ri_html->add( `<input name="proxy_auth" type="checkbox">` ).
     ENDIF.
-    ro_html->add( |<br>| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<label for="proxy_bypass">Bypass Proxy Settings for These Hosts & Domains</label>| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<button type="button" name="proxy_bypass" class="grey-set"|
+    ri_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
+    ri_html->add( |<label for="proxy_bypass">Bypass Proxy Settings for These Hosts & Domains</label>| ).
+    ri_html->add( |<br>| ).
+    ri_html->add( |<button type="button" name="proxy_bypass" class="grey-set"|
                 & |onclick="location.href='sapevent:{ c_action-change_proxy_bypass }';">Maintain</button>| ).
-    ro_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
 
-    ro_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
 
   ENDMETHOD.
 
 
   METHOD render_section_begin.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( |<h1>{ iv_header }</h1>| ).
-    ro_html->add( |<div class="settings_section">| ).
+    ri_html->add( |<h1>{ iv_header }</h1>| ).
+    ri_html->add( |<div class="settings_section">| ).
 
   ENDMETHOD.
 
 
   METHOD render_section_end.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( |</div>| ).
+    ri_html->add( |</div>| ).
 
   ENDMETHOD.
 
@@ -652,12 +652,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
       lv_checked = 'checked'.
     ENDIF.
 
-    CREATE OBJECT ro_html.
-    ro_html->add( |<h2>Startup</h2>| ).
-    ro_html->add( `<input type="checkbox" name="show_default_repo" value="X" `
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+    ri_html->add( |<h2>Startup</h2>| ).
+    ri_html->add( `<input type="checkbox" name="show_default_repo" value="X" `
                    && lv_checked && ` > Show Last Opened Repository` ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
   ENDMETHOD.
 
 
@@ -681,22 +681,22 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
         ls_sel-belize = ' selected'.
     ENDCASE.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    ro_html->add( |<h2>UI Theme</h2>| ).
-    ro_html->add( |<label for="ui_theme">UI Theme</label>| ).
-    ro_html->add( |<br>| ).
-    ro_html->add( |<select name="ui_theme" size="3">| ).
-    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_ui_theme-default }"{
+    ri_html->add( |<h2>UI Theme</h2>| ).
+    ri_html->add( |<label for="ui_theme">UI Theme</label>| ).
+    ri_html->add( |<br>| ).
+    ri_html->add( |<select name="ui_theme" size="3">| ).
+    ri_html->add( |<option value="{ zcl_abapgit_settings=>c_ui_theme-default }"{
       ls_sel-default }>{ zcl_abapgit_settings=>c_ui_theme-default }</option>| ).
-    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_ui_theme-dark }"{
+    ri_html->add( |<option value="{ zcl_abapgit_settings=>c_ui_theme-dark }"{
       ls_sel-dark }>{ zcl_abapgit_settings=>c_ui_theme-dark }</option>| ).
-    ro_html->add( |<option value="{ zcl_abapgit_settings=>c_ui_theme-belize }"{
+    ri_html->add( |<option value="{ zcl_abapgit_settings=>c_ui_theme-belize }"{
       ls_sel-belize }>{ zcl_abapgit_settings=>c_ui_theme-belize }</option>| ).
-    ro_html->add( |</select>| ).
+    ri_html->add( |</select>| ).
 
-    ro_html->add( |<br>| ).
-    ro_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
+    ri_html->add( |<br>| ).
 
   ENDMETHOD.
 
