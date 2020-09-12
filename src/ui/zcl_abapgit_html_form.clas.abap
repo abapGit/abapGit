@@ -7,46 +7,46 @@ CLASS zcl_abapgit_html_form DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        iv_form_id TYPE string OPTIONAL
+        iv_form_id     TYPE string OPTIONAL
       RETURNING
         VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form.
 
     METHODS render
       IMPORTING
-        iv_form_class TYPE string
-        io_values TYPE REF TO zcl_abapgit_string_map
+        iv_form_class     TYPE string
+        io_values         TYPE REF TO zcl_abapgit_string_map
         io_validation_log TYPE REF TO zcl_abapgit_string_map OPTIONAL
       RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html.
+        VALUE(ri_html)    TYPE REF TO zif_abapgit_html.
 
     METHODS command
       IMPORTING
-        iv_label TYPE string
-        iv_action TYPE string
+        iv_label   TYPE string
+        iv_action  TYPE string
         iv_is_main TYPE abap_bool DEFAULT abap_false
-        iv_as_a TYPE abap_bool DEFAULT abap_false.
+        iv_as_a    TYPE abap_bool DEFAULT abap_false.
 
     METHODS text
       IMPORTING
-        iv_label TYPE string
-        iv_name TYPE string
-        iv_hint TYPE string OPTIONAL
-        iv_required TYPE abap_bool DEFAULT abap_false
+        iv_label       TYPE string
+        iv_name        TYPE string
+        iv_hint        TYPE string OPTIONAL
+        iv_required    TYPE abap_bool DEFAULT abap_false
         iv_placeholder TYPE string OPTIONAL
         iv_side_action TYPE string OPTIONAL.
 
     METHODS checkbox
       IMPORTING
         iv_label TYPE string
-        iv_name TYPE string
-        iv_hint TYPE string OPTIONAL.
+        iv_name  TYPE string
+        iv_hint  TYPE string OPTIONAL.
 
     METHODS radio
       IMPORTING
-        iv_label TYPE string
-        iv_name TYPE string
+        iv_label         TYPE string
+        iv_name          TYPE string
         iv_default_value TYPE string OPTIONAL
-        iv_hint TYPE string OPTIONAL.
+        iv_hint          TYPE string OPTIONAL.
 
     METHODS option
       IMPORTING
@@ -56,8 +56,8 @@ CLASS zcl_abapgit_html_form DEFINITION
     METHODS start_group
       IMPORTING
         iv_label TYPE string
-        iv_name TYPE string
-        iv_hint TYPE string OPTIONAL.
+        iv_name  TYPE string
+        iv_hint  TYPE string OPTIONAL.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -66,60 +66,57 @@ CLASS zcl_abapgit_html_form DEFINITION
       BEGIN OF ty_subitem,
         label TYPE string,
         value TYPE string,
-      END OF ty_subitem.
+      END OF ty_subitem .
     TYPES:
-      tty_subitems TYPE STANDARD TABLE OF ty_subitem WITH DEFAULT KEY.
-
+      tty_subitems TYPE STANDARD TABLE OF ty_subitem WITH DEFAULT KEY .
     TYPES:
       BEGIN OF ty_field,
-        type TYPE i,
-        name TYPE string,
-        label TYPE string,
-        hint TYPE string,
-        dblclick TYPE string,
-        placeholder TYPE string,
-        required TYPE string,
-        item_class TYPE string,
-        error TYPE string,
+        type          TYPE i,
+        name          TYPE string,
+        label         TYPE string,
+        hint          TYPE string,
+        dblclick      TYPE string,
+        placeholder   TYPE string,
+        required      TYPE string,
+        item_class    TYPE string,
+        error         TYPE string,
         default_value TYPE string,
-        side_action TYPE string,
-        subitems TYPE tty_subitems,
+        side_action   TYPE string,
+        subitems      TYPE tty_subitems,
 *        onclick ???
-      END OF ty_field.
-
+      END OF ty_field .
     TYPES:
       BEGIN OF ty_command,
-        label TYPE string,
-        action TYPE string,
+        label   TYPE string,
+        action  TYPE string,
         is_main TYPE abap_bool,
-        as_a TYPE abap_bool,
+        as_a    TYPE abap_bool,
 *        onclick ???
-      END OF ty_command.
+      END OF ty_command .
 
     CONSTANTS:
       BEGIN OF c_field_type,
-        text TYPE i VALUE 1,
-        radio TYPE i VALUE 2,
-        checkbox TYPE i VALUE 3,
+        text        TYPE i VALUE 1,
+        radio       TYPE i VALUE 2,
+        checkbox    TYPE i VALUE 3,
         field_group TYPE i VALUE 4,
-      END OF c_field_type.
+      END OF c_field_type .
+    DATA:
+      mt_fields TYPE STANDARD TABLE OF ty_field .
+    DATA:
+      mt_commands TYPE STANDARD TABLE OF ty_command .
+    DATA mv_form_id TYPE string .
 
-    DATA mt_fields TYPE STANDARD TABLE OF ty_field.
-    DATA mt_commands TYPE STANDARD TABLE OF ty_command.
-    DATA mv_form_id TYPE string.
-
-    CLASS-METHODS render_field
+    METHODS render_field
       IMPORTING
-        ii_html TYPE REF TO zif_abapgit_html
-        io_values TYPE REF TO zcl_abapgit_string_map
-        io_validation_log TYPE REF TO zcl_abapgit_string_map
-        is_field TYPE ty_field.
-
-    CLASS-METHODS render_command
+        !ii_html           TYPE REF TO zif_abapgit_html
+        !io_values         TYPE REF TO zcl_abapgit_string_map
+        !io_validation_log TYPE REF TO zcl_abapgit_string_map
+        !is_field          TYPE ty_field .
+    METHODS render_command
       IMPORTING
-        ii_html TYPE REF TO zif_abapgit_html
-        is_cmd TYPE ty_command.
-
+        !ii_html TYPE REF TO zif_abapgit_html
+        !is_cmd  TYPE ty_command .
 ENDCLASS.
 
 
