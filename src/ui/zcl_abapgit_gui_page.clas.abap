@@ -70,7 +70,7 @@ CLASS zcl_abapgit_gui_page DEFINITION PUBLIC ABSTRACT
         zcx_abapgit_exception .
     METHODS scripts
       RETURNING
-        VALUE(ro_html) TYPE REF TO zcl_abapgit_html
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
@@ -230,14 +230,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD scripts.
 
-    CREATE OBJECT ro_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     render_deferred_parts(
-      ii_html          = ro_html
+      ii_html          = ri_html
       iv_part_category = c_html_parts-scripts ).
 
-    render_link_hints( ro_html ).
-    render_command_palettes( ro_html ).
+    render_link_hints( ri_html ).
+    render_command_palettes( ri_html ).
 
   ENDMETHOD.
 
