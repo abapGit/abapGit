@@ -5,60 +5,55 @@ CLASS zcl_abapgit_html_form DEFINITION
 
   PUBLIC SECTION.
 
+    CONSTANTS c_action TYPE string VALUE 'ag_hidden_action' ##NO_TEXT.
+    CONSTANTS c_event TYPE string VALUE 'submit_form' ##NO_TEXT.
+
     CLASS-METHODS create
       IMPORTING
-        iv_form_id     TYPE string OPTIONAL
+        !iv_form_id    TYPE string OPTIONAL
       RETURNING
-        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form.
-
+        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form .
     METHODS render
       IMPORTING
-        iv_form_class     TYPE string
-        io_values         TYPE REF TO zcl_abapgit_string_map
-        io_validation_log TYPE REF TO zcl_abapgit_string_map OPTIONAL
+        !iv_form_class     TYPE string
+        !io_values         TYPE REF TO zcl_abapgit_string_map
+        !io_validation_log TYPE REF TO zcl_abapgit_string_map OPTIONAL
       RETURNING
-        VALUE(ri_html)    TYPE REF TO zif_abapgit_html.
-
+        VALUE(ri_html)     TYPE REF TO zif_abapgit_html .
     METHODS command
       IMPORTING
-        iv_label   TYPE string
-        iv_action  TYPE string
-        iv_is_main TYPE abap_bool DEFAULT abap_false
-        iv_as_a    TYPE abap_bool DEFAULT abap_false.
-
+        !iv_label   TYPE string
+        !iv_action  TYPE string
+        !iv_is_main TYPE abap_bool DEFAULT abap_false
+        !iv_as_a    TYPE abap_bool DEFAULT abap_false .
     METHODS text
       IMPORTING
-        iv_label       TYPE string
-        iv_name        TYPE string
-        iv_hint        TYPE string OPTIONAL
-        iv_required    TYPE abap_bool DEFAULT abap_false
-        iv_placeholder TYPE string OPTIONAL
-        iv_side_action TYPE string OPTIONAL.
-
+        !iv_label       TYPE string
+        !iv_name        TYPE string
+        !iv_hint        TYPE string OPTIONAL
+        !iv_required    TYPE abap_bool DEFAULT abap_false
+        !iv_placeholder TYPE string OPTIONAL
+        !iv_side_action TYPE string OPTIONAL .
     METHODS checkbox
       IMPORTING
-        iv_label TYPE string
-        iv_name  TYPE string
-        iv_hint  TYPE string OPTIONAL.
-
+        !iv_label TYPE string
+        !iv_name  TYPE string
+        !iv_hint  TYPE string OPTIONAL .
     METHODS radio
       IMPORTING
-        iv_label         TYPE string
-        iv_name          TYPE string
-        iv_default_value TYPE string OPTIONAL
-        iv_hint          TYPE string OPTIONAL.
-
+        !iv_label         TYPE string
+        !iv_name          TYPE string
+        !iv_default_value TYPE string OPTIONAL
+        !iv_hint          TYPE string OPTIONAL .
     METHODS option
       IMPORTING
-        iv_label TYPE string
-        iv_value TYPE string.
-
+        !iv_label TYPE string
+        !iv_value TYPE string .
     METHODS start_group
       IMPORTING
-        iv_label TYPE string
-        iv_name  TYPE string
-        iv_hint  TYPE string OPTIONAL.
-
+        !iv_label TYPE string
+        !iv_name  TYPE string
+        !iv_hint  TYPE string OPTIONAL .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -133,7 +128,7 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     ls_field-label = iv_label.
 
     IF iv_hint IS NOT INITIAL.
-      ls_field-hint    = | title="{ iv_hint }"|.
+      ls_field-hint = | title="{ iv_hint }"|.
     ENDIF.
 
     APPEND ls_field TO mt_fields.
@@ -225,8 +220,9 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( |<div class="{ iv_form_class }">| ).
-    ri_html->add( |<form method="post"{ ls_form_id } action="sapevent:submit_form">| ).
-    ri_html->add( |<input type="hidden" id="hidden_action" name="action" value="?">| ).
+    ri_html->add( |<form method="post"{ ls_form_id } action="sapevent:{ c_event }">| ).
+* Workaround for Java GUI, formaction does not work in Java, hence use hidden action, see #3417
+    ri_html->add( |<input type="hidden" id="{ c_action }" name="{ c_action }" value="?">| ).
     ri_html->add( |<ul>| ).
 
     LOOP AT mt_fields ASSIGNING <ls_field>.
@@ -282,14 +278,17 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
         iv_class = 'dialog-commands' ).
     ELSE.
       IF is_cmd-is_main = abap_true.
-        lv_main_submit = ' class="main"'.
+        lv_main_submit = 'main'.
       ELSE.
         CLEAR lv_main_submit.
       ENDIF.
 
-      ii_html->add_a( iv_act = |document.getElementById('hidden_action').value = '{ is_cmd-label }'; document.getElementById('{ mv_form_id }').submit();|
-                      iv_txt = is_cmd-label
-                      iv_typ = zif_abapgit_html=>c_action_type-onclick ).
+      ii_html->add_a(
+        iv_act   = |document.getElementById('{ c_action }').value = '{
+          is_cmd-action }'; document.getElementById('{ mv_form_id }').submit();|
+        iv_txt   = is_cmd-label
+        iv_class = lv_main_submit
+        iv_typ   = zif_abapgit_html=>c_action_type-onclick ).
     ENDIF.
 
   ENDMETHOD.
@@ -341,7 +340,13 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
         IF is_field-side_action IS NOT INITIAL.
           ii_html->add( '</div>' ).
           ii_html->add( '<div class="command-container">' ).
-          ii_html->add( |<input type="submit" value="&#x2026;" formaction="sapevent:{ is_field-side_action }">| ).
+
+          ii_html->add_a(
+            iv_act = |document.getElementById('{ c_action }').value = '{
+              is_field-side_action }'; document.getElementById('{ mv_form_id }').submit();|
+            iv_txt = |&#x2026;|
+            iv_typ = zif_abapgit_html=>c_action_type-onclick ).
+
           ii_html->add( '</div>' ).
         ENDIF.
 

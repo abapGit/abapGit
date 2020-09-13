@@ -109,6 +109,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
           ro_form_data->set(
             iv_key = ls_field-name
             iv_val = boolc( ls_field-value = 'on' ) ).
+        WHEN zcl_abapgit_html_form=>c_action.
+          ro_form_data->set(
+            iv_key = ls_field-name
+            iv_val = ls_field-value ).
         WHEN OTHERS.
           zcx_abapgit_exception=>raise( |Unexpected form field [{ ls_field-name }]| ).
       ENDCASE.
@@ -168,11 +172,18 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: ls_repo_params     TYPE zif_abapgit_services_repo=>ty_repo_params,
+          lv_action          TYPE string,
           lo_new_online_repo TYPE REF TO zcl_abapgit_repo_online.
+
+    IF iv_action <> zcl_abapgit_html_form=>c_event.
+      zcx_abapgit_exception=>raise( |Unexpected action| ).
+    ENDIF.
 
     mo_form_data = parse_form( it_postdata ). " import data from html before re-render
 
-    CASE iv_action.
+    lv_action = mo_form_data->get( zcl_abapgit_html_form=>c_action ).
+
+    CASE lv_action.
       WHEN c_event-go_back.
         ev_state = zcl_abapgit_gui=>c_event_state-go_back.
 
@@ -255,7 +266,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
-    lo_form = zcl_abapgit_html_form=>create( iv_form_id = 'add-repo-online-form' ).
+    lo_form = zcl_abapgit_html_form=>create( 'add-repo-online-form' ).
     lo_form->text(
       iv_name        = c_id-url
       iv_required    = abap_true
