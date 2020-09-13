@@ -270,8 +270,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     DATA lv_master_language TYPE spras.
 
-    find_remote_dot_abapgit( ).
-
+    " assumes find_remote_dot_abapgit has been called before
     lv_master_language = get_dot_abapgit( )->get_master_language( ).
 
     IF lv_master_language <> sy-langu.
@@ -329,6 +328,9 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     DATA: lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
           lx_error         TYPE REF TO zcx_abapgit_exception.
 
+    find_remote_dot_abapgit( ).
+    find_remote_dot_apack( ).
+
     check_write_protect( ).
     check_language( ).
 
@@ -374,7 +376,6 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
     DATA: lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
           lt_dependencies TYPE zif_abapgit_apack_definitions=>tt_dependencies.
-
 
     find_remote_dot_abapgit( ).
     find_remote_dot_apack( ).
