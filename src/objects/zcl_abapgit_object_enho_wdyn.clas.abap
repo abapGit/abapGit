@@ -34,13 +34,13 @@ CLASS zcl_abapgit_object_enho_wdyn IMPLEMENTATION.
                    <ls_view_data>       TYPE enhwdyv.
 
 
-    io_xml->read(
+    ii_xml->read(
       EXPORTING
         iv_name = 'TOOL'
       CHANGING
         cg_data = lv_tool_type ).
 
-    io_xml->read(
+    ii_xml->read(
       EXPORTING
         iv_name = 'COMPONENT_DATA'
       CHANGING
@@ -106,10 +106,10 @@ CLASS zcl_abapgit_object_enho_wdyn IMPLEMENTATION.
           IMPORTING
             p_enh_data       = ls_enh_data ).
 
-        io_xml->add( iv_name = 'TOOL'
+        ii_xml->add( iv_name = 'TOOL'
                      ig_data = ii_enh_tool->get_tool( ) ).
 
-        io_xml->add( iv_name = 'COMPONENT_DATA'
+        ii_xml->add( iv_name = 'COMPONENT_DATA'
                      ig_data = ls_enh_data ).
 
       CATCH cx_enh_not_found.
