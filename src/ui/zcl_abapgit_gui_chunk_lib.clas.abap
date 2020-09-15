@@ -811,7 +811,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
         lv_display_url = io_repo_online->get_commit_display_url( lv_commit_hash ).
 
         ii_html->add_a( iv_txt   = |{ lv_icon_commit }{ lv_commit_short_hash }|
-                        iv_act   = |{ zif_abapgit_definitions=>c_action-url }?| && lv_display_url
+                        iv_act   = |{ zif_abapgit_definitions=>c_action-url }?{ lv_display_url }|
                         iv_class = |url| ).
       CATCH zcx_abapgit_exception.
         ii_html->add( |<span class="url">{ lv_icon_commit }{ lv_commit_short_hash }</span>| ).
@@ -824,7 +824,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     ri_html->add( '<div class="dummydiv warning">' ).
-    ri_html->add( |{ ri_html->icon( 'exclamation-triangle/yellow' ) }| && | { iv_text }| ).
+    ri_html->add( |{ ri_html->icon( 'exclamation-triangle/yellow' ) } { iv_text }| ).
     ri_html->add( '</div>' ).
 
   ENDMETHOD.

@@ -226,7 +226,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
   METHOD deserialize_longtexts.
 
     zcl_abapgit_factory=>get_longtexts( )->deserialize(
-        io_xml             = io_xml
+        ii_xml             = io_xml
         iv_master_language = mv_language ).
 
   ENDMETHOD.
@@ -359,7 +359,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
         iv_object_name = ms_item-obj_name
         iv_longtext_id = iv_longtext_id
         it_dokil       = it_dokil
-        io_xml         = io_xml  ).
+        ii_xml         = io_xml  ).
 
   ENDMETHOD.
 

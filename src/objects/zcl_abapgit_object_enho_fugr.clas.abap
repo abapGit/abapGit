@@ -34,13 +34,13 @@ CLASS zcl_abapgit_object_enho_fugr IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_fuba> TYPE enhfugrfuncdata.
 
-    io_xml->read(
+    ii_xml->read(
       EXPORTING
         iv_name = 'TOOL'
       CHANGING
         cg_data = lv_tool ).
 
-    io_xml->read(
+    ii_xml->read(
       EXPORTING
         iv_name = 'FUGRDATA'
       CHANGING
@@ -109,10 +109,10 @@ CLASS zcl_abapgit_object_enho_fugr IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |error deserializing ENHO fugrdata { ms_item-obj_name }| ).
     ENDTRY.
 
-    io_xml->add( iv_name = 'TOOL'
+    ii_xml->add( iv_name = 'TOOL'
                  ig_data = lo_fugrdata->if_enh_tool~get_tool( ) ).
 
-    io_xml->add( iv_name = 'FUGRDATA'
+    ii_xml->add( iv_name = 'FUGRDATA'
                  ig_data = ls_enha_data ).
 
   ENDMETHOD.
