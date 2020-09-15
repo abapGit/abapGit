@@ -253,7 +253,8 @@
       "exporting": "^E._.*$",
       "ignoreNames": [
         "P_TASK"
-      ]
+      ],
+      "exclude": ["zif_abapgit_html_viewer"]
     },
     "mix_returning": true,
     "msag_consistency": true,
