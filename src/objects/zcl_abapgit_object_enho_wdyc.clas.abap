@@ -27,7 +27,7 @@ CLASS zcl_abapgit_object_enho_wdyc IMPLEMENTATION.
           lv_package TYPE devclass.
 
 
-    io_xml->read( EXPORTING iv_name = 'ORIGINAL_OBJECT'
+    ii_xml->read( EXPORTING iv_name = 'ORIGINAL_OBJECT'
                   CHANGING cg_data  = ls_obj ).
 
     lv_enhname = ms_item-obj_name.
@@ -71,9 +71,9 @@ CLASS zcl_abapgit_object_enho_wdyc IMPLEMENTATION.
     lo_wdyconf ?= ii_enh_tool.
 
     ls_obj = lo_wdyconf->get_original_object( ).
-    io_xml->add( iv_name = 'TOOL'
+    ii_xml->add( iv_name = 'TOOL'
                  ig_data = ii_enh_tool->get_tool( ) ).
-    io_xml->add( iv_name = 'ORIGINAL_OBJECT'
+    ii_xml->add( iv_name = 'ORIGINAL_OBJECT'
                  ig_data = ls_obj ).
 
 * only works on new ABAP versions, parameters differ between versions
@@ -92,7 +92,7 @@ CLASS zcl_abapgit_object_enho_wdyc IMPLEMENTATION.
       CHANGING
         document      = li_document.
 
-    io_xml->add_xml( iv_name = 'ENHANCEMENT_DATA'
+    ii_xml->add_xml( iv_name = 'ENHANCEMENT_DATA'
                      ii_xml = li_element ).
 
   ENDMETHOD.

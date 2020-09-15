@@ -59,7 +59,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DOCT IMPLEMENTATION.
 
     mi_longtexts->deserialize(
         iv_longtext_name   = c_name
-        io_xml             = io_xml
+        ii_xml             = io_xml
         iv_master_language = mv_language ).
 
     tadir_insert( iv_package ).
@@ -163,7 +163,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DOCT IMPLEMENTATION.
         iv_longtext_name = c_name
         iv_object_name = ms_item-obj_name
         iv_longtext_id = c_id
-        io_xml         = io_xml ).
+        ii_xml         = io_xml ).
 
   ENDMETHOD.
 ENDCLASS.

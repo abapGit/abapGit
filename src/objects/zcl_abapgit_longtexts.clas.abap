@@ -159,7 +159,7 @@ CLASS ZCL_ABAPGIT_LONGTEXTS IMPLEMENTATION.
           lv_no_masterlang TYPE dokil-masterlang.
     FIELD-SYMBOLS: <ls_longtext> TYPE ty_longtext.
 
-    io_xml->read(
+    ii_xml->read(
       EXPORTING
         iv_name = iv_longtext_name
       CHANGING
@@ -191,7 +191,7 @@ CLASS ZCL_ABAPGIT_LONGTEXTS IMPLEMENTATION.
     DATA lv_master_lang_only TYPE abap_bool.
 
     lt_dokil = it_dokil.
-    lv_master_lang_only = io_xml->i18n_params( )-serialize_master_lang_only.
+    lv_master_lang_only = ii_xml->i18n_params( )-serialize_master_lang_only.
     IF lv_master_lang_only = abap_true.
       DELETE lt_dokil WHERE masterlang <> abap_true.
     ENDIF.
@@ -201,7 +201,7 @@ CLASS ZCL_ABAPGIT_LONGTEXTS IMPLEMENTATION.
                          it_dokil       = lt_dokil
                          iv_master_lang_only = lv_master_lang_only ).
 
-    io_xml->add( iv_name = iv_longtext_name
+    ii_xml->add( iv_name = iv_longtext_name
                  ig_data = lt_longtexts ).
 
   ENDMETHOD.
