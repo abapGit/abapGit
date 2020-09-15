@@ -58,10 +58,6 @@ CLASS zcl_abapgit_gui DEFINITION
         zcx_abapgit_exception .
     METHODS free .
   PROTECTED SECTION.
-
-    METHODS startup
-      RAISING
-        zcx_abapgit_exception .
   PRIVATE SECTION.
 
     TYPES:
@@ -88,6 +84,9 @@ CLASS zcl_abapgit_gui DEFINITION
         !iv_text      TYPE string
       RETURNING
         VALUE(rv_url) TYPE w3url .
+    METHODS startup
+      RAISING
+        zcx_abapgit_exception .
     METHODS render
       RAISING
         zcx_abapgit_exception .
@@ -190,9 +189,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     mi_asset_man      = ii_asset_man.
     mi_hotkey_ctl     = ii_hotkey_ctl.
     mi_html_processor = ii_html_processor. " Maybe improve to middlewares stack ??
-    IF zcl_abapgit_ui_factory=>get_gui_functions( )->gui_is_available( ) = abap_true.
-      startup( ).
-    ENDIF.
+    startup( ).
 
   ENDMETHOD.
 
