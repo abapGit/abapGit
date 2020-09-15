@@ -62,15 +62,15 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
              <ls_enhancement>-id.
     ENDLOOP.
 
-    io_xml->add( iv_name = 'TOOL'
+    ii_xml->add( iv_name = 'TOOL'
                  ig_data = ii_enh_tool->get_tool( ) ).
-    io_xml->add( ig_data = lv_shorttext
+    ii_xml->add( ig_data = lv_shorttext
                  iv_name = 'SHORTTEXT' ).
-    io_xml->add( ig_data = ls_original_object
+    ii_xml->add( ig_data = ls_original_object
                  iv_name = 'ORIGINAL_OBJECT' ).
-    io_xml->add( iv_name = 'ENHANCEMENTS'
+    ii_xml->add( iv_name = 'ENHANCEMENTS'
                  ig_data = lt_enhancements ).
-    io_xml->add( iv_name = 'SPACES'
+    ii_xml->add( iv_name = 'SPACES'
                  ig_data = lt_spaces ).
 
   ENDMETHOD.
@@ -114,13 +114,13 @@ CLASS zcl_abapgit_object_enho_hook IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_enhancement> LIKE LINE OF lt_enhancements.
 
 
-    io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
+    ii_xml->read( EXPORTING iv_name = 'SHORTTEXT'
                   CHANGING cg_data  = lv_shorttext ).
-    io_xml->read( EXPORTING iv_name = 'ORIGINAL_OBJECT'
+    ii_xml->read( EXPORTING iv_name = 'ORIGINAL_OBJECT'
                   CHANGING cg_data  = ls_original_object ).
-    io_xml->read( EXPORTING iv_name = 'ENHANCEMENTS'
+    ii_xml->read( EXPORTING iv_name = 'ENHANCEMENTS'
                   CHANGING cg_data  = lt_enhancements ).
-    io_xml->read( EXPORTING iv_name = 'SPACES'
+    ii_xml->read( EXPORTING iv_name = 'SPACES'
                   CHANGING cg_data  = lt_spaces ).
 
     " todo: kept for compatibility, remove after grace period #3680
