@@ -33,15 +33,15 @@ CLASS zcl_abapgit_object_enho_intf IMPLEMENTATION.
     lv_shorttext = lo_enh_intf->if_enh_object_docu~get_shorttext( ).
     lo_enh_intf->get_class( IMPORTING class_name = lv_class ).
 
-    io_xml->add( iv_name = 'TOOL'
+    ii_xml->add( iv_name = 'TOOL'
                  ig_data = ii_enh_tool->get_tool( ) ).
-    io_xml->add( ig_data = lv_shorttext
+    ii_xml->add( ig_data = lv_shorttext
                  iv_name = 'SHORTTEXT' ).
-    io_xml->add( iv_name = 'CLASS'
+    ii_xml->add( iv_name = 'CLASS'
                  ig_data = lv_class ).
 
     zcl_abapgit_object_enho_clif=>serialize(
-      io_xml  = io_xml
+      io_xml  = ii_xml
       io_files = mo_files
       io_clif = lo_enh_intf ).
 
@@ -57,9 +57,9 @@ CLASS zcl_abapgit_object_enho_intf IMPLEMENTATION.
           lv_package   TYPE devclass.
 
 
-    io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
+    ii_xml->read( EXPORTING iv_name = 'SHORTTEXT'
                   CHANGING cg_data  = lv_shorttext ).
-    io_xml->read( EXPORTING iv_name = 'CLASS'
+    ii_xml->read( EXPORTING iv_name = 'CLASS'
                   CHANGING cg_data  = lv_class ).
 
     lv_enhname = ms_item-obj_name.
@@ -80,7 +80,7 @@ CLASS zcl_abapgit_object_enho_intf IMPLEMENTATION.
         lo_enh_intf->set_class( lv_class ).
 
         zcl_abapgit_object_enho_clif=>deserialize(
-          io_xml  = io_xml
+          io_xml  = ii_xml
           io_clif = lo_enh_intf ).
 
         lo_enh_intf->if_enh_object~save( run_dark = abap_true ).

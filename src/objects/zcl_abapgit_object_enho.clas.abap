@@ -145,7 +145,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO IMPLEMENTATION.
 
     li_enho = factory( lv_tool ).
 
-    li_enho->deserialize( io_xml     = io_xml
+    li_enho->deserialize( ii_xml     = io_xml
                           iv_package = iv_package ).
 
     zcl_abapgit_sotr_handler=>create_sotr(
@@ -242,7 +242,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO IMPLEMENTATION.
 
     li_enho = factory( li_enh_tool->get_tool( ) ).
 
-    li_enho->serialize( io_xml      = io_xml
+    li_enho->serialize( ii_xml      = io_xml
                         ii_enh_tool = li_enh_tool ).
 
     zcl_abapgit_sotr_handler=>read_sotr(
