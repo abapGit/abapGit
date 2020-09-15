@@ -144,7 +144,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DSYS IMPLEMENTATION.
 
       WHEN 'v2.0.0'.
         zcl_abapgit_factory=>get_longtexts( )->deserialize(
-          io_xml             = io_xml
+          ii_xml             = io_xml
           iv_master_language = mv_language ).
 
       WHEN OTHERS.
@@ -225,7 +225,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DSYS IMPLEMENTATION.
     zcl_abapgit_factory=>get_longtexts( )->serialize(
       iv_object_name = mv_doc_object
       iv_longtext_id = c_id
-      io_xml         = io_xml ).
+      ii_xml         = io_xml ).
 
   ENDMETHOD.
 ENDCLASS.
