@@ -378,7 +378,8 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_asset> LIKE LINE OF lt_assets.
 
-    CREATE OBJECT mi_html_viewer TYPE zcl_abapgit_html_viewer_gui.
+
+    mi_html_viewer = zcl_abapgit_ui_factory=>get_html_viewer( ).
 
     IF mi_asset_man IS BOUND.
       lt_assets = mi_asset_man->get_all_assets( ).

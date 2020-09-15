@@ -1,6 +1,7 @@
 CLASS zcl_abapgit_ui_factory DEFINITION
   PUBLIC
   CREATE PRIVATE
+
   GLOBAL FRIENDS zcl_abapgit_ui_injector .
 
   PUBLIC SECTION.
@@ -27,21 +28,25 @@ CLASS zcl_abapgit_ui_factory DEFINITION
     CLASS-METHODS get_frontend_services
       RETURNING
         VALUE(ri_fe_serv) TYPE REF TO zif_abapgit_frontend_services .
+    CLASS-METHODS get_html_viewer
+      RETURNING
+        VALUE(ri_viewer) TYPE REF TO zif_abapgit_html_viewer .
   PROTECTED SECTION.
   PRIVATE SECTION.
+
     CLASS-DATA gi_popups TYPE REF TO zif_abapgit_popups .
     CLASS-DATA gi_tag_popups TYPE REF TO zif_abapgit_tag_popups .
     CLASS-DATA gi_gui_functions TYPE REF TO zif_abapgit_gui_functions .
+    CLASS-DATA gi_html_viewer TYPE REF TO zif_abapgit_html_viewer .
     CLASS-DATA go_gui TYPE REF TO zcl_abapgit_gui .
     CLASS-DATA gi_fe_services TYPE REF TO zif_abapgit_frontend_services .
-    CLASS-DATA gi_gui_services TYPE REF TO zif_abapgit_gui_services.
+    CLASS-DATA gi_gui_services TYPE REF TO zif_abapgit_gui_services .
 
     CLASS-METHODS init_asset_manager
       RETURNING
         VALUE(ro_asset_man) TYPE REF TO zcl_abapgit_gui_asset_manager
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -64,8 +69,8 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
 
     DATA:
       li_hotkey_ctl TYPE REF TO zif_abapgit_gui_hotkey_ctl,
-      li_router    TYPE REF TO zif_abapgit_gui_event_handler,
-      li_asset_man TYPE REF TO zif_abapgit_gui_asset_manager.
+      li_router     TYPE REF TO zif_abapgit_gui_event_handler,
+      li_asset_man  TYPE REF TO zif_abapgit_gui_asset_manager.
 
     DATA lo_html_preprocessor TYPE REF TO zcl_abapgit_gui_html_processor.
 
@@ -107,6 +112,18 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
       gi_gui_services ?= get_gui( ).
     ENDIF.
     ri_gui_services = gi_gui_services.
+  ENDMETHOD.
+
+
+  METHOD get_html_viewer.
+
+    IF gi_html_viewer IS BOUND.
+      ri_viewer = gi_html_viewer.
+      RETURN.
+    ENDIF.
+
+    CREATE OBJECT ri_viewer TYPE zcl_abapgit_html_viewer_gui.
+
   ENDMETHOD.
 
 
