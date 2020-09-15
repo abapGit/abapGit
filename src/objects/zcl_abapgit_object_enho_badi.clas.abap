@@ -50,13 +50,13 @@ CLASS zcl_abapgit_object_enho_badi IMPLEMENTATION.
       ENDLOOP.
     ENDLOOP.
 
-    io_xml->add( iv_name = 'TOOL'
+    ii_xml->add( iv_name = 'TOOL'
                  ig_data = ii_enh_tool->get_tool( ) ).
-    io_xml->add( ig_data = lv_shorttext
+    ii_xml->add( ig_data = lv_shorttext
                  iv_name = 'SHORTTEXT' ).
-    io_xml->add( iv_name = 'SPOT_NAME'
+    ii_xml->add( iv_name = 'SPOT_NAME'
                  ig_data = lv_spot_name ).
-    io_xml->add( iv_name = 'IMPL'
+    ii_xml->add( iv_name = 'IMPL'
                  ig_data = lt_impl ).
 
   ENDMETHOD.
@@ -74,11 +74,11 @@ CLASS zcl_abapgit_object_enho_badi IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_impl> LIKE LINE OF lt_impl.
 
 
-    io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
+    ii_xml->read( EXPORTING iv_name = 'SHORTTEXT'
                   CHANGING cg_data  = lv_shorttext ).
-    io_xml->read( EXPORTING iv_name = 'SPOT_NAME'
+    ii_xml->read( EXPORTING iv_name = 'SPOT_NAME'
                   CHANGING cg_data  = lv_spot_name ).
-    io_xml->read( EXPORTING iv_name = 'IMPL'
+    ii_xml->read( EXPORTING iv_name = 'IMPL'
                   CHANGING cg_data  = lt_impl ).
 
     lv_enhname = ms_item-obj_name.
