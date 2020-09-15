@@ -9,7 +9,7 @@ INTERFACE zif_abapgit_comparator
 
   METHODS compare
     IMPORTING
-      !io_remote       TYPE REF TO zcl_abapgit_xml_input
+      !ii_remote       TYPE REF TO zif_abapgit_xml_input
       !ii_log          TYPE REF TO zif_abapgit_log
     RETURNING
       VALUE(rs_result) TYPE ty_result

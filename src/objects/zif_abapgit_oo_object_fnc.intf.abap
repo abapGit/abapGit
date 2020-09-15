@@ -53,7 +53,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
       IMPORTING
         iv_object_name TYPE sobj_name
         iv_package     TYPE devclass
-        io_xml         TYPE REF TO zcl_abapgit_xml_input
+        ii_xml         TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception,
     create_documentation
@@ -117,7 +117,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
     read_sotr
       IMPORTING
         iv_object_name TYPE sobj_name
-        io_xml         TYPE REF TO zcl_abapgit_xml_output
+        ii_xml         TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception,
     read_descriptions

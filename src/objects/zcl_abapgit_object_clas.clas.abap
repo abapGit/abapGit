@@ -201,7 +201,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
     mi_object_oriented_object_fct->create_sotr(
       iv_object_name = ms_item-obj_name
       iv_package     = iv_package
-      io_xml         = io_xml ).
+      ii_xml         = io_xml ).
   ENDMETHOD.
 
 
@@ -365,7 +365,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
   METHOD serialize_sotr.
     mi_object_oriented_object_fct->read_sotr(
       iv_object_name = ms_item-obj_name
-      io_xml         = io_xml ).
+      ii_xml         = io_xml ).
   ENDMETHOD.
 
 
