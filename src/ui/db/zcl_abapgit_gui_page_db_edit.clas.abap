@@ -114,7 +114,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
     ri_html->add( '</td></tr></table>' ).
 
     " Form
-    ri_html->add( |<form id="db_form" method="post" action="sapevent:| && |{ c_action-update }">| ).
+    ri_html->add( |<form id="db_form" method="post" action="sapevent:{ c_action-update }">| ).
     ri_html->add( |<input type="hidden" name="type" value="{ ms_key-type }">| ).
     ri_html->add( |<input type="hidden" name="value" value="{ ms_key-value }">| ).
     ri_html->add( |<textarea rows="20" cols="100" name="xmldata">{ lv_data }</textarea>| ).
