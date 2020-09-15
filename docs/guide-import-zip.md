@@ -19,7 +19,7 @@ First, download the latest version of the project you want to import.
 2. Run abapGit:
   * If you have installed the standalone version : in transaction `SE38`, run the program you created  (`ZABAPGIT_STANDALONE` or `ZABAPGIT_FULL` or other)
   * If you have installed the developer version : run transaction `ZABAPGIT`
-3. Select **+ Offline**
+3. Select **New Offline**
 4. Enter the project name and select an existing package or create a new package
 5. Select **Import <sup>zip</sup>**
 6. Select the zip archive file (eg. *abapGit-master.zip*)
