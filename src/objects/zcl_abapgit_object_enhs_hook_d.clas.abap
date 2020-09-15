@@ -35,10 +35,10 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHS_HOOK_D IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_hook_definition> TYPE enh_hook_def_ext.
 
-    io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
+    ii_xml->read( EXPORTING iv_name = 'SHORTTEXT'
                   CHANGING  cg_data = lv_enh_shorttext ).
 
-    io_xml->read( EXPORTING iv_name = 'BADI_DATA'
+    ii_xml->read( EXPORTING iv_name = 'BADI_DATA'
                   CHANGING  cg_data = ls_hook_definition ).
 
     li_enh_object ?= ii_enh_spot_tool.
@@ -96,13 +96,13 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHS_HOOK_D IMPLEMENTATION.
         main_name = ls_hook_definition-main_name
         program   = ls_hook_definition-program ).
 
-    io_xml->add( ig_data = ii_enh_spot_tool->get_tool( )
+    ii_xml->add( ig_data = ii_enh_spot_tool->get_tool( )
                  iv_name = 'TOOL' ).
 
-    io_xml->add( ig_data = lv_enh_shorttext
+    ii_xml->add( ig_data = lv_enh_shorttext
                  iv_name = 'SHORTTEXT' ).
 
-    io_xml->add( ig_data = ls_hook_definition
+    ii_xml->add( ig_data = ls_hook_definition
                  iv_name = 'BADI_DATA' ).
 
   ENDMETHOD.

@@ -18,7 +18,7 @@ CLASS zcl_abapgit_object_enho_class DEFINITION PUBLIC.
           zcx_abapgit_exception,
       deserialize_includes
         IMPORTING
-          io_xml   TYPE REF TO zcl_abapgit_xml_input
+          ii_xml   TYPE REF TO zif_abapgit_xml_input
           io_class TYPE REF TO cl_enh_tool_class
         RAISING
           zcx_abapgit_exception.
@@ -30,7 +30,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_ENHO_CLASS IMPLEMENTATION.
+CLASS zcl_abapgit_object_enho_class IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -49,7 +49,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_CLASS IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_method> LIKE LINE OF lt_tab_methods.
 
-    io_xml->read( EXPORTING iv_name = 'TAB_METHODS'
+    ii_xml->read( EXPORTING iv_name = 'TAB_METHODS'
                   CHANGING cg_data = lt_tab_methods ).
 
     LOOP AT lt_tab_methods ASSIGNING <ls_method>.
@@ -124,15 +124,15 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_CLASS IMPLEMENTATION.
           lv_package   TYPE devclass.
 
 
-    io_xml->read( EXPORTING iv_name = 'SHORTTEXT'
+    ii_xml->read( EXPORTING iv_name = 'SHORTTEXT'
                   CHANGING cg_data  = lv_shorttext ).
-    io_xml->read( EXPORTING iv_name = 'OWR_METHODS'
+    ii_xml->read( EXPORTING iv_name = 'OWR_METHODS'
                   CHANGING cg_data  = lt_owr ).
-    io_xml->read( EXPORTING iv_name = 'PRE_METHODS'
+    ii_xml->read( EXPORTING iv_name = 'PRE_METHODS'
                   CHANGING cg_data  = lt_pre ).
-    io_xml->read( EXPORTING iv_name = 'POST_METHODS'
+    ii_xml->read( EXPORTING iv_name = 'POST_METHODS'
                   CHANGING cg_data  = lt_post ).
-    io_xml->read( EXPORTING iv_name = 'CLASS'
+    ii_xml->read( EXPORTING iv_name = 'CLASS'
                   CHANGING cg_data  = lv_class ).
     lt_source = mo_files->read_abap( ).
 
@@ -162,11 +162,11 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_CLASS IMPLEMENTATION.
                                         eimp_source = lt_source ).
 
         zcl_abapgit_object_enho_clif=>deserialize(
-          io_xml  = io_xml
+          io_xml  = ii_xml
           io_clif = lo_enh_class ).
 
         deserialize_includes(
-          io_xml   = io_xml
+          ii_xml   = ii_xml
           io_class = lo_enh_class ).
 
         lo_enh_class->if_enh_object~save( run_dark = abap_true ).
@@ -198,23 +198,23 @@ CLASS ZCL_ABAPGIT_OBJECT_ENHO_CLASS IMPLEMENTATION.
     lt_source = lo_enh_class->get_eimp_include( ).
     lo_enh_class->get_class( IMPORTING class_name = lv_class ).
 
-    io_xml->add( iv_name = 'TOOL'
+    ii_xml->add( iv_name = 'TOOL'
                  ig_data = ii_enh_tool->get_tool( ) ).
-    io_xml->add( ig_data = lv_shorttext
+    ii_xml->add( ig_data = lv_shorttext
                  iv_name = 'SHORTTEXT' ).
-    io_xml->add( iv_name = 'CLASS'
+    ii_xml->add( iv_name = 'CLASS'
                  ig_data = lv_class ).
-    io_xml->add( iv_name = 'OWR_METHODS'
+    ii_xml->add( iv_name = 'OWR_METHODS'
                  ig_data = lt_owr ).
-    io_xml->add( iv_name = 'PRE_METHODS'
+    ii_xml->add( iv_name = 'PRE_METHODS'
                  ig_data = lt_pre ).
-    io_xml->add( iv_name = 'POST_METHODS'
+    ii_xml->add( iv_name = 'POST_METHODS'
                  ig_data = lt_post ).
 
     mo_files->add_abap( lt_source ).
 
     zcl_abapgit_object_enho_clif=>serialize(
-      io_xml   = io_xml
+      io_xml   = ii_xml
       io_files = mo_files
       io_clif  = lo_enh_class ).
 
