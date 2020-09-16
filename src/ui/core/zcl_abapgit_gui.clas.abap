@@ -420,13 +420,13 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
       mi_html_viewer->load_data(
         EXPORTING
-          type         = iv_type
-          subtype      = iv_subtype
-          url          = iv_url
+          iv_type      = iv_type
+          iv_subtype   = iv_subtype
+          iv_url       = iv_url
         IMPORTING
-          assigned_url = rv_url
+          ev_assigned_url = rv_url
         CHANGING
-          data_table   = lt_html
+          ct_data_table   = lt_html
         EXCEPTIONS
           OTHERS       = 1 ).
     ELSE. " Raw input
@@ -439,16 +439,16 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
       mi_html_viewer->load_data(
         EXPORTING
-          type         = iv_type
-          subtype      = iv_subtype
-          size         = lv_size
-          url          = iv_url
+          iv_type      = iv_type
+          iv_subtype   = iv_subtype
+          iv_size      = lv_size
+          iv_url       = iv_url
         IMPORTING
-          assigned_url = rv_url
+          ev_assigned_url = rv_url
         CHANGING
-          data_table   = lt_xdata
+          ct_data_table   = lt_xdata
         EXCEPTIONS
-          OTHERS       = 1 ).
+          OTHERS          = 1 ).
     ENDIF.
 
     ASSERT sy-subrc = 0. " Image data error

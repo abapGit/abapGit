@@ -14,20 +14,14 @@ INTERFACE zif_abapgit_html_viewer
 
   METHODS load_data
     IMPORTING
-      !url              TYPE c OPTIONAL
-      !type             TYPE c DEFAULT 'text'
-      !subtype          TYPE c DEFAULT 'html'
-      !size             TYPE i DEFAULT 0
-      !encoding         TYPE sychar60 OPTIONAL
-      !charset          TYPE sychar60 OPTIONAL
-      !needfiltering    TYPE i DEFAULT 0
-      !language         TYPE lang OPTIONAL
-      !i_tidyt          TYPE boolean OPTIONAL
+      !iv_url          TYPE c OPTIONAL
+      !iv_type         TYPE c DEFAULT 'text'
+      !iv_subtype      TYPE c DEFAULT 'html'
+      !iv_size         TYPE i DEFAULT 0
     EXPORTING
-      !assigned_url     TYPE c
+      !ev_assigned_url TYPE c
     CHANGING
-      !data_table       TYPE STANDARD TABLE
-      !iscontentchanged TYPE boolean OPTIONAL
+      !ct_data_table   TYPE STANDARD TABLE
     EXCEPTIONS
       dp_invalid_parameter
       dp_error_general
@@ -35,14 +29,14 @@ INTERFACE zif_abapgit_html_viewer
       html_syntax_notcorrect .
   METHODS set_registered_events
     IMPORTING
-      !events TYPE cntl_simple_events
+      !it_events TYPE cntl_simple_events
     EXCEPTIONS
       cntl_error
       cntl_system_error
       illegal_event_combination .
   METHODS show_url
     IMPORTING
-      !url TYPE c
+      !iv_url TYPE c
     EXCEPTIONS
       cntl_error
       cnht_error_not_allowed

@@ -80,34 +80,28 @@ CLASS ZCL_ABAPGIT_HTML_VIEWER_GUI IMPLEMENTATION.
 
     mo_html_viewer->load_data(
       EXPORTING
-        url           = url
-        type          = type
-        subtype       = subtype
-        size          = size
-        encoding      = encoding
-        charset       = charset
-        needfiltering = needfiltering
-        language      = language
-        i_tidyt       = i_tidyt
+        url           = iv_url
+        type          = iv_type
+        subtype       = iv_subtype
+        size          = iv_size
       IMPORTING
-        assigned_url  = assigned_url
+        assigned_url  = ev_assigned_url
       CHANGING
-        data_table    = data_table
-        iscontentchanged = iscontentchanged ).
+        data_table    = ct_data_table ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_html_viewer~set_registered_events.
 
-    mo_html_viewer->set_registered_events( events ).
+    mo_html_viewer->set_registered_events( it_events ).
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_html_viewer~show_url.
 
-    mo_html_viewer->show_url( url ).
+    mo_html_viewer->show_url( iv_url ).
 
   ENDMETHOD.
 ENDCLASS.
