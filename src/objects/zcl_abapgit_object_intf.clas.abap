@@ -13,13 +13,13 @@ CLASS zcl_abapgit_object_intf DEFINITION PUBLIC FINAL INHERITING FROM zcl_abapgi
         zcx_abapgit_exception .
     METHODS deserialize_abap
       IMPORTING
-        !io_xml     TYPE REF TO zcl_abapgit_xml_input
+        !ii_xml     TYPE REF TO zif_abapgit_xml_input
         !iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_docu
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_input
+        !ii_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
@@ -55,7 +55,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
 
     ls_clskey-clsname = ms_item-obj_name.
     lt_source = mo_files->read_abap( ).
-    io_xml->read( EXPORTING iv_name = 'VSEOINTERF'
+    ii_xml->read( EXPORTING iv_name = 'VSEOINTERF'
                   CHANGING cg_data = ls_vseointerf ).
 
     mi_object_oriented_object_fct->create(
@@ -68,7 +68,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
       is_key               = ls_clskey
       it_source            = lt_source ).
 
-    io_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
+    ii_xml->read( EXPORTING iv_name = 'DESCRIPTIONS'
                   CHANGING cg_data = lt_descriptions ).
 
     mi_object_oriented_object_fct->update_descriptions(
@@ -84,7 +84,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
     DATA: lt_lines  TYPE tlinetab,
           lv_object TYPE dokhl-object.
 
-    io_xml->read( EXPORTING iv_name = 'LINES'
+    ii_xml->read( EXPORTING iv_name = 'LINES'
                   CHANGING cg_data = lt_lines ).
 
     IF lines( lt_lines ) = 0.
@@ -253,7 +253,7 @@ CLASS ZCL_ABAPGIT_OBJECT_INTF IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    deserialize_abap( io_xml     = io_xml
+    deserialize_abap( ii_xml     = io_xml
                       iv_package = iv_package ).
 
     deserialize_docu( io_xml ).

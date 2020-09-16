@@ -26,7 +26,7 @@ CLASS zcl_abapgit_object_dsys DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     METHODS deserialize_dsys
       IMPORTING
-        io_xml TYPE REF TO zcl_abapgit_xml_input
+        ii_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception.
 
@@ -73,7 +73,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DSYS IMPLEMENTATION.
           lv_doku_obj  TYPE doku_obj.
 
     lv_doku_obj = mv_doc_object.
-    io_xml->read( EXPORTING iv_name = 'DSYS'
+    ii_xml->read( EXPORTING iv_name = 'DSYS'
                   CHANGING cg_data = ls_data ).
 
     CALL FUNCTION 'DOCU_INIT'
