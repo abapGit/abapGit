@@ -72,6 +72,12 @@
     "globalMacros": []
   },
   "rules": {
+    "check_subrc": false,
+    "cyclomatic_complexity": {
+      "max": 25
+    },
+    "identical_conditions": true,
+    "use_line_exists": false,
     "line_break_style": true,
     "forbidden_pseudo_and_pragma": {
       "ignoreGlobalClassDefinition": true,
