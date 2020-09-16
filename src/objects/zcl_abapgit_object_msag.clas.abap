@@ -21,18 +21,18 @@ CLASS zcl_abapgit_object_msag DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     METHODS serialize_texts
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_output
+        !ii_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_texts
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_input
+        !ii_xml TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
     METHODS serialize_longtexts_msag
       IMPORTING
         !it_t100 TYPE tty_t100
-        !io_xml  TYPE REF TO zcl_abapgit_xml_output
+        !ii_xml  TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
     METHODS delete_msgid
@@ -124,10 +124,10 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     SELECT * FROM t100u INTO TABLE lt_t100u
       WHERE arbgb = lv_msg_id ORDER BY PRIMARY KEY.     "#EC CI_GENBUFF
 
-    io_xml->read( EXPORTING iv_name = 'T100_TEXTS'
+    ii_xml->read( EXPORTING iv_name = 'T100_TEXTS'
                   CHANGING  cg_data = lt_t100_texts ).
 
-    io_xml->read( EXPORTING iv_name = 'T100T'
+    ii_xml->read( EXPORTING iv_name = 'T100T'
                   CHANGING  cg_data = lt_t100t ).
 
     MODIFY t100t FROM TABLE lt_t100t.                     "#EC CI_SUBRC
@@ -180,7 +180,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
     ENDLOOP.
 
-    lv_master_lang_only = io_xml->i18n_params( )-serialize_master_lang_only.
+    lv_master_lang_only = ii_xml->i18n_params( )-serialize_master_lang_only.
     IF lv_master_lang_only = abap_true.
       SELECT * FROM dokil
         INTO TABLE lt_dokil
@@ -202,7 +202,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     MODIFY lt_dokil FROM ls_dokil TRANSPORTING dokstate WHERE dokstate IS NOT INITIAL.
 
     IF lines( lt_dokil ) > 0.
-      serialize_longtexts( io_xml   = io_xml
+      serialize_longtexts( ii_xml   = ii_xml
                            it_dokil = lt_dokil ).
     ENDIF.
 
@@ -218,7 +218,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
     lv_msg_id = ms_item-obj_name.
 
-    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+    IF ii_xml->i18n_params( )-serialize_master_lang_only = abap_true.
       RETURN. " skip
     ENDIF.
 
@@ -246,13 +246,13 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
       SORT lt_t100t BY sprsl ASCENDING.
       SORT lt_t100_texts BY sprsl msgnr ASCENDING.
 
-      io_xml->add( iv_name = 'I18N_LANGS'
+      ii_xml->add( iv_name = 'I18N_LANGS'
                    ig_data = lt_i18n_langs ).
 
-      io_xml->add( iv_name = 'T100T'
+      ii_xml->add( iv_name = 'T100T'
                    ig_data = lt_t100t ).
 
-      io_xml->add( iv_name = 'T100_TEXTS'
+      ii_xml->add( iv_name = 'T100_TEXTS'
                    ig_data = lt_t100_texts ).
 
     ENDIF.
@@ -496,7 +496,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
                  iv_name = 'T100' ).
 
     serialize_longtexts_msag( it_t100 = lt_source
-                              io_xml  = io_xml ).
+                              ii_xml  = io_xml ).
 
     serialize_texts( io_xml ).
 
