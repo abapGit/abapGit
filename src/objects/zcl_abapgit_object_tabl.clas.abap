@@ -98,7 +98,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
+CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -783,20 +783,25 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_comparator.
 
-    DATA: lo_local_version_output TYPE REF TO zcl_abapgit_xml_output,
-          lo_local_version_input  TYPE REF TO zcl_abapgit_xml_input.
+    DATA: li_local_version_output TYPE REF TO zif_abapgit_xml_output,
+          lo_local_version_output TYPE REF TO zcl_abapgit_xml_output,
+          li_local_version_input  TYPE REF TO zif_abapgit_xml_input.
 
 
-    CREATE OBJECT lo_local_version_output.
+    CREATE OBJECT li_local_version_output TYPE zcl_abapgit_xml_output.
+
+    " TODO: remove cast after zif_abapgit_object uses interface instead of class
+    lo_local_version_output ?= li_local_version_output.
     me->zif_abapgit_object~serialize( lo_local_version_output ).
 
-    CREATE OBJECT lo_local_version_input
+    CREATE OBJECT li_local_version_input
+      TYPE zcl_abapgit_xml_input
       EXPORTING
-        iv_xml = lo_local_version_output->render( ).
+        iv_xml = li_local_version_output->render( ).
 
     CREATE OBJECT ri_comparator TYPE zcl_abapgit_object_tabl_compar
       EXPORTING
-        io_local = lo_local_version_input.
+        ii_local = li_local_version_input.
 
   ENDMETHOD.
 
@@ -961,7 +966,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
     serialize_texts( io_xml ).
 
-    serialize_longtexts( io_xml         = io_xml
+    serialize_longtexts( ii_xml         = io_xml
                          iv_longtext_id = c_longtext_id_tabl ).
 
     serialize_idoc_segment( io_xml ).
