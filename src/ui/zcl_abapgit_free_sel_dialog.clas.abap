@@ -18,7 +18,7 @@ CLASS zcl_abapgit_free_sel_dialog DEFINITION
       END OF ty_free_sel_field,
       ty_free_sel_field_tab TYPE STANDARD TABLE OF ty_free_sel_field WITH DEFAULT KEY.
 
-    TYPES: ty_syst_title TYPE sychar70.
+    TYPES: ty_syst_title TYPE c LENGTH 70.
 
     METHODS:
       constructor IMPORTING iv_title      TYPE ty_syst_title OPTIONAL
