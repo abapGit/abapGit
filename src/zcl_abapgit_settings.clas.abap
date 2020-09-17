@@ -177,7 +177,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
+CLASS zcl_abapgit_settings IMPLEMENTATION.
 
 
   METHOD get_activate_wo_popup.
@@ -433,10 +433,10 @@ CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
   METHOD set_xml_settings.
 
-    DATA: lo_input TYPE REF TO zcl_abapgit_xml_input.
+    DATA: lo_input TYPE REF TO zif_abapgit_xml_input.
 
 
-    CREATE OBJECT lo_input EXPORTING iv_xml = iv_settings_xml.
+    CREATE OBJECT lo_input TYPE zcl_abapgit_xml_input EXPORTING iv_xml = iv_settings_xml.
 
     CLEAR ms_settings.
 
