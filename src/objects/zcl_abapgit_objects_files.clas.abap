@@ -26,7 +26,7 @@ CLASS zcl_abapgit_objects_files DEFINITION
     METHODS add_xml
       IMPORTING
         !iv_extra     TYPE clike OPTIONAL
-        !io_xml       TYPE REF TO zcl_abapgit_xml_output
+        !ii_xml       TYPE REF TO zif_abapgit_xml_output
         !iv_normalize TYPE abap_bool DEFAULT abap_true
         !is_metadata  TYPE zif_abapgit_definitions=>ty_metadata OPTIONAL
       RAISING
@@ -35,7 +35,7 @@ CLASS zcl_abapgit_objects_files DEFINITION
       IMPORTING
         !iv_extra     TYPE clike OPTIONAL
       RETURNING
-        VALUE(ro_xml) TYPE REF TO zcl_abapgit_xml_input
+        VALUE(ri_xml) TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
     METHODS read_abap
@@ -111,7 +111,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
+CLASS zcl_abapgit_objects_files IMPLEMENTATION.
 
 
   METHOD add.
@@ -173,7 +173,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
     DATA: lv_xml  TYPE string,
           ls_file TYPE zif_abapgit_definitions=>ty_file.
 
-    lv_xml = io_xml->render( iv_normalize = iv_normalize
+    lv_xml = ii_xml->render( iv_normalize = iv_normalize
                              is_metadata = is_metadata ).
     ls_file-path = '/'.
 
@@ -371,7 +371,8 @@ CLASS ZCL_ABAPGIT_OBJECTS_FILES IMPLEMENTATION.
 
     lv_xml = zcl_abapgit_convert=>xstring_to_string_utf8( lv_data ).
 
-    CREATE OBJECT ro_xml
+    CREATE OBJECT ri_xml
+      TYPE zcl_abapgit_xml_input
       EXPORTING
         iv_xml      = lv_xml
         iv_filename = lv_filename.

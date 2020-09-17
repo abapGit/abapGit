@@ -308,7 +308,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
       IF lv_body_size > lc_body_col_max.
         lv_body_size = lc_body_col_max.
       ENDIF.
-      ri_html->add( |<textarea id="c-body" name="body" rows="10" cols="| && |{ lv_body_size }"></textarea>| ).
+      ri_html->add( |<textarea id="c-body" name="body" rows="10" cols="{ lv_body_size }"></textarea>| ).
 
     ENDIF.
 

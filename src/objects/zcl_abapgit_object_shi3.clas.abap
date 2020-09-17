@@ -167,9 +167,11 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
 
     CONSTANTS lc_activity_delete_06 TYPE activ_auth VALUE '06'.
 
-    IF zif_abapgit_object~exists( ) = abap_true.
-      RETURN.
-    ENDIF.
+    TRY.
+        me->zif_abapgit_object~exists( ).
+      CATCH zcx_abapgit_exception.
+        RETURN.
+    ENDTRY.
 
     has_authorization( iv_structure_id = mv_tree_id
                        iv_devclass     = ms_item-devclass

@@ -15,13 +15,13 @@ INTERFACE zif_abapgit_object
 
   METHODS serialize
     IMPORTING
-      !io_xml TYPE REF TO zcl_abapgit_xml_output
+      !io_xml TYPE REF TO zif_abapgit_xml_output
     RAISING
       zcx_abapgit_exception .
   METHODS deserialize
     IMPORTING
       !iv_package TYPE devclass
-      !io_xml     TYPE REF TO zcl_abapgit_xml_input
+      !io_xml     TYPE REF TO zif_abapgit_xml_input
       !iv_step    TYPE zif_abapgit_definitions=>ty_deserialization_step
       !ii_log     TYPE REF TO zif_abapgit_log
     RAISING

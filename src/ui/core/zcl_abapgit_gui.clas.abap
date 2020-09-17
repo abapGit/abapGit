@@ -1,8 +1,11 @@
 CLASS zcl_abapgit_gui DEFINITION
   PUBLIC
-  FINAL .
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
+
+    INTERFACES zif_abapgit_gui_services .
+
     CONSTANTS:
       BEGIN OF c_event_state,
         not_handled         TYPE i VALUE 0,
@@ -14,54 +17,46 @@ CLASS zcl_abapgit_gui DEFINITION
         go_back_to_bookmark TYPE i VALUE 6,
         new_page_replacing  TYPE i VALUE 7,
       END OF c_event_state .
-
     CONSTANTS:
       BEGIN OF c_action,
         go_home TYPE string VALUE 'go_home',
         go_db   TYPE string VALUE 'go_db',
-      END OF c_action.
-
-    INTERFACES zif_abapgit_gui_services.
+      END OF c_action .
 
     METHODS go_home
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS go_page
       IMPORTING
-        ii_page        TYPE REF TO zif_abapgit_gui_renderable
-        iv_clear_stack TYPE abap_bool DEFAULT abap_true
+        !ii_page        TYPE REF TO zif_abapgit_gui_renderable
+        !iv_clear_stack TYPE abap_bool DEFAULT abap_true
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS back
       IMPORTING
-        iv_to_bookmark TYPE abap_bool DEFAULT abap_false
+        !iv_to_bookmark TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rv_exit) TYPE abap_bool
+        VALUE(rv_exit)  TYPE abap_bool
       RAISING
-        zcx_abapgit_exception.
-
-    METHODS on_event FOR EVENT sapevent OF cl_gui_html_viewer
+        zcx_abapgit_exception .
+    METHODS on_event
+          FOR EVENT sapevent OF zif_abapgit_html_viewer
       IMPORTING
-          action
-          frame
-          getdata
-          postdata
-          query_table.
-
+          !action
+          !frame
+          !getdata
+          !postdata
+          !query_table .
     METHODS constructor
       IMPORTING
-        io_component      TYPE REF TO object OPTIONAL
-        ii_asset_man      TYPE REF TO zif_abapgit_gui_asset_manager OPTIONAL
-        ii_hotkey_ctl     TYPE REF TO zif_abapgit_gui_hotkey_ctl OPTIONAL
-        ii_html_processor TYPE REF TO zif_abapgit_gui_html_processor OPTIONAL
-        iv_rollback_on_error TYPE abap_bool DEFAULT abap_true
+        !io_component         TYPE REF TO object OPTIONAL
+        !ii_asset_man         TYPE REF TO zif_abapgit_gui_asset_manager OPTIONAL
+        !ii_hotkey_ctl        TYPE REF TO zif_abapgit_gui_hotkey_ctl OPTIONAL
+        !ii_html_processor    TYPE REF TO zif_abapgit_gui_html_processor OPTIONAL
+        !iv_rollback_on_error TYPE abap_bool DEFAULT abap_true
       RAISING
-        zcx_abapgit_exception.
-
-    METHODS free.
-
+        zcx_abapgit_exception .
+    METHODS free .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -69,51 +64,47 @@ CLASS zcl_abapgit_gui DEFINITION
       BEGIN OF ty_page_stack,
         page     TYPE REF TO zif_abapgit_gui_renderable,
         bookmark TYPE abap_bool,
-      END OF ty_page_stack.
+      END OF ty_page_stack .
 
+    DATA mv_rollback_on_error TYPE abap_bool .
+    DATA mi_cur_page TYPE REF TO zif_abapgit_gui_renderable .
     DATA:
-      mv_rollback_on_error TYPE abap_bool,
-      mi_cur_page       TYPE REF TO zif_abapgit_gui_renderable,
-      mt_stack          TYPE STANDARD TABLE OF ty_page_stack,
-      mt_event_handlers TYPE STANDARD TABLE OF REF TO zif_abapgit_gui_event_handler,
-      mi_router         TYPE REF TO zif_abapgit_gui_event_handler,
-      mi_asset_man      TYPE REF TO zif_abapgit_gui_asset_manager,
-      mi_hotkey_ctl     TYPE REF TO zif_abapgit_gui_hotkey_ctl,
-      mi_html_processor TYPE REF TO zif_abapgit_gui_html_processor,
-      mo_html_viewer    TYPE REF TO cl_gui_html_viewer,
-      mo_html_parts     TYPE REF TO zcl_abapgit_html_parts.
-
-    METHODS startup
-      RAISING
-        zcx_abapgit_exception.
+      mt_stack             TYPE STANDARD TABLE OF ty_page_stack .
+    DATA:
+      mt_event_handlers    TYPE STANDARD TABLE OF REF TO zif_abapgit_gui_event_handler .
+    DATA mi_router TYPE REF TO zif_abapgit_gui_event_handler .
+    DATA mi_asset_man TYPE REF TO zif_abapgit_gui_asset_manager .
+    DATA mi_hotkey_ctl TYPE REF TO zif_abapgit_gui_hotkey_ctl .
+    DATA mi_html_processor TYPE REF TO zif_abapgit_gui_html_processor .
+    DATA mi_html_viewer TYPE REF TO zif_abapgit_html_viewer .
+    DATA mo_html_parts TYPE REF TO zcl_abapgit_html_parts .
 
     METHODS cache_html
       IMPORTING
-        iv_text       TYPE string
+        !iv_text      TYPE string
       RETURNING
-        VALUE(rv_url) TYPE w3url.
-
+        VALUE(rv_url) TYPE w3url .
+    METHODS startup
+      RAISING
+        zcx_abapgit_exception .
     METHODS render
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS call_page
       IMPORTING
-        ii_page          TYPE REF TO zif_abapgit_gui_renderable
-        iv_with_bookmark TYPE abap_bool DEFAULT abap_false
-        iv_replacing     TYPE abap_bool DEFAULT abap_false
+        !ii_page          TYPE REF TO zif_abapgit_gui_renderable
+        !iv_with_bookmark TYPE abap_bool DEFAULT abap_false
+        !iv_replacing     TYPE abap_bool DEFAULT abap_false
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS handle_action
       IMPORTING
-        iv_action      TYPE c
-        iv_getdata     TYPE c OPTIONAL
-        it_postdata    TYPE cnht_post_data_tab OPTIONAL.
-
+        !iv_action   TYPE c
+        !iv_getdata  TYPE c OPTIONAL
+        !it_postdata TYPE cnht_post_data_tab OPTIONAL .
     METHODS handle_error
       IMPORTING
-        ix_exception TYPE REF TO zcx_abapgit_exception.
+        !ix_exception TYPE REF TO zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -205,10 +196,10 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD free.
 
-    SET HANDLER me->on_event FOR mo_html_viewer ACTIVATION space.
-    mo_html_viewer->close_document( ).
-    mo_html_viewer->free( ).
-    FREE mo_html_viewer.
+    SET HANDLER me->on_event FOR mi_html_viewer ACTIVATION space.
+    mi_html_viewer->close_document( ).
+    mi_html_viewer->free( ).
+    FREE mi_html_viewer.
 
   ENDMETHOD.
 
@@ -345,9 +336,9 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD render.
 
-    DATA: lv_url           TYPE w3url,
-          lv_html          TYPE string,
-          li_html          TYPE REF TO zif_abapgit_html.
+    DATA: lv_url  TYPE w3url,
+          lv_html TYPE string,
+          li_html TYPE REF TO zif_abapgit_html.
 
     IF mi_cur_page IS NOT BOUND.
       zcx_abapgit_exception=>raise( 'GUI error: no current page' ).
@@ -373,8 +364,8 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         ii_gui_services = me ).
     ENDIF.
 
-    lv_url  = cache_html( lv_html ).
-    mo_html_viewer->show_url( lv_url ).
+    lv_url = cache_html( lv_html ).
+    mi_html_viewer->show_url( lv_url ).
 
   ENDMETHOD.
 
@@ -387,27 +378,26 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_asset> LIKE LINE OF lt_assets.
 
-    CREATE OBJECT mo_html_viewer
-      EXPORTING
-        query_table_disabled = abap_true
-        parent               = cl_gui_container=>screen0.
+
+    mi_html_viewer = zcl_abapgit_ui_factory=>get_html_viewer( ).
 
     IF mi_asset_man IS BOUND.
       lt_assets = mi_asset_man->get_all_assets( ).
       LOOP AT lt_assets ASSIGNING <ls_asset> WHERE is_cacheable = abap_true.
-        zif_abapgit_gui_services~cache_asset( iv_xdata   = <ls_asset>-content
-                     iv_url     = <ls_asset>-url
-                     iv_type    = <ls_asset>-type
-                     iv_subtype = <ls_asset>-subtype ).
+        zif_abapgit_gui_services~cache_asset(
+          iv_xdata   = <ls_asset>-content
+          iv_url     = <ls_asset>-url
+          iv_type    = <ls_asset>-type
+          iv_subtype = <ls_asset>-subtype ).
       ENDLOOP.
     ENDIF.
 
-    ls_event-eventid    = mo_html_viewer->m_id_sapevent.
+    ls_event-eventid    = mi_html_viewer->m_id_sapevent.
     ls_event-appl_event = abap_true.
     APPEND ls_event TO lt_events.
 
-    mo_html_viewer->set_registered_events( lt_events ).
-    SET HANDLER me->on_event FOR mo_html_viewer.
+    mi_html_viewer->set_registered_events( lt_events ).
+    SET HANDLER me->on_event FOR mi_html_viewer.
 
   ENDMETHOD.
 
@@ -421,24 +411,25 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     ASSERT iv_text IS SUPPLIED OR iv_xdata IS SUPPLIED.
 
     IF iv_text IS SUPPLIED. " String input
-
-      zcl_abapgit_convert=>string_to_tab( " FM SCMS_STRING_TO_FTEXT
+      zcl_abapgit_convert=>string_to_tab(
          EXPORTING
-           iv_str = iv_text
+           iv_str  = iv_text
          IMPORTING
-           et_tab = lt_html ).
+           ev_size = lv_size
+           et_tab  = lt_html ).
 
-      mo_html_viewer->load_data(
+      mi_html_viewer->load_data(
         EXPORTING
-          type         = iv_type
-          subtype      = iv_subtype
-          url          = iv_url
+          iv_type         = iv_type
+          iv_subtype      = iv_subtype
+          iv_size         = lv_size
+          iv_url          = iv_url
         IMPORTING
-          assigned_url = rv_url
+          ev_assigned_url = rv_url
         CHANGING
-          data_table   = lt_html
+          ct_data_table   = lt_html
         EXCEPTIONS
-          OTHERS       = 1 ).
+          OTHERS          = 1 ).
     ELSE. " Raw input
       zcl_abapgit_convert=>xstring_to_bintab(
         EXPORTING
@@ -447,18 +438,18 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
           ev_size   = lv_size
           et_bintab = lt_xdata ).
 
-      mo_html_viewer->load_data(
+      mi_html_viewer->load_data(
         EXPORTING
-          type         = iv_type
-          subtype      = iv_subtype
-          size         = lv_size
-          url          = iv_url
+          iv_type         = iv_type
+          iv_subtype      = iv_subtype
+          iv_size         = lv_size
+          iv_url          = iv_url
         IMPORTING
-          assigned_url = rv_url
+          ev_assigned_url = rv_url
         CHANGING
-          data_table   = lt_xdata
+          ct_data_table   = lt_xdata
         EXCEPTIONS
-          OTHERS       = 1 ).
+          OTHERS          = 1 ).
     ENDIF.
 
     ASSERT sy-subrc = 0. " Image data error
