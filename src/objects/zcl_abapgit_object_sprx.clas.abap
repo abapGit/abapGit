@@ -32,7 +32,7 @@ CLASS zcl_abapgit_object_sprx DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         !ev_obj_name TYPE sproxhdr-obj_name .
     METHODS delta_handling
       IMPORTING
-        !io_xml          TYPE REF TO zcl_abapgit_xml_input
+        !ii_xml          TYPE REF TO zif_abapgit_xml_input
       EXPORTING
         !et_sproxhdr_new TYPE sprx_hdr_t
         !et_sproxdat_new TYPE sprx_dat_t
@@ -115,7 +115,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SPRX IMPLEMENTATION.
       CATCH cx_proxy_gen_error.
         "No delta for this object -> create
 
-        io_xml->read(
+        ii_xml->read(
           EXPORTING
             iv_name = c_proxy-header
           CHANGING
@@ -125,7 +125,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SPRX IMPLEMENTATION.
           zcx_abapgit_exception=>raise( |SPRX - error deserialize: { ms_item-obj_name }| ).
         ENDIF.
 
-        io_xml->read(
+        ii_xml->read(
           EXPORTING
             iv_name = c_proxy-data
           CHANGING
@@ -266,7 +266,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SPRX IMPLEMENTATION.
 
     delta_handling(
       EXPORTING
-        io_xml = io_xml
+        ii_xml = io_xml
       IMPORTING
         et_sproxhdr_new = lt_sproxhdr_new
         et_sproxdat_new = lt_sproxdat_new ).

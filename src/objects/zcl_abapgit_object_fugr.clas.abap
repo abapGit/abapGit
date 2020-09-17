@@ -75,12 +75,12 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         zcx_abapgit_exception .
     METHODS serialize_xml
       IMPORTING
-        !io_xml TYPE REF TO zcl_abapgit_xml_output
+        !ii_xml TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_xml
       IMPORTING
-        !io_xml     TYPE REF TO zcl_abapgit_xml_input
+        !ii_xml     TYPE REF TO zif_abapgit_xml_input
         !iv_package TYPE devclass
       RAISING
         zcx_abapgit_exception .
@@ -89,7 +89,7 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         zcx_abapgit_exception .
     METHODS deserialize_includes
       IMPORTING
-        !io_xml     TYPE REF TO zcl_abapgit_xml_input
+        !ii_xml     TYPE REF TO zif_abapgit_xml_input
         !iv_package TYPE devclass
         !ii_log     TYPE REF TO zif_abapgit_log
       RAISING
@@ -111,7 +111,7 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         zcx_abapgit_exception .
     METHODS get_abap_version
       IMPORTING
-        !io_xml                TYPE REF TO zcl_abapgit_xml_input
+        !ii_xml                TYPE REF TO zif_abapgit_xml_input
       RETURNING
         VALUE(rv_abap_version) TYPE progdir-uccheck
       RAISING
@@ -123,20 +123,20 @@ CLASS zcl_abapgit_object_fugr DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     METHODS serialize_texts
       IMPORTING
         !iv_prog_name TYPE programm
-        !io_xml       TYPE REF TO zif_abapgit_xml_output
+        !ii_xml       TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_texts
       IMPORTING
         !iv_prog_name TYPE programm
-        !io_xml       TYPE REF TO zif_abapgit_xml_input
+        !ii_xml       TYPE REF TO zif_abapgit_xml_input
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
+CLASS zcl_abapgit_object_fugr IMPLEMENTATION.
 
 
   METHOD check_rfc_parameters.
@@ -307,7 +307,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
   METHOD deserialize_includes.
 
-    DATA: lo_xml       TYPE REF TO zcl_abapgit_xml_input,
+    DATA: lo_xml       TYPE REF TO zif_abapgit_xml_input,
           ls_progdir   TYPE ty_progdir,
           lt_includes  TYPE ty_sobj_name_tt,
           lt_tpool     TYPE textpool_table,
@@ -320,7 +320,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
     tadir_insert( iv_package ).
 
-    io_xml->read( EXPORTING iv_name = 'INCLUDES'
+    ii_xml->read( EXPORTING iv_name = 'INCLUDES'
                   CHANGING cg_data = lt_includes ).
 
     LOOP AT lt_includes ASSIGNING <lv_include>.
@@ -372,7 +372,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
           lt_tpool      TYPE textpool_table.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
-    io_xml->read( EXPORTING iv_name = 'I18N_TPOOL'
+    ii_xml->read( EXPORTING iv_name = 'I18N_TPOOL'
                   CHANGING  cg_data = lt_tpool_i18n ).
 
     LOOP AT lt_tpool_i18n ASSIGNING <ls_tpool>.
@@ -394,7 +394,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
           lv_abap_version TYPE trdir-uccheck,
           lv_corrnum      TYPE e070use-ordernum.
 
-    lv_abap_version = get_abap_version( io_xml ).
+    lv_abap_version = get_abap_version( ii_xml ).
     lv_complete = ms_item-obj_name.
 
     CALL FUNCTION 'FUNCTION_INCLUDE_SPLIT'
@@ -420,7 +420,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from FUNCTION_INCLUDE_SPLIT' ).
     ENDIF.
 
-    io_xml->read( EXPORTING iv_name = 'AREAT'
+    ii_xml->read( EXPORTING iv_name = 'AREAT'
                   CHANGING cg_data = lv_areat ).
     lv_stext = lv_areat.
     lv_corrnum = zcl_abapgit_default_transport=>get_instance( )->get( )-ordernum.
@@ -497,11 +497,11 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
     DATA: lt_includes TYPE ty_sobj_name_tt,
           ls_progdir  TYPE ty_progdir,
-          lo_xml      TYPE REF TO zcl_abapgit_xml_input.
+          lo_xml      TYPE REF TO zif_abapgit_xml_input.
 
     FIELD-SYMBOLS: <lv_include> LIKE LINE OF lt_includes.
 
-    io_xml->read( EXPORTING iv_name = 'INCLUDES'
+    ii_xml->read( EXPORTING iv_name = 'INCLUDES'
                   CHANGING cg_data = lt_includes ).
 
     LOOP AT lt_includes ASSIGNING <lv_include>.
@@ -854,7 +854,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_tpool> LIKE LINE OF lt_tpool_i18n.
 
-    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+    IF ii_xml->i18n_params( )-serialize_master_lang_only = abap_true.
       RETURN.
     ENDIF.
 
@@ -877,7 +877,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     ENDLOOP.
 
     IF lines( lt_tpool_i18n ) > 0.
-      io_xml->add( iv_name = 'I18N_TPOOL'
+      ii_xml->add( iv_name = 'I18N_TPOOL'
                    ig_data = lt_tpool_i18n ).
     ENDIF.
   ENDMETHOD.
@@ -896,9 +896,9 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
 
     lt_includes = includes( ).
 
-    io_xml->add( iv_name = 'AREAT'
+    ii_xml->add( iv_name = 'AREAT'
                  ig_data = lv_areat ).
-    io_xml->add( iv_name = 'INCLUDES'
+    ii_xml->add( iv_name = 'INCLUDES'
                  ig_data = lt_includes ).
 
   ENDMETHOD.
@@ -1055,7 +1055,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
           ls_cua          TYPE ty_cua.
 
     deserialize_xml(
-      io_xml     = io_xml
+      ii_xml     = io_xml
       iv_package = iv_package ).
 
     io_xml->read( EXPORTING iv_name = 'FUNCTIONS'
@@ -1065,14 +1065,14 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
       ii_log       = ii_log ).
 
     deserialize_includes(
-      io_xml     = io_xml
+      ii_xml     = io_xml
       iv_package = iv_package
       ii_log     = ii_log ).
 
     lv_program_name = main_name( ).
 
     deserialize_texts( iv_prog_name = lv_program_name
-                       io_xml       = io_xml ).
+                       ii_xml       = io_xml ).
 
     io_xml->read( EXPORTING iv_name = 'DYNPROS'
                   CHANGING cg_data = lt_dynpros ).
@@ -1182,7 +1182,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     ls_progdir = read_progdir( lv_program_name ).
 
     serialize_texts( iv_prog_name = lv_program_name
-                     io_xml       = io_xml ).
+                     ii_xml       = io_xml ).
 
     IF ls_progdir-subc = 'F'.
       lt_dynpros = serialize_dynpros( lv_program_name ).
