@@ -411,24 +411,25 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     ASSERT iv_text IS SUPPLIED OR iv_xdata IS SUPPLIED.
 
     IF iv_text IS SUPPLIED. " String input
-
-      zcl_abapgit_convert=>string_to_tab( " FM SCMS_STRING_TO_FTEXT
+      zcl_abapgit_convert=>string_to_tab(
          EXPORTING
-           iv_str = iv_text
+           iv_str  = iv_text
          IMPORTING
-           et_tab = lt_html ).
+           ev_size = lv_size
+           et_tab  = lt_html ).
 
       mi_html_viewer->load_data(
         EXPORTING
-          iv_type      = iv_type
-          iv_subtype   = iv_subtype
-          iv_url       = iv_url
+          iv_type         = iv_type
+          iv_subtype      = iv_subtype
+          iv_size         = lv_size
+          iv_url          = iv_url
         IMPORTING
           ev_assigned_url = rv_url
         CHANGING
           ct_data_table   = lt_html
         EXCEPTIONS
-          OTHERS       = 1 ).
+          OTHERS          = 1 ).
     ELSE. " Raw input
       zcl_abapgit_convert=>xstring_to_bintab(
         EXPORTING
@@ -439,10 +440,10 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
       mi_html_viewer->load_data(
         EXPORTING
-          iv_type      = iv_type
-          iv_subtype   = iv_subtype
-          iv_size      = lv_size
-          iv_url       = iv_url
+          iv_type         = iv_type
+          iv_subtype      = iv_subtype
+          iv_size         = lv_size
+          iv_url          = iv_url
         IMPORTING
           ev_assigned_url = rv_url
         CHANGING
