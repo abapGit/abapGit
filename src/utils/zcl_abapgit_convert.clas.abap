@@ -63,9 +63,10 @@ CLASS zcl_abapgit_convert DEFINITION
         VALUE(rv_xstr) TYPE xstring .
     CLASS-METHODS string_to_tab
       IMPORTING
-        !iv_str       TYPE string
+        !iv_str  TYPE string
       EXPORTING
-        VALUE(et_tab) TYPE STANDARD TABLE .
+        !ev_size TYPE i
+        !et_tab  TYPE STANDARD TABLE .
     CLASS-METHODS base64_to_xstring
       IMPORTING
         !iv_base64     TYPE string
@@ -207,14 +208,15 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
 
   METHOD string_to_tab.
 
-    CLEAR et_tab[].
     CALL FUNCTION 'SCMS_STRING_TO_FTEXT'
       EXPORTING
         text      = iv_str
-*     IMPORTING
-*       LENGTH    = LENGTH
+      IMPORTING
+        length    = ev_size
       TABLES
-        ftext_tab = et_tab.
+        ftext_tab = et_tab
+      EXCEPTIONS
+        OTHERS    = 1.
     ASSERT sy-subrc = 0.
 
   ENDMETHOD.
