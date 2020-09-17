@@ -7,15 +7,6 @@ CLASS zcl_abapgit_objects DEFINITION
     TYPES:
       ty_types_tt TYPE SORTED TABLE OF tadir-object WITH UNIQUE KEY table_line.
     TYPES:
-      BEGIN OF ty_deserialization,
-        obj     TYPE REF TO zif_abapgit_object,
-        xml     TYPE REF TO zcl_abapgit_xml_input,
-        package TYPE devclass,
-        item    TYPE zif_abapgit_definitions=>ty_item,
-      END OF ty_deserialization .
-    TYPES:
-      ty_deserialization_tt TYPE STANDARD TABLE OF ty_deserialization WITH DEFAULT KEY .
-    TYPES:
       BEGIN OF ty_serialization,
         files TYPE zif_abapgit_definitions=>ty_files_tt,
         item  TYPE zif_abapgit_definitions=>ty_item,
@@ -572,7 +563,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
           lt_remote   TYPE zif_abapgit_definitions=>ty_files_tt,
           lv_package  TYPE devclass,
           lo_files    TYPE REF TO zcl_abapgit_objects_files,
-          lo_xml      TYPE REF TO zcl_abapgit_xml_input,
+          lo_xml      TYPE REF TO zif_abapgit_xml_input,
           lt_results  TYPE zif_abapgit_definitions=>ty_results_tt,
           li_progress TYPE REF TO zif_abapgit_progress,
           lv_path     TYPE string,
@@ -585,7 +576,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_result>  TYPE zif_abapgit_definitions=>ty_result,
                    <lv_step_id> TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_step_tt,
                    <ls_step>    TYPE LINE OF zif_abapgit_definitions=>ty_step_data_tt,
-                   <ls_deser>   TYPE LINE OF ty_deserialization_tt.
+                   <ls_deser>   TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_tt.
 
     lt_steps = get_deserialize_steps( ).
 
@@ -1169,7 +1160,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     ENDIF.
 
     li_obj->serialize( lo_xml ).
-    lo_files->add_xml( io_xml      = lo_xml
+    lo_files->add_xml( ii_xml      = lo_xml
                        is_metadata = li_obj->get_metadata( ) ).
 
     rs_files_and_item-files = lo_files->get_files( ).
