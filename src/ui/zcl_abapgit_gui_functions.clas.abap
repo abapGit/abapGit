@@ -6,11 +6,14 @@ CLASS zcl_abapgit_gui_functions DEFINITION
     INTERFACES:
       zif_abapgit_gui_functions.
 
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_functions IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_FUNCTIONS IMPLEMENTATION.
+
 
   METHOD zif_abapgit_gui_functions~gui_is_available.
 
@@ -28,5 +31,4 @@ CLASS zcl_abapgit_gui_functions IMPLEMENTATION.
         return = rv_result.
 
   ENDMETHOD.
-
 ENDCLASS.
