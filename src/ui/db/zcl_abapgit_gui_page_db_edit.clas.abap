@@ -148,6 +148,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
         ls_db = dbcontent_decode( ii_event->mt_postdata ).
         update( ls_db ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+      WHEN OTHERS.
+        rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
     ENDCASE.
 
   ENDMETHOD.

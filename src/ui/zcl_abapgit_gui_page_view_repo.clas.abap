@@ -1194,7 +1194,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
         rs_handled-state        = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-change_order_by.
-        mv_order_by     = zcl_abapgit_gui_chunk_lib=>parse_change_order_by( ii_Event->mv_getdata ).
+        mv_order_by     = zcl_abapgit_gui_chunk_lib=>parse_change_order_by( ii_event->mv_getdata ).
         rs_handled-state        = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-direction.

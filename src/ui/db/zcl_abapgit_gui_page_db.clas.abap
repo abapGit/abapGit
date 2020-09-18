@@ -199,6 +199,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
         ls_db = zcl_abapgit_html_action_utils=>dbkey_decode( ii_event->mv_getdata ).
         delete( ls_db ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN OTHERS.
+        rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
     ENDCASE.
 
   ENDMETHOD.
