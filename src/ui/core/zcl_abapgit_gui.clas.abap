@@ -245,38 +245,39 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD handle_action.
 
-    DATA: lx_exception TYPE REF TO zcx_abapgit_exception,
-          li_handler   TYPE REF TO zif_abapgit_gui_event_handler,
-          li_page      TYPE REF TO zif_abapgit_gui_renderable,
-          lv_state     TYPE i.
+    DATA:
+      lx_exception TYPE REF TO zcx_abapgit_exception,
+      li_handler   TYPE REF TO zif_abapgit_gui_event_handler,
+      li_event     TYPE REF TO zif_abapgit_gui_event,
+      ls_handled   TYPE zif_abapgit_gui_event_handler=>ty_handling_result.
+
+    CREATE OBJECT li_event TYPE zcl_abapgit_gui_event
+      EXPORTING
+        ii_gui_services = me
+        iv_action       = iv_action
+        iv_getdata      = iv_getdata
+        it_postdata     = it_postdata.
 
     TRY.
         LOOP AT mt_event_handlers INTO li_handler.
-          li_handler->on_event(
-            EXPORTING
-              iv_action    = iv_action
-              iv_getdata   = iv_getdata
-              it_postdata  = it_postdata
-            IMPORTING
-              ei_page      = li_page
-              ev_state     = lv_state ).
-          IF lv_state IS NOT INITIAL AND lv_state <> c_event_state-not_handled. " is handled
+          ls_handled = li_handler->on_event( li_event ).
+          IF ls_handled-state IS NOT INITIAL AND ls_handled-state <> c_event_state-not_handled. " is handled
             EXIT.
           ENDIF.
         ENDLOOP.
 
-        CASE lv_state.
+        CASE ls_handled-state.
           WHEN c_event_state-re_render.
             render( ).
           WHEN c_event_state-new_page.
-            call_page( li_page ).
+            call_page( ls_handled-page ).
           WHEN c_event_state-new_page_w_bookmark.
             call_page(
-              ii_page = li_page
+              ii_page = ls_handled-page
               iv_with_bookmark = abap_true ).
           WHEN c_event_state-new_page_replacing.
             call_page(
-              ii_page = li_page
+              ii_page = ls_handled-page
               iv_replacing = abap_true ).
           WHEN c_event_state-go_back.
             back( ).
@@ -309,7 +310,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     TRY.
         li_gui_error_handler ?= mi_cur_page.
 
-        IF li_gui_error_handler->handle_error( ix_exception ) = abap_true.
+        IF li_gui_error_handler IS BOUND AND li_gui_error_handler->handle_error( ix_exception ) = abap_true.
           " We rerender the current page to display the error box
           render( ).
         ELSE.
