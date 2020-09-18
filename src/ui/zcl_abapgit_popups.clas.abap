@@ -2,7 +2,6 @@ CLASS zcl_abapgit_popups DEFINITION
   PUBLIC
   FINAL
   CREATE PRIVATE
-
   GLOBAL FRIENDS zcl_abapgit_ui_factory .
 
   PUBLIC SECTION.
