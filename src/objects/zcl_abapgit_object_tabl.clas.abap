@@ -784,15 +784,12 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
   METHOD zif_abapgit_object~get_comparator.
 
     DATA: li_local_version_output TYPE REF TO zif_abapgit_xml_output,
-          lo_local_version_output TYPE REF TO zcl_abapgit_xml_output,
           li_local_version_input  TYPE REF TO zif_abapgit_xml_input.
 
 
     CREATE OBJECT li_local_version_output TYPE zcl_abapgit_xml_output.
 
-    " TODO: remove cast after zif_abapgit_object uses interface instead of class
-    lo_local_version_output ?= li_local_version_output.
-    me->zif_abapgit_object~serialize( lo_local_version_output ).
+    me->zif_abapgit_object~serialize( li_local_version_output ).
 
     CREATE OBJECT li_local_version_input
       TYPE zcl_abapgit_xml_input

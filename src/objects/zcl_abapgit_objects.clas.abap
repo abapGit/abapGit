@@ -1133,7 +1133,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
   METHOD serialize.
 
     DATA: li_obj   TYPE REF TO zif_abapgit_object,
-          lo_xml   TYPE REF TO zcl_abapgit_xml_output,
+          li_xml   TYPE REF TO zif_abapgit_xml_output,
           lo_files TYPE REF TO zcl_abapgit_objects_files.
 
     FIELD-SYMBOLS: <ls_file> LIKE LINE OF rs_files_and_item-files.
@@ -1153,14 +1153,14 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
     li_obj = create_object( is_item     = rs_files_and_item-item
                             iv_language = iv_language ).
     li_obj->mo_files = lo_files.
-    CREATE OBJECT lo_xml.
+    CREATE OBJECT li_xml TYPE zcl_abapgit_xml_output.
 
     IF iv_serialize_master_lang_only = abap_true.
-      lo_xml->i18n_params( iv_serialize_master_lang_only = abap_true ).
+      li_xml->i18n_params( iv_serialize_master_lang_only = abap_true ).
     ENDIF.
 
-    li_obj->serialize( lo_xml ).
-    lo_files->add_xml( ii_xml      = lo_xml
+    li_obj->serialize( li_xml ).
+    lo_files->add_xml( ii_xml      = li_xml
                        is_metadata = li_obj->get_metadata( ) ).
 
     rs_files_and_item-files = lo_files->get_files( ).
