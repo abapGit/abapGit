@@ -7,13 +7,6 @@ CLASS zcl_abapgit_xml_output DEFINITION
 
     INTERFACES zif_abapgit_xml_output.
 
-    ALIASES:
-      add FOR zif_abapgit_xml_output~add,
-      set_raw FOR zif_abapgit_xml_output~set_raw,
-      add_xml FOR zif_abapgit_xml_output~add_xml,
-      render FOR zif_abapgit_xml_output~render,
-      i18n_params FOR zif_abapgit_xml_output~i18n_params.
-
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -30,7 +23,7 @@ ENDCLASS.
 CLASS zcl_abapgit_xml_output IMPLEMENTATION.
 
 
-  METHOD add.
+  METHOD zif_abapgit_xml_output~add.
 
     DATA: li_node TYPE REF TO if_ixml_node,
           li_doc  TYPE REF TO if_ixml_document,
@@ -67,7 +60,7 @@ CLASS zcl_abapgit_xml_output IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD add_xml.
+  METHOD zif_abapgit_xml_output~add_xml.
 
     DATA: li_element TYPE REF TO if_ixml_element.
 
@@ -101,7 +94,7 @@ CLASS zcl_abapgit_xml_output IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD i18n_params.
+  METHOD zif_abapgit_xml_output~i18n_params.
 
     IF iv_serialize_master_lang_only IS SUPPLIED.
       ms_i18n_params-serialize_master_lang_only = iv_serialize_master_lang_only.
@@ -112,7 +105,7 @@ CLASS zcl_abapgit_xml_output IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render.
+  METHOD zif_abapgit_xml_output~render.
 
     DATA: li_git  TYPE REF TO if_ixml_element,
           li_abap TYPE REF TO if_ixml_element.
@@ -145,7 +138,7 @@ CLASS zcl_abapgit_xml_output IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_raw.
+  METHOD zif_abapgit_xml_output~set_raw.
     mi_raw = ii_raw.
   ENDMETHOD.
 ENDCLASS.
