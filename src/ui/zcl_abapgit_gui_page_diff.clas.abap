@@ -988,22 +988,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    CASE iv_action.
+    CASE ii_event->mv_action.
       WHEN c_actions-toggle_unified. " Toggle file diplay
 
         mv_unified = zcl_abapgit_persistence_user=>get_instance( )->toggle_diff_unified( ).
-        ev_state   = zcl_abapgit_gui=>c_event_state-re_render.
+        rs_handled-state   = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN OTHERS.
 
-        super->zif_abapgit_gui_event_handler~on_event(
-           EXPORTING
-             iv_action    = iv_action
-             iv_getdata   = iv_getdata
-             it_postdata  = it_postdata
-           IMPORTING
-             ei_page      = ei_page
-             ev_state     = ev_state ).
+        rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
 
     ENDCASE.
 

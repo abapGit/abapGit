@@ -143,11 +143,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
 
     DATA: ls_db TYPE zif_abapgit_persistence=>ty_content.
 
-    CASE iv_action.
+    CASE ii_event->mv_action.
       WHEN c_action-update.
-        ls_db = dbcontent_decode( it_postdata ).
+        ls_db = dbcontent_decode( ii_event->mt_postdata ).
         update( ls_db ).
-        ev_state = zcl_abapgit_gui=>c_event_state-go_back.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
     ENDCASE.
 
   ENDMETHOD.

@@ -1159,74 +1159,67 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
     DATA lv_path TYPE string.
     DATA lv_switched TYPE abap_bool.
 
-    CASE iv_action.
+    CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-go_repo. " Switch to another repo
-        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_view_repo
+        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_view_repo
           EXPORTING
-            iv_key = |{ iv_getdata }|.
-        ev_state        = zcl_abapgit_gui=>c_event_state-new_page_replacing.
+            iv_key = |{ ii_event->mv_getdata }|.
+        rs_handled-state        = zcl_abapgit_gui=>c_event_state-new_page_replacing.
 
       WHEN c_actions-toggle_hide_files. " Toggle file diplay
         mv_hide_files   = zcl_abapgit_persistence_user=>get_instance( )->toggle_hide_files( ).
-        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+        rs_handled-state        = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-change_dir.        " Change dir
-        lv_path         = zcl_abapgit_html_action_utils=>dir_decode( iv_getdata ).
+        lv_path         = zcl_abapgit_html_action_utils=>dir_decode( ii_event->mv_getdata ).
         mv_cur_dir      = zcl_abapgit_path=>change_dir( iv_cur_dir = mv_cur_dir
                                                         iv_cd = lv_path ).
-        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+        rs_handled-state        = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-toggle_folders.    " Toggle folder view
         mv_show_folders = boolc( mv_show_folders <> abap_true ).
         mv_cur_dir      = '/'. " Root
-        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+        rs_handled-state        = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-toggle_changes.    " Toggle changes only view
         mv_changes_only = zcl_abapgit_persistence_user=>get_instance( )->toggle_changes_only( ).
-        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+        rs_handled-state        = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-toggle_diff_first.
         mv_diff_first = boolc( mv_diff_first = abap_false ).
-        ev_state             = zcl_abapgit_gui=>c_event_state-re_render.
+        rs_handled-state             = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-display_more.      " Increase MAX lines limit
         mv_max_lines    = mv_max_lines + mv_max_setting.
-        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+        rs_handled-state        = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-change_order_by.
-        mv_order_by     = zcl_abapgit_gui_chunk_lib=>parse_change_order_by( iv_getdata ).
-        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+        mv_order_by     = zcl_abapgit_gui_chunk_lib=>parse_change_order_by( ii_Event->mv_getdata ).
+        rs_handled-state        = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-direction.
-        mv_order_descending = zcl_abapgit_gui_chunk_lib=>parse_direction( iv_getdata ).
-        ev_state            = zcl_abapgit_gui=>c_event_state-re_render.
+        mv_order_descending = zcl_abapgit_gui_chunk_lib=>parse_direction( ii_event->mv_getdata ).
+        rs_handled-state            = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-repo_open_in_master_lang.
         open_in_master_language( ).
-        ev_state        = zcl_abapgit_gui=>c_event_state-re_render.
+        rs_handled-state        = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-repo_switch_origin_to_pr.
         lv_switched = switch_to_pr( ).
         IF lv_switched = abap_true.
-          ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
         ELSE.
-          ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
         ENDIF.
 
       WHEN c_actions-repo_reset_origin.
         switch_to_pr( iv_revert = abap_true ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN OTHERS.
 
-        super->zif_abapgit_gui_event_handler~on_event( " TODO refactor, move to HOC components
-          EXPORTING
-            iv_action    = iv_action
-            iv_getdata   = iv_getdata
-            it_postdata  = it_postdata
-          IMPORTING
-            ei_page      = ei_page
-            ev_state     = ev_state ).
+        rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ). " TODO refactor, move to HOC components
 
     ENDCASE.
 
