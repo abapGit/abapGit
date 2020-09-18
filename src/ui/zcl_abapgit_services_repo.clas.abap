@@ -198,9 +198,6 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
       iv_ign_subpkg       = is_repo_params-ignore_subpackages
       iv_master_lang_only = is_repo_params-master_lang_only ).
 
-    " Make sure there're no leftovers from previous repos
-    ro_repo->rebuild_local_checksums( ).
-
     toggle_favorite( ro_repo->get_key( ) ).
 
     " Set default repo for user
