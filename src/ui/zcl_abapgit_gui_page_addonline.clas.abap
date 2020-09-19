@@ -93,7 +93,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
     DATA lt_form TYPE tihttpnvp.
     DATA ls_field LIKE LINE OF lt_form.
 
-    lt_form = zcl_abapgit_html_action_utils=>parse_post_data( it_post_data ).
+    lt_form = zcl_abapgit_html_action_utils=>parse_post_form_data( it_post_data ).
     CREATE OBJECT ro_form_data.
 
     LOOP AT lt_form INTO ls_field.
