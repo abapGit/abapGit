@@ -8,13 +8,14 @@ This doc covers html form component in abapGit UI. See also the [UI - HTML pages
 ## General
 
 There is a helper class to render html forms - `zcl_abapgit_html_form`. To see an example - open the online repo creation dialog (code: class `zcl_abapgit_gui_page_addonline`). Typical usage:
-- create the form
+- create the form (preferable in constructor - it is descriptive)
 - add fields one by one
 - for complex fields (radio) - add `options` right after the field
 - on render - pass `zcl_abapgit_string_map` instance of values and, optionally, a map of validation results (see below)
 - fields can be required (`iv_required = abap_true`)
 - fields can have tooltips (`iv_hint = 'help for the field'`)
 - text fields may have placeholders (`iv_placeholder = '...'`)
+- text fields may be upper cased (`iv_upper_case = abap_bool` - for normalization - see below)
 - text fields may have side-actions - button next to them - passing current form state to abap for additional logic and re-render
 - a form may have one or more *commands* at the bottom. *Main* ones (`iv_is_main = abap_true`) - will be highlighted
 
@@ -56,6 +57,26 @@ ro_html->add( lo_form->render(
     io_values         = mo_form_data
     io_validation_log = mo_validation_log ) ).
 
+```
+
+## Values normalization
+
+The class has `validate_normalize_form_data` method as a default validator/normalizer. It accepts `string_map` with field key-values. And the run through them doing the following:
+- fields, missing in the form definition will raise an exception
+- text fields, marked with `upper_case` during definition, are converted to upper case
+- checkbox fields, convert `on` value (html default), to `abap_true`
+
+```abap
+" lo_field_map:
+" 'name'        = 'xxx'
+" 'package'     = '$mypack'  <-- with 'iv_upper_case = true' during definition
+" 'my_checkbox' = 'on'
+
+lo_field_map = lo_form->validate_normalize_form_data( lo_field_map ).
+
+" 'name'        = 'xxx'
+" 'package'     = '$MYPACK'
+" 'my_checkbox' = 'X'
 ```
 
 ## Values and validation
