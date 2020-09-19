@@ -221,7 +221,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
     DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
 
-    CASE iv_action.
+    CASE ii_event->mv_action.
       WHEN c_actions-stage.
 
         lo_repo_online ?= mo_repo.
@@ -230,15 +230,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
           " we need to refresh as the source might have changed
           lo_repo_online->refresh( ).
 
-          CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_stage
+          CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_stage
             EXPORTING
               io_repo = lo_repo_online.
-          ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
         ELSE.
 
-          ei_page = me.
-          ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
         ENDIF.
 
@@ -248,34 +247,25 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODE_INSP IMPLEMENTATION.
 
         IF is_stage_allowed( ) = abap_true.
 
-          CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
+          CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_commit
             EXPORTING
               io_repo  = lo_repo_online
               io_stage = mo_stage.
-          ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
         ELSE.
 
-          ei_page = me.
-          ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
         ENDIF.
 
       WHEN c_actions-rerun.
 
         run_code_inspector( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
-        ei_page = me.
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN OTHERS.
-        super->zif_abapgit_gui_event_handler~on_event(
-          EXPORTING
-            iv_action             = iv_action
-            iv_getdata            = iv_getdata
-            it_postdata           = it_postdata
-          IMPORTING
-            ei_page               = ei_page
-            ev_state              = ev_state ).
+        rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
     ENDCASE.
 
   ENDMETHOD.

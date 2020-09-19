@@ -80,7 +80,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -492,10 +492,13 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    CASE iv_action.
+    CASE ii_event->mv_action.
       WHEN c_action-save_settings.
-        save( it_postdata ).
-        ev_state = zcl_abapgit_gui=>c_event_state-go_back.
+        save( ii_event->mt_postdata ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+      WHEN OTHERS.
+        rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
+
     ENDCASE.
 
   ENDMETHOD.

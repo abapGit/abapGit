@@ -740,36 +740,29 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    CASE iv_action.
+    CASE ii_event->mv_action.
       WHEN c_actions-stage.
 
-        start_staging( it_postdata ).
+        start_staging( ii_event->mt_postdata ).
 
-        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
+        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_commit
           EXPORTING
             io_repo  = mo_repo_online
             io_stage = mo_stage.
-        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN OTHERS.
 
-        FIND FIRST OCCURRENCE OF REGEX |^{ c_actions-refresh }| IN iv_action.
+        FIND FIRST OCCURRENCE OF REGEX |^{ c_actions-refresh }| IN ii_event->mv_action.
         IF sy-subrc = 0.
 
-          apply_patch_from_form_fields( it_postdata ).
-          refresh( iv_action ).
-          ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+          apply_patch_from_form_fields( ii_event->mt_postdata ).
+          refresh( ii_event->mv_action ).
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
         ELSE.
 
-          super->zif_abapgit_gui_event_handler~on_event(
-             EXPORTING
-               iv_action    = iv_action
-               iv_getdata   = iv_getdata
-               it_postdata  = it_postdata
-             IMPORTING
-               ei_page      = ei_page
-               ev_state     = ev_state ).
+          rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
 
         ENDIF.
 
