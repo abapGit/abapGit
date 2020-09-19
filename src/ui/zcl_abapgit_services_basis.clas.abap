@@ -83,7 +83,8 @@ CLASS zcl_abapgit_services_basis IMPLEMENTATION.
           lx_salv_error                 TYPE REF TO cx_salv_error,
           lv_current_repo               TYPE zif_abapgit_persistence=>ty_value,
           lo_runtime_column             TYPE REF TO cl_salv_column,
-          lo_seconds_column             TYPE REF TO cl_salv_column.
+          lo_seconds_column             TYPE REF TO cl_salv_column,
+          li_popups                     TYPE REF TO zif_abapgit_popups.
 
     TRY.
         lv_current_repo = zcl_abapgit_persistence_user=>get_instance( )->get_repo_show( ).
@@ -93,7 +94,8 @@ CLASS zcl_abapgit_services_basis IMPLEMENTATION.
       CATCH zcx_abapgit_exception ##NO_HANDLER.
     ENDTRY.
 
-    zcl_abapgit_ui_factory=>get_popups( )->popup_perf_test_parameters(
+    li_popups = zcl_abapgit_ui_factory=>get_popups( ).
+    li_popups->popup_perf_test_parameters(
       IMPORTING
         et_object_type_filter         = lt_object_type_filter
         et_object_name_filter         = lt_object_name_filter
