@@ -170,11 +170,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
     DATA: ls_repo_params     TYPE zif_abapgit_services_repo=>ty_repo_params,
           lo_new_online_repo TYPE REF TO zcl_abapgit_repo_online.
 
-    mo_form_data = parse_form( it_postdata ). " import data from html before re-render
+    mo_form_data = parse_form( ii_event->mt_postdata ). " import data from html before re-render
 
-    CASE iv_action.
+    CASE ii_event->mv_action.
       WHEN c_event-go_back.
-        ev_state = zcl_abapgit_gui=>c_event_state-go_back.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
 
       WHEN c_event-create_package.
 
@@ -184,9 +184,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
             iv_prefill_package = |{ mo_form_data->get( 'package' ) }| ) ).
         IF mo_form_data->get( c_id-package ) IS NOT INITIAL.
           mo_validation_log = validate_form( mo_form_data ).
-          ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
         ELSE.
-          ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
         ENDIF.
 
       WHEN c_event-choose_package.
@@ -196,9 +196,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
           iv_val = zcl_abapgit_ui_factory=>get_popups( )->popup_search_help( 'TDEVC-DEVCLASS' ) ).
         IF mo_form_data->get( c_id-package ) IS NOT INITIAL.
           mo_validation_log = validate_form( mo_form_data ).
-          ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
         ELSE.
-          ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
         ENDIF.
 
       WHEN c_event-choose_branch.
@@ -208,7 +208,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
           mo_validation_log->set(
             iv_key = c_id-branch_name
             iv_val = 'Check URL issues' ).
-          ev_state = zcl_abapgit_gui=>c_event_state-re_render. " Display errors
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render. " Display errors
           RETURN.
         ENDIF.
         mo_form_data->set(
@@ -216,7 +216,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
           iv_val = zcl_abapgit_ui_factory=>get_popups( )->branch_list_popup( mo_form_data->get( c_id-url ) )-name ).
 
         IF mo_form_data->get( c_id-branch_name ) IS INITIAL.
-          ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
         ELSE.
           mo_form_data->set(
             iv_key = c_id-branch_name
@@ -224,7 +224,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
               val = mo_form_data->get( c_id-branch_name )
               sub = zif_abapgit_definitions=>c_git_branch-heads_prefix
               with = '' ) ).
-          ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
         ENDIF.
 
       WHEN c_event-add_online_repo.
@@ -234,12 +234,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
         IF mo_validation_log->is_empty( ) = abap_true.
           mo_form_data->to_abap( CHANGING cs_container = ls_repo_params ).
           lo_new_online_repo = zcl_abapgit_services_repo=>new_online( ls_repo_params ).
-          CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_view_repo
+          CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_view_repo
             EXPORTING
               iv_key = lo_new_online_repo->get_key( ).
-          ev_state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
         ELSE.
-          ev_state = zcl_abapgit_gui=>c_event_state-re_render. " Display errors
+          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render. " Display errors
         ENDIF.
 
     ENDCASE.

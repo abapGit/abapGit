@@ -307,19 +307,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    CASE iv_action.
+    CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-bg_update.
-        update( decode( iv_getdata ) ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        update( decode( ii_event->mv_getdata ) ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN OTHERS.
-        super->zif_abapgit_gui_event_handler~on_event(
-          EXPORTING
-            iv_action    = iv_action
-            iv_getdata   = iv_getdata
-            it_postdata  = it_postdata
-          IMPORTING
-            ei_page      = ei_page
-            ev_state     = ev_state ).
+        rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
     ENDCASE.
 
   ENDMETHOD.
