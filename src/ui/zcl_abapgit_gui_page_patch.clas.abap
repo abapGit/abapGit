@@ -318,13 +318,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
 
   METHOD apply_patch_from_form_fields.
 
-    DATA: lv_string TYPE string,
-          lt_fields TYPE tihttpnvp,
-          lv_add    TYPE string,
-          lv_remove TYPE string.
+    DATA:
+      lt_fields TYPE tihttpnvp,
+      lv_add    TYPE string,
+      lv_remove TYPE string.
 
-    lv_string = zcl_abapgit_utils=>translate_postdata( it_postdata ).
-    lt_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_string ).
+    lt_fields = zcl_abapgit_html_action_utils=>parse_post_form_data( it_postdata ).
 
     zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name  = c_patch_action-add
                                                         it_field = lt_fields

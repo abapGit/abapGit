@@ -587,16 +587,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
   METHOD stage_selected.
 
-    DATA: lv_string TYPE string,
-          lt_fields TYPE tihttpnvp,
-          ls_file   TYPE zif_abapgit_definitions=>ty_file.
+    DATA:
+      lt_fields TYPE tihttpnvp,
+      ls_file   TYPE zif_abapgit_definitions=>ty_file.
 
-    FIELD-SYMBOLS: <ls_file>   LIKE LINE OF ms_files-local,
-                   <ls_status> LIKE LINE OF ms_files-status,
-                   <ls_item>   LIKE LINE OF lt_fields.
+    FIELD-SYMBOLS:
+      <ls_file>   LIKE LINE OF ms_files-local,
+      <ls_status> LIKE LINE OF ms_files-status,
+      <ls_item>   LIKE LINE OF lt_fields.
 
-    lv_string = zcl_abapgit_utils=>translate_postdata( it_postdata ).
-    lt_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_string ).
+    lt_fields = zcl_abapgit_html_action_utils=>parse_post_form_data( it_postdata ).
 
     IF lines( lt_fields ) = 0.
       zcx_abapgit_exception=>raise( 'process_stage_list: empty list' ).
@@ -687,7 +687,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
       WHEN c_action-stage_filter.
 
-        lt_fields = zcl_abapgit_html_action_utils=>parse_fields( concat_lines_of( table = ii_event->mt_postdata ) ).
+        lt_fields = zcl_abapgit_html_action_utils=>parse_post_form_data( ii_event->mt_postdata ).
 
         zcl_abapgit_html_action_utils=>get_field(
           EXPORTING

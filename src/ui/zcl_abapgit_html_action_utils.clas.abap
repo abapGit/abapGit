@@ -4,9 +4,10 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
 
   PUBLIC SECTION.
 
-    CLASS-METHODS parse_post_data
+    CLASS-METHODS parse_post_form_data
       IMPORTING
         !it_post_data TYPE cnht_post_data_tab
+        !iv_upper_cased TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rt_fields) TYPE tihttpnvp .
     CLASS-METHODS parse_fields
@@ -19,6 +20,12 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !iv_string       TYPE clike
       RETURNING
         VALUE(rt_fields) TYPE tihttpnvp .
+    CLASS-METHODS translate_postdata
+      IMPORTING
+        !it_postdata TYPE cnht_post_data_tab
+      RETURNING
+        VALUE(rv_string) TYPE string .
+
     CLASS-METHODS get_field
       IMPORTING
         !iv_name   TYPE string
@@ -330,27 +337,33 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
   METHOD parse_fields.
 
-    DATA: lt_substrings TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
-          ls_field      LIKE LINE OF rt_fields.
+    DATA:
+      lt_substrings TYPE string_table,
+      ls_field      LIKE LINE OF rt_fields.
 
-    FIELD-SYMBOLS: <lv_substring> LIKE LINE OF lt_substrings.
-
+    FIELD-SYMBOLS <lv_substring> LIKE LINE OF lt_substrings.
 
     SPLIT iv_string AT '&' INTO TABLE lt_substrings.
 
     LOOP AT lt_substrings ASSIGNING <lv_substring>.
 
-      CLEAR: ls_field.
+      CLEAR ls_field.
 
-      ls_field-name = substring_before( val = <lv_substring>
-                                     sub = '=' ).
+      ls_field-name = substring_before(
+        val = <lv_substring>
+        sub = '=' ).
       ls_field-name = unescape( ls_field-name ).
 
-      ls_field-value = substring_after( val = <lv_substring>
-                                     sub = '=' ).
+      ls_field-value = substring_after(
+        val = <lv_substring>
+        sub = '=' ).
       ls_field-value = unescape( ls_field-value ).
 
-      INSERT ls_field INTO TABLE rt_fields.
+      IF ls_field IS INITIAL. " Not a field with proper structure
+        CONTINUE.
+      ENDIF.
+
+      APPEND ls_field TO rt_fields.
 
     ENDLOOP.
 
@@ -365,12 +378,16 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD parse_post_data.
+  METHOD parse_post_form_data.
 
     DATA lv_serialized_post_data TYPE string.
 
-    CONCATENATE LINES OF it_post_data INTO lv_serialized_post_data.
-    rt_fields = parse_fields( lv_serialized_post_data ).
+    lv_serialized_post_data = translate_postdata( it_post_data ).
+    IF iv_upper_cased = abap_true.
+      rt_fields = parse_fields_upper_case_name( lv_serialized_post_data ).
+    ELSE.
+      rt_fields = parse_fields( lv_serialized_post_data ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -387,6 +404,33 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
                          it_field = lt_fields CHANGING cg_field = ev_seed ).
 
     ASSERT NOT ev_key IS INITIAL.
+
+  ENDMETHOD.
+
+
+  METHOD translate_postdata.
+
+    DATA: lt_post_data       TYPE cnht_post_data_tab,
+          ls_last_line       TYPE cnht_post_data_line,
+          lv_last_line_index TYPE i.
+
+    IF it_postdata IS INITIAL.
+      RETURN. "Nothing to do
+    ENDIF.
+
+    lt_post_data = it_postdata.
+
+    "Save the last line for separate merge, because we don't need its trailing spaces
+    WHILE ls_last_line IS INITIAL.
+      lv_last_line_index = lines( lt_post_data ).
+      READ TABLE lt_post_data INTO ls_last_line INDEX lv_last_line_index.
+      DELETE lt_post_data INDEX lv_last_line_index.
+    ENDWHILE.
+
+    CONCATENATE LINES OF lt_post_data INTO rv_string
+      IN CHARACTER MODE RESPECTING BLANKS.
+    CONCATENATE rv_string ls_last_line INTO rv_string
+      IN CHARACTER MODE.
 
   ENDMETHOD.
 

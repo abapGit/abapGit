@@ -245,15 +245,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
 
   METHOD decode_merge.
 
-    DATA: lv_string TYPE string,
-          lt_fields TYPE tihttpnvp.
-
+    DATA lt_fields TYPE tihttpnvp.
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
 
-    lv_string = zcl_abapgit_utils=>translate_postdata( it_postdata ).
-
-    lt_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_string ).
+    lt_fields = zcl_abapgit_html_action_utils=>parse_post_form_data( it_postdata ).
 
     READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'source'.
     ASSERT sy-subrc = 0.
