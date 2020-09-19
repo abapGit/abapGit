@@ -55,15 +55,15 @@ CLASS ltcl_event IMPLEMENTATION.
       act = lo_map->get( 'B' )
       exp = 'c' ).
 
-    TRY .
-      lo_map->set(
-        iv_key = 'x'
-        iv_val = 'y' ).
-      cl_abap_unit_assert=>fail( ).
-    CATCH zcx_abapgit_exception INTO lo_x.
-      cl_abap_unit_assert=>assert_char_cp(
-        act = lo_x->get_text( )
-        exp = '*immutable*' ).
+    TRY.
+       lo_map->set(
+         iv_key = 'x'
+         iv_val = 'y' ).
+       cl_abap_unit_assert=>fail( ).
+     CATCH zcx_abapgit_exception INTO lo_x.
+       cl_abap_unit_assert=>assert_char_cp(
+         act = lo_x->get_text( )
+         exp = '*immutable*' ).
     ENDTRY.
 
   ENDMETHOD.
