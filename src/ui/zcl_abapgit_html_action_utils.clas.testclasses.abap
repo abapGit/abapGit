@@ -279,7 +279,9 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
     DATA lv_size TYPE i.
 
     DESCRIBE FIELD lv_line LENGTH lv_size IN CHARACTER MODE.
-    lv_long_name = repeat( val = 'x' occ = lv_size - 4 ).
+    lv_long_name = repeat(
+      val = 'x'
+      occ = lv_size - 4 ).
     lv_line = 'a=b&' && lv_long_name.
 
     APPEND lv_line TO lt_post_data.
