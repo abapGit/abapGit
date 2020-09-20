@@ -33,6 +33,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TUTORIAL IMPLEMENTATION.
     CREATE OBJECT ro_menu EXPORTING iv_id = 'toolbar-main'.
 
     ro_menu->add(
+      iv_txt = zcl_abapgit_gui_buttons=>repo_list( )
+      iv_act = zif_abapgit_definitions=>c_action-abapgit_home
+    )->add(
       iv_txt = zcl_abapgit_gui_buttons=>new_online( )
       iv_act = zif_abapgit_definitions=>c_action-repo_newonline
     )->add(
