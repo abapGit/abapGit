@@ -43,7 +43,7 @@ See [dotabap.org](http://dotabap.org) or [this page](https://docs.abapgit.org/ot
 ## FAQ
 For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/larshp/abapGit/issues)
 
-![abapgit](http://docs.abapgit.org/img/abapgit_1_94_0.png)
+![abapgit](http://docs.abapgit.org/img/abapgit_1_99_0.png)
 
 ## Credits and references
 
