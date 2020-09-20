@@ -216,23 +216,27 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
   METHOD general_page_routing.
 
     DATA: lv_key           TYPE zif_abapgit_persistence=>ty_repo-key,
-          lv_last_repo_key TYPE zif_abapgit_persistence=>ty_repo-key.
+          lv_last_repo_key TYPE zif_abapgit_persistence=>ty_repo-key,
+          lt_repo_list     TYPE zif_abapgit_definitions=>ty_repo_ref_tt.
 
 
     lv_key = ii_event->mv_getdata. " TODO refactor
 
     CASE ii_event->mv_action.
       WHEN zcl_abapgit_gui=>c_action-go_home.
-
         lv_last_repo_key = zcl_abapgit_persistence_user=>get_instance( )->get_repo_show( ).
+        lt_repo_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
 
-        IF lv_last_repo_key IS INITIAL.
-          CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_main.
-        ELSE.
+        IF lv_last_repo_key IS NOT INITIAL.
           CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_view_repo
             EXPORTING
               iv_key = lv_last_repo_key.
+        ELSEIF lt_repo_list IS NOT INITIAL.
+          CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_main.
+        ELSE.
+          rs_handled-page = zcl_abapgit_gui_page_tutorial=>create( ).
         ENDIF.
+
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN zif_abapgit_definitions=>c_action-go_db.                          " Go DB util page
