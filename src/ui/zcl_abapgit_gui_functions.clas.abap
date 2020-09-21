@@ -57,7 +57,7 @@ CLASS ZCL_ABAPGIT_GUI_FUNCTIONS IMPLEMENTATION.
         " Everything after Windows XP is reported as Windows XP
         rv_result = abap_true.
       WHEN OTHERS.
-        rv_result = abap_true.
+        rv_result = abap_false.
     ENDCASE.
   ENDMETHOD.
 ENDCLASS.
