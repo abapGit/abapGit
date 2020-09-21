@@ -200,8 +200,6 @@ CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
                        iv_argument = lv_argument )       = abap_true
         OR check_lock( iv_tabname = 'VCLSTRUCT'
                        iv_argument = lv_argument_langu ) = abap_true
-        OR check_lock( iv_tabname = 'VCLSTRUC'
-                       iv_argument = lv_argument )       = abap_true
         OR check_lock( iv_tabname = 'VCLMF'
                        iv_argument = lv_argument )       = abap_true.
 

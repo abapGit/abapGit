@@ -1,4 +1,34 @@
-CLASS ltcl_test DEFINITION
+CLASS ltcl_get_t100_longtext DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
+
+  PUBLIC SECTION.
+    INTERFACES if_t100_message.
+    METHODS test01 FOR TESTING.
+
+ENDCLASS.
+
+CLASS ltcl_get_t100_longtext IMPLEMENTATION.
+
+  METHOD test01.
+
+    DATA lo_cut TYPE REF TO zcl_abapgit_message_helper.
+    DATA lv_result TYPE string.
+
+    if_t100_message~t100key-msgid = '00'.
+    if_t100_message~t100key-msgno = '058'.
+    if_t100_message~t100key-attr1 = 'ATTR'.
+
+    CREATE OBJECT lo_cut
+      EXPORTING
+        ii_t100_message = me.
+
+    lv_result = lo_cut->get_t100_longtext( ).
+    cl_abap_unit_assert=>assert_not_initial( lv_result ).
+
+  ENDMETHOD.
+
+ENDCLASS.
+
+CLASS ltcl_set_msg_vars_for_clike DEFINITION
   FOR TESTING
   DURATION SHORT
   RISK LEVEL HARMLESS.
@@ -26,7 +56,7 @@ CLASS ltcl_test DEFINITION
           is_msg  TYPE ty_msg.
 ENDCLASS.
 
-CLASS ltcl_test IMPLEMENTATION.
+CLASS ltcl_set_msg_vars_for_clike IMPLEMENTATION.
   METHOD test_set_msg_b.
     CONSTANTS:
       lc_text_b TYPE string VALUE '0123456789012345678901234567890123456789012345678 0123456789',

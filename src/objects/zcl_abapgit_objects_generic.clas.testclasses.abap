@@ -13,7 +13,7 @@ CLASS ltcl_test IMPLEMENTATION.
   METHOD serialize.
 
     DATA: lo_cut  TYPE REF TO zcl_abapgit_objects_generic,
-          lo_xml  TYPE REF TO zcl_abapgit_xml_output,
+          li_xml  TYPE REF TO zif_abapgit_xml_output,
           ls_item TYPE zif_abapgit_definitions=>ty_item.
 
 * assumption: this object exists in all SAP systems
@@ -24,9 +24,9 @@ CLASS ltcl_test IMPLEMENTATION.
       EXPORTING
         is_item = ls_item.
 
-    CREATE OBJECT lo_xml.
+    CREATE OBJECT li_xml TYPE zcl_abapgit_xml_output.
 
-    lo_cut->serialize( lo_xml ).
+    lo_cut->serialize( li_xml ).
 * checks that it does not dump
 
   ENDMETHOD.

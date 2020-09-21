@@ -587,16 +587,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
   METHOD stage_selected.
 
-    DATA: lv_string TYPE string,
-          lt_fields TYPE tihttpnvp,
-          ls_file   TYPE zif_abapgit_definitions=>ty_file.
+    DATA:
+      lt_fields TYPE tihttpnvp,
+      ls_file   TYPE zif_abapgit_definitions=>ty_file.
 
-    FIELD-SYMBOLS: <ls_file>   LIKE LINE OF ms_files-local,
-                   <ls_status> LIKE LINE OF ms_files-status,
-                   <ls_item>   LIKE LINE OF lt_fields.
+    FIELD-SYMBOLS:
+      <ls_file>   LIKE LINE OF ms_files-local,
+      <ls_status> LIKE LINE OF ms_files-status,
+      <ls_item>   LIKE LINE OF lt_fields.
 
-    lv_string = zcl_abapgit_utils=>translate_postdata( it_postdata ).
-    lt_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_string ).
+    lt_fields = zcl_abapgit_html_action_utils=>parse_post_form_data( it_postdata ).
 
     IF lines( lt_fields ) = 0.
       zcx_abapgit_exception=>raise( 'process_stage_list: empty list' ).
@@ -662,34 +662,32 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     DATA: lo_stage  TYPE REF TO zcl_abapgit_stage,
           lt_fields TYPE tihttpnvp.
 
-    CLEAR: ei_page, ev_state.
-
-    CASE iv_action.
+    CASE ii_event->mv_action.
       WHEN c_action-stage_all.
 
         lo_stage = stage_all( ).
 
-        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
+        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_commit
           EXPORTING
             io_repo  = mo_repo
             io_stage = lo_stage.
 
-        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN c_action-stage_commit.
 
-        lo_stage = stage_selected( it_postdata ).
+        lo_stage = stage_selected( ii_event->mt_postdata ).
 
-        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_commit
+        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_commit
           EXPORTING
             io_repo  = mo_repo
             io_stage = lo_stage.
 
-        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN c_action-stage_filter.
 
-        lt_fields = zcl_abapgit_html_action_utils=>parse_fields( concat_lines_of( table = it_postdata ) ).
+        lt_fields = zcl_abapgit_html_action_utils=>parse_post_form_data( ii_event->mt_postdata ).
 
         zcl_abapgit_html_action_utils=>get_field(
           EXPORTING
@@ -698,23 +696,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           CHANGING
             cg_field = mv_filter_value ).
 
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
       WHEN zif_abapgit_definitions=>c_action-go_patch.                         " Go Patch page
 
-        lo_stage = stage_selected( it_postdata ).
-        ei_page  = get_page_patch( lo_stage ).
-        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+        lo_stage = stage_selected( ii_event->mt_postdata ).
+        rs_handled-page  = get_page_patch( lo_stage ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN OTHERS.
-        super->zif_abapgit_gui_event_handler~on_event(
-          EXPORTING
-            iv_action    = iv_action
-            iv_getdata   = iv_getdata
-            it_postdata  = it_postdata
-          IMPORTING
-            ei_page      = ei_page
-            ev_state     = ev_state ).
+        rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
     ENDCASE.
 
   ENDMETHOD.

@@ -8,7 +8,7 @@ CLASS zcl_abapgit_object_tabl_compar DEFINITION
 
     METHODS constructor
       IMPORTING
-        !io_local TYPE REF TO zcl_abapgit_xml_input .
+        !ii_local TYPE REF TO zif_abapgit_xml_input.
   PROTECTED SECTION.
 
     TYPES:
@@ -18,7 +18,7 @@ CLASS zcl_abapgit_object_tabl_compar DEFINITION
       tty_seu_obj TYPE STANDARD TABLE OF seu_obj
                            WITH NON-UNIQUE DEFAULT KEY .
 
-    DATA mo_local TYPE REF TO zcl_abapgit_xml_input .
+    DATA mi_local TYPE REF TO zif_abapgit_xml_input.
 
     METHODS get_where_used_recursive
       IMPORTING
@@ -39,8 +39,8 @@ CLASS zcl_abapgit_object_tabl_compar DEFINITION
         zcx_abapgit_exception .
     METHODS validate
       IMPORTING
-        !io_remote_version TYPE REF TO zcl_abapgit_xml_input
-        !io_local_version  TYPE REF TO zcl_abapgit_xml_input
+        !ii_remote_version TYPE REF TO zif_abapgit_xml_input
+        !ii_local_version  TYPE REF TO zif_abapgit_xml_input
         !ii_log            TYPE REF TO zif_abapgit_log
       RETURNING
         VALUE(rv_message)  TYPE string
@@ -52,12 +52,12 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TABL_COMPAR IMPLEMENTATION.
+CLASS zcl_abapgit_object_tabl_compar IMPLEMENTATION.
 
 
   METHOD constructor.
 
-    mo_local = io_local.
+    mi_local = ii_local.
 
   ENDMETHOD.
 
@@ -151,7 +151,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_COMPAR IMPLEMENTATION.
           ls_item                  TYPE zif_abapgit_definitions=>ty_item,
           lv_inconsistent          TYPE abap_bool.
 
-    io_remote_version->read(
+    ii_remote_version->read(
       EXPORTING
         iv_name = 'DD02V'
       CHANGING
@@ -162,13 +162,13 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_COMPAR IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    io_remote_version->read(
+    ii_remote_version->read(
       EXPORTING
         iv_name       = 'DD03P_TABLE'
       CHANGING
         cg_data       = lt_previous_table_fields ).
 
-    io_local_version->read(
+    ii_local_version->read(
       EXPORTING
         iv_name       = 'DD03P_TABLE'
       CHANGING
@@ -226,8 +226,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL_COMPAR IMPLEMENTATION.
   METHOD zif_abapgit_comparator~compare.
 
     rs_result-text = validate(
-      io_remote_version = io_remote
-      io_local_version  = mo_local
+      ii_remote_version = ii_remote
+      ii_local_version  = mi_local
       ii_log            = ii_log ).
 
   ENDMETHOD.

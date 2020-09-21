@@ -54,11 +54,6 @@ CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
         !it_post_fields TYPE tihttpnvp
       RAISING
         zcx_abapgit_exception .
-    METHODS parse_post
-      IMPORTING
-        !it_postdata          TYPE cnht_post_data_tab
-      RETURNING
-        VALUE(rt_post_fields) TYPE tihttpnvp .
     METHODS render_dot_abapgit_reqs
       IMPORTING
         ii_html         TYPE REF TO zif_abapgit_html
@@ -80,23 +75,13 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_SETT IMPLEMENTATION.
 
 
   METHOD constructor.
     super->constructor( ).
     ms_control-page_title = 'Repository Settings'.
     mo_repo = io_repo.
-  ENDMETHOD.
-
-
-  METHOD parse_post.
-
-    DATA lv_serialized_post_data TYPE string.
-
-    lv_serialized_post_data = zcl_abapgit_utils=>translate_postdata( it_postdata ).
-    rt_post_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_serialized_post_data ).
-
   ENDMETHOD.
 
 
@@ -352,7 +337,7 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
     DATA: lt_post_fields TYPE tihttpnvp,
           lv_msg         TYPE string.
 
-    lt_post_fields = parse_post( it_postdata ).
+    lt_post_fields = zcl_abapgit_html_action_utils=>parse_post_form_data( it_postdata ).
 
     save_dot_abap( lt_post_fields ).
     save_remotes( lt_post_fields ).
@@ -492,10 +477,13 @@ CLASS zcl_abapgit_gui_page_repo_sett IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    CASE iv_action.
+    CASE ii_event->mv_action.
       WHEN c_action-save_settings.
-        save( it_postdata ).
-        ev_state = zcl_abapgit_gui=>c_event_state-go_back.
+        save( ii_event->mt_postdata ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+      WHEN OTHERS.
+        rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
+
     ENDCASE.
 
   ENDMETHOD.

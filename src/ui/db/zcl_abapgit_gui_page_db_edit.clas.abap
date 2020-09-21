@@ -52,18 +52,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
 
   METHOD dbcontent_decode.
 
-    DATA: lt_fields TYPE tihttpnvp,
-          lv_string TYPE string.
+    DATA lt_fields TYPE tihttpnvp.
 
+    lt_fields = zcl_abapgit_html_action_utils=>parse_post_form_data(
+      it_post_data = it_postdata
+      iv_upper_cased = abap_true ).
 
-    lv_string = zcl_abapgit_utils=>translate_postdata( it_postdata ).
-
-    lv_string = cl_http_utility=>unescape_url( lv_string ).
-
-    rs_content = zcl_abapgit_html_action_utils=>dbkey_decode( lv_string ).
-
-    lt_fields = zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( lv_string ).
-
+    zcl_abapgit_html_action_utils=>get_field(
+      EXPORTING
+        iv_name = 'TYPE'
+        it_field = lt_fields
+      CHANGING
+        cg_field = rs_content-type ).
+    zcl_abapgit_html_action_utils=>get_field(
+      EXPORTING
+        iv_name = 'VALUE'
+        it_field = lt_fields
+      CHANGING
+        cg_field = rs_content-value ).
     zcl_abapgit_html_action_utils=>get_field(
       EXPORTING
         iv_name = 'XMLDATA'
@@ -143,11 +149,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
 
     DATA: ls_db TYPE zif_abapgit_persistence=>ty_content.
 
-    CASE iv_action.
+    CASE ii_event->mv_action.
       WHEN c_action-update.
-        ls_db = dbcontent_decode( it_postdata ).
+        ls_db = dbcontent_decode( ii_event->mt_postdata ).
         update( ls_db ).
-        ev_state = zcl_abapgit_gui=>c_event_state-go_back.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
+      WHEN OTHERS.
+        rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
     ENDCASE.
 
   ENDMETHOD.

@@ -245,15 +245,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
 
   METHOD decode_merge.
 
-    DATA: lv_string TYPE string,
-          lt_fields TYPE tihttpnvp.
-
+    DATA lt_fields TYPE tihttpnvp.
     FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
 
 
-    lv_string = zcl_abapgit_utils=>translate_postdata( it_postdata ).
-
-    lt_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_string ).
+    lt_fields = zcl_abapgit_html_action_utils=>parse_post_form_data( it_postdata ).
 
     READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'source'.
     ASSERT sy-subrc = 0.
@@ -411,36 +407,29 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
           lo_merge TYPE REF TO zcl_abapgit_gui_page_merge.
 
 
-    CASE iv_action.
+    CASE ii_event->mv_action.
       WHEN c_actions-refresh.
         refresh( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-uncompress.
         mv_compress = abap_false.
         refresh( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-compress.
         mv_compress = abap_true.
         refresh( ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-merge.
-        ls_merge = decode_merge( it_postdata ).
+        ls_merge = decode_merge( ii_event->mt_postdata ).
         CREATE OBJECT lo_merge
           EXPORTING
             io_repo   = mo_repo
             iv_source = ls_merge-source
             iv_target = ls_merge-target.
-        ei_page = lo_merge.
-        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+        rs_handled-page = lo_merge.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN OTHERS.
-        super->zif_abapgit_gui_event_handler~on_event(
-          EXPORTING
-            iv_action    = iv_action
-            iv_getdata   = iv_getdata
-            it_postdata  = it_postdata
-          IMPORTING
-            ei_page      = ei_page
-            ev_state     = ev_state ).
+        rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
     ENDCASE.
 
   ENDMETHOD.

@@ -35,7 +35,7 @@ CLASS zcl_abapgit_objects_program DEFINITION PUBLIC INHERITING FROM zcl_abapgit_
            END OF ty_progdir.
 
     METHODS serialize_program
-      IMPORTING io_xml     TYPE REF TO zcl_abapgit_xml_output OPTIONAL
+      IMPORTING io_xml     TYPE REF TO zif_abapgit_xml_output OPTIONAL
                 is_item    TYPE zif_abapgit_definitions=>ty_item
                 io_files   TYPE REF TO zcl_abapgit_objects_files
                 iv_program TYPE programm OPTIONAL
@@ -165,7 +165,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
+CLASS zcl_abapgit_objects_program IMPLEMENTATION.
 
 
   METHOD add_tpool.
@@ -765,10 +765,10 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
                    <ls_field_int>   LIKE LINE OF lt_fieldlist_int.
 
     "#2746: relevant flag values (taken from include MSEUSBIT)
-    CONSTANTS:    lc_flg1ddf TYPE x VALUE '20',
-                  lc_flg3fku TYPE x VALUE '08',
-                  lc_flg3for TYPE x VALUE '04',
-                  lc_flg3fdu TYPE x VALUE '02'.
+    CONSTANTS: lc_flg1ddf TYPE x VALUE '20',
+               lc_flg3fku TYPE x VALUE '08',
+               lc_flg3for TYPE x VALUE '04',
+               lc_flg3fdu TYPE x VALUE '02'.
 
 
     CALL FUNCTION 'RS_SCREEN_LIST'
@@ -875,7 +875,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
           lt_source       TYPE TABLE OF abaptxt255,
           lt_tpool        TYPE textpool_table,
           ls_tpool        LIKE LINE OF lt_tpool,
-          lo_xml          TYPE REF TO zcl_abapgit_xml_output.
+          li_xml          TYPE REF TO zif_abapgit_xml_output.
 
     IF iv_program IS INITIAL.
       lv_program_name = is_item-obj_name.
@@ -912,21 +912,21 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
     ls_progdir = read_progdir( lv_program_name ).
 
     IF io_xml IS BOUND.
-      lo_xml = io_xml.
+      li_xml = io_xml.
     ELSE.
-      CREATE OBJECT lo_xml.
+      CREATE OBJECT li_xml TYPE zcl_abapgit_xml_output.
     ENDIF.
 
-    lo_xml->add( iv_name = 'PROGDIR'
+    li_xml->add( iv_name = 'PROGDIR'
                  ig_data = ls_progdir ).
     IF ls_progdir-subc = '1' OR ls_progdir-subc = 'M'.
       lt_dynpros = serialize_dynpros( lv_program_name ).
-      lo_xml->add( iv_name = 'DYNPROS'
+      li_xml->add( iv_name = 'DYNPROS'
                    ig_data = lt_dynpros ).
 
       ls_cua = serialize_cua( lv_program_name ).
       IF NOT ls_cua IS INITIAL.
-        lo_xml->add( iv_name = 'CUA'
+        li_xml->add( iv_name = 'CUA'
                      ig_data = ls_cua ).
       ENDIF.
     ENDIF.
@@ -936,12 +936,12 @@ CLASS ZCL_ABAPGIT_OBJECTS_PROGRAM IMPLEMENTATION.
       DELETE lt_tpool INDEX sy-tabix.
     ENDIF.
 
-    lo_xml->add( iv_name = 'TPOOL'
+    li_xml->add( iv_name = 'TPOOL'
                  ig_data = add_tpool( lt_tpool ) ).
 
     IF NOT io_xml IS BOUND.
       io_files->add_xml( iv_extra = iv_extra
-                         io_xml   = lo_xml ).
+                         ii_xml   = li_xml ).
     ENDIF.
 
     io_files->add_abap( iv_extra = iv_extra

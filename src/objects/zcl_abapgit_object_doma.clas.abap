@@ -31,13 +31,13 @@ CLASS zcl_abapgit_object_doma DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
     METHODS serialize_texts
       IMPORTING
-        !io_xml   TYPE REF TO zcl_abapgit_xml_output
+        !ii_xml   TYPE REF TO zif_abapgit_xml_output
         !it_dd07v TYPE dd07v_tab
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_texts
       IMPORTING
-        !io_xml   TYPE REF TO zcl_abapgit_xml_input
+        !ii_xml   TYPE REF TO zif_abapgit_xml_input
         !is_dd01v TYPE dd01v
         !it_dd07v TYPE dd07v_tab
       RAISING
@@ -66,13 +66,13 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
 
     lv_name = ms_item-obj_name.
 
-    io_xml->read( EXPORTING iv_name = 'I18N_LANGS'
+    ii_xml->read( EXPORTING iv_name = 'I18N_LANGS'
                   CHANGING  cg_data = lt_i18n_langs ).
 
-    io_xml->read( EXPORTING iv_name = 'DD01_TEXTS'
+    ii_xml->read( EXPORTING iv_name = 'DD01_TEXTS'
                   CHANGING  cg_data = lt_dd01_texts ).
 
-    io_xml->read( EXPORTING iv_name = 'DD07_TEXTS'
+    ii_xml->read( EXPORTING iv_name = 'DD07_TEXTS'
                   CHANGING  cg_data = lt_dd07_texts ).
 
     SORT lt_i18n_langs.
@@ -143,7 +143,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
                    <ls_dd01_text> LIKE LINE OF lt_dd01_texts,
                    <ls_dd07_text> LIKE LINE OF lt_dd07_texts.
 
-    IF io_xml->i18n_params( )-serialize_master_lang_only = abap_true.
+    IF ii_xml->i18n_params( )-serialize_master_lang_only = abap_true.
       RETURN.
     ENDIF.
 
@@ -198,13 +198,13 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
     SORT lt_dd07_texts BY valpos ASCENDING ddlanguage ASCENDING.
 
     IF lines( lt_i18n_langs ) > 0.
-      io_xml->add( iv_name = 'I18N_LANGS'
+      ii_xml->add( iv_name = 'I18N_LANGS'
                    ig_data = lt_i18n_langs ).
 
-      io_xml->add( iv_name = 'DD01_TEXTS'
+      ii_xml->add( iv_name = 'DD01_TEXTS'
                    ig_data = lt_dd01_texts ).
 
-      io_xml->add( iv_name = 'DD07_TEXTS'
+      ii_xml->add( iv_name = 'DD07_TEXTS'
                    ig_data = lt_dd07_texts ).
     ENDIF.
 
@@ -284,7 +284,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'error from DDIF_DOMA_PUT' ).
     ENDIF.
 
-    deserialize_texts( io_xml   = io_xml
+    deserialize_texts( ii_xml   = io_xml
                        is_dd01v = ls_dd01v
                        it_dd07v = lt_dd07v ).
 
@@ -395,10 +395,10 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
     io_xml->add( iv_name = 'DD07V_TAB'
                  ig_data = lt_dd07v ).
 
-    serialize_texts( io_xml   = io_xml
+    serialize_texts( ii_xml   = io_xml
                      it_dd07v = lt_dd07v ).
 
-    serialize_longtexts( io_xml         = io_xml
+    serialize_longtexts( ii_xml         = io_xml
                          iv_longtext_id = c_longtext_id_doma ).
 
   ENDMETHOD.

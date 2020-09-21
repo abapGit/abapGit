@@ -61,11 +61,6 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
       IMPORTING
         !it_post_fields TYPE tihttpnvp .
     METHODS validate_settings .
-    METHODS parse_post
-      IMPORTING
-        !it_postdata          TYPE cnht_post_data_tab
-      RETURNING
-        VALUE(rt_post_fields) TYPE tihttpnvp .
     METHODS persist_settings
       RAISING
         zcx_abapgit_exception .
@@ -121,16 +116,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
         OR <ls_post_field>-value = 'on' ).     "HTML value when using Netweaver Java GUI
       rv_return = abap_true.
     ENDIF.
-  ENDMETHOD.
-
-
-  METHOD parse_post.
-
-    DATA lv_serialized_post_data TYPE string.
-
-    lv_serialized_post_data = zcl_abapgit_utils=>translate_postdata( it_postdata ).
-    rt_post_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_serialized_post_data ).
-
   ENDMETHOD.
 
 
@@ -717,9 +702,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     DATA:
       lt_post_fields TYPE tihttpnvp.
 
-    CASE iv_action.
+    CASE ii_event->mv_action.
       WHEN c_action-save_settings.
-        lt_post_fields = parse_post( it_postdata ).
+        lt_post_fields = zcl_abapgit_html_action_utils=>parse_post_form_data( ii_event->mt_postdata ).
 
         post( lt_post_fields ).
         validate_settings( ).
@@ -730,11 +715,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
           persist_settings( ).
         ENDIF.
 
-        ev_state = zcl_abapgit_gui=>c_event_state-go_back.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
       WHEN c_action-change_proxy_bypass.
         mt_proxy_bypass = zcl_abapgit_ui_factory=>get_popups( )->popup_proxy_bypass( mt_proxy_bypass ).
 
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
     ENDCASE.
 
   ENDMETHOD.

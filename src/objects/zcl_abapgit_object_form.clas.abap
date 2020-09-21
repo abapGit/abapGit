@@ -129,12 +129,12 @@ CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
   METHOD compress_lines.
 
     DATA lv_string TYPE string.
-    DATA lo_xml TYPE REF TO zcl_abapgit_xml_output.
+    DATA li_xml TYPE REF TO zif_abapgit_xml_output.
 
-    CREATE OBJECT lo_xml.
-    lo_xml->add( iv_name = c_objectname_tdlines
+    CREATE OBJECT li_xml TYPE zcl_abapgit_xml_output.
+    li_xml->add( iv_name = c_objectname_tdlines
                  ig_data = it_lines ).
-    lv_string = lo_xml->render( ).
+    lv_string = li_xml->render( ).
     IF lv_string IS NOT INITIAL.
       mo_files->add_string( iv_extra  =
                     build_extra_from_header( is_form_data-form_header )
@@ -158,7 +158,7 @@ CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
   METHOD extract_tdlines.
 
     DATA lv_string TYPE string.
-    DATA lo_xml TYPE REF TO zcl_abapgit_xml_input.
+    DATA li_xml TYPE REF TO zif_abapgit_xml_input.
 
     TRY.
         lv_string = mo_files->read_string( iv_extra =
@@ -172,8 +172,8 @@ CLASS ZCL_ABAPGIT_OBJECT_FORM IMPLEMENTATION.
 
     ENDTRY.
 
-    CREATE OBJECT lo_xml EXPORTING iv_xml = lv_string.
-    lo_xml->read( EXPORTING iv_name = c_objectname_tdlines
+    CREATE OBJECT li_xml TYPE zcl_abapgit_xml_input EXPORTING iv_xml = lv_string.
+    li_xml->read( EXPORTING iv_name = c_objectname_tdlines
                   CHANGING  cg_data = rt_lines ).
 
   ENDMETHOD.
