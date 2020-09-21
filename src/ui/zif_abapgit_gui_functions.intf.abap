@@ -8,6 +8,10 @@ INTERFACE zif_abapgit_gui_functions
 
     is_sapgui_for_java
       RETURNING
+        VALUE(rv_result) TYPE abap_bool,
+
+    is_sapgui_for_windows
+      RETURNING
         VALUE(rv_result) TYPE abap_bool.
 
 ENDINTERFACE.
