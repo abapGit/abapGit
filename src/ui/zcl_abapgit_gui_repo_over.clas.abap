@@ -482,7 +482,7 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
 
     _add_column(
-      iv_tech_name = 'CREATED_TAT'
+      iv_tech_name = 'CREATED_AT'
       iv_display_name = 'Created at'
       iv_css_class = 'ro-detail'
       iv_add_tz = abap_true ).
