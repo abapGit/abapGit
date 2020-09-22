@@ -143,7 +143,7 @@ CLASS ltd_mock IMPLEMENTATION.
     add_line( |       <TYPEID>CL_SWF_CNT_HRS_PERSISTENCE</TYPEID>| ).
     add_line( |       <CATID>CL</CATID>| ).
     add_line( |      </OWN_ID>| ).
-    add_line( |      <PROPSTRING>23</PROPSTRING>| ).
+    add_line( |      <PROPSTRING>23000000000008</PROPSTRING>| ).
     add_line( |      <XMLVERSION>0002</XMLVERSION>| ).
     add_line( |      <INTERNAL>X</INTERNAL>| ).
     add_line( |      <EXDEFINITN>| ).
@@ -156,20 +156,20 @@ CLASS ltd_mock IMPLEMENTATION.
     add_line( |      </EXDEFINITN>| ).
     add_line( |     </PROPERTIES>| ).
     add_line( |     <ELEMENTS>| ).
-    add_line( |      <A NAME="_ADHOC_OBJECTS:_Adhoc_Objects:" TYPE=":BO::h:0:0" PROPS="0C925A51" LTEXTS="EE014Ad Hoc ObjectsAd Hoc Objects of Workflow Instance"/>| ).
-    add_line( |      <B NAME="_ATTACH_OBJECTS:_Attach_Objects:" TYPE="SOFM:BO::h:0:0" PROPS="0C925A51" LTEXTS="EE011AttachmentsAttachments of Workflow Instance"/>| ).
-    add_line( |      <C NAME="_WI_ACTUAL_AGENT:_Wi_Actual_Agent:" TYPE="::WFSYST-AGENT:C:0:0" PROPS="0C002A11" LTEXTS="EE005AgentActual Agent of Workflow Activity"/>| ).
-    add_line( |      <D NAME="_WI_GROUP_ID:_Wi_Group_ID:" TYPE=":BO::u:0:0" PROPS="0C921A11" LTEXTS="EE017Grouping Charact.Grouping Characteristic for Workflow Instances"/>| ).
-    add_line( |      <E NAME="_WORKITEM:_Workitem:" TYPE="WORKINGWI:BO:::0:0" PROPS="0C921A11" LTEXTS="EE004StepStep Instance"/>| ).
-    add_line( |      <F NAME="_WF_TICKET:_Wf_Ticket:" TYPE="::SWWTTICKET:h:0:0" PROPS="0C000271" LTEXTS="EE018Transaction TicketTransaction Ticket"/>| ).
-    add_line( |      <G NAME="_RULE_RESULT:_Rule_Result:" TYPE="AAGENT:BO::u:0:0" PROPS="0C921A11" LTEXTS="EE006AgentsResult of Agent Determination"/>| ).
-    add_line( |      <H NAME="_RFC_DESTINATION:_Rfc_Destination:" TYPE="::RFCDEST:C:0:0" PROPS="0C001231" LTEXTS="EE015RFC DestinationRFC Destination"/>| ).
-    add_line( |      <I NAME="_ATTACH_COMMENT_OBJECTS:_Attach_Comment_Objects:" TYPE="SOFM:BO::h:0:0" PROPS="0C925A71" LTEXTS="EE007CommentComment"/>| ).
-    add_line( |      <J NAME="_METHOD_OBJECTS:_Method_Objects:" TYPE=":BO::h:0:0" PROPS="0C925A51" LTEXTS="EE020Second.Method ObjectSecondary Method Objects of Workflow Activity"/>| ).
-    add_line( |      <K NAME="_START_EVENT_IDENTIFIER:_Start_Event_Identifier:" TYPE="CL_SWF_UTL_EVT_IDENTIFIER:CL::h:0:0" PROPS="0CC20231" LTEXTS="EE017ID of Start EventID of Start Event"/>| ).
-    add_line( |      <L NAME="_WF_TYPENAME_MAPPING:_WF_Typename_Mapping:" TYPE="::SWF_CNT_MAPPING_TAB:h:0:0" PROPS="0C120271" LTEXTS="EE022Relation of Type NamesRelation of Type Names (Original and Copy)"/>| ).
-    add_line( |      <M NAME="NEWINTERNALMODE:NewInternalMode:" TYPE="::BAPIBUS1006_HEAD-NEWINTERNALMODE:C:1:0" PROPS="0C003301"/>| ).
-    add_line( |      <N NAME="_WI_OBJECT_ID:_Wi_Object_ID:" TYPE="BUS1006:BO:::0:0" PROPS="0C921A11"/>| ).
+*    add_line( |      <A NAME="_ADHOC_OBJECTS:_Adhoc_Objects:" TYPE=":BO::h:0:0" PROPS="0C925A51"/>| ).
+*    add_line( |      <B NAME="_ATTACH_OBJECTS:_Attach_Objects:" TYPE="SOFM:BO::h:0:0" PROPS="0C925A51"/>| ).
+*    add_line( |      <C NAME="_WI_ACTUAL_AGENT:_Wi_Actual_Agent:" TYPE="::WFSYST-AGENT:C:0:0" PROPS="0C002A11"/>| ).
+*    add_line( |      <D NAME="_WI_GROUP_ID:_Wi_Group_ID:" TYPE=":BO::u:0:0" PROPS="0C921A11"/>| ).
+*    add_line( |      <E NAME="_WORKITEM:_Workitem:" TYPE="WORKINGWI:BO::u:0:0" PROPS="0C921A11"/>| ).
+*    add_line( |      <F NAME="_WF_TICKET:_Wf_Ticket:" TYPE="::SWWTTICKET:h:0:0" PROPS="0C000271"/>| ).
+*    add_line( |      <G NAME="_RULE_RESULT:_Rule_Result:" TYPE="AAGENT:BO::u:0:0" PROPS="0C921A11"/>| ).
+*    add_line( |      <H NAME="_RFC_DESTINATION:_Rfc_Destination:" TYPE="::RFCDEST:C:0:0" PROPS="0C001231"/>| ).
+*    add_line( |      <I NAME="_ATTACH_COMMENT_OBJECTS:_Attach_Comment_Objects:" TYPE="SOFM:BO::h:0:0" PROPS="0C925A71"/>| ).
+*    add_line( |      <J NAME="_METHOD_OBJECTS:_Method_Objects:" TYPE=":BO::h:0:0" PROPS="0C925A51"/>| ).
+*    add_line( |      <K NAME="_START_EVENT_IDENTIFIER:_Start_Event_Identifier:" TYPE="CL_SWF_UTL_EVT_IDENTIFIER:CL::u:0:0" PROPS="0CC20231"/>| ).
+*    add_line( |      <L NAME="_WF_TYPENAME_MAPPING:_WF_Typename_Mapping:" TYPE="::SWF_CNT_MAPPING_TAB:h:0:0" PROPS="0C120271"/>| ).
+*    add_line( |      <M NAME="NEWINTERNALMODE:NewInternalMode:" TYPE="::BAPIBUS1006_HEAD-NEWINTERNALMODE:C:1:0" PROPS="0C003301"/>| ).
+*    add_line( |      <N NAME="_WI_OBJECT_ID:_Wi_Object_ID:" TYPE="BUS1006:BO:::0:0" PROPS="0C921A11"/>| ).
     add_line( |      <O NAME="FOO:Foo:" TYPE="::CHAR10:h:10:0" PROPS="0C005241"/>| ).
     add_line( |     </ELEMENTS>| ).
     add_line( |    </CONTAINER>| ).
@@ -200,7 +200,7 @@ CLASS ltc_turnaround_test DEFINITION FINAL FOR TESTING
   PRIVATE SECTION.
 
     DATA mo_mock TYPE REF TO ltd_mock.
-    DATA mo_output_xml TYPE REF TO zcl_abapgit_xml_output.
+    DATA mi_output_xml TYPE REF TO zif_abapgit_xml_output.
     DATA mo_cut    TYPE REF TO zif_abapgit_object.
 
     CLASS-METHODS class_setup.
@@ -303,9 +303,9 @@ CLASS ltc_turnaround_test IMPLEMENTATION.
 
   METHOD serialize_task.
 
-    CREATE OBJECT mo_output_xml TYPE zcl_abapgit_xml_output.
-    mo_cut->serialize( io_xml = mo_output_xml ).
-    rv_result = mo_output_xml->render( ).
+    CREATE OBJECT mi_output_xml TYPE zcl_abapgit_xml_output.
+    mo_cut->serialize( io_xml = mi_output_xml ).
+    rv_result = mi_output_xml->render( ).
 
   ENDMETHOD.
 

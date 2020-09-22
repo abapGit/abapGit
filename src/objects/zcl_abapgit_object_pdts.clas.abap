@@ -49,15 +49,14 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
   METHOD constructor.
 
-
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
 
     IF is_experimental( ) = abap_false.
       "Known issues:
-      "- Container not deserialized
+      "- Container texts not de/serialized properly (functionnally OK)
       "- More testing needed
-      zcx_abapgit_exception=>raise( 'PDTS not fully implemented, turn on experimental features' ).
+      zcx_abapgit_exception=>raise( 'PDTS not fully implemented, turn on experimental features to use' ).
     ENDIF.
 
     ms_objkey-otype = c_object_type_task.
@@ -87,10 +86,6 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
                    <ls_method_binding>          LIKE LINE OF ls_task-method_binding,
                    <ls_starting_events_binding> TYPE hrs1212,
                    <ls_term_events_binding>     TYPE hrs1212.
-
-    "Todo: Delete info note once it all works
-    "Original code from https://app.assembla.com/spaces/saplink-plugins/subversion/source/HEAD/trunk/Workflow
-    "called function 'RH_TASK_ATTRIBUTES_RUNTIME'
 
     cl_workflow_factory=>create_ts(
       EXPORTING
@@ -156,7 +151,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         include_initial_values     = abap_true
         include_typenames          = abap_true
         include_change_data        = abap_true
-        include_texts              = abap_true
+        include_texts              = abap_false
         include_extension_elements = abap_true
         save_delta_handling_info   = abap_true
         use_xslt                   = abap_false
@@ -187,16 +182,26 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
       li_child_iterator = li_children->create_iterator( ).
 
       DO.
+
         li_element = li_child_iterator->get_next( ).
 
         IF li_element IS NOT BOUND.
           EXIT.
         ENDIF.
 
+        "Remove system container elements - causing too much trouble
+        "Todo: I don't like this lettered naming, but this is possibly temporary
+        DATA(name) = li_element->get_name( ).
+        IF `ABCDEFGHIJKLMN` CS name.
+          li_element->remove_node( ).
+          li_child_iterator->reset( ).
+          CONTINUE.
+        ENDIF.
+
         li_attributes = li_element->get_attributes( ).
 
         lv_length = li_attributes->get_length( ).
-        li_attributes->remove_named_item( name = 'CHGDTA' )  ##no_text.
+        li_attributes->remove_named_item( name = 'CHGDTA' ). "#EC NOTEXT
         lv_length = li_attributes->get_length( ).
 
       ENDDO.
@@ -287,6 +292,31 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
     ENDLOOP.
 
+    li_document = io_xml->get_raw( ).
+
+    li_container_element = li_document->find_from_name_ns( 'CONTAINER' ).
+
+    IF li_container_element IS BOUND.
+
+      li_document = cl_ixml=>create( )->create_document( ).
+
+      li_stream = cl_ixml=>create( )->create_stream_factory( )->create_ostream_xstring( lv_xml_string ).
+
+      li_document->append_child( li_container_element ).
+
+      cl_ixml=>create( )->create_renderer(
+          document = li_document
+          ostream  = li_stream
+      )->render( ).
+
+      lo_inst->container->import_from_xml(
+        EXPORTING
+          xml_stream     = lv_xml_string
+        IMPORTING
+          exception_list = lt_exception_list ).
+
+    ENDIF.
+
     lo_inst->change_start_events_complete(
       EXPORTING
         starting_events    = ls_task-starting_events
@@ -352,31 +382,6 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
     check_subrc_for( `SAVE_STANDARD_TASK` ).                "#EC NOTEXT
 
-    li_document = io_xml->get_raw( ).
-
-    li_container_element = li_document->find_from_name_ns( 'CONTAINER' ).
-
-    IF li_container_element IS BOUND.
-
-      li_document = cl_ixml=>create( )->create_document( ).
-
-      li_stream = cl_ixml=>create( )->create_stream_factory( )->create_ostream_xstring( lv_xml_string ).
-
-      li_document->append_child( li_container_element ).
-
-      cl_ixml=>create( )->create_renderer(
-          document = li_document
-          ostream  = li_stream
-      )->render( ).
-
-      lo_inst->container->import_from_xml(
-        EXPORTING
-          xml_stream     = lv_xml_string
-        IMPORTING
-          exception_list = lt_exception_list ).
-
-    ENDIF.
-
     tadir_insert( iv_package ).
 
   ENDMETHOD.
@@ -396,9 +401,6 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         OTHERS              = 4.  "#EC SUBRC_OK
 
     check_subrc_for( `RH_HRSOBJECT_DELETE` ).
-
-    "Todo: delete this comment when stable
-    "Previous code used FUNCTION 'RH_TASK_DELETE'
 
   ENDMETHOD.
 
