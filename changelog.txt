@@ -8,6 +8,20 @@ Legend
 + : added
 - : removed
 
+2020-09-22 v1.99.2
+------------------
+- Start removing GitHub 2FA implementation
+* fixes and harmonizes during startup
+* fix deletion of branches
+* Enhance result view of Code Inspector/Syntax Check
+* PROG, program class added to deserialization
+* SHI3 serialization and deserialization fixes
+* Performance improved during deserialize
+* Fix sort by created in repo overview
+* Split up global settings button
+* Refactoring, XML interfaces, HTML interfaces, event abstraction
+* Downport
+
 2020-09-03 v1.99.1
 ------------------
 ! exception class updated, might require update via ZABAPGIT_STANDALONE
