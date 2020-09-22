@@ -215,6 +215,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
         structure_description    = space
         structure_masterlanguage = mv_language
         structure_responsible    = sy-uname
+        structure_buffermode     = ls_head-buffermode
         development_class        = iv_package
       IMPORTING
         message                  = ls_msg

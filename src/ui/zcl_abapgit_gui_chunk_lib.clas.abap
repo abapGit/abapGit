@@ -189,10 +189,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     ro_menu->add(
       iv_txt = 'Performance Test'
-      iv_act = zif_abapgit_definitions=>c_action-performance_test
-    )->add(
-      iv_txt = 'Settings'
-      iv_act = zif_abapgit_definitions=>c_action-go_settings ).
+      iv_act = zif_abapgit_definitions=>c_action-performance_test ).
 
   ENDMETHOD.
 
