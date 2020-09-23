@@ -81,7 +81,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
+CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
 
   METHOD branches.
@@ -246,6 +246,8 @@ CLASS ZCL_ABAPGIT_GIT_TRANSPORT IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'branch delete not allowed' ).
     ELSEIF lv_string CP '*cannot lock ref*reference already exists*'.
       zcx_abapgit_exception=>raise( 'branch already exists' ).
+    ELSEIF lv_string CP '*invalid committer*'.
+      zcx_abapgit_exception=>raise( 'invalid committer' ).
     ENDIF.
 
   ENDMETHOD.
