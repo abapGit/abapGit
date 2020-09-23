@@ -154,6 +154,11 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
 
   METHOD advanced_submenu.
+    DATA: li_gui_functions        TYPE REF TO zif_abapgit_gui_functions,
+          lv_supports_ie_devtools TYPE abap_bool.
+
+    li_gui_functions = zcl_abapgit_ui_factory=>get_gui_functions( ).
+    lv_supports_ie_devtools = li_gui_functions->is_sapgui_for_windows( ).
 
     CREATE OBJECT ro_menu.
 
@@ -174,8 +179,15 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       iv_act = zif_abapgit_definitions=>c_action-changed_by
     )->add(
       iv_txt = 'Debug Info'
-      iv_act = zif_abapgit_definitions=>c_action-go_debuginfo
-    )->add(
+      iv_act = zif_abapgit_definitions=>c_action-go_debuginfo ).
+
+    IF lv_supports_ie_devtools = abap_true.
+      ro_menu->add(
+        iv_txt = 'Open IE DevTools'
+        iv_act = zif_abapgit_definitions=>c_action-ie_devtools ).
+    ENDIF.
+
+    ro_menu->add(
       iv_txt = 'Performance Test'
       iv_act = zif_abapgit_definitions=>c_action-performance_test ).
 
