@@ -9,7 +9,7 @@ CLASS lcl_abapgit_object_pdts_helper DEFINITION
                                       io_task  TYPE REF TO cl_workflow_general_task_def.
 
     CLASS-METHODS set_container_id IMPORTING iv_id   TYPE guid_32
-                                             io_task TYPE REF TO cl_workflow_general_task_def.
+                                             io_task TYPE REF TO cl_workflow_general_task_def.  "#EC NEEDED
 
 ENDCLASS.
 

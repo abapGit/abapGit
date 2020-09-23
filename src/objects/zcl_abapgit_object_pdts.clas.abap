@@ -12,25 +12,23 @@ CLASS zcl_abapgit_object_pdts DEFINITION
                                   iv_language TYPE spras
                         RAISING   zcx_abapgit_exception.
 
-    TYPES:
-      BEGIN OF ty_task,
-        short_text                 TYPE hr_mcshort,
-        plvar                      TYPE plvar,
-        wi_text                    TYPE witext,
-        method                     TYPE hrs1201,
-        method_binding             TYPE hrsmtbind,
-        starting_events            TYPE hrsevtab,
-        starting_events_binding    TYPE hrsevbind,
-        terminating_events         TYPE hrsetmtab,
-        terminating_events_binding TYPE hrsevbind,
-        descriptions               TYPE wstexts,
-      END OF ty_task .
+    TYPES: BEGIN OF ty_task,
+             short_text                 TYPE hr_mcshort,
+             plvar                      TYPE plvar,
+             wi_text                    TYPE witext,
+             method                     TYPE hrs1201,
+             method_binding             TYPE hrsmtbind,
+             starting_events            TYPE hrsevtab,
+             starting_events_binding    TYPE hrsevbind,
+             terminating_events         TYPE hrsetmtab,
+             terminating_events_binding TYPE hrsevbind,
+             descriptions               TYPE wstexts,
+           END OF ty_task .
 
   PRIVATE SECTION.
 
-    CONSTANTS:
-      c_subty_task_description TYPE hr_s_subty VALUE '0120',
-      c_object_type_task       TYPE hr_sotype VALUE 'TS'.
+    CONSTANTS: c_subty_task_description TYPE hr_s_subty VALUE '0120',
+               c_object_type_task       TYPE hr_sotype VALUE 'TS'.
 
     DATA ms_objkey TYPE hrsobject.
     DATA mv_objid TYPE hrobjid.
@@ -56,7 +54,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
       "Known issues:
       "- Container texts not de/serialized properly (functionnally OK)
       "- More testing needed
-      zcx_abapgit_exception=>raise( 'PDTS not fully implemented, turn on experimental features to use' ).
+      zcx_abapgit_exception=>raise( 'PDTS not fully implemented, enable experimental features to test it' )  ##NO_TEXT.
     ENDIF.
 
     ms_objkey-otype = c_object_type_task.
@@ -78,9 +76,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
           li_element        TYPE REF TO if_ixml_node,
           li_children       TYPE REF TO if_ixml_node_list,
           li_child_iterator TYPE REF TO if_ixml_node_iterator,
-          li_attributes     TYPE REF TO if_ixml_named_node_map,
-          lv_length         TYPE i,
-          lv_xml_stream     TYPE xstring.
+          li_attributes     TYPE REF TO if_ixml_named_node_map.
 
     FIELD-SYMBOLS: <ls_description>             TYPE hrs1002,
                    <ls_method_binding>          LIKE LINE OF ls_task-method_binding,
@@ -145,28 +141,28 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
     io_xml->add( iv_name = 'PDTS'
                  ig_data = ls_task ).
 
+    "Todo: For some reason customer elements' texts are not picked up, need to debug some more
     lo_inst->container->to_xml(
       EXPORTING
         include_null_values        = abap_true
         include_initial_values     = abap_true
         include_typenames          = abap_true
         include_change_data        = abap_true
-        include_texts              = abap_false
+        include_texts              = abap_false  "Todo: Get texts to work properly
         include_extension_elements = abap_true
         save_delta_handling_info   = abap_true
         use_xslt                   = abap_false
       IMPORTING
         xml_dom                    = li_xml_dom
-        xml_stream                 = lv_xml_stream
       EXCEPTIONS
         conversion_error           = 1
-        OTHERS                     = 2 ).
+        OTHERS                     = 2 ).                 "#EC SUBRC_OK
 
     check_subrc_for( `TO_XML` ).
 
     li_first_element ?= li_xml_dom->get_first_child( ).
 
-    li_elements = li_first_element->get_elements_by_tag_name( name = 'ELEMENTS' ). "#EC NOTEXT
+    li_elements = li_first_element->get_elements_by_tag_name( name = 'ELEMENTS' ) ##NO_TEXT.
 
     li_iterator = li_elements->create_iterator( ).
 
@@ -190,8 +186,9 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         ENDIF.
 
         "Remove system container elements - causing too much trouble
-        "Todo: I don't like this lettered naming, but this is possibly temporary
-        DATA(name) = li_element->get_name( ).
+        "Todo: I don't like this sequential-letter naming, but this is probably temporary
+        DATA name TYPE string.
+        name = li_element->get_name( ).
         IF `ABCDEFGHIJKLMN` CS name.
           li_element->remove_node( ).
           li_child_iterator->reset( ).
@@ -200,9 +197,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
         li_attributes = li_element->get_attributes( ).
 
-        lv_length = li_attributes->get_length( ).
-        li_attributes->remove_named_item( name = 'CHGDTA' ). "#EC NOTEXT
-        lv_length = li_attributes->get_length( ).
+        li_attributes->remove_named_item( name = 'CHGDTA' ) ##NO_TEXT.
 
       ENDDO.
 
@@ -242,11 +237,11 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         task_object         = lo_inst
       EXCEPTIONS
         text_exists_already = 1
-        OTHERS              = 2 ).
+        OTHERS              = 2 ).                        "#EC SUBRC_OK
 
     check_subrc_for( `CREATE_NEW_TS` ).
 
-    lo_gen_task ?= lo_inst.
+    lo_gen_task = lo_inst.
 
     lcl_abapgit_object_pdts_helper=>set_objid( iv_objid = mv_objid
                                                io_task  = lo_gen_task ).
@@ -259,7 +254,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         new_wi_text        = ls_task-wi_text
       EXCEPTIONS
         no_changes_allowed = 1
-        OTHERS             = 2 ).
+        OTHERS             = 2 ).                         "#EC SUBRC_OK
 
     check_subrc_for( `CHANGE_WI_TEXT` ).
 
@@ -270,9 +265,9 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         no_changes_allowed           = 1
         problem_method_web_enabling  = 2
         problem_method_phon_enabling = 3
-        OTHERS                       = 4 ).
+        OTHERS                       = 4 ).               "#EC SUBRC_OK
 
-    check_subrc_for( `CHANGE_METHOD` ).                     "#EC NOTEXT
+    check_subrc_for( `CHANGE_METHOD` )  ##NO_TEXT.
 
     LOOP AT ls_task-method_binding ASSIGNING <ls_method_binding>.
 
@@ -288,7 +283,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
           binding_could_not_be_deleted  = 4
           OTHERS                        = 5 ).            "#EC SUBRC_OK
 
-      check_subrc_for( `CHANGE_METHOD_BINDING` ).           "#EC NOTEXT
+      check_subrc_for( `CHANGE_METHOD_BINDING` )  ##NO_TEXT.
 
     ENDLOOP.
 
@@ -322,36 +317,36 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         starting_events    = ls_task-starting_events
       EXCEPTIONS
         no_changes_allowed = 1
-        OTHERS             = 2 ).
+        OTHERS             = 2 ).                         "#EC SUBRC_OK
 
-    check_subrc_for( `CHANGE_START_EVENTS_COMPLETE` ).      "#EC NOTEXT
+    check_subrc_for( `CHANGE_START_EVENTS_COMPLETE` )  ##NO_TEXT.
 
     lo_inst->change_start_evt_bind_complete(
       EXPORTING
         new_bindings       = ls_task-starting_events_binding
       EXCEPTIONS
         no_changes_allowed = 1
-        OTHERS             = 2 ).
+        OTHERS             = 2 ).                         "#EC SUBRC_OK
 
-    check_subrc_for( `CHANGE_START_EVT_BIND_COMPLETE` ).    "#EC NOTEXT
+    check_subrc_for( `CHANGE_START_EVT_BIND_COMPLETE` )  ##NO_TEXT.
 
     lo_inst->change_term_events_complete(
       EXPORTING
         terminating_events = ls_task-terminating_events
       EXCEPTIONS
         no_changes_allowed = 1
-        OTHERS             = 2 ).
+        OTHERS             = 2 ).                         "#EC SUBRC_OK
 
-    check_subrc_for( `CHANGE_TEXT` ).                       "#EC NOTEXT
+    check_subrc_for( `CHANGE_TEXT` )  ##NO_TEXT.
 
     lo_inst->change_term_evt_bind_complete(
       EXPORTING
         new_bindings       = ls_task-terminating_events_binding
       EXCEPTIONS
         no_changes_allowed = 1
-        OTHERS             = 2 ).
+        OTHERS             = 2 ).                         "#EC SUBRC_OK
 
-    check_subrc_for( `CHANGE_TERM_EVENTS_COMPLETE` ).       "#EC NOTEXT
+    check_subrc_for( `CHANGE_TERM_EVENTS_COMPLETE` )  ##NO_TEXT.
 
     lo_inst->change_text(
       EXPORTING
@@ -359,9 +354,9 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         new_text           = ls_task-descriptions
       EXCEPTIONS
         no_changes_allowed = 1
-        OTHERS             = 2 ).
+        OTHERS             = 2 ).                         "#EC SUBRC_OK
 
-    check_subrc_for( `CHANGE_TEXT` ).                       "#EC NOTEXT
+    check_subrc_for( `CHANGE_TEXT` )  ##NO_TEXT.
 
     ls_hrsobject-otype = c_object_type_task.
     ls_hrsobject-objid = mv_objid.
@@ -378,9 +373,9 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         insert_error_new_ts        = 4
         new_ts_could_not_be_locked = 5
         save_abort_by_user         = 6
-        OTHERS                     = 7 ).
+        OTHERS                     = 7 ).                 "#EC SUBRC_OK
 
-    check_subrc_for( `SAVE_STANDARD_TASK` ).                "#EC NOTEXT
+    check_subrc_for( `SAVE_STANDARD_TASK` )  ##NO_TEXT.
 
     tadir_insert( iv_package ).
 
@@ -398,7 +393,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         enqueue_failed      = 1
         object_not_deleted  = 2
         object_not_found    = 3
-        OTHERS              = 4.  "#EC SUBRC_OK
+        OTHERS              = 4.       "#EC FM_SUBRC_OK
 
     check_subrc_for( `RH_HRSOBJECT_DELETE` ).
 
@@ -407,10 +402,6 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
   METHOD zif_abapgit_object~exists.
 
-    DATA: lv_endda TYPE plog-endda.
-
-    lv_endda = '99991231'.
-
     CALL FUNCTION 'RH_READ_OBJECT'
       EXPORTING
         plvar     = '01'
@@ -418,7 +409,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         objid     = mv_objid
         istat     = '1'
         begda     = sy-datum
-        endda     = lv_endda
+        endda     = '99991231'
         ointerval = 'X'
         read_db   = 'X'
       EXCEPTIONS
@@ -464,8 +455,9 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         operation     = 'SHOW'
         object_name   = ms_item-obj_name
         object_type   = ms_item-obj_type
-        in_new_window = abap_true.
-
+        in_new_window = abap_true
+      EXCEPTIONS
+        OTHERS        = 0.
   ENDMETHOD.
 
 
@@ -489,7 +481,6 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
       zcx_abapgit_exception=>raise( iv_call && ' returned ' && sy-subrc ). "#EC NOTEXT
     ENDIF.
   ENDMETHOD.
-
 
 
   METHOD is_experimental.

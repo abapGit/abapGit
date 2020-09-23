@@ -1,4 +1,5 @@
 CLASS ltd_mock DEFINITION
+  FINAL
   CREATE PUBLIC
   FOR TESTING
   DURATION SHORT
@@ -11,9 +12,7 @@ CLASS ltd_mock DEFINITION
                              RAISING   zcx_abapgit_exception.
     METHODS get_input_xml RETURNING VALUE(rv_result) TYPE string.
 
-  PROTECTED SECTION.
   PRIVATE SECTION.
-    DATA mo_xml TYPE REF TO  zcl_abapgit_xml_input.
     DATA mv_xml TYPE string.
 
     METHODS generate.
@@ -249,6 +248,7 @@ CLASS ltc_turnaround_test IMPLEMENTATION.
             is_item     = ls_item
             iv_language = sy-langu.
       CATCH zcx_abapgit_exception.
+        cl_abap_unit_assert=>fail( ).
     ENDTRY.
 
     CREATE OBJECT mo_mock.
@@ -284,7 +284,7 @@ CLASS ltc_turnaround_test IMPLEMENTATION.
     DATA lo_input_xml TYPE REF TO zif_abapgit_xml_input.
 
     DATA: lv_step TYPE zif_abapgit_definitions=>ty_deserialization_step,
-          li_log  TYPE REF TO zif_abapgit_log.
+          li_log  TYPE REF TO zif_abapgit_log.              "#EC NEEDED
 
     lo_input_xml = mo_mock->create_input_xml( ).
 
@@ -324,7 +324,7 @@ CLASS ltc_turnaround_test IMPLEMENTATION.
            INTO lv_dummy
            FROM hrs1000
            WHERE otype = 'TS' AND
-                 objid = ltd_mock=>mc_task_id.
+                 objid = ltd_mock=>mc_task_id  ##WARN_OK.
 
     IF sy-subrc = 0.
       rv_result = abap_true.
@@ -357,7 +357,6 @@ CLASS ltc_lock IMPLEMENTATION.
   METHOD enqueue_is_detected.
 
     DATA: lv_taskid TYPE hrobjid,
-          lv_task   TYPE hrsobject,
           lo_cut    TYPE REF TO zif_abapgit_object,
           ls_item   TYPE zif_abapgit_definitions=>ty_item.
 
@@ -390,7 +389,7 @@ CLASS ltc_lock IMPLEMENTATION.
     SELECT SINGLE objid
            INTO rv_taskid
            FROM hrs1000
-           WHERE otype = c_ts.
+           WHERE otype = c_ts  ##WARN_OK. "#EC CI_NOORDER #EC CI_SGLSELECT
 
     cl_abap_unit_assert=>assert_subrc( exp = 0
                                        act = sy-subrc ).
