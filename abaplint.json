@@ -72,6 +72,8 @@
     "globalMacros": []
   },
   "rules": {
+    "prefer_is_not": false,
+    "use_bool_expression": true,
     "check_subrc": false,
     "cyclomatic_complexity": {
       "max": 25

@@ -155,11 +155,7 @@ CLASS ZCL_ABAPGIT_OBJECT_XSLT IMPLEMENTATION.
     lv_name = ms_item-obj_name.
 
     rv_bool = cl_o2_api_xsltdesc=>exists( lv_name ).
-    IF rv_bool = '1'.
-      rv_bool = abap_true.
-    ELSE.
-      rv_bool = abap_false.
-    ENDIF.
+    rv_bool = boolc( rv_bool = '1' ).
 
   ENDMETHOD.
 
