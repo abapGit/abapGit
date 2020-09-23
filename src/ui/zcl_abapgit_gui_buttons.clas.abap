@@ -19,6 +19,9 @@ CLASS zcl_abapgit_gui_buttons DEFINITION
     CLASS-METHODS repo_list
       RETURNING VALUE(rv_html_string) TYPE string.
 
+    CLASS-METHODS settings
+      RETURNING VALUE(rv_html_string) TYPE string.
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -45,6 +48,10 @@ CLASS zcl_abapgit_gui_buttons IMPLEMENTATION.
 
   METHOD repo_list.
     rv_html_string = `<i class="icon icon-bars"></i> Repository List`.
+  ENDMETHOD.
+
+  METHOD settings.
+    rv_html_string = `<i class="icon icon-cog"></i> Settings`.
   ENDMETHOD.
 
 ENDCLASS.
