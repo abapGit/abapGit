@@ -22,7 +22,7 @@ Note the part `NPL(*)/001` only appears if you have `Show system name in taskbar
 
 ## Using a custom authentication mechanism
 
-You can use the exit [`CREATE_HTTP_CLIENT`](ref-exits.html#create_http_client) to implement a different authentication yourself by returning an already authenticated http client instance. See the exit documentation for examples.
+You can use the exit `CREATE_HTTP_CLIENT` to implement a different authentication yourself by returning an already authenticated http client instance. See the [exit documentation](ref-exits.html#create_http_client) for examples.
 
 ## Security considerations
 
