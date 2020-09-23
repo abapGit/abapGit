@@ -155,20 +155,6 @@ CLASS ltd_mock IMPLEMENTATION.
     add_line( |      </EXDEFINITN>| ).
     add_line( |     </PROPERTIES>| ).
     add_line( |     <ELEMENTS>| ).
-*    add_line( |      <A NAME="_ADHOC_OBJECTS:_Adhoc_Objects:" TYPE=":BO::h:0:0" PROPS="0C925A51"/>| ).
-*    add_line( |      <B NAME="_ATTACH_OBJECTS:_Attach_Objects:" TYPE="SOFM:BO::h:0:0" PROPS="0C925A51"/>| ).
-*    add_line( |      <C NAME="_WI_ACTUAL_AGENT:_Wi_Actual_Agent:" TYPE="::WFSYST-AGENT:C:0:0" PROPS="0C002A11"/>| ).
-*    add_line( |      <D NAME="_WI_GROUP_ID:_Wi_Group_ID:" TYPE=":BO::u:0:0" PROPS="0C921A11"/>| ).
-*    add_line( |      <E NAME="_WORKITEM:_Workitem:" TYPE="WORKINGWI:BO::u:0:0" PROPS="0C921A11"/>| ).
-*    add_line( |      <F NAME="_WF_TICKET:_Wf_Ticket:" TYPE="::SWWTTICKET:h:0:0" PROPS="0C000271"/>| ).
-*    add_line( |      <G NAME="_RULE_RESULT:_Rule_Result:" TYPE="AAGENT:BO::u:0:0" PROPS="0C921A11"/>| ).
-*    add_line( |      <H NAME="_RFC_DESTINATION:_Rfc_Destination:" TYPE="::RFCDEST:C:0:0" PROPS="0C001231"/>| ).
-*    add_line( |      <I NAME="_ATTACH_COMMENT_OBJECTS:_Attach_Comment_Objects:" TYPE="SOFM:BO::h:0:0" PROPS="0C925A71"/>| ).
-*    add_line( |      <J NAME="_METHOD_OBJECTS:_Method_Objects:" TYPE=":BO::h:0:0" PROPS="0C925A51"/>| ).
-*    add_line( |      <K NAME="_START_EVENT_IDENTIFIER:_Start_Event_Identifier:" TYPE="CL_SWF_UTL_EVT_IDENTIFIER:CL::u:0:0" PROPS="0CC20231"/>| ).
-*    add_line( |      <L NAME="_WF_TYPENAME_MAPPING:_WF_Typename_Mapping:" TYPE="::SWF_CNT_MAPPING_TAB:h:0:0" PROPS="0C120271"/>| ).
-*    add_line( |      <M NAME="NEWINTERNALMODE:NewInternalMode:" TYPE="::BAPIBUS1006_HEAD-NEWINTERNALMODE:C:1:0" PROPS="0C003301"/>| ).
-*    add_line( |      <N NAME="_WI_OBJECT_ID:_Wi_Object_ID:" TYPE="BUS1006:BO:::0:0" PROPS="0C921A11"/>| ).
     add_line( |      <O NAME="FOO:Foo:" TYPE="::CHAR10:h:10:0" PROPS="0C005241"/>| ).
     add_line( |     </ELEMENTS>| ).
     add_line( |    </CONTAINER>| ).
@@ -288,12 +274,10 @@ CLASS ltc_turnaround_test IMPLEMENTATION.
 
     lo_input_xml = mo_mock->create_input_xml( ).
 
-    CALL METHOD mo_cut->deserialize
-      EXPORTING
-        iv_package = '$TMP'
-        io_xml     = lo_input_xml
-        iv_step    = lv_step
-        ii_log     = li_log.
+    mo_cut->deserialize( iv_package = '$TMP'
+                         io_xml     = lo_input_xml
+                         iv_step    = lv_step
+                         ii_log     = li_log  ).
 
     cl_abap_unit_assert=>assert_true( task_exists( ) ).
     cl_abap_unit_assert=>assert_true( mo_cut->exists( ) ).
@@ -343,7 +327,7 @@ CLASS ltc_lock DEFINITION
 
   PRIVATE SECTION.
 
-    CONSTANTS c_ts TYPE hr_sotype VALUE 'TS' ##NO_TEXT.
+    CONSTANTS c_ts TYPE hr_sotype VALUE 'TS'.
 
     METHODS enqueue_is_detected FOR TESTING RAISING cx_static_check.
     METHODS get_any_task RETURNING VALUE(rv_taskid) TYPE hrobjid.

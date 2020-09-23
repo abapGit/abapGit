@@ -54,7 +54,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
       "Known issues:
       "- Container texts not de/serialized properly (functionnally OK)
       "- More testing needed
-      zcx_abapgit_exception=>raise( 'PDTS not fully implemented, enable experimental features to test it' )  ##NO_TEXT.
+      zcx_abapgit_exception=>raise( 'PDTS not fully implemented, enable experimental features to test it' ).
     ENDIF.
 
     ms_objkey-otype = c_object_type_task.
@@ -77,6 +77,8 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
           li_children       TYPE REF TO if_ixml_node_list,
           li_child_iterator TYPE REF TO if_ixml_node_iterator,
           li_attributes     TYPE REF TO if_ixml_named_node_map.
+
+    DATA lv_name TYPE string.
 
     FIELD-SYMBOLS: <ls_description>             TYPE hrs1002,
                    <ls_method_binding>          LIKE LINE OF ls_task-method_binding,
@@ -187,9 +189,8 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
         "Remove system container elements - causing too much trouble
         "Todo: I don't like this sequential-letter naming, but this is probably temporary
-        DATA name TYPE string.
-        name = li_element->get_name( ).
-        IF `ABCDEFGHIJKLMN` CS name.
+        lv_name = li_element->get_name( ).
+        IF `ABCDEFGHIJKLMN` CS lv_name.
           li_element->remove_node( ).
           li_child_iterator->reset( ).
           CONTINUE.
