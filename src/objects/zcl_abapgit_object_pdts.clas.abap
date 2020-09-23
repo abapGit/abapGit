@@ -162,7 +162,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
     li_first_element ?= li_xml_dom->get_first_child( ).
 
-    li_elements = li_first_element->get_elements_by_tag_name( name = 'ELEMENTS' ) ##NO_TEXT.
+    li_elements = li_first_element->get_elements_by_tag_name( name = 'ELEMENTS' ).
 
     li_iterator = li_elements->create_iterator( ).
 
@@ -197,7 +197,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
         li_attributes = li_element->get_attributes( ).
 
-        li_attributes->remove_named_item( name = 'CHGDTA' ) ##NO_TEXT.
+        li_attributes->remove_named_item( name = 'CHGDTA' ).
 
       ENDDO.
 
@@ -267,7 +267,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         problem_method_phon_enabling = 3
         OTHERS                       = 4 ).               "#EC SUBRC_OK
 
-    check_subrc_for( `CHANGE_METHOD` )  ##NO_TEXT.
+    check_subrc_for( `CHANGE_METHOD` ).
 
     LOOP AT ls_task-method_binding ASSIGNING <ls_method_binding>.
 
@@ -283,7 +283,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
           binding_could_not_be_deleted  = 4
           OTHERS                        = 5 ).            "#EC SUBRC_OK
 
-      check_subrc_for( `CHANGE_METHOD_BINDING` )  ##NO_TEXT.
+      check_subrc_for( `CHANGE_METHOD_BINDING` ).
 
     ENDLOOP.
 
@@ -319,7 +319,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         no_changes_allowed = 1
         OTHERS             = 2 ).                         "#EC SUBRC_OK
 
-    check_subrc_for( `CHANGE_START_EVENTS_COMPLETE` )  ##NO_TEXT.
+    check_subrc_for( `CHANGE_START_EVENTS_COMPLETE` ).
 
     lo_inst->change_start_evt_bind_complete(
       EXPORTING
@@ -328,7 +328,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         no_changes_allowed = 1
         OTHERS             = 2 ).                         "#EC SUBRC_OK
 
-    check_subrc_for( `CHANGE_START_EVT_BIND_COMPLETE` )  ##NO_TEXT.
+    check_subrc_for( `CHANGE_START_EVT_BIND_COMPLETE` ).
 
     lo_inst->change_term_events_complete(
       EXPORTING
@@ -337,7 +337,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         no_changes_allowed = 1
         OTHERS             = 2 ).                         "#EC SUBRC_OK
 
-    check_subrc_for( `CHANGE_TEXT` )  ##NO_TEXT.
+    check_subrc_for( `CHANGE_TEXT` ).
 
     lo_inst->change_term_evt_bind_complete(
       EXPORTING
@@ -346,7 +346,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         no_changes_allowed = 1
         OTHERS             = 2 ).                         "#EC SUBRC_OK
 
-    check_subrc_for( `CHANGE_TERM_EVENTS_COMPLETE` )  ##NO_TEXT.
+    check_subrc_for( `CHANGE_TERM_EVENTS_COMPLETE` ).
 
     lo_inst->change_text(
       EXPORTING
@@ -356,7 +356,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         no_changes_allowed = 1
         OTHERS             = 2 ).                         "#EC SUBRC_OK
 
-    check_subrc_for( `CHANGE_TEXT` )  ##NO_TEXT.
+    check_subrc_for( `CHANGE_TEXT` ).
 
     ls_hrsobject-otype = c_object_type_task.
     ls_hrsobject-objid = mv_objid.
@@ -375,7 +375,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         save_abort_by_user         = 6
         OTHERS                     = 7 ).                 "#EC SUBRC_OK
 
-    check_subrc_for( `SAVE_STANDARD_TASK` )  ##NO_TEXT.
+    check_subrc_for( `SAVE_STANDARD_TASK` ).
 
     tadir_insert( iv_package ).
 
@@ -478,7 +478,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
   METHOD check_subrc_for.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( iv_call && ' returned ' && sy-subrc ). "#EC NOTEXT
+      zcx_abapgit_exception=>raise( iv_call && ' returned ' && sy-subrc ).
     ENDIF.
   ENDMETHOD.
 

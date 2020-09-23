@@ -291,7 +291,7 @@ CLASS ltc_turnaround_test IMPLEMENTATION.
     CALL METHOD mo_cut->deserialize
       EXPORTING
         iv_package = '$TMP'
-        io_xml     = CAST #( lo_input_xml )
+        io_xml     = lo_input_xml
         iv_step    = lv_step
         ii_log     = li_log.
 
