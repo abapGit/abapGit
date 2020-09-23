@@ -172,12 +172,8 @@ CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
     SELECT SINGLE changedate INTO lv_changedate FROM vcldir
       WHERE vclname = ms_item-obj_name.
 
-    IF lv_changedate IS NOT INITIAL.
 * see logic in function module VIEWCLUSTER_GET_DEFINITION
-      rv_active = abap_true.
-    ELSE.
-      rv_active = abap_false.
-    ENDIF.
+    rv_active = boolc( lv_changedate IS NOT INITIAL ).
 
   ENDMETHOD.
 
