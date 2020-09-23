@@ -79,7 +79,7 @@ CLASS lcl_password_dialog IMPLEMENTATION.
     s_title = 'Login'.
     s_url   = 'Repo URL'.
     s_user  = 'User'.
-    s_pass  = 'Password'.
+    s_pass  = 'Password or Token'.
   ENDMETHOD.
 
   METHOD on_screen_output.
