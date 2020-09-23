@@ -375,11 +375,7 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
 
   METHOD has_conflicts.
 
-    IF lines( mt_conflicts ) > 0.
-      rv_conflicts_exists = abap_true.
-    ELSE.
-      rv_conflicts_exists = abap_false.
-    ENDIF.
+    rv_conflicts_exists = boolc( lines( mt_conflicts ) > 0 ).
 
   ENDMETHOD.
 

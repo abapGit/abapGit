@@ -8,6 +8,14 @@ ENDCLASS.
 
 CLASS ltcl_get_t100_longtext IMPLEMENTATION.
 
+  METHOD if_message~get_longtext.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD if_message~get_text.
+    RETURN.
+  ENDMETHOD.
+
   METHOD test01.
 
     DATA lo_cut TYPE REF TO zcl_abapgit_message_helper.

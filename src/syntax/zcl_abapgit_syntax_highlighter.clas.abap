@@ -208,11 +208,7 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
     "/^\s+$/
     lv_whitespace = ` ` && cl_abap_char_utilities=>horizontal_tab && cl_abap_char_utilities=>cr_lf.
 
-    IF iv_string CO lv_whitespace.
-      rv_result = abap_true.
-    ELSE.
-      rv_result = abap_false.
-    ENDIF.
+    rv_result = boolc( iv_string CO lv_whitespace ).
 
   ENDMETHOD.
 
