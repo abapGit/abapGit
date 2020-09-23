@@ -236,11 +236,7 @@ CLASS zcl_abapgit_object_oa2p IMPLEMENTATION.
         enq     = lt_locks.    " Number of chosen lock entries
 
 
-    IF lv_lock_number > 0.
-      rv_is_locked = abap_true.
-    ELSE.
-      rv_is_locked = abap_false.
-    ENDIF.
+    rv_is_locked = boolc( lv_lock_number > 0 ).
 
   ENDMETHOD.
 

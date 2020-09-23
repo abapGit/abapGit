@@ -260,11 +260,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
             get_state = 'A'
           IMPORTING
             got_state = lv_state.
-        IF lv_state IS INITIAL.
-          rv_bool = abap_false.
-        ELSE.
-          rv_bool = abap_true.
-        ENDIF.
+        rv_bool = boolc( NOT ( lv_state IS INITIAL ) ).
       CATCH cx_root.
         rv_bool = abap_false.
     ENDTRY.

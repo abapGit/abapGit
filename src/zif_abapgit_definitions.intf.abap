@@ -494,6 +494,7 @@ INTERFACE zif_abapgit_definitions
       zip_transport                 TYPE string VALUE 'zip_transport',
       zip_object                    TYPE string VALUE 'zip_object',
       performance_test              TYPE string VALUE 'performance_test',
+      ie_devtools                   TYPE string VALUE 'ie_devtools',
       git_pull                      TYPE string VALUE 'git_pull',
       git_reset                     TYPE string VALUE 'git_reset',
       git_branch_create             TYPE string VALUE 'git_branch_create',
