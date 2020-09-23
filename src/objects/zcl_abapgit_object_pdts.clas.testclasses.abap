@@ -441,10 +441,14 @@ CLASS ltc_smoke_test IMPLEMENTATION.
     ls_item-obj_type = 'PDTS'.
     ls_item-obj_name = ltd_mock=>mc_task_id.
 
-    CREATE OBJECT mo_cut TYPE zcl_abapgit_object_pdts
-      EXPORTING
-        is_item     = ls_item
-        iv_language = sy-langu.
+    TRY.
+        CREATE OBJECT mo_cut TYPE zcl_abapgit_object_pdts
+          EXPORTING
+            is_item     = ls_item
+            iv_language = sy-langu.
+      CATCH zcx_abapgit_exception.
+        cl_abap_unit_assert=>fail( ).
+    ENDTRY.
 
   ENDMETHOD.
 
