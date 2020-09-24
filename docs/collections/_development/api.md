@@ -5,7 +5,7 @@ order: 80
 
 *******************************
 
-This page describes how to execute various abapGit tasks using your own code. These classes and methods have exists for quite some time and are stable. However, they do **not** provide a guaranteed API. Future change are a possibility. 
+This page describes how to execute various abapGit tasks using your own code. These classes and methods have existed for quite some time and are stable. However, they do **not** provide a guaranteed API. Future change are a possibility. 
 
 ## Repositories ##
 
