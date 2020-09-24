@@ -44,7 +44,7 @@ The certificate list should end up looking something like this:
 ![](img/strust.png)
 
 ### Note on actions that require authentication
-To perform operations that require authentication, like e.g. cloning a private or pushing to any GitHub repository, you need to install not only the certificates for github.com but also for [https://**api**.github.com](https://api.github.com). Repeat the download and STRUST import steps as described in the sections above accordingly. (See also [Issue#1491](https://github.com/larshp/abapGit/issues/1491))
+To perform operations that require authentication, like e.g. cloning a private or pushing to any GitHub repository, you need to install not only the certificates for github.com but also for [https://**api**.github.com](https://api.github.com). Repeat the download and STRUST import steps as described in the sections above accordingly. (See also [Issue#1491](https://github.com/abapGit/abapGit/issues/1491))
 
 ### Note about GitHub
 On [2018-02-22](https://githubengineering.com/crypto-removal-notice/), GitHub deprectated weak TLS connections.

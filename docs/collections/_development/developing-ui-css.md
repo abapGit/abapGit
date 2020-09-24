@@ -41,7 +41,7 @@ ro_asset_man->register_asset(
     iv_mime_name = 'ZABAPGIT_ICON_FONT'
     iv_base64    = concat_lines_of( table = lt_inline ) ).
 
-" see https://github.com/larshp/abapGit/issues/201 for source SVG
+" see https://github.com/abapGit/abapGit/issues/201 for source SVG
 ro_asset_man->register_asset(
     iv_url       = 'img/logo'
     iv_type      = 'image/png'
@@ -58,7 +58,7 @@ There are several ways to store content of a static asset in abapGit.
 
 ### Ensuring working of one-file version of abapGit (abapmerge)
 
-The tricky thing is that abapGit can be either installed as a development version, deploying all the MIME objects in particular **or** as a single file. This single file must contain all the assets (images, css, js and fonts) **in-code**. This is enabled by **abapmerge** tool. Consider the `css/common.css` registration above. 
+The tricky thing is that abapGit can be either installed as a development version, deploying all the MIME objects in particular **or** as a single file. This single file must contain all the assets (images, css, js and fonts) **in-code**. This is enabled by **abapmerge** tool. Consider the `css/common.css` registration above.
 
 - First, `lt_inline` is cleared. And in the development version of abapGit it is then just passed to `register_asset` being initial. The asset manager is thus falls back to `ZABAPGIT_CSS_COMMON` MIME object (which is conveniently deployed in case of dev version).
 - In case of one-file abapGit version there is no MIME object. However, `@@abapmerge include` statement is processed by abapmerge and the file `zabapgit_css_common.w3mi.data.css` is included to the code line by line in form of `_inline '$$'`, where `$$` is the text file line. Thus, at the moment of `register_asset` the content of `lt_inline` is **not** initial and takes the priority over the missing MIME.

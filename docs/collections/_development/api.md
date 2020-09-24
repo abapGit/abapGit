@@ -94,7 +94,7 @@ todo
 ## Pushing
 
 Online projects, todo, see
-[https://github.com/larshp/abapGit/blob/master/src/zcl_abapgit_background.clas.abap](https://github.com/larshp/abapGit/blob/master/src/zcl_abapgit_background.clas.abap)
+[https://github.com/abapGit/abapGit/blob/master/src/zcl_abapgit_background.clas.abap](https://github.com/abapGit/abapGit/blob/master/src/zcl_abapgit_background.clas.abap)
 
 todo: staging, commits, tags
 
@@ -150,7 +150,7 @@ ENDMETHOD.
 ```
 
 todo:
-[https://github.com/larshp/abapGit/issues/1331](https://github.com/larshp/abapGit/issues/1331)
+[https://github.com/abapGit/abapGit/issues/1331](https://github.com/abapGit/abapGit/issues/1331)
 
 *******************************
 
