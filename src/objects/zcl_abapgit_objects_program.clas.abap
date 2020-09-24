@@ -288,7 +288,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         not_found = 1
         OTHERS    = 2.
     IF sy-subrc <> 0.
-* if moving code from SAPlink, see https://github.com/larshp/abapGit/issues/562
+* if moving code from SAPlink, see https://github.com/abapGit/abapGit/issues/562
       zcx_abapgit_exception=>raise( |Error from RS_CUA_INTERNAL_WRITE. Subrc = { sy-subrc }| ).
     ENDIF.
 
