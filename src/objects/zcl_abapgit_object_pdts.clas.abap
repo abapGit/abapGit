@@ -5,7 +5,7 @@ CLASS zcl_abapgit_object_pdts DEFINITION
   CREATE PUBLIC.
 
   PUBLIC SECTION.
-methods foo.
+    METHODS foo.
 
 ENDCLASS.
 
