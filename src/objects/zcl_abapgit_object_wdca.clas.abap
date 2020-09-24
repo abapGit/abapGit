@@ -40,12 +40,6 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_OBJECT_WDCA IMPLEMENTATION.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Private Method ZCL_ABAPGIT_OBJECT_WDCA->CHECK
-* +-------------------------------------------------------------------------------------------------+
-* | [--->] IT_MESSAGES                    TYPE        CTS_MESSAGES
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD check.
 
     FIELD-SYMBOLS: <ls_message> TYPE LINE OF cts_messages.
@@ -57,12 +51,6 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCA IMPLEMENTATION.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Private Method ZCL_ABAPGIT_OBJECT_WDCA->DELETE
-* +-------------------------------------------------------------------------------------------------+
-* | [--->] IV_PACKAGE                     TYPE        DEVCLASS
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD delete.
 
     DATA:
@@ -124,13 +112,6 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCA IMPLEMENTATION.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Private Method ZCL_ABAPGIT_OBJECT_WDCA->READ
-* +-------------------------------------------------------------------------------------------------+
-* | [<---] ES_OUTLINE                     TYPE        WDY_CFG_OUTLINE_DATA
-* | [<---] ET_DATA                        TYPE        WDY_CFG_PERSIST_DATA_APPL_TAB
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD read.
 
     DATA:
@@ -181,14 +162,6 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCA IMPLEMENTATION.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Private Method ZCL_ABAPGIT_OBJECT_WDCA->SAVE
-* +-------------------------------------------------------------------------------------------------+
-* | [--->] IS_OUTLINE                     TYPE        WDY_CFG_OUTLINE_DATA
-* | [--->] IT_DATA                        TYPE        WDY_CFG_PERSIST_DATA_APPL_TAB
-* | [--->] IV_PACKAGE                     TYPE        DEVCLASS
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD save.
 
     DATA:
@@ -255,12 +228,6 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCA IMPLEMENTATION.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_WDCA->ZIF_ABAPGIT_OBJECT~CHANGED_BY
-* +-------------------------------------------------------------------------------------------------+
-* | [<-()] RV_USER                        TYPE        XUBNAME
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~changed_by.
 
     DATA ls_key TYPE wdy_config_key.
@@ -276,12 +243,6 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCA IMPLEMENTATION.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_WDCA->ZIF_ABAPGIT_OBJECT~DELETE
-* +-------------------------------------------------------------------------------------------------+
-* | [--->] IV_PACKAGE                     TYPE        DEVCLASS
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~delete.
 
     delete( iv_package = iv_package ).
@@ -289,15 +250,6 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCA IMPLEMENTATION.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_WDCA->ZIF_ABAPGIT_OBJECT~DESERIALIZE
-* +-------------------------------------------------------------------------------------------------+
-* | [--->] IV_PACKAGE                     TYPE        DEVCLASS
-* | [--->] IO_XML                         TYPE REF TO ZIF_ABAPGIT_XML_INPUT
-* | [--->] IV_STEP                        TYPE        ZIF_ABAPGIT_DEFINITIONS=>TY_DESERIALIZATION_STEP
-* | [--->] II_LOG                         TYPE REF TO ZIF_ABAPGIT_LOG
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~deserialize.
 
     DATA: ls_outline TYPE wdy_cfg_outline_data,
@@ -315,12 +267,6 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCA IMPLEMENTATION.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_WDCA->ZIF_ABAPGIT_OBJECT~EXISTS
-* +-------------------------------------------------------------------------------------------------+
-* | [<-()] RV_BOOL                        TYPE        ABAP_BOOL
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~exists.
     DATA: ls_wdy_config_appl TYPE wdy_config_appl.
     DATA: ls_wdy_config_key TYPE wdy_config_key.
@@ -335,64 +281,31 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCA IMPLEMENTATION.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_WDCA->ZIF_ABAPGIT_OBJECT~GET_COMPARATOR
-* +-------------------------------------------------------------------------------------------------+
-* | [<-()] RI_COMPARATOR                  TYPE REF TO ZIF_ABAPGIT_COMPARATOR
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~get_comparator.
     RETURN.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_WDCA->ZIF_ABAPGIT_OBJECT~GET_DESERIALIZE_STEPS
-* +-------------------------------------------------------------------------------------------------+
-* | [<-()] RT_STEPS                       TYPE        ZIF_ABAPGIT_DEFINITIONS=>TY_DESERIALIZATION_STEP_TT
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_WDCA->ZIF_ABAPGIT_OBJECT~GET_METADATA
-* +-------------------------------------------------------------------------------------------------+
-* | [<-()] RS_METADATA                    TYPE        ZIF_ABAPGIT_DEFINITIONS=>TY_METADATA
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_WDCA->ZIF_ABAPGIT_OBJECT~IS_ACTIVE
-* +-------------------------------------------------------------------------------------------------+
-* | [<-()] RV_ACTIVE                      TYPE        ABAP_BOOL
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~is_active.
     rv_active = is_active( ).
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_WDCA->ZIF_ABAPGIT_OBJECT~IS_LOCKED
-* +-------------------------------------------------------------------------------------------------+
-* | [<-()] RV_IS_LOCKED                   TYPE        ABAP_BOOL
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~is_locked.
     rv_is_locked = abap_false.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_WDCA->ZIF_ABAPGIT_OBJECT~JUMP
-* +-------------------------------------------------------------------------------------------------+
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~jump.
 
     CALL FUNCTION 'RS_TOOL_ACCESS'
@@ -405,12 +318,6 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCA IMPLEMENTATION.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_WDCA->ZIF_ABAPGIT_OBJECT~SERIALIZE
-* +-------------------------------------------------------------------------------------------------+
-* | [--->] IO_XML                         TYPE REF TO ZIF_ABAPGIT_XML_OUTPUT
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~serialize.
 
     DATA: ls_outline TYPE wdy_cfg_outline_data,
