@@ -4,14 +4,14 @@ CLASS lcl_abapgit_object_pdts_helper DEFINITION
   FINAL.
 
   PUBLIC SECTION.
-    CLASS-METHODS foo.
+    CLASS-METHODS bar.
 
 ENDCLASS.
 
 
 CLASS lcl_abapgit_object_pdts_helper IMPLEMENTATION.
 
-  METHOD foo.
+  METHOD bar.
 
   ENDMETHOD.
 
