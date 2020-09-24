@@ -5,7 +5,7 @@ order: 80
 
 *******************************
 
-This page describes how to execute various abapGit tasks using your own code. These classes and methods have existed for quite some time and are stable. However, they do **not** provide a guaranteed API. Future change are a possibility. 
+This page describes how to execute various abapGit tasks using your own code. These classes and methods have existed for quite some time and are stable. However, they do **not** provide a guaranteed API. Future changes are a possibility. 
 
 ## Repositories ##
 
@@ -106,9 +106,9 @@ DATA(lt_result) = zcl_abapgit_file_status=>status( lo_repo ).
 
 ## Online Repository ##
 
-The following tasks are supported for online repositories, only (`lo_repo type ref to zcl_abapgit_repo_online`).
+The following tasks are supported for online repositories only (`lo_repo type ref to zcl_abapgit_repo_online`).
 
-**Note:** Certain tasks will require authentification (user/password or token). In such cases, you will have to provide the login details upfront (see [#1331](https://github.com/abapGit/abapGit/issues/1331) for details):
+**Note:** Certain tasks will require authentication (user/password or token). In such cases, you will have to provide the login details upfront (see [#1331](https://github.com/abapGit/abapGit/issues/1331) for details):
 
 ```abap
 zcl_abapgit_login_manager=>set(
@@ -127,7 +127,7 @@ zcl_abapgit_git_transport=>branches( lo_repo->get_url( ) ).
 
 ### Switch Branch ###
 
-Change abapGit repository to a different branch:
+Switch abapGit repository to a different branch:
 
 ```abap
 lo_repo->set_branch_name( lv_name ).
@@ -135,7 +135,7 @@ lo_repo->set_branch_name( lv_name ).
 
 ### Create Branch ###
 
-Create a new branch in the online repository:
+Create a new branch in an online repository:
 
 ```abap
 lo_repo->create_branch( lv_name ).
@@ -143,7 +143,7 @@ lo_repo->create_branch( lv_name ).
 
 ### Delete Branch ###
 
-Delete a branch of the online repository:
+Delete a branch of an online repository:
 
 ```abap
 lo_branches = zcl_abapgit_git_transport=>branches( lo_repo->get_url( ) ).
@@ -241,11 +241,11 @@ ENDMETHOD.
 
 ## Offline Repository ##
 
-The following tasks are supported for offline repositories, only (`lo_repo type ref to zcl_abapgit_repo_offline`).
+The following tasks are supported for offline repositories only (`lo_repo type ref to zcl_abapgit_repo_offline`).
 
 ### Import ZIP ###
 
-Upload ZIP file from frontend to offline repository:
+Upload ZIP file from frontend to an offline repository:
 
 ```abap
 lv_xstr = zcl_abapgit_ui_factory=>get_frontend_services( )->file_upload( lv_file_with_path ).
@@ -256,7 +256,7 @@ zcl_abapgit_services_repo=>refresh( lv_key ).
 
 ### Export ZIP ###
 
-Download ZIP file of offline repository to frontend:
+Download ZIP file of an offline repository to frontend:
 
 ```abap
 lv_xstr = zcl_abapgit_zip=>export( lo_repo ).
