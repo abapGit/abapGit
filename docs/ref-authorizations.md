@@ -6,7 +6,7 @@ order: 50
 
 You can block actions from users using **Authorizations**.
 
-You need to create a class named `ZCL_ABAPGIT_AUTH_EXIT` implementing interface `ZIF_ABAPGIT_AUTH`, and put inside include `zabapgit_authorizations_exit` [¹](https://github.com/larshp/abapGit/blob/52758028a7b08101e9c76d1cdab8639d776d3d2b/src/zabapgit.prog.abap#L35 "Link to source code include location") .
+You need to create a class named `ZCL_ABAPGIT_AUTH_EXIT` implementing interface `ZIF_ABAPGIT_AUTH`, and put inside include `zabapgit_authorizations_exit` [¹](https://github.com/abapGit/abapGit/blob/52758028a7b08101e9c76d1cdab8639d776d3d2b/src/zabapgit.prog.abap#L35 "Link to source code include location") .
 
 **Note:** If you are using the abapGit development version, do not create the class in the abapGit package.
 

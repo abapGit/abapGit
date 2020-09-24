@@ -68,7 +68,7 @@ CLASS zcl_abapgit_xml IMPLEMENTATION.
       EXPORTING
         titel = 'abapGit XML version mismatch'
         txt1  = 'abapGit XML version mismatch'
-        txt2  = 'See http://larshp.github.io/abapGit/other-xml-mismatch.html'
+        txt2  = 'See https://docs.abapgit.org/other-xml-mismatch.html'
         txt3  = lv_version
         txt4  = lv_file.
 

@@ -715,7 +715,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
         validate_settings( ).
 
         IF mv_error = abap_true.
-          MESSAGE 'Error when saving settings. Open an issue at https://github.com/larshp/abapGit' TYPE 'E'.
+          MESSAGE 'Error when saving settings. Open an issue at https://github.com/abapGit/abapGit' TYPE 'E'.
         ELSE.
           persist_settings( ).
         ENDIF.

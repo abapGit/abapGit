@@ -64,7 +64,7 @@ CLASS zcl_abapgit_transport_objects IMPLEMENTATION.
                 iv_data     = ls_local_file-file-data ).
             ENDIF.
           WHEN zif_abapgit_definitions=>c_state-deleted.
-* SUSC, see https://github.com/larshp/abapGit/issues/2772
+* SUSC, see https://github.com/abapGit/abapGit/issues/2772
             IF ls_transport_object-delflag = abap_false
                 AND ls_transport_object-object <> 'SUSC'
                 AND ls_transport_object-object <> 'IWOM'
