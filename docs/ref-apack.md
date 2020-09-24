@@ -11,11 +11,11 @@ Such an APACK implementation class must reside in the top-level ABAP package whi
 **Note:** Don't put any functionality in such implementation classes, only use them to advertise APACK metadata.
 
 The metadata follows the [POM format by Apache Maven](https://maven.apache.org/pom.html#Maven_Coordinates) and specifies additional information as well:
-- `group_id`: Unique name for your organization or project, e.g. `github.com/larshp`
+- `group_id`: Unique name for your organization or project, e.g. `github.com/abapGit`
 - `artifact_id`: Name for the project, needs to be unique together with the specified `group_id`, e.g. `abapGit`
 - `version`: Version of your project, should adhere to the [semantic versioning concept](https://semver.org/), e.g. `1.85`
 - `repository_type`: Currently fixed to `abapGit` as it's currently the only supported repository type and is set automatically during serialization
-- `git_url`: The URL where your main repository is located, e.g. `https://github.com/larshp/abapGit.git`
+- `git_url`: The URL where your main repository is located, e.g. `https://github.com/abapGit/abapGit.git`
 - `dependencies`: Optional, only needs to be filled if this project has dependencies to other projects. You only need to specify `group_id`, `artifact_id`, `version` and `git_url` to identify the dependency. `target_package` is ignored during serialization. **Note:** Be sure to specify the `git_url` for each dependency properly as this is currently the only way how dependencies can automatically be resolved.
 
 If such an implementation class is detected during the serialization process, a corresponding `.apack-manifest.xml` file will be created on the top level of the Git repository. This contains the APACK metadata information.
