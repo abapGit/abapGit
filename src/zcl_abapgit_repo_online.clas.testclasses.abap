@@ -26,14 +26,14 @@ CLASS ltcl_repo_online IMPLEMENTATION.
           lv_show_url      TYPE zif_abapgit_persistence=>ty_repo-url.
     FIELD-SYMBOLS <ls_provider_urls> TYPE ty_show_url_test.
 
-    ls_provider_urls-repo_url = |https://github.com/larshp/abapGit.git|.
-    ls_provider_urls-show_url = |https://github.com/larshp/abapGit/commit/{ lv_testhash }|.
+    ls_provider_urls-repo_url = |https://github.com/abapGit/abapGit.git|.
+    ls_provider_urls-show_url = |https://github.com/abapGit/abapGit/commit/{ lv_testhash }|.
     APPEND ls_provider_urls TO lt_test_urls.
-    ls_provider_urls-repo_url = |https://bitbucket.org/larshp/abapGit.git|.
-    ls_provider_urls-show_url = |https://bitbucket.org/larshp/abapGit/commits/{ lv_testhash }|.
+    ls_provider_urls-repo_url = |https://bitbucket.org/abapGit/abapGit.git|.
+    ls_provider_urls-show_url = |https://bitbucket.org/abapGit/abapGit/commits/{ lv_testhash }|.
     APPEND ls_provider_urls TO lt_test_urls.
-    ls_provider_urls-repo_url = |https://gitlab.com/larshp/abapGit.git|.
-    ls_provider_urls-show_url = |https://gitlab.com/larshp/abapGit/-/commit/{ lv_testhash }|.
+    ls_provider_urls-repo_url = |https://gitlab.com/abapGit/abapGit.git|.
+    ls_provider_urls-show_url = |https://gitlab.com/abapGit/abapGit/-/commit/{ lv_testhash }|.
     APPEND ls_provider_urls TO lt_test_urls.
 
     LOOP AT lt_test_urls ASSIGNING <ls_provider_urls>.

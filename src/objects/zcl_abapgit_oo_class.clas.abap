@@ -292,7 +292,7 @@ CLASS ZCL_ABAPGIT_OO_CLASS IMPLEMENTATION.
             read_source_error             = 2
             OTHERS                        = 3 ##SUBRC_OK.
       CATCH cx_sy_dyn_call_param_not_found.
-* downport to 702, see https://github.com/larshp/abapGit/issues/933
+* downport to 702, see https://github.com/abapGit/abapGit/issues/933
 * this will READ REPORT instead of using it_source, which should be okay
         CREATE OBJECT lo_update TYPE cl_oo_class_section_source
           EXPORTING
