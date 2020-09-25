@@ -69,6 +69,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
     DATA: ls_task           TYPE ty_task,
           lo_inst           TYPE REF TO cl_workflow_task_ts,
+          li_task           TYPE REF TO lif_task_definition,
           li_first_element  TYPE REF TO if_ixml_element,
           li_xml_dom        TYPE REF TO if_ixml_document,
           li_elements       TYPE REF TO if_ixml_node_collection,
@@ -84,6 +85,9 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
                    <ls_method_binding>          LIKE LINE OF ls_task-method_binding,
                    <ls_starting_events_binding> TYPE hrs1212,
                    <ls_term_events_binding>     TYPE hrs1212.
+
+    li_task = lcl_task_definition=>create( mv_objid ).
+    li_task->clear_origin_data( ).
 
     cl_workflow_factory=>create_ts(
       EXPORTING
@@ -244,10 +248,10 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
     lo_gen_task = lo_inst.
 
-    lcl_task_definition=>set_objid( iv_objid = mv_objid
+    lcl_attribute_setter=>set_objid( iv_objid = mv_objid
                                                io_task  = lo_gen_task ).
 
-    lcl_task_definition=>set_container_id( iv_id    = |{ c_object_type_task }{ mv_objid }|
+    lcl_attribute_setter=>set_container_id( iv_id    = |{ c_object_type_task }{ mv_objid }|
                                                       io_task  = lo_gen_task ).
 
     lo_inst->change_wi_text(
