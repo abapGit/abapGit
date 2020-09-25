@@ -9,6 +9,8 @@ CLASS ltcl_html_action_utils DEFINITION FOR TESTING RISK LEVEL HARMLESS
     METHODS parse_fields_advanced_case FOR TESTING.
     METHODS parse_fields_unescape FOR TESTING.
     METHODS parse_fields_german_umlauts FOR TESTING.
+    METHODS parse_fields_wrong_format FOR TESTING.
+    METHODS parse_post_form_data FOR TESTING.
 
   PRIVATE SECTION.
 
@@ -36,6 +38,9 @@ CLASS ltcl_html_action_utils DEFINITION FOR TESTING RISK LEVEL HARMLESS
         iv_index TYPE i
         iv_name  TYPE string
         iv_value TYPE string.
+    METHODS _then_field_count_should_be
+      IMPORTING
+        iv_count TYPE i.
 
     CLASS-METHODS _hex_to_char
       IMPORTING
@@ -65,12 +70,18 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
     ls_answer-value = 'TEST'.
     APPEND ls_answer TO lt_fields.
 
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'NAME'
-                                                        it_field = lt_fields
-                                      CHANGING  cg_field   = ls_field-value ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'NAME'
-                                                        it_field = lt_fields
-                                      CHANGING  cg_field   = ls_field ).
+    zcl_abapgit_html_action_utils=>get_field(
+      EXPORTING
+        iv_name = 'NAME'
+        it_field = lt_fields
+      CHANGING
+        cg_field   = ls_field-value ).
+    zcl_abapgit_html_action_utils=>get_field(
+      EXPORTING
+        iv_name = 'NAME'
+        it_field = lt_fields
+      CHANGING
+        cg_field   = ls_field ).
 
     ls_answer-name  = 'TEST'.
     ls_answer-value = 'TEST'.
@@ -208,19 +219,30 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_parsed_field> LIKE LINE OF mt_parsed_fields.
 
-    READ TABLE mt_parsed_fields ASSIGNING <ls_parsed_field>
-                                INDEX iv_index.
+    READ TABLE mt_parsed_fields ASSIGNING <ls_parsed_field> INDEX iv_index.
 
-    cl_abap_unit_assert=>assert_subrc( exp = 0
-                                       msg = |No parsed field found at index { iv_index }| ).
+    cl_abap_unit_assert=>assert_subrc(
+      exp = 0
+      msg = |No parsed field found at index { iv_index }| ).
 
-    cl_abap_unit_assert=>assert_equals( act = <ls_parsed_field>-name
-                                        exp = iv_name
-                                        msg = |Name at index { iv_index } should be { iv_name }| ).
+    cl_abap_unit_assert=>assert_equals(
+      act = <ls_parsed_field>-name
+      exp = iv_name
+      msg = |Name at index { iv_index } should be { iv_name }| ).
 
-    cl_abap_unit_assert=>assert_equals( act = <ls_parsed_field>-value
-                                        exp = iv_value
-                                        msg = |Value at index { iv_index } should be { iv_value }| ).
+    cl_abap_unit_assert=>assert_equals(
+      act = <ls_parsed_field>-value
+      exp = iv_value
+      msg = |Value at index { iv_index } should be { iv_value }| ).
+
+  ENDMETHOD.
+
+  METHOD _then_field_count_should_be.
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lines( mt_parsed_fields )
+      exp = iv_count
+      msg = |Field count { lines( mt_parsed_fields ) } should be { iv_count }| ).
 
   ENDMETHOD.
 
@@ -230,6 +252,64 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
 
     lo_conv = cl_abap_conv_in_ce=>create( ).
     lo_conv->convert( EXPORTING input = iv_x IMPORTING data = rv_s ).
+
+  ENDMETHOD.
+
+  METHOD parse_fields_wrong_format.
+
+    _given_string_is( `some_query_string_without_param_structure` ).
+    _when_fields_are_parsed( ).
+    _then_field_count_should_be( 0 ).
+
+    _given_string_is( `some_query_string_without_param_structure&a=b` ).
+    _when_fields_are_parsed( ).
+    _then_field_count_should_be( 1 ).
+    _then_fields_should_be(
+      iv_index = 1
+      iv_name  = 'A'
+      iv_value = 'b' ).
+
+  ENDMETHOD.
+
+  METHOD parse_post_form_data.
+
+    DATA lt_post_data TYPE cnht_post_data_tab.
+    DATA lv_line LIKE LINE OF lt_post_data.
+    DATA lv_long_name LIKE LINE OF lt_post_data.
+    DATA lv_size TYPE i.
+
+    DESCRIBE FIELD lv_line LENGTH lv_size IN CHARACTER MODE.
+    lv_long_name = repeat(
+      val = 'x'
+      occ = lv_size - 4 ).
+    lv_line = 'a=b&' && lv_long_name.
+
+    APPEND lv_line TO lt_post_data.
+    APPEND '=y' TO lt_post_data.
+
+    mt_parsed_fields = zcl_abapgit_html_action_utils=>parse_post_form_data( lt_post_data ).
+    _then_field_count_should_be( 2 ).
+    _then_fields_should_be(
+      iv_index = 1
+      iv_name  = 'a'
+      iv_value = 'b' ).
+    _then_fields_should_be(
+      iv_index = 2
+      iv_name  = |{ lv_long_name }|
+      iv_value = 'y' ).
+
+    mt_parsed_fields = zcl_abapgit_html_action_utils=>parse_post_form_data(
+      it_post_data = lt_post_data
+      iv_upper_cased = abap_true ).
+    _then_field_count_should_be( 2 ).
+    _then_fields_should_be(
+      iv_index = 1
+      iv_name  = 'A'
+      iv_value = 'b' ).
+    _then_fields_should_be(
+      iv_index = 2
+      iv_name  = |{ to_upper( lv_long_name ) }|
+      iv_value = 'y' ).
 
   ENDMETHOD.
 

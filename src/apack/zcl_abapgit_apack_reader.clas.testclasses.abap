@@ -18,10 +18,10 @@ CLASS ltcl_apack_manifest_reader IMPLEMENTATION.
   METHOD setup.
     DATA: ls_apack_manifest_descriptor TYPE zif_abapgit_apack_definitions=>ty_descriptor.
 
-    ls_apack_manifest_descriptor-group_id = 'github.com/larshp'.
+    ls_apack_manifest_descriptor-group_id = 'github.com/abapGit'.
     ls_apack_manifest_descriptor-artifact_id = 'abapGit'.
     ls_apack_manifest_descriptor-version = '1.42'.
-    ls_apack_manifest_descriptor-git_url = 'https://github.com/larshp/abapGit.git'.
+    ls_apack_manifest_descriptor-git_url = 'https://github.com/abapGit/abapGit.git'.
 
     me->mo_manifest_reader = zcl_abapgit_apack_reader=>create_instance( '$TMP' ).
     me->mo_manifest_reader->set_manifest_descriptor( ls_apack_manifest_descriptor ).
@@ -30,7 +30,7 @@ CLASS ltcl_apack_manifest_reader IMPLEMENTATION.
 
   METHOD verify_own_descriptor.
     cl_abap_unit_assert=>assert_not_initial( is_manifest_descriptor ).
-    cl_abap_unit_assert=>assert_equals( exp = 'github.com/larshp'
+    cl_abap_unit_assert=>assert_equals( exp = 'github.com/abapGit'
                                         act = is_manifest_descriptor-group_id ).
     cl_abap_unit_assert=>assert_equals( exp = 'abapGit'
                                         act = is_manifest_descriptor-artifact_id ).
@@ -38,7 +38,7 @@ CLASS ltcl_apack_manifest_reader IMPLEMENTATION.
                                         act = is_manifest_descriptor-version ).
     " Repository type is added automatically by serializer later
     cl_abap_unit_assert=>assert_initial( is_manifest_descriptor-repository_type ).
-    cl_abap_unit_assert=>assert_equals( exp = 'https://github.com/larshp/abapGit.git'
+    cl_abap_unit_assert=>assert_equals( exp = 'https://github.com/abapGit/abapGit.git'
                                         act = is_manifest_descriptor-git_url ).
     cl_abap_unit_assert=>assert_initial( is_manifest_descriptor-dependencies ).
   ENDMETHOD.

@@ -40,7 +40,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
 
   METHOD build_main_menu.
@@ -54,10 +54,13 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
       iv_txt = zcl_abapgit_gui_buttons=>new_offline( )
       iv_act = zif_abapgit_definitions=>c_action-repo_newoffline
     )->add(
-      iv_txt = '<i class="icon icon-tools-solid"></i>'
+      iv_txt = zcl_abapgit_gui_buttons=>settings( )
+      iv_act = zif_abapgit_definitions=>c_action-go_settings
+    )->add(
+      iv_txt = zcl_abapgit_gui_buttons=>advanced( )
       io_sub = zcl_abapgit_gui_chunk_lib=>advanced_submenu( )
     )->add(
-      iv_txt = '<i class="icon icon-question-circle-solid"></i>'
+      iv_txt = zcl_abapgit_gui_buttons=>help( )
       io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
 
   ENDMETHOD.
@@ -67,6 +70,26 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
     super->constructor( ).
     ms_control-page_menu  = build_main_menu( ).
     ms_control-page_title = 'Repository List'.
+  ENDMETHOD.
+
+
+  METHOD get_patch_page.
+
+    DATA lv_key TYPE zif_abapgit_persistence=>ty_value.
+
+    FIND FIRST OCCURRENCE OF '=' IN iv_getdata.
+    IF sy-subrc <> 0. " Not found ? -> just repo key in params
+      lv_key = iv_getdata.
+    ELSE.
+      zcl_abapgit_html_action_utils=>stage_decode(
+        EXPORTING iv_getdata = iv_getdata
+        IMPORTING ev_key     = lv_key ).
+    ENDIF.
+
+    CREATE OBJECT ri_page TYPE zcl_abapgit_gui_page_patch
+      EXPORTING
+        iv_key = lv_key.
+
   ENDMETHOD.
 
 
@@ -90,13 +113,13 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
     DATA: lv_key TYPE zif_abapgit_persistence=>ty_value.
 
-    CASE iv_action.
+    CASE ii_event->mv_action.
       WHEN c_actions-abapgit_home.
         CLEAR mv_repo_key.
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-select.
 
-        lv_key = iv_getdata.
+        lv_key = ii_event->mv_getdata.
         zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
 
         TRY.
@@ -105,70 +128,44 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
         ENDTRY.
 
         mv_repo_key = lv_key.
-        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_view_repo
+        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_view_repo
           EXPORTING
             iv_key = lv_key.
-        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN zif_abapgit_definitions=>c_action-change_order_by.
 
-        mo_repo_overview->set_order_by( zcl_abapgit_gui_chunk_lib=>parse_change_order_by( iv_getdata ) ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        mo_repo_overview->set_order_by( zcl_abapgit_gui_chunk_lib=>parse_change_order_by( ii_event->mv_getdata ) ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-direction.
 
-        mo_repo_overview->set_order_direction( zcl_abapgit_gui_chunk_lib=>parse_direction( iv_getdata ) ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        mo_repo_overview->set_order_direction( zcl_abapgit_gui_chunk_lib=>parse_direction( ii_event->mv_getdata ) ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-apply_filter.
 
-        mo_repo_overview->set_filter( it_postdata ).
-        ev_state = zcl_abapgit_gui=>c_event_state-re_render.
+        mo_repo_overview->set_filter( ii_event->mt_postdata ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-go_patch.
 
-        ei_page = get_patch_page( iv_getdata ).
-        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+        rs_handled-page = get_patch_page( ii_event->mv_getdata ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN zif_abapgit_definitions=>c_action-repo_settings.
 
-        lv_key = iv_getdata.
-        CREATE OBJECT ei_page TYPE zcl_abapgit_gui_page_repo_sett
+        lv_key = ii_event->mv_getdata.
+        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_repo_sett
           EXPORTING
             io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-        ev_state = zcl_abapgit_gui=>c_event_state-new_page.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN OTHERS.
 
-        super->zif_abapgit_gui_event_handler~on_event(
-          EXPORTING
-            iv_action    = iv_action
-            iv_getdata   = iv_getdata
-            it_postdata  = it_postdata
-          IMPORTING
-            ei_page      = ei_page
-            ev_state     = ev_state ).
+        rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).
 
     ENDCASE.
-
-  ENDMETHOD.
-
-  METHOD get_patch_page.
-
-    DATA lv_key TYPE zif_abapgit_persistence=>ty_value.
-
-    FIND FIRST OCCURRENCE OF '=' IN iv_getdata.
-    IF sy-subrc <> 0. " Not found ? -> just repo key in params
-      lv_key = iv_getdata.
-    ELSE.
-      zcl_abapgit_html_action_utils=>stage_decode(
-        EXPORTING iv_getdata = iv_getdata
-        IMPORTING ev_key     = lv_key ).
-    ENDIF.
-
-    CREATE OBJECT ri_page TYPE zcl_abapgit_gui_page_patch
-      EXPORTING
-        iv_key = lv_key.
 
   ENDMETHOD.
 

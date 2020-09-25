@@ -8,14 +8,14 @@ CLASS zcl_abapgit_user_master_record DEFINITION
     CLASS-METHODS:
       get_instance
         IMPORTING
-          !iv_user       TYPE uname
+          !iv_user       TYPE sy-uname
         RETURNING
           VALUE(ro_user) TYPE REF TO zcl_abapgit_user_master_record.
 
     METHODS:
       constructor
         IMPORTING
-          !iv_user TYPE uname,
+          !iv_user TYPE sy-uname,
 
       get_name
         RETURNING
@@ -29,7 +29,7 @@ CLASS zcl_abapgit_user_master_record DEFINITION
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_user,
-        user   TYPE uname,
+        user   TYPE sy-uname,
         o_user TYPE REF TO zcl_abapgit_user_master_record,
       END OF ty_user.
 

@@ -301,11 +301,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDCC IMPLEMENTATION.
     ENDIF.
 
     DESCRIBE TABLE lt_enq LINES lv_lines.
-    IF lv_lines > 0.
-      rv_is_locked = abap_true.
-    ELSE.
-      rv_is_locked = abap_false.
-    ENDIF.
+    rv_is_locked = boolc( lv_lines > 0 ).
 
   ENDMETHOD.
 

@@ -61,11 +61,6 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
       IMPORTING
         !it_post_fields TYPE tihttpnvp .
     METHODS validate_settings .
-    METHODS parse_post
-      IMPORTING
-        !it_postdata          TYPE cnht_post_data_tab
-      RETURNING
-        VALUE(rt_post_fields) TYPE tihttpnvp .
     METHODS persist_settings
       RAISING
         zcx_abapgit_exception .
@@ -121,16 +116,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
         OR <ls_post_field>-value = 'on' ).     "HTML value when using Netweaver Java GUI
       rv_return = abap_true.
     ENDIF.
-  ENDMETHOD.
-
-
-  METHOD parse_post.
-
-    DATA lv_serialized_post_data TYPE string.
-
-    lv_serialized_post_data = zcl_abapgit_utils=>translate_postdata( it_postdata ).
-    rt_post_fields = zcl_abapgit_html_action_utils=>parse_fields( lv_serialized_post_data ).
-
   ENDMETHOD.
 
 
@@ -667,18 +652,21 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
 
     DATA:
       BEGIN OF ls_sel,
-        default TYPE string,
-        dark    TYPE string,
-        belize  TYPE string,
+        default         TYPE string,
+        dark            TYPE string,
+        belize          TYPE string,
+        synced_with_gui TYPE string,
       END OF ls_sel.
 
-    CASE mo_settings->get_ui_theme( ).
+    CASE mo_settings->get_ui_theme( abap_false ).
       WHEN zcl_abapgit_settings=>c_ui_theme-default.
         ls_sel-default = ' selected'.
       WHEN zcl_abapgit_settings=>c_ui_theme-dark.
         ls_sel-dark = ' selected'.
       WHEN zcl_abapgit_settings=>c_ui_theme-belize.
         ls_sel-belize = ' selected'.
+      WHEN zcl_abapgit_settings=>c_ui_theme-synced_with_gui.
+        ls_sel-synced_with_gui = ' selected'.
     ENDCASE.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -686,13 +674,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     ri_html->add( |<h2>UI Theme</h2>| ).
     ri_html->add( |<label for="ui_theme">UI Theme</label>| ).
     ri_html->add( |<br>| ).
-    ri_html->add( |<select name="ui_theme" size="3">| ).
+    ri_html->add( |<select name="ui_theme" size="4">| ).
     ri_html->add( |<option value="{ zcl_abapgit_settings=>c_ui_theme-default }"{
       ls_sel-default }>{ zcl_abapgit_settings=>c_ui_theme-default }</option>| ).
     ri_html->add( |<option value="{ zcl_abapgit_settings=>c_ui_theme-dark }"{
       ls_sel-dark }>{ zcl_abapgit_settings=>c_ui_theme-dark }</option>| ).
     ri_html->add( |<option value="{ zcl_abapgit_settings=>c_ui_theme-belize }"{
       ls_sel-belize }>{ zcl_abapgit_settings=>c_ui_theme-belize }</option>| ).
+    ri_html->add( |<option value="{ zcl_abapgit_settings=>c_ui_theme-synced_with_gui }"{
+      ls_sel-synced_with_gui }>Synced with SAP GUI</option>| ).
     ri_html->add( |</select>| ).
 
     ri_html->add( |<br>| ).
@@ -717,24 +707,24 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
     DATA:
       lt_post_fields TYPE tihttpnvp.
 
-    CASE iv_action.
+    CASE ii_event->mv_action.
       WHEN c_action-save_settings.
-        lt_post_fields = parse_post( it_postdata ).
+        lt_post_fields = zcl_abapgit_html_action_utils=>parse_post_form_data( ii_event->mt_postdata ).
 
         post( lt_post_fields ).
         validate_settings( ).
 
         IF mv_error = abap_true.
-          MESSAGE 'Error when saving settings. Open an issue at https://github.com/larshp/abapGit' TYPE 'E'.
+          MESSAGE 'Error when saving settings. Open an issue at https://github.com/abapGit/abapGit' TYPE 'E'.
         ELSE.
           persist_settings( ).
         ENDIF.
 
-        ev_state = zcl_abapgit_gui=>c_event_state-go_back.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
       WHEN c_action-change_proxy_bypass.
         mt_proxy_bypass = zcl_abapgit_ui_factory=>get_popups( )->popup_proxy_bypass( mt_proxy_bypass ).
 
-        ev_state = zcl_abapgit_gui=>c_event_state-no_more_act.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
     ENDCASE.
 
   ENDMETHOD.

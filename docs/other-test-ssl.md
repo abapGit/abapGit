@@ -9,7 +9,7 @@ Following report can be used to test SSL connection to github. Copy paste the re
 ```abap
 REPORT zabapgit_test_ssl.
 
-* See https://github.com/larshp/abapGit/
+* See https://github.com/abapGit/abapGit/
 
 PARAMETERS: p_url1 TYPE swc_value DEFAULT 'https://github.com',
             p_url2 TYPE swc_value DEFAULT 'https://api.github.com',

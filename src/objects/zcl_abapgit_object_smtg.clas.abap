@@ -12,9 +12,10 @@ CLASS zcl_abapgit_object_smtg DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING
           zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA:
-      mv_template_id TYPE char30,
+      mv_template_id TYPE c LENGTH 30,
       mo_structdescr TYPE REF TO cl_abap_structdescr.
 
     METHODS:
@@ -38,12 +39,53 @@ CLASS zcl_abapgit_object_smtg DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           ct_components     TYPE abap_component_tab
         RAISING
           zcx_abapgit_exception.
-
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_SMTG IMPLEMENTATION.
+
+
+  METHOD add_component.
+
+    DATA:
+      ls_component LIKE LINE OF ct_components,
+      lo_typedescr TYPE REF TO cl_abap_typedescr.
+
+    cl_abap_structdescr=>describe_by_name(
+      EXPORTING
+        p_name         = iv_structure_name
+      RECEIVING
+        p_descr_ref    = lo_typedescr
+      EXCEPTIONS
+        type_not_found = 1
+        OTHERS         = 2 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |SMTG not supported| ).
+    ENDIF.
+
+    ls_component-name =  iv_fielname.
+    ls_component-type ?= lo_typedescr.
+    INSERT ls_component INTO TABLE ct_components.
+
+  ENDMETHOD.
+
+
+  METHOD clear_field.
+
+    FIELD-SYMBOLS: <lg_field> TYPE data.
+
+    ASSIGN
+      COMPONENT iv_fieldname
+      OF STRUCTURE cg_header
+      TO <lg_field>.
+    ASSERT sy-subrc = 0.
+
+    CLEAR: <lg_field>.
+
+  ENDMETHOD.
+
 
   METHOD constructor.
 
@@ -53,6 +95,36 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
 
     mv_template_id = ms_item-obj_name.
     mo_structdescr = get_structure( ).
+
+  ENDMETHOD.
+
+
+  METHOD get_structure.
+
+    DATA: lt_components TYPE abap_component_tab.
+
+    add_component(
+      EXPORTING
+        iv_fielname       = `HEADER`
+        iv_structure_name = `IF_SMTG_EMAIL_TEMPLATE=>TY_GS_TMPL_HDR`
+      CHANGING
+        ct_components     = lt_components ).
+
+    add_component(
+      EXPORTING
+        iv_fielname       = `HEADER_T`
+        iv_structure_name = `IF_SMTG_EMAIL_TEMPLATE=>TY_GT_TMPL_HDR_T`
+      CHANGING
+        ct_components     = lt_components ).
+
+    add_component(
+      EXPORTING
+        iv_fielname       = `CONTENT`
+        iv_structure_name = `IF_SMTG_EMAIL_TEMPLATE=>TY_GT_TMPL_CONT`
+      CHANGING
+        ct_components     = lt_components ).
+
+    ro_structdescr = cl_abap_structdescr=>create( lt_components ).
 
   ENDMETHOD.
 
@@ -316,76 +388,4 @@ CLASS zcl_abapgit_object_smtg IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
-
-
-  METHOD clear_field.
-
-    FIELD-SYMBOLS: <lg_field> TYPE data.
-
-    ASSIGN
-      COMPONENT iv_fieldname
-      OF STRUCTURE cg_header
-      TO <lg_field>.
-    ASSERT sy-subrc = 0.
-
-    CLEAR: <lg_field>.
-
-  ENDMETHOD.
-
-
-  METHOD get_structure.
-
-    DATA: lt_components TYPE abap_component_tab.
-
-    add_component(
-      EXPORTING
-        iv_fielname       = `HEADER`
-        iv_structure_name = `IF_SMTG_EMAIL_TEMPLATE=>TY_GS_TMPL_HDR`
-      CHANGING
-        ct_components     = lt_components ).
-
-    add_component(
-      EXPORTING
-        iv_fielname       = `HEADER_T`
-        iv_structure_name = `IF_SMTG_EMAIL_TEMPLATE=>TY_GT_TMPL_HDR_T`
-      CHANGING
-        ct_components     = lt_components ).
-
-    add_component(
-      EXPORTING
-        iv_fielname       = `CONTENT`
-        iv_structure_name = `IF_SMTG_EMAIL_TEMPLATE=>TY_GT_TMPL_CONT`
-      CHANGING
-        ct_components     = lt_components ).
-
-    ro_structdescr = cl_abap_structdescr=>create( lt_components ).
-
-  ENDMETHOD.
-
-
-  METHOD add_component.
-
-    DATA:
-      ls_component LIKE LINE OF ct_components,
-      lo_typedescr TYPE REF TO cl_abap_typedescr.
-
-    cl_abap_structdescr=>describe_by_name(
-      EXPORTING
-        p_name         = iv_structure_name
-      RECEIVING
-        p_descr_ref    = lo_typedescr
-      EXCEPTIONS
-        type_not_found = 1
-        OTHERS         = 2 ).
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |SMTG not supported| ).
-    ENDIF.
-
-    ls_component-name =  iv_fielname.
-    ls_component-type ?= lo_typedescr.
-    INSERT ls_component INTO TABLE ct_components.
-
-  ENDMETHOD.
-
 ENDCLASS.

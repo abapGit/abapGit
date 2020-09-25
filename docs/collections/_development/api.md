@@ -5,9 +5,13 @@ order: 80
 
 *******************************
 
-## Repositories
+This page describes how to execute various abapGit tasks using your own code. These classes and methods have existed for quite some time and are stable. However, they do **not** provide a guaranteed API. Future changes are a possibility. 
 
-### Create Online
+## Repositories ##
+
+### Create Online ###
+
+Create a new abapGit repository for a given online project and branch and associate it with an SAP package (must exist already):
 
 ```abap
 DATA(lo_repo) = zcl_abapgit_repo_srv=>get_instance( )->new_online(
@@ -16,91 +20,175 @@ DATA(lo_repo) = zcl_abapgit_repo_srv=>get_instance( )->new_online(
   iv_package     = lv_package ).
 ```
 
-### Create Offline
+Optional parameters correspond to the input fields of "New Online" in abapGit.
+
+### Create Offline ###
+
+Create a new abapGit repository for an offline project and associate it with an SAP package (must exist already):
 
 ```abap
-zcl_abapgit_repo_srv=>get_instance( )->new_offline(
+DATA(lo_repo) = zcl_abapgit_repo_srv=>get_instance( )->new_offline(
+  iv_url     = lv_name_of_repo   "not a URL
+  iv_package = lv_package ).
 ```
 
-### List
+Optional parameters correspond to the input fields of "New Offline" in abapGit.
+
+### List ###
+
+Get a list of all repository instances:
 
 ```abap
-DATA(lt_repos) = NEW zcl_abapgit_persistence_repo( )->list( ).
+DATA(lt_repos) = zcl_abapgit_repo_srv=>get_instance( )->list( ).
 ```
 
-todo, ZCL_ABAPGIT_REPO_SRV->list( returns a list of objects, should this be used
-instead of the persistence_repo, probably, having a list of structures is just
-easier to use sometimes
-
-### Read
+Get a structured list of all repositories with properties and local settings:
 
 ```abap
-DATA(ls_repo) = NEW zcl_abapgit_persistence_repo( )->read( iv_key )
+DATA(lt_list) = NEW zcl_abapgit_persistence_repo( )->list( ).
 ```
 
-todo, zcl_abapgit_persistence_repo vs zcl_abapgit_repo_srv
+### Read ###
 
-### Delete
-
-Removes the project, objects in package untouched
+Get an instance of a repository:
 
 ```abap
-zcl_abapgit_repo_srv=>get_instance( )->get( iv_key )->delete( ).
+DATA(lo_repo) = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 ```
 
-(this one looks good)
-
-### Purge
-
-Deletes all objects part of repository
+Get a structure containing all properties and local settings of a repository:
 
 ```abap
-zcl_abapgit_repo_srv=>get_instance( )->purge(
-      zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ) ).
+DATA(ls_repo) = NEW zcl_abapgit_persistence_repo( )->read( iv_key ).
 ```
 
-todo, to be refactored, in zcl_abapgit_repo_srv inputs for other methods is key not the object.
-Generally, should delete + purge + read be methods on the repo object instead?
-And the srv class have a get_by_id method?
+### Find ###
 
-### Status
+Find the repository for a given SAP package:
 
-Online only?
+```abap
+DATA(lo_repo) = zcl_abapgit_repo_srv=>get_instance( )->get_repo_from_package( iv_package ).
+```
+
+### Delete ###
+
+Remove an abapGit repository (the objects in SAP packages remain untouched):
+
+```abap
+zcl_abapgit_repo_srv=>get_instance( )->delete( lo_repo ).
+```
+
+### Purge ###
+
+Delete all objects that are part of an abapGit repository (i.e. full uninstall):
+
+```abap
+ls_checks = lo_repo->delete_checks( ).
+IF ls_checks-transport-required = abap_true.
+  ls_checks-transport-transport = 'SIDK900000'. "transport ewquest
+ENDIF.
+
+zcl_abapgit_repo_srv=>get_instance( )->purge(  
+  io_repo  = lo_repo 
+  is_check = ls_check ).
+```
+
+### Status ###
+
+Get the status of all files included in a repository:
 
 ```abap
 DATA(lt_result) = zcl_abapgit_file_status=>status( lo_repo ).
 ```
 
-todo, should this be refactored to the repo object instead?
 
 *******************************
 
-## Branches
+## Online Repository ##
 
-### List
-`zcl_abapgit_git_transport=>branches( io_repo->get_url( ) ).`
+The following tasks are supported for online repositories only (`lo_repo type ref to zcl_abapgit_repo_online`).
 
-### Switching
-`repo->set_branch_name( lv_name )`
+**Note:** Certain tasks will require authentication (user/password or token). In such cases, you will have to provide the login details upfront (see [#1331](https://github.com/abapGit/abapGit/issues/1331) for details):
 
-### Creating
-`repo->create_branch( )`
+```abap
+zcl_abapgit_login_manager=>set(
+  iv_uri      = lo_repo->get_url( )
+  iv_username = lv_username
+  iv_password = lv_password ).
+```
 
-### Deleting
-todo
+### List Branches ###
 
-*******************************
+Get a list of all branches (including main branch):
 
-## Pushing
+```abap
+zcl_abapgit_git_transport=>branches( lo_repo->get_url( ) ).
+```
 
-Online projects, todo, see
-[https://github.com/larshp/abapGit/blob/master/src/zcl_abapgit_background.clas.abap](https://github.com/larshp/abapGit/blob/master/src/zcl_abapgit_background.clas.abap)
+### Switch Branch ###
 
-todo: staging, commits, tags
+Switch abapGit repository to a different branch:
 
-*******************************
+```abap
+lo_repo->set_branch_name( lv_name ).
+```
 
-## Pulling, Online projects
+### Create Branch ###
+
+Create a new branch in an online repository:
+
+```abap
+lo_repo->create_branch( lv_name ).
+```
+
+### Delete Branch ###
+
+Delete a branch of an online repository:
+
+```abap
+lo_branches = zcl_abapgit_git_transport=>branches( lo_repo->get_url( ) ).
+ls_branch = lo_branches->find_by_name( lv_name ).
+
+zcl_abapgit_git_porcelain=>delete_branch(
+  iv_url    = lo_repo->get_url( )
+  is_branch = ls_branch ).
+```
+
+### Push Changes ###
+
+Push changes to an online repository:
+
+```abap
+CREATE OBJECT li_log TYPE zcl_abapgit_log.
+CREATE OBJECT li_background TYPE zcl_abapgit_background_push_au. " or push_fi
+
+li_background->run(
+  io_repo     = lo_repo
+  ii_log      = li_log
+  it_settings = lt_settings ).
+```
+        
+Alternatively, implement your own logic using interface `zif_abapgit_background` (see
+[Background Package](https://github.com/abapGit/abapGit/tree/master/src/background) for details).
+
+### Pull Changes ##
+
+Pull changes from an online repository:
+
+```abap
+CREATE OBJECT li_log TYPE zcl_abapgit_log.
+CREATE OBJECT li_background TYPE zcl_abapgit_background_pull.
+
+li_background->run(
+  io_repo     = lo_repo
+  ii_log      = li_log
+  it_settings = lt_settings ).
+```
+
+Alternative 1: implement your own logic using interface `zif_abapgit_background` (see
+[Background Package](https://github.com/abapGit/abapGit/tree/master/src/background) for details).
+
+Alternative 2: Use the following code to trigger the pull.
 
 ```abap
 METHOD pull.
@@ -143,17 +231,43 @@ METHOD decisions.
   ENDIF.
 
   IF rs_checks-transport-required = abap_true.
-    rs_checks-transport-transport = 'SOMETHING'.
+    rs_checks-transport-transport = 'SIDK900000'. "transport request
   ENDIF.
 
 ENDMETHOD.
 ```
 
-todo:
-[https://github.com/larshp/abapGit/issues/1331](https://github.com/larshp/abapGit/issues/1331)
+*******************************
+
+## Offline Repository ##
+
+The following tasks are supported for offline repositories only (`lo_repo type ref to zcl_abapgit_repo_offline`).
+
+### Import ZIP ###
+
+Upload ZIP file from frontend to an offline repository:
+
+```abap
+lv_xstr = zcl_abapgit_ui_factory=>get_frontend_services( )->file_upload( lv_file_with_path ).
+
+lo_repo->set_files_remote( zcl_abapgit_zip=>load( lv_xstr ) ).
+zcl_abapgit_services_repo=>refresh( lv_key ).
+```
+
+### Export ZIP ###
+
+Download ZIP file of an offline repository to frontend:
+
+```abap
+lv_xstr = zcl_abapgit_zip=>export( lo_repo ).
+
+zcl_abapgit_ui_factory=>get_frontend_services( )->file_download( 
+  iv_path = lv_file_with_path 
+  iv_xstr = lv_xstr ).
+```
 
 *******************************
 
-## Progress indicator
+## Progress Indicator ##
 
 The default progress indicator shows progress in SAP GUI, however it is possible to inject a custom progress indicator via `ZCL_ABAPGIT_PROGRESS=>SET_INSTANCE` which can catch the status in non SAP GUI scenarios.

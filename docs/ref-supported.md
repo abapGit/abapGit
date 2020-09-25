@@ -8,19 +8,19 @@ Type   | Description   | Supported
 :------------ | :------------ | ------------:
 ACID | Checkpoint Group | Yes
 AMSD | Logical Database Schema | Yes
-AOBJ | Archiving Object | [#804](https://github.com/larshp/abapGit/issues/804)
+AOBJ | Archiving Object | [#804](https://github.com/abapGit/abapGit/issues/804)
 AREA | InfoArea | Yes
 ASFC | Field Catalog | Yes
-ASIS | Archiving Information Structure | [#1579](https://github.com/larshp/abapGit/issues/1579)
+ASIS | Archiving Information Structure | [#1579](https://github.com/abapGit/abapGit/issues/1579)
 AUTH | Authorization Check Fields | Yes
-AVAS | Classification | [#1360](https://github.com/larshp/abapGit/issues/1360)
+AVAS | Classification | [#1360](https://github.com/abapGit/abapGit/issues/1360)
 BDEF | Behaviour Definition | Yes
-BMFR | Application Component | [#2108](https://github.com/larshp/abapGit/issues/2108)
-BOBF | BOPF: Business Object Model | [#165](https://github.com/larshp/abapGit/issues/165)
+BMFR | Application Component | [#2108](https://github.com/abapGit/abapGit/issues/2108)
+BOBF | BOPF: Business Object Model | [#165](https://github.com/abapGit/abapGit/issues/165)
 CHAR | Object characteristic | Yes
 CHDO | Change Document Object | Yes
 CLAS | Class (ABAP Objects) | Yes
-CMOD | Customer enhancement projects | [#151](https://github.com/larshp/abapGit/issues/151)
+CMOD | Customer enhancement projects | [#151](https://github.com/abapGit/abapGit/issues/151)
 CMPT | Code Composer Template | Yes
 CUS0 | Customizing IMG Activity | Yes
 CUS1 | Customizing Transactions | Yes
@@ -51,8 +51,8 @@ ENSC | Composite Enhancement Spot | Yes
 FORM | SAPscript form | Yes
 FTGL | Feature Toggle | Yes
 FUGR | Function Group | Yes
-FUGS | Function Group with Customer Include: SAP Part | [#2851](https://github.com/larshp/abapGit/issues/2851)
-FUGX | Function Group with Customer Include: Customer Part | [#2851](https://github.com/larshp/abapGit/issues/2851)
+FUGS | Function Group with Customer Include: SAP Part | [#2851](https://github.com/abapGit/abapGit/issues/2851)
+FUGX | Function Group with Customer Include: Customer Part | [#2851](https://github.com/abapGit/abapGit/issues/2851)
 G4BA | SAP Gateway OData V4 Backend Service Group & Assigments | Yes
 G4BS | SAP Gateway OData V4 Backend Service | Yes
 IAMU | Language-Independent IAC Binary Data | Yes
@@ -71,24 +71,26 @@ IWSG | Gateway: Service Groups Metadata | Yes
 IWSV | Gateway Business Suite Enablement - Service | Yes
 IWVB | SAP Gateway Business Suite Enablement -Vocabulary Annotation | Yes
 JOBD | Technical Job Definition | Yes
-LPDC | Launchpad short texts | [#107](https://github.com/larshp/abapGit/issues/107)
+LPDC | Launchpad short texts | [#107](https://github.com/abapGit/abapGit/issues/107)
 MSAG | Message Class | Yes
 NROB | Number Range Objects | Yes
 OA2P | OAuth2 Profile | Yes
 ODSO | DataStore Object | Yes
 OTGR | Object type group | Yes
 PARA | SPA/GPA Parameters | Yes
-PDTS | Standard Task | [#153](https://github.com/larshp/abapGit/issues/153)
-PDWS | Workflow templates | [#154](https://github.com/larshp/abapGit/issues/154)
+PDAC | Standard Rule | [#3914](https://github.com/abapGit/abapGit/issues/3914)
+PDTG | Task Group | [#3915](https://github.com/abapGit/abapGit/issues/3915)
+PDTS | Standard Task | [#153](https://github.com/abapGit/abapGit/issues/153)
+PDWS | Workflow templates | [#154](https://github.com/abapGit/abapGit/issues/154)
 PERS | Personalization object | Yes
 PINF | Package interface | Yes
 PRAG | Pragma in ABAP Source Code | Yes
 PROG | Program | Yes
-SAJC | Application job catalog entry | [#1580](https://github.com/larshp/abapGit/issues/1580)
-SAJT | Application job template | [1581](https://github.com/larshp/abapGit/issues/1581)
+SAJC | Application job catalog entry | [#1580](https://github.com/abapGit/abapGit/issues/1580)
+SAJT | Application job template | [1581](https://github.com/abapGit/abapGit/issues/1581)
 SAMC | ABAP Messaging Channels | Yes
 SAPC | ABAP Push Channels | Yes
-SCP1 | BC Set or Customizing Profile | [#1004](https://github.com/larshp/abapGit/issues/1004)
+SCP1 | BC Set or Customizing Profile | [#1004](https://github.com/abapGit/abapGit/issues/1004)
 SCVI | Screen Variants | Yes
 SFBF | Business Function + Assignment | Yes
 SFBS | Business Function Set + Assignment | Yes
@@ -116,7 +118,7 @@ STVI | Transaction Variants | Yes
 STYL | SAPscript style | Yes
 SUCU | Authorization Groups (TBRG_AUTH) | Yes
 SUSC | Authorization object class | Yes
-SUSH | Assignment: Service --> Authorization Objects | [#1582](https://github.com/larshp/abapGit/issues/1582)
+SUSH | Assignment: Service --> Authorization Objects | [#1582](https://github.com/abapGit/abapGit/issues/1582)
 SUSO | Authorization object | Yes
 SXCI | Business Add-Ins - Implementations | Yes
 TABL | Table | Yes
@@ -132,7 +134,7 @@ VIEW | View | Yes
 W3HT | Web Reporting/Internet Transaction Server HTML Templates | Yes
 W3MI | Web Reporting/Internet Transaction Server MIME Types(binary | Yes
 WAPA | BSP (Business Server Pages) Application | Yes
-WDCA | Web Dynpro Application Configuration | [#79](https://github.com/larshp/abapGit/issues/79)
+WDCA | Web Dynpro Application Configuration | [#79](https://github.com/abapGit/abapGit/issues/79)
 WDCC | Web Dynpro Component Configuration | Yes
 WDYA | Web Dynpro Application | Yes
 WDYN | Web Dynpro Component | Yes
@@ -140,8 +142,8 @@ WEBI | Virtual End Point | Yes
 XINX | Extension Index | Yes
 XSLT | Transformation | Yes
 
-If additional object types are required please open an [issue](https://github.com/larshp/abapGit/issues)
+If additional object types are required please open an [issue](https://github.com/abapGit/abapGit/issues)
 
-Support for customizing planned, see [#1004](https://github.com/larshp/abapGit/issues/1004)
+Support for customizing planned, see [#1004](https://github.com/abapGit/abapGit/issues/1004)
 
-Also see [https://github.com/larshp/abapGit-Plugins](https://github.com/larshp/abapGit-Plugins)
+Also see [https://github.com/abapGit/abapGit-Plugins](https://github.com/abapGit/abapGit-Plugins)

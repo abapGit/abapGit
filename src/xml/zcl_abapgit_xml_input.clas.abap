@@ -7,11 +7,6 @@ CLASS zcl_abapgit_xml_input DEFINITION
 
     INTERFACES zif_abapgit_xml_input.
 
-    ALIASES:
-      read FOR zif_abapgit_xml_input~read,
-      get_raw FOR zif_abapgit_xml_input~get_raw,
-      get_metadata FOR zif_abapgit_xml_input~get_metadata.
-
     METHODS constructor
       IMPORTING
         !iv_xml      TYPE clike
@@ -54,17 +49,17 @@ CLASS zcl_abapgit_xml_input IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_metadata.
+  METHOD zif_abapgit_xml_input~get_metadata.
     rs_metadata = ms_metadata.
   ENDMETHOD.
 
 
-  METHOD get_raw.
+  METHOD zif_abapgit_xml_input~get_raw.
     ri_raw = mi_xml_doc.
   ENDMETHOD.
 
 
-  METHOD read.
+  METHOD zif_abapgit_xml_input~read.
 
     DATA: lx_error TYPE REF TO cx_transformation_error,
           lt_rtab  TYPE abap_trans_resbind_tab.

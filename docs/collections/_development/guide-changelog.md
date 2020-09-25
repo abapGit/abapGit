@@ -37,4 +37,4 @@ Notes section using header format:
 + Notes.....
 ```
 
-Check [abapGit changelog](https://github.com/larshp/abapGit/blob/master/changelog.txt) as texample
+Check [abapGit changelog](https://github.com/abapGit/abapGit/blob/master/changelog.txt) as texample

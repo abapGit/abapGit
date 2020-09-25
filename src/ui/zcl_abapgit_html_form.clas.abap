@@ -24,7 +24,9 @@ CLASS zcl_abapgit_html_form DEFINITION
         iv_label   TYPE string
         iv_action  TYPE string
         iv_is_main TYPE abap_bool DEFAULT abap_false
-        iv_as_a    TYPE abap_bool DEFAULT abap_false.
+        iv_as_a    TYPE abap_bool DEFAULT abap_false
+      RETURNING
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
 
     METHODS text
       IMPORTING
@@ -32,32 +34,51 @@ CLASS zcl_abapgit_html_form DEFINITION
         iv_name        TYPE string
         iv_hint        TYPE string OPTIONAL
         iv_required    TYPE abap_bool DEFAULT abap_false
+        iv_upper_case  TYPE abap_bool DEFAULT abap_false
         iv_placeholder TYPE string OPTIONAL
-        iv_side_action TYPE string OPTIONAL.
+        iv_side_action TYPE string OPTIONAL
+      RETURNING
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
 
     METHODS checkbox
       IMPORTING
         iv_label TYPE string
         iv_name  TYPE string
-        iv_hint  TYPE string OPTIONAL.
+        iv_hint  TYPE string OPTIONAL
+      RETURNING
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
 
     METHODS radio
       IMPORTING
         iv_label         TYPE string
         iv_name          TYPE string
         iv_default_value TYPE string OPTIONAL
-        iv_hint          TYPE string OPTIONAL.
+        iv_hint          TYPE string OPTIONAL
+      RETURNING
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
 
     METHODS option
       IMPORTING
         iv_label TYPE string
-        iv_value TYPE string.
+        iv_value TYPE string
+      RETURNING
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
 
     METHODS start_group
       IMPORTING
         iv_label TYPE string
         iv_name  TYPE string
-        iv_hint  TYPE string OPTIONAL.
+        iv_hint  TYPE string OPTIONAL
+      RETURNING
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
+
+    METHODS validate_normalize_form_data
+      IMPORTING
+        io_form_data TYPE REF TO zcl_abapgit_string_map
+      RETURNING
+        VALUE(ro_form_data) TYPE REF TO zcl_abapgit_string_map
+      RAISING
+        zcx_abapgit_exception.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -78,6 +99,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         dblclick      TYPE string,
         placeholder   TYPE string,
         required      TYPE string,
+        upper_case    TYPE abap_bool,
         item_class    TYPE string,
         error         TYPE string,
         default_value TYPE string,
@@ -102,9 +124,10 @@ CLASS zcl_abapgit_html_form DEFINITION
         field_group TYPE i VALUE 4,
       END OF c_field_type .
     DATA:
-      mt_fields TYPE STANDARD TABLE OF ty_field .
+      mt_fields TYPE STANDARD TABLE OF ty_field
+        WITH UNIQUE SORTED KEY by_name COMPONENTS name.
     DATA:
-      mt_commands TYPE STANDARD TABLE OF ty_command .
+      mt_commands TYPE STANDARD TABLE OF ty_command.
     DATA mv_form_id TYPE string .
 
     METHODS render_field
@@ -138,6 +161,8 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
     APPEND ls_field TO mt_fields.
 
+    ro_self = me.
+
   ENDMETHOD.
 
 
@@ -153,6 +178,8 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     ls_cmd-as_a = iv_as_a.
 
     APPEND ls_cmd TO mt_commands.
+
+    ro_self = me.
 
   ENDMETHOD.
 
@@ -190,6 +217,8 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
     APPEND ls_option TO <ls_last>-subitems.
 
+    ro_self = me.
+
   ENDMETHOD.
 
 
@@ -207,6 +236,8 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     ENDIF.
 
     APPEND ls_field TO mt_fields.
+
+    ro_self = me.
 
   ENDMETHOD.
 
@@ -398,6 +429,8 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
     APPEND ls_field TO mt_fields.
 
+    ro_self = me.
+
   ENDMETHOD.
 
 
@@ -405,9 +438,10 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
 
     DATA ls_field LIKE LINE OF mt_fields.
 
-    ls_field-type  = c_field_type-text.
-    ls_field-name  = iv_name.
-    ls_field-label = iv_label.
+    ls_field-type       = c_field_type-text.
+    ls_field-name       = iv_name.
+    ls_field-label      = iv_label.
+    ls_field-upper_case = iv_upper_case.
 
     IF iv_hint IS NOT INITIAL.
       ls_field-hint    = | title="{ iv_hint }"|.
@@ -431,6 +465,39 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     ENDIF.
 
     APPEND ls_field TO mt_fields.
+
+    ro_self = me.
+
+  ENDMETHOD.
+
+
+  METHOD validate_normalize_form_data.
+
+    DATA ls_field LIKE LINE OF mt_fields.
+    FIELD-SYMBOLS <ls_entry> LIKE LINE OF io_form_data->mt_entries.
+
+    CREATE OBJECT ro_form_data.
+
+    LOOP AT io_form_data->mt_entries ASSIGNING <ls_entry>.
+      READ TABLE mt_fields INTO ls_field WITH KEY by_name COMPONENTS name = <ls_entry>-k.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Unexpected form field [{ <ls_entry>-k }]| ).
+      ENDIF.
+
+      IF ls_field-type = c_field_type-checkbox.
+        ro_form_data->set(
+          iv_key = <ls_entry>-k
+          iv_val = boolc( <ls_entry>-v = 'on' ) ).
+      ELSEIF ls_field-type = c_field_type-text AND ls_field-upper_case = abap_true.
+        ro_form_data->set(
+          iv_key = <ls_entry>-k
+          iv_val = to_upper( <ls_entry>-v ) ).
+      ELSE.
+        ro_form_data->set(
+          iv_key = <ls_entry>-k
+          iv_val = <ls_entry>-v ).
+      ENDIF.
+    ENDLOOP.
 
   ENDMETHOD.
 ENDCLASS.

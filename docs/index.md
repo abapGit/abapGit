@@ -5,7 +5,7 @@ abapGit is a git client for ABAP developed in ABAP. It requires SAP BASIS versio
 
 Latest build: [zabapgit.abap](https://raw.githubusercontent.com/abapGit/build/master/zabapgit.abap)
 
-For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/larshp/abapGit/issues)
+For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/abapGit/abapGit/issues)
 
 ### Security
 abapGit is a tool to import and export code between ABAP systems. If a developer has a developer key to the system,
@@ -17,7 +17,7 @@ ABAP artifacts in the system in ways that might not be intended. Always review a
 this is possible because abapGit is plain text unlinke traditional transport files.
 
 That being said, abapGit is used by mutiple [organizations](https://docs.abapgit.org/other-where-used.html), all abapGit
-changes are reviewed via pull requests. And all 100+ [repository watchers](https://github.com/larshp/abapGit/watchers) are
+changes are reviewed via pull requests. And all 100+ [repository watchers](https://github.com/abapGit/abapGit/watchers) are
 automatically notified for every change to the code base, so potentially all changes are looked at by more people than
 tradtional enterprise products.
 

@@ -10,7 +10,7 @@ order: 50
 * Queensland Health
 * RheinEnergie AG, Cologne, Germany
 * Sword Holdings
-* bonprix Handelsgesellschaft mbH, Germany 
+* bonprix Handelsgesellschaft mbH, Germany
 * [CHS Inc.](https://www.chsinc.com)
 * [TRR, Sweden](https://www.trr.se)
 
@@ -38,4 +38,4 @@ order: 50
 
 [Projects using abapGit listed on dotabap.org](http://dotabap.org)
 
-Initial list reported at [issue #1574](https://github.com/larshp/abapGit/issues/1574). Updates can be made via pull request.
+Initial list reported at [issue #1574](https://github.com/abapGit/abapGit/issues/1574). Updates can be made via pull request.
