@@ -244,10 +244,10 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
     lo_gen_task = lo_inst.
 
-    lcl_abapgit_object_pdts_helper=>set_objid( iv_objid = mv_objid
+    lcl_task_definition=>set_objid( iv_objid = mv_objid
                                                io_task  = lo_gen_task ).
 
-    lcl_abapgit_object_pdts_helper=>set_container_id( iv_id    = |{ c_object_type_task }{ mv_objid }|
+    lcl_task_definition=>set_container_id( iv_id    = |{ c_object_type_task }{ mv_objid }|
                                                       io_task  = lo_gen_task ).
 
     lo_inst->change_wi_text(

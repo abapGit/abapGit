@@ -1,21 +1,24 @@
-CLASS lcl_abapgit_object_pdts_helper DEFINITION
+CLASS lcl_task_definition DEFINITION
   INHERITING FROM cl_workflow_general_task_def
   CREATE PUBLIC
   FINAL.
 
   PUBLIC SECTION.
+    CLASS-METHODS create IMPORTING iv_objid TYPE hrobject-objid.
 
     CLASS-METHODS set_objid IMPORTING iv_objid TYPE hrobject-objid
                                       io_task  TYPE REF TO cl_workflow_general_task_def.
 
     CLASS-METHODS set_container_id IMPORTING iv_id   TYPE guid_32
-                                             io_task TYPE REF TO cl_workflow_general_task_def.  "#EC NEEDED
+                                             io_task TYPE REF TO cl_workflow_general_task_def. "#EC NEEDED
+
+  PRIVATE SECTION.
 
 ENDCLASS.
 
 
 
-CLASS lcl_abapgit_object_pdts_helper IMPLEMENTATION.
+CLASS lcl_task_definition IMPLEMENTATION.
 
 
   METHOD set_container_id.
@@ -35,6 +38,10 @@ CLASS lcl_abapgit_object_pdts_helper IMPLEMENTATION.
   METHOD set_objid.
 
     io_task->objid = iv_objid.
+
+  ENDMETHOD.
+
+  METHOD create.
 
   ENDMETHOD.
 
