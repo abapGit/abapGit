@@ -336,7 +336,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ENDIF.
 
     ri_html->add( |<div class="{ lv_class }">| ).
-    ri_html->add( |{ ri_html->icon( 'exclamation-circle/red' ) } Error: { lv_error }| ).
+    ri_html->add( |{ ri_html->icon( 'exclamation-circle/red' ) } { lv_error }| ).
     ri_html->add( '</div>' ).
 
   ENDMETHOD.
@@ -374,7 +374,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       IN lv_longtext WITH |<h3>$1</h3>|.
 
     ri_html->add( |<div id="message" class="message-panel">| ).
-    ri_html->add( |{ lv_error_text }| ).
+    ri_html->add( |{ ri_html->icon( 'exclamation-circle/red' ) } { lv_error_text }| ).
     ri_html->add( |<div class="float-right">| ).
 
     ri_html->add_a(
