@@ -17,12 +17,6 @@ ENDCLASS.
 CLASS ZCL_ABAPGIT_OBJECT_CMOD IMPLEMENTATION.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_CMOD->ZIF_ABAPGIT_OBJECT~CHANGED_BY
-* +-------------------------------------------------------------------------------------------------+
-* | [<-()] RV_USER                        TYPE        XUBNAME
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~changed_by.
 
     SELECT SINGLE anam FROM modattr INTO rv_user WHERE name = ms_item-obj_name.
@@ -33,12 +27,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CMOD IMPLEMENTATION.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_CMOD->ZIF_ABAPGIT_OBJECT~DELETE
-* +-------------------------------------------------------------------------------------------------+
-* | [--->] IV_PACKAGE                     TYPE        DEVCLASS
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~delete.
 
     DATA lv_name TYPE modact-name.
@@ -82,15 +70,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CMOD IMPLEMENTATION.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_CMOD->ZIF_ABAPGIT_OBJECT~DESERIALIZE
-* +-------------------------------------------------------------------------------------------------+
-* | [--->] IV_PACKAGE                     TYPE        DEVCLASS
-* | [--->] IO_XML                         TYPE REF TO ZIF_ABAPGIT_XML_INPUT
-* | [--->] IV_STEP                        TYPE        ZIF_ABAPGIT_DEFINITIONS=>TY_DESERIALIZATION_STEP
-* | [--->] II_LOG                         TYPE REF TO ZIF_ABAPGIT_LOG
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~deserialize.
 
     DATA: lv_name    TYPE modact-name,
@@ -141,12 +120,6 @@ CLASS ZCL_ABAPGIT_OBJECT_CMOD IMPLEMENTATION.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_CMOD->ZIF_ABAPGIT_OBJECT~EXISTS
-* +-------------------------------------------------------------------------------------------------+
-* | [<-()] RV_BOOL                        TYPE        ABAP_BOOL
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~exists.
 
     DATA: lv_name TYPE modact-name.
@@ -159,75 +132,36 @@ CLASS ZCL_ABAPGIT_OBJECT_CMOD IMPLEMENTATION.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_CMOD->ZIF_ABAPGIT_OBJECT~GET_COMPARATOR
-* +-------------------------------------------------------------------------------------------------+
-* | [<-()] RI_COMPARATOR                  TYPE REF TO ZIF_ABAPGIT_COMPARATOR
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~get_comparator.
     RETURN.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_CMOD->ZIF_ABAPGIT_OBJECT~GET_DESERIALIZE_STEPS
-* +-------------------------------------------------------------------------------------------------+
-* | [<-()] RT_STEPS                       TYPE        ZIF_ABAPGIT_DEFINITIONS=>TY_DESERIALIZATION_STEP_TT
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~get_deserialize_steps.
     APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_CMOD->ZIF_ABAPGIT_OBJECT~GET_METADATA
-* +-------------------------------------------------------------------------------------------------+
-* | [<-()] RS_METADATA                    TYPE        ZIF_ABAPGIT_DEFINITIONS=>TY_METADATA
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_CMOD->ZIF_ABAPGIT_OBJECT~IS_ACTIVE
-* +-------------------------------------------------------------------------------------------------+
-* | [<-()] RV_ACTIVE                      TYPE        ABAP_BOOL
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~is_active.
     rv_active = is_active( ).
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_CMOD->ZIF_ABAPGIT_OBJECT~IS_LOCKED
-* +-------------------------------------------------------------------------------------------------+
-* | [<-()] RV_IS_LOCKED                   TYPE        ABAP_BOOL
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~is_locked.
     rv_is_locked = abap_false.
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_CMOD->ZIF_ABAPGIT_OBJECT~JUMP
-* +-------------------------------------------------------------------------------------------------+
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~jump.
     zcx_abapgit_exception=>raise( |Jump to CMOD is not supported| ).
   ENDMETHOD.
 
 
-* <SIGNATURE>---------------------------------------------------------------------------------------+
-* | Instance Public Method ZCL_ABAPGIT_OBJECT_CMOD->ZIF_ABAPGIT_OBJECT~SERIALIZE
-* +-------------------------------------------------------------------------------------------------+
-* | [--->] IO_XML                         TYPE REF TO ZIF_ABAPGIT_XML_OUTPUT
-* | [!CX!] ZCX_ABAPGIT_EXCEPTION
-* +--------------------------------------------------------------------------------------</SIGNATURE>
   METHOD zif_abapgit_object~serialize.
 
     DATA: lt_modact  TYPE TABLE OF modact,
