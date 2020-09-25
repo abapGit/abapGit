@@ -115,7 +115,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_REPO_OVER IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -334,7 +334,7 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
       ii_html->add( |<tr class="repo { lv_favorite_class }">| ).
       ii_html->add( |<td class="wmin">| ).
-      ii_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?{ <ls_overview>-key }|
+      ii_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?key={ <ls_overview>-key }|
                       iv_txt = ii_html->icon( iv_name  = lv_favorite_icon
                                               iv_class = 'pad-sides'
                                               iv_hint  = 'Click to toggle favorite' ) ).
@@ -342,7 +342,7 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
       ii_html->add( |<td class="wmin">{ ii_html->icon( lv_type_icon ) }</td>| ).
 
       ii_html->add( |<td>{ ii_html->a( iv_txt = <ls_overview>-name
-                                       iv_act = |{ c_action-select }?{ <ls_overview>-key }| ) }</td>| ).
+                                       iv_act = |{ c_action-select }?key={ <ls_overview>-key }| ) }</td>| ).
 
       IF <ls_overview>-type = abap_false.
         ii_html->add( |<td>{ ii_html->a( iv_txt = <ls_overview>-url
@@ -371,7 +371,7 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
         ii_html->add( |<td>{ ii_html->a(
           iv_txt = lv_branch_html
-          iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ <ls_overview>-key }| ) }</td>| ).
+          iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?key={ <ls_overview>-key }| ) }</td>| ).
       ENDIF.
 
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_by }</td>| ).
@@ -384,39 +384,39 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
 
       lv_check_link = ii_html->a(
         iv_txt = |Check|
-        iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?{ <ls_overview>-key } | ).
+        iv_act = |{ zif_abapgit_definitions=>c_action-repo_code_inspector }?key={ <ls_overview>-key } | ).
 
       ii_html->add( lv_check_link && lc_separator ).
 
       IF <ls_overview>-type = abap_false. " online repo
         lv_stage_link = ii_html->a(
           iv_txt = |Stage|
-          iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?{ <ls_overview>-key } | ).
+          iv_act = |{ zif_abapgit_definitions=>c_action-go_stage }?key={ <ls_overview>-key } | ).
 
         ii_html->add( lv_stage_link && lc_separator ).
 
         lv_patch_link = ii_html->a(
           iv_txt = |Patch|
-          iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?{ <ls_overview>-key } | ).
+          iv_act = |{ zif_abapgit_definitions=>c_action-go_patch }?key={ <ls_overview>-key } | ).
 
         ii_html->add( lv_patch_link && lc_separator ).
       ELSE. " offline repo
         lv_zip_import_link = ii_html->a(
           iv_txt = |Import|
-          iv_act = |{ zif_abapgit_definitions=>c_action-zip_import }?{ <ls_overview>-key } | ).
+          iv_act = |{ zif_abapgit_definitions=>c_action-zip_import }?key={ <ls_overview>-key } | ).
 
         ii_html->add( lv_zip_import_link && lc_separator ).
 
         lv_zip_export_link = ii_html->a(
           iv_txt = |Export|
-          iv_act = |{ zif_abapgit_definitions=>c_action-zip_export }?{ <ls_overview>-key } | ).
+          iv_act = |{ zif_abapgit_definitions=>c_action-zip_export }?key={ <ls_overview>-key } | ).
 
         ii_html->add( lv_zip_export_link && lc_separator ).
       ENDIF.
 
       lv_settings_link = ii_html->a(
         iv_txt = |Settings|
-        iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?{ <ls_overview>-key } | ).
+        iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?key={ <ls_overview>-key } | ).
 
       ii_html->add( lv_settings_link ).
 
@@ -425,7 +425,7 @@ CLASS zcl_abapgit_gui_repo_over IMPLEMENTATION.
       ii_html->add( |<td class='ro-go'><span>{
                 ii_html->a(
                   iv_txt = `&rsaquo;`
-                  iv_act = |{ c_action-select }?{ <ls_overview>-key }| ) }</span></td>| ).
+                  iv_act = |{ c_action-select }?key={ <ls_overview>-key }| ) }</span></td>| ).
 
       ii_html->add( |</tr>| ).
 

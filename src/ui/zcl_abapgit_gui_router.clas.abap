@@ -88,7 +88,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
         zcx_abapgit_exception .
     METHODS get_page_branch_overview
       IMPORTING
-        !iv_getdata    TYPE clike
+        !iv_key    TYPE zif_abapgit_persistence=>ty_repo-key
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -220,7 +220,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
           lt_repo_list     TYPE zif_abapgit_definitions=>ty_repo_ref_tt.
 
 
-    lv_key = ii_event->mv_getdata. " TODO refactor
+    lv_key = ii_event->query( iv_upper_cased = abap_true )->get( 'KEY' ).
 
     CASE ii_event->mv_action.
       WHEN zcl_abapgit_gui=>c_action-go_home.
@@ -265,7 +265,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
         ENDIF.
       WHEN zif_abapgit_definitions=>c_action-go_branch_overview.              " Go repo branch overview
-        rs_handled-page  = get_page_branch_overview( ii_event->mv_getdata ).
+        rs_handled-page  = get_page_branch_overview( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_tutorial.                     " Go to tutorial
         rs_handled-page  = zcl_abapgit_gui_page_tutorial=>create( ).
@@ -297,13 +297,10 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
   METHOD get_page_branch_overview.
 
     DATA: lo_repo TYPE REF TO zcl_abapgit_repo_online,
-          lo_page TYPE REF TO zcl_abapgit_gui_page_boverview,
-          lv_key  TYPE zif_abapgit_persistence=>ty_repo-key.
+          lo_page TYPE REF TO zcl_abapgit_gui_page_boverview.
 
 
-    lv_key = iv_getdata.
-
-    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     CREATE OBJECT lo_page
       EXPORTING
@@ -388,10 +385,9 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
   METHOD git_services.
 
-    DATA: lv_key TYPE zif_abapgit_persistence=>ty_repo-key.
+    DATA lv_key TYPE zif_abapgit_persistence=>ty_repo-key.
 
-
-    lv_key = ii_event->mv_getdata. " TODO refactor
+    lv_key = ii_event->query( iv_upper_cased = abap_true )->get( 'KEY' ).
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-git_pull.                      " GIT Pull
@@ -486,10 +482,10 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
   METHOD remote_origin_manipulations.
 
-    DATA: lv_key TYPE zif_abapgit_persistence=>ty_repo-key.
+    DATA lv_key TYPE zif_abapgit_persistence=>ty_repo-key.
 
 
-    lv_key = ii_event->mv_getdata. " TODO refactor
+    lv_key = ii_event->query( iv_upper_cased = abap_true )->get( 'KEY' ).
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-repo_remote_attach.            " Remote attach
@@ -508,12 +504,11 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
   METHOD repository_services.
 
-    DATA: lv_url TYPE string,
-          lv_key TYPE zif_abapgit_persistence=>ty_repo-key,
-          li_log TYPE REF TO zif_abapgit_log.
+    DATA:
+      lv_key TYPE zif_abapgit_persistence=>ty_repo-key,
+      li_log TYPE REF TO zif_abapgit_log.
 
-    lv_key = ii_event->mv_getdata. " TODO refactor
-    lv_url = ii_event->mv_getdata. " TODO refactor
+    lv_key = ii_event->query( iv_upper_cased = abap_true )->get( 'KEY' ).
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-repo_newoffline.                 " New offline repo
@@ -647,7 +642,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         repo_view TYPE string VALUE 'ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO',
       END OF lc_page.
 
-    lv_key = ii_event->mv_getdata. " TODO refactor
+    lv_key = ii_event->query( iv_upper_cased = abap_true )->get( 'KEY' ).
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-zip_import.                      " Import repo from ZIP

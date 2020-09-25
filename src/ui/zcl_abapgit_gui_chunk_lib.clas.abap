@@ -290,7 +290,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ri_html->add_icon( iv_name = 'code-branch/grey70'
                        iv_hint = 'Current branch' ).
     IF iv_interactive = abap_true.
-      ri_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ io_repo->get_key( ) }|
+      ri_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?key={ io_repo->get_key( ) }|
                       iv_txt = lv_text ).
     ELSE.
       ri_html->add( lv_text ).
@@ -749,7 +749,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ELSE.
       lv_icon = 'star/grey'.
     ENDIF.
-    ri_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?{ io_repo->get_key( ) }|
+    ri_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?key={ io_repo->get_key( ) }|
                     iv_txt = ri_html->icon( iv_name  = lv_icon
                                             iv_class = 'pad-sides'
                                             iv_hint  = 'Click to toggle favorite' ) ).
