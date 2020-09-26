@@ -35,6 +35,7 @@ ENDCLASS.
 
 
 INTERFACE lif_task_definition.
+
   TYPES: BEGIN OF ty_task_data,
            short_text                 TYPE hr_mcshort,
            plvar                      TYPE plvar,
@@ -49,7 +50,7 @@ INTERFACE lif_task_definition.
          END OF ty_task_data.
 
   METHODS clear_origin_data.
-  METHODS get_definition RETURNING VALUE(rs_result) TYPE lif_task_definition=>ty_task_data.
+  METHODS get_definition RETURNING VALUE(rs_result) TYPE ty_task_data.
   METHODS get_container RETURNING VALUE(ri_result) TYPE REF TO if_swf_cnt_container.
 
 ENDINTERFACE.
