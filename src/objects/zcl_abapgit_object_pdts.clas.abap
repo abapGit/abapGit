@@ -41,9 +41,7 @@ CLASS zcl_abapgit_object_pdts DEFINITION
 ENDCLASS.
 
 
-
 CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
-
 
   METHOD constructor.
 
@@ -88,6 +86,8 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
     li_task = lcl_task_definition=>create( mv_objid ).
     li_task->clear_origin_data( ).
+    io_xml->add( iv_name = 'PDTS'
+                 ig_data = li_task->get_definition( ) ).
 
     cl_workflow_factory=>create_ts(
       EXPORTING
@@ -102,53 +102,8 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
     check_subrc_for( `CREATE_TS` ).
 
-    ls_task-wi_text                    = lo_inst->wi_text.
-    ls_task-short_text                 = lo_inst->short_text.
-    ls_task-plvar                      = lo_inst->plvar.
-    ls_task-method                     = lo_inst->method.
-    ls_task-method_binding             = lo_inst->method_binding.
-    ls_task-starting_events            = lo_inst->starting_events.
-    ls_task-starting_events_binding    = lo_inst->starting_events_binding.
-    ls_task-terminating_events         = lo_inst->terminating_events.
-    ls_task-terminating_events_binding = lo_inst->terminating_events_binding.
-    ls_task-descriptions               = lo_inst->descriptions.
-
-    CLEAR: ls_task-method-aedtm,
-           ls_task-method-uname.
-
-    LOOP AT ls_task-method_binding ASSIGNING <ls_method_binding>.
-
-      CLEAR: <ls_method_binding>-aedtm,
-             <ls_method_binding>-uname.
-
-    ENDLOOP.
-
-    LOOP AT ls_task-starting_events_binding ASSIGNING <ls_starting_events_binding>.
-
-      CLEAR: <ls_starting_events_binding>-aedtm,
-             <ls_starting_events_binding>-uname.
-
-    ENDLOOP.
-
-    LOOP AT ls_task-descriptions ASSIGNING <ls_description>.
-
-      CLEAR: <ls_description>-aedtm,
-             <ls_description>-uname.
-
-    ENDLOOP.
-
-    LOOP AT ls_task-terminating_events_binding ASSIGNING <ls_term_events_binding>.
-
-      CLEAR: <ls_term_events_binding>-aedtm,
-             <ls_term_events_binding>-uname.
-
-    ENDLOOP.
-
-    io_xml->add( iv_name = 'PDTS'
-                 ig_data = ls_task ).
-
     "Todo: For some reason customer elements' texts are not picked up, need to debug some more
-    lo_inst->container->to_xml(
+    li_task->get_container( )->to_xml(
       EXPORTING
         include_null_values        = abap_true
         include_initial_values     = abap_true
