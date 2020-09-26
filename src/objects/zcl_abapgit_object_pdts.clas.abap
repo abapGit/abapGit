@@ -84,26 +84,14 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
                    <ls_starting_events_binding> TYPE hrs1212,
                    <ls_term_events_binding>     TYPE hrs1212.
 
-    li_task = lcl_task_definition=>create( mv_objid ).
+    li_task = lcl_task_definition=>load( mv_objid ).
     li_task->clear_origin_data( ).
     io_xml->add( iv_name = 'PDTS'
                  ig_data = li_task->get_definition( ) ).
 
-    cl_workflow_factory=>create_ts(
-      EXPORTING
-        objid                        = mv_objid
-      RECEIVING
-        ts_inst                      = lo_inst
-      EXCEPTIONS
-        standard_task_does_not_exist = 1
-        object_could_not_be_locked   = 2
-        objid_not_given              = 3
-        OTHERS                       = 4 )  ##SUBRC_OK.
-
-    check_subrc_for( `CREATE_TS` ).
-
-    "Todo: For some reason customer elements' texts are not picked up, need to debug some more
-    li_task->get_container( )->to_xml(
+    "Todo: this method strips out system elements, but to_xml adds them back in.
+    "      Dirty hack further down to remove them from XML until we get this to work properly
+    li_task->get_user_container( )->to_xml(
       EXPORTING
         include_null_values        = abap_true
         include_initial_values     = abap_true
@@ -147,15 +135,18 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         ENDIF.
 
         "Remove system container elements - causing too much trouble
-        "Todo: I don't like this sequential-letter naming, but this is probably temporary
-        lv_name = li_element->get_name( ).
-        IF `ABCDEFGHIJKLMN` CS lv_name.
+        "Todo: I don't like this sequential-letter naming from SAP, may be different in other versions.
+        "      However this should become obsolete, so run with dirty hack for now
+*        lv_name = li_element->get_name( ).
+*        IF `ABCDEFGHIJKLMN` CS lv_name.
+        li_attributes = li_element->get_attributes( ).
+        lv_name = li_attributes->get_named_item( name  = 'NAME' )->get_value( ).
+        if lv_name(1) = '_'.
           li_element->remove_node( ).
           li_child_iterator->reset( ).
           CONTINUE.
         ENDIF.
 
-        li_attributes = li_element->get_attributes( ).
 
         li_attributes->remove_named_item( name = 'CHGDTA' ).
 

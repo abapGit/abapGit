@@ -155,7 +155,8 @@ CLASS ltd_mock IMPLEMENTATION.
     add_line( |      </EXDEFINITN>| ).
     add_line( |     </PROPERTIES>| ).
     add_line( |     <ELEMENTS>| ).
-    add_line( |      <O NAME="FOO:Foo:" TYPE="::CHAR10:h:10:0" PROPS="0C005241"/>| ).
+    add_line( |      <M NAME="NEWINTERNALMODE:NewInternalMode:" TYPE="::BAPIBUS1006_HEAD-NEWINTERNALMODE:C:1:0" PROPS="0C003301"/>| ).
+    add_line( |      <N NAME="FOO:Foo:" TYPE="::CHAR10:h:10:0" PROPS="0C005241"/>| ).
     add_line( |     </ELEMENTS>| ).
     add_line( |    </CONTAINER>| ).
     add_line( |   </CONTAINER>| ).

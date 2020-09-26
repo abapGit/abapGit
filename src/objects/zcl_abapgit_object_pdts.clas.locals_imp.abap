@@ -52,6 +52,7 @@ INTERFACE lif_task_definition.
   METHODS clear_origin_data.
   METHODS get_definition RETURNING VALUE(rs_result) TYPE ty_task_data.
   METHODS get_container RETURNING VALUE(ri_result) TYPE REF TO if_swf_cnt_container.
+  METHODS get_user_container RETURNING VALUE(ri_result) TYPE REF TO if_swf_cnt_container.
 
 ENDINTERFACE.
 
@@ -64,11 +65,12 @@ CLASS lcl_task_definition DEFINITION
 
     INTERFACES lif_task_definition.
     ALIASES: clear_origin_data FOR lif_task_definition~clear_origin_data,
-             get_definition FOR lif_task_definition~get_definition.
+             get_definition FOR lif_task_definition~get_definition,
+             remove_system_elements FOR lif_task_definition~get_user_container.
 
-    CLASS-METHODS create IMPORTING iv_objid         TYPE hrobject-objid
-                         RETURNING VALUE(ri_result) TYPE REF TO lif_task_definition
-                         RAISING   zcx_abapgit_exception.
+    CLASS-METHODS load IMPORTING iv_objid         TYPE hrobject-objid
+                       RETURNING VALUE(ri_result) TYPE REF TO lif_task_definition
+                       RAISING   zcx_abapgit_exception.
 
   PRIVATE SECTION.
     DATA mo_taskdef TYPE REF TO cl_workflow_task_ts.
@@ -95,7 +97,7 @@ ENDCLASS.
 
 CLASS lcl_task_definition IMPLEMENTATION.
 
-  METHOD create.
+  METHOD load.
 
     DATA lo_taskdef TYPE REF TO lcl_task_definition.
 
@@ -180,6 +182,33 @@ CLASS lcl_task_definition IMPLEMENTATION.
 
   METHOD lif_task_definition~get_container.
     ri_result = mo_taskdef->container.
+  ENDMETHOD.
+
+  METHOD lif_task_definition~get_user_container.
+
+    DATA: li_container       TYPE REF TO if_swf_cnt_element_access_1,
+          lt_user_elements   TYPE swfdnamtab,
+          lt_system_elements TYPE swfdnamtab.
+
+    li_container = mo_taskdef->container.
+    lt_user_elements = li_container->all_elements_list( ).
+    lt_system_elements = li_container->all_elements_list(
+      EXPORTING
+        list_system                = abap_true ).
+
+    LOOP AT lt_system_elements INTO DATA(lv_element).
+      READ TABLE lt_user_elements WITH KEY table_line = lv_element TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        TRY.
+            li_container->element_remove( name = lv_element ).
+          CATCH cx_swf_cnt_container.
+            "Shouldn't happen, doesn't matter if it does
+        ENDTRY.
+      ENDIF.
+    ENDLOOP.
+
+    ri_result ?= li_container.
+
   ENDMETHOD.
 
 ENDCLASS.
