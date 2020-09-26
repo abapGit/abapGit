@@ -37,6 +37,16 @@ CLASS zcl_abapgit_object_pdts DEFINITION
                             RAISING   zcx_abapgit_exception.
 
     METHODS is_experimental RETURNING VALUE(rv_result) TYPE abap_bool.
+    METHODS get_container_xml
+      IMPORTING
+        ii_task                 TYPE REF TO lif_task_definition
+      RETURNING
+        VALUE(ri_first_element) TYPE REF TO if_ixml_element
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS extract_container IMPORTING io_xml           TYPE REF TO zif_abapgit_xml_input
+                              RETURNING VALUE(rv_result) TYPE xstring.
 
 ENDCLASS.
 
@@ -65,9 +75,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: ls_task           TYPE ty_task,
-          lo_inst           TYPE REF TO cl_workflow_task_ts,
-          li_task           TYPE REF TO lif_task_definition,
+    DATA: li_task           TYPE REF TO lif_task_definition,
           li_first_element  TYPE REF TO if_ixml_element,
           li_xml_dom        TYPE REF TO if_ixml_document,
           li_elements       TYPE REF TO if_ixml_node_collection,
@@ -79,19 +87,31 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
     DATA lv_name TYPE string.
 
-    FIELD-SYMBOLS: <ls_description>             TYPE hrs1002,
-                   <ls_method_binding>          LIKE LINE OF ls_task-method_binding,
-                   <ls_starting_events_binding> TYPE hrs1212,
-                   <ls_term_events_binding>     TYPE hrs1212.
-
     li_task = lcl_task_definition=>load( mv_objid ).
     li_task->clear_origin_data( ).
     io_xml->add( iv_name = 'PDTS'
                  ig_data = li_task->get_definition( ) ).
 
-    "Todo: this method strips out system elements, but to_xml adds them back in.
+    io_xml->add_xml( iv_name = 'CONTAINER'
+                     ii_xml  = get_container_xml( li_task ) ).
+
+  ENDMETHOD.
+
+
+  METHOD get_container_xml.
+
+    DATA li_xml_dom TYPE REF TO if_ixml_document.
+    DATA li_elements TYPE REF TO if_ixml_node_collection.
+    DATA li_iterator TYPE REF TO if_ixml_node_iterator.
+    DATA li_element TYPE REF TO if_ixml_node.
+    DATA li_children TYPE REF TO if_ixml_node_list.
+    DATA li_child_iterator TYPE REF TO if_ixml_node_iterator.
+    DATA li_attributes TYPE REF TO if_ixml_named_node_map.
+    DATA lv_name TYPE string.
+
+    "Todo: get_user_container strips out system elements, but to_xml adds them back in (hardcoded internally)
     "      Dirty hack further down to remove them from XML until we get this to work properly
-    li_task->get_user_container( )->to_xml(
+    ii_task->get_user_container( )->to_xml(
       EXPORTING
         include_null_values        = abap_true
         include_initial_values     = abap_true
@@ -109,10 +129,8 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
     check_subrc_for( `TO_XML` ).
 
-    li_first_element ?= li_xml_dom->get_first_child( ).
-
-    li_elements = li_first_element->get_elements_by_tag_name( name = 'ELEMENTS' ).
-
+    ri_first_element ?= li_xml_dom->get_first_child( ).
+    li_elements = ri_first_element->get_elements_by_tag_name( name = 'ELEMENTS' ).
     li_iterator = li_elements->create_iterator( ).
 
     DO.
@@ -123,30 +141,24 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
       ENDIF.
 
       li_children = li_element->get_children( ).
-
       li_child_iterator = li_children->create_iterator( ).
 
       DO.
 
         li_element = li_child_iterator->get_next( ).
-
         IF li_element IS NOT BOUND.
           EXIT.
         ENDIF.
 
         "Remove system container elements - causing too much trouble
-        "Todo: I don't like this sequential-letter naming from SAP, may be different in other versions.
-        "      However this should become obsolete, so run with dirty hack for now
-*        lv_name = li_element->get_name( ).
-*        IF `ABCDEFGHIJKLMN` CS lv_name.
+        "Todo: This is a bad hack, but obsolete if we can fix todo above
         li_attributes = li_element->get_attributes( ).
         lv_name = li_attributes->get_named_item( name  = 'NAME' )->get_value( ).
-        if lv_name(1) = '_'.
+        IF lv_name(1) = '_'.
           li_element->remove_node( ).
           li_child_iterator->reset( ).
           CONTINUE.
         ENDIF.
-
 
         li_attributes->remove_named_item( name = 'CHGDTA' ).
 
@@ -154,15 +166,12 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
     ENDDO.
 
-    io_xml->add_xml( iv_name = 'CONTAINER'
-                     ii_xml  = li_first_element ).
-
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: ls_task              TYPE ty_task,
+    DATA: ls_task              TYPE lif_task_definition=>ty_task_data,
           ls_hrsobject         TYPE hrsobject,
           lo_inst              TYPE REF TO cl_workflow_task_ts,
           lo_gen_task          TYPE REF TO cl_workflow_general_task_def,
@@ -180,63 +189,156 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
       CHANGING
         cg_data = ls_task ).
 
-    cl_workflow_factory=>create_new_ts(
-      EXPORTING
-        short_text          = |{ ls_task-short_text }|
-        text                = |{ ls_task-wi_text }|
-      RECEIVING
-        task_object         = lo_inst
-      EXCEPTIONS
-        text_exists_already = 1
-        OTHERS              = 2 ).                        "#EC SUBRC_OK
+    DATA(lo_task) = lcl_task_definition=>create_new( ls_task ).
+    lo_task->create_task( ).
+    lo_task->change_wi_text( ).
+    lo_task->change_method( ).
 
-    check_subrc_for( `CREATE_NEW_TS` ).
+    lv_xml_string = extract_container( io_xml ).
+    lo_task->import_container( lv_xml_string ).
 
-    lo_gen_task = lo_inst.
+    lo_task->change_start_events( ).
+    lo_task->change_terminating_events( ).
+    lo_task->change_text( ).
 
-    lcl_attribute_setter=>set_objid( iv_objid = mv_objid
-                                               io_task  = lo_gen_task ).
+    lo_task->save( iv_package ).
 
-    lcl_attribute_setter=>set_container_id( iv_id    = |{ c_object_type_task }{ mv_objid }|
-                                                      io_task  = lo_gen_task ).
+*    cl_workflow_factory=>create_new_ts(
+*      EXPORTING
+*        short_text          = |{ ls_task-short_text }|
+*        text                = |{ ls_task-wi_text }|
+*      RECEIVING
+*        task_object         = lo_inst
+*      EXCEPTIONS
+*        text_exists_already = 1
+*        OTHERS              = 2 ).                        "#EC SUBRC_OK
+*
+*    check_subrc_for( `CREATE_NEW_TS` ).
+*
+*    lo_gen_task = lo_inst.
+*
+*    lcl_attribute_setter=>set_objid( iv_objid = mv_objid
+*                                               io_task  = lo_gen_task ).
+*
+*    lcl_attribute_setter=>set_container_id( iv_id    = |{ c_object_type_task }{ mv_objid }|
+*                                                      io_task  = lo_gen_task ).
+*
+*    lo_inst->change_wi_text(
+*      EXPORTING
+*        new_wi_text        = ls_task-wi_text
+*      EXCEPTIONS
+*        no_changes_allowed = 1
+*        OTHERS             = 2 ).                         "#EC SUBRC_OK
+*
+*    check_subrc_for( `CHANGE_WI_TEXT` ).
+*
+*    lo_inst->change_method(
+*      EXPORTING
+*        new_method                   = ls_task-method    " New Method or Settings
+*      EXCEPTIONS
+*        no_changes_allowed           = 1
+*        problem_method_web_enabling  = 2
+*        problem_method_phon_enabling = 3
+*        OTHERS                       = 4 ).               "#EC SUBRC_OK
+*
+*    check_subrc_for( `CHANGE_METHOD` ).
+*
+*    LOOP AT ls_task-method_binding ASSIGNING <ls_method_binding>.
+*
+*      lo_inst->change_method_binding(
+*        EXPORTING
+*          binding                       = <ls_method_binding>
+*          delete                        = abap_false
+*          insert                        = abap_true
+*        EXCEPTIONS
+*          no_changes_allowed            = 1
+*          desired_action_not_clear      = 2
+*          ts_cnt_element_does_not_exist = 3
+*          binding_could_not_be_deleted  = 4
+*          OTHERS                        = 5 ).            "#EC SUBRC_OK
+*
+*      check_subrc_for( `CHANGE_METHOD_BINDING` ).
+*
+*    ENDLOOP.
+*
+*    lo_inst->container->import_from_xml(
+*        EXPORTING xml_stream     = lv_xml_string
+*        IMPORTING exception_list = lt_exception_list ).
+*
+*    lo_inst->change_start_events_complete(
+*      EXPORTING
+*        starting_events    = ls_task-starting_events
+*      EXCEPTIONS
+*        no_changes_allowed = 1
+*        OTHERS             = 2 ).                         "#EC SUBRC_OK
+*
+*    check_subrc_for( `CHANGE_START_EVENTS_COMPLETE` ).
+*
+*    lo_inst->change_start_evt_bind_complete(
+*      EXPORTING
+*        new_bindings       = ls_task-starting_events_binding
+*      EXCEPTIONS
+*        no_changes_allowed = 1
+*        OTHERS             = 2 ).                         "#EC SUBRC_OK
+*
+*    check_subrc_for( `CHANGE_START_EVT_BIND_COMPLETE` ).
+*
+*    lo_inst->change_term_events_complete(
+*      EXPORTING
+*        terminating_events = ls_task-terminating_events
+*      EXCEPTIONS
+*        no_changes_allowed = 1
+*        OTHERS             = 2 ).                         "#EC SUBRC_OK
+*
+*    check_subrc_for( `CHANGE_TEXT` ).
+*
+*    lo_inst->change_term_evt_bind_complete(
+*      EXPORTING
+*        new_bindings       = ls_task-terminating_events_binding
+*      EXCEPTIONS
+*        no_changes_allowed = 1
+*        OTHERS             = 2 ).                         "#EC SUBRC_OK
+*
+*    check_subrc_for( `CHANGE_TERM_EVENTS_COMPLETE` ).
+*
+*    lo_inst->change_text(
+*      EXPORTING
+*        subty              = c_subty_task_description
+*        new_text           = ls_task-descriptions
+*      EXCEPTIONS
+*        no_changes_allowed = 1
+*        OTHERS             = 2 ).                         "#EC SUBRC_OK
+*
+*    check_subrc_for( `CHANGE_TEXT` ).
+*
+*    ls_hrsobject-otype = c_object_type_task.
+*    ls_hrsobject-objid = mv_objid.
+*    INSERT hrsobject FROM ls_hrsobject.
+*
+*    lo_inst->save_standard_task(
+*      EXPORTING
+*        development_class          = iv_package
+*        iv_force_gen               = abap_true
+*      EXCEPTIONS
+*        no_changes_allowed         = 1
+*        no_client_indep_maint      = 2
+*        update_error               = 3
+*        insert_error_new_ts        = 4
+*        new_ts_could_not_be_locked = 5
+*        save_abort_by_user         = 6
+*        OTHERS                     = 7 ).                 "#EC SUBRC_OK
+*
+*    check_subrc_for( `SAVE_STANDARD_TASK` ).
 
-    lo_inst->change_wi_text(
-      EXPORTING
-        new_wi_text        = ls_task-wi_text
-      EXCEPTIONS
-        no_changes_allowed = 1
-        OTHERS             = 2 ).                         "#EC SUBRC_OK
+    tadir_insert( iv_package ).
 
-    check_subrc_for( `CHANGE_WI_TEXT` ).
+  ENDMETHOD.
 
-    lo_inst->change_method(
-      EXPORTING
-        new_method                   = ls_task-method    " New Method or Settings
-      EXCEPTIONS
-        no_changes_allowed           = 1
-        problem_method_web_enabling  = 2
-        problem_method_phon_enabling = 3
-        OTHERS                       = 4 ).               "#EC SUBRC_OK
+  METHOD extract_container.
 
-    check_subrc_for( `CHANGE_METHOD` ).
-
-    LOOP AT ls_task-method_binding ASSIGNING <ls_method_binding>.
-
-      lo_inst->change_method_binding(
-        EXPORTING
-          binding                       = <ls_method_binding>
-          delete                        = abap_false
-          insert                        = abap_true
-        EXCEPTIONS
-          no_changes_allowed            = 1
-          desired_action_not_clear      = 2
-          ts_cnt_element_does_not_exist = 3
-          binding_could_not_be_deleted  = 4
-          OTHERS                        = 5 ).            "#EC SUBRC_OK
-
-      check_subrc_for( `CHANGE_METHOD_BINDING` ).
-
-    ENDLOOP.
+    DATA li_stream TYPE REF TO if_ixml_ostream.
+    DATA li_container_element TYPE REF TO if_ixml_element.
+    DATA li_document TYPE REF TO if_ixml_document.
 
     li_document = io_xml->get_raw( ).
 
@@ -246,7 +348,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
       li_document = cl_ixml=>create( )->create_document( ).
 
-      li_stream = cl_ixml=>create( )->create_stream_factory( )->create_ostream_xstring( lv_xml_string ).
+      li_stream = cl_ixml=>create( )->create_stream_factory( )->create_ostream_xstring( rv_result ).
 
       li_document->append_child( li_container_element ).
 
@@ -255,82 +357,11 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
           ostream  = li_stream
       )->render( ).
 
-      lo_inst->container->import_from_xml(
-        EXPORTING
-          xml_stream     = lv_xml_string
-        IMPORTING
-          exception_list = lt_exception_list ).
-
     ENDIF.
 
-    lo_inst->change_start_events_complete(
-      EXPORTING
-        starting_events    = ls_task-starting_events
-      EXCEPTIONS
-        no_changes_allowed = 1
-        OTHERS             = 2 ).                         "#EC SUBRC_OK
-
-    check_subrc_for( `CHANGE_START_EVENTS_COMPLETE` ).
-
-    lo_inst->change_start_evt_bind_complete(
-      EXPORTING
-        new_bindings       = ls_task-starting_events_binding
-      EXCEPTIONS
-        no_changes_allowed = 1
-        OTHERS             = 2 ).                         "#EC SUBRC_OK
-
-    check_subrc_for( `CHANGE_START_EVT_BIND_COMPLETE` ).
-
-    lo_inst->change_term_events_complete(
-      EXPORTING
-        terminating_events = ls_task-terminating_events
-      EXCEPTIONS
-        no_changes_allowed = 1
-        OTHERS             = 2 ).                         "#EC SUBRC_OK
-
-    check_subrc_for( `CHANGE_TEXT` ).
-
-    lo_inst->change_term_evt_bind_complete(
-      EXPORTING
-        new_bindings       = ls_task-terminating_events_binding
-      EXCEPTIONS
-        no_changes_allowed = 1
-        OTHERS             = 2 ).                         "#EC SUBRC_OK
-
-    check_subrc_for( `CHANGE_TERM_EVENTS_COMPLETE` ).
-
-    lo_inst->change_text(
-      EXPORTING
-        subty              = c_subty_task_description
-        new_text           = ls_task-descriptions
-      EXCEPTIONS
-        no_changes_allowed = 1
-        OTHERS             = 2 ).                         "#EC SUBRC_OK
-
-    check_subrc_for( `CHANGE_TEXT` ).
-
-    ls_hrsobject-otype = c_object_type_task.
-    ls_hrsobject-objid = mv_objid.
-    INSERT hrsobject FROM ls_hrsobject.
-
-    lo_inst->save_standard_task(
-      EXPORTING
-        development_class          = iv_package
-        iv_force_gen               = abap_true
-      EXCEPTIONS
-        no_changes_allowed         = 1
-        no_client_indep_maint      = 2
-        update_error               = 3
-        insert_error_new_ts        = 4
-        new_ts_could_not_be_locked = 5
-        save_abort_by_user         = 6
-        OTHERS                     = 7 ).                 "#EC SUBRC_OK
-
-    check_subrc_for( `SAVE_STANDARD_TASK` ).
-
-    tadir_insert( iv_package ).
-
   ENDMETHOD.
+
+
 
 
   METHOD zif_abapgit_object~delete.
@@ -344,7 +375,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         enqueue_failed      = 1
         object_not_deleted  = 2
         object_not_found    = 3
-        OTHERS              = 4.       "#EC FM_SUBRC_OK
+        OTHERS              = 4.       "#EC SUBRC_OK
 
     check_subrc_for( `RH_HRSOBJECT_DELETE` ).
 
@@ -399,7 +430,6 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~jump.
-
     CALL FUNCTION 'RS_TOOL_ACCESS_REMOTE'
       STARTING NEW TASK 'GIT'
       EXPORTING
