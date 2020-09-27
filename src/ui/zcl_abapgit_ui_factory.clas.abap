@@ -142,7 +142,6 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
 
       CREATE OBJECT lo_html_preprocessor EXPORTING ii_asset_man = li_asset_man.
       lo_html_preprocessor->preserve_css( 'css/ag-icons.css' ).
-      lo_html_preprocessor->preserve_css( 'css/common.css' ).
 
       CREATE OBJECT li_router TYPE zcl_abapgit_gui_router.
       CREATE OBJECT li_hotkey_ctl TYPE zcl_abapgit_hotkeys.

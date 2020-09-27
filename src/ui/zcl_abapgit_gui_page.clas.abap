@@ -127,8 +127,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ri_html->add( '<link rel="stylesheet" type="text/css" href="css/ag-icons.css">' ).
 
     " Themes
-    ri_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-default.css">' ). " Theme basis
     CASE mo_settings->get_ui_theme( ).
+      WHEN zcl_abapgit_settings=>c_ui_theme-default.
+        ri_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-default.css">' ).
       WHEN zcl_abapgit_settings=>c_ui_theme-dark.
         ri_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-dark.css">' ).
       WHEN zcl_abapgit_settings=>c_ui_theme-belize.
