@@ -152,7 +152,7 @@ CLASS lcl_task_definition IMPLEMENTATION.
   METHOD lif_task_definition~clear_origin_data.
 
     FIELD-SYMBOLS: <ls_description>             TYPE hrs1002,
-                   <ls_method_binding>          type hrs1214,
+                   <ls_method_binding>          TYPE hrs1214,
                    <ls_starting_events_binding> TYPE hrs1212,
                    <ls_term_events_binding>     TYPE hrs1212.
 
@@ -194,13 +194,11 @@ CLASS lcl_task_definition IMPLEMENTATION.
     DATA: li_container       TYPE REF TO if_swf_cnt_element_access_1,
           lt_user_elements   TYPE swfdnamtab,
           lt_system_elements TYPE swfdnamtab,
-          lv_element TYPE swfdname.
+          lv_element         TYPE swfdname.
 
     li_container = mo_taskdef->container.
     lt_user_elements = li_container->all_elements_list( ).
-    lt_system_elements = li_container->all_elements_list(
-      EXPORTING
-        list_system                = abap_true ).
+    lt_system_elements = li_container->all_elements_list( list_system = abap_true ).
 
     LOOP AT lt_system_elements INTO lv_element.
       READ TABLE lt_user_elements WITH KEY table_line = lv_element TRANSPORTING NO FIELDS.
@@ -218,12 +216,13 @@ CLASS lcl_task_definition IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD create.
-    DATA: lo_task TYPE REF TO lcl_task_definition.
+    DATA lo_task TYPE REF TO lcl_task_definition.
 
-    lo_task = NEW lcl_task_definition( ).
+    CREATE OBJECT lo_task TYPE lcl_task_definition.
     lo_task->mv_objid = iv_objid.
     lo_task->ms_task = is_task_data.
     ri_result = lo_task.
+
   ENDMETHOD.
 
 
@@ -238,10 +237,8 @@ CLASS lcl_task_definition IMPLEMENTATION.
 
     IF lt_exception_list IS NOT INITIAL.
       READ TABLE lt_exception_list INDEX 1 INTO lo_exception.
-      zcx_abapgit_exception=>raise(
-        EXPORTING
-          iv_text     = lo_exception->get_text( )
-          ix_previous = lo_exception ).
+      zcx_abapgit_exception=>raise( iv_text     = lo_exception->get_text( )
+                                    ix_previous = lo_exception ).
     ENDIF.
 
   ENDMETHOD.
@@ -294,7 +291,7 @@ CLASS lcl_task_definition IMPLEMENTATION.
   METHOD lif_task_definition~save.
 
     DATA ls_hrsobject TYPE hrsobject.
-    ls_hrsobject-otype = swfco_org_standard_task.
+    ls_hrsobject-otype = 'TS'. "swfco_org_standard_task - todo: linter can't resolve this
     ls_hrsobject-objid = mv_objid.
     INSERT hrsobject FROM ls_hrsobject.
 
