@@ -19,9 +19,7 @@ INTERFACE lif_task_definition.
   METHODS get_user_container RETURNING VALUE(ri_result) TYPE REF TO if_swf_cnt_container.
   METHODS import_container IMPORTING iv_xml_string TYPE xstring
                            RAISING   zcx_abapgit_exception.
-  METHODS create_task
-            RAISING
-              zcx_abapgit_exception.
+  METHODS create_task RAISING zcx_abapgit_exception.
   METHODS save IMPORTING iv_package TYPE devclass OPTIONAL
                RAISING   zcx_abapgit_exception.
   METHODS change_wi_text RAISING zcx_abapgit_exception.

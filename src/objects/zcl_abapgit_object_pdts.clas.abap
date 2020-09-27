@@ -12,19 +12,6 @@ CLASS zcl_abapgit_object_pdts DEFINITION
                                   iv_language TYPE spras
                         RAISING   zcx_abapgit_exception.
 
-    TYPES: BEGIN OF ty_task,
-             short_text                 TYPE hr_mcshort,
-             plvar                      TYPE plvar,
-             wi_text                    TYPE witext,
-             method                     TYPE hrs1201,
-             method_binding             TYPE hrsmtbind,
-             starting_events            TYPE hrsevtab,
-             starting_events_binding    TYPE hrsevbind,
-             terminating_events         TYPE hrsetmtab,
-             terminating_events_binding TYPE hrsevbind,
-             descriptions               TYPE wstexts,
-           END OF ty_task .
-
   PRIVATE SECTION.
 
     CONSTANTS: c_subty_task_description TYPE hr_s_subty VALUE '0120',
@@ -59,9 +46,10 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
                         iv_language = iv_language ).
 
     IF is_experimental( ) = abap_false.
-      "Known issues:
-      "- Container texts not de/serialized properly (functionnally OK)
-      "- More testing needed
+      "Alpha version, known issues:
+      "- Container texts not de/serialized properly (functionally OK)
+      "- Container handling still a bad hack, needs refactoring with lots of debugging time
+      "- Probably has a few more bugs, more testing needed
       zcx_abapgit_exception=>raise( 'PDTS not fully implemented, enable experimental features to test it' ).
     ENDIF.
 
@@ -171,25 +159,16 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
   METHOD zif_abapgit_object~deserialize.
 
-    DATA: ls_task              TYPE lif_task_definition=>ty_task_data,
-          ls_hrsobject         TYPE hrsobject,
-          lo_inst              TYPE REF TO cl_workflow_task_ts,
-          lo_gen_task          TYPE REF TO cl_workflow_general_task_def,
-          lv_xml_string        TYPE xstring,
-          li_document          TYPE REF TO if_ixml_document,
-          li_container_element TYPE REF TO if_ixml_element,
-          li_stream            TYPE REF TO if_ixml_ostream,
-          lt_exception_list    TYPE swf_cx_tab.
+    DATA: ls_task       TYPE lif_task_definition=>ty_task_data,
+          lv_xml_string TYPE xstring.
 
-    FIELD-SYMBOLS: <ls_method_binding> TYPE hrs1214.
+    io_xml->read( EXPORTING iv_name = 'PDTS'
+      CHANGING cg_data = ls_task ).
 
-    io_xml->read(
-      EXPORTING
-        iv_name = 'PDTS'
-      CHANGING
-        cg_data = ls_task ).
+    DATA(lo_task) = lcl_task_definition=>create(
+                      iv_objid     = mv_objid
+                      is_task_data = ls_task ).
 
-    DATA(lo_task) = lcl_task_definition=>create_new( ls_task ).
     lo_task->create_task( ).
     lo_task->change_wi_text( ).
     lo_task->change_method( ).
@@ -203,136 +182,10 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
     lo_task->save( iv_package ).
 
-*    cl_workflow_factory=>create_new_ts(
-*      EXPORTING
-*        short_text          = |{ ls_task-short_text }|
-*        text                = |{ ls_task-wi_text }|
-*      RECEIVING
-*        task_object         = lo_inst
-*      EXCEPTIONS
-*        text_exists_already = 1
-*        OTHERS              = 2 ).                        "#EC SUBRC_OK
-*
-*    check_subrc_for( `CREATE_NEW_TS` ).
-*
-*    lo_gen_task = lo_inst.
-*
-*    lcl_attribute_setter=>set_objid( iv_objid = mv_objid
-*                                               io_task  = lo_gen_task ).
-*
-*    lcl_attribute_setter=>set_container_id( iv_id    = |{ c_object_type_task }{ mv_objid }|
-*                                                      io_task  = lo_gen_task ).
-*
-*    lo_inst->change_wi_text(
-*      EXPORTING
-*        new_wi_text        = ls_task-wi_text
-*      EXCEPTIONS
-*        no_changes_allowed = 1
-*        OTHERS             = 2 ).                         "#EC SUBRC_OK
-*
-*    check_subrc_for( `CHANGE_WI_TEXT` ).
-*
-*    lo_inst->change_method(
-*      EXPORTING
-*        new_method                   = ls_task-method    " New Method or Settings
-*      EXCEPTIONS
-*        no_changes_allowed           = 1
-*        problem_method_web_enabling  = 2
-*        problem_method_phon_enabling = 3
-*        OTHERS                       = 4 ).               "#EC SUBRC_OK
-*
-*    check_subrc_for( `CHANGE_METHOD` ).
-*
-*    LOOP AT ls_task-method_binding ASSIGNING <ls_method_binding>.
-*
-*      lo_inst->change_method_binding(
-*        EXPORTING
-*          binding                       = <ls_method_binding>
-*          delete                        = abap_false
-*          insert                        = abap_true
-*        EXCEPTIONS
-*          no_changes_allowed            = 1
-*          desired_action_not_clear      = 2
-*          ts_cnt_element_does_not_exist = 3
-*          binding_could_not_be_deleted  = 4
-*          OTHERS                        = 5 ).            "#EC SUBRC_OK
-*
-*      check_subrc_for( `CHANGE_METHOD_BINDING` ).
-*
-*    ENDLOOP.
-*
-*    lo_inst->container->import_from_xml(
-*        EXPORTING xml_stream     = lv_xml_string
-*        IMPORTING exception_list = lt_exception_list ).
-*
-*    lo_inst->change_start_events_complete(
-*      EXPORTING
-*        starting_events    = ls_task-starting_events
-*      EXCEPTIONS
-*        no_changes_allowed = 1
-*        OTHERS             = 2 ).                         "#EC SUBRC_OK
-*
-*    check_subrc_for( `CHANGE_START_EVENTS_COMPLETE` ).
-*
-*    lo_inst->change_start_evt_bind_complete(
-*      EXPORTING
-*        new_bindings       = ls_task-starting_events_binding
-*      EXCEPTIONS
-*        no_changes_allowed = 1
-*        OTHERS             = 2 ).                         "#EC SUBRC_OK
-*
-*    check_subrc_for( `CHANGE_START_EVT_BIND_COMPLETE` ).
-*
-*    lo_inst->change_term_events_complete(
-*      EXPORTING
-*        terminating_events = ls_task-terminating_events
-*      EXCEPTIONS
-*        no_changes_allowed = 1
-*        OTHERS             = 2 ).                         "#EC SUBRC_OK
-*
-*    check_subrc_for( `CHANGE_TEXT` ).
-*
-*    lo_inst->change_term_evt_bind_complete(
-*      EXPORTING
-*        new_bindings       = ls_task-terminating_events_binding
-*      EXCEPTIONS
-*        no_changes_allowed = 1
-*        OTHERS             = 2 ).                         "#EC SUBRC_OK
-*
-*    check_subrc_for( `CHANGE_TERM_EVENTS_COMPLETE` ).
-*
-*    lo_inst->change_text(
-*      EXPORTING
-*        subty              = c_subty_task_description
-*        new_text           = ls_task-descriptions
-*      EXCEPTIONS
-*        no_changes_allowed = 1
-*        OTHERS             = 2 ).                         "#EC SUBRC_OK
-*
-*    check_subrc_for( `CHANGE_TEXT` ).
-*
-*    ls_hrsobject-otype = c_object_type_task.
-*    ls_hrsobject-objid = mv_objid.
-*    INSERT hrsobject FROM ls_hrsobject.
-*
-*    lo_inst->save_standard_task(
-*      EXPORTING
-*        development_class          = iv_package
-*        iv_force_gen               = abap_true
-*      EXCEPTIONS
-*        no_changes_allowed         = 1
-*        no_client_indep_maint      = 2
-*        update_error               = 3
-*        insert_error_new_ts        = 4
-*        new_ts_could_not_be_locked = 5
-*        save_abort_by_user         = 6
-*        OTHERS                     = 7 ).                 "#EC SUBRC_OK
-*
-*    check_subrc_for( `SAVE_STANDARD_TASK` ).
-
     tadir_insert( iv_package ).
 
   ENDMETHOD.
+
 
   METHOD extract_container.
 
@@ -360,8 +213,6 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
-
-
 
 
   METHOD zif_abapgit_object~delete.
