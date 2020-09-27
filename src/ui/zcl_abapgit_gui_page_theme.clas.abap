@@ -5,8 +5,13 @@ CLASS zcl_abapgit_gui_page_theme DEFINITION
   CREATE PUBLIC.
 
   PUBLIC SECTION.
+    CONSTANTS:
+      BEGIN OF c_action,
+        change_theme TYPE string VALUE 'change_theme',
+      END OF c_action.
     METHODS:
-      constructor RAISING zcx_abapgit_exception.
+      constructor RAISING zcx_abapgit_exception,
+      zif_abapgit_gui_event_handler~on_event REDEFINITION.
   PROTECTED SECTION.
     METHODS:
       render_content REDEFINITION.
@@ -73,7 +78,22 @@ CLASS zcl_abapgit_gui_page_theme IMPLEMENTATION.
 
     lo_theme_sub_menu->add(
       iv_txt = 'Default'
-      iv_act = 'theme_test' ).
+      iv_act = |{ c_action-change_theme }?{ zcl_abapgit_settings=>c_ui_theme-default }|
+    )->add(
+      iv_txt = 'Belize'
+      iv_act = |{ c_action-change_theme }?{ zcl_abapgit_settings=>c_ui_theme-belize }|
+    )->add(
+      iv_txt = 'Dark'
+      iv_act = |{ c_action-change_theme }?{ zcl_abapgit_settings=>c_ui_theme-dark }|
+    )->add(
+      iv_txt = 'Quartz'
+      iv_act = |{ c_action-change_theme }?{ zcl_abapgit_settings=>c_ui_theme-quartz }|
+    )->add(
+      iv_txt = 'Quartz Dark'
+      iv_act = |{ c_action-change_theme }?{ zcl_abapgit_settings=>c_ui_theme-quartz_dark }|
+    )->add(
+      iv_txt = 'Synced with SAP GUI'
+      iv_act = |{ c_action-change_theme }?{ zcl_abapgit_settings=>c_ui_theme-synced_with_gui }| ).
 
     ro_menu->add(
       iv_txt = 'Theme'
@@ -192,5 +212,19 @@ CLASS zcl_abapgit_gui_page_theme IMPLEMENTATION.
 
   METHOD render_icon.
     ii_html->add_icon( iv_name = iv_name iv_hint = iv_name iv_class = 'large' ).
+  ENDMETHOD.
+
+  METHOD zif_abapgit_gui_event_handler~on_event.
+    DATA: lo_settings_persistence TYPE REF TO zcl_abapgit_persist_settings,
+          lo_settings             TYPE REF TO zcl_abapgit_settings.
+
+    CASE ii_event->mv_action.
+      WHEN c_action-change_theme.
+        lo_settings_persistence = zcl_abapgit_persist_settings=>get_instance( ).
+        lo_settings = lo_settings_persistence->read( ).
+        lo_settings->set_ui_theme( ii_event->mv_getdata ).
+        lo_settings_persistence->modify( lo_settings ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+    ENDCASE.
   ENDMETHOD.
 ENDCLASS.
