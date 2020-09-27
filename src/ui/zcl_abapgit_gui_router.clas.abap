@@ -172,7 +172,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-db_edit.
-        ii_event->query( )->to_abap( changing cs_container = ls_db_key ).
+        ii_event->query( )->to_abap( CHANGING cs_container = ls_db_key ).
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_db_edit
           EXPORTING
             is_key = ls_db_key.
