@@ -348,16 +348,16 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
     LOOP AT lt_substrings ASSIGNING <lv_substring>.
 
       CLEAR ls_field.
+      <lv_substring> = unescape( <lv_substring> ).
+      " On attempt to change unescaping -> run unit tests to check !
 
       ls_field-name = substring_before(
         val = <lv_substring>
         sub = '=' ).
-      ls_field-name = unescape( ls_field-name ).
 
       ls_field-value = substring_after(
         val = <lv_substring>
         sub = '=' ).
-      ls_field-value = unescape( ls_field-value ).
 
       IF ls_field IS INITIAL. " Not a field with proper structure
         CONTINUE.

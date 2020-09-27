@@ -135,12 +135,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
       WHEN zif_abapgit_definitions=>c_action-change_order_by.
 
-        mo_repo_overview->set_order_by( zcl_abapgit_gui_chunk_lib=>parse_change_order_by( ii_event->mv_getdata ) ).
+        mo_repo_overview->set_order_by( ii_event->query( )->get( 'ORDERBY' ) ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-direction.
 
-        mo_repo_overview->set_order_direction( zcl_abapgit_gui_chunk_lib=>parse_direction( ii_event->mv_getdata ) ).
+        mo_repo_overview->set_order_direction(
+          boolc( ii_event->query( )->get( 'DIRECTION' ) = 'DESCENDING' ) ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-apply_filter.
@@ -150,7 +151,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
       WHEN zif_abapgit_definitions=>c_action-go_patch.
 
-        rs_handled-page = get_patch_page( ii_event->mv_getdata ).
+        rs_handled-page  = get_patch_page( ii_event->query( )->get( 'KEY' ) ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN zif_abapgit_definitions=>c_action-repo_settings.

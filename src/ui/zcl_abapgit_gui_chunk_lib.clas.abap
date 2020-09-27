@@ -62,16 +62,6 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !ix_error      TYPE REF TO zcx_abapgit_exception
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
-    CLASS-METHODS parse_change_order_by
-      IMPORTING
-        !iv_query_str      TYPE clike
-      RETURNING
-        VALUE(rv_order_by) TYPE string .
-    CLASS-METHODS parse_direction
-      IMPORTING
-        !iv_query_str              TYPE clike
-      RETURNING
-        VALUE(rv_order_descending) TYPE abap_bool .
     CLASS-METHODS render_order_by_header_cells
       IMPORTING
         !it_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec
@@ -244,30 +234,6 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     rv_normalized_program_name = substring_before(
                                      val   = iv_program_name
                                      regex = `(=+CP)?$` ).
-
-  ENDMETHOD.
-
-
-  METHOD parse_change_order_by.
-
-    FIND FIRST OCCURRENCE OF REGEX `orderBy=(.*)`
-         IN iv_query_str
-         SUBMATCHES rv_order_by.
-
-    rv_order_by = condense( rv_order_by ).
-
-  ENDMETHOD.
-
-
-  METHOD parse_direction.
-
-    DATA: lv_direction TYPE string.
-
-    FIND FIRST OCCURRENCE OF REGEX `direction=(.*)`
-         IN iv_query_str
-         SUBMATCHES lv_direction.
-
-    rv_order_descending = boolc( condense( lv_direction ) = 'DESCENDING' ).
 
   ENDMETHOD.
 

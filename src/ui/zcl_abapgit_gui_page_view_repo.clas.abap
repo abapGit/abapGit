@@ -1176,9 +1176,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-change_dir.        " Change dir
-        lv_path         = zcl_abapgit_html_action_utils=>dir_decode( ii_event->mv_getdata ).
-        mv_cur_dir      = zcl_abapgit_path=>change_dir( iv_cur_dir = mv_cur_dir
-                                                        iv_cd = lv_path ).
+        lv_path         = ii_event->query( )->get( 'PATH' ).
+        mv_cur_dir      = zcl_abapgit_path=>change_dir(
+          iv_cur_dir = mv_cur_dir
+          iv_cd      = lv_path ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-toggle_folders.    " Toggle folder view
@@ -1199,12 +1200,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-change_order_by.
-        mv_order_by     = zcl_abapgit_gui_chunk_lib=>parse_change_order_by( ii_event->mv_getdata ).
+        mv_order_by      = ii_event->query( )->get( 'ORDERBY' ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-direction.
-        mv_order_descending = zcl_abapgit_gui_chunk_lib=>parse_direction( ii_event->mv_getdata ).
-        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+        mv_order_descending = boolc( ii_event->query( )->get( 'DIRECTION' ) = 'DESCENDING' ).
+        rs_handled-state    = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-repo_open_in_master_lang.
         open_in_master_language( ).

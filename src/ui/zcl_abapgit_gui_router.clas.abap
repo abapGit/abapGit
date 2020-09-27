@@ -220,7 +220,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
           lt_repo_list     TYPE zif_abapgit_definitions=>ty_repo_ref_tt.
 
 
-    lv_key = ii_event->query( iv_upper_cased = abap_true )->get( 'KEY' ).
+    lv_key = ii_event->query( )->get( 'KEY' ).
 
     CASE ii_event->mv_action.
       WHEN zcl_abapgit_gui=>c_action-go_home.
@@ -387,7 +387,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
     DATA lv_key TYPE zif_abapgit_persistence=>ty_repo-key.
 
-    lv_key = ii_event->query( iv_upper_cased = abap_true )->get( 'KEY' ).
+    lv_key = ii_event->query( )->get( 'KEY' ).
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-git_pull.                      " GIT Pull
@@ -485,7 +485,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
     DATA lv_key TYPE zif_abapgit_persistence=>ty_repo-key.
 
 
-    lv_key = ii_event->query( iv_upper_cased = abap_true )->get( 'KEY' ).
+    lv_key = ii_event->query( )->get( 'KEY' ).
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-repo_remote_attach.            " Remote attach
@@ -508,7 +508,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       lv_key TYPE zif_abapgit_persistence=>ty_repo-key,
       li_log TYPE REF TO zif_abapgit_log.
 
-    lv_key = ii_event->query( iv_upper_cased = abap_true )->get( 'KEY' ).
+    lv_key = ii_event->query( )->get( 'KEY' ).
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-repo_newoffline.                 " New offline repo
@@ -642,7 +642,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         repo_view TYPE string VALUE 'ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO',
       END OF lc_page.
 
-    lv_key = ii_event->query( iv_upper_cased = abap_true )->get( 'KEY' ).
+    lv_key = ii_event->query( )->get( 'KEY' ).
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-zip_import.                      " Import repo from ZIP

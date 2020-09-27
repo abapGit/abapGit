@@ -8,7 +8,7 @@ INTERFACE zif_abapgit_gui_event
 
   METHODS query
     IMPORTING
-      iv_upper_cased TYPE abap_bool DEFAULT abap_false
+      iv_upper_cased TYPE abap_bool DEFAULT abap_true
     RETURNING
       VALUE(ro_string_map) TYPE REF TO zcl_abapgit_string_map
     RAISING
