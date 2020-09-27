@@ -1038,7 +1038,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
           lv_icon_html = li_html->a(
             iv_txt = li_html->icon( iv_name = 'briefcase/darkgrey'
                                     iv_hint = lv_transport_string )
-            iv_act = |{ zif_abapgit_definitions=>c_action-jump_transport }?| && lv_transport ).
+            iv_act = |{ zif_abapgit_definitions=>c_action-jump_transport }?transport={ lv_transport }| ).
 
           rv_html = |<td class="icon">| &&
                     |{ lv_icon_html }| &&

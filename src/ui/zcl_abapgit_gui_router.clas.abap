@@ -81,7 +81,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
         zcx_abapgit_exception.
     METHODS get_page_diff
       IMPORTING
-        !iv_getdata    TYPE clike
+        !ii_event TYPE REF TO zif_abapgit_gui_event
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -95,7 +95,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
         zcx_abapgit_exception .
     METHODS get_page_stage
       IMPORTING
-        !iv_getdata    TYPE clike
+        !ii_event TYPE REF TO zif_abapgit_gui_event
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
@@ -110,7 +110,7 @@ CLASS zcl_abapgit_gui_router DEFINITION
 
     CLASS-METHODS jump_display_transport
       IMPORTING
-        !iv_getdata TYPE clike
+        !iv_transport TYPE trkorr
       RAISING
         zcx_abapgit_exception.
 
@@ -168,19 +168,23 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
   METHOD db_actions.
 
+    DATA ls_db_key TYPE zif_abapgit_persistence=>ty_content.
+
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-db_edit.
+        ii_event->query( )->to_abap( changing cs_container = ls_db_key ).
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_db_edit
           EXPORTING
-            is_key = zcl_abapgit_html_action_utils=>dbkey_decode( ii_event->mv_getdata ).
+            is_key = ls_db_key.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
         IF ii_event->mi_gui_services->get_current_page_name( ) = 'ZCL_ABAPGIT_GUI_PAGE_DB_DIS'. " TODO refactor
           rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
         ENDIF.
       WHEN zif_abapgit_definitions=>c_action-db_display.
+        ii_event->query( )->to_abap( changing cs_container = ls_db_key ).
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_db_dis
           EXPORTING
-            is_key = zcl_abapgit_html_action_utils=>dbkey_decode( ii_event->mv_getdata ).
+            is_key = ls_db_key.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
     ENDCASE.
 
@@ -255,10 +259,10 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         rs_handled-page  = get_page_background( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_diff.                         " Go Diff page
-        rs_handled-page  = get_page_diff( ii_event->mv_getdata ).
+        rs_handled-page  = get_page_diff( ii_event ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_w_bookmark.
       WHEN zif_abapgit_definitions=>c_action-go_stage.                        " Go Staging page
-        rs_handled-page  = get_page_stage( ii_event->mv_getdata ).
+        rs_handled-page  = get_page_stage( ii_event ).
         IF ii_event->mi_gui_services->get_current_page_name( ) = 'ZCL_ABAPGIT_GUI_PAGE_DIFF'. " TODO refactor
           rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
         ELSE.
@@ -318,14 +322,11 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
           lo_page   TYPE REF TO zcl_abapgit_gui_page_diff,
           lv_key    TYPE zif_abapgit_persistence=>ty_repo-key.
 
-
-    zcl_abapgit_html_action_utils=>file_obj_decode(
-      EXPORTING
-        iv_string = iv_getdata
-      IMPORTING
-        ev_key    = lv_key
-        eg_file   = ls_file
-        eg_object = ls_object ).
+    lv_key             = ii_event->query( )->get( 'KEY' ).
+    ls_file-path       = ii_event->query( )->get( 'PATH' ).
+    ls_file-filename   = ii_event->query( )->get( 'FILENAME' ). " unescape ?
+    ls_object-obj_type = ii_event->query( )->get( 'OBJ_TYPE' ).
+    ls_object-obj_name = ii_event->query( )->get( 'OBJ_NAME' ). " unescape ?
 
     CREATE OBJECT lo_page
       EXPORTING
@@ -346,16 +347,8 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
           lo_stage_page          TYPE REF TO zcl_abapgit_gui_page_stage,
           lo_code_inspector_page TYPE REF TO zcl_abapgit_gui_page_code_insp.
 
-    FIND FIRST OCCURRENCE OF '=' IN iv_getdata.
-    IF sy-subrc <> 0. " Not found ? -> just repo key in params
-      lv_key = iv_getdata.
-    ELSE.
-      zcl_abapgit_html_action_utils=>stage_decode(
-        EXPORTING iv_getdata = iv_getdata
-        IMPORTING ev_key     = lv_key
-                  ev_seed    = lv_seed ).
-    ENDIF.
-
+    lv_key   = ii_event->query( )->get( 'KEY' ).
+    lv_seed  = ii_event->query( )->get( 'SEED' ).
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
 
     IF lo_repo->get_local_settings( )-code_inspector_check_variant IS NOT INITIAL.
@@ -427,19 +420,17 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
   METHOD jump_display_transport.
 
-    DATA: lv_transport         TYPE trkorr,
-          lv_transport_adt_uri TYPE string,
-          lv_adt_link          TYPE string,
-          lv_adt_jump_enabled  TYPE abap_bool.
-
-    lv_transport = iv_getdata.
+    DATA:
+      lv_transport_adt_uri TYPE string,
+      lv_adt_link          TYPE string,
+      lv_adt_jump_enabled  TYPE abap_bool.
 
     lv_adt_jump_enabled = zcl_abapgit_persist_settings=>get_instance( )->read( )->get_adt_jump_enabled( ).
     IF lv_adt_jump_enabled = abap_true.
       TRY.
           CALL METHOD ('CL_CTS_ADT_TM_URI_BUILDER')=>('CREATE_ADT_URI')
             EXPORTING
-              trnumber = lv_transport
+              trnumber = iv_transport
             RECEIVING
               result   = lv_transport_adt_uri.
           lv_adt_link = |adt://{ sy-sysid }{ lv_transport_adt_uri }|.
@@ -452,12 +443,12 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         CATCH cx_root.
           CALL FUNCTION 'TR_DISPLAY_REQUEST'
             EXPORTING
-              i_trkorr = lv_transport.
+              i_trkorr = iv_transport.
       ENDTRY.
     ELSE.
       CALL FUNCTION 'TR_DISPLAY_REQUEST'
         EXPORTING
-          i_trkorr = lv_transport.
+          i_trkorr = iv_transport.
     ENDIF.
 
   ENDMETHOD.
@@ -571,19 +562,17 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-jump.                          " Open object editor
-        zcl_abapgit_html_action_utils=>jump_decode(
-          EXPORTING iv_string   = ii_event->mv_getdata
-          IMPORTING ev_obj_type = ls_item-obj_type
-                    ev_obj_name = ls_item-obj_name ).
+        ls_item-obj_type = ii_event->query( )->get( 'TYPE' ).
+        ls_item-obj_name = ii_event->query( )->get( 'NAME' ).
         zcl_abapgit_objects=>jump( ls_item ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
       WHEN zif_abapgit_definitions=>c_action-jump_transport.
-        jump_display_transport( ii_event->mv_getdata ).
+        jump_display_transport( |{ ii_event->query( )->get( 'TRANSPORT' ) }| ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
       WHEN zif_abapgit_definitions=>c_action-url.
-        call_browser( ii_event->mv_getdata ).
+        call_browser( ii_event->query( )->get( 'URL' ) ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
     ENDCASE.
