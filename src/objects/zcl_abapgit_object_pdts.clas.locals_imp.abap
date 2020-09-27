@@ -34,6 +34,39 @@ CLASS lcl_attribute_setter IMPLEMENTATION.
 ENDCLASS.
 
 
+INTERFACE lif_task_definition.
+
+  TYPES: BEGIN OF ty_task_data,
+           short_text                 TYPE hr_mcshort,
+           plvar                      TYPE plvar,
+           wi_text                    TYPE witext,
+           method                     TYPE hrs1201,
+           method_binding             TYPE hrsmtbind,
+           starting_events            TYPE hrsevtab,
+           starting_events_binding    TYPE hrsevbind,
+           terminating_events         TYPE hrsetmtab,
+           terminating_events_binding TYPE hrsevbind,
+           descriptions               TYPE wstexts,
+         END OF ty_task_data.
+
+  METHODS clear_origin_data.
+  METHODS get_definition RETURNING VALUE(rs_result) TYPE ty_task_data.
+  METHODS get_container RETURNING VALUE(ri_result) TYPE REF TO if_swf_cnt_container.
+  METHODS get_user_container RETURNING VALUE(ri_result) TYPE REF TO if_swf_cnt_container.
+  METHODS import_container IMPORTING iv_xml_string TYPE xstring
+                           RAISING   zcx_abapgit_exception.
+  METHODS create_task RAISING zcx_abapgit_exception.
+  METHODS save IMPORTING iv_package TYPE devclass OPTIONAL
+               RAISING   zcx_abapgit_exception.
+  METHODS change_wi_text RAISING zcx_abapgit_exception.
+  METHODS change_method RAISING zcx_abapgit_exception.
+  METHODS change_start_events RAISING zcx_abapgit_exception.
+  METHODS change_terminating_events RAISING zcx_abapgit_exception.
+  METHODS change_text RAISING zcx_abapgit_exception.
+
+ENDINTERFACE.
+
+
 CLASS lcl_task_definition DEFINITION
   CREATE PUBLIC
   FINAL.
@@ -53,20 +86,12 @@ CLASS lcl_task_definition DEFINITION
 
 
   PRIVATE SECTION.
+    CONSTANTS c_subty_task_description TYPE hr_s_subty VALUE '0120'.
+
     DATA mo_taskdef TYPE REF TO cl_workflow_task_ts.
     DATA ms_task TYPE lif_task_definition=>ty_task_data.
 
-    DATA: mv_objid                      TYPE hrobjid,
-          mv_short_text                 TYPE hr_mcshort,
-          mv_plvar                      TYPE plvar,
-          mv_wi_text                    TYPE witext,
-          ms_method                     TYPE hrs1201,
-          mt_method_binding             TYPE hrsmtbind,
-          mt_starting_events            TYPE hrsevtab,
-          mt_starting_events_binding    TYPE hrsevbind,
-          mt_terminating_events         TYPE hrsetmtab,
-          mt_terminating_events_binding TYPE hrsevbind,
-          mt_descriptions               TYPE wstexts.
+    DATA: mv_objid                      TYPE hrobjid.
 
     METHODS supply_instance RAISING zcx_abapgit_exception.
     METHODS check_subrc_for IMPORTING iv_call TYPE clike OPTIONAL
@@ -127,7 +152,7 @@ CLASS lcl_task_definition IMPLEMENTATION.
   METHOD lif_task_definition~clear_origin_data.
 
     FIELD-SYMBOLS: <ls_description>             TYPE hrs1002,
-                   <ls_method_binding>          LIKE LINE OF mt_method_binding,
+                   <ls_method_binding>          type hrs1214,
                    <ls_starting_events_binding> TYPE hrs1212,
                    <ls_term_events_binding>     TYPE hrs1212.
 
@@ -168,7 +193,8 @@ CLASS lcl_task_definition IMPLEMENTATION.
 
     DATA: li_container       TYPE REF TO if_swf_cnt_element_access_1,
           lt_user_elements   TYPE swfdnamtab,
-          lt_system_elements TYPE swfdnamtab.
+          lt_system_elements TYPE swfdnamtab,
+          lv_element TYPE swfdname.
 
     li_container = mo_taskdef->container.
     lt_user_elements = li_container->all_elements_list( ).
@@ -176,7 +202,7 @@ CLASS lcl_task_definition IMPLEMENTATION.
       EXPORTING
         list_system                = abap_true ).
 
-    LOOP AT lt_system_elements INTO DATA(lv_element).
+    LOOP AT lt_system_elements INTO lv_element.
       READ TABLE lt_user_elements WITH KEY table_line = lv_element TRANSPORTING NO FIELDS.
       IF sy-subrc <> 0.
         TRY.
@@ -221,10 +247,6 @@ CLASS lcl_task_definition IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD lif_task_definition~create_task.
-    CONSTANTS: c_subty_task_description TYPE hr_s_subty VALUE '0120',
-               c_object_type_task       TYPE hr_sotype VALUE 'TS'.
-
-    FIELD-SYMBOLS: <ls_method_binding> TYPE hrs1214.
 
     cl_workflow_factory=>create_new_ts(
       EXPORTING
@@ -272,7 +294,7 @@ CLASS lcl_task_definition IMPLEMENTATION.
   METHOD lif_task_definition~save.
 
     DATA ls_hrsobject TYPE hrsobject.
-    ls_hrsobject-otype = 'TS'.
+    ls_hrsobject-otype = swfco_org_standard_task.
     ls_hrsobject-objid = mv_objid.
     INSERT hrsobject FROM ls_hrsobject.
 
@@ -368,8 +390,6 @@ CLASS lcl_task_definition IMPLEMENTATION.
 
 
   METHOD lif_task_definition~change_text.
-
-    CONSTANTS c_subty_task_description TYPE hr_s_subty VALUE '0120'.
 
     mo_taskdef->change_text(
       EXPORTING

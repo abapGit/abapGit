@@ -14,8 +14,7 @@ CLASS zcl_abapgit_object_pdts DEFINITION
 
   PRIVATE SECTION.
 
-    CONSTANTS: c_subty_task_description TYPE hr_s_subty VALUE '0120',
-               c_object_type_task       TYPE hr_sotype VALUE 'TS'.
+    CONSTANTS: c_object_type_task       TYPE hr_sotype VALUE 'TS'.
 
     DATA ms_objkey TYPE hrsobject.
     DATA mv_objid TYPE hrobjid.
@@ -63,17 +62,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: li_task           TYPE REF TO lif_task_definition,
-          li_first_element  TYPE REF TO if_ixml_element,
-          li_xml_dom        TYPE REF TO if_ixml_document,
-          li_elements       TYPE REF TO if_ixml_node_collection,
-          li_iterator       TYPE REF TO if_ixml_node_iterator,
-          li_element        TYPE REF TO if_ixml_node,
-          li_children       TYPE REF TO if_ixml_node_list,
-          li_child_iterator TYPE REF TO if_ixml_node_iterator,
-          li_attributes     TYPE REF TO if_ixml_named_node_map.
-
-    DATA lv_name TYPE string.
+    DATA li_task TYPE REF TO lif_task_definition.
 
     li_task = lcl_task_definition=>load( mv_objid ).
     li_task->clear_origin_data( ).
@@ -287,7 +276,6 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
         operation     = 'SHOW'
         object_name   = ms_item-obj_name
         object_type   = ms_item-obj_type
-        in_new_window = abap_true
       EXCEPTIONS
         OTHERS        = 0.
   ENDMETHOD.
