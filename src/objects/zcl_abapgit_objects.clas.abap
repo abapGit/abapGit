@@ -222,7 +222,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD adjust_namespaces.
@@ -512,8 +512,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
       CATCH zcx_abapgit_exception INTO lx_error.
         zcl_abapgit_default_transport=>get_instance( )->reset( ).
-        lv_text = lx_error->get_text( ).
-        zcx_abapgit_exception=>raise( lv_text ).
+        RAISE EXCEPTION lx_error.
     ENDTRY.
 
     zcl_abapgit_default_transport=>get_instance( )->reset( ).
