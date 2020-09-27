@@ -41,7 +41,7 @@ CLASS ltcl_requirements IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD different_fields_are_one_group.
-    DATA lv_lines TYPE i.
+
     DATA lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
 
     mo_cut->set_component( '1' ).
@@ -49,14 +49,13 @@ CLASS ltcl_requirements IMPLEMENTATION.
     mo_cut->set_min_patch( '1' ).
 
     lt_requirements = mo_cut->get_as_table( ).
-    DESCRIBE TABLE lt_requirements LINES lv_lines.
 
-    cl_abap_unit_assert=>assert_equals( act = lv_lines
+    cl_abap_unit_assert=>assert_equals( act = lines( lt_requirements )
                                         exp = 1 ).
   ENDMETHOD.
 
   METHOD repeat_field_adds_new_group.
-    DATA lv_lines TYPE i.
+
     DATA lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt.
 
     mo_cut->set_component( '1' ).
@@ -64,9 +63,8 @@ CLASS ltcl_requirements IMPLEMENTATION.
     mo_cut->set_component( '1' ).
 
     lt_requirements = mo_cut->get_as_table( ).
-    DESCRIBE TABLE lt_requirements LINES lv_lines.
 
-    cl_abap_unit_assert=>assert_equals( act = lv_lines
+    cl_abap_unit_assert=>assert_equals( act = lines( lt_requirements )
                                         exp = 2 ).
   ENDMETHOD.
 
