@@ -91,6 +91,22 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
       iv_mime_name = 'ZABAPGIT_CSS_THEME_BELIZE_BLUE'
       iv_inline    = lo_buf->join_w_newline_and_flush( ) ).
 
+    " @@abapmerge include zabapgit_css_theme_quartz.w3mi.data.css > lo_buf->add( '$$' ).
+    lo_asset_man->register_asset(
+      iv_url       = 'css/theme-quartz.css'
+      iv_type      = 'text/css'
+      iv_cachable  = abap_false
+      iv_mime_name = 'ZABAPGIT_CSS_THEME_QUARTZ'
+      iv_inline    = lo_buf->join_w_newline_and_flush( ) ).
+
+    " @@abapmerge include zabapgit_css_theme_quartz_dark.w3mi.data.css > lo_buf->add( '$$' ).
+    lo_asset_man->register_asset(
+      iv_url       = 'css/theme-quartz-dark.css'
+      iv_type      = 'text/css'
+      iv_cachable  = abap_false
+      iv_mime_name = 'ZABAPGIT_CSS_THEME_QUARTZ_DARK'
+      iv_inline    = lo_buf->join_w_newline_and_flush( ) ).
+
     " @@abapmerge include zabapgit_js_common.w3mi.data.js > lo_buf->add( '$$' ).
     lo_asset_man->register_asset(
       iv_url       = 'js/common.js'

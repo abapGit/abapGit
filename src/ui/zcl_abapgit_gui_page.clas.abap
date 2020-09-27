@@ -134,6 +134,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
         ri_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-dark.css">' ).
       WHEN zcl_abapgit_settings=>c_ui_theme-belize.
         ri_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-belize-blue.css">' ).
+      WHEN zcl_abapgit_settings=>c_ui_theme-quartz.
+        ri_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-quartz.css">' ).
+      WHEN zcl_abapgit_settings=>c_ui_theme-quartz_dark.
+        ri_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-quartz-dark.css">' ).
     ENDCASE.
 
     ri_html->add( '<script type="text/javascript" src="js/common.js"></script>' ).

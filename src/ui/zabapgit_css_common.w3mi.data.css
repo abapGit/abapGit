@@ -227,7 +227,7 @@ div.debug_container {
   padding: 0.5em;
   font-size: 10pt;
   font-family: Consolas, Courier, monospace;
-  color: var(--theme-primary-font-color2);
+  color: var(--theme-primary-font-color2); 
   background-color: var(--theme-container-background-color);
 }
 
@@ -798,7 +798,7 @@ table.db_tab th {
 table.db_tab td {
   padding: 4px 8px;
   vertical-align: middle;
-  color: var(--theme-primary-font-color);
+  color: var(--theme-primary-font-color); 
 }
 table.db_tab td.data {
   font-style: italic;

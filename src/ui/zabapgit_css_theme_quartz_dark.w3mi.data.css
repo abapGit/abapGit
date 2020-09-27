@@ -1,0 +1,54 @@
+/*
+ * ABAPGIT THEME CSS - QUARTZ DARK
+ */
+
+/* https://experience.sap.com/fiori-design-web/quartz-dark-colors/ */
+
+:root {
+  --sap-gui-quartz-dark-background: #1c2228;
+  --sap-gui-quartz-dark-tab-background: #29313a;
+  --sap-gui-quartz-dark-font-color: #fafafa;
+  --sap-gui-quartz-dark-link-color: #62b0f2;
+  --sap-gui-quartz-dark-container-border-color: #364553;
+  --sap-gui-quartz-dark-input-border-color: #8097aa;
+  --sap-gui-quartz-dark-input-border-color-focus: #78caf9;
+  --sap-gui-quartz-dark-input-background-color: #26313b;
+  --sap-gui-quartz-dark-input-background-color-readonly: #364553;
+  --sap-gui-quartz-dark-table-cell-background-color: #26313b;
+  --sap-gui-quartz-dark-table-cell-background-color-selected: #2a4c60;
+  --sap-gui-quartz-dark-table-cell-border-color-selected: #78caf9;
+  --fiori-color-app-headers-containers: #29313A; /* Background in SAP GUI */
+  --fiori-color-gui-tab-background: #354a5f; /* Tabstrip background */
+  --fiori-color-gui-container-border: #4b6985;
+  --fiori-color-gui-uneditable-background: #F2F2F2; /* Textbox not editable */
+  --fiori-color-gui-editable-background: #FFFFFF; /* Textbox editable */
+  --fiori-color-font-primary: #333333; /* Grayscale 1 */
+  --fiori-color-font-secondary: #666666; /* Grayscale 2 */
+  --fiori-color-font-highlighted: #003D84;
+  --fiori-color-message-box-background: #2F3C48; /* Bottom message container */
+
+  --theme-background-color: var(--sap-gui-quartz-dark-background);
+  --theme-container-background-color: var(--sap-gui-quartz-dark-tab-background);
+  --theme-primary-font: "72", Arial, Helvetica, sans-serif;
+  --theme-primary-font-color: var(--sap-gui-quartz-dark-font-color);
+  --theme-primary-font-color2: var(--sap-gui-quartz-dark-font-color);
+  --theme-primary-font-color3: var(--sap-gui-quartz-dark-font-color);
+  --theme-primary-font-color-reduced: var(--sap-gui-quartz-dark-font-color);
+  --theme-container-border-color: var(--sap-gui-quartz-dark-input-border-color);
+  --theme-input-control-border-color-focus: var(--sap-gui-quartz-dark-input-border-color-focus);
+  --theme-input-control-bg-color: var(--sap-gui-quartz-dark-input-background-color);
+  --theme-input-control-bg-color-readonly: var(--sap-gui-quartz-dark-input-background-color-readonly);
+  --theme-font-size: 11pt;
+  --theme-link-color: var(--sap-gui-quartz-dark-link-color);
+  --theme-table-border-color: #E5E5E5; /* ALV border color */
+  --theme-table-background-color: var(--sap-gui-quartz-dark-table-cell-background-color);
+  --theme-table-background-color-hover: var(--sap-gui-quartz-dark-table-cell-background-color-selected);
+  --theme-greyscale-dark: #666666;
+  --theme-greyscale-medium: #BFBFBF;
+  --theme-greyscale-light: #CCCCCC;
+  --theme-greyscale-lighter: #E5E5E5;
+}
+
+#header a, #header a:visited {
+  color: #346187;
+}

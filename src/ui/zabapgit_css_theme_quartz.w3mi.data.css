@@ -1,0 +1,35 @@
+/*
+ * ABAPGIT THEME CSS - QUARTZ DARK
+ */
+
+/* https://experience.sap.com/fiori-design-web/quartz-light-colors/ */
+
+:root {
+  --fiori-color-app-headers-containers: #29313A; /* Background in SAP GUI */
+  --fiori-color-gui-tab-background: #354a5f; /* Tabstrip background */
+  --fiori-color-gui-container-border: #4b6985;
+  --fiori-color-gui-uneditable-background: #F2F2F2; /* Textbox not editable */
+  --fiori-color-gui-editable-background: #FFFFFF; /* Textbox editable */
+  --fiori-color-font-primary: #333333; /* Grayscale 1 */
+  --fiori-color-font-secondary: #666666; /* Grayscale 2 */
+  --fiori-color-font-highlighted: #003D84;
+  --fiori-color-message-box-background: #2F3C48; /* Bottom message container */
+
+  --theme-background-color: var(--fiori-color-app-headers-containers);
+  --theme-container-background-color: var(--fiori-color-gui-tab-background);
+  --theme-primary-font: "72", Arial, Helvetica, sans-serif;
+  --theme-primary-font-color: var(--fiori-color-font-primary);
+  --theme-primary-font-color-reduced: var(--fiori-color-font-secondary);
+  --theme-font-size: 11pt;
+  --theme-link-color: var(--fiori-color-font-highlighted);
+  --theme-container-border-color: var(--fiori-color-gui-container-border);
+  --theme-table-border-color: #E5E5E5; /* ALV border color */
+  --theme-greyscale-dark: #666666;
+  --theme-greyscale-medium: #BFBFBF;
+  --theme-greyscale-light: #CCCCCC;
+  --theme-greyscale-lighter: #E5E5E5;
+}
+
+#header a, #header a:visited {
+  color: #346187;
+}
