@@ -58,7 +58,7 @@ ENDMETHOD.
 `ro_html` which is the instance of `ZCL_ABAPGIT_HTML` is helper tool for html rendering. It accumulates html content and then can output it with `render` method. It has a couple of important methods:
 
 - **ADD** - adds a chunk to accumulated HTML. You can pass a string or another `ZCL_ABAPGIT_HTML` instance. In the example above `render_some_stuff` may either return a string or have the same pattern as `render_content` (retuning `ZCL_ABAPGIT_HTML` instance)
-- **ADD_ICON and ICON** - renders an icon. abapGit uses web-fonts to render icons (see [adding icons](./development/adding-icons.html)). The method accepts the icon name and a css-class name which represents a color separated by '/'. E.g.  in the example above it will render 'star' icon and assign 'error' css class to it which has red color in abapGit styes. The method has it's static brother `ZCL_ABAPGIT_HTML=>ICON` which is more convenient in some cases and just returns a rendered html string.
+- **ADD_ICON and ICON** - renders an icon. abapGit uses web-fonts to render icons (see [adding icons](./adding-icons.html)). The method accepts the icon name and a css-class name which represents a color separated by '/'. E.g.  in the example above it will render 'star' icon and assign 'error' css class to it which has red color in abapGit styes. The method has it's static brother `ZCL_ABAPGIT_HTML=>ICON` which is more convenient in some cases and just returns a rendered html string.
 - **ADD_A and A** - renders a link (anchor) (`A` - static method). It is strongly suggested that you use this method instead of rendering `<a>` tags directly. Params:
     - `IV_TXT` - text to be rendered inside anchor
     - `IV_TYP` - type of action done on click. 3 options: 
