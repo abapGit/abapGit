@@ -125,9 +125,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CMOD IMPLEMENTATION.
     DATA: lv_name TYPE modact-name.
 
     SELECT SINGLE name FROM modact INTO lv_name WHERE name = ms_item-obj_name.
-    IF sy-subrc = 0.
-      rv_bool = abap_true.
-    ENDIF.
+    rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
 
