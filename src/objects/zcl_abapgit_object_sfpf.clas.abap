@@ -329,10 +329,10 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
         IF li_node IS INITIAL.
           EXIT.
         ENDIF.
-         li_node_new = li_document->create_element_ns('CACHE_INFO').
-         li_node_parent = li_node->get_parent( ).
-         li_node_parent->replace_child( new_child = li_node_new
-                                        old_child = li_node ).
+        li_node_new = li_document->create_element_ns('CACHE_INFO').
+        li_node_parent = li_node->get_parent( ).
+        li_node_parent->replace_child( new_child = li_node_new
+                                       old_child = li_node ).
       ENDDO.
     ENDIF.
 
