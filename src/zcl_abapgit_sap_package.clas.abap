@@ -46,7 +46,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
         OTHERS                     = 6 ).
 
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from CL_PACKAGE_FACTORY=>LOAD_PACKAGE { sy-subrc }| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     rv_are_changes_rec_in_tr_req = li_package->wbo_korr_flag.
@@ -118,7 +118,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
 *        error_in_cts_checks        = 21
         OTHERS                     = 18 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Package { is_package-devclass } could not be created| ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     li_package->save(
@@ -175,7 +175,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
         no_access                  = 4
         object_locked_and_modified = 5 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'error reading parent package' ).
+      zcx_abapgit_exception=>raise_t100( ).
     ENDIF.
 
     ls_child-devclass  = iv_child.
