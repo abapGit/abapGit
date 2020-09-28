@@ -2,6 +2,7 @@ CLASS zcl_abapgit_popups DEFINITION
   PUBLIC
   FINAL
   CREATE PRIVATE
+
   GLOBAL FRIENDS zcl_abapgit_ui_factory .
 
   PUBLIC SECTION.
@@ -1033,11 +1034,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
         p_object_data    = es_package_data
       EXCEPTIONS
         action_cancelled = 1.
-    IF sy-subrc = 0.
-      ev_create = abap_true.
-    ELSE.
-      ev_create = abap_false.
-    ENDIF.
+    ev_create = boolc( sy-subrc = 0 ).
   ENDMETHOD.
 
 
