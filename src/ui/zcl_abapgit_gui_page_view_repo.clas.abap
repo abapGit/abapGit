@@ -585,6 +585,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
   METHOD constructor.
 
     DATA: lo_settings TYPE REF TO zcl_abapgit_settings,
+          lx_error    TYPE REF TO zcx_abapgit_exception,
           lv_package  TYPE devclass.
 
     TRY.
