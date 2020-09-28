@@ -321,7 +321,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
     li_document = cl_ixml_80_20=>parse_to_document( stream_xstring = lv_xstr ).
 
 *   Clear CACHE_INFO
-    li_node_collection = li_document->get_elements_by_tag_name_ns('CACHE_INFO').
+    li_node_collection = li_document->get_elements_by_tag_name_ns( 'CACHE_INFO' ).
     IF li_node_collection IS NOT INITIAL.
       li_node_iter = li_node_collection->create_iterator( ).
       DO.
@@ -329,7 +329,7 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
         IF li_node IS INITIAL.
           EXIT.
         ENDIF.
-        li_node_new = li_document->create_element_ns('CACHE_INFO').
+        li_node_new = li_document->create_element_ns( 'CACHE_INFO' ).
         li_node_parent = li_node->get_parent( ).
         li_node_parent->replace_child( new_child = li_node_new
                                        old_child = li_node ).
