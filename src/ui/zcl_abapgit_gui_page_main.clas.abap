@@ -31,11 +31,6 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
     METHODS build_main_menu
       RETURNING VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar.
 
-    METHODS get_patch_page
-      IMPORTING iv_getdata     TYPE clike
-      RETURNING VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
-      RAISING   zcx_abapgit_exception.
-
 ENDCLASS.
 
 
@@ -73,26 +68,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_patch_page.
-
-    DATA lv_key TYPE zif_abapgit_persistence=>ty_value.
-
-    FIND FIRST OCCURRENCE OF '=' IN iv_getdata.
-    IF sy-subrc <> 0. " Not found ? -> just repo key in params
-      lv_key = iv_getdata.
-    ELSE.
-      zcl_abapgit_html_action_utils=>stage_decode(
-        EXPORTING iv_getdata = iv_getdata
-        IMPORTING ev_key     = lv_key ).
-    ENDIF.
-
-    CREATE OBJECT ri_page TYPE zcl_abapgit_gui_page_patch
-      EXPORTING
-        iv_key = lv_key.
-
-  ENDMETHOD.
-
-
   METHOD render_content.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
@@ -119,7 +94,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-select.
 
-        lv_key = ii_event->mv_getdata.
+        lv_key = ii_event->query( iv_upper_cased = abap_true )->get( 'KEY' ).
         zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( lv_key ).
 
         TRY.
@@ -135,12 +110,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
       WHEN zif_abapgit_definitions=>c_action-change_order_by.
 
-        mo_repo_overview->set_order_by( zcl_abapgit_gui_chunk_lib=>parse_change_order_by( ii_event->mv_getdata ) ).
+        mo_repo_overview->set_order_by( ii_event->query( )->get( 'ORDERBY' ) ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN zif_abapgit_definitions=>c_action-direction.
 
-        mo_repo_overview->set_order_direction( zcl_abapgit_gui_chunk_lib=>parse_direction( ii_event->mv_getdata ) ).
+        mo_repo_overview->set_order_direction(
+          boolc( ii_event->query( )->get( 'DIRECTION' ) = 'DESCENDING' ) ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN c_actions-apply_filter.
@@ -150,12 +126,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
 
       WHEN zif_abapgit_definitions=>c_action-go_patch.
 
-        rs_handled-page = get_patch_page( ii_event->mv_getdata ).
+        lv_key = ii_event->query( )->get( 'KEY' ).
+        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_patch
+          EXPORTING
+            iv_key = lv_key.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN zif_abapgit_definitions=>c_action-repo_settings.
 
-        lv_key = ii_event->mv_getdata.
+        lv_key = ii_event->query( iv_upper_cased = abap_true )->get( 'KEY' ).
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_repo_sett
           EXPORTING
             io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
