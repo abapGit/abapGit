@@ -191,6 +191,8 @@ CLASS ltc_turnaround_test DEFINITION FINAL FOR TESTING
 
     CLASS-METHODS class_setup.
     CLASS-METHODS task_exists RETURNING VALUE(rv_result) TYPE abap_bool.
+    CLASS-METHODS check_critical_tests_enabled.
+    CLASS-METHODS check_task_does_not_exist.
 
     METHODS setup.
 
@@ -213,13 +215,30 @@ CLASS ltc_turnaround_test IMPLEMENTATION.
 
 
   METHOD class_setup.
+    check_critical_tests_enabled( ).
+    check_task_does_not_exist( ).
+  ENDMETHOD.
 
+
+  METHOD check_critical_tests_enabled.
+
+    "Objects will be created and deleted, do not run in customer system!
+    "These tests may fail if you are locking the entries (e.g. the ZABAPGIT transaction is open)
+    IF zcl_abapgit_persist_settings=>get_instance( )->read( )->get_run_critical_tests( ) = abap_false.
+      cl_abap_unit_assert=>fail(
+        msg   = 'Cancelled. You can enable these tests at the Settings page'
+        level = if_aunit_constants=>tolerable ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD check_task_does_not_exist.
     IF task_exists( ) = abap_true.
       cl_abap_unit_assert=>fail( msg   = |Test task { ltd_mock=>mc_task_id } already exists|
                                  level = if_aunit_constants=>fatal
                                  quit  = if_aunit_constants=>class ).
     ENDIF.
-
   ENDMETHOD.
 
 
