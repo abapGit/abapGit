@@ -118,7 +118,7 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD IF_MESSAGE~GET_LONGTEXT.
+  METHOD if_message~get_longtext.
 
     " You should remember that we have to call ZCL_ABAPGIT_MESSAGE_HELPER
     " dynamically, because the compiled abapGit report puts the definition
@@ -133,7 +133,7 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
 
       CREATE OBJECT lo_message_helper TYPE ('ZCL_ABAPGIT_MESSAGE_HELPER')
         EXPORTING
-          ii_t100_message = me.
+          io_exception = me.
 
       CALL METHOD lo_message_helper->('GET_T100_LONGTEXT')
         RECEIVING
