@@ -142,15 +142,17 @@ CLASS ltcl_html_action_utils IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD parse_fields_unescape.
-* file status = '?', used in staging page
 
+    " file status = '?', used in staging page
     _given_string_is( '/SRC/ZFOOBAR.PROG.ABAP=%3F' ).
 
     _when_fields_are_parsed( ).
+    _then_field_count_should_be( 1 ).
 
-    _then_fields_should_be( iv_index = 1
-                            iv_name  = '/SRC/ZFOOBAR.PROG.ABAP'
-                            iv_value = '?' ).
+    _then_fields_should_be(
+      iv_index = 1
+      iv_name  = '/SRC/ZFOOBAR.PROG.ABAP'
+      iv_value = '?' ).
 
   ENDMETHOD.
 

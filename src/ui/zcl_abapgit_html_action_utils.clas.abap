@@ -39,26 +39,12 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !iv_obj_name     TYPE tadir-obj_name
       RETURNING
         VALUE(rv_string) TYPE string .
-    CLASS-METHODS jump_decode
-      IMPORTING
-        !iv_string   TYPE clike
-      EXPORTING
-        !ev_obj_type TYPE tadir-object
-        !ev_obj_name TYPE tadir-obj_name
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS dir_encode
       IMPORTING
         !iv_path         TYPE string
       RETURNING
         VALUE(rv_string) TYPE string .
-    CLASS-METHODS dir_decode
-      IMPORTING
-        !iv_string     TYPE clike
-      RETURNING
-        VALUE(rv_path) TYPE string
-      RAISING
-        zcx_abapgit_exception .
+
     CLASS-METHODS file_encode
       IMPORTING
         !iv_key          TYPE zif_abapgit_persistence=>ty_repo-key
@@ -71,33 +57,13 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
         !ig_object       TYPE any
       RETURNING
         VALUE(rv_string) TYPE string .
-    CLASS-METHODS file_obj_decode
-      IMPORTING
-        !iv_string TYPE clike
-      EXPORTING
-        !ev_key    TYPE zif_abapgit_persistence=>ty_repo-key
-        !eg_file   TYPE any                                    "assuming ty_file
-        !eg_object TYPE any                      "assuming ty_item
-      RAISING
-        zcx_abapgit_exception .
+
     CLASS-METHODS dbkey_encode
       IMPORTING
         !is_key          TYPE zif_abapgit_persistence=>ty_content
       RETURNING
         VALUE(rv_string) TYPE string .
-    CLASS-METHODS dbkey_decode
-      IMPORTING
-        !iv_string    TYPE clike
-      RETURNING
-        VALUE(rs_key) TYPE zif_abapgit_persistence=>ty_content .
-    CLASS-METHODS stage_decode
-      IMPORTING
-        !iv_getdata TYPE clike
-      EXPORTING
-        !ev_key     TYPE zif_abapgit_persistence=>ty_repo-key
-        !ev_seed    TYPE string
-      RAISING
-        zcx_abapgit_exception .
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -146,20 +112,6 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD dbkey_decode.
-
-    DATA: lt_fields TYPE tihttpnvp.
-
-    lt_fields = parse_fields_upper_case_name( cl_http_utility=>unescape_url( |{ iv_string }| ) ).
-
-    get_field( EXPORTING iv_name = 'TYPE'
-                         it_field = lt_fields CHANGING cg_field = rs_key-type ).
-    get_field( EXPORTING iv_name = 'VALUE'
-                         it_field = lt_fields CHANGING cg_field = rs_key-value ).
-
-  ENDMETHOD.
-
-
   METHOD dbkey_encode.
 
     DATA: lt_fields TYPE tihttpnvp.
@@ -170,17 +122,6 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
                          ig_field = is_key-value CHANGING ct_field = lt_fields ).
 
     rv_string = cl_http_utility=>if_http_utility~fields_to_string( lt_fields ).
-
-  ENDMETHOD.
-
-
-  METHOD dir_decode.
-
-    DATA: lt_fields TYPE tihttpnvp.
-
-    lt_fields = parse_fields( iv_string ).
-    get_field( EXPORTING iv_name = 'PATH'
-                         it_field = lt_fields CHANGING cg_field = rv_path ).
 
   ENDMETHOD.
 
@@ -223,39 +164,6 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD file_obj_decode.
-
-    DATA: lt_fields TYPE tihttpnvp.
-
-    ASSERT eg_file IS SUPPLIED OR eg_object IS SUPPLIED OR ev_key IS SUPPLIED.
-
-    CLEAR: ev_key, eg_file, eg_object.
-    lt_fields = parse_fields_upper_case_name( iv_string ).
-
-    get_field( EXPORTING iv_name = 'KEY'
-                         it_field = lt_fields CHANGING cg_field = ev_key ).
-
-    IF eg_file IS SUPPLIED.
-      get_field( EXPORTING iv_name = 'PATH'
-                           it_field = lt_fields CHANGING cg_field = eg_file ).
-      get_field( EXPORTING iv_name = 'FILENAME'
-                           it_field = lt_fields
-                           iv_decode = abap_true
-                 CHANGING cg_field = eg_file ).
-    ENDIF.
-
-    IF eg_object IS SUPPLIED.
-      get_field( EXPORTING iv_name = 'OBJ_TYPE'
-                           it_field = lt_fields CHANGING cg_field = eg_object ).
-      get_field( EXPORTING iv_name = 'OBJ_NAME'
-                           it_field = lt_fields
-                           iv_decode = abap_true
-                 CHANGING cg_field = eg_object ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD get_field.
 
     DATA: lv_value TYPE string.
@@ -285,20 +193,6 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
       WHEN OTHERS.
         ASSERT 0 = 1.
     ENDCASE.
-
-  ENDMETHOD.
-
-
-  METHOD jump_decode.
-
-    DATA: lt_fields TYPE tihttpnvp.
-
-    lt_fields = parse_fields( iv_string ).
-
-    get_field( EXPORTING iv_name = 'TYPE'
-                         it_field = lt_fields CHANGING cg_field = ev_obj_type ).
-    get_field( EXPORTING iv_name = 'NAME'
-                         it_field = lt_fields CHANGING cg_field = ev_obj_name ).
 
   ENDMETHOD.
 
@@ -348,16 +242,16 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
     LOOP AT lt_substrings ASSIGNING <lv_substring>.
 
       CLEAR ls_field.
+      <lv_substring> = unescape( <lv_substring> ).
+      " On attempt to change unescaping -> run unit tests to check !
 
       ls_field-name = substring_before(
         val = <lv_substring>
         sub = '=' ).
-      ls_field-name = unescape( ls_field-name ).
 
       ls_field-value = substring_after(
         val = <lv_substring>
         sub = '=' ).
-      ls_field-value = unescape( ls_field-value ).
 
       IF ls_field IS INITIAL. " Not a field with proper structure
         CONTINUE.
@@ -388,22 +282,6 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
     ELSE.
       rt_fields = parse_fields( lv_serialized_post_data ).
     ENDIF.
-
-  ENDMETHOD.
-
-
-  METHOD stage_decode.
-
-    DATA: lt_fields TYPE tihttpnvp.
-
-    lt_fields = parse_fields_upper_case_name( iv_getdata ).
-
-    get_field( EXPORTING iv_name = 'KEY'
-                         it_field = lt_fields CHANGING cg_field = ev_key ).
-    get_field( EXPORTING iv_name = 'SEED'
-                         it_field = lt_fields CHANGING cg_field = ev_seed ).
-
-    ASSERT NOT ev_key IS INITIAL.
 
   ENDMETHOD.
 
