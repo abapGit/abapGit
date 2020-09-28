@@ -73,6 +73,7 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF ct_tadir.
 
     " misuse field KORRNUM to fix deletion sequence
+    " higher value means later deletion
 
     LOOP AT ct_tadir ASSIGNING <ls_tadir>.
       CASE <ls_tadir>-object.
@@ -86,18 +87,9 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
           <ls_tadir>-korrnum = '810000'.
         WHEN 'DTEL'.
           <ls_tadir>-korrnum = '800000'.
-        WHEN 'DCLS'.
-          " AUTH and SUSO after DCLS
-          <ls_tadir>-korrnum = '705000'.
-        WHEN 'SUSO'.
-          " SUSO after DCLS
-          <ls_tadir>-korrnum = '710000'.
-        WHEN 'AUTH'.
-          " AUTH after DCLS
-          <ls_tadir>-korrnum = '715000'.
-        WHEN 'DDLS'.
-          " DDLS after DCLS but before other DDIC
-          <ls_tadir>-korrnum = '720000'.
+        WHEN 'SHLP'.
+          " SHLP after TABL
+          <ls_tadir>-korrnum = '760000'.
         WHEN 'TTYP' OR 'TABL' OR 'VIEW'.
           SELECT SINGLE tabclass FROM dd02l
             INTO lv_tabclass
@@ -110,6 +102,18 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
           ELSE.
             <ls_tadir>-korrnum = '750000'.
           ENDIF.
+        WHEN 'DDLS'.
+          " DDLS after DCLS but before other DDIC
+          <ls_tadir>-korrnum = '720000'.
+        WHEN 'AUTH'.
+          " AUTH after DCLS
+          <ls_tadir>-korrnum = '715000'.
+        WHEN 'SUSO'.
+          " SUSO after DCLS
+          <ls_tadir>-korrnum = '710000'.
+        WHEN 'DCLS'.
+          " AUTH and SUSO after DCLS
+          <ls_tadir>-korrnum = '705000'.
         WHEN 'IASP'.
           <ls_tadir>-korrnum = '552000'.
         WHEN 'IARP'.
@@ -130,10 +134,10 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
           IF sy-subrc = 0.
             <ls_tadir>-korrnum = '200000'.
           ELSE.
-            <ls_tadir>-korrnum = '100000'.
+            <ls_tadir>-korrnum = '180000'.
           ENDIF.
         WHEN 'IDOC'.
-          <ls_tadir>-korrnum = '200000'.
+          <ls_tadir>-korrnum = '160000'.
         WHEN 'IEXT'.
           <ls_tadir>-korrnum = '150000'.
         WHEN OTHERS.
