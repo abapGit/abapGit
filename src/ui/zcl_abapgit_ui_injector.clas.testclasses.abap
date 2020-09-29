@@ -84,10 +84,6 @@ CLASS ltcl_abapgit_popups_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_popups~repo_new_offline.
-
-  ENDMETHOD.
-
   METHOD zif_abapgit_popups~repo_popup.
 
   ENDMETHOD.
