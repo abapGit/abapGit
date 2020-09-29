@@ -7,6 +7,6 @@ ENDCLASS.
 
 CLASS ltcl_ci IMPLEMENTATION.
   METHOD run.
-    zcl_abapgit_exit=>get_instance( )->run_ci_tests( 'TABL' ).
+    zcl_abapgit_objects_ci_tests=>run( 'TABL' ).
   ENDMETHOD.
 ENDCLASS.

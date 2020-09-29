@@ -4,6 +4,8 @@ INTERFACE zif_abapgit_exit
 
   TYPES:
     ty_icm_sinfo2_tt TYPE STANDARD TABLE OF icm_sinfo2 WITH DEFAULT KEY .
+  TYPES:
+    ty_repos TYPE STANDARD TABLE OF string WITH DEFAULT KEY .
 
   METHODS change_local_host
     CHANGING
@@ -57,7 +59,9 @@ INTERFACE zif_abapgit_exit
     IMPORTING
       !is_step TYPE zif_abapgit_definitions=>ty_step_data
       !ii_log  TYPE REF TO zif_abapgit_log .
-  METHODS run_ci_tests
+  METHODS get_ci_tests
     IMPORTING
-      !iv_object TYPE tadir-object.
+      !iv_object      TYPE tadir-object
+    RETURNING
+      VALUE(rt_repos) TYPE ty_repos.
 ENDINTERFACE.
