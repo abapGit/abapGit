@@ -141,7 +141,11 @@ CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
   METHOD zif_abapgit_exit~get_ci_tests.
 
     TRY.
-        rt_repos = gi_exit->get_ci_tests( iv_object ).
+        gi_exit->get_ci_tests(
+          EXPORTING
+            iv_object = iv_object
+          CHANGING
+            ct_repos  = ct_repos ).
       CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
     ENDTRY.
 
