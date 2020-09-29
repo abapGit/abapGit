@@ -18,43 +18,43 @@ CLASS zcl_abapgit_gui_page_addofflin DEFINITION
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
-PRIVATE SECTION.
+  PRIVATE SECTION.
 
-  CONSTANTS:
-    BEGIN OF c_id,
-      url              TYPE string VALUE 'url',
-      package          TYPE string VALUE 'package',
-      folder_logic     TYPE string VALUE 'folder_logic',
-      master_lang_only TYPE string VALUE 'master_lang_only',
-    END OF c_id .
-  CONSTANTS:
-    BEGIN OF c_event,
-      go_back          TYPE string VALUE 'go-back',
-      choose_package   TYPE string VALUE 'choose-package',
-      create_package   TYPE string VALUE 'create-package',
-      add_offline_repo TYPE string VALUE 'add-repo-offline',
-    END OF c_event .
-  DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
-  DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
-  DATA mo_form TYPE REF TO zcl_abapgit_html_form .
+    CONSTANTS:
+      BEGIN OF c_id,
+        url              TYPE string VALUE 'url',
+        package          TYPE string VALUE 'package',
+        folder_logic     TYPE string VALUE 'folder_logic',
+        master_lang_only TYPE string VALUE 'master_lang_only',
+      END OF c_id .
+    CONSTANTS:
+      BEGIN OF c_event,
+        go_back          TYPE string VALUE 'go-back',
+        choose_package   TYPE string VALUE 'choose-package',
+        create_package   TYPE string VALUE 'create-package',
+        add_offline_repo TYPE string VALUE 'add-repo-offline',
+      END OF c_event .
+    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
+    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
+    DATA mo_form TYPE REF TO zcl_abapgit_html_form .
 
-  METHODS parse_form
-    IMPORTING
-      !it_form_fields     TYPE tihttpnvp
-    RETURNING
-      VALUE(ro_form_data) TYPE REF TO zcl_abapgit_string_map
-    RAISING
-      zcx_abapgit_exception .
-  METHODS validate_form
-    IMPORTING
-      !io_form_data            TYPE REF TO zcl_abapgit_string_map
-    RETURNING
-      VALUE(ro_validation_log) TYPE REF TO zcl_abapgit_string_map
-    RAISING
-      zcx_abapgit_exception .
-  METHODS get_form_schema
-    RETURNING
-      VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form .
+    METHODS parse_form
+      IMPORTING
+        !it_form_fields     TYPE tihttpnvp
+      RETURNING
+        VALUE(ro_form_data) TYPE REF TO zcl_abapgit_string_map
+      RAISING
+        zcx_abapgit_exception .
+    METHODS validate_form
+      IMPORTING
+        !io_form_data            TYPE REF TO zcl_abapgit_string_map
+      RETURNING
+        VALUE(ro_validation_log) TYPE REF TO zcl_abapgit_string_map
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_form_schema
+      RETURNING
+        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form .
 ENDCLASS.
 
 
