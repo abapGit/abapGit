@@ -57,4 +57,7 @@ INTERFACE zif_abapgit_exit
     IMPORTING
       !is_step TYPE zif_abapgit_definitions=>ty_step_data
       !ii_log  TYPE REF TO zif_abapgit_log .
+  METHODS run_ci_tests
+    IMPORTING
+      !iv_object TYPE tadir-object.
 ENDINTERFACE.

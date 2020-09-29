@@ -1,0 +1,12 @@
+CLASS ltcl_ci DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT.
+
+  PUBLIC SECTION.
+    METHODS run FOR TESTING.
+
+ENDCLASS.
+
+CLASS ltcl_ci IMPLEMENTATION.
+  METHOD run.
+    zcl_abapgit_exit=>get_instance( )->run_ci_tests( 'TABL' ).
+  ENDMETHOD.
+ENDCLASS.
