@@ -670,12 +670,13 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
       io_xml->read( EXPORTING iv_name = 'DD36M'
                     CHANGING cg_data = lt_dd36m ).
 
-      " DDIC Step: Remove referenced to search helps
+      " DDIC Step: Remove references to search helps and foreign keys
       IF iv_step = zif_abapgit_object=>gc_step_id-ddic.
-        CLEAR: lt_dd35v, lt_dd36m.
+        CLEAR: lt_dd08v, lt_dd35v, lt_dd36m.
       ENDIF.
 
-      IF iv_step = zif_abapgit_object=>gc_step_id-late AND lv_refs = abap_false AND lines( lt_dd35v ) = 0.
+      IF iv_step = zif_abapgit_object=>gc_step_id-late AND lv_refs = abap_false
+        AND lines( lt_dd35v ) = 0 AND lines( lt_dd08v ) = 0.
         RETURN. " already active
       ENDIF.
 

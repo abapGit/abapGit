@@ -1,36 +1,39 @@
 CLASS ltcl_get_t100_longtext DEFINITION FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
 
   PUBLIC SECTION.
-    INTERFACES if_t100_message.
     METHODS test01 FOR TESTING.
 
 ENDCLASS.
 
 CLASS ltcl_get_t100_longtext IMPLEMENTATION.
 
-  METHOD if_message~get_longtext.
-    RETURN.
-  ENDMETHOD.
-
-  METHOD if_message~get_text.
-    RETURN.
-  ENDMETHOD.
-
   METHOD test01.
 
-    DATA lo_cut TYPE REF TO zcl_abapgit_message_helper.
-    DATA lv_result TYPE string.
+    DATA: lx_err    TYPE REF TO zcx_abapgit_exception,
+          lv_dummy  TYPE string,
+          lv_result TYPE string.
 
-    if_t100_message~t100key-msgid = '00'.
-    if_t100_message~t100key-msgno = '058'.
-    if_t100_message~t100key-attr1 = 'ATTR'.
+    TRY.
+        MESSAGE e058(00) WITH 'Value_1' 'Value_2' 'Value_3' 'Value_4' INTO lv_dummy.
+        zcx_abapgit_exception=>raise_t100( ).
+      CATCH zcx_abapgit_exception INTO lx_err.
+        lv_result = lx_err->get_longtext( ).
+    ENDTRY.
 
-    CREATE OBJECT lo_cut
-      EXPORTING
-        ii_t100_message = me.
-
-    lv_result = lo_cut->get_t100_longtext( ).
     cl_abap_unit_assert=>assert_not_initial( lv_result ).
+
+    IF lv_result NS 'Value_1'.
+      cl_abap_unit_assert=>fail( ).
+    ENDIF.
+    IF lv_result NS 'Value_2'.
+      cl_abap_unit_assert=>fail( ).
+    ENDIF.
+    IF lv_result NS 'Value_3'.
+      cl_abap_unit_assert=>fail( ).
+    ENDIF.
+    IF lv_result NS 'Value_4'.
+      cl_abap_unit_assert=>fail( ).
+    ENDIF.
 
   ENDMETHOD.
 
