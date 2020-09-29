@@ -103,12 +103,14 @@ CLASS ltcl_objects_files IMPLEMENTATION.
       uccheck(1) TYPE c VALUE 'X',
     END OF ls_exp_prog_metadata,
     ls_act_prog_metadata LIKE ls_exp_prog_metadata,
-    ls_exp_metadata TYPE zif_abapgit_definitions=>ty_metadata.
+    ls_exp_metadata TYPE zif_abapgit_definitions=>ty_metadata,
+    li_xml TYPE REF TO zif_abapgit_xml_input.
 
     ls_exp_metadata-class = 'LCL_OBJECT_PROG'.
     ls_exp_metadata-version = 'v1.0.0'.
 
-    mo_cut->read_xml( )->read( EXPORTING iv_name = 'PROGDIR' CHANGING cg_data = ls_act_prog_metadata ).
+    li_xml = mo_cut->read_xml( ).
+    li_xml->read( EXPORTING iv_name = 'PROGDIR' CHANGING cg_data = ls_act_prog_metadata ).
 
     cl_abap_unit_assert=>assert_equals( exp = ls_exp_prog_metadata
       act = ls_act_prog_metadata ).
