@@ -137,7 +137,15 @@ CLASS zcl_abapgit_dependencies IMPLEMENTATION.
             <ls_tadir>-korrnum = '180000'.
           ENDIF.
         WHEN 'IDOC'.
-          <ls_tadir>-korrnum = '160000'.
+          <ls_tadir>-korrnum = '200000'.
+        WHEN 'WDCA'.
+          <ls_tadir>-korrnum = '174000'.
+        WHEN 'WDYA'.
+          <ls_tadir>-korrnum = '173000'.
+        WHEN 'WDCC'.
+          <ls_tadir>-korrnum = '172000'.
+        WHEN 'WDYN'.
+          <ls_tadir>-korrnum = '171000'.
         WHEN 'IEXT'.
           <ls_tadir>-korrnum = '150000'.
         WHEN OTHERS.
