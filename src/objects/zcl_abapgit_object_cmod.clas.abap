@@ -20,7 +20,7 @@ CLASS ZCL_ABAPGIT_OBJECT_CMOD IMPLEMENTATION.
   METHOD zif_abapgit_object~changed_by.
 
     SELECT SINGLE anam FROM modattr INTO rv_user WHERE name = ms_item-obj_name.
-    IF sy-subrc = 0.
+    IF sy-subrc <> 0.
       rv_user = c_user_unknown.
     ENDIF.
 
