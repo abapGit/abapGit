@@ -99,43 +99,43 @@ CLASS ZCL_ABAPGIT_OBJECTS_CI_TESTS IMPLEMENTATION.
           cl_abap_unit_assert=>assert_equals(
             exp = 'OK'
             act = <lv_result>
-            msg = 'Error creating package').
+            msg = 'Error creating package' ).
           ASSIGN COMPONENT 'CLONE' OF STRUCTURE <ls_repo_result> TO <lv_result>.
           ASSERT sy-subrc = 0.
           cl_abap_unit_assert=>assert_equals(
             exp = 'OK'
             act = <lv_result>
-            msg = 'Error cloning repo').
+            msg = 'Error cloning repo' ).
           ASSIGN COMPONENT 'PULL' OF STRUCTURE <ls_repo_result> TO <lv_result>.
           ASSERT sy-subrc = 0.
           cl_abap_unit_assert=>assert_equals(
             exp = 'OK'
             act = <lv_result>
-            msg = 'Error pulling repo').
+            msg = 'Error pulling repo' ).
           ASSIGN COMPONENT 'SYNTAX_CHECK' OF STRUCTURE <ls_repo_result> TO <lv_result>.
           ASSERT sy-subrc = 0.
           cl_abap_unit_assert=>assert_equals(
             exp = 'OK'
             act = <lv_result>
-            msg = 'Error during syntax check').
+            msg = 'Error during syntax check' ).
           ASSIGN COMPONENT 'OBJECT_CHECK' OF STRUCTURE <ls_repo_result> TO <lv_result>.
           ASSERT sy-subrc = 0.
           cl_abap_unit_assert=>assert_equals(
             exp = 'OK'
             act = <lv_result>
-            msg = 'Error during object check').
+            msg = 'Error during object check' ).
           ASSIGN COMPONENT 'PURGE' OF STRUCTURE <ls_repo_result> TO <lv_result>.
           ASSERT sy-subrc = 0.
           cl_abap_unit_assert=>assert_equals(
             exp = 'OK'
             act = <lv_result>
-            msg = 'Error purging repo').
+            msg = 'Error purging repo' ).
           ASSIGN COMPONENT 'CHECK_LEFTOVERS' OF STRUCTURE <ls_repo_result> TO <lv_result>.
           ASSERT sy-subrc = 0.
           cl_abap_unit_assert=>assert_equals(
             exp = 'OK'
             act = <lv_result>
-            msg = 'Error checking for leftovers').
+            msg = 'Error checking for leftovers' ).
         ENDLOOP.
 
       CATCH zcx_abapgit_exception INTO lx_error.
