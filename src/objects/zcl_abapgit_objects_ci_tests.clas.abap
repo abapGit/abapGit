@@ -24,6 +24,7 @@ CLASS ZCL_ABAPGIT_OBJECTS_CI_TESTS IMPLEMENTATION.
   METHOD run.
 
     DATA:
+      ls_repo     TYPE zif_abapgit_exit=>ty_repo,
       lt_repos    TYPE zif_abapgit_exit=>ty_repos,
       lo_ci_repos TYPE REF TO object,
       ld_options  TYPE REF TO data,
@@ -41,10 +42,9 @@ CLASS ZCL_ABAPGIT_OBJECTS_CI_TESTS IMPLEMENTATION.
       <lv_repo>        TYPE any.
 
     " Add the default test repo from https://github.com/abapGit-tests
-    INSERT VALUE #(
-      name      = iv_object
-      clone_url = |https://github.com/abapGit-tests/{ iv_object }| )
-      INTO TABLE lt_repos.
+    ls_repo-name = iv_object.
+    ls_repo-clone_url = |https://github.com/abapGit-tests/{ iv_object }|.
+    APPEND ls_repo TO lt_repos.
 
     " Get list of repos via exit
     zcl_abapgit_exit=>get_instance( )->get_ci_tests(
