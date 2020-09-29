@@ -4,8 +4,15 @@ INTERFACE zif_abapgit_exit
 
   TYPES:
     ty_icm_sinfo2_tt TYPE STANDARD TABLE OF icm_sinfo2 WITH DEFAULT KEY .
+  " Match ty_repo with zif_abapgit_ci_definitions->ty_repo
   TYPES:
-    ty_repos TYPE STANDARD TABLE OF string WITH DEFAULT KEY .
+    BEGIN OF ty_repo,
+      name      TYPE string,
+      clone_url TYPE string,
+    END OF ty_repo .
+  TYPES:
+    ty_repos TYPE STANDARD TABLE OF ty_repo
+             WITH NON-UNIQUE DEFAULT KEY .
 
   METHODS change_local_host
     CHANGING

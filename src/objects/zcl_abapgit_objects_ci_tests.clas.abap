@@ -24,14 +24,13 @@ CLASS ZCL_ABAPGIT_OBJECTS_CI_TESTS IMPLEMENTATION.
   METHOD run.
 
     DATA:
-      lt_repos         TYPE zif_abapgit_exit=>ty_repos,
-      lr_repos         TYPE RANGE OF string,
-      ls_repos         LIKE LINE OF lr_repos,
-      ld_options       TYPE REF TO data,
-      ld_result        TYPE REF TO data,
-      li_repo_provider TYPE REF TO object,
-      li_ci_controller TYPE REF TO object,
-      lx_error         TYPE REF TO zcx_abapgit_exception.
+      lt_repos    TYPE zif_abapgit_exit=>ty_repos,
+      lo_ci_repos TYPE REF TO object,
+      ld_options  TYPE REF TO data,
+      ld_results  TYPE REF TO data,
+      lv_msg      TYPE string,
+      lv_check    TYPE string,
+      lx_error    TYPE REF TO zcx_abapgit_exception.
 
     FIELD-SYMBOLS:
       <ls_options>     TYPE any,
@@ -39,8 +38,15 @@ CLASS ZCL_ABAPGIT_OBJECTS_CI_TESTS IMPLEMENTATION.
       <ls_result>      TYPE any,
       <lt_repo_result> TYPE ANY TABLE,
       <ls_repo_result> TYPE any,
-      <lv_result>      TYPE string.
+      <lv_result>      TYPE any,
+      <lv_repo>        TYPE any.
 
+    " Get list of repos via exit
+    lt_repos = zcl_abapgit_exit=>get_instance( )->get_ci_tests( iv_object ).
+
+    IF lines( lt_repos ) = 0.
+      RETURN.
+    ENDIF.
 
     "Objects will be created and deleted, do not run in customer system!
     "These tests may fail if you are locking the entries (e.g. the ZABAPGIT transaction is open)
@@ -50,92 +56,67 @@ CLASS ZCL_ABAPGIT_OBJECTS_CI_TESTS IMPLEMENTATION.
         level = if_aunit_constants=>tolerable ).
     ENDIF.
 
-    " Get list of repos via exit
-    lt_repos = zcl_abapgit_exit=>get_instance( )->get_ci_tests( 'TABL' ).
-
-    ls_repos-sign = 'I'.
-    ls_repos-option = 'EQ'.
-    LOOP AT lt_repos INTO ls_repos-low.
-      APPEND ls_repos TO lr_repos.
-    ENDLOOP.
-
-    IF lines( lr_repos ) = 0.
-      RETURN.
-    ENDIF.
-
     TRY.
-        " Prepare the CI test controller
-        CREATE OBJECT li_repo_provider TYPE ('ZCL_ABAPGIT_CI_TEST_REPOS')
-          EXPORTING
-            it_repo_name_range = lr_repos.
-
-        CREATE DATA ld_options TYPE ('ZIF_ABAPGIT_CI_DEFINITIONS=>TY_OPTIONS').
+        " Prepare CI repo test input
+        CREATE DATA ld_options TYPE ('ZIF_ABAPGIT_CI_DEFINITIONS=>TY_REPO_CHECK_OPTIONS').
         ASSIGN ld_options->* TO <ls_options>.
 
-        ASSIGN COMPONENT 'EXEC_REPOSITORY_CHECKS' OF STRUCTURE <ls_options> TO <lv_option>.
+        ASSIGN COMPONENT 'CHECK_LOCAL' OF STRUCTURE <ls_options> TO <lv_option>.
         ASSERT sy-subrc = 0.
         <lv_option> = abap_true.
 
-        ASSIGN COMPONENT 'REPO_CHECK_OPTIONS-CHECK_LOCAL' OF STRUCTURE <ls_options> TO <lv_option>.
-        ASSERT sy-subrc = 0.
-        <lv_option> = abap_true.
+        CREATE DATA ld_results TYPE ('ZIF_ABAPGIT_CI_DEFINITIONS=>TY_RESULT-REPO_RESULT_LIST').
+        ASSIGN ld_results->* TO <lt_repo_result>.
 
-        CREATE OBJECT li_ci_controller TYPE ('ZCL_ABAPGIT_CI_CONTROLLER')
+        " Run CI repo tests
+        CREATE OBJECT lo_ci_repos TYPE ('ZCL_ABAPGIT_CI_REPOS').
+
+        CALL METHOD lo_ci_repos->('PROCESS_REPOS')
           EXPORTING
-            ii_repo_provider = li_repo_provider "<<< how to dynamically cast to ZIF_ABAPGIT_CI_CONTROLLER ???
-            is_options       = <ls_options>.
-
-        " Run the CI tests
-        CALL METHOD li_ci_controller->('RUN')
+            it_repos       = lt_repos
+            is_options     = <ls_options>
           RECEIVING
-            rs_result = <ls_result>.
+            rt_result_list = <lt_repo_result>.
 
         " Check results for individual repos
-        ASSIGN COMPONENT 'REPO_RESULT_LIST' OF STRUCTURE <ls_result> TO <lt_repo_result>.
-        ASSERT sy-subrc = 0.
         LOOP AT <lt_repo_result> ASSIGNING <ls_repo_result>.
-          ASSIGN COMPONENT 'CREATE_PACKAGE' OF STRUCTURE <ls_repo_result> TO <lv_result>.
+          ASSIGN COMPONENT 'NAME' OF STRUCTURE <ls_repo_result> TO <lv_repo>.
           ASSERT sy-subrc = 0.
+
+          CLEAR lv_msg.
+          DO 7 TIMES.
+            CASE sy-index.
+              WHEN 1.
+                lv_check = 'CREATE_PACKAGE'.
+              WHEN 2.
+                lv_check = 'CLONE'.
+              WHEN 3.
+                lv_check = 'PULL'.
+              WHEN 4.
+                lv_check = 'SYNTAX_CHECK'.
+              WHEN 5.
+                lv_check = 'OBJECT_CHECK'.
+              WHEN 6.
+                lv_check = 'PURGE'.
+              WHEN 7.
+                lv_check = 'CHECK_LEFTOVERS'.
+            ENDCASE.
+            ASSIGN COMPONENT lv_check OF STRUCTURE <ls_repo_result> TO <lv_result>.
+            ASSERT sy-subrc = 0.
+            IF <lv_result> <> 'OK'.
+              IF lv_msg IS INITIAL.
+                lv_msg = |{ lv_check }:{ <lv_result> }|.
+              ELSE.
+                lv_msg = |{ lv_msg } { lv_check }:{ <lv_result> }|.
+              ENDIF.
+            ENDIF.
+          ENDDO.
+
           cl_abap_unit_assert=>assert_equals(
-            exp = 'OK'
-            act = <lv_result>
-            msg = 'Error creating package' ).
-          ASSIGN COMPONENT 'CLONE' OF STRUCTURE <ls_repo_result> TO <lv_result>.
-          ASSERT sy-subrc = 0.
-          cl_abap_unit_assert=>assert_equals(
-            exp = 'OK'
-            act = <lv_result>
-            msg = 'Error cloning repo' ).
-          ASSIGN COMPONENT 'PULL' OF STRUCTURE <ls_repo_result> TO <lv_result>.
-          ASSERT sy-subrc = 0.
-          cl_abap_unit_assert=>assert_equals(
-            exp = 'OK'
-            act = <lv_result>
-            msg = 'Error pulling repo' ).
-          ASSIGN COMPONENT 'SYNTAX_CHECK' OF STRUCTURE <ls_repo_result> TO <lv_result>.
-          ASSERT sy-subrc = 0.
-          cl_abap_unit_assert=>assert_equals(
-            exp = 'OK'
-            act = <lv_result>
-            msg = 'Error during syntax check' ).
-          ASSIGN COMPONENT 'OBJECT_CHECK' OF STRUCTURE <ls_repo_result> TO <lv_result>.
-          ASSERT sy-subrc = 0.
-          cl_abap_unit_assert=>assert_equals(
-            exp = 'OK'
-            act = <lv_result>
-            msg = 'Error during object check' ).
-          ASSIGN COMPONENT 'PURGE' OF STRUCTURE <ls_repo_result> TO <lv_result>.
-          ASSERT sy-subrc = 0.
-          cl_abap_unit_assert=>assert_equals(
-            exp = 'OK'
-            act = <lv_result>
-            msg = 'Error purging repo' ).
-          ASSIGN COMPONENT 'CHECK_LEFTOVERS' OF STRUCTURE <ls_repo_result> TO <lv_result>.
-          ASSERT sy-subrc = 0.
-          cl_abap_unit_assert=>assert_equals(
-            exp = 'OK'
-            act = <lv_result>
-            msg = 'Error checking for leftovers' ).
+            exp = ''
+            act = lv_msg
+            msg = |{ <lv_repo> } { lv_msg }| ).
+
         ENDLOOP.
 
       CATCH zcx_abapgit_exception INTO lx_error.
