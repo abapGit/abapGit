@@ -49,7 +49,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_dependencies IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
 
 
   METHOD get_ddls_dependencies.
