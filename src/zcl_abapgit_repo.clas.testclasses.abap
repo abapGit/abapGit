@@ -7,7 +7,8 @@ CLASS ltcl_find_remote_dot_abapgit DEFINITION FINAL FOR TESTING
     CONSTANTS: c_dummy_repo_key TYPE zif_abapgit_persistence=>ty_value VALUE '000000001'.
     METHODS:
       positive FOR TESTING RAISING cx_static_check,
-      negative FOR TESTING RAISING cx_static_check,
+      bigger_repo_needs_dot_abapgit FOR TESTING RAISING cx_static_check,
+      new_repo_needs_no_dot_abapgit FOR TESTING RAISING cx_static_check,
 
       given_any_repo,
       when_find_remote_dot_abapgit,
@@ -16,7 +17,10 @@ CLASS ltcl_find_remote_dot_abapgit DEFINITION FINAL FOR TESTING
       given_dot_abapgit_file,
       given_no_dot_abapgit_file,
       then_dot_abapgit_is_not_bound,
-      then_exception_is_raised.
+      then_exception_is_raised,
+      given_repo_has_files
+        IMPORTING
+          iv_number_of_files TYPE i.
 
     DATA:
       mo_repo        TYPE REF TO zcl_abapgit_repo,
@@ -40,9 +44,24 @@ CLASS ltcl_find_remote_dot_abapgit IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD negative.
+  METHOD new_repo_needs_no_dot_abapgit.
 
     given_any_repo( ).
+    given_repo_has_files( zcl_abapgit_repo=>c_new_repo_size ).
+    given_no_dot_abapgit_file( ).
+
+    when_find_remote_dot_abapgit( ).
+
+    then_dot_abapgit_is_not_bound( ).
+    then_no_exception_is_raised( ).
+
+  ENDMETHOD.
+
+
+  METHOD bigger_repo_needs_dot_abapgit.
+
+    given_any_repo( ).
+    given_repo_has_files( zcl_abapgit_repo=>c_new_repo_size + 1 ).
     given_no_dot_abapgit_file( ).
 
     when_find_remote_dot_abapgit( ).
@@ -132,6 +151,23 @@ CLASS ltcl_find_remote_dot_abapgit IMPLEMENTATION.
 
   METHOD then_exception_is_raised.
     cl_abap_unit_assert=>assert_bound( mx_error ).
+  ENDMETHOD.
+
+
+  METHOD given_repo_has_files.
+
+    DATA: lt_files TYPE zif_abapgit_definitions=>ty_files_tt,
+          ls_file  LIKE LINE OF lt_files.
+
+    ls_file-path = zif_abapgit_definitions=>c_root_dir.
+
+    DO iv_number_of_files TIMES.
+      ls_file-filename = |File_{ sy-index }|.
+      INSERT ls_file INTO TABLE lt_files.
+    ENDDO.
+
+    mo_repo->set_files_remote( lt_files ).
+
   ENDMETHOD.
 
 ENDCLASS.

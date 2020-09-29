@@ -2003,7 +2003,7 @@ function createRepoCatalogEnumerator(catalog, action) {
   return function() {
     return catalog.map(function(i) {
       return {
-        action:    action + "?" + i.key,
+        action:    action + "?key=" + i.key,
         iconClass: i.isOffline
           ? "icon icon-plug darkgrey"
           : "icon icon-cloud-upload-alt blue",

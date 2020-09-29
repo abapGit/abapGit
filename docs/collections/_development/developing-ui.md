@@ -98,7 +98,15 @@ Currently 2 collections are supported out of the box - scripts and hidden_forms 
 
 ## Router and event handlers
 
-To process sapevents in abap the component (page) must implement `ZIF_ABAPGIT_GUI_EVENT_HANDLER=>on_event`. It has the same importing params as `sapevent` handler of `cl_gui_html_viewer`, please refer SAP official documentation for param meaning and detail. For the exporting params see below.
+To process sapevents in abap the component (page) must implement `ZIF_ABAPGIT_GUI_EVENT_HANDLER=>on_event`. It imports `ii_event` instance which represents `sapevent` handler of `cl_gui_html_viewer`. In particular:
+- `ii_event->mv_action` - sapevent code (part of url before `?`)
+- `ii_event->mv_getdata` - raw url query (part of url after `?`)
+- `ii_event->mt_postdata` - raw post data (if present)
+- `ii_event->mi_gui_services` - instance of GUI services for easier access
+- `ii_event->query()` - returns parsed url query (`k1=v1&k2=v2...`) in form of `string_map`. Param names are upper cased (by default). Params that are not uniform are not parsed (`k1=v1&k2` - will result in `k1` only). Params can be addressed in 2 typical ways:
+  - `ii_event->query( )->get( 'XXX' )`
+  - or `ii_event->query( )->to_abap( changing cs_container = ls_struc_with_fields )`
+  - query string_map is immutable (attempt to `set` will raise an exception)
 
 Events can be processed on 2 levels - in page/component **or** in the router. On new event:
 - the GUI goes through event handlers stack - list of components that registered themselves as event handlers during rendering via `gui_services`
@@ -108,7 +116,7 @@ Events can be processed on 2 levels - in page/component **or** in the router. On
 
 Router (`ZCL_ABAPGIT_GUI_ROUTER`) is the class which handle global abapGit commands like opening specific pages and actions like repo installation/deletion.
 
-In order to indicate the result of event handling an `on_event` implementation must return `ev_state` (element of `zcl_abapgit_gui=>c_event_state`) and, optionally, `ei_page`:
+In order to indicate the result of event handling an `on_event` implementation must return `rs_handled-state` (element of `zcl_abapgit_gui=>c_event_state`) and, optionally, `rs_handled-page`:
 
 - `not_handled` (same as `initial`) - event was not handled, process by next handler (e.g. the router)
 - `re_render` - just re-render the current page (probably internal state of the page object was changed so the visualization should too)

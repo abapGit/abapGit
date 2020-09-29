@@ -62,16 +62,6 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !ix_error      TYPE REF TO zcx_abapgit_exception
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
-    CLASS-METHODS parse_change_order_by
-      IMPORTING
-        !iv_query_str      TYPE clike
-      RETURNING
-        VALUE(rv_order_by) TYPE string .
-    CLASS-METHODS parse_direction
-      IMPORTING
-        !iv_query_str              TYPE clike
-      RETURNING
-        VALUE(rv_order_descending) TYPE abap_bool .
     CLASS-METHODS render_order_by_header_cells
       IMPORTING
         !it_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec
@@ -248,30 +238,6 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD parse_change_order_by.
-
-    FIND FIRST OCCURRENCE OF REGEX `orderBy=(.*)`
-         IN iv_query_str
-         SUBMATCHES rv_order_by.
-
-    rv_order_by = condense( rv_order_by ).
-
-  ENDMETHOD.
-
-
-  METHOD parse_direction.
-
-    DATA: lv_direction TYPE string.
-
-    FIND FIRST OCCURRENCE OF REGEX `direction=(.*)`
-         IN iv_query_str
-         SUBMATCHES lv_direction.
-
-    rv_order_descending = boolc( condense( lv_direction ) = 'DESCENDING' ).
-
-  ENDMETHOD.
-
-
   METHOD render_branch_span.
 
     DATA: lv_text  TYPE string,
@@ -290,7 +256,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ri_html->add_icon( iv_name = 'code-branch/grey70'
                        iv_hint = 'Current branch' ).
     IF iv_interactive = abap_true.
-      ri_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?{ io_repo->get_key( ) }|
+      ri_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?key={ io_repo->get_key( ) }|
                       iv_txt = lv_text ).
     ELSE.
       ri_html->add( lv_text ).
@@ -709,7 +675,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
       lo_repo_online ?= io_repo.
 
       ri_html->add_a( iv_txt   = lo_repo_online->get_url( )
-                      iv_act   = |{ zif_abapgit_definitions=>c_action-url }?|
+                      iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url=|
                               && |{ lo_repo_online->get_url( ) }|
                       iv_class = |url| ).
 
@@ -749,7 +715,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     ELSE.
       lv_icon = 'star/grey'.
     ENDIF.
-    ri_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?{ io_repo->get_key( ) }|
+    ri_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-repo_toggle_fav }?key={ io_repo->get_key( ) }|
                     iv_txt = ri_html->icon( iv_name  = lv_icon
                                             iv_class = 'pad-sides'
                                             iv_hint  = 'Click to toggle favorite' ) ).
@@ -820,7 +786,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
         lv_display_url = io_repo_online->get_commit_display_url( lv_commit_hash ).
 
         ii_html->add_a( iv_txt   = |{ lv_icon_commit }{ lv_commit_short_hash }|
-                        iv_act   = |{ zif_abapgit_definitions=>c_action-url }?{ lv_display_url }|
+                        iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ lv_display_url }|
                         iv_class = |url| ).
       CATCH zcx_abapgit_exception.
         ii_html->add( |<span class="url">{ lv_icon_commit }{ lv_commit_short_hash }</span>| ).
