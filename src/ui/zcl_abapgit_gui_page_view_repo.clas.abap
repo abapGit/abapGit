@@ -588,6 +588,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
           lx_error    TYPE REF TO zcx_abapgit_exception,
           lv_package  TYPE devclass.
 
+    super->constructor( ).
+
     TRY.
         mv_key           = iv_key.
         mo_repo          = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
