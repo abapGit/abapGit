@@ -192,11 +192,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA: ls_db TYPE zif_abapgit_persistence=>ty_content.
+    DATA ls_db TYPE zif_abapgit_persistence=>ty_content.
+    DATA lo_query TYPE REF TO zcl_abapgit_string_map.
 
+    lo_query = ii_event->query( ).
     CASE ii_event->mv_action.
       WHEN c_action-delete.
-        ls_db = zcl_abapgit_html_action_utils=>dbkey_decode( ii_event->mv_getdata ).
+        lo_query->to_abap( CHANGING cs_container = ls_db ).
         delete( ls_db ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN OTHERS.
