@@ -190,7 +190,7 @@ CLASS ZCL_ABAPGIT_ADT_LINK IMPLEMENTATION.
           RECEIVING
             result     = lv_vit_wb_request.
 
-        rv_is_adt_jump_possible = boolc( NOT ( lv_vit_wb_request = abap_true ) ).
+        rv_is_adt_jump_possible = boolc( NOT lv_vit_wb_request = abap_true ).
 
       CATCH cx_root.
         zcx_abapgit_exception=>raise( 'ADT Jump Error' ).
