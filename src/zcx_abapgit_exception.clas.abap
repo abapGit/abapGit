@@ -336,7 +336,7 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD RAISE_WITH_TEXT.
+  METHOD raise_with_text.
     raise(
       iv_text = ix_previous->get_text( )
       ix_previous = ix_previous ).
@@ -398,7 +398,7 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD SPLIT_TEXT_TO_SYMSG.
+  METHOD split_text_to_symsg.
 
     CONSTANTS:
       lc_length_of_msgv           TYPE i VALUE 50,
