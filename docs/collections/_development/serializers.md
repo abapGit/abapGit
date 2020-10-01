@@ -42,7 +42,7 @@ Method | Description
 `GET_COMPARATOR`        | Triggered before deserialization to perform checks (for example, to warn the user that database tables are changed)
 `GET_DESERIALIZE_STEPS` | Defines the deserialzation step or steps used to build the processing sequence (see below)
 
-Example: [Object type `DOMA`](https://github.com/abapGit/abapGit/blob/master/src/objects/zcl_abapgit_object_doma.clas.abap).
+Example: [`DOMA`](https://github.com/abapGit/abapGit/blob/master/src/objects/zcl_abapgit_object_doma.clas.abap).
 
 ### Metadata
 
@@ -52,9 +52,9 @@ Attribute | Description
 ----------|------------
 `CLASS`        | Technical name used to identify the serializer within serialized XML files (format `LCL_OBJECT_{type}`)
 `VERSION`      | Version number of the serializer (format `v1.0.0`)
-`DELETE_TADIR` | Set to `abap_true` if the serializer class doesn't remove the TADIR entry during object deletion
+`DELETE_TADIR` | Set to `abap_true` to force the removal of the TADIR entry after deletion of the object
 `DDIC`         | Set to `abap_true` if it is a DDIC object type (used for mass activation of DDIC objects)
-`LATE_DESER`   | obsolete
+`LATE_DESER`   | Obsolete (to be removed)
 
 It's recommended to fill `CLASS` and `VERSION` metadata using `SUPER->GET_METADATA( )` and then changing settings as required. 
 
@@ -68,6 +68,24 @@ Serializers can take advantage of the following methods in [`ZCL_ABAPGIT_OBJECTS
 
 Method | Description
 -------|------------
+`GET_METADATA`             | Return default metadata for class and version 
+`CORR_INSERT`              | Insert object into a transport (for transportable objects)
+`TADIR_INSERT`             | Insert object into TADIR 
+`EXISTS_A_LOCK_ENTRY_FOR`  | Check if an enqueue lock exists
+`SET_DEFAULT_PACKAGE`      | Set SAP package for it can't be supplied via APIs for RS_CORR_INSERT
+`IS_ACTIVE`                | Method to check if an ABAP Workbench object or it's parts are active
+`DELETE_DDIC`              | Method to remove DDIC objects
+`CHECK_TIMESTAMP`          | Obsolete (to be removed)
+`JUMP_ADT`                 | Obsolete (to be removed; use `ZCL_ABAPGIT_OBJECTS->JUMP` instead)
+`JUMP_SE11`                | Obsolete (to be removed; use `ZCL_ABAPGIT_OBJECTS->JUMP` instead)
+
+In addition, there are some methods to handle documents associated with an object (transaction `SE61`, table `DOKIL`).
+
+Method | Description
+-------|------------
+`SERIALIZE_LONGTEXTS`   | Serialize document including I18N handling
+`DESERIALIZE_LONGTEXTS` | Deserialize document including I18N handling
+`DELETE_LONGTEXTS`      | Delete document 
 
 ## Generic Class
 
@@ -77,23 +95,45 @@ Example: [`IWMO`](https://github.com/abapGit/abapGit/blob/master/src/objects/zcl
 
 ## Serialize Object
 
-The serialize method needs to produce one or several files containing the data that represents a given object. There are a few methods available to define files and attach data using [`ZIF_ABAPGIT_OUTPUT_XML`](https://github.com/abapGit/abapGit/blob/master/src/xml/zif_abapgit_xml_output.intf.abap) (input parameter `IO_XML`).
+The serialize method shall produce one or several files containing the data that represents a given object. There are a few methods available to define files and attach data using [`ZIF_ABAPGIT_OUTPUT_XML`](https://github.com/abapGit/abapGit/blob/master/src/xml/zif_abapgit_xml_output.intf.abap) (input parameter `IO_XML`).
 
 Method | Description
 -------|------------
-`ADD`     | Append a value, structure, or internal table to the output (using ID transformation to XML)
-`ADD_XML` | Append an instance of an XML document to the output (`IF_XML_ELEMENT`)
-`SET_RAW` | Set the output to an instance of an XML document (`IF_XML_ELEMENT`)
-
+`ADD`         | Append a value, structure, or internal table to the output (using ID transformation to XML suppressing initial fields)
+`ADD_XML`     | Append an instance of an XML document to the output (`IF_XML_ELEMENT`)
+`SET_RAW`     | Set the output to an instance of an XML document (`IF_XML_ELEMENT`)
+`I18N_PARAMS` | Get the settings for internationalization (see below)
 
 ## Deserialize Object
 
+The deserialize method shall read the file or files representing a given object and create such object in the system. If such object already exist, it shall be updated according to the  definition in the file or files. There are a few methods available to process files using [`ZIF_ABAPGIT_INPUT_XML`](https://github.com/abapGit/abapGit/blob/master/src/xml/zif_abapgit_xml_input.intf.abap) (input parameter `IO_XML`).
 
 Method | Description
 -------|------------
+`READ`         | Return a value, structure, or internal table from the input (using ID transformation from XML accepting data loss)
+`GET_RAW`      | Return the input as an instance of an XML document (`IF_XML_ELEMENT`)
+`GET_METADATA` | Return the metadata used at time of serializing the object
+
+In addition, the deserialize method must add or update the TADIR entry for the given object and insert the object into a transport request (for transportable packages). If the used SAP APIs are not performing these tasks, `TADIR_INSERT( iv_package )` and `CORR_INSERT( iv_package )` shall be called by the deserialize method.
+
+## Activate Object
+
+After deserializing, an object (or dependent objects) might have to be activated. Add such objects to the activation queue using [`ZCL_ABAPGIT_OBJECTS_ACTIVATION`]:
+
+Method | Description
+-------|------------
+`ADD`      | Append a given object type and name to the queue (for example, `INDX` `{table}` for database indexes when deserializing tables)
+`ADD_ITEM` | Append a given object to the queue (for example, use `ms_item` for activating the object itself)
+
+The activation queue is built separately for each phase (see 'Deserialize Process' below).
 
 ## Internationalization (I18N)
 
+In general, the serializer class shall process texts of an object in all available languages i.e. the original language as well as any translations. It shall respect the "Serialize Master Language Only" setting of a repository and limit the texts to the language provided to the constructor (`MV_LANGUAGE`). 
+
+The recommended approach is to check `io_xml->i18n_params( )-serialize_master_lang_only = abap_false` and then serialize the additional translations in the XML (typically using `I18N` prefix). During deserialize the translation languages can then be retrieved and processed accordingly (
+
+Example: [`TABL`](https://github.com/abapGit/abapGit/blob/master/src/objects/zcl_abapgit_object_tabl.clas.abap).
 
 ## Testing
 
