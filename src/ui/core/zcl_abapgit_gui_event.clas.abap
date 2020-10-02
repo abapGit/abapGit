@@ -17,12 +17,25 @@ CLASS zcl_abapgit_gui_event DEFINITION
   PRIVATE SECTION.
     DATA mo_query TYPE REF TO zcl_abapgit_string_map.
     DATA mo_query_upper_cased TYPE REF TO zcl_abapgit_string_map.
+    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
+    DATA mo_form_data_upper_cased TYPE REF TO zcl_abapgit_string_map.
 
     METHODS fields_to_map
       IMPORTING
         it_fields            TYPE tihttpnvp
       RETURNING
         VALUE(ro_string_map) TYPE REF TO zcl_abapgit_string_map
+      RAISING
+        zcx_abapgit_exception.
+
+    METHODS fields_to_map_macro
+      IMPORTING
+        it_fields      TYPE tihttpnvp
+        iv_upper_cased TYPE abap_bool
+      CHANGING
+        co_string_map_lower TYPE REF TO zcl_abapgit_string_map
+        co_string_map_upper TYPE REF TO zcl_abapgit_string_map
+        co_string_map_return TYPE REF TO zcl_abapgit_string_map
       RAISING
         zcx_abapgit_exception.
 
@@ -55,25 +68,53 @@ CLASS ZCL_ABAPGIT_GUI_EVENT IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_gui_event~query.
+  METHOD fields_to_map_macro.
 
-    DATA lt_fields TYPE tihttpnvp.
+    FIELD-SYMBOLS <lo_map> TYPE REF TO zcl_abapgit_string_map.
 
     IF iv_upper_cased = abap_true.
-      IF mo_query_upper_cased IS NOT BOUND.
-        mo_query_upper_cased = fields_to_map(
-          zcl_abapgit_html_action_utils=>parse_fields_upper_case_name( zif_abapgit_gui_event~mv_getdata ) ).
-        mo_query_upper_cased->freeze( ).
-      ENDIF.
-      ro_string_map = mo_query_upper_cased.
+      ASSIGN co_string_map_upper TO <lo_map>.
     ELSE.
-      IF mo_query IS NOT BOUND.
-        mo_query = fields_to_map(
-          zcl_abapgit_html_action_utils=>parse_fields( zif_abapgit_gui_event~mv_getdata ) ).
-        mo_query->freeze( ).
-      ENDIF.
-      ro_string_map = mo_query.
+      ASSIGN co_string_map_lower TO <lo_map>.
     ENDIF.
+
+    IF <lo_map> IS NOT BOUND.
+      <lo_map> = fields_to_map( it_fields ).
+      <lo_map>->freeze( ).
+    ENDIF.
+    co_string_map_return = <lo_map>.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_event~form_data.
+
+    fields_to_map_macro(
+      EXPORTING
+        iv_upper_cased = iv_upper_cased
+        it_fields      = zcl_abapgit_html_action_utils=>parse_post_form_data(
+          it_post_data   = zif_abapgit_gui_event~mt_postdata
+          iv_upper_cased = iv_upper_cased )
+      CHANGING
+        co_string_map_upper  = mo_form_data_upper_cased
+        co_string_map_lower  = mo_form_data
+        co_string_map_return = ro_string_map ).
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_gui_event~query.
+
+    fields_to_map_macro(
+      EXPORTING
+        iv_upper_cased = iv_upper_cased
+        it_fields      = zcl_abapgit_html_action_utils=>parse_fields(
+          iv_string      = zif_abapgit_gui_event~mv_getdata
+          iv_upper_cased = iv_upper_cased )
+      CHANGING
+        co_string_map_upper  = mo_query_upper_cased
+        co_string_map_lower  = mo_query
+        co_string_map_return = ro_string_map ).
 
   ENDMETHOD.
 ENDCLASS.

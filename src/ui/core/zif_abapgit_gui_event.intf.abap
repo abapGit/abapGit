@@ -14,4 +14,12 @@ INTERFACE zif_abapgit_gui_event
     RAISING
       zcx_abapgit_exception.
 
+  METHODS form_data
+    IMPORTING
+      iv_upper_cased TYPE abap_bool DEFAULT abap_false
+    RETURNING
+      VALUE(ro_string_map) TYPE REF TO zcl_abapgit_string_map
+    RAISING
+      zcx_abapgit_exception.
+
 ENDINTERFACE.
