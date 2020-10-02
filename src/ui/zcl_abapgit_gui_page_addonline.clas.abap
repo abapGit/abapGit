@@ -176,25 +176,29 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
     DATA lx_err TYPE REF TO zcx_abapgit_exception.
 
-    CREATE OBJECT ro_validation_log.
+    ro_validation_log = mo_form->validate_required_fields( io_form_data ).
 
-    TRY.
-        zcl_abapgit_url=>validate( io_form_data->get( c_id-url ) ).
-      CATCH zcx_abapgit_exception INTO lx_err.
-        ro_validation_log->set(
-          iv_key = c_id-url
-          iv_val = lx_err->get_text( ) ).
-    ENDTRY.
+    IF io_form_data->get( c_id-url ) IS NOT INITIAL.
+      TRY.
+          zcl_abapgit_url=>validate( io_form_data->get( c_id-url ) ).
+        CATCH zcx_abapgit_exception INTO lx_err.
+          ro_validation_log->set(
+            iv_key = c_id-url
+            iv_val = lx_err->get_text( ) ).
+      ENDTRY.
+    ENDIF.
 
-    TRY.
-        zcl_abapgit_repo_srv=>get_instance( )->validate_package(
-          iv_package    = |{ io_form_data->get( c_id-package ) }|
-          iv_ign_subpkg = |{ io_form_data->get( c_id-ignore_subpackages ) }| ).
-      CATCH zcx_abapgit_exception INTO lx_err.
-        ro_validation_log->set(
-          iv_key = c_id-package
-          iv_val = lx_err->get_text( ) ).
-    ENDTRY.
+    IF io_form_data->get( c_id-package ) IS NOT INITIAL.
+      TRY.
+          zcl_abapgit_repo_srv=>get_instance( )->validate_package(
+            iv_package    = |{ io_form_data->get( c_id-package ) }|
+            iv_ign_subpkg = |{ io_form_data->get( c_id-ignore_subpackages ) }| ).
+        CATCH zcx_abapgit_exception INTO lx_err.
+          ro_validation_log->set(
+            iv_key = c_id-package
+            iv_val = lx_err->get_text( ) ).
+      ENDTRY.
+    ENDIF.
 
     IF io_form_data->get( c_id-folder_logic ) <> zif_abapgit_dot_abapgit=>c_folder_logic-prefix
         AND io_form_data->get( c_id-folder_logic ) <> zif_abapgit_dot_abapgit=>c_folder_logic-full.

@@ -7,79 +7,77 @@ CLASS zcl_abapgit_html_form DEFINITION
 
     CLASS-METHODS create
       IMPORTING
-        iv_form_id     TYPE string OPTIONAL
+        !iv_form_id    TYPE string OPTIONAL
       RETURNING
-        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form.
-
+        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form .
     METHODS render
       IMPORTING
-        iv_form_class     TYPE string
-        io_values         TYPE REF TO zcl_abapgit_string_map
-        io_validation_log TYPE REF TO zcl_abapgit_string_map OPTIONAL
+        !iv_form_class     TYPE string
+        !io_values         TYPE REF TO zcl_abapgit_string_map
+        !io_validation_log TYPE REF TO zcl_abapgit_string_map OPTIONAL
       RETURNING
-        VALUE(ri_html)    TYPE REF TO zif_abapgit_html.
-
+        VALUE(ri_html)     TYPE REF TO zif_abapgit_html .
     METHODS command
       IMPORTING
-        iv_label   TYPE string
-        iv_action  TYPE string
-        iv_is_main TYPE abap_bool DEFAULT abap_false
-        iv_as_a    TYPE abap_bool DEFAULT abap_false
+        !iv_label      TYPE string
+        !iv_action     TYPE string
+        !iv_is_main    TYPE abap_bool DEFAULT abap_false
+        !iv_as_a       TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
-
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
     METHODS text
       IMPORTING
-        iv_label       TYPE string
-        iv_name        TYPE string
-        iv_hint        TYPE string OPTIONAL
-        iv_required    TYPE abap_bool DEFAULT abap_false
-        iv_upper_case  TYPE abap_bool DEFAULT abap_false
-        iv_placeholder TYPE string OPTIONAL
-        iv_side_action TYPE string OPTIONAL
+        !iv_label       TYPE string
+        !iv_name        TYPE string
+        !iv_hint        TYPE string OPTIONAL
+        !iv_required    TYPE abap_bool DEFAULT abap_false
+        !iv_upper_case  TYPE abap_bool DEFAULT abap_false
+        !iv_placeholder TYPE string OPTIONAL
+        !iv_side_action TYPE string OPTIONAL
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
-
+        VALUE(ro_self)  TYPE REF TO zcl_abapgit_html_form .
     METHODS checkbox
       IMPORTING
-        iv_label TYPE string
-        iv_name  TYPE string
-        iv_hint  TYPE string OPTIONAL
+        !iv_label      TYPE string
+        !iv_name       TYPE string
+        !iv_hint       TYPE string OPTIONAL
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
-
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
     METHODS radio
       IMPORTING
-        iv_label         TYPE string
-        iv_name          TYPE string
-        iv_default_value TYPE string OPTIONAL
-        iv_hint          TYPE string OPTIONAL
+        !iv_label         TYPE string
+        !iv_name          TYPE string
+        !iv_default_value TYPE string OPTIONAL
+        !iv_hint          TYPE string OPTIONAL
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
-
+        VALUE(ro_self)    TYPE REF TO zcl_abapgit_html_form .
     METHODS option
       IMPORTING
-        iv_label TYPE string
-        iv_value TYPE string
+        !iv_label      TYPE string
+        !iv_value      TYPE string
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
-
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
     METHODS start_group
       IMPORTING
-        iv_label TYPE string
-        iv_name  TYPE string
-        iv_hint  TYPE string OPTIONAL
+        !iv_label      TYPE string
+        !iv_name       TYPE string
+        !iv_hint       TYPE string OPTIONAL
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
-
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
     METHODS validate_normalize_form_data
       IMPORTING
-        io_form_data TYPE REF TO zcl_abapgit_string_map
+        !io_form_data       TYPE REF TO zcl_abapgit_string_map
       RETURNING
         VALUE(ro_form_data) TYPE REF TO zcl_abapgit_string_map
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
+    METHODS validate_required_fields
+      IMPORTING
+        !io_form_data            TYPE REF TO zcl_abapgit_string_map
+      RETURNING
+        VALUE(ro_validation_log) TYPE REF TO zcl_abapgit_string_map
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -329,7 +327,6 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     DATA lv_error TYPE string.
     DATA lv_value TYPE string.
     DATA lv_checked TYPE string.
-    DATA lv_required TYPE string.
     DATA lv_item_class TYPE string.
     FIELD-SYMBOLS <ls_opt> LIKE LINE OF is_field-subitems.
 
@@ -360,16 +357,12 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
           ii_html->add( |<small>{ lv_error }</small>| ).
         ENDIF.
 
-        IF is_field-required IS NOT INITIAL.
-          lv_required = ' required'.
-        ENDIF.
-
         IF is_field-side_action IS NOT INITIAL.
           ii_html->add( '<div class="input-container">' ). " Ugly :(
         ENDIF.
 
         ii_html->add( |<input type="text" name="{ is_field-name }" id="{
-          is_field-name }"{ is_field-placeholder } value="{ lv_value }"{ is_field-dblclick }{ lv_required }>| ).
+          is_field-name }"{ is_field-placeholder } value="{ lv_value }"{ is_field-dblclick }>| ).
 
         IF is_field-side_action IS NOT INITIAL.
           ii_html->add( '</div>' ).
@@ -489,10 +482,6 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |Unexpected form field [{ <ls_entry>-k }]| ).
       ENDIF.
 
-      IF ls_field-required = abap_true AND <ls_entry>-v IS INITIAL.
-        zcx_abapgit_exception=>raise( |Unexpected empty form field [{ <ls_entry>-k }]| ).
-      ENDIF.
-
       IF ls_field-type = c_field_type-checkbox.
         ro_form_data->set(
           iv_key = <ls_entry>-k
@@ -505,6 +494,29 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
         ro_form_data->set(
           iv_key = <ls_entry>-k
           iv_val = <ls_entry>-v ).
+      ENDIF.
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD validate_required_fields.
+
+    DATA ls_field LIKE LINE OF mt_fields.
+    FIELD-SYMBOLS <ls_entry> LIKE LINE OF io_form_data->mt_entries.
+
+    CREATE OBJECT ro_validation_log.
+
+    LOOP AT io_form_data->mt_entries ASSIGNING <ls_entry>.
+      READ TABLE mt_fields INTO ls_field WITH KEY by_name COMPONENTS name = <ls_entry>-k.
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Unexpected form field [{ <ls_entry>-k }]| ).
+      ENDIF.
+
+      IF ls_field-required IS NOT INITIAL AND <ls_entry>-v IS INITIAL.
+        ro_validation_log->set(
+          iv_key = ls_field-name
+          iv_val = |{ ls_field-label } cannot be empty| ).
       ENDIF.
     ENDLOOP.
 
