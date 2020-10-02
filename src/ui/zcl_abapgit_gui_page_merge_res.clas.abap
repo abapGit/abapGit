@@ -56,7 +56,7 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
 
     METHODS apply_merged_content
       IMPORTING
-        !it_postdata TYPE cnht_post_data_tab
+        !ii_event TYPE REF TO zif_abapgit_gui_event
       RAISING
         zcx_abapgit_exception .
     METHODS build_menu
@@ -113,30 +113,19 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
   METHOD apply_merged_content.
 
     DATA:
-      BEGIN OF ls_filedata,
-        merge_content TYPE string,
-      END OF ls_filedata,
+      lv_merge_content    TYPE string,
       lt_fields           TYPE tihttpnvp,
       lv_new_file_content TYPE xstring.
 
     FIELD-SYMBOLS:
       <ls_conflict>      TYPE zif_abapgit_definitions=>ty_merge_conflict.
 
-    lt_fields = zcl_abapgit_html_action_utils=>parse_post_form_data(
-      it_post_data = it_postdata
-      iv_upper_cased = abap_true ).
-
-    zcl_abapgit_html_action_utils=>get_field(
-      EXPORTING
-        iv_name = 'MERGE_CONTENT'
-        it_field = lt_fields
-      CHANGING
-        cg_field = ls_filedata ).
+    lv_merge_content = ii_event->form_data( iv_upper_cased = abap_true )->get( 'MERGE_CONTENT' ).
 
     REPLACE ALL OCCURRENCES
-      OF zif_abapgit_definitions=>c_crlf IN ls_filedata-merge_content WITH zif_abapgit_definitions=>c_newline.
+      OF zif_abapgit_definitions=>c_crlf IN lv_merge_content WITH zif_abapgit_definitions=>c_newline.
 
-    lv_new_file_content = zcl_abapgit_convert=>string_to_xstring_utf8( ls_filedata-merge_content ).
+    lv_new_file_content = zcl_abapgit_convert=>string_to_xstring_utf8( lv_merge_content ).
 
     READ TABLE mt_conflicts ASSIGNING <ls_conflict> INDEX mv_current_conflict_index.
     <ls_conflict>-result_sha1 = zcl_abapgit_hash=>sha1(
@@ -545,7 +534,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
         CASE ii_event->mv_action.
           WHEN c_actions-apply_merge.
-            apply_merged_content( ii_event->mt_postdata ).
+            apply_merged_content( ii_event ).
 
           WHEN c_actions-apply_source.
             READ TABLE mt_conflicts ASSIGNING <ls_conflict> INDEX mv_current_conflict_index.
