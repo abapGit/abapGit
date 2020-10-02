@@ -329,6 +329,7 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     DATA lv_error TYPE string.
     DATA lv_value TYPE string.
     DATA lv_checked TYPE string.
+    DATA lv_required TYPE string.
     DATA lv_item_class TYPE string.
     FIELD-SYMBOLS <ls_opt> LIKE LINE OF is_field-subitems.
 
@@ -359,12 +360,16 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
           ii_html->add( |<small>{ lv_error }</small>| ).
         ENDIF.
 
+        IF is_field-required IS NOT INITIAL.
+          lv_required = ' required'.
+        ENDIF.
+
         IF is_field-side_action IS NOT INITIAL.
           ii_html->add( '<div class="input-container">' ). " Ugly :(
         ENDIF.
 
         ii_html->add( |<input type="text" name="{ is_field-name }" id="{
-          is_field-name }"{ is_field-placeholder } value="{ lv_value }"{ is_field-dblclick }>| ).
+          is_field-name }"{ is_field-placeholder } value="{ lv_value }"{ is_field-dblclick }{ lv_required }>| ).
 
         IF is_field-side_action IS NOT INITIAL.
           ii_html->add( '</div>' ).
@@ -482,6 +487,10 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
       READ TABLE mt_fields INTO ls_field WITH KEY by_name COMPONENTS name = <ls_entry>-k.
       IF sy-subrc <> 0.
         zcx_abapgit_exception=>raise( |Unexpected form field [{ <ls_entry>-k }]| ).
+      ENDIF.
+
+      IF ls_field-required = abap_true AND <ls_entry>-v IS INITIAL.
+        zcx_abapgit_exception=>raise( |Unexpected empty form field [{ <ls_entry>-k }]| ).
       ENDIF.
 
       IF ls_field-type = c_field_type-checkbox.
