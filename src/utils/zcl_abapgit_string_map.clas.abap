@@ -16,6 +16,7 @@ CLASS zcl_abapgit_string_map DEFINITION
     CLASS-METHODS create
       RETURNING
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_string_map.
+    METHODS constructor.
     METHODS get
       IMPORTING
         iv_key        TYPE string
@@ -53,6 +54,11 @@ CLASS zcl_abapgit_string_map DEFINITION
         !cs_container TYPE any
       RAISING
         zcx_abapgit_exception.
+    METHODS strict
+      IMPORTING
+        !iv_strict TYPE abap_bool DEFAULT abap_true
+      RETURNING
+        VALUE(ro_instance) TYPE REF to zcl_abapgit_string_map .
     METHODS freeze.
 
     DATA mt_entries TYPE tts_entries READ-ONLY.
@@ -60,6 +66,7 @@ CLASS zcl_abapgit_string_map DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
     DATA mv_read_only TYPE abap_bool.
+    DATA mv_is_strict TYPE abap_bool.
 
 ENDCLASS.
 
@@ -73,6 +80,11 @@ CLASS ZCL_ABAPGIT_STRING_MAP IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'Cannot clear. This string map is immutable' ).
     ENDIF.
     CLEAR mt_entries.
+  ENDMETHOD.
+
+
+  METHOD constructor.
+    mv_is_strict = abap_true.
   ENDMETHOD.
 
 
@@ -151,6 +163,12 @@ CLASS ZCL_ABAPGIT_STRING_MAP IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD strict.
+    mv_is_strict = iv_strict.
+    ro_instance = me.
+  ENDMETHOD.
+
+
   METHOD to_abap.
 
     DATA lo_type TYPE REF TO cl_abap_typedescr.
@@ -172,6 +190,8 @@ CLASS ZCL_ABAPGIT_STRING_MAP IMPLEMENTATION.
       IF sy-subrc = 0.
         " TODO check target type ?
         <lv_val> = <ls_entry>-v.
+      ELSEIF mv_is_strict = abap_false.
+        CONTINUE.
       ELSE.
         zcx_abapgit_exception=>raise( |Component { lv_field } not found in target| ).
       ENDIF.
