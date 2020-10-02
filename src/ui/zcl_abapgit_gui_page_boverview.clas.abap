@@ -52,13 +52,6 @@ CLASS zcl_abapgit_gui_page_boverview DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
-    METHODS decode_merge
-      IMPORTING
-        !it_postdata    TYPE cnht_post_data_tab
-      RETURNING
-        VALUE(rs_merge) TYPE ty_merge
-      RAISING
-        zcx_abapgit_exception .
     METHODS build_menu
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
@@ -243,25 +236,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD decode_merge.
-
-    DATA lt_fields TYPE tihttpnvp.
-    FIELD-SYMBOLS: <ls_field> LIKE LINE OF lt_fields.
-
-
-    lt_fields = zcl_abapgit_html_action_utils=>parse_post_form_data( it_postdata ).
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'source'.
-    ASSERT sy-subrc = 0.
-    rs_merge-source = <ls_field>-value.
-
-    READ TABLE lt_fields ASSIGNING <ls_field> WITH KEY name = 'target'.
-    ASSERT sy-subrc = 0.
-    rs_merge-target = <ls_field>-value.
-
-  ENDMETHOD.
-
-
   METHOD escape_branch.
 
     rv_string = iv_string.
@@ -420,7 +394,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BOVERVIEW IMPLEMENTATION.
         refresh( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN c_actions-merge.
-        ls_merge = decode_merge( ii_event->mt_postdata ).
+        ls_merge-source = ii_event->form_data( )->get( 'source' ).
+        ls_merge-target = ii_event->form_data( )->get( 'target' ).
         CREATE OBJECT lo_merge
           EXPORTING
             io_repo   = mo_repo
