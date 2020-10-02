@@ -187,8 +187,7 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
     DATA: lv_progname TYPE reposrc-progname.
 
     SELECT SINGLE progname FROM reposrc INTO lv_progname
-      WHERE progname = ms_item-obj_name
-      AND r3state = 'A'.
+      WHERE progname = ms_item-obj_name.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
