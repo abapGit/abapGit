@@ -58,7 +58,7 @@ CLASS zcl_abapgit_string_map DEFINITION
       IMPORTING
         !iv_strict TYPE abap_bool DEFAULT abap_true
       RETURNING
-        VALUE(ro_instance) TYPE REF to zcl_abapgit_string_map .
+        VALUE(ro_instance) TYPE REF TO zcl_abapgit_string_map .
     METHODS freeze.
 
     DATA mt_entries TYPE tts_entries READ-ONLY.

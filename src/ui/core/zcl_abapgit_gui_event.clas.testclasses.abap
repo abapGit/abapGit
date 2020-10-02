@@ -95,7 +95,7 @@ CLASS ltcl_event IMPLEMENTATION.
       act = lo_map->size( )
       exp = 0 ).
 
-    APPEND 'a=b&b=c' to lt_postdata.
+    APPEND 'a=b&b=c' TO lt_postdata.
     CREATE OBJECT li_cut TYPE zcl_abapgit_gui_event
       EXPORTING
         iv_action   = 'XXX'
