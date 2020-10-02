@@ -98,6 +98,20 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD read_baseinfo.
+
+    TRY.
+        rv_baseinfo_string = mo_files->read_string( 'baseinfo' ).
+
+      CATCH zcx_abapgit_exception.
+        " File not found. That's ok, as the object could have been created in a
+        " system where baseinfo wasn't supported.
+        RETURN.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_object~changed_by.
 
     DATA: lo_ddl   TYPE REF TO object,
@@ -257,7 +271,6 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
         CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~READ')
           EXPORTING
             name      = ms_item-obj_name
-            get_state = 'A'
           IMPORTING
             got_state = lv_state.
         rv_bool = boolc( NOT lv_state IS INITIAL ).
@@ -415,19 +428,4 @@ CLASS ZCL_ABAPGIT_OBJECT_DDLS IMPLEMENTATION.
                  ig_data = <lg_data> ).
 
   ENDMETHOD.
-
-
-  METHOD read_baseinfo.
-
-    TRY.
-        rv_baseinfo_string = mo_files->read_string( 'baseinfo' ).
-
-      CATCH zcx_abapgit_exception.
-        " File not found. That's ok, as the object could have been created in a
-        " system where baseinfo wasn't supported.
-        RETURN.
-    ENDTRY.
-
-  ENDMETHOD.
-
 ENDCLASS.

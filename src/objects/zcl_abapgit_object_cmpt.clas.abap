@@ -143,7 +143,14 @@ CLASS ZCL_ABAPGIT_OBJECT_CMPT IMPLEMENTATION.
             i_version    = 'A'
           RECEIVING
             r_flg_exists = rv_bool.
-
+        IF rv_bool = abap_false.
+          CALL METHOD ('CL_CMP_TEMPLATE')=>('S_TEMPLATE_EXISTS')
+            EXPORTING
+              i_name       = mv_name
+              i_version    = 'I'
+            RECEIVING
+              r_flg_exists = rv_bool.
+        ENDIF.
       CATCH cx_root.
         zcx_abapgit_exception=>raise( 'CMPT not supported' ).
     ENDTRY.

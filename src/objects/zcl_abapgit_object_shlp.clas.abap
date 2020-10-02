@@ -94,10 +94,8 @@ CLASS ZCL_ABAPGIT_OBJECT_SHLP IMPLEMENTATION.
 
     DATA: lv_shlpname TYPE dd30l-shlpname.
 
-
     SELECT SINGLE shlpname FROM dd30l INTO lv_shlpname
-      WHERE shlpname = ms_item-obj_name
-      AND as4local = 'A'.                               "#EC CI_GENBUFF
+      WHERE shlpname = ms_item-obj_name.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
