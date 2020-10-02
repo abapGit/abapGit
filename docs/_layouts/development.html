@@ -4,25 +4,58 @@
 <body>
 {% include header.html %}
 <div class="container wrap">
+  <div class="nav nav-print">
+  <h3>Development</h3>
+  <ul>
+  {% assign pages = site.development | sort: 'order' %}
+  {% for doc in pages %}
+  {% if doc.title != "Development" %}
+  <li><a href="{{ doc.url }}">{{ doc.title }}</a></li>
+  {% endif %}
+  {% endfor %}
+  </ul>
+  <p><a href="{{ site.github.repository_url }}">Back to User Docs</a></p>
+  </div>
 
-<div class="nav nav-print">
-<h3>Development</h3>
-<ul>
-{% assign pages = site.development | sort: 'order' %}
-{% for doc in pages %}
-{% if doc.title != "Development" %}
-<li><a href="{{ doc.url }}">{{ doc.title }}</a></li>
-{% endif %}
-{% endfor %}
-</ul>
-</div>
-
-<div class="content">
-<h1>{{ page.title }}</h1>
-<small><a href="{{ site.github.repository_url }}/tree/master/docs/collections/{{ page.path }}">{% octicon pencil %} Improve this page</a></small>
-{{ content }}
-</div>
+  <div class="content">
+  <h1>{{ page.title }}</h1>
+  <small><a href="{{ site.github.repository_url }}/tree/master/docs/collections/{{ page.path }}">{% octicon pencil %} Improve this page</a></small>
+  {{ content }}
+  </div>
 </div>
 {% include footer.html %}
+
+<script type="text/javascript">
+  (function(){
+    'use strict';
+
+    /*
+    Create intra-page links
+    Requires that your headings already have an `id` attribute set (because that's what jekyll does)
+    For every heading in your page, this adds a little anchor link `#` that you can click to get a permalink to the heading.
+    Ignores `h1`, because you should only have one per page.
+    The text content of the tag is used to generate the link, so it will fail "gracefully-ish" if you have duplicate heading text.
+     */
+
+    var headingNodes = [], results, link,
+        tags = ['h2', 'h3', 'h4'];
+
+    tags.forEach(function(tag){
+      results = document.getElementsByTagName(tag);
+      Array.prototype.push.apply(headingNodes, results);
+    });
+
+    headingNodes.forEach(function(node){
+      link = document.createElement('a');
+      link.className = 'anchor-link';
+      link.textContent = '#';
+      link.href = '#' + node.getAttribute('id');
+      if (node.getAttribute('id')) {
+       node.appendChild(link);
+      }
+    });
+
+  })();
+</script>
 </body>
 </html>
