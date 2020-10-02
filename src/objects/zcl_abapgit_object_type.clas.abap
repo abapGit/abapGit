@@ -77,6 +77,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TYPE IMPLEMENTATION.
         AND ddlanguage = mv_language.
 
     lv_typdname = ms_item-obj_name.
+
+    " Active version
     CALL FUNCTION 'TYPD_GET_OBJECT'
       EXPORTING
         typdname          = lv_typdname
@@ -89,6 +91,22 @@ CLASS ZCL_ABAPGIT_OBJECT_TYPE IMPLEMENTATION.
         version_not_found = 1
         reps_not_exist    = 2
         OTHERS            = 3.
+    IF sy-subrc <> 0.
+      " Inactive version
+      CALL FUNCTION 'TYPD_GET_OBJECT'
+        EXPORTING
+          typdname          = lv_typdname
+          r3state           = 'I'
+        TABLES
+          psmodisrc         = lt_psmodisrc
+          psmodilog         = lt_psmodilog
+          psource           = et_source
+          ptrdir            = lt_ptrdir
+        EXCEPTIONS
+          version_not_found = 1
+          reps_not_exist    = 2
+          OTHERS            = 3.
+    ENDIF.
     IF sy-subrc <> 0.
       RAISE EXCEPTION TYPE zcx_abapgit_not_found.
     ENDIF.
