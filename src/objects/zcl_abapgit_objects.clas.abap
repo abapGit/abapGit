@@ -501,9 +501,9 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
         RAISE EXCEPTION lx_error.
     ENDTRY.
 
+    lv_count = 1.
     DO 3 TIMES.
       LOOP AT lt_tadir ASSIGNING <ls_tadir>.
-        lv_count = lv_count + 1.
         li_progress->show( iv_current = lv_count
                            iv_text    = |Delete { <ls_tadir>-obj_name }| ).
 
@@ -517,6 +517,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
               is_item    = ls_item ).
 
             DELETE lt_tadir.
+            lv_count = lv_count + 1.
 
             " make sure to save object deletions
             COMMIT WORK.
