@@ -365,6 +365,10 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
     validate_package( iv_package ).
 
+    IF iv_url IS INITIAL.
+      zcx_abapgit_exception=>raise( 'Missing display name for repo' ).
+    ENDIF.
+
     lo_dot_abapgit = zcl_abapgit_dot_abapgit=>build_default( ).
     lo_dot_abapgit->set_folder_logic( iv_folder_logic ).
 
