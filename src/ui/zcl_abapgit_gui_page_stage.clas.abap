@@ -74,7 +74,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS stage_selected
       IMPORTING
-        !it_postdata    TYPE cnht_post_data_tab
+        !ii_event TYPE REF TO zif_abapgit_gui_event
       RETURNING
         VALUE(ro_stage) TYPE REF TO zcl_abapgit_stage
       RAISING
@@ -587,30 +587,29 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
   METHOD stage_selected.
 
-    DATA:
-      lt_fields TYPE tihttpnvp,
-      ls_file   TYPE zif_abapgit_definitions=>ty_file.
+    DATA ls_file  TYPE zif_abapgit_definitions=>ty_file.
+    DATA lo_files TYPE REF TO zcl_abapgit_string_map.
 
     FIELD-SYMBOLS:
       <ls_file>   LIKE LINE OF ms_files-local,
       <ls_status> LIKE LINE OF ms_files-status,
-      <ls_item>   LIKE LINE OF lt_fields.
+      <ls_item>   LIKE LINE OF lo_files->mt_entries.
 
-    lt_fields = zcl_abapgit_html_action_utils=>parse_post_form_data( it_postdata ).
+    lo_files = ii_event->form_data( ).
 
-    IF lines( lt_fields ) = 0.
+    IF lo_files->size( ) = 0.
       zcx_abapgit_exception=>raise( 'process_stage_list: empty list' ).
     ENDIF.
 
     CREATE OBJECT ro_stage.
 
-    LOOP AT lt_fields ASSIGNING <ls_item>
+    LOOP AT lo_files->mt_entries ASSIGNING <ls_item>
       "Ignore Files that we don't want to stage, so any errors don't stop the staging process
-      WHERE value <> zif_abapgit_definitions=>c_method-skip.
+      WHERE v <> zif_abapgit_definitions=>c_method-skip.
 
       zcl_abapgit_path=>split_file_location(
         EXPORTING
-          iv_fullpath = <ls_item>-name
+          iv_fullpath = <ls_item>-k
         IMPORTING
           ev_path     = ls_file-path
           ev_filename = ls_file-filename ).
@@ -626,7 +625,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           | Consider ignoring or staging the file at a later time.| ).
       ENDIF.
 
-      CASE <ls_item>-value.
+      CASE <ls_item>-v.
         WHEN zif_abapgit_definitions=>c_method-add.
           READ TABLE ms_files-local ASSIGNING <ls_file>
             WITH KEY file-path     = ls_file-path
@@ -650,7 +649,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
         WHEN zif_abapgit_definitions=>c_method-skip.
           " Do nothing
         WHEN OTHERS.
-          zcx_abapgit_exception=>raise( |process_stage_list: unknown method { <ls_item>-value }| ).
+          zcx_abapgit_exception=>raise( |process_stage_list: unknown method { <ls_item>-v }| ).
       ENDCASE.
     ENDLOOP.
 
@@ -659,8 +658,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA: lo_stage  TYPE REF TO zcl_abapgit_stage,
-          lt_fields TYPE tihttpnvp.
+    DATA: lo_stage  TYPE REF TO zcl_abapgit_stage.
 
     CASE ii_event->mv_action.
       WHEN c_action-stage_all.
@@ -676,7 +674,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
       WHEN c_action-stage_commit.
 
-        lo_stage = stage_selected( ii_event->mt_postdata ).
+        lo_stage = stage_selected( ii_event ).
 
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_commit
           EXPORTING
@@ -687,20 +685,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
       WHEN c_action-stage_filter.
 
-        lt_fields = zcl_abapgit_html_action_utils=>parse_post_form_data( ii_event->mt_postdata ).
-
-        zcl_abapgit_html_action_utils=>get_field(
-          EXPORTING
-            iv_name  = 'filterValue'
-            it_field = lt_fields
-          CHANGING
-            cg_field = mv_filter_value ).
-
+        mv_filter_value = ii_event->form_data( )->get( 'filterValue' ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
       WHEN zif_abapgit_definitions=>c_action-go_patch.                         " Go Patch page
 
-        lo_stage = stage_selected( ii_event->mt_postdata ).
+        lo_stage = stage_selected( ii_event ).
         rs_handled-page  = get_page_patch( lo_stage ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
