@@ -25,9 +25,11 @@ CLASS zcl_abapgit_gui_page_commit DEFINITION
 
     CLASS-METHODS parse_commit_request
       IMPORTING
-        !it_postdata TYPE cnht_post_data_tab
-      EXPORTING
-        !eg_fields   TYPE any .
+        !ii_event TYPE REF TO zif_abapgit_gui_event
+      RETURNING
+        VALUE(rs_commit) TYPE zif_abapgit_services_git=>ty_commit_fields
+      RAISING
+        zcx_abapgit_exception .
 
     METHODS render_content REDEFINITION .
 
@@ -177,56 +179,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
 
   METHOD parse_commit_request.
 
-    DATA lt_fields TYPE tihttpnvp.
+    DATA lo_map TYPE REF TO zcl_abapgit_string_map.
 
-    FIELD-SYMBOLS <lv_body> TYPE string.
-
-    CLEAR eg_fields.
-
-    lt_fields = zcl_abapgit_html_action_utils=>parse_post_form_data(
-      it_post_data = it_postdata
-      iv_upper_cased = abap_true ).
-
-    zcl_abapgit_html_action_utils=>get_field(
-      EXPORTING
-        iv_name = 'COMMITTER_NAME'
-        it_field = lt_fields
-      CHANGING
-        cg_field = eg_fields ).
-    zcl_abapgit_html_action_utils=>get_field(
-      EXPORTING
-        iv_name = 'COMMITTER_EMAIL'
-        it_field = lt_fields
-      CHANGING
-        cg_field = eg_fields ).
-    zcl_abapgit_html_action_utils=>get_field(
-      EXPORTING
-        iv_name = 'AUTHOR_NAME'
-        it_field = lt_fields
-      CHANGING
-        cg_field = eg_fields ).
-    zcl_abapgit_html_action_utils=>get_field(
-      EXPORTING
-        iv_name = 'AUTHOR_EMAIL'
-        it_field = lt_fields
-      CHANGING
-      cg_field = eg_fields ).
-    zcl_abapgit_html_action_utils=>get_field(
-      EXPORTING
-        iv_name = 'COMMENT'
-        it_field = lt_fields
-      CHANGING
-      cg_field = eg_fields ).
-    zcl_abapgit_html_action_utils=>get_field(
-      EXPORTING
-        iv_name = 'BODY'
-        it_field = lt_fields
-      CHANGING
-        cg_field = eg_fields ).
-
-    ASSIGN COMPONENT 'BODY' OF STRUCTURE eg_fields TO <lv_body>.
-    ASSERT <lv_body> IS ASSIGNED.
-    REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>c_crlf IN <lv_body> WITH zif_abapgit_definitions=>c_newline.
+    lo_map = ii_event->form_data( iv_upper_cased = abap_true ).
+    lo_map->to_abap( CHANGING cs_container = rs_commit ).
+    REPLACE ALL OCCURRENCES
+      OF zif_abapgit_definitions=>c_crlf
+      IN rs_commit-body
+      WITH zif_abapgit_definitions=>c_newline.
 
   ENDMETHOD.
 
@@ -462,10 +422,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN c_action-commit_post.
 
-        parse_commit_request(
-          EXPORTING it_postdata = ii_event->mt_postdata
-          IMPORTING eg_fields   = ms_commit ).
-
+        ms_commit = parse_commit_request( ii_event ).
         ms_commit-repo_key = mo_repo->get_key( ).
 
         zcl_abapgit_services_git=>commit(

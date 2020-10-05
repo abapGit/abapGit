@@ -48,14 +48,16 @@ CLASS zcl_abapgit_gui_page_tag DEFINITION PUBLIC FINAL
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS create_tag
       IMPORTING
-        !it_postdata TYPE cnht_post_data_tab
+        !ii_event TYPE REF TO zif_abapgit_gui_event
       RAISING
         zcx_abapgit_exception .
     METHODS parse_tag_request
       IMPORTING
-        !it_postdata TYPE cnht_post_data_tab
-      EXPORTING
-        !eg_fields   TYPE any .
+        !ii_event TYPE REF TO zif_abapgit_gui_event
+      RETURNING
+        VALUE(rs_git_tag) TYPE zif_abapgit_definitions=>ty_git_tag
+      RAISING
+        zcx_abapgit_exception .
     METHODS parse_change_tag_type_request
       IMPORTING
         !it_postdata TYPE cnht_post_data_tab .
@@ -89,9 +91,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
       lx_error TYPE REF TO zcx_abapgit_exception,
       lv_text  TYPE string.
 
-    parse_tag_request(
-      EXPORTING it_postdata = it_postdata
-      IMPORTING eg_fields   = ls_tag ).
+    ls_tag = parse_tag_request( ii_event ).
 
     IF ls_tag-name IS INITIAL.
       zcx_abapgit_exception=>raise( |Please supply a tag name| ).
@@ -153,38 +153,15 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
 
   METHOD parse_tag_request.
 
-    DATA lt_fields TYPE tihttpnvp.
+    DATA lo_map TYPE REF TO zcl_abapgit_string_map.
 
-    FIELD-SYMBOLS <lv_body> TYPE string.
-
-    CLEAR eg_fields.
-
-    lt_fields = zcl_abapgit_html_action_utils=>parse_post_form_data(
-      it_post_data = it_postdata
-      iv_upper_cased = abap_true ).
-
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'SHA1'
-                                                        it_field = lt_fields
-                                              CHANGING cg_field = eg_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'NAME'
-                                                        it_field = lt_fields
-                                              CHANGING cg_field = eg_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'TAGGER_NAME'
-                                                        it_field = lt_fields
-                                              CHANGING cg_field = eg_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'TAGGER_EMAIL'
-                                                        it_field = lt_fields
-                                              CHANGING cg_field = eg_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'MESSAGE'
-                                                        it_field = lt_fields
-                                              CHANGING cg_field = eg_fields ).
-    zcl_abapgit_html_action_utils=>get_field( EXPORTING iv_name = 'BODY'
-                                                        it_field = lt_fields
-                                              CHANGING cg_field = eg_fields ).
-
-    ASSIGN COMPONENT 'BODY' OF STRUCTURE eg_fields TO <lv_body>.
-    ASSERT <lv_body> IS ASSIGNED.
-    REPLACE ALL OCCURRENCES OF zif_abapgit_definitions=>c_crlf IN <lv_body> WITH zif_abapgit_definitions=>c_newline.
+    lo_map = ii_event->form_data( ).
+    lo_map->strict( abap_false ). " Hack, refactor !
+    lo_map->to_abap( CHANGING cs_container = rs_git_tag ).
+    REPLACE ALL OCCURRENCES
+      OF zif_abapgit_definitions=>c_crlf
+      IN rs_git_tag-body
+      WITH zif_abapgit_definitions=>c_newline.
 
   ENDMETHOD.
 
@@ -377,7 +354,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN c_action-commit_post.
 
-        create_tag( ii_event->mt_postdata ).
+        create_tag( ii_event ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-go_back.
 
       WHEN c_action-change_tag_type.
