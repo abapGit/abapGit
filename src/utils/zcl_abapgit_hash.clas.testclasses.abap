@@ -7,7 +7,8 @@ CLASS ltcl_test DEFINITION FOR TESTING
     METHODS:
       adler32 FOR TESTING,
       sha1 FOR TESTING RAISING zcx_abapgit_exception,
-      sha1_raw FOR TESTING RAISING zcx_abapgit_exception.
+      sha1_raw_valid FOR TESTING RAISING zcx_abapgit_exception,
+      sha1_raw_invalid FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -40,7 +41,22 @@ CLASS ltcl_test IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD sha1_raw.
+
+  METHOD sha1_raw_valid.
+
+    DATA: lv_sha1  TYPE zif_abapgit_definitions=>ty_sha1,
+          lv_input TYPE xstring.
+
+    lv_input = 'C5188BAF86A64A581D2201'.
+    lv_sha1 = zcl_abapgit_hash=>sha1_raw( lv_input ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_sha1
+      exp = '0ec2eba75071f87988ced3237cae5ec7c5efd795' ).
+
+  ENDMETHOD.
+
+  METHOD sha1_raw_invalid.
 
     DATA: lv_sha1  TYPE zif_abapgit_definitions=>ty_sha1,
           lv_input TYPE xstring.
