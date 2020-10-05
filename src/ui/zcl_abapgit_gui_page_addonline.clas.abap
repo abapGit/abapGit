@@ -116,8 +116,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
       iv_name        = c_id-branch_name
       iv_side_action = c_event-choose_branch
       iv_label       = 'Branch'
-      iv_hint        = 'Switch to a specific branch on clone (default: HEAD)'
-      iv_placeholder = 'HEAD' ).
+      iv_hint        = 'Switch to a specific branch on clone (default: autodetect)'
+      iv_placeholder = 'autodetect default branch' ).
 
     ro_form->radio(
       iv_name        = c_id-folder_logic
