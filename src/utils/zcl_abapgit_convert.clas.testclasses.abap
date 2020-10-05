@@ -9,6 +9,10 @@ CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FIN
     METHODS convert_int FOR TESTING RAISING zcx_abapgit_exception.
     METHODS split_string FOR TESTING.
     METHODS convert_bitbyte FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS string_to_xstring_utf8 FOR TESTING.
+    METHODS xstring_to_string_utf8 FOR TESTING.
+    METHODS base64_to_xstring FOR TESTING.
+    METHODS conversion_exit_isola_output FOR TESTING.
     METHODS alpha_output FOR TESTING.
 
 ENDCLASS.
@@ -19,6 +23,54 @@ ENDCLASS.
 *
 *----------------------------------------------------------------------*
 CLASS ltcl_convert IMPLEMENTATION.
+
+  METHOD conversion_exit_isola_output.
+
+    DATA lv_laiso TYPE laiso.
+
+    lv_laiso = zcl_abapgit_convert=>conversion_exit_isola_output( 'E' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_laiso
+      exp = 'EN' ).
+
+  ENDMETHOD.
+
+  METHOD base64_to_xstring.
+
+    DATA lv_result TYPE xstring.
+
+    lv_result = zcl_abapgit_convert=>base64_to_xstring( 'YWJhcA==' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_result
+      exp = '61626170' ).
+
+  ENDMETHOD.
+
+  METHOD string_to_xstring_utf8.
+
+    DATA lv_result TYPE xstring.
+
+    lv_result = zcl_abapgit_convert=>string_to_xstring_utf8( 'abc' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_result
+      exp = '616263' ).
+
+  ENDMETHOD.
+
+  METHOD xstring_to_string_utf8.
+
+    DATA lv_result TYPE string.
+
+    lv_result = zcl_abapgit_convert=>xstring_to_string_utf8( '616263' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_result
+      exp = 'abc' ).
+
+  ENDMETHOD.
 
   METHOD alpha_output.
 
