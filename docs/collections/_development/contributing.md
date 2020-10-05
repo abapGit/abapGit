@@ -3,7 +3,7 @@ title: Contributing
 order: 5
 ---
 
-General contribution guidelines can be found [here](https://github.com/larshp/abapGit/blob/master/CONTRIBUTING.md).
+General contribution guidelines can be found [here](https://github.com/abapGit/abapGit/blob/master/CONTRIBUTING.md).
 
 How to submit a pull request:
 
