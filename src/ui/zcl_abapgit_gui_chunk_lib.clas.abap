@@ -324,19 +324,19 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
     lv_longtext = ix_error->if_message~get_longtext( abap_true ).
 
     REPLACE FIRST OCCURRENCE OF REGEX
-      |({ zcl_abapgit_message_helper=>gc_section_text-cause }{ cl_abap_char_utilities=>newline })|
+      |({ zcx_abapgit_exception=>gc_section_text-cause }{ cl_abap_char_utilities=>newline })|
       IN lv_longtext WITH |<h3>$1</h3>|.
 
     REPLACE FIRST OCCURRENCE OF REGEX
-      |({ zcl_abapgit_message_helper=>gc_section_text-system_response }{ cl_abap_char_utilities=>newline })|
+      |({ zcx_abapgit_exception=>gc_section_text-system_response }{ cl_abap_char_utilities=>newline })|
       IN lv_longtext WITH |<h3>$1</h3>|.
 
     REPLACE FIRST OCCURRENCE OF REGEX
-      |({ zcl_abapgit_message_helper=>gc_section_text-what_to_do }{ cl_abap_char_utilities=>newline })|
+      |({ zcx_abapgit_exception=>gc_section_text-what_to_do }{ cl_abap_char_utilities=>newline })|
       IN lv_longtext WITH |<h3>$1</h3>|.
 
     REPLACE FIRST OCCURRENCE OF REGEX
-      |({ zcl_abapgit_message_helper=>gc_section_text-sys_admin }{ cl_abap_char_utilities=>newline })|
+      |({ zcx_abapgit_exception=>gc_section_text-sys_admin }{ cl_abap_char_utilities=>newline })|
       IN lv_longtext WITH |<h3>$1</h3>|.
 
     ri_html->add( |<div id="message" class="message-panel">| ).
