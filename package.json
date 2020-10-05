@@ -9,7 +9,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/larshp/abapGit.git"
+    "url": "git+https://github.com/abapGit/abapGit.git"
   },
   "devDependencies": {
     "@abaplint/cli": "^2.54.0",
