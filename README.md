@@ -1,6 +1,6 @@
-![CI](https://github.com/larshp/abapGit/workflows/CI/badge.svg)
+![CI](https://github.com/abapGit/abapGit/workflows/CI/badge.svg)
 [![Slack](https://abapgit-slackinviter.herokuapp.com/badge.svg)](https://abapgit-slackinviter.herokuapp.com/)
-[![abap package version](https://img.shields.io/endpoint?url=https://shield.abap.space/version-shield-json/github/larshp/abapGit/src/zif_abapgit_version.intf.abap/gc_abap_version&label=version)](https://github.com/larshp/abapGit/blob/master/src/zif_abapgit_version.intf.abap)
+[![abap package version](https://img.shields.io/endpoint?url=https://shield.abap.space/version-shield-json/github/abapGit/abapGit/src/zif_abapgit_version.intf.abap/gc_abap_version&label=version)](https://github.com/abapGit/abapGit/blob/master/src/zif_abapgit_version.intf.abap)
 
 # abapGit
 
@@ -40,7 +40,7 @@ You can find the contribution guidelines [here](CONTRIBUTING.md).
 See [dotabap.org](https://dotabap.org) or [this page](https://docs.abapgit.org/other-where-used.html).
 
 ## FAQ
-For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/larshp/abapGit/issues)
+For questions/comments/bugs/feature requests/wishes please create an [issue](https://github.com/abapGit/abapGit/issues)
 
 ![abapgit](https://docs.abapgit.org/img/abapgit_1_99_0.png)
 
