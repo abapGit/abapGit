@@ -13,6 +13,7 @@ CLASS zcl_abapgit_html_action_utils DEFINITION
     CLASS-METHODS parse_fields
       IMPORTING
         !iv_string       TYPE clike
+        !iv_upper_cased  TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rt_fields) TYPE tihttpnvp .
     CLASS-METHODS parse_fields_upper_case_name
@@ -261,13 +262,18 @@ CLASS ZCL_ABAPGIT_HTML_ACTION_UTILS IMPLEMENTATION.
 
     ENDLOOP.
 
+    IF iv_upper_cased = abap_true.
+      field_keys_to_upper( CHANGING ct_fields = rt_fields ).
+    ENDIF.
+
   ENDMETHOD.
 
 
   METHOD parse_fields_upper_case_name.
 
-    rt_fields = parse_fields( iv_string ).
-    field_keys_to_upper( CHANGING ct_fields = rt_fields ).
+    rt_fields = parse_fields(
+      iv_string      = iv_string
+      iv_upper_cased = abap_true ).
 
   ENDMETHOD.
 

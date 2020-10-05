@@ -1,76 +1,65 @@
-CLASS zcl_abapgit_gui_page_addonline DEFINITION
+CLASS zcl_abapgit_gui_page_addofflin DEFINITION
   PUBLIC
   INHERITING FROM zcl_abapgit_gui_component
   FINAL
   CREATE PRIVATE .
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_gui_event_handler.
-    INTERFACES zif_abapgit_gui_renderable.
+    INTERFACES zif_abapgit_gui_event_handler .
+    INTERFACES zif_abapgit_gui_renderable .
 
     CLASS-METHODS create
-      " TODO importing prefilled form data
+        " TODO importing prefilled form data
       RETURNING
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS constructor
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
     CONSTANTS:
       BEGIN OF c_id,
-        url                TYPE string VALUE 'url',
-        package            TYPE string VALUE 'package',
-        branch_name        TYPE string VALUE 'branch_name',
-        display_name       TYPE string VALUE 'display_name',
-        folder_logic       TYPE string VALUE 'folder_logic',
-        ignore_subpackages TYPE string VALUE 'ignore_subpackages',
-        master_lang_only   TYPE string VALUE 'master_lang_only',
-      END OF c_id.
-
+        url              TYPE string VALUE 'url',
+        package          TYPE string VALUE 'package',
+        folder_logic     TYPE string VALUE 'folder_logic',
+        master_lang_only TYPE string VALUE 'master_lang_only',
+      END OF c_id .
     CONSTANTS:
       BEGIN OF c_event,
-        go_back         TYPE string VALUE 'go-back',
-        choose_package  TYPE string VALUE 'choose-package',
-        create_package  TYPE string VALUE 'create-package',
-        choose_branch   TYPE string VALUE 'choose-branch',
-        add_online_repo TYPE string VALUE 'add-repo-online',
-      END OF c_event.
-
-    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map.
-    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map.
-    DATA mo_form TYPE REF TO zcl_abapgit_html_form.
+        go_back          TYPE string VALUE 'go-back',
+        choose_package   TYPE string VALUE 'choose-package',
+        create_package   TYPE string VALUE 'create-package',
+        add_offline_repo TYPE string VALUE 'add-repo-offline',
+      END OF c_event .
+    DATA mo_validation_log TYPE REF TO zcl_abapgit_string_map .
+    DATA mo_form_data TYPE REF TO zcl_abapgit_string_map .
+    DATA mo_form TYPE REF TO zcl_abapgit_html_form .
 
     METHODS parse_form
       IMPORTING
-        it_form_fields TYPE tihttpnvp
+        !it_form_fields     TYPE tihttpnvp
       RETURNING
         VALUE(ro_form_data) TYPE REF TO zcl_abapgit_string_map
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS validate_form
       IMPORTING
-        io_form_data             TYPE REF TO zcl_abapgit_string_map
+        !io_form_data            TYPE REF TO zcl_abapgit_string_map
       RETURNING
         VALUE(ro_validation_log) TYPE REF TO zcl_abapgit_string_map
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
     METHODS get_form_schema
       RETURNING
-        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form.
-
+        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_ADDOFFLIN IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -83,12 +72,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
   METHOD create.
 
-    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_addonline.
+    DATA lo_component TYPE REF TO zcl_abapgit_gui_page_addofflin.
 
     CREATE OBJECT lo_component.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
-      iv_page_title = 'Clone online repository'
+      iv_page_title = 'Create offline repository'
       ii_child_component = lo_component ).
 
   ENDMETHOD.
@@ -96,27 +85,20 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
   METHOD get_form_schema.
 
-    ro_form = zcl_abapgit_html_form=>create( iv_form_id = 'add-repo-online-form' ).
+    ro_form = zcl_abapgit_html_form=>create( iv_form_id = 'add-repo-offline-form' ).
+
     ro_form->text(
       iv_name        = c_id-url
       iv_required    = abap_true
-      iv_label       = 'Git repository URL'
-      iv_hint        = 'HTTPS address of the repository to clone'
-      iv_placeholder = 'https://github.com/...git'
+      iv_label       = 'Repository name'
+      iv_hint        = 'Unique name for repository'
     )->text(
       iv_name        = c_id-package
       iv_side_action = c_event-choose_package
       iv_required    = abap_true
-      iv_upper_case  = abap_true
       iv_label       = 'Package'
       iv_hint        = 'SAP package for the code (should be a dedicated one)'
       iv_placeholder = 'Z... / $...'
-    )->text(
-      iv_name        = c_id-branch_name
-      iv_side_action = c_event-choose_branch
-      iv_label       = 'Branch'
-      iv_hint        = 'Switch to a specific branch on clone (default: master)'
-      iv_placeholder = 'master'
     )->radio(
       iv_name        = c_id-folder_logic
       iv_default_value = zif_abapgit_dot_abapgit=>c_folder_logic-prefix
@@ -128,22 +110,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
     )->option(
       iv_label       = 'Full'
       iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-full
-    )->text(
-      iv_name        = c_id-display_name
-      iv_label       = 'Display name'
-      iv_hint        = 'Name to show instead of original repo name (optional)'
-    )->checkbox(
-      iv_name        = c_id-ignore_subpackages
-      iv_label       = 'Ignore subpackages'
-      iv_hint        = 'Syncronize root package only (see https://docs.abapgit.org)'
     )->checkbox(
       iv_name        = c_id-master_lang_only
       iv_label       = 'Serialize master language only'
       iv_hint        = 'Ignore translations, serialize just master language'
     )->command(
-      iv_label       = 'Clone online repo'
+      iv_label       = 'Create offline repo'
       iv_is_main     = abap_true
-      iv_action      = c_event-add_online_repo
+      iv_action      = c_event-add_offline_repo
     )->command(
       iv_label       = 'Create package'
       iv_action      = c_event-create_package
@@ -178,21 +152,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
     ro_validation_log = mo_form->validate_required_fields( io_form_data ).
 
-    IF io_form_data->get( c_id-url ) IS NOT INITIAL.
-      TRY.
-          zcl_abapgit_url=>validate( io_form_data->get( c_id-url ) ).
-        CATCH zcx_abapgit_exception INTO lx_err.
-          ro_validation_log->set(
-            iv_key = c_id-url
-            iv_val = lx_err->get_text( ) ).
-      ENDTRY.
-    ENDIF.
-
     IF io_form_data->get( c_id-package ) IS NOT INITIAL.
       TRY.
           zcl_abapgit_repo_srv=>get_instance( )->validate_package(
-            iv_package    = |{ io_form_data->get( c_id-package ) }|
-            iv_ign_subpkg = |{ io_form_data->get( c_id-ignore_subpackages ) }| ).
+            iv_package    = |{ io_form_data->get( c_id-package ) }| ).
         CATCH zcx_abapgit_exception INTO lx_err.
           ro_validation_log->set(
             iv_key = c_id-package
@@ -214,8 +177,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
 
-    DATA: ls_repo_params     TYPE zif_abapgit_services_repo=>ty_repo_params,
-          lo_new_online_repo TYPE REF TO zcl_abapgit_repo_online.
+    DATA: ls_repo_params      TYPE zif_abapgit_services_repo=>ty_repo_params,
+          lo_new_offline_repo TYPE REF TO zcl_abapgit_repo_offline.
 
     " import data from html before re-render
     mo_form_data = parse_form( zcl_abapgit_html_action_utils=>parse_post_form_data( ii_event->mt_postdata ) ).
@@ -249,42 +212,16 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
         ENDIF.
 
-      WHEN c_event-choose_branch.
-
-        mo_validation_log = validate_form( mo_form_data ).
-        IF mo_validation_log->has( c_id-url ) = abap_true.
-          mo_validation_log->set(
-            iv_key = c_id-branch_name
-            iv_val = 'Check URL issues' ).
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render. " Display errors
-          RETURN.
-        ENDIF.
-        mo_form_data->set(
-          iv_key = c_id-branch_name
-          iv_val = zcl_abapgit_ui_factory=>get_popups( )->branch_list_popup( mo_form_data->get( c_id-url ) )-name ).
-
-        IF mo_form_data->get( c_id-branch_name ) IS INITIAL.
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
-        ELSE.
-          mo_form_data->set(
-            iv_key = c_id-branch_name
-            iv_val = replace( " strip technical
-              val = mo_form_data->get( c_id-branch_name )
-              sub = zif_abapgit_definitions=>c_git_branch-heads_prefix
-              with = '' ) ).
-          rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-        ENDIF.
-
-      WHEN c_event-add_online_repo.
+      WHEN c_event-add_offline_repo.
 
         mo_validation_log = validate_form( mo_form_data ).
 
         IF mo_validation_log->is_empty( ) = abap_true.
           mo_form_data->to_abap( CHANGING cs_container = ls_repo_params ).
-          lo_new_online_repo = zcl_abapgit_services_repo=>new_online( ls_repo_params ).
+          lo_new_offline_repo = zcl_abapgit_services_repo=>new_offline( ls_repo_params ).
           CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_view_repo
             EXPORTING
-              iv_key = lo_new_online_repo->get_key( ).
+              iv_key = lo_new_offline_repo->get_key( ).
           rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
         ELSE.
           rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render. " Display errors
