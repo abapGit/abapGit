@@ -96,7 +96,7 @@ CLASS zcl_abapgit_git_transport DEFINITION
       RETURNING
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
       RAISING
-        zcx_abapgit_exception.        
+        zcx_abapgit_exception.
 ENDCLASS.
 
 
