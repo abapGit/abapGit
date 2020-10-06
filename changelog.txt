@@ -8,6 +8,18 @@ Legend
 + : added
 - : removed
 
+2020-10-01 v1.100.0
+-------------------
++ CMOD support
++ PDTS support
++ WDCA support
++ AVAR support
++ Add option to synchronize theme with frontend 
+* documentation fixes
+* downport
+* Fix error from CL_PACKAGE_FACTORY=>LOAD_PACKAGE3
+* Fix deserialize of TABL with foreign keys
+
 2020-09-22 v1.99.2
 ------------------
 - Start removing GitHub 2FA implementation

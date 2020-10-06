@@ -224,12 +224,19 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
     DATA: lv_rollname TYPE dd04l-rollname.
 
     lv_rollname = ms_item-obj_name.
+
+    " Check nametab because it's fast
     CALL FUNCTION 'DD_GET_NAMETAB_HEADER'
       EXPORTING
         tabname   = lv_rollname
       EXCEPTIONS
         not_found = 1
         OTHERS    = 2.
+    IF sy-subrc <> 0.
+      " Check for inactive or modified versions
+      SELECT SINGLE rollname FROM dd04l INTO lv_rollname
+        WHERE rollname = lv_rollname.
+    ENDIF.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.

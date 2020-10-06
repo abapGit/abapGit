@@ -25,7 +25,7 @@ CLASS zcl_abapgit_gui_page_main DEFINITION
         abapgit_home TYPE string VALUE 'abapgit_home',
       END OF c_actions.
 
-    DATA: mo_repo_overview TYPE REF TO zcl_abapgit_gui_repo_over,
+    DATA: mo_repo_overview TYPE REF TO zcl_abapgit_gui_page_repo_over,
           mv_repo_key      TYPE zif_abapgit_persistence=>ty_value.
 
     METHODS build_main_menu
@@ -74,7 +74,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
     gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
 
     IF mo_repo_overview IS INITIAL.
-      CREATE OBJECT mo_repo_overview TYPE zcl_abapgit_gui_repo_over.
+      CREATE OBJECT mo_repo_overview.
     ENDIF.
 
     ri_html->add( mo_repo_overview->zif_abapgit_gui_renderable~render( ) ).
@@ -103,7 +103,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
         ENDTRY.
 
         mv_repo_key = lv_key.
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_view_repo
+        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_repo_view
           EXPORTING
             iv_key = lv_key.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.

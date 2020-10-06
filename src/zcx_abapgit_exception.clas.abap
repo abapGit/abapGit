@@ -8,6 +8,20 @@ CLASS zcx_abapgit_exception DEFINITION
 
     INTERFACES if_t100_message .
 
+    CONSTANTS:
+      BEGIN OF gc_section_text,
+        cause           TYPE string VALUE `Cause`,
+        system_response TYPE string VALUE `System response`,
+        what_to_do      TYPE string VALUE `Procedure`,
+        sys_admin       TYPE string VALUE `System administration`,
+      END OF gc_section_text .
+    CONSTANTS:
+      BEGIN OF gc_section_token,
+        cause           TYPE string VALUE `&CAUSE&`,
+        system_response TYPE string VALUE `&SYSTEM_RESPONSE&`,
+        what_to_do      TYPE string VALUE `&WHAT_TO_DO&`,
+        sys_admin       TYPE string VALUE `&SYS_ADMIN&`,
+      END OF gc_section_token .
     DATA msgv1 TYPE symsgv READ-ONLY .
     DATA msgv2 TYPE symsgv READ-ONLY .
     DATA msgv3 TYPE symsgv READ-ONLY .
@@ -43,6 +57,12 @@ CLASS zcx_abapgit_exception DEFINITION
         VALUE(iv_msgv2) TYPE symsgv DEFAULT sy-msgv2
         VALUE(iv_msgv3) TYPE symsgv DEFAULT sy-msgv3
         VALUE(iv_msgv4) TYPE symsgv DEFAULT sy-msgv4
+        !ix_previous    TYPE REF TO cx_root OPTIONAL
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS raise_with_text
+      IMPORTING
+        !ix_previous TYPE REF TO cx_root
       RAISING
         zcx_abapgit_exception .
     METHODS constructor
@@ -53,11 +73,6 @@ CLASS zcx_abapgit_exception DEFINITION
         !msgv2    TYPE symsgv OPTIONAL
         !msgv3    TYPE symsgv OPTIONAL
         !msgv4    TYPE symsgv OPTIONAL .
-    CLASS-METHODS raise_with_text
-      IMPORTING
-        !ix_previous TYPE REF TO cx_root
-      RAISING
-        zcx_abapgit_exception .
 
     METHODS get_source_position
         REDEFINITION .
@@ -65,11 +80,32 @@ CLASS zcx_abapgit_exception DEFINITION
         REDEFINITION .
   PROTECTED SECTION.
   PRIVATE SECTION.
-    CONSTANTS:
-      gc_generic_error_msg TYPE string VALUE `An error occured (ZCX_ABAPGIT_EXCEPTION)` ##NO_TEXT.
 
-    METHODS:
-      save_callstack.
+    CONSTANTS gc_generic_error_msg TYPE string VALUE `An error occured (ZCX_ABAPGIT_EXCEPTION)` ##NO_TEXT.
+
+    CLASS-METHODS split_text_to_symsg
+      IMPORTING
+        !iv_text      TYPE string
+      RETURNING
+        VALUE(rs_msg) TYPE symsg .
+    METHODS save_callstack .
+    METHODS itf_to_string
+      IMPORTING
+        !it_itf          TYPE tline_tab
+      RETURNING
+        VALUE(rv_result) TYPE string .
+    METHODS get_t100_longtext_itf
+      RETURNING
+        VALUE(rt_itf) TYPE tline_tab .
+    METHODS remove_empty_section
+      IMPORTING
+        !iv_tabix_from TYPE i
+        !iv_tabix_to   TYPE i
+      CHANGING
+        !ct_itf        TYPE tline_tab .
+    METHODS replace_section_head_with_text
+      CHANGING
+        !cs_itf TYPE tline .
 ENDCLASS.
 
 
@@ -78,6 +114,7 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
 
 
   METHOD constructor ##ADT_SUPPRESS_GENERATION.
+
     super->constructor( previous = previous ).
 
     me->msgv1 = msgv1.
@@ -118,39 +155,141 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_t100_longtext_itf.
+
+    DATA: lv_docu_key TYPE doku_obj.
+
+    FIELD-SYMBOLS <lv_msgv> TYPE any.
+
+    lv_docu_key = if_t100_message~t100key-msgid && if_t100_message~t100key-msgno.
+
+    CALL FUNCTION 'DOCU_GET'
+      EXPORTING
+        id     = 'NA'
+        langu  = sy-langu
+        object = lv_docu_key
+        typ    = 'E'
+      TABLES
+        line   = rt_itf
+      EXCEPTIONS
+        OTHERS = 1.
+
+    IF sy-subrc = 0.
+      ASSIGN me->(if_t100_message~t100key-attr1) TO <lv_msgv>.
+      IF sy-subrc = 0.
+        REPLACE ALL OCCURRENCES OF '&V1&' IN TABLE rt_itf WITH <lv_msgv>.
+      ENDIF.
+      ASSIGN me->(if_t100_message~t100key-attr2) TO <lv_msgv>.
+      IF sy-subrc = 0.
+        REPLACE ALL OCCURRENCES OF '&V2&' IN TABLE rt_itf WITH <lv_msgv>.
+      ENDIF.
+      ASSIGN me->(if_t100_message~t100key-attr3) TO <lv_msgv>.
+      IF sy-subrc = 0.
+        REPLACE ALL OCCURRENCES OF '&V3&' IN TABLE rt_itf WITH <lv_msgv>.
+      ENDIF.
+      ASSIGN me->(if_t100_message~t100key-attr4) TO <lv_msgv>.
+      IF sy-subrc = 0.
+        REPLACE ALL OCCURRENCES OF '&V4&' IN TABLE rt_itf WITH <lv_msgv>.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD if_message~get_longtext.
-
-    " You should remember that we have to call ZCL_ABAPGIT_MESSAGE_HELPER
-    " dynamically, because the compiled abapGit report puts the definition
-    " of the exception classes on the top and therefore ZCL_ABAPGIT_MESSAGE_HELPER
-    " isn't statically known
-
-    DATA: lo_message_helper TYPE REF TO object.
 
     result = super->get_longtext( ).
 
     IF if_t100_message~t100key IS NOT INITIAL.
 
-      CREATE OBJECT lo_message_helper TYPE ('ZCL_ABAPGIT_MESSAGE_HELPER')
-        EXPORTING
-          io_exception = me.
-
-      CALL METHOD lo_message_helper->('GET_T100_LONGTEXT')
-        RECEIVING
-          rv_longtext = result.
+      result = itf_to_string( get_t100_longtext_itf( ) ).
 
     ENDIF.
 
   ENDMETHOD.
 
 
+  METHOD itf_to_string.
+
+    CONSTANTS: lc_format_section TYPE string VALUE 'U1'.
+
+    DATA:
+      lt_stream      TYPE TABLE OF tdline,
+      lt_string      TYPE TABLE OF string,
+      lv_string      LIKE LINE OF lt_string,
+      lt_itf         TYPE tline_tab,
+      lv_has_content TYPE abap_bool,
+      lv_tabix_from  TYPE syst-tabix,
+      lv_tabix_to    TYPE syst-tabix.
+
+    FIELD-SYMBOLS: <ls_itf_section>      TYPE tline,
+                   <ls_itf_section_item> TYPE tline.
+
+    lt_itf = it_itf.
+
+    " You should remember that we replace the U1 format because
+    " that preserves the section header of longtexts.
+    LOOP AT lt_itf ASSIGNING <ls_itf_section>
+                   WHERE tdformat = lc_format_section.
+
+      CLEAR:
+        lv_has_content,
+        lv_tabix_to.
+
+      lv_tabix_from = sy-tabix.
+
+      LOOP AT lt_itf ASSIGNING <ls_itf_section_item>
+                     FROM sy-tabix + 1.
+
+        IF <ls_itf_section_item>-tdformat = lc_format_section.
+          lv_tabix_to = sy-tabix.
+          EXIT.
+        ELSEIF <ls_itf_section_item>-tdline IS NOT INITIAL.
+          lv_has_content = abap_true.
+        ENDIF.
+
+      ENDLOOP.
+
+      IF lv_has_content = abap_false.
+        remove_empty_section(
+          EXPORTING
+            iv_tabix_from = lv_tabix_from
+            iv_tabix_to   = lv_tabix_to
+          CHANGING
+            ct_itf        = lt_itf ).
+        CONTINUE.
+      ENDIF.
+
+      replace_section_head_with_text( CHANGING cs_itf = <ls_itf_section> ).
+
+    ENDLOOP.
+
+    CALL FUNCTION 'CONVERT_ITF_TO_STREAM_TEXT'
+      EXPORTING
+        lf           = 'X'
+      IMPORTING
+        stream_lines = lt_string
+      TABLES
+        itf_text     = lt_itf
+        text_stream  = lt_stream.
+
+    LOOP AT lt_string INTO lv_string.
+      IF sy-tabix = 1.
+        rv_result = lv_string.
+      ELSE.
+        CONCATENATE rv_result lv_string
+                    INTO rv_result
+                    SEPARATED BY cl_abap_char_utilities=>newline.
+      ENDIF.
+
+    ENDLOOP.
+
+  ENDMETHOD.
+
+
   METHOD raise.
-    DATA: lv_msgv1    TYPE symsgv,
-          lv_msgv2    TYPE symsgv,
-          lv_msgv3    TYPE symsgv,
-          lv_msgv4    TYPE symsgv,
-          ls_t100_key TYPE scx_t100key,
-          lv_text     TYPE string.
+
+    DATA lv_text TYPE string.
 
     IF iv_text IS INITIAL.
       lv_text = gc_generic_error_msg.
@@ -158,29 +297,10 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
       lv_text = iv_text.
     ENDIF.
 
-    CALL METHOD ('ZCL_ABAPGIT_MESSAGE_HELPER')=>set_msg_vars_for_clike
-      EXPORTING
-        iv_text = lv_text.
+    split_text_to_symsg( lv_text ).
 
-    ls_t100_key-msgid = sy-msgid.
-    ls_t100_key-msgno = sy-msgno.
-    ls_t100_key-attr1 = 'MSGV1'.
-    ls_t100_key-attr2 = 'MSGV2'.
-    ls_t100_key-attr3 = 'MSGV3'.
-    ls_t100_key-attr4 = 'MSGV4'.
-    lv_msgv1 = sy-msgv1.
-    lv_msgv2 = sy-msgv2.
-    lv_msgv3 = sy-msgv3.
-    lv_msgv4 = sy-msgv4.
+    raise_t100( ix_previous = ix_previous ).
 
-    RAISE EXCEPTION TYPE zcx_abapgit_exception
-      EXPORTING
-        textid   = ls_t100_key
-        msgv1    = lv_msgv1
-        msgv2    = lv_msgv2
-        msgv3    = lv_msgv3
-        msgv4    = lv_msgv4
-        previous = ix_previous.
   ENDMETHOD.
 
 
@@ -200,11 +320,12 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
 
     RAISE EXCEPTION TYPE zcx_abapgit_exception
       EXPORTING
-        textid = ls_t100_key
-        msgv1  = iv_msgv1
-        msgv2  = iv_msgv2
-        msgv3  = iv_msgv3
-        msgv4  = iv_msgv4.
+        textid   = ls_t100_key
+        msgv1    = iv_msgv1
+        msgv2    = iv_msgv2
+        msgv3    = iv_msgv3
+        msgv4    = iv_msgv4
+        previous = ix_previous.
   ENDMETHOD.
 
 
@@ -212,6 +333,31 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
     raise(
       iv_text = ix_previous->get_text( )
       ix_previous = ix_previous ).
+  ENDMETHOD.
+
+
+  METHOD remove_empty_section.
+    IF iv_tabix_to BETWEEN iv_tabix_from AND lines( ct_itf ).
+      DELETE ct_itf FROM iv_tabix_from TO iv_tabix_to.
+    ELSE.
+      DELETE ct_itf FROM iv_tabix_from.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD replace_section_head_with_text.
+
+    CASE cs_itf-tdline.
+      WHEN gc_section_token-cause.
+        cs_itf-tdline = gc_section_text-cause.
+      WHEN gc_section_token-system_response.
+        cs_itf-tdline = gc_section_text-system_response.
+      WHEN gc_section_token-what_to_do.
+        cs_itf-tdline = gc_section_text-what_to_do.
+      WHEN gc_section_token-sys_admin.
+        cs_itf-tdline = gc_section_text-sys_admin.
+    ENDCASE.
+
   ENDMETHOD.
 
 
@@ -241,6 +387,61 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
       ENDIF.
 
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD split_text_to_symsg.
+
+    CONSTANTS:
+      lc_length_of_msgv           TYPE i VALUE 50,
+      lc_offset_of_last_character TYPE i VALUE 49.
+
+    DATA:
+      lv_text    TYPE c LENGTH 200,
+      lv_rest    TYPE c LENGTH 200,
+      ls_msg     TYPE symsg,
+      lv_msg_var TYPE c LENGTH lc_length_of_msgv,
+      lv_index   TYPE sy-index.
+
+    lv_text = iv_text.
+
+    DO 4 TIMES.
+
+      lv_index = sy-index.
+
+      CALL FUNCTION 'TEXT_SPLIT'
+        EXPORTING
+          length = lc_length_of_msgv
+          text   = lv_text
+        IMPORTING
+          line   = lv_msg_var
+          rest   = lv_rest.
+
+      IF lv_msg_var+lc_offset_of_last_character(1) = space OR
+         lv_text+lc_length_of_msgv(1) = space.
+        " keep the space at the beginning of the rest
+        " because otherwise it's lost
+        lv_rest = | { lv_rest }|.
+      ENDIF.
+
+      lv_text = lv_rest.
+
+      CASE lv_index.
+        WHEN 1.
+          ls_msg-msgv1 = lv_msg_var.
+        WHEN 2.
+          ls_msg-msgv2 = lv_msg_var.
+        WHEN 3.
+          ls_msg-msgv3 = lv_msg_var.
+        WHEN 4.
+          ls_msg-msgv4 = lv_msg_var.
+      ENDCASE.
+
+    ENDDO.
+
+    " Set syst using generic error message
+    MESSAGE e001(00) WITH ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4 INTO sy-lisel.
 
   ENDMETHOD.
 ENDCLASS.

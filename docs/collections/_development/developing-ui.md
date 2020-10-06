@@ -107,6 +107,8 @@ To process sapevents in abap the component (page) must implement `ZIF_ABAPGIT_GU
   - `ii_event->query( )->get( 'XXX' )`
   - or `ii_event->query( )->to_abap( changing cs_container = ls_struc_with_fields )`
   - query string_map is immutable (attempt to `set` will raise an exception)
+  - accepts optional `iv_upper_cased` param to unify param names (default = `true`)
+- `ii_event->form_data()` - attempts to parse post_data assuming it is set of key value pairs. Returns a string map. Otherwise behaves as `query()` above. `iv_upper_cased = false` by default.
 
 Events can be processed on 2 levels - in page/component **or** in the router. On new event:
 - the GUI goes through event handlers stack - list of components that registered themselves as event handlers during rendering via `gui_services`

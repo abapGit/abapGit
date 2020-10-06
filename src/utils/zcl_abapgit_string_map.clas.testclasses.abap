@@ -4,8 +4,18 @@ CLASS ltcl_sm_test DEFINITION
   DURATION SHORT
   RISK LEVEL HARMLESS.
   PRIVATE SECTION.
+
+    TYPES:
+      BEGIN OF ty_struc,
+        a TYPE string,
+        b TYPE abap_bool,
+        c TYPE i,
+      END OF ty_struc.
+
     METHODS simple FOR TESTING RAISING zcx_abapgit_exception.
     METHODS freeze FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS strict FOR TESTING RAISING zcx_abapgit_exception.
+
 ENDCLASS.
 
 CLASS ltcl_sm_test IMPLEMENTATION.
@@ -88,6 +98,48 @@ CLASS ltcl_sm_test IMPLEMENTATION.
         cl_abap_unit_assert=>fail( ).
       CATCH zcx_abapgit_exception.
     ENDTRY.
+
+  ENDMETHOD.
+
+  METHOD strict.
+
+    DATA ls_struc_act TYPE ty_struc.
+    DATA ls_struc_exp TYPE ty_struc.
+    DATA lo_x TYPE REF TO cx_root.
+    DATA lo_cut TYPE REF TO zcl_abapgit_string_map.
+    lo_cut = zcl_abapgit_string_map=>create( ).
+
+    lo_cut->set(
+      iv_key = 'a'
+      iv_val = 'avalue' ).
+    lo_cut->set(
+      iv_key = 'b'
+      iv_val = 'X' ).
+    lo_cut->set(
+      iv_key = 'c'
+      iv_val = '123' ).
+    lo_cut->set(
+      iv_key = 'z'
+      iv_val = 'xyz' ).
+
+    ls_struc_exp-a = 'avalue'.
+    ls_struc_exp-b = abap_true.
+    ls_struc_exp-c = 123.
+
+    TRY.
+        lo_cut->to_abap( CHANGING cs_container = ls_struc_act ).
+        cl_abap_unit_assert=>fail( ).
+      CATCH cx_root INTO lo_x.
+        cl_abap_unit_assert=>assert_equals(
+          exp = 'Component Z not found in target'
+          act = lo_x->get_text( ) ).
+    ENDTRY.
+
+    lo_cut->strict( abap_false )->to_abap( CHANGING cs_container = ls_struc_act ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = ls_struc_exp
+      act = ls_struc_act ).
 
   ENDMETHOD.
 

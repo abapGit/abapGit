@@ -309,12 +309,33 @@ CLASS ZCL_ABAPGIT_OBJECT_SFPF IMPLEMENTATION.
 
   METHOD zif_abapgit_object~serialize.
 
-    DATA: lv_xstr     TYPE xstring,
-          li_document TYPE REF TO if_ixml_document.
-
+    DATA: lv_xstr            TYPE xstring,
+          li_document        TYPE REF TO if_ixml_document,
+          li_node_collection TYPE REF TO if_ixml_node_collection,
+          li_node_iter       TYPE REF TO if_ixml_node_iterator,
+          li_node            TYPE REF TO if_ixml_node,
+          li_node_new        TYPE REF TO if_ixml_node,
+          li_node_parent     TYPE REF TO if_ixml_node.
 
     lv_xstr = form_to_xstring( ).
     li_document = cl_ixml_80_20=>parse_to_document( stream_xstring = lv_xstr ).
+
+*   Clear CACHE_INFO
+    li_node_collection = li_document->get_elements_by_tag_name_ns( 'CACHE_INFO' ).
+    IF li_node_collection IS NOT INITIAL.
+      li_node_iter = li_node_collection->create_iterator( ).
+      DO.
+        li_node = li_node_iter->get_next( ).
+        IF li_node IS INITIAL.
+          EXIT.
+        ENDIF.
+        li_node_new = li_document->create_element_ns( 'CACHE_INFO' ).
+        li_node_parent = li_node->get_parent( ).
+        li_node_parent->replace_child( new_child = li_node_new
+                                       old_child = li_node ).
+      ENDDO.
+    ENDIF.
+
     fix_oref( li_document ).
     io_xml->set_raw( li_document->get_root_element( ) ).
 
