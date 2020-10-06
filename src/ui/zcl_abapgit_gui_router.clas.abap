@@ -234,7 +234,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         lt_repo_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
 
         IF lv_last_repo_key IS NOT INITIAL.
-          CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_view_repo
+          CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_repo_view
             EXPORTING
               iv_key = lv_last_repo_key.
         ELSEIF lt_repo_list IS NOT INITIAL.
@@ -651,7 +651,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
           WHEN lc_page-repo_view.
             rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
           WHEN lc_page-main_view.
-            CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_view_repo
+            CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_repo_view
               EXPORTING
                 iv_key = lo_repo->get_key( ).
             rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
