@@ -27,16 +27,6 @@ CLASS zcl_abapgit_git_transport DEFINITION
         !ev_commit       TYPE zif_abapgit_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS upload_pack
-      IMPORTING
-        !io_client        TYPE REF TO zcl_abapgit_http_client
-        !iv_url           TYPE string
-        !iv_deepen_level  TYPE i DEFAULT 0
-        !it_hashes        TYPE zif_abapgit_definitions=>ty_sha1_tt
-      RETURNING
-        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
-      RAISING
-        zcx_abapgit_exception.
 * local to remote
     CLASS-METHODS receive_pack
       IMPORTING
@@ -97,6 +87,16 @@ CLASS zcl_abapgit_git_transport DEFINITION
         !cv_data TYPE xstring
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS upload_pack
+      IMPORTING
+        !io_client        TYPE REF TO zcl_abapgit_http_client
+        !iv_url           TYPE string
+        !iv_deepen_level  TYPE i DEFAULT 0
+        !it_hashes        TYPE zif_abapgit_definitions=>ty_sha1_tt
+      RETURNING
+        VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
+      RAISING
+        zcx_abapgit_exception.        
 ENDCLASS.
 
 
