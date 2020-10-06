@@ -1,10 +1,12 @@
-CLASS zcl_abapgit_gui_page_view_repo DEFINITION
+CLASS zcl_abapgit_gui_page_repo_view DEFINITION
   PUBLIC
-  FINAL
   INHERITING FROM zcl_abapgit_gui_page
-  CREATE PUBLIC.
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
+
+    INTERFACES zif_abapgit_gui_hotkeys .
 
     CONSTANTS:
       BEGIN OF c_actions,
@@ -17,10 +19,7 @@ CLASS zcl_abapgit_gui_page_view_repo DEFINITION
         display_more             TYPE string VALUE 'display_more' ##NO_TEXT,
         repo_switch_origin_to_pr TYPE string VALUE 'repo_switch_origin_to_pr',
         repo_reset_origin        TYPE string VALUE 'repo_reset_origin',
-      END OF c_actions.
-
-
-    INTERFACES: zif_abapgit_gui_hotkeys.
+      END OF c_actions .
 
     METHODS constructor
       IMPORTING
@@ -28,8 +27,8 @@ CLASS zcl_abapgit_gui_page_view_repo DEFINITION
       RAISING
         zcx_abapgit_exception .
 
-    METHODS zif_abapgit_gui_event_handler~on_event REDEFINITION.
-
+    METHODS zif_abapgit_gui_event_handler~on_event
+        REDEFINITION .
   PROTECTED SECTION.
     METHODS render_content REDEFINITION.
   PRIVATE SECTION.
@@ -185,7 +184,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -1176,7 +1175,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO IMPLEMENTATION.
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-go_repo. " Switch to another repo
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_view_repo
+        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_repo_view
           EXPORTING
             iv_key = |{ ii_event->query( iv_upper_cased = abap_true )->get( 'KEY' ) }|.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
