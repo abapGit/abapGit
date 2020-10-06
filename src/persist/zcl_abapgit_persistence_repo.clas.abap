@@ -10,10 +10,6 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
     METHODS constructor .
   PROTECTED SECTION.
 
-    ALIASES list
-      FOR zif_abapgit_persist_repo~list .
-    ALIASES read
-      FOR zif_abapgit_persist_repo~read .
   PRIVATE SECTION.
 
     DATA mt_meta_fields TYPE STANDARD TABLE OF abap_compname.
@@ -211,7 +207,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
     DATA lt_repo TYPE zif_abapgit_persistence=>tt_repo.
 
-    lt_repo = list( ).
+    lt_repo = zif_abapgit_persist_repo~list( ).
 
     READ TABLE lt_repo INTO rs_repo WITH KEY key = iv_key.
     IF sy-subrc <> 0.
@@ -244,7 +240,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        ls_persistent_meta = read( iv_key ).
+        ls_persistent_meta = zif_abapgit_persist_repo~read( iv_key ).
       CATCH zcx_abapgit_not_found.
         zcx_abapgit_exception=>raise( 'repo key not found' ).
     ENDTRY.

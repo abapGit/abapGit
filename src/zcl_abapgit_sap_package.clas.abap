@@ -9,12 +9,9 @@ CLASS zcl_abapgit_sap_package DEFINITION
 
     INTERFACES: zif_abapgit_sap_package.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: mv_package TYPE devclass.
-
-    ALIASES:
-      create FOR zif_abapgit_sap_package~create,
-      create_local FOR zif_abapgit_sap_package~create_local.
 
 ENDCLASS.
 
@@ -186,7 +183,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
     ls_child-pdevclass = li_parent->transport_layer.
     ls_child-as4user   = sy-uname.
 
-    create( ls_child ).
+    zif_abapgit_sap_package~create( ls_child ).
 
   ENDMETHOD.
 
@@ -202,7 +199,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
     ls_package-dlvunit   = 'LOCAL'.
     ls_package-as4user   = sy-uname.
 
-    create( ls_package ).
+    zif_abapgit_sap_package~create( ls_package ).
 
   ENDMETHOD.
 
@@ -308,7 +305,7 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
   METHOD zif_abapgit_sap_package~read_parent.
 
     SELECT SINGLE parentcl FROM tdevc INTO rv_parentcl
-      WHERE devclass = mv_package.        "#EC CI_GENBUFF
+      WHERE devclass = mv_package.                      "#EC CI_GENBUFF
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Inconsistent package structure! Cannot find parent for { mv_package }| ).
     ENDIF.
