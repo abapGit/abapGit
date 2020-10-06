@@ -116,7 +116,7 @@ ENDFORM.
 
 FORM exit RAISING zcx_abapgit_exception.
   CASE sy-ucomm.
-    WHEN 'CBAC'.  "Back
+    WHEN 'CBAC' OR 'CCAN'.  "Back & Escape
       IF zcl_abapgit_ui_factory=>get_gui( )->back( ) = abap_true. " end of stack
         zcl_abapgit_ui_factory=>get_gui( )->free( ). " Graceful shutdown
       ELSE.
