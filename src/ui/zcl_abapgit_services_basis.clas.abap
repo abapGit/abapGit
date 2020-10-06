@@ -27,7 +27,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_services_basis IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SERVICES_BASIS IMPLEMENTATION.
 
 
   METHOD create_package.
@@ -54,25 +54,50 @@ CLASS zcl_abapgit_services_basis IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD test_changed_by.
+  METHOD open_ie_devtools.
+    DATA: lv_system_directory TYPE string,
+          lv_exe_full_path    TYPE string.
 
-    DATA ls_tadir TYPE zif_abapgit_definitions=>ty_tadir.
-    DATA ls_item  TYPE zif_abapgit_definitions=>ty_item.
-    DATA lv_user  TYPE xubname.
-
-    ls_tadir = zcl_abapgit_ui_factory=>get_popups( )->popup_object( ).
-    IF ls_tadir IS INITIAL.
-      RETURN.
+    IF zcl_abapgit_ui_factory=>get_gui_functions( )->is_sapgui_for_windows( ) = abap_false.
+      zcx_abapgit_exception=>raise( |IE DevTools not supported on frontend OS| ).
     ENDIF.
 
-    ls_item-obj_type = ls_tadir-object.
-    ls_item-obj_name = ls_tadir-obj_name.
+    cl_gui_frontend_services=>get_system_directory(
+      CHANGING
+        system_directory     = lv_system_directory
+      EXCEPTIONS
+        cntl_error           = 1
+        error_no_gui         = 2
+        not_supported_by_gui = 3
+        OTHERS               = 4 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from GET_SYSTEM_DIRECTORY sy-subrc: { sy-subrc }| ).
+    ENDIF.
 
-    lv_user = zcl_abapgit_objects=>changed_by( ls_item ).
+    cl_gui_cfw=>flush( ).
 
-    MESSAGE lv_user TYPE 'S'.
+    lv_exe_full_path = lv_system_directory && `\F12\IEChooser.exe`.
 
+    cl_gui_frontend_services=>execute(
+      EXPORTING
+        application            = lv_exe_full_path
+      EXCEPTIONS
+        cntl_error             = 1
+        error_no_gui           = 2
+        bad_parameter          = 3
+        file_not_found         = 4
+        path_not_found         = 5
+        file_extension_unknown = 6
+        error_execute_failed   = 7
+        synchronous_failed     = 8
+        not_supported_by_gui   = 9
+        OTHERS                 = 10 ).
+    IF sy-subrc <> 0.
+      " IEChooser is only available on Windows 10
+      zcx_abapgit_exception=>raise( |Error from EXECUTE sy-subrc: { sy-subrc }| ).
+    ENDIF.
   ENDMETHOD.
+
 
   METHOD run_performance_test.
     DATA: lo_performance                TYPE REF TO zcl_abapgit_performance_test,
@@ -81,7 +106,7 @@ CLASS zcl_abapgit_services_basis IMPLEMENTATION.
           lv_serialize_master_lang_only TYPE abap_bool VALUE abap_true,
           lt_object_type_filter         TYPE zif_abapgit_definitions=>ty_object_type_range,
           lt_object_name_filter         TYPE zif_abapgit_definitions=>ty_object_name_range,
-          lt_result                     TYPE zcl_abapgit_performance_test=>gty_result_tab,
+          lt_result                     TYPE zcl_abapgit_performance_test=>ty_results,
           lo_alv                        TYPE REF TO cl_salv_table,
           lx_salv_error                 TYPE REF TO cx_salv_error,
           lv_current_repo               TYPE zif_abapgit_persistence=>ty_value,
@@ -150,47 +175,24 @@ CLASS zcl_abapgit_services_basis IMPLEMENTATION.
     ENDTRY.
   ENDMETHOD.
 
-  METHOD open_ie_devtools.
-    DATA: lv_system_directory TYPE string,
-          lv_exe_full_path    TYPE string.
 
-    IF zcl_abapgit_ui_factory=>get_gui_functions( )->is_sapgui_for_windows( ) = abap_false.
-      zcx_abapgit_exception=>raise( |IE DevTools not supported on frontend OS| ).
+  METHOD test_changed_by.
+
+    DATA ls_tadir TYPE zif_abapgit_definitions=>ty_tadir.
+    DATA ls_item  TYPE zif_abapgit_definitions=>ty_item.
+    DATA lv_user  TYPE xubname.
+
+    ls_tadir = zcl_abapgit_ui_factory=>get_popups( )->popup_object( ).
+    IF ls_tadir IS INITIAL.
+      RETURN.
     ENDIF.
 
-    cl_gui_frontend_services=>get_system_directory(
-      CHANGING
-        system_directory     = lv_system_directory
-      EXCEPTIONS
-        cntl_error           = 1
-        error_no_gui         = 2
-        not_supported_by_gui = 3
-        OTHERS               = 4 ).
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |Error from GET_SYSTEM_DIRECTORY sy-subrc: { sy-subrc }| ).
-    ENDIF.
+    ls_item-obj_type = ls_tadir-object.
+    ls_item-obj_name = ls_tadir-obj_name.
 
-    cl_gui_cfw=>flush( ).
+    lv_user = zcl_abapgit_objects=>changed_by( ls_item ).
 
-    lv_exe_full_path = lv_system_directory && `\F12\IEChooser.exe`.
+    MESSAGE lv_user TYPE 'S'.
 
-    cl_gui_frontend_services=>execute(
-      EXPORTING
-        application            = lv_exe_full_path
-      EXCEPTIONS
-        cntl_error             = 1
-        error_no_gui           = 2
-        bad_parameter          = 3
-        file_not_found         = 4
-        path_not_found         = 5
-        file_extension_unknown = 6
-        error_execute_failed   = 7
-        synchronous_failed     = 8
-        not_supported_by_gui   = 9
-        OTHERS                 = 10 ).
-    IF sy-subrc <> 0.
-      " IEChooser is only available on Windows 10
-      zcx_abapgit_exception=>raise( |Error from EXECUTE sy-subrc: { sy-subrc }| ).
-    ENDIF.
   ENDMETHOD.
 ENDCLASS.

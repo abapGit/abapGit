@@ -378,7 +378,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
   METHOD deserialize_checks.
 
     DATA: lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
-          lt_dependencies TYPE zif_abapgit_apack_definitions=>tt_dependencies.
+          lt_dependencies TYPE zif_abapgit_apack_definitions=>ty_dependencies.
 
     find_remote_dot_abapgit( ).
     find_remote_dot_apack( ).

@@ -505,7 +505,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     DATA: lv_text TYPE string,
           lv_hint TYPE string,
-          lt_log  TYPE zcl_abapgit_news=>tt_log.
+          lt_log  TYPE zcl_abapgit_news=>ty_logs.
 
     FIELD-SYMBOLS: <ls_line> LIKE LINE OF lt_log.
 

@@ -6,7 +6,7 @@ CLASS zcl_abapgit_performance_test DEFINITION
 
   PUBLIC SECTION.
     TYPES:
-      BEGIN OF gty_result,
+      BEGIN OF ty_result,
         pgmid    TYPE pgmid,
         object   TYPE trobjtype,
         obj_name TYPE sobj_name,
@@ -14,8 +14,8 @@ CLASS zcl_abapgit_performance_test DEFINITION
         counter  TYPE i,
         runtime  TYPE i,
         seconds  TYPE p LENGTH 16 DECIMALS 6,
-      END OF gty_result,
-      gty_result_tab TYPE STANDARD TABLE OF gty_result WITH KEY pgmid object obj_name.
+      END OF ty_result,
+      ty_results TYPE STANDARD TABLE OF ty_result WITH KEY pgmid object obj_name.
     METHODS:
       constructor IMPORTING iv_package                    TYPE devclass
                             iv_include_sub_packages       TYPE abap_bool DEFAULT abap_true
@@ -25,7 +25,7 @@ CLASS zcl_abapgit_performance_test DEFINITION
       get_object_type_filter RETURNING VALUE(rt_object_type_range) TYPE zif_abapgit_definitions=>ty_object_type_range,
       get_object_name_filter RETURNING VALUE(rt_object_name_range) TYPE zif_abapgit_definitions=>ty_object_name_range,
       run_measurement RAISING zcx_abapgit_exception,
-      get_result RETURNING VALUE(rt_result) TYPE gty_result_tab.
+      get_result RETURNING VALUE(rt_result) TYPE ty_results.
   PROTECTED SECTION.
   PRIVATE SECTION.
     METHODS:
@@ -39,33 +39,35 @@ CLASS zcl_abapgit_performance_test DEFINITION
         object_type_range TYPE zif_abapgit_definitions=>ty_object_type_range,
         object_name_range TYPE zif_abapgit_definitions=>ty_object_name_range,
       END OF ms_filter_parameters,
-      mt_result TYPE gty_result_tab.
+      mt_result TYPE ty_results.
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_performance_test IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_PERFORMANCE_TEST IMPLEMENTATION.
+
+
   METHOD constructor.
     mv_package = iv_package.
     mv_include_sub_packages = iv_include_sub_packages.
     mv_serialize_master_lang_only = iv_serialize_master_lang_only.
   ENDMETHOD.
 
+
   METHOD get_object_name_filter.
     rt_object_name_range = ms_filter_parameters-object_name_range.
   ENDMETHOD.
+
 
   METHOD get_object_type_filter.
     rt_object_type_range = ms_filter_parameters-object_type_range.
   ENDMETHOD.
 
-  METHOD set_object_name_filter.
-    ms_filter_parameters-object_name_range = it_object_name_range.
+
+  METHOD get_result.
+    rt_result = mt_result.
   ENDMETHOD.
 
-  METHOD set_object_type_filter.
-    ms_filter_parameters-object_type_range = it_object_type_range.
-  ENDMETHOD.
 
   METHOD run_measurement.
     DATA: li_actual_progress TYPE REF TO zif_abapgit_progress,
@@ -77,7 +79,7 @@ CLASS zcl_abapgit_performance_test IMPLEMENTATION.
           lx_exception       TYPE REF TO zcx_abapgit_exception,
           lo_dummy_progress  TYPE REF TO lcl_dummy_progress.
     FIELD-SYMBOLS: <ls_tadir>  TYPE zif_abapgit_definitions=>ty_tadir,
-                   <ls_result> TYPE gty_result.
+                   <ls_result> TYPE ty_result.
 
     CLEAR mt_result.
 
@@ -120,6 +122,7 @@ CLASS zcl_abapgit_performance_test IMPLEMENTATION.
     ENDTRY.
   ENDMETHOD.
 
+
   METHOD select_tadir_entries.
     rt_tadir = zcl_abapgit_factory=>get_tadir( )->read(
       iv_package            = mv_package
@@ -129,7 +132,13 @@ CLASS zcl_abapgit_performance_test IMPLEMENTATION.
                        OR obj_name NOT IN ms_filter_parameters-object_name_range.
   ENDMETHOD.
 
-  METHOD get_result.
-    rt_result = mt_result.
+
+  METHOD set_object_name_filter.
+    ms_filter_parameters-object_name_range = it_object_name_range.
+  ENDMETHOD.
+
+
+  METHOD set_object_type_filter.
+    ms_filter_parameters-object_type_range = it_object_type_range.
   ENDMETHOD.
 ENDCLASS.

@@ -15,7 +15,7 @@ CLASS zcl_abapgit_longtexts DEFINITION
         lines TYPE tline_tab,
       END OF ty_longtext .
     TYPES:
-      tty_longtexts TYPE STANDARD TABLE OF ty_longtext
+      ty_longtexts TYPE STANDARD TABLE OF ty_longtext
                            WITH NON-UNIQUE DEFAULT KEY .
 
     METHODS read
@@ -25,7 +25,7 @@ CLASS zcl_abapgit_longtexts DEFINITION
         !it_dokil            TYPE zif_abapgit_definitions=>tty_dokil
         !iv_master_lang_only TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(rt_longtexts)  TYPE tty_longtexts
+        VALUE(rt_longtexts)  TYPE ty_longtexts
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
@@ -107,7 +107,7 @@ CLASS ZCL_ABAPGIT_LONGTEXTS IMPLEMENTATION.
 
   METHOD zif_abapgit_longtexts~changed_by.
 
-    DATA: lt_longtexts TYPE tty_longtexts.
+    DATA: lt_longtexts TYPE ty_longtexts.
     FIELD-SYMBOLS: <ls_longtext> TYPE ty_longtext.
 
     lt_longtexts = read( iv_object_name = iv_object_name
@@ -155,7 +155,7 @@ CLASS ZCL_ABAPGIT_LONGTEXTS IMPLEMENTATION.
 
   METHOD zif_abapgit_longtexts~deserialize.
 
-    DATA: lt_longtexts     TYPE tty_longtexts,
+    DATA: lt_longtexts     TYPE ty_longtexts,
           lv_no_masterlang TYPE dokil-masterlang.
     FIELD-SYMBOLS: <ls_longtext> TYPE ty_longtext.
 
@@ -186,7 +186,7 @@ CLASS ZCL_ABAPGIT_LONGTEXTS IMPLEMENTATION.
 
   METHOD zif_abapgit_longtexts~serialize.
 
-    DATA lt_longtexts TYPE tty_longtexts.
+    DATA lt_longtexts TYPE ty_longtexts.
     DATA lt_dokil LIKE it_dokil.
     DATA lv_master_lang_only TYPE abap_bool.
 

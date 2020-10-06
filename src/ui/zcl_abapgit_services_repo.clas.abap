@@ -123,7 +123,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
 
     DATA: ls_checks       TYPE zif_abapgit_definitions=>ty_deserialize_checks,
           lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
-          lt_dependencies TYPE zif_abapgit_apack_definitions=>tt_dependencies.
+          lt_dependencies TYPE zif_abapgit_apack_definitions=>ty_dependencies.
 
 
 * find troublesome objects
