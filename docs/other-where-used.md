@@ -19,6 +19,7 @@ order: 50
 * [SAP Labs Czech Republic](https://www.facebook.com/SAPLabsCZ/)
 
 ### Consulting and Partner
+* [abat AG](https://www.abat.de/)
 * Computerservice Wolf
 * [CQSE](https://www.cqse.eu/)
 * [Discovery Consulting](https://www.discoveryconsulting.com.au)
