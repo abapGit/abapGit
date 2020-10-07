@@ -87,7 +87,7 @@ CLASS zcl_abapgit_gui_page_patch DEFINITION
         zcx_abapgit_exception .
     METHODS restore_patch_flags
       IMPORTING
-        !it_diff_files_old TYPE tt_file_diff
+        !it_diff_files_old TYPE ty_file_diffs
       RAISING
         zcx_abapgit_exception .
     METHODS add_to_stage
@@ -477,7 +477,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
   METHOD refresh.
 
     DATA:
-      lt_diff_files_old TYPE tt_file_diff,
+      lt_diff_files_old TYPE ty_file_diffs,
       lt_files          TYPE zif_abapgit_definitions=>ty_stage_tt,
       ls_file           LIKE LINE OF lt_files.
 

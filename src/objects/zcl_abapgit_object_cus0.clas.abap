@@ -11,11 +11,11 @@ CLASS zcl_abapgit_object_cus0 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-    TYPES: tty_img_activity_texts TYPE STANDARD TABLE OF cus_imgact
+    TYPES: ty_img_activity_texts TYPE STANDARD TABLE OF cus_imgact
                                        WITH NON-UNIQUE DEFAULT KEY,
            BEGIN OF ty_img_activity,
              header TYPE cus_imgach,
-             texts  TYPE tty_img_activity_texts,
+             texts  TYPE ty_img_activity_texts,
            END OF ty_img_activity.
     DATA: mv_img_activity TYPE cus_img_ac.
 

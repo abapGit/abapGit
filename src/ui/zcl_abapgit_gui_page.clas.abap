@@ -161,7 +161,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
 
   METHOD render_deferred_parts.
 
-    DATA lt_parts TYPE zif_abapgit_html=>tty_table_of.
+    DATA lt_parts TYPE zif_abapgit_html=>ty_table_of.
     DATA li_part LIKE LINE OF lt_parts.
 
     lt_parts = gui_services( )->get_html_parts( )->get_parts( iv_part_category ).

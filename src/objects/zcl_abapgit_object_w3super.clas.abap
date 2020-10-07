@@ -19,14 +19,14 @@ CLASS zcl_abapgit_object_w3super DEFINITION PUBLIC INHERITING FROM zcl_abapgit_o
         iv_language TYPE spras.
 
   PROTECTED SECTION.
-    TYPES tty_bdcdata TYPE STANDARD TABLE OF bdcdata
+    TYPES ty_bdcdata TYPE STANDARD TABLE OF bdcdata
                            WITH NON-UNIQUE DEFAULT KEY.
 
     METHODS get_metadata REDEFINITION.
 
     METHODS change_bdc_jump_data ABSTRACT
       CHANGING
-        ct_bdcdata TYPE tty_bdcdata.
+        ct_bdcdata TYPE ty_bdcdata.
 
   PRIVATE SECTION.
 
@@ -376,7 +376,7 @@ CLASS ZCL_ABAPGIT_OBJECT_W3SUPER IMPLEMENTATION.
   METHOD zif_abapgit_object~jump.
 
     DATA: ls_bdcdata TYPE bdcdata,
-          lt_bdcdata TYPE tty_bdcdata.
+          lt_bdcdata TYPE ty_bdcdata.
 
     ls_bdcdata-program  = 'SAPMWWW0'.
     ls_bdcdata-dynpro   = '0100'.

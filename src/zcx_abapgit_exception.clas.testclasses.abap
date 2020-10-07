@@ -22,18 +22,18 @@ CLASS ltcl_test DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
-      BEGIN OF gty_t100_message,
+      BEGIN OF ty_t100_message,
         msgid TYPE symsgid,
         msgno TYPE symsgno,
         msgv1 TYPE symsgv,
         msgv2 TYPE symsgv,
         msgv3 TYPE symsgv,
         msgv4 TYPE symsgv,
-      END OF gty_t100_message.
+      END OF ty_t100_message.
     CLASS-METHODS:
       get_exc_text IMPORTING ix_ex          TYPE REF TO cx_root
                    RETURNING VALUE(rv_text) TYPE string,
-      get_t100_text IMPORTING is_message     TYPE gty_t100_message
+      get_t100_text IMPORTING is_message     TYPE ty_t100_message
                     RETURNING VALUE(rv_text) TYPE string.
 ENDCLASS.
 

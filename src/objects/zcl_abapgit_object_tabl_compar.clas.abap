@@ -12,10 +12,10 @@ CLASS zcl_abapgit_object_tabl_compar DEFINITION
   PROTECTED SECTION.
 
     TYPES:
-      tty_founds  TYPE STANDARD TABLE OF rsfindlst
+      ty_founds  TYPE STANDARD TABLE OF rsfindlst
                            WITH NON-UNIQUE DEFAULT KEY .
     TYPES:
-      tty_seu_obj TYPE STANDARD TABLE OF seu_obj
+      ty_seu_obj TYPE STANDARD TABLE OF seu_obj
                            WITH NON-UNIQUE DEFAULT KEY .
 
     DATA mi_local TYPE REF TO zif_abapgit_xml_input.
@@ -25,9 +25,9 @@ CLASS zcl_abapgit_object_tabl_compar DEFINITION
         !iv_object_name      TYPE csequence
         !iv_depth            TYPE i
         !iv_object_type      TYPE euobj-id
-        !it_scope            TYPE tty_seu_obj
+        !it_scope            TYPE ty_seu_obj
       RETURNING
-        VALUE(rt_founds_all) TYPE tty_founds
+        VALUE(rt_founds_all) TYPE ty_founds
       RAISING
         zcx_abapgit_exception .
     METHODS is_structure_used_in_db_table
@@ -52,7 +52,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tabl_compar IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TABL_COMPAR IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -66,7 +66,7 @@ CLASS zcl_abapgit_object_tabl_compar IMPLEMENTATION.
 
     DATA: lt_findstrings TYPE string_table,
           lt_founds      TYPE STANDARD TABLE OF rsfindlst,
-          lt_scope       TYPE tty_seu_obj,
+          lt_scope       TYPE ty_seu_obj,
           lv_findstring  LIKE LINE OF lt_findstrings.
 
     FIELD-SYMBOLS: <ls_found> TYPE rsfindlst.
@@ -123,8 +123,8 @@ CLASS zcl_abapgit_object_tabl_compar IMPLEMENTATION.
 
   METHOD is_structure_used_in_db_table.
 
-    DATA: lt_scope  TYPE tty_seu_obj,
-          lt_founds TYPE tty_founds.
+    DATA: lt_scope  TYPE ty_seu_obj,
+          lt_founds TYPE ty_founds.
 
     APPEND 'TABL' TO lt_scope.
     APPEND 'STRU' TO lt_scope.

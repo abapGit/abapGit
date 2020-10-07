@@ -19,7 +19,7 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
     TYPES:
       BEGIN OF ty_info,
         repo_json TYPE REF TO zif_abapgit_ajson_reader,
-        pulls     TYPE zif_abapgit_pr_enum_provider=>tty_pulls,
+        pulls     TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests,
       END OF ty_info.
 
     DATA mi_http_agent TYPE REF TO zif_abapgit_http_agent.
@@ -37,7 +37,7 @@ CLASS zcl_abapgit_pr_enum_github DEFINITION
       IMPORTING
         ii_json         TYPE REF TO zif_abapgit_ajson_reader
       RETURNING
-        VALUE(rt_pulls) TYPE zif_abapgit_pr_enum_provider=>tty_pulls.
+        VALUE(rt_pulls) TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests.
 
     METHODS clean_url
       IMPORTING

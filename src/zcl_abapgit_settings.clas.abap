@@ -124,10 +124,10 @@ CLASS zcl_abapgit_settings DEFINITION PUBLIC CREATE PUBLIC.
           VALUE(rv_link_hint_key) TYPE string,
       set_hotkeys
         IMPORTING
-          it_hotkeys TYPE zif_abapgit_definitions=>tty_hotkey,
+          it_hotkeys TYPE zif_abapgit_definitions=>ty_hotkey_tt,
       get_hotkeys
         RETURNING
-          VALUE(rt_hotkeys) TYPE zif_abapgit_definitions=>tty_hotkey
+          VALUE(rt_hotkeys) TYPE zif_abapgit_definitions=>ty_hotkey_tt
         RAISING
           zcx_abapgit_exception,
       set_parallel_proc_disabled
@@ -180,7 +180,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_settings IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_SETTINGS IMPLEMENTATION.
 
 
   METHOD get_activate_wo_popup.

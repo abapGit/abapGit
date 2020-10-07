@@ -6,7 +6,7 @@ INTERFACE zif_abapgit_longtexts
     IMPORTING
       !iv_object_name TYPE sobj_name
       !iv_longtext_id TYPE dokil-id
-      !it_dokil       TYPE zif_abapgit_definitions=>tty_dokil OPTIONAL
+      !it_dokil       TYPE zif_abapgit_definitions=>ty_dokil_tt OPTIONAL
     RETURNING
       VALUE(rv_user)  TYPE xubname
     RAISING
@@ -16,7 +16,7 @@ INTERFACE zif_abapgit_longtexts
       !iv_longtext_name TYPE string DEFAULT 'LONGTEXTS'
       !iv_object_name   TYPE sobj_name
       !iv_longtext_id   TYPE dokil-id
-      !it_dokil         TYPE zif_abapgit_definitions=>tty_dokil OPTIONAL
+      !it_dokil         TYPE zif_abapgit_definitions=>ty_dokil_tt OPTIONAL
       !ii_xml           TYPE REF TO zif_abapgit_xml_output
     RAISING
       zcx_abapgit_exception .
