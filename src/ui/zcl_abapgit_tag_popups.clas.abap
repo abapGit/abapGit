@@ -7,7 +7,7 @@ CLASS zcl_abapgit_tag_popups DEFINITION
   PUBLIC SECTION.
     INTERFACES: zif_abapgit_tag_popups.
 
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_tag_out.

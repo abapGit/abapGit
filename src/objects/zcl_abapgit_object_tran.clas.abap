@@ -13,9 +13,9 @@ CLASS zcl_abapgit_object_tran DEFINITION
 
   PRIVATE SECTION.
     TYPES:
-      tty_param_values TYPE STANDARD TABLE OF rsparam
+      ty_param_values TYPE STANDARD TABLE OF rsparam
                                      WITH NON-UNIQUE DEFAULT KEY ,
-      tty_tstca        TYPE STANDARD TABLE OF tstca
+      ty_tstca        TYPE STANDARD TABLE OF tstca
                                      WITH DEFAULT KEY.
 
     CONSTANTS:
@@ -99,7 +99,7 @@ CLASS zcl_abapgit_object_tran DEFINITION
     METHODS save_authorizations
       IMPORTING
         iv_transaction    TYPE tstc-tcode
-        it_authorizations TYPE tty_tstca
+        it_authorizations TYPE ty_tstca
       RAISING
         zcx_abapgit_exception.
     METHODS clear_functiongroup_globals.
@@ -663,8 +663,8 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
           ls_tstct        TYPE tstct,
           ls_tstcc        TYPE tstcc,
           ls_tstcp        TYPE tstcp,
-          lt_tstca        TYPE tty_tstca,
-          lt_param_values TYPE tty_param_values,
+          lt_tstca        TYPE ty_tstca,
+          lt_param_values TYPE ty_param_values,
           ls_rsstcd       TYPE rsstcd.
 
 
@@ -856,7 +856,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
           ls_tcode       TYPE tstc,
           ls_tstct       TYPE tstct,
           ls_tstcp       TYPE tstcp,
-          lt_tstca       TYPE tty_tstca,
+          lt_tstca       TYPE ty_tstca,
           ls_gui_attr    TYPE tstcc.
 
 
