@@ -1,9 +1,15 @@
-CLASS zcl_abapgit_object_wdyn DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_super FINAL.
+CLASS zcl_abapgit_object_wdyn DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
 
+    INTERFACES zif_abapgit_object .
+
+    ALIASES mo_files
+      FOR zif_abapgit_object~mo_files .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -63,7 +69,10 @@ CLASS zcl_abapgit_object_wdyn DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       add_fm_exception
         IMPORTING iv_name      TYPE string
                   iv_value     TYPE i
-        CHANGING  ct_exception TYPE abap_func_excpbind_tab.
+        CHANGING  ct_exception TYPE abap_func_excpbind_tab,
+      add_with_inactive_parts
+        RAISING
+          zcx_abapgit_exception .
 
 ENDCLASS.
 
@@ -106,6 +115,39 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
     GET REFERENCE OF ct_value INTO ls_param-value.
 
     INSERT ls_param INTO TABLE ct_param.
+
+  ENDMETHOD.
+
+
+  METHOD add_with_inactive_parts.
+
+    DATA:
+      lv_obj_name TYPE trobj_name,
+      lv_object   TYPE trobjtype,
+      lt_objects  TYPE dwinactiv_tab.
+
+    FIELD-SYMBOLS: <ls_object> LIKE LINE OF lt_objects.
+
+    lv_obj_name = ms_item-obj_name.
+    lv_object = ms_item-obj_type.
+
+    CALL FUNCTION 'RS_INACTIVE_OBJECTS_IN_OBJECT'
+      EXPORTING
+        obj_name         = lv_obj_name
+        object           = lv_object
+      TABLES
+        inactive_objects = lt_objects
+      EXCEPTIONS
+        object_not_found = 1
+        OTHERS           = 2.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error from RS_INACTIVE_OBJECTS_IN_OBJECT' ).
+    ENDIF.
+
+    LOOP AT lt_objects ASSIGNING <ls_object>.
+      zcl_abapgit_objects_activation=>add( iv_type = <ls_object>-object
+                                           iv_name = <ls_object>-obj_name ).
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -784,7 +826,7 @@ CLASS ZCL_ABAPGIT_OBJECT_WDYN IMPLEMENTATION.
         io_xml     = io_xml ).
     ENDIF.
 
-    zcl_abapgit_objects_activation=>add_item( ms_item ).
+    add_with_inactive_parts( ).
 
   ENDMETHOD.
 
