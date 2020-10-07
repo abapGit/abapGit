@@ -19,7 +19,7 @@ CLASS zcl_abapgit_pr_enumerator DEFINITION
 
     METHODS get_pulls
       RETURNING
-        VALUE(rt_pulls) TYPE zif_abapgit_pr_enum_provider=>tty_pulls
+        VALUE(rt_pulls) TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests
       RAISING
         zcx_abapgit_exception.
 

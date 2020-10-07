@@ -7,17 +7,18 @@ CLASS zcl_abapgit_tag_popups DEFINITION
   PUBLIC SECTION.
     INTERFACES: zif_abapgit_tag_popups.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_tag_out.
         INCLUDE TYPE zif_abapgit_definitions=>ty_git_tag.
     TYPES: body_icon TYPE icon_d,
            END OF ty_tag_out,
-           tty_tag_out TYPE STANDARD TABLE OF ty_tag_out
+           ty_tag_outs TYPE STANDARD TABLE OF ty_tag_out
                        WITH NON-UNIQUE DEFAULT KEY.
 
     DATA:
-      mt_tags              TYPE tty_tag_out,
+      mt_tags              TYPE ty_tag_outs,
       mo_docking_container TYPE REF TO cl_gui_docking_container,
       mo_text_control      TYPE REF TO cl_gui_textedit.
 
@@ -29,7 +30,7 @@ CLASS zcl_abapgit_tag_popups DEFINITION
         IMPORTING
           it_tags            TYPE zif_abapgit_definitions=>ty_git_tag_list_tt
         RETURNING
-          VALUE(rt_tags_out) TYPE tty_tag_out,
+          VALUE(rt_tags_out) TYPE ty_tag_outs,
 
       clean_up,
 

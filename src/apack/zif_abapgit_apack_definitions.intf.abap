@@ -10,7 +10,7 @@ INTERFACE zif_abapgit_apack_definitions PUBLIC.
       target_package TYPE devclass,
     END OF ty_dependency,
 
-    tt_dependencies    TYPE STANDARD TABLE OF ty_dependency
+    ty_dependencies    TYPE STANDARD TABLE OF ty_dependency
                     WITH NON-UNIQUE DEFAULT KEY,
 
     ty_repository_type TYPE string,
@@ -27,10 +27,10 @@ INTERFACE zif_abapgit_apack_definitions PUBLIC.
     BEGIN OF ty_descriptor.
       INCLUDE TYPE ty_descriptor_wo_dependencies.
   TYPES:
-    dependencies TYPE tt_dependencies,
+    dependencies TYPE ty_dependencies,
     END OF ty_descriptor,
 
-    tt_descriptor TYPE STANDARD TABLE OF ty_descriptor WITH NON-UNIQUE DEFAULT KEY.
+    ty_descriptors TYPE STANDARD TABLE OF ty_descriptor WITH NON-UNIQUE DEFAULT KEY.
 
   CONSTANTS c_dot_apack_manifest TYPE string VALUE '.apack-manifest.xml' ##NO_TEXT.
   CONSTANTS c_repository_type_abapgit TYPE ty_repository_type VALUE 'abapGit' ##NO_TEXT.
