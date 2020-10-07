@@ -117,7 +117,7 @@ CLASS ZCL_ABAPGIT_USER_MASTER_RECORD IMPLEMENTATION.
     ENDTRY.
 
     " If the user has been found add it to the list
-    IF ( ms_user-name IS NOT INITIAL AND ms_user-email IS NOT INITIAL ).
+    IF ms_user-name IS NOT INITIAL AND ms_user-email IS NOT INITIAL.
       ls_user-user = iv_user.
       ls_user-o_user = me.
       INSERT ls_user INTO TABLE gt_user.
