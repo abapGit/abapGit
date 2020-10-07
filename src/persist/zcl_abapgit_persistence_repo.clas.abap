@@ -96,7 +96,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 * todo: Lock the complete persistence in order to prevent concurrent repo-creation
 * however the current approach will most likely work in almost all cases
 
-    DATA: lt_content TYPE zif_abapgit_persistence=>tt_content.
+    DATA: lt_content TYPE zif_abapgit_persistence=>ty_contents.
 
     FIELD-SYMBOLS: <ls_content> LIKE LINE OF lt_content.
 
@@ -174,7 +174,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
   METHOD zif_abapgit_persist_repo~list.
 
-    DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
+    DATA: lt_content TYPE zif_abapgit_persistence=>ty_contents,
           ls_content LIKE LINE OF lt_content,
           ls_repo    LIKE LINE OF rt_repos.
 
@@ -205,7 +205,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
   METHOD zif_abapgit_persist_repo~read.
 
-    DATA lt_repo TYPE zif_abapgit_persistence=>tt_repo.
+    DATA lt_repo TYPE zif_abapgit_persistence=>ty_repos.
 
     lt_repo = zif_abapgit_persist_repo~list( ).
 

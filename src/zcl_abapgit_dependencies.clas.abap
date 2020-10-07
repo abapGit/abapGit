@@ -23,7 +23,7 @@ CLASS zcl_abapgit_dependencies DEFINITION
         kind     TYPE c LENGTH 1,
       END OF ty_dependency .
     TYPES:
-      tty_dedenpency TYPE STANDARD TABLE OF ty_dependency
+      ty_dedenpencies TYPE STANDARD TABLE OF ty_dependency
                                  WITH NON-UNIQUE DEFAULT KEY .
     TYPES:
       BEGIN OF ty_item,
@@ -41,7 +41,7 @@ CLASS zcl_abapgit_dependencies DEFINITION
       IMPORTING
         iv_ddls_name         TYPE tadir-obj_name
       RETURNING
-        VALUE(rt_dependency) TYPE tty_dedenpency .
+        VALUE(rt_dependency) TYPE ty_dedenpencies.
     CLASS-METHODS resolve_packages
       CHANGING
         ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
@@ -179,7 +179,7 @@ CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
           lv_before       TYPE i,
           lt_founds       TYPE TABLE OF rsfindlst,
           lt_scope        TYPE STANDARD TABLE OF seu_obj,
-          lt_dependency   TYPE tty_dedenpency.
+          lt_dependency   TYPE ty_dedenpencies.
 
     FIELD-SYMBOLS: <ls_tadir_ddls>      TYPE zif_abapgit_definitions=>ty_tadir,
                    <ls_dependency>      TYPE ty_dependency,

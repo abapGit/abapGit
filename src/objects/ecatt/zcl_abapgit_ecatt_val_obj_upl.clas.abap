@@ -35,7 +35,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_ECATT_VAL_OBJ_UPL IMPLEMENTATION.
 
 
   METHOD get_business_msgs_from_dom.
@@ -43,13 +43,13 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
     " downport from CL_APL_ECATT_VO_UPLOAD
 
     DATA: li_section            TYPE REF TO if_ixml_element,
-          lt_buss_msg_ref       TYPE zif_abapgit_ecatt=>etvo_bus_msg_tabtype,
+          lt_buss_msg_ref       TYPE zif_abapgit_ecatt=>ty_bus_msgs,
           lv_exception_occurred TYPE etonoff,
           lo_ecatt_vo           TYPE REF TO object.
 
     FIELD-SYMBOLS: <lg_ecatt_vo> TYPE any.
 
-    li_section = template_over_all->find_from_name_ns( 'ETVO_MSG' ).
+    li_section = template_over_all->find_from_name_ns( 'ty_MSG' ).
 
     IF NOT li_section IS INITIAL.
       CALL FUNCTION 'SDIXML_DOM_TO_DATA'
@@ -90,7 +90,7 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
     " downport from CL_APL_ECATT_VO_UPLOAD
 
     DATA: li_section            TYPE REF TO if_ixml_element,
-          ls_impl_details       TYPE zif_abapgit_ecatt=>etvoimpl_det,
+          ls_impl_details       TYPE zif_abapgit_ecatt=>ty_impl_det,
           lv_exception_occurred TYPE etonoff,
           lo_ecatt_vo           TYPE REF TO object.
 
@@ -137,8 +137,8 @@ CLASS zcl_abapgit_ecatt_val_obj_upl IMPLEMENTATION.
     " downport from CL_APL_ECATT_VO_UPLOAD
 
     DATA: li_section            TYPE REF TO if_ixml_element,
-          lv_error_prio         TYPE zif_abapgit_ecatt=>etvo_error_prio,
-          lv_invert_validation  TYPE zif_abapgit_ecatt=>etvo_invert_validation,
+          lv_error_prio         TYPE zif_abapgit_ecatt=>ty_error_prio,
+          lv_invert_validation  TYPE zif_abapgit_ecatt=>ty_invert_validation,
           lv_exception_occurred TYPE etonoff,
           lo_ecatt_vo           TYPE REF TO object.
 

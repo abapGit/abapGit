@@ -375,7 +375,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
     DATA: lt_events TYPE cntl_simple_events,
           ls_event  LIKE LINE OF lt_events,
-          lt_assets TYPE zif_abapgit_gui_asset_manager=>tt_web_assets.
+          lt_assets TYPE zif_abapgit_gui_asset_manager=>ty_web_assets.
 
     FIELD-SYMBOLS <ls_asset> LIKE LINE OF lt_assets.
 

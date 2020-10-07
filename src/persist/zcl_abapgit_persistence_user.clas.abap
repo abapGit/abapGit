@@ -6,7 +6,7 @@ CLASS zcl_abapgit_persistence_user DEFINITION
 
     INTERFACES zif_abapgit_persist_user.
 
-    TYPES tt_favorites TYPE zif_abapgit_persistence=>tt_repo_keys .
+    TYPES ty_favorites TYPE zif_abapgit_persistence=>ty_repo_keys .
 
     CLASS-METHODS get_instance
       IMPORTING
@@ -27,7 +27,7 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         last_change_seen TYPE string,
       END OF ty_repo_config .
     TYPES:
-      ty_repo_config_tt TYPE STANDARD TABLE OF ty_repo_config WITH DEFAULT KEY .
+      ty_repo_configs TYPE STANDARD TABLE OF ty_repo_config WITH DEFAULT KEY .
     TYPES:
       BEGIN OF ty_user,
         default_git_user TYPE zif_abapgit_definitions=>ty_git_user,
@@ -35,8 +35,8 @@ CLASS zcl_abapgit_persistence_user DEFINITION
         hide_files       TYPE abap_bool,
         changes_only     TYPE abap_bool,
         diff_unified     TYPE abap_bool,
-        favorites        TYPE tt_favorites,
-        repo_config      TYPE ty_repo_config_tt,
+        favorites        TYPE ty_favorites,
+        repo_config      TYPE ty_repo_configs,
         settings         TYPE zif_abapgit_definitions=>ty_s_user_settings,
       END OF ty_user .
 
@@ -141,7 +141,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
 
 
   METHOD read_repo_config.
-    DATA: lt_repo_config TYPE ty_repo_config_tt,
+    DATA: lt_repo_config TYPE ty_repo_configs,
           lv_key         TYPE string.
 
     lv_key         = to_lower( iv_url ).
@@ -298,7 +298,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
 
   METHOD zif_abapgit_persist_user~is_favorite_repo.
 
-    DATA: lt_favorites TYPE tt_favorites.
+    DATA: lt_favorites TYPE ty_favorites.
 
     lt_favorites = zif_abapgit_persist_user~get_favorites( ).
 
@@ -468,6 +468,4 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
     rv_hide = ls_user-hide_files.
 
   ENDMETHOD.
-
-
 ENDCLASS.

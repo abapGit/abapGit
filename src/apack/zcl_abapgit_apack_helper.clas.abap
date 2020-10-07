@@ -6,7 +6,7 @@ CLASS zcl_abapgit_apack_helper DEFINITION
   PUBLIC SECTION.
     CLASS-METHODS are_dependencies_met
       IMPORTING
-        !it_dependencies TYPE zif_abapgit_apack_definitions=>tt_dependencies
+        !it_dependencies TYPE zif_abapgit_apack_definitions=>ty_dependencies
       RETURNING
         VALUE(rv_status) TYPE zif_abapgit_definitions=>ty_yes_no
       RAISING
@@ -14,7 +14,7 @@ CLASS zcl_abapgit_apack_helper DEFINITION
 
     CLASS-METHODS dependencies_popup
       IMPORTING
-        !it_dependencies TYPE zif_abapgit_apack_definitions=>tt_dependencies
+        !it_dependencies TYPE zif_abapgit_apack_definitions=>ty_dependencies
       RAISING
         zcx_abapgit_exception.
 
@@ -26,45 +26,44 @@ CLASS zcl_abapgit_apack_helper DEFINITION
         clsname  TYPE seometarel-clsname,
         devclass TYPE devclass,
       END OF ty_manifest_declaration,
-      tt_manifest_declaration TYPE STANDARD TABLE OF ty_manifest_declaration WITH NON-UNIQUE DEFAULT KEY.
+      ty_manifest_declarations TYPE STANDARD TABLE OF ty_manifest_declaration WITH NON-UNIQUE DEFAULT KEY.
 
     TYPES:
       BEGIN OF ty_dependency_status,
         met TYPE zif_abapgit_definitions=>ty_yes_no_partial.
         INCLUDE TYPE zif_abapgit_apack_definitions=>ty_dependency.
     TYPES: END OF ty_dependency_status,
-      tt_dependency_status TYPE STANDARD TABLE OF ty_dependency_status WITH NON-UNIQUE DEFAULT KEY.
+      ty_dependency_statuses TYPE STANDARD TABLE OF ty_dependency_status WITH NON-UNIQUE DEFAULT KEY.
 
     CLASS-METHODS get_dependencies_met_status
       IMPORTING
-        !it_dependencies TYPE zif_abapgit_apack_definitions=>tt_dependencies
+        !it_dependencies TYPE zif_abapgit_apack_definitions=>ty_dependencies
       RETURNING
-        VALUE(rt_status) TYPE tt_dependency_status
+        VALUE(rt_status) TYPE ty_dependency_statuses
       RAISING
         zcx_abapgit_exception.
 
     CLASS-METHODS get_installed_packages
       RETURNING
-        VALUE(rt_packages) TYPE zif_abapgit_apack_definitions=>tt_descriptor
+        VALUE(rt_packages) TYPE zif_abapgit_apack_definitions=>ty_descriptors
       RAISING
         zcx_abapgit_exception.
 
     CLASS-METHODS show_dependencies_popup
       IMPORTING
-        !it_dependencies TYPE tt_dependency_status
+        !it_dependencies TYPE ty_dependency_statuses
       RAISING
         zcx_abapgit_exception.
-
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_APACK_HELPER IMPLEMENTATION.
 
 
   METHOD are_dependencies_met.
 
-    DATA: lt_dependencies_status TYPE tt_dependency_status.
+    DATA: lt_dependencies_status TYPE ty_dependency_statuses.
 
     IF it_dependencies IS INITIAL.
       rv_status = zif_abapgit_definitions=>gc_yes.
@@ -88,7 +87,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
 
   METHOD dependencies_popup.
 
-    DATA: lt_met_status TYPE tt_dependency_status.
+    DATA: lt_met_status TYPE ty_dependency_statuses.
 
     lt_met_status = get_dependencies_met_status( it_dependencies ).
 
@@ -99,7 +98,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
 
   METHOD get_dependencies_met_status.
 
-    DATA: lt_installed_packages TYPE zif_abapgit_apack_definitions=>tt_descriptor,
+    DATA: lt_installed_packages TYPE zif_abapgit_apack_definitions=>ty_descriptors,
           ls_installed_package  TYPE zif_abapgit_apack_definitions=>ty_descriptor,
           ls_dependecy          TYPE zif_abapgit_apack_definitions=>ty_dependency,
           ls_dependecy_popup    TYPE ty_dependency_status.
@@ -140,7 +139,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
   METHOD get_installed_packages.
 
     DATA: lo_apack_reader            TYPE REF TO zcl_abapgit_apack_reader,
-          lt_manifest_implementation TYPE tt_manifest_declaration,
+          lt_manifest_implementation TYPE ty_manifest_declarations,
           ls_manifest_implementation TYPE ty_manifest_declaration,
           lo_manifest_provider       TYPE REF TO object,
           ls_descriptor              TYPE zif_abapgit_apack_definitions=>ty_descriptor.
@@ -182,14 +181,14 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
   METHOD show_dependencies_popup.
 
     TYPES:
-      BEGIN OF lty_color_line,
+      BEGIN OF ty_color_line,
         exception(1) TYPE c,
         color        TYPE lvc_t_scol.
         INCLUDE TYPE ty_dependency_status.
     TYPES: t_hyperlink  TYPE salv_t_int4_column,
-      END OF lty_color_line.
+      END OF ty_color_line.
 
-    TYPES: lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
+    TYPES: ty_color_tab TYPE STANDARD TABLE OF ty_color_line WITH DEFAULT KEY.
 
     DATA: lo_alv                 TYPE REF TO cl_salv_table,
           lo_functional_settings TYPE REF TO cl_salv_functional_settings,
@@ -199,7 +198,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
           lo_columns             TYPE REF TO cl_salv_columns_table,
           lt_columns             TYPE salv_t_column_ref,
           ls_column              LIKE LINE OF lt_columns,
-          lt_color_table         TYPE lty_color_tab,
+          lt_color_table         TYPE ty_color_tab,
           lt_color_negative      TYPE lvc_t_scol,
           lt_color_normal        TYPE lvc_t_scol,
           lt_color_positive      TYPE lvc_t_scol,
@@ -209,7 +208,7 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
           lv_hyperlink           TYPE service_rl,
           lx_ex                  TYPE REF TO cx_root.
 
-    FIELD-SYMBOLS: <ls_line>       TYPE lty_color_line,
+    FIELD-SYMBOLS: <ls_line>       TYPE ty_color_line,
                    <ls_dependency> LIKE LINE OF it_dependencies.
 
     IF it_dependencies IS INITIAL.
@@ -317,6 +316,4 @@ CLASS zcl_abapgit_apack_helper IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
-
-
 ENDCLASS.

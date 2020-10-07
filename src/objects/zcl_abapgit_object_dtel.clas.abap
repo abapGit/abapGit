@@ -8,16 +8,16 @@ CLASS zcl_abapgit_object_dtel DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PRIVATE SECTION.
 
     TYPES:
-      BEGIN OF ty_dd04_texts,
+      BEGIN OF ty_dd04_text,
         ddlanguage TYPE dd04t-ddlanguage,
         ddtext     TYPE dd04t-ddtext,
         reptext    TYPE dd04t-reptext,
         scrtext_s  TYPE dd04t-scrtext_s,
         scrtext_m  TYPE dd04t-scrtext_m,
         scrtext_l  TYPE dd04t-scrtext_l,
-      END OF ty_dd04_texts .
+      END OF ty_dd04_text .
     TYPES:
-      tt_dd04_texts TYPE STANDARD TABLE OF ty_dd04_texts .
+      ty_dd04_texts TYPE STANDARD TABLE OF ty_dd04_text .
 
     CONSTANTS c_longtext_id_dtel TYPE dokil-id VALUE 'DE' ##NO_TEXT.
 
@@ -44,7 +44,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
     DATA: lv_name       TYPE ddobjname,
           ls_dd04v_tmp  TYPE dd04v,
           lt_i18n_langs TYPE TABLE OF langu,
-          lt_dd04_texts TYPE tt_dd04_texts.
+          lt_dd04_texts TYPE ty_dd04_texts.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
                    <ls_dd04_text> LIKE LINE OF lt_dd04_texts.
@@ -94,7 +94,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DTEL IMPLEMENTATION.
     DATA: lv_name       TYPE ddobjname,
           lv_index      TYPE i,
           ls_dd04v      TYPE dd04v,
-          lt_dd04_texts TYPE tt_dd04_texts,
+          lt_dd04_texts TYPE ty_dd04_texts,
           lt_i18n_langs TYPE TABLE OF langu.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,

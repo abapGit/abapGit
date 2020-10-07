@@ -54,7 +54,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REQUIREMENT_HELPER IMPLEMENTATION.
 
 
   METHOD get_requirement_met_status.
@@ -143,23 +143,23 @@ CLASS zcl_abapgit_requirement_helper IMPLEMENTATION.
 
   METHOD show_requirement_popup.
 
-    TYPES: BEGIN OF lty_color_line,
+    TYPES: BEGIN OF ty_color_line,
              color TYPE lvc_t_scol.
              INCLUDE TYPE ty_requirement_status.
-    TYPES: END OF lty_color_line.
+    TYPES: END OF ty_color_line.
 
-    TYPES: lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
+    TYPES: ty_color_tab TYPE STANDARD TABLE OF ty_color_line WITH DEFAULT KEY.
 
     DATA: lo_alv            TYPE REF TO cl_salv_table,
           lo_column         TYPE REF TO cl_salv_column,
           lo_columns        TYPE REF TO cl_salv_columns_table,
-          lt_color_table    TYPE lty_color_tab,
+          lt_color_table    TYPE ty_color_tab,
           lt_color_negative TYPE lvc_t_scol,
           lt_color_positive TYPE lvc_t_scol,
           ls_color          TYPE lvc_s_scol,
           lx_ex             TYPE REF TO cx_root.
 
-    FIELD-SYMBOLS: <ls_line>        TYPE lty_color_line,
+    FIELD-SYMBOLS: <ls_line>        TYPE ty_color_line,
                    <ls_requirement> LIKE LINE OF it_requirements.
 
 

@@ -41,15 +41,15 @@ CLASS zcl_abapgit_code_inspector DEFINITION
 
     DATA mv_success TYPE abap_bool .
 
-    TYPES: t_run_mode TYPE c LENGTH 1.
+    TYPES: ty_run_mode TYPE c LENGTH 1.
     CONSTANTS:
       BEGIN OF co_run_mode,
-        run_with_popup   TYPE t_run_mode VALUE 'P',
-        run_after_popup  TYPE t_run_mode VALUE 'A',
-        run_via_rfc      TYPE t_run_mode VALUE 'R',
-        run_in_batch     TYPE t_run_mode VALUE 'B',
-        run_loc_parallel TYPE t_run_mode VALUE 'L',
-        run_direct       TYPE t_run_mode VALUE 'L',
+        run_with_popup   TYPE ty_run_mode VALUE 'P',
+        run_after_popup  TYPE ty_run_mode VALUE 'A',
+        run_via_rfc      TYPE ty_run_mode VALUE 'R',
+        run_in_batch     TYPE ty_run_mode VALUE 'B',
+        run_loc_parallel TYPE ty_run_mode VALUE 'L',
+        run_direct       TYPE ty_run_mode VALUE 'L',
       END OF co_run_mode .
     DATA mo_inspection TYPE REF TO cl_ci_inspection .
     DATA mv_name TYPE sci_objs .
@@ -77,7 +77,7 @@ CLASS zcl_abapgit_code_inspector DEFINITION
 
     METHODS decide_run_mode
       RETURNING
-        VALUE(rv_run_mode) TYPE t_run_mode.
+        VALUE(rv_run_mode) TYPE ty_run_mode.
 ENDCLASS.
 
 

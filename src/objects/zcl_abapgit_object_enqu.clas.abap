@@ -5,8 +5,8 @@ CLASS zcl_abapgit_object_enqu DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
     ALIASES mo_files FOR zif_abapgit_object~mo_files.
   PROTECTED SECTION.
   PRIVATE SECTION.
-    TYPES: tyt_dd27p TYPE STANDARD TABLE OF dd27p WITH DEFAULT KEY.
-    METHODS _clear_dd27p_fields CHANGING ct_dd27p TYPE tyt_dd27p.
+    TYPES: ty_dd27p TYPE STANDARD TABLE OF dd27p WITH DEFAULT KEY.
+    METHODS _clear_dd27p_fields CHANGING ct_dd27p TYPE ty_dd27p.
 
 ENDCLASS.
 
@@ -45,7 +45,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENQU IMPLEMENTATION.
     DATA: lv_name  TYPE ddobjname,
           ls_dd25v TYPE dd25v,
           lt_dd26e TYPE TABLE OF dd26e,
-          lt_dd27p TYPE tyt_dd27p.
+          lt_dd27p TYPE ty_dd27p.
 
 
     io_xml->read( EXPORTING iv_name = 'DD25V'
@@ -135,7 +135,7 @@ CLASS ZCL_ABAPGIT_OBJECT_ENQU IMPLEMENTATION.
     DATA: lv_name  TYPE ddobjname,
           ls_dd25v TYPE dd25v,
           lt_dd26e TYPE TABLE OF dd26e,
-          lt_dd27p TYPE tyt_dd27p.
+          lt_dd27p TYPE ty_dd27p.
 
     lv_name = ms_item-obj_name.
 
