@@ -8,12 +8,12 @@ CLASS zcl_abapgit_object_doma DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PRIVATE SECTION.
 
     TYPES:
-      BEGIN OF ty_dd01_texts,
+      BEGIN OF ty_dd01_text,
         ddlanguage TYPE dd01v-ddlanguage,
         ddtext     TYPE dd01v-ddtext,
-      END OF ty_dd01_texts .
+      END OF ty_dd01_text .
     TYPES:
-      BEGIN OF ty_dd07_texts,
+      BEGIN OF ty_dd07_text,
         valpos     TYPE dd07v-valpos,
         ddlanguage TYPE dd07v-ddlanguage,
         domvalue_l TYPE dd07v-domvalue_l,
@@ -21,11 +21,11 @@ CLASS zcl_abapgit_object_doma DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         ddtext     TYPE dd07v-ddtext,
         domval_ld  TYPE dd07v-domval_ld,
         domval_hd  TYPE dd07v-domval_hd,
-      END OF ty_dd07_texts .
+      END OF ty_dd07_text .
     TYPES:
-      tt_dd01_texts TYPE STANDARD TABLE OF ty_dd01_texts .
+      ty_dd01_texts TYPE STANDARD TABLE OF ty_dd01_text .
     TYPES:
-      tt_dd07_texts TYPE STANDARD TABLE OF ty_dd07_texts .
+      ty_dd07_texts TYPE STANDARD TABLE OF ty_dd07_text .
 
     CONSTANTS c_longtext_id_doma TYPE dokil-id VALUE 'DO' ##NO_TEXT.
 
@@ -56,8 +56,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
           ls_dd01v_tmp  TYPE dd01v,
           lt_dd07v_tmp  TYPE TABLE OF dd07v,
           lt_i18n_langs TYPE TABLE OF langu,
-          lt_dd01_texts TYPE tt_dd01_texts,
-          lt_dd07_texts TYPE tt_dd07_texts.
+          lt_dd01_texts TYPE ty_dd01_texts,
+          lt_dd07_texts TYPE ty_dd07_texts.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
                    <ls_dd07v>     LIKE LINE OF it_dd07v,
@@ -134,8 +134,8 @@ CLASS ZCL_ABAPGIT_OBJECT_DOMA IMPLEMENTATION.
           ls_dd01v      TYPE dd01v,
           lt_dd07v      TYPE TABLE OF dd07v,
           lt_i18n_langs TYPE TABLE OF langu,
-          lt_dd01_texts TYPE tt_dd01_texts,
-          lt_dd07_texts TYPE tt_dd07_texts.
+          lt_dd01_texts TYPE ty_dd01_texts,
+          lt_dd07_texts TYPE ty_dd07_texts.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
                    <ls_dd07v>     LIKE LINE OF lt_dd07v,

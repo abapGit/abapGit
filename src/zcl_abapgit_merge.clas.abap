@@ -13,7 +13,7 @@ CLASS zcl_abapgit_merge DEFINITION
         zcx_abapgit_exception .
     METHODS get_conflicts
       RETURNING
-        VALUE(rt_conflicts) TYPE zif_abapgit_definitions=>tt_merge_conflict .
+        VALUE(rt_conflicts) TYPE zif_abapgit_definitions=>ty_merge_conflict_tt .
     METHODS get_result
       RETURNING
         VALUE(rs_merge) TYPE zif_abapgit_definitions=>ty_merge .
@@ -41,7 +41,7 @@ CLASS zcl_abapgit_merge DEFINITION
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
     DATA ms_merge TYPE zif_abapgit_definitions=>ty_merge .
-    DATA mt_conflicts TYPE zif_abapgit_definitions=>tt_merge_conflict .
+    DATA mt_conflicts TYPE zif_abapgit_definitions=>ty_merge_conflict_tt .
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
     DATA mv_source_branch TYPE string .
 

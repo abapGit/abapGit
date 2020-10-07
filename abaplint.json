@@ -136,7 +136,9 @@
     },
     "check_abstract": true,
     "check_text_elements": true,
-    "types_naming": false,
+    "types_naming": {
+      "pattern": "^TY_.+$"
+    },
     "7bit_ascii": {
       "exclude": ["zcl_abapgit_utils.clas.testclasses.abap"]
     },

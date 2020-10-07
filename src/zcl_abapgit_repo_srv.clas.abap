@@ -65,7 +65,7 @@ CLASS zcl_abapgit_repo_srv DEFINITION
     METHODS validate_sub_super_packages
       IMPORTING
         !iv_package    TYPE devclass
-        !it_repos      TYPE zif_abapgit_persistence=>tt_repo
+        !it_repos      TYPE zif_abapgit_persistence=>ty_repos
         !iv_ign_subpkg TYPE abap_bool DEFAULT abap_false
       EXPORTING
         VALUE(eo_repo) TYPE REF TO zcl_abapgit_repo
@@ -156,7 +156,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
   METHOD refresh.
 
-    DATA: lt_list TYPE zif_abapgit_persistence=>tt_repo.
+    DATA: lt_list TYPE zif_abapgit_persistence=>ty_repos.
 
     FIELD-SYMBOLS: <ls_list> LIKE LINE OF lt_list.
 
@@ -304,7 +304,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
   METHOD zif_abapgit_repo_srv~get_repo_from_package.
 
     DATA:
-      lt_repos TYPE zif_abapgit_persistence=>tt_repo,
+      lt_repos TYPE zif_abapgit_persistence=>ty_repos,
       lv_name  TYPE zif_abapgit_persistence=>ty_local_settings-display_name,
       lv_owner TYPE zif_abapgit_persistence=>ty_local_settings-display_name.
 

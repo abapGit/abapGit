@@ -1,7 +1,7 @@
 INTERFACE zif_abapgit_persist_user
   PUBLIC .
 
-  TYPES tt_favorites TYPE zif_abapgit_persistence=>tt_repo_keys .
+  TYPES ty_favorites TYPE zif_abapgit_persistence=>ty_repo_keys .
 
   METHODS get_changes_only
     RETURNING
@@ -25,7 +25,7 @@ INTERFACE zif_abapgit_persist_user
       zcx_abapgit_exception .
   METHODS get_favorites
     RETURNING
-      VALUE(rt_favorites) TYPE tt_favorites
+      VALUE(rt_favorites) TYPE ty_favorites
     RAISING
       zcx_abapgit_exception .
   METHODS get_hide_files

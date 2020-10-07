@@ -19,7 +19,7 @@ CLASS zcl_abapgit_branch_overview DEFINITION
   PRIVATE SECTION.
 
     TYPES:
-      tyt_commit_sha1_range TYPE RANGE OF zif_abapgit_definitions=>ty_sha1 .
+      ty_commit_sha1_range TYPE RANGE OF zif_abapgit_definitions=>ty_sha1 .
 
     DATA mt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt .
     DATA mt_commits TYPE zif_abapgit_definitions=>ty_commit_tt .
@@ -67,9 +67,9 @@ CLASS zcl_abapgit_branch_overview DEFINITION
         !ct_commits TYPE zif_abapgit_definitions=>ty_commit_tt .
     METHODS _get_1st_child_commit
       IMPORTING
-        !it_commit_sha1s TYPE tyt_commit_sha1_range
+        !it_commit_sha1s TYPE ty_commit_sha1_range
       EXPORTING
-        !et_commit_sha1s TYPE tyt_commit_sha1_range
+        !et_commit_sha1s TYPE ty_commit_sha1_range
         !es_1st_commit   TYPE zif_abapgit_definitions=>ty_commit
       CHANGING
         !ct_commits      TYPE zif_abapgit_definitions=>ty_commit_tt .
@@ -579,7 +579,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
 
     DATA: lt_sorted_commits TYPE zif_abapgit_definitions=>ty_commit_tt,
           ls_next_commit    TYPE zif_abapgit_definitions=>ty_commit,
-          lt_parents        TYPE tyt_commit_sha1_range,
+          lt_parents        TYPE ty_commit_sha1_range,
           ls_parent         LIKE LINE OF lt_parents.
 
     FIELD-SYMBOLS: <ls_initial_commit> TYPE zif_abapgit_definitions=>ty_commit.

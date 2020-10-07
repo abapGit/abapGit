@@ -52,7 +52,7 @@ CLASS zcl_abapgit_gui_page_merge_res DEFINITION
     DATA ms_diff_file TYPE ty_file_diff .
     DATA mv_current_conflict_index TYPE sy-tabix .
     DATA mv_merge_mode TYPE string .
-    DATA mt_conflicts TYPE zif_abapgit_definitions=>tt_merge_conflict .
+    DATA mt_conflicts TYPE zif_abapgit_definitions=>ty_merge_conflict_tt .
 
     METHODS apply_merged_content
       IMPORTING

@@ -130,7 +130,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: lt_data    TYPE zif_abapgit_persistence=>tt_content,
+    DATA: lt_data    TYPE zif_abapgit_persistence=>ty_contents,
           lv_action  TYPE string,
           lv_trclass TYPE string,
           lo_toolbar TYPE REF TO zcl_abapgit_html_toolbar.
