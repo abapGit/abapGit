@@ -10,12 +10,12 @@ CLASS zcl_abapgit_user_master_record DEFINITION
     CLASS-METHODS reset.
     CLASS-METHODS get_instance
       IMPORTING
-        !iv_user       TYPE uname
+        !iv_user       TYPE sy-uname
       RETURNING
         VALUE(ro_user) TYPE REF TO zcl_abapgit_user_master_record .
     METHODS constructor
       IMPORTING
-        !iv_user TYPE uname .
+        !iv_user TYPE sy-uname .
     METHODS get_name
       RETURNING
         VALUE(rv_name) TYPE zif_abapgit_definitions=>ty_git_user-name .
@@ -26,7 +26,7 @@ CLASS zcl_abapgit_user_master_record DEFINITION
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_user,
-        user   TYPE uname,
+        user   TYPE sy-uname,
         o_user TYPE REF TO zcl_abapgit_user_master_record,
       END OF ty_user.
 
@@ -45,7 +45,7 @@ CLASS zcl_abapgit_user_master_record DEFINITION
 
     METHODS check_user_exists
       IMPORTING
-        VALUE(iv_user)    TYPE uname
+        VALUE(iv_user)    TYPE sy-uname
       EXPORTING
         VALUE(es_address) TYPE bapiaddr3
         VALUE(et_smtp)    TYPE ty_smtp
@@ -54,7 +54,7 @@ CLASS zcl_abapgit_user_master_record DEFINITION
 
     METHODS get_user_dtls_from_other_clnt
       IMPORTING
-        iv_user TYPE uname.
+        iv_user TYPE sy-uname.
 
 ENDCLASS.
 

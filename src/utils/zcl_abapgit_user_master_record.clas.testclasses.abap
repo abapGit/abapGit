@@ -7,7 +7,7 @@ CLASS ltcl_user_master_record DEFINITION FINAL FOR TESTING
   RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
-    CONSTANTS gc_wrong_user TYPE uname VALUE 'WRONG_USER'.
+    CONSTANTS gc_wrong_user TYPE sy-uname VALUE 'WRONG_USER'.
     METHODS:
       test_valid_user FOR TESTING RAISING cx_static_check,
       test_invalid_user FOR TESTING RAISING cx_static_check.
