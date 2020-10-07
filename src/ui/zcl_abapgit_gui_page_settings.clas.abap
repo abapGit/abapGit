@@ -24,7 +24,7 @@ CLASS zcl_abapgit_gui_page_settings DEFINITION
     DATA mv_error TYPE abap_bool .
     DATA mt_post_fields TYPE tihttpnvp .
     DATA mt_proxy_bypass TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url.
-    DATA mt_default_hotkeys TYPE zif_abapgit_gui_hotkeys=>tty_hotkey_with_descr.
+    DATA mt_default_hotkeys TYPE zif_abapgit_gui_hotkeys=>ty_hotkeys_with_descr.
 
     METHODS post_commit_msg .
     METHODS post_development_internals .

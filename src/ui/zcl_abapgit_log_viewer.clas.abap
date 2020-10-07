@@ -33,7 +33,7 @@ CLASS zcl_abapgit_log_viewer DEFINITION
         cell_type TYPE salv_t_int4_column,
       END OF ty_log_out.
     TYPES:
-      tty_log_out TYPE STANDARD TABLE OF ty_log_out
+      ty_log_outs TYPE STANDARD TABLE OF ty_log_out
                                 WITH NON-UNIQUE DEFAULT KEY.
 
     CLASS-METHODS:
@@ -41,7 +41,7 @@ CLASS zcl_abapgit_log_viewer DEFINITION
         IMPORTING
           ii_log            TYPE REF TO zif_abapgit_log
         RETURNING
-          VALUE(rt_log_out) TYPE tty_log_out,
+          VALUE(rt_log_out) TYPE ty_log_outs,
 
       show_longtext
         IMPORTING
@@ -86,7 +86,7 @@ CLASS zcl_abapgit_log_viewer DEFINITION
           VALUE(ro_exception_viewer) TYPE REF TO zcl_abapgit_exception_viewer.
 
     CLASS-DATA:
-      gt_log TYPE tty_log_out.
+      gt_log TYPE ty_log_outs.
 
 ENDCLASS.
 

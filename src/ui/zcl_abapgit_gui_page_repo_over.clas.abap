@@ -44,7 +44,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         deserialized_by TYPE string,
         deserialized_at TYPE string,
       END OF ty_overview,
-      tty_overview TYPE STANDARD TABLE OF ty_overview
+      ty_overviews TYPE STANDARD TABLE OF ty_overview
                    WITH NON-UNIQUE DEFAULT KEY.
     CONSTANTS:
       BEGIN OF c_action,
@@ -56,7 +56,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
           mv_filter           TYPE string,
           mv_time_zone        TYPE timezone,
           mt_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec,
-          mt_overview         TYPE tty_overview.
+          mt_overview         TYPE ty_overviews.
 
     METHODS: render_text_input
       IMPORTING iv_name        TYPE string
@@ -67,13 +67,13 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
 
       apply_filter
         CHANGING
-          ct_overview TYPE tty_overview,
+          ct_overview TYPE ty_overviews,
 
       map_repo_list_to_overview
         IMPORTING
           it_repo_list       TYPE zif_abapgit_persistence=>ty_repos
         RETURNING
-          VALUE(rt_overview) TYPE tty_overview
+          VALUE(rt_overview) TYPE ty_overviews
         RAISING
           zcx_abapgit_exception,
 
@@ -84,19 +84,19 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       render_table
         IMPORTING
           ii_html     TYPE REF TO zif_abapgit_html
-          it_overview TYPE tty_overview,
+          it_overview TYPE ty_overviews,
 
       render_table_body
         IMPORTING
           ii_html     TYPE REF TO zif_abapgit_html
-          it_overview TYPE tty_overview,
+          it_overview TYPE ty_overviews,
 
       render_header_bar
         IMPORTING
           ii_html TYPE REF TO zif_abapgit_html,
 
       apply_order_by
-        CHANGING ct_overview TYPE tty_overview,
+        CHANGING ct_overview TYPE ty_overviews,
 
       _add_column
         IMPORTING

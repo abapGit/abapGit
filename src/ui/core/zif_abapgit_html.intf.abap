@@ -16,7 +16,7 @@ INTERFACE zif_abapgit_html PUBLIC.
     END OF c_html_opt .
 
   TYPES:
-    tty_table_of TYPE STANDARD TABLE OF REF TO zif_abapgit_html WITH DEFAULT KEY.
+    ty_table_of TYPE STANDARD TABLE OF REF TO zif_abapgit_html WITH DEFAULT KEY.
 
   DATA mv_chunk_title TYPE string READ-ONLY. " Primarily for debug of posponed html parts
 

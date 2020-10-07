@@ -58,9 +58,9 @@ CLASS zcl_abapgit_html_toolbar DEFINITION
         title TYPE string,
       END OF ty_item .
     TYPES:
-      tt_items TYPE STANDARD TABLE OF ty_item .
+      ty_items TYPE STANDARD TABLE OF ty_item .
 
-    DATA mt_items TYPE tt_items .
+    DATA mt_items TYPE ty_items .
     DATA mv_id TYPE string .
 
     METHODS render_items
