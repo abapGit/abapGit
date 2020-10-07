@@ -376,7 +376,7 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
 
     IF iv_deepen_level > 0.
       lv_buffer = lv_buffer && zcl_abapgit_git_utils=>pkt_string( |deepen { iv_deepen_level }| &&
-        |{ zif_abapgit_definitions=>c_newline }| ).
+        zif_abapgit_definitions=>c_newline ).
     ENDIF.
 
     lv_buffer = lv_buffer
