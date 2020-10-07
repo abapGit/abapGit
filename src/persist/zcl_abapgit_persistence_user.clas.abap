@@ -6,7 +6,7 @@ CLASS zcl_abapgit_persistence_user DEFINITION
 
     INTERFACES zif_abapgit_persist_user.
 
-    TYPES ty_favorites TYPE zif_abapgit_persistence=>tt_repo_keys .
+    TYPES ty_favorites TYPE zif_abapgit_persistence=>ty_repo_keys .
 
     CLASS-METHODS get_instance
       IMPORTING

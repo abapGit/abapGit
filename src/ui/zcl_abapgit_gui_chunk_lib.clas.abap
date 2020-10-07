@@ -609,7 +609,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
   METHOD render_repo_palette.
 
     DATA li_repo_srv TYPE REF TO zif_abapgit_repo_srv.
-    DATA lt_repo_list TYPE zif_abapgit_persistence=>tt_repo.
+    DATA lt_repo_list TYPE zif_abapgit_persistence=>ty_repos.
     DATA lv_repo_json TYPE string.
     DATA lv_size TYPE i.
     DATA lo_repo TYPE REF TO zcl_abapgit_repo.

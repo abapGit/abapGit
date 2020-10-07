@@ -71,7 +71,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
 
       map_repo_list_to_overview
         IMPORTING
-          it_repo_list       TYPE zif_abapgit_persistence=>tt_repo
+          it_repo_list       TYPE zif_abapgit_persistence=>ty_repos
         RETURNING
           VALUE(rt_overview) TYPE tty_overview
         RAISING

@@ -97,7 +97,7 @@ CLASS ZCL_ABAPGIT_PERSIST_BACKGROUND IMPLEMENTATION.
 
   METHOD list.
 
-    DATA: lt_list TYPE zif_abapgit_persistence=>tt_content,
+    DATA: lt_list TYPE zif_abapgit_persistence=>ty_contents,
           ls_xml  TYPE ty_xml.
 
     FIELD-SYMBOLS: <ls_list>   LIKE LINE OF lt_list,

@@ -1,7 +1,7 @@
 INTERFACE zif_abapgit_persist_user
   PUBLIC .
 
-  TYPES tt_favorites TYPE zif_abapgit_persistence=>tt_repo_keys .
+  TYPES tt_favorites TYPE zif_abapgit_persistence=>ty_repo_keys .
 
   METHODS get_changes_only
     RETURNING
