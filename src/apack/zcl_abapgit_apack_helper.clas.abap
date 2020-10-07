@@ -181,14 +181,14 @@ CLASS ZCL_ABAPGIT_APACK_HELPER IMPLEMENTATION.
   METHOD show_dependencies_popup.
 
     TYPES:
-      BEGIN OF lty_color_line,
+      BEGIN OF ty_color_line,
         exception(1) TYPE c,
         color        TYPE lvc_t_scol.
         INCLUDE TYPE ty_dependency_status.
     TYPES: t_hyperlink  TYPE salv_t_int4_column,
-      END OF lty_color_line.
+      END OF ty_color_line.
 
-    TYPES: lty_color_tab TYPE STANDARD TABLE OF lty_color_line WITH DEFAULT KEY.
+    TYPES: ty_color_tab TYPE STANDARD TABLE OF ty_color_line WITH DEFAULT KEY.
 
     DATA: lo_alv                 TYPE REF TO cl_salv_table,
           lo_functional_settings TYPE REF TO cl_salv_functional_settings,
@@ -198,7 +198,7 @@ CLASS ZCL_ABAPGIT_APACK_HELPER IMPLEMENTATION.
           lo_columns             TYPE REF TO cl_salv_columns_table,
           lt_columns             TYPE salv_t_column_ref,
           ls_column              LIKE LINE OF lt_columns,
-          lt_color_table         TYPE lty_color_tab,
+          lt_color_table         TYPE ty_color_tab,
           lt_color_negative      TYPE lvc_t_scol,
           lt_color_normal        TYPE lvc_t_scol,
           lt_color_positive      TYPE lvc_t_scol,
@@ -208,7 +208,7 @@ CLASS ZCL_ABAPGIT_APACK_HELPER IMPLEMENTATION.
           lv_hyperlink           TYPE service_rl,
           lx_ex                  TYPE REF TO cx_root.
 
-    FIELD-SYMBOLS: <ls_line>       TYPE lty_color_line,
+    FIELD-SYMBOLS: <ls_line>       TYPE ty_color_line,
                    <ls_dependency> LIKE LINE OF it_dependencies.
 
     IF it_dependencies IS INITIAL.
