@@ -676,14 +676,14 @@ CLASS ltcl_json_to_abap DEFINITION
         a TYPE string,
         b TYPE i,
       END OF ty_struc,
-      tty_struc TYPE STANDARD TABLE OF ty_struc WITH DEFAULT KEY,
+      ty_struc_tt TYPE STANDARD TABLE OF ty_struc WITH DEFAULT KEY,
       BEGIN OF ty_complex,
         str   TYPE string,
         int   TYPE i,
         float TYPE f,
         bool  TYPE abap_bool,
         obj   TYPE ty_struc,
-        tab   TYPE tty_struc,
+        tab   TYPE ty_struc_tt,
         oref  TYPE REF TO object,
         date1 TYPE d,
         date2 TYPE d,
@@ -1063,7 +1063,7 @@ CLASS ltcl_integrated DEFINITION
         start    TYPE ty_loc,
         end      TYPE ty_loc,
       END OF ty_issue,
-      tt_issues TYPE STANDARD TABLE OF ty_issue WITH DEFAULT KEY,
+      ty_issues TYPE STANDARD TABLE OF ty_issue WITH DEFAULT KEY,
       BEGIN OF ty_target,
         string  TYPE string,
         number  TYPE i,
@@ -1072,7 +1072,7 @@ CLASS ltcl_integrated DEFINITION
         false   TYPE abap_bool,
         null    TYPE string,
         date    TYPE string, " ??? TODO
-        issues  TYPE tt_issues,
+        issues  TYPE ty_issues,
       END OF ty_target.
 
     METHODS reader FOR TESTING RAISING zcx_abapgit_ajson_error.
