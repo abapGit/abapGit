@@ -12,11 +12,11 @@ CLASS zcl_abapgit_object_shi5 DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-    TYPES: tty_ttree_extt TYPE STANDARD TABLE OF ttree_extt
+    TYPES: ty_ttree_extt TYPE STANDARD TABLE OF ttree_extt
                                WITH NON-UNIQUE DEFAULT KEY,
            BEGIN OF ty_extension,
              header    TYPE ttree_ext,
-             texts     TYPE tty_ttree_extt,
+             texts     TYPE ty_ttree_extt,
              sequences TYPE STANDARD TABLE OF ttrees WITH NON-UNIQUE DEFAULT KEY,
            END OF ty_extension.
 

@@ -6,13 +6,13 @@ CLASS zcl_abapgit_object_view DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-    TYPES: tty_dd26v TYPE STANDARD TABLE OF dd26v
+    TYPES: ty_dd26v TYPE STANDARD TABLE OF dd26v
                           WITH NON-UNIQUE DEFAULT KEY,
-           tty_dd27p TYPE STANDARD TABLE OF dd27p
+           ty_dd27p TYPE STANDARD TABLE OF dd27p
                           WITH NON-UNIQUE DEFAULT KEY,
-           tty_dd28j TYPE STANDARD TABLE OF dd28j
+           ty_dd28j TYPE STANDARD TABLE OF dd28j
                           WITH NON-UNIQUE DEFAULT KEY,
-           tty_dd28v TYPE STANDARD TABLE OF dd28v
+           ty_dd28v TYPE STANDARD TABLE OF dd28v
                           WITH NON-UNIQUE DEFAULT KEY.
     CONSTANTS: BEGIN OF co_viewclass,
                  help         TYPE viewclass VALUE 'H',
@@ -32,10 +32,10 @@ CLASS zcl_abapgit_object_view DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         EXPORTING
           es_dd25v TYPE dd25v
           es_dd09l TYPE dd09l
-          et_dd26v TYPE tty_dd26v
-          et_dd27p TYPE tty_dd27p
-          et_dd28j TYPE tty_dd28j
-          et_dd28v TYPE tty_dd28v
+          et_dd26v TYPE ty_dd26v
+          et_dd27p TYPE ty_dd27p
+          et_dd28j TYPE ty_dd28j
+          et_dd28v TYPE ty_dd28v
         RAISING
           zcx_abapgit_exception.
 
@@ -245,10 +245,10 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
 
     DATA: ls_dd25v TYPE dd25v,
           ls_dd09l TYPE dd09l,
-          lt_dd26v TYPE tty_dd26v,
-          lt_dd27p TYPE tty_dd27p,
-          lt_dd28j TYPE tty_dd28j,
-          lt_dd28v TYPE tty_dd28v.
+          lt_dd26v TYPE ty_dd26v,
+          lt_dd27p TYPE ty_dd27p,
+          lt_dd28j TYPE ty_dd28j,
+          lt_dd28v TYPE ty_dd28v.
 
     FIELD-SYMBOLS: <ls_dd27p> LIKE LINE OF lt_dd27p.
 

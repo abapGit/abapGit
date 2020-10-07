@@ -13,11 +13,11 @@ INTERFACE zif_abapgit_pr_enum_provider
       is_for_upstream TYPE abap_bool,
     END OF ty_pull_request.
   TYPES:
-    tty_pulls TYPE STANDARD TABLE OF ty_pull_request WITH KEY base_url number.
+    ty_pull_requests TYPE STANDARD TABLE OF ty_pull_request WITH KEY base_url number.
 
   METHODS list_pull_requests
     RETURNING
-      VALUE(rt_pulls) TYPE tty_pulls
+      VALUE(rt_pulls) TYPE ty_pull_requests
     RAISING
       zcx_abapgit_exception.
 

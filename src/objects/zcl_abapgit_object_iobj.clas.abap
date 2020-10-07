@@ -69,11 +69,11 @@ CLASS ZCL_ABAPGIT_OBJECT_IOBJ IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    TYPES: BEGIN OF t_iobj,
+    TYPES: BEGIN OF ty_iobj,
              objnm TYPE c LENGTH 30.
-    TYPES END OF t_iobj.
+    TYPES END OF ty_iobj.
 
-    DATA: lt_iobjname     TYPE STANDARD TABLE OF t_iobj,
+    DATA: lt_iobjname     TYPE STANDARD TABLE OF ty_iobj,
           lv_subrc        TYPE sy-subrc,
           lv_object       TYPE string,
           lv_object_class TYPE string,

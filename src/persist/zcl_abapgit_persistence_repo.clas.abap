@@ -10,10 +10,6 @@ CLASS zcl_abapgit_persistence_repo DEFINITION
     METHODS constructor .
   PROTECTED SECTION.
 
-    ALIASES list
-      FOR zif_abapgit_persist_repo~list .
-    ALIASES read
-      FOR zif_abapgit_persist_repo~read .
   PRIVATE SECTION.
 
     DATA mt_meta_fields TYPE STANDARD TABLE OF abap_compname.
@@ -100,7 +96,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 * todo: Lock the complete persistence in order to prevent concurrent repo-creation
 * however the current approach will most likely work in almost all cases
 
-    DATA: lt_content TYPE zif_abapgit_persistence=>tt_content.
+    DATA: lt_content TYPE zif_abapgit_persistence=>ty_contents.
 
     FIELD-SYMBOLS: <ls_content> LIKE LINE OF lt_content.
 
@@ -178,7 +174,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
   METHOD zif_abapgit_persist_repo~list.
 
-    DATA: lt_content TYPE zif_abapgit_persistence=>tt_content,
+    DATA: lt_content TYPE zif_abapgit_persistence=>ty_contents,
           ls_content LIKE LINE OF lt_content,
           ls_repo    LIKE LINE OF rt_repos.
 
@@ -209,9 +205,9 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
 
   METHOD zif_abapgit_persist_repo~read.
 
-    DATA lt_repo TYPE zif_abapgit_persistence=>tt_repo.
+    DATA lt_repo TYPE zif_abapgit_persistence=>ty_repos.
 
-    lt_repo = list( ).
+    lt_repo = zif_abapgit_persist_repo~list( ).
 
     READ TABLE lt_repo INTO rs_repo WITH KEY key = iv_key.
     IF sy-subrc <> 0.
@@ -244,7 +240,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_REPO IMPLEMENTATION.
     ENDIF.
 
     TRY.
-        ls_persistent_meta = read( iv_key ).
+        ls_persistent_meta = zif_abapgit_persist_repo~read( iv_key ).
       CATCH zcx_abapgit_not_found.
         zcx_abapgit_exception=>raise( 'repo key not found' ).
     ENDTRY.

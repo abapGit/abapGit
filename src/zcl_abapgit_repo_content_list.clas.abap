@@ -11,7 +11,7 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
       IMPORTING iv_path              TYPE string
                 iv_by_folders        TYPE abap_bool
                 iv_changes_only      TYPE abap_bool
-      RETURNING VALUE(rt_repo_items) TYPE zif_abapgit_definitions=>tt_repo_items
+      RETURNING VALUE(rt_repo_items) TYPE zif_abapgit_definitions=>ty_repo_item_tt
       RAISING   zcx_abapgit_exception.
 
     METHODS get_log
@@ -31,20 +31,20 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
           mi_log  TYPE REF TO zif_abapgit_log.
 
     METHODS build_repo_items_local_only
-      RETURNING VALUE(rt_repo_items) TYPE zif_abapgit_definitions=>tt_repo_items
+      RETURNING VALUE(rt_repo_items) TYPE zif_abapgit_definitions=>ty_repo_item_tt
       RAISING   zcx_abapgit_exception.
 
     METHODS build_repo_items_with_remote
-      RETURNING VALUE(rt_repo_items) TYPE zif_abapgit_definitions=>tt_repo_items
+      RETURNING VALUE(rt_repo_items) TYPE zif_abapgit_definitions=>ty_repo_item_tt
       RAISING   zcx_abapgit_exception.
 
     METHODS build_folders
       IMPORTING iv_cur_dir    TYPE string
-      CHANGING  ct_repo_items TYPE zif_abapgit_definitions=>tt_repo_items
+      CHANGING  ct_repo_items TYPE zif_abapgit_definitions=>ty_repo_item_tt
       RAISING   zcx_abapgit_exception.
 
     METHODS filter_changes
-      CHANGING ct_repo_items TYPE zif_abapgit_definitions=>tt_repo_items.
+      CHANGING ct_repo_items TYPE zif_abapgit_definitions=>ty_repo_item_tt.
 ENDCLASS.
 
 
@@ -209,7 +209,7 @@ CLASS ZCL_ABAPGIT_REPO_CONTENT_LIST IMPLEMENTATION.
 
   METHOD get_log.
     DATA li_repo_log TYPE REF TO zif_abapgit_log.
-    DATA lt_repo_msg TYPE zif_abapgit_log=>tty_log_out.
+    DATA lt_repo_msg TYPE zif_abapgit_log=>ty_log_outs.
     DATA lr_repo_msg TYPE REF TO zif_abapgit_log=>ty_log_out.
 
     ri_log = mi_log.

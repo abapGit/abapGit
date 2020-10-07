@@ -11,7 +11,7 @@ CLASS zcl_abapgit_string_map DEFINITION
         v TYPE string,
       END OF ty_entry.
     TYPES:
-      tts_entries TYPE SORTED TABLE OF ty_entry WITH UNIQUE KEY k.
+      ty_entries TYPE SORTED TABLE OF ty_entry WITH UNIQUE KEY k.
 
     CLASS-METHODS create
       RETURNING
@@ -61,7 +61,7 @@ CLASS zcl_abapgit_string_map DEFINITION
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_string_map .
     METHODS freeze.
 
-    DATA mt_entries TYPE tts_entries READ-ONLY.
+    DATA mt_entries TYPE ty_entries READ-ONLY.
 
   PROTECTED SECTION.
   PRIVATE SECTION.

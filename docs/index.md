@@ -14,7 +14,7 @@ not more than already possible to do manually.
 
 Running automated security checks on the abapGit code will by design give a lot of errors, as abapGit will import, overwrite and change
 ABAP artifacts in the system in ways that might not be intended. Always review all code in remote repositories before importing to the target system,
-this is possible because abapGit is plain text unlinke traditional transport files.
+this is possible because abapGit is plain text unlike traditional transport files.
 
 That being said, abapGit is used by mutiple [organizations](https://docs.abapgit.org/other-where-used.html), all abapGit
 changes are reviewed via pull requests. And all 100+ [repository watchers](https://github.com/abapGit/abapGit/watchers) are

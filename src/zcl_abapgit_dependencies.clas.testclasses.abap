@@ -2,7 +2,7 @@ CLASS ltcl_sap_package DEFINITION FOR TESTING.
 
   PUBLIC SECTION.
     TYPES:
-      tty_package TYPE STANDARD TABLE OF devclass
+      ty_package TYPE STANDARD TABLE OF devclass
                                 WITH NON-UNIQUE DEFAULT KEY.
 
     METHODS:
@@ -12,13 +12,13 @@ CLASS ltcl_sap_package DEFINITION FOR TESTING.
 
       set_sub_packages
         IMPORTING
-          it_sub_packages TYPE tty_package.
+          it_sub_packages TYPE ty_package.
 
     INTERFACES: zif_abapgit_sap_package.
 
   PRIVATE SECTION.
     DATA: mv_package      TYPE devclass,
-          mt_sub_packages TYPE tty_package.
+          mt_sub_packages TYPE ty_package.
 
 ENDCLASS.
 
@@ -88,7 +88,7 @@ CLASS ltcl_resolve_packages DEFINITION FOR TESTING
   PRIVATE SECTION.
     DATA:
       mt_tadir        TYPE zif_abapgit_definitions=>ty_tadir_tt,
-      mt_sub_packages TYPE ltcl_sap_package=>tty_package.
+      mt_sub_packages TYPE ltcl_sap_package=>ty_package.
 
     METHODS:
       resolve_single FOR TESTING RAISING cx_static_check,

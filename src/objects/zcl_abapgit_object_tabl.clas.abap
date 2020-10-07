@@ -56,11 +56,11 @@ CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       ty_dd03p_tt TYPE STANDARD TABLE OF dd03p .
 
     TYPES:
-      BEGIN OF ty_dd02_texts,
+      BEGIN OF ty_dd02_text,
         ddlanguage TYPE dd02t-ddlanguage,
         ddtext     TYPE dd02t-ddtext,
-      END OF ty_dd02_texts,
-      tt_dd02_texts TYPE STANDARD TABLE OF ty_dd02_texts.
+      END OF ty_dd02_text,
+      ty_dd02_texts TYPE STANDARD TABLE OF ty_dd02_text.
 
     CONSTANTS c_longtext_id_tabl TYPE dokil-id VALUE 'TB' ##NO_TEXT.
     CONSTANTS:
@@ -98,7 +98,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -319,7 +319,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     DATA: lv_name       TYPE ddobjname,
           ls_dd02v_tmp  TYPE dd02v,
           lt_i18n_langs TYPE TABLE OF langu,
-          lt_dd02_texts TYPE tt_dd02_texts.
+          lt_dd02_texts TYPE ty_dd02_texts.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
                    <ls_dd02_text> LIKE LINE OF lt_dd02_texts.
@@ -454,7 +454,7 @@ CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
     DATA: lv_name       TYPE ddobjname,
           lv_index      TYPE i,
           ls_dd02v      TYPE dd02v,
-          lt_dd02_texts TYPE tt_dd02_texts,
+          lt_dd02_texts TYPE ty_dd02_texts,
           lt_i18n_langs TYPE TABLE OF langu.
 
     FIELD-SYMBOLS: <lv_lang>      LIKE LINE OF lt_i18n_langs,
