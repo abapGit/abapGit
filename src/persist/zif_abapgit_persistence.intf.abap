@@ -11,7 +11,7 @@ INTERFACE zif_abapgit_persistence PUBLIC.
       data_str TYPE string,
     END OF ty_content .
   TYPES:
-    tt_content TYPE SORTED TABLE OF ty_content WITH UNIQUE KEY type value .
+    ty_contents TYPE SORTED TABLE OF ty_content WITH UNIQUE KEY type value .
 
   TYPES: BEGIN OF ty_local_checksum,
            item  TYPE zif_abapgit_definitions=>ty_item,
@@ -68,7 +68,7 @@ INTERFACE zif_abapgit_persistence PUBLIC.
            key TYPE ty_value.
       INCLUDE TYPE ty_repo_xml.
   TYPES: END OF ty_repo.
-  TYPES: tt_repo TYPE STANDARD TABLE OF ty_repo WITH DEFAULT KEY.
-  TYPES: tt_repo_keys TYPE STANDARD TABLE OF ty_repo-key WITH DEFAULT KEY.
+  TYPES: ty_repos TYPE STANDARD TABLE OF ty_repo WITH DEFAULT KEY.
+  TYPES: ty_repo_keys TYPE STANDARD TABLE OF ty_repo-key WITH DEFAULT KEY.
 
 ENDINTERFACE.

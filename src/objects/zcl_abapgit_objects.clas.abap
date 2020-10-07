@@ -84,15 +84,15 @@ CLASS zcl_abapgit_objects DEFINITION
   PRIVATE SECTION.
 
     TYPES:
-      BEGIN OF ty_obj_serializer_map,
+      BEGIN OF ty_obj_serializer_item,
         item     TYPE zif_abapgit_definitions=>ty_item,
         metadata TYPE zif_abapgit_definitions=>ty_metadata,
-      END OF ty_obj_serializer_map .
+      END OF ty_obj_serializer_item .
     TYPES:
-      tty_obj_serializer_map
-            TYPE SORTED TABLE OF ty_obj_serializer_map WITH UNIQUE KEY item .
+      ty_obj_serializer_map
+            TYPE SORTED TABLE OF ty_obj_serializer_item WITH UNIQUE KEY item .
 
-    CLASS-DATA gt_obj_serializer_map TYPE tty_obj_serializer_map .
+    CLASS-DATA gt_obj_serializer_map TYPE ty_obj_serializer_map .
 
     CLASS-METHODS files_to_deserialize
       IMPORTING

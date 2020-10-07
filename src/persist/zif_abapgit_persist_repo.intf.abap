@@ -22,7 +22,7 @@ INTERFACE zif_abapgit_persist_repo
       zcx_abapgit_exception .
   METHODS list
     RETURNING
-      VALUE(rt_repos) TYPE zif_abapgit_persistence=>tt_repo
+      VALUE(rt_repos) TYPE zif_abapgit_persistence=>ty_repos
     RAISING
       zcx_abapgit_exception .
   METHODS lock

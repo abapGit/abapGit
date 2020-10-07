@@ -27,7 +27,7 @@ CLASS zcl_abapgit_log DEFINITION
 
     METHODS get_messages_status
       IMPORTING
-        !it_msg          TYPE zif_abapgit_log=>tty_msg
+        !it_msg          TYPE zif_abapgit_log=>ty_msgs
       RETURNING
         VALUE(rv_status) TYPE symsgty .
   PRIVATE SECTION.
@@ -35,7 +35,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_log IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_LOG IMPLEMENTATION.
 
 
   METHOD get_messages_status.

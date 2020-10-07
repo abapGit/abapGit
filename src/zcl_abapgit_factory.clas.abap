@@ -51,20 +51,20 @@ CLASS zcl_abapgit_factory DEFINITION
         instance TYPE REF TO zif_abapgit_sap_package,
       END OF ty_sap_package .
     TYPES:
-      tty_sap_package TYPE HASHED TABLE OF ty_sap_package
+      ty_sap_packages TYPE HASHED TABLE OF ty_sap_package
                                     WITH UNIQUE KEY package .
     TYPES:
-      BEGIN OF ty_code_inspector,
+      BEGIN OF ty_code_inspector_pack,
         package  TYPE devclass,
         instance TYPE REF TO zif_abapgit_code_inspector,
-      END OF ty_code_inspector .
+      END OF ty_code_inspector_pack .
     TYPES:
-      tty_code_inspector TYPE HASHED TABLE OF ty_code_inspector
+      ty_code_inspector_packs TYPE HASHED TABLE OF ty_code_inspector_pack
                                        WITH UNIQUE KEY package .
 
     CLASS-DATA gi_tadir TYPE REF TO zif_abapgit_tadir .
-    CLASS-DATA gt_sap_package TYPE tty_sap_package .
-    CLASS-DATA gt_code_inspector TYPE tty_code_inspector .
+    CLASS-DATA gt_sap_package TYPE ty_sap_packages .
+    CLASS-DATA gt_code_inspector TYPE ty_code_inspector_packs .
     CLASS-DATA gi_stage_logic TYPE REF TO zif_abapgit_stage_logic .
     CLASS-DATA gi_cts_api TYPE REF TO zif_abapgit_cts_api .
     CLASS-DATA gi_environment TYPE REF TO zif_abapgit_environment .
@@ -90,7 +90,7 @@ CLASS ZCL_ABAPGIT_FACTORY IMPLEMENTATION.
   METHOD get_code_inspector.
 
     DATA: ls_code_inspector LIKE LINE OF gt_code_inspector.
-    FIELD-SYMBOLS: <ls_code_inspector> TYPE ty_code_inspector.
+    FIELD-SYMBOLS: <ls_code_inspector> TYPE ty_code_inspector_pack.
 
     READ TABLE gt_code_inspector ASSIGNING <ls_code_inspector>
       WITH TABLE KEY package = iv_package.

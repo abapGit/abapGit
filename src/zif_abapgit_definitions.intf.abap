@@ -65,7 +65,7 @@ INTERFACE zif_abapgit_definitions
       hotkey       TYPE string,
     END OF ty_hotkey .
   TYPES:
-    tty_hotkey TYPE STANDARD TABLE OF ty_hotkey
+    ty_hotkey_tt TYPE STANDARD TABLE OF ty_hotkey
                     WITH NON-UNIQUE DEFAULT KEY
                     WITH NON-UNIQUE SORTED KEY action
                          COMPONENTS ui_component action.
@@ -159,7 +159,7 @@ INTERFACE zif_abapgit_definitions
       lstate     TYPE c LENGTH 1,
     END OF ty_repo_file .
   TYPES:
-    tt_repo_files TYPE STANDARD TABLE OF ty_repo_file WITH DEFAULT KEY .
+    ty_repo_file_tt TYPE STANDARD TABLE OF ty_repo_file WITH DEFAULT KEY .
   TYPES:
     ty_chmod TYPE c LENGTH 6 .
   TYPES:
@@ -327,7 +327,7 @@ INTERFACE zif_abapgit_definitions
       result_data TYPE xstring,
     END OF ty_merge_conflict .
   TYPES:
-    tt_merge_conflict TYPE STANDARD TABLE OF ty_merge_conflict WITH DEFAULT KEY .
+    ty_merge_conflict_tt TYPE STANDARD TABLE OF ty_merge_conflict WITH DEFAULT KEY .
   TYPES:
     BEGIN OF ty_repo_item,
       obj_type TYPE tadir-object,
@@ -339,10 +339,10 @@ INTERFACE zif_abapgit_definitions
       changes  TYPE i,
       lstate   TYPE c LENGTH 1,
       rstate   TYPE c LENGTH 1,
-      files    TYPE tt_repo_files,
+      files    TYPE ty_repo_file_tt,
     END OF ty_repo_item .
   TYPES:
-    tt_repo_items TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY .
+    ty_repo_item_tt TYPE STANDARD TABLE OF ty_repo_item WITH DEFAULT KEY .
   TYPES:
     BEGIN OF ty_s_user_settings,
       max_lines              TYPE i,
@@ -350,7 +350,7 @@ INTERFACE zif_abapgit_definitions
       show_default_repo      TYPE abap_bool,
       link_hints_enabled     TYPE abap_bool,
       link_hint_key          TYPE c LENGTH 1,
-      hotkeys                TYPE tty_hotkey,
+      hotkeys                TYPE ty_hotkey_tt,
       parallel_proc_disabled TYPE abap_bool,
       icon_scaling           TYPE c LENGTH 1,
       ui_theme               TYPE string,
@@ -358,7 +358,7 @@ INTERFACE zif_abapgit_definitions
       activate_wo_popup      TYPE abap_bool,
     END OF ty_s_user_settings .
   TYPES:
-    tty_dokil TYPE STANDARD TABLE OF dokil
+    ty_dokil_tt TYPE STANDARD TABLE OF dokil
                          WITH NON-UNIQUE DEFAULT KEY .
   TYPES:
     BEGIN OF ty_col_spec,
@@ -368,7 +368,7 @@ INTERFACE zif_abapgit_definitions
       add_tz       TYPE abap_bool,
       title        TYPE string,
     END OF ty_col_spec,
-    tty_col_spec TYPE STANDARD TABLE OF ty_col_spec
+    ty_col_spec_tt TYPE STANDARD TABLE OF ty_col_spec
                       WITH NON-UNIQUE KEY tech_name.
   TYPES:
     ty_proxy_bypass_url       TYPE c LENGTH 255,

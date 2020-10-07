@@ -18,7 +18,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
         type       TYPE string,
       END OF ty_file_diff.
     TYPES:
-      tt_file_diff TYPE STANDARD TABLE OF ty_file_diff
+      ty_file_diffs TYPE STANDARD TABLE OF ty_file_diff
                         WITH NON-UNIQUE DEFAULT KEY
                         WITH NON-UNIQUE SORTED KEY secondary
                              COMPONENTS path filename.
@@ -45,7 +45,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
 
     DATA mv_unified TYPE abap_bool VALUE abap_true ##NO_TEXT.
     DATA mo_repo TYPE REF TO zcl_abapgit_repo .
-    DATA mt_diff_files TYPE tt_file_diff .
+    DATA mt_diff_files TYPE ty_file_diffs .
 
     METHODS get_normalized_fname_with_path
       IMPORTING
@@ -195,7 +195,7 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
       IMPORTING
         !it_files      TYPE zif_abapgit_definitions=>ty_stage_tt
       CHANGING
-        !ct_diff_files TYPE tt_file_diff .
+        !ct_diff_files TYPE ty_file_diffs .
 ENDCLASS.
 
 

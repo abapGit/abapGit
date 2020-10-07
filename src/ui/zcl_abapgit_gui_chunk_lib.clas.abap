@@ -64,7 +64,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     CLASS-METHODS render_order_by_header_cells
       IMPORTING
-        !it_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec
+        !it_col_spec         TYPE zif_abapgit_definitions=>ty_col_spec_tt
         !iv_order_by         TYPE string
         !iv_order_descending TYPE abap_bool
       RETURNING
@@ -505,7 +505,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     DATA: lv_text TYPE string,
           lv_hint TYPE string,
-          lt_log  TYPE zcl_abapgit_news=>tt_log.
+          lt_log  TYPE zcl_abapgit_news=>ty_logs.
 
     FIELD-SYMBOLS: <ls_line> LIKE LINE OF lt_log.
 
@@ -609,7 +609,7 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
   METHOD render_repo_palette.
 
     DATA li_repo_srv TYPE REF TO zif_abapgit_repo_srv.
-    DATA lt_repo_list TYPE zif_abapgit_persistence=>tt_repo.
+    DATA lt_repo_list TYPE zif_abapgit_persistence=>ty_repos.
     DATA lv_repo_json TYPE string.
     DATA lv_size TYPE i.
     DATA lo_repo TYPE REF TO zcl_abapgit_repo.

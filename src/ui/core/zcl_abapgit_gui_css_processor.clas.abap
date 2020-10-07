@@ -19,23 +19,23 @@ CLASS zcl_abapgit_gui_css_processor DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
-      BEGIN OF gty_css_var,
+      BEGIN OF ty_css_var,
         name  TYPE string,
         value TYPE string,
-      END OF gty_css_var,
-      gty_css_var_tab TYPE SORTED TABLE OF gty_css_var WITH UNIQUE KEY name.
+      END OF ty_css_var,
+      ty_css_vars TYPE SORTED TABLE OF ty_css_var WITH UNIQUE KEY name.
 
     METHODS:
       get_css_vars_in_string
         IMPORTING
           iv_string           TYPE string
         RETURNING
-          VALUE(rt_variables) TYPE gty_css_var_tab,
+          VALUE(rt_variables) TYPE ty_css_vars,
       resolve_var_recursively
         IMPORTING
           iv_variable_name TYPE string
         CHANGING
-          ct_variables     TYPE gty_css_var_tab
+          ct_variables     TYPE ty_css_vars
         RAISING
           zcx_abapgit_exception.
     DATA:
@@ -90,8 +90,8 @@ CLASS ZCL_ABAPGIT_GUI_CSS_PROCESSOR IMPLEMENTATION.
     DATA:
           lt_contents         TYPE STANDARD TABLE OF string,
           lv_content          TYPE string,
-          lt_css_variables    TYPE gty_css_var_tab,
-          lt_css_vars_in_file TYPE gty_css_var_tab.
+          lt_css_variables    TYPE ty_css_vars,
+          lt_css_vars_in_file TYPE ty_css_vars.
     FIELD-SYMBOLS: <lv_url>          TYPE string,
                    <ls_css_variable> LIKE LINE OF lt_css_vars_in_file,
                    <lv_content>      LIKE LINE OF lt_contents.

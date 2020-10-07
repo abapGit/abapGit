@@ -66,7 +66,7 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
       IMPORTING
         !ii_xml         TYPE REF TO zif_abapgit_xml_output
         !iv_longtext_id TYPE dokil-id OPTIONAL
-        !it_dokil       TYPE zif_abapgit_definitions=>tty_dokil OPTIONAL
+        !it_dokil       TYPE zif_abapgit_definitions=>ty_dokil_tt OPTIONAL
       RAISING
         zcx_abapgit_exception .
     METHODS deserialize_longtexts
@@ -96,7 +96,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_objects_super IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
 
 
   METHOD check_timestamp.

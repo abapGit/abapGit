@@ -8,15 +8,15 @@ CLASS zcl_abapgit_object_msag DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
   PRIVATE SECTION.
 
     TYPES:
-      BEGIN OF ty_t100_texts,
+      BEGIN OF ty_t100_text,
         sprsl TYPE t100-sprsl,
         msgnr TYPE t100-msgnr,
         text  TYPE t100-text,
-      END OF ty_t100_texts .
+      END OF ty_t100_text .
     TYPES:
-      tt_t100_texts TYPE STANDARD TABLE OF ty_t100_texts .
+      ty_t100_texts TYPE STANDARD TABLE OF ty_t100_text .
     TYPES:
-      tty_t100      TYPE STANDARD TABLE OF t100
+      ty_t100s      TYPE STANDARD TABLE OF t100
                            WITH NON-UNIQUE DEFAULT KEY .
 
     METHODS serialize_texts
@@ -31,7 +31,7 @@ CLASS zcl_abapgit_object_msag DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         zcx_abapgit_exception .
     METHODS serialize_longtexts_msag
       IMPORTING
-        !it_t100 TYPE tty_t100
+        !it_t100 TYPE ty_t100s
         !ii_xml  TYPE REF TO zif_abapgit_xml_output
       RAISING
         zcx_abapgit_exception .
@@ -48,7 +48,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_object_msag IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
 
 
   METHOD delete_documentation.
@@ -113,10 +113,10 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     DATA: lv_msg_id     TYPE rglif-message_id,
           ls_t100       TYPE t100,
           lt_t100t      TYPE TABLE OF t100t,
-          lt_t100_texts TYPE tt_t100_texts,
+          lt_t100_texts TYPE ty_t100_texts,
           lt_t100u      TYPE TABLE OF t100u.
 
-    FIELD-SYMBOLS: <ls_t100_text> TYPE ty_t100_texts.
+    FIELD-SYMBOLS: <ls_t100_text> TYPE ty_t100_text.
 
 
     lv_msg_id = ms_item-obj_name.
@@ -163,7 +163,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
     DATA: lv_doku_object_name           TYPE dokhl-object,
           lt_doku_object_names          TYPE STANDARD TABLE OF dokhl-object
                           WITH NON-UNIQUE DEFAULT KEY,
-          lt_dokil            TYPE zif_abapgit_definitions=>tty_dokil,
+          lt_dokil            TYPE zif_abapgit_definitions=>ty_dokil_tt,
           ls_dokil            LIKE LINE OF lt_dokil,
           lv_master_lang_only TYPE abap_bool.
 
@@ -212,7 +212,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
   METHOD serialize_texts.
 
     DATA: lv_msg_id     TYPE rglif-message_id,
-          lt_t100_texts TYPE tt_t100_texts,
+          lt_t100_texts TYPE ty_t100_texts,
           lt_t100t      TYPE TABLE OF t100t,
           lt_i18n_langs TYPE TABLE OF langu.
 
@@ -469,7 +469,7 @@ CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
     DATA: lv_msg_id TYPE rglif-message_id,
           ls_inf    TYPE t100a,
-          lt_source TYPE tty_t100.
+          lt_source TYPE ty_t100s.
 
 
     lv_msg_id = ms_item-obj_name.

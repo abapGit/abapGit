@@ -140,7 +140,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
   METHOD read_persist.
 
     DATA: lo_per TYPE REF TO zcl_abapgit_persist_background,
-          lt_per TYPE zcl_abapgit_persist_background=>tt_background.
+          lt_per TYPE zcl_abapgit_persist_background=>ty_background_keys.
 
 
     CREATE OBJECT lo_per.
@@ -212,7 +212,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_BKG IMPLEMENTATION.
 
   METHOD render_methods.
 
-    DATA: lt_methods TYPE zcl_abapgit_background=>ty_methods_tt,
+    DATA: lt_methods TYPE zcl_abapgit_background=>ty_methods,
           ls_method  LIKE LINE OF lt_methods,
           lv_checked TYPE string.
 
