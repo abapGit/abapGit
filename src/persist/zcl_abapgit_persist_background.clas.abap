@@ -35,7 +35,7 @@ CLASS zcl_abapgit_persist_background DEFINITION
       IMPORTING iv_key        TYPE ty_background-key
       RETURNING VALUE(rv_yes) TYPE abap_bool
       RAISING   zcx_abapgit_exception.
-PROTECTED SECTION.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: mo_db   TYPE REF TO zcl_abapgit_persistence_db,
           mt_jobs TYPE ty_background_keys.
