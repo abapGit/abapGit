@@ -128,7 +128,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS apply_order_by
       CHANGING
-        !ct_repo_items TYPE zif_abapgit_definitions=>tt_repo_items .
+        !ct_repo_items TYPE zif_abapgit_definitions=>ty_repo_item_tt .
     METHODS build_branch_dropdown
       IMPORTING
         !iv_wp_opt                LIKE zif_abapgit_html=>c_html_opt-crossout
@@ -727,7 +727,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: lt_repo_items        TYPE zif_abapgit_definitions=>tt_repo_items,
+    DATA: lt_repo_items        TYPE zif_abapgit_definitions=>ty_repo_item_tt,
           lo_browser           TYPE REF TO zcl_abapgit_repo_content_list,
           lx_error             TYPE REF TO zcx_abapgit_exception,
           lv_lstate            TYPE char1,
@@ -1063,7 +1063,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
     DATA:
       lv_icon     TYPE string,
-      lt_col_spec TYPE zif_abapgit_definitions=>tty_col_spec,
+      lt_col_spec TYPE zif_abapgit_definitions=>ty_col_spec_tt,
       ls_col_spec TYPE zif_abapgit_definitions=>ty_col_spec.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.

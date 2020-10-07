@@ -64,7 +64,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     CLASS-METHODS render_order_by_header_cells
       IMPORTING
-        !it_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec
+        !it_col_spec         TYPE zif_abapgit_definitions=>ty_col_spec_tt
         !iv_order_by         TYPE string
         !iv_order_descending TYPE abap_bool
       RETURNING

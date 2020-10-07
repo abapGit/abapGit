@@ -255,7 +255,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SETTINGS IMPLEMENTATION.
   METHOD post_hotkeys.
 
     DATA:
-      lt_key_bindings TYPE zif_abapgit_definitions=>tty_hotkey,
+      lt_key_bindings TYPE zif_abapgit_definitions=>ty_hotkey_tt,
       ls_key_binding  LIKE LINE OF lt_key_bindings.
 
     FIELD-SYMBOLS:

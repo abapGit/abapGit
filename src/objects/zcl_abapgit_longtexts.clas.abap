@@ -22,7 +22,7 @@ CLASS zcl_abapgit_longtexts DEFINITION
       IMPORTING
         !iv_object_name      TYPE sobj_name
         !iv_longtext_id      TYPE dokil-id
-        !it_dokil            TYPE zif_abapgit_definitions=>tty_dokil
+        !it_dokil            TYPE zif_abapgit_definitions=>ty_dokil_tt
         !iv_master_lang_only TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(rt_longtexts)  TYPE ty_longtexts
@@ -41,7 +41,7 @@ CLASS ZCL_ABAPGIT_LONGTEXTS IMPLEMENTATION.
   METHOD read.
 
     DATA: ls_longtext TYPE ty_longtext,
-          lt_dokil    TYPE zif_abapgit_definitions=>tty_dokil.
+          lt_dokil    TYPE zif_abapgit_definitions=>ty_dokil_tt.
 
     FIELD-SYMBOLS: <ls_dokil> LIKE LINE OF lt_dokil.
 
@@ -124,7 +124,7 @@ CLASS ZCL_ABAPGIT_LONGTEXTS IMPLEMENTATION.
 
   METHOD zif_abapgit_longtexts~delete.
 
-    DATA: lt_dokil TYPE zif_abapgit_definitions=>tty_dokil.
+    DATA: lt_dokil TYPE zif_abapgit_definitions=>ty_dokil_tt.
     FIELD-SYMBOLS: <ls_dokil> TYPE dokil.
 
     SELECT * FROM dokil

@@ -231,7 +231,7 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
 
   METHOD merge_hotkeys_with_settings.
 
-    DATA lt_user_defined_hotkeys TYPE zif_abapgit_definitions=>tty_hotkey.
+    DATA lt_user_defined_hotkeys TYPE zif_abapgit_definitions=>ty_hotkey_tt.
     FIELD-SYMBOLS <ls_hotkey> LIKE LINE OF ct_hotkey_actions.
     FIELD-SYMBOLS <ls_user_defined_hotkey> LIKE LINE OF lt_user_defined_hotkeys.
 

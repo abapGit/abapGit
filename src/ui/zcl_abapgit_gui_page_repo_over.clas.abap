@@ -55,7 +55,7 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
     DATA: mv_order_descending TYPE abap_bool,
           mv_filter           TYPE string,
           mv_time_zone        TYPE timezone,
-          mt_col_spec         TYPE zif_abapgit_definitions=>tty_col_spec,
+          mt_col_spec         TYPE zif_abapgit_definitions=>ty_col_spec_tt,
           mt_overview         TYPE ty_overviews.
 
     METHODS: render_text_input

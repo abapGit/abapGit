@@ -163,7 +163,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
     DATA: lv_doku_object_name           TYPE dokhl-object,
           lt_doku_object_names          TYPE STANDARD TABLE OF dokhl-object
                           WITH NON-UNIQUE DEFAULT KEY,
-          lt_dokil            TYPE zif_abapgit_definitions=>tty_dokil,
+          lt_dokil            TYPE zif_abapgit_definitions=>ty_dokil_tt,
           ls_dokil            LIKE LINE OF lt_dokil,
           lv_master_lang_only TYPE abap_bool.
 
