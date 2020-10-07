@@ -11,7 +11,7 @@ INTERFACE zif_abapgit_log
       exception TYPE REF TO cx_root,
     END OF ty_log_out .
   TYPES:
-    tty_log_out TYPE STANDARD TABLE OF ty_log_out
+    ty_log_outs TYPE STANDARD TABLE OF ty_log_out
                 WITH NON-UNIQUE DEFAULT KEY .
   TYPES:
     BEGIN OF ty_msg,
@@ -19,16 +19,16 @@ INTERFACE zif_abapgit_log
       type TYPE symsgty,
     END OF ty_msg .
   TYPES:
-    tty_msg TYPE STANDARD TABLE OF ty_msg
+    ty_msgs TYPE STANDARD TABLE OF ty_msg
                           WITH NON-UNIQUE DEFAULT KEY .
   TYPES:
     BEGIN OF ty_item_status_out,
       item     TYPE zif_abapgit_definitions=>ty_item,
       status   TYPE symsgty,
-      messages TYPE tty_msg,
+      messages TYPE ty_msgs,
     END OF ty_item_status_out .
   TYPES:
-    tty_item_status_out TYPE SORTED TABLE OF ty_item_status_out
+    ty_item_status_outs TYPE SORTED TABLE OF ty_item_status_out
                         WITH UNIQUE KEY item-obj_type item-obj_name .
 
   METHODS add
@@ -69,9 +69,9 @@ INTERFACE zif_abapgit_log
       VALUE(rv_yes) TYPE abap_bool .
   METHODS get_messages
     RETURNING
-      VALUE(rt_msg) TYPE tty_log_out .
+      VALUE(rt_msg) TYPE ty_log_outs .
   METHODS get_item_status
-    RETURNING VALUE(rt_item_status) TYPE tty_item_status_out .
+    RETURNING VALUE(rt_item_status) TYPE ty_item_status_outs .
   METHODS get_status
     RETURNING
       VALUE(rv_status) TYPE symsgty .

@@ -1135,7 +1135,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
   METHOD switch_to_pr.
 
     DATA lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
-    DATA lt_pulls TYPE zif_abapgit_pr_enum_provider=>tty_pulls.
+    DATA lt_pulls TYPE zif_abapgit_pr_enum_provider=>ty_pull_requests.
     DATA ls_pull LIKE LINE OF lt_pulls.
 
     IF mo_repo->is_offline( ) = abap_true.

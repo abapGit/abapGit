@@ -219,7 +219,7 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
 
   METHOD prepare_log_for_display.
 
-    DATA: lt_message      TYPE zif_abapgit_log=>tty_log_out,
+    DATA: lt_message      TYPE zif_abapgit_log=>ty_log_outs,
           lr_message      TYPE REF TO zif_abapgit_log=>ty_log_out,
           ls_log          TYPE ty_log_out,
           li_t100_message TYPE REF TO if_t100_message,
@@ -429,7 +429,7 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
 
   METHOD to_html.
 
-    DATA: lt_message TYPE zif_abapgit_log=>tty_log_out,
+    DATA: lt_message TYPE zif_abapgit_log=>ty_log_outs,
           lr_message TYPE REF TO zif_abapgit_log=>ty_log_out,
           lv_class   TYPE string,
           lv_icon    TYPE string.
@@ -466,7 +466,7 @@ CLASS ZCL_ABAPGIT_LOG_VIEWER IMPLEMENTATION.
 
   METHOD write_log.
 
-    DATA: lt_message TYPE zif_abapgit_log=>tty_log_out,
+    DATA: lt_message TYPE zif_abapgit_log=>ty_log_outs,
           lr_message TYPE REF TO zif_abapgit_log=>ty_log_out,
           lv_text    TYPE string.
 
