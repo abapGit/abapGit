@@ -308,12 +308,10 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
       ENDLOOP.
     ENDIF.
 
-    et_objects = upload_pack(
-      EXPORTING
-        io_client       = lo_client
-        iv_url          = iv_url
-        iv_deepen_level = iv_deepen_level
-        it_hashes       = lt_hashes ).
+    et_objects = upload_pack( io_client       = lo_client
+                              iv_url          = iv_url
+                              iv_deepen_level = iv_deepen_level
+                              it_hashes       = lt_hashes ).
 
   ENDMETHOD.
 
@@ -334,12 +332,10 @@ CLASS zcl_abapgit_git_transport IMPLEMENTATION.
       iv_url     = iv_url
       iv_service = c_service-upload ).
 
-    et_objects = upload_pack(
-      EXPORTING
-        io_client       = lo_client
-        iv_url          = iv_url
-        iv_deepen_level = iv_deepen_level
-        it_hashes       = lt_hashes ).
+    et_objects = upload_pack( io_client       = lo_client
+                              iv_url          = iv_url
+                              iv_deepen_level = iv_deepen_level
+                              it_hashes       = lt_hashes ).
 
   ENDMETHOD.
 
