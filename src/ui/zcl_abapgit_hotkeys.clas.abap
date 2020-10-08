@@ -290,8 +290,9 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
     DATA ls_hotkey LIKE LINE OF rt_hotkey_actions.
 
     ls_hotkey-ui_component = 'Hotkeys'.
+
     ls_hotkey-action       = c_showhotkeys_action.
-    ls_hotkey-description  = 'Show hotkeys help'.
+    ls_hotkey-description  = 'Show this hotkey help'.
     ls_hotkey-hotkey       = '?'.
     INSERT ls_hotkey INTO TABLE rt_hotkey_actions.
 
@@ -348,7 +349,7 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     lt_registered_hotkeys = zif_abapgit_gui_hotkey_ctl~get_registered_hotkeys( ).
-    SORT lt_registered_hotkeys BY ui_component description.
+    SORT lt_registered_hotkeys BY hotkey.
 
     register_deferred_script( render_scripts( lt_registered_hotkeys ) ).
 
@@ -372,7 +373,7 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
 
     lv_hint = |Close window with upper right corner 'X'|.
     IF lv_hotkey IS NOT INITIAL.
-      lv_hint = lv_hint && | or '{ <ls_hotkey>-hotkey }'|.
+      lv_hint = lv_hint && | or press '{ <ls_hotkey>-hotkey }'again|.
     ENDIF.
 
     ri_html = zcl_abapgit_gui_chunk_lib=>render_infopanel(

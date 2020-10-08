@@ -2022,7 +2022,19 @@ function enumerateToolbarActions() {
       if (item.nodeName !== "LI") continue; // unexpected node
       if (item.children.length >=2 && item.children[1].nodeName === "UL") {
         // submenu detected
-        processUL(item.children[1], item.children[0].innerText);
+        var menutext = item.children[0].innerText;
+        // special treatment for menus without text
+        if (!menutext) {
+          menutext = item.children[0].innerHTML;
+          if (menutext.includes("icon-tools")) {
+            menutext = "Utilities"
+          } else if (menutext.includes("icon-question")) {
+            menutext = "Help"
+          } else {
+            menutext = "Other"
+          }
+        }
+        processUL(item.children[1], menutext);
       } else if (item.firstElementChild && item.firstElementChild.nodeName === "A") {
         var anchor = item.firstElementChild;
         if (anchor.href && anchor.href !== "#") items.push([anchor, prefix]);
@@ -2042,7 +2054,7 @@ function enumerateToolbarActions() {
     var prefix = item[1];
     return {
       action:    anchor.href.replace("sapevent:", ""),
-      title:     (prefix ? prefix + ": " : "") + anchor.innerText
+      title:     (prefix ? prefix + ": " : "") + anchor.innerText.trim()
     };
   });
 

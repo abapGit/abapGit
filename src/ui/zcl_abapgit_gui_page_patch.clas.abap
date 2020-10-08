@@ -768,13 +768,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_PATCH IMPLEMENTATION.
 
     ls_hotkey_action-ui_component = 'Patch'.
 
-    ls_hotkey_action-description = |Stage changes|.
-    ls_hotkey_action-action      = |stagePatch|.
+    ls_hotkey_action-description = |<u>S</u>tage changes|.
+    ls_hotkey_action-action      = c_actions-stage.
     ls_hotkey_action-hotkey      = |s|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description = |Refresh local|.
-    ls_hotkey_action-action      = |refreshLocal|.
+    ls_hotkey_action-description = |<u>R</u>efresh local|.
+    ls_hotkey_action-action      = c_actions-refresh_local.
     ls_hotkey_action-hotkey      = |r|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 

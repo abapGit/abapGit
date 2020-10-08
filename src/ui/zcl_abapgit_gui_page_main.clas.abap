@@ -160,9 +160,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
     ls_hotkey_action-hotkey = |x|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description   = |Add online repository|.
+    ls_hotkey_action-description   = |Add o<u>n</u>line repository|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_newonline.
     ls_hotkey_action-hotkey = |n|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description   = |Add o<u>f</u>fline repository|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_newoffline.
+    ls_hotkey_action-hotkey = |f|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.

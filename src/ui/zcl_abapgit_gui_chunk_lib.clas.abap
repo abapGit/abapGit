@@ -621,12 +621,19 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
+    " Sort list by display name
+    LOOP AT lt_repo_list ASSIGNING <ls_repo>.
+      <ls_repo>-local_settings-display_name = li_repo_srv->get( <ls_repo>-key )->get_name( ).
+    ENDLOOP.
+    SORT lt_repo_list BY local_settings-display_name AS TEXT.
+
     ri_html->add( 'var repoCatalog = [' ). " Maybe separate this into another method if needed in more places
     LOOP AT lt_repo_list ASSIGNING <ls_repo>.
-      lo_repo = li_repo_srv->get( <ls_repo>-key ). " inefficient
-      lv_repo_json = |\{ key: "{ <ls_repo>-key
-        }", isOffline: "{ <ls_repo>-offline
-        }", displayName: "{ lo_repo->get_name( ) }"  \}|.
+      lv_repo_json = |\{ key: "{ <ls_repo>-key }", isOffline: "{ <ls_repo>-offline }",|.
+      IF <ls_repo>-offline = abap_true.
+        SHIFT <ls_repo>-local_settings-display_name RIGHT. " pad for smaller icon
+      ENDIF.
+      lv_repo_json = lv_repo_json && | displayName: "{ <ls_repo>-local_settings-display_name }"  \}|.
       IF sy-tabix < lv_size.
         lv_repo_json = lv_repo_json && ','.
       ENDIF.
