@@ -44,7 +44,7 @@ CLASS ltcl_user IMPLEMENTATION.
 
   METHOD set_get_repo_show.
 
-    DATA: lv_key TYPE zif_abapgit_persistence=>ty_repo-key .
+    DATA: lv_key TYPE zif_abapgit_persistence=>ty_repo-key.
 
     mi_user = zcl_abapgit_persistence_user=>get_instance( c_abap_user ).
     mi_user->set_repo_show( c_repo_key ).
