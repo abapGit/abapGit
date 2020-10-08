@@ -2027,11 +2027,11 @@ function enumerateToolbarActions() {
         if (!menutext) {
           menutext = item.children[0].innerHTML;
           if (menutext.includes("icon-tools")) {
-            menutext = "Utilities"
+            menutext = "Utilities";
           } else if (menutext.includes("icon-question")) {
-            menutext = "Help"
+            menutext = "Help";
           } else {
-            menutext = "Other"
+            menutext = "Other";
           }
         }
         processUL(item.children[1], menutext);
