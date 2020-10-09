@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_STVI</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Object: Transaction Variants</DESCRIPT>
+    <DESCRIPT>STVI - Transaction variants (cross-client)</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
