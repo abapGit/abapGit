@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_WDCC</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>WDA Component Configuration</DESCRIPT>
+    <DESCRIPT>WDCC - Web Dynpro Component Configuration</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
