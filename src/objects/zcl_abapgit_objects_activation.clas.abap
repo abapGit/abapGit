@@ -1,22 +1,27 @@
-CLASS zcl_abapgit_objects_activation DEFINITION PUBLIC CREATE PUBLIC.
+CLASS zcl_abapgit_objects_activation DEFINITION
+  PUBLIC
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
+
     CLASS-METHODS add
-      IMPORTING iv_type   TYPE trobjtype
-                iv_name   TYPE clike
-                iv_delete TYPE abap_bool DEFAULT abap_false
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !iv_type   TYPE trobjtype
+        !iv_name   TYPE clike
+        !iv_delete TYPE abap_bool DEFAULT abap_false
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS add_item
-      IMPORTING is_item TYPE zif_abapgit_definitions=>ty_item
-      RAISING   zcx_abapgit_exception.
-
+      IMPORTING
+        !is_item TYPE zif_abapgit_definitions=>ty_item
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS activate
-      IMPORTING iv_ddic TYPE abap_bool DEFAULT abap_false
-      RAISING   zcx_abapgit_exception.
-
-    CLASS-METHODS clear.
-
+      IMPORTING
+        !iv_ddic TYPE abap_bool DEFAULT abap_false
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS clear .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -228,43 +233,16 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 * function module RS_INSERT_INTO_WORKING_AREA
 * class CL_WB_ACTIVATION_WORK_AREA
 
-    DATA: lt_objects  TYPE dwinactiv_tab,
-          lv_obj_name TYPE dwinactiv-obj_name.
+    FIELD-SYMBOLS: <ls_object> TYPE dwinactiv.
 
-    FIELD-SYMBOLS: <ls_object> LIKE LINE OF lt_objects.
-
-
-    lv_obj_name = iv_name.
-
-    CASE iv_type.
-      WHEN 'CLAS'.
-        APPEND iv_name TO gt_classes.
-      WHEN 'WDYN'.
-* todo, move this to the object type include instead
-        CALL FUNCTION 'RS_INACTIVE_OBJECTS_IN_OBJECT'
-          EXPORTING
-            obj_name         = lv_obj_name
-            object           = iv_type
-          TABLES
-            inactive_objects = lt_objects
-          EXCEPTIONS
-            object_not_found = 1
-            OTHERS           = 2.
-        IF sy-subrc <> 0.
-          zcx_abapgit_exception=>raise( 'Error from RS_INACTIVE_OBJECTS_IN_OBJECT' ).
-        ENDIF.
-
-        LOOP AT lt_objects ASSIGNING <ls_object>.
-          <ls_object>-delet_flag = iv_delete.
-        ENDLOOP.
-
-        APPEND LINES OF lt_objects TO gt_objects.
-      WHEN OTHERS.
-        APPEND INITIAL LINE TO gt_objects ASSIGNING <ls_object>.
-        <ls_object>-object     = iv_type.
-        <ls_object>-obj_name   = lv_obj_name.
-        <ls_object>-delet_flag = iv_delete.
-    ENDCASE.
+    IF iv_type = 'CLAS'.
+      APPEND iv_name TO gt_classes.
+    ELSE.
+      APPEND INITIAL LINE TO gt_objects ASSIGNING <ls_object>.
+      <ls_object>-object     = iv_type.
+      <ls_object>-obj_name   = iv_name.
+      <ls_object>-delet_flag = iv_delete.
+    ENDIF.
 
   ENDMETHOD.
 

@@ -370,9 +370,8 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_res1> LIKE LINE OF it_results,
                    <ls_res2> LIKE LINE OF it_results.
 
-
+    " This method just adds messages to the log. No log, nothing to do here
     IF ii_log IS INITIAL.
-* huh?
       RETURN.
     ENDIF.
 
