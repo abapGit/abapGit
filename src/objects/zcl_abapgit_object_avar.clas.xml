@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_AVAR</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>AVAR</DESCRIPT>
+    <DESCRIPT>AVAR - Activation Variants for Assertions and Breakpoints</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
