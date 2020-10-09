@@ -96,6 +96,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDOFFLIN IMPLEMENTATION.
       iv_name        = c_id-package
       iv_side_action = c_event-choose_package
       iv_required    = abap_true
+      iv_upper_case  = abap_true
       iv_label       = 'Package'
       iv_hint        = 'SAP package for the code (should be a dedicated one)'
       iv_placeholder = 'Z... / $...'
