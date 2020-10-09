@@ -373,7 +373,7 @@ CLASS ZCL_ABAPGIT_HOTKEYS IMPLEMENTATION.
 
     lv_hint = |Close window with upper right corner 'X'|.
     IF lv_hotkey IS NOT INITIAL.
-      lv_hint = lv_hint && | or press '{ <ls_hotkey>-hotkey }'again|.
+      lv_hint = lv_hint && | or press '{ <ls_hotkey>-hotkey }' again|.
     ENDIF.
 
     ri_html = zcl_abapgit_gui_chunk_lib=>render_infopanel(
