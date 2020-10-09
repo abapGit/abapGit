@@ -2025,14 +2025,7 @@ function enumerateToolbarActions() {
         var menutext = item.children[0].innerText;
         // special treatment for menus without text
         if (!menutext) {
-          menutext = item.children[0].innerHTML;
-          if (menutext.includes("icon-tools")) {
-            menutext = "Utilities";
-          } else if (menutext.includes("icon-question")) {
-            menutext = "Help";
-          } else {
-            menutext = "Other";
-          }
+          menutext = item.children[0].getAttribute('title');
         }
         processUL(item.children[1], menutext);
       } else if (item.firstElementChild && item.firstElementChild.nodeName === "A") {
