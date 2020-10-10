@@ -559,8 +559,6 @@ CLASS ZCL_ABAPGIT_OBJECT_FUGR IMPLEMENTATION.
     CALL FUNCTION 'RS_GET_ALL_INCLUDES'
       EXPORTING
         program      = lv_program
-*       WITH_RESERVED_INCLUDES =
-*       WITH_CLASS_INCLUDES    = ' ' hmm, todo
       TABLES
         includetab   = rt_includes
       EXCEPTIONS
