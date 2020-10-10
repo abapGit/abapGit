@@ -109,6 +109,7 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
           lt_dd28j TYPE TABLE OF dd28j,
           lt_dd28v TYPE TABLE OF dd28v.
 
+    FIELD-SYMBOLS: <ls_dd27p> LIKE LINE OF lt_dd27p.
 
     io_xml->read( EXPORTING iv_name = 'DD25V'
                   CHANGING cg_data = ls_dd25v ).
@@ -123,10 +124,22 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
     io_xml->read( EXPORTING iv_name = 'DD28V_TABLE'
                   CHANGING cg_data = lt_dd28v ).
 
+    lv_name = ms_item-obj_name. " type conversion
+
+    LOOP AT lt_dd27p ASSIGNING <ls_dd27p>.
+      <ls_dd27p>-objpos = sy-tabix.
+      <ls_dd27p>-viewname = lv_name.
+* rollname seems to be mandatory in the API, but is typically not defined in the VIEW
+      SELECT SINGLE rollname FROM dd03l INTO <ls_dd27p>-rollname
+        WHERE tabname = <ls_dd27p>-tabname
+        AND fieldname = <ls_dd27p>-fieldname.
+      IF <ls_dd27p>-rollnamevi IS INITIAL.
+        <ls_dd27p>-rollnamevi = <ls_dd27p>-rollname.
+      ENDIF.
+    ENDLOOP.
+
     corr_insert( iv_package = iv_package
                  ig_object_class = 'DICT' ).
-
-    lv_name = ms_item-obj_name. " type conversion
 
     CALL FUNCTION 'DDIF_VIEW_PUT'
       EXPORTING
@@ -295,6 +308,13 @@ CLASS ZCL_ABAPGIT_OBJECT_VIEW IMPLEMENTATION.
              <ls_dd27p>-scrlen2,
              <ls_dd27p>-scrlen3,
              <ls_dd27p>-memoryid.
+      IF <ls_dd27p>-rollchange = abap_false.
+        CLEAR <ls_dd27p>-rollnamevi.
+      ENDIF.
+      CLEAR <ls_dd27p>-ddlanguage.
+      CLEAR <ls_dd27p>-rollname.
+      CLEAR <ls_dd27p>-viewname.
+      CLEAR <ls_dd27p>-objpos.
     ENDLOOP.
 
     io_xml->add( iv_name = 'DD25V'
