@@ -67,7 +67,7 @@ CLASS ltcl_test_form IMPLEMENTATION.
     DATA lo_normalized_exp TYPE REF TO zcl_abapgit_string_map.
 
     lo_cut            = zcl_abapgit_html_form=>create( ).
-    lo_form_data      = zcl_abapgit_string_map=>create( ).
+    lo_form_data      = zcl_abapgit_string_map=>create( iv_case_insensitive = abap_true ).
     lo_normalized_exp = zcl_abapgit_string_map=>create( ).
 
     lo_cut->text(
