@@ -11,39 +11,39 @@ CLASS zcl_abapgit_object_bdef DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING
           zcx_abapgit_exception.
 
-protected section.
-private section.
+  PROTECTED SECTION.
+  PRIVATE SECTION.
 
-  data MI_PERSISTENCE type ref to IF_WB_OBJECT_PERSIST .
-  data MI_WB_OBJECT_OPERATOR type ref to OBJECT .
-  data MV_BEHAVIOUR_DEFINITION_KEY type SEU_OBJKEY .
-  data MR_BEHAVIOUR_DEFINITION type ref to DATA .
+    DATA mi_persistence TYPE REF TO if_wb_object_persist .
+    DATA mi_wb_object_operator TYPE REF TO object .
+    DATA mv_behaviour_definition_key TYPE seu_objkey .
+    DATA mr_behaviour_definition TYPE REF TO data .
 
-  methods CLEAR_FIELDS
-    changing
-      !CS_METADATA type ANY .
-  methods CLEAR_FIELD
-    importing
-      !IV_FIELDNAME type CSEQUENCE
-    changing
-      !CS_METADATA type ANY .
-  methods FILL_METADATA_FROM_DB
-    changing
-      !CS_METADATA type ANY
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods GET_TRANSPORT_REQ_IF_NEEDED
-    importing
-      !IV_PACKAGE type DEVCLASS
-    returning
-      value(RV_TRANSPORT_REQUEST) type TRKORR
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
-  methods GET_WB_OBJECT_OPERATOR
-    returning
-      value(RI_WB_OBJECT_OPERATOR) type ref to OBJECT
-    raising
-      ZCX_ABAPGIT_EXCEPTION .
+    METHODS clear_fields
+      CHANGING
+        !cs_metadata TYPE any .
+    METHODS clear_field
+      IMPORTING
+        !iv_fieldname TYPE csequence
+      CHANGING
+        !cs_metadata  TYPE any .
+    METHODS fill_metadata_from_db
+      CHANGING
+        !cs_metadata TYPE any
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_transport_req_if_needed
+      IMPORTING
+        !iv_package                 TYPE devclass
+      RETURNING
+        VALUE(rv_transport_request) TYPE trkorr
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_wb_object_operator
+      RETURNING
+        VALUE(ri_wb_object_operator) TYPE REF TO object
+      RAISING
+        zcx_abapgit_exception .
 ENDCLASS.
 
 
@@ -65,6 +65,9 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
 
 
   METHOD clear_fields.
+
+    FIELD-SYMBOLS: <lv_links> TYPE ANY TABLE.
+    FIELD-SYMBOLS: <lv_value> TYPE data.
 
     clear_field(
       EXPORTING
@@ -174,26 +177,15 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
       CHANGING
       cs_metadata = cs_metadata ).
 
-
-
-
-    "    ----------
-    FIELD-SYMBOLS: <lv_links> TYPE ANY TABLE.
     ASSIGN COMPONENT 'LINKS' OF STRUCTURE cs_metadata TO <lv_links>.
     ASSERT sy-subrc = 0.
 
-    FIELD-SYMBOLS <item> TYPE any.
-    LOOP AT <lv_links> ASSIGNING <item>.
-      FIELD-SYMBOLS: <lv_value> TYPE data.
-      ASSIGN COMPONENT 'COMMON_ATTRIBUTES' OF STRUCTURE <item> TO <lv_value>.
+    FIELD-SYMBOLS <ls_item> TYPE any.
+    LOOP AT <lv_links> ASSIGNING <ls_item>.
+      ASSIGN COMPONENT 'COMMON_ATTRIBUTES' OF STRUCTURE <ls_item> TO <lv_value>.
       ASSERT sy-subrc = 0.
       CLEAR: <lv_value>.
     ENDLOOP.
-
-
-
-
-
 
   ENDMETHOD.
 
