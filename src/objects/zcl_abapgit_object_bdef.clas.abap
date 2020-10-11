@@ -68,6 +68,7 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
 
     FIELD-SYMBOLS: <lv_links> TYPE ANY TABLE.
     FIELD-SYMBOLS: <lv_value> TYPE data.
+    FIELD-SYMBOLS <ls_item> TYPE any.
 
     clear_field(
       EXPORTING
@@ -180,7 +181,6 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
     ASSIGN COMPONENT 'LINKS' OF STRUCTURE cs_metadata TO <lv_links>.
     ASSERT sy-subrc = 0.
 
-    FIELD-SYMBOLS <ls_item> TYPE any.
     LOOP AT <lv_links> ASSIGNING <ls_item>.
       ASSIGN COMPONENT 'COMMON_ATTRIBUTES' OF STRUCTURE <ls_item> TO <lv_value>.
       ASSERT sy-subrc = 0.
