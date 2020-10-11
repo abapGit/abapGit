@@ -11,54 +11,51 @@ CLASS zcl_abapgit_object_bdef DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         RAISING
           zcx_abapgit_exception.
 
-  PRIVATE SECTION.
-    METHODS:
-      clear_fields
-        CHANGING
-          cs_behaviour_definition TYPE any,
+protected section.
+private section.
 
-      clear_field
-        IMPORTING
-          iv_fieldname            TYPE csequence
-        CHANGING
-          cs_behaviour_definition TYPE any,
+  data MI_PERSISTENCE type ref to IF_WB_OBJECT_PERSIST .
+  data MI_WB_OBJECT_OPERATOR type ref to OBJECT .
+  data MV_BEHAVIOUR_DEFINITION_KEY type SEU_OBJKEY .
+  data MR_BEHAVIOUR_DEFINITION type ref to DATA .
 
-      fill_metadata_from_db
-        CHANGING
-          cs_behaviour_definition TYPE any
-        RAISING
-          zcx_abapgit_exception,
-
-      get_transport_req_if_needed
-        IMPORTING
-          iv_package                  TYPE devclass
-        RETURNING
-          VALUE(rv_transport_request) TYPE trkorr
-        RAISING
-          zcx_abapgit_exception,
-
-      get_wb_object_operator
-        RETURNING
-          VALUE(ri_wb_object_operator) TYPE REF TO object
-        RAISING
-          zcx_abapgit_exception.
-
-    DATA:
-      mi_persistence              TYPE REF TO if_wb_object_persist,
-      mi_wb_object_operator       TYPE REF TO object,
-      mv_behaviour_definition_key TYPE seu_objkey,
-      mr_behaviour_definition     TYPE REF TO data.
-
+  methods CLEAR_FIELDS
+    changing
+      !CS_METADATA type ANY .
+  methods CLEAR_FIELD
+    importing
+      !IV_FIELDNAME type CSEQUENCE
+    changing
+      !CS_METADATA type ANY .
+  methods FILL_METADATA_FROM_DB
+    changing
+      !CS_METADATA type ANY
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods GET_TRANSPORT_REQ_IF_NEEDED
+    importing
+      !IV_PACKAGE type DEVCLASS
+    returning
+      value(RV_TRANSPORT_REQUEST) type TRKORR
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods GET_WB_OBJECT_OPERATOR
+    returning
+      value(RI_WB_OBJECT_OPERATOR) type ref to OBJECT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
 ENDCLASS.
 
 
-CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
+
+CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
+
 
   METHOD clear_field.
 
     FIELD-SYMBOLS: <lv_value> TYPE data.
 
-    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_behaviour_definition
+    ASSIGN COMPONENT iv_fieldname OF STRUCTURE cs_metadata
            TO <lv_value>.
     ASSERT sy-subrc = 0.
 
@@ -71,63 +68,132 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_AT'
+        iv_fieldname          = 'VERSION'
       CHANGING
-        cs_behaviour_definition = cs_behaviour_definition ).
+        cs_metadata = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CREATED_BY'
+        iv_fieldname          = 'CREATED_AT'
       CHANGING
-        cs_behaviour_definition = cs_behaviour_definition ).
+        cs_metadata = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_AT'
+        iv_fieldname          = 'CREATED_BY'
       CHANGING
-        cs_behaviour_definition = cs_behaviour_definition ).
+        cs_metadata = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-CHANGED_BY'
+        iv_fieldname          = 'CHANGED_AT'
       CHANGING
-        cs_behaviour_definition = cs_behaviour_definition ).
+        cs_metadata = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-LANGUAGE'
+        iv_fieldname          = 'CHANGED_BY'
       CHANGING
-        cs_behaviour_definition = cs_behaviour_definition ).
+        cs_metadata = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-MASTER_LANGUAGE'
+        iv_fieldname          = 'RESPONSIBLE'
       CHANGING
-        cs_behaviour_definition = cs_behaviour_definition ).
+        cs_metadata = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-MASTER_SYSTEM'
+      iv_fieldname          = 'PACKAGE_REF'
       CHANGING
-        cs_behaviour_definition = cs_behaviour_definition ).
+      cs_metadata = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-RESPONSIBLE'
+      iv_fieldname          = 'CONTAINER_REF'
       CHANGING
-        cs_behaviour_definition = cs_behaviour_definition ).
+      cs_metadata = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'METADATA-PACKAGE_REF'
+      iv_fieldname          = 'MASTER_SYSTEM'
       CHANGING
-        cs_behaviour_definition = cs_behaviour_definition ).
+      cs_metadata = cs_metadata ).
 
     clear_field(
       EXPORTING
-        iv_fieldname          = 'CONTENT-SOURCE'
+      iv_fieldname          = 'MAIN_OBJECT-CHANGED_AT'
       CHANGING
-        cs_behaviour_definition = cs_behaviour_definition ).
+      cs_metadata = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+      iv_fieldname          = 'MAIN_OBJECT-CHANGED_BY'
+      CHANGING
+      cs_metadata = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+      iv_fieldname          = 'MAIN_OBJECT-CREATED_AT'
+      CHANGING
+      cs_metadata = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+      iv_fieldname          = 'MAIN_OBJECT-CREATED_BY'
+      CHANGING
+      cs_metadata = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+      iv_fieldname          = 'MAIN_OBJECT-RESPONSIBLE'
+      CHANGING
+      cs_metadata = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+      iv_fieldname          = 'MAIN_OBJECT-PACKAGE_REF'
+      CHANGING
+      cs_metadata = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+      iv_fieldname          = 'MAIN_OBJECT-CONTAINER_REF'
+      CHANGING
+      cs_metadata = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+      iv_fieldname          = 'MAIN_OBJECT-MASTER_SYSTEM'
+      CHANGING
+      cs_metadata = cs_metadata ).
+
+    clear_field(
+      EXPORTING
+      iv_fieldname          = 'SYNTAX_CONFIGURATION'
+      CHANGING
+      cs_metadata = cs_metadata ).
+
+
+
+
+    "    ----------
+    FIELD-SYMBOLS: <lv_links> TYPE ANY TABLE.
+    ASSIGN COMPONENT 'LINKS' OF STRUCTURE cs_metadata TO <lv_links>.
+    ASSERT sy-subrc = 0.
+
+    FIELD-SYMBOLS <item> TYPE any.
+    LOOP AT <lv_links> ASSIGNING <item>.
+      FIELD-SYMBOLS: <lv_value> TYPE data.
+      ASSIGN COMPONENT 'COMMON_ATTRIBUTES' OF STRUCTURE <item> TO <lv_value>.
+      ASSERT sy-subrc = 0.
+      CLEAR: <lv_value>.
+    ENDLOOP.
+
+
+
+
+
 
   ENDMETHOD.
 
@@ -240,7 +306,7 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
         IF zif_abapgit_object~exists( ) = abap_true.
 
           " We need to populate created_at, created_by, because otherwise update  is not possible
-          fill_metadata_from_db( CHANGING cs_behaviour_definition = <ls_behaviour_definition> ).
+          fill_metadata_from_db( CHANGING cs_metadata = <ls_behaviour_definition> ).
           li_object_data_model->set_data( <ls_behaviour_definition> ).
 
           CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
@@ -357,6 +423,7 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
 
     FIELD-SYMBOLS:
       <ls_behaviour_definition> TYPE any,
+      <lv_metadata>             TYPE any,
       <lv_source>               TYPE string.
 
     ASSIGN mr_behaviour_definition->* TO <ls_behaviour_definition>.
@@ -372,13 +439,13 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
             data           = <ls_behaviour_definition>
             eo_object_data = li_object_data_model.
 
-        ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <ls_behaviour_definition>
-               TO <lv_source>.
+        ASSIGN COMPONENT 'METADATA' OF STRUCTURE <ls_behaviour_definition> TO <lv_metadata>.
         ASSERT sy-subrc = 0.
+        clear_fields( CHANGING cs_metadata = <lv_metadata> ).
 
+        ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <ls_behaviour_definition> TO <lv_source>.
+        ASSERT sy-subrc = 0.
         lv_source = <lv_source>.
-
-        clear_fields( CHANGING cs_behaviour_definition = <ls_behaviour_definition> ).
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise(
@@ -388,13 +455,14 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
 
     io_xml->add(
         iv_name = 'BDEF'
-        ig_data = <ls_behaviour_definition> ).
+        ig_data = <lv_metadata> ).
 
     mo_files->add_string(
         iv_ext    = 'asbdef'
         iv_string = lv_source ).
 
   ENDMETHOD.
+
 
   METHOD fill_metadata_from_db.
 
@@ -419,19 +487,19 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
       IMPORTING
         data = <ls_behaviour_definition_old>.
 
-    ASSIGN COMPONENT 'METADATA-CREATED_BY' OF STRUCTURE cs_behaviour_definition
+    ASSIGN COMPONENT 'CREATED_BY' OF STRUCTURE cs_metadata
            TO <lv_created_by>.
     ASSERT sy-subrc = 0.
 
-    ASSIGN COMPONENT 'METADATA-CREATED_AT' OF STRUCTURE cs_behaviour_definition
+    ASSIGN COMPONENT 'CREATED_AT' OF STRUCTURE cs_metadata
            TO <lv_created_at>.
     ASSERT sy-subrc = 0.
 
-    ASSIGN COMPONENT 'METADATA-CREATED_BY' OF STRUCTURE <ls_behaviour_definition_old>
+    ASSIGN COMPONENT 'CREATED_BY' OF STRUCTURE <ls_behaviour_definition_old>
            TO <lv_created_by_old>.
     ASSERT sy-subrc = 0.
 
-    ASSIGN COMPONENT 'METADATA-CREATED_AT' OF STRUCTURE <ls_behaviour_definition_old>
+    ASSIGN COMPONENT 'CREATED_AT' OF STRUCTURE <ls_behaviour_definition_old>
            TO <lv_created_at_old>.
     ASSERT sy-subrc = 0.
 
@@ -484,5 +552,4 @@ CLASS zcl_abapgit_object_bdef IMPLEMENTATION.
     ri_wb_object_operator = mi_wb_object_operator.
 
   ENDMETHOD.
-
 ENDCLASS.
