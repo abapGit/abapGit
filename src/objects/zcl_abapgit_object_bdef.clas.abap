@@ -637,10 +637,11 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
 
     DATA:
       lo_object_data        TYPE REF TO object,
-      lo_object_data_old    TYPE REF TO iF_WB_OBJECT_DATA_MODEL,
+      lo_object_data_old    TYPE REF TO if_wb_object_data_model,
       lr_new                TYPE REF TO data,
       lr_old                TYPE REF TO data,
-      lo_wb_object_operator TYPE REF TO object.
+      lo_wb_object_operator TYPE REF TO object,
+      ls_old                TYPE     cl_blue_source_object_data=>ty_object_data.
 
     FIELD-SYMBOLS:
       <ls_new>       TYPE any,
@@ -674,7 +675,6 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
       IMPORTING
         eo_object_data = lo_object_data_old.
 
-    DATA ls_old TYPE     cl_blue_source_object_data=>ty_object_data.
     CALL METHOD lo_object_data_old->('GET_DATA')
       EXPORTING
         p_metadata_only  = abap_false
