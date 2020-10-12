@@ -301,7 +301,8 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
 
     " Unit tests are only functional if the corresponding flag is set
     " Therefore, if the flag is not set, there's no need to serialize this include
-    SELECT SINGLE with_unit_tests FROM seoclassdf INTO lv_with_unit_test WHERE clsname = is_clskey-clsname.
+    SELECT SINGLE with_unit_tests FROM seoclassdf INTO lv_with_unit_test
+        WHERE clsname = is_clskey-clsname AND version = '1'.
     IF sy-subrc <> 0 OR lv_with_unit_test = abap_false.
       RETURN.
     ENDIF.
