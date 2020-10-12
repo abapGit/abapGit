@@ -137,13 +137,11 @@ CLASS ZCL_ABAPGIT_OBJECT_XSLT IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |error from cl_o2_api_xsltdesc=>create_new_from_string, { sy-subrc }| ).
     ENDIF.
 
-    lo_xslt->activate( ).
-
     lo_xslt->save( ).
 
-    lo_xslt->set_changeable( abap_false ).
+    lo_xslt->activate( ).
 
-    zcl_abapgit_objects_activation=>add_item( ms_item ).
+    lo_xslt->set_changeable( abap_false ).
 
   ENDMETHOD.
 
