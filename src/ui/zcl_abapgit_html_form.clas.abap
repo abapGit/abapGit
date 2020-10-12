@@ -64,7 +64,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_hint       TYPE string OPTIONAL
       RETURNING
         VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
-    METHODS validate_normalize_form_data
+    METHODS normalize_form_data
       IMPORTING
         !io_form_data       TYPE REF TO zcl_abapgit_string_map
       RETURNING
@@ -193,6 +193,36 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
       GET TIME STAMP FIELD lv_ts.
       ro_form->mv_form_id = |form_{ lv_ts }|.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD normalize_form_data.
+
+    DATA lv_value TYPE string.
+    FIELD-SYMBOLS <ls_field> LIKE LINE OF mt_fields.
+
+    CREATE OBJECT ro_form_data.
+
+    LOOP AT mt_fields ASSIGNING <ls_field>.
+      CLEAR lv_value.
+      lv_value = io_form_data->get( <ls_field>-name ).
+
+      IF <ls_field>-type = c_field_type-checkbox.
+        ro_form_data->set(
+          iv_key = <ls_field>-name
+          iv_val = boolc( lv_value = 'on' ) ).
+      ELSEIF <ls_field>-type = c_field_type-text AND <ls_field>-upper_case = abap_true.
+        ro_form_data->set(
+          iv_key = <ls_field>-name
+          iv_val = to_upper( lv_value ) ).
+      ELSE.
+        ro_form_data->set(
+          iv_key = <ls_field>-name
+          iv_val = lv_value ).
+      ENDIF.
+
+    ENDLOOP.
 
   ENDMETHOD.
 
@@ -376,7 +406,7 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
         IF lv_error IS NOT INITIAL.
           ii_html->add( |<small>{ lv_error }</small>| ).
         ENDIF.
-        IF lv_value IS NOT INITIAL.
+        IF lv_value = abap_true OR lv_value = 'on'. " boolc return ` ` which is not initial -> bug after 1st validation
           lv_checked = ' checked'.
         ENDIF.
         ii_html->add( |<input type="checkbox" name="{ is_field-name }" id="{ is_field-name }"{ lv_checked }>| ).
@@ -469,54 +499,19 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD validate_normalize_form_data.
-
-    DATA ls_field LIKE LINE OF mt_fields.
-    FIELD-SYMBOLS <ls_entry> LIKE LINE OF io_form_data->mt_entries.
-
-    CREATE OBJECT ro_form_data.
-
-    LOOP AT io_form_data->mt_entries ASSIGNING <ls_entry>.
-      READ TABLE mt_fields INTO ls_field WITH KEY by_name COMPONENTS name = <ls_entry>-k.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Unexpected form field [{ <ls_entry>-k }]| ).
-      ENDIF.
-
-      IF ls_field-type = c_field_type-checkbox.
-        ro_form_data->set(
-          iv_key = <ls_entry>-k
-          iv_val = boolc( <ls_entry>-v = 'on' ) ).
-      ELSEIF ls_field-type = c_field_type-text AND ls_field-upper_case = abap_true.
-        ro_form_data->set(
-          iv_key = <ls_entry>-k
-          iv_val = to_upper( <ls_entry>-v ) ).
-      ELSE.
-        ro_form_data->set(
-          iv_key = <ls_entry>-k
-          iv_val = <ls_entry>-v ).
-      ENDIF.
-    ENDLOOP.
-
-  ENDMETHOD.
-
-
   METHOD validate_required_fields.
 
-    DATA ls_field LIKE LINE OF mt_fields.
-    FIELD-SYMBOLS <ls_entry> LIKE LINE OF io_form_data->mt_entries.
+    DATA lv_value TYPE string.
+    FIELD-SYMBOLS <ls_field> LIKE LINE OF mt_fields.
 
     CREATE OBJECT ro_validation_log.
 
-    LOOP AT io_form_data->mt_entries ASSIGNING <ls_entry>.
-      READ TABLE mt_fields INTO ls_field WITH KEY by_name COMPONENTS name = <ls_entry>-k.
-      IF sy-subrc <> 0.
-        zcx_abapgit_exception=>raise( |Unexpected form field [{ <ls_entry>-k }]| ).
-      ENDIF.
-
-      IF ls_field-required IS NOT INITIAL AND <ls_entry>-v IS INITIAL.
+    LOOP AT mt_fields ASSIGNING <ls_field>.
+      lv_value = io_form_data->get( <ls_field>-name ).
+      IF <ls_field>-required IS NOT INITIAL AND lv_value IS INITIAL.
         ro_validation_log->set(
-          iv_key = ls_field-name
-          iv_val = |{ ls_field-label } cannot be empty| ).
+          iv_key = <ls_field>-name
+          iv_val = |{ <ls_field>-label } cannot be empty| ).
       ENDIF.
     ENDLOOP.
 
