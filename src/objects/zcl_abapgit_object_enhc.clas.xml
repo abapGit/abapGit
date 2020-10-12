@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_OBJECT_ENHC</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>Composite Enhancement</DESCRIPT>
+    <DESCRIPT>ENHC - Composite Enhancement Implementation</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
