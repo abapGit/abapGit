@@ -12,38 +12,50 @@ CLASS zcl_abapgit_object_bdef DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           zcx_abapgit_exception.
 
   PROTECTED SECTION.
-  PRIVATE SECTION.
+private section.
 
-    DATA mi_persistence TYPE REF TO if_wb_object_persist .
-    DATA mi_wb_object_operator TYPE REF TO object .
-    DATA mv_behaviour_definition_key TYPE seu_objkey .
-    DATA mr_behaviour_definition TYPE REF TO data .
+  data MI_PERSISTENCE type ref to IF_WB_OBJECT_PERSIST .
+  data MI_WB_OBJECT_OPERATOR type ref to OBJECT .
+  data MV_BEHAVIOUR_DEFINITION_KEY type SEU_OBJKEY .
+  data MR_BEHAVIOUR_DEFINITION type ref to DATA .
 
-    METHODS clear_fields
-      CHANGING
-        !cs_metadata TYPE any .
-    METHODS clear_field
-      IMPORTING
-        !iv_fieldname TYPE csequence
-      CHANGING
-        !cs_metadata  TYPE any .
-    METHODS fill_metadata_from_db
-      CHANGING
-        !cs_metadata TYPE any
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_transport_req_if_needed
-      IMPORTING
-        !iv_package                 TYPE devclass
-      RETURNING
-        VALUE(rv_transport_request) TYPE trkorr
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_wb_object_operator
-      RETURNING
-        VALUE(ri_wb_object_operator) TYPE REF TO object
-      RAISING
-        zcx_abapgit_exception .
+  methods CLEAR_FIELDS
+    changing
+      !CS_METADATA type ANY .
+  methods CLEAR_FIELD
+    importing
+      !IV_FIELDNAME type CSEQUENCE
+    changing
+      !CS_METADATA type ANY .
+  methods FILL_METADATA_FROM_DB
+    changing
+      !CS_METADATA type ANY
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods GET_TRANSPORT_REQ_IF_NEEDED
+    importing
+      !IV_PACKAGE type DEVCLASS
+    returning
+      value(RV_TRANSPORT_REQUEST) type TRKORR
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods GET_WB_OBJECT_OPERATOR
+    returning
+      value(RI_WB_OBJECT_OPERATOR) type ref to OBJECT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods MERGE_OBJECT_DATA
+    importing
+      !IO_OBJECT_DATA type ref to OBJECT
+    returning
+      value(RO_OBJECT_DATA_MERGED) type ref to IF_WB_OBJECT_DATA_MODEL
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods GET_OBJECT_DATA
+    importing
+      !IO_XML type ref to ZIF_ABAPGIT_XML_INPUT
+    returning
+      value(RO_OBJECT_DATA) type ref to OBJECT .
 ENDCLASS.
 
 
@@ -262,72 +274,101 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
   METHOD zif_abapgit_object~deserialize.
 
     DATA:
-      li_object_data_model  TYPE REF TO if_wb_object_data_model,
-      li_wb_object_operator TYPE REF TO object,
+      lo_object_data        TYPE REF TO object,
+      lo_object_data_merged TYPE REF TO if_wb_object_data_model,
+      lo_wb_object_operator TYPE REF TO object,
       lx_error              TYPE REF TO cx_root,
-      lv_transport_request  TYPE trkorr.
+      lv_transport_request  TYPE trkorr,
+      lr_wbobjtype          TYPE REF TO data,
+      lr_category           TYPE REF TO data.
 
     FIELD-SYMBOLS:
-      <ls_behaviour_definition> TYPE any,
-      <lv_source>               TYPE data.
-
-    ASSIGN mr_behaviour_definition->* TO <ls_behaviour_definition>.
-    ASSERT sy-subrc = 0.
-
-    io_xml->read(
-      EXPORTING
-        iv_name = 'BDEF'
-      CHANGING
-        cg_data = <ls_behaviour_definition> ).
-
-    li_wb_object_operator = get_wb_object_operator( ).
+      <ls_wbobjtype> TYPE any,
+      <lv_category>  TYPE any,
+      <lv_field>     TYPE any.
 
     TRY.
-        CREATE OBJECT li_object_data_model TYPE ('CL_BLUE_SOURCE_OBJECT_DATA').
 
-        ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <ls_behaviour_definition>
-               TO <lv_source>.
-        ASSERT sy-subrc = 0.
+        lo_object_data = get_object_data( io_xml ).
+        lv_transport_request = get_transport_req_if_needed( iv_package ).
 
-        <lv_source> = mo_files->read_string( 'asbdef' ).
+        CREATE DATA lr_wbobjtype TYPE ('WBOBJTYPE').
+        ASSIGN lr_wbobjtype->* TO <ls_wbobjtype>.
+        ASSIGN COMPONENT 'OBJTYPE_TR' OF STRUCTURE <ls_wbobjtype> TO <lv_field>.
+        <lv_field> = 'BDEF'.
+        ASSIGN COMPONENT 'SUBTYPE_WB' OF STRUCTURE <ls_wbobjtype> TO <lv_field>.
+        <lv_field> = 'BDO'.
+
+        CREATE DATA lr_category TYPE ('WBADT_RESOURCE_CATEGORY').
+        ASSIGN lr_category->* TO <lv_category>.
+
+        CALL METHOD ('CL_BLUE_WB_UTILITY')=>('GET_RESOURCE_CATEGORY')
+          EXPORTING
+            is_object_type = <ls_wbobjtype>
+          RECEIVING
+            result         = <lv_category>.
+
+        lo_wb_object_operator = get_wb_object_operator( ).
 
         tadir_insert( iv_package ).
 
-        lv_transport_request = get_transport_req_if_needed( iv_package ).
 
-        IF zif_abapgit_object~exists( ) = abap_true.
+        IF zif_abapgit_object~exists( ) = abap_false.
+          CASE <lv_category>.
+            WHEN '1'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_atomic.
+              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~CREATE')
+                EXPORTING
+                  io_object_data    = lo_object_data
+                  data_selection    = 'AL' " if_wb_object_data_selection_co=>c_all_data
+                  version           = 'I'
+                  package           = iv_package
+                  transport_request = lv_transport_request.
+            WHEN '2'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_compound_s.
+              CALL METHOD lo_wb_object_operator->('CREATE')
+                EXPORTING
+                  io_object_data    = lo_object_data
+                  data_selection    = 'P' " if_wb_object_data_selection_co=>c_properties
+                  version           = 'I'
+                  package           = iv_package
+                  transport_request = lv_transport_request.
 
-          " We need to populate created_at, created_by, because otherwise update  is not possible
-          fill_metadata_from_db( CHANGING cs_metadata = <ls_behaviour_definition> ).
-          li_object_data_model->set_data( <ls_behaviour_definition> ).
-
-          CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
-            EXPORTING
-              io_object_data    = li_object_data_model
-              transport_request = lv_transport_request.
-
+              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
+                EXPORTING
+                  io_object_data    = lo_object_data
+                  data_selection    = 'D' "if_wb_object_data_selection_co=>c_data_content
+                  version           = 'I'
+                  transport_request = lv_transport_request.
+            WHEN OTHERS.
+          ENDCASE.
         ELSE.
-
-          li_object_data_model->set_data( <ls_behaviour_definition> ).
-
-          CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~CREATE')
-            EXPORTING
-              io_object_data    = li_object_data_model
-              data_selection    = 'P' " if_wb_object_data_selection_co=>c_properties
-              package           = iv_package
-              transport_request = lv_transport_request.
-
-          CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
-            EXPORTING
-              io_object_data    = li_object_data_model
-              data_selection    = 'D' " if_wb_object_data_selection_co=>c_data_content
-              transport_request = lv_transport_request.
-
+          lo_object_data_merged = merge_object_data( lo_object_data ).
+          CASE <lv_category>.
+            WHEN '1'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_atomic.
+              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
+                EXPORTING
+                  io_object_data    = lo_object_data_merged
+                  data_selection    = 'AL' "if_wb_object_data_selection_co=>c_all_data
+                  version           = 'I'
+                  transport_request = lv_transport_request.
+            WHEN '2'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_compound_s.
+              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
+                EXPORTING
+                  io_object_data    = lo_object_data_merged
+                  data_selection    = 'P' "if_wb_object_data_selection_co=>c_properties
+                  version           = 'I'
+                  transport_request = lv_transport_request.
+              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~UPDATE')
+                EXPORTING
+                  io_object_data    = lo_object_data_merged
+                  data_selection    = 'D' "if_wb_object_data_selection_co=>c_data_content
+                  version           = 'I'
+                  transport_request = lv_transport_request.
+            WHEN OTHERS.
+          ENDCASE.
         ENDIF.
 
-        CALL METHOD li_wb_object_operator->('IF_WB_OBJECT_OPERATOR~ACTIVATE').
-
         corr_insert( iv_package ).
+        zcl_abapgit_objects_activation=>add_item( ms_item ).
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise(
@@ -379,7 +420,7 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_locked.
 
-    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESWB_EO'
+    rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'ESDIC'
                                             iv_argument    = |{ ms_item-obj_type }{ ms_item-obj_name }| ).
 
   ENDMETHOD.
@@ -543,5 +584,116 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
 
     ri_wb_object_operator = mi_wb_object_operator.
 
+  ENDMETHOD.
+
+
+  METHOD get_object_data.
+
+    DATA:
+      lo_object_data        TYPE REF TO object,
+      lr_metadata           TYPE REF TO data,
+      lr_data               TYPE REF TO data.
+
+    FIELD-SYMBOLS:
+      <lv_metadata_node> TYPE any,
+      <ls_metadata>      TYPE any,
+      <lv_source>        TYPE any,
+      <lg_data>          TYPE any.
+
+    CREATE DATA lr_data TYPE ('CL_BLUE_SOURCE_OBJECT_DATA=>TY_OBJECT_DATA').
+    ASSIGN lr_data->* TO <lg_data>.
+    ASSERT sy-subrc = 0.
+
+    ASSIGN COMPONENT 'METADATA' OF STRUCTURE <lg_data> TO <lv_metadata_node>.
+    ASSERT sy-subrc = 0.
+
+    CREATE DATA lr_metadata  TYPE ('IF_ADT_TOOLS_CORE_SOURCE_TYPES=>TY_ABAP_SOURCE_MAIN_OBJECT').
+    ASSIGN lr_metadata->* TO <ls_metadata>.
+    ASSERT sy-subrc = 0.
+
+    io_xml->read(
+      EXPORTING
+        iv_name = 'BDEF'
+      CHANGING
+        cg_data = <ls_metadata> ).
+
+    <lv_metadata_node> = <ls_metadata>.
+
+    ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <lg_data> TO <lv_source>.
+    ASSERT sy-subrc = 0.
+
+    <lv_source> = mo_files->read_string( 'asbdef' ).
+
+    CREATE OBJECT ro_object_data TYPE ('CL_BLUE_SOURCE_OBJECT_DATA').
+
+    CALL METHOD ro_object_data->('IF_WB_OBJECT_DATA_MODEL~SET_DATA')
+      EXPORTING
+        p_data = <lg_data>.
+
+  ENDMETHOD.
+
+
+  METHOD merge_object_data.
+
+    DATA:
+      lo_object_data        TYPE REF TO object,
+      lo_object_data_old    TYPE REF TO iF_WB_OBJECT_DATA_MODEL,
+      lr_new                TYPE REF TO data,
+      lr_old                TYPE REF TO data,
+      lo_wb_object_operator TYPE REF TO object.
+
+    FIELD-SYMBOLS:
+      <ls_new>       TYPE any,
+      <ls_old>       TYPE any,
+      <lv_field_old> TYPE any,
+      <lv_field_new> TYPE any.
+
+    CREATE OBJECT lo_object_data TYPE ('CL_BLUE_SOURCE_OBJECT_DATA').
+    lo_object_data = io_object_data.
+
+    CREATE DATA lr_new TYPE ('CL_BLUE_SOURCE_OBJECT_DATA=>TY_OBJECT_DATA').
+    ASSIGN lr_new->* TO <ls_new>.
+    ASSERT sy-subrc = 0.
+
+    CREATE DATA lr_old TYPE ('CL_BLUE_SOURCE_OBJECT_DATA=>TY_OBJECT_DATA').
+    ASSIGN lr_old->* TO <ls_old>.
+    ASSERT sy-subrc = 0.
+
+    CALL METHOD lo_object_data->('IF_WB_OBJECT_DATA_MODEL~GET_DATA')
+      EXPORTING
+        p_metadata_only  = abap_false
+        p_data_selection = 'AL'
+      IMPORTING
+        p_data           = <ls_new>.
+
+    lo_wb_object_operator = get_wb_object_operator( ).
+
+    CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~READ')
+      EXPORTING
+        data_selection = 'AL' " if_wb_object_data_selection_co=>c_all_data
+      IMPORTING
+        eo_object_data = lo_object_data_old.
+
+    DATA ls_old TYPE     cl_blue_source_object_data=>ty_object_data.
+    CALL METHOD lo_object_data_old->('GET_DATA')
+      EXPORTING
+        p_metadata_only  = abap_false
+        p_data_selection = 'AL' " if_wb_object_data_selection_co=>c_all_data
+      IMPORTING
+        p_data           = <ls_old>.
+
+    ASSIGN COMPONENT 'METADATA-DESCRIPTION' OF STRUCTURE <ls_old> TO <lv_field_old>.
+    ASSIGN COMPONENT 'METADATA-DESCRIPTION' OF STRUCTURE <ls_new> TO <lv_field_new>.
+    <lv_field_old> = <lv_field_new>.
+
+    ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <ls_old> TO <lv_field_old>.
+    ASSIGN COMPONENT 'CONTENT-SOURCE' OF STRUCTURE <ls_new> TO <lv_field_new>.
+    <lv_field_old> = <lv_field_new>.
+
+    CREATE OBJECT ro_object_data_merged TYPE ('CL_BLUE_SOURCE_OBJECT_DATA').
+
+    CALL METHOD ro_object_data_merged->('SET_DATA')
+      EXPORTING
+        p_data = <ls_old>.
   ENDMETHOD.
 ENDCLASS.
