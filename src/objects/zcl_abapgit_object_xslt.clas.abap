@@ -134,16 +134,33 @@ CLASS ZCL_ABAPGIT_OBJECT_XSLT IMPLEMENTATION.
         undefined_name          = 5
         OTHERS                  = 6 ).
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |error from cl_o2_api_xsltdesc=>create_new_from_string, { sy-subrc }| ).
+      zcx_abapgit_exception=>raise( |Error from XSLT new, { sy-subrc }| ).
     ENDIF.
 
-    lo_xslt->activate( ).
+    lo_xslt->save(
+      EXCEPTIONS
+        action_cancelled      = 1
+        error_occured         = 2
+        object_invalid        = 3
+        object_not_changeable = 4
+        permission_failure    = 5
+        OTHERS                = 6 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from XSLT save, { sy-subrc }| ).
+    ENDIF.
 
-    lo_xslt->save( ).
+    lo_xslt->activate(
+      EXCEPTIONS
+        generate_error    = 1
+        storage_error     = 2
+        syntax_errors     = 3
+        xtc_not_available = 4
+        OTHERS            = 5 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( |Error from XSLT activate, { sy-subrc }| ).
+    ENDIF.
 
     lo_xslt->set_changeable( abap_false ).
-
-    zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.
 
