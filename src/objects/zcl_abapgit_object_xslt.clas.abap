@@ -154,7 +154,7 @@ CLASS ZCL_ABAPGIT_OBJECT_XSLT IMPLEMENTATION.
         generate_error    = 1
         storage_error     = 2
         syntax_errors     = 3
-        xtc_not_available = 4
+*        xtc_not_available = 4  downport/upport, does not exist in 751
         OTHERS            = 5 ).
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error from XSLT activate, { sy-subrc }| ).
