@@ -120,16 +120,6 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
     ls_data-starting_folder = '/src/'.
     ls_data-folder_logic    = zif_abapgit_dot_abapgit=>c_folder_logic-prefix.
 
-    APPEND '/.gitignore' TO ls_data-ignore.
-    APPEND '/LICENSE' TO ls_data-ignore.
-    APPEND '/README.md' TO ls_data-ignore.
-    APPEND '/package.json' TO ls_data-ignore.
-    APPEND '/.travis.yml' TO ls_data-ignore.
-    APPEND '/.gitlab-ci.yml' TO ls_data-ignore.
-    APPEND '/abaplint.json' TO ls_data-ignore.
-    APPEND '/azure-pipelines.yml' TO ls_data-ignore.
-    APPEND '/.devcontainer.json' TO ls_data-ignore.
-
     CREATE OBJECT ro_dot_abapgit
       EXPORTING
         is_data = ls_data.
@@ -225,20 +215,29 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
     lv_name = iv_path && iv_filename.
 
     CONCATENATE ms_data-starting_folder '*' INTO lv_starting.
+
+    " Always allow .abapgit.xml and .apack-manifest.xml
     CONCATENATE '/' zif_abapgit_definitions=>c_dot_abapgit INTO lv_dot.
+    IF lv_name = lv_dot.
+      RETURN.
+    ENDIF.
+    CONCATENATE '/' zif_abapgit_apack_definitions=>c_dot_apack_manifest INTO lv_dot.
+    IF lv_name = lv_dot.
+      RETURN.
+    ENDIF.
 
+    " Ignore all files matching pattern in ignore list
     LOOP AT ms_data-ignore INTO lv_ignore.
-      FIND ALL OCCURRENCES OF '/' IN lv_name MATCH COUNT lv_count.
-
-      IF lv_name CP lv_ignore
-          OR ( ms_data-starting_folder <> '/'
-          AND lv_count > 1
-          AND NOT lv_name CP lv_starting
-          AND NOT lv_name = lv_dot ).
+      IF lv_name CP lv_ignore.
         rv_ignored = abap_true.
         RETURN.
       ENDIF.
     ENDLOOP.
+
+    " Ignore all files outside of starting folder tree
+    IF ms_data-starting_folder <> '/' AND NOT lv_name CP lv_starting.
+      rv_ignored = abap_true.
+    ENDIF.
 
   ENDMETHOD.
 
