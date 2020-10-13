@@ -311,6 +311,7 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
         model_only   = 3
         OTHERS       = 4.
     IF sy-subrc <> 0 OR ls_vseoclass-with_unit_tests = abap_false.
+      mv_skip_testclass = abap_true.
       RETURN.
     ENDIF.
 
