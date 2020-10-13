@@ -56,7 +56,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB_EDIT IMPLEMENTATION.
 
     DATA lo_map TYPE REF TO zcl_abapgit_string_map.
 
-    lo_map = ii_event->form_data( iv_upper_cased = abap_true ).
+    lo_map = ii_event->form_data( ).
     rs_content-type     = lo_map->get( 'TYPE' ).
     rs_content-value    = lo_map->get( 'VALUE' ).
     rs_content-data_str = lo_map->get( 'XMLDATA' ).
