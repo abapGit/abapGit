@@ -35,7 +35,8 @@ CLASS ltcl_dot_abapgit IMPLEMENTATION.
 
   METHOD ignore.
 
-    CONSTANTS: lc_path     TYPE string VALUE '/',
+    CONSTANTS: lc_path     TYPE string VALUE '/src/',
+               lc_root     TYPE string VALUE '/',
                lc_filename TYPE string VALUE 'foobar.txt'.
 
     DATA: lv_ignored TYPE abap_bool,
@@ -44,12 +45,14 @@ CLASS ltcl_dot_abapgit IMPLEMENTATION.
 
     lo_dot = zcl_abapgit_dot_abapgit=>build_default( ).
 
+    " Any file in default starting folder /src/ should not be ignored
     lv_ignored = lo_dot->is_ignored( iv_path = lc_path
                                      iv_filename = lc_filename ).
     cl_abap_unit_assert=>assert_equals(
       act = lv_ignored
       exp = abap_false ).
 
+" Add file to ignore list -> expect to be ignored
     lo_dot->add_ignore( iv_path = lc_path
                         iv_filename = lc_filename ).
 
@@ -59,11 +62,39 @@ CLASS ltcl_dot_abapgit IMPLEMENTATION.
       act = lv_ignored
       exp = abap_true ).
 
+" Remove file from ignore list -> expect to be allowed
     lo_dot->remove_ignore( iv_path = lc_path
                            iv_filename = lc_filename ).
 
     lv_ignored = lo_dot->is_ignored( iv_path = lc_path
                                      iv_filename = lc_filename ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_ignored
+      exp = abap_false ).
+
+    " .abapgit.xml and .apack-manifest.xml must always be allowed
+    lv_ignored = lo_dot->is_ignored( iv_path = lc_root
+                                     iv_filename = zif_abapgit_definitions=>c_dot_abapgit ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_ignored
+      exp = abap_false ).
+
+    lv_ignored = lo_dot->is_ignored( iv_path = lc_root
+                                     iv_filename = zif_abapgit_apack_definitions=>c_dot_apack_manifest ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_ignored
+      exp = abap_false ).
+
+    " File in root must be ignored since it's not under starting folder
+    lv_ignored = lo_dot->is_ignored( iv_path = lc_root
+                                     iv_filename = 'abaplint.json' ).
+    cl_abap_unit_assert=>assert_equals(
+      act = lv_ignored
+      exp = abap_true ).
+
+    " File under starting folder must not be ignored
+    lv_ignored = lo_dot->is_ignored( iv_path = lc_path
+                                     iv_filename = 'ztest.prog.abap' ).
     cl_abap_unit_assert=>assert_equals(
       act = lv_ignored
       exp = abap_false ).
