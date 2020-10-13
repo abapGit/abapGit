@@ -120,7 +120,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
     FIELD-SYMBOLS:
       <ls_conflict>      TYPE zif_abapgit_definitions=>ty_merge_conflict.
 
-    lv_merge_content = ii_event->form_data( iv_upper_cased = abap_true )->get( 'MERGE_CONTENT' ).
+    lv_merge_content = ii_event->form_data( )->get( 'MERGE_CONTENT' ).
 
     REPLACE ALL OCCURRENCES
       OF zif_abapgit_definitions=>c_crlf IN lv_merge_content WITH zif_abapgit_definitions=>c_newline.

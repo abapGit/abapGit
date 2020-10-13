@@ -15,6 +15,7 @@ CLASS ltcl_sm_test DEFINITION
     METHODS simple FOR TESTING RAISING zcx_abapgit_exception.
     METHODS freeze FOR TESTING RAISING zcx_abapgit_exception.
     METHODS strict FOR TESTING RAISING zcx_abapgit_exception.
+    METHODS case_insensitive FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -142,5 +143,36 @@ CLASS ltcl_sm_test IMPLEMENTATION.
       act = ls_struc_act ).
 
   ENDMETHOD.
+
+  METHOD case_insensitive.
+
+    DATA lo_cut TYPE REF TO zcl_abapgit_string_map.
+    lo_cut = zcl_abapgit_string_map=>create( iv_case_insensitive = abap_true ).
+
+    lo_cut->set(
+      iv_key = 'A'
+      iv_val = 'avalue' ).
+    lo_cut->set(
+      iv_key = 'b'
+      iv_val = 'bvalue' ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'avalue'
+      act = lo_cut->get( 'A' ) ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'avalue'
+      act = lo_cut->get( 'a' ) ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'bvalue'
+      act = lo_cut->get( 'B' ) ).
+
+    cl_abap_unit_assert=>assert_equals(
+      exp = 'bvalue'
+      act = lo_cut->get( 'b' ) ).
+
+  ENDMETHOD.
+
 
 ENDCLASS.
