@@ -165,7 +165,7 @@ CLASS ZCL_ABAPGIT_PERSISTENCE_USER IMPLEMENTATION.
       iv_value = mv_user
       iv_data  = lv_xml ).
 
-    CALL FUNCTION 'DB_COMMIT'.
+    COMMIT WORK AND WAIT.
 
   ENDMETHOD.
 
