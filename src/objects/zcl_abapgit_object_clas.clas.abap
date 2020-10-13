@@ -24,7 +24,7 @@ CLASS zcl_abapgit_object_clas DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
         IMPORTING ii_xml TYPE REF TO zif_abapgit_xml_input
         RAISING   zcx_abapgit_exception,
       deserialize_sotr
-        IMPORTING ii_ml     TYPE REF TO zif_abapgit_xml_input
+        IMPORTING ii_ml      TYPE REF TO zif_abapgit_xml_input
                   iv_package TYPE devclass
         RAISING   zcx_abapgit_exception,
       serialize_xml
@@ -77,6 +77,12 @@ CLASS zcl_abapgit_object_clas DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       is_class_locked
         RETURNING VALUE(rv_is_class_locked) TYPE abap_bool
         RAISING   zcx_abapgit_exception.
+    METHODS interface_replacement
+      IMPORTING
+        !iv_from_interface TYPE seoclsname
+        !iv_to_interface   TYPE seoclsname
+      CHANGING
+        !ct_source         TYPE seop_source_string .
 ENDCLASS.
 
 
@@ -244,6 +250,27 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD interface_replacement.
+
+    DATA lv_tabix TYPE sy-tabix.
+
+    FIELD-SYMBOLS <lv_source> LIKE LINE OF ct_source.
+
+    FIND REGEX '^\s*INTERFACES(:| )\s*' && iv_from_interface && '\s*.' IN TABLE ct_source MATCH LINE lv_tabix.
+    IF sy-subrc = 0.
+      READ TABLE ct_source ASSIGNING <lv_source> INDEX lv_tabix.
+      ASSERT sy-subrc = 0.
+
+      REPLACE FIRST OCCURRENCE OF iv_from_interface IN <lv_source>
+                             WITH iv_to_interface IGNORING CASE.
+
+      REPLACE ALL OCCURRENCES OF iv_from_interface && '~descriptor' IN TABLE ct_source
+                            WITH iv_to_interface && '~descriptor' IGNORING CASE.
+    ENDIF.
+
+  ENDMETHOD.
+
+
   METHOD is_class_locked.
 
     DATA: lv_argument TYPE seqg3-garg.
@@ -260,26 +287,23 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
   METHOD repo_apack_replacement.
 
-    FIELD-SYMBOLS: <lv_source> LIKE LINE OF ct_source.
+    DATA lv_apack TYPE seoclsname.
 
-    LOOP AT ct_source ASSIGNING <lv_source>.
+    " Check if SAP-version of APACK manifest exists
+    SELECT SINGLE clsname INTO lv_apack
+      FROM seoclass
+      WHERE clsname = 'IF_APACK_MANIFEST'.
+    IF sy-subrc = 0.
+      RETURN.
+    ENDIF.
 
-      FIND FIRST OCCURRENCE OF REGEX '^\s*INTERFACES(:| )\s*if_apack_manifest\s*.' IN <lv_source>.
-      IF sy-subrc = 0.
-        REPLACE FIRST OCCURRENCE OF 'if_apack_manifest' IN <lv_source> WITH 'zif_apack_manifest' IGNORING CASE.
-
-        REPLACE ALL OCCURRENCES OF 'if_apack_manifest~descriptor' IN TABLE ct_source
-                              WITH 'zif_apack_manifest~descriptor' IGNORING CASE.
-
-        EXIT.
-      ENDIF.
-
-      FIND FIRST OCCURRENCE OF REGEX '^\s*PROTECTED\s*SECTION\s*.' IN <lv_source>.
-      IF sy-subrc = 0.
-        EXIT.
-      ENDIF.
-
-    ENDLOOP.
+    " If not, replace with abapGit version
+    interface_replacement(
+      EXPORTING
+        iv_from_interface = 'if_apack_manifest'
+        iv_to_interface   = 'zif_apack_manifest'
+      CHANGING
+        ct_source         = ct_source ).
 
   ENDMETHOD.
 
@@ -483,37 +507,25 @@ CLASS ZCL_ABAPGIT_OBJECT_CLAS IMPLEMENTATION.
 
   METHOD source_apack_replacement.
 
-    DATA: lv_clsname TYPE seoclsname.
-    FIELD-SYMBOLS: <lv_source> LIKE LINE OF ct_source.
+    DATA lv_clsname TYPE seoclsname.
 
-    lv_clsname = ms_item-obj_name.
-    SELECT COUNT(*)
+    " Check if abapGit version of APACK manifest is used
+    SELECT SINGLE clsname INTO lv_clsname
       FROM seometarel
-      WHERE clsname    = lv_clsname
+      WHERE clsname    = ms_item-obj_name
         AND refclsname = 'ZIF_APACK_MANIFEST'
         AND version    = '1'.
     IF sy-subrc <> 0.
       RETURN.
     ENDIF.
 
-    LOOP AT ct_source ASSIGNING <lv_source>.
-
-      FIND FIRST OCCURRENCE OF REGEX '^\s*INTERFACES(:| )\s*zif_apack_manifest\s*.' IN <lv_source>.
-      IF sy-subrc = 0.
-        REPLACE FIRST OCCURRENCE OF 'zif_apack_manifest' IN <lv_source> WITH 'if_apack_manifest' IGNORING CASE.
-
-        REPLACE ALL OCCURRENCES OF 'zif_apack_manifest~descriptor' IN TABLE ct_source
-                              WITH 'if_apack_manifest~descriptor' IGNORING CASE.
-
-        EXIT.
-      ENDIF.
-
-      FIND FIRST OCCURRENCE OF REGEX '^\s*PROTECTED\s*SECTION\s*.' IN <lv_source>.
-      IF sy-subrc = 0.
-        EXIT.
-      ENDIF.
-
-    ENDLOOP.
+    " If yes, replace with SAP-version
+    interface_replacement(
+      EXPORTING
+        iv_from_interface = 'zif_apack_manifest'
+        iv_to_interface   = 'if_apack_manifest'
+      CHANGING
+        ct_source         = ct_source ).
 
   ENDMETHOD.
 
