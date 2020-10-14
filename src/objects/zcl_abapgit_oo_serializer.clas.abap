@@ -297,6 +297,24 @@ CLASS ZCL_ABAPGIT_OO_SERIALIZER IMPLEMENTATION.
 
   METHOD serialize_testclasses.
 
+    DATA ls_vseoclass TYPE vseoclass.
+
+    CALL FUNCTION 'SEO_CLIF_GET'
+      EXPORTING
+        cifkey       = is_clskey
+        version      = seoc_version_active
+      IMPORTING
+        class        = ls_vseoclass
+      EXCEPTIONS
+        not_existing = 1
+        deleted      = 2
+        model_only   = 3
+        OTHERS       = 4.
+    IF sy-subrc <> 0 OR ls_vseoclass-with_unit_tests = abap_false.
+      mv_skip_testclass = abap_true.
+      RETURN.
+    ENDIF.
+
     rt_source = read_include( is_clskey = is_clskey
                               iv_type = seop_ext_class_testclasses ).
 
