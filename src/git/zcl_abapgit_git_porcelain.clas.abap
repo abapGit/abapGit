@@ -10,6 +10,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         files   TYPE zif_abapgit_definitions=>ty_files_tt,
         objects TYPE zif_abapgit_definitions=>ty_objects_tt,
         branch  TYPE zif_abapgit_definitions=>ty_sha1,
+        commit  TYPE zif_abapgit_definitions=>ty_sha1,
       END OF ty_pull_result .
     TYPES:
       BEGIN OF ty_push_result,
@@ -19,10 +20,18 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         new_objects   TYPE zif_abapgit_definitions=>ty_objects_tt,
       END OF ty_push_result .
 
-    CLASS-METHODS pull
+    CLASS-METHODS pull_by_branch
       IMPORTING
         !iv_url          TYPE string
         !iv_branch_name  TYPE string
+      RETURNING
+        VALUE(rs_result) TYPE ty_pull_result
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS pull_by_commit
+      IMPORTING
+        !iv_url          TYPE string
+        !iv_commit_hash  TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
       RETURNING
         VALUE(rs_result) TYPE ty_pull_result
       RAISING
@@ -72,6 +81,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         VALUE(rt_expanded) TYPE zif_abapgit_definitions=>ty_expanded_tt
       RAISING
         zcx_abapgit_exception .
+
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -106,6 +116,13 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
         !it_expanded      TYPE zif_abapgit_definitions=>ty_expanded_tt
       RETURNING
         VALUE(rt_folders) TYPE ty_folders_tt .
+    CLASS-METHODS pull
+      IMPORTING
+        !iv_hash   TYPE zif_abapgit_definitions=>ty_sha1
+      CHANGING
+        !cs_result TYPE ty_pull_result
+      RAISING
+        zcx_abapgit_exception.
     CLASS-METHODS walk
       IMPORTING
         !it_objects TYPE zif_abapgit_definitions=>ty_objects_tt
@@ -161,7 +178,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
+CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
 
   METHOD build_trees.
@@ -385,13 +402,12 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
     DATA: ls_object LIKE LINE OF it_objects,
           ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
 
-
     READ TABLE it_objects INTO ls_object
       WITH KEY type COMPONENTS
         type = zif_abapgit_definitions=>c_type-commit
         sha1 = iv_branch.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'commit not found' ).
+      zcx_abapgit_exception=>raise( 'commit not found.' ).
     ENDIF.
     ls_commit = zcl_abapgit_git_pack=>decode_commit( ls_object-data ).
 
@@ -402,36 +418,66 @@ CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD pull.
-
-    DATA: ls_object LIKE LINE OF rs_result-objects,
-          ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
-
+  METHOD pull_by_branch.
 
     zcl_abapgit_git_transport=>upload_pack_by_branch(
       EXPORTING
-        iv_url         = iv_url
-        iv_branch_name = iv_branch_name
+        iv_url          = iv_url
+        iv_branch_name  = iv_branch_name
       IMPORTING
-        et_objects     = rs_result-objects
-        ev_branch      = rs_result-branch ).
+        et_objects      = rs_result-objects
+        ev_branch       = rs_result-branch ).
 
-    READ TABLE rs_result-objects INTO ls_object
-      WITH KEY type COMPONENTS
-        type = zif_abapgit_definitions=>c_type-commit
-        sha1 = rs_result-branch.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Commit/branch not found' ).
-    ENDIF.
-    ls_commit = zcl_abapgit_git_pack=>decode_commit( ls_object-data ).
-
-    walk( EXPORTING it_objects = rs_result-objects
-                    iv_sha1 = ls_commit-tree
-                    iv_path = '/'
-          CHANGING ct_files = rs_result-files ).
+    pull(
+      EXPORTING
+        iv_hash   = rs_result-branch
+      CHANGING
+        cs_result = rs_result ).
 
   ENDMETHOD.
 
+
+  METHOD pull_by_commit.
+
+    zcl_abapgit_git_transport=>upload_pack_by_commit(
+      EXPORTING
+        iv_url          = iv_url
+        iv_hash         = iv_commit_hash
+      IMPORTING
+        et_objects      = rs_result-objects
+        ev_commit       = rs_result-commit ).
+
+    pull(
+      EXPORTING
+        iv_hash   = rs_result-commit
+      CHANGING
+        cs_result = rs_result ).
+
+  ENDMETHOD.
+
+
+  METHOD pull.
+
+    DATA: ls_object LIKE LINE OF cs_result-objects,
+          ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
+
+    READ TABLE cs_result-objects INTO ls_object
+      WITH KEY type COMPONENTS
+        type = zif_abapgit_definitions=>c_type-commit
+        sha1 = iv_hash.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Commit/Branch not found.' ).
+    ENDIF.
+
+    ls_commit = zcl_abapgit_git_pack=>decode_commit( ls_object-data ).
+
+    walk( EXPORTING it_objects = cs_result-objects
+                    iv_sha1 = ls_commit-tree
+                    iv_path = '/'
+          CHANGING ct_files = cs_result-files ).
+
+  ENDMETHOD.
 
   METHOD push.
 
