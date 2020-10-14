@@ -407,7 +407,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
         type = zif_abapgit_definitions=>c_type-commit
         sha1 = iv_branch.
     IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'commit not found.' ).
+      zcx_abapgit_exception=>raise( 'commit not found' ).
     ENDIF.
     ls_commit = zcl_abapgit_git_pack=>decode_commit( ls_object-data ).
 
@@ -441,11 +441,11 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
     zcl_abapgit_git_transport=>upload_pack_by_commit(
       EXPORTING
-        iv_url          = iv_url
-        iv_hash         = iv_commit_hash
+        iv_url     = iv_url
+        iv_hash    = iv_commit_hash
       IMPORTING
-        et_objects      = rs_result-objects
-        ev_commit       = rs_result-commit ).
+        et_objects = rs_result-objects
+        ev_commit  = rs_result-commit ).
 
     pull(
       EXPORTING
