@@ -29,9 +29,9 @@ CLASS zcl_abapgit_repo_online DEFINITION
         !iv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name
       RAISING
         zcx_abapgit_exception .
-    METHODS get_sha1_remote
+    METHODS get_branch_hash_remote
       RETURNING
-        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+        VALUE(rv_hash) TYPE zif_abapgit_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
     METHODS get_objects
@@ -68,7 +68,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
   PRIVATE SECTION.
 
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
-    DATA mv_branch TYPE zif_abapgit_definitions=>ty_sha1 .
+    DATA mv_branch_hash TYPE zif_abapgit_definitions=>ty_sha1 .
 
     METHODS handle_stage_ignore
       IMPORTING
@@ -110,7 +110,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     set_files_remote( ls_pull-files ).
     set_objects( ls_pull-objects ).
-    mv_branch = ls_pull-branch.
+    mv_branch_hash = ls_pull-branch.
 
   ENDMETHOD.
 
@@ -168,9 +168,9 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_sha1_remote.
+  METHOD get_branch_hash_remote.
     fetch_remote( ).
-    rv_sha1 = mv_branch.
+    rv_hash = mv_branch_hash.
   ENDMETHOD.
 
 
@@ -348,7 +348,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     ASSERT iv_name CP zif_abapgit_definitions=>c_git_branch-heads.
 
     IF iv_from IS INITIAL.
-      lv_sha1 = get_sha1_remote( ).
+      lv_sha1 = get_branch_hash_remote( ).
     ELSE.
       lv_sha1 = iv_from.
     ENDIF.
@@ -391,13 +391,13 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
       io_stage       = io_stage
       iv_branch_name = get_branch_name( )
       iv_url         = get_url( )
-      iv_parent      = get_sha1_remote( )
+      iv_parent      = get_branch_hash_remote( )
       it_old_objects = get_objects( ) ).
 
     set_objects( ls_push-new_objects ).
     set_files_remote( ls_push-new_files ).
 
-    mv_branch = ls_push-branch.
+    mv_branch_hash = ls_push-branch.
 
     update_local_checksums( ls_push-updated_files ).
 
