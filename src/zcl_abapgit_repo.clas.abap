@@ -161,6 +161,7 @@ CLASS zcl_abapgit_repo DEFINITION
         !it_checksums       TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
         !iv_url             TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
         !iv_branch_name     TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
+        !iv_commit_hash     TYPE zif_abapgit_persistence=>ty_repo-commit_hash OPTIONAL
         !iv_head_branch     TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
         !iv_offline         TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
         !is_dot_abapgit     TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL
@@ -209,7 +210,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -712,6 +713,7 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     ASSERT it_checksums IS SUPPLIED
       OR iv_url IS SUPPLIED
       OR iv_branch_name IS SUPPLIED
+      OR iv_commit_hash IS SUPPLIED
       OR iv_head_branch IS SUPPLIED
       OR iv_offline IS SUPPLIED
       OR is_dot_abapgit IS SUPPLIED
@@ -734,6 +736,11 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     IF iv_branch_name IS SUPPLIED.
       ms_data-branch_name = iv_branch_name.
       ls_mask-branch_name = abap_true.
+    ENDIF.
+
+    IF iv_commit_hash IS SUPPLIED.
+      ms_data-commit_hash = iv_commit_hash.
+      ls_mask-commit_hash = abap_true.
     ENDIF.
 
     IF iv_head_branch IS SUPPLIED.
