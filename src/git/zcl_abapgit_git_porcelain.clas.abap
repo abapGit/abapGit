@@ -425,9 +425,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
         et_objects      = rs_result-objects
         ev_branch       = rs_result-commit ).
 
-    pull(
-      CHANGING
-        cs_result = rs_result ).
+    pull( CHANGING cs_result = rs_result ).
 
   ENDMETHOD.
 
@@ -442,9 +440,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
         et_objects = rs_result-objects
         ev_commit  = rs_result-commit ).
 
-    pull(
-      CHANGING
-        cs_result = rs_result ).
+    pull( CHANGING cs_result = rs_result ).
 
   ENDMETHOD.
 
