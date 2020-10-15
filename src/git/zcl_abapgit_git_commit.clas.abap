@@ -4,7 +4,7 @@ CLASS zcl_abapgit_git_commit DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    CLASS-METHODS get
+    CLASS-METHODS get_from_remote
       IMPORTING
         !io_repo          TYPE REF TO zcl_abapgit_repo_online
         !iv_commit_hash   TYPE zif_abapgit_definitions=>ty_sha1
@@ -50,7 +50,7 @@ ENDCLASS.
 CLASS zcl_abapgit_git_commit IMPLEMENTATION.
 
 
-  METHOD get.
+  METHOD get_from_remote.
 
     DATA: li_progress TYPE REF TO zif_abapgit_progress,
           lt_objects  TYPE zif_abapgit_definitions=>ty_objects_tt.
