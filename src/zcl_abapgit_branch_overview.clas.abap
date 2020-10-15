@@ -5,7 +5,6 @@ CLASS zcl_abapgit_branch_overview DEFINITION
   GLOBAL FRIENDS zcl_abapgit_factory .
 
   PUBLIC SECTION.
-
     INTERFACES zif_abapgit_branch_overview .
     CONSTANTS c_deleted_branch_name_prefix TYPE string VALUE '__DELETED_BRANCH_' ##NO_TEXT.
 
@@ -17,10 +16,6 @@ CLASS zcl_abapgit_branch_overview DEFINITION
 
   PROTECTED SECTION.
   PRIVATE SECTION.
-
-    TYPES:
-      ty_commit_sha1_range TYPE RANGE OF zif_abapgit_definitions=>ty_sha1 .
-
     DATA mt_branches TYPE zif_abapgit_definitions=>ty_git_branch_list_tt .
     DATA mt_commits TYPE zif_abapgit_definitions=>ty_commit_tt .
     DATA mt_tags TYPE zif_abapgit_definitions=>ty_git_tag_list_tt .

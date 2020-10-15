@@ -59,7 +59,7 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
 
     li_progress->show(
       iv_current = 1
-      iv_text    = |Get git commits { io_repo->get_name( ) }| ).
+      iv_text    = |Get git commits { io_repo->get_name( ) }| ) .
 
     IF iv_commit_hash CN ' _0'.
 
