@@ -59,6 +59,46 @@ FORM exit RAISING zcx_abapgit_exception.
   ENDCASE.
 ENDFORM.
 
+*&---------------------------------------------------------------------*	
+*&      Form  branch_popup	
+*&---------------------------------------------------------------------*	
+*       text	
+*----------------------------------------------------------------------*	
+*      -->TT_FIELDS      text	
+*      -->PV_CODE        text	
+*      -->CS_ERROR       text	
+*      -->CV_SHOW_POPUP  text	
+*      -->RAISING        text	
+*      -->zcx_abapgit_exception  text	
+*      -->##CALLED       text	
+*      -->##NEEDED       text	
+*----------------------------------------------------------------------*	
+FORM branch_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt	
+                  USING    pv_code TYPE clike	
+                  CHANGING cs_error TYPE svale	
+                           cv_show_popup TYPE c	
+                  RAISING zcx_abapgit_exception ##called ##needed.	
+* called dynamically from function module POPUP_GET_VALUES_USER_BUTTONS	
+
+  DATA: lx_error  TYPE REF TO zcx_abapgit_exception,	
+        li_popups TYPE REF TO zif_abapgit_popups.	
+
+  TRY.	
+      li_popups = zcl_abapgit_ui_factory=>get_popups( ).	
+      li_popups->branch_popup_callback(	
+        EXPORTING	
+          iv_code       = pv_code	
+        CHANGING	
+          ct_fields     = tt_fields[]	
+          cs_error      = cs_error	
+          cv_show_popup = cv_show_popup ).	
+
+    CATCH zcx_abapgit_exception INTO lx_error.	
+      MESSAGE lx_error TYPE 'S' DISPLAY LIKE 'E'.	
+  ENDTRY.	
+
+ENDFORM.                    "branch_popup
+
 FORM password_popup
       USING
         pv_repo_url TYPE string
