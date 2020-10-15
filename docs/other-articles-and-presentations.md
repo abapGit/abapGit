@@ -9,10 +9,12 @@ order: 30
 [Git client for ABAP – alpha release](http://blogs.sap.com/2014/07/17/git-client-for-abap-alpha-release/)
 -Lars Hvam
 
-### 2016
+### 2015
 
 [How can I use Git and GitHub for SAP software development?](http://searchsap.techtarget.com/answer/How-can-I-use-Git-and-GitHub-for-SAP-software-development)
 -Ethan Jewett
+
+### 2016
 
 [Implementing modern practices in an ABAP development shop](http://searchsap.techtarget.com/tip/Implementing-modern-practices-in-an-ABAP-development-shop)
 -Ethan Jewett
