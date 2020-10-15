@@ -324,7 +324,7 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
                   package           = iv_package
                   transport_request = lv_transport_request.
             WHEN '2'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_compound_s.
-              CALL METHOD lo_wb_object_operator->('CREATE')
+              CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~CREATE')
                 EXPORTING
                   io_object_data    = lo_object_data
                   data_selection    = 'P' " if_wb_object_data_selection_co=>c_properties
