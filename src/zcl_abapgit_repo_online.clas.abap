@@ -110,7 +110,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     set_files_remote( ls_pull-files ).
     set_objects( ls_pull-objects ).
-    mv_branch = ls_pull-branch.
+    mv_branch = ls_pull-commit.
 
   ENDMETHOD.
 

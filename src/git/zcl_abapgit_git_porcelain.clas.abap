@@ -9,7 +9,6 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
       BEGIN OF ty_pull_result,
         files   TYPE zif_abapgit_definitions=>ty_files_tt,
         objects TYPE zif_abapgit_definitions=>ty_objects_tt,
-        branch  TYPE zif_abapgit_definitions=>ty_sha1,
         commit  TYPE zif_abapgit_definitions=>ty_sha1,
       END OF ty_pull_result .
     TYPES:
@@ -117,8 +116,6 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
       RETURNING
         VALUE(rt_folders) TYPE ty_folders_tt .
     CLASS-METHODS pull
-      IMPORTING
-        !iv_hash   TYPE zif_abapgit_definitions=>ty_sha1
       CHANGING
         !cs_result TYPE ty_pull_result
       RAISING
@@ -426,11 +423,9 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
         iv_branch_name  = iv_branch_name
       IMPORTING
         et_objects      = rs_result-objects
-        ev_branch       = rs_result-branch ).
+        ev_branch       = rs_result-commit ).
 
     pull(
-      EXPORTING
-        iv_hash   = rs_result-branch
       CHANGING
         cs_result = rs_result ).
 
@@ -448,8 +443,6 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
         ev_commit  = rs_result-commit ).
 
     pull(
-      EXPORTING
-        iv_hash   = rs_result-commit
       CHANGING
         cs_result = rs_result ).
 
@@ -464,7 +457,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
     READ TABLE cs_result-objects INTO ls_object
       WITH KEY type COMPONENTS
         type = zif_abapgit_definitions=>c_type-commit
-        sha1 = iv_hash.
+        sha1 = cs_result-commit.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Commit/Branch not found.' ).
