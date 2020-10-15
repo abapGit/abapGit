@@ -680,7 +680,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
                               && |{ lo_repo_online->get_url( ) }|
                       iv_class = |url| ).
 
-      IF iv_show_commit EQ abap_true.
+      IF iv_show_commit = abap_true.
 
         TRY.
             render_repo_top_commit_hash( ii_html        = ri_html
