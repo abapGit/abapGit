@@ -31,8 +31,6 @@ CLASS zcl_abapgit_git_commit DEFINITION
   PRIVATE SECTION.
     TYPES: ty_sha1_range TYPE RANGE OF zif_abapgit_definitions=>ty_sha1 .
 
-    DATA mt_commits TYPE zif_abapgit_definitions=>ty_commit_tt .
-
     CLASS-METHODS get_1st_child_commit
       IMPORTING
         it_commit_sha1s TYPE ty_sha1_range
@@ -132,7 +130,7 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
 
   METHOD parse_commits.
 
-    DATA: ls_commit LIKE LINE OF mt_commits,
+    DATA: ls_commit TYPE zif_abapgit_definitions=>ty_commit,
           lt_body   TYPE STANDARD TABLE OF string WITH DEFAULT KEY,
           ls_raw    TYPE zcl_abapgit_git_pack=>ty_commit.
 
@@ -180,6 +178,7 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
 
 
   METHOD reverse_sort_order.
+
     DATA: lt_commits           TYPE zif_abapgit_definitions=>ty_commit_tt.
     FIELD-SYMBOLS: <ls_commit> TYPE zif_abapgit_definitions=>ty_commit.
 
