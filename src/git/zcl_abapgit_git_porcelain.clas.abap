@@ -30,7 +30,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
     CLASS-METHODS pull_by_commit
       IMPORTING
         !iv_url          TYPE string
-        !iv_commit_hash  TYPE zif_abapgit_definitions=>ty_sha1 OPTIONAL
+        !iv_commit_hash  TYPE zif_abapgit_definitions=>ty_sha1
       RETURNING
         VALUE(rs_result) TYPE ty_pull_result
       RAISING
