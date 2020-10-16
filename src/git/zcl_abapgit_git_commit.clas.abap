@@ -23,7 +23,7 @@ CLASS zcl_abapgit_git_commit DEFINITION
       RETURNING
         VALUE(rt_commits) TYPE zif_abapgit_definitions=>ty_commit_tt
       RAISING
-        zcx_abapgit_exception ..
+        zcx_abapgit_exception .
     CLASS-METHODS parse_commits
       IMPORTING
         !it_objects       TYPE zif_abapgit_definitions=>ty_objects_tt
