@@ -104,13 +104,13 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     li_progress->show( iv_current = 1
                        iv_text    = 'Fetch remote files' ).
 
-    ls_pull = zcl_abapgit_git_porcelain=>pull(
+    ls_pull = zcl_abapgit_git_porcelain=>pull_by_branch(
       iv_url         = get_url( )
       iv_branch_name = get_branch_name( ) ).
 
     set_files_remote( ls_pull-files ).
     set_objects( ls_pull-objects ).
-    mv_branch = ls_pull-branch.
+    mv_branch = ls_pull-commit.
 
   ENDMETHOD.
 
