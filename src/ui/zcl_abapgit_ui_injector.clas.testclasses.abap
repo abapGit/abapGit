@@ -40,10 +40,6 @@ CLASS ltcl_abapgit_popups_mock IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD zif_abapgit_popups~package_popup_callback.
-
-  ENDMETHOD.
-
   METHOD zif_abapgit_popups~popup_folder_logic.
 
   ENDMETHOD.
