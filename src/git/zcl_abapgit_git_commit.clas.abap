@@ -4,15 +4,26 @@ CLASS zcl_abapgit_git_commit DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    CLASS-METHODS get_from_remote
+    CLASS-METHODS get_by_branch
       IMPORTING
-        !io_repo          TYPE REF TO zcl_abapgit_repo_online
-        !iv_commit_hash   TYPE zif_abapgit_definitions=>ty_sha1
+        !iv_branch_name   TYPE string
+        !iv_repo_name     TYPE string
+        !iv_repo_url      TYPE zif_abapgit_persistence=>ty_repo-url
         !iv_deepen_level  TYPE i
       RETURNING
         VALUE(rt_commits) TYPE zif_abapgit_definitions=>ty_commit_tt
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS get_by_commit
+      IMPORTING
+        !iv_commit_hash   TYPE zif_abapgit_definitions=>ty_sha1
+        !iv_repo_name     TYPE string
+        !iv_repo_url      TYPE zif_abapgit_persistence=>ty_repo-url
+        !iv_deepen_level  TYPE i
+      RETURNING
+        VALUE(rt_commits) TYPE zif_abapgit_definitions=>ty_commit_tt
+      RAISING
+        zcx_abapgit_exception ..
     CLASS-METHODS parse_commits
       IMPORTING
         !it_objects       TYPE zif_abapgit_definitions=>ty_objects_tt
@@ -48,7 +59,7 @@ ENDCLASS.
 CLASS zcl_abapgit_git_commit IMPLEMENTATION.
 
 
-  METHOD get_from_remote.
+  METHOD get_by_branch.
 
     DATA: li_progress TYPE REF TO zif_abapgit_progress,
           lt_objects  TYPE zif_abapgit_definitions=>ty_objects_tt.
@@ -57,29 +68,42 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
 
     li_progress->show(
       iv_current = 1
-      iv_text    = |Get git commits { io_repo->get_name( ) }| ).
+      iv_text    = |Get git commits { iv_repo_name }| ).
 
-    IF iv_commit_hash CN ' _0'.
+    zcl_abapgit_git_transport=>upload_pack_by_branch(
+      EXPORTING
+        iv_url          = iv_repo_url
+        iv_branch_name  = iv_branch_name
+        iv_deepen_level = iv_deepen_level
+      IMPORTING
+        et_objects      = lt_objects ).
 
-      zcl_abapgit_git_transport=>upload_pack_by_commit(
-        EXPORTING
-          iv_url          = io_repo->get_url( )
-          iv_deepen_level = iv_deepen_level
-          iv_hash         = iv_commit_hash
-        IMPORTING
-          et_objects      = lt_objects ).
+    DELETE lt_objects WHERE type <> zif_abapgit_definitions=>c_type-commit.
 
-    ELSE.
+    rt_commits = parse_commits( lt_objects ).
+    sort_commits( CHANGING ct_commits = rt_commits ).
 
-      zcl_abapgit_git_transport=>upload_pack_by_branch(
-        EXPORTING
-          iv_url          = io_repo->get_url( )
-          iv_branch_name  = io_repo->get_branch_name( )
-          iv_deepen_level = iv_deepen_level
-        IMPORTING
-          et_objects      = lt_objects ).
+  ENDMETHOD.
 
-    ENDIF.
+
+  METHOD get_by_commit.
+
+    DATA: li_progress TYPE REF TO zif_abapgit_progress,
+          lt_objects  TYPE zif_abapgit_definitions=>ty_objects_tt.
+
+    li_progress = zcl_abapgit_progress=>get_instance( 1 ).
+
+    li_progress->show(
+      iv_current = 1
+      iv_text    = |Get git commits { iv_repo_name }| ).
+
+    zcl_abapgit_git_transport=>upload_pack_by_commit(
+      EXPORTING
+        iv_url          = iv_repo_url
+        iv_deepen_level = iv_deepen_level
+        iv_hash         = iv_commit_hash
+      IMPORTING
+        et_objects      = lt_objects ).
 
     DELETE lt_objects WHERE type <> zif_abapgit_definitions=>c_type-commit.
 
