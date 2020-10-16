@@ -116,8 +116,11 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
       RETURNING
         VALUE(rt_folders) TYPE ty_folders_tt .
     CLASS-METHODS pull
-      CHANGING
-        !cs_result TYPE ty_pull_result
+      IMPORTING
+        !iv_commit      TYPE zif_abapgit_definitions=>ty_sha1
+        !it_objects     TYPE zif_abapgit_definitions=>ty_objects_tt
+      RETURNING
+        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
       RAISING
         zcx_abapgit_exception.
     CLASS-METHODS walk
@@ -425,7 +428,8 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
         et_objects      = rs_result-objects
         ev_branch       = rs_result-commit ).
 
-    pull( CHANGING cs_result = rs_result ).
+    rs_result-files = pull( iv_commit  = rs_result-commit
+                            it_objects = rs_result-objects ).
 
   ENDMETHOD.
 
@@ -440,20 +444,21 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
         et_objects = rs_result-objects
         ev_commit  = rs_result-commit ).
 
-    pull( CHANGING cs_result = rs_result ).
+    rs_result-files = pull( iv_commit  = rs_result-commit
+                            it_objects = rs_result-objects ).
 
   ENDMETHOD.
 
 
   METHOD pull.
 
-    DATA: ls_object LIKE LINE OF cs_result-objects,
+    DATA: ls_object TYPE zif_abapgit_definitions=>ty_object,
           ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
 
-    READ TABLE cs_result-objects INTO ls_object
+    READ TABLE it_objects INTO ls_object
       WITH KEY type COMPONENTS
         type = zif_abapgit_definitions=>c_type-commit
-        sha1 = cs_result-commit.
+        sha1 = iv_commit.
 
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Commit/Branch not found.' ).
@@ -461,10 +466,10 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
     ls_commit = zcl_abapgit_git_pack=>decode_commit( ls_object-data ).
 
-    walk( EXPORTING it_objects = cs_result-objects
-                    iv_sha1 = ls_commit-tree
-                    iv_path = '/'
-          CHANGING ct_files = cs_result-files ).
+    walk( EXPORTING it_objects = it_objects
+                    iv_sha1    = ls_commit-tree
+                    iv_path    = '/'
+          CHANGING  ct_files   = rt_files ).
 
   ENDMETHOD.
 
