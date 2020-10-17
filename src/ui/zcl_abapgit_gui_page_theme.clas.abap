@@ -22,9 +22,12 @@ CLASS zcl_abapgit_gui_page_theme DEFINITION
       render_themed_table IMPORTING ii_html TYPE REF TO zif_abapgit_html,
       render_menu_test IMPORTING ii_html TYPE REF TO zif_abapgit_html,
       render_input IMPORTING ii_html TYPE REF TO zif_abapgit_html,
+      render_form IMPORTING ii_html TYPE REF TO zif_abapgit_html,
       render_icons IMPORTING ii_html TYPE REF TO zif_abapgit_html,
       render_icon IMPORTING ii_html TYPE REF TO zif_abapgit_html
                             iv_name TYPE string.
+    DATA:
+      mo_form_values TYPE REF TO zcl_abapgit_string_map.
 ENDCLASS.
 
 
@@ -56,6 +59,9 @@ CLASS zcl_abapgit_gui_page_theme IMPLEMENTATION.
     ri_html->add( '<hr>' ).
 
     render_input( ri_html ).
+    ri_html->add( '<hr>' ).
+
+    render_form( ri_html ).
   ENDMETHOD.
 
   METHOD build_menu.
@@ -174,6 +180,55 @@ CLASS zcl_abapgit_gui_page_theme IMPLEMENTATION.
     ii_html->add( '<p>' ).
     ii_html->add( '<input type="submit" value="Button">' ).
     ii_html->add( '</p>' ).
+  ENDMETHOD.
+
+  METHOD render_form.
+    DATA: lo_form TYPE REF TO zcl_abapgit_html_form.
+
+    ii_html->add( '<h1>Forms</h1>' ).
+
+    IF mo_form_values IS NOT BOUND.
+      CREATE OBJECT mo_form_values.
+    ENDIF.
+
+    lo_form = zcl_abapgit_html_form=>create( 'dummy-form' ).
+    lo_form->text(
+      iv_name          = 'text'
+      iv_label         = 'Simple text'
+    )->text(
+      iv_name          = 'text2'
+      iv_label         = 'Obligatory text with hint and placeholder'
+      iv_hint          = 'Explaining hint for obligatory text'
+      iv_placeholder   = 'Input value here'
+      iv_required      = abap_true
+    )->text(
+      iv_name          = 'text3'
+      iv_label         = 'Text with side action'
+      iv_side_action   = 'dummy'
+    )->radio(
+      iv_name          = 'radio'
+      iv_label         = 'Radio buttons'
+      iv_default_value = 'optiona'
+    )->option(
+      iv_label         = 'Option A'
+      iv_value         = 'optiona'
+    )->option(
+      iv_label         = 'Option B'
+      iv_value         = 'optionb'
+    )->checkbox(
+      iv_name          = 'checkbox'
+      iv_label         = 'Checkbox'
+    )->command(
+      iv_label         = 'Submit'
+      iv_action        = 'dummy'
+      iv_is_main       = abap_true
+    )->command(
+      iv_label         = 'Cancel'
+      iv_action        = 'dummy' ).
+
+    ii_html->add( lo_form->render(
+      iv_form_class = 'dialog w600px'
+      io_values     = mo_form_values ) ).
   ENDMETHOD.
 
   METHOD render_icons.
