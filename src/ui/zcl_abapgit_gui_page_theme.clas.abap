@@ -142,12 +142,22 @@ CLASS zcl_abapgit_gui_page_theme IMPLEMENTATION.
 
     CREATE OBJECT lo_sub_menu.
 
-    lo_sub_menu->add( iv_txt = 'Sub Item 1' iv_act = 'DUMMY' ).
-    lo_sub_menu->add( iv_txt = 'Sub Item 2' iv_act = 'DUMMY' ).
-    lo_sub_menu->add( iv_txt = 'Sub Item 3' iv_act = 'DUMMY' ).
-    lo_sub_menu->add( iv_txt = 'Sub Item 4' iv_act = 'DUMMY' ).
+    lo_sub_menu->add(
+      iv_txt = 'Sub Item 1'
+      iv_act = 'DUMMY' ).
+    lo_sub_menu->add(
+      iv_txt = 'Sub Item 2'
+      iv_act = 'DUMMY' ).
+    lo_sub_menu->add(
+      iv_txt = 'Sub Item 3'
+      iv_act = 'DUMMY' ).
+    lo_sub_menu->add(
+      iv_txt = 'Sub Item 4'
+      iv_act = 'DUMMY' ).
 
-    lo_menu->add( iv_txt = 'Submenu' io_sub = lo_sub_menu ).
+    lo_menu->add(
+      iv_txt = 'Submenu'
+      io_sub = lo_sub_menu ).
 
     ii_html->add( '<h1>Menus</h1>' ).
     ii_html->add( lo_menu->render( ) ).
@@ -233,40 +243,101 @@ CLASS zcl_abapgit_gui_page_theme IMPLEMENTATION.
 
   METHOD render_icons.
     ii_html->add( '<h1>Logos and Icons</h1>' ).
-    render_icon( ii_html = ii_html iv_name = 'git-alt' ).
-    render_icon( ii_html = ii_html iv_name = 'abapgit' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'git-alt' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'abapgit' ).
     ii_html->add( '<br>' ).
-    render_icon( ii_html = ii_html iv_name = 'arrow-circle-up' ).
-    render_icon( ii_html = ii_html iv_name = 'bars' ).
-    render_icon( ii_html = ii_html iv_name = 'bolt' ).
-    render_icon( ii_html = ii_html iv_name = 'box' ).
-    render_icon( ii_html = ii_html iv_name = 'briefcase' ).
-    render_icon( ii_html = ii_html iv_name = 'check' ).
-    render_icon( ii_html = ii_html iv_name = 'chevron-down' ).
-    render_icon( ii_html = ii_html iv_name = 'chevron-left' ).
-    render_icon( ii_html = ii_html iv_name = 'chevron-right' ).
-    render_icon( ii_html = ii_html iv_name = 'chevron-up' ).
-    render_icon( ii_html = ii_html iv_name = 'cloud-upload-alt' ).
-    render_icon( ii_html = ii_html iv_name = 'code-branch' ).
-    render_icon( ii_html = ii_html iv_name = 'exclamation-circle' ).
-    render_icon( ii_html = ii_html iv_name = 'exclamation-triangle' ).
-    render_icon( ii_html = ii_html iv_name = 'file-alt' ).
-    render_icon( ii_html = ii_html iv_name = 'file-code' ).
-    render_icon( ii_html = ii_html iv_name = 'file-image' ).
-    render_icon( ii_html = ii_html iv_name = 'file' ).
-    render_icon( ii_html = ii_html iv_name = 'fire-alt' ).
-    render_icon( ii_html = ii_html iv_name = 'folder' ).
-    render_icon( ii_html = ii_html iv_name = 'lock' ).
-    render_icon( ii_html = ii_html iv_name = 'plug' ).
-    render_icon( ii_html = ii_html iv_name = 'question-circle-solid' ).
-    render_icon( ii_html = ii_html iv_name = 'sliders-h' ).
-    render_icon( ii_html = ii_html iv_name = 'snowflake' ).
-    render_icon( ii_html = ii_html iv_name = 'star' ).
-    render_icon( ii_html = ii_html iv_name = 'tools-solid' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'arrow-circle-up' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'bars' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'bolt' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'box' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'briefcase' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'check' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'chevron-down' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'chevron-left' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'chevron-right' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'chevron-up' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'cloud-upload-alt' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'code-branch' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'exclamation-circle' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'exclamation-triangle' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'file-alt' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'file-code' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'file-image' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'file' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'fire-alt' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'folder' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'lock' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'plug' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'question-circle-solid' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'sliders-h' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'snowflake' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'star' ).
+    render_icon(
+      ii_html = ii_html
+      iv_name = 'tools-solid' ).
   ENDMETHOD.
 
   METHOD render_icon.
-    ii_html->add_icon( iv_name = iv_name iv_hint = iv_name iv_class = 'large' ).
+    ii_html->add_icon(
+      iv_name  = iv_name
+      iv_hint  = iv_name
+      iv_class = 'large' ).
   ENDMETHOD.
 
   METHOD zif_abapgit_gui_event_handler~on_event.
