@@ -79,14 +79,6 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
         iv_login = lv_user ).
     ENDIF.
 
-    " Offer two factor authentication if it is available and required
-    zcl_abapgit_2fa_auth_registry=>use_2fa_if_required(
-      EXPORTING
-        iv_url      = iv_url
-      CHANGING
-        cv_username = lv_user
-        cv_password = lv_pass ).
-
     rv_scheme = ii_client->response->get_header_field( 'www-authenticate' ).
     FIND REGEX '^(\w+)' IN rv_scheme SUBMATCHES rv_scheme.
 
