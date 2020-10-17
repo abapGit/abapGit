@@ -31,7 +31,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
         zcx_abapgit_exception .
     METHODS get_branch_hash_remote
       RETURNING
-        VALUE(rv_hash) TYPE zif_abapgit_definitions=>ty_sha1
+        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
     METHODS get_objects
@@ -68,7 +68,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
   PRIVATE SECTION.
 
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
-    DATA mv_branch_hash TYPE zif_abapgit_definitions=>ty_sha1 .
+    DATA mv_branch TYPE zif_abapgit_definitions=>ty_sha1 .
 
     METHODS handle_stage_ignore
       IMPORTING
@@ -87,7 +87,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
+CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
 
   METHOD fetch_remote.
@@ -110,7 +110,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     set_files_remote( ls_pull-files ).
     set_objects( ls_pull-objects ).
-    mv_branch_hash = ls_pull-branch.
+    mv_branch = ls_pull-branch.
 
   ENDMETHOD.
 
@@ -170,7 +170,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
   METHOD get_branch_hash_remote.
     fetch_remote( ).
-    rv_hash = mv_branch_hash.
+    rv_sha1 = mv_branch.
   ENDMETHOD.
 
 
@@ -397,7 +397,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     set_objects( ls_push-new_objects ).
     set_files_remote( ls_push-new_files ).
 
-    mv_branch_hash = ls_push-branch.
+    mv_branch = ls_push-branch.
 
     update_local_checksums( ls_push-updated_files ).
 

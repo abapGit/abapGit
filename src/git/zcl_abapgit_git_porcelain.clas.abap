@@ -67,7 +67,7 @@ CLASS zcl_abapgit_git_porcelain DEFINITION
     CLASS-METHODS full_tree
       IMPORTING
         !it_objects        TYPE zif_abapgit_definitions=>ty_objects_tt
-        !iv_parent         TYPE zif_abapgit_definitions=>ty_sha1
+        !iv_branch         TYPE zif_abapgit_definitions=>ty_sha1
       RETURNING
         VALUE(rt_expanded) TYPE zif_abapgit_definitions=>ty_expanded_tt
       RAISING
@@ -389,7 +389,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
     READ TABLE it_objects INTO ls_object
       WITH KEY type COMPONENTS
         type = zif_abapgit_definitions=>c_type-commit
-        sha1 = iv_parent.
+        sha1 = iv_branch.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'commit not found' ).
     ENDIF.
@@ -448,7 +448,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
 
     lt_expanded = full_tree( it_objects = it_old_objects
-                             iv_parent  = iv_parent ).
+                             iv_branch  = iv_parent ).
 
     lt_stage = io_stage->get_all( ).
     LOOP AT lt_stage ASSIGNING <ls_stage>.
