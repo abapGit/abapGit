@@ -1,8 +1,6 @@
 INTERFACE zif_abapgit_repo_listener
   PUBLIC .
 
-
-  INTERFACE zif_abapgit_persistence LOAD .
   METHODS on_meta_change
     IMPORTING
       !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
