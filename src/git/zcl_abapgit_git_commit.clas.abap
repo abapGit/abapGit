@@ -7,7 +7,6 @@ CLASS zcl_abapgit_git_commit DEFINITION
     CLASS-METHODS get_by_branch
       IMPORTING
         !iv_branch_name   TYPE string
-        !iv_repo_name     TYPE string
         !iv_repo_url      TYPE zif_abapgit_persistence=>ty_repo-url
         !iv_deepen_level  TYPE i
       RETURNING
@@ -17,7 +16,6 @@ CLASS zcl_abapgit_git_commit DEFINITION
     CLASS-METHODS get_by_commit
       IMPORTING
         !iv_commit_hash   TYPE zif_abapgit_definitions=>ty_sha1
-        !iv_repo_name     TYPE string
         !iv_repo_url      TYPE zif_abapgit_persistence=>ty_repo-url
         !iv_deepen_level  TYPE i
       RETURNING
@@ -68,7 +66,7 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
 
     li_progress->show(
       iv_current = 1
-      iv_text    = |Get git commits { iv_repo_name }| ).
+      iv_text    = |Get git commits { iv_repo_url }| ).
 
     zcl_abapgit_git_transport=>upload_pack_by_branch(
       EXPORTING
@@ -95,7 +93,7 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
 
     li_progress->show(
       iv_current = 1
-      iv_text    = |Get git commits { iv_repo_name }| ).
+      iv_text    = |Get git commits { iv_repo_url }| ).
 
     zcl_abapgit_git_transport=>upload_pack_by_commit(
       EXPORTING
