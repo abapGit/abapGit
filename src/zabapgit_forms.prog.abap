@@ -94,7 +94,7 @@ FORM exit RAISING zcx_abapgit_exception.
       IF zcl_abapgit_ui_factory=>get_gui( )->back( ) = abap_true. " end of stack
         zcl_abapgit_ui_factory=>get_gui( )->free( ). " Graceful shutdown
       ELSE.
-        LEAVE TO SCREEN 1001.
+        CALL SELECTION-SCREEN 1001.
       ENDIF.
   ENDCASE.
 ENDFORM.
