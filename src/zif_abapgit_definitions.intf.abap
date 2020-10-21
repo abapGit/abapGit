@@ -539,6 +539,7 @@ INTERFACE zif_abapgit_definitions
   CONSTANTS gc_yes TYPE ty_yes_no VALUE 'Y'.
   CONSTANTS gc_no TYPE ty_yes_no VALUE 'N'.
   CONSTANTS gc_partial TYPE ty_yes_no_partial VALUE 'P'.
+  CONSTANTS gc_memoryid_title TYPE c LENGTH 60 VALUE 'ZABAPGIT_TITLE'.
 
   TYPES:
     ty_method TYPE c LENGTH 1 .

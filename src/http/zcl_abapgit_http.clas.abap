@@ -4,11 +4,6 @@ CLASS zcl_abapgit_http DEFINITION
 
   PUBLIC SECTION.
 
-    CONSTANTS:
-      BEGIN OF c_scheme,
-        digest TYPE string VALUE 'Digest',
-      END OF c_scheme .
-
     CLASS-METHODS get_agent
       RETURNING
         VALUE(rv_agent) TYPE string .
@@ -20,6 +15,9 @@ CLASS zcl_abapgit_http DEFINITION
         VALUE(ro_client) TYPE REF TO zcl_abapgit_http_client
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS reset_login
+      IMPORTING
+        !iv_url TYPE string .
   PROTECTED SECTION.
 
     CLASS-METHODS check_auth_requested
@@ -34,73 +32,29 @@ CLASS zcl_abapgit_http DEFINITION
         !iv_url        TYPE string
       RETURNING
         VALUE(rv_bool) TYPE abap_bool .
-    CLASS-METHODS acquire_login_details
+    CLASS-METHODS trigger_login
       IMPORTING
-        !ii_client       TYPE REF TO if_http_client
-        !io_client       TYPE REF TO zcl_abapgit_http_client
-        !iv_url          TYPE string
-      RETURNING
-        VALUE(rv_scheme) TYPE string
+        !iv_url    TYPE string
+        !iv_digest TYPE string
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
+
+    TYPES:
+      BEGIN OF ty_login,
+        url   TYPE string,
+        count TYPE i,
+      END OF ty_login .
+
+    CLASS-DATA:
+      gt_logins TYPE HASHED TABLE OF ty_login WITH UNIQUE KEY url .
+    CONSTANTS c_max_logins TYPE i VALUE 3.
+
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
-
-
-  METHOD acquire_login_details.
-
-    DATA: lv_default_user TYPE string,
-          lv_user         TYPE string,
-          lv_pass         TYPE string,
-          lo_digest       TYPE REF TO zcl_abapgit_http_digest.
-
-
-    lv_default_user = zcl_abapgit_persistence_user=>get_instance( )->get_repo_login( iv_url ).
-    lv_user         = lv_default_user.
-
-    zcl_abapgit_password_dialog=>popup(
-      EXPORTING
-        iv_repo_url     = iv_url
-      CHANGING
-        cv_user         = lv_user
-        cv_pass         = lv_pass ).
-
-    IF lv_user IS INITIAL.
-      zcx_abapgit_exception=>raise( 'Unauthorized access. Check your credentials' ).
-    ENDIF.
-
-    IF lv_user <> lv_default_user.
-      zcl_abapgit_persistence_user=>get_instance( )->set_repo_login(
-        iv_url   = iv_url
-        iv_login = lv_user ).
-    ENDIF.
-
-    rv_scheme = ii_client->response->get_header_field( 'www-authenticate' ).
-    FIND REGEX '^(\w+)' IN rv_scheme SUBMATCHES rv_scheme.
-
-    CASE rv_scheme.
-      WHEN c_scheme-digest.
-* https://en.wikipedia.org/wiki/Digest_access_authentication
-* e.g. used by https://www.gerritcodereview.com/
-        CREATE OBJECT lo_digest
-          EXPORTING
-            ii_client   = ii_client
-            iv_username = lv_user
-            iv_password = lv_pass.
-        lo_digest->run( ii_client ).
-        io_client->set_digest( lo_digest ).
-      WHEN OTHERS.
-* https://en.wikipedia.org/wiki/Basic_access_authentication
-        ii_client->authenticate(
-          username = lv_user
-          password = lv_pass ).
-    ENDCASE.
-
-  ENDMETHOD.
+CLASS zcl_abapgit_http IMPLEMENTATION.
 
 
   METHOD check_auth_requested.
@@ -118,7 +72,7 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
   METHOD create_by_url.
 
     DATA: lv_uri                 TYPE string,
-          lv_scheme              TYPE string,
+          lv_digest              TYPE string,
           li_client              TYPE REF TO if_http_client,
           lo_proxy_configuration TYPE REF TO zcl_abapgit_proxy_config,
           lv_text                TYPE string.
@@ -197,18 +151,22 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
       ii_client = li_client ).
 
     ro_client->send_receive( ).
-    IF check_auth_requested( li_client ) = abap_true.
-      lv_scheme = acquire_login_details( ii_client = li_client
-                                         io_client = ro_client
-                                         iv_url    = iv_url ).
-      ro_client->send_receive( ).
-    ENDIF.
-    ro_client->check_http_200( ).
 
-    IF lv_scheme <> c_scheme-digest.
-      zcl_abapgit_login_manager=>save( iv_uri    = iv_url
-                                       ii_client = li_client ).
+    IF check_auth_requested( li_client ) = abap_true.
+      lv_digest = li_client->response->get_header_field( 'WWW-Authenticate' ).
+
+      " If login count is below maximum, the following will raise an exception
+      " that redirects to the login page
+      trigger_login(
+        iv_url    = iv_url
+        iv_digest = lv_digest ).
+
+      " If we get to here, the login was not successful. We reset the count
+      " and continue to process the http return code as usual.
+      reset_login( iv_url ).
     ENDIF.
+
+    ro_client->check_http_200( ).
 
   ENDMETHOD.
 
@@ -253,6 +211,41 @@ CLASS ZCL_ABAPGIT_HTTP IMPLEMENTATION.
 
     READ TABLE lt_list WITH KEY hostname = lv_host TRANSPORTING NO FIELDS.
     rv_bool = boolc( sy-subrc = 0 ).
+
+  ENDMETHOD.
+
+
+  METHOD reset_login.
+    " Reset login count
+    DELETE gt_logins WHERE url = iv_url.
+  ENDMETHOD.
+
+
+  METHOD trigger_login.
+
+    DATA ls_login TYPE ty_login.
+
+    FIELD-SYMBOLS: <ls_login> TYPE ty_login.
+
+    " Keep track of how many login attempts have been made
+    READ TABLE gt_logins ASSIGNING <ls_login> WITH TABLE KEY url = iv_url.
+    IF sy-subrc = 0.
+      <ls_login>-count = <ls_login>-count + 1.
+    ELSE.
+      ls_login-url = iv_url.
+      ls_login-count = 1.
+      INSERT ls_login INTO TABLE gt_logins ASSIGNING <ls_login>.
+    ENDIF.
+
+    " Until maximum number of logins has been reached, we trigger the login page
+    " by raising an exception with the URL parameter. The exception is caught
+    " in ZCL_ABAPGIT_GUI->HANDLE_ACTION which redirects to the login page.
+    IF <ls_login>-count BETWEEN 1 AND c_max_logins.
+      zcx_abapgit_exception=>raise_login_error(
+        iv_url    = iv_url
+        iv_digest = iv_digest
+        iv_count  = <ls_login>-count ).
+    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

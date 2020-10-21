@@ -9,13 +9,13 @@
      <RELID>MI</RELID>
      <OBJID>ZABAPGIT_CSS_THEME_DEFAULT</OBJID>
      <NAME>fileextension</NAME>
-     <VALUE>.CSS</VALUE>
+     <VALUE>.css</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
      <RELID>MI</RELID>
      <OBJID>ZABAPGIT_CSS_THEME_DEFAULT</OBJID>
      <NAME>filename</NAME>
-     <VALUE>~wwwtmp.CSS</VALUE>
+     <VALUE>default_theme.css</VALUE>
     </WWWPARAMS>
     <WWWPARAMS>
      <RELID>MI</RELID>

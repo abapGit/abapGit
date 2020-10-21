@@ -6,7 +6,8 @@ CLASS zcl_abapgit_http_digest DEFINITION
 
     METHODS constructor
       IMPORTING
-        !ii_client   TYPE REF TO if_http_client
+        !ii_client   TYPE REF TO if_http_client OPTIONAL
+        !iv_digest   TYPE string OPTIONAL
         !iv_username TYPE string
         !iv_password TYPE string
       RAISING
@@ -17,6 +18,7 @@ CLASS zcl_abapgit_http_digest DEFINITION
       RAISING
         zcx_abapgit_exception.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     DATA: mv_ha1      TYPE string,
           mv_username TYPE string,
@@ -26,39 +28,40 @@ CLASS zcl_abapgit_http_digest DEFINITION
 
     CLASS-DATA: gv_nc TYPE n LENGTH 8.
 
-    CLASS-METHODS:
-      md5
-        IMPORTING
-                  iv_data        TYPE string
-        RETURNING
-                  VALUE(rv_hash) TYPE string
-        RAISING   zcx_abapgit_exception.
-
-    METHODS:
-      hash
-        IMPORTING
-                  iv_qop             TYPE string
-                  iv_nonce           TYPE string
-                  iv_uri             TYPE string
-                  iv_method          TYPE string
-                  iv_cnonse          TYPE string
-        RETURNING
-                  VALUE(rv_response) TYPE string
-        RAISING   zcx_abapgit_exception,
-      parse
-        IMPORTING
-          ii_client TYPE REF TO if_http_client.
+    CLASS-METHODS md5
+      IMPORTING
+        iv_data        TYPE string
+      RETURNING
+        VALUE(rv_hash) TYPE string
+      RAISING
+        zcx_abapgit_exception.
+    METHODS hash
+      IMPORTING
+        iv_qop             TYPE string
+        iv_nonce           TYPE string
+        iv_uri             TYPE string
+        iv_method          TYPE string
+        iv_cnonse          TYPE string
+      RETURNING
+        VALUE(rv_response) TYPE string
+      RAISING
+        zcx_abapgit_exception.
+    METHODS parse
+      IMPORTING
+        ii_client  TYPE REF TO if_http_client
+        !iv_digest TYPE string.
 
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTTP_DIGEST IMPLEMENTATION.
+CLASS zcl_abapgit_http_digest IMPLEMENTATION.
 
 
   METHOD constructor.
 
-    parse( ii_client ).
+    parse( ii_client = ii_client
+           iv_digest = iv_digest ).
 
     mv_ha1 = md5( |{ iv_username }:{ mv_realm }:{ iv_password }| ).
 
@@ -114,8 +117,11 @@ CLASS ZCL_ABAPGIT_HTTP_DIGEST IMPLEMENTATION.
 
     DATA: lv_value TYPE string.
 
-
-    lv_value = ii_client->response->get_header_field( 'www-authenticate' ).
+    IF iv_digest IS INITIAL.
+      lv_value = ii_client->response->get_header_field( 'WWW-Authenticate' ).
+    ELSE.
+      lv_value = iv_digest.
+    ENDIF.
 
     FIND REGEX 'realm="([\w ]+)"' IN lv_value SUBMATCHES mv_realm.
     FIND REGEX 'qop="(\w+)"' IN lv_value SUBMATCHES mv_qop.

@@ -67,6 +67,10 @@ div.panel.error {
   color: #d41919;
   background-color: #fad6d6;
 }
+div.panel.warning {
+  color: #efb301;
+  background-color: lightyellow;
+}
 #debug-output { color: var(--theme-debug-color); }
 div.dummydiv { background-color: var(--theme-container-background-color); }
 

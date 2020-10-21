@@ -184,7 +184,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -853,6 +853,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
         ri_html->add( '</div>' ).
         ri_html->add( '</div>' ).
       CATCH zcx_abapgit_exception INTO lx_error.
+        IF lx_error->is_login_error( ) = abap_true.
+          RAISE EXCEPTION lx_error.
+        ENDIF.
+
         " Reset 'last shown repo' so next start will go to repo overview
         " and allow troubleshooting of issue
         zcl_abapgit_persistence_user=>get_instance( )->set_repo_show( || ).

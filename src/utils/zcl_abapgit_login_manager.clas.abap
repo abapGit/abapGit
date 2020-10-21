@@ -25,6 +25,7 @@ CLASS zcl_abapgit_login_manager DEFINITION
         !iv_uri        TYPE string
         !iv_username   TYPE string
         !iv_password   TYPE string
+        !iv_digest     TYPE string OPTIONAL
       RETURNING
         VALUE(rv_auth) TYPE string
       RAISING
@@ -36,6 +37,13 @@ CLASS zcl_abapgit_login_manager DEFINITION
         VALUE(rv_auth) TYPE string
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS get_digest
+      IMPORTING
+        !iv_uri          TYPE string
+      RETURNING
+        VALUE(ro_digest) TYPE REF TO zcl_abapgit_http_digest
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -43,34 +51,37 @@ CLASS zcl_abapgit_login_manager DEFINITION
       BEGIN OF ty_auth,
         uri           TYPE string,
         authorization TYPE string,
+        digest        TYPE REF TO zcl_abapgit_http_digest,
       END OF ty_auth .
 
     CLASS-DATA:
-      gt_auth TYPE TABLE OF ty_auth WITH DEFAULT KEY .
+      gt_auth TYPE HASHED TABLE OF ty_auth WITH UNIQUE KEY uri.
 
     CLASS-METHODS append
       IMPORTING
-        !iv_uri  TYPE string
-        !iv_auth TYPE string
+        !iv_uri    TYPE string
+        !iv_auth   TYPE string
+        !io_digest TYPE REF TO zcl_abapgit_http_digest OPTIONAL
       RAISING
         zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
+CLASS zcl_abapgit_login_manager IMPLEMENTATION.
 
 
   METHOD append.
 
-    FIELD-SYMBOLS: <ls_auth> LIKE LINE OF gt_auth.
+    DATA ls_auth LIKE LINE OF gt_auth.
 
-    READ TABLE gt_auth WITH KEY uri = zcl_abapgit_url=>host( iv_uri )
+    READ TABLE gt_auth WITH TABLE KEY uri = zcl_abapgit_url=>host( iv_uri )
       TRANSPORTING NO FIELDS.
     IF sy-subrc <> 0.
-      APPEND INITIAL LINE TO gt_auth ASSIGNING <ls_auth>.
-      <ls_auth>-uri           = zcl_abapgit_url=>host( iv_uri ).
-      <ls_auth>-authorization = iv_auth.
+      ls_auth-uri           = zcl_abapgit_url=>host( iv_uri ).
+      ls_auth-authorization = iv_auth.
+      ls_auth-digest        = io_digest.
+      INSERT ls_auth INTO TABLE gt_auth.
     ENDIF.
 
   ENDMETHOD.
@@ -87,9 +98,21 @@ CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
 
     DATA ls_auth LIKE LINE OF gt_auth.
 
-    READ TABLE gt_auth INTO ls_auth WITH KEY uri = zcl_abapgit_url=>host( iv_uri ).
+    READ TABLE gt_auth INTO ls_auth WITH TABLE KEY uri = zcl_abapgit_url=>host( iv_uri ).
     IF sy-subrc = 0.
       rv_auth = ls_auth-authorization.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_digest.
+
+    DATA ls_auth LIKE LINE OF gt_auth.
+
+    READ TABLE gt_auth INTO ls_auth WITH TABLE KEY uri = zcl_abapgit_url=>host( iv_uri ).
+    IF sy-subrc = 0.
+      ro_digest = ls_auth-digest.
     ENDIF.
 
   ENDMETHOD.
@@ -99,14 +122,23 @@ CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
 
     DATA: ls_auth LIKE LINE OF gt_auth.
 
-    READ TABLE gt_auth INTO ls_auth WITH KEY uri = zcl_abapgit_url=>host( iv_uri ).
+    READ TABLE gt_auth INTO ls_auth WITH TABLE KEY uri = zcl_abapgit_url=>host( iv_uri ).
     IF sy-subrc = 0.
       rv_authorization = ls_auth-authorization.
 
       IF NOT ii_client IS INITIAL.
-        ii_client->request->set_header_field(
-          name  = 'authorization'
-          value = ls_auth-authorization ).
+        IF ls_auth-digest IS BOUND.
+          " Digest Authentification
+          " https://en.wikipedia.org/wiki/Digest_access_authentication
+          " e.g. used by https://www.gerritcodereview.com/
+          ls_auth-digest->run( ii_client ).
+        ELSE.
+          " Basic Authentification
+          " https://en.wikipedia.org/wiki/Basic_access_authentication
+          ii_client->request->set_header_field(
+            name  = 'Authorization'
+            value = ls_auth-authorization ).
+        ENDIF.
         ii_client->propertytype_logon_popup = ii_client->co_disabled.
       ENDIF.
     ENDIF.
@@ -118,7 +150,7 @@ CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
 
     DATA: lv_auth TYPE string.
 
-    lv_auth = ii_client->request->get_header_field( 'authorization' ).
+    lv_auth = ii_client->request->get_header_field( 'Authorization' ).
 
     IF NOT lv_auth IS INITIAL.
       append( iv_uri  = iv_uri
@@ -130,7 +162,8 @@ CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
 
   METHOD set.
 
-    DATA: lv_concat TYPE string.
+    DATA: lv_concat TYPE string,
+          lo_digest TYPE REF TO zcl_abapgit_http_digest.
 
     ASSERT NOT iv_uri IS INITIAL.
 
@@ -145,8 +178,17 @@ CLASS ZCL_ABAPGIT_LOGIN_MANAGER IMPLEMENTATION.
     CONCATENATE 'Basic' rv_auth INTO rv_auth
       SEPARATED BY space.
 
-    append( iv_uri  = iv_uri
-            iv_auth = rv_auth ).
+    IF iv_digest CP 'Digest *'.
+      CREATE OBJECT lo_digest
+        EXPORTING
+          iv_digest   = iv_digest
+          iv_username = iv_username
+          iv_password = iv_password.
+    ENDIF.
+
+    append( iv_uri    = iv_uri
+            iv_auth   = rv_auth
+            io_digest = lo_digest ).
 
   ENDMETHOD.
 ENDCLASS.

@@ -73,7 +73,20 @@ FORM branch_popup TABLES   tt_fields TYPE zif_abapgit_definitions=>ty_sval_tt
 ENDFORM.                    "branch_popup
 
 FORM output.
-  DATA: lt_ucomm TYPE TABLE OF sy-ucomm.
+
+  DATA:
+    lt_ucomm TYPE TABLE OF sy-ucomm,
+    lv_title TYPE sy-title.
+
+  " Check if gui title should be set differently
+  " Used by login page (see ZCL_ABAPGIT_GUI_PAGE_LOGIN)
+  IMPORT title = lv_title FROM MEMORY ID zif_abapgit_definitions=>gc_memoryid_title.
+  IF sy-subrc = 0.
+    SET TITLEBAR '%_T' WITH lv_title.
+    FREE MEMORY ID zif_abapgit_definitions=>gc_memoryid_title.
+  ELSE.
+    SET TITLEBAR '%_T' WITH 'abapGit'.
+  ENDIF.
 
   PERFORM set_pf_status IN PROGRAM rsdbrunt IF FOUND.
 

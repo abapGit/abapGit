@@ -27,6 +27,9 @@ CLASS zcx_abapgit_exception DEFINITION
     DATA msgv3 TYPE symsgv READ-ONLY .
     DATA msgv4 TYPE symsgv READ-ONLY .
     DATA mt_callstack TYPE abap_callstack READ-ONLY .
+    DATA url TYPE string READ-ONLY .
+    DATA count TYPE i READ-ONLY.
+    DATA digest TYPE string READ-ONLY.
 
     "! Raise exception with text
     "! @parameter iv_text | Text
@@ -72,7 +75,20 @@ CLASS zcx_abapgit_exception DEFINITION
         !msgv1    TYPE symsgv OPTIONAL
         !msgv2    TYPE symsgv OPTIONAL
         !msgv3    TYPE symsgv OPTIONAL
-        !msgv4    TYPE symsgv OPTIONAL .
+        !msgv4    TYPE symsgv OPTIONAL
+        !url      TYPE string OPTIONAL
+        !count    TYPE i OPTIONAL
+        !digest   TYPE string OPTIONAL.
+    CLASS-METHODS raise_login_error
+      IMPORTING
+        !iv_url    TYPE string
+        !iv_count  TYPE i
+        !iv_digest TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    METHODS is_login_error
+      RETURNING
+        VALUE(rv_result) TYPE abap_bool .
 
     METHODS get_source_position
         REDEFINITION .
@@ -110,7 +126,7 @@ ENDCLASS.
 
 
 
-CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
+CLASS zcx_abapgit_exception IMPLEMENTATION.
 
 
   METHOD constructor ##ADT_SUPPRESS_GENERATION.
@@ -121,6 +137,9 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
     me->msgv2 = msgv2.
     me->msgv3 = msgv3.
     me->msgv4 = msgv4.
+    me->url = url.
+    me->count = count.
+    me->digest = digest.
 
     CLEAR me->textid.
     IF textid IS INITIAL.
@@ -206,6 +225,11 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
 
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD is_login_error.
+    rv_result = boolc( url <> '' AND count > 0 ).
   ENDMETHOD.
 
 
@@ -300,6 +324,17 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
     split_text_to_symsg( lv_text ).
 
     raise_t100( ix_previous = ix_previous ).
+
+  ENDMETHOD.
+
+
+  METHOD raise_login_error.
+
+    RAISE EXCEPTION TYPE zcx_abapgit_exception
+      EXPORTING
+        url    = iv_url
+        count  = iv_count
+        digest = iv_digest.
 
   ENDMETHOD.
 

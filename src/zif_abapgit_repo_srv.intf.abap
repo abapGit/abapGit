@@ -1,6 +1,7 @@
 INTERFACE zif_abapgit_repo_srv
   PUBLIC .
 
+
   METHODS delete
     IMPORTING
       !io_repo TYPE REF TO zcl_abapgit_repo
@@ -69,6 +70,13 @@ INTERFACE zif_abapgit_repo_srv
     EXPORTING
       VALUE(eo_repo) TYPE REF TO zcl_abapgit_repo
       !ev_reason     TYPE string
+    RAISING
+      zcx_abapgit_exception .
+  METHODS get_repo_from_url
+    IMPORTING
+      !iv_url        TYPE string
+    RETURNING
+      VALUE(ro_repo) TYPE REF TO zcl_abapgit_repo
     RAISING
       zcx_abapgit_exception .
 ENDINTERFACE.

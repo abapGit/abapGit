@@ -40,13 +40,13 @@ CLASS zcl_abapgit_gui DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS on_event
-          FOR EVENT sapevent OF zif_abapgit_html_viewer
+        FOR EVENT sapevent OF zif_abapgit_html_viewer
       IMPORTING
-          !action
-          !frame
-          !getdata
-          !postdata
-          !query_table .
+        !action
+        !frame
+        !getdata
+        !postdata
+        !query_table .
     METHODS constructor
       IMPORTING
         !io_component         TYPE REF TO object OPTIONAL
@@ -105,11 +105,14 @@ CLASS zcl_abapgit_gui DEFINITION
     METHODS handle_error
       IMPORTING
         !ix_exception TYPE REF TO zcx_abapgit_exception .
+    METHODS handle_login
+      IMPORTING
+        !ix_login_error TYPE REF TO zcx_abapgit_exception .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
+CLASS zcl_abapgit_gui IMPLEMENTATION.
 
 
   METHOD back.
@@ -292,7 +295,11 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
       CATCH zcx_abapgit_cancel ##NO_HANDLER.
         " Do nothing = gc_event_state-no_more_act
       CATCH zcx_abapgit_exception INTO lx_exception.
-        handle_error( lx_exception ).
+        IF lx_exception->is_login_error( ) = abap_true.
+          handle_login( lx_exception ).
+        ELSE.
+          handle_error( lx_exception ).
+        ENDIF.
     ENDTRY.
 
   ENDMETHOD.
@@ -318,6 +325,28 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
         ENDIF.
 
       CATCH zcx_abapgit_exception cx_sy_move_cast_error INTO lx_exception.
+        " In case of fire we just fallback to plain old message
+        MESSAGE lx_exception TYPE 'S' DISPLAY LIKE 'E'.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD handle_login.
+
+    DATA:
+      li_login_page TYPE REF TO zif_abapgit_gui_renderable,
+      lx_exception  TYPE REF TO zcx_abapgit_exception.
+
+    TRY.
+        li_login_page = zcl_abapgit_gui_page_login=>create( iv_url    = ix_login_error->url
+                                                            iv_count  = ix_login_error->count
+                                                            iv_digest = ix_login_error->digest
+                                                            io_page   = mi_cur_page ).
+        call_page( ii_page      = li_login_page
+                   iv_replacing = abap_true ).
+
+      CATCH zcx_abapgit_exception INTO lx_exception.
         " In case of fire we just fallback to plain old message
         MESSAGE lx_exception TYPE 'S' DISPLAY LIKE 'E'.
     ENDTRY.

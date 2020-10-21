@@ -76,7 +76,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
+CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
 
   METHOD add.
@@ -330,6 +330,26 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
           eo_repo       = eo_repo
           ev_reason     = ev_reason ).
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_repo_srv~get_repo_from_url.
+
+    DATA:
+      lt_repo        TYPE zif_abapgit_definitions=>ty_repo_ref_tt,
+      lo_repo        TYPE REF TO zcl_abapgit_repo,
+      lo_repo_online TYPE REF TO zcl_abapgit_repo_online.
+
+    lt_repo = list( ).
+
+    LOOP AT lt_repo INTO lo_repo.
+      CHECK lo_repo->is_offline( ) = abap_false.
+      lo_repo_online ?= lo_repo.
+      CHECK to_upper( lo_repo_online->get_url( ) ) = to_upper( iv_url ).
+      ro_repo ?= lo_repo.
+      RETURN.
+    ENDLOOP.
 
   ENDMETHOD.
 

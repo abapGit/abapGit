@@ -72,9 +72,10 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(ri_html)       TYPE REF TO zif_abapgit_html .
     CLASS-METHODS render_warning_banner
       IMPORTING
-        !iv_text       TYPE string
+        !iv_text        TYPE string
+        !iv_extra_style TYPE string OPTIONAL
       RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+        VALUE(ri_html)  TYPE REF TO zif_abapgit_html .
     CLASS-METHODS render_infopanel
       IMPORTING
         !iv_div_id     TYPE string
@@ -681,18 +682,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
                       iv_class = |url| ).
 
       IF iv_show_commit = abap_true.
-
-        TRY.
-            render_repo_top_commit_hash( ii_html        = ri_html
-                                         io_repo_online = lo_repo_online ).
-          CATCH zcx_abapgit_exception INTO lx_error.
-            " In case of missing or wrong credentials, show message in status bar
-            lv_hint = lx_error->get_text( ).
-            IF lv_hint CS 'credentials'.
-              MESSAGE lv_hint TYPE 'S' DISPLAY LIKE 'E'.
-            ENDIF.
-        ENDTRY.
-
+        render_repo_top_commit_hash( ii_html        = ri_html
+                                     io_repo_online = lo_repo_online ).
       ENDIF.
 
     ENDIF.
@@ -802,8 +793,15 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
   METHOD render_warning_banner.
 
+    DATA lv_class TYPE string VALUE 'panel warning center'.
+
+    IF iv_extra_style IS NOT INITIAL.
+      lv_class = lv_class && ` ` && iv_extra_style.
+    ENDIF.
+
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
-    ri_html->add( '<div class="dummydiv warning">' ).
+
+    ri_html->add( |<div class="{ lv_class }">| ).
     ri_html->add( |{ ri_html->icon( 'exclamation-triangle/yellow' ) } { iv_text }| ).
     ri_html->add( '</div>' ).
 

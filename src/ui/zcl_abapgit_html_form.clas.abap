@@ -34,6 +34,8 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_upper_case  TYPE abap_bool DEFAULT abap_false
         !iv_placeholder TYPE string OPTIONAL
         !iv_side_action TYPE string OPTIONAL
+        !iv_password    TYPE abap_bool DEFAULT abap_false
+        !iv_autofocus   TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ro_self)  TYPE REF TO zcl_abapgit_html_form .
     METHODS checkbox
@@ -98,6 +100,8 @@ CLASS zcl_abapgit_html_form DEFINITION
         placeholder   TYPE string,
         required      TYPE string,
         upper_case    TYPE abap_bool,
+        password      TYPE abap_bool,
+        autofocus     TYPE abap_bool,
         item_class    TYPE string,
         error         TYPE string,
         default_value TYPE string,
@@ -142,7 +146,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
+CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
 
   METHOD checkbox.
@@ -356,6 +360,8 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     DATA lv_opt_id TYPE string.
     DATA lv_error TYPE string.
     DATA lv_value TYPE string.
+    DATA lv_type TYPE string.
+    DATA lv_focus TYPE string.
     DATA lv_checked TYPE string.
     DATA lv_item_class TYPE string.
     FIELD-SYMBOLS <ls_opt> LIKE LINE OF is_field-subitems.
@@ -391,8 +397,20 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
           ii_html->add( '<div class="input-container">' ). " Ugly :(
         ENDIF.
 
-        ii_html->add( |<input type="text" name="{ is_field-name }" id="{
-          is_field-name }"{ is_field-placeholder } value="{ lv_value }"{ is_field-dblclick }>| ).
+        IF is_field-password = abap_true.
+          lv_type = 'password'.
+        ELSE.
+          lv_type = 'text'.
+        ENDIF.
+
+        IF is_field-autofocus = abap_true.
+          lv_focus = ' autofocus'.
+        ELSE.
+          lv_focus = ''.
+        ENDIF.
+
+        ii_html->add( |<input type="{ lv_type }" name="{ is_field-name }" id="{
+          is_field-name }"{ is_field-placeholder } value="{ lv_value }"{ is_field-dblclick }{ lv_focus }>| ).
 
         IF is_field-side_action IS NOT INITIAL.
           ii_html->add( '</div>' ).
@@ -470,6 +488,8 @@ CLASS ZCL_ABAPGIT_HTML_FORM IMPLEMENTATION.
     ls_field-name       = iv_name.
     ls_field-label      = iv_label.
     ls_field-upper_case = iv_upper_case.
+    ls_field-password   = iv_password.
+    ls_field-autofocus = iv_autofocus.
 
     IF iv_hint IS NOT INITIAL.
       ls_field-hint    = | title="{ iv_hint }"|.
