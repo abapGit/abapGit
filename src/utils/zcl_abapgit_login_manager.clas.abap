@@ -5,6 +5,14 @@ CLASS zcl_abapgit_login_manager DEFINITION
 
   PUBLIC SECTION.
 
+    CONSTANTS gc_proxy TYPE string VALUE 'http://proxy/' ##NO_TEXT. " Identifier for proxy
+
+    CLASS-METHODS login
+      IMPORTING
+        !iv_url    TYPE string
+        !iv_digest TYPE string OPTIONAL
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS load
       IMPORTING
         !iv_uri                 TYPE string
@@ -37,15 +45,26 @@ CLASS zcl_abapgit_login_manager DEFINITION
         VALUE(rv_auth) TYPE string
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS get_digest
+    CLASS-METHODS reset_count
       IMPORTING
-        !iv_uri          TYPE string
+        !iv_url TYPE string .
+    CLASS-METHODS get_default_user
+      IMPORTING
+        !iv_uri            TYPE string
       RETURNING
-        VALUE(ro_digest) TYPE REF TO zcl_abapgit_http_digest
+        VALUE(rv_username) TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS set_default_user
+      IMPORTING
+        !iv_uri      TYPE string
+        !iv_username TYPE string
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
   PRIVATE SECTION.
+
+    CONSTANTS gc_max_logins TYPE i VALUE 3.
 
     TYPES:
       BEGIN OF ty_auth,
@@ -54,8 +73,16 @@ CLASS zcl_abapgit_login_manager DEFINITION
         digest        TYPE REF TO zcl_abapgit_http_digest,
       END OF ty_auth .
 
+    TYPES:
+      BEGIN OF ty_login,
+        url   TYPE string,
+        count TYPE i,
+      END OF ty_login .
+
     CLASS-DATA:
       gt_auth TYPE HASHED TABLE OF ty_auth WITH UNIQUE KEY uri.
+    CLASS-DATA:
+      gt_logins TYPE HASHED TABLE OF ty_login WITH UNIQUE KEY url .
 
     CLASS-METHODS append
       IMPORTING
@@ -106,14 +133,14 @@ CLASS zcl_abapgit_login_manager IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_digest.
+  METHOD get_default_user.
 
-    DATA ls_auth LIKE LINE OF gt_auth.
-
-    READ TABLE gt_auth INTO ls_auth WITH TABLE KEY uri = zcl_abapgit_url=>host( iv_uri ).
-    IF sy-subrc = 0.
-      ro_digest = ls_auth-digest.
+    " No default user for proxy
+    IF iv_uri = zcl_abapgit_login_manager=>gc_proxy.
+      RETURN.
     ENDIF.
+
+    rv_username = zcl_abapgit_persistence_user=>get_instance( )->get_repo_login( iv_uri ).
 
   ENDMETHOD.
 
@@ -128,12 +155,12 @@ CLASS zcl_abapgit_login_manager IMPLEMENTATION.
 
       IF NOT ii_client IS INITIAL.
         IF ls_auth-digest IS BOUND.
-          " Digest Authentification
+          " Digest Authentication
           " https://en.wikipedia.org/wiki/Digest_access_authentication
           " e.g. used by https://www.gerritcodereview.com/
           ls_auth-digest->run( ii_client ).
         ELSE.
-          " Basic Authentification
+          " Basic Authentication
           " https://en.wikipedia.org/wiki/Basic_access_authentication
           ii_client->request->set_header_field(
             name  = 'Authorization'
@@ -143,6 +170,45 @@ CLASS zcl_abapgit_login_manager IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD login.
+
+    DATA ls_login TYPE ty_login.
+
+    FIELD-SYMBOLS: <ls_login> TYPE ty_login.
+
+    " Keep track of how many login attempts have been made
+    READ TABLE gt_logins ASSIGNING <ls_login> WITH TABLE KEY url = iv_url.
+    IF sy-subrc = 0.
+      <ls_login>-count = <ls_login>-count + 1.
+    ELSE.
+      ls_login-url = iv_url.
+      ls_login-count = 1.
+      INSERT ls_login INTO TABLE gt_logins ASSIGNING <ls_login>.
+    ENDIF.
+
+    " Until maximum number of logins has been reached, trigger the login page
+    " by raising an exception with the URL parameter. The exception is caught
+    " in ZCL_ABAPGIT_GUI->HANDLE_ACTION which redirects to the login page.
+    IF <ls_login>-count BETWEEN 1 AND gc_max_logins.
+      zcx_abapgit_exception=>raise_login(
+        iv_url    = iv_url
+        iv_digest = iv_digest
+        iv_count  = <ls_login>-count ).
+    ENDIF.
+
+    " The previous logins were not successful. Reset the count and continue to
+    " process as usual. This will typically result in an error message
+    " on the target page
+    reset_count( iv_url ).
+
+  ENDMETHOD.
+
+
+  METHOD reset_count.
+    DELETE gt_logins WHERE url = iv_url.
   ENDMETHOD.
 
 
@@ -173,10 +239,14 @@ CLASS zcl_abapgit_login_manager IMPLEMENTATION.
 
     CONCATENATE iv_username ':' iv_password INTO lv_concat.
 
-    rv_auth = cl_http_utility=>if_http_utility~encode_base64( lv_concat ).
+    IF iv_uri = gc_proxy.
+      rv_auth = lv_concat.
+    ELSE.
+      rv_auth = cl_http_utility=>if_http_utility~encode_base64( lv_concat ).
 
-    CONCATENATE 'Basic' rv_auth INTO rv_auth
-      SEPARATED BY space.
+      CONCATENATE 'Basic' rv_auth INTO rv_auth
+        SEPARATED BY space.
+    ENDIF.
 
     IF iv_digest CP 'Digest *'.
       CREATE OBJECT lo_digest
@@ -189,6 +259,20 @@ CLASS zcl_abapgit_login_manager IMPLEMENTATION.
     append( iv_uri    = iv_uri
             iv_auth   = rv_auth
             io_digest = lo_digest ).
+
+  ENDMETHOD.
+
+
+  METHOD set_default_user.
+
+    " No default user for proxy
+    IF iv_uri = zcl_abapgit_login_manager=>gc_proxy.
+      RETURN.
+    ENDIF.
+
+    zcl_abapgit_persistence_user=>get_instance( )->set_repo_login(
+      iv_url   = iv_uri
+      iv_login = iv_username ).
 
   ENDMETHOD.
 ENDCLASS.

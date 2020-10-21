@@ -28,8 +28,8 @@ CLASS zcx_abapgit_exception DEFINITION
     DATA msgv4 TYPE symsgv READ-ONLY .
     DATA mt_callstack TYPE abap_callstack READ-ONLY .
     DATA url TYPE string READ-ONLY .
-    DATA count TYPE i READ-ONLY.
-    DATA digest TYPE string READ-ONLY.
+    DATA count TYPE i READ-ONLY .
+    DATA digest TYPE string READ-ONLY .
 
     "! Raise exception with text
     "! @parameter iv_text | Text
@@ -78,15 +78,15 @@ CLASS zcx_abapgit_exception DEFINITION
         !msgv4    TYPE symsgv OPTIONAL
         !url      TYPE string OPTIONAL
         !count    TYPE i OPTIONAL
-        !digest   TYPE string OPTIONAL.
-    CLASS-METHODS raise_login_error
+        !digest   TYPE string OPTIONAL .
+    CLASS-METHODS raise_login
       IMPORTING
         !iv_url    TYPE string
         !iv_count  TYPE i
         !iv_digest TYPE string
       RAISING
         zcx_abapgit_exception .
-    METHODS is_login_error
+    METHODS is_login
       RETURNING
         VALUE(rv_result) TYPE abap_bool .
 
@@ -228,7 +228,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD is_login_error.
+  METHOD is_login.
     rv_result = boolc( url <> '' AND count > 0 ).
   ENDMETHOD.
 
@@ -328,7 +328,7 @@ CLASS zcx_abapgit_exception IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD raise_login_error.
+  METHOD raise_login.
 
     RAISE EXCEPTION TYPE zcx_abapgit_exception
       EXPORTING

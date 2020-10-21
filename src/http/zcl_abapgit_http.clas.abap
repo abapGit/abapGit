@@ -15,9 +15,6 @@ CLASS zcl_abapgit_http DEFINITION
         VALUE(ro_client) TYPE REF TO zcl_abapgit_http_client
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS reset_login
-      IMPORTING
-        !iv_url TYPE string .
   PROTECTED SECTION.
 
     CLASS-METHODS check_auth_requested
@@ -32,23 +29,7 @@ CLASS zcl_abapgit_http DEFINITION
         !iv_url        TYPE string
       RETURNING
         VALUE(rv_bool) TYPE abap_bool .
-    CLASS-METHODS trigger_login
-      IMPORTING
-        !iv_url    TYPE string
-        !iv_digest TYPE string
-      RAISING
-        zcx_abapgit_exception .
   PRIVATE SECTION.
-
-    TYPES:
-      BEGIN OF ty_login,
-        url   TYPE string,
-        count TYPE i,
-      END OF ty_login .
-
-    CLASS-DATA:
-      gt_logins TYPE HASHED TABLE OF ty_login WITH UNIQUE KEY url .
-    CONSTANTS c_max_logins TYPE i VALUE 3.
 
 ENDCLASS.
 
@@ -155,15 +136,10 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
     IF check_auth_requested( li_client ) = abap_true.
       lv_digest = li_client->response->get_header_field( 'WWW-Authenticate' ).
 
-      " If login count is below maximum, the following will raise an exception
-      " that redirects to the login page
-      trigger_login(
+      " If authorization is not set, redirect to "Login Page"
+      zcl_abapgit_login_manager=>login(
         iv_url    = iv_url
         iv_digest = lv_digest ).
-
-      " If we get to here, the login was not successful. We reset the count
-      " and continue to process the http return code as usual.
-      reset_login( iv_url ).
     ENDIF.
 
     ro_client->check_http_200( ).
@@ -211,41 +187,6 @@ CLASS zcl_abapgit_http IMPLEMENTATION.
 
     READ TABLE lt_list WITH KEY hostname = lv_host TRANSPORTING NO FIELDS.
     rv_bool = boolc( sy-subrc = 0 ).
-
-  ENDMETHOD.
-
-
-  METHOD reset_login.
-    " Reset login count
-    DELETE gt_logins WHERE url = iv_url.
-  ENDMETHOD.
-
-
-  METHOD trigger_login.
-
-    DATA ls_login TYPE ty_login.
-
-    FIELD-SYMBOLS: <ls_login> TYPE ty_login.
-
-    " Keep track of how many login attempts have been made
-    READ TABLE gt_logins ASSIGNING <ls_login> WITH TABLE KEY url = iv_url.
-    IF sy-subrc = 0.
-      <ls_login>-count = <ls_login>-count + 1.
-    ELSE.
-      ls_login-url = iv_url.
-      ls_login-count = 1.
-      INSERT ls_login INTO TABLE gt_logins ASSIGNING <ls_login>.
-    ENDIF.
-
-    " Until maximum number of logins has been reached, we trigger the login page
-    " by raising an exception with the URL parameter. The exception is caught
-    " in ZCL_ABAPGIT_GUI->HANDLE_ACTION which redirects to the login page.
-    IF <ls_login>-count BETWEEN 1 AND c_max_logins.
-      zcx_abapgit_exception=>raise_login_error(
-        iv_url    = iv_url
-        iv_digest = iv_digest
-        iv_count  = <ls_login>-count ).
-    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.

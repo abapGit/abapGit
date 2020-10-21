@@ -853,7 +853,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         ri_html->add( '</div>' ).
         ri_html->add( '</div>' ).
       CATCH zcx_abapgit_exception INTO lx_error.
-        IF lx_error->is_login_error( ) = abap_true.
+        IF lx_error->is_login( ) = abap_true.
           RAISE EXCEPTION lx_error.
         ENDIF.
 

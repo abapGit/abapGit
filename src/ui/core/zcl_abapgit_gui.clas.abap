@@ -295,7 +295,7 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
       CATCH zcx_abapgit_cancel ##NO_HANDLER.
         " Do nothing = gc_event_state-no_more_act
       CATCH zcx_abapgit_exception INTO lx_exception.
-        IF lx_exception->is_login_error( ) = abap_true.
+        IF lx_exception->is_login( ) = abap_true.
           handle_login( lx_exception ).
         ELSE.
           handle_error( lx_exception ).
