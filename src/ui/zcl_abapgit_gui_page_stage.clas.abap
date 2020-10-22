@@ -48,12 +48,13 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
 
     METHODS find_changed_by
       IMPORTING
-        !it_local            TYPE zif_abapgit_definitions=>ty_files_item_tt
+        it_files             TYPE zif_abapgit_definitions=>ty_stage_files
+        it_transports        TYPE ty_transport_tt
       RETURNING
         VALUE(rt_changed_by) TYPE ty_changed_by_tt .
     METHODS find_transports
       IMPORTING
-        !it_local            TYPE zif_abapgit_definitions=>ty_files_item_tt
+        it_files             TYPE zif_abapgit_definitions=>ty_stage_files
       RETURNING
         VALUE(rt_transports) TYPE ty_transport_tt .
     METHODS render_list
@@ -74,7 +75,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html .
     METHODS stage_selected
       IMPORTING
-        !ii_event TYPE REF TO zif_abapgit_gui_event
+        !ii_event       TYPE REF TO zif_abapgit_gui_event
       RETURNING
         VALUE(ro_stage) TYPE REF TO zcl_abapgit_stage
       RAISING
@@ -108,11 +109,18 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
+    METHODS get_transport_html
+      IMPORTING
+        ri_html             TYPE REF TO zif_abapgit_html
+        lv_transport_string TYPE string
+        iv_transport        TYPE trkorr
+      RETURNING
+        VALUE(r_result)     TYPE string.
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
 
   METHOD build_menu.
@@ -182,15 +190,32 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
   METHOD find_changed_by.
 
-    DATA: ls_local      LIKE LINE OF it_local,
-          ls_changed_by LIKE LINE OF rt_changed_by.
+    DATA: ls_local      LIKE LINE OF it_files-local,
+          ls_remote     LIKE LINE OF it_files-remote,
+          ls_changed_by LIKE LINE OF rt_changed_by,
+          lt_changed_by_remote like rt_changed_by.
 
     FIELD-SYMBOLS: <ls_changed_by> LIKE LINE OF rt_changed_by.
 
-
-    LOOP AT it_local INTO ls_local WHERE NOT item IS INITIAL.
+    LOOP AT it_files-local INTO ls_local WHERE NOT item IS INITIAL.
       ls_changed_by-item = ls_local-item.
       INSERT ls_changed_by INTO TABLE rt_changed_by.
+    ENDLOOP.
+
+    LOOP AT it_files-remote INTO ls_remote WHERE filename IS NOT INITIAL.
+      TRY.
+
+          zcl_abapgit_file_status=>identify_object(
+            EXPORTING
+              iv_filename = ls_remote-filename
+              iv_path = ls_remote-path
+              io_dot = mo_repo->get_dot_abapgit( )
+            IMPORTING
+              es_item = DATA(item) ).
+          ls_changed_by-item = item.
+          INSERT ls_changed_by INTO TABLE lt_changed_by_remote.
+        CATCH zcx_abapgit_exception.
+      ENDTRY.
     ENDLOOP.
 
     LOOP AT rt_changed_by ASSIGNING <ls_changed_by>.
@@ -200,6 +225,27 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
       ENDTRY.
     ENDLOOP.
 
+    LOOP AT lt_changed_by_remote ASSIGNING <ls_changed_by>.
+      TRY.
+
+          " file was deleted
+          " but it might be in a transport
+
+          READ TABLE it_transports WITH KEY item = <ls_changed_by>-item
+          INTO DATA(transport).
+
+          SELECT SINGLE as4user FROM e070
+            WHERE trkorr = @transport-transport
+          INTO @DATA(user).
+
+          <ls_changed_by>-name = to_lower( user ).
+
+        CATCH zcx_abapgit_exception.
+      ENDTRY.
+    ENDLOOP.
+
+    INSERT LINES OF lt_changed_by_remote INTO TABLE rt_changed_by.
+
   ENDMETHOD.
 
 
@@ -207,12 +253,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
     DATA: li_cts_api TYPE REF TO zif_abapgit_cts_api,
           ls_new     LIKE LINE OF rt_transports.
 
-    FIELD-SYMBOLS: <ls_local> LIKE LINE OF it_local.
+    FIELD-SYMBOLS: <ls_local> LIKE LINE OF it_files-local.
+    FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_files-remote.
 
     li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
 
     TRY.
-        LOOP AT it_local ASSIGNING <ls_local> WHERE item IS NOT INITIAL.
+        LOOP AT it_files-local ASSIGNING <ls_local> WHERE item IS NOT INITIAL.
           IF <ls_local>-item-obj_type IS NOT INITIAL AND
              <ls_local>-item-obj_name IS NOT INITIAL AND
              <ls_local>-item-devclass IS NOT INITIAL.
@@ -235,6 +282,26 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
             ENDIF.
           ENDIF.
         ENDLOOP.
+
+        LOOP AT it_files-remote ASSIGNING <ls_remote> WHERE filename IS NOT INITIAL.
+          zcl_abapgit_file_status=>identify_object(
+            EXPORTING
+              iv_filename = <ls_remote>-filename
+              iv_path = <ls_remote>-path
+              io_dot = mo_repo->get_dot_abapgit( )
+            IMPORTING
+              es_item = DATA(item)
+              ev_is_xml = DATA(is_xml) ).
+
+          CLEAR ls_new.
+          ls_new-item = item.
+          ls_new-transport = li_cts_api->get_current_transport_for_obj(
+            iv_object_type             = <ls_local>-item-obj_type
+            iv_object_name             = <ls_local>-item-obj_name
+            iv_resolve_task_to_request = abap_false ).
+          INSERT ls_new INTO TABLE rt_transports.
+        ENDLOOP.
+
       CATCH zcx_abapgit_exception.
         ASSERT 1 = 2.
     ENDTRY.
@@ -380,20 +447,26 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           iv_txt = lv_filename
           iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?{ lv_param }| ).
 
-        IF iv_transport IS NOT INITIAL.
-          lv_transport_html = ri_html->a(
-            iv_txt = lv_transport_string
-            iv_act = |{ zif_abapgit_definitions=>c_action-jump_transport }?transport={ iv_transport }| ).
-        ENDIF.
+        lv_transport_html = get_transport_html(
+          ri_html = ri_html
+          lv_transport_string = lv_transport_string
+          iv_transport = iv_transport ).
+
         ri_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
         ri_html->add( |<td class="name">{ lv_filename }</td>| ).
         ri_html->add( |<td class="user">{ iv_changed_by }</td>| ).
         ri_html->add( |<td class="transport">{ lv_transport_html }</td>| ).
       WHEN 'remote'.
+
+        lv_transport_html = get_transport_html(
+            ri_html = ri_html
+            lv_transport_string = lv_transport_string
+            iv_transport = iv_transport ).
+
         ri_html->add( '<td class="type">-</td>' ).  " Dummy for object type
         ri_html->add( |<td class="name">{ lv_filename }</td>| ).
-        ri_html->add( '<td></td>' ).                " Dummy for changed-by
-        ri_html->add( '<td></td>' ).                " Dummy for transport
+        ri_html->add( |<td>{ iv_changed_by }</td>| ).                " Dummy for changed-by
+        ri_html->add( |<td>{ lv_transport_html }</td>| ).
     ENDCASE.
 
     ri_html->add( |<td class="status">?</td>| ).
@@ -401,6 +474,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     ri_html->add( '</tr>' ).
 
+  ENDMETHOD.
+
+  METHOD get_transport_html.
+    CHECK lv_transport_string IS NOT INITIAL.
+    r_result = ri_html->a(
+            iv_txt = lv_transport_string
+            iv_act = |{ zif_abapgit_definitions=>c_action-jump_transport }?transport={ iv_transport }| ).
   ENDMETHOD.
 
 
@@ -419,8 +499,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
 
     ri_html->add( '<table id="stageTab" class="stage_tab w100">' ).
 
-    lt_changed_by = find_changed_by( ms_files-local ).
-    lt_transports = find_transports( ms_files-local ).
+    lt_transports = find_transports( ms_files ).
+    lt_changed_by = find_changed_by(
+      it_files = ms_files
+      it_transports = lt_transports ).
 
     " Local changes
     LOOP AT ms_files-local ASSIGNING <ls_local>.
@@ -469,6 +551,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
         ri_html->add( '<th></th>' ). " Diff state
         ri_html->add( '<th></th>' ). " Type
         ri_html->add( '<th colspan="3">Files to remove or non-code</th>' ).
+        ri_html->add( '<th></th>' ). " Transport
         ri_html->add( '<th></th>' ). " Status
         ri_html->add( '<th class="cmd">' ).
         ri_html->add( '<a>ignore</a>&#x2193; <a>remove</a>&#x2193; <a>reset</a>&#x2193;' ).
@@ -483,10 +566,26 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_STAGE IMPLEMENTATION.
           filename = <ls_remote>-filename.
       ASSERT sy-subrc = 0.
 
+      TRY.
+          zcl_abapgit_file_status=>identify_object(
+             EXPORTING
+               iv_filename = <ls_remote>-filename
+               iv_path = <ls_remote>-path
+               io_dot = mo_repo->get_dot_abapgit( )
+             IMPORTING
+               es_item = DATA(item) ).
+          READ TABLE lt_transports INTO ls_transport WITH KEY item = item.
+          READ TABLE lt_changed_by INTO ls_changed_by WITH KEY item = item.
+        CATCH zcx_abapgit_exception.
+          CLEAR ls_transport.
+      ENDTRY.
+
       ri_html->add( render_file(
         iv_context = 'remote'
         is_status  = <ls_status>
-        is_file    = <ls_remote> ) ).
+        is_file    = <ls_remote>
+        iv_changed_by = ls_changed_by-name
+        iv_transport = ls_transport-transport ) ).
 
       AT LAST.
         ri_html->add( '</tbody>' ).
