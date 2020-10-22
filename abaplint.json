@@ -72,6 +72,7 @@
     "globalMacros": []
   },
   "rules": {
+    "sy_modification": false,
     "call_transaction_authority_check": true,
     "function_module_recommendations": false,
     "method_overwrites_builtin": false,
@@ -309,7 +310,7 @@
       "subtract": true,
       "multiply": true,
       "typePools": true,
-      "load": false,
+      "load": true,
       "move": true,
       "divide": true,
       "fieldSymbolStructure": true,
