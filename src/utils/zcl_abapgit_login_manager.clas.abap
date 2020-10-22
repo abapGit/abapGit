@@ -136,7 +136,7 @@ CLASS zcl_abapgit_login_manager IMPLEMENTATION.
   METHOD get_default_user.
 
     " No default user for proxy
-    IF iv_uri = zcl_abapgit_login_manager=>gc_proxy.
+    IF iv_uri = gc_proxy.
       RETURN.
     ENDIF.
 
@@ -266,7 +266,7 @@ CLASS zcl_abapgit_login_manager IMPLEMENTATION.
   METHOD set_default_user.
 
     " No default user for proxy
-    IF iv_uri = zcl_abapgit_login_manager=>gc_proxy.
+    IF iv_uri = gc_proxy.
       RETURN.
     ENDIF.
 

@@ -40,13 +40,13 @@ CLASS zcl_abapgit_gui DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS on_event
-        FOR EVENT sapevent OF zif_abapgit_html_viewer
+          FOR EVENT sapevent OF zif_abapgit_html_viewer
       IMPORTING
-        !action
-        !frame
-        !getdata
-        !postdata
-        !query_table .
+          !action
+          !frame
+          !getdata
+          !postdata
+          !query_table .
     METHODS constructor
       IMPORTING
         !io_component         TYPE REF TO object OPTIONAL
