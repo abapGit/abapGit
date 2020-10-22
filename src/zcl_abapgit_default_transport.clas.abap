@@ -204,6 +204,7 @@ CLASS ZCL_ABAPGIT_DEFAULT_TRANSPORT IMPLEMENTATION.
     CALL FUNCTION 'TR_TASK_SET'
       EXPORTING
         iv_order          = iv_transport
+        iv_validdays      = 1
       EXCEPTIONS
         invalid_username  = 1
         invalid_category  = 2
