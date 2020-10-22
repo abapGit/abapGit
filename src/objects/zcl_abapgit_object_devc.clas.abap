@@ -636,6 +636,10 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
            ls_package_data-dlvu_text,
            ls_package_data-layer_text.
 
+    " Clear obsolete fields
+    CLEAR: ls_package_data-intfprefx,
+           ls_package_data-cli_check.
+
     ASSIGN COMPONENT 'TRANSLATION_DEPTH_TEXT'
            OF STRUCTURE ls_package_data
            TO <lg_field>.
