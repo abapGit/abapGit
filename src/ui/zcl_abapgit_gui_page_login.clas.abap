@@ -64,6 +64,8 @@ CLASS zcl_abapgit_gui_page_login DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS get_form_schema
+      IMPORTING
+        iv_username    TYPE string
       RETURNING
         VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form .
 ENDCLASS.
@@ -81,12 +83,12 @@ CLASS zcl_abapgit_gui_page_login IMPLEMENTATION.
     mv_count  = iv_count.
     mv_digest = iv_digest.
     mo_page   = io_page.
+    mv_default_user = zcl_abapgit_login_manager=>get_default_user( mv_url ).
 
     CREATE OBJECT mo_validation_log.
     CREATE OBJECT mo_form_data.
-    mo_form = get_form_schema( ).
+    mo_form = get_form_schema( mv_default_user ).
 
-    mv_default_user = zcl_abapgit_login_manager=>get_default_user( mv_url ).
     mo_form_data->set( iv_key = c_id-user
                        iv_val = mv_default_user ).
 
@@ -129,12 +131,7 @@ CLASS zcl_abapgit_gui_page_login IMPLEMENTATION.
 
     DATA lv_title TYPE sy-title.
 
-    IF iv_url = zcl_abapgit_login_manager=>gc_proxy.
-      rv_host = 'Proxy'.
-    ELSE.
-      rv_host = zcl_abapgit_url=>host( iv_url ).
-      SPLIT rv_host AT '//' INTO lv_title rv_host.
-    ENDIF.
+    rv_host = zcl_abapgit_login_manager=>get_host( iv_url ).
 
     lv_title = |Login: { rv_host }|.
     EXPORT title = lv_title TO MEMORY ID zif_abapgit_definitions=>gc_memoryid_title.
@@ -149,12 +146,12 @@ CLASS zcl_abapgit_gui_page_login IMPLEMENTATION.
     ro_form->text(
       iv_name        = c_id-user
       iv_required    = abap_true
-      iv_autofocus   = boolc( mv_default_user IS INITIAL )
+      iv_autofocus   = boolc( iv_username IS INITIAL )
       iv_label       = 'User Name'
     )->text(
       iv_name        = c_id-password
       iv_required    = abap_true
-      iv_autofocus   = boolc( mv_default_user IS NOT INITIAL )
+      iv_autofocus   = boolc( iv_username IS NOT INITIAL )
       iv_password    = abap_true
       iv_label       = 'Password or Token'
     )->command(

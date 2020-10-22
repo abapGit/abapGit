@@ -45,9 +45,6 @@ CLASS zcl_abapgit_login_manager DEFINITION
         VALUE(rv_auth) TYPE string
       RAISING
         zcx_abapgit_exception .
-    CLASS-METHODS reset_count
-      IMPORTING
-        !iv_url TYPE string .
     CLASS-METHODS get_default_user
       IMPORTING
         !iv_uri            TYPE string
@@ -61,10 +58,18 @@ CLASS zcl_abapgit_login_manager DEFINITION
         !iv_username TYPE string
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS get_host
+      IMPORTING
+        !iv_url        TYPE string
+      RETURNING
+        VALUE(rv_host) TYPE string
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS reset_count
+      IMPORTING
+        !iv_url TYPE string .
   PROTECTED SECTION.
   PRIVATE SECTION.
-
-    CONSTANTS gc_max_logins TYPE i VALUE 3.
 
     TYPES:
       BEGIN OF ty_auth,
@@ -72,18 +77,23 @@ CLASS zcl_abapgit_login_manager DEFINITION
         authorization TYPE string,
         digest        TYPE REF TO zcl_abapgit_http_digest,
       END OF ty_auth .
-
     TYPES:
       BEGIN OF ty_login,
         url   TYPE string,
         count TYPE i,
       END OF ty_login .
 
+    CONSTANTS gc_max_logins TYPE i VALUE 3.
     CLASS-DATA:
-      gt_auth TYPE HASHED TABLE OF ty_auth WITH UNIQUE KEY uri.
+      gt_auth TYPE HASHED TABLE OF ty_auth WITH UNIQUE KEY uri .
     CLASS-DATA:
       gt_logins TYPE HASHED TABLE OF ty_login WITH UNIQUE KEY url .
 
+    CLASS-METHODS increase_count
+      IMPORTING
+        !iv_url         TYPE string
+      RETURNING
+        VALUE(rv_count) TYPE i.
     CLASS-METHODS append
       IMPORTING
         !iv_uri    TYPE string
@@ -145,6 +155,41 @@ CLASS zcl_abapgit_login_manager IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_host.
+
+    DATA lv_host TYPE string.
+
+    IF iv_url = gc_proxy.
+      rv_host = 'Proxy'.
+    ELSE.
+      lv_host = zcl_abapgit_url=>host( iv_url ).
+      SPLIT lv_host AT '//' INTO lv_host rv_host.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD increase_count.
+
+    DATA ls_login TYPE ty_login.
+
+    FIELD-SYMBOLS: <ls_login> TYPE ty_login.
+
+    " Keep track of how many login attempts have been made
+    READ TABLE gt_logins ASSIGNING <ls_login> WITH TABLE KEY url = iv_url.
+    IF sy-subrc = 0.
+      <ls_login>-count = <ls_login>-count + 1.
+    ELSE.
+      ls_login-url = iv_url.
+      ls_login-count = 1.
+      INSERT ls_login INTO TABLE gt_logins ASSIGNING <ls_login>.
+    ENDIF.
+
+    rv_count = <ls_login>-count.
+
+  ENDMETHOD.
+
+
   METHOD load.
 
     DATA: ls_auth LIKE LINE OF gt_auth.
@@ -175,28 +220,18 @@ CLASS zcl_abapgit_login_manager IMPLEMENTATION.
 
   METHOD login.
 
-    DATA ls_login TYPE ty_login.
+    DATA lv_count TYPE i.
 
-    FIELD-SYMBOLS: <ls_login> TYPE ty_login.
-
-    " Keep track of how many login attempts have been made
-    READ TABLE gt_logins ASSIGNING <ls_login> WITH TABLE KEY url = iv_url.
-    IF sy-subrc = 0.
-      <ls_login>-count = <ls_login>-count + 1.
-    ELSE.
-      ls_login-url = iv_url.
-      ls_login-count = 1.
-      INSERT ls_login INTO TABLE gt_logins ASSIGNING <ls_login>.
-    ENDIF.
+    lv_count = increase_count( iv_url ).
 
     " Until maximum number of logins has been reached, trigger the login page
     " by raising an exception with the URL parameter. The exception is caught
     " in ZCL_ABAPGIT_GUI->HANDLE_ACTION which redirects to the login page.
-    IF <ls_login>-count BETWEEN 1 AND gc_max_logins.
+    IF lv_count BETWEEN 1 AND gc_max_logins.
       zcx_abapgit_exception=>raise_login(
         iv_url    = iv_url
         iv_digest = iv_digest
-        iv_count  = <ls_login>-count ).
+        iv_count  = lv_count ).
     ENDIF.
 
     " The previous logins were not successful. Reset the count and continue to
