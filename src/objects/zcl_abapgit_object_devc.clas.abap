@@ -391,18 +391,18 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
 * korrflag
 * dlvunit
 * parentcl
+* cli_check
+* intprefx
     ls_data_sign-ctext            = abap_true.
     ls_data_sign-as4user          = abap_true.
     ls_data_sign-pdevclass        = abap_true.
     ls_data_sign-comp_posid       = abap_true.
     ls_data_sign-component        = abap_true.
     ls_data_sign-perminher        = abap_true.
-    ls_data_sign-intfprefx        = abap_true.
     ls_data_sign-packtype         = abap_true.
     ls_data_sign-restricted       = abap_true.
     ls_data_sign-mainpack         = abap_true.
     ls_data_sign-srv_check        = abap_true.
-    ls_data_sign-cli_check        = abap_true.
     ls_data_sign-ext_alias        = abap_true.
     ls_data_sign-project_guid     = abap_true.
     ls_data_sign-project_id       = abap_true.
@@ -635,6 +635,10 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
     CLEAR: ls_package_data-comp_text,
            ls_package_data-dlvu_text,
            ls_package_data-layer_text.
+
+    " Clear obsolete fields
+    CLEAR: ls_package_data-intfprefx,
+           ls_package_data-cli_check.
 
     ASSIGN COMPONENT 'TRANSLATION_DEPTH_TEXT'
            OF STRUCTURE ls_package_data
