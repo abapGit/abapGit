@@ -135,15 +135,6 @@ INTERFACE zif_abapgit_popups
       !cv_show_popup TYPE char01
     RAISING
       zcx_abapgit_exception .
-  METHODS package_popup_callback
-    IMPORTING
-      !iv_code       TYPE clike
-    CHANGING
-      !ct_fields     TYPE zif_abapgit_definitions=>ty_sval_tt
-      !cs_error      TYPE svale
-      !cv_show_popup TYPE char01
-    RAISING
-      zcx_abapgit_exception .
   METHODS popup_transport_request
     IMPORTING
       !is_transport_type  TYPE zif_abapgit_definitions=>ty_transport_type

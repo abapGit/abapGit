@@ -24,6 +24,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !io_repo               TYPE REF TO zcl_abapgit_repo
         !iv_show_package       TYPE abap_bool DEFAULT abap_true
         !iv_show_branch        TYPE abap_bool DEFAULT abap_true
+        !iv_show_commit        TYPE abap_bool DEFAULT abap_true
         !iv_interactive_branch TYPE abap_bool DEFAULT abap_false
         !iv_branch             TYPE string OPTIONAL
         !io_news               TYPE REF TO zcl_abapgit_news OPTIONAL
@@ -140,7 +141,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
+CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
 
   METHOD advanced_submenu.
@@ -686,16 +687,20 @@ CLASS ZCL_ABAPGIT_GUI_CHUNK_LIB IMPLEMENTATION.
                               && |{ lo_repo_online->get_url( ) }|
                       iv_class = |url| ).
 
-      TRY.
-          render_repo_top_commit_hash( ii_html        = ri_html
-                                       io_repo_online = lo_repo_online ).
-        CATCH zcx_abapgit_exception INTO lx_error.
-          " In case of missing or wrong credentials, show message in status bar
-          lv_hint = lx_error->get_text( ).
-          IF lv_hint CS 'credentials'.
-            MESSAGE lv_hint TYPE 'S' DISPLAY LIKE 'E'.
-          ENDIF.
-      ENDTRY.
+      IF iv_show_commit = abap_true.
+
+        TRY.
+            render_repo_top_commit_hash( ii_html        = ri_html
+                                         io_repo_online = lo_repo_online ).
+          CATCH zcx_abapgit_exception INTO lx_error.
+            " In case of missing or wrong credentials, show message in status bar
+            lv_hint = lx_error->get_text( ).
+            IF lv_hint CS 'credentials'.
+              MESSAGE lv_hint TYPE 'S' DISPLAY LIKE 'E'.
+            ENDIF.
+        ENDTRY.
+
+      ENDIF.
 
     ENDIF.
 
