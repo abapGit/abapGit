@@ -595,9 +595,9 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       IF <ls_col>-tech_name = iv_order_by
       AND iv_order_by IS NOT INITIAL.
         IF iv_order_descending = abap_true.
-          lv_tmp = lv_tmp && | &#x25B4;|. " arrow up
-        ELSE.
           lv_tmp = lv_tmp && | &#x25BE;|. " arrow down
+        ELSE.
+          lv_tmp = lv_tmp && | &#x25B4;|. " arrow up
         ENDIF.
       ENDIF.
 
