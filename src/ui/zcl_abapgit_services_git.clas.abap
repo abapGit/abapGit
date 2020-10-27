@@ -101,8 +101,6 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
   METHOD checkout_commit.
 
     DATA: lo_repo            TYPE REF TO zcl_abapgit_repo_online,
-          lx_error           TYPE REF TO zcx_abapgit_exception,
-          lv_more_loadable   TYPE abap_bool,
           lt_value_tab       TYPE ty_commit_value_tab_tt,
           lt_commits         TYPE zif_abapgit_definitions=>ty_commit_tt,
           ls_selected_commit TYPE zif_abapgit_definitions=>ty_commit.
