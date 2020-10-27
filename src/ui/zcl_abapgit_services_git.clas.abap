@@ -71,11 +71,10 @@ CLASS zcl_abapgit_services_git DEFINITION
   PRIVATE SECTION.
     CLASS-METHODS checkout_commit_build_popup
       IMPORTING
-        !it_commits         TYPE zif_abapgit_definitions=>ty_commit_tt
-      EXPORTING
-        !es_selected_commit TYPE zif_abapgit_definitions=>ty_commit
-      CHANGING
-        !ct_value_tab       TYPE ty_commit_value_tab_tt
+        !it_commits               TYPE zif_abapgit_definitions=>ty_commit_tt
+        !it_value_tab             TYPE ty_commit_value_tab_tt
+      RETURNING
+        VALUE(rs_selected_commit) TYPE zif_abapgit_definitions=>ty_commit
       RAISING
         zcx_abapgit_exception .
 
@@ -95,8 +94,6 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_value_tab> TYPE ty_commit_value_tab,
                    <ls_column>    TYPE zif_abapgit_definitions=>ty_alv_column.
 
-    CLEAR: es_selected_commit.
-
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
     <ls_column>-name   = 'SHA1'.
     <ls_column>-text   = 'Hash'.
@@ -111,7 +108,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
     li_popups->popup_to_select_from_list(
       EXPORTING
-        it_list               = ct_value_tab
+        it_list               = it_value_tab
         iv_title              = |Checkout Commit|
         iv_end_column         = 83
         iv_striped_pattern    = abap_true
@@ -134,7 +131,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     ENDIF.
 
     READ TABLE it_commits
-      INTO es_selected_commit
+      INTO rs_selected_commit
       WITH KEY sha1 = <ls_value_tab>-sha1.
 
   ENDMETHOD.
@@ -182,11 +179,11 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
   METHOD create_branch.
 
-    DATA: lv_name   TYPE string,
-          lv_cancel TYPE abap_bool,
-          lo_repo   TYPE REF TO zcl_abapgit_repo_online,
-          lv_msg    TYPE string,
-          li_popups TYPE REF TO zif_abapgit_popups,
+    DATA: lv_name               TYPE string,
+          lv_cancel             TYPE abap_bool,
+          lo_repo               TYPE REF TO zcl_abapgit_repo_online,
+          lv_msg                TYPE string,
+          li_popups             TYPE REF TO zif_abapgit_popups,
           lv_source_branch_name TYPE string.
 
 
