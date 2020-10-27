@@ -71,6 +71,8 @@ INTERFACE zif_abapgit_exit
       !ct_ci_repos TYPE ty_ci_repos .
   METHODS adjust_display_commit_url
     IMPORTING !iv_repo_url    TYPE zif_abapgit_persistence=>ty_repo-url
+              !iv_repo_name   TYPE string
+              !iv_repo_key    TYPE zif_abapgit_persistence=>ty_value
               !iv_commit_hash TYPE zif_abapgit_definitions=>ty_sha1
     CHANGING  !cv_display_url TYPE zif_abapgit_persistence=>ty_repo-url
     RAISING   zcx_abapgit_exception .

@@ -144,6 +144,8 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     zcl_abapgit_exit=>get_instance( )->adjust_display_commit_url(
       EXPORTING
         iv_repo_url           = me->get_url( )
+        iv_repo_name          = me->get_name( )
+        iv_repo_key           = me->get_key( )
         iv_commit_hash        = iv_hash
       CHANGING
         cv_display_url        = rv_url ).

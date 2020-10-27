@@ -15,7 +15,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
+CLASS zcl_abapgit_exit IMPLEMENTATION.
 
 
   METHOD get_instance.
@@ -184,6 +184,8 @@ CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
         gi_exit->adjust_display_commit_url(
           EXPORTING
             iv_repo_url           = iv_repo_url
+            iv_repo_name          = iv_repo_name
+            iv_repo_key           = iv_repo_key
             iv_commit_hash        = iv_commit_hash
           CHANGING
             cv_display_url        = cv_display_url ).
