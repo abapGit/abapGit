@@ -55,6 +55,6 @@ Can be used for any postprocessing operation for deserialized objects. Since it 
 Can be used to set the URL to display a commit. There is a default implementation for some provider:
 |  | Repo URL | Show Commit URL|
 |-- | -- | -- |
-|github | http(s):\/\/github.com/larshp/abapGit.git | http(s): //github.com/larshp/abapGit/commit/17b6411cdb59cfb4478a8e6b3de1da3241fedd41 |
-|bitbucket | http(s):\/\/bitbucket.org/bigld/abapgit.git | http(s):\/\/bitbucket.org/bigld/abapgit/commits/17b6411cdb59cfb4478a8e6b3de1da3241fedd41 |
+|github | http(s):\/\/github.com/<user\>/\<repo\>.git | http(s): //github.com/<user\>/\<repo\>/commit/17b6411cdb59cfb4478a8e6b3de1da3241fedd41 |
+|bitbucket | http(s):\/\/bitbucket.org/<user\>/\<repo\>.git | http(s):\/\/bitbucket.org/<user\>/\<repo\>/commits/17b6411cdb59cfb4478a8e6b3de1da3241fedd41 |
 |gitlab | http(s):\/\/gitlab.com/<user\>/\<repo\>.git | http(s):\/\/gitlab.com/\<user\>/\<repo\>/-/commit/17b6411cdb59cfb4478a8e6b3de1da3241fedd41 |
