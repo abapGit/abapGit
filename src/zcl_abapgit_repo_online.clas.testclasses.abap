@@ -29,6 +29,9 @@ CLASS ltcl_repo_online IMPLEMENTATION.
     ls_provider_urls-repo_url = |https://github.com/abapGit/abapGit.git|.
     ls_provider_urls-show_url = |https://github.com/abapGit/abapGit/commit/{ lv_testhash }|.
     APPEND ls_provider_urls TO lt_test_urls.
+    ls_provider_urls-repo_url = |http://github.com/abapGit/abapGit.git|.
+    ls_provider_urls-show_url = |http://github.com/abapGit/abapGit/commit/{ lv_testhash }|.
+    APPEND ls_provider_urls TO lt_test_urls.
     ls_provider_urls-repo_url = |https://bitbucket.org/abapGit/abapGit.git|.
     ls_provider_urls-show_url = |https://bitbucket.org/abapGit/abapGit/commits/{ lv_testhash }|.
     APPEND ls_provider_urls TO lt_test_urls.

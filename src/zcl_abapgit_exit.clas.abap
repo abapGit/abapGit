@@ -176,4 +176,20 @@ CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_exit~adjust_display_commit_url.
+
+    TRY.
+        gi_exit->adjust_display_commit_url(
+          EXPORTING
+            iv_repo_url           = iv_repo_url
+            iv_commit_hash        = iv_commit_hash
+          CHANGING
+            cv_display_url        = cv_display_url ).
+      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+    ENDTRY.
+
+  ENDMETHOD.
+
 ENDCLASS.
