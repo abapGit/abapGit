@@ -99,7 +99,10 @@ CLASS zcl_abapgit_object_tabl DEFINITION
       deserialize_texts
         IMPORTING io_xml   TYPE REF TO zif_abapgit_xml_input
                   is_dd02v TYPE dd02v
-        RAISING   zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception,
+      is_db_table_category
+        IMPORTING iv_tabclass                TYPE dd02l-tabclass
+        RETURNING VALUE(rv_is_db_table_type) TYPE dd02l-tabclass.
 
 ENDCLASS.
 
@@ -571,9 +574,9 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_objname  TYPE rsedd0-ddobjname,
-          lv_no_ask   TYPE abap_bool,
-          lv_subrc    TYPE sy-subrc,
+    DATA: lv_objname TYPE rsedd0-ddobjname,
+          lv_no_ask  TYPE abap_bool,
+          lv_subrc   TYPE sy-subrc,
           BEGIN OF ls_dd02l,
             tabname  TYPE dd02l-tabname,
             tabclass TYPE dd02l-tabclass,
@@ -595,7 +598,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
         WHERE tabname = ms_item-obj_name
         AND as4local = 'A'
         AND as4vers = '0000'.
-      IF sy-subrc = 0.
+      IF sy-subrc = 0 AND is_db_table_category( ls_dd02l-tabclass ) = abap_true.
 
         CALL FUNCTION 'DD_EXISTS_DATA'
           EXPORTING
@@ -986,4 +989,15 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
                  ig_data = ls_extras ).
 
   ENDMETHOD.
+
+
+  METHOD is_db_table_category.
+
+    " values from domain TABCLASS
+    rv_is_db_table_type = boolc( iv_tabclass = 'TRANSP'
+                              OR iv_tabclass = 'CLUSTER'
+                              OR iv_tabclass = 'POOL' ).
+
+  ENDMETHOD.
+
 ENDCLASS.
