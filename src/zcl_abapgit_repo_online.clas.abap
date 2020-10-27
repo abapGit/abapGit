@@ -392,8 +392,9 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
 * assumption: PUSH is done on top of the currently selected branch
 
-    DATA: ls_push TYPE zcl_abapgit_git_porcelain=>ty_push_result,
-          lv_text TYPE string.
+    DATA: ls_push   TYPE zcl_abapgit_git_porcelain=>ty_push_result,
+          lv_text   TYPE string,
+          lv_parent TYPE zif_abapgit_definitions=>ty_sha1.
 
 
     IF ms_data-branch_name CP zif_abapgit_definitions=>c_git_branch-tags.
@@ -410,12 +411,18 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     handle_stage_ignore( io_stage ).
 
+    IF get_sha1( ) IS INITIAL.
+      lv_parent = get_sha1_remote( ).
+    ELSE.
+      lv_parent = get_sha1( ).
+    ENDIF.
+
     ls_push = zcl_abapgit_git_porcelain=>push(
       is_comment     = is_comment
       io_stage       = io_stage
       iv_branch_name = get_branch_name( )
       iv_url         = get_url( )
-      iv_parent      = get_sha1_remote( )
+      iv_parent      = lv_parent
       it_old_objects = get_objects( ) ).
 
     set_objects( ls_push-new_objects ).
