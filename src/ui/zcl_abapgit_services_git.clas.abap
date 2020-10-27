@@ -78,6 +78,12 @@ CLASS zcl_abapgit_services_git DEFINITION
         !ct_value_tab       TYPE ty_commit_value_tab_tt
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS checkout_commit_handle_select
+      IMPORTING
+        !io_repo            TYPE REF TO zcl_abapgit_repo_online
+        !is_selected_commit TYPE zif_abapgit_definitions=>ty_commit
+      RAISING
+        zcx_abapgit_exception .
 
 ENDCLASS.
 
@@ -140,6 +146,14 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD checkout_commit_handle_select.
+
+    io_repo->set_sha1( is_selected_commit-sha1 ).
+    COMMIT WORK AND WAIT.
+
+  ENDMETHOD.
+
+
   METHOD commit.
 
     DATA: ls_comment TYPE zif_abapgit_definitions=>ty_comment,
@@ -182,11 +196,11 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
   METHOD create_branch.
 
-    DATA: lv_name   TYPE string,
-          lv_cancel TYPE abap_bool,
-          lo_repo   TYPE REF TO zcl_abapgit_repo_online,
-          lv_msg    TYPE string,
-          li_popups TYPE REF TO zif_abapgit_popups,
+    DATA: lv_name               TYPE string,
+          lv_cancel             TYPE abap_bool,
+          lo_repo               TYPE REF TO zcl_abapgit_repo_online,
+          lv_msg                TYPE string,
+          li_popups             TYPE REF TO zif_abapgit_popups,
           lv_source_branch_name TYPE string.
 
 
