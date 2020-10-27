@@ -15,7 +15,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_exit IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_EXIT IMPLEMENTATION.
 
 
   METHOD get_instance.
@@ -132,6 +132,20 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
     TRY.
         gi_exit->deserialize_postprocess( is_step = is_step
                                           ii_log  = ii_log ).
+      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_exit~get_ci_tests.
+
+    TRY.
+        gi_exit->get_ci_tests(
+          EXPORTING
+            iv_object   = iv_object
+          CHANGING
+            ct_ci_repos = ct_ci_repos ).
       CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
     ENDTRY.
 
