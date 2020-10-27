@@ -123,10 +123,8 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
         et_value_tab   = lt_value_tab
         et_commits     = lt_commits ).
 
-    ls_selected_commit = checkout_commit_build_popup(
-      EXPORTING
-        it_commits   = lt_commits
-        it_value_tab = lt_value_tab ).
+    ls_selected_commit = checkout_commit_build_popup( it_commits   = lt_commits
+                                                      it_value_tab = lt_value_tab ).
 
     lo_repo->set_sha1( ls_selected_commit-sha1 ).
     COMMIT WORK AND WAIT.
