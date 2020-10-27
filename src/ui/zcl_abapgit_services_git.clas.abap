@@ -476,6 +476,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       RETURN.
     ENDIF.
 
+    lo_repo->set_sha1( space ).
     lo_repo->set_branch_name( ls_branch-name ).
 
     COMMIT WORK AND WAIT.
