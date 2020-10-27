@@ -97,9 +97,9 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
   METHOD checkout_commit_build_list.
 
     DATA: lv_unix_time   TYPE zcl_abapgit_time=>ty_unixtime,
-          lv_date        TYPE sydatum,
+          lv_date        TYPE sy-datum,
           lv_date_string TYPE c LENGTH 12,
-          lv_time        TYPE syuzeit,
+          lv_time        TYPE sy-uzeit,
           lv_time_string TYPE c LENGTH 10,
           ls_pull_result TYPE zcl_abapgit_git_commit=>ty_pull_result.
 
@@ -108,11 +108,9 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     CLEAR: et_commits.
 
-    ls_pull_result = zcl_abapgit_git_commit=>get_by_branch(
-      EXPORTING
-        iv_branch_name  = iv_branch_name
-        iv_repo_url     = iv_url
-        iv_deepen_level = 99 ).
+    ls_pull_result = zcl_abapgit_git_commit=>get_by_branch( iv_branch_name  = iv_branch_name
+                                                            iv_repo_url     = iv_url
+                                                            iv_deepen_level = 99 ).
 
     et_commits = ls_pull_result-commits.
     DELETE et_commits WHERE sha1 = ls_pull_result-commit.
