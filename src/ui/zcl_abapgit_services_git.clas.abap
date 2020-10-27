@@ -190,7 +190,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
     <ls_column>-name   = 'SHA1'.
     <ls_column>-text   = 'Hash'.
-    <ls_column>-length = 7.
+    <ls_column>-length = 8.
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
     <ls_column>-name = 'MESSAGE'.
     <ls_column>-text = 'Message'.
