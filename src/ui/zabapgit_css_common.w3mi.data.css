@@ -1138,8 +1138,8 @@ settings_tab tr:first-child td { border-top: 0px; }
   margin-top: 0;
 }
 .dialog fieldset legend {
-  text-transform: uppercase;
   font-size: small;
+  text-transform: uppercase;
   padding-left: 0.5em;
   padding-right: 0.5em;
 }
