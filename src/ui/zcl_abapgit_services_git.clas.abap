@@ -69,13 +69,21 @@ CLASS zcl_abapgit_services_git DEFINITION
       RAISING
         zcx_abapgit_exception .
   PRIVATE SECTION.
+    CLASS-METHODS checkout_commit_build_list
+      IMPORTING
+        iv_url         TYPE string
+        iv_branch_name TYPE string
+      EXPORTING
+        et_value_tab   TYPE ty_commit_value_tab_tt
+        et_commits     TYPE zif_abapgit_definitions=>ty_commit_tt
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS checkout_commit_build_popup
       IMPORTING
-        !it_commits         TYPE zif_abapgit_definitions=>ty_commit_tt
-      EXPORTING
-        !es_selected_commit TYPE zif_abapgit_definitions=>ty_commit
-      CHANGING
-        !ct_value_tab       TYPE ty_commit_value_tab_tt
+        !it_commits               TYPE zif_abapgit_definitions=>ty_commit_tt
+        !it_value_tab             TYPE ty_commit_value_tab_tt
+      RETURNING
+        VALUE(rs_selected_commit) TYPE zif_abapgit_definitions=>ty_commit
       RAISING
         zcx_abapgit_exception .
 
@@ -84,6 +92,53 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_services_git IMPLEMENTATION.
+
+  METHOD checkout_commit_build_list.
+
+    DATA: lv_unix_time   TYPE zcl_abapgit_time=>ty_unixtime,
+          lv_date        TYPE sy-datum,
+          lv_date_string TYPE c LENGTH 12,
+          lv_time        TYPE sy-uzeit,
+          lv_time_string TYPE c LENGTH 10,
+          ls_pull_result TYPE zcl_abapgit_git_commit=>ty_pull_result.
+
+    FIELD-SYMBOLS: <ls_commit>    TYPE zif_abapgit_definitions=>ty_commit,
+                   <ls_value_tab> TYPE ty_commit_value_tab.
+
+    CLEAR: et_commits, et_value_tab.
+
+    ls_pull_result = zcl_abapgit_git_commit=>get_by_branch( iv_branch_name  = iv_branch_name
+                                                            iv_repo_url     = iv_url
+                                                            iv_deepen_level = 99 ).
+
+    et_commits = ls_pull_result-commits.
+    DELETE et_commits WHERE sha1 = ls_pull_result-commit.
+    SORT et_commits BY time DESCENDING.
+
+    IF et_commits IS INITIAL.
+      zcx_abapgit_exception=>raise( |No commits are available in this branch.| ).
+    ENDIF.
+
+    LOOP AT et_commits ASSIGNING <ls_commit>.
+
+      APPEND INITIAL LINE TO et_value_tab ASSIGNING <ls_value_tab>.
+      <ls_value_tab>-sha1    = <ls_commit>-sha1.
+      <ls_value_tab>-message = <ls_commit>-message.
+      lv_unix_time = <ls_commit>-time.
+      zcl_abapgit_time=>get_utc(
+        EXPORTING
+          iv_unix = lv_unix_time
+        IMPORTING
+          ev_time = lv_time
+          ev_date = lv_date ).
+      WRITE: lv_date TO lv_date_string,
+             lv_time TO lv_time_string.
+      <ls_value_tab>-datetime = |{ lv_date_string }, | &&
+                                |{ lv_time_string }|.
+
+    ENDLOOP.
+
+  ENDMETHOD.
 
 
   METHOD checkout_commit_build_popup.
@@ -94,8 +149,6 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     FIELD-SYMBOLS: <ls_value_tab> TYPE ty_commit_value_tab,
                    <ls_column>    TYPE zif_abapgit_definitions=>ty_alv_column.
-
-    CLEAR: es_selected_commit.
 
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
     <ls_column>-name   = 'SHA1'.
@@ -111,7 +164,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
     li_popups->popup_to_select_from_list(
       EXPORTING
-        it_list               = ct_value_tab
+        it_list               = it_value_tab
         iv_title              = |Checkout Commit|
         iv_end_column         = 83
         iv_striped_pattern    = abap_true
@@ -134,7 +187,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     ENDIF.
 
     READ TABLE it_commits
-      INTO es_selected_commit
+      INTO rs_selected_commit
       WITH KEY sha1 = <ls_value_tab>-sha1.
 
   ENDMETHOD.
