@@ -4,6 +4,7 @@ CLASS zcl_abapgit_services_git DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+
     CLASS-METHODS pull
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
@@ -29,6 +30,7 @@ CLASS zcl_abapgit_services_git DEFINITION
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
         zcx_abapgit_exception.
+
     CLASS-METHODS delete_tag
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
@@ -51,7 +53,6 @@ CLASS zcl_abapgit_services_git DEFINITION
         !io_stage  TYPE REF TO zcl_abapgit_stage
       RAISING
         zcx_abapgit_exception.
-
   PROTECTED SECTION.
     TYPES: BEGIN OF ty_commit_value_tab,
              sha1     TYPE zif_abapgit_definitions=>ty_sha1,
@@ -67,7 +68,6 @@ CLASS zcl_abapgit_services_git DEFINITION
         VALUE(rt_unnecessary_local_objects) TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
-
   PRIVATE SECTION.
     CLASS-METHODS checkout_commit_build_list
       IMPORTING
@@ -238,11 +238,11 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
   METHOD create_branch.
 
-    DATA: lv_name               TYPE string,
-          lv_cancel             TYPE abap_bool,
-          lo_repo               TYPE REF TO zcl_abapgit_repo_online,
-          lv_msg                TYPE string,
-          li_popups             TYPE REF TO zif_abapgit_popups,
+    DATA: lv_name   TYPE string,
+          lv_cancel TYPE abap_bool,
+          lo_repo   TYPE REF TO zcl_abapgit_repo_online,
+          lv_msg    TYPE string,
+          li_popups TYPE REF TO zif_abapgit_popups,
           lv_source_branch_name TYPE string.
 
 
