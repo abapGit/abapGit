@@ -106,7 +106,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     FIELD-SYMBOLS: <ls_commit>    TYPE zif_abapgit_definitions=>ty_commit,
                    <ls_value_tab> TYPE ty_commit_value_tab.
 
-    CLEAR: et_commits.
+    CLEAR: et_commits, et_value_tab.
 
     ls_pull_result = zcl_abapgit_git_commit=>get_by_branch( iv_branch_name  = iv_branch_name
                                                             iv_repo_url     = iv_url
