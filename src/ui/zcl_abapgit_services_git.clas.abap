@@ -179,11 +179,11 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
   METHOD create_branch.
 
-    DATA: lv_name               TYPE string,
-          lv_cancel             TYPE abap_bool,
-          lo_repo               TYPE REF TO zcl_abapgit_repo_online,
-          lv_msg                TYPE string,
-          li_popups             TYPE REF TO zif_abapgit_popups,
+    DATA: lv_name   TYPE string,
+          lv_cancel TYPE abap_bool,
+          lo_repo   TYPE REF TO zcl_abapgit_repo_online,
+          lv_msg    TYPE string,
+          li_popups TYPE REF TO zif_abapgit_popups,
           lv_source_branch_name TYPE string.
 
 
