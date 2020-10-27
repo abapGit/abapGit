@@ -56,6 +56,13 @@ CLASS zcl_abapgit_repo_online DEFINITION
         VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url
       RAISING
         zcx_abapgit_exception .
+    METHODS get_default_commit_display_url
+      IMPORTING
+        !iv_hash      TYPE zif_abapgit_definitions=>ty_sha1
+      RETURNING
+        VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url
+      RAISING
+        zcx_abapgit_exception .
     METHODS get_switched_origin
       RETURNING
         VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-switched_origin .
@@ -132,6 +139,24 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
   METHOD get_commit_display_url.
 
+    rv_url = me->get_default_commit_display_url( iv_hash ).
+
+    zcl_abapgit_exit=>get_instance( )->adjust_display_commit_url(
+      EXPORTING
+        iv_repo_url           = me->get_url( )
+        iv_commit_hash        = iv_hash
+      CHANGING
+        cv_display_url        = rv_url ).
+
+    IF rv_url IS INITIAL.
+      zcx_abapgit_exception=>raise( |provider not yet supported| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_default_commit_display_url.
+
     DATA ls_result TYPE match_result.
     FIELD-SYMBOLS <ls_provider_match> TYPE submatch_result.
 
@@ -151,17 +176,6 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
           REPLACE REGEX '\.git$' IN rv_url WITH space.
           rv_url = rv_url && |/-/commit/| && iv_hash.
       ENDCASE.
-    ENDIF.
-
-    zcl_abapgit_exit=>get_instance( )->adjust_display_commit_url(
-      EXPORTING
-        iv_repo_url           = me->get_url( )
-        iv_commit_hash        = iv_hash
-      CHANGING
-        cv_display_url        = rv_url ).
-
-    IF rv_url IS INITIAL.
-      zcx_abapgit_exception=>raise( |provider not yet supported| ).
     ENDIF.
 
   ENDMETHOD.
