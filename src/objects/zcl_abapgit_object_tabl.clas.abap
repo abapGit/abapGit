@@ -105,7 +105,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
+CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -605,10 +605,17 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
           " it cannot delete table with data without asking
           CREATE DATA lr_data TYPE (lv_objname).
           ASSIGN lr_data->* TO <lg_data>.
-          SELECT SINGLE * FROM (lv_objname) INTO <lg_data>.
-          IF sy-subrc = 0.
-            lv_no_ask = abap_false.
-          ENDIF.
+          TRY.
+              SELECT SINGLE * FROM (lv_objname) INTO <lg_data>.
+              IF sy-subrc = 0.
+                lv_no_ask = abap_false.
+              ENDIF.
+
+            CATCH cx_sy_dynamic_osql_semantics.
+              " In case of GTTs (DD02L-IS_GTT) new SQL-Syntax is required.
+              " But they are empty by definition and we don't have to ask anyway.
+              lv_no_ask = abap_true.
+          ENDTRY.
         ENDIF.
       ENDIF.
 
