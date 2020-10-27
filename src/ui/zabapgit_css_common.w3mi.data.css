@@ -751,12 +751,14 @@ div.info-panel-fixed {
 }
 
 div.info-panel div.info-hint {
+  text-transform: uppercase;
   font-size: small;
   padding: 8px 6px 0px;
   text-align: center;
 }
 
 div.info-panel div.info-title {
+  text-transform: uppercase;
   font-size: small;
   padding: 6px;
   text-align: center;
@@ -1136,6 +1138,7 @@ settings_tab tr:first-child td { border-top: 0px; }
   margin-top: 0;
 }
 .dialog fieldset legend {
+  text-transform: uppercase;
   font-size: small;
   padding-left: 0.5em;
   padding-right: 0.5em;
