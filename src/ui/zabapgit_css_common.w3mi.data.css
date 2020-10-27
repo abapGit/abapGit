@@ -751,14 +751,12 @@ div.info-panel-fixed {
 }
 
 div.info-panel div.info-hint {
-  text-transform: uppercase;
   font-size: small;
   padding: 8px 6px 0px;
   text-align: center;
 }
 
 div.info-panel div.info-title {
-  text-transform: uppercase;
   font-size: small;
   padding: 6px;
   text-align: center;
@@ -1007,6 +1005,10 @@ table.commit tr .title {
   margin-right: 10px;
 }
 
+.cmd-palette li .icon-plug {
+  margin-right: 15px;
+}
+
 /* SETTINGS */
 
 table.settings_tab {
@@ -1135,7 +1137,6 @@ settings_tab tr:first-child td { border-top: 0px; }
 }
 .dialog fieldset legend {
   font-size: small;
-  text-transform: uppercase;
   padding-left: 0.5em;
   padding-right: 0.5em;
 }
