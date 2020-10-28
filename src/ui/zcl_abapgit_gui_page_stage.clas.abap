@@ -125,11 +125,11 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
         zcx_abapgit_exception .
     METHODS get_transport_html
       IMPORTING
-        ri_html             TYPE REF TO zif_abapgit_html
-        lv_transport_string TYPE string
+        iv_html             TYPE REF TO zif_abapgit_html
+        iv_transport_string TYPE string
         iv_transport        TYPE trkorr
       RETURNING
-        VALUE(r_result)     TYPE string.
+        VALUE(rv_result)    TYPE string.
 ENDCLASS.
 
 
@@ -208,9 +208,9 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
           ls_remote            LIKE LINE OF it_files-remote,
           ls_changed_by        LIKE LINE OF rt_changed_by,
           lt_changed_by_remote LIKE rt_changed_by,
-          item                 TYPE zif_abapgit_definitions=>ty_item,
+          ls_item              TYPE zif_abapgit_definitions=>ty_item,
           lv_transport         TYPE ty_transport,
-          user                 TYPE e070-as4user.
+          lv_user              TYPE e070-as4user.
 
     FIELD-SYMBOLS: <ls_changed_by> LIKE LINE OF rt_changed_by.
 
@@ -228,8 +228,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
               iv_path = ls_remote-path
               io_dot = mo_repo->get_dot_abapgit( )
             IMPORTING
-              es_item = item ).
-          ls_changed_by-item = item.
+              es_item = ls_item ).
+          ls_changed_by-item = ls_item.
           INSERT ls_changed_by INTO TABLE lt_changed_by_remote.
         CATCH zcx_abapgit_exception.
       ENDTRY.
@@ -251,11 +251,10 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
           INTO lv_transport.
 
           IF sy-subrc = 0.
-            SELECT SINGLE as4user FROM e070
-              WHERE trkorr = @lv_transport-transport
-            INTO @user.
+            SELECT SINGLE as4user FROM e070 INTO lv_user
+            WHERE trkorr = lv_transport-transport.
 
-            <ls_changed_by>-name = to_lower( user ).
+            <ls_changed_by>-name = to_lower( lv_user ).
           ELSE.
             <ls_changed_by>-name = to_lower( zcl_abapgit_objects_super=>c_user_unknown ).
           ENDIF.
@@ -432,8 +431,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
           iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?{ lv_param }| ).
 
         lv_transport_html = get_transport_html(
-          ri_html = ri_html
-          lv_transport_string = lv_transport_string
+          iv_html = ri_html
+          iv_transport_string = lv_transport_string
           iv_transport = iv_transport ).
 
         ri_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
@@ -442,8 +441,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
       WHEN 'remote'.
 
         lv_transport_html = get_transport_html(
-            ri_html = ri_html
-            lv_transport_string = lv_transport_string
+            iv_html = ri_html
+            iv_transport_string = lv_transport_string
             iv_transport = iv_transport ).
 
         ri_html->add( |<td class="type">{ is_item-obj_type }</td>| ).
@@ -454,8 +453,8 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ri_html->add( |<td class="transport">{ lv_transport_html }</td>| ).
 
     lv_transport_html = get_transport_html(
-      ri_html = ri_html
-      lv_transport_string = lv_transport_string
+      iv_html = ri_html
+      iv_transport_string = lv_transport_string
       iv_transport = iv_transport ).
 
 
@@ -467,9 +466,13 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD get_transport_html.
-    CHECK lv_transport_string IS NOT INITIAL.
-    r_result = ri_html->a(
-            iv_txt = lv_transport_string
+
+    IF iv_transport_string IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    rv_result = iv_html->a(
+            iv_txt = iv_transport_string
             iv_act = |{ zif_abapgit_definitions=>c_action-jump_transport }?transport={ iv_transport }| ).
   ENDMETHOD.
 
@@ -846,13 +849,14 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
     DATA:
       ls_item TYPE zif_abapgit_definitions=>ty_item,
-      is_xml  TYPE abap_bool,
-      ls_new  LIKE LINE OF ct_transports.
-
-    DATA: li_cts_api TYPE REF TO zif_abapgit_cts_api.
-    li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
+      lv_is_xml_file  TYPE abap_bool,
+      ls_new  LIKE LINE OF ct_transports,
+      li_cts_api TYPE REF TO zif_abapgit_cts_api.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_files.
+
+    li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
+
     LOOP AT it_files ASSIGNING <ls_remote> WHERE filename IS NOT INITIAL.
 
       CLEAR ls_item.
@@ -865,7 +869,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
           io_dot = mo_repo->get_dot_abapgit( )
         IMPORTING
           es_item = ls_item
-          ev_is_xml = is_xml ).
+          ev_is_xml = lv_is_xml_file ).
 
       IF ls_item IS INITIAL.
         CONTINUE.
