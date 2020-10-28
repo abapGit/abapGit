@@ -130,6 +130,14 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         VALUE(ri_html)  TYPE REF TO zif_abapgit_html
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS render_transport
+      IMPORTING
+        !iv_transport   TYPE trkorr
+        !iv_interactive TYPE abap_bool DEFAULT abap_true
+      RETURNING
+        VALUE(ri_html)  TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
 
     CLASS-METHODS render_repo_top_commit_hash
@@ -261,7 +269,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       lv_key    TYPE string,
       lv_branch TYPE string,
       lv_text   TYPE string,
-          lv_class TYPE string.
+      lv_class  TYPE string.
 
     IF iv_repo_key IS NOT INITIAL.
       lv_key = iv_repo_key.
@@ -823,7 +831,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     " Package
     IF iv_show_package = abap_true.
-      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_package_name( io_repo->get_package( ) ) ).
+      ri_html->add( render_package_name( io_repo->get_package( ) ) ).
     ENDIF.
 
     ri_html->add( '</td>' ).
@@ -855,6 +863,34 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       CATCH zcx_abapgit_exception.
         ii_html->add( |<span class="url">{ lv_icon_commit }{ lv_commit_short_hash }</span>| ).
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD render_transport.
+
+    DATA lv_title TYPE string.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    IF iv_transport IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE as4text FROM e07t INTO lv_title
+      WHERE trkorr = iv_transport AND langu = sy-langu ##SUBRC_OK.
+
+    ri_html->add( |<span class="transport">| ).
+    ri_html->add_icon( iv_name = 'briefcase/grey70'
+                       iv_hint = 'Transport' ).
+    IF iv_interactive = abap_true.
+      ri_html->add_a( iv_act   = |{ zif_abapgit_definitions=>c_action-jump_transport }?transport={ iv_transport }|
+                      iv_title = lv_title
+                      iv_txt   = to_lower( iv_transport ) ).
+    ELSE.
+      ri_html->add( to_lower( iv_transport ) ).
+    ENDIF.
+    ri_html->add( '</span>' ).
 
   ENDMETHOD.
 
