@@ -453,7 +453,7 @@ INTERFACE zif_abapgit_definitions
       unchanged TYPE c LENGTH 1 VALUE '',
       added     TYPE c LENGTH 1 VALUE 'A',
       modified  TYPE c LENGTH 1 VALUE 'M',
-      deleted   TYPE c LENGTH 1 VALUE 'D', "For future use
+      deleted   TYPE c LENGTH 1 VALUE 'D',
       mixed     TYPE c LENGTH 1 VALUE '*',
     END OF c_state .
   CONSTANTS:
