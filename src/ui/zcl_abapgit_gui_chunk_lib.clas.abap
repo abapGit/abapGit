@@ -584,18 +584,16 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
               iv_act   = |{ zif_abapgit_definitions=>c_action-direction }?direction=DESCENDING|
               iv_title = <ls_col>-title ).
           ENDIF.
+        ELSEIF <ls_col>-allow_order_by = abap_true.
+          lv_tmp = lv_tmp && ri_html->a(
+            iv_txt   = lv_disp_name
+            iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }?orderBy={ <ls_col>-tech_name }|
+            iv_title = <ls_col>-title ).
         ELSE.
-          IF <ls_col>-allow_order_by = abap_true.
-            lv_tmp = lv_tmp && ri_html->a(
+          lv_tmp = lv_tmp && ri_html->a(
               iv_txt   = lv_disp_name
-              iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }?orderBy={ <ls_col>-tech_name }|
+              iv_act   = ``
               iv_title = <ls_col>-title ).
-          ELSE.
-            lv_tmp = lv_tmp && ri_html->a(
-                iv_txt   = lv_disp_name
-                iv_act   = ``
-                iv_title = <ls_col>-title ).
-          ENDIF.
         ENDIF.
       ENDIF.
       IF <ls_col>-tech_name = iv_order_by
@@ -748,7 +746,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       lo_repo_online ?= io_repo.
       IF iv_show_branch = abap_true.
         IF iv_branch IS INITIAL.
-          ri_html->add( render_branch_span( iv_branch      = lo_repo_online->get_selected_branch( )
+          ri_html->add( render_branch_span( iv_branch      = lo_repo_online->get_branch_name( )
                                             io_repo        = lo_repo_online
                                             iv_interactive = iv_interactive_branch ) ).
         ELSE.
@@ -787,7 +785,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
           lv_display_url       TYPE zif_abapgit_persistence=>ty_repo-url,
           lv_icon_commit       TYPE string.
 
-    lv_commit_hash = io_repo_online->get_current_remote( ).
+    lv_commit_hash = io_repo_online->get_sha1_remote( ).
     lv_commit_short_hash = lv_commit_hash(7).
 
     lv_icon_commit = ii_html->icon( iv_name  = 'code-commit'
