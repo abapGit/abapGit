@@ -509,7 +509,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
         ri_html->add( '<th>Transport</th>' ).
         ri_html->add( '<th></th>' ). " Status
         ri_html->add( '<th class="cmd">' ).
-        ri_html->add( '<a>add</a>&#x2193; <a>reset</a>&#x2193;' ).
+        ri_html->add( '<a>add</a>&#x2193; <a>ignore</a>&#x2193; <a>reset</a>&#x2193;' ).
         ri_html->add( '</th>' ).
         ri_html->add( '</tr></thead>' ).
         ri_html->add( '<tbody>' ).

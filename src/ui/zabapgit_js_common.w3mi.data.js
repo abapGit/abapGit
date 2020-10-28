@@ -356,8 +356,8 @@ function StageHelper(params) {
 
   this.TEMPLATES = {
     cmdReset:  "<a>reset</a>",
-    cmdLocal:  "<a>add</a>",
-    cmdRemote: "<a>ignore</a><a>remove</a>"
+    cmdLocal:  "<a>add</a><a>ignore</a>",
+    cmdRemote: "<a>remove</a><a>ignore</a>"
   };
 
   this.setHooks();
