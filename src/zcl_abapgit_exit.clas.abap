@@ -138,6 +138,20 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD zif_abapgit_exit~get_ci_tests.
+
+    TRY.
+        gi_exit->get_ci_tests(
+          EXPORTING
+            iv_object   = iv_object
+          CHANGING
+            ct_ci_repos = ct_ci_repos ).
+      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+    ENDTRY.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_exit~get_ssl_id.
 
     TRY.
@@ -162,4 +176,22 @@ CLASS zcl_abapgit_exit IMPLEMENTATION.
     ENDTRY.
 
   ENDMETHOD.
+
+
+  METHOD zif_abapgit_exit~adjust_display_commit_url.
+
+    TRY.
+        gi_exit->adjust_display_commit_url(
+          EXPORTING
+            iv_repo_url           = iv_repo_url
+            iv_repo_name          = iv_repo_name
+            iv_repo_key           = iv_repo_key
+            iv_commit_hash        = iv_commit_hash
+          CHANGING
+            cv_display_url        = cv_display_url ).
+      CATCH cx_sy_ref_is_initial cx_sy_dyn_call_illegal_method ##NO_HANDLER.
+    ENDTRY.
+
+  ENDMETHOD.
+
 ENDCLASS.
