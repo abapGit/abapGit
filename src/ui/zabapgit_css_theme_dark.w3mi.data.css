@@ -47,6 +47,16 @@ table.repo_tab {
     background-color: var(--theme-background-color);
 }
 
+/* ABAPGIT OBJECTS */
+span.user {
+  background-color: #4c6782;
+  border-color: #d9e4f2;
+}
+span.package {
+  background-color: #705a6d;
+  border-color: #ebe3ea;
+}
+
 /* PANELS */
 #debug-output { color: var(--theme-greyscale-dark); }
 

@@ -26,7 +26,6 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
         !iv_show_branch        TYPE abap_bool DEFAULT abap_true
         !iv_show_commit        TYPE abap_bool DEFAULT abap_true
         !iv_interactive_branch TYPE abap_bool DEFAULT abap_false
-        !iv_branch             TYPE string OPTIONAL
         !io_news               TYPE REF TO zcl_abapgit_news OPTIONAL
       RETURNING
         VALUE(ri_html)         TYPE REF TO zif_abapgit_html
@@ -105,6 +104,32 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
     CLASS-METHODS help_submenu
       RETURNING
         VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
+    CLASS-METHODS render_branch_name
+      IMPORTING
+        !iv_branch      TYPE string OPTIONAL
+        !iv_repo_key    TYPE zif_abapgit_persistence=>ty_value OPTIONAL
+        !io_repo        TYPE REF TO zcl_abapgit_repo_online OPTIONAL
+        !iv_interactive TYPE abap_bool DEFAULT abap_true
+      RETURNING
+        VALUE(ri_html)  TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS render_package_name
+      IMPORTING
+        !iv_package     TYPE devclass
+        !iv_interactive TYPE abap_bool DEFAULT abap_true
+      RETURNING
+        VALUE(ri_html)  TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
+    CLASS-METHODS render_user_name
+      IMPORTING
+        !iv_username    TYPE xubname
+        !iv_interactive TYPE abap_bool DEFAULT abap_true
+      RETURNING
+        VALUE(ri_html)  TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
   PROTECTED SECTION.
 
     CLASS-METHODS render_repo_top_commit_hash
@@ -117,15 +142,6 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
 
     CLASS-DATA gv_time_zone TYPE timezone .
 
-    CLASS-METHODS render_branch_span
-      IMPORTING
-        !iv_branch      TYPE string
-        !io_repo        TYPE REF TO zcl_abapgit_repo_online
-        !iv_interactive TYPE abap_bool
-      RETURNING
-        VALUE(ri_html)  TYPE REF TO zif_abapgit_html
-      RAISING
-        zcx_abapgit_exception .
     CLASS-METHODS get_t100_text
       IMPORTING
         !iv_msgid      TYPE scx_t100key-msgid
@@ -239,14 +255,33 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD render_branch_span.
+  METHOD render_branch_name.
 
-    DATA: lv_text  TYPE string,
+    DATA:
+      lv_key    TYPE string,
+      lv_branch TYPE string,
+      lv_text   TYPE string,
           lv_class TYPE string.
 
-    lv_text = zcl_abapgit_git_branch_list=>get_display_name( iv_branch ).
+    IF iv_repo_key IS NOT INITIAL.
+      lv_key = iv_repo_key.
+    ELSEIF io_repo IS BOUND.
+      lv_key = io_repo->get_key( ).
+    ELSE.
+      zcx_abapgit_exception=>raise( 'Either iv_repo_key or io_repo must be supplied' ).
+    ENDIF.
 
-    IF zcl_abapgit_git_branch_list=>get_type( iv_branch ) = zif_abapgit_definitions=>c_git_branch_type-branch.
+    IF iv_branch IS NOT INITIAL.
+      lv_branch = iv_branch.
+    ELSEIF io_repo IS BOUND.
+      lv_branch = io_repo->get_selected_branch( ).
+    ELSE.
+      zcx_abapgit_exception=>raise( 'Either iv_branch or io_repo must be supplied' ).
+    ENDIF.
+
+    lv_text = zcl_abapgit_git_branch_list=>get_display_name( lv_branch ).
+
+    IF zcl_abapgit_git_branch_list=>get_type( lv_branch ) = zif_abapgit_definitions=>c_git_branch_type-branch.
       lv_class = 'branch branch_branch'.
     ELSE.
       lv_class = 'branch'.
@@ -257,7 +292,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     ri_html->add_icon( iv_name = 'code-branch/grey70'
                        iv_hint = 'Current branch' ).
     IF iv_interactive = abap_true.
-      ri_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?key={ io_repo->get_key( ) }|
+      ri_html->add_a( iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?key={ lv_key }|
                       iv_txt = lv_text ).
     ELSE.
       ri_html->add( lv_text ).
@@ -612,6 +647,42 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD render_package_name.
+
+    DATA:
+      lv_obj_name TYPE tadir-obj_name,
+      lv_jump     TYPE string,
+      lv_title    TYPE string.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    IF iv_package IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE ctext FROM tdevct INTO lv_title
+      WHERE devclass = iv_package AND spras = sy-langu ##SUBRC_OK.
+
+    lv_obj_name = iv_package.
+    lv_jump = zcl_abapgit_html_action_utils=>jump_encode(
+                iv_obj_type = 'DEVC'
+                iv_obj_name = lv_obj_name ).
+
+    ri_html->add( |<span class="package">| ).
+    ri_html->add_icon( iv_name = 'box/grey70'
+                       iv_hint = 'SAP package' ).
+    IF iv_interactive = abap_true.
+      ri_html->add_a( iv_act   = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_jump }|
+                      iv_title = lv_title
+                      iv_txt   = to_lower( iv_package ) ).
+    ELSE.
+      ri_html->add( to_lower( iv_package ) ).
+    ENDIF.
+    ri_html->add( '</span>' ).
+
+  ENDMETHOD.
+
+
   METHOD render_repo_palette.
 
     DATA li_repo_srv TYPE REF TO zif_abapgit_repo_srv.
@@ -745,31 +816,14 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     IF io_repo->is_offline( ) = abap_false.
       lo_repo_online ?= io_repo.
       IF iv_show_branch = abap_true.
-        IF iv_branch IS INITIAL.
-          ri_html->add( render_branch_span( iv_branch      = lo_repo_online->get_selected_branch( )
-                                            io_repo        = lo_repo_online
-                                            iv_interactive = iv_interactive_branch ) ).
-        ELSE.
-          ri_html->add( render_branch_span( iv_branch      = iv_branch
-                                            io_repo        = lo_repo_online
-                                            iv_interactive = iv_interactive_branch ) ).
-        ENDIF.
+        ri_html->add( render_branch_name( io_repo        = lo_repo_online
+                                          iv_interactive = iv_interactive_branch ) ).
       ENDIF.
     ENDIF.
 
     " Package
     IF iv_show_package = abap_true.
-      ri_html->add_icon( iv_name = 'box/grey70'
-                         iv_hint = 'SAP package' ).
-      ri_html->add( '<span>' ).
-
-      lv_package_jump_data = zcl_abapgit_html_action_utils=>jump_encode(
-        iv_obj_type = 'DEVC'
-        iv_obj_name = io_repo->get_package( ) ).
-
-      ri_html->add_a( iv_txt = io_repo->get_package( )
-                      iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_package_jump_data }| ).
-      ri_html->add( '</span>' ).
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_package_name( io_repo->get_package( ) ) ).
     ENDIF.
 
     ri_html->add( '</td>' ).
@@ -801,6 +855,45 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       CATCH zcx_abapgit_exception.
         ii_html->add( |<span class="url">{ lv_icon_commit }{ lv_commit_short_hash }</span>| ).
     ENDTRY.
+
+  ENDMETHOD.
+
+
+  METHOD render_user_name.
+
+    DATA:
+      ls_user_address TYPE addr3_val,
+      lv_title        TYPE string.
+
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
+
+    IF iv_username IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    CALL FUNCTION 'SUSR_USER_ADDRESS_READ'
+      EXPORTING
+        user_name              = iv_username
+      IMPORTING
+        user_address           = ls_user_address
+      EXCEPTIONS
+        user_address_not_found = 1
+        OTHERS                 = 2.
+    IF sy-subrc = 0.
+      lv_title = ls_user_address-name_text.
+    ENDIF.
+
+    ri_html->add( |<span class="user">| ).
+    " todo, add icon ri_html->add_icon( iv_name = 'user/grey70'
+    "                                   iv_hint = 'User name' )
+    IF iv_interactive = abap_true.
+      ri_html->add_a( iv_act   = |{ zif_abapgit_definitions=>c_action-jump_user }?user={ iv_username }|
+                      iv_title = lv_title
+                      iv_txt   = to_lower( iv_username ) ).
+    ELSE.
+      ri_html->add( to_lower( iv_username ) ).
+    ENDIF.
+    ri_html->add( '</span>' ).
 
   ENDMETHOD.
 
