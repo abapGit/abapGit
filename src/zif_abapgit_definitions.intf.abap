@@ -363,11 +363,12 @@ INTERFACE zif_abapgit_definitions
                          WITH NON-UNIQUE DEFAULT KEY .
   TYPES:
     BEGIN OF ty_col_spec,
-      tech_name    TYPE string,
-      display_name TYPE string,
-      css_class    TYPE string,
-      add_tz       TYPE abap_bool,
-      title        TYPE string,
+      tech_name      TYPE string,
+      display_name   TYPE string,
+      css_class      TYPE string,
+      add_tz         TYPE abap_bool,
+      title          TYPE string,
+      allow_order_by TYPE abap_bool,
     END OF ty_col_spec,
     ty_col_spec_tt TYPE STANDARD TABLE OF ty_col_spec
                       WITH NON-UNIQUE KEY tech_name.
