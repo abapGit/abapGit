@@ -104,7 +104,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_online IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
 
   METHOD fetch_remote.
@@ -136,11 +136,6 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_selected_branch.
-    rv_name = ms_data-branch_name.
-  ENDMETHOD.
-
-
   METHOD get_commit_display_url.
 
     rv_url = me->get_default_commit_display_url( iv_hash ).
@@ -158,6 +153,12 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |provider not yet supported| ).
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD get_current_remote.
+    fetch_remote( ).
+    rv_sha1 = mv_current_commit.
   ENDMETHOD.
 
 
@@ -208,20 +209,13 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_selected_branch.
+    rv_name = ms_data-branch_name.
+  ENDMETHOD.
+
+
   METHOD get_selected_commit.
-    rv_sha1 = mv_current_commit.
-  ENDMETHOD.
-
-
-  METHOD get_current_remote.
-    fetch_remote( ).
-    rv_sha1 = mv_current_commit.
-  ENDMETHOD.
-
-
-  METHOD select_commit.
-    reset_remote( ).
-    mv_current_commit = iv_sha1.
+* todo, rv_sha1 = mv_current_commit.
   ENDMETHOD.
 
 
@@ -338,6 +332,12 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     reset_remote( ).
     set( iv_branch_name = iv_branch_name ).
 
+  ENDMETHOD.
+
+
+  METHOD select_commit.
+    reset_remote( ).
+    mv_current_commit = iv_sha1.
   ENDMETHOD.
 
 
