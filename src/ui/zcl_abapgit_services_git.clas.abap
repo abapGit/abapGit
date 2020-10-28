@@ -4,7 +4,6 @@ CLASS zcl_abapgit_services_git DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-
     CLASS-METHODS pull
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
@@ -30,7 +29,6 @@ CLASS zcl_abapgit_services_git DEFINITION
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
       RAISING
         zcx_abapgit_exception.
-
     CLASS-METHODS delete_tag
       IMPORTING
         !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
@@ -53,6 +51,12 @@ CLASS zcl_abapgit_services_git DEFINITION
         !io_stage  TYPE REF TO zcl_abapgit_stage
       RAISING
         zcx_abapgit_exception.
+    CLASS-METHODS checkout_commit
+      IMPORTING
+        !iv_key TYPE zif_abapgit_persistence=>ty_repo-key
+      RAISING
+        zcx_abapgit_exception.
+
   PROTECTED SECTION.
     TYPES: BEGIN OF ty_commit_value_tab,
              sha1     TYPE zif_abapgit_definitions=>ty_sha1,
@@ -68,6 +72,7 @@ CLASS zcl_abapgit_services_git DEFINITION
         VALUE(rt_unnecessary_local_objects) TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
         zcx_abapgit_exception .
+
   PRIVATE SECTION.
     CLASS-METHODS checkout_commit_build_list
       IMPORTING
@@ -92,6 +97,38 @@ ENDCLASS.
 
 
 CLASS zcl_abapgit_services_git IMPLEMENTATION.
+
+  METHOD checkout_commit.
+
+    DATA: lo_repo            TYPE REF TO zcl_abapgit_repo_online,
+          lt_value_tab       TYPE ty_commit_value_tab_tt,
+          lt_commits         TYPE zif_abapgit_definitions=>ty_commit_tt,
+          ls_selected_commit TYPE zif_abapgit_definitions=>ty_commit.
+
+    FIELD-SYMBOLS: <ls_field_desc> TYPE rsvbfidesc.
+
+    lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
+
+    IF lo_repo->get_local_settings( )-write_protected = abap_true.
+      zcx_abapgit_exception=>raise( 'Cannot checkout. Local code is write-protected by repo config.' ).
+    ENDIF.
+
+    checkout_commit_build_list(
+      EXPORTING
+        iv_branch_name = lo_repo->get_selected_branch( )
+        iv_url         = lo_repo->get_url( )
+      IMPORTING
+        et_value_tab   = lt_value_tab
+        et_commits     = lt_commits ).
+
+    ls_selected_commit = checkout_commit_build_popup( it_commits   = lt_commits
+                                                      it_value_tab = lt_value_tab ).
+
+    lo_repo->select_commit( ls_selected_commit-sha1 ).
+    COMMIT WORK AND WAIT.
+
+  ENDMETHOD.
+
 
   METHOD checkout_commit_build_list.
 
@@ -153,7 +190,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
     <ls_column>-name   = 'SHA1'.
     <ls_column>-text   = 'Hash'.
-    <ls_column>-length = 7.
+    <ls_column>-length = 8.
     APPEND INITIAL LINE TO lt_columns ASSIGNING <ls_column>.
     <ls_column>-name = 'MESSAGE'.
     <ls_column>-text = 'Message'.
@@ -235,16 +272,16 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
   METHOD create_branch.
 
-    DATA: lv_name   TYPE string,
-          lv_cancel TYPE abap_bool,
-          lo_repo   TYPE REF TO zcl_abapgit_repo_online,
-          lv_msg    TYPE string,
-          li_popups TYPE REF TO zif_abapgit_popups,
+    DATA: lv_name               TYPE string,
+          lv_cancel             TYPE abap_bool,
+          lo_repo               TYPE REF TO zcl_abapgit_repo_online,
+          lv_msg                TYPE string,
+          li_popups             TYPE REF TO zif_abapgit_popups,
           lv_source_branch_name TYPE string.
 
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    lv_source_branch_name = lo_repo->get_branch_name( ).
+    lv_source_branch_name = lo_repo->get_selected_branch( ).
 
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
     li_popups->create_branch_popup(
@@ -279,7 +316,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
     ls_branch = li_popups->branch_list_popup( iv_url         = lo_repo->get_url( )
-                                              iv_hide_branch = lo_repo->get_branch_name( )
+                                              iv_hide_branch = lo_repo->get_selected_branch( )
                                               iv_hide_head   = abap_true ).
     IF ls_branch IS INITIAL.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
@@ -465,7 +502,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     ls_branch = zcl_abapgit_ui_factory=>get_popups( )->branch_list_popup(
       iv_url             = lo_repo->get_url( )
-      iv_default_branch  = lo_repo->get_branch_name( )
+      iv_default_branch  = lo_repo->get_selected_branch( )
       iv_show_new_option = abap_true ).
     IF ls_branch IS INITIAL.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
@@ -476,8 +513,8 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lo_repo->set_branch_name( ls_branch-name ).
-
+    lo_repo->select_commit( space ).
+    lo_repo->select_branch( ls_branch-name ).
     COMMIT WORK AND WAIT.
 
   ENDMETHOD.
@@ -495,7 +532,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    lo_repo->set_branch_name( ls_tag-name ).
+    lo_repo->select_branch( ls_tag-name ).
 
     COMMIT WORK AND WAIT.
 

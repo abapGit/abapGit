@@ -251,7 +251,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
 
     ri_html->add( render_text_input( iv_name  = 'sha1'
                                      iv_label = 'SHA1'
-                                     iv_value = mo_repo_online->get_sha1_remote( ) ) ).
+                                     iv_value = mo_repo_online->get_current_remote( ) ) ).
 
     ri_html->add( render_text_input( iv_name  = 'name'
                                      iv_label = 'tag name' ) ).
