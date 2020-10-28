@@ -121,8 +121,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     li_progress->show( iv_current = 1
                        iv_text    = 'Fetch remote files' ).
 
-    IF   mv_request_local_refresh = abap_true
-      OR get_selected_commit( ) IS INITIAL.
+    IF get_selected_commit( ) IS INITIAL.
       ls_pull = zcl_abapgit_git_porcelain=>pull_by_branch( iv_url         = get_url( )
                                                            iv_branch_name = get_selected_branch( ) ).
     ELSE.
