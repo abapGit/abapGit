@@ -282,13 +282,12 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
             ct_transports = rt_transports ).
 
         find_transports_remote(
-              EXPORTING
-                it_files = it_files-remote
-              CHANGING
-                ct_transports = rt_transports ).
+          EXPORTING
+            it_files = it_files-remote
+          CHANGING
+            ct_transports = rt_transports ).
 
       CATCH zcx_abapgit_exception.
-        BREAK-POINT.
     ENDTRY.
 
   ENDMETHOD.
