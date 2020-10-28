@@ -216,7 +216,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
 
   METHOD get_selected_commit.
-* todo, rv_sha1 = mv_current_commit.
+    rv_sha1 = mv_current_commit.
   ENDMETHOD.
 
 
