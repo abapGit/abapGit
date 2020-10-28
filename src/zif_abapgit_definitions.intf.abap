@@ -454,7 +454,7 @@ INTERFACE zif_abapgit_definitions
       unchanged TYPE c LENGTH 1 VALUE '',
       added     TYPE c LENGTH 1 VALUE 'A',
       modified  TYPE c LENGTH 1 VALUE 'M',
-      deleted   TYPE c LENGTH 1 VALUE 'D', "For future use
+      deleted   TYPE c LENGTH 1 VALUE 'D',
       mixed     TYPE c LENGTH 1 VALUE '*',
     END OF c_state .
   CONSTANTS:
@@ -499,6 +499,7 @@ INTERFACE zif_abapgit_definitions
       ie_devtools                   TYPE string VALUE 'ie_devtools',
       git_pull                      TYPE string VALUE 'git_pull',
       git_reset                     TYPE string VALUE 'git_reset',
+      git_checkout_commit           TYPE string VALUE 'git_checkout_commit',
       git_branch_create             TYPE string VALUE 'git_branch_create',
       git_branch_switch             TYPE string VALUE 'git_branch_switch',
       git_branch_delete             TYPE string VALUE 'git_branch_delete',

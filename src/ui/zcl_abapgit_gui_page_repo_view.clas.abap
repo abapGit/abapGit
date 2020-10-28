@@ -184,7 +184,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -430,9 +430,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
       iv_act = zif_abapgit_definitions=>c_action-go_settings
     )->add(
       iv_txt = zcl_abapgit_gui_buttons=>advanced( )
+      iv_title = 'Utilities'
       io_sub = zcl_abapgit_gui_chunk_lib=>advanced_submenu( )
     )->add(
       iv_txt = zcl_abapgit_gui_buttons=>help( )
+      iv_title = 'Help'
       io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
 
   ENDMETHOD.
@@ -1161,7 +1163,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
       ENDIF.
 
       lo_repo_online->switch_origin( ls_pull-head_url ).
-      lo_repo_online->set_branch_name( |refs/heads/{ ls_pull-head_branch }| ). " TODO refactor
+      lo_repo_online->select_branch( |refs/heads/{ ls_pull-head_branch }| ). " TODO refactor
       rv_switched = abap_true.
     ENDIF.
 
@@ -1256,7 +1258,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     ls_hotkey_action-hotkey = |b|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description   = |Installed repo list|.
+    ls_hotkey_action-description   = |Repository list|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-abapgit_home.
     ls_hotkey_action-hotkey = |o|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
@@ -1281,6 +1283,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     ls_hotkey_action-hotkey = |u|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
+    ls_hotkey_action-description   = |Run syntax check|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_syntax_check.
+    ls_hotkey_action-hotkey = |c|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
     ls_hotkey_action-description   = |Run code inspector|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_code_inspector.
     ls_hotkey_action-hotkey = |i|.
@@ -1289,6 +1296,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     ls_hotkey_action-description   = |Show log|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_log.
     ls_hotkey_action-hotkey = |l|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description   = |abapGit settings|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_settings.
+    ls_hotkey_action-hotkey = |x|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.

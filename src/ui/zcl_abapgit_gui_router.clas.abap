@@ -391,6 +391,9 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-git_reset.                     " GIT Reset
         zcl_abapgit_services_git=>reset( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-git_checkout_commit.           " GIT Checkout commit
+        zcl_abapgit_services_git=>checkout_commit( lv_key ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-git_branch_create.             " GIT Create new branch
         zcl_abapgit_services_git=>create_branch( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
@@ -630,7 +633,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
     CONSTANTS:
       BEGIN OF lc_page,
         main_view TYPE string VALUE 'ZCL_ABAPGIT_GUI_PAGE_MAIN',
-        repo_view TYPE string VALUE 'ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO',
+        repo_view TYPE string VALUE 'ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW',
       END OF lc_page.
 
     lv_key = ii_event->query( )->get( 'KEY' ).

@@ -199,7 +199,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_COMMIT IMPLEMENTATION.
     ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
       io_repo         = mo_repo
       iv_show_package = abap_false
-      iv_branch       = mo_repo->get_branch_name( ) ) ).
+      iv_branch       = mo_repo->get_selected_branch( ) ) ).
 
     ri_html->add( render_menu( ) ).
     ri_html->add( render_form( ) ).

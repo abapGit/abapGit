@@ -1,8 +1,15 @@
-CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_objects_super FINAL.
+CLASS zcl_abapgit_object_tabl DEFINITION
+  PUBLIC
+  INHERITING FROM zcl_abapgit_objects_super
+  FINAL
+  CREATE PUBLIC .
 
   PUBLIC SECTION.
-    INTERFACES zif_abapgit_object.
-    ALIASES mo_files FOR zif_abapgit_object~mo_files.
+
+    INTERFACES zif_abapgit_object .
+
+    ALIASES mo_files
+      FOR zif_abapgit_object~mo_files .
   PROTECTED SECTION.
     TYPES: BEGIN OF ty_segment_definition,
              segmentheader     TYPE edisegmhd,
@@ -92,7 +99,10 @@ CLASS zcl_abapgit_object_tabl DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
       deserialize_texts
         IMPORTING io_xml   TYPE REF TO zif_abapgit_xml_input
                   is_dd02v TYPE dd02v
-        RAISING   zcx_abapgit_exception.
+        RAISING   zcx_abapgit_exception,
+      is_db_table_category
+        IMPORTING iv_tabclass                TYPE dd02l-tabclass
+        RETURNING VALUE(rv_is_db_table_type) TYPE dd02l-tabclass.
 
 ENDCLASS.
 
@@ -564,13 +574,14 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lv_objname  TYPE rsedd0-ddobjname,
-          lv_tabclass TYPE dd02l-tabclass,
-          lv_no_ask   TYPE abap_bool,
-          lv_subrc    TYPE sy-subrc,
-          lr_data     TYPE REF TO data.
-
-    FIELD-SYMBOLS: <lg_data>  TYPE any.
+    DATA: lv_objname TYPE rsedd0-ddobjname,
+          lv_no_ask  TYPE abap_bool,
+          lv_subrc   TYPE sy-subrc,
+          BEGIN OF ls_dd02l,
+            tabname  TYPE dd02l-tabname,
+            tabclass TYPE dd02l-tabclass,
+            sqltab   TYPE dd02l-sqltab,
+          END OF ls_dd02l.
 
     IF zif_abapgit_object~exists( ) = abap_false.
       " Proxies e.g. delete on its own, nothing todo here then.
@@ -582,27 +593,31 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
     IF delete_idoc_segment( ) = abap_false.
 
       lv_no_ask = abap_true.
-      SELECT SINGLE tabclass FROM dd02l INTO lv_tabclass
+      SELECT SINGLE tabname tabclass sqltab FROM dd02l
+        INTO CORRESPONDING FIELDS OF ls_dd02l
         WHERE tabname = ms_item-obj_name
         AND as4local = 'A'
         AND as4vers = '0000'.
-      IF sy-subrc = 0 AND lv_tabclass = 'TRANSP'.
+      IF sy-subrc = 0 AND is_db_table_category( ls_dd02l-tabclass ) = abap_true.
 
-        " Avoid dump in dynamic SELECT in case the table does not exist on database
-        CALL FUNCTION 'DB_EXISTS_TABLE'
+        CALL FUNCTION 'DD_EXISTS_DATA'
           EXPORTING
-            tabname = lv_objname
+            reftab          = ls_dd02l-sqltab
+            tabclass        = ls_dd02l-tabclass
+            tabname         = ls_dd02l-tabname
           IMPORTING
-            subrc   = lv_subrc.
-        IF lv_subrc = 0.
-          " it cannot delete table with data without asking
-          CREATE DATA lr_data TYPE (lv_objname).
-          ASSIGN lr_data->* TO <lg_data>.
-          SELECT SINGLE * FROM (lv_objname) INTO <lg_data>.
-          IF sy-subrc = 0.
-            lv_no_ask = abap_false.
-          ENDIF.
+            subrc           = lv_subrc
+          EXCEPTIONS
+            missing_reftab  = 1
+            sql_error       = 2
+            buffer_overflow = 3
+            unknown_error   = 4
+            OTHERS          = 5.
+
+        IF sy-subrc = 0 AND lv_subrc = 0.
+          lv_no_ask = abap_false.
         ENDIF.
+
       ENDIF.
 
       delete_ddic( iv_objtype = 'T'
@@ -974,4 +989,15 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
                  ig_data = ls_extras ).
 
   ENDMETHOD.
+
+
+  METHOD is_db_table_category.
+
+    " values from domain TABCLASS
+    rv_is_db_table_type = boolc( iv_tabclass = 'TRANSP'
+                              OR iv_tabclass = 'CLUSTER'
+                              OR iv_tabclass = 'POOL' ).
+
+  ENDMETHOD.
+
 ENDCLASS.

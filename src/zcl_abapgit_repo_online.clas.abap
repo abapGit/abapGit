@@ -16,7 +16,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
     METHODS get_url
       RETURNING
         VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url .
-    METHODS get_branch_name
+    METHODS get_selected_branch
       RETURNING
         VALUE(rv_name) TYPE zif_abapgit_persistence=>ty_repo-branch_name .
     METHODS set_url
@@ -24,14 +24,24 @@ CLASS zcl_abapgit_repo_online DEFINITION
         !iv_url TYPE zif_abapgit_persistence=>ty_repo-url
       RAISING
         zcx_abapgit_exception .
-    METHODS set_branch_name
+    METHODS select_branch
       IMPORTING
         !iv_branch_name TYPE zif_abapgit_persistence=>ty_repo-branch_name
       RAISING
         zcx_abapgit_exception .
-    METHODS get_sha1_remote
+    METHODS get_selected_commit
       RETURNING
         VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_current_remote
+      RETURNING
+        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+      RAISING
+        zcx_abapgit_exception .
+    METHODS select_commit
+      IMPORTING
+        iv_sha1 TYPE zif_abapgit_definitions=>ty_sha1
       RAISING
         zcx_abapgit_exception .
     METHODS get_objects
@@ -40,6 +50,13 @@ CLASS zcl_abapgit_repo_online DEFINITION
       RAISING
         zcx_abapgit_exception .
     METHODS get_commit_display_url
+      IMPORTING
+        !iv_hash      TYPE zif_abapgit_definitions=>ty_sha1
+      RETURNING
+        VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url
+      RAISING
+        zcx_abapgit_exception .
+    METHODS get_default_commit_display_url
       IMPORTING
         !iv_hash      TYPE zif_abapgit_definitions=>ty_sha1
       RETURNING
@@ -57,18 +74,18 @@ CLASS zcl_abapgit_repo_online DEFINITION
         zcx_abapgit_exception .
 
     METHODS get_files_remote
-        REDEFINITION .
+         REDEFINITION .
     METHODS get_name
-        REDEFINITION .
+         REDEFINITION .
     METHODS has_remote_source
-        REDEFINITION .
+         REDEFINITION .
     METHODS rebuild_local_checksums
-        REDEFINITION .
+         REDEFINITION .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
-    DATA mv_branch TYPE zif_abapgit_definitions=>ty_sha1 .
+    DATA mv_current_commit TYPE zif_abapgit_definitions=>ty_sha1 .
 
     METHODS handle_stage_ignore
       IMPORTING
@@ -87,7 +104,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
+CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
 
   METHOD fetch_remote.
@@ -106,43 +123,62 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
     ls_pull = zcl_abapgit_git_porcelain=>pull_by_branch(
       iv_url         = get_url( )
-      iv_branch_name = get_branch_name( ) ).
+      iv_branch_name = get_selected_branch( ) ).
 
     set_files_remote( ls_pull-files ).
     set_objects( ls_pull-objects ).
-    mv_branch = ls_pull-commit.
+    mv_current_commit = ls_pull-commit.
 
   ENDMETHOD.
 
 
-  METHOD get_branch_name.
+  METHOD get_selected_branch.
     rv_name = ms_data-branch_name.
   ENDMETHOD.
 
 
   METHOD get_commit_display_url.
 
+    rv_url = me->get_default_commit_display_url( iv_hash ).
+
+    zcl_abapgit_exit=>get_instance( )->adjust_display_commit_url(
+      EXPORTING
+        iv_repo_url           = me->get_url( )
+        iv_repo_name          = me->get_name( )
+        iv_repo_key           = me->get_key( )
+        iv_commit_hash        = iv_hash
+      CHANGING
+        cv_display_url        = rv_url ).
+
+    IF rv_url IS INITIAL.
+      zcx_abapgit_exception=>raise( |provider not yet supported| ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD get_default_commit_display_url.
+
     DATA ls_result TYPE match_result.
     FIELD-SYMBOLS <ls_provider_match> TYPE submatch_result.
 
     rv_url = me->get_url( ).
 
-    FIND REGEX '^https:\/\/(?:www\.)?(github\.com|bitbucket\.org|gitlab\.com)\/' IN rv_url RESULTS ls_result.
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( |provider not yet supported| ).
+    FIND REGEX '^http(?:s)?:\/\/(?:www\.)?(github\.com|bitbucket\.org|gitlab\.com)\/' IN rv_url RESULTS ls_result.
+    IF sy-subrc = 0.
+      READ TABLE ls_result-submatches INDEX 1 ASSIGNING <ls_provider_match>.
+      CASE rv_url+<ls_provider_match>-offset(<ls_provider_match>-length).
+        WHEN 'github.com'.
+          REPLACE REGEX '\.git$' IN rv_url WITH space.
+          rv_url = rv_url && |/commit/| && iv_hash.
+        WHEN 'bitbucket.org'.
+          REPLACE REGEX '\.git$' IN rv_url WITH space.
+          rv_url = rv_url && |/commits/| && iv_hash.
+        WHEN 'gitlab.com'.
+          REPLACE REGEX '\.git$' IN rv_url WITH space.
+          rv_url = rv_url && |/-/commit/| && iv_hash.
+      ENDCASE.
     ENDIF.
-    READ TABLE ls_result-submatches INDEX 1 ASSIGNING <ls_provider_match>.
-    CASE rv_url+<ls_provider_match>-offset(<ls_provider_match>-length).
-      WHEN 'github.com'.
-        REPLACE REGEX '\.git$' IN rv_url WITH space.
-        rv_url = rv_url && |/commit/| && iv_hash.
-      WHEN 'bitbucket.org'.
-        REPLACE REGEX '\.git$' IN rv_url WITH space.
-        rv_url = rv_url && |/commits/| && iv_hash.
-      WHEN 'gitlab.com'.
-        REPLACE REGEX '\.git$' IN rv_url WITH space.
-        rv_url = rv_url && |/-/commit/| && iv_hash.
-    ENDCASE.
 
   ENDMETHOD.
 
@@ -168,9 +204,20 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_sha1_remote.
+  METHOD get_selected_commit.
+    rv_sha1 = mv_current_commit.
+  ENDMETHOD.
+
+
+  METHOD get_current_remote.
     fetch_remote( ).
-    rv_sha1 = mv_branch.
+    rv_sha1 = mv_current_commit.
+  ENDMETHOD.
+
+
+  METHOD select_commit.
+    reset_remote( ).
+    mv_current_commit = iv_sha1.
   ENDMETHOD.
 
 
@@ -282,7 +329,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_branch_name.
+  METHOD select_branch.
 
     reset_remote( ).
     set( iv_branch_name = iv_branch_name ).
@@ -326,7 +373,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
         set_url( substring(
           val = ms_data-switched_origin
           len = lv_offs ) ).
-        set_branch_name( substring(
+        select_branch( substring(
           val = ms_data-switched_origin
           off = lv_offs + 1 ) ).
         set( iv_switched_origin = '' ).
@@ -348,7 +395,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     ASSERT iv_name CP zif_abapgit_definitions=>c_git_branch-heads.
 
     IF iv_from IS INITIAL.
-      lv_sha1 = get_sha1_remote( ).
+      lv_sha1 = get_current_remote( ).
     ELSE.
       lv_sha1 = iv_from.
     ENDIF.
@@ -359,7 +406,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
       iv_from = lv_sha1 ).
 
     " automatically switch to new branch
-    set_branch_name( iv_name ).
+    select_branch( iv_name ).
 
   ENDMETHOD.
 
@@ -389,15 +436,15 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
     ls_push = zcl_abapgit_git_porcelain=>push(
       is_comment     = is_comment
       io_stage       = io_stage
-      iv_branch_name = get_branch_name( )
+      iv_branch_name = get_selected_branch( )
       iv_url         = get_url( )
-      iv_parent      = get_sha1_remote( )
+      iv_parent      = get_current_remote( )
       it_old_objects = get_objects( ) ).
 
     set_objects( ls_push-new_objects ).
     set_files_remote( ls_push-new_files ).
 
-    mv_branch = ls_push-branch.
+    mv_current_commit = ls_push-branch.
 
     update_local_checksums( ls_push-updated_files ).
 

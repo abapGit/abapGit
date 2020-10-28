@@ -334,7 +334,7 @@ CLASS ZCL_ABAPGIT_BRANCH_OVERVIEW IMPLEMENTATION.
     zcl_abapgit_git_transport=>upload_pack_by_branch(
       EXPORTING
         iv_url          = io_repo->get_url( )
-        iv_branch_name  = io_repo->get_branch_name( )
+        iv_branch_name  = io_repo->get_selected_branch( )
         iv_deepen_level = 0
         it_branches     = lt_branches_and_tags
       IMPORTING
