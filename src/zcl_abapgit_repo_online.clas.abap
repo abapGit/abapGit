@@ -216,6 +216,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
 
   METHOD set_sha1.
+    reset_remote( ).
     mv_branch = iv_sha1.
   ENDMETHOD.
 
