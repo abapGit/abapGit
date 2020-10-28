@@ -35,7 +35,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
 
   METHOD build_main_menu.
@@ -162,9 +162,14 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MAIN IMPLEMENTATION.
     ls_hotkey_action-hotkey = |x|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description   = |Add online repository|.
+    ls_hotkey_action-description   = |New online repository|.
     ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_newonline.
     ls_hotkey_action-hotkey = |n|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description   = |New offline repository|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-repo_newoffline.
+    ls_hotkey_action-hotkey = |f|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.
