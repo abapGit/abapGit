@@ -363,11 +363,12 @@ INTERFACE zif_abapgit_definitions
                          WITH NON-UNIQUE DEFAULT KEY .
   TYPES:
     BEGIN OF ty_col_spec,
-      tech_name    TYPE string,
-      display_name TYPE string,
-      css_class    TYPE string,
-      add_tz       TYPE abap_bool,
-      title        TYPE string,
+      tech_name      TYPE string,
+      display_name   TYPE string,
+      css_class      TYPE string,
+      add_tz         TYPE abap_bool,
+      title          TYPE string,
+      allow_order_by TYPE abap_bool,
     END OF ty_col_spec,
     ty_col_spec_tt TYPE STANDARD TABLE OF ty_col_spec
                       WITH NON-UNIQUE KEY tech_name.
@@ -498,6 +499,7 @@ INTERFACE zif_abapgit_definitions
       ie_devtools                   TYPE string VALUE 'ie_devtools',
       git_pull                      TYPE string VALUE 'git_pull',
       git_reset                     TYPE string VALUE 'git_reset',
+      git_checkout_commit           TYPE string VALUE 'git_checkout_commit',
       git_branch_create             TYPE string VALUE 'git_branch_create',
       git_branch_switch             TYPE string VALUE 'git_branch_switch',
       git_branch_delete             TYPE string VALUE 'git_branch_delete',

@@ -444,7 +444,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
     IF mv_merge_mode = c_merge_mode-selection.
       ri_html->add( '<form id="target_form" method="post" action="sapevent:apply_target">' ).
-      ri_html->add( '<th>Target - ' && mo_repo->get_branch_name( ) && ' - ' ).
+      ri_html->add( '<th>Target - ' && mo_repo->get_selected_branch( ) && ' - ' ).
       ri_html->add_a( iv_act = 'submitFormById(''target_form'');'
                       iv_txt = 'Apply'
                       iv_typ = zif_abapgit_html=>c_action_type-onclick
@@ -461,7 +461,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
       ri_html->add( '</th> ' ).
       ri_html->add( '</form>' ).
     ELSE.
-      ri_html->add( '<th>Target - ' && mo_repo->get_branch_name( ) && '</th> ' ).
+      ri_html->add( '<th>Target - ' && mo_repo->get_selected_branch( ) && '</th> ' ).
       ri_html->add( '<th class="num"></th>' ).
       ri_html->add( '<th>Source - ' && mo_merge->get_source_branch( ) && '</th> ' ).
     ENDIF.
