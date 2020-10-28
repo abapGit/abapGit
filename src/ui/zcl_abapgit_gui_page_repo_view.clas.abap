@@ -254,6 +254,12 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                                  iv_opt = iv_wp_opt ).
     ENDIF.
 
+    IF mo_repo->is_offline( ) = abap_false.
+      ro_advanced_dropdown->add( iv_txt = 'Checkout commit'
+                                 iv_act = |{ zif_abapgit_definitions=>c_action-git_checkout_commit }?key={ mv_key }|
+                                 iv_opt = iv_wp_opt ).
+    ENDIF.
+
     IF mo_repo->is_offline( ) = abap_false. " Online ?
       ro_advanced_dropdown->add( iv_txt = 'Background Mode'
                                  iv_act = |{ zif_abapgit_definitions=>c_action-go_background }?key={ mv_key }| ).
