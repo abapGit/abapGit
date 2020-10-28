@@ -907,22 +907,24 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    CALL FUNCTION 'SUSR_USER_ADDRESS_READ'
-      EXPORTING
-        user_name              = iv_username
-      IMPORTING
-        user_address           = ls_user_address
-      EXCEPTIONS
-        user_address_not_found = 1
-        OTHERS                 = 2.
-    IF sy-subrc = 0.
-      lv_title = ls_user_address-name_text.
+    IF iv_username <> zcl_abapgit_objects_super=>c_user_unknown.
+      CALL FUNCTION 'SUSR_USER_ADDRESS_READ'
+        EXPORTING
+          user_name              = iv_username
+        IMPORTING
+          user_address           = ls_user_address
+        EXCEPTIONS
+          user_address_not_found = 1
+          OTHERS                 = 2.
+      IF sy-subrc = 0.
+        lv_title = ls_user_address-name_text.
+      ENDIF.
     ENDIF.
 
     ri_html->add( |<span class="user">| ).
     " todo, add icon ri_html->add_icon( iv_name = 'user/grey70'
     "                                   iv_hint = 'User name' )
-    IF iv_interactive = abap_true.
+    IF iv_interactive = abap_true AND iv_username <> zcl_abapgit_objects_super=>c_user_unknown.
       ri_html->add_a( iv_act   = |{ zif_abapgit_definitions=>c_action-jump_user }?user={ iv_username }|
                       iv_title = lv_title
                       iv_txt   = to_lower( iv_username ) ).
