@@ -209,7 +209,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
           ls_changed_by        LIKE LINE OF rt_changed_by,
           lt_changed_by_remote LIKE rt_changed_by,
           item                 TYPE zif_abapgit_definitions=>ty_item,
-          lv_transport         TYPE zcl_abapgit_gui_page_stage=>ty_transport,
+          lv_transport         TYPE ty_transport,
           user                 TYPE e070-as4user.
 
     FIELD-SYMBOLS: <ls_changed_by> LIKE LINE OF rt_changed_by.
