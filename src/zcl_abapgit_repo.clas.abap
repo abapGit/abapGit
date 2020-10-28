@@ -161,6 +161,7 @@ CLASS zcl_abapgit_repo DEFINITION
         !it_checksums       TYPE zif_abapgit_persistence=>ty_local_checksum_tt OPTIONAL
         !iv_url             TYPE zif_abapgit_persistence=>ty_repo-url OPTIONAL
         !iv_branch_name     TYPE zif_abapgit_persistence=>ty_repo-branch_name OPTIONAL
+        !iv_selected_commit TYPE zif_abapgit_persistence=>ty_repo-selected_commit OPTIONAL
         !iv_head_branch     TYPE zif_abapgit_persistence=>ty_repo-head_branch OPTIONAL
         !iv_offline         TYPE zif_abapgit_persistence=>ty_repo-offline OPTIONAL
         !is_dot_abapgit     TYPE zif_abapgit_persistence=>ty_repo-dot_abapgit OPTIONAL
@@ -707,6 +708,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     ASSERT it_checksums IS SUPPLIED
       OR iv_url IS SUPPLIED
       OR iv_branch_name IS SUPPLIED
+      OR iv_selected_commit IS SUPPLIED
       OR iv_head_branch IS SUPPLIED
       OR iv_offline IS SUPPLIED
       OR is_dot_abapgit IS SUPPLIED
@@ -729,6 +731,11 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     IF iv_branch_name IS SUPPLIED.
       ms_data-branch_name = iv_branch_name.
       ls_mask-branch_name = abap_true.
+    ENDIF.
+
+    IF iv_selected_commit IS SUPPLIED.
+      ms_data-selected_commit = iv_selected_commit.
+      ls_mask-selected_commit = abap_true.
     ENDIF.
 
     IF iv_head_branch IS SUPPLIED.
