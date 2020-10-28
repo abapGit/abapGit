@@ -281,7 +281,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
 
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
-    lv_source_branch_name = lo_repo->get_branch_name( ).
+    lv_source_branch_name = lo_repo->get_selected_branch( ).
 
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
     li_popups->create_branch_popup(
@@ -316,7 +316,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     li_popups = zcl_abapgit_ui_factory=>get_popups( ).
     ls_branch = li_popups->branch_list_popup( iv_url         = lo_repo->get_url( )
-                                              iv_hide_branch = lo_repo->get_branch_name( )
+                                              iv_hide_branch = lo_repo->get_selected_branch( )
                                               iv_hide_head   = abap_true ).
     IF ls_branch IS INITIAL.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
@@ -502,7 +502,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     ls_branch = zcl_abapgit_ui_factory=>get_popups( )->branch_list_popup(
       iv_url             = lo_repo->get_url( )
-      iv_default_branch  = lo_repo->get_branch_name( )
+      iv_default_branch  = lo_repo->get_selected_branch( )
       iv_show_new_option = abap_true ).
     IF ls_branch IS INITIAL.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
@@ -513,7 +513,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lo_repo->set_branch_name( ls_branch-name ).
+    lo_repo->select_branch( ls_branch-name ).
 
     COMMIT WORK AND WAIT.
 
@@ -532,7 +532,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    lo_repo->set_branch_name( ls_tag-name ).
+    lo_repo->select_branch( ls_tag-name ).
 
     COMMIT WORK AND WAIT.
 
