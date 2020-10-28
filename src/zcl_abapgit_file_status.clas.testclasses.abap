@@ -432,6 +432,7 @@ CLASS lcl_status_result IMPLEMENTATION.
   METHOD constructor.
 
     mt_results = it_results.
+    SORT mt_results BY path filename.
 
   ENDMETHOD.
 
@@ -478,10 +479,14 @@ CLASS ltcl_status_helper DEFINITION FOR TESTING.
           iv_path     TYPE string DEFAULT '/'
           iv_filename TYPE string
           iv_sha1     TYPE zif_abapgit_definitions=>ty_sha1
-          iv_obj_type TYPE tadir-object
-          iv_obj_name TYPE tadir-obj_name
+          iv_obj_type TYPE tadir-object OPTIONAL
+          iv_obj_name TYPE tadir-obj_name OPTIONAL
           iv_devclass TYPE devclass DEFAULT '$Z$',
-      add_state,
+      add_state
+        IMPORTING
+          iv_path     TYPE string DEFAULT '/'
+          iv_filename TYPE string
+          iv_sha1     TYPE zif_abapgit_definitions=>ty_sha1,
       run
         IMPORTING
           iv_devclass      TYPE devclass DEFAULT '$Z$'
@@ -575,7 +580,13 @@ CLASS ltcl_status_helper IMPLEMENTATION.
 
   METHOD add_state.
 
-* todo
+    FIELD-SYMBOLS: <ls_state> LIKE LINE OF mt_state.
+
+    APPEND INITIAL LINE TO mt_state ASSIGNING <ls_state>.
+    <ls_state>-path     = iv_path.
+    <ls_state>-filename = iv_filename.
+    <ls_state>-sha1     = iv_sha1.
+
   ENDMETHOD.
 
   METHOD run.
@@ -618,7 +629,8 @@ CLASS ltcl_calculate_status DEFINITION FOR TESTING RISK LEVEL HARMLESS
       only_local FOR TESTING RAISING zcx_abapgit_exception,
       match FOR TESTING RAISING zcx_abapgit_exception,
       diff FOR TESTING RAISING zcx_abapgit_exception,
-      local_outside_main FOR TESTING RAISING zcx_abapgit_exception.
+      local_outside_main FOR TESTING RAISING zcx_abapgit_exception,
+      complete FOR TESTING RAISING zcx_abapgit_exception.
 
 ENDCLASS.
 
@@ -731,6 +743,240 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = mo_result->get_line( 1 )-rstate
       exp = zif_abapgit_definitions=>c_state-added ).
+
+  ENDMETHOD.
+
+  METHOD complete.
+
+    DATA:
+      ls_line TYPE zif_abapgit_definitions=>ty_result,
+      lv_act  TYPE c LENGTH 3,
+      lv_exp  TYPE c LENGTH 3.
+
+    mo_helper->add_local(
+      iv_path     = '/'
+      iv_filename = '.abapgit.xml'
+      iv_sha1     = '1017'  ).
+    mo_helper->add_local(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_created_locally.prog.abap'
+      iv_sha1     = '1001' ).
+    mo_helper->add_local(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_created_locally.prog.xml'
+      iv_sha1     = '1022' ).
+    mo_helper->add_local(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_deleted_remotely.prog.abap'
+      iv_sha1     = '1016' ).
+    mo_helper->add_local(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_deleted_remotely.prog.xml'
+      iv_sha1     = '1003' ).
+    mo_helper->add_local(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_modified_both.prog.abap'
+      iv_sha1     = '1028' ).
+    mo_helper->add_local(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_modified_both.prog.xml'
+      iv_sha1     = '1032' ).
+    mo_helper->add_local(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_modified_locally.prog.abap'
+      iv_sha1     = '1023' ).
+    mo_helper->add_local(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_modified_locally.prog.xml'
+      iv_sha1     = '1033' ).
+    mo_helper->add_local(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_modified_remotely.prog.abap'
+      iv_sha1     = '1018' ).
+    mo_helper->add_local(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_modified_remotely.prog.xml'
+      iv_sha1     = '1011' ).
+    mo_helper->add_local(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_mod_del.prog.abap'
+      iv_sha1     = '1012' ).
+    mo_helper->add_local(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_mod_del.prog.xml'
+      iv_sha1     = '1006' ).
+    mo_helper->add_local(
+      iv_path     = '/src/'
+      iv_filename = 'package.devc.xml'
+      iv_sha1     = '1027' ).
+
+    mo_helper->add_remote(
+      iv_path     = '/'
+      iv_filename = '.abapgit.xml'
+      iv_sha1     = '1017' ).
+    mo_helper->add_remote(
+      iv_path     = '/'
+      iv_filename = 'README.md'
+      iv_sha1     = '1007' ).
+    mo_helper->add_remote(
+      iv_path     = '/src/'
+      iv_filename = 'package.devc.xml'
+      iv_sha1     = '1027' ).
+    mo_helper->add_remote(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_created_remotely.prog.abap'
+      iv_sha1     = '1025' ).
+    mo_helper->add_remote(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_created_remotely.prog.xml'
+      iv_sha1     = '1015' ).
+    mo_helper->add_remote(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_del_mod.prog.abap'
+      iv_sha1     = '1024' ).
+    mo_helper->add_remote(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_del_mod.prog.xml'
+      iv_sha1     = '1013' ).
+    mo_helper->add_remote(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_deleted_locally.prog.abap'
+      iv_sha1     = '1008' ).
+    mo_helper->add_remote(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_deleted_locally.prog.xml'
+      iv_sha1     = '1009' ).
+    mo_helper->add_remote(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_modified_both.prog.abap'
+      iv_sha1     = '1002' ).
+    mo_helper->add_remote(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_modified_both.prog.xml'
+      iv_sha1     = '1030' ).
+    mo_helper->add_remote(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_modified_locally.prog.abap'
+      iv_sha1     = '1026' ).
+    mo_helper->add_remote(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_modified_locally.prog.xml'
+      iv_sha1     = '1021' ).
+    mo_helper->add_remote(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_modified_remotely.prog.abap'
+      iv_sha1     = '1019' ).
+    mo_helper->add_remote(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_modified_remotely.prog.xml'
+      iv_sha1     = '1031' ).
+
+    mo_helper->add_state(
+      iv_path     = '/'
+      iv_filename = '.abapgit.xml'
+      iv_sha1     = '1017' ).
+    mo_helper->add_state(
+      iv_path     = '/src/'
+      iv_filename = 'package.devc.xml'
+      iv_sha1     = '1027' ).
+    mo_helper->add_state(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_deleted_locally.prog.abap'
+      iv_sha1     = '1008' ).
+    mo_helper->add_state(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_deleted_locally.prog.xml'
+      iv_sha1     = '1009' ).
+    mo_helper->add_state(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_deleted_remotely.prog.abap'
+      iv_sha1     = '1016' ).
+    mo_helper->add_state(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_deleted_remotely.prog.xml'
+      iv_sha1     = '1003' ).
+    mo_helper->add_state(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_del_mod.prog.abap'
+      iv_sha1     = '1020' ).
+    mo_helper->add_state(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_del_mod.prog.xml'
+      iv_sha1     = '1029' ).
+    mo_helper->add_state(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_modified_both.prog.abap'
+      iv_sha1     = '1010' ).
+    mo_helper->add_state(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_modified_both.prog.xml'
+      iv_sha1     = '1004' ).
+    mo_helper->add_state(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_modified_locally.prog.abap'
+      iv_sha1     = '1026' ).
+    mo_helper->add_state(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_modified_locally.prog.xml'
+      iv_sha1     = '1021' ).
+    mo_helper->add_state(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_modified_remotely.prog.abap'
+      iv_sha1     = '1018' ).
+    mo_helper->add_state(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_modified_remotely.prog.xml'
+      iv_sha1     = '1011' ).
+    mo_helper->add_state(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_mod_del.prog.abap'
+      iv_sha1     = '1014' ).
+    mo_helper->add_state(
+      iv_path     = '/src/'
+      iv_filename = 'ztest_mod_del.prog.xml'
+      iv_sha1     = '1005' ).
+
+    mo_result = mo_helper->run( ).
+
+    mo_result->assert_lines( 21 ).
+
+    DO 21 TIMES.
+      ls_line = mo_result->get_line( sy-index ).
+      lv_act+0(1) = ls_line-match.
+      lv_act+1(1) = ls_line-lstate.
+      lv_act+2(1) = ls_line-rstate.
+      CASE sy-index.
+        WHEN 1.
+          lv_exp = 'X  '.
+        WHEN 2.
+          lv_exp = '  A'.
+        WHEN 3.
+          lv_exp = 'X  '.
+        WHEN 4 OR 5.
+          lv_exp = ' A '.
+        WHEN 6 OR 7.
+          lv_exp = '  A'.
+        WHEN 8 OR 9.
+          lv_exp = ' DM'.
+        WHEN 10 OR 11.
+          lv_exp = ' D '.
+        WHEN 12 OR 13.
+          lv_exp = '  D'.
+        WHEN 14 OR 15.
+          lv_exp = ' MD'.
+        WHEN 16 OR 17.
+          lv_exp = ' MM'.
+        WHEN 18 OR 19.
+          lv_exp = ' M '.
+        WHEN 20 OR 21.
+          lv_exp = '  M'.
+      ENDCASE.
+
+      cl_abap_unit_assert=>assert_equals(
+        act = lv_act
+        exp = lv_exp
+        msg = |Line { sy-index }: { ls_line-filename }| ).
+    ENDDO.
 
   ENDMETHOD.
 
