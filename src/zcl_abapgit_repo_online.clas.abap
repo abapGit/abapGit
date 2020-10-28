@@ -330,14 +330,18 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   METHOD select_branch.
 
     reset_remote( ).
-    set( iv_branch_name = iv_branch_name ).
+    set( iv_branch_name     = iv_branch_name
+         iv_selected_commit = space  ).
 
   ENDMETHOD.
 
 
   METHOD select_commit.
+
     reset_remote( ).
-    set( iv_selected_commit = iv_selected_commit ).
+    set( iv_branch_name     = space
+         iv_selected_commit = iv_selected_commit ).
+
   ENDMETHOD.
 
 
