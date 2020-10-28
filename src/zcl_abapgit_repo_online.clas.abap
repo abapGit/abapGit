@@ -216,6 +216,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
 
   METHOD select_commit.
+    reset_remote( ).
     mv_current_commit = iv_sha1.
   ENDMETHOD.
 
