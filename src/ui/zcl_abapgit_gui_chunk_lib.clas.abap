@@ -785,10 +785,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
           lv_display_url       TYPE zif_abapgit_persistence=>ty_repo-url,
           lv_icon_commit       TYPE string.
 
-    lv_commit_hash = io_repo_online->get_selected_commit( ).
-    IF lv_commit_hash IS INITIAL.
-      lv_commit_hash = io_repo_online->get_current_remote( ).
-    ENDIF.
+    lv_commit_hash = io_repo_online->get_current_remote( ).
     lv_commit_short_hash = lv_commit_hash(7).
 
     lv_icon_commit = ii_html->icon( iv_name  = 'code-commit'
