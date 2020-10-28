@@ -56,7 +56,7 @@ CLASS zcl_abapgit_gui_page_stage DEFINITION
       IMPORTING
         it_files      TYPE zif_abapgit_definitions=>ty_files_tt
       CHANGING
-        ct_transports TYPE zcl_abapgit_gui_page_stage=>ty_transport_tt
+        ct_transports TYPE ty_transport_tt
       RAISING
         zcx_abapgit_exception.
     METHODS find_transports_local
