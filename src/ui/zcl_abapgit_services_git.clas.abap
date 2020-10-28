@@ -115,7 +115,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     checkout_commit_build_list(
       EXPORTING
-        iv_branch_name = lo_repo->get_branch_name( )
+        iv_branch_name = lo_repo->get_selected_branch( )
         iv_url         = lo_repo->get_url( )
       IMPORTING
         et_value_tab   = lt_value_tab
@@ -124,7 +124,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     ls_selected_commit = checkout_commit_build_popup( it_commits   = lt_commits
                                                       it_value_tab = lt_value_tab ).
 
-    lo_repo->set_sha1( ls_selected_commit-sha1 ).
+    lo_repo->select_commit( ls_selected_commit-sha1 ).
     COMMIT WORK AND WAIT.
 
   ENDMETHOD.
