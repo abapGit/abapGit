@@ -253,7 +253,7 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
 
   METHOD constructor.
 
-    IF iv_source_branch = io_repo->get_branch_name( ).
+    IF iv_source_branch = io_repo->get_selected_branch( ).
       zcx_abapgit_exception=>raise( 'source = target' ).
     ENDIF.
 
@@ -274,7 +274,7 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
       zcl_abapgit_git_branch_list=>complete_heads_branch_name( mv_source_branch ) ).
 
     ms_merge-target = lo_branch_list->find_by_name(
-      zcl_abapgit_git_branch_list=>complete_heads_branch_name( mo_repo->get_branch_name( ) ) ).
+      zcl_abapgit_git_branch_list=>complete_heads_branch_name( mo_repo->get_selected_branch( ) ) ).
 
     APPEND ms_merge-source TO lt_upload.
     APPEND ms_merge-target TO lt_upload.
@@ -282,7 +282,7 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
     zcl_abapgit_git_transport=>upload_pack_by_branch(
       EXPORTING
         iv_url          = ms_merge-repo->get_url( )
-        iv_branch_name  = ms_merge-repo->get_branch_name( )
+        iv_branch_name  = ms_merge-repo->get_selected_branch( )
         iv_deepen_level = 0
         it_branches     = lt_upload
       IMPORTING
