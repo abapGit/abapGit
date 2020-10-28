@@ -584,11 +584,16 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
               iv_act   = |{ zif_abapgit_definitions=>c_action-direction }?direction=DESCENDING|
               iv_title = <ls_col>-title ).
           ENDIF.
-        ELSE.
+        ELSEIF <ls_col>-allow_order_by = abap_true.
           lv_tmp = lv_tmp && ri_html->a(
             iv_txt   = lv_disp_name
             iv_act   = |{ zif_abapgit_definitions=>c_action-change_order_by }?orderBy={ <ls_col>-tech_name }|
             iv_title = <ls_col>-title ).
+        ELSE.
+          lv_tmp = lv_tmp && ri_html->a(
+              iv_txt   = lv_disp_name
+              iv_act   = ``
+              iv_title = <ls_col>-title ).
         ENDIF.
       ENDIF.
       IF <ls_col>-tech_name = iv_order_by
