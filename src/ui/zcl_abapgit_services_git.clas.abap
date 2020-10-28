@@ -515,7 +515,6 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     lo_repo->select_commit( space ).
     lo_repo->select_branch( ls_branch-name ).
-    
     COMMIT WORK AND WAIT.
 
   ENDMETHOD.
