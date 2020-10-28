@@ -848,10 +848,10 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
   METHOD find_transports_remote.
 
     DATA:
-      ls_item TYPE zif_abapgit_definitions=>ty_item,
-      lv_is_xml_file  TYPE abap_bool,
-      ls_new  LIKE LINE OF ct_transports,
-      li_cts_api TYPE REF TO zif_abapgit_cts_api.
+      ls_item        TYPE zif_abapgit_definitions=>ty_item,
+      lv_is_xml_file TYPE abap_bool,
+      ls_new         LIKE LINE OF ct_transports,
+      li_cts_api     TYPE REF TO zif_abapgit_cts_api.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF it_files.
 
@@ -873,18 +873,15 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
       IF ls_item IS INITIAL.
         CONTINUE.
-      ELSE.
-
-        IF li_cts_api->is_object_type_lockable( ls_item-obj_type ) = abap_true AND
-               li_cts_api->is_object_locked_in_transport( iv_object_type = ls_item-obj_type
-                                                          iv_object_name = ls_item-obj_name ) = abap_true.
-          ls_new-item = ls_item.
-          ls_new-transport = li_cts_api->get_current_transport_for_obj(
-            iv_object_type             = ls_item-obj_type
-            iv_object_name             = ls_item-obj_name
-            iv_resolve_task_to_request = abap_false ).
-          INSERT ls_new INTO TABLE ct_transports.
-        ENDIF.
+      ELSEIF li_cts_api->is_object_type_lockable( ls_item-obj_type ) = abap_true
+        AND li_cts_api->is_object_locked_in_transport( iv_object_type = ls_item-obj_type
+                                                       iv_object_name = ls_item-obj_name ) = abap_true.
+        ls_new-item = ls_item.
+        ls_new-transport = li_cts_api->get_current_transport_for_obj(
+          iv_object_type             = ls_item-obj_type
+          iv_object_name             = ls_item-obj_name
+          iv_resolve_task_to_request = abap_false ).
+        INSERT ls_new INTO TABLE ct_transports.
       ENDIF.
 
     ENDLOOP.
