@@ -31,7 +31,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
         zcx_abapgit_exception .
     METHODS get_selected_commit
       RETURNING
-        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+        VALUE(rv_selected_commit) TYPE zif_abapgit_persistence=>ty_repo-selected_commit
       RAISING
         zcx_abapgit_exception .
     METHODS get_current_remote
@@ -41,7 +41,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
         zcx_abapgit_exception .
     METHODS select_commit
       IMPORTING
-        iv_sha1 TYPE zif_abapgit_definitions=>ty_sha1
+        iv_selected_commit TYPE zif_abapgit_persistence=>ty_repo-selected_commit
       RAISING
         zcx_abapgit_exception .
     METHODS get_objects
@@ -74,13 +74,13 @@ CLASS zcl_abapgit_repo_online DEFINITION
         zcx_abapgit_exception .
 
     METHODS get_files_remote
-         REDEFINITION .
+        REDEFINITION .
     METHODS get_name
-         REDEFINITION .
+        REDEFINITION .
     METHODS has_remote_source
-         REDEFINITION .
+        REDEFINITION .
     METHODS rebuild_local_checksums
-         REDEFINITION .
+        REDEFINITION .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -104,7 +104,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
+CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
 
   METHOD fetch_remote.
@@ -215,7 +215,7 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
 
   METHOD get_selected_commit.
-* todo, rv_sha1 = mv_current_commit.
+    rv_selected_commit = ms_data-selected_commit.
   ENDMETHOD.
 
 
@@ -330,14 +330,17 @@ CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
   METHOD select_branch.
 
     reset_remote( ).
-    set( iv_branch_name = iv_branch_name ).
+    set( iv_branch_name     = iv_branch_name
+         iv_selected_commit = space  ).
 
   ENDMETHOD.
 
 
   METHOD select_commit.
+
     reset_remote( ).
-    mv_current_commit = iv_sha1.
+    set( iv_selected_commit = iv_selected_commit ).
+
   ENDMETHOD.
 
 
