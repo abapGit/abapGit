@@ -146,7 +146,8 @@ CLASS ZCL_ABAPGIT_SOTR_HANDLER IMPLEMENTATION.
            ls_header-crea_name,
            ls_header-crea_tstut,
            ls_header-chan_name,
-           ls_header-chan_tstut.
+           ls_header-chan_tstut,
+           ls_header-system_id.
 
     LOOP AT lt_entries ASSIGNING <ls_entry>.
       CLEAR: <ls_entry>-version,
