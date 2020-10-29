@@ -186,7 +186,8 @@ div.repo {
 /* ABAPGIT OBJECTS */
 span.branch,
 span.user,
-span.package {
+span.package,
+span.transport {
   padding: 2px 4px;
   border: 1px solid;
   border-radius: 4px;

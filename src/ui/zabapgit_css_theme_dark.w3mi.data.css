@@ -50,11 +50,15 @@ table.repo_tab {
 /* ABAPGIT OBJECTS */
 span.user {
   background-color: #4c6782;
-  border-color: #d9e4f2;
+  border-color: #7491b2;
 }
 span.package {
   background-color: #705a6d;
-  border-color: #ebe3ea;
+  border-color: #987095;
+}
+span.transport {
+  background-color: #456d5d;
+  border-color: #60a087;
 }
 
 /* PANELS */

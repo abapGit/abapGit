@@ -66,6 +66,10 @@ span.package {
   border-color: #d3ccd2;
   background-color: #ebe3ea;
 }
+span.transport {
+  border-color: #a7e3cf;
+  background-color: #dbf3eb;
+}
 
 /* PANELS */
 /* TODO: add warning and error colors */
