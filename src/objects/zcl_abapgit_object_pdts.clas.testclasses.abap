@@ -369,10 +369,17 @@ ENDCLASS.
 CLASS ltc_ci IMPLEMENTATION.
 
   METHOD run_ci.
+    DATA lv_repo_url TYPE string.
+
+    SELECT SINGLE low
+      FROM tvarvc
+      WHERE name = 'ABAPGIT_TEST_URL_PDTS'
+      INTO @lv_repo_url.
+
     zcl_abapgit_objects_ci_tests=>run(
-      EXPORTING
         iv_object = 'PDTS'
-        iv_url  = `http://vhcalnplci:8000/sap/zabapgitserver/git/PDTS.git` ).
+        iv_url  = lv_repo_url ).
+
   ENDMETHOD.
 
 ENDCLASS.
