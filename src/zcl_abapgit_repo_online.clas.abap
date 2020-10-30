@@ -31,7 +31,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
         zcx_abapgit_exception .
     METHODS get_selected_commit
       RETURNING
-        VALUE(rv_sha1) TYPE zif_abapgit_definitions=>ty_sha1
+        VALUE(rv_selected_commit) TYPE zif_abapgit_persistence=>ty_repo-selected_commit
       RAISING
         zcx_abapgit_exception .
     METHODS get_current_remote
@@ -41,7 +41,7 @@ CLASS zcl_abapgit_repo_online DEFINITION
         zcx_abapgit_exception .
     METHODS select_commit
       IMPORTING
-        iv_sha1 TYPE zif_abapgit_definitions=>ty_sha1
+        iv_selected_commit TYPE zif_abapgit_persistence=>ty_repo-selected_commit
       RAISING
         zcx_abapgit_exception .
     METHODS get_objects
@@ -74,13 +74,13 @@ CLASS zcl_abapgit_repo_online DEFINITION
         zcx_abapgit_exception .
 
     METHODS get_files_remote
-         REDEFINITION .
+        REDEFINITION .
     METHODS get_name
-         REDEFINITION .
+        REDEFINITION .
     METHODS has_remote_source
-         REDEFINITION .
+        REDEFINITION .
     METHODS rebuild_local_checksums
-         REDEFINITION .
+        REDEFINITION .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -136,11 +136,6 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_selected_branch.
-    rv_name = ms_data-branch_name.
-  ENDMETHOD.
-
-
   METHOD get_commit_display_url.
 
     rv_url = me->get_default_commit_display_url( iv_hash ).
@@ -158,6 +153,12 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
       zcx_abapgit_exception=>raise( |provider not yet supported| ).
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD get_current_remote.
+    fetch_remote( ).
+    rv_sha1 = mv_current_commit.
   ENDMETHOD.
 
 
@@ -208,20 +209,13 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD get_selected_branch.
+    rv_name = ms_data-branch_name.
+  ENDMETHOD.
+
+
   METHOD get_selected_commit.
-    rv_sha1 = mv_current_commit.
-  ENDMETHOD.
-
-
-  METHOD get_current_remote.
-    fetch_remote( ).
-    rv_sha1 = mv_current_commit.
-  ENDMETHOD.
-
-
-  METHOD select_commit.
-    reset_remote( ).
-    mv_current_commit = iv_sha1.
+    rv_selected_commit = ms_data-selected_commit.
   ENDMETHOD.
 
 
@@ -336,7 +330,16 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   METHOD select_branch.
 
     reset_remote( ).
-    set( iv_branch_name = iv_branch_name ).
+    set( iv_branch_name     = iv_branch_name
+         iv_selected_commit = space  ).
+
+  ENDMETHOD.
+
+
+  METHOD select_commit.
+
+    reset_remote( ).
+    set( iv_selected_commit = iv_selected_commit ).
 
   ENDMETHOD.
 
