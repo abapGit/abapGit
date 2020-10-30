@@ -11,11 +11,12 @@ ENDCLASS.
 CLASS ltc_ci IMPLEMENTATION.
 
   METHOD run_ci.
+
     DATA lv_repo_url TYPE string.
 
     "Use STVARV to optionally override repo in local system
     SELECT SINGLE low
-      INTO @lv_repo_url
+      INTO lv_repo_url
       FROM tvarvc
       WHERE name = 'ABAPGIT_TEST_URL_PDTS'  ##WARN_OK.
 
