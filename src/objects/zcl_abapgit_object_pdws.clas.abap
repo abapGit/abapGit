@@ -36,7 +36,7 @@ CLASS zcl_abapgit_object_pdws IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'PDWS not fully implemented, enable experimental features to test it' ).
     ENDIF.
 
-    ms_objkey-otype = c_object_type_workflow.
+    ms_objkey-otype = swfco_org_workflow_template.   "   c_object_type_workflow.
     ms_objkey-objid = ms_item-obj_name.
 
   ENDMETHOD.
@@ -45,7 +45,7 @@ CLASS zcl_abapgit_object_pdws IMPLEMENTATION.
     SELECT SINGLE uname
       FROM hrs1201
       WHERE otype = 'WS' AND
-            objid = @ms_item-obj_name
+            objid = @ms_objkey-objid
       INTO @rv_user.
   ENDMETHOD.
 
