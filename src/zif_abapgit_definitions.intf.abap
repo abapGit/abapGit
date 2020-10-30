@@ -526,6 +526,7 @@ INTERFACE zif_abapgit_definitions
       go_patch                      TYPE string VALUE 'go_patch',
       jump                          TYPE string VALUE 'jump',
       jump_transport                TYPE string VALUE 'jump_transport',
+      jump_user                     TYPE string VALUE 'jump_user',
       url                           TYPE string VALUE 'url',
       goto_source                   TYPE string VALUE 'goto_source',
       show_callstack                TYPE string VALUE 'show_callstack',

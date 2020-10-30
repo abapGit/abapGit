@@ -107,16 +107,19 @@ CLASS zcl_abapgit_gui_router DEFINITION
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
-
     CLASS-METHODS jump_display_transport
       IMPORTING
         !iv_transport TYPE trkorr
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
+    CLASS-METHODS jump_display_user
+      IMPORTING
+        !iv_username TYPE xubname
+      RAISING
+        zcx_abapgit_exception .
     METHODS call_browser
       IMPORTING
-        iv_url TYPE csequence
+        !iv_url TYPE csequence
       RAISING
         zcx_abapgit_exception.
 
@@ -124,7 +127,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -459,6 +462,17 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD jump_display_user.
+
+    " todo, user display in ADT
+
+    CALL FUNCTION 'BAPI_USER_DISPLAY'
+      EXPORTING
+        username = iv_username.
+
+  ENDMETHOD.
+
+
   METHOD other_utilities.
 
     CASE ii_event->mv_action.
@@ -574,6 +588,10 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
       WHEN zif_abapgit_definitions=>c_action-jump_transport.
         jump_display_transport( |{ ii_event->query( )->get( 'TRANSPORT' ) }| ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
+      WHEN zif_abapgit_definitions=>c_action-jump_user.
+        jump_display_user( |{ ii_event->query( )->get( 'USER' ) }| ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
       WHEN zif_abapgit_definitions=>c_action-url.
