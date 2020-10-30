@@ -128,7 +128,9 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
       IMPORTING
         !is_diff       TYPE ty_file_diff
       RETURNING
-        VALUE(ri_html) TYPE REF TO zif_abapgit_html .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     METHODS render_table_head
       IMPORTING
         !is_diff       TYPE ty_file_diff
@@ -200,7 +202,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
 
   METHOD add_filter_sub_menu.
@@ -344,10 +346,10 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
 
     " Changed by
     IF <ls_local>-item-obj_type IS NOT INITIAL.
-      <ls_diff>-changed_by = to_lower( zcl_abapgit_objects=>changed_by( <ls_local>-item ) ).
+      <ls_diff>-changed_by = zcl_abapgit_objects=>changed_by( <ls_local>-item ).
     ENDIF.
     IF <ls_diff>-changed_by IS INITIAL.
-      <ls_diff>-changed_by = to_lower( zcl_abapgit_objects_super=>c_user_unknown ).
+      <ls_diff>-changed_by = zcl_abapgit_objects_super=>c_user_unknown.
     ENDIF.
 
     " Extension
@@ -688,7 +690,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
     ENDIF.
 
     " no links for nonexistent or deleted objects
-    IF is_diff-lstate IS NOT INITIAL AND is_diff-lstate <> 'D'.
+    IF NOT ( is_diff-lstate = zif_abapgit_definitions=>c_state-unchanged AND
+             is_diff-rstate = zif_abapgit_definitions=>c_state-added ) AND
+         NOT is_diff-lstate = zif_abapgit_definitions=>c_state-deleted.
       lv_adt_link = ri_html->a(
         iv_txt = |{ is_diff-path }{ is_diff-filename }|
         iv_typ = zif_abapgit_html=>c_action_type-sapevent
@@ -709,8 +713,9 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DIFF IMPLEMENTATION.
       ii_html = ri_html
       is_diff = is_diff ).
 
-    ri_html->add( |<span class="diff_changed_by">Last Changed by: <span class="user">{
-      is_diff-changed_by }</span></span>| ).
+    ri_html->add( '<span class="diff_changed_by">Last Changed by: ' ).
+    ri_html->add( zcl_abapgit_gui_chunk_lib=>render_user_name( is_diff-changed_by ) ).
+    ri_html->add( '</span>' ).
 
     ri_html->add( '</div>' ).
 
