@@ -10,7 +10,8 @@ CLASS zcl_abapgit_objects_ci_tests DEFINITION
     CLASS-METHODS:
       run
         IMPORTING
-          !iv_object TYPE tadir-object.
+          iv_object TYPE tadir-object
+          iv_url    TYPE string OPTIONAL.
 
   PROTECTED SECTION.
   PRIVATE SECTION.
@@ -18,7 +19,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_CI_TESTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects_ci_tests IMPLEMENTATION.
 
 
   METHOD run.
@@ -43,7 +44,11 @@ CLASS ZCL_ABAPGIT_OBJECTS_CI_TESTS IMPLEMENTATION.
 
     " Add the default test repo from https://github.com/abapGit-tests
     ls_repo-name = iv_object.
-    ls_repo-clone_url = |https://github.com/abapGit-tests/{ iv_object }|.
+    IF iv_url IS NOT INITIAL.
+      ls_repo-clone_url = iv_url.
+    ELSE.
+      ls_repo-clone_url = |https://github.com/abapGit-tests/{ iv_object }|.
+    ENDIF.
     APPEND ls_repo TO lt_repos.
 
     " Get list of repos via exit
