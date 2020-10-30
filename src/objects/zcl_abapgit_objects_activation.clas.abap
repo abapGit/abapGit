@@ -279,18 +279,19 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
     " Determine if object can be handled by mass activation (see RADMASUTC form ma_tab_check)
 
     CONSTANTS:
-      lc_domain(9)      VALUE 'DOMA DOMD',
-      lc_types(50)      VALUE 'DTEL DTED TABL TABD SQLT SQLD TTYP TTYD VIEW VIED',
-      lc_technset(24)   VALUE 'TABT VIET SQTT INDX XINX',
-      lc_f4_objects(35) VALUE 'SHLP SHLD MCOB MCOD MACO MACD MCID',
-      lc_enqueue(9)     VALUE 'ENQU ENQD',
-      lc_sqsc(4)        VALUE 'SQSC',
-      lc_stob(4)        VALUE 'STOB',
-      lc_ntab(14)       VALUE 'NTTT NTTB NTDT',
-      lc_ddls(4)        VALUE 'DDLS',
-      lc_switches(24)   VALUE 'SF01 SF02 SFSW SFBS SFBF',
-      lc_enhd(4)        VALUE 'ENHD'.
+      lc_domain     TYPE c LENGTH 9  VALUE 'DOMA DOMD',
+      lc_types      TYPE c LENGTH 50 VALUE 'DTEL DTED TABL TABD SQLT SQLD TTYP TTYD VIEW VIED',
+      lc_technset   TYPE c LENGTH 24 VALUE 'TABT VIET SQTT INDX XINX',
+      lc_f4_objects TYPE c LENGTH 35 VALUE 'SHLP SHLD MCOB MCOD MACO MACD MCID',
+      lc_enqueue    TYPE c LENGTH 9  VALUE 'ENQU ENQD',
+      lc_sqsc       TYPE c LENGTH 4  VALUE 'SQSC',
+      lc_stob       TYPE c LENGTH 4  VALUE 'STOB',
+      lc_ntab       TYPE c LENGTH 14 VALUE 'NTTT NTTB NTDT',
+      lc_ddls       TYPE c LENGTH 4  VALUE 'DDLS',
+      lc_switches   TYPE c LENGTH 24 VALUE 'SF01 SF02 SFSW SFBS SFBF',
+      lc_enhd       TYPE c LENGTH 4  VALUE 'ENHD'.
 
+    rv_result = abap_true.
     IF lc_domain   NS iv_obj_type AND lc_types      NS iv_obj_type AND
        lc_technset NS iv_obj_type AND lc_f4_objects NS iv_obj_type AND
        lc_enqueue  NS iv_obj_type AND lc_sqsc       NS iv_obj_type AND
@@ -298,8 +299,6 @@ CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
        lc_ddls     NS iv_obj_type AND
        lc_switches NS iv_obj_type AND iv_obj_type <> lc_enhd.
       rv_result = abap_false.
-    ELSE.
-      rv_result = abap_true.
     ENDIF.
 
   ENDMETHOD.
