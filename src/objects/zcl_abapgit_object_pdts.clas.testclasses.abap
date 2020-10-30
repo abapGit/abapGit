@@ -13,10 +13,11 @@ CLASS ltc_ci IMPLEMENTATION.
   METHOD run_ci.
     DATA lv_repo_url TYPE string.
 
+    "Use STVARV to optionally override repo in local system
     SELECT SINGLE low
+      INTO @lv_repo_url
       FROM tvarvc
-      WHERE name = 'ABAPGIT_TEST_URL_PDTS'
-      INTO @lv_repo_url. "Not found is OK, use default repo
+      WHERE name = 'ABAPGIT_TEST_URL_PDTS'  ##WARN_OK.
 
     zcl_abapgit_objects_ci_tests=>run(
         iv_object = 'PDTS'
