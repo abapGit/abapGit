@@ -28,8 +28,8 @@ CLASS zcl_abapgit_object_pdws IMPLEMENTATION.
 
   METHOD constructor.
 
-    DATA foo TYPE string.
-    foo = abap_undefined.
+    DATA lv_foo TYPE string.
+    lv_foo = abap_undefined.
 
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
@@ -45,11 +45,17 @@ CLASS zcl_abapgit_object_pdws IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~changed_by.
+
     SELECT SINGLE uname
+      INTO rv_user
       FROM hrs1201
-      WHERE otype = 'WS' AND
-            objid = @ms_objkey-objid
-      INTO @rv_user.
+      WHERE otype = c_object_type_workflow AND
+            objid = ms_item-obj_name.
+
+    IF sy-subrc <> 0.
+      rv_user = c_user_unknown.
+    ENDIF.
+
   ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
