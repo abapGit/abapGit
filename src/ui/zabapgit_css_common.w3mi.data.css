@@ -183,7 +183,11 @@ div.repo {
   padding: 4px 2px 3px 2px;
 }
 
-span.branch {
+/* ABAPGIT OBJECTS */
+span.branch,
+span.user,
+span.package,
+span.transport {
   padding: 2px 4px;
   border: 1px solid;
   border-radius: 4px;
@@ -385,11 +389,6 @@ span.diff_name {
 }
 span.diff_changed_by {
   float: right;
-}
-span.diff_changed_by span.user {
-  border-radius: 3px;
-  border: solid 1px;
-  padding: 1px 0.4em;
 }
 span.diff_banner {
   border-style: solid;
