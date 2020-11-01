@@ -28,6 +28,9 @@ CLASS zcl_abapgit_object_pdws IMPLEMENTATION.
 
   METHOD constructor.
 
+    DATA foo TYPE string.
+    foo = abap_undefined.
+
     super->constructor( is_item     = is_item
                         iv_language = iv_language ).
 
@@ -36,7 +39,7 @@ CLASS zcl_abapgit_object_pdws IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'PDWS not fully implemented, enable experimental features to test it' ).
     ENDIF.
 
-    ms_objkey-otype = swfco_org_workflow_template.   "   c_object_type_workflow.
+    ms_objkey-otype = 'WS'. "swfco_org_workflow_template.   "   c_object_type_workflow.
     ms_objkey-objid = ms_item-obj_name.
 
   ENDMETHOD.
