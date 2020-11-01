@@ -109,7 +109,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
+CLASS zcl_abapgit_object_tran IMPLEMENTATION.
 
 
   METHOD add_data.
@@ -719,7 +719,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TRAN IMPLEMENTATION.
 
       WHEN OTHERS.
 
-        me->clear_functiongroup_globals( ).
+        clear_functiongroup_globals( ).
 
         CALL FUNCTION 'RPY_TRANSACTION_INSERT'
           EXPORTING
