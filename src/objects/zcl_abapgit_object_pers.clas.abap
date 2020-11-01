@@ -9,7 +9,7 @@ CLASS zcl_abapgit_object_pers DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           is_item     TYPE zif_abapgit_definitions=>ty_item
           iv_language TYPE spras.
 
-protected section.
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_personalization_object,
