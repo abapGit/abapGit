@@ -253,8 +253,6 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       rv_user = zcl_abapgit_objects_super=>c_user_unknown.
     ENDIF.
 
-* todo, fallback to looking at transports if rv_user = 'UNKNOWN'?
-
   ENDMETHOD.
 
 
