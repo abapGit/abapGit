@@ -40,7 +40,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
+CLASS zcl_abapgit_object_shi3 IMPLEMENTATION.
 
 
   METHOD clear_fields.
@@ -168,7 +168,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SHI3 IMPLEMENTATION.
     CONSTANTS lc_activity_delete_06 TYPE activ_auth VALUE '06'.
 
     TRY.
-        me->zif_abapgit_object~exists( ).
+        IF zif_abapgit_object~exists( ) = abap_false.
+          RETURN.
+        ENDIF.
       CATCH zcx_abapgit_exception.
         RETURN.
     ENDTRY.

@@ -143,9 +143,9 @@ CLASS lcl_transport_zipper IMPLEMENTATION.
 
   METHOD constructor.
 
-    CONCATENATE sy-datlo sy-timlo INTO me->mv_timestamp SEPARATED BY '_'.
+    CONCATENATE sy-datlo sy-timlo INTO mv_timestamp SEPARATED BY '_'.
 
-    me->mv_full_folder = get_full_folder( iv_folder = iv_folder ).
+    mv_full_folder = get_full_folder( iv_folder = iv_folder ).
 
     cl_gui_frontend_services=>get_file_separator(
       CHANGING

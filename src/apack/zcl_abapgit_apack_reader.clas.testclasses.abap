@@ -23,8 +23,8 @@ CLASS ltcl_apack_manifest_reader IMPLEMENTATION.
     ls_apack_manifest_descriptor-version = '1.42'.
     ls_apack_manifest_descriptor-git_url = 'https://github.com/abapGit/abapGit.git'.
 
-    me->mo_manifest_reader = zcl_abapgit_apack_reader=>create_instance( '$TMP' ).
-    me->mo_manifest_reader->set_manifest_descriptor( ls_apack_manifest_descriptor ).
+    mo_manifest_reader = zcl_abapgit_apack_reader=>create_instance( '$TMP' ).
+    mo_manifest_reader->set_manifest_descriptor( ls_apack_manifest_descriptor ).
 
   ENDMETHOD.
 

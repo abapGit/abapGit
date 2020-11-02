@@ -22,7 +22,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_IEXT IMPLEMENTATION.
+CLASS zcl_abapgit_object_iext IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -79,7 +79,7 @@ CLASS ZCL_ABAPGIT_OBJECT_IEXT IMPLEMENTATION.
     ls_attributes-presp = cl_abap_syst=>get_user_name( ).
     ls_attributes-pwork = ls_attributes-presp.
 
-    IF me->zif_abapgit_object~exists( ) = abap_true.
+    IF zif_abapgit_object~exists( ) = abap_true.
       CALL FUNCTION 'EXTTYPE_UPDATE'
         EXPORTING
           pi_cimtyp     = mv_extension
