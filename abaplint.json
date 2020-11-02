@@ -72,6 +72,7 @@
     "globalMacros": []
   },
   "rules": {
+    "parser_702_chaining": true,
     "sy_modification": false,
     "call_transaction_authority_check": true,
     "function_module_recommendations": false,
