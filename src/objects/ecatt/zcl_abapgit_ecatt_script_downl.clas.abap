@@ -51,7 +51,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
+CLASS zcl_abapgit_ecatt_script_downl IMPLEMENTATION.
 
 
   METHOD download.
@@ -194,7 +194,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
         ex_errmsg       = lv_errmsg ).
 
     IF li_artmp_node IS INITIAL OR lv_rc_args_tmpl > 0.
-      me->raise_download_exception(
+      raise_download_exception(
           textid        = cx_ecatt_apl_util=>download_processing
           previous      = ex_ecatt
           called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_ARTMP_TO_TEMPLATE'
@@ -203,7 +203,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
 
     lv_rc = li_artmp_node->set_value( value = lv_text ).
     IF lv_rc <> 0.
-      me->raise_download_exception(
+      raise_download_exception(
             textid        = cx_ecatt_apl_util=>download_processing
             previous      = ex_ecatt
             called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_ARTMP_TO_TEMPLATE' ).
@@ -225,7 +225,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
                   parent = root_node ).
 
     IF li_blob_node IS INITIAL.
-      me->raise_download_exception(
+      raise_download_exception(
             textid        = cx_ecatt_apl_util=>download_processing
             previous      = ex_ecatt
             called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_BLOB_TO_TEMPLATE' ).
@@ -239,7 +239,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
 
     lv_rc = li_blob_node->set_value( value = lv_text ).
     IF lv_rc <> 0.
-      me->raise_download_exception(
+      raise_download_exception(
             textid        = cx_ecatt_apl_util=>download_processing
             previous      = ex_ecatt
             called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_BLOB_TO_TEMPLATE' ).
@@ -362,7 +362,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
           OTHERS       = 2.
 
       IF sy-subrc <> 0.
-        me->raise_download_exception(
+        raise_download_exception(
               textid   = cx_ecatt_apl_util=>download_processing
               previous = ex_ecatt ).
       ENDIF.
@@ -371,7 +371,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
       lv_rc = li_deep_tcd->append_child( new_child = li_element ).
 
       IF lv_rc <> 0.
-        me->raise_download_exception(
+        raise_download_exception(
               textid   = cx_ecatt_apl_util=>download_processing
               previous = ex_ecatt ).
       ENDIF.
@@ -410,7 +410,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
                         parent = root_node ).
 
     IF mi_script_node IS INITIAL.
-      me->raise_download_exception(
+      raise_download_exception(
             textid        = cx_ecatt_apl_util=>download_processing
             previous      = ex_ecatt
             called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_SCRIPT_TO_TEMPLATE' ).
@@ -428,7 +428,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
         illegal_name = 1
         OTHERS       = 2.
     IF sy-subrc <> 0.
-      me->raise_download_exception(
+      raise_download_exception(
             textid        = cx_ecatt_apl_util=>download_processing
             previous      = ex_ecatt
             called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_SCRIPT_TO_TEMPLATE' ).
@@ -437,7 +437,7 @@ CLASS ZCL_ABAPGIT_ECATT_SCRIPT_DOWNL IMPLEMENTATION.
 
     lv_rc = mi_script_node->append_child( li_element ).
     IF lv_rc <> 0.
-      me->raise_download_exception(
+      raise_download_exception(
             textid        = cx_ecatt_apl_util=>download_processing
             previous      = ex_ecatt
             called_method = 'CL_APL_ECATT_SCRIPT_DOWNLOAD->SET_SCRIPT_TO_TEMPLATE' ).

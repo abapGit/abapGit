@@ -88,7 +88,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
+CLASS zcl_abapgit_news IMPLEMENTATION.
 
 
   METHOD compare_versions.
@@ -216,7 +216,7 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
 
 
   METHOD get_log.
-    rt_log = me->mt_log.
+    rt_log = mt_log.
   ENDMETHOD.
 
 
@@ -246,7 +246,7 @@ CLASS ZCL_ABAPGIT_NEWS IMPLEMENTATION.
 
 
   METHOD latest_version.
-    rv_version = me->mv_latest_version.
+    rv_version = mv_latest_version.
   ENDMETHOD.
 
 
