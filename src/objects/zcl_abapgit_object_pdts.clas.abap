@@ -50,7 +50,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
       zcx_abapgit_exception=>raise( 'PDTS not fully implemented, enable experimental features to test it' ).
     ENDIF.
 
-    ms_objkey-otype = swfco_org_standard_task.
+    ms_objkey-otype = 'TS'.
     ms_objkey-objid = ms_item-obj_name.
 
     mv_objid = ms_item-obj_name.  "Todo: Obsolete
@@ -209,7 +209,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
     CALL FUNCTION 'RH_HRSOBJECT_DELETE'
       EXPORTING
-        act_otype           = swfco_org_standard_task
+        act_otype           = 'TS'
         act_objid           = mv_objid
         no_confirmation_msg = abap_true
       EXCEPTIONS
@@ -228,7 +228,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
     CALL FUNCTION 'RH_READ_OBJECT'
       EXPORTING
         plvar     = '01'
-        otype     = swfco_org_standard_task
+        otype     = 'TS'
         objid     = mv_objid
         istat     = '1'
         begda     = sy-datum
@@ -246,7 +246,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
 
   METHOD zif_abapgit_object~is_locked.
     rv_is_locked = exists_a_lock_entry_for( iv_lock_object = 'HRSOBJECT'
-                                            iv_argument = swfco_org_standard_task && mv_objid ).
+                                            iv_argument = 'TS' && mv_objid ).
   ENDMETHOD.
 
 
@@ -260,7 +260,7 @@ CLASS zcl_abapgit_object_pdts IMPLEMENTATION.
     SELECT SINGLE uname
       INTO rv_user
       FROM hrs1201
-      WHERE otype = swfco_org_standard_task AND
+      WHERE otype = 'TS' AND
             objid = ms_item-obj_name.
 
     IF sy-subrc <> 0.
