@@ -108,6 +108,8 @@ CLASS ltcl_sm_test IMPLEMENTATION.
     DATA ls_struc_exp TYPE ty_struc.
     DATA lo_x TYPE REF TO cx_root.
     DATA lo_cut TYPE REF TO zcl_abapgit_string_map.
+    DATA lo_map TYPE REF TO zcl_abapgit_string_map.
+
     lo_cut = zcl_abapgit_string_map=>create( ).
 
     lo_cut->set(
@@ -136,7 +138,8 @@ CLASS ltcl_sm_test IMPLEMENTATION.
           act = lo_x->get_text( ) ).
     ENDTRY.
 
-    lo_cut->strict( abap_false )->to_abap( CHANGING cs_container = ls_struc_act ).
+    lo_map = lo_cut->strict( abap_false ).
+    lo_map->to_abap( CHANGING cs_container = ls_struc_act ).
 
     cl_abap_unit_assert=>assert_equals(
       exp = ls_struc_exp
