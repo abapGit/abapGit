@@ -52,11 +52,16 @@ CLASS zcl_abapgit_objects_activation DEFINITION
         !iv_logname TYPE ddmass-logname
       RAISING
         zcx_abapgit_exception .
+    CLASS-METHODS is_ddic_type
+      IMPORTING
+        !iv_obj_type     TYPE trobjtype
+      RETURNING
+        VALUE(rv_result) TYPE abap_bool .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
+CLASS zcl_abapgit_objects_activation IMPLEMENTATION.
 
 
   METHOD activate.
@@ -85,10 +90,14 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
 
 
     LOOP AT gt_objects ASSIGNING <ls_object>.
+      " Filter types supported by mass activation
+      IF is_ddic_type( <ls_object>-object ) = abap_false.
+        CONTINUE.
+      ENDIF.
       ls_gentab-tabix = sy-tabix.
       ls_gentab-type = <ls_object>-object.
       ls_gentab-name = <ls_object>-obj_name.
-      IF ls_gentab-type = 'INDX'.
+      IF ls_gentab-type = 'INDX' OR ls_gentab-type = 'XINX' OR ls_gentab-type = 'MCID'.
         CALL FUNCTION 'DD_E071_TO_DD'
           EXPORTING
             object   = <ls_object>-object
@@ -135,6 +144,12 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
       IF lv_rc > 0.
         show_activation_errors( lv_logname ).
       ENDIF.
+
+      " Remove objects from activation queue to avoid double activation in activate_old
+      LOOP AT lt_gentab INTO ls_gentab.
+        DELETE gt_objects WHERE object = ls_gentab-type AND obj_name = ls_gentab-name.
+      ENDLOOP.
+      DELETE gt_objects WHERE object = 'INDX' OR object = 'XINX' OR object = 'MCID'.
 
     ENDIF.
 
@@ -256,6 +271,36 @@ CLASS ZCL_ABAPGIT_OBJECTS_ACTIVATION IMPLEMENTATION.
   METHOD clear.
     CLEAR gt_objects.
     CLEAR gt_classes.
+  ENDMETHOD.
+
+
+  METHOD is_ddic_type.
+
+    " Determine if object can be handled by mass activation (see RADMASUTC form ma_tab_check)
+
+    CONSTANTS:
+      lc_domain     TYPE c LENGTH 9  VALUE 'DOMA DOMD',
+      lc_types      TYPE c LENGTH 50 VALUE 'DTEL DTED TABL TABD SQLT SQLD TTYP TTYD VIEW VIED',
+      lc_technset   TYPE c LENGTH 24 VALUE 'TABT VIET SQTT INDX XINX',
+      lc_f4_objects TYPE c LENGTH 35 VALUE 'SHLP SHLD MCOB MCOD MACO MACD MCID',
+      lc_enqueue    TYPE c LENGTH 9  VALUE 'ENQU ENQD',
+      lc_sqsc       TYPE c LENGTH 4  VALUE 'SQSC',
+      lc_stob       TYPE c LENGTH 4  VALUE 'STOB',
+      lc_ntab       TYPE c LENGTH 14 VALUE 'NTTT NTTB NTDT',
+      lc_ddls       TYPE c LENGTH 4  VALUE 'DDLS',
+      lc_switches   TYPE c LENGTH 24 VALUE 'SF01 SF02 SFSW SFBS SFBF',
+      lc_enhd       TYPE c LENGTH 4  VALUE 'ENHD'.
+
+    rv_result = abap_true.
+    IF lc_domain   NS iv_obj_type AND lc_types      NS iv_obj_type AND
+       lc_technset NS iv_obj_type AND lc_f4_objects NS iv_obj_type AND
+       lc_enqueue  NS iv_obj_type AND lc_sqsc       NS iv_obj_type AND
+       lc_stob     NS iv_obj_type AND lc_ntab       NS iv_obj_type AND
+       lc_ddls     NS iv_obj_type AND
+       lc_switches NS iv_obj_type AND iv_obj_type <> lc_enhd.
+      rv_result = abap_false.
+    ENDIF.
+
   ENDMETHOD.
 
 
