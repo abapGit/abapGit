@@ -65,7 +65,8 @@ CLASS ltc_lock IMPLEMENTATION.
         is_item     = ls_item
         iv_language = sy-langu.
 
-    cl_abap_unit_assert=>assert_true( lo_cut->is_locked( ) ).
+    cl_abap_unit_assert=>assert_equals( act = lo_cut->is_locked( )
+                                        exp = abap_true ).
 
     CALL FUNCTION 'DEQUEUE_HRSOBJECT'
       EXPORTING
