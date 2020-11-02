@@ -138,9 +138,12 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
   METHOD get_commit_display_url.
 
-    rv_url = get_default_commit_display_url( iv_hash ).
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
 
-    zcl_abapgit_exit=>get_instance( )->adjust_display_commit_url(
+    rv_url = me->get_default_commit_display_url( iv_hash ).
+
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->adjust_display_commit_url(
       EXPORTING
         iv_repo_url           = get_url( )
         iv_repo_name          = get_name( )
