@@ -697,7 +697,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     DATA lt_repo_list TYPE zif_abapgit_persistence=>ty_repos.
     DATA lv_repo_json TYPE string.
     DATA lv_size TYPE i.
-    DATA lo_repo TYPE REF TO zcl_abapgit_repo.
     FIELD-SYMBOLS <ls_repo> LIKE LINE OF lt_repo_list.
 
     li_repo_srv = zcl_abapgit_repo_srv=>get_instance( ).
@@ -739,8 +738,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
           lo_pback             TYPE REF TO zcl_abapgit_persist_background,
           lx_error             TYPE REF TO zcx_abapgit_exception,
           lv_hint              TYPE string,
-          lv_icon              TYPE string,
-          lv_package_jump_data TYPE string.
+          lv_icon              TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     CREATE OBJECT lo_pback.
