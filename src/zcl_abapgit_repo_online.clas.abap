@@ -140,7 +140,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
     DATA li_exit TYPE REF TO zif_abapgit_exit.
 
-    rv_url = me->get_default_commit_display_url( iv_hash ).
+    rv_url = get_default_commit_display_url( iv_hash ).
 
     li_exit = zcl_abapgit_exit=>get_instance( ).
     li_exit->adjust_display_commit_url(
