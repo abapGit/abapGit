@@ -82,7 +82,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
+CLASS zcl_abapgit_syntax_highlighter IMPLEMENTATION.
 
 
   METHOD add_rule.
@@ -192,8 +192,8 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
       CLEAR ls_rule. " Failed read equals no style
       READ TABLE mt_rules INTO ls_rule WITH KEY token = <ls_match>-token.
 
-      lv_chunk = me->apply_style( iv_line  = lv_chunk
-                                  iv_class = ls_rule-style ).
+      lv_chunk = apply_style( iv_line  = lv_chunk
+                              iv_class = ls_rule-style ).
 
       rv_line = rv_line && lv_chunk.
     ENDLOOP.
@@ -266,16 +266,16 @@ CLASS ZCL_ABAPGIT_SYNTAX_HIGHLIGHTER IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    lt_matches = me->parse_line( iv_line ).
+    lt_matches = parse_line( iv_line ).
 
-    me->order_matches( EXPORTING iv_line    = iv_line
-                       CHANGING  ct_matches = lt_matches ).
+    order_matches( EXPORTING iv_line    = iv_line
+                   CHANGING  ct_matches = lt_matches ).
 
-    me->extend_matches( EXPORTING iv_line    = iv_line
-                        CHANGING  ct_matches = lt_matches ).
+    extend_matches( EXPORTING iv_line    = iv_line
+                    CHANGING  ct_matches = lt_matches ).
 
-    rv_line = me->format_line( iv_line    = iv_line
-                               it_matches = lt_matches ).
+    rv_line = format_line( iv_line    = iv_line
+                           it_matches = lt_matches ).
 
   ENDMETHOD.
 ENDCLASS.

@@ -61,7 +61,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
+CLASS zcl_abapgit_object_webi IMPLEMENTATION.
 
 
   METHOD handle_endpoint.
@@ -144,9 +144,9 @@ CLASS ZCL_ABAPGIT_OBJECT_WEBI IMPLEMENTATION.
       LOOP AT is_webi-pvepparameter ASSIGNING <ls_parameter>
           WHERE function = <ls_function>-function.
 
-        li_parameter = me->handle_single_parameter( iv_name        = <ls_parameter>-vepparam
-                                                    ii_function    = li_function
-                                                    iv_parameter_type = <ls_parameter>-vepparamtype ).
+        li_parameter = handle_single_parameter( iv_name           = <ls_parameter>-vepparam
+                                                ii_function       = li_function
+                                                iv_parameter_type = <ls_parameter>-vepparamtype ).
 
         li_parameter->set_name_mapped_to( <ls_parameter>-mappedname ).
         li_parameter->set_is_exposed( <ls_parameter>-is_exposed ).
