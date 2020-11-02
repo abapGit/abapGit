@@ -128,7 +128,7 @@ CLASS zcl_abapgit_ecatt_sp_upload IMPLEMENTATION.
         lv_exc_occ = 'X'.
     ENDTRY.
 
-    ASSIGN me->ecatt_object TO <lg_ecatt_sp>.
+    ASSIGN ecatt_object TO <lg_ecatt_sp>.
     ASSERT sy-subrc = 0.
 
     lo_ecatt_sp = <lg_ecatt_sp>.

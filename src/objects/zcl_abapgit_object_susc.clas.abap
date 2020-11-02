@@ -30,7 +30,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_SUSC IMPLEMENTATION.
+CLASS zcl_abapgit_object_susc IMPLEMENTATION.
 
 
   METHOD delete_class.
@@ -136,7 +136,9 @@ CLASS ZCL_ABAPGIT_OBJECT_SUSC IMPLEMENTATION.
     lv_auth_object_class = ms_item-obj_name.
 
     TRY.
-        me->zif_abapgit_object~exists( ).
+        IF zif_abapgit_object~exists( ) = abap_false.
+          RETURN.
+        ENDIF.
       CATCH zcx_abapgit_exception.
         RETURN.
     ENDTRY.

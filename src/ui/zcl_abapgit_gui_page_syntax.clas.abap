@@ -86,7 +86,13 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_SYNTAX IMPLEMENTATION.
     DATA: li_syntax_check TYPE REF TO zif_abapgit_code_inspector.
 
     li_syntax_check = zcl_abapgit_factory=>get_code_inspector( mo_repo->get_package( ) ).
-    mt_result = li_syntax_check->run( c_variant ).
+
+    TRY.
+        mt_result = li_syntax_check->run( c_variant ).
+      CATCH zcx_abapgit_exception.
+        " Variant SYNTAX_CHECK does not exist in 702
+        mt_result = li_syntax_check->run( 'VERI_' && c_variant ).
+    ENDTRY.
 
   ENDMETHOD.
 
