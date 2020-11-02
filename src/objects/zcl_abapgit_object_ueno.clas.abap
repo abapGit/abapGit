@@ -105,7 +105,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_UENO IMPLEMENTATION.
+CLASS zcl_abapgit_object_ueno IMPLEMENTATION.
 
 
   METHOD build_text_name.
@@ -119,7 +119,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UENO IMPLEMENTATION.
     DATA ls_text_name TYPE ty_text_name.
 
     ls_text_name-id = iv_id.
-    ls_text_name-entity = me->mv_entity_id.
+    ls_text_name-entity = mv_entity_id.
     ls_text_name-modifier = 'A%'.
 
     rv_result = ls_text_name.
@@ -132,7 +132,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UENO IMPLEMENTATION.
     super->constructor( is_item  =  is_item
                         iv_language = iv_language ).
 
-    me->mv_entity_id = is_item-obj_name.
+    mv_entity_id = is_item-obj_name.
 
   ENDMETHOD.
 
@@ -145,7 +145,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UENO IMPLEMENTATION.
     SELECT *
       FROM dm02l
       INTO TABLE lt_dm02l
-      WHERE entid = me->mv_entity_id.
+      WHERE entid = mv_entity_id.
 
     LOOP AT lt_dm02l INTO ls_dm02l.
 
@@ -154,7 +154,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UENO IMPLEMENTATION.
           key1     = ls_dm02l-entid
           key2     = ls_dm02l-as4local
           key3     = '00'
-          langu    = me->mv_language
+          langu    = mv_language
           obj_id   = 'UENC' "Entity Comments
         EXCEPTIONS
           ret_code = 0.
@@ -164,7 +164,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UENO IMPLEMENTATION.
           key1     = ls_dm02l-entid
           key2     = ls_dm02l-as4local
           key3     = '00'
-          langu    = me->mv_language
+          langu    = mv_language
           obj_id   = 'UEND' "Entity Definition
         EXCEPTIONS
           ret_code = 0.
@@ -174,7 +174,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UENO IMPLEMENTATION.
           key1     = ls_dm02l-entid
           key2     = ls_dm02l-as4local
           key3     = '00'
-          langu    = me->mv_language
+          langu    = mv_language
           obj_id   = 'UENE' "Entity Example
         EXCEPTIONS
           ret_code = 0.
@@ -192,13 +192,13 @@ CLASS ZCL_ABAPGIT_OBJECT_UENO IMPLEMENTATION.
     SELECT *
       FROM dm42s
       INTO TABLE lt_dm42s
-      WHERE entidto = me->mv_entity_id.
+      WHERE entidto = mv_entity_id.
 
     LOOP AT lt_dm42s INTO ls_dm42s.
 
       CALL FUNCTION 'SDU_DOCU_DELETE'
         EXPORTING
-          langu    = me->mv_language
+          langu    = mv_language
           obj_id   = 'URL1'
           key1     = ls_dm42s-entidto
           key2     = ls_dm42s-as4local
@@ -209,7 +209,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UENO IMPLEMENTATION.
 
       CALL FUNCTION 'SDU_DOCU_DELETE'
         EXPORTING
-          langu    = me->mv_language
+          langu    = mv_language
           obj_id   = 'URL2'
           key1     = ls_dm42s-entidto
           key2     = ls_dm42s-as4local
@@ -220,7 +220,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UENO IMPLEMENTATION.
 
       CALL FUNCTION 'SDU_DOCU_DELETE'
         EXPORTING
-          langu    = me->mv_language
+          langu    = mv_language
           obj_id   = 'URLC'
           key1     = ls_dm42s-entidto
           key2     = ls_dm42s-as4local
@@ -243,13 +243,13 @@ CLASS ZCL_ABAPGIT_OBJECT_UENO IMPLEMENTATION.
     SELECT *
       FROM dm45l
       INTO TABLE lt_dm45l
-      WHERE entid = me->ms_item-obj_name.
+      WHERE entid = ms_item-obj_name.
 
     LOOP AT lt_dm45l INTO ls_dm45l.
 
       CALL FUNCTION 'SDU_DOCU_DELETE'
         EXPORTING
-          langu    = me->mv_language
+          langu    = mv_language
           obj_id   = 'USPD'
           key1     = ls_dm45l-entid
           key2     = ls_dm45l-as4local
@@ -343,7 +343,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UENO IMPLEMENTATION.
 
       CALL FUNCTION 'LXE_OBJ_DOKU_PUT_XSTRING'
         EXPORTING
-          slang       = me->mv_language
+          slang       = mv_language
           tlang       = ls_docu-language
           objtype     = ls_docu-header-tdid
           objname     = lv_objname
@@ -367,8 +367,8 @@ CLASS ZCL_ABAPGIT_OBJECT_UENO IMPLEMENTATION.
 
     CALL FUNCTION 'SDU_SAA_CHECK'
       EXPORTING
-        obj_name   = me->ms_item-obj_name
-        obj_type   = me->ms_item-obj_type
+        obj_name   = ms_item-obj_name
+        obj_type   = ms_item-obj_type
       EXCEPTIONS
         wrong_type = 01.
 
@@ -444,7 +444,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UENO IMPLEMENTATION.
     DATA lv_objname         TYPE lxeobjname.
 
 
-    ls_dokvl-object = me->build_text_name( iv_id = iv_id ).
+    ls_dokvl-object = build_text_name( iv_id = iv_id ).
 
     SELECT id object langu
       FROM dokvl
@@ -492,7 +492,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UENO IMPLEMENTATION.
 
     SELECT SINGLE lstuser INTO rv_user
       FROM dm02l
-      WHERE entid = me->mv_entity_id
+      WHERE entid = mv_entity_id
       AND as4local = c_active_state.
 
     IF sy-subrc <> 0.
