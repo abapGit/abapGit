@@ -96,7 +96,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
+CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
 
 
   METHOD access_free.
@@ -106,8 +106,8 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     CALL FUNCTION 'RS_ACCESS_PERMISSION'
       EXPORTING
         mode                     = 'FREE'
-        object                   = me->ms_object_type
-        object_class             = me->c_transport_object_class
+        object                   = ms_object_type
+        object_class             = c_transport_object_class
       EXCEPTIONS
         canceled_in_corr         = 1
         enqueued_by_user         = 2
@@ -144,8 +144,8 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
         authority_check          = abap_true
         global_lock              = abap_true
         mode                     = 'MODIFY'
-        object                   = me->ms_object_type
-        object_class             = me->c_transport_object_class
+        object                   = ms_object_type
+        object_class             = c_transport_object_class
       EXCEPTIONS
         canceled_in_corr         = 1
         enqueued_by_user         = 2
@@ -174,9 +174,9 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
 
     " Conversion to Data model
-    me->mv_data_model = is_item-obj_name.
+    mv_data_model = is_item-obj_name.
     " Default activation state is active
-    me->mv_activation_state = c_active_state.
+    mv_activation_state = c_active_state.
     " Derive the data model's text object
     mv_text_object = 'UDMD' && is_item-obj_name.
     " And set the text object to active
@@ -184,8 +184,8 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     mv_lxe_text_name = mv_text_object.
 
     " Correction and Transport System object
-    me->ms_object_type-objtype = c_correction_object_type.
-    me->ms_object_type-objname = is_item-obj_name.
+    ms_object_type-objtype = c_correction_object_type.
+    ms_object_type-objname = is_item-obj_name.
 
 
   ENDMETHOD.
@@ -200,8 +200,8 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
     CALL FUNCTION 'RS_CORR_INSERT'
       EXPORTING
-        object              = me->ms_object_type
-        object_class        = me->c_transport_object_class
+        object              = ms_object_type
+        object_class        = c_transport_object_class
         devclass            = iv_package
         master_language     = mv_language
         mode                = 'INSERT'
@@ -271,8 +271,8 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
       SELECT MAX( dokversion )
       INTO ls_header-tdversion
       FROM dokhl
-      WHERE id = me->c_lxe_text_type
-      AND   object = me->mv_text_object
+      WHERE id = c_lxe_text_type
+      AND   object = mv_text_object
       AND   langu = ls_udmo_long_text-language.
 
       " Increment the version
@@ -282,10 +282,10 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
       " This function module takes care of the variation in text processing between various objects.
       CALL FUNCTION 'LXE_OBJ_DOKU_PUT_XSTRING'
         EXPORTING
-          slang   = me->mv_language
+          slang   = mv_language
           tlang   = ls_udmo_long_text-language
-          objtype = me->c_lxe_text_type
-          objname = me->mv_lxe_text_name
+          objtype = c_lxe_text_type
+          objname = mv_lxe_text_name
           header  = ls_udmo_long_text-header
           content = ls_udmo_long_text-content.
 
@@ -348,7 +348,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
         INTO ls_dm40t
         WHERE sprache  = ls_udmo_text-sprache
         AND   dmoid    = ls_udmo_text-dmoid
-        AND   as4local = me->mv_activation_state.
+        AND   as4local = mv_activation_state.
 
       IF sy-subrc = 0.
         " There is already an active description for this language
@@ -395,8 +395,8 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
     CALL FUNCTION 'SDU_SAA_CHECK'
       EXPORTING
-        obj_name   = me->ms_object_type-objname
-        obj_type   = me->ms_object_type-objtype
+        obj_name   = ms_object_type-objname
+        obj_type   = ms_object_type-objtype
       EXCEPTIONS
         wrong_type = 01.
 
@@ -414,8 +414,8 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
     SELECT * FROM dm41s
       INTO TABLE lt_udmo_entities
-      WHERE dmoid = me->mv_data_model
-      AND as4local = me->mv_activation_state.
+      WHERE dmoid = mv_data_model
+      AND as4local = mv_activation_state.
 
 
     LOOP AT lt_udmo_entities ASSIGNING <ls_udmo_entity>.
@@ -466,8 +466,8 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     SELECT sprache AS language
       FROM dm40t
       INTO TABLE lt_udmo_languages
-      WHERE dmoid    = me->mv_data_model
-      AND   as4local = me->mv_activation_state
+      WHERE dmoid    = mv_data_model
+      AND   as4local = mv_activation_state
       ORDER BY sprache ASCENDING.                       "#EC CI_NOFIRST
 
     " For every language for which a short text is maintained,
@@ -482,8 +482,8 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
       CALL FUNCTION 'LXE_OBJ_DOKU_GET_XSTRING'
         EXPORTING
           lang    = ls_udmo_language-language
-          objtype = me->c_lxe_text_type
-          objname = me->mv_lxe_text_name
+          objtype = c_lxe_text_type
+          objname = mv_lxe_text_name
         IMPORTING
           header  = ls_udmo_long_text-header
           content = ls_udmo_long_text-content
@@ -522,8 +522,8 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     SELECT SINGLE *
     FROM dm40l
     INTO ls_dm40l
-    WHERE dmoid    = me->mv_data_model
-    AND   as4local = me->mv_activation_state.
+    WHERE dmoid    = mv_data_model
+    AND   as4local = mv_activation_state.
 
 
     IF sy-subrc <> 0.
@@ -554,8 +554,8 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     SELECT sprache dmoid as4local langbez
       FROM dm40t
       INTO CORRESPONDING FIELDS OF TABLE lt_udmo_texts
-      WHERE dmoid    = me->mv_data_model
-      AND   as4local = me->mv_activation_state
+      WHERE dmoid    = mv_data_model
+      AND   as4local = mv_activation_state
       ORDER BY sprache ASCENDING.                       "#EC CI_NOFIRST
 
     " You are reminded that descriptions in other languages do not have to be in existence.
@@ -572,9 +572,9 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
     CALL FUNCTION 'RS_TREE_OBJECT_PLACEMENT'
       EXPORTING
-        object    = me->mv_data_model
+        object    = mv_data_model
         operation = 'INSERT'
-        type      = me->c_correction_object_type.
+        type      = c_correction_object_type.
 
   ENDMETHOD.
 
@@ -583,8 +583,8 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
     SELECT SINGLE lstuser INTO rv_user
       FROM dm40l
-      WHERE dmoid = me->mv_data_model
-      AND as4local = me->mv_activation_state.
+      WHERE dmoid = mv_data_model
+      AND as4local = mv_activation_state.
 
     IF sy-subrc <> 0.
       rv_user = c_user_unknown.
@@ -605,7 +605,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
     CALL FUNCTION 'RPY_DATAMODEL_DELETE'
       EXPORTING
-        model_name       = me->mv_data_model
+        model_name       = mv_data_model
       EXCEPTIONS
         cancelled        = 1
         permission_error = 2
@@ -652,7 +652,7 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
 
       CATCH zcx_abapgit_exception.
 
-        me->access_free( ).
+        access_free( ).
 
         zcx_abapgit_exception=>raise( 'Error in deserialisation of UDMO' ).
 
@@ -670,8 +670,8 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     "  See Function Module SDU_MODEL_EXISTS
 
     SELECT COUNT( * ) FROM  dm40l
-           WHERE  dmoid     = me->mv_data_model
-           AND    as4local  = me->mv_activation_state.
+           WHERE  dmoid     = mv_data_model
+           AND    as4local  = mv_activation_state.
 
     rv_bool = boolc( sy-subrc = 0 ).
 
@@ -760,9 +760,9 @@ CLASS ZCL_ABAPGIT_OBJECT_UDMO IMPLEMENTATION.
     ENDIF.
 
     serialize_model( io_xml ).
-    me->serialize_entities( io_xml ).
-    me->serialize_short_texts( io_xml ).
-    me->serialize_long_texts( io_xml ).
+    serialize_entities( io_xml ).
+    serialize_short_texts( io_xml ).
+    serialize_long_texts( io_xml ).
 
   ENDMETHOD.
 ENDCLASS.
