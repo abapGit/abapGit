@@ -22,7 +22,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
+CLASS zcl_abapgit_object_vcls IMPLEMENTATION.
 
 
   METHOD check_lock.
@@ -184,8 +184,8 @@ CLASS ZCL_ABAPGIT_OBJECT_VCLS IMPLEMENTATION.
       lv_argument       TYPE seqg3-garg,
       lv_argument_langu TYPE seqg3-garg.
 
-    lv_argument       = me->ms_item-obj_name.
-    lv_argument_langu = |@{ me->ms_item-obj_name }|.
+    lv_argument       = ms_item-obj_name.
+    lv_argument_langu = |@{ ms_item-obj_name }|.
 
     "Check all relevant maintein tabeles for view clusters
     IF check_lock( iv_tabname = 'VCLDIR'

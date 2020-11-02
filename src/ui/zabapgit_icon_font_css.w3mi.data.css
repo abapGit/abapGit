@@ -18,7 +18,8 @@
     text-decoration: none;
     text-align: center;
     vertical-align: text-top;
-    width: 1em;
+    /* width: 1.1em; */
+    /* padding-right: 0.2em */
 
     /* For safety - reset parent styles, that can break glyph codes*/
     font-variant: normal;
@@ -39,23 +40,27 @@
 .icon-chevron-left:before { content: "\f10a"; }
 .icon-chevron-right:before { content: "\f10b"; }
 .icon-chevron-up:before { content: "\f10c"; }
-.icon-cloud-upload-alt:before { content: "\f10d"; }
-.icon-code-branch:before { content: "\f10e"; }
-.icon-code-commit:before { content: "\f10f"; }
-.icon-cog:before { content: "\f110"; }
-.icon-exclamation-circle:before { content: "\f111"; }
-.icon-exclamation-triangle:before { content: "\f112"; }
-.icon-file-alt:before { content: "\f113"; }
-.icon-file-code:before { content: "\f114"; }
-.icon-file-image:before { content: "\f115"; }
-.icon-file:before { content: "\f116"; }
-.icon-fire-alt:before { content: "\f117"; }
-.icon-folder:before { content: "\f118"; }
-.icon-git-alt:before { content: "\f119"; }
-.icon-lock:before { content: "\f11a"; }
-.icon-plug:before { content: "\f11b"; }
-.icon-question-circle-solid:before { content: "\f11c"; }
-.icon-sliders-h:before { content: "\f11d"; }
-.icon-snowflake:before { content: "\f11e"; }
-.icon-star:before { content: "\f11f"; }
-.icon-tools-solid:before { content: "\f120"; }
+.icon-cloud-commit:before { content: "\f10d"; }
+.icon-cloud-solid:before { content: "\f10e"; }
+.icon-cloud-upload-alt:before { content: "\f10f"; }
+.icon-code-branch:before { content: "\f110"; }
+.icon-code-commit:before { content: "\f111"; }
+.icon-cog:before { content: "\f112"; }
+.icon-exclamation-circle:before { content: "\f113"; }
+.icon-exclamation-triangle:before { content: "\f114"; }
+.icon-file-alt:before { content: "\f115"; }
+.icon-file-code:before { content: "\f116"; }
+.icon-file-image:before { content: "\f117"; }
+.icon-file:before { content: "\f118"; }
+.icon-fire-alt:before { content: "\f119"; }
+.icon-folder:before { content: "\f11a"; }
+.icon-git-alt:before { content: "\f11b"; }
+.icon-lock:before { content: "\f11c"; }
+.icon-plug:before { content: "\f11d"; }
+.icon-question-circle-solid:before { content: "\f11e"; }
+.icon-sliders-h:before { content: "\f11f"; }
+.icon-snowflake:before { content: "\f120"; }
+.icon-star:before { content: "\f121"; }
+.icon-tools-solid:before { content: "\f122"; }
+.icon-truck-solid:before { content: "\f123"; }
+.icon-user-solid:before { content: "\f124"; }
