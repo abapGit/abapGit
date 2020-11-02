@@ -108,7 +108,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
+CLASS zcl_abapgit_object_tabl IMPLEMENTATION.
 
 
   METHOD clear_dd03p_fields.
@@ -369,6 +369,16 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
         zcx_abapgit_exception=>raise( |error from DDIF_TABL_PUT @TEXTS, { sy-subrc }| ).
       ENDIF.
     ENDLOOP.
+
+  ENDMETHOD.
+
+
+  METHOD is_db_table_category.
+
+    " values from domain TABCLASS
+    rv_is_db_table_type = boolc( iv_tabclass = 'TRANSP'
+                              OR iv_tabclass = 'CLUSTER'
+                              OR iv_tabclass = 'POOL' ).
 
   ENDMETHOD.
 
@@ -786,12 +796,19 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
     DATA: lv_tabname TYPE dd02l-tabname.
 
     lv_tabname = ms_item-obj_name.
+
+    " Check nametab because it's fast
     CALL FUNCTION 'DD_GET_NAMETAB_HEADER'
       EXPORTING
         tabname   = lv_tabname
       EXCEPTIONS
         not_found = 1
         OTHERS    = 2.
+    IF sy-subrc <> 0.
+      " Check for new, inactive, or modified versions that might not be in nametab
+      SELECT SINGLE tabname FROM dd02l INTO lv_tabname
+        WHERE tabname = lv_tabname.
+    ENDIF.
     rv_bool = boolc( sy-subrc = 0 ).
 
   ENDMETHOD.
@@ -805,7 +822,7 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
 
     CREATE OBJECT li_local_version_output TYPE zcl_abapgit_xml_output.
 
-    me->zif_abapgit_object~serialize( li_local_version_output ).
+    zif_abapgit_object~serialize( li_local_version_output ).
 
     CREATE OBJECT li_local_version_input
       TYPE zcl_abapgit_xml_input
@@ -989,15 +1006,4 @@ CLASS ZCL_ABAPGIT_OBJECT_TABL IMPLEMENTATION.
                  ig_data = ls_extras ).
 
   ENDMETHOD.
-
-
-  METHOD is_db_table_category.
-
-    " values from domain TABCLASS
-    rv_is_db_table_type = boolc( iv_tabclass = 'TRANSP'
-                              OR iv_tabclass = 'CLUSTER'
-                              OR iv_tabclass = 'POOL' ).
-
-  ENDMETHOD.
-
 ENDCLASS.

@@ -36,7 +36,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
+CLASS zcl_abapgit_object_devc IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -51,7 +51,7 @@ CLASS ZCL_ABAPGIT_OBJECT_DEVC IMPLEMENTATION.
 
 
   METHOD get_package.
-    IF me->zif_abapgit_object~exists( ) = abap_true.
+    IF zif_abapgit_object~exists( ) = abap_true.
       ri_package = load_package( mv_local_devclass ).
     ENDIF.
   ENDMETHOD.

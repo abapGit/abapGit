@@ -76,11 +76,10 @@ CLASS zcl_abapgit_services_git DEFINITION
   PRIVATE SECTION.
     CLASS-METHODS checkout_commit_build_list
       IMPORTING
-        iv_url         TYPE string
-        iv_branch_name TYPE string
+        !io_repo     TYPE REF TO zcl_abapgit_repo_online
       EXPORTING
-        et_value_tab   TYPE ty_commit_value_tab_tt
-        et_commits     TYPE zif_abapgit_definitions=>ty_commit_tt
+        et_value_tab TYPE ty_commit_value_tab_tt
+        et_commits   TYPE zif_abapgit_definitions=>ty_commit_tt
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS checkout_commit_build_popup
@@ -115,8 +114,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
     checkout_commit_build_list(
       EXPORTING
-        iv_branch_name = lo_repo->get_selected_branch( )
-        iv_url         = lo_repo->get_url( )
+        io_repo        = lo_repo
       IMPORTING
         et_value_tab   = lt_value_tab
         et_commits     = lt_commits ).
@@ -136,20 +134,18 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
           lv_date        TYPE sy-datum,
           lv_date_string TYPE c LENGTH 12,
           lv_time        TYPE sy-uzeit,
-          lv_time_string TYPE c LENGTH 10,
-          ls_pull_result TYPE zcl_abapgit_git_commit=>ty_pull_result.
+          lv_time_string TYPE c LENGTH 10.
 
     FIELD-SYMBOLS: <ls_commit>    TYPE zif_abapgit_definitions=>ty_commit,
                    <ls_value_tab> TYPE ty_commit_value_tab.
 
     CLEAR: et_commits, et_value_tab.
 
-    ls_pull_result = zcl_abapgit_git_commit=>get_by_branch( iv_branch_name  = iv_branch_name
-                                                            iv_repo_url     = iv_url
-                                                            iv_deepen_level = 99 ).
+    et_commits = zcl_abapgit_git_commit=>get_by_branch( iv_branch_name  = io_repo->get_selected_branch( )
+                                                        iv_repo_url     = io_repo->get_url( )
+                                                        iv_deepen_level = 99 )-commits.
 
-    et_commits = ls_pull_result-commits.
-    DELETE et_commits WHERE sha1 = ls_pull_result-commit.
+    DELETE et_commits WHERE sha1 = io_repo->get_selected_commit( ).
     SORT et_commits BY time DESCENDING.
 
     IF et_commits IS INITIAL.
