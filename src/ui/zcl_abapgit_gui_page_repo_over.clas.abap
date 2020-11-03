@@ -307,15 +307,12 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
       lv_type_icon         TYPE string,
       lv_favorite_icon     TYPE string,
       lv_favorite_class    TYPE string,
-      lv_package_jump_data TYPE string,
-      lv_package_obj_name  TYPE sobj_name,
       lv_stage_link        TYPE string,
       lv_patch_link        TYPE string,
       lv_zip_import_link   TYPE string,
       lv_zip_export_link   TYPE string,
       lv_check_link        TYPE string,
-      lv_settings_link     TYPE string,
-      lv_branch_html       TYPE string.
+      lv_settings_link     TYPE string.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
