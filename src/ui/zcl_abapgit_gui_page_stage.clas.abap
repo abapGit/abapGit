@@ -352,7 +352,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
     ri_html->add( '<td class="right">' ).
     ri_html->add( '<input class="stage-filter" id="objectSearch"' &&
                   ' type="search" placeholder="Filter Objects"' &&
-                  | value={ mv_filter_value }>| ).
+                  | value="{ mv_filter_value }">| ).
     ri_html->add( '</td>' ).
 
     ri_html->add( '</tr>' ).

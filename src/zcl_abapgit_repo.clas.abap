@@ -210,7 +210,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -488,9 +488,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       io_dot                = get_dot_abapgit( )
       ii_log                = ii_log ).
 
-    CREATE OBJECT lo_filter
-      EXPORTING
-        iv_package = get_package( ).
+    CREATE OBJECT lo_filter.
 
     lo_filter->apply( EXPORTING it_filter = it_filter
                       CHANGING  ct_tadir  = lt_tadir ).

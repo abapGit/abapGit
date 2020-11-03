@@ -473,8 +473,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           lt_tadir    LIKE it_tadir,
           lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
           lx_error    TYPE REF TO zcx_abapgit_exception,
-          lv_count    TYPE i,
-          lv_text     TYPE string.
+          lv_count    TYPE i.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 
