@@ -4,10 +4,6 @@ CLASS zcl_abapgit_repo_filter DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    METHODS constructor
-      IMPORTING
-        !iv_package TYPE devclass.
-
     METHODS apply
       IMPORTING
         it_filter TYPE zif_abapgit_definitions=>ty_tadir_tt
@@ -15,27 +11,16 @@ CLASS zcl_abapgit_repo_filter DEFINITION
         ct_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt .
 
   PROTECTED SECTION.
-    METHODS get_package
-      RETURNING
-        VALUE(rv_package) TYPE devclass.
 
     METHODS filter_generated_tadir
       CHANGING
-        ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt.
-
-  PRIVATE SECTION.
-    DATA mv_package TYPE devclass.
+        !ct_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt .
 
 ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_filter IMPLEMENTATION.
-
-
-  METHOD constructor.
-    mv_package = iv_package.
-  ENDMETHOD.
+CLASS ZCL_ABAPGIT_REPO_FILTER IMPLEMENTATION.
 
 
   METHOD apply.
@@ -114,10 +99,4 @@ CLASS zcl_abapgit_repo_filter IMPLEMENTATION.
     ENDLOOP.
 
   ENDMETHOD.
-
-
-  METHOD get_package.
-    rv_package = mv_package.
-  ENDMETHOD.
-
 ENDCLASS.

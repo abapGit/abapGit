@@ -114,7 +114,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE_RES IMPLEMENTATION.
 
     DATA:
       lv_merge_content    TYPE string,
-      lt_fields           TYPE tihttpnvp,
       lv_new_file_content TYPE xstring.
 
     FIELD-SYMBOLS:

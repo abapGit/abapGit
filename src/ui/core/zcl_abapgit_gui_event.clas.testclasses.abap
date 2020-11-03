@@ -53,7 +53,6 @@ CLASS ltcl_event IMPLEMENTATION.
 
     DATA li_cut TYPE REF TO zif_abapgit_gui_event.
     DATA lo_map TYPE REF TO zcl_abapgit_string_map.
-    DATA lo_x TYPE REF TO zcx_abapgit_exception.
 
     CREATE OBJECT li_cut TYPE zcl_abapgit_gui_event
       EXPORTING
@@ -91,7 +90,6 @@ CLASS ltcl_event IMPLEMENTATION.
 
     DATA li_cut TYPE REF TO zif_abapgit_gui_event.
     DATA lo_map TYPE REF TO zcl_abapgit_string_map.
-    DATA lo_x TYPE REF TO zcx_abapgit_exception.
     DATA lt_postdata TYPE cnht_post_data_tab.
 
     APPEND 'a=b&b=c' TO lt_postdata.

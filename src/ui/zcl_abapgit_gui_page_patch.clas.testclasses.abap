@@ -34,10 +34,6 @@ CLASS ltcl_is_patch_line_possible DEFINITION FINAL FOR TESTING
         IMPORTING
           is_diff_line TYPE zif_abapgit_definitions=>ty_diff OPTIONAL,
 
-      given_fstate
-        IMPORTING
-          iv_fstate TYPE char1,
-
       when_is_patch_line_possible,
 
       then_patch_shd_be_possible,
@@ -224,13 +220,6 @@ CLASS ltcl_is_patch_line_possible IMPLEMENTATION.
   METHOD given_diff_line.
 
     ms_diff_line = is_diff_line.
-
-  ENDMETHOD.
-
-
-  METHOD given_fstate.
-
-    mv_fstate = iv_fstate.
 
   ENDMETHOD.
 
