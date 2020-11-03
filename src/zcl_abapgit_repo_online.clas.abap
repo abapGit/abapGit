@@ -138,13 +138,16 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
 
   METHOD get_commit_display_url.
 
-    rv_url = me->get_default_commit_display_url( iv_hash ).
+    DATA li_exit TYPE REF TO zif_abapgit_exit.
 
-    zcl_abapgit_exit=>get_instance( )->adjust_display_commit_url(
+    rv_url = get_default_commit_display_url( iv_hash ).
+
+    li_exit = zcl_abapgit_exit=>get_instance( ).
+    li_exit->adjust_display_commit_url(
       EXPORTING
-        iv_repo_url           = me->get_url( )
-        iv_repo_name          = me->get_name( )
-        iv_repo_key           = me->get_key( )
+        iv_repo_url           = get_url( )
+        iv_repo_name          = get_name( )
+        iv_repo_key           = get_key( )
         iv_commit_hash        = iv_hash
       CHANGING
         cv_display_url        = rv_url ).
@@ -167,7 +170,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
     DATA ls_result TYPE match_result.
     FIELD-SYMBOLS <ls_provider_match> TYPE submatch_result.
 
-    rv_url = me->get_url( ).
+    rv_url = get_url( ).
 
     FIND REGEX '^http(?:s)?:\/\/(?:www\.)?(github\.com|bitbucket\.org|gitlab\.com)\/' IN rv_url RESULTS ls_result.
     IF sy-subrc = 0.

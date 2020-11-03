@@ -253,8 +253,6 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
       rv_user = zcl_abapgit_objects_super=>c_user_unknown.
     ENDIF.
 
-* todo, fallback to looking at transports if rv_user = 'UNKNOWN'?
-
   ENDMETHOD.
 
 
@@ -475,8 +473,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           lt_tadir    LIKE it_tadir,
           lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
           lx_error    TYPE REF TO zcx_abapgit_exception,
-          lv_count    TYPE i,
-          lv_text     TYPE string.
+          lv_count    TYPE i.
 
     FIELD-SYMBOLS: <ls_tadir> LIKE LINE OF it_tadir.
 

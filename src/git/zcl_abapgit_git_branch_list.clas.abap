@@ -90,7 +90,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
+CLASS zcl_abapgit_git_branch_list IMPLEMENTATION.
 
 
   METHOD complete_heads_branch_name.
@@ -108,8 +108,8 @@ CLASS ZCL_ABAPGIT_GIT_BRANCH_LIST IMPLEMENTATION.
       EXPORTING
         iv_data        = iv_data
       IMPORTING
-        et_list        = me->mt_branches
-        ev_head_symref = me->mv_head_symref ).
+        et_list        = mt_branches
+        ev_head_symref = mv_head_symref ).
 
   ENDMETHOD.
 

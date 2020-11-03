@@ -109,7 +109,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
+CLASS zcl_abapgit_gui IMPLEMENTATION.
 
 
   METHOD back.
@@ -196,7 +196,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
   METHOD free.
 
-    SET HANDLER me->on_event FOR mi_html_viewer ACTIVATION space.
+    SET HANDLER on_event FOR mi_html_viewer ACTIVATION space.
     mi_html_viewer->close_document( ).
     mi_html_viewer->free( ).
     FREE mi_html_viewer.
@@ -398,7 +398,7 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     APPEND ls_event TO lt_events.
 
     mi_html_viewer->set_registered_events( lt_events ).
-    SET HANDLER me->on_event FOR mi_html_viewer.
+    SET HANDLER on_event FOR mi_html_viewer.
 
   ENDMETHOD.
 

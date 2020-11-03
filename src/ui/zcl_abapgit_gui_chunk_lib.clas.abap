@@ -573,6 +573,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
         ENDIF.
         ri_html->add( |<h1>{ lv_text }</h1>| ).
       ELSE.
+        <ls_line>-text = escape( val    = <ls_line>-text
+                                 format = cl_abap_format=>e_html_text ).
         ri_html->add( |<li>{ <ls_line>-text }</li>| ).
       ENDIF.
     ENDLOOP.
@@ -697,7 +699,6 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     DATA lt_repo_list TYPE zif_abapgit_persistence=>ty_repos.
     DATA lv_repo_json TYPE string.
     DATA lv_size TYPE i.
-    DATA lo_repo TYPE REF TO zcl_abapgit_repo.
     FIELD-SYMBOLS <ls_repo> LIKE LINE OF lt_repo_list.
 
     li_repo_srv = zcl_abapgit_repo_srv=>get_instance( ).
@@ -706,12 +707,17 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
+    " Sort list by display name
+    LOOP AT lt_repo_list ASSIGNING <ls_repo>.
+      <ls_repo>-local_settings-display_name = li_repo_srv->get( <ls_repo>-key )->get_name( ).
+    ENDLOOP.
+    SORT lt_repo_list BY local_settings-display_name AS TEXT.
+
     ri_html->add( 'var repoCatalog = [' ). " Maybe separate this into another method if needed in more places
     LOOP AT lt_repo_list ASSIGNING <ls_repo>.
-      lo_repo = li_repo_srv->get( <ls_repo>-key ). " inefficient
       lv_repo_json = |\{ key: "{ <ls_repo>-key
         }", isOffline: "{ <ls_repo>-offline
-        }", displayName: "{ lo_repo->get_name( ) }"  \}|.
+        }", displayName: "{ <ls_repo>-local_settings-display_name }"  \}|.
       IF sy-tabix < lv_size.
         lv_repo_json = lv_repo_json && ','.
       ENDIF.
@@ -734,8 +740,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
           lo_pback             TYPE REF TO zcl_abapgit_persist_background,
           lx_error             TYPE REF TO zcx_abapgit_exception,
           lv_hint              TYPE string,
-          lv_icon              TYPE string,
-          lv_package_jump_data TYPE string.
+          lv_icon              TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     CREATE OBJECT lo_pback.

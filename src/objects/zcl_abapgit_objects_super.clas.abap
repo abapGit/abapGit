@@ -24,13 +24,6 @@ CLASS zcl_abapgit_objects_super DEFINITION PUBLIC ABSTRACT.
     DATA ms_item TYPE zif_abapgit_definitions=>ty_item .
     DATA mv_language TYPE spras .
 
-    METHODS check_timestamp
-      IMPORTING
-        !iv_timestamp     TYPE timestamp
-        !iv_date          TYPE d
-        !iv_time          TYPE t
-      RETURNING
-        VALUE(rv_changed) TYPE abap_bool .
     METHODS get_metadata
       RETURNING
         VALUE(rs_metadata) TYPE zif_abapgit_definitions=>ty_metadata .
@@ -97,27 +90,6 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_OBJECTS_SUPER IMPLEMENTATION.
-
-
-  METHOD check_timestamp.
-
-    DATA: lv_ts TYPE timestamp.
-
-    IF sy-subrc = 0 AND iv_date IS NOT INITIAL AND iv_time IS NOT INITIAL.
-      cl_abap_tstmp=>systemtstmp_syst2utc(
-        EXPORTING syst_date = iv_date
-                  syst_time = iv_time
-        IMPORTING utc_tstmp = lv_ts ).
-      IF lv_ts < iv_timestamp.
-        rv_changed = abap_false. " Unchanged
-      ELSE.
-        rv_changed = abap_true.
-      ENDIF.
-    ELSE. " Not found? => changed
-      rv_changed = abap_true.
-    ENDIF.
-
-  ENDMETHOD.
 
 
   METHOD constructor.
