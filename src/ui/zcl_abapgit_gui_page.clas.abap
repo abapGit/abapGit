@@ -328,7 +328,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
       iv_part_category = c_html_parts-hidden_forms ).
 
     ri_html->add( footer( ) ).
-    ri_html->add( '</body>' ).
 
     li_script = scripts( ).
 
@@ -339,6 +338,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
       ri_html->add( '</script>' ).
     ENDIF.
 
+    ri_html->add( '</body>' ).
     ri_html->add( '</html>' ).
 
   ENDMETHOD.

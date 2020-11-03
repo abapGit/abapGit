@@ -344,11 +344,11 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     lo_repo_online ?= mo_repo. " TODO refactor this disaster
     IF lo_repo_online->get_switched_origin( ) IS NOT INITIAL.
       ro_branch_dropdown->add(
-        iv_txt = 'Switch Origin: Revert <sup>beta<sup>'
+        iv_txt = 'Revert to Previous Branch'
         iv_act = |{ c_actions-repo_reset_origin }| ).
     ELSE.
       ro_branch_dropdown->add(
-        iv_txt = 'Switch Origin: to PR <sup>beta<sup>'
+        iv_txt = 'Switch to PR Branch'
         iv_act = |{ c_actions-repo_switch_origin_to_pr }| ).
     ENDIF.
 
