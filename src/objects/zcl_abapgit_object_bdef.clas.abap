@@ -12,50 +12,50 @@ CLASS zcl_abapgit_object_bdef DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           zcx_abapgit_exception.
 
   PROTECTED SECTION.
-  PRIVATE SECTION.
+private section.
 
-    DATA mi_persistence TYPE REF TO if_wb_object_persist .
-    DATA mi_wb_object_operator TYPE REF TO object .
-    DATA mv_behaviour_definition_key TYPE seu_objkey .
-    DATA mr_behaviour_definition TYPE REF TO data .
+  data MI_PERSISTENCE type ref to IF_WB_OBJECT_PERSIST .
+  data MI_WB_OBJECT_OPERATOR type ref to OBJECT .
+  data MV_BEHAVIOUR_DEFINITION_KEY type SEU_OBJKEY .
+  data MR_BEHAVIOUR_DEFINITION type ref to DATA .
 
-    METHODS clear_fields
-      CHANGING
-        !cs_metadata TYPE any .
-    METHODS clear_field
-      IMPORTING
-        !iv_fieldname TYPE csequence
-      CHANGING
-        !cs_metadata  TYPE any .
-    METHODS fill_metadata_from_db
-      CHANGING
-        !cs_metadata TYPE any
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_transport_req_if_needed
-      IMPORTING
-        !iv_package                 TYPE devclass
-      RETURNING
-        VALUE(rv_transport_request) TYPE trkorr
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_wb_object_operator
-      RETURNING
-        VALUE(ri_wb_object_operator) TYPE REF TO object
-      RAISING
-        zcx_abapgit_exception .
-    METHODS merge_object_data
-      IMPORTING
-        !io_object_data              TYPE REF TO object
-      RETURNING
-        VALUE(ro_object_data_merged) TYPE REF TO if_wb_object_data_model
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_object_data
-      IMPORTING
-        !io_xml               TYPE REF TO zif_abapgit_xml_input
-      RETURNING
-        VALUE(ro_object_data) TYPE REF TO object .
+  methods CLEAR_FIELDS
+    changing
+      !CS_METADATA type ANY .
+  methods CLEAR_FIELD
+    importing
+      !IV_FIELDNAME type CSEQUENCE
+    changing
+      !CS_METADATA type ANY .
+  methods FILL_METADATA_FROM_DB
+    changing
+      !CS_METADATA type ANY
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods GET_TRANSPORT_REQ_IF_NEEDED
+    importing
+      !IV_PACKAGE type DEVCLASS
+    returning
+      value(RV_TRANSPORT_REQUEST) type TRKORR
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods GET_WB_OBJECT_OPERATOR
+    returning
+      value(RI_WB_OBJECT_OPERATOR) type ref to OBJECT
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods MERGE_OBJECT_DATA
+    importing
+      !IO_OBJECT_DATA type ref to OBJECT
+    returning
+      value(RO_OBJECT_DATA_MERGED) type ref to IF_WB_OBJECT_DATA_MODEL
+    raising
+      ZCX_ABAPGIT_EXCEPTION .
+  methods GET_OBJECT_DATA
+    importing
+      !IO_XML type ref to ZIF_ABAPGIT_XML_INPUT
+    returning
+      value(RO_OBJECT_DATA) type ref to IF_WB_OBJECT_DATA_MODEL .
 ENDCLASS.
 
 
