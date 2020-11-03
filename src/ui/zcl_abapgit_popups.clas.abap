@@ -92,7 +92,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
+CLASS zcl_abapgit_popups IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -636,6 +636,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
       APPEND INITIAL LINE TO lt_selection ASSIGNING <ls_sel>.
       <ls_sel>-varoption = |{ <ls_pull>-number } - { <ls_pull>-title } @{ <ls_pull>-user }|.
     ENDLOOP.
+    SORT lt_selection BY varoption DESCENDING.
 
     CALL FUNCTION 'POPUP_TO_DECIDE_LIST'
       EXPORTING

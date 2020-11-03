@@ -104,8 +104,6 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
           lt_commits         TYPE zif_abapgit_definitions=>ty_commit_tt,
           ls_selected_commit TYPE zif_abapgit_definitions=>ty_commit.
 
-    FIELD-SYMBOLS: <ls_field_desc> TYPE rsvbfidesc.
-
     lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
     IF lo_repo->get_local_settings( )-write_protected = abap_true.

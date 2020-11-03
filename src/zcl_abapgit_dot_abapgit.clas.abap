@@ -208,7 +208,6 @@ CLASS ZCL_ABAPGIT_DOT_ABAPGIT IMPLEMENTATION.
     DATA: lv_name     TYPE string,
           lv_starting TYPE string,
           lv_dot      TYPE string,
-          lv_count    TYPE i,
           lv_ignore   TYPE string.
 
 
