@@ -573,6 +573,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
         ENDIF.
         ri_html->add( |<h1>{ lv_text }</h1>| ).
       ELSE.
+        <ls_line>-text = escape( val    = <ls_line>-text
+                                 format = cl_abap_format=>e_html_text ).
         ri_html->add( |<li>{ <ls_line>-text }</li>| ).
       ENDIF.
     ENDLOOP.
