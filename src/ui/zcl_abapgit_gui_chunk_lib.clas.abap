@@ -126,6 +126,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
       IMPORTING
         !iv_username    TYPE xubname
         !iv_interactive TYPE abap_bool DEFAULT abap_true
+        !iv_icon_only   TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ri_html)  TYPE REF TO zif_abapgit_html
       RAISING
@@ -134,6 +135,7 @@ CLASS zcl_abapgit_gui_chunk_lib DEFINITION
       IMPORTING
         !iv_transport   TYPE trkorr
         !iv_interactive TYPE abap_bool DEFAULT abap_true
+        !iv_icon_only   TYPE abap_bool DEFAULT abap_false
       RETURNING
         VALUE(ri_html)  TYPE REF TO zif_abapgit_html
       RAISING
@@ -678,7 +680,7 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
                 iv_obj_type = 'DEVC'
                 iv_obj_name = lv_obj_name ).
 
-    ri_html->add( |<span class="package">| ).
+    ri_html->add( |<span class="package-box">| ).
     ri_html->add_icon( iv_name = 'box/grey70'
                        iv_hint = 'SAP package' ).
     IF iv_interactive = abap_true.
@@ -736,11 +738,11 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
   METHOD render_repo_top.
 
-    DATA: lo_repo_online       TYPE REF TO zcl_abapgit_repo_online,
-          lo_pback             TYPE REF TO zcl_abapgit_persist_background,
-          lx_error             TYPE REF TO zcx_abapgit_exception,
-          lv_hint              TYPE string,
-          lv_icon              TYPE string.
+    DATA: lo_repo_online TYPE REF TO zcl_abapgit_repo_online,
+          lo_pback       TYPE REF TO zcl_abapgit_persist_background,
+          lx_error       TYPE REF TO zcx_abapgit_exception,
+          lv_hint        TYPE string,
+          lv_icon        TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
     CREATE OBJECT lo_pback.
@@ -874,7 +876,9 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
   METHOD render_transport.
 
-    DATA lv_title TYPE string.
+    DATA:
+      lv_title TYPE string,
+      lv_jump  TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -885,17 +889,27 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
     SELECT SINGLE as4text FROM e07t INTO lv_title
       WHERE trkorr = iv_transport AND langu = sy-langu ##SUBRC_OK.
 
-    ri_html->add( |<span class="transport">| ).
-    ri_html->add_icon( iv_name = 'briefcase/grey70'
-                       iv_hint = 'Transport' ).
-    IF iv_interactive = abap_true.
-      ri_html->add_a( iv_act   = |{ zif_abapgit_definitions=>c_action-jump_transport }?transport={ iv_transport }|
-                      iv_title = lv_title
-                      iv_txt   = to_lower( iv_transport ) ).
+    lv_jump = |{ zif_abapgit_definitions=>c_action-jump_transport }?transport={ iv_transport }|.
+
+    IF iv_icon_only = abap_true.
+      ri_html->add_a( iv_act   = lv_jump
+                      iv_title = |Transport { iv_transport }|
+                      iv_txt   = zcl_abapgit_html=>icon( 'truck-solid/darkgrey' ) ).
     ELSE.
-      ri_html->add( to_lower( iv_transport ) ).
+      ri_html->add( |<span class="transport-box">| ).
+
+      ri_html->add_icon( iv_name = 'truck-solid/grey70'
+                         iv_hint = 'Transport' ).
+      IF iv_interactive = abap_true.
+        ri_html->add_a( iv_act   = lv_jump
+                        iv_title = lv_title
+                        iv_txt   = to_lower( iv_transport ) ).
+      ELSE.
+        ri_html->add( to_lower( iv_transport ) ).
+      ENDIF.
+
+      ri_html->add( '</span>' ).
     ENDIF.
-    ri_html->add( '</span>' ).
 
   ENDMETHOD.
 
@@ -904,7 +918,8 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
 
     DATA:
       ls_user_address TYPE addr3_val,
-      lv_title        TYPE string.
+      lv_title        TYPE string,
+      lv_jump         TYPE string.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
@@ -926,17 +941,27 @@ CLASS zcl_abapgit_gui_chunk_lib IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    ri_html->add( |<span class="user">| ).
-    " todo, add icon ri_html->add_icon( iv_name = 'user/grey70'
-    "                                   iv_hint = 'User name' )
-    IF iv_interactive = abap_true AND iv_username <> zcl_abapgit_objects_super=>c_user_unknown.
-      ri_html->add_a( iv_act   = |{ zif_abapgit_definitions=>c_action-jump_user }?user={ iv_username }|
+    lv_jump = |{ zif_abapgit_definitions=>c_action-jump_user }?user={ iv_username }|.
+
+    IF iv_icon_only = abap_true.
+      ri_html->add_a( iv_act   = lv_jump
                       iv_title = lv_title
-                      iv_txt   = to_lower( iv_username ) ).
+                      iv_txt   = zcl_abapgit_html=>icon( 'user-solid/darkgrey' ) ).
     ELSE.
-      ri_html->add( to_lower( iv_username ) ).
+      ri_html->add( |<span class="user-box">| ).
+
+      ri_html->add_icon( iv_name = 'user-solid/grey70'
+                         iv_hint = 'User name' ).
+      IF iv_interactive = abap_true AND iv_username <> zcl_abapgit_objects_super=>c_user_unknown.
+        ri_html->add_a( iv_act   = lv_jump
+                        iv_title = lv_title
+                        iv_txt   = to_lower( iv_username ) ).
+      ELSE.
+        ri_html->add( to_lower( iv_username ) ).
+      ENDIF.
+
+      ri_html->add( '</span>' ).
     ENDIF.
-    ri_html->add( '</span>' ).
 
   ENDMETHOD.
 

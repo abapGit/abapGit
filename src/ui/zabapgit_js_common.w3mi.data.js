@@ -437,7 +437,6 @@ StageHelper.prototype.onPageLoad = function() {
   if (this.dom.objectSearch.value) {
     this.applyFilterValue(this.dom.objectSearch.value);
   }
-  debugOutput("StageHelper.onPageLoad: " + ((data) ? "from Storage" : "initial state"));
 };
 
 // Table event handler, change status
@@ -510,6 +509,8 @@ StageHelper.prototype.applyFilterToRow = function (row, filter) {
   // Collect data cells
   var targets = this.filterTargets.map(function(attr) {
     var elem = row.cells[this.colIndex[attr]];
+    if (elem.firstChild && elem.firstChild.tagName === "SPAN") elem = elem.firstChild;
+    if (elem.firstChild && elem.firstChild.tagName === "I") elem = elem.nextChild;
     if (elem.firstChild && elem.firstChild.tagName === "A") elem = elem.firstChild;
     return {
       elem:      elem,
@@ -2068,6 +2069,8 @@ function enumerateJumpAllFiles() {
         title:  title
       };});
 }
+
+/* Save Scroll Position for Diff/Patch Page */
 
 function saveScrollPosition(){
   if (!window.sessionStorage) { return }
