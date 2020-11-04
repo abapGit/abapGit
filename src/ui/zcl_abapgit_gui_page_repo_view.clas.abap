@@ -99,7 +99,9 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
       IMPORTING
         !is_item       TYPE zif_abapgit_definitions=>ty_repo_item
       RETURNING
-        VALUE(rv_html) TYPE string .
+        VALUE(ri_html) TYPE REF TO zif_abapgit_html
+      RAISING
+        zcx_abapgit_exception .
     METHODS render_parent_dir
       RETURNING
         VALUE(ri_html) TYPE REF TO zif_abapgit_html
@@ -650,11 +652,14 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     CASE is_item-obj_type.
       WHEN 'PROG' OR 'CLAS' OR 'FUGR' OR 'INTF' OR 'TYPE'.
-        rv_html = zcl_abapgit_html=>icon( 'file-code/darkgrey' ).
+        rv_html = zcl_abapgit_html=>icon( iv_name = 'file-code/darkgrey'
+                                          iv_hint = 'Code' ).
       WHEN 'W3MI' OR 'W3HT' OR 'SFPF'.
-        rv_html = zcl_abapgit_html=>icon( 'file-image/darkgrey' ).
+        rv_html = zcl_abapgit_html=>icon( iv_name = 'file-image/darkgrey'
+                                          iv_hint = 'Binary' ).
       WHEN 'DEVC'.
-        rv_html = zcl_abapgit_html=>icon( 'box/darkgrey' ).
+        rv_html = zcl_abapgit_html=>icon( iv_name = 'box/darkgrey'
+                                          iv_hint = 'Package' ).
       WHEN ''.
         rv_html = space. " no icon
       WHEN OTHERS.
@@ -662,7 +667,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ENDCASE.
 
     IF is_item-is_dir = abap_true.
-      rv_html = zcl_abapgit_html=>icon( 'folder/darkgrey' ).
+      rv_html = zcl_abapgit_html=>icon( iv_name = 'folder/darkgrey'
+                                        iv_hint = 'Folder' ).
     ENDIF.
 
   ENDMETHOD.
@@ -964,9 +970,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
       ri_html->add( '<div>' ).
       ri_html->add( |<span class="grey">{ is_item-changes } changes</span>| ).
-      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state(
-        iv_lstate = is_item-lstate
-        iv_rstate = is_item-rstate ) ).
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_item-lstate
+                                                                  iv_rstate = is_item-rstate ) ).
       ri_html->add( '</div>' ).
 
     ELSEIF is_item-changes > 0.
@@ -981,7 +986,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
         ri_html->add_a( iv_txt = |diff ({ is_item-changes })|
                         iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?{ lv_difflink }| ).
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = is_item-lstate
-                                                            iv_rstate = is_item-rstate ) ).
+                                                                    iv_rstate = is_item-rstate ) ).
         ri_html->add( '</div>' ).
 
       ELSE.
@@ -995,7 +1000,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
             ri_html->add_a( iv_txt = 'diff'
                             iv_act = |{ zif_abapgit_definitions=>c_action-go_diff }?{ lv_difflink }| ).
             ri_html->add( zcl_abapgit_gui_chunk_lib=>render_item_state( iv_lstate = ls_file-lstate
-                                                                iv_rstate = ls_file-rstate ) ).
+                                                                        iv_rstate = ls_file-rstate ) ).
           ELSE.
             ri_html->add( '&nbsp;' ).
           ENDIF.
@@ -1028,39 +1033,31 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
   METHOD render_item_lock_column.
 
-    DATA li_cts_api          TYPE REF TO zif_abapgit_cts_api.
-    DATA lv_transport        TYPE trkorr.
-    DATA lv_transport_string TYPE string.
-    DATA lv_icon_html        TYPE string.
-    DATA li_html             TYPE REF TO zif_abapgit_html.
+    DATA:
+      li_cts_api   TYPE REF TO zif_abapgit_cts_api,
+      lv_transport TYPE trkorr.
 
-    CREATE OBJECT li_html TYPE zcl_abapgit_html.
+    CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     li_cts_api = zcl_abapgit_factory=>get_cts_api( ).
 
-    TRY.
-        IF is_item-obj_type IS INITIAL OR is_item-obj_name IS INITIAL OR
-           li_cts_api->is_object_type_lockable( is_item-obj_type ) = abap_false OR
-           li_cts_api->is_object_locked_in_transport( iv_object_type = is_item-obj_type
-                                                      iv_object_name = is_item-obj_name ) = abap_false.
-          rv_html = |<td class="icon"></td>|.
-        ELSE.
-          lv_transport = li_cts_api->get_current_transport_for_obj( iv_object_type             = is_item-obj_type
-                                                                    iv_object_name             = is_item-obj_name
-                                                                    iv_resolve_task_to_request = abap_false ).
-          lv_transport_string = lv_transport.
-          lv_icon_html = li_html->a(
-            iv_txt = li_html->icon( iv_name = 'briefcase/darkgrey'
-                                    iv_hint = lv_transport_string )
-            iv_act = |{ zif_abapgit_definitions=>c_action-jump_transport }?transport={ lv_transport }| ).
+    ri_html->add( '<td class="icon">' ).
 
-          rv_html = |<td class="icon">| &&
-                    |{ lv_icon_html }| &&
-                    |</td>|.
-        ENDIF.
-      CATCH zcx_abapgit_exception.
-        ASSERT 1 = 2.
-    ENDTRY.
+    IF is_item-obj_type IS NOT INITIAL AND is_item-obj_name IS NOT INITIAL AND
+       li_cts_api->is_object_type_lockable( is_item-obj_type ) = abap_true AND
+       li_cts_api->is_object_locked_in_transport( iv_object_type = is_item-obj_type
+                                                  iv_object_name = is_item-obj_name ) = abap_true.
+
+      lv_transport = li_cts_api->get_current_transport_for_obj( iv_object_type             = is_item-obj_type
+                                                                iv_object_name             = is_item-obj_name
+                                                                iv_resolve_task_to_request = abap_false ).
+      ri_html->add( zcl_abapgit_gui_chunk_lib=>render_transport( iv_transport = lv_transport
+                                                                 iv_icon_only = abap_true ) ).
+
+    ENDIF.
+
+    ri_html->add( '</td>' ).
+
   ENDMETHOD.
 
 
