@@ -64,6 +64,8 @@
       "swbm_c_type_wdy_application",
       "swbm_version_active",
       "swbm_version_inactive",
+      "swfco_org_standard_task",
+      "swfco_org_workflow_template",
       "wbmr_c_skwf_folder_class",
       "wdyn_limu_component_controller",
       "wdyn_limu_component_definition",
