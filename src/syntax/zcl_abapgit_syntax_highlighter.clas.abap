@@ -144,7 +144,7 @@ CLASS zcl_abapgit_syntax_highlighter IMPLEMENTATION.
       CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_js.
     ELSEIF iv_filename CP '*.json'.
       CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_json.
-    ELSEIF iv_filename CP '*.txt' OR iv_filename CP '*.text'.
+    ELSEIF iv_filename CP '*.txt' OR iv_filename CP '*.ini'  OR iv_filename CP '*.text'.
       CREATE OBJECT ro_instance TYPE zcl_abapgit_syntax_txt.
     ELSE.
       CLEAR ro_instance.
