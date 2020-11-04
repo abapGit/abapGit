@@ -58,15 +58,15 @@ input:focus, textarea:focus { border-color: #8cadd9; }
 }
 
 /* ABAPGIT OBJECTS */
-span.user {
+span.user-box {
   border-color: #c2d4ea;
   background-color: #d9e4f2;
 }
-span.package {
+span.package-box {
   border-color: #d3ccd2;
   background-color: #ebe3ea;
 }
-span.transport {
+span.transport-box {
   border-color: #a7e3cf;
   background-color: #dbf3eb;
 }
