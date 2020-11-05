@@ -269,6 +269,7 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
       lv_data     TYPE xstring,
       ls_data     TYPE zif_abapgit_persistence=>ty_content,
       lt_data     TYPE zif_abapgit_persistence=>ty_contents,
+      lt_data_old TYPE zif_abapgit_persistence=>ty_contents,
       li_fe_serv  TYPE REF TO zif_abapgit_frontend_services.
 
     FIELD-SYMBOLS:
@@ -338,7 +339,8 @@ CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
       RAISE EXCEPTION TYPE zcx_abapgit_cancel.
     ENDIF.
 
-    LOOP AT zcl_abapgit_persistence_db=>get_instance( )->list( ) INTO ls_data.
+    lt_data_old = zcl_abapgit_persistence_db=>get_instance( )->list( ).
+    LOOP AT lt_data_old INTO ls_data.
       zcl_abapgit_persistence_db=>get_instance( )->delete(
         iv_type  = ls_data-type
         iv_value = ls_data-value ).
