@@ -132,3 +132,9 @@ Michael Pang
 [The journey to Git-based ABAP development: Part 2](https://blogs.sap.com/2020/03/31/the-journey-to-git-based-abap-development-part-2/), Marcello Urbani
 
 [The journey to Git-based ABAP development: Part 3](https://blogs.sap.com/2020/05/21/the-journey-to-git-based-abap-development-part-3/), Marcello Urbani
+
+[Inside Steampunk – Vital parts of Steampunk’s abapGit](https://blogs.sap.com/2020/10/07/inside-steampunk-vital-parts-of-steampunks-abapgit/), Andre Becker
+
+[Automatically generate issues from source code](https://blogs.sap.com/2020/10/20/automatically-generated-issues-from-source-code-abapgit/), Enno Wulff
+
+[CTS is beautiful](https://blogs.sap.com/2020/11/05/cts-is-beautiful/), Lars Hvam
