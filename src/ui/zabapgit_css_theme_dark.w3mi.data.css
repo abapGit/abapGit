@@ -48,15 +48,15 @@ table.repo_tab {
 }
 
 /* ABAPGIT OBJECTS */
-span.user {
+span.user-box {
   background-color: #4c6782;
   border-color: #7491b2;
 }
-span.package {
+span.package-box {
   background-color: #705a6d;
   border-color: #987095;
 }
-span.transport {
+span.transport-box {
   background-color: #456d5d;
   border-color: #60a087;
 }
