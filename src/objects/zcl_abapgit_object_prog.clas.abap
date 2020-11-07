@@ -126,8 +126,10 @@ CLASS ZCL_ABAPGIT_OBJECT_PROG IMPLEMENTATION.
         permission_failure         = 3
         reject_deletion            = 4
         OTHERS                     = 5.
-
-    IF sy-subrc <> 0.
+    IF sy-subrc = 2.
+      " Drop also any inactive code that is left in REPOSRC
+      DELETE REPORT lv_program ##SUBRC_OK.
+    ELSEIF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( |Error from RS_DELETE_PROGRAM: { sy-subrc }| ).
     ENDIF.
 
