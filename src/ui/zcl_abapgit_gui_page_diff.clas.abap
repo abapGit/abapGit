@@ -111,11 +111,13 @@ CLASS zcl_abapgit_gui_page_diff DEFINITION
 
     CONSTANTS:
       BEGIN OF c_actions,
-        toggle_unified TYPE string VALUE 'toggle_unified',
+        toggle_unified      TYPE string VALUE 'toggle_unified',
+        toggle_hidden_chars TYPE string VALUE 'toggle_hidden_chars',
       END OF c_actions .
     DATA mt_delayed_lines TYPE zif_abapgit_definitions=>ty_diffs_tt .
     DATA mv_repo_key TYPE zif_abapgit_persistence=>ty_repo-key .
     DATA mv_seed TYPE string .                    " Unique page id to bind JS sessionStorage
+    DATA mv_hidden_chars TYPE abap_bool .
 
     METHODS render_diff
       IMPORTING
@@ -292,8 +294,12 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
   METHOD add_menu_end.
 
-    io_menu->add( iv_txt = 'Split/Unified view'
+    io_menu->add( iv_txt = 'Split/Unified'
                   iv_act = c_actions-toggle_unified ).
+
+    io_menu->add( iv_txt   = '&para;'
+                  iv_title = 'Toggle Hidden Characters'
+                  iv_act   = c_actions-toggle_hidden_chars ).
 
   ENDMETHOD.
 
@@ -646,7 +652,7 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
     " Content
     IF is_diff-type <> 'binary'.
       ri_html->add( '<div class="diff_content">' ).
-      ri_html->add( |<table class="diff_tab syntax-hl" id={ is_diff-filename }>| ).
+      ri_html->add( |<table class="diff_tab syntax-hl" id="{ is_diff-filename }">| ).
       ri_html->add( render_table_head( is_diff ) ).
       ri_html->add( render_lines( is_diff ) ).
       ri_html->add( '</table>' ).
@@ -741,7 +747,8 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_diff> LIKE LINE OF lt_diffs.
 
-    lo_highlighter = zcl_abapgit_syntax_highlighter=>create( is_diff-filename ).
+    lo_highlighter = zcl_abapgit_syntax_highlighter=>create( iv_filename     = is_diff-filename
+                                                             iv_hidden_chars = mv_hidden_chars ).
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     lt_diffs = is_diff-o_diff->get( ).
@@ -997,7 +1004,12 @@ CLASS zcl_abapgit_gui_page_diff IMPLEMENTATION.
       WHEN c_actions-toggle_unified. " Toggle file diplay
 
         mv_unified = zcl_abapgit_persistence_user=>get_instance( )->toggle_diff_unified( ).
-        rs_handled-state   = zcl_abapgit_gui=>c_event_state-re_render.
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+
+      WHEN c_actions-toggle_hidden_chars. " Toggle display of hidden characters
+
+        mv_hidden_chars = boolc( mv_hidden_chars = abap_false ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
 
       WHEN OTHERS.
 
