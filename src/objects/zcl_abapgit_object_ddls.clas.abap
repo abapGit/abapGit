@@ -456,7 +456,7 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
         lv_lastchar1 <> space OR
         ( lv_lastchar1 = space AND
           ( lv_lastchar2 <> cl_abap_char_utilities=>cr_lf AND lv_lastchar2 <> cl_abap_char_utilities=>newline ) ).
-      cv_string = |{ cv_string } { cl_abap_char_utilities=>cr_lf } |.
+      cv_string = |{ cv_string }{ cl_abap_char_utilities=>cr_lf }|.
     ENDIF.
 
   ENDMETHOD.
