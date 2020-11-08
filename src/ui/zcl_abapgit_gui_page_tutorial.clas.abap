@@ -46,9 +46,11 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TUTORIAL IMPLEMENTATION.
       iv_act = zif_abapgit_definitions=>c_action-go_settings
     )->add(
       iv_txt = zcl_abapgit_gui_buttons=>advanced( )
+      iv_title = 'Utilities'
       io_sub = zcl_abapgit_gui_chunk_lib=>advanced_submenu( )
     )->add(
       iv_txt = zcl_abapgit_gui_buttons=>help( )
+      iv_title = 'Help'
       io_sub = zcl_abapgit_gui_chunk_lib=>help_submenu( ) ).
 
   ENDMETHOD.

@@ -19,14 +19,22 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
 
     CONSTANTS:
       BEGIN OF c_action,
-        delete TYPE string VALUE 'delete',
+        delete  TYPE string VALUE 'delete',
+        backup  TYPE string VALUE 'backup',
+        restore TYPE string VALUE 'restore',
       END OF c_action .
 
+    CLASS-METHODS backup
+      RAISING
+        zcx_abapgit_exception .
     CLASS-METHODS delete
       IMPORTING
         !is_key TYPE zif_abapgit_persistence=>ty_content
       RAISING
-        zcx_abapgit_exception.
+        zcx_abapgit_exception .
+    CLASS-METHODS restore
+      RAISING
+        zcx_abapgit_exception .
     METHODS explain_content
       IMPORTING
         !is_data       TYPE zif_abapgit_persistence=>ty_content
@@ -34,16 +42,76 @@ CLASS zcl_abapgit_gui_page_db DEFINITION
         VALUE(rv_text) TYPE string
       RAISING
         zcx_abapgit_exception .
+    METHODS build_menu
+      RETURNING
+        VALUE(ro_menu) TYPE REF TO zcl_abapgit_html_toolbar .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_db IMPLEMENTATION.
+
+
+  METHOD backup.
+
+    DATA:
+      lt_data     TYPE zif_abapgit_persistence=>ty_contents,
+      lo_zip      TYPE REF TO cl_abap_zip,
+      lv_zip      TYPE xstring,
+      lv_path     TYPE string,
+      lv_filename TYPE string,
+      li_fe_serv  TYPE REF TO zif_abapgit_frontend_services.
+
+    FIELD-SYMBOLS:
+      <ls_data> LIKE LINE OF lt_data.
+
+    lt_data = zcl_abapgit_persistence_db=>get_instance( )->list( ).
+
+    CREATE OBJECT lo_zip.
+
+    LOOP AT lt_data ASSIGNING <ls_data>.
+      CONCATENATE <ls_data>-type '_' <ls_data>-value '.xml' INTO lv_filename.
+      lo_zip->add( name    = lv_filename
+                   content = zcl_abapgit_convert=>string_to_xstring_utf8( <ls_data>-data_str ) ).
+    ENDLOOP.
+
+    lv_zip = lo_zip->save( ).
+
+    CONCATENATE 'abapGit_Backup_' sy-datlo '_' sy-timlo INTO lv_filename.
+
+    li_fe_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
+
+    lv_path = li_fe_serv->show_file_save_dialog(
+      iv_title            = 'abapGit Backup'
+      iv_extension        = 'zip'
+      iv_default_filename = lv_filename ).
+
+    li_fe_serv->file_download(
+      iv_path = lv_path
+      iv_xstr = lv_zip ).
+
+    MESSAGE 'abapGit Backup successfully saved' TYPE 'S'.
+
+  ENDMETHOD.
+
+
+  METHOD build_menu.
+
+    CREATE OBJECT ro_menu.
+
+    ro_menu->add( iv_txt = 'Backup'
+                  iv_act = c_action-backup ).
+
+    ro_menu->add( iv_txt = 'Restore'
+                  iv_act = c_action-restore ).
+
+  ENDMETHOD.
 
 
   METHOD constructor.
     super->constructor( ).
     ms_control-page_title = 'Database Utility'.
+    ms_control-page_menu  = build_menu( ).
   ENDMETHOD.
 
 
@@ -190,6 +258,110 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD restore.
+
+    DATA:
+      lv_answer   TYPE c LENGTH 1,
+      lo_zip      TYPE REF TO cl_abap_zip,
+      lv_zip      TYPE xstring,
+      lv_path     TYPE string,
+      lv_filename TYPE string,
+      lv_data     TYPE xstring,
+      ls_data     TYPE zif_abapgit_persistence=>ty_content,
+      lt_data     TYPE zif_abapgit_persistence=>ty_contents,
+      lt_data_old TYPE zif_abapgit_persistence=>ty_contents,
+      li_fe_serv  TYPE REF TO zif_abapgit_frontend_services.
+
+    FIELD-SYMBOLS:
+      <ls_zipfile> LIKE LINE OF lo_zip->files.
+
+    li_fe_serv = zcl_abapgit_ui_factory=>get_frontend_services( ).
+
+    lv_path = li_fe_serv->show_file_open_dialog(
+      iv_title            = 'Restore abapGit Backup'
+      iv_extension        = 'zip'
+      iv_default_filename = 'abapGit_Backup_*.zip' ).
+
+    lv_zip = li_fe_serv->file_upload( lv_path ).
+
+    CREATE OBJECT lo_zip.
+
+    lo_zip->load(
+      EXPORTING
+        zip             = lv_zip
+      EXCEPTIONS
+        zip_parse_error = 1
+        OTHERS          = 2 ).
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Error loading ZIP file' ).
+    ENDIF.
+
+    LOOP AT lo_zip->files ASSIGNING <ls_zipfile>.
+      CLEAR ls_data.
+      lv_filename = <ls_zipfile>-name.
+      REPLACE '.xml' IN lv_filename WITH ''.
+      SPLIT lv_filename AT '_' INTO ls_data-type ls_data-value.
+
+      " Validate DB key
+      IF ls_data-type <> 'REPO' AND ls_data-type <> 'USER' AND
+          ls_data-type <> 'SETTINGS' AND ls_data-type <> 'BACKGROUND'.
+        zcx_abapgit_exception=>raise( |Invalid DB key. This is not an abapGit Backup| ).
+      ENDIF.
+
+      lo_zip->get(
+        EXPORTING
+          name                    = <ls_zipfile>-name
+        IMPORTING
+          content                 = lv_data
+        EXCEPTIONS
+          zip_index_error         = 1
+          zip_decompression_error = 2
+          OTHERS                  = 3 ).
+      IF sy-subrc <> 0.
+        zcx_abapgit_exception=>raise( |Error getting file { <ls_zipfile>-name } from ZIP| ).
+      ENDIF.
+
+      ls_data-data_str = zcl_abapgit_convert=>xstring_to_string_utf8( lv_data ).
+      INSERT ls_data INTO TABLE lt_data.
+    ENDLOOP.
+
+    lv_answer = zcl_abapgit_ui_factory=>get_popups( )->popup_to_confirm(
+      iv_titlebar              = 'Warning'
+      iv_text_question         = 'All existing repositories and settings will be deleted and overwritten! Continue?'
+      iv_text_button_1         = 'Restore'
+      iv_icon_button_1         = 'ICON_IMPORT'
+      iv_text_button_2         = 'Cancel'
+      iv_icon_button_2         = 'ICON_CANCEL'
+      iv_default_button        = '2'
+      iv_display_cancel_button = abap_false ).
+
+    IF lv_answer <> '1'.
+      RAISE EXCEPTION TYPE zcx_abapgit_cancel.
+    ENDIF.
+
+    lt_data_old = zcl_abapgit_persistence_db=>get_instance( )->list( ).
+    LOOP AT lt_data_old INTO ls_data.
+      zcl_abapgit_persistence_db=>get_instance( )->delete(
+        iv_type  = ls_data-type
+        iv_value = ls_data-value ).
+    ENDLOOP.
+
+    COMMIT WORK AND WAIT.
+
+    LOOP AT lt_data INTO ls_data.
+      zcl_abapgit_persistence_db=>get_instance( )->add(
+        iv_type  = ls_data-type
+        iv_value = ls_data-value
+        iv_data  = ls_data-data_str ).
+    ENDLOOP.
+
+    COMMIT WORK AND WAIT.
+
+    MESSAGE 'abapGit Backup successfully restored' TYPE 'S'.
+
+  ENDMETHOD.
+
+
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA ls_db TYPE zif_abapgit_persistence=>ty_content.
@@ -200,6 +372,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_DB IMPLEMENTATION.
       WHEN c_action-delete.
         lo_query->to_abap( CHANGING cs_container = ls_db ).
         delete( ls_db ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-backup.
+        backup( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN c_action-restore.
+        restore( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN OTHERS.
         rs_handled = super->zif_abapgit_gui_event_handler~on_event( ii_event ).

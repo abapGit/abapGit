@@ -64,6 +64,8 @@
       "swbm_c_type_wdy_application",
       "swbm_version_active",
       "swbm_version_inactive",
+      "swfco_org_standard_task",
+      "swfco_org_workflow_template",
       "wbmr_c_skwf_folder_class",
       "wdyn_limu_component_controller",
       "wdyn_limu_component_definition",
@@ -72,13 +74,14 @@
     "globalMacros": []
   },
   "rules": {
+    "parser_702_chaining": true,
     "sy_modification": false,
     "call_transaction_authority_check": true,
     "function_module_recommendations": false,
     "method_overwrites_builtin": false,
     "omit_parameter_name": false,
     "omit_receiving": true,
-    "unused_methods": false,
+    "unused_methods": true,
     "identical_contents": false,
     "many_parenthesis": true,
     "prefer_xsdbool": true,
@@ -115,9 +118,7 @@
     "forbidden_identifier": true,
     "try_without_catch": true,
     "unused_variables": false,
-    "prefix_is_current_class": {
-      "omitMeInstanceCalls": false
-    },
+    "prefix_is_current_class": true,
     "allowed_object_naming": true,
     "check_comments": false,
     "fully_type_constants": true,

@@ -9,6 +9,7 @@ CLASS zcl_abapgit_object_pers DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
           is_item     TYPE zif_abapgit_definitions=>ty_item
           iv_language TYPE spras.
 
+  PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_personalization_object,
@@ -35,6 +36,7 @@ ENDCLASS.
 
 CLASS zcl_abapgit_object_pers IMPLEMENTATION.
 
+
   METHOD constructor.
 
     super->constructor( is_item     = is_item
@@ -42,6 +44,27 @@ CLASS zcl_abapgit_object_pers IMPLEMENTATION.
 
 
     mv_pers_key = ms_item-obj_name.
+
+  ENDMETHOD.
+
+
+  METHOD get_personalization_object.
+
+    CREATE OBJECT ro_personalization_object
+      EXPORTING
+        p_create                = iv_create
+        p_pers_key              = mv_pers_key
+        p_view_only             = iv_view_only
+      EXCEPTIONS
+        pers_key_already_exists = 1
+        pers_key_does_not_exist = 2
+        transport_view_only     = 3
+        transport_canceled      = 4
+        OTHERS                  = 5.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -134,9 +157,7 @@ CLASS zcl_abapgit_object_pers IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-
     rs_metadata-delete_tadir = abap_true.
-    rs_metadata-late_deser   = abap_true.
   ENDMETHOD.
 
 
@@ -214,26 +235,4 @@ CLASS zcl_abapgit_object_pers IMPLEMENTATION.
                  ig_data = ls_personalization_object ).
 
   ENDMETHOD.
-
-
-  METHOD get_personalization_object.
-
-    CREATE OBJECT ro_personalization_object
-      EXPORTING
-        p_create                = iv_create
-        p_pers_key              = mv_pers_key
-        p_view_only             = iv_view_only
-      EXCEPTIONS
-        pers_key_already_exists = 1
-        pers_key_does_not_exist = 2
-        transport_view_only     = 3
-        transport_canceled      = 4
-        OTHERS                  = 5.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise_t100( ).
-    ENDIF.
-
-  ENDMETHOD.
-
 ENDCLASS.

@@ -437,7 +437,6 @@ StageHelper.prototype.onPageLoad = function() {
   if (this.dom.objectSearch.value) {
     this.applyFilterValue(this.dom.objectSearch.value);
   }
-  debugOutput("StageHelper.onPageLoad: " + ((data) ? "from Storage" : "initial state"));
 };
 
 // Table event handler, change status
@@ -510,6 +509,8 @@ StageHelper.prototype.applyFilterToRow = function (row, filter) {
   // Collect data cells
   var targets = this.filterTargets.map(function(attr) {
     var elem = row.cells[this.colIndex[attr]];
+    if (elem.firstChild && elem.firstChild.tagName === "SPAN") elem = elem.firstChild;
+    if (elem.firstChild && elem.firstChild.tagName === "I") elem = elem.nextChild;
     if (elem.firstChild && elem.firstChild.tagName === "A") elem = elem.firstChild;
     return {
       elem:      elem,
@@ -2022,7 +2023,12 @@ function enumerateToolbarActions() {
       if (item.nodeName !== "LI") continue; // unexpected node
       if (item.children.length >=2 && item.children[1].nodeName === "UL") {
         // submenu detected
-        processUL(item.children[1], item.children[0].innerText);
+        var menutext = item.children[0].innerText;
+        // special treatment for menus without text
+        if (!menutext) {
+          menutext = item.children[0].getAttribute("title");
+        }
+        processUL(item.children[1], menutext);
       } else if (item.firstElementChild && item.firstElementChild.nodeName === "A") {
         var anchor = item.firstElementChild;
         if (anchor.href && anchor.href !== "#") items.push([anchor, prefix]);
@@ -2042,7 +2048,7 @@ function enumerateToolbarActions() {
     var prefix = item[1];
     return {
       action:    anchor.href.replace("sapevent:", ""),
-      title:     (prefix ? prefix + ": " : "") + anchor.innerText
+      title:     (prefix ? prefix + ": " : "") + anchor.innerText.trim()
     };
   });
 
@@ -2063,6 +2069,8 @@ function enumerateJumpAllFiles() {
         title:  title
       };});
 }
+
+/* Save Scroll Position for Diff/Patch Page */
 
 function saveScrollPosition(){
   if (!window.sessionStorage) { return }

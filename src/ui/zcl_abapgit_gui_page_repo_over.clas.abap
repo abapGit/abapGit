@@ -34,14 +34,14 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
         favorite        TYPE string,
         "! True for offline, false for online repo
         type            TYPE string,
-        key             TYPE string,
+        key             TYPE zif_abapgit_persistence=>ty_value,
         name            TYPE string,
         url             TYPE string,
-        package         TYPE string,
+        package         TYPE devclass,
         branch          TYPE string,
-        created_by      TYPE string,
+        created_by      TYPE xubname,
         created_at      TYPE string,
-        deserialized_by TYPE string,
+        deserialized_by TYPE xubname,
         deserialized_at TYPE string,
       END OF ty_overview,
       ty_overviews TYPE STANDARD TABLE OF ty_overview
@@ -84,12 +84,16 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
       render_table
         IMPORTING
           ii_html     TYPE REF TO zif_abapgit_html
-          it_overview TYPE ty_overviews,
+          it_overview TYPE ty_overviews
+        RAISING
+          zcx_abapgit_exception,
 
       render_table_body
         IMPORTING
           ii_html     TYPE REF TO zif_abapgit_html
-          it_overview TYPE ty_overviews,
+          it_overview TYPE ty_overviews
+        RAISING
+          zcx_abapgit_exception,
 
       render_header_bar
         IMPORTING
@@ -100,11 +104,12 @@ CLASS zcl_abapgit_gui_page_repo_over DEFINITION
 
       _add_column
         IMPORTING
-          iv_tech_name    TYPE string OPTIONAL
-          iv_display_name TYPE string OPTIONAL
-          iv_css_class    TYPE string OPTIONAL
-          iv_add_tz       TYPE abap_bool OPTIONAL
-          iv_title        TYPE string OPTIONAL.
+          iv_tech_name      TYPE string OPTIONAL
+          iv_display_name   TYPE string OPTIONAL
+          iv_css_class      TYPE string OPTIONAL
+          iv_add_tz         TYPE abap_bool OPTIONAL
+          iv_title          TYPE string OPTIONAL
+          iv_allow_order_by TYPE any OPTIONAL.
 
     METHODS render_scripts
       RETURNING
@@ -115,7 +120,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
 
 
   METHOD apply_filter.
@@ -208,7 +213,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       ls_overview-name       = lo_repo_srv->get_name( ).
       ls_overview-url        = <ls_repo>-url.
       ls_overview-package    = <ls_repo>-package.
-      ls_overview-branch     = zcl_abapgit_git_branch_list=>get_display_name( <ls_repo>-branch_name ).
+      ls_overview-branch     = <ls_repo>-branch_name.
       ls_overview-created_by = <ls_repo>-created_by.
 
       IF <ls_repo>-created_at IS NOT INITIAL.
@@ -302,15 +307,12 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
       lv_type_icon         TYPE string,
       lv_favorite_icon     TYPE string,
       lv_favorite_class    TYPE string,
-      lv_package_jump_data TYPE string,
-      lv_package_obj_name  TYPE sobj_name,
       lv_stage_link        TYPE string,
       lv_patch_link        TYPE string,
       lv_zip_import_link   TYPE string,
       lv_zip_export_link   TYPE string,
       lv_check_link        TYPE string,
-      lv_settings_link     TYPE string,
-      lv_branch_html       TYPE string.
+      lv_settings_link     TYPE string.
 
     FIELD-SYMBOLS: <ls_overview> LIKE LINE OF it_overview.
 
@@ -352,31 +354,27 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
         ii_html->add( |<td></td>| ).
       ENDIF.
 
-      lv_package_obj_name = <ls_overview>-package.
-      lv_package_jump_data = zcl_abapgit_html_action_utils=>jump_encode(
-        iv_obj_type = 'DEVC'
-        iv_obj_name = lv_package_obj_name ).
-
-      ii_html->add( |<td>{ ii_html->a(
-          iv_txt = <ls_overview>-package
-          iv_act = |{ zif_abapgit_definitions=>c_action-jump }?{ lv_package_jump_data }| ) }</td>| ).
+      ii_html->add( |<td>| ).
+      ii_html->add( zcl_abapgit_gui_chunk_lib=>render_package_name( <ls_overview>-package ) ).
+      ii_html->add( |</td>| ).
 
       IF <ls_overview>-branch IS INITIAL.
         ii_html->add( |<td>&nbsp;</td>| ).
       ELSE.
-        lv_branch_html = `<span class="branch branch_branch">`
-          && `<i title="Current branch" class="icon icon-code-branch grey70"></i>`
-          && <ls_overview>-branch
-          && `</span>`.
-
-        ii_html->add( |<td>{ ii_html->a(
-          iv_txt = lv_branch_html
-          iv_act = |{ zif_abapgit_definitions=>c_action-git_branch_switch }?key={ <ls_overview>-key }| ) }</td>| ).
+        ii_html->add( |<td>| ).
+        ii_html->add( zcl_abapgit_gui_chunk_lib=>render_branch_name(
+                        iv_branch   = <ls_overview>-branch
+                        iv_repo_key = <ls_overview>-key ) ).
+        ii_html->add( |</td>| ).
       ENDIF.
 
-      ii_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_by }</td>| ).
+      ii_html->add( |<td class="ro-detail">| ).
+      ii_html->add( zcl_abapgit_gui_chunk_lib=>render_user_name( <ls_overview>-deserialized_by ) ).
+      ii_html->add( |</td>| ).
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-deserialized_at }</td>| ).
-      ii_html->add( |<td class="ro-detail">{ <ls_overview>-created_by }</td>| ).
+      ii_html->add( |<td class="ro-detail">| ).
+      ii_html->add( zcl_abapgit_gui_chunk_lib=>render_user_name( <ls_overview>-created_by ) ).
+      ii_html->add( |</td>| ).
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-created_at }</td>| ).
       ii_html->add( |<td class="ro-detail">{ <ls_overview>-key }</td>| ).
 
@@ -442,64 +440,76 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
 
     _add_column(
       iv_tech_name = 'FAVORITE'
-      iv_css_class = 'wmin' ).
+      iv_css_class = 'wmin'
+      iv_allow_order_by = abap_false ).
 
     _add_column(
       iv_tech_name = 'TYPE'
-      iv_css_class = 'wmin' ).
+      iv_css_class = 'wmin'
+      iv_allow_order_by = abap_false ).
 
     _add_column(
       iv_tech_name = 'NAME'
-      iv_display_name = 'Name' ).
+      iv_display_name = 'Name'
+      iv_allow_order_by = abap_true ).
 
     _add_column(
       iv_tech_name = 'URL'
-      iv_display_name = 'Url' ).
+      iv_display_name = 'Url'
+      iv_allow_order_by = abap_true ).
 
     _add_column(
       iv_tech_name = 'PACKAGE'
-      iv_display_name = 'Package' ).
+      iv_display_name = 'Package'
+      iv_allow_order_by = abap_true ).
 
     _add_column(
       iv_tech_name = 'BRANCH'
-      iv_display_name = 'Branch' ).
+      iv_display_name = 'Branch'
+      iv_allow_order_by = abap_true ).
 
     _add_column(
       iv_tech_name = 'DESERIALIZED_BY'
       iv_display_name = 'Deserialized by'
-      iv_css_class = 'ro-detail' ).
+      iv_css_class = 'ro-detail'
+      iv_allow_order_by = abap_true ).
 
     _add_column(
       iv_tech_name = 'DESERIALIZED_AT'
       iv_display_name = 'Deserialized at'
       iv_css_class = 'ro-detail'
-      iv_add_tz = abap_true ).
+      iv_allow_order_by = abap_true ).
 
     _add_column(
       iv_tech_name = 'CREATED_BY'
       iv_display_name = 'Created by'
-      iv_css_class = 'ro-detail' ).
+      iv_css_class = 'ro-detail'
+      iv_allow_order_by = abap_true ).
 
 
     _add_column(
       iv_tech_name = 'CREATED_AT'
       iv_display_name = 'Created at'
       iv_css_class = 'ro-detail'
-      iv_add_tz = abap_true ).
+      iv_add_tz = abap_true
+      iv_allow_order_by = abap_true ).
 
     _add_column(
       iv_tech_name = 'KEY'
       iv_display_name = 'Key'
-      iv_css_class = 'ro-detail' ).
+      iv_css_class = 'ro-detail'
+      iv_allow_order_by = abap_true ).
 
     _add_column(
       iv_tech_name = 'ACTION'
       iv_display_name = 'Action'
-      iv_css_class = 'ro-action' ).
+      iv_css_class = 'ro-action'
+      iv_allow_order_by = abap_false ).
 
     _add_column(
       iv_tech_name = 'GO'
-      iv_css_class = 'ro-go' ).
+      iv_css_class = 'ro-go'
+      iv_allow_order_by = abap_false ).
 
     ii_html->add( |<thead>| ).
     ii_html->add( |<tr>| ).
@@ -588,5 +598,6 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_OVER IMPLEMENTATION.
     <ls_col>-title = iv_title.
     <ls_col>-css_class = iv_css_class.
     <ls_col>-add_tz = iv_add_tz.
+    <ls_col>-allow_order_by = iv_allow_order_by.
   ENDMETHOD.
 ENDCLASS.

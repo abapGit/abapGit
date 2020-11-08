@@ -363,11 +363,12 @@ INTERFACE zif_abapgit_definitions
                          WITH NON-UNIQUE DEFAULT KEY .
   TYPES:
     BEGIN OF ty_col_spec,
-      tech_name    TYPE string,
-      display_name TYPE string,
-      css_class    TYPE string,
-      add_tz       TYPE abap_bool,
-      title        TYPE string,
+      tech_name      TYPE string,
+      display_name   TYPE string,
+      css_class      TYPE string,
+      add_tz         TYPE abap_bool,
+      title          TYPE string,
+      allow_order_by TYPE abap_bool,
     END OF ty_col_spec,
     ty_col_spec_tt TYPE STANDARD TABLE OF ty_col_spec
                       WITH NON-UNIQUE KEY tech_name.
@@ -453,7 +454,7 @@ INTERFACE zif_abapgit_definitions
       unchanged TYPE c LENGTH 1 VALUE '',
       added     TYPE c LENGTH 1 VALUE 'A',
       modified  TYPE c LENGTH 1 VALUE 'M',
-      deleted   TYPE c LENGTH 1 VALUE 'D', "For future use
+      deleted   TYPE c LENGTH 1 VALUE 'D',
       mixed     TYPE c LENGTH 1 VALUE '*',
     END OF c_state .
   CONSTANTS:
@@ -498,6 +499,7 @@ INTERFACE zif_abapgit_definitions
       ie_devtools                   TYPE string VALUE 'ie_devtools',
       git_pull                      TYPE string VALUE 'git_pull',
       git_reset                     TYPE string VALUE 'git_reset',
+      git_checkout_commit           TYPE string VALUE 'git_checkout_commit',
       git_branch_create             TYPE string VALUE 'git_branch_create',
       git_branch_switch             TYPE string VALUE 'git_branch_switch',
       git_branch_delete             TYPE string VALUE 'git_branch_delete',
@@ -524,6 +526,7 @@ INTERFACE zif_abapgit_definitions
       go_patch                      TYPE string VALUE 'go_patch',
       jump                          TYPE string VALUE 'jump',
       jump_transport                TYPE string VALUE 'jump_transport',
+      jump_user                     TYPE string VALUE 'jump_user',
       url                           TYPE string VALUE 'url',
       goto_source                   TYPE string VALUE 'goto_source',
       show_callstack                TYPE string VALUE 'show_callstack',

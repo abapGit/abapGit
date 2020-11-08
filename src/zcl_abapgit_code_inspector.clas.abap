@@ -189,7 +189,7 @@ CLASS ZCL_ABAPGIT_CODE_INSPECTOR IMPLEMENTATION.
       FOR ALL ENTRIES IN lt_packages
       WHERE devclass = lt_packages-table_line
       AND delflag = abap_false
-      AND pgmid = 'R3TR'.                               "#EC CI_GENBUFF
+      AND pgmid = 'R3TR' ##TOO_MANY_ITAB_FIELDS.        "#EC CI_GENBUFF
 
     LOOP AT lt_objs INTO ls_obj.
 

@@ -107,16 +107,19 @@ CLASS zcl_abapgit_gui_router DEFINITION
         VALUE(ri_page) TYPE REF TO zif_abapgit_gui_renderable
       RAISING
         zcx_abapgit_exception .
-
     CLASS-METHODS jump_display_transport
       IMPORTING
         !iv_transport TYPE trkorr
       RAISING
-        zcx_abapgit_exception.
-
+        zcx_abapgit_exception .
+    CLASS-METHODS jump_display_user
+      IMPORTING
+        !iv_username TYPE xubname
+      RAISING
+        zcx_abapgit_exception .
     METHODS call_browser
       IMPORTING
-        iv_url TYPE csequence
+        !iv_url TYPE csequence
       RAISING
         zcx_abapgit_exception.
 
@@ -124,7 +127,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -391,6 +394,9 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-git_reset.                     " GIT Reset
         zcl_abapgit_services_git=>reset( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
+      WHEN zif_abapgit_definitions=>c_action-git_checkout_commit.           " GIT Checkout commit
+        zcl_abapgit_services_git=>checkout_commit( lv_key ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-git_branch_create.             " GIT Create new branch
         zcl_abapgit_services_git=>create_branch( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
@@ -452,6 +458,17 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         EXPORTING
           i_trkorr = iv_transport.
     ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD jump_display_user.
+
+    " todo, user display in ADT
+
+    CALL FUNCTION 'BAPI_USER_DISPLAY'
+      EXPORTING
+        username = iv_username.
 
   ENDMETHOD.
 
@@ -573,6 +590,10 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         jump_display_transport( |{ ii_event->query( )->get( 'TRANSPORT' ) }| ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
+      WHEN zif_abapgit_definitions=>c_action-jump_user.
+        jump_display_user( |{ ii_event->query( )->get( 'USER' ) }| ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
+
       WHEN zif_abapgit_definitions=>c_action-url.
         call_browser( ii_event->query( )->get( 'URL' ) ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
@@ -630,7 +651,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
     CONSTANTS:
       BEGIN OF lc_page,
         main_view TYPE string VALUE 'ZCL_ABAPGIT_GUI_PAGE_MAIN',
-        repo_view TYPE string VALUE 'ZCL_ABAPGIT_GUI_PAGE_VIEW_REPO',
+        repo_view TYPE string VALUE 'ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW',
       END OF lc_page.
 
     lv_key = ii_event->query( )->get( 'KEY' ).

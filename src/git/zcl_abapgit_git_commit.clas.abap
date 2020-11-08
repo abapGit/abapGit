@@ -4,13 +4,19 @@ CLASS zcl_abapgit_git_commit DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    TYPES:
+      BEGIN OF ty_pull_result,
+        commits TYPE zif_abapgit_definitions=>ty_commit_tt,
+        commit  TYPE zif_abapgit_definitions=>ty_sha1,
+      END OF ty_pull_result .
+
     CLASS-METHODS get_by_branch
       IMPORTING
-        !iv_branch_name   TYPE string
-        !iv_repo_url      TYPE zif_abapgit_persistence=>ty_repo-url
-        !iv_deepen_level  TYPE i
+        !iv_branch_name       TYPE string
+        !iv_repo_url          TYPE zif_abapgit_persistence=>ty_repo-url
+        !iv_deepen_level      TYPE i
       RETURNING
-        VALUE(rt_commits) TYPE zif_abapgit_definitions=>ty_commit_tt
+        VALUE(rs_pull_result) TYPE ty_pull_result
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS get_by_commit
@@ -74,12 +80,13 @@ CLASS zcl_abapgit_git_commit IMPLEMENTATION.
         iv_branch_name  = iv_branch_name
         iv_deepen_level = iv_deepen_level
       IMPORTING
+        ev_branch       = rs_pull_result-commit
         et_objects      = lt_objects ).
 
     DELETE lt_objects WHERE type <> zif_abapgit_definitions=>c_type-commit.
 
-    rt_commits = parse_commits( lt_objects ).
-    sort_commits( CHANGING ct_commits = rt_commits ).
+    rs_pull_result-commits = parse_commits( lt_objects ).
+    sort_commits( CHANGING ct_commits = rs_pull_result-commits ).
 
   ENDMETHOD.
 
