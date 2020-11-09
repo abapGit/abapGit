@@ -62,7 +62,9 @@ CLASS ZCL_ABAPGIT_GIT_URL IMPLEMENTATION.
 
     rv_commit_url = iv_repo_url.
 
-    FIND REGEX '^http(?:s)?:\/\/(?:www\.)?(github\.com|bitbucket\.org|gitlab\.com)\/' IN rv_commit_url RESULTS ls_result.
+    FIND REGEX '^http(?:s)?:\/\/(?:www\.)?(github\.com|bitbucket\.org|gitlab\.com)\/'
+      IN rv_commit_url
+      RESULTS ls_result.
     IF sy-subrc = 0.
       READ TABLE ls_result-submatches INDEX 1 ASSIGNING <ls_provider_match>.
       CASE rv_commit_url+<ls_provider_match>-offset(<ls_provider_match>-length).
