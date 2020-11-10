@@ -212,8 +212,6 @@ INTERFACE zif_abapgit_definitions
       status TYPE ty_results_ts_path,
     END OF ty_stage_files .
   TYPES:
-    ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY .
-  TYPES:
     ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY .
   TYPES:
     BEGIN OF ty_tpool.
