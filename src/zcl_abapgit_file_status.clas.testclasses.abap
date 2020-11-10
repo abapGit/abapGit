@@ -665,8 +665,7 @@ CLASS ltcl_calculate_status IMPLEMENTATION.
       iv_obj_name = '$$ZDOMA1'
       iv_devclass = 'FOO' ).
 
-    mo_result = mo_helper->run(
-      iv_devclass = 'FOO' ).
+    mo_result = mo_helper->run( iv_devclass = 'FOO' ).
 
     mo_result->assert_lines(
       iv_lines = 2
