@@ -1,6 +1,7 @@
-CLASS ltcl_repo_online DEFINITION FINAL FOR TESTING
-  DURATION SHORT
-  RISK LEVEL HARMLESS.
+CLASS ltcl_repo_online DEFINITION DEFERRED.
+CLASS zcl_abapgit_git_url DEFINITION LOCAL FRIENDS ltcl_repo_online.
+
+CLASS ltcl_repo_online DEFINITION FINAL FOR TESTING DURATION SHORT RISK LEVEL HARMLESS.
 
   PRIVATE SECTION.
     METHODS:
@@ -23,8 +24,12 @@ CLASS ltcl_repo_online IMPLEMENTATION.
           lv_testhash      TYPE zif_abapgit_definitions=>ty_sha1 VALUE 'my-SHA1-hash',
           ls_online_repo   TYPE zif_abapgit_persistence=>ty_repo,
           lr_test_repo     TYPE REF TO zcl_abapgit_repo_online,
+          lo_cut           TYPE REF TO zcl_abapgit_git_url,
           lv_show_url      TYPE zif_abapgit_persistence=>ty_repo-url.
+
     FIELD-SYMBOLS <ls_provider_urls> TYPE ty_show_url_test.
+
+    CREATE OBJECT lo_cut.
 
     ls_provider_urls-repo_url = |https://github.com/abapGit/abapGit.git|.
     ls_provider_urls-show_url = |https://github.com/abapGit/abapGit/commit/{ lv_testhash }|.
@@ -49,13 +54,14 @@ CLASS ltcl_repo_online IMPLEMENTATION.
         EXPORTING
           is_data = ls_online_repo.
 
-      lv_show_url = lr_test_repo->get_default_commit_display_url( iv_hash = lv_testhash ).
+      lv_show_url = lo_cut->get_default_commit_display_url(
+        iv_repo_url = lr_test_repo->get_url( )
+        iv_hash     = lv_testhash ).
 
       cl_aunit_assert=>assert_equals( exp  = <ls_provider_urls>-show_url
                                       act  = lv_show_url
                                       quit = cl_aunit_assert=>no ).
     ENDLOOP.
-
 
   ENDMETHOD.
 
