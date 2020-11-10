@@ -49,7 +49,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
+CLASS zcl_abapgit_dependencies IMPLEMENTATION.
 
 
   METHOD get_ddls_dependencies.
@@ -125,6 +125,8 @@ CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
         WHEN 'ACID'.
           " ACID after PROG/FUGR/CLAS
           <ls_tadir>-korrnum = '300000'.
+        WHEN 'FUGR'.
+          <ls_tadir>-korrnum = '260000'.
         WHEN 'PROG'.
           " delete includes after main programs
           SELECT COUNT(*) FROM reposrc
@@ -132,10 +134,14 @@ CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
             AND r3state = 'A'
             AND subc = 'I'.
           IF sy-subrc = 0.
-            <ls_tadir>-korrnum = '200000'.
+            <ls_tadir>-korrnum = '250000'.
           ELSE.
-            <ls_tadir>-korrnum = '180000'.
+            <ls_tadir>-korrnum = '240000'.
           ENDIF.
+        WHEN 'INTF'.
+          <ls_tadir>-korrnum = '230000'.
+        WHEN 'CLAS'.
+          <ls_tadir>-korrnum = '220000'.
         WHEN 'IDOC'.
           <ls_tadir>-korrnum = '200000'.
         WHEN 'WDCA'.
@@ -253,6 +259,7 @@ CLASS ZCL_ABAPGIT_DEPENDENCIES IMPLEMENTATION.
     ENDLOOP.
 
     " build DDLS edges
+    SORT ct_tadir. "binary search
     LOOP AT ct_tadir ASSIGNING <ls_tadir_ddls>
                      WHERE object = 'DDLS'.
 
