@@ -48,7 +48,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
+CLASS zcl_abapgit_object_msag IMPLEMENTATION.
 
 
   METHOD delete_documentation.
@@ -223,7 +223,7 @@ CLASS ZCL_ABAPGIT_OBJECT_MSAG IMPLEMENTATION.
     ENDIF.
 
     " Collect additional languages
-    " Skip master lang - it has been already serialized
+    " Skip main lang - it has been already serialized
     SELECT DISTINCT sprsl AS langu INTO TABLE lt_i18n_langs
       FROM t100t
       WHERE arbgb = lv_msg_id

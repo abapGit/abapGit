@@ -62,7 +62,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -132,8 +132,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
       iv_hint        = 'Syncronize root package only (see https://docs.abapgit.org)'
     )->checkbox(
       iv_name        = c_id-master_lang_only
-      iv_label       = 'Serialize master language only'
-      iv_hint        = 'Ignore translations, serialize just master language'
+      iv_label       = 'Serialize main language only'
+      iv_hint        = 'Ignore translations, serialize just main language'
     )->command(
       iv_label       = 'Clone online repo'
       iv_is_main     = abap_true

@@ -304,7 +304,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
     IF mo_repo->get_dot_abapgit( )->get_master_language( ) <> sy-langu.
       ro_advanced_dropdown->add(
-        iv_txt = 'Open in Master Language'
+        iv_txt = 'Open in Main Language'
         iv_act = |{ zif_abapgit_definitions=>c_action-repo_open_in_master_lang }?key={ mv_key }| ).
     ENDIF.
 
@@ -692,7 +692,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     lv_master_language = mo_repo->get_dot_abapgit( )->get_master_language( ).
 
     IF lv_master_language = sy-langu.
-      zcx_abapgit_exception=>raise( |Repo already opened in master language| ).
+      zcx_abapgit_exception=>raise( |Repo already opened in main language| ).
     ENDIF.
 
     ls_item-obj_name = lc_abapgit_tcode.

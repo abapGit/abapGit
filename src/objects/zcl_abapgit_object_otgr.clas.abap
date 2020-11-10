@@ -27,7 +27,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECT_OTGR IMPLEMENTATION.
+CLASS zcl_abapgit_object_otgr IMPLEMENTATION.
 
 
   METHOD instantiate_and_lock_otgr.
@@ -173,9 +173,9 @@ CLASS ZCL_ABAPGIT_OBJECT_OTGR IMPLEMENTATION.
         IF sy-subrc = 0.
           lo_otgr->set_description( <ls_groupt>-text ).
           " ELSE.
-          "   Do we want to clear the master language description if not present in the XML conent?
-          "   Master Language is non-deterministic - it depends on sy-langu, so rather don't touch
-          "   description if the master language is not present
+          "   Do we want to clear the main language description if not present in the XML conent?
+          "   Main language is non-deterministic - it depends on sy-langu, so rather don't touch
+          "   description if the main language is not present
           "   Perhaps, we can display some sort of a message but how?
         ENDIF.
 
@@ -260,10 +260,10 @@ CLASS ZCL_ABAPGIT_OBJECT_OTGR IMPLEMENTATION.
 
 *   Description part 1:
 *   Dealing with Description of OTGR objects is problematic.
-*   The API supports setting of Master Language only and
+*   The API supports setting of main language only and
 *   if we want to save also translations we would have to implement
 *   our own logic for merging and activation. To keep it simple stupid
-*   the current version focuses on the Master language only.
+*   the current version focuses on the main language only.
 *   If anybody ever runs into the need to version also translation,
 *   ask the maintainers of CL_CLS_OBJECT_TYPE_GROUP to add a method for it.
 *
@@ -291,7 +291,7 @@ CLASS ZCL_ABAPGIT_OBJECT_OTGR IMPLEMENTATION.
               ex_parent_groups         = <lt_parents>.
         ENDIF.
 
-        " Beware: the following method returns the Master Language description only if the object is Locked!
+        " Beware: the following method returns the main language description only if the object is locked!
         <ls_groupt>-text = lo_otgr->if_cls_object_type_group~get_description( ).
         <ls_groupt>-langu = lo_otgr->if_pak_wb_object~get_master_language( ).
 
