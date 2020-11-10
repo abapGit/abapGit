@@ -41,26 +41,12 @@ CLASS zcl_abapgit_repo_online DEFINITION
         zcx_abapgit_exception .
     METHODS select_commit
       IMPORTING
-        iv_selected_commit TYPE zif_abapgit_persistence=>ty_repo-selected_commit
+        !iv_selected_commit TYPE zif_abapgit_persistence=>ty_repo-selected_commit
       RAISING
         zcx_abapgit_exception .
     METHODS get_objects
       RETURNING
         VALUE(rt_objects) TYPE zif_abapgit_definitions=>ty_objects_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_commit_display_url
-      IMPORTING
-        !iv_hash      TYPE zif_abapgit_definitions=>ty_sha1
-      RETURNING
-        VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_default_commit_display_url
-      IMPORTING
-        !iv_hash      TYPE zif_abapgit_definitions=>ty_sha1
-      RETURNING
-        VALUE(rv_url) TYPE zif_abapgit_persistence=>ty_repo-url
       RAISING
         zcx_abapgit_exception .
     METHODS get_switched_origin
@@ -104,7 +90,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo_online IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO_ONLINE IMPLEMENTATION.
 
 
   METHOD fetch_remote.
@@ -136,58 +122,9 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_commit_display_url.
-
-    DATA li_exit TYPE REF TO zif_abapgit_exit.
-
-    rv_url = get_default_commit_display_url( iv_hash ).
-
-    li_exit = zcl_abapgit_exit=>get_instance( ).
-    li_exit->adjust_display_commit_url(
-      EXPORTING
-        iv_repo_url           = get_url( )
-        iv_repo_name          = get_name( )
-        iv_repo_key           = get_key( )
-        iv_commit_hash        = iv_hash
-      CHANGING
-        cv_display_url        = rv_url ).
-
-    IF rv_url IS INITIAL.
-      zcx_abapgit_exception=>raise( |provider not yet supported| ).
-    ENDIF.
-
-  ENDMETHOD.
-
-
   METHOD get_current_remote.
     fetch_remote( ).
     rv_sha1 = mv_current_commit.
-  ENDMETHOD.
-
-
-  METHOD get_default_commit_display_url.
-
-    DATA ls_result TYPE match_result.
-    FIELD-SYMBOLS <ls_provider_match> TYPE submatch_result.
-
-    rv_url = get_url( ).
-
-    FIND REGEX '^http(?:s)?:\/\/(?:www\.)?(github\.com|bitbucket\.org|gitlab\.com)\/' IN rv_url RESULTS ls_result.
-    IF sy-subrc = 0.
-      READ TABLE ls_result-submatches INDEX 1 ASSIGNING <ls_provider_match>.
-      CASE rv_url+<ls_provider_match>-offset(<ls_provider_match>-length).
-        WHEN 'github.com'.
-          REPLACE REGEX '\.git$' IN rv_url WITH space.
-          rv_url = rv_url && |/commit/| && iv_hash.
-        WHEN 'bitbucket.org'.
-          REPLACE REGEX '\.git$' IN rv_url WITH space.
-          rv_url = rv_url && |/commits/| && iv_hash.
-        WHEN 'gitlab.com'.
-          REPLACE REGEX '\.git$' IN rv_url WITH space.
-          rv_url = rv_url && |/-/commit/| && iv_hash.
-      ENDCASE.
-    ENDIF.
-
   ENDMETHOD.
 
 

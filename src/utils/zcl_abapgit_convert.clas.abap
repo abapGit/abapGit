@@ -74,7 +74,7 @@ CLASS zcl_abapgit_convert DEFINITION
         VALUE(rv_xstr) TYPE xstring .
     CLASS-METHODS bintab_to_xstring
       IMPORTING
-        !it_bintab     TYPE lvc_t_mime
+        !it_bintab     TYPE STANDARD TABLE
         !iv_size       TYPE i
       RETURNING
         VALUE(rv_xstr) TYPE xstring .
@@ -83,7 +83,7 @@ CLASS zcl_abapgit_convert DEFINITION
         !iv_xstr   TYPE xstring
       EXPORTING
         !ev_size   TYPE i
-        !et_bintab TYPE lvc_t_mime .
+        !et_bintab TYPE STANDARD TABLE .
   PROTECTED SECTION.
   PRIVATE SECTION.
 
