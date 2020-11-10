@@ -85,7 +85,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_MERGE IMPLEMENTATION.
 
   METHOD render_content.
 
-    DATA: ls_merge  TYPE zif_abapgit_definitions=>ty_merge,
+    DATA: ls_merge  TYPE zcl_abapgit_merge=>ty_merge,
           lt_files  LIKE ls_merge-stree,
           ls_result LIKE LINE OF ls_merge-result.
 
