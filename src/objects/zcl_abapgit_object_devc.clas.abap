@@ -142,8 +142,11 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
   METHOD remove_obsolete_tadir.
 
     DATA:
-      lv_pack TYPE devclass,
-      ls_item TYPE zif_abapgit_definitions=>ty_item.
+      lv_pack  TYPE devclass,
+      lt_pack  TYPE STANDARD TABLE OF devclass,
+      ls_tadir TYPE zif_abapgit_definitions=>ty_tadir,
+      lt_tadir TYPE zif_abapgit_definitions=>ty_tadir_tt,
+      ls_item  TYPE zif_abapgit_definitions=>ty_item.
 
     " TADIR entries must remain for transportable packages
     IF is_local( iv_package_name ) = abap_false.
@@ -151,25 +154,31 @@ CLASS zcl_abapgit_object_devc IMPLEMENTATION.
     ENDIF.
 
     " Clean-up sub packages first
-    SELECT devclass FROM tdevc INTO lv_pack WHERE parentcl = iv_package_name.
+    SELECT devclass FROM tdevc INTO TABLE lt_pack WHERE parentcl = iv_package_name.
+
+    LOOP AT lt_pack INTO lv_pack.
       remove_obsolete_tadir( lv_pack ).
-    ENDSELECT.
+    ENDLOOP.
 
     " Remove TADIR entries for objects that do not exist anymore
-    SELECT object obj_name FROM tadir INTO (ls_item-obj_type, ls_item-obj_name)
-        WHERE devclass = iv_package_name.
+    SELECT * FROM tadir INTO CORRESPONDING FIELDS OF TABLE lt_tadir WHERE devclass = iv_package_name.
+
+    LOOP AT lt_tadir INTO ls_tadir.
+      ls_item-obj_type = ls_tadir-object.
+      ls_item-obj_name = ls_tadir-obj_name.
+
       IF zcl_abapgit_objects=>exists( ls_item ) = abap_false.
         CALL FUNCTION 'TR_TADIR_INTERFACE'
           EXPORTING
             wi_delete_tadir_entry = abap_true
             wi_tadir_pgmid        = 'R3TR'
-            wi_tadir_object       = ls_item-obj_type
-            wi_tadir_obj_name     = ls_item-obj_name
+            wi_tadir_object       = ls_tadir-object
+            wi_tadir_obj_name     = ls_tadir-obj_name
             wi_test_modus         = abap_false
           EXCEPTIONS
             OTHERS                = 1 ##FM_SUBRC_OK.
       ENDIF.
-    ENDSELECT.
+    ENDLOOP.
 
   ENDMETHOD.
 
