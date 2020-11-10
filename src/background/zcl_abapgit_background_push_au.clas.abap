@@ -36,7 +36,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
+CLASS zcl_abapgit_background_push_au IMPLEMENTATION.
 
 
   METHOD build_comment.
@@ -69,12 +69,12 @@ CLASS ZCL_ABAPGIT_BACKGROUND_PUSH_AU IMPLEMENTATION.
 
   METHOD determine_user_details.
 
-    DATA: lo_user_master_record TYPE REF TO zcl_abapgit_user_master_record.
+    DATA: lo_user_record TYPE REF TO zcl_abapgit_user_record.
 
 
-    lo_user_master_record = zcl_abapgit_user_master_record=>get_instance( iv_changed_by ).
-    rs_user-name = lo_user_master_record->get_name( ).
-    rs_user-email = lo_user_master_record->get_email( ).
+    lo_user_record = zcl_abapgit_user_record=>get_instance( iv_changed_by ).
+    rs_user-name = lo_user_record->get_name( ).
+    rs_user-email = lo_user_record->get_email( ).
 
 *   If no email, fall back to localhost/default email
     IF rs_user-email IS INITIAL.
