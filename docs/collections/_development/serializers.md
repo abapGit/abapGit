@@ -20,7 +20,7 @@ The constructor is implemented in the super class and take two parameters as inp
 Parameter | Description
 ----------|------------
 `IS_ITEM`     | Contains object type, object name, SAP package, and state (active/inactive)
-`IV_LANGUAGE` | Contains the language key for the master language of the repository
+`IV_LANGUAGE` | Contains the language key for the main language of the repository
 
 These parameters are stored in attributes `MS_ITEM` and `MV_LANGUAGE` respectively.
 
@@ -129,7 +129,7 @@ The activation queue is built separately for each phase (see 'Deserialize Proces
 
 ## Internationalization (I18N)
 
-In general, the serializer class shall process texts of an object in all available languages i.e. the original language as well as any translations. It shall respect the "Serialize Master Language Only" setting of a repository and limit the texts to the language provided to the constructor (`MV_LANGUAGE`). 
+In general, the serializer class shall process texts of an object in all available languages i.e. the original language as well as any translations. It shall respect the "Serialize Main Language Only" setting of a repository and limit the texts to the language provided to the constructor (`MV_LANGUAGE`). 
 
 The recommended approach is to check `io_xml->i18n_params( )-serialize_master_lang_only = abap_false` and then serialize the additional translations in the XML (typically using `I18N` prefix). During deserialize the translation languages can then be retrieved and processed accordingly (
 
