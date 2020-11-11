@@ -4,57 +4,12 @@ CLASS zcl_abapgit_merge DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
-    TYPES:
-      BEGIN OF ty_merge,
-        repo     TYPE REF TO zcl_abapgit_repo_online,
-        source   TYPE zif_abapgit_definitions=>ty_git_branch,
-        target   TYPE zif_abapgit_definitions=>ty_git_branch,
-        common   TYPE zif_abapgit_definitions=>ty_ancestor,
-        stree    TYPE zif_abapgit_definitions=>ty_expanded_tt,
-        ttree    TYPE zif_abapgit_definitions=>ty_expanded_tt,
-        ctree    TYPE zif_abapgit_definitions=>ty_expanded_tt,
-        result   TYPE zif_abapgit_definitions=>ty_expanded_tt,
-        stage    TYPE REF TO zcl_abapgit_stage,
-        conflict TYPE string,
-      END OF ty_merge .
-    TYPES:
-      BEGIN OF ty_merge_conflict,
-        path        TYPE string,
-        filename    TYPE string,
-        source_sha1 TYPE zif_abapgit_definitions=>ty_sha1,
-        source_data TYPE xstring,
-        target_sha1 TYPE zif_abapgit_definitions=>ty_sha1,
-        target_data TYPE xstring,
-        result_sha1 TYPE zif_abapgit_definitions=>ty_sha1,
-        result_data TYPE xstring,
-      END OF ty_merge_conflict .
-    TYPES:
-      ty_merge_conflict_tt TYPE STANDARD TABLE OF ty_merge_conflict WITH DEFAULT KEY .
+    INTERFACES zif_abapgit_merge.
 
     METHODS constructor
       IMPORTING
         !io_repo          TYPE REF TO zcl_abapgit_repo_online
         !iv_source_branch TYPE string
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_conflicts
-      RETURNING
-        VALUE(rt_conflicts) TYPE ty_merge_conflict_tt .
-    METHODS get_result
-      RETURNING
-        VALUE(rs_merge) TYPE ty_merge .
-    METHODS get_source_branch
-      RETURNING
-        VALUE(rv_source_branch) TYPE string .
-    METHODS has_conflicts
-      RETURNING
-        VALUE(rv_conflicts_exists) TYPE abap_bool .
-    METHODS resolve_conflict
-      IMPORTING
-        !is_conflict TYPE ty_merge_conflict
-      RAISING
-        zcx_abapgit_exception .
-    METHODS run
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -66,8 +21,8 @@ CLASS zcl_abapgit_merge DEFINITION
       ty_visit_tt TYPE STANDARD TABLE OF zif_abapgit_definitions=>ty_sha1 WITH DEFAULT KEY .
 
     DATA mo_repo TYPE REF TO zcl_abapgit_repo_online .
-    DATA ms_merge TYPE ty_merge .
-    DATA mt_conflicts TYPE ty_merge_conflict_tt .
+    DATA ms_merge TYPE zif_abapgit_merge=>ty_merge .
+    DATA mt_conflicts TYPE zif_abapgit_merge=>ty_merge_conflict_tt .
     DATA mt_objects TYPE zif_abapgit_definitions=>ty_objects_tt .
     DATA mv_source_branch TYPE string .
 
@@ -378,37 +333,49 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_conflicts.
+  METHOD visit.
+
+    IF NOT iv_parent IS INITIAL.
+      READ TABLE ct_visit FROM iv_parent TRANSPORTING NO FIELDS.
+      IF sy-subrc <> 0.
+        APPEND iv_parent TO ct_visit.
+      ENDIF.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD zif_abapgit_merge~get_conflicts.
 
     rt_conflicts = mt_conflicts.
 
   ENDMETHOD.
 
 
-  METHOD get_result.
+  METHOD zif_abapgit_merge~get_result.
 
     rs_merge = ms_merge.
 
   ENDMETHOD.
 
 
-  METHOD get_source_branch.
+  METHOD zif_abapgit_merge~get_source_branch.
 
     rv_source_branch = mv_source_branch.
 
   ENDMETHOD.
 
 
-  METHOD has_conflicts.
+  METHOD zif_abapgit_merge~has_conflicts.
 
     rv_conflicts_exists = boolc( lines( mt_conflicts ) > 0 ).
 
   ENDMETHOD.
 
 
-  METHOD resolve_conflict.
+  METHOD zif_abapgit_merge~resolve_conflict.
 
-    FIELD-SYMBOLS: <ls_conflict> TYPE ty_merge_conflict,
+    FIELD-SYMBOLS: <ls_conflict> TYPE zif_abapgit_merge=>ty_merge_conflict,
                    <ls_result>   LIKE LINE OF ms_merge-result.
 
     IF is_conflict-result_sha1 IS NOT INITIAL
@@ -441,7 +408,7 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD run.
+  METHOD zif_abapgit_merge~run.
 
     DATA: lt_asource TYPE ty_ancestor_tt,
           lt_atarget TYPE ty_ancestor_tt.
@@ -468,18 +435,6 @@ CLASS ZCL_ABAPGIT_MERGE IMPLEMENTATION.
       iv_parent  = ms_merge-common-commit ).
 
     calculate_result( ).
-
-  ENDMETHOD.
-
-
-  METHOD visit.
-
-    IF NOT iv_parent IS INITIAL.
-      READ TABLE ct_visit FROM iv_parent TRANSPORTING NO FIELDS.
-      IF sy-subrc <> 0.
-        APPEND iv_parent TO ct_visit.
-      ENDIF.
-    ENDIF.
 
   ENDMETHOD.
 ENDCLASS.
