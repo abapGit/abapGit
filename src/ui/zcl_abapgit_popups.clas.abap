@@ -89,7 +89,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
+CLASS zcl_abapgit_popups IMPLEMENTATION.
 
 
   METHOD add_field.
@@ -774,7 +774,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
     add_field( EXPORTING iv_tabname   = 'TVDIR'
                          iv_fieldname = 'FLAG'
-                         iv_fieldtext = 'Master lang only'
+                         iv_fieldtext = 'Main language only'
                CHANGING  ct_fields    = lt_fields ).
 
     TRY.
@@ -838,7 +838,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
     <ls_field>-only_parameter = abap_true.
     <ls_field>-ddic_tabname = 'TVDIR'.
     <ls_field>-ddic_fieldname = 'FLAG'.
-    <ls_field>-text = 'Master lang only'.
+    <ls_field>-text = 'Main language only'.
     <ls_field>-value = cv_serialize_master_lang_only.
 
     popup_get_from_free_selections(
@@ -1297,7 +1297,7 @@ CLASS ZCL_ABAPGIT_POPUPS IMPLEMENTATION.
 
       add_field( EXPORTING iv_tabname    = 'DOKIL'
                            iv_fieldname  = 'MASTERLANG'
-                           iv_fieldtext  = 'Master language only'
+                           iv_fieldtext  = 'Main language only'
                            iv_value      = abap_true
                   CHANGING ct_fields     = lt_fields ).
 

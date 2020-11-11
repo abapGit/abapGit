@@ -646,7 +646,7 @@ CLASS zcl_abapgit_gui_page_stage IMPLEMENTATION.
 
     IF ls_dot_abapgit-master_language <> sy-langu.
       ri_html->add( zcl_abapgit_gui_chunk_lib=>render_warning_banner(
-                        |Caution: Master language of the repo is '{ ls_dot_abapgit-master_language }', |
+                        |Caution: Main language of the repo is '{ ls_dot_abapgit-master_language }', |
                      && |but you're logged on in '{ sy-langu }'| ) ).
     ENDIF.
 

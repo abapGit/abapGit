@@ -402,7 +402,7 @@ CLASS zcl_abapgit_object_tran IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    " Skip master language - it was already serialized
+    " Skip main language - it was already serialized
     " Don't serialize t-code itself
     SELECT sprsl ttext
       INTO CORRESPONDING FIELDS OF TABLE lt_tpool_i18n

@@ -569,7 +569,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
     ENDIF.
 
     IF lv_language = mv_language.
-      lv_state = 'I'. "Textpool in master language needs to be activated
+      lv_state = 'I'. "Textpool in main language needs to be activated
     ELSE.
       lv_state = 'A'. "Translations are always active
     ENDIF.
@@ -583,7 +583,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
         lv_delete = abap_true.
       ELSE.
         INSERT TEXTPOOL iv_program "In case of includes: Deletion of textpool in
-          FROM it_tpool            "master language cannot be activated because
+          FROM it_tpool            "main language cannot be activated because
           LANGUAGE lv_language     "this woul activate the deletion of the textpool
           STATE lv_state.          "of the mail program -> insert empty textpool
       ENDIF.
@@ -591,7 +591,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       IF lines( it_tpool ) = 1 AND lv_language = mv_language.
         READ TABLE it_tpool WITH KEY id = 'R' TRANSPORTING NO FIELDS.
         IF sy-subrc = 0.
-          RETURN. "No action because description in master language is already there
+          RETURN. "No action because description in main language is already there
         ENDIF.
       ENDIF.
 
@@ -604,7 +604,7 @@ CLASS zcl_abapgit_objects_program IMPLEMENTATION.
       ENDIF.
     ENDIF.
 
-    IF lv_state = 'I'. "Textpool in master language needs to be activated
+    IF lv_state = 'I'. "Textpool in main language needs to be activated
       zcl_abapgit_objects_activation=>add(
         iv_type   = 'REPT'
         iv_name   = iv_program
