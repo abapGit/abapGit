@@ -180,21 +180,21 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
     DATA lv_iterations TYPE i.
     DATA lv_offset TYPE i.
 
-    FIELD-SYMBOLS <line> TYPE any.
+    FIELD-SYMBOLS <lg_line> TYPE any.
 
 
     CLEAR et_tab.
     ev_size = strlen( iv_str ).
 
-    APPEND INITIAL LINE TO et_tab ASSIGNING <line>.
-    <line> = iv_str.
-    DESCRIBE FIELD <line> LENGTH lv_length IN CHARACTER MODE.
+    APPEND INITIAL LINE TO et_tab ASSIGNING <lg_line>.
+    <lg_line> = iv_str.
+    DESCRIBE FIELD <lg_line> LENGTH lv_length IN CHARACTER MODE.
     lv_iterations = ev_size DIV lv_length.
 
     DO lv_iterations TIMES.
       lv_offset = sy-index * lv_length.
-      APPEND INITIAL LINE TO et_tab ASSIGNING <line>.
-      <line> = iv_str+lv_offset.
+      APPEND INITIAL LINE TO et_tab ASSIGNING <lg_line>.
+      <lg_line> = iv_str+lv_offset.
     ENDDO.
 
   ENDMETHOD.
@@ -255,21 +255,21 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
     DATA lv_iterations TYPE i.
     DATA lv_offset TYPE i.
 
-    FIELD-SYMBOLS <line> TYPE any.
+    FIELD-SYMBOLS <lg_line> TYPE any.
 
 
     CLEAR et_bintab.
     ev_size = xstrlen( iv_xstr ).
 
-    APPEND INITIAL LINE TO et_bintab ASSIGNING <line>.
-    <line> = iv_xstr.
-    DESCRIBE FIELD <line> LENGTH lv_length IN BYTE MODE.
+    APPEND INITIAL LINE TO et_bintab ASSIGNING <lg_line>.
+    <lg_line> = iv_xstr.
+    DESCRIBE FIELD <lg_line> LENGTH lv_length IN BYTE MODE.
     lv_iterations = ev_size DIV lv_length.
 
     DO lv_iterations TIMES.
       lv_offset = sy-index * lv_length.
-      APPEND INITIAL LINE TO et_bintab ASSIGNING <line>.
-      <line> = iv_xstr+lv_offset.
+      APPEND INITIAL LINE TO et_bintab ASSIGNING <lg_line>.
+      <lg_line> = iv_xstr+lv_offset.
     ENDDO.
 
   ENDMETHOD.
