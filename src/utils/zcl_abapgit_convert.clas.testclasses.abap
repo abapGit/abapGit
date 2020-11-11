@@ -14,7 +14,6 @@ CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FIN
     METHODS base64_to_xstring FOR TESTING.
     METHODS conversion_exit_isola_output FOR TESTING.
     METHODS alpha_output FOR TESTING.
-    METHODS bintab_to_xstring FOR TESTING.
     METHODS string_to_tab FOR TESTING.
     METHODS string_to_xstring FOR TESTING.
     METHODS xstring_to_bintab FOR TESTING.
@@ -84,25 +83,6 @@ CLASS ltcl_convert IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lines( lt_tab )
       exp = 6 ).
-
-  ENDMETHOD.
-
-  METHOD bintab_to_xstring.
-
-    TYPES ty_hex TYPE x LENGTH 2.
-    DATA lt_bintab TYPE STANDARD TABLE OF ty_hex WITH DEFAULT KEY.
-    DATA lv_xstr TYPE xstring.
-
-    APPEND '1122' TO lt_bintab.
-    APPEND '33' TO lt_bintab.
-
-    lv_xstr = zcl_abapgit_convert=>bintab_to_xstring(
-      it_bintab = lt_bintab
-      iv_size   = 3 ).
-
-    cl_abap_unit_assert=>assert_equals(
-      act = lv_xstr
-      exp = '112233' ).
 
   ENDMETHOD.
 

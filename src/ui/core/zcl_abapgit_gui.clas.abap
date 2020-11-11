@@ -109,7 +109,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
 
 
   METHOD back.
@@ -405,7 +405,9 @@ CLASS zcl_abapgit_gui IMPLEMENTATION.
 
   METHOD zif_abapgit_gui_services~cache_asset.
 
-    DATA: lt_xdata TYPE lvc_t_mime,
+    TYPES: ty_hex TYPE x LENGTH 200.
+
+    DATA: lt_xdata TYPE STANDARD TABLE OF ty_hex WITH DEFAULT KEY,
           lv_size  TYPE i,
           lt_html  TYPE w3htmltab.
 
