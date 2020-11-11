@@ -1,33 +1,33 @@
-CLASS zcl_abapgit_user_master_record DEFINITION
+CLASS zcl_abapgit_user_record DEFINITION
   PUBLIC
   FINAL
-  CREATE PRIVATE .
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
 
-    CONSTANTS gc_cc_category TYPE string VALUE 'C' ##NO_TEXT.
+    CONSTANTS gc_cc_category TYPE string VALUE 'C'.
 
     CLASS-METHODS reset.
     CLASS-METHODS get_instance
       IMPORTING
         !iv_user       TYPE sy-uname
       RETURNING
-        VALUE(ro_user) TYPE REF TO zcl_abapgit_user_master_record .
+        VALUE(ro_user) TYPE REF TO zcl_abapgit_user_record.
     METHODS constructor
       IMPORTING
-        !iv_user TYPE sy-uname .
+        !iv_user TYPE sy-uname.
     METHODS get_name
       RETURNING
-        VALUE(rv_name) TYPE zif_abapgit_definitions=>ty_git_user-name .
+        VALUE(rv_name) TYPE zif_abapgit_definitions=>ty_git_user-name.
     METHODS get_email
       RETURNING
-        VALUE(rv_email) TYPE zif_abapgit_definitions=>ty_git_user-email .
+        VALUE(rv_email) TYPE zif_abapgit_definitions=>ty_git_user-email.
   PROTECTED SECTION.
   PRIVATE SECTION.
     TYPES:
       BEGIN OF ty_user,
         user   TYPE sy-uname,
-        o_user TYPE REF TO zcl_abapgit_user_master_record,
+        o_user TYPE REF TO zcl_abapgit_user_record,
       END OF ty_user.
 
     TYPES:
@@ -60,7 +60,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_USER_MASTER_RECORD IMPLEMENTATION.
+CLASS zcl_abapgit_user_record IMPLEMENTATION.
 
 
   METHOD check_user_exists.
@@ -85,11 +85,11 @@ CLASS ZCL_ABAPGIT_USER_MASTER_RECORD IMPLEMENTATION.
   METHOD constructor.
 
     DATA:
-      ls_address     TYPE bapiaddr3,
-      lt_smtp        TYPE TABLE OF bapiadsmtp,
-      ls_smtp        TYPE bapiadsmtp,
-      ls_user        TYPE ty_user,
-      lo_exception   TYPE REF TO zcx_abapgit_exception.
+      ls_address   TYPE bapiaddr3,
+      lt_smtp      TYPE TABLE OF bapiadsmtp,
+      ls_smtp      TYPE bapiadsmtp,
+      ls_user      TYPE ty_user,
+      lo_exception TYPE REF TO zcx_abapgit_exception.
 
     "Get user details
     TRY.
