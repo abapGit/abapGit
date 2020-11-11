@@ -4,6 +4,7 @@
     "test": "npm run eslint && npm run abaplint",
     "merge": "abapmerge -f src/zabapgit.prog.abap -c zabapgit_standalone > zabapgit.abap",
     "merge.ci": "cp zabapgit.abap ci/zabapgit_standalone.prog.abap && cd ci && abaplint && cd ..",
+    "unit_wip": "abap_transpile",
     "abaplint": "abaplint",
     "eslint": "eslint src"
   },
@@ -12,7 +13,8 @@
     "url": "git+https://github.com/abapGit/abapGit.git"
   },
   "devDependencies": {
-    "@abaplint/cli": "^2.59.4",
+    "@abaplint/cli": "^2.59.7",
+    "@abaplint/transpiler-cli": "^0.6.2",
     "abapmerge": "^0.14.1",
     "eslint": "^7.13.0"
   }
