@@ -5,6 +5,9 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
          END OF ty_includes,
          ty_includes_tt TYPE STANDARD TABLE OF ty_includes WITH DEFAULT KEY.
 
+  TYPES:
+    ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY .
+
   METHODS:
     create
       IMPORTING
@@ -43,7 +46,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
     update_descriptions
       IMPORTING
         is_key          TYPE seoclskey
-        it_descriptions TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
+        it_descriptions TYPE ty_seocompotx_tt,
     add_to_activation_list
       IMPORTING
         is_item TYPE zif_abapgit_definitions=>ty_item
@@ -125,7 +128,7 @@ INTERFACE zif_abapgit_oo_object_fnc PUBLIC.
         iv_obejct_name         TYPE seoclsname
         iv_language            TYPE spras OPTIONAL
       RETURNING
-        VALUE(rt_descriptions) TYPE zif_abapgit_definitions=>ty_seocompotx_tt,
+        VALUE(rt_descriptions) TYPE ty_seocompotx_tt,
     delete
       IMPORTING
         is_deletion_key TYPE seoclskey
