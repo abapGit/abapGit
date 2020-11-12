@@ -210,7 +210,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -280,9 +280,9 @@ CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
     IF lv_master_language <> sy-langu.
       zcx_abapgit_exception=>raise( |Current login language |
                                  && |'{ zcl_abapgit_convert=>conversion_exit_isola_output( sy-langu ) }'|
-                                 && | does not match master language |
+                                 && | does not match main language |
                                  && |'{ zcl_abapgit_convert=>conversion_exit_isola_output( lv_master_language ) }'.|
-                                 && | Run 'Advanced' > 'Open in master language'| ).
+                                 && | Run 'Advanced' > 'Open in main language'| ).
     ENDIF.
 
   ENDMETHOD.
