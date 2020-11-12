@@ -132,7 +132,7 @@ Legend
 + hover line highlighting
 ! staging will show error instead of dump in special cases
 * fix related to textpools of includes
-* various changes regarding only serializing master language
+* various changes regarding only serializing main language
 ! GUI refactoring
 + New syntax highlighters CSS + JS + JSON
 * downports
@@ -156,8 +156,8 @@ Legend
 + SRVD support
 + DRUL support
 + DTDC support
-! CUS0, CUS1, CUS2 only serialize master language
-! DTEL, DOCT, only serialize master language
+! CUS0, CUS1, CUS2 only serialize main language
+! DTEL, DOCT, only serialize main language
 * CHAR serialization fixes
 + Allow setting of display name for offline repos
 - Remove page playground

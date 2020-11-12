@@ -70,7 +70,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_tag IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -203,8 +203,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
       lv_user = li_user->get_default_git_user_name( ).
     ENDIF.
     IF lv_user IS INITIAL.
-      " get default from user master record
-      lv_user = zcl_abapgit_user_master_record=>get_instance( sy-uname )->get_name( ).
+      " get default from user record
+      lv_user = zcl_abapgit_user_record=>get_instance( sy-uname )->get_name( ).
     ENDIF.
 
     lv_email = li_user->get_repo_git_user_email( mo_repo_online->get_url( ) ).
@@ -212,8 +212,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TAG IMPLEMENTATION.
       lv_email = li_user->get_default_git_user_email( ).
     ENDIF.
     IF lv_email IS INITIAL.
-      " get default from user master record
-      lv_email = zcl_abapgit_user_master_record=>get_instance( sy-uname )->get_email( ).
+      " get default from user record
+      lv_email = zcl_abapgit_user_record=>get_instance( sy-uname )->get_email( ).
     ENDIF.
 
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.

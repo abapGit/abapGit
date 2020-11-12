@@ -1,6 +1,8 @@
 INTERFACE zif_abapgit_popups
   PUBLIC .
 
+  TYPES:
+    ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
 
   TYPES:
     BEGIN OF ty_popup, " TODO remove, use zif_abapgit_services_repo=>ty_repo_params instead
@@ -130,7 +132,7 @@ INTERFACE zif_abapgit_popups
     IMPORTING
       !iv_code       TYPE clike
     CHANGING
-      !ct_fields     TYPE zif_abapgit_definitions=>ty_sval_tt
+      !ct_fields     TYPE ty_sval_tt
       !cs_error      TYPE svale
       !cv_show_popup TYPE char01
     RAISING
