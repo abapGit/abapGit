@@ -196,7 +196,7 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
     " You are reminded that SUDM - Data Model has no part objects e.g. no LIMU
     " Therefore global lock is always appropriate
 
-    " You are reminded that the master language (in TADIR) is taken from MV_LANGUAGE.
+    " You are reminded that the main language (in TADIR) is taken from MV_LANGUAGE.
 
     CALL FUNCTION 'RS_CORR_INSERT'
       EXPORTING
@@ -443,7 +443,7 @@ CLASS zcl_abapgit_object_udmo IMPLEMENTATION.
 
     " The model has short texts in multiple languages. These are held in DM40T.
 
-    " The model has a long description also in a master language, with other long descriptions
+    " The model has a long description also in a main language, with other long descriptions
     " maintained as translations using SE63 Translation Editor. All of these long texts are held in DOK*
 
     TYPES BEGIN OF ty_language_type.

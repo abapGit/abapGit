@@ -1,0 +1,12 @@
+{
+  "input_folder": "src",
+  "input_filter": ["zif_abapgit_definitions"],
+  "output_folder": "output",
+  "lib": "https://github.com/open-abap/open-abap",
+  "write_unit_tests": true,
+  "options": {
+    "ignoreSyntaxCheck": false,
+    "addFilenames": true,
+    "addCommonJS": true
+  }
+}

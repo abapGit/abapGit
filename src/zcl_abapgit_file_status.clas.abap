@@ -65,7 +65,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_file_status IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -237,7 +237,6 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
           WITH KEY filename = <ls_local>-file-filename.
         IF sy-subrc = 0 AND <ls_local>-file-sha1 = <ls_remote>-sha1.
           <ls_result>-packmove = abap_true.
-          CLEAR <ls_remote>-sha1. " Mark as processed
         ELSEIF sy-subrc = 4.
           " Check if file existed before and was deleted remotely
           READ TABLE lt_state_idx ASSIGNING <ls_state>
@@ -266,7 +265,7 @@ CLASS zcl_abapgit_file_status IMPLEMENTATION.
                        IMPORTING es_item     = ls_item
                                  ev_is_xml   = lv_is_xml ).
 
-      CHECK lv_is_xml = abap_true. " Skip all but obj definitions
+      CHECK lv_is_xml = abap_true. " only object definitions
 
       ls_item-devclass = get_object_package(
         iv_object   = ls_item-obj_type

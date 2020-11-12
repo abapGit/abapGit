@@ -245,7 +245,7 @@ CLASS zcl_abapgit_oo_base IMPLEMENTATION.
                AND descript <> ''
              ORDER BY PRIMARY KEY.                        "#EC CI_SUBRC
     ELSE.
-      " load master language
+      " load main language
       SELECT * FROM seocompotx INTO TABLE rt_descriptions
               WHERE clsname   = iv_obejct_name
                 AND langu = iv_language
