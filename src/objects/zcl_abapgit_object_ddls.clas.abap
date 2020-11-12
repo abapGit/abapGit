@@ -6,8 +6,10 @@ CLASS zcl_abapgit_object_ddls DEFINITION PUBLIC INHERITING FROM zcl_abapgit_obje
 
   PROTECTED SECTION.
     METHODS open_adt_stob
-      IMPORTING iv_ddls_name TYPE tadir-obj_name
-      RAISING   zcx_abapgit_exception.
+      IMPORTING
+        iv_ddls_name TYPE tadir-obj_name
+      RAISING
+        zcx_abapgit_exception.
 
   PRIVATE SECTION.
     METHODS is_baseinfo_supported
@@ -156,23 +158,39 @@ CLASS zcl_abapgit_object_ddls IMPLEMENTATION.
 
   METHOD zif_abapgit_object~delete.
 
-    DATA: lo_ddl   TYPE REF TO object,
-          lx_error TYPE REF TO cx_root.
+    DATA:
+      lt_deltab TYPE TABLE OF dcdeltb,
+      ls_deltab TYPE dcdeltb,
+      lt_gentab TYPE TABLE OF dcgentb,
+      lv_rc     TYPE sy-subrc.
 
+    " CL_DD_DDL_HANDLER->DELETE does not work for CDS views that reference other views
+    " To drop any views regardless of reference, we use delnoref = false
+    ls_deltab-objtyp  = 'DDLS'.
+    ls_deltab-objname = ms_item-obj_name.
+    APPEND ls_deltab TO lt_deltab.
 
-    CALL METHOD ('CL_DD_DDL_HANDLER_FACTORY')=>('CREATE')
-      RECEIVING
-        handler = lo_ddl.
-
-    TRY.
-        CALL METHOD lo_ddl->('IF_DD_DDL_HANDLER~DELETE')
-          EXPORTING
-            name = ms_item-obj_name.
-      CATCH cx_root INTO lx_error.
-        zcx_abapgit_exception=>raise(
-          iv_text     = |DDLS, { ms_item-obj_name } { lx_error->get_text( ) }|
-          ix_previous = lx_error ).
-    ENDTRY.
+    CALL FUNCTION 'DD_MASS_ACT_C3'
+      EXPORTING
+        ddmode         = 'O'
+        inactive       = abap_true
+        write_log      = abap_false
+        delall         = abap_true
+        delnoref       = abap_false
+        prid           = -1
+      IMPORTING
+        act_rc         = lv_rc
+      TABLES
+        gentab         = lt_gentab
+        deltab         = lt_deltab
+      EXCEPTIONS
+        access_failure = 1
+        no_objects     = 2
+        locked         = 3
+        OTHERS         = 4.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
 
   ENDMETHOD.
 
