@@ -12,9 +12,6 @@ CLASS zcl_abapgit_popups DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    TYPES:
-      ty_sval_tt TYPE STANDARD TABLE OF sval WITH DEFAULT KEY.
-
     CONSTANTS c_fieldname_selected TYPE lvc_fname VALUE `SELECTED` ##NO_TEXT.
     CONSTANTS c_answer_cancel      TYPE c LENGTH 1 VALUE 'A' ##NO_TEXT.
 
@@ -32,7 +29,7 @@ CLASS zcl_abapgit_popups DEFINITION
         !iv_field_attr TYPE sval-field_attr DEFAULT ''
         !iv_obligatory TYPE spo_obl OPTIONAL
       CHANGING
-        !ct_fields     TYPE ty_sval_tt .
+        !ct_fields     TYPE zif_abapgit_popups=>ty_sval_tt .
     METHODS create_new_table
       IMPORTING
         !it_list TYPE STANDARD TABLE .
@@ -55,7 +52,7 @@ CLASS zcl_abapgit_popups DEFINITION
           !column .
     METHODS extract_field_values
       IMPORTING
-        it_fields           TYPE ty_sval_tt
+        it_fields           TYPE zif_abapgit_popups=>ty_sval_tt
       EXPORTING
         ev_url              TYPE abaptxt255-line
         ev_package          TYPE tdevc-devclass
@@ -777,7 +774,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
     add_field( EXPORTING iv_tabname   = 'TVDIR'
                          iv_fieldname = 'FLAG'
-                         iv_fieldtext = 'Master lang only'
+                         iv_fieldtext = 'Main language only'
                CHANGING  ct_fields    = lt_fields ).
 
     TRY.
@@ -841,7 +838,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
     <ls_field>-only_parameter = abap_true.
     <ls_field>-ddic_tabname = 'TVDIR'.
     <ls_field>-ddic_fieldname = 'FLAG'.
-    <ls_field>-text = 'Master lang only'.
+    <ls_field>-text = 'Main language only'.
     <ls_field>-value = cv_serialize_master_lang_only.
 
     popup_get_from_free_selections(
@@ -1300,7 +1297,7 @@ CLASS zcl_abapgit_popups IMPLEMENTATION.
 
       add_field( EXPORTING iv_tabname    = 'DOKIL'
                            iv_fieldname  = 'MASTERLANG'
-                           iv_fieldtext  = 'Master language only'
+                           iv_fieldtext  = 'Main language only'
                            iv_value      = abap_true
                   CHANGING ct_fields     = lt_fields ).
 

@@ -8,6 +8,21 @@ Legend
 + : added
 - : removed
 
+2020-11-12 v1.102.0
+-------------------
++ Backup and restore for abapGit persistency
++ Retreive transport and changed by for deletions
+! Trigger main command when pressing enter in form
+! DDLS, uninstall even if references exists
+! DEVC, remove obsolete TADIR during uninstall
+* Sort "switch origin" by PR number
+* Workaround for special characters in password dialog
+* adjust rendering of transport, usernames
+* PROG: remove inactive sources during uninstall
++ Diff page, option to toggle hidden characters
+* Optimize order of uninstalling objects
+* Terminology, inclusive language changes
+
 2020-11-02 v1.101.0
 -------------------
 + add user exit for commit display URL
@@ -132,7 +147,7 @@ Legend
 + hover line highlighting
 ! staging will show error instead of dump in special cases
 * fix related to textpools of includes
-* various changes regarding only serializing master language
+* various changes regarding only serializing main language
 ! GUI refactoring
 + New syntax highlighters CSS + JS + JSON
 * downports
@@ -156,8 +171,8 @@ Legend
 + SRVD support
 + DRUL support
 + DTDC support
-! CUS0, CUS1, CUS2 only serialize master language
-! DTEL, DOCT, only serialize master language
+! CUS0, CUS1, CUS2 only serialize main language
+! DTEL, DOCT, only serialize main language
 * CHAR serialization fixes
 + Allow setting of display name for offline repos
 - Remove page playground

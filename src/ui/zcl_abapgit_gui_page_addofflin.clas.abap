@@ -52,7 +52,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_ADDOFFLIN IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -106,8 +106,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDOFFLIN IMPLEMENTATION.
       iv_value       = zif_abapgit_dot_abapgit=>c_folder_logic-full
     )->checkbox(
       iv_name        = c_id-master_lang_only
-      iv_label       = 'Serialize master language only'
-      iv_hint        = 'Ignore translations, serialize just master language'
+      iv_label       = 'Serialize main language only'
+      iv_hint        = 'Ignore translations, serialize just main language'
     )->command(
       iv_label       = 'Create offline repo'
       iv_is_main     = abap_true
