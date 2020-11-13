@@ -330,17 +330,22 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
       EXIT.
     ENDLOOP.
 
-    ri_html->add( |<ul>| ).
-
     LOOP AT mt_fields ASSIGNING <ls_field>.
+      AT FIRST.
+        IF <ls_field>-type <> c_field_type-field_group.
+          ri_html->add( |<ul>| ).
+        ENDIF.
+      ENDAT.
 
       IF <ls_field>-type = c_field_type-field_group.
         IF lv_cur_group IS NOT INITIAL AND lv_cur_group <> <ls_field>-name.
-          ri_html->add( '</fieldset>' ).
+          ri_html->add( |</ul>| ).
+          ri_html->add( |</fieldset>| ).
         ENDIF.
         lv_cur_group = <ls_field>-name.
         ri_html->add( |<fieldset name="{ <ls_field>-name }">| ).
         ri_html->add( |<legend{ <ls_field>-hint }>{ <ls_field>-label }</legend>| ).
+        ri_html->add( |<ul>| ).
         CONTINUE.
       ENDIF.
 
@@ -351,12 +356,14 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
         is_field          = <ls_field> ).
 
       AT LAST.
+        ri_html->add( |</ul>| ).
         IF lv_cur_group IS NOT INITIAL.
-          ri_html->add( '</fieldset>' ).
+          ri_html->add( |</fieldset>| ).
         ENDIF.
       ENDAT.
     ENDLOOP.
 
+    ri_html->add( |<ul>| ).
     ri_html->add( |<li class="dialog-commands">| ).
 
     IF mv_help_page IS NOT INITIAL.
@@ -375,7 +382,6 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ENDLOOP.
 
     ri_html->add( |</li>| ).
-
     ri_html->add( |</ul>| ).
     ri_html->add( |</form>| ).
     ri_html->add( |</div>| ).
@@ -455,8 +461,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     CASE is_field-type.
       WHEN c_field_type-text OR c_field_type-number.
 
-        ii_html->add( |<label for="{ is_field-name }"{ lv_hint }>{
-          is_field-label }{ lv_required }</label>| ).
+        ii_html->add( |<label for="{ is_field-name }"{ lv_hint }>{ is_field-label }{ lv_required }</label>| ).
         IF lv_error IS NOT INITIAL.
           ii_html->add( |<small>{ lv_error }</small>| ).
         ENDIF.
@@ -506,8 +511,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
           lv_checked = ' checked'.
         ENDIF.
         ii_html->add( |<input type="checkbox" name="{ is_field-name }" id="{ is_field-name }"{ lv_checked }>| ).
-        ii_html->add( |<label for="{ is_field-name }"{ lv_hint }>{
-          is_field-label }</label>| ).
+        ii_html->add( |<label for="{ is_field-name }"{ lv_hint }>{ is_field-label }</label>| ).
 
       WHEN c_field_type-radio.
 
