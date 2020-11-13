@@ -41,6 +41,17 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_max         TYPE i DEFAULT cl_abap_math=>max_int4
       RETURNING
         VALUE(ro_self)  TYPE REF TO zcl_abapgit_html_form.
+    METHODS textarea
+      IMPORTING
+        !iv_label       TYPE csequence
+        !iv_name        TYPE csequence
+        !iv_rows        TYPE i DEFAULT 3
+        !iv_hint        TYPE csequence OPTIONAL
+        !iv_required    TYPE abap_bool DEFAULT abap_false
+        !iv_readonly    TYPE abap_bool DEFAULT abap_false
+        !iv_placeholder TYPE csequence OPTIONAL
+      RETURNING
+        VALUE(ro_self)  TYPE REF TO zcl_abapgit_html_form.
     METHODS number
       IMPORTING
         !iv_label      TYPE csequence
@@ -123,6 +134,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         password      TYPE abap_bool,
         min           TYPE i,
         max           TYPE i,
+        rows          TYPE i,
 *        onclick ???
       END OF ty_field.
     TYPES:
@@ -141,6 +153,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         checkbox    TYPE i VALUE 3,
         field_group TYPE i VALUE 4,
         number      TYPE i VALUE 5,
+        textarea    TYPE i VALUE 6,
       END OF c_field_type.
     DATA:
       mt_fields TYPE STANDARD TABLE OF ty_field
@@ -236,6 +249,13 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
         ro_form_data->set(
           iv_key = <ls_field>-name
           iv_val = to_upper( lv_value ) ).
+      ELSEIF <ls_field>-type = c_field_type-number.
+        IF lv_value NA '0123456789- '.
+
+        ENDIF.
+        ro_form_data->set(
+          iv_key = <ls_field>-name
+          iv_val = lv_value ).
       ELSE.
         ro_form_data->set(
           iv_key = <ls_field>-name
@@ -311,6 +331,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_field> LIKE LINE OF mt_fields.
     FIELD-SYMBOLS <ls_cmd> LIKE LINE OF mt_commands.
+    DATA lv_hint TYPE string.
     DATA ls_form_id TYPE string.
     DATA lv_cur_group TYPE string.
 
@@ -342,9 +363,14 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
           ri_html->add( |</ul>| ).
           ri_html->add( |</fieldset>| ).
         ENDIF.
+        IF <ls_field>-hint IS NOT INITIAL.
+          lv_hint = | title="{ <ls_field>-hint }"|.
+        ELSE.
+          lv_hint = ''.
+        ENDIF.
         lv_cur_group = <ls_field>-name.
         ri_html->add( |<fieldset name="{ <ls_field>-name }">| ).
-        ri_html->add( |<legend{ <ls_field>-hint }>{ <ls_field>-label }</legend>| ).
+        ri_html->add( |<legend{ lv_hint }>{ <ls_field>-label }</legend>| ).
         ri_html->add( |<ul>| ).
         CONTINUE.
       ENDIF.
@@ -470,26 +496,12 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
           ii_html->add( '<div class="input-container">' ). " Ugly :(
         ENDIF.
 
-        IF is_field-type = c_field_type-text.
-          IF is_field-password = abap_true.
-            lv_type = 'password'.
-          ELSE.
-            lv_type = 'text'.
-          ENDIF.
-          IF is_field-min <> cl_abap_math=>min_int4.
-            lv_attr = lv_attr && | minlength="{ is_field-min }"|.
-          ENDIF.
-          IF is_field-max <> cl_abap_math=>max_int4.
-            lv_attr = lv_attr && | maxlength="{ is_field-max }"|.
-          ENDIF.
-        ELSE.
+        IF is_field-type = c_field_type-number.
           lv_type = 'number'.
-          IF is_field-min <> cl_abap_math=>min_int4.
-            lv_attr = lv_attr && | min="{ is_field-min }"|.
-          ENDIF.
-          IF is_field-max <> cl_abap_math=>max_int4.
-            lv_attr = lv_attr && | max="{ is_field-max }"|.
-          ENDIF.
+        ELSEIF is_field-password = abap_true.
+          lv_type = 'password'.
+        ELSE.
+          lv_type = 'text'.
         ENDIF.
 
         ii_html->add( |<input type="{ lv_type }" name="{ is_field-name }" id="{
@@ -501,6 +513,16 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
           ii_html->add( |<input type="submit" value="&#x2026;" formaction="sapevent:{ is_field-side_action }">| ).
           ii_html->add( '</div>' ).
         ENDIF.
+
+      WHEN c_field_type-textarea.
+
+        ii_html->add( |<label for="{ is_field-name }"{ lv_hint }>{ is_field-label }{ lv_required }</label>| ).
+        IF lv_error IS NOT INITIAL.
+          ii_html->add( |<small>{ lv_error }</small>| ).
+        ENDIF.
+
+        ii_html->add( |<textarea name="{ is_field-name }" id="{
+          is_field-name }" value="{ lv_value }" rows="{ is_field-rows }" { lv_attr }>| ).
 
       WHEN c_field_type-checkbox.
 
@@ -550,10 +572,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ls_field-type  = c_field_type-field_group.
     ls_field-label = iv_label.
     ls_field-name  = iv_name.
-
-    IF iv_hint IS NOT INITIAL.
-      ls_field-hint    = | title="{ iv_hint }"|.
-    ENDIF.
+    ls_field-hint  = iv_hint.
 
     APPEND ls_field TO mt_fields.
 
@@ -594,9 +613,30 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD textarea.
+
+    DATA ls_field LIKE LINE OF mt_fields.
+
+    ls_field-type        = c_field_type-textarea.
+    ls_field-name        = iv_name.
+    ls_field-label       = iv_label.
+    ls_field-readonly    = iv_readonly.
+    ls_field-hint        = iv_hint.
+    ls_field-required    = iv_required.
+    ls_field-placeholder = iv_placeholder.
+    ls_field-rows        = iv_rows.
+
+    APPEND ls_field TO mt_fields.
+
+    ro_self = me.
+
+  ENDMETHOD.
+
+
   METHOD validate_required_fields.
 
     DATA lv_value TYPE string.
+    DATA lv_number TYPE i.
     FIELD-SYMBOLS <ls_field> LIKE LINE OF mt_fields.
 
     CREATE OBJECT ro_validation_log.
@@ -608,6 +648,38 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
           iv_key = <ls_field>-name
           iv_val = |{ <ls_field>-label } cannot be empty| ).
       ENDIF.
+      CASE <ls_field>-type.
+        WHEN c_field_type-text.
+          IF <ls_field>-min <> cl_abap_math=>min_int4 AND strlen( lv_value ) < <ls_field>-min.
+            ro_validation_log->set(
+              iv_key = <ls_field>-name
+              iv_val = |{ <ls_field>-label } must not be shorter than { <ls_field>-min } characters| ).
+          ENDIF.
+          IF <ls_field>-max <> cl_abap_math=>max_int4 AND strlen( lv_value ) > <ls_field>-max.
+            ro_validation_log->set(
+              iv_key = <ls_field>-name
+              iv_val = |{ <ls_field>-label } must not be longer than { <ls_field>-max } characters| ).
+          ENDIF.
+        WHEN c_field_type-number.
+          TRY.
+              lv_number = lv_value.
+            CATCH cx_root.
+              ro_validation_log->set(
+                iv_key = <ls_field>-name
+                iv_val = |{ <ls_field>-label } is not a number| ).
+              CONTINUE.
+          ENDTRY.
+          IF <ls_field>-min <> cl_abap_math=>min_int4 AND lv_number < <ls_field>-min.
+            ro_validation_log->set(
+              iv_key = <ls_field>-name
+              iv_val = |{ <ls_field>-label } must not be lower than { <ls_field>-min }| ).
+          ENDIF.
+          IF <ls_field>-max <> cl_abap_math=>max_int4 AND lv_number > <ls_field>-max.
+            ro_validation_log->set(
+              iv_key = <ls_field>-name
+              iv_val = |{ <ls_field>-label } must not be higher than { <ls_field>-max }| ).
+          ENDIF.
+      ENDCASE.
     ENDLOOP.
 
   ENDMETHOD.
