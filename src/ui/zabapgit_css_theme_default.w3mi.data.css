@@ -497,6 +497,7 @@ table.settings_tab input:focus {
 .dialog li.error small {
   color: #ff5959;
 }
+.dialog li.error input[type="number"],
 .dialog li.error input[type="text"] {
   border-color: #ff5959;
 }
@@ -519,5 +520,14 @@ table.settings_tab input:focus {
   border-color: #dfdfdf;
 }
 .dialog fieldset legend {
-  color: #ccc;
+  color: #444;
+}
+.dialog input:read-only {
+  background-color: #f4f4f4;
+  color: var(--theme-greyscale-dark);
+}
+/* for IE */
+.dialog input[readonly] {
+  background-color: #f4f4f4;
+  color: var(--theme-greyscale-dark);
 }
