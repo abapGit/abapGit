@@ -212,8 +212,6 @@ INTERFACE zif_abapgit_definitions
       status TYPE ty_results_ts_path,
     END OF ty_stage_files .
   TYPES:
-    ty_seocompotx_tt TYPE STANDARD TABLE OF seocompotx WITH DEFAULT KEY .
-  TYPES:
     BEGIN OF ty_tpool.
       INCLUDE TYPE textpool.
   TYPES: split TYPE c LENGTH 8.
