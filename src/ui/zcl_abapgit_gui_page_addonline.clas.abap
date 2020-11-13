@@ -133,7 +133,7 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
       iv_label       = 'Serialize Main Language Only'
       iv_hint        = 'Ignore translations, serialize just main language'
     )->command(
-      iv_label       = 'Create Online Repo'
+      iv_label       = 'Clone Online Repo'
       iv_is_main     = abap_true
       iv_action      = c_event-add_online_repo
     )->command(
