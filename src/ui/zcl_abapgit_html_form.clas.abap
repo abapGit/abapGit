@@ -522,7 +522,8 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
         ENDIF.
 
         ii_html->add( |<textarea name="{ is_field-name }" id="{
-          is_field-name }" value="{ lv_value }" rows="{ is_field-rows }" { lv_attr }>| ).
+          is_field-name }" value="{ lv_value }" rows="{ is_field-rows }"{ lv_attr }>| ).
+        ii_html->add( |</textarea>| ).
 
       WHEN c_field_type-checkbox.
 
