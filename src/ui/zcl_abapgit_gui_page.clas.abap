@@ -135,7 +135,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
         ri_html->add( '<link rel="stylesheet" type="text/css" href="css/theme-belize-blue.css">' ).
     ENDCASE.
 
-    ri_html->add( '<script type="text/javascript" src="js/common.js"></script>' ).
+    ri_html->add( '<script src="js/common.js"></script>' ).
 
     CASE mo_settings->get_icon_scaling( ). " Enforce icon scaling
       WHEN mo_settings->c_icon_scaling-large.
@@ -313,7 +313,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( '<!DOCTYPE html>' ).
-    ri_html->add( '<html>' ).
+    ri_html->add( '<html lang="en">' ).
     ri_html->add( html_head( ) ).
     ri_html->add( '<body>' ).
     ri_html->add( title( ) ).
@@ -332,7 +332,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     li_script = scripts( ).
 
     IF li_script IS BOUND AND li_script->is_empty( ) = abap_false.
-      ri_html->add( '<script type="text/javascript">' ).
+      ri_html->add( '<script>' ).
       ri_html->add( li_script ).
       ri_html->add( 'confirmInitialized();' ).
       ri_html->add( '</script>' ).
