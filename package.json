@@ -4,7 +4,7 @@
     "test": "npm run eslint && npm run abaplint",
     "merge": "abapmerge -f src/zabapgit.prog.abap -c zabapgit_standalone > zabapgit.abap",
     "merge.ci": "cp zabapgit.abap ci/zabapgit_standalone.prog.abap && cd ci && abaplint && cd ..",
-    "unit": "abap_transpile && echo RUNNING && node output/index.js",
+    "unit": "rm -rf output && abap_transpile && echo RUNNING && node output/index.js",
     "abaplint": "abaplint",
     "eslint": "eslint src"
   },
