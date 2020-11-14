@@ -5,7 +5,7 @@
    <VSEOCLASS>
     <CLSNAME>ZCL_ABAPGIT_GUI_PAGE_ADDONLINE</CLSNAME>
     <LANGU>E</LANGU>
-    <DESCRIPT>abapgit GUI add repo online page</DESCRIPT>
+    <DESCRIPT>abapGit - New Online Repository</DESCRIPT>
     <STATE>1</STATE>
     <CLSCCINCL>X</CLSCCINCL>
     <FIXPT>X</FIXPT>
