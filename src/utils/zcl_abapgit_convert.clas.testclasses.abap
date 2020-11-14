@@ -13,7 +13,6 @@ CLASS ltcl_convert DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT FIN
     METHODS xstring_to_string_utf8 FOR TESTING.
     METHODS base64_to_xstring FOR TESTING.
     METHODS conversion_exit_isola_output FOR TESTING.
-    METHODS alpha_output FOR TESTING.
     METHODS string_to_tab FOR TESTING.
     METHODS string_to_xstring FOR TESTING.
     METHODS xstring_to_bintab FOR TESTING.
@@ -131,21 +130,6 @@ CLASS ltcl_convert IMPLEMENTATION.
     cl_abap_unit_assert=>assert_equals(
       act = lv_result
       exp = 'abc' ).
-
-  ENDMETHOD.
-
-  METHOD alpha_output.
-
-    DATA lv_alpha TYPE c LENGTH 10 VALUE '0000001234'.
-    DATA lv_numc TYPE n LENGTH 6 VALUE '001234'.
-
-    cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_convert=>alpha_output( lv_alpha )
-        exp = '1234' ).
-
-    cl_abap_unit_assert=>assert_equals(
-        act = zcl_abapgit_convert=>alpha_output( lv_numc )
-        exp = '1234' ).
 
   ENDMETHOD.
 
