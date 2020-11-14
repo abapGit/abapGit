@@ -198,6 +198,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     DATA: lv_class   TYPE string,
           lv_obj_txt TYPE string,
           lv_msg     TYPE string,
+          lv_line    TYPE i,
           ls_mtdkey  TYPE seocpdkey.
 
     CASE is_result-kind.
@@ -258,7 +259,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_CODI_BASE IMPLEMENTATION.
     IF lv_obj_txt IS INITIAL.
       lv_obj_txt = |{ is_result-objtype } { is_result-objname } &gt; { is_result-sobjtype } { is_result-sobjname }|.
     ENDIF.
-    lv_obj_txt = |{ lv_obj_txt } [ @{ zcl_abapgit_convert=>alpha_output( is_result-line ) } ]|.
+    lv_line = is_result-line. " convert from numc to integer
+    lv_obj_txt = |{ lv_obj_txt } [ @{ lv_line } ]|.
 
     ii_html->add( |<li class="{ lv_class }">| ).
     ii_html->add_a(
