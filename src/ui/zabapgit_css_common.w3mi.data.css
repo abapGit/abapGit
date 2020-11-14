@@ -1096,7 +1096,12 @@ settings_tab tr:first-child td { border-top: 0px; }
 }
 .dialog input[type="text"] {
   width: 100%;
-  box-sizing : border-box;
+  box-sizing: border-box;
+  height: 2.5em;
+}
+.dialog input[type="number"] {
+  width: 25%;
+  box-sizing: border-box;
   height: 2.5em;
 }
 .dialog .radio-container input[type="radio"] {
@@ -1130,6 +1135,9 @@ settings_tab tr:first-child td { border-top: 0px; }
 .dialog fieldset {
   margin-top: 1em;
   border: 1px solid;
+  border-right: none;
+  border-left: none;
+  border-bottom: none;
   border-radius: 6px; /* doesn't work in IE ? */
   padding-bottom: 1em;
 }
@@ -1137,8 +1145,11 @@ settings_tab tr:first-child td { border-top: 0px; }
   margin-top: 0;
 }
 .dialog fieldset legend {
-  font-size: small;
-  text-transform: uppercase;
+  font-size: large;
+  font-style: bold;
   padding-left: 0.5em;
   padding-right: 0.5em;
+}
+.dialog .dialog-help {
+  float: left;
 }
