@@ -120,7 +120,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE IMPLEMENTATION.
     ri_html->add( '<head>' ).
 
     ri_html->add( '<meta http-equiv="content-type" content="text/html; charset=utf-8">' ).
-    ri_html->add( '<meta http-equiv="x-ua-compatible" content="IE=edge" />' ).
+    ri_html->add( '<meta http-equiv="X-UA-Compatible" content="IE=11,10,9,8" />' ).
 
     ri_html->add( '<title>abapGit</title>' ).
     ri_html->add( '<link rel="stylesheet" type="text/css" href="css/common.css">' ).
