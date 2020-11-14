@@ -65,7 +65,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
+CLASS zcl_abapgit_file_status IMPLEMENTATION.
 
 
   METHOD build_existing.
@@ -249,7 +249,6 @@ CLASS ZCL_ABAPGIT_FILE_STATUS IMPLEMENTATION.
               <ls_result>-lstate = zif_abapgit_definitions=>c_state-modified.
             ENDIF.
             <ls_result>-rstate = zif_abapgit_definitions=>c_state-deleted.
-            CLEAR <ls_remote>-sha1. " Mark as processed
           ENDIF.
         ENDIF.
       ENDIF.
