@@ -51,11 +51,6 @@ CLASS zcl_abapgit_convert DEFINITION
         !iv_spras       TYPE spras
       RETURNING
         VALUE(rv_spras) TYPE laiso .
-    CLASS-METHODS alpha_output
-      IMPORTING
-        !iv_val       TYPE clike
-      RETURNING
-        VALUE(rv_str) TYPE string .
     CLASS-METHODS string_to_xstring
       IMPORTING
         !iv_str        TYPE string
@@ -88,15 +83,6 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
-
-
-  METHOD alpha_output.
-
-    rv_str = |{ iv_val ALPHA = OUT }|.
-
-    CONDENSE rv_str.
-
-  ENDMETHOD.
 
 
   METHOD base64_to_xstring.
@@ -277,16 +263,8 @@ CLASS ZCL_ABAPGIT_CONVERT IMPLEMENTATION.
 
   METHOD xstring_to_int.
 
-    DATA: lv_xstring TYPE xstring,
-          lv_x       TYPE x.
-
-
-    lv_xstring = iv_xstring.
-    WHILE xstrlen( lv_xstring ) > 0.
-      lv_x = lv_xstring(1).
-      rv_i = rv_i * 256 + lv_x.
-      lv_xstring = lv_xstring+1.
-    ENDWHILE.
+* use the built-in type conversion
+    rv_i = iv_xstring.
 
   ENDMETHOD.
 
