@@ -32,8 +32,6 @@ INTERFACE zif_abapgit_definitions
     ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY .
   TYPES:
     ty_string_tt TYPE STANDARD TABLE OF string WITH DEFAULT KEY .
-  TYPES:
-    ty_repo_ref_tt TYPE STANDARD TABLE OF REF TO zcl_abapgit_repo WITH DEFAULT KEY .
   TYPES ty_git_branch_type TYPE c LENGTH 2 .
   TYPES:
     BEGIN OF ty_git_branch,

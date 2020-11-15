@@ -60,7 +60,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
+CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
 
   METHOD check_sapgui.
@@ -329,9 +329,9 @@ CLASS ZCL_ABAPGIT_SERVICES_ABAPGIT IMPLEMENTATION.
           ls_r_package     LIKE LINE OF lt_r_package,
           lt_superpackages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
           li_package       TYPE REF TO zif_abapgit_sap_package,
-          lt_repo_list     TYPE zif_abapgit_definitions=>ty_repo_ref_tt.
+          lt_repo_list     TYPE zif_abapgit_repo_srv=>ty_repo_list.
 
-    FIELD-SYMBOLS: <lo_repo>         TYPE LINE OF zif_abapgit_definitions=>ty_repo_ref_tt,
+    FIELD-SYMBOLS: <lo_repo>         TYPE LINE OF zif_abapgit_repo_srv=>ty_repo_list,
                    <lv_superpackage> LIKE LINE OF lt_superpackages.
 
     li_package = zcl_abapgit_factory=>get_sap_package( iv_package ).
