@@ -203,7 +203,7 @@ CLASS ltcl_convert IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals( exp = lt_exp
                                         act = lt_act
-                                        msg = ' Error during string split: CRLF' ).
+                                        msg = 'Error during string split: CRLF' ).
 
     CLEAR: lt_act.
 
@@ -212,7 +212,7 @@ CLASS ltcl_convert IMPLEMENTATION.
 
     cl_abap_unit_assert=>assert_equals( exp = lt_exp
                                         act = lt_act
-                                        msg = ' Error during string split: LF' ).
+                                        msg = 'Error during string split: LF' ).
 
   ENDMETHOD.
 
