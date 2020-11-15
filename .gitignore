@@ -6,3 +6,4 @@ zabapgit.abap
 deps
 output
 ci/*.abap
+allure-report
