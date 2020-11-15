@@ -11,6 +11,27 @@ CLASS zcl_abapgit_objects DEFINITION
         files TYPE zif_abapgit_definitions=>ty_files_tt,
         item  TYPE zif_abapgit_definitions=>ty_item,
       END OF ty_serialization .
+    TYPES:
+      BEGIN OF ty_deserialization,
+        obj     TYPE REF TO zif_abapgit_object,
+        xml     TYPE REF TO zif_abapgit_xml_input,
+        package TYPE devclass,
+        item    TYPE zif_abapgit_definitions=>ty_item,
+      END OF ty_deserialization .
+    TYPES:
+      ty_deserialization_tt TYPE STANDARD TABLE OF ty_deserialization WITH DEFAULT KEY .
+    TYPES:
+      BEGIN OF ty_step_data,
+        step_id      TYPE zif_abapgit_definitions=>ty_deserialization_step,
+        order        TYPE i,
+        descr        TYPE string,
+        is_ddic      TYPE abap_bool,
+        syntax_check TYPE abap_bool,
+        objects      TYPE ty_deserialization_tt,
+      END OF ty_step_data .
+    TYPES:
+      ty_step_data_tt TYPE STANDARD TABLE OF ty_step_data
+                                  WITH DEFAULT KEY .
 
     CLASS-METHODS serialize
       IMPORTING
@@ -172,7 +193,7 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_objects
       IMPORTING
-        !is_step  TYPE zif_abapgit_definitions=>ty_step_data
+        !is_step  TYPE ty_step_data
         !ii_log   TYPE REF TO zif_abapgit_log
       CHANGING
         !ct_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt
@@ -217,12 +238,12 @@ CLASS zcl_abapgit_objects DEFINITION
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt .
     CLASS-METHODS get_deserialize_steps
       RETURNING
-        VALUE(rt_steps) TYPE zif_abapgit_definitions=>ty_step_data_tt .
+        VALUE(rt_steps) TYPE ty_step_data_tt .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD adjust_namespaces.
@@ -582,14 +603,14 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           lv_path     TYPE string,
           lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
           lt_steps_id TYPE zif_abapgit_definitions=>ty_deserialization_step_tt,
-          lt_steps    TYPE zif_abapgit_definitions=>ty_step_data_tt,
+          lt_steps    TYPE ty_step_data_tt,
           lx_exc      TYPE REF TO zcx_abapgit_exception.
     DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_result>  TYPE zif_abapgit_definitions=>ty_result,
                    <lv_step_id> TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_step_tt,
-                   <ls_step>    TYPE LINE OF zif_abapgit_definitions=>ty_step_data_tt,
-                   <ls_deser>   TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_tt.
+                   <ls_step>    TYPE LINE OF ty_step_data_tt,
+                   <ls_deser>   TYPE LINE OF ty_deserialization_tt.
 
     lt_steps = get_deserialize_steps( ).
 
@@ -910,7 +931,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD get_deserialize_steps.
-    FIELD-SYMBOLS: <ls_step>    TYPE LINE OF zif_abapgit_definitions=>ty_step_data_tt.
+    FIELD-SYMBOLS: <ls_step>    TYPE LINE OF ty_step_data_tt.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-ddic.
