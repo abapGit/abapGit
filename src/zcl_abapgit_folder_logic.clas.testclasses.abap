@@ -104,6 +104,10 @@ CLASS ltcl_folder_logic IMPLEMENTATION.
     RETURN.
   ENDMETHOD.
 
+  METHOD zif_abapgit_sap_package~get_namespace.
+    RETURN.
+  ENDMETHOD.
+
   METHOD setup.
 
     zcl_abapgit_injector=>set_sap_package( iv_package     = '$TOP'
@@ -222,6 +226,10 @@ CLASS ltcl_folder_logic_namespaces IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_sap_package~create_local.
+    RETURN.
+  ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~get_namespace.
     RETURN.
   ENDMETHOD.
 
