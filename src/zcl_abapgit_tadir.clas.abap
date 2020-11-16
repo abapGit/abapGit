@@ -38,20 +38,21 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
+CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
 
   METHOD build.
 
-    DATA: lv_path         TYPE string,
-          lo_skip_objects TYPE REF TO zcl_abapgit_skip_objects,
-          lt_excludes     TYPE RANGE OF trobjtype,
-          lt_srcsystem    TYPE RANGE OF tadir-srcsystem,
-          ls_srcsystem    LIKE LINE OF lt_srcsystem,
-          ls_exclude      LIKE LINE OF lt_excludes,
-          lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic,
-          lv_last_package TYPE devclass VALUE cl_abap_char_utilities=>horizontal_tab,
-          lt_packages     TYPE zif_abapgit_sap_package=>ty_devclass_tt.
+    DATA: lv_path              TYPE string,
+          lo_skip_objects      TYPE REF TO zcl_abapgit_skip_objects,
+          lt_excludes          TYPE RANGE OF trobjtype,
+          lt_srcsystem         TYPE RANGE OF tadir-srcsystem,
+          ls_srcsystem         LIKE LINE OF lt_srcsystem,
+          ls_exclude           LIKE LINE OF lt_excludes,
+          lo_folder_logic      TYPE REF TO zcl_abapgit_folder_logic,
+          lv_last_package      TYPE devclass VALUE cl_abap_char_utilities=>horizontal_tab,
+          lt_packages          TYPE zif_abapgit_sap_package=>ty_devclass_tt,
+          lv_bmfr_component_id TYPE ufps_posid.
 
     FIELD-SYMBOLS: <ls_tadir>   LIKE LINE OF rt_tadir,
                    <lv_package> LIKE LINE OF lt_packages.
@@ -145,6 +146,10 @@ CLASS ZCL_ABAPGIT_TADIR IMPLEMENTATION.
           CATCH cx_sy_dyn_call_illegal_method ##NO_HANDLER.
 * SICF might not be supported in some systems, assume this code is not called
         ENDTRY.
+      ELSEIF <ls_tadir>-object = 'BMFR'.
+        " Application components use generated IDs per system, use component identifier instead
+        lv_bmfr_component_id = zcl_abapgit_object_bmfr=>read_component_id( <ls_tadir>-obj_name ).
+        <ls_tadir>-obj_name = lv_bmfr_component_id.
       ENDIF.
     ENDLOOP.
   ENDMETHOD.
