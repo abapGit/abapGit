@@ -75,8 +75,7 @@ CLASS zcl_abapgit_object_bm_super IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~delete.
-    DATA: lv_object_id  TYPE ufobjdef,
-          lv_is_deleted TYPE abap_bool.
+    DATA: lv_object_id  TYPE ufobjdef.
 
     lv_object_id = get_local_tadir_object_name( ).
     IF lv_object_id IS INITIAL.
