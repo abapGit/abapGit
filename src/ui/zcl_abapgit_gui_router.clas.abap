@@ -127,7 +127,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_router IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -226,7 +226,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
     DATA: lv_key           TYPE zif_abapgit_persistence=>ty_repo-key,
           lv_last_repo_key TYPE zif_abapgit_persistence=>ty_repo-key,
-          lt_repo_list     TYPE zif_abapgit_definitions=>ty_repo_ref_tt.
+          lt_repo_list     TYPE zif_abapgit_persistence=>ty_repos.
 
 
     lv_key = ii_event->query( )->get( 'KEY' ).
@@ -234,7 +234,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
     CASE ii_event->mv_action.
       WHEN zcl_abapgit_gui=>c_action-go_home.
         lv_last_repo_key = zcl_abapgit_persistence_user=>get_instance( )->get_repo_show( ).
-        lt_repo_list = zcl_abapgit_repo_srv=>get_instance( )->list( ).
+        lt_repo_list = zcl_abapgit_persist_factory=>get_repo( )->list( ).
 
         IF lv_last_repo_key IS NOT INITIAL.
           CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_repo_view

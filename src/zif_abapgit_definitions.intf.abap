@@ -32,8 +32,6 @@ INTERFACE zif_abapgit_definitions
     ty_files_tt TYPE STANDARD TABLE OF ty_file WITH DEFAULT KEY .
   TYPES:
     ty_string_tt TYPE STANDARD TABLE OF string WITH DEFAULT KEY .
-  TYPES:
-    ty_repo_ref_tt TYPE STANDARD TABLE OF REF TO zcl_abapgit_repo WITH DEFAULT KEY .
   TYPES ty_git_branch_type TYPE c LENGTH 2 .
   TYPES:
     BEGIN OF ty_git_branch,
@@ -360,31 +358,10 @@ INTERFACE zif_abapgit_definitions
          END OF ty_alv_column,
          ty_alv_column_tt TYPE TABLE OF ty_alv_column WITH DEFAULT KEY.
   TYPES:
-    BEGIN OF ty_deserialization,
-      obj     TYPE REF TO zif_abapgit_object,
-      xml     TYPE REF TO zif_abapgit_xml_input,
-      package TYPE devclass,
-      item    TYPE ty_item,
-    END OF ty_deserialization .
-  TYPES:
-    ty_deserialization_tt TYPE STANDARD TABLE OF ty_deserialization WITH DEFAULT KEY .
-  TYPES:
     ty_deserialization_step TYPE string.
   TYPES:
     ty_deserialization_step_tt TYPE STANDARD TABLE OF ty_deserialization_step
                                           WITH DEFAULT KEY .
-  TYPES:
-    BEGIN OF ty_step_data,
-      step_id      TYPE ty_deserialization_step,
-      order        TYPE i,
-      descr        TYPE string,
-      is_ddic      TYPE abap_bool,
-      syntax_check TYPE abap_bool,
-      objects      TYPE ty_deserialization_tt,
-    END OF ty_step_data .
-  TYPES:
-    ty_step_data_tt TYPE STANDARD TABLE OF ty_step_data
-                                WITH DEFAULT KEY .
   TYPES:
     ty_object_type_range TYPE RANGE OF trobjtype,
     ty_object_name_range TYPE RANGE OF sobj_name.
