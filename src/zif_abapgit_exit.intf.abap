@@ -62,7 +62,7 @@ INTERFACE zif_abapgit_exit
       zcx_abapgit_exception .
   METHODS deserialize_postprocess
     IMPORTING
-      !is_step TYPE zif_abapgit_definitions=>ty_step_data
+      !is_step TYPE zif_abapgit_objects=>ty_step_data
       !ii_log  TYPE REF TO zif_abapgit_log .
   METHODS get_ci_tests
     IMPORTING
