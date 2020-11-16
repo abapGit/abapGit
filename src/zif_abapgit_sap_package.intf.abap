@@ -25,6 +25,9 @@ INTERFACE zif_abapgit_sap_package PUBLIC.
       RAISING   zcx_abapgit_exception,
     get_transport_type
       RETURNING VALUE(rs_transport_type) TYPE zif_abapgit_definitions=>ty_transport_type
+      RAISING   zcx_abapgit_exception,
+    get_namespace
+      RETURNING VALUE(rv_namespace) TYPE namespace
       RAISING   zcx_abapgit_exception.
 
 ENDINTERFACE.

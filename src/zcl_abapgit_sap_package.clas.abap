@@ -311,4 +311,27 @@ CLASS ZCL_ABAPGIT_SAP_PACKAGE IMPLEMENTATION.
     ENDIF.
 
   ENDMETHOD.
+
+  METHOD zif_abapgit_sap_package~get_namespace.
+    DATA: li_package TYPE REF TO if_package.
+
+    cl_package_factory=>load_package(
+      EXPORTING
+        i_package_name             = mv_package
+      IMPORTING
+        e_package                  = li_package
+      EXCEPTIONS
+        object_not_existing        = 1
+        unexpected_error           = 2
+        intern_err                 = 3
+        no_access                  = 4
+        object_locked_and_modified = 5
+        OTHERS                     = 6 ).
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise_t100( ).
+    ENDIF.
+
+    rv_namespace = li_package->namespace.
+  ENDMETHOD.
 ENDCLASS.

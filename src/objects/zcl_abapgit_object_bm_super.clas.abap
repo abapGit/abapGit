@@ -101,7 +101,8 @@ CLASS zcl_abapgit_object_bm_super IMPLEMENTATION.
           lo_specific_data_descr TYPE REF TO cl_abap_structdescr,
           lr_specific_data       TYPE REF TO data,
           lt_specific_fields     TYPE ty_specific_fields,
-          lv_mode                TYPE rpygsmode.
+          lv_mode                TYPE rpygsmode,
+          lv_namespace           TYPE namespace.
     FIELD-SYMBOLS: <lg_specific_data> TYPE data.
 
     lv_object_id = get_local_tadir_object_name( ).
@@ -131,6 +132,13 @@ CLASS zcl_abapgit_object_bm_super IMPLEMENTATION.
       ASSERT lv_object_id IS INITIAL.
     ENDIF.
 
+    lv_namespace = zcl_abapgit_factory=>get_sap_package( iv_package )->get_namespace( ).
+
+    IF lv_namespace(2) = '/0' OR " /0SAP/ = SAP, /0CUST/ = Customer
+       lv_namespace = '/*/'. " Mixed namespaces in local packages
+      CLEAR lv_namespace.
+    ENDIF.
+
     CALL FUNCTION 'BM_OBJECT_MAINTAIN'
       EXPORTING
         i_object_type  = ms_item-obj_type
@@ -138,6 +146,7 @@ CLASS zcl_abapgit_object_bm_super IMPLEMENTATION.
         i_devclass     = iv_package
         i_language     = mv_language
         i_mode         = lv_mode
+        i_namespace    = lv_namespace
       IMPORTING
         e_object_data  = ls_general_data
       TABLES
