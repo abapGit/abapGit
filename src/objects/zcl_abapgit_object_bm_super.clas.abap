@@ -268,7 +268,6 @@ CLASS zcl_abapgit_object_bm_super IMPLEMENTATION.
     ENDIF.
 
     IF lv_is_deleted = abap_true.
-      " Should not happen because of exists()
       zcx_abapgit_exception=>raise( |{ ms_item-obj_type }-{ ms_item-obj_name } does not exist| ).
     ENDIF.
 
@@ -281,9 +280,11 @@ CLASS zcl_abapgit_object_bm_super IMPLEMENTATION.
            ls_general_data-type,
            ls_general_data-id.
 
-    io_xml->add( iv_name = c_general_data_struct_name ig_data = ls_general_data ).
+    io_xml->add( iv_name = c_general_data_struct_name
+                 ig_data = ls_general_data ).
 
-    serialize_specific_data( io_xml = io_xml ig_specific_data = <lg_specific_data> ).
+    serialize_specific_data( io_xml           = io_xml
+                             ig_specific_data = <lg_specific_data> ).
   ENDMETHOD.
 
   METHOD map_remote_to_local_tadir.

@@ -51,7 +51,7 @@ CLASS zcl_abapgit_object_bmfr IMPLEMENTATION.
       WHEN 0.
         rv_object_name = space.
       WHEN 1.
-        rv_object_name = lt_object_names[ 1 ].
+        READ TABLE lt_object_names INDEX 1 INTO rv_object_name.
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( |Component ID { iv_component_id } is not unique in system.| ).
     ENDCASE.
@@ -79,10 +79,12 @@ CLASS zcl_abapgit_object_bmfr IMPLEMENTATION.
            <ls_specific_data>-srcsystem,
            <ls_specific_data>-ariid.
 
-    io_xml->add( iv_name = c_bmfr_struct_name ig_data = <ls_specific_data> ).
+    io_xml->add( iv_name = c_bmfr_struct_name
+                 ig_data = <ls_specific_data> ).
   ENDMETHOD.
 
   METHOD deserialize_specific_data.
+    DATA: lt_components TYPE abap_compdescr_tab.
     FIELD-SYMBOLS: <ls_specific_data> TYPE bmt_function_range,
                    <ls_component>     TYPE abap_compdescr.
 
@@ -96,7 +98,9 @@ CLASS zcl_abapgit_object_bmfr IMPLEMENTATION.
     <ls_specific_data>-as4local = 'A'.
     <ls_specific_data>-langu = mv_language.
 
-    LOOP AT get_specific_data_descr( )->components ASSIGNING <ls_component>.
+    lt_components = get_specific_data_descr( )->components.
+
+    LOOP AT lt_components ASSIGNING <ls_component>.
       APPEND <ls_component>-name TO et_specific_fields.
     ENDLOOP.
   ENDMETHOD.
