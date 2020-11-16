@@ -255,6 +255,7 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
 
   METHOD zif_abapgit_tadir~read_single.
+    DATA: lv_bmfr_component_id TYPE ufps_posid.
 
     IF iv_object = 'SICF'.
       TRY.
@@ -274,5 +275,9 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
         AND obj_name = iv_obj_name.                       "#EC CI_SUBRC
     ENDIF.
 
+    IF iv_object = 'BMFR' AND iv_pgmid = 'R3TR'.
+      lv_bmfr_component_id = zcl_abapgit_object_bmfr=>read_component_id( iv_obj_name ).
+      rs_tadir-obj_name = lv_bmfr_component_id.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.
