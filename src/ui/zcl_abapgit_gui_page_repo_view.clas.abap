@@ -432,7 +432,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       iv_act = zif_abapgit_definitions=>c_action-abapgit_home
     )->add(
       iv_txt = zcl_abapgit_gui_buttons=>settings( )
-      iv_act = zif_abapgit_definitions=>c_action-go_settings
+      iv_title = 'Settings'
+      io_sub = zcl_abapgit_gui_chunk_lib=>settings_submenu( )
     )->add(
       iv_txt = zcl_abapgit_gui_buttons=>advanced( )
       iv_title = 'Utilities'
@@ -856,7 +857,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                         iv_act = c_actions-display_more )
             } more. (Set in Advanced > {
             ri_html->a( iv_txt = 'Settings'
-                        iv_act = zif_abapgit_definitions=>c_action-go_settings )
+                        iv_act = zif_abapgit_definitions=>c_action-go_settings_personal )
             } )| ).
           ri_html->add( '</div>' ).
         ENDIF.
@@ -1298,9 +1299,14 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ls_hotkey_action-hotkey = |l|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
-    ls_hotkey_action-description   = |abapGit settings|.
-    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_settings.
+    ls_hotkey_action-description   = |abapGit global settings|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_settings_global.
     ls_hotkey_action-hotkey = |x|.
+    INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
+
+    ls_hotkey_action-description   = |abapGit personal settings|.
+    ls_hotkey_action-action = zif_abapgit_definitions=>c_action-go_settings_personal.
+    ls_hotkey_action-hotkey = |y|.
     INSERT ls_hotkey_action INTO TABLE rt_hotkey_actions.
 
   ENDMETHOD.

@@ -254,8 +254,11 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-go_debuginfo.
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_debuginfo.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-      WHEN zif_abapgit_definitions=>c_action-go_settings.
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_settings.
+      WHEN zif_abapgit_definitions=>c_action-go_settings_global.
+        rs_handled-page  = zcl_abapgit_gui_page_sett_glob=>create( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-go_settings_personal.
+        rs_handled-page  = zcl_abapgit_gui_page_sett_pers=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_background_run.              " Go background run page
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_bkg_run.

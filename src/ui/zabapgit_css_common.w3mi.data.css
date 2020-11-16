@@ -1104,6 +1104,11 @@ settings_tab tr:first-child td { border-top: 0px; }
   box-sizing: border-box;
   height: 2.5em;
 }
+.dialog textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
+}
 .dialog .radio-container input[type="radio"] {
   visibility: hidden;
   display: none;
