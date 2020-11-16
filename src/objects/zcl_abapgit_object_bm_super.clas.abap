@@ -185,7 +185,7 @@ CLASS zcl_abapgit_object_bm_super IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~get_comparator.
-
+    RETURN.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~get_deserialize_steps.
@@ -193,7 +193,7 @@ CLASS zcl_abapgit_object_bm_super IMPLEMENTATION.
   ENDMETHOD.
 
   METHOD zif_abapgit_object~get_metadata.
-
+    rs_metadata = get_metadata( ).
   ENDMETHOD.
 
   METHOD zif_abapgit_object~is_active.
