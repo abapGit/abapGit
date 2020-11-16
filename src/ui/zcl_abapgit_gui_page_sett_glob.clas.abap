@@ -151,7 +151,7 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
       iv_hint        = |At least { zcl_abapgit_settings=>c_commitmsg_body_size_dft } characters|
       iv_min         = zcl_abapgit_settings=>c_commitmsg_body_size_dft ).
 
-    IF zcl_abapgit_services_abapgit=>is_installed( ) AND sy-cprog = lc_abapgit_prog.
+    IF zcl_abapgit_services_abapgit=>is_installed( ) = abap_true AND sy-cprog = lc_abapgit_prog.
       ro_form->start_group(
         iv_name        = c_id-devint_settings
         iv_label       = 'Development Internal Settings'
@@ -177,10 +177,12 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
   METHOD read_proxy_bypass.
 
     DATA:
-      ls_proxy_bypass TYPE LINE OF zif_abapgit_definitions=>ty_range_proxy_bypass_url,
+      lt_proxy_bypass TYPE zif_abapgit_definitions=>ty_range_proxy_bypass_url,
+      ls_proxy_bypass LIKE LINE OF lt_proxy_bypass,
       lv_val          TYPE string.
 
-    LOOP AT mo_settings->get_proxy_bypass( ) INTO ls_proxy_bypass.
+    lt_proxy_bypass = mo_settings->get_proxy_bypass( ).
+    LOOP AT lt_proxy_bypass INTO ls_proxy_bypass.
       lv_val = lv_val && ls_proxy_bypass-low && zif_abapgit_definitions=>c_crlf.
     ENDLOOP.
 

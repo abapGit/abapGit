@@ -25,7 +25,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_TUTORIAL IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_tutorial IMPLEMENTATION.
 
 
   METHOD build_main_menu.
@@ -43,7 +43,8 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_TUTORIAL IMPLEMENTATION.
       iv_act = zif_abapgit_definitions=>c_action-repo_newoffline
     )->add(
       iv_txt = zcl_abapgit_gui_buttons=>settings( )
-      iv_act = zif_abapgit_definitions=>c_action-go_settings
+      iv_title = 'Settings'
+      io_sub = zcl_abapgit_gui_chunk_lib=>settings_submenu( )
     )->add(
       iv_txt = zcl_abapgit_gui_buttons=>advanced( )
       iv_title = 'Utilities'

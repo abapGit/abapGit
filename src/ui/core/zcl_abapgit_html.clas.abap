@@ -247,16 +247,12 @@ CLASS zcl_abapgit_html IMPLEMENTATION.
     ENDIF.
 
     " Textarea (same assumptions as above)
-    IF is_context-within_textarea = abap_true.
-      IF lv_len >= 10 AND lv_line(10) = '</TEXTAREA'.
-        rs_result-textarea_close = abap_true.
-      ENDIF.
-    ELSE.
-      IF lv_len >= 9 AND lv_line(9) = '<TEXTAREA'.
-        FIND FIRST OCCURRENCE OF '</TEXTAREA' IN lv_line.
-        IF sy-subrc > 0. " Not found
-          rs_result-textarea_open = abap_true.
-        ENDIF.
+    IF is_context-within_textarea = abap_true AND lv_len >= 10 AND lv_line(10) = '</TEXTAREA'.
+      rs_result-textarea_close = abap_true.
+    ELSEIF is_context-within_textarea = abap_false AND lv_len >= 9 AND lv_line(9) = '<TEXTAREA'.
+      FIND FIRST OCCURRENCE OF '</TEXTAREA' IN lv_line.
+      IF sy-subrc > 0. " Not found
+        rs_result-textarea_open = abap_true.
       ENDIF.
     ENDIF.
 
