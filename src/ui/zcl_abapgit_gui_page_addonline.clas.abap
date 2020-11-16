@@ -61,7 +61,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -87,7 +87,9 @@ CLASS zcl_abapgit_gui_page_addonline IMPLEMENTATION.
 
   METHOD get_form_schema.
 
-    ro_form = zcl_abapgit_html_form=>create( iv_form_id = 'add-repo-online-form' ).
+    ro_form = zcl_abapgit_html_form=>create(
+                iv_form_id   = 'add-repo-online-form'
+                iv_help_page = 'https://docs.abapgit.org/guide-online-install.html' ).
 
     ro_form->text(
       iv_name        = c_id-url
