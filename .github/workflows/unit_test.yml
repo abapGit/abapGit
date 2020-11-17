@@ -20,3 +20,5 @@ jobs:
       run: |
         npm install
         npm run unit
+    - name: View PR author
+      run: echo "This PR is opened by ${{ github.event.pull_request.user.login }} ."
