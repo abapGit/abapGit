@@ -371,7 +371,8 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
     SORT lt_tadir BY pgmid ASCENDING object ASCENDING obj_name ASCENDING devclass ASCENDING.
 
     LOOP AT lt_status ASSIGNING <ls_status>
-                      WHERE lstate = zif_abapgit_definitions=>c_state-added.
+                      WHERE lstate = zif_abapgit_definitions=>c_state-added
+                         OR rstate = zif_abapgit_definitions=>c_state-deleted.
 
       READ TABLE lt_tadir ASSIGNING <ls_tadir>
                           WITH KEY pgmid    = 'R3TR'
