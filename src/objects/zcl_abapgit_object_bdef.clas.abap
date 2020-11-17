@@ -309,7 +309,6 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
 
         tadir_insert( iv_package ).
 
-
         IF zif_abapgit_object~exists( ) = abap_false.
           CASE <lv_category>.
             WHEN '1'. "if_wb_adt_plugin_resource_co=>co_sfs_res_category_atomic.
@@ -365,6 +364,7 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
         ENDIF.
 
         corr_insert( iv_package ).
+
         zcl_abapgit_objects_activation=>add_item( ms_item ).
 
       CATCH cx_root INTO lx_error.
@@ -578,9 +578,7 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
 
     CREATE OBJECT ro_object_data TYPE ('CL_BLUE_SOURCE_OBJECT_DATA').
 
-    CALL METHOD ro_object_data->('IF_WB_OBJECT_DATA_MODEL~SET_DATA')
-      EXPORTING
-        p_data = <lg_data>.
+    ro_object_data->set_data(  p_data = <lg_data>  ).
 
   ENDMETHOD.
 
