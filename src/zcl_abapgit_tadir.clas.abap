@@ -255,8 +255,6 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
 
 
   METHOD zif_abapgit_tadir~read_single.
-    DATA: lv_bmfr_component_id TYPE ufps_posid.
-
     IF iv_object = 'SICF'.
       TRY.
           CALL METHOD ('ZCL_ABAPGIT_OBJECT_SICF')=>read_tadir
@@ -268,16 +266,15 @@ CLASS zcl_abapgit_tadir IMPLEMENTATION.
         CATCH cx_sy_dyn_call_illegal_method ##NO_HANDLER.
 * SICF might not be supported in some systems, assume this code is not called
       ENDTRY.
+    ELSEIF iv_object = 'BMFR'.
+      rs_tadir = zcl_abapgit_object_bmfr=>read_tadir_bmfr(
+        iv_pgmid    = iv_pgmid
+        iv_obj_name = iv_obj_name ).
     ELSE.
       SELECT SINGLE * FROM tadir INTO CORRESPONDING FIELDS OF rs_tadir
         WHERE pgmid = iv_pgmid
         AND object = iv_object
         AND obj_name = iv_obj_name.                       "#EC CI_SUBRC
-    ENDIF.
-
-    IF iv_object = 'BMFR' AND iv_pgmid = 'R3TR'.
-      lv_bmfr_component_id = zcl_abapgit_object_bmfr=>read_component_id( iv_obj_name ).
-      rs_tadir-obj_name = lv_bmfr_component_id.
     ENDIF.
   ENDMETHOD.
 ENDCLASS.

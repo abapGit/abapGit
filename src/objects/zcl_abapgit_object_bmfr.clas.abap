@@ -14,7 +14,11 @@ CLASS zcl_abapgit_object_bmfr DEFINITION
                         RAISING   zcx_abapgit_exception,
       read_object_name_by_comp_id IMPORTING iv_component_id       TYPE ufps_posid
                                   RETURNING VALUE(rv_object_name) TYPE sobj_name
-                                  RAISING   zcx_abapgit_exception.
+                                  RAISING   zcx_abapgit_exception,
+      read_tadir_bmfr IMPORTING iv_pgmid        TYPE pgmid
+                                iv_obj_name     TYPE sobj_name
+                      RETURNING VALUE(rs_tadir) TYPE zif_abapgit_definitions=>ty_tadir
+                      RAISING   zcx_abapgit_exception.
   PROTECTED SECTION.
     METHODS:
       serialize_specific_data REDEFINITION,
@@ -55,6 +59,27 @@ CLASS zcl_abapgit_object_bmfr IMPLEMENTATION.
       WHEN OTHERS.
         zcx_abapgit_exception=>raise( |Component ID { iv_component_id } is not unique in system.| ).
     ENDCASE.
+  ENDMETHOD.
+
+  METHOD read_tadir_bmfr.
+    DATA: lv_local_obj_name TYPE sobj_name,
+          lv_component_id   TYPE ufps_posid.
+
+    lv_component_id = iv_obj_name.
+
+    lv_local_obj_name = read_object_name_by_comp_id( lv_component_id ).
+    IF lv_local_obj_name IS INITIAL.
+      RETURN.
+    ENDIF.
+
+    SELECT SINGLE *
+      FROM tadir
+      INTO CORRESPONDING FIELDS OF rs_tadir
+      WHERE pgmid = iv_pgmid
+        AND obj_name = lv_local_obj_name.
+    IF sy-subrc = 0.
+      rs_tadir-obj_name = iv_obj_name.
+    ENDIF.
   ENDMETHOD.
 
   METHOD serialize_specific_data.
