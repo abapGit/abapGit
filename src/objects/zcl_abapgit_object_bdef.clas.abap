@@ -363,9 +363,9 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
           ENDCASE.
         ENDIF.
 
-        corr_insert( iv_package ).
+        CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~ACTIVATE').
 
-        zcl_abapgit_objects_activation=>add_item( ms_item ).
+        corr_insert( iv_package ).
 
       CATCH cx_root INTO lx_error.
         zcx_abapgit_exception=>raise(
@@ -404,7 +404,6 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-
     rs_metadata-ddic         = abap_true.
     rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.
