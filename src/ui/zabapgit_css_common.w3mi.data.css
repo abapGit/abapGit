@@ -200,6 +200,7 @@ span.transport-box {
   width: 0;
   padding: 0;
   margin: 0;
+  position: absolute;
   overflow: hidden;
 }
 
