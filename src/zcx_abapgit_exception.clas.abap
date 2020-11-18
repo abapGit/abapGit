@@ -400,7 +400,10 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
     DATA:
       lv_text    TYPE c LENGTH 200,
       lv_rest    TYPE c LENGTH 200,
-      ls_msg     TYPE symsg,
+      lv_msgv1   TYPE c LENGTH lc_length_of_msgv,
+      lv_msgv2   TYPE c LENGTH lc_length_of_msgv,
+      lv_msgv3   TYPE c LENGTH lc_length_of_msgv,
+      lv_msgv4   TYPE c LENGTH lc_length_of_msgv,
       lv_msg_var TYPE c LENGTH lc_length_of_msgv,
       lv_index   TYPE sy-index.
 
@@ -429,19 +432,19 @@ CLASS ZCX_ABAPGIT_EXCEPTION IMPLEMENTATION.
 
       CASE lv_index.
         WHEN 1.
-          ls_msg-msgv1 = lv_msg_var.
+          lv_msgv1 = lv_msg_var.
         WHEN 2.
-          ls_msg-msgv2 = lv_msg_var.
+          lv_msgv2 = lv_msg_var.
         WHEN 3.
-          ls_msg-msgv3 = lv_msg_var.
+          lv_msgv3 = lv_msg_var.
         WHEN 4.
-          ls_msg-msgv4 = lv_msg_var.
+          lv_msgv4 = lv_msg_var.
       ENDCASE.
 
     ENDDO.
 
     " Set syst using generic error message
-    MESSAGE e001(00) WITH ls_msg-msgv1 ls_msg-msgv2 ls_msg-msgv3 ls_msg-msgv4 INTO sy-lisel.
+    MESSAGE e001(00) WITH lv_msgv1 lv_msgv2 lv_msgv3 lv_msgv4 INTO sy-lisel.
 
   ENDMETHOD.
 ENDCLASS.
