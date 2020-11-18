@@ -57,7 +57,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_ADDOFFLIN IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -83,7 +83,9 @@ CLASS zcl_abapgit_gui_page_addofflin IMPLEMENTATION.
 
   METHOD get_form_schema.
 
-    ro_form = zcl_abapgit_html_form=>create( iv_form_id = 'add-repo-offline-form' ).
+    ro_form = zcl_abapgit_html_form=>create(
+                iv_form_id   = 'add-repo-offline-form'
+                iv_help_page = 'https://docs.abapgit.org/guide-offline-install.html' ).
 
     ro_form->text(
       iv_name        = c_id-url

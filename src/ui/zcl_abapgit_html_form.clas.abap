@@ -334,6 +334,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     DATA lv_hint TYPE string.
     DATA ls_form_id TYPE string.
     DATA lv_cur_group TYPE string.
+    DATA lv_url TYPE string.
 
     IF mv_form_id IS NOT INITIAL.
       ls_form_id = | id="{ mv_form_id }"|.
@@ -393,10 +394,11 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ri_html->add( |<li class="dialog-commands">| ).
 
     IF mv_help_page IS NOT INITIAL.
+      lv_url = escape( val    = mv_help_page
+                       format = cl_abap_format=>e_url ).
       ri_html->add_a(
         iv_txt   = zcl_abapgit_gui_buttons=>help( )
-        iv_typ   = zif_abapgit_html=>c_action_type-url
-        iv_act   = mv_help_page
+        iv_act   = |{ zif_abapgit_definitions=>c_action-url }?url={ lv_url }|
         iv_class = 'dialog-help'
         iv_title = 'Help' ).
     ENDIF.
