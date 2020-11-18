@@ -541,7 +541,7 @@ CLASS zcl_abapgit_objects IMPLEMENTATION.
 
     zcl_abapgit_default_transport=>get_instance( )->reset( ).
 
-    IF lx_error IS BOUND AND lines( lt_tadir ) > 0 AND NOT ii_log IS BOUND.
+    IF lx_error IS BOUND AND lines( lt_tadir ) > 0.
       RAISE EXCEPTION lx_error.
     ENDIF.
 
