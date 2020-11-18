@@ -117,6 +117,12 @@ CLASS ZCL_ABAPGIT_GUI IMPLEMENTATION.
     DATA: lv_index TYPE i,
           ls_stack LIKE LINE OF mt_stack.
 
+    " If viewer is showing Internet page, then use browser navigation
+    IF mi_html_viewer->get_url( ) CP 'http*'.
+      mi_html_viewer->back( ).
+      RETURN.
+    ENDIF.
+
     lv_index = lines( mt_stack ).
 
     IF lv_index = 0.
