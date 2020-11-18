@@ -48,4 +48,5 @@ INTERFACE zif_abapgit_html_viewer
     RETURNING
       VALUE(rv_url) TYPE w3url.
   METHODS back .
+  METHODS set_visiblity IMPORTING iv_visible TYPE abap_bool.
 ENDINTERFACE.
