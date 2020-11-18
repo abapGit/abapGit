@@ -363,8 +363,6 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
           ENDCASE.
         ENDIF.
 
-        CALL METHOD lo_wb_object_operator->('IF_WB_OBJECT_OPERATOR~ACTIVATE').
-
         corr_insert( iv_package ).
 
       CATCH cx_root INTO lx_error.
@@ -372,6 +370,8 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
             iv_text     = lx_error->get_text( )
             ix_previous = lx_error ).
     ENDTRY.
+
+    zcl_abapgit_objects_activation=>add_item( ms_item ).
 
   ENDMETHOD.
 
@@ -398,13 +398,13 @@ CLASS ZCL_ABAPGIT_OBJECT_BDEF IMPLEMENTATION.
 
 
   METHOD zif_abapgit_object~get_deserialize_steps.
-    APPEND zif_abapgit_object=>gc_step_id-ddic TO rt_steps.
+    APPEND zif_abapgit_object=>gc_step_id-abap TO rt_steps.
   ENDMETHOD.
 
 
   METHOD zif_abapgit_object~get_metadata.
     rs_metadata = get_metadata( ).
-    rs_metadata-ddic         = abap_true.
+    rs_metadata-ddic         = abap_false.
     rs_metadata-delete_tadir = abap_true.
   ENDMETHOD.
 
