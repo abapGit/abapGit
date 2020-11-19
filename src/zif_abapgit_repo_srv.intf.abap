@@ -1,5 +1,8 @@
 INTERFACE zif_abapgit_repo_srv
-  PUBLIC .
+  PUBLIC.
+
+  TYPES:
+    ty_repo_list TYPE STANDARD TABLE OF REF TO zcl_abapgit_repo WITH DEFAULT KEY.
 
   METHODS delete
     IMPORTING
@@ -23,7 +26,7 @@ INTERFACE zif_abapgit_repo_srv
       zcx_abapgit_exception .
   METHODS list
     RETURNING
-      VALUE(rt_list) TYPE zif_abapgit_definitions=>ty_repo_ref_tt
+      VALUE(rt_list) TYPE ty_repo_list
     RAISING
       zcx_abapgit_exception .
   METHODS new_offline
@@ -53,6 +56,7 @@ INTERFACE zif_abapgit_repo_srv
     IMPORTING
       !io_repo   TYPE REF TO zcl_abapgit_repo
       !is_checks TYPE zif_abapgit_definitions=>ty_delete_checks
+      !ii_log    TYPE REF TO zif_abapgit_log OPTIONAL
     RAISING
       zcx_abapgit_exception .
   METHODS validate_package

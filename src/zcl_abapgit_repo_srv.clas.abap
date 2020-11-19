@@ -28,7 +28,7 @@ CLASS zcl_abapgit_repo_srv DEFINITION
 
     CLASS-DATA gi_ref TYPE REF TO zif_abapgit_repo_srv .
     DATA mv_init TYPE abap_bool VALUE abap_false ##NO_TEXT.
-    DATA mt_list TYPE zif_abapgit_definitions=>ty_repo_ref_tt .
+    DATA mt_list TYPE zif_abapgit_repo_srv=>ty_repo_list .
 
     METHODS determine_branch_name
       IMPORTING
@@ -76,7 +76,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
+CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
 
   METHOD add.
@@ -336,7 +336,7 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
 
   METHOD zif_abapgit_repo_srv~is_repo_installed.
 
-    DATA: lt_repo        TYPE zif_abapgit_definitions=>ty_repo_ref_tt,
+    DATA: lt_repo        TYPE zif_abapgit_repo_srv=>ty_repo_list,
           lo_repo        TYPE REF TO zcl_abapgit_repo,
           lv_url         TYPE string,
           lv_package     TYPE devclass,
@@ -490,7 +490,8 @@ CLASS ZCL_ABAPGIT_REPO_SRV IMPLEMENTATION.
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( io_repo->get_package( ) ).
 
     zcl_abapgit_objects=>delete( it_tadir  = lt_tadir
-                                 is_checks = is_checks ).
+                                 is_checks = is_checks
+                                 ii_log    = ii_log ).
 
     delete( io_repo ).
 

@@ -41,14 +41,15 @@ CLASS zcl_abapgit_objects DEFINITION
       IMPORTING
         !it_tadir  TYPE zif_abapgit_definitions=>ty_tadir_tt
         !is_checks TYPE zif_abapgit_definitions=>ty_delete_checks OPTIONAL
+        !ii_log    TYPE REF TO zif_abapgit_log OPTIONAL
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS jump
       IMPORTING
-        !is_item        TYPE zif_abapgit_definitions=>ty_item
-        !iv_line_number TYPE i OPTIONAL
-        iv_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
-        iv_sub_obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type OPTIONAL
+        !is_item         TYPE zif_abapgit_definitions=>ty_item
+        !iv_line_number  TYPE i OPTIONAL
+        !iv_sub_obj_name TYPE zif_abapgit_definitions=>ty_item-obj_name OPTIONAL
+        !iv_sub_obj_type TYPE zif_abapgit_definitions=>ty_item-obj_type OPTIONAL
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS changed_by
@@ -172,7 +173,7 @@ CLASS zcl_abapgit_objects DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS deserialize_objects
       IMPORTING
-        !is_step  TYPE zif_abapgit_definitions=>ty_step_data
+        !is_step  TYPE zif_abapgit_objects=>ty_step_data
         !ii_log   TYPE REF TO zif_abapgit_log
       CHANGING
         !ct_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt
@@ -217,12 +218,12 @@ CLASS zcl_abapgit_objects DEFINITION
         VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt .
     CLASS-METHODS get_deserialize_steps
       RETURNING
-        VALUE(rt_steps) TYPE zif_abapgit_definitions=>ty_step_data_tt .
+        VALUE(rt_steps) TYPE zif_abapgit_objects=>ty_step_data_tt .
 ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
+CLASS zcl_abapgit_objects IMPLEMENTATION.
 
 
   METHOD adjust_namespaces.
@@ -471,6 +472,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     DATA: ls_item     TYPE zif_abapgit_definitions=>ty_item,
           li_progress TYPE REF TO zif_abapgit_progress,
           lt_tadir    LIKE it_tadir,
+          lt_deleted  LIKE it_tadir,
           lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
           lx_error    TYPE REF TO zcx_abapgit_exception,
           lv_count    TYPE i.
@@ -499,7 +501,8 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
     ENDTRY.
 
     lv_count = 1.
-    DO 3 TIMES.
+    DO.
+      CLEAR lt_deleted.
       LOOP AT lt_tadir ASSIGNING <ls_tadir>.
         li_progress->show( iv_current = lv_count
                            iv_text    = |Delete { <ls_tadir>-obj_name }| ).
@@ -513,22 +516,33 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
               iv_package = <ls_tadir>-devclass
               is_item    = ls_item ).
 
+            INSERT <ls_tadir> INTO TABLE lt_deleted.
             DELETE lt_tadir.
             lv_count = lv_count + 1.
 
             " make sure to save object deletions
             COMMIT WORK.
-          CATCH zcx_abapgit_exception INTO lx_error ##NO_HANDLER.
-            " ignore errors inside the loops and raise it later
+          CATCH zcx_abapgit_exception INTO lx_error.
+            IF ii_log IS BOUND.
+              ii_log->add_exception( ix_exc  = lx_error
+                                     is_item = ls_item ).
+              ii_log->add_error( iv_msg = |Deletion of object { ls_item-obj_name } failed|
+                                 is_item = ls_item ).
+            ENDIF.
         ENDTRY.
 
       ENDLOOP.
+
+      " Exit if done or nothing else was deleted
+      IF lines( lt_tadir ) = 0 OR lines( lt_deleted ) = 0.
+        EXIT.
+      ENDIF.
     ENDDO.
 
     zcl_abapgit_default_transport=>get_instance( )->reset( ).
 
     IF lx_error IS BOUND AND lines( lt_tadir ) > 0.
-      RAISE EXCEPTION lx_error.
+      zcx_abapgit_exception=>raise( 'Error during uninstall. Check the log.' ).
     ENDIF.
 
   ENDMETHOD.
@@ -582,14 +596,14 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
           lv_path     TYPE string,
           lt_items    TYPE zif_abapgit_definitions=>ty_items_tt,
           lt_steps_id TYPE zif_abapgit_definitions=>ty_deserialization_step_tt,
-          lt_steps    TYPE zif_abapgit_definitions=>ty_step_data_tt,
+          lt_steps    TYPE zif_abapgit_objects=>ty_step_data_tt,
           lx_exc      TYPE REF TO zcx_abapgit_exception.
     DATA: lo_folder_logic TYPE REF TO zcl_abapgit_folder_logic.
 
     FIELD-SYMBOLS: <ls_result>  TYPE zif_abapgit_definitions=>ty_result,
                    <lv_step_id> TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_step_tt,
-                   <ls_step>    TYPE LINE OF zif_abapgit_definitions=>ty_step_data_tt,
-                   <ls_deser>   TYPE LINE OF zif_abapgit_definitions=>ty_deserialization_tt.
+                   <ls_step>    TYPE LINE OF zif_abapgit_objects=>ty_step_data_tt,
+                   <ls_deser>   TYPE LINE OF zif_abapgit_objects=>ty_deserialization_tt.
 
     lt_steps = get_deserialize_steps( ).
 
@@ -910,7 +924,7 @@ CLASS ZCL_ABAPGIT_OBJECTS IMPLEMENTATION.
 
 
   METHOD get_deserialize_steps.
-    FIELD-SYMBOLS: <ls_step>    TYPE LINE OF zif_abapgit_definitions=>ty_step_data_tt.
+    FIELD-SYMBOLS: <ls_step>    TYPE LINE OF zif_abapgit_objects=>ty_step_data_tt.
 
     APPEND INITIAL LINE TO rt_steps ASSIGNING <ls_step>.
     <ls_step>-step_id      = zif_abapgit_object=>gc_step_id-ddic.
