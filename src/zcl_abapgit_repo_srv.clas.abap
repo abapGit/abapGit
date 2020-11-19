@@ -490,7 +490,8 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
     lt_tadir = zcl_abapgit_factory=>get_tadir( )->read( io_repo->get_package( ) ).
 
     zcl_abapgit_objects=>delete( it_tadir  = lt_tadir
-                                 is_checks = is_checks ).
+                                 is_checks = is_checks
+                                 ii_log    = ii_log ).
 
     delete( io_repo ).
 

@@ -91,7 +91,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
+CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
 
   METHOD check_package.
@@ -310,6 +310,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     DATA: lt_tadir     TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lv_answer    TYPE c LENGTH 1,
           lo_repo      TYPE REF TO zcl_abapgit_repo,
+          li_log       TYPE REF TO zif_abapgit_log,
           lv_package   TYPE devclass,
           lv_question  TYPE c LENGTH 100,
           ls_checks    TYPE zif_abapgit_definitions=>ty_delete_checks,
@@ -351,9 +352,17 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     ENDIF.
 
     zcl_abapgit_repo_srv=>get_instance( )->purge( io_repo   = lo_repo
-                                                  is_checks = ls_checks ).
+                                                  is_checks = ls_checks
+                                                  ii_log    = lo_repo->create_new_log( 'Uninstall Log' ) ).
 
     COMMIT WORK.
+
+    li_log = lo_repo->get_log( ).
+    IF li_log IS BOUND AND li_log->count( ) > 0.
+      zcl_abapgit_log_viewer=>show_log( ii_log = li_log
+                                        iv_header_text = li_log->get_title( ) ).
+      RETURN.
+    ENDIF.
 
     lv_message = |Repository { lv_repo_name } successfully uninstalled from Package { lv_package }. |.
     MESSAGE lv_message TYPE 'S'.
