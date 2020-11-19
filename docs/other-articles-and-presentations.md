@@ -138,3 +138,5 @@ Michael Pang
 [Automatically generate issues from source code](https://blogs.sap.com/2020/10/20/automatically-generated-issues-from-source-code-abapgit/), Enno Wulff
 
 [CTS is beautiful](https://blogs.sap.com/2020/11/05/cts-is-beautiful/), Lars Hvam
+
+[abapGit and namespace](https://blogs.sap.com/2020/11/18/abapgit-and-namespace/), Michael Keller
