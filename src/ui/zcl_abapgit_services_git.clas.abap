@@ -97,6 +97,7 @@ ENDCLASS.
 
 CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
+
   METHOD checkout_commit.
 
     DATA: lo_repo            TYPE REF TO zcl_abapgit_repo_online,
