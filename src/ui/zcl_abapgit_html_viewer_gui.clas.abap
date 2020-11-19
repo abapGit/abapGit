@@ -26,7 +26,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_HTML_VIEWER_GUI IMPLEMENTATION.
+CLASS zcl_abapgit_html_viewer_gui IMPLEMENTATION.
 
 
   METHOD constructor.

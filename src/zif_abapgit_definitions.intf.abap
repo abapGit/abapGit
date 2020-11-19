@@ -468,7 +468,7 @@ INTERFACE zif_abapgit_definitions
       go_branch_overview            TYPE string VALUE 'go_branch_overview',
       go_tag_overview               TYPE string VALUE 'go_tag_overview',
       go_debuginfo                  TYPE string VALUE 'go_debuginfo',
-      go_settings_global            TYPE string VALUE 'go_settings_global',
+      go_settings                   TYPE string VALUE 'go_settings',
       go_settings_personal          TYPE string VALUE 'go_settings_personal',
       go_tutorial                   TYPE string VALUE 'go_tutorial',
       go_patch                      TYPE string VALUE 'go_patch',

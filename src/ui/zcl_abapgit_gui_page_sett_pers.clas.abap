@@ -81,8 +81,6 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
     CREATE OBJECT mo_form_data.
     mo_form = get_form_schema( ).
 
-    read_settings( ).
-
   ENDMETHOD.
 
 
@@ -94,6 +92,8 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
 
     ri_page = zcl_abapgit_gui_page_hoc=>create(
       iv_page_title      = 'Personal Settings'
+      io_page_menu       = zcl_abapgit_gui_chunk_lib=>settings_toolbar(
+                             zif_abapgit_definitions=>c_action-go_settings_personal )
       ii_child_component = lo_component ).
 
   ENDMETHOD.
@@ -304,10 +304,12 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
 
     gui_services( )->register_event_handler( me ).
 
+    read_settings( ).
+
     CREATE OBJECT ri_html TYPE zcl_abapgit_html.
 
     ri_html->add( mo_form->render(
-      iv_form_class     = 'dialog w600px m-em5-sides margin-v1' " to center add wmax600px and auto-center instead
+      iv_form_class     = 'dialog w600px m-em5-sides margin-v1'
       io_values         = mo_form_data
       io_validation_log = mo_validation_log ) ).
 
