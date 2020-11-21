@@ -580,13 +580,27 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
   METHOD sap_gui_actions.
 
-    DATA: ls_item TYPE zif_abapgit_definitions=>ty_item.
+    DATA: ls_item        TYPE zif_abapgit_definitions=>ty_item,
+          lx_ex          TYPE REF TO zcx_abapgit_exception,
+          li_html_viewer TYPE REF TO zif_abapgit_html_viewer.
 
     CASE ii_event->mv_action.
       WHEN zif_abapgit_definitions=>c_action-jump.                          " Open object editor
         ls_item-obj_type = ii_event->query( )->get( 'TYPE' ).
         ls_item-obj_name = ii_event->query( )->get( 'NAME' ).
-        zcl_abapgit_objects=>jump( ls_item ).
+
+        li_html_viewer = zcl_abapgit_ui_factory=>get_html_viewer( ).
+
+        TRY.
+            " Hide HTML Viewer in dummy screen0 for direct CALL SCREEN to work
+            li_html_viewer->set_visiblity( abap_false ).
+            zcl_abapgit_objects=>jump( ls_item ).
+            li_html_viewer->set_visiblity( abap_true ).
+          CATCH zcx_abapgit_exception INTO lx_ex.
+            li_html_viewer->set_visiblity( abap_true ).
+            RAISE EXCEPTION lx_ex.
+        ENDTRY.
+
         rs_handled-state = zcl_abapgit_gui=>c_event_state-no_more_act.
 
       WHEN zif_abapgit_definitions=>c_action-jump_transport.

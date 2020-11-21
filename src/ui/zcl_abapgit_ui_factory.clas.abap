@@ -180,12 +180,11 @@ CLASS ZCL_ABAPGIT_UI_FACTORY IMPLEMENTATION.
 
   METHOD get_html_viewer.
 
-    IF gi_html_viewer IS BOUND.
-      ri_viewer = gi_html_viewer.
-      RETURN.
+    IF gi_html_viewer IS NOT BOUND.
+      CREATE OBJECT gi_html_viewer TYPE zcl_abapgit_html_viewer_gui.
     ENDIF.
 
-    CREATE OBJECT ri_viewer TYPE zcl_abapgit_html_viewer_gui.
+    ri_viewer = gi_html_viewer.
 
   ENDMETHOD.
 
