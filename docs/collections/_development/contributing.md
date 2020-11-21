@@ -14,7 +14,7 @@ Having already [installed](https://docs.abapgit.org/guide-install.html#install-s
 - cloning your *own [fork](https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/about-collaborative-development-models)* of the [abapGit repository](https://github.com/abapGit/abapGit) using abapGit's "New Online" option or 
 - [downloading the zip file and installing it](https://docs.abapgit.org/guide-install.html#install-developer-version) using the "New Offline" option
 
-(When specifying a package for the repository, assign a different (new, e.g. `$ZABAPGIT`) package to the one `ZABAPGIT_STANDALONE` is in)
+When specifying a package for the repository, assign a different (new, e.g. `$ZABAPGIT`) package to the one `ZABAPGIT_STANDALONE` is in
 
 2. Your system will now contain the abapGit package you created in step 1, along with several subpackages and development objects such as classes, interfaces, function groups, etc. There will also be the development version of the abapGit program (transaction `ZABAPGIT`). The standalone program, `ZABAPGIT_STANDALONE` will remain unaffected, to serve as [fallback](https://docs.abapgit.org/guide-upgrade.html#troubleshooting).
 
