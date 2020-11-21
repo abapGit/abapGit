@@ -8,7 +8,7 @@ General contribution guidelines can be found [here](https://github.com/abapGit/a
 How to submit a pull request:
 
 *******************************
-Having already [installed](https://docs.abapgit.org/guide-install.html#install-standalone-version) the [abapGit standalone](https://raw.githubusercontent.com/abapGit/build/master/zabapgit.abap) program,
+Having already [installed](https://docs.abapgit.org/guide-install.html#install-standalone-version) the abapGit standalone program,
 
 1. [Install the development version](https://docs.abapgit.org/guide-install.html#install-developer-version) of abapGit by running `ZABAPGIT_STANDALONE` and either:
 - cloning your *own [fork](https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/about-collaborative-development-models)* of the [abapGit repository](https://github.com/abapGit/abapGit) using abapGit's "New Online" option or 
@@ -24,7 +24,7 @@ Having already [installed](https://docs.abapgit.org/guide-install.html#install-s
 
 5. Submit a [pull request](https://docs.github.com/en/free-pro-team@latest/articles/creating-a-pull-request-from-a-fork) with the changes.
 
-Alternatively to the steps above, use the GitHub webinterface to change the files directly on a GitHub branch of your forked abapGit repository and then submit a pull request. This might make sense when, e.g., contributing to the documentation files such as the one you are reading right now (where contributions are done through the "Improve this page" link above).
+Alternatively to the steps above, use the GitHub webinterface to change the files directly on a GitHub branch of your forked abapGit repository and then submit a pull request. This might make sense when, e.g., contributing to the documentation files such as the one you are reading right now (where contributions may be initiated through the "Improve this page" link above).
 
 If you already have an old fork and would like to create a new pull request, you can sync your old fork to current state following this guide: [Sync your fork to original repository](https://github.com/KirstieJane/STEMMRoleModels/wiki/Syncing-your-fork-to-the-original-repository-via-the-browser).
 
