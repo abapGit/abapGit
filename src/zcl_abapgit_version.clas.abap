@@ -9,26 +9,26 @@ CLASS zcl_abapgit_version DEFINITION
       IMPORTING
         !iv_version       TYPE string
       RETURNING
-        VALUE(rv_version) TYPE string .
+        VALUE(rv_version) TYPE string.
     CLASS-METHODS conv_str_to_version
       IMPORTING
         !iv_version       TYPE csequence
       RETURNING
         VALUE(rs_version) TYPE zif_abapgit_definitions=>ty_version
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     CLASS-METHODS check_dependant_version
       IMPORTING
         !is_current   TYPE zif_abapgit_definitions=>ty_version
         !is_dependant TYPE zif_abapgit_definitions=>ty_version
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     CLASS-METHODS compare
       IMPORTING
         !iv_a            TYPE string
         !iv_b            TYPE string
       RETURNING
-        VALUE(rv_result) TYPE i .
+        VALUE(rv_result) TYPE i.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -101,8 +101,8 @@ CLASS zcl_abapgit_version IMPLEMENTATION.
           ls_version_b TYPE zif_abapgit_definitions=>ty_version.
 
     TRY.
-        ls_version_a = zcl_abapgit_version=>conv_str_to_version( iv_a ).
-        ls_version_b = zcl_abapgit_version=>conv_str_to_version( iv_b ).
+        ls_version_a = conv_str_to_version( iv_a ).
+        ls_version_b = conv_str_to_version( iv_b ).
       CATCH zcx_abapgit_exception.
         rv_result = 0.
         RETURN.
@@ -112,8 +112,8 @@ CLASS zcl_abapgit_version IMPLEMENTATION.
       rv_result = 0.
     ELSE.
       TRY.
-          zcl_abapgit_version=>check_dependant_version( is_current   = ls_version_a
-                                                        is_dependant = ls_version_b ).
+          check_dependant_version( is_current   = ls_version_a
+                                   is_dependant = ls_version_b ).
           rv_result = 1.
         CATCH zcx_abapgit_exception.
           rv_result = -1.
