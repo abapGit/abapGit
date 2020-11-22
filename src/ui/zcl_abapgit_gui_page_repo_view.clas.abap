@@ -186,7 +186,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
+CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -309,6 +309,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
     ENDIF.
 
     ro_advanced_dropdown->add( iv_txt = 'Remove'
+                               iv_title = `Remove abapGit's records of the repository (SAP objects unaffected)`
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_remove }?key={ mv_key }| ).
 
     CLEAR lv_crossout.
@@ -317,6 +318,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
       lv_crossout = zif_abapgit_html=>c_html_opt-crossout.
     ENDIF.
     ro_advanced_dropdown->add( iv_txt = 'Uninstall'
+                               iv_title = `Deletes SAP package objects!`
                                iv_act = |{ zif_abapgit_definitions=>c_action-repo_purge }?key={ mv_key }|
                                iv_opt = lv_crossout ).
 
