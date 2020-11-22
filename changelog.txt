@@ -8,6 +8,16 @@ Legend
 + : added
 - : removed
 
+2020-11-22 v1.103.0
+-------------------
+! DDLS file format changes, newline
+! VIEW file format changes, less data
++ Support jump for SHI3
++ Support jump for SHI5
+* New help buttons in new online/offline forms
+* Better error handling for uninstall
+* Documentation updates
+
 2020-11-12 v1.102.0
 -------------------
 + Backup and restore for abapGit persistency
