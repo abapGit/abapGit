@@ -1,6 +1,6 @@
 {
   "input_folder": "src",
-  "input_filter": ["zif_abapgit_definitions", "zcl_abapgit_convert"],
+  "input_filter": ["zif_abapgit_definitions", "zcl_abapgit_convert", "zcl_abapgit_path", "zcx_abapgit_exception"],
   "output_folder": "output",
   "lib": "https://github.com/open-abap/open-abap",
   "write_unit_tests": true,
