@@ -13,4 +13,11 @@ ENDCLASS.
 
 
 CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
+
+
+  METHOD zif_abapgit_data_serializer~serialize.
+
+* todo
+
+  ENDMETHOD.
 ENDCLASS.
