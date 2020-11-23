@@ -200,6 +200,7 @@ span.transport-box {
   width: 0;
   padding: 0;
   margin: 0;
+  position: absolute;
   overflow: hidden;
 }
 
@@ -1103,6 +1104,11 @@ settings_tab tr:first-child td { border-top: 0px; }
   width: 25%;
   box-sizing: border-box;
   height: 2.5em;
+}
+.dialog textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px;
 }
 .dialog .radio-container input[type="radio"] {
   visibility: hidden;

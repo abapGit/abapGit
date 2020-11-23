@@ -127,7 +127,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
+CLASS zcl_abapgit_gui_router IMPLEMENTATION.
 
 
   METHOD abapgit_services_actions.
@@ -251,11 +251,14 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-go_db.                          " Go DB util page
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_db.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-      WHEN zif_abapgit_definitions=>c_action-go_debuginfo.
+      WHEN zif_abapgit_definitions=>c_action-go_debuginfo.                   " Go debug info
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_debuginfo.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-      WHEN zif_abapgit_definitions=>c_action-go_settings.
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_settings.
+      WHEN zif_abapgit_definitions=>c_action-go_settings.                    " Go global settings
+        rs_handled-page  = zcl_abapgit_gui_page_sett_glob=>create( ).
+        rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
+      WHEN zif_abapgit_definitions=>c_action-go_settings_personal.           " Go personal settings
+        rs_handled-page  = zcl_abapgit_gui_page_sett_pers=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-go_background_run.              " Go background run page
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_bkg_run.
@@ -524,23 +527,23 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-repo_newoffline.                 " New offline repo
         rs_handled-page  = zcl_abapgit_gui_page_addofflin=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-      WHEN zif_abapgit_definitions=>c_action-repo_add_all_obj_to_trans_req.
+      WHEN zif_abapgit_definitions=>c_action-repo_add_all_obj_to_trans_req.   " Add objects to transport
         zcl_abapgit_transport=>add_all_objects_to_trans_req( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_refresh.                    " Repo refresh
         zcl_abapgit_services_repo=>refresh( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
       WHEN zif_abapgit_definitions=>c_action-repo_syntax_check.
-        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_syntax
+        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_syntax        " Syntax check
           EXPORTING
             io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-      WHEN zif_abapgit_definitions=>c_action-repo_code_inspector.
+      WHEN zif_abapgit_definitions=>c_action-repo_code_inspector.             " Code inspector
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_code_insp
           EXPORTING
             io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-      WHEN zif_abapgit_definitions=>c_action-repo_purge.                      " Repo remove & purge all objects
+      WHEN zif_abapgit_definitions=>c_action-repo_purge.                      " Repo purge all objects (uninstall)
         zcl_abapgit_services_repo=>purge( lv_key ).
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_main.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
@@ -548,7 +551,7 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
         zcl_abapgit_services_repo=>remove( lv_key ).
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_main.
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page_replacing.
-      WHEN zif_abapgit_definitions=>c_action-repo_newonline.
+      WHEN zif_abapgit_definitions=>c_action-repo_newonline.                  " New offline repo
         rs_handled-page  = zcl_abapgit_gui_page_addonline=>create( ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
       WHEN zif_abapgit_definitions=>c_action-repo_refresh_checksums.          " Rebuild local checksums
@@ -557,15 +560,15 @@ CLASS ZCL_ABAPGIT_GUI_ROUTER IMPLEMENTATION.
       WHEN zif_abapgit_definitions=>c_action-repo_toggle_fav.                 " Toggle repo as favorite
         zcl_abapgit_services_repo=>toggle_favorite( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN zif_abapgit_definitions=>c_action-repo_transport_to_branch.
+      WHEN zif_abapgit_definitions=>c_action-repo_transport_to_branch.        " Transport to branch
         zcl_abapgit_services_repo=>transport_to_branch( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-re_render.
-      WHEN zif_abapgit_definitions=>c_action-repo_settings.
+      WHEN zif_abapgit_definitions=>c_action-repo_settings.                   " Repo settings
         CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_repo_sett
           EXPORTING
             io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
-      WHEN zif_abapgit_definitions=>c_action-repo_log.
+      WHEN zif_abapgit_definitions=>c_action-repo_log.                        " Repo log
         li_log = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key )->get_log( ).
         zcl_abapgit_log_viewer=>show_log( ii_log = li_log
                                           iv_header_text = li_log->get_title( ) ).

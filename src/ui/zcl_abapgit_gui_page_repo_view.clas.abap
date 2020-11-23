@@ -515,7 +515,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                      iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?key={ mv_key }|
                      iv_title = `Repository Settings` ).
 
-
   ENDMETHOD.
 
 
@@ -758,12 +757,12 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
     gui_services( )->register_event_handler( me ).
 
-    " Reinit, for the case of type change
-    mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
-
-    lo_news = zcl_abapgit_news=>create( mo_repo ).
-
     TRY.
+        " Reinit, for the case of type change
+        mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
+
+        lo_news = zcl_abapgit_news=>create( mo_repo ).
+
         CREATE OBJECT ri_html TYPE zcl_abapgit_html.
         ri_html->add( |<div class="repo" id="repo{ mv_key }">| ).
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(
@@ -858,7 +857,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                         iv_act = c_actions-display_more )
             } more. (Set in Advanced > {
             ri_html->a( iv_txt = 'Settings'
-                        iv_act = zif_abapgit_definitions=>c_action-go_settings )
+                        iv_act = zif_abapgit_definitions=>c_action-go_settings_personal )
             } )| ).
           ri_html->add( '</div>' ).
         ENDIF.
