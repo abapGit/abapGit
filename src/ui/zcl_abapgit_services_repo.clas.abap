@@ -312,7 +312,6 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     DATA: lt_tadir     TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lv_answer    TYPE c LENGTH 1,
           lo_repo      TYPE REF TO zcl_abapgit_repo,
-          li_log       TYPE REF TO zif_abapgit_log,
           lv_package   TYPE devclass,
           lv_question  TYPE c LENGTH 100,
           ls_checks    TYPE zif_abapgit_definitions=>ty_delete_checks,
@@ -362,7 +361,7 @@ CLASS ZCL_ABAPGIT_SERVICES_REPO IMPLEMENTATION.
     IF ri_log IS BOUND AND ri_log->count( ) > 0.
       zcl_abapgit_log_viewer=>show_log(
         ii_log         = ri_log
-        iv_header_text = li_log->get_title( ) ).
+        iv_header_text = ri_log->get_title( ) ).
       RETURN.
     ENDIF.
 
