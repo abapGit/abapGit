@@ -73,7 +73,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_GLOB IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -106,8 +106,8 @@ CLASS zcl_abapgit_gui_page_sett_glob IMPLEMENTATION.
     CONSTANTS lc_abapgit_prog TYPE progname VALUE `ZABAPGIT`.
 
     ro_form = zcl_abapgit_html_form=>create(
-                iv_form_id   = 'global-setting-form'
-                iv_help_page = 'https://docs.abapgit.org/guide-global-settings.html' ).
+      iv_form_id   = 'global-setting-form'
+      iv_help_page = 'https://docs.abapgit.org/guide-settings-global.html' ).
 
     ro_form->start_group(
       iv_name        = c_id-proxy_settings

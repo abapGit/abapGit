@@ -71,7 +71,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_SETT_PERS IMPLEMENTATION.
 
 
   METHOD constructor.
@@ -102,8 +102,8 @@ CLASS zcl_abapgit_gui_page_sett_pers IMPLEMENTATION.
   METHOD get_form_schema.
 
     ro_form = zcl_abapgit_html_form=>create(
-                iv_form_id   = 'personal-setting-form'
-                iv_help_page = 'https://docs.abapgit.org/guide-personal-settings.html' ).
+      iv_form_id   = 'personal-setting-form'
+      iv_help_page = 'https://docs.abapgit.org/guide-settings-personal.html' ).
 
     ro_form->start_group(
       iv_name          = c_id-startup
