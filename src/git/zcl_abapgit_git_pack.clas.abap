@@ -782,10 +782,10 @@ CLASS ZCL_ABAPGIT_GIT_PACK IMPLEMENTATION.
 
 * https://github.com/git/git/blob/master/Documentation/technical/pack-format.txt
 
-*        n-byte sizeN (as long as MSB is set, each 7-bit)
-*		size0..sizeN form 4+7+7+..+7 bit integer, size0
-*		is the least significant part, and sizeN is the
-*		most significant part.
+* n-byte sizeN (as long as MSB is set, each 7-bit)
+*    size0..sizeN form 4+7+7+..+7 bit integer, size0
+*    is the least significant part, and sizeN is the
+*    most significant part.
 
     DATA: lv_x           TYPE x,
           lv_length_bits TYPE string,
