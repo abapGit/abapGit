@@ -48,12 +48,12 @@ CLASS zcl_abapgit_repo_srv DEFINITION
       IMPORTING
         !is_repo_meta  TYPE zif_abapgit_persistence=>ty_repo
       RETURNING
-        VALUE(ro_repo) TYPE REF TO zcl_abapgit_repo
+        VALUE(ro_repo) TYPE REF TO zif_abapgit_repo
       RAISING
         zcx_abapgit_exception .
     METHODS add
       IMPORTING
-        !io_repo TYPE REF TO zcl_abapgit_repo
+        !io_repo TYPE REF TO zif_abapgit_repo
       RAISING
         zcx_abapgit_exception .
     METHODS reinstantiate_repo
@@ -68,7 +68,7 @@ CLASS zcl_abapgit_repo_srv DEFINITION
         !it_repos      TYPE zif_abapgit_persistence=>ty_repos
         !iv_ign_subpkg TYPE abap_bool DEFAULT abap_false
       EXPORTING
-        VALUE(eo_repo) TYPE REF TO zcl_abapgit_repo
+        VALUE(eo_repo) TYPE REF TO zif_abapgit_repo
         !ev_reason     TYPE string
       RAISING
         zcx_abapgit_exception .
@@ -175,7 +175,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
 
   METHOD reinstantiate_repo.
 
-    DATA lo_repo      TYPE REF TO zcl_abapgit_repo.
+    DATA lo_repo      TYPE REF TO zif_abapgit_repo.
     DATA ls_full_meta TYPE zif_abapgit_persistence=>ty_repo.
 
     lo_repo = get( iv_key ).
@@ -196,7 +196,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
       ls_repo     LIKE LINE OF it_repos,
       li_package  TYPE REF TO zif_abapgit_sap_package,
       lt_packages TYPE zif_abapgit_sap_package=>ty_devclass_tt,
-      lo_repo     TYPE REF TO zcl_abapgit_repo.
+      lo_repo     TYPE REF TO zif_abapgit_repo.
 
     LOOP AT it_repos INTO ls_repo.
       lo_repo = get( ls_repo-key ).
@@ -337,10 +337,10 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
   METHOD zif_abapgit_repo_srv~is_repo_installed.
 
     DATA: lt_repo        TYPE zif_abapgit_repo_srv=>ty_repo_list,
-          lo_repo        TYPE REF TO zcl_abapgit_repo,
+          lo_repo        TYPE REF TO zif_abapgit_repo,
           lv_url         TYPE string,
           lv_package     TYPE devclass,
-          lo_repo_online TYPE REF TO zcl_abapgit_repo_online,
+          lo_repo_online TYPE REF TO zif_abapgit_repo_online,
           lv_err         TYPE string.
 
     lt_repo = list( ).
@@ -501,7 +501,7 @@ CLASS zcl_abapgit_repo_srv IMPLEMENTATION.
   METHOD zif_abapgit_repo_srv~validate_package.
 
     DATA: lv_as4user TYPE tdevc-as4user,
-          lo_repo    TYPE REF TO zcl_abapgit_repo,
+          lo_repo    TYPE REF TO zif_abapgit_repo,
           lv_reason  TYPE string.
 
     IF iv_package IS INITIAL.

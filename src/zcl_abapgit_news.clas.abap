@@ -20,7 +20,7 @@ CLASS zcl_abapgit_news DEFINITION
 
     CLASS-METHODS create     " TODO REFACTOR
       IMPORTING
-        !io_repo           TYPE REF TO zcl_abapgit_repo
+        !io_repo           TYPE REF TO zif_abapgit_repo
       RETURNING
         VALUE(ro_instance) TYPE REF TO zcl_abapgit_news
       RAISING

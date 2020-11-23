@@ -104,7 +104,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
   METHOD do_install.
 
-    DATA: lo_repo   TYPE REF TO zcl_abapgit_repo_online,
+    DATA: lo_repo   TYPE REF TO zcl_abapgit_repo,
           lv_answer TYPE c LENGTH 1.
 
 
@@ -126,7 +126,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
       zcl_abapgit_factory=>get_sap_package( iv_package )->create_local( ).
 
-      lo_repo = zcl_abapgit_repo_srv=>get_instance( )->new_online(
+      lo_repo ?= zcl_abapgit_repo_srv=>get_instance( )->new_online(
         iv_url         = iv_url
         iv_branch_name = zif_abapgit_definitions=>c_git_branch-master
         iv_package     = iv_package ).
@@ -324,7 +324,7 @@ CLASS zcl_abapgit_services_abapgit IMPLEMENTATION.
 
   METHOD set_start_repo_from_package.
 
-    DATA: lo_repo          TYPE REF TO zcl_abapgit_repo,
+    DATA: lo_repo          TYPE REF TO zif_abapgit_repo,
           lt_r_package     TYPE RANGE OF devclass,
           ls_r_package     LIKE LINE OF lt_r_package,
           lt_superpackages TYPE zif_abapgit_sap_package=>ty_devclass_tt,

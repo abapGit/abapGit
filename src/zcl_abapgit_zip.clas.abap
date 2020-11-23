@@ -6,7 +6,7 @@ CLASS zcl_abapgit_zip DEFINITION
 
     CLASS-METHODS export
       IMPORTING
-        !io_repo       TYPE REF TO zcl_abapgit_repo
+        !io_repo       TYPE REF TO zif_abapgit_repo
         !iv_show_log   TYPE abap_bool DEFAULT abap_true
         !it_filter     TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
       RETURNING

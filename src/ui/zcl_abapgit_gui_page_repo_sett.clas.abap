@@ -8,7 +8,7 @@ CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
 
     METHODS constructor
       IMPORTING
-                !io_repo TYPE REF TO zcl_abapgit_repo
+                !io_repo TYPE REF TO zif_abapgit_repo
       RAISING   zcx_abapgit_exception.
 
     METHODS zif_abapgit_gui_event_handler~on_event
@@ -19,7 +19,7 @@ CLASS zcl_abapgit_gui_page_repo_sett DEFINITION
       BEGIN OF c_action,
         save_settings TYPE string VALUE 'save_settings',
       END OF c_action .
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo.
+    DATA mo_repo TYPE REF TO zif_abapgit_repo.
 
     METHODS render_dot_abapgit
       IMPORTING

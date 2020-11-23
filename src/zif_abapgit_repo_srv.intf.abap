@@ -2,18 +2,18 @@ INTERFACE zif_abapgit_repo_srv
   PUBLIC.
 
   TYPES:
-    ty_repo_list TYPE STANDARD TABLE OF REF TO zcl_abapgit_repo WITH DEFAULT KEY.
+    ty_repo_list TYPE STANDARD TABLE OF REF TO zif_abapgit_repo WITH DEFAULT KEY.
 
   METHODS delete
     IMPORTING
-      !io_repo TYPE REF TO zcl_abapgit_repo
+      !io_repo TYPE REF TO zif_abapgit_repo
     RAISING
       zcx_abapgit_exception .
   METHODS get
     IMPORTING
       !iv_key        TYPE zif_abapgit_persistence=>ty_value
     RETURNING
-      VALUE(ro_repo) TYPE REF TO zcl_abapgit_repo
+      VALUE(ro_repo) TYPE REF TO zif_abapgit_repo
     RAISING
       zcx_abapgit_exception .
   METHODS is_repo_installed
@@ -49,12 +49,12 @@ INTERFACE zif_abapgit_repo_srv
       !iv_ign_subpkg       TYPE abap_bool DEFAULT abap_false
       !iv_master_lang_only TYPE abap_bool DEFAULT abap_false
     RETURNING
-      VALUE(ro_repo)       TYPE REF TO zcl_abapgit_repo_online
+      VALUE(ro_repo)       TYPE REF TO zif_abapgit_repo_online
     RAISING
       zcx_abapgit_exception .
   METHODS purge
     IMPORTING
-      !io_repo   TYPE REF TO zcl_abapgit_repo
+      !io_repo   TYPE REF TO zif_abapgit_repo
       !is_checks TYPE zif_abapgit_definitions=>ty_delete_checks
       !ii_log    TYPE REF TO zif_abapgit_log OPTIONAL
     RAISING
@@ -71,7 +71,7 @@ INTERFACE zif_abapgit_repo_srv
       !iv_package    TYPE devclass
       !iv_ign_subpkg TYPE abap_bool DEFAULT abap_false
     EXPORTING
-      VALUE(eo_repo) TYPE REF TO zcl_abapgit_repo
+      VALUE(eo_repo) TYPE REF TO zif_abapgit_repo
       !ev_reason     TYPE string
     RAISING
       zcx_abapgit_exception .

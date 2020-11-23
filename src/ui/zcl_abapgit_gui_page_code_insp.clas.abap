@@ -7,7 +7,7 @@ CLASS zcl_abapgit_gui_page_code_insp DEFINITION PUBLIC FINAL CREATE PUBLIC
     METHODS:
       constructor
         IMPORTING
-          io_repo  TYPE REF TO zcl_abapgit_repo
+          io_repo  TYPE REF TO zif_abapgit_repo
           io_stage TYPE REF TO zcl_abapgit_stage OPTIONAL
         RAISING
           zcx_abapgit_exception,

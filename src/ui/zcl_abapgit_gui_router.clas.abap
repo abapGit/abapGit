@@ -659,7 +659,7 @@ CLASS zcl_abapgit_gui_router IMPLEMENTATION.
   METHOD zip_services.
 
     DATA: lv_key     TYPE zif_abapgit_persistence=>ty_repo-key,
-          lo_repo    TYPE REF TO zcl_abapgit_repo,
+          lo_repo    TYPE REF TO zif_abapgit_repo,
           lv_package TYPE devclass,
           lv_path    TYPE string,
           lv_xstr    TYPE xstring.

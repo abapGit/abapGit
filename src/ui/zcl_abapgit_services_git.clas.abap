@@ -67,7 +67,7 @@ CLASS zcl_abapgit_services_git DEFINITION
 
     CLASS-METHODS get_unnecessary_local_objs
       IMPORTING
-        !io_repo                            TYPE REF TO zcl_abapgit_repo
+        !io_repo                            TYPE REF TO zif_abapgit_repo
       RETURNING
         VALUE(rt_unnecessary_local_objects) TYPE zif_abapgit_definitions=>ty_tadir_tt
       RAISING
@@ -397,7 +397,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
   METHOD pull.
 
-    DATA: lo_repo TYPE REF TO zcl_abapgit_repo.
+    DATA: lo_repo TYPE REF TO zif_abapgit_repo.
 
     lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( iv_key ).
 
@@ -412,7 +412,7 @@ CLASS zcl_abapgit_services_git IMPLEMENTATION.
 
   METHOD reset.
 
-    DATA: lo_repo                   TYPE REF TO zcl_abapgit_repo,
+    DATA: lo_repo                   TYPE REF TO zif_abapgit_repo,
           lv_answer                 TYPE c LENGTH 1,
           lt_unnecessary_local_objs TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lt_selected               LIKE lt_unnecessary_local_objs,

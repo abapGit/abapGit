@@ -191,7 +191,7 @@ CLASS ZCL_ABAPGIT_GUI_PAGE_ADDONLINE IMPLEMENTATION.
   METHOD zif_abapgit_gui_event_handler~on_event.
 
     DATA: ls_repo_params     TYPE zif_abapgit_services_repo=>ty_repo_params,
-          lo_new_online_repo TYPE REF TO zcl_abapgit_repo_online.
+          lo_new_online_repo TYPE REF TO zif_abapgit_repo_online.
 
     mo_form_data = mo_form->normalize_form_data( ii_event->form_data( ) ).
 

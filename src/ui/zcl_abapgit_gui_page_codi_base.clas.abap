@@ -15,7 +15,7 @@ CLASS zcl_abapgit_gui_page_codi_base DEFINITION PUBLIC ABSTRACT INHERITING FROM 
         stage  TYPE string VALUE 'stage' ##NO_TEXT,
         commit TYPE string VALUE 'commit' ##NO_TEXT,
       END OF c_actions .
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo .
+    DATA mo_repo TYPE REF TO zif_abapgit_repo .
     DATA mt_result TYPE scit_alvlist .
 
     METHODS render_variant

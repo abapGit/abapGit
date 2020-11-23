@@ -5,7 +5,7 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
 
   PUBLIC SECTION.
     METHODS constructor
-      IMPORTING io_repo TYPE REF TO zcl_abapgit_repo.
+      IMPORTING io_repo TYPE REF TO zif_abapgit_repo.
 
     METHODS list
       IMPORTING iv_path              TYPE string
@@ -27,7 +27,7 @@ CLASS zcl_abapgit_repo_content_list DEFINITION
                  inactive   TYPE i VALUE 4,
                END OF c_sortkey.
 
-    DATA: mo_repo TYPE REF TO zcl_abapgit_repo,
+    DATA: mo_repo TYPE REF TO zif_abapgit_repo,
           mi_log  TYPE REF TO zif_abapgit_log.
 
     METHODS build_repo_items_local_only

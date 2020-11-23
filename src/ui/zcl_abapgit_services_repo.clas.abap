@@ -9,7 +9,7 @@ CLASS zcl_abapgit_services_repo DEFINITION
       IMPORTING
         !is_repo_params TYPE zif_abapgit_services_repo=>ty_repo_params
       RETURNING
-        VALUE(ro_repo)  TYPE REF TO zcl_abapgit_repo_online
+        VALUE(ro_repo)  TYPE REF TO zif_abapgit_repo_online
       RAISING
         zcx_abapgit_exception .
     CLASS-METHODS refresh
@@ -66,7 +66,7 @@ CLASS zcl_abapgit_services_repo DEFINITION
         zcx_abapgit_exception .
     CLASS-METHODS gui_deserialize
       IMPORTING
-        !io_repo TYPE REF TO zcl_abapgit_repo
+        !io_repo TYPE REF TO zif_abapgit_repo
       RAISING
         zcx_abapgit_exception .
   PROTECTED SECTION.
@@ -97,7 +97,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
   METHOD check_package.
 
     DATA:
-      lo_repo     TYPE REF TO zcl_abapgit_repo,
+      lo_repo     TYPE REF TO zif_abapgit_repo,
       li_repo_srv TYPE REF TO zif_abapgit_repo_srv,
       lv_reason   TYPE string.
 
@@ -309,7 +309,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     DATA: lt_tadir     TYPE zif_abapgit_definitions=>ty_tadir_tt,
           lv_answer    TYPE c LENGTH 1,
-          lo_repo      TYPE REF TO zcl_abapgit_repo,
+          lo_repo      TYPE REF TO zif_abapgit_repo,
           li_log       TYPE REF TO zif_abapgit_log,
           lv_package   TYPE devclass,
           lv_question  TYPE c LENGTH 100,
@@ -381,7 +381,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
 
     DATA: lv_answer   TYPE c,
           lv_question TYPE string,
-          lo_repo     TYPE REF TO zcl_abapgit_repo.
+          lo_repo     TYPE REF TO zif_abapgit_repo.
 
 
     IF zcl_abapgit_auth=>is_allowed( zif_abapgit_auth=>gc_authorization-update_local_checksum ) = abap_false.
@@ -513,7 +513,7 @@ CLASS zcl_abapgit_services_repo IMPLEMENTATION.
   METHOD remove.
 
     DATA: lv_answer    TYPE c LENGTH 1,
-          lo_repo      TYPE REF TO zcl_abapgit_repo,
+          lo_repo      TYPE REF TO zif_abapgit_repo,
           lv_package   TYPE devclass,
           lv_question  TYPE c LENGTH 200,
           lv_repo_name TYPE string,

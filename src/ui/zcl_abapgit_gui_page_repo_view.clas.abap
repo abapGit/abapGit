@@ -33,7 +33,7 @@ CLASS zcl_abapgit_gui_page_repo_view DEFINITION
     METHODS render_content REDEFINITION.
   PRIVATE SECTION.
 
-    DATA mo_repo TYPE REF TO zcl_abapgit_repo .
+    DATA mo_repo TYPE REF TO zif_abapgit_repo .
     DATA mv_cur_dir TYPE string .
     DATA mv_hide_files TYPE abap_bool .
     DATA mv_max_lines TYPE i .
@@ -186,7 +186,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -755,12 +755,12 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     gui_services( )->get_hotkeys_ctl( )->register_hotkeys( me ).
     gui_services( )->register_event_handler( me ).
 
+    " Reinit, for the case of type change
+    mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
+
+    lo_news = zcl_abapgit_news=>create( mo_repo ).
+
     TRY.
-        " Reinit, for the case of type change
-        mo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( mo_repo->get_key( ) ).
-
-        lo_news = zcl_abapgit_news=>create( mo_repo ).
-
         CREATE OBJECT ri_html TYPE zcl_abapgit_html.
         ri_html->add( |<div class="repo" id="repo{ mv_key }">| ).
         ri_html->add( zcl_abapgit_gui_chunk_lib=>render_repo_top(

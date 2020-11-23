@@ -4,143 +4,44 @@ CLASS zcl_abapgit_repo DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+    INTERFACES zif_abapgit_repo ABSTRACT METHODS has_remote_source.
+    ALIASES: bind_listener FOR zif_abapgit_repo~bind_listener,
+             deserialize_checks FOR zif_abapgit_repo~deserialize_checks,
+             delete_checks FOR zif_abapgit_repo~delete_checks,
+             get_key FOR zif_abapgit_repo~get_key,
+             get_name FOR zif_abapgit_repo~get_name,
+             get_files_local FOR zif_abapgit_repo~get_files_local,
+             get_local_checksums_per_file FOR zif_abapgit_repo~get_local_checksums_per_file,
+             get_files_remote FOR zif_abapgit_repo~get_files_remote,
+             get_package FOR zif_abapgit_repo~get_package,
+             get_dot_abapgit FOR zif_abapgit_repo~get_dot_abapgit,
+             set_dot_abapgit FOR zif_abapgit_repo~set_dot_abapgit,
+             get_dot_apack FOR zif_abapgit_repo~get_dot_apack,
+             deserialize FOR zif_abapgit_repo~deserialize,
+             refresh FOR zif_abapgit_repo~refresh,
+             update_local_checksums FOR zif_abapgit_repo~update_local_checksums,
+             rebuild_local_checksums FOR zif_abapgit_repo~rebuild_local_checksums,
+             find_remote_dot_abapgit FOR zif_abapgit_repo~find_remote_dot_abapgit,
+             find_remote_dot_apack FOR zif_abapgit_repo~find_remote_dot_apack,
+             is_offline FOR zif_abapgit_repo~is_offline,
+             set_files_remote FOR zif_abapgit_repo~set_files_remote,
+             get_local_settings FOR zif_abapgit_repo~get_local_settings,
+             set_local_settings FOR zif_abapgit_repo~set_local_settings,
+             has_remote_source FOR zif_abapgit_repo~has_remote_source,
+             status FOR zif_abapgit_repo~status,
+             switch_repo_type FOR zif_abapgit_repo~switch_repo_type,
+             create_new_log FOR zif_abapgit_repo~create_new_log,
+             get_log FOR zif_abapgit_repo~get_log,
+             reset_log FOR zif_abapgit_repo~reset_log,
+             refresh_local_object FOR zif_abapgit_repo~refresh_local_object,
+             refresh_local_objects FOR zif_abapgit_repo~refresh_local_objects,
+             reset_status FOR zif_abapgit_repo~reset_status.
 
     CONSTANTS c_new_repo_size TYPE i VALUE 3.
-
-    METHODS bind_listener
-      IMPORTING
-        !ii_listener TYPE REF TO zif_abapgit_repo_listener .
-    METHODS deserialize_checks
-      RETURNING
-        VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_deserialize_checks
-      RAISING
-        zcx_abapgit_exception .
-    METHODS delete_checks
-      RETURNING
-        VALUE(rs_checks) TYPE zif_abapgit_definitions=>ty_delete_checks
-      RAISING
-        zcx_abapgit_exception .
     METHODS constructor
       IMPORTING
         !is_data TYPE zif_abapgit_persistence=>ty_repo .
-    METHODS get_key
-      RETURNING
-        VALUE(rv_key) TYPE zif_abapgit_persistence=>ty_value .
-    METHODS get_name
-      RETURNING
-        VALUE(rv_name) TYPE string
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_files_local
-      IMPORTING
-        !ii_log         TYPE REF TO zif_abapgit_log OPTIONAL
-        !it_filter      TYPE zif_abapgit_definitions=>ty_tadir_tt OPTIONAL
-      RETURNING
-        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_item_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_local_checksums_per_file
-      RETURNING
-        VALUE(rt_checksums) TYPE zif_abapgit_definitions=>ty_file_signatures_tt .
-    METHODS get_files_remote
-      RETURNING
-        VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_package
-      RETURNING
-        VALUE(rv_package) TYPE zif_abapgit_persistence=>ty_repo-package .
-    METHODS get_dot_abapgit
-      RETURNING
-        VALUE(ro_dot_abapgit) TYPE REF TO zcl_abapgit_dot_abapgit .
-    METHODS set_dot_abapgit
-      IMPORTING
-        !io_dot_abapgit TYPE REF TO zcl_abapgit_dot_abapgit
-      RAISING
-        zcx_abapgit_exception .
-    METHODS get_dot_apack
-      RETURNING
-        VALUE(ro_dot_apack) TYPE REF TO zcl_abapgit_apack_reader .
-    METHODS deserialize
-      IMPORTING
-        !is_checks TYPE zif_abapgit_definitions=>ty_deserialize_checks
-        !ii_log    TYPE REF TO zif_abapgit_log
-      RAISING
-        zcx_abapgit_exception .
-    METHODS refresh
-      IMPORTING
-        !iv_drop_cache TYPE abap_bool DEFAULT abap_false
-      RAISING
-        zcx_abapgit_exception .
-    METHODS update_local_checksums
-      IMPORTING
-        !it_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS rebuild_local_checksums
-      RAISING
-        zcx_abapgit_exception .
-    METHODS find_remote_dot_abapgit
-      RETURNING
-        VALUE(ro_dot) TYPE REF TO zcl_abapgit_dot_abapgit
-      RAISING
-        zcx_abapgit_exception .
-    METHODS find_remote_dot_apack
-      RETURNING
-        VALUE(ro_dot) TYPE REF TO zcl_abapgit_apack_reader
-      RAISING
-        zcx_abapgit_exception .
-    METHODS is_offline
-      RETURNING
-        VALUE(rv_offline) TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception .
-    METHODS set_files_remote
-      IMPORTING
-        !it_files TYPE zif_abapgit_definitions=>ty_files_tt .
-    METHODS get_local_settings
-      RETURNING
-        VALUE(rs_settings) TYPE zif_abapgit_persistence=>ty_repo-local_settings .
-    METHODS set_local_settings
-      IMPORTING
-        !is_settings TYPE zif_abapgit_persistence=>ty_repo-local_settings
-      RAISING
-        zcx_abapgit_exception .
-    METHODS has_remote_source
-          ABSTRACT
-      RETURNING
-        VALUE(rv_yes) TYPE abap_bool .
-    METHODS status
-      IMPORTING
-        !ii_log           TYPE REF TO zif_abapgit_log OPTIONAL
-      RETURNING
-        VALUE(rt_results) TYPE zif_abapgit_definitions=>ty_results_tt
-      RAISING
-        zcx_abapgit_exception .
-    METHODS switch_repo_type
-      IMPORTING
-        !iv_offline TYPE abap_bool
-      RAISING
-        zcx_abapgit_exception .
-    METHODS create_new_log
-      IMPORTING
-        !iv_title     TYPE string OPTIONAL
-      RETURNING
-        VALUE(ri_log) TYPE REF TO zif_abapgit_log .
-    METHODS get_log
-      RETURNING
-        VALUE(ri_log) TYPE REF TO zif_abapgit_log .
-    METHODS reset_log .
-    METHODS refresh_local_object
-      IMPORTING
-        !iv_obj_type TYPE tadir-object
-        !iv_obj_name TYPE tadir-obj_name
-      RAISING
-        zcx_abapgit_exception .
-    METHODS refresh_local_objects
-      RAISING
-        zcx_abapgit_exception .
-    METHODS reset_status .
+
   PROTECTED SECTION.
 
     DATA mt_local TYPE zif_abapgit_definitions=>ty_files_item_tt .
@@ -213,7 +114,7 @@ ENDCLASS.
 CLASS zcl_abapgit_repo IMPLEMENTATION.
 
 
-  METHOD bind_listener.
+  METHOD zif_abapgit_repo~bind_listener.
     mi_listener = ii_listener.
   ENDMETHOD.
 
@@ -307,7 +208,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD create_new_log.
+  METHOD zif_abapgit_repo~create_new_log.
 
     CREATE OBJECT mi_log TYPE zcl_abapgit_log.
     mi_log->set_title( iv_title ).
@@ -317,7 +218,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD delete_checks.
+  METHOD zif_abapgit_repo~delete_checks.
 
     DATA: li_package TYPE REF TO zif_abapgit_sap_package.
 
@@ -327,7 +228,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD deserialize.
+  METHOD zif_abapgit_repo~deserialize.
 
     DATA: lt_updated_files TYPE zif_abapgit_definitions=>ty_file_signatures_tt,
           lx_error         TYPE REF TO zcx_abapgit_exception.
@@ -376,7 +277,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD deserialize_checks.
+  METHOD zif_abapgit_repo~deserialize_checks.
 
     DATA: lt_requirements TYPE zif_abapgit_dot_abapgit=>ty_requirement_tt,
           lt_dependencies TYPE zif_abapgit_apack_definitions=>ty_dependencies.
@@ -398,7 +299,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD find_remote_dot_abapgit.
+  METHOD zif_abapgit_repo~find_remote_dot_abapgit.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
 
@@ -419,7 +320,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD find_remote_dot_apack.
+  METHOD zif_abapgit_repo~find_remote_dot_apack.
 
     FIELD-SYMBOLS: <ls_remote> LIKE LINE OF mt_remote.
 
@@ -437,14 +338,14 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_dot_abapgit.
+  METHOD zif_abapgit_repo~get_dot_abapgit.
     CREATE OBJECT ro_dot_abapgit
       EXPORTING
         is_data = ms_data-dot_abapgit.
   ENDMETHOD.
 
 
-  METHOD get_dot_apack.
+  METHOD zif_abapgit_repo~get_dot_apack.
     IF mo_apack_reader IS NOT BOUND.
       mo_apack_reader = zcl_abapgit_apack_reader=>create_instance( ms_data-package ).
     ENDIF.
@@ -454,7 +355,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_files_local.
+  METHOD zif_abapgit_repo~get_files_local.
 
     DATA: lo_filter     TYPE REF TO zcl_abapgit_repo_filter,
           lt_tadir      TYPE zif_abapgit_definitions=>ty_tadir_tt,
@@ -515,12 +416,12 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_files_remote.
+  METHOD zif_abapgit_repo~get_files_remote.
     rt_files = mt_remote.
   ENDMETHOD.
 
 
-  METHOD get_key.
+  METHOD zif_abapgit_repo~get_key.
     rv_key = ms_data-key.
   ENDMETHOD.
 
@@ -530,7 +431,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_local_checksums_per_file.
+  METHOD zif_abapgit_repo~get_local_checksums_per_file.
 
     FIELD-SYMBOLS <ls_object> LIKE LINE OF ms_data-local_checksums.
 
@@ -541,31 +442,31 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD get_local_settings.
+  METHOD zif_abapgit_repo~get_local_settings.
 
     rs_settings = ms_data-local_settings.
 
   ENDMETHOD.
 
 
-  METHOD get_log.
+  METHOD zif_abapgit_repo~get_log.
     ri_log = mi_log.
   ENDMETHOD.
 
 
-  METHOD get_name.
+  METHOD zif_abapgit_repo~get_name.
 
     rv_name = ms_data-local_settings-display_name.
 
   ENDMETHOD.
 
 
-  METHOD get_package.
+  METHOD zif_abapgit_repo~get_package.
     rv_package = ms_data-package.
   ENDMETHOD.
 
 
-  METHOD is_offline.
+  METHOD zif_abapgit_repo~is_offline.
     rv_offline = ms_data-offline.
   ENDMETHOD.
 
@@ -585,7 +486,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD rebuild_local_checksums.
+  METHOD zif_abapgit_repo~rebuild_local_checksums.
 
     DATA:
       lt_local     TYPE zif_abapgit_definitions=>ty_files_item_tt,
@@ -623,7 +524,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD refresh.
+  METHOD zif_abapgit_repo~refresh.
 
     mv_request_local_refresh = abap_true.
     reset_remote( ).
@@ -637,7 +538,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD refresh_local_object.
+  METHOD zif_abapgit_repo~refresh_local_object.
 
     DATA:
       ls_tadir           TYPE zif_abapgit_definitions=>ty_tadir,
@@ -671,7 +572,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD refresh_local_objects.
+  METHOD zif_abapgit_repo~refresh_local_objects.
 
     mv_request_local_refresh = abap_true.
     get_files_local( ).
@@ -679,7 +580,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD reset_log.
+  METHOD zif_abapgit_repo~reset_log.
     CLEAR mi_log.
   ENDMETHOD.
 
@@ -691,7 +592,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD reset_status.
+  METHOD zif_abapgit_repo~reset_status.
     CLEAR mt_status.
   ENDMETHOD.
 
@@ -773,7 +674,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_dot_abapgit.
+  METHOD zif_abapgit_repo~set_dot_abapgit.
     set( is_dot_abapgit = io_dot_abapgit->get_data( ) ).
   ENDMETHOD.
 
@@ -784,7 +685,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_files_remote.
+  METHOD zif_abapgit_repo~set_files_remote.
 
     mt_remote = it_files.
     mv_request_remote_refresh = abap_false.
@@ -792,14 +693,14 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD set_local_settings.
+  METHOD zif_abapgit_repo~set_local_settings.
 
     set( is_local_settings = is_settings ).
 
   ENDMETHOD.
 
 
-  METHOD status.
+  METHOD zif_abapgit_repo~status.
 
     IF lines( mt_status ) = 0.
       mt_status = zcl_abapgit_file_status=>status(
@@ -812,7 +713,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD switch_repo_type.
+  METHOD zif_abapgit_repo~switch_repo_type.
 
     IF iv_offline = ms_data-offline.
       zcx_abapgit_exception=>raise( |Cannot switch_repo_type, offline already = "{ ms_data-offline }"| ).
@@ -845,7 +746,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD update_local_checksums.
+  METHOD zif_abapgit_repo~update_local_checksums.
 
     " ASSUMTION: SHA1 in param is actual and correct.
     " Push fills it from local files before pushing, deserialize from remote

@@ -287,7 +287,7 @@ CLASS ZCL_ABAPGIT_TRANSPORT IMPLEMENTATION.
       lt_objects     TYPE scts_tadir,
       lt_objects_all LIKE lt_objects,
       ls_e071        LIKE LINE OF rt_objects,
-      lo_repo        TYPE REF TO zcl_abapgit_repo,
+      lo_repo        TYPE REF TO zif_abapgit_repo,
       lv_package     TYPE zif_abapgit_persistence=>ty_repo-package,
       lt_packages    TYPE zif_abapgit_sap_package=>ty_devclass_tt.
 

@@ -194,7 +194,7 @@ CLASS zcl_abapgit_gui_page_repo_over IMPLEMENTATION.
   METHOD map_repo_list_to_overview.
 
     DATA: ls_overview LIKE LINE OF rt_overview,
-          lo_repo_srv TYPE REF TO zcl_abapgit_repo,
+          lo_repo_srv TYPE REF TO zif_abapgit_repo,
           lv_date     TYPE d,
           lv_time     TYPE t.
 
