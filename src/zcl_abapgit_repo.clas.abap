@@ -210,7 +210,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_repo IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_REPO IMPLEMENTATION.
 
 
   METHOD bind_listener.
@@ -230,8 +230,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
       rs_file-path     = zif_abapgit_definitions=>c_root_dir.
       rs_file-filename = zif_abapgit_apack_definitions=>c_dot_apack_manifest.
       rs_file-data     = zcl_abapgit_convert=>string_to_xstring_utf8( lo_manifest_writer->serialize( ) ).
-      rs_file-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
-                                                 iv_data = rs_file-data ).
+      rs_file-sha1     = zcl_abapgit_hash=>sha1_blob( rs_file-data ).
     ENDIF.
   ENDMETHOD.
 
@@ -241,8 +240,7 @@ CLASS zcl_abapgit_repo IMPLEMENTATION.
     rs_file-path     = zif_abapgit_definitions=>c_root_dir.
     rs_file-filename = zif_abapgit_definitions=>c_dot_abapgit.
     rs_file-data     = get_dot_abapgit( )->serialize( ).
-    rs_file-sha1     = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
-                                               iv_data = rs_file-data ).
+    rs_file-sha1     = zcl_abapgit_hash=>sha1_blob( rs_file-data ).
 
   ENDMETHOD.
 
