@@ -169,7 +169,7 @@ CLASS zcl_abapgit_repo_online IMPLEMENTATION.
   ENDMETHOD.
 
 
-  METHOD zif_abapgit_repo~has_remote_source.
+  METHOD has_remote_source.
     rv_yes = abap_true.
   ENDMETHOD.
 
