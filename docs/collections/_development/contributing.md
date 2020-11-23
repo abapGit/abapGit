@@ -10,19 +10,18 @@ How to submit a pull request:
 *******************************
 Having already [installed](https://docs.abapgit.org/guide-install.html#install-standalone-version) the abapGit standalone program,
 
-1. [Install the development version](https://docs.abapgit.org/guide-install.html#install-developer-version) of abapGit by running `ZABAPGIT_STANDALONE` and either:
-- cloning your *own [fork](https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/about-collaborative-development-models)* of the [abapGit repository](https://github.com/abapGit/abapGit) using abapGit's "New Online" option or 
-- [downloading the zip file and installing it](https://docs.abapgit.org/guide-install.html#install-developer-version) using the "New Offline" option
+1. [Install the development version](https://docs.abapgit.org/guide-install.html#install-developer-version) of abapGit, by running `ZABAPGIT_STANDALONE` and either:
+   1. cloning your *own [fork](https://docs.github.com/en/free-pro-team@latest/github/collaborating-with-issues-and-pull-requests/about-collaborative-development-models)* of the [abapGit repository](https://github.com/abapGit/abapGit) using abapGit's "New Online" option or 
+   2. [downloading the zip file and installing it](https://docs.abapgit.org/guide-install.html#install-developer-version) using the "New Offline" option
+2. When specifying a package for the repository in step 1, assign a different (new, e.g. `$ZABAPGIT`) package to the one `ZABAPGIT_STANDALONE` is in
 
-When specifying a package for the repository, assign a different (new, e.g. `$ZABAPGIT`) package to the one `ZABAPGIT_STANDALONE` is in
+3. Your system will now contain the abapGit package, along with several subpackages and development objects such as classes, interfaces, function groups, etc. There will also be the development version of the abapGit program (transaction `ZABAPGIT`). The standalone program, `ZABAPGIT_STANDALONE` will remain unaffected, to serve as [fallback](https://docs.abapgit.org/guide-upgrade.html#troubleshooting).
 
-2. Your system will now contain the abapGit package you created in step 1, along with several subpackages and development objects such as classes, interfaces, function groups, etc. There will also be the development version of the abapGit program (transaction `ZABAPGIT`). The standalone program, `ZABAPGIT_STANDALONE` will remain unaffected, to serve as [fallback](https://docs.abapgit.org/guide-upgrade.html#troubleshooting).
+4. Make your changes to abapGit development objects and test locally.
 
-3. Make your changes to abapGit development objects and test locally.
+5. Using abapGit on your system, commit the changes to your online fork (so if you had chosen the "offline" option in step 1, you will need to have switched to online).
 
-4. Using abapGit on your system, commit the changes to your online fork (so if you had chosen the "offline" option in step 1, you will need to have switched to online).
-
-5. Submit a [pull request](https://docs.github.com/en/free-pro-team@latest/articles/creating-a-pull-request-from-a-fork) with the changes.
+6. Submit a [pull request](https://docs.github.com/en/free-pro-team@latest/articles/creating-a-pull-request-from-a-fork) with the changes.
 
 Alternatively to the steps above, use the GitHub webinterface to change the files directly on a GitHub branch of your forked abapGit repository and then submit a pull request. This might make sense when, e.g., contributing to the documentation files such as the one you are reading right now (where contributions may be initiated through the "Improve this page" link above).
 
