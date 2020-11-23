@@ -79,5 +79,4 @@ INTERFACE zif_abapgit_repo_online
       iv_overwrite TYPE abap_bool DEFAULT abap_false
     RAISING
       zcx_abapgit_exception .
-
 ENDINTERFACE.
