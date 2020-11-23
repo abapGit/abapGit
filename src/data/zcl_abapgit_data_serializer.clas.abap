@@ -110,9 +110,7 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
 
       ls_file-filename = to_lower( |{ ls_config-name }.{ ls_config-type }.todo| ).
       ls_file-data = dump_itab( lr_data ).
-      ls_file-sha1 = zcl_abapgit_hash=>sha1(
-        iv_type = zif_abapgit_definitions=>c_type-blob
-        iv_data = ls_file-data ).
+      ls_file-sha1 = zcl_abapgit_hash=>sha1_blob( ls_file-data ).
       APPEND ls_file TO rt_files.
 
     ENDLOOP.
