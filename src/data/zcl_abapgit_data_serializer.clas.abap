@@ -43,16 +43,16 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
   METHOD read_table.
 
     DATA lv_where LIKE LINE OF it_where.
-    FIELD-SYMBOLS: <tab> TYPE ANY TABLE.
+    FIELD-SYMBOLS: <lg_tab> TYPE ANY TABLE.
 
     rr_data = build_table_itab( iv_name ).
-    ASSIGN rr_data->* TO <tab>.
+    ASSIGN rr_data->* TO <lg_tab>.
 
     LOOP AT it_where INTO lv_where.
-      SELECT * FROM (iv_name) INTO TABLE <tab> WHERE (lv_where).
+      SELECT * FROM (iv_name) INTO TABLE <lg_tab> WHERE (lv_where).
     ENDLOOP.
     IF lines( it_where ) = 0.
-      SELECT * FROM (iv_name) INTO TABLE <tab>.
+      SELECT * FROM (iv_name) INTO TABLE <lg_tab>.
     ENDIF.
 
   ENDMETHOD.
