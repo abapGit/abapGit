@@ -45,7 +45,6 @@ CLASS zcl_abapgit_html_form DEFINITION
       IMPORTING
         !iv_label       TYPE csequence
         !iv_name        TYPE csequence
-        !iv_rows        TYPE i DEFAULT 3
         !iv_hint        TYPE csequence OPTIONAL
         !iv_required    TYPE abap_bool DEFAULT abap_false
         !iv_readonly    TYPE abap_bool DEFAULT abap_false
@@ -134,7 +133,6 @@ CLASS zcl_abapgit_html_form DEFINITION
         password      TYPE abap_bool,
         min           TYPE i,
         max           TYPE i,
-        rows          TYPE i,
 *        onclick ???
       END OF ty_field.
     TYPES:
@@ -450,6 +448,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     DATA lv_required TYPE string.
     DATA lv_attr TYPE string.
     DATA lv_type TYPE string.
+    DATA lv_rows TYPE i.
     FIELD-SYMBOLS <ls_opt> LIKE LINE OF is_field-subitems.
 
     " Get value and validation error from maps
@@ -523,8 +522,12 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
           ii_html->add( |<small>{ lv_error }</small>| ).
         ENDIF.
 
+        lv_rows = lines( zcl_abapgit_convert=>split_string( lv_value ) ) + 1.
+
         ii_html->add( |<textarea name="{ is_field-name }" id="{
-          is_field-name }" value="{ lv_value }" rows="{ is_field-rows }"{ lv_attr }>| ).
+          is_field-name }" rows="{ lv_rows }"{ lv_attr }>| ).
+        ii_html->add( escape( val    = lv_value
+                              format = cl_abap_format=>e_html_attr ) ).
         ii_html->add( |</textarea>| ).
 
       WHEN c_field_type-checkbox.
@@ -627,7 +630,6 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
     ls_field-hint        = iv_hint.
     ls_field-required    = iv_required.
     ls_field-placeholder = iv_placeholder.
-    ls_field-rows        = iv_rows.
 
     APPEND ls_field TO mt_fields.
 
