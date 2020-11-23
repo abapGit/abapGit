@@ -137,8 +137,9 @@ CLASS zcl_abapgit_gui_page_main IMPLEMENTATION.
 
       WHEN zif_abapgit_definitions=>c_action-repo_settings.
 
-        lo_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
-        rs_handled-page  = zcl_abapgit_gui_page_sett_repo=>create( lo_repo ).
+        CREATE OBJECT rs_handled-page TYPE zcl_abapgit_gui_page_repo_sett
+          EXPORTING
+            io_repo = zcl_abapgit_repo_srv=>get_instance( )->get( lv_key ).
         rs_handled-state = zcl_abapgit_gui=>c_event_state-new_page.
 
       WHEN OTHERS.
