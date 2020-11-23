@@ -180,7 +180,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GIT_PORCELAIN IMPLEMENTATION.
 
 
   METHOD build_trees.
@@ -231,8 +231,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
       CLEAR ls_tree.
       ls_tree-path = <ls_folder>-path.
       ls_tree-data = zcl_abapgit_git_pack=>encode_tree( lt_nodes ).
-      ls_tree-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-tree
-                                             iv_data = ls_tree-data ).
+      ls_tree-sha1 = zcl_abapgit_hash=>sha1_tree( ls_tree-data ).
       APPEND ls_tree TO rt_trees.
 
       <ls_folder>-sha1 = ls_tree-sha1.
@@ -420,6 +419,30 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
   ENDMETHOD.
 
 
+  METHOD pull.
+
+    DATA: ls_object TYPE zif_abapgit_definitions=>ty_object,
+          ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
+
+    READ TABLE it_objects INTO ls_object
+      WITH KEY type COMPONENTS
+        type = zif_abapgit_definitions=>c_type-commit
+        sha1 = iv_commit.
+
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Commit/Branch not found.' ).
+    ENDIF.
+
+    ls_commit = zcl_abapgit_git_pack=>decode_commit( ls_object-data ).
+
+    walk( EXPORTING it_objects = it_objects
+                    iv_sha1    = ls_commit-tree
+                    iv_path    = '/'
+          CHANGING  ct_files   = rt_files ).
+
+  ENDMETHOD.
+
+
   METHOD pull_by_branch.
 
     zcl_abapgit_git_transport=>upload_pack_by_branch(
@@ -453,29 +476,6 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
   ENDMETHOD.
 
-
-  METHOD pull.
-
-    DATA: ls_object TYPE zif_abapgit_definitions=>ty_object,
-          ls_commit TYPE zcl_abapgit_git_pack=>ty_commit.
-
-    READ TABLE it_objects INTO ls_object
-      WITH KEY type COMPONENTS
-        type = zif_abapgit_definitions=>c_type-commit
-        sha1 = iv_commit.
-
-    IF sy-subrc <> 0.
-      zcx_abapgit_exception=>raise( 'Commit/Branch not found.' ).
-    ENDIF.
-
-    ls_commit = zcl_abapgit_git_pack=>decode_commit( ls_object-data ).
-
-    walk( EXPORTING it_objects = it_objects
-                    iv_sha1    = ls_commit-tree
-                    iv_path    = '/'
-          CHANGING  ct_files   = rt_files ).
-
-  ENDMETHOD.
 
   METHOD push.
 
@@ -516,8 +516,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
             <ls_exp>-chmod = zif_abapgit_definitions=>c_chmod-file.
           ENDIF.
 
-          lv_sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-blob
-                                            iv_data = <ls_stage>-file-data ).
+          lv_sha1 = zcl_abapgit_hash=>sha1_blob( <ls_stage>-file-data ).
           IF <ls_exp>-sha1 <> lv_sha1.
             <ls_exp>-sha1 = lv_sha1.
           ENDIF.
@@ -584,9 +583,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
     lv_tag = zcl_abapgit_git_pack=>encode_tag( ls_tag ).
 
-    lv_new_tag_sha1 = zcl_abapgit_hash=>sha1(
-      iv_type = zif_abapgit_definitions=>c_type-tag
-      iv_data = lv_tag ).
+    lv_new_tag_sha1 = zcl_abapgit_hash=>sha1_tag( lv_tag ).
 
     ls_object-sha1 = lv_new_tag_sha1.
     ls_object-type = zif_abapgit_definitions=>c_type-tag.
@@ -640,8 +637,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
     ls_commit-body      = is_comment-comment.
     lv_commit = zcl_abapgit_git_pack=>encode_commit( ls_commit ).
 
-    ls_object-sha1 = zcl_abapgit_hash=>sha1( iv_type = zif_abapgit_definitions=>c_type-commit
-                                             iv_data = lv_commit ).
+    ls_object-sha1 = zcl_abapgit_hash=>sha1_commit( lv_commit ).
     ls_object-type = zif_abapgit_definitions=>c_type-commit.
     ls_object-data = lv_commit.
     APPEND ls_object TO et_new_objects.
@@ -669,9 +665,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
     LOOP AT it_blobs ASSIGNING <ls_blob>.
       CLEAR ls_object.
-      ls_object-sha1 = zcl_abapgit_hash=>sha1(
-        iv_type = zif_abapgit_definitions=>c_type-blob
-        iv_data = <ls_blob>-data ).
+      ls_object-sha1 = zcl_abapgit_hash=>sha1_blob( <ls_blob>-data ).
 
       READ TABLE et_new_objects
         WITH KEY type COMPONENTS
@@ -693,9 +687,7 @@ CLASS zcl_abapgit_git_porcelain IMPLEMENTATION.
 
     lv_pack = zcl_abapgit_git_pack=>encode( et_new_objects ).
 
-    ev_new_commit = zcl_abapgit_hash=>sha1(
-      iv_type = zif_abapgit_definitions=>c_type-commit
-      iv_data = lv_commit ).
+    ev_new_commit = zcl_abapgit_hash=>sha1_commit( lv_commit ).
 
     zcl_abapgit_git_transport=>receive_pack(
       iv_url         = iv_url
