@@ -15,8 +15,8 @@ CLASS zcl_abapgit_data_factory DEFINITION
   PROTECTED SECTION.
   PRIVATE SECTION.
 
-    CLASS-DATA mi_serializer TYPE REF TO zif_abapgit_data_serializer .
-    CLASS-DATA mi_deserializer TYPE REF TO zif_abapgit_data_deserializer .
+    CLASS-DATA gi_serializer TYPE REF TO zif_abapgit_data_serializer .
+    CLASS-DATA gi_deserializer TYPE REF TO zif_abapgit_data_deserializer .
 ENDCLASS.
 
 
@@ -26,22 +26,22 @@ CLASS ZCL_ABAPGIT_DATA_FACTORY IMPLEMENTATION.
 
   METHOD get_deserializer.
 
-    IF mi_deserializer IS INITIAL.
-      CREATE OBJECT mi_deserializer TYPE zcl_abapgit_data_deserializer.
+    IF gi_deserializer IS INITIAL.
+      CREATE OBJECT gi_deserializer TYPE zcl_abapgit_data_deserializer.
     ENDIF.
 
-    ri_deserializer = mi_deserializer.
+    ri_deserializer = gi_deserializer.
 
   ENDMETHOD.
 
 
   METHOD get_serializer.
 
-    IF mi_serializer IS INITIAL.
-      CREATE OBJECT mi_serializer TYPE zcl_abapgit_data_serializer.
+    IF gi_serializer IS INITIAL.
+      CREATE OBJECT gi_serializer TYPE zcl_abapgit_data_serializer.
     ENDIF.
 
-    ri_serializer = mi_serializer.
+    ri_serializer = gi_serializer.
 
   ENDMETHOD.
 ENDCLASS.

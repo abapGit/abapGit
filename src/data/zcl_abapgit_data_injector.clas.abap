@@ -20,11 +20,11 @@ CLASS ZCL_ABAPGIT_DATA_INJECTOR IMPLEMENTATION.
 
 
   METHOD set_deserializer.
-    zcl_abapgit_data_factory=>mi_deserializer = ii_deserializer.
+    zcl_abapgit_data_factory=>gi_deserializer = ii_deserializer.
   ENDMETHOD.
 
 
   METHOD set_serializer.
-    zcl_abapgit_data_factory=>mi_serializer = ii_serializer.
+    zcl_abapgit_data_factory=>gi_serializer = ii_serializer.
   ENDMETHOD.
 ENDCLASS.
