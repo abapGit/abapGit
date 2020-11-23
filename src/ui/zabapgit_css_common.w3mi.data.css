@@ -1137,6 +1137,7 @@ settings_tab tr:first-child td { border-top: 0px; }
   font-size: 14px;
   height: 2.5em;
   background-color: #ddd;
+  border: 1px solid #ddd;
   padding: 0px 10px;
 }
 .dialog table tbody td {
