@@ -1,7 +1,7 @@
 CLASS zcl_abapgit_html_form DEFINITION
   PUBLIC
   FINAL
-  CREATE PRIVATE .
+  CREATE PRIVATE.
 
   PUBLIC SECTION.
 
@@ -12,14 +12,14 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_form_id    TYPE csequence OPTIONAL
         !iv_help_page  TYPE csequence OPTIONAL
       RETURNING
-        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form .
+        VALUE(ro_form) TYPE REF TO zcl_abapgit_html_form.
     METHODS render
       IMPORTING
         !iv_form_class     TYPE csequence
         !io_values         TYPE REF TO zcl_abapgit_string_map
         !io_validation_log TYPE REF TO zcl_abapgit_string_map OPTIONAL
       RETURNING
-        VALUE(ri_html)     TYPE REF TO zif_abapgit_html .
+        VALUE(ri_html)     TYPE REF TO zif_abapgit_html.
     METHODS command
       IMPORTING
         !iv_label      TYPE csequence
@@ -27,7 +27,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_is_main    TYPE abap_bool DEFAULT abap_false
         !iv_as_a       TYPE abap_bool DEFAULT abap_false
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
     METHODS text
       IMPORTING
         !iv_label       TYPE csequence
@@ -42,7 +42,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_min         TYPE i DEFAULT cl_abap_math=>min_int4
         !iv_max         TYPE i DEFAULT cl_abap_math=>max_int4
       RETURNING
-        VALUE(ro_self)  TYPE REF TO zcl_abapgit_html_form .
+        VALUE(ro_self)  TYPE REF TO zcl_abapgit_html_form.
     METHODS textarea
       IMPORTING
         !iv_label       TYPE csequence
@@ -52,7 +52,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_readonly    TYPE abap_bool DEFAULT abap_false
         !iv_placeholder TYPE csequence OPTIONAL
       RETURNING
-        VALUE(ro_self)  TYPE REF TO zcl_abapgit_html_form .
+        VALUE(ro_self)  TYPE REF TO zcl_abapgit_html_form.
     METHODS number
       IMPORTING
         !iv_label      TYPE csequence
@@ -63,14 +63,14 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_min        TYPE i DEFAULT cl_abap_math=>min_int4
         !iv_max        TYPE i DEFAULT cl_abap_math=>max_int4
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
     METHODS checkbox
       IMPORTING
         !iv_label      TYPE csequence
         !iv_name       TYPE csequence
         !iv_hint       TYPE csequence OPTIONAL
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
     METHODS radio
       IMPORTING
         !iv_label         TYPE csequence
@@ -78,47 +78,47 @@ CLASS zcl_abapgit_html_form DEFINITION
         !iv_default_value TYPE csequence OPTIONAL
         !iv_hint          TYPE csequence OPTIONAL
       RETURNING
-        VALUE(ro_self)    TYPE REF TO zcl_abapgit_html_form .
+        VALUE(ro_self)    TYPE REF TO zcl_abapgit_html_form.
     METHODS option
       IMPORTING
         !iv_label      TYPE csequence
         !iv_value      TYPE csequence
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
     METHODS table
       IMPORTING
         !iv_label      TYPE csequence
         !iv_name       TYPE csequence
         !iv_hint       TYPE csequence OPTIONAL
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
     METHODS column
       IMPORTING
         !iv_label      TYPE csequence
         !iv_width      TYPE csequence OPTIONAL
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
     METHODS start_group
       IMPORTING
         !iv_label      TYPE csequence
         !iv_name       TYPE csequence
         !iv_hint       TYPE csequence OPTIONAL
       RETURNING
-        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form .
+        VALUE(ro_self) TYPE REF TO zcl_abapgit_html_form.
     METHODS normalize_form_data
       IMPORTING
         !io_form_data       TYPE REF TO zcl_abapgit_string_map
       RETURNING
         VALUE(ro_form_data) TYPE REF TO zcl_abapgit_string_map
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
     METHODS validate_required_fields
       IMPORTING
         !io_form_data            TYPE REF TO zcl_abapgit_string_map
       RETURNING
         VALUE(ro_validation_log) TYPE REF TO zcl_abapgit_string_map
       RAISING
-        zcx_abapgit_exception .
+        zcx_abapgit_exception.
   PROTECTED SECTION.
   PRIVATE SECTION.
 
@@ -126,9 +126,9 @@ CLASS zcl_abapgit_html_form DEFINITION
       BEGIN OF ty_subitem,
         label TYPE string,
         value TYPE string,
-      END OF ty_subitem .
+      END OF ty_subitem.
     TYPES:
-      ty_subitems TYPE STANDARD TABLE OF ty_subitem WITH DEFAULT KEY .
+      ty_subitems TYPE STANDARD TABLE OF ty_subitem WITH DEFAULT KEY.
     TYPES:
       BEGIN OF ty_field,
         type          TYPE i,
@@ -149,7 +149,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         min           TYPE i,
         max           TYPE i,
 *        onclick ???
-      END OF ty_field .
+      END OF ty_field.
     TYPES:
       BEGIN OF ty_command,
         label   TYPE string,
@@ -157,7 +157,7 @@ CLASS zcl_abapgit_html_form DEFINITION
         is_main TYPE abap_bool,
         as_a    TYPE abap_bool,
 *        onclick ???
-      END OF ty_command .
+      END OF ty_command.
     TYPES:
       BEGIN OF ty_attr,
         value       TYPE string,
@@ -177,21 +177,21 @@ CLASS zcl_abapgit_html_form DEFINITION
         number      TYPE i VALUE 5,
         textarea    TYPE i VALUE 6,
         table       TYPE i VALUE 7,
-      END OF c_field_type .
+      END OF c_field_type.
     DATA:
       mt_fields TYPE STANDARD TABLE OF ty_field
-            WITH UNIQUE SORTED KEY by_name COMPONENTS name .
+          WITH UNIQUE SORTED KEY by_name COMPONENTS name.
     DATA:
-      mt_commands TYPE STANDARD TABLE OF ty_command .
-    DATA mv_form_id TYPE string .
-    DATA mv_help_page TYPE string .
+      mt_commands TYPE STANDARD TABLE OF ty_command.
+    DATA mv_form_id TYPE string.
+    DATA mv_help_page TYPE string.
 
     METHODS render_field
       IMPORTING
         !ii_html           TYPE REF TO zif_abapgit_html
         !io_values         TYPE REF TO zcl_abapgit_string_map
         !io_validation_log TYPE REF TO zcl_abapgit_string_map
-        !is_field          TYPE ty_field .
+        !is_field          TYPE ty_field.
     METHODS render_field_text
       IMPORTING
         !ii_html  TYPE REF TO zif_abapgit_html
@@ -221,7 +221,7 @@ CLASS zcl_abapgit_html_form DEFINITION
     METHODS render_command
       IMPORTING
         !ii_html TYPE REF TO zif_abapgit_html
-        !is_cmd  TYPE ty_command .
+        !is_cmd  TYPE ty_command.
 ENDCLASS.
 
 
@@ -691,8 +691,7 @@ CLASS zcl_abapgit_html_form IMPLEMENTATION.
 
     FIELD-SYMBOLS <ls_subitem> LIKE LINE OF is_field-subitems.
 
-    ii_html->add( |<label for="{ is_field-name }"{ is_attr-hint }>{
-                  is_field-label }</label>| ).
+    ii_html->add( |<label for="{ is_field-name }"{ is_attr-hint }>{ is_field-label }</label>| ).
 
     IF is_attr-error IS NOT INITIAL.
       ii_html->add( is_attr-error ).

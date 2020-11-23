@@ -181,10 +181,8 @@ CLASS ltcl_test_form IMPLEMENTATION.
     lo_cut->table(
       iv_name        = 'tab1'
       iv_label       = 'Table 1' ).
-    lo_cut->column(
-      iv_label       = 'Column 1' ).
-    lo_cut->column(
-      iv_label       = 'Column 2' ).
+    lo_cut->column( iv_label = 'Column 1' ).
+    lo_cut->column( iv_label = 'Column 2' ).
     lo_cut->number(
       iv_name        = |tab1-{ zcl_abapgit_html_form=>c_rows }|
       iv_label       = 'Number of Rows' ). " simulate hidden form field
