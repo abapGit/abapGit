@@ -65,7 +65,8 @@ CLASS ZCL_ABAPGIT_DATA_SERIALIZER IMPLEMENTATION.
       APPEND lv_str TO lt_data.
     ENDLOOP.
 
-    rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( concat_lines_of( table = lt_data sep = |\n| ) ).
+    rv_data = zcl_abapgit_convert=>string_to_xstring_utf8( concat_lines_of( table = lt_data
+                                                                            sep   = |\n| ) ).
 
   ENDMETHOD.
 
