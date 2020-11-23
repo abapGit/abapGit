@@ -1,7 +1,6 @@
 CLASS zcl_abapgit_data_factory DEFINITION
   PUBLIC
   CREATE PUBLIC
-
   GLOBAL FRIENDS zcl_abapgit_data_injector .
 
   PUBLIC SECTION.

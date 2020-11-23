@@ -12,6 +12,7 @@ CLASS zcl_abapgit_data_config DEFINITION
   PRIVATE SECTION.
 
     DATA mv_path TYPE string .
+    DATA mt_config TYPE zif_abapgit_data_config=>ty_config_tt .
 ENDCLASS.
 
 
@@ -28,16 +29,22 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
 
   METHOD zif_abapgit_data_config~add_config.
 
-* todo, give exception if it already exists
+    INSERT is_config INTO TABLE mt_config.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Already in table' ).
+    ENDIF.
 
   ENDMETHOD.
 
 
   METHOD zif_abapgit_data_config~from_json.
+* todo
+    ASSERT 0 = 1.
   ENDMETHOD.
 
 
   METHOD zif_abapgit_data_config~get_configs.
+    rt_configs = mt_config.
   ENDMETHOD.
 
 
@@ -51,6 +58,11 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
   METHOD zif_abapgit_data_config~remove_config.
 
 * todo, give exception if it does not exist
+
+    DELETE mt_config WHERE name = is_config-name AND type = is_config-type.
+    IF sy-subrc <> 0.
+      zcx_abapgit_exception=>raise( 'Not found' ).
+    ENDIF.
 
   ENDMETHOD.
 
@@ -66,10 +78,14 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
 
   METHOD zif_abapgit_data_config~to_json.
 * todo
+    ASSERT 0 = 1.
   ENDMETHOD.
 
 
   METHOD zif_abapgit_data_config~update_config.
-* todo
+
+    zif_abapgit_data_config~remove_config( is_config ).
+    zif_abapgit_data_config~add_config( is_config ).
+
   ENDMETHOD.
 ENDCLASS.

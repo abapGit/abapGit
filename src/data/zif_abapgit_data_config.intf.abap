@@ -11,7 +11,7 @@ INTERFACE zif_abapgit_data_config
       where TYPE string_table,
     END OF ty_config .
   TYPES:
-    ty_config_tt TYPE STANDARD TABLE OF ty_config WITH DEFAULT KEY .
+    ty_config_tt TYPE SORTED TABLE OF ty_config WITH UNIQUE KEY type name.
 
   CONSTANTS c_default_path TYPE string VALUE '/data/' ##NO_TEXT.
   CONSTANTS:
@@ -40,13 +40,19 @@ INTERFACE zif_abapgit_data_config
       VALUE(rt_files) TYPE zif_abapgit_definitions=>ty_files_tt .
   METHODS add_config
     IMPORTING
-      !is_config TYPE ty_config .
+      !is_config TYPE ty_config
+    RAISING
+      zcx_abapgit_exception .
   METHODS update_config
     IMPORTING
-      !is_config TYPE ty_config .
+      !is_config TYPE ty_config
+    RAISING
+      zcx_abapgit_exception .
   METHODS remove_config
     IMPORTING
-      !is_config TYPE ty_config .
+      !is_config TYPE ty_config
+    RAISING
+      zcx_abapgit_exception .
   METHODS get_configs
     RETURNING
       VALUE(rt_configs) TYPE ty_config_tt .
