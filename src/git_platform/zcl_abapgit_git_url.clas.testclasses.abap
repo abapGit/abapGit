@@ -43,6 +43,7 @@ CLASS ltcl_repo_online IMPLEMENTATION.
     APPEND ls_provider_urls TO lt_test_urls.
 
     LOOP AT lt_test_urls ASSIGNING <ls_provider_urls>.
+    
       lv_show_url = lo_cut->get_default_commit_display_url(
         iv_repo_url = <ls_provider_urls>-repo_url
         iv_hash     = lv_testhash ).
