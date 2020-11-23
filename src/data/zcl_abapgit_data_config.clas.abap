@@ -29,6 +29,9 @@ CLASS ZCL_ABAPGIT_DATA_CONFIG IMPLEMENTATION.
 
   METHOD zif_abapgit_data_config~add_config.
 
+    ASSERT NOT is_config-type IS INITIAL.
+    ASSERT NOT is_config-name IS INITIAL.
+
     INSERT is_config INTO TABLE mt_config.
     IF sy-subrc <> 0.
       zcx_abapgit_exception=>raise( 'Already in table' ).
