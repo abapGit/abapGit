@@ -186,7 +186,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
+CLASS ZCL_ABAPGIT_GUI_PAGE_REPO_VIEW IMPLEMENTATION.
 
 
   METHOD apply_order_by.
@@ -512,7 +512,6 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
     ro_toolbar->add( iv_txt = zcl_abapgit_html=>icon( iv_name = 'cog' )
                      iv_act = |{ zif_abapgit_definitions=>c_action-repo_settings }?key={ mv_key }|
                      iv_title = `Repository Settings` ).
-
 
   ENDMETHOD.
 
@@ -856,7 +855,7 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
                         iv_act = c_actions-display_more )
             } more. (Set in Advanced > {
             ri_html->a( iv_txt = 'Settings'
-                        iv_act = zif_abapgit_definitions=>c_action-go_settings )
+                        iv_act = zif_abapgit_definitions=>c_action-go_settings_personal )
             } )| ).
           ri_html->add( '</div>' ).
         ENDIF.
@@ -1156,6 +1155,8 @@ CLASS zcl_abapgit_gui_page_repo_view IMPLEMENTATION.
       IF lines( lt_pulls ) = 0.
         RETURN. " false
       ENDIF.
+
+      SORT lt_pulls BY number DESCENDING.
 
       ls_pull = zcl_abapgit_ui_factory=>get_popups( )->choose_pr_popup( lt_pulls ).
       IF ls_pull IS INITIAL.
